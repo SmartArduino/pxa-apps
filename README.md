@@ -14,6 +14,21 @@ tools/simulator.sh product --profile pai-touch \
   --publisher-key deps/pxa-system/apps/pxa/.dev-signing/publisher-public.der
 ```
 
+For store publication, build separate signed containers for each runtime
+profile rather than a combined multi-AOT container:
+
+```sh
+for target in esp32s3 esp32s31 simulator; do
+  tools/app.sh build store --target "$target" --aot-only \
+    --output "local/app-output/store-variants/$target"
+done
+tools/app.sh build store --target wasm \
+  --output local/app-output/store-variants/wasm
+```
+
+The AOT variants carry only their target architecture (plus any explicitly
+WASM-only component); the portable variant contains only WASM components.
+
 Workspace packaging defaults to the development-only key in
 `deps/pxa-system/apps/pxa/.dev-signing`; supply `PXA_SIGNING_KEY` for your own
 publisher. The bundled fixture is not a production credential. Local

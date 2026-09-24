@@ -13,7 +13,7 @@
     1
   ],
   "id": "pxa-store",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "name": "App Store",
   "description": "Browses the catalog, manages verified downloads and installed apps, and requests confirmed installation",
   "icon": "assets/icon.png",
@@ -44,5 +44,5 @@
       "scope": "https://app.doit.am"
     }
   ],
-  "release_sequence": 8
+  "release_sequence": 9
 }

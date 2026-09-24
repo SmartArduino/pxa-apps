@@ -13,7 +13,7 @@
     1
   ],
   "id": "pxa-maze-evil",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "name": "Maze Evil",
   "description": "Raycasting shooter with mapped RGB565 rendering, touch controls and Host-driven SFX",
   "build": {
@@ -53,5 +53,5 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 2
+  "release_sequence": 3
 }

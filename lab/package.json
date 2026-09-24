@@ -4,7 +4,8 @@
   "target_sdk": [0, 1],
   "compile_sdk": [0, 1],
   "id": "pxa-lab",
-  "version": "0.4.0",
+  "version": "0.4.1",
+  "release_sequence": 2,
   "name": "PXA ABI Lab",
   "description": "Examples of PXA services, WASI capabilities, dynamic memory, and manageable background tasks",
   "components": [

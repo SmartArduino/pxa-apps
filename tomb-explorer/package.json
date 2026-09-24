@@ -13,7 +13,7 @@
     1
   ],
   "id": "pxa-tomb-explorer",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "name": "Tomb Explorer",
   "description": "Third-person room-and-portal explorer with host-raster textured polygons",
   "build": {
@@ -44,5 +44,5 @@
       ]
     }
   ],
-  "release_sequence": 2
+  "release_sequence": 3
 }

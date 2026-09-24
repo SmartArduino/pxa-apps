@@ -34,11 +34,13 @@ int store_client_profile_for_device(char *output, size_t capacity,
     size_t offset = 0;
     if (output == NULL || capacity == 0 || target == NULL ||
         architecture == NULL || engine == NULL ||
-        (formats & PXA_DEVICE_FORMAT_AOT) == 0 ||
+        (formats & (PXA_DEVICE_FORMAT_AOT | PXA_DEVICE_FORMAT_WASM)) == 0 ||
         !((same_text(target, "esp32-s3") &&
            same_text(architecture, "xtensa")) ||
           (same_text(target, "esp32-s31") &&
-           same_text(architecture, "riscv32"))) ||
+           same_text(architecture, "riscv32")) ||
+          (same_text(target, "linux-x86_64") &&
+           same_text(architecture, "x86_64"))) ||
         !same_text(engine, "wamr"))
         return 0;
     output[0] = '\0';

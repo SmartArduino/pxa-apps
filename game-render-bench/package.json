@@ -13,7 +13,7 @@
     1
   ],
   "id": "pxa-game-render-bench",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "name": "GameRender Bench",
   "description": "Eleven-stage 2D/3D benchmark with low-resolution rendering",
   "build": {
@@ -36,5 +36,5 @@
       ]
     }
   ],
-  "release_sequence": 2
+  "release_sequence": 3
 }

@@ -13,7 +13,7 @@
     1
   ],
   "id": "pxa-plane-shooter-raster",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "name": "Orbital Strike Raster",
   "description": "GameRender battle prototype: adaptive-resolution shmup drawn with raster draw lists",
   "build": {
@@ -35,5 +35,5 @@
       ]
     }
   ],
-  "release_sequence": 2
+  "release_sequence": 3
 }
