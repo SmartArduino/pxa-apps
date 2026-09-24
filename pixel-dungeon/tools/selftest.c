@@ -436,16 +436,25 @@ static void test_responsive_layout(void) {
             check(layout.map_w == layout.cols * layout.tile_pixels &&
                   layout.map_h == layout.rows * layout.tile_pixels,
                   "world viewport follows zoom");
+            check(layout.cols == (width + layout.tile_pixels - 1) /
+                                     layout.tile_pixels ||
+                      layout.cols == PD_MAP_W,
+                  "world viewport includes partially visible edge columns");
+            check(layout.rows == (height + layout.tile_pixels - 1) /
+                                     layout.tile_pixels ||
+                      layout.rows == PD_MAP_H,
+                  "world viewport includes partially visible edge rows");
             check(layout.hud_h == 40 && layout.bar_h == 38,
                   "zoom never scales interface");
         }
-        check(layout.map_x >= layout.safe_left &&
-              layout.map_x + layout.map_w <= width - layout.safe_right,
-              "map fits available width");
-        check(layout.map_y >= layout.safe_top + layout.hud_h &&
-              layout.map_y + layout.map_h <=
-                  height - layout.safe_bottom - layout.bar_h,
-              "map fits between HUD and toolbar");
+        check(layout.map_x == (width - layout.map_w) / 2 &&
+              layout.map_y == (height - layout.map_h) / 2,
+              "world viewport stays centered independently of controls");
+        check(layout.map_x <= layout.hero_info.x &&
+              layout.map_y <= layout.hero_info.y &&
+              layout.map_y + layout.map_h >=
+                  layout.button[0].y + layout.button[0].h,
+              "world continues behind the transparent HUD and toolbar");
         check(layout.cols <= PD_MAP_W && layout.rows <= PD_MAP_H,
               "viewport never exceeds level bounds");
         for (int index = 0; index < PD_BUTTON_COUNT; ++index)
@@ -517,10 +526,9 @@ static void test_responsive_layout(void) {
         pd_layout_build(&layout, 412, 412, 60, 60, 60, 60);
         pd_layout_fit_display_shape(&layout, 2, NULL);
         pd_layout_set_zoom(&layout, 1);
-        check(layout.map_w > 412 - layout.safe_left - layout.safe_right &&
-              layout.map_y < layout.safe_top + layout.hud_h &&
-              layout.map_y + layout.map_h >
-                  layout.height - layout.safe_bottom - layout.bar_h,
+        check(layout.map_x <= 0 && layout.map_y <= 0 &&
+              layout.map_x + layout.map_w >= layout.width &&
+              layout.map_y + layout.map_h >= layout.height,
               "round screen map extends behind safe-area controls");
         check(layout.button[0].x >= layout.safe_left &&
               layout.button[PD_BUTTON_COUNT - 1].x +
@@ -529,8 +537,9 @@ static void test_responsive_layout(void) {
               layout.hero_info.x >= layout.safe_left,
               "round screen controls remain in the safe area");
         pd_layout_set_zoom(&layout, 2);
-        check(layout.map_w > 412 - layout.safe_left - layout.safe_right &&
-              layout.map_x >= 0 && layout.map_x + layout.map_w <= layout.width,
+        check(layout.map_x <= 0 && layout.map_y <= 0 &&
+              layout.map_x + layout.map_w >= layout.width &&
+              layout.map_y + layout.map_h >= layout.height,
               "round screen zoom preserves the expanded world viewport");
     }
     {
@@ -538,9 +547,9 @@ static void test_responsive_layout(void) {
         pd_layout_build(&layout, 296, 240, 8, 10, 8, 10);
         pd_layout_fit_display_shape(&layout, 2, NULL);
         pd_layout_set_zoom(&layout, 1);
-        check(layout.map_w > layout.width - layout.safe_left -
-                  layout.safe_right && layout.map_y >= 0 &&
-              layout.map_y + layout.map_h <= layout.height,
+        check(layout.map_x <= 0 && layout.map_y <= 0 &&
+              layout.map_x + layout.map_w >= layout.width &&
+              layout.map_y + layout.map_h >= layout.height,
               "small round screen also uses the area behind its controls");
     }
 }

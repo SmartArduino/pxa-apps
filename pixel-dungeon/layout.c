@@ -30,28 +30,22 @@ void pd_layout_camera(const pd_layout_t *layout, int hero_x, int hero_y,
 }
 
 void pd_layout_set_zoom(pd_layout_t *layout, int zoom) {
-    const int circle = layout->display_shape == 2;
-    const int content_w = circle ? layout->width :
-                          layout->width - layout->safe_left - layout->safe_right;
-    const int content_h = circle ? layout->height :
-                          layout->height - layout->safe_top - layout->safe_bottom -
-                          layout->hud_h - layout->bar_h;
     if (zoom < 1) zoom = 1;
     if (zoom > 3) zoom = 3;
     layout->zoom = zoom;
     layout->tile_pixels = PD_TILE_PIXELS * zoom;
-    layout->cols = content_w / layout->tile_pixels;
-    layout->rows = content_h / layout->tile_pixels;
+    layout->cols = (layout->width + layout->tile_pixels - 1) /
+                   layout->tile_pixels;
+    layout->rows = (layout->height + layout->tile_pixels - 1) /
+                   layout->tile_pixels;
     if (layout->cols < 1) layout->cols = 1;
     if (layout->rows < 1) layout->rows = 1;
     if (layout->cols > PD_MAP_W) layout->cols = PD_MAP_W;
     if (layout->rows > PD_MAP_H) layout->rows = PD_MAP_H;
     layout->map_w = layout->cols * layout->tile_pixels;
     layout->map_h = layout->rows * layout->tile_pixels;
-    layout->map_x = (circle ? 0 : layout->safe_left) +
-                    (content_w - layout->map_w) / 2;
-    layout->map_y = (circle ? 0 : layout->safe_top + layout->hud_h) +
-                    (content_h - layout->map_h) / 2;
+    layout->map_x = (layout->width - layout->map_w) / 2;
+    layout->map_y = (layout->height - layout->map_h) / 2;
 }
 
 static int rounded_inset(int radius, int edge_distance) {
