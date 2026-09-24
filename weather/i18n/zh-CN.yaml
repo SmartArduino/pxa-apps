@@ -1,14 +1,36 @@
 locale: zh-CN
 metadata:
   name: 天气
-  description: 使用吉米兔天气按设备 MAC 地址定位并显示当地天气
+  description: 通过 IP 定位获取当地天气，支持天气源自动切换
 translations:
   screen.title: 天气
   screen.phase.conditions: 实况天气
   screen.phase.day: 白天实况
   screen.phase.night: 夜间实况
   location.locating: 正在定位
+  location.ip_estimate: 公网 IP 估算位置，可能不准确
+  location.selected: 已选城市
+  location.search_label: 搜索城市并选择
+  location.search: 搜索
+  location.auto: 恢复 IP 自动定位
+  location.no_results: 搜索未成功，请检查权限或换个城市名称
+  location.search_too_short: 请输入至少两个字再搜索
+  location.save_failed: 无法保存位置，重启后可能丢失本次选择
+  forecast.hourly: 未来 8 小时
+  forecast.daily: 未来 7 天
+  forecast.unavailable: 当前数据源暂无预报
+  forecast.sunrise: 日出
+  forecast.sunset: 日落
+  history.title: 近期历史天气（截至五天前）
+  history.unavailable: 历史数据暂不可用
   weather.waiting: 等待天气数据
+  weather.clear: 晴
+  weather.partly_cloudy: 多云
+  weather.cloudy: 阴
+  weather.fog: 有雾
+  weather.rain: 有雨
+  weather.snow: 有雪
+  weather.thunderstorm: 雷暴
   summary.locating: 定位完成后将显示当地实况
   summary.thunderstorm: 雷电天气，请尽量留在室内
   summary.rain: 可能有降水，出门记得带伞
@@ -29,13 +51,17 @@ translations:
   detail.feels_like: 温感
   detail.update_policy: 更新策略
   detail.auto_sync: 自动同步
-  update.provider: 吉米兔天气 · MAC定位
-  update.time: 更新于 {time}
+  detail.metrics: '体感 {feels}° · 湿度 {humidity}% · 风速 {wind} km/h'
+  detail.range: '今日 {low}°–{high}°C'
+  detail.air: '欧洲 AQI {aqi} · PM2.5 {pm25} µg/m³'
+  update.provider: 天气 · IP定位
+  update.wttr: wttr.in · IP定位
+  update.time: Open-Meteo · {time}
   status.updating: 正在更新
   status.ready: 已同步，约 10 分钟后自动更新
-  status.permission: 需要设备标识或网络权限
-  status.invalid_device: 设备标识格式无效
-  status.authentication: 天气服务鉴权失败
+  status.permission: 需要网络权限
+  status.invalid_device: 天气请求格式有误
+  status.authentication: 天气数据源拒绝请求
   status.unavailable: 天气服务暂不可用
   status.unexpected: 天气服务返回异常
   status.failed: 更新失败，请重试

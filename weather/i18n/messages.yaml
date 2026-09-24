@@ -21,10 +21,98 @@ messages:
     source: Locating
     context: Location lookup in progress
     max_bytes: 40
+  location.ip_estimate:
+    source: Estimated from public IP; may be inaccurate
+    context: Location source disclaimer
+    max_bytes: 96
+  location.selected:
+    source: Selected city
+    context: Manually selected location source
+    max_bytes: 48
+  location.search_label:
+    source: Search a city to change location
+    context: City search input label
+    max_bytes: 80
+  location.search:
+    source: Search
+    context: City search button
+    max_bytes: 32
+  location.auto:
+    source: Use IP location
+    context: Reset saved city and use automatic geolocation
+    max_bytes: 64
+  location.no_results:
+    source: Search failed. Check permissions or try a more specific name
+    context: Failed city search, including network errors
+    max_bytes: 96
+  location.search_too_short:
+    source: Enter at least two characters to search
+    context: City search input validation
+    max_bytes: 64
+  location.save_failed:
+    source: Could not save location; this choice may be lost on restart
+    context: Failed location preference storage
+    max_bytes: 112
+  forecast.hourly:
+    source: Next 8 hours
+    context: Hourly outlook heading
+    max_bytes: 48
+  forecast.daily:
+    source: 7-day forecast
+    context: Daily outlook heading
+    max_bytes: 48
+  forecast.unavailable:
+    source: Forecast unavailable from the current source
+    context: Current weather fallback has no extended forecast
+    max_bytes: 80
+  forecast.sunrise:
+    source: Sunrise
+    context: Today's sunrise time
+    max_bytes: 32
+  forecast.sunset:
+    source: Sunset
+    context: Today's sunset time
+    max_bytes: 32
+  history.title:
+    source: Recent weather history (through 5 days ago)
+    context: Archive daily weather heading
+    max_bytes: 96
+  history.unavailable:
+    source: Historical data is temporarily unavailable
+    context: Archive unavailable while current weather remains valid
+    max_bytes: 96
   weather.waiting:
     source: Waiting for weather data
     context: Weather data placeholder
     max_bytes: 64
+  weather.clear:
+    source: Clear
+    context: WMO clear sky
+    max_bytes: 32
+  weather.partly_cloudy:
+    source: Partly cloudy
+    context: WMO partly cloudy
+    max_bytes: 48
+  weather.cloudy:
+    source: Cloudy
+    context: WMO overcast
+    max_bytes: 32
+  weather.fog:
+    source: Foggy
+    context: WMO fog
+    max_bytes: 32
+  weather.rain:
+    source: Rain
+    context: WMO rain and showers
+    max_bytes: 32
+  weather.snow:
+    source: Snow
+    context: WMO snowfall
+    max_bytes: 32
+  weather.thunderstorm:
+    source: Thunderstorm
+    context: WMO thunderstorm
+    max_bytes: 48
   summary.locating:
     source: Local conditions appear after locating
     context: Summary before location is known
@@ -105,12 +193,38 @@ messages:
     source: Automatic sync
     context: Value for the weather update mode card
     max_bytes: 40
+  detail.metrics:
+    source: 'Feels {feels}° · Humidity {humidity}% · Wind {wind} km/h'
+    context: Compact current conditions; unavailable values use a dash
+    max_bytes: 128
+    placeholders:
+      feels: string
+      humidity: string
+      wind: string
+  detail.range:
+    source: 'Today {low}°–{high}°C'
+    context: Current day temperature range
+    max_bytes: 64
+    placeholders:
+      low: string
+      high: string
+  detail.air:
+    source: 'European AQI {aqi} · PM2.5 {pm25} µg/m³'
+    context: Optional Open-Meteo air quality measurement
+    max_bytes: 96
+    placeholders:
+      aqi: string
+      pm25: string
   update.provider:
-    source: Jimitu Weather · MAC location
+    source: Weather · IP location
     context: Provider and location method
     max_bytes: 80
+  update.wttr:
+    source: wttr.in · IP location
+    context: Backup weather provider and location method
+    max_bytes: 80
   update.time:
-    source: Updated {time}
+    source: Open-Meteo · {time}
     context: Last update timestamp
     max_bytes: 64
     placeholders:
@@ -124,15 +238,15 @@ messages:
     context: Successful synchronization status
     max_bytes: 112
   status.permission:
-    source: Device identity or network permission required
+    source: Network permission required
     context: Permission error
     max_bytes: 128
   status.invalid_device:
-    source: Invalid device identity
+    source: Invalid weather request
     context: HTTP 400 error
     max_bytes: 64
   status.authentication:
-    source: Weather authentication failed
+    source: Weather source rejected the request
     context: HTTP 401 error
     max_bytes: 80
   status.unavailable:
