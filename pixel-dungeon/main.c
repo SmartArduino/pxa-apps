@@ -2,7 +2,7 @@
  *
  * The app follows Shattered Pixel Dungeon's core loop: procedurally generated
  * floors, turn-based movement and combat, mobs with simple hunting AI, loot,
- * hunger, XP and a 25-floor descent that ends in a boss fight. Input is touch
+ * hunger, XP and a 25-floor descent that culminates in an amulet quest. Input is touch
  * first (tap to walk/attack, action bar and map zoom) with controller
  * support. Progress is saved through the Host key-value Storage service. */
 #include <stdint.h>
@@ -627,6 +627,10 @@ static void handle_pointer(const pxa_event_t *event) {
             (g_game.phase == PD_PHASE_DEAD || g_game.phase == PD_PHASE_WON)) {
             record_result();
             clear_progress();
+        } else if (g_game.phase != phase_before &&
+                   (g_game.phase == PD_PHASE_AMULET ||
+                    phase_before == PD_PHASE_AMULET)) {
+            save_progress();
         }
     }
     g_progress_dirty = 1;
@@ -666,6 +670,10 @@ static void handle_controller(const pxa_event_t *event) {
         (g_game.phase == PD_PHASE_DEAD || g_game.phase == PD_PHASE_WON)) {
         record_result();
         clear_progress();
+    } else if (g_game.phase != phase_before &&
+               (g_game.phase == PD_PHASE_AMULET ||
+                phase_before == PD_PHASE_AMULET)) {
+        save_progress();
     }
     g_controller_buttons = controller.buttons;
     g_progress_dirty = 1;
@@ -713,13 +721,17 @@ static void handle_tick(uint64_t timestamp_us) {
         } else if (g_game.phase == PD_PHASE_WON) {
             record_result();
             clear_progress();
+        } else if (g_game.phase == PD_PHASE_AMULET) {
+            save_progress();
         } else if (g_game.turn != turn_before &&
                    (g_game.turn % 40u) == 0u) {
             save_progress();
         }
     }
     if (pd_audio_active(&g_audio)) {
-        if ((g_render_phase & 1u) == 0u) render_frame();
+        const uint32_t render_interval = game_animating() ? 2u : 5u;
+        if (g_progress_dirty || g_render_phase % render_interval == 0u)
+            render_frame();
         ++g_render_phase;
     } else {
         render_frame();

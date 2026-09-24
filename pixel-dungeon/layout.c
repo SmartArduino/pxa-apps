@@ -289,6 +289,13 @@ void pd_layout_fit_display_shape(pd_layout_t *layout, uint32_t shape,
     right = layout->safe_right;
     layout->display_shape = shape;
     if (shape == 2) {
+        const int diameter = layout->width < layout->height ?
+                             layout->width : layout->height;
+        const int victory_w = diameter / 2 < 144 ? diameter / 2 : 144;
+        set_rect(&layout->victory_back,
+                 (layout->width - victory_w) / 2,
+                 layout->height / 2 + diameter / 4,
+                 victory_w, touch_size);
         const int available = layout->height - layout->safe_top -
                               layout->safe_bottom;
         int class_h = (available - 66) / PD_CLASS_COUNT;
@@ -470,6 +477,24 @@ void pd_layout_build(pd_layout_t *layout, int width, int height,
                  pause_w, touch_size);
         set_rect(&layout->pause_menu, pause_left, pause_top + touch_size + 4,
                  pause_w, touch_size);
+        const int amulet_w = min_side < 200 ? 108 :
+                             content_w < 184 ? content_w - 16 : 168;
+        const int amulet_h = min_side < 200 ? 28 : touch_size;
+        const int amulet_top = layout->safe_top +
+            (height - layout->safe_top - layout->safe_bottom -
+             (min_side < 200 ? 130 : 168)) / 2;
+        const int amulet_first = amulet_top +
+            (min_side < 200 ? 72 : 84);
+        set_rect(&layout->amulet_exit, center - amulet_w / 2,
+                 amulet_first, amulet_w, amulet_h);
+        set_rect(&layout->amulet_stay, center - amulet_w / 2,
+                 amulet_first + amulet_h + 4, amulet_w, amulet_h);
+        const int victory_w = min_side < 200 ? 104 :
+                              content_w < 160 ? content_w - 16 : 144;
+        set_rect(&layout->victory_back, center - victory_w / 2,
+                 height - layout->safe_bottom - touch_size -
+                 (min_side < 200 ? 18 : min_side / 8),
+                 victory_w, touch_size);
         set_rect(&layout->shop_buy, pause_left, menu_y + 6,
                  pause_w, touch_size);
         const int shop_w = content_w < 170 ? content_w - 10 : 170;

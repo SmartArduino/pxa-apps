@@ -51,9 +51,18 @@ static const pd_mob_def_t kMobs[] = {
     {PD_STR_MOB_SLIME, 7, 16, 2, 6, 1, 70, 4, 4, 1, 8},
     {PD_STR_MOB_GOLEM, 8, 44, 8, 14, 6, 82, 6, 20, 16, 25},
     {PD_STR_MOB_YOG, 9, 110, 11, 19, 7, 88, 10, 60, 25, 25},
+    {PD_STR_MOB_SWARM, 10, 22, 1, 4, 0, 72, 5, 3, 3, 7},
+    {PD_STR_MOB_DM100, 11, 20, 2, 8, 2, 76, 8, 6, 6, 12},
 };
 #define PD_MOB_TYPE_COUNT ((int)(sizeof(kMobs) / sizeof(kMobs[0])))
+#define PD_MOB_SPINNER 6
 #define PD_MOB_DEMON 9
+#define PD_MOB_SWARM 10
+#define PD_MOB_DM100 11
+#define PD_MOB_AWAKE 1
+#define PD_MOB_SPLIT 2
+#define PD_MOB_NO_XP 4
+#define PD_MOB_SPLIT_WAIT 8
 
 static const pd_string_id_t kWeaponNames[4] = {
     PD_STR_WEAPON_1, PD_STR_WEAPON_2, PD_STR_WEAPON_3, PD_STR_WEAPON_4};
@@ -215,6 +224,10 @@ static pd_string_id_t item_name_id(const pd_item_t *item) {
             return PD_STR_ITEM_GOLD;
         case PD_ITEM_IRON_KEY:
             return PD_STR_ITEM_IRON_KEY;
+        case PD_ITEM_AMULET:
+            return PD_STR_ITEM_AMULET;
+        case PD_ITEM_WAND_MAGIC:
+            return PD_STR_ITEM_WAND_MAGIC;
         case PD_ITEM_POTION_HEAL:
             return PD_STR_ITEM_POTION_HEAL;
         case PD_ITEM_POTION_STRENGTH:
@@ -241,6 +254,13 @@ void pd_item_detail(const pd_item_t *item, char *out, int capacity) {
     switch (item->kind) {
         case PD_ITEM_GOLD:
             pd_str_format(out, capacity, PD_STR_DETAIL_GOLD, (int)item->gold);
+            break;
+        case PD_ITEM_AMULET:
+            pd_str_format(out, capacity, PD_STR_DETAIL_AMULET);
+            break;
+        case PD_ITEM_WAND_MAGIC:
+            pd_str_format(out, capacity, PD_STR_DETAIL_WAND_MAGIC,
+                          (int)item->tier, 3 + (int)item->level);
             break;
         case PD_ITEM_POTION_HEAL:
             pd_str_format(out, capacity, PD_STR_DETAIL_HEAL,
@@ -291,6 +311,10 @@ uint8_t pd_item_sprite(const pd_item_t *item) {
             return PD_SPRITE_ITEM_GOLD;
         case PD_ITEM_IRON_KEY:
             return PD_SPRITE_ITEM_IRON_KEY;
+        case PD_ITEM_AMULET:
+            return PD_SPRITE_ITEM_AMULET;
+        case PD_ITEM_WAND_MAGIC:
+            return PD_SPRITE_ITEM_WAND_MAGIC_MISSILE;
         case PD_ITEM_POTION_HEAL:
             return PD_SPRITE_ITEM_POTION_HEAL;
         case PD_ITEM_POTION_STRENGTH:
@@ -367,6 +391,12 @@ static int ground_at(const pd_game_t *game, int x, int y) {
     return -1;
 }
 
+static int has_amulet(const pd_game_t *game) {
+    for (int index = 0; index < game->bag_count; ++index)
+        if (game->bag[index].kind == PD_ITEM_AMULET) return 1;
+    return 0;
+}
+
 static int alive_mobs(const pd_game_t *game) {
     int count = 0;
     for (int index = 0; index < PD_MOBS_MAX; ++index)
@@ -400,6 +430,9 @@ static pd_item_t make_item(uint8_t kind, uint8_t depth, uint32_t *rng) {
         case PD_ITEM_SCROLL_MAP:
             item.tier = (uint8_t)pd_rng_range(rng, 1, 3);
             break;
+        case PD_ITEM_WAND_MAGIC:
+            item.tier = 3;
+            break;
         default:
             break;
     }
@@ -412,8 +445,9 @@ static uint8_t pick_item_kind(uint32_t *rng, uint8_t depth) {
     if (roll < 34) return PD_ITEM_POTION_STRENGTH;
     if (roll < 48) return PD_ITEM_SCROLL_UPGRADE;
     if (roll < 56) return PD_ITEM_SCROLL_MAP;
-    if (roll < 70) return PD_ITEM_WEAPON;
-    if (roll < 84) return PD_ITEM_ARMOR;
+    if (roll < 65) return PD_ITEM_WEAPON;
+    if (roll < 78) return PD_ITEM_ARMOR;
+    if (roll < 86) return PD_ITEM_WAND_MAGIC;
     (void)depth;
     return PD_ITEM_FOOD;
 }
@@ -483,6 +517,7 @@ static void spawn_entities(pd_game_t *game, uint32_t seed) {
                     uint8_t candidates[PD_MOB_TYPE_COUNT];
                     int count = 0;
                     for (int type = 0; type < PD_MOB_TYPE_COUNT; ++type) {
+                        if (type == PD_MOB_DEMON) continue;
                         if (game->depth < kMobs[type].min_depth ||
                             game->depth > kMobs[type].max_depth)
                             continue;
@@ -517,7 +552,7 @@ static void spawn_entities(pd_game_t *game, uint32_t seed) {
             }
         }
     }
-    if (game->depth >= 25) {
+    if (game->depth >= 25 && !has_amulet(game)) {
         int slot = -1;
         for (int index = 0; index < PD_MOBS_MAX; ++index) {
             if (game->mobs[index].type == 0xFF) {
@@ -628,6 +663,7 @@ static void hero_init(pd_game_t *game, uint8_t cls) {
     hero->xp = 0;
     hero->gold = 0;
     hero->keys = 0;
+    hero->poison = 0;
     hero->hunger = PD_HUNGER_MAX;
     hero->weapon = -1;
     hero->armor = -1;
@@ -641,6 +677,7 @@ static void hero_init(pd_game_t *game, uint8_t cls) {
     game->hero_moving = 0;
     game->sound_count = 0;
     game->bag_selected = -1;
+    game->wand_slot = -1;
     for (int index = 0; index < PD_EFFECTS_MAX; ++index) game->effects[index].ttl = 0;
     if (def->weapon_tier > 0) {
         pd_item_t weapon;
@@ -718,6 +755,59 @@ static void place_special_tiles(pd_game_t *game) {
                     break;
                 }
     }
+    if (game->generation >= 3 && game->level.room_count > 2 &&
+        game->depth % 5 != 0) {
+        uint32_t rng = pd_rng_mix(game->run_seed,
+                                  game->depth * 1723u + 91u);
+        const int room_index = 1 + (int)pd_rng_below(
+            &rng, (uint32_t)(game->level.room_count - 1));
+        const pd_room_t *room = &game->level.rooms[room_index];
+        const int style = game->level.theme <= 1 ?
+                          (int)pd_rng_below(&rng, 2) :
+                          game->level.theme == 2 ? 1 : 2;
+        for (int y = room->y + 1; y < room->y + room->h - 1; ++y)
+            for (int x = room->x + 1; x < room->x + room->w - 1; ++x) {
+                const int at = y * PD_MAP_W + x;
+                const uint8_t kind = PD_TILE_KIND(game->level.tiles[at]);
+                if (kind == PD_TILEK_VOID || pd_tile_wall(game->level.tiles[at]) ||
+                    kind == PD_TILEK_DOOR || kind == PD_TILEK_DOOR_OPEN ||
+                    kind == PD_TILEK_STAIRS_UP || kind == PD_TILEK_STAIRS_DOWN ||
+                    kind == PD_TILEK_CHEST || kind == PD_TILEK_ALCHEMY ||
+                    kind == PD_TILEK_STATUE) continue;
+                const uint32_t roll = pd_rng_below(&rng, 100);
+                const uint8_t feature = style == 0 ?
+                    (roll < 60 ? PD_TILEK_HIGH_GRASS : PD_TILEK_GRASS) :
+                    style == 1 ?
+                    (roll < 78 ? PD_TILEK_WATER_A : PD_TILEK_GRASS) :
+                    (roll < 58 ? PD_TILEK_EMBERS_A : PD_TILEK_DECO_ALT);
+                game->level.tiles[at] = PD_TILE(game->level.theme, feature);
+            }
+    }
+    if (game->generation >= 2) {
+        uint32_t rng = pd_rng_mix(game->run_seed,
+                                  game->depth * 1031u + 79u);
+        const int trap_count = game->depth == 1 ? 1 :
+                               2 + game->depth / 8;
+        for (int placed = 0; placed < trap_count; ++placed) {
+            for (int attempt = 0; attempt < 80; ++attempt) {
+                const int x = pd_rng_range(&rng, 2, PD_MAP_W - 3);
+                const int y = pd_rng_range(&rng, 2, PD_MAP_H - 3);
+                const int entrance_dx = x - game->level.entrance_x;
+                const int entrance_dy = y - game->level.entrance_y;
+                const int exit_dx = x - game->level.exit_x;
+                const int exit_dy = y - game->level.exit_y;
+                if (PD_TILE_KIND(pd_tile_at(&game->level, x, y)) !=
+                        PD_TILEK_FLOOR ||
+                    (entrance_dx >= -2 && entrance_dx <= 2 &&
+                     entrance_dy >= -2 && entrance_dy <= 2) ||
+                    (exit_dx >= -1 && exit_dx <= 1 &&
+                     exit_dy >= -1 && exit_dy <= 1)) continue;
+                game->level.tiles[y * PD_MAP_W + x] =
+                    PD_TILE(game->level.theme, PD_TILEK_TRAP);
+                break;
+            }
+        }
+    }
 }
 
 static void place_floor_key(pd_game_t *game) {
@@ -747,6 +837,10 @@ static void place_floor_key(pd_game_t *game) {
 static void hero_pickup(pd_game_t *game);
 
 void pd_game_enter_depth(pd_game_t *game, uint8_t depth) {
+    const int ascending = depth < game->depth;
+    if (game->generation > 0 && game->generation < 3 &&
+        depth != game->depth)
+        game->generation = 3;
     if (depth < 1) depth = 1;
     if (depth > 25) depth = 25;
     game->depth = depth;
@@ -758,8 +852,8 @@ void pd_game_enter_depth(pd_game_t *game, uint8_t depth) {
     place_special_tiles(game);
     game->hero.keys = 0;
     game->change_count = 0;
-    game->hero.x = game->level.entrance_x;
-    game->hero.y = game->level.entrance_y;
+    game->hero.x = ascending ? game->level.exit_x : game->level.entrance_x;
+    game->hero.y = ascending ? game->level.exit_y : game->level.entrance_y;
     game->hero_from_x = game->hero.x;
     game->hero_from_y = game->hero.y;
     game->hero_moving = 0;
@@ -769,9 +863,11 @@ void pd_game_enter_depth(pd_game_t *game, uint8_t depth) {
     hero_pickup(game);
     pd_level_update_fov(&game->level, game->hero.x, game->hero.y);
     game->walk_active = 0;
-    message_num(game, PD_MSG_INFO, PD_STR_CLIMB_DOWN, depth);
+    game->wand_slot = -1;
+    message_num(game, PD_MSG_INFO,
+                ascending ? PD_STR_CLIMB_UP : PD_STR_CLIMB_DOWN, depth);
     sound_add(game, PD_SOUND_DESCEND);
-    if (depth >= 25) {
+    if (depth >= 25 && !has_amulet(game)) {
         message_simple(game, PD_MSG_BAD, PD_STR_BOSS_STIRS);
     }
 }
@@ -780,7 +876,7 @@ void pd_game_reset(pd_game_t *game, uint32_t seed) {
     game->run_seed = seed;
     game->roll_rng = pd_rng_mix(seed, UINT32_C(0x5bf03635));
     game->phase = PD_PHASE_TITLE;
-    game->generation = 1;
+    game->generation = 3;
     game->class_choice = 0;
     game->hero.x = 0;
     game->hero.y = 0;
@@ -790,7 +886,9 @@ void pd_game_reset(pd_game_t *game, uint32_t seed) {
     game->change_count = 0;
     game->walk_active = 0;
     game->bag_selected = -1;
+    game->wand_slot = -1;
     game->hero.keys = 0;
+    game->hero.poison = 0;
     game->potion_hint = 0;
     game->kills = 0;
     game->deepest = 1;
@@ -832,21 +930,77 @@ static void damage_hero(pd_game_t *game, int amount, const char *source) {
     }
 }
 
+static void poison_tick(pd_game_t *game) {
+    if (game->hero.poison == 0) return;
+    --game->hero.poison;
+    --game->hero.hp;
+    effect_add(game, PD_EFFECT_DAMAGE, game->hero.x, game->hero.y, 1);
+    effect_add(game, PD_EFFECT_POISON, game->hero.x, game->hero.y, 0);
+    message_simple(game, PD_MSG_BAD, PD_STR_POISON_DAMAGE);
+    if (game->hero.hp <= 0) {
+        game->hero.hp = 0;
+        game->phase = PD_PHASE_DEAD;
+        game->walk_active = 0;
+        message_simple(game, PD_MSG_BAD, PD_STR_POISON_DEATH);
+    } else if (game->hero.poison == 0) {
+        message_simple(game, PD_MSG_GOOD, PD_STR_POISON_FADE);
+    }
+}
+
 static void damage_mob(pd_game_t *game, int mob_index, int amount) {
     pd_mob_t *mob = &game->mobs[mob_index];
     pd_text_t line;
     if (amount < 1) amount = 1;
     mob->hp = (int16_t)(mob->hp - amount);
-    mob->awake = 1;
+    mob->awake |= PD_MOB_AWAKE;
     sound_add(game, PD_SOUND_HIT);
     effect_add(game, PD_EFFECT_DAMAGE, mob->x, mob->y, amount);
     effect_add(game, PD_EFFECT_BLOOD, mob->x, mob->y, 0);
     message_text_num(game, PD_MSG_GOOD, PD_STR_HIT_MOB,
                      pd_mob_name(mob->type), amount);
-    if (mob->hp > 0) return;
+    if (mob->hp > 0) {
+        if (mob->type == PD_MOB_SWARM && mob->hp >= 4 &&
+            !(mob->awake & PD_MOB_SPLIT)) {
+            static const int8_t directions[4][2] = {
+                {1, 0}, {0, 1}, {-1, 0}, {0, -1}};
+            int slot = -1;
+            for (int index = 0; index < PD_MOBS_MAX; ++index)
+                if (game->mobs[index].type == 0xFF) {
+                    slot = index;
+                    break;
+                }
+            if (slot >= 0) {
+                const int first = (int)pd_rng_below(&game->roll_rng, 4);
+                for (int offset = 0; offset < 4; ++offset) {
+                    const int direction = (first + offset) & 3;
+                    const int x = mob->x + directions[direction][0];
+                    const int y = mob->y + directions[direction][1];
+                    if (!pd_in_bounds(x, y) ||
+                        (x == game->hero.x && y == game->hero.y) ||
+                        !pd_tile_walkable(pd_tile_at(&game->level, x, y)) ||
+                        mob_at(game, x, y) >= 0) continue;
+                    pd_mob_t *clone = &game->mobs[slot];
+                    clone->type = PD_MOB_SWARM;
+                    clone->x = clone->from_x = (uint8_t)x;
+                    clone->y = clone->from_y = (uint8_t)y;
+                    clone->hp = mob->hp / 2;
+                    clone->awake = PD_MOB_AWAKE | PD_MOB_SPLIT |
+                                   PD_MOB_NO_XP | PD_MOB_SPLIT_WAIT;
+                    clone->wander = 0;
+                    clone->dying = clone->attacking = clone->moving = 0;
+                    mob->hp -= clone->hp;
+                    mob->awake |= PD_MOB_SPLIT;
+                    effect_add(game, PD_EFFECT_SWARM, x, y, 0);
+                    message_simple(game, PD_MSG_WARN, PD_STR_SWARM_SPLITS);
+                    break;
+                }
+            }
+        }
+        return;
+    }
     {
         const uint8_t type = mob->type;
-        const int xp = kMobs[type].xp;
+        const int xp = mob->awake & PD_MOB_NO_XP ? 0 : kMobs[type].xp;
         mob->hp = 0;
         mob->dying = 22;
         sound_add(game, PD_SOUND_DEATH);
@@ -856,9 +1010,10 @@ static void damage_mob(pd_game_t *game, int mob_index, int amount) {
                      pd_str(kMobs[type].name));
         gain_xp(game, xp);
         if (type == PD_MOB_DEMON && game->depth >= 25) {
-            game->phase = PD_PHASE_WON;
+            const pd_item_t amulet = {PD_ITEM_AMULET, 0, 0, 0};
+            drop_item_on_floor(game, &amulet, mob->x, mob->y);
             game->walk_active = 0;
-            message_simple(game, PD_MSG_GOOD, PD_STR_VICTORY_MSG);
+            message_simple(game, PD_MSG_GOOD, PD_STR_AMULET_DROPS);
         }
     }
 }
@@ -921,6 +1076,11 @@ static void mob_attack_hero(pd_game_t *game, int mob_index) {
     }
     damage_hero(game, pd_rng_range(&game->roll_rng, def->dmg_min, def->dmg_max),
                 pd_str(def->name));
+    if (game->phase == PD_PHASE_PLAY && mob->type == PD_MOB_SPINNER &&
+        pd_rng_below(&game->roll_rng, 100) < 35) {
+        if (game->hero.poison < 5) game->hero.poison = 5;
+        message_simple(game, PD_MSG_BAD, PD_STR_POISONED);
+    }
 }
 
 /* ---------------------------------------------------------------------- */
@@ -961,6 +1121,10 @@ static void mobs_turn(pd_game_t *game) {
         int dy;
         int distance;
         if (mob->type == 0xFF || mob->dying) continue;
+        if (mob->awake & PD_MOB_SPLIT_WAIT) {
+            mob->awake &= (uint8_t)~PD_MOB_SPLIT_WAIT;
+            continue;
+        }
         def = &kMobs[mob->type];
         dx = game->hero.x - mob->x;
         dy = game->hero.y - mob->y;
@@ -969,9 +1133,9 @@ static void mobs_turn(pd_game_t *game) {
         distance = dx > dy ? dx : dy;
         {
             const int in_sight = game->level.visible[mob->y * PD_MAP_W + mob->x];
-            if (!mob->awake) {
+            if (!(mob->awake & PD_MOB_AWAKE)) {
                 if (in_sight && distance <= 8) {
-                    mob->awake = 1;
+                    mob->awake |= PD_MOB_AWAKE;
                     message_text(game, PD_MSG_WARN, PD_STR_MOB_NOTICES,
                                  pd_str(def->name));
                 } else {
@@ -994,8 +1158,21 @@ static void mobs_turn(pd_game_t *game) {
                 if (game->phase != PD_PHASE_PLAY) return;
                 continue;
             }
+            if (mob->type == PD_MOB_DM100 && in_sight && distance <= 4) {
+                mob->attacking = 12;
+                effect_add(game, PD_EFFECT_LIGHTNING, game->hero.x,
+                           game->hero.y, (mob->x << 8) | mob->y);
+                sound_add(game, PD_SOUND_LIGHTNING);
+                if (pd_rng_below(&game->roll_rng, 100) < 76)
+                    damage_hero(game,
+                                pd_rng_range(&game->roll_rng, 3, 10) +
+                                pd_hero_armor_value(game),
+                                pd_str(def->name));
+                if (game->phase != PD_PHASE_PLAY) return;
+                continue;
+            }
             if (!in_sight && distance > 9) {
-                mob->awake = 0;
+                mob->awake &= (uint8_t)~PD_MOB_AWAKE;
                 continue;
             }
         }
@@ -1035,16 +1212,35 @@ static void open_chest(pd_game_t *game, int x, int y) {
 }
 
 static void trigger_trap(pd_game_t *game, int x, int y) {
-    const int damage = 3 + game->depth / 3;
-    pd_text_t line;
+    const int variant = pd_trap_variant(game->run_seed, game->depth, x, y);
+    const int damage = variant == 0 ? 3 + game->depth / 3 :
+                                     4 + game->depth / 2;
     game->level.known[y * PD_MAP_W + x] = 1;
     game->level.tiles[y * PD_MAP_W + x] =
         PD_TILE(game->level.theme, PD_TILEK_FLOOR_ALT);
     record_change(game, x, y, game->level.tiles[y * PD_MAP_W + x]);
-    message_num(game, PD_MSG_BAD, PD_STR_TRAP_HIT, damage);
+    message_num(game, PD_MSG_BAD, variant == 0 ? PD_STR_TRAP_DART_HIT :
+                PD_STR_TRAP_BLAST_HIT, damage);
     sound_add(game, PD_SOUND_TRAP);
+    effect_add(game, variant == 0 ? PD_EFFECT_TRAP_DART :
+                                       PD_EFFECT_TRAP_BLAST, x, y, 0);
     damage_hero(game, damage + pd_hero_armor_value(game), "The trap");
-    effect_add(game, PD_EFFECT_SPARK, x, y, 0);
+    if (variant == 0 && game->phase == PD_PHASE_PLAY) {
+        if (game->hero.poison < 4) game->hero.poison = 4;
+        message_simple(game, PD_MSG_BAD, PD_STR_POISONED);
+        effect_add(game, PD_EFFECT_POISON, x, y, 0);
+    } else if (variant == 1) {
+        sound_add(game, PD_SOUND_BLAST);
+        for (int index = 0; index < PD_MOBS_MAX; ++index) {
+            pd_mob_t *mob = &game->mobs[index];
+            if (mob->type == 0xFF || mob->dying ||
+                (mob->awake & PD_MOB_SPLIT_WAIT)) continue;
+            const int dx = mob->x - x;
+            const int dy = mob->y - y;
+            if (dx >= -1 && dx <= 1 && dy >= -1 && dy <= 1)
+                damage_mob(game, index, damage);
+        }
+    }
 }
 
 static void hero_pickup(pd_game_t *game) {
@@ -1075,6 +1271,11 @@ static void hero_pickup(pd_game_t *game) {
             message_item(game, PD_MSG_GOOD, PD_STR_PICK_ITEM, &item);
             sound_add(game, PD_SOUND_ITEM);
             game->bag[game->bag_count++] = item;
+            if (item.kind == PD_ITEM_AMULET) {
+                game->phase = PD_PHASE_AMULET;
+                game->walk_active = 0;
+                message_simple(game, PD_MSG_GOOD, PD_STR_AMULET_FOUND);
+            }
         }
         entry->used = 0;
         for (int move = index; move + 1 < game->ground_count; ++move)
@@ -1088,11 +1289,21 @@ static void end_turn(pd_game_t *game) {
     ++game->turn;
     mobs_turn(game);
     if (game->phase != PD_PHASE_PLAY) return;
+    poison_tick(game);
+    if (game->phase != PD_PHASE_PLAY) return;
     hunger_tick(game);
     if (game->phase != PD_PHASE_PLAY) return;
     if ((game->turn % 12u) == 0 && game->hero.hp < game->hero.max_hp &&
         game->hero.hunger > 0) {
         ++game->hero.hp;
+    }
+    if ((game->turn % 12u) == 0) {
+        for (int index = 0; index < game->bag_count; ++index) {
+            pd_item_t *item = &game->bag[index];
+            if (item->kind == PD_ITEM_WAND_MAGIC &&
+                item->tier < 3 + item->level)
+                ++item->tier;
+        }
     }
     if (game->potion_hint > 0) --game->potion_hint;
     pd_level_update_fov(&game->level, game->hero.x, game->hero.y);
@@ -1197,6 +1408,7 @@ static void hero_act_move(pd_game_t *game, int dx, int dy, int from_walk) {
 
 void pd_game_hero_step(pd_game_t *game, int dx, int dy) {
     game->walk_active = 0;
+    game->wand_slot = -1;
     if (dx == 0 && dy == 0) {
         pd_game_hero_wait(game);
         return;
@@ -1207,6 +1419,7 @@ void pd_game_hero_step(pd_game_t *game, int dx, int dy) {
 void pd_game_hero_wait(pd_game_t *game) {
     if (game->phase != PD_PHASE_PLAY) return;
     game->walk_active = 0;
+    game->wand_slot = -1;
     message_simple(game, PD_MSG_NEUTRAL, PD_STR_WAIT);
     end_turn(game);
 }
@@ -1216,6 +1429,7 @@ void pd_game_hero_search(pd_game_t *game) {
     const int radius = game->hero.cls == 1 ? 2 : 1;
     if (game->phase != PD_PHASE_PLAY) return;
     game->walk_active = 0;
+    game->wand_slot = -1;
     for (int dy = -radius; dy <= radius; ++dy) {
         for (int dx = -radius; dx <= radius; ++dx) {
             const int x = game->hero.x + dx;
@@ -1273,6 +1487,7 @@ void pd_game_hero_stairs(pd_game_t *game) {
     const uint8_t tile = pd_tile_at(&game->level, game->hero.x, game->hero.y);
     if (game->phase != PD_PHASE_PLAY) return;
     game->walk_active = 0;
+    game->wand_slot = -1;
     if (pd_tile_stairs_down(tile)) {
         if (game->depth >= 25) {
             message_simple(game, PD_MSG_INFO, PD_STR_STAIRS_SEALED);
@@ -1285,16 +1500,31 @@ void pd_game_hero_stairs(pd_game_t *game) {
         if (game->depth > 1) {
             pd_game_enter_depth(game, (uint8_t)(game->depth - 1));
         } else {
-            message_simple(game, PD_MSG_INFO, PD_STR_EXIT_SEALED);
+            if (has_amulet(game)) {
+                game->phase = PD_PHASE_WON;
+                message_simple(game, PD_MSG_GOOD, PD_STR_AMULET_ASCEND);
+            } else {
+                message_simple(game, PD_MSG_INFO, PD_STR_EXIT_SEALED);
+            }
         }
         return;
     }
     message_simple(game, PD_MSG_INFO, PD_STR_NEED_STAIRS);
 }
 
+void pd_game_amulet_exit(pd_game_t *game) {
+    if (game->phase == PD_PHASE_AMULET && has_amulet(game))
+        game->phase = PD_PHASE_WON;
+}
+
+void pd_game_amulet_stay(pd_game_t *game) {
+    if (game->phase == PD_PHASE_AMULET) game->phase = PD_PHASE_PLAY;
+}
+
 void pd_game_hero_potion(pd_game_t *game) {
     int slot = -1;
     if (game->phase != PD_PHASE_PLAY) return;
+    game->wand_slot = -1;
     for (int index = 0; index < game->bag_count; ++index) {
         if (game->bag[index].kind == PD_ITEM_POTION_HEAL) {
             slot = index;
@@ -1310,11 +1540,44 @@ void pd_game_hero_potion(pd_game_t *game) {
     pd_game_bag_use(game, slot);
 }
 
+void pd_game_wand_zap(pd_game_t *game, int x, int y) {
+    const int slot = game->wand_slot;
+    int distance_x = x - game->hero.x;
+    int distance_y = y - game->hero.y;
+    if (game->phase != PD_PHASE_PLAY || slot < 0 ||
+        slot >= game->bag_count ||
+        game->bag[slot].kind != PD_ITEM_WAND_MAGIC) return;
+    if (distance_x < 0) distance_x = -distance_x;
+    if (distance_y < 0) distance_y = -distance_y;
+    const int mob = pd_in_bounds(x, y) ? mob_at(game, x, y) : -1;
+    if (mob < 0 || !game->level.visible[y * PD_MAP_W + x] ||
+        distance_x > PD_FOV_RADIUS || distance_y > PD_FOV_RADIUS) {
+        message_simple(game, PD_MSG_WARN, PD_STR_WAND_TARGET);
+        return;
+    }
+    if (game->bag[slot].tier == 0) {
+        game->wand_slot = -1;
+        message_simple(game, PD_MSG_WARN, PD_STR_WAND_EMPTY);
+        return;
+    }
+    --game->bag[slot].tier;
+    game->wand_slot = -1;
+    game->walk_active = 0;
+    effect_add(game, PD_EFFECT_ZAP, x, y,
+               (game->hero.x << 8) | game->hero.y);
+    sound_add(game, PD_SOUND_MAGIC);
+    damage_mob(game, mob, pd_rng_range(&game->roll_rng,
+               4 + game->bag[slot].level, 8 + 2 * game->bag[slot].level));
+    end_turn(game);
+}
+
 /* ---------------------------------------------------------------------- */
 /* Bag                                                                     */
 /* ---------------------------------------------------------------------- */
 
 static void bag_remove(pd_game_t *game, int slot) {
+    if (game->wand_slot == slot) game->wand_slot = -1;
+    else if (game->wand_slot > slot) --game->wand_slot;
     if (slot < 0 || slot >= game->bag_count) return;
     for (int index = slot; index + 1 < game->bag_count; ++index)
         game->bag[index] = game->bag[index + 1];
@@ -1333,6 +1596,7 @@ void pd_game_bag_use(pd_game_t *game, int slot) {
     pd_item_t item;
     pd_text_t line;
     if (slot < 0 || slot >= game->bag_count) return;
+    game->wand_slot = -1;
     item = game->bag[slot];
     switch (item.kind) {
         case PD_ITEM_POTION_HEAL: {
@@ -1340,6 +1604,10 @@ void pd_game_bag_use(pd_game_t *game, int slot) {
             game->hero.hp = (int16_t)(game->hero.hp + heal);
             if (game->hero.hp > game->hero.max_hp)
                 game->hero.hp = game->hero.max_hp;
+            if (game->hero.poison > 0) {
+                game->hero.poison = 0;
+                message_simple(game, PD_MSG_GOOD, PD_STR_POISON_CURED);
+            }
             message_num(game, PD_MSG_GOOD, PD_STR_DRINK, heal);
             sound_add(game, PD_SOUND_DRINK);
             bag_remove(game, slot);
@@ -1389,6 +1657,18 @@ void pd_game_bag_use(pd_game_t *game, int slot) {
             game->hero.armor = (int8_t)slot;
             message_item(game, PD_MSG_INFO, PD_STR_WEAR, &game->bag[slot]);
             break;
+        case PD_ITEM_AMULET:
+            game->phase = PD_PHASE_AMULET;
+            break;
+        case PD_ITEM_WAND_MAGIC:
+            if (game->bag[slot].tier == 0) {
+                message_simple(game, PD_MSG_WARN, PD_STR_WAND_EMPTY);
+            } else {
+                game->wand_slot = (int8_t)slot;
+                game->walk_active = 0;
+                message_simple(game, PD_MSG_INFO, PD_STR_WAND_AIM);
+            }
+            break;
         default:
             break;
     }
@@ -1399,6 +1679,10 @@ void pd_game_bag_drop(pd_game_t *game, int slot) {
     int x = game->hero.x;
     int y = game->hero.y;
     if (slot < 0 || slot >= game->bag_count) return;
+    if (game->bag[slot].kind == PD_ITEM_AMULET) {
+        message_simple(game, PD_MSG_WARN, PD_STR_AMULET_KEEP);
+        return;
+    }
     if (ground_at(game, x, y) >= 0) {
         if (!pd_level_nearest_open(&game->level, x, y, 2, &x, &y)) {
             message_simple(game, PD_MSG_WARN, PD_STR_NO_ROOM_DROP);
@@ -1451,6 +1735,10 @@ void pd_game_tap(pd_game_t *game, int x, int y) {
 
     if (game->phase != PD_PHASE_PLAY) return;
     if (!pd_in_bounds(x, y)) return;
+    if (game->wand_slot >= 0) {
+        pd_game_wand_zap(game, x, y);
+        return;
+    }
     if (x == game->hero.x && y == game->hero.y) {
         pd_game_hero_wait(game);
         return;
@@ -1539,9 +1827,11 @@ void pd_game_tick(pd_game_t *game) {
 #define PD_SAVE_BAG_BYTES (PD_BAG_MAX * 4)
 #define PD_SAVE_MOB_BYTES (PD_MOBS_MAX * 6)
 #define PD_SAVE_CHANGE_BYTES (PD_TILE_CHANGES_MAX * 3)
-#define PD_SAVE_BYTES                                                    \
+#define PD_SAVE_BASE_BYTES                                               \
     (PD_SAVE_HEADER + PD_SAVE_EXPLORED + PD_SAVE_GROUND_BYTES +          \
      PD_SAVE_BAG_BYTES + PD_SAVE_MOB_BYTES + PD_SAVE_CHANGE_BYTES)
+#define PD_SAVE_STATUS_BYTES 1
+#define PD_SAVE_BYTES (PD_SAVE_BASE_BYTES + PD_SAVE_STATUS_BYTES + PD_SAVE_EXPLORED)
 
 static void put_u16(uint8_t *out, uint16_t value) {
     out[0] = (uint8_t)value;
@@ -1563,7 +1853,7 @@ static uint32_t get_u32(const uint8_t *in) {
 
 int pd_game_save_summary(const uint8_t *bytes, int length,
                          pd_save_slot_t *summary) {
-    if (bytes == NULL || summary == NULL || length < PD_SAVE_BYTES ||
+    if (bytes == NULL || summary == NULL || length < PD_SAVE_BASE_BYTES ||
         get_u32(bytes) != PD_SAVE_MAGIC || bytes[12] < 1 || bytes[12] > 25 ||
         bytes[13] >= 3 || get_u16(bytes + 20) == 0)
         return 0;
@@ -1663,7 +1953,7 @@ int pd_game_serialize(const pd_game_t *game, uint8_t *out, int capacity) {
         record[1] = mob->x;
         record[2] = mob->y;
         put_u16(record + 3, (uint16_t)mob->hp);
-        record[5] = (uint8_t)(mob->awake | (mob->wander << 4));
+        record[5] = (uint8_t)((mob->awake & 15u) | (mob->wander << 4));
     }
     at += PD_SAVE_MOB_BYTES;
     for (int index = 0; index < PD_TILE_CHANGES_MAX; ++index) {
@@ -1672,17 +1962,27 @@ int pd_game_serialize(const pd_game_t *game, uint8_t *out, int capacity) {
         out[at + index * 3 + 1] = game->changes[index].y;
         out[at + index * 3 + 2] = game->changes[index].tile;
     }
+    out[PD_SAVE_BASE_BYTES] = game->hero.poison;
+    for (int index = 0; index < PD_SAVE_EXPLORED; ++index) {
+        uint8_t bits = 0;
+        for (int bit = 0; bit < 8; ++bit) {
+            const int tile = index * 8 + bit;
+            if (tile < PD_MAP_TILES && game->level.known[tile])
+                bits |= (uint8_t)(1u << bit);
+        }
+        out[PD_SAVE_BASE_BYTES + PD_SAVE_STATUS_BYTES + index] = bits;
+    }
     return PD_SAVE_BYTES;
 }
 
 int pd_game_restore(pd_game_t *game, const uint8_t *bytes, int length) {
     int at = PD_SAVE_HEADER;
-    if (length < PD_SAVE_BYTES || get_u32(bytes) != PD_SAVE_MAGIC) return 0;
+    if (length < PD_SAVE_BASE_BYTES || get_u32(bytes) != PD_SAVE_MAGIC) return 0;
     if (bytes[12] < 1 || bytes[12] > 25) return 0;
     game->run_seed = get_u32(bytes + 4);
     game->roll_rng = get_u32(bytes + 8);
     game->depth = bytes[12];
-    game->generation = bytes[38] == 1 ? 1 : 0;
+    game->generation = bytes[38] <= 3 ? bytes[38] : 0;
     game->hero.cls = bytes[13] < 3 ? bytes[13] : 0;
     game->hero.level = bytes[17] < 1 ? 1 : bytes[17];
     game->hero.xp = bytes[18];
@@ -1693,6 +1993,8 @@ int pd_game_restore(pd_game_t *game, const uint8_t *bytes, int length) {
     if (game->hero.hp > game->hero.max_hp) game->hero.hp = game->hero.max_hp;
     game->hero.gold = get_u16(bytes + 24);
     game->hero.keys = bytes[39];
+    game->hero.poison = length > PD_SAVE_BASE_BYTES ?
+                        bytes[PD_SAVE_BASE_BYTES] : 0;
     game->hero.hunger = (int16_t)get_u16(bytes + 26);
     game->turn = get_u16(bytes + 28);
     game->hero.weapon = (int8_t)bytes[30];
@@ -1708,6 +2010,7 @@ int pd_game_restore(pd_game_t *game, const uint8_t *bytes, int length) {
     game->message_total = 0;
     game->walk_active = 0;
     game->bag_selected = -1;
+    game->wand_slot = -1;
     game->potion_hint = 0;
     game->phase = PD_PHASE_PLAY;
     game->hero_from_x = game->hero.x;
@@ -1724,6 +2027,15 @@ int pd_game_restore(pd_game_t *game, const uint8_t *bytes, int length) {
     else
         pd_level_generate(&game->level, game->run_seed, game->depth);
     place_special_tiles(game);
+    if (length >= PD_SAVE_BYTES) {
+        for (int index = 0; index < PD_SAVE_EXPLORED; ++index) {
+            const uint8_t bits =
+                bytes[PD_SAVE_BASE_BYTES + PD_SAVE_STATUS_BYTES + index];
+            for (int bit = 0; bit < 8; ++bit)
+                game->level.known[index * 8 + bit] =
+                    (uint8_t)((bits >> bit) & 1u);
+        }
+    }
     pd_level_map_all(&game->level);
     for (int index = 0; index < PD_MAP_TILES; ++index)
         game->level.explored[index] = 0;
@@ -1775,7 +2087,7 @@ int pd_game_restore(pd_game_t *game, const uint8_t *bytes, int length) {
         mob->x = record[1];
         mob->y = record[2];
         mob->hp = (int16_t)get_u16(record + 3);
-        mob->awake = record[5] & 1;
+        mob->awake = record[5] & 15;
         mob->wander = (uint8_t)(record[5] >> 4);
         mob->dying = 0;
         mob->attacking = 0;

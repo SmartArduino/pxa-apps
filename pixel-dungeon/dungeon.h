@@ -76,6 +76,11 @@ static inline int pd_tile_trap(uint8_t tile) {
     return PD_TILE_KIND(tile) == PD_TILEK_TRAP;
 }
 
+static inline int pd_trap_variant(uint32_t seed, uint8_t depth, int x, int y) {
+    return (int)(pd_rng_mix(seed, (uint32_t)depth * 1031u +
+                             (uint32_t)x * 163u + (uint32_t)y * 479u) & 1u);
+}
+
 static inline int pd_tile_water(uint8_t tile) {
     const uint8_t kind = PD_TILE_KIND(tile);
     return kind >= PD_TILEK_WATER_A && kind <= PD_TILEK_WATER_D;

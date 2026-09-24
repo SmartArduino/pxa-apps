@@ -30,6 +30,9 @@ SOUNDS = [
     ('grass', 0.30),
     ('trample', 0.36),
     ('water', 0.36),
+    ('hit_magic', 0.35),
+    ('lightning', 0.50),
+    ('blast', 0.55),
 ]
 
 

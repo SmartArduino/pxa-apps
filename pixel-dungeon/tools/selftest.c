@@ -100,6 +100,7 @@ static void test_menus_and_slots(void) {
 static void test_back_navigation(void) {
     pd_game_t game;
     memset(&game, 0, sizeof(game));
+    game.wand_slot = -1;
     game.phase = PD_PHASE_TITLE;
     check(!pd_input_back(&game), "Back exits from the title page");
     game.phase = PD_PHASE_PLAY;
@@ -259,6 +260,291 @@ static void test_mob_death(void) {
           "mob never revives after death animation");
 }
 
+static void test_amulet_quest(void) {
+    pd_game_t game;
+    pd_game_t restored;
+    pd_layout_t layout;
+    uint8_t save[4096];
+    int amulet_slot = -1;
+    pd_game_reset(&game, 325);
+    pd_game_start_run(&game, 0);
+    pd_game_enter_depth(&game, 25);
+    for (int index = 0; index < PD_MOBS_MAX; ++index)
+        game.mobs[index].type = 0xFF;
+    game.hero.hp = game.hero.max_hp = 3000;
+    game.hero.str = 100;
+    game.mobs[0].type = 9;
+    game.mobs[0].hp = 1;
+    game.mobs[0].x = game.hero.x + 1;
+    game.mobs[0].y = game.hero.y;
+    game.level.tiles[game.mobs[0].y * PD_MAP_W + game.mobs[0].x] =
+        game.level.floor_tile;
+    for (int attempt = 0; attempt < 50 && game.kills == 0; ++attempt)
+        pd_game_hero_step(&game, 1, 0);
+    check(game.kills == 1 && game.phase == PD_PHASE_PLAY,
+          "defeating Yog-Dzewa does not end the adventure before pickup");
+    for (int index = 0; index < game.ground_count; ++index)
+        if (game.ground[index].item.kind == PD_ITEM_AMULET)
+            amulet_slot = index;
+    check(amulet_slot >= 0,
+          "the final boss drops the Amulet of Yendor");
+    if (amulet_slot < 0) return;
+    for (int frame = 0; frame < 22; ++frame) pd_game_tick(&game);
+    pd_game_hero_step(&game, 1, 0);
+    check(game.phase == PD_PHASE_AMULET && game.bag_count > 0 &&
+          game.bag[game.bag_count - 1].kind == PD_ITEM_AMULET,
+          "picking up the amulet opens the original ending choice");
+    amulet_slot = game.bag_count - 1;
+    pd_game_amulet_stay(&game);
+    check(game.phase == PD_PHASE_PLAY,
+          "the hero can keep exploring with the amulet");
+    pd_game_bag_drop(&game, amulet_slot);
+    check(game.bag_count > amulet_slot &&
+          game.bag[amulet_slot].kind == PD_ITEM_AMULET,
+          "the unique amulet cannot be discarded");
+    pd_game_bag_use(&game, amulet_slot);
+    check(game.phase == PD_PHASE_AMULET,
+          "using the amulet reopens the ending choice");
+
+    const int length = pd_game_serialize(&game, save, sizeof(save));
+    const int restored_ok = length > 0 &&
+                            pd_game_restore(&restored, save, length);
+    check(restored_ok,
+          "amulet remains in the inventory after restoring a save");
+    if (!restored_ok) return;
+    pd_game_enter_depth(&restored, 24);
+    check(restored.hero.x == restored.level.exit_x &&
+          restored.hero.y == restored.level.exit_y,
+          "ascending lands at the previous floor's down staircase");
+    pd_game_enter_depth(&restored, 25);
+    int bosses = 0;
+    for (int index = 0; index < PD_MOBS_MAX; ++index)
+        if (restored.mobs[index].type == 9) ++bosses;
+    check(bosses == 0, "the boss does not respawn after amulet pickup");
+    pd_game_enter_depth(&restored, 1);
+    restored.hero.x = restored.level.entrance_x;
+    restored.hero.y = restored.level.entrance_y;
+    pd_game_hero_stairs(&restored);
+    check(restored.phase == PD_PHASE_WON,
+          "the hero can escape through the surface stairs with the amulet");
+
+    for (int profile = 0; profile < 3; ++profile) {
+        const int width = profile == 0 ? 176 : profile == 1 ? 296 : 412;
+        const int height = profile == 0 ? 176 : profile == 1 ? 240 : 412;
+        pd_layout_build(&layout, width, height, 8, 10, 8, 10);
+        pd_layout_fit_display_shape(&layout, 2, NULL);
+        check(layout.victory_back.y > height / 2 &&
+              layout.victory_back.y + layout.victory_back.h < height,
+              "round-screen victory button sits below the statistics");
+        game.phase = PD_PHASE_AMULET;
+        tap_rect(&game, &layout, &layout.amulet_stay);
+        check(game.phase == PD_PHASE_PLAY,
+              "the stay button works on small and round screens");
+        game.phase = PD_PHASE_AMULET;
+        tap_rect(&game, &layout, &layout.amulet_exit);
+        check(game.phase == PD_PHASE_WON,
+              "the exit button ends the adventure");
+        tap_rect(&game, &layout, &layout.victory_back);
+        check(game.phase == PD_PHASE_RANKINGS,
+              "the victory button opens rankings on each screen shape");
+    }
+}
+
+static void test_victory_numbers(void) {
+    const pd_string_id_t labels[] = {
+        PD_STR_STAT_DEPTH, PD_STR_STAT_LEVEL, PD_STR_STAT_KILLS,
+        PD_STR_STAT_GOLD, PD_STR_STAT_TURNS, PD_STR_STAT_DEEPEST,
+    };
+    const int values[] = {25, 19, 130, 65535, 5722, 25};
+    for (int language = 0; language < 2; ++language) {
+        pd_strings_set_language((uint8_t)language);
+        for (int index = 0; index < 6; ++index) {
+            char text[48];
+            char digits[12];
+            pd_str_format(text, sizeof(text), labels[index], values[index]);
+            snprintf(digits, sizeof(digits), "%d", values[index]);
+            check(strstr(text, digits) != NULL && strchr(text, '%') == NULL,
+                  "victory stats display values rather than format tokens");
+        }
+    }
+    pd_strings_set_language(0);
+}
+
+static void test_search_poison_and_magic(void) {
+    pd_game_t game;
+    pd_game_t restored;
+    uint8_t save[1024];
+    int trap_x = -1;
+    int trap_y = -1;
+    const int neighbors[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+    pd_game_reset(&game, 4919);
+    pd_game_start_run(&game, 0);
+    pd_game_enter_depth(&game, 2);
+    for (int index = 0; index < PD_MOBS_MAX; ++index)
+        game.mobs[index].type = 0xFF;
+    for (int y = 1; y < PD_MAP_H - 1 && trap_x < 0; ++y)
+        for (int x = 1; x < PD_MAP_W - 1 && trap_x < 0; ++x) {
+            if (!pd_tile_trap(pd_tile_at(&game.level, x, y))) continue;
+            for (int neighbor = 0; neighbor < 4; ++neighbor) {
+                const int hero_x = x + neighbors[neighbor][0];
+                const int hero_y = y + neighbors[neighbor][1];
+                if (!pd_tile_walkable(pd_tile_at(&game.level,
+                                                hero_x, hero_y))) continue;
+                game.hero.x = (uint8_t)hero_x;
+                game.hero.y = (uint8_t)hero_y;
+                trap_x = x;
+                trap_y = y;
+                break;
+            }
+        }
+    check(trap_x >= 0, "generated floors contain searchable hidden traps");
+    if (trap_x < 0) return;
+    const int trap_index = trap_y * PD_MAP_W + trap_x;
+    pd_level_update_fov(&game.level, game.hero.x, game.hero.y);
+    check(!game.level.known[trap_index], "traps start hidden");
+    const uint16_t turn_before_search = game.turn;
+    pd_game_hero_search(&game);
+    check(game.level.known[trap_index] &&
+          game.turn == turn_before_search + 2,
+          "intentional search reveals traps and consumes two turns");
+
+    game.hero.hp = 10;
+    game.hero.poison = 3;
+    pd_game_hero_wait(&game);
+    check(game.hero.hp == 9 && game.hero.poison == 2,
+          "poison deals unarmored damage over time");
+    int potion_slot = -1;
+    for (int index = 0; index < game.bag_count; ++index)
+        if (game.bag[index].kind == PD_ITEM_POTION_HEAL)
+            potion_slot = index;
+    check(potion_slot >= 0, "starting inventory contains a healing potion");
+    if (potion_slot >= 0) {
+        pd_game_bag_use(&game, potion_slot);
+        check(game.hero.poison == 0, "healing potion cures poison");
+    }
+
+    const int wand_slot = game.bag_count++;
+    game.bag[wand_slot] = (pd_item_t){PD_ITEM_WAND_MAGIC, 3, 0, 0};
+    game.mobs[0].type = 0;
+    game.mobs[0].hp = 30;
+    game.mobs[0].x = (uint8_t)trap_x;
+    game.mobs[0].y = (uint8_t)trap_y;
+    game.level.visible[trap_index] = 1;
+    pd_game_bag_use(&game, wand_slot);
+    check(game.wand_slot == wand_slot,
+          "using a charged wand enters targeting mode");
+    pd_game_tap(&game, trap_x, trap_y);
+    check(game.wand_slot == -1 && game.bag[wand_slot].tier == 2 &&
+          game.mobs[0].hp < 30,
+          "magic missile damages a visible enemy and spends one charge");
+    game.mobs[0].type = 0xFF;
+    for (int turn = 0; turn < 12; ++turn) pd_game_hero_wait(&game);
+    check(game.bag[wand_slot].tier == 3,
+          "wand charges regenerate over turns");
+
+    game.hero.poison = 4;
+    const int length = pd_game_serialize(&game, save, sizeof(save));
+    check(length > 0 && length <= (int)sizeof(save),
+          "new status and discovery data fit the Storage value limit");
+    check(pd_game_restore(&restored, save, length) &&
+          restored.hero.poison == 4 && restored.level.known[trap_index],
+          "poison and discovered traps survive save and restore");
+    const int old_length = length - 1 - PD_MAP_TILES / 8;
+    check(pd_game_restore(&restored, save, old_length) &&
+          restored.hero.poison == 0 && !restored.level.known[trap_index],
+          "older save blobs remain compatible");
+}
+
+static void test_trap_fx_and_new_mobs(void) {
+    pd_game_t game;
+    for (int variant = 0; variant < 2; ++variant) {
+        pd_game_reset(&game, 3901);
+        pd_game_start_run(&game, 0);
+        for (int index = 0; index < PD_MOBS_MAX; ++index)
+            game.mobs[index].type = 0xFF;
+        const int trap_x = game.hero.x + 1;
+        const int trap_y = game.hero.y;
+        for (uint32_t seed = 1; seed < 100; ++seed)
+            if (pd_trap_variant(seed, game.depth, trap_x, trap_y) == variant) {
+                game.run_seed = seed;
+                break;
+            }
+        game.level.tiles[trap_y * PD_MAP_W + trap_x] =
+            PD_TILE(game.level.theme, PD_TILEK_TRAP);
+        game.hero.max_hp = game.hero.hp = 100;
+        pd_game_hero_step(&game, 1, 0);
+        int effect_found = 0;
+        for (int index = 0; index < PD_EFFECTS_MAX; ++index)
+            if (game.effects[index].ttl && game.effects[index].kind ==
+                (variant == 0 ? PD_EFFECT_TRAP_DART : PD_EFFECT_TRAP_BLAST))
+                effect_found = 1;
+        check(effect_found && game.hero.hp < 100 &&
+              !pd_tile_trap(pd_tile_at(&game.level, trap_x, trap_y)),
+              "dart and blast traps have separate effects and consume tiles");
+        if (variant == 0)
+            check(game.hero.poison > 0, "poison darts apply poison");
+    }
+
+    pd_game_reset(&game, 3007);
+    pd_game_start_run(&game, 0);
+    for (int index = 0; index < PD_MOBS_MAX; ++index)
+        game.mobs[index].type = 0xFF;
+    game.hero.max_hp = game.hero.hp = 100;
+    for (int dx = 1; dx <= 3; ++dx)
+        game.level.tiles[game.hero.y * PD_MAP_W + game.hero.x + dx] =
+            game.level.floor_tile;
+    pd_level_update_fov(&game.level, game.hero.x, game.hero.y);
+    game.mobs[0].type = 10;
+    game.mobs[0].hp = 22;
+    game.mobs[0].x = game.hero.x + 2;
+    game.mobs[0].y = game.hero.y;
+    const int wand_slot = game.bag_count++;
+    game.bag[wand_slot] = (pd_item_t){PD_ITEM_WAND_MAGIC, 3, 0, 0};
+    pd_game_bag_use(&game, wand_slot);
+    pd_game_wand_zap(&game, game.mobs[0].x, game.mobs[0].y);
+    int swarms = 0;
+    int clone_found = 0;
+    for (int index = 0; index < PD_MOBS_MAX; ++index)
+        if (game.mobs[index].type == 10) {
+            ++swarms;
+            if (game.mobs[index].awake & 4u) clone_found = 1;
+        }
+    check(swarms == 2 && clone_found,
+          "surviving swarms split into a non-XP clone");
+    uint8_t save[1024];
+    const int length = pd_game_serialize(&game, save, sizeof(save));
+    pd_game_t restored;
+    check(length > 0 && pd_game_restore(&restored, save, length),
+          "split swarm saves restore");
+    clone_found = 0;
+    for (int index = 0; index < PD_MOBS_MAX; ++index)
+        if (restored.mobs[index].type == 10 &&
+            (restored.mobs[index].awake & 4u)) clone_found = 1;
+    check(clone_found, "clone XP flag survives save and restore");
+
+    pd_game_reset(&game, 3007);
+    pd_game_start_run(&game, 0);
+    for (int index = 0; index < PD_MOBS_MAX; ++index)
+        game.mobs[index].type = 0xFF;
+    game.hero.max_hp = game.hero.hp = 100;
+    for (int dx = 1; dx <= 3; ++dx)
+        game.level.tiles[game.hero.y * PD_MAP_W + game.hero.x + dx] =
+            game.level.floor_tile;
+    pd_level_update_fov(&game.level, game.hero.x, game.hero.y);
+    game.mobs[0].type = 11;
+    game.mobs[0].hp = 20;
+    game.mobs[0].x = game.hero.x + 3;
+    game.mobs[0].y = game.hero.y;
+    pd_game_hero_wait(&game);
+    int lightning_found = 0;
+    for (int index = 0; index < PD_EFFECTS_MAX; ++index)
+        if (game.effects[index].ttl &&
+            game.effects[index].kind == PD_EFFECT_LIGHTNING)
+            lightning_found = 1;
+    check(lightning_found && game.mobs[0].x == game.hero.x + 3,
+          "DM-100 fires at range instead of walking into melee");
+}
+
 static void test_mob_movement(void) {
     pd_game_t game;
     pd_game_reset(&game, 194);
@@ -392,12 +678,12 @@ static void test_save_restore(void) {
           "truncated slot previews are rejected");
     game.hero.keys = 2;
     length = pd_game_serialize(&game, blob, sizeof(blob));
-    check(blob[38] == 1, "new saves record their generator version");
+    check(blob[38] == 3, "new saves record their generator version");
     check(length <= 2048, "save fits the Storage value limit");
     memset(&restored, 0, sizeof(restored));
     check(pd_game_restore(&restored, blob, length), "restore accepts the blob");
     check(restored.depth == game.depth, "depth survives a save");
-    check(restored.generation == 1, "new saves retain their generator version");
+    check(restored.generation == 3, "new saves retain their generator version");
     check(restored.hero.hp == game.hero.hp, "hp survives a save");
     check(restored.hero.max_hp == game.hero.max_hp, "max hp survives a save");
     check(restored.hero.x == game.hero.x && restored.hero.y == game.hero.y,
@@ -412,6 +698,14 @@ static void test_save_restore(void) {
     check(memcmp(restored.level.explored, game.level.explored,
                  PD_MAP_TILES) == 0,
           "explored tiles survive a save");
+    blob[38] = 2;
+    check(pd_game_restore(&restored, blob, length) &&
+          restored.generation == 2,
+          "previous generator saves retain their current floor");
+    pd_game_enter_depth(&restored, 6);
+    check(restored.generation == 3,
+          "previous generator saves upgrade on the next floor");
+    blob[38] = 3;
     game.generation = 0;
     pd_level_generate_legacy(&game.level, game.run_seed, game.depth);
     game.hero.x = game.level.entrance_x;
@@ -1265,6 +1559,10 @@ int main(void) {
     test_menus_and_slots();
     test_generation();
     test_mob_death();
+    test_amulet_quest();
+    test_victory_numbers();
+    test_search_poison_and_magic();
+    test_trap_fx_and_new_mobs();
     test_mob_movement();
     test_spawn_and_fov();
     test_play_session();

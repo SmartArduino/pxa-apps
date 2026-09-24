@@ -88,16 +88,27 @@ experience value and the amount needed for the next level.
 * Normal steps have no dust burst; walking through tall grass tramples it to
   short grass, releases leaves and plays the original grass sounds.
 * Turn-based movement and combat with accuracy, damage, armour and XP.
-* The XP bar shows the full fraction when it fits legibly, otherwise the
-  current XP alone; tap the portrait for the full current/next-level value.
-  One-, two- and three-digit levels stay centered inside the badge.
+* The slim XP bar shows progress without a number; tap the portrait for the
+  current/next-level value. One-, two- and three-digit levels stay centered
+  inside the badge.
 * Hunger uses the original warning/starvation buff icons and messages. Tap the
   portrait for remaining satiety out of 320; the original shows the status
   icon and its description, but not a numeric satiety meter.
-* Ten mobs taken from the original (rat, gnoll, crab, skeleton, bat, snake,
-  spinner, slime, golem, Yog-Dzewa) with hunting AI, wake-on-sight and
-  wander-when-idle.
-* Loot: potions, scrolls, weapons and armour with upgrade levels, gold, food.
+* Hidden dart and explosive traps use the original trap symbols. Intentional
+  search checks nearby visible cells (two tiles for the rogue), reveals traps
+  and costs two turns plus extra hunger; merely passing by has a lower chance
+  to notice them. Dart traps poison the hero, while explosions also hit nearby
+  monsters. Triggering either plays a distinct particle effect and sound.
+  Revealed traps remain known after saving.
+* Twelve mobs use original sprites: the original ten plus splitting swarms of
+  flies and ranged-lightning DM-100s. Swarm clones do not award extra XP.
+  Existing monsters still hunt, wake on sight and wander when idle.
+* Loot: potions, scrolls, weapons and armour with upgrade levels, gold, food,
+  and rechargeable magic-missile wands. Equip weapons and armour in the pack;
+  using a wand enters targeting mode for a visible enemy, and charges recover
+  over time. Magic missiles stream white particles and burst on impact;
+  poison, darts, blasts and lightning have distinct particles. Healing potions
+  cure poison from spider attacks and dart traps.
 * Five independent save slots; the old `pixel-dungeon.save` key remains slot 1.
   On compact displays the save list pages in two or three touch-sized rows.
   Finished runs are recorded in a separate five-entry leaderboard.
@@ -106,12 +117,21 @@ experience value and the amount needed for the next level.
   retain their original generator and map layout.
 * A potion merchant appears on region-transition depths (6, 11, 16, 21),
   charging gold when the player chooses Buy.
-* Hunger, natural regeneration, level-ups and a 25 floor descent ending in the
-  Yog-Dzewa fight.
+* The five original region tile themes (sewers, prison, caves, city and halls)
+  now include deterministic garden, flooded and ember-filled room variants on
+  newly generated non-boss floors. Previous saves keep their current floor
+  until they change depth.
+* Hunger, natural regeneration and level-ups. Yog-Dzewa drops the Amulet of
+  Yendor on floor 25. Picking it up offers a choice: end the run or continue
+  exploring. The Amulet can be used again to finish, or carried back to the
+  surface to escape. Ascending places the hero at the lower staircase of each
+  regenerated floor. Victory records the result and leads to the rankings.
 * Field of view with remembered terrain, auto-walk (tap a distant tile),
   drag-to-pan map, searching with a staggered blue scan effect and quick potion
-  use. Search consumes two turns and extra hunger, finds visible nearby traps;
-  the rogue checks a wider radius. Walking can passively notice traps.
+  use. Unexplored and off-screen cells are skipped by the renderer; shared
+  sprite atlases are uploaded once, rather than reloaded by visibility. With
+  music active, idle redraws run less often than movement and effects while
+  audio mixing keeps its normal cadence.
 * Class-specific hero frames switch to the original outfit for the equipped
   armor tier (0–4); the original status-panel art tracks the same outfit.
 * Defeat keeps the final map visible beneath the original GAME OVER banner,

@@ -82,6 +82,7 @@ ITEM_CELLS = {
     'POTION_HEAL': (0, 22),
     'POTION_STRENGTH': (3, 22),
     'RATION': (5, 27),
+    'WAND_MAGIC_MISSILE': (0, 13),
 }
 
 # Film frame dimensions and indices from SPD's HeroSprite and MobSprite
@@ -97,6 +98,8 @@ MOB_LAYOUT = {
     'SLIME': (14, 12, (0, 1, 2, 3, 4, 5, 7)),
     'GOLEM': (17, 19, (0, 1, 2, 3, 6, 9, 13)),
     'YOG': (20, 19, (0, 1, 0, 1, 0, 7, 9)),
+    'SWARM': (16, 16, (0, 1, 2, 3, 6, 10, 11)),
+    'DM100': (16, 14, (0, 1, 6, 7, 2, 10, 11)),
 }
 MOBS = [
     ('RAT', 'rat'),
@@ -109,6 +112,8 @@ MOBS = [
     ('SLIME', 'slime'),
     ('GOLEM', 'golem'),
     ('YOG', 'yog'),
+    ('SWARM', 'swarm'),
+    ('DM100', 'dm100'),
 ]
 HERO_FRAMES = (0, 1, 2, 4, 6)
 HERO_TIERS = 5
@@ -243,6 +248,7 @@ UI_SLICES = [
     ('TITLE_JOURNAL', 'interfaces/icons.png', 136, 0, 17, 15),
     ('BUFF_HUNGRY', 'interfaces/buffs.png', 35, 0, 7, 7),
     ('BUFF_STARVING', 'interfaces/buffs.png', 42, 0, 7, 7),
+    ('BUFF_POISON', 'interfaces/buffs.png', 21, 0, 7, 7),
 ]
 
 
@@ -328,6 +334,9 @@ def load_sprites(spd):
             animation = ('IDLE', 'IDLE', 'RUN', 'RUN', 'ATTACK', 'DIE', 'DIE')[position]
             out.append(('%s_%s' % (label, animation),
                         film_frame(image, index, width, height)))
+    features = Image.open(spd / 'environment/terrain_features.png').convert('RGBA')
+    out.append(('TRAP_DART', cell(features, 3, 5)))
+    out.append(('TRAP_BLAST', cell(features, 1, 4)))
     items = Image.open(spd / 'sprites/items.png').convert('RGBA')
     for name, (x, y) in ITEM_CELLS.items():
         out.append(('ITEM_' + name, cell(items, x, y)))
@@ -510,7 +519,7 @@ def emit_header(tile_count, sprite_count):
     for slot, (name, _) in enumerate(SPRITES):
         if slot == 0 or SPRITES[slot - 1][0] != name:
             sprite_enum.append('    /* %s */' % name)
-        if name.startswith('ITEM_'):
+        if name.startswith(('ITEM_', 'TRAP_')):
             sprite_enum.append('    PD_SPRITE_%s = %d,' % (name, slot))
         else:
             sprite_enum.append('    PD_SPRITE_%s_%d = %d,' % (name, slot, slot))

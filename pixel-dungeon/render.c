@@ -467,9 +467,28 @@ static uint8_t animated_tile(uint8_t tile) {
 
 static uint8_t visible_tile(const pd_level_t *level, int x, int y) {
     uint8_t tile = level->tiles[y * PD_MAP_W + x];
-    if (pd_tile_trap(tile) && !level->known[y * PD_MAP_W + x])
+    if (pd_tile_trap(tile))
         return level->floor_tile;
     return tile;
+}
+
+static int world_cell_on_screen(const pd_layout_t *layout, int x, int y) {
+    if (x + g_world_cell <= 0 || y + g_world_cell <= 0 ||
+        x >= layout->width || y >= layout->height) return 0;
+    if (layout->display_shape != 2) return 1;
+    const int center_x = layout->width / 2;
+    const int center_y = layout->height / 2;
+    const int radius = (layout->width < layout->height ?
+                        layout->width : layout->height) / 2;
+    const int nearest_x = center_x < x ? x :
+                          center_x > x + g_world_cell ? x + g_world_cell :
+                          center_x;
+    const int nearest_y = center_y < y ? y :
+                          center_y > y + g_world_cell ? y + g_world_cell :
+                          center_y;
+    const int dx = nearest_x - center_x;
+    const int dy = nearest_y - center_y;
+    return dx * dx + dy * dy <= radius * radius;
 }
 
 static void draw_map(const pd_game_t *game, const pd_layout_t *layout,
@@ -497,6 +516,7 @@ static void draw_map(const pd_game_t *game, const pd_layout_t *layout,
             if (PD_TILE_KIND(tile) == PD_TILEK_VOID) continue;
             x = origin_x + tile_x * g_world_cell;
             y = origin_y + tile_y * g_world_cell;
+            if (!world_cell_on_screen(layout, x, y)) continue;
             if (pd_tile_wall(tile)) {
                 if (!pd_wall_exposed(level, tile_x, tile_y)) continue;
                 face = pd_wall_face(level, tile_x, tile_y);
@@ -517,6 +537,12 @@ static void draw_map(const pd_game_t *game, const pd_layout_t *layout,
                         PD_TILEK_WATER_SHORE_0 +
                         pd_water_shore(level, tile_x, tile_y)));
             }
+            if (pd_tile_trap(pd_tile_at(level, tile_x, tile_y)) &&
+                level->known[tile_y * PD_MAP_W + tile_x])
+                sprite_add(pd_trap_variant(game->run_seed, game->depth,
+                           tile_x, tile_y) == 0 ? PD_SPRITE_TRAP_DART :
+                           PD_SPRITE_TRAP_BLAST, x, y,
+                           g_world_cell, g_world_cell);
             if (!level->visible[tile_y * PD_MAP_W + tile_x])
                 shade_add(x, y);
         }
@@ -546,14 +572,14 @@ static void draw_upper_walls(const pd_game_t *game, const pd_layout_t *layout,
                 (pd_tile_wall(pd_tile_at(level, tile_x, tile_y + 1)) &&
                  !pd_wall_exposed(level, tile_x, tile_y + 1))) continue;
             upper = pd_wall_upper(level, tile_x, tile_y);
+            const int screen_x = layout->map_x + tile_x * g_world_cell - camera_x;
+            const int screen_y = layout->map_y + tile_y * g_world_cell - camera_y;
+            if (!world_cell_on_screen(layout, screen_x, screen_y)) continue;
             if (upper >= 0)
-                wall_add(layout->map_x + tile_x * g_world_cell - camera_x,
-                         layout->map_y + tile_y * g_world_cell - camera_y,
-                         (uint8_t)upper);
+                wall_add(screen_x, screen_y, (uint8_t)upper);
             if (PD_TILE_KIND(pd_tile_at(level, tile_x, tile_y + 1)) ==
                 PD_TILEK_HIGH_GRASS)
-                overlay_add(layout->map_x + tile_x * g_world_cell - camera_x,
-                            layout->map_y + tile_y * g_world_cell - camera_y,
+                overlay_add(screen_x, screen_y,
                             PD_TILE(level->theme,
                                     terrain_alt(tile_x, tile_y + 1) ?
                                     PD_TILEK_HIGH_GRASS_OVERHANG_ALT :
@@ -641,7 +667,7 @@ static void draw_mobs(const pd_game_t *game, const pd_layout_t *layout,
             frame = (uint8_t)(PD_MOB_FRAME_DIE + (mob->dying > 10 ? 0 : 1));
         } else if (mob->attacking > 0) {
             frame = PD_MOB_FRAME_ATTACK;
-        } else if (mob->awake) {
+        } else if (mob->awake & 1u) {
             frame = (uint8_t)(PD_MOB_FRAME_RUN + (g_now_ms / 150u) % 2u);
         } else {
             frame = (uint8_t)(PD_MOB_FRAME_IDLE + (g_now_ms / 420u) % 2u);
@@ -732,6 +758,123 @@ static void draw_effects(const pd_game_t *game, const pd_layout_t *layout,
             draw_search_square(x + inset, y + inset, size, age / 4);
             continue;
         }
+        if (effect->kind == PD_EFFECT_ZAP) {
+            const int age = 20 - effect->ttl;
+            const int start_x = layout->map_x +
+                ((effect->value >> 8) & 0xff) * g_world_cell - camera_x +
+                8 * layout->zoom;
+            const int start_y = layout->map_y +
+                (effect->value & 0xff) * g_world_cell - camera_y +
+                8 * layout->zoom;
+            const int target_x = x + 8 * layout->zoom;
+            const int target_y = y + 8 * layout->zoom;
+            if (age < 12) {
+                for (int trail = 4; trail >= 0; --trail) {
+                    const int progress = age - trail * 2;
+                    if (progress < 0) continue;
+                    const int center_x = start_x +
+                        (target_x - start_x) * progress / 12;
+                    const int center_y = start_y +
+                        (target_y - start_y) * progress / 12;
+                    const int size = (trail == 0 ? 3 : trail < 3 ? 2 : 1) *
+                                     layout->zoom;
+                    draw_rect(center_x - size / 2, center_y - size / 2,
+                              size, size, trail == 0 ? rgb565(255, 255, 255) :
+                              rgb565(174, 205, 255));
+                }
+            } else {
+                static const int8_t rays[8][2] = {
+                    {1, 0}, {-1, 0}, {0, 1}, {0, -1},
+                    {1, 1}, {-1, 1}, {1, -1}, {-1, -1}};
+                const int distance = (age - 11) * layout->zoom;
+                for (int ray = 0; ray < 8; ++ray)
+                    draw_rect(target_x + rays[ray][0] * distance,
+                              target_y + rays[ray][1] * distance,
+                              layout->zoom, layout->zoom,
+                              ray & 1 ? rgb565(158, 195, 255) :
+                                        rgb565(255, 255, 255));
+            }
+            continue;
+        }
+        if (effect->kind == PD_EFFECT_LIGHTNING) {
+            const int age = 20 - effect->ttl;
+            const int start_x = layout->map_x +
+                ((effect->value >> 8) & 0xff) * g_world_cell - camera_x +
+                8 * layout->zoom;
+            const int start_y = layout->map_y +
+                (effect->value & 0xff) * g_world_cell - camera_y +
+                8 * layout->zoom;
+            const int target_x = x + 8 * layout->zoom;
+            const int target_y = y + 8 * layout->zoom;
+            if (age < 12) {
+                int previous_x = start_x;
+                int previous_y = start_y;
+                for (int segment = 1; segment <= 6; ++segment) {
+                    const int jitter = segment == 6 ? 0 :
+                        ((segment * 7 + age * 3) % 5 - 2) * layout->zoom;
+                    const int next_x = start_x +
+                        (target_x - start_x) * segment / 6 + jitter;
+                    const int next_y = start_y +
+                        (target_y - start_y) * segment / 6 - jitter;
+                    const int left = previous_x < next_x ? previous_x : next_x;
+                    const int top = previous_y < next_y ? previous_y : next_y;
+                    const uint16_t color = segment & 1 ?
+                        rgb565(245, 252, 183) : rgb565(183, 222, 255);
+                    draw_rect(left, previous_y,
+                              (previous_x > next_x ? previous_x - next_x :
+                               next_x - previous_x) + layout->zoom,
+                              layout->zoom, color);
+                    draw_rect(next_x, top, layout->zoom,
+                              (previous_y > next_y ? previous_y - next_y :
+                               next_y - previous_y) + layout->zoom, color);
+                    previous_x = next_x;
+                    previous_y = next_y;
+                }
+            }
+            continue;
+        }
+        if (effect->kind == PD_EFFECT_TRAP_BLAST) {
+            const int age = 20 - effect->ttl;
+            if (age < 15) {
+                const int radius = (age + 1) * layout->zoom;
+                const int center_x = x + g_world_cell / 2;
+                const int center_y = y + g_world_cell / 2;
+                const uint16_t color = age < 6 ? rgb565(255, 245, 170) :
+                                       rgb565(236, 112, 45);
+                draw_rect(center_x - radius, center_y - radius,
+                          radius * 2, layout->zoom, color);
+                draw_rect(center_x - radius, center_y + radius,
+                          radius * 2, layout->zoom, color);
+                draw_rect(center_x - radius, center_y - radius,
+                          layout->zoom, radius * 2, color);
+                draw_rect(center_x + radius, center_y - radius,
+                          layout->zoom, radius * 2, color);
+            }
+            continue;
+        }
+        if (effect->kind == PD_EFFECT_TRAP_DART ||
+            effect->kind == PD_EFFECT_POISON ||
+            effect->kind == PD_EFFECT_SWARM) {
+            const int age = 20 - effect->ttl;
+            if (age < 16) {
+                const uint16_t color = effect->kind == PD_EFFECT_TRAP_DART ?
+                    rgb565(140, 225, 95) : effect->kind == PD_EFFECT_POISON ?
+                    rgb565(94, 185, 68) : rgb565(173, 198, 124);
+                for (int particle = 0; particle < 6; ++particle) {
+                    const int drift = ((particle * 7 + effect->x * 3 +
+                                        effect->y) % 9) - 4;
+                    const int horizontal = effect->kind == PD_EFFECT_TRAP_DART ?
+                        (particle & 1 ? 1 : -1) * age / 2 :
+                        drift * age / 5;
+                    const int vertical = effect->kind == PD_EFFECT_TRAP_DART ?
+                        (particle / 2 - 1) * age / 3 : -age / 2;
+                    draw_rect(x + (8 + horizontal) * layout->zoom,
+                              y + (8 + vertical) * layout->zoom,
+                              layout->zoom, layout->zoom, color);
+                }
+            }
+            continue;
+        }
         if (effect->kind == PD_EFFECT_LEAF) {
             const int age = 40 - effect->ttl;
             const uint32_t seed = (uint32_t)(effect->x * 73 + effect->y * 149);
@@ -804,6 +947,13 @@ static void draw_hud(const pd_game_t *game, const pd_layout_t *layout) {
         const int buff_size = pane_w > 82 ? 11 : 7;
         ui_sprite(hero->hunger == 0 ? PD_UI_BUFF_STARVING : PD_UI_BUFF_HUNGRY,
                   pane_x + 33 * pane_w / 82,
+                  pane_y + 12 * pane_h / 38,
+                  buff_size, buff_size);
+    }
+    if (hero->poison > 0) {
+        const int buff_size = pane_w > 82 ? 11 : 7;
+        ui_sprite(PD_UI_BUFF_POISON,
+                  pane_x + 43 * pane_w / 82,
                   pane_y + 12 * pane_h / 38,
                   buff_size, buff_size);
     }
@@ -956,46 +1106,69 @@ static void fill_screen(const pd_layout_t *layout, uint16_t color) {
     draw_rect(0, 0, layout->width, layout->height, color);
 }
 
-static void draw_status_screen(const pd_game_t *game, const pd_layout_t *layout,
-                               int won) {
+static void draw_victory_stat(pd_string_id_t label, int value,
+                              int x, int y, uint16_t color) {
     char text[48];
-    char *out;
-    const uint16_t heading = won ? rgb565(250, 214, 96)
-                                 : rgb565(255, 96, 88);
+    pd_str_format(text, sizeof(text), label, value);
+    text_center(x, y, text, color, 1);
+}
+
+static void draw_victory_screen(const pd_game_t *game,
+                                const pd_layout_t *layout) {
+    const int available_h = layout->height - layout->safe_top -
+                            layout->safe_bottom;
+    const int compact = available_h < 210;
+    const int center = layout->width / 2;
+    const int title_y = layout->safe_top + (compact ?
+                        layout->display_shape == 2 ? -8 : 3 :
+                        layout->height >= 300 ? 20 : 12);
+    const int title_scale = compact ? 2 : 3;
+    const int amulet_size = compact ? 18 : layout->height < 300 ? 28 : 32;
+    const int amulet_y = title_y + 16 * title_scale + 2;
+    const int line_h = compact ? 16 : layout->height < 300 ? 20 : 22;
+    const int space = layout->victory_back.y - amulet_y - amulet_size -
+                      3 * line_h;
+    const int stats_top = amulet_y + amulet_size +
+                          (space > 8 ? space / 2 : 4);
+    const int column = layout->width < 200 ? 40 : layout->width / 4;
     const uint16_t ink = rgb565(228, 228, 234);
-    fill_screen(layout, rgb565(12, 10, 16));
-    text_center(layout->width / 2, 34, won ? pd_str(PD_STR_WIN_TITLE) : pd_str(PD_STR_DEAD_TITLE), heading, 3);
-    if (won) {
-        sprite_add(PD_SPRITE_ITEM_AMULET, layout->width / 2 - 16, 66, 32, 32);
-    } else {
-        sprite_add(PD_SPRITE_MOB(3, PD_MOB_FRAME_DIE + 1),
-                   layout->width / 2 - 16, 66, 32, 32);
-    }
-    out = text;
-    out = append_text(out, pd_str(PD_STR_STAT_DEPTH));
-    out = append_int(out, game->depth);
-    *out = '\0';
-    text_center(layout->width / 2, 112, text, ink, 1);
-    out = text;
-    out = append_text(out, pd_str(PD_STR_STAT_LEVEL_KILLS));
-    out = append_int(out, game->hero.level);
-    out = append_text(out, "   Kills ");
-    out = append_int(out, game->kills);
-    *out = '\0';
-    text_center(layout->width / 2, 128, text, ink, 1);
-    out = text;
-    out = append_text(out, pd_str(PD_STR_STAT_GOLD_TURNS));
-    out = append_int(out, game->hero.gold);
-    out = append_text(out, "   Turns ");
-    out = append_int(out, game->turn);
-    *out = '\0';
-    text_center(layout->width / 2, 144, text, ink, 1);
-    out = text;
-    out = append_text(out, pd_str(PD_STR_STAT_DEEPEST));
-    out = append_int(out, game->deepest);
-    *out = '\0';
-    text_center(layout->width / 2, 160, text, rgb565(160, 200, 240), 1);
-    text_center(layout->width / 2, layout->height - 30, pd_str(PD_STR_TAP_RETURN), ink, 1);
+    fill_screen(layout, rgb565(19, 22, 43));
+    text_center(center, title_y, pd_str(PD_STR_WIN_TITLE),
+                rgb565(255, 224, 144), title_scale);
+    sprite_add(PD_SPRITE_ITEM_AMULET, center - amulet_size / 2,
+               amulet_y, amulet_size, amulet_size);
+    draw_victory_stat(PD_STR_STAT_DEPTH, game->depth,
+                      center - column, stats_top, ink);
+    draw_victory_stat(PD_STR_STAT_LEVEL, game->hero.level,
+                      center + column, stats_top, ink);
+    draw_victory_stat(PD_STR_STAT_KILLS, game->kills,
+                      center - column, stats_top + line_h, ink);
+    draw_victory_stat(PD_STR_STAT_GOLD, game->hero.gold,
+                      center + column, stats_top + line_h, ink);
+    draw_victory_stat(PD_STR_STAT_TURNS, game->turn,
+                      center - column, stats_top + 2 * line_h, ink);
+    draw_victory_stat(PD_STR_STAT_DEEPEST, game->deepest,
+                      center + column, stats_top + 2 * line_h,
+                      rgb565(164, 204, 244));
+    ui_button(&layout->victory_back, pd_str(PD_STR_RANKINGS));
+}
+
+static void draw_amulet_scene(const pd_layout_t *layout) {
+    const int compact = layout->height < 210;
+    const int center = layout->width / 2;
+    const int sprite_size = compact ? 24 : 36;
+    const int sprite_y = layout->amulet_exit.y -
+                         (compact ? 72 : 84);
+    fill_screen(layout, rgb565(19, 22, 43));
+    sprite_add(PD_SPRITE_ITEM_AMULET, center - sprite_size / 2,
+               sprite_y, sprite_size, sprite_size);
+    text_center(center, sprite_y + sprite_size + (compact ? 5 : 8),
+                pd_str(PD_STR_AMULET_LINE_1), rgb565(255, 224, 144), 1);
+    text_center(center, sprite_y + sprite_size + (compact ? 21 : 27),
+                pd_str(PD_STR_AMULET_LINE_2),
+                rgb565(232, 230, 222), 1);
+    ui_button(&layout->amulet_exit, pd_str(PD_STR_AMULET_EXIT));
+    ui_button(&layout->amulet_stay, pd_str(PD_STR_AMULET_STAY));
 }
 
 static void draw_game_over(const pd_layout_t *layout) {
@@ -1344,6 +1517,8 @@ static void draw_bag(const pd_game_t *game, const pd_layout_t *layout) {
         text_right(panel_x + panel_w - 10, layout->bag_use[0].y - 22, detail,
                    rgb565(184, 203, 213), 1);
         ui_button(&layout->bag_use[0],
+                  game->bag[selected].kind == PD_ITEM_AMULET ?
+                  pd_str(PD_STR_AMULET_EXIT) :
                   game->bag[selected].kind == PD_ITEM_WEAPON ||
                   game->bag[selected].kind == PD_ITEM_ARMOR ?
                   pd_str(PD_STR_BAG_WIELD) : pd_str(PD_STR_BAG_USE));
@@ -1403,6 +1578,10 @@ static void draw_info(const pd_game_t *game, const pd_layout_t *layout) {
         text_right(left + width - 12, y, line,
                    rgb565(226, 226, 226), 1);
         y += (height - 50) / 6;
+    }
+    if (game->hero.poison > 0 && height >= 150) {
+        pd_str_format(line, sizeof(line), PD_STR_POISONED);
+        text_draw(left + 12, y, line, rgb565(132, 210, 102), 1);
     }
 }
 
@@ -1519,8 +1698,11 @@ int pd_render_present(uint32_t context_handle, uint32_t capabilities,
         text_flush();
         return pxa_raster_submit(context_handle, &g_list) > 0;
     }
-    if (game->phase == PD_PHASE_WON) {
-        draw_status_screen(game, layout, 1);
+    if (game->phase == PD_PHASE_WON || game->phase == PD_PHASE_AMULET) {
+        if (game->phase == PD_PHASE_WON)
+            draw_victory_screen(game, layout);
+        else
+            draw_amulet_scene(layout);
         sprite_flush();
         text_flush();
         return pxa_raster_submit(context_handle, &g_list) > 0;

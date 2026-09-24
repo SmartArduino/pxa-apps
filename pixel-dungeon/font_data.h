@@ -12,9 +12,9 @@
 #define PD_CJK_ATLAS_W 256
 #define PD_CJK_ATLAS_H 256
 #define PD_CJK_PAGE_GLYPHS 256
-#define PD_CJK_EXTRA_ATLAS_H 16
-#define PD_CJK_EXTRA_GLYPHS 4
-#define PD_CJK_GLYPHS 260
+#define PD_CJK_EXTRA_ATLAS_H 48
+#define PD_CJK_EXTRA_GLYPHS 46
+#define PD_CJK_GLYPHS 302
 
 extern const uint8_t pd_font_ascii[PD_ASCII_ATLAS_W * PD_ASCII_ATLAS_H];
 extern const uint8_t pd_font_cjk[PD_CJK_ATLAS_W * PD_CJK_ATLAS_H];

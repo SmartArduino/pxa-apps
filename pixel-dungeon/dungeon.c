@@ -567,6 +567,8 @@ int pd_level_path(const pd_level_t *level, int from_x, int from_y, int to_x,
                 if (!pd_in_bounds(nx, ny) || g_bfs_parent[next] != UINT16_MAX)
                     continue;
                 if (!pd_tile_walkable(pd_tile_at(level, nx, ny))) continue;
+                if (level->known[next] &&
+                    pd_tile_trap(pd_tile_at(level, nx, ny))) continue;
                 g_bfs_parent[next] = (uint16_t)at;
                 g_bfs_queue[tail++] = (uint16_t)next;
             }

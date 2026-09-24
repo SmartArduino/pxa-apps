@@ -44,6 +44,7 @@ typedef struct {
     pd_rect_t save_row[PD_SAVE_SLOTS];
     pd_rect_t menu_pane, settings, journal, depth, zoom_out, zoom_in, settings_back;
     pd_rect_t pause_settings, pause_menu;
+    pd_rect_t amulet_exit, amulet_stay, victory_back;
     pd_rect_t shop_buy, shop_close;
     pd_rect_t class_button[PD_CLASS_COUNT];
     pd_rect_t bag_row[PD_BAG_ROWS];

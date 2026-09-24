@@ -40,6 +40,7 @@ static void handle_play_tap(pd_game_t *game, const pd_layout_t *layout, int x,
 
     for (int index = 0; index < PD_BUTTON_COUNT; ++index) {
         if (!pd_rect_contains(&layout->button[index], x, y)) continue;
+        game->wand_slot = -1;
         switch (index) {
             case PD_BUTTON_WAIT:
                 pd_game_hero_wait(game);
@@ -232,8 +233,16 @@ void pd_input_pointer(pd_game_t *game, pd_layout_t *layout, int x, int y,
             }
             return;
         case PD_PHASE_WON:
-            game->phase = PD_PHASE_TITLE;
-            game->message_total = 0;
+            if (pd_rect_contains(&layout->victory_back, x, y)) {
+                game->phase = PD_PHASE_RANKINGS;
+                game->message_total = 0;
+            }
+            return;
+        case PD_PHASE_AMULET:
+            if (pd_rect_contains(&layout->amulet_exit, x, y))
+                pd_game_amulet_exit(game);
+            else if (pd_rect_contains(&layout->amulet_stay, x, y))
+                pd_game_amulet_stay(game);
             return;
         case PD_PHASE_BAG:
             if (pd_rect_contains(&layout->bag_close, x, y)) {
@@ -250,7 +259,7 @@ void pd_input_pointer(pd_game_t *game, pd_layout_t *layout, int x, int y,
                 if (selected < 0 || selected >= game->bag_count) selected = 0;
                 if (pd_rect_contains(&layout->bag_use[0], x, y)) {
                     pd_game_bag_use(game, selected);
-                    game->phase = PD_PHASE_PLAY;
+                    if (game->phase == PD_PHASE_BAG) game->phase = PD_PHASE_PLAY;
                 } else if (pd_rect_contains(&layout->bag_drop[0], x, y)) {
                     pd_game_bag_drop(game, selected);
                     game->phase = PD_PHASE_PLAY;
@@ -333,7 +342,15 @@ void pd_input_controller(pd_game_t *game, uint32_t buttons, uint32_t previous) {
         return;
     }
     if (game->phase == PD_PHASE_DEAD || game->phase == PD_PHASE_WON) {
-        if ((pressed & PXA_CONTROLLER_A) != 0) game->phase = PD_PHASE_TITLE;
+        if ((pressed & PXA_CONTROLLER_A) != 0)
+            game->phase = game->phase == PD_PHASE_WON ?
+                          PD_PHASE_RANKINGS : PD_PHASE_TITLE;
+        return;
+    }
+    if (game->phase == PD_PHASE_AMULET) {
+        if ((pressed & PXA_CONTROLLER_A) != 0) pd_game_amulet_exit(game);
+        else if ((pressed & PXA_CONTROLLER_B) != 0)
+            pd_game_amulet_stay(game);
         return;
     }
     if (game->phase == PD_PHASE_BAG || game->phase == PD_PHASE_INFO ||
@@ -350,6 +367,33 @@ void pd_input_controller(pd_game_t *game, uint32_t buttons, uint32_t previous) {
     if (game->phase == PD_PHASE_SHOP) {
         if ((pressed & PXA_CONTROLLER_A) != 0) pd_game_shop_buy(game);
         else if ((pressed & PXA_CONTROLLER_B) != 0) game->phase = PD_PHASE_PLAY;
+        return;
+    }
+    if (game->wand_slot >= 0) {
+        if ((pressed & PXA_CONTROLLER_B) != 0) {
+            game->wand_slot = -1;
+        } else if ((pressed & PXA_CONTROLLER_A) != 0) {
+            int closest = -1;
+            int distance = PD_MAP_W + PD_MAP_H;
+            for (int index = 0; index < PD_MOBS_MAX; ++index) {
+                const pd_mob_t *mob = &game->mobs[index];
+                if (mob->type == 0xFF || mob->dying ||
+                    !game->level.visible[mob->y * PD_MAP_W + mob->x])
+                    continue;
+                int dx = mob->x - game->hero.x;
+                int dy = mob->y - game->hero.y;
+                if (dx < 0) dx = -dx;
+                if (dy < 0) dy = -dy;
+                if (dx > PD_FOV_RADIUS || dy > PD_FOV_RADIUS) continue;
+                if (dx + dy < distance) {
+                    distance = dx + dy;
+                    closest = index;
+                }
+            }
+            if (closest >= 0)
+                pd_game_wand_zap(game, game->mobs[closest].x,
+                                 game->mobs[closest].y);
+        }
         return;
     }
     if ((pressed & PXA_CONTROLLER_UP) != 0)
@@ -373,7 +417,8 @@ int pd_input_back(pd_game_t *game) {
         case PD_PHASE_TITLE:
             return 0;
         case PD_PHASE_PLAY:
-            game->phase = PD_PHASE_PAUSE;
+            if (game->wand_slot >= 0) game->wand_slot = -1;
+            else game->phase = PD_PHASE_PAUSE;
             break;
         case PD_PHASE_SETTINGS:
             game->phase = game->settings_from_title ? PD_PHASE_TITLE : PD_PHASE_PAUSE;
@@ -391,9 +436,15 @@ int pd_input_back(pd_game_t *game) {
             game->phase = PD_PHASE_SAVES;
             break;
         case PD_PHASE_DEAD:
-        case PD_PHASE_WON:
             game->phase = PD_PHASE_TITLE;
             game->message_total = 0;
+            break;
+        case PD_PHASE_WON:
+            game->phase = PD_PHASE_RANKINGS;
+            game->message_total = 0;
+            break;
+        case PD_PHASE_AMULET:
+            pd_game_amulet_stay(game);
             break;
         default:
             game->phase = PD_PHASE_PLAY;

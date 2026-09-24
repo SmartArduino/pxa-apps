@@ -49,6 +49,9 @@ static const pd_sound_file_t sound_files[PD_SOUND_COUNT] = {
     [PD_SOUND_GRASS] = {"assets/sfx/grass.pcm", -7 * 256},
     [PD_SOUND_TRAMPLE] = {"assets/sfx/trample.pcm", -6 * 256},
     [PD_SOUND_WATER] = {"assets/sfx/water.pcm", -7 * 256},
+    [PD_SOUND_MAGIC] = {"assets/sfx/hit_magic.pcm", -5 * 256},
+    [PD_SOUND_LIGHTNING] = {"assets/sfx/lightning.pcm", -6 * 256},
+    [PD_SOUND_BLAST] = {"assets/sfx/blast.pcm", -5 * 256},
 };
 
 static uint8_t g_payload[96];

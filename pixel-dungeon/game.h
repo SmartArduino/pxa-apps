@@ -38,6 +38,7 @@ enum {
     PD_PHASE_RANKINGS,
     PD_PHASE_JOURNAL,
     PD_PHASE_SHOP,
+    PD_PHASE_AMULET,
 };
 
 typedef struct {
@@ -55,6 +56,8 @@ enum {
     PD_ITEM_ARMOR,
     PD_ITEM_FOOD,
     PD_ITEM_IRON_KEY,
+    PD_ITEM_AMULET,
+    PD_ITEM_WAND_MAGIC,
 };
 
 enum {
@@ -86,6 +89,9 @@ enum {
     PD_SOUND_GRASS,
     PD_SOUND_TRAMPLE,
     PD_SOUND_WATER,
+    PD_SOUND_MAGIC,
+    PD_SOUND_LIGHTNING,
+    PD_SOUND_BLAST,
     PD_SOUND_COUNT,
 };
 
@@ -96,11 +102,16 @@ enum {
     PD_EFFECT_BLOOD,
     PD_EFFECT_LEAF,
     PD_EFFECT_SEARCH,
+    PD_EFFECT_POISON,
+    PD_EFFECT_TRAP_DART,
+    PD_EFFECT_TRAP_BLAST,
+    PD_EFFECT_LIGHTNING,
+    PD_EFFECT_SWARM,
 };
 
 typedef struct {
     uint8_t kind;
-    uint8_t tier;   /* weapon/armor tier (1..4); potions use 1 */
+    uint8_t tier;   /* equipment tier, or current wand charges */
     uint8_t level;  /* upgrade level */
     uint16_t gold;  /* gold amount for PD_ITEM_GOLD */
 } pd_item_t;
@@ -121,6 +132,7 @@ typedef struct {
     int16_t hunger;
     uint16_t gold;
     uint8_t keys;
+    uint8_t poison;
     uint8_t x, y, facing;
     int8_t weapon; /* bag slot, -1 for fists */
     int8_t armor;  /* bag slot, -1 for rags */
@@ -189,6 +201,7 @@ typedef struct {
     uint8_t hero_moving; /* frames left in the walk cycle */
     uint8_t hero_from_x, hero_from_y;
     int8_t bag_selected;
+    int8_t wand_slot; /* -1 unless choosing a visible target */
     uint8_t potion_hint; /* frames left on the "no potions" flash */
     uint8_t sounds[8];
     uint8_t sound_count;
@@ -204,7 +217,10 @@ void pd_game_hero_wait(pd_game_t *game);
 void pd_game_hero_search(pd_game_t *game);
 void pd_game_shop_buy(pd_game_t *game);
 void pd_game_hero_stairs(pd_game_t *game);
+void pd_game_amulet_exit(pd_game_t *game);
+void pd_game_amulet_stay(pd_game_t *game);
 void pd_game_hero_potion(pd_game_t *game);
+void pd_game_wand_zap(pd_game_t *game, int x, int y);
 void pd_game_tap(pd_game_t *game, int x, int y);
 
 /* Bag operations. */
