@@ -1,0 +1,16 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [0, 1],
+  "target_sdk": [0, 1],
+  "compile_sdk": [0, 1],
+  "id": "pxa-weather",
+  "version": "0.1.1",
+  "name": "Weather",
+  "description": "Uses Jimitu Weather to locate the device by MAC address and show local conditions",
+  "icon": "assets/icon.png",
+  "services": ["device", "net"],
+  "permissions": [
+    {"name": "device.identity", "required": false, "scope": "mac.wifi.station.hardware"},
+    {"name": "net.client", "required": false, "scope": "http://8.166.128.230:3100"}
+  ]
+}

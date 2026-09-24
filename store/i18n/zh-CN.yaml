@@ -1,0 +1,80 @@
+locale: zh-CN
+metadata:
+  name: 应用商城
+  description: 浏览 DOIT PXA 商城目录，查看设备兼容性、权限与安装要求
+translations:
+  screen.title: 应用商城
+  action.refresh: 刷新
+  action.load_more: 加载更多
+  action.back: 返回
+  action.install: 安装
+  action.update: 更新
+  action.check_updates: 检查更新
+  status.checking_updates: 正在检查更新…
+  status.updates_checked: 更新检查完成
+  status.update_check_failed: 部分更新检查失败
+  action.open: 打开
+  action.download: 下载
+  action.delete: 删除
+  action.uninstall: 卸载
+  status.uninstall_waiting: 请在系统弹窗中确认卸载
+  status.uninstall_success: 应用已卸载
+  status.uninstall_cancelled: 已取消卸载
+  status.uninstall_failed: 卸载失败
+  screen.installed: 已安装
+  screen.downloads: 下载管理
+  list.no_installed: 暂无已安装应用
+  list.no_downloads: 暂无下载记录
+  status.update_available: 有可用更新
+  status.installed: 已安装
+  status.downloaded: 下载完成，可安装
+  status.downloading: 正在下载
+  dialog.install_success: 安装成功，是否打开？
+  action.later: 稍后
+  kind.apps: 应用
+  kind.games: 游戏
+  filter.all: 全部
+  search.title: 搜索
+  search.placeholder: 应用名称或关键词
+  action.search: 搜索
+  action.clear: 清空
+  key.delete: 退格
+  list.loading: 正在加载目录
+  list.empty: 没有适用于该设备的已上架应用
+  list.loaded: 已加载 {count}
+  detail.summary: 简介
+  detail.changelog: 更新说明
+  detail.permissions: 权限
+  detail.services: 依赖服务
+  detail.version: 版本
+  detail.size: 安装包大小
+  detail.channel: 渠道
+  detail.sequence: 发布序号
+  detail.publisher: 发布者
+  detail.digest: SHA-256
+  detail.profile: 设备配置
+  detail.sdk: SDK
+  detail.platforms: 目标平台
+  detail.none: 无
+  detail.required: 必需
+  detail.optional: 可选
+  install.title: 安装
+  install.host_confirm: 下载到 Host 存储，安装时请在系统弹窗确认
+  status.waiting: 等待获取目录
+  status.loading: 加载中
+  status.ready: 目录已更新
+  status.permission: 需要网络权限
+  status.denied: 网络权限被拒绝
+  status.unsupported: 当前固件没有网络服务
+  status.unavailable: 无法连接商城
+  status.timeout: 商城请求超时
+  status.limit: 目录响应超过网络上限
+  status.protocol: 目录响应异常
+  status.not_found: 未找到应用
+  status.http: 商城错误 {code}
+  status.failed: 目录请求失败
+  status.install_loading: 正在处理应用，请在系统弹窗中确认安装
+  status.install_success: 安装成功
+  status.download_failed: 下载失败，请检查网络或票据
+  status.install_failed: 安装失败或已取消，请检查应用包签名
+  status.storage_full: 存储空间不足，请删除下载记录或不用的应用后重试

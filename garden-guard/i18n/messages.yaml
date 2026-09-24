@@ -1,0 +1,224 @@
+namespace: app.pxa-garden-guard
+default_locale: en-US
+messages:
+  screen.title:
+    source: Garden Guard
+    context: Game title
+  screen.subtitle:
+    source: GARDEN GUARD
+    context: Decorative game subtitle
+  screen.version:
+    source: v2.0 Day & Night Garden
+    context: Version label on home screen
+  home.progress:
+    source: "Progress {current}/{total}  {stars} stars"
+    context: Campaign progress and collected stars
+    placeholders:
+      current: u32
+      total: u32
+      stars: u32
+  action.start_adventure:
+    source: Start adventure
+    context: Continue campaign button
+  action.select_level:
+    source: Select level
+    context: Open level selection button
+  action.open_almanac:
+    source: Plant almanac
+    context: Open plant collection button
+  action.continue:
+    source: Continue
+    context: Continue after winning
+  action.retry:
+    source: Try again
+    context: Retry after losing
+  action.resume:
+    source: Resume game
+    context: Pause menu action
+  action.restart:
+    source: Restart
+    context: Pause menu action
+  action.main_menu:
+    source: Main menu
+    context: Pause menu action
+  action.choose:
+    source: Choose
+    context: Choose plant action
+  action.cancel:
+    source: Cancel
+    context: Cancel plant choice action
+  action.start_battle:
+    source: Start battle
+    context: Start selected level action
+  pause.title:
+    source: Game paused
+    context: Pause dialog title
+  sound.on:
+    source: "Sound: On"
+    context: Enabled sound toggle
+  sound.off:
+    source: "Sound: Off"
+    context: Disabled sound toggle
+  scene.day:
+    source: Day
+    context: Day scene label
+  scene.night:
+    source: Night
+    context: Night scene label
+  game.ready:
+    source: Defenses ready
+    context: Level start message
+  game.plant_hint:
+    source: Tap the lawn to plant
+    context: Level control hint
+  game.won:
+    source: Garden defended
+    context: Victory title
+  game.lost:
+    source: Defenses breached
+    context: Loss title
+  game.reward:
+    source: "New plant: {plant}"
+    context: Newly unlocked plant message
+    placeholders:
+      plant: string
+  level.screen_title:
+    source: Select level
+    context: Level selection title
+  level.locked:
+    source: Locked
+    context: Locked level symbol
+  level.not_unlocked:
+    source: Not unlocked yet
+    context: Locked level explanation
+  level.one_one:
+    source: 1-1 Lawn Trial
+    context: Campaign level name
+  level.one_two:
+    source: 1-2 Wall-nut Line
+    context: Campaign level name
+  level.one_three:
+    source: 1-3 Cherry Blast
+    context: Campaign level name
+  level.one_four:
+    source: 1-4 Twin Shooters
+    context: Campaign level name
+  level.one_five:
+    source: 1-5 Frost Defense
+    context: Campaign level name
+  level.two_one:
+    source: 2-1 Nightfall
+    context: Campaign level name
+  level.two_two:
+    source: 2-2 Moonlit Shrooms
+    context: Campaign level name
+  level.two_three:
+    source: 2-3 Spike Ambush
+    context: Campaign level name
+  level.two_four:
+    source: 2-4 Heavy Fog
+    context: Campaign level name
+  level.three_one:
+    source: 3-1 High Noon
+    context: Campaign level name
+  level.three_two:
+    source: 3-2 Night Finale
+    context: Campaign level name
+  level.three_three:
+    source: 3-3 Endless Garden
+    context: Campaign level name
+  seed.sun_cost:
+    source: "Sun {cost}"
+    context: Plant sun cost
+    placeholders:
+      cost: u32
+  seed.empty:
+    source: No plants available
+    context: Empty plant selection message
+  almanac.title:
+    source: Plant almanac
+    context: Plant collection title
+  almanac.unlock_required:
+    source: Clear a level to unlock
+    context: Locked plant explanation
+  almanac.unlocked:
+    source: Unlocked
+    context: Unlocked plant state
+  plant.shooter.name:
+    source: Pea Shooter
+    context: Plant name
+  plant.shooter.description:
+    source: Shoots straight ahead
+    context: Plant description
+  plant.sunflower.name:
+    source: Sunflower
+    context: Plant name
+  plant.sunflower.description:
+    source: Produces sun
+    context: Plant description
+  plant.wall.name:
+    source: Wall-nut
+    context: Plant name
+  plant.wall.description:
+    source: High-health defense
+    context: Plant description
+  plant.bomb.name:
+    source: Cherry Bomb
+    context: Plant name
+  plant.bomb.description:
+    source: Area explosion
+    context: Plant description
+  plant.repeater.name:
+    source: Repeater
+    context: Plant name
+  plant.repeater.description:
+    source: Fires two peas
+    context: Plant description
+  plant.ice.name:
+    source: Snow Pea
+    context: Plant name
+  plant.ice.description:
+    source: Slows zombies
+    context: Plant description
+  plant.puff.name:
+    source: Puff-shroom
+    context: Plant name
+  plant.puff.description:
+    source: Free short-range attack
+    context: Plant description
+  plant.sunshroom.name:
+    source: Sun-shroom
+    context: Plant name
+  plant.sunshroom.description:
+    source: Produces sun at night
+    context: Plant description
+  plant.spike.name:
+    source: Spikeweed
+    context: Plant name
+  plant.spike.description:
+    source: Damages passing zombies
+    context: Plant description
+  plant.fume.name:
+    source: Fume-shroom
+    context: Plant name
+  plant.fume.description:
+    source: Piercing fumes
+    context: Plant description
+  plant.doom.name:
+    source: Doom-shroom
+    context: Plant name
+  plant.doom.description:
+    source: Huge blast leaves a crater
+    context: Plant description
+  plant.magnet.name:
+    source: Magnet-shroom
+    context: Plant name
+  plant.magnet.description:
+    source: Removes zombie armor
+    context: Plant description
+  plant.gloom.name:
+    source: Gloom-shroom
+    context: Plant name
+  plant.gloom.description:
+    source: Continuous area damage
+    context: Plant description

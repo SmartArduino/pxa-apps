@@ -1,0 +1,269 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="80"
+     viewBox="0 0 320 40">
+  <defs>
+    <style>
+      .o{stroke:#26362b;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+      .e{fill:#18251c;stroke:none}
+      .h{fill:#ffffff;stroke:none;opacity:.8}
+    </style>
+    <g id="zombie-base" class="o">
+      <path d="M12.1 27.4h6.1l-2 8.7H9.7z" fill="#465a87"/>
+      <path d="M18 27.6h5.8l2.2 8.5h-7z" fill="#516694"/>
+      <path d="M8.1 36.1c2.7-1.6 5.6-1.8 8.2.2l-.4 2.2H7.1z" fill="#4b3528"/>
+      <path d="M18.8 36.1c3.2-1.4 6.3-1.2 8.8.9l-.5 1.8h-8.8z" fill="#4b3528"/>
+      <path d="M21 19.3c3.1 1.1 4 3.9 5.3 6.4" fill="none" stroke="#6f4a31"
+            stroke-width="4"/>
+      <path d="m25.4 25 2.7 2m-2-1 .3 2.6m.4-2 2.5-.2" fill="none" stroke="#8fa98a"
+            stroke-width="1.7"/>
+      <path d="M12.1 18.4c3.1-2.1 8.3-2.1 11.1.5l1 11.6-5-1.4-2.8 1.9-5.8-1.7z"
+            fill="#715039"/>
+      <path d="M14.9 18.5h4.3l1.2 10.5-6.5.2z" fill="#ddd3af" stroke="none"/>
+      <path d="m17 19.2 2.2 2.1-1.2 2.2 1.2 4-2.2 1.7-1.1-5.6.9-2.1-1.5-1.6z"
+            fill="#b7443f" stroke="none"/>
+      <path d="m13.2 20.3 3.2 2.1m6-2.3-3 2.5m2.2 4.5 2.4 2" fill="none"
+            stroke="#4f382c" stroke-width="1.1"/>
+      <path d="M12.8 20.1 7.6 22.8" fill="none" stroke="#6f4a31" stroke-width="4.2"/>
+      <path d="M7.5 22.8 4.3 24" fill="none" stroke="#8fa98a" stroke-width="3.4"/>
+      <path d="m4.7 22.7-2.2.4m2 1-2.1 1m2.7-.1-1.2 2" fill="none" stroke="#8fa98a"
+            stroke-width="1.35"/>
+      <path d="M7.2 8.3C9 3 17.5 1.4 22.8 5.3c3 2.3 3.2 8.5 1.1 12.4-2.5 4.6-8.6 6-12.8 3.4-4.4-2.8-5.8-8-3.9-12.8z"
+            fill="#8da879"/>
+      <ellipse cx="10.7" cy="11.3" rx="2.35" ry="2.65" fill="#eef0b5"/>
+      <ellipse cx="18.2" cy="10" rx="3.05" ry="3.45" fill="#f3f0b4"/>
+      <circle cx="10.2" cy="11.5" r=".72" class="e"/>
+      <circle cx="18.6" cy="10.2" r=".78" class="e"/>
+      <path d="M12.8 14.1 12 16l2.1-.3m2-1.6.9 1.7" fill="none" stroke="#3e4939"
+            stroke-width="1.1"/>
+      <path d="M8.8 16c3.1-.3 6.9-.6 10.5.6l-.8 4.2c-3.2 1.8-7.5 1.3-9.7-.9z"
+            fill="#4f3030"/>
+      <path d="m10.1 16.2.5 2.2 2.2-.1.3-2.5m2.5.1.2 2.4 2.2.3.5-2"
+            fill="#e9e0b8" stroke="#5a4a38" stroke-width=".65"/>
+      <path d="M11 20c2.1.9 4.8 1 6.7 0" fill="none" stroke="#a66c62" stroke-width=".8"/>
+      <path d="M10.1 5.1 8.5 2.6m6.2 1.2L14.5.8m4.7 3.2 1-2.4m3.1 4.8 2-1"
+            fill="none" stroke="#343c32" stroke-width="1.1"/>
+    </g>
+  </defs>
+
+  <!-- Pea shooter, cell 0. -->
+  <g transform="translate(0 0)" class="o">
+    <path d="M15.7 35.1c-4.6-4.3-9.5-3.6-13 1.5 4.7 1.7 9.2 1.2 13-1.5z"
+          fill="#3e9c37"/>
+    <path d="M15.6 35.1c4.6-4.4 9.6-3.5 13.4 1.7-4.8 1.5-9.4.9-13.4-1.7z"
+          fill="#52b83f"/>
+    <path d="M15.7 35.2c.1-5.5-.2-9.8-.8-14.4" fill="none" stroke="#3e9c37"
+          stroke-width="4.2"/>
+    <path d="M7.6 11.1C4.3 8.9 1.7 9.2.7 10.5c1 3.6 3.2 5.8 7 6.4z"
+          fill="#42a93a"/>
+    <path d="M4.3 14.8C4.3 8.4 8.5 4 14.7 4c4.4 0 5.7 5.4 13.9 5.5v9.6C20.6 19 19.6 24 15.1 24c-6.4 0-10.8-3.5-10.8-9.2z"
+          fill="#66ca4c"/>
+    <ellipse cx="28.4" cy="14.3" rx="2.6" ry="5.1" fill="#72d256"/>
+    <ellipse cx="28.7" cy="14.3" rx="1.35" ry="3.7" fill="#267536" stroke="none"/>
+    <ellipse cx="15.3" cy="11.5" rx="1.65" ry="1.9" class="e"/>
+    <ellipse cx="19.4" cy="9" rx="1.15" ry="1.35" class="e"/>
+    <circle cx="14.8" cy="10.9" r=".42" class="h"/>
+    <circle cx="19.1" cy="8.6" r=".3" class="h"/>
+    <path d="M8.1 8.4c1.8-1.7 4-2.4 6.2-2.2" fill="none" stroke="#9ee67d"
+          stroke-width="1.1"/>
+  </g>
+
+  <!-- Sunflower, cell 1. -->
+  <g transform="translate(32 0)" class="o">
+    <path d="M16 37c.2-5.6.1-10-.2-14" fill="none" stroke="#3d963d" stroke-width="4"/>
+    <path d="M15.8 33c-4.5-4.6-9.2-3.9-12.4 1.3 4.5 1.6 8.7 1.1 12.4-1.3z"
+          fill="#45a83c"/>
+    <path d="M16 33c4.2-4.3 8.8-3.6 12.3 1.3-4.4 1.7-8.5 1.2-12.3-1.3z"
+          fill="#58b944"/>
+    <g transform="translate(0 1.5)">
+      <g fill="#f4ac24" stroke="#8a5124" stroke-width="1.2">
+        <ellipse cx="16" cy="3.1" rx="2.25" ry="3.8"/>
+        <ellipse cx="21.2" cy="4.5" rx="2.2" ry="3.7" transform="rotate(30 21.2 4.5)"/>
+        <ellipse cx="24.9" cy="8.2" rx="2.2" ry="3.7" transform="rotate(60 24.9 8.2)"/>
+        <ellipse cx="26.3" cy="13.3" rx="3.8" ry="2.2"/>
+        <ellipse cx="24.9" cy="18.4" rx="2.2" ry="3.7" transform="rotate(-60 24.9 18.4)"/>
+        <ellipse cx="21.2" cy="22.1" rx="2.2" ry="3.7" transform="rotate(-30 21.2 22.1)"/>
+        <ellipse cx="16" cy="23.5" rx="2.25" ry="3.8"/>
+        <ellipse cx="10.8" cy="22.1" rx="2.2" ry="3.7" transform="rotate(30 10.8 22.1)"/>
+        <ellipse cx="7.1" cy="18.4" rx="2.2" ry="3.7" transform="rotate(60 7.1 18.4)"/>
+        <ellipse cx="5.7" cy="13.3" rx="3.8" ry="2.2"/>
+        <ellipse cx="7.1" cy="8.2" rx="2.2" ry="3.7" transform="rotate(-60 7.1 8.2)"/>
+        <ellipse cx="10.8" cy="4.5" rx="2.2" ry="3.7" transform="rotate(-30 10.8 4.5)"/>
+      </g>
+      <circle cx="16" cy="13.3" r="7.6" fill="#9d5b2b"/>
+      <ellipse cx="13.2" cy="12.2" rx="1.15" ry="1.45" class="e"/>
+      <ellipse cx="18.8" cy="12.2" rx="1.15" ry="1.45" class="e"/>
+      <circle cx="12.9" cy="11.8" r=".3" class="h"/>
+      <circle cx="18.5" cy="11.8" r=".3" class="h"/>
+      <path d="M12.2 15.6c2.2 2 5.4 2 7.6 0" fill="none" stroke="#38271c" stroke-width="1.25"/>
+    </g>
+  </g>
+
+  <!-- Wall nut, cell 2. -->
+  <g transform="translate(64 0) translate(16 0) scale(1.12 1) translate(-16 0)" class="o">
+    <path d="M8 34.6C5.8 27 6 14.2 8.4 7.2c1.5-4.2 4.9-5.9 8.1-5.2 2.7-1.1 6.3 1.2 7.4 5.2 2.3 7.7 2.4 20.5.1 27.6-3.2 4.7-12 5.1-16-.2z"
+          fill="#bd8145"/>
+    <path d="M9.4 31.7C8 24 8.3 13.5 10.2 7.6c1-2.6 2.7-4 4.5-4.7-3.2.4-5.3 2.2-6.3 5.1-2.2 7.3-2.3 19.5-.4 26.6 1.6 2.1 4.2 3.2 7 3.4-2.5-1.1-4.5-3.2-5.6-6.3z"
+          fill="#9f6639" stroke="none"/>
+    <path d="M11 7c2.4-2.3 7.2-2.9 10.1-.3M9.8 30c3.7 1.7 8.6 1.7 12.7-.2"
+          fill="none" stroke="#dda45e" stroke-width="1.1"/>
+    <ellipse cx="12.7" cy="18.5" rx="2.3" ry="2.8" fill="#f4efc9"/>
+    <ellipse cx="19.5" cy="18" rx="2.7" ry="3.2" fill="#f4efc9"/>
+    <circle cx="13.3" cy="19.1" r=".75" class="e"/>
+    <circle cx="20.2" cy="18.7" r=".8" class="e"/>
+    <path d="M14.2 26.1c1.5-1 3.3-1 4.8 0" fill="none" stroke="#573b29" stroke-width="1.3"/>
+    <path d="m11 11 1.7-.8m8.1 1.7 1.5.8m-11 20.8 1.8.6" fill="none" stroke="#83552f" stroke-width=".9"/>
+  </g>
+
+  <!-- Cherry bomb, cell 3. -->
+  <g transform="translate(96 0)" class="o">
+    <path d="M10.5 16C11 9.5 14 6.8 19 5m4.2 9.8C22 10.4 20.3 7.5 18.4 5.2"
+          fill="none" stroke="#397f37" stroke-width="2.8"/>
+    <path d="M18.5 5.1c2.8-3.6 7.2-3.8 10.2-1.5-2.1 3.9-6.1 5-10.2 1.5z"
+          fill="#60b64a"/>
+    <path d="M2.1 24.1c0-5.8 3.7-9.5 8.5-9.5 5.3 0 8.7 4.2 8.3 9.8-.4 5.3-3.6 8.8-8.5 8.8-4.8 0-8.3-3.7-8.3-9.1z"
+          fill="#df393b"/>
+    <path d="M15.2 22.4c0-5.1 3.2-8.4 7.6-8.4 5 0 8.2 3.9 7.7 8.8-.5 4.7-3.4 7.7-7.7 7.7-4.5 0-7.6-3.2-7.6-8.1z"
+          fill="#e6443f"/>
+    <path d="M5.1 19.1c1.2-1.8 3-2.7 4.6-2.5m9.1 1.4c1-1.5 2.6-2.1 4-2"
+          fill="none" stroke="#ff8170" stroke-width="1.3"/>
+    <path d="m5.8 21.1 3.4.7m2.1-.7 2.8-1m5.1-.2 2.8.8m1.8-.8 2.7-1"
+          fill="none" stroke="#70272b" stroke-width="1.2"/>
+    <g fill="#fff1bd" stroke="none">
+      <ellipse cx="8.3" cy="22.4" rx="1" ry="1.3"/>
+      <ellipse cx="12.2" cy="21.7" rx="1" ry="1.3"/>
+      <ellipse cx="21.2" cy="21.1" rx=".95" ry="1.25"/>
+      <ellipse cx="25.1" cy="20.5" rx=".95" ry="1.25"/>
+    </g>
+    <circle cx="8.7" cy="22.7" r=".38" class="e"/>
+    <circle cx="12.5" cy="21.9" r=".38" class="e"/>
+    <circle cx="21.5" cy="21.4" r=".36" class="e"/>
+    <circle cx="25.4" cy="20.8" r=".36" class="e"/>
+    <path d="M8.3 27.2c1.3-.9 2.8-.9 4.2 0m8.2-1.3c1.1-.8 2.5-.8 3.7 0"
+          fill="none" stroke="#71252b" stroke-width="1.2"/>
+  </g>
+
+  <!-- Garden zombie, cell 4. -->
+  <g transform="translate(128 0)">
+    <use href="#zombie-base"/>
+  </g>
+
+  <!-- Lawn mower, cell 5. -->
+  <g transform="translate(160 0)" class="o" style="stroke:#2d2931">
+    <g transform="translate(0 2) scale(1 .86)">
+    <!-- The open, swept-back handle is the mower's strongest silhouette. -->
+    <path d="M13.6 22.7 2.2 11.3 7.5 6 18.9 17.4"
+          fill="none" stroke="#2f2738" stroke-width="3.3"/>
+    <path d="M13.6 22.7 2.2 11.3 7.5 6 18.9 17.4"
+          fill="none" stroke="#55465a" stroke-width=".7"/>
+    <path d="M9.4 18.5 14.7 13.2" fill="none" stroke="#302839" stroke-width="2.2"/>
+
+    <!-- Rear wheels sit higher to preserve the original front-facing perspective. -->
+    <circle cx="12.1" cy="21.4" r="4.5" fill="#30263b"/>
+    <circle cx="26.1" cy="21.5" r="4.5" fill="#30263b"/>
+    <circle cx="12.1" cy="21.4" r="1.45" fill="#cbc9cc" stroke="#5d5861"
+            stroke-width=".75"/>
+    <circle cx="26.1" cy="21.5" r="1.45" fill="#cbc9cc" stroke="#5d5861"
+            stroke-width=".75"/>
+
+    <!-- Rounded red deck and side guards. -->
+    <path d="M4.4 24.2c.6-4.3 4.1-6.8 8.4-6.8h12.3c3.8 0 6.1 2.7 6 7.1l-2.7 4.4H7z"
+          fill="#c92f35"/>
+    <path d="M5.8 23.4c1.4-3.1 3.8-4.4 7.3-4.5l-1.2 5.8-5.8 2z"
+          fill="#ed4a43" stroke="none"/>
+    <path d="M25.1 18.9c2.8.7 4.4 2.7 4.6 5.5l-4.9.4-1.1-5.5z"
+          fill="#e84740" stroke="none"/>
+
+    <!-- Large front wheels overlap the deck, as in the in-game render. -->
+    <circle cx="8.7" cy="27.6" r="5.1" fill="#30263b"/>
+    <circle cx="26.1" cy="27.6" r="5.1" fill="#30263b"/>
+    <circle cx="8.7" cy="27.6" r="1.65" fill="#e0dde0" stroke="#5d5861"
+            stroke-width=".8"/>
+    <circle cx="26.1" cy="27.6" r="1.65" fill="#e0dde0" stroke="#5d5861"
+            stroke-width=".8"/>
+
+    <!-- Central engine, red cap, starter and front cover. -->
+    <path d="M13.5 16.1c2.7-1.5 8.3-1.5 10.5.3l1.2 8.9-2.4 3.3h-9.5l-2-3.3z"
+          fill="#4a4153"/>
+    <path d="M13 17.5c3.3 1.3 8.3 1.4 11.6.1l-.3 3c-3 1.4-8.2 1.4-11.1 0z"
+          fill="#696070" stroke="none"/>
+    <ellipse cx="18.8" cy="15.5" rx="4.4" ry="2.25" fill="#df302f"/>
+    <ellipse cx="18.8" cy="14.9" rx="3.5" ry="1.15" fill="#f14e43"
+             stroke="none"/>
+    <path d="M12 20.2 9.9 22l.3 3.1" fill="none" stroke="#b9b7b5"
+          stroke-width="1.05"/>
+    <circle cx="10.2" cy="25.2" r=".75" fill="#c9c6c4"/>
+    <rect x="15.1" y="23.1" width="7.2" height="4.8" rx="1.1"
+          fill="#c5c4c2"/>
+    <path d="M16.2 24.1h5m-5 1.35h5" fill="none" stroke="#89898b"
+          stroke-width=".65"/>
+    <path d="M12.3 29h12.6l-1 2.2H13.1z" fill="#34363c"/>
+    </g>
+  </g>
+
+  <!-- Repeater, cell 6. -->
+  <g transform="translate(192 0)" class="o">
+    <path d="M15.7 35.1c-4.6-4.3-9.5-3.6-13 1.5 4.7 1.7 9.2 1.2 13-1.5z"
+          fill="#348b32"/>
+    <path d="M15.6 35.1c4.6-4.4 9.6-3.5 13.4 1.7-4.8 1.5-9.4.9-13.4-1.7z"
+          fill="#48aa3b"/>
+    <path d="M15.7 35.2c.1-5.5-.2-9.8-.8-14.4" fill="none" stroke="#348d35"
+          stroke-width="4.2"/>
+    <path d="M8 11.1C4.8 6.7 2.2 6.2.9 7.4.4 10.8 2.5 13.8 7 15z"
+          fill="#268431"/>
+    <path d="M7.3 14.5C3.2 14.8 1.1 17 .9 19.4c2.8 1.8 6.1.6 8.4-2.6z"
+          fill="#37a238"/>
+    <path d="M4.3 14.8C4.3 8.4 8.5 4 14.7 4c4.4 0 5.7 5.4 13.9 5.5v9.6C20.6 19 19.6 24 15.1 24c-6.4 0-10.8-3.5-10.8-9.2z"
+          fill="#57bd42"/>
+    <ellipse cx="28.4" cy="14.3" rx="2.6" ry="5.1" fill="#62c94c"/>
+    <ellipse cx="28.7" cy="14.3" rx="1.35" ry="3.7" fill="#1d6730" stroke="none"/>
+    <path d="m13.7 10.1 2.7-.7m1.3-2.1 2.8.8" fill="none" stroke="#1d4c29"
+          stroke-width="1.3"/>
+    <ellipse cx="15.3" cy="11.5" rx="1.65" ry="1.9" class="e"/>
+    <ellipse cx="19.4" cy="9" rx="1.15" ry="1.35" class="e"/>
+    <circle cx="14.8" cy="10.9" r=".42" class="h"/>
+    <circle cx="19.1" cy="8.6" r=".3" class="h"/>
+  </g>
+
+  <!-- Ice shooter, cell 7. -->
+  <g transform="translate(224 0)" class="o">
+    <path d="M15.7 35.1c-4.6-4.3-9.5-3.6-13 1.5 4.7 1.7 9.2 1.2 13-1.5z"
+          fill="#319a68"/>
+    <path d="M15.6 35.1c4.6-4.4 9.6-3.5 13.4 1.7-4.8 1.5-9.4.9-13.4-1.7z"
+          fill="#45ad73"/>
+    <path d="M15.7 35.2c.1-5.5-.2-9.8-.8-14.4" fill="none" stroke="#45b5b7"
+          stroke-width="4.2"/>
+    <g fill="#72dce7" stroke="#348ba5" stroke-width="1.2">
+      <path d="m9.4 6.2-3-5.1-1 6.5z"/>
+      <path d="M6.9 8.6 1.6 5.9l1.7 5.6z"/>
+      <path d="M5.6 11.7.4 11.9l3.4 3.9z"/>
+      <path d="m6.1 15.1-4.7 3.2 5.7.3z"/>
+      <path d="m8.1 17.5-2.4 4.6 5.4-2.5z"/>
+    </g>
+    <path d="M4.3 14.8C4.3 8.4 8.5 4 14.7 4c4.4 0 5.7 5.4 13.9 5.5v9.6C20.6 19 19.6 24 15.1 24c-6.4 0-10.8-3.5-10.8-9.2z"
+          fill="#79d9e4"/>
+    <ellipse cx="28.4" cy="14.3" rx="2.6" ry="5.1" fill="#8ae4e9"/>
+    <ellipse cx="28.7" cy="14.3" rx="1.35" ry="3.7" fill="#267da8" stroke="none"/>
+    <ellipse cx="15.3" cy="11.5" rx="1.65" ry="1.9" fill="#23485c" stroke="none"/>
+    <ellipse cx="19.4" cy="9" rx="1.15" ry="1.35" fill="#23485c" stroke="none"/>
+    <circle cx="14.8" cy="10.9" r=".42" class="h"/>
+    <circle cx="19.1" cy="8.6" r=".3" class="h"/>
+    <path d="M8.2 7.8c1.8-1.4 4-2 6.1-1.7m7.3 5.8c1.4-.8 2.8-.8 4.2-.4"
+          fill="none" stroke="#c9f7f6" stroke-width="1.1"/>
+  </g>
+
+  <!-- Conehead zombie, cell 8. -->
+  <g transform="translate(256 0)" class="o">
+    <use href="#zombie-base" transform="translate(0 2) scale(1 .94)"/>
+    <path d="m10.7 6.2 4.5-5h4l3.4 5z" fill="#ef781d"/>
+    <path d="M8.6 5.8h16l-1 2.6H9.5z" fill="#f28a22"/>
+    <path d="M15.9 2.3h2.6m-5.9 3.3h8.2" fill="none" stroke="#ffc04b" stroke-width="1.1"/>
+  </g>
+
+  <!-- Buckethead zombie, cell 9. -->
+  <g transform="translate(288 0)" class="o">
+    <use href="#zombie-base" transform="translate(0 2) scale(1 .94)"/>
+    <path d="M9 1.2h15.4l-1.2 6.7H10.1z" fill="#aab3b4"/>
+    <path d="M8.3.5h16.8v2.3H8.3z" fill="#c6cece"/>
+    <path d="M11.2 3.4h11.5m-9.4 2.7h7.8" fill="none" stroke="#e4e9e7" stroke-width="1.1"/>
+    <path d="m21.8 2.1-2.1 2.5 2 1.6" fill="none" stroke="#778282" stroke-width="1"/>
+  </g>
+</svg>

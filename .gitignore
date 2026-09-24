@@ -1,0 +1,11 @@
+/.dev-signing/
+/weather/weather_config.h
+/.pxa/
+/build/
+/out/
+__pycache__/
+*.py[cod]
+*.o
+*.aot
+*.wasm
+*.pxa

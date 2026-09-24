@@ -1,0 +1,31 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [0, 1],
+  "target_sdk": [0, 1],
+  "compile_sdk": [0, 1],
+  "id": "pxa-maze-spike",
+  "version": "0.1.0",
+  "name": "Maze Spike",
+  "description": "Guest raycaster using a mapped RGB565 triple buffer and Host 2x presentation",
+  "build": {
+    "system": "direct",
+    "linear_memory": {
+      "maximum_bytes": 1048576,
+      "pinned": true
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "sources": [
+        "main.c",
+        "raster.c",
+        "palette.c",
+        "assets.c",
+        "raycast.c"
+      ],
+      "services": ["surface"]
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [
+    0,
+    1
+  ],
+  "target_sdk": [
+    0,
+    1
+  ],
+  "compile_sdk": [
+    0,
+    1
+  ],
+  "id": "pxa-store",
+  "version": "0.8.0",
+  "name": "App Store",
+  "description": "Browses the catalog, manages verified downloads and installed apps, and requests confirmed installation",
+  "icon": "assets/icon.png",
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "sources": [
+        "main.c",
+        "store_client.c",
+        "store_json.c"
+      ]
+    }
+  ],
+  "services": [
+    "device",
+    "net"
+  ],
+  "permissions": [
+    {
+      "name": "device.identity",
+      "required": false,
+      "scope": "mac.wifi.station.hardware"
+    },
+    {
+      "name": "net.client",
+      "required": false,
+      "scope": "https://app.doit.am"
+    }
+  ],
+  "release_sequence": 8
+}

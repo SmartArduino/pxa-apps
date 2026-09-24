@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192"
+     viewBox="0 0 96 96">
+  <defs>
+    <clipPath id="icon-clip">
+      <rect x="1" y="1" width="94" height="94" rx="19"/>
+    </clipPath>
+    <style>
+      .o{stroke:#26362b;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+      .e{fill:#18251c;stroke:none}
+      .h{fill:#ffffff;stroke:none;opacity:.8}
+    </style>
+  </defs>
+
+  <g clip-path="url(#icon-clip)">
+    <rect width="96" height="96" fill="#244536"/>
+    <rect x="4" y="29" width="88" height="67" rx="12" fill="#65a94e"/>
+    <path d="M4 55h88M34 29v67m30-67v67" fill="none"
+          stroke="#a7d07b" stroke-width="1.2" opacity=".75"/>
+
+    <g fill="none" stroke="#e99a25" stroke-width="2.5"
+       stroke-linecap="round">
+      <path d="M76 6v4m0 17v4M62 18h4m20 0h4"/>
+      <path d="m66.5 8.5 3 3m13 13 3 3m-19 0 3-3m13-13 3-3"/>
+    </g>
+    <circle cx="76" cy="18" r="8.5" fill="#ffd653"
+            stroke="#d98922" stroke-width="1.8"/>
+    <circle cx="76" cy="18" r="5.8" fill="#ffe36d"/>
+    <path d="M71 15.5c1-2 2.8-3.2 5.2-3.5" fill="none"
+          stroke="#fff4b3" stroke-width="1.8" stroke-linecap="round"/>
+
+    <!-- Pea shooter. -->
+    <g transform="translate(7 19) scale(1.45)" class="o">
+      <path d="M15.7 35.1c-4.6-4.3-9.5-3.6-13 1.5 4.7 1.7 9.2 1.2 13-1.5z"
+            fill="#3e9c37"/>
+      <path d="M15.6 35.1c4.6-4.4 9.6-3.5 13.4 1.7-4.8 1.5-9.4.9-13.4-1.7z"
+            fill="#52b83f"/>
+      <path d="M15.7 35.2c.1-5.5-.2-9.8-.8-14.4" fill="none" stroke="#3e9c37"
+            stroke-width="4.2"/>
+      <path d="M7.6 11.1C4.3 8.9 1.7 9.2.7 10.5c1 3.6 3.2 5.8 7 6.4z"
+            fill="#42a93a"/>
+      <path d="M4.3 14.8C4.3 8.4 8.5 4 14.7 4c4.4 0 5.7 5.4 13.9 5.5v9.6C20.6 19 19.6 24 15.1 24c-6.4 0-10.8-3.5-10.8-9.2z"
+            fill="#66ca4c"/>
+      <ellipse cx="28.4" cy="14.3" rx="2.6" ry="5.1" fill="#72d256"/>
+      <ellipse cx="28.7" cy="14.3" rx="1.35" ry="3.7" fill="#267536" stroke="none"/>
+      <ellipse cx="15.3" cy="11.5" rx="1.65" ry="1.9" class="e"/>
+      <ellipse cx="19.4" cy="9" rx="1.15" ry="1.35" class="e"/>
+      <circle cx="14.8" cy="10.9" r=".42" class="h"/>
+      <circle cx="19.1" cy="8.6" r=".3" class="h"/>
+      <path d="M8.1 8.4c1.8-1.7 4-2.4 6.2-2.2" fill="none" stroke="#9ee67d"
+            stroke-width="1.1"/>
+    </g>
+
+    <circle cx="57" cy="40" r="3.2" fill="#a6de58"
+            stroke="#315a35" stroke-width="1.4"/>
+
+    <!-- Garden zombie. -->
+    <g transform="translate(63 38)" class="o">
+      <path d="M12.1 27.4h6.1l-2 8.7H9.7z" fill="#465a87"/>
+      <path d="M18 27.6h5.8l2.2 8.5h-7z" fill="#516694"/>
+      <path d="M8.1 36.1c2.7-1.6 5.6-1.8 8.2.2l-.4 2.2H7.1z" fill="#4b3528"/>
+      <path d="M18.8 36.1c3.2-1.4 6.3-1.2 8.8.9l-.5 1.8h-8.8z" fill="#4b3528"/>
+      <path d="M21 19.3c3.1 1.1 4 3.9 5.3 6.4" fill="none" stroke="#6f4a31"
+            stroke-width="4"/>
+      <path d="m25.4 25 2.7 2m-2-1 .3 2.6m.4-2 2.5-.2" fill="none" stroke="#8fa98a"
+            stroke-width="1.7"/>
+      <path d="M12.1 18.4c3.1-2.1 8.3-2.1 11.1.5l1 11.6-5-1.4-2.8 1.9-5.8-1.7z"
+            fill="#715039"/>
+      <path d="M14.9 18.5h4.3l1.2 10.5-6.5.2z" fill="#ddd3af" stroke="none"/>
+      <path d="m17 19.2 2.2 2.1-1.2 2.2 1.2 4-2.2 1.7-1.1-5.6.9-2.1-1.5-1.6z"
+            fill="#b7443f" stroke="none"/>
+      <path d="m13.2 20.3 3.2 2.1m6-2.3-3 2.5m2.2 4.5 2.4 2" fill="none"
+            stroke="#4f382c" stroke-width="1.1"/>
+      <path d="M12.8 20.1 7.6 22.8" fill="none" stroke="#6f4a31" stroke-width="4.2"/>
+      <path d="M7.5 22.8 4.3 24" fill="none" stroke="#8fa98a" stroke-width="3.4"/>
+      <path d="m4.7 22.7-2.2.4m2 1-2.1 1m2.7-.1-1.2 2" fill="none" stroke="#8fa98a"
+            stroke-width="1.35"/>
+      <path d="M7.2 8.3C9 3 17.5 1.4 22.8 5.3c3 2.3 3.2 8.5 1.1 12.4-2.5 4.6-8.6 6-12.8 3.4-4.4-2.8-5.8-8-3.9-12.8z"
+            fill="#8da879"/>
+      <ellipse cx="10.7" cy="11.3" rx="2.35" ry="2.65" fill="#eef0b5"/>
+      <ellipse cx="18.2" cy="10" rx="3.05" ry="3.45" fill="#f3f0b4"/>
+      <circle cx="10.2" cy="11.5" r=".72" class="e"/>
+      <circle cx="18.6" cy="10.2" r=".78" class="e"/>
+      <path d="M12.8 14.1 12 16l2.1-.3m2-1.6.9 1.7" fill="none" stroke="#3e4939"
+            stroke-width="1.1"/>
+      <path d="M8.8 16c3.1-.3 6.9-.6 10.5.6l-.8 4.2c-3.2 1.8-7.5 1.3-9.7-.9z"
+            fill="#4f3030"/>
+      <path d="m10.1 16.2.5 2.2 2.2-.1.3-2.5m2.5.1.2 2.4 2.2.3.5-2"
+            fill="#e9e0b8" stroke="#5a4a38" stroke-width=".65"/>
+      <path d="M11 20c2.1.9 4.8 1 6.7 0" fill="none" stroke="#a66c62" stroke-width=".8"/>
+      <path d="M10.1 5.1 8.5 2.6m6.2 1.2L14.5.8m4.7 3.2 1-2.4m3.1 4.8 2-1"
+            fill="none" stroke="#343c32" stroke-width="1.1"/>
+    </g>
+  </g>
+
+  <rect x="1" y="1" width="94" height="94" rx="19" fill="none"
+        stroke="#d9efc2" stroke-width="2"/>
+</svg>

@@ -1,0 +1,81 @@
+locale: zh-CN
+metadata:
+  name: 星际突击
+  description: 包含剧情战役、战机机库与自动射击的太空战斗游戏
+translations:
+  screen.title: 星际突击
+  currency.credits: 补给
+  nav.home: 主页
+  nav.hangar: 机库
+  nav.shop: 商店
+  nav.missions: 任务
+  home.falcon_ready: 苍隼 Mk.I / 航线待命
+  home.lark_ready: 云雀 Mk.II / 航线待命
+  action.launch_mission: 执行当前任务
+  ship.falcon: 苍隼 Mk.I
+  ship.lark: 云雀 Mk.II
+  stat.power: 火力
+  stat.armor: 装甲
+  hangar.upgrade_weapon: 强化脉冲炮  80C
+  hangar.upgrade_hull: 加固装甲  100C
+  module.standard: 标准核心
+  module.cannons: 棱镜炮组
+  module.shield: 偏导护盾
+  hangar.loadout: 当前战斗配置
+  hangar.weapon_detail: 自动射击，可强化至 III 级
+  hangar.hull_detail: 受击后获得短暂无敌
+  shop.tab.ship: 战机
+  shop.tab.weapon: 武器
+  shop.tab.shield: 护盾
+  shop.ship_detail: 射速提升 + 强化甲
+  shop.cannons_detail: 增加双侧弹道
+  shop.shield_detail: 护盾 + 额外装甲
+  shop.buy_ship: 购买  320C
+  shop.buy_cannons: 购买  180C
+  shop.buy_shield: 购买  200C
+  action.equip: 装备
+  state.equipped: 当前已装备
+  shop.traits: 装备特性
+  trait.ship: 主炮冷却 -1 / 装甲 +1
+  trait.cannons: 追加上下侧翼弹道
+  trait.shield: 初始护盾 / 装甲 +1
+  mission.map_title: 边境星图
+  mission.boss_label: 首领：
+  mission.briefing_title: 任务简报
+  mission.one.name: 月影航道
+  mission.two.name: 赤潮星云
+  mission.three.name: 寒渊裂隙
+  mission.one.boss: 重装无畏舰
+  mission.two.boss: 蜂巢航母
+  mission.three.boss: 裂隙巨兽
+  mission.one.threat: 侦察机 · 标准弹幕
+  mission.two.threat: 高速机群 · 追踪火力
+  mission.three.threat: 重型舰队 · 密集弹幕
+  mission.one.brief: 护送补给舰突围
+  mission.two.brief: 警惕高速截击机
+  mission.three.brief: 重型舰队逼近
+  mission.one.objective: 清剿 30 点威胁
+  mission.two.objective: 清剿 45 点威胁
+  mission.three.objective: 清剿 60 点威胁
+  result.title: 战斗结算
+  result.score: 战果
+  result.reward: 获得补给
+  result.unlocked: 新航线已解锁
+  result.complete: 区域威胁已清除
+  action.return_base: 返回基地
+  notice.funds: 补给不足
+  notice.locked: 航线尚未解锁
+  notice.maxed: 已强化至最高级
+  battle.score: 得分
+  battle.wave: 波次
+  battle.chain: 连击
+  battle.threat: 威胁
+  battle.incoming: 来袭
+  battle.hint: 右侧上下拖动闪避
+  battle.lost: 战机失联，点击重启
+  battle.complete: 任务完成
+  battle.report: 查看战报
+  pause.title: 任务暂停
+  pause.resume: 继续任务
+  pause.restart: 重新开始
+  pause.exit: 退出任务

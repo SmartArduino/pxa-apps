@@ -1,0 +1,60 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [
+    0,
+    1
+  ],
+  "target_sdk": [
+    0,
+    1
+  ],
+  "compile_sdk": [
+    0,
+    1
+  ],
+  "id": "pxa-jump-jump-3d",
+  "version": "0.1.0",
+  "name": "Jump Jump 3D",
+  "description": "Isometric 3D remake of the WeChat Jump Jump: charge, flip, land on the centre, chain perfect hits",
+  "icon": "assets/icon.png",
+  "build": {
+    "system": "direct",
+    "linear_memory": {
+      "maximum_bytes": 1048576,
+      "pinned": true
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "sources": [
+        "main.c",
+        "jump3d_audio.c",
+        "jump3d_game.c",
+        "jump3d_render.c",
+        "jump3d_palette.c",
+        "jump3d_font.c"
+      ],
+      "services": [
+        "audio",
+        "game-render",
+        "storage",
+        "log",
+        {
+          "name": "ui",
+          "features": [
+            "canvas"
+          ]
+        }
+      ]
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "required": false,
+      "scope": "media"
+    }
+  ]
+}

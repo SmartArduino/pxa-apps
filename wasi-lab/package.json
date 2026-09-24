@@ -1,0 +1,23 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [0, 1],
+  "target_sdk": [0, 1],
+  "compile_sdk": [0, 1],
+  "id": "pxa-wasi-lab",
+  "version": "0.1.0",
+  "name": "PXA WASI Lab",
+  "description": "Examples of WASI libc, clock, and random capabilities",
+  "build": {"system": "cmake", "source_dir": "."},
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": ["monotonic-clock", "random", "wall-clock"]
+      }
+    }
+  ]
+}

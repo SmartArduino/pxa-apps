@@ -1,0 +1,21 @@
+namespace: app.pxa-wasi-lab
+default_locale: en-US
+messages:
+  screen.title:
+    source: PXA WASI Lab
+    context: Main screen title
+    max_bytes: 48
+  screen.capabilities:
+    source: libc  monotonic clock  wall clock  random
+    context: Capabilities tested by the lab
+    max_bytes: 96
+  screen.policy:
+    source: Signed capabilities, no files, env or host stdio
+    context: Sandbox policy summary
+    max_bytes: 128
+  result.summary:
+    source: "{passed}/6 checks passed"
+    context: Completed check count
+    max_bytes: 64
+    placeholders:
+      passed: u32

@@ -1,0 +1,59 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [
+    0,
+    1
+  ],
+  "target_sdk": [
+    0,
+    1
+  ],
+  "compile_sdk": [
+    0,
+    1
+  ],
+  "id": "pxa-voxel-craft",
+  "version": "0.1.0",
+  "name": "Voxel Craft",
+  "description": "First-person voxel sandbox: mine blocks, build structures, fight slimes, walk and fly",
+  "icon": "assets/icon.png",
+  "build": {
+    "system": "direct",
+    "linear_memory": {
+      "maximum_bytes": 2097152,
+      "pinned": true
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "sources": [
+        "main.c",
+        "game.c",
+        "render.c",
+        "block_textures.c",
+        "voxel_raster.c"
+      ],
+      "services": [
+        "audio",
+        "game-render",
+        "log",
+        "storage",
+        {
+          "name": "ui",
+          "features": [
+            "canvas"
+          ]
+        }
+      ]
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "required": false,
+      "scope": "media"
+    }
+  ]
+}

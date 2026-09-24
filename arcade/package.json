@@ -1,0 +1,30 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [0, 1],
+  "target_sdk": [0, 1],
+  "compile_sdk": [0, 1],
+  "id": "pxa-arcade",
+  "version": "0.1.0",
+  "name": "PXA Arcade",
+  "description": "A collection of compact arcade games",
+  "icon": "assets/flappy-bird/icon.png",
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "sources": [
+        "main.c",
+        "modules/brick_breaker.c",
+        "modules/flappy_bird.c",
+        "modules/jump_jump.c",
+        "modules/jumping.c",
+        "modules/minesweeper.c",
+        "modules/tetris.c"
+      ],
+      "services": ["audio"]
+    }
+  ],
+  "permissions": [
+    {"name": "audio.playback", "required": false, "scope": "media"}
+  ]
+}

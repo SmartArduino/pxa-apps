@@ -1,0 +1,117 @@
+namespace: app.pxa-lab
+default_locale: en-US
+messages:
+  screen.title:
+    source: PXA ABI Lab
+    context: ABI Lab menu title
+  screen.subtitle:
+    source: 18 ABI examples
+    context: ABI Lab menu subtitle
+  module.audio.name:
+    source: Audio
+    context: Module name
+  module.audio.description:
+    source: Permission, speaker visualization and PCM queue
+    context: Module description
+  module.benchmark.name:
+    source: AOT / WASM Benchmark
+    context: Module name
+  module.benchmark.description:
+    source: Compare integer, call, branch and memory workloads
+    context: Module description
+  module.fs.name:
+    source: Private files
+    context: Module name
+  module.fs.description:
+    source: Create, read, list and remove sandbox files
+    context: Module description
+  module.ipc.name:
+    source: Process communication
+    context: Module name
+  module.ipc.description:
+    source: Request and response loopback calls
+    context: Module description
+  module.kv.name:
+    source: Key-value counter
+    context: Module name
+  module.kv.description:
+    source: Increment a persistent value
+    context: Module description
+  module.lease.name:
+    source: Execution lease
+    context: Module name
+  module.lease.description:
+    source: Request foreground execution and observe expiry
+    context: Module description
+  module.light.name:
+    source: Ambient light
+    context: Module name
+  module.light.description:
+    source: Discover a sensor and read authorized data
+    context: Module description
+  module.memory.name:
+    source: Dynamic memory
+    context: Module name
+  module.memory.description:
+    source: Complete calloc, realloc and free lifecycle
+    context: Module description
+  module.net.name:
+    source: Network
+    context: Module name
+  module.net.description:
+    source: HTTP methods, streaming reads and error cases
+    context: Module description
+  module.permission.name:
+    source: Permissions
+    context: Module name
+  module.permission.description:
+    source: Check and request optional permissions
+    context: Module description
+  module.sensor.name:
+    source: Temperature
+    context: Module name
+  module.sensor.description:
+    source: Discover a sensor and read authorized data
+    context: Module description
+  module.storage.name:
+    source: Storage
+    context: Module name
+  module.storage.description:
+    source: Write, read, list and remove keys
+    context: Module description
+  module.surface.name:
+    source: Surface composition
+    context: Module name
+  module.surface.description:
+    source: Compose an RGB565 BufferQueue with the system UI
+    context: Module description
+  module.alpha_surface.name:
+    source: Alpha Surface
+    context: Module name
+  module.alpha_surface.description:
+    source: Premultiplied ARGB, overlay controls and actual FPS
+    context: Module description
+  module.wasi.name:
+    source: WASI capabilities
+    context: Module name
+  module.wasi.description:
+    source: Signed clock and random capability calls
+    context: Module description
+  module.work.name:
+    source: Background work
+    context: Module name
+  module.work.description:
+    source: Schedule, observe and cancel delayed work
+    context: Module description
+  module.rgb565.name:
+    source: RGB565 frame buffer
+    context: Module name
+  module.rgb565.description:
+    source: Compare full and dirty redraw of a 120 KiB frame
+    context: Module description
+  module.controller.name:
+    source: Controller input
+    context: Module name
+  module.controller.description:
+    source: Full state, chords, two controllers and disconnect reset
+    context: Module description

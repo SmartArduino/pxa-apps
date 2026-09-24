@@ -1,0 +1,39 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [
+    0,
+    1
+  ],
+  "target_sdk": [
+    0,
+    1
+  ],
+  "compile_sdk": [
+    0,
+    1
+  ],
+  "id": "pxa-plane-shooter-raster",
+  "version": "0.1.1",
+  "name": "Orbital Strike Raster",
+  "description": "GameRender battle prototype: adaptive-resolution shmup drawn with raster draw lists",
+  "build": {
+    "system": "direct",
+    "linear_memory": {
+      "maximum_bytes": 1048576,
+      "pinned": true
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "sources": [
+        "main.c"
+      ],
+      "services": [
+        "game-render"
+      ]
+    }
+  ],
+  "release_sequence": 2
+}

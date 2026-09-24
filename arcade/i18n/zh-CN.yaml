@@ -1,0 +1,48 @@
+locale: zh-CN
+metadata:
+  name: PXA 游戏厅
+  description: 多款轻量街机游戏合集
+translations:
+  screen.title: PXA 游戏厅
+  screen.subtitle: 触控游戏厅
+  game.brick_breaker.name: 打砖块
+  game.brick_breaker.description: 拖动球拍，清除全部砖块
+  game.flappy_bird.name: 像素小鸟
+  game.flappy_bird.description: 点击飞行，穿过水管
+  game.jump_jump.name: 跳一跳
+  game.jump_jump.description: 按住蓄力，落到平台上
+  game.jumping.name: 跳跃平台
+  game.jumping.description: 拖动角色，跃上更高平台
+  game.minesweeper.name: 扫雷
+  game.minesweeper.description: 翻开安全格，标记地雷
+  game.tetris.name: 俄罗斯方块
+  game.tetris.description: 移动、旋转并消除方块
+  hud.score: 得分
+  hud.best: 最高
+  hud.level: 等级
+  brick.hint.strong: 金边砖块需要两次击打
+  brick.hint.serve: 拖动球拍，点击发球
+  brick.result.lost: 小球落地，点击重来
+  brick.result.clear: 关卡完成，点击继续
+  flappy.hint.start: 点击屏幕开始
+  flappy.result.crashed: 撞到了，再点一次
+  jump_jump.hint.charge: 按住蓄力，松手起跳
+  jump_jump.result.missed: 没站稳，点击重来
+  jumping.hint.drag: 拖动屏幕控制左右
+  jumping.result.fell: 掉下去了，点击重来
+  mines.title: 扫雷
+  mines.remaining: 剩余雷数
+  mines.mode.flag: 插旗模式
+  mines.mode.reveal: 翻开模式
+  mines.action.restart: 重新开始
+  mines.result.clear: 雷区已清除
+  mines.result.triggered: 踩到地雷
+  mines.hint.restart: 点击重新开始
+  shooter.hud.wave: 波次
+  shooter.hud.chain: 连击
+  shooter.wave.incoming: 来袭
+  shooter.hint.dodge: 右侧上下拖动闪避
+  shooter.result.lost: 战机失联，点击重启
+  tetris.hud.lines: 消行
+  tetris.hud.next: 下一个
+  tetris.hint.restart: 点击屏幕重新开始

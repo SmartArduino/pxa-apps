@@ -1,0 +1,231 @@
+namespace: app.pxa-plane-shooter
+default_locale: en-US
+messages:
+  screen.title:
+    source: Orbital Frontline
+    context: Game title
+  currency.credits:
+    source: Credits
+    context: Player currency label
+  nav.home:
+    source: Home
+    context: Bottom navigation destination
+  nav.hangar:
+    source: Hangar
+    context: Bottom navigation destination
+  nav.shop:
+    source: Shop
+    context: Bottom navigation destination
+  nav.missions:
+    source: Missions
+    context: Bottom navigation destination
+  home.falcon_ready:
+    source: Falcon Mk.I / route ready
+    context: Current ship and mission status
+  home.lark_ready:
+    source: Lark Mk.II / route ready
+    context: Current ship and mission status
+  action.launch_mission:
+    source: Launch mission
+    context: Start selected mission action
+  ship.falcon:
+    source: Falcon Mk.I
+    context: Ship model name
+  ship.lark:
+    source: Lark Mk.II
+    context: Ship model name
+  stat.power:
+    source: Power
+    context: Weapon strength label
+  stat.armor:
+    source: Armor
+    context: Hull strength label
+  hangar.upgrade_weapon:
+    source: Upgrade pulse cannon  80C
+    context: Weapon upgrade action
+  hangar.upgrade_hull:
+    source: Reinforce armor  100C
+    context: Hull upgrade action
+  module.standard:
+    source: Standard core
+    context: Equipment module name
+  module.cannons:
+    source: Prism cannons
+    context: Equipment module name
+  module.shield:
+    source: Deflector shield
+    context: Equipment module name
+  hangar.loadout:
+    source: Current loadout
+    context: Equipment section title
+  hangar.weapon_detail:
+    source: Auto-fire · upgrades to level III
+    context: Weapon behavior summary
+  hangar.hull_detail:
+    source: Brief invulnerability after a hit
+    context: Hull behavior summary
+  shop.tab.ship:
+    source: Ship
+    context: Shop category
+  shop.tab.weapon:
+    source: Weapon
+    context: Shop category
+  shop.tab.shield:
+    source: Shield
+    context: Shop category
+  shop.ship_detail:
+    source: Faster fire + reinforced hull
+    context: Shop item description
+  shop.cannons_detail:
+    source: Adds upper and lower wing fire
+    context: Shop item description
+  shop.shield_detail:
+    source: Shield + extra armor
+    context: Shop item description
+  shop.buy_ship:
+    source: Buy  320C
+    context: Purchase action
+  shop.buy_cannons:
+    source: Buy  180C
+    context: Purchase action
+  shop.buy_shield:
+    source: Buy  200C
+    context: Purchase action
+  action.equip:
+    source: Equip
+    context: Equip item action
+  state.equipped:
+    source: Equipped
+    context: Equipped item state
+  shop.traits:
+    source: Equipment traits
+    context: Item traits section title
+  trait.ship:
+    source: Cannon cooldown -1 / armor +1
+    context: Ship gameplay traits
+  trait.cannons:
+    source: Adds upper and lower wing fire
+    context: Weapon gameplay traits
+  trait.shield:
+    source: Starting shield / armor +1
+    context: Shield gameplay traits
+  mission.map_title:
+    source: Frontier map
+    context: Mission selection title
+  mission.boss_label:
+    source: 'Boss:'
+    context: Prefix before boss name
+  mission.briefing_title:
+    source: Mission briefing
+    context: Mission details title
+  mission.one.name:
+    source: Moonshade Route
+    context: Mission name
+  mission.two.name:
+    source: Redtide Nebula
+    context: Mission name
+  mission.three.name:
+    source: Cold Rift
+    context: Mission name
+  mission.one.boss:
+    source: Dreadnought
+    context: Mission boss name
+  mission.two.boss:
+    source: Hive Carrier
+    context: Mission boss name
+  mission.three.boss:
+    source: Rift Leviathan
+    context: Mission boss name
+  mission.one.threat:
+    source: Scouts · standard barrage
+    context: Mission threat summary
+  mission.two.threat:
+    source: Interceptors · tracking fire
+    context: Mission threat summary
+  mission.three.threat:
+    source: Heavy fleet · dense barrage
+    context: Mission threat summary
+  mission.one.brief:
+    source: Escort the supply ship through
+    context: Mission briefing
+  mission.two.brief:
+    source: Watch for fast interceptors
+    context: Mission briefing
+  mission.three.brief:
+    source: A heavy fleet is approaching
+    context: Mission briefing
+  mission.one.objective:
+    source: Clear 30 threat points
+    context: Mission objective
+  mission.two.objective:
+    source: Clear 45 threat points
+    context: Mission objective
+  mission.three.objective:
+    source: Clear 60 threat points
+    context: Mission objective
+  result.title:
+    source: Mission results
+    context: Results screen title
+  result.score:
+    source: Score
+    context: Mission result score label
+  result.reward:
+    source: Credits
+    context: Mission reward label
+  result.unlocked:
+    source: New route unlocked
+    context: New mission unlocked message
+  result.complete:
+    source: Sector threat cleared
+    context: Completed mission message
+  action.return_base:
+    source: Return to base
+    context: Leave results screen action
+  notice.funds:
+    source: Not enough credits
+    context: Insufficient currency notice
+  notice.locked:
+    source: Route is still locked
+    context: Locked mission notice
+  notice.maxed:
+    source: Already at maximum level
+    context: Upgrade limit notice
+  battle.score:
+    source: Score
+    context: Battle HUD score label
+  battle.wave:
+    source: Wave
+    context: Battle HUD wave label
+  battle.chain:
+    source: Chain
+    context: Battle HUD combo label
+  battle.threat:
+    source: Threat
+    context: Battle threat meter label
+  battle.incoming:
+    source: incoming
+    context: Suffix after incoming wave number
+  battle.hint:
+    source: Drag vertically to dodge
+    context: Battle control hint
+  battle.lost:
+    source: Fighter lost. Tap to restart
+    context: Battle loss message
+  battle.complete:
+    source: Mission complete
+    context: Battle completion title
+  battle.report:
+    source: View report
+    context: Open result report action
+  pause.title:
+    source: Mission paused
+    context: Pause dialog title
+  pause.resume:
+    source: Resume
+    context: Resume battle action
+  pause.restart:
+    source: Restart
+    context: Restart battle action
+  pause.exit:
+    source: Exit mission
+    context: Exit battle action

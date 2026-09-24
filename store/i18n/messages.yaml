@@ -1,0 +1,307 @@
+namespace: app.pxa-store
+default_locale: en-US
+messages:
+  screen.title:
+    source: App Store
+    context: Store screen title
+    max_bytes: 32
+  action.refresh:
+    source: Refresh
+    context: Reload the first catalog page
+    max_bytes: 24
+  action.load_more:
+    source: Load more
+    context: Append the next catalog page
+    max_bytes: 24
+  action.back:
+    source: Back
+    context: Return to the catalog list
+    max_bytes: 24
+  action.install:
+    source: Install
+    context: Start installing the selected application
+    max_bytes: 24
+  action.update:
+    source: Update
+    context: Install a newer release
+    max_bytes: 24
+  action.check_updates:
+    source: Check updates
+    context: Query the catalog for every installed application
+    max_bytes: 32
+  status.checking_updates:
+    source: Checking updates...
+    context: Update checks are in progress
+    max_bytes: 48
+  status.updates_checked:
+    source: Update check complete
+    context: All installed applications have been checked
+    max_bytes: 48
+  status.update_check_failed:
+    source: Some update checks failed
+    context: One or more application lookups failed
+    max_bytes: 48
+  action.open:
+    source: Open
+    context: Launch an installed application
+    max_bytes: 24
+  action.download:
+    source: Download
+    context: Download the application package
+    max_bytes: 24
+  action.delete:
+    source: Delete
+    context: Delete a download or failed entry
+    max_bytes: 24
+  action.uninstall:
+    source: Uninstall
+    context: Ask the Host to confirm removal of an installed application
+    max_bytes: 24
+  status.uninstall_waiting:
+    source: Confirm uninstall in the system dialog
+    context: Waiting for Host uninstall approval
+    max_bytes: 64
+  status.uninstall_success:
+    source: App uninstalled
+    context: Uninstall completed
+    max_bytes: 48
+  status.uninstall_cancelled:
+    source: Uninstall cancelled
+    context: User declined Host uninstall confirmation
+    max_bytes: 48
+  status.uninstall_failed:
+    source: Uninstall failed
+    context: Host could not uninstall the application
+    max_bytes: 48
+  screen.installed:
+    source: Installed
+    context: List of installed applications
+    max_bytes: 32
+  screen.downloads:
+    source: Downloads
+    context: Download manager
+    max_bytes: 32
+  list.no_installed:
+    source: No installed applications
+    context: Empty installed list
+    max_bytes: 48
+  list.no_downloads:
+    source: No downloads
+    context: Empty download manager
+    max_bytes: 32
+  status.update_available:
+    source: Update available
+    context: Catalog release newer than installed release
+    max_bytes: 32
+  status.installed:
+    source: Installed
+    context: Application already installed on this device
+    max_bytes: 32
+  status.downloaded:
+    source: Downloaded; ready to install
+    context: Completed verified download
+    max_bytes: 48
+  status.downloading:
+    source: Downloading
+    context: Live package download progress
+    max_bytes: 32
+  dialog.install_success:
+    source: Installed successfully. Open now?
+    context: Post-install confirmation
+    max_bytes: 64
+  action.later:
+    source: Later
+    context: Dismiss a completed installation dialog
+    max_bytes: 24
+  kind.apps:
+    source: Apps
+    context: Bottom tab for ordinary applications
+    max_bytes: 24
+  kind.games:
+    source: Games
+    context: Bottom tab for games
+    max_bytes: 24
+  filter.all:
+    source: All
+    context: Catalog filter that clears the search query
+    max_bytes: 24
+  search.title:
+    source: Search
+    context: Search screen title
+    max_bytes: 24
+  search.placeholder:
+    source: App name or keyword
+    context: Empty search field hint
+    max_bytes: 48
+  action.search:
+    source: Search
+    context: Apply the typed search text
+    max_bytes: 24
+  action.clear:
+    source: Clear
+    context: Clear the typed search text
+    max_bytes: 24
+  key.delete:
+    source: Del
+    context: On-screen keyboard backspace key
+    max_bytes: 16
+  list.loading:
+    source: Loading catalog
+    context: Catalog request in progress
+    max_bytes: 48
+  list.empty:
+    source: No published application matches this device
+    context: Empty catalog result
+    max_bytes: 96
+  list.loaded:
+    source: Loaded {count}
+    context: Number of catalog entries held in memory
+    max_bytes: 64
+    placeholders:
+      count: string
+  detail.summary:
+    source: Summary
+    context: Section title for the application summary
+    max_bytes: 24
+  detail.changelog:
+    source: What is new
+    context: Section title for the release changelog
+    max_bytes: 32
+  detail.permissions:
+    source: Permissions
+    context: Section title for declared permissions
+    max_bytes: 32
+  detail.services:
+    source: Required services
+    context: Section title for service requirements
+    max_bytes: 32
+  detail.version:
+    source: Version
+    context: Row label for the release version
+    max_bytes: 24
+  detail.size:
+    source: Package size
+    context: Row label for the artifact size
+    max_bytes: 32
+  detail.channel:
+    source: Channel
+    context: Row label for the release channel
+    max_bytes: 24
+  detail.sequence:
+    source: Release sequence
+    context: Row label for the signed release sequence
+    max_bytes: 32
+  detail.publisher:
+    source: Publisher
+    context: Row label for the publisher key identifier
+    max_bytes: 24
+  detail.digest:
+    source: SHA-256
+    context: Row label for the artifact digest
+    max_bytes: 24
+  detail.profile:
+    source: Device profile
+    context: Row label for the target device profile
+    max_bytes: 32
+  detail.sdk:
+    source: SDK
+    context: Row label for the required and target SDK versions
+    max_bytes: 24
+  detail.platforms:
+    source: Platforms
+    context: Row label for the packaged target platforms
+    max_bytes: 24
+  detail.none:
+    source: None
+    context: Empty section placeholder
+    max_bytes: 16
+  detail.required:
+    source: required
+    context: Permission that the application requires
+    max_bytes: 24
+  detail.optional:
+    source: optional
+    context: Permission that the application may request
+    max_bytes: 24
+  install.title:
+    source: Installation
+    context: Section title for the installation status
+    max_bytes: 32
+  install.host_confirm:
+    source: Download to Host storage; confirm installation in the system dialog
+    context: Installation runs outside the Guest's private filesystem
+    max_bytes: 128
+  status.waiting:
+    source: Waiting for the catalog
+    context: Idle status before the first request
+    max_bytes: 48
+  status.loading:
+    source: Loading
+    context: Catalog request in progress
+    max_bytes: 32
+  status.ready:
+    source: Catalog updated
+    context: Successful catalog synchronization
+    max_bytes: 32
+  status.permission:
+    source: Network permission is required
+    context: Permission was not granted
+    max_bytes: 48
+  status.denied:
+    source: Network permission denied
+    context: Permission request was denied
+    max_bytes: 48
+  status.unsupported:
+    source: This firmware has no network service
+    context: Net service is not available on this Host
+    max_bytes: 48
+  status.unavailable:
+    source: Store is unreachable
+    context: Transport is unavailable
+    max_bytes: 48
+  status.timeout:
+    source: Store request timed out
+    context: Request exceeded its timeout
+    max_bytes: 48
+  status.limit:
+    source: Catalog response exceeds the network limit
+    context: Response was larger than the bounded network buffer
+    max_bytes: 64
+  status.protocol:
+    source: Unexpected catalog response
+    context: Response could not be decoded
+    max_bytes: 48
+  status.not_found:
+    source: Application not found
+    context: HTTP 404 from the store
+    max_bytes: 48
+  status.http:
+    source: Store error {code}
+    context: Other HTTP error status
+    max_bytes: 48
+    placeholders:
+      code: string
+  status.failed:
+    source: Catalog request failed
+    context: Generic catalog failure
+    max_bytes: 48
+  status.install_loading:
+    source: Processing package; confirm installation in the system dialog
+    context: Host package installation request is pending
+    max_bytes: 96
+  status.install_success:
+    source: Installed successfully
+    context: Host installer committed the package
+    max_bytes: 48
+  status.download_failed:
+    source: Download failed; check the network or ticket
+    context: Host could not download or verify the package
+    max_bytes: 96
+  status.install_failed:
+    source: Installation failed or was cancelled; check the package signature
+    context: Host rejected the package after download
+    max_bytes: 112
+  status.storage_full:
+    source: Storage is full; delete downloads or unused apps and try again
+    context: Host package installer ran out of persistent storage
+    max_bytes: 112

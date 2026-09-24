@@ -1,0 +1,132 @@
+namespace: app.pxa-arcade
+default_locale: en-US
+messages:
+  screen.title:
+    source: PXA Arcade
+    context: Arcade collection title
+  screen.subtitle:
+    source: Touch Arcade
+    context: Arcade collection subtitle
+  game.brick_breaker.name:
+    source: Brick Breaker
+    context: Game name
+  game.brick_breaker.description:
+    source: Drag the paddle and clear every brick
+    context: Game description
+  game.flappy_bird.name:
+    source: Flappy Bird
+    context: Game name
+  game.flappy_bird.description:
+    source: Tap to fly through the pipes
+    context: Game description
+  game.jump_jump.name:
+    source: Jump Jump
+    context: Game name
+  game.jump_jump.description:
+    source: Hold to charge and land on a platform
+    context: Game description
+  game.jumping.name:
+    source: Platform Jump
+    context: Game name
+  game.jumping.description:
+    source: Drag the character toward higher platforms
+    context: Game description
+  game.minesweeper.name:
+    source: Minesweeper
+    context: Game name
+  game.minesweeper.description:
+    source: Reveal safe cells and mark mines
+    context: Game description
+  game.tetris.name:
+    source: Tetris
+    context: Game name
+  game.tetris.description:
+    source: Move, rotate and clear blocks
+    context: Game description
+  hud.score:
+    source: Score
+    context: Game score label
+  hud.best:
+    source: Best
+    context: Best score label
+  hud.level:
+    source: Level
+    context: Game level label
+  brick.hint.strong:
+    source: Gold bricks take two hits
+    context: Brick Breaker hint
+  brick.hint.serve:
+    source: Drag the paddle, tap to serve
+    context: Brick Breaker hint
+  brick.result.lost:
+    source: Ball lost. Tap to retry
+    context: Brick Breaker loss message
+  brick.result.clear:
+    source: Level clear. Tap to continue
+    context: Brick Breaker win message
+  flappy.hint.start:
+    source: Tap to start
+    context: Flappy Bird start hint
+  flappy.result.crashed:
+    source: Crashed. Tap to retry
+    context: Flappy Bird loss message
+  jump_jump.hint.charge:
+    source: Hold to charge, release to jump
+    context: Jump Jump control hint
+  jump_jump.result.missed:
+    source: Missed the platform. Tap to retry
+    context: Jump Jump loss message
+  jumping.hint.drag:
+    source: Drag left or right
+    context: Platform Jump control hint
+  jumping.result.fell:
+    source: You fell. Tap to retry
+    context: Platform Jump loss message
+  mines.title:
+    source: Mines
+    context: Minesweeper screen title
+  mines.remaining:
+    source: Remaining
+    context: Remaining mine count label
+  mines.mode.flag:
+    source: Flag mode
+    context: Minesweeper interaction mode
+  mines.mode.reveal:
+    source: Reveal mode
+    context: Minesweeper interaction mode
+  mines.action.restart:
+    source: Restart
+    context: Minesweeper restart action
+  mines.result.clear:
+    source: Minefield cleared
+    context: Minesweeper win message
+  mines.result.triggered:
+    source: Mine triggered
+    context: Minesweeper loss message
+  mines.hint.restart:
+    source: Tap to restart
+    context: Minesweeper restart hint
+  shooter.hud.wave:
+    source: Wave
+    context: Plane Shooter wave label
+  shooter.hud.chain:
+    source: Chain
+    context: Plane Shooter combo label
+  shooter.wave.incoming:
+    source: incoming
+    context: Suffix after wave number
+  shooter.hint.dodge:
+    source: Drag vertically to dodge
+    context: Plane Shooter control hint
+  shooter.result.lost:
+    source: Fighter lost. Tap to restart
+    context: Plane Shooter loss message
+  tetris.hud.lines:
+    source: Lines
+    context: Cleared line count label
+  tetris.hud.next:
+    source: Next
+    context: Next piece label
+  tetris.hint.restart:
+    source: Tap to restart
+    context: Tetris restart hint

@@ -1,0 +1,43 @@
+locale: zh-CN
+metadata:
+  name: PXA ABI 实验室
+  description: PXA 服务、WASI 能力、动态内存与可管理后台任务示例
+translations:
+  screen.title: PXA ABI 实验室
+  screen.subtitle: 18 个 ABI 示例
+  module.audio.name: 音频
+  module.audio.description: 权限申请、扬声器图和 PCM 队列
+  module.benchmark.name: AOT / WASM 跑分
+  module.benchmark.description: 整数、调用、分支和内存负载对比
+  module.fs.name: 私有文件
+  module.fs.description: 创建、读取、列举和删除沙盒文件
+  module.ipc.name: 进程通信
+  module.ipc.description: 请求与应答组件的回环调用
+  module.kv.name: 键值计数器
+  module.kv.description: 持久化键值的递增更新
+  module.lease.name: 执行租约
+  module.lease.description: 申请前台执行资格，观察到期撤销
+  module.light.name: 环境光
+  module.light.description: 发现传感器并读取授权范围内的数据
+  module.memory.name: 动态内存
+  module.memory.description: calloc、realloc 和 free 的完整生命周期
+  module.net.name: 网络
+  module.net.description: HTTP 方法、流式读取和错误场景
+  module.permission.name: 权限
+  module.permission.description: 检查并申请可选权限
+  module.sensor.name: 温度
+  module.sensor.description: 发现传感器并读取授权范围内的数据
+  module.storage.name: 存储
+  module.storage.description: 写入、读取、列出键名和删除键
+  module.surface.name: Surface 合成
+  module.surface.description: 独立 RGB565 BufferQueue 与系统 UI 融合
+  module.alpha_surface.name: 透明 Surface
+  module.alpha_surface.description: 预乘 ARGB、叠加按钮和实际 FPS
+  module.wasi.name: WASI 系统能力
+  module.wasi.description: 时钟和随机数的签名能力调用
+  module.work.name: 后台任务
+  module.work.description: 延迟执行、实时观察完成状态和取消
+  module.rgb565.name: RGB565 帧缓冲
+  module.rgb565.description: 对比全帧与脏区重绘的 120 KiB 动态帧
+  module.controller.name: 手柄输入
+  module.controller.description: 完整状态、组合键、双手柄和断开清零

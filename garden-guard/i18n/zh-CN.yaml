@@ -1,0 +1,76 @@
+locale: zh-CN
+metadata:
+  name: 花园守卫
+  description: 昼夜花园、12 个关卡、13 种植物，选卡出战并收集阳光守住花园
+translations:
+  screen.title: 花园守卫
+  screen.subtitle: 花园守卫
+  screen.version: v2.0 昼夜花园
+  home.progress: "进度 {current}/{total}  {stars} 星"
+  action.start_adventure: 开始冒险
+  action.select_level: 关卡选择
+  action.open_almanac: 植物图鉴
+  action.continue: 点击继续
+  action.retry: 点击重来
+  action.resume: 继续游戏
+  action.restart: 重新开始
+  action.main_menu: 返回主菜单
+  action.choose: 选择
+  action.cancel: 取消
+  action.start_battle: 开始战斗
+  pause.title: 游戏暂停
+  sound.on: "音效: 开"
+  sound.off: "音效: 关"
+  scene.day: 白天
+  scene.night: 夜晚
+  game.ready: 防线就绪
+  game.plant_hint: 点击草地种植
+  game.won: 守住花园
+  game.lost: 防线失守
+  game.reward: "解锁新植物 {plant}"
+  level.screen_title: 选择关卡
+  level.locked: 锁
+  level.not_unlocked: 暂未解锁
+  level.one_one: 1-1 草坪初试
+  level.one_two: 1-2 坚果筑墙
+  level.one_three: 1-3 樱桃炸弹
+  level.one_four: 1-4 双重射手
+  level.one_five: 1-5 寒冰守卫
+  level.two_one: 2-1 夜幕降临
+  level.two_two: 2-2 月光蘑影
+  level.two_three: 2-3 地刺暗阵
+  level.two_four: 2-4 迷雾重重
+  level.three_one: 3-1 烈日决战
+  level.three_two: 3-2 暗夜终章
+  level.three_three: 3-3 无尽花园
+  seed.sun_cost: "阳光 {cost}"
+  seed.empty: 没有可选植物
+  almanac.title: 植物图鉴
+  almanac.unlock_required: 通关解锁
+  almanac.unlocked: 已解锁
+  plant.shooter.name: 豌豆射手
+  plant.shooter.description: 直线射击
+  plant.sunflower.name: 向日葵
+  plant.sunflower.description: 生产阳光
+  plant.wall.name: 坚果墙
+  plant.wall.description: 高血量防御
+  plant.bomb.name: 樱桃炸弹
+  plant.bomb.description: 范围爆炸
+  plant.repeater.name: 双重射手
+  plant.repeater.description: 双发豌豆
+  plant.ice.name: 寒冰射手
+  plant.ice.description: 减速僵尸
+  plant.puff.name: 小喷菇
+  plant.puff.description: 免费近程攻击
+  plant.sunshroom.name: 阳光菇
+  plant.sunshroom.description: 夜晚产阳光
+  plant.spike.name: 地刺
+  plant.spike.description: 扎伤僵尸
+  plant.fume.name: 大喷菇
+  plant.fume.description: 穿透喷雾
+  plant.doom.name: 毁灭菇
+  plant.doom.description: 巨爆留下弹坑
+  plant.magnet.name: 磁力菇
+  plant.magnet.description: 吸铁降级僵尸
+  plant.gloom.name: 幽暗菇
+  plant.gloom.description: 范围持续伤害

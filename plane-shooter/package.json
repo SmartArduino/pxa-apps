@@ -1,0 +1,22 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [0, 1],
+  "target_sdk": [0, 1],
+  "compile_sdk": [0, 1],
+  "id": "pxa-plane-shooter",
+  "version": "0.2.1",
+  "name": "Orbital Strike",
+  "description": "A space combat game with a story campaign, ship hangar, and automatic fire",
+  "icon": "assets/plane-shooter/icon.png",
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "sources": ["main.c", "gameplay.c"],
+      "services": ["audio", "storage"]
+    }
+  ],
+  "permissions": [
+    {"name": "audio.playback", "required": false, "scope": "media"}
+  ]
+}

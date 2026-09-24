@@ -1,0 +1,59 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [0, 1],
+  "target_sdk": [0, 1],
+  "compile_sdk": [0, 1],
+  "id": "pxa-lab",
+  "version": "0.4.0",
+  "name": "PXA ABI Lab",
+  "description": "Examples of PXA services, WASI capabilities, dynamic memory, and manageable background tasks",
+  "components": [
+    {"id": "bench-aot", "kind": "service", "source": "benchmark_worker.c", "artifact": "aot", "services": ["ipc"]},
+    {"id": "bench-wasm", "kind": "service", "source": "benchmark_worker.c", "artifact": "wasm", "services": ["ipc"]},
+    {
+      "id": "main",
+      "kind": "ui",
+      "sources": [
+        "main.c",
+        "modules/audio.c",
+        "modules/alpha_surface.c",
+        "modules/benchmark.c",
+        "modules/controller.c",
+        "modules/fs.c",
+        "modules/ipc.c",
+        "modules/kv.c",
+        "modules/lease.c",
+        "modules/light.c",
+        "modules/memory.c",
+        "modules/net.c",
+        "modules/permission.c",
+        "modules/rgb565.c",
+        "modules/sensor.c",
+        "modules/storage.c",
+        "modules/surface.c",
+        "modules/wasi.c",
+        "modules/work.c"
+      ],
+      "services": ["audio", "fs", "surface", "ipc", "net", "sensor", "storage", "work"],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": ["monotonic-clock", "random", "wall-clock"]
+      }
+    },
+    {"id": "responder", "kind": "service", "source": "responder.c", "services": ["ipc"]},
+    {"id": "worker", "kind": "job", "source": "worker.c", "services": ["storage", "work"]}
+  ],
+  "ipc_endpoints": [
+    {"name": "bench.aot", "component": "bench-aot"},
+    {"name": "bench.wasm", "component": "bench-wasm"},
+    {"name": "demo.echo", "component": "responder"}
+  ],
+  "permissions": [
+    {"name": "audio.playback", "required": false, "scope": "media"},
+    {"name": "net.client", "required": false, "scope": "demo.local"},
+    {"name": "net.client", "required": false, "scope": "https://postman-echo.com"},
+    {"name": "sensor.read", "required": false, "scope": "ambient.light"},
+    {"name": "sensor.read", "required": false, "scope": "ambient.temperature"}
+  ]
+}

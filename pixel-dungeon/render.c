@@ -1,0 +1,1326 @@
+/* Draw-list renderer: builds one GameRender raster list per frame.
+ *
+ * Tiles come from the Shattered Pixel Dungeon tilesets, one region per five
+ * floors. Animation is time based: water and embers cycle through atlas
+ * frames, actors pick walk frames while the world moves, and remembered
+ * terrain is darkened with a fixed-alpha painter overlay. */
+#include "render.h"
+
+#include "assets.h"
+#include "font.h"
+#include "pxa_log.h"
+#include "strings.h"
+#include "wall_tiles.h"
+
+#define PD_MAX_TILE_INSTANCES 320
+#define PD_MAX_SPRITES 200
+#define PD_MAX_TEXT_BATCHES 12
+#define PD_MAX_TEXT_GLYPHS 96
+
+typedef struct {
+    uint16_t color;
+    uint8_t slot;
+    int count;
+    pxa_raster_sprite_instance_t items[PD_MAX_TEXT_GLYPHS];
+} pd_text_batch_t;
+
+static pxa_raster_sprite_instance_t g_tiles[PD_MAX_TILE_INSTANCES];
+static int g_tile_count;
+static pxa_raster_sprite_instance_t g_walls[PD_MAX_TILE_INSTANCES];
+static int g_wall_count;
+static pxa_raster_sprite_instance_t g_overlay[PD_MAX_TILE_INSTANCES];
+static int g_overlay_count;
+/* Remembered tiles need their overlay drawn after the whole tile batch, so the
+ * rectangles are collected first and emitted once the tiles are in the list. */
+#define PD_MAX_SHADES (PD_MAP_W * PD_MAP_H)
+static int16_t g_shade[PD_MAX_SHADES][2];
+static int g_shade_count;
+static int g_world_cell = PD_CELL;
+static pxa_raster_sprite_instance_t g_sprites[PD_MAX_SPRITES];
+static int g_sprite_count;
+static pd_text_batch_t g_text[PD_MAX_TEXT_BATCHES];
+static int g_text_count;
+static pxa_raster_draw_list_t g_list;
+static uint32_t g_capabilities;
+static uint32_t g_now_ms;
+static void sprite_flush(void);
+static void text_flush(void);
+static void text_center(int center_x, int y, const char *text,
+                        uint16_t color, int scale);
+
+static uint16_t rgb565(uint8_t red, uint8_t green, uint8_t blue) {
+    return (uint16_t)(((uint16_t)(red >> 3) << 11) |
+                      ((uint16_t)(green >> 2) << 5) | (blue >> 3));
+}
+
+/* ---------------------------------------------------------------------- */
+/* Primitives                                                              */
+/* ---------------------------------------------------------------------- */
+
+static void draw_rect(int x, int y, int width, int height, uint16_t color) {
+    int16_t xy[8];
+    if (width <= 0 || height <= 0) return;
+    sprite_flush();
+    text_flush();
+    xy[0] = xy[6] = (int16_t)(x * 16);
+    xy[1] = xy[3] = (int16_t)(y * 16);
+    xy[2] = xy[4] = (int16_t)((x + width) * 16);
+    xy[5] = xy[7] = (int16_t)((y + height) * 16);
+    (void)pxa_raster_flat_quad(&g_list, xy, color);
+}
+
+static void draw_frame_rect(int x, int y, int width, int height, int border,
+                            uint16_t fill, uint16_t edge) {
+    draw_rect(x, y, width, height, edge);
+    draw_rect(x + border, y + border, width - border * 2, height - border * 2,
+              fill);
+}
+
+static void draw_shade(int x, int y, int width, int height) {
+    pxa_raster_vertex_t vertices[4];
+    for (int index = 0; index < 4; ++index) {
+        vertices[index].x_q4 = (int16_t)((index == 1 || index == 2 ? x + width : x) * 16);
+        vertices[index].y_q4 = (int16_t)((index >= 2 ? y + height : y) * 16);
+        vertices[index].u_q4 = 0;
+        vertices[index].v_q4 = 0;
+        vertices[index].light = 0; /* only one palette row is uploaded */
+        vertices[index].depth_q8 = 0;
+    }
+    (void)pxa_raster_textured_quad_flags(
+        &g_list, vertices, PD_TEXTURE_FOG,
+        PXA_RASTER_QUAD_PAINTER | PXA_RASTER_QUAD_BLEND_75);
+    g_list.required_capabilities |= PXA_RASTER_CAP_FIXED_ALPHA_BLEND;
+}
+
+/* Remembered tiles need their overlay drawn after the whole tile batch, so the
+ * rectangles are collected first and emitted once the tiles are in the list. */
+static void shade_add(int x, int y) {
+    if (g_shade_count >= PD_MAX_SHADES) return;
+    g_shade[g_shade_count][0] = (int16_t)x;
+    g_shade[g_shade_count][1] = (int16_t)y;
+    ++g_shade_count;
+}
+
+static void shade_flush(void) {
+    for (int index = 0; index < g_shade_count; ++index)
+        draw_shade(g_shade[index][0], g_shade[index][1], g_world_cell,
+                   g_world_cell);
+    g_shade_count = 0;
+}
+
+
+static uint8_t g_sprite_slot = PD_TEXTURE_SPRITES;
+
+static void sprite_flush(void) {
+    if (g_sprite_count == 0) return;
+    (void)pxa_raster_sprite_batch(&g_list, g_sprite_slot,
+                                  PXA_RASTER_SPRITE_TRANSPARENT_INDEX0,
+                                  g_capabilities, g_sprites,
+                                  (uint16_t)g_sprite_count, 0);
+    g_sprite_count = 0;
+}
+
+/* Interface slices and world sprites live in different textures, so the
+ * pending batch is flushed whenever the target texture changes. */
+static void sprite_use_slot(uint8_t slot) {
+    text_flush();
+    if (g_sprite_slot == slot) return;
+    sprite_flush();
+    g_sprite_slot = slot;
+}
+
+static void sprite_instance(int x, int y, int width, int height,
+                            uint16_t source_x, uint16_t source_y,
+                            uint16_t source_width, uint16_t source_height) {
+    if (g_sprite_count >= PD_MAX_SPRITES) sprite_flush();
+    g_sprites[g_sprite_count].x = (int16_t)x;
+    g_sprites[g_sprite_count].y = (int16_t)y;
+    g_sprites[g_sprite_count].width = (uint16_t)width;
+    g_sprites[g_sprite_count].height = (uint16_t)height;
+    g_sprites[g_sprite_count].source_x = source_x;
+    g_sprites[g_sprite_count].source_y = source_y;
+    g_sprites[g_sprite_count].source_width = source_width;
+    g_sprites[g_sprite_count].source_height = source_height;
+    ++g_sprite_count;
+}
+
+/* One cell of the sprite atlas. */
+static void sprite_add(uint8_t id, int x, int y, int width, int height) {
+    sprite_use_slot(PD_TEXTURE_SPRITES);
+    sprite_instance(x, y, width, height,
+                    (uint16_t)((id % PD_CELLS_PER_ROW) * PD_CELL),
+                    (uint16_t)((id / PD_CELLS_PER_ROW) * PD_CELL), PD_CELL,
+                    PD_CELL);
+}
+
+/* One interface slice from pd_ui_rect, scaled to the requested size. */
+static void ui_sprite(uint8_t slice, int x, int y, int width, int height) {
+    const uint16_t *rect;
+    if (slice >= PD_UI_SLICE_COUNT) return;
+    rect = pd_ui_rect[slice];
+    sprite_use_slot(PD_TEXTURE_UI);
+    sprite_instance(x, y, width, height, rect[0], rect[1], rect[2], rect[3]);
+}
+
+static void ui_sprite_without_header(uint8_t slice, int x, int y,
+                                     int width, int height) {
+    const uint16_t *rect = pd_ui_rect[slice];
+    sprite_use_slot(PD_TEXTURE_UI);
+    sprite_instance(x, y, width, height, rect[0], rect[1] + 7,
+                    rect[2], rect[3] - 7);
+}
+
+static void ui_ninepatch(uint8_t slice, int x, int y, int width, int height,
+                         int border) {
+    const uint16_t *source = pd_ui_rect[slice];
+    const int center_w = width - 2 * border;
+    const int center_h = height - 2 * border;
+    const int source_w = source[2] - 2 * border;
+    const int source_h = source[3] - 2 * border;
+    const int dest_x[3] = {x, x + border, x + width - border};
+    const int dest_y[3] = {y, y + border, y + height - border};
+    const int dest_w[3] = {border, center_w, border};
+    const int dest_h[3] = {border, center_h, border};
+    const int src_x[3] = {source[0], source[0] + border,
+                          source[0] + source[2] - border};
+    const int src_y[3] = {source[1], source[1] + border,
+                          source[1] + source[3] - border};
+    const int src_w[3] = {border, source_w, border};
+    const int src_h[3] = {border, source_h, border};
+    sprite_use_slot(PD_TEXTURE_UI);
+    for (int row = 0; row < 3; ++row)
+        for (int column = 0; column < 3; ++column)
+            sprite_instance(dest_x[column], dest_y[row], dest_w[column],
+                            dest_h[row], src_x[column], src_y[row],
+                            src_w[column], src_h[row]);
+}
+
+static void ui_button(const pd_rect_t *rect, const char *label) {
+    ui_ninepatch(PD_UI_BUTTON, rect->x, rect->y, rect->w, rect->h, 4);
+    text_center(rect->x + rect->w / 2, rect->y + (rect->h - 12) / 2,
+                label, rgb565(238, 234, 220), 1);
+}
+
+static void ui_red_button(const pd_rect_t *rect, const char *label) {
+    ui_ninepatch(PD_UI_RED_BUTTON, rect->x, rect->y, rect->w, rect->h, 2);
+    text_center(rect->x + rect->w / 2, rect->y + (rect->h - 16) / 2,
+                label, rgb565(238, 234, 220), 1);
+}
+
+
+static void text_flush(void) {
+    for (int index = 0; index < g_text_count; ++index) {
+        pd_text_batch_t *batch = &g_text[index];
+        if (batch->count == 0) continue;
+        (void)pxa_raster_sprite_batch(
+            &g_list, batch->slot,
+            PXA_RASTER_SPRITE_TRANSPARENT_INDEX0 |
+                PXA_RASTER_SPRITE_SOLID_COLOR |
+                PXA_RASTER_SPRITE_TEXEL_ALPHA,
+            g_capabilities, batch->items, (uint16_t)batch->count, batch->color);
+        batch->count = 0;
+    }
+}
+
+static pd_text_batch_t *text_batch(uint16_t color, uint8_t slot) {
+    for (int index = 0; index < g_text_count; ++index)
+        if (g_text[index].color == color && g_text[index].slot == slot)
+            return &g_text[index];
+    if (g_text_count >= PD_MAX_TEXT_BATCHES) {
+        /* Never mix slots in one batch: flush and reuse the first entry. */
+        text_flush();
+        g_text[0].color = color;
+        g_text[0].slot = slot;
+        return &g_text[0];
+    }
+    g_text[g_text_count].color = color;
+    g_text[g_text_count].slot = slot;
+    g_text[g_text_count].count = 0;
+    return &g_text[g_text_count++];
+}
+
+/* Anti-aliased text: the atlas texel is coverage and solid_color tints it. */
+static int text_draw(int x, int y, const char *text, uint16_t color,
+                     int scale) {
+    int cursor = x;
+    const char *walker = text;
+    pd_glyph_t glyph;
+    int result;
+    sprite_flush();
+    while ((result = pd_font_next(&walker, &glyph)) != 0) {
+        if (result < 0) continue;
+        const uint8_t slot =
+            glyph.cjk ? PD_TEXTURE_FONT_CJK : PD_TEXTURE_FONT_ASCII;
+        pd_text_batch_t *batch = text_batch(color, slot);
+        int advance = pd_font_advance(&glyph, scale);
+        if (glyph.atlas == NULL) continue;
+        if (batch->count >= PD_MAX_TEXT_GLYPHS) text_flush();
+        batch = text_batch(color, slot);
+        batch->items[batch->count].x = (int16_t)cursor;
+        batch->items[batch->count].y = (int16_t)(y + (glyph.cjk ? 0 : scale));
+        batch->items[batch->count].width = (uint16_t)(glyph.cell_width * scale);
+        batch->items[batch->count].height = (uint16_t)(glyph.cell_height * scale);
+        batch->items[batch->count].source_x =
+            (uint16_t)((glyph.slot % (glyph.atlas_width / glyph.cell_width)) *
+                       glyph.cell_width);
+        batch->items[batch->count].source_y =
+            (uint16_t)((glyph.slot / (glyph.atlas_width / glyph.cell_width)) *
+                       glyph.cell_height);
+        batch->items[batch->count].source_width = glyph.cell_width;
+        batch->items[batch->count].source_height = glyph.cell_height;
+        ++batch->count;
+        cursor += advance;
+    }
+    return cursor - x;
+}
+
+static void text_center(int center_x, int y, const char *text, uint16_t color,
+                        int scale) {
+    text_draw(center_x - pd_font_width(text, scale) / 2, y, text, color, scale);
+}
+
+static void text_right(int right, int y, const char *text, uint16_t color,
+                       int scale) {
+    text_draw(right - pd_font_width(text, scale), y, text, color, scale);
+}
+
+static void draw_hud_value(int x, int y, const char *text, uint16_t color) {
+    static const uint8_t glyphs[11][5] = {
+        {3, 5, 5, 5, 6}, {1, 3, 1, 1, 1}, {6, 1, 2, 4, 7},
+        {6, 1, 2, 1, 6}, {5, 5, 7, 1, 1}, {7, 4, 6, 1, 6},
+        {3, 4, 7, 5, 7}, {7, 1, 2, 4, 4}, {7, 5, 2, 5, 7},
+        {7, 5, 7, 1, 6}, {1, 1, 0, 2, 2},
+    };
+    for (const char *character = text; *character != '\0'; ++character) {
+        const int index = *character == '/' ? 10 : *character - '0';
+        if (index < 0 || index > 10) continue;
+        const int width = index == 1 || index == 10 ? 2 : 3;
+        for (int row = 0; row < 5; ++row)
+            for (int column = 0; column < width; ++column)
+                if (glyphs[index][row] & (1u << (width - 1 - column)))
+                    draw_rect(x + column, y + row, 1, 1, color);
+        x += width + 1;
+    }
+}
+
+static char *append_text(char *out, const char *text) {
+    while (*text != '\0') *out++ = *text++;
+    return out;
+}
+
+static char *append_int(char *out, int value) {
+    char digits[12];
+    int count = 0;
+    if (value < 0) {
+        *out++ = '-';
+        value = -value;
+    }
+    if (value == 0) {
+        *out++ = '0';
+        return out;
+    }
+    while (value > 0 && count < 11) {
+        digits[count++] = (char)('0' + value % 10);
+        value /= 10;
+    }
+    while (count > 0) *out++ = digits[--count];
+    return out;
+}
+
+static int text_width(const char *text, int scale) {
+    return pd_font_width(text, scale);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Tiles                                                                   */
+/* ---------------------------------------------------------------------- */
+
+static void tile_flush(void) {
+    if (g_tile_count == 0) return;
+    (void)pxa_raster_sprite_batch(&g_list, PD_TEXTURE_TILES,
+                                  PXA_RASTER_SPRITE_TRANSPARENT_INDEX0,
+                                  g_capabilities, g_tiles,
+                                  (uint16_t)g_tile_count, 0);
+    g_tile_count = 0;
+}
+
+static void tile_add(int x, int y, uint8_t tile) {
+    const int cell_x = (tile % PD_CELLS_PER_ROW) * PD_CELL;
+    const int cell_y = (tile / PD_CELLS_PER_ROW) * PD_CELL;
+    if (g_tile_count >= PD_MAX_TILE_INSTANCES) tile_flush();
+    g_tiles[g_tile_count].x = (int16_t)x;
+    g_tiles[g_tile_count].y = (int16_t)y;
+    g_tiles[g_tile_count].width = (uint16_t)g_world_cell;
+    g_tiles[g_tile_count].height = (uint16_t)g_world_cell;
+    g_tiles[g_tile_count].source_x = (uint16_t)cell_x;
+    g_tiles[g_tile_count].source_y = (uint16_t)cell_y;
+    g_tiles[g_tile_count].source_width = PD_CELL;
+    g_tiles[g_tile_count].source_height = PD_CELL;
+    ++g_tile_count;
+}
+
+static void wall_flush(void) {
+    if (g_wall_count == 0) return;
+    (void)pxa_raster_sprite_batch(&g_list, PD_TEXTURE_WALLS,
+                                  PXA_RASTER_SPRITE_TRANSPARENT_INDEX0,
+                                  g_capabilities, g_walls,
+                                  (uint16_t)g_wall_count, 0);
+    g_wall_count = 0;
+}
+
+static void wall_add(int x, int y, uint8_t wall) {
+    pxa_raster_sprite_instance_t *item;
+    if (g_wall_count >= PD_MAX_TILE_INSTANCES) wall_flush();
+    item = &g_walls[g_wall_count++];
+    item->x = (int16_t)x;
+    item->y = (int16_t)y;
+    item->width = (uint16_t)g_world_cell;
+    item->height = (uint16_t)g_world_cell;
+    item->source_x = (uint16_t)((wall % PD_CELLS_PER_ROW) * PD_CELL);
+    item->source_y = (uint16_t)((wall / PD_CELLS_PER_ROW) * PD_CELL);
+    item->source_width = PD_CELL;
+    item->source_height = PD_CELL;
+}
+
+static void overlay_flush(void) {
+    if (g_overlay_count == 0) return;
+    (void)pxa_raster_sprite_batch(&g_list, PD_TEXTURE_TILES,
+                                  PXA_RASTER_SPRITE_TRANSPARENT_INDEX0,
+                                  g_capabilities, g_overlay,
+                                  (uint16_t)g_overlay_count, 0);
+    g_overlay_count = 0;
+}
+
+static void overlay_add(int x, int y, uint8_t tile) {
+    pxa_raster_sprite_instance_t *item;
+    if (g_overlay_count >= PD_MAX_TILE_INSTANCES) overlay_flush();
+    item = &g_overlay[g_overlay_count++];
+    item->x = (int16_t)x;
+    item->y = (int16_t)y;
+    item->width = (uint16_t)g_world_cell;
+    item->height = (uint16_t)g_world_cell;
+    item->source_x = (uint16_t)((tile % PD_CELLS_PER_ROW) * PD_CELL);
+    item->source_y = (uint16_t)((tile / PD_CELLS_PER_ROW) * PD_CELL);
+    item->source_width = PD_CELL;
+    item->source_height = PD_CELL;
+}
+
+static int terrain_alt(int x, int y) {
+    const uint32_t hash = (uint32_t)x * UINT32_C(73856093) ^
+                          (uint32_t)y * UINT32_C(19349663);
+    return ((hash >> 16) & 1u) != 0;
+}
+
+/* Water and embers are the two animated terrain kinds. */
+static uint8_t animated_tile(uint8_t tile) {
+    const uint8_t kind = PD_TILE_KIND(tile);
+    const uint8_t theme = (uint8_t)(tile / PD_TILES_PER_THEME);
+    if (kind >= PD_TILEK_WATER_A && kind <= PD_TILEK_WATER_D)
+        return PD_TILE(theme,
+                       (uint8_t)(PD_TILEK_WATER_A + (g_now_ms / 220u) % 4u));
+    if (kind == PD_TILEK_EMBERS_A || kind == PD_TILEK_EMBERS_B)
+        return PD_TILE(theme,
+                       (uint8_t)(PD_TILEK_EMBERS_A + (g_now_ms / 180u) % 2u));
+    return tile;
+}
+
+static uint8_t visible_tile(const pd_level_t *level, int x, int y) {
+    uint8_t tile = level->tiles[y * PD_MAP_W + x];
+    if (pd_tile_trap(tile) && !level->known[y * PD_MAP_W + x])
+        return level->floor_tile;
+    return tile;
+}
+
+static void draw_map(const pd_game_t *game, const pd_layout_t *layout,
+                     int camera_x, int camera_y) {
+    const pd_level_t *level = &game->level;
+    const int origin_x = layout->map_x - camera_x * layout->tile_pixels;
+    const int origin_y = layout->map_y - camera_y * layout->tile_pixels;
+    g_world_cell = layout->tile_pixels;
+    for (int row = 0; row < layout->rows; ++row) {
+        const int tile_y = camera_y + row;
+        if (tile_y < 0 || tile_y >= PD_MAP_H) continue;
+        for (int column = 0; column < layout->cols; ++column) {
+            const int tile_x = camera_x + column;
+            int x;
+            int y;
+            int face;
+            uint8_t tile;
+            if (tile_x < 0 || tile_x >= PD_MAP_W) continue;
+            if (!level->explored[tile_y * PD_MAP_W + tile_x]) continue;
+            tile = visible_tile(level, tile_x, tile_y);
+            if (PD_TILE_KIND(tile) == PD_TILEK_VOID) continue;
+            x = origin_x + tile_x * g_world_cell;
+            y = origin_y + tile_y * g_world_cell;
+            if (pd_tile_wall(tile)) {
+                if (!pd_wall_exposed(level, tile_x, tile_y)) continue;
+                face = pd_wall_face(level, tile_x, tile_y);
+                if (face >= 0) wall_add(x, y, (uint8_t)face);
+            } else if (pd_tile_door(tile) && tile_y > 0 &&
+                       pd_tile_wall(pd_tile_at(level, tile_x, tile_y - 1))) {
+                wall_add(x, y, PD_WALL(level->theme,
+                                      PD_WALLK_DOOR_FLOOR_SIDEWAYS));
+            } else {
+                const uint8_t kind = PD_TILE_KIND(tile);
+                if (kind == PD_TILEK_GRASS && terrain_alt(tile_x, tile_y))
+                    tile = PD_TILE(level->theme, PD_TILEK_GRASS_ALT);
+                if (kind == PD_TILEK_HIGH_GRASS && terrain_alt(tile_x, tile_y))
+                    tile = PD_TILE(level->theme, PD_TILEK_HIGH_GRASS_ALT);
+                tile_add(x, y, animated_tile(tile));
+                if (pd_tile_water(tile))
+                    overlay_add(x, y, PD_TILE(level->theme,
+                        PD_TILEK_WATER_SHORE_0 +
+                        pd_water_shore(level, tile_x, tile_y)));
+            }
+            if (!level->visible[tile_y * PD_MAP_W + tile_x])
+                shade_add(x, y);
+        }
+    }
+    tile_flush();
+    overlay_flush();
+    wall_flush();
+}
+
+static void draw_upper_walls(const pd_game_t *game, const pd_layout_t *layout,
+                             int camera_x, int camera_y) {
+    const pd_level_t *level = &game->level;
+    for (int row = 0; row < layout->rows; ++row) {
+        const int tile_y = camera_y + row;
+        if (tile_y < 0 || tile_y + 1 >= PD_MAP_H) continue;
+        for (int column = 0; column < layout->cols; ++column) {
+            const int tile_x = camera_x + column;
+            int upper;
+            if (tile_x < 0 || tile_x >= PD_MAP_W) continue;
+            if (!level->explored[tile_y * PD_MAP_W + tile_x]) continue;
+            if ((pd_tile_wall(pd_tile_at(level, tile_x, tile_y)) &&
+                 !pd_wall_exposed(level, tile_x, tile_y)) ||
+                (pd_tile_wall(pd_tile_at(level, tile_x, tile_y + 1)) &&
+                 !pd_wall_exposed(level, tile_x, tile_y + 1))) continue;
+            upper = pd_wall_upper(level, tile_x, tile_y);
+            if (upper >= 0)
+                wall_add(layout->map_x + column * g_world_cell,
+                         layout->map_y + row * g_world_cell, (uint8_t)upper);
+            if (PD_TILE_KIND(pd_tile_at(level, tile_x, tile_y + 1)) ==
+                PD_TILEK_HIGH_GRASS)
+                overlay_add(layout->map_x + column * g_world_cell,
+                            layout->map_y + row * g_world_cell,
+                            PD_TILE(level->theme,
+                                    terrain_alt(tile_x, tile_y + 1) ?
+                                    PD_TILEK_HIGH_GRASS_OVERHANG_ALT :
+                                    PD_TILEK_HIGH_GRASS_OVERHANG));
+        }
+    }
+    wall_flush();
+    overlay_flush();
+}
+
+static void draw_ground_items(const pd_game_t *game, const pd_layout_t *layout,
+                              int camera_x, int camera_y) {
+    for (int index = 0; index < game->ground_count; ++index) {
+        const pd_ground_t *entry = &game->ground[index];
+        const int x = layout->map_x + (entry->x - camera_x) * g_world_cell;
+        const int y = layout->map_y + (entry->y - camera_y) * g_world_cell -
+                      5 * layout->zoom;
+        if (!entry->used) continue;
+        if (!game->level.visible[entry->y * PD_MAP_W + entry->x]) continue;
+        if (x < layout->map_x || x >= layout->map_x + layout->map_w ||
+            y + g_world_cell <= layout->map_y ||
+            y >= layout->map_y + layout->map_h) continue;
+        sprite_add(pd_item_sprite(&entry->item), x, y, g_world_cell, g_world_cell);
+    }
+}
+
+/* Ground items glimmer like the original: two pixels pulsing over the heap. */
+static void draw_item_sparkles(const pd_game_t *game,
+                               const pd_layout_t *layout, int camera_x,
+                               int camera_y) {
+    const uint32_t phase = (g_now_ms / 90u) % 10u;
+    if (phase > 6u) return;
+    for (int index = 0; index < game->ground_count; ++index) {
+        const pd_ground_t *entry = &game->ground[index];
+        const int x = layout->map_x + (entry->x - camera_x) * g_world_cell;
+        const int y = layout->map_y + (entry->y - camera_y) * g_world_cell -
+                      5 * layout->zoom;
+        if (!entry->used) continue;
+        if (!game->level.visible[entry->y * PD_MAP_W + entry->x]) continue;
+        if (x < layout->map_x || x >= layout->map_x + layout->map_w ||
+            y + g_world_cell <= layout->map_y ||
+            y >= layout->map_y + layout->map_h) continue;
+        draw_rect(x + (3 + (int)(phase / 3u)) * layout->zoom,
+                  y + 3 * layout->zoom, 2 * layout->zoom, 2 * layout->zoom,
+                  rgb565(255, 255, 220));
+        draw_rect(x + 10 * layout->zoom,
+                  y + (4 + (int)(phase / 2u) % 4) * layout->zoom,
+                  2 * layout->zoom, 2 * layout->zoom,
+                  rgb565(255, 255, 220));
+    }
+}
+
+static void draw_mobs(const pd_game_t *game, const pd_layout_t *layout,
+                      int camera_x, int camera_y) {
+    for (int index = 0; index < PD_MOBS_MAX; ++index) {
+        const pd_mob_t *mob = &game->mobs[index];
+        uint8_t frame;
+        int x;
+        int y;
+        if (mob->type == 0xFF) continue;
+        if (!game->level.visible[mob->y * PD_MAP_W + mob->x]) continue;
+        x = layout->map_x + (mob->x - camera_x) * g_world_cell;
+        y = layout->map_y + (mob->y - camera_y) * g_world_cell;
+        if (mob->moving > 0) {
+            x += ((int)mob->from_x - mob->x) * g_world_cell * mob->moving / 8;
+            y += ((int)mob->from_y - mob->y) * g_world_cell * mob->moving / 8;
+        }
+        y -= 6 * layout->zoom;
+        if (x < layout->map_x || x >= layout->map_x + layout->map_w ||
+            y + g_world_cell <= layout->map_y ||
+            y >= layout->map_y + layout->map_h) continue;
+        if (mob->dying > 0) {
+            frame = (uint8_t)(PD_MOB_FRAME_DIE + (mob->dying > 10 ? 0 : 1));
+        } else if (mob->attacking > 0) {
+            frame = PD_MOB_FRAME_ATTACK;
+        } else if (mob->awake) {
+            frame = (uint8_t)(PD_MOB_FRAME_RUN + (g_now_ms / 150u) % 2u);
+        } else {
+            frame = (uint8_t)(PD_MOB_FRAME_IDLE + (g_now_ms / 420u) % 2u);
+        }
+        sprite_add(PD_SPRITE_MOB(mob->type, frame), x, y,
+                   g_world_cell, g_world_cell);
+        if (mob->dying > 0) continue;
+        if (mob->hp < pd_mob_max_hp(mob->type)) {
+            const int width =
+                mob->hp * (g_world_cell - 4) / pd_mob_max_hp(mob->type);
+            draw_rect(x + 2, y - 3, g_world_cell - 4, 2, rgb565(40, 20, 20));
+            draw_rect(x + 2, y - 3, width < 1 ? 1 : width, 2,
+                      rgb565(210, 60, 60));
+        }
+    }
+}
+
+static void draw_hero(const pd_game_t *game, const pd_layout_t *layout,
+                      int camera_x, int camera_y) {
+    int x = layout->map_x + (game->hero.x - camera_x) * g_world_cell;
+    int y = layout->map_y + (game->hero.y - camera_y) * g_world_cell;
+    uint8_t frame = 0;
+    int bob = 0;
+    if (game->hero_moving > 0) {
+        x += ((int)game->hero_from_x - game->hero.x) * g_world_cell *
+             game->hero_moving / 12;
+        y += ((int)game->hero_from_y - game->hero.y) * g_world_cell *
+             game->hero_moving / 12;
+        frame = (uint8_t)(2u + (g_now_ms / 120u) % 3u);
+        bob = (int)((g_now_ms / 120u) % 2u) * layout->zoom;
+    } else {
+        frame = (uint8_t)((g_now_ms / 700u) % 4u == 0u ? 1u : 0u);
+    }
+    y -= 6 * layout->zoom;
+    sprite_add(PD_SPRITE_HERO_FACING(game->hero.cls,
+               pd_hero_visual_tier(game),
+               game->hero.facing == 2, frame), x, y - bob,
+               g_world_cell, g_world_cell);
+}
+
+static void draw_search_square(int x, int y, int size, int fade) {
+    pxa_raster_vertex_t vertices[4];
+    const int source_x = fade * 16;
+    for (int index = 0; index < 4; ++index) {
+        vertices[index].x_q4 = (int16_t)((index == 1 || index == 2 ?
+                                          x + size : x) * 16);
+        vertices[index].y_q4 = (int16_t)((index >= 2 ? y + size : y) * 16);
+        vertices[index].u_q4 = (int16_t)((source_x +
+                              (index == 1 || index == 2 ? 16 : 0)) * 16);
+        vertices[index].v_q4 = (int16_t)((index >= 2 ? 16 : 0) * 16);
+        vertices[index].light = 0;
+        vertices[index].depth_q8 = 0;
+    }
+    (void)pxa_raster_textured_quad_flags(
+        &g_list, vertices, PD_TEXTURE_SEARCH,
+        PXA_RASTER_QUAD_PAINTER | PXA_RASTER_QUAD_TRANSPARENT_INDEX0 |
+        PXA_RASTER_QUAD_BLEND_75);
+    g_list.required_capabilities |= PXA_RASTER_CAP_FIXED_ALPHA_BLEND;
+}
+
+static void draw_effects(const pd_game_t *game, const pd_layout_t *layout,
+                         int camera_x, int camera_y) {
+    for (int index = 0; index < PD_EFFECTS_MAX; ++index) {
+        const pd_effect_t *effect = &game->effects[index];
+        const int x = layout->map_x + (effect->x - camera_x) * g_world_cell;
+        const int y = layout->map_y + (effect->y - camera_y) * g_world_cell;
+        if (effect->ttl == 0) continue;
+        if (x < layout->map_x || x >= layout->map_x + layout->map_w ||
+            y < layout->map_y || y >= layout->map_y + layout->map_h) continue;
+        if (effect->kind == PD_EFFECT_DAMAGE) {
+            char text[8];
+            char *out = text;
+            out = append_int(out, effect->value);
+            *out = '\0';
+            text_draw(x + g_world_cell / 2 - text_width(text, 1) / 2,
+                      y - (20 - effect->ttl) / 3, text, rgb565(255, 236, 160),
+                      1);
+            continue;
+        }
+        if (effect->kind == PD_EFFECT_SEARCH) {
+            const int age = 20 - effect->ttl - effect->value * 3;
+            int size;
+            int inset;
+            if (age < 0 || age >= 16) continue;
+            size = g_world_cell * (16 - age) / 20;
+            if (size < layout->zoom) size = layout->zoom;
+            inset = (g_world_cell - size) / 2;
+            draw_search_square(x + inset, y + inset, size, age / 4);
+            continue;
+        }
+        if (effect->kind == PD_EFFECT_LEAF) {
+            const int age = 40 - effect->ttl;
+            const uint32_t seed = (uint32_t)(effect->x * 73 + effect->y * 149);
+            if (age >= 34) continue;
+            for (int leaf = 0; leaf < 4; ++leaf) {
+                const int drift = (leaf & 1 ? 1 : -1) * (2 + age / 5);
+                const int sway = (int)((seed + (uint32_t)leaf * 7u +
+                                        (uint32_t)age / 4u) % 3u) - 1;
+                const int leaf_x = (8 + drift + sway) * layout->zoom;
+                const int leaf_y = (8 - age / 2 + age * age / 72 +
+                                    (leaf / 2) * 2) * layout->zoom;
+                const int size = (age < 16 ? 2 : 1) * layout->zoom;
+                const uint16_t color = game->level.theme <= 1 ?
+                    (leaf & 1 ? rgb565(93, 155, 63) : rgb565(134, 177, 74)) :
+                    (leaf & 1 ? rgb565(157, 129, 74) : rgb565(195, 162, 94));
+                draw_rect(x + leaf_x, y + leaf_y, size, size, color);
+            }
+            continue;
+        }
+        if (effect->kind == PD_EFFECT_BLOOD) {
+            const uint32_t seed = (uint32_t)(effect->x * 73 + effect->y * 149);
+            const int age = 20 - effect->ttl;
+            for (int dot = 0; dot < 8; ++dot) {
+                const int drift_x = (int)((seed + (uint32_t)dot * 47u) % 9u) - 4;
+                const int drift_y = (int)((seed + (uint32_t)dot * 23u) % 7u) - 5;
+                const int dx = (8 + drift_x * age / 6) * layout->zoom;
+                const int dy = (8 + drift_y * age / 6 + age * age / 36) * layout->zoom;
+                const uint16_t color =
+                    rgb565(190, 40 + (uint8_t)(dot * 4), 40);
+                draw_rect(x + dx, y + dy, layout->zoom, layout->zoom, color);
+            }
+            continue;
+        }
+        {
+            const uint32_t phase = (uint32_t)effect->ttl;
+            draw_rect(x + (7 - (int)(phase % 3u)) * layout->zoom,
+                      y + 7 * layout->zoom, 3 * layout->zoom, 3 * layout->zoom,
+                      rgb565(255, 255, 210));
+            draw_rect(x + 6 * layout->zoom,
+                      y + (6 - (int)(phase % 4u)) * layout->zoom,
+                      2 * layout->zoom, 2 * layout->zoom,
+                      rgb565(255, 240, 160));
+        }
+    }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Chrome                                                                  */
+/* ---------------------------------------------------------------------- */
+
+static void draw_hud(const pd_game_t *game, const pd_layout_t *layout) {
+    const pd_hero_t *hero = &game->hero;
+    char text[32];
+    char *out;
+    const int needed = 6 + hero->level * 5;
+    const int pane_x = layout->hero_info.x;
+    const int pane_y = layout->hero_info.y;
+    const int pane_w = 82;
+    const int pane_h = 38;
+    int fill;
+
+    /* A status panel shaped like the original's: portrait, health bar and an
+     * experience bar along the bottom edge. */
+    ui_sprite(PD_UI_STATUS_PANE, pane_x, pane_y, pane_w, pane_h);
+    sprite_add(PD_SPRITE_HERO(hero->cls, pd_hero_visual_tier(game), 0),
+               pane_x + 7, pane_y + 8, 16, 16);
+
+    /* Health bar in the panel's bar recess. */
+    fill = hero->max_hp == 0 ? 0 : 50 * hero->hp / hero->max_hp;
+    if (fill > 50) fill = 50;
+    if (fill > 0)
+        ui_sprite(PD_UI_HP_BAR, pane_x + 30, pane_y + 2, fill, 8);
+
+    out = text;
+    out = append_int(out, hero->hp);
+    *out++ = '/';
+    out = append_int(out, hero->max_hp);
+    *out = '\0';
+    draw_hud_value(pane_x + 31, pane_y + 3, text,
+                   rgb565(255, 240, 236));
+
+    /* Experience bar along the panel's lower edge. */
+    if (needed > 0) {
+        int width = 17 * hero->xp / needed;
+        if (width > 17) width = 17;
+        if (width > 0)
+            ui_sprite(PD_UI_EXP_BAR, pane_x + 2, pane_y + 29, width, 8);
+    }
+
+    out = text;
+    out = append_int(out, hero->xp);
+    *out++ = '/';
+    out = append_int(out, needed);
+    *out = '\0';
+    draw_hud_value(pane_x + 3, pane_y + 30, text,
+                   rgb565(255, 243, 170));
+
+    out = text;
+    out = append_int(out, hero->level);
+    *out = '\0';
+    text_center(pane_x + 25, pane_y + 25, text,
+                rgb565(250, 236, 180), 1);
+}
+
+static void draw_messages(const pd_game_t *game, const pd_layout_t *layout) {
+    const pd_message_t *message;
+    const char *walker;
+    const char *start;
+    const int line_h = pd_strings_chinese() ? 17 : 14;
+    const int max_lines = layout->map_h >= 80 ? 2 : 1;
+    const int max_width = layout->width - layout->safe_left -
+                          layout->safe_right - 8;
+    char lines[2][PD_MESSAGE_TEXT];
+    int count = 0;
+    int line_width = 0;
+    int box_y;
+    uint16_t color = rgb565(255, 228, 92);
+    if (game->message_total == 0 || max_width < 8) return;
+    message = &game->messages[(game->message_total - 1u) % PD_MESSAGE_COUNT];
+    walker = start = message->text;
+    while (*walker && count < max_lines) {
+        const char *next = walker;
+        pd_glyph_t glyph;
+        const int result = pd_font_next(&next, &glyph);
+        const int advance = result > 0 ? pd_font_advance(&glyph, 1) : 0;
+        if (line_width + advance > max_width) {
+            if (walker != start) {
+                int length = (int)(walker - start);
+                if (length >= PD_MESSAGE_TEXT) length = PD_MESSAGE_TEXT - 1;
+                for (int offset = 0; offset < length; ++offset)
+                    lines[count][offset] = start[offset];
+                lines[count++][length] = '\0';
+                start = walker;
+                line_width = 0;
+                continue;
+            }
+            break;
+        }
+        line_width += advance;
+        walker = next;
+    }
+    if (count < max_lines && walker != start) {
+        int length = (int)(walker - start);
+        if (length >= PD_MESSAGE_TEXT) length = PD_MESSAGE_TEXT - 1;
+        for (int offset = 0; offset < length; ++offset)
+            lines[count][offset] = start[offset];
+        lines[count++][length] = '\0';
+    }
+    if (count == 0) return;
+    box_y = layout->height - layout->safe_bottom - layout->bar_h -
+            count * line_h - 2;
+    if (message->color == PD_MSG_GOOD) color = rgb565(140, 226, 140);
+    if (message->color == PD_MSG_BAD) color = rgb565(255, 120, 110);
+    if (message->color == PD_MSG_WARN) color = rgb565(250, 214, 96);
+    if (message->color == PD_MSG_INFO) color = rgb565(250, 217, 85);
+    for (int index = 0; index < count; ++index)
+        text_draw(layout->safe_left + 2, box_y + index * line_h,
+                  lines[index], color, 1);
+}
+
+/* The original's action toolbar: five slots with the wait, search, potion,
+ * pack and stairs actions. */
+static void draw_buttons(const pd_game_t *game, const pd_layout_t *layout) {
+    char text[16];
+    char *out;
+    int potions = 0;
+    for (int index = 0; index < game->bag_count; ++index)
+        if (game->bag[index].kind == PD_ITEM_POTION_HEAL) ++potions;
+    for (int index = 0; index < PD_BUTTON_COUNT; ++index) {
+        const pd_rect_t *rect = &layout->button[index];
+        const int icon = rect->h - 4;
+        const int icon_x = rect->x + (rect->w - icon) / 2;
+        const int icon_y = rect->y + 2;
+        ui_sprite(PD_UI_TOOLBAR_SLOT, rect->x, rect->y, rect->w, rect->h);
+        switch (index) {
+            case PD_BUTTON_WAIT:
+                ui_sprite(PD_UI_TOOLBAR_WAIT, icon_x, icon_y, icon, icon);
+                break;
+            case PD_BUTTON_SEARCH:
+                ui_sprite(PD_UI_TOOLBAR_SEARCH, icon_x, icon_y, icon, icon);
+                break;
+            case PD_BUTTON_POTION:
+                sprite_add(PD_SPRITE_ITEM_POTION_HEAL,
+                           rect->x + (rect->w - PD_CELL) / 2,
+                           rect->y + (rect->h - PD_CELL) / 2,
+                           PD_CELL, PD_CELL);
+                out = text;
+                out = append_int(out, potions);
+                *out = '\0';
+                text_right(rect->x + rect->w - 2, rect->y + rect->h - 13, text,
+                           potions > 0 ? rgb565(240, 240, 244)
+                                       : rgb565(145, 140, 150), 1);
+                break;
+            case PD_BUTTON_BAG:
+                ui_sprite(PD_UI_TOOLBAR_BAG, icon_x, icon_y, icon, icon);
+                break;
+            default:
+                ui_sprite(PD_UI_STAIRS_ICON, icon_x, icon_y, icon, icon);
+                break;
+        }
+    }
+}
+
+/* ---------------------------------------------------------------------- */
+/* Screens                                                                 */
+/* ---------------------------------------------------------------------- */
+
+static void fill_screen(const pd_layout_t *layout, uint16_t color) {
+    draw_rect(0, 0, layout->width, layout->height, color);
+}
+
+static void draw_status_screen(const pd_game_t *game, const pd_layout_t *layout,
+                               int won) {
+    char text[48];
+    char *out;
+    const uint16_t heading = won ? rgb565(250, 214, 96)
+                                 : rgb565(255, 96, 88);
+    const uint16_t ink = rgb565(228, 228, 234);
+    fill_screen(layout, rgb565(12, 10, 16));
+    text_center(layout->width / 2, 34, won ? pd_str(PD_STR_WIN_TITLE) : pd_str(PD_STR_DEAD_TITLE), heading, 3);
+    if (won) {
+        sprite_add(PD_SPRITE_ITEM_AMULET, layout->width / 2 - 16, 66, 32, 32);
+    } else {
+        sprite_add(PD_SPRITE_MOB(3, PD_MOB_FRAME_DIE + 1),
+                   layout->width / 2 - 16, 66, 32, 32);
+    }
+    out = text;
+    out = append_text(out, pd_str(PD_STR_STAT_DEPTH));
+    out = append_int(out, game->depth);
+    *out = '\0';
+    text_center(layout->width / 2, 112, text, ink, 1);
+    out = text;
+    out = append_text(out, pd_str(PD_STR_STAT_LEVEL_KILLS));
+    out = append_int(out, game->hero.level);
+    out = append_text(out, "   Kills ");
+    out = append_int(out, game->kills);
+    *out = '\0';
+    text_center(layout->width / 2, 128, text, ink, 1);
+    out = text;
+    out = append_text(out, pd_str(PD_STR_STAT_GOLD_TURNS));
+    out = append_int(out, game->hero.gold);
+    out = append_text(out, "   Turns ");
+    out = append_int(out, game->turn);
+    *out = '\0';
+    text_center(layout->width / 2, 144, text, ink, 1);
+    out = text;
+    out = append_text(out, pd_str(PD_STR_STAT_DEEPEST));
+    out = append_int(out, game->deepest);
+    *out = '\0';
+    text_center(layout->width / 2, 160, text, rgb565(160, 200, 240), 1);
+    text_center(layout->width / 2, layout->height - 30, pd_str(PD_STR_TAP_RETURN), ink, 1);
+}
+
+static void draw_game_over(const pd_layout_t *layout) {
+    const int banner_w = layout->width - layout->safe_left -
+                         layout->safe_right - 20 < 128 ?
+                         layout->width - layout->safe_left -
+                         layout->safe_right - 20 : 128;
+    const int banner_h = banner_w * 35 / 128;
+    const int center_y = layout->safe_top +
+        (layout->height - layout->safe_top - layout->safe_bottom) / 2;
+    draw_shade(0, 0, layout->width, layout->height);
+    ui_sprite(PD_UI_BANNER_GAME_OVER,
+              (layout->width - banner_w) / 2,
+              center_y - banner_h - 32, banner_w, banner_h);
+    ui_button(&layout->menu_primary, pd_str(PD_STR_NEW_GAME));
+    ui_button(&layout->menu_secondary, pd_str(PD_STR_BACK));
+}
+
+static void draw_title_background(const pd_layout_t *layout) {
+    int width = layout->width;
+    int height = width / 2;
+    if (height < layout->height) {
+        height = layout->height;
+        width = height * 2;
+    }
+    fill_screen(layout, rgb565(12, 10, 8));
+    sprite_use_slot(PD_TEXTURE_TITLE);
+    sprite_instance((layout->width - width) / 2,
+                    (layout->height - height) / 2, width, height,
+                    0, 0, PD_TITLE_ATLAS_WIDTH, PD_TITLE_ATLAS_HEIGHT);
+}
+
+static void draw_title(const pd_game_t *game, const pd_layout_t *layout) {
+    int banner_w = layout->width - layout->safe_left - layout->safe_right - 16;
+    if (banner_w > 240) banner_w = 240;
+    draw_title_background(layout);
+    ui_sprite(PD_UI_BANNER_TITLE, layout->width / 2 - banner_w / 2,
+              layout->safe_top + 10, banner_w, banner_w * 57 / 240);
+    ui_button(&layout->menu_primary, pd_str(PD_STR_ENTER_GAME));
+    if (game->deepest > 1) {
+        char line[32];
+        pd_str_format(line, sizeof(line), PD_STR_BEST_DEPTH, game->deepest);
+        text_center(layout->width / 2, layout->menu_secondary.y + 8, line,
+                    rgb565(236, 218, 140), 1);
+    }
+}
+
+static void draw_saves(const pd_game_t *game, const pd_layout_t *layout) {
+    char line[32];
+    draw_title_background(layout);
+    text_center(layout->width / 2, layout->safe_top + 38,
+                pd_str(PD_STR_SAVED_GAME), rgb565(250, 214, 96), 1);
+    if (game->hero.hp > 0) {
+        ui_button(&layout->menu_primary, pd_str(PD_STR_CONTINUE_GAME));
+        pd_str_format(line, sizeof(line), PD_STR_STAT_DEPTH, game->depth);
+        text_center(layout->width / 2, layout->menu_primary.y - 18,
+                    line, rgb565(232, 230, 210), 1);
+    }
+    ui_button(&layout->menu_secondary, pd_str(PD_STR_NEW_GAME));
+    ui_button(&layout->menu_back, pd_str(PD_STR_BACK));
+}
+
+static void draw_class_select(const pd_game_t *game, const pd_layout_t *layout) {
+    static const pd_string_id_t kClassDescriptions[3] = {
+        PD_STR_CLASS_1_DESC, PD_STR_CLASS_2_DESC, PD_STR_CLASS_3_DESC};
+    char text[32];
+    char *out;
+    draw_title_background(layout);
+    int heading_y = layout->safe_top + 30;
+    if (heading_y > layout->class_button[0].y - 18)
+        heading_y = layout->class_button[0].y - 18;
+    text_center(layout->width / 2, heading_y,
+                pd_str(PD_STR_CHOOSE_HERO), rgb565(250, 214, 96), 1);
+    for (int index = 0; index < PD_CLASS_COUNT; ++index) {
+        const pd_rect_t *rect = &layout->class_button[index];
+        ui_ninepatch(PD_UI_WINDOW, rect->x, rect->y, rect->w, rect->h, 6);
+        if (rect->h <= 40) {
+            ui_sprite((uint8_t)(PD_UI_AVATAR_WARRIOR + index),
+                      rect->x + 8, rect->y + 4,
+                      rect->h < 40 ? 16 : 20,
+                      rect->h < 40 ? 22 : 28);
+            text_draw(rect->x + 37, rect->y + 3,
+                      pd_class_name((uint8_t)index),
+                      rgb565(240, 240, 244), 1);
+        } else if (rect->h < 100) {
+            ui_sprite((uint8_t)(PD_UI_AVATAR_WARRIOR + index),
+                      rect->x + 10, rect->y + 15, 24, 32);
+            text_draw(rect->x + 49, rect->y + 9,
+                      pd_class_name((uint8_t)index),
+                      rgb565(240, 240, 244), 1);
+        } else {
+            ui_sprite((uint8_t)(PD_UI_AVATAR_WARRIOR + index),
+                      rect->x + rect->w / 2 - 12, rect->y + 5, 24, 32);
+            text_center(rect->x + rect->w / 2, rect->y + 41,
+                        pd_class_name((uint8_t)index),
+                        rgb565(240, 240, 244), 1);
+        }
+        out = text;
+        out = append_text(out, "STR ");
+        out = append_int(out, index == 0 ? 11 : 10);
+        *out = '\0';
+        if (rect->h <= 40) {
+            text_draw(rect->x + 37, rect->y + 16, text,
+                      rgb565(200, 200, 210), 1);
+            if (rect->h == 40)
+                text_draw(rect->x + 83, rect->y + 16,
+                          pd_str(kClassDescriptions[index]),
+                          rgb565(150, 200, 240), 1);
+        } else if (rect->h < 100) {
+            text_draw(rect->x + 49, rect->y + 30, text,
+                      rgb565(200, 200, 210), 1);
+            text_draw(rect->x + 49, rect->y + 51,
+                      pd_str(kClassDescriptions[index]),
+                      rgb565(150, 200, 240), 1);
+        } else {
+            text_center(rect->x + rect->w / 2, rect->y + 59, text,
+                        rgb565(200, 200, 210), 1);
+            text_center(rect->x + rect->w / 2, rect->y + 77,
+                        pd_str(kClassDescriptions[index]),
+                        rgb565(150, 200, 240), 1);
+        }
+    }
+    out = text;
+    out = append_text(out, pd_str(PD_STR_TAP_CLASS));
+    *out = '\0';
+    if (layout->display_shape != 2 || layout->height >= 220)
+        text_center(layout->width / 2,
+                    layout->display_shape == 2
+                        ? layout->height - layout->safe_bottom - 12
+                        : layout->class_button[PD_CLASS_COUNT - 1].y +
+                          layout->class_button[PD_CLASS_COUNT - 1].h + 9,
+                    text, rgb565(200, 200, 210), 1);
+    ui_button(&layout->menu_back, pd_str(PD_STR_BACK));
+    (void)game;
+}
+
+static void draw_bag(const pd_game_t *game, const pd_layout_t *layout) {
+    char text[48];
+    char *out;
+    char detail[48];
+    const int panel_x = layout->bag_row[0].x - 12;
+    const int available_h = layout->height - layout->safe_top -
+                            layout->safe_bottom - 8;
+    const int panel_h = available_h < 184 ? available_h : 184;
+    const int panel_y = layout->safe_top +
+        (layout->height - layout->safe_top - layout->safe_bottom - panel_h) / 2;
+    const int panel_w = layout->width - layout->safe_left -
+                        layout->safe_right < 250 ?
+                        layout->width - layout->safe_left - layout->safe_right - 12 : 240;
+    draw_rect(panel_x - 2, panel_y - 2, panel_w + 4, panel_h + 4,
+              rgb565(8, 8, 10));
+    ui_ninepatch(PD_UI_WINDOW, panel_x, panel_y, panel_w, panel_h, 6);
+    text_draw(panel_x + 10, panel_y + 10, pd_str(PD_STR_PACK_TITLE),
+              rgb565(250, 214, 96), 1);
+    sprite_add(PD_SPRITE_ITEM_GOLD, panel_x + panel_w - 53,
+               panel_y + 8, 16, 16);
+    out = append_int(text, game->hero.gold);
+    *out = '\0';
+    text_right(panel_x + panel_w - 9, panel_y + 11, text,
+               rgb565(250, 214, 96), 1);
+
+    for (int index = 0; index < PD_BAG_ROWS; ++index) {
+        const pd_rect_t *row = &layout->bag_row[index];
+        ui_ninepatch(PD_UI_BUTTON, row->x, row->y, row->w, row->h, 4);
+        if (index >= game->bag_count) continue;
+        {
+            const pd_item_t *item = &game->bag[index];
+            const int equipped =
+                index == game->hero.weapon || index == game->hero.armor;
+            const int icon = row->h < 25 ? 16 : 18;
+            sprite_add(pd_item_sprite(item), row->x + (row->w - icon) / 2,
+                       row->y + (row->h - icon) / 2, icon, icon);
+            if (equipped)
+                text_draw(row->x + 3, row->y + 1, "E",
+                          rgb565(250, 214, 96), 1);
+            if (index == game->bag_selected)
+            {
+                const uint16_t edge = rgb565(250, 214, 96);
+                draw_rect(row->x, row->y, row->w, 1, edge);
+                draw_rect(row->x, row->y + row->h - 1, row->w, 1, edge);
+                draw_rect(row->x, row->y, 1, row->h, edge);
+                draw_rect(row->x + row->w - 1, row->y, 1, row->h, edge);
+            }
+        }
+    }
+    if (game->bag_count == 0) {
+        text_center(panel_x + panel_w / 2, panel_y + 92,
+                    pd_str(PD_STR_BAG_EMPTY),
+                    rgb565(180, 180, 190), 1);
+    } else {
+        int selected = game->bag_selected;
+        if (selected < 0 || selected >= game->bag_count) selected = 0;
+        text_draw(panel_x + 12, layout->bag_use[0].y - 22,
+                  pd_item_name(&game->bag[selected]),
+                  rgb565(250, 214, 96), 1);
+        pd_item_detail(&game->bag[selected], detail, sizeof(detail));
+        text_right(panel_x + panel_w - 10, layout->bag_use[0].y - 22, detail,
+                   rgb565(184, 203, 213), 1);
+        ui_button(&layout->bag_use[0],
+                  game->bag[selected].kind == PD_ITEM_WEAPON ||
+                  game->bag[selected].kind == PD_ITEM_ARMOR ?
+                  pd_str(PD_STR_BAG_WIELD) : pd_str(PD_STR_BAG_USE));
+        ui_button(&layout->bag_drop[0], pd_str(PD_STR_BAG_DROP));
+    }
+    ui_button(&layout->bag_close, "X");
+}
+
+static void draw_info(const pd_game_t *game, const pd_layout_t *layout) {
+    const int available_w = layout->width - layout->safe_left -
+                            layout->safe_right - 16;
+    const int available_h = layout->height - layout->safe_top -
+                            layout->safe_bottom - 12;
+    const int width = available_w < 210 ? available_w : 210;
+    const int height = available_h < 156 ? available_h : 156;
+    const int left = (layout->width - width) / 2;
+    const int top = (layout->height - height) / 2;
+    char line[32];
+    char *out;
+    int y = top + 40;
+    ui_ninepatch(PD_UI_WINDOW, left, top, width, height, 6);
+    ui_sprite((uint8_t)(PD_UI_AVATAR_WARRIOR + game->hero.cls),
+              left + 12, top + 9, 18, 24);
+    text_draw(left + 36, top + 15, pd_str(PD_STR_PLAYER_INFO),
+              rgb565(250, 214, 96), 1);
+    for (int index = 0; index < 5; ++index) {
+        const char *label;
+        out = line;
+        if (index == 0) {
+            label = pd_str(PD_STR_PLAYER_STRENGTH);
+            out = append_int(out, game->hero.str);
+        } else if (index == 1) {
+            label = pd_str(PD_STR_PLAYER_HEALTH);
+            out = append_int(out, game->hero.hp);
+            *out++ = '/';
+            out = append_int(out, game->hero.max_hp);
+        } else if (index == 2) {
+            label = pd_str(PD_STR_PLAYER_EXPERIENCE);
+            out = append_int(out, game->hero.xp);
+            *out++ = '/';
+            out = append_int(out, 6 + game->hero.level * 5);
+        } else if (index == 3) {
+            label = pd_str(PD_STR_PLAYER_DEPTH);
+            out = append_int(out, game->depth);
+        } else {
+            label = pd_str(PD_STR_PLAYER_GOLD);
+            out = append_int(out, game->hero.gold);
+        }
+        *out = '\0';
+        text_draw(left + 12, y, label, rgb565(236, 234, 218), 1);
+        text_right(left + width - 12, y, line,
+                   rgb565(226, 226, 226), 1);
+        y += (height - 66) / 5;
+    }
+    text_center(layout->width / 2, top + height - 20,
+                pd_str(PD_STR_BAG_CLOSE), rgb565(250, 214, 96), 1);
+}
+
+static void draw_settings(const pd_layout_t *layout) {
+    const int panel_w = layout->width - layout->safe_left -
+                        layout->safe_right < 218 ?
+                        layout->width - layout->safe_left -
+                        layout->safe_right - 12 : 206;
+    const int panel_h = 160;
+    const int left = (layout->width - panel_w) / 2;
+    const int top = (layout->height - panel_h) / 2;
+    char zoom_text[8];
+    char *end = append_int(zoom_text, layout->zoom);
+    *end++ = 'x';
+    *end = '\0';
+    ui_ninepatch(PD_UI_WINDOW, left, top, panel_w, panel_h, 6);
+    text_center(layout->width / 2, top + 13, pd_str(PD_STR_SETTINGS),
+                rgb565(250, 214, 96), 1);
+    text_center(layout->width / 2, top + 43, pd_str(PD_STR_MAP_ZOOM),
+                rgb565(225, 222, 214), 1);
+    ui_button(&layout->zoom_out, "-");
+    text_center(layout->width / 2, layout->zoom_out.y + 9, zoom_text,
+                rgb565(250, 214, 96), 1);
+    ui_button(&layout->zoom_in, "+");
+    ui_button(&layout->settings_back, pd_str(PD_STR_BACK));
+    text_center(layout->width / 2, top + 105,
+                pd_str(PD_STR_PINCH_HINT), rgb565(182, 184, 185), 1);
+}
+
+static void draw_pause(const pd_layout_t *layout) {
+    const pd_rect_t *top = &layout->pause_settings;
+    ui_ninepatch(PD_UI_WINDOW, top->x - 6, top->y - 6,
+                 top->w + 12, 63, 6);
+    ui_red_button(&layout->pause_settings, pd_str(PD_STR_SETTINGS));
+    ui_sprite(PD_UI_PREFS, top->x + 5, top->y + 5, 14, 14);
+    ui_red_button(&layout->pause_menu, pd_str(PD_STR_MAIN_MENU));
+    ui_sprite(PD_UI_DISPLAY_ICON, layout->pause_menu.x + 6,
+              layout->pause_menu.y + 4, 12, 16);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Entry point                                                             */
+/* ---------------------------------------------------------------------- */
+
+int pd_render_present(uint32_t context_handle, uint32_t capabilities,
+                      const pd_game_t *game, const pd_layout_t *layout,
+                      uint8_t *buffer, uint32_t capacity, uint64_t frame_id,
+                      uint32_t now_ms) {
+    int32_t status;
+    int camera_x = 0;
+    int camera_y = 0;
+    g_capabilities = capabilities;
+    g_now_ms = now_ms;
+    g_sprite_count = 0;
+    g_text_count = 0;
+    g_tile_count = 0;
+    g_wall_count = 0;
+    g_overlay_count = 0;
+    g_shade_count = 0;
+    g_world_cell = layout->tile_pixels;
+    pxa_raster_draw_list_begin(&g_list, buffer, capacity, frame_id);
+
+    if (game->phase == PD_PHASE_TITLE) {
+        draw_title(game, layout);
+        sprite_flush();
+        text_flush();
+        return pxa_raster_submit(context_handle, &g_list) > 0;
+    }
+    if (game->phase == PD_PHASE_SAVES || game->phase == PD_PHASE_CLASS) {
+        if (game->phase == PD_PHASE_SAVES) draw_saves(game, layout);
+        else draw_class_select(game, layout);
+        sprite_flush();
+        text_flush();
+        return pxa_raster_submit(context_handle, &g_list) > 0;
+    }
+    if (game->phase == PD_PHASE_WON) {
+        draw_status_screen(game, layout, 1);
+        sprite_flush();
+        text_flush();
+        return pxa_raster_submit(context_handle, &g_list) > 0;
+    }
+
+    pd_layout_camera(layout, game->hero.x, game->hero.y, &camera_x, &camera_y);
+    (void)pxa_raster_clear(&g_list, rgb565(8, 8, 12));
+#if !defined(PD_SKIP_MAP)
+    draw_map(game, layout, camera_x, camera_y);
+#endif
+#if !defined(PD_SKIP_ENTITIES)
+    draw_ground_items(game, layout, camera_x, camera_y);
+    draw_item_sparkles(game, layout, camera_x, camera_y);
+    draw_mobs(game, layout, camera_x, camera_y);
+    draw_hero(game, layout, camera_x, camera_y);
+#endif
+    sprite_flush();
+#if !defined(PD_SKIP_MAP)
+    draw_upper_walls(game, layout, camera_x, camera_y);
+    shade_flush();
+#endif
+#if !defined(PD_SKIP_ENTITIES)
+    draw_effects(game, layout, camera_x, camera_y);
+#endif
+#if !defined(PD_SKIP_HUD)
+    draw_hud(game, layout);
+    draw_messages(game, layout);
+    {
+        const pd_rect_t *pane = &layout->menu_pane;
+        const pd_rect_t *journal = &layout->journal;
+        const pd_rect_t *settings = &layout->settings;
+        const pd_rect_t *depth = &layout->depth;
+        char floor[12];
+        char *end = append_int(floor, game->depth);
+        *end = '\0';
+        ui_sprite_without_header(PD_UI_MENU_PANE, pane->x, pane->y,
+                                 pane->w, pane->h);
+        ui_sprite(PD_UI_MENU_JOURNAL, journal->x + 2, journal->y + 2,
+                  journal->w - 3, journal->h - 4);
+        ui_sprite(PD_UI_MENU_JOURNAL_ICON, journal->x + 4,
+                  journal->y + (journal->h - 8) / 2,
+                  journal->w - 7, 8);
+        ui_sprite(PD_UI_MENU_BUTTON, settings->x + 1, settings->y + 2,
+                  settings->w - 3, settings->h - 4);
+        ui_sprite(PD_UI_DEPTH_ICON, depth->x + 3, depth->y + 2, 6, 7);
+        draw_hud_value(depth->x + 3, depth->y + 12, floor,
+                       rgb565(202, 207, 194));
+    }
+#endif
+#if !defined(PD_SKIP_CONTROLS)
+    draw_buttons(game, layout);
+#endif
+    if (game->phase == PD_PHASE_BAG) draw_bag(game, layout);
+    if (game->phase == PD_PHASE_INFO) draw_info(game, layout);
+    if (game->phase == PD_PHASE_SETTINGS) draw_settings(layout);
+    if (game->phase == PD_PHASE_PAUSE) draw_pause(layout);
+    if (game->phase == PD_PHASE_DEAD) draw_game_over(layout);
+    sprite_flush();
+    text_flush();
+
+    status = pxa_raster_submit(context_handle, &g_list);
+    if (status > 0) return 1;
+    if (status != PXA_STATUS_WOULD_BLOCK) {
+        char line[64];
+        char *out = line;
+        out = append_text(out, "pd: frame rejected status=");
+        out = append_int(out, (int)status);
+        *out = '\0';
+        (void)pxa_log_error(line);
+    }
+    return status == PXA_STATUS_WOULD_BLOCK ? 1 : 0;
+}

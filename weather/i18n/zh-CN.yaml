@@ -1,0 +1,44 @@
+locale: zh-CN
+metadata:
+  name: 天气
+  description: 使用吉米兔天气按设备 MAC 地址定位并显示当地天气
+translations:
+  screen.title: 天气
+  screen.phase.conditions: 实况天气
+  screen.phase.day: 白天实况
+  screen.phase.night: 夜间实况
+  location.locating: 正在定位
+  weather.waiting: 等待天气数据
+  summary.locating: 定位完成后将显示当地实况
+  summary.thunderstorm: 雷电天气，请尽量留在室内
+  summary.rain: 可能有降水，出门记得带伞
+  summary.snow: 路面湿滑，请注意保暖与出行安全
+  summary.low_visibility: 能见度较低，外出建议佩戴口罩
+  summary.wind: 风力较明显，注意关好门窗
+  summary.very_hot: 天气炎热，请注意补水和防晒
+  summary.warm: 体感偏热，适合轻薄透气的衣物
+  summary.cold: 天气寒冷，外出请做好保暖
+  summary.cool: 早晚偏凉，建议备一件外套
+  summary.comfortable: 体感舒适，适合安排户外活动
+  feel.hot: 炎热
+  feel.warm: 偏热
+  feel.comfortable: 舒适
+  feel.cool: 微凉
+  feel.cold: 偏冷
+  feel.very_cold: 寒冷
+  detail.feels_like: 温感
+  detail.update_policy: 更新策略
+  detail.auto_sync: 自动同步
+  update.provider: 吉米兔天气 · MAC定位
+  update.time: 更新于 {time}
+  status.updating: 正在更新
+  status.ready: 已同步，约 10 分钟后自动更新
+  status.permission: 需要设备标识或网络权限
+  status.invalid_device: 设备标识格式无效
+  status.authentication: 天气服务鉴权失败
+  status.unavailable: 天气服务暂不可用
+  status.unexpected: 天气服务返回异常
+  status.failed: 更新失败，请重试
+  status.waiting: 等待更新
+  action.updating: 更新中
+  action.update_now: 立即更新

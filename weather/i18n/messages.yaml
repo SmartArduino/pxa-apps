@@ -1,0 +1,161 @@
+namespace: app.pxa-weather
+default_locale: en-US
+messages:
+  screen.title:
+    source: Weather
+    context: Weather screen title
+    max_bytes: 32
+  screen.phase.conditions:
+    source: Conditions
+    context: Header before weather data is available
+    max_bytes: 40
+  screen.phase.day:
+    source: Day
+    context: Header for daytime conditions
+    max_bytes: 40
+  screen.phase.night:
+    source: Night
+    context: Header for nighttime conditions
+    max_bytes: 40
+  location.locating:
+    source: Locating
+    context: Location lookup in progress
+    max_bytes: 40
+  weather.waiting:
+    source: Waiting for weather data
+    context: Weather data placeholder
+    max_bytes: 64
+  summary.locating:
+    source: Local conditions appear after locating
+    context: Summary before location is known
+    max_bytes: 96
+  summary.thunderstorm:
+    source: 'Thunderstorms: stay indoors when possible'
+    context: Thunderstorm safety advice
+    max_bytes: 112
+  summary.rain:
+    source: Rain is possible. Take an umbrella
+    context: Rain advice
+    max_bytes: 96
+  summary.snow:
+    source: 'Slippery roads: keep warm and travel safely'
+    context: Snow safety advice
+    max_bytes: 112
+  summary.low_visibility:
+    source: Low visibility. Consider wearing a mask
+    context: Haze safety advice
+    max_bytes: 112
+  summary.wind:
+    source: Windy conditions. Secure doors and windows
+    context: Wind safety advice
+    max_bytes: 112
+  summary.very_hot:
+    source: 'Hot weather: hydrate and use sun protection'
+    context: Very hot weather advice
+    max_bytes: 112
+  summary.warm:
+    source: Feels warm. Light clothing is recommended
+    context: Warm weather advice
+    max_bytes: 112
+  summary.cold:
+    source: Cold weather. Dress warmly before going out
+    context: Cold weather advice
+    max_bytes: 112
+  summary.cool:
+    source: Cool mornings and evenings. Bring a jacket
+    context: Cool weather advice
+    max_bytes: 112
+  summary.comfortable:
+    source: Comfortable for outdoor activities
+    context: Mild weather advice
+    max_bytes: 96
+  feel.hot:
+    source: Hot
+    context: Temperature feeling
+    max_bytes: 32
+  feel.warm:
+    source: Warm
+    context: Temperature feeling
+    max_bytes: 32
+  feel.comfortable:
+    source: Comfortable
+    context: Temperature feeling
+    max_bytes: 32
+  feel.cool:
+    source: Cool
+    context: Temperature feeling
+    max_bytes: 32
+  feel.cold:
+    source: Cold
+    context: Temperature feeling
+    max_bytes: 32
+  feel.very_cold:
+    source: Very cold
+    context: Temperature feeling
+    max_bytes: 32
+  detail.feels_like:
+    source: Feels like
+    context: Label for the perceived temperature card
+    max_bytes: 32
+  detail.update_policy:
+    source: Update policy
+    context: Label for the weather update mode card
+    max_bytes: 40
+  detail.auto_sync:
+    source: Automatic sync
+    context: Value for the weather update mode card
+    max_bytes: 40
+  update.provider:
+    source: Jimitu Weather · MAC location
+    context: Provider and location method
+    max_bytes: 80
+  update.time:
+    source: Updated {time}
+    context: Last update timestamp
+    max_bytes: 64
+    placeholders:
+      time: string
+  status.updating:
+    source: Updating
+    context: Weather update in progress
+    max_bytes: 40
+  status.ready:
+    source: Synced · refreshes in about 10 minutes
+    context: Successful synchronization status
+    max_bytes: 112
+  status.permission:
+    source: Device identity or network permission required
+    context: Permission error
+    max_bytes: 128
+  status.invalid_device:
+    source: Invalid device identity
+    context: HTTP 400 error
+    max_bytes: 64
+  status.authentication:
+    source: Weather authentication failed
+    context: HTTP 401 error
+    max_bytes: 80
+  status.unavailable:
+    source: Weather service unavailable
+    context: HTTP 503 error
+    max_bytes: 80
+  status.unexpected:
+    source: Unexpected weather response
+    context: Unexpected HTTP response
+    max_bytes: 80
+  status.failed:
+    source: Update failed. Try again
+    context: Generic update failure
+    max_bytes: 64
+  status.waiting:
+    source: Waiting to update
+    context: Idle status before first update
+    max_bytes: 48
+  action.updating:
+    source: Updating
+    context: Refresh button while busy
+    max_bytes: 40
+  action.update_now:
+    source: Update now
+    context: Manual refresh button
+    max_bytes: 40

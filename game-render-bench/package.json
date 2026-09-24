@@ -1,0 +1,40 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [
+    0,
+    1
+  ],
+  "target_sdk": [
+    0,
+    1
+  ],
+  "compile_sdk": [
+    0,
+    1
+  ],
+  "id": "pxa-game-render-bench",
+  "version": "0.1.1",
+  "name": "GameRender Bench",
+  "description": "Eleven-stage 2D/3D benchmark with low-resolution rendering",
+  "build": {
+    "system": "direct",
+    "linear_memory": {
+      "maximum_bytes": 524288,
+      "pinned": true
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "sources": [
+        "main.c"
+      ],
+      "services": [
+        "game-render",
+        "log"
+      ]
+    }
+  ],
+  "release_sequence": 2
+}
