@@ -12,9 +12,6 @@
 #ifndef PXA_STORE_ORIGIN
 #define PXA_STORE_ORIGIN "https://app.doit.am"
 #endif
-#ifndef PXA_STORE_PROFILE
-#define PXA_STORE_PROFILE "esp32-s3-wamr-2.4.0"
-#endif
 #ifndef PXA_STORE_CHANNEL
 #define PXA_STORE_CHANNEL "stable"
 #endif
@@ -37,6 +34,7 @@
 #define STORE_REQUEST_LAUNCH UINT32_C(12)
 #define STORE_REQUEST_UPDATE_CHECK UINT32_C(13)
 #define STORE_REQUEST_UNINSTALL UINT32_C(14)
+#define STORE_REQUEST_RUNTIME_INFO UINT32_C(15)
 
 #define STORE_BODY_ERROR 0
 #define STORE_BODY_DONE 1
@@ -79,13 +77,19 @@ int store_client_fetch_mac(store_client_t *client, uint8_t *payload,
 /* Builds "<origin>/api/v2/catalog?...". query, kind and category may be NULL
  * or empty; the store ignores unknown or empty filters. */
 int store_client_build_catalog_url(char *output, size_t capacity,
+                                   const char *profile,
                                    const char *device_id, uint64_t cursor,
                                    const char *query, const char *kind,
                                    const char *category, uint8_t page_size);
 
 /* Builds "<origin>/api/v2/apps/<app_id>?..." for one catalog entry. */
 int store_client_build_app_url(char *output, size_t capacity,
-                               const char *app_id, const char *device_id);
+                               const char *profile, const char *app_id,
+                               const char *device_id);
+
+int store_client_profile_for_device(char *output, size_t capacity,
+                                    const char *target, const char *architecture,
+                                    const char *engine, uint32_t formats);
 
 int store_client_build_download_url(char *output, size_t capacity,
                                     const char *ticket_path);

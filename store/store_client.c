@@ -18,6 +18,35 @@ static const char catalog_path[] = "/api/v2/catalog?profile=";
 static const char artifact_path[] = "/api/v2/artifacts/";
 
 static int append_text(char *output, size_t capacity, size_t *offset,
+                       const char *value);
+
+static int same_text(const char *left, const char *right) {
+    while (*left != '\0' && *left == *right) {
+        ++left;
+        ++right;
+    }
+    return *left == *right;
+}
+
+int store_client_profile_for_device(char *output, size_t capacity,
+                                    const char *target, const char *architecture,
+                                    const char *engine, uint32_t formats) {
+    size_t offset = 0;
+    if (output == NULL || capacity == 0 || target == NULL ||
+        architecture == NULL || engine == NULL ||
+        (formats & PXA_DEVICE_FORMAT_AOT) == 0 ||
+        !((same_text(target, "esp32-s3") &&
+           same_text(architecture, "xtensa")) ||
+          (same_text(target, "esp32-s31") &&
+           same_text(architecture, "riscv32"))) ||
+        !same_text(engine, "wamr"))
+        return 0;
+    output[0] = '\0';
+    return append_text(output, capacity, &offset, target) &&
+           append_text(output, capacity, &offset, "-wamr-2.4.0");
+}
+
+static int append_text(char *output, size_t capacity, size_t *offset,
                        const char *value) {
     size_t index = 0;
     while (value[index] != '\0') {
@@ -138,17 +167,19 @@ int store_client_fetch_mac(store_client_t *client, uint8_t *payload,
 }
 
 int store_client_build_catalog_url(char *output, size_t capacity,
+                                   const char *profile,
                                    const char *device_id, uint64_t cursor,
                                    const char *query, const char *kind,
                                    const char *category, uint8_t page_size) {
     size_t offset = 0;
     if (output == NULL || capacity == 0 || capacity > STORE_URL_CAPACITY ||
+        profile == NULL || profile[0] == '\0' ||
         page_size == 0 || page_size > STORE_MAX_APPS)
         return 0;
     output[0] = '\0';
     if (!append_text(output, capacity, &offset, PXA_STORE_ORIGIN) ||
         !append_text(output, capacity, &offset, catalog_path) ||
-        !append_query_value(output, capacity, &offset, PXA_STORE_PROFILE) ||
+        !append_query_value(output, capacity, &offset, profile) ||
         !append_text(output, capacity, &offset, "&channel=") ||
         !append_query_value(output, capacity, &offset, PXA_STORE_CHANNEL) ||
         !append_text(output, capacity, &offset, "&view=compact&page_size=") ||
@@ -183,9 +214,11 @@ int store_client_build_catalog_url(char *output, size_t capacity,
 }
 
 int store_client_build_app_url(char *output, size_t capacity,
-                               const char *app_id, const char *device_id) {
+                               const char *profile, const char *app_id,
+                               const char *device_id) {
     size_t offset = 0;
     if (output == NULL || capacity == 0 || capacity > STORE_URL_CAPACITY ||
+        profile == NULL || profile[0] == '\0' ||
         app_id == NULL || app_id[0] == '\0')
         return 0;
     output[0] = '\0';
@@ -193,7 +226,7 @@ int store_client_build_app_url(char *output, size_t capacity,
         !append_text(output, capacity, &offset, "/api/v2/apps/") ||
         !append_query_value(output, capacity, &offset, app_id) ||
         !append_text(output, capacity, &offset, "?profile=") ||
-        !append_query_value(output, capacity, &offset, PXA_STORE_PROFILE) ||
+        !append_query_value(output, capacity, &offset, profile) ||
         !append_text(output, capacity, &offset, "&channel=") ||
         !append_query_value(output, capacity, &offset, PXA_STORE_CHANNEL) ||
         !append_text(output, capacity, &offset, "&view=compact"))

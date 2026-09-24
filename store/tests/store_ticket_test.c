@@ -33,10 +33,16 @@ int main(void) {
         "\"}}}";
     store_app_t app = {0};
     char url[512];
-    assert(store_client_build_catalog_url(url, sizeof(url), "", 0, "", "", "", 6));
+    assert(store_client_profile_for_device(url, sizeof(url), "esp32-s3", "xtensa", "wamr", 3));
+    assert(strcmp(url, "esp32-s3-wamr-2.4.0") == 0);
+    assert(store_client_profile_for_device(url, sizeof(url), "esp32-s31", "riscv32", "wamr", 3));
+    assert(strcmp(url, "esp32-s31-wamr-2.4.0") == 0);
+    assert(!store_client_profile_for_device(url, sizeof(url), "linux-x86_64", "x86_64", "wamr", 3));
+    assert(!store_client_profile_for_device(url, sizeof(url), "esp32-s31", "xtensa", "wamr", 3));
+    assert(store_client_build_catalog_url(url, sizeof(url), "esp32-s3-wamr-2.4.0", "", 0, "", "", "", 6));
     assert(strstr(url, "page_size=6") != NULL);
-    assert(!store_client_build_catalog_url(url, sizeof(url), "", 0, "", "", "", 0));
-    assert(!store_client_build_catalog_url(url, sizeof(url), "", 0, "", "", "", 13));
+    assert(!store_client_build_catalog_url(url, sizeof(url), "esp32-s3-wamr-2.4.0", "", 0, "", "", "", 0));
+    assert(!store_client_build_catalog_url(url, sizeof(url), "esp32-s3-wamr-2.4.0", "", 0, "", "", "", 13));
     assert(store_json_parse_app_detail((const uint8_t *)detail,
                                        sizeof(detail) - 1u, &app));
     assert(strcmp(app.download_ticket_url, ticket) == 0);

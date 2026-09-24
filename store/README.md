@@ -35,7 +35,12 @@ tools/app.sh build store --target esp32s3 --source-root local/pxa-apps
 | Define | Default | Notes |
 | --- | --- | --- |
 | `PXA_STORE_ORIGIN` | `https://app.doit.am` | Must stay byte-identical to the signed `net.client` scope in `package.json`; the Host compares the parsed URL origin with that scope. |
-| `PXA_STORE_PROFILE` | `esp32-s3-wamr-2.4.0` | Device profile requested from the catalog. |
+The Store queries Device ABI 0.2 at startup to select a catalog profile from
+the Host target and supported AOT formats. Catalog profile names are server
+keys, not WAMR engine ABI strings. An unsupported Host or catalog profile does
+not fall back to another board's artifacts. The current catalog must publish
+an `esp32-s31-wamr-2.4.0` profile and matching artifacts before Korvo can
+install apps from it.
 | `PXA_STORE_CHANNEL` | `stable` | `stable` or `beta`. |
 
 Override them with `PXA_APP_DEFINES`, for example

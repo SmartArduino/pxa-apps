@@ -248,6 +248,8 @@ typedef struct {
     char query[STORE_MAX_QUERY];
     char url[512];
     char device_id[24];
+    char profile[64];
+    uint8_t profile_ready;
     char scratch[384];
     char status[64];
     uint8_t packet[3072];
@@ -2558,6 +2560,7 @@ static int start_catalog_fetch(void) {
     app.state = STORE_LOADING;
     app.pending_request = STORE_REQUEST_CATALOG;
     if (!store_client_build_catalog_url(app.url, sizeof(app.url),
+                                        app.profile,
                                         app.device_id, app.request_cursor,
                                         app.query, selected_kind_value(),
                                         selected_category_value(),
@@ -2581,7 +2584,7 @@ static int start_detail_fetch(void) {
         app.detail_state = STORE_FAILED;
         return 0;
     }
-    if (!store_client_build_app_url(app.url, sizeof(app.url), item->app_id,
+    if (!store_client_build_app_url(app.url, sizeof(app.url), app.profile, item->app_id,
                                     app.device_id))
         return 0;
     app.pending_request = STORE_REQUEST_DETAIL;
@@ -2601,7 +2604,7 @@ static int restart_catalog(const char *query);
 static int next_update_check(void) {
     while (app.update_index < app.installed_count) {
         const char *app_id = app.installed[app.update_index].app_id;
-        if (store_client_build_app_url(app.url, sizeof(app.url), app_id,
+        if (store_client_build_app_url(app.url, sizeof(app.url), app.profile, app_id,
                                        app.device_id) &&
             ensure_body_capacity() &&
             store_client_fetch(&app.client, STORE_REQUEST_UPDATE_CHECK,
@@ -2666,6 +2669,18 @@ static int finish_update_check(int failed) {
  * identity, network permission, then the catalog request itself. Result
  * handlers call this to continue, so it must not check app.busy. */
 static int advance_catalog_request(void) {
+    if (!app.profile_ready) {
+        if (!pxa_device_get_runtime_info(STORE_REQUEST_RUNTIME_INFO,
+                                         app.packet, sizeof(app.packet))) {
+            (void)fail_request(STORE_ERROR_UNSUPPORTED);
+            return 0;
+        }
+        return 1;
+    }
+    if (app.profile[0] == '\0') {
+        (void)fail_request(STORE_ERROR_UNSUPPORTED);
+        return 0;
+    }
     if (!app.client.has_device_permission) {
         store_trace("acquire device permission", 1);
         if (!store_client_acquire_device_permission(
@@ -3071,6 +3086,21 @@ static int handle_mac_result(const pxa_event_t *parsed) {
     return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
 }
 
+static int handle_runtime_info(const pxa_event_t *parsed) {
+    pxa_device_runtime_info_t info;
+    app.profile_ready = 1;
+    if (pxa_device_parse_runtime_info(parsed, &info) &&
+        info.status == PXA_STATUS_OK) {
+        (void)store_client_profile_for_device(app.profile,
+                                               sizeof(app.profile),
+                                               info.target, info.architecture,
+                                               info.engine,
+                                               info.formats);
+    }
+    if (!advance_catalog_request()) return PXA_EVENT_HANDLED;
+    return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+}
+
 /* An ordinary application window: the system keeps its status and navigation
  * bars visible, which also keeps the system back gesture available. Games
  * request the fullscreen edge-to-edge window instead. */
@@ -3233,6 +3263,8 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t config_length) {
     app.taxonomy.category_count = 0;
     copy_text(app.query, sizeof(app.query), "");
     copy_text(app.device_id, sizeof(app.device_id), "");
+    app.profile[0] = '\0';
+    app.profile_ready = 0;
     store_trace("start", 1);
     {
         pxa_ui_environment_t environment;
@@ -3313,6 +3345,10 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     if (parsed.service == PXA_SERVICE_PERMISSION &&
         parsed.opcode == PXA_PERMISSION_ACQUIRE)
         return handle_permission_result(&parsed);
+    if (parsed.service == PXA_SERVICE_DEVICE &&
+        parsed.opcode == PXA_DEVICE_GET_RUNTIME_INFO &&
+        parsed.request_id == STORE_REQUEST_RUNTIME_INFO)
+        return handle_runtime_info(&parsed);
     if (parsed.service == PXA_SERVICE_DEVICE &&
         parsed.opcode == PXA_DEVICE_GET_MAC &&
         parsed.request_id == STORE_REQUEST_DEVICE_MAC)
