@@ -163,7 +163,7 @@
 
 #define ICON_REFRESH "\xef\x80\xa1"
 #define ICON_BACK "\xef\x81\x93"
-#define ICON_SEARCH "\xef\x80\x82"
+#define STORE_SEARCH_ICON "assets/search.png"
 #define ICON_APPS "\xef\x80\x8b"
 #define ICON_GAMES "\xef\x81\x8b"
 #define ICON_INSTALLED "\xef\x80\x8c"
@@ -706,8 +706,7 @@ static int create_action_button(pxa_ui_transaction_t *transaction, uint32_t node
                                 uint32_t label_node, const char *text,
                                 uint8_t enabled) {
     const store_metrics_t *m = metrics();
-    const char *icon = node == NODE_BACK ? ICON_BACK :
-                       node == NODE_SEARCH_BUTTON ? ICON_SEARCH : ICON_REFRESH;
+    const char *icon = node == NODE_BACK ? ICON_BACK : ICON_REFRESH;
     return pxa_ui_create_typed(transaction, node, NODE_HEADER_ROW, 0,
                                  PXA_UI_NODE_CONTROL, PXA_UI_CONTROL_BUTTON) &&
              pxa_ui_set_length(transaction, node, PXA_UI_PROPERTY_WIDTH,
@@ -735,14 +734,32 @@ static int create_action_button(pxa_ui_transaction_t *transaction, uint32_t node
              pxa_ui_set_property(transaction, node,
                                  PXA_UI_PROPERTY_ACCESSIBILITY_LABEL,
                                  text, string_length(text)) &&
-             pxa_ui_create(transaction, label_node, node, 0, PXA_UI_NODE_TEXT) &&
-             pxa_ui_set_text(transaction, label_node, icon,
-                             string_length(icon)) &&
-             pxa_ui_set_font_role(transaction, label_node,
-                                  PXA_UI_FONT_ROLE_ICON) &&
-             pxa_ui_set_theme_color(transaction, label_node,
-                                    PXA_UI_PROPERTY_FOREGROUND,
-                                    PXA_UI_THEME_PRIMARY);
+             (node == NODE_SEARCH_BUTTON
+                  ? (pxa_ui_create(transaction, label_node, node, 0,
+                                   PXA_UI_NODE_IMAGE) &&
+                     pxa_ui_set_length(transaction, label_node,
+                                       PXA_UI_PROPERTY_WIDTH,
+                                       PXA_UI_LENGTH_PX, 20) &&
+                     pxa_ui_set_length(transaction, label_node,
+                                       PXA_UI_PROPERTY_HEIGHT,
+                                       PXA_UI_LENGTH_PX, 20) &&
+                     pxa_ui_set_u8(transaction, label_node,
+                                    PXA_UI_PROPERTY_IMAGE_FIT,
+                                    PXA_UI_IMAGE_FIT_CONTAIN) &&
+                     pxa_ui_set_property(transaction, label_node,
+                                         PXA_UI_PROPERTY_ASSET,
+                                         STORE_SEARCH_ICON,
+                                         sizeof(STORE_SEARCH_ICON) - 1u) &&
+                     pxa_ui_set_event_mask(transaction, label_node, 0))
+                  : (pxa_ui_create(transaction, label_node, node, 0,
+                                    PXA_UI_NODE_TEXT) &&
+                     pxa_ui_set_text(transaction, label_node, icon,
+                                     string_length(icon)) &&
+                     pxa_ui_set_font_role(transaction, label_node,
+                                          PXA_UI_FONT_ROLE_ICON) &&
+                     pxa_ui_set_theme_color(transaction, label_node,
+                                            PXA_UI_PROPERTY_FOREGROUND,
+                                            PXA_UI_THEME_PRIMARY)));
 }
 
 /* Flat title row on the page background, like the system application pages.
