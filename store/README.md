@@ -87,10 +87,17 @@ candidates, English multi tap and symbol pages on narrow panels, and the full
 keyboard with pinyin on wide panels. The system reports each edit as a text
 event, so the query follows the system keyboard, and the input's submitted
 event (its confirm key) applies the search.
+The search entry uses a centered, width-limited system-colored field with an
+inline hint and a clear icon that appears only after text is entered. Clearing
+the field patches the input in place, preserving the system keyboard.
 
 Safe area insets and the layout's own margins do not stack: the root only adds
 the part of an inset a screen margin does not already cover (`inset_padding`),
 so a gesture strip never pushes the content further than the strip itself.
+The search header instead uses its own horizontal safe band: rounded corners
+reserve extra space beyond the search field on the right, while the back arrow
+gets a narrower slot on the left. Circular panels keep their larger reported
+shape insets, and rectangular displays retain the normal content margin.
 
 On the catalog, the header, filter row and bottom tab bar stay visible while
 scrolling. The list keeps its layout stable instead of hiding the chrome while

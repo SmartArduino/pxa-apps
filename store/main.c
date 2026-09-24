@@ -87,12 +87,16 @@
 /* Search screen: fixed nodes 40..53, then one row per keyboard line. */
 #define NODE_SEARCH_BACK 40u
 #define NODE_SEARCH_BACK_LABEL 41u
-#define NODE_SEARCH_TITLE 42u
+#define NODE_SEARCH_BAR 42u
 #define NODE_SEARCH_CLEAR 43u
 #define NODE_SEARCH_CLEAR_LABEL 44u
 #define NODE_SEARCH_FIELD 45u
 #define NODE_SEARCH_TEXT 46u
 #define NODE_SEARCH_KEYBOARD 47u
+#define NODE_SEARCH_ICON 48u
+#define NODE_SEARCH_EMPTY 53u
+#define NODE_SEARCH_EMPTY_ICON 54u
+#define NODE_SEARCH_EMPTY_TEXT 55u
 #define NODE_SEARCH_ROW_BASE 50u
 /* Catalog header search action; only used on the catalog surface. */
 #define NODE_SEARCH_BUTTON 60u
@@ -2326,10 +2330,65 @@ static int create_key(pxa_ui_transaction_t *transaction, uint32_t parent,
                                          : PXA_UI_THEME_TEXT);
 }
 
+static int create_search_clear(pxa_ui_transaction_t *transaction) {
+    const char *label = message(PXA_MSG_ACTION_CLEAR);
+    return pxa_ui_create_typed(transaction, NODE_SEARCH_CLEAR, NODE_SEARCH_BAR,
+                               0, PXA_UI_NODE_CONTROL, PXA_UI_CONTROL_BUTTON) &&
+           pxa_ui_set_length(transaction, NODE_SEARCH_CLEAR,
+                             PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_PX, 28) &&
+           pxa_ui_set_length(transaction, NODE_SEARCH_CLEAR,
+                             PXA_UI_PROPERTY_HEIGHT, PXA_UI_LENGTH_PX, 28) &&
+           pxa_ui_set_u8(transaction, NODE_SEARCH_CLEAR,
+                         PXA_UI_PROPERTY_LAYOUT, PXA_UI_LAYOUT_ROW) &&
+           pxa_ui_set_u8(transaction, NODE_SEARCH_CLEAR,
+                         PXA_UI_PROPERTY_JUSTIFY, PXA_UI_ALIGN_CENTER) &&
+           pxa_ui_set_u8(transaction, NODE_SEARCH_CLEAR,
+                         PXA_UI_PROPERTY_ALIGN, PXA_UI_ALIGN_CENTER) &&
+           pxa_ui_set_dp(transaction, NODE_SEARCH_CLEAR,
+                         PXA_UI_PROPERTY_RADIUS, 14) &&
+           pxa_ui_set_dp(transaction, NODE_SEARCH_CLEAR,
+                         PXA_UI_PROPERTY_BORDER_WIDTH, 0) &&
+           pxa_ui_set_theme_color(transaction, NODE_SEARCH_CLEAR,
+                                  PXA_UI_PROPERTY_BACKGROUND,
+                                  PXA_UI_THEME_BACKGROUND) &&
+           pxa_ui_set_u8(transaction, NODE_SEARCH_CLEAR,
+                         PXA_UI_PROPERTY_VISIBLE,
+                         (uint8_t)(app.draft[0] != '\0')) &&
+           pxa_ui_set_event_mask(transaction, NODE_SEARCH_CLEAR,
+                                 PXA_UI_EVENT_MASK_CLICK) &&
+           pxa_ui_set_property(transaction, NODE_SEARCH_CLEAR,
+                               PXA_UI_PROPERTY_ACCESSIBILITY_LABEL,
+                               label, string_length(label)) &&
+           pxa_ui_create(transaction, NODE_SEARCH_CLEAR_LABEL,
+                         NODE_SEARCH_CLEAR, 0, PXA_UI_NODE_TEXT) &&
+           pxa_ui_set_text(transaction, NODE_SEARCH_CLEAR_LABEL,
+                           "×", sizeof("×") - 1u) &&
+           pxa_ui_set_font_role(transaction, NODE_SEARCH_CLEAR_LABEL,
+                                PXA_UI_FONT_ROLE_TITLE) &&
+           pxa_ui_set_theme_color(transaction, NODE_SEARCH_CLEAR_LABEL,
+                                  PXA_UI_PROPERTY_FOREGROUND,
+                                  PXA_UI_THEME_MUTED);
+}
+
 static int render_search(void) {
     const store_metrics_t *m = metrics();
     pxa_ui_transaction_t transaction = {0};
     uint32_t next = app.generation + 1u;
+    uint16_t bar_height = m->search_height + 4u;
+    uint16_t left_padding = effective_inset(3);
+    uint16_t right_padding = effective_inset(1);
+    if (bar_height > 46u) bar_height = 46u;
+    if (app.display_shape == PXA_UI_DISPLAY_SHAPE_ROUNDED_RECTANGLE) {
+        uint16_t left_offset = (uint16_t)(app.corner_radii[0] / 8u);
+        uint16_t right_offset = (uint16_t)(app.corner_radii[1] / 8u);
+        if (left_offset > 8u) left_offset = 8u;
+        if (right_offset > 8u) right_offset = 8u;
+        left_padding = left_padding > left_offset ?
+            left_padding - left_offset : 0u;
+        right_padding += right_offset;
+    }
+    if (left_padding < m->list_pad_h) left_padding = m->list_pad_h;
+    if (right_padding < m->list_pad_h) right_padding = m->list_pad_h;
     uint8_t row;
     int ok;
     if (next == 0 ||
@@ -2340,38 +2399,44 @@ static int render_search(void) {
     ok = pxa_ui_create(&transaction, NODE_ROOT, 0, 0, PXA_UI_NODE_ROOT) &&
          pxa_ui_set_u8(&transaction, NODE_ROOT, PXA_UI_PROPERTY_LAYOUT,
                        PXA_UI_LAYOUT_COLUMN) &&
+         pxa_ui_set_u8(&transaction, NODE_ROOT, PXA_UI_PROPERTY_ALIGN,
+                       PXA_UI_ALIGN_CENTER) &&
          pxa_ui_set_theme_color(&transaction, NODE_ROOT,
                                 PXA_UI_PROPERTY_BACKGROUND,
                                 PXA_UI_THEME_BACKGROUND) &&
          pxa_ui_set_padding(&transaction, NODE_ROOT,
-                            inset_padding(3, m->list_pad_h),
+                            left_padding,
                             inset_padding(0, m->header_pad_v),
-                            inset_padding(1, m->list_pad_h),
+                            right_padding,
                             inset_padding(2, 6)) &&
          pxa_ui_create(&transaction, NODE_HEADER, NODE_ROOT, 0,
                        PXA_UI_NODE_BOX) &&
          pxa_ui_set_length(&transaction, NODE_HEADER, PXA_UI_PROPERTY_WIDTH,
                            PXA_UI_LENGTH_FILL, 0) &&
+         pxa_ui_set_length(&transaction, NODE_HEADER,
+                           PXA_UI_PROPERTY_MAX_WIDTH, PXA_UI_LENGTH_PX, 520) &&
          pxa_ui_set_u8(&transaction, NODE_HEADER, PXA_UI_PROPERTY_LAYOUT,
                        PXA_UI_LAYOUT_ROW) &&
          pxa_ui_set_u8(&transaction, NODE_HEADER, PXA_UI_PROPERTY_ALIGN,
                        PXA_UI_ALIGN_CENTER) &&
-         pxa_ui_set_padding(&transaction, NODE_HEADER, m->header_pad_h, 6,
-                       m->header_pad_h, 6) &&
-         pxa_ui_set_dp(&transaction, NODE_HEADER, PXA_UI_PROPERTY_GAP, 8) &&
+         pxa_ui_set_dp(&transaction, NODE_HEADER, PXA_UI_PROPERTY_GAP, 2) &&
          pxa_ui_set_theme_color(&transaction, NODE_HEADER,
                                 PXA_UI_PROPERTY_BACKGROUND,
                                 PXA_UI_THEME_BACKGROUND) &&
          pxa_ui_create_typed(&transaction, NODE_SEARCH_BACK, NODE_HEADER, 0,
                              PXA_UI_NODE_CONTROL, PXA_UI_CONTROL_BUTTON) &&
          pxa_ui_set_length(&transaction, NODE_SEARCH_BACK,
-                           PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_PX, 36) &&
+                           PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_PX, 32) &&
          pxa_ui_set_length(&transaction, NODE_SEARCH_BACK,
-                           PXA_UI_PROPERTY_HEIGHT, PXA_UI_LENGTH_PX, 32) &&
+                           PXA_UI_PROPERTY_HEIGHT, PXA_UI_LENGTH_PX,
+                           bar_height) &&
          pxa_ui_set_u8(&transaction, NODE_SEARCH_BACK, PXA_UI_PROPERTY_LAYOUT,
                        PXA_UI_LAYOUT_ROW) &&
          pxa_ui_set_u8(&transaction, NODE_SEARCH_BACK, PXA_UI_PROPERTY_JUSTIFY,
                        PXA_UI_ALIGN_CENTER) &&
+         pxa_ui_set_u8(&transaction, NODE_SEARCH_BACK, PXA_UI_PROPERTY_ALIGN,
+                       PXA_UI_ALIGN_CENTER) &&
+         pxa_ui_set_padding(&transaction, NODE_SEARCH_BACK, 0, 0, 0, 0) &&
          pxa_ui_set_dp(&transaction, NODE_SEARCH_BACK, PXA_UI_PROPERTY_RADIUS,
                        m->card_radius) &&
          pxa_ui_set_dp(&transaction, NODE_SEARCH_BACK,
@@ -2393,49 +2458,41 @@ static int render_search(void) {
          pxa_ui_set_theme_color(&transaction, NODE_SEARCH_BACK_LABEL,
                                 PXA_UI_PROPERTY_FOREGROUND,
                                 PXA_UI_THEME_TEXT) &&
-         pxa_ui_create(&transaction, NODE_SEARCH_TITLE, NODE_HEADER, 0,
-                       PXA_UI_NODE_TEXT) &&
-         pxa_ui_set_u16(&transaction, NODE_SEARCH_TITLE, PXA_UI_PROPERTY_GROW,
+         pxa_ui_create(&transaction, NODE_SEARCH_BAR, NODE_HEADER, 0,
+                       PXA_UI_NODE_BOX) &&
+         pxa_ui_set_u16(&transaction, NODE_SEARCH_BAR, PXA_UI_PROPERTY_GROW,
                         1) &&
-         pxa_ui_set_text(&transaction, NODE_SEARCH_TITLE,
-                         message(PXA_MSG_SEARCH_TITLE),
-                         pxa_i18n_size(&app.i18n, PXA_MSG_SEARCH_TITLE)) &&
-         pxa_ui_set_font_role(&transaction, NODE_SEARCH_TITLE,
-                              PXA_UI_FONT_ROLE_TITLE) &&
-         pxa_ui_set_theme_color(&transaction, NODE_SEARCH_TITLE,
-                                PXA_UI_PROPERTY_FOREGROUND,
-                                PXA_UI_THEME_TEXT) &&
-         pxa_ui_create_typed(&transaction, NODE_SEARCH_CLEAR, NODE_HEADER, 0,
-                             PXA_UI_NODE_CONTROL, PXA_UI_CONTROL_BUTTON) &&
-         pxa_ui_set_length(&transaction, NODE_SEARCH_CLEAR,
-                           PXA_UI_PROPERTY_HEIGHT, PXA_UI_LENGTH_PX, 30) &&
-         pxa_ui_set_u8(&transaction, NODE_SEARCH_CLEAR, PXA_UI_PROPERTY_LAYOUT,
+         pxa_ui_set_length(&transaction, NODE_SEARCH_BAR,
+                           PXA_UI_PROPERTY_HEIGHT, PXA_UI_LENGTH_PX,
+                           bar_height) &&
+         pxa_ui_set_u8(&transaction, NODE_SEARCH_BAR, PXA_UI_PROPERTY_LAYOUT,
                        PXA_UI_LAYOUT_ROW) &&
-         pxa_ui_set_u8(&transaction, NODE_SEARCH_CLEAR, PXA_UI_PROPERTY_JUSTIFY,
+         pxa_ui_set_u8(&transaction, NODE_SEARCH_BAR, PXA_UI_PROPERTY_ALIGN,
                        PXA_UI_ALIGN_CENTER) &&
-         pxa_ui_set_padding(&transaction, NODE_SEARCH_CLEAR, 12, 2, 12, 2) &&
-         pxa_ui_set_dp(&transaction, NODE_SEARCH_CLEAR, PXA_UI_PROPERTY_RADIUS,
-                       15) &&
-         pxa_ui_set_dp(&transaction, NODE_SEARCH_CLEAR,
+         pxa_ui_set_padding(&transaction, NODE_SEARCH_BAR, 12, 0, 6, 0) &&
+         pxa_ui_set_dp(&transaction, NODE_SEARCH_BAR, PXA_UI_PROPERTY_GAP, 6) &&
+         pxa_ui_set_dp(&transaction, NODE_SEARCH_BAR, PXA_UI_PROPERTY_RADIUS,
+                       14) &&
+         pxa_ui_set_dp(&transaction, NODE_SEARCH_BAR,
                        PXA_UI_PROPERTY_BORDER_WIDTH, 1) &&
-         pxa_ui_set_theme_color(&transaction, NODE_SEARCH_CLEAR,
+         pxa_ui_set_theme_color(&transaction, NODE_SEARCH_BAR,
                                 PXA_UI_PROPERTY_BORDER_COLOR,
                                 PXA_UI_THEME_BORDER) &&
-         pxa_ui_set_theme_color(&transaction, NODE_SEARCH_CLEAR,
+         pxa_ui_set_theme_color(&transaction, NODE_SEARCH_BAR,
                                 PXA_UI_PROPERTY_BACKGROUND,
                                 PXA_UI_THEME_SURFACE) &&
-         pxa_ui_set_event_mask(&transaction, NODE_SEARCH_CLEAR,
-                               PXA_UI_EVENT_MASK_CLICK) &&
-         pxa_ui_create(&transaction, NODE_SEARCH_CLEAR_LABEL, NODE_SEARCH_CLEAR,
-                       0, PXA_UI_NODE_TEXT) &&
-         pxa_ui_set_text(&transaction, NODE_SEARCH_CLEAR_LABEL,
-                         message(PXA_MSG_ACTION_CLEAR),
-                         string_length(message(PXA_MSG_ACTION_CLEAR))) &&
-         pxa_ui_set_font_role(&transaction, NODE_SEARCH_CLEAR_LABEL,
-                              PXA_UI_FONT_ROLE_CAPTION) &&
-         pxa_ui_set_theme_color(&transaction, NODE_SEARCH_CLEAR_LABEL,
-                                PXA_UI_PROPERTY_FOREGROUND,
-                                PXA_UI_THEME_PRIMARY);
+         pxa_ui_create(&transaction, NODE_SEARCH_ICON, NODE_SEARCH_BAR, 0,
+                       PXA_UI_NODE_IMAGE) &&
+         pxa_ui_set_length(&transaction, NODE_SEARCH_ICON,
+                           PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_PX, 20) &&
+         pxa_ui_set_length(&transaction, NODE_SEARCH_ICON,
+                           PXA_UI_PROPERTY_HEIGHT, PXA_UI_LENGTH_PX, 20) &&
+         pxa_ui_set_u8(&transaction, NODE_SEARCH_ICON,
+                        PXA_UI_PROPERTY_IMAGE_FIT,
+                        PXA_UI_IMAGE_FIT_CONTAIN) &&
+         pxa_ui_set_property(&transaction, NODE_SEARCH_ICON,
+                             PXA_UI_PROPERTY_ASSET,
+                             STORE_SEARCH_ICON, sizeof(STORE_SEARCH_ICON) - 1u);
     if (!ok) goto failed;
     /* Search field. */
     {
@@ -2446,57 +2503,66 @@ static int render_search(void) {
         (void)text;
         (void)empty;
 #if STORE_SEARCH_TEXT_INPUT
-        /* A real text input: the system input method can attach to it and
-         * reports edits as text events. The label underneath only shows the
-         * placeholder while the query is empty. */
-        ok = pxa_ui_create_typed(&transaction, NODE_SEARCH_FIELD, NODE_ROOT, 0,
+        /* The real text input keeps the system input method and text events. */
+        ok = pxa_ui_create_typed(&transaction, NODE_SEARCH_FIELD,
+                                 NODE_SEARCH_BAR, 0,
                                  PXA_UI_NODE_CONTROL,
                                  PXA_UI_CONTROL_TEXT_INPUT) &&
-             pxa_ui_set_length(&transaction, NODE_SEARCH_FIELD,
-                               PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_FILL, 0) &&
+             pxa_ui_set_u16(&transaction, NODE_SEARCH_FIELD,
+                            PXA_UI_PROPERTY_GROW, 1) &&
              pxa_ui_set_length(&transaction, NODE_SEARCH_FIELD,
                                PXA_UI_PROPERTY_HEIGHT, PXA_UI_LENGTH_PX,
-                               m->search_height) &&
-             pxa_ui_set_padding(&transaction, NODE_SEARCH_FIELD, 14, 6, 14, 6) &&
+                               bar_height - 2u) &&
+             pxa_ui_set_padding(&transaction, NODE_SEARCH_FIELD, 2, 4, 2, 4) &&
              pxa_ui_set_dp(&transaction, NODE_SEARCH_FIELD,
-                           PXA_UI_PROPERTY_RADIUS, 12) &&
+                           PXA_UI_PROPERTY_RADIUS, 0) &&
              pxa_ui_set_dp(&transaction, NODE_SEARCH_FIELD,
-                           PXA_UI_PROPERTY_BORDER_WIDTH, 1) &&
-             pxa_ui_set_theme_color(&transaction, NODE_SEARCH_FIELD,
-                                    PXA_UI_PROPERTY_BORDER_COLOR,
-                                    PXA_UI_THEME_BORDER) &&
-             pxa_ui_set_theme_color(&transaction, NODE_SEARCH_FIELD,
-                                    PXA_UI_PROPERTY_BACKGROUND,
-                                    PXA_UI_THEME_SURFACE) &&
+                           PXA_UI_PROPERTY_BORDER_WIDTH, 0) &&
+             pxa_ui_set_rgba(&transaction, NODE_SEARCH_FIELD,
+                              PXA_UI_PROPERTY_BACKGROUND, 0) &&
              pxa_ui_set_event_mask(&transaction, NODE_SEARCH_FIELD,
                                    PXA_UI_EVENT_MASK_CLICK |
                                        PXA_UI_EVENT_MASK_TEXT) &&
              pxa_ui_set_text(&transaction, NODE_SEARCH_FIELD, app.draft,
-                             string_length(app.draft));
+                             string_length(app.draft)) &&
+             pxa_ui_create(&transaction, NODE_SEARCH_TEXT, NODE_SEARCH_FIELD,
+                           0, PXA_UI_NODE_TEXT) &&
+             pxa_ui_set_u8(&transaction, NODE_SEARCH_TEXT,
+                           PXA_UI_PROPERTY_POSITION, 1) &&
+             pxa_ui_set_length(&transaction, NODE_SEARCH_TEXT,
+                               PXA_UI_PROPERTY_X, PXA_UI_LENGTH_PX, 2) &&
+             pxa_ui_set_length(&transaction, NODE_SEARCH_TEXT,
+                               PXA_UI_PROPERTY_Y, PXA_UI_LENGTH_PX, 9) &&
+             pxa_ui_set_text(&transaction, NODE_SEARCH_TEXT,
+                             empty ? message(PXA_MSG_SEARCH_PLACEHOLDER) : "",
+                             empty ? pxa_i18n_size(
+                                 &app.i18n, PXA_MSG_SEARCH_PLACEHOLDER) : 0) &&
+             pxa_ui_set_font_role(&transaction, NODE_SEARCH_TEXT,
+                                  PXA_UI_FONT_ROLE_LABEL) &&
+             pxa_ui_set_theme_color(&transaction, NODE_SEARCH_TEXT,
+                                    PXA_UI_PROPERTY_FOREGROUND,
+                                    PXA_UI_THEME_MUTED);
 #else
-        ok = pxa_ui_create_typed(&transaction, NODE_SEARCH_FIELD, NODE_ROOT, 0,
+        ok = pxa_ui_create_typed(&transaction, NODE_SEARCH_FIELD,
+                                 NODE_SEARCH_BAR, 0,
                                  PXA_UI_NODE_CONTROL,
                                  PXA_UI_CONTROL_BUTTON) &&
-             pxa_ui_set_length(&transaction, NODE_SEARCH_FIELD,
-                               PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_FILL, 0) &&
+             pxa_ui_set_u16(&transaction, NODE_SEARCH_FIELD,
+                            PXA_UI_PROPERTY_GROW, 1) &&
              pxa_ui_set_length(&transaction, NODE_SEARCH_FIELD,
                                PXA_UI_PROPERTY_HEIGHT, PXA_UI_LENGTH_PX,
-                               m->search_height) &&
+                               bar_height - 2u) &&
              pxa_ui_set_u8(&transaction, NODE_SEARCH_FIELD,
                            PXA_UI_PROPERTY_LAYOUT, PXA_UI_LAYOUT_ROW) &&
              pxa_ui_set_u8(&transaction, NODE_SEARCH_FIELD,
                            PXA_UI_PROPERTY_ALIGN, PXA_UI_ALIGN_CENTER) &&
-             pxa_ui_set_padding(&transaction, NODE_SEARCH_FIELD, 14, 6, 14, 6) &&
+             pxa_ui_set_padding(&transaction, NODE_SEARCH_FIELD, 2, 4, 2, 4) &&
              pxa_ui_set_dp(&transaction, NODE_SEARCH_FIELD,
-                           PXA_UI_PROPERTY_RADIUS, 12) &&
+                           PXA_UI_PROPERTY_RADIUS, 0) &&
              pxa_ui_set_dp(&transaction, NODE_SEARCH_FIELD,
-                           PXA_UI_PROPERTY_BORDER_WIDTH, 1) &&
-             pxa_ui_set_theme_color(&transaction, NODE_SEARCH_FIELD,
-                                    PXA_UI_PROPERTY_BORDER_COLOR,
-                                    PXA_UI_THEME_BORDER) &&
-             pxa_ui_set_theme_color(&transaction, NODE_SEARCH_FIELD,
-                                    PXA_UI_PROPERTY_BACKGROUND,
-                                    PXA_UI_THEME_SURFACE) &&
+                           PXA_UI_PROPERTY_BORDER_WIDTH, 0) &&
+             pxa_ui_set_rgba(&transaction, NODE_SEARCH_FIELD,
+                              PXA_UI_PROPERTY_BACKGROUND, 0) &&
              pxa_ui_set_event_mask(&transaction, NODE_SEARCH_FIELD,
                                    PXA_UI_EVENT_MASK_CLICK) &&
              pxa_ui_create(&transaction, NODE_SEARCH_TEXT, NODE_SEARCH_FIELD, 0,
@@ -2511,7 +2577,47 @@ static int render_search(void) {
                                           : PXA_UI_THEME_TEXT);
 #endif
     }
+    if (!ok || !create_search_clear(&transaction)) goto failed;
+#if STORE_SEARCH_TEXT_INPUT
+    ok = pxa_ui_create(&transaction, NODE_SEARCH_EMPTY, NODE_ROOT, 0,
+                       PXA_UI_NODE_BOX) &&
+         pxa_ui_set_length(&transaction, NODE_SEARCH_EMPTY,
+                           PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_FILL, 0) &&
+         pxa_ui_set_u8(&transaction, NODE_SEARCH_EMPTY,
+                       PXA_UI_PROPERTY_VISIBLE,
+                       (uint8_t)(app.draft[0] == '\0')) &&
+         pxa_ui_set_u16(&transaction, NODE_SEARCH_EMPTY, PXA_UI_PROPERTY_GROW,
+                        1) &&
+         pxa_ui_set_u8(&transaction, NODE_SEARCH_EMPTY, PXA_UI_PROPERTY_LAYOUT,
+                       PXA_UI_LAYOUT_COLUMN) &&
+         pxa_ui_set_u8(&transaction, NODE_SEARCH_EMPTY, PXA_UI_PROPERTY_JUSTIFY,
+                       PXA_UI_ALIGN_CENTER) &&
+         pxa_ui_set_u8(&transaction, NODE_SEARCH_EMPTY, PXA_UI_PROPERTY_ALIGN,
+                       PXA_UI_ALIGN_CENTER) &&
+         pxa_ui_set_dp(&transaction, NODE_SEARCH_EMPTY, PXA_UI_PROPERTY_GAP,
+                       10) &&
+         pxa_ui_create(&transaction, NODE_SEARCH_EMPTY_ICON,
+                       NODE_SEARCH_EMPTY, 0, PXA_UI_NODE_IMAGE) &&
+         pxa_ui_set_length(&transaction, NODE_SEARCH_EMPTY_ICON,
+                           PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_PX, 36) &&
+         pxa_ui_set_length(&transaction, NODE_SEARCH_EMPTY_ICON,
+                           PXA_UI_PROPERTY_HEIGHT, PXA_UI_LENGTH_PX, 36) &&
+         pxa_ui_set_property(&transaction, NODE_SEARCH_EMPTY_ICON,
+                             PXA_UI_PROPERTY_ASSET,
+                             STORE_SEARCH_ICON, sizeof(STORE_SEARCH_ICON) - 1u) &&
+         pxa_ui_create(&transaction, NODE_SEARCH_EMPTY_TEXT,
+                       NODE_SEARCH_EMPTY, 0, PXA_UI_NODE_TEXT) &&
+         pxa_ui_set_text(&transaction, NODE_SEARCH_EMPTY_TEXT,
+                         message(PXA_MSG_SEARCH_PLACEHOLDER),
+                         pxa_i18n_size(&app.i18n,
+                                       PXA_MSG_SEARCH_PLACEHOLDER)) &&
+         pxa_ui_set_font_role(&transaction, NODE_SEARCH_EMPTY_TEXT,
+                              PXA_UI_FONT_ROLE_LABEL) &&
+         pxa_ui_set_theme_color(&transaction, NODE_SEARCH_EMPTY_TEXT,
+                                PXA_UI_PROPERTY_FOREGROUND,
+                                PXA_UI_THEME_MUTED);
     if (!ok) goto failed;
+#endif
 #if !STORE_SEARCH_TEXT_INPUT
     ok = pxa_ui_create(&transaction, NODE_SEARCH_KEYBOARD, NODE_ROOT, 0,
                        PXA_UI_NODE_BOX) &&
@@ -2566,10 +2672,7 @@ failed:
 }
 
 #if STORE_SEARCH_TEXT_INPUT
-/* Mirrors the draft query into the text input. The system input method writes
- * the field itself, so this only runs for edits made on the built-in
- * keyboard. */
-static int sync_search_field(void) {
+static int sync_search_decoration(uint8_t update_field) {
     pxa_ui_transaction_t transaction = {0};
     uint32_t next = app.generation + 1u;
     uint8_t empty = (uint8_t)(app.draft[0] == '\0');
@@ -2579,11 +2682,15 @@ static int sync_search_field(void) {
                                   PXA_UI_TRANSACTION_PATCH, app.packet,
                                   sizeof(app.packet)))
         return 0;
-    if (!pxa_ui_set_text(&transaction, NODE_SEARCH_FIELD, app.draft,
-                         string_length(app.draft)) ||
+    if ((update_field && !pxa_ui_set_text(&transaction, NODE_SEARCH_FIELD,
+                                          app.draft, string_length(app.draft))) ||
         !pxa_ui_set_text(&transaction, NODE_SEARCH_TEXT,
                          empty ? hint : "",
                          empty ? string_length(hint) : 0) ||
+        !pxa_ui_set_u8(&transaction, NODE_SEARCH_CLEAR,
+                        PXA_UI_PROPERTY_VISIBLE, !empty) ||
+        !pxa_ui_set_u8(&transaction, NODE_SEARCH_EMPTY,
+                        PXA_UI_PROPERTY_VISIBLE, empty) ||
         !pxa_ui_transaction_commit(&transaction)) {
         if (transaction.active) (void)pxa_ui_transaction_cancel(&transaction);
         return 0;
@@ -3673,7 +3780,10 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         if (!pxa_ui_event_text(&ui_event, text, sizeof(text)))
             return PXA_EVENT_HANDLED;
         length = string_length(text);
-        if (!text_equal(text, app.draft)) adopt_field_text(text, length);
+        if (!text_equal(text, app.draft)) {
+            adopt_field_text(text, length);
+            if (!sync_search_decoration(0)) return PXA_STATUS_INTERNAL;
+        }
         /* The field already shows the text the input method wrote; editing
          * never restarts a search in flight, the query is applied when the
          * input is submitted or searched. */
@@ -3708,7 +3818,12 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         }
         if (ui_event.node == NODE_SEARCH_CLEAR) {
             app.draft[0] = '\0';
+#if STORE_SEARCH_TEXT_INPUT
+            return sync_search_decoration(1) ? PXA_EVENT_HANDLED
+                                             : PXA_STATUS_INTERNAL;
+#else
             return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+#endif
         }
         if (ui_event.node == NODE_SEARCH_FIELD) {
             if (app.busy) return PXA_EVENT_HANDLED;
@@ -3735,7 +3850,7 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
                 return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
             }
 #if STORE_SEARCH_TEXT_INPUT
-            return sync_search_field() ? PXA_EVENT_HANDLED
+            return sync_search_decoration(1) ? PXA_EVENT_HANDLED
                                        : PXA_STATUS_INTERNAL;
 #else
             return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
