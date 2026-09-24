@@ -577,7 +577,7 @@ static int render_hourly(pxa_ui_transaction_t *transaction) {
                             layout->radius) ||
             !pxa_ui_set_theme_color(transaction, tile,
                                     PXA_UI_PROPERTY_BACKGROUND,
-                                    PXA_UI_THEME_SURFACE) ||
+                                    PXA_UI_THEME_SURFACE_CONTAINER_LOW) ||
             !pxa_ui_create(transaction, tile + 1u, tile, 0,
                             PXA_UI_NODE_TEXT) ||
             !pxa_ui_set_text(transaction, tile + 1u,
@@ -649,7 +649,7 @@ static int render_daily_rows(pxa_ui_transaction_t *transaction,
                             layout->radius) ||
             !pxa_ui_set_theme_color(transaction, row,
                                     PXA_UI_PROPERTY_BACKGROUND,
-                                    PXA_UI_THEME_SURFACE) ||
+                                    PXA_UI_THEME_SURFACE_CONTAINER_LOW) ||
             !pxa_ui_create(transaction, row + 1u, row, 0,
                             PXA_UI_NODE_TEXT) ||
             !pxa_ui_set_length(transaction, row + 1u, PXA_UI_PROPERTY_WIDTH,
@@ -939,9 +939,9 @@ static int render(void) {
                        layout->radius) &&
          pxa_ui_set_dp(&transaction, 9, PXA_UI_PROPERTY_BORDER_WIDTH, 1) &&
          pxa_ui_set_theme_color(&transaction, 9, PXA_UI_PROPERTY_BACKGROUND,
-                                PXA_UI_THEME_SURFACE) &&
+                                PXA_UI_THEME_PRIMARY_CONTAINER) &&
          pxa_ui_set_theme_color(&transaction, 9, PXA_UI_PROPERTY_BORDER_COLOR,
-                                PXA_UI_THEME_BORDER) &&
+                                PXA_UI_THEME_OUTLINE_VARIANT) &&
          create_icon(&transaction, 10, 9, weather_icon(),
                      layout->hero_icon) &&
          pxa_ui_create(&transaction, 11, 9, 0, PXA_UI_NODE_BOX) &&
@@ -954,12 +954,12 @@ static int render(void) {
                          string_length(temperature_text)) &&
          pxa_ui_set_font_role(&transaction, 12, PXA_UI_FONT_ROLE_DISPLAY) &&
          pxa_ui_set_theme_color(&transaction, 12, PXA_UI_PROPERTY_FOREGROUND,
-                                PXA_UI_THEME_TEXT) &&
+                                PXA_UI_THEME_ON_PRIMARY_CONTAINER) &&
          pxa_ui_create(&transaction, 13, 11, 0, PXA_UI_NODE_TEXT) &&
          pxa_ui_set_text(&transaction, 13, display_weather,
                          string_length(display_weather)) &&
          pxa_ui_set_theme_color(&transaction, 13, PXA_UI_PROPERTY_FOREGROUND,
-                                PXA_UI_THEME_MUTED) &&
+                                PXA_UI_THEME_ON_PRIMARY_CONTAINER) &&
          pxa_ui_create(&transaction, 22, 5, 0, PXA_UI_NODE_BOX) &&
          pxa_ui_set_length(&transaction, 22, PXA_UI_PROPERTY_WIDTH,
                            PXA_UI_LENGTH_FILL, 0) &&
@@ -977,7 +977,7 @@ static int render(void) {
          pxa_ui_set_text(&transaction, 24, summary, string_length(summary)) &&
          pxa_ui_set_font_role(&transaction, 24, PXA_UI_FONT_ROLE_CAPTION) &&
          pxa_ui_set_theme_color(&transaction, 24, PXA_UI_PROPERTY_FOREGROUND,
-                                PXA_UI_THEME_TEXT) &&
+                                PXA_UI_THEME_PRIMARY) &&
          pxa_ui_create(&transaction, 32, 5, 0, PXA_UI_NODE_TEXT) &&
          pxa_ui_set_length(&transaction, 32, PXA_UI_PROPERTY_WIDTH,
                            PXA_UI_LENGTH_FILL, 0) &&
@@ -1015,7 +1015,7 @@ static int render(void) {
          pxa_ui_set_dp(&transaction, 26, PXA_UI_PROPERTY_RADIUS,
                        layout->radius) &&
          pxa_ui_set_theme_color(&transaction, 26, PXA_UI_PROPERTY_BACKGROUND,
-                                PXA_UI_THEME_SURFACE) &&
+                                PXA_UI_THEME_SURFACE_CONTAINER) &&
          pxa_ui_create(&transaction, 27, 26, 0, PXA_UI_NODE_TEXT) &&
          pxa_ui_set_text(&transaction, 27, message(PXA_MSG_DETAIL_FEELS_LIKE),
                          pxa_i18n_size(&i18n, PXA_MSG_DETAIL_FEELS_LIKE)) &&
@@ -1036,7 +1036,7 @@ static int render(void) {
          pxa_ui_set_dp(&transaction, 29, PXA_UI_PROPERTY_RADIUS,
                        layout->radius) &&
          pxa_ui_set_theme_color(&transaction, 29, PXA_UI_PROPERTY_BACKGROUND,
-                                PXA_UI_THEME_SURFACE) &&
+                                PXA_UI_THEME_SURFACE_CONTAINER) &&
          pxa_ui_create(&transaction, 30, 29, 0, PXA_UI_NODE_TEXT) &&
          pxa_ui_set_text(&transaction, 30,
                          message(PXA_MSG_DETAIL_UPDATE_POLICY),

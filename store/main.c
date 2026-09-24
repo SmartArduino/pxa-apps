@@ -1041,7 +1041,7 @@ static int create_card(pxa_ui_transaction_t *transaction, uint8_t index) {
         !pxa_ui_set_dp(transaction, card, PXA_UI_PROPERTY_RADIUS, m->card_radius) ||
         !pxa_ui_set_dp(transaction, card, PXA_UI_PROPERTY_BORDER_WIDTH, 1) ||
         !pxa_ui_set_theme_color(transaction, card, PXA_UI_PROPERTY_BACKGROUND,
-                                PXA_UI_THEME_SURFACE) ||
+                                PXA_UI_THEME_SURFACE_CONTAINER_LOW) ||
         !pxa_ui_set_theme_color(transaction, card, PXA_UI_PROPERTY_BORDER_COLOR,
                                 PXA_UI_THEME_BORDER) ||
         !pxa_ui_set_event_mask(transaction, card,
@@ -1329,13 +1329,15 @@ static int create_tab(pxa_ui_transaction_t *transaction, uint32_t tab,
            pxa_ui_set_dp(transaction, mark, PXA_UI_PROPERTY_RADIUS,
                          icon_height / 2u) &&
            pxa_ui_set_theme_color(transaction, mark, PXA_UI_PROPERTY_BACKGROUND,
-                                  active ? PXA_UI_THEME_BORDER : PXA_UI_THEME_SURFACE) &&
+                                  active ? PXA_UI_THEME_PRIMARY_CONTAINER :
+                                           PXA_UI_THEME_SURFACE_CONTAINER_LOW) &&
            pxa_ui_create(transaction, icon_node, mark, 0, PXA_UI_NODE_TEXT) &&
            pxa_ui_set_text(transaction, icon_node, icon, string_length(icon)) &&
            pxa_ui_set_font_role(transaction, icon_node, PXA_UI_FONT_ROLE_ICON) &&
            pxa_ui_set_theme_color(transaction, icon_node,
                                   PXA_UI_PROPERTY_FOREGROUND,
-                                  active ? PXA_UI_THEME_PRIMARY : PXA_UI_THEME_MUTED) &&
+                                  active ? PXA_UI_THEME_ON_PRIMARY_CONTAINER :
+                                           PXA_UI_THEME_MUTED) &&
            pxa_ui_create(transaction, label, tab, 0, PXA_UI_NODE_TEXT) &&
            pxa_ui_set_text(transaction, label, text, string_length(text)) &&
            pxa_ui_set_font_role(transaction, label, PXA_UI_FONT_ROLE_CAPTION) &&
@@ -1381,7 +1383,7 @@ static int create_tabbar(pxa_ui_transaction_t *transaction, uint8_t mode) {
                          PXA_UI_LAYOUT_ROW) &&
            pxa_ui_set_theme_color(transaction, NODE_TABBAR,
                                   PXA_UI_PROPERTY_BACKGROUND,
-                                  PXA_UI_THEME_SURFACE) &&
+                                  PXA_UI_THEME_SURFACE_CONTAINER) &&
            pxa_ui_create(transaction, NODE_TABBAR_ACTIONS, NODE_TABBAR, 0,
                          PXA_UI_NODE_BOX) &&
            pxa_ui_set_length(transaction, NODE_TABBAR_ACTIONS,
@@ -2480,7 +2482,7 @@ static int render_search(void) {
                                 PXA_UI_THEME_BORDER) &&
          pxa_ui_set_theme_color(&transaction, NODE_SEARCH_BAR,
                                 PXA_UI_PROPERTY_BACKGROUND,
-                                PXA_UI_THEME_SURFACE) &&
+                                PXA_UI_THEME_SURFACE_CONTAINER_HIGH) &&
          pxa_ui_create(&transaction, NODE_SEARCH_ICON, NODE_SEARCH_BAR, 0,
                        PXA_UI_NODE_IMAGE) &&
          pxa_ui_set_length(&transaction, NODE_SEARCH_ICON,
