@@ -45,6 +45,10 @@
         "font_data.c"
       ],
       "services": [
+        {
+          "name": "window",
+          "min_version": [0, 1]
+        },
         "game-render",
         "storage",
         "log",
