@@ -12,7 +12,8 @@ window. Individual lookup failures are reported as a partial check. **Downloads*
 retains verified packages in Host storage so
 they can be installed later or deleted. Failed downloads have removable entries
 for the current Store session. After confirmation and successful installation,
-the Store asks whether to open the app. Host download records survive a reboot;
+the Host displays a localized result dialog with **Open** and **Confirm**;
+the Store also shows the installed app on a success card. Host download records survive a reboot;
 unfinished files are removed during startup cleanup. The manager keeps at most
 eight completed downloads and the installed view lists up to twelve apps.
 
@@ -20,7 +21,8 @@ Removable installed apps show **Uninstall** next to **Open** and any available
 update. This sends only the App ID to the Host; the Host resolves the unique
 installed identity, refuses built-in or active apps, and asks for confirmation
 in a bilingual system dialog before transactional removal. The installed list
-refreshes only after the Host reports success. The Store does not offer to
+refreshes only after the Host reports success and shows a localized completion
+dialog. The Store does not offer to
 uninstall itself.
 
 ## Building
@@ -90,21 +92,25 @@ Safe area insets and the layout's own margins do not stack: the root only adds
 the part of an inset a screen margin does not already cover (`inset_padding`),
 so a gesture strip never pushes the content further than the strip itself.
 
-On the catalog, scrolling down hides the header, the filter row and the bottom
-tab bar. They return on the first upward scroll, and also on any drag inside
-the list. The list reserves space for chrome so cards do not jump when it
-hides. A bounded header-action hit region on the list forwards taps on
-Hosts whose scroll layer intercepts the header; taps during a drag are ignored.
-Hiding is a small `PATCH` transaction, not a full surface rebuild.
+On the catalog, the header, filter row and bottom tab bar stay visible while
+scrolling. The list keeps its layout stable instead of hiding the chrome while
+retaining its reserved space. A bounded header-action hit region on the list
+forwards taps on Hosts whose scroll layer intercepts the header; taps during a
+drag are ignored.
 
 Wide displays (`>= 480` logical pixels, `>= 1100` for three columns) render the
 catalog as a grid with fractional, equally sized columns through the UI grid
 ABI. Narrow panels keep the single-column list.
 
-The catalog requests 2, 4 or 6 entries per page for one, two or three columns.
-It prefetches while the current grid is shorter than the viewport plus one row,
-and scrolling near the last row requests the next page without a button. A
-bounded ring of 12 entries evicts the oldest rows as needed.
+The catalog requests enough entries to fill the viewport plus one row, bounded
+by 12 entries. It prefetches when the current grid is still too short and
+scrolling near the last row requests the next page without a button. A bounded
+ring of 12 entries evicts the oldest rows as needed. Initial taxonomy changes
+rebuild the whole catalog; later pages replace only the list subtree while
+preserving the header, filters and tab bar. Download progress patches only its
+row's text and progress bar when the displayed percentage changes. Waiting for
+the next network chunk and checking each installed app do not redraw the whole
+surface; the update check redraws on entry and completion.
 
 The Guest starts with a 4 KiB network response allowance and doubles it on
 `limit-exceeded`, growing its WebAssembly linear memory only as needed up to
@@ -121,7 +127,7 @@ rectangle even if a product reports only small physical safe insets.
 The App reads the signed device API and skips envelope signature verification:
 
 ```text
-GET /api/v2/catalog?profile=...&channel=stable&view=compact&page_size=2|4|6
+GET /api/v2/catalog?profile=...&channel=stable&view=compact&page_size=2..12
     [&kind=game|app][&category=SLUG][&cursor=N][&device_id=MAC][&q=QUERY]
 GET /api/v2/apps/{app_id}?profile=...&channel=stable&view=compact[&device_id=MAC]
 ```

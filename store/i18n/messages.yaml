@@ -106,12 +106,12 @@ messages:
     context: Live package download progress
     max_bytes: 32
   dialog.install_success:
-    source: Installed successfully. Open now?
-    context: Post-install confirmation
+    source: Ready in Installed apps
+    context: Description on the installation success card
     max_bytes: 64
-  action.later:
-    source: Later
-    context: Dismiss a completed installation dialog
+  action.done:
+    source: Done
+    context: Leave the installation success screen
     max_bytes: 24
   kind.apps:
     source: Apps
