@@ -23,8 +23,9 @@ GPL-3.0; the upstream license text is included in `LICENSE.txt`.
 | Floors | One SPD region per five depths: sewers, prison, caves, city, halls |
 | Walls | Original raised faces, 16-way interior joins, 4-way overhangs and door lintels for every region |
 
-The art and fallback PCM are extracted by `tools/generate_assets.py` and
-`tools/generate_audio.py`. Simulator packages contain the six original Ogg
+The art and packaged PCM sound-effect files are extracted by
+`tools/generate_assets.py` and `tools/generate_audio.py`. No audio samples are
+embedded in the executable. Simulator packages contain the six original Ogg
 Vorbis tracks. For ESP32-S3, `tools/generate_device_music.sh` produces
 full-length Ogg Opus versions under `assets-esp32s3/music/` to fit the
 LittleFS install's temporary container and unpacked files without dropping
@@ -133,9 +134,10 @@ badge; other character statistics remain in the hero information page.
 The home actions use the original entrance, rankings, journal and settings
 icons. Menu, close, save-slot and toolbar hit targets grow with larger display
 profiles while preserving the original pixel-art proportions.
-The status pane fits experience and health values inside their bars, using
-condensed pixel digits when the small portrait frame cannot fit the full
-value. The level badge measures one- and two-digit values before centering.
+The status pane fits the health value inside its bar, using condensed pixel
+digits when the small portrait frame cannot fit the full value. The experience
+bar shows progress only; its value is in hero details. The level badge measures
+one- and two-digit values before centering.
 
 ## Audio
 
@@ -150,10 +152,10 @@ requested path resolves inside the package's `assets/` directory.
 
 On the `pai-touch` ESP32 board the asset sink streams the packaged Ogg tracks
 through the Espressif GMF audio codec's Vorbis/Opus decoder, resamples to
-16 kHz mono and mixes the result with the existing PCM effects before sending
-it to RPC701. Pause, resume, stop, looping and gain changes are supported.
-Other boards without an asset sink return `UNSUPPORTED`; the game then plays
-its compact 8 kHz PCM fallback music through the existing guest effect mixer.
+16 kHz mono and mixes them with the packaged 16 kHz PCM sound-effect files
+before sending them to RPC701. Pause, resume, stop, looping and gain changes
+are supported. Boards without a compatible asset sink play silently rather
+than carrying duplicate PCM samples in the executable.
 
 ## Animations
 

@@ -60,6 +60,7 @@ void pd_layout_set_zoom(pd_layout_t *layout, int zoom);
 void pd_layout_fit_display_shape(pd_layout_t *layout, uint32_t shape,
                                  const int corner_radii[4]);
 int pd_rect_contains(const pd_rect_t *rect, int x, int y);
+pd_rect_t pd_layout_hero_portrait(const pd_layout_t *layout);
 pd_hud_digits_t pd_layout_hud_digits(int x, int width,
                                      const char *text, int scale);
 pd_rect_t pd_layout_save_row(const pd_layout_t *layout, int visible_count,

@@ -750,6 +750,50 @@ static void test_responsive_layout(void) {
     }
 }
 
+static void test_hero_portrait_hitbox(void) {
+    pd_game_t game;
+    pd_layout_t layout;
+    for (int profile = 0; profile < 3; ++profile) {
+        const int width = profile == 0 ? 176 : profile == 1 ? 296 : 412;
+        const int height = profile == 0 ? 176 : profile == 1 ? 240 : 412;
+        pd_game_reset(&game, 900 + profile);
+        pd_game_start_run(&game, 0);
+        pd_layout_build(&layout, width, height, 8, 10, 8, 10);
+        pd_layout_fit_display_shape(&layout, 2, NULL);
+        const pd_rect_t portrait = pd_layout_hero_portrait(&layout);
+        const int avatar_x = portrait.x + portrait.w / 2;
+        const int avatar_y = portrait.y + portrait.h / 2;
+        pd_input_pointer(&game, &layout, avatar_x, avatar_y, 0,
+                         PXA_POINTER_DOWN, 1);
+        pd_input_pointer(&game, &layout, avatar_x, avatar_y, 0,
+                         PXA_POINTER_UP, 2);
+        check(game.phase == PD_PHASE_INFO,
+              "tapping the portrait opens hero information");
+
+        game.phase = PD_PHASE_PLAY;
+        const int below_health_x = layout.hero_info.x +
+                                   50 * layout.hero_info.w / 82;
+        const int below_health_y = layout.hero_info.y +
+                                   20 * layout.hero_info.h / 38;
+        pd_input_pointer(&game, &layout, below_health_x, below_health_y, 0,
+                         PXA_POINTER_DOWN, 3);
+        pd_input_pointer(&game, &layout, below_health_x, below_health_y, 0,
+                         PXA_POINTER_UP, 4);
+        check(game.phase != PD_PHASE_INFO,
+              "transparent space below health bar is not a portrait tap");
+
+        game.phase = PD_PHASE_PLAY;
+        const int below_portrait_x = portrait.x + portrait.w / 2;
+        const int below_portrait_y = portrait.y + portrait.h + 1;
+        pd_input_pointer(&game, &layout, below_portrait_x, below_portrait_y, 0,
+                         PXA_POINTER_DOWN, 5);
+        pd_input_pointer(&game, &layout, below_portrait_x, below_portrait_y, 0,
+                         PXA_POINTER_UP, 6);
+        check(game.phase != PD_PHASE_INFO,
+              "experience strip below portrait does not open hero information");
+    }
+}
+
 static void test_hud_digit_bounds(void) {
     struct {
         const char *text;
@@ -1228,6 +1272,7 @@ int main(void) {
     test_keys_shop_and_camera();
     test_auto_walk();
     test_responsive_layout();
+    test_hero_portrait_hitbox();
     test_hud_digit_bounds();
     test_hunger_and_font_pages();
     test_camera_top_pan();

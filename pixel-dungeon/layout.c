@@ -10,6 +10,13 @@ int pd_rect_contains(const pd_rect_t *rect, int x, int y) {
            y < rect->y + rect->h;
 }
 
+pd_rect_t pd_layout_hero_portrait(const pd_layout_t *layout) {
+    const pd_rect_t *pane = &layout->hero_info;
+    pd_rect_t portrait = {pane->x, pane->y,
+                          30 * pane->w / 82, 30 * pane->h / 38};
+    return portrait;
+}
+
 static int hud_digits_width(const char *text, int scale, int spacing,
                              int condensed) {
     int width = 0;

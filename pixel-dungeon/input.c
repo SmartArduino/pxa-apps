@@ -59,7 +59,8 @@ static void handle_play_tap(pd_game_t *game, const pd_layout_t *layout, int x,
         }
         return;
     }
-    if (pd_rect_contains(&layout->hero_info, x, y)) {
+    const pd_rect_t portrait = pd_layout_hero_portrait(layout);
+    if (pd_rect_contains(&portrait, x, y)) {
         game->phase = PD_PHASE_INFO;
         return;
     }

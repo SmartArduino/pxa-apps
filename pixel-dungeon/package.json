@@ -40,7 +40,6 @@
         "assets.c",
         "compat.c",
         "audio.c",
-        "audio_data.c",
         "strings.c",
         "font_data.c"
       ],
