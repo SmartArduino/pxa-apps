@@ -86,45 +86,108 @@ pd_rect_t pd_layout_save_page_button(const pd_layout_t *layout,
     return button;
 }
 
-void pd_layout_camera(const pd_layout_t *layout, int hero_x, int hero_y,
-                      int *camera_x, int *camera_y) {
-    int x = hero_x - layout->cols / 2 + layout->camera_dx;
-    int y = hero_y - layout->rows / 2 + layout->camera_dy;
+static int floor_div(int value, int divisor) {
+    return value >= 0 ? value / divisor : -1 - (-1 - value) / divisor;
+}
+
+void pd_layout_camera_pixels(const pd_layout_t *layout, int hero_x, int hero_y,
+                             int *camera_x, int *camera_y) {
+    const int cell = layout->tile_pixels;
+    int x = (hero_x - layout->cols / 2) * cell + layout->camera_dx;
+    int y = (hero_y - layout->rows / 2) * cell + layout->camera_dy;
+    int left = layout->hero_info.x + layout->hero_info.w;
     int top = layout->hero_info.y + layout->hero_info.h;
     if (top < layout->menu_pane.y + layout->menu_pane.h)
         top = layout->menu_pane.y + layout->menu_pane.h;
     if (top < layout->depth.y + layout->depth.h)
         top = layout->depth.y + layout->depth.h;
-    int upper_margin = (top + 6 * layout->zoom - layout->map_y +
-                        layout->tile_pixels - 1) / layout->tile_pixels;
+    if (left < layout->depth.x + layout->depth.w)
+        left = layout->depth.x + layout->depth.w;
+    int upper_margin = top + 6 * layout->zoom - layout->map_y;
+    int left_margin = left + 6 * layout->zoom - layout->map_x;
+    int right_margin = layout->map_x + layout->map_w -
+                       layout->menu_pane.x + 6 * layout->zoom;
+    int bottom_margin = layout->map_y + layout->map_h -
+                        layout->button[0].y + 6 * layout->zoom;
+    int max_x = (PD_MAP_W - layout->cols) * cell;
+    int max_y = (PD_MAP_H - layout->rows) * cell;
+    const int horizontal_limit = layout->width - 3 * cell;
+    const int vertical_limit = layout->height - 3 * cell;
     if (upper_margin < 0) upper_margin = 0;
-    if (upper_margin > layout->rows - 3) upper_margin = layout->rows - 3;
-    if (upper_margin < 0) upper_margin = 0;
-    if (x > PD_MAP_W - layout->cols) x = PD_MAP_W - layout->cols;
-    if (y > PD_MAP_H - layout->rows) y = PD_MAP_H - layout->rows;
-    if (x < 0) x = 0;
+    if (left_margin < 0) left_margin = 0;
+    if (right_margin < 0) right_margin = 0;
+    if (bottom_margin < 0) bottom_margin = 0;
+    if (upper_margin > vertical_limit) upper_margin = vertical_limit;
+    if (bottom_margin > vertical_limit) bottom_margin = vertical_limit;
+    if (left_margin > horizontal_limit) left_margin = horizontal_limit;
+    if (right_margin > horizontal_limit) right_margin = horizontal_limit;
+    if (max_x < 0) max_x = 0;
+    if (max_y < 0) max_y = 0;
+    if (layout->camera_manual) {
+        max_x += right_margin;
+        max_y += bottom_margin;
+    }
+    if (x > max_x) x = max_x;
+    if (y > max_y) y = max_y;
+    if (x < (layout->camera_manual ? -left_margin : 0))
+        x = layout->camera_manual ? -left_margin : 0;
     if (y < (layout->camera_manual ? -upper_margin : 0))
         y = layout->camera_manual ? -upper_margin : 0;
     *camera_x = x;
     *camera_y = y;
 }
 
-void pd_layout_pan(pd_layout_t *layout, int hero_x, int hero_y,
-                   int step_x, int step_y) {
+void pd_layout_camera(const pd_layout_t *layout, int hero_x, int hero_y,
+                      int *camera_x, int *camera_y) {
+    pd_layout_camera_pixels(layout, hero_x, hero_y, camera_x, camera_y);
+    *camera_x = floor_div(*camera_x, layout->tile_pixels);
+    *camera_y = floor_div(*camera_y, layout->tile_pixels);
+}
+
+void pd_layout_camera_visual_pixels(const pd_layout_t *layout,
+                                    int hero_x, int hero_y,
+                                    int from_x, int from_y, int moving,
+                                    int *camera_x, int *camera_y) {
+    pd_layout_camera_pixels(layout, hero_x, hero_y, camera_x, camera_y);
+    if (moving <= 0) return;
+    int previous_x;
+    int previous_y;
+    pd_layout_camera_pixels(layout, from_x, from_y,
+                            &previous_x, &previous_y);
+    if (moving > 12) moving = 12;
+    *camera_x += (previous_x - *camera_x) * moving / 12;
+    *camera_y += (previous_y - *camera_y) * moving / 12;
+}
+
+void pd_layout_pan_pixels(pd_layout_t *layout, int hero_x, int hero_y,
+                          int delta_x, int delta_y) {
     int camera_x;
     int camera_y;
-    pd_layout_camera(layout, hero_x, hero_y, &camera_x, &camera_y);
+    const int base_x = (hero_x - layout->cols / 2) * layout->tile_pixels;
+    const int base_y = (hero_y - layout->rows / 2) * layout->tile_pixels;
+    pd_layout_camera_pixels(layout, hero_x, hero_y, &camera_x, &camera_y);
     layout->camera_manual = 1;
-    layout->camera_dx = camera_x + step_x - (hero_x - layout->cols / 2);
-    layout->camera_dy = camera_y + step_y - (hero_y - layout->rows / 2);
-    pd_layout_camera(layout, hero_x, hero_y, &camera_x, &camera_y);
-    layout->camera_dx = camera_x - (hero_x - layout->cols / 2);
-    layout->camera_dy = camera_y - (hero_y - layout->rows / 2);
+    layout->camera_dx = camera_x + delta_x - base_x;
+    layout->camera_dy = camera_y + delta_y - base_y;
+    pd_layout_camera_pixels(layout, hero_x, hero_y, &camera_x, &camera_y);
+    layout->camera_dx = camera_x - base_x;
+    layout->camera_dy = camera_y - base_y;
+}
+
+void pd_layout_pan(pd_layout_t *layout, int hero_x, int hero_y,
+                   int step_x, int step_y) {
+    pd_layout_pan_pixels(layout, hero_x, hero_y,
+                         step_x * layout->tile_pixels,
+                         step_y * layout->tile_pixels);
 }
 
 void pd_layout_set_zoom(pd_layout_t *layout, int zoom) {
     if (zoom < 1) zoom = 1;
     if (zoom > 3) zoom = 3;
+    if (layout->zoom > 0 && layout->zoom != zoom) {
+        layout->camera_dx = layout->camera_dx * zoom / layout->zoom;
+        layout->camera_dy = layout->camera_dy * zoom / layout->zoom;
+    }
     layout->zoom = zoom;
     layout->tile_pixels = PD_TILE_PIXELS * zoom;
     layout->cols = (layout->width + layout->tile_pixels - 1) /
@@ -336,6 +399,7 @@ void pd_layout_build(pd_layout_t *layout, int width, int height,
     layout->safe_bottom = safe_bottom < 0 ? 0 : safe_bottom;
     layout->safe_left = safe_left < 0 ? 0 : safe_left;
     layout->display_shape = 0;
+    layout->zoom = 0;
     layout->camera_dx = 0;
     layout->camera_dy = 0;
     layout->camera_manual = 0;

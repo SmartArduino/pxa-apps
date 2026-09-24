@@ -11,10 +11,14 @@
 #define PD_CJK_CELL 16
 #define PD_CJK_ATLAS_W 256
 #define PD_CJK_ATLAS_H 256
-#define PD_CJK_GLYPHS 253
+#define PD_CJK_PAGE_GLYPHS 256
+#define PD_CJK_EXTRA_ATLAS_H 16
+#define PD_CJK_EXTRA_GLYPHS 4
+#define PD_CJK_GLYPHS 260
 
 extern const uint8_t pd_font_ascii[PD_ASCII_ATLAS_W * PD_ASCII_ATLAS_H];
 extern const uint8_t pd_font_cjk[PD_CJK_ATLAS_W * PD_CJK_ATLAS_H];
+extern const uint8_t pd_font_cjk_extra[PD_CJK_ATLAS_W * PD_CJK_EXTRA_ATLAS_H];
 /* Slot of a CJK codepoint, or -1 when it is not baked in. */
 int pd_font_cjk_slot(uint32_t codepoint);
 

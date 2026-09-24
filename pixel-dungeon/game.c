@@ -628,7 +628,7 @@ static void hero_init(pd_game_t *game, uint8_t cls) {
     hero->xp = 0;
     hero->gold = 0;
     hero->keys = 0;
-    hero->hunger = 320;
+    hero->hunger = PD_HUNGER_MAX;
     hero->weapon = -1;
     hero->armor = -1;
     game->bag_count = 0;
@@ -812,19 +812,23 @@ void pd_game_start_run(pd_game_t *game, uint8_t class_choice) {
 
 static void gain_xp(pd_game_t *game, int amount);
 static void damage_hero(pd_game_t *game, int amount, const char *source) {
-    int armor = pd_hero_armor_value(game);
-    int taken = amount - armor;
-    pd_text_t line;
+    const int starvation = source == NULL;
+    int taken = amount - (starvation ? 0 : pd_hero_armor_value(game));
     if (taken < 1) taken = 1;
     game->hero.hp = (int16_t)(game->hero.hp - taken);
     effect_add(game, PD_EFFECT_DAMAGE, game->hero.x, game->hero.y, taken);
-    sound_add(game, PD_SOUND_HIT_STRONG);
-    message_text_num(game, PD_MSG_BAD, PD_STR_MOB_HITS_YOU, source, taken);
+    if (starvation)
+        message_num(game, PD_MSG_BAD, PD_STR_STARVATION_DAMAGE, taken);
+    else {
+        sound_add(game, PD_SOUND_HIT_STRONG);
+        message_text_num(game, PD_MSG_BAD, PD_STR_MOB_HITS_YOU, source, taken);
+    }
     if (game->hero.hp <= 0) {
         game->hero.hp = 0;
         game->phase = PD_PHASE_DEAD;
         game->walk_active = 0;
-        message_simple(game, PD_MSG_BAD, PD_STR_YOU_DIE);
+        message_simple(game, PD_MSG_BAD,
+                       starvation ? PD_STR_STARVED : PD_STR_YOU_DIE);
     }
 }
 
@@ -1008,14 +1012,16 @@ static void mobs_turn(pd_game_t *game) {
 static void hunger_tick(pd_game_t *game) {
     if (game->hero.hunger > 0) {
         --game->hero.hunger;
-        if (game->hero.hunger == 60) {
+        if (game->hero.hunger == PD_HUNGER_WARN) {
             message_simple(game, PD_MSG_WARN, PD_STR_HUNGRY);
             sound_add(game, PD_SOUND_HUNGRY);
+        } else if (game->hero.hunger == 0) {
+            message_simple(game, PD_MSG_BAD, PD_STR_STARVING);
         }
         return;
     }
     if ((game->turn % 6u) == 0) {
-        damage_hero(game, 1, "Starvation");
+        damage_hero(game, 1, NULL);
     }
 }
 
@@ -1367,7 +1373,7 @@ void pd_game_bag_use(pd_game_t *game, int slot) {
             bag_remove(game, slot);
             break;
         case PD_ITEM_FOOD:
-            game->hero.hunger = 320;
+            game->hero.hunger = PD_HUNGER_MAX;
             game->hero.hp = (int16_t)(game->hero.hp + 6);
             if (game->hero.hp > game->hero.max_hp)
                 game->hero.hp = game->hero.max_hp;

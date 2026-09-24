@@ -343,6 +343,13 @@ static int upload_resources(void) {
         (int32_t)(PXA_RASTER_UPLOAD_HEADER_BYTES +
                   PD_CJK_ATLAS_W * PD_CJK_ATLAS_H))
         return 0;
+    if (PD_CJK_EXTRA_GLYPHS > 0 && pxa_raster_upload_texture_index8(
+            g_context, PD_TEXTURE_FONT_CJK_EXTRA, PD_CJK_ATLAS_W,
+            PD_CJK_EXTRA_ATLAS_H, pd_font_cjk_extra, g_upload,
+            sizeof(g_upload)) !=
+        (int32_t)(PXA_RASTER_UPLOAD_HEADER_BYTES +
+                  PD_CJK_ATLAS_W * PD_CJK_EXTRA_ATLAS_H))
+        return 0;
     if (pxa_raster_upload_texture_index8(
             g_context, PD_TEXTURE_UI, PD_UI_ATLAS_WIDTH, PD_UI_ATLAS_HEIGHT,
             pd_ui_atlas, g_upload, sizeof(g_upload)) !=

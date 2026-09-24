@@ -241,6 +241,8 @@ UI_SLICES = [
     ('TITLE_ENTER', 'interfaces/icons.png', 0, 0, 16, 16),
     ('TITLE_RANKINGS', 'interfaces/icons.png', 34, 0, 17, 16),
     ('TITLE_JOURNAL', 'interfaces/icons.png', 136, 0, 17, 15),
+    ('BUFF_HUNGRY', 'interfaces/buffs.png', 35, 0, 7, 7),
+    ('BUFF_STARVING', 'interfaces/buffs.png', 42, 0, 7, 7),
 ]
 
 

@@ -42,12 +42,13 @@ int pd_font_next(const char **cursor, pd_glyph_t *glyph) {
     {
         const int slot = pd_font_cjk_slot(codepoint);
         if (slot < 0) return -1;
-        glyph->atlas = pd_font_cjk;
+        glyph->atlas = slot >= PD_CJK_PAGE_GLYPHS ?
+                       pd_font_cjk_extra : pd_font_cjk;
         glyph->atlas_width = PD_CJK_ATLAS_W;
         glyph->cell_width = PD_CJK_CELL;
         glyph->cell_height = PD_CJK_CELL;
-        glyph->slot = (uint16_t)slot;
-        glyph->cjk = 1;
+        glyph->slot = (uint16_t)(slot % PD_CJK_PAGE_GLYPHS);
+        glyph->cjk = slot >= PD_CJK_PAGE_GLYPHS ? 2 : 1;
     }
     return 1;
 }

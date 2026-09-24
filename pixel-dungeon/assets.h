@@ -435,7 +435,7 @@ enum {
 #define PD_TITLE_ATLAS_HEIGHT 128
 #define PD_FIRE_ATLAS_WIDTH 192
 #define PD_FIRE_ATLAS_HEIGHT 72
-#define PD_UI_SLICE_COUNT 28
+#define PD_UI_SLICE_COUNT 30
 
 /* Interface slices packed into the UI strip: source x, y, width, height. */
 enum {
@@ -467,6 +467,8 @@ enum {
     PD_UI_TITLE_ENTER = 25,
     PD_UI_TITLE_RANKINGS = 26,
     PD_UI_TITLE_JOURNAL = 27,
+    PD_UI_BUFF_HUNGRY = 28,
+    PD_UI_BUFF_STARVING = 29,
 };
 
 extern const uint8_t pd_tile_atlas[PD_ATLAS_WIDTH * PD_TILE_ATLAS_HEIGHT];

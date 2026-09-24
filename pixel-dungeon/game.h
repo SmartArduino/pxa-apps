@@ -21,6 +21,8 @@
 #define PD_TILE_CHANGES_MAX 48
 #define PD_SAVE_SLOTS 5
 #define PD_RANK_COUNT 5
+#define PD_HUNGER_MAX 320
+#define PD_HUNGER_WARN 60
 
 enum {
     PD_PHASE_TITLE = 0,

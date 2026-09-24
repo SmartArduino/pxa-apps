@@ -76,9 +76,14 @@ static void handle_play_tap(pd_game_t *game, const pd_layout_t *layout, int x,
         x >= layout->map_x + layout->map_w ||
         y >= layout->map_y + layout->map_h)
         return;
-    pd_layout_camera(layout, game->hero.x, game->hero.y, &camera_x, &camera_y);
-    tile_x = camera_x + (x - layout->map_x) / layout->tile_pixels;
-    tile_y = camera_y + (y - layout->map_y) / layout->tile_pixels;
+    pd_layout_camera_visual_pixels(layout, game->hero.x, game->hero.y,
+                                   game->hero_from_x, game->hero_from_y,
+                                   game->hero_moving, &camera_x, &camera_y);
+    tile_x = x - layout->map_x + camera_x;
+    tile_y = y - layout->map_y + camera_y;
+    if (tile_x < 0 || tile_y < 0) return;
+    tile_x /= layout->tile_pixels;
+    tile_y /= layout->tile_pixels;
     pd_game_tap(game, tile_x, tile_y);
 }
 
@@ -133,14 +138,11 @@ void pd_input_pointer(pd_game_t *game, pd_layout_t *layout, int x, int y,
             const int dy = g_touches[slot].start_y - y;
             if (dx * dx + dy * dy > 64) g_touches[slot].dragged = 1;
             if (g_touches[slot].dragged) {
-                const int step_x = (g_touches[slot].drag_x - x) /
-                                   layout->tile_pixels;
-                const int step_y = (g_touches[slot].drag_y - y) /
-                                   layout->tile_pixels;
-                pd_layout_pan(layout, game->hero.x, game->hero.y,
-                              step_x, step_y);
-                g_touches[slot].drag_x -= step_x * layout->tile_pixels;
-                g_touches[slot].drag_y -= step_y * layout->tile_pixels;
+                pd_layout_pan_pixels(layout, game->hero.x, game->hero.y,
+                                     g_touches[slot].drag_x - x,
+                                     g_touches[slot].drag_y - y);
+                g_touches[slot].drag_x = x;
+                g_touches[slot].drag_y = y;
                 game->walk_active = 0;
             }
         }

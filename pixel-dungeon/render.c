@@ -275,8 +275,9 @@ static int text_draw(int x, int y, const char *text, uint16_t color,
     sprite_flush();
     while ((result = pd_font_next(&walker, &glyph)) != 0) {
         if (result < 0) continue;
-        const uint8_t slot =
-            glyph.cjk ? PD_TEXTURE_FONT_CJK : PD_TEXTURE_FONT_ASCII;
+        const uint8_t slot = glyph.cjk == 2 ? PD_TEXTURE_FONT_CJK_EXTRA :
+                             glyph.cjk ? PD_TEXTURE_FONT_CJK :
+                                          PD_TEXTURE_FONT_ASCII;
         pd_text_batch_t *batch = text_batch(color, slot);
         int advance = pd_font_advance(&glyph, scale);
         if (glyph.atlas == NULL) continue;
@@ -474,14 +475,18 @@ static uint8_t visible_tile(const pd_level_t *level, int x, int y) {
 static void draw_map(const pd_game_t *game, const pd_layout_t *layout,
                      int camera_x, int camera_y) {
     const pd_level_t *level = &game->level;
-    const int origin_x = layout->map_x - camera_x * layout->tile_pixels;
-    const int origin_y = layout->map_y - camera_y * layout->tile_pixels;
+    const int first_x = camera_x >= 0 ? camera_x / layout->tile_pixels :
+                        -1 - (-1 - camera_x) / layout->tile_pixels;
+    const int first_y = camera_y >= 0 ? camera_y / layout->tile_pixels :
+                        -1 - (-1 - camera_y) / layout->tile_pixels;
+    const int origin_x = layout->map_x - camera_x;
+    const int origin_y = layout->map_y - camera_y;
     g_world_cell = layout->tile_pixels;
-    for (int row = 0; row < layout->rows; ++row) {
-        const int tile_y = camera_y + row;
+    for (int row = 0; row < layout->rows + 2; ++row) {
+        const int tile_y = first_y + row;
         if (tile_y < 0 || tile_y >= PD_MAP_H) continue;
-        for (int column = 0; column < layout->cols; ++column) {
-            const int tile_x = camera_x + column;
+        for (int column = 0; column < layout->cols + 2; ++column) {
+            const int tile_x = first_x + column;
             int x;
             int y;
             int face;
@@ -524,11 +529,15 @@ static void draw_map(const pd_game_t *game, const pd_layout_t *layout,
 static void draw_upper_walls(const pd_game_t *game, const pd_layout_t *layout,
                              int camera_x, int camera_y) {
     const pd_level_t *level = &game->level;
-    for (int row = 0; row < layout->rows; ++row) {
-        const int tile_y = camera_y + row;
+    const int first_x = camera_x >= 0 ? camera_x / g_world_cell :
+                        -1 - (-1 - camera_x) / g_world_cell;
+    const int first_y = camera_y >= 0 ? camera_y / g_world_cell :
+                        -1 - (-1 - camera_y) / g_world_cell;
+    for (int row = 0; row < layout->rows + 2; ++row) {
+        const int tile_y = first_y + row;
         if (tile_y < 0 || tile_y + 1 >= PD_MAP_H) continue;
-        for (int column = 0; column < layout->cols; ++column) {
-            const int tile_x = camera_x + column;
+        for (int column = 0; column < layout->cols + 2; ++column) {
+            const int tile_x = first_x + column;
             int upper;
             if (tile_x < 0 || tile_x >= PD_MAP_W) continue;
             if (!level->explored[tile_y * PD_MAP_W + tile_x]) continue;
@@ -538,12 +547,13 @@ static void draw_upper_walls(const pd_game_t *game, const pd_layout_t *layout,
                  !pd_wall_exposed(level, tile_x, tile_y + 1))) continue;
             upper = pd_wall_upper(level, tile_x, tile_y);
             if (upper >= 0)
-                wall_add(layout->map_x + column * g_world_cell,
-                         layout->map_y + row * g_world_cell, (uint8_t)upper);
+                wall_add(layout->map_x + tile_x * g_world_cell - camera_x,
+                         layout->map_y + tile_y * g_world_cell - camera_y,
+                         (uint8_t)upper);
             if (PD_TILE_KIND(pd_tile_at(level, tile_x, tile_y + 1)) ==
                 PD_TILEK_HIGH_GRASS)
-                overlay_add(layout->map_x + column * g_world_cell,
-                            layout->map_y + row * g_world_cell,
+                overlay_add(layout->map_x + tile_x * g_world_cell - camera_x,
+                            layout->map_y + tile_y * g_world_cell - camera_y,
                             PD_TILE(level->theme,
                                     terrain_alt(tile_x, tile_y + 1) ?
                                     PD_TILEK_HIGH_GRASS_OVERHANG_ALT :
@@ -560,8 +570,8 @@ static void draw_ground_items(const pd_game_t *game, const pd_layout_t *layout,
         PD_TILE_KIND(pd_tile_at(&game->level, game->lock_x, game->lock_y)) ==
             PD_TILEK_DOOR &&
         game->level.visible[game->lock_y * PD_MAP_W + game->lock_x]) {
-        const int x = layout->map_x + (game->lock_x - camera_x) * g_world_cell;
-        const int y = layout->map_y + (game->lock_y - camera_y) * g_world_cell;
+        const int x = layout->map_x + game->lock_x * g_world_cell - camera_x;
+        const int y = layout->map_y + game->lock_y * g_world_cell - camera_y;
         if (x >= layout->map_x && x < layout->map_x + layout->map_w &&
             y >= layout->map_y && y < layout->map_y + layout->map_h)
             sprite_add(PD_SPRITE_ITEM_IRON_KEY, x + g_world_cell / 4,
@@ -570,8 +580,8 @@ static void draw_ground_items(const pd_game_t *game, const pd_layout_t *layout,
     }
     for (int index = 0; index < game->ground_count; ++index) {
         const pd_ground_t *entry = &game->ground[index];
-        const int x = layout->map_x + (entry->x - camera_x) * g_world_cell;
-        const int y = layout->map_y + (entry->y - camera_y) * g_world_cell -
+        const int x = layout->map_x + entry->x * g_world_cell - camera_x;
+        const int y = layout->map_y + entry->y * g_world_cell - camera_y -
                       5 * layout->zoom;
         if (!entry->used) continue;
         if (!game->level.visible[entry->y * PD_MAP_W + entry->x]) continue;
@@ -590,8 +600,8 @@ static void draw_item_sparkles(const pd_game_t *game,
     if (phase > 6u) return;
     for (int index = 0; index < game->ground_count; ++index) {
         const pd_ground_t *entry = &game->ground[index];
-        const int x = layout->map_x + (entry->x - camera_x) * g_world_cell;
-        const int y = layout->map_y + (entry->y - camera_y) * g_world_cell -
+        const int x = layout->map_x + entry->x * g_world_cell - camera_x;
+        const int y = layout->map_y + entry->y * g_world_cell - camera_y -
                       5 * layout->zoom;
         if (!entry->used) continue;
         if (!game->level.visible[entry->y * PD_MAP_W + entry->x]) continue;
@@ -617,8 +627,8 @@ static void draw_mobs(const pd_game_t *game, const pd_layout_t *layout,
         int y;
         if (mob->type == 0xFF) continue;
         if (!game->level.visible[mob->y * PD_MAP_W + mob->x]) continue;
-        x = layout->map_x + (mob->x - camera_x) * g_world_cell;
-        y = layout->map_y + (mob->y - camera_y) * g_world_cell;
+        x = layout->map_x + mob->x * g_world_cell - camera_x;
+        y = layout->map_y + mob->y * g_world_cell - camera_y;
         if (mob->moving > 0) {
             x += ((int)mob->from_x - mob->x) * g_world_cell * mob->moving / 8;
             y += ((int)mob->from_y - mob->y) * g_world_cell * mob->moving / 8;
@@ -651,8 +661,8 @@ static void draw_mobs(const pd_game_t *game, const pd_layout_t *layout,
 
 static void draw_hero(const pd_game_t *game, const pd_layout_t *layout,
                       int camera_x, int camera_y) {
-    int x = layout->map_x + (game->hero.x - camera_x) * g_world_cell;
-    int y = layout->map_y + (game->hero.y - camera_y) * g_world_cell;
+    int x = layout->map_x + game->hero.x * g_world_cell - camera_x;
+    int y = layout->map_y + game->hero.y * g_world_cell - camera_y;
     uint8_t frame = 0;
     int bob = 0;
     if (game->hero_moving > 0) {
@@ -696,8 +706,8 @@ static void draw_effects(const pd_game_t *game, const pd_layout_t *layout,
                          int camera_x, int camera_y) {
     for (int index = 0; index < PD_EFFECTS_MAX; ++index) {
         const pd_effect_t *effect = &game->effects[index];
-        const int x = layout->map_x + (effect->x - camera_x) * g_world_cell;
-        const int y = layout->map_y + (effect->y - camera_y) * g_world_cell;
+        const int x = layout->map_x + effect->x * g_world_cell - camera_x;
+        const int y = layout->map_y + effect->y * g_world_cell - camera_y;
         if (effect->ttl == 0) continue;
         if (x < layout->map_x || x >= layout->map_x + layout->map_w ||
             y < layout->map_y || y >= layout->map_y + layout->map_h) continue;
@@ -790,6 +800,13 @@ static void draw_hud(const pd_game_t *game, const pd_layout_t *layout) {
     sprite_add(PD_SPRITE_HERO(hero->cls, pd_hero_visual_tier(game), 0),
                pane_x + 7 * pane_w / 82, pane_y + 8 * pane_h / 38,
                16 * pane_w / 82, 16 * pane_h / 38);
+    if (hero->hunger <= PD_HUNGER_WARN) {
+        const int buff_size = pane_w > 82 ? 11 : 7;
+        ui_sprite(hero->hunger == 0 ? PD_UI_BUFF_STARVING : PD_UI_BUFF_HUNGRY,
+                  pane_x + 33 * pane_w / 82,
+                  pane_y + 12 * pane_h / 38,
+                  buff_size, buff_size);
+    }
 
     /* Health bar in the panel's bar recess. */
     fill = hero->max_hp == 0 ? 0 : 50 * hero->hp / hero->max_hp;
@@ -815,19 +832,9 @@ static void draw_hud(const pd_game_t *game, const pd_layout_t *layout) {
         if (width > 17) width = 17;
         if (width > 0)
             ui_sprite(PD_UI_EXP_BAR, pane_x + 2 * pane_w / 82,
-                      pane_y + 29 * pane_h / 38,
-                      width * pane_w / 82, 8 * pane_h / 38);
+                      pane_y + 30 * pane_h / 38,
+                      width * pane_w / 82, 4 * pane_h / 38);
     }
-
-    out = text;
-    out = append_int(out, hero->xp);
-    *out++ = '/';
-    out = append_int(out, needed);
-    *out = '\0';
-    draw_hud_value_fit(pane_x + 2 * pane_w / 82,
-                       pane_y + 29 * pane_h / 38 + 4 * pane_h / 38,
-                       17 * pane_w / 82, text,
-                       rgb565(255, 243, 170), value_scale);
 
     out = text;
     out = append_int(out, hero->level);
@@ -1356,14 +1363,14 @@ static void draw_info(const pd_game_t *game, const pd_layout_t *layout) {
     const int top = (layout->height - height) / 2;
     char line[32];
     char *out;
-    int y = top + 40;
+    int y = top + 35;
     ui_ninepatch(PD_UI_WINDOW, left, top, width, height, 6);
     ui_panel_close(&layout->info_close);
     ui_sprite((uint8_t)(PD_UI_AVATAR_WARRIOR + game->hero.cls),
               left + 12, top + 9, 18, 24);
     text_draw(left + 36, top + 15, pd_str(PD_STR_PLAYER_INFO),
               rgb565(250, 214, 96), 1);
-    for (int index = 0; index < 5; ++index) {
+    for (int index = 0; index < 6; ++index) {
         const char *label;
         out = line;
         if (index == 0) {
@@ -1380,6 +1387,11 @@ static void draw_info(const pd_game_t *game, const pd_layout_t *layout) {
             *out++ = '/';
             out = append_int(out, 6 + game->hero.level * 5);
         } else if (index == 3) {
+            label = pd_str(PD_STR_PLAYER_SATIETY);
+            out = append_int(out, game->hero.hunger);
+            *out++ = '/';
+            out = append_int(out, PD_HUNGER_MAX);
+        } else if (index == 4) {
             label = pd_str(PD_STR_PLAYER_DEPTH);
             out = append_int(out, game->depth);
         } else {
@@ -1390,7 +1402,7 @@ static void draw_info(const pd_game_t *game, const pd_layout_t *layout) {
         text_draw(left + 12, y, label, rgb565(236, 234, 218), 1);
         text_right(left + width - 12, y, line,
                    rgb565(226, 226, 226), 1);
-        y += (height - 66) / 5;
+        y += (height - 50) / 6;
     }
 }
 
@@ -1514,7 +1526,9 @@ int pd_render_present(uint32_t context_handle, uint32_t capabilities,
         return pxa_raster_submit(context_handle, &g_list) > 0;
     }
 
-    pd_layout_camera(layout, game->hero.x, game->hero.y, &camera_x, &camera_y);
+    pd_layout_camera_visual_pixels(layout, game->hero.x, game->hero.y,
+                                   game->hero_from_x, game->hero_from_y,
+                                   game->hero_moving, &camera_x, &camera_y);
     (void)pxa_raster_clear(&g_list, rgb565(8, 8, 12));
 #if !defined(PD_SKIP_MAP)
     draw_map(game, layout, camera_x, camera_y);

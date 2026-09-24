@@ -44,9 +44,10 @@ cp /tmp/pxa-spd-assets/core/src/main/assets/music/{theme,sewers,prison,caves,cit
 tools/generate_device_music.sh
 ```
 
-`generate_text.py` renders the anti-aliased ASCII atlas and the CJK atlas from
-the characters actually used by `tools/strings.py`, so Chinese support costs
-only the glyphs the game needs.
+`generate_text.py` renders the anti-aliased ASCII atlas and CJK atlas pages
+from the characters actually used by `tools/strings.py`. PXA limits each
+texture to 256×256, so extra Chinese glyphs use a second texture slot rather
+than reducing the translated text.
 
 ## Build and run
 
@@ -71,8 +72,11 @@ tiles and actors, never the HUD, and is remembered across launches. The PXADB
 desktop simulator currently advertises one pointer; use pause → settings
 there to check zoom. The simulator's SDL audio sink plays the original effects
 and region music when a system audio output device is available.
-Drag the map down to move its top row below the HUD when a monster is covered;
-the camera can pan a few tiles beyond the floor edge without moving the hero.
+Drag the map to move the camera smoothly by pixels without moving the hero.
+At every floor edge, drag farther to bring tiles out from under HUD controls;
+the map and the controls zoom independently.
+The HUD shows experience as a progress bar; tap the portrait for the exact
+experience value and the amount needed for the next level.
 
 ## Gameplay
 
@@ -83,6 +87,12 @@ the camera can pan a few tiles beyond the floor edge without moving the hero.
 * Normal steps have no dust burst; walking through tall grass tramples it to
   short grass, releases leaves and plays the original grass sounds.
 * Turn-based movement and combat with accuracy, damage, armour and XP.
+* The XP bar shows the full fraction when it fits legibly, otherwise the
+  current XP alone; tap the portrait for the full current/next-level value.
+  One-, two- and three-digit levels stay centered inside the badge.
+* Hunger uses the original warning/starvation buff icons and messages. Tap the
+  portrait for remaining satiety out of 320; the original shows the status
+  icon and its description, but not a numeric satiety meter.
 * Ten mobs taken from the original (rat, gnoll, crab, skeleton, bat, snake,
   spinner, slime, golem, Yog-Dzewa) with hunting AI, wake-on-sight and
   wander-when-idle.
@@ -170,6 +180,6 @@ fixed-alpha painter overlay.
 cd local/pxa-apps/pixel-dungeon
 cc -O1 -fsanitize=address,undefined -Wno-attributes -I. \
    -I../../../deps/pxa-system/sdk/guest-c/include tools/selftest.c \
-   game.c dungeon.c layout.c input.c assets.c strings.c font_data.c \
+   game.c dungeon.c layout.c input.c font.c assets.c strings.c font_data.c \
    -o /tmp/pd-selftest && /tmp/pd-selftest
 ```

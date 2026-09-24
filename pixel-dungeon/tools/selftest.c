@@ -6,7 +6,7 @@
  *
  *   cc -O1 -fsanitize=address,undefined -I. \
  *      -I../../../deps/pxa-system/sdk/guest-c/include tools/selftest.c \
- *      game.c dungeon.c layout.c input.c assets.c strings.c font_data.c \
+ *      game.c dungeon.c layout.c input.c font.c assets.c strings.c font_data.c \
  *      -o /tmp/pd-selftest && /tmp/pd-selftest
  */
 #include <stdio.h>
@@ -14,9 +14,11 @@
 #include <string.h>
 
 #include "dungeon.h"
+#include "font.h"
 #include "game.h"
 #include "input.h"
 #include "layout.h"
+#include "strings.h"
 #include "wall_tiles.h"
 
 static int g_failures;
@@ -776,6 +778,77 @@ static void test_hud_digit_bounds(void) {
                   cases[index].width) <= 1,
               "one- and two-digit levels remain centered in badge");
     }
+    for (int level = 1; level <= 255; ++level) {
+        char badge[8];
+        snprintf(badge, sizeof(badge), "%d", level);
+        for (int large = 0; large < 2; ++large) {
+            const int badge_width = large ? 21 : 14;
+            const int scale = large ? 2 : 1;
+            const pd_hud_digits_t level_digits = pd_layout_hud_digits(
+                100, badge_width, badge, scale);
+            check(level_digits.x >= 100 &&
+                  level_digits.x + level_digits.width <= 100 + badge_width &&
+                  abs(2 * (level_digits.x - 100) + level_digits.width -
+                      badge_width) <= 1,
+                  "every one-, two- and three-digit level fits its badge");
+        }
+    }
+}
+
+static void test_hunger_and_font_pages(void) {
+    pd_game_t game;
+    pd_glyph_t glyph;
+    char expected[PD_MESSAGE_TEXT];
+    int extra_glyphs = 0;
+    pd_game_reset(&game, 105);
+    pd_game_start_run(&game, 0);
+    for (int index = 0; index < PD_MOBS_MAX; ++index)
+        game.mobs[index].type = 0xFF;
+
+    game.hero.hunger = PD_HUNGER_WARN + 1;
+    pd_game_hero_wait(&game);
+    check(game.hero.hunger == PD_HUNGER_WARN &&
+          strcmp(game.messages[(game.message_total - 1) % PD_MESSAGE_COUNT].text,
+                 pd_str(PD_STR_HUNGRY)) == 0,
+          "hunger warning appears when satiety reaches threshold");
+    game.hero.hunger = 1;
+    pd_game_hero_wait(&game);
+    check(game.hero.hunger == 0 &&
+          strcmp(game.messages[(game.message_total - 1) % PD_MESSAGE_COUNT].text,
+                 pd_str(PD_STR_STARVING)) == 0,
+          "starvation warning appears when satiety reaches zero");
+    game.hero.hp = 10;
+    game.turn = 5;
+    game.sound_count = 0;
+    pd_game_hero_wait(&game);
+    pd_str_format(expected, sizeof(expected), PD_STR_STARVATION_DAMAGE, 1);
+    check(game.hero.hp == 9 &&
+          strcmp(game.messages[(game.message_total - 1) % PD_MESSAGE_COUNT].text,
+                 expected) == 0 && game.sound_count == 0,
+          "starvation deals damage without a monster-hit log or hit sound");
+    game.hero.hp = 1;
+    game.turn = 11;
+    pd_game_hero_wait(&game);
+    check(game.phase == PD_PHASE_DEAD &&
+          strcmp(game.messages[(game.message_total - 1) % PD_MESSAGE_COUNT].text,
+                 pd_str(PD_STR_STARVED)) == 0,
+          "starvation death has its own message");
+    check(pd_ui_rect[PD_UI_BUFF_HUNGRY][2] == 7 &&
+          pd_ui_rect[PD_UI_BUFF_STARVING][2] == 7,
+          "original hunger buff icons are available in the UI atlas");
+
+    pd_strings_set_language(1);
+    for (int id = PD_STR_STARVING; id <= PD_STR_STARVED; ++id) {
+        const char *cursor = pd_str((pd_string_id_t)id);
+        while (*cursor != '\0') {
+            const int result = pd_font_next(&cursor, &glyph);
+            check(result > 0, "starvation text has no missing glyphs");
+            if (result > 0 && glyph.cjk == 2) ++extra_glyphs;
+        }
+    }
+    check(extra_glyphs > 0 && PD_CJK_EXTRA_GLYPHS > 0,
+          "overflow Chinese glyphs use the second texture page");
+    pd_strings_set_language(0);
 }
 
 static void test_camera_top_pan(void) {
@@ -801,30 +874,27 @@ static void test_camera_top_pan(void) {
                          &camera_x, &camera_y);
         check(camera_y == -1, "one drag step moves beyond the top row");
         pd_layout_pan(&layout, game.hero.x, game.hero.y, 0, -100);
-        pd_layout_camera(&layout, game.hero.x, game.hero.y,
-                         &camera_x, &camera_y);
+        pd_layout_camera_pixels(&layout, game.hero.x, game.hero.y,
+                                &camera_x, &camera_y);
         const int hero_bottom = layout.hero_info.y + layout.hero_info.h;
         const int menu_bottom = layout.menu_pane.y + layout.menu_pane.h;
         const int top = hero_bottom > menu_bottom ? hero_bottom : menu_bottom;
-        check(camera_y < 0 &&
-              layout.map_y - camera_y * layout.tile_pixels >= top,
+        check(camera_y < 0 && layout.map_y - camera_y >= top,
               "top floor row can be moved below the HUD");
         const int limit = camera_y;
         pd_layout_pan(&layout, game.hero.x, game.hero.y, 0, -100);
         pd_layout_pan(&layout, game.hero.x, game.hero.y, 0, 1);
-        pd_layout_camera(&layout, game.hero.x, game.hero.y,
-                         &camera_x, &camera_y);
-        check(camera_y == limit + 1,
+        pd_layout_camera_pixels(&layout, game.hero.x, game.hero.y,
+                                &camera_x, &camera_y);
+        check(camera_y == limit + layout.tile_pixels,
               "dragging back from the boundary has no hidden offset");
         if (profile == 0) {
             const int tile_x = 15;
             const int tile_y = 1;
-            const int screen_x = layout.map_x +
-                (tile_x - camera_x) * layout.tile_pixels +
-                layout.tile_pixels / 2;
-            const int screen_y = layout.map_y +
-                (tile_y - camera_y) * layout.tile_pixels +
-                layout.tile_pixels / 2;
+            const int screen_x = layout.map_x + tile_x * layout.tile_pixels -
+                                 camera_x + layout.tile_pixels / 2;
+            const int screen_y = layout.map_y + tile_y * layout.tile_pixels -
+                                 camera_y + layout.tile_pixels / 2;
             check(screen_y >= top &&
                   !pd_rect_contains(&layout.menu_pane, screen_x, screen_y),
                   "reframed top tile is outside the menu hitbox");
@@ -835,6 +905,84 @@ static void test_camera_top_pan(void) {
             check(game.walk_x == tile_x && game.walk_y == tile_y,
                   "reframed top tile accepts a world tap");
         }
+    }
+}
+
+static void test_camera_smooth_edges(void) {
+    pd_game_t game;
+    pd_layout_t layout;
+    int camera_x;
+    int camera_y;
+    pd_game_reset(&game, 813);
+    pd_game_start_run(&game, 0);
+    game.phase = PD_PHASE_PLAY;
+    for (int profile = 0; profile < 3; ++profile) {
+        const int width = profile == 0 ? 412 : profile == 1 ? 296 : 176;
+        const int height = profile == 0 ? 412 : profile == 1 ? 240 : 176;
+        pd_layout_build(&layout, width, height, 8, 10, 8, 10);
+        pd_layout_fit_display_shape(&layout, 2, NULL);
+        game.hero.x = 20;
+        game.hero.y = 18;
+        pd_layout_camera_pixels(&layout, 20, 18, &camera_x, &camera_y);
+        const int start_x = camera_x;
+        const int start_y = camera_y;
+        const int center_x = width / 2;
+        const int center_y = height / 2;
+        pd_input_pointer(&game, &layout, center_x, center_y, 0,
+                         PXA_POINTER_DOWN, 1);
+        pd_input_pointer(&game, &layout, center_x - 11, center_y + 5, 0,
+                         PXA_POINTER_MOVE, 2);
+        pd_layout_camera_pixels(&layout, 20, 18, &camera_x, &camera_y);
+        check(camera_x == start_x + 11 && camera_y == start_y - 5,
+              "map drag follows every pixel on both axes");
+        pd_input_pointer(&game, &layout, center_x - 11, center_y + 5, 0,
+                         PXA_POINTER_UP, 3);
+        pd_layout_camera_pixels(&layout, 20, 18, &camera_x, &camera_y);
+        const int destination_x = camera_x;
+        pd_layout_camera_visual_pixels(&layout, 20, 18, 19, 18, 6,
+                                       &camera_x, &camera_y);
+        check(camera_x == destination_x - layout.tile_pixels / 2,
+              "camera follows the interpolated walking sprite");
+
+        game.hero.x = 0;
+        game.hero.y = 0;
+        pd_layout_pan_pixels(&layout, 0, 0, -10000, 0);
+        pd_layout_camera_pixels(&layout, 0, 0, &camera_x, &camera_y);
+        check(camera_x < 0 && layout.map_x - camera_x >=
+              layout.hero_info.x + layout.hero_info.w,
+              "left floor edge clears the portrait HUD");
+        const int left_limit = camera_x;
+        pd_layout_pan_pixels(&layout, 0, 0, -10000, 0);
+        pd_layout_pan_pixels(&layout, 0, 0, 1, 0);
+        pd_layout_camera_pixels(&layout, 0, 0, &camera_x, &camera_y);
+        check(camera_x == left_limit + 1,
+              "left bound reverses without a hidden offset");
+
+        game.hero.x = PD_MAP_W - 1;
+        game.hero.y = PD_MAP_H - 1;
+        pd_layout_pan_pixels(&layout, game.hero.x, game.hero.y,
+                             10000, 10000);
+        pd_layout_camera_pixels(&layout, game.hero.x, game.hero.y,
+                                &camera_x, &camera_y);
+        const int right = layout.map_x + PD_MAP_W * layout.tile_pixels -
+                          camera_x;
+        const int bottom = layout.map_y + PD_MAP_H * layout.tile_pixels -
+                           camera_y;
+        check(camera_x > (PD_MAP_W - layout.cols) * layout.tile_pixels &&
+              right <= layout.menu_pane.x,
+              "right floor edge clears the menu HUD");
+        check(camera_y > (PD_MAP_H - layout.rows) * layout.tile_pixels &&
+              bottom <= layout.button[0].y,
+              "bottom floor edge clears the toolbar");
+        const int right_limit = camera_x;
+        const int bottom_limit = camera_y;
+        pd_layout_pan_pixels(&layout, game.hero.x, game.hero.y,
+                             10000, 10000);
+        pd_layout_pan_pixels(&layout, game.hero.x, game.hero.y, -1, -1);
+        pd_layout_camera_pixels(&layout, game.hero.x, game.hero.y,
+                                &camera_x, &camera_y);
+        check(camera_x == right_limit - 1 && camera_y == bottom_limit - 1,
+              "right and bottom bounds reverse without a hidden offset");
     }
 }
 
@@ -1081,7 +1229,9 @@ int main(void) {
     test_auto_walk();
     test_responsive_layout();
     test_hud_digit_bounds();
+    test_hunger_and_font_pages();
     test_camera_top_pan();
+    test_camera_smooth_edges();
     test_world_zoom_input();
     test_grass_trample();
     test_wall_stitching();

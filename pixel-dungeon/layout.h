@@ -72,7 +72,15 @@ pd_rect_t pd_layout_save_page_button(const pd_layout_t *layout,
 /* Top-left tile of the map viewport for a hero at (hero_x, hero_y). */
 void pd_layout_camera(const pd_layout_t *layout, int hero_x, int hero_y,
                       int *camera_x, int *camera_y);
+void pd_layout_camera_pixels(const pd_layout_t *layout, int hero_x, int hero_y,
+                             int *camera_x, int *camera_y);
+void pd_layout_camera_visual_pixels(const pd_layout_t *layout,
+                                    int hero_x, int hero_y,
+                                    int from_x, int from_y, int moving,
+                                    int *camera_x, int *camera_y);
 void pd_layout_pan(pd_layout_t *layout, int hero_x, int hero_y,
                    int step_x, int step_y);
+void pd_layout_pan_pixels(pd_layout_t *layout, int hero_x, int hero_y,
+                          int delta_x, int delta_y);
 
 #endif
