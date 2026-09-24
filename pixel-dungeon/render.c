@@ -201,6 +201,32 @@ static void ui_button(const pd_rect_t *rect, const char *label) {
                 label, rgb565(238, 234, 220), 1);
 }
 
+static void ui_title_button(const pd_rect_t *rect, const char *label,
+                            int icon, int icon_width, int icon_height) {
+    const int icon_size = rect->h >= 40 ? 20 : 16;
+    ui_ninepatch(PD_UI_BUTTON, rect->x, rect->y, rect->w, rect->h, 4);
+    ui_sprite(icon, rect->x + 5,
+              rect->y + (rect->h - icon_size) / 2,
+              icon_width * icon_size / 16,
+              icon_height * icon_size / 16);
+    text_center(rect->x + (rect->w + icon_size + 5) / 2,
+                rect->y + (rect->h - 12) / 2,
+                label, rgb565(238, 234, 220), 1);
+}
+
+static void ui_scene_back(const pd_rect_t *rect) {
+    const int width = rect->w >= 40 ? 23 : 17;
+    const int height = rect->w >= 40 ? 17 : 13;
+    ui_sprite(PD_UI_EXIT, rect->x + (rect->w - width) / 2,
+              rect->y + (rect->h - height) / 2, width, height);
+}
+
+static void ui_panel_close(const pd_rect_t *rect) {
+    const int size = rect->w >= 40 ? 18 : 15;
+    ui_sprite(PD_UI_CLOSE, rect->x + (rect->w - size) / 2,
+              rect->y + (rect->h - size) / 2, size, size);
+}
+
 static void ui_red_button(const pd_rect_t *rect, const char *label) {
     ui_ninepatch(PD_UI_RED_BUTTON, rect->x, rect->y, rect->w, rect->h, 2);
     text_center(rect->x + rect->w / 2, rect->y + (rect->h - 16) / 2,
@@ -284,7 +310,8 @@ static void text_right(int right, int y, const char *text, uint16_t color,
     text_draw(right - pd_font_width(text, scale), y, text, color, scale);
 }
 
-static void draw_hud_value(int x, int y, const char *text, uint16_t color) {
+static void draw_hud_value(int x, int y, const char *text, uint16_t color,
+                           int scale, int spacing, int condensed) {
     static const uint8_t glyphs[11][5] = {
         {3, 5, 5, 5, 6}, {1, 3, 1, 1, 1}, {6, 1, 2, 4, 7},
         {6, 1, 2, 1, 6}, {5, 5, 7, 1, 1}, {7, 4, 6, 1, 6},
@@ -294,13 +321,26 @@ static void draw_hud_value(int x, int y, const char *text, uint16_t color) {
     for (const char *character = text; *character != '\0'; ++character) {
         const int index = *character == '/' ? 10 : *character - '0';
         if (index < 0 || index > 10) continue;
-        const int width = index == 1 || index == 10 ? 2 : 3;
+        const int source_width = index == 1 || index == 10 ? 2 : 3;
+        const int width = condensed ? 2 : source_width;
         for (int row = 0; row < 5; ++row)
             for (int column = 0; column < width; ++column)
-                if (glyphs[index][row] & (1u << (width - 1 - column)))
-                    draw_rect(x + column, y + row, 1, 1, color);
-        x += width + 1;
+                if (glyphs[index][row] &
+                    (source_width == 3 && condensed ?
+                         (column == 0 ? 4u : 3u) :
+                         (1u << (width - 1 - column))))
+                    draw_rect(x + column * scale, y + row * scale,
+                              scale, scale, color);
+        x += width * scale + spacing;
     }
+}
+
+static void draw_hud_value_fit(int x, int center_y, int width, const char *text,
+                               uint16_t color, int scale) {
+    const pd_hud_digits_t digits = pd_layout_hud_digits(x, width, text,
+                                                        scale);
+    draw_hud_value(digits.x, center_y - 5 * digits.scale / 2, text, color,
+                   digits.scale, digits.spacing, digits.condensed);
 }
 
 static char *append_text(char *out, const char *text) {
@@ -516,6 +556,18 @@ static void draw_upper_walls(const pd_game_t *game, const pd_layout_t *layout,
 
 static void draw_ground_items(const pd_game_t *game, const pd_layout_t *layout,
                               int camera_x, int camera_y) {
+    if (game->lock_x < PD_MAP_W && game->lock_y < PD_MAP_H &&
+        PD_TILE_KIND(pd_tile_at(&game->level, game->lock_x, game->lock_y)) ==
+            PD_TILEK_DOOR &&
+        game->level.visible[game->lock_y * PD_MAP_W + game->lock_x]) {
+        const int x = layout->map_x + (game->lock_x - camera_x) * g_world_cell;
+        const int y = layout->map_y + (game->lock_y - camera_y) * g_world_cell;
+        if (x >= layout->map_x && x < layout->map_x + layout->map_w &&
+            y >= layout->map_y && y < layout->map_y + layout->map_h)
+            sprite_add(PD_SPRITE_ITEM_IRON_KEY, x + g_world_cell / 4,
+                       y + g_world_cell / 4, g_world_cell / 2,
+                       g_world_cell / 2);
+    }
     for (int index = 0; index < game->ground_count; ++index) {
         const pd_ground_t *entry = &game->ground[index];
         const int x = layout->map_x + (entry->x - camera_x) * g_world_cell;
@@ -727,36 +779,44 @@ static void draw_hud(const pd_game_t *game, const pd_layout_t *layout) {
     const int needed = 6 + hero->level * 5;
     const int pane_x = layout->hero_info.x;
     const int pane_y = layout->hero_info.y;
-    const int pane_w = 82;
-    const int pane_h = 38;
+    const int pane_w = layout->hero_info.w;
+    const int pane_h = layout->hero_info.h;
+    const int value_scale = pane_w > 82 ? 2 : 1;
     int fill;
 
     /* A status panel shaped like the original's: portrait, health bar and an
      * experience bar along the bottom edge. */
     ui_sprite(PD_UI_STATUS_PANE, pane_x, pane_y, pane_w, pane_h);
     sprite_add(PD_SPRITE_HERO(hero->cls, pd_hero_visual_tier(game), 0),
-               pane_x + 7, pane_y + 8, 16, 16);
+               pane_x + 7 * pane_w / 82, pane_y + 8 * pane_h / 38,
+               16 * pane_w / 82, 16 * pane_h / 38);
 
     /* Health bar in the panel's bar recess. */
     fill = hero->max_hp == 0 ? 0 : 50 * hero->hp / hero->max_hp;
     if (fill > 50) fill = 50;
     if (fill > 0)
-        ui_sprite(PD_UI_HP_BAR, pane_x + 30, pane_y + 2, fill, 8);
+        ui_sprite(PD_UI_HP_BAR, pane_x + 30 * pane_w / 82,
+                  pane_y + 2 * pane_h / 38,
+                  fill * pane_w / 82, 8 * pane_h / 38);
 
     out = text;
     out = append_int(out, hero->hp);
     *out++ = '/';
     out = append_int(out, hero->max_hp);
     *out = '\0';
-    draw_hud_value(pane_x + 31, pane_y + 3, text,
-                   rgb565(255, 240, 236));
+    draw_hud_value_fit(pane_x + 30 * pane_w / 82,
+                       pane_y + 2 * pane_h / 38 + 4 * pane_h / 38,
+                       50 * pane_w / 82, text,
+                       rgb565(255, 240, 236), value_scale);
 
     /* Experience bar along the panel's lower edge. */
     if (needed > 0) {
         int width = 17 * hero->xp / needed;
         if (width > 17) width = 17;
         if (width > 0)
-            ui_sprite(PD_UI_EXP_BAR, pane_x + 2, pane_y + 29, width, 8);
+            ui_sprite(PD_UI_EXP_BAR, pane_x + 2 * pane_w / 82,
+                      pane_y + 29 * pane_h / 38,
+                      width * pane_w / 82, 8 * pane_h / 38);
     }
 
     out = text;
@@ -764,14 +824,19 @@ static void draw_hud(const pd_game_t *game, const pd_layout_t *layout) {
     *out++ = '/';
     out = append_int(out, needed);
     *out = '\0';
-    draw_hud_value(pane_x + 3, pane_y + 30, text,
-                   rgb565(255, 243, 170));
+    draw_hud_value_fit(pane_x + 2 * pane_w / 82,
+                       pane_y + 29 * pane_h / 38 + 4 * pane_h / 38,
+                       17 * pane_w / 82, text,
+                       rgb565(255, 243, 170), value_scale);
 
     out = text;
     out = append_int(out, hero->level);
     *out = '\0';
-    text_center(pane_x + 25, pane_y + 25, text,
-                rgb565(250, 236, 180), 1);
+    const int badge_width = 14 * pane_w / 82;
+    draw_hud_value_fit(pane_x + 25 * pane_w / 82 - badge_width / 2,
+                       pane_y + 31 * pane_h / 38,
+                       badge_width, text,
+                       rgb565(250, 236, 180), value_scale);
 }
 
 static void draw_messages(const pd_game_t *game, const pd_layout_t *layout) {
@@ -852,10 +917,12 @@ static void draw_buttons(const pd_game_t *game, const pd_layout_t *layout) {
                 ui_sprite(PD_UI_TOOLBAR_SEARCH, icon_x, icon_y, icon, icon);
                 break;
             case PD_BUTTON_POTION:
+            {
+                const int potion_size = rect->h >= 40 ? 32 : PD_CELL;
                 sprite_add(PD_SPRITE_ITEM_POTION_HEAL,
-                           rect->x + (rect->w - PD_CELL) / 2,
-                           rect->y + (rect->h - PD_CELL) / 2,
-                           PD_CELL, PD_CELL);
+                           rect->x + (rect->w - potion_size) / 2,
+                           rect->y + (rect->h - potion_size) / 2 - 2,
+                           potion_size, potion_size);
                 out = text;
                 out = append_int(out, potions);
                 *out = '\0';
@@ -863,6 +930,7 @@ static void draw_buttons(const pd_game_t *game, const pd_layout_t *layout) {
                            potions > 0 ? rgb565(240, 240, 244)
                                        : rgb565(145, 140, 150), 1);
                 break;
+            }
             case PD_BUTTON_BAG:
                 ui_sprite(PD_UI_TOOLBAR_BAG, icon_x, icon_y, icon, icon);
                 break;
@@ -955,11 +1023,28 @@ static void draw_title_background(const pd_layout_t *layout) {
 
 static void draw_title(const pd_game_t *game, const pd_layout_t *layout) {
     int banner_w = layout->width - layout->safe_left - layout->safe_right - 16;
+    const int frame = (int)(g_now_ms / 42u % 24u);
     if (banner_w > 240) banner_w = 240;
     draw_title_background(layout);
     ui_sprite(PD_UI_BANNER_TITLE, layout->width / 2 - banner_w / 2,
               layout->safe_top + 10, banner_w, banner_w * 57 / 240);
-    ui_button(&layout->menu_primary, pd_str(PD_STR_ENTER_GAME));
+    sprite_use_slot(PD_TEXTURE_FIRE);
+    sprite_instance(layout->width / 2 - banner_w / 2 - 7,
+                    layout->safe_top + 10, 42, 42,
+                    (uint16_t)((frame % 8) * 24),
+                    (uint16_t)((frame / 8) * 24), 24, 24);
+    sprite_instance(layout->width / 2 + banner_w / 2 - 35,
+                    layout->safe_top + 10, 42, 42,
+                    (uint16_t)(((frame + 12) % 8) * 24),
+                    (uint16_t)((frame + 12) / 8 * 24), 24, 24);
+    ui_title_button(&layout->menu_primary, pd_str(PD_STR_ENTER_GAME),
+                    PD_UI_TITLE_ENTER, 16, 16);
+    ui_title_button(&layout->title_rankings, pd_str(PD_STR_RANKINGS),
+                    PD_UI_TITLE_RANKINGS, 17, 16);
+    ui_title_button(&layout->title_journal, pd_str(PD_STR_JOURNAL),
+                    PD_UI_TITLE_JOURNAL, 17, 15);
+    ui_title_button(&layout->title_settings, pd_str(PD_STR_SETTINGS),
+                    PD_UI_PREFS, 14, 14);
     if (game->deepest > 1) {
         char line[32];
         pd_str_format(line, sizeof(line), PD_STR_BEST_DEPTH, game->deepest);
@@ -969,18 +1054,119 @@ static void draw_title(const pd_game_t *game, const pd_layout_t *layout) {
 }
 
 static void draw_saves(const pd_game_t *game, const pd_layout_t *layout) {
-    char line[32];
+    uint8_t slots[PD_SAVE_SLOTS];
+    const int count = pd_game_visible_save_slots(game, slots);
+    const int page_size = pd_layout_save_page_size(layout);
+    int selected_index = 0;
+    for (int index = 0; index < count; ++index)
+        if (slots[index] == game->selected_slot) selected_index = index;
+    const int start = pd_layout_save_page_start(layout, selected_index);
+    const int visible = count - start < page_size ?
+                        count - start : page_size;
+    const pd_rect_t first = pd_layout_save_row(layout, visible, 0);
+    int heading_y = layout->safe_top + 20;
+    if (heading_y > first.y - 16) heading_y = first.y - 16;
     draw_title_background(layout);
-    text_center(layout->width / 2, layout->safe_top + 38,
-                pd_str(PD_STR_SAVED_GAME), rgb565(250, 214, 96), 1);
-    if (game->hero.hp > 0) {
-        ui_button(&layout->menu_primary, pd_str(PD_STR_CONTINUE_GAME));
-        pd_str_format(line, sizeof(line), PD_STR_STAT_DEPTH, game->depth);
-        text_center(layout->width / 2, layout->menu_primary.y - 18,
-                    line, rgb565(232, 230, 210), 1);
+    if (layout->display_shape != 2 || layout->width >= 220)
+        text_center(layout->width / 2, heading_y,
+                    pd_str(PD_STR_SAVED_GAME),
+                    rgb565(250, 214, 96), 1);
+    for (int index = 0; index < visible; ++index) {
+        char label[32];
+        const int slot_index = slots[start + index];
+        const pd_save_slot_t *slot = &game->slots[slot_index];
+        const pd_rect_t row = pd_layout_save_row(layout, visible, index);
+        const pd_rect_t *rect = &row;
+        ui_button(rect, "");
+        if (slot->occupied) {
+            char depth[32];
+            char *out = append_text(label, pd_class_name(slot->cls));
+            *out++ = ' ';
+            out = append_int(out, slot_index + 1);
+            *out = '\0';
+            const int avatar_h = rect->h >= 40 ? 30 : 21;
+            text_draw(rect->x + (rect->h >= 40 ? 43 : 32),
+                      rect->y + (rect->h - 12) / 2, label,
+                      rgb565(240, 224, 165), 1);
+            pd_str_format(depth, sizeof(depth), PD_STR_STAT_DEPTH, slot->depth);
+            text_right(rect->x + rect->w - 8,
+                       rect->y + (rect->h - 12) / 2,
+                       depth, rgb565(230, 230, 230), 1);
+            ui_sprite((uint8_t)(PD_UI_AVATAR_WARRIOR + slot->cls),
+                      rect->x + 9, rect->y + (rect->h - avatar_h) / 2,
+                      rect->h >= 40 ? 22 : 15, avatar_h);
+        } else {
+            text_center(rect->x + rect->w / 2,
+                       rect->y + (rect->h - 12) / 2,
+                       pd_str(PD_STR_SAVE_EMPTY),
+                       rgb565(165, 190, 165), 1);
+        }
+        if (game->selected_slot == slot_index)
+            draw_rect(rect->x + 2, rect->y + (rect->h - 8) / 2, 3, 8,
+                      rgb565(100, 235, 115));
     }
-    ui_button(&layout->menu_secondary, pd_str(PD_STR_NEW_GAME));
-    ui_button(&layout->menu_back, pd_str(PD_STR_BACK));
+    if (count > page_size) {
+        char label[12];
+        char *out = append_int(label, start / page_size + 1);
+        *out++ = '/';
+        out = append_int(out, (count + page_size - 1) / page_size);
+        *out++ = ' ';
+        *out++ = '>';
+        *out = '\0';
+        const pd_rect_t button = pd_layout_save_page_button(layout, visible);
+        ui_button(&button, label);
+    }
+    ui_scene_back(&layout->menu_back);
+}
+
+static void draw_rankings(const pd_game_t *game, const pd_layout_t *layout) {
+    draw_title_background(layout);
+    text_center(layout->width / 2, layout->safe_top + 20,
+                pd_str(PD_STR_RANKINGS), rgb565(250, 214, 96), 1);
+    if (!game->rankings[0].occupied)
+        text_center(layout->width / 2, layout->height / 2,
+                    pd_str(PD_STR_RANK_EMPTY), rgb565(185, 184, 175), 1);
+    for (int index = 0; index < PD_RANK_COUNT; ++index) {
+        char line[48];
+        char *out = line;
+        const pd_save_slot_t *slot = &game->rankings[index];
+        if (!slot->occupied) continue;
+        out = append_int(out, index + 1);
+        out = append_text(out, ". ");
+        out = append_text(out, pd_class_name(slot->cls));
+        out = append_text(out, "  ");
+        out = append_int(out, slot->deepest);
+        *out = '\0';
+        const pd_rect_t *row = &layout->save_row[0];
+        const int row_y = row->y + index * 24;
+        ui_ninepatch(PD_UI_BUTTON, row->x, row_y, row->w, 22, 4);
+        text_center(layout->width / 2, row_y + 4,
+                    line, rgb565(232, 228, 210), 1);
+    }
+    ui_scene_back(&layout->menu_back);
+}
+
+static void draw_journal(const pd_game_t *game, const pd_layout_t *layout) {
+    const int width = layout->width - layout->safe_left - layout->safe_right - 12;
+    const int left = (layout->width - width) / 2;
+    const int top = layout->safe_top + 12;
+    const int bottom = layout->height - layout->safe_bottom - 12;
+    ui_ninepatch(PD_UI_WINDOW, left, top, width, bottom - top, 6);
+    text_center(layout->width / 2, top + 12,
+                pd_str(PD_STR_JOURNAL), rgb565(250, 214, 96), 1);
+    int count = game->message_total < 6 ? game->message_total : 6;
+    if (count == 0)
+        text_center(layout->width / 2, top + 49,
+                    pd_str(PD_STR_JOURNAL_EMPTY),
+                    rgb565(180, 180, 175), 1);
+    for (int index = 0; index < count; ++index) {
+        const int message_index = (game->message_total - count + index) %
+                                  PD_MESSAGE_COUNT;
+        text_draw(left + 9, top + 31 + index * 20,
+                  game->messages[message_index].text,
+                  rgb565(222, 222, 216), 1);
+    }
+    ui_panel_close(&layout->journal_close);
 }
 
 static void draw_class_select(const pd_game_t *game, const pd_layout_t *layout) {
@@ -992,12 +1178,13 @@ static void draw_class_select(const pd_game_t *game, const pd_layout_t *layout) 
     int heading_y = layout->safe_top + 30;
     if (heading_y > layout->class_button[0].y - 18)
         heading_y = layout->class_button[0].y - 18;
-    text_center(layout->width / 2, heading_y,
-                pd_str(PD_STR_CHOOSE_HERO), rgb565(250, 214, 96), 1);
+    if (layout->class_button[0].h > 32)
+        text_center(layout->width / 2, heading_y,
+                    pd_str(PD_STR_CHOOSE_HERO), rgb565(250, 214, 96), 1);
     for (int index = 0; index < PD_CLASS_COUNT; ++index) {
         const pd_rect_t *rect = &layout->class_button[index];
         ui_ninepatch(PD_UI_WINDOW, rect->x, rect->y, rect->w, rect->h, 6);
-        if (rect->h <= 40) {
+        if (rect->h < 60) {
             ui_sprite((uint8_t)(PD_UI_AVATAR_WARRIOR + index),
                       rect->x + 8, rect->y + 4,
                       rect->h < 40 ? 16 : 20,
@@ -1022,17 +1209,17 @@ static void draw_class_select(const pd_game_t *game, const pd_layout_t *layout) 
         out = append_text(out, "STR ");
         out = append_int(out, index == 0 ? 11 : 10);
         *out = '\0';
-        if (rect->h <= 40) {
+        if (rect->h < 60) {
             text_draw(rect->x + 37, rect->y + 16, text,
                       rgb565(200, 200, 210), 1);
-            if (rect->h == 40)
+            if (rect->h >= 40 && rect->w >= 145)
                 text_draw(rect->x + 83, rect->y + 16,
                           pd_str(kClassDescriptions[index]),
                           rgb565(150, 200, 240), 1);
         } else if (rect->h < 100) {
             text_draw(rect->x + 49, rect->y + 30, text,
                       rgb565(200, 200, 210), 1);
-            text_draw(rect->x + 49, rect->y + 51,
+            text_draw(rect->x + 49, rect->y + rect->h - 22,
                       pd_str(kClassDescriptions[index]),
                       rgb565(150, 200, 240), 1);
         } else {
@@ -1053,7 +1240,7 @@ static void draw_class_select(const pd_game_t *game, const pd_layout_t *layout) 
                         : layout->class_button[PD_CLASS_COUNT - 1].y +
                           layout->class_button[PD_CLASS_COUNT - 1].h + 9,
                     text, rgb565(200, 200, 210), 1);
-    ui_button(&layout->menu_back, pd_str(PD_STR_BACK));
+    ui_scene_back(&layout->menu_back);
     (void)game;
 }
 
@@ -1064,23 +1251,52 @@ static void draw_bag(const pd_game_t *game, const pd_layout_t *layout) {
     const int panel_x = layout->bag_row[0].x - 12;
     const int available_h = layout->height - layout->safe_top -
                             layout->safe_bottom - 8;
-    const int panel_h = available_h < 184 ? available_h : 184;
+    const int max_panel_h = layout->bag_use[0].h > 32 ? 244 : 184;
+    const int panel_h = available_h < max_panel_h ?
+                        available_h : max_panel_h;
     const int panel_y = layout->safe_top +
         (layout->height - layout->safe_top - layout->safe_bottom - panel_h) / 2;
     const int panel_w = layout->width - layout->safe_left -
                         layout->safe_right < 250 ?
                         layout->width - layout->safe_left - layout->safe_right - 12 : 240;
+    const int currency_right = layout->bag_close.x - 18;
+    int gold_icon_x;
     draw_rect(panel_x - 2, panel_y - 2, panel_w + 4, panel_h + 4,
               rgb565(8, 8, 10));
     ui_ninepatch(PD_UI_WINDOW, panel_x, panel_y, panel_w, panel_h, 6);
-    text_draw(panel_x + 10, panel_y + 10, pd_str(PD_STR_PACK_TITLE),
-              rgb565(250, 214, 96), 1);
-    sprite_add(PD_SPRITE_ITEM_GOLD, panel_x + panel_w - 53,
-               panel_y + 8, 16, 16);
+    if (panel_w >= 180)
+        text_draw(panel_x + 10, panel_y + 10,
+                  pd_str(PD_STR_PACK_TITLE),
+                  rgb565(250, 214, 96), 1);
     out = append_int(text, game->hero.gold);
     *out = '\0';
-    text_right(panel_x + panel_w - 9, panel_y + 11, text,
+    gold_icon_x = currency_right - pd_font_width(text, 1) - 19;
+    if (panel_w < 180) gold_icon_x = panel_x + 10;
+    sprite_add(PD_SPRITE_ITEM_GOLD, gold_icon_x,
+               panel_y + 8, 16, 16);
+    const int gold_right = panel_w < 180 ?
+                           gold_icon_x + 16 + pd_font_width(text, 1) :
+                           currency_right;
+    text_right(gold_right, panel_y + 11, text,
                rgb565(250, 214, 96), 1);
+    if (game->hero.keys) {
+        out = append_int(text, game->hero.keys);
+        *out = '\0';
+        if (panel_w >= 180) {
+            const int key_right = gold_icon_x - 4;
+            sprite_add(PD_SPRITE_ITEM_IRON_KEY,
+                       key_right - pd_font_width(text, 1) - 19,
+                       panel_y + 8, 16, 16);
+            text_right(key_right, panel_y + 11, text,
+                       rgb565(250, 214, 96), 1);
+        } else {
+            const int key_x = gold_right + 3;
+            sprite_add(PD_SPRITE_ITEM_IRON_KEY,
+                       key_x, panel_y + 8, 16, 16);
+            text_draw(key_x + 16, panel_y + 11, text,
+                      rgb565(250, 214, 96), 1);
+        }
+    }
 
     for (int index = 0; index < PD_BAG_ROWS; ++index) {
         const pd_rect_t *row = &layout->bag_row[index];
@@ -1090,7 +1306,8 @@ static void draw_bag(const pd_game_t *game, const pd_layout_t *layout) {
             const pd_item_t *item = &game->bag[index];
             const int equipped =
                 index == game->hero.weapon || index == game->hero.armor;
-            const int icon = row->h < 25 ? 16 : 18;
+            const int icon = row->h < 25 ? 16 :
+                             (row->h >= 34 ? 24 : 18);
             sprite_add(pd_item_sprite(item), row->x + (row->w - icon) / 2,
                        row->y + (row->h - icon) / 2, icon, icon);
             if (equipped)
@@ -1125,7 +1342,7 @@ static void draw_bag(const pd_game_t *game, const pd_layout_t *layout) {
                   pd_str(PD_STR_BAG_WIELD) : pd_str(PD_STR_BAG_USE));
         ui_button(&layout->bag_drop[0], pd_str(PD_STR_BAG_DROP));
     }
-    ui_button(&layout->bag_close, "X");
+    ui_panel_close(&layout->bag_close);
 }
 
 static void draw_info(const pd_game_t *game, const pd_layout_t *layout) {
@@ -1141,6 +1358,7 @@ static void draw_info(const pd_game_t *game, const pd_layout_t *layout) {
     char *out;
     int y = top + 40;
     ui_ninepatch(PD_UI_WINDOW, left, top, width, height, 6);
+    ui_panel_close(&layout->info_close);
     ui_sprite((uint8_t)(PD_UI_AVATAR_WARRIOR + game->hero.cls),
               left + 12, top + 9, 18, 24);
     text_draw(left + 36, top + 15, pd_str(PD_STR_PLAYER_INFO),
@@ -1174,8 +1392,6 @@ static void draw_info(const pd_game_t *game, const pd_layout_t *layout) {
                    rgb565(226, 226, 226), 1);
         y += (height - 66) / 5;
     }
-    text_center(layout->width / 2, top + height - 20,
-                pd_str(PD_STR_BAG_CLOSE), rgb565(250, 214, 96), 1);
 }
 
 static void draw_settings(const pd_layout_t *layout) {
@@ -1199,20 +1415,53 @@ static void draw_settings(const pd_layout_t *layout) {
     text_center(layout->width / 2, layout->zoom_out.y + 9, zoom_text,
                 rgb565(250, 214, 96), 1);
     ui_button(&layout->zoom_in, "+");
-    ui_button(&layout->settings_back, pd_str(PD_STR_BACK));
-    text_center(layout->width / 2, top + 105,
+    ui_panel_close(&layout->settings_back);
+    text_center(layout->width / 2, top + 115,
                 pd_str(PD_STR_PINCH_HINT), rgb565(182, 184, 185), 1);
 }
 
 static void draw_pause(const pd_layout_t *layout) {
     const pd_rect_t *top = &layout->pause_settings;
+    const int icon_size = top->h >= 40 ? 20 : 16;
     ui_ninepatch(PD_UI_WINDOW, top->x - 6, top->y - 6,
-                 top->w + 12, 63, 6);
+                 top->w + 12, layout->pause_menu.y +
+                 layout->pause_menu.h - top->y + 12, 6);
     ui_red_button(&layout->pause_settings, pd_str(PD_STR_SETTINGS));
-    ui_sprite(PD_UI_PREFS, top->x + 5, top->y + 5, 14, 14);
+    ui_sprite(PD_UI_PREFS, top->x + 11,
+              top->y + (top->h - icon_size) / 2,
+              icon_size, icon_size);
     ui_red_button(&layout->pause_menu, pd_str(PD_STR_MAIN_MENU));
-    ui_sprite(PD_UI_DISPLAY_ICON, layout->pause_menu.x + 6,
-              layout->pause_menu.y + 4, 12, 16);
+    ui_sprite(PD_UI_DISPLAY_ICON, layout->pause_menu.x + 11,
+              layout->pause_menu.y +
+              (layout->pause_menu.h - icon_size) / 2,
+              icon_size, icon_size);
+}
+
+static void draw_shop(const pd_game_t *game, const pd_layout_t *layout) {
+    const int width = layout->width - layout->safe_left -
+                      layout->safe_right < 170 ?
+                      layout->width - layout->safe_left -
+                      layout->safe_right - 10 : 170;
+    const int left = (layout->width - width) / 2;
+    const int top = (layout->height - 140) / 2;
+    char price[32];
+    char gold[32];
+    char *end;
+    ui_ninepatch(PD_UI_WINDOW, left, top, width, 140, 6);
+    text_center(layout->width / 2, top + 11, pd_str(PD_STR_SHOP_TITLE),
+                rgb565(250, 214, 96), 1);
+    sprite_add(PD_SPRITE_ITEM_POTION_HEAL, layout->width / 2 - 10,
+               top + 28, 20, 20);
+    end = append_int(price, 40 + game->depth * 4);
+    *end = '\0';
+    text_center(layout->width / 2, top + 53, price,
+                rgb565(250, 214, 96), 1);
+    end = append_int(gold, game->hero.gold);
+    *end = '\0';
+    text_center(layout->width / 2, top + 70, gold,
+                rgb565(232, 226, 212), 1);
+    ui_button(&layout->shop_buy, pd_str(PD_STR_SHOP_BUY_BUTTON));
+    ui_panel_close(&layout->shop_close);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -1237,8 +1486,16 @@ int pd_render_present(uint32_t context_handle, uint32_t capabilities,
     g_world_cell = layout->tile_pixels;
     pxa_raster_draw_list_begin(&g_list, buffer, capacity, frame_id);
 
-    if (game->phase == PD_PHASE_TITLE) {
-        draw_title(game, layout);
+    if (game->phase == PD_PHASE_TITLE || game->phase == PD_PHASE_RANKINGS ||
+        (game->settings_from_title && (game->phase == PD_PHASE_SETTINGS ||
+                                       game->phase == PD_PHASE_JOURNAL))) {
+        if (game->phase == PD_PHASE_TITLE) draw_title(game, layout);
+        else if (game->phase == PD_PHASE_RANKINGS) draw_rankings(game, layout);
+        else {
+            draw_title_background(layout);
+            if (game->phase == PD_PHASE_SETTINGS) draw_settings(layout);
+            else draw_journal(game, layout);
+        }
         sprite_flush();
         text_flush();
         return pxa_raster_submit(context_handle, &g_list) > 0;
@@ -1281,24 +1538,43 @@ int pd_render_present(uint32_t context_handle, uint32_t capabilities,
     draw_messages(game, layout);
     {
         const pd_rect_t *pane = &layout->menu_pane;
-        const pd_rect_t *journal = &layout->journal;
-        const pd_rect_t *settings = &layout->settings;
         const pd_rect_t *depth = &layout->depth;
         char floor[12];
         char *end = append_int(floor, game->depth);
         *end = '\0';
-        ui_sprite_without_header(PD_UI_MENU_PANE, pane->x, pane->y,
-                                 pane->w, pane->h);
-        ui_sprite(PD_UI_MENU_JOURNAL, journal->x + 2, journal->y + 2,
-                  journal->w - 3, journal->h - 4);
-        ui_sprite(PD_UI_MENU_JOURNAL_ICON, journal->x + 4,
-                  journal->y + (journal->h - 8) / 2,
-                  journal->w - 7, 8);
-        ui_sprite(PD_UI_MENU_BUTTON, settings->x + 1, settings->y + 2,
-                  settings->w - 3, settings->h - 4);
-        ui_sprite(PD_UI_DEPTH_ICON, depth->x + 3, depth->y + 2, 6, 7);
-        draw_hud_value(depth->x + 3, depth->y + 12, floor,
-                       rgb565(202, 207, 194));
+        const int art_scale = pane->w >= 93 && pane->h >= 42 ? 3 : 2;
+        const int art_x = pane->x + (pane->w - 31 * art_scale) / 2;
+        const int art_y = pane->y + (pane->h - 14 * art_scale) / 2;
+        const int journal_x = art_x + 2 * art_scale;
+        const int journal_y = art_y + art_scale;
+        ui_sprite_without_header(PD_UI_MENU_PANE,
+                                 art_x, art_y,
+                                 31 * art_scale, 14 * art_scale);
+        ui_sprite(PD_UI_MENU_JOURNAL,
+                  journal_x, journal_y,
+                  13 * art_scale, 11 * art_scale);
+        ui_sprite(PD_UI_MENU_JOURNAL_ICON,
+                  journal_x + art_scale,
+                  journal_y + (11 - 6) * art_scale / 2,
+                  11 * art_scale, 6 * art_scale);
+        ui_sprite(PD_UI_MENU_BUTTON,
+                  art_x + 17 * art_scale, journal_y,
+                  12 * art_scale, 11 * art_scale);
+        if (depth->w > 12) {
+            ui_ninepatch(PD_UI_BUTTON, depth->x, depth->y,
+                         depth->w, depth->h, 4);
+            ui_sprite(PD_UI_DEPTH_ICON, depth->x + 9,
+                      depth->y + 4, 12, 14);
+            draw_hud_value_fit(depth->x + 3, depth->y + 30,
+                               depth->w - 6, floor,
+                               rgb565(202, 207, 194), 2);
+        } else {
+            ui_sprite(PD_UI_DEPTH_ICON, depth->x + 3,
+                      depth->y + 2, 6, 7);
+            draw_hud_value_fit(depth->x + 1, depth->y + 14,
+                               depth->w - 2, floor,
+                               rgb565(202, 207, 194), 1);
+        }
     }
 #endif
 #if !defined(PD_SKIP_CONTROLS)
@@ -1306,8 +1582,10 @@ int pd_render_present(uint32_t context_handle, uint32_t capabilities,
 #endif
     if (game->phase == PD_PHASE_BAG) draw_bag(game, layout);
     if (game->phase == PD_PHASE_INFO) draw_info(game, layout);
+    if (game->phase == PD_PHASE_JOURNAL) draw_journal(game, layout);
     if (game->phase == PD_PHASE_SETTINGS) draw_settings(layout);
     if (game->phase == PD_PHASE_PAUSE) draw_pause(layout);
+    if (game->phase == PD_PHASE_SHOP) draw_shop(game, layout);
     if (game->phase == PD_PHASE_DEAD) draw_game_over(layout);
     sprite_flush();
     text_flush();

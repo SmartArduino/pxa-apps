@@ -66,6 +66,7 @@ T_TRAP = 3
 # Items sheet cells (SPD ItemSpriteSheet, xy() is 1-based).
 ITEM_CELLS = {
     'GOLD': (2, 1),
+    'IRON_KEY': (7, 3),
     'CHEST': (4, 2),
     'AMULET': (13, 3),
     'DAGGER': (4, 6),
@@ -235,6 +236,11 @@ UI_SLICES = [
     ('STAIRS_ICON', 'interfaces/icons.png', 0, 64, 15, 16),
     ('DISPLAY_ICON', 'interfaces/icons.png', 16, 16, 12, 16),
     ('DEPTH_ICON', 'interfaces/icons.png', 32, 80, 6, 7),
+    ('EXIT', 'interfaces/icons.png', 0, 16, 15, 11),
+    ('CLOSE', 'interfaces/icons.png', 80, 32, 11, 11),
+    ('TITLE_ENTER', 'interfaces/icons.png', 0, 0, 16, 16),
+    ('TITLE_RANKINGS', 'interfaces/icons.png', 34, 0, 17, 16),
+    ('TITLE_JOURNAL', 'interfaces/icons.png', 136, 0, 17, 15),
 ]
 
 
@@ -277,6 +283,24 @@ def build_title_background(spd, lookup):
     atlas = bytearray(256 * 128)
     for offset, (red, green, blue, _) in enumerate(image.get_flattened_data()):
         atlas[offset] = nearest(lookup, (red, green, blue))
+    return atlas
+
+
+def build_title_fire(spd, lookup):
+    image = Image.open(spd / 'effects/fireball-short.png').convert('RGBA')
+    atlas = bytearray(192 * 72)
+    for frame in range(24):
+        source = image.crop(((frame % 5) * 47, (frame // 5) * 47,
+                             (frame % 5 + 1) * 47, (frame // 5 + 1) * 47))
+        source = source.resize((24, 24), Image.Resampling.NEAREST)
+        left = frame % 8 * 24
+        top = frame // 8 * 24
+        for row in range(24):
+            for column in range(24):
+                red, green, blue, alpha = source.getpixel((column, row))
+                if alpha >= 80:
+                    atlas[(top + row) * 192 + left + column] = nearest(
+                        lookup, (red, green, blue))
     return atlas
 
 
@@ -449,6 +473,8 @@ enum {{
 #define PD_UI_ATLAS_HEIGHT {ui_atlas_h}
 #define PD_TITLE_ATLAS_WIDTH 256
 #define PD_TITLE_ATLAS_HEIGHT 128
+#define PD_FIRE_ATLAS_WIDTH 192
+#define PD_FIRE_ATLAS_HEIGHT 72
 #define PD_UI_SLICE_COUNT {ui_count}
 
 /* Interface slices packed into the UI strip: source x, y, width, height. */
@@ -461,6 +487,7 @@ extern const uint8_t pd_wall_atlas[PD_ATLAS_WIDTH * PD_WALL_ATLAS_HEIGHT];
 extern const uint8_t pd_sprite_atlas[PD_ATLAS_WIDTH * PD_SPRITE_ATLAS_HEIGHT];
 extern const uint8_t pd_ui_atlas[PD_UI_ATLAS_WIDTH * PD_UI_ATLAS_HEIGHT];
 extern const uint8_t pd_title_atlas[PD_TITLE_ATLAS_WIDTH * PD_TITLE_ATLAS_HEIGHT];
+extern const uint8_t pd_fire_atlas[PD_FIRE_ATLAS_WIDTH * PD_FIRE_ATLAS_HEIGHT];
 extern const uint16_t pd_ui_rect[PD_UI_SLICE_COUNT][4];
 extern const uint16_t pd_palette[256];
 
@@ -503,7 +530,8 @@ def emit_header(tile_count, sprite_count):
                           enumerate(UI_SLICES)))
 
 
-def emit_source(tile_atlas, wall_atlas, sprite_atlas, ui_atlas, title_atlas, palette):
+def emit_source(tile_atlas, wall_atlas, sprite_atlas, ui_atlas, title_atlas,
+                fire_atlas, palette):
     def array(name, data, width, height):
         lines = []
         for offset in range(0, len(data), 16):
@@ -520,6 +548,7 @@ def emit_source(tile_atlas, wall_atlas, sprite_atlas, ui_atlas, title_atlas, pal
     body.append(array('pd_sprite_atlas', sprite_atlas, 'PD_ATLAS_WIDTH', 'PD_SPRITE_ATLAS_HEIGHT'))
     body.append(array('pd_ui_atlas', ui_atlas, 'PD_UI_ATLAS_WIDTH', 'PD_UI_ATLAS_HEIGHT'))
     body.append(array('pd_title_atlas', title_atlas, 'PD_TITLE_ATLAS_WIDTH', 'PD_TITLE_ATLAS_HEIGHT'))
+    body.append(array('pd_fire_atlas', fire_atlas, 'PD_FIRE_ATLAS_WIDTH', 'PD_FIRE_ATLAS_HEIGHT'))
     body.append('const uint16_t pd_ui_rect[PD_UI_SLICE_COUNT][4] = {')
     for name, _, _, _, width, height in UI_SLICES:
         x, y, _, _ = ui_offsets[name]
@@ -603,6 +632,7 @@ def main():
     artwork_lookup = {**tile_lookup_global, **sprite_lookup_global}
     ui_atlas, ui_offsets = build_ui_atlas(spd, artwork_lookup)
     title_atlas = build_title_background(spd, artwork_lookup)
+    fire_atlas = build_title_fire(spd, artwork_lookup)
     globals()['ui_offsets'] = ui_offsets
 
     if args.preview:
@@ -611,7 +641,7 @@ def main():
 
     header = emit_header(len(TILE_ORDER), len(SPRITES))
     source = emit_source(tile_atlas, wall_atlas, sprite_atlas, ui_atlas,
-                         title_atlas, palette_global)
+                         title_atlas, fire_atlas, palette_global)
     for name, content in (('assets.h', header), ('assets.c', source)):
         target = APP / name
         if args.check:

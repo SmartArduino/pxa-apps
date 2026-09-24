@@ -11,7 +11,7 @@
 #define PD_CJK_CELL 16
 #define PD_CJK_ATLAS_W 256
 #define PD_CJK_ATLAS_H 256
-#define PD_CJK_GLYPHS 229
+#define PD_CJK_GLYPHS 253
 
 extern const uint8_t pd_font_ascii[PD_ASCII_ATLAS_W * PD_ASCII_ATLAS_H];
 extern const uint8_t pd_font_cjk[PD_CJK_ATLAS_W * PD_CJK_ATLAS_H];

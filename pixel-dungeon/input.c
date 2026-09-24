@@ -7,12 +7,21 @@
 typedef struct {
     uint8_t active;
     uint8_t id;
-    int x, y;
+    int x, y, start_x, start_y, drag_x, drag_y;
+    uint8_t dragged;
 } pd_touch_t;
 
 static pd_touch_t g_touches[2];
 static int g_pinch_distance;
 static uint8_t g_pinch_consumed;
+
+static void select_visible_slot(pd_game_t *game) {
+    uint8_t slots[PD_SAVE_SLOTS];
+    const int count = pd_game_visible_save_slots(game, slots);
+    for (int index = 0; index < count; ++index)
+        if (slots[index] == game->selected_slot) return;
+    game->selected_slot = slots[0];
+}
 
 static int touch_distance(void) {
     const int dx = g_touches[0].x - g_touches[1].x;
@@ -60,7 +69,7 @@ static void handle_play_tap(pd_game_t *game, const pd_layout_t *layout, int x,
     }
     if (pd_rect_contains(&layout->journal, x, y) ||
         pd_rect_contains(&layout->depth, x, y)) {
-        game->phase = PD_PHASE_INFO;
+        game->phase = PD_PHASE_JOURNAL;
         return;
     }
     if (x < layout->map_x || y < layout->map_y ||
@@ -91,6 +100,11 @@ void pd_input_pointer(pd_game_t *game, pd_layout_t *layout, int x, int y,
         g_touches[slot].id = pointer_id;
         g_touches[slot].x = x;
         g_touches[slot].y = y;
+        g_touches[slot].start_x = x;
+        g_touches[slot].start_y = y;
+        g_touches[slot].drag_x = x;
+        g_touches[slot].drag_y = y;
+        g_touches[slot].dragged = 0;
         if (g_touches[0].active && g_touches[1].active) {
             g_pinch_distance = touch_distance();
             g_pinch_consumed = 1;
@@ -109,27 +123,85 @@ void pd_input_pointer(pd_game_t *game, pd_layout_t *layout, int x, int y,
                 pd_layout_set_zoom(layout, layout->zoom + (delta > 0 ? 1 : -1));
                 g_pinch_distance = distance;
             }
+        } else if (game->phase == PD_PHASE_PLAY && !g_pinch_consumed &&
+                   x >= layout->map_x && y >= layout->map_y &&
+                   g_touches[slot].start_x >= layout->map_x &&
+                   g_touches[slot].start_y >= layout->map_y &&
+                   g_touches[slot].start_x < layout->map_x + layout->map_w &&
+                   g_touches[slot].start_y < layout->map_y + layout->map_h) {
+            const int dx = g_touches[slot].start_x - x;
+            const int dy = g_touches[slot].start_y - y;
+            if (dx * dx + dy * dy > 64) g_touches[slot].dragged = 1;
+            if (g_touches[slot].dragged) {
+                const int step_x = (g_touches[slot].drag_x - x) /
+                                   layout->tile_pixels;
+                const int step_y = (g_touches[slot].drag_y - y) /
+                                   layout->tile_pixels;
+                pd_layout_pan(layout, game->hero.x, game->hero.y,
+                              step_x, step_y);
+                g_touches[slot].drag_x -= step_x * layout->tile_pixels;
+                g_touches[slot].drag_y -= step_y * layout->tile_pixels;
+                game->walk_active = 0;
+            }
         }
         return;
     }
+    const uint8_t dragged = g_touches[slot].dragged;
     g_touches[slot].active = 0;
-    if (phase != PXA_POINTER_UP || g_pinch_consumed) {
+    if (phase != PXA_POINTER_UP || g_pinch_consumed || dragged) {
         if (!g_touches[0].active && !g_touches[1].active)
             g_pinch_consumed = 0;
         return;
     }
     switch (game->phase) {
         case PD_PHASE_TITLE:
-            if (pd_rect_contains(&layout->menu_primary, x, y))
+            if (pd_rect_contains(&layout->menu_primary, x, y)) {
+                game->settings_from_title = 0;
                 game->phase = PD_PHASE_SAVES;
+                select_visible_slot(game);
+            } else if (pd_rect_contains(&layout->title_settings, x, y)) {
+                game->settings_from_title = 1;
+                game->phase = PD_PHASE_SETTINGS;
+            } else if (pd_rect_contains(&layout->title_rankings, x, y))
+                game->phase = PD_PHASE_RANKINGS;
+            else if (pd_rect_contains(&layout->title_journal, x, y)) {
+                game->settings_from_title = 1;
+                game->phase = PD_PHASE_JOURNAL;
+            }
             return;
         case PD_PHASE_SAVES:
             if (pd_rect_contains(&layout->menu_back, x, y)) {
                 game->phase = PD_PHASE_TITLE;
-            } else if (pd_rect_contains(&layout->menu_secondary, x, y)) {
-                game->phase = PD_PHASE_CLASS;
-            } else if (pd_rect_contains(&layout->menu_primary, x, y)) {
-                game->phase = game->hero.hp > 0 ? PD_PHASE_PLAY : PD_PHASE_CLASS;
+            } else {
+                uint8_t slots[PD_SAVE_SLOTS];
+                const int count = pd_game_visible_save_slots(game, slots);
+                const int page_size = pd_layout_save_page_size(layout);
+                int selected_index = 0;
+                for (int index = 0; index < count; ++index)
+                    if (slots[index] == game->selected_slot)
+                        selected_index = index;
+                const int start = pd_layout_save_page_start(layout,
+                                                             selected_index);
+                const int visible = count - start < page_size ?
+                                    count - start : page_size;
+                if (count > page_size) {
+                    const pd_rect_t button = pd_layout_save_page_button(
+                        layout, visible);
+                    if (pd_rect_contains(&button, x, y)) {
+                        const int next = start + page_size;
+                        game->selected_slot = slots[next < count ? next : 0];
+                        return;
+                    }
+                }
+                for (int index = 0; index < visible; ++index) {
+                    const pd_rect_t row = pd_layout_save_row(layout, visible,
+                                                               index);
+                    if (!pd_rect_contains(&row, x, y)) continue;
+                    game->selected_slot = slots[start + index];
+                    game->phase = game->slots[slots[start + index]].occupied ?
+                                  PD_PHASE_PLAY : PD_PHASE_CLASS;
+                    break;
+                }
             }
             return;
         case PD_PHASE_CLASS:
@@ -185,17 +257,32 @@ void pd_input_pointer(pd_game_t *game, pd_layout_t *layout, int x, int y,
         case PD_PHASE_INFO:
             game->phase = PD_PHASE_PLAY;
             return;
+        case PD_PHASE_JOURNAL:
+            game->phase = game->settings_from_title ? PD_PHASE_TITLE : PD_PHASE_PLAY;
+            return;
+        case PD_PHASE_RANKINGS:
+            game->phase = PD_PHASE_TITLE;
+            return;
         case PD_PHASE_SETTINGS:
             if (pd_rect_contains(&layout->zoom_out, x, y))
                 pd_layout_set_zoom(layout, layout->zoom - 1);
             else if (pd_rect_contains(&layout->zoom_in, x, y))
                 pd_layout_set_zoom(layout, layout->zoom + 1);
             else if (pd_rect_contains(&layout->settings_back, x, y))
-                game->phase = PD_PHASE_PAUSE;
+                game->phase = game->settings_from_title ?
+                              PD_PHASE_TITLE : PD_PHASE_PAUSE;
+            return;
+        case PD_PHASE_SHOP:
+            if (pd_rect_contains(&layout->shop_buy, x, y))
+                pd_game_shop_buy(game);
+            else if (pd_rect_contains(&layout->shop_close, x, y))
+                game->phase = PD_PHASE_PLAY;
             return;
         case PD_PHASE_PAUSE:
-            if (pd_rect_contains(&layout->pause_settings, x, y))
+            if (pd_rect_contains(&layout->pause_settings, x, y)) {
+                game->settings_from_title = 0;
                 game->phase = PD_PHASE_SETTINGS;
+            }
             else if (pd_rect_contains(&layout->pause_menu, x, y))
                 game->phase = PD_PHASE_TITLE;
             else
@@ -210,14 +297,26 @@ void pd_input_pointer(pd_game_t *game, pd_layout_t *layout, int x, int y,
 void pd_input_controller(pd_game_t *game, uint32_t buttons, uint32_t previous) {
     const uint32_t pressed = buttons & ~previous;
     if (game->phase == PD_PHASE_TITLE) {
-        if ((pressed & PXA_CONTROLLER_A) != 0) game->phase = PD_PHASE_SAVES;
+        if ((pressed & PXA_CONTROLLER_A) != 0) {
+            game->settings_from_title = 0;
+            game->phase = PD_PHASE_SAVES;
+            select_visible_slot(game);
+        }
         return;
     }
     if (game->phase == PD_PHASE_SAVES) {
-        if ((pressed & PXA_CONTROLLER_A) != 0)
-            game->phase = game->hero.hp > 0 ? PD_PHASE_PLAY : PD_PHASE_CLASS;
-        else if ((pressed & PXA_CONTROLLER_START) != 0)
-            game->phase = PD_PHASE_CLASS;
+        uint8_t slots[PD_SAVE_SLOTS];
+        const int count = pd_game_visible_save_slots(game, slots);
+        int current = 0;
+        for (int index = 0; index < count; ++index)
+            if (slots[index] == game->selected_slot) current = index;
+        if ((pressed & PXA_CONTROLLER_DOWN) != 0)
+            game->selected_slot = slots[(current + 1) % count];
+        else if ((pressed & PXA_CONTROLLER_UP) != 0)
+            game->selected_slot = slots[(current + count - 1) % count];
+        else if ((pressed & PXA_CONTROLLER_A) != 0)
+            game->phase = game->slots[game->selected_slot].occupied ?
+                          PD_PHASE_PLAY : PD_PHASE_CLASS;
         else if ((pressed & PXA_CONTROLLER_B) != 0)
             game->phase = PD_PHASE_TITLE;
         return;
@@ -235,10 +334,19 @@ void pd_input_controller(pd_game_t *game, uint32_t buttons, uint32_t previous) {
         return;
     }
     if (game->phase == PD_PHASE_BAG || game->phase == PD_PHASE_INFO ||
-        game->phase == PD_PHASE_SETTINGS || game->phase == PD_PHASE_PAUSE) {
+        game->phase == PD_PHASE_SETTINGS || game->phase == PD_PHASE_PAUSE ||
+        game->phase == PD_PHASE_JOURNAL || game->phase == PD_PHASE_RANKINGS) {
         if ((pressed & (PXA_CONTROLLER_B | PXA_CONTROLLER_START)) != 0)
-            game->phase = game->phase == PD_PHASE_SETTINGS ? PD_PHASE_PAUSE :
-                          PD_PHASE_PLAY;
+            game->phase = game->phase == PD_PHASE_SETTINGS ?
+                          (game->settings_from_title ? PD_PHASE_TITLE : PD_PHASE_PAUSE) :
+                          (game->phase == PD_PHASE_RANKINGS ||
+                           (game->phase == PD_PHASE_JOURNAL && game->settings_from_title) ?
+                           PD_PHASE_TITLE : PD_PHASE_PLAY);
+        return;
+    }
+    if (game->phase == PD_PHASE_SHOP) {
+        if ((pressed & PXA_CONTROLLER_A) != 0) pd_game_shop_buy(game);
+        else if ((pressed & PXA_CONTROLLER_B) != 0) game->phase = PD_PHASE_PLAY;
         return;
     }
     if ((pressed & PXA_CONTROLLER_UP) != 0)
@@ -265,7 +373,13 @@ int pd_input_back(pd_game_t *game) {
             game->phase = PD_PHASE_PAUSE;
             break;
         case PD_PHASE_SETTINGS:
-            game->phase = PD_PHASE_PAUSE;
+            game->phase = game->settings_from_title ? PD_PHASE_TITLE : PD_PHASE_PAUSE;
+            break;
+        case PD_PHASE_RANKINGS:
+            game->phase = PD_PHASE_TITLE;
+            break;
+        case PD_PHASE_JOURNAL:
+            game->phase = game->settings_from_title ? PD_PHASE_TITLE : PD_PHASE_PLAY;
             break;
         case PD_PHASE_SAVES:
             game->phase = PD_PHASE_TITLE;

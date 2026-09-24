@@ -33,10 +33,20 @@
 #define PD_POINTER_NODE UINT32_C(2)
 #define PD_STORAGE_GET_REQUEST UINT32_C(3)
 #define PD_STORAGE_SET_REQUEST UINT32_C(4)
+#define PD_STORAGE_GET_SLOT2 UINT32_C(7)
+#define PD_STORAGE_GET_SLOT3 UINT32_C(8)
+#define PD_STORAGE_GET_SLOT4 UINT32_C(11)
+#define PD_STORAGE_GET_SLOT5 UINT32_C(12)
+#define PD_RANK_GET_REQUEST UINT32_C(9)
+#define PD_RANK_SET_REQUEST UINT32_C(10)
 #define PD_ZOOM_GET_REQUEST UINT32_C(5)
 #define PD_ZOOM_SET_REQUEST UINT32_C(6)
-#define PD_STORAGE_KEY "pixel-dungeon.save"
-#define PD_STORAGE_KEY_BYTES 18
+static const char *const kSaveKeys[PD_SAVE_SLOTS] = {
+    "pixel-dungeon.save", "pixel-dungeon.save.2", "pixel-dungeon.save.3",
+    "pixel-dungeon.save.4", "pixel-dungeon.save.5"};
+static const uint8_t kSaveKeyBytes[PD_SAVE_SLOTS] = {18, 20, 20, 20, 20};
+#define PD_RANK_KEY "pixel-dungeon.ranks"
+#define PD_RANK_KEY_BYTES 19
 #define PD_ZOOM_KEY "pixel-dungeon.zoom"
 #define PD_ZOOM_KEY_BYTES 18
 #define PD_ACTIVE_PERIOD_MS 40u
@@ -51,6 +61,9 @@ static uint8_t g_canvas_packet[128];
 static uint8_t g_storage_payload[1024];
 static uint8_t g_storage_packet[1024];
 static uint8_t g_save_blob[1024];
+static uint8_t g_rank_blob[2 + PD_RANK_COUNT * 10];
+static uint8_t g_slot_blob[PD_SAVE_SLOTS][1024];
+static uint16_t g_slot_length[PD_SAVE_SLOTS];
 #define PD_UPLOAD_BYTES (PXA_RASTER_UPLOAD_HEADER_BYTES + 65536u)
 static uint8_t g_upload[PD_UPLOAD_BYTES];
 static uint8_t g_draw[PD_MAX_DRAW_BYTES];
@@ -84,6 +97,7 @@ static pd_game_t g_game;
 static pd_layout_t g_layout;
 static pd_audio_t g_audio;
 static uint8_t g_seeded;
+static uint8_t g_result_recorded;
 
 static void rebuild_layout(void) {
     const int display_w = g_display_width ? (int)g_display_width : 1;
@@ -175,32 +189,103 @@ static void update_clock_period(void) {
 
 static void save_progress(void) {
     int length;
+    const int slot = g_game.active_slot;
+    if (slot >= PD_SAVE_SLOTS) return;
     if (g_game.phase != PD_PHASE_PLAY && g_game.phase != PD_PHASE_BAG &&
         g_game.phase != PD_PHASE_INFO && g_game.phase != PD_PHASE_SETTINGS &&
-        g_game.phase != PD_PHASE_PAUSE)
+        g_game.phase != PD_PHASE_PAUSE && g_game.phase != PD_PHASE_SHOP)
         return;
     length = pd_game_serialize(&g_game, g_save_blob, (int)sizeof(g_save_blob));
     if (length <= 0) return;
     /* Storage SET is a synchronous control message; the Host answers inside
      * the call, so no result event follows. */
-    (void)pxa_storage_set(PD_STORAGE_SET_REQUEST, PD_STORAGE_KEY,
-                          PD_STORAGE_KEY_BYTES, g_save_blob, (size_t)length,
-                          g_storage_payload, sizeof(g_storage_payload),
-                          g_storage_packet, sizeof(g_storage_packet));
+    if (pxa_storage_set(PD_STORAGE_SET_REQUEST, kSaveKeys[slot],
+                        kSaveKeyBytes[slot], g_save_blob, (size_t)length,
+                        g_storage_payload, sizeof(g_storage_payload),
+                        g_storage_packet, sizeof(g_storage_packet))) {
+        for (int index = 0; index < length; ++index)
+            g_slot_blob[slot][index] = g_save_blob[index];
+        g_slot_length[slot] = (uint16_t)length;
+        (void)pd_game_save_summary(g_save_blob, length, &g_game.slots[slot]);
+    }
 }
 
 static void clear_progress(void) {
-    (void)pxa_storage_remove(PD_STORAGE_SET_REQUEST, PD_STORAGE_KEY,
-                             PD_STORAGE_KEY_BYTES, g_storage_payload,
-                             sizeof(g_storage_payload), g_storage_packet,
-                             sizeof(g_storage_packet));
+    const int slot = g_game.active_slot;
+    if (slot >= PD_SAVE_SLOTS) return;
+    if (pxa_storage_remove(PD_STORAGE_SET_REQUEST, kSaveKeys[slot],
+                           kSaveKeyBytes[slot], g_storage_payload,
+                           sizeof(g_storage_payload), g_storage_packet,
+                           sizeof(g_storage_packet))) {
+        g_slot_length[slot] = 0;
+        g_game.slots[slot].occupied = 0;
+    }
 }
 
 static void request_progress(void) {
-    (void)pxa_storage_get(PD_STORAGE_GET_REQUEST, PD_STORAGE_KEY,
-                          PD_STORAGE_KEY_BYTES, g_storage_payload,
-                          sizeof(g_storage_payload), g_storage_packet,
-                          sizeof(g_storage_packet));
+    const uint32_t requests[PD_SAVE_SLOTS] = {
+        PD_STORAGE_GET_REQUEST, PD_STORAGE_GET_SLOT2, PD_STORAGE_GET_SLOT3,
+        PD_STORAGE_GET_SLOT4, PD_STORAGE_GET_SLOT5};
+    for (int slot = 0; slot < PD_SAVE_SLOTS; ++slot)
+        (void)pxa_storage_get(requests[slot], kSaveKeys[slot],
+                              kSaveKeyBytes[slot], g_storage_payload,
+                              sizeof(g_storage_payload), g_storage_packet,
+                              sizeof(g_storage_packet));
+}
+
+static void resume_slot(void) {
+    const int slot = g_game.selected_slot;
+    if (slot >= PD_SAVE_SLOTS || !g_slot_length[slot] ||
+        !pd_game_restore(&g_game, g_slot_blob[slot], g_slot_length[slot])) {
+        g_game.phase = PD_PHASE_SAVES;
+        return;
+    }
+    g_game.active_slot = (uint8_t)slot;
+    g_game.phase = PD_PHASE_PLAY;
+    g_result_recorded = 0;
+    g_layout.camera_dx = 0;
+    g_layout.camera_dy = 0;
+    g_layout.camera_manual = 0;
+}
+
+static void record_result(void) {
+    pd_save_slot_t entry;
+    int position = 0;
+    if (g_result_recorded) return;
+    g_result_recorded = 1;
+    entry = (pd_save_slot_t){1, g_game.hero.cls, g_game.depth,
+                             g_game.hero.level, g_game.deepest, g_game.kills,
+                             g_game.hero.gold, g_game.turn};
+    while (position < PD_RANK_COUNT &&
+           g_game.rankings[position].occupied &&
+           (g_game.rankings[position].deepest > entry.deepest ||
+            (g_game.rankings[position].deepest == entry.deepest &&
+             g_game.rankings[position].kills >= entry.kills)))
+        ++position;
+    if (position >= PD_RANK_COUNT) return;
+    for (int index = PD_RANK_COUNT - 1; index > position; --index)
+        g_game.rankings[index] = g_game.rankings[index - 1];
+    g_game.rankings[position] = entry;
+    g_rank_blob[0] = 'R';
+    g_rank_blob[1] = 1;
+    for (int index = 0; index < PD_RANK_COUNT; ++index) {
+        const pd_save_slot_t *rank = &g_game.rankings[index];
+        uint8_t *record = g_rank_blob + 2 + index * 10;
+        record[0] = rank->occupied;
+        record[1] = rank->cls;
+        record[2] = rank->depth;
+        record[3] = rank->level;
+        record[4] = rank->deepest;
+        record[5] = rank->kills;
+        record[6] = (uint8_t)rank->gold;
+        record[7] = (uint8_t)(rank->gold >> 8);
+        record[8] = (uint8_t)rank->turns;
+        record[9] = (uint8_t)(rank->turns >> 8);
+    }
+    (void)pxa_storage_set(PD_RANK_SET_REQUEST, PD_RANK_KEY,
+                          PD_RANK_KEY_BYTES, g_rank_blob, sizeof(g_rank_blob),
+                          g_storage_payload, sizeof(g_storage_payload),
+                          g_storage_packet, sizeof(g_storage_packet));
 }
 
 static void save_zoom(void) {
@@ -270,6 +355,13 @@ static int upload_resources(void) {
             sizeof(g_upload)) !=
         (int32_t)(PXA_RASTER_UPLOAD_HEADER_BYTES +
                   PD_TITLE_ATLAS_WIDTH * PD_TITLE_ATLAS_HEIGHT))
+        return 0;
+    if (pxa_raster_upload_texture_index8(
+            g_context, PD_TEXTURE_FIRE, PD_FIRE_ATLAS_WIDTH,
+            PD_FIRE_ATLAS_HEIGHT, pd_fire_atlas, g_upload,
+            sizeof(g_upload)) !=
+        (int32_t)(PXA_RASTER_UPLOAD_HEADER_BYTES +
+                  PD_FIRE_ATLAS_WIDTH * PD_FIRE_ATLAS_HEIGHT))
         return 0;
     {
         /* One-colour texture used by the remembered-terrain overlay. */
@@ -361,6 +453,7 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     g_frame_id = 0;
     g_clock_period = 0;
     g_seeded = 0;
+    g_result_recorded = 0;
     g_progress_dirty = 0;
     g_have_controller = 0;
     g_controller_buttons = 0;
@@ -377,12 +470,22 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     }
     rebuild_layout();
     pd_game_reset(&g_game, UINT32_C(0x51ed270b));
+    for (int slot = 0; slot < PD_SAVE_SLOTS; ++slot) {
+        g_slot_length[slot] = 0;
+        g_game.slots[slot].occupied = 0;
+    }
+    for (int index = 0; index < PD_RANK_COUNT; ++index)
+        g_game.rankings[index].occupied = 0;
     if (!setup_pointer_node() || !pxa_window_fullscreen()) {
         (void)pxa_log_error("pd: pointer node or fullscreen request failed");
         return PXA_STATUS_INTERNAL;
     }
     request_context();
     request_progress();
+    (void)pxa_storage_get(PD_RANK_GET_REQUEST, PD_RANK_KEY,
+                          PD_RANK_KEY_BYTES, g_storage_payload,
+                          sizeof(g_storage_payload), g_storage_packet,
+                          sizeof(g_storage_packet));
     request_zoom();
     return PXA_STATUS_OK;
 }
@@ -498,9 +601,14 @@ static void handle_pointer(const pxa_event_t *event) {
         pd_input_pointer(&g_game, &g_layout, x, y, pointer.pointer_id,
                          pointer.phase,
                          pointer.timestamp_us);
+        if (phase_before == PD_PHASE_SAVES && g_game.phase == PD_PHASE_PLAY)
+            resume_slot();
         if (zoom_before != g_layout.zoom) save_zoom();
         if (phase_before == PD_PHASE_CLASS && g_game.phase == PD_PHASE_PLAY) {
-            clear_progress();
+            g_game.active_slot = g_game.selected_slot;
+            g_result_recorded = 0;
+            g_layout.camera_dx = g_layout.camera_dy = 0;
+            g_layout.camera_manual = 0;
             save_progress();
         }
         if (phase_before == PD_PHASE_PAUSE && g_game.phase == PD_PHASE_TITLE) {
@@ -509,8 +617,10 @@ static void handle_pointer(const pxa_event_t *event) {
             g_game.phase = PD_PHASE_TITLE;
         }
         if (g_game.phase != phase_before &&
-            (g_game.phase == PD_PHASE_DEAD || g_game.phase == PD_PHASE_WON))
+            (g_game.phase == PD_PHASE_DEAD || g_game.phase == PD_PHASE_WON)) {
+            record_result();
             clear_progress();
+        }
     }
     g_progress_dirty = 1;
     pd_audio_set_music(&g_audio,
@@ -536,9 +646,19 @@ static void handle_controller(const pxa_event_t *event) {
     }
     phase_before = g_game.phase;
     pd_input_controller(&g_game, controller.buttons, g_controller_buttons);
+    if (phase_before == PD_PHASE_SAVES && g_game.phase == PD_PHASE_PLAY)
+        resume_slot();
     if (phase_before == PD_PHASE_CLASS && g_game.phase == PD_PHASE_PLAY) {
-        clear_progress();
+        g_game.active_slot = g_game.selected_slot;
+        g_result_recorded = 0;
+        g_layout.camera_dx = g_layout.camera_dy = 0;
+        g_layout.camera_manual = 0;
         save_progress();
+    }
+    if (g_game.phase != phase_before &&
+        (g_game.phase == PD_PHASE_DEAD || g_game.phase == PD_PHASE_WON)) {
+        record_result();
+        clear_progress();
     }
     g_controller_buttons = controller.buttons;
     g_progress_dirty = 1;
@@ -581,6 +701,10 @@ static void handle_tick(uint64_t timestamp_us) {
             g_progress_dirty = 1;
         }
         if (g_game.phase == PD_PHASE_DEAD) {
+            record_result();
+            clear_progress();
+        } else if (g_game.phase == PD_PHASE_WON) {
+            record_result();
             clear_progress();
         } else if (g_game.turn != turn_before &&
                    (g_game.turn % 40u) == 0u) {
@@ -620,14 +744,53 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t length) {
     }
     if (event.service == PXA_SERVICE_STORAGE &&
         event.opcode == PXA_STORAGE_GET &&
-        event.request_id == PD_STORAGE_GET_REQUEST) {
+        event.request_id == PD_RANK_GET_REQUEST) {
         pxa_storage_get_result_t result;
         if (pxa_storage_parse_get(&event, &result) &&
             result.status == PXA_STATUS_OK && result.value != NULL &&
-            pd_game_restore(&g_game, result.value, (int)result.value_length)) {
-            g_game.phase = PD_PHASE_SAVES;
-            g_seeded = 1;
-            (void)pxa_log_info("pd: progress restored");
+            result.value_length == sizeof(g_rank_blob) &&
+            result.value[0] == 'R' && result.value[1] == 1) {
+            for (int index = 0; index < PD_RANK_COUNT; ++index) {
+                const uint8_t *record = result.value + 2 + index * 10;
+                pd_save_slot_t *rank = &g_game.rankings[index];
+                if (record[0] != 1 || record[1] >= PD_CLASS_COUNT ||
+                    record[2] < 1 || record[2] > 25) {
+                    rank->occupied = 0;
+                    continue;
+                }
+                rank->occupied = 1;
+                rank->cls = record[1];
+                rank->depth = record[2];
+                rank->level = record[3];
+                rank->deepest = record[4];
+                rank->kills = record[5];
+                rank->gold = (uint16_t)(record[6] | (record[7] << 8));
+                rank->turns = (uint16_t)(record[8] | (record[9] << 8));
+            }
+            render_frame();
+        }
+        return PXA_EVENT_HANDLED;
+    }
+    if (event.service == PXA_SERVICE_STORAGE &&
+        event.opcode == PXA_STORAGE_GET &&
+        (event.request_id == PD_STORAGE_GET_REQUEST ||
+         event.request_id == PD_STORAGE_GET_SLOT2 ||
+         event.request_id == PD_STORAGE_GET_SLOT3 ||
+         event.request_id == PD_STORAGE_GET_SLOT4 ||
+         event.request_id == PD_STORAGE_GET_SLOT5)) {
+        pxa_storage_get_result_t result;
+        const int slot = event.request_id == PD_STORAGE_GET_REQUEST ? 0 :
+                         event.request_id == PD_STORAGE_GET_SLOT2 ? 1 :
+                         event.request_id == PD_STORAGE_GET_SLOT3 ? 2 :
+                         event.request_id == PD_STORAGE_GET_SLOT4 ? 3 : 4;
+        if (pxa_storage_parse_get(&event, &result) &&
+            result.status == PXA_STATUS_OK && result.value != NULL &&
+            result.value_length <= sizeof(g_slot_blob[slot]) &&
+            pd_game_save_summary(result.value, (int)result.value_length,
+                                 &g_game.slots[slot])) {
+            for (uint32_t index = 0; index < result.value_length; ++index)
+                g_slot_blob[slot][index] = result.value[index];
+            g_slot_length[slot] = (uint16_t)result.value_length;
             render_frame();
         }
         return PXA_EVENT_HANDLED;
@@ -647,6 +810,7 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t length) {
     if (event.service == PXA_SERVICE_STORAGE &&
         event.opcode == PXA_STORAGE_SET &&
         (event.request_id == PD_STORAGE_SET_REQUEST ||
+         event.request_id == PD_RANK_SET_REQUEST ||
          event.request_id == PD_ZOOM_SET_REQUEST)) {
         return PXA_EVENT_HANDLED;
     }

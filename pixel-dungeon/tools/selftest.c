@@ -31,6 +31,70 @@ static int walkable_at(const pd_level_t *level, int x, int y) {
     return pd_in_bounds(x, y) && pd_tile_walkable(pd_tile_at(level, x, y));
 }
 
+static void tap_rect(pd_game_t *game, pd_layout_t *layout,
+                     const pd_rect_t *rect) {
+    const int x = rect->x + rect->w / 2;
+    const int y = rect->y + rect->h / 2;
+    pd_input_pointer(game, layout, x, y, 0, PXA_POINTER_DOWN, 100);
+    pd_input_pointer(game, layout, x, y, 0, PXA_POINTER_UP, 101);
+}
+
+static void test_menus_and_slots(void) {
+    pd_game_t game = {0};
+    pd_layout_t layout;
+    pd_layout_build(&layout, 296, 240, 8, 10, 8, 10);
+    pd_game_reset(&game, 713);
+    check(layout.menu_back.x > layout.width / 2,
+          "scene exit icon is on the original's right side");
+    tap_rect(&game, &layout, &layout.title_settings);
+    check(game.phase == PD_PHASE_SETTINGS, "title opens settings");
+    tap_rect(&game, &layout, &layout.settings_back);
+    check(game.phase == PD_PHASE_TITLE,
+          "settings close icon returns to its originating title");
+    tap_rect(&game, &layout, &layout.title_rankings);
+    check(game.phase == PD_PHASE_RANKINGS, "title opens rankings");
+    tap_rect(&game, &layout, &layout.menu_back);
+    check(game.phase == PD_PHASE_TITLE,
+          "rankings exit icon returns to the title");
+    tap_rect(&game, &layout, &layout.menu_primary);
+    check(game.phase == PD_PHASE_SAVES, "title opens save slots");
+    uint8_t slots[PD_SAVE_SLOTS];
+    check(pd_game_visible_save_slots(&game, slots) == 1 && slots[0] == 0,
+          "empty save screen shows only the next new-game slot");
+    for (int index = 0; index < PD_SAVE_SLOTS - 1; ++index)
+        game.slots[index].occupied = 1;
+    check(pd_game_visible_save_slots(&game, slots) == PD_SAVE_SLOTS,
+          "occupied slots plus one empty slot match the original");
+    const pd_rect_t last = pd_layout_save_row(&layout, PD_SAVE_SLOTS,
+                                               PD_SAVE_SLOTS - 1);
+    tap_rect(&game, &layout, &last);
+    check(game.phase == PD_PHASE_CLASS &&
+          game.selected_slot == PD_SAVE_SLOTS - 1,
+          "fifth empty slot starts hero selection");
+    tap_rect(&game, &layout, &layout.menu_back);
+    check(game.phase == PD_PHASE_SAVES,
+          "hero selection exit icon returns to save slots");
+    pd_layout_build(&layout, 176, 176, 8, 10, 8, 10);
+    pd_layout_fit_display_shape(&layout, 2, NULL);
+    check(pd_layout_save_page_size(&layout) == 2,
+          "very small circles show two save slots per page");
+    game.selected_slot = slots[0];
+    const pd_rect_t page_button = pd_layout_save_page_button(&layout, 2);
+    check(page_button.y + page_button.h <=
+              layout.height - layout.safe_bottom,
+          "save page control fits the tiny screen safe area");
+    tap_rect(&game, &layout, &page_button);
+    check(game.phase == PD_PHASE_SAVES && game.selected_slot == slots[2],
+          "save page control advances to the next pair");
+    tap_rect(&game, &layout, &page_button);
+    check(game.selected_slot == slots[4],
+          "save page control reaches the fifth slot");
+    const pd_rect_t compact_last = pd_layout_save_row(&layout, 1, 0);
+    tap_rect(&game, &layout, &compact_last);
+    check(game.phase == PD_PHASE_CLASS && game.selected_slot == slots[4],
+          "fifth slot remains tappable on the tiny round display");
+}
+
 static void test_back_navigation(void) {
     pd_game_t game;
     memset(&game, 0, sizeof(game));
@@ -310,6 +374,7 @@ static void test_play_session(void) {
 static void test_save_restore(void) {
     pd_game_t game;
     pd_game_t restored;
+    pd_save_slot_t summary = {0};
     static uint8_t blob[2048];
     int length;
     pd_game_reset(&game, 777);
@@ -318,6 +383,13 @@ static void test_save_restore(void) {
     pd_game_hero_step(&game, 0, 0);
     length = pd_game_serialize(&game, blob, sizeof(blob));
     check(length > 0, "serialize produces a blob");
+    check(pd_game_save_summary(blob, length, &summary) &&
+          summary.depth == game.depth && summary.cls == game.hero.cls,
+          "save summaries drive independent slot previews");
+    check(!pd_game_save_summary(blob, 24, &summary),
+          "truncated slot previews are rejected");
+    game.hero.keys = 2;
+    length = pd_game_serialize(&game, blob, sizeof(blob));
     check(blob[38] == 1, "new saves record their generator version");
     check(length <= 2048, "save fits the Storage value limit");
     memset(&restored, 0, sizeof(restored));
@@ -329,6 +401,7 @@ static void test_save_restore(void) {
     check(restored.hero.x == game.hero.x && restored.hero.y == game.hero.y,
           "hero position survives a save");
     check(restored.hero.gold == game.hero.gold, "gold survives a save");
+    check(restored.hero.keys == 2, "iron keys survive a save");
     check(restored.bag_count == game.bag_count, "pack size survives a save");
     check(restored.ground_count == game.ground_count,
           "ground items survive a save");
@@ -374,6 +447,80 @@ static void test_save_restore(void) {
           "a corrupt save is rejected");
 }
 
+static void test_keys_shop_and_camera(void) {
+    pd_game_t game;
+    pd_layout_t layout;
+    for (uint32_t seed = 1; seed <= 20; ++seed) {
+        pd_game_reset(&game, seed * 7919u);
+        pd_game_start_run(&game, 0);
+        pd_game_enter_depth(&game, 2);
+        check(game.lock_x < PD_MAP_W &&
+              (game.hero.keys > 0 || game.ground_count > 0),
+              "generated runs have a locked door and a reachable key");
+        pd_game_enter_depth(&game, 6);
+        check(game.shop_x < PD_MAP_W && game.shop_y < PD_MAP_H,
+              "region transition floors have a merchant");
+    }
+    pd_game_reset(&game, 17982);
+    pd_game_start_run(&game, 0);
+    pd_game_enter_depth(&game, 2);
+    check(game.lock_x < PD_MAP_W && game.lock_y < PD_MAP_H,
+          "a generated floor has an iron-key door");
+    if (game.lock_x < PD_MAP_W) {
+        int key_present = game.hero.keys > 0;
+        for (int index = 0; index < game.ground_count; ++index)
+            if (game.ground[index].item.kind == PD_ITEM_IRON_KEY)
+                key_present = 1;
+        check(key_present, "locked floors provide a key");
+        for (int index = 0; index < PD_MOBS_MAX; ++index)
+            game.mobs[index].type = 0xFF;
+        const int directions[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+        for (int index = 0; index < 4; ++index) {
+            const int x = game.lock_x - directions[index][0];
+            const int y = game.lock_y - directions[index][1];
+            if (!walkable_at(&game.level, x, y) ||
+                PD_TILE_KIND(pd_tile_at(&game.level, x, y)) == PD_TILEK_DOOR)
+                continue;
+            game.hero.x = (uint8_t)x;
+            game.hero.y = (uint8_t)y;
+            game.hero.keys = 0;
+            pd_game_hero_step(&game, directions[index][0], directions[index][1]);
+            check(game.hero.x == x && game.hero.y == y,
+                  "a locked door rejects a hero without a key");
+            game.hero.keys = 1;
+            pd_game_hero_step(&game, directions[index][0], directions[index][1]);
+            check(game.hero.x == game.lock_x && game.hero.y == game.lock_y &&
+                  game.hero.keys == 0, "key unlocks the door and is consumed");
+            break;
+        }
+    }
+    pd_game_enter_depth(&game, 6);
+    check(game.shop_x < PD_MAP_W && game.shop_y < PD_MAP_H,
+          "a region entrance has a shop");
+    game.phase = PD_PHASE_SHOP;
+    game.hero.gold = 100;
+    const int old_bag = game.bag_count;
+    pd_game_shop_buy(&game);
+    check(game.bag_count == old_bag + 1 &&
+          game.hero.gold == 100 - 40 - 6 * 4,
+          "gold purchases a healing potion");
+    pd_layout_build(&layout, 296, 240, 8, 10, 8, 10);
+    int camera_x, camera_y;
+    pd_layout_camera(&layout, 20, 18, &camera_x, &camera_y);
+    const int start_x = camera_x;
+    game.phase = PD_PHASE_PLAY;
+    game.hero.x = 20;
+    game.hero.y = 18;
+    const int screen_x = layout.map_x + layout.map_w / 2;
+    const int screen_y = layout.map_y + layout.map_h / 2;
+    pd_input_pointer(&game, &layout, screen_x, screen_y, 0, PXA_POINTER_DOWN, 10);
+    pd_input_pointer(&game, &layout, screen_x - 48, screen_y, 0, PXA_POINTER_MOVE, 11);
+    pd_input_pointer(&game, &layout, screen_x - 48, screen_y, 0, PXA_POINTER_UP, 12);
+    pd_layout_camera(&layout, 20, 18, &camera_x, &camera_y);
+    check(camera_x > start_x && game.hero.x == 20,
+          "dragging pans the map without moving the hero");
+}
+
 static void test_auto_walk(void) {
     pd_game_t game;
     pd_game_reset(&game, 5150);
@@ -410,8 +557,14 @@ static void test_responsive_layout(void) {
               layout.depth.y == layout.menu_pane.y &&
               layout.depth.h == layout.menu_pane.h,
               "floor indicator stays beside the top buttons");
+        const int initial_bar_h = layout.bar_h;
+        const int initial_hud_h = layout.hud_h;
         const int radii[4] = {48, 48, 48, 48};
         pd_layout_fit_display_shape(&layout, width <= 296 ? 1u : 0u, radii);
+        check(layout.journal.w >= 32 && layout.journal.h >= 32 &&
+              layout.settings.w >= 32 && layout.settings.h >= 32 &&
+              layout.menu_back.w >= 32 && layout.menu_back.h >= 32,
+              "narrow display menus and exit retain touch-friendly targets");
         if (width <= 296) {
             const int radius = 48;
             const int y = layout.menu_pane.y;
@@ -444,7 +597,8 @@ static void test_responsive_layout(void) {
                                      layout.tile_pixels ||
                       layout.rows == PD_MAP_H,
                   "world viewport includes partially visible edge rows");
-            check(layout.hud_h == 40 && layout.bar_h == 38,
+            check(layout.hud_h == initial_hud_h &&
+                  layout.bar_h == initial_bar_h,
                   "zoom never scales interface");
         }
         check(layout.map_x == (width - layout.map_w) / 2 &&
@@ -481,6 +635,38 @@ static void test_responsive_layout(void) {
                   "inventory slot fits safe area");
     }
     {
+        pd_layout_t layout;
+        pd_layout_build(&layout, 410, 410, 60, 60, 60, 60);
+        pd_layout_fit_display_shape(&layout, 2, NULL);
+        check(pd_layout_save_page_size(&layout) == PD_SAVE_SLOTS,
+              "large circles show all save slots without pagination");
+        check(layout.menu_primary.h >= 44 && layout.title_rankings.h >= 44 &&
+              layout.title_journal.h >= 44 && layout.title_settings.h >= 44,
+              "large circle title targets remain easy to tap");
+        check(layout.settings.w >= 44 && layout.journal.w >= 44 &&
+              layout.settings_back.w >= 44 && layout.bag_close.w >= 44 &&
+              layout.info_close.w >= 44 && layout.journal_close.w >= 44,
+              "large circle menu and close controls use 44-pixel targets");
+        check(layout.menu_pane.w >= 93 && layout.menu_pane.h >= 42 &&
+              layout.journal.w >= 39 && layout.settings.w >= 36,
+              "large circle menu fits integer-scaled original art");
+        check(layout.button[0].w >= 44 && layout.button[0].h >= 44,
+              "large circle toolbar actions remain easy to tap");
+        check(layout.hero_info.w == 124 && layout.hero_info.h == 57 &&
+              layout.depth.w == 28,
+              "large circle status and floor remain readable");
+        check(layout.class_button[0].h >= 63 &&
+              layout.class_button[0].y >= layout.menu_back.y +
+                  layout.menu_back.h + 4 &&
+              layout.class_button[2].y + layout.class_button[2].h <
+                  layout.height - layout.safe_bottom - 12,
+              "round hero cards contain three lines below the back control");
+        check(pd_layout_save_row(&layout, 5, 0).y >= layout.safe_top + 24 &&
+              pd_layout_save_row(&layout, 5, 4).y + 44 <=
+                  layout.height - layout.safe_bottom,
+              "all five enlarged save slots fit the round display");
+    }
+    {
         static const int circles[][2] = {{176, 176}, {296, 240}};
         for (int screen = 0; screen < 2; ++screen) {
             const int width = circles[screen][0];
@@ -494,7 +680,15 @@ static void test_responsive_layout(void) {
             controls[1] = &layout.menu_pane;
             controls[2] = &layout.depth;
             controls[3] = &layout.menu_back;
-            check(layout.menu_pane.y >= layout.hero_info.y + 38 ||
+            if (width == 176) {
+                check(layout.menu_back.y + layout.menu_back.h <=
+                          layout.class_button[0].y &&
+                      layout.class_button[2].y + layout.class_button[2].h <=
+                          layout.height - layout.safe_bottom,
+                      "tiny round class cards fit below their back control");
+            }
+            check(layout.menu_pane.y >= layout.hero_info.y +
+                      layout.hero_info.h ||
                   layout.depth.x >= layout.hero_info.x + layout.hero_info.w,
                   "circle display separates the HUD and pause buttons");
             for (int index = 0; index < 4; ++index) {
@@ -551,6 +745,96 @@ static void test_responsive_layout(void) {
               layout.map_x + layout.map_w >= layout.width &&
               layout.map_y + layout.map_h >= layout.height,
               "small round screen also uses the area behind its controls");
+    }
+}
+
+static void test_hud_digit_bounds(void) {
+    struct {
+        const char *text;
+        int width;
+        int scale;
+    } cases[] = {
+        {"0/11", 17, 1},
+        {"255/1281", 17, 1},
+        {"255/1281", 25, 2},
+        {"32767/32767", 50, 1},
+        {"9", 14, 1},
+        {"10", 14, 1},
+        {"255", 14, 1},
+        {"10", 21, 2},
+        {"255", 21, 2},
+    };
+    for (int index = 0; index < (int)(sizeof(cases) / sizeof(cases[0]));
+         ++index) {
+        const pd_hud_digits_t digits = pd_layout_hud_digits(
+            100, cases[index].width, cases[index].text,
+            cases[index].scale);
+        check(digits.x >= 100 &&
+              digits.x + digits.width <= 100 + cases[index].width,
+              "single, double and maximum-length HUD values stay inside bars");
+        check(abs(2 * (digits.x - 100) + digits.width -
+                  cases[index].width) <= 1,
+              "one- and two-digit levels remain centered in badge");
+    }
+}
+
+static void test_camera_top_pan(void) {
+    pd_game_t game;
+    pd_layout_t layout;
+    int camera_x;
+    int camera_y;
+    pd_game_reset(&game, 812);
+    pd_game_start_run(&game, 0);
+    game.hero.x = 10;
+    game.hero.y = 1;
+
+    for (int profile = 0; profile < 3; ++profile) {
+        const int width = profile == 0 ? 412 : profile == 1 ? 296 : 176;
+        const int height = profile == 0 ? 412 : profile == 1 ? 240 : 176;
+        pd_layout_build(&layout, width, height, 8, 10, 8, 10);
+        pd_layout_fit_display_shape(&layout, 2, NULL);
+        pd_layout_camera(&layout, game.hero.x, game.hero.y,
+                         &camera_x, &camera_y);
+        check(camera_y == 0, "camera starts at the top of the floor");
+        pd_layout_pan(&layout, game.hero.x, game.hero.y, 0, -1);
+        pd_layout_camera(&layout, game.hero.x, game.hero.y,
+                         &camera_x, &camera_y);
+        check(camera_y == -1, "one drag step moves beyond the top row");
+        pd_layout_pan(&layout, game.hero.x, game.hero.y, 0, -100);
+        pd_layout_camera(&layout, game.hero.x, game.hero.y,
+                         &camera_x, &camera_y);
+        const int hero_bottom = layout.hero_info.y + layout.hero_info.h;
+        const int menu_bottom = layout.menu_pane.y + layout.menu_pane.h;
+        const int top = hero_bottom > menu_bottom ? hero_bottom : menu_bottom;
+        check(camera_y < 0 &&
+              layout.map_y - camera_y * layout.tile_pixels >= top,
+              "top floor row can be moved below the HUD");
+        const int limit = camera_y;
+        pd_layout_pan(&layout, game.hero.x, game.hero.y, 0, -100);
+        pd_layout_pan(&layout, game.hero.x, game.hero.y, 0, 1);
+        pd_layout_camera(&layout, game.hero.x, game.hero.y,
+                         &camera_x, &camera_y);
+        check(camera_y == limit + 1,
+              "dragging back from the boundary has no hidden offset");
+        if (profile == 0) {
+            const int tile_x = 15;
+            const int tile_y = 1;
+            const int screen_x = layout.map_x +
+                (tile_x - camera_x) * layout.tile_pixels +
+                layout.tile_pixels / 2;
+            const int screen_y = layout.map_y +
+                (tile_y - camera_y) * layout.tile_pixels +
+                layout.tile_pixels / 2;
+            check(screen_y >= top &&
+                  !pd_rect_contains(&layout.menu_pane, screen_x, screen_y),
+                  "reframed top tile is outside the menu hitbox");
+            pd_input_pointer(&game, &layout, screen_x, screen_y, 0,
+                             PXA_POINTER_DOWN, 10);
+            pd_input_pointer(&game, &layout, screen_x, screen_y, 0,
+                             PXA_POINTER_UP, 11);
+            check(game.walk_x == tile_x && game.walk_y == tile_y,
+                  "reframed top tile accepts a world tap");
+        }
     }
 }
 
@@ -786,14 +1070,18 @@ static void test_visual_features(void) {
 
 int main(void) {
     test_back_navigation();
+    test_menus_and_slots();
     test_generation();
     test_mob_death();
     test_mob_movement();
     test_spawn_and_fov();
     test_play_session();
     test_save_restore();
+    test_keys_shop_and_camera();
     test_auto_walk();
     test_responsive_layout();
+    test_hud_digit_bounds();
+    test_camera_top_pan();
     test_world_zoom_input();
     test_grass_trample();
     test_wall_stitching();

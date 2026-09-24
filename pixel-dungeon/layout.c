@@ -10,6 +10,39 @@ int pd_rect_contains(const pd_rect_t *rect, int x, int y) {
            y < rect->y + rect->h;
 }
 
+static int hud_digits_width(const char *text, int scale, int spacing,
+                             int condensed) {
+    int width = 0;
+    for (const char *character = text; *character != '\0'; ++character) {
+        if ((*character < '0' || *character > '9') && *character != '/')
+            continue;
+        const int glyph_width = (*character == '/' || *character == '1' ||
+                                 condensed) ? 2 : 3;
+        width += glyph_width * scale + spacing;
+    }
+    return width > 0 ? width - spacing : 0;
+}
+
+pd_hud_digits_t pd_layout_hud_digits(int x, int width,
+                                     const char *text, int scale) {
+    pd_hud_digits_t digits = {x, 0, scale, scale, 0};
+    if (hud_digits_width(text, digits.scale, digits.spacing, 0) > width)
+        digits.spacing = 0;
+    if (hud_digits_width(text, digits.scale, digits.spacing, 0) > width &&
+        digits.scale > 1) {
+        digits.scale = 1;
+        digits.spacing = 1;
+    }
+    if (hud_digits_width(text, digits.scale, digits.spacing, 0) > width) {
+        digits.condensed = 1;
+        digits.spacing = 0;
+    }
+    digits.width = hud_digits_width(text, digits.scale, digits.spacing,
+                                     digits.condensed);
+    digits.x = x + (width - digits.width) / 2;
+    return digits;
+}
+
 static void set_rect(pd_rect_t *rect, int x, int y, int w, int h) {
     rect->x = x;
     rect->y = y;
@@ -17,16 +50,76 @@ static void set_rect(pd_rect_t *rect, int x, int y, int w, int h) {
     rect->h = h;
 }
 
+int pd_layout_save_page_size(const pd_layout_t *layout) {
+    const int available = layout->height - layout->safe_top -
+                          layout->safe_bottom;
+    if (available < 155) return 2;
+    if (available < 220) return 3;
+    return PD_SAVE_SLOTS;
+}
+
+int pd_layout_save_page_start(const pd_layout_t *layout,
+                              int selected_index) {
+    const int page_size = pd_layout_save_page_size(layout);
+    return selected_index / page_size * page_size;
+}
+
+pd_rect_t pd_layout_save_row(const pd_layout_t *layout, int visible_count,
+                              int visible_index) {
+    pd_rect_t rect = layout->save_row[visible_index];
+    const int step = rect.h + 2;
+    const int center_y = layout->safe_top +
+                         (layout->height - layout->safe_top -
+                          layout->safe_bottom) / 2;
+    rect.y = center_y - (visible_count * step - 2) / 2 + visible_index * step;
+    if (pd_layout_save_page_size(layout) < PD_SAVE_SLOTS) rect.y -= 8;
+    return rect;
+}
+
+pd_rect_t pd_layout_save_page_button(const pd_layout_t *layout,
+                                     int visible_count) {
+    const pd_rect_t last = pd_layout_save_row(layout, visible_count,
+                                              visible_count - 1);
+    pd_rect_t button;
+    set_rect(&button, layout->width / 2 - 32,
+             last.y + last.h + 2, 64, 32);
+    return button;
+}
+
 void pd_layout_camera(const pd_layout_t *layout, int hero_x, int hero_y,
                       int *camera_x, int *camera_y) {
-    int x = hero_x - layout->cols / 2;
-    int y = hero_y - layout->rows / 2;
+    int x = hero_x - layout->cols / 2 + layout->camera_dx;
+    int y = hero_y - layout->rows / 2 + layout->camera_dy;
+    int top = layout->hero_info.y + layout->hero_info.h;
+    if (top < layout->menu_pane.y + layout->menu_pane.h)
+        top = layout->menu_pane.y + layout->menu_pane.h;
+    if (top < layout->depth.y + layout->depth.h)
+        top = layout->depth.y + layout->depth.h;
+    int upper_margin = (top + 6 * layout->zoom - layout->map_y +
+                        layout->tile_pixels - 1) / layout->tile_pixels;
+    if (upper_margin < 0) upper_margin = 0;
+    if (upper_margin > layout->rows - 3) upper_margin = layout->rows - 3;
+    if (upper_margin < 0) upper_margin = 0;
     if (x > PD_MAP_W - layout->cols) x = PD_MAP_W - layout->cols;
     if (y > PD_MAP_H - layout->rows) y = PD_MAP_H - layout->rows;
     if (x < 0) x = 0;
-    if (y < 0) y = 0;
+    if (y < (layout->camera_manual ? -upper_margin : 0))
+        y = layout->camera_manual ? -upper_margin : 0;
     *camera_x = x;
     *camera_y = y;
+}
+
+void pd_layout_pan(pd_layout_t *layout, int hero_x, int hero_y,
+                   int step_x, int step_y) {
+    int camera_x;
+    int camera_y;
+    pd_layout_camera(layout, hero_x, hero_y, &camera_x, &camera_y);
+    layout->camera_manual = 1;
+    layout->camera_dx = camera_x + step_x - (hero_x - layout->cols / 2);
+    layout->camera_dy = camera_y + step_y - (hero_y - layout->rows / 2);
+    pd_layout_camera(layout, hero_x, hero_y, &camera_x, &camera_y);
+    layout->camera_dx = camera_x - (hero_x - layout->cols / 2);
+    layout->camera_dy = camera_y - (hero_y - layout->rows / 2);
 }
 
 void pd_layout_set_zoom(pd_layout_t *layout, int zoom) {
@@ -92,10 +185,15 @@ static int shape_rect_inset(const pd_layout_t *layout, uint32_t shape,
 }
 
 void pd_layout_fit_display_shape(pd_layout_t *layout, uint32_t shape,
-                                  const int radii[4]) {
-    const int pane_w = layout->width < 190 ? 36 : 42;
-    const int pane_h = layout->height < 190 ? 20 : 22;
-    const int depth_w = 12;
+                                 const int radii[4]) {
+    int min_side = layout->width < layout->height ?
+                   layout->width : layout->height;
+    int touch_size = min_side / 9;
+    if (touch_size < 32) touch_size = 32;
+    if (touch_size > 44) touch_size = 44;
+    const int pane_w = touch_size * 2 + (touch_size > 40 ? 8 : 0);
+    const int pane_h = touch_size;
+    const int depth_w = touch_size > 32 ? 28 : 12;
     int y;
     int right;
     if (shape == 2) {
@@ -121,23 +219,39 @@ void pd_layout_fit_display_shape(pd_layout_t *layout, uint32_t shape,
     right = layout->safe_right;
     layout->display_shape = shape;
     if (shape == 2) {
-        const int compact = layout->height < 220;
-        const int class_h = compact ? 30 : 40;
-        const int class_top = layout->safe_top + (compact ? 26 : 27);
+        const int available = layout->height - layout->safe_top -
+                              layout->safe_bottom;
+        int class_h = (available - 66) / PD_CLASS_COUNT;
+        if (class_h < 34) class_h = 34;
+        if (class_h > 66) class_h = 66;
+        int class_top = layout->safe_top +
+            (available - PD_CLASS_COUNT * class_h -
+             4 * (PD_CLASS_COUNT - 1)) / 2;
+        if (available < 155) {
+            class_h = 32;
+            class_top = layout->safe_top + 17;
+            set_rect(&layout->menu_back, (layout->width - 32) / 2,
+                     layout->safe_top - 17, 32, 32);
+        }
+        if (available > 220 && class_top < layout->menu_back.y +
+                                             layout->menu_back.h + 4)
+            class_top = layout->menu_back.y + layout->menu_back.h + 4;
         for (int index = 0; index < PD_CLASS_COUNT; ++index)
             set_rect(&layout->class_button[index], layout->safe_left + 4,
-                     class_top + index * (class_h + 2),
+                     class_top + index * (class_h + (available < 155 ? 2 : 4)),
                      layout->width - layout->safe_left -
                          layout->safe_right - 8, class_h);
     }
     if (shape == 2) {
         const int initial_y = layout->hero_info.y;
-        while (layout->hero_info.y + 38 <
+        while (layout->hero_info.y + layout->hero_info.h <
                layout->height - layout->safe_bottom - layout->bar_h) {
             int left_bound = shape_rect_inset(layout, shape, radii,
-                                              layout->hero_info.y, 38, 0);
+                                              layout->hero_info.y,
+                                              layout->hero_info.h, 0);
             int right_bound = shape_rect_inset(layout, shape, radii,
-                                               layout->hero_info.y, 38, 1);
+                                               layout->hero_info.y,
+                                               layout->hero_info.h, 1);
             if (left_bound < layout->safe_left + 1)
                 left_bound = layout->safe_left + 1;
             if (right_bound < layout->safe_right)
@@ -149,17 +263,18 @@ void pd_layout_fit_display_shape(pd_layout_t *layout, uint32_t shape,
         layout->hud_h += layout->hero_info.y - initial_y;
     }
     int left = shape_rect_inset(layout, shape, radii, layout->hero_info.y,
-                                38, 0);
+                                layout->hero_info.h, 0);
     if (left < layout->hero_info.x) left = layout->hero_info.x;
     layout->hero_info.x = left;
     left = shape_rect_inset(layout, shape, radii, layout->menu_back.y,
-                            layout->menu_back.h, 0);
-    if (left > layout->menu_back.x) layout->menu_back.x = left;
+                            layout->menu_back.h, 1);
+    if (left > layout->safe_right)
+        layout->menu_back.x = layout->width - left - layout->menu_back.w;
     left = shape_rect_inset(layout, shape, radii, y, pane_h, 1);
     if (right < left) right = left;
     if (shape == 2 && layout->width - right - pane_w - depth_w <
                           layout->hero_info.x + layout->hero_info.w + 2) {
-        y = layout->hero_info.y + 41;
+        y = layout->hero_info.y + layout->hero_info.h + 3;
         right = layout->safe_right;
         left = shape_rect_inset(layout, shape, radii, y, pane_h, 1);
         if (right < left) right = left;
@@ -208,6 +323,10 @@ void pd_layout_build(pd_layout_t *layout, int width, int height,
     int bar_y;
     int content_x;
     int content_w;
+    const int min_side = width < height ? width : height;
+    int touch_size = min_side / 9;
+    if (touch_size < 32) touch_size = 32;
+    if (touch_size > 44) touch_size = 44;
 
     layout->width = width;
     layout->height = height;
@@ -217,8 +336,11 @@ void pd_layout_build(pd_layout_t *layout, int width, int height,
     layout->safe_bottom = safe_bottom < 0 ? 0 : safe_bottom;
     layout->safe_left = safe_left < 0 ? 0 : safe_left;
     layout->display_shape = 0;
+    layout->camera_dx = 0;
+    layout->camera_dy = 0;
+    layout->camera_manual = 0;
     layout->hud_h = 40;
-    layout->bar_h = 38;
+    layout->bar_h = touch_size + 6;
     bar_y = height - layout->safe_bottom - layout->bar_h;
     content_x = layout->safe_left;
     content_w = width - layout->safe_left - layout->safe_right;
@@ -227,7 +349,8 @@ void pd_layout_build(pd_layout_t *layout, int width, int height,
 
     /* The original has no movement pad: taps walk the hero. Five toolbar slots
      * carry the wait, search, potion, pack and stairs actions. */
-    button_w = content_w < 174 ? (content_w - 12) / PD_BUTTON_COUNT : 32;
+    button_w = content_w < touch_size * PD_BUTTON_COUNT + 12 ?
+               (content_w - 12) / PD_BUTTON_COUNT : touch_size;
     {
         const int total = button_w * PD_BUTTON_COUNT +
                           button_gap * (PD_BUTTON_COUNT - 1);
@@ -244,25 +367,51 @@ void pd_layout_build(pd_layout_t *layout, int width, int height,
         const int center = layout->safe_left + content_w / 2;
         const int menu_y = layout->safe_top + (height - layout->safe_top -
                             layout->safe_bottom) / 2;
-        const int menu_w = content_w < 190 ? content_w - 24 : 172;
+        int menu_w = content_w - 24;
+        if (menu_w > 224) menu_w = 224;
+        const int small_w = content_w < 224 ?
+                            (content_w - 12) / 3 : touch_size + 40;
+        const int small_start = center - (3 * small_w + 6) / 2;
         set_rect(&layout->menu_primary, center - menu_w / 2,
-                 menu_y - 10, menu_w, 26);
+                 menu_y - 15, menu_w, touch_size + 2);
         set_rect(&layout->menu_secondary, center - menu_w / 2,
-                 menu_y + 21, menu_w, 26);
-        set_rect(&layout->menu_back, layout->safe_left + 4,
-                 layout->safe_top + 4, 30, 24);
+                 menu_y + touch_size - 10, menu_w, touch_size);
+        set_rect(&layout->menu_back, width - layout->safe_right - touch_size,
+                 layout->safe_top + 2, touch_size, touch_size);
+        set_rect(&layout->title_rankings, small_start,
+                 menu_y + touch_size + 17, small_w, touch_size);
+        set_rect(&layout->title_journal, small_start + small_w + 3,
+                 menu_y + touch_size + 17, small_w, touch_size);
+        set_rect(&layout->title_settings, small_start + 2 * (small_w + 3),
+                 menu_y + touch_size + 17, small_w, touch_size);
+        for (int index = 0; index < PD_SAVE_SLOTS; ++index)
+            set_rect(&layout->save_row[index], center - menu_w / 2,
+                     menu_y - 84 + index * (touch_size + 2),
+                     menu_w, touch_size);
+        if (touch_size > 32) layout->hud_h = 58;
         set_rect(&layout->hero_info, layout->safe_left + 1,
-                 layout->safe_top, 82, layout->hud_h);
+                 layout->safe_top, touch_size > 32 ? 124 : 82,
+                 touch_size > 32 ? 57 : 38);
         const int pause_w = content_w < 156 ? content_w - 18 : 138;
         const int pause_left = center - pause_w / 2;
-        const int pause_top = menu_y - 26;
+        const int pause_top = menu_y - 35;
         set_rect(&layout->pause_settings, pause_left, pause_top,
-                 pause_w, 24);
-        set_rect(&layout->pause_menu, pause_left, pause_top + 27,
-                 pause_w, 24);
-        set_rect(&layout->zoom_out, center - 61, menu_y - 14, 42, 32);
-        set_rect(&layout->zoom_in, center + 19, menu_y - 14, 42, 32);
-        set_rect(&layout->settings_back, center - 44, menu_y + 43, 88, 26);
+                 pause_w, touch_size);
+        set_rect(&layout->pause_menu, pause_left, pause_top + touch_size + 4,
+                 pause_w, touch_size);
+        set_rect(&layout->shop_buy, pause_left, menu_y + 6,
+                 pause_w, touch_size);
+        const int shop_w = content_w < 170 ? content_w - 10 : 170;
+        set_rect(&layout->shop_close, center + shop_w / 2 - touch_size - 4,
+                 menu_y - 70, touch_size, touch_size);
+        set_rect(&layout->zoom_out, center - 61, menu_y - 14, 42,
+                 touch_size);
+        set_rect(&layout->zoom_in, center + 19, menu_y - 14, 42,
+                 touch_size);
+        const int settings_w = content_w < 218 ? content_w - 12 : 206;
+        set_rect(&layout->settings_back,
+                 center + settings_w / 2 - touch_size - 4,
+                 (height - 160) / 2, touch_size, touch_size);
     }
     pd_layout_fit_display_shape(layout, 0, NULL);
 
@@ -297,12 +446,14 @@ void pd_layout_build(pd_layout_t *layout, int width, int height,
         const int panel_w = content_w < 250 ? content_w - 12 : 240;
         const int panel_x = content_x + (content_w - panel_w) / 2;
         const int available_h = height - layout->safe_top - layout->safe_bottom - 8;
-        const int panel_h = available_h < 184 ? available_h : 184;
+        const int max_panel_h = touch_size > 32 ? 244 : 184;
+        const int panel_h = available_h < max_panel_h ?
+                            available_h : max_panel_h;
         const int panel_y = layout->safe_top +
                             (height - layout->safe_top - layout->safe_bottom - panel_h) / 2;
         const int header_h = panel_h < 170 ? 30 : 36;
         const int top = panel_y + header_h;
-        const int row_step = (panel_h - header_h - 55) / 3;
+        const int row_step = (panel_h - header_h - touch_size - 30) / 3;
         const int slot_w = (panel_w - 24) / 5;
         for (int index = 0; index < PD_BAG_ROWS; ++index) {
             set_rect(&layout->bag_row[index], panel_x + 12 +
@@ -310,11 +461,23 @@ void pd_layout_build(pd_layout_t *layout, int width, int height,
                      top + (index / 5) * row_step,
                      slot_w - 2, row_step - 2);
             set_rect(&layout->bag_use[index], panel_x + 12,
-                     panel_y + panel_h - 28, panel_w / 2 - 16, 23);
+                     panel_y + panel_h - touch_size - 5,
+                     panel_w / 2 - 16, touch_size);
             set_rect(&layout->bag_drop[index], panel_x + panel_w / 2 + 4,
-                     panel_y + panel_h - 28, panel_w / 2 - 16, 23);
+                     panel_y + panel_h - touch_size - 5,
+                     panel_w / 2 - 16, touch_size);
         }
-        set_rect(&layout->bag_close, panel_x + panel_w - 30,
-                 panel_y + 5, 22, 20);
+        set_rect(&layout->bag_close,
+                 panel_x + panel_w - touch_size - 4,
+                 panel_y, touch_size, touch_size);
+        const int info_w = content_w - 16 < 210 ? content_w - 16 : 210;
+        const int info_h = available_h - 4 < 156 ? available_h - 4 : 156;
+        set_rect(&layout->info_close,
+                 width / 2 + info_w / 2 - touch_size - 4,
+                 (height - info_h) / 2, touch_size, touch_size);
+        const int journal_w = content_w - 12;
+        set_rect(&layout->journal_close,
+                 width / 2 + journal_w / 2 - touch_size - 4,
+                 layout->safe_top + 12, touch_size, touch_size);
     }
 }

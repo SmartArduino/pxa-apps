@@ -48,8 +48,14 @@ STRINGS = [
     ('WALL_BLOCKS', 'A wall blocks the way.', '墙挡住了去路。'),
     ('VICTORY_MSG', 'Yog-Dzewa falls. You win!', '尤格-兹瓦倒下了，你赢了！'),
     ('AUDIO_OFF', 'Audio unavailable.', '音频不可用。'),
+    ('PICK_KEY', 'You pick up an iron key.', '你拾取了一把铁钥匙。'),
+    ('NEED_KEY', 'This door needs an iron key.', '这扇门需要铁钥匙。'),
+    ('KEY_UNLOCK', 'You unlock the door.', '你用钥匙打开了门。'),
+    ('SHOP_BUY', 'You buy the potion for %d gold.', '你花费 %d 金币买下药水。'),
+    ('SHOP_SHORT', 'You need %d gold for the potion.', '购买药水需要 %d 金币。'),
     # --- items ----------------------------------------------------------
     ('ITEM_GOLD', 'Gold', '金币'),
+    ('ITEM_IRON_KEY', 'Iron Key', '铁钥匙'),
     ('ITEM_POTION_HEAL', 'Potion of Healing', '治疗药水'),
     ('ITEM_POTION_STRENGTH', 'Potion of Strength', '力量药水'),
     ('ITEM_SCROLL_UPGRADE', 'Scroll of Upgrade', '升级卷轴'),
@@ -132,6 +138,15 @@ STRINGS = [
     ('MAP_ZOOM', 'Map zoom', '地图缩放'),
     ('PINCH_HINT', 'Pinch to zoom the map', '双指缩放地图'),
     ('MAIN_MENU', 'MAIN MENU', '主菜单'),
+    ('RANKINGS', 'RANKINGS', '排行榜'),
+    ('JOURNAL', 'JOURNAL', '日志'),
+    ('SAVE_EMPTY', 'New game', '新游戏'),
+    ('SAVE_SLOT', 'Slot %d', '存档 %d'),
+    ('KEY_COUNT', 'Keys %d', '钥匙 %d'),
+    ('SHOP_TITLE', 'SHOP', '商店'),
+    ('SHOP_BUY_BUTTON', 'BUY', '购买'),
+    ('RANK_EMPTY', 'No completed adventures yet.', '还没有冒险记录。'),
+    ('JOURNAL_EMPTY', 'Nothing recorded yet.', '暂时没有日志。'),
 ]
 
 

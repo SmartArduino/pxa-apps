@@ -17,6 +17,7 @@ GPL-3.0; the upstream license text is included in `LICENSE.txt`.
 | Interface | SPD `interfaces/chrome.png`, `banners.png`, `toolbar.png`, `icons.png`, `sprites/avatars.png` |
 | App icon | SPD `metadata/en-US/images/icon.png` |
 | Title backdrop | SPD `splashes/title/archs.png` |
+| Title flames | SPD `effects/fireball-short.png` |
 | Sound effects | SPD `sounds/*.mp3` |
 | Music | Uncut SPD `music/{theme,sewers,prison,caves,city,halls}_1.ogg` |
 | Floors | One SPD region per five depths: sewers, prison, caves, city, halls |
@@ -70,6 +71,8 @@ tiles and actors, never the HUD, and is remembered across launches. The PXADB
 desktop simulator currently advertises one pointer; use pause → settings
 there to check zoom. The simulator's SDL audio sink plays the original effects
 and region music when a system audio output device is available.
+Drag the map down to move its top row below the HUD when a monster is covered;
+the camera can pan a few tiles beyond the floor edge without moving the hero.
 
 ## Gameplay
 
@@ -84,15 +87,25 @@ and region music when a system audio output device is available.
   spinner, slime, golem, Yog-Dzewa) with hunting AI, wake-on-sight and
   wander-when-idle.
 * Loot: potions, scrolls, weapons and armour with upgrade levels, gold, food.
+* Five independent save slots; the old `pixel-dungeon.save` key remains slot 1.
+  On compact displays the save list pages in two or three touch-sized rows.
+  Finished runs are recorded in a separate five-entry leaderboard.
+* One iron-key door per new floor from depth 2 onward; its key appears next to
+  the entrance and is consumed when that door opens. Existing legacy runs
+  retain their original generator and map layout.
+* A potion merchant appears on region-transition depths (6, 11, 16, 21),
+  charging gold when the player chooses Buy.
 * Hunger, natural regeneration, level-ups and a 25 floor descent ending in the
   Yog-Dzewa fight.
 * Field of view with remembered terrain, auto-walk (tap a distant tile),
-  searching with a staggered blue scan effect and quick potion use.
+  drag-to-pan map, searching with a staggered blue scan effect and quick potion
+  use. Search consumes two turns and extra hunger, finds visible nearby traps;
+  the rogue checks a wider radius. Walking can passively notice traps.
 * Class-specific hero frames switch to the original outfit for the equipped
   armor tier (0–4); the original status-panel art tracks the same outfit.
 * Defeat keeps the final map visible beneath the original GAME OVER banner,
   with separate new-game and menu buttons.
-* Progress is saved through the Host key-value Storage service; floors are
+* Progress is saved per slot through the Host key-value Storage service; floors are
   rebuilt from the run seed and replayed tile changes. A saved generator
   version keeps existing runs on their original floor layout.
 
@@ -103,9 +116,16 @@ the original's five actions: wait, search, potion, pack and stairs. A
 controller's d-pad and A/B buttons work as well. Tap the portrait for hero
 information; tap an item in the five-column pack to select it, then use or
 drop it. Back opens the pause menu during play and dismisses overlays;
-Back from the title page exits. The main menu opens the single save slot
-and hero selection. The HUD places level inside the portrait's original
+Back from the title page exits. The main menu offers five independent save
+slots and hero selection, plus settings, rankings and the recent-message
+journal. The HUD places level inside the portrait's original
 badge; other character statistics remain in the hero information page.
+The home actions use the original entrance, rankings, journal and settings
+icons. Menu, close, save-slot and toolbar hit targets grow with larger display
+profiles while preserving the original pixel-art proportions.
+The status pane fits experience and health values inside their bars, using
+condensed pixel digits when the small portrait frame cannot fit the full
+value. The level badge measures one- and two-digit values before centering.
 
 ## Audio
 
@@ -139,8 +159,10 @@ fixed-alpha painter overlay.
   overlay are not yet included (isolated hidden wall segments are culled).
 * Menus and inventory use the original nine-patch art, but do not implement
   the full original's menus, talents or class descriptions.
-* No wands, talents, shops or boss levels beyond the final fight.
-* Only one save slot and three hero classes are available.
+* No wands or talents; the merchant and key system cover a subset of the
+  original's shops, special locks and economy rather than the full item system.
+* The journal currently shows recent in-session messages, not the original's
+  full persistent notes, catalogues and landmarks.
 
 ## Tests
 

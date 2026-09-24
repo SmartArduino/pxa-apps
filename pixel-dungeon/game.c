@@ -1,5 +1,7 @@
 #include "game.h"
 
+#include <stddef.h>
+
 #include "assets.h"
 #include "strings.h"
 
@@ -211,6 +213,8 @@ static pd_string_id_t item_name_id(const pd_item_t *item) {
     switch (item->kind) {
         case PD_ITEM_GOLD:
             return PD_STR_ITEM_GOLD;
+        case PD_ITEM_IRON_KEY:
+            return PD_STR_ITEM_IRON_KEY;
         case PD_ITEM_POTION_HEAL:
             return PD_STR_ITEM_POTION_HEAL;
         case PD_ITEM_POTION_STRENGTH:
@@ -285,6 +289,8 @@ uint8_t pd_item_sprite(const pd_item_t *item) {
     switch (item->kind) {
         case PD_ITEM_GOLD:
             return PD_SPRITE_ITEM_GOLD;
+        case PD_ITEM_IRON_KEY:
+            return PD_SPRITE_ITEM_IRON_KEY;
         case PD_ITEM_POTION_HEAL:
             return PD_SPRITE_ITEM_POTION_HEAL;
         case PD_ITEM_POTION_STRENGTH:
@@ -621,6 +627,7 @@ static void hero_init(pd_game_t *game, uint8_t cls) {
     hero->level = 1;
     hero->xp = 0;
     hero->gold = 0;
+    hero->keys = 0;
     hero->hunger = 320;
     hero->weapon = -1;
     hero->armor = -1;
@@ -673,6 +680,72 @@ static void hero_init(pd_game_t *game, uint8_t cls) {
     }
 }
 
+static void place_special_tiles(pd_game_t *game) {
+    int door_count = 0;
+    game->lock_x = game->lock_y = 255;
+    game->shop_x = game->shop_y = 255;
+    if (game->generation == 0) return;
+    if (game->depth >= 2 && game->depth < 25) {
+        uint32_t rng = pd_rng_mix(game->run_seed, game->depth * 713u);
+        for (int y = 1; y < PD_MAP_H - 1; ++y)
+            for (int x = 1; x < PD_MAP_W - 1; ++x)
+                if (PD_TILE_KIND(pd_tile_at(&game->level, x, y)) == PD_TILEK_DOOR &&
+                    (int)pd_rng_below(&rng, (uint32_t)++door_count) == 0) {
+                    game->lock_x = (uint8_t)x;
+                    game->lock_y = (uint8_t)y;
+                }
+    }
+    if (game->depth > 1 && game->depth % 5 == 1) {
+        const int entrance_x = game->level.entrance_x;
+        const int entrance_y = game->level.entrance_y;
+        for (int radius = 2; radius <= 5 && game->shop_x == 255; ++radius)
+            for (int y = entrance_y - radius; y <= entrance_y + radius &&
+                 game->shop_x == 255; ++y)
+                for (int x = entrance_x - radius; x <= entrance_x + radius;
+                     ++x) {
+                    if (!pd_in_bounds(x, y) ||
+                        PD_TILE_KIND(pd_tile_at(&game->level, x, y)) !=
+                            PD_TILEK_FLOOR ||
+                        !pd_tile_walkable(pd_tile_at(&game->level, x - 1, y)) ||
+                        !pd_tile_walkable(pd_tile_at(&game->level, x + 1, y)) ||
+                        !pd_tile_walkable(pd_tile_at(&game->level, x, y - 1)) ||
+                        !pd_tile_walkable(pd_tile_at(&game->level, x, y + 1)))
+                        continue;
+                    game->shop_x = (uint8_t)x;
+                    game->shop_y = (uint8_t)y;
+                    game->level.tiles[y * PD_MAP_W + x] =
+                        PD_TILE(game->level.theme, PD_TILEK_ALCHEMY);
+                    break;
+                }
+    }
+}
+
+static void place_floor_key(pd_game_t *game) {
+    if (game->lock_x == 255) return;
+    if (game->ground_count >= PD_GROUND_MAX) {
+        game->hero.keys = 1;
+        return;
+    }
+    const int start_x = game->level.entrance_x;
+    const int start_y = game->level.entrance_y;
+    const pd_item_t key = {PD_ITEM_IRON_KEY, 0, 0, 0};
+    const int offsets[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+    for (int index = 0; index < 4; ++index) {
+        const int x = start_x + offsets[index][0];
+        const int y = start_y + offsets[index][1];
+        if (!pd_in_bounds(x, y) ||
+            !pd_tile_walkable(pd_tile_at(&game->level, x, y)) ||
+            PD_TILE_KIND(pd_tile_at(&game->level, x, y)) == PD_TILEK_DOOR ||
+            ground_at(game, x, y) >= 0 || mob_at(game, x, y) >= 0)
+            continue;
+        place_ground_item(game, &key, x, y);
+        return;
+    }
+    place_ground_item(game, &key, start_x, start_y);
+}
+
+static void hero_pickup(pd_game_t *game);
+
 void pd_game_enter_depth(pd_game_t *game, uint8_t depth) {
     if (depth < 1) depth = 1;
     if (depth > 25) depth = 25;
@@ -682,6 +755,8 @@ void pd_game_enter_depth(pd_game_t *game, uint8_t depth) {
         pd_level_generate_legacy(&game->level, game->run_seed, depth);
     else
         pd_level_generate(&game->level, game->run_seed, depth);
+    place_special_tiles(game);
+    game->hero.keys = 0;
     game->change_count = 0;
     game->hero.x = game->level.entrance_x;
     game->hero.y = game->level.entrance_y;
@@ -690,6 +765,8 @@ void pd_game_enter_depth(pd_game_t *game, uint8_t depth) {
     game->hero_moving = 0;
     game->hero.facing = 0;
     spawn_entities(game, pd_rng_mix(game->run_seed, depth * 131u + 5u));
+    place_floor_key(game);
+    hero_pickup(game);
     pd_level_update_fov(&game->level, game->hero.x, game->hero.y);
     game->walk_active = 0;
     message_num(game, PD_MSG_INFO, PD_STR_CLIMB_DOWN, depth);
@@ -713,6 +790,7 @@ void pd_game_reset(pd_game_t *game, uint32_t seed) {
     game->change_count = 0;
     game->walk_active = 0;
     game->bag_selected = -1;
+    game->hero.keys = 0;
     game->potion_hint = 0;
     game->kills = 0;
     game->deepest = 1;
@@ -978,6 +1056,10 @@ static void hero_pickup(pd_game_t *game) {
             message_num(game, PD_MSG_GOOD, PD_STR_PICK_GOLD,
                         entry->item.gold);
             sound_add(game, PD_SOUND_GOLD);
+        } else if (entry->item.kind == PD_ITEM_IRON_KEY) {
+            if (game->hero.keys < 255) ++game->hero.keys;
+            message_simple(game, PD_MSG_GOOD, PD_STR_PICK_KEY);
+            sound_add(game, PD_SOUND_ITEM);
         } else if (game->bag_count >= PD_BAG_MAX) {
             message_simple(game, PD_MSG_WARN, PD_STR_PACK_FULL);
             ++index;
@@ -1008,6 +1090,21 @@ static void end_turn(pd_game_t *game) {
     }
     if (game->potion_hint > 0) --game->potion_hint;
     pd_level_update_fov(&game->level, game->hero.x, game->hero.y);
+    const int radius = game->hero.cls == 1 ? 2 : 1;
+    for (int dy = -radius; dy <= radius; ++dy)
+        for (int dx = -radius; dx <= radius; ++dx) {
+            const int x = game->hero.x + dx;
+            const int y = game->hero.y + dy;
+            if (!pd_in_bounds(x, y) ||
+                !game->level.visible[y * PD_MAP_W + x] ||
+                !pd_tile_trap(pd_tile_at(&game->level, x, y)) ||
+                game->level.known[y * PD_MAP_W + x]) continue;
+            if (pd_rng_below(&game->roll_rng, 100) >=
+                (uint32_t)(40 - game->depth * 10 / 25)) continue;
+            game->level.known[y * PD_MAP_W + x] = 1;
+            message_simple(game, PD_MSG_GOOD, PD_STR_SEARCH_TRAP);
+            effect_add(game, PD_EFFECT_SPARK, x, y, 0);
+        }
 }
 
 static void hero_act_move(pd_game_t *game, int dx, int dy, int from_walk) {
@@ -1038,12 +1135,27 @@ static void hero_act_move(pd_game_t *game, int dx, int dy, int from_walk) {
         }
     }
     tile = pd_tile_at(&game->level, nx, ny);
+    if (nx == game->shop_x && ny == game->shop_y) {
+        game->phase = PD_PHASE_SHOP;
+        game->walk_active = 0;
+        return;
+    }
     if (PD_TILE_KIND(tile) == PD_TILEK_CHEST) {
         open_chest(game, nx, ny);
         end_turn(game);
         return;
     }
     if (PD_TILE_KIND(tile) == PD_TILEK_DOOR) {
+        if (nx == game->lock_x && ny == game->lock_y) {
+            if (!hero->keys) {
+                message_simple(game, PD_MSG_WARN, PD_STR_NEED_KEY);
+                game->walk_active = 0;
+                return;
+            }
+            --hero->keys;
+            message_simple(game, PD_MSG_GOOD, PD_STR_KEY_UNLOCK);
+            sound_add(game, PD_SOUND_UNLOCK);
+        }
         game->level.tiles[ny * PD_MAP_W + nx] =
             PD_TILE(game->level.theme, PD_TILEK_DOOR_OPEN);
         record_change(game, nx, ny, game->level.tiles[ny * PD_MAP_W + nx]);
@@ -1110,11 +1222,12 @@ void pd_game_hero_search(pd_game_t *game) {
                        (distance_x > distance_y ? distance_x : distance_y) - 1);
         }
     }
-    for (int dy = -2; dy <= 2; ++dy) {
-        for (int dx = -2; dx <= 2; ++dx) {
+    for (int dy = -radius; dy <= radius; ++dy) {
+        for (int dx = -radius; dx <= radius; ++dx) {
             const int x = game->hero.x + dx;
             const int y = game->hero.y + dy;
-            if (!pd_in_bounds(x, y)) continue;
+            if (!pd_in_bounds(x, y) ||
+                !game->level.visible[y * PD_MAP_W + x]) continue;
             if (!pd_tile_trap(pd_tile_at(&game->level, x, y))) continue;
             if (game->level.known[y * PD_MAP_W + x]) continue;
             game->level.known[y * PD_MAP_W + x] = 1;
@@ -1126,6 +1239,28 @@ void pd_game_hero_search(pd_game_t *game) {
     else
         message_simple(game, PD_MSG_NEUTRAL, PD_STR_SEARCH);
     end_turn(game);
+    if (game->phase == PD_PHASE_PLAY) {
+        game->hero.hunger = game->hero.hunger > 4 ?
+                            game->hero.hunger - 4 : 0;
+        end_turn(game);
+    }
+}
+
+void pd_game_shop_buy(pd_game_t *game) {
+    const int price = 40 + game->depth * 4;
+    if (game->phase != PD_PHASE_SHOP) return;
+    if (game->hero.gold < price) {
+        message_num(game, PD_MSG_WARN, PD_STR_SHOP_SHORT, price);
+        return;
+    }
+    if (game->bag_count >= PD_BAG_MAX) {
+        message_simple(game, PD_MSG_WARN, PD_STR_PACK_FULL);
+        return;
+    }
+    game->hero.gold = (uint16_t)(game->hero.gold - price);
+    game->bag[game->bag_count++] = (pd_item_t){PD_ITEM_POTION_HEAL, 1, 0, 0};
+    message_num(game, PD_MSG_GOOD, PD_STR_SHOP_BUY, price);
+    sound_add(game, PD_SOUND_GOLD);
 }
 
 void pd_game_hero_stairs(pd_game_t *game) {
@@ -1420,6 +1555,37 @@ static uint32_t get_u32(const uint8_t *in) {
     return (uint32_t)get_u16(in) | ((uint32_t)get_u16(in + 2) << 16);
 }
 
+int pd_game_save_summary(const uint8_t *bytes, int length,
+                         pd_save_slot_t *summary) {
+    if (bytes == NULL || summary == NULL || length < PD_SAVE_BYTES ||
+        get_u32(bytes) != PD_SAVE_MAGIC || bytes[12] < 1 || bytes[12] > 25 ||
+        bytes[13] >= 3 || get_u16(bytes + 20) == 0)
+        return 0;
+    summary->occupied = 1;
+    summary->cls = bytes[13];
+    summary->depth = bytes[12];
+    summary->level = bytes[17];
+    summary->deepest = bytes[36];
+    summary->kills = bytes[35];
+    summary->gold = get_u16(bytes + 24);
+    summary->turns = get_u16(bytes + 28);
+    return 1;
+}
+
+int pd_game_visible_save_slots(const pd_game_t *game,
+                               uint8_t output[PD_SAVE_SLOTS]) {
+    int count = 0;
+    int empty = -1;
+    for (int slot = 0; slot < PD_SAVE_SLOTS; ++slot) {
+        if (game->slots[slot].occupied)
+            output[count++] = (uint8_t)slot;
+        else if (empty < 0)
+            empty = slot;
+    }
+    if (empty >= 0) output[count++] = (uint8_t)empty;
+    return count;
+}
+
 int pd_game_serialize(const pd_game_t *game, uint8_t *out, int capacity) {
     int at = PD_SAVE_HEADER;
     if (capacity < PD_SAVE_BYTES) return 0;
@@ -1449,6 +1615,7 @@ int pd_game_serialize(const pd_game_t *game, uint8_t *out, int capacity) {
     out[36] = game->deepest;
     out[37] = (uint8_t)(game->message_total > 255 ? 255 : game->message_total);
     out[38] = game->generation;
+    out[39] = game->hero.keys;
     for (int index = 0; index < PD_SAVE_EXPLORED; ++index) {
         uint8_t bits = 0;
         for (int bit = 0; bit < 8; ++bit) {
@@ -1519,6 +1686,7 @@ int pd_game_restore(pd_game_t *game, const uint8_t *bytes, int length) {
     if (game->hero.max_hp < 1) game->hero.max_hp = 1;
     if (game->hero.hp > game->hero.max_hp) game->hero.hp = game->hero.max_hp;
     game->hero.gold = get_u16(bytes + 24);
+    game->hero.keys = bytes[39];
     game->hero.hunger = (int16_t)get_u16(bytes + 26);
     game->turn = get_u16(bytes + 28);
     game->hero.weapon = (int8_t)bytes[30];
@@ -1549,6 +1717,7 @@ int pd_game_restore(pd_game_t *game, const uint8_t *bytes, int length) {
         pd_level_generate_legacy(&game->level, game->run_seed, game->depth);
     else
         pd_level_generate(&game->level, game->run_seed, game->depth);
+    place_special_tiles(game);
     pd_level_map_all(&game->level);
     for (int index = 0; index < PD_MAP_TILES; ++index)
         game->level.explored[index] = 0;

@@ -19,6 +19,8 @@
 #define PD_MESSAGE_TEXT 44
 #define PD_EFFECTS_MAX 24
 #define PD_TILE_CHANGES_MAX 48
+#define PD_SAVE_SLOTS 5
+#define PD_RANK_COUNT 5
 
 enum {
     PD_PHASE_TITLE = 0,
@@ -31,7 +33,15 @@ enum {
     PD_PHASE_INFO,
     PD_PHASE_SETTINGS,
     PD_PHASE_PAUSE,
+    PD_PHASE_RANKINGS,
+    PD_PHASE_JOURNAL,
+    PD_PHASE_SHOP,
 };
+
+typedef struct {
+    uint8_t occupied, cls, depth, level, deepest, kills;
+    uint16_t gold, turns;
+} pd_save_slot_t;
 
 enum {
     PD_ITEM_GOLD = 0,
@@ -42,6 +52,7 @@ enum {
     PD_ITEM_WEAPON,
     PD_ITEM_ARMOR,
     PD_ITEM_FOOD,
+    PD_ITEM_IRON_KEY,
 };
 
 enum {
@@ -107,6 +118,7 @@ typedef struct {
     uint8_t xp;
     int16_t hunger;
     uint16_t gold;
+    uint8_t keys;
     uint8_t x, y, facing;
     int8_t weapon; /* bag slot, -1 for fists */
     int8_t armor;  /* bag slot, -1 for rags */
@@ -144,9 +156,14 @@ typedef struct {
     uint32_t run_seed;
     uint32_t roll_rng; /* runtime combat/loot rolls, saved with the run */
     uint8_t depth;
+    uint8_t lock_x, lock_y, shop_x, shop_y;
     uint8_t generation;
     uint8_t phase;
     uint8_t class_choice;
+    uint8_t active_slot, selected_slot;
+    uint8_t settings_from_title;
+    pd_save_slot_t slots[PD_SAVE_SLOTS];
+    pd_save_slot_t rankings[PD_RANK_COUNT];
     uint16_t turn;
     uint8_t kills;
     uint8_t deepest;
@@ -183,6 +200,7 @@ void pd_game_enter_depth(pd_game_t *game, uint8_t depth);
 void pd_game_hero_step(pd_game_t *game, int dx, int dy);
 void pd_game_hero_wait(pd_game_t *game);
 void pd_game_hero_search(pd_game_t *game);
+void pd_game_shop_buy(pd_game_t *game);
 void pd_game_hero_stairs(pd_game_t *game);
 void pd_game_hero_potion(pd_game_t *game);
 void pd_game_tap(pd_game_t *game, int x, int y);
@@ -212,5 +230,9 @@ const char *pd_class_name(uint8_t cls);
 /* Save/load through the Host key-value Storage service. */
 int pd_game_serialize(const pd_game_t *game, uint8_t *out, int capacity);
 int pd_game_restore(pd_game_t *game, const uint8_t *bytes, int length);
+int pd_game_save_summary(const uint8_t *bytes, int length,
+                         pd_save_slot_t *summary);
+int pd_game_visible_save_slots(const pd_game_t *game,
+                               uint8_t output[PD_SAVE_SLOTS]);
 
 #endif
