@@ -1,0 +1,10 @@
+{
+  "assets": [
+    {
+      "kind": "image",
+      "source": "resources/search.png",
+      "path": "assets/search.pxr",
+      "encoding": "bgra8888"
+    }
+  ]
+}

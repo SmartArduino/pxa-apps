@@ -1,0 +1,20 @@
+#ifndef WEATHER_IMAGES_H
+#define WEATHER_IMAGES_H
+#include "pxa_image_set.h"
+typedef enum {
+    WEATHER_IMAGE_SUN,
+    WEATHER_IMAGE_MOON,
+    WEATHER_IMAGE_CLOUD,
+    WEATHER_IMAGE_PARTLY_CLOUDY,
+    WEATHER_IMAGE_RAIN,
+    WEATHER_IMAGE_SNOW,
+    WEATHER_IMAGE_STORM,
+    WEATHER_IMAGE_FOG,
+    WEATHER_IMAGE_LOCATION,
+    WEATHER_IMAGE_CLOCK,
+    WEATHER_IMAGE_INFO,
+    WEATHER_IMAGE_REFRESH,
+    WEATHER_IMAGE_COUNT
+} weather_image_id_t;
+extern pxa_image_set_t weather_images;
+#endif

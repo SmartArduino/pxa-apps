@@ -1,23 +1,81 @@
 {
   "format": "pxa-package-source-0.1",
-  "min_sdk": [0, 1],
-  "target_sdk": [0, 1],
-  "compile_sdk": [0, 1],
+  "min_sdk": [
+    1,
+    0
+  ],
+  "target_sdk": [
+    1,
+    0
+  ],
+  "compile_sdk": [
+    1,
+    0
+  ],
   "id": "pxa-weather",
-  "version": "0.3.1",
-  "release_sequence": 3,
+  "version": "0.3.2",
+  "release_sequence": 4,
   "name": "Weather",
   "description": "Local weather with IP geolocation and automatic provider fallback",
   "icon": "assets/icon.png",
-  "components": [{"id": "main", "kind": "ui", "sources": ["main.c", "weather_providers.c"]}],
-  "services": ["net", "storage"],
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "sources": [
+        "main.c",
+        "weather_providers.c",
+        "images.c"
+      ]
+    }
+  ],
+  "services": [
+    "net",
+    "storage",
+    "clock",
+    "permission",
+    "window",
+    {
+      "name": "ui"
+    },
+    "assets",
+    "log"
+  ],
   "permissions": [
-    {"name": "net.client", "required": false, "scope": "https://air-quality-api.open-meteo.com"},
-    {"name": "net.client", "required": false, "scope": "https://api.open-meteo.com"},
-    {"name": "net.client", "required": false, "scope": "https://archive-api.open-meteo.com"},
-    {"name": "net.client", "required": false, "scope": "https://geocoding-api.open-meteo.com"},
-    {"name": "net.client", "required": false, "scope": "https://ipapi.co"},
-    {"name": "net.client", "required": false, "scope": "https://ipwho.is"},
-    {"name": "net.client", "required": false, "scope": "https://wttr.in"}
+    {
+      "name": "net.client",
+      "required": false,
+      "scope": "https://air-quality-api.open-meteo.com"
+    },
+    {
+      "name": "net.client",
+      "required": false,
+      "scope": "https://api.open-meteo.com"
+    },
+    {
+      "name": "net.client",
+      "required": false,
+      "scope": "https://archive-api.open-meteo.com"
+    },
+    {
+      "name": "net.client",
+      "required": false,
+      "scope": "https://geocoding-api.open-meteo.com"
+    },
+    {
+      "name": "net.client",
+      "required": false,
+      "scope": "https://ipapi.co"
+    },
+    {
+      "name": "net.client",
+      "required": false,
+      "scope": "https://ipwho.is"
+    },
+    {
+      "name": "net.client",
+      "required": false,
+      "scope": "https://wttr.in"
+    }
   ]
 }

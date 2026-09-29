@@ -42,9 +42,9 @@
 #define STORE_BODY_LIMIT 3
 
 typedef struct {
-    uint32_t device_permission;
-    uint32_t network_permission;
-    uint32_t body_handle;
+    uint64_t device_permission;
+    uint64_t network_permission;
+    uint64_t body_handle;
     uint32_t response_size;
     uint32_t response_flags;
     uint64_t response_length;
@@ -58,21 +58,13 @@ typedef struct {
 
 void store_client_init(store_client_t *client);
 
-int store_client_acquire_device_permission(store_client_t *client,
-                                           uint8_t *payload,
-                                           size_t payload_capacity,
-                                           uint8_t *packet,
+int store_client_acquire_device_permission(uint8_t *packet,
                                            size_t packet_capacity);
 
-int store_client_acquire_network_permission(store_client_t *client,
-                                            uint8_t *payload,
-                                            size_t payload_capacity,
-                                            uint8_t *packet,
+int store_client_acquire_network_permission(uint8_t *packet,
                                             size_t packet_capacity);
 
-int store_client_fetch_mac(store_client_t *client, uint8_t *payload,
-                           size_t payload_capacity, uint8_t *packet,
-                           size_t packet_capacity);
+int store_client_fetch_mac(const store_client_t *client);
 
 /* Builds "<origin>/api/v2/catalog?...". query, kind and category may be NULL
  * or empty; the store ignores unknown or empty filters. */
@@ -94,21 +86,18 @@ int store_client_profile_for_device(char *output, size_t capacity,
 int store_client_build_download_url(char *output, size_t capacity,
                                     const char *ticket_path);
 
-int store_client_fetch(store_client_t *client, uint32_t request_id,
+int store_client_fetch(store_client_t *client, uint64_t request_id,
                        const char *url, size_t url_length,
-                       uint32_t max_response_bytes, uint8_t *payload,
-                       size_t payload_capacity, uint8_t *packet,
+                       uint32_t max_response_bytes, uint8_t *packet,
                        size_t packet_capacity);
 
-int store_client_close_body(store_client_t *client, uint8_t *packet,
-                            size_t packet_capacity);
+int store_client_close_body(store_client_t *client);
 
 /* Streams the response body into the caller buffer. Returns STORE_BODY_DONE,
  * STORE_BODY_WAITING when the Host needs another clock tick, STORE_BODY_LIMIT
  * when the response exceeds the buffer or STORE_BODY_ERROR on transport
  * failure. */
 int store_client_consume_body(store_client_t *client, uint8_t *body,
-                              size_t body_capacity, uint8_t *packet,
-                              size_t packet_capacity);
+                              size_t body_capacity);
 
 #endif

@@ -1,9 +1,12 @@
+#include "images.h"
 #include "pxa_app_messages.h"
+#include "pxa_ui.h"
+#include "pxa_clock.h"
 #include "pxa_i18n.h"
 #include "pxa_net.h"
 #include "pxa_permission.h"
 #include "pxa_storage.h"
-#include "pxa_ui.h"
+#include "pxa_window.h"
 #include "weather_providers.h"
 
 #define REQUEST_NETWORK_PERMISSION UINT32_C(1)
@@ -28,12 +31,11 @@
 #define WEATHER_ERROR UINT8_C(4)
 
 static uint8_t packet[3072];
-static uint8_t request_payload[1024];
 static uint8_t response_body[4096];
 static char weather_url[512];
 static uint32_t generation;
-static uint32_t network_permission_handles[WEATHER_PROVIDER_COUNT];
-static uint32_t body_handle;
+static uint64_t network_permission_handles[WEATHER_PROVIDER_COUNT];
+static uint64_t body_handle;
 static uint32_t response_size;
 static uint16_t http_status;
 static uint64_t response_length;
@@ -141,16 +143,15 @@ static uint16_t inset_padding(uint8_t edge, uint16_t margin) {
 }
 
 static int configure_window(void) {
-    uint8_t records[15];
-    pxa_writer_t writer;
-    const uint8_t edge_to_edge = 0;
-    const uint8_t visible = PXA_WINDOW_BAR_VISIBLE;
-    pxa_writer_init(&writer, records, sizeof(records));
-    return pxa_record(&writer, PXA_WINDOW_EDGE_TO_EDGE, &edge_to_edge, 1) &&
-           pxa_record(&writer, PXA_WINDOW_STATUS_BAR_MODE, &visible, 1) &&
-           pxa_record(&writer, PXA_WINDOW_NAVIGATION_BAR_MODE, &visible, 1) &&
-           pxa_send(PXA_SERVICE_WINDOW, PXA_WINDOW_CONFIGURE, 0,
-                    writer.data, writer.length);
+    const pxa_window_config_t config = {
+        .edge_to_edge = 0,
+        .status_bar_mode = PXA_WINDOW_BAR_VISIBLE,
+        .navigation_bar_mode = PXA_WINDOW_BAR_VISIBLE,
+        .status_bar_icons = 0,
+        .navigation_bar_icons = 0,
+        .status_bar_color = 0,
+        .navigation_bar_color = 0};
+    return pxa_window_configure(&config) == PXA_STATUS_OK;
 }
 
 static void apply_environment(const pxa_ui_environment_t *environment) {
@@ -163,14 +164,21 @@ static void apply_environment(const pxa_ui_environment_t *environment) {
     }
 }
 
-static int apply_window_snapshot(const pxa_event_t *event, int with_status) {
-    pxa_window_insets_view_t view;
-    if (!pxa_window_parse_snapshot(event->payload, event->payload_length,
-                                   with_status, &view)) return 0;
-    for (size_t index = 0; index < 4u; ++index) {
-        if (view.has_safe_insets) safe_insets[index] = view.safe_insets[index];
-        if (view.has_bar_insets) bar_insets[index] = view.bar_insets[index];
-    }
+static int apply_window_snapshot(const pxa_event_t *event,
+                                 int with_status) {
+    pxa_window_snapshot_t view;
+    if (!(with_status ?
+          pxa_window_parse_snapshot(event, REQUEST_WINDOW_SNAPSHOT, &view) :
+          pxa_window_parse_metrics_changed(event, &view))) return 0;
+    if (with_status && view.status != PXA_STATUS_OK) return 0;
+    safe_insets[0] = view.safe_insets.top;
+    safe_insets[1] = view.safe_insets.right;
+    safe_insets[2] = view.safe_insets.bottom;
+    safe_insets[3] = view.safe_insets.left;
+    bar_insets[0] = view.system_bar_insets.top;
+    bar_insets[1] = view.system_bar_insets.right;
+    bar_insets[2] = view.system_bar_insets.bottom;
+    bar_insets[3] = view.system_bar_insets.left;
     return 1;
 }
 
@@ -227,36 +235,27 @@ static void format_i32(char *output, size_t capacity, int32_t value) {
     (void)append_u32(output, capacity, offset, magnitude);
 }
 
-static int close_handle(uint32_t handle) {
-    uint8_t payload[4];
-    pxa_writer_t writer;
+static int close_handle(uint64_t handle) {
     if (handle == 0) return 1;
-    payload[0] = (uint8_t)handle;
-    payload[1] = (uint8_t)(handle >> 8);
-    payload[2] = (uint8_t)(handle >> 16);
-    payload[3] = (uint8_t)(handle >> 24);
-    pxa_writer_init(&writer, packet, sizeof(packet));
-    return pxa_message(&writer, PXA_SERVICE_CORE, PXA_CORE_CLOSE_HANDLE, 0,
-                       payload, sizeof(payload)) &&
-           pxa_control(writer.data, (uint32_t)writer.length) == PXA_STATUS_OK;
+    return pxa_close_handle(handle) == PXA_STATUS_OK;
 }
 
-static const char *icon_for_code(int32_t code, uint8_t day) {
-    if (code >= 95) return "assets/storm.png";
-    if (code >= 71 && code <= 77) return "assets/snow.png";
-    if (code >= 85 && code <= 86) return "assets/snow.png";
-    if (code >= 51 && code <= 67) return "assets/rain.png";
-    if (code >= 80 && code <= 82) return "assets/rain.png";
-    if (code >= 45 && code <= 48) return "assets/fog.png";
-    if (code == 0) return day ? "assets/sun.png" : "assets/moon.png";
-    if (code <= 2) return day ? "assets/partly-cloudy.png" :
-                               "assets/moon.png";
-    return "assets/cloud.png";
+static weather_image_id_t icon_for_code(int32_t code, uint8_t day) {
+    if (code >= 95) return WEATHER_IMAGE_STORM;
+    if (code >= 71 && code <= 77) return WEATHER_IMAGE_SNOW;
+    if (code >= 85 && code <= 86) return WEATHER_IMAGE_SNOW;
+    if (code >= 51 && code <= 67) return WEATHER_IMAGE_RAIN;
+    if (code >= 80 && code <= 82) return WEATHER_IMAGE_RAIN;
+    if (code >= 45 && code <= 48) return WEATHER_IMAGE_FOG;
+    if (code == 0) return day ? WEATHER_IMAGE_SUN : WEATHER_IMAGE_MOON;
+    if (code <= 2) return day ? WEATHER_IMAGE_PARTLY_CLOUDY :
+                               WEATHER_IMAGE_MOON;
+    return WEATHER_IMAGE_CLOUD;
 }
 
-static const char *weather_icon(void) {
+static weather_image_id_t weather_icon(void) {
     return has_weather ? icon_for_code(weather_code, is_day) :
-                         "assets/cloud.png";
+                         WEATHER_IMAGE_CLOUD;
 }
 
 static const char *weather_condition(void) {
@@ -387,8 +386,13 @@ static const char *status_text(void) {
     return message(PXA_MSG_STATUS_WAITING);
 }
 
+static uint64_t draw_images, last_ready_images;
+static int image_error_reported;
+
 static int create_icon(pxa_ui_transaction_t *transaction, uint32_t node,
-                       uint32_t parent, const char *path, int32_t size) {
+                       uint32_t parent, weather_image_id_t image, int32_t size) {
+    draw_images |= UINT64_C(1)<<image;
+    uint64_t handle=pxa_image_set_handle(&weather_images,image);
     return pxa_ui_create(transaction, node, parent, 0, PXA_UI_NODE_IMAGE) &&
            pxa_ui_set_length(transaction, node, PXA_UI_PROPERTY_WIDTH,
                              PXA_UI_LENGTH_PX, size) &&
@@ -396,8 +400,7 @@ static int create_icon(pxa_ui_transaction_t *transaction, uint32_t node,
                              PXA_UI_LENGTH_PX, size) &&
            pxa_ui_set_u8(transaction, node, PXA_UI_PROPERTY_IMAGE_FIT,
                          PXA_UI_IMAGE_FIT_CONTAIN) &&
-           pxa_ui_set_property(transaction, node, PXA_UI_PROPERTY_ASSET,
-                               path, string_length(path));
+           (!handle || pxa_ui_set_image(transaction,node,handle));
 }
 
 static int render_city_candidates(pxa_ui_transaction_t *transaction) {
@@ -805,10 +808,11 @@ static int render_city_controls(pxa_ui_transaction_t *transaction) {
 
 static int schedule_auto_refresh(void) {
     auto_refresh_ticks = 0;
-    return pxa_clock_set_period(1000);
+    return pxa_clock_set_period(1000) == PXA_STATUS_OK;
 }
 
 static int render(void) {
+    draw_images=0;
     const weather_metrics_t *layout = metrics();
     char temperature_text[24];
     char update_text[48];
@@ -856,7 +860,7 @@ static int render(void) {
          pxa_ui_set_dp(&transaction, 2, PXA_UI_PROPERTY_GAP, 6) &&
          pxa_ui_set_theme_color(&transaction, 2, PXA_UI_PROPERTY_BACKGROUND,
                                 PXA_UI_THEME_BACKGROUND) &&
-         create_icon(&transaction, 3, 2, "assets/partly-cloudy.png",
+         create_icon(&transaction, 3, 2, WEATHER_IMAGE_PARTLY_CLOUDY,
                      layout->header_icon) &&
          pxa_ui_create(&transaction, 4, 2, 0, PXA_UI_NODE_TEXT) &&
          pxa_ui_set_text(&transaction, 4, message(PXA_MSG_SCREEN_TITLE),
@@ -904,7 +908,7 @@ static int render(void) {
          pxa_ui_set_event_mask(&transaction, NODE_LOCATION_PICKER,
                                PXA_UI_EVENT_MASK_CLICK) &&
          create_icon(&transaction, 7, NODE_LOCATION_PICKER,
-                     "assets/location.png", 19) &&
+                     WEATHER_IMAGE_LOCATION, 19) &&
          pxa_ui_create(&transaction, 8, NODE_LOCATION_PICKER, 0,
                        PXA_UI_NODE_TEXT) &&
          pxa_ui_set_u16(&transaction, 8, PXA_UI_PROPERTY_GROW, 1) &&
@@ -971,7 +975,7 @@ static int render(void) {
                        layout->radius) &&
          pxa_ui_set_theme_color(&transaction, 22, PXA_UI_PROPERTY_BACKGROUND,
                                 PXA_UI_THEME_SURFACE) &&
-         create_icon(&transaction, 23, 22, "assets/info.png", 18) &&
+         create_icon(&transaction, 23, 22, WEATHER_IMAGE_INFO, 18) &&
          pxa_ui_create(&transaction, 24, 22, 0, PXA_UI_NODE_TEXT) &&
          pxa_ui_set_u16(&transaction, 24, PXA_UI_PROPERTY_GROW, 1) &&
          pxa_ui_set_text(&transaction, 24, summary, string_length(summary)) &&
@@ -1059,7 +1063,7 @@ static int render(void) {
          pxa_ui_set_u8(&transaction, 14, PXA_UI_PROPERTY_ALIGN,
                        PXA_UI_ALIGN_CENTER) &&
          pxa_ui_set_dp(&transaction, 14, PXA_UI_PROPERTY_GAP, 6) &&
-         create_icon(&transaction, 15, 14, "assets/clock.png", 17) &&
+         create_icon(&transaction, 15, 14, WEATHER_IMAGE_CLOCK, 17) &&
          pxa_ui_create(&transaction, 16, 14, 0, PXA_UI_NODE_TEXT) &&
          pxa_ui_set_text(&transaction, 16, update_text,
                          string_length(update_text)) &&
@@ -1100,7 +1104,7 @@ static int render(void) {
          pxa_ui_set_theme_color(&transaction, NODE_REFRESH,
                                 PXA_UI_PROPERTY_BACKGROUND,
                                 PXA_UI_THEME_PRIMARY) &&
-         create_icon(&transaction, 19, NODE_REFRESH, "assets/refresh.png", 17) &&
+         create_icon(&transaction, 19, NODE_REFRESH, WEATHER_IMAGE_REFRESH, 17) &&
          pxa_ui_create(&transaction, 20, NODE_REFRESH, 0, PXA_UI_NODE_TEXT) &&
          pxa_ui_set_text(&transaction, 20,
                          state == WEATHER_LOADING
@@ -1116,17 +1120,31 @@ static int render(void) {
         return 0;
     }
     generation = next;
+    /* The successful UI commit retires obsolete node references before loading
+     * replacements. An unavailable icon keeps its normal empty geometry. */
+    (void)pxa_image_set_select(&weather_images,draw_images);
+    pxa_image_set_pump(&weather_images);
+    if (weather_images.error && !image_error_reported) {
+        (void)pxa_log_write(3,"weather: images unavailable");image_error_reported=1;
+    }
+    if (pxa_image_set_ready(&weather_images) && last_ready_images!=draw_images) {
+        last_ready_images=draw_images;
+        (void)pxa_log_write(2,"weather: images ready");
+    }
     return 1;
 }
 
 static int acquire_network_permission(void) {
     static const char permission_name[] = "net.client";
     const char *origin = weather_provider_origin(provider);
+    uint32_t packet_size = 0;
     state = WEATHER_LOADING;
-    return pxa_permission_acquire(
-        REQUEST_NETWORK_PERMISSION, permission_name, sizeof(permission_name) - 1u,
-        (const uint8_t *)origin, string_length(origin), request_payload,
-        sizeof(request_payload), packet, sizeof(packet));
+    return pxa_permission_build(
+               packet, sizeof(packet), PXA_PERMISSION_ACQUIRE,
+               REQUEST_NETWORK_PERMISSION, permission_name,
+               sizeof(permission_name) - 1u, (const uint8_t *)origin,
+               string_length(origin), &packet_size) &&
+           pxa_submit(packet, packet_size) == PXA_STATUS_OK;
 }
 
 static int fetch_weather(void) {
@@ -1136,7 +1154,7 @@ static int fetch_weather(void) {
         {accept_name, sizeof(accept_name) - 1u, accept_value,
          sizeof(accept_value) - 1u},
     };
-    pxa_net_http_request_t request = {0};
+    pxa_net_request_t request = {0};
     if (!(provider == WEATHER_HISTORY ?
           weather_provider_history_url(&location, last_update, weather_url,
                                        sizeof(weather_url)) :
@@ -1152,9 +1170,9 @@ static int fetch_weather(void) {
     stream_waiting = 0;
     auto_refresh_ticks = 0;
     state = WEATHER_LOADING;
-    request.method = PXA_NET_METHOD_GET;
+    request.method = PXA_NET_GET;
     request.url = weather_url;
-    request.url_length = (uint16_t)string_length(weather_url);
+    request.url_size = (uint16_t)string_length(weather_url);
     request.permission_handle = network_permission_handles[provider];
     request.max_response_bytes = sizeof(response_body);
     request.timeout_ms = 12000;
@@ -1162,9 +1180,9 @@ static int fetch_weather(void) {
         request.headers = json_headers;
         request.header_count = 1;
     }
-    return pxa_net_http_request(REQUEST_WEATHER, &request, request_payload,
-                                sizeof(request_payload), packet,
-                                sizeof(packet));
+    return pxa_net_submit(packet, sizeof(packet),
+                              PXA_NET_HTTP_REQUEST, REQUEST_WEATHER,
+                              &request) == PXA_STATUS_OK;
 }
 
 static int start_weather_request(void) {
@@ -1227,7 +1245,7 @@ static int finish_response(void) {
     weather_conditions_t conditions;
     weather_location_t parsed_location;
     weather_air_t air;
-    int valid = (response_flags & PXA_NET_RESPONSE_BODY_LENGTH_KNOWN) == 0 ||
+    int valid = (response_flags & PXA_NET_BODY_LENGTH_KNOWN) == 0 ||
                 response_length == response_size;
     if (valid) valid = provider == WEATHER_GEOCODING ?
         (candidate_count = (uint8_t)weather_provider_search_results(
@@ -1301,10 +1319,11 @@ static int consume_response(void) {
         uint8_t *output = remaining == 0 ? &overflow_byte :
                                           response_body + response_size;
         uint32_t capacity = remaining == 0 ? 1u : remaining;
-        int32_t count = pxa_io(body_handle, PXA_IO_READ, output, capacity);
+        int32_t count = pxa_io(body_handle, PXA_NET_IO_READ,
+                                  output, capacity);
         if (count == PXA_STATUS_WOULD_BLOCK) {
             stream_waiting = 1;
-            return pxa_clock_set_period(50);
+            return pxa_clock_set_period(50) == PXA_STATUS_OK;
         }
         if (count < 0 || (remaining == 0 && count != 0) ||
             (uint32_t)(count < 0 ? 0 : count) > remaining) {
@@ -1345,13 +1364,13 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t config_length) {
     auto_refresh_ticks = 0;
     if (!configure_window())
         return PXA_STATUS_INTERNAL;
-    (void)pxa_send(PXA_SERVICE_WINDOW, PXA_WINDOW_GET_SNAPSHOT,
-                   REQUEST_WINDOW_SNAPSHOT, NULL, 0);
+    (void)pxa_window_request_snapshot(REQUEST_WINDOW_SNAPSHOT);
     if (!render())
         return PXA_STATUS_INTERNAL;
-    if (!pxa_storage_get(REQUEST_LOCATION_GET, LOCATION_STORAGE_KEY,
-                         sizeof(LOCATION_STORAGE_KEY) - 1u, request_payload,
-                         sizeof(request_payload), packet, sizeof(packet)) &&
+    if (pxa_storage_request_get(REQUEST_LOCATION_GET,
+                                   LOCATION_STORAGE_KEY,
+                                   sizeof(LOCATION_STORAGE_KEY) - 1u) !=
+            PXA_STATUS_OK &&
         !start_weather_request()) return PXA_STATUS_INTERNAL;
     return PXA_STATUS_OK;
 }
@@ -1360,6 +1379,20 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     pxa_event_t parsed;
     pxa_ui_event_data_t ui_event;
     if (!pxa_parse_event(event, length, &parsed)) return PXA_EVENT_UNHANDLED;
+    if (pxa_image_set_on_event(&weather_images,&parsed)) {
+        if (weather_images.paused || weather_images.stopped) return PXA_EVENT_HANDLED;
+        return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+    }
+    if (parsed.service==PXA_SERVICE_SYSTEM && parsed.opcode==PXA_SYSTEM_LIFECYCLE_EVENT && parsed.payload_size==1) {
+        if (parsed.payload[0]==PXA_SYSTEM_LIFECYCLE_BACKGROUND) {
+            pxa_image_set_pause(&weather_images,1);return PXA_EVENT_HANDLED;
+        }
+        if (parsed.payload[0]==PXA_SYSTEM_LIFECYCLE_FOREGROUND) {
+            pxa_image_set_pause(&weather_images,0);pxa_image_set_retry(&weather_images);
+            image_error_reported=0;
+            return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+        }
+    }
     {
         int locale_result = pxa_i18n_handle_event(&i18n, &parsed);
         if (locale_result != 0) {
@@ -1368,39 +1401,37 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
                        : PXA_EVENT_HANDLED;
         }
     }
-    if (parsed.service == PXA_SERVICE_WINDOW &&
+    if (parsed.service == PXA_WINDOW_SERVICE &&
         parsed.opcode == PXA_WINDOW_GET_SNAPSHOT &&
-        parsed.request_id == REQUEST_WINDOW_SNAPSHOT) {
+        parsed.token == REQUEST_WINDOW_SNAPSHOT) {
         if (!apply_window_snapshot(&parsed, 1)) return PXA_EVENT_UNHANDLED;
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
-    if (parsed.service == PXA_SERVICE_WINDOW &&
+    if (parsed.service == PXA_WINDOW_SERVICE &&
         parsed.opcode == PXA_WINDOW_METRICS_CHANGED) {
         if (!apply_window_snapshot(&parsed, 0)) return PXA_EVENT_UNHANDLED;
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
-    if (parsed.service == PXA_SERVICE_UI &&
+    if (parsed.service == PXA_UI_SERVICE &&
         parsed.opcode == PXA_UI_ENVIRONMENT_CHANGED) {
         pxa_ui_environment_t environment;
         if (!pxa_ui_parse_environment_event(&parsed, &environment))
             return PXA_EVENT_UNHANDLED;
         apply_environment(&environment);
-        (void)pxa_send(PXA_SERVICE_WINDOW, PXA_WINDOW_GET_SNAPSHOT,
-                       REQUEST_WINDOW_SNAPSHOT, NULL, 0);
+        (void)pxa_window_request_snapshot(REQUEST_WINDOW_SNAPSHOT);
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
-    if (parsed.service == PXA_SERVICE_WINDOW &&
-        parsed.opcode == PXA_WINDOW_BACK_REQUESTED && show_city_picker) {
+    if (pxa_window_is_back_requested(&parsed) && show_city_picker) {
         show_city_picker = 0;
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
-    if (parsed.service == PXA_SERVICE_STORAGE &&
+    if (parsed.service == PXA_STORAGE_SERVICE &&
         parsed.opcode == PXA_STORAGE_GET &&
-        parsed.request_id == REQUEST_LOCATION_GET) {
+        parsed.token == REQUEST_LOCATION_GET) {
         pxa_storage_get_result_t saved;
-        if (pxa_storage_parse_get(&parsed, &saved) &&
+        if (pxa_storage_parse_get(&parsed, REQUEST_LOCATION_GET, &saved) &&
             saved.status == PXA_STATUS_OK &&
-            weather_location_decode(saved.value, saved.value_length,
+            weather_location_decode(saved.value.data, saved.value.size,
                                     &location)) {
             has_location = 1;
             manual_location = 1;
@@ -1409,14 +1440,15 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         return start_weather_request() && render() ? PXA_EVENT_HANDLED :
                                                    PXA_STATUS_INTERNAL;
     }
-    if (parsed.service == PXA_SERVICE_STORAGE &&
-        (parsed.request_id == REQUEST_LOCATION_SET ||
-         parsed.request_id == REQUEST_LOCATION_REMOVE)) {
+    if (parsed.service == PXA_STORAGE_SERVICE &&
+        (parsed.token == REQUEST_LOCATION_SET ||
+         parsed.token == REQUEST_LOCATION_REMOVE)) {
         int32_t status;
-        if (!pxa_storage_parse_status(&parsed,
-                                      parsed.request_id == REQUEST_LOCATION_SET ?
-                                          PXA_STORAGE_SET : PXA_STORAGE_REMOVE,
-                                      &status)) return PXA_STATUS_INTERNAL;
+        if (!pxa_storage_parse_status(
+                &parsed, parsed.token,
+                parsed.token == REQUEST_LOCATION_SET ?
+                    PXA_STORAGE_SET : PXA_STORAGE_REMOVE,
+                &status)) return PXA_STATUS_INTERNAL;
         location_storage_error = (uint8_t)(status != PXA_STATUS_OK);
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
@@ -1441,10 +1473,9 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
                                                      PXA_STATUS_INTERNAL;
         }
         if (ui_event.node == NODE_LOCATION_AUTO) {
-            location_storage_error = (uint8_t)!pxa_storage_remove(
+            location_storage_error = (uint8_t)(pxa_storage_request_remove(
                 REQUEST_LOCATION_REMOVE, LOCATION_STORAGE_KEY,
-                sizeof(LOCATION_STORAGE_KEY) - 1u, request_payload,
-                sizeof(request_payload), packet, sizeof(packet));
+                sizeof(LOCATION_STORAGE_KEY) - 1u) != PXA_STATUS_OK);
             manual_location = 0;
             show_city_picker = 0;
             has_location = 0;
@@ -1472,11 +1503,12 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
             candidate_count = 0;
             search_failed = 0;
             size = weather_location_encode(&location, saved, sizeof(saved));
-            location_storage_error = (uint8_t)(size == 0 || !pxa_storage_set(
-                REQUEST_LOCATION_SET, LOCATION_STORAGE_KEY,
-                sizeof(LOCATION_STORAGE_KEY) - 1u, saved, size,
-                request_payload, sizeof(request_payload), packet,
-                sizeof(packet)));
+            location_storage_error = (uint8_t)(size == 0 ||
+                pxa_storage_request_set(
+                    packet, sizeof(packet), REQUEST_LOCATION_SET,
+                    LOCATION_STORAGE_KEY,
+                    sizeof(LOCATION_STORAGE_KEY) - 1u,
+                    saved, size) != PXA_STATUS_OK);
             return start_weather_request() && render() ? PXA_EVENT_HANDLED :
                                                        PXA_STATUS_INTERNAL;
         }
@@ -1485,14 +1517,16 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         ui_event.node == NODE_REFRESH &&
         ui_event.kind == PXA_UI_EVENT_CLICK_KIND &&
         state != WEATHER_LOADING) {
+        pxa_image_set_retry(&weather_images);image_error_reported=0;
         int started = start_weather_request();
         return started && render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
-    if (parsed.service == PXA_SERVICE_PERMISSION &&
+    if (parsed.service == PXA_PERMISSION_SERVICE &&
         parsed.opcode == PXA_PERMISSION_ACQUIRE &&
-        parsed.request_id == REQUEST_NETWORK_PERMISSION) {
+        parsed.token == REQUEST_NETWORK_PERMISSION) {
         pxa_permission_acquire_result_t result;
-        if (!pxa_permission_parse_acquire(&parsed, &result))
+        if (!pxa_permission_parse_acquire(
+                &parsed, REQUEST_NETWORK_PERMISSION, &result))
             return PXA_STATUS_INTERNAL;
         if (result.status != PXA_STATUS_OK) {
             permission_denied = 1;
@@ -1504,11 +1538,13 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         return fetch_weather() && render() ? PXA_EVENT_HANDLED :
                                              PXA_STATUS_INTERNAL;
     }
-    if (parsed.service == PXA_SERVICE_NET &&
+    if (parsed.service == PXA_NET_SERVICE &&
         parsed.opcode == PXA_NET_HTTP_REQUEST &&
-        parsed.request_id == REQUEST_WEATHER) {
-        pxa_net_http_result_t result;
-        if (!pxa_net_parse_http_result(&parsed, &result)) {
+        parsed.token == REQUEST_WEATHER) {
+        pxa_net_result_t result;
+        if (!pxa_net_parse_result(
+                &parsed, REQUEST_WEATHER, PXA_NET_HTTP_REQUEST,
+                &result)) {
             return advance_provider() && render() ? PXA_EVENT_HANDLED :
                                                     PXA_STATUS_INTERNAL;
         }
@@ -1530,7 +1566,8 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         return consume_response() && render() ? PXA_EVENT_HANDLED :
                                                 PXA_STATUS_INTERNAL;
     }
-    if (parsed.service == PXA_SERVICE_CLOCK && parsed.opcode == PXA_CLOCK_TICK) {
+    uint64_t tick_us;
+    if (pxa_clock_parse_tick(&parsed, &tick_us)) {
         if (stream_waiting && body_handle != 0) {
             stream_waiting = 0;
             return consume_response() && render() ? PXA_EVENT_HANDLED :
@@ -1545,8 +1582,7 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
 }
 
 void pxa_app_stop(uint32_t reason) {
+    pxa_image_set_stop(&weather_images);
     (void)reason;
-    (void)pxa_clock_set_period(0);
-    if (body_handle != 0) (void)close_handle(body_handle);
     body_handle = 0;
 }

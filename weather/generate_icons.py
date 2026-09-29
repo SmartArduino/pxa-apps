@@ -4,7 +4,8 @@ from pathlib import Path
 import subprocess
 
 
-ASSETS = Path(__file__).resolve().parent / "assets"
+ASSETS = Path(__file__).resolve().parent / "resources"
+ASSETS.mkdir(exist_ok=True)
 SUN = '<circle cx="32" cy="32" r="11" fill="#ffd04a"/><path d="M32 4v9m0 38v9M4 32h9m38 0h9M12 12l7 7m26 26 7 7M52 12l-7 7M19 45l-7 7" stroke="#ffbb36" stroke-width="4" stroke-linecap="round"/>'
 CLOUD = '<path d="M15 46h34a10 10 0 0 0 0-20 17 17 0 0 0-32-4A12 12 0 0 0 15 46Z" fill="#e8f4fc" stroke="#91b8d1" stroke-width="3" stroke-linejoin="round"/>'
 MOON = '<path d="M43 9a24 24 0 1 0 12 39A22 22 0 0 1 43 9Z" fill="#fce4a4" stroke="#efbd68" stroke-width="2"/>'

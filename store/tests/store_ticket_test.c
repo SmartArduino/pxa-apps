@@ -10,12 +10,12 @@ int main(void) {
     uint8_t progress_payload[20] = {42, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0,
                                     100, 0, 0, 0, 0, 0, 0, 0};
     pxa_event_t progress_event = {0};
-    uint32_t progress_request;
+    uint64_t progress_request;
     uint64_t received, total;
     progress_event.service = PXA_SERVICE_STORE_INSTALLER;
     progress_event.opcode = PXA_STORE_DOWNLOAD_PROGRESS;
     progress_event.payload = progress_payload;
-    progress_event.payload_length = sizeof(progress_payload);
+    progress_event.payload_size = sizeof(progress_payload);
     assert(pxa_store_parse_download_progress(&progress_event, &progress_request,
                                               &received, &total));
     assert(progress_request == 42 && received == 50 && total == 100);

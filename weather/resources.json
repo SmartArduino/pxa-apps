@@ -1,0 +1,84 @@
+{
+  "assets": [
+    {
+      "kind": "image",
+      "source": "resources/sun.png",
+      "path": "assets/sun.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/moon.png",
+      "path": "assets/moon.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/cloud.png",
+      "path": "assets/cloud.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/partly-cloudy.png",
+      "path": "assets/partly-cloudy.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/rain.png",
+      "path": "assets/rain.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/snow.png",
+      "path": "assets/snow.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/storm.png",
+      "path": "assets/storm.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/fog.png",
+      "path": "assets/fog.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/location-19-premultiplied.bgra",
+      "path": "assets/location.pxr",
+      "encoding": "bgra8888-premultiplied",
+      "width": 19,
+      "height": 19
+    },
+    {
+      "kind": "image",
+      "source": "resources/clock-17-premultiplied.bgra",
+      "path": "assets/clock.pxr",
+      "encoding": "bgra8888-premultiplied",
+      "width": 17,
+      "height": 17
+    },
+    {
+      "kind": "image",
+      "source": "resources/info-18-premultiplied.bgra",
+      "path": "assets/info.pxr",
+      "encoding": "bgra8888-premultiplied",
+      "width": 18,
+      "height": 18
+    },
+    {
+      "kind": "image",
+      "source": "resources/refresh-17-premultiplied.bgra",
+      "path": "assets/refresh.pxr",
+      "encoding": "bgra8888-premultiplied",
+      "width": 17,
+      "height": 17
+    }
+  ]
+}

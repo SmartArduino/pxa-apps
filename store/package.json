@@ -1,16 +1,16 @@
 {
   "format": "pxa-package-source-0.1",
   "min_sdk": [
-    0,
-    1
+    1,
+    0
   ],
   "target_sdk": [
-    0,
-    1
+    1,
+    0
   ],
   "compile_sdk": [
-    0,
-    1
+    1,
+    0
   ],
   "id": "pxa-store",
   "version": "0.8.1",
@@ -24,13 +24,21 @@
       "sources": [
         "main.c",
         "store_client.c",
-        "store_json.c"
+        "store_json.c",
+        "search_image.c"
       ]
     }
   ],
   "services": [
     "device",
-    "net"
+    "net",
+    "permission",
+    "window",
+    "ui",
+    "clock",
+    "log",
+    "store-installer",
+    "assets"
   ],
   "permissions": [
     {

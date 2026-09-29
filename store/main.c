@@ -2,15 +2,17 @@
 
 
 #include "pxa_app_messages.h"
+#include "pxa_ui.h"
+#include "pxa_clock.h"
 #include "pxa_device.h"
 #include "pxa_i18n.h"
-#include "pxa_log.h"
 #include "pxa_net.h"
 #include "pxa_permission.h"
-#include "pxa_ui.h"
 #include "pxa_store_installer.h"
+#include "pxa_window.h"
 
 #include "store_client.h"
+#include "search_image.h"
 #include "store_json.h"
 #include "store_model.h"
 
@@ -172,7 +174,6 @@
 
 #define ICON_REFRESH "\xef\x80\xa1"
 #define ICON_BACK "\xef\x81\x93"
-#define STORE_SEARCH_ICON "assets/search.png"
 #define ICON_APPS "\xef\x80\x8b"
 #define ICON_GAMES "\xef\x81\x8b"
 #define ICON_INSTALLED "\xef\x80\x8c"
@@ -262,7 +263,6 @@ typedef struct {
     char scratch[384];
     char status[64];
     uint8_t packet[3072];
-    uint8_t payload[1024];
     uint8_t *body;
     uint32_t body_capacity;
     uint32_t body_limit;
@@ -417,7 +417,7 @@ static void store_trace(const char *tag, uint32_t value) {
     offset = append_text(message, sizeof(message), offset, tag);
     offset = append_text(message, sizeof(message), offset, "=");
     (void)append_u64(message, sizeof(message), offset, value);
-    (void)pxa_log_info(message);
+    (void)pxa_log_write(2, message);
 #else
     (void)tag;
     (void)value;
@@ -682,7 +682,7 @@ static void toast_failure(pxa_i18n_message_id_t title, int32_t status) {
         text[size++] = ' ';
         copy_text(text + size, sizeof(text) - size, message(reason));
     }
-    (void)pxa_window_show_toast(text, string_length(text), 2600u);
+    (void)pxa_window_show_toast(2600u, text, string_length(text));
 }
 
 static void toast_current_error(void) {
@@ -695,7 +695,7 @@ static void toast_current_error(void) {
         text[size++] = ' ';
         copy_text(text + size, sizeof(text) - size, error_text());
     }
-    (void)pxa_window_show_toast(text, string_length(text), 2600u);
+    (void)pxa_window_show_toast(2600u, text, string_length(text));
 }
 
 /* ------------------------------------------------------------------ */
@@ -758,10 +758,10 @@ static int create_action_button(pxa_ui_transaction_t *transaction, uint32_t node
                      pxa_ui_set_u8(transaction, label_node,
                                     PXA_UI_PROPERTY_IMAGE_FIT,
                                     PXA_UI_IMAGE_FIT_CONTAIN) &&
-                     pxa_ui_set_property(transaction, label_node,
-                                         PXA_UI_PROPERTY_ASSET,
-                                         STORE_SEARCH_ICON,
-                                         sizeof(STORE_SEARCH_ICON) - 1u) &&
+                     store_search_image_set(transaction, label_node) &&
+                     pxa_ui_set_theme_color(transaction, label_node,
+                                            PXA_UI_PROPERTY_FOREGROUND,
+                                            PXA_UI_THEME_PRIMARY) &&
                      pxa_ui_set_event_mask(transaction, label_node, 0))
                   : (pxa_ui_create(transaction, label_node, node, 0,
                                     PXA_UI_NODE_TEXT) &&
@@ -2492,9 +2492,10 @@ static int render_search(void) {
          pxa_ui_set_u8(&transaction, NODE_SEARCH_ICON,
                         PXA_UI_PROPERTY_IMAGE_FIT,
                         PXA_UI_IMAGE_FIT_CONTAIN) &&
-         pxa_ui_set_property(&transaction, NODE_SEARCH_ICON,
-                             PXA_UI_PROPERTY_ASSET,
-                             STORE_SEARCH_ICON, sizeof(STORE_SEARCH_ICON) - 1u);
+         store_search_image_set(&transaction, NODE_SEARCH_ICON) &&
+         pxa_ui_set_theme_color(&transaction, NODE_SEARCH_ICON,
+                                 PXA_UI_PROPERTY_FOREGROUND,
+                                 PXA_UI_THEME_PRIMARY);
     if (!ok) goto failed;
     /* Search field. */
     {
@@ -2534,7 +2535,8 @@ static int render_search(void) {
              pxa_ui_set_length(&transaction, NODE_SEARCH_TEXT,
                                PXA_UI_PROPERTY_X, PXA_UI_LENGTH_PX, 2) &&
              pxa_ui_set_length(&transaction, NODE_SEARCH_TEXT,
-                               PXA_UI_PROPERTY_Y, PXA_UI_LENGTH_PX, 9) &&
+                               PXA_UI_PROPERTY_Y, PXA_UI_LENGTH_PX,
+                               m == &metrics_compact ? 3u : 9u) &&
              pxa_ui_set_text(&transaction, NODE_SEARCH_TEXT,
                              empty ? message(PXA_MSG_SEARCH_PLACEHOLDER) : "",
                              empty ? pxa_i18n_size(
@@ -2604,9 +2606,10 @@ static int render_search(void) {
                            PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_PX, 36) &&
          pxa_ui_set_length(&transaction, NODE_SEARCH_EMPTY_ICON,
                            PXA_UI_PROPERTY_HEIGHT, PXA_UI_LENGTH_PX, 36) &&
-         pxa_ui_set_property(&transaction, NODE_SEARCH_EMPTY_ICON,
-                             PXA_UI_PROPERTY_ASSET,
-                             STORE_SEARCH_ICON, sizeof(STORE_SEARCH_ICON) - 1u) &&
+         store_search_image_set(&transaction, NODE_SEARCH_EMPTY_ICON) &&
+         pxa_ui_set_theme_color(&transaction, NODE_SEARCH_EMPTY_ICON,
+                                 PXA_UI_PROPERTY_FOREGROUND,
+                                 PXA_UI_THEME_PRIMARY) &&
          pxa_ui_create(&transaction, NODE_SEARCH_EMPTY_TEXT,
                        NODE_SEARCH_EMPTY, 0, PXA_UI_NODE_TEXT) &&
          pxa_ui_set_text(&transaction, NODE_SEARCH_EMPTY_TEXT,
@@ -2752,8 +2755,7 @@ static int fail_request(uint8_t error) {
     store_trace("catalog failure", error);
     (void)pxa_clock_set_period(0);
     if (app.client.body_handle != 0)
-        (void)store_client_close_body(&app.client, app.packet,
-                                      sizeof(app.packet));
+        (void)store_client_close_body(&app.client);
     app.state = STORE_FAILED;
     app.error = error;
     app.busy = 0;
@@ -2778,15 +2780,14 @@ static int ensure_body_capacity(void) {
 static int retry_larger_body(void) {
     if (app.body_limit >= PXA_NET_MAX_RESPONSE_BODY_BYTES) return 0;
     if (app.client.body_handle != 0)
-        (void)store_client_close_body(&app.client, app.packet, sizeof(app.packet));
+        (void)store_client_close_body(&app.client);
     app.body_limit *= 2u;
     if (app.body_limit > PXA_NET_MAX_RESPONSE_BODY_BYTES)
         app.body_limit = PXA_NET_MAX_RESPONSE_BODY_BYTES;
     if (!ensure_body_capacity()) return 0;
     return store_client_fetch(&app.client, app.pending_request, app.url,
                               string_length(app.url), app.body_limit,
-                              app.payload, sizeof(app.payload), app.packet,
-                              sizeof(app.packet));
+                              app.packet, sizeof(app.packet));
 }
 
 static int start_catalog_fetch(void) {
@@ -2804,8 +2805,7 @@ static int start_catalog_fetch(void) {
     if (!ensure_body_capacity()) return 0;
     return store_client_fetch(
         &app.client, STORE_REQUEST_CATALOG, app.url, string_length(app.url),
-        app.body_limit, app.payload, sizeof(app.payload),
-        app.packet, sizeof(app.packet));
+        app.body_limit, app.packet, sizeof(app.packet));
 }
 
 /* Fetches the full metadata for one catalog entry. The compact catalog page
@@ -2827,8 +2827,7 @@ static int start_detail_fetch(void) {
     if (!ensure_body_capacity()) return 0;
     if (!store_client_fetch(
             &app.client, STORE_REQUEST_DETAIL, app.url, string_length(app.url),
-            app.body_limit, app.payload, sizeof(app.payload),
-            app.packet, sizeof(app.packet)))
+            app.body_limit, app.packet, sizeof(app.packet)))
         return 0;
     app.busy = 1;
     return 1;
@@ -2844,8 +2843,7 @@ static int next_update_check(void) {
             ensure_body_capacity() &&
             store_client_fetch(&app.client, STORE_REQUEST_UPDATE_CHECK,
                                app.url, string_length(app.url),
-                               app.body_limit, app.payload,
-                               sizeof(app.payload), app.packet,
+                               app.body_limit, app.packet,
                                sizeof(app.packet))) {
             app.pending_request = STORE_REQUEST_UPDATE_CHECK;
             app.busy = 1;
@@ -2870,7 +2868,7 @@ static int next_update_check(void) {
 static int skip_update_check(int failed) {
     (void)pxa_clock_set_period(0);
     if (app.client.body_handle != 0 &&
-        !store_client_close_body(&app.client, app.packet, sizeof(app.packet)))
+        !store_client_close_body(&app.client))
         failed = 1;
     if (failed) app.update_failed = 1;
     ++app.update_index;
@@ -2880,10 +2878,10 @@ static int skip_update_check(int failed) {
 static int finish_update_check(int failed) {
     (void)pxa_clock_set_period(0);
     if (app.client.body_handle != 0 &&
-        !store_client_close_body(&app.client, app.packet, sizeof(app.packet)))
+        !store_client_close_body(&app.client))
         failed = 1;
     if (!failed &&
-        ((app.client.response_flags & PXA_NET_RESPONSE_BODY_LENGTH_KNOWN) != 0 &&
+        ((app.client.response_flags & PXA_NET_BODY_LENGTH_KNOWN) != 0 &&
          app.client.response_length != app.client.response_size)) failed = 1;
     if (!failed &&
         (!store_json_parse_app_detail(app.body, app.client.response_size,
@@ -2907,8 +2905,8 @@ static int finish_update_check(int failed) {
  * handlers call this to continue, so it must not check app.busy. */
 static int advance_catalog_request(void) {
     if (!app.profile_ready) {
-        if (!pxa_device_get_runtime_info(STORE_REQUEST_RUNTIME_INFO,
-                                         app.packet, sizeof(app.packet))) {
+        if (pxa_device_request_runtime_info(
+                STORE_REQUEST_RUNTIME_INFO) != PXA_STATUS_OK) {
             (void)fail_request(STORE_ERROR_UNSUPPORTED);
             return 0;
         }
@@ -2921,8 +2919,7 @@ static int advance_catalog_request(void) {
     if (!app.client.has_device_permission) {
         store_trace("acquire device permission", 1);
         if (!store_client_acquire_device_permission(
-                &app.client, app.payload, sizeof(app.payload), app.packet,
-                sizeof(app.packet))) {
+                app.packet, sizeof(app.packet))) {
             (void)fail_request(STORE_ERROR_UNSUPPORTED);
             return 0;
         }
@@ -2930,9 +2927,7 @@ static int advance_catalog_request(void) {
     }
     if (!app.client.has_mac) {
         store_trace("fetch device mac", 1);
-        if (!store_client_fetch_mac(&app.client, app.payload,
-                                    sizeof(app.payload), app.packet,
-                                    sizeof(app.packet))) {
+        if (!store_client_fetch_mac(&app.client)) {
             (void)fail_request(STORE_ERROR_UNSUPPORTED);
             return 0;
         }
@@ -2941,8 +2936,7 @@ static int advance_catalog_request(void) {
     if (!app.client.has_network_permission) {
         store_trace("acquire network permission", 1);
         if (!store_client_acquire_network_permission(
-                &app.client, app.payload, sizeof(app.payload), app.packet,
-                sizeof(app.packet))) {
+                app.packet, sizeof(app.packet))) {
             (void)fail_request(STORE_ERROR_UNSUPPORTED);
             return 0;
         }
@@ -3056,9 +3050,9 @@ static int finish_catalog_body(void) {
     uint8_t moved;
     (void)pxa_clock_set_period(0);
     if (app.client.body_handle != 0 &&
-        !store_client_close_body(&app.client, app.packet, sizeof(app.packet)))
+        !store_client_close_body(&app.client))
         return fail_request(STORE_ERROR_FAILED);
-    if ((app.client.response_flags & PXA_NET_RESPONSE_BODY_LENGTH_KNOWN) != 0 &&
+    if ((app.client.response_flags & PXA_NET_BODY_LENGTH_KNOWN) != 0 &&
         app.client.response_length != app.client.response_size)
         return fail_request(STORE_ERROR_PROTOCOL);
     app.catalog.has_more = 0;
@@ -3120,8 +3114,7 @@ static int fail_detail(uint8_t error) {
     store_trace("detail failure", error);
     (void)pxa_clock_set_period(0);
     if (app.client.body_handle != 0)
-        (void)store_client_close_body(&app.client, app.packet,
-                                      sizeof(app.packet));
+        (void)store_client_close_body(&app.client);
     app.busy = 0;
     if (app.install_refresh) {
         app.install_refresh = 0;
@@ -3160,9 +3153,9 @@ static int send_install_request(void) {
 static int finish_detail_body(void) {
     (void)pxa_clock_set_period(0);
     if (app.client.body_handle != 0 &&
-        !store_client_close_body(&app.client, app.packet, sizeof(app.packet)))
+        !store_client_close_body(&app.client))
         return fail_detail(STORE_ERROR_FAILED);
-    if ((app.client.response_flags & PXA_NET_RESPONSE_BODY_LENGTH_KNOWN) != 0 &&
+    if ((app.client.response_flags & PXA_NET_BODY_LENGTH_KNOWN) != 0 &&
         app.client.response_length != app.client.response_size)
         return fail_detail(STORE_ERROR_PROTOCOL);
     app.busy = 0;
@@ -3194,7 +3187,7 @@ static int continue_body(void) {
     int result;
     store_trace("continue body", app.client.response_size);
     result = store_client_consume_body(
-        &app.client, app.body, app.body_capacity, app.packet, sizeof(app.packet));
+        &app.client, app.body, app.body_capacity);
     if (result == STORE_BODY_WAITING) return 1;
     if (result == STORE_BODY_DONE) {
         if (app.pending_request == STORE_REQUEST_UPDATE_CHECK)
@@ -3214,18 +3207,18 @@ static int continue_body(void) {
 }
 
 static int handle_json_result(const pxa_event_t *parsed) {
-    pxa_net_http_result_t result;
-    uint8_t detail = (uint8_t)(parsed->request_id == STORE_REQUEST_DETAIL);
-    store_trace("net result parsed", pxa_net_parse_http_result(parsed, &result));
-    if (!pxa_net_parse_http_result(parsed, &result)) {
-        if (parsed->request_id == STORE_REQUEST_UPDATE_CHECK)
+    pxa_net_result_t result;
+    uint8_t detail = (uint8_t)(parsed->token == STORE_REQUEST_DETAIL);
+    if (!pxa_net_parse_result(parsed, parsed->token,
+                                  PXA_NET_HTTP_REQUEST, &result)) {
+        if (parsed->token == STORE_REQUEST_UPDATE_CHECK)
             return finish_update_check(1);
         return detail ? fail_detail(STORE_ERROR_PROTOCOL)
                       : fail_request(STORE_ERROR_PROTOCOL);
     }
     if (result.status == PXA_STATUS_LIMIT_EXCEEDED && retry_larger_body())
         return 1;
-    if (parsed->request_id == STORE_REQUEST_UPDATE_CHECK) {
+    if (parsed->token == STORE_REQUEST_UPDATE_CHECK) {
         app.client.response_flags = result.flags;
         app.client.response_length = result.body_length;
         app.client.body_handle = result.body_handle;
@@ -3266,8 +3259,7 @@ static int handle_json_result(const pxa_event_t *parsed) {
             app.install_feedback = 3;
         }
         if (result.body_handle != 0)
-            (void)store_client_close_body(&app.client, app.packet,
-                                          sizeof(app.packet));
+            (void)store_client_close_body(&app.client);
         app.error = result.status_code == 404 ? STORE_ERROR_NOT_FOUND
                                               : STORE_ERROR_HTTP;
         toast_failure(PXA_MSG_STATUS_FAILED,
@@ -3286,15 +3278,14 @@ static int handle_json_result(const pxa_event_t *parsed) {
 
 static int handle_permission_result(const pxa_event_t *parsed) {
     pxa_permission_acquire_result_t result;
-    store_trace("permission result parsed", pxa_permission_parse_acquire(parsed, &result));
-    if (!pxa_permission_parse_acquire(parsed, &result))
+    if (!pxa_permission_parse_acquire(parsed, parsed->token, &result))
         return fail_request(STORE_ERROR_PROTOCOL);
     if (result.status != PXA_STATUS_OK) {
         app.state = STORE_DENIED;
         app.busy = 0;
         return render();
     }
-    if (parsed->request_id == STORE_REQUEST_DEVICE_PERMISSION) {
+    if (parsed->token == STORE_REQUEST_DEVICE_PERMISSION) {
         app.client.device_permission = result.handle;
         app.client.has_device_permission = 1;
     } else {
@@ -3307,10 +3298,10 @@ static int handle_permission_result(const pxa_event_t *parsed) {
 
 static int handle_mac_result(const pxa_event_t *parsed) {
     pxa_device_mac_result_t result;
-    store_trace("mac result parsed", pxa_device_parse_mac(parsed, &result));
-    if (!pxa_device_parse_mac(parsed, &result) ||
+    if (!pxa_device_parse_get_mac(parsed, STORE_REQUEST_DEVICE_MAC,
+                                     &result) ||
         result.status != PXA_STATUS_OK ||
-        result.kind != PXA_DEVICE_MAC_KIND_WIFI_STATION_HARDWARE) {
+        result.kind != PXA_DEVICE_MAC_WIFI_STATION_HARDWARE) {
         /* A stable device identity only affects rollout bucketing. */
         copy_text(app.device_id, sizeof(app.device_id), "");
     } else {
@@ -3325,7 +3316,8 @@ static int handle_mac_result(const pxa_event_t *parsed) {
 static int handle_runtime_info(const pxa_event_t *parsed) {
     pxa_device_runtime_info_t info;
     app.profile_ready = 1;
-    if (pxa_device_parse_runtime_info(parsed, &info) &&
+    if (pxa_device_parse_runtime_info(
+            parsed, STORE_REQUEST_RUNTIME_INFO, &info) &&
         info.status == PXA_STATUS_OK) {
         (void)store_client_profile_for_device(app.profile,
                                                sizeof(app.profile),
@@ -3341,16 +3333,10 @@ static int handle_runtime_info(const pxa_event_t *parsed) {
  * bars visible, which also keeps the system back gesture available. Games
  * request the fullscreen edge-to-edge window instead. */
 static int configure_window(void) {
-    uint8_t records[15];
-    pxa_writer_t writer;
-    const uint8_t edge_to_edge = 0;
-    const uint8_t visible = PXA_WINDOW_BAR_VISIBLE;
-    pxa_writer_init(&writer, records, sizeof(records));
-    return pxa_record(&writer, PXA_WINDOW_EDGE_TO_EDGE, &edge_to_edge, 1) &&
-           pxa_record(&writer, PXA_WINDOW_STATUS_BAR_MODE, &visible, 1) &&
-           pxa_record(&writer, PXA_WINDOW_NAVIGATION_BAR_MODE, &visible, 1) &&
-           pxa_send(PXA_SERVICE_WINDOW, PXA_WINDOW_CONFIGURE, 0, writer.data,
-                    writer.length);
+    pxa_window_config_t config = {0};
+    config.status_bar_mode = 1;
+    config.navigation_bar_mode = 1;
+    return pxa_window_configure(&config) == PXA_STATUS_OK;
 }
 
 static void apply_environment(const pxa_ui_environment_t *environment) {
@@ -3412,20 +3398,21 @@ static uint16_t inset_padding(uint8_t edge, uint16_t margin) {
 static int request_window_snapshot(void);
 
 /* Applies a window snapshot: the panel safe area and the system bar insets. */
-static int parse_window_snapshot(const uint8_t *data, size_t size,
+static int parse_window_snapshot(const pxa_event_t *event,
                                  int with_status) {
-    pxa_window_insets_view_t view;
-    if (!pxa_window_parse_snapshot(data, size, with_status, &view)) return 0;
-    if (view.has_safe_insets) {
-        uint8_t index;
-        for (index = 0; index < 4u; ++index)
-            app.safe_insets[index] = view.safe_insets[index];
-    }
-    if (view.has_bar_insets) {
-        uint8_t index;
-        for (index = 0; index < 4u; ++index)
-            app.bar_insets[index] = view.bar_insets[index];
-    }
+    pxa_window_snapshot_t view;
+    if (!(with_status ? pxa_window_parse_snapshot(
+                            event, STORE_REQUEST_WINDOW_SNAPSHOT, &view)
+                     : pxa_window_parse_metrics_changed(event, &view)) ||
+        view.status != PXA_STATUS_OK) return 0;
+    app.safe_insets[0] = view.safe_insets.left;
+    app.safe_insets[1] = view.safe_insets.top;
+    app.safe_insets[2] = view.safe_insets.right;
+    app.safe_insets[3] = view.safe_insets.bottom;
+    app.bar_insets[0] = view.system_bar_insets.left;
+    app.bar_insets[1] = view.system_bar_insets.top;
+    app.bar_insets[2] = view.system_bar_insets.right;
+    app.bar_insets[3] = view.system_bar_insets.bottom;
     app.snapshot_received = 1;
     return 1;
 }
@@ -3439,8 +3426,8 @@ static void ensure_window_snapshot(void) {
 }
 
 static int request_window_snapshot(void) {
-    return pxa_send(PXA_SERVICE_WINDOW, PXA_WINDOW_GET_SNAPSHOT,
-                    STORE_REQUEST_WINDOW_SNAPSHOT, NULL, 0);
+    return pxa_window_request_snapshot(STORE_REQUEST_WINDOW_SNAPSHOT) ==
+           PXA_STATUS_OK;
 }
 
 /* ------------------------------------------------------------------ */
@@ -3451,6 +3438,7 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t config_length) {
     (void)pxa_i18n_init_from_start_config(&app.i18n, &pxa_app_i18n_bundle,
                                           config, config_length);
     store_client_init(&app.client);
+    store_search_image_request();
     app.installed_count = 0;
     app.download_count = 0;
     app.failed_count = 0;
@@ -3523,27 +3511,39 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     }
     store_trace("event service", parsed.service);
     store_trace("event opcode", parsed.opcode);
+    if (store_search_image_on_event(&parsed)) {
+        if (store_search_image_handle()) {
+            pxa_log_write(2,"store: search image ready");
+            return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+        }
+        if (store_search_image_error()) pxa_log_write(3,"store: search image unavailable");
+        return PXA_EVENT_HANDLED;
+    }
+    if (parsed.service==PXA_SERVICE_SYSTEM && parsed.opcode==PXA_SYSTEM_LIFECYCLE_EVENT && parsed.payload_size==1) {
+        store_search_image_pause(parsed.payload[0]==PXA_SYSTEM_LIFECYCLE_BACKGROUND);
+        return PXA_EVENT_HANDLED;
+    }
     {
         int locale_result = pxa_i18n_handle_event(&app.i18n, &parsed);
         if (locale_result != 0)
             return locale_result == 1 && !render() ? PXA_STATUS_INTERNAL
                                                    : PXA_EVENT_HANDLED;
     }
-    if (parsed.service == PXA_SERVICE_WINDOW &&
+    if (parsed.service == PXA_WINDOW_SERVICE &&
         parsed.opcode == PXA_WINDOW_GET_SNAPSHOT &&
-        parsed.request_id == STORE_REQUEST_WINDOW_SNAPSHOT) {
-        if (!parse_window_snapshot(parsed.payload, parsed.payload_length, 1))
+        parsed.token == STORE_REQUEST_WINDOW_SNAPSHOT) {
+        if (!parse_window_snapshot(&parsed, 1))
             return PXA_EVENT_UNHANDLED;
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
-    if (parsed.service == PXA_SERVICE_WINDOW &&
-        parsed.opcode == 0x8001u) {
+    if (parsed.service == PXA_WINDOW_SERVICE &&
+        parsed.opcode == PXA_WINDOW_METRICS_CHANGED) {
         /* metrics-changed carries a complete snapshot without a status. */
-        if (!parse_window_snapshot(parsed.payload, parsed.payload_length, 0))
+        if (!parse_window_snapshot(&parsed, 0))
             return PXA_EVENT_UNHANDLED;
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
-    if (parsed.service == PXA_SERVICE_UI &&
+    if (parsed.service == PXA_UI_SERVICE &&
         parsed.opcode == PXA_UI_ENVIRONMENT_CHANGED) {
         pxa_ui_environment_t environment;
         if (!pxa_ui_parse_environment_event(&parsed, &environment))
@@ -3552,8 +3552,7 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         ensure_window_snapshot();
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
-    if (parsed.service == PXA_SERVICE_WINDOW &&
-        parsed.opcode == PXA_WINDOW_BACK_REQUESTED) {
+    if (pxa_window_is_back_requested(&parsed)) {
         if (app.screen == STORE_SCREEN_SUCCESS) {
             app.screen = app.success_return_screen;
             return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
@@ -3577,26 +3576,26 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         }
         return PXA_EVENT_UNHANDLED;
     }
-    if (parsed.service == PXA_SERVICE_PERMISSION &&
+    if (parsed.service == PXA_PERMISSION_SERVICE &&
         parsed.opcode == PXA_PERMISSION_ACQUIRE)
         return handle_permission_result(&parsed);
-    if (parsed.service == PXA_SERVICE_DEVICE &&
+    if (parsed.service == PXA_DEVICE_SERVICE &&
         parsed.opcode == PXA_DEVICE_GET_RUNTIME_INFO &&
-        parsed.request_id == STORE_REQUEST_RUNTIME_INFO)
+        parsed.token == STORE_REQUEST_RUNTIME_INFO)
         return handle_runtime_info(&parsed);
-    if (parsed.service == PXA_SERVICE_DEVICE &&
+    if (parsed.service == PXA_DEVICE_SERVICE &&
         parsed.opcode == PXA_DEVICE_GET_MAC &&
-        parsed.request_id == STORE_REQUEST_DEVICE_MAC)
+        parsed.token == STORE_REQUEST_DEVICE_MAC)
         return handle_mac_result(&parsed);
-    if (parsed.service == PXA_SERVICE_NET &&
+    if (parsed.service == PXA_NET_SERVICE &&
         parsed.opcode == PXA_NET_HTTP_REQUEST &&
-        (parsed.request_id == STORE_REQUEST_CATALOG ||
-         parsed.request_id == STORE_REQUEST_DETAIL ||
-         parsed.request_id == STORE_REQUEST_UPDATE_CHECK))
+        (parsed.token == STORE_REQUEST_CATALOG ||
+         parsed.token == STORE_REQUEST_DETAIL ||
+         parsed.token == STORE_REQUEST_UPDATE_CHECK))
         return handle_json_result(&parsed);
     if (parsed.service == PXA_SERVICE_STORE_INSTALLER &&
         parsed.opcode == PXA_STORE_INSTALLED_LIST_REQUEST &&
-        parsed.request_id == STORE_REQUEST_INSTALLED) {
+        parsed.token == STORE_REQUEST_INSTALLED) {
         size_t count = 0;
         if (pxa_store_parse_installed(&parsed, app.installed,
                                       PXA_STORE_INSTALLED_MAX, &count)) {
@@ -3608,7 +3607,7 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     }
     if (parsed.service == PXA_SERVICE_STORE_INSTALLER &&
         parsed.opcode == PXA_STORE_UNINSTALL_REQUEST &&
-        parsed.request_id == STORE_REQUEST_UNINSTALL) {
+        parsed.token == STORE_REQUEST_UNINSTALL) {
         int32_t status;
         app.uninstall_feedback = pxa_store_uninstall_result(&parsed, &status) ?
             status == PXA_STATUS_OK ? 2u :
@@ -3625,7 +3624,7 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     }
     if (parsed.service == PXA_SERVICE_STORE_INSTALLER &&
         parsed.opcode == PXA_STORE_DOWNLOAD_LIST_REQUEST &&
-        parsed.request_id == STORE_REQUEST_DOWNLOADS) {
+        parsed.token == STORE_REQUEST_DOWNLOADS) {
         size_t count = 0;
         if (pxa_store_parse_downloads(&parsed, app.downloads,
                                       PXA_STORE_DOWNLOAD_MAX, &count))
@@ -3635,9 +3634,9 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     }
     if (parsed.service == PXA_SERVICE_STORE_INSTALLER &&
         parsed.opcode == PXA_STORE_DELETE_REQUEST &&
-        parsed.request_id == STORE_REQUEST_DELETE) {
-        if (parsed.payload != NULL && parsed.payload_length == 4u &&
-            (int32_t)pxa_read_u32(parsed.payload) == PXA_STATUS_OK) {
+        parsed.token == STORE_REQUEST_DELETE) {
+        if (parsed.payload != NULL && parsed.payload_size == 4u &&
+            (int32_t)pxa_load_u32(parsed.payload) == PXA_STATUS_OK) {
             (void)pxa_store_manage(PXA_STORE_DOWNLOAD_LIST_REQUEST,
                                    STORE_REQUEST_DOWNLOADS, NULL,
                                    app.packet, sizeof(app.packet));
@@ -3646,7 +3645,7 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     }
     if (parsed.service == PXA_SERVICE_STORE_INSTALLER &&
         parsed.opcode == PXA_STORE_DOWNLOAD_PROGRESS) {
-        uint32_t request_id;
+        pxa_store_token_t request_id;
         uint64_t received, total;
         if (pxa_store_parse_download_progress(&parsed, &request_id, &received, &total) &&
             request_id == STORE_REQUEST_DOWNLOAD && app.downloading) {
@@ -3659,7 +3658,7 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     }
     if (parsed.service == PXA_SERVICE_STORE_INSTALLER &&
         parsed.opcode == PXA_STORE_DOWNLOAD_REQUEST &&
-        parsed.request_id == STORE_REQUEST_DOWNLOAD) {
+        parsed.token == STORE_REQUEST_DOWNLOAD) {
         app.downloading = 0u;
         int32_t status = PXA_STATUS_PROTOCOL_ERROR;
         char filename[20];
@@ -3687,7 +3686,7 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     }
     if (parsed.service == PXA_SERVICE_STORE_INSTALLER &&
         parsed.opcode == PXA_STORE_INSTALL_FILE_REQUEST &&
-        parsed.request_id == STORE_REQUEST_INSTALL) {
+        parsed.token == STORE_REQUEST_INSTALL) {
         int32_t status = PXA_STATUS_PROTOCOL_ERROR;
         app.install_feedback = pxa_store_install_result(&parsed, &status) ?
             status == PXA_STATUS_OK ? 2u :
@@ -3707,7 +3706,8 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         }
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
-    if (parsed.service == PXA_SERVICE_CLOCK && parsed.opcode == PXA_CLOCK_TICK) {
+    if (parsed.service == PXA_CLOCK_SERVICE &&
+        parsed.opcode == PXA_CLOCK_TICK) {
         if (app.client.stream_waiting && app.client.body_handle != 0) {
             app.client.stream_waiting = 0;
             return continue_body() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
@@ -3894,6 +3894,7 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
     if (ui_event.node == NODE_REFRESH && app.screen == STORE_SCREEN_CATALOG) {
+        store_search_image_retry();
         if (!restart_catalog(app.query)) return PXA_EVENT_HANDLED;
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
@@ -4071,8 +4072,6 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
 
 void pxa_app_stop(uint32_t reason) {
     (void)reason;
-    (void)pxa_clock_set_period(0);
-    if (app.client.body_handle != 0)
-        (void)store_client_close_body(&app.client, app.packet,
-                                      sizeof(app.packet));
+    store_search_image_stop();
+    app.client.body_handle = 0;
 }

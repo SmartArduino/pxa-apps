@@ -2,6 +2,7 @@
 
 #include "store_client.h"
 
+#include "pxa_clock.h"
 #include "pxa_device.h"
 #include "pxa_net.h"
 #include "pxa_permission.h"
@@ -100,19 +101,9 @@ static int append_query_value(char *output, size_t capacity, size_t *offset,
     return 1;
 }
 
-static int close_handle(uint32_t handle, uint8_t *packet,
-                        size_t packet_capacity) {
-    uint8_t payload[4];
-    pxa_writer_t writer;
+static int close_handle(uint64_t handle) {
     if (handle == 0) return 1;
-    payload[0] = (uint8_t)handle;
-    payload[1] = (uint8_t)(handle >> 8);
-    payload[2] = (uint8_t)(handle >> 16);
-    payload[3] = (uint8_t)(handle >> 24);
-    pxa_writer_init(&writer, packet, packet_capacity);
-    return pxa_message(&writer, PXA_SERVICE_CORE, PXA_CORE_CLOSE_HANDLE, 0,
-                       payload, sizeof(payload)) &&
-           pxa_control(writer.data, (uint32_t)writer.length) == PXA_STATUS_OK;
+    return pxa_close_handle(handle) == PXA_STATUS_OK;
 }
 
 void store_client_init(store_client_t *client) {
@@ -131,41 +122,36 @@ void store_client_init(store_client_t *client) {
         client->mac[index] = 0;
 }
 
-int store_client_acquire_device_permission(store_client_t *client,
-                                           uint8_t *payload,
-                                           size_t payload_capacity,
-                                           uint8_t *packet,
+int store_client_acquire_device_permission(uint8_t *packet,
                                            size_t packet_capacity) {
-    (void)client;
-    return pxa_permission_acquire(
-        STORE_REQUEST_DEVICE_PERMISSION, device_permission_name,
-        sizeof(device_permission_name) - 1u,
-        (const uint8_t *)device_permission_scope,
-        sizeof(device_permission_scope) - 1u, payload, payload_capacity, packet,
-        packet_capacity);
+    uint32_t packet_size = 0;
+    return pxa_permission_build(
+               packet, packet_capacity, PXA_PERMISSION_ACQUIRE,
+               STORE_REQUEST_DEVICE_PERMISSION, device_permission_name,
+               sizeof(device_permission_name) - 1u,
+               (const uint8_t *)device_permission_scope,
+               sizeof(device_permission_scope) - 1u, &packet_size) &&
+           pxa_submit(packet, packet_size) == PXA_STATUS_OK;
 }
 
-int store_client_acquire_network_permission(store_client_t *client,
-                                            uint8_t *payload,
-                                            size_t payload_capacity,
-                                            uint8_t *packet,
+int store_client_acquire_network_permission(uint8_t *packet,
                                             size_t packet_capacity) {
     static const char scope[] = PXA_STORE_ORIGIN;
-    (void)client;
-    return pxa_permission_acquire(
-        STORE_REQUEST_NETWORK_PERMISSION, network_permission_name,
-        sizeof(network_permission_name) - 1u, (const uint8_t *)scope,
-        sizeof(scope) - 1u, payload, payload_capacity, packet,
-        packet_capacity);
+    uint32_t packet_size = 0;
+    return pxa_permission_build(
+               packet, packet_capacity, PXA_PERMISSION_ACQUIRE,
+               STORE_REQUEST_NETWORK_PERMISSION, network_permission_name,
+               sizeof(network_permission_name) - 1u,
+               (const uint8_t *)scope, sizeof(scope) - 1u,
+               &packet_size) &&
+           pxa_submit(packet, packet_size) == PXA_STATUS_OK;
 }
 
-int store_client_fetch_mac(store_client_t *client, uint8_t *payload,
-                           size_t payload_capacity, uint8_t *packet,
-                           size_t packet_capacity) {
-    return pxa_device_get_mac(
-        STORE_REQUEST_DEVICE_MAC, PXA_DEVICE_MAC_KIND_WIFI_STATION_HARDWARE,
-        client->device_permission, payload, payload_capacity, packet,
-        packet_capacity);
+int store_client_fetch_mac(const store_client_t *client) {
+    return pxa_device_request_get_mac(
+               STORE_REQUEST_DEVICE_MAC,
+               PXA_DEVICE_MAC_WIFI_STATION_HARDWARE,
+               client->device_permission) == PXA_STATUS_OK;
 }
 
 int store_client_build_catalog_url(char *output, size_t capacity,
@@ -277,10 +263,9 @@ int store_client_build_download_url(char *output, size_t capacity,
     return 1;
 }
 
-int store_client_fetch(store_client_t *client, uint32_t request_id,
+int store_client_fetch(store_client_t *client, uint64_t request_id,
                        const char *url, size_t url_length,
-                       uint32_t max_response_bytes, uint8_t *payload,
-                       size_t payload_capacity, uint8_t *packet,
+                       uint32_t max_response_bytes, uint8_t *packet,
                        size_t packet_capacity) {
     static const char accept_name[] = "accept";
     static const uint8_t accept_value[] = "application/json";
@@ -288,35 +273,34 @@ int store_client_fetch(store_client_t *client, uint32_t request_id,
         {accept_name, sizeof(accept_name) - 1u, accept_value,
          sizeof(accept_value) - 1u},
     };
-    pxa_net_http_request_t request = {0};
+    pxa_net_request_t request = {0};
     client->response_size = 0;
     client->response_length = 0;
     client->response_flags = 0;
     client->http_status = 0;
     client->stream_waiting = 0;
-    request.method = PXA_NET_METHOD_GET;
+    request.method = PXA_NET_GET;
     request.url = url;
-    request.url_length = (uint16_t)url_length;
+    request.url_size = (uint16_t)url_length;
     request.permission_handle = client->network_permission;
     request.max_response_bytes = max_response_bytes;
     request.timeout_ms = STORE_RESPONSE_TIMEOUT_MS;
     request.headers = headers;
     request.header_count = 1;
-    return pxa_net_http_request(request_id, &request, payload,
-                                payload_capacity, packet, packet_capacity);
+    return pxa_net_submit(packet, packet_capacity,
+                              PXA_NET_HTTP_REQUEST, request_id,
+                              &request) == PXA_STATUS_OK;
 }
 
-int store_client_close_body(store_client_t *client, uint8_t *packet,
-                            size_t packet_capacity) {
-    int ok = close_handle(client->body_handle, packet, packet_capacity);
+int store_client_close_body(store_client_t *client) {
+    int ok = close_handle(client->body_handle);
     client->body_handle = 0;
     client->stream_waiting = 0;
     return ok;
 }
 
 int store_client_consume_body(store_client_t *client, uint8_t *body,
-                              size_t body_capacity, uint8_t *packet,
-                              size_t packet_capacity) {
+                              size_t body_capacity) {
     uint8_t overflow;
     for (;;) {
         uint32_t remaining =
@@ -324,8 +308,8 @@ int store_client_consume_body(store_client_t *client, uint8_t *body,
         uint8_t *output = remaining == 0 ? &overflow
                                          : body + client->response_size;
         uint32_t capacity = remaining == 0 ? 1u : remaining;
-        int32_t count = pxa_io(client->body_handle, PXA_IO_READ, output,
-                               capacity);
+        int32_t count = pxa_io(client->body_handle, PXA_NET_IO_READ,
+                                  output, capacity);
         if (count == PXA_STATUS_WOULD_BLOCK) {
             client->stream_waiting = 1;
             (void)pxa_clock_set_period(STORE_STREAM_TICK_MS);
@@ -333,7 +317,7 @@ int store_client_consume_body(store_client_t *client, uint8_t *body,
         }
         if (count < 0 || (remaining == 0 && count != 0) ||
             (uint32_t)(count < 0 ? 0 : count) > remaining) {
-            (void)store_client_close_body(client, packet, packet_capacity);
+            (void)store_client_close_body(client);
             return remaining == 0 ? STORE_BODY_LIMIT : STORE_BODY_ERROR;
         }
         if (count == 0) {

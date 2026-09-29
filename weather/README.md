@@ -29,8 +29,23 @@ When adding a provider, update the enum, origin, URL, parser, fallback sequence,
 and exact-origin permission in `package.json`. The Host does not follow HTTP
 redirects. Every provider must return a bounded response (currently 4 KiB).
 
-All interface symbols and weather conditions use packaged PNG assets. Regenerate
-them with `python3 generate_icons.py` (requires `rsvg-convert`).
+The launcher icon remains a PNG. Weather conditions are built from the source
+PNGs in `resources/` into straight-alpha BGRA8888 PXR images. The four small
+fixed-size UI symbols use committed premultiplied BGRA files and PXR encoding 8.
+They are generated from the 64×64 PNG originals through the LVGL 9.6 software
+transform at their actual display sizes: info 18, location 19, clock and refresh
+17 pixels. This removes their repeated draw-time scale allocation while keeping
+the LVGL 9.6 output pixels. After changing an original icon or the LVGL version,
+rebuild `tools/compile-lvgl-premul-icon.c` against the matching LVGL library and
+run `python3 tools/regenerate-weather-premul-icons.py <generator> --check` to
+verify the committed files, or omit `--check` to regenerate them.
+`images.c` declares their paths and the app uses the Guest SDK image-set helper
+to load only images used by the current page. A missing image leaves its
+geometry empty while the forecast remains usable. Image requests run one at a
+time; changing the page releases unused handles after the UI commit. On
+background/foreground transitions, pending loads are cancelled and resumed.
+Regenerate source icons with `python3 generate_icons.py` (requires
+`rsvg-convert`). The package builder performs the PNG-to-PXR conversion.
 
 The App uses a normal window with visible system status/navigation bars, not
 fullscreen. Layout sizes follow the display width and shape; safe-area, bar and
