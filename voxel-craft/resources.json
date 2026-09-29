@@ -1,0 +1,357 @@
+{
+  "assets": [
+    {
+      "kind": "index8",
+      "source": "resources/b00.index8",
+      "path": "assets/b00.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b01.index8",
+      "path": "assets/b01.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b02.index8",
+      "path": "assets/b02.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b03.index8",
+      "path": "assets/b03.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b04.index8",
+      "path": "assets/b04.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b05.index8",
+      "path": "assets/b05.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b06.index8",
+      "path": "assets/b06.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b07.index8",
+      "path": "assets/b07.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b08.index8",
+      "path": "assets/b08.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b09.index8",
+      "path": "assets/b09.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b10.index8",
+      "path": "assets/b10.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b11.index8",
+      "path": "assets/b11.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b12.index8",
+      "path": "assets/b12.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b13.index8",
+      "path": "assets/b13.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b14.index8",
+      "path": "assets/b14.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b15.index8",
+      "path": "assets/b15.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b16.index8",
+      "path": "assets/b16.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b17.index8",
+      "path": "assets/b17.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b18.index8",
+      "path": "assets/b18.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b19.index8",
+      "path": "assets/b19.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b20.index8",
+      "path": "assets/b20.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b21.index8",
+      "path": "assets/b21.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b22.index8",
+      "path": "assets/b22.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b23.index8",
+      "path": "assets/b23.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b24.index8",
+      "path": "assets/b24.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b25.index8",
+      "path": "assets/b25.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b26.index8",
+      "path": "assets/b26.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b27.index8",
+      "path": "assets/b27.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b28.index8",
+      "path": "assets/b28.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b29.index8",
+      "path": "assets/b29.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b30.index8",
+      "path": "assets/b30.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b31.index8",
+      "path": "assets/b31.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b32.index8",
+      "path": "assets/b32.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b33.index8",
+      "path": "assets/b33.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b34.index8",
+      "path": "assets/b34.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b35.index8",
+      "path": "assets/b35.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b36.index8",
+      "path": "assets/b36.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b37.index8",
+      "path": "assets/b37.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b38.index8",
+      "path": "assets/b38.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b39.index8",
+      "path": "assets/b39.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b40.index8",
+      "path": "assets/b40.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b41.index8",
+      "path": "assets/b41.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b42.index8",
+      "path": "assets/b42.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b43.index8",
+      "path": "assets/b43.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/b44.index8",
+      "path": "assets/b44.pxr",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/font0.index8",
+      "path": "assets/font0.pxr",
+      "width": 252,
+      "height": 9
+    },
+    {
+      "kind": "index8",
+      "source": "resources/font1.index8",
+      "path": "assets/font1.pxr",
+      "width": 250,
+      "height": 28
+    },
+    {
+      "kind": "index8",
+      "source": "resources/font2.index8",
+      "path": "assets/font2.pxr",
+      "width": 256,
+      "height": 66
+    },
+    {
+      "kind": "index8",
+      "source": "resources/font-legacy.index8",
+      "path": "assets/font-legacy.pxr",
+      "width": 168,
+      "height": 5
+    },
+    {
+      "kind": "palette",
+      "source": "resources/palette.json",
+      "path": "assets/palette.pxr"
+    },
+    {
+      "kind": "palette",
+      "source": "resources/palette-lit.json",
+      "path": "assets/palette-lit.pxr"
+    }
+  ]
+}

@@ -1,8 +1,7 @@
 /* Voxel Craft: a first-person voxel sandbox for PXA.
  *
  * The world is a 64 x 24 x 64 block grid generated from value noise. The scene
- * uses a capability-gated GameRender context during play and keeps the
- * GuestMapped pixel renderer as its complex-UI fallback.
+ * uses GameRender for play and menus in the published build.
  * The Host fuses nearest upscale, rotation and panel byte order conversion. Touch
  * controls: left half is a movement stick, right half looks around. The MINE
  * button holds a mining action with per-block progress and break particles,
@@ -10,13 +9,12 @@
  * doubles as fly-up; double-tap toggles fly mode. A small PCM synth plays
  * mining, break, place, attack, hit and jump effects.
  */
-#include "pxa.h"
-#include "pxa_game_render.h"
-#include "pxa_log.h"
 #include "pxa_raster.h"
-#include "pxa_storage.h"
-#include "pxa_surface.h"
 #include "pxa_ui.h"
+#include "pxa_clock.h"
+#include "pxa_storage.h"
+#include "pxa_window.h"
+#include "pxa_surface.h"
 
 #include "game.h"
 #include "quality_controller.h"
@@ -25,11 +23,14 @@
 #include "sfx.h"
 #include "surface_ownership.h"
 #include "voxel_raster.h"
+#include "voxel_assets.h"
 
 #define FRAME_NODE UINT32_C(2)
 #define FRAME_PERIOD_MS 33u
 #define CLOCK_POLL_PERIOD_MS 16u
+#if !VOXEL_GAME_RENDER_ONLY
 #define VOXEL_HOST_RASTER_DEFAULT 1u
+#endif
 #define MAX_CATCHUP_STEPS 3u
 #define WINDOW_SNAPSHOT_REQUEST UINT32_C(3)
 #define SURFACE_CREATE_REQUEST UINT32_C(4)
@@ -114,11 +115,13 @@ typedef struct {
     uint8_t active;
 } perf_timing_sample_t;
 
+#if !VOXEL_GAME_RENDER_ONLY
 static uint16_t g_surface_buffers[SURFACE_BUFFER_COUNT * FRAME_PIXELS_MAX]
     __attribute__((aligned(PXA_SURFACE_BUFFER_ALIGNMENT)));
+#endif
 static uint8_t g_packet[128];
 static uint32_t g_ui_generation;
-static uint32_t g_surface_handle;
+static uint64_t g_surface_handle;
 static uint16_t g_surface_width;
 static uint16_t g_surface_height;
 static uint64_t g_frame_id;
@@ -127,8 +130,11 @@ static uint8_t g_surface_start_pending;
 static uint8_t g_surface_retry_ticks;
 static uint8_t g_surface_mode;
 static uint8_t g_surface_request_mode;
+#if !VOXEL_GAME_RENDER_ONLY
 static uint8_t g_raster_supported;
+#endif
 static uint8_t g_raster_ready;
+static uint8_t g_asset_failures;
 static voxel_surface_ownership_t g_surface_ownership;
 static uint8_t g_input_initialized;
 static uint8_t g_input_dirty;
@@ -307,7 +313,11 @@ static void toast_quality_mode(void) {
  * settings screens and the inventory; the Guest CPU renderer remains only for
  * Hosts without GameRender support. */
 static uint8_t desired_surface_mode(void) {
+#if VOXEL_GAME_RENDER_ONLY
+    return SURFACE_MODE_RASTER;
+#else
     return g_raster_supported ? SURFACE_MODE_RASTER : SURFACE_MODE_MAPPED;
+#endif
 }
 
 /* Menus, settings and the inventory render at the real display resolution
@@ -390,9 +400,9 @@ static void update_quality(uint64_t duration_us) {
     uint32_t consumer_wait_us = g_buffer_wait_ema_us;
     voxel_quality_action_t action;
     if (g_surface_mode == SURFACE_MODE_RASTER && g_raster_ready) {
-        pxa_raster_telemetry_t telemetry;
-        if (pxa_raster_query_telemetry(g_surface_handle, &telemetry) ==
-            (int32_t)PXA_RASTER_TELEMETRY_BYTES) {
+        pxa_game_render_telemetry_t telemetry;
+        if (pxa_game_render_query_telemetry(g_surface_handle,
+                                                &telemetry) == PXA_STATUS_OK) {
             if (telemetry.last_host_raster_us != 0)
                 update_duration_stats(telemetry.last_host_raster_us,
                                       &g_host_raster_ema_us,
@@ -502,7 +512,7 @@ static void update_duration_stats(uint64_t duration_us, uint32_t *ema_us,
 
 static int mark_perf_timing(uint32_t request_id) {
     if (!g_perf_timing.active) return 0;
-    if (pxa_clock_now(request_id)) return 1;
+    if (pxa_clock_now(request_id) == PXA_STATUS_OK) return 1;
     g_perf_timing.active = 0;
     return 0;
 }
@@ -516,11 +526,15 @@ static void mark_raster_phase(uint8_t phase) {
 }
 
 static int perf_timing_surface_ready(void) {
+#if !VOXEL_GAME_RENDER_ONLY
     const uint8_t all_buffers = (uint8_t)((1u << SURFACE_BUFFER_COUNT) - 1u);
+#endif
     return g_surface_handle != 0 && !g_surface_create_pending &&
            !g_surface_ownership.recreate_pending &&
+#if !VOXEL_GAME_RENDER_ONLY
            g_surface_ownership.writing_buffer == VOXEL_SURFACE_BUFFER_NONE &&
            g_surface_ownership.host_owned_mask != all_buffers &&
+#endif
            g_surface_width == (uint16_t)render_scene_width() &&
            g_surface_height == (uint16_t)render_scene_height();
 }
@@ -577,7 +591,7 @@ static void log_perf_sample(uint64_t timestamp_us, uint64_t guest_render_us) {
     out = put_perf_metric(out, " total_ema_us=", g_render_total_ema_us);
     out = put_perf_metric(out, " wait_ema_us=", g_buffer_wait_ema_us);
     *out = '\0';
-    (void)pxa_log_info(line);
+    (void)pxa_log_write(2, line);
 
     if (g_surface_mode != SURFACE_MODE_RASTER ||
         !g_perf_raster_stats_valid) return;
@@ -609,7 +623,7 @@ static void log_perf_sample(uint64_t timestamp_us, uint64_t guest_render_us) {
      * mix. Keeping them here too pushed this line past
      * PXA_LOG_MAX_MESSAGE_BYTES, which dropped the whole record. */
     *out = '\0';
-    (void)pxa_log_info(line);
+    (void)pxa_log_write(2, line);
 
     out = line;
     out = put_perf_metric(out, "VOXEL RANGE fog_q8=",
@@ -632,7 +646,7 @@ static void log_perf_sample(uint64_t timestamp_us, uint64_t guest_render_us) {
     out = put_perf_metric(out, " commands=",
                           g_perf_raster_stats.draw_commands);
     *out = '\0';
-    (void)pxa_log_info(line);
+    (void)pxa_log_write(2, line);
 
     out = line;
     out = put_perf_metric(out, "VOXEL DROP mesh_overflow=",
@@ -648,7 +662,7 @@ static void log_perf_sample(uint64_t timestamp_us, uint64_t guest_render_us) {
     out = put_perf_metric(out, " append_fail=",
                           g_perf_raster_stats.append_failures);
     *out = '\0';
-    (void)pxa_log_info(line);
+    (void)pxa_log_write(2, line);
 
     out = line;
     out = put_perf_metric(out, "VOXEL CULL backface=",
@@ -664,26 +678,27 @@ static void log_perf_sample(uint64_t timestamp_us, uint64_t guest_render_us) {
     out = put_perf_metric(out, " sort_cycles=",
                           g_perf_raster_stats.sort_cycles);
     *out = '\0';
-    (void)pxa_log_info(line);
+    (void)pxa_log_write(2, line);
 }
 
 static int handle_perf_clock_event(const pxa_event_t *event) {
-    int32_t status;
+    pxa_clock_now_result_t now;
     uint64_t timestamp_us;
-    if (event->service != PXA_SERVICE_CLOCK ||
-        event->opcode != PXA_CLOCK_NOW_RESULT ||
-        event->request_id < PERF_CLOCK_FRAME_START ||
-        event->request_id > PERF_CLOCK_SUBMIT_END) {
+    if (event->service != PXA_CLOCK_SERVICE ||
+        event->opcode != PXA_CLOCK_NOW ||
+        event->token < PERF_CLOCK_FRAME_START ||
+        event->token > PERF_CLOCK_SUBMIT_END) {
         return 0;
     }
-    if (!pxa_clock_parse_now(event, &status, &timestamp_us) ||
-        status != PXA_STATUS_OK || !g_perf_timing.active) {
-        if (event->request_id == PERF_CLOCK_FRAME_END) {
+    if (!pxa_clock_parse_now(event, event->token, &now) ||
+        now.status != PXA_STATUS_OK || !g_perf_timing.active) {
+        if (event->token == PERF_CLOCK_FRAME_END) {
             g_perf_timing.active = 0;
         }
         return 1;
     }
-    switch (event->request_id) {
+    timestamp_us = now.timestamp_us;
+    switch (event->token) {
         case PERF_CLOCK_FRAME_START:
             g_perf_timing.frame_start_us = timestamp_us;
             break;
@@ -779,13 +794,12 @@ static int initialize_input_surface(void) {
 static void rebind_ui_surface(void) {
     g_input_initialized = 0;
     if (!initialize_input_surface()) {
-        (void)pxa_log_error("UI surface rebind failed");
+        (void)pxa_log_write(4, "UI surface rebind failed");
     }
 }
 
 static int request_surface_create(void) {
-    /* GuestMapped frames use the current internal quality resolution. The
-     * Host performs nearest upscale and panel rotation in one native pass. */
+    int sent;
     if (g_surface_create_pending || g_surface_handle != 0 ||
         g_layout.view_w <= 0 || g_layout.view_h <= 0) {
         return 0;
@@ -797,15 +811,29 @@ static int request_surface_create(void) {
     render_set_quality(desired_render_quality());
     g_surface_width = (uint16_t)render_scene_width();
     g_surface_height = (uint16_t)render_scene_height();
-    if (!(g_surface_request_mode == SURFACE_MODE_RASTER
-              ? pxa_game_render_create(
-                    SURFACE_CREATE_REQUEST, g_surface_width,
-                    g_surface_height, SURFACE_BUFFER_COUNT, 1, g_packet,
-                    sizeof(g_packet))
-              : pxa_surface_create_rgb565_mapped(
-                    SURFACE_CREATE_REQUEST, g_surface_width,
-                    g_surface_height, SURFACE_BUFFER_COUNT, 1, g_packet,
-                    sizeof(g_packet)))) {
+    if (g_surface_request_mode == SURFACE_MODE_RASTER) {
+        const pxa_game_render_options_t options = {
+            .width = g_surface_width,
+            .height = g_surface_height,
+            .buffer_count = SURFACE_BUFFER_COUNT,
+            .prefer_direct_scanout = 1,
+            .max_draw_bytes = PXA_RASTER_MAX_DRAW_BYTES};
+        uint32_t packet_size = 0;
+        sent = pxa_game_render_build_create(
+                   g_packet, sizeof(g_packet), SURFACE_CREATE_REQUEST,
+                   &options, &packet_size) &&
+               pxa_submit(g_packet, packet_size) == PXA_STATUS_OK;
+    }
+#if !VOXEL_GAME_RENDER_ONLY
+    else
+        sent = pxa_surface_create_rgb565_mapped(
+            SURFACE_CREATE_REQUEST, g_surface_width, g_surface_height,
+            SURFACE_BUFFER_COUNT, 1, g_packet, sizeof(g_packet));
+#else
+    else
+        sent = 0;
+#endif
+    if (!sent) {
         g_surface_start_pending = 1;
         g_surface_retry_ticks = SURFACE_RETRY_TICKS;
         return 0;
@@ -836,6 +864,7 @@ static void reset_surface_ownership(void) {
 static void try_finish_surface_recreate(void) {
     if (!voxel_surface_can_recreate(&g_surface_ownership)) return;
     if (g_surface_handle != 0) {
+        voxel_assets_cancel();
         (void)pxa_close_handle(g_surface_handle);
         g_surface_handle = 0;
         g_surface_width = 0;
@@ -869,45 +898,30 @@ static window_insets_t g_system_bar_insets;
  * physical safe area plus the system chrome/gesture reserves. Both are used
  * for the metrics-changed event and as a periodic fallback, so a resize or a
  * chrome change is picked up even if the UI environment event is missed. */
-static int parse_window_snapshot(const uint8_t *payload, uint32_t length,
+static int parse_window_snapshot(const pxa_event_t *event,
                                  uint32_t *out_width, uint32_t *out_height,
                                  window_insets_t *out_safe,
                                  window_insets_t *out_bars) {
-    uint32_t offset = 0;
-    uint32_t width = 0;
-    uint32_t height = 0;
-    window_insets_t safe = {0, 0, 0, 0};
-    window_insets_t bars = {0, 0, 0, 0};
-    while (offset + 4u <= length) {
-        const uint16_t tag = pxa_read_u16(payload + offset);
-        const uint16_t size = pxa_read_u16(payload + offset + 2u);
-        offset += 4u;
-        if (size > length - offset) {
-            return 0;
-        }
-        if (tag == 2u && size == 8u) {
-            width = pxa_read_u32(payload + offset);
-            height = pxa_read_u32(payload + offset + 4u);
-        } else if (tag == 5u && size == 16u) {
-            safe.left = pxa_read_u32(payload + offset);
-            safe.top = pxa_read_u32(payload + offset + 4u);
-            safe.right = pxa_read_u32(payload + offset + 8u);
-            safe.bottom = pxa_read_u32(payload + offset + 12u);
-        } else if (tag == 6u && size == 16u) {
-            bars.left = pxa_read_u32(payload + offset);
-            bars.top = pxa_read_u32(payload + offset + 4u);
-            bars.right = pxa_read_u32(payload + offset + 8u);
-            bars.bottom = pxa_read_u32(payload + offset + 12u);
-        }
-        offset += size;
+    pxa_window_snapshot_t snapshot;
+    const int valid = event->opcode == PXA_WINDOW_GET_SNAPSHOT
+        ? pxa_window_parse_snapshot(event, WINDOW_SNAPSHOT_REQUEST,
+                                       &snapshot)
+        : pxa_window_parse_metrics_changed(event, &snapshot);
+    if (!valid || snapshot.status != PXA_STATUS_OK) return 0;
+    *out_width = snapshot.logical_width;
+    *out_height = snapshot.logical_height;
+    if (out_safe != NULL) {
+        *out_safe = (window_insets_t){
+            snapshot.safe_insets.left, snapshot.safe_insets.top,
+            snapshot.safe_insets.right, snapshot.safe_insets.bottom};
     }
-    if (width == 0 || height == 0) {
-        return 0;
+    if (out_bars != NULL) {
+        *out_bars = (window_insets_t){
+            snapshot.system_bar_insets.left,
+            snapshot.system_bar_insets.top,
+            snapshot.system_bar_insets.right,
+            snapshot.system_bar_insets.bottom};
     }
-    *out_width = width;
-    *out_height = height;
-    if (out_safe != NULL) *out_safe = safe;
-    if (out_bars != NULL) *out_bars = bars;
     return 1;
 }
 
@@ -937,8 +951,7 @@ static void apply_screen_size(int width, int height) {
 }
 
 static void request_window_snapshot(void) {
-    (void)pxa_send(PXA_SERVICE_WINDOW, PXA_WINDOW_GET_SNAPSHOT_OP,
-                   WINDOW_SNAPSHOT_REQUEST, (const uint8_t *)0, 0);
+    (void)pxa_window_request_snapshot(WINDOW_SNAPSHOT_REQUEST);
 }
 
 /* --- menu, settings and save data --------------------------------------- */
@@ -973,7 +986,7 @@ static int g_save_length;
 static int g_load_next;
 static int g_load_chunks;
 static uint8_t g_save_blob[SAVE_BLOB_BYTES];
-static uint8_t g_storage_payload[2304];
+static uint8_t g_storage_packet[2304];
 static char g_menu_toast[24];
 static uint32_t g_menu_toast_until;
 static uint32_t g_clock_seed;
@@ -1002,10 +1015,10 @@ static void set_screen(uint8_t screen) {
  * detail level (0 = AUTO). */
 static void save_preferences(void) {
     const uint8_t value[2] = {g_show_performance ? 1u : 0u, g_quality_manual};
-    (void)pxa_storage_set(STORAGE_PREFS_SET_REQUEST, STORAGE_PREFS_KEY,
-                          STORAGE_PREFS_KEY_LEN, value, sizeof(value),
-                          g_storage_payload, sizeof(g_storage_payload),
-                          g_packet, sizeof(g_packet));
+    (void)pxa_storage_request_set(
+        g_storage_packet, sizeof(g_storage_packet),
+        STORAGE_PREFS_SET_REQUEST, STORAGE_PREFS_KEY,
+        STORAGE_PREFS_KEY_LEN, value, sizeof(value));
 }
 
 static void menu_toast(const char *text) {
@@ -1098,10 +1111,10 @@ static void save_write_next_chunk(void) {
     if (length > SAVE_CHUNK_BYTES) {
         length = SAVE_CHUNK_BYTES;
     }
-    if (!pxa_storage_set(STORAGE_CHUNK_SET_REQUEST, key, 5,
-                         g_save_blob + offset, (size_t)length,
-                         g_storage_payload, sizeof(g_storage_payload),
-                         g_packet, sizeof(g_packet))) {
+    if (pxa_storage_request_set(
+            g_storage_packet, sizeof(g_storage_packet),
+            STORAGE_CHUNK_SET_REQUEST, key, 5,
+            g_save_blob + offset, (size_t)length) != PXA_STATUS_OK) {
         menu_toast("SAVE FAILED");
         g_save_active = 0;
         return;
@@ -1138,10 +1151,10 @@ static void save_start(void) {
     meta[5] = (uint8_t)((uint32_t)g_save_chunks >> 8);
     meta[6] = 0;
     meta[7] = 0;
-    if (!pxa_storage_set(STORAGE_META_SET_REQUEST, STORAGE_META_KEY,
-                         STORAGE_META_KEY_LEN, meta, sizeof(meta),
-                         g_storage_payload, sizeof(g_storage_payload),
-                         g_packet, sizeof(g_packet))) {
+    if (pxa_storage_request_set(
+            g_storage_packet, sizeof(g_storage_packet),
+            STORAGE_META_SET_REQUEST, STORAGE_META_KEY,
+            STORAGE_META_KEY_LEN, meta, sizeof(meta)) != PXA_STATUS_OK) {
         menu_toast("SAVE FAILED");
         g_save_active = 0;
         return;
@@ -1166,9 +1179,8 @@ static void load_request_chunk(void) {
         return;
     }
     storage_chunk_key(key, g_load_next);
-    if (!pxa_storage_get(STORAGE_CHUNK_GET_REQUEST, key, 5,
-                         g_storage_payload, sizeof(g_storage_payload),
-                         g_packet, sizeof(g_packet))) {
+    if (pxa_storage_request_get(STORAGE_CHUNK_GET_REQUEST, key, 5) !=
+        PXA_STATUS_OK) {
         menu_toast("LOAD FAILED");
         g_load_active = 0;
     }
@@ -1180,20 +1192,18 @@ static void load_start(void) {
     }
     g_load_active = 1;
     menu_toast("LOADING...");
-    if (!pxa_storage_get(STORAGE_META_GET_REQUEST, STORAGE_META_KEY,
-                         STORAGE_META_KEY_LEN, g_storage_payload,
-                         sizeof(g_storage_payload), g_packet,
-                         sizeof(g_packet))) {
+    if (pxa_storage_request_get(
+            STORAGE_META_GET_REQUEST, STORAGE_META_KEY,
+            STORAGE_META_KEY_LEN) != PXA_STATUS_OK) {
         menu_toast("LOAD FAILED");
         g_load_active = 0;
     }
 }
 
 static void delete_save(void) {
-    if (!pxa_storage_remove(STORAGE_REMOVE_REQUEST, STORAGE_META_KEY,
-                            STORAGE_META_KEY_LEN, g_storage_payload,
-                            sizeof(g_storage_payload), g_packet,
-                            sizeof(g_packet))) {
+    if (pxa_storage_request_remove(
+            STORAGE_REMOVE_REQUEST, STORAGE_META_KEY,
+            STORAGE_META_KEY_LEN) != PXA_STATUS_OK) {
         menu_toast("DELETE FAILED");
     }
 }
@@ -1268,12 +1278,12 @@ static void on_menu_tap(int x, int y) {
 
 static void handle_storage_event(const pxa_event_t *event) {
     if (event->opcode == PXA_STORAGE_GET &&
-        event->request_id == STORAGE_META_GET_REQUEST) {
+        event->token == STORAGE_META_GET_REQUEST) {
         pxa_storage_get_result_t result;
-        if (pxa_storage_parse_get(event, &result) &&
-            result.status == PXA_STATUS_OK && result.value_length == 8) {
-            g_save_length = (int)pxa_read_u32(result.value);
-            g_load_chunks = (int)pxa_read_u32(result.value + 4);
+        if (pxa_storage_parse_get(event, event->token, &result) &&
+            result.status == PXA_STATUS_OK && result.value.size == 8) {
+            g_save_length = (int)pxa_read_u32(result.value.data);
+            g_load_chunks = (int)pxa_read_u32(result.value.data + 4);
             g_has_save = 1;
             if (g_load_active) {
                 if (g_save_length <= 0 ||
@@ -1296,19 +1306,19 @@ static void handle_storage_event(const pxa_event_t *event) {
         return;
     }
     if (event->opcode == PXA_STORAGE_GET &&
-        event->request_id == STORAGE_CHUNK_GET_REQUEST) {
+        event->token == STORAGE_CHUNK_GET_REQUEST) {
         pxa_storage_get_result_t result;
-        if (pxa_storage_parse_get(event, &result) &&
+        if (pxa_storage_parse_get(event, event->token, &result) &&
             result.status == PXA_STATUS_OK && g_load_active &&
             g_load_next < g_load_chunks) {
             const int offset = g_load_next * SAVE_CHUNK_BYTES;
-            int length = result.value_length;
+            int length = result.value.size;
             int index;
             if (offset + length > (int)sizeof(g_save_blob)) {
                 length = (int)sizeof(g_save_blob) - offset;
             }
             for (index = 0; index < length; ++index) {
-                g_save_blob[offset + index] = result.value[index];
+                g_save_blob[offset + index] = result.value.data[index];
             }
             ++g_load_next;
             load_request_chunk();
@@ -1319,9 +1329,9 @@ static void handle_storage_event(const pxa_event_t *event) {
         return;
     }
     if (event->opcode == PXA_STORAGE_SET &&
-        event->request_id == STORAGE_META_SET_REQUEST) {
+        event->token == STORAGE_META_SET_REQUEST) {
         int32_t status;
-        if (pxa_storage_parse_status(event, PXA_STORAGE_SET, &status) &&
+        if (pxa_storage_parse_status(event, event->token, PXA_STORAGE_SET, &status) &&
             status == PXA_STATUS_OK) {
             g_save_next = 0;
             save_write_next_chunk();
@@ -1332,9 +1342,9 @@ static void handle_storage_event(const pxa_event_t *event) {
         return;
     }
     if (event->opcode == PXA_STORAGE_SET &&
-        event->request_id == STORAGE_CHUNK_SET_REQUEST) {
+        event->token == STORAGE_CHUNK_SET_REQUEST) {
         int32_t status;
-        if (pxa_storage_parse_status(event, PXA_STORAGE_SET, &status) &&
+        if (pxa_storage_parse_status(event, event->token, PXA_STORAGE_SET, &status) &&
             status == PXA_STATUS_OK) {
             save_write_next_chunk();
         } else {
@@ -1344,19 +1354,19 @@ static void handle_storage_event(const pxa_event_t *event) {
         return;
     }
     if (event->opcode == PXA_STORAGE_REMOVE &&
-        event->request_id == STORAGE_REMOVE_REQUEST) {
+        event->token == STORAGE_REMOVE_REQUEST) {
         g_has_save = 0;
         menu_toast("SAVE DELETED");
         return;
     }
     if (event->opcode == PXA_STORAGE_GET &&
-        event->request_id == STORAGE_PREFS_GET_REQUEST) {
+        event->token == STORAGE_PREFS_GET_REQUEST) {
         pxa_storage_get_result_t result;
-        if (pxa_storage_parse_get(event, &result) &&
-            result.status == PXA_STATUS_OK && result.value_length >= 1) {
-            g_show_performance = result.value[0] & 1u;
-            if (result.value_length >= 2) {
-                g_quality_manual = result.value[1];
+        if (pxa_storage_parse_get(event, event->token, &result) &&
+            result.status == PXA_STATUS_OK && result.value.size >= 1) {
+            g_show_performance = result.value.data[0] & 1u;
+            if (result.value.size >= 2) {
+                g_quality_manual = result.value.data[1];
                 apply_quality();
             }
             (void)render_frame();
@@ -2099,6 +2109,7 @@ static void end_buffer_wait(void) {
 /* Returns 1 once ownership moved to Host, 0 while back-pressured and -1 when
  * the Surface must be recreated. A blocked Present retains the acquired
  * buffer and retries it without rendering over those pixels. */
+#if !VOXEL_GAME_RENDER_ONLY
 static int present_writing_buffer(void) {
     int32_t result;
     const uint8_t index = g_surface_ownership.writing_buffer;
@@ -2121,6 +2132,7 @@ static int present_writing_buffer(void) {
     }
     return -1;
 }
+#endif
 
 /* Fills the state both the raster and the CPU menu renderers draw. */
 static void build_menu_state(menu_state_t *menu) {
@@ -2141,17 +2153,21 @@ static void build_menu_state(menu_state_t *menu) {
 static int render_frame(void) {
     hud_state_t hud;
     ray_hit_t target;
+#if !VOXEL_GAME_RENDER_ONLY
     const size_t pixels = (size_t)g_surface_width * g_surface_height;
     uint16_t *frame;
     uint8_t buffer_index;
     int32_t acquire_result;
     int present_result;
+#endif
     if (g_surface_ownership.recreate_pending) {
         try_finish_surface_recreate();
         return 1;
     }
     if (g_surface_handle == 0 ||
+#if !VOXEL_GAME_RENDER_ONLY
         (g_surface_mode == SURFACE_MODE_MAPPED && pixels > FRAME_PIXELS_MAX) ||
+#endif
         g_surface_width != (uint16_t)render_scene_width() ||
         g_surface_height != (uint16_t)render_scene_height()) {
         return 0;
@@ -2202,19 +2218,19 @@ static int render_frame(void) {
             return 1;
         }
         if (raster_result == PXA_STATUS_INVALID_ARGUMENT)
-            (void)pxa_log_error("voxel raster submit: invalid argument");
+            (void)pxa_log_write(4, "voxel raster submit: invalid argument");
         else if (raster_result == PXA_STATUS_BAD_STATE)
-            (void)pxa_log_error("voxel raster submit: bad state");
+            (void)pxa_log_write(4, "voxel raster submit: bad state");
         else if (raster_result == PXA_STATUS_UNSUPPORTED)
-            (void)pxa_log_error("voxel raster submit: unsupported");
+            (void)pxa_log_write(4, "voxel raster submit: unsupported");
         else if (raster_result == PXA_STATUS_RESOURCE_LIMIT)
-            (void)pxa_log_error("voxel raster submit: resource limit");
+            (void)pxa_log_write(4, "voxel raster submit: resource limit");
         else if (raster_result == PXA_STATUS_PROTOCOL_ERROR)
-            (void)pxa_log_error("voxel raster submit: protocol error");
+            (void)pxa_log_write(4, "voxel raster submit: protocol error");
         else if (raster_result == PXA_STATUS_LIMIT_EXCEEDED)
-            (void)pxa_log_error("voxel raster submit: limit exceeded");
+            (void)pxa_log_write(4, "voxel raster submit: limit exceeded");
         else
-            (void)pxa_log_error("voxel raster submit: other failure");
+            (void)pxa_log_write(4, "voxel raster submit: other failure");
         /* A malformed or oversized frame must not permanently demote the app
          * to the low-resolution mapped renderer. Keep the last valid frame;
          * only recreate the same GameRender context when its state is gone. */
@@ -2225,6 +2241,7 @@ static int render_frame(void) {
         }
         return 0;
     }
+#if !VOXEL_GAME_RENDER_ONLY
     if (g_surface_ownership.writing_buffer != VOXEL_SURFACE_BUFFER_NONE) {
         present_result = present_writing_buffer();
         if (present_result < 0) recreate_surface();
@@ -2281,6 +2298,9 @@ static int render_frame(void) {
     present_result = present_writing_buffer();
     if (present_result < 0) recreate_surface();
     return present_result >= 0;
+#else
+    return 0;
+#endif
 }
 
 /* A detail level the Host rejected is stepped down and persisted, with a
@@ -2306,20 +2326,23 @@ static void notify_quality_fallback(int requested, int fallback) {
     } else {
         menu_toast(text);
     }
-    (void)pxa_log_warn(text);
+    (void)pxa_log_write(3, text);
 }
 
 static int handle_surface_create(const pxa_event_t *event) {
+#if !VOXEL_GAME_RENDER_ONLY
     pxa_surface_create_result_t created;
     const uint32_t expected_stride = (uint32_t)g_surface_width *
                                      sizeof(g_surface_buffers[0]);
     const uint32_t expected_bytes = expected_stride * g_surface_height;
-    if (event == NULL || event->request_id != SURFACE_CREATE_REQUEST)
+#endif
+    if (event == NULL || event->token != SURFACE_CREATE_REQUEST)
         return 0;
     if (g_surface_request_mode == SURFACE_MODE_RASTER) {
         pxa_game_render_create_result_t renderer;
         const uint32_t required = PXA_RASTER_CAP_TEXTURED_QUAD;
-        if (!pxa_game_render_parse_create(event, &renderer)) return 0;
+        if (!pxa_game_render_parse_create(
+                event, SURFACE_CREATE_REQUEST, &renderer)) return 0;
         g_surface_create_pending = 0;
         if (renderer.status == PXA_STATUS_UNSUPPORTED) {
             /* A Host with a smaller GameRender limit rejects this context
@@ -2337,41 +2360,54 @@ static int handle_surface_create(const pxa_event_t *event) {
                 schedule_surface_retry();
                 return 1;
             }
+#if VOXEL_GAME_RENDER_ONLY
+            (void)pxa_log_write(4, "voxel: GameRender is required");
+#else
             g_raster_supported = 0;
             schedule_surface_retry();
+#endif
             return 1;
         }
         if (renderer.status != PXA_STATUS_OK ||
             (renderer.capabilities & required) != required ||
             g_surface_width != (uint16_t)render_scene_width() ||
             g_surface_height != (uint16_t)render_scene_height()) {
-            if (renderer.context_handle != 0)
-                (void)pxa_close_handle(renderer.context_handle);
+            if (renderer.handle != 0)
+                (void)pxa_close_handle(renderer.handle);
             schedule_surface_retry();
             return 1;
         }
-        g_surface_handle = renderer.context_handle;
+        g_surface_handle = renderer.handle;
         g_surface_mode = SURFACE_MODE_RASTER;
         g_surface_ownership.recreate_pending = 0;
         reset_surface_ownership();
         voxel_raster_reset();
         voxel_raster_set_capabilities(renderer.capabilities);
-        if (!voxel_raster_upload_assets(g_surface_handle)) {
+        if (voxel_assets_begin(g_surface_handle, renderer.capabilities) != 0) {
+            voxel_assets_cancel();
             (void)pxa_close_handle(g_surface_handle);
             g_surface_handle = 0;
+#if !VOXEL_GAME_RENDER_ONLY
             g_raster_supported = 0;
+#endif
             voxel_raster_set_capabilities(0);
             schedule_surface_retry();
             return 1;
         }
-        g_raster_ready = 1;
         voxel_raster_set_phase_marker(mark_raster_phase);
-        (void)pxa_log_info("voxel: raster surface ready");
         g_surface_retry_ticks = 0;
         rebind_ui_surface();
-        (void)render_frame();
+        /* A resource-free frame remains responsive while Host loads files. */
+        {
+            pxa_raster_draw_list_t loading;
+            pxa_raster_draw_list_begin(&loading, g_packet, sizeof(g_packet), ++g_frame_id);
+            pxa_raster_clear(&loading, UINT16_C(0x116a));
+            (void)pxa_raster_submit(g_surface_handle, &loading);
+        }
+        if (g_backgrounded) (void)voxel_assets_suspend(1);
         return 1;
     }
+#if !VOXEL_GAME_RENDER_ONLY
     if (!pxa_surface_parse_create(event, &created)) return 0;
     g_surface_create_pending = 0;
     if (created.status != PXA_STATUS_OK ||
@@ -2415,6 +2451,9 @@ static int handle_surface_create(const pxa_event_t *event) {
     rebind_ui_surface();
     (void)render_frame();
     return 1;
+#else
+    return 0;
+#endif
 }
 
 static void update_fps(uint64_t timestamp_us) {
@@ -2459,11 +2498,13 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     g_surface_create_pending = 0;
     g_surface_start_pending = 0;
     g_surface_retry_ticks = 0;
-    g_surface_mode = SURFACE_MODE_MAPPED;
-    g_surface_request_mode = SURFACE_MODE_MAPPED;
+    g_surface_mode = desired_surface_mode();
+    g_surface_request_mode = g_surface_mode;
     /* The host owns the pixel work while the Guest supplies world geometry and
      * the same UI state used by the mapped renderer. */
+#if !VOXEL_GAME_RENDER_ONLY
     g_raster_supported = VOXEL_HOST_RASTER_DEFAULT;
+#endif
     g_raster_ready = 0;
     voxel_raster_set_capabilities(0);
     reset_surface_ownership();
@@ -2538,7 +2579,7 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     g_pad_turn = 0.0F;
     g_pad_pitch = 0.0F;
     g_pad_last_a_us = 0;
-    g_sfx.state = VOXEL_SFX_OFF;
+    g_sfx = (voxel_sfx_t){0};
     g_has_save = 0;
     g_game_started = 0;
     g_save_active = 0;
@@ -2557,37 +2598,35 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     g_menu_press_travel = 0;
     g_menu_press_us = 0;
     game_inventory_init();
-    if (!pxa_window_fullscreen()) {
-        (void)pxa_log_error("voxel: fullscreen request failed");
+    if (pxa_window_fullscreen() != PXA_STATUS_OK) {
+        (void)pxa_log_write(4, "voxel: fullscreen request failed");
         return PXA_STATUS_INTERNAL;
     }
     if (!initialize_input_surface()) {
-        (void)pxa_log_error("voxel: input surface setup failed");
+        (void)pxa_log_write(4, "voxel: input surface setup failed");
         return PXA_STATUS_INTERNAL;
     }
     if (!request_surface_create()) {
-        (void)pxa_log_error("voxel: surface create request failed");
+        (void)pxa_log_write(4, "voxel: surface create request failed");
         return PXA_STATUS_INTERNAL;
     }
     /* Audio is optional and may open a runtime modal. The Host modal barrier
      * keeps this already-requested Surface behind trusted UI until dismissal. */
     voxel_sfx_start(&g_sfx, g_packet, sizeof(g_packet));
-    (void)pxa_storage_get(STORAGE_PREFS_GET_REQUEST, STORAGE_PREFS_KEY,
-                          STORAGE_PREFS_KEY_LEN, g_storage_payload,
-                          sizeof(g_storage_payload), g_packet,
-                          sizeof(g_packet));
-    (void)pxa_storage_get(STORAGE_META_GET_REQUEST, STORAGE_META_KEY,
-                          STORAGE_META_KEY_LEN, g_storage_payload,
-                          sizeof(g_storage_payload), g_packet,
-                          sizeof(g_packet));
+    (void)pxa_storage_request_get(
+        STORAGE_PREFS_GET_REQUEST, STORAGE_PREFS_KEY,
+        STORAGE_PREFS_KEY_LEN);
+    (void)pxa_storage_request_get(
+        STORAGE_META_GET_REQUEST, STORAGE_META_KEY,
+        STORAGE_META_KEY_LEN);
 #ifndef VOXEL_AUTOPLAY
 #define VOXEL_AUTOPLAY 0
 #endif
 #if VOXEL_AUTOPLAY
     g_autoplay_pending = 1;
 #endif
-    return pxa_clock_set_period(CLOCK_POLL_PERIOD_MS) ? PXA_STATUS_OK
-                                                 : PXA_STATUS_INTERNAL;
+    return pxa_clock_set_period(CLOCK_POLL_PERIOD_MS) == PXA_STATUS_OK
+               ? PXA_STATUS_OK : PXA_STATUS_INTERNAL;
 }
 
 static uint8_t consume_simulation_steps(uint64_t timestamp_us) {
@@ -2620,8 +2659,10 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     }
     if (parsed.service == PXA_SERVICE_SYSTEM &&
         parsed.opcode == PXA_SYSTEM_LIFECYCLE_EVENT &&
-        parsed.payload_length == 1) {
+        parsed.payload_size == 1) {
         g_backgrounded = parsed.payload[0] == PXA_SYSTEM_LIFECYCLE_BACKGROUND;
+        if (voxel_assets_suspend(g_backgrounded) != 0) return -1;
+        if (g_backgrounded) save_start();
         g_last_tick_us = 0;
         g_tick_accumulator_us = 0;
         release_finger(&g_move_finger);
@@ -2636,12 +2677,31 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         g_pad_pitch = 0.0F;
         return PXA_EVENT_HANDLED;
     }
+    {
+        int assets = voxel_assets_on_event(&parsed);
+        if (assets == 2) {
+            g_raster_ready = 1;
+            g_asset_failures = 0;
+            (void)pxa_log_write(2, "voxel: raster surface ready; file assets");
+            (void)render_frame();
+        } else if (assets < 0) {
+            voxel_assets_cancel();
+            (void)pxa_close_handle(g_surface_handle);
+            g_surface_handle = 0;
+            g_raster_ready = 0;
+            (void)pxa_log_write(4, "voxel: file asset load/bind failed");
+            if (++g_asset_failures > 3) return -1;
+            schedule_surface_retry();
+        }
+        if (assets) return PXA_EVENT_HANDLED;
+    }
     if (voxel_sfx_handle_event(&g_sfx, &parsed, g_packet, sizeof(g_packet))) {
         return PXA_EVENT_HANDLED;
     }
     if (handle_surface_create(&parsed)) {
         return PXA_EVENT_HANDLED;
     }
+#if !VOXEL_GAME_RENDER_ONLY
     {
         pxa_surface_released_event_t released;
         if (pxa_surface_parse_released(&parsed, &released)) {
@@ -2657,7 +2717,8 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
             return PXA_EVENT_HANDLED;
         }
     }
-    if (parsed.service == PXA_SERVICE_STORAGE) {
+#endif
+    if (parsed.service == PXA_STORAGE_SERVICE) {
         handle_storage_event(&parsed);
         g_input_dirty = 1;
         return PXA_EVENT_HANDLED;
@@ -2684,31 +2745,30 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
             return PXA_EVENT_HANDLED;
         }
     }
-    if (parsed.service == PXA_SERVICE_WINDOW &&
-        (parsed.opcode == PXA_WINDOW_METRICS_CHANGED_OP ||
-         (parsed.opcode == PXA_WINDOW_GET_SNAPSHOT_OP &&
-          parsed.request_id == WINDOW_SNAPSHOT_REQUEST))) {
+    if (parsed.service == PXA_WINDOW_SERVICE &&
+        (parsed.opcode == PXA_WINDOW_METRICS_CHANGED ||
+         (parsed.opcode == PXA_WINDOW_GET_SNAPSHOT &&
+          parsed.token == WINDOW_SNAPSHOT_REQUEST))) {
         uint32_t width;
         uint32_t height;
         window_insets_t safe;
         window_insets_t bars;
-        if (parse_window_snapshot(parsed.payload, parsed.payload_length,
-                                  &width, &height, &safe, &bars)) {
+        if (parse_window_snapshot(&parsed, &width, &height, &safe, &bars)) {
             g_safe_insets = safe;
             g_system_bar_insets = bars;
             apply_screen_size((int)width, (int)height);
         }
         return PXA_EVENT_HANDLED;
     }
-    if (parsed.service == PXA_SERVICE_CLOCK &&
-        parsed.opcode == PXA_CLOCK_NOW_RESULT &&
-        parsed.request_id == SEED_CLOCK_REQUEST) {
-        int32_t status;
-        uint64_t seed_us;
-        if (pxa_clock_parse_now(&parsed, &status, &seed_us) &&
-            status == PXA_STATUS_OK) {
+    if (parsed.service == PXA_CLOCK_SERVICE &&
+        parsed.opcode == PXA_CLOCK_NOW &&
+        parsed.token == SEED_CLOCK_REQUEST) {
+        pxa_clock_now_result_t now;
+        if (pxa_clock_parse_now(&parsed, SEED_CLOCK_REQUEST, &now) &&
+            now.status == PXA_STATUS_OK) {
             g_clock_seed =
-                (uint32_t)seed_us ^ (uint32_t)(seed_us >> 32);
+                (uint32_t)now.timestamp_us ^
+                (uint32_t)(now.timestamp_us >> 32);
             g_input_dirty = 1;
         }
         return PXA_EVENT_HANDLED;
@@ -2716,7 +2776,7 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     if (handle_perf_clock_event(&parsed)) {
         return PXA_EVENT_HANDLED;
     }
-    if (pxa_clock_tick_timestamp_us(&parsed, &timestamp_us)) {
+    if (pxa_clock_parse_tick(&parsed, &timestamp_us)) {
         if (g_backgrounded) {
             g_last_tick_us = timestamp_us;
             g_tick_accumulator_us = 0;
@@ -2740,6 +2800,13 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
             g_snapshot_ticks = 0;
             request_window_snapshot();
         }
+#if VOXEL_AUTOPLAY
+        /* Measurement builds must leave the menu before its early return. */
+        if (steps != 0 && g_autoplay_pending && g_surface_handle != 0) {
+            g_autoplay_pending = 0;
+            start_new_game();
+        }
+#endif
         if (g_screen != SCREEN_PLAY) {
             const uint8_t toast_was_visible =
                 g_menu_toast_until > g_now_ms;
@@ -2768,14 +2835,6 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         g_player.flying = 1;
 #endif
         if (steps != 0) {
-#if VOXEL_AUTOPLAY
-            /* Debug/measurement build: start a game once the Surface exists,
-             * so screenshots and frame timing need no input injection. */
-            if (g_autoplay_pending && g_surface_handle != 0) {
-                g_autoplay_pending = 0;
-                start_new_game();
-            }
-#endif
             maybe_begin_perf_timing();
         }
         for (index = 0; index < steps; ++index) {
@@ -2852,7 +2911,8 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         }
         return PXA_EVENT_HANDLED;
     }
-    if (!pxa_ui_parse_pointer(&parsed, &pointer) || pointer.node != FRAME_NODE) {
+    if (!pxa_ui_parse_pointer(&parsed, &pointer) ||
+        pointer.node != FRAME_NODE) {
         return PXA_EVENT_UNHANDLED;
     }
     if (g_backgrounded) return PXA_EVENT_HANDLED;
@@ -2871,14 +2931,8 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
 
 void pxa_app_stop(uint32_t reason) {
     (void)reason;
-    (void)pxa_clock_set_period(0);
-    if (g_sfx.session_handle != 0) {
-        (void)pxa_close_handle(g_sfx.session_handle);
-        g_sfx.session_handle = 0;
-    }
-    if (g_surface_handle != 0) {
-        (void)pxa_close_handle(g_surface_handle);
-    }
+    voxel_assets_cancel();
+    g_sfx.session_handle = 0;
     g_surface_handle = 0;
     g_surface_create_pending = 0;
     g_surface_start_pending = 0;

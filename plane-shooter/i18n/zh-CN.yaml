@@ -79,3 +79,6 @@ translations:
   pause.resume: 继续任务
   pause.restart: 重新开始
   pause.exit: 退出任务
+  images.loading: 正在加载图片…
+  images.failed: 图片加载失败
+  images.retry: 重试

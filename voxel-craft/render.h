@@ -6,6 +6,12 @@
 
 #include "game.h"
 
+/* The published Guest renders through GameRender. Build the CPU reference
+ * path explicitly with -DVOXEL_GAME_RENDER_ONLY=0 when needed. */
+#ifndef VOXEL_GAME_RENDER_ONLY
+#define VOXEL_GAME_RENDER_ONLY 1
+#endif
+
 /* Upper bounds for the static buffers. The actual layout follows the UI
  * environment at runtime; screens larger than these bounds are centred with a
  * letterbox, smaller ones are filled natively. */

@@ -4,10 +4,9 @@
 #include <stdint.h>
 
 #include "block_textures.h"
-#include "pxa_log.h"
 #include "pxa_raster.h"
 #include "rc_math.h"
-#include "voxel_font_data.h"
+#include "voxel_font_metrics.h"
 #include "voxel_sky.h"
 
 #define VOXEL_MESH_QUADS_PER_CHUNK 640u
@@ -189,25 +188,11 @@ static uint16_t g_sort_heap[VOXEL_RASTER_EXACT_CANDIDATES];
 static uint16_t g_sort_sweep[VOXEL_RASTER_EXACT_CANDIDATES];
 static uint8_t g_sort_emitted[VOXEL_RASTER_EXACT_CANDIDATES];
 _Alignas(uint32_t) static uint8_t g_draw_list[PXA_RASTER_MAX_DRAW_BYTES];
-#define VOXEL_RASTER_UPLOAD_SCRATCH \
-    (PXA_RASTER_UPLOAD_HEADER_BYTES + 256u * 66u)
-static uint8_t g_upload[VOXEL_RASTER_UPLOAD_SCRATCH];
-static uint8_t g_font_texture[VOXEL_RASTER_FONT_WIDTH * 5u];
 /* Antialiased glyph tiers, selected when the Host blends per-texel coverage.
  * Without it the legacy 3x5 cut-out font keeps every panel working. */
 static uint8_t g_font_aa;
-static const uint8_t *g_font_aa_pixels[VOXEL_FONT_TIERS];
-static uint8_t g_font_aa_slot[VOXEL_FONT_TIERS];
-static uint8_t g_font_aa_width[VOXEL_FONT_TIERS];
-static uint8_t g_font_aa_height[VOXEL_FONT_TIERS];
-static uint8_t g_font_aa_columns[VOXEL_FONT_TIERS];
 /* Painter polygons select one pre-lit palette row per pixel. */
 #define VOXEL_RASTER_LIGHT_LEVELS 16u
-static uint16_t
-    g_lit_palette[VOXEL_RASTER_LIGHT_LEVELS * PXA_RASTER_PALETTE_COLORS];
-static uint8_t g_palette_upload[PXA_RASTER_UPLOAD_HEADER_BYTES +
-                                VOXEL_RASTER_LIGHT_LEVELS *
-                                    PXA_RASTER_PALETTE_COLORS * 2u];
 static voxel_raster_stats_t g_stats;
 static void (*g_phase_marker)(uint8_t phase);
 static uint32_t g_raster_capabilities;
@@ -220,32 +205,12 @@ static uint8_t g_painter_perspective;
 static float g_view_distance = VOXEL_RASTER_VIEW_MAX;
 static int16_t g_water_uv_offset_q4;
 
-static const char kFontCharacters[] =
-    "0123456789.:-/+ABCDEFGHIJKLMNOPQRSTUVWXYZ ";
-static const uint8_t kFontRows[VOXEL_RASTER_FONT_GLYPHS][5] = {
-    {7, 5, 5, 5, 7}, {2, 6, 2, 2, 7}, {7, 1, 7, 4, 7},
-    {7, 1, 7, 1, 7}, {5, 5, 7, 1, 1}, {7, 4, 7, 1, 7},
-    {7, 4, 7, 5, 7}, {7, 1, 1, 1, 1}, {7, 5, 7, 5, 7},
-    {7, 5, 7, 1, 7}, {0, 0, 0, 0, 2}, {0, 2, 0, 2, 0},
-    {0, 0, 7, 0, 0}, {1, 1, 2, 4, 4}, {0, 2, 7, 2, 0},
-    {7, 5, 7, 5, 5}, {6, 5, 6, 5, 6}, {7, 4, 4, 4, 7},
-    {6, 5, 5, 5, 6}, {7, 4, 6, 4, 7}, {7, 4, 6, 4, 4},
-    {7, 4, 5, 5, 7}, {5, 5, 7, 5, 5}, {7, 2, 2, 2, 7},
-    {1, 1, 1, 5, 7}, {5, 5, 6, 5, 5}, {4, 4, 4, 4, 7},
-    {5, 7, 7, 5, 5}, {5, 7, 7, 7, 5}, {7, 5, 5, 5, 7},
-    {7, 5, 7, 4, 4}, {7, 5, 5, 7, 1}, {6, 5, 6, 5, 5},
-    {7, 4, 7, 1, 7}, {7, 2, 2, 2, 2}, {5, 5, 5, 5, 7},
-    {5, 5, 5, 5, 2}, {5, 5, 7, 7, 5}, {5, 5, 2, 5, 5},
-    {5, 5, 2, 2, 2}, {7, 1, 2, 4, 7}, {0, 0, 0, 0, 0},
-};
-
 typedef struct {
     uint8_t slot;
     uint8_t width;
     uint8_t height;
     uint8_t columns;
     uint8_t rows;
-    const uint8_t *pixels;
 } font_tier_t;
 
 /* Antialiased HUD tiers, drawn at their native texel size so no atlas is ever
@@ -253,14 +218,12 @@ typedef struct {
  * per-texel blend; otherwise the legacy 3x5 cut-out font is used. */
 static const font_tier_t kFontTiers[VOXEL_FONT_TIERS] = {
     {VOXEL_RASTER_FONT_SLOT_AA0, VOXEL_FONT_SMALL_WIDTH,
-     VOXEL_FONT_SMALL_HEIGHT, VOXEL_FONT_SMALL_COLUMNS, VOXEL_FONT_SMALL_ROWS,
-     voxel_font_small_pixels},
+     VOXEL_FONT_SMALL_HEIGHT, VOXEL_FONT_SMALL_COLUMNS, VOXEL_FONT_SMALL_ROWS},
     {VOXEL_RASTER_FONT_SLOT_AA1, VOXEL_FONT_MEDIUM_WIDTH,
      VOXEL_FONT_MEDIUM_HEIGHT, VOXEL_FONT_MEDIUM_COLUMNS,
-     VOXEL_FONT_MEDIUM_ROWS, voxel_font_medium_pixels},
+     VOXEL_FONT_MEDIUM_ROWS},
     {VOXEL_RASTER_FONT_SLOT_AA2, VOXEL_FONT_LARGE_WIDTH,
-     VOXEL_FONT_LARGE_HEIGHT, VOXEL_FONT_LARGE_COLUMNS, VOXEL_FONT_LARGE_ROWS,
-     voxel_font_large_pixels},
+     VOXEL_FONT_LARGE_HEIGHT, VOXEL_FONT_LARGE_COLUMNS, VOXEL_FONT_LARGE_ROWS},
 };
 
 static int block_uses_cutout(int block) {
@@ -320,38 +283,10 @@ float voxel_raster_min_view_distance(void) { return VOXEL_RASTER_VIEW_MIN; }
 
 void voxel_raster_set_capabilities(uint32_t capabilities) {
     g_raster_capabilities = capabilities;
+    g_font_aa = (capabilities & PXA_RASTER_CAP_SPRITE_TEXEL_ALPHA) != 0 &&
+                (capabilities & PXA_RASTER_CAP_TEXTURE_SLOTS_48) != 0;
     g_painter_perspective = (uint8_t)(
         (capabilities & PXA_RASTER_CAP_PAINTER_PERSPECTIVE) != 0);
-}
-
-/* Same rounding as the Host's light_rgb565(), so the pre-lit rows match the
- * per-pixel shading of the depth path. */
-static uint16_t shade_rgb565(uint16_t color, uint32_t intensity) {
-    uint32_t red = (color >> 11) * intensity + 127u;
-    uint32_t green = ((color >> 5) & 63u) * intensity + 127u;
-    uint32_t blue = (color & 31u) * intensity + 127u;
-    red = (red + 1u + ((red + 1u) >> 8)) >> 8;
-    green = (green + 1u + ((green + 1u) >> 8)) >> 8;
-    blue = (blue + 1u + ((blue + 1u) >> 8)) >> 8;
-    return (uint16_t)((red << 11) | (green << 5) | blue);
-}
-
-static void build_lit_palette(void) {
-    const uint16_t *base = block_texture_palette();
-    uint32_t level;
-    uint32_t index;
-    for (level = 0; level < VOXEL_RASTER_LIGHT_LEVELS; ++level) {
-        /* Row 0 stays the full-bright palette: textured sprites (item icons)
-         * sample palette[texel] and have no light row of their own, while
-         * painter polygons select darker rows through light_row(). */
-        const uint32_t intensity =
-            (VOXEL_RASTER_LIGHT_LEVELS - 1u - level) * 255u /
-            (VOXEL_RASTER_LIGHT_LEVELS - 1u);
-        uint16_t *row =
-            &g_lit_palette[level * PXA_RASTER_PALETTE_COLORS];
-        for (index = 0; index < PXA_RASTER_PALETTE_COLORS; ++index)
-            row[index] = shade_rgb565(base[index], intensity);
-    }
 }
 
 /* Maps a 0..255 face light to a pre-lit palette row index (bright faces use
@@ -360,98 +295,6 @@ static uint8_t light_row(uint8_t light) {
     const uint32_t level =
         ((uint32_t)light * (VOXEL_RASTER_LIGHT_LEVELS - 1u) + 127u) / 255u;
     return (uint8_t)(VOXEL_RASTER_LIGHT_LEVELS - 1u - level);
-}
-
-int voxel_raster_upload_assets(uint32_t surface_handle) {
-    const block_index_set_t *indices = block_texture_indices();
-    const uint16_t *palette = block_texture_palette();
-    const int extended =
-        (g_raster_capabilities & PXA_RASTER_CAP_TEXTURE_SLOTS_48) != 0;
-    uint8_t block;
-    int32_t result;
-    if ((g_raster_capabilities & PXA_RASTER_CAP_LIT_PALETTE_DEPTH) != 0) {
-        build_lit_palette();
-        result = pxa_raster_upload_lit_palette_rgb565(
-            surface_handle, VOXEL_RASTER_LIGHT_LEVELS, g_lit_palette,
-            g_palette_upload, sizeof(g_palette_upload));
-        if (result !=
-            (int32_t)(PXA_RASTER_UPLOAD_HEADER_BYTES +
-                      VOXEL_RASTER_LIGHT_LEVELS *
-                          PXA_RASTER_PALETTE_COLORS * 2u)) {
-            (void)pxa_log_error("voxel: lit palette upload failed");
-            return 0;
-        }
-    } else {
-        result = pxa_raster_upload_palette_rgb565(
-            surface_handle, palette, g_upload, sizeof(g_upload));
-        if (result != (int32_t)(PXA_RASTER_UPLOAD_HEADER_BYTES + 512u)) {
-            (void)pxa_log_error("voxel: palette upload failed");
-            return 0;
-        }
-    }
-    for (block = 0; block < VOXEL_RASTER_TEXTURED_BLOCKS; ++block) {
-        const uint8_t kinds = extended ? 3u : 1u;
-        uint8_t kind;
-        for (kind = 0; kind < kinds; ++kind) {
-            const uint8_t texture_kind =
-                extended ? kind : BLOCK_TEXTURE_SIDE;
-            const uint8_t slot =
-                texture_slot_for((uint8_t)(block + 1u), texture_kind);
-            result = pxa_raster_upload_texture_index8(
-                surface_handle, slot, 16, 16, indices[block + 1][texture_kind],
-                g_upload, sizeof(g_upload));
-            if (result != (int32_t)(PXA_RASTER_UPLOAD_HEADER_BYTES + 256u)) {
-                (void)pxa_log_error("voxel: block texture upload failed");
-                return 0;
-            }
-        }
-    }
-    pxa_raster_zero_bytes(g_font_texture, sizeof(g_font_texture));
-    for (block = 0; block < VOXEL_RASTER_FONT_GLYPHS; ++block) {
-        uint8_t row;
-        for (row = 0; row < 5; ++row) {
-            uint8_t column;
-            for (column = 0; column < 3; ++column) {
-                if ((kFontRows[block][row] & (4u >> column)) != 0)
-                    g_font_texture[(size_t)row * VOXEL_RASTER_FONT_WIDTH +
-                                   (size_t)block * 4u + column] = 255;
-            }
-        }
-    }
-    result = pxa_raster_upload_texture_index8(
-        surface_handle, font_slot(), VOXEL_RASTER_FONT_WIDTH, 5,
-        g_font_texture, g_upload, sizeof(g_upload));
-    if (result != (int32_t)(PXA_RASTER_UPLOAD_HEADER_BYTES +
-                            VOXEL_RASTER_FONT_WIDTH * 5u)) {
-        (void)pxa_log_error("voxel: font texture upload failed");
-        return 0;
-    }
-    g_font_aa = (g_raster_capabilities &
-                 PXA_RASTER_CAP_SPRITE_TEXEL_ALPHA) != 0 &&
-                (g_raster_capabilities & PXA_RASTER_CAP_TEXTURE_SLOTS_48) != 0;
-    if (g_font_aa) {
-        uint8_t tier;
-        for (tier = 0; tier < VOXEL_FONT_TIERS; ++tier) {
-            const font_tier_t *const face = &kFontTiers[tier];
-            const uint16_t texture_width =
-                (uint16_t)(face->width * face->columns);
-            const uint16_t texture_height =
-                (uint16_t)(face->height * face->rows);
-            const uint32_t bytes =
-                (uint32_t)texture_width * texture_height;
-            result = pxa_raster_upload_texture_index8(
-                surface_handle, face->slot, texture_width, texture_height,
-                face->pixels, g_upload, sizeof(g_upload));
-            if (result != (int32_t)(PXA_RASTER_UPLOAD_HEADER_BYTES + bytes)) {
-                /* Missing glyph tiers are a cosmetic loss: keep the legacy
-                 * cut-out font instead of failing the whole Surface. */
-                (void)pxa_log_error("voxel: font tier upload failed");
-                g_font_aa = 0;
-                break;
-            }
-        }
-    }
-    return 1;
 }
 
 static int local_block(const chunk_t *chunk, int x, int y, int z) {
@@ -2984,7 +2827,7 @@ static void append_inventory(pxa_raster_draw_list_t *list,
 static uint8_t g_submit_error_logged;
 static uint32_t g_submit_frames;
 
-static int32_t submit_list(uint32_t surface_handle,
+static int32_t submit_list(uint64_t surface_handle,
                            pxa_raster_draw_list_t *list) {
     const int32_t result = pxa_raster_submit(surface_handle, list);
     ++g_submit_frames;
@@ -2999,12 +2842,12 @@ static int32_t submit_list(uint32_t surface_handle,
         out = append_u32_text(out, (uint32_t)(result < 0 ? -result : result));
         *out++ = result < 0 ? '-' : '+';
         *out = '\0';
-        (void)pxa_log_error(message);
+        (void)pxa_log_write(4, message);
     }
     return result;
 }
 
-int32_t voxel_raster_render(uint32_t surface_handle, uint64_t frame_id,
+int32_t voxel_raster_render(uint64_t surface_handle, uint64_t frame_id,
                             const player_t *player, uint8_t quality,
                             const hud_state_t *hud, const menu_state_t *menu,
                             const ray_hit_t *target) {

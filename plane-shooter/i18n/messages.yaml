@@ -229,3 +229,12 @@ messages:
   pause.exit:
     source: Exit mission
     context: Exit battle action
+  images.loading:
+    source: Loading images…
+    context: Shown while preparing the current scene
+  images.failed:
+    source: Images could not be loaded
+    context: Resource loading failed; the user can retry
+  images.retry:
+    source: Retry
+    context: Retry the current scene's image requests

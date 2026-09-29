@@ -1,9 +1,26 @@
+#include <stdint.h>
+static void log_ui_failure(uint16_t opcode, int32_t status);
+#define PXA_UI_COMMAND_FAILED(opcode, status) log_ui_failure(opcode, status)
+#include "images.h"
 #include "pxa_canvas.h"
 #include "pxa_app_messages.h"
 #include "pxa_game_screen.h"
 #include "pxa_game_sfx.h"
 #include "pxa_i18n.h"
+#include "pxa_clock.h"
+#include "pxa_i18n.h"
 #include "pxa_storage.h"
+#include "pxa_window.h"
+
+static void log_ui_failure(uint16_t opcode, int32_t status) {
+    static const char hex[] = "0123456789abcdef";
+    char message[] = "plane-shooter: UI opcode=0000 status=00000000";
+    for (unsigned i=0;i<4;++i)
+        message[sizeof("plane-shooter: UI opcode=")-1+i]=hex[(opcode>>(12-4*i))&15];
+    for (unsigned i=0;i<8;++i)
+        message[sizeof("plane-shooter: UI opcode=0000 status=")-1+i]=hex[((uint32_t)status>>(28-4*i))&15];
+    (void)pxa_log_write(4,message);
+}
 
 int32_t pxa_plane_game_start(const uint8_t *config, uint32_t config_length);
 int32_t pxa_plane_game_on_event(const uint8_t *event, uint32_t length);
@@ -46,9 +63,11 @@ enum {
 static uint8_t draw_data[12 * 1024];
 static uint8_t ui_commands[512];
 static uint8_t packet[512];
-static uint8_t storage_payload[96];
 static uint8_t shell_initialized;
 static uint8_t page;
+static uint8_t battle_started, images_backgrounded;
+static uint8_t last_ready_page=255;
+static uint32_t last_ready_images;
 static uint8_t weapon_level;
 static uint8_t hull_level;
 static uint8_t ship_model;
@@ -138,15 +157,15 @@ static void apply_shell_geometry(void) {
     if (transaction.active) (void)pxa_ui_transaction_cancel(&transaction);
 }
 
-static const char hero_asset[] = "assets/ui/home-hero.png";
-static const char mission_icon[] = "assets/ui/icon-mission.png";
-static const char hangar_icon[] = "assets/ui/icon-hangar.png";
-static const char shop_icon[] = "assets/ui/icon-shop.png";
-static const char comms_icon[] = "assets/ui/icon-comms.png";
-static const char ship_asset[] = "assets/plane-shooter/player-plane-left.png";
-static const char ship_mk2_asset[] = "assets/ui/ship-mk2.png";
-static const char module_cannon_asset[] = "assets/plane-shooter/pickup-overdrive.png";
-static const char module_shield_asset[] = "assets/plane-shooter/pickup-shield.png";
+#define hero_asset PLANE_IMAGE_UI_HOME_HERO
+#define mission_icon PLANE_IMAGE_UI_ICON_MISSION
+#define hangar_icon PLANE_IMAGE_UI_ICON_HANGAR
+#define shop_icon PLANE_IMAGE_UI_ICON_SHOP
+#define comms_icon PLANE_IMAGE_UI_ICON_COMMS
+#define ship_asset PLANE_IMAGE_PLANE_SHOOTER_PLAYER_PLANE_LEFT
+#define ship_mk2_asset PLANE_IMAGE_UI_SHIP_MK2
+#define module_cannon_asset PLANE_IMAGE_PLANE_SHOOTER_PICKUP_OVERDRIVE
+#define module_shield_asset PLANE_IMAGE_PLANE_SHOOTER_PICKUP_SHIELD
 
 const char *pxa_plane_message(pxa_i18n_message_id_t id) {
     return pxa_i18n_cstr(&i18n, id);
@@ -281,34 +300,27 @@ static void draw_header(pxa_canvas_frame_t *frame) {
                         value, value_size);
 }
 
-static void draw_button(pxa_canvas_frame_t *frame, int16_t x, int16_t y,
-                        uint16_t width, const char *label, size_t label_size,
-                        const char *icon, size_t icon_size, uint32_t color) {
+static void draw_button(pxa_canvas_frame_t *frame, int16_t x, int16_t y, uint16_t width, const char *label, size_t label_size, plane_image_id_t icon, uint32_t color) {
     pxa_canvas_rect(frame, (int16_t)(x + 2), (int16_t)(y + 3), width, 32,
                     0x07121E, 7);
     pxa_canvas_rect(frame, x, y, width, 32, color, 7);
     pxa_canvas_line(frame, (int16_t)(x + 9), (int16_t)(y + 2),
                     (int16_t)(x + width - 9), (int16_t)(y + 2), 0x8DEBFF, 1);
-    if (icon != NULL)
-        pxa_canvas_image(frame, x + 10, y + 7, 18, 18, 255,
-                         PXA_UI_IMAGE_FIT_CONTAIN, icon, icon_size);
-    pxa_canvas_text_box(frame, icon != NULL ? x + 34 : x + 8, y + 2,
-                        icon != NULL ? width - 42 : width - 16, 28, 0xFFFFFF,
+    if (icon != PLANE_IMAGE_NONE)
+        plane_image(frame, x + 10, y + 7, 18, 18, 255, PXA_UI_IMAGE_FIT_CONTAIN, icon);
+    pxa_canvas_text_box(frame, icon != PLANE_IMAGE_NONE ? x + 34 : x + 8, y + 2,
+                        icon != PLANE_IMAGE_NONE ? width - 42 : width - 16, 28, 0xFFFFFF,
                         PXA_CANVAS_ALIGN_CENTER, PXA_CANVAS_TEXT_ALIGN_MIDDLE,
                         label, label_size);
 }
 
-static void draw_compact_button(pxa_canvas_frame_t *frame, int16_t x, int16_t y,
-                                uint16_t width, const char *label,
-                                size_t label_size, const char *icon,
-                                size_t icon_size, uint32_t color) {
+static void draw_compact_button(pxa_canvas_frame_t *frame, int16_t x, int16_t y, uint16_t width, const char *label, size_t label_size, plane_image_id_t icon, uint32_t color) {
     pxa_canvas_rect(frame, (int16_t)(x + 2), (int16_t)(y + 2), width, 26,
                     0x07121E, 6);
     pxa_canvas_rect(frame, x, y, width, 26, color, 6);
     pxa_canvas_line(frame, (int16_t)(x + 8), (int16_t)(y + 2),
                     (int16_t)(x + width - 8), (int16_t)(y + 2), 0xD0C1FF, 1);
-    pxa_canvas_image(frame, x + 10, y + 4, 18, 18, 255,
-                     PXA_UI_IMAGE_FIT_CONTAIN, icon, icon_size);
+    plane_image(frame, x + 10, y + 4, 18, 18, 255, PXA_UI_IMAGE_FIT_CONTAIN, icon);
     pxa_canvas_text_box(frame, x + 34, y + 1, width - 42, 24, 0xFFFFFF,
                         PXA_CANVAS_ALIGN_CENTER, PXA_CANVAS_TEXT_ALIGN_MIDDLE,
                         label, label_size);
@@ -320,16 +332,13 @@ static void draw_nav(pxa_canvas_frame_t *frame) {
         pxa_plane_message(PXA_MSG_NAV_HANGAR),
         pxa_plane_message(PXA_MSG_NAV_SHOP),
         pxa_plane_message(PXA_MSG_NAV_MISSIONS)};
-    const char *icons[] = {mission_icon, hangar_icon, shop_icon, comms_icon};
-    const size_t sizes[] = {sizeof(mission_icon) - 1u, sizeof(hangar_icon) - 1u,
-                            sizeof(shop_icon) - 1u, sizeof(comms_icon) - 1u};
+    const plane_image_id_t icons[] = {mission_icon, hangar_icon, shop_icon, comms_icon};
     pxa_canvas_rect(frame, 25, NAV_Y, 246, 43, 0x0B2135, 9);
     for (uint8_t i = 0; i < 4; ++i) {
         const int16_t x = (int16_t)(32 + i * 59);
         const uint8_t selected = page == i;
         if (selected) pxa_canvas_rect(frame, x - 3, NAV_Y + 3, 54, 37, 0x164B69, 7);
-        pxa_canvas_image(frame, x + 14, NAV_Y + 4, 18, 18, 255,
-                         PXA_UI_IMAGE_FIT_CONTAIN, icons[i], sizes[i]);
+        plane_image(frame, x + 14, NAV_Y + 4, 18, 18, 255, PXA_UI_IMAGE_FIT_CONTAIN, icons[i]);
         pxa_canvas_text_box_role(
             frame, x - 1, NAV_Y + 21, 48, 18,
             pxa_canvas_rgba(selected ? 0xFFFFFF : 0x78AFCF),
@@ -342,15 +351,12 @@ static void draw_home(pxa_canvas_frame_t *frame) {
     const char *ready = pxa_plane_message(PXA_MSG_HOME_FALCON_READY);
     const char *ready_mk2 = pxa_plane_message(PXA_MSG_HOME_LARK_READY);
     const char *launch = pxa_plane_message(PXA_MSG_ACTION_LAUNCH_MISSION);
-    pxa_canvas_image(frame, 18, content_y(41), 260, 82, 255,
-                     PXA_UI_IMAGE_FIT_STRETCH,
-                     hero_asset, sizeof(hero_asset) - 1u);
+    plane_image(frame, 18, content_y(41), 260, 82, 255, PXA_UI_IMAGE_FIT_STRETCH, hero_asset);
     pxa_canvas_text_box(frame, 35, content_y(124), 226, 22, 0xDDF8FF,
                         PXA_CANVAS_ALIGN_CENTER, PXA_CANVAS_TEXT_ALIGN_MIDDLE,
                         ship_model ? ready_mk2 : ready,
                         text_length(ship_model ? ready_mk2 : ready));
-    draw_button(frame, 47, content_y(153), 202, launch, text_length(launch),
-                mission_icon, sizeof(mission_icon) - 1u, 0x137EAA);
+    draw_button(frame, 47, content_y(153), 202, launch, text_length(launch), mission_icon, 0x137EAA);
 }
 
 static void draw_compact_level(pxa_canvas_frame_t *frame, int16_t x, int16_t y,
@@ -379,10 +385,7 @@ static void draw_hangar(pxa_canvas_frame_t *frame) {
     const char *weapon_detail = pxa_plane_message(PXA_MSG_HANGAR_WEAPON_DETAIL);
     const char *hull_detail = pxa_plane_message(PXA_MSG_HANGAR_HULL_DETAIL);
     pxa_canvas_rect(frame, 29, content_y(43), 238, 75, 0x10283E, 8);
-    pxa_canvas_image(frame, 43, content_y(52), 68, 45, 255,
-                     PXA_UI_IMAGE_FIT_CONTAIN,
-                     ship_model ? ship_mk2_asset : ship_asset,
-                     ship_model ? sizeof(ship_mk2_asset) - 1u : sizeof(ship_asset) - 1u);
+    plane_image(frame, 43, content_y(52), 68, 45, 255, PXA_UI_IMAGE_FIT_CONTAIN, ship_model ? ship_mk2_asset : ship_asset);
     pxa_canvas_text_box(frame, 120, content_y(47), 126, 18, 0xFFFFFF,
                         PXA_CANVAS_ALIGN_LEFT, PXA_CANVAS_TEXT_ALIGN_MIDDLE,
                         ship_model ? name2 : name,
@@ -396,12 +399,8 @@ static void draw_hangar(pxa_canvas_frame_t *frame) {
                        weapon_level);
     draw_compact_level(frame, 151, content_y(96), hull, text_length(hull),
                        hull_level);
-    draw_button(frame, 34, content_y(122), 228, upgrade_weapon,
-                text_length(upgrade_weapon),
-                mission_icon, sizeof(mission_icon) - 1u, 0x175A7C);
-    draw_button(frame, 34, content_y(156), 228, upgrade_hull,
-                text_length(upgrade_hull),
-                hangar_icon, sizeof(hangar_icon) - 1u, 0x175A7C);
+    draw_button(frame, 34, content_y(122), 228, upgrade_weapon, text_length(upgrade_weapon), mission_icon, 0x175A7C);
+    draw_button(frame, 34, content_y(156), 228, upgrade_hull, text_length(upgrade_hull), hangar_icon, 0x175A7C);
     pxa_canvas_text_box_role(
         frame, 38, content_y(205), 220, 18, pxa_canvas_rgba(0x7DE5FF),
         PXA_CANVAS_FONT_CAPTION, PXA_CANVAS_ALIGN_LEFT,
@@ -440,10 +439,7 @@ static void draw_shop(pxa_canvas_frame_t *frame) {
         pxa_plane_message(PXA_MSG_TRAIT_SHIP),
         pxa_plane_message(PXA_MSG_TRAIT_CANNONS),
         pxa_plane_message(PXA_MSG_TRAIT_SHIELD)};
-    const char *assets[] = {ship_mk2_asset, module_cannon_asset, module_shield_asset};
-    const size_t asset_sizes[] = {sizeof(ship_mk2_asset) - 1u,
-                                  sizeof(module_cannon_asset) - 1u,
-                                  sizeof(module_shield_asset) - 1u};
+    const plane_image_id_t assets[] = {ship_mk2_asset, module_cannon_asset, module_shield_asset};
     const uint8_t owned = shop_item == 0
                               ? (owned_ships & 2u) != 0
                               : (owned_modules & (uint8_t)(1u << shop_item)) != 0;
@@ -460,9 +456,7 @@ static void draw_shop(pxa_canvas_frame_t *frame) {
             PXA_CANVAS_FONT_CAPTION, PXA_CANVAS_ALIGN_CENTER,
             PXA_CANVAS_TEXT_ALIGN_MIDDLE, tabs[i], text_length(tabs[i]));
     }
-    pxa_canvas_image(frame, 52, content_y(76), 62, 45, 255,
-                     PXA_UI_IMAGE_FIT_CONTAIN,
-                     assets[shop_item], asset_sizes[shop_item]);
+    plane_image(frame, 52, content_y(76), 62, 45, 255, PXA_UI_IMAGE_FIT_CONTAIN, assets[shop_item]);
     pxa_canvas_text_box(frame, 124, content_y(76), 126, 22, 0xFFFFFF,
                         PXA_CANVAS_ALIGN_CENTER, PXA_CANVAS_TEXT_ALIGN_MIDDLE,
                         titles[shop_item], text_length(titles[shop_item]));
@@ -471,12 +465,8 @@ static void draw_shop(pxa_canvas_frame_t *frame) {
         PXA_CANVAS_FONT_CAPTION, PXA_CANVAS_ALIGN_CENTER,
         PXA_CANVAS_TEXT_ALIGN_MIDDLE, details[shop_item],
         text_length(details[shop_item]));
-    draw_button(frame, 47, content_y(155), 202,
-                active ? equipped : owned ? equip : buy_labels[shop_item],
-                text_length(active ? equipped : owned ? equip
-                                                       : buy_labels[shop_item]),
-                shop_icon, sizeof(shop_icon) - 1u,
-                active ? 0x265260 : 0x6750A5);
+    draw_button(frame, 47, content_y(155), 202, active ? equipped : owned ? equip : buy_labels[shop_item], text_length(active ? equipped : owned ? equip
+                                                       : buy_labels[shop_item]), shop_icon, active ? 0x265260 : 0x6750A5);
     pxa_canvas_rect(frame, 34, content_y(201), 228, 55, 0x10283E, 7);
     pxa_canvas_text_box_role(
         frame, 43, content_y(205), 210, 17, pxa_canvas_rgba(0x7DE5FF),
@@ -544,9 +534,7 @@ static void draw_briefing(pxa_canvas_frame_t *frame) {
         PXA_CANVAS_FONT_CAPTION, PXA_CANVAS_ALIGN_LEFT,
         PXA_CANVAS_TEXT_ALIGN_MIDDLE, mission_boss(selected_mission),
         text_length(mission_boss(selected_mission)));
-    draw_compact_button(frame, 75, content_y(164), 146, accept,
-                        text_length(accept), mission_icon,
-                        sizeof(mission_icon) - 1u, 0x6750A5);
+    draw_compact_button(frame, 75, content_y(164), 146, accept, text_length(accept), mission_icon, 0x6750A5);
     pxa_canvas_rect(frame, 34, content_y(205), 228, 94, 0x10283E, 7);
     pxa_canvas_text_box_role(
         frame, 43, content_y(210), 210, 18, pxa_canvas_rgba(0x7DE5FF),
@@ -616,11 +604,81 @@ static void draw_results(pxa_canvas_frame_t *frame) {
         PXA_CANVAS_TEXT_ALIGN_MIDDLE,
         last_result_unlocked ? unlocked : complete,
         text_length(last_result_unlocked ? unlocked : complete));
-    draw_button(frame, 67, 174, 162, back, text_length(back),
-                mission_icon, sizeof(mission_icon) - 1u, 0x137EAA);
+    draw_button(frame, 67, 174, 162, back, text_length(back), mission_icon, 0x137EAA);
+}
+
+static uint32_t scene_images(void) {
+    const uint32_t nav=PLANE_IMAGE_BIT(mission_icon)|PLANE_IMAGE_BIT(hangar_icon)|
+        PLANE_IMAGE_BIT(shop_icon)|PLANE_IMAGE_BIT(comms_icon);
+    switch (page) {
+        case PAGE_HOME: return nav|PLANE_IMAGE_BIT(hero_asset);
+        case PAGE_HANGAR: return nav|PLANE_IMAGE_BIT(ship_model ? ship_mk2_asset : ship_asset);
+        case PAGE_SHOP: return nav|PLANE_IMAGE_BIT(shop_item==0 ? ship_mk2_asset :
+            shop_item==1 ? module_cannon_asset : module_shield_asset);
+        case PAGE_BRIEFING: return nav;
+        case PAGE_RESULTS: return PLANE_IMAGE_BIT(mission_icon);
+        default: return
+            PLANE_IMAGE_BIT(ship_model ? PLANE_IMAGE_PLANE_SHOOTER_PLAYER_PLANE_MK2 : PLANE_IMAGE_PLANE_SHOOTER_PLAYER_PLANE_LEFT)|
+            PLANE_IMAGE_BIT(PLANE_IMAGE_PLANE_SHOOTER_ENEMY_PLANE)|
+            PLANE_IMAGE_BIT(PLANE_IMAGE_PLANE_SHOOTER_ENEMY_DART)|
+            PLANE_IMAGE_BIT(PLANE_IMAGE_PLANE_SHOOTER_ENEMY_FIGHTER)|
+            PLANE_IMAGE_BIT(PLANE_IMAGE_PLANE_SHOOTER_ENEMY_CRUISER)|
+            PLANE_IMAGE_BIT(PLANE_IMAGE_PLANE_SHOOTER_ENEMY_GUNSHIP)|
+            PLANE_IMAGE_BIT(PLANE_IMAGE_PLANE_SHOOTER_PICKUP_ENERGY)|
+            PLANE_IMAGE_BIT(PLANE_IMAGE_PLANE_SHOOTER_PICKUP_SHIELD)|
+            PLANE_IMAGE_BIT(PLANE_IMAGE_PLANE_SHOOTER_PICKUP_OVERDRIVE)|
+            PLANE_IMAGE_BIT(PLANE_IMAGE_UI_HUD_PANEL)|PLANE_IMAGE_BIT(PLANE_IMAGE_UI_DIALOG_PANEL)|
+            PLANE_IMAGE_BIT(selected_mission==1 ? PLANE_IMAGE_PLANE_SHOOTER_BOSS_CARRIER :
+                selected_mission==2 ? PLANE_IMAGE_PLANE_SHOOTER_BOSS_LEVIATHAN : PLANE_IMAGE_PLANE_SHOOTER_BOSS_DREADNOUGHT);
+    }
+}
+
+static int render_loading(void) {
+    pxa_canvas_frame_t frame;
+    const int failed=plane_images_error()!=0;
+    const char *label=pxa_plane_message(failed ? PXA_MSG_IMAGES_FAILED : PXA_MSG_IMAGES_LOADING);
+    pxa_canvas_begin(&frame,draw_data,sizeof(draw_data));
+    pxa_canvas_rect(&frame,0,0,SCREEN_W,SCREEN_H,0x071421,0);
+    pxa_canvas_text_box(&frame,24,72,248,44,0xDDF8FF,PXA_CANVAS_ALIGN_CENTER,
+        PXA_CANVAS_TEXT_ALIGN_MIDDLE,label,text_length(label));
+    if (failed) {
+        label=pxa_plane_message(PXA_MSG_IMAGES_RETRY);
+        draw_button(&frame,67,130,162,label,text_length(label),PLANE_IMAGE_NONE,0x137EAA);
+    }
+    if (!pxa_canvas_present(SHELL_NODE,&frame,&pxa_arcade_ui_generation,&shell_initialized,
+        ui_commands,sizeof(ui_commands),packet,sizeof(packet))) return 0;
+    apply_shell_geometry();
+    return 1;
+}
+
+static void images_ready_log(void) {
+    uint32_t mask=scene_images();
+    if (last_ready_page==page && last_ready_images==mask) return;
+    static const char *const messages[]={"plane-shooter: ready home", "plane-shooter: ready hangar",
+        "plane-shooter: ready shop", "plane-shooter: ready briefing", "plane-shooter: ready results", "plane-shooter: ready battle"};
+    (void)pxa_log_write(2,messages[page]);
+    last_ready_page=page; last_ready_images=mask;
 }
 
 static int render_shell(void) {
+    if (images_backgrounded) return 1;
+    plane_images_select(scene_images());
+    if (!plane_images_ready()) {
+        last_ready_page=255;
+        if (!render_loading()) return 0;
+        plane_images_pump();
+        return !plane_images_error() || render_loading();
+    }
+    if (page==PAGE_BATTLE) {
+        if (!battle_started) {
+            pxa_plane_game_set_screen(&game_screen);
+            pxa_plane_game_configure(weapon_level,hull_level,ship_model,selected_mission,equipped_module);
+            if (pxa_plane_game_start(NULL,0)!=PXA_STATUS_OK) return 0;
+            battle_started=1;
+        }
+        images_ready_log();
+        return 1;
+    }
     pxa_canvas_frame_t frame;
     const int16_t scroll_max = max_page_scroll();
     pxa_canvas_begin(&frame, draw_data, sizeof(draw_data));
@@ -658,6 +716,7 @@ static int render_shell(void) {
                             sizeof(ui_commands), packet, sizeof(packet)))
         return 0;
     apply_shell_geometry();
+    images_ready_log();
     return 1;
 }
 
@@ -668,21 +727,18 @@ static void save_progress(void) {
                        selected_mission, owned_ships, owned_modules,
                        equipped_module, unlocked_missions, mission_stars[0],
                        mission_stars[1], mission_stars[2]};
-    (void)pxa_storage_set(STORAGE_SET_REQUEST, key, sizeof(key) - 1u, value,
-                          sizeof(value), storage_payload, sizeof(storage_payload),
-                          packet, sizeof(packet));
+    (void)pxa_storage_request_set(packet, sizeof(packet),
+                                      STORAGE_SET_REQUEST, key,
+                                      sizeof(key) - 1u, value, sizeof(value));
 }
 
 static int start_battle(void) {
     story_seen = 1;
     notice = 0;
-    pxa_plane_game_set_screen(&game_screen);
-    pxa_plane_game_configure(weapon_level, hull_level, ship_model,
-                             selected_mission, equipped_module);
-    if (pxa_plane_game_start(NULL, 0) != PXA_STATUS_OK) return 0;
     page = PAGE_BATTLE;
+    battle_started=0;
     save_progress();
-    return 1;
+    return render_shell();
 }
 
 static int return_from_battle(void) {
@@ -692,7 +748,9 @@ static int return_from_battle(void) {
     const uint8_t completed = (uint8_t)pxa_plane_game_take_result(
         &final_score, &stars, &reward);
     pxa_plane_game_stop(0);
+    battle_started=0;
     shell_initialized = 0;
+    shell_geometry_ready = 0;
     if (completed) {
         const uint16_t previous_credits = credits;
         last_result_score = final_score;
@@ -826,26 +884,48 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t config_length) {
     for (uint8_t i = 0; i < 4u; ++i) page_scroll[i] = 0;
     scroll_pointer_active = 0u;
     page = PAGE_HOME;
-    if (!pxa_window_fullscreen()) return PXA_STATUS_BAD_STATE;
+    if (pxa_window_fullscreen() != PXA_STATUS_OK) return PXA_STATUS_BAD_STATE;
     if (!render_shell()) return PXA_STATUS_INTERNAL;
-    if (!pxa_clock_set_period(SHELL_TICK_MS)) return PXA_STATUS_INTERNAL;
+    if (pxa_clock_set_period(SHELL_TICK_MS) != PXA_STATUS_OK) return PXA_STATUS_INTERNAL;
     pxa_game_sfx_set_theme(&pxa_plane_sfx, PXA_GAME_SFX_THEME_PLANE);
     set_shell_music(PAGE_HOME);
     pxa_game_sfx_start(&pxa_plane_sfx, packet, sizeof(packet));
-    (void)pxa_storage_get(STORAGE_GET_REQUEST, key, sizeof(key) - 1u,
-                          storage_payload, sizeof(storage_payload), packet,
-                          sizeof(packet));
-    return PXA_STATUS_OK;
+    (void)pxa_storage_request_get(STORAGE_GET_REQUEST, key,
+                                      sizeof(key) - 1u);
+    return render_shell() ? PXA_STATUS_OK : PXA_STATUS_INTERNAL;
 }
 
 int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     pxa_canvas_event_t parsed;
     pxa_ui_pointer_data_t pointer;
     if (!pxa_canvas_parse_event(event, length, &parsed)) return PXA_EVENT_UNHANDLED;
+    if (plane_images_on_event(&parsed))
+        return render_shell() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+    if (parsed.service==PXA_SERVICE_SYSTEM && parsed.opcode==PXA_SYSTEM_LIFECYCLE_EVENT && parsed.payload_size==1) {
+        images_backgrounded=parsed.payload[0]==PXA_SYSTEM_LIFECYCLE_BACKGROUND;
+        plane_images_pause(images_backgrounded);
+        if (page==PAGE_BATTLE && battle_started) return pxa_plane_game_on_event(event,length);
+        return images_backgrounded || render_shell() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+    }
+    if ((!plane_images_ready() || (page==PAGE_BATTLE && !battle_started)) &&
+        pxa_window_is_back_requested(&parsed)) {
+        if (page==PAGE_HOME) return PXA_EVENT_UNHANDLED;
+        page=PAGE_HOME; shell_geometry_ready=0;
+        set_shell_music(page);
+        return render_shell() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+    }
+    if (!plane_images_ready() && pxa_canvas_parse_pointer(&parsed,SHELL_NODE,&pointer)) {
+        if (plane_images_error() && pointer.phase==PXA_POINTER_UP &&
+            pointer.x>=67 && pointer.x<229 && pointer.y>=130 && pointer.y<166) {
+            plane_images_retry();
+            return render_shell() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+        }
+        return PXA_EVENT_HANDLED;
+    }
     {
         int locale_result = pxa_i18n_handle_event(&i18n, &parsed);
         if (locale_result != 0) {
-            if (page == PAGE_BATTLE)
+            if (page == PAGE_BATTLE && battle_started)
                 return pxa_plane_game_on_event(event, length);
             return locale_result == 1 && !render_shell()
                        ? PXA_STATUS_INTERNAL
@@ -855,13 +935,12 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     if (pxa_game_screen_handle_event(&game_screen, &parsed)) {
         shell_layout_update();
         shell_geometry_ready = 0;
-        if (page == PAGE_BATTLE)
+        if (page == PAGE_BATTLE && battle_started)
             return pxa_plane_game_on_event(event, length);
         return render_shell() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
-    if (page == PAGE_BATTLE) {
-        if (parsed.service == PXA_SERVICE_WINDOW &&
-            parsed.opcode == PXA_WINDOW_BACK_REQUESTED) {
+    if (page == PAGE_BATTLE && battle_started) {
+        if (pxa_window_is_back_requested(&parsed)) {
             return return_from_battle()
                        ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
         }
@@ -874,33 +953,39 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     if (pxa_game_sfx_handle_event(&pxa_plane_sfx, &parsed, packet,
                                   sizeof(packet)))
         return PXA_EVENT_HANDLED;
-    if (parsed.service == PXA_SERVICE_CLOCK &&
-        parsed.opcode == PXA_CLOCK_TICK && parsed.payload_length == 8) {
+    if (parsed.service == PXA_CLOCK_SERVICE &&
+        parsed.opcode == PXA_CLOCK_TICK) {
+        uint64_t timestamp_us;
+        if (!pxa_clock_parse_tick(&parsed, &timestamp_us))
+            return PXA_EVENT_UNHANDLED;
+        (void)timestamp_us;
         pxa_game_sfx_tick(&pxa_plane_sfx, &parsed);
         return PXA_EVENT_HANDLED;
     }
-    if (parsed.service == PXA_SERVICE_STORAGE &&
-        parsed.opcode == PXA_STORAGE_GET && parsed.request_id == STORAGE_GET_REQUEST) {
+    if (parsed.service == PXA_STORAGE_SERVICE &&
+        parsed.opcode == PXA_STORAGE_GET && parsed.token == STORAGE_GET_REQUEST) {
         pxa_storage_get_result_t result;
-        if (!pxa_storage_parse_get(&parsed, &result)) return PXA_STATUS_INTERNAL;
-        if (result.status == PXA_STATUS_OK && result.value_length >= 7u &&
-            result.value[0] >= 1u && result.value[0] <= 3u) {
-            credits = (uint16_t)(result.value[1] | ((uint16_t)result.value[2] << 8));
-            weapon_level = result.value[3] > 2u ? 2u : result.value[3];
-            hull_level = result.value[4] > 2u ? 2u : result.value[4];
-            ship_model = result.value[5] > 1u ? 1u : result.value[5];
-            story_seen = result.value[6];
-            if (result.value[0] >= 2u && result.value_length >= 11u) {
-                selected_mission = result.value[7] < 3u ? result.value[7] : 0u;
-                owned_ships = result.value[8] | 1u;
-                owned_modules = result.value[9] | 1u;
-                equipped_module = result.value[10] < 3u ? result.value[10] : 0u;
-                if (result.value[0] == 3u && result.value_length >= 15u) {
-                    unlocked_missions = result.value[11] & 7u;
+        if (!pxa_storage_parse_get(&parsed, STORAGE_GET_REQUEST, &result)) return PXA_STATUS_INTERNAL;
+        const uint8_t *value = result.value.data;
+        const uint16_t value_length = result.value.size;
+        if (result.status == PXA_STATUS_OK && value_length >= 7u &&
+            value[0] >= 1u && value[0] <= 3u) {
+            credits = (uint16_t)(value[1] | ((uint16_t)value[2] << 8));
+            weapon_level = value[3] > 2u ? 2u : value[3];
+            hull_level = value[4] > 2u ? 2u : value[4];
+            ship_model = value[5] > 1u ? 1u : value[5];
+            story_seen = value[6];
+            if (value[0] >= 2u && value_length >= 11u) {
+                selected_mission = value[7] < 3u ? value[7] : 0u;
+                owned_ships = value[8] | 1u;
+                owned_modules = value[9] | 1u;
+                equipped_module = value[10] < 3u ? value[10] : 0u;
+                if (value[0] == 3u && value_length >= 15u) {
+                    unlocked_missions = value[11] & 7u;
                     if (unlocked_missions == 0u) unlocked_missions = 1u;
                     for (uint8_t i = 0; i < 3u; ++i)
-                        mission_stars[i] = result.value[12u + i] > 3u
-                                               ? 3u : result.value[12u + i];
+                        mission_stars[i] = value[12u + i] > 3u
+                                               ? 3u : value[12u + i];
                 } else {
                     /* Version 2 exposed every mission; preserve existing saves. */
                     unlocked_missions = 7u;
@@ -914,9 +999,8 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         }
         return render_shell() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
-    if (parsed.service == PXA_SERVICE_STORAGE) return PXA_EVENT_HANDLED;
-    if (parsed.service == PXA_SERVICE_WINDOW &&
-        parsed.opcode == PXA_WINDOW_BACK_REQUESTED) {
+    if (parsed.service == PXA_STORAGE_SERVICE) return PXA_EVENT_HANDLED;
+    if (pxa_window_is_back_requested(&parsed)) {
         if (page == PAGE_HOME) return PXA_EVENT_UNHANDLED;
         page = PAGE_HOME;
         set_shell_music(PAGE_HOME);
@@ -974,5 +1058,8 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
 }
 
 void pxa_app_stop(uint32_t reason) {
-    if (page == PAGE_BATTLE) pxa_plane_game_stop(reason);
+    if (page == PAGE_BATTLE && battle_started) pxa_plane_game_stop(reason);
+    plane_images_stop();
+    pxa_plane_sfx.session_handle = 0;
+    pxa_plane_sfx.permission_handle = 0;
 }

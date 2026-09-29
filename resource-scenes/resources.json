@@ -1,0 +1,129 @@
+{
+  "assets": [
+    {
+      "kind": "texture",
+      "source": "resources/t00.png",
+      "palette": "resources/palette.json",
+      "path": "assets/t00.pxr"
+    },
+    {
+      "kind": "texture",
+      "source": "resources/t01.png",
+      "palette": "resources/palette.json",
+      "path": "assets/t01.pxr"
+    },
+    {
+      "kind": "texture",
+      "source": "resources/t02.png",
+      "palette": "resources/palette.json",
+      "path": "assets/t02.pxr"
+    },
+    {
+      "kind": "texture",
+      "source": "resources/t03.png",
+      "palette": "resources/palette.json",
+      "path": "assets/t03.pxr"
+    },
+    {
+      "kind": "texture",
+      "source": "resources/t04.png",
+      "palette": "resources/palette.json",
+      "path": "assets/t04.pxr"
+    },
+    {
+      "kind": "texture",
+      "source": "resources/t05.png",
+      "palette": "resources/palette.json",
+      "path": "assets/t05.pxr"
+    },
+    {
+      "kind": "texture",
+      "source": "resources/t06.png",
+      "palette": "resources/palette.json",
+      "path": "assets/t06.pxr"
+    },
+    {
+      "kind": "texture",
+      "source": "resources/t07.png",
+      "palette": "resources/palette.json",
+      "path": "assets/t07.pxr"
+    },
+    {
+      "kind": "texture",
+      "source": "resources/t08.png",
+      "palette": "resources/palette.json",
+      "path": "assets/t08.pxr"
+    },
+    {
+      "kind": "texture",
+      "source": "resources/t09.png",
+      "palette": "resources/palette.json",
+      "path": "assets/t09.pxr"
+    },
+    {
+      "kind": "texture",
+      "source": "resources/t10.png",
+      "palette": "resources/palette.json",
+      "path": "assets/t10.pxr"
+    },
+    {
+      "kind": "texture",
+      "source": "resources/t11.png",
+      "palette": "resources/palette.json",
+      "path": "assets/t11.pxr"
+    },
+    {
+      "kind": "texture",
+      "source": "resources/t12.png",
+      "palette": "resources/palette.json",
+      "path": "assets/t12.pxr"
+    },
+    {
+      "kind": "texture",
+      "source": "resources/t13.png",
+      "palette": "resources/palette.json",
+      "path": "assets/t13.pxr"
+    },
+    {
+      "kind": "texture",
+      "source": "resources/t14.png",
+      "palette": "resources/palette.json",
+      "path": "assets/t14.pxr"
+    },
+    {
+      "kind": "texture",
+      "source": "resources/t15.png",
+      "palette": "resources/palette.json",
+      "path": "assets/t15.pxr"
+    },
+    {
+      "kind": "texture",
+      "source": "resources/t16.png",
+      "palette": "resources/palette.json",
+      "path": "assets/t16.pxr"
+    },
+    {
+      "kind": "texture",
+      "source": "resources/t17.png",
+      "palette": "resources/palette.json",
+      "path": "assets/t17.pxr"
+    },
+    {
+      "kind": "texture",
+      "source": "resources/t18.png",
+      "palette": "resources/palette.json",
+      "path": "assets/t18.pxr"
+    },
+    {
+      "kind": "texture",
+      "source": "resources/t19.png",
+      "palette": "resources/palette.json",
+      "path": "assets/t19.pxr"
+    },
+    {
+      "kind": "palette",
+      "source": "resources/palette.json",
+      "path": "assets/p.pxr"
+    }
+  ]
+}

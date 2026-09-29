@@ -51,12 +51,11 @@ float voxel_raster_view_distance(void);
 float voxel_raster_max_view_distance(void);
 float voxel_raster_min_view_distance(void);
 void voxel_raster_set_capabilities(uint32_t capabilities);
-int voxel_raster_upload_assets(uint32_t surface_handle);
 /* Draws the 3D scene plus either the play HUD or a menu. A menu without the
  * paint-overlay flag replaces the scene; a pause menu overlays the frozen
  * frame. Menus are drawn at the scene resolution (1x when the caller sizes the
  * Surface for the display). */
-int32_t voxel_raster_render(uint32_t surface_handle, uint64_t frame_id,
+int32_t voxel_raster_render(uint64_t surface_handle, uint64_t frame_id,
                             const player_t *player, uint8_t quality,
                             const hud_state_t *hud, const menu_state_t *menu,
                             const ray_hit_t *target);

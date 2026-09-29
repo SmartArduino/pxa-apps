@@ -1,0 +1,56 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [
+    1,
+    0
+  ],
+  "target_sdk": [
+    1,
+    0
+  ],
+  "compile_sdk": [
+    1,
+    0
+  ],
+  "id": "pxa-resource-scenes",
+  "version": "0.1.0",
+  "release_sequence": 1,
+  "name": "Resource Scenes",
+  "description": "20 file textures, four visible, 100 asynchronous scene transitions",
+  "build": {
+    "system": "direct",
+    "linear_memory": {
+      "maximum_bytes": 131072,
+      "pinned": true
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "sources": [
+        "main.c"
+      ],
+      "services": [
+        "assets",
+        "clock",
+        {
+          "name": "game-render",
+          "features": [
+            "asset-bindings"
+          ]
+        },
+        "log",
+        "audio",
+        "permission"
+      ]
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "required": true,
+      "scope": "media"
+    }
+  ]
+}

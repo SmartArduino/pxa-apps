@@ -1,0 +1,130 @@
+{
+  "assets": [
+    {
+      "kind": "image",
+      "source": "resources/plane-shooter/boss-carrier.png",
+      "path": "assets/plane-shooter/boss-carrier.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/plane-shooter/boss-dreadnought.png",
+      "path": "assets/plane-shooter/boss-dreadnought.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/plane-shooter/boss-leviathan.png",
+      "path": "assets/plane-shooter/boss-leviathan.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/plane-shooter/enemy-cruiser.png",
+      "path": "assets/plane-shooter/enemy-cruiser.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/plane-shooter/enemy-dart.png",
+      "path": "assets/plane-shooter/enemy-dart.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/plane-shooter/enemy-fighter.png",
+      "path": "assets/plane-shooter/enemy-fighter.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/plane-shooter/enemy-gunship.png",
+      "path": "assets/plane-shooter/enemy-gunship.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/plane-shooter/enemy-plane.png",
+      "path": "assets/plane-shooter/enemy-plane.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/plane-shooter/pickup-energy.png",
+      "path": "assets/plane-shooter/pickup-energy.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/plane-shooter/pickup-overdrive.png",
+      "path": "assets/plane-shooter/pickup-overdrive.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/plane-shooter/pickup-shield.png",
+      "path": "assets/plane-shooter/pickup-shield.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/plane-shooter/player-plane-left.png",
+      "path": "assets/plane-shooter/player-plane-left.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/plane-shooter/player-plane-mk2.png",
+      "path": "assets/plane-shooter/player-plane-mk2.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/dialog-panel.png",
+      "path": "assets/ui/dialog-panel.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/home-hero.png",
+      "path": "assets/ui/home-hero.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/hud-panel.png",
+      "path": "assets/ui/hud-panel.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/icon-comms.png",
+      "path": "assets/ui/icon-comms.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/icon-hangar.png",
+      "path": "assets/ui/icon-hangar.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/icon-mission.png",
+      "path": "assets/ui/icon-mission.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/icon-shop.png",
+      "path": "assets/ui/icon-shop.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/ship-mk2.png",
+      "path": "assets/ui/ship-mk2.pxr",
+      "encoding": "bgra8888"
+    }
+  ]
+}

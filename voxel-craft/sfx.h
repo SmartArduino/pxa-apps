@@ -31,8 +31,8 @@ enum {
 };
 
 typedef struct {
-    uint32_t permission_handle;
-    uint32_t session_handle;
+    uint64_t permission_handle;
+    uint64_t session_handle;
     uint8_t state;
     uint8_t bgm_pending;
     uint8_t bgm_active;
@@ -45,11 +45,13 @@ static inline void voxel_sfx_start(voxel_sfx_t *sfx, uint8_t *packet,
     static const uint8_t permission_scope[] = "media";
     if (sfx == NULL || packet == NULL || sfx->state != VOXEL_SFX_OFF) return;
     sfx->state = VOXEL_SFX_WAIT_PERMISSION;
-    if (!pxa_permission_acquire(VOXEL_SFX_PERMISSION_REQUEST, permission_name,
-                                sizeof(permission_name) - 1, permission_scope,
-                                sizeof(permission_scope) - 1, sfx->payload,
-                                sizeof(sfx->payload), packet,
-                                packet_capacity)) {
+    uint32_t packet_size = 0;
+    if (!pxa_permission_build(
+            packet, packet_capacity, PXA_PERMISSION_ACQUIRE,
+            VOXEL_SFX_PERMISSION_REQUEST, permission_name,
+            sizeof(permission_name) - 1, permission_scope,
+            sizeof(permission_scope) - 1, &packet_size) ||
+        pxa_submit(packet, packet_size) != PXA_STATUS_OK) {
         sfx->state = VOXEL_SFX_UNAVAILABLE;
     }
 }
@@ -59,51 +61,53 @@ static inline int voxel_sfx_handle_event(voxel_sfx_t *sfx,
                                          uint8_t *packet,
                                          size_t packet_capacity) {
     if (sfx == NULL || event == NULL || packet == NULL) return 0;
-    if (event->service == PXA_SERVICE_PERMISSION &&
+    if (event->service == PXA_PERMISSION_SERVICE &&
         event->opcode == PXA_PERMISSION_ACQUIRE &&
-        event->request_id == VOXEL_SFX_PERMISSION_REQUEST) {
+        event->token == VOXEL_SFX_PERMISSION_REQUEST) {
         pxa_permission_acquire_result_t result;
-        if (!pxa_permission_parse_acquire(event, &result) ||
+        if (!pxa_permission_parse_acquire(
+                event, VOXEL_SFX_PERMISSION_REQUEST, &result) ||
             result.status != PXA_STATUS_OK) {
             sfx->state = VOXEL_SFX_UNAVAILABLE;
             return 1;
         }
         sfx->permission_handle = result.handle;
         sfx->state = VOXEL_SFX_WAIT_OPEN;
-        if (!pxa_audio_open_media(VOXEL_SFX_OPEN_REQUEST,
-                                  sfx->permission_handle, sfx->payload,
-                                  sizeof(sfx->payload), packet,
-                                  packet_capacity)) {
+        if (pxa_audio_open_media(VOXEL_SFX_OPEN_REQUEST,
+                                    sfx->permission_handle) != PXA_STATUS_OK) {
             sfx->state = VOXEL_SFX_UNAVAILABLE;
         }
         return 1;
     }
-    if (event->service == PXA_SERVICE_AUDIO &&
+    if (event->service == PXA_AUDIO_SERVICE &&
         event->opcode == PXA_AUDIO_OPEN_SESSION &&
-        event->request_id == VOXEL_SFX_OPEN_REQUEST) {
+        event->token == VOXEL_SFX_OPEN_REQUEST) {
         pxa_audio_open_result_t result;
-        if (!pxa_audio_parse_open(event, &result) ||
+        if (!pxa_audio_parse_open(event, VOXEL_SFX_OPEN_REQUEST, &result) ||
             result.status != PXA_STATUS_OK ||
             result.sample_rate != VOXEL_SFX_SAMPLE_RATE ||
             result.channels != 1 || result.frame_ms != 20) {
             sfx->state = VOXEL_SFX_UNAVAILABLE;
             return 1;
         }
-        sfx->session_handle = result.session_handle;
+        sfx->session_handle = result.handle;
         sfx->state = VOXEL_SFX_WAIT_GRAPH;
-        if (!pxa_audio_commit_speaker_graph(
-                VOXEL_SFX_GRAPH_REQUEST, sfx->session_handle,
-                VOXEL_SFX_GRAPH_GAIN_DB_Q8, 1500, 256, 256, sfx->payload,
-                sizeof(sfx->payload), packet, packet_capacity)) {
+        const pxa_audio_eq_band_t band = {1500, 256, 256};
+        const pxa_audio_graph_t graph = {
+            VOXEL_SFX_GRAPH_GAIN_DB_Q8, &band, 1};
+        if (pxa_audio_commit_graph(VOXEL_SFX_GRAPH_REQUEST,
+                                      sfx->session_handle,
+                                      &graph) != PXA_STATUS_OK) {
             sfx->state = VOXEL_SFX_UNAVAILABLE;
         }
         return 1;
     }
-    if (event->service == PXA_SERVICE_AUDIO &&
+    if (event->service == PXA_AUDIO_SERVICE &&
         event->opcode == PXA_AUDIO_COMMIT_GRAPH &&
-        event->request_id == VOXEL_SFX_GRAPH_REQUEST) {
+        event->token == VOXEL_SFX_GRAPH_REQUEST) {
         int32_t status;
-        if (!pxa_audio_parse_status(event, PXA_AUDIO_COMMIT_GRAPH, &status) ||
+        if (!pxa_audio_parse_status(event, VOXEL_SFX_GRAPH_REQUEST,
+                                       PXA_AUDIO_COMMIT_GRAPH, &status) ||
             status != PXA_STATUS_OK) {
             sfx->state = VOXEL_SFX_UNAVAILABLE;
         } else {
@@ -140,7 +144,7 @@ static inline void voxel_sfx_play(voxel_sfx_t *sfx, uint8_t kind) {
         kind >= VOXEL_SFX_KIND_COUNT) {
         return;
     }
-    (void)pxa_audio_play_tone_enveloped(
+    (void)pxa_audio_play_tone(
         sfx->session_handle, waveform[kind], frequency_hz[kind],
         duration_ms[kind], gain_db_q8[kind], attack_ms[kind],
         release_ms[kind], 0);

@@ -1,12 +1,14 @@
+#include "images.h"
 #define PXA_ARCADE_MODULE_PREFIX pxa_plane_game_
+#include "pxa_canvas.h"
+#include "pxa_game_sfx.h"
+#include "pxa_clock.h"
 #ifndef PXA_ARCADE_MODULE_PREFIX
 #define PXA_ARCADE_MODULE_PREFIX pxa_arcade_plane_shooter_
 #endif
 #include "pxa_arcade_module.h"
 
-#include "pxa_canvas.h"
 #include "pxa_game_screen.h"
-#include "pxa_game_sfx.h"
 
 #define GAME_ROOT_NODE 1u
 #define GAME_NODE 2u
@@ -250,21 +252,21 @@ static boss_t boss;
 pxa_game_sfx_t pxa_plane_sfx;
 #define sfx pxa_plane_sfx
 
-static const char player_asset[] = "assets/plane-shooter/player-plane-left.png";
-static const char player_mk2_asset[] = "assets/plane-shooter/player-plane-mk2.png";
-static const char enemy_scout_asset[] = "assets/plane-shooter/enemy-plane.png";
-static const char enemy_dart_asset[] = "assets/plane-shooter/enemy-dart.png";
-static const char enemy_fighter_asset[] = "assets/plane-shooter/enemy-fighter.png";
-static const char enemy_cruiser_asset[] = "assets/plane-shooter/enemy-cruiser.png";
-static const char enemy_gunship_asset[] = "assets/plane-shooter/enemy-gunship.png";
-static const char boss_asset[] = "assets/plane-shooter/boss-dreadnought.png";
-static const char boss_carrier_asset[] = "assets/plane-shooter/boss-carrier.png";
-static const char boss_leviathan_asset[] = "assets/plane-shooter/boss-leviathan.png";
-static const char pickup_energy_asset[] = "assets/plane-shooter/pickup-energy.png";
-static const char pickup_shield_asset[] = "assets/plane-shooter/pickup-shield.png";
-static const char pickup_overdrive_asset[] = "assets/plane-shooter/pickup-overdrive.png";
-static const char hud_panel_asset[] = "assets/ui/hud-panel.png";
-static const char dialog_panel_asset[] = "assets/ui/dialog-panel.png";
+#define player_asset PLANE_IMAGE_PLANE_SHOOTER_PLAYER_PLANE_LEFT
+#define player_mk2_asset PLANE_IMAGE_PLANE_SHOOTER_PLAYER_PLANE_MK2
+#define enemy_scout_asset PLANE_IMAGE_PLANE_SHOOTER_ENEMY_PLANE
+#define enemy_dart_asset PLANE_IMAGE_PLANE_SHOOTER_ENEMY_DART
+#define enemy_fighter_asset PLANE_IMAGE_PLANE_SHOOTER_ENEMY_FIGHTER
+#define enemy_cruiser_asset PLANE_IMAGE_PLANE_SHOOTER_ENEMY_CRUISER
+#define enemy_gunship_asset PLANE_IMAGE_PLANE_SHOOTER_ENEMY_GUNSHIP
+#define boss_asset PLANE_IMAGE_PLANE_SHOOTER_BOSS_DREADNOUGHT
+#define boss_carrier_asset PLANE_IMAGE_PLANE_SHOOTER_BOSS_CARRIER
+#define boss_leviathan_asset PLANE_IMAGE_PLANE_SHOOTER_BOSS_LEVIATHAN
+#define pickup_energy_asset PLANE_IMAGE_PLANE_SHOOTER_PICKUP_ENERGY
+#define pickup_shield_asset PLANE_IMAGE_PLANE_SHOOTER_PICKUP_SHIELD
+#define pickup_overdrive_asset PLANE_IMAGE_PLANE_SHOOTER_PICKUP_OVERDRIVE
+#define hud_panel_asset PLANE_IMAGE_UI_HUD_PANEL
+#define dialog_panel_asset PLANE_IMAGE_UI_DIALOG_PANEL
 
 /* Original deep-space loop: an ascending lead over a compact pulse rhythm. */
 static const pxa_game_music_note_t plane_shooter_music[] = {
@@ -637,16 +639,16 @@ static uint32_t pickup_color(uint8_t kind) {
     }
 }
 
-static const char* pickup_asset(uint8_t kind, size_t* length) {
+static plane_image_id_t pickup_asset(uint8_t kind) {
     switch (kind) {
         case PICKUP_SHIELD:
-            *length = sizeof(pickup_shield_asset) - 1;
+
             return pickup_shield_asset;
         case PICKUP_OVERDRIVE:
-            *length = sizeof(pickup_overdrive_asset) - 1;
+
             return pickup_overdrive_asset;
         default:
-            *length = sizeof(pickup_energy_asset) - 1;
+
             return pickup_energy_asset;
     }
 }
@@ -745,11 +747,7 @@ static void draw_player(pxa_canvas_frame_t* frame) {
     if (invulnerable_ticks != 0)
         pxa_canvas_circle(frame, (int16_t)(player_x + 19), center_y, 22, 0x1C567B);
     if (invulnerable_ticks == 0 || (invulnerable_ticks / 3u) % 2u == 0)
-        pxa_canvas_image(frame, player_x, (int16_t)(player_y - 2), PLAYER_PLANE_W,
-                         PLAYER_PLANE_H, 255, 0,
-                         configured_ship_model ? player_mk2_asset : player_asset,
-                         configured_ship_model ? sizeof(player_mk2_asset) - 1u
-                                               : sizeof(player_asset) - 1u);
+        plane_image(frame, player_x, (int16_t)(player_y - 2), PLAYER_PLANE_W, PLAYER_PLANE_H, 255, 0, configured_ship_model ? player_mk2_asset : player_asset);
 }
 
 static void draw_engine_particles(pxa_canvas_frame_t* frame) {
@@ -786,30 +784,28 @@ static void draw_enemy_engine_particles(pxa_canvas_frame_t* frame) {
 
 static void draw_enemy(pxa_canvas_frame_t* frame, const enemy_t* enemy) {
     const uint32_t color = enemy_color(enemy->kind);
-    const char* asset = enemy_scout_asset;
-    size_t asset_length = sizeof(enemy_scout_asset) - 1;
+    plane_image_id_t asset = enemy_scout_asset;
     switch (enemy->kind) {
         case ENEMY_DART:
             asset = enemy_dart_asset;
-            asset_length = sizeof(enemy_dart_asset) - 1;
+
             break;
         case ENEMY_FIGHTER:
             asset = enemy_fighter_asset;
-            asset_length = sizeof(enemy_fighter_asset) - 1;
+
             break;
         case ENEMY_CRUISER:
             asset = enemy_cruiser_asset;
-            asset_length = sizeof(enemy_cruiser_asset) - 1;
+
             break;
         case ENEMY_GUNSHIP:
             asset = enemy_gunship_asset;
-            asset_length = sizeof(enemy_gunship_asset) - 1;
+
             break;
         default:
             break;
     }
-    pxa_canvas_image(frame, enemy->x, enemy->y, ENEMY_PLANE_W, ENEMY_PLANE_H,
-                     255, 0, asset, asset_length);
+    plane_image(frame, enemy->x, enemy->y, ENEMY_PLANE_W, ENEMY_PLANE_H, 255, 0, asset);
     if (enemy->health > 1) {
         const uint8_t maximum = enemy_health(enemy->kind);
         pxa_canvas_rect(frame, enemy->x, (int16_t)(enemy->y - 5), 28, 3, 0x331B32, 1);
@@ -829,16 +825,10 @@ static void draw_boss(pxa_canvas_frame_t* frame) {
                     (int16_t)(boss.x + 5), (int16_t)(boss.y + 15), core, 2);
     pxa_canvas_line(frame, (int16_t)(boss.x - 16), (int16_t)(boss.y + 31),
                     (int16_t)(boss.x + 5), (int16_t)(boss.y + 31), core, 2);
-    const char *asset = boss.kind == 1u ? boss_carrier_asset
+    plane_image_id_t asset = boss.kind == 1u ? boss_carrier_asset
                                        : boss.kind == 2u ? boss_leviathan_asset
                                                          : boss_asset;
-    const size_t asset_length = boss.kind == 1u
-                                    ? sizeof(boss_carrier_asset) - 1u
-                                    : boss.kind == 2u
-                                          ? sizeof(boss_leviathan_asset) - 1u
-                                          : sizeof(boss_asset) - 1u;
-    pxa_canvas_image(frame, boss.x, boss.y, BOSS_WIDTH, BOSS_HEIGHT, 255,
-                     PXA_UI_IMAGE_FIT_STRETCH, asset, asset_length);
+    plane_image(frame, boss.x, boss.y, BOSS_WIDTH, BOSS_HEIGHT, 255, PXA_UI_IMAGE_FIT_STRETCH, asset);
     if (enraged)
         pxa_canvas_circle(frame, (int16_t)(boss.x + 32), (int16_t)(boss.y + 23), 4,
                           0xFFF0AD);
@@ -847,19 +837,17 @@ static void draw_boss(pxa_canvas_frame_t* frame) {
 static void draw_pickups(pxa_canvas_frame_t* frame) {
     for (uint8_t index = 0; index < PICKUP_COUNT; ++index) {
         const pickup_t* pickup = &pickups[index];
-        size_t asset_length;
-        const char* asset;
+        plane_image_id_t asset;
         if (!pickup->active)
             continue;
-        asset = pickup_asset(pickup->kind, &asset_length);
+        asset = pickup_asset(pickup->kind);
         pxa_canvas_circle(frame, (int16_t)(pickup->x + PICKUP_SIZE / 2),
                           (int16_t)(pickup->y + PICKUP_SIZE / 2),
                           (uint16_t)(10 + (pickup->pulse / 4u & 1u)),
                           pickup_color(pickup->kind));
         pxa_canvas_circle(frame, (int16_t)(pickup->x + PICKUP_SIZE / 2),
                           (int16_t)(pickup->y + PICKUP_SIZE / 2), 7, 0x102940);
-        pxa_canvas_image(frame, pickup->x, pickup->y, PICKUP_SIZE, PICKUP_SIZE, 255, 0,
-                         asset, asset_length);
+        plane_image(frame, pickup->x, pickup->y, PICKUP_SIZE, PICKUP_SIZE, 255, 0, asset);
     }
 }
 
@@ -933,9 +921,7 @@ static int render(void) {
     draw_engine_particles(&frame);
     draw_player(&frame);
 
-    pxa_canvas_image(&frame, layout.hud_x, layout.hud_y, layout.hud_w,
-                     HUD_PANEL_H, 255, PXA_UI_IMAGE_FIT_STRETCH, hud_panel_asset,
-                     sizeof(hud_panel_asset) - 1);
+    plane_image(&frame, layout.hud_x, layout.hud_y, layout.hud_w, HUD_PANEL_H, 255, PXA_UI_IMAGE_FIT_STRETCH, hud_panel_asset);
     const char *score_label = PXA_PLANE_MSG(PXA_MSG_BATTLE_SCORE);
     const char *wave_label = PXA_PLANE_MSG(PXA_MSG_BATTLE_WAVE);
     const char *chain_label = PXA_PLANE_MSG(PXA_MSG_BATTLE_CHAIN);
@@ -1035,9 +1021,7 @@ static int render(void) {
         const char *over = PXA_PLANE_MSG(PXA_MSG_BATTLE_LOST);
         const int16_t panel_x = (int16_t)((layout.width - 220) / 2);
         const int16_t panel_y = (int16_t)((layout.height - 52) / 2);
-        pxa_canvas_image(&frame, panel_x, panel_y, 220, 52, 255,
-                         PXA_UI_IMAGE_FIT_STRETCH, dialog_panel_asset,
-                         sizeof(dialog_panel_asset) - 1);
+        plane_image(&frame, panel_x, panel_y, 220, 52, 255, PXA_UI_IMAGE_FIT_STRETCH, dialog_panel_asset);
         pxa_canvas_text(&frame, (int16_t)(panel_x + 12),
                         (int16_t)(panel_y + 17), 196, 0xFFFFFF,
                         PXA_CANVAS_ALIGN_CENTER, over,
@@ -1557,7 +1541,7 @@ int32_t pxa_app_start(const uint8_t* config, uint32_t config_length) {
     initialized = 0;
     backgrounded = 0;
     reset_game();
-    if (!render() || !pxa_clock_set_period(GAME_TICK_MS))
+    if (!render() || pxa_clock_set_period(GAME_TICK_MS) != PXA_STATUS_OK)
         return PXA_STATUS_INTERNAL;
     pxa_game_sfx_set_theme(&sfx, PXA_GAME_SFX_THEME_PLANE);
     pxa_game_sfx_set_song(&sfx, &plane_shooter_song);
@@ -1573,7 +1557,7 @@ int32_t pxa_app_on_event(const uint8_t* event, uint32_t length) {
         return PXA_EVENT_UNHANDLED;
     if (parsed.service == PXA_SERVICE_SYSTEM &&
         parsed.opcode == PXA_SYSTEM_LIFECYCLE_EVENT &&
-        parsed.payload_length == 1) {
+        parsed.payload_size == 1) {
         backgrounded = parsed.payload[0] == PXA_SYSTEM_LIFECYCLE_BACKGROUND;
         control_active = 0;
         player_velocity_y = 0;
@@ -1593,17 +1577,19 @@ int32_t pxa_app_on_event(const uint8_t* event, uint32_t length) {
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     if (pxa_game_sfx_handle_event(&sfx, &parsed, packet, sizeof(packet)))
         return PXA_EVENT_HANDLED;
-    if (parsed.service == PXA_SERVICE_CLOCK && parsed.opcode == PXA_CLOCK_TICK &&
-        parsed.payload_length == 8) {
+    if (parsed.service == PXA_CLOCK_SERVICE && parsed.opcode == PXA_CLOCK_TICK) {
+        uint64_t timestamp_us;
+        if (!pxa_clock_parse_tick(&parsed, &timestamp_us))
+            return PXA_EVENT_UNHANDLED;
         const uint8_t steps = pxa_clock_tick_steps(
-            &last_tick_us, &parsed, GAME_TICK_MS, GAME_MAX_CATCHUP_STEPS);
+            &last_tick_us, timestamp_us, GAME_TICK_MS, GAME_MAX_CATCHUP_STEPS);
         if (!paused && !backgrounded) {
             pxa_game_sfx_tick(&sfx, &parsed);
         } else {
-            sfx.music_tick_us = pxa_read_u64(parsed.payload);
+            sfx.music_tick_us = timestamp_us;
             sfx.music_remainder_us = 0;
         }
-        random_state ^= (uint32_t)pxa_read_u64(parsed.payload);
+        random_state ^= (uint32_t)timestamp_us;
         if (!paused && !backgrounded && !tick(steps))
             return PXA_STATUS_INTERNAL;
         return PXA_EVENT_HANDLED;
