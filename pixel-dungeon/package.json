@@ -1,19 +1,19 @@
 {
   "format": "pxa-package-source-0.1",
   "min_sdk": [
-    0,
-    1
+    1,
+    0
   ],
   "target_sdk": [
-    0,
-    1
+    1,
+    0
   ],
   "compile_sdk": [
-    0,
-    1
+    1,
+    0
   ],
   "id": "pxa-pixel-dungeon",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "name": "Pixel Dungeon",
   "description": "Turn-based roguelike dungeon crawler drawn with the GameRender raster API and Shattered Pixel Dungeon art",
   "icon": "assets/icon.png",
@@ -44,18 +44,24 @@
         "font_data.c"
       ],
       "services": [
-        {
-          "name": "window",
-          "min_version": [0, 1]
-        },
+        "window",
         "game-render",
         "storage",
         "log",
-        "audio"
+        "audio",
+        "clock",
+        "permission",
+        {
+          "name": "ui",
+          "features": [
+            "canvas"
+          ]
+        },
+        "assets"
       ]
     }
   ],
-  "release_sequence": 1,
+  "release_sequence": 2,
   "permissions": [
     {
       "name": "audio.playback",

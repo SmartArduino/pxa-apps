@@ -1,15 +1,23 @@
 {
   "format": "pxa-package-source-0.1",
-  "min_sdk": [0, 1],
-  "target_sdk": [0, 1],
-  "compile_sdk": [0, 1],
+  "min_sdk": [1, 0],
+  "target_sdk": [1, 0],
+  "compile_sdk": [1, 0],
   "id": "pxa-garden-guard",
-  "version": "0.2.1",
-  "release_sequence": 2,
+  "version": "0.2.2",
+  "release_sequence": 3,
   "name": "Garden Guard",
   "description": "Defend a day-and-night garden across 12 stages with 13 plants",
   "icon": "assets/icon.png",
-  "services": ["audio", "storage"],
+  "components": [{
+    "id": "main",
+    "kind": "ui",
+    "sources": ["main.c"],
+    "services": [
+      "audio", "clock", "permission", "storage", "window",
+      {"name": "ui", "features": ["canvas"]}
+    ]
+  }],
   "permissions": [
     {"name": "audio.playback", "required": false, "scope": "media"}
   ]

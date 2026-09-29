@@ -4,6 +4,9 @@
 #include <stdint.h>
 
 #include "pxa.h"
+#include "pxa_audio.h"
+#include "pxa_clock.h"
+#include "pxa_permission.h"
 
 #define AUDIO_MAX_VOICES 16
 #define AUDIO_MAX_SCHEDULED 24
@@ -50,12 +53,12 @@ enum {
 };
 
 typedef struct {
-    uint32_t permission_handle;
-    uint32_t session_handle;
+    uint64_t permission_handle;
+    uint64_t session_handle;
     uint64_t tick_us;
     uint32_t queued_frames; /* estimate of the provider queue depth */
     uint32_t ticks_since_query;
-    uint32_t query_request;
+    uint64_t query_request;
     uint32_t query_pending;
     uint8_t state;
     uint8_t clock_started;
@@ -64,7 +67,6 @@ typedef struct {
     int16_t frame[AUDIO_FRAME_SAMPLES];
     audio_voice_t voices[AUDIO_MAX_VOICES];
     audio_scheduled_t scheduled[AUDIO_MAX_SCHEDULED];
-    uint8_t payload[96];
 } game_audio_t;
 
 /* Requests audio.playback and opens a media session. */
@@ -80,7 +82,7 @@ int audio_handle_event(game_audio_t *audio, const pxa_event_t *event,
 void audio_play(game_audio_t *audio, uint8_t sound_id, uint8_t gain);
 
 /* Pumps the PCM compatibility path only while it has active sound. */
-void audio_tick(game_audio_t *audio, const pxa_event_t *event);
+void audio_tick(game_audio_t *audio, uint64_t timestamp_us);
 
 void audio_stop(game_audio_t *audio);
 

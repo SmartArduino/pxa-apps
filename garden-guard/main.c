@@ -3,7 +3,10 @@
 #include "pxa_game_screen.h"
 #include "pxa_game_sfx.h"
 #include "pxa_i18n.h"
+#include "pxa_clock.h"
+#include "pxa_i18n.h"
 #include "pxa_storage.h"
+#include "pxa_window.h"
 
 #ifndef GARDEN_DEBUG_UNLOCK_ALL
 #define GARDEN_DEBUG_UNLOCK_ALL 0
@@ -389,7 +392,6 @@ static const level_def_t levels[LEVELS_COUNT] = {
 
 static uint8_t draw_data[16 * 1024];
 static uint8_t packet[512];
-static uint8_t storage_payload[128];
 static uint32_t generation;
 static uint32_t random_state = 0x39d8a617u;
 static uint32_t sun_count;
@@ -590,14 +592,14 @@ int32_t pxa_app_start(const uint8_t* config,uint32_t config_length){
         &i18n,&pxa_app_i18n_bundle,config,config_length);
     pxa_game_screen_from_start(&game_screen,config,config_length);
     garden_layout_update();
-    if(!pxa_window_fullscreen()) return PXA_STATUS_INTERNAL;
+    if(pxa_window_fullscreen()!=PXA_STATUS_OK) return PXA_STATUS_INTERNAL;
     init_unlocks();
     state=STATE_HOME;
     current_level=0;
     chosen_count=0;
     level_scroll=0;
     almanac_scroll=0;
-    if(!render() || !pxa_clock_set_period(AUDIO_TICK_MS)) return PXA_STATUS_INTERNAL;
+    if(!render() || pxa_clock_set_period(AUDIO_TICK_MS)!=PXA_STATUS_OK) return PXA_STATUS_INTERNAL;
     sync_background_music();
     pxa_game_sfx_start(&sfx,packet,sizeof(packet));
     garden_load();
@@ -617,18 +619,18 @@ int32_t pxa_app_on_event(const uint8_t* event,uint32_t length){
         garden_layout_update();
         return render()?PXA_EVENT_HANDLED:PXA_STATUS_INTERNAL;
     }
-    if(parsed.service==PXA_SERVICE_WINDOW && parsed.opcode==PXA_WINDOW_BACK_REQUESTED){
+    if(pxa_window_is_back_requested(&parsed)){
         if(!navigate_back()) return PXA_EVENT_UNHANDLED;
         if(!render()) return PXA_STATUS_INTERNAL;
         return PXA_EVENT_HANDLED;
     }
     if(pxa_game_sfx_handle_event(&sfx,&parsed,packet,sizeof(packet))) return PXA_EVENT_HANDLED;
-    if(parsed.service==PXA_SERVICE_STORAGE){
-        if(parsed.opcode==PXA_STORAGE_GET && parsed.request_id==STORAGE_GET_REQ){
+    if(parsed.service==PXA_STORAGE_SERVICE){
+        if(parsed.opcode==PXA_STORAGE_GET && parsed.token==STORAGE_GET_REQ){
             pxa_storage_get_result_t result;
-            if(!pxa_storage_parse_get(&parsed,&result)) return PXA_STATUS_INTERNAL;
-            if(result.status==PXA_STATUS_OK && result.value_length>=6){
-                const uint8_t* v=result.value;
+            if(!pxa_storage_parse_get(&parsed,STORAGE_GET_REQ,&result)) return PXA_STATUS_INTERNAL;
+            if(result.status==PXA_STATUS_OK && result.value.size>=6){
+                const uint8_t* v=result.value.data;
                 if(v[0]==SAVE_VERSION){
                     max_unlocked=v[1];
                     if(max_unlocked==0) max_unlocked=1;
@@ -636,7 +638,7 @@ int32_t pxa_app_on_event(const uint8_t* event,uint32_t length){
                     unlocked_mask=(uint32_t)v[2]|((uint32_t)v[3]<<8)|((uint32_t)v[4]<<16)|((uint32_t)v[5]<<24);
                     if(unlocked_mask==0) init_unlocks();
                     else {
-                        for(uint8_t i=0;i<LEVELS_COUNT && 6+i < result.value_length;++i) level_stars[i]=v[6+i];
+                        for(uint8_t i=0;i<LEVELS_COUNT && 6+i < result.value.size;++i) level_stars[i]=v[6+i];
                     }
                 }
             } else if(result.status==PXA_STATUS_NOT_FOUND){
@@ -645,16 +647,18 @@ int32_t pxa_app_on_event(const uint8_t* event,uint32_t length){
             apply_debug_unlocks();
             if(!render()) return PXA_STATUS_INTERNAL;
             return PXA_EVENT_HANDLED;
-        } else if(parsed.opcode==PXA_STORAGE_SET && parsed.request_id==STORAGE_SET_REQ){
+        } else if(parsed.opcode==PXA_STORAGE_SET && parsed.token==STORAGE_SET_REQ){
             storage_pending=0;
             return PXA_EVENT_HANDLED;
         }
         return PXA_EVENT_UNHANDLED;
     }
-    if(parsed.service==PXA_SERVICE_CLOCK && parsed.opcode==PXA_CLOCK_TICK && parsed.payload_length==8){
+    if(parsed.service==PXA_CLOCK_SERVICE && parsed.opcode==PXA_CLOCK_TICK){
+        uint64_t timestamp_us=0;
+        if(!pxa_clock_parse_tick(&parsed,&timestamp_us)) return PXA_EVENT_UNHANDLED;
         sync_background_music();
         if(state!=STATE_PAUSED) pxa_game_sfx_tick(&sfx,&parsed);
-        if(state!=STATE_PAUSED) random_state^=(uint32_t)pxa_read_u64(parsed.payload);
+        if(state!=STATE_PAUSED) random_state^=(uint32_t)timestamp_us;
         // 自动推进调试 - 若HOME停留过久自动进入选卡，避免点击失灵假死
         if(state==STATE_HOME){
             if(++home_ticks > 120){
@@ -829,4 +833,8 @@ int32_t pxa_app_on_event(const uint8_t* event,uint32_t length){
     return PXA_EVENT_UNHANDLED;
 }
 
-void pxa_app_stop(uint32_t reason){ (void)reason; }
+void pxa_app_stop(uint32_t reason){
+    (void)reason;
+    sfx.session_handle=0;
+    sfx.permission_handle=0;
+}

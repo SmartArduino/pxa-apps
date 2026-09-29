@@ -3,7 +3,6 @@
 #include <stddef.h>
 
 #include "jump3d_font_data.h"
-#include "pxa_log.h"
 
 /* Antialiased coverage paths can be compiled out for measurements: 0 forces the
  * binary cut-out so builds with and without AA can be compared on one Host. */
@@ -73,7 +72,7 @@ static int glyph_index(const j3_font_face_t *face, const char *text) {
     return -1;
 }
 
-int j3_font_upload(uint32_t context, uint8_t *scratch,
+int j3_font_upload(uint64_t context, uint8_t *scratch,
                    uint32_t scratch_capacity) {
     uint8_t tier;
     if (scratch == NULL) return 0;
@@ -111,7 +110,7 @@ int j3_font_upload(uint32_t context, uint8_t *scratch,
                     text[length++] = (char)('0' + (int)(result / 10) % 10);
                     text[length++] = (char)('0' + (int)(result % 10));
                     text[length] = '\0';
-                    (void)pxa_log_error(text);
+                    (void)pxa_log_write(4, text);
                     return 0;
                 }
             }

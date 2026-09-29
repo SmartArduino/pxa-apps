@@ -1220,7 +1220,7 @@ static float block_depth(const j3_block_t *block) {
 }
 
 int j3_render_frame(j3_render_t *render, const j3_game_t *game,
-                    uint32_t context, uint8_t *bytes, uint32_t capacity,
+                    uint64_t context, uint8_t *bytes, uint32_t capacity,
                     uint64_t frame_id) {
     uint8_t order[J3_BLOCK_MAX];
     uint8_t count = game->block_count;
@@ -1405,7 +1405,7 @@ static void build_shadow_shape(uint8_t *pixels, int size, int rounded_square) {
     }
 }
 
-int j3_render_upload_resources(uint32_t context, uint8_t *scratch,
+int j3_render_upload_resources(uint64_t context, uint8_t *scratch,
                                uint32_t scratch_capacity) {
     static uint8_t pixels[J3_SHADOW_TEXTURE_SIZE * J3_SHADOW_TEXTURE_SIZE];
     static const uint8_t solid = 15u;

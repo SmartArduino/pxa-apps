@@ -96,13 +96,12 @@ typedef struct {
 } j3_audio_voice_t;
 
 typedef struct {
-    uint32_t permission_handle;
-    uint32_t session_handle;
+    uint64_t permission_handle;
+    uint64_t session_handle;
     uint64_t tick_us;
     uint32_t remainder_us;
     uint16_t queued_frames;
     uint8_t state;
-    uint8_t payload[96];
     j3_audio_voice_t voices[J3_CHANNEL_COUNT];
     int16_t frame[J3_AUDIO_FRAME_SAMPLES];
 } j3_audio_t;
@@ -115,7 +114,7 @@ int j3_audio_handle_event(j3_audio_t *audio, const pxa_event_t *event,
                           uint8_t *packet, uint32_t capacity);
 
 /* Mixes and submits frames for a clock tick. */
-void j3_audio_tick(j3_audio_t *audio, const pxa_event_t *event);
+void j3_audio_tick(j3_audio_t *audio, uint64_t timestamp_us);
 
 /* Starts `clip` on `channel`. `loop` repeats it until stopped or replaced. */
 void j3_audio_play(j3_audio_t *audio, uint8_t channel, uint8_t clip,

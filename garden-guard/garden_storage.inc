@@ -1,6 +1,6 @@
 static void garden_load(void){
     static const char key[]="garden.save";
-    pxa_storage_get(STORAGE_GET_REQ,key,sizeof(key)-1,storage_payload,sizeof(storage_payload),packet,sizeof(packet));
+    (void)pxa_storage_request_get(STORAGE_GET_REQ,key,sizeof(key)-1);
 }
 static void garden_save(void){
 #if GARDEN_DEBUG_UNLOCK_ALL
@@ -18,7 +18,9 @@ static void garden_save(void){
     value[len++]=(uint8_t)(unlocked_mask>>24);
     for(uint8_t i=0;i<LEVELS_COUNT && len<sizeof(value);++i) value[len++]=level_stars[i];
     storage_pending=1;
-    pxa_storage_set(STORAGE_SET_REQ,key,sizeof(key)-1,value,len,storage_payload,sizeof(storage_payload),packet,sizeof(packet));
+    if(pxa_storage_request_set(packet,sizeof(packet),STORAGE_SET_REQ,key,
+                                  sizeof(key)-1,value,len)!=PXA_STATUS_OK)
+        storage_pending=0;
 }
 static void apply_debug_unlocks(void){
 #if GARDEN_DEBUG_UNLOCK_ALL

@@ -66,7 +66,10 @@ static inline int pxa_game_screen_handle_event(pxa_game_screen_t *screen,
                                                const pxa_event_t *event) {
     pxa_ui_environment_t environment;
     if (screen == NULL || event == NULL ||
-        !pxa_ui_parse_environment_event(event, &environment))
+        event->service != PXA_UI_SERVICE ||
+        event->opcode != PXA_UI_ENVIRONMENT_CHANGED || event->token != 0 ||
+        !pxa_ui_parse_environment_records(event->payload,
+                                           event->payload_size, &environment))
         return 0;
     return pxa_game_screen_apply(screen, &environment);
 }

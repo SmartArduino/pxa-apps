@@ -1,19 +1,19 @@
 {
   "format": "pxa-package-source-0.1",
   "min_sdk": [
-    0,
-    1
+    1,
+    0
   ],
   "target_sdk": [
-    0,
-    1
+    1,
+    0
   ],
   "compile_sdk": [
-    0,
-    1
+    1,
+    0
   ],
   "id": "pxa-game-render-bench",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "name": "GameRender Bench",
   "description": "Eleven-stage 2D/3D benchmark with low-resolution rendering",
   "build": {
@@ -31,10 +31,11 @@
         "main.c"
       ],
       "services": [
+        "clock",
         "game-render",
         "log"
       ]
     }
   ],
-  "release_sequence": 3
+  "release_sequence": 4
 }

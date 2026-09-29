@@ -2,6 +2,7 @@
 #include "pxa_app_messages.h"
 #include "pxa_game_screen.h"
 #include "pxa_i18n.h"
+#include "pxa_window.h"
 
 typedef int32_t (*pxa_arcade_start_fn)(const uint8_t *config, uint32_t config_length);
 typedef int32_t (*pxa_arcade_event_fn)(const uint8_t *event, uint32_t length);
@@ -62,7 +63,10 @@ static const pxa_arcade_game_t games[] = {
 #define PXA_ARCADE_MENU_ICON_NODE_BASE UINT32_C(80)
 #define PXA_ARCADE_MENU_CONTENT_NODE_BASE UINT32_C(100)
 
-static uint8_t packet[4096];
+uint8_t pxa_arcade_draw_data[16 * 1024];
+uint8_t pxa_arcade_ui_commands[4096];
+uint8_t pxa_arcade_packet[4096];
+#define packet pxa_arcade_packet
 uint32_t pxa_arcade_ui_generation;
 pxa_game_screen_t pxa_arcade_screen;
 static uint8_t active_game = UINT8_MAX;
@@ -257,7 +261,7 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t config_length) {
     (void)pxa_i18n_init_from_start_config(
         &i18n, &pxa_app_i18n_bundle, config, config_length);
     pxa_game_screen_from_start(&pxa_arcade_screen, config, config_length);
-    return pxa_window_fullscreen() && render_menu()
+    return pxa_window_fullscreen() == PXA_STATUS_OK && render_menu()
                ? PXA_STATUS_OK : PXA_STATUS_INTERNAL;
 }
 
@@ -280,8 +284,7 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         return render_menu() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
     if (active_game != UINT8_MAX) {
-        if (parsed.service == PXA_SERVICE_WINDOW &&
-            parsed.opcode == PXA_WINDOW_BACK_REQUESTED)
+        if (pxa_window_is_back_requested(&parsed))
             return return_to_menu() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
         return games[active_game].on_event(event, length);
     }

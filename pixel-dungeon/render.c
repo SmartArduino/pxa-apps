@@ -8,7 +8,6 @@
 
 #include "assets.h"
 #include "font.h"
-#include "pxa_log.h"
 #include "strings.h"
 #include "wall_tiles.h"
 
@@ -1659,7 +1658,7 @@ static void draw_shop(const pd_game_t *game, const pd_layout_t *layout) {
 /* Entry point                                                             */
 /* ---------------------------------------------------------------------- */
 
-int pd_render_present(uint32_t context_handle, uint32_t capabilities,
+int pd_render_present(uint64_t context_handle, uint32_t capabilities,
                       const pd_game_t *game, const pd_layout_t *layout,
                       uint8_t *buffer, uint32_t capacity, uint64_t frame_id,
                       uint32_t now_ms) {
@@ -1794,7 +1793,7 @@ int pd_render_present(uint32_t context_handle, uint32_t capabilities,
         out = append_text(out, "pd: frame rejected status=");
         out = append_int(out, (int)status);
         *out = '\0';
-        (void)pxa_log_error(line);
+        (void)pxa_log_write(4, line);
     }
     return status == PXA_STATUS_WOULD_BLOCK ? 1 : 0;
 }

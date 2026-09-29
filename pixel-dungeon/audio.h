@@ -4,8 +4,12 @@
 #include <stdint.h>
 
 #include "pxa.h"
+#include "pxa_audio.h"
+#include "pxa_assets.h"
+#include "pxa_permission.h"
 
 #define PD_AUDIO_PENDING_SOUNDS 6
+#define PD_AUDIO_SOUND_SLOTS 8
 
 enum {
     PD_MUSIC_SEWERS = 0,
@@ -31,13 +35,20 @@ typedef struct {
     uint8_t music_track;
     uint8_t music_pending;
     uint8_t music_host;
+    uint8_t music_ready;
     uint8_t sfx_host_reported;
     uint8_t music_fading_out;
     int16_t music_asset_gain_db_q8;
-    uint32_t permission_handle;
-    uint32_t session_handle;
+    uint64_t permission_handle;
+    uint64_t session_handle;
+    uint64_t music_instance;
     uint8_t pending[PD_AUDIO_PENDING_SOUNDS];
     uint8_t pending_count;
+    uint64_t sound_handles[PD_AUDIO_SOUND_SLOTS];
+    uint8_t sound_ids[PD_AUDIO_SOUND_SLOTS];
+    uint32_t sound_ages[PD_AUDIO_SOUND_SLOTS], sound_age;
+    uint64_t sound_sequence, sound_load_token;
+    uint8_t sound_load_id, sound_load_slot;
 } pd_audio_t;
 
 void pd_audio_init(pd_audio_t *audio);

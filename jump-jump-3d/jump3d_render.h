@@ -51,7 +51,7 @@ typedef struct {
 } j3_render_t;
 
 /* Uploads the two procedural shadow shapes and the solid texel. */
-int j3_render_upload_resources(uint32_t context, uint8_t *scratch,
+int j3_render_upload_resources(uint64_t context, uint8_t *scratch,
                                uint32_t scratch_capacity);
 
 void j3_render_configure(j3_render_t *render, int width, int height,
@@ -59,7 +59,7 @@ void j3_render_configure(j3_render_t *render, int width, int height,
 
 /* Builds and submits one frame. Returns 0 when the draw list overflowed or
  * the Host refused the list. */
-int j3_render_frame(j3_render_t *render, const j3_game_t *game, uint32_t context,
+int j3_render_frame(j3_render_t *render, const j3_game_t *game, uint64_t context,
                     uint8_t *bytes, uint32_t capacity, uint64_t frame_id);
 
 /* Debug build aid: when J3_SKIP_PROBE is set the App cycles a bitmask of

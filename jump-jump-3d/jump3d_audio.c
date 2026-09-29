@@ -215,64 +215,73 @@ void j3_audio_start(j3_audio_t *audio, uint8_t *packet, uint32_t capacity) {
         audio->state != J3_AUDIO_OFF)
         return;
     audio->state = J3_AUDIO_WAIT_PERMISSION;
-    if (!pxa_permission_acquire(J3_AUDIO_PERMISSION_REQUEST, permission_name,
-                                sizeof(permission_name) - 1u, permission_scope,
-                                sizeof(permission_scope) - 1u, audio->payload,
-                                sizeof(audio->payload), packet, capacity))
+    uint32_t size = 0;
+    if (!pxa_permission_build(packet, capacity, PXA_PERMISSION_ACQUIRE,
+                                 J3_AUDIO_PERMISSION_REQUEST, permission_name,
+                                 sizeof(permission_name) - 1u, permission_scope,
+                                 sizeof(permission_scope) - 1u, &size) ||
+        pxa_submit(packet, size) != PXA_STATUS_OK)
         audio->state = J3_AUDIO_UNAVAILABLE;
 }
 
 int j3_audio_handle_event(j3_audio_t *audio, const pxa_event_t *event,
                           uint8_t *packet, uint32_t capacity) {
+    (void)packet;
+    (void)capacity;
     if (audio == NULL || event == NULL || packet == NULL) return 0;
-    if (event->service == PXA_SERVICE_PERMISSION &&
+    if (event->service == PXA_PERMISSION_SERVICE &&
         event->opcode == PXA_PERMISSION_ACQUIRE &&
-        event->request_id == J3_AUDIO_PERMISSION_REQUEST) {
+        event->token == J3_AUDIO_PERMISSION_REQUEST) {
         pxa_permission_acquire_result_t result;
-        if (!pxa_permission_parse_acquire(event, &result) ||
+        if (!pxa_permission_parse_acquire(event,
+                                             J3_AUDIO_PERMISSION_REQUEST,
+                                             &result) ||
             result.status != PXA_STATUS_OK) {
             audio->state = J3_AUDIO_UNAVAILABLE;
             return 1;
         }
         audio->permission_handle = result.handle;
         audio->state = J3_AUDIO_WAIT_OPEN;
-        if (!pxa_audio_open_media(J3_AUDIO_OPEN_REQUEST,
-                                  audio->permission_handle, audio->payload,
-                                  sizeof(audio->payload), packet, capacity))
+        if (pxa_audio_open_media(J3_AUDIO_OPEN_REQUEST,
+                                    audio->permission_handle) != PXA_STATUS_OK)
             audio->state = J3_AUDIO_UNAVAILABLE;
         return 1;
     }
-    if (event->service == PXA_SERVICE_AUDIO &&
+    if (event->service == PXA_AUDIO_SERVICE &&
         event->opcode == PXA_AUDIO_OPEN_SESSION &&
-        event->request_id == J3_AUDIO_OPEN_REQUEST) {
+        event->token == J3_AUDIO_OPEN_REQUEST) {
         pxa_audio_open_result_t result;
-        if (!pxa_audio_parse_open(event, &result) ||
+        if (!pxa_audio_parse_open(event, J3_AUDIO_OPEN_REQUEST, &result) ||
             result.status != PXA_STATUS_OK ||
             result.sample_rate != J3_AUDIO_SAMPLE_RATE || result.channels != 1 ||
             result.frame_ms != 20) {
             audio->state = J3_AUDIO_UNAVAILABLE;
             return 1;
         }
-        audio->session_handle = result.session_handle;
+        audio->session_handle = result.handle;
         audio->state = J3_AUDIO_WAIT_GRAPH;
-        if (!pxa_audio_commit_speaker_graph(J3_AUDIO_GRAPH_REQUEST,
-                                            audio->session_handle, -256, 1500,
-                                            256, 256, audio->payload,
-                                            sizeof(audio->payload), packet,
-                                            capacity))
-            audio->state = J3_AUDIO_UNAVAILABLE;
+        {
+            const pxa_audio_eq_band_t band = {1500, 256, 256};
+            const pxa_audio_graph_t graph = {-256, &band, 1};
+            if (pxa_audio_commit_graph(J3_AUDIO_GRAPH_REQUEST,
+                                           audio->session_handle,
+                                           &graph) != PXA_STATUS_OK)
+                audio->state = J3_AUDIO_UNAVAILABLE;
+        }
         return 1;
     }
-    if (event->service == PXA_SERVICE_AUDIO &&
+    if (event->service == PXA_AUDIO_SERVICE &&
         event->opcode == PXA_AUDIO_COMMIT_GRAPH &&
-        event->request_id == J3_AUDIO_GRAPH_REQUEST) {
+        event->token == J3_AUDIO_GRAPH_REQUEST) {
         int32_t status;
-        if (!pxa_audio_parse_status(event, PXA_AUDIO_COMMIT_GRAPH, &status) ||
+        if (!pxa_audio_parse_status(event, J3_AUDIO_GRAPH_REQUEST,
+                                       PXA_AUDIO_COMMIT_GRAPH, &status) ||
             status != PXA_STATUS_OK) {
             audio->state = J3_AUDIO_UNAVAILABLE;
             return 1;
         }
         audio->state = J3_AUDIO_READY;
+        (void)pxa_log_write(2, "jump-jump-3d audio ready");
         {
             uint8_t frame;
             for (frame = 0; frame < J3_AUDIO_PREFILL_FRAMES; ++frame)
@@ -283,15 +292,11 @@ int j3_audio_handle_event(j3_audio_t *audio, const pxa_event_t *event,
     return 0;
 }
 
-void j3_audio_tick(j3_audio_t *audio, const pxa_event_t *event) {
-    uint64_t timestamp_us;
+void j3_audio_tick(j3_audio_t *audio, uint64_t timestamp_us) {
     uint64_t elapsed_us;
     uint8_t frames = 0;
-    if (audio == NULL || event == NULL || audio->state != J3_AUDIO_READY ||
-        event->service != PXA_SERVICE_CLOCK || event->opcode != PXA_CLOCK_TICK ||
-        event->payload_length != 8)
+    if (audio == NULL || audio->state != J3_AUDIO_READY)
         return;
-    timestamp_us = pxa_read_u64(event->payload);
     if (audio->tick_us == 0) {
         audio->tick_us = timestamp_us;
         frames = 2;

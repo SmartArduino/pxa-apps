@@ -1,11 +1,11 @@
 {
   "format": "pxa-package-source-0.1",
-  "min_sdk": [0, 1],
-  "target_sdk": [0, 1],
-  "compile_sdk": [0, 1],
+  "min_sdk": [1, 0],
+  "target_sdk": [1, 0],
+  "compile_sdk": [1, 0],
   "id": "pxa-maze-spike",
-  "version": "0.1.1",
-  "release_sequence": 2,
+  "version": "0.1.2",
+  "release_sequence": 3,
   "name": "Maze Spike",
   "description": "Guest raycaster using a mapped RGB565 triple buffer and Host 2x presentation",
   "build": {
@@ -26,7 +26,7 @@
         "assets.c",
         "raycast.c"
       ],
-      "services": ["surface"]
+      "services": ["window", "clock", "surface", "log"]
     }
   ]
 }

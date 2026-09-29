@@ -2,7 +2,11 @@
 #include "pxa_arcade_module.h"
 
 #include "pxa_canvas.h"
+#ifdef PXA_ARCADE_STANDALONE_TEST
 #include "pxa_game_sfx.h"
+#else
+#include "pxa_game_sfx.h"
+#endif
 
 #define GAME_NODE 2u
 #define TICK_MS 25u
@@ -22,9 +26,15 @@ typedef struct {
     uint8_t width;
 } platform_t;
 
+#ifdef PXA_ARCADE_STANDALONE_TEST
 static uint8_t draw_data[16 * 1024];
 static uint8_t ui_commands[3072];
 static uint8_t packet[512];
+#else
+#define draw_data pxa_arcade_draw_data
+#define ui_commands pxa_arcade_ui_commands
+#define packet pxa_arcade_packet
+#endif
 static uint32_t random_state = 0x42ac91e7u;
 static uint32_t score;
 static uint32_t best_score;
@@ -352,10 +362,10 @@ int32_t pxa_app_start(const uint8_t* config, uint32_t config_length) {
     (void)config;
     (void)config_length;
     initialized = 0;
-    if (!pxa_window_fullscreen())
+    if (!pxa_arcade_window_fullscreen())
         return PXA_STATUS_INTERNAL;
     reset_game();
-    if (!render() || !pxa_clock_set_period(TICK_MS))
+    if (!render() || !pxa_arcade_clock_set_period(TICK_MS))
         return PXA_STATUS_INTERNAL;
     pxa_game_sfx_set_theme(&sfx, PXA_GAME_SFX_THEME_JUMP_JUMP);
     pxa_game_sfx_start(&sfx, packet, sizeof(packet));
@@ -372,12 +382,11 @@ int32_t pxa_app_on_event(const uint8_t* event, uint32_t length) {
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     if (pxa_game_sfx_handle_event(&sfx, &parsed, packet, sizeof(packet)))
         return PXA_EVENT_HANDLED;
-    if (parsed.service == PXA_SERVICE_CLOCK && parsed.opcode == PXA_CLOCK_TICK &&
-        parsed.payload_length == 8) {
+    if (pxa_arcade_is_tick(&parsed)) {
         pxa_game_sfx_tick(&sfx, &parsed);
-        const uint8_t steps = pxa_clock_tick_steps(
+        const uint8_t steps = pxa_arcade_clock_tick_steps(
             &last_tick_us, &parsed, TICK_MS, GAME_MAX_CATCHUP_STEPS);
-        random_state ^= (uint32_t)pxa_read_u64(parsed.payload);
+        random_state ^= (uint32_t)pxa_arcade_tick_timestamp(&parsed);
         if (!(steps == 1 ? tick() : tick_steps(steps)))
             return PXA_STATUS_INTERNAL;
         return PXA_EVENT_HANDLED;

@@ -6,6 +6,8 @@
 
 #include "pxa_app_messages.h"
 #include "pxa_canvas.h"
+#include "pxa_clock.h"
+#include "pxa_window.h"
 #include "pxa_game_screen.h"
 #include "pxa_system.h"
 
@@ -23,6 +25,9 @@
 #define pxa_app_stop PXA_ARCADE_EXPORT(stop)
 extern uint32_t pxa_arcade_ui_generation;
 extern pxa_game_screen_t pxa_arcade_screen;
+extern uint8_t pxa_arcade_draw_data[16 * 1024];
+extern uint8_t pxa_arcade_ui_commands[4096];
+extern uint8_t pxa_arcade_packet[4096];
 const char *pxa_arcade_message(pxa_i18n_message_id_t id);
 size_t pxa_arcade_text_size(const char *text);
 #else
@@ -100,5 +105,34 @@ static inline int pxa_arcade_present(uint32_t node_id,
 }
 
 #define PXA_ARCADE_MSG(id) pxa_arcade_message((id))
+
+static inline int pxa_arcade_window_fullscreen(void) {
+    return pxa_window_fullscreen() == PXA_STATUS_OK;
+}
+
+static inline int pxa_arcade_clock_set_period(uint16_t period_ms) {
+    return pxa_clock_set_period(period_ms) == PXA_STATUS_OK;
+}
+
+static inline uint64_t pxa_arcade_tick_timestamp(
+    const pxa_canvas_event_t *event) {
+    uint64_t timestamp_us = 0;
+    (void)pxa_clock_parse_tick(event, &timestamp_us);
+    return timestamp_us;
+}
+
+static inline int pxa_arcade_is_tick(const pxa_canvas_event_t *event) {
+    uint64_t timestamp_us;
+    return pxa_clock_parse_tick(event, &timestamp_us);
+}
+
+static inline uint8_t pxa_arcade_clock_tick_steps(
+    uint64_t *previous_timestamp_us, const pxa_canvas_event_t *event,
+    uint16_t step_ms, uint8_t maximum_steps) {
+    uint64_t timestamp_us;
+    if (!pxa_clock_parse_tick(event, &timestamp_us)) return 0;
+    return pxa_clock_tick_steps(previous_timestamp_us, timestamp_us,
+                                step_ms, maximum_steps);
+}
 
 #endif

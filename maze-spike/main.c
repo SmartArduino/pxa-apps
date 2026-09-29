@@ -14,7 +14,9 @@
 #include "palette.h"
 #include "pxa.h"
 #include "pxa_mapped_surface.h"
+#include "pxa_clock.h"
 #include "pxa_surface.h"
+#include "pxa_window.h"
 #include "raycast.h"
 #include "rc_math.h"
 
@@ -88,7 +90,7 @@ static uint8_t g_packet[128];
 static ray_camera_t g_camera;
 static float g_angle;
 
-static uint32_t g_surface_handle;
+static uint64_t g_surface_handle;
 static uint32_t g_surface_frame_bytes;
 static uint16_t g_surface_width;
 static uint16_t g_surface_height;
@@ -102,6 +104,8 @@ static uint32_t g_tick_count;
 static uint64_t g_tick_max_us;
 static uint32_t g_ticks_since_stats;
 static uint32_t g_query_pending;
+static uint64_t g_clock_pending_token;
+static uint64_t g_clock_next_token;
 static uint64_t g_query_sent_us;
 static uint64_t g_sample_ts_us;
 static uint64_t g_sample_presented;
@@ -245,7 +249,7 @@ static int present_mapped_frame(void) {
         ++g_blocked;
         return 1;
     }
-    if (status != (int32_t)PXA_SURFACE_PRESENT_RECORD_BYTES ||
+    if (status != 16 ||
         !pxa_mapped_surface_presented(&g_surface_ownership,
                                       SURFACE_BUFFER_COUNT)) {
         return 0;
@@ -267,7 +271,7 @@ static int render_and_submit_frame(void) {
             ++g_blocked;
             return 1;
         }
-        if (status != (int32_t)PXA_SURFACE_ACQUIRE_RECORD_BYTES ||
+        if (status != 4 ||
             !pxa_mapped_surface_begin(&g_surface_ownership, buffer_index,
                                       SURFACE_BUFFER_COUNT, g_frame_id + 1u)) {
             return 0;
@@ -289,9 +293,11 @@ static int render_and_submit_frame(void) {
     if (status != (int32_t)FALLBACK_FRAME_BYTES) {
         return 0;
     }
-    status = pxa_surface_queue_frame(g_surface_handle, g_frame_id + 1u, NULL, 0,
-                                     g_packet, sizeof(g_packet));
-    if (status != PXA_STATUS_OK) {
+    uint32_t packet_size = 0;
+    if (!pxa_surface_build_queue_frame(
+            g_packet, sizeof(g_packet), g_surface_handle, g_frame_id + 1u,
+            NULL, 0, &packet_size) ||
+        pxa_submit(g_packet, packet_size) != PXA_STATUS_OK) {
         return 0;
     }
     ++g_frame_id;
@@ -299,29 +305,34 @@ static int render_and_submit_frame(void) {
 }
 
 static int request_surface(void) {
-    if (g_request_mapped) {
-        return pxa_surface_create_rgb565_mapped(
-            CREATE_REQUEST, VIEW_WIDTH, VIEW_HEIGHT, SURFACE_BUFFER_COUNT, 1,
-            g_packet, sizeof(g_packet));
-    }
-    return pxa_surface_create_rgb565_direct(
-        CREATE_REQUEST, DISPLAY_WIDTH, DISPLAY_HEIGHT, SURFACE_BUFFER_COUNT,
-        g_packet, sizeof(g_packet));
+    pxa_surface_desc_t desc = {0};
+    uint32_t packet_size = 0;
+    desc.width = g_request_mapped ? VIEW_WIDTH : DISPLAY_WIDTH;
+    desc.height = g_request_mapped ? VIEW_HEIGHT : DISPLAY_HEIGHT;
+    desc.format = PXA_SURFACE_RGB565;
+    desc.buffer_count = SURFACE_BUFFER_COUNT;
+    desc.flags = PXA_SURFACE_PREFER_DIRECT_SCANOUT |
+                 (g_request_mapped ? PXA_SURFACE_GUEST_MAPPED : 0);
+    return pxa_surface_build_create(g_packet, sizeof(g_packet),
+                                        CREATE_REQUEST, desc, &packet_size) &&
+           pxa_submit(g_packet, packet_size) == PXA_STATUS_OK;
 }
 
 #if defined(MAZE_SPIKE_METRICS_LOG)
-/* The Guest SDK has no logging import. The Host logs any control message it
- * rejects at error level, so the spike emits metrics as unknown opcodes on the
- * Core service and reads them back with `pxadb logcat`. Debug builds only. */
+/* Debug builds report metrics through the typed Log service. */
 static void emit_metric(uint16_t id, uint32_t value) {
-    uint8_t message[12];
-    pxa_writer_t writer;
-    pxa_writer_init(&writer, message, sizeof(message));
-    if (pxa_put_u16(&writer, PXA_SERVICE_CORE) &&
-        pxa_put_u16(&writer, (uint16_t)(0x9000u + id)) &&
-        pxa_put_u32(&writer, value) && pxa_put_u32(&writer, 0)) {
-        (void)pxa_control(message, (uint32_t)writer.length);
-    }
+    char line[32] = "MazeSpike 0: ";
+    char digits[10];
+    unsigned count = 0;
+    unsigned offset = 13;
+    line[10] = (char)('0' + id);
+    do {
+        digits[count++] = (char)('0' + value % 10u);
+        value /= 10u;
+    } while (value != 0 && count < sizeof(digits));
+    while (count != 0) line[offset++] = digits[--count];
+    line[offset] = '\0';
+    (void)pxa_log_write(2, line);
 }
 
 static void log_metrics(void) {
@@ -341,8 +352,11 @@ static void log_metrics(void) {
 #endif
 
 static void send_query(uint64_t timestamp_us) {
-    if (!pxa_surface_query_state(QUERY_REQUEST, g_surface_handle, g_packet,
-                                 sizeof(g_packet))) {
+    uint32_t packet_size = 0;
+    if (!pxa_surface_build_query_state(g_packet, sizeof(g_packet),
+                                           QUERY_REQUEST, g_surface_handle,
+                                           &packet_size) ||
+        pxa_submit(g_packet, packet_size) != PXA_STATUS_OK) {
         return;
     }
     g_query_sent_us = timestamp_us;
@@ -357,6 +371,8 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     g_prev_tick_us = 0;
     g_ticks_since_stats = 0;
     g_query_pending = 0;
+    g_clock_pending_token = 0;
+    g_clock_next_token = CLOCK_END_REQUEST;
     g_angle = 0.0F;
     g_render_ref_us = 0;
     g_render_sum_us = 0;
@@ -373,7 +389,7 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     palette_build();
     raycast_init_light();
     build_map();
-    if (!pxa_window_fullscreen()) {
+    if (pxa_window_fullscreen() != PXA_STATUS_OK) {
         return PXA_STATUS_INTERNAL;
     }
     if (!request_surface()) {
@@ -388,11 +404,12 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     if (!pxa_parse_event(event, length, &parsed)) {
         return PXA_EVENT_UNHANDLED;
     }
-    if (parsed.service == PXA_SERVICE_SURFACE &&
+    if (parsed.service == PXA_SURFACE_SERVICE &&
         parsed.opcode == PXA_SURFACE_CREATE &&
-        parsed.request_id == CREATE_REQUEST) {
+        parsed.token == CREATE_REQUEST) {
         pxa_surface_create_result_t result;
-        if (!pxa_surface_parse_create(&parsed, &result)) {
+        uint32_t packet_size = 0;
+        if (!pxa_surface_parse_create(&parsed, CREATE_REQUEST, &result)) {
             return PXA_STATUS_INTERNAL;
         }
         if (result.status == PXA_STATUS_UNSUPPORTED && g_request_mapped) {
@@ -412,7 +429,7 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
             result.buffer_count != SURFACE_BUFFER_COUNT) {
             return PXA_STATUS_INTERNAL;
         }
-        g_surface_handle = result.surface_handle;
+        g_surface_handle = result.handle;
         g_surface_mapped = g_request_mapped;
         if (g_surface_mapped &&
             pxa_surface_register_buffers(
@@ -421,34 +438,38 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
                 (int32_t)(g_surface_frame_bytes * SURFACE_BUFFER_COUNT)) {
             return PXA_STATUS_INTERNAL;
         }
-        return pxa_surface_configure_layer(
-                   CONFIGURE_REQUEST, g_surface_handle, 0, 0, g_surface_width,
-                   g_surface_height, 0, 1, g_packet, sizeof(g_packet))
-                   ? PXA_EVENT_HANDLED
-                   : PXA_STATUS_INTERNAL;
+        return pxa_surface_build_configure_layer(
+                   g_packet, sizeof(g_packet), CONFIGURE_REQUEST,
+                   g_surface_handle, 0, 0, g_surface_width, g_surface_height,
+                   0, 1, &packet_size) &&
+                       pxa_submit(g_packet, packet_size) == PXA_STATUS_OK
+                   ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
-    if (parsed.service == PXA_SERVICE_SURFACE &&
+    if (parsed.service == PXA_SURFACE_SERVICE &&
         parsed.opcode == PXA_SURFACE_CONFIGURE_LAYER &&
-        parsed.request_id == CONFIGURE_REQUEST) {
-        if (parsed.payload_length != 4 ||
-            (int32_t)pxa_read_u32(parsed.payload) != PXA_STATUS_OK) {
+        parsed.token == CONFIGURE_REQUEST) {
+        int32_t configure_status;
+        if (!pxa_surface_parse_status(&parsed, CONFIGURE_REQUEST,
+                                         PXA_SURFACE_CONFIGURE_LAYER,
+                                         &configure_status) ||
+            configure_status != PXA_STATUS_OK) {
             return PXA_STATUS_INTERNAL;
         }
         if (!render_and_submit_frame()) {
             return PXA_STATUS_INTERNAL;
         }
-        return pxa_clock_set_period(FRAME_PERIOD_MS) ? PXA_EVENT_HANDLED
-                                                     : PXA_STATUS_INTERNAL;
+        return pxa_clock_set_period(FRAME_PERIOD_MS) == PXA_STATUS_OK
+                   ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
-    if (parsed.service == PXA_SERVICE_CLOCK &&
-        parsed.opcode == PXA_CLOCK_NOW_RESULT) {
-        int32_t status;
-        uint64_t timestamp;
-        if (pxa_clock_parse_now(&parsed, &status, &timestamp) &&
-            status == PXA_STATUS_OK) {
-            if (parsed.request_id == CLOCK_END_REQUEST &&
-                g_render_ref_us != 0 && timestamp >= g_render_ref_us) {
-                const uint64_t us = timestamp - g_render_ref_us;
+    if (parsed.service == PXA_CLOCK_SERVICE &&
+        parsed.opcode == PXA_CLOCK_NOW) {
+        pxa_clock_now_result_t result;
+        if (g_clock_pending_token != 0 &&
+            pxa_clock_parse_now(&parsed, g_clock_pending_token, &result) &&
+            result.status == PXA_STATUS_OK) {
+            if (g_render_ref_us != 0 &&
+                result.timestamp_us >= g_render_ref_us) {
+                const uint64_t us = result.timestamp_us - g_render_ref_us;
                 if (us < UINT64_C(2000000)) {
                     g_render_us = (uint32_t)us;
                     g_render_sum_us += us;
@@ -459,13 +480,15 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
                 }
             }
         }
+        if (parsed.token == g_clock_pending_token)
+            g_clock_pending_token = 0;
         return PXA_EVENT_HANDLED;
     }
-    if (parsed.service == PXA_SERVICE_SURFACE &&
+    if (parsed.service == PXA_SURFACE_SERVICE &&
         parsed.opcode == PXA_SURFACE_QUERY_STATE && g_query_pending) {
-        pxa_surface_state_result_t result;
+        pxa_surface_state_t result;
         g_query_pending = 0;
-        if (!pxa_surface_parse_state(&parsed, &result) ||
+        if (!pxa_surface_parse_state(&parsed, QUERY_REQUEST, &result) ||
             result.status != PXA_STATUS_OK) {
             return PXA_STATUS_INTERNAL;
         }
@@ -489,9 +512,9 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         return PXA_EVENT_HANDLED;
     }
     {
-        pxa_surface_released_event_t released;
+        pxa_surface_released_t released;
         if (pxa_surface_parse_released(&parsed, &released)) {
-            if (!g_surface_mapped || released.surface_handle != g_surface_handle ||
+            if (!g_surface_mapped || released.handle != g_surface_handle ||
                 !pxa_mapped_surface_released(&g_surface_ownership,
                                              released.buffer_index,
                                              SURFACE_BUFFER_COUNT)) {
@@ -500,7 +523,7 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
             return PXA_EVENT_HANDLED;
         }
     }
-    if (!pxa_clock_tick_timestamp_us(&parsed, &timestamp_us) ||
+    if (!pxa_clock_parse_tick(&parsed, &timestamp_us) ||
         g_surface_handle == 0) {
         return PXA_EVENT_UNHANDLED;
     }
@@ -514,12 +537,9 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     }
     g_prev_tick_us = timestamp_us;
 
-    /* pxa_control is synchronous, so the Host stamps CLOCK_NOW while it is
-     * handled inside this callback. The tick timestamp is taken just before
-     * the tick event is posted, so the reply bounds event delivery plus the
-     * Guest-side render (geometry + raster + overlay). Only one CLOCK_NOW per
-     * tick: transient Host replies coalesce by service/opcode. */
-    g_render_ref_us = timestamp_us;
+    /* Keep one timed request outstanding and preserve its starting tick until
+     * the reserved Core v1 completion arrives. */
+    if (g_clock_pending_token == 0) g_render_ref_us = timestamp_us;
     if (g_surface_mapped &&
         g_surface_ownership.writing_buffer !=
             PXA_MAPPED_SURFACE_BUFFER_NONE) {
@@ -529,7 +549,12 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     if (!render_and_submit_frame()) {
         return PXA_STATUS_INTERNAL;
     }
-    (void)pxa_clock_now(CLOCK_END_REQUEST);
+    if (g_clock_pending_token == 0) {
+        uint64_t token = ++g_clock_next_token;
+        if (token == 0) token = ++g_clock_next_token;
+        if (pxa_clock_now(token) == PXA_STATUS_OK)
+            g_clock_pending_token = token;
+    }
     ++g_ticks_since_stats;
     if (g_ticks_since_stats >= STATS_TICKS && !g_query_pending) {
 #if defined(MAZE_SPIKE_METRICS_LOG)
@@ -549,9 +574,5 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
 
 void pxa_app_stop(uint32_t reason) {
     (void)reason;
-    (void)pxa_clock_set_period(0);
-    if (g_surface_handle != 0) {
-        (void)pxa_close_handle(g_surface_handle);
-        g_surface_handle = 0;
-    }
+    g_surface_handle = 0;
 }

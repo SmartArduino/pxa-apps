@@ -38,7 +38,7 @@ uint8_t j3_font_tier(void);
 
 /* Uploads every tier's atlases into texture slots 0..8. `scratch` must hold
  * the largest atlas plus the upload header. */
-int j3_font_upload(uint32_t context, uint8_t *scratch, uint32_t scratch_capacity);
+int j3_font_upload(uint64_t context, uint8_t *scratch, uint32_t scratch_capacity);
 
 /* Height of the selected tier's cell for `font`, in pixels. */
 float j3_font_cell_height(uint8_t font);

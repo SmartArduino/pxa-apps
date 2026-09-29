@@ -1,0 +1,24 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [1, 0],
+  "target_sdk": [1, 0],
+  "compile_sdk": [1, 0],
+  "id": "pxa-abi-v1-ipc-smoke",
+  "version": "1.0.0",
+  "name": "ABI v1 IPC Smoke",
+  "description": "Exercises native v1 IPC across two signed Components",
+  "build": {
+    "system": "direct",
+    "linear_memory": {"maximum_bytes": 131072, "pinned": false}
+  },
+  "components": [
+    {"id": "echo", "kind": "service", "sources": ["provider.c"],
+     "services": ["ipc"]},
+    {"id": "main", "kind": "ui", "sources": ["main.c"],
+     "services": ["ipc", "log"]}
+  ],
+  "ipc_endpoints": [
+    {"name": "v1.echo", "component": "echo"}
+  ],
+  "release_sequence": 1
+}

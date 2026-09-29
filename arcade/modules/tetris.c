@@ -2,7 +2,11 @@
 #include "pxa_arcade_module.h"
 
 #include "pxa_canvas.h"
+#ifdef PXA_ARCADE_STANDALONE_TEST
 #include "pxa_game_sfx.h"
+#else
+#include "pxa_game_sfx.h"
+#endif
 
 #define GAME_NODE 2u
 #define BOARD_W 10
@@ -33,9 +37,15 @@ static const char icon_arrow_right[] = "\xef\x81\xa1";
 static const char icon_rotate[] = "\xef\x80\xa1";
 static const char icon_arrow_down[] = "\xef\x81\xa3";
 
+#ifdef PXA_ARCADE_STANDALONE_TEST
 static uint8_t draw_data[16 * 1024];
 static uint8_t ui_commands[4070];
 static uint8_t packet[512];
+#else
+#define draw_data pxa_arcade_draw_data
+#define ui_commands pxa_arcade_ui_commands
+#define packet pxa_arcade_packet
+#endif
 static uint8_t board[BOARD_H][BOARD_W];
 static uint32_t random_state = 0x94a31c27u;
 static uint32_t score;
@@ -345,10 +355,10 @@ int32_t pxa_app_start(const uint8_t* config, uint32_t config_length) {
     (void)config;
     (void)config_length;
     initialized = 0;
-    if (!pxa_window_fullscreen())
+    if (!pxa_arcade_window_fullscreen())
         return PXA_STATUS_INTERNAL;
     reset_game();
-    if (!render() || !pxa_clock_set_period(GAME_TICK_MS))
+    if (!render() || !pxa_arcade_clock_set_period(GAME_TICK_MS))
         return PXA_STATUS_INTERNAL;
     pxa_game_sfx_set_theme(&sfx, PXA_GAME_SFX_THEME_TETRIS);
     pxa_game_sfx_start(&sfx, packet, sizeof(packet));
@@ -365,12 +375,11 @@ int32_t pxa_app_on_event(const uint8_t* event, uint32_t length) {
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     if (pxa_game_sfx_handle_event(&sfx, &parsed, packet, sizeof(packet)))
         return PXA_EVENT_HANDLED;
-    if (parsed.service == PXA_SERVICE_CLOCK && parsed.opcode == PXA_CLOCK_TICK &&
-        parsed.payload_length == 8) {
+    if (pxa_arcade_is_tick(&parsed)) {
         pxa_game_sfx_tick(&sfx, &parsed);
-        const uint8_t steps = pxa_clock_tick_steps(
+        const uint8_t steps = pxa_arcade_clock_tick_steps(
             &last_tick_us, &parsed, GAME_TICK_MS, GAME_MAX_CATCHUP_STEPS);
-        random_state ^= (uint32_t)pxa_read_u64(parsed.payload);
+        random_state ^= (uint32_t)pxa_arcade_tick_timestamp(&parsed);
         if (steps == 0 || game_over)
             return PXA_EVENT_HANDLED;
         const uint32_t level = 1u + lines_cleared / 10u;

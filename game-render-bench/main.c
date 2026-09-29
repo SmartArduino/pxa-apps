@@ -1,8 +1,9 @@
 #include <stdint.h>
 
 #include "pxa.h"
+#include "pxa_core.h"
+#include "pxa_clock.h"
 #include "pxa_game_render.h"
-#include "pxa_log.h"
 #include "pxa_raster.h"
 
 #define WIDTH 296
@@ -30,6 +31,7 @@
 #define HUD_SCALE 2
 #define RESULT_TEXT_LENGTH 18u
 #define BENCH_GROUPS 11u
+#define BENCH_DRAW_BYTES 8192u
 #define MICRO_BENCH_DURATION_US UINT64_C(4000000)
 #define GAME_BENCH_DURATION_US UINT64_C(6000000)
 #define TELEMETRY_TICK_PERIOD 12u
@@ -40,14 +42,14 @@
 
 static uint8_t g_packet[64];
 static uint8_t g_upload[PXA_RASTER_UPLOAD_HEADER_BYTES + FONT_WIDTH * 5u];
-static uint8_t g_draw[PXA_RASTER_MAX_DRAW_BYTES];
+static uint8_t g_draw[BENCH_DRAW_BYTES];
 static uint8_t g_texture[16 * 16];
 static uint8_t g_font[FONT_WIDTH * 5u];
 static uint16_t g_palette[256];
 static pxa_raster_sprite_instance_t g_sprites[SPRITE_COUNT];
 static pxa_raster_vertex_t g_triangles[TRIANGLE_GROUPS][VERTICES_PER_GROUP];
 static uint16_t g_triangle_counts[TRIANGLE_GROUPS];
-static uint32_t g_context;
+static uint64_t g_context;
 static uint32_t g_capabilities;
 static uint32_t g_tick;
 static uint32_t g_group_tick;
@@ -662,9 +664,9 @@ static void log_result(uint8_t index) {
     write_decimal(line + 20, rendered_fps, 2);
     write_decimal(line + 25, raster_ms, 3);
     if (raster_ms >= 50u)
-        (void)pxa_log_warn(line);
+        (void)pxa_log_write(PXA_LOG_LEVEL_WARN, line);
     else
-        (void)pxa_log_info(line);
+        (void)pxa_log_write(PXA_LOG_LEVEL_INFO, line);
 }
 
 static void finish_group(uint64_t timestamp_us,
@@ -691,7 +693,7 @@ static void finish_group(uint64_t timestamp_us,
     g_have_group_baseline = 0;
     if (g_group == BENCH_GROUPS) {
         g_finished = 1;
-        (void)pxa_log_info("GameRender benchmark complete");
+        (void)pxa_log_write(PXA_LOG_LEVEL_INFO, "GameRender benchmark complete");
     }
 }
 
@@ -724,18 +726,26 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     g_finished = 0;
     g_have_group_baseline = 0;
     pxa_raster_zero_bytes(g_results, sizeof(g_results));
-    if (!pxa_game_render_create(CREATE_REQUEST, RENDER_WIDTH, RENDER_HEIGHT,
-                                3, 1,
-                                g_packet, sizeof(g_packet))) {
-        (void)pxa_log_error("GameRender create request failed");
+    pxa_game_render_options_t options = {0};
+    uint32_t packet_size = 0;
+    options.width = RENDER_WIDTH;
+    options.height = RENDER_HEIGHT;
+    options.buffer_count = 3;
+    options.prefer_direct_scanout = 1;
+    options.max_draw_bytes = BENCH_DRAW_BYTES;
+    if (!pxa_game_render_build_create(g_packet, sizeof(g_packet),
+                                          CREATE_REQUEST, &options,
+                                          &packet_size) ||
+        pxa_submit(g_packet, packet_size) != PXA_STATUS_OK) {
+        (void)pxa_log_write(PXA_LOG_LEVEL_ERROR, "GameRender create request failed");
         return PXA_STATUS_INTERNAL;
     }
 #if PXA_GAME_RENDER_SCALE_SHIFT == 0
-    (void)pxa_log_info("GameRender benchmark start: 11 groups, native");
+    (void)pxa_log_write(PXA_LOG_LEVEL_INFO, "GameRender benchmark start: 11 groups, native");
 #elif PXA_GAME_RENDER_SCALE_SHIFT == 1
-    (void)pxa_log_info("GameRender benchmark start: 11 groups, 2x upscale");
+    (void)pxa_log_write(PXA_LOG_LEVEL_INFO, "GameRender benchmark start: 11 groups, 2x upscale");
 #else
-    (void)pxa_log_info("GameRender benchmark start: 11 groups, scaled");
+    (void)pxa_log_write(PXA_LOG_LEVEL_INFO, "GameRender benchmark start: 11 groups, scaled");
 #endif
     return PXA_STATUS_OK;
 }
@@ -744,30 +754,30 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t length) {
     pxa_event_t event;
     uint64_t timestamp_us;
     if (!pxa_parse_event(bytes, length, &event)) return PXA_EVENT_UNHANDLED;
-    if (event.request_id == CREATE_REQUEST) {
+    if (event.token == CREATE_REQUEST) {
         pxa_game_render_create_result_t created;
-        if (!pxa_game_render_parse_create(&event, &created))
+        if (!pxa_game_render_parse_create(&event, CREATE_REQUEST, &created))
             return PXA_EVENT_UNHANDLED;
         if (created.status != PXA_STATUS_OK) {
-            (void)pxa_log_error("GameRender context creation failed");
+            (void)pxa_log_write(PXA_LOG_LEVEL_ERROR, "GameRender context creation failed");
             return PXA_EVENT_HANDLED;
         }
         if ((created.capabilities & REQUIRED_CAPABILITIES) !=
             REQUIRED_CAPABILITIES) {
-            (void)pxa_log_error("GameRender capabilities missing");
+            (void)pxa_log_write(PXA_LOG_LEVEL_ERROR, "GameRender capabilities missing");
             return PXA_EVENT_HANDLED;
         }
-        g_context = created.context_handle;
+        g_context = created.handle;
         g_capabilities = created.capabilities;
         if (!upload_resources()) {
-            (void)pxa_log_error("GameRender resource upload failed");
+            (void)pxa_log_write(PXA_LOG_LEVEL_ERROR, "GameRender resource upload failed");
             return PXA_EVENT_HANDLED;
         }
         (void)render_frame();
         (void)pxa_clock_set_period(FRAME_PERIOD_MS);
         return PXA_EVENT_HANDLED;
     }
-    if (!pxa_clock_tick_timestamp_us(&event, &timestamp_us) || g_context == 0)
+    if (!pxa_clock_parse_tick(&event, &timestamp_us) || g_context == 0)
         return PXA_EVENT_UNHANDLED;
     ++g_tick;
     ++g_group_tick;
@@ -779,7 +789,5 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t length) {
 
 void pxa_app_stop(uint32_t reason) {
     (void)reason;
-    (void)pxa_clock_set_period(0);
-    if (g_context != 0) (void)pxa_close_handle(g_context);
     g_context = 0;
 }

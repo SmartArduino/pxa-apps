@@ -2,7 +2,11 @@
 #include "pxa_arcade_module.h"
 
 #include "pxa_canvas.h"
+#ifdef PXA_ARCADE_STANDALONE_TEST
 #include "pxa_game_sfx.h"
+#else
+#include "pxa_game_sfx.h"
+#endif
 
 #define GAME_NODE 2u
 #define BRICK_ROWS 6
@@ -19,9 +23,15 @@
 #define BRICK_PITCH_Y 16
 #define PADDLE_Y 206
 
+#ifdef PXA_ARCADE_STANDALONE_TEST
 static uint8_t draw_data[16 * 1024];
 static uint8_t ui_commands[3600];
 static uint8_t packet[512];
+#else
+#define draw_data pxa_arcade_draw_data
+#define ui_commands pxa_arcade_ui_commands
+#define packet pxa_arcade_packet
+#endif
 static uint32_t score;
 static uint8_t level;
 static uint8_t lives;
@@ -265,10 +275,10 @@ int32_t pxa_app_start(const uint8_t* config, uint32_t config_length) {
     (void)config;
     (void)config_length;
     initialized = 0;
-    if (!pxa_window_fullscreen())
+    if (!pxa_arcade_window_fullscreen())
         return PXA_STATUS_INTERNAL;
     reset_game();
-    if (!render() || !pxa_clock_set_period(GAME_TICK_MS))
+    if (!render() || !pxa_arcade_clock_set_period(GAME_TICK_MS))
         return PXA_STATUS_INTERNAL;
     pxa_game_sfx_set_theme(&sfx, PXA_GAME_SFX_THEME_BRICK);
     pxa_game_sfx_start(&sfx, packet, sizeof(packet));
@@ -285,10 +295,9 @@ int32_t pxa_app_on_event(const uint8_t* event, uint32_t length) {
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     if (pxa_game_sfx_handle_event(&sfx, &parsed, packet, sizeof(packet)))
         return PXA_EVENT_HANDLED;
-    if (parsed.service == PXA_SERVICE_CLOCK && parsed.opcode == PXA_CLOCK_TICK &&
-        parsed.payload_length == 8) {
+    if (pxa_arcade_is_tick(&parsed)) {
         pxa_game_sfx_tick(&sfx, &parsed);
-        if (!tick(pxa_clock_tick_steps(&last_tick_us, &parsed, GAME_TICK_MS,
+        if (!tick(pxa_arcade_clock_tick_steps(&last_tick_us, &parsed, GAME_TICK_MS,
                                        GAME_MAX_CATCHUP_STEPS)))
             return PXA_STATUS_INTERNAL;
         return PXA_EVENT_HANDLED;

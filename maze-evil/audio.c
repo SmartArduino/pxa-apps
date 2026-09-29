@@ -1,7 +1,5 @@
 #include "audio.h"
 
-#include "pxa_audio.h"
-#include "pxa_permission.h"
 #include "rc_math.h"
 #include "sfx_profiles.h"
 #include "world.h"
@@ -237,7 +235,7 @@ static int32_t submit_host_tone(game_audio_t *audio, const tone_spec_t *spec,
                                    ? 40u
                                    : spec->frequency_hz;
     if (volume == 0) return PXA_STATUS_OK;
-    return pxa_audio_play_tone_enveloped(
+    return pxa_audio_play_tone(
         audio->session_handle, (uint8_t)(spec->waveform - 1u), frequency,
         spec->duration_ms, host_gain_db_q8(volume), spec->attack_ms,
         spec->release_ms, spec->delay_ms);
@@ -267,11 +265,13 @@ void audio_init(game_audio_t *audio) {
                       32767.0F);
     }
     audio->state = AUDIO_WAIT_PERMISSION;
-    if (!pxa_permission_acquire(
+    uint32_t packet_size = 0;
+    if (!pxa_permission_build(
+            packet, sizeof(packet), PXA_PERMISSION_ACQUIRE,
             AUDIO_PERMISSION_REQUEST, permission_name,
             sizeof(permission_name) - 1u, permission_scope,
-            sizeof(permission_scope) - 1u, audio->payload,
-            sizeof(audio->payload), packet, sizeof(packet))) {
+            sizeof(permission_scope) - 1u, &packet_size) ||
+        pxa_submit(packet, packet_size) != PXA_STATUS_OK) {
         audio->state = AUDIO_UNAVAILABLE;
     }
 }
@@ -336,22 +336,19 @@ void audio_play(game_audio_t *audio, uint8_t sound_id, uint8_t gain) {
     }
 }
 
-void audio_tick(game_audio_t *audio, const pxa_event_t *event) {
-    uint64_t timestamp_us;
+void audio_tick(game_audio_t *audio, uint64_t timestamp_us) {
     uint64_t elapsed_us;
     uint32_t consumed;
     uint32_t to_write;
     if (audio->state != AUDIO_READY ||
-        audio->tone_mode != AUDIO_TONE_MODE_PCM_FALLBACK || event == 0 ||
-        event->service != PXA_SERVICE_CLOCK ||
-        event->opcode != PXA_CLOCK_TICK || event->payload_length != 8) {
+        audio->tone_mode != AUDIO_TONE_MODE_PCM_FALLBACK) {
         return;
     }
-    timestamp_us = pxa_read_u64(event->payload);
     if (!audio->clock_started) {
         audio->clock_started = 1;
         audio->tick_us = timestamp_us;
     } else {
+        if (timestamp_us <= audio->tick_us) return;
         elapsed_us = timestamp_us - audio->tick_us;
         audio->tick_us = timestamp_us;
         if (elapsed_us > 100000u) {
@@ -393,8 +390,9 @@ void audio_tick(game_audio_t *audio, const pxa_event_t *event) {
         if (audio->query_request == 0u) {
             audio->query_request = 1u;
         }
-        if (pxa_audio_query_state(audio->query_request, audio->session_handle,
-                                  audio->payload, sizeof(audio->payload))) {
+        if (pxa_audio_session_request(PXA_AUDIO_QUERY_STATE,
+                                          audio->query_request,
+                                          audio->session_handle) == PXA_STATUS_OK) {
             audio->query_pending = 1;
         }
     }
@@ -402,54 +400,60 @@ void audio_tick(game_audio_t *audio, const pxa_event_t *event) {
 
 int audio_handle_event(game_audio_t *audio, const pxa_event_t *event,
                        uint8_t *packet, size_t packet_capacity) {
-    if (event->service == PXA_SERVICE_PERMISSION &&
+    (void)packet;
+    (void)packet_capacity;
+    if (event->service == PXA_PERMISSION_SERVICE &&
         event->opcode == PXA_PERMISSION_ACQUIRE &&
-        event->request_id == AUDIO_PERMISSION_REQUEST) {
+        event->token == AUDIO_PERMISSION_REQUEST) {
         pxa_permission_acquire_result_t result;
-        if (!pxa_permission_parse_acquire(event, &result) ||
+        if (!pxa_permission_parse_acquire(event, AUDIO_PERMISSION_REQUEST,
+                                             &result) ||
             result.status != PXA_STATUS_OK) {
             audio->state = AUDIO_UNAVAILABLE;
             return 1;
         }
         audio->permission_handle = result.handle;
         audio->state = AUDIO_WAIT_OPEN;
-        if (!pxa_audio_open_media(AUDIO_OPEN_REQUEST, audio->permission_handle,
-                                  audio->payload, sizeof(audio->payload),
-                                  packet, packet_capacity)) {
+        if (pxa_audio_open_media(AUDIO_OPEN_REQUEST,
+                                    audio->permission_handle) != PXA_STATUS_OK) {
             audio->state = AUDIO_UNAVAILABLE;
         }
         return 1;
     }
-    if (event->service == PXA_SERVICE_AUDIO &&
+    if (event->service == PXA_AUDIO_SERVICE &&
         event->opcode == PXA_AUDIO_OPEN_SESSION &&
-        event->request_id == AUDIO_OPEN_REQUEST) {
+        event->token == AUDIO_OPEN_REQUEST) {
         pxa_audio_open_result_t result;
-        if (!pxa_audio_parse_open(event, &result) ||
+        if (!pxa_audio_parse_open(event, AUDIO_OPEN_REQUEST, &result) ||
             result.status != PXA_STATUS_OK ||
             result.sample_rate != AUDIO_SAMPLE_RATE || result.channels != 1 ||
             result.frame_ms != 20) {
             audio->state = AUDIO_UNAVAILABLE;
             return 1;
         }
-        audio->session_handle = result.session_handle;
+        audio->session_handle = result.handle;
         audio->state = AUDIO_WAIT_GRAPH;
-        if (!pxa_audio_commit_speaker_graph(
-                AUDIO_GRAPH_REQUEST, audio->session_handle,
-                AUDIO_GRAPH_GAIN_DB_Q8, 1500, 256, 256, audio->payload,
-                sizeof(audio->payload), packet, packet_capacity)) {
+        const pxa_audio_eq_band_t band = {1500, 256, 256};
+        const pxa_audio_graph_t graph = {AUDIO_GRAPH_GAIN_DB_Q8,
+                                             &band, 1};
+        if (pxa_audio_commit_graph(AUDIO_GRAPH_REQUEST,
+                                      audio->session_handle,
+                                      &graph) != PXA_STATUS_OK) {
             audio->state = AUDIO_UNAVAILABLE;
         }
         return 1;
     }
-    if (event->service == PXA_SERVICE_AUDIO &&
+    if (event->service == PXA_AUDIO_SERVICE &&
         event->opcode == PXA_AUDIO_COMMIT_GRAPH &&
-        event->request_id == AUDIO_GRAPH_REQUEST) {
+        event->token == AUDIO_GRAPH_REQUEST) {
         int32_t status;
-        if (!pxa_audio_parse_status(event, PXA_AUDIO_COMMIT_GRAPH, &status) ||
+        if (!pxa_audio_parse_status(event, AUDIO_GRAPH_REQUEST,
+                                       PXA_AUDIO_COMMIT_GRAPH, &status) ||
             status != PXA_STATUS_OK) {
             audio->state = AUDIO_UNAVAILABLE;
         } else {
             audio->state = AUDIO_READY;
+            (void)pxa_log_write(2, "maze-evil audio ready");
             if (audio->tone_mode == AUDIO_TONE_MODE_PCM_FALLBACK) {
                 uint32_t frame;
                 for (frame = 0; frame < AUDIO_TARGET_FRAMES; ++frame) {
@@ -462,12 +466,12 @@ int audio_handle_event(game_audio_t *audio, const pxa_event_t *event,
         }
         return 1;
     }
-    if (event->service == PXA_SERVICE_AUDIO &&
+    if (event->service == PXA_AUDIO_SERVICE &&
         event->opcode == PXA_AUDIO_QUERY_STATE && audio->query_pending &&
-        event->request_id == audio->query_request) {
+        event->token == audio->query_request) {
         pxa_audio_state_result_t result;
         audio->query_pending = 0;
-        if (pxa_audio_parse_state(event, &result) &&
+        if (pxa_audio_parse_state(event, audio->query_request, &result) &&
             result.status == PXA_STATUS_OK) {
             audio->queued_frames =
                 result.queued_samples / AUDIO_FRAME_SAMPLES;
@@ -488,6 +492,10 @@ void audio_stop(game_audio_t *audio) {
     if (audio->session_handle != 0) {
         (void)pxa_close_handle(audio->session_handle);
         audio->session_handle = 0;
+    }
+    if (audio->permission_handle != 0) {
+        (void)pxa_close_handle(audio->permission_handle);
+        audio->permission_handle = 0;
     }
     audio->state = AUDIO_OFF;
 }

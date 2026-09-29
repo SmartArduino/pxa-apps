@@ -27,7 +27,7 @@
 /* Builds and submits one complete frame. `now_ms` drives tile and actor
  * animation. Returns 1 when the frame was accepted (a dropped frame is not an
  * error), 0 on a hard failure. */
-int pd_render_present(uint32_t context_handle, uint32_t capabilities,
+int pd_render_present(uint64_t context_handle, uint32_t capabilities,
                       const pd_game_t *game, const pd_layout_t *layout,
                       uint8_t *buffer, uint32_t capacity, uint64_t frame_id,
                       uint32_t now_ms);

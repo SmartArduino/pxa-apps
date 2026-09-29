@@ -7,12 +7,13 @@
 #include <stdint.h>
 
 #include "pxa.h"
-#include "pxa_game_render.h"
+#include "pxa_ui.h"
 #include "pxa_game_screen.h"
-#include "pxa_log.h"
+#include "pxa_clock.h"
+#include "pxa_game_render.h"
 #include "pxa_raster.h"
 #include "pxa_storage.h"
-#include "pxa_ui.h"
+#include "pxa_window.h"
 
 #include "jump3d_audio.h"
 #include "jump3d_font.h"
@@ -25,6 +26,7 @@
 #define TICK_MS 20u
 #define MAX_CATCHUP_STEPS 2u
 #define REQUIRED_CAPABILITIES PXA_RASTER_CAP_PAINTER_POLYGON
+#define J3_DRAW_BYTES 16384u
 /* Scratch for one upload: the lit palette or the largest glyph atlas. */
 #define UPLOAD_PAYLOAD_BYTES \
     (J3_PALETTE_ENTRIES * 2u > J3_FONT_MAX_ATLAS_BYTES \
@@ -76,14 +78,15 @@
 #endif
 
 static uint8_t g_packet[192];
-static uint8_t g_draw[PXA_RASTER_MAX_DRAW_BYTES];
+static uint8_t g_draw[J3_DRAW_BYTES];
 static uint8_t g_upload[UPLOAD_BYTES];
 static uint16_t g_palette[J3_PALETTE_ENTRIES];
 static j3_game_t g_game;
 static j3_render_t g_render;
 static j3_audio_t g_audio;
 static pxa_game_screen_t g_screen;
-static uint32_t g_context;
+static uint64_t g_context;
+static uint64_t g_create_token;
 static uint64_t g_frame_id;
 static uint64_t g_last_tick_us;
 static uint32_t g_seed;
@@ -100,6 +103,7 @@ static uint32_t g_perf_ticks;
 static uint32_t g_perf_frames;
 static uint32_t g_perf_raster_us;
 static uint32_t g_perf_present_us;
+static uint32_t g_perf_draw_peak;
 #endif
 static uint32_t g_last_signature;
 static uint8_t g_bonus_played;
@@ -115,7 +119,6 @@ static uint32_t g_quality_raster_us;
 static uint32_t g_scale_raster_us[MAX_SCALE_SHIFT + 1u];
 static uint8_t g_palette_scheme;
 static uint8_t g_request_scale_change;
-static uint8_t g_storage_payload[32];
 static uint8_t g_storage_ready;
 static uint32_t g_best_saved;
 static float g_save_timer;
@@ -180,31 +183,41 @@ static int upload_resources(void) {
         text[length++] = (char)('0' + (int)((result < 0 ? -result : result) / 10) % 10);
         text[length++] = (char)('0' + (int)((result < 0 ? -result : result)) % 10);
         text[length] = '\0';
-        (void)pxa_log_error(text);
+        (void)pxa_log_write(4, text);
         return 0;
     }
     if (!j3_font_upload(g_context, g_upload, sizeof(g_upload))) return 0;
     if (!j3_render_upload_resources(g_context, g_upload, sizeof(g_upload))) {
-        (void)pxa_log_error("jump-jump-3d: shadow upload failed");
+        (void)pxa_log_write(4, "jump-jump-3d: shadow upload failed");
         return 0;
     }
     return 1;
 }
 
-static void request_context(uint8_t shift, uint32_t request_id) {
+static void request_context(uint8_t shift, uint64_t request_id) {
+    pxa_game_render_options_t options = {0};
+    uint32_t packet_size = 0;
     g_scale_shift = shift;
     apply_scale();
     if (g_context != 0) {
-        (void)pxa_close_handle(g_context);
+        (void)pxa_game_render_close(g_context);
         g_context = 0;
     }
     g_started = 0;
     g_frame_rendered = 0;
     g_quality_frames = 0;
     g_quality_raster_us = 0;
-    (void)pxa_game_render_create(request_id, (uint16_t)g_target_w,
-                                 (uint16_t)g_target_h, 3, 1, g_packet,
-                                 sizeof(g_packet));
+    options.width = (uint16_t)g_target_w;
+    options.height = (uint16_t)g_target_h;
+    options.buffer_count = 3;
+    options.prefer_direct_scanout = 1;
+    options.scratch_mode = 0;
+    options.max_draw_bytes = sizeof(g_draw);
+    g_create_token = request_id;
+    if (!pxa_game_render_build_create(g_packet, sizeof(g_packet),
+                                          request_id, &options, &packet_size) ||
+        pxa_submit(g_packet, packet_size) != PXA_STATUS_OK)
+        (void)pxa_log_write(4, "jump-jump-3d: context request failed");
 }
 
 /* Mirrors the original's audio triggers: a charge swell while the finger is
@@ -355,19 +368,20 @@ static uint32_t frame_signature(const j3_game_t *game) {
  * the limit; if frames is much lower than ticks the App is skipping work. */
 static void log_perf(void) {
     char text[128];
-    static const char prefix[] = "j3 perf ticks frames raster_us covered ";
-    uint32_t values[4];
+    static const char prefix[] = "j3 perf ticks frames raster_us covered draw_peak ";
+    uint32_t values[5];
     int length = 0;
     int field;
     values[0] = g_perf_ticks;
     values[1] = g_perf_frames;
     values[2] = g_perf_raster_us / (g_perf_frames != 0u ? g_perf_frames : 1u);
     values[3] = g_perf_present_us;
+    values[4] = g_perf_draw_peak;
     while (prefix[length] != '\0') {
         text[length] = prefix[length];
         ++length;
     }
-    for (field = 0; field < 4; ++field) {
+    for (field = 0; field < 5; ++field) {
         uint32_t divisor = 10000u;
         while (divisor > 1u && values[field] < divisor) divisor /= 10u;
         while (divisor != 0u) {
@@ -428,11 +442,12 @@ static void log_perf(void) {
     }
 #endif
     text[length] = '\0';
-    (void)pxa_log_info(text);
+    (void)pxa_log_write(2, text);
     g_perf_ticks = 0;
     g_perf_frames = 0;
     g_perf_raster_us = 0;
     g_perf_present_us = 0;
+    g_perf_draw_peak = 0;
 }
 #endif
 
@@ -457,6 +472,10 @@ static int render_frame(void) {
         }
         return 0;
     }
+#if J3_PERF_LOG
+    if (g_render.list.length > g_perf_draw_peak)
+        g_perf_draw_peak = g_render.list.length;
+#endif
     g_present_failures = 0;
     return 1;
 }
@@ -532,10 +551,10 @@ static void update_storage(float dt) {
     g_save_timer -= dt;
     if (g_save_timer > 0.0F) return;
     g_save_timer = STORAGE_SAVE_DELAY;
-    pxa_game_render_store_u32(value, g_game.best);
-    if (pxa_storage_set(STORAGE_SET_REQUEST, "best", 4u, value, 4u,
-                        g_storage_payload, sizeof(g_storage_payload), g_packet,
-                        sizeof(g_packet)))
+    pxa_store_u32(value, g_game.best);
+    if (pxa_storage_request_set(g_packet, sizeof(g_packet),
+                                    STORAGE_SET_REQUEST, "best", 4u, value,
+                                    4u) == PXA_STATUS_OK)
         g_best_saved = g_game.best;
 }
 
@@ -561,14 +580,13 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t config_length) {
     g_last_state = g_game.state;
     g_last_score = g_game.score;
     g_last_jumps = g_game.jump_count;
-    if (!pxa_window_fullscreen()) return PXA_STATUS_INTERNAL;
+    if (pxa_window_fullscreen() != PXA_STATUS_OK)
+        return PXA_STATUS_INTERNAL;
     if (!initialize_input_surface()) return PXA_STATUS_INTERNAL;
     j3_audio_start(&g_audio, g_packet, sizeof(g_packet));
     request_context(0, CREATE_REQUEST);
-    (void)pxa_log_info("jump-jump-3d ready");
-    (void)pxa_storage_get(STORAGE_GET_REQUEST, "best", 4u, g_storage_payload,
-                          sizeof(g_storage_payload), g_packet,
-                          sizeof(g_packet));
+    (void)pxa_log_write(2, "jump-jump-3d ready");
+    (void)pxa_storage_request_get(STORAGE_GET_REQUEST, "best", 4u);
     return PXA_STATUS_OK;
 }
 
@@ -576,10 +594,12 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     pxa_event_t parsed;
     if (!pxa_parse_event(event, length, &parsed)) return PXA_EVENT_UNHANDLED;
 
-    if (parsed.service == PXA_SERVICE_GAME_RENDER &&
-        parsed.opcode == PXA_GAME_RENDER_CREATE_CONTEXT) {
+    if (parsed.service == PXA_GAME_RENDER_SERVICE &&
+        parsed.opcode == PXA_GAME_RENDER_CREATE &&
+        parsed.token == g_create_token) {
         pxa_game_render_create_result_t created;
-        if (!pxa_game_render_parse_create(&parsed, &created))
+        if (!pxa_game_render_parse_create(&parsed, g_create_token,
+                                              &created))
             return PXA_EVENT_UNHANDLED;
         if (created.status != PXA_STATUS_OK ||
             (created.capabilities & REQUIRED_CAPABILITIES) !=
@@ -592,15 +612,15 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
             }
             return PXA_EVENT_HANDLED;
         }
-        g_context = created.context_handle;
+        g_context = created.handle;
         if (!upload_resources()) {
-            (void)pxa_log_error("jump-jump-3d: resource upload failed");
+            (void)pxa_log_write(4, "jump-jump-3d: resource upload failed");
             return PXA_EVENT_HANDLED;
         }
         j3_render_configure(&g_render, g_target_w, g_target_h,
                             created.capabilities);
         g_started = 1;
-        if (!render_frame()) (void)pxa_log_warn("jump3d first frame failed");
+        if (!render_frame()) (void)pxa_log_write(3, "jump3d first frame failed");
         (void)pxa_clock_set_period(TICK_MS);
         return PXA_EVENT_HANDLED;
     }
@@ -608,27 +628,29 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     if (j3_audio_handle_event(&g_audio, &parsed, g_packet, sizeof(g_packet)))
         return PXA_EVENT_HANDLED;
 
-    if (parsed.service == PXA_SERVICE_STORAGE &&
-        parsed.request_id == STORAGE_GET_REQUEST) {
+    if (parsed.service == PXA_STORAGE_SERVICE &&
+        parsed.opcode == PXA_STORAGE_GET &&
+        parsed.token == STORAGE_GET_REQUEST) {
         pxa_storage_get_result_t result;
-        if (pxa_storage_parse_get(&parsed, &result) && result.value != NULL &&
-            result.value_length >= 4u) {
-            g_game.best = pxa_read_u32(result.value);
+        if (pxa_storage_parse_get(&parsed, STORAGE_GET_REQUEST, &result) &&
+            result.status == PXA_STATUS_OK && result.value.size >= 4u) {
+            g_game.best = pxa_load_u32(result.value.data);
             g_best_saved = g_game.best;
         }
         g_storage_ready = 1;
         return PXA_EVENT_HANDLED;
     }
 
-    if (parsed.service == PXA_SERVICE_CLOCK && parsed.opcode == PXA_CLOCK_TICK &&
-        parsed.payload_length == 8) {
+    if (parsed.service == PXA_CLOCK_SERVICE &&
+        parsed.opcode == PXA_CLOCK_TICK) {
         uint64_t timestamp_us = 0;
         uint8_t steps;
-        j3_audio_tick(&g_audio, &parsed);
-        steps = pxa_clock_tick_steps(&g_last_tick_us, &parsed, TICK_MS,
-                                     MAX_CATCHUP_STEPS);
-        if (pxa_clock_tick_timestamp_us(&parsed, &timestamp_us))
-            g_game.rng ^= (uint32_t)timestamp_us;
+        if (!pxa_clock_parse_tick(&parsed, &timestamp_us))
+            return PXA_EVENT_UNHANDLED;
+        j3_audio_tick(&g_audio, timestamp_us);
+        steps = pxa_clock_tick_steps(&g_last_tick_us, timestamp_us,
+                                        TICK_MS, MAX_CATCHUP_STEPS);
+        g_game.rng ^= (uint32_t)timestamp_us;
         if (steps != 0) {
             uint8_t step;
             for (step = 0; step < steps; ++step)
@@ -696,13 +718,9 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
 
 void pxa_app_stop(uint32_t reason) {
     (void)reason;
-    (void)pxa_clock_set_period(0);
     j3_audio_stop_all(&g_audio);
-    if (g_audio.session_handle != 0) {
-        (void)pxa_close_handle(g_audio.session_handle);
-        g_audio.session_handle = 0;
-    }
-    if (g_context != 0) (void)pxa_close_handle(g_context);
+    g_audio.session_handle = 0;
+    g_audio.permission_handle = 0;
     g_context = 0;
     g_started = 0;
 }

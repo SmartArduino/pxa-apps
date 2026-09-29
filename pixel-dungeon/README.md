@@ -33,6 +33,17 @@ the original tracks or any other installed applications.
 Device packages keep the target-specific AOT executable rather than a second
 WASM copy, reducing peak LittleFS usage while the signed container is unpacked.
 
+Short effects use Assets 1.3 asynchronous PCM preparation and Audio 0.6 handle
+playback. The controller keeps at most eight Guest handles, six pending effect
+IDs and one outstanding load. The common step effect is prepared after the
+audio graph becomes ready; cold effects wait for their resource result on later
+ticks. Hot playback reads no file and copies no samples into Guest memory.
+Replacing a Guest holding is safe while an accepted voice keeps playing.
+Immediate load failure drops the pending effect; stopping cancels a load and
+closes holdings, while a late successful result is still closed by event dispatch.
+Music continues through the existing streaming session. `tools/audio_selftest.c`
+checks the bounded controller, eviction, backpressure and late cancellation.
+
 ## Fetch the upstream assets
 
 ```sh

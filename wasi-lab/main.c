@@ -3,8 +3,9 @@
 #include <string.h>
 
 #include "pxa_app_messages.h"
-#include "pxa_i18n.h"
 #include "pxa_ui.h"
+#include "pxa_i18n.h"
+#include "pxa_window.h"
 
 #define WASI_CLOCK_REALTIME UINT32_C(0)
 #define WASI_CLOCK_MONOTONIC UINT32_C(1)
@@ -164,15 +165,16 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t config_length) {
         &i18n, &pxa_app_i18n_bundle, config, config_length);
     passed = run_checks();
     last_passed = passed;
-    return pxa_window_fullscreen() && render(passed) && passed == 6
+    return pxa_window_fullscreen() == 0 && render(passed) && passed == 6
                ? PXA_STATUS_OK : PXA_STATUS_INTERNAL;
 }
 
 int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
-    pxa_event_t parsed;
+    pxa_event_t v1_event;
     int locale_result;
-    if (!pxa_parse_event(event, length, &parsed)) return PXA_EVENT_UNHANDLED;
-    locale_result = pxa_i18n_handle_event(&i18n, &parsed);
+    if (!pxa_parse_event(event, length, &v1_event))
+        return PXA_EVENT_UNHANDLED;
+    locale_result = pxa_i18n_handle_event(&i18n, &v1_event);
     if (locale_result != 0) {
         return locale_result == 1 && !render(last_passed)
                    ? PXA_STATUS_INTERNAL

@@ -1139,10 +1139,10 @@ int32_t pxa_app_start(const uint8_t* config, uint32_t config_length) {
     (void)config;
     (void)config_length;
     initialized = 0;
-    if (!pxa_window_fullscreen())
+    if (pxa_window_fullscreen() != PXA_STATUS_OK)
         return PXA_STATUS_INTERNAL;
     reset_game();
-    if (!render() || !pxa_clock_set_period(GAME_TICK_MS))
+    if (!render() || pxa_clock_set_period(GAME_TICK_MS) != PXA_STATUS_OK)
         return PXA_STATUS_INTERNAL;
     pxa_game_sfx_set_theme(&sfx, PXA_GAME_SFX_THEME_PLANE);
     pxa_game_sfx_set_song(&sfx, &plane_shooter_song);
@@ -1154,6 +1154,7 @@ int32_t pxa_app_on_event(const uint8_t* event, uint32_t length) {
     pxa_canvas_event_t parsed;
     pxa_ui_event_data_t ui_event;
     pxa_ui_pointer_data_t pointer;
+    uint64_t tick_us;
     if (!pxa_canvas_parse_event(event, length, &parsed))
         return PXA_EVENT_UNHANDLED;
     if (parsed.service == PXA_SERVICE_SYSTEM &&
@@ -1161,11 +1162,10 @@ int32_t pxa_app_on_event(const uint8_t* event, uint32_t length) {
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     if (pxa_game_sfx_handle_event(&sfx, &parsed, packet, sizeof(packet)))
         return PXA_EVENT_HANDLED;
-    if (parsed.service == PXA_SERVICE_CLOCK && parsed.opcode == PXA_CLOCK_TICK &&
-        parsed.payload_length == 8) {
+    if (pxa_clock_parse_tick(&parsed, &tick_us)) {
         pxa_game_sfx_tick(&sfx, &parsed);
-        random_state ^= (uint32_t)pxa_read_u64(parsed.payload);
-        if (!tick(pxa_clock_tick_steps(&last_tick_us, &parsed, GAME_TICK_MS,
+        random_state ^= (uint32_t)tick_us;
+        if (!tick(pxa_clock_tick_steps(&last_tick_us, tick_us, GAME_TICK_MS,
                                        GAME_MAX_CATCHUP_STEPS)))
             return PXA_STATUS_INTERNAL;
         return PXA_EVENT_HANDLED;

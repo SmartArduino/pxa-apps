@@ -144,7 +144,7 @@ static uint8_t game_clock_steps(const pxa_canvas_event_t* event){
     uint64_t timestamp_us;
     uint64_t elapsed_us;
     uint8_t steps;
-    if(!pxa_clock_tick_timestamp_us(event,&timestamp_us)) return 0;
+    if(!pxa_clock_parse_tick(event,&timestamp_us)) return 0;
     if(last_tick_us==0){ last_tick_us=timestamp_us; return 1; }
     if(timestamp_us<=last_tick_us) return 0;
     elapsed_us=timestamp_us - last_tick_us;

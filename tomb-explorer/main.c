@@ -18,6 +18,8 @@
 
 #include <stdint.h>
 
+#include "pxa_canvas.h"
+#include "pxa_raster.h"
 #include "character.h"
 #include "input.h"
 #include "level.h"
@@ -25,11 +27,9 @@
 #include "palette.h"
 #include "player.h"
 #include "pxa.h"
-#include "pxa_canvas.h"
+#include "pxa_clock.h"
 #include "pxa_game_render.h"
-#include "pxa_log.h"
-#include "pxa_raster.h"
-#include "pxa_ui.h"
+#include "pxa_window.h"
 #include "textures.h"
 #include "tomb_math.h"
 #include "world.h"
@@ -71,7 +71,7 @@ static uint8_t g_upload[PXA_RASTER_UPLOAD_HEADER_BYTES +
                         TOMB_LIGHT_LEVELS * 256u * sizeof(uint16_t)];
 static uint8_t g_draw[PXA_RASTER_MAX_DRAW_BYTES];
 static uint16_t g_palette[TOMB_LIGHT_LEVELS * 256u];
-static uint32_t g_context;
+static uint64_t g_context;
 static uint64_t g_frame_id;
 static uint64_t g_last_tick_us;
 static uint32_t g_display_width = 296u;
@@ -358,7 +358,7 @@ static void log_stats(uint64_t now_us) {
     out = append_text(out, " room=");
     out = append_uint(out, g_player.room);
     *out = '\0';
-    (void)pxa_log_info(line);
+    (void)pxa_log_write(2, line);
 }
 #endif
 
@@ -422,7 +422,7 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     if (g_render_width == 0u) g_render_width = 1u;
     if (g_render_height == 0u) g_render_height = 1u;
     if (g_render_width > UINT16_MAX || g_render_height > UINT16_MAX) {
-        (void)pxa_log_error("tomb: display dimensions exceed GameRender ABI");
+        (void)pxa_log_write(4, "tomb: display dimensions exceed GameRender ABI");
         return PXA_STATUS_LIMIT_EXCEEDED;
     }
     g_context = 0u;
@@ -433,14 +433,24 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     g_level = tomb_level();
     g_stats = (tomb_stats_t){0};
     tomb_transform_identity(&g_identity);
-    if (!pxa_game_render_create(TOMB_CREATE_REQUEST, (uint16_t)g_render_width,
-                                (uint16_t)g_render_height, TOMB_BUFFER_COUNT,
-                                1u, g_packet, sizeof(g_packet))) {
-        (void)pxa_log_error("tomb: GameRender create request failed");
+    pxa_game_render_options_t options = {0};
+    uint32_t packet_size = 0;
+    options.width = (uint16_t)g_render_width;
+    options.height = (uint16_t)g_render_height;
+    options.buffer_count = TOMB_BUFFER_COUNT;
+    options.prefer_direct_scanout = 1;
+    options.scratch_mode = 1;
+    options.max_draw_bytes = sizeof(g_draw);
+    if (!pxa_game_render_build_create(g_packet, sizeof(g_packet),
+                                          TOMB_CREATE_REQUEST, &options,
+                                          &packet_size) ||
+        pxa_submit(g_packet, packet_size) != PXA_STATUS_OK) {
+        (void)pxa_log_write(4, "tomb: GameRender create request failed");
         return PXA_STATUS_INTERNAL;
     }
-    if (!setup_pointer_node() || !pxa_window_fullscreen()) {
-        (void)pxa_log_error("tomb: pointer node or fullscreen request failed");
+    if (!setup_pointer_node() ||
+        pxa_window_fullscreen() != PXA_STATUS_OK) {
+        (void)pxa_log_write(4, "tomb: pointer node or fullscreen request failed");
         return PXA_STATUS_INTERNAL;
     }
     tomb_build_palette(g_palette);
@@ -460,22 +470,23 @@ static int handle_create_event(const pxa_event_t *event) {
                               PXA_RASTER_CAP_TEXTURED_QUAD |
                               PXA_RASTER_CAP_TRIANGLE_BATCH |
                               PXA_RASTER_CAP_PAINTER_POLYGON;
-    if (event->request_id != TOMB_CREATE_REQUEST) return 0;
-    if (!pxa_game_render_parse_create(event, &created)) return 0;
+    if (event->token != TOMB_CREATE_REQUEST) return 0;
+    if (!pxa_game_render_parse_create(event, TOMB_CREATE_REQUEST,
+                                          &created)) return 0;
     if (created.status != PXA_STATUS_OK) {
-        (void)pxa_log_error("tomb: GameRender context creation failed");
+        (void)pxa_log_write(4, "tomb: GameRender context creation failed");
         return 1;
     }
     if ((created.capabilities & required) != required) {
-        (void)pxa_close_handle(created.context_handle);
-        (void)pxa_log_error("tomb: GameRender raster capabilities missing");
+        (void)pxa_game_render_close(created.handle);
+        (void)pxa_log_write(4, "tomb: GameRender raster capabilities missing");
         return 1;
     }
-    g_context = created.context_handle;
+    g_context = created.handle;
     if (!upload_resources()) {
-        (void)pxa_close_handle(g_context);
+        (void)pxa_game_render_close(g_context);
         g_context = 0u;
-        (void)pxa_log_error("tomb: raster resource upload failed");
+        (void)pxa_log_write(4, "tomb: raster resource upload failed");
         return 1;
     }
     g_have_surface = 1u;
@@ -502,7 +513,7 @@ static int handle_create_event(const pxa_event_t *event) {
         out = append_uint(out, g_level->room_count);
         out = append_text(out, " touch: left stick, right drag orbits, tap jumps");
         *out = '\0';
-        (void)pxa_log_info(line);
+        (void)pxa_log_write(2, line);
     }
     return 1;
 }
@@ -524,7 +535,7 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t length) {
         if (controller.connected) tomb_input_button(controller.buttons);
         return PXA_EVENT_HANDLED;
     }
-    if (pxa_clock_tick_timestamp_us(&event, &timestamp_us)) {
+    if (pxa_clock_parse_tick(&event, &timestamp_us)) {
         handle_tick(timestamp_us);
         return PXA_EVENT_HANDLED;
     }
@@ -533,8 +544,6 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t length) {
 
 void pxa_app_stop(uint32_t reason) {
     (void)reason;
-    (void)pxa_clock_set_period(0);
-    if (g_context != 0u) (void)pxa_close_handle(g_context);
     g_context = 0u;
     g_have_surface = 0u;
 }

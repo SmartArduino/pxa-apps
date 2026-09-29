@@ -8,10 +8,12 @@
 #include <stdint.h>
 
 #include "pxa.h"
-#include "pxa_canvas.h"
-#include "pxa_game_render.h"
+#include "pxa_ui.h"
 #include "pxa_game_screen.h"
+#include "pxa_clock.h"
+#include "pxa_game_render.h"
 #include "pxa_raster.h"
+#include "pxa_window.h"
 
 #define INPUT_NODE 2u
 #define CREATE_REQUEST UINT32_C(1)
@@ -31,6 +33,7 @@
 #define MAX_PARTICLES 24u
 #define MAX_STARS 22u
 #define HUD_H 15
+#define PLANE_DRAW_BYTES 8192u
 #define PLAYER_W 22
 #define PLAYER_H 15
 #define ENEMY_W 18
@@ -72,12 +75,12 @@ typedef struct {
 
 static uint8_t g_packet[128];
 static uint8_t g_upload[PXA_RASTER_UPLOAD_HEADER_BYTES + FONT_WIDTH * 5u];
-static uint8_t g_draw[PXA_RASTER_MAX_DRAW_BYTES];
+static uint8_t g_draw[PLANE_DRAW_BYTES];
 static uint8_t g_player_texture[16 * 16];
 static uint8_t g_enemy_texture[16 * 16];
 static uint8_t g_font[FONT_WIDTH * 5u];
 static uint16_t g_palette[256];
-static uint32_t g_context;
+static uint64_t g_context;
 static uint32_t g_capabilities;
 static uint64_t g_frame_id;
 static pxa_game_screen_t g_screen;
@@ -580,17 +583,27 @@ static int target_from_screen_y(int y) {
 }
 
 int32_t pxa_app_start(const uint8_t *config, uint32_t config_length) {
+    pxa_game_render_options_t render_options = {0};
+    uint32_t packet_size = 0;
     pxa_game_screen_from_start(&g_screen, config, config_length);
     apply_screen();
     build_resources();
     reset_game();
     g_frame_id = 0;
     g_started = 0;
-    if (!initialize_input_surface() || !pxa_window_fullscreen())
+    if (!initialize_input_surface() ||
+        pxa_window_fullscreen() != PXA_STATUS_OK)
         return PXA_STATUS_INTERNAL;
-    if (!pxa_game_render_create(CREATE_REQUEST, (uint16_t)g_target_w,
-                                (uint16_t)g_target_h, 3, 1, g_packet,
-                                sizeof(g_packet)))
+    render_options.width = (uint16_t)g_target_w;
+    render_options.height = (uint16_t)g_target_h;
+    render_options.buffer_count = 3;
+    render_options.prefer_direct_scanout = 1;
+    render_options.scratch_mode = 1;
+    render_options.max_draw_bytes = sizeof(g_draw);
+    if (!pxa_game_render_build_create(g_packet, sizeof(g_packet),
+                                          CREATE_REQUEST, &render_options,
+                                          &packet_size) ||
+        pxa_submit(g_packet, packet_size) != PXA_STATUS_OK)
         return PXA_STATUS_INTERNAL;
     return PXA_STATUS_OK;
 }
@@ -598,15 +611,15 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t config_length) {
 int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     pxa_event_t parsed;
     if (!pxa_parse_event(event, length, &parsed)) return PXA_EVENT_UNHANDLED;
-    if (parsed.request_id == CREATE_REQUEST) {
+    if (parsed.token == CREATE_REQUEST) {
         pxa_game_render_create_result_t created;
-        if (!pxa_game_render_parse_create(&parsed, &created))
+        if (!pxa_game_render_parse_create(&parsed, CREATE_REQUEST, &created))
             return PXA_EVENT_UNHANDLED;
         if (created.status != PXA_STATUS_OK ||
             (created.capabilities & REQUIRED_CAPABILITIES) !=
                 REQUIRED_CAPABILITIES)
             return PXA_EVENT_HANDLED;
-        g_context = created.context_handle;
+        g_context = created.handle;
         g_capabilities = created.capabilities;
         if (!upload_resources()) return PXA_EVENT_HANDLED;
         g_started = 1;
@@ -614,8 +627,12 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         (void)pxa_clock_set_period(FRAME_PERIOD_MS);
         return PXA_EVENT_HANDLED;
     }
-    if (parsed.service == PXA_SERVICE_CLOCK && parsed.opcode == PXA_CLOCK_TICK &&
-        g_context != 0 && g_started) {
+    if (parsed.service == PXA_CLOCK_SERVICE &&
+        parsed.opcode == PXA_CLOCK_TICK && g_context != 0 && g_started) {
+        uint64_t timestamp_us;
+        if (!pxa_clock_parse_tick(&parsed, &timestamp_us))
+            return PXA_EVENT_UNHANDLED;
+        (void)timestamp_us;
         tick_game();
         (void)render_frame();
         return PXA_EVENT_HANDLED;
@@ -624,10 +641,11 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         pxa_ui_pointer_data_t pointer;
         if (pxa_ui_parse_pointer(&parsed, &pointer) &&
             pointer.node == INPUT_NODE) {
+            const uint8_t phase = pointer.phase;
             const int target_y = target_from_screen_y(pointer.y);
-            if (pointer.phase == PXA_POINTER_DOWN ||
-                pointer.phase == PXA_POINTER_MOVE) {
-                if (g_game_over && pointer.phase == PXA_POINTER_DOWN)
+            if (phase == PXA_POINTER_DOWN ||
+                phase == PXA_POINTER_MOVE) {
+                if (g_game_over && phase == PXA_POINTER_DOWN)
                     reset_game();
                 else if (!g_game_over)
                     g_player_target_y = target_y;
@@ -640,7 +658,5 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
 
 void pxa_app_stop(uint32_t reason) {
     (void)reason;
-    (void)pxa_clock_set_period(0);
-    if (g_context != 0) (void)pxa_close_handle(g_context);
     g_context = 0;
 }

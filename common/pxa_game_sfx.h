@@ -1,8 +1,10 @@
 #ifndef PXA_GAME_SFX_H
 #define PXA_GAME_SFX_H
 
-#include "pxa_audio.h"
+#include "pxa.h"
 #include "pxa_game_music.h"
+#include "pxa_audio.h"
+#include "pxa_clock.h"
 #include "pxa_permission.h"
 
 #define PXA_GAME_SFX_PERMISSION_REQUEST UINT32_C(0x50475801)
@@ -73,8 +75,8 @@ typedef struct {
 } pxa_game_sfx_score_voice_t;
 
 typedef struct {
-    uint32_t permission_handle;
-    uint32_t session_handle;
+    uint64_t permission_handle;
+    uint64_t session_handle;
     const pxa_game_music_song_t* music_song;
     uint64_t music_tick_us;
     uint32_t music_remainder_us;
@@ -97,7 +99,6 @@ typedef struct {
     uint8_t music_theme;
     pxa_game_sfx_voice_t effects[PXA_GAME_SFX_EFFECT_VOICES];
     pxa_game_sfx_score_voice_t score_voices[PXA_GAME_SFX_SCORE_VOICES];
-    uint8_t payload[96];
     int16_t frame[PXA_GAME_SFX_FRAME_SAMPLES];
 } pxa_game_sfx_t;
 
@@ -507,7 +508,7 @@ static inline int pxa_game_sfx_submit_frame(pxa_game_sfx_t* sfx) {
         return 0;
     pxa_game_sfx_mix_frame(sfx);
     result = pxa_audio_write_pcm(sfx->session_handle, (uint8_t*)sfx->frame,
-                                 sizeof(sfx->frame));
+                                    sizeof(sfx->frame));
     return result == (int32_t)sizeof(sfx->frame) || result == PXA_STATUS_WOULD_BLOCK;
 }
 
@@ -518,10 +519,14 @@ static inline void pxa_game_sfx_start(pxa_game_sfx_t* sfx, uint8_t* packet,
     if (sfx == NULL || packet == NULL || sfx->state != PXA_GAME_SFX_OFF)
         return;
     sfx->state = PXA_GAME_SFX_WAIT_PERMISSION;
-    if (!pxa_permission_acquire(PXA_GAME_SFX_PERMISSION_REQUEST, permission_name,
-                                sizeof(permission_name) - 1, permission_scope,
-                                sizeof(permission_scope) - 1, sfx->payload,
-                                sizeof(sfx->payload), packet, packet_capacity))
+    uint32_t size = 0;
+    if (!pxa_permission_build(packet, packet_capacity,
+                                  PXA_PERMISSION_ACQUIRE,
+                                  PXA_GAME_SFX_PERMISSION_REQUEST,
+                                  permission_name, sizeof(permission_name) - 1,
+                                  permission_scope,
+                                  sizeof(permission_scope) - 1, &size) ||
+        pxa_submit(packet, size) != PXA_STATUS_OK)
         sfx->state = PXA_GAME_SFX_UNAVAILABLE;
 }
 
@@ -568,56 +573,58 @@ static inline int pxa_game_sfx_handle_event(pxa_game_sfx_t* sfx,
                                             size_t packet_capacity) {
     if (sfx == NULL || event == NULL || packet == NULL)
         return 0;
-    if (event->service == PXA_SERVICE_PERMISSION &&
+    (void)packet_capacity;
+    if (event->service == PXA_PERMISSION_SERVICE &&
         event->opcode == PXA_PERMISSION_ACQUIRE &&
-        event->request_id == PXA_GAME_SFX_PERMISSION_REQUEST) {
+        event->token == PXA_GAME_SFX_PERMISSION_REQUEST) {
         pxa_permission_acquire_result_t result;
-        if (!pxa_permission_parse_acquire(event, &result) ||
+        if (!pxa_permission_parse_acquire(
+                event, PXA_GAME_SFX_PERMISSION_REQUEST, &result) ||
             result.status != PXA_STATUS_OK) {
             sfx->state = PXA_GAME_SFX_UNAVAILABLE;
             return 1;
         }
         sfx->permission_handle = result.handle;
         sfx->state = PXA_GAME_SFX_WAIT_OPEN;
-        if (!pxa_audio_open_media(PXA_GAME_SFX_OPEN_REQUEST, sfx->permission_handle,
-                                  sfx->payload, sizeof(sfx->payload), packet,
-                                  packet_capacity))
+        if (pxa_audio_open_media(PXA_GAME_SFX_OPEN_REQUEST,
+                                    sfx->permission_handle) != PXA_STATUS_OK)
             sfx->state = PXA_GAME_SFX_UNAVAILABLE;
         return 1;
     }
-    if (event->service == PXA_SERVICE_AUDIO &&
+    if (event->service == PXA_AUDIO_SERVICE &&
         event->opcode == PXA_AUDIO_OPEN_SESSION &&
-        event->request_id == PXA_GAME_SFX_OPEN_REQUEST) {
+        event->token == PXA_GAME_SFX_OPEN_REQUEST) {
         pxa_audio_open_result_t result;
-        if (!pxa_audio_parse_open(event, &result) || result.status != PXA_STATUS_OK ||
-            result.sample_rate != PXA_GAME_SFX_SAMPLE_RATE || result.channels != 1 ||
-            result.frame_ms != 20) {
+        if (!pxa_audio_parse_open(event, PXA_GAME_SFX_OPEN_REQUEST,
+                                      &result) || result.status != PXA_STATUS_OK ||
+            result.sample_rate != PXA_GAME_SFX_SAMPLE_RATE ||
+            result.channels != 1 || result.frame_ms != 20) {
             sfx->state = PXA_GAME_SFX_UNAVAILABLE;
             return 1;
         }
-        sfx->session_handle = result.session_handle;
+        sfx->session_handle = result.handle;
         sfx->state = PXA_GAME_SFX_WAIT_GRAPH;
-        if (!pxa_audio_commit_speaker_graph(PXA_GAME_SFX_GRAPH_REQUEST,
-                                            sfx->session_handle,
-                                            PXA_GAME_SFX_GRAPH_GAIN_DB_Q8, 1500,
-                                            256, 256, sfx->payload,
-                                            sizeof(sfx->payload), packet,
-                                            packet_capacity))
+        const pxa_audio_eq_band_t band = {1500, 256, 256};
+        const pxa_audio_graph_t graph = {
+            PXA_GAME_SFX_GRAPH_GAIN_DB_Q8, &band, 1};
+        if (pxa_audio_commit_graph(PXA_GAME_SFX_GRAPH_REQUEST,
+                                       sfx->session_handle,
+                                       &graph) != PXA_STATUS_OK)
             sfx->state = PXA_GAME_SFX_UNAVAILABLE;
         return 1;
     }
-    if (event->service == PXA_SERVICE_AUDIO &&
+    if (event->service == PXA_AUDIO_SERVICE &&
         event->opcode == PXA_AUDIO_COMMIT_GRAPH &&
-        event->request_id == PXA_GAME_SFX_GRAPH_REQUEST) {
+        event->token == PXA_GAME_SFX_GRAPH_REQUEST) {
         int32_t status;
-        if (!pxa_audio_parse_status(event, PXA_AUDIO_COMMIT_GRAPH, &status) ||
+        if (!pxa_audio_parse_status(event, PXA_GAME_SFX_GRAPH_REQUEST,
+                                       PXA_AUDIO_COMMIT_GRAPH, &status) ||
             status != PXA_STATUS_OK)
             sfx->state = PXA_GAME_SFX_UNAVAILABLE;
         else {
             sfx->state = PXA_GAME_SFX_READY;
             for (uint8_t frame = 0; frame < PXA_GAME_SFX_PREFILL_FRAMES; ++frame)
-                if (!pxa_game_sfx_submit_frame(sfx))
-                    break;
+                if (!pxa_game_sfx_submit_frame(sfx)) break;
         }
         return 1;
     }
@@ -671,15 +678,14 @@ static inline void pxa_game_sfx_tick(pxa_game_sfx_t* sfx,
     uint64_t elapsed_us;
     uint8_t frames = 0;
     if (sfx == NULL || event == NULL || sfx->state != PXA_GAME_SFX_READY ||
-        event->service != PXA_SERVICE_CLOCK || event->opcode != PXA_CLOCK_TICK ||
-        event->payload_length != 8)
+        !pxa_clock_parse_tick(event, &timestamp_us))
         return;
-    timestamp_us = pxa_read_u64(event->payload);
     if (!sfx->music_clock_started) {
         sfx->music_clock_started = 1;
         sfx->music_tick_us = timestamp_us;
         frames = 2;
     } else {
+        if (timestamp_us <= sfx->music_tick_us) return;
         elapsed_us = timestamp_us - sfx->music_tick_us;
         sfx->music_tick_us = timestamp_us;
         if (elapsed_us > 100000)

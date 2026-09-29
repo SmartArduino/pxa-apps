@@ -1,0 +1,26 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [1, 0],
+  "target_sdk": [1, 0],
+  "compile_sdk": [1, 0],
+  "id": "pxa-abi-v1-smoke",
+  "version": "1.0.0",
+  "name": "ABI v1 Smoke",
+  "description": "Exercises the signed Core v1 import and envelope",
+  "build": {
+    "system": "direct",
+    "linear_memory": {"maximum_bytes": 131072, "pinned": false}
+  },
+  "components": [{
+    "id": "main",
+    "kind": "ui",
+    "sources": ["main.c"],
+    "services": ["log", "device", "game-render", "window", "permission", "storage", "fs", "clock", "ui"]
+  }],
+  "permissions": [{
+    "name": "device.identity",
+    "required": false,
+    "scope": "mac.wifi.station.hardware"
+  }],
+  "release_sequence": 1
+}
