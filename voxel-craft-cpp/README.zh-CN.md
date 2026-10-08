@@ -17,4 +17,4 @@ bash local/pxa-apps/voxel-craft-cpp/tests/test.sh
 
 主机测试检查多指输入、后台复位、32 个地图种子的树干/树冠、所有区块的可见面、超容量分页与编辑重建。`PXA_APP_DEFINES=VOXEL_PROFILE=1` 可启用 Guest 绘图计时；默认不增加帧内 WASI 计时调用。
 
-2026-10-08 pai-touch `/dev/ttyACM2` 三轮显示帧率约 7.42 FPS，Host 光栅化约 59.7 ms；会随场景、视距和操作变化。数据与限制见 workspace `local/host-interface-20261008/REPORT.zh-CN.md`，不能当作与 C 版等价画面的语言性能比较。
+2026-10-08 pai-touch `/dev/ttyACM2` 三轮显示帧率约 7.42 FPS，Host 光栅化约 59.5 ms；会随场景、视距和操作变化。数据与限制见 workspace `local/host-interface-20261008/REPORT.zh-CN.md`，不能当作与 C 版等价画面的语言性能比较。
