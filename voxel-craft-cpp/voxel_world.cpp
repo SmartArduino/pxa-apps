@@ -89,7 +89,9 @@ const std::uint8_t kHotbarBlocks[] = {
 const int kHotbarCount = static_cast<int>(sizeof(kHotbarBlocks) /
                                           sizeof(kHotbarBlocks[0]));
 
-void World::generate(std::uint32_t seed) noexcept {
+// Terrain creation runs once. Keep startup code compact instead of consuming
+// another 64 KiB ESP instruction-map page for an infrequently used function.
+[[gnu::cold]] void World::generate(std::uint32_t seed) noexcept {
     blocks_.fill(kAir);
     for (int x = 0; x < kWorldX; ++x) {
         for (int z = 0; z < kWorldZ; ++z) {
