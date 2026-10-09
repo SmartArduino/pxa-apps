@@ -1,0 +1,21 @@
+pxa_host_activation_arena_test OK
+pxa_esp_store_policy_test OK
+Install admission: decoded bytes, metadata, cleanup reserve and overflow passed.
+blob worker: real files, queue full, ownership, blocked cancellation, full/short/EOF reads and exact-range reads passed
+ESP assets: 100 real-file scenes, peak=459168 B, palette=544 B, metadata=7503 B, configured task stack=6144 B
+ESP shared budget: external pressure, load failure rollback and retry recovery passed
+ESP UI pixels: existing worker, coalesced loads, RGB565/BGRA alpha, exact IMAGE accounting and clean exit passed
+ESP installed music input: bounds, cancellation, admission budget, deferred shutdown and reactivation passed
+ESP shared storage: music priority, bounded waiters, queued cancellation, outage exit and I/O error recovery passed
+ESP assets: cancelled reads, frame-held shutdown, repeated activation and zero leaked allocations passed
+ESP Guest UI startup: default/305 DPI encoded before onStart, no startup events OK
+DMA clock fixture: device_paced=0 frames=320 gaps=1 buffered=2 elapsed_us=6380500
+DMA clock fixture: device_paced=1 frames=320 gaps=0 buffered=5 elapsed_us=6300000
+shared ESP output: bounded cache, total/temporary quota rollback/recovery, command replacement/cancel, prebuffer/EOF/underrun recovery/pause, decoder metrics and old/new owner isolation passed
+codec allocation hooks: overflow, total/temporary quotas, realloc rollback, nested scopes, late free and task isolation passed
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.015s
+
+OK
+PXA ESP adapter host tests passed

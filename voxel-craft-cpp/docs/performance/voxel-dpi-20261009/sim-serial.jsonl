@@ -1,0 +1,50 @@
+{"command": "SCREENSHOT"}
+{"command": "INPUT POINTER DOWN 240 362 0"}
+{"command": "INPUT SYNC"}
+{"command": "INPUT POINTER UP 240 362 0"}
+{"command": "INPUT SYNC"}
+{"command": "SCREENSHOT"}
+{"command": "INPUT POINTER DOWN 240 353 0"}
+{"command": "INPUT SYNC"}
+{"command": "INPUT POINTER UP 240 353 0"}
+{"command": "INPUT SYNC"}
+{"command": "SCREENSHOT"}
+{"command": "INPUT POINTER DOWN 240 300 0"}
+{"command": "INPUT SYNC"}
+{"command": "INPUT POINTER UP 240 300 0"}
+{"command": "INPUT SYNC"}
+{"command": "SCREENSHOT"}
+{"command": "INPUT POINTER DOWN 240 314 0"}
+{"command": "INPUT SYNC"}
+{"command": "INPUT POINTER UP 240 314 0"}
+{"command": "INPUT SYNC"}
+{"command": "SCREENSHOT"}
+{"command": "INPUT POINTER DOWN 240 238 0"}
+{"command": "INPUT SYNC"}
+{"command": "INPUT POINTER UP 240 238 0"}
+{"command": "INPUT SYNC"}
+{"command": "SCREENSHOT"}
+{"command": "INPUT POINTER DOWN 430 49 0"}
+{"command": "INPUT SYNC"}
+{"command": "INPUT POINTER UP 430 49 0"}
+{"command": "INPUT SYNC"}
+{"command": "SCREENSHOT"}
+{"command": "INPUT POINTER DOWN 240 126 0"}
+{"command": "INPUT SYNC"}
+{"command": "INPUT POINTER UP 240 126 0"}
+{"command": "INPUT SYNC"}
+{"command": "INPUT POINTER DOWN 437 436 0"}
+{"command": "INPUT SYNC"}
+{"command": "INPUT POINTER UP 437 436 0"}
+{"command": "INPUT SYNC"}
+{"command": "SCREENSHOT"}
+{"command": "INPUT POINTER DOWN 432 42 0"}
+{"command": "INPUT SYNC"}
+{"command": "INPUT POINTER UP 432 42 0"}
+{"command": "INPUT SYNC"}
+{"command": "INPUT POINTER DOWN 430 49 0"}
+{"command": "INPUT SYNC"}
+{"command": "INPUT POINTER UP 430 49 0"}
+{"command": "INPUT SYNC"}
+{"command": "SCREENSHOT"}
+{"command": "INPUT CANCEL"}

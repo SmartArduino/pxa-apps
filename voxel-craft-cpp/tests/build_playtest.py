@@ -11,9 +11,10 @@ root = next((p for p in Path(__file__).resolve().parents
 if root is None:
     raise SystemExit('Run from a pxa-projects workspace checkout.')
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--target', choices=['esp32s3', 'simulator'], required=True)
+parser.add_argument('--target', choices=['esp32s3', 'esp32s31', 'simulator'], required=True)
 parser.add_argument('--output', type=Path, required=True)
 parser.add_argument('--tools', action='store_true',help='Use the isolated six-tool crafting/efficiency fixture')
+parser.add_argument('--no-audio', action='store_true',help='Omit optional audio permission for deterministic display-only QA')
 parser.add_argument('--identity',default='pxa-voxel-craft-cpp-ui2',help='Isolated app ID; use a fresh ID for first-grant tests')
 parser.add_argument('--font-size',type=int,choices=[10,14,18],help='Package only this font for a fixed-device fixture; production keeps all fonts')
 args = parser.parse_args()
@@ -34,6 +35,9 @@ package = json.loads(manifest.read_text())
 if args.identity=='pxa-voxel-craft-cpp' or not args.identity.startswith('pxa-voxel-craft-cpp-ui'):
     parser.error('Fixture identity must be isolated from production')
 package.update(id=args.identity, name='Voxel UI Test', release_sequence=4)
+if args.no_audio:
+    package['permissions']=[permission for permission in package.get('permissions',[])
+                            if permission['name']!='audio.playback']
 manifest.write_text(json.dumps(package, indent=2) + '\n')
 if args.font_size:
     resources=app/'resources.json'

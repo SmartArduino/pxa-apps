@@ -1,0 +1,68 @@
+PXA STORAGE CONFIG bytes_per_second=0 latency_us=0 max_read=4096
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-INIT window[0m
+[33m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=WARN] Voxel audio permission unavailable[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] gfx caps=0x0000ffff painter_needs=0x000081a2 missing=0x00000000[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] gfx render=480x480 scale=0 max_draw=49152 tex=48[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] Voxel Craft C++ ready[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-DISPLAY pixels=480,480 density=124928 scale_milli=1824 title_top=92 first=240,238[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-UI screen=0 busy=0 slots=0 fly=0 font=18 button=54 menu=430,49 bag=437,436 hits=3 audio=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-DISPLAY pixels=480,480 density=124928 scale_milli=1824 title_top=92 first=240,238[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-UI screen=0 busy=0 slots=0 fly=0 font=18 button=54 menu=430,49 bag=437,436 hits=3 audio=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-DISPLAY pixels=480,480 density=124928 scale_milli=1824 title_top=92 first=240,238[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-UI screen=3 busy=0 slots=0 fly=0 font=18 button=54 menu=430,49 bag=437,436 hits=7 audio=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-DISPLAY pixels=480,480 density=124928 scale_milli=1824 title_top=92 first=240,238[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-UI screen=3 busy=0 slots=0 fly=0 font=18 button=54 menu=430,49 bag=437,436 hits=7 audio=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-DISPLAY pixels=480,480 density=124928 scale_milli=1824 title_top=92 first=240,238[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-UI screen=0 busy=0 slots=0 fly=0 font=18 button=54 menu=430,49 bag=437,436 hits=3 audio=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-DISPLAY pixels=480,480 density=124928 scale_milli=1824 title_top=92 first=240,238[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-UI screen=0 busy=0 slots=0 fly=0 font=18 button=54 menu=430,49 bag=437,436 hits=3 audio=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-DISPLAY pixels=480,480 density=124928 scale_milli=1824 title_top=92 first=240,238[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-UI screen=4 busy=0 slots=0 fly=0 font=18 button=54 menu=430,49 bag=437,436 hits=1 audio=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-DISPLAY pixels=480,480 density=124928 scale_milli=1824 title_top=92 first=240,238[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-UI screen=4 busy=0 slots=0 fly=0 font=18 button=54 menu=430,49 bag=437,436 hits=1 audio=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-DISPLAY pixels=480,480 density=124928 scale_milli=1824 title_top=92 first=240,238[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-UI screen=0 busy=0 slots=0 fly=0 font=18 button=54 menu=430,49 bag=437,436 hits=3 audio=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-DISPLAY pixels=480,480 density=124928 scale_milli=1824 title_top=92 first=240,238[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-UI screen=0 busy=0 slots=0 fly=0 font=18 button=54 menu=430,49 bag=437,436 hits=3 audio=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-CPP fps10=121 faces=22 batches=30 view=32 q=0 raster_us=0 affine=0 solid=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-STATE xq8=8320 yq8=256 zq8=8320 yawq10=0 pitchq10=0 fly=0 ground=1 hit=1 bx=32 by=2 bz=34 block=16[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-EDIT count=0 packed=0 budget=40000 exhausted=0 bytes=2752[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-BAG bush=0 leaves=0 dirt=0 wood=0 plank=0 stone=0 table=0 selected=0 count=0 progress=0 hash=964337205[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-TOOLS stick=0 wpick=0 waxe=0 wshovel=0 spick=0 saxe=0 sshovel=0 item=0 wear=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-CPP fps10=101 faces=22 batches=30 view=32 q=0 raster_us=14274 affine=0 solid=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-STATE xq8=8320 yq8=256 zq8=8320 yawq10=0 pitchq10=0 fly=0 ground=1 hit=1 bx=32 by=2 bz=34 block=16[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-EDIT count=0 packed=0 budget=40000 exhausted=0 bytes=2752[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-BAG bush=0 leaves=0 dirt=0 wood=0 plank=0 stone=0 table=0 selected=0 count=0 progress=0 hash=964337205[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-TOOLS stick=0 wpick=0 waxe=0 wshovel=0 spick=0 saxe=0 sshovel=0 item=0 wear=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-CPP fps10=112 faces=22 batches=30 view=32 q=0 raster_us=14274 affine=0 solid=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-STATE xq8=8320 yq8=256 zq8=8320 yawq10=0 pitchq10=0 fly=0 ground=1 hit=1 bx=32 by=2 bz=34 block=16[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-EDIT count=0 packed=0 budget=40000 exhausted=0 bytes=2752[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-BAG bush=0 leaves=0 dirt=0 wood=0 plank=0 stone=0 table=0 selected=0 count=0 progress=0 hash=964337205[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-TOOLS stick=0 wpick=0 waxe=0 wshovel=0 spick=0 saxe=0 sshovel=0 item=0 wear=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-CPP fps10=119 faces=22 batches=30 view=32 q=0 raster_us=11405 affine=0 solid=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-STATE xq8=8320 yq8=256 zq8=8320 yawq10=0 pitchq10=0 fly=0 ground=1 hit=1 bx=32 by=2 bz=34 block=16[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-EDIT count=0 packed=0 budget=40000 exhausted=0 bytes=2752[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-BAG bush=0 leaves=0 dirt=0 wood=0 plank=0 stone=0 table=0 selected=0 count=0 progress=0 hash=964337205[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-TOOLS stick=0 wpick=0 waxe=0 wshovel=0 spick=0 saxe=0 sshovel=0 item=0 wear=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-CPP fps10=108 faces=22 batches=30 view=32 q=0 raster_us=11405 affine=0 solid=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-STATE xq8=8320 yq8=256 zq8=8320 yawq10=0 pitchq10=0 fly=0 ground=1 hit=1 bx=32 by=2 bz=34 block=16[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-EDIT count=0 packed=0 budget=40000 exhausted=0 bytes=2752[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-BAG bush=0 leaves=0 dirt=0 wood=0 plank=0 stone=0 table=0 selected=0 count=0 progress=0 hash=964337205[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-TOOLS stick=0 wpick=0 waxe=0 wshovel=0 spick=0 saxe=0 sshovel=0 item=0 wear=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-DISPLAY pixels=480,480 density=124928 scale_milli=1824 title_top=92 first=240,238[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-UI screen=2 busy=0 slots=0 fly=0 font=18 button=54 menu=430,49 bag=437,436 hits=4 audio=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-DISPLAY pixels=480,480 density=124928 scale_milli=1824 title_top=92 first=240,238[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-UI screen=2 busy=0 slots=0 fly=0 font=18 button=54 menu=430,49 bag=437,436 hits=4 audio=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-CPP fps10=95 faces=22 batches=30 view=32 q=0 raster_us=11405 affine=0 solid=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-STATE xq8=8320 yq8=256 zq8=8320 yawq10=0 pitchq10=0 fly=0 ground=1 hit=1 bx=32 by=2 bz=34 block=16[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-EDIT count=0 packed=0 budget=40000 exhausted=0 bytes=2752[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-BAG bush=0 leaves=0 dirt=0 wood=0 plank=0 stone=0 table=0 selected=0 count=0 progress=0 hash=964337205[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-TOOLS stick=0 wpick=0 waxe=0 wshovel=0 spick=0 saxe=0 sshovel=0 item=0 wear=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-CRAFT side=2 cell=36 space=3 grid=142,89 bag=66,224 quick=66,344 output=316,126 back=432,42[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-DISPLAY pixels=480,480 density=124928 scale_milli=1824 title_top=92 first=240,238[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-UI screen=6 busy=0 slots=0 fly=0 font=18 button=54 menu=430,49 bag=437,436 hits=42 audio=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-CRAFT side=2 cell=36 space=3 grid=142,89 bag=66,224 quick=66,344 output=316,126 back=432,42[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-DISPLAY pixels=480,480 density=124928 scale_milli=1824 title_top=92 first=240,238[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-UI screen=6 busy=0 slots=0 fly=0 font=18 button=54 menu=430,49 bag=437,436 hits=42 audio=0[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-DISPLAY pixels=480,480 density=124928 scale_milli=1824 title_top=92 first=240,238[0m
+[32m[PXA app=pxa-voxel-craft-cpp-ui6 component=65537 level=INFO] VOXEL-UI screen=2 busy=0 slots=0 fly=0 font=18 button=54 menu=430,49 bag=437,436 hits=4 audio=0[0m

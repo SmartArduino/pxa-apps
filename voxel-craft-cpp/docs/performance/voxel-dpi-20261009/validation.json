@@ -1,0 +1,65 @@
+{
+  "firmware_deployed": false,
+  "device_after_verified": false,
+  "expected_serial": "1c:29:04:d0:ad:04",
+  "font_pixel_bytes_before": 12100,
+  "font_pixel_bytes_after": 39204,
+  "artifacts": [
+    {
+      "path": "local/voxel-dpi-20261009/production-s31/pxa-voxel-craft-cpp.pxa",
+      "bytes": 702213,
+      "sha256": "c093601a3aab1a8a8eebc6ac848bbaa5c53476ba5c9f9a415796bc94f3eb4ffd"
+    },
+    {
+      "path": "local/voxel-dpi-20261009/production-s31/pxa-voxel-craft-cpp/artifacts/main.esp32-s31.aot",
+      "bytes": 872992,
+      "sha256": "5a359d8ef370ab8b26f33aa87c996d33953cd89d906d69aa4ac819dfd9bdeaeb"
+    },
+    {
+      "path": "local/voxel-dpi-20261009/production-s3/pxa-voxel-craft-cpp.pxa",
+      "bytes": 601082,
+      "sha256": "4f9635d49e074685cd91df6ef4af027a989ae5f7a463340886ca2f58256f6d21"
+    },
+    {
+      "path": "build/firmware/esp-mosaico/pxa_esp_platform.bin",
+      "bytes": 3836320,
+      "sha256": "6251f0aa02c65e61f3a62807ffd4c03cb60827bce62b97021842139367755efd"
+    }
+  ],
+  "simulator_296_verified": true,
+  "original_data_files_verified_unchanged": 22,
+  "host_starting_environment_test": true,
+  "simulator_480_verified": true,
+  "lvgl_native_verified": true,
+  "lvgl_asan_ubsan_verified": true,
+  "cpp_primary_maintenance": true,
+  "final_fixture_identity": "pxa-voxel-craft-cpp-ui6",
+  "final_fixture_audio_permission": false,
+  "source_commits": [
+    {
+      "repo": "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/pxa-apps",
+      "commit": "0d4cba64a9d90330c6e9f7a697a260ad1fe3c31e",
+      "title": "fix(games): preserve raster touch coordinates at high DPI"
+    },
+    {
+      "repo": "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/deps/pxa-system",
+      "commit": "8b24e02a963c467b92da9a294f4e3806ce9f999a",
+      "title": "fix(lvgl): apply display density once to viewport lengths"
+    },
+    {
+      "repo": "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/deps/pxa-system",
+      "commit": "d600bc247e9396452e97e9135a6a94999837279c",
+      "title": "docs(sdk): prioritize C++ development during C SDK transition"
+    },
+    {
+      "repo": "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects",
+      "commit": "c5bdd6a4c0c0b43ec1c97e37c4202d006ae8c39e",
+      "title": "fix(host): forward board DPI before starting Guest UI"
+    },
+    {
+      "repo": "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/pxa-apps",
+      "commit": "b25a4bfeae5d2fc7e13d243c7a576419a472b1a0",
+      "title": "fix(voxel-craft-cpp): adapt menus to dense square displays"
+    }
+  ]
+}

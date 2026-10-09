@@ -1,0 +1,55 @@
+{
+  "passed": true,
+  "width": 296,
+  "height": 240,
+  "dpi": 160,
+  "density_q16": 65536,
+  "scale": 1.0,
+  "font": 10,
+  "scenes": [
+    "title",
+    "settings",
+    "title-return",
+    "load-slots",
+    "title-load-return",
+    "game",
+    "pause",
+    "inventory",
+    "pause-after-inventory"
+  ],
+  "observed": {
+    "display": {
+      "component": 65537,
+      "pixels": [
+        296,
+        240
+      ],
+      "density": 65536,
+      "scale_milli": 1000,
+      "title_top": 15,
+      "first": [
+        148,
+        95
+      ]
+    },
+    "ui": {
+      "component": 65537,
+      "screen": 0,
+      "busy": 0,
+      "slots": 0,
+      "fly": 0,
+      "font": 10,
+      "button": 30,
+      "menu": [
+        267,
+        29
+      ],
+      "bag": [
+        264,
+        214
+      ],
+      "hits": 3,
+      "audio": 1
+    }
+  }
+}

@@ -1,0 +1,10 @@
+Alpha warm path: frames=100 native_snapshot_calls=0 adapter_allocations=0 hash=3301561681495607219
+Alpha staging: frames=100 allocations=0 resident=7595 final=7595 peak=7595 hash=4637473789383918359
+Alpha staging rollback: first=preserved second=preserved resize_failures=3 retry=ok
+Canvas prepared metadata: frames=2000 allocations=0 resident_before=4240 resident_after=4240 window_peak=4240 acquires=3000
+Canvas duplicated metadata: frames=2000 allocations=0 resident_before=13768 resident_after=13768 window_peak=13768 acquires=2000
+Property rollback: variant=0 resident=23495 peak=34773 remaining=23495 allocations=78
+Property rollback: variant=1 resident=23495 peak=71070 remaining=23495 allocations=83
+Property rollback: variant=2 resident=23495 peak=71167 remaining=23495 allocations=84
+Alpha limits: snapshot=8192 plane=2048 rejected=3 recovered=1 opaque_released=4035
+LVGL viewport lengths: 50vw/50vh stay 160x120 at 160/240/305/480 DPI OK
