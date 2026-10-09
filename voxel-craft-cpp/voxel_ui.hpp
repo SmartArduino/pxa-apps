@@ -37,6 +37,14 @@ struct ControlLayout {
         auto [l,r]=horizontal(y,h);int margin=std::max(2,int(5*scale));
         int w=std::max(1,std::min(desired,r-l-2*margin));return {(l+r-w)/2,y,w,h};
     }
+    int title_top()const noexcept {
+        const int first=int(display.safe.top)+std::max(4,int(7*scale));
+        // Compact landscape panels need their vertical space for buttons.
+        // Square/portrait panels center the whole title and button group.
+        if(width()>height())return first;
+        const int group=int(66*scale)+3*std::max(20,int(29*scale))+2*std::max(3,int(6*scale));
+        return std::max(first,int(display.safe.top)+(height()-int(display.safe.top+display.safe.bottom)-group)/2);
+    }
     static ControlLayout make(pxa::ui::DisplayMetrics d,int quick_count=9)noexcept {
         ControlLayout v;v.display=d;
         // Guard unreasonable host values before conversions and geometry.

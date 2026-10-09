@@ -30,7 +30,8 @@
             text(value,(hud.width-text_width(value,scale))/2.f,float(y),scale);
         };
         const int margin=std::max(4,int(7*controls.scale));
-        const int top=int(display.safe.top)+margin,bottom=hud.height-int(display.safe.bottom)-margin;
+        const int top=screen==title?controls.title_top():int(display.safe.top)+margin;
+        const int bottom=hud.height-int(display.safe.bottom)-margin;
         const float font=std::min(controls.text_scale,controls.scale*1.18f);
         const int button_h=std::max(20,int(29*controls.scale));
         const int gap=std::max(3,int(6*controls.scale));
@@ -148,6 +149,7 @@
         const auto submitted=frame.submit();ui_dirty=!submitted;
         if(!submitted&&app_context){char error[80];std::snprintf(error,sizeof(error),"Menu draw failed: %d bytes=%u",int(submitted.error()),unsigned(frame.bytes_used()));(void)app_context->log().write(pxa::LogLevel::error,error);}
 #if VOXEL_VALIDATE
+        if(app_context){char metrics[160];std::snprintf(metrics,sizeof(metrics),"VOXEL-DISPLAY pixels=%d,%d density=%u scale_milli=%d title_top=%d first=%d,%d",hud.width,hud.height,unsigned(display.density_q16),int(controls.scale*1000),controls.title_top(),hud.width/2,controls.title_top()+int(66*controls.scale)+button_h/2);(void)app_context->log().write(pxa::LogLevel::info,metrics);}
         if(app_context){char message[200];int n=std::snprintf(message,sizeof(message),"VOXEL-UI screen=%u busy=%u slots=%u fly=%u font=%d button=%d menu=%d,%d bag=%d,%d hits=%u audio=%u",unsigned(screen),unsigned(busy),unsigned(bool(slot_generations[0]))|(unsigned(bool(slot_generations[1]))<<1)|(unsigned(bool(slot_generations[2]))<<2),unsigned(flying),font_size,hud.button,controls.menu.cx(),controls.menu.cy(),controls.bag.cx(),controls.bag.cy(),menu_hit_count,unsigned(bool(audio)));if(n>0&&n<int(sizeof(message)))(void)app_context->log().write(pxa::LogLevel::info,std::string_view(message,n));}
 #endif
     }

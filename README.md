@@ -4,6 +4,11 @@ Application sources for the PXA workspace. The PXA runtime, Guest SDK, packaging
 tools, and a minimal `hello` smoke-test app remain in `pxa-system`. All product
 applications and their shared art live here.
 
+New SDK capabilities and game development focus on the C++ Guest SDK and
+`voxel-craft-cpp`. The C SDK is being phased out of feature development;
+existing C applications retain necessary compatibility and correctness fixes
+during the transition. The Core wire ABI remains shared.
+
 Clone this repository to `local/pxa-apps` alongside `deps/pxa-system` in
 `pxa-projects`. From the workspace root, for example:
 
