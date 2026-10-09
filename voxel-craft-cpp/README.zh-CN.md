@@ -71,6 +71,8 @@ bash local/pxa-apps/voxel-craft-cpp/tests/test.sh
 缓存容量；C 原版 Z 面 UV 交换已修复后才允许参与画质一致的对照。
 在固定场景另加 `VOXEL_CHEAP_PATHS=1,VOXEL_BENCH_CHEAP=1` 可对照绘制近似的画面与收益；
 该结果应独立标注，不能与完整纹理结果混作语言性能比较。
+固定场景另加 `VOXEL_BENCH_HUD=1` 可只打开正常游戏 HUD，对照按钮、物品栏和
+准星的实际显示成本；地图、相机、画质、模拟和自动视距仍固定。
 
 `VOXEL_PROFILE=1` 将几何准备与编码放在同一命令缓冲的两个阶段，只在边界
 计时，120 帧后输出均值。它仍有观察者成本，最终显示 FPS 必须使用不含该宏

@@ -36,6 +36,9 @@
 #ifndef VOXEL_BENCH_CHEAP
 #define VOXEL_BENCH_CHEAP 0
 #endif
+#ifndef VOXEL_BENCH_HUD
+#define VOXEL_BENCH_HUD 0
+#endif
 #ifndef VOXEL_VALIDATE
 #define VOXEL_VALIDATE 0
 #endif
@@ -927,7 +930,7 @@ struct VoxelCraft {
         const auto geometry_end=std::chrono::steady_clock::now();
 #endif
         voxel::draw_particles(frame, *projector, eye_camera, particles.items());
-        if constexpr (!VOXEL_BENCH_SCENE) draw_hud(frame, width, height);
+        if constexpr (!VOXEL_BENCH_SCENE || VOXEL_BENCH_HUD) draw_hud(frame, width, height);
         const auto used = frame.bytes_used();
 #if VOXEL_PROFILE
         const auto build_us = std::chrono::duration_cast<std::chrono::microseconds>(
