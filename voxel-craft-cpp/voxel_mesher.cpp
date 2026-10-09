@@ -33,6 +33,16 @@ struct BatchStyle {
 };
 BatchStyle g_batch_style{};
 
+#if VOXEL_PROFILE
+// This is in-process diagnostic staging, not a PXA packet. Keep its native
+// header typed and copy it without alignment/aliasing assumptions.
+struct PreparedHeader {
+    std::uint8_t kind, flags, slot, reserved;
+    std::uint16_t bytes, color, vertices, reserved2;
+};
+static_assert(sizeof(PreparedHeader) == 12);
+#endif
+
 /* Face order: +Y, +X, -Z, -Y, -X, +Z. The value selects a row of the
  * 16-level lit palette (row 0 is full brightness, row 15 is black). */
 constexpr std::uint8_t kFaceLight[6] = {0, 3, 2, 6, 4, 2};
@@ -103,10 +113,10 @@ DrawStats draw_world(pxa::game::Frame& frame,
         if(bytes>budget.staging.size()-prepared_used ||
            frame.bytes_used()+prepared_used+bytes>budget.max_bytes) return false;
         auto* p=budget.staging.data()+prepared_used;
-        p[0]=std::byte(kind); p[1]=std::byte(style.flags);p[2]=std::byte(style.slot);
-        p[3]=std::byte{};pxa::wire::put16(p+4,static_cast<std::uint16_t>(bytes));
-        pxa::wire::put16(p+6,style.color);pxa::wire::put16(p+8,static_cast<std::uint16_t>(vertices.size()));
-        pxa::wire::put16(p+10,0);
+        const PreparedHeader header{static_cast<std::uint8_t>(kind),style.flags,style.slot,0,
+            static_cast<std::uint16_t>(bytes),style.color,
+            static_cast<std::uint16_t>(vertices.size()),0};
+        std::memcpy(p,&header,sizeof(header));
         // Diagnostic vertices share the final command buffer. Their native
         // padding never escapes: Frame writes the wire's reserved byte as zero.
         std::memcpy(p+12,vertices.data(),vertices.size_bytes());
@@ -343,10 +353,12 @@ encode_prepared:
         stats.geometry_us=pxa::profile_short_us(geometry_begin,encode_begin);
         for(std::size_t offset=0;offset<prepared_used;) {
             const auto* p=budget.staging.data()+offset;
-            const bool polygon=p[0]==std::byte{5};
-            const BatchStyle style{pxa::wire::get16(p+6),std::to_integer<std::uint8_t>(p[2]),std::to_integer<std::uint8_t>(p[1])};
-            const auto vertices=pxa::wire::get16(p+8);
-            const auto size=pxa::wire::get16(p+4);
+            PreparedHeader header;
+            std::memcpy(&header,p,sizeof(header));
+            const bool polygon=header.kind==5;
+            const BatchStyle style{header.color,header.slot,header.flags};
+            const auto vertices=header.vertices;
+            const auto size=header.bytes;
             if(polygon) {
                 // Read a record before Frame overwrites it. Encoded quads are
                 // four bytes smaller; triangle batches only shrink on merging.

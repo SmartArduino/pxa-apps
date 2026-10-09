@@ -1,8 +1,7 @@
 #pragma once
 #include "voxel_world.hpp"
 #include "voxel_mesher.hpp"
-#include <pxa/core.hpp>
-#include <bit>
+#include <pxa/binary.hpp>
 #include <cmath>
 
 namespace voxel {
@@ -17,29 +16,67 @@ struct SaveState {
     std::array<std::uint8_t,kQuickCount> quick{1,2,3,4,5,6,8,12};
     std::uint8_t selected=0;bool flying=false;
 };
-inline SaveHeader encode_save(const SaveState& state)noexcept {
-    SaveHeader h{};auto* p=h.data();pxa::wire::put32(p,0x31584356u); // VCX1
-    pxa::wire::put16(p+4,1);pxa::wire::put16(p+6,kWorldX);pxa::wire::put16(p+8,kWorldY);pxa::wire::put16(p+10,kWorldZ);
-    pxa::wire::put32(p+12,kWorldX*kWorldY*kWorldZ);pxa::wire::put32(p+16,state.generation);
-    pxa::wire::put32(p+20,state.seed);pxa::wire::put32(p+24,state.blocks_hash);
-    const float f[]={state.camera.x,state.camera.y,state.camera.z,state.camera.yaw,state.camera.pitch,state.velocity};
-    for(int i=0;i<6;++i)pxa::wire::put32(p+28+4*i,std::bit_cast<std::uint32_t>(f[i]));
-    for(int i=0;i<kQuickCount;++i)p[52+i]=std::byte(state.quick[i]);
-    p[60]=std::byte(state.selected);p[61]=std::byte(state.flying);
-    pxa::wire::put32(p+76,checksum(std::span{h}.first(76)));return h;
+inline SaveHeader encode_save(const SaveState& state) noexcept {
+    SaveHeader header{};
+    pxa::binary::Writer out(header);
+    // Preserve the existing 80-byte VCX1 layout.
+    (void)out.write(std::uint32_t{0x31584356u});
+    (void)out.write(std::uint16_t{1});
+    (void)out.write(std::uint16_t{kWorldX});
+    (void)out.write(std::uint16_t{kWorldY});
+    (void)out.write(std::uint16_t{kWorldZ});
+    (void)out.write(std::uint32_t{kWorldX*kWorldY*kWorldZ});
+    (void)out.write(state.generation);
+    (void)out.write(state.seed);
+    (void)out.write(state.blocks_hash);
+    for (float value : {state.camera.x,state.camera.y,state.camera.z,
+                        state.camera.yaw,state.camera.pitch,state.velocity})
+        (void)out.write(value);
+    for (int i=0;i<kQuickCount;++i) (void)out.write(state.quick[i]);
+    (void)out.write(state.selected);
+    (void)out.write(state.flying);
+    (void)out.bytes(std::span{header}.subspan(62,14)); // Reserved zeros.
+    (void)out.write(checksum(std::span{header}.first(76)));
+    return header;
 }
-inline pxa::Result<SaveState> decode_save(std::span<const std::byte> h)noexcept {
-    if(h.size()!=kSaveHeaderBytes)return std::unexpected(pxa::Error::protocol_error);auto* p=h.data();
-    if(pxa::wire::get32(p)!=0x31584356u||pxa::wire::get16(p+4)!=1||pxa::wire::get16(p+6)!=kWorldX||pxa::wire::get16(p+8)!=kWorldY||pxa::wire::get16(p+10)!=kWorldZ||pxa::wire::get32(p+12)!=kWorldX*kWorldY*kWorldZ||pxa::wire::get32(p+76)!=checksum(h.first(76)))return std::unexpected(pxa::Error::protocol_error);
-    SaveState s;s.generation=pxa::wire::get32(p+16);s.seed=pxa::wire::get32(p+20);s.blocks_hash=pxa::wire::get32(p+24);
-    float f[6];for(int i=0;i<6;++i){f[i]=std::bit_cast<float>(pxa::wire::get32(p+28+4*i));if(!std::isfinite(f[i]))return std::unexpected(pxa::Error::protocol_error);}
-    // Flying and walking can leave the finite block field. Preserve those
-    // legitimate poses while bounding floor-to-int collision/raycast inputs.
-    if(std::fabs(f[0])>1048576||std::fabs(f[1])>1048576||std::fabs(f[2])>1048576||std::fabs(f[3])>3.142f||std::fabs(f[4])>1.35f||std::fabs(f[5])>32||!s.generation)return std::unexpected(pxa::Error::protocol_error);
-    s.camera={f[0],f[1],f[2],f[3],f[4]};s.velocity=f[5];
-    for(int i=0;i<kQuickCount;++i){s.quick[i]=std::to_integer<unsigned>(p[52+i]);if(!s.quick[i]||s.quick[i]>=kBedrock)return std::unexpected(pxa::Error::protocol_error);}
-    s.selected=std::to_integer<unsigned>(p[60]);s.flying=std::to_integer<unsigned>(p[61])!=0;
-    if(s.selected>=kQuickCount||std::to_integer<unsigned>(p[61])>1)return std::unexpected(pxa::Error::protocol_error);return s;
+inline pxa::Result<SaveState> decode_save(std::span<const std::byte> header) noexcept {
+    if (header.size()!=kSaveHeaderBytes ||
+        *pxa::binary::read<std::uint32_t>(header,76)!=checksum(header.first(76)))
+        return std::unexpected(pxa::Error::protocol_error);
+    pxa::binary::Reader in(header);
+    const auto magic=*in.read<std::uint32_t>();
+    const auto version=*in.read<std::uint16_t>();
+    const auto x=*in.read<std::uint16_t>(),y=*in.read<std::uint16_t>(),z=*in.read<std::uint16_t>();
+    const auto blocks=*in.read<std::uint32_t>();
+    if (magic!=0x31584356u || version!=1 ||
+        x!=kWorldX || y!=kWorldY || z!=kWorldZ || blocks!=kWorldX*kWorldY*kWorldZ)
+        return std::unexpected(pxa::Error::protocol_error);
+    SaveState state;
+    state.generation=*in.read<std::uint32_t>();
+    state.seed=*in.read<std::uint32_t>();
+    state.blocks_hash=*in.read<std::uint32_t>();
+    float pose[6];
+    for (auto& value : pose) {
+        value=*in.read<float>();
+        if (!std::isfinite(value)) return std::unexpected(pxa::Error::protocol_error);
+    }
+    // Flying/walking may leave the finite field. Bound collision/raycast inputs.
+    if (std::fabs(pose[0])>1048576 || std::fabs(pose[1])>1048576 ||
+        std::fabs(pose[2])>1048576 || std::fabs(pose[3])>3.142f ||
+        std::fabs(pose[4])>1.35f || std::fabs(pose[5])>32 || !state.generation)
+        return std::unexpected(pxa::Error::protocol_error);
+    state.camera={pose[0],pose[1],pose[2],pose[3],pose[4]};
+    state.velocity=pose[5];
+    for (auto& block : state.quick) {
+        block=*in.read<std::uint8_t>();
+        if (!block || block>=kBedrock) return std::unexpected(pxa::Error::protocol_error);
+    }
+    state.selected=*in.read<std::uint8_t>();
+    auto flying=in.read<bool>();
+    if (!flying) return std::unexpected(flying.error());
+    state.flying=*flying;
+    if (state.selected>=kQuickCount) return std::unexpected(pxa::Error::protocol_error);
+    return state;
 }
 inline bool valid_saved_blocks(std::span<const std::byte> blocks)noexcept {
     if(blocks.size()!=kWorldX*kWorldY*kWorldZ)return false;
