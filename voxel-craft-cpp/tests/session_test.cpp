@@ -64,7 +64,7 @@ int main(){
     app.world.finish_load(false);assert(app.world.at(10,2,10)==old);
     staged=app.world.load_staging();std::fill(staged.begin(),staged.end(),std::byte{voxel::kAir});staged[10]=std::byte{voxel::kTable};
     assert(voxel::valid_saved_blocks(staged));app.world.finish_load(true);assert(app.world.at(10,0,0)==voxel::kTable);
-    const auto& rebuilt=app.world.chunk_mesh(1,0,0);assert(rebuilt.count==6); // caches reset after staging
+    const auto& rebuilt=app.world.chunk_mesh(10/voxel::kChunkSize,0,0);assert(rebuilt.count==6); // caches reset after staging
     pxa::Transport transport;transport.phase(pxa::Phase::event);
     pxa::game::RenderInfo info;info.capabilities=PXA_RASTER_CAP_KNOWN_MASK;info.render_width=296;info.render_height=240;info.max_textures=48;info.max_draw_bytes=49152;
     pxa::game::Renderer renderer(transport,77,info);

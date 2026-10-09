@@ -260,7 +260,7 @@ DrawStats draw_world(pxa::game::Frame& frame,
                 : DrawPath::perspective;
             const std::uint16_t color = path == DrawPath::solid ? kLodColors[quad.slot * 7 +
                 (budget.lit_palette ? kFaceLight[quad.face] : 0)] : 0;
-            const BatchStyle style{static_cast<std::uint16_t>(path == DrawPath::solid ? color : 0), quad.slot,
+            const BatchStyle style{static_cast<std::uint16_t>(path == DrawPath::solid ? color : 0), static_cast<std::uint8_t>(quad.slot),
                 static_cast<std::uint8_t>((path == DrawPath::solid ? 1 : 0) |
                                          (path == DrawPath::affine ? 2 : 0) |
                                          (quad.cutout ? 4 : 0))};

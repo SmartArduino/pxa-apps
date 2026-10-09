@@ -235,8 +235,12 @@ int main() {
     auto corner_projector=pxa::game3d::Projector::create(296,240,1.221451928f,0.25f,24);
     assert(corner_projector);
     const voxel::Camera corner_camera{18.5f,9.6f,18.5f,0.7f,-0.15f};
-    assert(25.5f*25.5f+2.4f*2.4f+17.5f*17.5f>
-           (24+voxel::kChunkSize*.87f)*(24+voxel::kChunkSize*.87f));
+    // This particular centre demonstrates the old eight-block-chunk bug.
+    // Sixteen-block chunks have a different centre/radial bound, but must
+    // still render the same in-frustum corner below.
+    if constexpr(voxel::kChunkSize==8)
+        assert(25.5f*25.5f+2.4f*2.4f+17.5f*17.5f>
+               (24+voxel::kChunkSize*.87f)*(24+voxel::kChunkSize*.87f));
     budget.focal=corner_projector->focal_length();
     budget.max_distance=24;
     auto corner_frame=renderer.frame(buffer);

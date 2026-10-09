@@ -40,6 +40,12 @@ static void check_chunk(int cx, int cy, int cz) {
 }
 
 int main() {
+    MeshQuad limits;
+    limits.face=5;limits.plane=N-1;limits.u=N-1;limits.v=N-1;
+    limits.width=N;limits.height=N;limits.slot=44;limits.cutout=1;
+    const auto copied=limits;
+    assert(copied.face==5&&copied.plane==N-1&&copied.u==N-1&&copied.v==N-1);
+    assert(copied.width==N&&copied.height==N&&copied.slot==44&&copied.cutout==1);
     for (int block=1; block<=15; ++block)
         for (int face=0; face<3; ++face)
             assert(block_info(block).texture[face] == (block-1)*3+face);

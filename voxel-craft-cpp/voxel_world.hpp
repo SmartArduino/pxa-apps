@@ -56,19 +56,6 @@ const BlockInfo& block_info(std::uint8_t id) noexcept;
 extern const std::uint8_t kHotbarBlocks[];
 extern const int kHotbarCount;
 
-/* One merged, coplanar, single-material rectangle of faces. Greedy meshing
- * turns a flat chunk face into one quad instead of one per voxel. */
-struct MeshQuad {
-    std::uint8_t face = 0;     /* 0 +Y, 1 +X, 2 -Z, 3 -Y, 4 -X, 5 +Z */
-    std::uint8_t plane = 0;    /* coordinate along the face normal */
-    std::uint8_t u = 0;        /* in-plane origin */
-    std::uint8_t v = 0;
-    std::uint8_t width = 1;    /* extents along u and v */
-    std::uint8_t height = 1;
-    std::uint8_t slot = 0;     /* block texture slot */
-    std::uint8_t cutout = 0;
-};
-
 #ifndef VOXEL_CHUNK_SIZE
 #define VOXEL_CHUNK_SIZE 8
 #endif
@@ -77,6 +64,21 @@ struct MeshQuad {
 #endif
 constexpr int kChunkSize = VOXEL_CHUNK_SIZE;
 static_assert(kChunkSize == 8 || kChunkSize == 16);
+/* Cache chunk-local faces in one word for eight-block chunks. All fields
+ * retain their full range, including merged extents equal to the chunk size.
+ * This is private Guest storage, never an ABI or save-file representation.
+ * Sixteen-block chunks keep two words; no cache entries are removed. */
+struct MeshQuad {
+    std::uint32_t face : 3 = 0; /* 0 +Y, 1 +X, 2 -Z, 3 -Y, 4 -X, 5 +Z */
+    std::uint32_t plane : (kChunkSize == 8 ? 4 : 5) = 0;
+    std::uint32_t u : (kChunkSize == 8 ? 3 : 4) = 0;
+    std::uint32_t v : (kChunkSize == 8 ? 3 : 4) = 0;
+    std::uint32_t width : (kChunkSize == 8 ? 4 : 5) = 1;
+    std::uint32_t height : (kChunkSize == 8 ? 4 : 5) = 1;
+    std::uint32_t slot : 6 = 0;
+    std::uint32_t cutout : 1 = 0;
+};
+static_assert(sizeof(MeshQuad) == (kChunkSize == 8 ? 4 : 8));
 constexpr int kChunksX = (kWorldX + kChunkSize - 1) / kChunkSize;
 constexpr int kChunksY = (kWorldY + kChunkSize - 1) / kChunkSize;
 constexpr int kChunksZ = (kWorldZ + kChunkSize - 1) / kChunkSize;
