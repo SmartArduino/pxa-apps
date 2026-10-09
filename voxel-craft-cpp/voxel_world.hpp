@@ -169,7 +169,7 @@ struct RayHit {
     float distance = 0.0f;
 };
 
-/* Voxel DDA along a normalised direction; returns the first solid block. */
+/* Voxel DDA: select non-air/non-water cells independently of collision. */
 RayHit raycast(const World& world, float ox, float oy, float oz, float dx,
                float dy, float dz, float max_distance) noexcept;
 

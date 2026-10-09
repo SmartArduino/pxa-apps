@@ -447,7 +447,10 @@ RayHit raycast(const World& world, float ox, float oy, float oz, float dx,
     float travelled = 0.0f;
     for (int guard = 0; guard < 512; ++guard) {
         const std::uint8_t id = world.at(x, y, z);
-        if (id != kAir && block_info(id).solid) {
+        // Selection is independent of collision. Ground vegetation must be
+        // selectable even though a player can walk through it. Water remains
+        // pass-through until the game has a bucket/tool interaction.
+        if (world.in_bounds(x, y, z) && id != kAir && id != kWater) {
             hit.hit = true;
             hit.x = x;
             hit.y = y;

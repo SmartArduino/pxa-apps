@@ -93,6 +93,23 @@ int main() {
         for (int cx=0;cx<2;++cx) for (int cy=0;cy<kChunksY;++cy)
             for (int cz=0;cz<2;++cz) check_chunk(cx,cy,cz);
     }
+    // Non-colliding vegetation in front of dirt is a selectable block. The
+    // DDA must return its cell/entry normal in both horizontal and down rays.
+    for (int y=0;y<4;++y) for (int z=40;z<45;++z)
+        world.set(40,y,z,kAir);
+    world.set(40,0,42,kDirt);
+    for (auto plant:{kLeaves,kBush,kFlower}) {
+        world.set(40,1,42,plant);
+        auto h=raycast(world,40.5f,3.f,42.5f,0,-1,0,5.5f);
+        assert(h.hit&&h.y==1&&h.ny==1&&world.at(h.x,h.y,h.z)==plant);
+        h=raycast(world,40.5f,1.5f,40.5f,0,0,1,5.5f);
+        assert(h.hit&&h.z==42&&h.nz==-1);
+        assert(plant==kLeaves||!world.solid(40,1,42));
+    }
+    world.set(40,1,42,kWater);
+    auto through_water=raycast(world,40.5f,3.f,42.5f,0,-1,0,5.5f);
+    assert(through_water.hit&&through_water.y==0);
+    assert(!raycast(world,-2.f,40.f,-2.f,0,0,1,5.5f).hit);
     std::printf("World bytes=%zu, chunks=%d, max terrain quads=%u; ", sizeof(World), kChunksX*kChunksY*kChunksZ, max_quads);
     std::printf("World: 32 seeds, %u rooted trees, %u terrain cache overflows; overflow coverage OK\n",trees,overflows);
 }
