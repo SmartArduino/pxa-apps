@@ -1,0 +1,602 @@
+{
+  "date": "2026-10-09",
+  "source": {
+    "system": "055d256",
+    "apps": "98c5f1c",
+    "firmware_built_from": "9d10a8f-dirty",
+    "user_preexisting_changes_preserved": true
+  },
+  "canonical": [
+    {
+      "scene": 1,
+      "version": "c",
+      "passed": true,
+      "package_sha256": "a812c09db8a767b13f13225b44371db1be9fd8cf56e883f60d107f5ed8638e43",
+      "fps": 12.586501780118226,
+      "fps_runs": [
+        12.584286404264162,
+        12.585109952330122,
+        12.590108983760397
+      ],
+      "raster_ms": 49.67338339933993,
+      "frames_bytes": {
+        "frame": 426240,
+        "scratch": 142080,
+        "mailbox": 147456,
+        "probe": 2112,
+        "peak_total": 717888
+      },
+      "steady_sram": 286264,
+      "steady_sram_peak": 290624,
+      "launch_sram_peak": 294556,
+      "steady_psram": 3738644,
+      "steady_psram_peak": 3739528,
+      "launch_psram_peak": 3969180
+    },
+    {
+      "scene": 1,
+      "version": "before",
+      "passed": true,
+      "package_sha256": "9e8a76bfdeeb1b98649106360c2363ea7a56b943d44c920b83b4172359b52a96",
+      "fps": 10.439319219576506,
+      "fps_runs": [
+        10.44795345615115,
+        10.44942066245504,
+        10.420583540123328
+      ],
+      "raster_ms": 40.98322489959839,
+      "frames_bytes": {
+        "frame": 284160,
+        "scratch": 142080,
+        "mailbox": 147456,
+        "probe": 2112,
+        "peak_total": 717888
+      },
+      "steady_sram": 286176,
+      "steady_sram_peak": 286264,
+      "launch_sram_peak": 294604,
+      "steady_psram": 3382852,
+      "steady_psram_peak": 3383456,
+      "launch_psram_peak": 3683600
+    },
+    {
+      "scene": 1,
+      "version": "after",
+      "passed": true,
+      "package_sha256": "bef54033e3e5abe4fc6ecf908de61e9a4cc363450b7ac2c917347655273d8a1a",
+      "fps": 13.900968231614364,
+      "fps_runs": [
+        13.888881874302085,
+        13.885782120464969,
+        13.928240700076039
+      ],
+      "raster_ms": 37.061009009009005,
+      "frames_bytes": {
+        "frame": 284160,
+        "scratch": 142080,
+        "mailbox": 147456,
+        "probe": 2112,
+        "peak_total": 717888
+      },
+      "steady_sram": 286176,
+      "steady_sram_peak": 286264,
+      "launch_sram_peak": 294388,
+      "steady_psram": 3129088,
+      "steady_psram_peak": 3129696,
+      "launch_psram_peak": 3430568
+    },
+    {
+      "scene": 2,
+      "version": "c",
+      "passed": true,
+      "package_sha256": "08c2fe21c0a0f94c1a4773d1e30559b7434c16e99bcf512f10fe2a431283f701",
+      "fps": 12.525773016289136,
+      "fps_runs": [
+        12.563059405981235,
+        12.538243224947609,
+        12.476016417938567
+      ],
+      "raster_ms": 47.93338247524753,
+      "frames_bytes": {
+        "frame": 426240,
+        "scratch": 142080,
+        "mailbox": 147456,
+        "probe": 2112,
+        "peak_total": 717888
+      },
+      "steady_sram": 286264,
+      "steady_sram_peak": 290624,
+      "launch_sram_peak": 294556,
+      "steady_psram": 3739036,
+      "steady_psram_peak": 3739320,
+      "launch_psram_peak": 3969912
+    },
+    {
+      "scene": 2,
+      "version": "before",
+      "passed": true,
+      "package_sha256": "0a829d5b19a7f49d2c4f87b8fed03058b416c174292960974939019a208e16df",
+      "fps": 8.913709169078807,
+      "fps_runs": [
+        8.911153664310314,
+        8.919050569615164,
+        8.910923273310944
+      ],
+      "raster_ms": 46.79202816901408,
+      "frames_bytes": {
+        "frame": 284160,
+        "scratch": 142080,
+        "mailbox": 147456,
+        "probe": 2112,
+        "peak_total": 717888
+      },
+      "steady_sram": 286176,
+      "steady_sram_peak": 286264,
+      "launch_sram_peak": 294468,
+      "steady_psram": 3382760,
+      "steady_psram_peak": 3383416,
+      "launch_psram_peak": 3683580
+    },
+    {
+      "scene": 2,
+      "version": "after",
+      "passed": true,
+      "package_sha256": "8c8553f8f998877f98e7df9e95621d2fe02d68adcb001e46b58497b4c1bce0fc",
+      "fps": 12.107138090542804,
+      "fps_runs": [
+        12.049594625278317,
+        12.119005605292573,
+        12.152814041057523
+      ],
+      "raster_ms": 40.222747565864836,
+      "frames_bytes": {
+        "frame": 284160,
+        "scratch": 142080,
+        "mailbox": 147456,
+        "probe": 2112,
+        "peak_total": 717888
+      },
+      "steady_sram": 286176,
+      "steady_sram_peak": 286264,
+      "launch_sram_peak": 294476,
+      "steady_psram": 3129100,
+      "steady_psram_peak": 3129704,
+      "launch_psram_peak": 3430580
+    }
+  ],
+  "diagnostic": {
+    "delivery-before-stages-scene2": {
+      "samples_window": 54,
+      "phases_us": {
+        "total_us": 112585.83333333333,
+        "geometry_us": 57543.833333333336,
+        "encode_us": 6414.833333333333,
+        "hud_us": 279.1111111111111,
+        "submit_us": 48249.11111111111,
+        "update_us": 0.0
+      },
+      "pipeline": {
+        "rendered": 54,
+        "visible": 54,
+        "dropped": 0,
+        "queue_mean_us": 1990.5185185185185,
+        "ready_to_display_mean_us": 38074.07407407407
+      },
+      "diagnostic_fps": 8.233734700454198,
+      "raster_us": 46525.72727272727
+    },
+    "delivery-stages-scene2": {
+      "samples_window": 78,
+      "phases_us": {
+        "total_us": 76064.1282051282,
+        "geometry_us": 28786.5,
+        "encode_us": 5518.705128205128,
+        "hud_us": 108.8076923076923,
+        "submit_us": 41545.92307692308,
+        "update_us": 0.0
+      },
+      "pipeline": {
+        "rendered": 78,
+        "visible": 78,
+        "dropped": 0,
+        "queue_mean_us": 2302.102564102564,
+        "ready_to_display_mean_us": 36679.48717948718
+      },
+      "diagnostic_fps": 12.517159460976066,
+      "raster_us": 39562.94
+    }
+  },
+  "c_diagnostic": {
+    "delivery-c-scene1": {
+      "samples": 9,
+      "fields": {
+        "update_ema_us": {
+          "median_us": 171,
+          "min_us": 138,
+          "max_us": 331
+        },
+        "project_us": {
+          "median_us": 14493,
+          "min_us": 11387,
+          "max_us": 72721
+        },
+        "sort_us": {
+          "median_us": 824,
+          "min_us": 614,
+          "max_us": 1554
+        },
+        "build_us": {
+          "median_us": 2380,
+          "min_us": 1970,
+          "max_us": 9231
+        },
+        "submit_us": {
+          "median_us": 50604,
+          "min_us": 33218,
+          "max_us": 73591
+        },
+        "guest_sample_us": {
+          "median_us": 82189,
+          "min_us": 48254,
+          "max_us": 150994
+        },
+        "wait_ema_us": {
+          "median_us": 0,
+          "min_us": 0,
+          "max_us": 0
+        }
+      }
+    },
+    "delivery-c-scene2": {
+      "samples": 9,
+      "fields": {
+        "update_ema_us": {
+          "median_us": 174,
+          "min_us": 156,
+          "max_us": 310
+        },
+        "project_us": {
+          "median_us": 16461,
+          "min_us": 15030,
+          "max_us": 90085
+        },
+        "sort_us": {
+          "median_us": 1020,
+          "min_us": 707,
+          "max_us": 1983
+        },
+        "build_us": {
+          "median_us": 2986,
+          "min_us": 2584,
+          "max_us": 4331
+        },
+        "submit_us": {
+          "median_us": 48611,
+          "min_us": 34014,
+          "max_us": 77253
+        },
+        "guest_sample_us": {
+          "median_us": 83445,
+          "min_us": 53578,
+          "max_us": 145698
+        },
+        "wait_ema_us": {
+          "median_us": 0,
+          "min_us": 0,
+          "max_us": 0
+        }
+      }
+    }
+  },
+  "delivery-before-production-device": {
+    "passed": true,
+    "runs": 3,
+    "package_sha256": "7cf8b803c848e98dd9dc0e55e658f7df26f5db301f245c229092cba2efb665cf",
+    "launch_heap": [
+      {
+        "sram_peak_used": 294468,
+        "psram_peak_used": 3778044
+      },
+      {
+        "sram_peak_used": 294388,
+        "psram_peak_used": 3687608
+      },
+      {
+        "sram_peak_used": 294388,
+        "psram_peak_used": 3782328
+      }
+    ],
+    "steady_heap": [
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286264,
+        "psram_used": 3481704,
+        "psram_peak_used": 3482116,
+        "sram_peak_delta": 88,
+        "psram_peak_delta": 2720
+      },
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286264,
+        "psram_used": 3481516,
+        "psram_peak_used": 3482120,
+        "sram_peak_delta": 88,
+        "psram_peak_delta": 2720
+      },
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286264,
+        "psram_used": 3481452,
+        "psram_peak_used": 3482068,
+        "sram_peak_delta": 88,
+        "psram_peak_delta": 2732
+      }
+    ]
+  },
+  "delivery-repeat20-device": {
+    "passed": true,
+    "runs": 20,
+    "package_sha256": "7915f779fb6c97bf47d861305793b6e66e02717fdea77a6acdf2a9f2c952db50",
+    "launch_heap": [
+      {
+        "sram_peak_used": 294468,
+        "psram_peak_used": 3528524
+      },
+      {
+        "sram_peak_used": 294388,
+        "psram_peak_used": 3528516
+      },
+      {
+        "sram_peak_used": 294468,
+        "psram_peak_used": 3527900
+      },
+      {
+        "sram_peak_used": 294388,
+        "psram_peak_used": 3524200
+      },
+      {
+        "sram_peak_used": 294388,
+        "psram_peak_used": 3528556
+      },
+      {
+        "sram_peak_used": 294388,
+        "psram_peak_used": 3527864
+      },
+      {
+        "sram_peak_used": 294388,
+        "psram_peak_used": 3527844
+      },
+      {
+        "sram_peak_used": 294388,
+        "psram_peak_used": 3527852
+      },
+      {
+        "sram_peak_used": 294468,
+        "psram_peak_used": 3523520
+      },
+      {
+        "sram_peak_used": 294468,
+        "psram_peak_used": 3527876
+      },
+      {
+        "sram_peak_used": 294468,
+        "psram_peak_used": 3523580
+      },
+      {
+        "sram_peak_used": 294468,
+        "psram_peak_used": 3527844
+      },
+      {
+        "sram_peak_used": 294388,
+        "psram_peak_used": 3527848
+      },
+      {
+        "sram_peak_used": 294468,
+        "psram_peak_used": 3523492
+      },
+      {
+        "sram_peak_used": 294388,
+        "psram_peak_used": 3527868
+      },
+      {
+        "sram_peak_used": 294388,
+        "psram_peak_used": 3527876
+      },
+      {
+        "sram_peak_used": 294468,
+        "psram_peak_used": 3527868
+      },
+      {
+        "sram_peak_used": 294468,
+        "psram_peak_used": 3523508
+      },
+      {
+        "sram_peak_used": 294468,
+        "psram_peak_used": 3523524
+      },
+      {
+        "sram_peak_used": 294468,
+        "psram_peak_used": 3527856
+      }
+    ],
+    "steady_heap": [
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286264,
+        "psram_used": 3227644,
+        "psram_peak_used": 3228260,
+        "sram_peak_delta": 88,
+        "psram_peak_delta": 2732
+      },
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286176,
+        "psram_used": 3227620,
+        "psram_peak_used": 3227772,
+        "sram_peak_delta": 0,
+        "psram_peak_delta": 2268
+      },
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286176,
+        "psram_used": 3227676,
+        "psram_peak_used": 3227788,
+        "sram_peak_delta": 0,
+        "psram_peak_delta": 2228
+      },
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286176,
+        "psram_used": 3227652,
+        "psram_peak_used": 3227772,
+        "sram_peak_delta": 0,
+        "psram_peak_delta": 2236
+      },
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286176,
+        "psram_used": 3227660,
+        "psram_peak_used": 3227780,
+        "sram_peak_delta": 0,
+        "psram_peak_delta": 2236
+      },
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286264,
+        "psram_used": 3227600,
+        "psram_peak_used": 3228196,
+        "sram_peak_delta": 88,
+        "psram_peak_delta": 2712
+      },
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286264,
+        "psram_used": 3227620,
+        "psram_peak_used": 3228216,
+        "sram_peak_delta": 88,
+        "psram_peak_delta": 2712
+      },
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286264,
+        "psram_used": 3227608,
+        "psram_peak_used": 3228224,
+        "sram_peak_delta": 88,
+        "psram_peak_delta": 2732
+      },
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286264,
+        "psram_used": 3227656,
+        "psram_peak_used": 3228260,
+        "sram_peak_delta": 88,
+        "psram_peak_delta": 2720
+      },
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286264,
+        "psram_used": 3227636,
+        "psram_peak_used": 3228232,
+        "sram_peak_delta": 88,
+        "psram_peak_delta": 2712
+      },
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286176,
+        "psram_used": 3227616,
+        "psram_peak_used": 3227724,
+        "sram_peak_delta": 0,
+        "psram_peak_delta": 2224
+      },
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286176,
+        "psram_used": 3227604,
+        "psram_peak_used": 3227712,
+        "sram_peak_delta": 0,
+        "psram_peak_delta": 2224
+      },
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286176,
+        "psram_used": 3227596,
+        "psram_peak_used": 3227744,
+        "sram_peak_delta": 0,
+        "psram_peak_delta": 2264
+      },
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286176,
+        "psram_used": 3227612,
+        "psram_peak_used": 3227720,
+        "sram_peak_delta": 0,
+        "psram_peak_delta": 2224
+      },
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286264,
+        "psram_used": 3227620,
+        "psram_peak_used": 3228232,
+        "sram_peak_delta": 88,
+        "psram_peak_delta": 2728
+      },
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286264,
+        "psram_used": 3227640,
+        "psram_peak_used": 3228236,
+        "sram_peak_delta": 88,
+        "psram_peak_delta": 2712
+      },
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286264,
+        "psram_used": 3227628,
+        "psram_peak_used": 3228224,
+        "sram_peak_delta": 88,
+        "psram_peak_delta": 2712
+      },
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286264,
+        "psram_used": 3227624,
+        "psram_peak_used": 3228244,
+        "sram_peak_delta": 88,
+        "psram_peak_delta": 2736
+      },
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286176,
+        "psram_used": 3227620,
+        "psram_peak_used": 3227732,
+        "sram_peak_delta": 0,
+        "psram_peak_delta": 2228
+      },
+      {
+        "sram_used": 286176,
+        "sram_peak_used": 286176,
+        "psram_used": 3227608,
+        "psram_peak_used": 3227752,
+        "sram_peak_delta": 0,
+        "psram_peak_delta": 2260
+      }
+    ]
+  },
+  "validation": {
+    "delivery-functional-real-device": true,
+    "simulator-delivery-check": true,
+    "delivery-budget512-device": true,
+    "delivery-final-device": true
+  },
+  "sdk_matrix": {
+    "passed": true,
+    "builds": 60,
+    "components": 17,
+    "targets": [
+      "esp32s3",
+      "esp32s31",
+      "simulator"
+    ],
+    "final_game_refresh": true
+  }
+}
