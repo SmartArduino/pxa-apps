@@ -6,6 +6,7 @@
 #include <pxa/app.hpp>
 #include <pxa/game3d.hpp>
 #include <pxa/game_utils.hpp>
+#include <pxa/game_pacing.hpp>
 
 #include <algorithm>
 #include <array>
@@ -283,11 +284,9 @@ struct VoxelCraft {
     bool look_active = false;
     int look_pointer = -1;
     int mine_pointer = -1, up_pointer = -1, down_pointer = -1;
-    float look_origin_x = 0.0f, look_origin_y = 0.0f;
-    bool look_dragged = false;
     float look_last_x = 0.0f;
     float look_last_y = 0.0f;
-    std::uint64_t last_tap_us = 0;
+    std::uint64_t last_draw_tick_us = 0;
     float last_tap_x = 0.0f;
     float last_tap_y = 0.0f;
     bool mining = false;
@@ -801,7 +800,7 @@ struct VoxelCraft {
         stick_active = look_active = mining = up_held = down_held = false;
         stick_pointer = look_pointer = mine_pointer = up_pointer = down_pointer = -1;
         move_right = move_forward = 0.0f;
-        last_tap_us = 0;
+        last_draw_tick_us = 0;
         hud_window_us = fps_frames = fps_window_us = fps_window_frames = 0;
     }
 
@@ -887,6 +886,16 @@ struct VoxelCraft {
     void on_frame(pxa::Context& context, pxa::game::FrameTick tick) {
         if (!renderer || !projector) return;
         if(screen!=voxel::Screen::game){if(ui_dirty)draw_menu(*renderer);return;}
+        // Avoid competing with the rasterizer for external memory. Scanout
+        // still overlaps the next build; simulation/input keep their tick.
+        if (auto pipeline = renderer->telemetry();
+            pipeline && !pxa::game::can_build_frame(*pipeline, 1)) return;
+        // Skipped render ticks still count toward displayed pacing and the
+        // adaptive view budget.
+        if (last_draw_tick_us && tick.timestamp_us >= last_draw_tick_us)
+            tick.frame_delta_us = static_cast<std::uint32_t>(std::min(
+                tick.timestamp_us - last_draw_tick_us, std::uint64_t(UINT32_MAX)));
+        last_draw_tick_us = tick.timestamp_us;
         const auto width = renderer->info().render_width;
         const auto height = renderer->info().render_height;
         if (width < 32 || height < 32) return;

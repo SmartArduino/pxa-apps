@@ -26,7 +26,7 @@
     void cancel_controls()noexcept {
         stick_active=look_active=mining=up_held=down_held=false;
         stick_pointer=look_pointer=mine_pointer=up_pointer=down_pointer=-1;
-        move_right=move_forward=0;mine_timer=0;mine_long_pressed=false;last_tap_us=0;ui_pointer=ui_pressed=-1;
+        move_right=move_forward=0;mine_timer=0;mine_long_pressed=false;last_draw_tick_us=0;ui_pointer=ui_pressed=-1;
     }
     void show(voxel::Screen next)noexcept {
         cancel_controls();screen=next;ui_dirty=true;menu_hit_count=0;ui_status="";

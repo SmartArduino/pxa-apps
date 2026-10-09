@@ -5,9 +5,18 @@
 static std::array<std::uint16_t,296*240> pixels{},depth{};
 static std::array<std::uint16_t,16*256> palette{};
 static std::array<std::uint8_t,220*220> texture{};
+static bool pending_frame = false;
+static unsigned draw_submissions = 0;
 extern "C" std::int32_t pxa_submit(const std::uint8_t*,std::uint32_t){return 0;}
 extern "C" std::int32_t pxa_io(std::uint64_t handle,std::uint32_t opcode,std::uint8_t* data,std::uint32_t size){
-    assert(handle==77&&opcode==0x101);
+    assert(handle==77);
+    if (opcode==0x102) {
+        assert(size==104);std::fill_n(data,size,0);
+        pxa::wire::put64(reinterpret_cast<std::byte*>(data),1);
+        pxa::wire::put64(reinterpret_cast<std::byte*>(data)+88,pending_frame?0:1);
+        return size;
+    }
+    assert(opcode==0x101);++draw_submissions;
     pxa_raster_target_t target{};target.pixels=pixels.data();target.depth_pixels=depth.data();
     target.width=target.stride_pixels=target.depth_stride_pixels=296;target.height=240;target.scratch_mode=PXA_RASTER_SCRATCH_DEPTH16;
     pxa_raster_resources_t resources{};resources.capabilities=PXA_RASTER_CAP_KNOWN_MASK;
@@ -62,5 +71,19 @@ int main(){
         assert(pixels[120*296+148]!=0); // cleared visible frame
         assert(app.menu_hit_count<=app.menu_hits.size());
     }
+    app.renderer.emplace(transport,77,info);
+    auto projection=pxa::game3d::Projector::create(296,240,1.15f,.25f,64.f);
+    assert(projection);app.projector=*projection;app.settings.auto_distance=false;
+    app.show(game);app.hud_window_us=0;
+    const auto before=draw_submissions;
+    pending_frame=true;app.on_frame(ctx,{100000,16000,16000,1});
+    assert(draw_submissions==before&&app.frames==0);
+    pending_frame=false;app.on_frame(ctx,{116000,16000,16000,1});
+    assert(draw_submissions==before+1&&app.frames==1);
+    pending_frame=true;app.on_frame(ctx,{132000,16000,16000,1});
+    assert(draw_submissions==before+1&&app.frames==1);
+    pending_frame=false;app.on_frame(ctx,{164000,16000,16000,1});
+    assert(app.frames==2&&app.hud_window_us==64000); // Includes the skipped interval.
+    app.renderer.reset();
     std::puts("Session: title/pause/navigation, grounded jump, inventory, corrupt headers, transactional mesh staging and all menu commands validated/rasterized OK");
 }

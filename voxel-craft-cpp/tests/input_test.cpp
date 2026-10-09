@@ -19,7 +19,7 @@ int main() {
     assert(game.camera.yaw > 0 && game.move_forward == movement);
     game.on_pointer(pointer(2, 2, 225, 100));
     assert(!game.look_active && game.stick_active && game.move_forward > 0);
-    assert(!game.flying && game.last_tap_us == 0); // Drag cannot become a double tap.
+    assert(!game.flying); // Drag cannot enable flight.
     game.on_pointer(pointer(1, 3, 60, 60));
     assert(!game.stick_active && game.move_forward == 0 && game.move_right == 0);
     game.hotbar = 3;
