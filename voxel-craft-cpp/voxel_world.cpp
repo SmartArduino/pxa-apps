@@ -1,5 +1,6 @@
 // Block table, value-noise terrain generation and voxel ray casting.
 #include "voxel_world.hpp"
+#include "../common/voxel_benchmark.h"
 
 #include <cmath>
 #include <cstring>
@@ -93,6 +94,14 @@ const int kHotbarCount = static_cast<int>(sizeof(kHotbarBlocks) /
 // another 64 KiB ESP instruction-map page for an infrequently used function.
 [[gnu::cold]] void World::generate(std::uint32_t seed) noexcept {
     blocks_.fill(kAir);
+    for (auto& mesh : meshes_) { mesh.built = false; mesh.overflow = false; mesh.count = 0; }
+#if VOXEL_BENCH_SCENE
+    for (int y=0; y<kWorldY; ++y) for (int z=0; z<kWorldZ; ++z)
+        for (int x=0; x<kWorldX; ++x)
+            blocks_[static_cast<std::size_t>((y*kWorldZ+z)*kWorldX+x)] = voxel_benchmark_block(x,y,z);
+    (void)seed;
+    return;
+#endif
     for (int x = 0; x < kWorldX; ++x) {
         for (int z = 0; z < kWorldZ; ++z) {
             const float fx = static_cast<float>(x);

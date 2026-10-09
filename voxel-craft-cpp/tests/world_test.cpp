@@ -5,26 +5,27 @@
 
 using namespace voxel;
 static World world;
+static constexpr int N = kChunkSize;
 static constexpr int directions[6][3] = {
     {0,1,0},{1,0,0},{0,0,-1},{0,-1,0},{-1,0,0},{0,0,1}};
 
 // Expand merged faces and compare every cell with independent voxel adjacency.
 static void check_chunk(int cx, int cy, int cz) {
-    std::array<unsigned char, 6 * 8 * 8 * 8> faces{};
+    std::array<unsigned char, 6 * N * N * N> faces{};
     auto visit = [&](const MeshQuad& q) noexcept {
-        assert(q.face < 6 && q.plane < 8 && q.width && q.height);
-        assert(q.u + q.width <= 8 && q.v + q.height <= 8 && q.slot < 45);
+        assert(q.face < 6 && q.plane < N && q.width && q.height);
+        assert(q.u + q.width <= N && q.v + q.height <= N && q.slot < 45);
         for (int v = q.v; v < q.v + q.height; ++v)
             for (int u = q.u; u < q.u + q.width; ++u) {
-                auto& cell = faces[((q.face * 8 + q.plane) * 8 + v) * 8 + u];
+                auto& cell = faces[((q.face * N + q.plane) * N + v) * N + u];
                 assert(cell == 0); cell = q.slot + 1 + (q.cutout ? 128 : 0);
             }
         return true;
     };
     assert(world.visit_chunk(cx, cy, cz, visit));
-    for (int f = 0; f < 6; ++f) for (int p = 0; p < 8; ++p)
-        for (int v = 0; v < 8; ++v) for (int u = 0; u < 8; ++u) {
-            int x=cx*8, y=cy*8, z=cz*8;
+    for (int f = 0; f < 6; ++f) for (int p = 0; p < N; ++p)
+        for (int v = 0; v < N; ++v) for (int u = 0; u < N; ++u) {
+            int x=cx*N, y=cy*N, z=cz*N;
             if (f == 0 || f == 3) {y+=p; x+=u; z+=v;}
             else if (f == 1 || f == 4) {x+=p; z+=u; y+=v;}
             else {z+=p; x+=u; y+=v;}
@@ -34,7 +35,7 @@ static void check_chunk(int cx, int cy, int cz) {
             const bool visible=id!=kAir && (info.solid || info.cutout) &&
                 !block_info(neighbor).opaque && !(neighbor==id && (id==kWater || info.cutout));
             const unsigned expected=visible ? 1+info.texture[f==0?0:f==3?2:1]+(info.cutout?128:0) : 0;
-            assert(faces[((f*8+p)*8+v)*8+u] == expected);
+            assert(faces[((f*N+p)*N+v)*N+u] == expected);
         }
 }
 
@@ -42,7 +43,7 @@ int main() {
     for (int block=1; block<=15; ++block)
         for (int face=0; face<3; ++face)
             assert(block_info(block).texture[face] == (block-1)*3+face);
-    unsigned trees=0, overflows=0;
+    unsigned trees=0, overflows=0, max_quads=0;
     for (unsigned i=0; i<32; ++i) {
         world.generate(i==0 ? 0x5ae1 : i*7919);
         for (int x=0; x<kWorldX; ++x) for (int z=0; z<kWorldZ; ++z)
@@ -58,12 +59,16 @@ int main() {
         for (int cx=0; cx<kChunksX; ++cx) for (int cy=0; cy<kChunksY; ++cy)
             for (int cz=0; cz<kChunksZ; ++cz) {
                 overflows += world.chunk_mesh(cx,cy,cz).overflow;
+                unsigned quads=0;
+                auto count=[&](const MeshQuad&) noexcept {++quads; return true;};
+                assert(world.visit_chunk(cx,cy,cz,count));
+                if (quads>max_quads) max_quads=quads;
                 check_chunk(cx,cy,cz);
             }
     }
     // User edits can exceed the fixed cache. Every face still has to be visited.
-    for (int x=0; x<16; ++x) for (int y=0; y<16; ++y) for (int z=0; z<16; ++z)
-        world.set(x,y,z, x<8 && y<8 && z<8 && ((x+y+z)&1) ? kStone : kAir);
+    for (int x=0; x<N*2; ++x) for (int y=0; y<N*2; ++y) for (int z=0; z<N*2; ++z)
+        world.set(x,y,z, x<N && y<N && z<N && ((x+y+z)&1) ? kStone : kAir);
     assert(world.chunk_mesh(0,0,0).overflow);
     check_chunk(0,0,0);
     unsigned paged=0, streamed=0;
@@ -81,5 +86,13 @@ int main() {
     assert(!world.visit_chunk(0,0,0,bounded) && count==7);
     world.set(0,0,0,kGrass);
     check_chunk(0,0,0); // Dirty overflow cache rebuild after editing.
+    for (const auto& xyz : std::array<std::array<int,3>,7>{{
+        {N-1,7,7},{N,7,7},{7,N-1,7},{7,N,7},
+        {7,7,N-1},{7,7,N},{7,kWorldY-1,7}}}) {
+        world.set(xyz[0],xyz[1],xyz[2],kWood);
+        for (int cx=0;cx<2;++cx) for (int cy=0;cy<kChunksY;++cy)
+            for (int cz=0;cz<2;++cz) check_chunk(cx,cy,cz);
+    }
+    std::printf("World bytes=%zu, chunks=%d, max terrain quads=%u; ", sizeof(World), kChunksX*kChunksY*kChunksZ, max_quads);
     std::printf("World: 32 seeds, %u rooted trees, %u terrain cache overflows; overflow coverage OK\n",trees,overflows);
 }

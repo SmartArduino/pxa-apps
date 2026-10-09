@@ -54,7 +54,7 @@ extern const std::uint8_t kHotbarBlocks[];
 extern const int kHotbarCount;
 
 /* One merged, coplanar, single-material rectangle of faces. Greedy meshing
- * turns a flat 8x8 chunk face into one quad instead of 64. */
+ * turns a flat chunk face into one quad instead of one per voxel. */
 struct MeshQuad {
     std::uint8_t face = 0;     /* 0 +Y, 1 +X, 2 -Z, 3 -Y, 4 -X, 5 +Z */
     std::uint8_t plane = 0;    /* coordinate along the face normal */
@@ -66,12 +66,21 @@ struct MeshQuad {
     std::uint8_t cutout = 0;
 };
 
-constexpr int kChunkSize = 8;
+#ifndef VOXEL_CHUNK_SIZE
+#define VOXEL_CHUNK_SIZE 8
+#endif
+#ifndef VOXEL_CHUNK_QUADS
+#define VOXEL_CHUNK_QUADS 192
+#endif
+constexpr int kChunkSize = VOXEL_CHUNK_SIZE;
+static_assert(kChunkSize == 8 || kChunkSize == 16);
 constexpr int kChunksX = (kWorldX + kChunkSize - 1) / kChunkSize;
 constexpr int kChunksY = (kWorldY + kChunkSize - 1) / kChunkSize;
 constexpr int kChunksZ = (kWorldZ + kChunkSize - 1) / kChunkSize;
-/* Per-chunk quad budget: 192 chunks * 8 bytes must fit the Guest heap. */
-constexpr int kMaxQuadsPerChunk = 384;
+/* Retain eight-block chunks for culling and bounded projected rectangles.
+ * 192 entries cover all 32 regression seeds (maximum 173), using half the
+ * former cache storage. Exceptional edited chunks stream overflow pages. */
+constexpr int kMaxQuadsPerChunk = VOXEL_CHUNK_QUADS;
 
 struct ChunkMesh {
     std::array<MeshQuad, kMaxQuadsPerChunk> quads{};

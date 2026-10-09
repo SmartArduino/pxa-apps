@@ -1,4 +1,5 @@
 #include "game.h"
+#include "../common/voxel_benchmark.h"
 
 #include <stddef.h>
 
@@ -510,6 +511,13 @@ static void generate_chunk(chunk_t *chunk, int cx, int cz) {
     for (index = 0; index < CHUNK_VOLUME; ++index) {
         chunk->blocks[index] = BLOCK_AIR;
     }
+#if VOXEL_BENCH_SCENE
+    for (int y=0; y<CHUNK_HEIGHT; ++y) for (lz=0; lz<CHUNK_SIZE; ++lz)
+        for (lx=0; lx<CHUNK_SIZE; ++lx)
+            chunk->blocks[(y<<8)|(lz<<CHUNK_BITS)|lx] = voxel_benchmark_block(base_x+lx,y,base_z+lz);
+    touch_chunk_revision(chunk);
+    return;
+#endif
     for (lx = 0; lx < CHUNK_SIZE; ++lx) {
         for (lz = 0; lz < CHUNK_SIZE; ++lz) {
             const int x = base_x + lx;

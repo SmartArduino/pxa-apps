@@ -1,4 +1,5 @@
 #include "voxel_raster.h"
+#include "../common/voxel_benchmark.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -26,7 +27,7 @@
 #ifndef VOXEL_FONT_AA
 #define VOXEL_FONT_AA 1
 #endif
-#define VOXEL_RASTER_NEAR 0.08F
+#define VOXEL_RASTER_NEAR (VOXEL_BENCH_SCENE ? VOXEL_BENCH_NEAR : 0.08F)
 #define VOXEL_RASTER_TAN_HALF 0.70F
 #define VOXEL_RASTER_PARTICLE_LIMIT 32u
 /* Terrain prefers the Host depth buffer over painter polygons when the Host
@@ -581,6 +582,9 @@ static void build_camera(raster_camera_t *camera, const player_t *player,
      * a horizon the controller pulled in still fades instead of cutting the
      * world off at a visible edge. */
     camera->fog_start = camera->fog_end * 0.45F;
+#if VOXEL_BENCH_SCENE
+    camera->fog_end=VOXEL_BENCH_FAR; camera->fog_start=VOXEL_BENCH_FAR;
+#endif
 }
 
 static int chunk_visible(const raster_camera_t *camera, const chunk_t *chunk) {
@@ -866,6 +870,7 @@ static void finish_projected_primitive(
         if (fog > 1.0F) fog = 1.0F;
         light = (uint8_t)((float)light * (1.0F - fog * 0.15F));
     }
+    if (VOXEL_BENCH_SCENE) light = 255;
     for (index = 0; index < 4; ++index) {
         projected->vertices[index] = vertices[indices[index]];
         projected->vertices[index].light = light;
@@ -908,7 +913,7 @@ static void finish_projected_primitive(
         /* Faces below roughly 4x4 screen pixels skip the texture and use the
          * block colour; the texel detail is invisible at that size. */
         if ((g_raster_capabilities & PXA_RASTER_CAP_COVERAGE_MASK) == 0 &&
-            !projected->transparent_index0 && !projected->blend_75 &&
+            !VOXEL_BENCH_SCENE && !projected->transparent_index0 && !projected->blend_75 &&
             (max_x - min_x < 4 * 16 || max_y - min_y < 4 * 16)) {
             projected->textured = 0;
             return;
@@ -920,7 +925,7 @@ static void finish_projected_primitive(
             const uint8_t span = quad->u_length > quad->v_length
                                      ? quad->u_length
                                      : quad->v_length;
-            if (min_depth != 0 &&
+            if (!VOXEL_BENCH_SCENE && min_depth != 0 &&
                 (uint32_t)(max_depth - min_depth) * 8u * span <= min_depth)
                 projected->affine = 1;
         }
@@ -1057,10 +1062,12 @@ static uint8_t project_quad_raw(const raster_camera_t *camera,
             input[0].v_q4 = input[1].v_q4 = quad->v_length * 256.0F;
             input[2].v_q4 = input[3].v_q4 = 0.0F;
         } else {
-            input[0].u_q4 = input[3].u_q4 = 0.0F;
-            input[1].u_q4 = input[2].u_q4 = quad->u_length * 256.0F;
-            input[0].v_q4 = input[1].v_q4 = quad->v_length * 256.0F;
-            input[2].v_q4 = input[3].v_q4 = 0.0F;
+            // Z faces use corner 1 along world Y and corner 3 along world X,
+            // just as X faces use corner 1 along Y and corner 3 along Z.
+            input[0].u_q4 = input[1].u_q4 = 0.0F;
+            input[2].u_q4 = input[3].u_q4 = quad->u_length * 256.0F;
+            input[0].v_q4 = input[3].v_q4 = quad->v_length * 256.0F;
+            input[1].v_q4 = input[2].v_q4 = 0.0F;
         }
     }
     for (plane = 0; outside_any != 0 && plane < CLIP_PLANE_COUNT; ++plane) {
@@ -3113,7 +3120,9 @@ int32_t voxel_raster_render(uint64_t surface_handle, uint64_t frame_id,
      * the reset even on frames without any cut-out face. */
     if (depth_terrain)
         list.required_capabilities |= PXA_RASTER_CAP_DEPTH_CUTOUT;
-    {
+    if (VOXEL_BENCH_SCENE) {
+        (void)pxa_raster_clear(&list, UINT16_C(0x867d));
+    } else {
         /* A submerged camera sees a deep water backdrop instead of sky. */
         const int submerged =
             game_block(rc_floor_int(player->x),
@@ -3274,12 +3283,12 @@ int32_t voxel_raster_render(uint64_t surface_handle, uint64_t frame_id,
             g_raster_capabilities, 0, 0, camera.width, camera.height, 0, 0, 1,
             1, VOXEL_RASTER_UNDERWATER_TINT);
     }
-    if ((g_raster_capabilities & PXA_RASTER_CAP_FLAT_QUAD) != 0 &&
+    if (!VOXEL_BENCH_SCENE && (g_raster_capabilities & PXA_RASTER_CAP_FLAT_QUAD) != 0 &&
         menu == NULL)
         append_block_outline(&list, &camera, target);
     if (menu != NULL)
         append_menu(&list, menu, camera.width, camera.height);
-    else
+    else if (!VOXEL_BENCH_SCENE)
         append_hud(&list, hud, camera.width, camera.height);
     g_stats.draw_commands = list.command_count;
     g_stats.draw_list_bytes = list.length;

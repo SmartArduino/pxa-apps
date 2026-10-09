@@ -38,4 +38,43 @@ int main() {
     game.on_pointer(pointer(6, 0, 30, 60));
     game.on_background(context);
     assert(!game.stick_active && !game.look_active && !game.up_held && !game.down_held);
+
+    // Partial stick deflection must allow precise movement; looking up/down
+    // must not alter ground speed, and a diagonal must not move faster.
+    pxa::Transport transport;
+    transport.phase(pxa::Phase::event);
+    game.renderer.emplace(transport, 77, 0u);
+    for (int x = 0; x < voxel::kWorldX; ++x)
+        for (int z = 0; z < voxel::kWorldZ; ++z)
+            game.world.set(x, 0, z, voxel::kStone);
+    for (float pitch : {0.0f, 1.2f}) {
+        for (float yaw : {0.0f, 0.7f}) {
+            for (float stick : {0.25f, 1.0f}) {
+                game.camera = {20.5f, 1.05f, 20.5f, yaw, pitch};
+                game.move_forward = stick;
+                game.move_right = 0;
+                game.velocity_y = 0;
+                for (int i = 0; i < 60; ++i) game.on_update(context, 16000);
+                const float dx = game.camera.x - 20.5f, dz = game.camera.z - 20.5f;
+                assert(std::fabs(std::sqrt(dx * dx + dz * dz) - 4.4f * .96f * stick) < .002f);
+                assert(game.on_ground && !game.collides(game.camera.x, game.camera.y, game.camera.z));
+            }
+        }
+    }
+    game.camera = {20.5f, 1.05f, 20.5f};
+    game.move_forward = game.move_right = 1;
+    for (int i = 0; i < 60; ++i) game.on_update(context, 16000);
+    const float dx = game.camera.x - 20.5f, dz = game.camera.z - 20.5f;
+    assert(std::fabs(std::sqrt(dx * dx + dz * dz) - 4.4f * .96f) < .002f);
+    // A wall remains solid throughout repeated updates; removing its blocks
+    // permits movement immediately, independently of render mesh rebuilding.
+    for (int y = 1; y <= 3; ++y) game.world.set(20, y, 24, voxel::kStone);
+    game.camera = {20.5f, 1.05f, 20.5f};
+    game.move_right = 0;
+    for (int i = 0; i < 60; ++i) game.on_update(context, 16000);
+    assert(game.camera.z < 23.7f && game.camera.z > 23.5f);
+    for (int y = 1; y <= 3; ++y) game.world.set(20, y, 24, voxel::kAir);
+    for (int i = 0; i < 30; ++i) game.on_update(context, 16000);
+    assert(game.camera.z > 25);
+    game.renderer.reset();
 }

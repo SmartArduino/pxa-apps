@@ -5,6 +5,7 @@
 // camera and HUD; simulation catch-up remains bounded independently of FPS.
 #include <pxa/app.hpp>
 #include <pxa/game3d.hpp>
+#include <pxa/game_utils.hpp>
 
 #include <algorithm>
 #include <array>
@@ -18,8 +19,26 @@
 #include <string>
 
 #include "voxel_mesher.hpp"
+#include "../common/voxel_benchmark.h"
 #include "voxel_render.hpp"
 #include "voxel_world.hpp"
+
+#ifndef VOXEL_BENCH_DISTANCE
+#define VOXEL_BENCH_DISTANCE 0
+#endif
+#ifndef VOXEL_CHEAP_PATHS
+#define VOXEL_CHEAP_PATHS 0
+#endif
+#ifndef VOXEL_BENCH_CHEAP
+#define VOXEL_BENCH_CHEAP 0
+#endif
+#ifndef VOXEL_VALIDATE
+#define VOXEL_VALIDATE 0
+#endif
+#ifndef VOXEL_DRAW_BUDGET
+#define VOXEL_DRAW_BUDGET 40000
+#endif
+static_assert(VOXEL_DRAW_BUDGET >= 40 && VOXEL_DRAW_BUDGET <= 44000);
 
 namespace {
 
@@ -35,6 +54,9 @@ constexpr float kEyeHeight = 1.55f;
 constexpr float kReach = 5.5f;
 
 struct VoxelCraft {
+    // 10 Hz rendering needs six 16 ms simulation steps. The former four-step
+    // budget discarded movement and gravity time on every slow frame.
+    static constexpr pxa::game::LoopOptions loop_options{.maximum_updates = 8};
     pxa::game::DrawBuffer<49152> commands;
     std::optional<pxa::game::Renderer> renderer;
     std::optional<pxa::game3d::Projector> projector;
@@ -45,11 +67,18 @@ struct VoxelCraft {
     bool flying = false;
     bool on_ground = false;
     int hotbar = 0;
+#if VOXEL_VALIDATE
+    std::uint32_t edit_count = 0, last_edit = 0;
+    void record_edit(int x, int y, int z, unsigned block, unsigned kind) noexcept {
+        last_edit = unsigned(x) | (unsigned(y) << 6) | (unsigned(z) << 11) |
+                    (block << 17) | (kind << 22);
+        ++edit_count;
+    }
+#endif
 
     static constexpr int kMaxParticles = 64;
-    std::array<voxel::Particle, kMaxParticles> particles{};
+    pxa::game::RecyclingPool<voxel::Particle, kMaxParticles> particles;
     std::uint32_t rng = 0x2545f491u;
-    std::uint32_t particle_cursor = 0;
 
     std::uint32_t next_random() noexcept {
         rng ^= rng << 13;
@@ -82,8 +111,7 @@ struct VoxelCraft {
     void spawn_debris(int x, int y, int z, std::uint8_t block) noexcept {
         const std::uint16_t color = block_color(block);
         for (int index = 0; index < 10; ++index) {
-            auto& particle = particles[particle_cursor % kMaxParticles];
-            particle_cursor = (particle_cursor + 1) % kMaxParticles;
+            auto& particle = particles.acquire();
             particle.x = static_cast<float>(x) + 0.15f + random_unit() * 0.7f;
             particle.y = static_cast<float>(y) + 0.15f + random_unit() * 0.7f;
             particle.z = static_cast<float>(z) + 0.15f + random_unit() * 0.7f;
@@ -105,6 +133,10 @@ struct VoxelCraft {
     std::uint32_t fps_frames = 0;
 
     voxel::HudLayout hud;
+
+#if VOXEL_PROFILE
+    pxa::game::StageStatistics<6> stage_stats;
+#endif
 
     /* ---- movement ------------------------------------------------------ */
 
@@ -188,6 +220,9 @@ struct VoxelCraft {
         if (world.at(hit.x, hit.y, hit.z) == voxel::kBedrock) return;
         const std::uint8_t removed = world.at(hit.x, hit.y, hit.z);
         world.set(hit.x, hit.y, hit.z, voxel::kAir);
+#if VOXEL_VALIDATE
+        record_edit(hit.x, hit.y, hit.z, removed, 1);
+#endif
         spawn_debris(hit.x, hit.y, hit.z, removed);
     }
 
@@ -211,6 +246,9 @@ struct VoxelCraft {
                               fy < camera.y + kPlayerHeight;
         if (overlaps) return;
         world.set(x, y, z, selected_block());
+#if VOXEL_VALIDATE
+        record_edit(x, y, z, selected_block(), 2);
+#endif
         spawn_debris(x, y, z, selected_block());
     }
 
@@ -578,6 +616,9 @@ struct VoxelCraft {
         options.width = width;
         options.height = height;
         options.scratch = pxa::game::Scratch::depth16;
+        // All visible content, including the HUD, is drawn into this surface.
+        // The input-only UI tree still lets the Host fall back for overlays.
+        options.direct_scanout = true;
         /* Render scaling needs the automatic target (width/height zero plus
          * RenderOptions::scale). That path does not come up on this host yet,
          * so render at native size and let the quality ladder manage cost. */
@@ -611,8 +652,9 @@ struct VoxelCraft {
         auto created = std::move(created_renderer);
         const auto render_info = created->info();
         auto projection = pxa::game3d::Projector::create(
-            render_info.render_width, render_info.render_height, 1.15f, 0.25f,
-            64.0f);
+            render_info.render_width, render_info.render_height,
+            VOXEL_BENCH_SCENE ? VOXEL_BENCH_FOV : 1.15f, 0.25f,
+            VOXEL_BENCH_SCENE ? VOXEL_BENCH_FAR : 64.0f);
         if (!projection) {
             initializing = false;
             co_return std::unexpected(projection.error());
@@ -630,7 +672,7 @@ struct VoxelCraft {
                 const int written = std::snprintf(
                     message, sizeof(message), "texture %d failed err=%d", index,
                     static_cast<int>(loaded.error()));
-                if (written > 0)
+                if (written > 0 && written < static_cast<int>(sizeof(message)))
                     (void)context.log().write(
                         pxa::LogLevel::error,
                         std::string_view(message,
@@ -681,7 +723,7 @@ struct VoxelCraft {
                 static_cast<unsigned>(caps),
                 static_cast<unsigned>(kPainterNeeds),
                 static_cast<unsigned>(kPainterNeeds & ~caps));
-            if (written > 0)
+            if (written > 0 && written < static_cast<int>(sizeof(message)))
                 (void)context.log().write(
                     pxa::LogLevel::info,
                     std::string_view(message,
@@ -698,7 +740,7 @@ struct VoxelCraft {
                 static_cast<unsigned>(info.render_scale),
                 static_cast<unsigned>(info.max_draw_bytes),
                 static_cast<unsigned>(info.max_textures));
-            if (written > 0)
+            if (written > 0 && written < static_cast<int>(sizeof(message)))
                 (void)context.log().write(
                     pxa::LogLevel::info,
                     std::string_view(message,
@@ -707,6 +749,11 @@ struct VoxelCraft {
 
         world.generate(0x5ae1u);
         respawn();
+#if VOXEL_BENCH_SCENE
+        camera.x=VOXEL_BENCH_X; camera.y=VOXEL_BENCH_EYE_Y-kEyeHeight;
+        camera.z=VOXEL_BENCH_Z; camera.yaw=VOXEL_BENCH_YAW; camera.pitch=VOXEL_BENCH_PITCH;
+        budget_max_distance=VOXEL_BENCH_FAR;
+#endif
         initializing = false;
         (void)context.log().write(pxa::LogLevel::info, "Voxel Craft C++ ready");
         co_return pxa::Result<void>{};
@@ -717,7 +764,7 @@ struct VoxelCraft {
     std::uint32_t fps_window_frames = 0;
     std::uint32_t fps_window_us = 0;
     float budget_max_distance = 32.0f;
-    bool low_quality = false; /* tier 2: lighting off */
+    bool low_quality = false; /* tier 2: unshaded palette colors */
     bool quality_painter = true;
     bool host_slow = false;
     std::uint64_t last_dropped_frames = 0;
@@ -756,10 +803,10 @@ struct VoxelCraft {
         if (distance > 32.0f) distance = 32.0f;
         budget_max_distance = distance;
         /* Second tier: once the distance is already at the floor and the frame
-         * rate is still poor, drop per-pixel palette lighting. Restore it only
+         * rate is still poor, use unshaded palette colors. Restore shading only
          * with clear headroom so the tier does not oscillate. */
         if (!low_quality && host_slow && distance <= 12.5f) {
-            low_quality = true; /* tier 2: drop per-pixel palette lighting */
+            low_quality = true; /* tier 2: select the unshaded palette row */
         } else if (low_quality && !host_slow && fps10 > 200u) {
             low_quality = false;
         }
@@ -794,24 +841,35 @@ struct VoxelCraft {
     }
 
     void on_update(pxa::Context&, std::uint32_t delta_us) {
+        // Measurement builds hold the spawn camera and view distance fixed.
+        if constexpr (VOXEL_BENCH_DISTANCE > 0 || VOXEL_BENCH_SCENE) {
+#if VOXEL_PROFILE
+            if (frames >= 120) stage_stats.record(5,0);
+#endif
+            return;
+        }
         if (!renderer) return;
+#if VOXEL_PROFILE
+        const auto update_start=std::chrono::steady_clock::now();
+#endif
         const float dt =
             std::min(static_cast<float>(delta_us) / 1000000.0f, 0.05f);
-        float fx = 0.0f;
-        float fy = 0.0f;
-        float fz = 0.0f;
-        camera.forward(fx, fy, fz);
         const float speed = flying ? kFlySpeed : kWalkSpeed;
         const float rx = std::cos(camera.yaw);
         const float rz = -std::sin(camera.yaw);
-        float wish_x = fx * move_forward + rx * move_right;
-        float wish_z = fz * move_forward + rz * move_right;
-        const float length = std::sqrt(wish_x * wish_x + wish_z * wish_z);
-        if (length > 0.0001f) {
-            move_axis(0, wish_x / length * speed * dt);
-            move_axis(2, wish_z / length * speed * dt);
+        // Ground movement follows yaw independently of look pitch. Preserve
+        // analog stick magnitude; normalize only an overlong diagonal.
+        float wish_x = -rz * move_forward + rx * move_right;
+        float wish_z = rx * move_forward + rz * move_right;
+        const float length_squared = wish_x * wish_x + wish_z * wish_z;
+        if (length_squared > 1.0f) {
+            const float inverse_length = 1.0f / std::sqrt(length_squared);
+            wish_x *= inverse_length;
+            wish_z *= inverse_length;
         }
-        for (auto& particle : particles) {
+        move_axis(0, wish_x * speed * dt);
+        move_axis(2, wish_z * speed * dt);
+        for (auto& particle : particles.items()) {
             if (particle.life <= 0.0f) continue;
             particle.life -= dt;
             particle.vy -= 9.0f * dt;
@@ -837,6 +895,11 @@ struct VoxelCraft {
                 mine();
             }
         }
+#if VOXEL_PROFILE
+        if (frames >= 120) stage_stats.record(5,static_cast<std::uint32_t>(
+            std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::steady_clock::now()-update_start).count()));
+#endif
     }
 
 
@@ -846,15 +909,18 @@ struct VoxelCraft {
         const auto height = renderer->info().render_height;
         if (width < 32 || height < 32) return;
         voxel::DrawBudget budget;
-        budget.max_distance = budget_max_distance;
+        budget.max_distance = VOXEL_BENCH_DISTANCE > 0
+                                  ? VOXEL_BENCH_DISTANCE : budget_max_distance;
         budget.lit_palette = !low_quality;
         budget.max_faces = 1600;
-        budget.max_bytes = 40000; /* leave room for the HUD in the list */
+        budget.max_bytes = VOXEL_DRAW_BUDGET; /* leave room for the HUD in the list */
         budget.width = static_cast<std::int32_t>(width);
         budget.height = static_cast<std::int32_t>(height);
-        budget.focal = static_cast<float>(height) /
-                       (2.0f * std::tan(1.15f * 0.5f));
+        budget.focal = projector->focal_length();
+        (void)projector->clip_range(0.25f, budget.max_distance);
         budget.painter = quality_painter;
+        budget.cheap_paths = VOXEL_CHEAP_PATHS != 0 &&
+                             (!VOXEL_BENCH_SCENE || VOXEL_BENCH_CHEAP != 0);
 #if VOXEL_PROFILE
         const auto build_start = std::chrono::steady_clock::now();
 #endif
@@ -862,15 +928,38 @@ struct VoxelCraft {
         eye_camera.y += kEyeHeight;
         auto frame = renderer->frame(commands);
         frame.clear({0x867d});
+#if VOXEL_PROFILE
+        budget.staging=commands.bytes().subspan(frame.bytes_used());
+#endif
         const auto stats = voxel::draw_world(frame, *projector, world, eye_camera, budget);
-        voxel::draw_particles(frame, *projector, eye_camera, particles);
-        draw_hud(frame, width, height);
+#if VOXEL_PROFILE
+        const auto geometry_end=std::chrono::steady_clock::now();
+#endif
+        voxel::draw_particles(frame, *projector, eye_camera, particles.items());
+        if constexpr (!VOXEL_BENCH_SCENE) draw_hud(frame, width, height);
         const auto used = frame.bytes_used();
 #if VOXEL_PROFILE
         const auto build_us = std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::steady_clock::now() - build_start).count();
 #endif
+#if VOXEL_PROFILE
+        const auto submit_start=std::chrono::steady_clock::now();
+#endif
         const auto submitted = frame.submit();
+#if VOXEL_PROFILE
+        const auto submit_end=std::chrono::steady_clock::now();
+        auto micros=[](auto duration) { return static_cast<std::uint32_t>(
+            std::chrono::duration_cast<std::chrono::microseconds>(duration).count()); };
+        // Initial mesh building belongs to launch measurements. Steady phase
+        // statistics start after 120 completed frames, as the device capture.
+        if (frames >= 120) {
+            stage_stats.record(0,micros(submit_end-build_start));
+            stage_stats.record(3,micros(submit_start-geometry_end));
+            stage_stats.record(4,micros(submit_end-submit_start));
+            stage_stats.record(1,stats.geometry_us);
+            stage_stats.record(2,stats.encode_us);
+        }
+#endif
         if (!submitted) {
             if (!submit_error_logged) {
                 submit_error_logged = true;
@@ -879,7 +968,7 @@ struct VoxelCraft {
                     message, sizeof(message), "submit failed err=%d bytes=%u",
                     static_cast<int>(submitted.error()),
                     static_cast<unsigned>(used));
-                if (written > 0)
+                if (written > 0 && written < static_cast<int>(sizeof(message)))
                     (void)context.log().write(
                         pxa::LogLevel::error,
                         std::string_view(message,
@@ -888,7 +977,8 @@ struct VoxelCraft {
             return;
         }
         ++frames;
-        update_view_distance(tick.frame_delta_us);
+        if constexpr (VOXEL_BENCH_DISTANCE == 0 && !VOXEL_BENCH_SCENE)
+            update_view_distance(tick.frame_delta_us);
         if (host_sample_due) {
             host_sample_due = false;
             sample_host_cost(*renderer);
@@ -901,7 +991,7 @@ struct VoxelCraft {
         if (hud_window_us >= 1000000u) {
             char message[160];
             const int written = std::snprintf(
-                message, sizeof(message), "VOXEL-CPP fps10=%u faces=%u batches=%u view=%u q=%u raster_us=%u"
+                message, sizeof(message), "VOXEL-CPP fps10=%u faces=%u batches=%u view=%u q=%u raster_us=%u affine=%u solid=%u"
 #if VOXEL_PROFILE
                 " guest_us=%u"
 #endif
@@ -909,18 +999,62 @@ struct VoxelCraft {
                 static_cast<unsigned>(std::uint64_t(fps_frames) * 10000000u / hud_window_us),
                 static_cast<unsigned>(last_faces),
                 static_cast<unsigned>(last_batches),
-                static_cast<unsigned>(budget_max_distance),
+                static_cast<unsigned>(budget.max_distance),
                 static_cast<unsigned>(low_quality ? 1 : 0),
-                static_cast<unsigned>(host_raster_us)
+                static_cast<unsigned>(host_raster_us),
+                static_cast<unsigned>(stats.affine_faces),
+                static_cast<unsigned>(stats.solid_faces)
 #if VOXEL_PROFILE
                 ,static_cast<unsigned>(build_us)
 #endif
                 );
-            if (written > 0)
+            if (written > 0 && written < static_cast<int>(sizeof(message)))
                 (void)context.log().write(
                     pxa::LogLevel::info,
                     std::string_view(message,
                                      static_cast<std::size_t>(written)));
+#if VOXEL_VALIDATE
+            const auto hit = target();
+            const int state_written = std::snprintf(message, sizeof(message),
+                "VOXEL-STATE xq8=%d yq8=%d zq8=%d yawq10=%d pitchq10=%d fly=%u ground=%u hit=%u bx=%d by=%d bz=%d block=%u",
+                int(camera.x * 256), int(camera.y * 256), int(camera.z * 256),
+                int(camera.yaw * 1024), int(camera.pitch * 1024),
+                unsigned(flying), unsigned(on_ground), unsigned(hit.hit),
+                hit.x, hit.y, hit.z, unsigned(hit.hit ? world.at(hit.x, hit.y, hit.z) : 0));
+            if (state_written > 0 && state_written < static_cast<int>(sizeof(message)))
+                (void)context.log().write(pxa::LogLevel::info,
+                    std::string_view(message, static_cast<std::size_t>(state_written)));
+            const int edit_written = std::snprintf(message, sizeof(message),
+                "VOXEL-EDIT count=%u packed=%u budget=%u exhausted=%u bytes=%u",
+                unsigned(edit_count), unsigned(last_edit), unsigned(budget.max_bytes),
+                unsigned(stats.exhausted), unsigned(frame.bytes_used()));
+            if (edit_written > 0 && edit_written < static_cast<int>(sizeof(message)))
+                (void)context.log().write(pxa::LogLevel::info,
+                    std::string_view(message, static_cast<std::size_t>(edit_written)));
+#endif
+#if VOXEL_PROFILE
+            if (auto pipeline=renderer->telemetry()) {
+                const int pipeline_written=std::snprintf(message,sizeof(message),
+                    "VOXEL-PIPE sub=%llu render=%llu visible=%llu drop=%llu queue_us=%llu present_us=%llu host_us=%u",
+                    static_cast<unsigned long long>(pipeline->submitted_frames),
+                    static_cast<unsigned long long>(pipeline->rendered_frames),
+                    static_cast<unsigned long long>(pipeline->visible_frames),
+                    static_cast<unsigned long long>(pipeline->dropped_frames),
+                    static_cast<unsigned long long>(pipeline->queue_wait_us),
+                    static_cast<unsigned long long>(pipeline->present_us),pipeline->last_host_raster_us);
+                if (pipeline_written>0 && pipeline_written<int(sizeof(message)))
+                    (void)context.log().write(pxa::LogLevel::info,
+                        std::string_view(message,static_cast<std::size_t>(pipeline_written)));
+            }
+            const int stage_written=std::snprintf(message,sizeof(message),
+                "VOXEL-STAGES total_us=%u geometry_us=%u encode_us=%u hud_us=%u submit_us=%u update_us=%u samples=%u",
+                stage_stats.stages[0].mean_us(),stage_stats.stages[1].mean_us(),
+                stage_stats.stages[2].mean_us(),stage_stats.stages[3].mean_us(),
+                stage_stats.stages[4].mean_us(),stage_stats.stages[5].mean_us(),stage_stats.stages[1].samples);
+            if (stage_written>0 && stage_written<int(sizeof(message)))
+                (void)context.log().write(pxa::LogLevel::info,
+                    std::string_view(message,static_cast<std::size_t>(stage_written)));
+#endif
             fps_frames = 0;
             hud_window_us = 0;
         }

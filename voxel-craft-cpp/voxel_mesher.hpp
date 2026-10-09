@@ -13,7 +13,7 @@ struct Camera {
     float y = 0.0f;
     float z = 0.0f;
     float yaw = 0.0f;   /* radians, 0 looks towards +Z */
-    float pitch = 0.0f; /* radians, positive looks up */
+    float pitch = 0.0f; /* radians, positive looks down */
 
     void to_camera(float wx, float wy, float wz,
                    pxa::game3d::Vec3& out) const noexcept;
@@ -31,19 +31,27 @@ struct DrawBudget {
     /* Stop feeding the draw list before the host's per-frame budget is used
      * up; the guest command buffer is capped in RenderOptions. */
     std::uint32_t max_bytes = 44000;
-    /* Quality tier: dropping per-pixel palette lighting roughly halves the
-     * per-pixel work in the host rasteriser. */
+    /* Quality tier: use unshaded palette colors when disabled. */
     bool lit_palette = true;
-    /* Use the scanline painter-depth kernel for projected quads. Clipped
-     * polygons use triangles in the same depth buffer. */
+    /* Use the scanline depth kernel, including clipped convex perimeters. */
     bool painter = true;
+    bool cheap_paths = true;
+#if VOXEL_PROFILE
+    std::span<std::byte> staging;
+#endif
 };
 
 struct DrawStats {
     std::uint32_t faces_drawn = 0;
     std::uint32_t faces_culled = 0;
     std::uint32_t batches = 0;
+    std::uint32_t affine_faces = 0;
+    std::uint32_t solid_faces = 0;
     bool exhausted = false;
+#if VOXEL_PROFILE
+    std::uint32_t encode_us = 0;
+    std::uint32_t geometry_us = 0;
+#endif
 };
 
 /* Short-lived block debris: camera-facing quads with a flat colour. */

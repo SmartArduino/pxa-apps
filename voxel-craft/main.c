@@ -17,6 +17,7 @@
 #include "pxa_surface.h"
 
 #include "game.h"
+#include "../common/voxel_benchmark.h"
 #include "quality_controller.h"
 #include "rc_math.h"
 #include "render.h"
@@ -451,6 +452,9 @@ static void update_quality(uint64_t duration_us) {
         if (g_host_queue_ema_us > consumer_wait_us)
             consumer_wait_us = g_host_queue_ema_us;
     }
+#if VOXEL_BENCH_SCENE
+    return;
+#endif
     /* Only gameplay feeds the automatic controllers: menu frames render at a
      * different resolution and would otherwise skew the sampled cost. */
     if (g_screen != SCREEN_PLAY || g_inventory_open) return;
@@ -1085,7 +1089,15 @@ static void start_new_game(void) {
     game_generate(seed);
     game_inventory_init();
     game_spawn(&g_player);
+#if VOXEL_BENCH_SCENE
+    g_player.x=VOXEL_BENCH_X; g_player.y=VOXEL_BENCH_EYE_Y-EYE_HEIGHT;
+    g_player.z=VOXEL_BENCH_Z; g_player.yaw=VOXEL_BENCH_YAW; g_player.pitch=-VOXEL_BENCH_PITCH;
+    g_player.flying=1;
+    game_ensure_chunks(&g_player);
+    voxel_raster_set_view_distance(VOXEL_BENCH_FAR);
+#else
     game_spawn_mobs(seed ^ 0xabcd1234u, &g_player);
+#endif
     reset_runtime_state();
     g_game_started = 1;
     set_screen(SCREEN_PLAY);
@@ -2823,7 +2835,7 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
  * same view instead of wherever the player happened to fall. */
 #define VOXEL_FIXED_VIEW 0
 #endif
-#if VOXEL_FIXED_VIEW
+#if VOXEL_FIXED_VIEW && !VOXEL_BENCH_SCENE
         g_player.x = 8.5F;
         g_player.y = 22.0F;
         g_player.z = 8.5F;
@@ -2838,6 +2850,12 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
             maybe_begin_perf_timing();
         }
         for (index = 0; index < steps; ++index) {
+#if VOXEL_BENCH_SCENE
+            // Render fixtures hold the entire simulation, like the C++ build.
+            // Gameplay movement, collision and audio are tested separately.
+            g_now_ms += FRAME_PERIOD_MS;
+            continue;
+#endif
             const uint8_t was_ground = g_player.on_ground;
             if (g_inventory_open) {
                 g_now_ms += FRAME_PERIOD_MS;
@@ -2893,7 +2911,7 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
             g_now_ms += FRAME_PERIOD_MS;
         }
         if (steps != 0 || g_input_dirty) {
-            if (steps != 0) (void)game_stream_chunks(1);
+            if (steps != 0 && !VOXEL_BENCH_SCENE) (void)game_stream_chunks(1);
             g_input_dirty = 0;
             (void)mark_perf_timing(PERF_CLOCK_UPDATE_END);
             if (render_frame()) {
