@@ -92,8 +92,9 @@ World 减少 294912 B，既有帧/深度/命令缓冲不增加。完整计量、
 降低编译优化级别。Host 对标准、动态载入 AOT 安全地提前释放重复的源文件；
 代码映射、稳定 RAM 与本次启动/保存峰值分别记录，不把文件大小等同于运行占用。
 此回收需要 Host 的 WAMR 初始数据所有权修复，不能仅把 loader 标志打开。
-0.10.0 的交互、大陆黑体、DPI、存档、峰值及固定场景验证见 workspace
-`docs/gameplay/voxel-craft-cpp-ui-20261009.zh-CN.md`。
+0.10.0 的交互、大陆黑体、DPI、存档、峰值及固定场景验证见
+[O3、HUD 与交互验收报告](docs/performance/voxel-craft-cpp-ui-20261009.zh-CN.md)。
+所有报告和测量汇总见 [性能与验收记录索引](docs/performance/README.zh-CN.md)。
 
 HUD 在世界之后直接编码到同一 DrawList、画进同一游戏 Surface，并一起提交。
 标题、暂停、设置等页面也复用这个 Surface；没有额外全屏 UI 图层或合成缓冲。

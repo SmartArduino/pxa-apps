@@ -1,0 +1,212 @@
+[
+  {
+    "name": "bench-o3-s1",
+    "display_fps": [
+      13.682252737305687,
+      13.72513336254584,
+      13.768345689055177
+    ],
+    "display_fps_mean": 13.725243929635567,
+    "host_raster_mean_ms": 37.96102121212121,
+    "queue_cumulative_ms_range": [
+      2.01,
+      2.089
+    ],
+    "ready_to_display_cumulative_ms_range": [
+      35.445,
+      37.798
+    ],
+    "maximum_reported_dropped": 0,
+    "watchdog_warning": false,
+    "package_sha256": "21bc65ad4bc5f5aaf180766c874ce80a4acd980b3cab3f04f17f9438c7791f6c"
+  },
+  {
+    "name": "bench-oz-s1",
+    "display_fps": [
+      13.725515380510322,
+      13.725800563614113,
+      13.636957670504586
+    ],
+    "display_fps_mean": 13.69609120487634,
+    "host_raster_mean_ms": 37.732357575757575,
+    "queue_cumulative_ms_range": [
+      2.06,
+      2.102
+    ],
+    "ready_to_display_cumulative_ms_range": [
+      35.512,
+      37.835
+    ],
+    "maximum_reported_dropped": 0,
+    "watchdog_warning": false,
+    "package_sha256": "2476665390408d0e9080d2ea3f06fcaa2611d2d358f8cbd4e8c0b4c24c86f4e1"
+  },
+  {
+    "name": "bench-paced-one-s1",
+    "display_fps": [
+      13.685285074625353,
+      13.681365515754218,
+      13.596499455321712
+    ],
+    "display_fps_mean": 13.654383348567094,
+    "host_raster_mean_ms": 37.46900609756097,
+    "queue_cumulative_ms_range": [
+      2.046,
+      2.101
+    ],
+    "ready_to_display_cumulative_ms_range": [
+      35.84,
+      37.246
+    ],
+    "maximum_reported_dropped": 0,
+    "watchdog_warning": false,
+    "package_sha256": "83547f67a903cf4344b611ace64b534d34facb4e68a67052f483a7a1192d0674"
+  },
+  {
+    "name": "bench-o3-s2",
+    "display_fps": [
+      11.999111307924604,
+      12.104162047973254,
+      11.960874594258804
+    ],
+    "display_fps_mean": 12.021382650052221,
+    "host_raster_mean_ms": 40.38631487889273,
+    "queue_cumulative_ms_range": [
+      2.236,
+      2.336
+    ],
+    "ready_to_display_cumulative_ms_range": [
+      32.848,
+      36.807
+    ],
+    "maximum_reported_dropped": 0,
+    "watchdog_warning": false,
+    "package_sha256": "fda527db44836b106c03f6006b738b9085087a6b3c4b2be3c86f3b97b5414cd5"
+  },
+  {
+    "name": "bench-oz-s2",
+    "display_fps": [
+      7.137925237116141,
+      7.074370201034652,
+      7.074381819040851
+    ],
+    "display_fps_mean": 7.095559085730548,
+    "host_raster_mean_ms": 124.56616470588236,
+    "queue_cumulative_ms_range": [
+      35.833,
+      39.82
+    ],
+    "ready_to_display_cumulative_ms_range": [
+      43.487,
+      44.512
+    ],
+    "maximum_reported_dropped": 105,
+    "watchdog_warning": true,
+    "package_sha256": "b4809c4bda3c8d0db935a6bd38e04d3b466e54ec654019615ea35b0c6571787c"
+  },
+  {
+    "name": "bench-paced-one-s2",
+    "display_fps": [
+      11.889835542297902,
+      11.852321602168796,
+      11.924561458562147
+    ],
+    "display_fps_mean": 11.888906201009615,
+    "host_raster_mean_ms": 38.279775438596495,
+    "queue_cumulative_ms_range": [
+      2.36,
+      2.422
+    ],
+    "ready_to_display_cumulative_ms_range": [
+      36.63,
+      37.63
+    ],
+    "maximum_reported_dropped": 0,
+    "watchdog_warning": false,
+    "package_sha256": "14273ece8ec682edf88a74c2e7a730a4c3877cfafc2b0385e5bbb102988a531c"
+  },
+  {
+    "name": "bench-final-o3-s1",
+    "display_fps": [
+      13.730503472368746,
+      13.689413825579537,
+      13.556952758538621
+    ],
+    "display_fps_mean": 13.658956685495635,
+    "host_raster_mean_ms": 37.62761698637754,
+    "queue_cumulative_ms_range": [
+      1.988,
+      2.011
+    ],
+    "ready_to_display_cumulative_ms_range": [
+      36.344,
+      37.723
+    ],
+    "maximum_reported_dropped": 0,
+    "watchdog_warning": false,
+    "package_sha256": "382400641c5d0dfe8419631f5d84d1d5842fb2ef5cb2a53626b7fb4e914731f4"
+  },
+  {
+    "name": "bench-final-o3-s2",
+    "display_fps": [
+      11.891687009796497,
+      12.088813490511415,
+      11.944041403638332
+    ],
+    "display_fps_mean": 11.974847301315414,
+    "host_raster_mean_ms": 38.04676490512148,
+    "queue_cumulative_ms_range": [
+      2.228,
+      2.366
+    ],
+    "ready_to_display_cumulative_ms_range": [
+      36.1,
+      37.067
+    ],
+    "maximum_reported_dropped": 0,
+    "watchdog_warning": false,
+    "package_sha256": "733475f20c697059fe9e482a57b45afdeef8dc1bbe9f03ade3a38a5a1f183ec5"
+  },
+  {
+    "name": "bench-final-o3-hud-s2",
+    "display_fps": [
+      11.051368794592909,
+      10.993038211161691,
+      10.95951440685515
+    ],
+    "display_fps_mean": 11.001307137536584,
+    "host_raster_mean_ms": 43.62008712121212,
+    "queue_cumulative_ms_range": [
+      2.618,
+      2.781
+    ],
+    "ready_to_display_cumulative_ms_range": [
+      36.613,
+      37.196
+    ],
+    "maximum_reported_dropped": 0,
+    "watchdog_warning": false,
+    "package_sha256": "302759fd532faee08de656fc01be865d8e3b908fb57aa0366f2b577530375c81"
+  },
+  {
+    "name": "bench-fast-hud-s2",
+    "display_fps": [
+      11.523253862980914,
+      11.5513819910188,
+      11.513096146867062
+    ],
+    "display_fps_mean": 11.529244000288925,
+    "host_raster_mean_ms": 39.42686594202898,
+    "queue_cumulative_ms_range": [
+      2.72,
+      2.782
+    ],
+    "ready_to_display_cumulative_ms_range": [
+      36.769,
+      37.435
+    ],
+    "maximum_reported_dropped": 0,
+    "watchdog_warning": false,
+    "package_sha256": "499cea94a743bf8e26fa1fa6773026adeabb4dc98e9a3b14b995edcbbb2ffd7a"
+  }
+]
