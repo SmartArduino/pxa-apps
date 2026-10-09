@@ -22,6 +22,9 @@
 #include "../common/voxel_benchmark.h"
 #include "voxel_render.hpp"
 #include "voxel_world.hpp"
+#include "voxel_ui.hpp"
+#include "voxel_save.hpp"
+#include "voxel_font.hpp"
 
 #ifndef VOXEL_BENCH_DISTANCE
 #define VOXEL_BENCH_DISTANCE 0
@@ -133,6 +136,8 @@ struct VoxelCraft {
     std::uint32_t fps_frames = 0;
 
     voxel::HudLayout hud;
+#include "voxel_session.inc"
+#include "voxel_menu.inc"
 
 #if VOXEL_PROFILE
     pxa::game::StageStatistics<6> stage_stats;
@@ -220,6 +225,7 @@ struct VoxelCraft {
         if (world.at(hit.x, hit.y, hit.z) == voxel::kBedrock) return;
         const std::uint8_t removed = world.at(hit.x, hit.y, hit.z);
         world.set(hit.x, hit.y, hit.z, voxel::kAir);
+        dirty_save=true;
 #if VOXEL_VALIDATE
         record_edit(hit.x, hit.y, hit.z, removed, 1);
 #endif
@@ -246,6 +252,7 @@ struct VoxelCraft {
                               fy < camera.y + kPlayerHeight;
         if (overlaps) return;
         world.set(x, y, z, selected_block());
+        dirty_save=true;
 #if VOXEL_VALIDATE
         record_edit(x, y, z, selected_block(), 2);
 #endif
@@ -253,11 +260,11 @@ struct VoxelCraft {
     }
 
     void cycle_hotbar(int delta) noexcept {
-        hotbar = (hotbar + delta + voxel::kHotbarCount) % voxel::kHotbarCount;
+        hotbar = (hotbar + delta + kQuickCount) % kQuickCount;
     }
 
     std::uint8_t selected_block() const noexcept {
-        return voxel::kHotbarBlocks[hotbar % voxel::kHotbarCount];
+        return quickbar[hotbar % kQuickCount];
     }
 
     /* ---- UI ------------------------------------------------------------ */
@@ -299,139 +306,70 @@ struct VoxelCraft {
     static constexpr int kActionButtons = 5;
 
     void button_center(int index, float& cx, float& cy) const noexcept {
-        const float radius = static_cast<float>(hud.button) * 0.5f;
-        cx = static_cast<float>(hud.button_x) + radius;
-        cy = static_cast<float>(hud.button_y) + radius +
-             static_cast<float>(index) * (hud.button + hud.button_gap);
+        cx=static_cast<float>(controls.actions[index].cx());
+        cy=static_cast<float>(controls.actions[index].cy());
     }
 
-    void on_pointer(const pxa::ui::CanvasPointer& pointer) noexcept {
-        using namespace pxa::ui;
-        float bx = 0.0f;
-        float by = 0.0f;
-        int button_index = -1;
-        const float radius = static_cast<float>(hud.button) * 0.5f;
-        for (int index = 0; index < kActionButtons; ++index) {
-            button_center(index, bx, by);
-            const float dx = static_cast<float>(pointer.x) - bx;
-            const float dy = static_cast<float>(pointer.y) - by;
-            if (dx * dx + dy * dy <= (radius + 6.0f) * (radius + 6.0f)) {
-                button_index = index;
-                break;
-            }
+    void on_pointer(const pxa::ui::CanvasPointer& input) noexcept {
+        auto pointer=input;
+        pointer.x=pxa::ui::canvas_to_surface_coordinate(input.x,display);
+        pointer.y=pxa::ui::canvas_to_surface_coordinate(input.y,display);
+        using namespace pxa::ui;using enum voxel::Screen;
+        if(screen!=game){
+            if(busy||initializing)return;
+            if(pointer.phase==pointer_phase_down&&ui_pointer<0){
+                for(unsigned i=0;i<menu_hit_count;++i)if(menu_hits[i].rect.contains(pointer.x,pointer.y)){ui_pointer=pointer.pointer_id;ui_pressed=int(i);ui_dirty=true;break;}
+            }else if(pointer.pointer_id==ui_pointer&&(pointer.phase==pointer_phase_up||pointer.phase==pointer_phase_cancel)){
+                int pressed=ui_pressed;ui_pointer=ui_pressed=-1;ui_dirty=true;
+                if(pointer.phase==pointer_phase_up&&pressed>=0&&unsigned(pressed)<menu_hit_count&&menu_hits[pressed].rect.contains(pointer.x,pointer.y)){auto hit=menu_hits[pressed];menu_action(hit.action,hit.argument);}
+            }return;
         }
-        const bool in_hotbar = pointer.y >= hud.hotbar_y &&
-                               pointer.y < hud.hotbar_y + hud.slot;
-        const int hotbar_index =
-            in_hotbar && pointer.x >= hud.hotbar_x && hud.slot > 0
-                ? (pointer.x - hud.hotbar_x) / (hud.slot + hud.slot_gap)
-                : -1;
-
-        if (pointer.phase == pointer_phase_down) {
-            if (button_index == 0) {
-                mine_pointer = pointer.pointer_id;
-                mining = true;
-                mine_timer = 0.0f;
+        if(busy)return;
+        if(pointer.phase==pointer_phase_down){
+            if(controls.menu.contains(pointer.x,pointer.y)){show(pause);return;}
+            if(controls.bag.contains(pointer.x,pointer.y)){show(inventory);return;}
+            for(int i=0;i<(flying?5:3);++i)if(controls.actions[i].contains(pointer.x,pointer.y)){
+                if(i==0){
+                    if(mine_pointer<0){mine_pointer=pointer.pointer_id;mining=true;mine_timer=0;mine_long_pressed=false;}
+                }else if(i==1)place();
+                else if(i==2){if(!flying&&on_ground){velocity_y=kJumpSpeed;on_ground=false;}}
+                else if(i==3&&up_pointer<0){up_pointer=pointer.pointer_id;up_held=true;}
+                else if(i==4&&down_pointer<0){down_pointer=pointer.pointer_id;down_held=true;}
                 return;
             }
-            if (button_index == 1) {
-                place();
-                return;
+            if(controls.hotbar.contains(pointer.x,pointer.y)){
+                int rel=pointer.x-controls.hotbar.x;int slot=rel/(controls.slot+controls.gap);
+                if(slot<kQuickCount&&rel%(controls.slot+controls.gap)<controls.slot){hotbar=slot;dirty_save=true;}return;
             }
-            if (button_index == 2) {
-                up_pointer = pointer.pointer_id;
-                up_held = true;
-                if (!flying) velocity_y = kJumpSpeed;
-                return;
-            }
-            if (button_index == 3) {
-                down_pointer = pointer.pointer_id;
-                down_held = true;
-                return;
-            }
-            if (button_index == 4) {
-                flying = !flying;
-                velocity_y = 0.0f;
-                return;
-            }
-            if (hotbar_index >= 0 && hotbar_index < voxel::kHotbarCount) {
-                hotbar = hotbar_index;
-                return;
-            }
-            if (pointer.x < hud.width / 2 && !stick_active) {
-                stick_pointer = pointer.pointer_id;
-                stick_active = true;
-                stick_origin_x = static_cast<float>(pointer.x);
-                stick_origin_y = static_cast<float>(pointer.y);
-                move_right = 0.0f;
-                move_forward = 0.0f;
-            } else if (pointer.x >= hud.width / 2 && !look_active) {
-                look_pointer = pointer.pointer_id;
-                look_origin_x = static_cast<float>(pointer.x);
-                look_origin_y = static_cast<float>(pointer.y);
-                look_dragged = false;
-                look_active = true;
-                look_last_x = static_cast<float>(pointer.x);
-                look_last_y = static_cast<float>(pointer.y);
-            }
-            return;
+            if(pointer.x<hud.width/2&&!stick_active){
+                stick_pointer=pointer.pointer_id;stick_active=true;stick_origin_x=float(pointer.x);stick_origin_y=float(pointer.y);move_right=move_forward=0;
+            }else if(pointer.x>=hud.width/2&&!look_active){
+                look_pointer=pointer.pointer_id;look_active=true;look_last_x=float(pointer.x);look_last_y=float(pointer.y);
+            }return;
         }
-
-        if (pointer.phase == pointer_phase_move) {
-            if (stick_active && pointer.pointer_id == stick_pointer) {
-                move_right = std::clamp(
-                    (static_cast<float>(pointer.x) - stick_origin_x) / 44.0f,
-                    -1.0f, 1.0f);
-                move_forward = std::clamp(
-                    (stick_origin_y - static_cast<float>(pointer.y)) / 44.0f,
-                    -1.0f, 1.0f);
-            } else if (look_active && pointer.pointer_id == look_pointer) {
-                const float dx = static_cast<float>(pointer.x) - look_last_x;
-                const float dy = static_cast<float>(pointer.y) - look_last_y;
-                look_last_x = static_cast<float>(pointer.x);
-                look_last_y = static_cast<float>(pointer.y);
-                if (std::fabs(look_last_x - look_origin_x) > 12.0f ||
-                    std::fabs(look_last_y - look_origin_y) > 12.0f)
-                    look_dragged = true;
-                look(dx * 0.006f, dy * 0.005f);
-            }
-            return;
+        if(pointer.phase==pointer_phase_move){
+            if(stick_active&&pointer.pointer_id==stick_pointer){
+                float x=(float(pointer.x)-stick_origin_x)/controls.stick_radius,y=(stick_origin_y-float(pointer.y))/controls.stick_radius;
+                float length=std::sqrt(x*x+y*y);
+                if(length<.10f)move_right=move_forward=0;
+                else{float gain=(std::min(length,1.f)-.10f)/(.90f*length);move_right=x*gain;move_forward=y*gain;}
+            }else if(look_active&&pointer.pointer_id==look_pointer){
+                float dx=float(pointer.x)-look_last_x,dy=float(pointer.y)-look_last_y;look_last_x=float(pointer.x);look_last_y=float(pointer.y);
+                const float sensitivity[]={.65f,1.f,1.5f};
+                float gain=sensitivity[settings.sensitivity]/std::max(.5f,controls.scale);
+                look(dx*.006f*gain,dy*.005f*gain*(settings.invert_y?-1.f:1.f));dirty_save=true;
+            }return;
         }
-
-        if (pointer.phase == pointer_phase_up ||
-            pointer.phase == pointer_phase_cancel) {
-            if (pointer.pointer_id == mine_pointer) { mining = false; mine_pointer = -1; }
-            if (pointer.pointer_id == up_pointer) { up_held = false; up_pointer = -1; }
-            if (pointer.pointer_id == down_pointer) { down_held = false; down_pointer = -1; }
-            if (stick_active && pointer.pointer_id == stick_pointer) {
-                stick_pointer = -1;
-                stick_active = false;
-                move_right = 0.0f;
-                move_forward = 0.0f;
+        if(pointer.phase==pointer_phase_up||pointer.phase==pointer_phase_cancel){
+            if(pointer.pointer_id==mine_pointer){
+                const bool use=pointer.phase==pointer_phase_up&&!mine_long_pressed&&controls.actions[0].contains(pointer.x,pointer.y);
+                mining=false;mine_pointer=-1;mine_timer=0;
+                if(use){auto hit=target();if(hit.hit&&world.at(hit.x,hit.y,hit.z)==voxel::kTable)show(workbench);}
             }
-            if (look_active && pointer.pointer_id == look_pointer) {
-                look_pointer = -1;
-                look_active = false;
-                if (pointer.phase == pointer_phase_cancel || look_dragged) {
-                    last_tap_us = 0;
-                    return;
-                }
-                const float dx = static_cast<float>(pointer.x) - last_tap_x;
-                const float dy = static_cast<float>(pointer.y) - last_tap_y;
-                const bool near = std::fabs(dx) < 24.0f && std::fabs(dy) < 24.0f;
-                const bool soon = pointer.timestamp_us > last_tap_us &&
-                                  pointer.timestamp_us - last_tap_us < 300000u;
-                if (near && soon) {
-                    flying = !flying;
-                    velocity_y = 0.0f;
-                    last_tap_us = 0;
-                } else {
-                    last_tap_us = pointer.timestamp_us;
-                    last_tap_x = static_cast<float>(pointer.x);
-                    last_tap_y = static_cast<float>(pointer.y);
-                }
-            }
-            return;
+            if(pointer.pointer_id==up_pointer){up_held=false;up_pointer=-1;}
+            if(pointer.pointer_id==down_pointer){down_held=false;down_pointer=-1;}
+            if(pointer.pointer_id==stick_pointer){stick_active=false;stick_pointer=-1;move_right=move_forward=0;}
+            if(pointer.pointer_id==look_pointer){look_active=false;look_pointer=-1;}
         }
     }
 
@@ -492,13 +430,13 @@ struct VoxelCraft {
         const float uv = 16.0f; /* one atlas texel in q4 units */
         const float cell = 16.0f * uv;
 
-        for (int index = 0; index < voxel::kHotbarCount; ++index) {
+        for (int index = 0; index < kQuickCount; ++index) {
             const float slot = static_cast<float>(hud.slot);
             const float x0 = static_cast<float>(hud.hotbar_x) +
                              static_cast<float>(index) * (slot + hud.slot_gap);
             const float y0 = static_cast<float>(hud.hotbar_y);
             rect(x0, y0, x0 + slot, y0 + slot, kPanel);
-            const std::uint8_t block = voxel::kHotbarBlocks[index];
+            const std::uint8_t block = quickbar[index];
             const std::uint8_t texture = voxel::block_info(block).texture[1];
             const std::array<pxa::game::Vertex, 4> icon{{
                 {.x_q4 = qx(x0 + 2.0f), .y_q4 = qy(y0 + 2.0f), .u_q4 = 0,
@@ -534,18 +472,29 @@ struct VoxelCraft {
                      16.0f * uv + 5 * 4.0f * uv, 25.0f * uv, qx, qy, kIcon);
         }
 
-        for (int index = 0; index < kActionButtons; ++index) {
+        for (int index = 0; index < (flying?5:3); ++index) {
             float cx = 0.0f;
             float cy = 0.0f;
             button_center(index, cx, cy);
             const float radius = static_cast<float>(hud.button) * 0.5f;
-            const bool active = (index == 0 && mining) || (index == 4 && flying);
+            const bool active = (index == 0 && mining) || (index == 3 && up_held) || (index == 4 && down_held);
             if (active)
                 rect(cx - radius - 1.5f, cy - radius - 1.5f, cx + radius + 1.5f,
                      cy + radius + 1.5f, kActive);
             blit_hud(frame, cx - radius, cy - radius, radius * 2.0f,
                      radius * 2.0f, 0.0f, 0.0f, cell, cell, qx, qy, kPanel);
-            /* 0 pickaxe, 1 block, 2 jump, 3 fly, 4 fly again for descend */
+            if(index>=3){
+                // Distinct up/down arrows without another texture or buffer.
+                const float direction=index==3?-1.f:1.f;
+                const float tip_y=cy+direction*radius*.55f;
+                const float base_y=cy-direction*radius*.10f;
+                frame.quad({qx(cx-radius*.45f),qy(base_y),qx(cx),qy(tip_y),
+                            qx(cx+radius*.45f),qy(base_y),qx(cx+radius*.45f),qy(base_y)},kIcon);
+                rect(cx-radius*.13f,std::min(cy-direction*radius*.48f,base_y),
+                     cx+radius*.13f,std::max(cy-direction*radius*.48f,base_y),kIcon);
+                continue;
+            }
+            /* 0 pickaxe, 1 block, 2 jump */
             float glyph_u = 0.0f;
             float glyph_v = 0.0f;
             switch (index) {
@@ -559,6 +508,12 @@ struct VoxelCraft {
                      glyph_v + cell, qx, qy, kIcon);
         }
 
+        // Menu and backpack are separate from look gestures, with identical
+        // visual/hit rectangles and no double-tap flight shortcut.
+        auto menu=controls.menu;rect(menu.x,menu.y,menu.x+menu.w,menu.y+menu.h,kPanel);
+        for(int i=0;i<3;++i)rect(menu.x+menu.w*.25f,menu.y+menu.h*(.28f+.20f*i),menu.x+menu.w*.75f,menu.y+menu.h*(.34f+.20f*i),kIcon);
+        auto bag=controls.bag;rect(bag.x,bag.y,bag.x+bag.w,bag.y+bag.h,kPanel);
+        for(int i=0;i<9;++i){float x=bag.x+bag.w*(.20f+.23f*(i%3)),y=bag.y+bag.h*(.20f+.23f*(i/3));rect(x,y,x+bag.w*.14f,y+bag.h*.14f,kIcon);}
         const std::int16_t cross_x = static_cast<std::int16_t>(width * 8);
         const std::int16_t cross_y = static_cast<std::int16_t>(height * 8);
         constexpr std::int16_t arm = 12 * 16;
@@ -611,8 +566,7 @@ struct VoxelCraft {
         if (width < 64) width = 64;
         if (height < 64) height = 64;
         pxa::game::RenderOptions options;
-        hud = voxel::hud_layout(static_cast<std::int32_t>(window->pixel_width),
-                                static_cast<std::int32_t>(window->pixel_height));
+        on_window_changed(*window);
         options.width = width;
         options.height = height;
         options.scratch = pxa::game::Scratch::depth16;
@@ -710,6 +664,14 @@ struct VoxelCraft {
             initializing = false;
             co_return std::unexpected(bound.error());
         }
+        if constexpr(!VOXEL_BENCH_SCENE&&!VOXEL_BENCH_DISTANCE){
+            font_size=voxel::select_font_size(controls.text_scale);
+            char font_path[40];std::snprintf(font_path,sizeof(font_path),"assets/menu-font-%d.pxr",font_size);
+            auto font=co_await context.assets().load(pxa::AssetKind::texture,font_path);
+            if(!font){initializing=false;co_return std::unexpected(font.error());}
+            auto bound_font=created->bind_asset(*font,{46});
+            if(!bound_font){initializing=false;co_return std::unexpected(bound_font.error());}
+        }
         renderer.emplace(std::move(*created));
         projector.emplace(*projection);
         {
@@ -747,8 +709,9 @@ struct VoxelCraft {
                                      static_cast<std::size_t>(written)));
         }
 
-        world.generate(0x5ae1u);
-        respawn();
+        if constexpr (VOXEL_BENCH_SCENE||VOXEL_BENCH_DISTANCE){world.generate(0x5ae1u);respawn();session_ready=true;}
+        else {if(!catalog_ready)(void)co_await read_catalog();auto now=co_await context.clock().now();if(now)rng^=std::uint32_t(*now);}
+
 #if VOXEL_BENCH_SCENE
         camera.x=VOXEL_BENCH_X; camera.y=VOXEL_BENCH_EYE_Y-kEyeHeight;
         camera.z=VOXEL_BENCH_Z; camera.yaw=VOXEL_BENCH_YAW; camera.pitch=VOXEL_BENCH_PITCH;
@@ -816,6 +779,7 @@ struct VoxelCraft {
     }
 
     void on_foreground(pxa::Context& context) {
+        app_context=&context;ui_dirty=true;
         if (!fullscreen_requested) {
             fullscreen_requested = true;
             const auto requested = context.window().fullscreen();
@@ -833,6 +797,7 @@ struct VoxelCraft {
     }
 
     void on_background(pxa::Context&) {
+        cancel_controls();ui_dirty=true;
         stick_active = look_active = mining = up_held = down_held = false;
         stick_pointer = look_pointer = mine_pointer = up_pointer = down_pointer = -1;
         move_right = move_forward = 0.0f;
@@ -848,12 +813,13 @@ struct VoxelCraft {
 #endif
             return;
         }
-        if (!renderer) return;
+        if (!renderer||screen!=voxel::Screen::game||busy) return;
 #if VOXEL_PROFILE
         const auto update_start=std::chrono::steady_clock::now();
 #endif
         const float dt =
             std::min(static_cast<float>(delta_us) / 1000000.0f, 0.05f);
+        const float old_x=camera.x,old_y=camera.y,old_z=camera.z;
         const float speed = flying ? kFlySpeed : kWalkSpeed;
         const float rx = std::cos(camera.yaw);
         const float rz = -std::sin(camera.yaw);
@@ -869,6 +835,19 @@ struct VoxelCraft {
         }
         move_axis(0, wish_x * speed * dt);
         move_axis(2, wish_z * speed * dt);
+        // Only probe extra collision cells after walking is actually blocked.
+        // One-block clearance and current headroom prevent jumps into walls
+        // or low ceilings. Flying and airborne movement never auto-jump.
+        if(settings.auto_jump&&!flying&&on_ground&&length_squared>.04f&&
+           std::fabs(camera.x-old_x)+std::fabs(camera.z-old_z)+.0001f<
+               (std::fabs(wish_x)+std::fabs(wish_z))*speed*dt){
+            const float length=std::sqrt(wish_x*wish_x+wish_z*wish_z);
+            const float px=camera.x+wish_x/length*.5f,pz=camera.z+wish_z/length*.5f;
+            if(collides(px,camera.y,pz)&&!collides(px,camera.y+1.05f,pz)&&
+               !collides(camera.x,camera.y+1.05f,camera.z)){
+                velocity_y=kJumpSpeed;on_ground=false;
+            }
+        }
         for (auto& particle : particles.items()) {
             if (particle.life <= 0.0f) continue;
             particle.life -= dt;
@@ -888,9 +867,11 @@ struct VoxelCraft {
             on_ground = collides(camera.x, camera.y - 0.06f, camera.z);
             if (on_ground && velocity_y < 0.0f) velocity_y = 0.0f;
         }
+        if(camera.x!=old_x||camera.y!=old_y||camera.z!=old_z)dirty_save=true;
         if (mining) {
             mine_timer += dt;
-            if (mine_timer >= 0.32f) {
+            if (mine_timer >= (mine_long_pressed?0.32f:0.38f)) {
+                mine_long_pressed=true;
                 mine_timer = 0.0f;
                 mine();
             }
@@ -905,6 +886,7 @@ struct VoxelCraft {
 
     void on_frame(pxa::Context& context, pxa::game::FrameTick tick) {
         if (!renderer || !projector) return;
+        if(screen!=voxel::Screen::game){if(ui_dirty)draw_menu(*renderer);return;}
         const auto width = renderer->info().render_width;
         const auto height = renderer->info().render_height;
         if (width < 32 || height < 32) return;
@@ -978,7 +960,7 @@ struct VoxelCraft {
         }
         ++frames;
         if constexpr (VOXEL_BENCH_DISTANCE == 0 && !VOXEL_BENCH_SCENE)
-            update_view_distance(tick.frame_delta_us);
+            if(settings.auto_distance)update_view_distance(tick.frame_delta_us);
         if (host_sample_due) {
             host_sample_due = false;
             sample_host_cost(*renderer);

@@ -13,8 +13,8 @@
     0
   ],
   "id": "pxa-voxel-craft-cpp",
-  "version": "0.9.0",
-  "release_sequence": 10,
+  "version": "0.10.0",
+  "release_sequence": 11,
   "name": "Voxel Craft C++",
   "description": "First-person voxel sandbox on the PXA C++26 SDK with depth-tested scanline rendering, optional bounded-error material paths and touch controls",
   "build": {
@@ -37,7 +37,9 @@
         "assets",
         "game-render",
         "ui",
-        "surface"
+        "surface",
+        "fs",
+        "storage"
       ],
       "wasi": {
         "version": "preview1",

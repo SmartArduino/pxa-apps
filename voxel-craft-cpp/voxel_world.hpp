@@ -3,6 +3,9 @@
 
 #include <array>
 #include <cstdint>
+#include <span>
+#include <cstddef>
+#include <algorithm>
 
 namespace voxel {
 
@@ -92,6 +95,23 @@ struct ChunkMesh {
 class World {
 public:
     void generate(std::uint32_t seed) noexcept;
+    std::span<const std::byte> saved_blocks() const noexcept {
+        return std::as_bytes(std::span{blocks_});
+    }
+    // Loading is paused: reuse disposable mesh storage for transactional input.
+    // Until finish_load(), callers must not build/read meshes or mutate blocks.
+    std::span<std::byte> load_staging() noexcept {
+        static_assert(sizeof(meshes_) >= sizeof(blocks_));
+        return std::as_writable_bytes(std::span{meshes_}).first(blocks_.size());
+    }
+    void finish_load(bool commit) noexcept {
+        if (commit) {
+            auto bytes=std::as_bytes(std::span{meshes_}).first(blocks_.size());
+            for(std::size_t i=0;i<blocks_.size();++i)blocks_[i]=std::to_integer<std::uint8_t>(bytes[i]);
+        }
+        for(auto& mesh:meshes_){mesh.count=0;mesh.built=false;mesh.overflow=false;}
+    }
+
 
     std::uint8_t at(int x, int y, int z) const noexcept;
     void set(int x, int y, int z, std::uint8_t id) noexcept;

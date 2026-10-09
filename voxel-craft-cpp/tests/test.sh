@@ -21,10 +21,6 @@ if [[ "${SANITIZE:-0}" == 1 ]]; then
     export UBSAN_OPTIONS=halt_on_error=1
 fi
 python3 "$app/tools/generate_lod_colors.py" --check
-"${CXX:-clang++}" "${flags[@]}" "$app/tests/input_test.cpp" "$app/voxel_world.cpp" "$app/voxel_render.cpp" "$app/voxel_mesher.cpp" "$sdk"/src/*.cpp -o "$build/input"
-"$build/input"
-"${CXX:-clang++}" "${flags[@]}" "$app/tests/world_test.cpp" "$app/voxel_world.cpp" -o "$build/world"
-"$build/world"
 host="$root/deps/pxa-system/libpxa"
 cflags=(-std=c11 -O2 -I"$host/include")
 if [[ "${SANITIZE:-0}" == 1 ]]; then
@@ -32,6 +28,14 @@ if [[ "${SANITIZE:-0}" == 1 ]]; then
 fi
 "${CC:-clang}" "${cflags[@]}" -c "$host/src/services/surface/raster.c" -o "$build/raster.o"
 "${CC:-clang}" "${cflags[@]}" -c "$host/src/core/wire.c" -o "$build/wire.o"
+"${CXX:-clang++}" "${flags[@]}" "$app/tests/input_test.cpp" "$app/voxel_world.cpp" "$app/voxel_render.cpp" "$app/voxel_mesher.cpp" "$sdk"/src/*.cpp -o "$build/input"
+"${CXX:-clang++}" "${flags[@]}" -I"$host/include" "$app/tests/session_test.cpp" "$app/voxel_world.cpp" "$app/voxel_render.cpp" "$app/voxel_mesher.cpp" "$sdk"/src/*.cpp "$build/raster.o" "$build/wire.o" -o "$build/session"
+"$build/session"
+"${CXX:-clang++}" "${flags[@]}" "$app/tests/layout_test.cpp" -o "$build/layout"
+"$build/layout"
+"$build/input"
+"${CXX:-clang++}" "${flags[@]}" "$app/tests/world_test.cpp" "$app/voxel_world.cpp" -o "$build/world"
+"$build/world"
 "${CXX:-clang++}" "${flags[@]}" -I"$host/include" "$app/tests/render_test.cpp" \
     "$app/voxel_world.cpp" "$app/voxel_mesher.cpp" "$sdk"/src/*.cpp \
     "$build/raster.o" "$build/wire.o" -o "$build/render"

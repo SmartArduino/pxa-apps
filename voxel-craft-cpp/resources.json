@@ -326,6 +326,27 @@
       "path": "assets/b44.pxr",
       "width": 16,
       "height": 16
+    },
+    {
+      "kind": "index8",
+      "source": "resources/menu-font-10.a8",
+      "path": "assets/menu-font-10.pxr",
+      "width": 110,
+      "height": 110
+    },
+    {
+      "kind": "index8",
+      "source": "resources/menu-font-14.a8",
+      "path": "assets/menu-font-14.pxr",
+      "width": 154,
+      "height": 154
+    },
+    {
+      "kind": "index8",
+      "source": "resources/menu-font-18.a8",
+      "path": "assets/menu-font-18.pxr",
+      "width": 198,
+      "height": 198
     }
   ]
 }

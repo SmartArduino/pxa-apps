@@ -4,7 +4,7 @@ extern "C" std::int32_t pxa_submit(const std::uint8_t*, std::uint32_t) { return 
 extern "C" std::int32_t pxa_io(std::uint64_t, std::uint32_t, std::uint8_t*, std::uint32_t) { return -3; }
 int main() {
     static VoxelCraft game;
-    game.hud = voxel::hud_layout(296, 240);
+    game.screen=voxel::Screen::game;game.apply_display({});
     auto pointer = [](unsigned id, unsigned phase, int x, int y, std::uint64_t time = 1000000) {
         pxa::ui::CanvasPointer p;
         p.pointer_id = id; p.phase = phase; p.x = x; p.y = y; p.timestamp_us = time;
@@ -76,5 +76,35 @@ int main() {
     for (int y = 1; y <= 3; ++y) game.world.set(20, y, 24, voxel::kAir);
     for (int i = 0; i < 30; ++i) game.on_update(context, 16000);
     assert(game.camera.z > 25);
+    // Auto-jump clears a single block, but neither tall walls nor ceilings.
+    for(bool enabled:{false,true}){
+        game.settings.auto_jump=enabled;game.camera={20.5f,1.05f,22.5f};game.on_ground=true;
+        game.velocity_y=0;game.move_forward=1;game.world.set(20,1,23,voxel::kStone);
+        float peak=game.camera.y;
+        for(int i=0;i<65;++i){game.on_update(context,16000);peak=std::max(peak,game.camera.y);}
+        assert(enabled?(peak>2.f&&game.camera.z>23.8f):(peak<1.1f&&game.camera.z<22.8f));
+    }
+    game.settings.auto_jump=true;game.world.set(20,2,23,voxel::kStone);
+    game.camera={20.5f,1.05f,22.5f};game.on_ground=true;game.velocity_y=0;
+    for(int i=0;i<50;++i)game.on_update(context,16000);
+    assert(game.camera.y<1.1f&&game.camera.z<22.8f);
+    game.world.set(20,2,23,voxel::kAir);game.world.set(20,3,22,voxel::kStone);
+    game.camera={20.5f,1.05f,22.5f};game.on_ground=true;game.velocity_y=0;
+    for(int i=0;i<50;++i)game.on_update(context,16000);
+    assert(game.camera.y<1.1f&&game.camera.z<22.8f);
+    game.world.set(20,3,22,voxel::kAir);game.world.set(20,1,23,voxel::kAir);
+    game.settings.auto_jump=false;game.move_forward=0;game.camera={20.5f,1.05f,20.5f};game.on_ground=true;game.velocity_y=0;
+    game.world.set(20,2,22,voxel::kTable);
+    auto press=pointer(9,0,game.controls.actions[0].cx(),game.controls.actions[0].cy());
+    auto release=press;release.phase=2;
+    game.on_pointer(press);assert(game.screen==voxel::Screen::game&&game.mining);
+    for(int i=0;i<5;++i)game.on_update(context,16000);
+    game.on_pointer(release);assert(game.screen==voxel::Screen::workbench&&game.world.at(20,2,22)==voxel::kTable);
+    game.show(voxel::Screen::game);game.on_pointer(press);
+    for(int i=0;i<25;++i)game.on_update(context,16000);
+    assert(game.screen==voxel::Screen::game&&game.world.at(20,2,22)==voxel::kAir&&game.mine_long_pressed);
+    game.on_pointer(release);assert(game.screen==voxel::Screen::game);
+    // Canceling a short press must never invoke the workbench.
+    game.world.set(20,2,22,voxel::kTable);game.on_pointer(press);release.phase=3;game.on_pointer(release);assert(game.screen==voxel::Screen::game);
     game.renderer.reset();
 }
