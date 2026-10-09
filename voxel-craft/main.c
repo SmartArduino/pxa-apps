@@ -11,6 +11,7 @@
  */
 #include "pxa_raster.h"
 #include "pxa_ui.h"
+#include "../common/pxa_canvas_pixels.h"
 #include "pxa_clock.h"
 #include "pxa_storage.h"
 #include "pxa_window.h"
@@ -205,6 +206,7 @@ static uint8_t g_inventory_open;
 static uint8_t g_craft_table;
 static item_stack_t g_cursor;
 static int16_t g_pointer_x;
+static uint32_t g_canvas_density_q16 = UINT32_C(65536);
 static int16_t g_pointer_y;
 static uint8_t g_inv_press_active;
 static int16_t g_inv_press_x;
@@ -2490,11 +2492,13 @@ static void update_fps(uint64_t timestamp_us) {
 
 int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     pxa_ui_environment_t environment;
+    g_canvas_density_q16 = UINT32_C(65536);
     g_screen = SCREEN_MENU;
     g_game_quality = QUALITY_MIN;
     update_scene_limits();
     if (pxa_ui_parse_start_environment(config, length, &environment) &&
         environment.width > 0 && environment.height > 0) {
+        g_canvas_density_q16 = environment.density_q16;
         render_configure((int)environment.width, (int)environment.height);
     } else {
         render_configure(SCREEN_W_DEFAULT, SCREEN_H_DEFAULT);
@@ -2668,6 +2672,12 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     uint64_t timestamp_us;
     if (!pxa_parse_event(event, length, &parsed)) {
         return PXA_EVENT_UNHANDLED;
+    }
+    if (parsed.service == PXA_UI_SERVICE && parsed.opcode == PXA_UI_ENVIRONMENT_CHANGED) {
+        pxa_ui_environment_t environment;
+        if (pxa_ui_parse_environment_event(&parsed, &environment))
+            g_canvas_density_q16 = environment.density_q16;
+        return PXA_EVENT_HANDLED;
     }
     if (parsed.service == PXA_SERVICE_SYSTEM &&
         parsed.opcode == PXA_SYSTEM_LIFECYCLE_EVENT &&
@@ -2933,6 +2943,8 @@ int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         pointer.node != FRAME_NODE) {
         return PXA_EVENT_UNHANDLED;
     }
+    pointer.x = pxa_game_canvas_to_surface_coordinate(pointer.x, g_canvas_density_q16);
+    pointer.y = pxa_game_canvas_to_surface_coordinate(pointer.y, g_canvas_density_q16);
     if (g_backgrounded) return PXA_EVENT_HANDLED;
     if (pointer.phase == PXA_POINTER_DOWN) {
         on_pointer_down(&pointer);

@@ -13,8 +13,8 @@
     0
   ],
   "id": "pxa-voxel-craft",
-  "version": "0.2.0",
-  "release_sequence": 6,
+  "version": "0.2.1",
+  "release_sequence": 7,
   "name": "Voxel Craft",
   "description": "First-person voxel sandbox: mine blocks, build structures, fight slimes, walk and fly",
   "icon": "assets/icon.png",

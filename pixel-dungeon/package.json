@@ -13,7 +13,7 @@
     0
   ],
   "id": "pxa-pixel-dungeon",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "name": "Pixel Dungeon",
   "description": "Turn-based roguelike dungeon crawler drawn with the GameRender raster API and Shattered Pixel Dungeon art",
   "icon": "assets/icon.png",
@@ -61,7 +61,7 @@
       ]
     }
   ],
-  "release_sequence": 2,
+  "release_sequence": 3,
   "permissions": [
     {
       "name": "audio.playback",

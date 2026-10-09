@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #include "pxa_canvas.h"
+#include "../common/pxa_canvas_pixels.h"
 #include "pxa_raster.h"
 #include "assets.h"
 #include "audio.h"
@@ -72,6 +73,7 @@ static uint8_t g_have_context;
 static uint8_t g_want_scale = 1;
 static uint8_t g_create_attempt; /* 0 auto, 1 auto at the board default, 2 legacy */
 static uint32_t g_display_width = PD_DEFAULT_WIDTH;
+static uint32_t g_canvas_density_q16 = UINT32_C(65536);
 static uint32_t g_display_height = PD_DEFAULT_HEIGHT;
 static uint32_t g_render_width = PD_DEFAULT_WIDTH;
 static uint32_t g_render_height = PD_DEFAULT_HEIGHT;
@@ -436,6 +438,7 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     pxa_ui_environment_t environment;
     if (pxa_ui_parse_start_environment(config, length, &environment) &&
         environment.width > 0 && environment.height > 0) {
+        g_canvas_density_q16 = environment.density_q16;
         g_display_width = environment.width;
         g_display_height = environment.height;
         g_safe_top = (int)environment.safe_insets[0];
@@ -588,6 +591,8 @@ static void handle_pointer(const pxa_event_t *event) {
     int y;
     if (!pxa_ui_parse_pointer(event, &pointer)) return;
     if (pointer.node != PD_POINTER_NODE) return;
+    pointer.x = pxa_game_canvas_to_surface_coordinate(pointer.x, g_canvas_density_q16);
+    pointer.y = pxa_game_canvas_to_surface_coordinate(pointer.y, g_canvas_density_q16);
     x = pxa_game_render_map_coord(pointer.x, (uint16_t)g_display_width,
                                   (uint16_t)g_render_width);
     y = pxa_game_render_map_coord(pointer.y, (uint16_t)g_display_height,
@@ -863,6 +868,7 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t length) {
         pxa_ui_environment_t environment;
         if (pxa_ui_parse_environment_event(&event, &environment) &&
             environment.width > 0 && environment.height > 0) {
+            g_canvas_density_q16 = environment.density_q16;
             const int resized = environment.width != g_display_width ||
                                 environment.height != g_display_height;
             g_display_width = environment.width;
