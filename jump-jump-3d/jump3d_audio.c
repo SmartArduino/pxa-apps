@@ -1,211 +1,74 @@
 #include "jump3d_audio.h"
-
 #include "jump3d_audio_data.h"
 
-/* The bank order and the public clip enum are authored separately, so pin them
- * together at compile time. */
 #define J3_AUDIO_PIN(name, index, samples, looping) \
     _Static_assert(J3_CLIP_##name == (index), "clip order drifted: " #name);
 J3_AUDIO_BANK(J3_AUDIO_PIN)
 #undef J3_AUDIO_PIN
 
-/* Standard IMA ADPCM step table (index 0..88). */
-static const int16_t k_step_table[89] = {
-    7,     8,     9,     10,    11,    12,    13,    14,    16,    17,
-    19,    21,    23,    25,    28,    31,    34,    37,    41,    45,
-    50,    55,    60,    66,    73,    80,    88,    97,    107,   118,
-    130,   143,   157,   173,   190,   209,   230,   253,   279,   307,
-    337,   371,   408,   449,   494,   544,   598,   658,   724,   796,
-    876,   963,   1060,  1166,  1282,  1411,  1552,  1707,  1878,  2066,
-    2272,  2499,  2749,  3024,  3327,  3660,  4026,  4428,  4871,  5358,
-    5894,  6484,  7132,  7845,  8630,  9493,  10442, 11487, 12635, 13899,
-    15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767,
-};
-
-static const int8_t k_index_table[8] = {-1, -1, -1, -1, 2, 4, 6, 8};
-
-/* Sample rate conversion: the stored clips are J3_AUDIO_CLIP_RATE_HZ and the
- * session runs at J3_AUDIO_SAMPLE_RATE. */
-#define J3_AUDIO_STEP_Q16 \
-    ((uint32_t)(((uint64_t)J3_AUDIO_CLIP_RATE_HZ << 16) / \
-                J3_AUDIO_SAMPLE_RATE))
-
-/* Gain ramp per output sample: 4096 / 8 = 512 samples, about 32 ms from silence
- * to full scale at 16 kHz. Ramping per sample (rather than per 20 ms frame) is
- * what removes the click when the charge sound is released. */
-#define J3_AUDIO_RAMP_STEP 8u
-
-static int16_t j3_audio_step(j3_audio_voice_t *voice, uint8_t nibble) {
-    const int32_t step = k_step_table[voice->step_index];
-    int32_t delta = step >> 3;
-    if ((nibble & 4u) != 0u) delta += step;
-    if ((nibble & 2u) != 0u) delta += step >> 1;
-    if ((nibble & 1u) != 0u) delta += step >> 2;
-    if ((nibble & 8u) != 0u) delta = -delta;
-    voice->predictor += delta;
-    if (voice->predictor > 32767) voice->predictor = 32767;
-    if (voice->predictor < -32768) voice->predictor = -32768;
-    /* The index table can subtract one at the bottom of the range; clamping
-     * through a signed value keeps quiet passages quiet instead of wrapping to
-     * the coarsest step, which is what made them sound raspy. */
-    {
-        int32_t next = (int32_t)voice->step_index +
-                       k_index_table[nibble & 7u];
-        if (next < 0) next = 0;
-        if (next > 88) next = 88;
-        voice->step_index = (uint16_t)next;
+/* The Guest owns commands and cache holdings. Host voices pin their assets,
+ * own the sampling clock, loop/fade independently and never read Guest PCM. */
+static int16_t gain_db(uint16_t gain) {
+    // Authored Q12 levels, expressed as dB Q8 without a Guest math library.
+    if (gain >= J3_GAIN_FULL) return 0;
+    if (gain >= J3_GAIN_LOUD) return -2*256;
+    if (gain >= J3_GAIN_SOFT) return -5*256;
+    if (gain >= J3_GAIN_QUIET) return -9*256;
+    if (gain >= J3_GAIN_BGM) return -11*256;
+    if (gain) return -20*256;
+    return -60*256;
+}
+static int sound_slot(const j3_audio_t *audio, uint8_t clip) {
+    for (unsigned i=0;i<J3_AUDIO_SOUND_SLOTS;++i)
+        if (audio->sound_handles[i] && audio->sound_ids[i]==clip) return (int)i;
+    return -1;
+}
+static int prepare_sound(j3_audio_t *audio, uint8_t clip) {
+    int slot=sound_slot(audio,clip);
+    if (slot>=0) return slot;
+    if (audio->load_token) return -1;
+    unsigned selected=0;
+    for (unsigned i=0;i<J3_AUDIO_SOUND_SLOTS;++i) {
+        if (!audio->sound_handles[i]) {selected=i;break;}
+        if (audio->sound_ages[i]<audio->sound_ages[selected]) selected=i;
     }
-    return (int16_t)voice->predictor;
+    if (audio->sound_handles[selected]) {
+        if (pxa_close_handle(audio->sound_handles[selected])) return -1;
+        audio->sound_handles[selected]=0;
+    }
+    uint64_t token=++audio->sequence;
+    if (!token || pxa_assets_load_sound(token,j3_audio_bank[clip].path)) return -1;
+    audio->load_token=token; audio->load_id=clip; audio->load_slot=(uint8_t)selected;
+    return -1;
 }
-
-static uint8_t j3_audio_nibble(const j3_audio_voice_t *voice) {
-    const uint32_t word = voice->clip->words[voice->position >> 3];
-    const uint8_t shift = (uint8_t)((voice->position & 7u) * 4u);
-    return (uint8_t)((word >> shift) & 0xFu);
+void j3_audio_play(j3_audio_t *audio,uint8_t channel,uint8_t clip,uint16_t gain,uint8_t loop) {
+    if (!audio || channel>=J3_CHANNEL_COUNT || clip>=J3_CLIP_COUNT ||
+        (channel==J3_CHANNEL_BGM && clip!=J3_CLIP_ICON) ||
+        (channel!=J3_CHANNEL_BGM && clip==J3_CLIP_ICON)) return;
+    j3_audio_voice_t *v=&audio->voices[channel];
+    v->clip=clip; v->gain_q12=gain; v->loop=loop!=0; v->requested=1;
+    // The current Host voice continues until the replacement is ready.
+    v->started=0; v->ends_us=0; v->stop_pending=0;
 }
-
-void j3_audio_stop(j3_audio_t *audio, uint8_t channel) {
-    if (audio == NULL || channel >= J3_CHANNEL_COUNT) return;
-    /* Ramp to silence instead of cutting, then release the voice. */
-    audio->voices[channel].requested = 0;
-    audio->voices[channel].target_gain_q12 = 0;
+void j3_audio_stop(j3_audio_t *audio,uint8_t channel) {
+    if (!audio || channel>=J3_CHANNEL_COUNT) return;
+    audio->voices[channel].requested=0;
+    audio->voices[channel].stop_pending=1;
+    audio->voices[channel].started=0;
 }
-
 void j3_audio_stop_all(j3_audio_t *audio) {
-    uint8_t channel;
-    for (channel = 0; channel < J3_CHANNEL_COUNT; ++channel)
-        j3_audio_stop(audio, channel);
+    if (!audio) return;
+    for (unsigned i=0;i<J3_CHANNEL_COUNT;++i) j3_audio_stop(audio,(uint8_t)i);
+    // Shutdown calls this immediately before Guest exit, so send stops now.
+    j3_audio_tick(audio,audio->tick_us);
 }
-
-void j3_audio_play(j3_audio_t *audio, uint8_t channel, uint8_t clip,
-                   uint16_t gain_q12, uint8_t loop) {
-    j3_audio_voice_t *voice;
-    if (audio == NULL || channel >= J3_CHANNEL_COUNT || clip >= J3_AUDIO_CLIP_COUNT)
-        return;
-    voice = &audio->voices[channel];
-    voice->clip = &j3_audio_bank[clip];
-    voice->position = 0;
-    voice->phase = 0;
-    voice->step_q16 = J3_AUDIO_STEP_Q16;
-    voice->predictor = 0;
-    voice->step_index = 0;
-    voice->previous = 0;
-    voice->current = 0;
-    /* A fresh voice starts from silence so percussive rests do not click. */
-    if (voice->active == 0u) voice->gain_q12 = 0;
-    voice->target_gain_q12 = gain_q12 > J3_GAIN_FULL ? J3_GAIN_FULL : gain_q12;
-    voice->loop = loop != 0u ? 1u : 0u;
-    voice->finished = 0;
-    voice->requested = 1;
-    voice->active = voice->clip->samples == 0u ? 0u : 1u;
+int j3_audio_channel_active(const j3_audio_t *audio,uint8_t channel) {
+    if (!audio || channel>=J3_CHANNEL_COUNT) return 0;
+    const j3_audio_voice_t *v=&audio->voices[channel];
+    return v->requested && (!v->started || v->loop || audio->tick_us<v->ends_us);
 }
-
-uint8_t j3_audio_channel_clip(const j3_audio_t *audio, uint8_t channel) {
-    if (audio == NULL || channel >= J3_CHANNEL_COUNT ||
-        audio->voices[channel].clip == NULL)
-        return (uint8_t)J3_AUDIO_CLIP_COUNT;
-    return (uint8_t)(audio->voices[channel].clip - j3_audio_bank);
-}
-
-int j3_audio_channel_active(const j3_audio_t *audio, uint8_t channel) {
-    if (audio == NULL || channel >= J3_CHANNEL_COUNT) return 0;
-    return audio->voices[channel].active != 0u;
-}
-
-/* Decodes the next source sample and advances the clip position. */
-static void j3_audio_advance(j3_audio_voice_t *voice) {
-    const uint8_t nibble = j3_audio_nibble(voice);
-    voice->previous = voice->current;
-    voice->current = j3_audio_step(voice, nibble);
-    if (++voice->position >= voice->clip->samples) {
-        if (voice->loop != 0u) {
-            voice->position = 0;
-            voice->predictor = 0;
-            voice->step_index = 0;
-        } else {
-            voice->finished = 1;
-        }
-    }
-}
-
-/* Smooth saturating limiter: transparent below the knee (about -1.3 dBFS) and
- * asymptotic to full scale above it, so only genuine overlaps are shaped. */
-static int32_t j3_audio_limit(int32_t value) {
-    const int32_t knee = 28800;
-    const int32_t range = 32767 - knee;
-    int32_t magnitude = value < 0 ? -value : value;
-    if (magnitude > knee) {
-        magnitude = knee + range - (range * range) / (magnitude - knee + range);
-        if (magnitude > 32767) magnitude = 32767;
-    }
-    return value < 0 ? -magnitude : magnitude;
-}
-
-static void j3_audio_mix(j3_audio_t *audio) {
-    int any_effect = 0;
-    uint8_t channel;
-    int index;
-    for (channel = J3_CHANNEL_LAND; channel <= J3_CHANNEL_BONUS; ++channel)
-        if (audio->voices[channel].active != 0u) any_effect = 1;
-    for (channel = 0; channel < J3_CHANNEL_COUNT; ++channel) {
-        j3_audio_voice_t *voice = &audio->voices[channel];
-        if (channel == J3_CHANNEL_BGM && voice->requested != 0u)
-            voice->target_gain_q12 =
-                any_effect != 0 ? J3_GAIN_BGM_DUCKED : J3_GAIN_BGM;
-        if (voice->active != 0u && voice->finished != 0u) {
-            voice->requested = 0;
-            voice->target_gain_q12 = 0;
-        }
-    }
-    for (index = 0; index < (int)J3_AUDIO_FRAME_SAMPLES; ++index) {
-        int32_t mix = 0;
-        for (channel = 0; channel < J3_CHANNEL_COUNT; ++channel) {
-            j3_audio_voice_t *voice = &audio->voices[channel];
-            int32_t sample;
-            if (voice->active == 0u) continue;
-            /* Per-sample gain ramp: no steps, so no clicks. */
-            if (voice->gain_q12 < voice->target_gain_q12) {
-                const uint16_t next =
-                    (uint16_t)(voice->gain_q12 + J3_AUDIO_RAMP_STEP);
-                voice->gain_q12 = next > voice->target_gain_q12
-                                      ? voice->target_gain_q12
-                                      : next;
-            } else if (voice->gain_q12 > voice->target_gain_q12) {
-                const uint16_t difference =
-                    voice->gain_q12 - voice->target_gain_q12;
-                voice->gain_q12 =
-                    difference > J3_AUDIO_RAMP_STEP
-                        ? (uint16_t)(voice->gain_q12 - J3_AUDIO_RAMP_STEP)
-                        : voice->target_gain_q12;
-            }
-            if (voice->gain_q12 == 0u) {
-                if (voice->requested == 0u) voice->active = 0u;
-                continue;
-            }
-            /* Linear interpolation between the two nearest source samples. */
-            voice->phase += voice->step_q16;
-            while (voice->phase >= 65536u) {
-                voice->phase -= 65536u;
-                if (voice->finished == 0u || voice->loop != 0u)
-                    j3_audio_advance(voice);
-            }
-            sample = (int32_t)voice->previous +
-                     (((int32_t)(voice->current - voice->previous) *
-                       (int32_t)(voice->phase >> 8)) >> 8);
-            mix += (sample * (int32_t)voice->gain_q12) >> 12;
-        }
-        audio->frame[index] = (int16_t)j3_audio_limit(mix);
-    }
-}
-
-static int j3_audio_submit(j3_audio_t *audio) {
-    int32_t result;
-    if (audio->state != J3_AUDIO_READY) return 0;
-    j3_audio_mix(audio);
-    result = pxa_audio_write_pcm(audio->session_handle,
-                                 (uint8_t *)audio->frame,
-                                 sizeof(audio->frame));
-    return result == (int32_t)sizeof(audio->frame);
+uint8_t j3_audio_channel_clip(const j3_audio_t *audio,uint8_t channel) {
+    return j3_audio_channel_active(audio,channel) ? audio->voices[channel].clip : J3_CLIP_COUNT;
 }
 
 void j3_audio_start(j3_audio_t *audio, uint8_t *packet, uint32_t capacity) {
@@ -229,6 +92,36 @@ int j3_audio_handle_event(j3_audio_t *audio, const pxa_event_t *event,
     (void)packet;
     (void)capacity;
     if (audio == NULL || event == NULL || packet == NULL) return 0;
+    if (event->service == PXA_ASSETS_SERVICE && event->opcode == PXA_ASSETS_LOAD &&
+        audio->load_token && event->token == audio->load_token) {
+        pxa_asset_result_t result;
+        if (!pxa_assets_parse_result(event,event->token,PXA_ASSETS_LOAD,&result)) return 1;
+        audio->load_token=0;
+        if (!result.status && audio->state == J3_AUDIO_READY) {
+            audio->sound_handles[audio->load_slot]=result.handle;
+            audio->sound_ids[audio->load_slot]=audio->load_id;
+            audio->sound_ages[audio->load_slot]=++audio->sound_age;
+        } else {
+            if (!result.status) (void)pxa_close_handle(result.handle);
+            for (unsigned i=0;i<J3_CHANNEL_BGM;++i)
+                if (audio->voices[i].clip==audio->load_id && !audio->voices[i].started)
+                    audio->voices[i].requested=0;
+            (void)pxa_log_write(2,"jump-jump-3d: Host sound preparation failed");
+        }
+        return 1;
+    }
+    if (event->service == PXA_AUDIO_SERVICE && event->opcode == PXA_AUDIO_PLAYBACK_EVENT) {
+        pxa_audio_playback_event_t result;
+        if (!pxa_audio_parse_playback(event,&result) || result.session != audio->session_handle ||
+            result.instance != audio->music_instance) return 0;
+        if (result.state == PXA_AUDIO_PLAYBACK_READY) audio->music_ready=1;
+        else {
+            audio->music_ready=0; audio->music_instance=0;
+            audio->voices[J3_CHANNEL_BGM].started=0;
+            audio->voices[J3_CHANNEL_BGM].requested=0;
+        }
+        return 1;
+    }
     if (event->service == PXA_PERMISSION_SERVICE &&
         event->opcode == PXA_PERMISSION_ACQUIRE &&
         event->token == J3_AUDIO_PERMISSION_REQUEST) {
@@ -282,35 +175,66 @@ int j3_audio_handle_event(j3_audio_t *audio, const pxa_event_t *event,
         }
         audio->state = J3_AUDIO_READY;
         (void)pxa_log_write(2, "jump-jump-3d audio ready");
-        {
-            uint8_t frame;
-            for (frame = 0; frame < J3_AUDIO_PREFILL_FRAMES; ++frame)
-                if (!j3_audio_submit(audio)) break;
-        }
         return 1;
     }
     return 0;
 }
 
-void j3_audio_tick(j3_audio_t *audio, uint64_t timestamp_us) {
-    uint64_t elapsed_us;
-    uint8_t frames = 0;
-    if (audio == NULL || audio->state != J3_AUDIO_READY)
-        return;
-    if (audio->tick_us == 0) {
-        audio->tick_us = timestamp_us;
-        frames = 2;
-    } else {
-        elapsed_us = timestamp_us - audio->tick_us;
-        audio->tick_us = timestamp_us;
-        if (elapsed_us > 100000u) elapsed_us = 100000u;
-        audio->remainder_us += (uint32_t)elapsed_us;
-        while (audio->remainder_us >= J3_AUDIO_FRAME_US &&
-               frames < J3_AUDIO_MAX_FRAMES_PER_TICK) {
-            audio->remainder_us -= J3_AUDIO_FRAME_US;
-            ++frames;
+void j3_audio_tick(j3_audio_t *audio,uint64_t now) {
+    static const uint8_t preload[]={J3_CLIP_SCALE_INTRO,J3_CLIP_SCALE_LOOP,J3_CLIP_SUCCESS,J3_CLIP_POP};
+    if (!audio || audio->state!=J3_AUDIO_READY) return;
+    audio->tick_us=now;
+    for (unsigned i=0;i<J3_CHANNEL_COUNT;++i) {
+        j3_audio_voice_t *v=&audio->voices[i];
+        if (v->stop_pending) {
+            int32_t result=i==J3_CHANNEL_BGM ?
+                pxa_audio_control_music(audio->session_handle,PXA_AUDIO_ASSET_STOP,0) :
+                pxa_audio_control_sound(audio->session_handle,(uint8_t)i,PXA_AUDIO_ASSET_STOP,0);
+            if (result>=0) {
+                v->stop_pending=0;
+                if (i==J3_CHANNEL_BGM) {audio->music_instance=0;audio->music_ready=0;}
+            }
+            continue;
+        }
+        if (!v->requested) continue;
+        if (v->started) {
+            if (!v->loop && now>=v->ends_us) {v->requested=0;v->started=0;}
+            continue;
+        }
+        int32_t result;
+        if (i==J3_CHANNEL_BGM) {
+            uint64_t instance;
+            result=pxa_audio_play_music(audio->session_handle,j3_audio_bank[v->clip].path,
+                v->loop,gain_db(v->gain_q12),&instance);
+            if (result>=0) {
+                audio->music_instance=instance;audio->music_ready=0;
+                audio->music_gain_q12=v->gain_q12;
+            }
+        } else {
+            int slot=prepare_sound(audio,v->clip);
+            if (slot<0) continue;
+            result=pxa_audio_play_sound_track(audio->session_handle,audio->sound_handles[slot],
+                (uint8_t)i,v->loop,gain_db(v->gain_q12));
+            if (result>=0) audio->sound_ages[slot]=++audio->sound_age;
+        }
+        if (result>=0) {
+            v->started=1;
+            v->ends_us=now+(uint64_t)j3_audio_bank[v->clip].samples*1000000/J3_AUDIO_SAMPLE_RATE;
+        } else if (result!=PXA_STATUS_WOULD_BLOCK) {
+            v->requested=0;
+            (void)pxa_log_write(2,"jump-jump-3d: Host playback command rejected");
         }
     }
-    while (frames-- != 0)
-        if (!j3_audio_submit(audio)) break;
+    j3_audio_voice_t *bgm=&audio->voices[J3_CHANNEL_BGM];
+    if (bgm->started && audio->music_ready) {
+        uint16_t gain=J3_GAIN_BGM;
+        for (unsigned i=J3_CHANNEL_LAND;i<=J3_CHANNEL_BONUS;++i)
+            if (j3_audio_channel_active(audio,(uint8_t)i)) gain=J3_GAIN_BGM_DUCKED;
+        if (gain!=audio->music_gain_q12 && pxa_audio_control_music(audio->session_handle,
+            PXA_AUDIO_ASSET_SET_GAIN,gain_db(gain))>=0) audio->music_gain_q12=gain;
+    }
+    // Prepare common effects during idle ticks, using the same bounded cache.
+    if (!audio->load_token && audio->preload_index<sizeof(preload)) {
+        if (prepare_sound(audio,preload[audio->preload_index])>=0) ++audio->preload_index;
+    }
 }

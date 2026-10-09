@@ -5,6 +5,7 @@
 
 #include "pxa.h"
 #include "pxa_audio.h"
+#include "pxa_assets.h"
 #include "pxa_permission.h"
 
 /* Clip order matches j3_audio_bank in the generated jump3d_audio_data.h. */
@@ -46,10 +47,7 @@ enum {
 };
 
 #define J3_AUDIO_SAMPLE_RATE 16000u
-#define J3_AUDIO_FRAME_SAMPLES 320u
-#define J3_AUDIO_FRAME_US 20000u
-#define J3_AUDIO_PREFILL_FRAMES 4u
-#define J3_AUDIO_MAX_FRAMES_PER_TICK 4u
+#define J3_AUDIO_SOUND_SLOTS 8u
 
 #define J3_AUDIO_PERMISSION_REQUEST UINT32_C(0x4a334101)
 #define J3_AUDIO_OPEN_REQUEST UINT32_C(0x4a334102)
@@ -73,37 +71,26 @@ enum {
 };
 
 typedef struct {
-    const uint32_t *words;
+    const char *path;
     uint32_t samples;
     uint8_t looping;
 } j3_audio_clip_t;
 
 typedef struct {
-    const j3_audio_clip_t *clip;
-    uint32_t position;      /* index of the newer decoded sample */
-    uint32_t phase;         /* Q16 fraction between previous and current */
-    uint32_t step_q16;      /* clip rate / session rate in Q16 */
-    int32_t predictor;
-    uint16_t step_index;
-    int16_t previous;       /* sample at position - 1 */
-    int16_t current;        /* sample at position */
-    uint16_t gain_q12;      /* current gain, Q12 (0..4096) */
-    uint16_t target_gain_q12;
-    uint8_t active;         /* still mixing */
-    uint8_t requested;      /* asked to play; clears when the fade ends */
-    uint8_t loop;
-    uint8_t finished;       /* ran past the end of a one shot */
+    uint64_t ends_us;
+    uint16_t gain_q12;
+    uint8_t clip, loop, requested, started, stop_pending;
 } j3_audio_voice_t;
 
 typedef struct {
-    uint64_t permission_handle;
-    uint64_t session_handle;
-    uint64_t tick_us;
-    uint32_t remainder_us;
-    uint16_t queued_frames;
-    uint8_t state;
+    uint64_t permission_handle, session_handle, tick_us;
+    uint64_t sound_handles[J3_AUDIO_SOUND_SLOTS];
+    uint32_t sound_ages[J3_AUDIO_SOUND_SLOTS], sound_age;
+    uint64_t load_token, sequence, music_instance;
+    uint8_t sound_ids[J3_AUDIO_SOUND_SLOTS], load_id, load_slot;
+    uint8_t state, music_ready, preload_index;
+    uint16_t music_gain_q12;
     j3_audio_voice_t voices[J3_CHANNEL_COUNT];
-    int16_t frame[J3_AUDIO_FRAME_SAMPLES];
 } j3_audio_t;
 
 /* Requests the optional playback permission and opens the media session. */
@@ -113,7 +100,7 @@ void j3_audio_start(j3_audio_t *audio, uint8_t *packet, uint32_t capacity);
 int j3_audio_handle_event(j3_audio_t *audio, const pxa_event_t *event,
                           uint8_t *packet, uint32_t capacity);
 
-/* Mixes and submits frames for a clock tick. */
+/* Sends pending Host commands; playback advances independently of this tick. */
 void j3_audio_tick(j3_audio_t *audio, uint64_t timestamp_us);
 
 /* Starts `clip` on `channel`. `loop` repeats it until stopped or replaced. */
