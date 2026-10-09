@@ -1,7 +1,11 @@
 #include "../main.cpp"
 #include <cassert>
 extern "C" std::int32_t pxa_submit(const std::uint8_t*, std::uint32_t) { return 0; }
-extern "C" std::int32_t pxa_io(std::uint64_t, std::uint32_t, std::uint8_t*, std::uint32_t) { return -3; }
+static unsigned sounds=0;
+extern "C" std::int32_t pxa_io(std::uint64_t handle, std::uint32_t opcode, std::uint8_t* data, std::uint32_t size) {
+    if(handle==88&&opcode==2){assert(size>0&&size<=640&&size%2==0);++sounds;return size;}
+    return -3;
+}
 int main() {
     static VoxelCraft game;
     game.screen=voxel::Screen::game;game.apply_display({});
@@ -102,9 +106,30 @@ int main() {
     game.on_pointer(release);assert(game.screen==voxel::Screen::workbench&&game.world.at(20,2,22)==voxel::kTable);
     game.show(voxel::Screen::game);game.on_pointer(press);
     for(int i=0;i<25;++i)game.on_update(context,16000);
+    assert(game.world.at(20,2,22)==voxel::kTable&&game.digging.progress()>0&&game.digging.progress()<1);
+    for(int i=0;i<100;++i)game.on_update(context,16000);
     assert(game.screen==voxel::Screen::game&&game.world.at(20,2,22)==voxel::kAir&&game.mine_long_pressed);
+    assert(game.inventory.count(voxel::kTable)==1);
     game.on_pointer(release);assert(game.screen==voxel::Screen::game);
     // Canceling a short press must never invoke the workbench.
     game.world.set(20,2,22,voxel::kTable);game.on_pointer(press);release.phase=3;game.on_pointer(release);assert(game.screen==voxel::Screen::game);
+    // Collect foliage without deleting the dirt underneath; place consumes
+    // exactly one stack item. Capacity failure preserves the selected block.
+    game.world.set(20,2,22,voxel::kBush);game.world.set(20,2,23,voxel::kDirt);
+    game.inventory={};
+    pxa::RequestTable requests;game.audio.emplace(transport,requests,88,pxa::AudioFormat{16000,1,20});
+    game.on_pointer(press);for(int i=0;i<20;++i)game.on_update(context,16000);
+    assert(game.world.at(20,2,22)==voxel::kBush&&game.digging.progress()>0);
+    for(int i=0;i<12;++i)game.on_update(context,16000);
+    assert(game.world.at(20,2,22)==voxel::kAir&&game.world.at(20,2,23)==voxel::kDirt);
+    game.cancel_controls();assert(game.digging.key==0&&game.inventory.count(voxel::kBush)==1);
+    game.hotbar=0;game.place();assert(game.world.at(20,2,22)==voxel::kBush&&game.inventory.count(voxel::kBush)==0);
+    const unsigned sounded=sounds;game.place();assert(sounds==sounded); // Empty hand, no phantom placement/sound.
+    for(auto& s:game.inventory.slots)s={voxel::kStone,64};
+    game.on_pointer(press);for(int i=0;i<40;++i)game.on_update(context,16000);
+    assert(game.world.at(20,2,22)==voxel::kBush&&game.inventory.count(voxel::kBush)==0);
+    game.on_background(context);assert(game.digging.key==0&&sounds>0);
+    game.audio.reset();
     game.renderer.reset();
+    std::printf("Gameplay: finite mining/drop/place/full-capacity rollback and %u bounded sound commands OK\n",sounds);
 }

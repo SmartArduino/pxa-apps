@@ -5,7 +5,7 @@ from pathlib import Path
 from PIL import Image,ImageDraw,ImageFont
 root=Path(__file__).resolve().parents[1]
 labels=[]
-for name in ['voxel_session.inc','voxel_menu.inc']:
+for name in ['voxel_session.inc','voxel_menu.inc','voxel_items.hpp']:
  for text in re.findall(r'"([^"\n]*)"',(root/name).read_text()):
   if re.search('[\u4e00-\u9fff]',text):labels.append(text)
 chars=''.join(dict.fromkeys('VOXEL CRAFT0123456789'+''.join(labels)))

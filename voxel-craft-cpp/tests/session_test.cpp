@@ -49,13 +49,39 @@ int main(){
     p.x=app.controls.menu.cx();p.y=app.controls.menu.cy();app.on_pointer(p);assert(app.screen==pause);
     assert(!app.stick_active&&!app.look_active&&!app.mining);
     app.show(voxel::Screen::game);p.x=app.controls.bag.cx();p.y=app.controls.bag.cy();app.on_pointer(p);assert(app.screen==inventory);
-    app.menu_action(voxel::UiAction::quick_slot,2);app.menu_action(voxel::UiAction::item,voxel::kTable);assert(app.selected_block()==voxel::kTable);
+    assert(app.inventory.count(voxel::kTable)==0);
+    app.inventory.slots[9]={voxel::kTable,3};
+    app.menu_action(voxel::UiAction::item,9);app.menu_action(voxel::UiAction::item,2);
+    assert(app.selected_block()==voxel::kTable&&app.inventory.slots[2].count==3&&!app.inventory.slots[9].count);
+    app.inventory.slots[9]={voxel::kWood,2};
+    app.menu_action(voxel::UiAction::item,9);app.menu_action(voxel::UiAction::craft_cell,4);
+    assert(app.crafting.result(app.inventory,2)==voxel::ItemStack(voxel::kPlank,4));
+    app.menu_action(voxel::UiAction::item,2); // switching ingredient must not transfer reserved stacks
+    assert(app.inventory.slots[9]==voxel::ItemStack(voxel::kWood,2)&&app.crafting.sources[4]==9);
+    app.menu_action(voxel::UiAction::back);
+    assert(app.inventory.count(voxel::kWood)==2&&app.crafting.sources[4]==-1); // close never loses materials
     pxa::ui::DisplayMetrics dense;dense.width=dense.height=412;dense.density_q16=131072;
     app.apply_display(dense);app.show(game);
     p.x=app.controls.menu.cx()/2;p.y=app.controls.menu.cy()/2;app.on_pointer(p);assert(app.screen==pause);
     app.apply_display({});
-    voxel::SaveState state;state.camera=pose;state.generation=3;state.quick=app.quickbar;state.blocks_hash=voxel::checksum(app.world.saved_blocks());
+    voxel::SaveState state;state.camera=pose;state.generation=3;state.inventory=app.inventory;state.blocks_hash=voxel::checksum(app.world.saved_blocks());
     auto header=voxel::encode_save(state);auto decoded=voxel::decode_save(header);assert(decoded&&decoded->generation==3&&decoded->quick[2]==voxel::kTable);
+    auto saved_items=std::as_bytes(std::span{state.inventory.slots});
+    assert(voxel::decode_inventory(*decoded,saved_items)&&decoded->inventory==app.inventory);
+    auto corrupt_items=state.inventory;corrupt_items.slots[2].count^=1;
+    assert(!voxel::decode_inventory(*decoded,std::as_bytes(std::span{corrupt_items.slots})));
+    // v2 two-byte stacks migrate without changing quantities or inventing wear.
+    std::array<std::byte,voxel::kInventorySlots*2> v2items{};
+    for(int i=0;i<voxel::kInventorySlots;++i){v2items[i*2]=std::byte(state.inventory.slots[i].block);v2items[i*2+1]=std::byte(state.inventory.slots[i].count);}
+    auto v2header=header;pxa::wire::put16(v2header.data()+4,2);pxa::wire::put16(v2header.data()+66,v2items.size());
+    pxa::wire::put32(v2header.data()+62,voxel::checksum(v2items));pxa::wire::put32(v2header.data()+76,voxel::checksum(std::span{v2header}.first(76)));
+    auto v2=voxel::decode_save(v2header);assert(v2&&voxel::decode_inventory(*v2,v2items)&&v2->inventory==state.inventory);
+    auto tools=state;tools.inventory.slots[0]={voxel::kStonePickaxe,1,93};
+    auto saved_tool=voxel::decode_save(voxel::encode_save(tools));assert(saved_tool&&voxel::decode_inventory(*saved_tool,std::as_bytes(std::span{tools.inventory.slots}))&&saved_tool->inventory.slots[0].wear==93);
+    auto legacy=header;pxa::wire::put16(legacy.data()+4,1);
+    for(int i=0;i<voxel::kHeaderQuickCount;++i)legacy[52+i]=std::byte(voxel::kDirt);
+    pxa::wire::put32(legacy.data()+76,voxel::checksum(std::span{legacy}.first(76)));
+    auto migrated=voxel::decode_save(legacy);assert(migrated&&migrated->legacy&&migrated->inventory.count(voxel::kDirt)==8);
     auto outside=state;outside.camera={-2.f,256.f,70.f,0.f,0.f};outside.flying=true;
     auto recovered=voxel::decode_save(voxel::encode_save(outside));assert(recovered&&recovered->camera.y==256.f&&recovered->camera.z==70.f);
     outside.camera.x=2097152.f;assert(!voxel::decode_save(voxel::encode_save(outside)));
@@ -72,6 +98,7 @@ int main(){
     // cutouts and palette rows while leaving world depth values untouched.
     // The two fixed-point interpolators can resolve exact texel boundaries
     // differently; the synthetic gradient bounds this to adjacent samples.
+    for(int i=0;i<voxel::kQuickCount;++i)app.inventory.slots[i]={voxel::kDirt,64};
     for(unsigned y=0;y<220;++y)for(unsigned x=0;x<220;++x)
         texture[y*220+x]=((x/3+y/5)%3==0)?0:std::uint8_t(1+(x+y)%15);
     for(unsigned i=0;i<palette.size();++i)palette[i]=std::uint16_t(i*127);
@@ -106,7 +133,14 @@ int main(){
         app.show(page);app.draw_menu(renderer);assert(!app.ui_dirty);
         assert(pixels[120*296+148]!=0); // cleared visible frame
         assert(app.menu_hit_count<=app.menu_hits.size());
+        if(page==inventory||page==workbench)for(unsigned i=0;i<app.menu_hit_count;++i){
+            voxel::Rect r=app.menu_hits[i].rect;auto [l,right]=app.controls.horizontal(r.y,r.h);
+            assert(r.x>=l&&r.x+r.w<=right&&r.y>=int(app.display.safe.top)&&r.y+r.h<=int(app.display.height-app.display.safe.bottom));
+        }
     }
+    std::printf("Session storage %zu B; inventory %zu B; crafting %zu B; hit table %zu B\n",sizeof(VoxelCraft),sizeof(app.inventory),sizeof(app.crafting),sizeof(app.menu_hits));
+    for(auto& stack:app.inventory.slots)stack={voxel::kStonePickaxe,1,132};
+    for(auto page:{inventory,workbench}){app.show(page);app.draw_menu(renderer);assert(last_draw_size<PXA_RASTER_MAX_DRAW_BYTES);}
     app.renderer.emplace(transport,77,info);
     auto projection=pxa::game3d::Projector::create(296,240,1.15f,.25f,64.f);
     assert(projection);app.projector=*projection;app.settings.auto_distance=false;
@@ -121,5 +155,35 @@ int main(){
     pending_frame=false;app.on_frame(ctx,{164000,16000,16000,1});
     assert(app.frames==2&&app.hud_window_us==64000); // Includes the skipped interval.
     app.renderer.reset();
+    // Mining cracks share world depth. A nearer wall blocks them completely,
+    // and cutout targets keep their holes without an opaque crack decal.
+    app.inventory={};
+    auto empty_world=app.world.load_staging();std::fill(empty_world.begin(),empty_world.end(),std::byte{});app.world.finish_load(true);
+    app.camera={20.5f,1.f,20.5f,0,0};app.world.set(20,2,22,voxel::kStone);
+    auto eye=app.camera;eye.y+=kEyeHeight;
+    app.mining=true;const auto hit=app.target();assert(hit.hit);
+    assert(!app.digging.advance(hit,voxel::kStone,1.6f));
+    auto occluded=renderer.frame(app.commands);occluded.clear({0x1234});
+    std::array<pxa::game::Vertex,4> foreground{{
+        {.x_q4=0,.y_q4=0,.depth_q8=128},{.x_q4=296*16,.y_q4=0,.depth_q8=128},
+        {.x_q4=296*16,.y_q4=240*16,.depth_q8=128},{.x_q4=0,.y_q4=240*16,.depth_q8=128}}};
+    occluded.solid_depth_quad(foreground,{0x1234});app.draw_mining_cracks(occluded,eye);assert(occluded.submit());
+    assert(std::all_of(pixels.begin(),pixels.end(),[](auto pixel){return pixel==0x1234;}));
+    auto visible=renderer.frame(app.commands);visible.clear({0x1234});app.draw_mining_cracks(visible,eye);assert(visible.submit());
+    assert(std::any_of(pixels.begin(),pixels.end(),[](auto pixel){return pixel==0x2104;}));
+    app.world.set(20,2,22,voxel::kAir);app.world.set(20,2,25,voxel::kStone);app.digging.reset();
+    const auto far_hit=app.target();assert(far_hit.hit);
+    assert(!app.digging.advance(far_hit,voxel::kStone,1.6f));
+    auto far_cracks=renderer.frame(app.commands);far_cracks.clear({0x1234});app.draw_mining_cracks(far_cracks,eye);assert(far_cracks.submit());
+    assert(std::count(pixels.begin(),pixels.end(),0x2104)>=15);
+    // A decal must survive the real textured block's quantized Z, not only
+    // draw against cleared depth. This caught invisible far-range cracks.
+    auto on_block=renderer.frame(app.commands);on_block.clear({0x1234});
+    voxel::DrawBudget block_budget;block_budget.max_distance=32;
+    const auto drawn=voxel::draw_world(on_block,*app.projector,app.world,eye,block_budget);
+    assert(drawn.faces_drawn);app.draw_mining_cracks(on_block,eye);assert(on_block.submit());
+    assert(std::count(pixels.begin(),pixels.end(),0x2104)>=15);
+    app.world.set(20,2,22,voxel::kLeaves);app.digging.reset();assert(!app.digging.advance(hit,voxel::kLeaves,.2f));
+    auto transparent=renderer.frame(app.commands);app.draw_mining_cracks(transparent,eye);assert(transparent.bytes_used()==PXA_RASTER_DRAW_HEADER_BYTES);
     std::puts("Session: title/pause/navigation, grounded jump, inventory, corrupt headers, transactional mesh staging and all menu commands validated/rasterized OK");
 }

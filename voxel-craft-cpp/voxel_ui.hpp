@@ -37,7 +37,7 @@ struct ControlLayout {
         auto [l,r]=horizontal(y,h);int margin=std::max(2,int(5*scale));
         int w=std::max(1,std::min(desired,r-l-2*margin));return {(l+r-w)/2,y,w,h};
     }
-    static ControlLayout make(pxa::ui::DisplayMetrics d)noexcept {
+    static ControlLayout make(pxa::ui::DisplayMetrics d,int quick_count=9)noexcept {
         ControlLayout v;v.display=d;
         // Guard unreasonable host values before conversions and geometry.
         v.display.width=std::clamp(d.width,96u,2047u);v.display.height=std::clamp(d.height,96u,2047u);
@@ -52,10 +52,11 @@ struct ControlLayout {
         v.menu={r-pad-b,y,b,b};
         v.slot=std::max(12,int(23*v.scale));v.gap=std::max(1,int(3*v.scale));
         y=v.height()-int(s.bottom)-pad-v.slot;
-        auto bar=v.row(y,v.slot,9*v.slot+8*v.gap);
-        v.slot=std::min(v.slot,std::max(8,(bar.w-8*v.gap)/9));
-        bar=v.row(y,v.slot,9*v.slot+8*v.gap);v.hotbar=bar;
-        v.bag={bar.x+8*(v.slot+v.gap),bar.y,v.slot,v.slot};
+        quick_count=std::clamp(quick_count,1,9);
+        auto bar=v.row(y,v.slot,(quick_count+1)*v.slot+quick_count*v.gap);
+        v.slot=std::min(v.slot,std::max(8,(bar.w-quick_count*v.gap)/(quick_count+1)));
+        bar=v.row(y,v.slot,(quick_count+1)*v.slot+quick_count*v.gap);v.hotbar=bar;
+        v.bag={bar.x+quick_count*(v.slot+v.gap),bar.y,v.slot,v.slot};
         int top=std::max(v.menu.y+b+pad,(bar.y-3*b-2*pad+v.menu.y+b)/2);
         for(int i=0;i<3;++i){int ay=top+i*(b+pad);auto span=v.horizontal(ay,b);v.actions[i]={span.second-pad-b,ay,b,b};}
         v.actions[3]={v.actions[0].x-b-pad,v.actions[0].y+b/2,b,b};
@@ -64,8 +65,19 @@ struct ControlLayout {
     }
 };
 enum class Screen:std::uint8_t {title,game,pause,settings_page,load_slots,save_slots,inventory,workbench,confirm_title,confirm_overwrite};
-enum class UiAction:std::uint8_t {none,new_game,load_slots,settings,resume,save_slots,title,back,slot,confirm,fly,sensitivity,invert,distance,auto_jump,defaults,item,quick_slot};
-struct MenuHit {Rect rect;UiAction action=UiAction::none;int argument=0;};
+enum class UiAction:std::uint8_t {none,new_game,load_slots,settings,resume,save_slots,title,back,slot,confirm,fly,sensitivity,invert,distance,auto_jump,defaults,item,quick_slot,craft,craft_cell};
+struct MenuHit {
+    struct Bounds {
+        std::int16_t x=0,y=0,w=0,h=0;
+        bool contains(int px,int py)const noexcept{return px>=x&&py>=y&&px<x+w&&py<y+h;}
+        operator Rect()const noexcept{return {x,y,w,h};}
+    } rect;
+    UiAction action=UiAction::none;
+    std::int8_t argument=0;
+    MenuHit()=default;
+    MenuHit(Rect r,UiAction a,int arg)noexcept:rect{std::int16_t(r.x),std::int16_t(r.y),std::int16_t(r.w),std::int16_t(r.h)},action(a),argument(std::int8_t(arg)){}
+};
+static_assert(sizeof(MenuHit)==10);
 struct Settings {
     std::uint8_t sensitivity=1;bool invert_y=false,auto_distance=true,flight=false,auto_jump=true;
 };

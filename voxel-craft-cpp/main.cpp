@@ -7,6 +7,7 @@
 #include <pxa/game3d.hpp>
 #include <pxa/game_utils.hpp>
 #include <pxa/game_pacing.hpp>
+#include <pxa/game3d_camera.hpp>
 
 #include <algorithm>
 #include <array>
@@ -26,6 +27,10 @@
 #include "voxel_ui.hpp"
 #include "voxel_save.hpp"
 #include "voxel_font.hpp"
+#include "voxel_mining.hpp"
+#include "voxel_crafting.hpp"
+#include "voxel_sound.hpp"
+#include "voxel_item_draw.hpp"
 
 #ifndef VOXEL_BENCH_DISTANCE
 #define VOXEL_BENCH_DISTANCE 0
@@ -42,6 +47,14 @@
 #ifndef VOXEL_VALIDATE
 #define VOXEL_VALIDATE 0
 #endif
+#ifndef VOXEL_PLAYTEST_SCENE
+#define VOXEL_PLAYTEST_SCENE 0
+#endif
+#ifndef VOXEL_PLAYTEST_TOOLS
+#define VOXEL_PLAYTEST_TOOLS 0
+#endif
+static_assert(!VOXEL_PLAYTEST_SCENE||VOXEL_VALIDATE);
+static_assert(!VOXEL_PLAYTEST_TOOLS||VOXEL_PLAYTEST_SCENE);
 #ifndef VOXEL_DRAW_BUDGET
 #define VOXEL_DRAW_BUDGET 40000
 #endif
@@ -74,6 +87,47 @@ struct VoxelCraft {
     bool flying = false;
     bool on_ground = false;
     int hotbar = 0;
+    voxel::MiningProgress digging;
+    std::optional<pxa::Permission> audio_permission;
+    std::optional<pxa::AudioSession> audio;
+
+    [[gnu::noinline]] pxa::Task<void> initialize_audio(pxa::Context& context) {
+        // Keep this child frame separate under O3 and borrow only the bytes
+        // needed by this short request, within the SDK's existing fixed pool.
+        std::array<std::byte,64> packet{};
+        constexpr std::string_view scope="media";
+        auto grant=co_await context.permissions().acquire("audio.playback",std::as_bytes(std::span{scope.data(),scope.size()}),packet);
+        if(!grant){(void)context.log().write(pxa::LogLevel::warning,"Voxel audio permission unavailable");co_return pxa::Result<void>{};}
+        audio_permission.emplace(std::move(*grant));
+        auto opened=co_await context.audio().open(*audio_permission);
+        if(opened){
+            auto configured=co_await opened->graph(0);
+            if(configured){audio.emplace(std::move(*opened));(void)context.log().write(pxa::LogLevel::info,"Voxel audio ready");}
+            else{audio_permission.reset();(void)context.log().write(pxa::LogLevel::warning,"Voxel audio configuration failed");}
+        }
+        else{audio_permission.reset();(void)context.log().write(pxa::LogLevel::warning,"Voxel audio open failed");}
+        co_return pxa::Result<void>{};
+    }
+    void play_effect(std::uint8_t block,unsigned action)noexcept {
+        if(!audio)return;
+        voxel::ContactSound sound(block,action,next_random());
+        std::array<std::int16_t,voxel::ContactSound::packet_samples> samples;
+        pxa::Result<void> result;
+        if(audio->format().sample_rate!=voxel::ContactSound::sample_rate||audio->format().channels!=1)
+            result=audio->tone({.frequency_hz=220,.duration_ms=40,.gain_db_q8=-24*256,.waveform=pxa::Waveform::triangle,.attack_ms=2,.release_ms=30});
+        else while(sound.remaining()){
+            const auto n=sound.render(samples);
+            auto written=audio->write_pcm(std::as_writable_bytes(std::span{samples}.first(n)));
+            if(!written||*written!=n*2){result=std::unexpected(written?pxa::Error::would_block:written.error());break;}
+        }
+#if VOXEL_VALIDATE
+        // Keep validation traffic below the device's bounded log ring: one
+        // hit sample per block is enough; always retain failures and actions.
+        if(app_context&&(action!=0||digging.elapsed<.12f||!result)){char msg[96];std::snprintf(msg,sizeof(msg),"VOXEL-SOUND block=%u action=%u ok=%u error=%d",unsigned(block),action,unsigned(bool(result)),result?0:int(result.error()));(void)app_context->log().write(pxa::LogLevel::info,msg);}
+#else
+        (void)result;
+#endif
+    }
 #if VOXEL_VALIDATE
     std::uint32_t edit_count = 0, last_edit = 0;
     void record_edit(int x, int y, int z, unsigned block, unsigned kind) noexcept {
@@ -223,20 +277,24 @@ struct VoxelCraft {
                               dx, dy, dz, kReach);
     }
 
-    void mine() noexcept {
-        const voxel::RayHit hit = target();
-        if (!hit.hit) return;
-        if (world.at(hit.x, hit.y, hit.z) == voxel::kBedrock) return;
-        const std::uint8_t removed = world.at(hit.x, hit.y, hit.z);
+    bool mine(const voxel::RayHit& hit) noexcept {
+        if (!hit.hit) return false;
+        const std::uint8_t removed = world.at(hit.x, hit.y, hit.z),tool=selected_block();
+        if(voxel::mining_seconds(removed)==0||!inventory.add(removed))return false;
         world.set(hit.x, hit.y, hit.z, voxel::kAir);
         dirty_save=true;
 #if VOXEL_VALIDATE
         record_edit(hit.x, hit.y, hit.z, removed, 1);
+        if(app_context){char msg[96];std::snprintf(msg,sizeof(msg),"VOXEL-MINED block=%u tool=%u elapsed_ms=%u",unsigned(removed),unsigned(tool),unsigned(digging.elapsed*1000));(void)app_context->log().write(pxa::LogLevel::info,msg);}
 #endif
         spawn_debris(hit.x, hit.y, hit.z, removed);
+        if(voxel::tool_life(tool))inventory.damage(hotbar);
+        play_effect(removed,1);return true;
     }
 
     void place() noexcept {
+        const auto block=selected_block();
+        if(block==voxel::kAir||block>=voxel::kBedrock)return;
         const voxel::RayHit hit = target();
         if (!hit.hit) return;
         const int x = hit.x + hit.nx;
@@ -244,7 +302,8 @@ struct VoxelCraft {
         const int z = hit.z + hit.nz;
         if (!world.in_bounds(x, y, z)) return;
         const std::uint8_t existing = world.at(x, y, z);
-        if (existing != voxel::kAir && !voxel::block_info(existing).cutout) return;
+        // Leaves and glass are real blocks; placing cannot delete them for free.
+        if (existing != voxel::kAir) return;
         const float fx = static_cast<float>(x);
         const float fy = static_cast<float>(y);
         const float fz = static_cast<float>(z);
@@ -255,12 +314,13 @@ struct VoxelCraft {
                               fy + 1.0f > camera.y &&
                               fy < camera.y + kPlayerHeight;
         if (overlaps) return;
-        world.set(x, y, z, selected_block());
+        if(!inventory.consume(hotbar))return;
+        world.set(x, y, z, block);digging.reset();
         dirty_save=true;
 #if VOXEL_VALIDATE
-        record_edit(x, y, z, selected_block(), 2);
+        record_edit(x, y, z, block, 2);
 #endif
-        spawn_debris(x, y, z, selected_block());
+        spawn_debris(x, y, z, block);play_effect(block,2);
     }
 
     void cycle_hotbar(int delta) noexcept {
@@ -268,7 +328,7 @@ struct VoxelCraft {
     }
 
     std::uint8_t selected_block() const noexcept {
-        return quickbar[hotbar % kQuickCount];
+        return inventory.slots[hotbar % kQuickCount].block;
     }
 
     /* ---- UI ------------------------------------------------------------ */
@@ -332,7 +392,7 @@ struct VoxelCraft {
             if(controls.bag.contains(pointer.x,pointer.y)){show(inventory);return;}
             for(int i=0;i<(flying?5:3);++i)if(controls.actions[i].contains(pointer.x,pointer.y)){
                 if(i==0){
-                    if(mine_pointer<0){mine_pointer=pointer.pointer_id;mining=true;mine_timer=0;mine_long_pressed=false;}
+                    if(mine_pointer<0){mine_pointer=pointer.pointer_id;mining=true;mine_timer=0;mine_long_pressed=false;digging.reset();}
                 }else if(i==1)place();
                 else if(i==2){if(!flying&&on_ground){velocity_y=kJumpSpeed;on_ground=false;}}
                 else if(i==3&&up_pointer<0){up_pointer=pointer.pointer_id;up_held=true;}
@@ -365,7 +425,7 @@ struct VoxelCraft {
         if(pointer.phase==pointer_phase_up||pointer.phase==pointer_phase_cancel){
             if(pointer.pointer_id==mine_pointer){
                 const bool use=pointer.phase==pointer_phase_up&&!mine_long_pressed&&controls.actions[0].contains(pointer.x,pointer.y);
-                mining=false;mine_pointer=-1;mine_timer=0;
+                mining=false;mine_pointer=-1;mine_timer=0;digging.reset();
                 if(use){auto hit=target();if(hit.hit&&world.at(hit.x,hit.y,hit.z)==voxel::kTable)show(workbench);}
             }
             if(pointer.pointer_id==up_pointer){up_held=false;up_pointer=-1;}
@@ -434,13 +494,16 @@ struct VoxelCraft {
         const float uv = 16.0f; /* one atlas texel in q4 units */
         const float cell = 16.0f * uv;
 
-        for (int index = 0; index < kQuickCount; ++index) {
+        for (int index = 0; index < (VOXEL_BENCH_SCENE?8:kQuickCount); ++index) {
             const float slot = static_cast<float>(hud.slot);
             const float x0 = static_cast<float>(hud.hotbar_x) +
                              static_cast<float>(index) * (slot + hud.slot_gap);
             const float y0 = static_cast<float>(hud.hotbar_y);
             rect(x0, y0, x0 + slot, y0 + slot, kPanel);
-            const std::uint8_t block = quickbar[index];
+            const std::uint8_t block = inventory.slots[index].block;
+            if(block!=voxel::kAir){
+            if(!VOXEL_BENCH_SCENE&&block>=voxel::kStick)voxel::draw_tool_icon(frame,block,x0+2,y0+2,slot-4,slot-4);
+            else{
             const std::uint8_t texture = voxel::block_info(block).texture[1];
             const std::array<pxa::game::Vertex, 4> icon{{
                 {.x_q4 = qx(x0 + 2.0f), .y_q4 = qy(y0 + 2.0f), .u_q4 = 0,
@@ -457,23 +520,33 @@ struct VoxelCraft {
             icon_options.transparent_index0 = true;
             frame.textured_quad(pxa::game::AtlasBinding{texture}, icon,
                                 icon_options);
+            }
+            }
             if (index == hotbar) {
                 rect(x0, y0, x0 + slot, y0 + 1.6f, kSelect);
                 rect(x0, y0 + slot - 1.6f, x0 + slot, y0 + slot, kSelect);
                 rect(x0, y0, x0 + 1.6f, y0 + slot, kSelect);
                 rect(x0 + slot - 1.6f, y0, x0 + slot, y0 + slot, kSelect);
             }
-            /* Stack count: two digits from the atlas (creative stack of 64). */
+            /* Only the inventory's real count is drawn. */
             const float digit_w = slot * 0.28f;
             const float digit_h = digit_w * 6.0f / 4.0f;
+            const unsigned count=inventory.slots[index].count;
+            if(count>=10)
             blit_hud(frame, x0 + slot - digit_w * 2.4f,
                      y0 + slot - digit_h - 1.0f, digit_w, digit_h,
-                     16.0f * uv + 6 * 4.0f * uv, 20.0f * uv,
-                     16.0f * uv + 7 * 4.0f * uv, 25.0f * uv, qx, qy, kIcon);
+                     16.0f * uv + (count/10) * 4.0f * uv, 20.0f * uv,
+                     16.0f * uv + (count/10+1) * 4.0f * uv, 25.0f * uv, qx, qy, kIcon);
+            if(count>1)
             blit_hud(frame, x0 + slot - digit_w * 1.1f,
                      y0 + slot - digit_h - 1.0f, digit_w, digit_h,
-                     16.0f * uv + 4 * 4.0f * uv, 20.0f * uv,
-                     16.0f * uv + 5 * 4.0f * uv, 25.0f * uv, qx, qy, kIcon);
+                     16.0f * uv + (count%10) * 4.0f * uv, 20.0f * uv,
+                     16.0f * uv + (count%10+1) * 4.0f * uv, 25.0f * uv, qx, qy, kIcon);
+            if(const auto wear=inventory.slots[index].wear){
+                const float used=(slot-4)*wear/voxel::tool_life(block);
+                rect(x0+2,y0+slot-3,x0+slot-2,y0+slot-2,kPanel);
+                rect(x0+2,y0+slot-3,x0+2+used,y0+slot-2,{0x87e0});
+            }
         }
 
         for (int index = 0; index < (flying?5:3); ++index) {
@@ -530,6 +603,11 @@ struct VoxelCraft {
              static_cast<float>(cross_y - arm) / 16.0f,
              static_cast<float>(cross_x + thin) / 16.0f,
              static_cast<float>(cross_y + arm) / 16.0f, kIcon);
+        if(mining&&digging.key){
+            const float x=width*.5f,y=height*.5f+18*controls.scale,w=44*controls.scale,h=4*controls.scale;
+            rect(x-w/2-1,y-1,x+w/2+1,y+h+1,kPanel);
+            rect(x-w/2,y,x-w/2+w*digging.progress(),y+h,kSelect);
+        }
     }
 
     static void line_quad(pxa::game::Frame& frame, std::int16_t x0,
@@ -556,13 +634,64 @@ struct VoxelCraft {
         (void)sy;
     }
 
+    void draw_mining_cracks(pxa::game::Frame& frame,const voxel::Camera& eye)noexcept {
+        if(!mining||!digging.key||digging.progress()<=0)return;
+        const auto h=target();
+        if(!h.hit||(!h.nx&&!h.ny&&!h.nz)||voxel::block_info(world.at(h.x,h.y,h.z)).cutout)return;
+        const auto key=voxel::MiningProgress::target_key(h,world.at(h.x,h.y,h.z),selected_block());
+        if(key!=digging.key)return;
+        const auto basis=pxa::game3d::CameraBasis::from_pose({eye.x,eye.y,eye.z},eye.yaw,eye.pitch);
+        const pxa::game3d::Vec3 origin{float(h.x+(h.nx>0))+h.nx*.008f,float(h.y+(h.ny>0))+h.ny*.008f,float(h.z+(h.nz>0))+h.nz*.008f};
+        const pxa::game3d::Vec3 u{h.nx?0.f:1.f,0,h.nx?1.f:0.f},v{0,h.ny?0.f:1.f,h.ny?1.f:0.f};
+        constexpr float lines[][4]={{.12f,.80f,.44f,.52f},{.44f,.52f,.28f,.28f},{.28f,.28f,.56f,.05f},{.44f,.52f,.78f,.68f},{.78f,.68f,.94f,.42f},{.44f,.52f,.73f,.22f}};
+        const int count=std::min(6,1+int(digging.progress()*6));
+        // Keep the crack stroke visible at the far end of the interaction
+        // range, where a fixed world-space width falls below one pixel.
+        const float half_width=std::max(.007f,.8f*std::max(.25f,h.distance)/projector->focal_length());
+        for(int i=0;i<count;++i){
+            const auto* l=lines[i];const float dx=l[2]-l[0],dy=l[3]-l[1],length=std::sqrt(dx*dx+dy*dy);
+            const float nx=-dy/length*half_width,ny=dx/length*half_width;
+            const float points[][2]={{l[0]+nx,l[1]+ny},{l[2]+nx,l[3]+ny},{l[2]-nx,l[3]-ny},{l[0]-nx,l[1]-ny}};
+            std::array<pxa::game3d::MeshVertex,4> face;
+            for(int j=0;j<4;++j)face[j]={{basis.to_view({origin.x+u.x*points[j][0]+v.x*points[j][1],origin.y+u.y*points[j][0]+v.y*points[j][1],origin.z+u.z*points[j][0]+v.z*points[j][1]})},0,0,0};
+            std::array<pxa::game::Vertex,pxa::game3d::Projector::max_polygon_vertices> projected;
+            if(auto n=projector->project_polygon(face,projected);n&&*n>=3){
+                auto vertices=std::span{projected}.first(*n);
+                // The Host stores floor(524288 / z_q8) and the scanline
+                // kernel rejects equal depth. A tiny geometric offset can
+                // quantize to the block's own depth. Bias the decal by two
+                // stored units; nearer foreground still wins the same Z test.
+                for(auto& vertex:vertices){
+                    const auto reciprocal=524288u/vertex.depth_q8;
+                    vertex.depth_q8=std::uint16_t(std::max(1u,524288u/(reciprocal+2u)));
+                }
+                frame.solid_depth_polygon(vertices,{0x2104});
+            }
+        }
+    }
+
     /* ---- lifecycle ----------------------------------------------------- */
 
     pxa::Task<void> initialize(pxa::Context& context) {
+#if VOXEL_VALIDATE
+        (void)context.log().write(pxa::LogLevel::info,"VOXEL-INIT window");
+#endif
         auto window = co_await context.window().snapshot();
         if (!window) {
             initializing = false;
             co_return std::unexpected(window.error());
+        }
+        // Attach the Host window before requesting its optional modal grant,
+        // but complete the decision before allocating the world Surface,
+        // depth buffer and mailbox. Their lifetime must not overlap the
+        // permission dialog's backing store at the first-launch peak.
+        if constexpr(!VOXEL_BENCH_SCENE&&!VOXEL_BENCH_DISTANCE) {
+            auto initialized_audio=co_await initialize_audio(context);
+            if(!initialized_audio){
+                char message[96];const auto stats=pxa::task_pool_stats();
+                std::snprintf(message,sizeof(message),"Voxel audio task failed: error=%d pool_fail=%u pool_peak=%u",int(initialized_audio.error()),stats.allocation_failures,stats.peak_slots);
+                (void)context.log().write(pxa::LogLevel::warning,message);
+            }
         }
         /* Full screen: whatever the compositor reports, no downscale. */
         std::uint16_t width = static_cast<std::uint16_t>(window->pixel_width);
@@ -715,6 +844,10 @@ struct VoxelCraft {
 
         if constexpr (VOXEL_BENCH_SCENE||VOXEL_BENCH_DISTANCE){world.generate(0x5ae1u);respawn();session_ready=true;}
         else {if(!catalog_ready)(void)co_await read_catalog();auto now=co_await context.clock().now();if(now)rng^=std::uint32_t(*now);}
+        if constexpr(VOXEL_BENCH_SCENE||VOXEL_BENCH_DISTANCE){
+            constexpr std::uint8_t blocks[]={1,2,3,4,5,6,8,12};
+            for(unsigned i=0;i<std::size(blocks);++i)inventory.slots[i]={blocks[i],64};
+        }
 
 #if VOXEL_BENCH_SCENE
         camera.x=VOXEL_BENCH_X; camera.y=VOXEL_BENCH_EYE_Y-kEyeHeight;
@@ -722,6 +855,9 @@ struct VoxelCraft {
         budget_max_distance=VOXEL_BENCH_FAR;
 #endif
         initializing = false;
+        // A modal grant or Window attachment may replace the system's active
+        // window. Apply immersion once the actual game Surface is attached.
+        (void)context.window().fullscreen(pxa::WindowBarMode::hidden);
         (void)context.log().write(pxa::LogLevel::info, "Voxel Craft C++ ready");
         co_return pxa::Result<void>{};
     }
@@ -735,7 +871,6 @@ struct VoxelCraft {
     bool quality_painter = true;
     bool host_slow = false;
     std::uint64_t last_dropped_frames = 0;
-    bool fullscreen_requested = false;
 
     /* The Guest submit rate says nothing about what the player sees: the host
      * raster is the real cost, and telemetry reports it directly. */
@@ -784,9 +919,8 @@ struct VoxelCraft {
 
     void on_foreground(pxa::Context& context) {
         app_context=&context;ui_dirty=true;
-        if (!fullscreen_requested) {
-            fullscreen_requested = true;
-            const auto requested = context.window().fullscreen();
+        {
+            const auto requested = context.window().fullscreen(pxa::WindowBarMode::hidden);
             if (!requested)
                 (void)context.log().write(pxa::LogLevel::warning,
                                           "fullscreen request failed");
@@ -796,6 +930,9 @@ struct VoxelCraft {
         auto started = context.tasks().start(initialize(context));
         if (!started) {
             initializing = false;
+#if VOXEL_VALIDATE
+            const auto pool=pxa::task_pool_stats();char message[96];std::snprintf(message,sizeof(message),"VOXEL-INIT failed=%d pool_fail=%u pool_peak=%u",int(started.error()),pool.allocation_failures,pool.peak_slots);(void)context.log().write(pxa::LogLevel::error,message);
+#endif
             (void)context.log().write(pxa::LogLevel::error, "init task failed");
         }
     }
@@ -874,10 +1011,13 @@ struct VoxelCraft {
         if(camera.x!=old_x||camera.y!=old_y||camera.z!=old_z)dirty_save=true;
         if (mining) {
             mine_timer += dt;
-            if (mine_timer >= (mine_long_pressed?0.32f:0.38f)) {
+            if (mine_timer >= .30f) {
                 mine_long_pressed=true;
-                mine_timer = 0.0f;
-                mine();
+                const auto hit=target();const auto block=hit.hit?world.at(hit.x,hit.y,hit.z):voxel::kAir;
+                const bool done=digging.advance(hit,block,std::min(dt,mine_timer-.30f),selected_block());
+                const auto stage=std::uint8_t(1+digging.elapsed/.25f);
+                if(!done&&digging.key&&stage!=digging.stage){play_effect(block,0);digging.stage=stage;}
+                if(done&&mine(hit))digging.reset();
             }
         }
 #if VOXEL_PROFILE
@@ -932,6 +1072,7 @@ struct VoxelCraft {
         const auto geometry_end=std::chrono::steady_clock::now();
 #endif
         voxel::draw_particles(frame, *projector, eye_camera, particles.items());
+        if constexpr(!VOXEL_BENCH_SCENE)draw_mining_cracks(frame,eye_camera);
         if constexpr (!VOXEL_BENCH_SCENE || VOXEL_BENCH_HUD) draw_hud(frame, width, height);
         const auto used = frame.bytes_used();
 #if VOXEL_PROFILE
@@ -1027,6 +1168,12 @@ struct VoxelCraft {
             if (edit_written > 0 && edit_written < static_cast<int>(sizeof(message)))
                 (void)context.log().write(pxa::LogLevel::info,
                     std::string_view(message, static_cast<std::size_t>(edit_written)));
+            const int inventory_written=std::snprintf(message,sizeof(message),
+                "VOXEL-BAG bush=%u leaves=%u dirt=%u wood=%u plank=%u stone=%u table=%u selected=%u count=%u progress=%u hash=%u",
+                inventory.count(voxel::kBush),inventory.count(voxel::kLeaves),inventory.count(voxel::kDirt),inventory.count(voxel::kWood),inventory.count(voxel::kPlank),inventory.count(voxel::kStone),inventory.count(voxel::kTable),unsigned(hotbar),unsigned(inventory.slots[hotbar].count),unsigned(digging.progress()*1000),unsigned(voxel::checksum(std::as_bytes(std::span{inventory.slots}))));
+            if(inventory_written>0&&inventory_written<int(sizeof(message)))(void)context.log().write(pxa::LogLevel::info,std::string_view(message,inventory_written));
+            const int tools_written=std::snprintf(message,sizeof(message),"VOXEL-TOOLS stick=%u wpick=%u waxe=%u wshovel=%u spick=%u saxe=%u sshovel=%u item=%u wear=%u",inventory.count(voxel::kStick),inventory.count(voxel::kWoodPickaxe),inventory.count(voxel::kWoodAxe),inventory.count(voxel::kWoodShovel),inventory.count(voxel::kStonePickaxe),inventory.count(voxel::kStoneAxe),inventory.count(voxel::kStoneShovel),unsigned(selected_block()),unsigned(inventory.slots[hotbar].wear));
+            if(tools_written>0&&tools_written<int(sizeof(message)))(void)context.log().write(pxa::LogLevel::info,std::string_view(message,tools_written));
 #endif
 #if VOXEL_PROFILE
             if (auto pipeline=renderer->telemetry()) {

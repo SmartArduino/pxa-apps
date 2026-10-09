@@ -1,12 +1,14 @@
     static constexpr int kQuickCount=voxel::kQuickCount;
-    std::array<std::uint8_t,kQuickCount> quickbar{1,2,3,4,5,6,8,12};
+    voxel::Inventory inventory;
+    voxel::CraftingGrid crafting;
+    int inventory_source=-1;
     pxa::Context* app_context=nullptr;
     pxa::ui::DisplayMetrics display;
     voxel::ControlLayout controls=voxel::ControlLayout::make(display);
     voxel::Settings settings;
     voxel::Screen screen=(VOXEL_BENCH_SCENE||VOXEL_BENCH_DISTANCE)?voxel::Screen::game:voxel::Screen::title;
     voxel::Screen settings_return=voxel::Screen::title,slots_return=voxel::Screen::title;
-    std::array<voxel::MenuHit,32> menu_hits{};
+    std::array<voxel::MenuHit,47> menu_hits{};
     unsigned menu_hit_count=0;
     int ui_pointer=-1,ui_pressed=-1,pending_slot=0;
     std::uint32_t world_seed=0x5ae1;
@@ -17,7 +19,7 @@
     const char* ui_status="";
 
     void apply_display(pxa::ui::DisplayMetrics value)noexcept {
-        display=value;controls=voxel::ControlLayout::make(value);
+        display=value;controls=voxel::ControlLayout::make(value,VOXEL_BENCH_SCENE?8:kQuickCount);
         hud.width=controls.width();hud.height=controls.height();hud.slot=controls.slot;hud.slot_gap=controls.gap;
         hud.hotbar_x=controls.hotbar.x;hud.hotbar_y=controls.hotbar.y;hud.button=controls.actions[0].w;
         hud.button_gap=std::max(2,int(6*controls.scale));hud.button_x=controls.actions[0].x;hud.button_y=controls.actions[0].y;
@@ -26,15 +28,27 @@
     void cancel_controls()noexcept {
         stick_active=look_active=mining=up_held=down_held=false;
         stick_pointer=look_pointer=mine_pointer=up_pointer=down_pointer=-1;
-        move_right=move_forward=0;mine_timer=0;mine_long_pressed=false;last_draw_tick_us=0;ui_pointer=ui_pressed=-1;
+        move_right=move_forward=0;mine_timer=0;mine_long_pressed=false;digging.reset();last_draw_tick_us=0;ui_pointer=ui_pressed=-1;
     }
     void show(voxel::Screen next)noexcept {
-        cancel_controls();screen=next;ui_dirty=true;menu_hit_count=0;ui_status="";
+        cancel_controls();inventory_source=-1;crafting.clear();screen=next;ui_dirty=true;menu_hit_count=0;ui_status="";
         fps_window_frames=fps_window_us=0;
     }
     void new_game()noexcept {
         world_seed=next_random();world.generate(world_seed);respawn();
-        flying=settings.flight;on_ground=false;quickbar={1,2,3,4,5,6,8,12};hotbar=0;
+        flying=settings.flight;on_ground=false;inventory={};hotbar=0;
+        if constexpr(VOXEL_PLAYTEST_SCENE){
+            auto empty=world.load_staging();std::fill(empty.begin(),empty.end(),std::byte{});world.finish_load(true);
+            for(int z=0;z<voxel::kWorldZ;++z)for(int x=0;x<voxel::kWorldX;++x)world.set(x,0,z,voxel::kStone);
+            constexpr std::uint8_t blocks[]={voxel::kBush,voxel::kLeaves,voxel::kDirt,voxel::kWood,voxel::kStone};
+            for(int i=0;i<5;++i){world.set(32,1,34+i,voxel::kDirt);world.set(32,2,34+i,blocks[i]);}
+            camera={32.5f,1.05f,32.5f,0,0};flying=false;
+            if constexpr(VOXEL_PLAYTEST_TOOLS){
+                constexpr std::uint8_t targets[]={voxel::kTable,voxel::kStone,voxel::kStone,voxel::kWood,voxel::kDirt,voxel::kDirt};
+                for(int i=0;i<6;++i){world.set(32,1,34+i,voxel::kDirt);world.set(32,2,34+i,targets[i]);}
+                inventory.slots[0]={voxel::kStone,32};inventory.slots[1]={voxel::kPlank,32};inventory.slots[2]={voxel::kStick,32};
+            }
+        }
         for(auto& p:particles.items())p.life=0;
         session_ready=true;dirty_save=true;budget_max_distance=32;low_quality=false;show(voxel::Screen::game);
     }
@@ -73,7 +87,7 @@
     pxa::Task<void> save_slot(int slot) {
         if(slot<0||slot>=voxel::kSaveSlots||!session_ready){busy=false;co_return std::unexpected(pxa::Error::bad_state);}
         std::uint32_t generation=slot_generations[slot]+1;if(!generation)generation=2;
-        voxel::SaveState state{camera,velocity_y,world_seed,generation,voxel::checksum(world.saved_blocks()),quickbar,std::uint8_t(hotbar),flying};
+        voxel::SaveState state;state.camera=camera;state.velocity=velocity_y;state.seed=world_seed;state.generation=generation;state.blocks_hash=voxel::checksum(world.saved_blocks());state.inventory=inventory;state.selected=std::uint8_t(hotbar);state.flying=flying;
         auto header=voxel::encode_save(state);char path[32],key[24];save_path(path,sizeof(path),slot,generation);
         std::snprintf(key,sizeof(key),"voxel.slot.%d",slot);
         bool success=false;
@@ -85,6 +99,7 @@
                 written=write_all(*file,blocks.subspan(at,std::min<std::size_t>(1024,blocks.size()-at)));
                 {auto yielded=co_await app_context->clock().now();if(!yielded){written=std::unexpected(yielded.error());break;}}
             }
+            if(written)written=write_all(*file,std::as_bytes(std::span{inventory.slots}));
             file->close();
             if(written){
                 // Verify the inactive file before atomically publishing its
@@ -97,7 +112,10 @@
                         read=read_all(*verify,temp.subspan(at,std::min<std::size_t>(1024,temp.size()-at)));
                         {auto yielded=co_await app_context->clock().now();if(!yielded){read=std::unexpected(yielded.error());break;}}
                     }
-                    success=read&&observed==header&&voxel::checksum(temp)==state.blocks_hash;
+                    voxel::Inventory observed_inventory;
+                    if(read)read=read_all(*verify,std::as_writable_bytes(std::span{observed_inventory.slots}));
+                    std::byte extra{};auto eof=verify->read({&extra,1});
+                    success=read&&observed==header&&observed_inventory==inventory&&eof&&!*eof&&voxel::checksum(temp)==state.blocks_hash;
                     world.finish_load(false);verify->close();
                 }
                 if(success){auto committed=co_await app_context->storage().set(key,header);success=bool(committed);}
@@ -121,10 +139,12 @@
                     read=read_all(*file,staged.subspan(at,std::min<std::size_t>(1024,staged.size()-at)));
                     {auto yielded=co_await app_context->clock().now();if(!yielded){read=std::unexpected(yielded.error());break;}}
                 }
+                voxel::Inventory loaded_inventory;
+                if(read&&state&&!state->legacy){auto payload=std::as_writable_bytes(std::span{loaded_inventory.slots}).first(state->inventory_bytes);read=read_all(*file,payload);if(read&&!voxel::decode_inventory(*state,payload))read=std::unexpected(pxa::Error::protocol_error);}
                 std::byte extra{};auto eof=file->read({&extra,1});
                 success=read&&state&&header==committed&&eof&&!*eof&&voxel::valid_saved_blocks(staged)&&voxel::checksum(staged)==state->blocks_hash;
                 world.finish_load(success);file->close();
-                if(success){camera=state->camera;velocity_y=state->velocity;world_seed=state->seed;quickbar=state->quick;hotbar=state->selected;flying=state->flying;settings.flight=flying;on_ground=false;session_ready=true;dirty_save=false;for(auto& p:particles.items())p.life=0;show(voxel::Screen::game);}
+                if(success){camera=state->camera;velocity_y=state->velocity;world_seed=state->seed;inventory=state->inventory;hotbar=state->selected;flying=state->flying;settings.flight=flying;on_ground=false;session_ready=true;dirty_save=false;for(auto& p:particles.items())p.life=0;show(voxel::Screen::game);}
             }
         }
         busy=false;ui_dirty=true;ui_status=success?"":"存档损坏或读取失败";
@@ -160,7 +180,27 @@
         case A::auto_jump:settings.auto_jump=!settings.auto_jump;ui_dirty=true;break;
         case A::defaults:settings={};if(session_ready){flying=false;velocity_y=0;}budget_max_distance=32;ui_dirty=true;break;
         case A::quick_slot:hotbar=argument;ui_dirty=true;break;
-        case A::item:quickbar[hotbar]=std::uint8_t(argument);dirty_save=true;ui_status="已放入快捷栏";ui_dirty=true;break;
+        case A::item:
+            if(argument<0||argument>=voxel::kInventorySlots)break;
+            if(inventory_source==argument)inventory_source=-1;
+            else if(inventory_source<0||std::any_of(crafting.sources.begin(),crafting.sources.end(),[](int slot){return slot>=0;})){
+                if(crafting.available(this->inventory,argument))inventory_source=argument;
+            }else{if(this->inventory.transfer(inventory_source,argument))dirty_save=true;inventory_source=-1;}
+            if(argument<kQuickCount)hotbar=argument;ui_dirty=true;break;
+        case A::craft_cell:
+            if(argument<0||argument>=9||(screen!=inventory&&screen!=workbench))break;
+            if(inventory_source<0)crafting.sources[argument]=-1;
+            else{
+                (void)crafting.put(this->inventory,argument,inventory_source);
+                if(!crafting.available(this->inventory,inventory_source))inventory_source=-1;
+            }
+            ui_status="";ui_dirty=true;break;
+        case A::craft:{
+            const int side=screen==workbench?3:2;const auto output=crafting.result(this->inventory,side);
+            if(crafting.take_result(this->inventory,side)){dirty_save=true;inventory_source=-1;ui_status="完成";play_effect(output.block,2);}
+            else ui_status="物品不足或背包已满";
+            ui_dirty=true;break;
+        }
         default:break;
         }
     }
@@ -178,6 +218,11 @@
         return {};
     }
     pxa::Result<bool> on_event(pxa::Context&,const pxa::Event& event) {
+        if(event.service==11&&event.opcode==0x8001){
+            auto revoked=pxa::decode_permission_revoked(event);
+            if(!revoked)return std::unexpected(revoked.error());
+            if(revoked->name=="audio.playback"){audio.reset();audio_permission.reset();return true;}
+        }
         if(event.service==3&&event.opcode==0x8002&&event.token==0){
             auto metrics=pxa::ui::decode_display_metrics(event.payload);
             if(!metrics)return std::unexpected(metrics.error());apply_display(*metrics);return true;
