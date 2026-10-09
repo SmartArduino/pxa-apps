@@ -1,0 +1,108 @@
+{
+  "passed": true,
+  "files": {
+    "pxa-state/data/17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171~pxa-jump-jump-3d/.pxa-storage/.pxa-kv-a": {
+      "bytes": 37,
+      "sha256": "f164500063ee5c28e7c8e2c6277eeb9237056392b190d357006fb9448942fd03"
+    },
+    "pxa-state/data/17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171~pxa-jump-jump-3d/.pxa-storage/.pxa-kv-b": {
+      "bytes": 37,
+      "sha256": "1dbbb363c60da541aa89dc3364948bbed3ee08cb9d13dc62ce7a1b7c0a4e8817"
+    },
+    "pxa-state/data/17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171~pxa-voxel-craft/.pxa-storage/.pxa-kv-a": {
+      "bytes": 80,
+      "sha256": "657e3fbe879e85e8c67674274c2264792452c6256406d60d5a91cdcc98fa07e5"
+    },
+    "pxa-state/data/17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171~pxa-voxel-craft/.pxa-storage/.pxa-kv-b": {
+      "bytes": 80,
+      "sha256": "e6ec53ad1f961c0da57f86f5bdf7f31715e492a95a8e50d794b1a1c613d9c679"
+    },
+    "pxa-state/data/17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171~pxa-voxel-craft-cpp/.pxa-storage/.pxa-kv-b": {
+      "bytes": 54,
+      "sha256": "0b9bf0d00066b654832d78e337057353867f4d30897b8141a0bebc8acda5b633"
+    }
+  },
+  "production_package": {
+    "manifest.pxm": {
+      "sha256": "dfbd8fdd41b1ab9f64c0e4d79f8b70c5b592737499eff7445bcc51738d916526",
+      "bytes": 4770
+    },
+    "artifacts/main.esp32-s3.aot": {
+      "sha256": "7ff17070f7b7d7ee22d7b1dee13516734744f88b46fe71ebd9f8c3c2281cca5c",
+      "bytes": 696508
+    },
+    "assets/menu-font-10.pxr": {
+      "sha256": "9c042562fd193510fb81f1a39b3757c99f4c0940148539f1d08a6780727fe1bd",
+      "bytes": 12132
+    },
+    "assets/menu-font-14.pxr": {
+      "sha256": "dc1d33f81112a266c4a76c4b3cda90383d25c1d16ac255dfe1f52102894d97fb",
+      "bytes": 23748
+    },
+    "assets/menu-font-18.pxr": {
+      "sha256": "73dd4f97e5365e4a2aa45e8c8bf5c904884928ed0dc5deea1da4a56d52313dbf",
+      "bytes": 39236
+    }
+  },
+  "resources": {
+    "heap": {
+      "sram_total": 309995,
+      "sram_free": 26479,
+      "sram_min": 9432,
+      "sram_largest": 7680,
+      "psram_total": 8369580,
+      "psram_free": 6961264,
+      "psram_min": 4905640,
+      "psram_largest": 5898240
+    },
+    "budget": {
+      "internal": 27468,
+      "external": 16516,
+      "peak_internal": 28956,
+      "peak_external": 62236,
+      "temporary_peak_internal": 0,
+      "temporary_peak_external": 0,
+      "fixed": 2224,
+      "denied": 0,
+      "allocation_failures": 0
+    },
+    "kind:raster": {
+      "internal": 0,
+      "external": 0
+    },
+    "kind:image": {
+      "internal": 0,
+      "external": 0
+    },
+    "kind:audio": {
+      "internal": 0,
+      "external": 16392
+    },
+    "kind:temporary": {
+      "internal": 0,
+      "external": 0
+    },
+    "kind:metadata": {
+      "internal": 27468,
+      "external": 124
+    },
+    "kind:frame": {
+      "internal": 0,
+      "external": 0
+    },
+    "surface": {
+      "frame": 0,
+      "scratch": 0,
+      "mailbox": 0,
+      "probe": 0,
+      "peak_total": 573696
+    }
+  },
+  "hello": "protocol=1;mode=normal;capabilities=info,memory,logcat,packages,package-deploy,package-run,package-stop,fs,reboot,doctor,input-v2,screenshot-rgb565,screenshot-jpeg,poweroff,perf-raster,heap-local;max_chunk=1024;fs_offset=1;fs_sha256=1;target=esp32s3;serial=a4:cb:8f:d5:d4:f0;version=57488b1-dirty",
+  "packages": [
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d\tJump Jump 3D\t0.1.4\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-store\tApp Store\t0.8.1\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft-cpp\tVoxel Craft C++\t0.12.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft\tVoxel Craft\t0.2.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+  ]
+}

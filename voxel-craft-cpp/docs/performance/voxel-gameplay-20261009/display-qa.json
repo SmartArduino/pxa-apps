@@ -1,0 +1,26 @@
+[
+  {
+    "width": 240,
+    "height": 296,
+    "dpi": 240,
+    "font": 10,
+    "scale": 0.88,
+    "passed": true
+  },
+  {
+    "width": 412,
+    "height": 412,
+    "dpi": 320,
+    "font": 14,
+    "scale": 1.568,
+    "passed": true
+  },
+  {
+    "width": 800,
+    "height": 480,
+    "dpi": 480,
+    "font": 18,
+    "scale": 2.1923076923076925,
+    "passed": true
+  }
+]

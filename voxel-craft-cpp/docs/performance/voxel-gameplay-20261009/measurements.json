@@ -1,0 +1,1112 @@
+{
+  "before": {
+    "passed": true,
+    "display_fps": [
+      11.365588030267823,
+      11.361676761306068,
+      11.26549568932066
+    ],
+    "mean_display_fps": 11.330920160298184,
+    "host_raster_mean_us": 39944.22914830741,
+    "host_raster_samples": 273,
+    "lcd_interval_samples": 270,
+    "probe_bytes": [
+      2112,
+      2112,
+      2112
+    ],
+    "workload": [
+      {
+        "list_min": 18576,
+        "list_max": 18576,
+        "pixels_min": 134250,
+        "pixels_max": 134250
+      },
+      {
+        "list_min": 18576,
+        "list_max": 18576,
+        "pixels_min": 134250,
+        "pixels_max": 134250
+      },
+      {
+        "list_min": 18576,
+        "list_max": 18576,
+        "pixels_min": 134250,
+        "pixels_max": 134250
+      }
+    ],
+    "profile_stages": [
+      {
+        "total_us": 0,
+        "geometry_us": 0,
+        "encode_us": 0,
+        "hud_us": 0,
+        "submit_us": 0,
+        "update_us": 0,
+        "samples": 0
+      },
+      {
+        "total_us": 76911,
+        "geometry_us": 24390,
+        "encode_us": 5684,
+        "hud_us": 1266,
+        "submit_us": 45448,
+        "update_us": 0,
+        "samples": 11
+      },
+      {
+        "total_us": 76416,
+        "geometry_us": 24304,
+        "encode_us": 5741,
+        "hud_us": 1229,
+        "submit_us": 45034,
+        "update_us": 0,
+        "samples": 23
+      },
+      {
+        "total_us": 76540,
+        "geometry_us": 24472,
+        "encode_us": 5693,
+        "hud_us": 1198,
+        "submit_us": 45074,
+        "update_us": 0,
+        "samples": 35
+      },
+      {
+        "total_us": 76525,
+        "geometry_us": 24518,
+        "encode_us": 5663,
+        "hud_us": 1221,
+        "submit_us": 45016,
+        "update_us": 0,
+        "samples": 47
+      },
+      {
+        "total_us": 76473,
+        "geometry_us": 24438,
+        "encode_us": 5688,
+        "hud_us": 1220,
+        "submit_us": 45024,
+        "update_us": 0,
+        "samples": 59
+      },
+      {
+        "total_us": 76497,
+        "geometry_us": 24512,
+        "encode_us": 5691,
+        "hud_us": 1209,
+        "submit_us": 44973,
+        "update_us": 0,
+        "samples": 71
+      },
+      {
+        "total_us": 76445,
+        "geometry_us": 24489,
+        "encode_us": 5674,
+        "hud_us": 1217,
+        "submit_us": 44956,
+        "update_us": 0,
+        "samples": 83
+      },
+      {
+        "total_us": 76446,
+        "geometry_us": 24506,
+        "encode_us": 5677,
+        "hud_us": 1209,
+        "submit_us": 44948,
+        "update_us": 0,
+        "samples": 95
+      },
+      {
+        "total_us": 76457,
+        "geometry_us": 24524,
+        "encode_us": 5670,
+        "hud_us": 1215,
+        "submit_us": 44943,
+        "update_us": 0,
+        "samples": 107
+      },
+      {
+        "total_us": 76912,
+        "geometry_us": 24763,
+        "encode_us": 5754,
+        "hud_us": 1219,
+        "submit_us": 45071,
+        "update_us": 0,
+        "samples": 119
+      },
+      {
+        "total_us": 76913,
+        "geometry_us": 24771,
+        "encode_us": 5751,
+        "hud_us": 1227,
+        "submit_us": 45060,
+        "update_us": 0,
+        "samples": 131
+      },
+      {
+        "total_us": 76927,
+        "geometry_us": 24767,
+        "encode_us": 5750,
+        "hud_us": 1226,
+        "submit_us": 45080,
+        "update_us": 0,
+        "samples": 143
+      },
+      {
+        "total_us": 76888,
+        "geometry_us": 24760,
+        "encode_us": 5745,
+        "hud_us": 1226,
+        "submit_us": 45054,
+        "update_us": 0,
+        "samples": 155
+      },
+      {
+        "total_us": 76850,
+        "geometry_us": 24745,
+        "encode_us": 5737,
+        "hud_us": 1224,
+        "submit_us": 45042,
+        "update_us": 0,
+        "samples": 167
+      },
+      {
+        "total_us": 76821,
+        "geometry_us": 24730,
+        "encode_us": 5739,
+        "hud_us": 1226,
+        "submit_us": 45025,
+        "update_us": 0,
+        "samples": 179
+      },
+      {
+        "total_us": 76822,
+        "geometry_us": 24751,
+        "encode_us": 5731,
+        "hud_us": 1230,
+        "submit_us": 45009,
+        "update_us": 0,
+        "samples": 191
+      },
+      {
+        "total_us": 76793,
+        "geometry_us": 24726,
+        "encode_us": 5734,
+        "hud_us": 1233,
+        "submit_us": 45000,
+        "update_us": 0,
+        "samples": 203
+      },
+      {
+        "total_us": 77253,
+        "geometry_us": 25076,
+        "encode_us": 5766,
+        "hud_us": 1235,
+        "submit_us": 45075,
+        "update_us": 0,
+        "samples": 215
+      }
+    ],
+    "profile_pipeline": [
+      {
+        "sub": 11,
+        "render": 11,
+        "visible": 11,
+        "drop": 0,
+        "queue_us": 29922,
+        "present_us": 331000,
+        "host_us": 39801
+      },
+      {
+        "sub": 23,
+        "render": 23,
+        "visible": 23,
+        "drop": 0,
+        "queue_us": 61647,
+        "present_us": 755000,
+        "host_us": 40199
+      },
+      {
+        "sub": 35,
+        "render": 35,
+        "visible": 35,
+        "drop": 0,
+        "queue_us": 93819,
+        "present_us": 1184000,
+        "host_us": 39859
+      },
+      {
+        "sub": 47,
+        "render": 47,
+        "visible": 47,
+        "drop": 0,
+        "queue_us": 128230,
+        "present_us": 1643000,
+        "host_us": 40441
+      },
+      {
+        "sub": 59,
+        "render": 59,
+        "visible": 59,
+        "drop": 0,
+        "queue_us": 161084,
+        "present_us": 2082000,
+        "host_us": 40571
+      },
+      {
+        "sub": 71,
+        "render": 71,
+        "visible": 71,
+        "drop": 0,
+        "queue_us": 193423,
+        "present_us": 2509000,
+        "host_us": 38228
+      },
+      {
+        "sub": 83,
+        "render": 83,
+        "visible": 83,
+        "drop": 0,
+        "queue_us": 228289,
+        "present_us": 2940000,
+        "host_us": 39960
+      },
+      {
+        "sub": 95,
+        "render": 95,
+        "visible": 95,
+        "drop": 0,
+        "queue_us": 258970,
+        "present_us": 3358000,
+        "host_us": 39827
+      },
+      {
+        "sub": 107,
+        "render": 107,
+        "visible": 107,
+        "drop": 0,
+        "queue_us": 289747,
+        "present_us": 3798000,
+        "host_us": 39904
+      },
+      {
+        "sub": 119,
+        "render": 119,
+        "visible": 119,
+        "drop": 0,
+        "queue_us": 321954,
+        "present_us": 4249000,
+        "host_us": 39150
+      },
+      {
+        "sub": 131,
+        "render": 131,
+        "visible": 131,
+        "drop": 0,
+        "queue_us": 354777,
+        "present_us": 4712000,
+        "host_us": 38019
+      },
+      {
+        "sub": 143,
+        "render": 142,
+        "visible": 142,
+        "drop": 0,
+        "queue_us": 386307,
+        "present_us": 5145000,
+        "host_us": 40883
+      },
+      {
+        "sub": 155,
+        "render": 154,
+        "visible": 154,
+        "drop": 0,
+        "queue_us": 419670,
+        "present_us": 5555000,
+        "host_us": 40821
+      },
+      {
+        "sub": 167,
+        "render": 166,
+        "visible": 166,
+        "drop": 0,
+        "queue_us": 452080,
+        "present_us": 5987000,
+        "host_us": 40695
+      },
+      {
+        "sub": 179,
+        "render": 178,
+        "visible": 178,
+        "drop": 0,
+        "queue_us": 485101,
+        "present_us": 6413000,
+        "host_us": 39346
+      },
+      {
+        "sub": 191,
+        "render": 190,
+        "visible": 190,
+        "drop": 0,
+        "queue_us": 517336,
+        "present_us": 6836000,
+        "host_us": 40036
+      },
+      {
+        "sub": 203,
+        "render": 202,
+        "visible": 202,
+        "drop": 0,
+        "queue_us": 549861,
+        "present_us": 7261000,
+        "host_us": 39607
+      },
+      {
+        "sub": 215,
+        "render": 214,
+        "visible": 214,
+        "drop": 0,
+        "queue_us": 582008,
+        "present_us": 7700000,
+        "host_us": 38068
+      },
+      {
+        "sub": 227,
+        "render": 226,
+        "visible": 226,
+        "drop": 0,
+        "queue_us": 614654,
+        "present_us": 8147000,
+        "host_us": 39679
+      },
+      {
+        "sub": 239,
+        "render": 239,
+        "visible": 239,
+        "drop": 0,
+        "queue_us": 651155,
+        "present_us": 8598000,
+        "host_us": 43284
+      },
+      {
+        "sub": 251,
+        "render": 251,
+        "visible": 251,
+        "drop": 0,
+        "queue_us": 683057,
+        "present_us": 9057000,
+        "host_us": 40632
+      },
+      {
+        "sub": 263,
+        "render": 263,
+        "visible": 263,
+        "drop": 0,
+        "queue_us": 715510,
+        "present_us": 9487000,
+        "host_us": 40521
+      },
+      {
+        "sub": 275,
+        "render": 275,
+        "visible": 275,
+        "drop": 0,
+        "queue_us": 748251,
+        "present_us": 9942000,
+        "host_us": 38244
+      },
+      {
+        "sub": 287,
+        "render": 287,
+        "visible": 287,
+        "drop": 0,
+        "queue_us": 780924,
+        "present_us": 10373000,
+        "host_us": 39049
+      },
+      {
+        "sub": 299,
+        "render": 299,
+        "visible": 299,
+        "drop": 0,
+        "queue_us": 813188,
+        "present_us": 10800000,
+        "host_us": 41164
+      },
+      {
+        "sub": 311,
+        "render": 311,
+        "visible": 311,
+        "drop": 0,
+        "queue_us": 844326,
+        "present_us": 11230000,
+        "host_us": 38489
+      },
+      {
+        "sub": 323,
+        "render": 323,
+        "visible": 323,
+        "drop": 0,
+        "queue_us": 876869,
+        "present_us": 11656000,
+        "host_us": 38486
+      },
+      {
+        "sub": 335,
+        "render": 334,
+        "visible": 334,
+        "drop": 0,
+        "queue_us": 907335,
+        "present_us": 12069000,
+        "host_us": 51721
+      }
+    ],
+    "production_memory": [
+      {
+        "kind": "cold",
+        "title": {
+          "sram_used": 272896,
+          "sram_peak_used": 277032,
+          "psram_used": 3116204,
+          "psram_peak_used": 3910148
+        },
+        "game": {
+          "sram_used": 272896,
+          "sram_peak_used": 277032,
+          "psram_used": 3116204,
+          "psram_peak_used": 3910148
+        },
+        "local_peak": {
+          "sram_used": 272896,
+          "sram_peak_used": 277032,
+          "psram_used": 3116204,
+          "psram_peak_used": 3910148
+        },
+        "buffers": {
+          "frame": 284160,
+          "scratch": 142080,
+          "mailbox": 147456,
+          "probe": 0,
+          "peak_total": 573696
+        }
+      },
+      {
+        "kind": "warm",
+        "title": {
+          "sram_used": 272896,
+          "sram_peak_used": 277032,
+          "psram_used": 3116172,
+          "psram_peak_used": 3909796
+        },
+        "game": {
+          "sram_used": 272932,
+          "sram_peak_used": 277032,
+          "psram_used": 3116172,
+          "psram_peak_used": 3909796
+        },
+        "local_peak": {
+          "sram_used": 272932,
+          "sram_peak_used": 277032,
+          "psram_used": 3116172,
+          "psram_peak_used": 3909796
+        },
+        "buffers": {
+          "frame": 284160,
+          "scratch": 142080,
+          "mailbox": 147456,
+          "probe": 0,
+          "peak_total": 573696
+        }
+      },
+      {
+        "kind": "warm",
+        "title": {
+          "sram_used": 272896,
+          "sram_peak_used": 277032,
+          "psram_used": 3116220,
+          "psram_peak_used": 3909928
+        },
+        "game": {
+          "sram_used": 272932,
+          "sram_peak_used": 277032,
+          "psram_used": 3116220,
+          "psram_peak_used": 3909928
+        },
+        "local_peak": {
+          "sram_used": 272896,
+          "sram_peak_used": 277032,
+          "psram_used": 3116220,
+          "psram_peak_used": 3909928
+        },
+        "buffers": {
+          "frame": 284160,
+          "scratch": 142080,
+          "mailbox": 147456,
+          "probe": 0,
+          "peak_total": 573696
+        }
+      }
+    ]
+  },
+  "after": {
+    "passed": true,
+    "display_fps": [
+      11.331267853042018,
+      11.301479668447602,
+      11.236763660558832
+    ],
+    "mean_display_fps": 11.289837060682817,
+    "host_raster_mean_us": 39482.66288156288,
+    "host_raster_samples": 272,
+    "lcd_interval_samples": 268,
+    "probe_bytes": [
+      2112,
+      2112,
+      2112
+    ],
+    "workload": [
+      {
+        "list_min": 18576,
+        "list_max": 18576,
+        "pixels_min": 134250,
+        "pixels_max": 134250
+      },
+      {
+        "list_min": 18576,
+        "list_max": 18576,
+        "pixels_min": 134250,
+        "pixels_max": 134250
+      },
+      {
+        "list_min": 18576,
+        "list_max": 18576,
+        "pixels_min": 134250,
+        "pixels_max": 134250
+      }
+    ],
+    "profile_stages": [
+      {
+        "total_us": 76793,
+        "geometry_us": 24726,
+        "encode_us": 5734,
+        "hud_us": 1233,
+        "submit_us": 45000,
+        "update_us": 0,
+        "samples": 203
+      },
+      {
+        "total_us": 77253,
+        "geometry_us": 25076,
+        "encode_us": 5766,
+        "hud_us": 1235,
+        "submit_us": 45075,
+        "update_us": 0,
+        "samples": 215
+      },
+      {
+        "total_us": 0,
+        "geometry_us": 0,
+        "encode_us": 0,
+        "hud_us": 0,
+        "submit_us": 0,
+        "update_us": 0,
+        "samples": 0
+      },
+      {
+        "total_us": 76987,
+        "geometry_us": 25625,
+        "encode_us": 6092,
+        "hud_us": 1305,
+        "submit_us": 43866,
+        "update_us": 0,
+        "samples": 11
+      },
+      {
+        "total_us": 77597,
+        "geometry_us": 25780,
+        "encode_us": 5969,
+        "hud_us": 1275,
+        "submit_us": 44475,
+        "update_us": 0,
+        "samples": 23
+      },
+      {
+        "total_us": 77600,
+        "geometry_us": 25833,
+        "encode_us": 5941,
+        "hud_us": 1248,
+        "submit_us": 44483,
+        "update_us": 0,
+        "samples": 35
+      },
+      {
+        "total_us": 77693,
+        "geometry_us": 25833,
+        "encode_us": 5921,
+        "hud_us": 1257,
+        "submit_us": 44590,
+        "update_us": 0,
+        "samples": 47
+      },
+      {
+        "total_us": 77745,
+        "geometry_us": 25813,
+        "encode_us": 5958,
+        "hud_us": 1257,
+        "submit_us": 44619,
+        "update_us": 0,
+        "samples": 59
+      },
+      {
+        "total_us": 77734,
+        "geometry_us": 25815,
+        "encode_us": 5923,
+        "hud_us": 1289,
+        "submit_us": 44611,
+        "update_us": 0,
+        "samples": 71
+      },
+      {
+        "total_us": 77695,
+        "geometry_us": 25775,
+        "encode_us": 5928,
+        "hud_us": 1279,
+        "submit_us": 44618,
+        "update_us": 0,
+        "samples": 83
+      },
+      {
+        "total_us": 77652,
+        "geometry_us": 25714,
+        "encode_us": 5928,
+        "hud_us": 1276,
+        "submit_us": 44638,
+        "update_us": 0,
+        "samples": 95
+      },
+      {
+        "total_us": 77735,
+        "geometry_us": 25720,
+        "encode_us": 5927,
+        "hud_us": 1283,
+        "submit_us": 44710,
+        "update_us": 0,
+        "samples": 107
+      },
+      {
+        "total_us": 78027,
+        "geometry_us": 25940,
+        "encode_us": 5964,
+        "hud_us": 1283,
+        "submit_us": 44745,
+        "update_us": 0,
+        "samples": 118
+      },
+      {
+        "total_us": 78012,
+        "geometry_us": 25929,
+        "encode_us": 5958,
+        "hud_us": 1280,
+        "submit_us": 44751,
+        "update_us": 0,
+        "samples": 130
+      },
+      {
+        "total_us": 77975,
+        "geometry_us": 25933,
+        "encode_us": 5950,
+        "hud_us": 1282,
+        "submit_us": 44715,
+        "update_us": 0,
+        "samples": 142
+      },
+      {
+        "total_us": 77965,
+        "geometry_us": 25928,
+        "encode_us": 5952,
+        "hud_us": 1281,
+        "submit_us": 44710,
+        "update_us": 0,
+        "samples": 154
+      },
+      {
+        "total_us": 77951,
+        "geometry_us": 25936,
+        "encode_us": 5961,
+        "hud_us": 1271,
+        "submit_us": 44690,
+        "update_us": 0,
+        "samples": 166
+      },
+      {
+        "total_us": 77939,
+        "geometry_us": 25937,
+        "encode_us": 5946,
+        "hud_us": 1272,
+        "submit_us": 44692,
+        "update_us": 0,
+        "samples": 178
+      },
+      {
+        "total_us": 77929,
+        "geometry_us": 25939,
+        "encode_us": 5941,
+        "hud_us": 1274,
+        "submit_us": 44682,
+        "update_us": 0,
+        "samples": 190
+      },
+      {
+        "total_us": 77925,
+        "geometry_us": 25930,
+        "encode_us": 5944,
+        "hud_us": 1272,
+        "submit_us": 44686,
+        "update_us": 0,
+        "samples": 202
+      }
+    ],
+    "profile_pipeline": [
+      {
+        "sub": 335,
+        "render": 334,
+        "visible": 334,
+        "drop": 0,
+        "queue_us": 907335,
+        "present_us": 12069000,
+        "host_us": 51721
+      },
+      {
+        "sub": 11,
+        "render": 10,
+        "visible": 10,
+        "drop": 0,
+        "queue_us": 29076,
+        "present_us": 375000,
+        "host_us": 40342
+      },
+      {
+        "sub": 23,
+        "render": 22,
+        "visible": 22,
+        "drop": 0,
+        "queue_us": 61415,
+        "present_us": 813000,
+        "host_us": 39705
+      },
+      {
+        "sub": 35,
+        "render": 34,
+        "visible": 34,
+        "drop": 0,
+        "queue_us": 92931,
+        "present_us": 1232000,
+        "host_us": 38067
+      },
+      {
+        "sub": 47,
+        "render": 47,
+        "visible": 47,
+        "drop": 0,
+        "queue_us": 129622,
+        "present_us": 1702000,
+        "host_us": 39614
+      },
+      {
+        "sub": 59,
+        "render": 58,
+        "visible": 58,
+        "drop": 0,
+        "queue_us": 159879,
+        "present_us": 2145000,
+        "host_us": 40012
+      },
+      {
+        "sub": 71,
+        "render": 70,
+        "visible": 70,
+        "drop": 0,
+        "queue_us": 192495,
+        "present_us": 2591000,
+        "host_us": 38540
+      },
+      {
+        "sub": 83,
+        "render": 82,
+        "visible": 82,
+        "drop": 0,
+        "queue_us": 224641,
+        "present_us": 3007000,
+        "host_us": 39337
+      },
+      {
+        "sub": 95,
+        "render": 94,
+        "visible": 94,
+        "drop": 0,
+        "queue_us": 258377,
+        "present_us": 3443000,
+        "host_us": 39060
+      },
+      {
+        "sub": 107,
+        "render": 106,
+        "visible": 106,
+        "drop": 0,
+        "queue_us": 292765,
+        "present_us": 3900000,
+        "host_us": 41126
+      },
+      {
+        "sub": 119,
+        "render": 118,
+        "visible": 118,
+        "drop": 0,
+        "queue_us": 325152,
+        "present_us": 4369000,
+        "host_us": 40034
+      },
+      {
+        "sub": 131,
+        "render": 130,
+        "visible": 130,
+        "drop": 0,
+        "queue_us": 358603,
+        "present_us": 4820000,
+        "host_us": 40843
+      },
+      {
+        "sub": 143,
+        "render": 142,
+        "visible": 142,
+        "drop": 0,
+        "queue_us": 390359,
+        "present_us": 5249000,
+        "host_us": 40853
+      },
+      {
+        "sub": 155,
+        "render": 154,
+        "visible": 154,
+        "drop": 0,
+        "queue_us": 423526,
+        "present_us": 5680000,
+        "host_us": 41488
+      },
+      {
+        "sub": 167,
+        "render": 166,
+        "visible": 166,
+        "drop": 0,
+        "queue_us": 457399,
+        "present_us": 6126000,
+        "host_us": 39122
+      },
+      {
+        "sub": 179,
+        "render": 178,
+        "visible": 178,
+        "drop": 0,
+        "queue_us": 490625,
+        "present_us": 6576000,
+        "host_us": 40762
+      },
+      {
+        "sub": 191,
+        "render": 190,
+        "visible": 190,
+        "drop": 0,
+        "queue_us": 522465,
+        "present_us": 7026000,
+        "host_us": 39282
+      },
+      {
+        "sub": 203,
+        "render": 202,
+        "visible": 202,
+        "drop": 0,
+        "queue_us": 555997,
+        "present_us": 7486000,
+        "host_us": 39484
+      },
+      {
+        "sub": 215,
+        "render": 214,
+        "visible": 214,
+        "drop": 0,
+        "queue_us": 590421,
+        "present_us": 7922000,
+        "host_us": 39225
+      },
+      {
+        "sub": 227,
+        "render": 226,
+        "visible": 226,
+        "drop": 0,
+        "queue_us": 623362,
+        "present_us": 8365000,
+        "host_us": 37635
+      },
+      {
+        "sub": 238,
+        "render": 237,
+        "visible": 237,
+        "drop": 0,
+        "queue_us": 655868,
+        "present_us": 8750000,
+        "host_us": 39272
+      },
+      {
+        "sub": 250,
+        "render": 249,
+        "visible": 249,
+        "drop": 0,
+        "queue_us": 689537,
+        "present_us": 9212000,
+        "host_us": 37912
+      },
+      {
+        "sub": 262,
+        "render": 261,
+        "visible": 261,
+        "drop": 0,
+        "queue_us": 721198,
+        "present_us": 9631000,
+        "host_us": 40587
+      },
+      {
+        "sub": 274,
+        "render": 273,
+        "visible": 273,
+        "drop": 0,
+        "queue_us": 754610,
+        "present_us": 10093000,
+        "host_us": 40041
+      },
+      {
+        "sub": 286,
+        "render": 285,
+        "visible": 285,
+        "drop": 0,
+        "queue_us": 788464,
+        "present_us": 10534000,
+        "host_us": 40276
+      },
+      {
+        "sub": 298,
+        "render": 297,
+        "visible": 297,
+        "drop": 0,
+        "queue_us": 820855,
+        "present_us": 10966000,
+        "host_us": 38615
+      },
+      {
+        "sub": 310,
+        "render": 309,
+        "visible": 309,
+        "drop": 0,
+        "queue_us": 853340,
+        "present_us": 11392000,
+        "host_us": 38890
+      },
+      {
+        "sub": 322,
+        "render": 321,
+        "visible": 321,
+        "drop": 0,
+        "queue_us": 886466,
+        "present_us": 11821000,
+        "host_us": 39341
+      }
+    ],
+    "production_memory": [
+      {
+        "kind": "cold",
+        "title": {
+          "sram_used": 286260,
+          "sram_peak_used": 297368,
+          "psram_used": 2982132,
+          "psram_peak_used": 2995424
+        },
+        "game": {
+          "sram_used": 286260,
+          "sram_peak_used": 297368,
+          "psram_used": 2982132,
+          "psram_peak_used": 2995424
+        },
+        "local_peak": {
+          "sram_used": 286296,
+          "sram_peak_used": 297368,
+          "psram_used": 2982132,
+          "psram_peak_used": 2995424
+        },
+        "buffers": {
+          "frame": 284160,
+          "scratch": 142080,
+          "mailbox": 147456,
+          "probe": 0,
+          "peak_total": 573696
+        }
+      },
+      {
+        "kind": "warm",
+        "title": {
+          "sram_used": 286260,
+          "sram_peak_used": 294240,
+          "psram_used": 2982092,
+          "psram_peak_used": 3198292
+        },
+        "game": {
+          "sram_used": 286260,
+          "sram_peak_used": 294240,
+          "psram_used": 2982092,
+          "psram_peak_used": 3198292
+        },
+        "local_peak": {
+          "sram_used": 286260,
+          "sram_peak_used": 294240,
+          "psram_used": 2982092,
+          "psram_peak_used": 3198292
+        },
+        "buffers": {
+          "frame": 284160,
+          "scratch": 142080,
+          "mailbox": 147456,
+          "probe": 0,
+          "peak_total": 573696
+        }
+      },
+      {
+        "kind": "warm",
+        "title": {
+          "sram_used": 286260,
+          "sram_peak_used": 294292,
+          "psram_used": 2982584,
+          "psram_peak_used": 3198792
+        },
+        "game": {
+          "sram_used": 286260,
+          "sram_peak_used": 294292,
+          "psram_used": 2982584,
+          "psram_peak_used": 3198792
+        },
+        "local_peak": {
+          "sram_used": 286260,
+          "sram_peak_used": 294292,
+          "psram_used": 2982584,
+          "psram_peak_used": 3198792
+        },
+        "buffers": {
+          "frame": 284160,
+          "scratch": 142080,
+          "mailbox": 147456,
+          "probe": 0,
+          "peak_total": 573696
+        }
+      }
+    ]
+  },
+  "lcd_fps_change_percent": -0.3625751398312338
+}

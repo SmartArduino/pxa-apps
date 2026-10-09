@@ -1,0 +1,118 @@
+{
+  "passed": true,
+  "scenes": [
+    {
+      "name": "title",
+      "ui": {
+        "component": 65537,
+        "screen": 0,
+        "busy": 0,
+        "slots": 1,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 3
+      },
+      "state": {},
+      "bag": {},
+      "edits": {},
+      "metadata": {
+        "format": "png",
+        "bytes": "6445",
+        "sha256": "a2949673f1add6e4adaceb0839f6bb2b6095191eee7566fac5e43b10087aaf06",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "restored-tools",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 1,
+        "slots": 1,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8626,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 0,
+        "bx": 0,
+        "by": 0,
+        "bz": 0,
+        "block": 0
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 0,
+        "leaves": 0,
+        "dirt": 2,
+        "wood": 1,
+        "plank": 25,
+        "stone": 27,
+        "table": 1,
+        "selected": 5,
+        "count": 1,
+        "progress": 0,
+        "hash": 1024414608
+      },
+      "edits": {
+        "component": 65537,
+        "count": 0,
+        "packed": 0,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 4688
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "18561",
+        "sha256": "4c80293ea06d198d1d0362631843c0060f6f5e12f667f54efcd8f68afeb97fb8",
+        "source": "simulator"
+      }
+    }
+  ],
+  "hello": "protocol=2;transport=unix;fs_offset=1;fs_sha256=1;max_chunk=65536;binary=1;simulator=1;screenshot=png;input=pointer,key",
+  "restored_inventory_hash": 1024414608,
+  "tools": {
+    "component": 65537,
+    "stick": 20,
+    "wpick": 1,
+    "waxe": 1,
+    "wshovel": 1,
+    "spick": 1,
+    "saxe": 1,
+    "sshovel": 1,
+    "item": 35,
+    "wear": 59
+  },
+  "sound_commands": [],
+  "events": [
+    "\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] Voxel audio ready\u001b[0m",
+    "\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-LOAD slot=0 ok=1\u001b[0m"
+  ]
+}

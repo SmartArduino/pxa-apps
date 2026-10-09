@@ -1,0 +1,119 @@
+{
+  "passed": true,
+  "scenes": [
+    {
+      "name": "title",
+      "ui": {
+        "component": 65537,
+        "screen": 0,
+        "busy": 0,
+        "slots": 7,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 3
+      },
+      "state": {},
+      "bag": {},
+      "edits": {},
+      "metadata": {
+        "format": "png",
+        "bytes": "6445",
+        "sha256": "a2949673f1add6e4adaceb0839f6bb2b6095191eee7566fac5e43b10087aaf06",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "restored-inventory",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 7,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 4
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 0,
+        "bx": 0,
+        "by": 0,
+        "bz": 0,
+        "block": 0
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 1,
+        "table": 1,
+        "selected": 3,
+        "count": 1,
+        "progress": 0,
+        "hash": 1268626653
+      },
+      "edits": {
+        "component": 65537,
+        "count": 0,
+        "packed": 0,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3312
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "19539",
+        "sha256": "4377a39511b2adab98c7b5161ab831db6fac774c1f4a723d44e38d0ee434dec3",
+        "source": "simulator"
+      }
+    }
+  ],
+  "hello": "protocol=2;transport=unix;fs_offset=1;fs_sha256=1;max_chunk=65536;binary=1;simulator=1;screenshot=png;input=pointer,key",
+  "restored_bag": {
+    "component": 65537,
+    "bush": 1,
+    "leaves": 1,
+    "dirt": 1,
+    "wood": 0,
+    "plank": 0,
+    "stone": 1,
+    "table": 1,
+    "selected": 3,
+    "count": 1,
+    "progress": 0,
+    "hash": 1268626653
+  },
+  "sound_commands": [],
+  "events": [
+    "\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] Voxel audio ready\u001b[0m",
+    "\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-LOAD slot=0 ok=1\u001b[0m"
+  ]
+}

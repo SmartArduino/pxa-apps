@@ -1,0 +1,445 @@
+{
+  "passed": true,
+  "scenes": [
+    {
+      "name": "title",
+      "ui": {
+        "component": 65537,
+        "screen": 0,
+        "busy": 0,
+        "slots": 7,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 3
+      },
+      "state": {},
+      "bag": {},
+      "edits": {},
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "2",
+        "device_us": "868712349",
+        "source": "surface",
+        "bytes": "7550",
+        "sha256": "4c82e9de2a873c7c0edd9590cd9b8ca5a8000f86092a188e026f139e61ace5b8"
+      }
+    },
+    {
+      "name": "restored-inventory",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 1,
+        "slots": 7,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 0,
+        "bx": 0,
+        "by": 0,
+        "bz": 0,
+        "block": 0
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 1,
+        "table": 1,
+        "selected": 3,
+        "count": 1,
+        "progress": 0,
+        "hash": 1268626653
+      },
+      "edits": {
+        "component": 65537,
+        "count": 0,
+        "packed": 0,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3312
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "86",
+        "device_us": "875347002",
+        "source": "surface",
+        "bytes": "9697",
+        "sha256": "1c0f1e3aec4f23251d84dd474c01ba6b442a85749b37f0f4ceb5ed29a40ef727"
+      }
+    },
+    {
+      "name": "movement",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 1,
+        "slots": 7,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 512,
+        "zq8": 9203,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 0,
+        "bx": 0,
+        "by": 0,
+        "bz": 0,
+        "block": 0
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 1,
+        "table": 1,
+        "selected": 3,
+        "count": 1,
+        "progress": 0,
+        "hash": 1268626653
+      },
+      "edits": {
+        "component": 65537,
+        "count": 0,
+        "packed": 0,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 2864
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "143",
+        "device_us": "877724934",
+        "source": "surface",
+        "bytes": "9788",
+        "sha256": "6b6c48c23269c8ccfce226bf9da677710bb36984f99ffdc745cd767c09dab212"
+      }
+    },
+    {
+      "name": "look",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 1,
+        "slots": 7,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 512,
+        "zq8": 9203,
+        "yawq10": 276,
+        "pitchq10": 76,
+        "fly": 0,
+        "ground": 1,
+        "hit": 0,
+        "bx": 0,
+        "by": 0,
+        "bz": 0,
+        "block": 0
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 1,
+        "table": 1,
+        "selected": 3,
+        "count": 1,
+        "progress": 0,
+        "hash": 1268626653
+      },
+      "edits": {
+        "component": 65537,
+        "count": 0,
+        "packed": 0,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3032
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "182",
+        "device_us": "879389447",
+        "source": "surface",
+        "bytes": "10215",
+        "sha256": "ce99229d371227ba726a453ded0287378be7a43db76f2bb1e7347adf3dd17177"
+      }
+    },
+    {
+      "name": "foreground-controls-cancelled",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 1,
+        "slots": 7,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8387,
+        "yq8": 512,
+        "zq8": 9446,
+        "yawq10": 276,
+        "pitchq10": 76,
+        "fly": 0,
+        "ground": 1,
+        "hit": 0,
+        "bx": 0,
+        "by": 0,
+        "bz": 0,
+        "block": 0
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 1,
+        "table": 1,
+        "selected": 3,
+        "count": 1,
+        "progress": 0,
+        "hash": 1268626653
+      },
+      "edits": {
+        "component": 65537,
+        "count": 0,
+        "packed": 0,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 2920
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "262",
+        "device_us": "884097193",
+        "source": "composed",
+        "bytes": "10565",
+        "sha256": "379802d7b39073a7b8ef3f027a2bd5ddb2d6e1857450d1169b5dda89ca82ab13"
+      }
+    }
+  ],
+  "hello": "protocol=1;mode=normal;capabilities=info,memory,logcat,packages,package-deploy,package-run,package-stop,fs,reboot,doctor,input-v2,screenshot-rgb565,screenshot-jpeg,poweroff,perf-raster,heap-local;max_chunk=1024;fs_offset=1;fs_sha256=1;target=esp32s3;serial=a4:cb:8f:d5:d4:f0;version=9a1841c-dirty",
+  "restored_bag": {
+    "component": 65537,
+    "bush": 1,
+    "leaves": 1,
+    "dirt": 1,
+    "wood": 0,
+    "plank": 0,
+    "stone": 1,
+    "table": 1,
+    "selected": 3,
+    "count": 1,
+    "progress": 0,
+    "hash": 1268626653
+  },
+  "movement_look_background_checks": true,
+  "sound_commands": [],
+  "events": [
+    "869186\t\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] Voxel audio ready\u001b[0m",
+    "872460\t\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-LOAD slot=0 ok=1\u001b[0m"
+  ],
+  "memory": {
+    "heap": {
+      "sram_total": "309995",
+      "sram_free": "23731",
+      "sram_min": "9872",
+      "sram_largest": "7680",
+      "psram_total": "8369580",
+      "psram_free": "5140156",
+      "psram_min": "4677972",
+      "psram_largest": "3932160"
+    },
+    "budget": {
+      "internal": "28956",
+      "external": "62240",
+      "peak_internal": "28956",
+      "peak_external": "62240",
+      "temporary_peak_internal": "0",
+      "temporary_peak_external": "0",
+      "fixed": "2224",
+      "denied": "0",
+      "allocation_failures": "0"
+    },
+    "kind:raster": {
+      "internal": "0",
+      "external": "35396"
+    },
+    "kind:image": {
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:audio": {
+      "internal": "0",
+      "external": "16392"
+    },
+    "kind:temporary": {
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:metadata": {
+      "internal": "28956",
+      "external": "10452"
+    },
+    "kind:frame": {
+      "internal": "0",
+      "external": "0"
+    },
+    "surface": {
+      "frame": "284160",
+      "scratch": "142080",
+      "mailbox": "147456",
+      "probe": "0",
+      "peak_total": "573696"
+    }
+  },
+  "memory_after_stop": {
+    "heap": {
+      "sram_total": "309995",
+      "sram_free": "26427",
+      "sram_min": "9872",
+      "sram_largest": "7680",
+      "psram_total": "8369580",
+      "psram_free": "6951328",
+      "psram_min": "4677972",
+      "psram_largest": "5242880"
+    },
+    "budget": {
+      "internal": "27468",
+      "external": "16516",
+      "peak_internal": "28956",
+      "peak_external": "62240",
+      "temporary_peak_internal": "0",
+      "temporary_peak_external": "0",
+      "fixed": "2224",
+      "denied": "0",
+      "allocation_failures": "0"
+    },
+    "kind:raster": {
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:image": {
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:audio": {
+      "internal": "0",
+      "external": "16392"
+    },
+    "kind:temporary": {
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:metadata": {
+      "internal": "27468",
+      "external": "124"
+    },
+    "kind:frame": {
+      "internal": "0",
+      "external": "0"
+    },
+    "surface": {
+      "frame": "0",
+      "scratch": "0",
+      "mailbox": "0",
+      "probe": "0",
+      "peak_total": "573696"
+    }
+  }
+}

@@ -1,0 +1,450 @@
+{
+  "passed": true,
+  "scenes": [
+    {
+      "name": "title",
+      "ui": {
+        "component": 65537,
+        "screen": 0,
+        "busy": 0,
+        "slots": 7,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 3,
+        "audio": 1
+      },
+      "state": {},
+      "bag": {},
+      "edits": {},
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "2",
+        "device_us": "1027717594",
+        "source": "surface",
+        "bytes": "7554",
+        "sha256": "081e6b1072b1b0b94ab8df8dc04572ca556a092f6b3de54f253b38a614d60c26"
+      }
+    },
+    {
+      "name": "restored-inventory",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 1,
+        "slots": 7,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 0,
+        "audio": 1
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 0,
+        "bx": 0,
+        "by": 0,
+        "bz": 0,
+        "block": 0
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 1,
+        "table": 1,
+        "selected": 3,
+        "count": 1,
+        "progress": 0,
+        "hash": 3579182353
+      },
+      "edits": {
+        "component": 65537,
+        "count": 0,
+        "packed": 0,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3312
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "87",
+        "device_us": "1034494245",
+        "source": "surface",
+        "bytes": "9731",
+        "sha256": "59b1401163e6fc81e135ce71fbb7f2e52f03116b3a0822968252dadbbecd0e06"
+      }
+    },
+    {
+      "name": "movement",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 1,
+        "slots": 7,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 0,
+        "audio": 1
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 512,
+        "zq8": 9112,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 0,
+        "bx": 0,
+        "by": 0,
+        "bz": 0,
+        "block": 0
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 1,
+        "table": 1,
+        "selected": 3,
+        "count": 1,
+        "progress": 0,
+        "hash": 3579182353
+      },
+      "edits": {
+        "component": 65537,
+        "count": 0,
+        "packed": 0,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 2864
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "147",
+        "device_us": "1037014931",
+        "source": "surface",
+        "bytes": "9723",
+        "sha256": "3b5f9b28d1a3eb25e0fc27401d25c82c414b5cb90ef0f954ba4ec5bd5d176a94"
+      }
+    },
+    {
+      "name": "look",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 1,
+        "slots": 7,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 0,
+        "audio": 1
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 512,
+        "zq8": 9112,
+        "yawq10": 276,
+        "pitchq10": 76,
+        "fly": 0,
+        "ground": 1,
+        "hit": 0,
+        "bx": 0,
+        "by": 0,
+        "bz": 0,
+        "block": 0
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 1,
+        "table": 1,
+        "selected": 3,
+        "count": 1,
+        "progress": 0,
+        "hash": 3579182353
+      },
+      "edits": {
+        "component": 65537,
+        "count": 0,
+        "packed": 0,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3144
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "189",
+        "device_us": "1038822364",
+        "source": "surface",
+        "bytes": "10284",
+        "sha256": "57e7eefe6905e52b916785691e05d24cc738d35d7717395c1a50438097c9d60a"
+      }
+    },
+    {
+      "name": "foreground-controls-cancelled",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 1,
+        "slots": 7,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 0,
+        "audio": 1
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8392,
+        "yq8": 512,
+        "zq8": 9373,
+        "yawq10": 276,
+        "pitchq10": 76,
+        "fly": 0,
+        "ground": 1,
+        "hit": 0,
+        "bx": 0,
+        "by": 0,
+        "bz": 0,
+        "block": 0
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 1,
+        "table": 1,
+        "selected": 3,
+        "count": 1,
+        "progress": 0,
+        "hash": 3579182353
+      },
+      "edits": {
+        "component": 65537,
+        "count": 0,
+        "packed": 0,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 2920
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "279",
+        "device_us": "1043602850",
+        "source": "surface",
+        "bytes": "10226",
+        "sha256": "851d18636c72c5301a49fee3a8dd63f0ca2a22217169cafdd750ca6a18f9c2aa"
+      }
+    }
+  ],
+  "hello": "protocol=1;mode=normal;capabilities=info,memory,logcat,packages,package-deploy,package-run,package-stop,fs,reboot,doctor,input-v2,screenshot-rgb565,screenshot-jpeg,poweroff,perf-raster,heap-local;max_chunk=1024;fs_offset=1;fs_sha256=1;target=esp32s3;serial=a4:cb:8f:d5:d4:f0;version=57488b1-dirty",
+  "restored_bag": {
+    "component": 65537,
+    "bush": 1,
+    "leaves": 1,
+    "dirt": 1,
+    "wood": 0,
+    "plank": 0,
+    "stone": 1,
+    "table": 1,
+    "selected": 3,
+    "count": 1,
+    "progress": 0,
+    "hash": 3579182353
+  },
+  "movement_look_background_checks": true,
+  "sound_commands": [],
+  "events": [
+    "1025947\t\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] Voxel audio ready\u001b[0m",
+    "1031555\t\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-LOAD slot=0 ok=1\u001b[0m"
+  ],
+  "memory": {
+    "heap": {
+      "sram_total": "309995",
+      "sram_free": "23651",
+      "sram_min": "8664",
+      "sram_largest": "7680",
+      "psram_total": "8369580",
+      "psram_free": "5290676",
+      "psram_min": "4808572",
+      "psram_largest": "4587520"
+    },
+    "budget": {
+      "internal": "28956",
+      "external": "62144",
+      "peak_internal": "28956",
+      "peak_external": "62144",
+      "temporary_peak_internal": "0",
+      "temporary_peak_external": "0",
+      "fixed": "2224",
+      "denied": "0",
+      "allocation_failures": "0"
+    },
+    "kind:raster": {
+      "internal": "0",
+      "external": "35396"
+    },
+    "kind:image": {
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:audio": {
+      "internal": "0",
+      "external": "16392"
+    },
+    "kind:temporary": {
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:metadata": {
+      "internal": "28956",
+      "external": "10356"
+    },
+    "kind:frame": {
+      "internal": "0",
+      "external": "0"
+    },
+    "surface": {
+      "frame": "284160",
+      "scratch": "142080",
+      "mailbox": "147456",
+      "probe": "0",
+      "peak_total": "573696"
+    }
+  },
+  "memory_after_stop": {
+    "heap": {
+      "sram_total": "309995",
+      "sram_free": "26383",
+      "sram_min": "8664",
+      "sram_largest": "7680",
+      "psram_total": "8369580",
+      "psram_free": "6950784",
+      "psram_min": "4808572",
+      "psram_largest": "6029312"
+    },
+    "budget": {
+      "internal": "27468",
+      "external": "16516",
+      "peak_internal": "28956",
+      "peak_external": "62144",
+      "temporary_peak_internal": "0",
+      "temporary_peak_external": "0",
+      "fixed": "2224",
+      "denied": "0",
+      "allocation_failures": "0"
+    },
+    "kind:raster": {
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:image": {
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:audio": {
+      "internal": "0",
+      "external": "16392"
+    },
+    "kind:temporary": {
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:metadata": {
+      "internal": "27468",
+      "external": "124"
+    },
+    "kind:frame": {
+      "internal": "0",
+      "external": "0"
+    },
+    "surface": {
+      "frame": "0",
+      "scratch": "0",
+      "mailbox": "0",
+      "probe": "0",
+      "peak_total": "573696"
+    }
+  }
+}

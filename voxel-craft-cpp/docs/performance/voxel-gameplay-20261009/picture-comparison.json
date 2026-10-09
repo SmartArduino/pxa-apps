@@ -1,0 +1,41 @@
+{
+  "method": "Compare decoded JPEG pixels below y=32, excluding top system/FPS/clock text; same viewport/geometry/material/HUD. JPEG is lossy, so equality is strong visual evidence but does not replace depth/cutout native tests.",
+  "runs": [
+    {
+      "run": 0,
+      "logical_size": [
+        296,
+        240
+      ],
+      "world_and_hud_crop_y": 32,
+      "decoded_pixels_equal": true,
+      "differing_pixels": 0,
+      "mean_absolute_channel_difference": 0.0,
+      "maximum_channel_difference": 0
+    },
+    {
+      "run": 1,
+      "logical_size": [
+        296,
+        240
+      ],
+      "world_and_hud_crop_y": 32,
+      "decoded_pixels_equal": true,
+      "differing_pixels": 0,
+      "mean_absolute_channel_difference": 0.0,
+      "maximum_channel_difference": 0
+    },
+    {
+      "run": 2,
+      "logical_size": [
+        296,
+        240
+      ],
+      "world_and_hud_crop_y": 32,
+      "decoded_pixels_equal": true,
+      "differing_pixels": 0,
+      "mean_absolute_channel_difference": 0.0,
+      "maximum_channel_difference": 0
+    }
+  ]
+}

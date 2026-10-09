@@ -1,0 +1,46 @@
+{
+  "before": {
+    "actual_code_mappings": [
+      {
+        "text_request": 547848,
+        "map": 589824,
+        "alloc": 589824
+      }
+    ],
+    "actual_instance_linear_memory": [
+      {
+        "linear": 589824,
+        "linear_peak": 589824
+      },
+      {
+        "linear": 0,
+        "linear_peak": 589824
+      }
+    ]
+  },
+  "after": {
+    "actual_code_mappings": [
+      {
+        "text_request": 653708,
+        "map": 655360,
+        "alloc": 655360
+      }
+    ],
+    "actual_instance_linear_memory": [
+      {
+        "linear": 393216,
+        "linear_peak": 393216
+      },
+      {
+        "linear": 0,
+        "linear_peak": 393216
+      }
+    ]
+  },
+  "tool_audio_host_log": "227878\tI (227878) PxaHost: Audio: active=1 queued=0/12 peak_queued=1 submitted=38 rendered=38 tones=0/0 tone_drop=0 voice_exhaust=0 queue_full=0 stale=0 rejected=0 assets=0/0 asset_fail=0 storage=8640 stack=4096",
+  "host_regression_passed": true,
+  "sdk_regression_passed": true,
+  "native_regression_passed": true,
+  "overlay_cache_fixed_passed": true,
+  "overlay_cache_unfixed_expected_failure": true
+}

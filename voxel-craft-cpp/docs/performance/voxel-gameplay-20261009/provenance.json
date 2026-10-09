@@ -1,0 +1,459 @@
+{
+  "schema": "voxel-gameplay-evidence-1",
+  "date": "2026-10-09",
+  "source_root": "9552f7c07b14320d7156e06aa82683c0bf599dd1",
+  "source_sdk": "7a0becdc251394689d13e5f630141a4aee6510ab",
+  "source_apps": "43df05576ad57647a784154eb37bc76c44e1eb00",
+  "gameplay_commit": "b6bd6c7449bcef0767205efe7ce5ff249f9861b3",
+  "test_commit": "43df05576ad57647a784154eb37bc76c44e1eb00",
+  "overlay_cache_commit": "20f3ae0",
+  "fullscreen_sdk_commit": "bf25c19",
+  "firmware_build_source": "de33362-dirty; own overlay cache invalidation was then incorporated in 20f3ae0",
+  "firmware_sha256": "558ea7f453bdc1cdf1e1138b18c4da77560e348c61fb4c2dbb7f0744f2d358fc",
+  "compiler": "WASI SDK 34 / clang 23.1.1 / O3 / ESP32-S3 wamrc opt=3,size=0",
+  "port": "/dev/serial/by-id/usb-Espressif_USB_JTAG_serial_debug_unit_A4:CB:8F:D5:D4:F0-if00",
+  "baseline_app_commit": "a23563d",
+  "fixed_workload": {
+    "scene": 2,
+    "hud": 1,
+    "seed": 23265,
+    "width": 296,
+    "height": 240,
+    "eye": [
+      18.5,
+      9.6,
+      18.5
+    ],
+    "yaw": 0.7,
+    "pitch": -0.15,
+    "fov": 1.221451928,
+    "near": 0.25,
+    "far": 24,
+    "full_textures": true,
+    "simulation": false,
+    "adaptive_distance": false,
+    "neutral_light": true,
+    "hotbar_fixture": "same original eight stacks of 64 items; not production empty inventory"
+  },
+  "artifacts": {
+    "before-current-sdk": {
+      "container": {
+        "manifest_sha256": "bc1b2a19eb8dec4850427d7985c60fef8a96c01b91f04d4ae99b07199842ade2",
+        "path": "pxa-voxel-craft-cpp.pxa",
+        "sha256": "fc8b7849b925f9a290480e5965c8403bfa98d6a03660e28a26d409eb3bf0c7df",
+        "size": 493836
+      },
+      "package": {
+        "app_id": "pxa-voxel-craft-cpp",
+        "engine_abi": "wamr-pxa-aot-v6-core-1",
+        "manifest_format": "0.7",
+        "min_sdk": "1.0",
+        "publisher_key_id": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171",
+        "release_sequence": 11,
+        "target": "esp32-s3",
+        "target_sdk": "1.0"
+      },
+      "payload": [
+        {
+          "path": "artifacts/main.esp32-s3.aot",
+          "sha256": "b4fb4873950fbfccbebcacf79a077df540e3a4bede6cf482b9397a8ac159d0fe",
+          "size": 554144
+        },
+        {
+          "path": "assets/menu-font-10.pxr",
+          "sha256": "7d911bd97ab9d2032ca4a29a60b4ff822296a0b0313fff02928138d9a5f1c2fb",
+          "size": 12132
+        },
+        {
+          "path": "assets/menu-font-14.pxr",
+          "sha256": "2b4e37c654924016c6ece803b84e43e9ddba3bfb9068c10b6a5cff53feebca70",
+          "size": 23748
+        },
+        {
+          "path": "assets/menu-font-18.pxr",
+          "sha256": "c64b99cdc20fddf48bf889e09aaa518a5a017b135951ede0d6286f30a9a92852",
+          "size": 39236
+        }
+      ]
+    },
+    "bench-gameplay-hud-s2": {
+      "container": {
+        "manifest_sha256": "1e00a02bd57ca5dd71954e5bf35ed5da016f293bf027d0b18229fa271768a5ce",
+        "path": "pxa-voxel-craft-cpp.pxa",
+        "sha256": "74ad5686975e2280b342a750edfdc47e9f4e0dede84a76b96a1dd5fc043e2796",
+        "size": 537569
+      },
+      "package": {
+        "app_id": "pxa-voxel-craft-cpp",
+        "engine_abi": "wamr-pxa-aot-v6-core-1",
+        "manifest_format": "0.7",
+        "min_sdk": "1.0",
+        "publisher_key_id": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171",
+        "release_sequence": 13,
+        "target": "esp32-s3",
+        "target_sdk": "1.0"
+      },
+      "payload": [
+        {
+          "path": "artifacts/main.esp32-s3.aot",
+          "sha256": "e13313ae6a7efde559ca1eac459a6441f61e5d1da06ede8f50eff68042595a30",
+          "size": 608508
+        },
+        {
+          "path": "assets/menu-font-10.pxr",
+          "sha256": "9c042562fd193510fb81f1a39b3757c99f4c0940148539f1d08a6780727fe1bd",
+          "size": 12132
+        },
+        {
+          "path": "assets/menu-font-14.pxr",
+          "sha256": "dc1d33f81112a266c4a76c4b3cda90383d25c1d16ac255dfe1f52102894d97fb",
+          "size": 23748
+        },
+        {
+          "path": "assets/menu-font-18.pxr",
+          "sha256": "73dd4f97e5365e4a2aa45e8c8bf5c904884928ed0dc5deea1da4a56d52313dbf",
+          "size": 39236
+        }
+      ]
+    },
+    "before-production": {
+      "container": {
+        "manifest_sha256": "bef9d5e059a5e5e5462d912ad08e3462bc653670ff92e4def48ba93683be99df",
+        "path": "pxa-voxel-craft-cpp.pxa",
+        "sha256": "af97c4bf905e2e12474deea0e9a61e712dc11326a7a377e4d5e0f40c3c3f2311",
+        "size": 515168
+      },
+      "package": {
+        "app_id": "pxa-voxel-craft-cpp",
+        "engine_abi": "wamr-pxa-aot-v6-core-1",
+        "manifest_format": "0.7",
+        "min_sdk": "1.0",
+        "publisher_key_id": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171",
+        "release_sequence": 11,
+        "target": "esp32-s3",
+        "target_sdk": "1.0"
+      },
+      "payload": [
+        {
+          "path": "artifacts/main.esp32-s3.aot",
+          "sha256": "b3e83e1fba99bb4d5fcf6d18c9a8d9110318a9edaa5eda751b66d4aa4b78e4a8",
+          "size": 585948
+        },
+        {
+          "path": "assets/menu-font-10.pxr",
+          "sha256": "7d911bd97ab9d2032ca4a29a60b4ff822296a0b0313fff02928138d9a5f1c2fb",
+          "size": 12132
+        },
+        {
+          "path": "assets/menu-font-14.pxr",
+          "sha256": "2b4e37c654924016c6ece803b84e43e9ddba3bfb9068c10b6a5cff53feebca70",
+          "size": 23748
+        },
+        {
+          "path": "assets/menu-font-18.pxr",
+          "sha256": "c64b99cdc20fddf48bf889e09aaa518a5a017b135951ede0d6286f30a9a92852",
+          "size": 39236
+        }
+      ]
+    },
+    "normal-s3": {
+      "container": {
+        "manifest_sha256": "dfbd8fdd41b1ab9f64c0e4d79f8b70c5b592737499eff7445bcc51738d916526",
+        "path": "pxa-voxel-craft-cpp.pxa",
+        "sha256": "e1fd85d3a7e6268cd62ba1c9258183df75ce95f19b7b6c9d4be1549984c6c19c",
+        "size": 601229
+      },
+      "package": {
+        "app_id": "pxa-voxel-craft-cpp",
+        "engine_abi": "wamr-pxa-aot-v6-core-1",
+        "manifest_format": "0.7",
+        "min_sdk": "1.0",
+        "publisher_key_id": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171",
+        "release_sequence": 13,
+        "target": "esp32-s3",
+        "target_sdk": "1.0"
+      },
+      "payload": [
+        {
+          "path": "artifacts/main.esp32-s3.aot",
+          "sha256": "7ff17070f7b7d7ee22d7b1dee13516734744f88b46fe71ebd9f8c3c2281cca5c",
+          "size": 696508
+        },
+        {
+          "path": "assets/menu-font-10.pxr",
+          "sha256": "9c042562fd193510fb81f1a39b3757c99f4c0940148539f1d08a6780727fe1bd",
+          "size": 12132
+        },
+        {
+          "path": "assets/menu-font-14.pxr",
+          "sha256": "dc1d33f81112a266c4a76c4b3cda90383d25c1d16ac255dfe1f52102894d97fb",
+          "size": 23748
+        },
+        {
+          "path": "assets/menu-font-18.pxr",
+          "sha256": "73dd4f97e5365e4a2aa45e8c8bf5c904884928ed0dc5deea1da4a56d52313dbf",
+          "size": 39236
+        }
+      ]
+    },
+    "normal": {
+      "container": {
+        "manifest_sha256": "fe5d32c4b03978c949ea81164d4b86f3e03eb7a4ead7f618ea9edc07c23d68fb",
+        "path": "pxa-voxel-craft-cpp.pxa",
+        "sha256": "5307870de7a1d0e9b1fd1e470d5c0f0eca7d0112240b0d1435691c9b9acf5e37",
+        "size": 1638653
+      },
+      "package": {
+        "app_id": "pxa-voxel-craft-cpp",
+        "engine_abi": "wamr-pxa-aot-v6-core-1",
+        "manifest_format": "0.7",
+        "min_sdk": "1.0",
+        "publisher_key_id": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171",
+        "release_sequence": 13,
+        "target": "esp32-s3",
+        "target_sdk": "1.0"
+      },
+      "payload": [
+        {
+          "path": "artifacts/main.esp32-s3.aot",
+          "sha256": "7ff17070f7b7d7ee22d7b1dee13516734744f88b46fe71ebd9f8c3c2281cca5c",
+          "size": 696508
+        },
+        {
+          "path": "artifacts/main.esp32-s31.aot",
+          "sha256": "e19aa99d2e4ba704848da65513461a0be71b1fa923bd812b7f8ea1e86b8c7879",
+          "size": 872632
+        },
+        {
+          "path": "artifacts/main.linux-x86_64.aot",
+          "sha256": "b648617b3a7d90277ec179599701af1f85f6badf9c4d88db55a30f41d791b0f1",
+          "size": 462960
+        },
+        {
+          "path": "artifacts/main.wasm",
+          "sha256": "6b4477b5624da96e442ffd1801c43258c09320c909f89ead57e3d377d66f8244",
+          "size": 234475
+        },
+        {
+          "path": "assets/menu-font-10.pxr",
+          "sha256": "9c042562fd193510fb81f1a39b3757c99f4c0940148539f1d08a6780727fe1bd",
+          "size": 12132
+        },
+        {
+          "path": "assets/menu-font-14.pxr",
+          "sha256": "dc1d33f81112a266c4a76c4b3cda90383d25c1d16ac255dfe1f52102894d97fb",
+          "size": 23748
+        },
+        {
+          "path": "assets/menu-font-18.pxr",
+          "sha256": "73dd4f97e5365e4a2aa45e8c8bf5c904884928ed0dc5deea1da4a56d52313dbf",
+          "size": 39236
+        }
+      ]
+    },
+    "profile-final-host-before": {
+      "container": {
+        "manifest_sha256": "73f0f6e7c88d2dde41b1b17441192f89dc4c901e9fd49ea5f2e0279af6adbe33",
+        "path": "pxa-voxel-craft-cpp.pxa",
+        "sha256": "21d40047338d74e1ae7600eec6c75427ada3c92041e599aa289b1b25a2720785",
+        "size": 515967
+      },
+      "package": {
+        "app_id": "pxa-voxel-craft-cpp",
+        "engine_abi": "wamr-pxa-aot-v6-core-1",
+        "manifest_format": "0.7",
+        "min_sdk": "1.0",
+        "publisher_key_id": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171",
+        "release_sequence": 11,
+        "target": "esp32-s3",
+        "target_sdk": "1.0"
+      },
+      "payload": [
+        {
+          "path": "artifacts/main.esp32-s3.aot",
+          "sha256": "867a50faf005627fab8535b78070ae51696ab814081f4508cbf1d8e25e2b2220",
+          "size": 594808
+        },
+        {
+          "path": "assets/menu-font-10.pxr",
+          "sha256": "7d911bd97ab9d2032ca4a29a60b4ff822296a0b0313fff02928138d9a5f1c2fb",
+          "size": 12132
+        },
+        {
+          "path": "assets/menu-font-14.pxr",
+          "sha256": "2b4e37c654924016c6ece803b84e43e9ddba3bfb9068c10b6a5cff53feebca70",
+          "size": 23748
+        },
+        {
+          "path": "assets/menu-font-18.pxr",
+          "sha256": "c64b99cdc20fddf48bf889e09aaa518a5a017b135951ede0d6286f30a9a92852",
+          "size": 39236
+        }
+      ]
+    },
+    "profile-final-host-after": {
+      "container": {
+        "manifest_sha256": "fb40e74c97b8e87db1be0066c99072afedfbcb84b652b87ef9678fddacc6b2fd",
+        "path": "pxa-voxel-craft-cpp.pxa",
+        "sha256": "99817bea3f4720a1e3e69257762d97de0b718482bfc9c9b01e38952da3ab7a88",
+        "size": 559107
+      },
+      "package": {
+        "app_id": "pxa-voxel-craft-cpp",
+        "engine_abi": "wamr-pxa-aot-v6-core-1",
+        "manifest_format": "0.7",
+        "min_sdk": "1.0",
+        "publisher_key_id": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171",
+        "release_sequence": 13,
+        "target": "esp32-s3",
+        "target_sdk": "1.0"
+      },
+      "payload": [
+        {
+          "path": "artifacts/main.esp32-s3.aot",
+          "sha256": "b923988910738b2eddbfce65e7cc1d447bae707dc95bc9b1d0ebb80dcde14294",
+          "size": 648200
+        },
+        {
+          "path": "assets/menu-font-10.pxr",
+          "sha256": "9c042562fd193510fb81f1a39b3757c99f4c0940148539f1d08a6780727fe1bd",
+          "size": 12132
+        },
+        {
+          "path": "assets/menu-font-14.pxr",
+          "sha256": "dc1d33f81112a266c4a76c4b3cda90383d25c1d16ac255dfe1f52102894d97fb",
+          "size": 23748
+        },
+        {
+          "path": "assets/menu-font-18.pxr",
+          "sha256": "73dd4f97e5365e4a2aa45e8c8bf5c904884928ed0dc5deea1da4a56d52313dbf",
+          "size": 39236
+        }
+      ]
+    },
+    "gameplay-device/artifacts": {
+      "container": {
+        "manifest_sha256": "4ecc7b3f52e4cfa47467af30edafc3a34e63e832e01a3322130b6fc7de4697cd",
+        "path": "pxa-voxel-craft-cpp.pxa",
+        "sha256": "f00f35a671acd7cd74272902e984e10bde479dfd81194940cda8e670a63ba0f0",
+        "size": 572055
+      },
+      "package": {
+        "app_id": "pxa-voxel-craft-cpp-ui2",
+        "engine_abi": "wamr-pxa-aot-v6-core-1",
+        "manifest_format": "0.7",
+        "min_sdk": "1.0",
+        "publisher_key_id": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171",
+        "release_sequence": 4,
+        "target": "esp32-s3",
+        "target_sdk": "1.0"
+      },
+      "payload": [
+        {
+          "path": "artifacts/main.esp32-s3.aot",
+          "sha256": "5fd55e49ccef44482fc03f5f88b405066ae48d87dcf30fe9c23e323e86803d64",
+          "size": 713928
+        },
+        {
+          "path": "assets/menu-font-10.pxr",
+          "sha256": "9c042562fd193510fb81f1a39b3757c99f4c0940148539f1d08a6780727fe1bd",
+          "size": 12132
+        }
+      ]
+    },
+    "tools-device/artifacts": {
+      "container": {
+        "manifest_sha256": "150a1d0bde8c93bbcfd1ed8c10cb6ea54a492a9d16c03b443bda585794505df7",
+        "path": "pxa-voxel-craft-cpp.pxa",
+        "sha256": "588f32bb23bc4241f21925d914971966c25347ad182ba714868e7ba207fc8d3d",
+        "size": 573189
+      },
+      "package": {
+        "app_id": "pxa-voxel-craft-cpp-ui2",
+        "engine_abi": "wamr-pxa-aot-v6-core-1",
+        "manifest_format": "0.7",
+        "min_sdk": "1.0",
+        "publisher_key_id": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171",
+        "release_sequence": 4,
+        "target": "esp32-s3",
+        "target_sdk": "1.0"
+      },
+      "payload": [
+        {
+          "path": "artifacts/main.esp32-s3.aot",
+          "sha256": "d3e7a8f84dfbb36c7f12e5e1d31aa3c4c3a6113d2643d79841f621b60a9b9661",
+          "size": 714400
+        },
+        {
+          "path": "assets/menu-font-10.pxr",
+          "sha256": "9c042562fd193510fb81f1a39b3757c99f4c0940148539f1d08a6780727fe1bd",
+          "size": 12132
+        }
+      ]
+    },
+    "permission-device/artifacts": {
+      "container": {
+        "manifest_sha256": "324eaf71367da8e911d813c375a62594e45d7b303dd5de64fad57c323f5da2fd",
+        "path": "pxa-voxel-craft-cpp.pxa",
+        "sha256": "5f2979878e4aadf3684d51544e0503e1b52b5b211ef13923ce7979e9d4356277",
+        "size": 572055
+      },
+      "package": {
+        "app_id": "pxa-voxel-craft-cpp-ui3",
+        "engine_abi": "wamr-pxa-aot-v6-core-1",
+        "manifest_format": "0.7",
+        "min_sdk": "1.0",
+        "publisher_key_id": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171",
+        "release_sequence": 4,
+        "target": "esp32-s3",
+        "target_sdk": "1.0"
+      },
+      "payload": [
+        {
+          "path": "artifacts/main.esp32-s3.aot",
+          "sha256": "5fd55e49ccef44482fc03f5f88b405066ae48d87dcf30fe9c23e323e86803d64",
+          "size": 713928
+        },
+        {
+          "path": "assets/menu-font-10.pxr",
+          "sha256": "9c042562fd193510fb81f1a39b3757c99f4c0940148539f1d08a6780727fe1bd",
+          "size": 12132
+        }
+      ]
+    },
+    "denied-device/artifacts": {
+      "container": {
+        "manifest_sha256": "39165b9b76911e87fe83a4993c1a3e702efae9144a02ad876977dab59333840d",
+        "path": "pxa-voxel-craft-cpp.pxa",
+        "sha256": "46840950bf1043d3df7a018016f582ff650b5096931a33ad2861455834fefa3f",
+        "size": 572055
+      },
+      "package": {
+        "app_id": "pxa-voxel-craft-cpp-ui4",
+        "engine_abi": "wamr-pxa-aot-v6-core-1",
+        "manifest_format": "0.7",
+        "min_sdk": "1.0",
+        "publisher_key_id": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171",
+        "release_sequence": 4,
+        "target": "esp32-s3",
+        "target_sdk": "1.0"
+      },
+      "payload": [
+        {
+          "path": "artifacts/main.esp32-s3.aot",
+          "sha256": "5fd55e49ccef44482fc03f5f88b405066ae48d87dcf30fe9c23e323e86803d64",
+          "size": 713928
+        },
+        {
+          "path": "assets/menu-font-10.pxr",
+          "sha256": "9c042562fd193510fb81f1a39b3757c99f4c0940148539f1d08a6780727fe1bd",
+          "size": 12132
+        }
+      ]
+    }
+  },
+  "raw_artifacts_and_logs": "workspace local/voxel-gameplay-20261009/; raw serial logs and build artifacts are not committed",
+  "intermediate_warning": "intermediate-0.11/ uses earlier code, firmware or workloads; do not combine it with final measured 0.12.0 data",
+  "firmware_hello": "protocol=1;mode=normal;capabilities=info,memory,logcat,packages,package-deploy,package-run,package-stop,fs,reboot,doctor,input-v2,screenshot-rgb565,screenshot-jpeg,poweroff,perf-raster,heap-local;max_chunk=1024;fs_offset=1;fs_sha256=1;target=esp32s3;serial=a4:cb:8f:d5:d4:f0;version=57488b1-dirty",
+  "firmware_version_note": "Version is a CMake-cached label; exact app-partition binary SHA identifies the measured firmware. Source at build contained local concurrent edits; later commits are not presented as a pristine release rebuild."
+}

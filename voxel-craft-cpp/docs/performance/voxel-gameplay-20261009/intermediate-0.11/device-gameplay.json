@@ -1,0 +1,1772 @@
+{
+  "passed": true,
+  "scenes": [
+    {
+      "name": "audio-permission",
+      "ui": {
+        "component": 65537,
+        "screen": 0,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 3,
+        "audio_prompt": 1
+      },
+      "state": {},
+      "bag": {},
+      "edits": {},
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "2",
+        "device_us": "804664368",
+        "source": "composed",
+        "bytes": "7865",
+        "sha256": "c6f97dcfad5dc75d3e7339589e44bd12fa49c7f98caad10d309d7a9559c8c26a"
+      }
+    },
+    {
+      "name": "title",
+      "ui": {
+        "component": 65537,
+        "screen": 0,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 3,
+        "audio_prompt": 0
+      },
+      "state": {},
+      "bag": {},
+      "edits": {},
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "2",
+        "device_us": "805710946",
+        "source": "surface",
+        "bytes": "7564",
+        "sha256": "e7fb6017dd8f78b31d8899180f74b57f3eee60d785df4353e021414bede5208d"
+      }
+    },
+    {
+      "name": "empty-inventory-hud",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 3,
+        "audio_prompt": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 34,
+        "block": 16
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 0,
+        "leaves": 0,
+        "dirt": 0,
+        "wood": 0,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 0,
+        "progress": 0,
+        "hash": 1794104933
+      },
+      "edits": {
+        "component": 65537,
+        "count": 0,
+        "packed": 0,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3200
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "25",
+        "device_us": "807873829",
+        "source": "surface",
+        "bytes": "11705",
+        "sha256": "055a64f347fabf08e0777f41aa6c27507d5310e74c6f2fefc3a45733e75bb101"
+      }
+    },
+    {
+      "name": "mined-ground-bush",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 3,
+        "audio_prompt": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 35,
+        "block": 6
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 0,
+        "dirt": 0,
+        "wood": 0,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 1,
+        "progress": 0,
+        "hash": 1084362874
+      },
+      "edits": {
+        "component": 65537,
+        "count": 1,
+        "packed": 6361248,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3200
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "59",
+        "device_us": "809561989",
+        "source": "surface",
+        "bytes": "10639",
+        "sha256": "ee555f6a13795a43a7626aee67ae69bad8617af6edd2c08811515d2e8c38cb6c"
+      }
+    },
+    {
+      "name": "mined-leaves",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 3,
+        "audio_prompt": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 36,
+        "block": 2
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 0,
+        "dirt": 0,
+        "wood": 0,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 1,
+        "progress": 0,
+        "hash": 1084362874
+      },
+      "edits": {
+        "component": 65537,
+        "count": 2,
+        "packed": 5052576,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 4128
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "95",
+        "device_us": "811273953",
+        "source": "surface",
+        "bytes": "9849",
+        "sha256": "405489786a2efbe7b03eda0bc6dab13ed943df1c33084db63abfb02d0fdefe97"
+      }
+    },
+    {
+      "name": "mined-dirt",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 3,
+        "audio_prompt": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 37,
+        "block": 5
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 1,
+        "progress": 0,
+        "hash": 1529454274
+      },
+      "edits": {
+        "component": 65537,
+        "count": 3,
+        "packed": 4530336,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 4000
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "135",
+        "device_us": "813176026",
+        "source": "surface",
+        "bytes": "9869",
+        "sha256": "fb4451b07c22123d31cbf6608971ea0aaa54fe8c5442b08d8005fdd1a9a43bba"
+      }
+    },
+    {
+      "name": "mined-wood",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 3,
+        "audio_prompt": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 38,
+        "block": 3
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 1,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 1,
+        "progress": 0,
+        "hash": 3404860220
+      },
+      "edits": {
+        "component": 65537,
+        "count": 4,
+        "packed": 4925600,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 4056
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "197",
+        "device_us": "816076761",
+        "source": "surface",
+        "bytes": "9815",
+        "sha256": "f7d5968b7e0ea6db5844d3d7802d28f8e79574e73eaadf2d724e105e496f9119"
+      }
+    },
+    {
+      "name": "placed-consumed-bush",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 3,
+        "audio_prompt": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 37,
+        "block": 16
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 0,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 1,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 0,
+        "progress": 0,
+        "hash": 3768574883
+      },
+      "edits": {
+        "component": 65537,
+        "count": 5,
+        "packed": 10561696,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3312
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "243",
+        "device_us": "818121515",
+        "source": "surface",
+        "bytes": "10064",
+        "sha256": "50e47aab4f3d3dc8e636a35415acfd66134fd82bce7614390ad2b617818f8052"
+      }
+    },
+    {
+      "name": "normal-backpack",
+      "ui": {
+        "component": 65537,
+        "screen": 6,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 42,
+        "audio_prompt": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 38,
+        "block": 3
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 1,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 1,
+        "progress": 0,
+        "hash": 3404860220
+      },
+      "edits": {
+        "component": 65537,
+        "count": 6,
+        "packed": 6367392,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3312
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "284",
+        "device_us": "819976070",
+        "source": "surface",
+        "bytes": "8599",
+        "sha256": "800a39b89bc703310d216ca04fc6028cbb36809fa58acc28688f33805fcbcbe2"
+      }
+    },
+    {
+      "name": "moved-wood-to-backpack",
+      "ui": {
+        "component": 65537,
+        "screen": 6,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 42,
+        "audio_prompt": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 38,
+        "block": 3
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 1,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 1,
+        "progress": 0,
+        "hash": 3404860220
+      },
+      "edits": {
+        "component": 65537,
+        "count": 6,
+        "packed": 6367392,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3312
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "288",
+        "device_us": "821901388",
+        "source": "surface",
+        "bytes": "8630",
+        "sha256": "428c48dc08e00663d8e18cbbd7a13bf54de3ef80548369d50a8239a2cd50706e"
+      }
+    },
+    {
+      "name": "wood-crafting-preview",
+      "ui": {
+        "component": 65537,
+        "screen": 6,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 42,
+        "audio_prompt": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 38,
+        "block": 3
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 1,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 1,
+        "progress": 0,
+        "hash": 3404860220
+      },
+      "edits": {
+        "component": 65537,
+        "count": 6,
+        "packed": 6367392,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3312
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "292",
+        "device_us": "823327527",
+        "source": "surface",
+        "bytes": "8465",
+        "sha256": "9542c3f25df22525d3e08e2b85bd88174440c3d1d373fa690dad4ed6213da1f3"
+      }
+    },
+    {
+      "name": "crafted-four-planks",
+      "ui": {
+        "component": 65537,
+        "screen": 6,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 42,
+        "audio_prompt": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 38,
+        "block": 3
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 1,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 1,
+        "progress": 0,
+        "hash": 3404860220
+      },
+      "edits": {
+        "component": 65537,
+        "count": 6,
+        "packed": 6367392,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3312
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "294",
+        "device_us": "824111867",
+        "source": "surface",
+        "bytes": "8476",
+        "sha256": "9996b366fe8a2457254981dc06ab52f48049845deeb7aa32bcf83b7b5c0532a9"
+      }
+    },
+    {
+      "name": "workbench-crafting-preview",
+      "ui": {
+        "component": 65537,
+        "screen": 6,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 42,
+        "audio_prompt": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 38,
+        "block": 3
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 1,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 1,
+        "progress": 0,
+        "hash": 3404860220
+      },
+      "edits": {
+        "component": 65537,
+        "count": 6,
+        "packed": 6367392,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3312
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "304",
+        "device_us": "827654306",
+        "source": "surface",
+        "bytes": "8636",
+        "sha256": "a3d3df97656030d80293d948f0a44ada8bf27aeb4671ead4f2325c15a6999213"
+      }
+    },
+    {
+      "name": "crafted-workbench",
+      "ui": {
+        "component": 65537,
+        "screen": 6,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 42,
+        "audio_prompt": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 38,
+        "block": 3
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 1,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 1,
+        "progress": 0,
+        "hash": 3404860220
+      },
+      "edits": {
+        "component": 65537,
+        "count": 6,
+        "packed": 6367392,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3312
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "306",
+        "device_us": "828415203",
+        "source": "surface",
+        "bytes": "8457",
+        "sha256": "0314f0ee6b15de4379592fdd4b8c9c35c728ede648c43dc3bce2db3a813891cb"
+      }
+    },
+    {
+      "name": "placed-workbench",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 42,
+        "audio_prompt": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 37,
+        "block": 12
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 3,
+        "count": 0,
+        "progress": 0,
+        "hash": 1529454274
+      },
+      "edits": {
+        "component": 65537,
+        "count": 7,
+        "packed": 10037408,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3412
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "402",
+        "device_us": "833171044",
+        "source": "surface",
+        "bytes": "9975",
+        "sha256": "a7d81406b4c4bc4726ec9bafb5ee7f6147fd0b799617e016f7f0198526a55fda"
+      }
+    },
+    {
+      "name": "workbench-use",
+      "ui": {
+        "component": 65537,
+        "screen": 7,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 47,
+        "audio_prompt": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 37,
+        "block": 12
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 3,
+        "count": 0,
+        "progress": 0,
+        "hash": 1529454274
+      },
+      "edits": {
+        "component": 65537,
+        "count": 7,
+        "packed": 10037408,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3412
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "411",
+        "device_us": "833598849",
+        "source": "surface",
+        "bytes": "9141",
+        "sha256": "9975118bb97a133a45a68eef5ef8bbe9e39da5f04e5a185429696eaa1c7e50b7"
+      }
+    },
+    {
+      "name": "stone-mining-progress",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 47,
+        "audio_prompt": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 38,
+        "block": 3
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 0,
+        "table": 1,
+        "selected": 3,
+        "count": 1,
+        "progress": 191,
+        "hash": 114127937
+      },
+      "edits": {
+        "component": 65537,
+        "count": 8,
+        "packed": 5843104,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3496
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "525",
+        "device_us": "839638360",
+        "source": "surface",
+        "bytes": "10225",
+        "sha256": "987b1405f3d884b2f5a9459789a6c86613d3ce2893081471a4f3fb290ce7865b"
+      }
+    },
+    {
+      "name": "stone-collected",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 47,
+        "audio_prompt": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 0,
+        "bx": 0,
+        "by": 0,
+        "bz": 0,
+        "block": 0
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 1,
+        "table": 1,
+        "selected": 3,
+        "count": 1,
+        "progress": 0,
+        "hash": 1268626653
+      },
+      "edits": {
+        "component": 65537,
+        "count": 9,
+        "packed": 4665504,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3312
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "654",
+        "device_us": "845487211",
+        "source": "surface",
+        "bytes": "9703",
+        "sha256": "28225ae6f31181f2e137718aec2638f222a6e52f5f3901560ccfa9ca84761121"
+      }
+    },
+    {
+      "name": "saved-slot-1",
+      "ui": {
+        "component": 65537,
+        "screen": 5,
+        "busy": 0,
+        "slots": 1,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 4,
+        "audio_prompt": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 0,
+        "bx": 0,
+        "by": 0,
+        "bz": 0,
+        "block": 0
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 1,
+        "table": 1,
+        "selected": 3,
+        "count": 1,
+        "progress": 0,
+        "hash": 1268626653
+      },
+      "edits": {
+        "component": 65537,
+        "count": 9,
+        "packed": 4665504,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3312
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "663",
+        "device_us": "851976297",
+        "source": "surface",
+        "bytes": "8015",
+        "sha256": "5319359bec8df052b5286a6fec72686da13a97381ba16c23116c5bdba0d2b87f"
+      }
+    },
+    {
+      "name": "saved-slot-2",
+      "ui": {
+        "component": 65537,
+        "screen": 5,
+        "busy": 0,
+        "slots": 3,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 4,
+        "audio_prompt": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 0,
+        "bx": 0,
+        "by": 0,
+        "bz": 0,
+        "block": 0
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 1,
+        "table": 1,
+        "selected": 3,
+        "count": 1,
+        "progress": 0,
+        "hash": 1268626653
+      },
+      "edits": {
+        "component": 65537,
+        "count": 9,
+        "packed": 4665504,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3312
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "666",
+        "device_us": "856421765",
+        "source": "surface",
+        "bytes": "8134",
+        "sha256": "eec129a38469aea7df39b9008f2d8aa22ef368a95d46124c333dcf8b4e1099fe"
+      }
+    },
+    {
+      "name": "saved-slot-3",
+      "ui": {
+        "component": 65537,
+        "screen": 5,
+        "busy": 0,
+        "slots": 7,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          254,
+          29
+        ],
+        "bag": [
+          255,
+          213
+        ],
+        "hits": 4,
+        "audio_prompt": 0
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 0,
+        "bx": 0,
+        "by": 0,
+        "bz": 0,
+        "block": 0
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 1,
+        "table": 1,
+        "selected": 3,
+        "count": 1,
+        "progress": 0,
+        "hash": 1268626653
+      },
+      "edits": {
+        "component": 65537,
+        "count": 9,
+        "packed": 4665504,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3312
+      },
+      "metadata": {
+        "format": "jpeg",
+        "width": "296",
+        "height": "240",
+        "orientation": "logical",
+        "frame_id": "669",
+        "device_us": "860843573",
+        "source": "surface",
+        "bytes": "8176",
+        "sha256": "8c70182ecef7859ba03dff6ca379ed7c11571ec9434a410276572b2f89a2e85b"
+      }
+    }
+  ],
+  "hello": "protocol=1;mode=normal;capabilities=info,memory,logcat,packages,package-deploy,package-run,package-stop,fs,reboot,doctor,input-v2,screenshot-rgb565,screenshot-jpeg,poweroff,perf-raster,heap-local;max_chunk=1024;fs_offset=1;fs_sha256=1;target=esp32s3;serial=a4:cb:8f:d5:d4:f0;version=9a1841c-dirty",
+  "mined_durations": [
+    {
+      "component": 65537,
+      "block": 16,
+      "elapsed_ms": 212
+    },
+    {
+      "component": 65537,
+      "block": 6,
+      "elapsed_ms": 452
+    },
+    {
+      "component": 65537,
+      "block": 2,
+      "elapsed_ms": 659
+    },
+    {
+      "component": 65537,
+      "block": 5,
+      "elapsed_ms": 1604
+    },
+    {
+      "component": 65537,
+      "block": 16,
+      "elapsed_ms": 212
+    },
+    {
+      "component": 65537,
+      "block": 12,
+      "elapsed_ms": 1604
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "elapsed_ms": 3204
+    }
+  ],
+  "saved_bag": {
+    "component": 65537,
+    "bush": 1,
+    "leaves": 1,
+    "dirt": 1,
+    "wood": 0,
+    "plank": 0,
+    "stone": 1,
+    "table": 1,
+    "selected": 3,
+    "count": 1,
+    "progress": 0,
+    "hash": 1268626653
+  },
+  "saved_pose": {
+    "component": 65537,
+    "xq8": 8320,
+    "yq8": 256,
+    "zq8": 8320,
+    "yawq10": 0,
+    "pitchq10": 0,
+    "fly": 0,
+    "ground": 1,
+    "hit": 0,
+    "bx": 0,
+    "by": 0,
+    "bz": 0,
+    "block": 0
+  },
+  "sound_commands": [
+    {
+      "component": 65537,
+      "block": 16,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 16,
+      "action": 1,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 6,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 6,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 6,
+      "action": 1,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 2,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 2,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 2,
+      "action": 1,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 5,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 5,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 5,
+      "action": 1,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 16,
+      "action": 2,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 16,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 16,
+      "action": 1,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 8,
+      "action": 2,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 12,
+      "action": 2,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 12,
+      "action": 2,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 12,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 12,
+      "action": 1,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "action": 1,
+      "ok": 1,
+      "error": 0
+    }
+  ],
+  "events": [
+    "806479\t\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] Voxel audio ready\u001b[0m",
+    "809098\t\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-MINED block=16 elapsed_ms=212\u001b[0m",
+    "810916\t\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-MINED block=6 elapsed_ms=452\u001b[0m",
+    "812867\t\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-MINED block=2 elapsed_ms=659\u001b[0m",
+    "815693\t\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-MINED block=5 elapsed_ms=1604\u001b[0m",
+    "819313\t\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-MINED block=16 elapsed_ms=212\u001b[0m",
+    "838021\t\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-MINED block=12 elapsed_ms=1604\u001b[0m",
+    "845022\t\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-MINED block=3 elapsed_ms=3204\u001b[0m",
+    "852456\t\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-SAVE slot=0 generation=1 ok=1\u001b[0m",
+    "856903\t\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-SAVE slot=1 generation=1 ok=1\u001b[0m",
+    "861321\t\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-SAVE slot=2 generation=1 ok=1\u001b[0m"
+  ],
+  "memory": {
+    "heap": {
+      "sram_total": "309995",
+      "sram_free": "23731",
+      "sram_min": "9872",
+      "sram_largest": "7680",
+      "psram_total": "8369580",
+      "psram_free": "5357240",
+      "psram_min": "4677972",
+      "psram_largest": "5111808"
+    },
+    "budget": {
+      "internal": "28956",
+      "external": "62240",
+      "peak_internal": "28956",
+      "peak_external": "62240",
+      "temporary_peak_internal": "0",
+      "temporary_peak_external": "0",
+      "fixed": "2224",
+      "denied": "0",
+      "allocation_failures": "0"
+    },
+    "kind:raster": {
+      "internal": "0",
+      "external": "35396"
+    },
+    "kind:image": {
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:audio": {
+      "internal": "0",
+      "external": "16392"
+    },
+    "kind:temporary": {
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:metadata": {
+      "internal": "28956",
+      "external": "10452"
+    },
+    "kind:frame": {
+      "internal": "0",
+      "external": "0"
+    },
+    "surface": {
+      "frame": "284160",
+      "scratch": "142080",
+      "mailbox": "147456",
+      "probe": "0",
+      "peak_total": "573696"
+    }
+  },
+  "memory_after_stop": {
+    "heap": {
+      "sram_total": "309995",
+      "sram_free": "26427",
+      "sram_min": "9872",
+      "sram_largest": "7680",
+      "psram_total": "8369580",
+      "psram_free": "6951312",
+      "psram_min": "4677972",
+      "psram_largest": "5242880"
+    },
+    "budget": {
+      "internal": "27468",
+      "external": "16516",
+      "peak_internal": "28956",
+      "peak_external": "62240",
+      "temporary_peak_internal": "0",
+      "temporary_peak_external": "0",
+      "fixed": "2224",
+      "denied": "0",
+      "allocation_failures": "0"
+    },
+    "kind:raster": {
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:image": {
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:audio": {
+      "internal": "0",
+      "external": "16392"
+    },
+    "kind:temporary": {
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:metadata": {
+      "internal": "27468",
+      "external": "124"
+    },
+    "kind:frame": {
+      "internal": "0",
+      "external": "0"
+    },
+    "surface": {
+      "frame": "0",
+      "scratch": "0",
+      "mailbox": "0",
+      "probe": "0",
+      "peak_total": "573696"
+    }
+  }
+}

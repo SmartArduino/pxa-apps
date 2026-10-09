@@ -1,0 +1,50 @@
+{
+  "before": {
+    "source": "a23563d",
+    "display_fps": [
+      11.51646855002654,
+      11.493230865917695,
+      11.546725267134116
+    ],
+    "mean_display_fps": 11.518808227692784,
+    "raster_mean_us": [
+      39232.934782608696,
+      39781.358695652176,
+      39443.684782608696
+    ],
+    "mean_raster_us": 39485.99275362319,
+    "draw_bytes": 18576,
+    "covered_pixels": 134250
+  },
+  "after": {
+    "source": "packed mesh + gameplay 0.11",
+    "display_fps": [
+      11.343848358494158,
+      11.274362757815542,
+      11.434343049348719
+    ],
+    "mean_display_fps": 11.350851388552806,
+    "raster_mean_us": [
+      39657.47252747253,
+      40529.37777777778,
+      39035.086956521736
+    ],
+    "mean_raster_us": 39740.645753924015,
+    "draw_bytes": 18576,
+    "covered_pixels": 134250
+  },
+  "fps_change_percent": -1.458109518102635,
+  "profile": {
+    "before": {
+      "stages": "1279974\t\u001b[32m[PXA app=pxa-voxel-craft-cpp component=65537 level=INFO] VOXEL-STAGES total_us=76531 geometry_us=24155 encode_us=5709 hud_us=1251 submit_us=45316 update_us=0 samples=227\u001b[0m",
+      "pipeline": "1279973\t\u001b[32m[PXA app=pxa-voxel-craft-cpp component=65537 level=INFO] VOXEL-PIPE sub=347 render=346 visible=346 drop=0 queue_us=953247 present_us=12746000 host_us=45061\u001b[0m",
+      "diagnostic_only": true
+    },
+    "after": {
+      "stages": "1488277\t\u001b[32m[PXA app=pxa-voxel-craft-cpp component=65537 level=INFO] VOXEL-STAGES total_us=72394 geometry_us=19814 encode_us=5795 hud_us=1273 submit_us=45411 update_us=0 samples=237\u001b[0m",
+      "pipeline": "1488276\t\u001b[32m[PXA app=pxa-voxel-craft-cpp component=65537 level=INFO] VOXEL-PIPE sub=357 render=356 visible=356 drop=0 queue_us=986987 present_us=13118000 host_us=42189\u001b[0m",
+      "diagnostic_only": true
+    }
+  },
+  "fixed_scene_rgb_equal_below_y32": true
+}

@@ -1,0 +1,1502 @@
+{
+  "passed": true,
+  "scenes": [
+    {
+      "name": "title",
+      "ui": {
+        "component": 65537,
+        "screen": 0,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 3
+      },
+      "state": {},
+      "bag": {},
+      "edits": {},
+      "metadata": {
+        "format": "png",
+        "bytes": "6445",
+        "sha256": "a2949673f1add6e4adaceb0839f6bb2b6095191eee7566fac5e43b10087aaf06",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "empty-inventory-hud",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 3
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 34,
+        "block": 16
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 0,
+        "leaves": 0,
+        "dirt": 0,
+        "wood": 0,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 0,
+        "progress": 0,
+        "hash": 1794104933
+      },
+      "edits": {
+        "component": 65537,
+        "count": 0,
+        "packed": 0,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3200
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "17530",
+        "sha256": "1a1b59711d2572b9eb8778c4b64cd293a0c9cb032fadf2a2a825dad25394e4b9",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "mined-ground-bush",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 3
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 35,
+        "block": 6
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 0,
+        "dirt": 0,
+        "wood": 0,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 1,
+        "progress": 106,
+        "hash": 1084362874
+      },
+      "edits": {
+        "component": 65537,
+        "count": 1,
+        "packed": 6361248,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 4016
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "18889",
+        "sha256": "83b39468be3abe39e2f0bbe5dc3122ac7dd1d0b04eede49eaccd818a3760308f",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "mined-leaves",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 3
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 36,
+        "block": 2
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 0,
+        "wood": 0,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 1,
+        "progress": 0,
+        "hash": 2988082479
+      },
+      "edits": {
+        "component": 65537,
+        "count": 2,
+        "packed": 5052576,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3800
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "18386",
+        "sha256": "aa9d982a29691dfedd01e60ba5c357797aa43a7c8799ca30b82afeaf6d69d07b",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "mined-dirt",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 3
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 37,
+        "block": 5
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 1,
+        "progress": 0,
+        "hash": 1529454274
+      },
+      "edits": {
+        "component": 65537,
+        "count": 3,
+        "packed": 4530336,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3412
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "18336",
+        "sha256": "49d9adfbcd2eaff27086e9cb6554c64bb928731329fbf4c39a46056c9a697c73",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "mined-wood",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 3
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 38,
+        "block": 3
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 1,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 1,
+        "progress": 0,
+        "hash": 3404860220
+      },
+      "edits": {
+        "component": 65537,
+        "count": 4,
+        "packed": 4925600,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3312
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "19258",
+        "sha256": "2b634e10ffdcf32865e59fbb8fb4984b818ae183de7aeec9e5d6046fd05f55ba",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "placed-consumed-bush",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 3
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 37,
+        "block": 16
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 0,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 1,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 0,
+        "progress": 0,
+        "hash": 3768574883
+      },
+      "edits": {
+        "component": 65537,
+        "count": 5,
+        "packed": 10561696,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3312
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "19126",
+        "sha256": "17b536ed5f72b0a8dd14f4b97846df6a1824321c9a483aaf3bb3c0215a711bd1",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "normal-backpack",
+      "ui": {
+        "component": 65537,
+        "screen": 6,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 42
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 38,
+        "block": 3
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 1,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 1,
+        "progress": 0,
+        "hash": 3404860220
+      },
+      "edits": {
+        "component": 65537,
+        "count": 6,
+        "packed": 6367392,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3984
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "5350",
+        "sha256": "c8e7f48d4d0427af1f3a98e82ad6c93d23f7858675be4073e6613b8dba14d98f",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "moved-wood-to-backpack",
+      "ui": {
+        "component": 65537,
+        "screen": 6,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 42
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 38,
+        "block": 3
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 1,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 1,
+        "progress": 0,
+        "hash": 3404860220
+      },
+      "edits": {
+        "component": 65537,
+        "count": 6,
+        "packed": 6367392,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3984
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "5373",
+        "sha256": "1ef444eef970bf6242b96c6ab7f155fb5e258188924d41b45097a7b6f801569d",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "wood-crafting-preview",
+      "ui": {
+        "component": 65537,
+        "screen": 6,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 42
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 38,
+        "block": 3
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 1,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 1,
+        "progress": 0,
+        "hash": 3404860220
+      },
+      "edits": {
+        "component": 65537,
+        "count": 6,
+        "packed": 6367392,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3984
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "5851",
+        "sha256": "bd5a8302eda295c89113dbf367773ddf85e6906d35601514c3d8965f03e61555",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "crafted-four-planks",
+      "ui": {
+        "component": 65537,
+        "screen": 6,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 42
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 38,
+        "block": 3
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 1,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 1,
+        "progress": 0,
+        "hash": 3404860220
+      },
+      "edits": {
+        "component": 65537,
+        "count": 6,
+        "packed": 6367392,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3984
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "6074",
+        "sha256": "d46e727eaabad5eecbe5e1eb5da0c14fa8807327e7c5a1ef43cea1ddcac4fad9",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "workbench-crafting-preview",
+      "ui": {
+        "component": 65537,
+        "screen": 6,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 42
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 38,
+        "block": 3
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 1,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 1,
+        "progress": 0,
+        "hash": 3404860220
+      },
+      "edits": {
+        "component": 65537,
+        "count": 6,
+        "packed": 6367392,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3984
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "6094",
+        "sha256": "a84783319b5c17749242db0fa4d015b04d2b187ec16068825109250ec5f33858",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "crafted-workbench",
+      "ui": {
+        "component": 65537,
+        "screen": 6,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 42
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 38,
+        "block": 3
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 1,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 0,
+        "count": 1,
+        "progress": 0,
+        "hash": 3404860220
+      },
+      "edits": {
+        "component": 65537,
+        "count": 6,
+        "packed": 6367392,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3984
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "5983",
+        "sha256": "432727bc7ec978b6f0ab01d23dc39fae3fcaffb224d033c3947c05c60c00150b",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "placed-workbench",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 42
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 37,
+        "block": 12
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 3,
+        "count": 0,
+        "progress": 0,
+        "hash": 1529454274
+      },
+      "edits": {
+        "component": 65537,
+        "count": 7,
+        "packed": 10037408,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3340
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "18703",
+        "sha256": "c616111b731ba6a4b800a372fd7047ea7de4462bfbc753b1388d650b864dd3ca",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "workbench-use",
+      "ui": {
+        "component": 65537,
+        "screen": 7,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 47
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 37,
+        "block": 12
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 0,
+        "table": 0,
+        "selected": 3,
+        "count": 0,
+        "progress": 0,
+        "hash": 1529454274
+      },
+      "edits": {
+        "component": 65537,
+        "count": 7,
+        "packed": 10037408,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3340
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "5130",
+        "sha256": "7f54f5d1dbd21892cecd70dd1ef8c0b08300ac27792c8259c02012f93a9bcf9a",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "stone-mining-progress",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 47
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 38,
+        "block": 3
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 0,
+        "table": 1,
+        "selected": 3,
+        "count": 1,
+        "progress": 206,
+        "hash": 114127937
+      },
+      "edits": {
+        "component": 65537,
+        "count": 8,
+        "packed": 5843104,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3496
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "18491",
+        "sha256": "9f0d039ff8f14538359d90876d0ea28086002e348d3b3666a1e27e73770b7e4c",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "stone-collected",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 47
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 0,
+        "bx": 0,
+        "by": 0,
+        "bz": 0,
+        "block": 0
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 1,
+        "table": 1,
+        "selected": 3,
+        "count": 1,
+        "progress": 0,
+        "hash": 1268626653
+      },
+      "edits": {
+        "component": 65537,
+        "count": 9,
+        "packed": 4665504,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3312
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "19539",
+        "sha256": "4377a39511b2adab98c7b5161ab831db6fac774c1f4a723d44e38d0ee434dec3",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "saved-slot-1",
+      "ui": {
+        "component": 65537,
+        "screen": 5,
+        "busy": 0,
+        "slots": 1,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 4
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 0,
+        "bx": 0,
+        "by": 0,
+        "bz": 0,
+        "block": 0
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 1,
+        "table": 1,
+        "selected": 3,
+        "count": 1,
+        "progress": 0,
+        "hash": 1268626653
+      },
+      "edits": {
+        "component": 65537,
+        "count": 9,
+        "packed": 4665504,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3312
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "8432",
+        "sha256": "78c85576bd5454b07fcb3fc6cedb9200d0109e3333fd8a4aff439c9f37bc1d84",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "saved-slot-2",
+      "ui": {
+        "component": 65537,
+        "screen": 5,
+        "busy": 0,
+        "slots": 3,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 4
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 0,
+        "bx": 0,
+        "by": 0,
+        "bz": 0,
+        "block": 0
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 1,
+        "table": 1,
+        "selected": 3,
+        "count": 1,
+        "progress": 0,
+        "hash": 1268626653
+      },
+      "edits": {
+        "component": 65537,
+        "count": 9,
+        "packed": 4665504,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3312
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "8432",
+        "sha256": "aeb2784baf2e65d334bfe9eb8118d1389266e80dd8b9981b3a9063455329053c",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "saved-slot-3",
+      "ui": {
+        "component": 65537,
+        "screen": 5,
+        "busy": 0,
+        "slots": 7,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 4
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 0,
+        "bx": 0,
+        "by": 0,
+        "bz": 0,
+        "block": 0
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 1,
+        "leaves": 1,
+        "dirt": 1,
+        "wood": 0,
+        "plank": 0,
+        "stone": 1,
+        "table": 1,
+        "selected": 3,
+        "count": 1,
+        "progress": 0,
+        "hash": 1268626653
+      },
+      "edits": {
+        "component": 65537,
+        "count": 9,
+        "packed": 4665504,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3312
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "8430",
+        "sha256": "326201ee12d585ffd5338b694f92f4f26bf293ded29481e4344e9486d2e4ead5",
+        "source": "simulator"
+      }
+    }
+  ],
+  "hello": "protocol=2;transport=unix;fs_offset=1;fs_sha256=1;max_chunk=65536;binary=1;simulator=1;screenshot=png;input=pointer,key",
+  "mined_durations": [
+    {
+      "component": 65537,
+      "block": 16,
+      "elapsed_ms": 212
+    },
+    {
+      "component": 65537,
+      "block": 6,
+      "elapsed_ms": 452
+    },
+    {
+      "component": 65537,
+      "block": 2,
+      "elapsed_ms": 659
+    },
+    {
+      "component": 65537,
+      "block": 5,
+      "elapsed_ms": 1604
+    },
+    {
+      "component": 65537,
+      "block": 12,
+      "elapsed_ms": 1604
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "elapsed_ms": 3204
+    }
+  ],
+  "saved_bag": {
+    "component": 65537,
+    "bush": 1,
+    "leaves": 1,
+    "dirt": 1,
+    "wood": 0,
+    "plank": 0,
+    "stone": 1,
+    "table": 1,
+    "selected": 3,
+    "count": 1,
+    "progress": 0,
+    "hash": 1268626653
+  },
+  "saved_pose": {
+    "component": 65537,
+    "xq8": 8320,
+    "yq8": 256,
+    "zq8": 8320,
+    "yawq10": 0,
+    "pitchq10": 0,
+    "fly": 0,
+    "ground": 1,
+    "hit": 0,
+    "bx": 0,
+    "by": 0,
+    "bz": 0,
+    "block": 0
+  },
+  "sound_commands": [
+    {
+      "component": 65537,
+      "block": 16,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 16,
+      "action": 1,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 6,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 6,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 6,
+      "action": 1,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 2,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 2,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 2,
+      "action": 1,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 5,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 5,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 5,
+      "action": 1,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 16,
+      "action": 2,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 16,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 16,
+      "action": 1,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 8,
+      "action": 2,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 12,
+      "action": 2,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 12,
+      "action": 2,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 12,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 12,
+      "action": 1,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "action": 1,
+      "ok": 1,
+      "error": 0
+    }
+  ],
+  "events": [
+    "\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] Voxel audio ready\u001b[0m",
+    "\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-MINED block=16 elapsed_ms=212\u001b[0m",
+    "\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-MINED block=6 elapsed_ms=452\u001b[0m",
+    "\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-MINED block=2 elapsed_ms=659\u001b[0m",
+    "\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-MINED block=5 elapsed_ms=1604\u001b[0m",
+    "\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-MINED block=12 elapsed_ms=1604\u001b[0m",
+    "\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-MINED block=3 elapsed_ms=3204\u001b[0m",
+    "\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-SAVE slot=0 generation=1 ok=1\u001b[0m",
+    "\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-SAVE slot=1 generation=1 ok=1\u001b[0m",
+    "\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-SAVE slot=2 generation=1 ok=1\u001b[0m"
+  ]
+}

@@ -1,0 +1,12 @@
+HUD: depth untouched; 20 adjacent-texel tie differences from legacy
+Session storage 299024 B; inventory 72 B; crafting 9 B; hit table 470 B
+Session: title/pause/navigation, grounded jump, inventory, corrupt headers, transactional mesh staging and all menu commands validated/rasterized OK
+Finite inventory 72 B: stacking, consumption, transfer, full rollback, recipes and per-target mining OK
+Layout: landscape/portrait/round-corner/DPI control bounds and display protocol validation OK
+Gameplay: finite mining/drop/place/full-capacity rollback and 4 bounded sound commands OK
+World bytes=246528, chunks=192, max terrain quads=173; World: 32 seeds, 3062 rooted trees, 0 terrain cache overflows; overflow coverage OK
+Voxel render: affine=461 solid=365; same faces, frustum corners, zero frame allocations OK
+Canonical C/C++: 98304 equal voxels, FNV1a=667de4b0, outside=air
+Canonical cache: max quads=50 overflow chunks=0
+C Guest UV: six normals, unequal merged extents, no axis swapping OK
+Voxel C++ input/world/render/benchmark tests OK

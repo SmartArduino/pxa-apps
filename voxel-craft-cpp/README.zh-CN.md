@@ -119,6 +119,9 @@ World 减少 294912 B，既有帧/深度/命令缓冲不增加。完整计量、
 0.10.0 的交互、大陆黑体、DPI、存档、峰值及固定场景验证见
 [O3、HUD 与交互验收报告](docs/performance/voxel-craft-cpp-ui-20261009.zh-CN.md)。
 所有报告和测量汇总见 [性能与验收记录索引](docs/performance/README.zh-CN.md)。
+0.12 的有限背包、合成、六种工具、材质音效、全屏缓存修复及最新同固件测量见
+[玩法与内存验收报告](docs/performance/voxel-gameplay-20261009.zh-CN.md)。本轮等 HUD
+显示 FPS 基本持平，稳定总内存降低；新增声音的 SRAM 代价在报告中单列。
 
 HUD 在世界之后直接编码到同一 DrawList、画进同一游戏 Surface，并一起提交。
 标题、暂停、设置等页面也复用这个 Surface；没有额外全屏 UI 图层或合成缓冲。

@@ -53,7 +53,10 @@ python local/pxa-apps/voxel-craft-cpp/tests/device_memory.py --port /dev/ttyACM2
 （不传 `--device`）驱动已启动的 runner；第二次重新启动 runner 后加 `--resume`。
 启动参数及多分辨率截图见 [本轮报告](../docs/performance/voxel-gameplay-20261009.zh-CN.md)。
 
-收尾仅停止、清理和卸载本次使用的 `pxa-voxel-craft-cpp-ui2/ui3` 测试身份，保留正式应用及其他应用。
+拒绝权限可用另一个新身份（例如 `pxa-voxel-craft-cpp-ui4`）构建、安装后，运行
+`device_lifecycle.py --app pxa-voxel-craft-cpp-ui4 --deny-audio`。安装失败时先核对
+包状态；只清理本次 inbox 副本可释放空间，不删除原应用或私有数据来腾位置。
+收尾仅停止、清理和卸载本次使用的 UI2/UI3/UI4 测试身份，保留正式应用及其他应用。
 
 工具的独立地图和触屏流程：
 

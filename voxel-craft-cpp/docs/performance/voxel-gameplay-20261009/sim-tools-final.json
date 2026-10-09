@@ -1,0 +1,1028 @@
+{
+  "passed": true,
+  "scenes": [
+    {
+      "name": "title",
+      "ui": {
+        "component": 65537,
+        "screen": 0,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 3
+      },
+      "state": {},
+      "bag": {},
+      "edits": {},
+      "metadata": {
+        "format": "png",
+        "bytes": "6445",
+        "sha256": "a2949673f1add6e4adaceb0839f6bb2b6095191eee7566fac5e43b10087aaf06",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "wpick-recipe",
+      "ui": {
+        "component": 65537,
+        "screen": 7,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 47
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 34,
+        "block": 12
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 0,
+        "leaves": 0,
+        "dirt": 0,
+        "wood": 0,
+        "plank": 32,
+        "stone": 32,
+        "table": 0,
+        "selected": 0,
+        "count": 32,
+        "progress": 0,
+        "hash": 1467893630
+      },
+      "edits": {
+        "component": 65537,
+        "count": 0,
+        "packed": 0,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3520
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "6444",
+        "sha256": "66515a831420cea7aa5be6a5c16f3254d98dc4633b7d5a47e72d0816778837da",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "waxe-recipe",
+      "ui": {
+        "component": 65537,
+        "screen": 7,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 47
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 34,
+        "block": 12
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 0,
+        "leaves": 0,
+        "dirt": 0,
+        "wood": 0,
+        "plank": 29,
+        "stone": 32,
+        "table": 0,
+        "selected": 2,
+        "count": 30,
+        "progress": 0,
+        "hash": 1310849407
+      },
+      "edits": {
+        "component": 65537,
+        "count": 0,
+        "packed": 0,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3760
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "6592",
+        "sha256": "add02d492a12b320df56da1d450cc11cda3d8d38e5a90cf9567c08b6d9754379",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "wshovel-recipe",
+      "ui": {
+        "component": 65537,
+        "screen": 7,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 47
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 34,
+        "block": 12
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 0,
+        "leaves": 0,
+        "dirt": 0,
+        "wood": 0,
+        "plank": 26,
+        "stone": 32,
+        "table": 0,
+        "selected": 2,
+        "count": 28,
+        "progress": 0,
+        "hash": 3521798251
+      },
+      "edits": {
+        "component": 65537,
+        "count": 0,
+        "packed": 0,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 3976
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "6477",
+        "sha256": "d7834ad5641aee043aeefa49cfcbf67f0e7a38dbbd3b233fffab9274e4f48402",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "spick-recipe",
+      "ui": {
+        "component": 65537,
+        "screen": 7,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 47
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 34,
+        "block": 12
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 0,
+        "leaves": 0,
+        "dirt": 0,
+        "wood": 0,
+        "plank": 25,
+        "stone": 32,
+        "table": 0,
+        "selected": 2,
+        "count": 26,
+        "progress": 0,
+        "hash": 1912724206
+      },
+      "edits": {
+        "component": 65537,
+        "count": 0,
+        "packed": 0,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 4216
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "6536",
+        "sha256": "d3861f557ff1ccfc512ec07eed81e7443cff4e3ab09e241f0be2198862fe9ab5",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "saxe-recipe",
+      "ui": {
+        "component": 65537,
+        "screen": 7,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 47
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 34,
+        "block": 12
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 0,
+        "leaves": 0,
+        "dirt": 0,
+        "wood": 0,
+        "plank": 25,
+        "stone": 29,
+        "table": 0,
+        "selected": 2,
+        "count": 24,
+        "progress": 0,
+        "hash": 1129302988
+      },
+      "edits": {
+        "component": 65537,
+        "count": 0,
+        "packed": 0,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 4456
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "6648",
+        "sha256": "358659b38beeeeb9cc4bc4b9dacbf82d6c36a07458fa0f262edbde3fe237869f",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "sshovel-recipe",
+      "ui": {
+        "component": 65537,
+        "screen": 7,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 47
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 34,
+        "block": 12
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 0,
+        "leaves": 0,
+        "dirt": 0,
+        "wood": 0,
+        "plank": 25,
+        "stone": 26,
+        "table": 0,
+        "selected": 2,
+        "count": 22,
+        "progress": 0,
+        "hash": 1113262065
+      },
+      "edits": {
+        "component": 65537,
+        "count": 0,
+        "packed": 0,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 4672
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "6513",
+        "sha256": "9971ec1c061c268c63e3ba914e2274d880393fd5c11f969c4a10cfa7f0e32c46",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "six-crafted-tools",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 47
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 34,
+        "block": 12
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 0,
+        "leaves": 0,
+        "dirt": 0,
+        "wood": 0,
+        "plank": 25,
+        "stone": 25,
+        "table": 0,
+        "selected": 2,
+        "count": 20,
+        "progress": 0,
+        "hash": 3238487543
+      },
+      "edits": {
+        "component": 65537,
+        "count": 0,
+        "packed": 0,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 4912
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "16743",
+        "sha256": "a9edcfc4d5df1295db258ae94662c28e306729741aa10f11c8f90944ea9fb73f",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "mined-with-wpick",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 47
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 36,
+        "block": 3
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 0,
+        "leaves": 0,
+        "dirt": 0,
+        "wood": 0,
+        "plank": 25,
+        "stone": 26,
+        "table": 1,
+        "selected": 3,
+        "count": 1,
+        "progress": 10,
+        "hash": 4146894053
+      },
+      "edits": {
+        "component": 65537,
+        "count": 2,
+        "packed": 4659360,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 5840
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "18517",
+        "sha256": "0566c2536f36a46337f58ec40002ea512a89532f6e3afbe6ba31d349270d35ec",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "mined-with-spick",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 47
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 37,
+        "block": 5
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 0,
+        "leaves": 0,
+        "dirt": 0,
+        "wood": 0,
+        "plank": 25,
+        "stone": 27,
+        "table": 1,
+        "selected": 6,
+        "count": 1,
+        "progress": 0,
+        "hash": 1319389897
+      },
+      "edits": {
+        "component": 65537,
+        "count": 3,
+        "packed": 4661408,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 5712
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "18128",
+        "sha256": "8305184c654b9fd5de086f5a59a506bed569f1c25e006b5f1241f4287b89115b",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "mined-with-saxe",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 47
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 1,
+        "bx": 32,
+        "by": 2,
+        "bz": 38,
+        "block": 2
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 0,
+        "leaves": 0,
+        "dirt": 0,
+        "wood": 1,
+        "plank": 25,
+        "stone": 27,
+        "table": 1,
+        "selected": 7,
+        "count": 1,
+        "progress": 123,
+        "hash": 142789802
+      },
+      "edits": {
+        "component": 65537,
+        "count": 4,
+        "packed": 4925600,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 5840
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "18724",
+        "sha256": "9754052a62215dc96996eaf4752ad2a15bc58e022acc6b9adce862310433ad78",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "mined-with-sshovel",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 47
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8320,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 0,
+        "bx": 0,
+        "by": 0,
+        "bz": 0,
+        "block": 0
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 0,
+        "leaves": 0,
+        "dirt": 1,
+        "wood": 1,
+        "plank": 25,
+        "stone": 27,
+        "table": 1,
+        "selected": 8,
+        "count": 1,
+        "progress": 0,
+        "hash": 1130702702
+      },
+      "edits": {
+        "component": 65537,
+        "count": 5,
+        "packed": 4534432,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 5736
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "18931",
+        "sha256": "592aa7d7818357ef13291852f51613f9d06e6ec930947a4e70baf81ce14e894f",
+        "source": "simulator"
+      }
+    },
+    {
+      "name": "tools-after-mining",
+      "ui": {
+        "component": 65537,
+        "screen": 1,
+        "busy": 0,
+        "slots": 0,
+        "fly": 0,
+        "font": 10,
+        "button": 30,
+        "menu": [
+          257,
+          31
+        ],
+        "bag": [
+          260,
+          212
+        ],
+        "hits": 47
+      },
+      "state": {
+        "component": 65537,
+        "xq8": 8320,
+        "yq8": 256,
+        "zq8": 8626,
+        "yawq10": 0,
+        "pitchq10": 0,
+        "fly": 0,
+        "ground": 1,
+        "hit": 0,
+        "bx": 0,
+        "by": 0,
+        "bz": 0,
+        "block": 0
+      },
+      "bag": {
+        "component": 65537,
+        "bush": 0,
+        "leaves": 0,
+        "dirt": 2,
+        "wood": 1,
+        "plank": 25,
+        "stone": 27,
+        "table": 1,
+        "selected": 5,
+        "count": 1,
+        "progress": 0,
+        "hash": 1024414608
+      },
+      "edits": {
+        "component": 65537,
+        "count": 6,
+        "packed": 4536480,
+        "budget": 40000,
+        "exhausted": 0,
+        "bytes": 5456
+      },
+      "metadata": {
+        "format": "png",
+        "bytes": "18561",
+        "sha256": "4c80293ea06d198d1d0362631843c0060f6f5e12f667f54efcd8f68afeb97fb8",
+        "source": "simulator"
+      }
+    }
+  ],
+  "hello": "protocol=2;transport=unix;fs_offset=1;fs_sha256=1;max_chunk=65536;binary=1;simulator=1;screenshot=png;input=pointer,key",
+  "tool_mining_durations": [
+    {
+      "component": 65537,
+      "block": 12,
+      "tool": 34,
+      "elapsed_ms": 803
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "tool": 33,
+      "elapsed_ms": 1604
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "tool": 36,
+      "elapsed_ms": 803
+    },
+    {
+      "component": 65537,
+      "block": 5,
+      "tool": 37,
+      "elapsed_ms": 404
+    },
+    {
+      "component": 65537,
+      "block": 2,
+      "tool": 38,
+      "elapsed_ms": 164
+    },
+    {
+      "component": 65537,
+      "block": 2,
+      "tool": 35,
+      "elapsed_ms": 340
+    }
+  ],
+  "saved_inventory_hash": 1024414608,
+  "tools": {
+    "component": 65537,
+    "stick": 20,
+    "wpick": 1,
+    "waxe": 1,
+    "wshovel": 1,
+    "spick": 1,
+    "saxe": 1,
+    "sshovel": 1,
+    "item": 35,
+    "wear": 59
+  },
+  "sound_commands": [
+    {
+      "component": 65537,
+      "block": 33,
+      "action": 2,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 34,
+      "action": 2,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 35,
+      "action": 2,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 36,
+      "action": 2,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 37,
+      "action": 2,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 38,
+      "action": 2,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 12,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 12,
+      "action": 1,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "action": 1,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 3,
+      "action": 1,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 5,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 5,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 5,
+      "action": 1,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 2,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 2,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 2,
+      "action": 1,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 2,
+      "action": 0,
+      "ok": 1,
+      "error": 0
+    },
+    {
+      "component": 65537,
+      "block": 2,
+      "action": 1,
+      "ok": 1,
+      "error": 0
+    }
+  ],
+  "events": [
+    "\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] Voxel audio ready\u001b[0m",
+    "\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-MINED block=12 tool=34 elapsed_ms=803\u001b[0m",
+    "\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-MINED block=3 tool=33 elapsed_ms=1604\u001b[0m",
+    "\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-MINED block=3 tool=36 elapsed_ms=803\u001b[0m",
+    "\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-MINED block=5 tool=37 elapsed_ms=404\u001b[0m",
+    "\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-MINED block=2 tool=38 elapsed_ms=164\u001b[0m",
+    "\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-MINED block=2 tool=35 elapsed_ms=340\u001b[0m",
+    "\u001b[32m[PXA app=pxa-voxel-craft-cpp-ui2 component=65537 level=INFO] VOXEL-SAVE slot=0 generation=1 ok=1\u001b[0m"
+  ]
+}

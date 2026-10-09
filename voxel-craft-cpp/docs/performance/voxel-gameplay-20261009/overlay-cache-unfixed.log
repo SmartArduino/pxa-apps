@@ -1,0 +1,21 @@
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/firmware/components/pxa/tests/system_overlay_cache_test.c:64:5: warning: 'lv_obj_add_flag' is deprecated: Use the dedicated lv_obj_set_<flag>() setters instead, e.g. lv_obj_set_hidden(obj, true). [-Wdeprecated-declarations]
+   64 |     lv_obj_add_flag(bar,LV_OBJ_FLAG_HIDDEN);
+      |     ^
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/firmware/managed_components/lvgl__lvgl/include/lvgl/core/lv_obj.h:238:1: note: 'lv_obj_add_flag' has been explicitly marked deprecated here
+  238 | LV_DEPRECATED("Use the dedicated lv_obj_set_<flag>() setters instead, e.g. lv_obj_set_hidden(obj, true).")
+      | ^
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/firmware/managed_components/lvgl__lvgl/include/lvgl/core/../lv_types.h:486:43: note: expanded from macro 'LV_DEPRECATED'
+  486 | #define LV_DEPRECATED(msg) __attribute__((deprecated(msg)))
+      |                                           ^
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/firmware/components/pxa/tests/system_overlay_cache_test.c:72:5: warning: 'lv_obj_remove_flag' is deprecated: Use the dedicated lv_obj_set_<flag>() setters instead, e.g. lv_obj_set_hidden(obj, false). [-Wdeprecated-declarations]
+   72 |     lv_obj_remove_flag(bar,LV_OBJ_FLAG_HIDDEN);
+      |     ^
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/firmware/managed_components/lvgl__lvgl/include/lvgl/core/lv_obj.h:247:1: note: 'lv_obj_remove_flag' has been explicitly marked deprecated here
+  247 | LV_DEPRECATED("Use the dedicated lv_obj_set_<flag>() setters instead, e.g. lv_obj_set_hidden(obj, false).")
+      | ^
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/firmware/managed_components/lvgl__lvgl/include/lvgl/core/../lv_types.h:486:43: note: expanded from macro 'LV_DEPRECATED'
+  486 | #define LV_DEPRECATED(msg) __attribute__((deprecated(msg)))
+      |                                           ^
+2 warnings generated.
+overlay-cache: /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/firmware/components/pxa/tests/system_overlay_cache_test.c:66: int main(void): Assertion `!g_plane.visible&&!g_plane_memory&&allocations==0' failed.
+tools/test-system-overlay-cache.sh: line 24: 1544252 Aborted                    (core dumped) SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy "$build/overlay-cache"
