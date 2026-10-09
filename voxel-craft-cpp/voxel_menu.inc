@@ -88,7 +88,7 @@
                     {.x_q4=qx(r.x+r.w-3),.y_q4=qy(r.y+3),.u_q4=256,.v_q4=0,.light=0,.depth_q8=1},
                     {.x_q4=qx(r.x+r.w-3),.y_q4=qy(r.y+r.h-3),.u_q4=256,.v_q4=256,.light=0,.depth_q8=1},
                     {.x_q4=qx(r.x+3),.y_q4=qy(r.y+r.h-3),.u_q4=0,.v_q4=256,.light=0,.depth_q8=1}}};
-                frame.textured_quad({texture},q,{.affine_uv=true,.transparent_index0=true,.lit_palette=true});
+                frame.textured_quad({texture},q,{.affine_uv=true,.painter=true,.transparent_index0=true});
                 menu_hits[menu_hit_count++]={r,A::item,block};
             }
             int slot=std::max(12,int(18*controls.scale)),qy0=y0+3*(cell+space)+space;

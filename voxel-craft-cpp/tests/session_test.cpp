@@ -7,6 +7,8 @@ static std::array<std::uint16_t,16*256> palette{};
 static std::array<std::uint8_t,220*220> texture{};
 static bool pending_frame = false;
 static unsigned draw_submissions = 0;
+static std::array<std::uint8_t,49152> last_draw{};
+static unsigned last_draw_size=0;
 extern "C" std::int32_t pxa_submit(const std::uint8_t*,std::uint32_t){return 0;}
 extern "C" std::int32_t pxa_io(std::uint64_t handle,std::uint32_t opcode,std::uint8_t* data,std::uint32_t size){
     assert(handle==77);
@@ -17,6 +19,7 @@ extern "C" std::int32_t pxa_io(std::uint64_t handle,std::uint32_t opcode,std::ui
         return size;
     }
     assert(opcode==0x101);++draw_submissions;
+    assert(size<=last_draw.size());std::copy_n(data,size,last_draw.data());last_draw_size=size;
     pxa_raster_target_t target{};target.pixels=pixels.data();target.depth_pixels=depth.data();
     target.width=target.stride_pixels=target.depth_stride_pixels=296;target.height=240;target.scratch_mode=PXA_RASTER_SCRATCH_DEPTH16;
     pxa_raster_resources_t resources{};resources.capabilities=PXA_RASTER_CAP_KNOWN_MASK;
@@ -65,6 +68,39 @@ int main(){
     pxa::Transport transport;transport.phase(pxa::Phase::event);
     pxa::game::RenderInfo info;info.capabilities=PXA_RASTER_CAP_KNOWN_MASK;info.render_width=296;info.render_height=240;info.max_textures=48;info.max_draw_bytes=49152;
     pxa::game::Renderer renderer(transport,77,info);
+    // A HUD is an ordered overlay. Its optimized scanlines must preserve
+    // cutouts and palette rows while leaving world depth values untouched.
+    // The two fixed-point interpolators can resolve exact texel boundaries
+    // differently; the synthetic gradient bounds this to adjacent samples.
+    for(unsigned y=0;y<220;++y)for(unsigned x=0;x<220;++x)
+        texture[y*220+x]=((x/3+y/5)%3==0)?0:std::uint8_t(1+(x+y)%15);
+    for(unsigned i=0;i<palette.size();++i)palette[i]=std::uint16_t(i*127);
+    std::fill(pixels.begin(),pixels.end(),0x1234);
+    std::fill(depth.begin(),depth.end(),0x4321);
+    auto hud_frame=renderer.frame(app.commands);app.draw_hud(hud_frame,296,240);
+    assert(hud_frame.submit());
+    assert(std::all_of(depth.begin(),depth.end(),[](auto v){return v==0x4321;}));
+    static auto scanline_pixels=pixels;
+    for(unsigned at=PXA_RASTER_DRAW_HEADER_BYTES;at<last_draw_size;at+=pxa::wire::get16(reinterpret_cast<const std::byte*>(last_draw.data()+at+2)))
+        if(last_draw[at]==PXA_RASTER_RECORD_TEXTURED_QUAD)
+            last_draw[at+1]=(last_draw[at+1]&~PXA_RASTER_QUAD_PAINTER)|PXA_RASTER_QUAD_LIT_PALETTE;
+    std::fill(pixels.begin(),pixels.end(),0x1234);
+    pxa_raster_target_t hud_target{};hud_target.pixels=pixels.data();hud_target.depth_pixels=depth.data();
+    hud_target.width=hud_target.stride_pixels=hud_target.depth_stride_pixels=296;hud_target.height=240;hud_target.scratch_mode=PXA_RASTER_SCRATCH_DEPTH16;
+    pxa_raster_resources_t hud_resources{};hud_resources.capabilities=PXA_RASTER_CAP_KNOWN_MASK;hud_resources.palette=palette.data();hud_resources.palette_light_levels=16;
+    for(auto& slot:hud_resources.textures)slot={texture.data(),220,220};
+    pxa_raster_draw_list_view_t hud_view{};
+    assert(pxa_raster_validate_draw_list(last_draw.data(),last_draw_size,&hud_target,&hud_resources,&hud_view)==PXA_STATUS_OK);
+    pxa_raster_execute_draw_list(last_draw.data(),&hud_view,&hud_target,&hud_resources,nullptr);
+    unsigned changed=0;
+    for(unsigned i=0;i<pixels.size();++i)if(pixels[i]!=scanline_pixels[i]){
+        assert(pixels[i]!=0x1234&&scanline_pixels[i]!=0x1234); // Same coverage/cutouts.
+        const int difference=std::abs(int(pixels[i])-int(scanline_pixels[i]));
+        assert(difference==127||difference==14*127); // Adjacent texels, including wrap.
+        ++changed;
+    }
+    assert(changed<=64); // <0.1% of the viewport; catches broad UV/palette shifts.
+    std::printf("HUD: depth untouched; %u adjacent-texel tie differences from legacy\n",changed);
     assert(voxel::select_font_size(1.f)==10&&voxel::select_font_size(1.4f)==14&&voxel::select_font_size(2.f)==18);
     for(auto page:{title,pause,settings_page,load_slots,save_slots,inventory,workbench,confirm_title,confirm_overwrite}){
         app.show(page);app.draw_menu(renderer);assert(!app.ui_dirty);

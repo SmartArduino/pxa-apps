@@ -398,7 +398,9 @@ struct VoxelCraft {
              .v_q4 = static_cast<std::int16_t>(v1), .light = 0, .depth_q8 = 1}}};
         pxa::game::PolygonOptions options;
         options.affine_uv = true;
-        options.lit_palette = true;
+        // HUD is ordered after the world: use palette row 0 and the 2D
+        // scanline path, with no Z reads/writes or depth interpolation.
+        options.painter = true;
         options.transparent_index0 = true;
         frame.textured_quad(pxa::game::AtlasBinding{
                                 static_cast<std::uint8_t>(kHudTexture)},
@@ -451,7 +453,7 @@ struct VoxelCraft {
                  .u_q4 = 0, .v_q4 = 256, .light = 0, .depth_q8 = 1}}};
             pxa::game::PolygonOptions icon_options;
             icon_options.affine_uv = true;
-            icon_options.lit_palette = true;
+            icon_options.painter = true;
             icon_options.transparent_index0 = true;
             frame.textured_quad(pxa::game::AtlasBinding{texture}, icon,
                                 icon_options);
