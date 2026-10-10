@@ -1,0 +1,280 @@
+{
+  "passed": true,
+  "host": {
+    "target": "esp32s3",
+    "serial": "a4:cb:8f:d5:d4:f0",
+    "version": "2ef8b1a-dirty"
+  },
+  "runs": {
+    "old_cpp": 6,
+    "original_c": 18,
+    "fixed_cpp": 18
+  },
+  "comparison": "median within one 20 ms step or 10%; original rounding jitter remains",
+  "rows": [
+    {
+      "requested_hold_seconds": 0.15,
+      "old_cpp": {
+        "device_hold_us": 140910,
+        "charge_us": 80000,
+        "land_x_q6": 211866,
+        "ticks": 2,
+        "moves": 3,
+        "draws": 6,
+        "max_gap_us": 58089,
+        "charge_range_us": [
+          80000,
+          80000
+        ]
+      },
+      "original_c": {
+        "device_hold_us": 154936,
+        "charge_us": 140000,
+        "land_x_q6": 373216,
+        "ticks": 4,
+        "moves": 4,
+        "draws": 5,
+        "max_gap_us": 37627,
+        "charge_range_us": [
+          140000,
+          160000
+        ]
+      },
+      "fixed_cpp": {
+        "device_hold_us": 147784,
+        "charge_us": 139999,
+        "land_x_q6": 373216,
+        "ticks": 5,
+        "moves": 4,
+        "draws": 6,
+        "max_gap_us": 30945,
+        "charge_range_us": [
+          139999,
+          159999
+        ]
+      },
+      "fixed_minus_C_charge_us": -1,
+      "median_tolerance_us": 20005
+    },
+    {
+      "requested_hold_seconds": 0.36,
+      "old_cpp": {
+        "device_hold_us": 365719,
+        "charge_us": 239999,
+        "land_x_q6": 646799,
+        "ticks": 6,
+        "moves": 9,
+        "draws": 16,
+        "max_gap_us": 85167,
+        "charge_range_us": [
+          239999,
+          239999
+        ]
+      },
+      "original_c": {
+        "device_hold_us": 362661,
+        "charge_us": 280000,
+        "land_x_q6": 757866,
+        "ticks": 12,
+        "moves": 11,
+        "draws": 13,
+        "max_gap_us": 31271,
+        "charge_range_us": [
+          280000,
+          300000
+        ]
+      },
+      "fixed_cpp": {
+        "device_hold_us": 364715,
+        "charge_us": 299999,
+        "land_x_q6": 813749,
+        "ticks": 11,
+        "moves": 12,
+        "draws": 12,
+        "max_gap_us": 32844,
+        "charge_range_us": [
+          259999,
+          360000
+        ]
+      },
+      "fixed_minus_C_charge_us": 19999,
+      "median_tolerance_us": 28000.0
+    },
+    {
+      "requested_hold_seconds": 0.7,
+      "old_cpp": {
+        "device_hold_us": 701837,
+        "charge_us": 320000,
+        "land_x_q6": 869866,
+        "ticks": 8,
+        "moves": 17,
+        "draws": 26,
+        "max_gap_us": 183354,
+        "charge_range_us": [
+          320000,
+          320000
+        ]
+      },
+      "original_c": {
+        "device_hold_us": 699030,
+        "charge_us": 600000,
+        "land_x_q6": 1680000,
+        "ticks": 24,
+        "moves": 23,
+        "draws": 25,
+        "max_gap_us": 38941,
+        "charge_range_us": [
+          560000,
+          699999
+        ]
+      },
+      "fixed_cpp": {
+        "device_hold_us": 701650,
+        "charge_us": 639999,
+        "land_x_q6": 1799466,
+        "ticks": 24,
+        "moves": 23,
+        "draws": 25,
+        "max_gap_us": 41803,
+        "charge_range_us": [
+          639999,
+          639999
+        ]
+      },
+      "fixed_minus_C_charge_us": 39999,
+      "median_tolerance_us": 60000.0
+    },
+    {
+      "requested_hold_seconds": 0.82,
+      "old_cpp": {
+        "device_hold_us": 821610,
+        "charge_us": 480000,
+        "land_x_q6": 1327200,
+        "ticks": 12,
+        "moves": 19,
+        "draws": 32,
+        "max_gap_us": 86884,
+        "charge_range_us": [
+          480000,
+          480000
+        ]
+      },
+      "original_c": {
+        "device_hold_us": 818887,
+        "charge_us": 739999,
+        "land_x_q6": 2102216,
+        "ticks": 29,
+        "moves": 28,
+        "draws": 30,
+        "max_gap_us": 40685,
+        "charge_range_us": [
+          719999,
+          759999
+        ]
+      },
+      "fixed_cpp": {
+        "device_hold_us": 819683,
+        "charge_us": 719999,
+        "land_x_q6": 2041199,
+        "ticks": 28,
+        "moves": 27,
+        "draws": 29,
+        "max_gap_us": 40078,
+        "charge_range_us": [
+          699999,
+          719999
+        ]
+      },
+      "fixed_minus_C_charge_us": -20000,
+      "median_tolerance_us": 73999.90000000001
+    },
+    {
+      "requested_hold_seconds": 1.2,
+      "old_cpp": {
+        "device_hold_us": 1202190,
+        "charge_us": 599999,
+        "land_x_q6": 1679999,
+        "ticks": 15,
+        "moves": 29,
+        "draws": 45,
+        "max_gap_us": 156119,
+        "charge_range_us": [
+          599999,
+          599999
+        ]
+      },
+      "original_c": {
+        "device_hold_us": 1198143,
+        "charge_us": 1099999,
+        "land_x_q6": 3240415,
+        "ticks": 41,
+        "moves": 41,
+        "draws": 42,
+        "max_gap_us": 40580,
+        "charge_range_us": [
+          1039999,
+          1119999
+        ]
+      },
+      "fixed_cpp": {
+        "device_hold_us": 1200895,
+        "charge_us": 1079999,
+        "land_x_q6": 3175198,
+        "ticks": 42,
+        "moves": 41,
+        "draws": 43,
+        "max_gap_us": 41583,
+        "charge_range_us": [
+          1019999,
+          1079999
+        ]
+      },
+      "fixed_minus_C_charge_us": -20000,
+      "median_tolerance_us": 109999.90000000001
+    },
+    {
+      "requested_hold_seconds": 2,
+      "old_cpp": {
+        "device_hold_us": 2003135,
+        "charge_us": 999999,
+        "land_x_q6": 2916665,
+        "ticks": 25,
+        "moves": 49,
+        "draws": 75,
+        "max_gap_us": 140376,
+        "charge_range_us": [
+          999999,
+          999999
+        ]
+      },
+      "original_c": {
+        "device_hold_us": 2000790,
+        "charge_us": 1739998,
+        "land_x_q6": 5450546,
+        "ticks": 69,
+        "moves": 69,
+        "draws": 70,
+        "max_gap_us": 40641,
+        "charge_range_us": [
+          1699999,
+          1819998
+        ]
+      },
+      "fixed_cpp": {
+        "device_hold_us": 2006738,
+        "charge_us": 1659999,
+        "land_x_q6": 5161213,
+        "ticks": 69,
+        "moves": 70,
+        "draws": 70,
+        "max_gap_us": 46356,
+        "charge_range_us": [
+          1599999,
+          1699999
+        ]
+      },
+      "fixed_minus_C_charge_us": -79999,
+      "median_tolerance_us": 173999.80000000002
+    }
+  ]
+}

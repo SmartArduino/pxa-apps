@@ -1,0 +1,44 @@
+[
+  {
+    "name": "before-cpp",
+    "bytes": 1438706,
+    "sha256": "97dbfb28bac3cee78a2f9096e43380447d0a7187088a08e6627dc0374175f081",
+    "file": "local/jump-charge-20261010/before-cpp/pxa-jump-jump-3d-cpp.pxa"
+  },
+  {
+    "name": "reference-c",
+    "bytes": 1247589,
+    "sha256": "c6a44e9e6c69f3bd41f0c67355c6201596bbace13b380d3add0a7ac34f151205",
+    "file": "local/jump-charge-20261010/reference-c/pxa-jump-jump-3d.pxa"
+  },
+  {
+    "name": "after-cpp",
+    "bytes": 1438681,
+    "sha256": "c9e7d5939f7af29dccba4adac08e73aeeb0a2db6fd043a8336ce8d8b861a32fa",
+    "file": "local/jump-charge-20261010/after-cpp/pxa-jump-jump-3d-cpp.pxa"
+  },
+  {
+    "name": "before-production-s3",
+    "bytes": 1439279,
+    "sha256": "a9f12c008bd22812c011696358f10acab837cd0aa7d4492da28271ff48523d48",
+    "file": "local/jump-charge-20261010/before-production-s3/pxa-jump-jump-3d-cpp.pxa"
+  },
+  {
+    "name": "release-s3",
+    "bytes": 1439272,
+    "sha256": "998e732d84c307677ee3cee685c9c17529bd0ff1f005d983088b63d1d3a210ad",
+    "file": "local/jump-charge-20261010/release-s3/pxa-jump-jump-3d-cpp.pxa"
+  },
+  {
+    "name": "release-all",
+    "bytes": 1961425,
+    "sha256": "060fdb4f30e2235669251c56a743476ee7398ee90dafa709e505233cec3d306c",
+    "file": "local/jump-charge-20261010/release-all/pxa-jump-jump-3d-cpp.pxa"
+  },
+  {
+    "name": "production-C-reference",
+    "bytes": 1244496,
+    "sha256": "f2dee90a4a1844fefc53ac14cf9d22011dfe91aaba771f16cdb2a7bbd978d6db",
+    "file": "local/jump-charge-20261010/release-C/pxa-jump-jump-3d.pxa"
+  }
+]

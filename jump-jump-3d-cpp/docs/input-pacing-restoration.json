@@ -1,0 +1,59 @@
+{
+  "passed": true,
+  "production_package_sha256": "998e732d84c307677ee3cee685c9c17529bd0ff1f005d983088b63d1d3a210ad",
+  "explicit_settings_writes": false,
+  "screens": {
+    "ready": {
+      "format": "jpeg",
+      "width": "296",
+      "height": "240",
+      "orientation": "logical",
+      "frame_id": "135",
+      "device_us": "4068440370",
+      "source": "surface",
+      "bytes": "5737",
+      "sha256": "9774b22006dac292b6afc061ec70a971a8fe7d1c3d1b99834c434d66ae1d4e70"
+    },
+    "charging": {
+      "format": "jpeg",
+      "width": "296",
+      "height": "240",
+      "orientation": "logical",
+      "frame_id": "152",
+      "device_us": "4068987445",
+      "source": "surface",
+      "bytes": "5727",
+      "sha256": "b2399147aa17e0ee956ba461e19b5f224562e9329dd1dcaeb5e0d11c59db2ccd"
+    },
+    "flying": {
+      "format": "jpeg",
+      "width": "296",
+      "height": "240",
+      "orientation": "logical",
+      "frame_id": "172",
+      "device_us": "4069582010",
+      "source": "surface",
+      "bytes": "5771",
+      "sha256": "3df2699bfec36fc825d0784cc0f0457c33b52dee76dec81132637a97b2d19be8"
+    },
+    "landed": {
+      "format": "jpeg",
+      "width": "296",
+      "height": "240",
+      "orientation": "logical",
+      "frame_id": "203",
+      "device_us": "4070676203",
+      "source": "surface",
+      "bytes": "6442",
+      "sha256": "89e7d9f366b1b0cc8987364440735a660434f63ca084e22fa571d1ba69adb058"
+    }
+  },
+  "score": 2,
+  "state": 0,
+  "packages": [
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+  ],
+  "info": [
+    "target=esp32s3;serial=a4:cb:8f:d5:d4:f0;version=2ef8b1a-dirty;free_heap=6881355;pxa=ready;storage_total=9437184;storage_used=5451776;storage_free=3985408"
+  ]
+}

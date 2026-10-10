@@ -1,0 +1,137 @@
+{
+  "before": {
+    "display_fps_median": 36.24186917440267,
+    "raster_us_median_of_means": 10886.472602739726,
+    "sram_warm_used_median": 303748,
+    "sram_idle_used_median": 283604,
+    "sram_app_delta_median": 20144,
+    "sram_launch_peak_range": [
+      311476,
+      311528
+    ],
+    "sram_steady_peak_range": [
+      303836,
+      303912
+    ],
+    "psram_warm_used_median": 2645952,
+    "psram_idle_used_median": 1511044,
+    "psram_app_delta_median": 1134908,
+    "psram_launch_peak_range": [
+      2783608,
+      2787952
+    ],
+    "psram_steady_peak_range": [
+      2650188,
+      2653380
+    ],
+    "surface": {
+      "frame": 426240,
+      "scratch": 0,
+      "mailbox": 49152,
+      "probe": 2112,
+      "peak_total": 617472
+    },
+    "mapped_logs": [
+      [
+        402144,
+        458752,
+        458752
+      ]
+    ],
+    "wamr_logs": [
+      [
+        41005,
+        36739,
+        131072,
+        131072
+      ]
+    ]
+  },
+  "fixed": {
+    "display_fps_median": 34.976851112100306,
+    "raster_us_median_of_means": 10548.829787234043,
+    "sram_warm_used_median": 303748,
+    "sram_idle_used_median": 283604,
+    "sram_app_delta_median": 20144,
+    "sram_launch_peak_range": [
+      311528,
+      311564
+    ],
+    "sram_steady_peak_range": [
+      303836,
+      303836
+    ],
+    "psram_warm_used_median": 2647420,
+    "psram_idle_used_median": 1512424,
+    "psram_app_delta_median": 1134988,
+    "psram_launch_peak_range": [
+      2784980,
+      2785012
+    ],
+    "psram_steady_peak_range": [
+      2651324,
+      2653100
+    ],
+    "surface": {
+      "frame": 426240,
+      "scratch": 0,
+      "mailbox": 49152,
+      "probe": 2112,
+      "peak_total": 617472
+    },
+    "mapped_logs": [
+      [
+        402144,
+        458752,
+        458752
+      ]
+    ],
+    "wamr_logs": [
+      [
+        41005,
+        36739,
+        131072,
+        131072
+      ]
+    ]
+  },
+  "pixel_validation": {
+    "excluded": "top 24 rows containing the system FPS overlay",
+    "fixed_cases": [
+      {
+        "run": 0,
+        "changed_pixels": 0,
+        "max_channel_difference": 0
+      },
+      {
+        "run": 1,
+        "changed_pixels": 0,
+        "max_channel_difference": 0
+      },
+      {
+        "run": 2,
+        "changed_pixels": 0,
+        "max_channel_difference": 0
+      }
+    ]
+  },
+  "display_fps_change_percent": -3.4904879111363196,
+  "original_c": {
+    "display_fps_median": 34.589375587117324,
+    "fps_runs": [
+      34.538812991098744,
+      35.31814686180855,
+      34.589375587117324
+    ],
+    "raster_us_median_of_means": 10291.671428571428,
+    "surface": {
+      "frame": 426240,
+      "scratch": 142080,
+      "mailbox": 49152,
+      "probe": 2112,
+      "peak_total": 619584
+    },
+    "note": "original C package, same held/max-squash scene and display size; original fonts and gradient differ"
+  },
+  "fixed_vs_C_display_fps_change_percent": 1.1202154372722983
+}
