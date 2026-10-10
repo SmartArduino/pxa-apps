@@ -7,6 +7,7 @@
 #include "jump3d_palette.hpp"
 #include "jump3d_font.hpp"
 #include "jump3d_audio.hpp"
+#include "frame_memory.hpp"
 #include "jump3d_clock.hpp"
 #define TICK_MS 20u
 #define J3_BGM_MODE 1
@@ -23,9 +24,7 @@ struct JumpJump {
     pxa::Context* context=nullptr;
     pxa::ui::DisplayMetrics display;
     std::optional<pxa::game::Renderer> renderer;
-    std::array<uint8_t,16384> draw{};
-    std::array<uint8_t,J3_FONT_MAX_ATLAS_BYTES+20> upload{};
-    std::array<uint16_t,J3_PALETTE_ENTRIES> palette{};
+    FrameMemory frame_memory;
     j3_game_t g_game{};
     j3_render_t render;
     j3_audio_t g_audio;
@@ -61,12 +60,13 @@ struct JumpJump {
             pxa::game::RenderOptions options;
             options.width=uint16_t(std::max(64u,(display.width+(1u<<scale_shift)-1)>>scale_shift));
             options.height=uint16_t(std::max(64u,(display.height+(1u<<scale_shift)-1)>>scale_shift));
-            options.buffers=3;options.direct_scanout=true;options.max_draw_bytes=draw.size();
+            options.buffers=3;options.direct_scanout=true;options.max_draw_bytes=FrameMemory::draw_capacity;
             auto created=co_await context->game().create(options);
             if(!created)continue;
             renderer.emplace(std::move(*created));
             j3_render_configure(&render,options.width,options.height,renderer->capabilities());
             j3_render_adapt(&render,display);
+            auto upload=frame_memory.upload();auto palette=frame_memory.palette();
             j3_palette_build(palette.data());scheme=uint8_t(g_game.jump_count/15%J3_BG_SCHEMES);
             if(!j3_render_upload_resources(*renderer,upload.data(),upload.size(),palette.data(),scheme)||
                 !pxa::game::Upload(*renderer,std::as_writable_bytes(std::span{upload})).palette(palette,J3_LIGHT_LEVELS)||
@@ -80,6 +80,7 @@ struct JumpJump {
         initializing=false;co_return std::unexpected(pxa::Error::limit_exceeded);
     }
     void draw_frame(){if(!renderer||initializing||!context->foreground())return;
+        auto draw=frame_memory.draw();
         if(!j3_render_frame(&render,&g_game,*renderer,draw.data(),draw.size(),++frame_id))
             (void)context->log().write(pxa::LogLevel::warning,"J3CPP frame not accepted");
     }
@@ -108,7 +109,7 @@ struct JumpJump {
         if(event.service==3&&event.opcode==0x8002){if(auto metrics=pxa::ui::decode_display_metrics(event.payload)){
             bool resize=metrics->width!=display.width||metrics->height!=display.height;display=*metrics;
             if(resize&&!initializing){scale_shift=J3_FORCE_SCALE_SHIFT>=0?J3_FORCE_SCALE_SHIFT:0;quality={};(void)context->tasks().start(initialize());}
-            else if(renderer){j3_render_adapt(&render,display);(void)j3_font_upload(*renderer,upload.data(),upload.size());draw_frame();}}
+            else if(renderer){auto upload=frame_memory.upload();j3_render_adapt(&render,display);(void)j3_font_upload(*renderer,upload.data(),upload.size());draw_frame();}}
             return true;}
         if(event.service!=4||event.opcode!=0x8001||event.payload.size()!=8)return false;
         auto now=pxa::wire::get64(event.payload.data());j3_audio_tick(&g_audio,now);
@@ -123,7 +124,8 @@ struct JumpJump {
         if(steps){play_state_sounds();save_timer-=steps*.02f;
             if(!saving&&save_timer<=0&&g_game.best>best_saved){saving=true;save_timer=2;if(!context->tasks().start(save_best(g_game.best)))saving=false;}
             auto next=uint8_t(g_game.jump_count/15%J3_BG_SCHEMES);
-            if(renderer&&next!=scheme){scheme=next;(void)j3_render_upload_sky(*renderer,palette.data(),scheme,upload.data(),upload.size());
+            if(renderer&&next!=scheme){scheme=next;auto upload=frame_memory.upload();auto palette=frame_memory.palette();j3_palette_build(palette.data());
+                (void)j3_render_upload_sky(*renderer,palette.data(),scheme,upload.data(),upload.size());
                 (void)pxa::game::Upload(*renderer,std::as_writable_bytes(std::span{upload})).palette(palette,J3_LIGHT_LEVELS);}}
         // Presentation stays independent of simulation rounding: a short
         // callback must not discard an otherwise available display frame.
