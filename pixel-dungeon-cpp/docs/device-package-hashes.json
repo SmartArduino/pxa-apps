@@ -1,0 +1,79 @@
+[
+  {
+    "build": "pixel-all",
+    "path": "pxa-pixel-dungeon-cpp.pxa",
+    "bytes": 2591084,
+    "sha256": "9e77e2473c019b573b51aab30adb3b89be2213c48ff664487e768ac5f1b0ee05",
+    "fixed_seed": false
+  },
+  {
+    "build": "pixel-all",
+    "path": "pxa-pixel-dungeon-cpp/artifacts/main.esp32-s31.aot",
+    "bytes": 665464,
+    "sha256": "1946d5d78ae4c861e9cf29df6cf1a835e80f1a7d3075633b0a2302c01a39c8eb",
+    "fixed_seed": false
+  },
+  {
+    "build": "pixel-all",
+    "path": "pxa-pixel-dungeon-cpp/artifacts/main.linux-x86_64.aot",
+    "bytes": 416496,
+    "sha256": "4ed7d8dfee325e5eb290af8dae4543759783c4b87f2380e40bce80de56951a18",
+    "fixed_seed": false
+  },
+  {
+    "build": "pixel-all",
+    "path": "pxa-pixel-dungeon-cpp/artifacts/main.wasm",
+    "bytes": 263991,
+    "sha256": "dc28516a3e950eb6e82c21ff1da60d995748f0443776f4975508911ede1a85c3",
+    "fixed_seed": false
+  },
+  {
+    "build": "pixel-all",
+    "path": "pxa-pixel-dungeon-cpp/artifacts/main.esp32-s3.aot",
+    "bytes": 659520,
+    "sha256": "5564e0d52748ea5fc71e61411d634ddd4a4a8cbf2e7189f2ba4b45daf2daeb36",
+    "fixed_seed": false
+  },
+  {
+    "build": "pixel-device-final",
+    "path": "pxa-pixel-dungeon-cpp.pxa",
+    "bytes": 1651007,
+    "sha256": "547bb48240266b48e46764a58082cf6a925f8942ad9dcb734ed8acfd6dbba54f",
+    "fixed_seed": false
+  },
+  {
+    "build": "pixel-device-final",
+    "path": "pxa-pixel-dungeon-cpp/artifacts/main.esp32-s3.aot",
+    "bytes": 659520,
+    "sha256": "5564e0d52748ea5fc71e61411d634ddd4a4a8cbf2e7189f2ba4b45daf2daeb36",
+    "fixed_seed": false
+  },
+  {
+    "build": "pixel-c-device-fixed",
+    "path": "pxa-pixel-dungeon.pxa",
+    "bytes": 1413891,
+    "sha256": "28cb854fda1a9802d6328eb40d2e83a8a0e6463b659b90f5e9b0254dccba45df",
+    "fixed_seed": true
+  },
+  {
+    "build": "pixel-c-device-fixed",
+    "path": "pxa-pixel-dungeon/artifacts/main.esp32-s3.aot",
+    "bytes": 727892,
+    "sha256": "3b5119a2f37a460cbdd4a7241de248c0a4c7ef6207ca5701aa818fda9259a2f2",
+    "fixed_seed": true
+  },
+  {
+    "build": "pixel-cpp-device-fixed",
+    "path": "pxa-pixel-dungeon-cpp.pxa",
+    "bytes": 1649918,
+    "sha256": "62f3e485ca45ce038f902b12fa44c0422ffcc6beb23513cb22203ee692ba42b1",
+    "fixed_seed": true
+  },
+  {
+    "build": "pixel-cpp-device-fixed",
+    "path": "pxa-pixel-dungeon-cpp/artifacts/main.esp32-s3.aot",
+    "bytes": 658960,
+    "sha256": "92a06cad49b7bd6b53222a8fe489c028dbbbf69dee443801c1674163518ac3dd",
+    "fixed_seed": true
+  }
+]

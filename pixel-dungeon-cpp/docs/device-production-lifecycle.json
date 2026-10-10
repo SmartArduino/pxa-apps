@@ -1,0 +1,30 @@
+{
+  "production": true,
+  "passed": true,
+  "checks": [
+    {
+      "name": "normal-new-game-bag-settings-title-save",
+      "seed": 1371982617,
+      "turn": 1
+    },
+    {
+      "name": "relaunch-load-wait-background-save",
+      "repeat": 0,
+      "seed": 1371982617,
+      "turn": 2
+    },
+    {
+      "name": "relaunch-load-wait-background-save",
+      "repeat": 1,
+      "seed": 1371982617,
+      "turn": 3
+    },
+    {
+      "name": "relaunch-load-wait-background-save",
+      "repeat": 2,
+      "seed": 1371982617,
+      "turn": 4
+    }
+  ],
+  "hello": "protocol=1;mode=normal;capabilities=info,memory,logcat,packages,package-deploy,package-run,package-stop,fs,reboot,doctor,input-v2,screenshot-rgb565,screenshot-jpeg,poweroff,perf-raster,heap-local;max_chunk=1024;fs_offset=1;fs_sha256=1;target=esp32s3;serial=a4:cb:8f:d5:d4:f0;version=1df1fad-dirty"
+}

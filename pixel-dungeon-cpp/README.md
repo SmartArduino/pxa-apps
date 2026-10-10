@@ -20,3 +20,5 @@ python3 tools/pxadb/pxadb.py package install local/cpp-games/pixel-device/pxa-pi
 Simulator 资源目录包含原版 Ogg Vorbis 音乐；ESP32-S3 专用目录保留 C 版已有的完整 Ogg Opus 音轨。设备包应按目标单独构建，避免携带冗余架构和 Wasm 副本。多架构包的实际资源随打包工具选择的主目标，应检查构建日志，不假定模拟器一定使用 Vorbis。
 
 原画、音乐及派生代码来自 Shattered Pixel Dungeon（Evan Debenham 等作者）及本仓库 C 版，遵循 GPL-3.0，完整许可证见 [LICENSE.txt](LICENSE.txt)。不声称这是上游完整游戏的等价重制。验证结果、截图与真机验收限制见 [本轮报告](docs/2026-10-10-validation.zh-CN.md)。
+
+真机固定种子游戏对照、内存与普通包存档/生命周期检查见 [pai-touch 验收报告](docs/2026-10-10-device.zh-CN.md)。

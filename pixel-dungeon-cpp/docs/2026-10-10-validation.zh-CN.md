@@ -1,6 +1,6 @@
 # Pixel Dungeon C++：实现与验证（2026-10-10）
 
-独立 C++ SDK 版已完成，保留同仓库 C 版的 25 层、五个地区、三种职业、五槽存档、装备、背包、地图缩放、日志、排行榜、触控/手柄规则、23 种音效与六首完整音乐。采用 O3，没有为包体积削减玩法或音轨。原生和签名 AOT 模拟器验证已通过；真机 C++ 显示性能、音效听感及 SRAM/PSRAM 峰值仍未验收。
+独立 C++ SDK 版已完成，保留同仓库 C 版的 25 层、五个地区、三种职业、五槽存档、装备、背包、地图缩放、日志、排行榜、触控/手柄规则、23 种音效与六首完整音乐。采用 O3，没有为包体积削减玩法或音轨。原生和签名 AOT 模拟器验证已通过；pai-touch 的固定种子三轮游戏显示与 SRAM/PSRAM 局部峰值已经验收；两版真实保存状态一致，FPS 持平。设备音效听感未做定量评价。最新数据见 [真机报告](2026-10-10-device.zh-CN.md)。
 
 源基线为 pxa-apps `1a9b506` 的 C 版，SDK 起点 `d600bc2`、Host 起点 `c5bdd6a`。新应用生产构建不依赖 C SDK。参考用 C 代码只用于可选比较测试。其他任务的既有工作区改动已保留，没有混入本应用提交。
 
@@ -67,7 +67,7 @@ CPU 是桌面经过时间，存在调度波动；本轮未证明 C++ 时钟帧 C
 
 Asset 缓存增大是静态图集从 Guest/直接上传移入 Host 资源系统的结果，已包含在资源预算内，不能重复相加。SDK/应用固定缓冲、代码映射与音乐解码等仍需分别计量；桌面 WAMR/OS 映射不能代替 ESP SRAM/PSRAM。1 MiB 包声明是最大上限，实际线性内存不是 1 MiB。产物大小与哈希见 [package-hashes.json](package-hashes.json)。
 
-生产 Guest 保留 49,152 B 绘制缓冲、五个 1,024 B 存档槽、1,024 B 序列化缓冲、1,152 B 存储报文、1,044 B 上传暂存及两个小型效果图，未新增大型默认缓存。设备代码映射、初始化峰值、稳定 SRAM/PSRAM、帧缓冲及命令队列真实值仍待安装后实测，不能仅根据这些静态预算宣告满足总峰值约束。
+生产 Guest 保留 49,152 B 绘制缓冲、五个 1,024 B 存档槽、1,024 B 序列化缓冲、1,152 B 存储报文、1,044 B 上传暂存及两个小型效果图，未新增大型默认缓存。设备代码映射、初始化峰值、稳定 SRAM/PSRAM、帧缓冲及命令队列已在 [真机报告](2026-10-10-device.zh-CN.md) 中分别列出；本页桌面数据作为独立工作负载保留。
 
 **自验证结果**
 
@@ -104,19 +104,12 @@ python3 tools/simulator_pxadb.py --state-root local/simulator/pai-touch@cpp-game
 python3 local/pxa-apps/common/cpp/tests/simulator_matrix.py --artifacts local/cpp-game-ports-20261010 --native-build local/cpp-game-ports-20261010/native-build --output local/cpp-game-ports-20261010/matrix-check
 ```
 
-安装空间足够后，设备专用包及采样命令为：
+设备固定种子包使用可选 `PD_BENCHMARK_SEED=1374496523`（即 `0x51ed270b`），普通包仍按时间生成地图。C 参考通过 `reference/prepare_pixel_device.py` 复制到独立目录，只增加相同的种子条件宏，保留原目录；完整复现见 [真机报告](2026-10-10-device.zh-CN.md)。通用采样器的 `--pixel-search` 会重置指定测试应用的私有数据，进入战士第一层、注入十二次搜索并校验真实提交的二十四回合存档。不能用于保留个人存档的普通安装。
 
-```sh
-bash tools/app.sh build pixel-dungeon-cpp --target esp32s3 --aot-only --source-root local/pxa-apps --output local/cpp-games/pixel-device
-python3 tools/pxadb/pxadb.py package install local/cpp-games/pixel-device/pxa-pixel-dungeon-cpp.pxa --port /dev/ttyACM0
-# 先确保没有其他活动应用。菜单中点击进入固定场景后再采样。
-python3 tools/measure-device-voxel.py --port /dev/ttyACM0 --app pxa-pixel-dungeon-cpp --output local/cpp-games/pixel-capture --warmup 5 --seconds 4 --repeat 3 --local-heap --unlock-swipe 148 218 148 60
-```
+**真机补充与限制**
 
-上述通用设备采样器虽然文件名含 voxel，也支持其他游戏；Pixel 静态标题不会产生持续帧，需先准备固定移动/动画场景。不能把它的标题采样失败当作 FPS 为零。记录内部目标尺寸、种子、角色、回合、相机与音频状态；C/C++ 两版保持一致。
+用户已授权清理应用，pai-touch 已成功安装两款 C++ 游戏并轮换完成真机检查。使用同一固件/同次开机采集 C 和 C++ 的同场景数据；保留阅读器，不擦除数据分区或修改分区表。安装曾出现客户端等待超时，但随后确认签名包已经提交，清理本测试包的暂存容器后继续，没有重复覆盖安装或误判为损坏。
 
-**尚未完成的真机验收**
+两版十二次搜索均落盘为二十四回合，六个最终存档哈希一致，真实显示 FPS 为 C 18.77 / C++ 18.80，整机稳定 PSRAM 减少约 577 KiB，初始化和稳态最大局部峰值也降低。此结果是完整游戏路径持平，未证明 Guest CPU 或 Host 光栅显著加速；全部轮次、命令/像素覆盖范围、局部堆统计和截图见 [最新报告](2026-10-10-device.zh-CN.md)。不同 DPI 下的整数缩放场景不能用于语言性能比较。
 
-pai-touch 数据分区首次诊断只剩 471,040 B，复位后最新为 1,110,016 B；仍小于本应用 ESP32-S3 容器的 1,651,007 B，且安装还需解包空间。esp-mosaico 上传 Jump C++ 包约 90% 后返回 `file_write_failed`，旧 Host 未返回 errno，空间不足只是推断。两个 C++ 游戏尚未成功在真机安装，未宣称 FPS ≥ C 版。保留全部已有应用与数据，没有通过卸载或清空存储绕过空间限制。
-
-pai-touch 已做授权范围内的应用分区固件更新，增加空间/写错误诊断和 Host 光栅优化；未改分区表或数据分区。固件及原 C Jump 的真实显示基线详见 [Jump 报告](../../jump-jump-3d-cpp/docs/2026-10-10-validation.zh-CN.md)。仍需在足够安装空间下验证实际显示 FPS、更新/编码/提交/光栅/排队/显示耗时、持续音频、冷/热峰值、前后台及重复启动。许可证与作者归属保留在 [LICENSE.txt](../LICENSE.txt) 和 [README](../README.md)。
+esp-mosaico 真机安装与音效主观听感仍未验收；六种尺寸/DPI/屏幕形状的实际签名 AOT 交互矩阵已通过。许可证与作者归属保留在 [LICENSE.txt](../LICENSE.txt) 和 [README](../README.md)。
