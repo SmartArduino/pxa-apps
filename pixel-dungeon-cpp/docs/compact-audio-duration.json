@@ -1,0 +1,96 @@
+{
+  "passed": true,
+  "maximum_duration_delta_frames_48k": 0,
+  "tracks": [
+    {
+      "track": "caves_1.ogg",
+      "vorbis": {
+        "bytes": 288835,
+        "decoded_frames_48k": 2088000,
+        "decoded_seconds": 43.5,
+        "decoded_sha256": "d382356379e4471be345ce9678c085b10dab156a9e42ca92d26fd0280ccd7ab1"
+      },
+      "opus": {
+        "bytes": 151022,
+        "decoded_frames_48k": 2088000,
+        "decoded_seconds": 43.5,
+        "decoded_sha256": "2f4f2ea996e2520beccb1136ef0fc155545ae801f6cb900b9489c860d7d59265"
+      }
+    },
+    {
+      "track": "city_1.ogg",
+      "vorbis": {
+        "bytes": 221914,
+        "decoded_frames_48k": 1478400,
+        "decoded_seconds": 30.8,
+        "decoded_sha256": "f4d77cad6bd454d18b6a1584d4c45808b3be0c59d5eaca1823d103b1f7a45aa5"
+      },
+      "opus": {
+        "bytes": 100157,
+        "decoded_frames_48k": 1478400,
+        "decoded_seconds": 30.8,
+        "decoded_sha256": "a0d8053973194d8caee52bcc8bb8567be1f5a1afa25576a22110ca6c45c9d9b9"
+      }
+    },
+    {
+      "track": "halls_1.ogg",
+      "vorbis": {
+        "bytes": 483192,
+        "decoded_frames_48k": 2928000,
+        "decoded_seconds": 61.0,
+        "decoded_sha256": "5f5773fe1232cd12013d0651875a963d02e93e85ea00e10f54571af342ab13f0"
+      },
+      "opus": {
+        "bytes": 181972,
+        "decoded_frames_48k": 2928000,
+        "decoded_seconds": 61.0,
+        "decoded_sha256": "0679583892c207462ece71fe08f7e34d4b2e82cfd512153e97f82870f522599d"
+      }
+    },
+    {
+      "track": "prison_1.ogg",
+      "vorbis": {
+        "bytes": 341702,
+        "decoded_frames_48k": 2448000,
+        "decoded_seconds": 51.0,
+        "decoded_sha256": "4b93717713a89520be56d4384a1f254151454f969b02ae69d078828206a41beb"
+      },
+      "opus": {
+        "bytes": 185548,
+        "decoded_frames_48k": 2448000,
+        "decoded_seconds": 51.0,
+        "decoded_sha256": "e93e8a1b55c2ecde338bbcdaf630e3cbe7c789dce949c1d965e3b25931cfee55"
+      }
+    },
+    {
+      "track": "sewers_1.ogg",
+      "vorbis": {
+        "bytes": 174614,
+        "decoded_frames_48k": 1272000,
+        "decoded_seconds": 26.5,
+        "decoded_sha256": "32ee0625db37170bba6360f69ba340488c82a2ccf580fbaf6d6c6c30f1c534bf"
+      },
+      "opus": {
+        "bytes": 85934,
+        "decoded_frames_48k": 1272000,
+        "decoded_seconds": 26.5,
+        "decoded_sha256": "6ef4e8693a607aee6931230a2d23840948459e14d34dcdae02faf067df170ee4"
+      }
+    },
+    {
+      "track": "theme_1.ogg",
+      "vorbis": {
+        "bytes": 403310,
+        "decoded_frames_48k": 2763228,
+        "decoded_seconds": 57.56725,
+        "decoded_sha256": "66971ef3515bf44fa1c22583b386f4dd4494878ce4c86219856806408287450e"
+      },
+      "opus": {
+        "bytes": 193224,
+        "decoded_frames_48k": 2763228,
+        "decoded_seconds": 57.56725,
+        "decoded_sha256": "4bfbd76f0fb804fc8a0fb4795a3f5d0a36734002c3bf6e28792f32fdfbf31ce8"
+      }
+    }
+  ]
+}

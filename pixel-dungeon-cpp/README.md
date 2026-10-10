@@ -17,7 +17,9 @@ PXA_CPP_GAME_TEST_BUILD="$PWD/local/cpp-games/native-build" bash local/pxa-apps/
 python3 tools/pxadb/pxadb.py package install local/cpp-games/pixel-device/pxa-pixel-dungeon-cpp.pxa --port /dev/ttyACM0
 ```
 
-Simulator 资源目录包含原版 Ogg Vorbis 音乐；ESP32-S3 专用目录保留 C 版已有的完整 Ogg Opus 音轨。设备包应按目标单独构建，避免携带冗余架构和 Wasm 副本。多架构包的实际资源随打包工具选择的主目标，应检查构建日志，不假定模拟器一定使用 Vorbis。
+所有目标（模拟器、ESP32-S3、ESP32-S31）统一使用 `assets/music/` 中完整时长、双声道、24 kbps VBR 的 Ogg Opus 音乐，与 C 版逐字节一致。沿用原有小体积设备音轨，六首共 897,857 字节；取消专用资源目录后，多架构包也使用同一套音频。23 个 16 kHz PCM 音效保持原样。可从应用仓库根目录运行 `python3 pixel-dungeon/tools/generate_music.py --spd-assets /path/to/shattered-pixel-dungeon`，直接从上游 Vorbis 原始文件重新生成两版资源，避免重复有损编码。设备包仍建议按目标单独构建，避免携带冗余架构和 Wasm 副本。
+
+统一音频的安装包体积、完整解码与内存验证见 [音频报告](docs/2026-10-10-compact-audio.zh-CN.md)。`python3 pixel-dungeon/tools/check_audio.py --package /path/to/unpacked/package` 可检查默认资源、两版一致性和实际包内音频，`--package` 可重复指定。
 
 原画、音乐及派生代码来自 Shattered Pixel Dungeon（Evan Debenham 等作者）及本仓库 C 版，遵循 GPL-3.0，完整许可证见 [LICENSE.txt](LICENSE.txt)。不声称这是上游完整游戏的等价重制。验证结果、截图与真机验收限制见 [本轮报告](docs/2026-10-10-validation.zh-CN.md)。
 

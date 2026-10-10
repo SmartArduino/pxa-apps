@@ -77,7 +77,7 @@ Asset 缓存增大是静态图集从 Guest/直接上传移入 Host 资源系统�
 - 屏幕矩阵：296×240/160 DPI、480×480/305 DPI、176×176 圆屏、320×480/240 DPI、800×480/160 DPI、480×800/320 DPI。圆角、安全边距和实际渲染尺寸见 [display-matrix.json](display-matrix.json)。
 - 签名 AOT 前后台检查三轮：后台时钟停止、400 ms 内无新增渲染、音乐暂停；恢复渲染和音乐，音乐实例保持相同，见 [aot-lifecycle.json](aot-lifecycle.json)。
 - 23 音效与六音乐的默认/S3 资源共 58 个文件，与原版逐字节一致，见 [audio-parity.json](audio-parity.json)。模拟器检查资源加载、音乐解码和缓冲，欠载为零；dummy 音频设备不构成真机听感结论。
-- 原版 C 的 ESP32-S3 全长 Opus 音轨与默认 Vorbis 音轨分别保留。多目标打包的资源随主目标选择，按设备单独构建；不能假定多架构包里一定是 Vorbis。
+- 本阶段保留了 ESP32-S3 全长 Opus 音轨与默认 Vorbis 音轨。后续已将两版、所有目标统一为原有小体积 Opus，详见 [统一音频报告](2026-10-10-compact-audio.zh-CN.md)；上面的 `audio-parity.json` 保留为此阶段的历史记录。
 
 **复现命令**
 

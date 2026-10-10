@@ -19,17 +19,21 @@ GPL-3.0; the upstream license text is included in `LICENSE.txt`.
 | Title backdrop | SPD `splashes/title/archs.png` |
 | Title flames | SPD `effects/fireball-short.png` |
 | Sound effects | SPD `sounds/*.mp3` |
-| Music | Uncut SPD `music/{theme,sewers,prison,caves,city,halls}_1.ogg` |
+| Music | Full-length stereo Opus derived from SPD `music/{theme,sewers,prison,caves,city,halls}_1.ogg` |
 | Floors | One SPD region per five depths: sewers, prison, caves, city, halls |
 | Walls | Original raised faces, 16-way interior joins, 4-way overhangs and door lintels for every region |
 
 The art and packaged PCM sound-effect files are extracted by
 `tools/generate_assets.py` and `tools/generate_audio.py`. No audio samples are
-embedded in the executable. Simulator packages contain the six original Ogg
-Vorbis tracks. For ESP32-S3, `tools/generate_device_music.sh` produces
-full-length Ogg Opus versions under `assets-esp32s3/music/` to fit the
-LittleFS install's temporary container and unpacked files without dropping
-the original tracks or any other installed applications.
+embedded in the executable. Every target, including the simulator, ESP32-S3
+and ESP32-S31, uses the same six full-length stereo Ogg Opus tracks in
+`assets/music/` (24 kbps VBR). These are the existing compact device versions;
+the combined music size is 897,857 bytes instead of 1,913,567 bytes. The C and
+C++ games ship identical audio. There is no target-specific asset override.
+`tools/generate_music.py` encodes the upstream Vorbis originals once and writes
+both games' canonical music directories. It refuses Opus inputs to avoid
+repeated lossy encoding. This keeps the LittleFS install's temporary container
+and unpacked files small without dropping music or shortening tracks.
 Device packages keep the target-specific AOT executable rather than a second
 WASM copy, reducing peak LittleFS usage while the signed container is unpacked.
 
@@ -51,10 +55,13 @@ tools/fetch_spd_assets.sh /tmp/pxa-spd-assets      # sparse clone
 python3 tools/generate_assets.py --spd-assets /tmp/pxa-spd-assets
 python3 tools/generate_audio.py  --spd-assets /tmp/pxa-spd-assets
 python3 tools/generate_text.py                     # strings + font atlases
-mkdir -p assets/music
-cp /tmp/pxa-spd-assets/core/src/main/assets/music/{theme,sewers,prison,caves,city,halls}_1.ogg assets/music/
-tools/generate_device_music.sh
+python3 tools/generate_music.py --spd-assets /tmp/pxa-spd-assets
+python3 tools/check_audio.py
 ```
+
+Both audio generators update the C and C++ games' shared audio copies. The
+compatibility entry point `tools/generate_device_music.sh` accepts the same
+arguments as `generate_music.py`; it no longer creates a device override.
 
 `generate_text.py` renders the anti-aliased ASCII atlas and CJK atlas pages
 from the characters actually used by `tools/strings.py`. PXA limits each
@@ -174,8 +181,8 @@ one- and two-digit values before centering.
 
 The existing `pxa_audio_play_asset`/`pxa_audio_control_asset` ABI accepts a
 package-relative `.ogg` path, loop flag, gain, pause/resume and stop commands.
-The desktop product simulator decodes the complete Ogg Vorbis track (requires
-`vorbisfile` development libraries), mixes it with 16 kHz PCM effects and
+The desktop product simulator decodes the complete Ogg Opus track (requires
+`opusfile` development libraries), mixes it with 16 kHz PCM effects and
 restarts only when the track ends. The title plays the original theme track;
 region changes fade out the previous track and fade in the new track via
 periodic gain commands. It validates that the

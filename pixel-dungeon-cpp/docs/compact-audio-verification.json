@@ -1,0 +1,178 @@
+{
+  "passed": true,
+  "copies_checked": 6,
+  "package_count": 4,
+  "music_bytes": 897857,
+  "effect_bytes": 140585,
+  "files": [
+    {
+      "path": "assets/music/caves_1.ogg",
+      "bytes": 151022,
+      "sha256": "77fde09013c79d9085eefd2cbc28c59891650186622aceb0de1153e8238985cb",
+      "codec": "opus",
+      "channels": 2,
+      "decoded_seconds": 43.5,
+      "decoded_sha256": "45b2dd3422e994145f4512b1d716f37888a08b3b1a8d5f4ab359813d10ff6386"
+    },
+    {
+      "path": "assets/music/city_1.ogg",
+      "bytes": 100157,
+      "sha256": "30c5c48429a1ca3843a7b0b3c5fc574b60c6f2e037789eef7719b6a14b1b7dcb",
+      "codec": "opus",
+      "channels": 2,
+      "decoded_seconds": 30.8,
+      "decoded_sha256": "d86580d8fc328a30e29fd33a98a3b4400344f329e0ace9a8680737356f729f63"
+    },
+    {
+      "path": "assets/music/halls_1.ogg",
+      "bytes": 181972,
+      "sha256": "b26a6ba7a40dffebd4f074bbf6d35d630c56a7012b14d6dbb59458a5c7349874",
+      "codec": "opus",
+      "channels": 2,
+      "decoded_seconds": 61.0,
+      "decoded_sha256": "6fc9f6191f3993d6c4092d3db50d2c4470cd04fc8fc771e65b5fc9b1dd898668"
+    },
+    {
+      "path": "assets/music/prison_1.ogg",
+      "bytes": 185548,
+      "sha256": "736a7eb0e2441fa595e4e86cb8edbb5b709f0d18b7269f3cdc32f5fbfa53fdff",
+      "codec": "opus",
+      "channels": 2,
+      "decoded_seconds": 51.0,
+      "decoded_sha256": "01d9a547026e31c9db72202a117ad634113ea091d03572ef4014dd0f3770f4d9"
+    },
+    {
+      "path": "assets/music/sewers_1.ogg",
+      "bytes": 85934,
+      "sha256": "bd2554ea6ab2acfea94783ad03d9c3b089c48ccf7d2aeae8d5988bdd68d6d1e3",
+      "codec": "opus",
+      "channels": 2,
+      "decoded_seconds": 26.5,
+      "decoded_sha256": "d070f2606535f013718897b39022ff101a5909d661279dbadb1cf5b0dbcd5c0a"
+    },
+    {
+      "path": "assets/music/theme_1.ogg",
+      "bytes": 193224,
+      "sha256": "948b0f2b4f995d55637fc66914dadbf790574002118e807560b08e5bb1fdfc38",
+      "codec": "opus",
+      "channels": 2,
+      "decoded_seconds": 57.56725,
+      "decoded_sha256": "d1443a653207ba127cebceeda61090420c30d6c1dddd0bba32df8f798e9ce16a"
+    },
+    {
+      "path": "assets/sfx/blast.pcm",
+      "bytes": 8800,
+      "sha256": "61296e12400d4338e1e8f61d507fc00dd447049492e03383eb5bbddb3fe2befe"
+    },
+    {
+      "path": "assets/sfx/death.pcm",
+      "bytes": 8640,
+      "sha256": "753aed73cd4c676c45eb535759d53b63f62a4865cb35a32426bd0888f33012d8"
+    },
+    {
+      "path": "assets/sfx/descend.pcm",
+      "bytes": 13440,
+      "sha256": "1c807f0c66ef6c946dda1e89c98fd197f1e9c35c54ea8b0c2ccec02688ecefb1"
+    },
+    {
+      "path": "assets/sfx/door_open.pcm",
+      "bytes": 6270,
+      "sha256": "b5e467874b8b2c4d2d4fb1ce78505fc35e607b231fc366b5fa0941000b66562d"
+    },
+    {
+      "path": "assets/sfx/drink.pcm",
+      "bytes": 6720,
+      "sha256": "b32bd7fb7d18ef4d747d2b88045ab41dafc726e9e5acab723209422efcc3e39c"
+    },
+    {
+      "path": "assets/sfx/eat.pcm",
+      "bytes": 6720,
+      "sha256": "1015253d9414b8dfa19dd82b343de6497c323a327cdd90b00f8526e07b25b720"
+    },
+    {
+      "path": "assets/sfx/gold.pcm",
+      "bytes": 4598,
+      "sha256": "4c72655ba9948f65fb858871b3b5cf41ae3c34ef81c5cfc8f75f5ce39d350eb0"
+    },
+    {
+      "path": "assets/sfx/grass.pcm",
+      "bytes": 2836,
+      "sha256": "a0f1bdc3a2e9da89ccf139a5d550eac85e4e42ce3bccbde4c52816ab8107474b"
+    },
+    {
+      "path": "assets/sfx/health_warn.pcm",
+      "bytes": 5760,
+      "sha256": "8f0481fa94e126c19bda1aefcb4dc8ef30079c6d66dab2ab71353a4b8768556f"
+    },
+    {
+      "path": "assets/sfx/hit.pcm",
+      "bytes": 4320,
+      "sha256": "c1a2ed6b763752457a888d17339a363b0cc3baf18d40ca471ae2297a7b62eaa9"
+    },
+    {
+      "path": "assets/sfx/hit_crush.pcm",
+      "bytes": 4800,
+      "sha256": "7d9f1ad6a830fe594d8a9152e8da88447794339ae35e10c7ac2e65336709f009"
+    },
+    {
+      "path": "assets/sfx/hit_magic.pcm",
+      "bytes": 5600,
+      "sha256": "984013ee56a6a362dc845f2fd730a0955e5d612a44477dc772b80e92a3c22c45"
+    },
+    {
+      "path": "assets/sfx/item.pcm",
+      "bytes": 4800,
+      "sha256": "54947b75b53afdf2b08a53f0c4b4f3b5bc50d5a9b2040c241de9eb5838cd9ee8"
+    },
+    {
+      "path": "assets/sfx/levelup.pcm",
+      "bytes": 15360,
+      "sha256": "6a919558484655ec48f6635165484831a58ad945be5c401259e0f9f0067bc237"
+    },
+    {
+      "path": "assets/sfx/lightning.pcm",
+      "bytes": 6688,
+      "sha256": "a5aead4839d73f306bdd770f262a4a65f3e8cbd3089a073a9de4965a970ae7aa"
+    },
+    {
+      "path": "assets/sfx/miss.pcm",
+      "bytes": 3360,
+      "sha256": "92bcca790c401a2c1397cbee1583983de74583e479ad026d94da3402f74d5e9b"
+    },
+    {
+      "path": "assets/sfx/read.pcm",
+      "bytes": 6688,
+      "sha256": "1c6e50226702cd0f6211b985b4bad78882104149dff36c70f0a8ab9823e30602"
+    },
+    {
+      "path": "assets/sfx/shatter.pcm",
+      "bytes": 7680,
+      "sha256": "887c8ef66d0f546f9aabac1ff9688209cd4bf2df1ddb586e239cca284e6652b4"
+    },
+    {
+      "path": "assets/sfx/step.pcm",
+      "bytes": 2926,
+      "sha256": "6f8fe8c00467be61889ae967d9b35ba9f2deba96081db1278184b3ba2007333b"
+    },
+    {
+      "path": "assets/sfx/trample.pcm",
+      "bytes": 3385,
+      "sha256": "5f2079155ad938c613d496ff5d18fbf490f0d602a5453d1706c4eaa45ff7bd8d"
+    },
+    {
+      "path": "assets/sfx/trap.pcm",
+      "bytes": 2090,
+      "sha256": "640cab50bab2b8dbdfab965902cbe5429bfbc46f769a75ac9de44dce4a1a257c"
+    },
+    {
+      "path": "assets/sfx/unlock.pcm",
+      "bytes": 5760,
+      "sha256": "2f3ad38782341a8ddab7da1a0430d4cc4d801726c07e0dcefb2cbf9bd4d62c93"
+    },
+    {
+      "path": "assets/sfx/water.pcm",
+      "bytes": 3344,
+      "sha256": "5ce792714ad2abd08f572de31712ccb1d629fd2587eb2968b64911b70738b5e9"
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+{
+  "passed": true,
+  "identical_simulator_artifacts": true,
+  "packages": [
+    {
+      "game": "C",
+      "build": "before-sim",
+      "bytes": 2312526,
+      "sha256": "cca8c0f09e13e5a69a41f4fb0fe99be3120750389fe1a10307110ece8dbdc672",
+      "music_bytes": 1913567,
+      "artifacts": [
+        {
+          "path": "artifacts/main.linux-x86_64.aot",
+          "bytes": 627524,
+          "sha256": "569a9814422f7f5c172abe29c594ae28f30b27b535e849abb52c106fc6fedb26"
+        }
+      ]
+    },
+    {
+      "game": "C",
+      "build": "after-sim",
+      "bytes": 1307405,
+      "sha256": "96da8ab7eedd19b5b9ea965d9365a0a79f64786e306a667c45e4d308c1d844fa",
+      "music_bytes": 897857,
+      "artifacts": [
+        {
+          "path": "artifacts/main.linux-x86_64.aot",
+          "bytes": 627524,
+          "sha256": "569a9814422f7f5c172abe29c594ae28f30b27b535e849abb52c106fc6fedb26"
+        }
+      ]
+    },
+    {
+      "game": "C",
+      "build": "after-all",
+      "bytes": 2137932,
+      "sha256": "82b2c5ba254938db2788193da7f0f8b0768db9b1fe30aa1a2c76b5166bbae707",
+      "music_bytes": 897857,
+      "artifacts": [
+        {
+          "path": "artifacts/main.esp32-s3.aot",
+          "bytes": 728384,
+          "sha256": "1752e2e9cb62a352a4846fbfd5795788e7065642a00b45a7abff42e30b645f87"
+        },
+        {
+          "path": "artifacts/main.esp32-s31.aot",
+          "bytes": 723188,
+          "sha256": "bd066e8b9827169380fe7c78fae29f4bbbc98db30757745dcc0281f73a7a8127"
+        },
+        {
+          "path": "artifacts/main.linux-x86_64.aot",
+          "bytes": 627524,
+          "sha256": "569a9814422f7f5c172abe29c594ae28f30b27b535e849abb52c106fc6fedb26"
+        }
+      ]
+    },
+    {
+      "game": "CPP",
+      "build": "before-sim",
+      "bytes": 2583736,
+      "sha256": "9b123f812aa7808d888af45f6956acc5899cd71c497e45537ac7a8c698359257",
+      "music_bytes": 1913567,
+      "artifacts": [
+        {
+          "path": "artifacts/main.linux-x86_64.aot",
+          "bytes": 416432,
+          "sha256": "2088150c25e652de29a6ee7a956185ba9daa8623ccb3c3f487584c278cb2d9b8"
+        },
+        {
+          "path": "artifacts/main.wasm",
+          "bytes": 264029,
+          "sha256": "a717edaf2db4521644e00c28dc91956f6378bf4e4d79000fb88039d01e7cf524"
+        }
+      ]
+    },
+    {
+      "game": "CPP",
+      "build": "after-sim",
+      "bytes": 1578614,
+      "sha256": "e944ab57dc32d903f7601bb10353fb6781a6f00d155a5fa6e0b9ec94d524a52a",
+      "music_bytes": 897857,
+      "artifacts": [
+        {
+          "path": "artifacts/main.linux-x86_64.aot",
+          "bytes": 416432,
+          "sha256": "2088150c25e652de29a6ee7a956185ba9daa8623ccb3c3f487584c278cb2d9b8"
+        },
+        {
+          "path": "artifacts/main.wasm",
+          "bytes": 264029,
+          "sha256": "a717edaf2db4521644e00c28dc91956f6378bf4e4d79000fb88039d01e7cf524"
+        }
+      ]
+    },
+    {
+      "game": "CPP",
+      "build": "after-all",
+      "bytes": 2591289,
+      "sha256": "4938f62e3fa96dd0950d9db28d563274239b3b3598f9e1bec22a98afce2c8841",
+      "music_bytes": 897857,
+      "artifacts": [
+        {
+          "path": "artifacts/main.esp32-s3.aot",
+          "bytes": 659388,
+          "sha256": "d84911e4996cdba118ee1bd2b109826c4c439c6d3823bbda25f6e0e6c3746cc7"
+        },
+        {
+          "path": "artifacts/main.esp32-s31.aot",
+          "bytes": 665380,
+          "sha256": "3a93e6891b0b723d596f440c59d5feec4d3c2d97a66b4891d141bedffb9bfafb"
+        },
+        {
+          "path": "artifacts/main.linux-x86_64.aot",
+          "bytes": 416432,
+          "sha256": "2088150c25e652de29a6ee7a956185ba9daa8623ccb3c3f487584c278cb2d9b8"
+        },
+        {
+          "path": "artifacts/main.wasm",
+          "bytes": 264029,
+          "sha256": "a717edaf2db4521644e00c28dc91956f6378bf4e4d79000fb88039d01e7cf524"
+        }
+      ]
+    }
+  ]
+}
