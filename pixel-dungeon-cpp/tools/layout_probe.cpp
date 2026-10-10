@@ -12,7 +12,7 @@ int main(int argc,char** argv){
     auto point=[&](const char* name,pd_rect_t r){std::printf("%s\"%s\":[%d,%d]",first?"":",",name,r.x+r.w/2,r.y+r.h/2);first=false;};
     point("title",l.menu_primary);point("slot",pd_layout_save_row(&l,1,0));point("class",l.class_button[0]);
     point("slot_saved",pd_layout_save_row(&l,2,0));
-    point("wait",l.button[PD_BUTTON_WAIT]);point("bag",l.button[PD_BUTTON_BAG]);point("bag_close",l.bag_close);
+    point("search",l.button[PD_BUTTON_SEARCH]);point("wait",l.button[PD_BUTTON_WAIT]);point("bag",l.button[PD_BUTTON_BAG]);point("bag_close",l.bag_close);
     point("pause",l.settings);point("pause_settings",l.pause_settings);point("settings_back",l.settings_back);
     point("pause_menu",l.pause_menu);std::printf("}\n");
 }

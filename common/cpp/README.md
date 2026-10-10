@@ -44,3 +44,17 @@ frames after warmup; Pixel samples cold-start memory on its static title.
 `--lifecycle` checks C++ clock, rendered-frame and music-instance behavior
 through background/foreground transitions. Peak counters belong to one fresh
 process, and shared resource/cache counters must not be double-counted.
+
+`--pixel-play --native-build <native-build>` instead loads an identical normal
+new-game save (seed `0x51ed270b`) into C/C++ Guests and taps Search twelve times
+at fixed 240 ms intervals. It measures four seconds of presentation, records
+clock-frame CPU and synchronous input CPU separately, then backgrounds the
+game and validates its actual private-storage snapshot: twenty-four turns and
+byte-identical saved game state in all six runs. The observer excludes panel
+transfer and does not claim a separate Guest-only time measurement.
+
+Add `--controller` to run the C++ controller integration check. The original
+C app subscribes for controller events on root 1 but filters input to node 2;
+it therefore cannot provide a fair controller benchmark. The C baseline is
+left intact. The C++ check chooses its subscribed Canvas and verifies the same
+saved state reached by pointer input.

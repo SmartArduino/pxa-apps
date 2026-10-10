@@ -10,12 +10,19 @@ from pathlib import Path
 import shlex
 import statistics
 import subprocess
+import struct
+import shutil
+import zlib
+import hashlib
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--simulator-build', type=Path, required=True)
 parser.add_argument('--artifacts', type=Path, required=True)
 parser.add_argument('--output', type=Path, required=True)
 parser.add_argument('--lifecycle', action='store_true', help='Check C++ clock and music pause/resume')
+parser.add_argument('--pixel-play', action='store_true', help='Load one fixed save and replay search input')
+parser.add_argument('--controller', action='store_true', help='C++ controller integration instead of C/C++ pointer comparison')
+parser.add_argument('--native-build', type=Path, help='Build containing pixel_save_fixture')
 args = parser.parse_args()
 build = args.simulator_build.resolve()
 artifacts = args.artifacts.resolve()
@@ -39,17 +46,52 @@ link[link.index('-o')+1] = str(executable)
 subprocess.run(link, check=True, cwd=build)
 key = root/'deps/pxa-system/apps/pxa/.dev-signing/publisher-public.der'
 report = []
+assert not args.controller or args.pixel_play
+def latest_save(private):
+    snapshots=[]
+    for path in private.glob('.pxa-kv-*'):
+        raw=path.read_bytes()
+        if len(raw)<24: continue
+        magic,version,_,generation,size,crc=struct.unpack('<4sHHQII',raw[:24])
+        body=raw[24:]
+        if magic!=b'PXKV' or version!=1 or len(body)!=size or zlib.crc32(body)!=crc: continue
+        values={};at=2
+        for _ in range(struct.unpack_from('<H',body)[0]):
+            n=body[at];at+=1;key=body[at:at+n];at+=n
+            n=struct.unpack_from('<H',body,at)[0];at+=2
+            values[key]=body[at:at+n];at+=n
+        assert at==len(body)
+        snapshots.append((generation,values))
+    assert snapshots,'no valid private storage snapshot'
+    return max(snapshots,key=lambda row:row[0])[1][b'pixel-dungeon.save']
+if args.pixel_play:
+    assert args.native_build and not args.lifecycle
+    fixture=output/'pixel-save.bin'
+    subprocess.run([str(args.native_build.resolve()/'pixel_save_fixture'),str(fixture)],check=True)
+    payload=fixture.read_bytes()
+    assert len(payload)<=1024
+    storage_key=b'pixel-dungeon.save'
+    body=struct.pack('<H',1)+bytes([len(storage_key)])+storage_key+struct.pack('<H',len(payload))+payload
+    storage_snapshot=struct.pack('<4sHHQII',b'PXKV',1,0,1,len(body),zlib.crc32(body))+body
 for game, identity in [('jump', 'pxa-jump-jump-3d'), ('pixel', 'pxa-pixel-dungeon')]:
+    if args.pixel_play and game!='pixel': continue
     for repeat in range(3):
         for cpp in [False, True]:
-            if args.lifecycle and not cpp: continue
+            if (args.lifecycle or args.controller) and not cpp: continue
             case = f'{game}-{"cpp" if cpp else "c"}-{repeat}'
-            state = output/(case+'-state'); state.mkdir(exist_ok=True)
+            state = output/(case+'-state')
+            if args.pixel_play:
+                shutil.rmtree(state,ignore_errors=True)
+                private=state/'app-data'/('17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171-'+identity+('-cpp' if cpp else ''))
+                private.mkdir(parents=True)
+                (private/'.pxa-kv-a').write_bytes(storage_snapshot)
+            state.mkdir(exist_ok=True)
             package = artifacts/(game+'-all' if cpp else game+'-c-baseline')/(identity+('-cpp' if cpp else ''))
             rows = output/(case+'.jsonl')
             with (output/(case+'.log')).open('w') as log:
                 subprocess.run([str(executable), str(package), str(key), str(state), str(rows),
-                    *(['static'] if game=='pixel' else []),
+                    *(['pixel-play'] if args.pixel_play else ['static'] if game=='pixel' else []),
+                    *(['controller'] if args.controller else []),
                     *(['lifecycle'] if args.lifecycle else [])],
                     stdout=log, stderr=subprocess.STDOUT, check=True, timeout=25)
             data = [json.loads(line) for line in rows.read_text().splitlines()]
@@ -57,7 +99,8 @@ for game, identity in [('jump', 'pxa-jump-jump-3d'), ('pixel', 'pxa-pixel-dungeo
             if args.lifecycle: assert lifecycle==[{'phase':'lifecycle', 'passed':True}]
             data = [row for row in data if row['phase']!='lifecycle']
             frames = [row for row in data if row['phase']=='frame']
-            assert len(frames)==(60 if game=='jump' else 0)
+            if args.pixel_play: assert len(frames)>=20
+            else: assert len(frames)==(60 if game=='jump' else 0)
             row = {'game':game, 'cpp':cpp, 'repeat':repeat,
                 'cpu_p50_us':statistics.median(r['cpu_us'] for r in frames) if frames else None,
                 'raster_p50_us':statistics.median(r['raster_us'] for r in frames) if frames else None,
@@ -65,10 +108,23 @@ for game, identity in [('jump', 'pxa-jump-jump-3d'), ('pixel', 'pxa-pixel-dungeo
                 'warm':data[0], 'end':data[-1], 'lifecycle_passed':bool(lifecycle)}
             if frames:
                 row['desktop_visible_fps'] = 1e6*data[-1]['visible_delta']/data[-1]['capture_us']
-                assert row['desktop_visible_fps']>=45, 'clock/simulation coupling dropped presentation frames'
+                assert row['desktop_visible_fps']>=(5 if args.pixel_play else 45), 'missing presentation frames'
+            if args.pixel_play:
+                saved=latest_save(private)
+                turns=struct.unpack_from('<H',saved,28)[0]
+                # A search consumes two game turns in the original rules.
+                assert turns==24,('twelve searches did not advance twenty-four turns',turns)
+                inputs=[r for r in data if r['phase']=='input'];assert len(inputs)==12
+                row.update(scene='fixed-save-search',save_sha256=hashlib.sha256(payload).hexdigest(),
+                    seed='0x51ed270b',input_kind='controller' if args.controller else 'pointer',
+                    saved_turn=turns,saved_sha256=hashlib.sha256(saved).hexdigest(),
+                    input_cpu_p50_us=statistics.median(r['cpu_us'] for r in inputs))
             report.append(row); print(case, row['cpu_p50_us'], row['raster_p50_us'], flush=True)
             (output/'report.json').write_text(json.dumps(report, indent=2)+'\n')
-if not args.lifecycle:
-    jump_c = statistics.median(r['desktop_visible_fps'] for r in report if r['game']=='jump' and not r['cpp'])
-    jump_cpp = statistics.median(r['desktop_visible_fps'] for r in report if r['game']=='jump' and r['cpp'])
-    assert jump_cpp>=jump_c*.95, 'C++ presentation cadence regressed'
+if args.pixel_play:
+    assert len({r['saved_sha256'] for r in report})==1,'game states diverged'
+if not args.lifecycle and not args.controller:
+    game='pixel' if args.pixel_play else 'jump'
+    c = statistics.median(r['desktop_visible_fps'] for r in report if r['game']==game and not r['cpp'])
+    cpp = statistics.median(r['desktop_visible_fps'] for r in report if r['game']==game and r['cpp'])
+    assert cpp>=c*.95, 'C++ presentation cadence regressed'
