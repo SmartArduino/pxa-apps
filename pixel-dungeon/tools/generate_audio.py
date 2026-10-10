@@ -56,7 +56,7 @@ def main():
     if not sounds.is_dir():
         raise SystemExit('not a Shattered Pixel Dungeon checkout: %s' % sounds)
 
-    for asset_root in (APP / 'assets', APP / 'assets-esp32s3'):
+    for asset_root in (APP / 'assets', APP.parent / 'pixel-dungeon-cpp/assets'):
         sound_root = asset_root / 'sfx'
         if not args.check:
             sound_root.mkdir(parents=True, exist_ok=True)
