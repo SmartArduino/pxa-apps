@@ -104,6 +104,11 @@ struct JumpJump {
             (void)context->log().write(pxa::LogLevel::warning,"J3CPP frame not accepted");
     }
     void pointer(const pxa::ui::CanvasPointer& p){if(!renderer||initializing)return;
+        // The touch driver sends MOVE samples even for a stationary hold.
+        // Charge advances on clock ticks; drawing on every sample floods the
+        // frame queue and starves that clock (which caps catch-up at 40 ms).
+        // Match the C game: only press/release/cancel need an immediate frame.
+        if(p.phase==pxa::ui::pointer_phase_move)return;
 #if J3_TRACE_TIMING
         const auto trace_charge_us=unsigned(g_game.charge*1e6f);
 #endif
