@@ -1,0 +1,67 @@
+{
+  "assets": [
+    {
+      "path": "assets/raster/pd_tile_atlas.pxr",
+      "kind": "index8",
+      "source": "resources/pd_tile_atlas.index8",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "path": "assets/raster/pd_wall_atlas.pxr",
+      "kind": "index8",
+      "source": "resources/pd_wall_atlas.index8",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "path": "assets/raster/pd_sprite_atlas.pxr",
+      "kind": "index8",
+      "source": "resources/pd_sprite_atlas.index8",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "path": "assets/raster/pd_ui_atlas.pxr",
+      "kind": "index8",
+      "source": "resources/pd_ui_atlas.index8",
+      "width": 256,
+      "height": 192
+    },
+    {
+      "path": "assets/raster/pd_title_atlas.pxr",
+      "kind": "index8",
+      "source": "resources/pd_title_atlas.index8",
+      "width": 256,
+      "height": 128
+    },
+    {
+      "path": "assets/raster/pd_fire_atlas.pxr",
+      "kind": "index8",
+      "source": "resources/pd_fire_atlas.index8",
+      "width": 192,
+      "height": 72
+    },
+    {
+      "path": "assets/raster/pd_font_ascii.pxr",
+      "kind": "index8",
+      "source": "resources/pd_font_ascii.index8",
+      "width": 128,
+      "height": 126
+    },
+    {
+      "path": "assets/raster/pd_font_cjk.pxr",
+      "kind": "index8",
+      "source": "resources/pd_font_cjk.index8",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "path": "assets/raster/pd_font_cjk_extra.pxr",
+      "kind": "index8",
+      "source": "resources/pd_font_cjk_extra.index8",
+      "width": 256,
+      "height": 48
+    }
+  ]
+}

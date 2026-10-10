@@ -1,0 +1,68 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [
+    1,
+    0
+  ],
+  "target_sdk": [
+    1,
+    0
+  ],
+  "compile_sdk": [
+    1,
+    0
+  ],
+  "id": "pxa-pixel-dungeon-cpp",
+  "version": "0.1.0",
+  "name": "Pixel Dungeon C++",
+  "description": "C++ SDK version: Turn-based roguelike dungeon crawler drawn with the GameRender raster API and Shattered Pixel Dungeon art",
+  "icon": "assets/icon.png",
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 1048576,
+      "pinned": false
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "services": [
+        "window",
+        "game-render",
+        "storage",
+        "log",
+        "audio",
+        "clock",
+        "permission",
+        {
+          "name": "ui",
+          "features": [
+            "canvas"
+          ]
+        },
+        "assets"
+      ],
+      "cmake_target": "pxa_main",
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "random",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "release_sequence": 1,
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "required": false,
+      "scope": "media"
+    }
+  ]
+}
