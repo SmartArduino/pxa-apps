@@ -23,6 +23,8 @@ static bool write_input_box(Transaction<> &tx, std::uint32_t node,
   color[0] = std::byte{1};
   pxa::wire::put32(color.data() + 4, box.foreground);
   return tx.u8(node, protocol::visible, box.visible) &&
+         tx.u32(node, protocol::text_max_bytes, 512) &&
+         tx.u8(node, protocol::text_single_line, 1) &&
          tx.u16(node, protocol::font_role, static_cast<std::uint16_t>(box.font)) &&
          tx.property(node, protocol::foreground, color) &&
          tx.u8(node, protocol::position, 1) &&

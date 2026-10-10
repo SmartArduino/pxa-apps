@@ -16,7 +16,7 @@ PXA C++ SDK 小说阅读器。借鉴 [KOReader](https://github.com/koreader/kore
 
 ## 添加书源
 
-在“添加书源”输入一个 HTTP(S) JSON 地址。可以是下面的配置文件，也可以直接指向 `books` 目录。当前系统输入事件最多 64 个 UTF-8 字节，长地址需要短链接；配置文件内的请求地址允许 512 字节。
+在“添加书源”输入一个 HTTP(S) JSON 地址。可以是下面的配置文件，也可以直接指向 `books` 目录。输入框使用动态文本事件，按实际长度保存，最多 512 个 UTF-8 字节，并使用单行横向滚动避免长网址反复折行；配置文件内的请求地址也允许 512 字节。
 
 ```json
 {
@@ -65,7 +65,7 @@ TXT 正文必须为 UTF-8。分章目录格式：
 
 ## 构建与验收
 
-需要当前 Host 与 SDK：UI 0.7 (`sized-text`, `text-input-control`)、FS 0.2、Net 0.3。旧 Host 不能直接运行本应用，需要更新应用固件。C++ / Wasm / AOT 使用 O3，最大线性内存 2 MiB，按需增长。
+需要当前 Host 与 SDK：UI 0.8 (`sized-text`, `text-input-control`, `dynamic-text`)、FS 0.2、Net 0.3。旧 Host 不能直接运行本应用，需要更新应用固件。C++ / Wasm / AOT 使用 O3，最大线性内存 2 MiB，按需增长。
 
 从 PXA 工作区根目录执行：
 
@@ -81,3 +81,5 @@ bash tools/app.sh build novel-reader --target simulator,esp32s3 --aot-only
 这是 JSON/TXT 阅读器，不兼容 Legado 的 JavaScript/CSS 书源规则，也不支持 EPUB/PDF、网页抓取、图片正文、账号登录和付费章节。拉丁字母按一字一个 em 保守换行，长英文段落的行利用率较低；不进行自动繁简转换。后台暂停下载，取消后需重试。网络来源的稳定性由服务端决定。
 
 正文索引从本地 TXT 中识别常见“第…章/回/卷”和英文 Chapter 标题，不能保证识别所有书的目录格式。缓存书源和图书字符串有容量上限，界面热路径没有无限增长的容器。
+
+动态输入与替换安装验收：[DYNAMIC_INPUT-20261010.md](docs/DYNAMIC_INPUT-20261010.md)。
