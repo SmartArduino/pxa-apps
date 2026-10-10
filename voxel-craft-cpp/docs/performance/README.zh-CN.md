@@ -12,3 +12,13 @@
 复现命令在 pxa-workspace 根目录执行，应用仓库默认位于 `local/pxa-apps/`。
 完整原始串口日志、测试包、实验源码与 SDK 归档保留在报告列出的 workspace
 `local/` 目录；此处提交报告所需的测量汇总和截图。
+
+字节完全相同的附件共用一份文件：0.10 与 0.12 的设置页截图见
+[412×412](voxel-gameplay-20261009/display-412x412-320dpi-settings.png)、
+[800×480](voxel-gameplay-20261009/display-800x480-480dpi-settings.png)；
+DPI 验证中返回后的相同画面见
+[标题](voxel-dpi-20261009/sim-title.png)、
+[暂停](voxel-dpi-20261009/sim-pause.png)；
+0.11 与最终报告共用的显示检查结果见
+[display-qa.json](voxel-gameplay-20261009/display-qa.json)。这些只合并附件副本，
+各阶段的测量数据和测试配置仍以原报告为准。

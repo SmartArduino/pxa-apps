@@ -9,3 +9,7 @@ __pycache__/
 *.aot
 *.wasm
 *.pxa
+
+# Generated font previews and obsolete experimental renderer snapshots.
+/voxel-craft-cpp/tools/menu-font*-preview.png
+/voxel-craft-cpp/main_*.cpp.txt

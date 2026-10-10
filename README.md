@@ -53,3 +53,8 @@ credentials do not enter this repository.
 Application-specific source checks use the SDK and tools from the neighboring
 `deps/pxa-system` checkout. Build outputs stay in the workspace's ignored
 `local/app-output` directory.
+
+Keep generated font previews and experimental source snapshots outside the
+tracked source tree. Byte-identical display matrices and screenshots share one
+attachment, with report links pointing to that retained file. Keep distinct
+benchmark runs, test configurations, runtime resources and license notices.
