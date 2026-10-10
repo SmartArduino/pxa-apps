@@ -1,0 +1,66 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [
+    1,
+    0
+  ],
+  "target_sdk": [
+    1,
+    0
+  ],
+  "compile_sdk": [
+    1,
+    0
+  ],
+  "id": "pxa-novel-reader",
+  "version": "0.1.0",
+  "release_sequence": 1,
+  "name": "书页阅读",
+  "description": "C++ novel reader with network sources, search, adaptive typography and offline downloads",
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 2097152,
+      "pinned": false
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "services": [
+        {
+          "name": "ui",
+          "features": [
+            "sized-text",
+            "text-input-control"
+          ]
+        },
+        "window",
+        "net",
+        "permission",
+        "fs",
+        "storage",
+        "clock",
+        "log"
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "net.client",
+      "scope": "web",
+      "required": false
+    }
+  ]
+}

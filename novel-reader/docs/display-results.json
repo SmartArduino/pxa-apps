@@ -1,0 +1,38 @@
+[
+  {
+    "profile": "360x480-320dpi",
+    "offline_cache": true,
+    "native_ime": "screenshot",
+    "pixel_size": [
+      360,
+      480
+    ]
+  },
+  {
+    "profile": "480x480-320dpi-circle",
+    "offline_cache": true,
+    "native_ime": "screenshot",
+    "pixel_size": [
+      480,
+      480
+    ]
+  },
+  {
+    "profile": "800x480-160dpi",
+    "offline_cache": true,
+    "native_ime": "screenshot",
+    "pixel_size": [
+      800,
+      480
+    ]
+  },
+  {
+    "profile": "296x240-160dpi",
+    "offline_cache": true,
+    "native_ime": "screenshot",
+    "pixel_size": [
+      296,
+      240
+    ]
+  }
+]

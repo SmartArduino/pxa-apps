@@ -10,6 +10,11 @@ New SDK capabilities and game development focus on the C++ Guest SDK and
 existing C applications retain necessary compatibility and correctness fixes
 during the transition. The Core wire ABI remains shared.
 
+[`novel-reader`](novel-reader/README.md) is the C++ network and offline TXT
+reader, with configurable JSON sources, system input, adaptive typography,
+chapter navigation and automatic page turns. Its device measurements and
+reproducible acceptance checks live in the application's `docs` and `tests`.
+
 Clone this repository to `local/pxa-apps` alongside `deps/pxa-system` in
 `pxa-projects`. From the workspace root, for example:
 
