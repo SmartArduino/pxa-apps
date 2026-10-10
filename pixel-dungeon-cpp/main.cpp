@@ -331,8 +331,13 @@ void handle_tick(uint64_t timestamp_us) {
     g_anim_ms = (uint32_t)(timestamp_us / 1000u);
     pump_audio();
     if (!g_seeded) {
+#ifdef PD_BENCHMARK_SEED
+        // Optional deterministic test build; production keeps clock seeding.
+        g_game.run_seed = uint32_t(PD_BENCHMARK_SEED);
+#else
         g_game.run_seed = pd_rng_mix((uint32_t)(timestamp_us >> 8),
                                      (uint32_t)timestamp_us);
+#endif
         g_seeded = 1;
     }
     if (g_game.phase != PD_PHASE_PLAY) {

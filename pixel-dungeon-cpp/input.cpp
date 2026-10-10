@@ -217,9 +217,13 @@ void pd_input_pointer(pd_game_t *game, pd_layout_t *layout, int x, int y,
             }
             for (int index = 0; index < PD_CLASS_COUNT; ++index) {
                 if (pd_rect_contains(&layout->class_button[index], x, y)) {
+#ifdef PD_BENCHMARK_SEED
+                    pd_game_reset(game, uint32_t(PD_BENCHMARK_SEED));
+#else
                     pd_game_reset(game, pd_rng_mix(
                         (uint32_t)timestamp_us ^ game->run_seed,
                         (uint32_t)(timestamp_us >> 32) ^ game->turn));
+#endif
                     pd_game_start_run(game, (uint8_t)index);
                     return;
                 }
@@ -337,7 +341,11 @@ void pd_input_controller(pd_game_t *game, uint32_t buttons, uint32_t previous) {
     }
     if (game->phase == PD_PHASE_CLASS) {
         if ((pressed & pxa::ui::controller_a) != 0) {
+#ifdef PD_BENCHMARK_SEED
+            pd_game_reset(game, uint32_t(PD_BENCHMARK_SEED));
+#else
             pd_game_reset(game, pd_rng_mix(game->run_seed, game->turn + 1u));
+#endif
             pd_game_start_run(game, 0);
         } else if ((pressed & pxa::ui::controller_b) != 0)
             game->phase = PD_PHASE_SAVES;
