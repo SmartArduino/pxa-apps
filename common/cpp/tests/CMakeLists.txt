@@ -61,6 +61,12 @@ add_test(NAME jump_raster COMMAND jump_preview --frames 3 --auto 8 --out "${CMAK
 # the C++ SDK. This target deliberately retains the original C SDK baseline.
 option(PXA_C_REFERENCE_BENCH "Build the original C rendering comparison" OFF)
 if(PXA_C_REFERENCE_BENCH)
+ add_library(jump_timing_reference STATIC reference/jump_timing_reference.c "${APP_ROOT}/jump-jump-3d/jump3d_game.c")
+ target_include_directories(jump_timing_reference PRIVATE "${APP_ROOT}/jump-jump-3d" "${PXA_SYSTEM_DIR}/sdk/guest-c/include")
+ add_executable(jump_timing_test reference/jump_timing_test.cpp)
+ target_include_directories(jump_timing_test PRIVATE "${PXA_SYSTEM_DIR}/sdk/guest-cpp/include")
+ target_link_libraries(jump_timing_test PRIVATE jump_core jump_timing_reference m)
+ add_test(NAME jump_timing_reference COMMAND jump_timing_test)
  add_library(pixel_reference STATIC reference/pixel_c_driver.c)
  foreach(unit game dungeon font_data font assets strings render layout input)
   target_sources(pixel_reference PRIVATE "${APP_ROOT}/pixel-dungeon/${unit}.c")

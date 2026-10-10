@@ -1,6 +1,5 @@
 #include <pxa/app.hpp>
 #include <pxa/ui_display.hpp>
-#include <pxa/clock.hpp>
 #include <pxa/game_quality.hpp>
 #include <cstdio>
 #include "jump3d_game.hpp"
@@ -8,9 +7,13 @@
 #include "jump3d_palette.hpp"
 #include "jump3d_font.hpp"
 #include "jump3d_audio.hpp"
+#include "jump3d_clock.hpp"
 #define TICK_MS 20u
 #define J3_BGM_MODE 1
 #define J3_BGM_LOOP 0
+#ifndef J3_TRACE_TIMING
+#define J3_TRACE_TIMING 0
+#endif
 #ifndef J3_FORCE_SCALE_SHIFT
 #define J3_FORCE_SCALE_SHIFT (-1)
 #endif
@@ -26,7 +29,7 @@ struct JumpJump {
     j3_game_t g_game{};
     j3_render_t render;
     j3_audio_t g_audio;
-    pxa::FixedStepper stepper{20000,2};
+    GameClock stepper;
     pxa::game::AdaptiveResolution quality;
     uint8_t quality_ticks=0;
     uint64_t frame_id=0,window_start=0;
@@ -81,14 +84,23 @@ struct JumpJump {
             (void)context->log().write(pxa::LogLevel::warning,"J3CPP frame not accepted");
     }
     void pointer(const pxa::ui::CanvasPointer& p){if(!renderer||initializing)return;
+#if J3_TRACE_TIMING
+        const auto trace_charge_us=unsigned(g_game.charge*1e6f);
+#endif
         if(p.phase==pxa::ui::pointer_phase_down){
             if(g_game.state==J3_STATE_OVER){auto best=g_game.best;j3_game_reset(&g_game,0x9e3779b9^uint32_t(frame_id));g_game.best=best;
                 g_last_state=g_game.state;g_last_score=0;g_last_jumps=0;g_bonus_played=0;g_bonus_repeat_timer=0;
                 j3_audio_play(&g_audio,J3_CHANNEL_LAND,J3_CLIP_START,J3_GAIN_FULL,0);
                 j3_audio_stop(&g_audio,J3_CHANNEL_COMBO);j3_audio_stop(&g_audio,J3_CHANNEL_BONUS);
             }else j3_game_press(&g_game);
-        }else if(p.phase==pxa::ui::pointer_phase_up)j3_game_release(&g_game);
+        }else if(p.phase==pxa::ui::pointer_phase_up) {
+            j3_game_release(&g_game);
+        }
         else if(p.phase==pxa::ui::pointer_phase_cancel){if(g_game.state==J3_STATE_CHARGING){g_game.state=J3_STATE_READY;g_game.charge=0;}}
+#if J3_TRACE_TIMING
+        char trace[200];std::snprintf(trace,sizeof(trace),"J3CPP input phase=%u now=%llu state=%u charge_us=%u vx_q6=%d vy_q6=%d vz_q6=%d land_x_q6=%d land_z_q6=%d",p.phase,(unsigned long long)p.timestamp_us,g_game.state,trace_charge_us,int(g_game.vx*1e6f),int(g_game.vy*1e6f),int(g_game.vz*1e6f),int(g_game.land_x*1e6f),int(g_game.land_z*1e6f));
+        (void)context->log().write(pxa::LogLevel::info,trace);
+#endif
         play_state_sounds();draw_frame();
     }
     pxa::Result<bool> on_event(pxa::Context&,const pxa::Event& event){
@@ -100,16 +112,21 @@ struct JumpJump {
             return true;}
         if(event.service!=4||event.opcode!=0x8001||event.payload.size()!=8)return false;
         auto now=pxa::wire::get64(event.payload.data());j3_audio_tick(&g_audio,now);
+#if J3_TRACE_TIMING
+        const auto previous=stepper.previous_timestamp();
+#endif
         auto steps=stepper.advance(now);
-        for(unsigned i=0;i<steps.count;++i)j3_game_tick(&g_game,.02f);
-        if(steps.count){play_state_sounds();save_timer-=steps.count*.02f;
+        for(unsigned i=0;i<steps;++i)j3_game_tick(&g_game,.02f);
+#if J3_TRACE_TIMING
+        if(g_game.state==J3_STATE_CHARGING){char trace[136];std::snprintf(trace,sizeof(trace),"J3CPP tick previous=%llu now=%llu steps=%u charge_us=%u",(unsigned long long)previous,(unsigned long long)now,steps,unsigned(g_game.charge*1e6f));(void)context->log().write(pxa::LogLevel::info,trace);}
+#endif
+        if(steps){play_state_sounds();save_timer-=steps*.02f;
             if(!saving&&save_timer<=0&&g_game.best>best_saved){saving=true;save_timer=2;if(!context->tasks().start(save_best(g_game.best)))saving=false;}
             auto next=uint8_t(g_game.jump_count/15%J3_BG_SCHEMES);
             if(renderer&&next!=scheme){scheme=next;(void)j3_render_upload_sky(*renderer,palette.data(),scheme,upload.data(),upload.size());
                 (void)pxa::game::Upload(*renderer,std::as_writable_bytes(std::span{upload})).palette(palette,J3_LIGHT_LEVELS);}}
-        // Presentation follows the clock independently of fixed simulation
-        // steps. Small scheduler jitter can alternate zero/two updates; it
-        // must not discard an otherwise available display frame.
+        // Presentation stays independent of simulation rounding: a short
+        // callback must not discard an otherwise available display frame.
         draw_frame();
         if constexpr(J3_FORCE_SCALE_SHIFT<0){
             if(renderer&&!initializing&&++quality_ticks>=48){quality_ticks=0;
