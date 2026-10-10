@@ -1,4 +1,5 @@
 #include <pxa/app.hpp>
+#include <pxa/events.hpp>
 #include <pxa/ui_display.hpp>
 #include <pxa/game_quality.hpp>
 #include <cstdio>
@@ -136,7 +137,7 @@ struct JumpJump {
     }
     pxa::Result<bool> on_event(pxa::Context&,const pxa::Event& event){
         j3_audio_event(&g_audio,event);
-        if(event.service==3&&event.opcode==0x8002){if(auto metrics=pxa::ui::decode_display_metrics(event.payload)){
+        if(event.is<pxa::ui::DisplayMetrics>()){if(auto metrics=pxa::ui::decode_display_metrics(event)){
             bool resize=metrics->width!=display.width||metrics->height!=display.height;display=*metrics;
             if(resize&&!initializing){scale_shift=J3_FORCE_SCALE_SHIFT>=0?J3_FORCE_SCALE_SHIFT:0;quality={};(void)context->tasks().start(initialize());}
             else if(renderer&&!initializing){const auto previous_tier=j3_font_tier();j3_render_adapt(&render,display);
@@ -146,8 +147,8 @@ struct JumpJump {
                         (void)context->log().write(pxa::LogLevel::warning,"J3CPP font reload deferred");draw_frame();}
                 }else draw_frame();}}
             return true;}
-        if(event.service!=4||event.opcode!=0x8001||event.payload.size()!=8)return false;
-        auto now=pxa::wire::get64(event.payload.data());j3_audio_tick(&g_audio,now);
+        auto tick=pxa::decode_clock_tick(event);if(!tick)return false;
+        auto now=tick->timestamp_us;j3_audio_tick(&g_audio,now);
 #if J3_TRACE_TIMING
         const auto previous=stepper.previous_timestamp();
 #endif

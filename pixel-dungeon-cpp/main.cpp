@@ -1,4 +1,6 @@
 #include <pxa/app.hpp>
+#include <pxa/startup.hpp>
+#include <pxa/events.hpp>
 #include <pxa/ui_display.hpp>
 #include <pxa/ui_controller.hpp>
 #include <cstdio>
@@ -48,18 +50,8 @@ struct PixelDungeon {
     pxa::Result<void> on_start(pxa::Context& ctx,std::span<const std::byte> config){
         context=&ctx;arcade::logging_transport=&ctx.transport();
         if(auto metrics=pxa::ui::decode_start_display(config))apply_display(*metrics);
-        // START record 12 contains nested system configuration TLVs.
-        for(size_t at=0;at+4<=config.size();){
-            auto tag=pxa::wire::get16(config.data()+at),n=pxa::wire::get16(config.data()+at+2);at+=4;
-            if(n>config.size()-at)break;
-            if(tag==12)for(size_t sub=at;sub+4<=at+n;){
-                auto key=pxa::wire::get16(config.data()+sub),length=pxa::wire::get16(config.data()+sub+2);sub+=4;
-                if(length>at+n-sub)break;
-                if(key==1&&length>=2)pd_strings_set_language(config[sub]==std::byte{'z'}&&config[sub+1]==std::byte{'h'});
-                sub+=length;
-            }
-            at+=n;
-        }
+        if(auto system=pxa::decode_start_system_environment(config))
+            pd_strings_set_language(system->is_language("zh"));
         pd_game_reset(&g_game,0x51ed270b);rebuild_layout();pd_audio_set_music(&g_audio,PD_MUSIC_TITLE);
         auto full=ctx.window().fullscreen(pxa::WindowBarMode::hidden,pxa::WindowBarMode::hidden);if(!full)return full;
         return ctx.tasks().start(initialize());
@@ -434,12 +426,12 @@ int upload_resources(void) {
 }
     pxa::Result<bool> on_event(pxa::Context&,const pxa::Event& event){
         pd_audio_event(&g_audio,event);
-        if(event.service==3&&event.opcode==0x8002){if(auto metrics=pxa::ui::decode_display_metrics(event.payload)){
+        if(event.is<pxa::ui::DisplayMetrics>()){if(auto metrics=pxa::ui::decode_display_metrics(event)){
             bool resize=metrics->width!=display.width||metrics->height!=display.height||metrics->density_q16!=display.density_q16;apply_display(*metrics);
             if(resize&&!initializing)(void)context->tasks().start(initialize());else{rebuild_layout();render_frame();}}
             return true;}
         if(auto controller=pxa::ui::decode_controller(event)){if(catalog_ready&&!initializing)handle_controller(*controller);return true;}
-        if(event.service==4&&event.opcode==0x8001&&event.payload.size()==8){auto now=pxa::wire::get64(event.payload.data());handle_tick(now);
+        if(auto tick=pxa::decode_clock_tick(event)){auto now=tick->timestamp_us;handle_tick(now);
             if(renderer&&now-perf_start>=5000000){perf_start=now;if(auto t=renderer->telemetry()){
                 char msg[224];std::snprintf(msg,sizeof(msg),"PDCPP perf submitted=%llu rendered=%llu visible=%llu raster_us=%llu queue_us=%llu present_us=%llu dropped=%llu draw=%u turn=%u phase=%u",(unsigned long long)t->submitted_frames,(unsigned long long)t->rendered_frames,(unsigned long long)t->visible_frames,(unsigned long long)t->host_raster_us,(unsigned long long)t->queue_wait_us,(unsigned long long)t->present_us,(unsigned long long)t->dropped_frames,t->last_draw_list_bytes,g_game.turn,g_game.phase);
                 (void)context->log().write(pxa::LogLevel::info,msg);}}
