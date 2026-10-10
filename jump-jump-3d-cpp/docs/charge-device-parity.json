@@ -1,0 +1,84 @@
+{
+  "port": "/dev/ttyACM0",
+  "diagnostic": true,
+  "fps_benchmark": false,
+  "runs": [
+    {
+      "requested_hold_seconds": 0.15,
+      "device_hold_us": 157301,
+      "clock_callbacks": 3,
+      "original_steps": 6,
+      "charge_us": 119999,
+      "vx_q6": 839999,
+      "vy_q6": 13680000,
+      "land_x_q6": 319199,
+      "all_callbacks_match_C": true,
+      "screenshot": "after-0.jpg"
+    },
+    {
+      "requested_hold_seconds": 0.36,
+      "device_hold_us": 363963,
+      "clock_callbacks": 5,
+      "original_steps": 10,
+      "charge_us": 199999,
+      "vx_q6": 1399999,
+      "vy_q6": 13800000,
+      "land_x_q6": 536666,
+      "all_callbacks_match_C": true,
+      "screenshot": "after-1.jpg"
+    },
+    {
+      "requested_hold_seconds": 0.7,
+      "device_hold_us": 708904,
+      "clock_callbacks": 7,
+      "original_steps": 14,
+      "charge_us": 279999,
+      "vx_q6": 1959999,
+      "vy_q6": 13920000,
+      "land_x_q6": 757866,
+      "all_callbacks_match_C": true,
+      "screenshot": "after-2.jpg"
+    },
+    {
+      "requested_hold_seconds": 0.82,
+      "device_hold_us": 824734,
+      "clock_callbacks": 9,
+      "original_steps": 18,
+      "charge_us": 360000,
+      "vx_q6": 2520000,
+      "vy_q6": 14040000,
+      "land_x_q6": 982799,
+      "all_callbacks_match_C": true,
+      "screenshot": "after-3.jpg"
+    },
+    {
+      "requested_hold_seconds": 1.2,
+      "device_hold_us": 1202709,
+      "clock_callbacks": 12,
+      "original_steps": 24,
+      "charge_us": 480000,
+      "vx_q6": 3360000,
+      "vy_q6": 14220000,
+      "land_x_q6": 1327200,
+      "all_callbacks_match_C": true,
+      "screenshot": "after-4.jpg"
+    },
+    {
+      "requested_hold_seconds": 2,
+      "device_hold_us": 2004964,
+      "clock_callbacks": 21,
+      "original_steps": 42,
+      "charge_us": 839999,
+      "vx_q6": 5879998,
+      "vy_q6": 14759999,
+      "land_x_q6": 2410799,
+      "all_callbacks_match_C": true,
+      "screenshot": "after-5.jpg"
+    }
+  ],
+  "passed": true,
+  "hello": "protocol=1;mode=normal;capabilities=info,memory,logcat,packages,package-deploy,package-run,package-stop,fs,reboot,doctor,input-v2,screenshot-rgb565,screenshot-jpeg,poweroff,perf-raster,heap-local;max_chunk=1024;fs_offset=1;fs_sha256=1;target=esp32s3;serial=a4:cb:8f:d5:d4:f0;version=1df1fad-dirty",
+  "info": [
+    "target=esp32s3;serial=a4:cb:8f:d5:d4:f0;version=1df1fad-dirty;free_heap=6983443;pxa=ready;storage_total=9437184;storage_used=6619136;storage_free=2818048"
+  ]
+}

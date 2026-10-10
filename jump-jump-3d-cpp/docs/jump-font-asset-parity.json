@@ -1,0 +1,56 @@
+[
+  {
+    "path": "assets/fonts/j3_font_big_t0.pxr",
+    "bytes": 1800,
+    "sha256": "52fc7ea861aa1ae189ea05b0b23aa49ace4cbba6db8b1663cbc911543e378f70",
+    "byte_exact": true
+  },
+  {
+    "path": "assets/fonts/j3_font_small_t0.pxr",
+    "bytes": 1470,
+    "sha256": "b47f94011a14a73c7e63bf96877fbc5fe5971761898a17ae86e682fe9a898081",
+    "byte_exact": true
+  },
+  {
+    "path": "assets/fonts/j3_font_cjk_t0.pxr",
+    "bytes": 1872,
+    "sha256": "0b247d3a7acab93a875dcf7cef2c0bc14a4708f3d60423deda057ddf43322068",
+    "byte_exact": true
+  },
+  {
+    "path": "assets/fonts/j3_font_big_t1.pxr",
+    "bytes": 7200,
+    "sha256": "5bbbb63ec59cd496f560d0c99d0d1f0013fff00eb03599dce56ed0e4f90d87e5",
+    "byte_exact": true
+  },
+  {
+    "path": "assets/fonts/j3_font_small_t1.pxr",
+    "bytes": 5632,
+    "sha256": "86c8cb6c07feb4df4ddd420402f99f574519bc6c81a41cbb03a8fa7aa3b84943",
+    "byte_exact": true
+  },
+  {
+    "path": "assets/fonts/j3_font_cjk_t1.pxr",
+    "bytes": 3328,
+    "sha256": "6820ef42a948636160615abf5306dc0feb06af37bfaf1a6fc283fa3140d46f53",
+    "byte_exact": true
+  },
+  {
+    "path": "assets/fonts/j3_font_big_t2.pxr",
+    "bytes": 19926,
+    "sha256": "02a55f022d6fbd3ba2956d1d384c3402a2cca2aa8d51bee2cd7e7ca32fca71a3",
+    "byte_exact": true
+  },
+  {
+    "path": "assets/fonts/j3_font_small_t2.pxr",
+    "bytes": 7590,
+    "sha256": "ec6695257a1ffdcbb7b48fb9d9b609c83806631b47c7f78af66bca1b33e415c9",
+    "byte_exact": true
+  },
+  {
+    "path": "assets/fonts/j3_font_cjk_t2.pxr",
+    "bytes": 10648,
+    "sha256": "2687d1c6aac8ad752475186bd0e28f06f253d55ee4f6caa9b69189ec109be7e0",
+    "byte_exact": true
+  }
+]

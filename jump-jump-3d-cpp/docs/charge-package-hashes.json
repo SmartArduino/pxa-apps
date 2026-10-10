@@ -1,0 +1,65 @@
+[
+  {
+    "build": "jump-charge-all",
+    "path": "pxa-jump-jump-3d-cpp.pxa",
+    "bytes": 2104691,
+    "sha256": "fbe419a11883d803f456bfb6f04e814847af02094949f66dfe8781b06f426487",
+    "timing_trace": false
+  },
+  {
+    "build": "jump-charge-all",
+    "path": "main.esp32-s31.aot",
+    "bytes": 495664,
+    "sha256": "cac7478484945ce5a53e28d20317cdbe85184412c70fb988ca002793a64ffed3",
+    "timing_trace": false
+  },
+  {
+    "build": "jump-charge-all",
+    "path": "main.linux-x86_64.aot",
+    "bytes": 387960,
+    "sha256": "faaea5c6984712a1bc3dd152a70d7bbec80c861f586ff291df9dcab483283199",
+    "timing_trace": false
+  },
+  {
+    "build": "jump-charge-all",
+    "path": "main.wasm",
+    "bytes": 215675,
+    "sha256": "47a1179689adea4b6baae9019734e141719b4abb510443ca8511355cc13c80b5",
+    "timing_trace": false
+  },
+  {
+    "build": "jump-charge-all",
+    "path": "main.esp32-s3.aot",
+    "bytes": 474900,
+    "sha256": "720e8d150666450f06e6dccc1fb12a9de21d819c7d54b0330b28f442d9896888",
+    "timing_trace": false
+  },
+  {
+    "build": "jump-charge-device",
+    "path": "pxa-jump-jump-3d-cpp.pxa",
+    "bytes": 1427431,
+    "sha256": "0b671959eee5efdf2c5f82bb2d8440670b3f10ea31766ed3067caa30e45967bc",
+    "timing_trace": false
+  },
+  {
+    "build": "jump-charge-device",
+    "path": "main.esp32-s3.aot",
+    "bytes": 474900,
+    "sha256": "720e8d150666450f06e6dccc1fb12a9de21d819c7d54b0330b28f442d9896888",
+    "timing_trace": false
+  },
+  {
+    "build": "jump-charge-trace",
+    "path": "pxa-jump-jump-3d-cpp.pxa",
+    "bytes": 1427156,
+    "sha256": "ab22d781685a02a6b26a2db1d576be99dfe0f7338ed9fc0d6a4bb3bd2fbd9888",
+    "timing_trace": true
+  },
+  {
+    "build": "jump-charge-trace",
+    "path": "main.esp32-s3.aot",
+    "bytes": 474528,
+    "sha256": "659d18a8ac6fd478283e13a547204c5ea3a1b8ea092f9480373c7b5670d0ea31",
+    "timing_trace": true
+  }
+]

@@ -1,0 +1,51 @@
+[
+  {
+    "build": "jump-font-all",
+    "path": "pxa-jump-jump-3d-cpp.pxa",
+    "bytes": 2056969,
+    "sha256": "30f24aec7f2c4f94ae602564edcab7e7f15f649cc44c831a2525fb25ce1848b4",
+    "timing_trace": false
+  },
+  {
+    "build": "jump-font-all",
+    "path": "main.esp32-s31.aot",
+    "bytes": 448188,
+    "sha256": "df116b17a730a3fa0b98ff8aba6469ce263225c41f2a4a5e3b2f148500c2bf5f",
+    "timing_trace": false
+  },
+  {
+    "build": "jump-font-all",
+    "path": "main.linux-x86_64.aot",
+    "bytes": 335832,
+    "sha256": "d4cd59401b95c23fd14ac752065b7d534696c15cccbc57fa0da45b9c00cc491a",
+    "timing_trace": false
+  },
+  {
+    "build": "jump-font-all",
+    "path": "main.wasm",
+    "bytes": 159876,
+    "sha256": "849c5465336a405932ae505b430fb109dce32968328c5fddc74e20fd57d63d37",
+    "timing_trace": false
+  },
+  {
+    "build": "jump-font-all",
+    "path": "main.esp32-s3.aot",
+    "bytes": 428260,
+    "sha256": "cad64401a98c28f5ada064fb250ee79d53ac745ecb38b7a76082277695b470b6",
+    "timing_trace": false
+  },
+  {
+    "build": "jump-font-device",
+    "path": "pxa-jump-jump-3d-cpp.pxa",
+    "bytes": 1439279,
+    "sha256": "2721dd26835e419b13ed8e40aa136f6e26d68ffac79b71fc19605961153261b8",
+    "timing_trace": false
+  },
+  {
+    "build": "jump-font-device",
+    "path": "main.esp32-s3.aot",
+    "bytes": 428260,
+    "sha256": "cad64401a98c28f5ada064fb250ee79d53ac745ecb38b7a76082277695b470b6",
+    "timing_trace": false
+  }
+]

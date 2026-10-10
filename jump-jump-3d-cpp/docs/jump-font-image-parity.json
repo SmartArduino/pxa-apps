@@ -1,0 +1,50 @@
+[
+  {
+    "screen": "touch",
+    "size": [
+      296,
+      240
+    ],
+    "different_pixels": 0
+  },
+  {
+    "screen": "mosaico",
+    "size": [
+      480,
+      480
+    ],
+    "different_pixels": 0
+  },
+  {
+    "screen": "round",
+    "size": [
+      176,
+      176
+    ],
+    "different_pixels": 0
+  },
+  {
+    "screen": "portrait",
+    "size": [
+      320,
+      480
+    ],
+    "different_pixels": 0
+  },
+  {
+    "screen": "wide",
+    "size": [
+      800,
+      480
+    ],
+    "different_pixels": 0
+  },
+  {
+    "screen": "tall",
+    "size": [
+      480,
+      800
+    ],
+    "different_pixels": 0
+  }
+]
