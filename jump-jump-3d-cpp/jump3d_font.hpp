@@ -37,6 +37,8 @@ typedef struct {
 /* Selects the tier used by every face (0 compact, 1 standard, 2 large). */
 void j3_font_set_tier(uint8_t tier);
 uint8_t j3_font_tier(void);
+const j3_font_face_t& j3_font_face(uint8_t font);
+const char* j3_font_asset_path(uint8_t font);
 
 /* Uploads the selected tier's three atlases into slots 0..2. `scratch` must hold
  * the largest atlas plus the upload header. */

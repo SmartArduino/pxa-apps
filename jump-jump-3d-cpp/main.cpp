@@ -69,8 +69,10 @@ struct JumpJump {
             auto upload=frame_memory.upload();auto palette=frame_memory.palette();
             j3_palette_build(palette.data());scheme=uint8_t(g_game.jump_count/15%J3_BG_SCHEMES);
             if(!j3_render_upload_resources(*renderer,upload.data(),upload.size(),palette.data(),scheme)||
-                !pxa::game::Upload(*renderer,std::as_writable_bytes(std::span{upload})).palette(palette,J3_LIGHT_LEVELS)||
-                !j3_font_upload(*renderer,upload.data(),upload.size())){
+                !pxa::game::Upload(*renderer,std::as_writable_bytes(std::span{upload})).palette(palette,J3_LIGHT_LEVELS)){
+                renderer.reset();continue;
+            }
+            auto fonts=co_await load_fonts();if(!fonts){
                 renderer.reset();continue;
             }
             (void)context->clock().set_period(TICK_MS);stepper.reset();initializing=false;draw_frame();
@@ -78,6 +80,23 @@ struct JumpJump {
             (void)context->log().write(pxa::LogLevel::info,msg);co_return pxa::Result<void>{};
         }
         initializing=false;co_return std::unexpected(pxa::Error::limit_exceeded);
+    }
+    pxa::Task<void> load_fonts(){
+        for(uint8_t font=0;font<J3_FONT_FACES;++font){
+            const auto& face=j3_font_face(font);
+            auto asset=co_await context->assets().load(pxa::AssetKind::texture,j3_font_asset_path(font));
+            if(!asset)co_return std::unexpected(asset.error());
+            if(asset->descriptor().width!=face.atlas_width||asset->descriptor().height!=face.atlas_height)
+                co_return std::unexpected(pxa::Error::protocol_error);
+            auto bound=renderer->bind_asset(*asset,{font});if(!bound)co_return bound;
+        }
+        co_return pxa::Result<void>{};
+    }
+    pxa::Task<void> reload_fonts(){
+        initializing=true;
+        auto fonts=co_await load_fonts();initializing=false;
+        if(!fonts){renderer.reset();co_return fonts;}
+        draw_frame();co_return pxa::Result<void>{};
     }
     void draw_frame(){if(!renderer||initializing||!context->foreground())return;
         auto draw=frame_memory.draw();
@@ -109,7 +128,12 @@ struct JumpJump {
         if(event.service==3&&event.opcode==0x8002){if(auto metrics=pxa::ui::decode_display_metrics(event.payload)){
             bool resize=metrics->width!=display.width||metrics->height!=display.height;display=*metrics;
             if(resize&&!initializing){scale_shift=J3_FORCE_SCALE_SHIFT>=0?J3_FORCE_SCALE_SHIFT:0;quality={};(void)context->tasks().start(initialize());}
-            else if(renderer){auto upload=frame_memory.upload();j3_render_adapt(&render,display);(void)j3_font_upload(*renderer,upload.data(),upload.size());draw_frame();}}
+            else if(renderer&&!initializing){const auto previous_tier=j3_font_tier();j3_render_adapt(&render,display);
+                if(previous_tier!=j3_font_tier()){
+                    auto started=context->tasks().start(reload_fonts());
+                    if(!started){j3_font_set_tier(previous_tier);render.big_cell_h=j3_font_cell_height(J3_FONT_BIG);
+                        (void)context->log().write(pxa::LogLevel::warning,"J3CPP font reload deferred");draw_frame();}
+                }else draw_frame();}}
             return true;}
         if(event.service!=4||event.opcode!=0x8001||event.payload.size()!=8)return false;
         auto now=pxa::wire::get64(event.payload.data());j3_audio_tick(&g_audio,now);

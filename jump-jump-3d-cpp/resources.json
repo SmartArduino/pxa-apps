@@ -1,0 +1,67 @@
+{
+  "assets": [
+    {
+      "path": "assets/fonts/j3_font_big_t0.pxr",
+      "kind": "index8",
+      "source": "resources/j3_font_big_t0.index8",
+      "width": 120,
+      "height": 15
+    },
+    {
+      "path": "assets/fonts/j3_font_small_t0.pxr",
+      "kind": "index8",
+      "source": "resources/j3_font_small_t0.index8",
+      "width": 210,
+      "height": 7
+    },
+    {
+      "path": "assets/fonts/j3_font_cjk_t0.pxr",
+      "kind": "index8",
+      "source": "resources/j3_font_cjk_t0.index8",
+      "width": 156,
+      "height": 12
+    },
+    {
+      "path": "assets/fonts/j3_font_big_t1.pxr",
+      "kind": "index8",
+      "source": "resources/j3_font_big_t1.index8",
+      "width": 240,
+      "height": 30
+    },
+    {
+      "path": "assets/fonts/j3_font_small_t1.pxr",
+      "kind": "index8",
+      "source": "resources/j3_font_small_t1.index8",
+      "width": 256,
+      "height": 22
+    },
+    {
+      "path": "assets/fonts/j3_font_cjk_t1.pxr",
+      "kind": "index8",
+      "source": "resources/j3_font_cjk_t1.index8",
+      "width": 208,
+      "height": 16
+    },
+    {
+      "path": "assets/fonts/j3_font_big_t2.pxr",
+      "kind": "index8",
+      "source": "resources/j3_font_big_t2.index8",
+      "width": 243,
+      "height": 82
+    },
+    {
+      "path": "assets/fonts/j3_font_small_t2.pxr",
+      "kind": "index8",
+      "source": "resources/j3_font_small_t2.index8",
+      "width": 253,
+      "height": 30
+    },
+    {
+      "path": "assets/fonts/j3_font_cjk_t2.pxr",
+      "kind": "index8",
+      "source": "resources/j3_font_cjk_t2.index8",
+      "width": 242,
+      "height": 44
+    }
+  ]
+}

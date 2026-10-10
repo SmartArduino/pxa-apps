@@ -8,13 +8,14 @@ parser.add_argument('--workspace',type=Path,default=Path.cwd())
 parser.add_argument('--artifacts',type=Path,required=True)
 parser.add_argument('--native-build',type=Path,required=True)
 parser.add_argument('--output',type=Path,required=True)
+parser.add_argument('--games',choices=['jump','pixel'],nargs='+',default=['jump','pixel'])
 parser.add_argument('--endpoint',default='unix:/tmp/pxa-simulator-1000/pai-touch@cpp-games.sock')
 parser.add_argument('--control',default='/tmp/pxa-simulator-1000/pai-touch@cpp-games.control.sock')
 args=parser.parse_args();root=args.workspace.resolve();out=args.output.resolve();out.mkdir(parents=True,exist_ok=True)
 state=out/'state';state.mkdir(exist_ok=True);sock=args.control;endpoint=args.endpoint
 variants=[('touch',296,240,160,58,False),('mosaico',480,480,305,58,False),('round',176,176,160,0,True),('portrait',320,480,240,24,False),('wide',800,480,160,0,False),('tall',480,800,320,48,False)]
 report=[]
-for game in ['jump','pixel']:
+for game in args.games:
  for name,w,h,dpi,corner,round_ in variants:
   directory=out/f'{game}-{name}';directory.mkdir(exist_ok=True)
   package=args.artifacts.resolve()/f'{game}-all'/('pxa-jump-jump-3d-cpp'if game=='jump'else'pxa-pixel-dungeon-cpp')

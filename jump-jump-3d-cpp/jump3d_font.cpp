@@ -2,7 +2,11 @@
 
 #include <stddef.h>
 
+#if J3_EMBED_FONTS
 #include "jump3d_font_data.hpp"
+#else
+#include "jump3d_font_metrics.hpp"
+#endif
 
 namespace jump {
 
@@ -34,6 +38,16 @@ void j3_font_set_tier(uint8_t tier) {
 }
 
 uint8_t j3_font_tier(void) { return g_tier; }
+
+const j3_font_face_t& j3_font_face(uint8_t font) { return *face_for(font); }
+
+const char* j3_font_asset_path(uint8_t font) {
+    static constexpr const char* paths[3][J3_FONT_FACES]{
+        {"assets/fonts/j3_font_big_t0.pxr","assets/fonts/j3_font_small_t0.pxr","assets/fonts/j3_font_cjk_t0.pxr"},
+        {"assets/fonts/j3_font_big_t1.pxr","assets/fonts/j3_font_small_t1.pxr","assets/fonts/j3_font_cjk_t1.pxr"},
+        {"assets/fonts/j3_font_big_t2.pxr","assets/fonts/j3_font_small_t2.pxr","assets/fonts/j3_font_cjk_t2.pxr"}};
+    return paths[g_tier][font<J3_FONT_FACES?font:J3_FONT_BIG];
+}
 
 static int bytes_equal(const char *left, const char *right, int length) {
     int index;
