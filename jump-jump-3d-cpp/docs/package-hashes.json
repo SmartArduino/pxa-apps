@@ -18,5 +18,9 @@
   "multi_arch_container": {
     "bytes": 2164635,
     "sha256": "9fee71a68c7075e6916df3a5d2343e02efd4734383bc4b75a27cdc165b0b7f5c"
+  },
+  "esp32s3_device_container": {
+    "bytes": 1428288,
+    "sha256": "8833d93441cd87645c98a7e7f4fba3efe6999b148c955ecb3223f25756ef09ae"
   }
 }
