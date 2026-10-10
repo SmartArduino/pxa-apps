@@ -17,6 +17,7 @@
 | 图集→存档目录→音频的串行初始化 | 降低同时在途资源请求 | 固定任务池；完整签名包启动无资源失败 |
 | 第二团标题火焰使用 `((frame+12)%24)/8` | 修复原版动画帧可能超出图集范围 | 无新增资源；全部 24 个标题动画位置经过 Host 验证 |
 | 字体使用 Host 图集元数据，不检查已外置的 Guest 像素指针 | 修复外置资源版本文字消失 | 无新增字图；实际签名 AOT 截图验证 |
+| SDK 手柄解码按真实 Host 协议读取事件标志 | 修复将 flags 当作数据长度导致所有真实手柄输入被丢弃 | 不新增存储；Host 常量单元测试及三轮签名 AOT 手柄搜索/落盘验证通过 |
 
 九个图集原始 texel 没有重新量化或降低分辨率。保留中国大陆字形的 Source Han Sans CN 黑体及原来的抗锯齿字图。像素游戏使用整数缩放；高 DPI 下放大像素而不使用模糊滤镜。地图、HUD 和菜单都画进同一 GameRender 目标，仅一个透明 Canvas 接收输入，没有额外全屏 UI 帧缓冲。
 
@@ -35,9 +36,24 @@
 
 两版相同命令经过同一个 Host 内核；不同轮次光栅时间的波动不能作为语言收益。这里没有测 AOT Guest 更新、设备队列或实际 LCD FPS。240×240 高 DPI 版本也不能直接与 C 版 480×480 的结果比较：内部像素量不同。正式帧率验收必须固定同一内部分辨率和画质。
 
+**固定存档的签名 AOT 游戏比较**
+
+同一普通新游戏存档，种子 `0x51ed270b`、战士、第一层、296×240 中文、160 DPI、相同画质/地图布局、同一 Host、完整音乐启用。两版各冷启动三次，实际从标题进入存档槽并加载；预热 3 秒后，每 240 ms 触控搜索一次，共 12 次，测量至少 4 秒的实际呈现通知。随后切入后台触发保存，检查真实私有存储的 CRC、快照世代与存档内容。搜索按原规则消耗两个回合，六次运行均达到 24 回合；最终存档 SHA-256 全部为 `066324e8c62dceee57a91a20067995d85676055616eeb3704b59259ec43700df`。没有使用只推进提交计数的空闲场景。原始汇总见 [aot-gameplay.json](aot-gameplay.json)。
+
+| 三次运行的中位数 | C | C++ |
+|---|---:|---:|
+| 桌面实际呈现 FPS | 24.39 | 25.21 |
+| 时钟帧 CPU：Guest tick、Host 及下一轮 LVGL | 2,739 µs | 2,945.5 µs |
+| 时钟帧 Host 光栅 | 287.5 µs | 287 µs |
+| 同步触控注入及事件处理 CPU | 159.5 µs | 165.5 µs |
+
+CPU 是桌面经过时间，存在调度波动；本轮未证明 C++ 时钟帧 CPU 更低。呈现计数覆盖输入、动画和空闲阶段，光栅/CPU 分位数只覆盖观察到的时钟帧；输入处理单独记录，不能把两者相加当作完整帧耗时。这是桌面 AOT 性能证据，不包含设备排队或 LCD 传输，也不是纯语言收益。两版输入期间会覆盖尚未绘制的帧，结束计数各约 13–14 帧，不能隐去废弃帧。
+
+手柄另做三轮 C++ 集成验证，同样 12 次搜索且落盘存档与触控结果完全一致，见 [aot-controller.json](aot-controller.json)。原 C 版把手柄订阅放在 root 1，却仅处理 node 2 的事件；真实 Host 会拒绝 node 2 的手柄注入，root 1 事件又被应用过滤。因此没有把无效的 C 手柄负载作为性能基线，也没有修改 C 参考实现来掩盖差异。
+
 **签名 AOT 与内存**
 
-真实桌面 AOT 冷启动，296×240 中文标题，预热 3 秒，三次独立进程。标题静态时不重复绘制，这是按需渲染行为，不能用其空闲 FPS 评价游戏性能。原始值见 [aot-performance.json](aot-performance.json)。运行峰值计数随每个进程重新建立，不使用历史累计峰值。
+真实桌面 AOT 冷启动，296×240 中文标题，预热 3 秒，三次独立进程。标题静态时不重复绘制，这是按需渲染行为，不能用其空闲 FPS 评价游戏性能。原始值见 [aot-performance.json](aot-performance.json)。运行峰值计数随每个进程重新建立，不使用历史累计峰值。手柄修正后的固定存档游戏测试再次得到相同的线性内存、WAMR 与资源预算稳定/峰值值。
 
 | 桌面分类（字节） | C 稳定 / 本次峰值 | C++ 稳定 / 本次峰值 |
 |---|---:|---:|
@@ -56,6 +72,7 @@ Asset 缓存增大是静态图集从 Guest/直接上传移入 Host 资源系统�
 **自验证结果**
 
 - 联合原生套件 **7/7**：游戏规则、楼层生成、背包/装备/存档、布局、真实光栅器、SDK helper 与 C 参考比较。ASan/UBSan **5/5**，Release 断言启用。
+- 手柄修正后再次完成联合原生 **7/7**、ASan/UBSan **5/5** 和完整 C++ SDK Host 回归；三次真实 Host 手柄事件重放均落盘 24 回合，与触控存档相同。
 - 签名 AOT 模拟器的两游戏六屏幕矩阵 **12/12**；本应用六组均完成标题→存档槽→职业→进入游戏→等待→背包→暂停→设置→返回标题→退出进程→同一私有目录重新启动→加载已保存槽。检查真实状态转换日志，不只比较截图是否非空。
 - 屏幕矩阵：296×240/160 DPI、480×480/305 DPI、176×176 圆屏、320×480/240 DPI、800×480/160 DPI、480×800/320 DPI。圆角、安全边距和实际渲染尺寸见 [display-matrix.json](display-matrix.json)。
 - 签名 AOT 前后台检查三轮：后台时钟停止、400 ms 内无新增渲染、音乐暂停；恢复渲染和音乐，音乐实例保持相同，见 [aot-lifecycle.json](aot-lifecycle.json)。
@@ -75,6 +92,8 @@ PXA_CPP_GAME_TEST_BUILD="$PWD/local/cpp-game-ports-20261010/asan-build" bash loc
 cmake --build build/simulator/pai-touch --target pxsys_voxel_resources_test --parallel
 python3 local/pxa-apps/common/cpp/tests/reference/run_aot_probe.py --simulator-build build/simulator/pai-touch --artifacts local/cpp-game-ports-20261010 --output local/cpp-game-ports-20261010/aot-check
 python3 local/pxa-apps/common/cpp/tests/reference/run_aot_probe.py --simulator-build build/simulator/pai-touch --artifacts local/cpp-game-ports-20261010 --output local/cpp-game-ports-20261010/lifecycle-check --lifecycle
+python3 local/pxa-apps/common/cpp/tests/reference/run_aot_probe.py --simulator-build build/simulator/pai-touch --artifacts local/cpp-game-ports-20261010 --native-build local/cpp-game-ports-20261010/native-build --pixel-play --output local/cpp-game-ports-20261010/pixel-gameplay-check
+python3 local/pxa-apps/common/cpp/tests/reference/run_aot_probe.py --simulator-build build/simulator/pai-touch --artifacts local/cpp-game-ports-20261010 --native-build local/cpp-game-ports-20261010/native-build --pixel-play --controller --output local/cpp-game-ports-20261010/pixel-controller-check
 ```
 
 显示矩阵使用独立 simulator PXADB 服务，避免干扰默认实例。先构建两游戏的 `*-all` 及原生测试，再执行：
@@ -98,6 +117,6 @@ python3 tools/measure-device-voxel.py --port /dev/ttyACM0 --app pxa-pixel-dungeo
 
 **尚未完成的真机验收**
 
-pai-touch 数据分区首次诊断只剩 471,040 B，复位后最新为 1,110,016 B；仍小于本应用 ESP32-S3 容器的 1,651,136 B，且安装还需解包空间。esp-mosaico 上传 Jump C++ 包约 90% 后返回 `file_write_failed`，旧 Host 未返回 errno，空间不足只是推断。两个 C++ 游戏尚未成功在真机安装，未宣称 FPS ≥ C 版。保留全部已有应用与数据，没有通过卸载或清空存储绕过空间限制。
+pai-touch 数据分区首次诊断只剩 471,040 B，复位后最新为 1,110,016 B；仍小于本应用 ESP32-S3 容器的 1,651,007 B，且安装还需解包空间。esp-mosaico 上传 Jump C++ 包约 90% 后返回 `file_write_failed`，旧 Host 未返回 errno，空间不足只是推断。两个 C++ 游戏尚未成功在真机安装，未宣称 FPS ≥ C 版。保留全部已有应用与数据，没有通过卸载或清空存储绕过空间限制。
 
 pai-touch 已做授权范围内的应用分区固件更新，增加空间/写错误诊断和 Host 光栅优化；未改分区表或数据分区。固件及原 C Jump 的真实显示基线详见 [Jump 报告](../../jump-jump-3d-cpp/docs/2026-10-10-validation.zh-CN.md)。仍需在足够安装空间下验证实际显示 FPS、更新/编码/提交/光栅/排队/显示耗时、持续音频、冷/热峰值、前后台及重复启动。许可证与作者归属保留在 [LICENSE.txt](../LICENSE.txt) 和 [README](../README.md)。

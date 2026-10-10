@@ -1,26 +1,26 @@
 {
   "main.esp32-s31.aot": {
-    "bytes": 824524,
-    "sha256": "6719ee026123bb12bbd2ac19060059f3ea220374726120b558c8ff1837255f42"
+    "bytes": 824648,
+    "sha256": "af3caf9f58a1b1bfac46dd275bd8240bd2c9e4123b35cf1eb8bbbcb86777177b"
   },
   "main.linux-x86_64.aot": {
-    "bytes": 416528,
-    "sha256": "dc9038a66f73df7d4c6b7116f4d7a4ca093e2da64a80555949bb4374732e9eaf"
+    "bytes": 416496,
+    "sha256": "4ed7d8dfee325e5eb290af8dae4543759783c4b87f2380e40bce80de56951a18"
   },
   "main.wasm": {
-    "bytes": 263980,
-    "sha256": "cab1e68868d9cda1cac51bcc9590d37da4d27a29770e9c00c5973341424183b1"
+    "bytes": 263991,
+    "sha256": "dc28516a3e950eb6e82c21ff1da60d995748f0443776f4975508911ede1a85c3"
   },
   "main.esp32-s3.aot": {
-    "bytes": 659488,
-    "sha256": "1736bb51f27287d3400c65f0563323286d2fadac9017eca0e15bdc4137db29aa"
+    "bytes": 659520,
+    "sha256": "5564e0d52748ea5fc71e61411d634ddd4a4a8cbf2e7189f2ba4b45daf2daeb36"
   },
   "multi_arch_container": {
-    "bytes": 2691956,
-    "sha256": "b259e1b6dafa2453479d9b659e8b7813b5b2f1e655140d11dce3aa8531171d02"
+    "bytes": 2691769,
+    "sha256": "9162f09a6b889530e79302480927e2113e3f7cf5d3fd89a12269b085732f4e14"
   },
   "esp32s3_device_container": {
-    "bytes": 1651136,
-    "sha256": "28532a7b918c92c71041fe80607b5acb4c295cf4c458b645c238aae1887d7d66"
+    "bytes": 1651007,
+    "sha256": "af6b0e196f015bc13caa6753acd6550053e8c5f9a56e6ec0325d99f3cd5dbb79"
   }
 }
