@@ -1,0 +1,1110 @@
+[
+  {
+    "idle": {
+      "heap": {
+        "scope": "heap",
+        "sram_total": "320987",
+        "sram_free": "36823",
+        "sram_min": "6304",
+        "sram_largest": "19456",
+        "psram_total": "8358572",
+        "psram_free": "6551580",
+        "psram_min": "4410572",
+        "psram_largest": "5636096"
+      },
+      "budget": {
+        "scope": "budget",
+        "internal": "27468",
+        "external": "16516",
+        "peak_internal": "45372",
+        "peak_external": "271834",
+        "temporary_peak_internal": "0",
+        "temporary_peak_external": "49686",
+        "fixed": "2224",
+        "denied": "0",
+        "allocation_failures": "0"
+      },
+      "kind:raster": {
+        "scope": "kind",
+        "name": "raster",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:image": {
+        "scope": "kind",
+        "name": "image",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:audio": {
+        "scope": "kind",
+        "name": "audio",
+        "internal": "0",
+        "external": "16392"
+      },
+      "kind:temporary": {
+        "scope": "kind",
+        "name": "temporary",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:metadata": {
+        "scope": "kind",
+        "name": "metadata",
+        "internal": "27468",
+        "external": "124"
+      },
+      "kind:frame": {
+        "scope": "kind",
+        "name": "frame",
+        "internal": "0",
+        "external": "0"
+      },
+      "surface": {
+        "scope": "surface",
+        "frame": "0",
+        "scratch": "0",
+        "mailbox": "0",
+        "probe": "0",
+        "peak_total": "573696"
+      }
+    },
+    "shelf": {
+      "heap": {
+        "scope": "heap",
+        "sram_total": "320987",
+        "sram_free": "35631",
+        "sram_min": "26263",
+        "sram_largest": "19456",
+        "psram_total": "8358572",
+        "psram_free": "5594472",
+        "psram_min": "4496256",
+        "psram_largest": "3735552"
+      },
+      "budget": {
+        "scope": "budget",
+        "internal": "27468",
+        "external": "16630",
+        "peak_internal": "45372",
+        "peak_external": "271834",
+        "temporary_peak_internal": "0",
+        "temporary_peak_external": "49686",
+        "fixed": "2224",
+        "denied": "0",
+        "allocation_failures": "0"
+      },
+      "kind:raster": {
+        "scope": "kind",
+        "name": "raster",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:image": {
+        "scope": "kind",
+        "name": "image",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:audio": {
+        "scope": "kind",
+        "name": "audio",
+        "internal": "0",
+        "external": "16392"
+      },
+      "kind:temporary": {
+        "scope": "kind",
+        "name": "temporary",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:metadata": {
+        "scope": "kind",
+        "name": "metadata",
+        "internal": "27468",
+        "external": "238"
+      },
+      "kind:frame": {
+        "scope": "kind",
+        "name": "frame",
+        "internal": "0",
+        "external": "0"
+      },
+      "surface": {
+        "scope": "surface",
+        "frame": "0",
+        "scratch": "0",
+        "mailbox": "0",
+        "probe": "0",
+        "peak_total": "573696"
+      }
+    },
+    "initialization_end": {
+      "heap": {
+        "scope": "heap",
+        "sram_total": "320987",
+        "sram_free": "35631",
+        "sram_min": "26263",
+        "sram_largest": "19456",
+        "psram_total": "8358572",
+        "psram_free": "5594472",
+        "psram_min": "4496256",
+        "psram_largest": "3735552"
+      },
+      "budget": {
+        "scope": "budget",
+        "internal": "27468",
+        "external": "16630",
+        "peak_internal": "45372",
+        "peak_external": "271834",
+        "temporary_peak_internal": "0",
+        "temporary_peak_external": "49686",
+        "fixed": "2224",
+        "denied": "0",
+        "allocation_failures": "0"
+      },
+      "kind:raster": {
+        "scope": "kind",
+        "name": "raster",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:image": {
+        "scope": "kind",
+        "name": "image",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:audio": {
+        "scope": "kind",
+        "name": "audio",
+        "internal": "0",
+        "external": "16392"
+      },
+      "kind:temporary": {
+        "scope": "kind",
+        "name": "temporary",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:metadata": {
+        "scope": "kind",
+        "name": "metadata",
+        "internal": "27468",
+        "external": "238"
+      },
+      "kind:frame": {
+        "scope": "kind",
+        "name": "frame",
+        "internal": "0",
+        "external": "0"
+      },
+      "surface": {
+        "scope": "surface",
+        "frame": "0",
+        "scratch": "0",
+        "mailbox": "0",
+        "probe": "0",
+        "peak_total": "573696"
+      }
+    },
+    "preferences": {
+      "heap": {
+        "scope": "heap",
+        "sram_total": "320987",
+        "sram_free": "35631",
+        "sram_min": "31015",
+        "sram_largest": "19456",
+        "psram_total": "8358572",
+        "psram_free": "5595504",
+        "psram_min": "5571456",
+        "psram_largest": "3735552"
+      },
+      "budget": {
+        "scope": "budget",
+        "internal": "27468",
+        "external": "16630",
+        "peak_internal": "45372",
+        "peak_external": "271834",
+        "temporary_peak_internal": "0",
+        "temporary_peak_external": "49686",
+        "fixed": "2224",
+        "denied": "0",
+        "allocation_failures": "0"
+      },
+      "kind:raster": {
+        "scope": "kind",
+        "name": "raster",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:image": {
+        "scope": "kind",
+        "name": "image",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:audio": {
+        "scope": "kind",
+        "name": "audio",
+        "internal": "0",
+        "external": "16392"
+      },
+      "kind:temporary": {
+        "scope": "kind",
+        "name": "temporary",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:metadata": {
+        "scope": "kind",
+        "name": "metadata",
+        "internal": "27468",
+        "external": "238"
+      },
+      "kind:frame": {
+        "scope": "kind",
+        "name": "frame",
+        "internal": "0",
+        "external": "0"
+      },
+      "surface": {
+        "scope": "surface",
+        "frame": "0",
+        "scratch": "0",
+        "mailbox": "0",
+        "probe": "0",
+        "peak_total": "573696"
+      }
+    },
+    "steady_end": {
+      "heap": {
+        "scope": "heap",
+        "sram_total": "320987",
+        "sram_free": "35631",
+        "sram_min": "16579",
+        "sram_largest": "19456",
+        "psram_total": "8358572",
+        "psram_free": "5594028",
+        "psram_min": "5147176",
+        "psram_largest": "3735552"
+      },
+      "budget": {
+        "scope": "budget",
+        "internal": "27468",
+        "external": "16630",
+        "peak_internal": "45372",
+        "peak_external": "271834",
+        "temporary_peak_internal": "0",
+        "temporary_peak_external": "49686",
+        "fixed": "2224",
+        "denied": "0",
+        "allocation_failures": "0"
+      },
+      "kind:raster": {
+        "scope": "kind",
+        "name": "raster",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:image": {
+        "scope": "kind",
+        "name": "image",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:audio": {
+        "scope": "kind",
+        "name": "audio",
+        "internal": "0",
+        "external": "16392"
+      },
+      "kind:temporary": {
+        "scope": "kind",
+        "name": "temporary",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:metadata": {
+        "scope": "kind",
+        "name": "metadata",
+        "internal": "27468",
+        "external": "238"
+      },
+      "kind:frame": {
+        "scope": "kind",
+        "name": "frame",
+        "internal": "0",
+        "external": "0"
+      },
+      "surface": {
+        "scope": "surface",
+        "frame": "0",
+        "scratch": "0",
+        "mailbox": "0",
+        "probe": "0",
+        "peak_total": "573696"
+      }
+    },
+    "reading": {
+      "heap": {
+        "scope": "heap",
+        "sram_total": "320987",
+        "sram_free": "35631",
+        "sram_min": "16579",
+        "sram_largest": "19456",
+        "psram_total": "8358572",
+        "psram_free": "5598876",
+        "psram_min": "5150604",
+        "psram_largest": "3735552"
+      },
+      "budget": {
+        "scope": "budget",
+        "internal": "27468",
+        "external": "16630",
+        "peak_internal": "45372",
+        "peak_external": "271834",
+        "temporary_peak_internal": "0",
+        "temporary_peak_external": "49686",
+        "fixed": "2224",
+        "denied": "0",
+        "allocation_failures": "0"
+      },
+      "kind:raster": {
+        "scope": "kind",
+        "name": "raster",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:image": {
+        "scope": "kind",
+        "name": "image",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:audio": {
+        "scope": "kind",
+        "name": "audio",
+        "internal": "0",
+        "external": "16392"
+      },
+      "kind:temporary": {
+        "scope": "kind",
+        "name": "temporary",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:metadata": {
+        "scope": "kind",
+        "name": "metadata",
+        "internal": "27468",
+        "external": "238"
+      },
+      "kind:frame": {
+        "scope": "kind",
+        "name": "frame",
+        "internal": "0",
+        "external": "0"
+      },
+      "surface": {
+        "scope": "surface",
+        "frame": "0",
+        "scratch": "0",
+        "mailbox": "0",
+        "probe": "0",
+        "peak_total": "573696"
+      }
+    },
+    "reading_end": {
+      "heap": {
+        "scope": "heap",
+        "sram_total": "320987",
+        "sram_free": "32547",
+        "sram_min": "12991",
+        "sram_largest": "19456",
+        "psram_total": "8358572",
+        "psram_free": "6640060",
+        "psram_min": "5150604",
+        "psram_largest": "5636096"
+      },
+      "budget": {
+        "scope": "budget",
+        "internal": "27468",
+        "external": "16516",
+        "peak_internal": "45372",
+        "peak_external": "271834",
+        "temporary_peak_internal": "0",
+        "temporary_peak_external": "49686",
+        "fixed": "2224",
+        "denied": "0",
+        "allocation_failures": "0"
+      },
+      "kind:raster": {
+        "scope": "kind",
+        "name": "raster",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:image": {
+        "scope": "kind",
+        "name": "image",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:audio": {
+        "scope": "kind",
+        "name": "audio",
+        "internal": "0",
+        "external": "16392"
+      },
+      "kind:temporary": {
+        "scope": "kind",
+        "name": "temporary",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:metadata": {
+        "scope": "kind",
+        "name": "metadata",
+        "internal": "27468",
+        "external": "124"
+      },
+      "kind:frame": {
+        "scope": "kind",
+        "name": "frame",
+        "internal": "0",
+        "external": "0"
+      },
+      "surface": {
+        "scope": "surface",
+        "frame": "0",
+        "scratch": "0",
+        "mailbox": "0",
+        "probe": "0",
+        "peak_total": "573696"
+      }
+    },
+    "after_stop": {
+      "heap": {
+        "scope": "heap",
+        "sram_total": "320987",
+        "sram_free": "36735",
+        "sram_min": "6304",
+        "sram_largest": "19456",
+        "psram_total": "8358572",
+        "psram_free": "6640356",
+        "psram_min": "4410572",
+        "psram_largest": "5636096"
+      },
+      "budget": {
+        "scope": "budget",
+        "internal": "27468",
+        "external": "16516",
+        "peak_internal": "45372",
+        "peak_external": "271834",
+        "temporary_peak_internal": "0",
+        "temporary_peak_external": "49686",
+        "fixed": "2224",
+        "denied": "0",
+        "allocation_failures": "0"
+      },
+      "kind:raster": {
+        "scope": "kind",
+        "name": "raster",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:image": {
+        "scope": "kind",
+        "name": "image",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:audio": {
+        "scope": "kind",
+        "name": "audio",
+        "internal": "0",
+        "external": "16392"
+      },
+      "kind:temporary": {
+        "scope": "kind",
+        "name": "temporary",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:metadata": {
+        "scope": "kind",
+        "name": "metadata",
+        "internal": "27468",
+        "external": "124"
+      },
+      "kind:frame": {
+        "scope": "kind",
+        "name": "frame",
+        "internal": "0",
+        "external": "0"
+      },
+      "surface": {
+        "scope": "surface",
+        "frame": "0",
+        "scratch": "0",
+        "mailbox": "0",
+        "probe": "0",
+        "peak_total": "573696"
+      }
+    }
+  },
+  {
+    "idle": {
+      "heap": {
+        "scope": "heap",
+        "sram_total": "320987",
+        "sram_free": "36787",
+        "sram_min": "6304",
+        "sram_largest": "19456",
+        "psram_total": "8358572",
+        "psram_free": "6551508",
+        "psram_min": "4410572",
+        "psram_largest": "5636096"
+      },
+      "budget": {
+        "scope": "budget",
+        "internal": "27468",
+        "external": "16516",
+        "peak_internal": "45372",
+        "peak_external": "271834",
+        "temporary_peak_internal": "0",
+        "temporary_peak_external": "49686",
+        "fixed": "2224",
+        "denied": "0",
+        "allocation_failures": "0"
+      },
+      "kind:raster": {
+        "scope": "kind",
+        "name": "raster",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:image": {
+        "scope": "kind",
+        "name": "image",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:audio": {
+        "scope": "kind",
+        "name": "audio",
+        "internal": "0",
+        "external": "16392"
+      },
+      "kind:temporary": {
+        "scope": "kind",
+        "name": "temporary",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:metadata": {
+        "scope": "kind",
+        "name": "metadata",
+        "internal": "27468",
+        "external": "124"
+      },
+      "kind:frame": {
+        "scope": "kind",
+        "name": "frame",
+        "internal": "0",
+        "external": "0"
+      },
+      "surface": {
+        "scope": "surface",
+        "frame": "0",
+        "scratch": "0",
+        "mailbox": "0",
+        "probe": "0",
+        "peak_total": "573696"
+      }
+    },
+    "shelf": {
+      "heap": {
+        "scope": "heap",
+        "sram_total": "320987",
+        "sram_free": "35631",
+        "sram_min": "26263",
+        "sram_largest": "19456",
+        "psram_total": "8358572",
+        "psram_free": "5594348",
+        "psram_min": "4496160",
+        "psram_largest": "3735552"
+      },
+      "budget": {
+        "scope": "budget",
+        "internal": "27468",
+        "external": "16630",
+        "peak_internal": "45372",
+        "peak_external": "271834",
+        "temporary_peak_internal": "0",
+        "temporary_peak_external": "49686",
+        "fixed": "2224",
+        "denied": "0",
+        "allocation_failures": "0"
+      },
+      "kind:raster": {
+        "scope": "kind",
+        "name": "raster",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:image": {
+        "scope": "kind",
+        "name": "image",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:audio": {
+        "scope": "kind",
+        "name": "audio",
+        "internal": "0",
+        "external": "16392"
+      },
+      "kind:temporary": {
+        "scope": "kind",
+        "name": "temporary",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:metadata": {
+        "scope": "kind",
+        "name": "metadata",
+        "internal": "27468",
+        "external": "238"
+      },
+      "kind:frame": {
+        "scope": "kind",
+        "name": "frame",
+        "internal": "0",
+        "external": "0"
+      },
+      "surface": {
+        "scope": "surface",
+        "frame": "0",
+        "scratch": "0",
+        "mailbox": "0",
+        "probe": "0",
+        "peak_total": "573696"
+      }
+    },
+    "initialization_end": {
+      "heap": {
+        "scope": "heap",
+        "sram_total": "320987",
+        "sram_free": "35631",
+        "sram_min": "26263",
+        "sram_largest": "19456",
+        "psram_total": "8358572",
+        "psram_free": "5594348",
+        "psram_min": "4496160",
+        "psram_largest": "3735552"
+      },
+      "budget": {
+        "scope": "budget",
+        "internal": "27468",
+        "external": "16630",
+        "peak_internal": "45372",
+        "peak_external": "271834",
+        "temporary_peak_internal": "0",
+        "temporary_peak_external": "49686",
+        "fixed": "2224",
+        "denied": "0",
+        "allocation_failures": "0"
+      },
+      "kind:raster": {
+        "scope": "kind",
+        "name": "raster",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:image": {
+        "scope": "kind",
+        "name": "image",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:audio": {
+        "scope": "kind",
+        "name": "audio",
+        "internal": "0",
+        "external": "16392"
+      },
+      "kind:temporary": {
+        "scope": "kind",
+        "name": "temporary",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:metadata": {
+        "scope": "kind",
+        "name": "metadata",
+        "internal": "27468",
+        "external": "238"
+      },
+      "kind:frame": {
+        "scope": "kind",
+        "name": "frame",
+        "internal": "0",
+        "external": "0"
+      },
+      "surface": {
+        "scope": "surface",
+        "frame": "0",
+        "scratch": "0",
+        "mailbox": "0",
+        "probe": "0",
+        "peak_total": "573696"
+      }
+    },
+    "preferences": {
+      "heap": {
+        "scope": "heap",
+        "sram_total": "320987",
+        "sram_free": "35631",
+        "sram_min": "30979",
+        "sram_largest": "19456",
+        "psram_total": "8358572",
+        "psram_free": "5595460",
+        "psram_min": "5571460",
+        "psram_largest": "3735552"
+      },
+      "budget": {
+        "scope": "budget",
+        "internal": "27468",
+        "external": "16630",
+        "peak_internal": "45372",
+        "peak_external": "271834",
+        "temporary_peak_internal": "0",
+        "temporary_peak_external": "49686",
+        "fixed": "2224",
+        "denied": "0",
+        "allocation_failures": "0"
+      },
+      "kind:raster": {
+        "scope": "kind",
+        "name": "raster",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:image": {
+        "scope": "kind",
+        "name": "image",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:audio": {
+        "scope": "kind",
+        "name": "audio",
+        "internal": "0",
+        "external": "16392"
+      },
+      "kind:temporary": {
+        "scope": "kind",
+        "name": "temporary",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:metadata": {
+        "scope": "kind",
+        "name": "metadata",
+        "internal": "27468",
+        "external": "238"
+      },
+      "kind:frame": {
+        "scope": "kind",
+        "name": "frame",
+        "internal": "0",
+        "external": "0"
+      },
+      "surface": {
+        "scope": "surface",
+        "frame": "0",
+        "scratch": "0",
+        "mailbox": "0",
+        "probe": "0",
+        "peak_total": "573696"
+      }
+    },
+    "steady_end": {
+      "heap": {
+        "scope": "heap",
+        "sram_total": "320987",
+        "sram_free": "35631",
+        "sram_min": "16579",
+        "sram_largest": "19456",
+        "psram_total": "8358572",
+        "psram_free": "5594028",
+        "psram_min": "5147100",
+        "psram_largest": "3735552"
+      },
+      "budget": {
+        "scope": "budget",
+        "internal": "27468",
+        "external": "16630",
+        "peak_internal": "45372",
+        "peak_external": "271834",
+        "temporary_peak_internal": "0",
+        "temporary_peak_external": "49686",
+        "fixed": "2224",
+        "denied": "0",
+        "allocation_failures": "0"
+      },
+      "kind:raster": {
+        "scope": "kind",
+        "name": "raster",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:image": {
+        "scope": "kind",
+        "name": "image",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:audio": {
+        "scope": "kind",
+        "name": "audio",
+        "internal": "0",
+        "external": "16392"
+      },
+      "kind:temporary": {
+        "scope": "kind",
+        "name": "temporary",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:metadata": {
+        "scope": "kind",
+        "name": "metadata",
+        "internal": "27468",
+        "external": "238"
+      },
+      "kind:frame": {
+        "scope": "kind",
+        "name": "frame",
+        "internal": "0",
+        "external": "0"
+      },
+      "surface": {
+        "scope": "surface",
+        "frame": "0",
+        "scratch": "0",
+        "mailbox": "0",
+        "probe": "0",
+        "peak_total": "573696"
+      }
+    },
+    "reading": {
+      "heap": {
+        "scope": "heap",
+        "sram_total": "320987",
+        "sram_free": "35631",
+        "sram_min": "16579",
+        "sram_largest": "19456",
+        "psram_total": "8358572",
+        "psram_free": "5598748",
+        "psram_min": "5150376",
+        "psram_largest": "3735552"
+      },
+      "budget": {
+        "scope": "budget",
+        "internal": "27468",
+        "external": "16630",
+        "peak_internal": "45372",
+        "peak_external": "271834",
+        "temporary_peak_internal": "0",
+        "temporary_peak_external": "49686",
+        "fixed": "2224",
+        "denied": "0",
+        "allocation_failures": "0"
+      },
+      "kind:raster": {
+        "scope": "kind",
+        "name": "raster",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:image": {
+        "scope": "kind",
+        "name": "image",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:audio": {
+        "scope": "kind",
+        "name": "audio",
+        "internal": "0",
+        "external": "16392"
+      },
+      "kind:temporary": {
+        "scope": "kind",
+        "name": "temporary",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:metadata": {
+        "scope": "kind",
+        "name": "metadata",
+        "internal": "27468",
+        "external": "238"
+      },
+      "kind:frame": {
+        "scope": "kind",
+        "name": "frame",
+        "internal": "0",
+        "external": "0"
+      },
+      "surface": {
+        "scope": "surface",
+        "frame": "0",
+        "scratch": "0",
+        "mailbox": "0",
+        "probe": "0",
+        "peak_total": "573696"
+      }
+    },
+    "reading_end": {
+      "heap": {
+        "scope": "heap",
+        "sram_total": "320987",
+        "sram_free": "36735",
+        "sram_min": "12991",
+        "sram_largest": "19456",
+        "psram_total": "8358572",
+        "psram_free": "6640236",
+        "psram_min": "5150376",
+        "psram_largest": "5636096"
+      },
+      "budget": {
+        "scope": "budget",
+        "internal": "27468",
+        "external": "16516",
+        "peak_internal": "45372",
+        "peak_external": "271834",
+        "temporary_peak_internal": "0",
+        "temporary_peak_external": "49686",
+        "fixed": "2224",
+        "denied": "0",
+        "allocation_failures": "0"
+      },
+      "kind:raster": {
+        "scope": "kind",
+        "name": "raster",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:image": {
+        "scope": "kind",
+        "name": "image",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:audio": {
+        "scope": "kind",
+        "name": "audio",
+        "internal": "0",
+        "external": "16392"
+      },
+      "kind:temporary": {
+        "scope": "kind",
+        "name": "temporary",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:metadata": {
+        "scope": "kind",
+        "name": "metadata",
+        "internal": "27468",
+        "external": "124"
+      },
+      "kind:frame": {
+        "scope": "kind",
+        "name": "frame",
+        "internal": "0",
+        "external": "0"
+      },
+      "surface": {
+        "scope": "surface",
+        "frame": "0",
+        "scratch": "0",
+        "mailbox": "0",
+        "probe": "0",
+        "peak_total": "573696"
+      }
+    },
+    "after_stop": {
+      "heap": {
+        "scope": "heap",
+        "sram_total": "320987",
+        "sram_free": "36735",
+        "sram_min": "6304",
+        "sram_largest": "19456",
+        "psram_total": "8358572",
+        "psram_free": "6640264",
+        "psram_min": "4410572",
+        "psram_largest": "5636096"
+      },
+      "budget": {
+        "scope": "budget",
+        "internal": "27468",
+        "external": "16516",
+        "peak_internal": "45372",
+        "peak_external": "271834",
+        "temporary_peak_internal": "0",
+        "temporary_peak_external": "49686",
+        "fixed": "2224",
+        "denied": "0",
+        "allocation_failures": "0"
+      },
+      "kind:raster": {
+        "scope": "kind",
+        "name": "raster",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:image": {
+        "scope": "kind",
+        "name": "image",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:audio": {
+        "scope": "kind",
+        "name": "audio",
+        "internal": "0",
+        "external": "16392"
+      },
+      "kind:temporary": {
+        "scope": "kind",
+        "name": "temporary",
+        "internal": "0",
+        "external": "0"
+      },
+      "kind:metadata": {
+        "scope": "kind",
+        "name": "metadata",
+        "internal": "27468",
+        "external": "124"
+      },
+      "kind:frame": {
+        "scope": "kind",
+        "name": "frame",
+        "internal": "0",
+        "external": "0"
+      },
+      "surface": {
+        "scope": "surface",
+        "frame": "0",
+        "scratch": "0",
+        "mailbox": "0",
+        "probe": "0",
+        "peak_total": "573696"
+      }
+    }
+  }
+]

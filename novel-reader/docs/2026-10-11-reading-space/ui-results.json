@@ -1,0 +1,82 @@
+[
+  {
+    "stage": "before",
+    "profile": "296x240-160dpi",
+    "native_ime": true,
+    "local_reading": true,
+    "menu_settings_contents": true,
+    "max_canvas_bytes": 423
+  },
+  {
+    "stage": "before",
+    "profile": "360x480-320dpi",
+    "native_ime": true,
+    "local_reading": true,
+    "menu_settings_contents": true,
+    "max_canvas_bytes": 382
+  },
+  {
+    "stage": "before",
+    "profile": "480x480-305dpi",
+    "native_ime": true,
+    "local_reading": true,
+    "menu_settings_contents": true,
+    "max_canvas_bytes": 403
+  },
+  {
+    "stage": "before",
+    "profile": "480x480-320dpi-circle",
+    "native_ime": true,
+    "local_reading": true,
+    "menu_settings_contents": true,
+    "max_canvas_bytes": 327
+  },
+  {
+    "stage": "before",
+    "profile": "800x480-160dpi",
+    "native_ime": true,
+    "local_reading": true,
+    "menu_settings_contents": true,
+    "max_canvas_bytes": 2027
+  },
+  {
+    "stage": "after",
+    "profile": "296x240-160dpi",
+    "native_ime": true,
+    "local_reading": true,
+    "menu_settings_contents": true,
+    "max_canvas_bytes": 499
+  },
+  {
+    "stage": "after",
+    "profile": "360x480-320dpi",
+    "native_ime": true,
+    "local_reading": true,
+    "menu_settings_contents": true,
+    "max_canvas_bytes": 382
+  },
+  {
+    "stage": "after",
+    "profile": "480x480-305dpi",
+    "native_ime": true,
+    "local_reading": true,
+    "menu_settings_contents": true,
+    "max_canvas_bytes": 473
+  },
+  {
+    "stage": "after",
+    "profile": "480x480-320dpi-circle",
+    "native_ime": true,
+    "local_reading": true,
+    "menu_settings_contents": true,
+    "max_canvas_bytes": 388
+  },
+  {
+    "stage": "after",
+    "profile": "800x480-160dpi",
+    "native_ime": true,
+    "local_reading": true,
+    "menu_settings_contents": true,
+    "max_canvas_bytes": 2247
+  }
+]

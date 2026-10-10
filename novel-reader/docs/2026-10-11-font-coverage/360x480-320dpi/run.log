@@ -1,0 +1,963 @@
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=0 busy=1 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=64 size=28 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=3 width=78 height=52 size=28 text=设置[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=21 height=44 size=20 text=正在加载书架…[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=30 height=128 size=28 text=这里等着你的第一本书[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=106 height=58 size=28 text=书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=1 width=106 height=58 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=2 width=108 height=58 size=28 text=书源[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 3,0,301,42;0,0,73,429;1,0,179,429;2,0,286,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=4 failures=0 linear_pages=2[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=0 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=64 size=28 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=3 width=78 height=52 size=28 text=设置[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=34 height=44 size=20 text=轻点阅读 · 长按管理书籍[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=4 width=320 height=102 size=28 text=[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=82 size=20 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=45 size=28 text=林间书屋[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=19 height=32 size=20 text=书页原创 · CC0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=4 width=320 height=86 size=28 text=[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=66 size=20 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=9 height=45 size=28 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=106 height=58 size=28 text=书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=1 width=106 height=58 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=2 width=108 height=58 size=28 text=书源[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 3,0,301,42;4,0,180,187;4,1,180,287;0,0,73,429;1,0,179,429;2,0,286,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=4 failures=0 linear_pages=2[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=8 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=管理书籍[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=44 size=20 text=林间书屋[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=4 width=320 height=58 size=28 text=继续阅读[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=9 width=320 height=58 size=28 text=已缓存 · 离线可读[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=27 width=320 height=58 size=28 text=移除书籍…[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=28 text=返回[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 4,0,180,165;9,0,180,229;27,0,180,293;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=4 failures=0 linear_pages=2[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=9 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=移除书籍[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=44 size=20 text=林间书屋[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=36 height=64 size=20 text=将移除书架记录与本地缓存[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=32 width=320 height=58 size=28 text=确认移除[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=28 text=取消[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=28 text=返回[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 32,0,180,229;16,0,180,293;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=4 failures=0 linear_pages=2[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=0 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=64 size=28 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=3 width=78 height=52 size=28 text=设置[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=34 height=44 size=20 text=轻点阅读 · 长按管理书籍[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=4 width=320 height=102 size=28 text=[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=82 size=20 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=45 size=28 text=林间书屋[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=19 height=32 size=20 text=书页原创 · CC0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=4 width=320 height=86 size=28 text=[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=66 size=20 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=9 height=45 size=28 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=106 height=58 size=28 text=书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=1 width=106 height=58 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=2 width=108 height=58 size=28 text=书源[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 3,0,301,42;4,0,180,187;4,1,180,287;0,0,73,429;1,0,179,429;2,0,286,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=4 failures=0 linear_pages=2[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=32 step=64 y=280 x=20 width=320 height=52 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=58 size=14 text=A−  16[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=58 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=58 size=16 text=行距 6[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=58 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=58 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=58 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,115;11,0,179,115;12,0,290,115;13,0,69,179;14,0,179,179;15,0,290,179;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=4 failures=0 linear_pages=2[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGES total=12 bytes=0 complete=1[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=0 next=90 lines=4[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=36 step=70 y=268 x=20 width=320 height=58 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=58 size=14 text=A−  18[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=58 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=58 size=16 text=行距 6[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=58 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=58 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=58 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,115;11,0,179,115;12,0,290,115;13,0,69,179;14,0,179,179;15,0,290,179;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=4 failures=0 linear_pages=2[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGES total=14 bytes=0 complete=1[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=0 next=90 lines=4[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=36 step=74 y=264 x=20 width=320 height=58 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=58 size=14 text=A−  18[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=58 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=58 size=16 text=行距 8[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=58 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=58 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=58 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,115;11,0,179,115;12,0,290,115;13,0,69,179;14,0,179,179;15,0,290,179;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=4 failures=0 linear_pages=2[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=36 step=74 y=264 x=20 width=320 height=58 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=58 size=14 text=A−  18[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=58 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=58 size=16 text=行距 8[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=58 size=14 text=配色·纸张[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=58 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=58 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,115;11,0,179,115;12,0,290,115;13,0,69,179;14,0,179,179;15,0,290,179;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=4 failures=0 linear_pages=2[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=36 step=74 y=264 x=20 width=320 height=58 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=58 size=14 text=A−  18[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=58 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=58 size=16 text=行距 8[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=58 size=14 text=配色·护眼[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=58 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=58 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,115;11,0,179,115;12,0,290,115;13,0,69,179;14,0,179,179;15,0,290,179;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=4 failures=0 linear_pages=2[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=36 step=74 y=264 x=20 width=320 height=58 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=58 size=14 text=A−  18[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=58 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=58 size=16 text=行距 8[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=58 size=14 text=配色·深夜[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=58 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=58 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,115;11,0,179,115;12,0,290,115;13,0,69,179;14,0,179,179;15,0,290,179;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=4 failures=0 linear_pages=2[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=36 step=74 y=264 x=20 width=320 height=58 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=58 size=14 text=A−  18[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=58 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=58 size=16 text=行距 8[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=58 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=58 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=58 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,115;11,0,179,115;12,0,290,115;13,0,69,179;14,0,179,179;15,0,290,179;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=4 failures=0 linear_pages=2[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGES total=10 bytes=0 complete=1[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=0 next=126 lines=5[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=32 step=68 y=276 x=20 width=320 height=52 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=58 size=14 text=A−  16[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=58 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=58 size=16 text=行距 8[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=58 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=58 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=58 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,115;11,0,179,115;12,0,290,115;13,0,69,179;14,0,179,179;15,0,290,179;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=4 failures=0 linear_pages=2[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGES total=9 bytes=0 complete=1[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=0 next=145 lines=5[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=28 step=61 y=290 x=20 width=320 height=45 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=58 size=14 text=A−  14[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=58 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=58 size=16 text=行距 8[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=58 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=58 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=58 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,115;11,0,179,115;12,0,290,115;13,0,69,179;14,0,179,179;15,0,290,179;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=4 failures=0 linear_pages=2[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGES total=6 bytes=0 complete=1[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=0 next=178 lines=6[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=24 step=55 y=302 x=20 width=320 height=39 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=58 size=14 text=A−  12[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=58 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=58 size=16 text=行距 8[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=58 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=58 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=58 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,115;11,0,179,115;12,0,290,115;13,0,69,179;14,0,179,179;15,0,290,179;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=4 failures=0 linear_pages=2[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=0 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=64 size=28 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=3 width=78 height=52 size=28 text=设置[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=34 height=44 size=20 text=轻点阅读 · 长按管理书籍[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=4 width=320 height=102 size=28 text=[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=82 size=20 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=45 size=28 text=林间书屋[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=19 height=32 size=20 text=书页原创 · CC0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=4 width=320 height=86 size=28 text=[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=66 size=20 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=9 height=45 size=28 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=106 height=58 size=28 text=书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=1 width=106 height=58 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=2 width=108 height=58 size=28 text=书源[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 3,0,301,42;4,0,180,187;4,1,180,287;0,0,73,429;1,0,179,429;2,0,286,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=4 failures=0 linear_pages=2[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-STATUS 已打开缓存，菜单中可继续下载[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=604 next=787 lines=6[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-INDEX chapters=2 cached=131072[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-INDEX chapters=3 cached=131072[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-INDEX chapters=5 cached=131072[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-INDEX chapters=7 cached=131072[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-INDEX chapters=7 cached=131072[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=84 width=316 height=39 size=24 text=第一回     靈根育孕源流出[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=139 width=316 height=39 size=24 text=　心性修持大道生[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=70 y=210 width=268 height=39 size=24 text=詩曰：[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=118 y=265 width=220 height=39 size=24 text=混沌未分天地亂，茫[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=320 width=316 height=39 size=24 text=茫渺渺無人見。[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=118 y=375 width=220 height=39 size=24 text=自從盤古破鴻濛，開[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-NUMBER current=1 total=0 x=20 y=432 width=320 height=32 pixels=20 text=1 / … 页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=3 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=382 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=9 height=64 size=28 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGES total=580 bytes=131072 complete=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=84 width=316 height=39 size=24 text=第一回     靈根育孕源流出[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=139 width=316 height=39 size=24 text=　心性修持大道生[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=70 y=210 width=268 height=39 size=24 text=詩曰：[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=118 y=265 width=220 height=39 size=24 text=混沌未分天地亂，茫[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=320 width=316 height=39 size=24 text=茫渺渺無人見。[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=118 y=375 width=220 height=39 size=24 text=自從盤古破鴻濛，開[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-NUMBER current=1 total=580 x=20 y=432 width=320 height=32 pixels=20 text=1 / 已缓存 580+ 页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=4 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=正在阅读[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=42 height=44 size=20 text=已打开缓存，菜单中可继续下载[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=154 height=58 size=28 text=继续阅读[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=8 width=154 height=58 size=28 text=章节目录[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=9 width=154 height=58 size=28 text=下载全文[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=26 width=154 height=58 size=28 text=保存进度[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=3 width=154 height=58 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=154 height=58 size=28 text=返回书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=28 text=返回[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 16,0,97,165;8,0,263,165;9,0,97,229;26,0,263,229;3,0,97,293;0,0,263,293;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=24 step=55 y=302 x=20 width=320 height=39 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=58 size=14 text=A−  12[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=58 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=58 size=16 text=行距 8[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=58 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=58 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=58 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,115;11,0,179,115;12,0,290,115;13,0,69,179;14,0,179,179;15,0,290,179;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=604 next=748 lines=5[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=28 step=61 y=290 x=20 width=320 height=45 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=58 size=14 text=A−  14[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=58 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=58 size=16 text=行距 8[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=58 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=58 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=58 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,115;11,0,179,115;12,0,290,115;13,0,69,179;14,0,179,179;15,0,290,179;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=604 next=713 lines=5[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=32 step=68 y=276 x=20 width=320 height=52 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=58 size=14 text=A−  16[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=58 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=58 size=16 text=行距 8[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=58 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=58 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=58 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,115;11,0,179,115;12,0,290,115;13,0,69,179;14,0,179,179;15,0,290,179;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=604 next=686 lines=4[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=36 step=74 y=264 x=20 width=320 height=58 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=58 size=14 text=A−  18[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=58 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=58 size=16 text=行距 8[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=58 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=58 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=58 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,115;11,0,179,115;12,0,290,115;13,0,69,179;14,0,179,179;15,0,290,179;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=604 next=686 lines=4[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=40 step=80 y=252 x=20 width=320 height=64 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=58 size=14 text=A−  20[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=58 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=58 size=16 text=行距 8[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=58 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=58 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=58 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,115;11,0,179,115;12,0,290,115;13,0,69,179;14,0,179,179;15,0,290,179;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=604 next=665 lines=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=44 step=87 y=238 x=20 width=320 height=71 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=58 size=14 text=A−  22[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=58 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=58 size=16 text=行距 8[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=58 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=58 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=58 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,115;11,0,179,115;12,0,290,115;13,0,69,179;14,0,179,179;15,0,290,179;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=604 next=657 lines=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=48 step=93 y=226 x=20 width=320 height=77 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=58 size=14 text=A−  24[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=58 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=58 size=16 text=行距 8[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=58 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=58 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=58 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,115;11,0,179,115;12,0,290,115;13,0,69,179;14,0,179,179;15,0,290,179;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=604 next=654 lines=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=52 step=100 y=212 x=20 width=320 height=84 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=51 size=14 text=A−  26[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=51 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=51 size=16 text=行距 8[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=51 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=51 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=51 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,111;11,0,179,111;12,0,290,111;13,0,69,168;14,0,179,168;15,0,290,168;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=604 next=648 lines=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=56 step=106 y=200 x=20 width=320 height=90 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=45 size=14 text=A−  28[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=45 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=45 size=16 text=行距 8[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=45 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=45 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=45 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,108;11,0,179,108;12,0,290,108;13,0,69,159;14,0,179,159;15,0,290,159;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=604 next=648 lines=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=56 step=110 y=196 x=20 width=320 height=90 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=43 size=14 text=A−  28[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=43 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=43 size=16 text=行距 10[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=43 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=43 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=43 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,107;11,0,179,107;12,0,290,107;13,0,69,156;14,0,179,156;15,0,290,156;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=84 width=316 height=90 size=56 text=第一回     [0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=194 width=316 height=90 size=56 text=靈根育孕源[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=304 width=316 height=90 size=56 text=流出　心性[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-NUMBER current=1 total=0 x=20 y=432 width=320 height=32 pixels=20 text=1 / … 页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=3 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=199 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=9 height=64 size=28 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGES total=2950 bytes=131072 complete=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=84 width=316 height=90 size=56 text=第一回     [0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=194 width=316 height=90 size=56 text=靈根育孕源[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=304 width=316 height=90 size=56 text=流出　心性[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-NUMBER current=1 total=2950 x=20 y=432 width=320 height=32 pixels=20 text=1 / 已缓存 2950+ 页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=4 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=正在阅读[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=9 height=44 size=20 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=154 height=58 size=28 text=继续阅读[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=8 width=154 height=58 size=28 text=章节目录[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=9 width=154 height=58 size=28 text=下载全文[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=26 width=154 height=58 size=28 text=保存进度[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=3 width=154 height=58 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=154 height=58 size=28 text=返回书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=28 text=返回[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 16,0,97,165;8,0,263,165;9,0,97,229;26,0,263,229;3,0,97,293;0,0,263,293;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=56 step=110 y=196 x=20 width=320 height=90 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=43 size=14 text=A−  28[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=43 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=43 size=16 text=行距 10[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=43 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=43 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=43 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,107;11,0,179,107;12,0,290,107;13,0,69,156;14,0,179,156;15,0,290,156;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=604 next=654 lines=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=52 step=104 y=208 x=20 width=320 height=84 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=49 size=14 text=A−  26[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=49 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=49 size=16 text=行距 10[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=49 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=49 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=49 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,110;11,0,179,110;12,0,290,110;13,0,69,165;14,0,179,165;15,0,290,165;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=604 next=657 lines=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=48 step=97 y=222 x=20 width=320 height=77 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=56 size=14 text=A−  24[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=56 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=56 size=16 text=行距 10[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=56 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=56 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=56 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,114;11,0,179,114;12,0,290,114;13,0,69,176;14,0,179,176;15,0,290,176;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=604 next=665 lines=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=44 step=91 y=234 x=20 width=320 height=71 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=58 size=14 text=A−  22[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=58 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=58 size=16 text=行距 10[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=58 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=58 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=58 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,115;11,0,179,115;12,0,290,115;13,0,69,179;14,0,179,179;15,0,290,179;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=604 next=686 lines=4[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=40 step=84 y=248 x=20 width=320 height=64 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=58 size=14 text=A−  20[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=58 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=58 size=16 text=行距 10[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=58 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=58 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=58 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,115;11,0,179,115;12,0,290,115;13,0,69,179;14,0,179,179;15,0,290,179;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=604 next=686 lines=4[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=36 step=78 y=260 x=20 width=320 height=58 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=58 size=14 text=A−  18[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=58 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=58 size=16 text=行距 10[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=58 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=58 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=58 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,115;11,0,179,115;12,0,290,115;13,0,69,179;14,0,179,179;15,0,290,179;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=604 next=686 lines=4[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=32 step=72 y=272 x=20 width=320 height=52 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=58 size=14 text=A−  16[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=58 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=58 size=16 text=行距 10[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=58 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=58 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=58 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,115;11,0,179,115;12,0,290,115;13,0,69,179;14,0,179,179;15,0,290,179;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=84 width=316 height=52 size=32 text=第一回     靈根育孕[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=156 width=316 height=52 size=32 text=源流出　心性修持大[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=228 width=316 height=52 size=32 text=道生[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=86 y=320 width=252 height=52 size=32 text=詩曰：[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-NUMBER current=1 total=0 x=20 y=432 width=320 height=32 pixels=20 text=1 / … 页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=3 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=251 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=9 height=64 size=28 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGES total=1033 bytes=131072 complete=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=84 width=316 height=52 size=32 text=第一回     靈根育孕[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=156 width=316 height=52 size=32 text=源流出　心性修持大[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=228 width=316 height=52 size=32 text=道生[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=86 y=320 width=252 height=52 size=32 text=詩曰：[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-NUMBER current=1 total=1033 x=20 y=432 width=320 height=32 pixels=20 text=1 / 已缓存 1033+ 页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=4 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=正在阅读[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=9 height=44 size=20 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=154 height=58 size=28 text=继续阅读[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=8 width=154 height=58 size=28 text=章节目录[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=9 width=154 height=58 size=28 text=下载全文[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=26 width=154 height=58 size=28 text=保存进度[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=3 width=154 height=58 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=154 height=58 size=28 text=返回书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=28 text=返回[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 16,0,97,165;8,0,263,165;9,0,97,229;26,0,263,229;3,0,97,293;0,0,263,293;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=0 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=64 size=28 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=3 width=78 height=52 size=28 text=设置[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=34 height=44 size=20 text=轻点阅读 · 长按管理书籍[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=4 width=320 height=102 size=28 text=[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=82 size=20 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=45 size=28 text=林间书屋[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=19 height=32 size=20 text=书页原创 · CC0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=4 width=320 height=86 size=28 text=[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=66 size=20 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=9 height=45 size=28 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=106 height=58 size=28 text=书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=1 width=106 height=58 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=2 width=108 height=58 size=28 text=书源[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 3,0,301,42;4,0,180,187;4,1,180,287;0,0,73,429;1,0,179,429;2,0,286,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PREVIEW pixels=32 step=72 y=272 x=20 width=320 height=52 x2=20 width2=320[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=5 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=182 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=10 width=98 height=58 size=14 text=A−  16[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=11 width=98 height=58 size=16 text=A+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=12 width=100 height=58 size=16 text=行距 10[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=13 width=98 height=58 size=14 text=配色·系统[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=14 width=98 height=58 size=16 text=自动·关[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=15 width=100 height=58 size=16 text=15秒[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=16 text=完成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 10,0,69,115;11,0,179,115;12,0,290,115;13,0,69,179;14,0,179,179;15,0,290,179;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=0 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=64 size=28 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=3 width=78 height=52 size=28 text=设置[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=34 height=44 size=20 text=轻点阅读 · 长按管理书籍[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=4 width=320 height=102 size=28 text=[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=82 size=20 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=45 size=28 text=林间书屋[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=19 height=32 size=20 text=书页原创 · CC0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=4 width=320 height=86 size=28 text=[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=66 size=20 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=9 height=45 size=28 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=106 height=58 size=28 text=书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=1 width=106 height=58 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=2 width=108 height=58 size=28 text=书源[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 3,0,301,42;4,0,180,187;4,1,180,287;0,0,73,429;1,0,179,429;2,0,286,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-STATUS 已打开缓存，菜单中可继续下载[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=604 next=686 lines=4[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-INDEX chapters=2 cached=131072[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-INDEX chapters=3 cached=131072[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-INDEX chapters=5 cached=131072[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-INDEX chapters=7 cached=131072[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-INDEX chapters=7 cached=131072[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=84 width=316 height=52 size=32 text=第一回     靈根育孕[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=156 width=316 height=52 size=32 text=源流出　心性修持大[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=228 width=316 height=52 size=32 text=道生[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=86 y=320 width=252 height=52 size=32 text=詩曰：[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-NUMBER current=1 total=0 x=20 y=432 width=320 height=32 pixels=20 text=1 / … 页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=3 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=251 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=9 height=64 size=28 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGES total=1033 bytes=131072 complete=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=84 width=316 height=52 size=32 text=第一回     靈根育孕[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=156 width=316 height=52 size=32 text=源流出　心性修持大[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=228 width=316 height=52 size=32 text=道生[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=86 y=320 width=252 height=52 size=32 text=詩曰：[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-NUMBER current=1 total=1033 x=20 y=432 width=320 height=32 pixels=20 text=1 / 已缓存 1033+ 页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=686 next=802 lines=5[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=150 y=84 width=188 height=52 size=32 text=混沌未分天[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=156 width=316 height=52 size=32 text=地亂，茫茫渺渺無人[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=228 width=316 height=52 size=32 text=見。[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=150 y=300 width=188 height=52 size=32 text=自從盤古破[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=372 width=316 height=52 size=32 text=鴻濛，開闢從茲清濁[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-NUMBER current=2 total=1033 x=20 y=432 width=320 height=32 pixels=20 text=2 / 已缓存 1033+ 页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=604 next=686 lines=4[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=84 width=316 height=52 size=32 text=第一回     靈根育孕[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=156 width=316 height=52 size=32 text=源流出　心性修持大[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=228 width=316 height=52 size=32 text=道生[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=86 y=320 width=252 height=52 size=32 text=詩曰：[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-NUMBER current=1 total=1033 x=20 y=432 width=320 height=32 pixels=20 text=1 / 已缓存 1033+ 页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=4 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=正在阅读[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=42 height=44 size=20 text=已打开缓存，菜单中可继续下载[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=154 height=58 size=28 text=继续阅读[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=8 width=154 height=58 size=28 text=章节目录[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=9 width=154 height=58 size=28 text=下载全文[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=26 width=154 height=58 size=28 text=保存进度[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=3 width=154 height=58 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=154 height=58 size=28 text=返回书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=28 text=返回[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 16,0,97,165;8,0,263,165;9,0,97,229;26,0,263,229;3,0,97,293;0,0,263,293;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=84 width=316 height=52 size=32 text=第一回     靈根育孕[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=156 width=316 height=52 size=32 text=源流出　心性修持大[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=228 width=316 height=52 size=32 text=道生[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=86 y=320 width=252 height=52 size=32 text=詩曰：[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-NUMBER current=1 total=1033 x=20 y=432 width=320 height=32 pixels=20 text=1 / 已缓存 1033+ 页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=3 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=263 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=9 height=64 size=28 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=4 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=正在阅读[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=42 height=44 size=20 text=已打开缓存，菜单中可继续下载[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=154 height=58 size=28 text=继续阅读[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=8 width=154 height=58 size=28 text=章节目录[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=9 width=154 height=58 size=28 text=下载全文[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=26 width=154 height=58 size=28 text=保存进度[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=3 width=154 height=58 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=154 height=58 size=28 text=返回书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=28 text=返回[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 16,0,97,165;8,0,263,165;9,0,97,229;26,0,263,229;3,0,97,293;0,0,263,293;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=6 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=章节目录[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=42 height=44 size=20 text=已打开缓存，菜单中可继续下载[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=25 width=320 height=58 size=14 text=第一回     靈根育孕源流出　心性修持大道生[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=25 width=320 height=58 size=14 text=第二回     悟徹菩提真妙理　斷魔歸本合元神[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=25 width=320 height=58 size=14 text=第三回     四海千山皆拱伏　九幽十類盡除名[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=23 width=154 height=58 size=28 text=上一组[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=24 width=154 height=58 size=28 text=下一组[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=28 text=返回[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 25,0,180,165;25,1,180,229;25,2,180,293;23,0,97,365;24,0,263,365;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=604 next=686 lines=4[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=84 width=316 height=52 size=32 text=第一回     靈根育孕[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=156 width=316 height=52 size=32 text=源流出　心性修持大[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=228 width=316 height=52 size=32 text=道生[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=86 y=320 width=252 height=52 size=32 text=詩曰：[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-NUMBER current=1 total=1033 x=20 y=432 width=320 height=32 pixels=20 text=1 / 已缓存 1033+ 页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=3 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=263 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=9 height=64 size=28 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=686 next=802 lines=5[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=150 y=84 width=188 height=52 size=32 text=混沌未分天[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=156 width=316 height=52 size=32 text=地亂，茫茫渺渺無人[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=228 width=316 height=52 size=32 text=見。[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=150 y=300 width=188 height=52 size=32 text=自從盤古破[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=372 width=316 height=52 size=32 text=鴻濛，開闢從茲清濁[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-NUMBER current=2 total=1033 x=20 y=432 width=320 height=32 pixels=20 text=2 / 已缓存 1033+ 页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=802 next=899 lines=5[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=84 width=316 height=52 size=32 text=辨。[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=150 y=156 width=188 height=52 size=32 text=覆載群生仰[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=228 width=316 height=52 size=32 text=至仁，發明萬物皆成[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=300 width=316 height=52 size=32 text=善。[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=150 y=372 width=188 height=52 size=32 text=欲知造化會[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-NUMBER current=3 total=1033 x=20 y=432 width=320 height=32 pixels=20 text=3 / 已缓存 1033+ 页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=899 next=986 lines=4[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=84 width=316 height=52 size=32 text=元功，須看西遊釋厄[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=156 width=316 height=52 size=32 text=傳。[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=86 y=248 width=252 height=52 size=32 text=蓋聞天地之數，[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=320 width=316 height=52 size=32 text=有十二萬九千六百歲[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-NUMBER current=4 total=1033 x=20 y=432 width=320 height=32 pixels=20 text=4 / 已缓存 1033+ 页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=986 next=1117 lines=5[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=84 width=316 height=52 size=32 text=為一元。將一元分為[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=156 width=316 height=52 size=32 text=十二會，乃子、丑、[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=228 width=316 height=52 size=32 text=寅、卯、辰、巳、[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=300 width=316 height=52 size=32 text=午、未、申、酉、[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=372 width=316 height=52 size=32 text=戌、亥之十二支也。[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-NUMBER current=5 total=1033 x=20 y=432 width=320 height=32 pixels=20 text=5 / 已缓存 1033+ 页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=1117 next=1251 lines=5[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=84 width=316 height=52 size=32 text=每會該一萬八百歲。[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=156 width=316 height=52 size=32 text=且就一日而論：子時[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=228 width=316 height=52 size=32 text=得陽氣，而丑則雞[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=300 width=316 height=52 size=32 text=鳴﹔寅不通光，而卯[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=372 width=316 height=52 size=32 text=則日出﹔辰時食後，[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-NUMBER current=6 total=1033 x=20 y=432 width=320 height=32 pixels=20 text=6 / 已缓存 1033+ 页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=1251 next=1390 lines=5[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=84 width=316 height=52 size=32 text=而巳則挨排﹔日午天[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=156 width=316 height=52 size=32 text=中，而未則西蹉﹔申[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=228 width=316 height=52 size=32 text=時晡，而日落酉，戌[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=300 width=316 height=52 size=32 text=黃昏，而人定亥。譬[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=372 width=316 height=52 size=32 text=於大數，若到戌會之[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-NUMBER current=7 total=1033 x=20 y=432 width=320 height=32 pixels=20 text=7 / 已缓存 1033+ 页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=4 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=正在阅读[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=9 height=44 size=20 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=154 height=58 size=28 text=继续阅读[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=8 width=154 height=58 size=28 text=章节目录[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=9 width=154 height=58 size=28 text=下载全文[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=26 width=154 height=58 size=28 text=保存进度[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=3 width=154 height=58 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=154 height=58 size=28 text=返回书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=28 text=返回[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 16,0,97,165;8,0,263,165;9,0,97,229;26,0,263,229;3,0,97,293;0,0,263,293;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=0 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=64 size=28 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=3 width=78 height=52 size=28 text=设置[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=34 height=44 size=20 text=轻点阅读 · 长按管理书籍[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=4 width=320 height=102 size=28 text=[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=82 size=20 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=45 size=28 text=林间书屋[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=19 height=32 size=20 text=书页原创 · CC0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=4 width=320 height=86 size=28 text=[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=66 size=20 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=9 height=45 size=28 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=106 height=58 size=28 text=书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=1 width=106 height=58 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=2 width=108 height=58 size=28 text=书源[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 3,0,301,42;4,0,180,187;4,1,180,287;0,0,73,429;1,0,179,429;2,0,286,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=1 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=64 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=17 width=83 height=58 size=28 text=搜索[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=18 width=320 height=58 size=24 text=经典直读 · 即时搜索 ›[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=29 width=154 height=58 size=28 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=29 width=154 height=58 size=28 text=红楼梦[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=106 height=58 size=28 text=书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=1 width=106 height=58 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=2 width=108 height=58 size=28 text=书源[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 30,0,138,118;17,0,298,115;18,0,180,185;29,0,97,249;29,1,263,249;0,0,73,429;1,0,179,429;2,0,286,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=1 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=64 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=17 width=83 height=58 size=28 text=搜索[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=18 width=320 height=58 size=16 text=GITenberg · 即时搜索 ›[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=29 width=154 height=58 size=28 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=29 width=154 height=58 size=28 text=红楼梦[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=106 height=58 size=28 text=书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=1 width=106 height=58 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=2 width=108 height=58 size=28 text=书源[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 30,0,138,118;17,0,298,115;18,0,180,185;29,0,97,249;29,1,263,249;0,0,73,429;1,0,179,429;2,0,286,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-STATUS 正在搜索…[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-STATUS 即时找到 1 部经典作品[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-SEARCH results=1 instant=1[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=1 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=9[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=64 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=23 width=58 height=52 size=28 text=‹[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=24 width=64 height=52 size=28 text=›[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=17 width=83 height=58 size=28 text=搜索[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=18 width=320 height=58 size=14 text=GITenberg · 即时搜索 · 1 部 ›[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=4 width=320 height=58 size=28 text=[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=38 size=20 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=9 height=38 size=20 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=106 height=58 size=28 text=书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=1 width=106 height=58 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=2 width=108 height=58 size=28 text=书源[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 23,0,241,42;24,0,308,42;30,0,138,118;17,0,298,115;18,0,180,185;4,0,180,249;0,0,73,429;1,0,179,429;2,0,286,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-STATUS 已打开缓存，菜单中可继续下载[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGE offset=1251 next=1390 lines=5[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-INDEX chapters=2 cached=131072[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-INDEX chapters=3 cached=131072[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-INDEX chapters=5 cached=131072[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-INDEX chapters=7 cached=131072[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-INDEX chapters=7 cached=131072[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=84 width=316 height=52 size=32 text=而巳則挨排﹔日午天[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=156 width=316 height=52 size=32 text=中，而未則西蹉﹔申[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=228 width=316 height=52 size=32 text=時晡，而日落酉，戌[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=300 width=316 height=52 size=32 text=黃昏，而人定亥。譬[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=372 width=316 height=52 size=32 text=於大數，若到戌會之[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-NUMBER current=0 total=0 x=20 y=432 width=320 height=32 pixels=20 text=— / … 页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=3 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=348 input_bytes=9[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=9 height=64 size=28 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-PAGES total=1033 bytes=131072 complete=0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=84 width=316 height=52 size=32 text=而巳則挨排﹔日午天[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=156 width=316 height=52 size=32 text=中，而未則西蹉﹔申[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=228 width=316 height=52 size=32 text=時晡，而日落酉，戌[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=300 width=316 height=52 size=32 text=黃昏，而人定亥。譬[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=372 width=316 height=52 size=32 text=於大數，若到戌會之[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-NUMBER current=7 total=1033 x=20 y=432 width=320 height=32 pixels=20 text=7 / 已缓存 1033+ 页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=4 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=9[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=正在阅读[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=42 height=44 size=20 text=已打开缓存，菜单中可继续下载[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=154 height=58 size=28 text=继续阅读[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=8 width=154 height=58 size=28 text=章节目录[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=9 width=154 height=58 size=28 text=下载全文[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=26 width=154 height=58 size=28 text=保存进度[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=3 width=154 height=58 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=154 height=58 size=28 text=返回书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=28 text=返回[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 16,0,97,165;8,0,263,165;9,0,97,229;26,0,263,229;3,0,97,293;0,0,263,293;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=6 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=9[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=章节目录[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=42 height=44 size=20 text=已打开缓存，菜单中可继续下载[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=25 width=320 height=58 size=14 text=第一回     靈根育孕源流出　心性修持大道生[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=25 width=320 height=58 size=14 text=第二回     悟徹菩提真妙理　斷魔歸本合元神[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=25 width=320 height=58 size=14 text=第三回     四海千山皆拱伏　九幽十類盡除名[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=23 width=154 height=58 size=28 text=上一组[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=24 width=154 height=58 size=28 text=下一组[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=28 text=返回[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 25,0,180,165;25,1,180,229;25,2,180,293;23,0,97,365;24,0,263,365;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=84 width=316 height=52 size=32 text=而巳則挨排﹔日午天[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=156 width=316 height=52 size=32 text=中，而未則西蹉﹔申[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=228 width=316 height=52 size=32 text=時晡，而日落酉，戌[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=300 width=316 height=52 size=32 text=黃昏，而人定亥。譬[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-LINE x=22 y=372 width=316 height=52 size=32 text=於大數，若到戌會之[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-NUMBER current=7 total=1033 x=20 y=432 width=320 height=32 pixels=20 text=7 / 已缓存 1033+ 页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=3 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=358 input_bytes=9[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=9 height=64 size=28 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=4 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=9[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=正在阅读[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=42 height=44 size=20 text=已打开缓存，菜单中可继续下载[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=154 height=58 size=28 text=继续阅读[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=8 width=154 height=58 size=28 text=章节目录[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=9 width=154 height=58 size=28 text=下载全文[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=26 width=154 height=58 size=28 text=保存进度[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=3 width=154 height=58 size=28 text=阅读偏好[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=154 height=58 size=28 text=返回书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=16 width=320 height=58 size=28 text=返回[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 16,0,97,165;8,0,263,165;9,0,97,229;26,0,263,229;3,0,97,293;0,0,263,293;16,0,180,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=0 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=9[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=64 size=28 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=3 width=78 height=52 size=28 text=设置[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=42 height=44 size=20 text=已打开缓存，菜单中可继续下载[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=4 width=320 height=102 size=28 text=[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=82 size=20 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=45 size=28 text=林间书屋[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=19 height=32 size=20 text=书页原创 · CC0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=4 width=320 height=86 size=28 text=[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=66 size=20 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=9 height=45 size=28 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=106 height=58 size=28 text=书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=1 width=106 height=58 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=2 width=108 height=58 size=28 text=书源[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 3,0,301,42;4,0,180,187;4,1,180,287;0,0,73,429;1,0,179,429;2,0,286,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=1 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=9[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=64 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=23 width=58 height=52 size=28 text=‹[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=24 width=64 height=52 size=28 text=›[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=17 width=83 height=58 size=28 text=搜索[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=18 width=320 height=58 size=14 text=GITenberg · 即时搜索 · 1 部 ›[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=4 width=320 height=58 size=28 text=[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=38 size=20 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=9 height=38 size=20 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=106 height=58 size=28 text=书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=1 width=106 height=58 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=2 width=108 height=58 size=28 text=书源[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 23,0,241,42;24,0,308,42;30,0,138,118;17,0,298,115;18,0,180,185;4,0,180,249;0,0,73,429;1,0,179,429;2,0,286,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=1 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=9[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=64 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=23 width=58 height=52 size=28 text=‹[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=24 width=64 height=52 size=28 text=›[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=17 width=83 height=58 size=28 text=搜索[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=18 width=320 height=58 size=14 text=GITenberg · 即时搜索 · 1 部 ›[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=4 width=320 height=58 size=28 text=[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=38 size=20 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=9 height=38 size=20 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=106 height=58 size=28 text=书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=1 width=106 height=58 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=2 width=108 height=58 size=28 text=书源[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 23,0,241,42;24,0,308,42;30,0,138,118;17,0,298,115;18,0,180,185;4,0,180,249;0,0,73,429;1,0,179,429;2,0,286,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=2 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=9[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=书源管理[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=42 height=44 size=20 text=已打开缓存，菜单中可继续下载[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=19 width=64 height=52 size=28 text=+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=21 width=256 height=58 size=14 text=经典直读 · 即时搜索 · 已启用[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=22 width=58 height=58 size=28 text=−[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=21 width=256 height=58 size=12 text=GITenberg · 即时… · 已启用[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=22 width=58 height=58 size=28 text=−[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=21 width=256 height=58 size=16 text=古腾堡中文小说 · 已启用[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=22 width=58 height=58 size=28 text=−[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=23 width=154 height=58 size=28 text=上一组[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=24 width=154 height=58 size=28 text=下一组[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=106 height=58 size=28 text=书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=1 width=106 height=58 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=2 width=108 height=58 size=28 text=书源[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 19,0,308,42;21,0,148,165;22,0,311,165;21,1,148,229;22,1,311,229;21,2,148,293;22,2,311,293;23,0,97,365;24,0,263,365;0,0,73,429;1,0,179,429;2,0,286,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=2 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=9[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=书源管理[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=42 height=44 size=20 text=已打开缓存，菜单中可继续下载[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=19 width=64 height=52 size=28 text=+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=21 width=256 height=58 size=14 text=经典直读 · 即时搜索 · 已停用[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=22 width=58 height=58 size=28 text=−[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=21 width=256 height=58 size=12 text=GITenberg · 即时… · 已启用[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=22 width=58 height=58 size=28 text=−[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=21 width=256 height=58 size=16 text=古腾堡中文小说 · 已启用[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=22 width=58 height=58 size=28 text=−[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=23 width=154 height=58 size=28 text=上一组[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=24 width=154 height=58 size=28 text=下一组[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=106 height=58 size=28 text=书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=1 width=106 height=58 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=2 width=108 height=58 size=28 text=书源[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 19,0,308,42;21,0,148,165;22,0,311,165;21,1,148,229;22,1,311,229;21,2,148,293;22,2,311,293;23,0,97,365;24,0,263,365;0,0,73,429;1,0,179,429;2,0,286,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=2 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=9[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=书源管理[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=42 height=44 size=20 text=已打开缓存，菜单中可继续下载[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=19 width=64 height=52 size=28 text=+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=21 width=256 height=58 size=14 text=经典直读 · 即时搜索 · 已启用[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=22 width=58 height=58 size=28 text=−[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=21 width=256 height=58 size=12 text=GITenberg · 即时… · 已启用[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=22 width=58 height=58 size=28 text=−[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=21 width=256 height=58 size=16 text=古腾堡中文小说 · 已启用[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=22 width=58 height=58 size=28 text=−[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=23 width=154 height=58 size=28 text=上一组[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=24 width=154 height=58 size=28 text=下一组[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=106 height=58 size=28 text=书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=1 width=106 height=58 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=2 width=108 height=58 size=28 text=书源[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 19,0,308,42;21,0,148,165;22,0,311,165;21,1,148,229;22,1,311,229;21,2,148,293;22,2,311,293;23,0,97,365;24,0,263,365;0,0,73,429;1,0,179,429;2,0,286,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=7 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=34[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=添加书源[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=42 height=44 size=20 text=已打开缓存，菜单中可继续下载[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=20 width=83 height=58 size=28 text=添加[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=39 height=64 size=20 text=粘贴目录 JSON 或书源配置链接[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=2 width=320 height=58 size=28 text=返回书源列表[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=106 height=58 size=28 text=书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=1 width=106 height=58 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=2 width=108 height=58 size=28 text=书源[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 30,0,138,168;20,0,298,165;2,0,180,299;0,0,73,429;1,0,179,429;2,0,286,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=2 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=9[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=64 size=28 text=书源管理[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=42 height=44 size=20 text=已打开缓存，菜单中可继续下载[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=19 width=64 height=52 size=28 text=+[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=21 width=256 height=58 size=14 text=经典直读 · 即时搜索 · 已启用[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=22 width=58 height=58 size=28 text=−[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=21 width=256 height=58 size=12 text=GITenberg · 即时… · 已启用[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=22 width=58 height=58 size=28 text=−[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=21 width=256 height=58 size=16 text=古腾堡中文小说 · 已启用[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=22 width=58 height=58 size=28 text=−[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=23 width=154 height=58 size=28 text=上一组[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=24 width=154 height=58 size=28 text=下一组[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=106 height=58 size=28 text=书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=1 width=106 height=58 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=2 width=108 height=58 size=28 text=书源[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 19,0,308,42;21,0,148,165;22,0,311,165;21,1,148,229;22,1,311,229;21,2,148,293;22,2,311,293;23,0,97,365;24,0,263,365;0,0,73,429;1,0,179,429;2,0,286,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-UI screen=0 busy=0 density=131072 auto=0 seconds=15 native_ui=1 draw_bytes=0 input_bytes=9[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=64 size=28 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=3 width=78 height=52 size=28 text=设置[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=42 height=44 size=20 text=已打开缓存，菜单中可继续下载[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=4 width=320 height=102 size=28 text=[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=82 size=20 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=12 height=45 size=28 text=林间书屋[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=19 height=32 size=20 text=书页原创 · CC0[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=4 width=320 height=86 size=28 text=[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=6 height=66 size=20 text=书页[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-TEXT bytes=9 height=45 size=28 text=西游记[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=0 width=106 height=58 size=28 text=书架[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=1 width=106 height=58 size=28 text=发现[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-BUTTON action=2 width=108 height=58 size=28 text=书源[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-HITS 3,0,301,42;4,0,180,187;4,1,180,287;0,0,73,429;1,0,179,429;2,0,286,429;[0m
+[32m[PXA app=pxa-novel-reader-qa component=65537 level=INFO] READER-MEM pool_bytes=16400 pool_peak=7 failures=0 linear_pages=3[0m
+PXA MUSIC INPUT read_bytes=0 read_calls=0
+PXA STORAGE lane=0 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA STORAGE lane=1 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA MUSIC BUFFER underruns=0 recoveries=0 missing_samples=0 consumed=0 high_water=0 low_water=0 low_water_valid=0 ready_max_us=0
+PXA MUSIC DECODE calls=0 total_us=0 max_us=0 excludes_input_io=1
+PXA RESOURCE BUDGET peak_internal=0 peak_external=0 remaining_internal=0 remaining_external=0 denied=0 counter_storage=1856 allocator_storage=576
+PXA TEMPORARY BUDGET peak_internal=0 peak_external=0 limit_internal=16384 limit_external=524288

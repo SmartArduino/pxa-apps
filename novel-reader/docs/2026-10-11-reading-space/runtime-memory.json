@@ -1,0 +1,16 @@
+{
+  "before": {
+    "pool_reserved": 16400,
+    "pool_peak_slots": 7,
+    "pool_failures": 0,
+    "linear_peak_pages": 3,
+    "max_canvas_bytes": 2027
+  },
+  "after": {
+    "pool_reserved": 16400,
+    "pool_peak_slots": 7,
+    "pool_failures": 0,
+    "linear_peak_pages": 3,
+    "max_canvas_bytes": 2247
+  }
+}

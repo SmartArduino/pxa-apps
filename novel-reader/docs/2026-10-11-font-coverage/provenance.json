@@ -1,0 +1,104 @@
+{
+  "runtime": [
+    {
+      "profile": "296x240-160dpi",
+      "linear_pages_peak": 3,
+      "pool_reserved_bytes": 16400,
+      "pool_used_peak": 7,
+      "failures": 0
+    },
+    {
+      "profile": "360x480-320dpi",
+      "linear_pages_peak": 3,
+      "pool_reserved_bytes": 16400,
+      "pool_used_peak": 7,
+      "failures": 0
+    },
+    {
+      "profile": "480x480-305dpi",
+      "linear_pages_peak": 3,
+      "pool_reserved_bytes": 16400,
+      "pool_used_peak": 7,
+      "failures": 0
+    },
+    {
+      "profile": "480x480-320dpi-circle",
+      "linear_pages_peak": 3,
+      "pool_reserved_bytes": 16400,
+      "pool_used_peak": 7,
+      "failures": 0
+    },
+    {
+      "profile": "800x480-160dpi",
+      "linear_pages_peak": 3,
+      "pool_reserved_bytes": 16400,
+      "pool_used_peak": 7,
+      "failures": 0
+    }
+  ],
+  "versions": {
+    "python": "3.14.7",
+    "fontTools": "4.66.1",
+    "Pillow": "12.3.0"
+  },
+  "sources": [
+    {
+      "file": "factory/base/system/fonts/noto_sans_cjk_common.ttf",
+      "sha256": "7b89dc0cb85fec0458461953a7e9a08c4012a0f84c3ce44e64407743a248bd10",
+      "bytes": 3879128
+    },
+    {
+      "file": "tools/fonts/build_common_font.py",
+      "sha256": "90dea4d26ea6efd9209e6ac2df539ad55492e8bc9c7c44a3cfa103136dc934a5",
+      "bytes": 10277
+    },
+    {
+      "file": "tools/fonts/ft_font_probe.c",
+      "sha256": "f2187661c5e94bf98c6d175497c35f9317fc678ca19faffd7f63e260f3c9605e",
+      "bytes": 5059
+    },
+    {
+      "file": "tools/fonts/test_common_font.py",
+      "sha256": "4de166d38e4e672aedeefa16589ef05b5626a336720b12e2554278ea126c2e75",
+      "bytes": 2090
+    },
+    {
+      "file": "tools/pxa/build_partition_image.sh",
+      "sha256": "66c5a78eda3b6125ecdf572c2d4a73bb15d3d9732cfc54e52473ce37929a4e2e",
+      "bytes": 7501
+    },
+    {
+      "file": "local/pxa-apps/novel-reader/tests/font_coverage_test.py",
+      "sha256": "c5e86fa753784fc935df0a63074a5b8e94bc5bb643c9f328cc81efee1f8e1bd5",
+      "bytes": 1686
+    },
+    {
+      "file": "local/pxa-apps/novel-reader/tests/ui_sdk_probe.py",
+      "sha256": "1cff610284f1bf5cad3af7f42f85f8870c5c1767d13335a515948d1b9fec3916",
+      "bytes": 34727
+    },
+    {
+      "file": "local/reader-pages-20261010/qa-verified/artifacts/pxa-novel-reader.pxa",
+      "sha256": "cca77ed523c7f0dd884811f2d265653a4c894d2e3c1c0cf21dbaf7f0e7f18700",
+      "bytes": 398154
+    }
+  ],
+  "physical": {
+    "updated": false,
+    "queries_only": true,
+    "serial": "a4:cb:8f:d6:8d:a4",
+    "port": "/dev/ttyACM1",
+    "board_not_confirmed": true,
+    "screenshot_attempt": "port already exclusively locked; did not retry or interrupt"
+  },
+  "notes": "Same QA application package as the prior page-number acceptance; only the system font changes. FreeType heap is requested bytes, excludes LVGL caches and allocator overhead.",
+  "user_simulator": {
+    "profile": "pai-touch",
+    "reader_updated": true,
+    "full_system_restarted": true,
+    "book_opened": "西游记",
+    "theme_and_reader_preferences_changed": false,
+    "screenshot": "user-pai-reading.png"
+  },
+  "base_font_commit": "5e511db02ed7eb578ae64a40b4b17c93d1332b4b"
+}

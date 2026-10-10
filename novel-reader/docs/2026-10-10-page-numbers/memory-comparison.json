@@ -1,0 +1,213 @@
+{
+  "wasm_abi": [
+    {
+      "version": "before",
+      "wasm_abi_sizes": {
+        "ReaderApp": {
+          "bytes": 15096,
+          "align": 8
+        },
+        "reader::Page": {
+          "bytes": 1548,
+          "align": 4
+        }
+      }
+    },
+    {
+      "version": "after",
+      "wasm_abi_sizes": {
+        "ReaderApp": {
+          "bytes": 15088,
+          "align": 8
+        },
+        "reader::Page": {
+          "bytes": 1548,
+          "align": 4
+        },
+        "reader::PageNumbers": {
+          "bytes": 152,
+          "align": 4
+        }
+      }
+    }
+  ],
+  "aot": [
+    {
+      "file": "local/reader-quiet-20261010/release-verified/pxa-novel-reader/artifacts/main.esp32-s3.aot",
+      "sha256": "24817d7854c3247ab85dd893a5b60493cb28f4e184562296d28919230a0066c1",
+      "aot_bytes": 949528,
+      "text_bytes": 895316,
+      "text_map_bytes": 917504,
+      "sections": [
+        {
+          "kind": 0,
+          "bytes": 48
+        },
+        {
+          "kind": 1,
+          "bytes": 12128
+        },
+        {
+          "kind": 2,
+          "bytes": 895316
+        },
+        {
+          "kind": 3,
+          "bytes": 5648
+        },
+        {
+          "kind": 4,
+          "bytes": 187
+        },
+        {
+          "kind": 5,
+          "bytes": 36144
+        }
+      ]
+    },
+    {
+      "file": "local/reader-pages-20261010/release/pxa-novel-reader/artifacts/main.esp32-s3.aot",
+      "sha256": "5cd467a158a1d5b11153a8298ecc552ae47c2a5c1dd908bf6edccb60ed928c33",
+      "aot_bytes": 969432,
+      "text_bytes": 914532,
+      "text_map_bytes": 917504,
+      "sections": [
+        {
+          "kind": 0,
+          "bytes": 48
+        },
+        {
+          "kind": 1,
+          "bytes": 12160
+        },
+        {
+          "kind": 2,
+          "bytes": 914532
+        },
+        {
+          "kind": 3,
+          "bytes": 5760
+        },
+        {
+          "kind": 4,
+          "bytes": 187
+        },
+        {
+          "kind": 5,
+          "bytes": 36688
+        }
+      ]
+    }
+  ],
+  "new_process_runtime": [
+    {
+      "version": "before",
+      "profile": "296x240-160dpi",
+      "pool_reserved_bytes": 16400,
+      "run_pool_used_peak": 7,
+      "pool_failures": 0,
+      "run_linear_pages_peak": 3,
+      "max_canvas_bytes": 460
+    },
+    {
+      "version": "before",
+      "profile": "360x480-320dpi",
+      "pool_reserved_bytes": 16400,
+      "run_pool_used_peak": 7,
+      "pool_failures": 0,
+      "run_linear_pages_peak": 3,
+      "max_canvas_bytes": 343
+    },
+    {
+      "version": "before",
+      "profile": "480x480-305dpi",
+      "pool_reserved_bytes": 16400,
+      "run_pool_used_peak": 7,
+      "pool_failures": 0,
+      "run_linear_pages_peak": 3,
+      "max_canvas_bytes": 392
+    },
+    {
+      "version": "before",
+      "profile": "480x480-320dpi-circle",
+      "pool_reserved_bytes": 16400,
+      "run_pool_used_peak": 7,
+      "pool_failures": 0,
+      "run_linear_pages_peak": 3,
+      "max_canvas_bytes": 346
+    },
+    {
+      "version": "before",
+      "profile": "800x480-160dpi",
+      "pool_reserved_bytes": 16400,
+      "run_pool_used_peak": 7,
+      "pool_failures": 0,
+      "run_linear_pages_peak": 3,
+      "max_canvas_bytes": 2208
+    },
+    {
+      "version": "after",
+      "profile": "296x240-160dpi",
+      "pool_reserved_bytes": 16400,
+      "run_pool_used_peak": 7,
+      "pool_failures": 0,
+      "run_linear_pages_peak": 3,
+      "max_canvas_bytes": 423
+    },
+    {
+      "version": "after",
+      "profile": "360x480-320dpi",
+      "pool_reserved_bytes": 16400,
+      "run_pool_used_peak": 7,
+      "pool_failures": 0,
+      "run_linear_pages_peak": 3,
+      "max_canvas_bytes": 382
+    },
+    {
+      "version": "after",
+      "profile": "480x480-305dpi",
+      "pool_reserved_bytes": 16400,
+      "run_pool_used_peak": 7,
+      "pool_failures": 0,
+      "run_linear_pages_peak": 3,
+      "max_canvas_bytes": 432
+    },
+    {
+      "version": "after",
+      "profile": "480x480-320dpi-circle",
+      "pool_reserved_bytes": 16400,
+      "run_pool_used_peak": 7,
+      "pool_failures": 0,
+      "run_linear_pages_peak": 3,
+      "max_canvas_bytes": 344
+    },
+    {
+      "version": "after",
+      "profile": "800x480-160dpi",
+      "pool_reserved_bytes": 16400,
+      "run_pool_used_peak": 7,
+      "pool_failures": 0,
+      "run_linear_pages_peak": 3,
+      "max_canvas_bytes": 2027
+    },
+    {
+      "version": "after-cache",
+      "profile": "480x480-305dpi",
+      "pool_reserved_bytes": 16400,
+      "run_pool_used_peak": 8,
+      "pool_failures": 0,
+      "run_linear_pages_peak": 3,
+      "max_canvas_bytes": 302
+    },
+    {
+      "version": "before-cache",
+      "profile": "480x480-305dpi",
+      "pool_reserved_bytes": 16400,
+      "run_pool_used_peak": 8,
+      "pool_failures": 0,
+      "run_linear_pages_peak": 3,
+      "max_canvas_bytes": 314
+    }
+  ],
+  "esp_current_version_memory_measured": false
+}

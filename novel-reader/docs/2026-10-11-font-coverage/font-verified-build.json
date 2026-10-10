@@ -1,0 +1,30 @@
+{
+  "base_sha256": "17f6e5bd2b8fbac78e38f16a8d454a551a064f6edc0070917c152c9caeaab543",
+  "source_sha256": "b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a",
+  "source_face": 2,
+  "base_codepoints": 13328,
+  "traditional_coverage": "common",
+  "codepoints": 15135,
+  "glyphs": 15176,
+  "added_codepoints": 1807,
+  "bytes": 3879128,
+  "sha256": "7b89dc0cb85fec0458461953a7e9a08c4012a0f84c3ce44e64407743a248bd10",
+  "tables": {
+    "head": 54,
+    "hhea": 36,
+    "maxp": 32,
+    "OS/2": 96,
+    "hmtx": 60700,
+    "cmap": 45768,
+    "loca": 60708,
+    "glyf": 3711364,
+    "name": 162,
+    "post": 32
+  },
+  "corpora": [
+    {
+      "name": "local/reader-typography-20261010/xiyou.txt",
+      "sha256": "fc9a3956fd22b9a4356af8dd0dca27596fd0c9da87c35eae45c4f331c1b8f597"
+    }
+  ]
+}

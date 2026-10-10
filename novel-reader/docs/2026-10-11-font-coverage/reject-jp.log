@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/tools/fonts/build_common_font.py", line 224, in <module>
+    main()
+    ~~~~^^
+  File "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/tools/fonts/build_common_font.py", line 218, in main
+    report = build(args.base,args.source,args.face,args.output,args.corpus,args.traditional)
+  File "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/tools/fonts/build_common_font.py", line 103, in build
+    raise ValueError('Select the Chinese mainland sans-serif source face')
+ValueError: Select the Chinese mainland sans-serif source face

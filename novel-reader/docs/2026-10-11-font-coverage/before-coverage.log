@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/pxa-apps/novel-reader/tests/font_coverage_test.py", line 21, in <module>
+    assert not missing, 'Missing glyphs: ' + ' '.join(f'{c}(U+{ord(c):04X})' for c in missing)
+           ^^^^^^^^^^^
+AssertionError: Missing glyphs: 亂(U+4E82) 濛(U+6FDB) 茲(U+8332) 闢(U+95E2) 靈(U+9748)

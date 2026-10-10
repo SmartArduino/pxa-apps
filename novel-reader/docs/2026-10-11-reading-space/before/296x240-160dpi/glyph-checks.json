@@ -1,0 +1,32 @@
+[
+  {
+    "label": "real-first-chapter",
+    "visible_han_characters": 30,
+    "body_lines": 4,
+    "body_top": 50,
+    "body_bottom": 178,
+    "body_pixels": 16,
+    "file_offset": 604,
+    "text_sha256": "ea9d30fcd8fc9e510dec8055f706a6bef447fdc426aa66a1dfbf50600bd94541"
+  },
+  {
+    "label": "real-prose-glyphs",
+    "visible_han_characters": 57,
+    "body_lines": 5,
+    "body_top": 50,
+    "body_bottom": 204,
+    "body_pixels": 16,
+    "file_offset": 1756,
+    "text_sha256": "4cf2b60d36cbd93940c8f2e32e2385f4cc0ff52fa6b31f0f371c3d89d8dd40c7"
+  },
+  {
+    "label": "fixed-second-chapter",
+    "visible_han_characters": 43,
+    "body_lines": 4,
+    "body_top": 50,
+    "body_bottom": 178,
+    "body_pixels": 16,
+    "file_offset": 22819,
+    "text_sha256": "27d987cf441fc2ec265f9cb5a5c3d6a13c4cb97314723b1e7375e795bb2ba4d7"
+  }
+]

@@ -1,0 +1,93 @@
+PXADB2 service already running: socket=/tmp/pxa-simulator-1000/pai-touch.sock state=/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/simulator/pai-touch log=/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/simulator/pai-touch/pxadb.log
+-- /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/deps/pxa-system/simulator/desktop/lv_conf.h
+-- Using configuration: /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/deps/pxa-system/simulator/desktop/lv_conf.h
+-- WAMR version: 2.4.3
+-- Build Configurations:
+     Build as target X86_64
+     Build for platform linux
+     CMAKE_BUILD_TYPE Release
+     BUILD_SHARED_LIBS OFF
+     WAMR Interpreter enabled
+     Fast interpreter enabled
+     WAMR AOT enabled
+     WAMR Fast JIT disabled
+     WAMR LLVM ORC JIT disabled
+     Libc builtin enabled
+     Libc WASI enabled
+     Multiple modules disabled
+     Wakeup of blocking operations enabled
+     GC performance profiling disabled
+     Module instance context enabled
+     Write linear memory base addr to x86 GS register enabled
+     Quick AOT/JIT entries enabled
+     AOT intrinsics enabled
+     Shrunk memory enabled
+     Extended constant expression disabled
+-- About Wasm Proposals:
+     Always-on:
+       "Import/Export of Mutable Globals"
+       "Multi-value"
+       "Non-trapping float-to-int Conversions"
+       "Sign-extension Operators"
+       "WebAssembly C and C++ API"
+     Configurable. 0 is OFF. 1 is ON:
+       "Branch Hinting" via WAMR_BUILD_BRANCH_HINTS:
+       "Bulk Memory Operation" via WAMR_BUILD_BULK_MEMORY: 1
+       "Bulk-memory-opt" via WAMR_BUILD_BULK_MEMORY_OPT: 1
+       "Call-indirect-overlong" via WAMR_BUILD_CALL_INDIRECT_OVERLONG: 1
+       "Extended Constant Expressions" via WAMR_BUILD_EXTENDED_CONST_EXPR: 0
+       "Fixed-width SIMD" via WAMR_BUILD_SIMD: 0
+       "Garbage Collection" via WAMR_BUILD_GC: 0
+       "Legacy Exception Handling" via WAMR_BUILD_EXCE_HANDLING: 0
+       "Memory64" via WAMR_BUILD_MEMORY64: 0
+       "Multiple Memories" via WAMR_BUILD_MULTI_MEMORY: 0
+       "Reference Types" via WAMR_BUILD_REF_TYPES: 1
+       "Reference-Typed Strings" via WAMR_BUILD_STRINGREF: 0
+       "Tail Call" via WAMR_BUILD_TAIL_CALL: 0
+       "Threads" via WAMR_BUILD_SHARED_MEMORY: 0
+       "Typed Function References" via WAMR_BUILD_GC: 0
+     Unsupported (>= Phase4):
+       "Custom Annotation Syntax in the Text Format"
+       "Exception Handling"
+       "JS String Builtins"
+       "Relaxed SIMD"
+
+-- Configuring done (1.9s)
+-- Generating done (0.4s)
+-- Build files have been written to: /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/simulator/pai-touch
+[  3%] Built target pxa_system_core
+[  4%] Built target pxa_system_reference_layout
+[ 78%] Built target lvgl
+[ 80%] Built target pxa_system_native
+[ 80%] Built target pxa_system_standard
+[ 80%] Building C object pxa-system/ui/reference/lvgl/CMakeFiles/pxa_system_reference_lvgl.dir/src/reference_lvgl.c.o
+[ 80%] Linking C static library libpxa_system_reference_lvgl.a
+[ 80%] Built target pxa_system_reference_lvgl
+[ 87%] Built target pxa
+[ 88%] Built target pxa_adapters_openssl
+[ 90%] Built target pxa_adapters_posix
+[ 90%] Building C object pxa-system/libpxa/CMakeFiles/pxa_adapters_lvgl.dir/adapters/lvgl/pxa_lvgl_ui.c.o
+[ 90%] Linking C static library libpxa_adapters_lvgl.a
+[ 90%] Built target pxa_adapters_lvgl
+[ 97%] Built target vmlib
+[ 97%] Built target pxa_adapters_wamr
+[ 97%] Built target pxa_system_pxa
+[ 98%] Built target pxa_system_renderer_lvgl
+[ 98%] Generating generated/builtin_catalog_data.h
+[ 98%] Generating generated/builtin_catalog_data.h
+[ 98%] Linking C executable pxsys_desktop_simulator
+[100%] Built target pxsys_desktop_simulator
+[  3%] Built target pxa_system_core
+[ 80%] Built target lvgl
+[ 88%] Built target pxa
+[ 89%] Built target pxa_adapters_openssl
+[ 90%] Built target pxa_adapters_posix
+[ 90%] Built target pxa_adapters_lvgl
+[ 98%] Built target vmlib
+[ 98%] Built target pxa_adapters_wamr
+[ 98%] Linking C executable pxsys_product_simulator
+[100%] Built target pxsys_product_simulator
+Simulator ready: profile=pai-touch mode=ui
+PXADB2 local endpoint: unix:/tmp/pxa-simulator-1000/pai-touch.sock
+PXADB2 debug control: unix:/tmp/pxa-simulator-1000/pai-touch.control.sock
+PXADB command: pxadb --simulator pai-touch <command>

@@ -1,0 +1,11 @@
+{
+  "local/pxa-apps/novel-reader/main.cpp": "ac80f799c27ce9f5f84dd749fbe6a05fd3e95778da87851ff8cafffe38efea3f",
+  "local/pxa-apps/novel-reader/reader_core.hpp": "65ef23337ceb12be7e114856a77df87079c31c4abac566bec05a0ff2b03d06c3",
+  "local/pxa-apps/novel-reader/reader_ui.inc": "4d376cfb19ee3535577b71a153be0880220c9f466b67cf3b13eee664e3a16eab",
+  "local/pxa-apps/novel-reader/reader_state.hpp": "5d3eed1ac174a9806665a25227a43193f9d63677de66a24a8c9968a4c6665b7a",
+  "local/pxa-apps/novel-reader/CMakeLists.txt": "99925bb9f7fb653714d23b0b149d5e7f58ac9248c982f7e58af4ed8385b3fb4f",
+  "local/pxa-apps/novel-reader/tests/ui_sdk_probe.py": "c12cba37e12505fc8eb8998f787bd83c738a99f9afa4a2479a491b08ea3172f6",
+  "local/pxa-apps/novel-reader/tests/core_test.cpp": "5c2c532b6a6eb91f641c916060f7446465f91797b4cc26ef91bb1202c34eb3d7",
+  "local/reader-quiet-20261010/release-verified/pxa-novel-reader.pxa": "fd1ba10518c8d97a096bb7712f2578df43fdd0b13f5a78e37401bc0d56faaccc",
+  "local/reader-quiet-20261010/qa-verified/artifacts/pxa-novel-reader.pxa": "8a288ad21f3a8dc093cef48ed5a294d56918b016412d922667a366fb7931095d"
+}

@@ -1,0 +1,29 @@
+[
+  {
+    "label": "smallest-font-settings",
+    "pixels": 22,
+    "step": 51,
+    "ink_heights": [
+      22,
+      21
+    ]
+  },
+  {
+    "label": "largest-font-settings",
+    "pixels": 53,
+    "step": 100,
+    "ink_heights": [
+      51,
+      50
+    ]
+  },
+  {
+    "label": "largest-font-larger-gap",
+    "pixels": 53,
+    "step": 104,
+    "ink_heights": [
+      51,
+      50
+    ]
+  }
+]

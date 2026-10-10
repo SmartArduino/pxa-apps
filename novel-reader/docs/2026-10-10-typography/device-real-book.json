@@ -1,0 +1,220 @@
+{
+  "idle": {
+    "heap": {
+      "scope": "heap",
+      "sram_total": "320987",
+      "sram_free": "36823",
+      "sram_min": "6304",
+      "sram_largest": "19456",
+      "psram_total": "8358572",
+      "psram_free": "6641268",
+      "psram_min": "4495784",
+      "psram_largest": "5636096"
+    },
+    "budget": {
+      "scope": "budget",
+      "internal": "27468",
+      "external": "16516",
+      "peak_internal": "45372",
+      "peak_external": "271834",
+      "temporary_peak_internal": "0",
+      "temporary_peak_external": "49686",
+      "fixed": "2224",
+      "denied": "0",
+      "allocation_failures": "0"
+    },
+    "kind:raster": {
+      "scope": "kind",
+      "name": "raster",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:image": {
+      "scope": "kind",
+      "name": "image",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:audio": {
+      "scope": "kind",
+      "name": "audio",
+      "internal": "0",
+      "external": "16392"
+    },
+    "kind:temporary": {
+      "scope": "kind",
+      "name": "temporary",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:metadata": {
+      "scope": "kind",
+      "name": "metadata",
+      "internal": "27468",
+      "external": "124"
+    },
+    "kind:frame": {
+      "scope": "kind",
+      "name": "frame",
+      "internal": "0",
+      "external": "0"
+    },
+    "surface": {
+      "scope": "surface",
+      "frame": "0",
+      "scratch": "0",
+      "mailbox": "0",
+      "probe": "0",
+      "peak_total": "573696"
+    }
+  },
+  "real_book": {
+    "url": "https://raw.githubusercontent.com/GITenberg/---_23962/master/23962-0.txt",
+    "source_bytes": 2264071,
+    "source_sha256": "fc9a3956fd22b9a4356af8dd0dca27596fd0c9da87c35eae45c4f331c1b8f597",
+    "partial_bytes": 270336,
+    "partial_sha256": "b50941594d30c55c81796a16e634ae4dbc63eac8fbcaeb4e4e0dec5e3fe03473",
+    "tenth_chapter_opened": true,
+    "instant_search_opened": true
+  },
+  "session_end": {
+    "heap": {
+      "scope": "heap",
+      "sram_total": "320987",
+      "sram_free": "35631",
+      "sram_min": "7939",
+      "sram_largest": "19456",
+      "psram_total": "8358572",
+      "psram_free": "5464248",
+      "psram_min": "4509628",
+      "psram_largest": "3604480"
+    },
+    "budget": {
+      "scope": "budget",
+      "internal": "27468",
+      "external": "16636",
+      "peak_internal": "45372",
+      "peak_external": "271834",
+      "temporary_peak_internal": "0",
+      "temporary_peak_external": "49686",
+      "fixed": "2224",
+      "denied": "0",
+      "allocation_failures": "0"
+    },
+    "kind:raster": {
+      "scope": "kind",
+      "name": "raster",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:image": {
+      "scope": "kind",
+      "name": "image",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:audio": {
+      "scope": "kind",
+      "name": "audio",
+      "internal": "0",
+      "external": "16392"
+    },
+    "kind:temporary": {
+      "scope": "kind",
+      "name": "temporary",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:metadata": {
+      "scope": "kind",
+      "name": "metadata",
+      "internal": "27468",
+      "external": "244"
+    },
+    "kind:frame": {
+      "scope": "kind",
+      "name": "frame",
+      "internal": "0",
+      "external": "0"
+    },
+    "surface": {
+      "scope": "surface",
+      "frame": "0",
+      "scratch": "0",
+      "mailbox": "0",
+      "probe": "0",
+      "peak_total": "573696"
+    }
+  },
+  "restarts_passed": 3,
+  "after_stop": {
+    "heap": {
+      "scope": "heap",
+      "sram_total": "320987",
+      "sram_free": "36787",
+      "sram_min": "6304",
+      "sram_largest": "19456",
+      "psram_total": "8358572",
+      "psram_free": "6558956",
+      "psram_min": "4410572",
+      "psram_largest": "5636096"
+    },
+    "budget": {
+      "scope": "budget",
+      "internal": "27468",
+      "external": "16516",
+      "peak_internal": "45372",
+      "peak_external": "271834",
+      "temporary_peak_internal": "0",
+      "temporary_peak_external": "49686",
+      "fixed": "2224",
+      "denied": "0",
+      "allocation_failures": "0"
+    },
+    "kind:raster": {
+      "scope": "kind",
+      "name": "raster",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:image": {
+      "scope": "kind",
+      "name": "image",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:audio": {
+      "scope": "kind",
+      "name": "audio",
+      "internal": "0",
+      "external": "16392"
+    },
+    "kind:temporary": {
+      "scope": "kind",
+      "name": "temporary",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:metadata": {
+      "scope": "kind",
+      "name": "metadata",
+      "internal": "27468",
+      "external": "124"
+    },
+    "kind:frame": {
+      "scope": "kind",
+      "name": "frame",
+      "internal": "0",
+      "external": "0"
+    },
+    "surface": {
+      "scope": "surface",
+      "frame": "0",
+      "scratch": "0",
+      "mailbox": "0",
+      "probe": "0",
+      "peak_total": "573696"
+    }
+  },
+  "passed": true
+}

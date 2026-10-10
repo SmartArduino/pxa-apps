@@ -1,0 +1,481 @@
+{
+  "idle": {
+    "heap": {
+      "scope": "heap",
+      "sram_total": "320987",
+      "sram_free": "57127",
+      "sram_min": "27900",
+      "sram_largest": "19456",
+      "psram_total": "8358572",
+      "psram_free": "6942460",
+      "psram_min": "6445008",
+      "psram_largest": "6422528"
+    },
+    "budget": {
+      "scope": "budget",
+      "internal": "27468",
+      "external": "16516",
+      "peak_internal": "27468",
+      "peak_external": "16516",
+      "temporary_peak_internal": "0",
+      "temporary_peak_external": "0",
+      "fixed": "2224",
+      "denied": "0",
+      "allocation_failures": "0"
+    },
+    "kind:raster": {
+      "scope": "kind",
+      "name": "raster",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:image": {
+      "scope": "kind",
+      "name": "image",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:audio": {
+      "scope": "kind",
+      "name": "audio",
+      "internal": "0",
+      "external": "16392"
+    },
+    "kind:temporary": {
+      "scope": "kind",
+      "name": "temporary",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:metadata": {
+      "scope": "kind",
+      "name": "metadata",
+      "internal": "27468",
+      "external": "124"
+    },
+    "kind:frame": {
+      "scope": "kind",
+      "name": "frame",
+      "internal": "0",
+      "external": "0"
+    },
+    "surface": {
+      "scope": "surface",
+      "frame": "0",
+      "scratch": "0",
+      "mailbox": "0",
+      "probe": "0",
+      "peak_total": "0"
+    }
+  },
+  "shelf": {
+    "heap": {
+      "scope": "heap",
+      "sram_total": "320987",
+      "sram_free": "55847",
+      "sram_min": "51403",
+      "sram_largest": "19456",
+      "psram_total": "8358572",
+      "psram_free": "5978892",
+      "psram_min": "4896584",
+      "psram_largest": "4718592"
+    },
+    "budget": {
+      "scope": "budget",
+      "internal": "27468",
+      "external": "16636",
+      "peak_internal": "27468",
+      "peak_external": "16636",
+      "temporary_peak_internal": "0",
+      "temporary_peak_external": "0",
+      "fixed": "2224",
+      "denied": "0",
+      "allocation_failures": "0"
+    },
+    "kind:raster": {
+      "scope": "kind",
+      "name": "raster",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:image": {
+      "scope": "kind",
+      "name": "image",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:audio": {
+      "scope": "kind",
+      "name": "audio",
+      "internal": "0",
+      "external": "16392"
+    },
+    "kind:temporary": {
+      "scope": "kind",
+      "name": "temporary",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:metadata": {
+      "scope": "kind",
+      "name": "metadata",
+      "internal": "27468",
+      "external": "244"
+    },
+    "kind:frame": {
+      "scope": "kind",
+      "name": "frame",
+      "internal": "0",
+      "external": "0"
+    },
+    "surface": {
+      "scope": "surface",
+      "frame": "0",
+      "scratch": "0",
+      "mailbox": "0",
+      "probe": "0",
+      "peak_total": "0"
+    }
+  },
+  "reading": {
+    "heap": {
+      "scope": "heap",
+      "sram_total": "320987",
+      "sram_free": "55847",
+      "sram_min": "27063",
+      "sram_largest": "19456",
+      "psram_total": "8358572",
+      "psram_free": "5947772",
+      "psram_min": "4896584",
+      "psram_largest": "4718592"
+    },
+    "budget": {
+      "scope": "budget",
+      "internal": "27468",
+      "external": "16636",
+      "peak_internal": "27468",
+      "peak_external": "16636",
+      "temporary_peak_internal": "0",
+      "temporary_peak_external": "0",
+      "fixed": "2224",
+      "denied": "0",
+      "allocation_failures": "0"
+    },
+    "kind:raster": {
+      "scope": "kind",
+      "name": "raster",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:image": {
+      "scope": "kind",
+      "name": "image",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:audio": {
+      "scope": "kind",
+      "name": "audio",
+      "internal": "0",
+      "external": "16392"
+    },
+    "kind:temporary": {
+      "scope": "kind",
+      "name": "temporary",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:metadata": {
+      "scope": "kind",
+      "name": "metadata",
+      "internal": "27468",
+      "external": "244"
+    },
+    "kind:frame": {
+      "scope": "kind",
+      "name": "frame",
+      "internal": "0",
+      "external": "0"
+    },
+    "surface": {
+      "scope": "surface",
+      "frame": "0",
+      "scratch": "0",
+      "mailbox": "0",
+      "probe": "0",
+      "peak_total": "0"
+    }
+  },
+  "initialization_end": {
+    "heap": {
+      "scope": "heap",
+      "sram_total": "320987",
+      "sram_free": "55847",
+      "sram_min": "27063",
+      "sram_largest": "19456",
+      "psram_total": "8358572",
+      "psram_free": "5947772",
+      "psram_min": "4896584",
+      "psram_largest": "4718592"
+    },
+    "budget": {
+      "scope": "budget",
+      "internal": "27468",
+      "external": "16636",
+      "peak_internal": "27468",
+      "peak_external": "16636",
+      "temporary_peak_internal": "0",
+      "temporary_peak_external": "0",
+      "fixed": "2224",
+      "denied": "0",
+      "allocation_failures": "0"
+    },
+    "kind:raster": {
+      "scope": "kind",
+      "name": "raster",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:image": {
+      "scope": "kind",
+      "name": "image",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:audio": {
+      "scope": "kind",
+      "name": "audio",
+      "internal": "0",
+      "external": "16392"
+    },
+    "kind:temporary": {
+      "scope": "kind",
+      "name": "temporary",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:metadata": {
+      "scope": "kind",
+      "name": "metadata",
+      "internal": "27468",
+      "external": "244"
+    },
+    "kind:frame": {
+      "scope": "kind",
+      "name": "frame",
+      "internal": "0",
+      "external": "0"
+    },
+    "surface": {
+      "scope": "surface",
+      "frame": "0",
+      "scratch": "0",
+      "mailbox": "0",
+      "probe": "0",
+      "peak_total": "0"
+    }
+  },
+  "steady_end": {
+    "heap": {
+      "scope": "heap",
+      "sram_total": "320987",
+      "sram_free": "55299",
+      "sram_min": "26515",
+      "sram_largest": "19456",
+      "psram_total": "8358572",
+      "psram_free": "5872816",
+      "psram_min": "5205700",
+      "psram_largest": "4718592"
+    },
+    "budget": {
+      "scope": "budget",
+      "internal": "27468",
+      "external": "16636",
+      "peak_internal": "27468",
+      "peak_external": "16636",
+      "temporary_peak_internal": "0",
+      "temporary_peak_external": "0",
+      "fixed": "2224",
+      "denied": "0",
+      "allocation_failures": "0"
+    },
+    "kind:raster": {
+      "scope": "kind",
+      "name": "raster",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:image": {
+      "scope": "kind",
+      "name": "image",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:audio": {
+      "scope": "kind",
+      "name": "audio",
+      "internal": "0",
+      "external": "16392"
+    },
+    "kind:temporary": {
+      "scope": "kind",
+      "name": "temporary",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:metadata": {
+      "scope": "kind",
+      "name": "metadata",
+      "internal": "27468",
+      "external": "244"
+    },
+    "kind:frame": {
+      "scope": "kind",
+      "name": "frame",
+      "internal": "0",
+      "external": "0"
+    },
+    "surface": {
+      "scope": "surface",
+      "frame": "0",
+      "scratch": "0",
+      "mailbox": "0",
+      "probe": "0",
+      "peak_total": "0"
+    }
+  },
+  "first_read_ms": 8552.2,
+  "sha256": "f1401c49bf6a399717c05f9dbcd86ec63019f66e3e030f2a9a505078a574d7d9",
+  "session_end": {
+    "heap": {
+      "scope": "heap",
+      "sram_total": "320987",
+      "sram_free": "55299",
+      "sram_min": "22119",
+      "sram_largest": "19456",
+      "psram_total": "8358572",
+      "psram_free": "5798376",
+      "psram_min": "5331228",
+      "psram_largest": "4718592"
+    },
+    "budget": {
+      "scope": "budget",
+      "internal": "27468",
+      "external": "16636",
+      "peak_internal": "27468",
+      "peak_external": "16636",
+      "temporary_peak_internal": "0",
+      "temporary_peak_external": "0",
+      "fixed": "2224",
+      "denied": "0",
+      "allocation_failures": "0"
+    },
+    "kind:raster": {
+      "scope": "kind",
+      "name": "raster",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:image": {
+      "scope": "kind",
+      "name": "image",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:audio": {
+      "scope": "kind",
+      "name": "audio",
+      "internal": "0",
+      "external": "16392"
+    },
+    "kind:temporary": {
+      "scope": "kind",
+      "name": "temporary",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:metadata": {
+      "scope": "kind",
+      "name": "metadata",
+      "internal": "27468",
+      "external": "244"
+    },
+    "kind:frame": {
+      "scope": "kind",
+      "name": "frame",
+      "internal": "0",
+      "external": "0"
+    },
+    "surface": {
+      "scope": "surface",
+      "frame": "0",
+      "scratch": "0",
+      "mailbox": "0",
+      "probe": "0",
+      "peak_total": "0"
+    }
+  },
+  "saved": {
+    "version": 2,
+    "settings": {
+      "font": 16,
+      "gap": 6,
+      "theme": 3,
+      "seconds": 15
+    },
+    "sources": [
+      {
+        "name": "验收书源",
+        "url": "http://192.168.100.128:18767/catalog.json",
+        "kind": 1,
+        "enabled": true
+      },
+      {
+        "name": "经典直读 · 即时搜索",
+        "url": "https://www.gutenberg.org/cache/epub/",
+        "kind": 2,
+        "enabled": true
+      },
+      {
+        "name": "GITenberg · 即时搜索",
+        "url": "https://raw.githubusercontent.com/GITenberg/",
+        "kind": 3,
+        "enabled": true
+      },
+      {
+        "name": "古腾堡中文小说",
+        "url": "https://gutendex.com/books/?languages=zh&copyright=false&mime_type=text%2Fplain",
+        "kind": 0,
+        "enabled": true
+      },
+      {
+        "name": "古腾堡世界文学",
+        "url": "https://gutendex.com/books/?copyright=false&mime_type=text%2Fplain&topic=fiction",
+        "kind": 0,
+        "enabled": true
+      }
+    ],
+    "shelf": [
+      {
+        "title": "林间书屋",
+        "author": "书页原创 · CC0",
+        "url": "sample:book",
+        "toc": "",
+        "validator": "",
+        "position": 0,
+        "total": 1121,
+        "complete": true
+      },
+      {
+        "title": "林间长篇（验收）",
+        "author": "书页 CC0",
+        "url": "http://192.168.100.128:18767/book.txt",
+        "toc": "",
+        "validator": "\"fixture-v1\"",
+        "position": 82,
+        "total": 258777,
+        "complete": true
+      }
+    ]
+  }
+}

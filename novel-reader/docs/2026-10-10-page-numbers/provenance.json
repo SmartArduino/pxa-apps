@@ -1,0 +1,60 @@
+{
+  "source_and_packages": [
+    {
+      "file": "local/pxa-apps/novel-reader/main.cpp",
+      "bytes": 49463,
+      "sha256": "57716d3411abaafe13c29bd41302012239c8abc2c9aec04437669438144c2ad9"
+    },
+    {
+      "file": "local/pxa-apps/novel-reader/reader_core.hpp",
+      "bytes": 32511,
+      "sha256": "3876e6fde522b08d195a249eb1f98f5697b5a8c57cbb14618da4041993ccf005"
+    },
+    {
+      "file": "local/pxa-apps/novel-reader/reader_paging.hpp",
+      "bytes": 3810,
+      "sha256": "10fef8c44a93985da13481b6cabf16d6c22b370546929c2ebe9981e74a5cdab3"
+    },
+    {
+      "file": "local/pxa-apps/novel-reader/reader_ui.inc",
+      "bytes": 31019,
+      "sha256": "80280fd79666fc7a67aa05cabfb9cdc6cc5f8190bc76180d64db7853d108dbe5"
+    },
+    {
+      "file": "local/pxa-apps/novel-reader/tests/core_test.cpp",
+      "bytes": 15373,
+      "sha256": "11f4c7e9aa6ff3b32e41f108c0b978b4712ec7b0e997108ce6d852c0707703db"
+    },
+    {
+      "file": "local/pxa-apps/novel-reader/tests/ui_sdk_probe.py",
+      "bytes": 32566,
+      "sha256": "39a03c272e59488da4db823f903c8256e15bc7b51f728412aaea4ebb6a6777e3"
+    },
+    {
+      "file": "local/reader-pages-20261010/release/pxa-novel-reader.pxa",
+      "bytes": 1847663,
+      "sha256": "85fafe5b2f9605898a697985d0d135c5874033f2ee2385c48db2c08a0876fd62"
+    },
+    {
+      "file": "local/reader-pages-20261010/qa-verified/artifacts/pxa-novel-reader.pxa",
+      "bytes": 398154,
+      "sha256": "cca77ed523c7f0dd884811f2d265653a4c894d2e3c1c0cf21dbaf7f0e7f18700"
+    },
+    {
+      "file": "local/reader-typography-20261010/xiyou.txt",
+      "bytes": 2264071,
+      "sha256": "fc9a3956fd22b9a4356af8dd0dca27596fd0c9da87c35eae45c4f331c1b8f597"
+    }
+  ],
+  "verified": {
+    "screens": "real/results.json",
+    "cache": "cache-verified/results.json"
+  },
+  "formal_install": "simulator:esp-mosaico",
+  "device_attempt": {
+    "port": "/dev/ttyACM0",
+    "result": "no HELLO response; no settings or device files changed",
+    "prior_storage_free_bytes": 4096
+  },
+  "pool_peak_scope": "per new simulator process; fixed 8-slot reservation, not additional heap allocations"
+}

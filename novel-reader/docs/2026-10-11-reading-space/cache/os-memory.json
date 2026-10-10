@@ -1,0 +1,177 @@
+[
+  {
+    "frame": "shelf",
+    "VmRSS": 47489024,
+    "VmHWM": 47489024
+  },
+  {
+    "frame": "book-management",
+    "VmRSS": 47882240,
+    "VmHWM": 47882240
+  },
+  {
+    "frame": "remove-confirmation",
+    "VmRSS": 47980544,
+    "VmHWM": 47980544
+  },
+  {
+    "frame": "settings",
+    "VmRSS": 48496640,
+    "VmHWM": 48496640
+  },
+  {
+    "frame": "tinted-settings",
+    "VmRSS": 48517120,
+    "VmHWM": 48517120
+  },
+  {
+    "frame": "night-settings",
+    "VmRSS": 48521216,
+    "VmHWM": 48521216
+  },
+  {
+    "frame": "reading",
+    "VmRSS": 48705536,
+    "VmHWM": 48705536
+  },
+  {
+    "frame": "page-number",
+    "VmRSS": 48705536,
+    "VmHWM": 48705536
+  },
+  {
+    "frame": "page-number-return",
+    "VmRSS": 48861184,
+    "VmHWM": 48861184
+  },
+  {
+    "frame": "reading-menu",
+    "VmRSS": 48865280,
+    "VmHWM": 48865280
+  },
+  {
+    "frame": "contents",
+    "VmRSS": 48906240,
+    "VmHWM": 48906240
+  },
+  {
+    "frame": "search",
+    "VmRSS": 49000448,
+    "VmHWM": 49000448
+  },
+  {
+    "frame": "system-ime",
+    "VmRSS": 49000448,
+    "VmHWM": 49000448
+  },
+  {
+    "frame": "chinese-input",
+    "VmRSS": 49065984,
+    "VmHWM": 49065984
+  },
+  {
+    "frame": "chinese-submitted",
+    "VmRSS": 49065984,
+    "VmHWM": 49065984
+  },
+  {
+    "frame": "query-restored",
+    "VmRSS": 49065984,
+    "VmHWM": 49065984
+  },
+  {
+    "frame": "query-edit-ime",
+    "VmRSS": 49065984,
+    "VmHWM": 49065984
+  },
+  {
+    "frame": "empty-submitted",
+    "VmRSS": 49065984,
+    "VmHWM": 49065984
+  },
+  {
+    "frame": "sources",
+    "VmRSS": 49131520,
+    "VmHWM": 49131520
+  },
+  {
+    "frame": "disabled-source",
+    "VmRSS": 49131520,
+    "VmHWM": 49131520
+  },
+  {
+    "frame": "partial-reading",
+    "VmRSS": 50061312,
+    "VmHWM": 50061312
+  },
+  {
+    "frame": "partial-next-page",
+    "VmRSS": 50061312,
+    "VmHWM": 50061312
+  },
+  {
+    "frame": "partial-contents",
+    "VmRSS": 50094080,
+    "VmHWM": 50094080
+  },
+  {
+    "frame": "reopened-partial",
+    "VmRSS": 50094080,
+    "VmHWM": 50094080
+  },
+  {
+    "frame": "partial-page-number",
+    "VmRSS": 50094080,
+    "VmHWM": 50094080
+  },
+  {
+    "frame": "downloaded-reading",
+    "VmRSS": 50094080,
+    "VmHWM": 50094080
+  },
+  {
+    "frame": "previous-from-file",
+    "VmRSS": 50171904,
+    "VmHWM": 50171904
+  },
+  {
+    "frame": "previous-page-number",
+    "VmRSS": 50171904,
+    "VmHWM": 50171904
+  },
+  {
+    "frame": "rejected-broken",
+    "VmRSS": 50171904,
+    "VmHWM": 50171904
+  },
+  {
+    "frame": "rejected-changed",
+    "VmRSS": 50188288,
+    "VmHWM": 50188288
+  },
+  {
+    "frame": "rejected-empty",
+    "VmRSS": 50200576,
+    "VmHWM": 50200576
+  },
+  {
+    "frame": "rejected-invalid-utf8",
+    "VmRSS": 50204672,
+    "VmHWM": 50204672
+  },
+  {
+    "frame": "progressive-chapter-contents",
+    "VmRSS": 50212864,
+    "VmHWM": 50212864
+  },
+  {
+    "frame": "pending-chapter-guard",
+    "VmRSS": 50212864,
+    "VmHWM": 50212864
+  },
+  {
+    "frame": "chapter-cache",
+    "VmRSS": 50212864,
+    "VmHWM": 50212864
+  }
+]

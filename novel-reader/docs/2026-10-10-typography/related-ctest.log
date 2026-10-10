@@ -1,0 +1,9 @@
+Test project /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/simulator/esp-mosaico
+    Start 12: pxsys_system_gestures_test
+1/2 Test #12: pxsys_system_gestures_test .......   Passed    0.09 sec
+    Start 16: pxsys_reference_ime_test
+2/2 Test #16: pxsys_reference_ime_test .........   Passed    0.01 sec
+
+100% tests passed out of 2
+
+Total Test time (real) =   0.10 sec

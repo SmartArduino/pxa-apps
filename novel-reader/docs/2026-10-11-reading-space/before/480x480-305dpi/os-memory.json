@@ -1,0 +1,192 @@
+[
+  {
+    "frame": "shelf",
+    "VmRSS": 47669248,
+    "VmHWM": 47669248
+  },
+  {
+    "frame": "book-management",
+    "VmRSS": 48058368,
+    "VmHWM": 48058368
+  },
+  {
+    "frame": "remove-confirmation",
+    "VmRSS": 48160768,
+    "VmHWM": 48160768
+  },
+  {
+    "frame": "settings",
+    "VmRSS": 48541696,
+    "VmHWM": 48541696
+  },
+  {
+    "frame": "tinted-settings",
+    "VmRSS": 48562176,
+    "VmHWM": 48562176
+  },
+  {
+    "frame": "night-settings",
+    "VmRSS": 48570368,
+    "VmHWM": 48570368
+  },
+  {
+    "frame": "smallest-font-settings",
+    "VmRSS": 48599040,
+    "VmHWM": 48599040
+  },
+  {
+    "frame": "smallest-reading",
+    "VmRSS": 48857088,
+    "VmHWM": 48857088
+  },
+  {
+    "frame": "largest-font-settings",
+    "VmRSS": 48988160,
+    "VmHWM": 48988160
+  },
+  {
+    "frame": "largest-font-larger-gap",
+    "VmRSS": 48988160,
+    "VmHWM": 48988160
+  },
+  {
+    "frame": "largest-reading",
+    "VmRSS": 49008640,
+    "VmHWM": 49008640
+  },
+  {
+    "frame": "reading",
+    "VmRSS": 49008640,
+    "VmHWM": 49008640
+  },
+  {
+    "frame": "page-number",
+    "VmRSS": 49008640,
+    "VmHWM": 49008640
+  },
+  {
+    "frame": "page-number-return",
+    "VmRSS": 49094656,
+    "VmHWM": 49094656
+  },
+  {
+    "frame": "real-partial-contents",
+    "VmRSS": 49094656,
+    "VmHWM": 49094656
+  },
+  {
+    "frame": "real-first-chapter",
+    "VmRSS": 49094656,
+    "VmHWM": 49094656
+  },
+  {
+    "frame": "real-prose-0",
+    "VmRSS": 49094656,
+    "VmHWM": 49094656
+  },
+  {
+    "frame": "real-prose-1",
+    "VmRSS": 49094656,
+    "VmHWM": 49094656
+  },
+  {
+    "frame": "real-prose-2",
+    "VmRSS": 49160192,
+    "VmHWM": 49160192
+  },
+  {
+    "frame": "real-prose-3",
+    "VmRSS": 49291264,
+    "VmHWM": 49291264
+  },
+  {
+    "frame": "real-prose-4",
+    "VmRSS": 49356800,
+    "VmHWM": 49356800
+  },
+  {
+    "frame": "real-prose-5",
+    "VmRSS": 49356800,
+    "VmHWM": 49356800
+  },
+  {
+    "frame": "real-prose-glyphs",
+    "VmRSS": 49356800,
+    "VmHWM": 49356800
+  },
+  {
+    "frame": "fixed-second-chapter",
+    "VmRSS": 49377280,
+    "VmHWM": 49377280
+  },
+  {
+    "frame": "real-instant-search",
+    "VmRSS": 49500160,
+    "VmHWM": 49500160
+  },
+  {
+    "frame": "real-search-open",
+    "VmRSS": 49500160,
+    "VmHWM": 49500160
+  },
+  {
+    "frame": "reading-menu",
+    "VmRSS": 49500160,
+    "VmHWM": 49500160
+  },
+  {
+    "frame": "contents",
+    "VmRSS": 49500160,
+    "VmHWM": 49500160
+  },
+  {
+    "frame": "search",
+    "VmRSS": 49500160,
+    "VmHWM": 49500160
+  },
+  {
+    "frame": "system-ime",
+    "VmRSS": 49500160,
+    "VmHWM": 49500160
+  },
+  {
+    "frame": "chinese-input",
+    "VmRSS": 49500160,
+    "VmHWM": 49500160
+  },
+  {
+    "frame": "chinese-submitted",
+    "VmRSS": 49500160,
+    "VmHWM": 49500160
+  },
+  {
+    "frame": "query-restored",
+    "VmRSS": 49504256,
+    "VmHWM": 49504256
+  },
+  {
+    "frame": "query-edit-ime",
+    "VmRSS": 49504256,
+    "VmHWM": 49504256
+  },
+  {
+    "frame": "empty-submitted",
+    "VmRSS": 49504256,
+    "VmHWM": 49504256
+  },
+  {
+    "frame": "sources",
+    "VmRSS": 49512448,
+    "VmHWM": 49512448
+  },
+  {
+    "frame": "disabled-source",
+    "VmRSS": 49512448,
+    "VmHWM": 49512448
+  },
+  {
+    "frame": "add-source",
+    "VmRSS": 49516544,
+    "VmHWM": 49516544
+  }
+]

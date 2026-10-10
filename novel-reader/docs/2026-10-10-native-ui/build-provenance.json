@@ -1,0 +1,55 @@
+{
+  "artifact": {
+    "manifest_sha256": "295a71cd39750605f97873802ae700cb580c096b313c6c38abd3b39cd41b956f",
+    "path": "pxa-novel-reader.pxa",
+    "sha256": "6602b616a3fbb27f7e240351296bac378f92980ac280f201541df5f8697b83b4",
+    "size": 1802336
+  },
+  "inputs": {
+    "compile_sdk": [
+      1,
+      0
+    ],
+    "files": [
+      {
+        "path": "artifacts/main.esp32-s3.aot",
+        "sha256": "ab780ecdf2288bed0be2020ad647b4c2f6986ebd11a8ae476a6b8f296743346a",
+        "size": 942980
+      },
+      {
+        "path": "artifacts/main.esp32-s31.aot",
+        "sha256": "c4af2d0e3880f9ac24612cb3dbc3dbf4ddb4fca7c2c7ab762d0b4b3d23b2c05d",
+        "size": 975164
+      },
+      {
+        "path": "artifacts/main.linux-x86_64.aot",
+        "sha256": "e6626989d784f4ec395c4f80c87117378e0db31eb374e09c4205ec8a6a453e2e",
+        "size": 547500
+      },
+      {
+        "path": "assets/resources.pxi",
+        "sha256": "14679f127775607a0560d9fa9731ca8059189d90690cbab3ec9403a8f436ea8b",
+        "size": 16
+      }
+    ],
+    "i18n_catalogs": [],
+    "package_json_sha256": "c477657a63fb3fd93cd9c23b1ac22dc66ba2cca7480944daeab16adbb50ee9d3"
+  },
+  "package": {
+    "app_id": "pxa-novel-reader",
+    "engine_abi": "wamr-pxa-aot-v6-core-1",
+    "manifest_format": "0.7",
+    "min_sdk": "1.0",
+    "publisher_key_id": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171",
+    "release_sequence": 1,
+    "target": "esp32-s3",
+    "target_sdk": "1.0"
+  },
+  "schema": "pxa-provenance-1",
+  "tools": {
+    "clang": "clang version 23.1.1",
+    "python": "3.14.7",
+    "wamrc": "unavailable",
+    "wasi_sdk_dir": ""
+  }
+}

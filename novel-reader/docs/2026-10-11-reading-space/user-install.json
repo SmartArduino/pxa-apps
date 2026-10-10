@@ -1,0 +1,12 @@
+{
+  "pai_touch_installed": true,
+  "full_system_ui_restarted": true,
+  "private_files_unchanged": true,
+  "private_file_count": 6,
+  "settings_and_position_unchanged": true,
+  "esp_mosaico": {
+    "installed": true,
+    "private_files_unchanged": true,
+    "files": 0
+  }
+}

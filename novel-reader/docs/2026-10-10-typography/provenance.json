@@ -1,0 +1,31 @@
+{
+  "source_hashes": {
+    "main.cpp": "9e3333e1576aac82abc7216b26d5fcd81ac3e6461eb0ff1a614f787c8aff28a6",
+    "reader_core.hpp": "b7f009df267d428b9d21453966b592777dc6bde4d25ccea3d0cc20ce526b00d9",
+    "reader_ui.inc": "608906445e849212cff17931e5850df8b22abd06e61080001f306af937d315e5",
+    "reader_state.hpp": "5d3eed1ac174a9806665a25227a43193f9d63677de66a24a8c9968a4c6665b7a",
+    "CMakeLists.txt": "99925bb9f7fb653714d23b0b149d5e7f58ac9248c982f7e58af4ed8385b3fb4f",
+    "package.json": "c477657a63fb3fd93cd9c23b1ac22dc66ba2cca7480944daeab16adbb50ee9d3"
+  },
+  "sdk_module_hashes": {
+    "sdk/cmake/PxaCppDiagnostics.cmake": "12cd60d3cad06496dfb4b34ea052ea46002a9f75c9441dcc8f0db7360bcea247",
+    "sdk/guest-cpp/include/pxa/libcpp_diagnostics.hpp": "9acefc504c458182f58c4839f0382ac419604a7ae5fc2cb36f8dbcde7d8d9edd",
+    "sdk/guest-cpp/src/libcpp_diagnostics.cpp": "1f5756dec515111207338c5282561b6ac35798e2f931db32dcfaabf85a1b295c"
+  },
+  "artifacts": {
+    "main.esp32-s31.aot": {
+      "bytes": 973992,
+      "sha256": "384c4fb30f683d49cd3f36a8316a1cd8fae106073cf88f0726518845c2ccfebb"
+    },
+    "main.linux-x86_64.aot": {
+      "bytes": 524124,
+      "sha256": "f817666a34bd3c503d33c83750d011c7dab8e493ee8e8cb5f36afe9b91c041dc"
+    },
+    "main.esp32-s3.aot": {
+      "bytes": 944740,
+      "sha256": "39964efe684bdd05aa75613d5b94c7ebfb9c72079d8c6b1219b155c7e5f40627"
+    }
+  },
+  "package_sha256": "8981cb8e9abad1dd774b9b11e7c21f85a083c1474188e1103913e2afea1df8ac",
+  "device_package_sha256": "85fc484f66dfc74e7691d5188a2b68c17f14576ef92bd749fd056c4cf23c653f"
+}

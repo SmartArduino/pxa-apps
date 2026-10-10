@@ -1,0 +1,14 @@
+{
+  "before": {
+    "app": 33464,
+    "page": 432,
+    "combined": 33896,
+    "sha256_main": "da486d87609fb3edfd738b6f175330c28f633013b6191065f73157a73b13762e"
+  },
+  "after": {
+    "app": 15376,
+    "page": 2264,
+    "combined": 17640,
+    "sha256_main": "8c7b85dc9a31c341e554f2acbaf661a794d5e13f6e44d52c3e6b5fd99826ecef"
+  }
+}

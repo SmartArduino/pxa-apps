@@ -1,0 +1,30 @@
+[
+  {
+    "case": "broken",
+    "rejected": true,
+    "complete_cache_preserved": true
+  },
+  {
+    "case": "changed",
+    "rejected": true,
+    "complete_cache_preserved": true
+  },
+  {
+    "case": "empty",
+    "rejected": true,
+    "complete_cache_preserved": true
+  },
+  {
+    "case": "invalid-utf8",
+    "rejected": true,
+    "complete_cache_preserved": true
+  },
+  {
+    "case": "directory-held-during-cache",
+    "pointer_release_opened_chapter": true
+  },
+  {
+    "case": "chapters",
+    "sha256": "ac7f0e8dcdc39ad2f191378edfda3ff35461b11a7d7bf91a7c8f4ffcfaf746ff"
+  }
+]

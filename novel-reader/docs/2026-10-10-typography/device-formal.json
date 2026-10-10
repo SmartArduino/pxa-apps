@@ -1,0 +1,300 @@
+{
+  "packages_before": [
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft-cpp\tVoxel Craft C++\t0.12.1\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-novel-reader\t书页阅读\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+  ],
+  "idle": {
+    "heap": {
+      "scope": "heap",
+      "sram_total": "320987",
+      "sram_free": "36787",
+      "sram_min": "6304",
+      "sram_largest": "19456",
+      "psram_total": "8358572",
+      "psram_free": "6542004",
+      "psram_min": "4410572",
+      "psram_largest": "5636096"
+    },
+    "budget": {
+      "scope": "budget",
+      "internal": "27468",
+      "external": "16516",
+      "peak_internal": "45372",
+      "peak_external": "271834",
+      "temporary_peak_internal": "0",
+      "temporary_peak_external": "49686",
+      "fixed": "2224",
+      "denied": "0",
+      "allocation_failures": "0"
+    },
+    "kind:raster": {
+      "scope": "kind",
+      "name": "raster",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:image": {
+      "scope": "kind",
+      "name": "image",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:audio": {
+      "scope": "kind",
+      "name": "audio",
+      "internal": "0",
+      "external": "16392"
+    },
+    "kind:temporary": {
+      "scope": "kind",
+      "name": "temporary",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:metadata": {
+      "scope": "kind",
+      "name": "metadata",
+      "internal": "27468",
+      "external": "124"
+    },
+    "kind:frame": {
+      "scope": "kind",
+      "name": "frame",
+      "internal": "0",
+      "external": "0"
+    },
+    "surface": {
+      "scope": "surface",
+      "frame": "0",
+      "scratch": "0",
+      "mailbox": "0",
+      "probe": "0",
+      "peak_total": "573696"
+    }
+  },
+  "aot_mapping": {
+    "request": 890504,
+    "map": 917504,
+    "alloc": 917504
+  },
+  "initialization_end": {
+    "heap": {
+      "scope": "heap",
+      "sram_total": "320987",
+      "sram_free": "35631",
+      "sram_min": "16579",
+      "sram_largest": "19456",
+      "psram_total": "8358572",
+      "psram_free": "5597032",
+      "psram_min": "4532656",
+      "psram_largest": "3735552"
+    },
+    "budget": {
+      "scope": "budget",
+      "internal": "27468",
+      "external": "16630",
+      "peak_internal": "45372",
+      "peak_external": "271834",
+      "temporary_peak_internal": "0",
+      "temporary_peak_external": "49686",
+      "fixed": "2224",
+      "denied": "0",
+      "allocation_failures": "0"
+    },
+    "kind:raster": {
+      "scope": "kind",
+      "name": "raster",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:image": {
+      "scope": "kind",
+      "name": "image",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:audio": {
+      "scope": "kind",
+      "name": "audio",
+      "internal": "0",
+      "external": "16392"
+    },
+    "kind:temporary": {
+      "scope": "kind",
+      "name": "temporary",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:metadata": {
+      "scope": "kind",
+      "name": "metadata",
+      "internal": "27468",
+      "external": "238"
+    },
+    "kind:frame": {
+      "scope": "kind",
+      "name": "frame",
+      "internal": "0",
+      "external": "0"
+    },
+    "surface": {
+      "scope": "surface",
+      "frame": "0",
+      "scratch": "0",
+      "mailbox": "0",
+      "probe": "0",
+      "peak_total": "573696"
+    }
+  },
+  "interaction_end": {
+    "heap": {
+      "scope": "heap",
+      "sram_total": "320987",
+      "sram_free": "35631",
+      "sram_min": "16579",
+      "sram_largest": "19456",
+      "psram_total": "8358572",
+      "psram_free": "5596264",
+      "psram_min": "5149324",
+      "psram_largest": "3735552"
+    },
+    "budget": {
+      "scope": "budget",
+      "internal": "27468",
+      "external": "16630",
+      "peak_internal": "45372",
+      "peak_external": "271834",
+      "temporary_peak_internal": "0",
+      "temporary_peak_external": "49686",
+      "fixed": "2224",
+      "denied": "0",
+      "allocation_failures": "0"
+    },
+    "kind:raster": {
+      "scope": "kind",
+      "name": "raster",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:image": {
+      "scope": "kind",
+      "name": "image",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:audio": {
+      "scope": "kind",
+      "name": "audio",
+      "internal": "0",
+      "external": "16392"
+    },
+    "kind:temporary": {
+      "scope": "kind",
+      "name": "temporary",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:metadata": {
+      "scope": "kind",
+      "name": "metadata",
+      "internal": "27468",
+      "external": "238"
+    },
+    "kind:frame": {
+      "scope": "kind",
+      "name": "frame",
+      "internal": "0",
+      "external": "0"
+    },
+    "surface": {
+      "scope": "surface",
+      "frame": "0",
+      "scratch": "0",
+      "mailbox": "0",
+      "probe": "0",
+      "peak_total": "573696"
+    }
+  },
+  "after_stop": {
+    "heap": {
+      "scope": "heap",
+      "sram_total": "320987",
+      "sram_free": "36823",
+      "sram_min": "6304",
+      "sram_largest": "19456",
+      "psram_total": "8358572",
+      "psram_free": "6549876",
+      "psram_min": "4410572",
+      "psram_largest": "5636096"
+    },
+    "budget": {
+      "scope": "budget",
+      "internal": "27468",
+      "external": "16516",
+      "peak_internal": "45372",
+      "peak_external": "271834",
+      "temporary_peak_internal": "0",
+      "temporary_peak_external": "49686",
+      "fixed": "2224",
+      "denied": "0",
+      "allocation_failures": "0"
+    },
+    "kind:raster": {
+      "scope": "kind",
+      "name": "raster",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:image": {
+      "scope": "kind",
+      "name": "image",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:audio": {
+      "scope": "kind",
+      "name": "audio",
+      "internal": "0",
+      "external": "16392"
+    },
+    "kind:temporary": {
+      "scope": "kind",
+      "name": "temporary",
+      "internal": "0",
+      "external": "0"
+    },
+    "kind:metadata": {
+      "scope": "kind",
+      "name": "metadata",
+      "internal": "27468",
+      "external": "124"
+    },
+    "kind:frame": {
+      "scope": "kind",
+      "name": "frame",
+      "internal": "0",
+      "external": "0"
+    },
+    "surface": {
+      "scope": "surface",
+      "frame": "0",
+      "scratch": "0",
+      "mailbox": "0",
+      "probe": "0",
+      "peak_total": "573696"
+    }
+  },
+  "packages_after": [
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft-cpp\tVoxel Craft C++\t0.12.1\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-novel-reader\t书页阅读\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+  ],
+  "settings": {
+    "font": 16,
+    "gap": 6,
+    "theme": 3,
+    "seconds": 15
+  },
+  "passed": true
+}

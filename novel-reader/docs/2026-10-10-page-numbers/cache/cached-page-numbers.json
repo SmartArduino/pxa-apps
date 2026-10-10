@@ -1,0 +1,29 @@
+{
+  "partial": {
+    "current": 1,
+    "total": 509,
+    "text": "1 / 已缓存 509+ 页",
+    "pixels": 19,
+    "y": 433,
+    "width": 442,
+    "height": 31
+  },
+  "complete": {
+    "current": 1,
+    "total": 1842,
+    "text": "1 / 1842 页",
+    "pixels": 19,
+    "y": 433,
+    "width": 442,
+    "height": 31
+  },
+  "previous_lookup": {
+    "current": 681,
+    "total": 1842,
+    "text": "681 / 1842 页",
+    "pixels": 19,
+    "y": 433,
+    "width": 442,
+    "height": 31
+  }
+}

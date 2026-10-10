@@ -1,0 +1,7 @@
+{
+  "visible_navigation": false,
+  "tap_next_previous_roundtrip": true,
+  "bottom_body_menu_tap": true,
+  "drag_ignored": true,
+  "stray_release_ignored": true
+}

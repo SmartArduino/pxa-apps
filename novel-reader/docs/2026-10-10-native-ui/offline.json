@@ -1,0 +1,37 @@
+[
+  {
+    "profile": "480x480-305dpi",
+    "native_ime": true,
+    "local_reading": true,
+    "menu_settings_contents": true,
+    "max_canvas_bytes": 187
+  },
+  {
+    "profile": "296x240-160dpi",
+    "native_ime": true,
+    "local_reading": true,
+    "menu_settings_contents": true,
+    "max_canvas_bytes": 159
+  },
+  {
+    "profile": "360x480-320dpi",
+    "native_ime": true,
+    "local_reading": true,
+    "menu_settings_contents": true,
+    "max_canvas_bytes": 156
+  },
+  {
+    "profile": "480x480-320dpi-circle",
+    "native_ime": true,
+    "local_reading": true,
+    "menu_settings_contents": true,
+    "max_canvas_bytes": 159
+  },
+  {
+    "profile": "800x480-160dpi",
+    "native_ime": true,
+    "local_reading": true,
+    "menu_settings_contents": true,
+    "max_canvas_bytes": 627
+  }
+]

@@ -1,0 +1,62 @@
+{
+  "480x480-305dpi": {
+    "before": {
+      "max_linear_pages": 3,
+      "max_pool_slots": 7,
+      "allocation_failures": 0
+    },
+    "after": {
+      "max_linear_pages": 3,
+      "max_pool_slots": 7,
+      "allocation_failures": 0
+    }
+  },
+  "296x240-160dpi": {
+    "before": {
+      "max_linear_pages": 3,
+      "max_pool_slots": 7,
+      "allocation_failures": 0
+    },
+    "after": {
+      "max_linear_pages": 3,
+      "max_pool_slots": 7,
+      "allocation_failures": 0
+    }
+  },
+  "360x480-320dpi": {
+    "before": {
+      "max_linear_pages": 3,
+      "max_pool_slots": 7,
+      "allocation_failures": 0
+    },
+    "after": {
+      "max_linear_pages": 3,
+      "max_pool_slots": 7,
+      "allocation_failures": 0
+    }
+  },
+  "480x480-320dpi-circle": {
+    "before": {
+      "max_linear_pages": 3,
+      "max_pool_slots": 7,
+      "allocation_failures": 0
+    },
+    "after": {
+      "max_linear_pages": 3,
+      "max_pool_slots": 7,
+      "allocation_failures": 0
+    }
+  },
+  "800x480-160dpi": {
+    "before": {
+      "max_linear_pages": 3,
+      "max_pool_slots": 7,
+      "allocation_failures": 0
+    },
+    "after": {
+      "max_linear_pages": 3,
+      "max_pool_slots": 7,
+      "allocation_failures": 0
+    }
+  }
+}

@@ -1,0 +1,52 @@
+[
+  {
+    "label": "smallest-reading",
+    "visible_han_characters": 33,
+    "body_lines": 5,
+    "body_top": 84,
+    "body_bottom": 359,
+    "body_pixels": 24,
+    "file_offset": 604,
+    "text_sha256": "ffb67305ba7cbb7dc78c2fa38d0e2a3a43f9a707e36a3feaa9603e89b3d60abc"
+  },
+  {
+    "label": "largest-reading",
+    "visible_han_characters": 15,
+    "body_lines": 3,
+    "body_top": 84,
+    "body_bottom": 394,
+    "body_pixels": 56,
+    "file_offset": 604,
+    "text_sha256": "0715a1ddde7413c501c169aba4734d6a4b2380e2a39b18c44bea7af8000a73bd"
+  },
+  {
+    "label": "real-first-chapter",
+    "visible_han_characters": 27,
+    "body_lines": 4,
+    "body_top": 84,
+    "body_bottom": 340,
+    "body_pixels": 32,
+    "file_offset": 604,
+    "text_sha256": "f00a16d24410c0a7dfad273476a42c71b82ce67ee7f45047dca952d8a7f37796"
+  },
+  {
+    "label": "real-prose-glyphs",
+    "visible_han_characters": 46,
+    "body_lines": 5,
+    "body_top": 84,
+    "body_bottom": 392,
+    "body_pixels": 32,
+    "file_offset": 1557,
+    "text_sha256": "b668cbebc8ad2e6dcb9e0acb97f33b03ba54dd8b261a733525efa2aaa66848b2"
+  },
+  {
+    "label": "fixed-second-chapter",
+    "visible_han_characters": 38,
+    "body_lines": 4,
+    "body_top": 84,
+    "body_bottom": 340,
+    "body_pixels": 32,
+    "file_offset": 22819,
+    "text_sha256": "97f99c87f8afa02114e5c4d00e86ec37a4f5bbaa9c35f42a45555986f5ca43ea"
+  }
+]

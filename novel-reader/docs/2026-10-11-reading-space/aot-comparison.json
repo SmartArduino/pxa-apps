@@ -1,0 +1,92 @@
+[
+  {
+    "stage": "before",
+    "target": "main.esp32-s3.aot",
+    "bytes": 969432,
+    "sections": {
+      "0": 48,
+      "1": 12160,
+      "2": 914532,
+      "3": 5760,
+      "4": 187,
+      "5": 36688
+    },
+    "text_map": 917504,
+    "sha256": "5cd467a158a1d5b11153a8298ecc552ae47c2a5c1dd908bf6edccb60ed928c33"
+  },
+  {
+    "stage": "before",
+    "target": "main.esp32-s31.aot",
+    "bytes": 1002852,
+    "sections": {
+      "0": 48,
+      "1": 13700,
+      "2": 897836,
+      "3": 5760,
+      "4": 187,
+      "5": 85264
+    },
+    "text_map": 917504,
+    "sha256": "004eb7ae7764eee347748cab5360a1ade5216dc6475d74e0172ebe93eef5613d"
+  },
+  {
+    "stage": "before",
+    "target": "main.linux-x86_64.aot",
+    "bytes": 541956,
+    "sections": {
+      "0": 48,
+      "1": 14352,
+      "2": 434812,
+      "3": 7200,
+      "4": 187,
+      "5": 85300
+    },
+    "text_map": 458752,
+    "sha256": "ee8a60e0f195c74e91479291f64db26eb30803c14064fcce4f281652b7ede63e"
+  },
+  {
+    "stage": "after",
+    "target": "main.esp32-s3.aot",
+    "bytes": 969856,
+    "sections": {
+      "0": 48,
+      "1": 12196,
+      "2": 914576,
+      "3": 5792,
+      "4": 187,
+      "5": 37000
+    },
+    "text_map": 917504,
+    "sha256": "8d90a33749a78e7b3cfc50f9d43d5259e909df09e0e4dd9df7e72b00c598e038"
+  },
+  {
+    "stage": "after",
+    "target": "main.esp32-s31.aot",
+    "bytes": 1003368,
+    "sections": {
+      "0": 48,
+      "1": 13728,
+      "2": 898204,
+      "3": 5792,
+      "4": 187,
+      "5": 85352
+    },
+    "text_map": 917504,
+    "sha256": "18970bfe1cbc4c96be70f09d029bac92d419df162fa7ffb8f240384b60190771"
+  },
+  {
+    "stage": "after",
+    "target": "main.linux-x86_64.aot",
+    "bytes": 545204,
+    "sections": {
+      "0": 48,
+      "1": 14508,
+      "2": 438108,
+      "3": 7240,
+      "4": 187,
+      "5": 85056
+    },
+    "text_map": 458752,
+    "sha256": "b779c3802a9b02fbb591e5a60635ac0c619a8fa8cc9d05d9fb9d3f9353ce30cb"
+  }
+]

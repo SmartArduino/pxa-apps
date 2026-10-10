@@ -1,0 +1,31 @@
+{
+  "baseline": {
+    "aot_bytes": 944700,
+    "aot_sha256": "8ded9a3ffcde5a3949071293be00a97845197569d82eb8537754e67ed024d4f0",
+    "section_bytes": {
+      "0": 48,
+      "1": 14292,
+      "2": 887364,
+      "3": 5648,
+      "4": 187,
+      "5": 37104
+    },
+    "s3_text_mapping_bytes_expected": 917504,
+    "s3_text_mapping_bytes_measured": 917504
+  },
+  "after": {
+    "aot_bytes": 944740,
+    "aot_sha256": "39964efe684bdd05aa75613d5b94c7ebfb9c72079d8c6b1219b155c7e5f40627",
+    "section_bytes": {
+      "0": 48,
+      "1": 12168,
+      "2": 890504,
+      "3": 5648,
+      "4": 187,
+      "5": 36128
+    },
+    "s3_text_mapping_bytes_expected": 917504,
+    "s3_text_mapping_bytes_measured": 917504,
+    "s3_text_mapping_log": "memory-final.log.gz"
+  }
+}

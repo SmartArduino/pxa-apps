@@ -1,0 +1,10 @@
+{
+  "before": {
+    "ReaderApp": 15096,
+    "reader::Page": 1548
+  },
+  "after": {
+    "ReaderApp": 15096,
+    "reader::Page": 1548
+  }
+}

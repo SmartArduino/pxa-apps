@@ -1,0 +1,57 @@
+[
+  {
+    "label": "smallest-reading",
+    "visible_han_characters": 41,
+    "body_lines": 6,
+    "body_top": 59,
+    "body_bottom": 389,
+    "body_pixels": 24,
+    "file_offset": 604,
+    "text_sha256": "1305322b9776727b7bc2b297bc9ebb07ed0f780e467cbd9f22d9289ecdc5f6ae",
+    "header_pixels": 24
+  },
+  {
+    "label": "largest-reading",
+    "visible_han_characters": 12,
+    "body_lines": 3,
+    "body_top": 59,
+    "body_bottom": 369,
+    "body_pixels": 56,
+    "file_offset": 604,
+    "text_sha256": "37aa11f72f793dbfb8c2c42ca6dde4c4485b01890ecad9f0f89db273903c1b3c",
+    "header_pixels": 24
+  },
+  {
+    "label": "real-first-chapter",
+    "visible_han_characters": 24,
+    "body_lines": 5,
+    "body_top": 59,
+    "body_bottom": 379,
+    "body_pixels": 32,
+    "file_offset": 604,
+    "text_sha256": "cf25dbb58c11e32367ac364fd4a74f676a13559238e783df7b1bb66742026f9d",
+    "header_pixels": 24
+  },
+  {
+    "label": "real-prose-glyphs",
+    "visible_han_characters": 38,
+    "body_lines": 5,
+    "body_top": 59,
+    "body_bottom": 367,
+    "body_pixels": 32,
+    "file_offset": 1307,
+    "text_sha256": "0ad8bf4e234f0a7039a35723dec75bf327960f20e9bb1e2d8f51263df130e716",
+    "header_pixels": 24
+  },
+  {
+    "label": "fixed-second-chapter",
+    "visible_han_characters": 31,
+    "body_lines": 5,
+    "body_top": 59,
+    "body_bottom": 379,
+    "body_pixels": 32,
+    "file_offset": 22819,
+    "text_sha256": "f30b204498bac45b7428eed4a2ffdf9675662d38cf0dc4eb5aab839e5c0206dc",
+    "header_pixels": 24
+  }
+]

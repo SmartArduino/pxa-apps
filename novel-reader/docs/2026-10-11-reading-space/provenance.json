@@ -1,0 +1,42 @@
+{
+  "local/pxa-apps/novel-reader/main.cpp": {
+    "bytes": 49663,
+    "sha256": "f8bd1d0ed06f5c534583d6ebf8e82faca236f6eaa83c54ac0961c1875d216480"
+  },
+  "local/pxa-apps/novel-reader/reader_core.hpp": {
+    "bytes": 34078,
+    "sha256": "42224d1f94c3cafceabbb90a9173750f59e4a209cbd3dffeecb890d74650147e"
+  },
+  "local/pxa-apps/novel-reader/reader_ui.inc": {
+    "bytes": 31585,
+    "sha256": "257921ddd960443bc42226a4ef6d3590c3971025432a6598ef03e08a570184b8"
+  },
+  "local/pxa-apps/novel-reader/reader_paging.hpp": {
+    "bytes": 3887,
+    "sha256": "397b4583dc0d19a5de984907a6a8916d24d3f561ee25307c7067a8715da2dc6c"
+  },
+  "local/pxa-apps/novel-reader/tests/core_test.cpp": {
+    "bytes": 16095,
+    "sha256": "5d8bb23684e72aa2ff351d942dfe38efdb06bc6e4b3bcba47782a28d259a313f"
+  },
+  "local/pxa-apps/novel-reader/tests/ui_sdk_probe.py": {
+    "bytes": 36761,
+    "sha256": "3324711a579d9de7b0fe4f5b20b703b636b6de2448cc62164c7e1ece9951feb6"
+  },
+  "local/reader-space-20261011/release-footer/pxa-novel-reader.pxa": {
+    "bytes": 1850185,
+    "sha256": "76d85ba8ba8d7e77e3a71735ab357c260b5e9093ab6a88c65f11ddc73e5f0016"
+  },
+  "local/reader-space-20261011/qa-footer/artifacts/pxa-novel-reader.pxa": {
+    "bytes": 404037,
+    "sha256": "8466052b33669da07544834f188a8a3a0fab66a5492c48d10633ab3c7416ac46"
+  },
+  "local/reader-typography-20261010/xiyou.txt": {
+    "bytes": 2264071,
+    "sha256": "fc9a3956fd22b9a4356af8dd0dca27596fd0c9da87c35eae45c4f331c1b8f597"
+  },
+  "factory/base/system/fonts/noto_sans_cjk_common.ttf": {
+    "bytes": 3879128,
+    "sha256": "7b89dc0cb85fec0458461953a7e9a08c4012a0f84c3ce44e64407743a248bd10"
+  }
+}
