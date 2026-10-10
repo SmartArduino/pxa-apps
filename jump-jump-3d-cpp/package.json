@@ -1,0 +1,74 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [
+    1,
+    0
+  ],
+  "target_sdk": [
+    1,
+    0
+  ],
+  "compile_sdk": [
+    1,
+    0
+  ],
+  "id": "pxa-jump-jump-3d-cpp",
+  "version": "0.1.0",
+  "release_sequence": 1,
+  "name": "Jump Jump 3D C++",
+  "description": "C++ SDK version: Isometric 3D remake of the WeChat Jump Jump: charge, flip, land on the centre, chain perfect hits",
+  "icon": "assets/icon.png",
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 1048576,
+      "pinned": false
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "services": [
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            8
+          ]
+        },
+        "clock",
+        "game-render",
+        "storage",
+        "log",
+        "permission",
+        "window",
+        {
+          "name": "ui",
+          "features": [
+            "canvas"
+          ]
+        },
+        "assets"
+      ],
+      "cmake_target": "pxa_main",
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "random",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "required": false,
+      "scope": "media"
+    }
+  ]
+}

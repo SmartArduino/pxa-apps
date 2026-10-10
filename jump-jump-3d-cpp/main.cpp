@@ -1,0 +1,130 @@
+#include <pxa/app.hpp>
+#include <pxa/ui_display.hpp>
+#include <pxa/clock.hpp>
+#include <pxa/game_quality.hpp>
+#include <cstdio>
+#include "jump3d_game.hpp"
+#include "jump3d_render.hpp"
+#include "jump3d_palette.hpp"
+#include "jump3d_font.hpp"
+#include "jump3d_audio.hpp"
+#define TICK_MS 20u
+#define J3_BGM_MODE 1
+#define J3_BGM_LOOP 0
+#ifndef J3_FORCE_SCALE_SHIFT
+#define J3_FORCE_SCALE_SHIFT (-1)
+#endif
+using namespace jump;
+namespace {
+struct JumpJump {
+    pxa::Context* context=nullptr;
+    pxa::ui::DisplayMetrics display;
+    std::optional<pxa::game::Renderer> renderer;
+    std::array<uint8_t,16384> draw{};
+    std::array<uint8_t,J3_FONT_MAX_ATLAS_BYTES+20> upload{};
+    std::array<uint16_t,J3_PALETTE_ENTRIES> palette{};
+    j3_game_t g_game{};
+    j3_render_t render;
+    j3_audio_t g_audio;
+    pxa::FixedStepper stepper{20000,2};
+    pxa::game::AdaptiveResolution quality;
+    uint8_t quality_ticks=0;
+    uint64_t frame_id=0,window_start=0;
+    uint32_t best_saved=0;
+    uint8_t g_last_state=0,g_bonus_played=0,scheme=0,scale_shift=0;
+    uint16_t g_last_jumps=0;
+    uint32_t g_last_score=0;
+    float g_bonus_repeat_timer=0,save_timer=0;
+    bool g_bgm_started=false,initializing=false,saving=false;
+    #include "sound_triggers.inc"
+    auto view(){return pxa::ui::Canvas().input_only().on_pointer([this](const pxa::ui::CanvasPointer& p){pointer(p);});}
+    pxa::Result<void> on_start(pxa::Context& ctx,std::span<const std::byte> config){
+        context=&ctx;arcade::logging_transport=&ctx.transport();
+        if(auto metrics=pxa::ui::decode_start_display(config))display=*metrics;
+        j3_game_reset(&g_game,0x9e3779b9);g_last_state=g_game.state;
+        if constexpr(J3_FORCE_SCALE_SHIFT>=0)scale_shift=J3_FORCE_SCALE_SHIFT;
+        auto full=ctx.window().fullscreen(pxa::WindowBarMode::hidden,pxa::WindowBarMode::hidden);if(!full)return full;
+        j3_audio_start(&g_audio,ctx);
+        auto started=ctx.tasks().start(load_best());if(!started)return started;
+        return ctx.tasks().start(initialize());
+    }
+    pxa::Task<void> load_best(){auto best=co_await context->storage().get_value<uint32_t>("best");
+        if(best){g_game.best=*best;best_saved=*best;}co_return pxa::Result<void>{};}
+    pxa::Task<void> save_best(uint32_t value){auto saved=co_await context->storage().set_value("best",value);
+        if(saved)best_saved=value;saving=false;co_return pxa::Result<void>{};}
+    pxa::Task<void> initialize(){
+        initializing=true;renderer.reset();
+        for(;scale_shift<=2;++scale_shift){
+            pxa::game::RenderOptions options;
+            options.width=uint16_t(std::max(64u,(display.width+(1u<<scale_shift)-1)>>scale_shift));
+            options.height=uint16_t(std::max(64u,(display.height+(1u<<scale_shift)-1)>>scale_shift));
+            options.buffers=3;options.direct_scanout=true;options.max_draw_bytes=draw.size();
+            auto created=co_await context->game().create(options);
+            if(!created)continue;
+            renderer.emplace(std::move(*created));
+            j3_render_configure(&render,options.width,options.height,renderer->capabilities());
+            j3_render_adapt(&render,display);
+            j3_palette_build(palette.data());scheme=uint8_t(g_game.jump_count/15%J3_BG_SCHEMES);
+            if(!j3_render_upload_resources(*renderer,upload.data(),upload.size(),palette.data(),scheme)||
+                !pxa::game::Upload(*renderer,std::as_writable_bytes(std::span{upload})).palette(palette,J3_LIGHT_LEVELS)||
+                !j3_font_upload(*renderer,upload.data(),upload.size())){
+                renderer.reset();continue;
+            }
+            (void)context->clock().set_period(TICK_MS);stepper.reset();initializing=false;draw_frame();
+            char msg[128];std::snprintf(msg,sizeof(msg),"J3CPP ready pixels=%u,%u dpi_q16=%u render=%u,%u scale=%u",display.width,display.height,display.density_q16,options.width,options.height,scale_shift);
+            (void)context->log().write(pxa::LogLevel::info,msg);co_return pxa::Result<void>{};
+        }
+        initializing=false;co_return std::unexpected(pxa::Error::limit_exceeded);
+    }
+    void draw_frame(){if(!renderer||initializing||!context->foreground())return;
+        if(!j3_render_frame(&render,&g_game,*renderer,draw.data(),draw.size(),++frame_id))
+            (void)context->log().write(pxa::LogLevel::warning,"J3CPP frame not accepted");
+    }
+    void pointer(const pxa::ui::CanvasPointer& p){if(!renderer||initializing)return;
+        if(p.phase==pxa::ui::pointer_phase_down){
+            if(g_game.state==J3_STATE_OVER){auto best=g_game.best;j3_game_reset(&g_game,0x9e3779b9^uint32_t(frame_id));g_game.best=best;
+                g_last_state=g_game.state;g_last_score=0;g_last_jumps=0;g_bonus_played=0;g_bonus_repeat_timer=0;
+                j3_audio_play(&g_audio,J3_CHANNEL_LAND,J3_CLIP_START,J3_GAIN_FULL,0);
+                j3_audio_stop(&g_audio,J3_CHANNEL_COMBO);j3_audio_stop(&g_audio,J3_CHANNEL_BONUS);
+            }else j3_game_press(&g_game);
+        }else if(p.phase==pxa::ui::pointer_phase_up)j3_game_release(&g_game);
+        else if(p.phase==pxa::ui::pointer_phase_cancel){if(g_game.state==J3_STATE_CHARGING){g_game.state=J3_STATE_READY;g_game.charge=0;}}
+        play_state_sounds();draw_frame();
+    }
+    pxa::Result<bool> on_event(pxa::Context&,const pxa::Event& event){
+        j3_audio_event(&g_audio,event);
+        if(event.service==3&&event.opcode==0x8002){if(auto metrics=pxa::ui::decode_display_metrics(event.payload)){
+            bool resize=metrics->width!=display.width||metrics->height!=display.height;display=*metrics;
+            if(resize&&!initializing){scale_shift=J3_FORCE_SCALE_SHIFT>=0?J3_FORCE_SCALE_SHIFT:0;quality={};(void)context->tasks().start(initialize());}
+            else if(renderer){j3_render_adapt(&render,display);(void)j3_font_upload(*renderer,upload.data(),upload.size());draw_frame();}}
+            return true;}
+        if(event.service!=4||event.opcode!=0x8001||event.payload.size()!=8)return false;
+        auto now=pxa::wire::get64(event.payload.data());j3_audio_tick(&g_audio,now);
+        auto steps=stepper.advance(now);
+        for(unsigned i=0;i<steps.count;++i)j3_game_tick(&g_game,.02f);
+        if(steps.count){play_state_sounds();save_timer-=steps.count*.02f;
+            if(!saving&&save_timer<=0&&g_game.best>best_saved){saving=true;save_timer=2;if(!context->tasks().start(save_best(g_game.best)))saving=false;}
+            auto next=uint8_t(g_game.jump_count/15%J3_BG_SCHEMES);
+            if(renderer&&next!=scheme){scheme=next;(void)j3_render_upload_sky(*renderer,palette.data(),scheme,upload.data(),upload.size());
+                (void)pxa::game::Upload(*renderer,std::as_writable_bytes(std::span{upload})).palette(palette,J3_LIGHT_LEVELS);}}
+        // Presentation follows the clock independently of fixed simulation
+        // steps. Small scheduler jitter can alternate zero/two updates; it
+        // must not discard an otherwise available display frame.
+        draw_frame();
+        if constexpr(J3_FORCE_SCALE_SHIFT<0){
+            if(renderer&&!initializing&&++quality_ticks>=48){quality_ticks=0;
+                if(auto t=renderer->telemetry())if(int change=quality.observe(*t,scale_shift)){
+                    const auto previous=scale_shift;scale_shift=uint8_t(int(scale_shift)+change);
+                    if(!context->tasks().start(initialize()))scale_shift=previous;
+                }}
+        }
+        if(renderer&&now-window_start>=5000000){window_start=now;if(auto t=renderer->telemetry()){
+            char line[232];std::snprintf(line,sizeof(line),"J3CPP perf submitted=%llu rendered=%llu visible=%llu raster_us=%llu queue_us=%llu present_us=%llu dropped=%llu draw=%u score=%u state=%u",(unsigned long long)t->submitted_frames,(unsigned long long)t->rendered_frames,(unsigned long long)t->visible_frames,(unsigned long long)t->host_raster_us,(unsigned long long)t->queue_wait_us,(unsigned long long)t->present_us,(unsigned long long)t->dropped_frames,t->last_draw_list_bytes,g_game.score,g_game.state);
+            (void)context->log().write(pxa::LogLevel::info,line);}}
+        return true;
+    }
+    void on_background(pxa::Context&){j3_audio_pause(&g_audio);(void)context->clock().set_period(0);if(g_game.state==J3_STATE_CHARGING){g_game.state=J3_STATE_READY;g_game.charge=0;}stepper.reset();}
+    void on_foreground(pxa::Context& ctx){j3_audio_resume(&g_audio);stepper.reset();(void)ctx.clock().set_period(TICK_MS);(void)ctx.window().fullscreen(pxa::WindowBarMode::hidden,pxa::WindowBarMode::hidden);draw_frame();}
+};
+}
+PXA_APPLICATION(JumpJump)
