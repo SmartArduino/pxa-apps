@@ -98,6 +98,6 @@ python3 tools/measure-device-voxel.py --port /dev/ttyACM0 --app pxa-pixel-dungeo
 
 **尚未完成的真机验收**
 
-pai-touch 数据分区只剩 471,040 B，无法暂存完整新包；esp-mosaico 上传 Jump C++ 包约 90% 后返回 `file_write_failed`，旧 Host 未返回 errno，空间不足只是推断。两个 C++ 游戏尚未成功在真机安装，未宣称 FPS ≥ C 版。保留全部已有应用与数据，没有通过卸载或清空存储绕过空间限制。
+pai-touch 数据分区首次诊断只剩 471,040 B，复位后最新为 1,110,016 B；仍小于本应用 ESP32-S3 容器的 1,651,136 B，且安装还需解包空间。esp-mosaico 上传 Jump C++ 包约 90% 后返回 `file_write_failed`，旧 Host 未返回 errno，空间不足只是推断。两个 C++ 游戏尚未成功在真机安装，未宣称 FPS ≥ C 版。保留全部已有应用与数据，没有通过卸载或清空存储绕过空间限制。
 
 pai-touch 已做授权范围内的应用分区固件更新，增加空间/写错误诊断和 Host 光栅优化；未改分区表或数据分区。固件及原 C Jump 的真实显示基线详见 [Jump 报告](../../jump-jump-3d-cpp/docs/2026-10-10-validation.zh-CN.md)。仍需在足够安装空间下验证实际显示 FPS、更新/编码/提交/光栅/排队/显示耗时、持续音频、冷/热峰值、前后台及重复启动。许可证与作者归属保留在 [LICENSE.txt](../LICENSE.txt) 和 [README](../README.md)。
