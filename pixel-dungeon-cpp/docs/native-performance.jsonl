@@ -1,0 +1,12 @@
+{"language":0,"phase":0,"cpp":0,"total_us":383.708,"raster_us":378.840,"guest_validation_us":4.868,"draw_bytes":1532}
+{"language":0,"phase":0,"cpp":1,"total_us":355.109,"raster_us":350.788,"guest_validation_us":4.321,"draw_bytes":1532}
+{"language":0,"phase":1,"cpp":0,"total_us":137.859,"raster_us":127.311,"guest_validation_us":10.549,"draw_bytes":3376}
+{"language":0,"phase":1,"cpp":1,"total_us":142.865,"raster_us":132.541,"guest_validation_us":10.324,"draw_bytes":3376}
+{"language":0,"phase":2,"cpp":0,"total_us":372.593,"raster_us":354.390,"guest_validation_us":18.203,"draw_bytes":6464}
+{"language":0,"phase":2,"cpp":1,"total_us":370.280,"raster_us":354.306,"guest_validation_us":15.974,"draw_bytes":6464}
+{"language":1,"phase":0,"cpp":0,"total_us":319.259,"raster_us":316.134,"guest_validation_us":3.125,"draw_bytes":1080}
+{"language":1,"phase":0,"cpp":1,"total_us":331.886,"raster_us":328.921,"guest_validation_us":2.965,"draw_bytes":1080}
+{"language":1,"phase":1,"cpp":0,"total_us":133.025,"raster_us":123.039,"guest_validation_us":9.987,"draw_bytes":3132}
+{"language":1,"phase":1,"cpp":1,"total_us":143.631,"raster_us":133.744,"guest_validation_us":9.888,"draw_bytes":3132}
+{"language":1,"phase":2,"cpp":0,"total_us":373.192,"raster_us":356.116,"guest_validation_us":17.076,"draw_bytes":5960}
+{"language":1,"phase":2,"cpp":1,"total_us":379.693,"raster_us":363.911,"guest_validation_us":15.782,"draw_bytes":5960}

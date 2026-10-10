@@ -5,7 +5,8 @@ tools, and a minimal `hello` smoke-test app remain in `pxa-system`. All product
 applications and their shared art live here.
 
 New SDK capabilities and game development focus on the C++ Guest SDK and
-`voxel-craft-cpp`. The C SDK is being phased out of feature development;
+`voxel-craft-cpp`, [`jump-jump-3d-cpp`](jump-jump-3d-cpp/README.md) and
+[`pixel-dungeon-cpp`](pixel-dungeon-cpp/README.md). The C SDK is being phased out of feature development;
 existing C applications retain necessary compatibility and correctness fixes
 during the transition. The Core wire ABI remains shared.
 

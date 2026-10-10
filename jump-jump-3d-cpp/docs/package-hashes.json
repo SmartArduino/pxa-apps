@@ -1,0 +1,22 @@
+{
+  "main.esp32-s31.aot": {
+    "bytes": 588660,
+    "sha256": "70134716fcdf865c00a99ab737faa2aef9da167f4021a66d93b120c35482a488"
+  },
+  "main.linux-x86_64.aot": {
+    "bytes": 388032,
+    "sha256": "b2b0dda054e2130056eaba857da3223623b639c83aafb4088f3508daf5a1c79a"
+  },
+  "main.wasm": {
+    "bytes": 215805,
+    "sha256": "31ce37c6229a85f06df142da19836e3bdd61804ba6ba0f37021e0cf1a410cadf"
+  },
+  "main.esp32-s3.aot": {
+    "bytes": 475904,
+    "sha256": "81eb60dec1655c980dee69ff1891bdcbdb4c8055447aaacc79e81fcdcdcead12"
+  },
+  "multi_arch_container": {
+    "bytes": 2164635,
+    "sha256": "9fee71a68c7075e6916df3a5d2343e02efd4734383bc4b75a27cdc165b0b7f5c"
+  }
+}

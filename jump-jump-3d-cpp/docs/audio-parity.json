@@ -1,0 +1,97 @@
+[
+  {
+    "path": "assets/audio/combo1.s16",
+    "bytes": 18880,
+    "sha256": "e1bba6d8d49b11f59d027a8ee4372382931748d0f19cd24652e2164e784b82cf"
+  },
+  {
+    "path": "assets/audio/combo2.s16",
+    "bytes": 16960,
+    "sha256": "a80e84615b1021ac63903fe37559579f93fd3dd2b5626c70bc3cd11f2b3aa839"
+  },
+  {
+    "path": "assets/audio/combo3.s16",
+    "bytes": 17600,
+    "sha256": "16da1f3b044aac1b12d1f6b1f94549e287078fc511965daca25d5a69b903703a"
+  },
+  {
+    "path": "assets/audio/combo4.s16",
+    "bytes": 17600,
+    "sha256": "d9ef93032bf5597c233bb57713c42a1c428f28c50d8362fc82a29994b676f574"
+  },
+  {
+    "path": "assets/audio/combo5.s16",
+    "bytes": 16960,
+    "sha256": "4d93388f9394bfad0be3de32a1c7d65ccfd0a38956642ccf5e1f66ac2c0c773b"
+  },
+  {
+    "path": "assets/audio/combo6.s16",
+    "bytes": 16960,
+    "sha256": "560c2d5f6468fe74bca3466239ee7d75ea6b27176408bb585a830415424ba8b2"
+  },
+  {
+    "path": "assets/audio/combo7.s16",
+    "bytes": 16320,
+    "sha256": "d1f697d373c4148409500c6f1702b17f50aa2182a99d838325f6f49c1d937d0a"
+  },
+  {
+    "path": "assets/audio/combo8.s16",
+    "bytes": 15040,
+    "sha256": "343a59e701d2728f4f78cce8e4ef0359f57dfca6d827fa09559b9d8393fad578"
+  },
+  {
+    "path": "assets/audio/fall.s16",
+    "bytes": 22720,
+    "sha256": "c5c0c6018e5ac89db6b109eed2409c66cd5db8e5e68f6e152f52df0073fcb8d8"
+  },
+  {
+    "path": "assets/audio/fall_2.s16",
+    "bytes": 52800,
+    "sha256": "a1996505a0de19660e78127ef5188257f5093795c8ba13cf8590fadf1137959f"
+  },
+  {
+    "path": "assets/audio/icon.ogg",
+    "bytes": 13599,
+    "sha256": "c7565aad78801f5f36bc4d3a788893f4ea0f0935fe74905e75e8261d13f8ae82"
+  },
+  {
+    "path": "assets/audio/pop.s16",
+    "bytes": 4930,
+    "sha256": "ae99d6b3bbb78dbc7d5ef3c2347eea2fd2aa615a1b6091a2e45a4da4fdc86899"
+  },
+  {
+    "path": "assets/audio/scale_intro.s16",
+    "bytes": 70734,
+    "sha256": "aa89d2e8c855e9b8d4a5feccc3b9a0103bb794a1f06facb4e9db92a6fbbf72bf"
+  },
+  {
+    "path": "assets/audio/scale_loop.s16",
+    "bytes": 40000,
+    "sha256": "6508665ee500c238c4303973eff965e2d23a1f7b53040332ef21966ecb271e3b"
+  },
+  {
+    "path": "assets/audio/sing.s16",
+    "bytes": 430400,
+    "sha256": "a7782a6a989d1bf5f55520cbf8a23c37e71c87dd0d8480181efee04ce1d5f3f3"
+  },
+  {
+    "path": "assets/audio/start.s16",
+    "bytes": 21440,
+    "sha256": "da36783408502d85fcd57b677ba767d435a7df5eb8411471506ce6170f394fe3"
+  },
+  {
+    "path": "assets/audio/store.s16",
+    "bytes": 148160,
+    "sha256": "aaf14b8ae9c6870a7151f7916cff0a2af95555d5c83ccefb984c06addae222a8"
+  },
+  {
+    "path": "assets/audio/success.s16",
+    "bytes": 6080,
+    "sha256": "08df92fb9d8c844896f4615e8d50f62b072cf4456f84f23b6a9f826f25dbf6b4"
+  },
+  {
+    "path": "assets/audio/water.s16",
+    "bytes": 140480,
+    "sha256": "3ac76ce0955ffb60d2ba35150d505c4fc0e8188e5d452a3083a626272a7bbbf5"
+  }
+]
