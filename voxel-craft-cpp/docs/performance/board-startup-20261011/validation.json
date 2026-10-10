@@ -1,0 +1,37 @@
+{
+  "device": "pai-touch ESP32-S3, /dev/ttyACM1, 296x240",
+  "app_version": "0.12.2",
+  "native_asan_ubsan": "passed",
+  "native_unfixed_interleaving_test": "failed as expected",
+  "simulator_first_title_load_new_world": "passed, isolated state",
+  "device_cold_title_load_existing_slot_turn_home_jump": "passed, screenshots reviewed",
+  "files_unchanged_after_board_flash": 141,
+  "files_unchanged_after_app_update": 138,
+  "expected_changed_app_files": [
+    "manifest.pxm",
+    "signature.pxs",
+    "artifacts/main.esp32-s3.aot"
+  ],
+  "persistent_data_unchanged": true,
+  "memory_artifacts": {
+    "baseline_source": "device files-before.json SHA/byte audit taken immediately before board flash",
+    "old_aot_bytes": 696676,
+    "old_aot_sha256": "26013d43c1c435e94b7250aba963a552da07417fd5e6655c38e818c05f70f40b",
+    "new_aot_bytes": 679800,
+    "new_aot_sha256": "9d4565021c77d4f35f8f30670698324bb7f406b50f003d6338c7421e0fc62f5a",
+    "old_map_bytes": 720896,
+    "new_map_bytes": 720896,
+    "linear_min_pages": 6,
+    "linear_max_pages": 32,
+    "sdk_core": "95dae86aaeb623c6ad1136a988f2a732151359bb",
+    "correction": "Earlier comparison to a 653876-byte historical artifact did not describe the installed device package; that comparison is discarded."
+  },
+  "sampled_raster_count": 34,
+  "sampled_present_intervals": 33,
+  "mean_raster_us": 64023.294117647056,
+  "mean_display_interval_us": 147390.24242424243,
+  "display_fps": 6.784709649378541,
+  "performance_comparison": false,
+  "native_VoxelCraft_bytes": 299048,
+  "limitation": "This smoke run is not a matched performance or whole-firmware peak-memory comparison; heap minimums are boot-lifetime diagnostics."
+}

@@ -855,6 +855,7 @@ struct VoxelCraft {
         budget_max_distance=VOXEL_BENCH_FAR;
 #endif
         initializing = false;
+        ui_dirty = true;
         // A modal grant or Window attachment may replace the system's active
         // window. Apply immersion once the actual game Surface is attached.
         (void)context.window().fullscreen(pxa::WindowBarMode::hidden);
@@ -1029,7 +1030,7 @@ struct VoxelCraft {
 
 
     void on_frame(pxa::Context& context, pxa::game::FrameTick tick) {
-        if (!renderer || !projector) return;
+        if (!renderer || !projector || initializing) return;
         if(screen!=voxel::Screen::game){if(ui_dirty)draw_menu(*renderer);return;}
         // Avoid competing with the rasterizer for external memory. Scanout
         // still overlaps the next build; simulation/input keep their tick.

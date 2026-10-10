@@ -144,6 +144,16 @@ int main(){
     app.renderer.emplace(transport,77,info);
     auto projection=pxa::game3d::Projector::create(296,240,1.15f,.25f,64.f);
     assert(projection);app.projector=*projection;app.settings.auto_distance=false;
+    // Frame ticks may interleave with asynchronous texture/font loading.
+    // Keep the pending first menu until every resource is ready, so its hit
+    // table cannot get stuck empty after an early disabled redraw.
+    app.show(title);app.initializing=true;
+    const auto startup_submissions=draw_submissions;
+    app.on_frame(ctx,{60000,16000,16000,1});
+    assert(draw_submissions==startup_submissions&&app.ui_dirty&&app.menu_hit_count==0);
+    app.initializing=false;
+    app.on_frame(ctx,{76000,16000,16000,1});
+    assert(draw_submissions==startup_submissions+1&&!app.ui_dirty&&app.menu_hit_count==3);
     app.show(game);app.hud_window_us=0;
     const auto before=draw_submissions;
     pending_frame=true;app.on_frame(ctx,{100000,16000,16000,1});
