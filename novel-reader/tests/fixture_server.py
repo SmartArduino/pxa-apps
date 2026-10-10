@@ -5,8 +5,14 @@ from urllib.parse import urlparse,parse_qs
 body=('第一章 林间来信\n\n'+'清晨的风沿着山路吹来，白鸟带来一封信。\n'*1700+'\n第二章 河边书屋\n\n'+'午后的河水映着云影，书屋的铜铃轻轻响了。\n'*1500+'\n第三章 未完的旅程\n\n'+'林舟收好书本，沿着小路走向远方。\n'*1400).encode()
 class Handler(BaseHTTPRequestHandler):
  fail_refresh=False
+ delay=.05
+ ranges=[]
  def do_GET(self):
   u=urlparse(self.path);p=u.path
+  if p=='/control/cache-delay':
+   Handler.delay=float(parse_qs(u.query).get('seconds',['.05'])[0]);Handler.ranges=[]
+   return self.reply(200,b'OK')
+  if p=='/stats':return self.reply(200,json.dumps(Handler.ranges).encode(),mime='application/json')
   if p=='/control/refresh-failure':
    Handler.fail_refresh=parse_qs(u.query).get('enabled',['0'])[0]=='1'
    return self.reply(200,b'OK')
@@ -17,7 +23,9 @@ class Handler(BaseHTTPRequestHandler):
    return self.reply(200,json.dumps(data,ensure_ascii=False).encode(),mime='application/json')
   if p=='/source.json':return self.reply(200,json.dumps({'format':'pxa-reader-source-1','name':'本地 CC0 书源','kind':'json','searchUrl':'/catalog.json?q={{key}}'},ensure_ascii=False).encode(),mime='application/json')
   if p=='/toc.json':return self.reply(200,json.dumps({'chapters':[{'title':f'第{i}章 旅途','url':f'/chapter{i}.txt'} for i in range(1,4)]},ensure_ascii=False).encode(),mime='application/json')
-  if p.startswith('/chapter'):return self.reply(200,('山间的书屋打开了门。\n'*60).encode())
+  if p.startswith('/chapter'):
+   if p!='/chapter1.txt':time.sleep(Handler.delay)
+   return self.reply(200,('山间的书屋打开了门。\n'*60).encode())
   if p=='/empty.json':return self.reply(200,b'{"chapters":[]}',mime='application/json')
   if p in ['/book.txt','/broken.txt','/changing.txt','/invalid.txt']:
    content=body if p!='/invalid.txt' else b'not utf8\xff\xfe\n'
@@ -28,7 +36,9 @@ class Handler(BaseHTTPRequestHandler):
    if p=='/book.txt' and start and Handler.fail_refresh:return self.reply(503,b'try again')
    if p=='/broken.txt' and start:return self.reply(503,b'try again')
    tag='"fixture-v2"' if p=='/changing.txt' and start else '"fixture-v1"'
-   if p=='/book.txt':time.sleep(.05)
+   if p=='/book.txt':
+    Handler.ranges.append({'start':start,'end':end,'time':time.monotonic()})
+    if start:time.sleep(Handler.delay)
    return self.reply(206,content[start:end+1],range=f'bytes {start}-{end}/{len(content)}',etag=tag)
   return self.reply(404,b'not found')
  def reply(self,status,data,mime='text/plain; charset=utf-8',range=None,etag=None):

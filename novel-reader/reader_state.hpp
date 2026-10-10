@@ -1,29 +1,30 @@
 #pragma once
 #include "reader_core.hpp"
+#include <charconv>
 namespace reader {
-inline std::string quote(std::string_view value) {
-  std::string out = "\"";
+[[gnu::noinline]] inline void append_quoted(std::string& out, std::string_view value) {
+  out += '"';
   for (unsigned char c : value) {
-    if (c == '"' || c == '\\') {
-      out += '\\';
-      out += char(c);
-    } else if (c == '\n')
-      out += "\\n";
-    else if (c == '\r')
-      out += "\\r";
-    else if (c == '\t')
-      out += "\\t";
-    else if (c < 32)
-      out += ' ';
-    else
-      out += char(c);
+    if (c == '"' || c == '\\') { out += '\\'; out += char(c); }
+    else if (c == '\n') out += "\\n";
+    else if (c == '\r') out += "\\r";
+    else if (c == '\t') out += "\\t";
+    else out += c < 32 ? ' ' : char(c);
   }
-  return out + '"';
+  out += '"';
+}
+inline std::string quote(std::string_view value) { std::string out; append_quoted(out, value); return out; }
+[[gnu::noinline]] inline void append_number(std::string& out, std::uint32_t value) {
+  std::array<char, 16> buffer{};
+  const auto end = std::to_chars(buffer.data(), buffer.data() + buffer.size(), value).ptr;
+  out.append(buffer.data(), std::size_t(end - buffer.data()));
 }
 struct SavedState {
   Settings settings;
   std::vector<Book> shelf;
   std::vector<Source> sources{
+      {"经典直读 · 即时搜索", "https://www.gutenberg.org/cache/epub/", SourceKind::classics},
+      {"GITenberg · 即时搜索", "https://raw.githubusercontent.com/GITenberg/", SourceKind::gitenberg},
       {"古腾堡中文小说",
        "https://gutendex.com/books/"
        "?languages=zh&copyright=false&mime_type=text%2Fplain",
@@ -33,45 +34,47 @@ struct SavedState {
        "?copyright=false&mime_type=text%2Fplain&topic=fiction",
        SourceKind::gutenberg}};
   std::string encode() const {
-    auto out = std::string("{\"version\":1,\"settings\":{") +
-               "\"font\":" + std::to_string(settings.font) +
-               ",\"gap\":" + std::to_string(settings.line_gap) +
-               ",\"theme\":" + std::to_string(settings.theme) +
-               ",\"seconds\":" + std::to_string(settings.auto_seconds) +
-               "},\"sources\":[";
+    std::string out = "{\"version\":2,\"settings\":{\"font\":";
+    append_number(out, settings.font); out += ",\"gap\":"; append_number(out, settings.line_gap);
+    out += ",\"theme\":"; append_number(out, settings.theme);
+    out += ",\"seconds\":"; append_number(out, settings.auto_seconds);
+    out += "},\"sources\":[";
     bool comma = false;
-    for (auto &s : sources) {
-      if (comma)
-        out += ',';
+    for (const auto& source : sources) {
+      if (comma) out += ',';
       comma = true;
-      out += "{\"name\":" + quote(s.name) + ",\"url\":" + quote(s.url) +
-             ",\"kind\":" + std::to_string(unsigned(s.kind)) +
-             ",\"enabled\":" + (s.enabled ? "true" : "false") + "}";
+      out += "{\"name\":"; append_quoted(out, source.name);
+      out += ",\"url\":"; append_quoted(out, source.url);
+      out += ",\"kind\":"; append_number(out, unsigned(source.kind));
+      out += ",\"enabled\":"; out += source.enabled ? "true}" : "false}";
     }
-    out += "],\"shelf\":[";
-    comma = false;
-    for (auto &b : shelf) {
-      if (comma)
-        out += ',';
+    out += "],\"shelf\":["; comma = false;
+    for (const auto& book : shelf) {
+      if (comma) out += ',';
       comma = true;
-      out += "{\"title\":" + quote(b.title) + ",\"author\":" + quote(b.author) +
-             ",\"url\":" + quote(b.url) + ",\"toc\":" + quote(b.toc) +
-             ",\"position\":" + std::to_string(b.position) +
-             ",\"total\":" + std::to_string(b.total) +
-             ",\"complete\":" + (b.complete ? "true" : "false") + "}";
+      out += "{\"title\":"; append_quoted(out, book.title);
+      out += ",\"author\":"; append_quoted(out, book.author);
+      out += ",\"url\":"; append_quoted(out, book.url);
+      out += ",\"toc\":"; append_quoted(out, book.toc);
+      out += ",\"validator\":"; append_quoted(out, book.validator);
+      out += ",\"position\":"; append_number(out, book.position);
+      out += ",\"total\":"; append_number(out, book.total);
+      out += ",\"complete\":"; out += book.complete ? "true}" : "false}";
     }
-    return out + "]}";
+    out += "]}";
+    return out;
   }
   bool decode(std::string_view text) {
     Json j(text);
-    if (text.size() > 32768 || !j.valid() || j.get("version").number() != 1)
+    auto version = j.get("version").number();
+    if (text.size() > 32768 || !j.valid() || !version || (*version != 1 && *version != 2))
       return false;
     SavedState candidate;
     auto s = j.get("settings");
     auto font = s.get("font").number(), gap = s.get("gap").number(),
          theme = s.get("theme").number(), seconds = s.get("seconds").number();
     if (!font || *font < 12 || *font > 28 || !gap || *gap > 12 || !theme ||
-        *theme > 2 || !seconds || *seconds < 5 || *seconds > 60)
+        *theme > 3 || !seconds || *seconds < 5 || *seconds > 60)
       return false;
     candidate.settings = {std::uint8_t(*font), std::uint8_t(*gap),
                           std::uint8_t(*theme), std::uint8_t(*seconds), false};
@@ -82,7 +85,7 @@ struct SavedState {
           auto name = row.get("name").string(96),
                url = row.get("url").string(512);
           auto kind = row.get("kind").number();
-          if (!name || !url || origin(*url).empty() || !kind || *kind > 1 ||
+          if (!name || !url || origin(*url).empty() || !kind || *kind > 3 ||
               candidate.sources.size() >= max_sources) {
             ok = false;
             return false;
@@ -116,12 +119,22 @@ struct SavedState {
                *pos,
                *total,
                row.get("complete").raw() == "true"};
+          b.validator = row.get("validator").string(128).value_or("");
           candidate.shelf.push_back(std::move(b));
           return true;
         },
         max_shelf + 1);
     if (!ok || !sources_valid || !shelf_valid || candidate.sources.empty())
       return false;
+    if (*version == 1) {
+      for (const auto& extra : std::array{
+          Source{"经典直读 · 即时搜索", "https://www.gutenberg.org/cache/epub/", SourceKind::classics},
+          Source{"GITenberg · 即时搜索", "https://raw.githubusercontent.com/GITenberg/", SourceKind::gitenberg}}) {
+        if (candidate.sources.size() < max_sources &&
+            std::none_of(candidate.sources.begin(), candidate.sources.end(), [&](const auto& source) { return source.kind == extra.kind; }))
+          candidate.sources.push_back(extra);
+      }
+    }
     *this = std::move(candidate);
     return true;
   }
