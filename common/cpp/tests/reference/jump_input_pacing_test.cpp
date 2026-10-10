@@ -65,5 +65,32 @@ int main() {
     // A stray held sample after release must not re-render or re-press.
     game.pointer({.phase=pxa::ui::pointer_phase_move});
     assert(frames==charged_frames+1 && game.g_game.state==J3_STATE_FLYING);
+    // Only the initiating pointer owns the hold. Extra physical contacts on
+    // Mosaico's two-contact driver must neither reset nor release the charge.
+    j3_game_reset(&game.g_game, 0x9e3779b9);
+    game.pointer({.pointer_id=7, .phase=pxa::ui::pointer_phase_down});
+    j3_game_tick(&game.g_game, .2f);
+    const auto held_charge=game.g_game.charge;
+    const auto held_frames=frames;
+    game.pointer({.pointer_id=8, .phase=pxa::ui::pointer_phase_down});
+    game.pointer({.pointer_id=8, .phase=pxa::ui::pointer_phase_up});
+    game.pointer({.pointer_id=8, .phase=pxa::ui::pointer_phase_cancel});
+    game.pointer({.pointer_id=7, .phase=pxa::ui::pointer_phase_down});
+    assert(game.g_game.state==J3_STATE_CHARGING && game.g_game.charge==held_charge);
+    assert(frames==held_frames);
+    game.pointer({.pointer_id=7, .phase=pxa::ui::pointer_phase_up});
+    assert(game.g_game.state==J3_STATE_FLYING && frames==held_frames+1);
+    game.pointer({.pointer_id=7, .phase=pxa::ui::pointer_phase_up});
+    assert(frames==held_frames+1);
+    j3_game_reset(&game.g_game, 0x9e3779b9);
+    game.pointer({.pointer_id=255, .phase=pxa::ui::pointer_phase_down});
+    game.pointer({.pointer_id=255, .phase=pxa::ui::pointer_phase_cancel});
+    assert(game.g_game.state==J3_STATE_READY && game.charge_pointer==256);
+    game.pointer({.pointer_id=3, .phase=pxa::ui::pointer_phase_down});
+    assert(game.g_game.state==J3_STATE_CHARGING && game.charge_pointer==3);
+    game.on_background(context);
+    assert(game.g_game.state==J3_STATE_READY && game.charge_pointer==256);
+    game.pointer({.pointer_id=3, .phase=pxa::ui::pointer_phase_up});
+    assert(game.g_game.state==J3_STATE_READY);
     std::puts("actual input handler: 2501 MOVE events produce zero extra frames; C charge/release parity passed");
 }

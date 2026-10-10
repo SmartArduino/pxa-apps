@@ -35,6 +35,7 @@ struct JumpJump {
     uint32_t best_saved=0;
     uint8_t g_last_state=0,g_bonus_played=0,scheme=0,scale_shift=0;
     uint16_t g_last_jumps=0;
+    uint16_t charge_pointer=256; // Outside the uint8_t pointer ID range.
     uint32_t g_last_score=0;
     float g_bonus_repeat_timer=0,save_timer=0;
     bool g_bgm_started=false,initializing=false,saving=false;
@@ -109,6 +110,10 @@ struct JumpJump {
         // frame queue and starves that clock (which caps catch-up at 40 ms).
         // Match the C game: only press/release/cancel need an immediate frame.
         if(p.phase==pxa::ui::pointer_phase_move)return;
+        // A second contact must not release the finger that owns the charge.
+        // Ignore unmatched endpoints and duplicate presses without drawing.
+        if (p.phase == pxa::ui::pointer_phase_down) {if(charge_pointer!=256)return;}
+        else if(p.pointer_id!=charge_pointer)return;
 #if J3_TRACE_TIMING
         const auto trace_charge_us=unsigned(g_game.charge*1e6f);
 #endif
@@ -117,11 +122,12 @@ struct JumpJump {
                 g_last_state=g_game.state;g_last_score=0;g_last_jumps=0;g_bonus_played=0;g_bonus_repeat_timer=0;
                 j3_audio_play(&g_audio,J3_CHANNEL_LAND,J3_CLIP_START,J3_GAIN_FULL,0);
                 j3_audio_stop(&g_audio,J3_CHANNEL_COMBO);j3_audio_stop(&g_audio,J3_CHANNEL_BONUS);
-            }else j3_game_press(&g_game);
+            }else {j3_game_press(&g_game);if(g_game.state==J3_STATE_CHARGING)charge_pointer=p.pointer_id;}
         }else if(p.phase==pxa::ui::pointer_phase_up) {
+            charge_pointer=256;
             j3_game_release(&g_game);
         }
-        else if(p.phase==pxa::ui::pointer_phase_cancel){if(g_game.state==J3_STATE_CHARGING){g_game.state=J3_STATE_READY;g_game.charge=0;}}
+        else if(p.phase==pxa::ui::pointer_phase_cancel){charge_pointer=256;if(g_game.state==J3_STATE_CHARGING){g_game.state=J3_STATE_READY;g_game.charge=0;}}
 #if J3_TRACE_TIMING
         char trace[200];std::snprintf(trace,sizeof(trace),"J3CPP input phase=%u now=%llu state=%u charge_us=%u vx_q6=%d vy_q6=%d vz_q6=%d land_x_q6=%d land_z_q6=%d",p.phase,(unsigned long long)p.timestamp_us,g_game.state,trace_charge_us,int(g_game.vx*1e6f),int(g_game.vy*1e6f),int(g_game.vz*1e6f),int(g_game.land_x*1e6f),int(g_game.land_z*1e6f));
         (void)context->log().write(pxa::LogLevel::info,trace);
@@ -171,7 +177,7 @@ struct JumpJump {
             (void)context->log().write(pxa::LogLevel::info,line);}}
         return true;
     }
-    void on_background(pxa::Context&){j3_audio_pause(&g_audio);(void)context->clock().set_period(0);if(g_game.state==J3_STATE_CHARGING){g_game.state=J3_STATE_READY;g_game.charge=0;}stepper.reset();}
+    void on_background(pxa::Context&){charge_pointer=256;j3_audio_pause(&g_audio);(void)context->clock().set_period(0);if(g_game.state==J3_STATE_CHARGING){g_game.state=J3_STATE_READY;g_game.charge=0;}stepper.reset();}
     void on_foreground(pxa::Context& ctx){j3_audio_resume(&g_audio);stepper.reset();(void)ctx.clock().set_period(TICK_MS);(void)ctx.window().fullscreen(pxa::WindowBarMode::hidden,pxa::WindowBarMode::hidden);draw_frame();}
 };
 }

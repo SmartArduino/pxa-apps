@@ -1,0 +1,67 @@
+{
+  "raw_to_queue": [
+    {
+      "phase": 0,
+      "sample_us": 434325091,
+      "queued_ms": 435642,
+      "raw_to_queue_ms": 5
+    },
+    {
+      "phase": 2,
+      "sample_us": 434392533,
+      "queued_ms": 435717,
+      "raw_to_queue_ms": 13
+    },
+    {
+      "phase": 0,
+      "sample_us": 534262302,
+      "queued_ms": 535576,
+      "raw_to_queue_ms": 2
+    },
+    {
+      "phase": 2,
+      "sample_us": 535375706,
+      "queued_ms": 536733,
+      "raw_to_queue_ms": 46
+    },
+    {
+      "phase": 0,
+      "sample_us": 535932678,
+      "queued_ms": 537378,
+      "raw_to_queue_ms": 134
+    },
+    {
+      "phase": 2,
+      "sample_us": 536351169,
+      "queued_ms": 537990,
+      "raw_to_queue_ms": 327
+    }
+  ],
+  "queue_to_delivery": [
+    {
+      "phase": 0,
+      "queue_to_delivery_ms": 4
+    },
+    {
+      "phase": 2,
+      "queue_to_delivery_ms": 3
+    },
+    {
+      "phase": 0,
+      "queue_to_delivery_ms": 25
+    },
+    {
+      "phase": 2,
+      "queue_to_delivery_ms": 17
+    },
+    {
+      "phase": 0,
+      "queue_to_delivery_ms": 2
+    },
+    {
+      "phase": 2,
+      "queue_to_delivery_ms": 19
+    }
+  ],
+  "warning": "Edges outside the capture window and dropped log streams are excluded; this is an observed latency sample, not a percentile benchmark."
+}
