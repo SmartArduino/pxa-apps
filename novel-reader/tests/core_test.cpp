@@ -155,6 +155,38 @@ int main(int argc,char** argv) {
       assert(command_bytes <= 3600);
       assert(page.lines[page.count-1].box.y + page.lines[page.count-1].box.h <= l.page_number_box().y-2);
     }
+  // Vertical balancing must retain file/page boundaries and leading. Moving
+  // rows towards a curved bottom must never clip already paginated text.
+  for (auto dims : {std::pair{296u,240u},std::pair{480u,480u},std::pair{360u,480u},std::pair{800u,480u}})
+    for (unsigned shape : {0u,1u,2u})
+      for (unsigned font : {12u,14u,16u,20u,24u,28u})
+        for (unsigned gap : {0u,2u,6u,12u}) {
+          pxa::ui::DisplayMetrics m;m.width=dims.first;m.height=dims.second;m.shape=shape;
+          m.safe={12,12,12,12};if(shape==1)m.corners={58,58,58,58};
+          m.density_q16=dims.first==296 || dims.first==800 ? 65536 : 124928;
+          Layout l(m,false);Settings s;s.font=font;s.line_gap=gap;
+          for (auto source : {std::string_view(dense_text),sample_text,std::string_view("末页仅有一段。")}) {
+            auto p=paginate(source,l,s);assert(p.count);
+            auto text=std::string(source);compact_page_text(text,p);
+            const auto before=p;
+            const auto& last=before.lines[before.count-1].box;
+            const int step=text_line_height(std::max(10,int(font*l.density)))+int(gap*l.density);
+            const int target=std::max(0,std::min((l.body_end()-last.y-last.h)/2,step/2));
+            const int shift=balance_page(p,text,l,s);
+            assert(shift>=0 && shift<=target);
+            if(shape==0)assert(shift==target);
+            assert(p.count==before.count && p.consumed==before.consumed);
+            for(std::size_t i=0;i<p.count;++i) {
+              const auto& line=p.lines[i];const auto& old=before.lines[i];
+              assert(line.begin==old.begin && line.end==old.end);
+              assert(line.box.y==old.box.y+shift && line.box.h==old.box.h);
+              assert(line.box.y>=l.body_start() && line.box.y+line.box.h<=l.body_end());
+              const auto span=l.span(line.box.y,line.box.h);
+              assert(line.box.x>=span.first && line.box.x+line.box.w<=span.second);
+              assert(text_width(std::string_view(text).substr(line.begin,line.end-line.begin),std::max(10,int(font*l.density)))<=line.box.w);
+            }
+          }
+        }
   assert(chapter_heading("第一章 山间来信"));
   assert(chapter_heading("Chapter IV. The house"));
   assert(!chapter_heading("这是一段正常的小说正文。"));
@@ -270,6 +302,19 @@ int main(int argc,char** argv) {
       assert(p.count>=9);
       assert(p.lines[p.count-1].box.y+p.lines[p.count-1].box.h<l.page_number_box().y);
       std::printf("User reading preferences: %zu complete rows, footer separated OK\n",p.count);
+      // Reproduce the reported continuation page: 16 dp, zero leading,
+      // original byte 1441. Preserve its six lines and balance the remainder.
+      s.font=16;
+      auto replay=paginate(std::string_view(novel).substr(1441),l,s,novel[1440]=='\n',true);
+      const auto before=replay;
+      std::string text(std::string_view(novel).substr(1441));compact_page_text(text,replay);
+      const auto shift=balance_page(replay,text,l,s);
+      assert(replay.count==6 && replay.consumed==before.consumed && shift>0);
+      std::printf("Reported page: %zu lines, y=%d -> %d, bottom=%d -> %d, footer=%d, shift=%d\n",
+          replay.count,before.lines[0].box.y,replay.lines[0].box.y,
+          before.lines[before.count-1].box.y+before.lines[before.count-1].box.h,
+          replay.lines[replay.count-1].box.y+replay.lines[replay.count-1].box.h,
+          l.page_number_box().y,shift);
     }
     auto digest = [](std::uint64_t& h,std::string_view text) {
       for (std::size_t at=0;at<text.size();) {

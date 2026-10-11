@@ -33,7 +33,9 @@ p.add_argument('--profile', help='Run only the named screen profile')
 p.add_argument('--real-book',type=Path,help='Use unmodified real Gutenberg/GITenberg 西游记 bytes in the private partial cache; requires --cached-state')
 p.add_argument('--live-theme', action='store_true', help='Toggle the full system quick-settings theme and restore it')
 p.add_argument('--font-boundaries', action='store_true', help='Exercise 12 and 28 point reading preferences')
+p.add_argument('--spacing-matrix', action='store_true', help='Check 12/16/20/24/28 dp at 0/6/12 dp leading on the same real chapter')
 a = p.parse_args()
+if a.spacing_matrix and not a.real_book: p.error('--spacing-matrix requires --real-book and --cached-state')
 a.output = a.output.resolve()
 a.output.mkdir(parents=True, exist_ok=True)
 binary = a.binary.resolve()
@@ -229,6 +231,10 @@ for width, height, dpi, radius, circle, theme in profiles:
                'body_pixels':int(lines[0][4]),
                'file_offset':int(re.findall(r'READER-PAGE offset=(\d+)',text)[-1]),
                'text_sha256':hashlib.sha256(''.join(v[-1].rstrip() for v in lines).encode()).hexdigest()}
+        if a.spacing_matrix:
+            number=re.findall(r'READER-NUMBER current=\d+ total=\d+ x=\d+ y=(\d+)',text)[-1]
+            value['footer_top']=int(number)
+            value['bottom_space_to_footer']=value['footer_top']-value['body_bottom']
         if headers: value['header_pixels']=int(headers[-1][4])
         reading_space.append(value)
         return value
@@ -354,6 +360,25 @@ for width, height, dpi, radius, circle, theme in profiles:
                 tap(7); tap(8); tap(25,1)
                 glyph_checks.append(assert_reading_glyphs('fixed-second-chapter'))
                 (out/'glyph-checks.json').write_text(json.dumps(glyph_checks,ensure_ascii=False,indent=2)+'\n')
+                if a.spacing_matrix:
+                    spacing=[]
+                    def preferences(font,gap):
+                        tap(7);tap(3)
+                        current=json.loads(state_file.read_text())['settings']
+                        for _ in range(abs(current['font']-font)//2):tap(10 if current['font']>font else 11)
+                        for _ in range(((gap-current['gap'])%14)//2):tap(12)
+                        tap(16)
+                    for font in (12,16,20,24,28):
+                        for gap in (0,6,12):
+                            preferences(font,gap)
+                            value=assert_reading_glyphs(f'spacing-{font}-{gap}')
+                            value.update(font_dp=font,gap_dp=gap)
+                            assert value['file_offset']==22819
+                            spacing.append(value)
+                            tap(5);tap(6)
+                            assert int(re.findall(r'READER-PAGE offset=(\d+)',logs())[-1])==22819
+                    preferences(16,6)
+                    (out/'spacing-matrix.json').write_text(json.dumps(spacing,ensure_ascii=False,indent=2)+'\n')
                 tap(7); tap(0); tap(1); tap(18); tap(29)
                 wait(lambda s:'READER-SEARCH results=1 instant=1' in s)
                 capture('real-instant-search'); tap(4); capture('real-search-open')

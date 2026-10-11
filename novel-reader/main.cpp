@@ -798,9 +798,13 @@ struct ReaderApp {
         page_text.erase(0,first_heading); paragraph_start = true; save();
       }
     }
-    page = reader::paginate(page_text, reader::Layout(metrics, false), state.settings, paragraph_start, reader::hardwrapped_source(book.url));
-    next_offset = book.position + std::uint32_t(page.consumed);
-    reader::compact_page_text(page_text,page);
+    {
+      const reader::Layout reading_layout(metrics, false);
+      page = reader::paginate(page_text, reading_layout, state.settings, paragraph_start, reader::hardwrapped_source(book.url));
+      next_offset = book.position + std::uint32_t(page.consumed);
+      reader::compact_page_text(page_text,page);
+      reader::balance_page(page,page_text,reading_layout,state.settings);
+    }
     if (book.url.starts_with("sample:")) {
       page_numbers.reset(); page_numbers.available=cached_bytes;
       page_numbers.consume(reader::sample_text,reader::Layout(metrics,false),state.settings,book.position,false,true,false);

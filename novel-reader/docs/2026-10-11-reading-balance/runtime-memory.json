@@ -1,0 +1,37 @@
+[
+  {
+    "profile": "296x240-160dpi",
+    "pool_bytes": 16400,
+    "slots": 7,
+    "failures": 0,
+    "linear_pages": 3
+  },
+  {
+    "profile": "480x480-305dpi",
+    "pool_bytes": 16400,
+    "slots": 7,
+    "failures": 0,
+    "linear_pages": 3
+  },
+  {
+    "profile": "480x480-320dpi-circle",
+    "pool_bytes": 16400,
+    "slots": 7,
+    "failures": 0,
+    "linear_pages": 3
+  },
+  {
+    "profile": "360x480-320dpi",
+    "pool_bytes": 16400,
+    "slots": 7,
+    "failures": 0,
+    "linear_pages": 3
+  },
+  {
+    "profile": "800x480-160dpi",
+    "pool_bytes": 16400,
+    "slots": 7,
+    "failures": 0,
+    "linear_pages": 3
+  }
+]

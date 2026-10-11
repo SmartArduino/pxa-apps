@@ -1,0 +1,92 @@
+[
+  {
+    "stage": "before",
+    "target": "main.esp32-s3.aot",
+    "bytes": 969856,
+    "sections": {
+      "0": 48,
+      "1": 12196,
+      "2": 914576,
+      "3": 5792,
+      "4": 187,
+      "5": 37000
+    },
+    "text_map": 917504,
+    "sha256": "8d90a33749a78e7b3cfc50f9d43d5259e909df09e0e4dd9df7e72b00c598e038"
+  },
+  {
+    "stage": "before",
+    "target": "main.esp32-s31.aot",
+    "bytes": 1003368,
+    "sections": {
+      "0": 48,
+      "1": 13728,
+      "2": 898204,
+      "3": 5792,
+      "4": 187,
+      "5": 85352
+    },
+    "text_map": 917504,
+    "sha256": "18970bfe1cbc4c96be70f09d029bac92d419df162fa7ffb8f240384b60190771"
+  },
+  {
+    "stage": "before",
+    "target": "main.linux-x86_64.aot",
+    "bytes": 545204,
+    "sections": {
+      "0": 48,
+      "1": 14508,
+      "2": 438108,
+      "3": 7240,
+      "4": 187,
+      "5": 85056
+    },
+    "text_map": 458752,
+    "sha256": "b779c3802a9b02fbb591e5a60635ac0c619a8fa8cc9d05d9fb9d3f9353ce30cb"
+  },
+  {
+    "stage": "after",
+    "target": "main.esp32-s3.aot",
+    "bytes": 972852,
+    "sections": {
+      "0": 48,
+      "1": 12196,
+      "2": 917456,
+      "3": 5808,
+      "4": 187,
+      "5": 37100
+    },
+    "text_map": 917504,
+    "sha256": "084f1a11731d5455fe262a769fb74be8c641215e6a562b540c019c0a8f9fc423"
+  },
+  {
+    "stage": "after",
+    "target": "main.esp32-s31.aot",
+    "bytes": 1006388,
+    "sections": {
+      "0": 48,
+      "1": 13736,
+      "2": 900940,
+      "3": 5808,
+      "4": 187,
+      "5": 85612
+    },
+    "text_map": 917504,
+    "sha256": "5bef0db15a95ddd474e1184a7817fb73be58add82f259e0bf2e4106d6c8e4c23"
+  },
+  {
+    "stage": "after",
+    "target": "main.linux-x86_64.aot",
+    "bytes": 547952,
+    "sections": {
+      "0": 48,
+      "1": 14520,
+      "2": 440444,
+      "3": 7260,
+      "4": 187,
+      "5": 85436
+    },
+    "text_map": 458752,
+    "sha256": "c53fdb0cdad36d16fa0ff609f869d87c8577af343c2c8330cebc0cc0e0a6882f"
+  }
+]

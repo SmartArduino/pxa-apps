@@ -1,0 +1,12 @@
+[
+  {
+    "profile": "pai-touch",
+    "private_files": 6,
+    "private_sha256_unchanged": true
+  },
+  {
+    "profile": "esp-mosaico",
+    "private_files": 0,
+    "private_sha256_unchanged": true
+  }
+]

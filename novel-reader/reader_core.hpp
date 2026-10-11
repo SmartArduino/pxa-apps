@@ -830,6 +830,45 @@ inline void compact_page_text(std::string& text, Page& page) {
   }
   text.resize(write);
 }
+// Balance the unused fraction of a row without changing page boundaries or
+// the user's leading. Limit sparse/end pages to half a row, so a growing
+// partial cache does not make the first few lines jump to the page center.
+// Each translated row gets its own curved-screen span; fit the existing text
+// before moving it, rather than clipping it or silently rewrapping a page.
+[[gnu::noinline]] inline int balance_page(Page& page, std::string_view text,
+                                        const Layout& layout, const Settings& settings) {
+  if (!page.count) return 0;
+  const int pixels = std::max(10, int(settings.font * layout.density));
+  const auto& last = page.lines[page.count - 1].box;
+  const int unused = layout.body_end() - last.y - last.h;
+  int low = 0, high = std::max(0, std::min(unused / 2,
+      (text_line_height(pixels) + int(settings.line_gap * layout.density)) / 2));
+  if (!high) return 0;
+  // Search and final placement use one traversal body. Guest noinline alone
+  // cannot prevent the AOT optimizer from duplicating geometry calculations.
+  bool placing = false;
+  for (;;) {
+    const int candidate = placing ? low : (low + high + 1) / 2;
+    bool fits = true;
+    for (std::size_t i = 0; i < page.count; ++i) {
+      auto& line = page.lines[i];
+      const auto before = layout.span(line.box.y, line.box.h);
+      const auto after = layout.span(line.box.y + candidate, line.box.h);
+      const int x = after.first + line.box.x - before.first;
+      const Rect box{x, line.box.y + candidate, after.second - x - 2, line.box.h};
+      if (text_width(text.substr(line.begin, line.end - line.begin), pixels) >
+          box.w) { fits = false; break; }
+      if (placing) line.box = box;
+    }
+    if (placing) return low;
+    if (fits) low = candidate;
+    else high = candidate - 1;
+    if (low == high) {
+      if (!low) return 0;
+      placing = true;
+    }
+  }
+}
 struct PreferencePreview {
   Rect first, second;
   int pixels = 0, step = 0;

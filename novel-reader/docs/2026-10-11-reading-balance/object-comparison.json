@@ -1,0 +1,14 @@
+{
+  "before": {
+    "ReaderApp": 15088,
+    "reader::Page": 1548,
+    "reader::PageNumbers": 152,
+    "reader::PaginationCursor": 12
+  },
+  "after": {
+    "ReaderApp": 15088,
+    "reader::Page": 1548,
+    "reader::PageNumbers": 152,
+    "reader::PaginationCursor": 12
+  }
+}

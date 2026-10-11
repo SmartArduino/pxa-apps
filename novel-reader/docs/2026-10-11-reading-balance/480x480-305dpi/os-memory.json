@@ -1,0 +1,242 @@
+[
+  {
+    "frame": "shelf",
+    "VmRSS": 48951296,
+    "VmHWM": 48951296
+  },
+  {
+    "frame": "book-management",
+    "VmRSS": 49332224,
+    "VmHWM": 49332224
+  },
+  {
+    "frame": "remove-confirmation",
+    "VmRSS": 49430528,
+    "VmHWM": 49430528
+  },
+  {
+    "frame": "settings",
+    "VmRSS": 49819648,
+    "VmHWM": 49819648
+  },
+  {
+    "frame": "tinted-settings",
+    "VmRSS": 49836032,
+    "VmHWM": 49836032
+  },
+  {
+    "frame": "night-settings",
+    "VmRSS": 49844224,
+    "VmHWM": 49844224
+  },
+  {
+    "frame": "reading",
+    "VmRSS": 50049024,
+    "VmHWM": 50049024
+  },
+  {
+    "frame": "page-number",
+    "VmRSS": 50049024,
+    "VmHWM": 50049024
+  },
+  {
+    "frame": "page-number-return",
+    "VmRSS": 50286592,
+    "VmHWM": 50286592
+  },
+  {
+    "frame": "real-partial-contents",
+    "VmRSS": 50315264,
+    "VmHWM": 50315264
+  },
+  {
+    "frame": "real-first-chapter",
+    "VmRSS": 50315264,
+    "VmHWM": 50315264
+  },
+  {
+    "frame": "real-prose-0",
+    "VmRSS": 50315264,
+    "VmHWM": 50315264
+  },
+  {
+    "frame": "real-prose-1",
+    "VmRSS": 50315264,
+    "VmHWM": 50315264
+  },
+  {
+    "frame": "real-prose-2",
+    "VmRSS": 50315264,
+    "VmHWM": 50315264
+  },
+  {
+    "frame": "real-prose-3",
+    "VmRSS": 50380800,
+    "VmHWM": 50380800
+  },
+  {
+    "frame": "real-prose-4",
+    "VmRSS": 50446336,
+    "VmHWM": 50446336
+  },
+  {
+    "frame": "real-prose-5",
+    "VmRSS": 50577408,
+    "VmHWM": 50577408
+  },
+  {
+    "frame": "real-prose-glyphs",
+    "VmRSS": 50577408,
+    "VmHWM": 50577408
+  },
+  {
+    "frame": "fixed-second-chapter",
+    "VmRSS": 50610176,
+    "VmHWM": 50610176
+  },
+  {
+    "frame": "spacing-12-0",
+    "VmRSS": 50774016,
+    "VmHWM": 50774016
+  },
+  {
+    "frame": "spacing-12-6",
+    "VmRSS": 50774016,
+    "VmHWM": 50774016
+  },
+  {
+    "frame": "spacing-12-12",
+    "VmRSS": 50774016,
+    "VmHWM": 50774016
+  },
+  {
+    "frame": "spacing-16-0",
+    "VmRSS": 50774016,
+    "VmHWM": 50774016
+  },
+  {
+    "frame": "spacing-16-6",
+    "VmRSS": 50790400,
+    "VmHWM": 50790400
+  },
+  {
+    "frame": "spacing-16-12",
+    "VmRSS": 50790400,
+    "VmHWM": 50790400
+  },
+  {
+    "frame": "spacing-20-0",
+    "VmRSS": 50868224,
+    "VmHWM": 50868224
+  },
+  {
+    "frame": "spacing-20-6",
+    "VmRSS": 50921472,
+    "VmHWM": 50921472
+  },
+  {
+    "frame": "spacing-20-12",
+    "VmRSS": 50921472,
+    "VmHWM": 50921472
+  },
+  {
+    "frame": "spacing-24-0",
+    "VmRSS": 50995200,
+    "VmHWM": 50995200
+  },
+  {
+    "frame": "spacing-24-6",
+    "VmRSS": 51052544,
+    "VmHWM": 51052544
+  },
+  {
+    "frame": "spacing-24-12",
+    "VmRSS": 51052544,
+    "VmHWM": 51052544
+  },
+  {
+    "frame": "spacing-28-0",
+    "VmRSS": 51105792,
+    "VmHWM": 51105792
+  },
+  {
+    "frame": "spacing-28-6",
+    "VmRSS": 51134464,
+    "VmHWM": 51134464
+  },
+  {
+    "frame": "spacing-28-12",
+    "VmRSS": 51134464,
+    "VmHWM": 51134464
+  },
+  {
+    "frame": "real-instant-search",
+    "VmRSS": 51134464,
+    "VmHWM": 51134464
+  },
+  {
+    "frame": "real-search-open",
+    "VmRSS": 51134464,
+    "VmHWM": 51134464
+  },
+  {
+    "frame": "reading-menu",
+    "VmRSS": 51134464,
+    "VmHWM": 51134464
+  },
+  {
+    "frame": "contents",
+    "VmRSS": 51134464,
+    "VmHWM": 51134464
+  },
+  {
+    "frame": "search",
+    "VmRSS": 51134464,
+    "VmHWM": 51134464
+  },
+  {
+    "frame": "system-ime",
+    "VmRSS": 51134464,
+    "VmHWM": 51134464
+  },
+  {
+    "frame": "chinese-input",
+    "VmRSS": 51134464,
+    "VmHWM": 51134464
+  },
+  {
+    "frame": "chinese-submitted",
+    "VmRSS": 51134464,
+    "VmHWM": 51134464
+  },
+  {
+    "frame": "query-restored",
+    "VmRSS": 51134464,
+    "VmHWM": 51134464
+  },
+  {
+    "frame": "query-edit-ime",
+    "VmRSS": 51134464,
+    "VmHWM": 51134464
+  },
+  {
+    "frame": "empty-submitted",
+    "VmRSS": 51134464,
+    "VmHWM": 51134464
+  },
+  {
+    "frame": "sources",
+    "VmRSS": 51134464,
+    "VmHWM": 51134464
+  },
+  {
+    "frame": "disabled-source",
+    "VmRSS": 51134464,
+    "VmHWM": 51134464
+  },
+  {
+    "frame": "add-source",
+    "VmRSS": 51134464,
+    "VmHWM": 51134464
+  }
+]

@@ -75,6 +75,8 @@ TXT 正文必须为 UTF-8。分章目录格式：
 [页码验收](docs/2026-10-10-page-numbers.zh-CN.md)。
 阅读页紧凑标题、高 DPI 修正及相同章节前后截图见
 [空间利用率验收](docs/2026-10-11-reading-space.zh-CN.md)。
+调整字号、行距后的正文上下均衡与圆角避让见
+[留白均衡验收](docs/2026-10-11-reading-balance.zh-CN.md)。
 改版截图、SDK 迁移及验证记录见
 [2026-10-10-sdk-mobile-ui.zh-CN.md](docs/2026-10-10-sdk-mobile-ui.zh-CN.md)。
 
