@@ -1,0 +1,655 @@
+{
+  "cpp": {
+    "passed": true,
+    "package_sha256": "4f733d546972777f69b03f1fd07e0db2f61a039dcded074a50f0fa5df0596353",
+    "runs": [
+      {
+        "index": 0,
+        "groups": [
+          {
+            "index": 1,
+            "group": "2D-CL",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 1
+          },
+          {
+            "index": 2,
+            "group": "2D-SN",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 3,
+            "group": "2D-SS",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 4,
+            "group": "2D-AD",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 5,
+            "group": "2D-QD",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 6,
+            "group": "2D-TX",
+            "visible_fps": 31,
+            "rendered_fps": 31,
+            "raster_ms": 13
+          },
+          {
+            "index": 7,
+            "group": "GM-2D",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 3
+          },
+          {
+            "index": 8,
+            "group": "3D-03",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 3
+          },
+          {
+            "index": 9,
+            "group": "3D-06",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 5
+          },
+          {
+            "index": 10,
+            "group": "3D-12",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 8
+          },
+          {
+            "index": 11,
+            "group": "GM-3D",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 12
+          }
+        ],
+        "memory": {
+          "sram": {
+            "stable": 267216,
+            "peak": 271352,
+            "added": 3368,
+            "peak_added": 7504
+          },
+          "psram": {
+            "stable": 1799136,
+            "peak": 2052088,
+            "added": 330556,
+            "peak_added": 583508
+          }
+        }
+      },
+      {
+        "index": 1,
+        "groups": [
+          {
+            "index": 1,
+            "group": "2D-CL",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 1
+          },
+          {
+            "index": 2,
+            "group": "2D-SN",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 3,
+            "group": "2D-SS",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 4,
+            "group": "2D-AD",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 5,
+            "group": "2D-QD",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 6,
+            "group": "2D-TX",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 13
+          },
+          {
+            "index": 7,
+            "group": "GM-2D",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 3
+          },
+          {
+            "index": 8,
+            "group": "3D-03",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 3
+          },
+          {
+            "index": 9,
+            "group": "3D-06",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 5
+          },
+          {
+            "index": 10,
+            "group": "3D-12",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 8
+          },
+          {
+            "index": 11,
+            "group": "GM-3D",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 12
+          }
+        ],
+        "memory": {
+          "sram": {
+            "stable": 267216,
+            "peak": 268512,
+            "added": 3368,
+            "peak_added": 4664
+          },
+          "psram": {
+            "stable": 1799124,
+            "peak": 2052632,
+            "added": 330124,
+            "peak_added": 583632
+          }
+        }
+      },
+      {
+        "index": 2,
+        "groups": [
+          {
+            "index": 1,
+            "group": "2D-CL",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 1
+          },
+          {
+            "index": 2,
+            "group": "2D-SN",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 3,
+            "group": "2D-SS",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 4,
+            "group": "2D-AD",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 5,
+            "group": "2D-QD",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 6,
+            "group": "2D-TX",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 13
+          },
+          {
+            "index": 7,
+            "group": "GM-2D",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 3
+          },
+          {
+            "index": 8,
+            "group": "3D-03",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 3
+          },
+          {
+            "index": 9,
+            "group": "3D-06",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 5
+          },
+          {
+            "index": 10,
+            "group": "3D-12",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 8
+          },
+          {
+            "index": 11,
+            "group": "GM-3D",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 12
+          }
+        ],
+        "memory": {
+          "sram": {
+            "stable": 267216,
+            "peak": 268512,
+            "added": 3368,
+            "peak_added": 4664
+          },
+          "psram": {
+            "stable": 1799336,
+            "peak": 2052712,
+            "added": 330392,
+            "peak_added": 583768
+          }
+        }
+      }
+    ],
+    "wamr_running_samples": [
+      {
+        "message": "354051\tI (354051) PxaHost: WAMR dynamic: peak=21476 current=21476 linear=45056 linear_peak=45056 artifact=0 events=128",
+        "values": {
+          "peak": 21476,
+          "current": 21476,
+          "linear": 45056,
+          "linear_peak": 45056,
+          "artifact": 0,
+          "events": 128
+        }
+      },
+      {
+        "message": "406743\tI (406743) PxaHost: WAMR dynamic: peak=21476 current=21476 linear=45056 linear_peak=45056 artifact=0 events=128",
+        "values": {
+          "peak": 21476,
+          "current": 21476,
+          "linear": 45056,
+          "linear_peak": 45056,
+          "artifact": 0,
+          "events": 128
+        }
+      }
+    ],
+    "aot_mapping_log": [
+      "301243\tI (301243) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b20000 dbus=0x3c480000 request=44600 map=65536 alloc=65536 free_psram=6750660",
+      "354021\tI (354021) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b20000 dbus=0x3c4b0000 request=44600 map=65536 alloc=65536 free_psram=6750272",
+      "406716\tI (406716) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b20000 dbus=0x3c4c0000 request=44600 map=65536 alloc=65536 free_psram=6750208"
+    ]
+  },
+  "c": {
+    "passed": true,
+    "package_sha256": "48429d909fdf20040a1a07721468630e6212c320558c94bae249d5cb1039d637",
+    "runs": [
+      {
+        "index": 0,
+        "groups": [
+          {
+            "index": 1,
+            "group": "2D-CL",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 1
+          },
+          {
+            "index": 2,
+            "group": "2D-SN",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 3,
+            "group": "2D-SS",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 4,
+            "group": "2D-AD",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 5,
+            "group": "2D-QD",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 6,
+            "group": "2D-TX",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 13
+          },
+          {
+            "index": 7,
+            "group": "GM-2D",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 3
+          },
+          {
+            "index": 8,
+            "group": "3D-03",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 3
+          },
+          {
+            "index": 9,
+            "group": "3D-06",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 5
+          },
+          {
+            "index": 10,
+            "group": "3D-12",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 8
+          },
+          {
+            "index": 11,
+            "group": "GM-3D",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 12
+          }
+        ],
+        "memory": {
+          "sram": {
+            "stable": 267216,
+            "peak": 268512,
+            "added": 3368,
+            "peak_added": 4664
+          },
+          "psram": {
+            "stable": 1856812,
+            "peak": 2110396,
+            "added": 387036,
+            "peak_added": 640620
+          }
+        }
+      },
+      {
+        "index": 1,
+        "groups": [
+          {
+            "index": 1,
+            "group": "2D-CL",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 1
+          },
+          {
+            "index": 2,
+            "group": "2D-SN",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 3,
+            "group": "2D-SS",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 4,
+            "group": "2D-AD",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 5,
+            "group": "2D-QD",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 6,
+            "group": "2D-TX",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 12
+          },
+          {
+            "index": 7,
+            "group": "GM-2D",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 3
+          },
+          {
+            "index": 8,
+            "group": "3D-03",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 3
+          },
+          {
+            "index": 9,
+            "group": "3D-06",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 5
+          },
+          {
+            "index": 10,
+            "group": "3D-12",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 8
+          },
+          {
+            "index": 11,
+            "group": "GM-3D",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 12
+          }
+        ],
+        "memory": {
+          "sram": {
+            "stable": 267216,
+            "peak": 268512,
+            "added": 3368,
+            "peak_added": 4664
+          },
+          "psram": {
+            "stable": 1856884,
+            "peak": 2109956,
+            "added": 387148,
+            "peak_added": 640220
+          }
+        }
+      },
+      {
+        "index": 2,
+        "groups": [
+          {
+            "index": 1,
+            "group": "2D-CL",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 1
+          },
+          {
+            "index": 2,
+            "group": "2D-SN",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 3,
+            "group": "2D-SS",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 4,
+            "group": "2D-AD",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 5,
+            "group": "2D-QD",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 4
+          },
+          {
+            "index": 6,
+            "group": "2D-TX",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 13
+          },
+          {
+            "index": 7,
+            "group": "GM-2D",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 3
+          },
+          {
+            "index": 8,
+            "group": "3D-03",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 3
+          },
+          {
+            "index": 9,
+            "group": "3D-06",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 5
+          },
+          {
+            "index": 10,
+            "group": "3D-12",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 8
+          },
+          {
+            "index": 11,
+            "group": "GM-3D",
+            "visible_fps": 30,
+            "rendered_fps": 30,
+            "raster_ms": 12
+          }
+        ],
+        "memory": {
+          "sram": {
+            "stable": 267216,
+            "peak": 268512,
+            "added": 3368,
+            "peak_added": 4664
+          },
+          "psram": {
+            "stable": 1856864,
+            "peak": 2110376,
+            "added": 387192,
+            "peak_added": 640704
+          }
+        }
+      }
+    ],
+    "wamr_running_samples": [
+      {
+        "message": "818563\tI (818563) PxaHost: WAMR dynamic: peak=21282 current=21282 linear=102400 linear_peak=102400 artifact=0 events=128",
+        "values": {
+          "peak": 21282,
+          "current": 21282,
+          "linear": 102400,
+          "linear_peak": 102400,
+          "artifact": 0,
+          "events": 128
+        }
+      },
+      {
+        "message": "871241\tI (871241) PxaHost: WAMR dynamic: peak=21282 current=21282 linear=102400 linear_peak=102400 artifact=0 events=128",
+        "values": {
+          "peak": 21282,
+          "current": 21282,
+          "linear": 102400,
+          "linear_peak": 102400,
+          "artifact": 0,
+          "events": 128
+        }
+      }
+    ],
+    "aot_mapping_log": [
+      "818535\tI (818535) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b20000 dbus=0x3c4b0000 request=46836 map=65536 alloc=65536 free_psram=6747508",
+      "871213\tI (871213) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b20000 dbus=0x3c4d0000 request=46836 map=65536 alloc=65536 free_psram=6747516",
+      "924033\tI (924033) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b20000 dbus=0x3c4d0000 request=46836 map=65536 alloc=65536 free_psram=6747508"
+    ]
+  },
+  "limitations": [
+    "Same firmware boot; C++ first, C second; first C++ run includes cold launch. Compare warmed runs 1 and 2.",
+    "Display limited to 30 FPS. Integer FPS estimates may show 31 at interval boundaries.",
+    "Raster telemetry quantized to 1 ms. Full-run PERF buffer overflowed: not a complete per-frame phase trace.",
+    "SRAM/PSRAM heap minima reset for each run; screenshot transfer is outside measurement window.",
+    "Guest stack 8192 bytes is explicit for the bounded benchmark only; SDK default stack unchanged."
+  ]
+}

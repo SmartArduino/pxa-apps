@@ -1,0 +1,395 @@
+{
+  "runs": [
+    {
+      "mode": "baseline-queued",
+      "repeat": 0,
+      "frames": 20000,
+      "stderr": "host_struct=31840 command_storage=98304 mode=queued\n240x240 INDEX8,20 resident textures,4 visible,checksum=dca27e35\n",
+      "submit_us": {
+        "mean": 0.7648,
+        "median": 1.0,
+        "p95": 1
+      },
+      "execute_us": {
+        "mean": 246.45225,
+        "median": 239.0,
+        "p95": 339
+      },
+      "render_present_us": {
+        "mean": 252.1054,
+        "median": 244.0,
+        "p95": 348
+      },
+      "total_us": {
+        "mean": 252.8702,
+        "median": 245.0,
+        "p95": 349
+      }
+    },
+    {
+      "mode": "current-queued",
+      "repeat": 0,
+      "frames": 20000,
+      "stderr": "host_struct=31392 command_storage=49152 mode=queued\n240x240 INDEX8,20 resident textures,4 visible,checksum=dca27e35\n",
+      "submit_us": {
+        "mean": 0.663,
+        "median": 1.0,
+        "p95": 1
+      },
+      "execute_us": {
+        "mean": 222.13125,
+        "median": 218.0,
+        "p95": 266
+      },
+      "render_present_us": {
+        "mean": 227.0352,
+        "median": 222.0,
+        "p95": 272
+      },
+      "total_us": {
+        "mean": 227.6982,
+        "median": 223.0,
+        "p95": 273
+      }
+    },
+    {
+      "mode": "current-borrowed",
+      "repeat": 0,
+      "frames": 20000,
+      "stderr": "host_struct=31392 command_storage=0 mode=borrowed\n240x240 INDEX8,20 resident textures,4 visible,checksum=dca27e35\n",
+      "submit_us": {
+        "mean": 252.84495,
+        "median": 233.0,
+        "p95": 404
+      },
+      "execute_us": {
+        "mean": 252.30845,
+        "median": 233.0,
+        "p95": 403
+      },
+      "render_present_us": {
+        "mean": 5.29065,
+        "median": 5.0,
+        "p95": 9
+      },
+      "total_us": {
+        "mean": 258.1356,
+        "median": 238.0,
+        "p95": 414
+      }
+    },
+    {
+      "mode": "current-queued",
+      "repeat": 1,
+      "frames": 20000,
+      "stderr": "host_struct=31392 command_storage=49152 mode=queued\n240x240 INDEX8,20 resident textures,4 visible,checksum=dca27e35\n",
+      "submit_us": {
+        "mean": 0.80165,
+        "median": 1.0,
+        "p95": 1
+      },
+      "execute_us": {
+        "mean": 260.0928,
+        "median": 251.0,
+        "p95": 355
+      },
+      "render_present_us": {
+        "mean": 266.13225,
+        "median": 257.0,
+        "p95": 364
+      },
+      "total_us": {
+        "mean": 266.9339,
+        "median": 257.0,
+        "p95": 365
+      }
+    },
+    {
+      "mode": "current-borrowed",
+      "repeat": 1,
+      "frames": 20000,
+      "stderr": "host_struct=31392 command_storage=0 mode=borrowed\n240x240 INDEX8,20 resident textures,4 visible,checksum=dca27e35\n",
+      "submit_us": {
+        "mean": 215.7166,
+        "median": 208.0,
+        "p95": 278
+      },
+      "execute_us": {
+        "mean": 215.2616,
+        "median": 208.0,
+        "p95": 277
+      },
+      "render_present_us": {
+        "mean": 4.4786,
+        "median": 4.0,
+        "p95": 6
+      },
+      "total_us": {
+        "mean": 220.1952,
+        "median": 212.0,
+        "p95": 284
+      }
+    },
+    {
+      "mode": "baseline-queued",
+      "repeat": 1,
+      "frames": 20000,
+      "stderr": "host_struct=31840 command_storage=98304 mode=queued\n240x240 INDEX8,20 resident textures,4 visible,checksum=dca27e35\n",
+      "submit_us": {
+        "mean": 0.60205,
+        "median": 1.0,
+        "p95": 1
+      },
+      "execute_us": {
+        "mean": 200.2604,
+        "median": 195.0,
+        "p95": 235
+      },
+      "render_present_us": {
+        "mean": 204.783,
+        "median": 200.0,
+        "p95": 240
+      },
+      "total_us": {
+        "mean": 205.38505,
+        "median": 200.0,
+        "p95": 241
+      }
+    },
+    {
+      "mode": "current-borrowed",
+      "repeat": 2,
+      "frames": 20000,
+      "stderr": "host_struct=31392 command_storage=0 mode=borrowed\n240x240 INDEX8,20 resident textures,4 visible,checksum=dca27e35\n",
+      "submit_us": {
+        "mean": 189.6944,
+        "median": 187.0,
+        "p95": 210
+      },
+      "execute_us": {
+        "mean": 189.3207,
+        "median": 186.0,
+        "p95": 210
+      },
+      "render_present_us": {
+        "mean": 3.861,
+        "median": 4.0,
+        "p95": 5
+      },
+      "total_us": {
+        "mean": 193.5554,
+        "median": 190.0,
+        "p95": 215
+      }
+    },
+    {
+      "mode": "baseline-queued",
+      "repeat": 2,
+      "frames": 20000,
+      "stderr": "host_struct=31840 command_storage=98304 mode=queued\n240x240 INDEX8,20 resident textures,4 visible,checksum=dca27e35\n",
+      "submit_us": {
+        "mean": 0.8,
+        "median": 1.0,
+        "p95": 1
+      },
+      "execute_us": {
+        "mean": 247.01115,
+        "median": 235.0,
+        "p95": 345
+      },
+      "render_present_us": {
+        "mean": 252.66925,
+        "median": 240.0,
+        "p95": 354
+      },
+      "total_us": {
+        "mean": 253.46925,
+        "median": 241.0,
+        "p95": 355
+      }
+    },
+    {
+      "mode": "current-queued",
+      "repeat": 2,
+      "frames": 20000,
+      "stderr": "host_struct=31392 command_storage=49152 mode=queued\n240x240 INDEX8,20 resident textures,4 visible,checksum=dca27e35\n",
+      "submit_us": {
+        "mean": 0.7009,
+        "median": 1.0,
+        "p95": 1
+      },
+      "execute_us": {
+        "mean": 230.4264,
+        "median": 212.0,
+        "p95": 361
+      },
+      "render_present_us": {
+        "mean": 235.49725,
+        "median": 217.0,
+        "p95": 369
+      },
+      "total_us": {
+        "mean": 236.19815,
+        "median": 218.0,
+        "p95": 370
+      }
+    },
+    {
+      "mode": "baseline-queued",
+      "repeat": 3,
+      "frames": 20000,
+      "stderr": "host_struct=31840 command_storage=98304 mode=queued\n240x240 INDEX8,20 resident textures,4 visible,checksum=dca27e35\n",
+      "submit_us": {
+        "mean": 0.63765,
+        "median": 1.0,
+        "p95": 1
+      },
+      "execute_us": {
+        "mean": 215.44745,
+        "median": 208.0,
+        "p95": 276
+      },
+      "render_present_us": {
+        "mean": 220.1994,
+        "median": 213.0,
+        "p95": 282
+      },
+      "total_us": {
+        "mean": 220.83705,
+        "median": 213.0,
+        "p95": 283
+      }
+    },
+    {
+      "mode": "current-queued",
+      "repeat": 3,
+      "frames": 20000,
+      "stderr": "host_struct=31392 command_storage=49152 mode=queued\n240x240 INDEX8,20 resident textures,4 visible,checksum=dca27e35\n",
+      "submit_us": {
+        "mean": 0.6635,
+        "median": 1.0,
+        "p95": 1
+      },
+      "execute_us": {
+        "mean": 217.9872,
+        "median": 207.0,
+        "p95": 301
+      },
+      "render_present_us": {
+        "mean": 222.83305,
+        "median": 211.0,
+        "p95": 308
+      },
+      "total_us": {
+        "mean": 223.49655,
+        "median": 212.0,
+        "p95": 309
+      }
+    },
+    {
+      "mode": "current-borrowed",
+      "repeat": 3,
+      "frames": 20000,
+      "stderr": "host_struct=31392 command_storage=0 mode=borrowed\n240x240 INDEX8,20 resident textures,4 visible,checksum=dca27e35\n",
+      "submit_us": {
+        "mean": 232.88845,
+        "median": 224.0,
+        "p95": 310
+      },
+      "execute_us": {
+        "mean": 232.40035,
+        "median": 223.0,
+        "p95": 309
+      },
+      "render_present_us": {
+        "mean": 4.90715,
+        "median": 4.0,
+        "p95": 8
+      },
+      "total_us": {
+        "mean": 237.7956,
+        "median": 228.0,
+        "p95": 318
+      }
+    },
+    {
+      "mode": "current-queued",
+      "repeat": 4,
+      "frames": 20000,
+      "stderr": "host_struct=31392 command_storage=49152 mode=queued\n240x240 INDEX8,20 resident textures,4 visible,checksum=dca27e35\n",
+      "submit_us": {
+        "mean": 0.67655,
+        "median": 1.0,
+        "p95": 1
+      },
+      "execute_us": {
+        "mean": 219.0609,
+        "median": 212.0,
+        "p95": 282
+      },
+      "render_present_us": {
+        "mean": 224.02955,
+        "median": 217.0,
+        "p95": 289
+      },
+      "total_us": {
+        "mean": 224.7061,
+        "median": 217.0,
+        "p95": 290
+      }
+    },
+    {
+      "mode": "current-borrowed",
+      "repeat": 4,
+      "frames": 20000,
+      "stderr": "host_struct=31392 command_storage=0 mode=borrowed\n240x240 INDEX8,20 resident textures,4 visible,checksum=dca27e35\n",
+      "submit_us": {
+        "mean": 219.71005,
+        "median": 198.0,
+        "p95": 351
+      },
+      "execute_us": {
+        "mean": 219.25215,
+        "median": 198.0,
+        "p95": 351
+      },
+      "render_present_us": {
+        "mean": 4.5365,
+        "median": 4.0,
+        "p95": 8
+      },
+      "total_us": {
+        "mean": 224.24655,
+        "median": 202.0,
+        "p95": 360
+      }
+    },
+    {
+      "mode": "baseline-queued",
+      "repeat": 4,
+      "frames": 20000,
+      "stderr": "host_struct=31840 command_storage=98304 mode=queued\n240x240 INDEX8,20 resident textures,4 visible,checksum=dca27e35\n",
+      "submit_us": {
+        "mean": 0.58415,
+        "median": 1.0,
+        "p95": 1
+      },
+      "execute_us": {
+        "mean": 191.72985,
+        "median": 188.0,
+        "p95": 218
+      },
+      "render_present_us": {
+        "mean": 196.07085,
+        "median": 192.0,
+        "p95": 223
+      },
+      "total_us": {
+        "mean": 196.655,
+        "median": 193.0,
+        "p95": 224
+      }
+    }
+  ],
+  "scope": "240x240 four-sprite fixed CPU workload, no VSync or real display FPS"
+}

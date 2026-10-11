@@ -1,0 +1,164 @@
+{
+  "app": "pxa-next-voxel-probe",
+  "package_sha256": "1c53fdf909e9bc8f1ccf6a4a3d1848867b24165d6659433ba8465f025e2af34c",
+  "moves": 48,
+  "interval_seconds": 0.16,
+  "ignored_top_rows": 24,
+  "positions": [
+    210,
+    120,
+    240,
+    120
+  ],
+  "runs": [
+    {
+      "index": 0,
+      "before": {
+        "metadata": {
+          "format": "rgb565le",
+          "width": "296",
+          "height": "240",
+          "stride": "592",
+          "orientation": "logical",
+          "frame_id": "20",
+          "device_us": "285792454",
+          "source": "surface",
+          "bytes": "142080",
+          "sha256": "bd285b5d662ea1714efa9ecceebc93e2ef007bc2b5a1ecebdbe9ef9d226d090a"
+        },
+        "pixels_sha256": "bd285b5d662ea1714efa9ecceebc93e2ef007bc2b5a1ecebdbe9ef9d226d090a",
+        "scene_pixels_sha256": "303510f59d3297db298fbbf8402a375c0e7793786c4773d7b23658ddde902f0d"
+      },
+      "metrics": {
+        "guest_total_us": 586159,
+        "guest_count": 104,
+        "guest_p95_us": 7000,
+        "guest_max_us": 123385,
+        "present_total_us": 4239913,
+        "present_count": 104,
+        "present_p95_us": 46000,
+        "present_max_us": 156737,
+        "visible_total_us": 11999974,
+        "visible_count": 104,
+        "visible_p95_us": 224772,
+        "visible_max_us": 224772
+      },
+      "after": {
+        "metadata": {
+          "format": "rgb565le",
+          "width": "296",
+          "height": "240",
+          "stride": "592",
+          "orientation": "logical",
+          "frame_id": "134",
+          "device_us": "295453558",
+          "source": "surface",
+          "bytes": "142080",
+          "sha256": "357795ed493de12a4e7c64010f7f5a9aaef27e6332e21d24c1c4753888d7603c"
+        },
+        "pixels_sha256": "357795ed493de12a4e7c64010f7f5a9aaef27e6332e21d24c1c4753888d7603c",
+        "scene_pixels_sha256": "f6d22bdc710fd0805c387cc4b841c839b44d410914aaedf310d7559813a28482"
+      }
+    },
+    {
+      "index": 1,
+      "before": {
+        "metadata": {
+          "format": "rgb565le",
+          "width": "296",
+          "height": "240",
+          "stride": "592",
+          "orientation": "logical",
+          "frame_id": "20",
+          "device_us": "302445875",
+          "source": "surface",
+          "bytes": "142080",
+          "sha256": "86992a9438f71666fe9b87f54ddf7a68f43552da99d41380792be27ee7279223"
+        },
+        "pixels_sha256": "86992a9438f71666fe9b87f54ddf7a68f43552da99d41380792be27ee7279223",
+        "scene_pixels_sha256": "303510f59d3297db298fbbf8402a375c0e7793786c4773d7b23658ddde902f0d"
+      },
+      "metrics": {
+        "guest_total_us": 483192,
+        "guest_count": 105,
+        "guest_p95_us": 8000,
+        "guest_max_us": 55301,
+        "present_total_us": 4130072,
+        "present_count": 104,
+        "present_p95_us": 46000,
+        "present_max_us": 87783,
+        "visible_total_us": 11805755,
+        "visible_count": 104,
+        "visible_p95_us": 166170,
+        "visible_max_us": 166170
+      },
+      "after": {
+        "metadata": {
+          "format": "rgb565le",
+          "width": "296",
+          "height": "240",
+          "stride": "592",
+          "orientation": "logical",
+          "frame_id": "134",
+          "device_us": "312059599",
+          "source": "surface",
+          "bytes": "142080",
+          "sha256": "b50881bc419b43e6464b779c81c80eb4136fb2fb89baf3c93491eae0220b8498"
+        },
+        "pixels_sha256": "b50881bc419b43e6464b779c81c80eb4136fb2fb89baf3c93491eae0220b8498",
+        "scene_pixels_sha256": "f6d22bdc710fd0805c387cc4b841c839b44d410914aaedf310d7559813a28482"
+      }
+    },
+    {
+      "index": 2,
+      "before": {
+        "metadata": {
+          "format": "rgb565le",
+          "width": "296",
+          "height": "240",
+          "stride": "592",
+          "orientation": "logical",
+          "frame_id": "19",
+          "device_us": "319003150",
+          "source": "surface",
+          "bytes": "142080",
+          "sha256": "b467fe53eee8769d89e5380c33bb6bdad87b55b8220a4598696bf87737e8546c"
+        },
+        "pixels_sha256": "b467fe53eee8769d89e5380c33bb6bdad87b55b8220a4598696bf87737e8546c",
+        "scene_pixels_sha256": "303510f59d3297db298fbbf8402a375c0e7793786c4773d7b23658ddde902f0d"
+      },
+      "metrics": {
+        "guest_total_us": 511770,
+        "guest_count": 104,
+        "guest_p95_us": 8000,
+        "guest_max_us": 71655,
+        "present_total_us": 4045218,
+        "present_count": 103,
+        "present_p95_us": 44000,
+        "present_max_us": 103490,
+        "visible_total_us": 11686072,
+        "visible_count": 103,
+        "visible_p95_us": 181439,
+        "visible_max_us": 181439
+      },
+      "after": {
+        "metadata": {
+          "format": "rgb565le",
+          "width": "296",
+          "height": "240",
+          "stride": "592",
+          "orientation": "logical",
+          "frame_id": "133",
+          "device_us": "328687694",
+          "source": "surface",
+          "bytes": "142080",
+          "sha256": "357795ed493de12a4e7c64010f7f5a9aaef27e6332e21d24c1c4753888d7603c"
+        },
+        "pixels_sha256": "357795ed493de12a4e7c64010f7f5a9aaef27e6332e21d24c1c4753888d7603c",
+        "scene_pixels_sha256": "f6d22bdc710fd0805c387cc4b841c839b44d410914aaedf310d7559813a28482"
+      }
+    }
+  ],
+  "passed": true,
+  "hello": "protocol=1;mode=normal;capabilities=info,memory,logcat,packages,package-deploy,package-run,package-stop,fs,reboot,doctor,input-v2,screenshot-rgb565,screenshot-jpeg,poweroff,perf-raster,heap-local;max_chunk=1024;fs_offset=1;fs_sha256=1;target=esp32s3;serial=a4:cb:8f:d6:8d:a4;version=4faf6cf-dirty"
+}

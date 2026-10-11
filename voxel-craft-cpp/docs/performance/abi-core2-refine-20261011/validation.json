@@ -1,0 +1,34 @@
+{
+  "cpp_host_suite": "passed",
+  "host_simulator_ctest": {
+    "passed": 84,
+    "failed": 0,
+    "excluded_cpp_fixtures": 4
+  },
+  "service_safety_real_aot_profiles": 3,
+  "voxel_real_aot_profiles": 2,
+  "voxel_modes": [
+    "previous_queued",
+    "current_queued",
+    "current_borrowed"
+  ],
+  "desktop_backend_asan_ubsan": "passed (backend TU instrumented; linked prebuilt libraries not all instrumented)",
+  "esp_adapter_normal": "passed",
+  "esp_adapter_asan_ubsan": "passed",
+  "spec_positive_and_negative": "passed",
+  "device_current_runs": 3,
+  "device_previous_runs": 3,
+  "device_current_input_runs": 3,
+  "restored_original_firmware": true,
+  "original_app_count": 5,
+  "private_app_removed": true,
+  "original_counter_launch_capture_stop": "passed",
+  "settings_changes": [],
+  "limitations": [
+    "Desktop CPU timing variance prevents strict parity/speedup claim",
+    "Device PSRAM steady-window max +572 B in one current run; no new ESP allocations but strict global peak non-growth not established",
+    "No Guest stage timing samples in this round",
+    "Simulator captures are Surface before round display mask",
+    "No full production app or edit/inventory matrix rerun"
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "date": "2026-10-11",
+  "status": "passed-with-documented-scope-and-limitations",
+  "migration": "Only SDK test fixtures and private game probes; production apps unmodified.",
+  "cpp": {
+    "result": "passed",
+    "log": "cpp-full.log",
+    "scope": "56 units and script diagnostic/configuration/i18n/IPC checks"
+  },
+  "host": {
+    "result": "32/32 passed",
+    "log": "host-final-tests.log"
+  },
+  "esp": {
+    "result": "passed",
+    "log": "esp-final-tests.log",
+    "sanitizers": [
+      "address",
+      "undefined"
+    ],
+    "scope": "Includes borrowed command lifetime, backpressure, frame ID retry, close, resource replacement, hidden/locked render"
+  },
+  "simulator": {
+    "covered": 88,
+    "first_passed": 82,
+    "initial_log": "simulator-tests.log",
+    "six_rerun_passed": true,
+    "logs": [
+      "simulator-retest.log",
+      "simulator-core2-final.log",
+      "simulator-admission-test.log"
+    ],
+    "note": "Two ABI fixtures pass in retest, four SDK packages pass in final after fixture/encoder fixes and O3 build timeout increases; raster repeated too. Not one all-green run."
+  },
+  "c_sdk": {
+    "unit_results": {
+      "headers": 0,
+      "core": 0,
+      "net": 0,
+      "store_installer": 0,
+      "fs": 0,
+      "sensor": 0,
+      "clock": 0,
+      "lease": 0,
+      "work": 0,
+      "audio": 0,
+      "canvas": 0,
+      "ui": 0,
+      "ui_builder": 0,
+      "ui_wire_transport": 0,
+      "surface": 0,
+      "raster": 0,
+      "log": 0
+    },
+    "passed": true,
+    "excluded": {
+      "canvas_smoke": "This executable needs a legacy C game fixture; not a standalone SDK unit. Production games intentionally remain unmigrated."
+    },
+    "legacy_app_matrix": "Stopped on maze-evil direct pxa_submit use, expected incompatible Core 1 application; source preserved."
+  },
+  "raster_differential": {
+    "result": "passed",
+    "log": "raster-differential.log",
+    "scope": "All existing raster regression scenarios: old/new full color, depth, telemetry byte-identical"
+  },
+  "device": {
+    "benchmark_groups": [
+      "device-before-unlocked",
+      "device-final-queued",
+      "device-final-borrowed"
+    ],
+    "input_groups": [
+      "input-before",
+      "input-final-queued",
+      "input-borrowed"
+    ],
+    "cold_restarts_per_group": 3,
+    "final_queued_foreground_background_cycles": 3,
+    "lifecycle_passed": true,
+    "control_bench_passed": true,
+    "restored_original_firmware": true,
+    "original_packages_preserved": 5,
+    "private_packages_removed": true,
+    "original_counter_launch_verified": true
+  },
+  "limits": [
+    "No full production app migration or gameplay matrix",
+    "No C-vs-C++ performance comparison in this round",
+    "Desktop explicitly rejects borrowed mode",
+    "No isolated FFI/dispatch/memcpy timings",
+    "No device task stack high-water measurements",
+    "Input histogram tail bins not exact p95",
+    "Queued SRAM launch peak +76B; borrowed steady-window peak +12B, origins not isolated; borrowed launch max SRAM unchanged"
+  ],
+  "evidence_root": "PXA project/local/abi-next-20261011",
+  "production_tracked_diff_unchanged_from_baseline": true,
+  "probe_reproduction_sources_match": true
+}

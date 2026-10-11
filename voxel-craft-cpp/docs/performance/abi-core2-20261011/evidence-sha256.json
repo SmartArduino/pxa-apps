@@ -1,0 +1,90 @@
+{
+  "artifacts.json": {
+    "size": 706,
+    "sha256": "3e71a14cd11431524461eb14a1cf5efdc94a18252f4dbdbec720e7da5f218697"
+  },
+  "baseline.json": {
+    "size": 3064,
+    "sha256": "659185641a3f1cd3815d59830228a1ed8e94f557f945ca4d1bd9c860fe6c4eb5"
+  },
+  "comparison.json": {
+    "size": 11568,
+    "sha256": "1b73d16e3e639b0a75d22e97381933da62fc6c9f38ca31d7638eb13b59565f46"
+  },
+  "control-final.json": {
+    "size": 65221,
+    "sha256": "d47df68852a9232996a2e7527115e8b7aaf9825146f4d40e1671b4726ab3e7a7"
+  },
+  "device-before-unlocked.json": {
+    "size": 39410,
+    "sha256": "d69c245d413e805a0179c378b3622274bfdc20a8ed9ef8e16b908709ff4ac397"
+  },
+  "device-cleanup.json": {
+    "size": 1467,
+    "sha256": "d74b7273c865afe2305ed27d252fccca1b723a30f4035d8f91ee3f3a884ee319"
+  },
+  "device-final-borrowed.json": {
+    "size": 39894,
+    "sha256": "657f9e4435b3b92dd4fe5d8ea3b2dea82bb7089811a22a6e2f9ff7b940ba8c15"
+  },
+  "device-final-queued.json": {
+    "size": 39625,
+    "sha256": "a4f9c44ad6897a024f2f6d157a960b5030617c7946301aeb6b9ee10ca36fe2ef"
+  },
+  "device-restored.json": {
+    "size": 8545,
+    "sha256": "8df836542a21a04920cae3854c6f4d26dc685f00ec5698e23bfd56cd35b5ff4d"
+  },
+  "firmware-sections.json": {
+    "size": 3062,
+    "sha256": "0682993e9c729897271c75a5e06220267987da3fae54efb5fcb14bc4d3862262"
+  },
+  "input-before.json": {
+    "size": 5610,
+    "sha256": "a6245b2e27ef3f837ed0b9b61ac77e79b07c39fb6f5be176baafa78da7a9f6b2"
+  },
+  "input-borrowed.json": {
+    "size": 5606,
+    "sha256": "6f2a53d3102d5e5382b202418550f4c0c67e9d13d6a16715c54ad917eb29994f"
+  },
+  "input-final-queued.json": {
+    "size": 5602,
+    "sha256": "ee60518a4dd68a1911c62e9dc6680eaecbf0657991c667649b88c9b89376df38"
+  },
+  "lifecycle.json": {
+    "size": 5922,
+    "sha256": "df06064b5707b7ed20cf4ec7c452a9e8877d5d8db7217f46a38af7f86714434a"
+  },
+  "probe-source-sha256.json": {
+    "size": 21614,
+    "sha256": "e1b221c9571d5b2e1f3202f9254e706be5e0291ef8127c92a6797689e0ea651f"
+  },
+  "raw-evidence-sha256.json": {
+    "size": 2631,
+    "sha256": "7440042bf3cfa9428d7333e49b7d04c5cf4f7ebf6cdc5fa10e4c8ba1f128d565"
+  },
+  "restored-counter.png": {
+    "size": 3751,
+    "sha256": "44e30965d2b3d4e2fbebf73e34e6d40e845d119423473168e6214aceb309286f"
+  },
+  "scene-comparison-final.json": {
+    "size": 716,
+    "sha256": "3e051912c0b7a7aea2c18c8f1581a8de70a7f797f046dd0dfdd45b842c8b5b26"
+  },
+  "scene-comparison-final.png": {
+    "size": 124460,
+    "sha256": "640c9d249e22c1837d4761a0de3bdc59c34d3dfac2414213fdb9870ddbb8abab"
+  },
+  "stage_probe.py": {
+    "size": 2059,
+    "sha256": "feb04045298a525e51ac00d914e6193bf64ba9ed2a7dedbc4b6ea0d50f4563a4"
+  },
+  "summarize.py": {
+    "size": 3391,
+    "sha256": "9b5099a1d11347fd10e7a5dbcc61279ed643ae79327d52fb02d2d472265b4a44"
+  },
+  "validation.json": {
+    "size": 3188,
+    "sha256": "d3376d4037d4a7a196b92c7b2b6f60dd5b74380f2d0a2943dc5af244e2d67b80"
+  }
+}

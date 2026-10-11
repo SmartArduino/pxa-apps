@@ -1,0 +1,258 @@
+[
+  {
+    "case": "plane-wait-ready",
+    "passed": true,
+    "returncode": 0,
+    "command": [
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/abi-audit-20261011/simulator/pxsys_ui_images_test",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/apps/plane-shooter/pxa-plane-shooter",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/publisher.der",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/resource-integration-final/plane-wait-ready-state",
+      "wait-ready"
+    ],
+    "overrides": {}
+  },
+  {
+    "case": "plane-walk",
+    "passed": true,
+    "returncode": 0,
+    "command": [
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/abi-audit-20261011/simulator/pxsys_ui_images_test",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/apps/plane-shooter/pxa-plane-shooter",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/publisher.der",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/resource-integration-final/plane-walk-state",
+      "walk"
+    ],
+    "overrides": {}
+  },
+  {
+    "case": "plane-background-loading",
+    "passed": true,
+    "returncode": 0,
+    "command": [
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/abi-audit-20261011/simulator/pxsys_ui_images_test",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/apps/plane-shooter/pxa-plane-shooter",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/publisher.der",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/resource-integration-final/plane-background-loading-state",
+      "background-loading"
+    ],
+    "overrides": {
+      "PXA_ASSET_READ_DELAY_US": "20000"
+    }
+  },
+  {
+    "case": "plane-exit-loading",
+    "passed": true,
+    "returncode": 0,
+    "command": [
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/abi-audit-20261011/simulator/pxsys_ui_images_test",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/apps/plane-shooter/pxa-plane-shooter",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/publisher.der",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/resource-integration-final/plane-exit-loading-state",
+      "exit-loading"
+    ],
+    "overrides": {
+      "PXA_ASSET_READ_DELAY_US": "20000"
+    }
+  },
+  {
+    "case": "plane-low",
+    "passed": true,
+    "returncode": 0,
+    "command": [
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/abi-audit-20261011/simulator/pxsys_ui_images_test",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/apps/plane-shooter/pxa-plane-shooter",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/publisher.der",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/resource-integration-final/plane-low-state",
+      "walk"
+    ],
+    "overrides": {
+      "PXA_RESOURCE_EXTERNAL_BYTES": "180000"
+    }
+  },
+  {
+    "case": "store-ready",
+    "passed": true,
+    "returncode": 0,
+    "command": [
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/abi-audit-20261011/simulator/pxsys_store_images_test",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/apps/store/pxa-store",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/publisher.der",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/resource-integration-final/store-ready-state",
+      "ready"
+    ],
+    "overrides": {}
+  },
+  {
+    "case": "store-background-loading",
+    "passed": true,
+    "returncode": 0,
+    "command": [
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/abi-audit-20261011/simulator/pxsys_store_images_test",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/apps/store/pxa-store",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/publisher.der",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/resource-integration-final/store-background-loading-state",
+      "background-loading"
+    ],
+    "overrides": {
+      "PXA_ASSET_READ_DELAY_US": "100000"
+    }
+  },
+  {
+    "case": "store-exit-loading",
+    "passed": true,
+    "returncode": 0,
+    "command": [
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/abi-audit-20261011/simulator/pxsys_store_images_test",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/apps/store/pxa-store",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/publisher.der",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/resource-integration-final/store-exit-loading-state",
+      "exit-loading"
+    ],
+    "overrides": {
+      "PXA_ASSET_READ_DELAY_US": "100000"
+    }
+  },
+  {
+    "case": "store-low-budget",
+    "passed": true,
+    "returncode": 0,
+    "command": [
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/abi-audit-20261011/simulator/pxsys_store_images_test",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/apps/store/pxa-store",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/publisher.der",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/resource-integration-final/store-low-budget-state",
+      "low-budget"
+    ],
+    "overrides": {
+      "PXA_ASSET_EXTERNAL_BYTES": "4096"
+    }
+  },
+  {
+    "case": "pixel-audio",
+    "passed": true,
+    "returncode": 0,
+    "command": [
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/abi-audit-20261011/simulator/pxsys_audio_app_test",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/apps/pixel-dungeon-cpp/pxa-pixel-dungeon-cpp",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/publisher.der"
+    ],
+    "overrides": {}
+  },
+  {
+    "case": "scenes-default",
+    "passed": true,
+    "returncode": 0,
+    "command": [
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/abi-audit-20261011/simulator/pxsys_resource_app_test",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/apps/resource-scenes/pxa-resource-scenes",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/publisher.der"
+    ],
+    "overrides": {}
+  },
+  {
+    "case": "scenes-storage-steady",
+    "passed": true,
+    "returncode": 0,
+    "command": [
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/abi-audit-20261011/simulator/pxsys_resource_app_test",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/apps/resource-scenes/pxa-resource-scenes",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/publisher.der",
+      "storage-steady"
+    ],
+    "overrides": {}
+  },
+  {
+    "case": "scenes-storage-stall",
+    "passed": true,
+    "returncode": 0,
+    "command": [
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/abi-audit-20261011/simulator/pxsys_resource_app_test",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/apps/resource-scenes/pxa-resource-scenes",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/publisher.der",
+      "storage-stall"
+    ],
+    "overrides": {}
+  },
+  {
+    "case": "scenes-storage-exit",
+    "passed": true,
+    "returncode": 0,
+    "command": [
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/abi-audit-20261011/simulator/pxsys_resource_app_test",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/apps/resource-scenes/pxa-resource-scenes",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/publisher.der",
+      "storage-exit"
+    ],
+    "overrides": {}
+  },
+  {
+    "case": "scenes-exit-reading",
+    "passed": true,
+    "returncode": 0,
+    "command": [
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/abi-audit-20261011/simulator/pxsys_resource_app_test",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/apps/resource-scenes/pxa-resource-scenes",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/publisher.der",
+      "exit-reading"
+    ],
+    "overrides": {
+      "PXA_ASSET_READ_DELAY_US": "20000"
+    }
+  },
+  {
+    "case": "scenes-exit-loading",
+    "passed": true,
+    "returncode": 0,
+    "command": [
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/abi-audit-20261011/simulator/pxsys_resource_app_test",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/apps/resource-scenes/pxa-resource-scenes",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/publisher.der",
+      "exit-loading"
+    ],
+    "overrides": {
+      "PXA_ASSET_READ_DELAY_US": "20000"
+    }
+  },
+  {
+    "case": "scenes-exit-sound-loading",
+    "passed": true,
+    "returncode": 0,
+    "command": [
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/abi-audit-20261011/simulator/pxsys_resource_app_test",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/apps/resource-scenes/pxa-resource-scenes",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/publisher.der",
+      "exit-sound-loading"
+    ],
+    "overrides": {
+      "PXA_ASSET_READ_DELAY_US": "20000"
+    }
+  },
+  {
+    "case": "scenes-low-default",
+    "passed": true,
+    "returncode": 0,
+    "command": [
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/abi-audit-20261011/simulator/pxsys_resource_app_test",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/apps/resource-scenes/pxa-resource-scenes",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/publisher.der"
+    ],
+    "overrides": {
+      "PXA_RESOURCE_EXTERNAL_BYTES": "300000"
+    }
+  },
+  {
+    "case": "scenes-low-storage-stall",
+    "passed": true,
+    "returncode": 0,
+    "command": [
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/abi-audit-20261011/simulator/pxsys_resource_app_test",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/apps/resource-scenes/pxa-resource-scenes",
+      "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/core2-migration-20261011/cpp-matrix/publisher.der",
+      "storage-stall"
+    ],
+    "overrides": {
+      "PXA_RESOURCE_EXTERNAL_BYTES": "300000"
+    }
+  }
+]

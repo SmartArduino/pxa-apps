@@ -1,0 +1,100 @@
+{
+  "0": {
+    "baseline": {
+      "width": 296,
+      "height": 240,
+      "stride": 592,
+      "visible": 160,
+      "rendered": 160,
+      "dropped": 0,
+      "wamr": 50218,
+      "wamr_peak": 138956,
+      "linear": 393216,
+      "linear_peak": 393216,
+      "command_bytes": 98304,
+      "host_struct": 31840,
+      "background_resume": true
+    },
+    "queued": {
+      "width": 296,
+      "height": 240,
+      "stride": 592,
+      "visible": 160,
+      "rendered": 160,
+      "dropped": 0,
+      "wamr": 50218,
+      "wamr_peak": 138956,
+      "linear": 393216,
+      "linear_peak": 393216,
+      "command_bytes": 49152,
+      "host_struct": 31392,
+      "background_resume": true
+    },
+    "borrowed": {
+      "width": 296,
+      "height": 240,
+      "stride": 592,
+      "visible": 160,
+      "rendered": 160,
+      "dropped": 0,
+      "wamr": 50218,
+      "wamr_peak": 138956,
+      "linear": 393216,
+      "linear_peak": 393216,
+      "command_bytes": 0,
+      "host_struct": 31392,
+      "background_resume": true
+    },
+    "all_pixels_identical": true,
+    "pixels_sha256": "db36d4ff1407f41a21aca765b1a5f91399ea0f1fa03da36bcc7cf9d2e209a814"
+  },
+  "1": {
+    "baseline": {
+      "width": 454,
+      "height": 454,
+      "stride": 908,
+      "visible": 160,
+      "rendered": 160,
+      "dropped": 0,
+      "wamr": 50218,
+      "wamr_peak": 138956,
+      "linear": 393216,
+      "linear_peak": 393216,
+      "command_bytes": 98304,
+      "host_struct": 31840,
+      "background_resume": true
+    },
+    "queued": {
+      "width": 454,
+      "height": 454,
+      "stride": 908,
+      "visible": 160,
+      "rendered": 160,
+      "dropped": 0,
+      "wamr": 50218,
+      "wamr_peak": 138956,
+      "linear": 393216,
+      "linear_peak": 393216,
+      "command_bytes": 49152,
+      "host_struct": 31392,
+      "background_resume": true
+    },
+    "borrowed": {
+      "width": 454,
+      "height": 454,
+      "stride": 908,
+      "visible": 160,
+      "rendered": 160,
+      "dropped": 0,
+      "wamr": 50218,
+      "wamr_peak": 138956,
+      "linear": 393216,
+      "linear_peak": 393216,
+      "command_bytes": 0,
+      "host_struct": 31392,
+      "background_resume": true
+    },
+    "all_pixels_identical": true,
+    "pixels_sha256": "cd0a103e75a9348148954306a42a5cc7404e93dfe00f51bb32bf08c3f4899335"
+  }
+}

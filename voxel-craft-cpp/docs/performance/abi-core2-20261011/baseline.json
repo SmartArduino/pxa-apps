@@ -1,0 +1,62 @@
+{
+  "product": {
+    "head": "4faf6cfc7d553af2a0804d54c76047a23432934e",
+    "diff_sha256": "aa7cf2d9c92a8c36a6a5956ccedecae04be07e42876a047cab2b4271e2cb48fe",
+    "untracked": [
+      "tools/measure-device-abi.py",
+      "tools/measure-device-game-input.py"
+    ]
+  },
+  "sdk": {
+    "head": "8693fc9c528792048172c316bb0be6f9372866ce",
+    "diff_sha256": "2686372843714b60716a604a2861c2e6a59c6081f6e1f3c6071021ff65329e11",
+    "untracked": [
+      "docs/zh-CN/abi-audit-20261011.md",
+      "docs/zh-CN/abi-audit-20261011/artifacts.json",
+      "docs/zh-CN/abi-audit-20261011/baseline-diagnostics.patch",
+      "docs/zh-CN/abi-audit-20261011/control-after.json",
+      "docs/zh-CN/abi-audit-20261011/control-before.json",
+      "docs/zh-CN/abi-audit-20261011/control-call.json",
+      "docs/zh-CN/abi-audit-20261011/device-cleanup.json",
+      "docs/zh-CN/abi-audit-20261011/device-final-state.json",
+      "docs/zh-CN/abi-audit-20261011/device-services.json",
+      "docs/zh-CN/abi-audit-20261011/device-services.png",
+      "docs/zh-CN/abi-audit-20261011/evidence-sha256.json",
+      "docs/zh-CN/abi-audit-20261011/final-summary.json",
+      "docs/zh-CN/abi-audit-20261011/input-after-after.png",
+      "docs/zh-CN/abi-audit-20261011/input-after-before.png",
+      "docs/zh-CN/abi-audit-20261011/input-after.json",
+      "docs/zh-CN/abi-audit-20261011/input-before-after.png",
+      "docs/zh-CN/abi-audit-20261011/input-before-before.png",
+      "docs/zh-CN/abi-audit-20261011/input-before.json",
+      "docs/zh-CN/abi-audit-20261011/input-call-after.png",
+      "docs/zh-CN/abi-audit-20261011/input-call-before.png",
+      "docs/zh-CN/abi-audit-20261011/input-call.json",
+      "docs/zh-CN/abi-audit-20261011/runtime-bench-final.json",
+      "docs/zh-CN/abi-audit-20261011/s3-footprints-final.json",
+      "docs/zh-CN/abi-audit-20261011/scene-image-hashes.json",
+      "docs/zh-CN/abi-audit-20261011/simulator-profile-0.png",
+      "docs/zh-CN/abi-audit-20261011/simulator-profile-1.png",
+      "docs/zh-CN/abi-audit-20261011/simulator-profile-2.png",
+      "docs/zh-CN/abi-audit-20261011/summarize_runs.py",
+      "docs/zh-CN/abi-audit-20261011/validation.json",
+      "docs/zh-CN/abi-audit-20261011/voxel-after.json",
+      "docs/zh-CN/abi-audit-20261011/voxel-before.json",
+      "docs/zh-CN/abi-audit-20261011/voxel-call-source.json",
+      "docs/zh-CN/abi-audit-20261011/voxel-call.json",
+      "docs/zh-CN/abi-audit-20261011/voxel-comparison.png",
+      "docs/zh-CN/abi-audit-20261011/voxel-submit-source.json",
+      "libpxa/cmake/pxaTestAssertions.cmake",
+      "sdk/guest-cpp/examples/abi-control-bench/CMakeLists.txt",
+      "sdk/guest-cpp/examples/abi-control-bench/README.zh-CN.md",
+      "sdk/guest-cpp/examples/abi-control-bench/main.cpp",
+      "sdk/guest-cpp/examples/abi-control-bench/package.json",
+      "sdk/guest-cpp/tests/direct_control_test.cpp"
+    ]
+  },
+  "apps": {
+    "head": "6aa21e18560a2413a4cdb5e5cb3ccba5a2263ad7",
+    "diff_sha256": "ec7acf85c8bc1931300900fbd21dc9619da4e8c3852f10acbb6bfc30e050c0a4",
+    "untracked": []
+  }
+}

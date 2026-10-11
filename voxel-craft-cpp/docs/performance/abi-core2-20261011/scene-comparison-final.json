@@ -1,0 +1,20 @@
+{
+  "excluded_top_rows": 24,
+  "different_bbox": {
+    "device-before-unlocked/frame-0.jpg": null,
+    "device-before-unlocked/frame-1.jpg": null,
+    "device-before-unlocked/frame-2.jpg": null,
+    "device-queued/frame-0.jpg": null,
+    "device-queued/frame-1.jpg": null,
+    "device-queued/frame-2.jpg": null,
+    "device-borrowed/frame-0.jpg": null,
+    "device-borrowed/frame-1.jpg": null,
+    "device-borrowed/frame-2.jpg": null,
+    "device-final-borrowed/frame-0.jpg": null,
+    "device-final-borrowed/frame-1.jpg": null,
+    "device-final-borrowed/frame-2.jpg": null,
+    "device-final-queued/frame-0.jpg": null,
+    "device-final-queued/frame-1.jpg": null,
+    "device-final-queued/frame-2.jpg": null
+  }
+}

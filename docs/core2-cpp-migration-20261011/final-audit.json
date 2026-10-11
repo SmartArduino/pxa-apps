@@ -1,0 +1,2217 @@
+{
+  "sdk_source_sha256": "8c5be6fde26cf49b96d03c710917c4620b2d3d399f5bdf983a56f69009353008",
+  "packages": [
+    {
+      "id": "apps/abi-v1-ipc-smoke",
+      "version": "1.0.1",
+      "source_sha256": "6d1ce546cb2547014c98ea28386ee8b0ce98303217c28990b8fa301b177bcb24",
+      "package_sha256": "317c71f61dea2c74429ee24ac6fb7b753bfea7f0f6b071b5681263e7e93a3127",
+      "components": [
+        {
+          "component": "echo",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "echo.wasm",
+              "bytes": 1636,
+              "sha256": "a46b725c9efac343f43801f2ff59f979588135ef4ba0fc6138cd46f44fc7e67c"
+            },
+            {
+              "name": "echo.linux-x86_64.aot",
+              "bytes": 2100,
+              "sha256": "6e7433da867f16c199166babcadc6caf6925906b39d47de6c367b39388a33b01"
+            },
+            {
+              "name": "echo.esp32-s3.aot",
+              "bytes": 2588,
+              "sha256": "290ce48d70bee34b7e4c752a912c78f05c86ed6cc178a50e058bd270610c2b1d"
+            },
+            {
+              "name": "echo.esp32-s31.aot",
+              "bytes": 2932,
+              "sha256": "649ba306b694deeb2d91f8c70e2b37b68dc256f9b5b0fdc6e318c9a14df619b1"
+            }
+          ]
+        },
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 2110,
+              "sha256": "2758f34d9ebf9f4aaa202629e65f284b0e84acd21c1b4ed4e60f0408e262b112"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 2748,
+              "sha256": "cc07f824b1d4a001a2ad7e552be8f3fb3557e390f2019b983276d3edfa61cc40"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 3916,
+              "sha256": "65e12aeef98ecd4dcc252bda2263eb1d0a420d545d57c4e05bd928a3c76e1915"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 4372,
+              "sha256": "9f09e50f47875039289cc6b468a6b6427e45f3b2bdbe72cab2ab2cd972780ff8"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "apps/abi-v1-smoke",
+      "version": "1.0.1",
+      "source_sha256": "8a156b7f7632189c280a53044bee341ee1662a4b83e2ed7505ed64faf071447d",
+      "package_sha256": "6ef104cebfcaf77bc76ba01a6feef5df3e24b3e57ea2aeb7edd9a95f662ef8cb",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 21768,
+              "sha256": "1f91829001b825202623f98cf651889f03aac17603400f434b804d9328ab8776"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 35936,
+              "sha256": "f0b93dd85f16c2e784fb0bf74f6ea6313463256934c00cf563839cb0f58a88f5"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 56596,
+              "sha256": "6655fd968f23890daee436b9a6457e389e04e90fd30f41ef8c2cb9bd79f8d89d"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 60328,
+              "sha256": "1e90117f84085ee894073c9232eba80b0758f305522f6bff99706001248964a1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "apps/arcade",
+      "version": "0.1.3",
+      "source_sha256": "f42054309873527e8c5c7d9fbb7374a363b864e82f44bc65b35136fc9d8a4a90",
+      "package_sha256": "9cb0903f4da066435e8a48f2c20432b317c8eca18fb7c1db502764a0516b760e",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 246488,
+              "sha256": "3fcc746503a5b323aa18989944a9736ec25a403620bff8fd474a0ec90e93fc87"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 291484,
+              "sha256": "63f1cc5a8aadb1b222ecebb06e6d97c6943f0dd5884ae04455daafca66709fe2"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 462200,
+              "sha256": "48ef6d40ff05772c2739403137dd913b1855345c68e7fb088d88ef1dcce08716"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 445836,
+              "sha256": "9726bb9f8432060920ce18efbe0559b1765dac8129b8e3b38fa4405e443750ff"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "apps/game-render-bench",
+      "version": "0.1.4",
+      "source_sha256": "25d9c37bcf16fef2ee32989fcdfe1f0c4b77653159faee18cf20d5b5acdc716f",
+      "package_sha256": "958bbda4baeeb008b774b92695366fe43b1b80df8efab0a0e1d0acf695d1b12e",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 21051,
+              "sha256": "a7187dcefcd7b24a7a3860b2677b16ee81b019ffc005bdf5d78ae2d1ea762a4b"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 30012,
+              "sha256": "8e4d047ae182ea4a9b60cfe146aef06a5a630998cfa00be52f55ab1956a954de"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 47332,
+              "sha256": "0ae7e603885d2c9dd297cfba7158d2c0570d67690ee83b9264b79303bd102f4e"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 45124,
+              "sha256": "312af7732b33d6e38e51d8d92a78f9d07224cf26b949ff424b3a0d5c075a291d"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "apps/garden-guard",
+      "version": "0.2.3",
+      "source_sha256": "bf5bae6c056579028d8efbc9ce823385ab24e260b21bb0695589bb5a43d82045",
+      "package_sha256": "cb8e22863b805c4eb1c253749fda358689e4df2d4974178fff1b3ec15be1666f",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 160472,
+              "sha256": "168b07832f3222973ed3544614e55fd3051c7c47cb3e88296fcc86ceca032858"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 176768,
+              "sha256": "daa87622029b1b823d409d97f2e505cb829ef6d6b2c72edde454208506d3115e"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 218984,
+              "sha256": "61ea8e2310382f25ef93af615274098e1eb1d27e790bb91c0bff7ad80a5eb1f9"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 213612,
+              "sha256": "38ec0b4dc8b1923cc05ae2d313280f6ca2bc4e49ed3d16c87700868255243e93"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "apps/jump-jump-3d-cpp",
+      "version": "0.1.1",
+      "source_sha256": "9d4caf2038704589b293bed9e749d6c36f0a21247ddcd0df573df0c2d26c25be",
+      "package_sha256": "4d766661923b30b67ab38316b3ac2641d50ee699370c8a0f5684b4ce89d822dd",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 159205,
+              "sha256": "694b3e6fec2eb0848bfb53328ee0076b3871213372ba50528f098a0a8c13c0f0"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 343712,
+              "sha256": "023c4908129f1c04e7de2f05cbf97a43fb409ef5df74c5f8db420d0ae0b626c5"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 419884,
+              "sha256": "59f2e837441c13f197d91f47c841c8a06fa9ec2b3c9b3696deab21067730ff25"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 440108,
+              "sha256": "b8b6e3a74089e069f476d9695b1c01d3ae783613c3841183098b5533226a8196"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "apps/lab",
+      "version": "1.0.1",
+      "source_sha256": "d91892d8d4b86b9b614f7c5614a1e481be5c7396f857b42c582e2251b17b68a9",
+      "package_sha256": "6e70e1da6da4ffc0e4dd5ab43dffc91dae661096e0382b3b52afd1faf1bb48f6",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "random_get"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 30057,
+              "sha256": "cf294cbffe1fbdf215d0e7f3069dc08b871cc87b72dc327b195272e89754925d"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 44220,
+              "sha256": "ba3da3ff484d3c311a3c6ca34d2a307d83ae5dc0d6ce70a16c3e653ce0da8596"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 71392,
+              "sha256": "b4f91aa0a15f21fd5f3e484c125ef64153d1614ade3cc023afda9ec17681dea9"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 70868,
+              "sha256": "811391047da7742bae87016f364e14dfc7f655ab3968563100789f3c656138ca"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "apps/maze-evil",
+      "version": "0.1.4",
+      "source_sha256": "5ebd8b8bd0f8885a9b9a785422e601a4b88fba3b3bd8d2a9a65c5c21b64584e4",
+      "package_sha256": "48faa5bf55b372220306e63d9f26635d3ee4365a525d9e908068e2b172831c30",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 260982,
+              "sha256": "9fddc1320168db96da0008c9f2e912700c149e216197aea0584451d7a3a75161"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 307288,
+              "sha256": "599ef2522644dd4a4616691729e93b82c2ef950bc30d845034e6c98a89d73968"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 344300,
+              "sha256": "02a17636ca30811e880e0892d13de3ef4891353eff8d5e8c10cead1c82835655"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 345776,
+              "sha256": "891ee4a7f9ef7f9347f5293c4cf11227ca54afc655996d5fd6eae63efa17e01e"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "apps/maze-spike",
+      "version": "0.1.3",
+      "source_sha256": "1ab56acfc3b87aed372e8241ba5a316621b49a82b201289e46fd2c3331d3fcce",
+      "package_sha256": "48475f1ed5dfa142b86b685c3a28e31503928843c185547b98ba8a41e7aed726",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 168527,
+              "sha256": "504d7a0224c7a0dcdf5a4d94e84e85bed30fb5d9be347550de71079b8463ef44"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 184424,
+              "sha256": "92a051ba760756db7c979d2e9681c19aa5dc44c32ee3aab993fbeda33ab17951"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 189896,
+              "sha256": "ec104cdeedd12c9771796892fe66ffbf51e69bd472ee56eb5e845c0b8b5d9e36"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 188888,
+              "sha256": "4ed9f76fc6feb6f689a0addd73596a35bcc11af5d841c2b526efd3a04dd95d37"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "apps/novel-reader",
+      "version": "0.1.1",
+      "source_sha256": "f5339799baa3b79f7e8adfb45003613aa4679ef0499afcd74fc11439f8585ed4",
+      "package_sha256": "9ddf710aab05919a10a8d1f07510b4b00b9b362eb87c2a42d6267e6def6c07f9",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 326180,
+              "sha256": "6541b4d40572d6d425e9f1474f7678c98d305cc026d0a1634537d07fefaed626"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 553152,
+              "sha256": "711734d59e194a3e9a77abb0e28e49e4d10d3d40ece9b92af6cfb6376095e32c"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 969644,
+              "sha256": "4e80c8c44bf836a1640c3b0fda8a4d6a35da8633583547c1a362aa01e3f2b728"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 1002956,
+              "sha256": "19da86a52365841eb57f4e11f1e953e8cc53ae206255a15223e21459fe5827fa"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "apps/pixel-dungeon-cpp",
+      "version": "0.1.1",
+      "source_sha256": "547c55c536c4f9a1bde74e696918bcfa728068aba970ecf8b6afd1ab81e4bd39",
+      "package_sha256": "09c1af007a7b0237dd6834549f8dd3582e13c9b426acbcc264404f4d3d56c2df",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 266350,
+              "sha256": "544573e21f1b6e236d7b3f641dfcf63e7955750d53fd8cf52feeb8743771ae51"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 429412,
+              "sha256": "82b0d89714f01f8dba589004d2f3d19e82281caaf0c8d2e2394b6724d0e178e8"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 655536,
+              "sha256": "11865f1add0598cdf08fa0c5dbac017359ab7abfb1e08a4acbd802ea97fe1773"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 660808,
+              "sha256": "2c36b2d3127abf661afbb955c3e7b52b463f8a2817b988a2f31a005aa288a11a"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "apps/plane-shooter",
+      "version": "0.3.1",
+      "source_sha256": "25465c2da1918e4eef97c53e8e59d56fd940c1d5c1795124810a397d54886f6c",
+      "package_sha256": "43f6310e6a1261472524047b9ab54188a0ffbb66e3f3964eff488683ba30295b",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 133442,
+              "sha256": "0840e3997380abc45cddce64cb9d36825fc0a7001d442c2e7772806dd0688c56"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 164844,
+              "sha256": "e7975c1a668a7bcd77cd921ce522411be71fa386db4378720ab73d4efe579d24"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 241268,
+              "sha256": "07c5ea4409e7971d69c253d1483ce1b796ed429d4c436a26bccba9935b65c029"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 228376,
+              "sha256": "9b06f4a958bf4a4547fab81d20004d4b2eadfe3c92a7d4c4059b0f9eb2a637ff"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "apps/plane-shooter-raster",
+      "version": "0.1.4",
+      "source_sha256": "a6a1b032b330219c994fcc41189f2d888443a98d68435dfcc7a26cb952774ea4",
+      "package_sha256": "2650a0f02bb49199852de894a46bb2b5602d12a10a3897324519afc1345a720b",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 20383,
+              "sha256": "0e9c457a8a86e63dccb4abb43087c3ca35d5508bcececa07e8f0200c5ad2a9d4"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 23892,
+              "sha256": "e3d560e2f3947badb606507160cca1d9e2dfea93ef8295d41eb3ec4afc9a69c9"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 33176,
+              "sha256": "199506f91cf1a285a35161561d4a718839cfa712454518b8d54c8677fc836878"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 27712,
+              "sha256": "5953c8de3cab87a33de2d17189549a32bce9262f0e3251b5688efb2ed08f203d"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "apps/resource-scenes",
+      "version": "0.1.1",
+      "source_sha256": "da01ac5bc60c3f46b3195a9347b7c3aba469ac572bd5f084bee09cec141501da",
+      "package_sha256": "b09485e37cc1e036a9f0d134d6ea5598b5b1d3aae38ab146ea8119c2dc9966d7",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 16395,
+              "sha256": "c105e89f31bd6f2b2f8424b353fe44cd9317f7757fe4134ed3ec27416f3c8f83"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 26020,
+              "sha256": "c784977cd69f36f60fb8e65f98812e501f5081fd6d283b0bddfd7695aa7f0c88"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 39836,
+              "sha256": "51b83097877e4f2e64054c85b656dd1fe20b4d17e785dc0ac11707a63fabfb87"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 40596,
+              "sha256": "943a218b1164f60060969081836138d11d99337c8a0b69c433b8aa71db9cf2de"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "apps/store",
+      "version": "0.8.2",
+      "source_sha256": "01eb89c04e315972ccc009e951ea3036d550a7636a07cb0584d2e134df32eb72",
+      "package_sha256": "6c6de105bd9088f6b258606242b973e55bf1e49c09568545d2013a6d5f56e5e2",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 138710,
+              "sha256": "668553a10b4dbcbb483a64288a81e33da54029886ff2abc199452576bbb16546"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 217912,
+              "sha256": "6c04a7676b4d87606271f4df1ab8dafd995086ae99c3eef8b236ba12fd3852d4"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 278492,
+              "sha256": "e94881eeab7a5e5d8a0c3a52c2c3e67df7b35a49376dd9f5cc0338d0001c4772"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 292956,
+              "sha256": "d5ae1ea73846b63cecdab1b7a9df239b72e04ce43114818f575639c6e7c23f80"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "apps/tomb-explorer",
+      "version": "0.1.4",
+      "source_sha256": "24d4d3e6001cf71f666663f44f39671a6432e3161fe840e0a4096c9be120185a",
+      "package_sha256": "6b01f4b5c20493600fb174d843566c9cf24d655e317e5827990cc46d9c2a4a42",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 129824,
+              "sha256": "9084d12a429021a86c4692b938f6f63b0de98c31aeb193e7e5f91d3b24738283"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 170096,
+              "sha256": "463886e58371afb3ba8120f873528156572a30cf17023bc85991d4cdc4bcf4de"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 212404,
+              "sha256": "55ff5521262a9d778e5a91b5d5134b1e68475aebf56be97e890a1a49687be24a"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 225208,
+              "sha256": "4c599db7903a144a72ec72351f5a61548c9bcc5c6257f8fbcf995e921ed5fabf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "apps/voxel-craft-cpp",
+      "version": "0.12.3",
+      "source_sha256": "d3443166f74b4bc6b2ccd8898cb47c0c814aa60a1457f57db5fa991e4d31baac",
+      "package_sha256": "134abca0bc729c99338858ff700215390f3dd3e6cb778e4092cbaefd1726d532",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 229998,
+              "sha256": "4025d4cf4db82c00ee49029d6bce5ea68c2ba0b7d8cb4e91ac24ec73aefcba4b"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 485764,
+              "sha256": "da0b17d61136fc79d65cc89792a630ff2286bb6ab3cf91734d1fcfd13c1791e3"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 673744,
+              "sha256": "4452560465eff04a5c03f8b1c00c412d2ee7145a062c7aa9eaf3f95ca1162cce"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 694804,
+              "sha256": "8082f87cefa5aeeb24c83d258740dd8faf4e373f1c1c85d12d94f74139a31ebd"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "apps/wasi-lab",
+      "version": "0.1.3",
+      "source_sha256": "a31aac063becff5620b36046f34ede25c9ab4632a70dfc9f6eb3d54ccf79ee38",
+      "package_sha256": "818b6f38ed90319c5d8825bebfde519168d502d7ac9e94bc3be74d56bfec65eb",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "random_get"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 21172,
+              "sha256": "2bb0fa97b4f523e5090d481f75eab7eec5c5bde4356b2c9719f933d69d3d5b6d"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 31468,
+              "sha256": "cada00e1635f9ab0098e4420648385c69baa064d3a411a84cabfd2279371e6a0"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 53816,
+              "sha256": "fa7a6f5de1f2a8d839ed9a5989710e9177795241821adb5753fc6e76160385ed"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 51984,
+              "sha256": "ae63bd6e339586e45959cb90e3c53ab4a236ff3017b5c81da5f37f6fb64f0851"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "apps/weather",
+      "version": "0.3.3",
+      "source_sha256": "928e9f3ea20491c16cbedfeda646b41a909565c24b2eadb26fc5d7f6a9caf565",
+      "package_sha256": "c29b204ce934af83bfd304babfdf60c94d299e7eb3c9ae686183746584b18ee5",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 74413,
+              "sha256": "8ec3179f6338099ecc52839ea9d5284a480492e25987d53e36e5a0345cb6ba94"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 110572,
+              "sha256": "dbfaa0391f4930125b80a396e6dd77ca1bab587e24be3768a3b55091085ba75a"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 143036,
+              "sha256": "dec36fa944396d9d44e92b01a06c39302a01fcbb1aeabfb33466422fac8e668f"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 151752,
+              "sha256": "ad764d2779ec05dee1b5c6239309b62e84b977050292dec87504a52992114d6f"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdk/abi-control-bench",
+      "version": "1.0.0",
+      "source_sha256": "d415992a7a7584777a2a6a8e36afc9512815df97d9cf34dc4f646f091f3082ae",
+      "package_sha256": "2355872eeffe72ed6ad184c278c04cfabc8ca7d507b335ee813da332bd365935",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 24735,
+              "sha256": "c3ccd1c9299957f0180182530048e4d6b77485a4283d7c1152d08ade04ca88d3"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 38840,
+              "sha256": "5faddf7972870da184191bd19d06f3653c4355c8db9bbae964804be3065d7c13"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 67632,
+              "sha256": "1f1e87022ccdb6e1dd6b28fe8899591e82cff4cf2bdfa1c91ea5868cf45b581b"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 65324,
+              "sha256": "15651c7273770634da28ebb80490bd725eff6eeca50e6734528947ba059c4b74"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdk/audio",
+      "version": "1.0.0",
+      "source_sha256": "9b71efd10ddcfb6502e43984871b2bf1f8ea301b64e0ce43fe0c31154e7abd1c",
+      "package_sha256": "b1d7e6d95c18aa27415414f89eb6203905e7c88646b6d3aab3f014907e0ec334",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 76134,
+              "sha256": "5984d63e3f5e534cd9b70b86eebf2a10329cee2d9b7692ad2f503f01d1f292a1"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 122300,
+              "sha256": "51c3e29e17823df2c5ff478856ec5495f3f6f9ce5dab4b97b42d477a6f08ffa8"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 202300,
+              "sha256": "196431a08f56ce54b2e20701b443c5f4b519fa622c69110c831f80d9fb195dd6"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 204640,
+              "sha256": "a4f899fe527dfdaae1b2ee677385aaf71b7cca014633e86a05aee64378efa88b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdk/canvas",
+      "version": "1.0.0",
+      "source_sha256": "ac9f063e0c5438d3078f51116b22ed5b735c10cd7d83b10e677d0d4f118939b1",
+      "package_sha256": "181e91d92a88b914a09ec2d3c65d2b796e2a913ed99877a13b0c6f530be2d4a1",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 44937,
+              "sha256": "85e93c31e2b549e84c392121c9ff0543647dcf2f6b3ed69b487506ceb0efa986"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 76956,
+              "sha256": "f9c3e83bdfbfeea47547c371ec0026a528004514453c515a7b99af21f6e523ba"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 117924,
+              "sha256": "2becaf7cb7177b4a7b6ec14ce5e03bd50ff11488b8764f068e2c75c9be0597b0"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 118304,
+              "sha256": "168d93666b626f84cb0f0edf833c4c4861ae9019a86cd78a75f3f851725f9d15"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdk/conditional",
+      "version": "1.0.0",
+      "source_sha256": "af8d95520ac3b6d04c8b8b13dd8e8e6fd07003c7b3121d0fcf19e920bdf61e7c",
+      "package_sha256": "c8d9eb06b11ea6e83a1d0a3f462c322929122dc474cdd2794a4f5b52670e16d1",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 79068,
+              "sha256": "212ceaa5f7b599945c34682212866df82f16ce7b8b223e44662cda6e8ad754bb"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 114212,
+              "sha256": "20745502f5a543e62efd969a5e5566c69c5a3fc8a84968b384d17b08cf436e17"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 192296,
+              "sha256": "2cf306b17b49bddb0e94a291d49b422ce7fc66e1ed6011bae9290985fdcb9f3b"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 193676,
+              "sha256": "6809376f2e2ed1070a4a8b06633a9534989284bcc78d45d6b365e90145e35f0c"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdk/counter",
+      "version": "1.0.0",
+      "source_sha256": "1dd6439d8c90acf2918c3bd2fa3895cc9b78b86c956e470e4acbda3a0981f2c0",
+      "package_sha256": "6348d912f1bef142c72db41d8c09b94dfaa78fb2edd36da34fa92bdb841a9f35",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 54945,
+              "sha256": "b2ee81aa2c6f70e89fa0505a12afaf9a6e10f93b60e849a9b9f6a7acc05df1d5"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 86948,
+              "sha256": "183998123ee3199750635ce7d196c58e1351bb10f2bf7bf9a2a8ebd0dc3d707b"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 138572,
+              "sha256": "7d86b965b0fab83ec4f90a160a400bfa04fd5c03fd4837ee8a556278c5d59682"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 139488,
+              "sha256": "2550f410a46bca8593257519ba7726d205435251cc8e672d07cd6f210000d40d"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdk/declarative-ui",
+      "version": "1.0.0",
+      "source_sha256": "15138636ed66b4a029c027327f3006d97bbd29d4ab522676f20c9e1c213401b7",
+      "package_sha256": "6dcb459147782beae3202d05d683feb75730ef4ecfcef94249dd2da19d1003ea",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 508103,
+              "sha256": "28f970e0fc02c2ef021daa000f78835f424a66b1c270ab06903c32e7564d6204"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 320524,
+              "sha256": "8a7f436ca0a04c6c9db3d53a3de80115d017eebefc85211718129d3be2083736"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 506212,
+              "sha256": "5a070c11f2c4fd7cbe3e63e5087db54a376003a9d02ce4d9b3c49da2855cbf38"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 509480,
+              "sha256": "1aa332ec62b18178de05316b3ea599bfc873f4729ef66c7e90dda726b2b92183"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdk/device-sensor",
+      "version": "1.0.0",
+      "source_sha256": "f7d7651f98bfffc8dc91058e63f9bd57c851ee4d5d5cd0c7bdbbe768eb462013",
+      "package_sha256": "7f0609a028ab2b8ecbf9258b302a2cfaa9d1723433ece5fd289ad2da6eb67dc0",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 97326,
+              "sha256": "f6665abb40669493e832233d00d1d4e578021d7db2e90662a614910c22f3ac89"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 152168,
+              "sha256": "075f63a8e4351d1661e9c2745976196824da1c5462b08c2260ff9ce32b30a0b5"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 251372,
+              "sha256": "c8cdd31f38df3b24d81f33c4076b34fabd1e96b76143af4cfe6cf01d7440b9d5"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 253216,
+              "sha256": "7f323b9e653ee0c53e6b36bf5667f3f041e2c5af0653f79b70a82dcb92f8537d"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdk/files",
+      "version": "1.0.0",
+      "source_sha256": "b86dde13ce462c0f2e114b1b3add799a2c4316e182405f5b13ea9c75c9cc7cc8",
+      "package_sha256": "2262cc5062cff960c44c0ce7cd35f8bb3a050bc9ae7c2c7b76e7b1e82272e7bf",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 71275,
+              "sha256": "b667854ca73cebcb6bbec68fbd0b6b9cad38c5ad07a01a0a886f5c08fe8d1005"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 114584,
+              "sha256": "98d38eaa3b0bb6cc475b276c0fdebb2fc5c6aa934fe4ed1d1b27b6d765a06e6b"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 189448,
+              "sha256": "a9e02c6bcb9b6d6746955651dae889911954d3936afc33e2bb75da86a2c9b151"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 189736,
+              "sha256": "85aeb7d720ee7780c11688b5db284a1725568513d04150597785056b06c0a909"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdk/game",
+      "version": "1.0.0",
+      "source_sha256": "39d47fd4d6bfbee91efebc6163bbd9065a7e88b069ae752e100d80c737d04a4b",
+      "package_sha256": "a9b81083b3edbdc9da5618aff8451fef179a27112ad8e2c401af58cf6935099e",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 78293,
+              "sha256": "53d1634b75af51650d797e7099d0403ecb334116cc4f90269c05da595ae21194"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 125988,
+              "sha256": "222ea86eb1a97e29ae35a4b89fee19e61176232204bc456823e541dc5c87c5e5"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 225476,
+              "sha256": "2ac1524bbe8b501924f13e907a7f5fdf3cd8ec5bd4a37cb60103e1852551369c"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 225368,
+              "sha256": "98f122eccc385f341bb2ea9306e55ecddbb451adcc4d257f78cfe8c4d75ee435"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdk/i18n",
+      "version": "1.0.0",
+      "source_sha256": "c961bf330db0fcb455dffe3662216dbcaebe9fba50800cf6c9b7ef6f2240336b",
+      "package_sha256": "c58462672a497b58f0d4c053712c9fa6c2b93653e313bf3c67e9b0c3063bce19",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 90301,
+              "sha256": "5da81221d632ce8c43d5cd9ca658f8b734081488fe2f68f2ce6a056e967f0227"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 119072,
+              "sha256": "a3b22b67d3914c7016f62c01de7ee533c86c82b29fda24ada709c72226dab560"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 185912,
+              "sha256": "9afebbf086a26f893078acc7b1edc22cfbec80a95fc8e70eef5bf4db33eb8a5d"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 187560,
+              "sha256": "ec35ee5ec678722d3066284d29f163f45c8f453619eff41aa8678f7216697855"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdk/ipc-stats",
+      "version": "1.0.0",
+      "source_sha256": "1ace4d46ab814f141f72bbbfac82999baadfe68649616a359a3a1ee0a978d4f1",
+      "package_sha256": "e4de4130aef4939894c205feca2c368a5795e54ca74b427ea99d13a90368d364",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 72135,
+              "sha256": "d67b2910b12c70fd3d81880b28e94d3c8921bc868a8de4748a99f802e681feb2"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 109824,
+              "sha256": "7b30ea0069146ea63b0b1825dfdf55d98c7ca867119b2d3201585689bacb7433"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 183812,
+              "sha256": "1aa511f94c5d427502c3e8bdbcf6faa1724a550355218eb9547c24bfeccdad38"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 184812,
+              "sha256": "77cf5f82cf8b78d636939d2fc1f4960329a75e2aedece1c4895b3571dca8ed11"
+            }
+          ]
+        },
+        {
+          "component": "stats.provider",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "stats.provider.wasm",
+              "bytes": 35415,
+              "sha256": "994736f614e804cdabe4150b28f327ee795a975ee3a0a2ddf868a06aa28793ce"
+            },
+            {
+              "name": "stats.provider.linux-x86_64.aot",
+              "bytes": 52240,
+              "sha256": "cacfd9ce35bb0fd86c449353cf3d0ccecf3a5a2fb89b13ba017a22be828a3889"
+            },
+            {
+              "name": "stats.provider.esp32-s3.aot",
+              "bytes": 98368,
+              "sha256": "7531168452b47bf7bd38baa8a49006ca893050813b04b3d2418e003ef273086b"
+            },
+            {
+              "name": "stats.provider.esp32-s31.aot",
+              "bytes": 96236,
+              "sha256": "678e1af3573fd54b55c9ca6cddbdb0ca40d65ed8b277328d7103e64a23139963"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdk/modules",
+      "version": "1.0.0",
+      "source_sha256": "581ad75e4b170fd23822a0698d469ece287588020ce17e49166c1d7b15474642",
+      "package_sha256": "68df106c81ef8902b1493137735c5498c400953dfee7746f2eb3620aec3a3320",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 55666,
+              "sha256": "9e5038a1badd99ad5cdde3efc8648c03506c9517aec6d9edb48f742b2e00e59a"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 87080,
+              "sha256": "3b4c027bd860b35667d7729279493f932b56a7095e70c892b68895c27881f56d"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 138136,
+              "sha256": "ee57d4de18494a5e634f4bd0760fde9df6168bf183679368df62b152a27a2dbb"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 139600,
+              "sha256": "7e290dc2dc332c4463db3c1f35ea4899bae30db137d87b577d318d035d7c91f5"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdk/navigation",
+      "version": "1.0.0",
+      "source_sha256": "a788e10fd32705bba20838bb7f914285cb45e60620db1fae021c149a77244124",
+      "package_sha256": "83b912f5e9f8f5609e8957735eecdc5f85d9cd9fc8ba7a22bd9079b721f41274",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 77771,
+              "sha256": "841740276d62193ce13e971cba5d1b9620aa68ac19e9874faa620ed7ee4a6730"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 112704,
+              "sha256": "51ae616a27550e1a5d2713b8b84702e1b85d4de7cb13bd46c6ba9090d1ce9b0e"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 184836,
+              "sha256": "f2ae9501c1b08998154625e931cdd54ffb53747f8745c799c9f371b43b757ead"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 188696,
+              "sha256": "5b4015d15a8c44a57ccc4c55b17911be06c3ed0aaff12fc9366eb2b392d38105"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdk/sdk-patterns",
+      "version": "1.0.0",
+      "source_sha256": "fadfffd341762f24ff80b51320045db297cdb15ab9914e105b01844447ce0909",
+      "package_sha256": "e26e8b9c612ebecd8011a03ac013f5d8dda46b24ae158965a362aa5a380ea8e4",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 93214,
+              "sha256": "9d17e16b3b6772422251737be1d3db2955804f54d2c727c6ccc77248b3bd6be1"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 145400,
+              "sha256": "1406479ea13c7f8371acd783fbe3e904e8af1d40866edb023abf705049a02289"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 241564,
+              "sha256": "d2b512578c1645d5df4ec96094946d1b3154b37c75cc88f743fc7fe50eaedd32"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 244440,
+              "sha256": "599f962c1fe371dc5e3bec05a239c6791d7e0d141d34ecd9a79c0132618ebe39"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdk/service-safety",
+      "version": "1.0.0",
+      "source_sha256": "1516577ed4c073164aef4ab08d52d38e19fcc142b5395e46f4d472c942cf9e4f",
+      "package_sha256": "028119603c683c65178402862370a79eb0ff0c6354908e973e881b46bde43cd1",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 128574,
+              "sha256": "181456b42cfc2f0266ce2d504263ebff8d944eb127b2438c401e637e0e2bed52"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 204728,
+              "sha256": "b032a460a0cab61eca461864810b2c32fb9cc637af813c3d3618cc7db09fbcae"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 342396,
+              "sha256": "5ed9d0fdb6debec766edfb95b90417fa1171c402e443227e44b52017a34a365f"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 346836,
+              "sha256": "a6c764a65160e44881e63037442a4eb0d04cc85253dcfb92da52f2a13c62f216"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdk/settings",
+      "version": "1.0.0",
+      "source_sha256": "0512f32ab2679cc461a39fd554c056f3e0ce65c530e5e64b902c73a7a6ecf6d1",
+      "package_sha256": "6b95b3e4c7abb9bd094d44314660816e7d90951878070da630219df9ed00fc1b",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 88050,
+              "sha256": "3fa4565af4cb2955238c19fd65bfb2b5273d7cc5bd2e076551c2104ad2874949"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 104336,
+              "sha256": "40d58e88fb4cfe88b76c705a1550f77b4271cb84c505aa49055598270492d84b"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 169764,
+              "sha256": "8aad222319a422bdf89c1b0fcaf693c476623675e067a095d182195aabb6f1bd"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 173136,
+              "sha256": "e0a95e178db269db2054786644b3a5296d8022536fe723179d599045889157f6"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdk/storage",
+      "version": "1.0.0",
+      "source_sha256": "68672fe6fee7c25d9f2e8569107ad980472977090b09fec07695b908e183cacd",
+      "package_sha256": "0065cbfc1a8dfa07e50ee0f2bae59588dae9f396093d799a5c38479a1bf2ca59",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 70494,
+              "sha256": "48f01894886afa5919db77f2d17c5c721f06dedc5e918deb8e5ab9bc788a937d"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 111460,
+              "sha256": "d5b190d6f1edf81281b046bdd69501a8a55011746e2ff0195b09c4f167b1f7ee"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 184392,
+              "sha256": "e2eb9941b5650beaa71de17da18cb035230804193de2ba3268f3e5a24a961773"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 185252,
+              "sha256": "8f198fe4c99553f3dbb140f4cbf85f4ef3755d01a0239141198b11aaf3f6af4b"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdk/surface",
+      "version": "1.0.0",
+      "source_sha256": "4d806bb7d41be75de4a65d5096ffb4503d8985391740b970126221fc7ee61aeb",
+      "package_sha256": "45f7848365f3c69f6622ebeb0fca6d8453b1d2052f40c26ed2c8ba5cfea7e361",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "pxa.core.v2",
+              "pxa_io"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 42817,
+              "sha256": "7c7375b86f9611193e59931c28bdf56078a74f618edc633a40a454f2b5aa1199"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 70704,
+              "sha256": "9965b5401da5916d82b0f6ba7802441b523e8dcd0a8fd93fec5f85b25236c4e7"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 127036,
+              "sha256": "ef26b37f031b5f6b3250490136b6970b58edd3a6226bf150fa01ac187bf137c5"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 125912,
+              "sha256": "5c645bb70633876e71d1765bdcc3a97884946a4a064b641094106595cdc37406"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdk/system-input",
+      "version": "1.0.0",
+      "source_sha256": "a85116632438159403a668b8c73340e40469240f04b392d072517e39f6c0c516",
+      "package_sha256": "e7e7f66b48a38fd33f8847c85af04798ff95d348eed215704e9d4a1a34a24691",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 75896,
+              "sha256": "c470a4731c303efb5e6f27e85b1fd7711ea058d00356e87cfdaf4d3a27e2bf57"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 104480,
+              "sha256": "2b4dd692c163fe219ee7afd5ff159411aba7db7cd40d8920aec78dc1153dbae3"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 168096,
+              "sha256": "d726d15456e93851b3dee5a0f0bb398edc3509f2a27b784a430061aa341d153c"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 170272,
+              "sha256": "640e2aad621ed720a24e2cdd0667197b0d9b76aad3aca232b0328e5e17e50049"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdk/virtual-list",
+      "version": "1.0.0",
+      "source_sha256": "79f342ec142b8d20f49c9a41014c4ad200a3719768fd894c7bfcebdb30016182",
+      "package_sha256": "4dde9ea65204a3d75777b5c7bb76fe356927adb8742eed426fef55b49f542fcf",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 74902,
+              "sha256": "809da69da3b249d8ce085569b562a545a57daba6fef3267ca954b41d366948c1"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 111944,
+              "sha256": "37a044b1aa740aa38cf1d2a62963b0b806fb89bca8d7c9f1ca8e7540b73ee65a"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 188852,
+              "sha256": "6233754ec4e32de91f620011e3c611a8f5e2ce29052564bca698df689730099d"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 190332,
+              "sha256": "197803d925c320f3a30f995efc26cb8ed2b56e447729a4df83d279ad5c5f63ef"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sdk/work",
+      "version": "1.0.0",
+      "source_sha256": "0af673a7f47c850c65887639fd8c4b221a6a14831d97300522d700f58722a454",
+      "package_sha256": "5923aee747fe496e7df748ef75386019b29c1ace4a65cb404a629a0b6c9e911f",
+      "components": [
+        {
+          "component": "main",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "main.wasm",
+              "bytes": 104511,
+              "sha256": "6076832db944ad3cf15cb9b49920d2c1bd0c5406177d456a98c0534a2ef22c94"
+            },
+            {
+              "name": "main.linux-x86_64.aot",
+              "bytes": 155696,
+              "sha256": "012efafb6d7525f4bfc179292737d06970e9a026357caea19da886eabcfdb162"
+            },
+            {
+              "name": "main.esp32-s3.aot",
+              "bytes": 265436,
+              "sha256": "b1a3c74c5b2121010f0e70d0e5626c8a079fcc1229755d0ae0c3298f54beb9e7"
+            },
+            {
+              "name": "main.esp32-s31.aot",
+              "bytes": 266736,
+              "sha256": "69745a0135c16ebdec38e7f5a68bf4af776d5441dafe2b9e77a4e20d30a53f88"
+            }
+          ]
+        },
+        {
+          "component": "sync.job",
+          "imports": [
+            [
+              "pxa.core.v2",
+              "pxa_call"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "clock_time_get"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_close"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_seek"
+            ],
+            [
+              "wasi_snapshot_preview1",
+              "fd_write"
+            ]
+          ],
+          "artifacts": [
+            {
+              "name": "sync.job.wasm",
+              "bytes": 39593,
+              "sha256": "5d82a5210fd4da8ad834fc80e051615d284a0afa62fe00d88af1516b5874920a"
+            },
+            {
+              "name": "sync.job.linux-x86_64.aot",
+              "bytes": 60452,
+              "sha256": "fcf9419d787178f96e40587a875ec864031a3c53bdda332ea49c25cc245691c3"
+            },
+            {
+              "name": "sync.job.esp32-s3.aot",
+              "bytes": 112008,
+              "sha256": "d2c39588228e6135c1d29136a90dee7e579164443dcf70d229c36310514847f8"
+            },
+            {
+              "name": "sync.job.esp32-s31.aot",
+              "bytes": 109348,
+              "sha256": "1d4ec9aeec201b31e0ba3d3d763050ba22f0d31cc7361a7873bc44c42d755cbb"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "counts": {
+    "apps": 19,
+    "sdk": 21,
+    "resource_integration": 19,
+    "startup_lifecycle": 120,
+    "components": 43
+  },
+  "device_benchmark_byte_identity": [
+    {
+      "artifact": "main.wasm",
+      "sha256": "a7187dcefcd7b24a7a3860b2677b16ee81b019ffc005bdf5d78ae2d1ea762a4b",
+      "bytes": 21051
+    },
+    {
+      "artifact": "main.esp32-s3.aot",
+      "sha256": "0ae7e603885d2c9dd297cfba7158d2c0570d67690ee83b9264b79303bd102f4e",
+      "bytes": 47332
+    }
+  ]
+}

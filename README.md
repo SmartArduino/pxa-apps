@@ -4,11 +4,22 @@ Application sources for the PXA workspace. The PXA runtime, Guest SDK, packaging
 tools, and a minimal `hello` smoke-test app remain in `pxa-system`. All product
 applications and their shared art live here.
 
-New SDK capabilities and game development focus on the C++ Guest SDK and
-`voxel-craft-cpp`, [`jump-jump-3d-cpp`](jump-jump-3d-cpp/README.md) and
-[`pixel-dungeon-cpp`](pixel-dungeon-cpp/README.md). The C SDK is being phased out of feature development;
-existing C applications retain necessary compatibility and correctness fixes
-during the transition. The Core wire ABI remains shared.
+All maintained applications now build as **C++26** against **Core 2.0**.
+The production C versions of Jump Jump, Pixel Dungeon and Voxel Craft have
+been retired; use [`jump-jump-3d-cpp`](jump-jump-3d-cpp/README.md),
+[`pixel-dungeon-cpp`](pixel-dungeon-cpp/README.md) and `voxel-craft-cpp`.
+Their frozen C algorithms remain only under `common/cpp/tests/reference/c`
+for timing, pixel and gameplay comparisons; they have no package manifests.
+
+Callback-based applications use the optional, stateless `pxa::call` path via
+`common/cpp/Application.cmake`. This reuses their bounded protocol helpers
+and saved message IDs without allocating a Context, coroutine pool or request
+table. Apps that use asynchronous tasks and declarative UI link the full C++
+SDK. Their PXA imports are only `pxa.core.v2::pxa_call` and `pxa_io`;
+WASI libc imports remain explicitly declared by each component.
+
+The migration results, device measurements and coverage limits are recorded in
+[the Core 2 / C++26 report](docs/core2-cpp-migration-20261011.zh-CN.md).
 
 [`novel-reader`](novel-reader/README.md) is the C++ network and offline TXT
 reader, with configurable JSON sources, system input, adaptive typography,
@@ -58,3 +69,20 @@ Keep generated font previews and experimental source snapshots outside the
 tracked source tree. Byte-identical display matrices and screenshots share one
 attachment, with report links pointing to that retained file. Keep distinct
 benchmark runs, test configurations, runtime resources and license notices.
+
+Regression entry points (from the workspace root):
+
+```sh
+bash local/pxa-apps/tests/native/run.sh
+bash local/pxa-apps/tests/native/reference/run.sh
+CC=clang CXX=clang++ bash local/pxa-apps/common/cpp/tests/run.sh -DPXA_C_REFERENCE_BENCH=ON
+bash local/pxa-apps/voxel-craft-cpp/tests/test.sh
+python3 tools/test-app-matrix.py --output local/app-matrix --target all --sdk-examples
+```
+
+Multi-architecture builds share one locked Wasm build and then produce separate
+AOT artifacts. `PXA_BUILD_CACHE_DIR` enables incremental builds;
+`PXA_COMPILER_CACHE=ccache` optionally shares identical compiler work across
+apps. Compiler caching adds no Guest or Host memory. Capacity definitions and
+SDK/compiler inputs participate in compiler cache keys; do not reuse archives
+built with different layout definitions by hand.

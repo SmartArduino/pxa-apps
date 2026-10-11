@@ -1,0 +1,22 @@
+{
+  "pxa_esp_platform.bin": {
+    "size": 3337616,
+    "sha256": "fdb4e32da5a0c6529b90ae85b0ca849f33ef7bd6d45a50cf16b3ee4ad9e9fe9c"
+  },
+  "core2-firmware.bin": {
+    "size": 3338224,
+    "sha256": "7cafe794277404f533669362c996a89b7edf69d11a0f7615ef92326cf30d7c60"
+  },
+  "final-firmware.bin": {
+    "size": 3338192,
+    "sha256": "e5f9e1d9045f69a274e51b827c3936feaa07c9c3366305fd31a592cce6d1565b"
+  },
+  "voxel-queued/pxa-voxel-craft-cpp.pxa": {
+    "size": 535734,
+    "sha256": "eb12f2f48ed00ac18dd77e87834445558af30faff02b16c86628c08a027bc612"
+  },
+  "voxel-borrowed/pxa-voxel-craft-cpp.pxa": {
+    "size": 535733,
+    "sha256": "2c88de4ef1ca3a94f17032f2c3c5a744cde12eaef2db1a1bde06b2c2ec3dfddc"
+  }
+}

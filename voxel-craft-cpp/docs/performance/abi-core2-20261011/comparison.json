@@ -1,0 +1,412 @@
+{
+  "device-before-unlocked": {
+    "fps_runs": [
+      12.298027092173333,
+      12.3871458334887,
+      12.424245382396087
+    ],
+    "fps_mean": 12.36980610268604,
+    "raster_mean_us": 36680.124888339175,
+    "stages": {
+      "per_run": [
+        {
+          "total_us": 71500.86666666667,
+          "geometry_us": 26148.333333333332,
+          "encode_us": 6047.466666666666,
+          "hud_us": 78.93333333333334,
+          "submit_us": 39117.6,
+          "update_us": 0.0,
+          "host_queue_us": 2209.188888888889,
+          "host_present_us": 36233.333333333336
+        },
+        {
+          "total_us": 71224.53333333334,
+          "geometry_us": 25984.2,
+          "encode_us": 6108.266666666666,
+          "hud_us": 83.0,
+          "submit_us": 38951.26666666667,
+          "update_us": 0.0,
+          "host_queue_us": 2220.311111111111,
+          "host_present_us": 35855.555555555555
+        },
+        {
+          "total_us": 71137.91262135922,
+          "geometry_us": 26133.95145631068,
+          "encode_us": 5922.281553398058,
+          "hud_us": 90.69902912621359,
+          "submit_us": 38882.64077669903,
+          "update_us": 0.0,
+          "host_queue_us": 2123.778846153846,
+          "host_present_us": 35615.38461538462
+        }
+      ],
+      "mean_us": {
+        "total_us": 71287.77087378642,
+        "geometry_us": 26088.82826321467,
+        "encode_us": 6026.004962243797,
+        "hud_us": 84.21078748651564,
+        "submit_us": 38983.83581445523,
+        "update_us": 0.0,
+        "host_queue_us": 2184.426282051282,
+        "host_present_us": 35901.4245014245
+      }
+    },
+    "surface": {
+      "frame": 284160,
+      "scratch": 142080,
+      "mailbox": 147456,
+      "probe": 0,
+      "peak_total": 573696
+    },
+    "memory": {
+      "sram": {
+        "stable_mean": 273088,
+        "stable_max": 273088,
+        "launch_true_peak_max": 277276,
+        "steady_true_peak_max": 273252
+      },
+      "psram": {
+        "stable_mean": 2967629.3333333335,
+        "stable_max": 2967636,
+        "launch_true_peak_max": 3713912,
+        "steady_true_peak_max": 2971220
+      }
+    }
+  },
+  "device-queued": {
+    "fps_runs": [
+      12.476345353304897,
+      12.509235037533392,
+      12.638358428900387
+    ],
+    "fps_mean": 12.541312939912892,
+    "raster_mean_us": 35608.21122112211,
+    "stages": {
+      "per_run": [
+        {
+          "total_us": 70466.53333333334,
+          "geometry_us": 25815.533333333333,
+          "encode_us": 5985.0,
+          "hud_us": 79.46666666666667,
+          "submit_us": 38488.13333333333,
+          "update_us": 0.0,
+          "host_queue_us": 2177.7555555555555,
+          "host_present_us": 36577.77777777778
+        },
+        {
+          "total_us": 70351.61538461539,
+          "geometry_us": 25459.08791208791,
+          "encode_us": 6016.956043956044,
+          "hud_us": 76.94505494505495,
+          "submit_us": 38688.57142857143,
+          "update_us": 0.0,
+          "host_queue_us": 2178.5,
+          "host_present_us": 37655.555555555555
+        },
+        {
+          "total_us": 70555.72527472528,
+          "geometry_us": 25864.417582417584,
+          "encode_us": 5908.483516483517,
+          "hud_us": 80.48351648351648,
+          "submit_us": 38596.307692307695,
+          "update_us": 0.0,
+          "host_queue_us": 2229.1444444444446,
+          "host_present_us": 35977.77777777778
+        }
+      ],
+      "mean_us": {
+        "total_us": 70457.957997558,
+        "geometry_us": 25713.012942612942,
+        "encode_us": 5970.14652014652,
+        "hud_us": 78.96507936507936,
+        "submit_us": 38591.00415140415,
+        "update_us": 0.0,
+        "host_queue_us": 2195.133333333333,
+        "host_present_us": 36737.03703703704
+      }
+    },
+    "surface": {
+      "frame": 284160,
+      "scratch": 142080,
+      "mailbox": 147456,
+      "probe": 0,
+      "peak_total": 573696
+    },
+    "memory": {
+      "sram": {
+        "stable_mean": 273092,
+        "stable_max": 273092,
+        "launch_true_peak_max": 277280,
+        "steady_true_peak_max": 273256
+      },
+      "psram": {
+        "stable_mean": 2964381.3333333335,
+        "stable_max": 2964732,
+        "launch_true_peak_max": 3711012,
+        "steady_true_peak_max": 2969344
+      }
+    }
+  },
+  "device-borrowed": {
+    "fps_runs": [
+      12.966618711364719,
+      12.849134283279069,
+      12.972968615743945
+    ],
+    "fps_mean": 12.929573870129245,
+    "raster_mean_us": 32851.11121483694,
+    "stages": {
+      "per_run": [
+        {
+          "total_us": 74766.33333333333,
+          "geometry_us": 25364.666666666668,
+          "encode_us": 5875.666666666667,
+          "hud_us": 85.0,
+          "submit_us": 43336.333333333336,
+          "update_us": 0.0,
+          "host_queue_us": 1510.247619047619,
+          "host_present_us": 37219.04761904762
+        },
+        {
+          "total_us": 75335.03846153847,
+          "geometry_us": 25678.75,
+          "encode_us": 5960.413461538462,
+          "hud_us": 81.67307692307692,
+          "submit_us": 43510.20192307692,
+          "update_us": 0.0,
+          "host_queue_us": 1543.2115384615386,
+          "host_present_us": 36692.307692307695
+        },
+        {
+          "total_us": 74471.47663551402,
+          "geometry_us": 25627.869158878504,
+          "encode_us": 5937.046728971963,
+          "hud_us": 84.25233644859813,
+          "submit_us": 42719.056074766355,
+          "update_us": 0.0,
+          "host_queue_us": 1519.7102803738317,
+          "host_present_us": 36130.84112149533
+        }
+      ],
+      "mean_us": {
+        "total_us": 74857.61614346194,
+        "geometry_us": 25557.095275181724,
+        "encode_us": 5924.37561905903,
+        "hud_us": 83.64180445722502,
+        "submit_us": 43188.53044372554,
+        "update_us": 0.0,
+        "host_queue_us": 1524.389812627663,
+        "host_present_us": 36680.732144283545
+      }
+    },
+    "surface": {
+      "frame": 284160,
+      "scratch": 142080,
+      "mailbox": 0,
+      "probe": 0,
+      "peak_total": 575808
+    },
+    "memory": {
+      "sram": {
+        "stable_mean": 273116,
+        "stable_max": 273128,
+        "launch_true_peak_max": 277280,
+        "steady_true_peak_max": 273256
+      },
+      "psram": {
+        "stable_mean": 2818424,
+        "stable_max": 2818452,
+        "launch_true_peak_max": 3564724,
+        "steady_true_peak_max": 2822040
+      }
+    }
+  },
+  "device-final-queued": {
+    "fps_runs": [
+      12.598485510859769,
+      12.635300375837009,
+      12.68627470683401
+    ],
+    "fps_mean": 12.640020197843596,
+    "raster_mean_us": 35494.30528052805,
+    "stages": {
+      "per_run": [
+        {
+          "total_us": 70026.13333333333,
+          "geometry_us": 25642.0,
+          "encode_us": 5951.2,
+          "hud_us": 87.06666666666666,
+          "submit_us": 38249.933333333334,
+          "update_us": 0.0,
+          "host_queue_us": 2206.6853932584268,
+          "host_present_us": 36640.449438202246
+        },
+        {
+          "total_us": 69807.48888888888,
+          "geometry_us": 25671.81111111111,
+          "encode_us": 5961.988888888889,
+          "hud_us": 83.0,
+          "submit_us": 37993.86666666667,
+          "update_us": 0.0,
+          "host_queue_us": 2167.688888888889,
+          "host_present_us": 35522.22222222222
+        },
+        {
+          "total_us": 69584.46153846153,
+          "geometry_us": 25114.53846153846,
+          "encode_us": 5985.076923076923,
+          "hud_us": 82.53846153846153,
+          "submit_us": 38301.0,
+          "update_us": 0.0,
+          "host_queue_us": 2183.6593406593406,
+          "host_present_us": 36065.93406593407
+        }
+      ],
+      "mean_us": {
+        "total_us": 69806.02792022792,
+        "geometry_us": 25476.116524216523,
+        "encode_us": 5966.088603988604,
+        "hud_us": 84.2017094017094,
+        "submit_us": 38181.6,
+        "update_us": 0.0,
+        "host_queue_us": 2186.0112076022187,
+        "host_present_us": 36076.20190878618
+      }
+    },
+    "surface": {
+      "frame": 284160,
+      "scratch": 142080,
+      "mailbox": 147456,
+      "probe": 0,
+      "peak_total": 573696
+    },
+    "memory": {
+      "sram": {
+        "stable_mean": 273088,
+        "stable_max": 273088,
+        "launch_true_peak_max": 277352,
+        "steady_true_peak_max": 273252
+      },
+      "psram": {
+        "stable_mean": 2963609.3333333335,
+        "stable_max": 2963616,
+        "launch_true_peak_max": 3709896,
+        "steady_true_peak_max": 2968888
+      }
+    }
+  },
+  "device-final-borrowed": {
+    "fps_runs": [
+      13.100609405078654,
+      13.13270638048077,
+      13.014462985351022
+    ],
+    "fps_mean": 13.082592923636815,
+    "raster_mean_us": 33004.87301587302,
+    "stages": {
+      "per_run": [
+        {
+          "total_us": 71507.59793814433,
+          "geometry_us": 25221.061855670105,
+          "encode_us": 5984.649484536082,
+          "hud_us": 86.90721649484536,
+          "submit_us": 40092.989690721646,
+          "update_us": 0.0,
+          "host_queue_us": 1470.2164948453608,
+          "host_present_us": 37536.0824742268
+        },
+        {
+          "total_us": 71732.14432989691,
+          "geometry_us": 25309.319587628866,
+          "encode_us": 5946.453608247422,
+          "hud_us": 75.09278350515464,
+          "submit_us": 40294.82474226804,
+          "update_us": 0.0,
+          "host_queue_us": 1476.020618556701,
+          "host_present_us": 36649.48453608248
+        },
+        {
+          "total_us": 72096.12037037036,
+          "geometry_us": 25120.50925925926,
+          "encode_us": 5898.416666666667,
+          "hud_us": 70.70370370370371,
+          "submit_us": 40908.49074074074,
+          "update_us": 0.0,
+          "host_queue_us": 1540.2592592592594,
+          "host_present_us": 37009.25925925926
+        }
+      ],
+      "mean_us": {
+        "total_us": 71778.62087947053,
+        "geometry_us": 25216.96356751941,
+        "encode_us": 5943.1732531500575,
+        "hud_us": 77.5679012345679,
+        "submit_us": 40432.10172457681,
+        "update_us": 0.0,
+        "host_queue_us": 1495.4987908871071,
+        "host_present_us": 37064.94208985618
+      }
+    },
+    "surface": {
+      "frame": 284160,
+      "scratch": 142080,
+      "mailbox": 0,
+      "probe": 0,
+      "peak_total": 426240
+    },
+    "memory": {
+      "sram": {
+        "stable_mean": 273026.6666666667,
+        "stable_max": 273088,
+        "launch_true_peak_max": 277276,
+        "steady_true_peak_max": 273264
+      },
+      "psram": {
+        "stable_mean": 2811096,
+        "stable_max": 2811308,
+        "launch_true_peak_max": 3557260,
+        "steady_true_peak_max": 2814908
+      }
+    }
+  },
+  "input-before": {
+    "guest_mean_us": 5515.958549222798,
+    "present_mean_us": 44419.78040540541,
+    "visible_mean_us": 123118.39527027027,
+    "visible_p95_runs_us": [
+      204425,
+      202955,
+      245555
+    ]
+  },
+  "input-queued": {
+    "guest_mean_us": 4724.383248730965,
+    "present_mean_us": 42801.5,
+    "visible_mean_us": 119746.8277027027,
+    "visible_p95_runs_us": [
+      175090,
+      195976,
+      176501
+    ]
+  },
+  "input-final-queued": {
+    "guest_mean_us": 4454.266318537859,
+    "present_mean_us": 42678.916387959864,
+    "visible_mean_us": 120382.3745819398,
+    "visible_p95_runs_us": [
+      185606,
+      228750,
+      163453
+    ]
+  },
+  "input-borrowed": {
+    "guest_mean_us": 5202.216129032258,
+    "present_mean_us": 40864.753246753244,
+    "visible_mean_us": 115942.57792207792,
+    "visible_p95_runs_us": [
+      191256,
+      181238,
+      222923
+    ]
+  }
+}

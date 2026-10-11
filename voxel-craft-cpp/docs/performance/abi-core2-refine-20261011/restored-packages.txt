@@ -1,0 +1,6 @@
+ID	NAME	VERSION	STATE
+17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter	C++ Counter	1.0.0	builtin=0;installed=1;staged=0;enabled=1;active=0
+17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n	C++ I18n	1.0.0	builtin=0;installed=1;staged=0;enabled=1;active=0
+17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp	Jump Jump 3D C++	0.1.0	builtin=0;installed=1;staged=0;enabled=1;active=0
+17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft-cpp	Voxel Craft C++	0.12.2	builtin=0;installed=1;staged=0;enabled=1;active=0
+17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather	Weather	0.3.2	builtin=0;installed=1;staged=0;enabled=1;active=0

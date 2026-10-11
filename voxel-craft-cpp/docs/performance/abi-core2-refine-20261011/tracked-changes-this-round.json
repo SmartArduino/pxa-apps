@@ -1,0 +1,19 @@
+{
+  "product": [
+    "diff --git a/firmware/components/pxa/tests/pxa_esp_surface_backend_test.c b/firmware/components/pxa/tests/pxa_esp_surface_backend_test.c"
+  ],
+  "sdk": [
+    "diff --git a/libpxa/tests/raster_snapshot_scenario.h b/libpxa/tests/raster_snapshot_scenario.h",
+    "diff --git a/sdk/guest-cpp/README.zh-CN.md b/sdk/guest-cpp/README.zh-CN.md",
+    "diff --git a/sdk/guest-cpp/include/pxa/game.hpp b/sdk/guest-cpp/include/pxa/game.hpp",
+    "diff --git a/sdk/guest-cpp/include/pxa/game_service.hpp b/sdk/guest-cpp/include/pxa/game_service.hpp",
+    "diff --git a/sdk/guest-cpp/tests/game_service_test.cpp b/sdk/guest-cpp/tests/game_service_test.cpp",
+    "diff --git a/simulator/desktop/product_runner.c b/simulator/desktop/product_runner.c",
+    "diff --git a/simulator/desktop/tests/raster_backend_test.c b/simulator/desktop/tests/raster_backend_test.c",
+    "diff --git a/simulator/desktop/tests/raster_benchmark.c b/simulator/desktop/tests/raster_benchmark.c",
+    "diff --git a/spec/draft/core-wire.md b/spec/draft/core-wire.md",
+    "diff --git a/spec/draft/pxa-game-render.json b/spec/draft/pxa-game-render.json",
+    "diff --git a/spec/draft/tools/check_spec.py b/spec/draft/tools/check_spec.py"
+  ],
+  "apps": []
+}

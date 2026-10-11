@@ -1,0 +1,29 @@
+{
+  "hello": "protocol=1;mode=normal;capabilities=info,memory,logcat,packages,package-deploy,package-run,package-stop,fs,reboot,doctor,input-v2,screenshot-rgb565,screenshot-jpeg,poweroff,perf-raster,heap-local;max_chunk=1024;fs_offset=1;fs_sha256=1;target=esp32s3;serial=a4:cb:8f:d6:8d:a4;version=4faf6cf-dirty",
+  "flash_verify": "digest matched",
+  "original_firmware_sha256": "fdb4e32da5a0c6529b90ae85b0ca849f33ef7bd6d45a50cf16b3ee4ad9e9fe9c",
+  "packages": [
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft-cpp\tVoxel Craft C++\t0.12.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+  ],
+  "run": [
+    "launch_queued"
+  ],
+  "screenshot": {
+    "format": "jpeg",
+    "width": "296",
+    "height": "240",
+    "orientation": "logical",
+    "frame_id": "0",
+    "device_us": "61941829",
+    "source": "lvgl",
+    "bytes": "4769",
+    "sha256": "83c4499b15774cda3c53561cfa4a396814cfd92c89462196bfcccaff6da5e0af"
+  },
+  "stop": [
+    "stop_queued"
+  ]
+}

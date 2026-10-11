@@ -1,0 +1,196 @@
+{
+  "passed": true,
+  "flashed_partition": "0x10000 application only",
+  "firmware_sha256": "fdb4e32da5a0c6529b90ae85b0ca849f33ef7bd6d45a50cf16b3ee4ad9e9fe9c",
+  "settings_changed": false,
+  "operations": [
+    {
+      "command": "PACKAGES",
+      "frames": [
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft-cpp\tVoxel Craft C++\t0.12.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "INPUT KEY HOME",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=1;device_us=45827068;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SWIPE 148 214 148 48 300 12",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=2;device_us=46427848;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=3;device_us=46428606;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "PACKAGE run pxa-cpp-counter",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "launch_queued"
+        }
+      ]
+    },
+    {
+      "command": "PACKAGES",
+      "frames": [
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=1"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft-cpp\tVoxel Craft C++\t0.12.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "SCREENSHOT",
+      "frames": [
+        {
+          "kind": "META",
+          "payload": "format=rgb565le;width=296;height=240;stride=592;orientation=logical;frame_id=0;device_us=47600504;source=lvgl;bytes=142080;sha256=3eb60fbfe6ecde5c0e35b2e834e86180aedf515420a3bbf12c97ba5b1d7e0b24"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "PACKAGE stop pxa-cpp-counter",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "stop_queued"
+        }
+      ]
+    },
+    {
+      "command": "INPUT KEY HOME",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=4;device_us=57495655;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "PACKAGES",
+      "frames": [
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft-cpp\tVoxel Craft C++\t0.12.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    }
+  ],
+  "hello": "protocol=1;mode=normal;capabilities=info,memory,logcat,packages,package-deploy,package-run,package-stop,fs,reboot,doctor,input-v2,screenshot-rgb565,screenshot-jpeg,poweroff,perf-raster,heap-local;max_chunk=1024;fs_offset=1;fs_sha256=1;target=esp32s3;serial=a4:cb:8f:d6:8d:a4;version=4faf6cf-dirty",
+  "packages": [
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft-cpp\tVoxel Craft C++\t0.12.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+  ],
+  "running_packages": [
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=1",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft-cpp\tVoxel Craft C++\t0.12.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+  ],
+  "screenshot": {
+    "format": "rgb565le",
+    "width": "296",
+    "height": "240",
+    "stride": "592",
+    "orientation": "logical",
+    "frame_id": "0",
+    "device_us": "47600504",
+    "source": "lvgl",
+    "bytes": "142080",
+    "sha256": "3eb60fbfe6ecde5c0e35b2e834e86180aedf515420a3bbf12c97ba5b1d7e0b24"
+  },
+  "final_packages": [
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft-cpp\tVoxel Craft C++\t0.12.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+  ]
+}

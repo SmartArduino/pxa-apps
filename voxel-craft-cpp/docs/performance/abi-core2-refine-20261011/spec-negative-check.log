@@ -1,0 +1,2 @@
+Correctly rejected: capabilities Host raster capabilities differ from game-render spec
+Correctly rejected: limits game-render draw_commands differs between spec, Host and C++ SDK

@@ -1,0 +1,216 @@
+{
+  "previous": {
+    "display_fps_mean": 13.082592923636815,
+    "raster_us_mean": 33004.87301587302,
+    "sram": {
+      "stable_max": 273088,
+      "launch_peak_max": 277276,
+      "steady_peak_max": 273264
+    },
+    "psram": {
+      "stable_max": 2811308,
+      "launch_peak_max": 3557260,
+      "steady_peak_max": 2814908
+    }
+  },
+  "current": {
+    "display_fps_mean": 13.203816791223165,
+    "raster_us_mean": 33033.92702639158,
+    "per_run": [
+      {
+        "index": 0,
+        "fps": 13.147013188224019,
+        "launch_heap": {
+          "sram_used": 273092,
+          "sram_peak_used": 277228,
+          "psram_used": 2812484,
+          "psram_peak_used": 3560864,
+          "sram_peak_delta": 13468,
+          "psram_peak_delta": 2083152
+        },
+        "steady_heap": {
+          "sram_used": 273128,
+          "sram_peak_used": 273256,
+          "psram_used": 2814596,
+          "psram_peak_used": 2818192,
+          "sram_peak_delta": 164,
+          "psram_peak_delta": 5712
+        },
+        "launch_start_free": {
+          "sram_free": 57259,
+          "psram_free": 6880860
+        }
+      },
+      {
+        "index": 1,
+        "fps": 13.234547311048791,
+        "launch_heap": {
+          "sram_used": 273092,
+          "sram_peak_used": 277228,
+          "psram_used": 2812820,
+          "psram_peak_used": 3561232,
+          "sram_peak_delta": 6840,
+          "psram_peak_delta": 2083084
+        },
+        "steady_heap": {
+          "sram_used": 273092,
+          "sram_peak_used": 273256,
+          "psram_used": 2814936,
+          "psram_peak_used": 2820200,
+          "sram_peak_delta": 164,
+          "psram_peak_delta": 7380
+        },
+        "launch_start_free": {
+          "sram_free": 50631,
+          "psram_free": 6880424
+        }
+      },
+      {
+        "index": 2,
+        "fps": 13.229889874396687,
+        "launch_heap": {
+          "sram_used": 273092,
+          "sram_peak_used": 277228,
+          "psram_used": 2812832,
+          "psram_peak_used": 3561188,
+          "sram_peak_delta": 6840,
+          "psram_peak_delta": 2083144
+        },
+        "steady_heap": {
+          "sram_used": 273092,
+          "sram_peak_used": 273216,
+          "psram_used": 2814948,
+          "psram_peak_used": 2818548,
+          "sram_peak_delta": 88,
+          "psram_peak_delta": 5716
+        },
+        "launch_start_free": {
+          "sram_free": 50631,
+          "psram_free": 6880528
+        }
+      }
+    ],
+    "sram": {
+      "stable_max": 273128,
+      "launch_peak_max": 277228,
+      "steady_peak_max": 273256,
+      "warm_used_max": 273092,
+      "steady_peak_runs": [
+        273256,
+        273256,
+        273216
+      ]
+    },
+    "psram": {
+      "stable_max": 2814948,
+      "launch_peak_max": 3561232,
+      "steady_peak_max": 2820200,
+      "warm_used_max": 2812832,
+      "steady_peak_runs": [
+        2818192,
+        2820200,
+        2818548
+      ]
+    }
+  },
+  "paired_previous": {
+    "display_fps_mean": 13.142595198852066,
+    "raster_us_mean": 32899.14117999401,
+    "per_run": [
+      {
+        "index": 0,
+        "fps": 13.10061930658422,
+        "launch_heap": {
+          "sram_used": 273128,
+          "sram_peak_used": 277316,
+          "psram_used": 2813584,
+          "psram_peak_used": 3562892,
+          "sram_peak_delta": 6928,
+          "psram_peak_delta": 2084040
+        },
+        "steady_heap": {
+          "sram_used": 273128,
+          "sram_peak_used": 273216,
+          "psram_used": 2815700,
+          "psram_peak_used": 2819224,
+          "sram_peak_delta": 88,
+          "psram_peak_delta": 5640
+        },
+        "launch_start_free": {
+          "sram_free": 50631,
+          "psram_free": 6879720
+        }
+      },
+      {
+        "index": 1,
+        "fps": 13.137676278561184,
+        "launch_heap": {
+          "sram_used": 273128,
+          "sram_peak_used": 277228,
+          "psram_used": 2813912,
+          "psram_peak_used": 3562276,
+          "sram_peak_delta": 6876,
+          "psram_peak_delta": 2083140
+        },
+        "steady_heap": {
+          "sram_used": 273128,
+          "sram_peak_used": 273256,
+          "psram_used": 2816028,
+          "psram_peak_used": 2819628,
+          "sram_peak_delta": 128,
+          "psram_peak_delta": 5716
+        },
+        "launch_start_free": {
+          "sram_free": 50667,
+          "psram_free": 6879436
+        }
+      },
+      {
+        "index": 2,
+        "fps": 13.189490011410793,
+        "launch_heap": {
+          "sram_used": 273092,
+          "sram_peak_used": 277316,
+          "psram_used": 2813872,
+          "psram_peak_used": 3136076,
+          "sram_peak_delta": 6928,
+          "psram_peak_delta": 1656972
+        },
+        "steady_heap": {
+          "sram_used": 273092,
+          "sram_peak_used": 273256,
+          "psram_used": 2815988,
+          "psram_peak_used": 2819580,
+          "sram_peak_delta": 128,
+          "psram_peak_delta": 5708
+        },
+        "launch_start_free": {
+          "sram_free": 50631,
+          "psram_free": 6879468
+        }
+      }
+    ],
+    "sram": {
+      "stable_max": 273128,
+      "launch_peak_max": 277316,
+      "steady_peak_max": 273256,
+      "warm_used_max": 273128,
+      "steady_peak_runs": [
+        273216,
+        273256,
+        273256
+      ]
+    },
+    "psram": {
+      "stable_max": 2816028,
+      "launch_peak_max": 3562892,
+      "steady_peak_max": 2819628,
+      "warm_used_max": 2813912,
+      "steady_peak_runs": [
+        2819224,
+        2819628,
+        2819580
+      ]
+    }
+  }
+}

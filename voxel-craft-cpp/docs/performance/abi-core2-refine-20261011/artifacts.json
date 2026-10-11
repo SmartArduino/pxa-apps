@@ -1,0 +1,42 @@
+{
+  "local/abi-refine-20261011/baseline-sdk/simulator/desktop/product_runner.c": {
+    "sha256": "83eb2edb5c5041f5719316504a0ab14891711f61a820db132ddd93cadd7fef67",
+    "bytes": 201560
+  },
+  "deps/pxa-system/simulator/desktop/product_runner.c": {
+    "sha256": "a63cc94b8a030bf43265fb12225b733719a9a18340a79f269c1c7b2951d37b67",
+    "bytes": 202114
+  },
+  "deps/pxa-system/sdk/guest-cpp/include/pxa/game_service.hpp": {
+    "sha256": "e52b9db0f9d43712da76a05451ffedab7479d83e39d015b99fd307c0dbd7d30a",
+    "bytes": 4937
+  },
+  "deps/pxa-system/sdk/guest-cpp/include/pxa/game.hpp": {
+    "sha256": "3eed856a79ee47d3590dc5523c8dacf1b4647190a9b2ef2adedd8f8347f5b3d5",
+    "bytes": 18418
+  },
+  "local/abi-next-20261011/probe-apps/voxel-craft-cpp/main.cpp": {
+    "sha256": "ff1d7468bf14fb81c59bb06d043259df4fbdd31862022b8bbf6d5e562b2708c2",
+    "bytes": 61292
+  },
+  "local/abi-next-20261011/probe-apps/voxel-craft-cpp/package.json": {
+    "sha256": "5700fc5cee473f509c03a4f6190b7223e52df848429cde77901d2234dd22079d",
+    "bytes": 1214
+  },
+  "local/abi-next-20261011/final-firmware.bin": {
+    "sha256": "e5f9e1d9045f69a274e51b827c3936feaa07c9c3366305fd31a592cce6d1565b",
+    "bytes": 3338192
+  },
+  "local/abi-next-20261011/pxa_esp_platform.bin": {
+    "sha256": "fdb4e32da5a0c6529b90ae85b0ca849f33ef7bd6d45a50cf16b3ee4ad9e9fe9c",
+    "bytes": 3337616
+  },
+  "local/abi-next-20261011/voxel-borrowed/pxa-voxel-craft-cpp.pxa": {
+    "sha256": "2c88de4ef1ca3a94f17032f2c3c5a744cde12eaef2db1a1bde06b2c2ec3dfddc",
+    "bytes": 535733
+  },
+  "local/abi-refine-20261011/voxel-esp/pxa-voxel-craft-cpp.pxa": {
+    "sha256": "1c53fdf909e9bc8f1ccf6a4a3d1848867b24165d6659433ba8465f025e2af34c",
+    "bytes": 536107
+  }
+}

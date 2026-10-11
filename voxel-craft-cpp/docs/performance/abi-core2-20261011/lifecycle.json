@@ -1,0 +1,131 @@
+{
+  "runs": [
+    {
+      "index": 0,
+      "foreground": {
+        "format": "rgb565le",
+        "width": "296",
+        "height": "240",
+        "stride": "592",
+        "orientation": "logical",
+        "frame_id": "261",
+        "device_us": "1099998472",
+        "source": "surface",
+        "bytes": "142080",
+        "sha256": "785fb81e9eee17a9dc7c226543a16c53d5f77d569024942354681c8c7617caba"
+      },
+      "background": {
+        "format": "rgb565le",
+        "width": "296",
+        "height": "240",
+        "stride": "592",
+        "orientation": "logical",
+        "frame_id": "0",
+        "device_us": "1101959502",
+        "source": "lvgl",
+        "bytes": "142080",
+        "sha256": "0e0ceb62db5c5c84a17b9b71df9c53dce61cdf347d40cd986ec8f24f03148105"
+      },
+      "memory": [
+        "scope=heap;sram_total=321019;sram_free=47895;sram_min=21032;sram_largest=19456;psram_total=8358572;psram_free=5395840;psram_min=4647468;psram_largest=4456448",
+        "scope=budget;internal=28956;external=50105;peak_internal=28956;peak_external=50105;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0",
+        "scope=kind;name=raster;internal=0;external=23264",
+        "scope=kind;name=image;internal=0;external=0",
+        "scope=kind;name=audio;internal=0;external=16392",
+        "scope=kind;name=temporary;internal=0;external=0",
+        "scope=kind;name=metadata;internal=28956;external=10449",
+        "scope=kind;name=frame;internal=0;external=0",
+        "scope=surface;frame=284160;scratch=142080;mailbox=147456;probe=0;peak_total=575808"
+      ]
+    },
+    {
+      "index": 1,
+      "foreground": {
+        "format": "rgb565le",
+        "width": "296",
+        "height": "240",
+        "stride": "592",
+        "orientation": "logical",
+        "frame_id": "359",
+        "device_us": "1111697339",
+        "source": "surface",
+        "bytes": "142080",
+        "sha256": "4b82d16f9902cb0265da04960011c9793d93e7371d3cebf51210d37315271ed5"
+      },
+      "background": {
+        "format": "rgb565le",
+        "width": "296",
+        "height": "240",
+        "stride": "592",
+        "orientation": "logical",
+        "frame_id": "0",
+        "device_us": "1113682256",
+        "source": "lvgl",
+        "bytes": "142080",
+        "sha256": "33e3a7ef7c817c0a73f0b87f5518c272a380df29db30502694a7f18dd39fbf6d"
+      },
+      "memory": [
+        "scope=heap;sram_total=321019;sram_free=47931;sram_min=21032;sram_largest=19456;psram_total=8358572;psram_free=5395844;psram_min=4647468;psram_largest=4456448",
+        "scope=budget;internal=28956;external=50105;peak_internal=28956;peak_external=50105;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0",
+        "scope=kind;name=raster;internal=0;external=23264",
+        "scope=kind;name=image;internal=0;external=0",
+        "scope=kind;name=audio;internal=0;external=16392",
+        "scope=kind;name=temporary;internal=0;external=0",
+        "scope=kind;name=metadata;internal=28956;external=10449",
+        "scope=kind;name=frame;internal=0;external=0",
+        "scope=surface;frame=284160;scratch=142080;mailbox=147456;probe=0;peak_total=575808"
+      ]
+    },
+    {
+      "index": 2,
+      "foreground": {
+        "format": "rgb565le",
+        "width": "296",
+        "height": "240",
+        "stride": "592",
+        "orientation": "logical",
+        "frame_id": "445",
+        "device_us": "1122260496",
+        "source": "surface",
+        "bytes": "142080",
+        "sha256": "a93cff74bda04d1228fb53e418117554f722bb7dde70966ae533131fba0feb3b"
+      },
+      "background": {
+        "format": "rgb565le",
+        "width": "296",
+        "height": "240",
+        "stride": "592",
+        "orientation": "logical",
+        "frame_id": "0",
+        "device_us": "1124245401",
+        "source": "lvgl",
+        "bytes": "142080",
+        "sha256": "cc208cbed97c5891c15d7e634f04dd0258addd8fbfe888638b7988a1c08d2b0e"
+      },
+      "memory": [
+        "scope=heap;sram_total=321019;sram_free=47931;sram_min=21032;sram_largest=19456;psram_total=8358572;psram_free=5395852;psram_min=4647468;psram_largest=4456448",
+        "scope=budget;internal=28956;external=50105;peak_internal=28956;peak_external=50105;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0",
+        "scope=kind;name=raster;internal=0;external=23264",
+        "scope=kind;name=image;internal=0;external=0",
+        "scope=kind;name=audio;internal=0;external=16392",
+        "scope=kind;name=temporary;internal=0;external=0",
+        "scope=kind;name=metadata;internal=28956;external=10449",
+        "scope=kind;name=frame;internal=0;external=0",
+        "scope=surface;frame=284160;scratch=142080;mailbox=147456;probe=0;peak_total=575808"
+      ]
+    }
+  ],
+  "passed": true,
+  "hello": "protocol=1;mode=normal;capabilities=info,memory,logcat,packages,package-deploy,package-run,package-stop,fs,reboot,doctor,input-v2,screenshot-rgb565,screenshot-jpeg,poweroff,perf-raster,heap-local;max_chunk=1024;fs_offset=1;fs_sha256=1;target=esp32s3;serial=a4:cb:8f:d6:8d:a4;version=4faf6cf-dirty",
+  "stopped_memory": [
+    "scope=heap;sram_total=321019;sram_free=50663;sram_min=21032;sram_largest=19456;psram_total=8358572;psram_free=6875968;psram_min=4647468;psram_largest=5373952",
+    "scope=budget;internal=27468;external=16516;peak_internal=28956;peak_external=50105;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0",
+    "scope=kind;name=raster;internal=0;external=0",
+    "scope=kind;name=image;internal=0;external=0",
+    "scope=kind;name=audio;internal=0;external=16392",
+    "scope=kind;name=temporary;internal=0;external=0",
+    "scope=kind;name=metadata;internal=27468;external=124",
+    "scope=kind;name=frame;internal=0;external=0",
+    "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=575808"
+  ]
+}

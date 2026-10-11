@@ -1,0 +1,80 @@
+{
+  "baseline-queued": {
+    "submit_us": {
+      "mean": 1.20096,
+      "min_run": 0.9582,
+      "max_run": 1.9718,
+      "median_run": 1.057
+    },
+    "execute_us": {
+      "mean": 380.43064,
+      "min_run": 300.437,
+      "max_run": 626.3126,
+      "median_run": 334.258
+    },
+    "render_present_us": {
+      "mean": 389.3052666666667,
+      "min_run": 307.3292,
+      "max_run": 640.8378,
+      "median_run": 342.0804
+    },
+    "total_us": {
+      "mean": 390.5062266666667,
+      "min_run": 308.2874,
+      "max_run": 642.8096,
+      "median_run": 343.1374
+    }
+  },
+  "current-borrowed": {
+    "submit_us": {
+      "mean": 343.9417466666667,
+      "min_run": 293.1896,
+      "max_run": 391.527,
+      "median_run": 347.2578
+    },
+    "execute_us": {
+      "mean": 343.1924666666667,
+      "min_run": 292.601,
+      "max_run": 390.6046,
+      "median_run": 346.4638
+    },
+    "render_present_us": {
+      "mean": 7.379426666666666,
+      "min_run": 6.1552,
+      "max_run": 8.6904,
+      "median_run": 7.5466
+    },
+    "total_us": {
+      "mean": 351.3211733333333,
+      "min_run": 299.4522,
+      "max_run": 400.2174,
+      "median_run": 354.8044
+    }
+  },
+  "current-queued": {
+    "submit_us": {
+      "mean": 1.1516666666666666,
+      "min_run": 0.821,
+      "max_run": 1.706,
+      "median_run": 1.0854
+    },
+    "execute_us": {
+      "mean": 371.8739733333333,
+      "min_run": 283.7734,
+      "max_run": 535.1762,
+      "median_run": 344.7296
+    },
+    "render_present_us": {
+      "mean": 380.50596,
+      "min_run": 290.033,
+      "max_run": 547.7036,
+      "median_run": 352.8362
+    },
+    "total_us": {
+      "mean": 381.65762666666666,
+      "min_run": 290.854,
+      "max_run": 549.4096,
+      "median_run": 353.933
+    }
+  }
+}
