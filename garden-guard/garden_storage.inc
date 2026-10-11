@@ -7,6 +7,10 @@ static void garden_save(void){
     /* Debug progress is session-only and must not replace the player's save. */
     return;
 #endif
+    if (storage_pending == 1 || storage_pending == 2) {
+        storage_pending = 2;
+        return;
+    }
     static const char key[]="garden.save";
     uint8_t value[32];
     size_t len=0;
@@ -18,9 +22,10 @@ static void garden_save(void){
     value[len++]=(uint8_t)(unlocked_mask>>24);
     for(uint8_t i=0;i<LEVELS_COUNT && len<sizeof(value);++i) value[len++]=level_stars[i];
     storage_pending=1;
-    if(pxa_storage_request_set(packet,sizeof(packet),STORAGE_SET_REQ,key,
-                                  sizeof(key)-1,value,len)!=PXA_STATUS_OK)
-        storage_pending=0;
+    const int32_t status = pxa_storage_request_set(packet,sizeof(packet),STORAGE_SET_REQ,key,
+                                  sizeof(key)-1,value,len);
+    if (status != PXA_STATUS_OK)
+        storage_pending = status == PXA_STATUS_WOULD_BLOCK || status == PXA_STATUS_BUSY ? 3 : 0;
 }
 static void apply_debug_unlocks(void){
 #if GARDEN_DEBUG_UNLOCK_ALL

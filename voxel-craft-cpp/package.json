@@ -1,20 +1,20 @@
 {
   "format": "pxa-package-source-0.1",
   "min_sdk": [
-    1,
+    2,
     0
   ],
   "target_sdk": [
-    1,
+    2,
     0
   ],
   "compile_sdk": [
-    1,
+    2,
     0
   ],
   "id": "pxa-voxel-craft-cpp",
-  "version": "0.12.2",
-  "release_sequence": 15,
+  "version": "0.12.3",
+  "release_sequence": 16,
   "name": "Voxel Craft C++",
   "description": "First-person voxel sandbox on the PXA C++26 SDK with depth-tested scanline rendering, optional bounded-error material paths and touch controls",
   "build": {

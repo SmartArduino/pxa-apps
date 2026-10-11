@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Generate the tomb-explorer INDEX8 textures as plain C (textures.h/.c).
+"""Generate the tomb-explorer INDEX8 textures as C++ (textures.h/.c).
 
 Ported from micropixel guest/apps/tomb-explorer/tools/generate_textures.py; the
 drawing code and seeds are unchanged so the PXA textures match the original.
 Every texture is drawn procedurally into the shared 16 ramp x 16 step palette
-of palette.c, so no source images or image libraries are involved. Use --check
+of palette.cpp, so no source images or image libraries are involved. Use --check
 to verify the checked-in C matches this script.
 """
 import argparse
@@ -204,7 +204,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--check', action='store_true', help='verify the generated files are up to date')
     args = parser.parse_args()
-    outputs = {APP / 'textures.h': render_header(), APP / 'textures.c': render_source()}
+    outputs = {APP / 'textures.h': render_header(), APP / 'textures.cpp': render_source()}
     stale = [path for path, text in outputs.items() if not path.exists() or path.read_text() != text]
     if args.check:
         if stale:

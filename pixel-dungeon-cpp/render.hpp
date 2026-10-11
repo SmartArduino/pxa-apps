@@ -31,7 +31,7 @@ namespace dungeon {
  * error), 0 on a hard failure. */
 int pd_render_present(pxa::game::Renderer& context_handle, uint32_t capabilities,
                       const pd_game_t *game, const pd_layout_t *layout,
-                      uint8_t *buffer, uint32_t capacity, uint64_t frame_id,
+                      uint8_t *buffer, uint32_t capacity,
                       uint32_t now_ms);
 
 } // namespace dungeon

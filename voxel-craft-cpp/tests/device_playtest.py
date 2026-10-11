@@ -65,6 +65,15 @@ with pxadb.PxaDbClient(a.port,15)as c,(a.output/'serial.jsonl').open('w',bufferi
   req(f'INPUT POINTER DOWN {int(x)} {int(y)} 0');req('INPUT SYNC');pump(.18);req(f'INPUT POINTER UP {int(x)} {int(y)} 0');req('INPUT SYNC');pump(.5)
  def hold(x,y,seconds):
   req(f'INPUT POINTER DOWN {int(x)} {int(y)} 0');req('INPUT SYNC');pump(seconds);req(f'INPUT POINTER UP {int(x)} {int(y)} 0');req('INPUT SYNC');pump(.7)
+ def mine(x,y,block,tool):
+  # Completion uses simulation time. A busy desktop running compiler jobs can
+  # hit the game's bounded catch-up cap; wall-time sleeps then release early.
+  # Wait for the actual mined event, and independently check elapsed_ms below.
+  start=len(events)
+  req(f'INPUT POINTER DOWN {int(x)} {int(y)} 0');req('INPUT SYNC')
+  try:until(lambda:any(f'VOXEL-MINED block={block} tool={tool} 'in e for e in events[start:]),30)
+  finally:
+   req(f'INPUT POINTER UP {int(x)} {int(y)} 0');req('INPUT SYNC');pump(.7)
  def snap(name):
   if a.no_screenshots:
    row={'name':name,'ui':dict(ui),'state':dict(state),'bag':dict(bag),'edits':dict(edits)};report['scenes'].append(row);return row
@@ -131,17 +140,17 @@ with pxadb.PxaDbClient(a.port,15)as c,(a.output/'serial.jsonl').open('w',bufferi
     assert tools['stick']==20
     slot=max(12,int(23*s));space_game=max(1,int(3*s));bar_x=(296-(10*slot+9*space_game))/2
     def select(index):tap(bar_x+index*(slot+space_game)+slot/2,ui['bag'][1])
-    select(4);hold(action_x,action_y,1.20);until(lambda:state.get('block')==3 and tools.get('wear')==59)
+    select(4);mine(action_x,action_y,12,34);until(lambda:state.get('block')==3 and tools.get('wear')==59)
     # An axe cannot silently accelerate stone; releasing cancels its progress.
     hold(action_x,action_y,.65);until(lambda:bag.get('progress')==0);assert state['block']==3
     for index,block,seconds,following,wear in [(3,3,2.05,3,59),(6,3,1.22,5,131),(7,5,.82,2,131),(8,2,.58,0,131)]:
-     select(index);hold(action_x,action_y,seconds)
+     select(index);mine(action_x,action_y,block,index+30)
      until(lambda:tools.get('wear')==wear)
      if following:until(lambda:state.get('block')==following)
      snap('mined-with-'+names[index-3])
     req('INPUT POINTER DOWN 78 140 0');req('INPUT SYNC');pump(.12)
     req('INPUT POINTER MOVE 78 90 0');req('INPUT SYNC');pump(.4);req('INPUT CANCEL');pump(1.2)
-    until(lambda:state.get('block')==2);select(5);hold(action_x,action_y,.76);until(lambda:tools.get('wear')==59)
+    until(lambda:state.get('block')==2);select(5);mine(action_x,action_y,2,35);until(lambda:tools.get('wear')==59)
     assert bag['stone']==27 and bag['plank']==25 and bag['wood']==1 and bag['dirt']==2 and bag['table']==1
     mined=[{k:int(v)for k,v in re.findall(r'(\w+)=(\d+)',e)}for e in events if 'VOXEL-MINED 'in e]
     for item,block,duration in [(34,12,800),(33,3,1600),(36,3,800),(37,5,400),(38,2,162),(35,2,325)]:

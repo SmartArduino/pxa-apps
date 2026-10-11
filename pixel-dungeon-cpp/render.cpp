@@ -1661,7 +1661,7 @@ static void draw_shop(const pd_game_t *game, const pd_layout_t *layout) {
 
 int pd_render_present(pxa::game::Renderer& context_handle, uint32_t capabilities,
                       const pd_game_t *game, const pd_layout_t *layout,
-                      uint8_t *buffer, uint32_t capacity, uint64_t frame_id,
+                      uint8_t *buffer, uint32_t capacity,
                       uint32_t now_ms) {
     int32_t status;
     int camera_x = 0;
@@ -1675,7 +1675,7 @@ int pd_render_present(pxa::game::Renderer& context_handle, uint32_t capabilities
     g_overlay_count = 0;
     g_shade_count = 0;
     g_world_cell = layout->tile_pixels;
-    g_list.begin(context_handle, buffer, capacity, frame_id);
+    g_list.begin(context_handle, buffer, capacity);
 
     if (game->phase == PD_PHASE_TITLE || game->phase == PD_PHASE_RANKINGS ||
         (game->settings_from_title && (game->phase == PD_PHASE_SETTINGS ||

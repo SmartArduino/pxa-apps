@@ -1,6 +1,7 @@
+#include "pxa_control_capture.h"
 #include "../main.cpp"
 #include <cassert>
-extern "C" std::int32_t pxa_submit(const std::uint8_t*, std::uint32_t) { return 0; }
+extern "C" std::int32_t pxa_test_control(const std::uint8_t*, std::uint32_t) { return 0; }
 static unsigned sounds=0;
 extern "C" std::int32_t pxa_io(std::uint64_t handle, std::uint32_t opcode, std::uint8_t* data, std::uint32_t size) {
     if(handle==88&&opcode==2){assert(size>0&&size<=640&&size%2==0);++sounds;return size;}

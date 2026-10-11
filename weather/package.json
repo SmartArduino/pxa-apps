@@ -1,20 +1,20 @@
 {
   "format": "pxa-package-source-0.1",
   "min_sdk": [
-    1,
+    2,
     0
   ],
   "target_sdk": [
-    1,
+    2,
     0
   ],
   "compile_sdk": [
-    1,
+    2,
     0
   ],
   "id": "pxa-weather",
-  "version": "0.3.2",
-  "release_sequence": 4,
+  "version": "0.3.3",
+  "release_sequence": 5,
   "name": "Weather",
   "description": "Local weather with IP geolocation and automatic provider fallback",
   "icon": "assets/icon.png",
@@ -22,11 +22,12 @@
     {
       "id": "main",
       "kind": "ui",
-      "sources": [
-        "main.c",
-        "weather_providers.c",
-        "images.c"
-      ]
+      "cmake_target": "pxa_main",
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": []
+      }
     }
   ],
   "services": [
@@ -77,5 +78,9 @@
       "required": false,
       "scope": "https://wttr.in"
     }
-  ]
+  ],
+  "build": {
+    "system": "cmake",
+    "source_dir": "."
+  }
 }

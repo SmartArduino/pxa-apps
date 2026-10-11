@@ -1,20 +1,20 @@
 {
   "format": "pxa-package-source-0.1",
   "min_sdk": [
-    1,
+    2,
     0
   ],
   "target_sdk": [
-    1,
+    2,
     0
   ],
   "compile_sdk": [
-    1,
+    2,
     0
   ],
   "id": "pxa-arcade",
-  "version": "0.1.2",
-  "release_sequence": 3,
+  "version": "0.1.3",
+  "release_sequence": 4,
   "name": "PXA Arcade",
   "description": "A collection of compact arcade games",
   "icon": "assets/flappy-bird/icon.png",
@@ -22,15 +22,6 @@
     {
       "id": "main",
       "kind": "ui",
-      "sources": [
-        "main.c",
-        "modules/brick_breaker.c",
-        "modules/flappy_bird.c",
-        "modules/jump_jump.c",
-        "modules/jumping.c",
-        "modules/minesweeper.c",
-        "modules/tetris.c"
-      ],
       "services": [
         "audio",
         "clock",
@@ -43,7 +34,13 @@
             "canvas"
           ]
         }
-      ]
+      ],
+      "cmake_target": "pxa_main",
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": []
+      }
     }
   ],
   "permissions": [
@@ -52,5 +49,9 @@
       "required": false,
       "scope": "media"
     }
-  ]
+  ],
+  "build": {
+    "system": "cmake",
+    "source_dir": "."
+  }
 }

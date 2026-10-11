@@ -1,3 +1,4 @@
+#include "pxa_control_capture.h"
 /* preview_render.c - developer harness for Jump Jump 3D.
  *
  * Runs the Guest draw list through the real Host raster kernel
@@ -55,7 +56,7 @@ static uint32_t g_raster_min_us = UINT32_MAX;
 static int g_width = 296;
 static int g_height = 240;
 
-extern "C" int32_t pxa_submit(const uint8_t *data, uint32_t length) {
+extern "C" int32_t pxa_test_control(const uint8_t *data, uint32_t length) {
     (void)data;
     (void)length;
     return PXA_STATUS_OK;
@@ -400,8 +401,7 @@ int main(int argc, char **argv) {
                     j3_game_tick(&game, 0.02F);
                 g_submitted = 0;
                 frame_id += 1;
-                if (!j3_render_frame(&render, &game, renderer, g_draw, sizeof(g_draw),
-                                     frame_id)) {
+                if (!j3_render_frame(&render, &game, renderer, g_draw, sizeof(g_draw))) {
                     fprintf(stderr, "render failed at shot %d\n", shot);
                     return 1;
                 }
@@ -422,8 +422,7 @@ int main(int argc, char **argv) {
             int tick;
             g_submitted = 0;
             frame_id += 1;
-            if (!j3_render_frame(&render, &game, renderer, g_draw, sizeof(g_draw),
-                                 frame_id)) {
+            if (!j3_render_frame(&render, &game, renderer, g_draw, sizeof(g_draw))) {
                 fprintf(stderr, "render failed at shot %d\n", shot);
                 return 1;
             }
@@ -477,8 +476,7 @@ int main(int argc, char **argv) {
                    game.cam_z);
             g_submitted = 0;
             frame_id += 1;
-            if (!j3_render_frame(&render, &game, renderer, g_draw, sizeof(g_draw),
-                                 frame_id)) {
+            if (!j3_render_frame(&render, &game, renderer, g_draw, sizeof(g_draw))) {
                 fprintf(stderr, "render failed at frame %u\n", frame_id);
                 return 1;
             }

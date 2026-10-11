@@ -1,19 +1,19 @@
 {
   "format": "pxa-package-source-0.1",
   "min_sdk": [
-    1,
+    2,
     0
   ],
   "target_sdk": [
-    1,
+    2,
     0
   ],
   "compile_sdk": [
-    1,
+    2,
     0
   ],
   "id": "pxa-store",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "name": "App Store",
   "description": "Browses the catalog, manages verified downloads and installed apps, and requests confirmed installation",
   "icon": "assets/icon.png",
@@ -21,12 +21,12 @@
     {
       "id": "main",
       "kind": "ui",
-      "sources": [
-        "main.c",
-        "store_client.c",
-        "store_json.c",
-        "search_image.c"
-      ]
+      "cmake_target": "pxa_main",
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": []
+      }
     }
   ],
   "services": [
@@ -52,5 +52,9 @@
       "scope": "https://app.doit.am"
     }
   ],
-  "release_sequence": 9
+  "release_sequence": 10,
+  "build": {
+    "system": "cmake",
+    "source_dir": "."
+  }
 }

@@ -1,7 +1,7 @@
 #include "../voxel_world.hpp"
 #include "../../common/voxel_benchmark.h"
 extern "C" {
-#include "../../voxel-craft/game.h"
+#include "../../common/cpp/tests/reference/c/voxel-craft/game.h"
 }
 #include <cassert>
 #include <cstdio>

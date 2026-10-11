@@ -2,9 +2,9 @@
 
 游戏图片的 PNG 原稿保存在 `resources/`，`resources.json` 在打包时将它们无损转换为 PXR1 BGRA8888。生成文件进入包的 `assets/`，不会成为 AOT 或 Guest 线性内存中的像素数组。启动器图标继续使用包图标入口。
 
-应用使用 Assets 2.1 和 UI 0.6。`images.c` 保存路径及资源句柄；绘制代码使用 `plane_image_id_t` 和 `plane_image()`，后者提交 Canvas IMAGE_HANDLE。Host 异步读取最终像素对象，LVGL 借用同一份像素。绘制调用不查找路径、不读取 PNG，也不在 Guest 中解码图片。安装时验证包；启动和加载图片时不重复 SHA 校验。
+应用使用 Assets 2.1 和 UI 0.6。`images.cpp` 保存路径及资源句柄；绘制代码使用 `plane_image_id_t` 和 `plane_image()`，后者提交 Canvas IMAGE_HANDLE。Host 异步读取最终像素对象，LVGL 借用同一份像素。绘制调用不查找路径、不读取 PNG，也不在 Guest 中解码图片。安装时验证包；启动和加载图片时不重复 SHA 校验。
 
-`main.c` 的 `scene_images()` 声明当前页面需要的图片：首页为主图和四个导航图标，其他菜单只保留当前显示的图片；战斗准备所选飞机、所选关卡首领、敌人、拾取物及 HUD/对话框。不能以全应用常驻来掩盖场景切换问题。
+`main.cpp` 的 `scene_images()` 声明当前页面需要的图片：首页为主图和四个导航图标，其他菜单只保留当前显示的图片；战斗准备所选飞机、所选关卡首领、敌人、拾取物及 HUD/对话框。不能以全应用常驻来掩盖场景切换问题。
 
 调用顺序为：
 

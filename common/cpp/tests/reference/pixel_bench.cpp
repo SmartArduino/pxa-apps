@@ -1,3 +1,4 @@
+#include "pxa_control_capture.h"
 // Exercise all game phases through the real Host validator and rasterizer.
 #include "render.hpp"
 #include "font_data.hpp"
@@ -19,7 +20,7 @@ using namespace dungeon;
 static pxa_raster_resources_t resources{};static pxa_raster_target_t target{};
 static uint16_t pixels[800*800]{};static uint8_t draw[PD_MAX_DRAW_BYTES]{};
 static unsigned frames=0;
-extern "C" int32_t pxa_submit(const uint8_t* bytes,uint32_t size){
+extern "C" int32_t pxa_test_control(const uint8_t* bytes,uint32_t size){
     if(size>32){for(uint32_t i=24;i<size;++i)if(bytes[i]>=32&&bytes[i]<127)std::fputc(bytes[i],stderr);std::fputc('\n',stderr);}return 0;}
 extern "C" int32_t pxa_io(uint64_t,uint32_t opcode,uint8_t* bytes,uint32_t size){
     assert(opcode==0x101);pxa_raster_draw_list_view_t view{};
@@ -58,7 +59,7 @@ int main(){
             double elapsed=0;raster_ns=0;unsigned bytes=0;
             for(int rep=0;rep<200;++rep){
                 auto start=std::chrono::steady_clock::now();
-                assert(cpp?pd_render_present(renderer,resources.capabilities,&game,&layout,draw,sizeof(draw),frames+1,0):pd_c_render(&game,&layout,draw,frames+1,0));
+                assert(cpp?pd_render_present(renderer,resources.capabilities,&game,&layout,draw,sizeof(draw),0):pd_c_render(&game,&layout,draw,frames+1,0));
                 elapsed+=std::chrono::duration<double,std::nano>(std::chrono::steady_clock::now()-start).count();bytes+=list_bytes;
             }
             std::vector<uint16_t> result(pixels,pixels+800*240);

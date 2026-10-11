@@ -23,8 +23,8 @@ or archive requests does not invalidate current weather. The location header
 opens the city picker; the chosen city persists, and IP mode re-resolves its
 location on each manual or ten-minute automatic update.
 
-Provider-specific origins, URLs and parsers live in `weather_providers.c`;
-the UI and asynchronous permission/stream state machine live in `main.c`.
+Provider-specific origins, URLs and parsers live in `weather_providers.cpp`;
+the UI and asynchronous permission/stream state machine live in `main.cpp`.
 When adding a provider, update the enum, origin, URL, parser, fallback sequence,
 and exact-origin permission in `package.json`. The Host does not follow HTTP
 redirects. Every provider must return a bounded response (currently 4 KiB).
@@ -39,7 +39,7 @@ the LVGL 9.6 output pixels. After changing an original icon or the LVGL version,
 rebuild `tools/compile-lvgl-premul-icon.c` against the matching LVGL library and
 run `python3 tools/regenerate-weather-premul-icons.py <generator> --check` to
 verify the committed files, or omit `--check` to regenerate them.
-`images.c` declares their paths and the app uses the Guest SDK image-set helper
+`images.cpp` declares their paths and the app uses the Guest SDK image-set helper
 to load only images used by the current page. A missing image leaves its
 geometry empty while the forecast remains usable. Image requests run one at a
 time; changing the page releases unused handles after the UI commit. On
@@ -55,7 +55,7 @@ Colors use system theme tokens so light and dark themes remain legible.
 Run the native parser tests with:
 
 ```sh
-cc -std=c11 -Wall -Wextra -Werror weather_providers.c tests/weather_providers_test.c -o /tmp/weather-providers-test
+clang++ -std=c++26 -Wall -Wextra -Werror weather_providers.cpp tests/weather_providers_test.cpp -o /tmp/weather-providers-test
 /tmp/weather-providers-test
 ```
 

@@ -101,8 +101,9 @@ struct JumpJump {
         draw_frame();co_return pxa::Result<void>{};
     }
     void draw_frame(){if(!renderer||initializing||!context->foreground())return;
+        ++frame_id;
         auto draw=frame_memory.draw();
-        if(!j3_render_frame(&render,&g_game,*renderer,draw.data(),draw.size(),++frame_id))
+        if(!j3_render_frame(&render,&g_game,*renderer,draw.data(),draw.size()))
             (void)context->log().write(pxa::LogLevel::warning,"J3CPP frame not accepted");
     }
     void pointer(const pxa::ui::CanvasPointer& p){if(!renderer||initializing)return;

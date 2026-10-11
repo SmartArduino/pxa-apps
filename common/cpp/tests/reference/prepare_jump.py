@@ -6,7 +6,6 @@ s=Path(sys.argv[1]).read_text()
 changes={
  '    uint32_t prefilled_commands;':'    uint32_t prefilled_commands;\n    uint8_t scratch_mode;',
  '    uint64_t frame_id;':'    uint64_t frame_id;\n    uint64_t texture_mask;\n    uint8_t uses_palette;\n    uint8_t uses_depth;',
- 'int32_t pxa_control(':'int32_t pxa_submit(',
  'int32_t pxa_io(uint32_t handle,':'int32_t pxa_io(uint64_t handle,',
  '    j3_game_t game;':'    j3_game_t game = {0};',
 }

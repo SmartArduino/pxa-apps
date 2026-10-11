@@ -1,24 +1,48 @@
 {
   "format": "pxa-package-source-0.1",
-  "min_sdk": [1, 0],
-  "target_sdk": [1, 0],
-  "compile_sdk": [1, 0],
+  "min_sdk": [
+    2,
+    0
+  ],
+  "target_sdk": [
+    2,
+    0
+  ],
+  "compile_sdk": [
+    2,
+    0
+  ],
   "id": "pxa-lab",
-  "version": "1.0.0",
-  "release_sequence": 3,
+  "version": "1.0.1",
+  "release_sequence": 4,
   "name": "PXA ABI Lab",
-  "description": "Interactive Core v1 diagnostics for device, clock, storage, private files, WASI and allocator",
-  "build": {"system": "cmake", "source_dir": "."},
+  "description": "Interactive Core 2 diagnostics for device, clock, storage, private files, WASI and allocator",
+  "build": {
+    "system": "cmake",
+    "source_dir": "."
+  },
   "components": [
     {
       "id": "main",
       "kind": "ui",
       "cmake_target": "pxa_main",
-      "services": ["window", "ui", "device", "clock", "storage", "fs", "log"],
+      "services": [
+        "window",
+        "ui",
+        "device",
+        "clock",
+        "storage",
+        "fs",
+        "log"
+      ],
       "wasi": {
         "version": "preview1",
         "libc": "wasi-libc",
-        "features": ["monotonic-clock", "random", "wall-clock"]
+        "features": [
+          "monotonic-clock",
+          "random",
+          "wall-clock"
+        ]
       }
     }
   ],

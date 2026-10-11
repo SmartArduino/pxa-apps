@@ -1,19 +1,19 @@
 {
   "format": "pxa-package-source-0.1",
   "min_sdk": [
-    1,
+    2,
     0
   ],
   "target_sdk": [
-    1,
+    2,
     0
   ],
   "compile_sdk": [
-    1,
+    2,
     0
   ],
   "id": "pxa-pixel-dungeon-cpp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "name": "Pixel Dungeon C++",
   "description": "C++ SDK version: Turn-based roguelike dungeon crawler drawn with the GameRender raster API and Shattered Pixel Dungeon art",
   "icon": "assets/icon.png",
@@ -57,7 +57,7 @@
       }
     }
   ],
-  "release_sequence": 1,
+  "release_sequence": 2,
   "permissions": [
     {
       "name": "audio.playback",

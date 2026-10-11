@@ -67,7 +67,7 @@ void j3_render_adapt(j3_render_t*,const pxa::ui::DisplayMetrics&);
 /* Builds and submits one frame. Returns 0 when the draw list overflowed or
  * the Host refused the list. */
 int j3_render_frame(j3_render_t *render, const j3_game_t *game, pxa::game::Renderer& context,
-                    uint8_t *bytes, uint32_t capacity, uint64_t frame_id);
+                    uint8_t *bytes, uint32_t capacity);
 
 /* Debug build aid: when J3_SKIP_PROBE is set the App cycles a bitmask of
  * renderer categories (background, shadows, blocks, waves, man, HUD) so one

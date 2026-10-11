@@ -1,20 +1,20 @@
 {
   "format": "pxa-package-source-0.1",
   "min_sdk": [
-    1,
+    2,
     0
   ],
   "target_sdk": [
-    1,
+    2,
     0
   ],
   "compile_sdk": [
-    1,
+    2,
     0
   ],
   "id": "pxa-plane-shooter",
-  "version": "0.3.0",
-  "release_sequence": 4,
+  "version": "0.3.1",
+  "release_sequence": 5,
   "name": "Orbital Strike",
   "description": "A space combat game with a story campaign, ship hangar, and automatic fire",
   "icon": "assets/plane-shooter/icon.png",
@@ -22,11 +22,6 @@
     {
       "id": "main",
       "kind": "ui",
-      "sources": [
-        "main.c",
-        "gameplay.c",
-        "images.c"
-      ],
       "services": [
         "audio",
         "clock",
@@ -41,7 +36,13 @@
         },
         "assets",
         "log"
-      ]
+      ],
+      "cmake_target": "pxa_main",
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": []
+      }
     }
   ],
   "permissions": [
@@ -50,5 +51,9 @@
       "required": false,
       "scope": "media"
     }
-  ]
+  ],
+  "build": {
+    "system": "cmake",
+    "source_dir": "."
+  }
 }

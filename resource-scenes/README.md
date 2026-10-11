@@ -1,6 +1,6 @@
 # Resource Scenes
 
-An actual Core v1 application demonstrating file resources and atomic bindings.
+A C++26 / Core 2 application demonstrating file resources and atomic bindings.
 Twenty 256×256 source PNGs are compiled to PXR INDEX8 files, with one RGB565
 palette. Each scene displays four textures. The Guest contains no texture
 pixel arrays, palette arrays, decoder buffers, or per-frame uploads.
@@ -17,6 +17,11 @@ its own references. After four clock ticks it unbinds the old textures,
 submits a clear loading frame, and loads the next scene. It completes 100
 scenes, closes its render context, and logs completion. The background worker
 and final cache reclamation are owned by the Host.
+
+The reference workload uses a 240×240 render surface. On smaller panels it
+reads the startup environment and fits the same four textures to the available
+square, keeping the context within the Host's display limits. This changes no
+texture storage, upload buffers or normal-size test workload.
 
 Each visible scene optionally prefetches the first texture of the next scene.
 Prefetch completion creates no Guest handle and leaves an evictable cache entry;
@@ -39,12 +44,12 @@ From the workspace root:
 ```
 
 For automated verification, build the package with the normal package tool,
-then build and run the simulator's `pxsys_resources_test` target:
+then build and run the simulator's `pxsys_resource_app_test` target:
 
 ```sh
-cmake -S deps/pxa-system/simulator/desktop -B build/simulator/pai-touch
-cmake --build build/simulator/pai-touch --target pxsys_resources_test -j4
-build/simulator/pai-touch/pxsys_resources_test \
+bash tools/simulator.sh product configure --profile pai-touch
+cmake --build build/simulator/pai-touch --target pxsys_resource_app_test -j4
+build/simulator/pai-touch/pxsys_resource_app_test \
   /absolute/path/to/pxa-resource-scenes \
   "$PWD/local/pxa-apps/.dev-signing/publisher-public.der"
 ```

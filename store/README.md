@@ -174,12 +174,12 @@ the Host must independently authenticate the download and verify the signed
 package before installation. Run the focused native test with:
 
 ```sh
-cc -std=c11 -Wall -Wextra -Werror -Wno-attributes \
+clang++ -std=c++26 -Wall -Wextra -Werror -Wno-attributes \
   -ffunction-sections -fdata-sections -Wl,--gc-sections \
-  -Ilocal/pxa-apps/store -Ideps/pxa-system/sdk/guest-c/include \
-  local/pxa-apps/store/tests/store_ticket_test.c \
-  local/pxa-apps/store/store_client.c \
-  local/pxa-apps/store/store_json.c -o /tmp/pxa-store-ticket-test
+  -Ilocal/pxa-apps/store -Ideps/pxa-system/sdk/guest-c/include -Ideps/pxa-system/sdk/guest-cpp/include \
+  local/pxa-apps/store/tests/store_ticket_test.cpp \
+  local/pxa-apps/store/store_client.cpp \
+  local/pxa-apps/store/store_json.cpp -o /tmp/pxa-store-ticket-test
 /tmp/pxa-store-ticket-test
 ```
 

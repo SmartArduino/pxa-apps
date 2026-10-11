@@ -8,8 +8,8 @@ translations:
   screen.version: v2.0 昼夜花园
   home.progress: "进度 {current}/{total}  {stars} 星"
   action.start_adventure: 开始冒险
-  action.select_level: 关卡选择
-  action.open_almanac: 植物图鉴
+  action.select_level: 选关
+  action.open_almanac: 图鉴
   action.continue: 点击继续
   action.retry: 点击重来
   action.resume: 继续游戏

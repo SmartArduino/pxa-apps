@@ -1,3 +1,4 @@
+#include "pxa_control_capture.h"
 #include "../voxel_draw_path.hpp"
 #include "../voxel_mesher.hpp"
 #include <pxa/raster.h>
@@ -23,7 +24,7 @@ void operator delete(void* p, std::size_t) noexcept { std::free(p); }
 void operator delete[](void* p, std::size_t) noexcept { std::free(p); }
 static std::array<std::uint8_t, 49152> commands{};
 static std::size_t command_size;
-extern "C" std::int32_t pxa_submit(const std::uint8_t*, std::uint32_t) { return 0; }
+extern "C" std::int32_t pxa_test_control(const std::uint8_t*, std::uint32_t) { return 0; }
 extern "C" std::int32_t pxa_io(std::uint64_t handle, std::uint32_t op,
                                   std::uint8_t* bytes, std::uint32_t size) {
     assert(handle == 77 && op == 0x101 && size <= commands.size());

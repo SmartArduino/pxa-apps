@@ -1,3 +1,4 @@
+#include "pxa_control_capture.h"
 // Exercise the maintained application's actual input/event handlers. A held
 // finger produces many MOVE samples; none may submit a frame or change charge.
 #include <pxa/app.hpp>
@@ -10,7 +11,7 @@
 #include <cmath>
 
 static unsigned frames;
-extern "C" std::int32_t pxa_submit(const std::uint8_t*, std::uint32_t) { return 0; }
+extern "C" std::int32_t pxa_test_control(const std::uint8_t*, std::uint32_t) { return 0; }
 extern "C" std::int32_t pxa_io(std::uint64_t handle, std::uint32_t operation,
                               std::uint8_t*, std::uint32_t length) {
     assert(handle == 77);

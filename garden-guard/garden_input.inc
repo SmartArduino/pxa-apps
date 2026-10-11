@@ -168,9 +168,9 @@ static int tick(uint8_t steps){
     }
     return !needs_render || render();
 }
-static int hit_home_start(int16_t x,int16_t y){ return x>=HOME_X && x<HOME_X+220 && y>=122 && y<156; }
-static int hit_home_levels(int16_t x,int16_t y){ return x>=HOME_X && x<HOME_X+106 && y>=166 && y<196; }
-static int hit_home_almanac(int16_t x,int16_t y){ return x>=HOME_X+114 && x<HOME_X+220 && y>=166 && y<196; }
+static int hit_home_start(int16_t x,int16_t y){ return x>=HOME_X && x<HOME_X+HOME_W && y>=HOME_START_Y && y<HOME_START_Y+HOME_START_H; }
+static int hit_home_levels(int16_t x,int16_t y){ return x>=HOME_X && x<HOME_X+HOME_HALF_W && y>=HOME_MORE_Y && y<HOME_MORE_Y+HOME_MORE_H; }
+static int hit_home_almanac(int16_t x,int16_t y){ return x>=HOME_X+HOME_W-HOME_HALF_W && x<HOME_X+HOME_W && y>=HOME_MORE_Y && y<HOME_MORE_Y+HOME_MORE_H; }
 static int hit_back(int16_t x,int16_t y){ return x>=16 && x<56 && y>=4 && y<38; }
 static int hit_level_button(int16_t x,int16_t y,int* idx){
     for(uint8_t i=0;i<LEVELS_COUNT;++i){

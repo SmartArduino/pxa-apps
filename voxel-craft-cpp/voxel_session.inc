@@ -100,7 +100,7 @@
                 {auto yielded=co_await app_context->clock().now();if(!yielded){written=std::unexpected(yielded.error());break;}}
             }
             if(written)written=write_all(*file,std::as_bytes(std::span{inventory.slots}));
-            file->close();
+            if (auto closed = file->close(); !closed) written = std::unexpected(closed.error());
             if(written){
                 // Verify the inactive file before atomically publishing its
                 // generation in Storage. Existing committed data stays intact.
@@ -116,7 +116,8 @@
                     if(read)read=read_all(*verify,std::as_writable_bytes(std::span{observed_inventory.slots}));
                     std::byte extra{};auto eof=verify->read({&extra,1});
                     success=read&&observed==header&&observed_inventory==inventory&&eof&&!*eof&&voxel::checksum(temp)==state.blocks_hash;
-                    world.finish_load(false);verify->close();
+                    world.finish_load(false);
+                    if (auto closed = verify->close(); !closed) success = false;
                 }
                 if(success){auto committed=co_await app_context->storage().set(key,header);success=bool(committed);}
             }
@@ -143,7 +144,8 @@
                 if(read&&state&&!state->legacy){auto payload=std::as_writable_bytes(std::span{loaded_inventory.slots}).first(state->inventory_bytes);read=read_all(*file,payload);if(read&&!voxel::decode_inventory(*state,payload))read=std::unexpected(pxa::Error::protocol_error);}
                 std::byte extra{};auto eof=file->read({&extra,1});
                 success=read&&state&&header==committed&&eof&&!*eof&&voxel::valid_saved_blocks(staged)&&voxel::checksum(staged)==state->blocks_hash;
-                world.finish_load(success);file->close();
+                if (auto closed = file->close(); !closed) success = false;
+                world.finish_load(success);
                 if(success){camera=state->camera;velocity_y=state->velocity;world_seed=state->seed;inventory=state->inventory;hotbar=state->selected;flying=state->flying;settings.flight=flying;on_ground=false;session_ready=true;dirty_save=false;for(auto& p:particles.items())p.life=0;show(voxel::Screen::game);}
             }
         }

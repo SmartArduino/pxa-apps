@@ -50,6 +50,41 @@ static inline int pxa_game_screen_apply(pxa_game_screen_t *screen,
     return 1;
 }
 
+/* Canvas primitives and Canvas pointer events use dp; GameRender buffers use
+ * Surface pixels. Keep the two coordinate spaces explicit. Insets are already
+ * in dp in the environment and must not be divided by density again. */
+static inline int pxa_game_screen_apply_canvas(pxa_game_screen_t *screen,
+                                               const pxa_ui_environment_t *environment) {
+    if (environment == NULL || environment->density_q16 == 0 ||
+        !pxa_game_screen_apply(screen, environment)) return 0;
+    screen->width = (uint32_t)((uint64_t)environment->width * 65536u /
+                               environment->density_q16);
+    screen->height = (uint32_t)((uint64_t)environment->height * 65536u /
+                                environment->density_q16);
+    if (screen->width == 0) screen->width = 1;
+    if (screen->height == 0) screen->height = 1;
+    return 1;
+}
+
+static inline int pxa_game_screen_canvas_from_start(pxa_game_screen_t *screen,
+                                                    const uint8_t *config,
+                                                    uint32_t length) {
+    pxa_ui_environment_t environment;
+    pxa_game_screen_reset(screen);
+    return pxa_ui_parse_start_environment(config, length, &environment) &&
+           pxa_game_screen_apply_canvas(screen, &environment);
+}
+
+static inline int pxa_game_screen_canvas_handle_event(pxa_game_screen_t *screen,
+                                                      const pxa_event_t *event) {
+    pxa_ui_environment_t environment;
+    return event != NULL && event->service == PXA_UI_SERVICE &&
+           event->opcode == PXA_UI_ENVIRONMENT_CHANGED && event->token == 0 &&
+           pxa_ui_parse_environment_records(event->payload, event->payload_size,
+                                            &environment) &&
+           pxa_game_screen_apply_canvas(screen, &environment);
+}
+
 static inline int pxa_game_screen_from_start(pxa_game_screen_t *screen,
                                              const uint8_t *config,
                                              uint32_t length) {

@@ -3,10 +3,10 @@ default_locale: en-US
 messages:
   screen.title:
     source: PXA ABI Lab
-    context: Core v1 diagnostic title
+    context: Core 2 diagnostic title
   screen.subtitle:
-    source: Core v1 health checks
-    context: Core v1 diagnostic subtitle
+    source: Core 2 health checks
+    context: Core 2 diagnostic subtitle
   probe.wasi:
     source: WASI clocks + random
     context: Diagnostic row

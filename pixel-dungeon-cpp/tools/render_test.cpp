@@ -1,3 +1,4 @@
+#include "pxa_control_capture.h"
 // Exercise all game phases through the real Host validator and rasterizer.
 #include "render.hpp"
 #include "font_data.hpp"
@@ -10,7 +11,7 @@ using namespace dungeon;
 static pxa_raster_resources_t resources{};static pxa_raster_target_t target{};
 static uint16_t pixels[800*800]{};static uint8_t draw[PD_MAX_DRAW_BYTES]{};
 static unsigned frames=0;
-extern "C" int32_t pxa_submit(const uint8_t* bytes,uint32_t size){
+extern "C" int32_t pxa_test_control(const uint8_t* bytes,uint32_t size){
     if(size>32){for(uint32_t i=24;i<size;++i)if(bytes[i]>=32&&bytes[i]<127)std::fputc(bytes[i],stderr);std::fputc('\n',stderr);}return 0;}
 extern "C" int32_t pxa_io(uint64_t,uint32_t opcode,uint8_t* bytes,uint32_t size){
     assert(opcode==0x101);pxa_raster_draw_list_view_t view{};
@@ -46,7 +47,7 @@ int main(){
         for(int phase=0;phase<=PD_PHASE_AMULET;++phase){game.phase=phase;
             std::fprintf(stderr,"render language=%d %dx%d phase=%d\n",language,size[0],size[1],phase);
             for(unsigned step=0;step<(phase==PD_PHASE_TITLE?24u:1u);++step)
-                assert(pd_render_present(renderer,resources.capabilities,&game,&layout,draw,sizeof(draw),frames+1,42*step));}
+                assert(pd_render_present(renderer,resources.capabilities,&game,&layout,draw,sizeof(draw),42*step));}
     }
     std::printf("Pixel Dungeon raster regression: %u frames validated and rendered\n",frames);
 }

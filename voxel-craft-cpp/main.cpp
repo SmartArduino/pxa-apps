@@ -706,13 +706,16 @@ struct VoxelCraft {
         // All visible content, including the HUD, is drawn into this surface.
         // The input-only UI tree still lets the Host fall back for overlays.
         options.direct_scanout = true;
+        // Consume commands during submit; only Host-owned pixels survive the
+        // call. This removes the queued command copies on both supported Hosts.
+        options.borrow_commands = true;
         /* Render scaling needs the automatic target (width/height zero plus
          * RenderOptions::scale). That path does not come up on this host yet,
          * so render at native size and let the quality ladder manage cost. */
         options.scale = 0;
         /* The default 4 KiB draw list is far too small for a voxel mesh; the
          * host accepts up to 48 KiB and PXA_RASTER_MAX_DRAW_BYTES is 49152. */
-        options.max_draw_bytes = 49152;
+        options.max_draw_bytes = pxa::game::limits::draw_list_bytes;
         std::optional<pxa::game::Renderer> created_renderer;
         pxa::Error create_error = pxa::Error::internal;
         {

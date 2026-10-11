@@ -1,10 +1,10 @@
 locale: zh-CN
 metadata:
   name: PXA ABI 实验室
-  description: Core v1 运行检查
+  description: Core 2 运行检查
 translations:
   screen.title: PXA ABI 实验室
-  screen.subtitle: Core v1 运行检查
+  screen.subtitle: Core 2 运行检查
   probe.wasi: WASI 时钟与随机数
   probe.allocator: 动态内存
   probe.device: 设备信息

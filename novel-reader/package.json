@@ -1,20 +1,20 @@
 {
   "format": "pxa-package-source-0.1",
   "min_sdk": [
-    1,
+    2,
     0
   ],
   "target_sdk": [
-    1,
+    2,
     0
   ],
   "compile_sdk": [
-    1,
+    2,
     0
   ],
   "id": "pxa-novel-reader",
-  "version": "0.1.0",
-  "release_sequence": 1,
+  "version": "0.1.1",
+  "release_sequence": 2,
   "name": "书页阅读",
   "description": "C++ novel reader with network sources, search, adaptive typography and offline downloads",
   "build": {

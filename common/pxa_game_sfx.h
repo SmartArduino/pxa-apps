@@ -526,7 +526,7 @@ static inline void pxa_game_sfx_start(pxa_game_sfx_t* sfx, uint8_t* packet,
                                   permission_name, sizeof(permission_name) - 1,
                                   permission_scope,
                                   sizeof(permission_scope) - 1, &size) ||
-        pxa_submit(packet, size) != PXA_STATUS_OK)
+        pxa_control_packet(packet, size) != PXA_STATUS_OK)
         sfx->state = PXA_GAME_SFX_UNAVAILABLE;
 }
 

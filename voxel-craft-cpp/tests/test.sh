@@ -5,7 +5,7 @@ app="$root/local/pxa-apps/voxel-craft-cpp"
 sdk="$root/deps/pxa-system/sdk/guest-cpp"
 build="$(mktemp -d /tmp/voxel-cpp-test.XXXXXX)"
 trap 'rm -rf "$build"' EXIT
-flags=(-std=c++2c -O2 -fno-exceptions -fno-rtti -I"$sdk/include" -Wno-attributes)
+flags=(-std=c++2c -O2 -fno-exceptions -fno-rtti -I"$sdk/include" -I"$root/deps/pxa-system/sdk/testing" -Wno-attributes)
 for setting in VOXEL_CHUNK_SIZE VOXEL_CHUNK_QUADS VOXEL_FIXED_ATTRIBUTES; do
     value=${!setting:-}
     if [[ -n "$value" ]]; then
@@ -22,7 +22,7 @@ if [[ "${SANITIZE:-0}" == 1 ]]; then
 fi
 python3 "$app/tools/generate_lod_colors.py" --check
 host="$root/deps/pxa-system/libpxa"
-cflags=(-std=c11 -O2 -I"$host/include")
+cflags=(-std=c11 -O2 -I"$host/include" -I"$root/deps/pxa-system/sdk/testing")
 if [[ "${SANITIZE:-0}" == 1 ]]; then
     cflags+=(-g -fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
@@ -44,12 +44,12 @@ fi
     "$app/voxel_world.cpp" "$app/voxel_mesher.cpp" "$sdk"/src/*.cpp \
     "$build/raster.o" "$build/wire.o" -o "$build/render"
 "$build/render"
-"${CC:-clang}" "${cflags[@]}" -DVOXEL_BENCH_SCENE=1 -c "$app/../voxel-craft/game.c" -o "$build/benchmark-c.o"
+"${CC:-clang}" "${cflags[@]}" -DVOXEL_BENCH_SCENE=1 -c "$app/../common/cpp/tests/reference/c/voxel-craft/game.c" -o "$build/benchmark-c.o"
 "${CXX:-clang++}" "${flags[@]}" -DVOXEL_BENCH_SCENE=1 "$app/tests/benchmark_test.cpp" \
     "$app/voxel_world.cpp" "$build/benchmark-c.o" -o "$build/benchmark"
 "$build/benchmark"
 "${CC:-clang}" "${cflags[@]}" -Wno-unknown-attributes -I"$root/deps/pxa-system/sdk/guest-c/include" \
-    "$app/../voxel-craft/tests/raster_uv_test.c" "$app/../voxel-craft/game.c" \
-    "$app/../voxel-craft/render.c" "$app/../voxel-craft/block_textures.c" -lm -o "$build/c-uv"
+    "$app/../common/cpp/tests/reference/c/voxel-craft/tests/raster_uv_test.c" "$app/../common/cpp/tests/reference/c/voxel-craft/game.c" \
+    "$app/../common/cpp/tests/reference/c/voxel-craft/render.c" "$app/../common/cpp/tests/reference/c/voxel-craft/block_textures.c" -lm -o "$build/c-uv"
 "$build/c-uv"
 printf 'Voxel C++ input/world/render/benchmark tests OK\n'

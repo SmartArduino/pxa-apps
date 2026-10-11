@@ -1,24 +1,63 @@
 {
   "format": "pxa-package-source-0.1",
-  "min_sdk": [1, 0],
-  "target_sdk": [1, 0],
-  "compile_sdk": [1, 0],
+  "min_sdk": [
+    2,
+    0
+  ],
+  "target_sdk": [
+    2,
+    0
+  ],
+  "compile_sdk": [
+    2,
+    0
+  ],
   "id": "pxa-abi-v1-ipc-smoke",
-  "version": "1.0.0",
-  "name": "ABI v1 IPC Smoke",
-  "description": "Exercises native v1 IPC across two signed Components",
+  "version": "1.0.1",
+  "name": "Core 2 IPC Smoke",
+  "description": "Exercises Core 2 IPC across two signed Components",
   "build": {
-    "system": "direct",
-    "linear_memory": {"maximum_bytes": 131072, "pinned": false}
+    "system": "cmake",
+    "linear_memory": {
+      "maximum_bytes": 131072,
+      "pinned": false
+    },
+    "source_dir": "."
   },
   "components": [
-    {"id": "echo", "kind": "service", "sources": ["provider.c"],
-     "services": ["ipc"]},
-    {"id": "main", "kind": "ui", "sources": ["main.c"],
-     "services": ["ipc", "log"]}
+    {
+      "id": "echo",
+      "kind": "service",
+      "services": [
+        "ipc"
+      ],
+      "cmake_target": "pxa_echo",
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": []
+      }
+    },
+    {
+      "id": "main",
+      "kind": "ui",
+      "services": [
+        "ipc",
+        "log"
+      ],
+      "cmake_target": "pxa_main",
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": []
+      }
+    }
   ],
   "ipc_endpoints": [
-    {"name": "v1.echo", "component": "echo"}
+    {
+      "name": "core2.echo",
+      "component": "echo"
+    }
   ],
-  "release_sequence": 1
+  "release_sequence": 2
 }

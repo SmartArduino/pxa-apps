@@ -1,3 +1,4 @@
+#include "pxa_control_capture.h"
 #include "../main.cpp"
 #include <cassert>
 #include <cstdio>
@@ -9,7 +10,7 @@ static bool pending_frame = false;
 static unsigned draw_submissions = 0;
 static std::array<std::uint8_t,49152> last_draw{};
 static unsigned last_draw_size=0;
-extern "C" std::int32_t pxa_submit(const std::uint8_t*,std::uint32_t){return 0;}
+extern "C" std::int32_t pxa_test_control(const std::uint8_t*,std::uint32_t){return 0;}
 extern "C" std::int32_t pxa_io(std::uint64_t handle,std::uint32_t opcode,std::uint8_t* data,std::uint32_t size){
     assert(handle==77);
     if (opcode==0x102) {

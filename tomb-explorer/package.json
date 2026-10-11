@@ -1,51 +1,47 @@
 {
   "format": "pxa-package-source-0.1",
   "min_sdk": [
-    1,
+    2,
     0
   ],
   "target_sdk": [
-    1,
+    2,
     0
   ],
   "compile_sdk": [
-    1,
+    2,
     0
   ],
   "id": "pxa-tomb-explorer",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "name": "Tomb Explorer",
   "description": "Third-person room-and-portal explorer with host-raster textured polygons",
   "build": {
-    "system": "direct",
+    "system": "cmake",
     "linear_memory": {
       "maximum_bytes": 1048576,
       "pinned": true
-    }
+    },
+    "source_dir": "."
   },
   "components": [
     {
       "id": "main",
       "kind": "ui",
-      "sources": [
-        "main.c",
-        "mesh.c",
-        "world.c",
-        "player.c",
-        "character.c",
-        "input.c",
-        "palette.c",
-        "textures.c",
-        "level_data.c"
-      ],
       "services": [
         "window",
         "ui",
         "clock",
         "game-render",
         "log"
-      ]
+      ],
+      "cmake_target": "pxa_main",
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": []
+      }
     }
   ],
-  "release_sequence": 4
+  "release_sequence": 5
 }

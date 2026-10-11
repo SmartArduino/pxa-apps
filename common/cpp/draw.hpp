@@ -20,8 +20,8 @@ enum : unsigned {quad_solid_color=1,quad_affine_uv=2,quad_painter=4,
     sprite_palette_ramp=8,sprite_texel_alpha=16};
 struct DrawList {
     std::optional<pxa::game::Frame> frame;
-    void begin(pxa::game::Renderer& renderer,uint8_t* bytes,uint32_t capacity,uint64_t id) {
-        frame.emplace(renderer,std::span{reinterpret_cast<std::byte*>(bytes),capacity},id);
+    void begin(pxa::game::Renderer& renderer,uint8_t* bytes,uint32_t capacity) {
+        frame.emplace(renderer,std::span{reinterpret_cast<std::byte*>(bytes),capacity});
     }
 };
 inline int submit(pxa::game::Renderer&,DrawList* list) {

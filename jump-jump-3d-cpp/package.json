@@ -1,20 +1,20 @@
 {
   "format": "pxa-package-source-0.1",
   "min_sdk": [
-    1,
+    2,
     0
   ],
   "target_sdk": [
-    1,
+    2,
     0
   ],
   "compile_sdk": [
-    1,
+    2,
     0
   ],
   "id": "pxa-jump-jump-3d-cpp",
-  "version": "0.1.0",
-  "release_sequence": 1,
+  "version": "0.1.1",
+  "release_sequence": 2,
   "name": "Jump Jump 3D C++",
   "description": "C++ SDK version: Isometric 3D remake of the WeChat Jump Jump: charge, flip, land on the centre, chain perfect hits",
   "icon": "assets/icon.png",

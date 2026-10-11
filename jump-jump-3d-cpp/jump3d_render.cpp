@@ -1226,8 +1226,7 @@ static float block_depth(const j3_block_t *block) {
 }
 
 int j3_render_frame(j3_render_t *render, const j3_game_t *game,
-                    pxa::game::Renderer& context, uint8_t *bytes, uint32_t capacity,
-                    uint64_t frame_id) {
+                    pxa::game::Renderer& context, uint8_t *bytes, uint32_t capacity) {
     uint8_t order[J3_BLOCK_MAX];
     uint8_t count = game->block_count;
     uint8_t index;
@@ -1252,7 +1251,7 @@ int j3_render_frame(j3_render_t *render, const j3_game_t *game,
     render->follow_x = game->cam_x;
     render->follow_y = 0.0F;
     render->follow_z = game->cam_z;
-    render->list.begin(context, bytes, capacity, frame_id);
+    render->list.begin(context, bytes, capacity);
     if (!render->list.frame) return 0;
     /* Deliberately no full-frame clear: the background bands tile the target
      * exactly, and every pixel written into a GameRender surface costs the Host

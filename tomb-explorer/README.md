@@ -16,8 +16,8 @@ and camera code and submits to the PXA GameRender raster service instead:
 | Affine subdivision pass | same four-way recursive subdivision and affine scanlines |
 | 16-row lit palette | `LIT_PALETTE_RGB565`, selected directly by interpolated light level |
 | `HostSurface` + palette/texture upload | `pxa_game_render_create` + `pxa_raster_upload_*` |
-| `world/level_data.cpp` | `level_data.c` (generated) |
-| `gfx/textures.cpp` | `textures.c` + `textures.h` (generated) |
+| `world/level_data.cpp` | `level_data.cpp` (generated) |
+| `gfx/textures.cpp` | `textures.cpp` + `textures.h` (generated) |
 
 Portal visibility, room scissors, sector collision, lighting, touch controls and
 the character poses are direct ports. Rooms are visited far to near, polygons
@@ -29,7 +29,7 @@ the 48 KiB / 768-command draw list is full.
 
 | Path | Role |
 |---|---|
-| `main.c` | app lifecycle, GameRender context, frame loop, stats, pointer node |
+| `main.cpp` | app lifecycle, GameRender context, frame loop, stats, pointer node |
 | `mesh.*` | polygon front end: transform, near clip, cull, light, scissor clip, records |
 | `world.*` | portal traversal (visible rooms, draw order, scissors) and floor/ceiling queries |
 | `player.*` | walking, steps, drops, jumps, wall sliding, room changes, camera |
@@ -38,13 +38,13 @@ the 48 KiB / 768-command draw list is full.
 | `palette.*` | 16 light rows x 256 entries, including the original dark blue tint |
 | `textures.*` | generated 64x64 INDEX8 textures |
 | `level.h` | read-only level contract (rooms, sectors, portals, faces) |
-| `level_data.c` | generated from `tools/level.json` |
+| `level_data.cpp` | generated from `tools/level.json` |
 
 ## Regenerate assets
 
 ```sh
-python3 tools/generate_textures.py   # textures.h, textures.c
-python3 tools/generate_level.py      # level_data.c
+python3 tools/generate_textures.py   # textures.h, textures.cpp
+python3 tools/generate_level.py      # level_data.cpp
 python3 tools/generate_textures.py --check
 python3 tools/generate_level.py --check
 ```

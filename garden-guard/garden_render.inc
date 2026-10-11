@@ -333,11 +333,11 @@ static void draw_home(pxa_canvas_frame_t* frame){
     pxa_canvas_circle(frame,52,14,16,0xFFFFFF);
     pxa_canvas_circle(frame,74,20,10,0xFFFFFF);
     const char* title=garden_message(PXA_MSG_SCREEN_TITLE);
-    pxa_canvas_text_role(frame,0,14,GARDEN_W,pxa_canvas_rgba(0xFFFFFF),PXA_CANVAS_FONT_TITLE,PXA_CANVAS_ALIGN_CENTER,title,garden_text_len(title));
+    pxa_canvas_text_role(frame,0,(HOME_COMPACT ? (int)game_screen.safe_top : 14),GARDEN_W,pxa_canvas_rgba(0xFFFFFF),(HOME_COMPACT ? PXA_CANVAS_FONT_BODY : PXA_CANVAS_FONT_TITLE),PXA_CANVAS_ALIGN_CENTER,title,garden_text_len(title));
     const char* subtitle=garden_message(PXA_MSG_SCREEN_SUBTITLE);
-    pxa_canvas_text_role(frame,0,36,GARDEN_W,pxa_canvas_rgba(0xE8F5D0),PXA_CANVAS_FONT_CAPTION,PXA_CANVAS_ALIGN_CENTER,subtitle,garden_text_len(subtitle));
+    pxa_canvas_text_role(frame,0,(HOME_COMPACT ? (int)game_screen.safe_top+22 : 36),GARDEN_W,pxa_canvas_rgba(0xE8F5D0),PXA_CANVAS_FONT_CAPTION,PXA_CANVAS_ALIGN_CENTER,subtitle,garden_text_len(subtitle));
     // 已移除“白天收集阳光 夜晚蘑菇觉醒”提示行，进度与按钮上移并垂直居中
-    pxa_canvas_rect(frame,HOME_PANEL_X,84,268,32,0x4A8348,8);
+    pxa_canvas_rect(frame,HOME_PANEL_X,HOME_PROGRESS_Y,HOME_PANEL_W,HOME_PROGRESS_H,0x4A8348,8);
     char prog[48];
     uint8_t total_stars=0; for(uint8_t i=0;i<LEVELS_COUNT;++i) total_stars+=level_stars[i];
     pxa_i18n_argument_t progress_arguments[]={
@@ -346,20 +346,27 @@ static void draw_home(pxa_canvas_frame_t* frame){
         {"stars",5u,PXA_I18N_ARGUMENT_U32,{.u32=total_stars}}};
     size_t pl=pxa_i18n_format(&i18n,PXA_MSG_HOME_PROGRESS,
                               progress_arguments,3u,prog,sizeof(prog));
-    pxa_canvas_text_box_role(frame,HOME_PANEL_X,84,268,32,pxa_canvas_rgba(0xFFE27A),
+    if(HOME_PANEL_W < 200){
+        char* end=prog+sizeof(prog);
+        char* out=std::to_chars(prog,end,max_unlocked).ptr;
+        *out++='/';out=std::to_chars(out,end,LEVELS_COUNT).ptr;
+        *out++=' ';*out++='*';out=std::to_chars(out,end,total_stars).ptr;
+        pl=(size_t)(out-prog);
+    }
+    pxa_canvas_text_box_role(frame,HOME_PANEL_X,HOME_PROGRESS_Y,HOME_PANEL_W,HOME_PROGRESS_H,pxa_canvas_rgba(0xFFE27A),
                              PXA_CANVAS_FONT_TITLE, PXA_CANVAS_ALIGN_CENTER,
                              PXA_CANVAS_TEXT_ALIGN_MIDDLE, prog, pl);
-    pxa_canvas_rect(frame,HOME_X,122,220,34,0xF6BE32,8);
+    pxa_canvas_rect(frame,HOME_X,HOME_START_Y,HOME_W,HOME_START_H,0xF6BE32,8);
     const char* btn1=garden_message(PXA_MSG_ACTION_START_ADVENTURE);
-    draw_title_button_text(frame,HOME_X,122,220,34,0x1D3528,btn1,garden_text_len(btn1));
-    pxa_canvas_rect(frame,HOME_X,166,106,30,0x456B4B,7);
+    draw_title_button_text(frame,HOME_X,HOME_START_Y,HOME_W,HOME_START_H,0x1D3528,btn1,garden_text_len(btn1));
+    pxa_canvas_rect(frame,HOME_X,HOME_MORE_Y,HOME_HALF_W,HOME_MORE_H,0x456B4B,7);
     const char* btn2=garden_message(PXA_MSG_ACTION_SELECT_LEVEL);
-    draw_body_button_text(frame,HOME_X,166,106,30,0xFFFFFF,btn2,garden_text_len(btn2));
-    pxa_canvas_rect(frame,HOME_X+114,166,106,30,0x5A3FA0,7);
+    draw_body_button_text(frame,HOME_X,HOME_MORE_Y,HOME_HALF_W,HOME_MORE_H,0xFFFFFF,btn2,garden_text_len(btn2));
+    pxa_canvas_rect(frame,HOME_X+HOME_W-HOME_HALF_W,HOME_MORE_Y,HOME_HALF_W,HOME_MORE_H,0x5A3FA0,7);
     const char* btn3=garden_message(PXA_MSG_ACTION_OPEN_ALMANAC);
-    draw_body_button_text(frame,HOME_X+114,166,106,30,0xFFFFFF,btn3,garden_text_len(btn3));
+    draw_body_button_text(frame,HOME_X+HOME_W-HOME_HALF_W,HOME_MORE_Y,HOME_HALF_W,HOME_MORE_H,0xFFFFFF,btn3,garden_text_len(btn3));
     const char* ver=garden_message(PXA_MSG_SCREEN_VERSION);
-    pxa_canvas_text_role(frame,0,GARDEN_H-23,GARDEN_W,pxa_canvas_rgba(0x9FBFA4),PXA_CANVAS_FONT_CAPTION,PXA_CANVAS_ALIGN_CENTER,ver,garden_text_len(ver));
+    if(!HOME_COMPACT) pxa_canvas_text_role(frame,0,GARDEN_H-23,GARDEN_W,pxa_canvas_rgba(0x9FBFA4),PXA_CANVAS_FONT_CAPTION,PXA_CANVAS_ALIGN_CENTER,ver,garden_text_len(ver));
 }
 
 static void draw_back_button(pxa_canvas_frame_t* frame){

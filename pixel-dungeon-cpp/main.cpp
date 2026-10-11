@@ -34,7 +34,7 @@ struct PixelDungeon {
     uint8_t g_upload[1024+20]{},g_draw[PD_MAX_DRAW_BYTES]{},g_fog_texels[256]{},g_search_texels[1024]{};
     uint32_t g_display_width=296,g_display_height=240,g_render_width=296,g_render_height=240;
     uint32_t g_capabilities=0,g_controller_buttons=0,g_anim_ms=0,g_render_phase=0;
-    uint64_t g_frame_id=0,perf_start=0;
+    uint64_t perf_start=0;
     uint16_t g_clock_period=0;
     int g_safe_top=8,g_safe_right=10,g_safe_bottom=8,g_safe_left=10;
     uint32_t g_display_shape=0,g_corner_radii[4]{};
@@ -91,7 +91,7 @@ struct PixelDungeon {
     void clear_progress(){auto slot=g_game.active_slot;if(slot>=PD_SAVE_SLOTS)return;g_slot_length[slot]=0;g_game.slots[slot].occupied=0;remove_dirty|=1u<<slot;start_storage();}
     void save_zoom(){zoom_dirty=true;start_storage();}
     void render_frame(){if(!renderer||initializing||!context->foreground())return;
-        (void)pd_render_present(*renderer,g_capabilities,&g_game,&g_layout,g_draw,sizeof(g_draw),++g_frame_id,g_anim_ms);}
+        (void)pd_render_present(*renderer,g_capabilities,&g_game,&g_layout,g_draw,sizeof(g_draw),g_anim_ms);}
     void log_phase(uint8_t previous){if(previous==g_game.phase)return;
         char message[32];std::snprintf(message,sizeof(message),"PDCPP phase=%u",g_game.phase);
         (void)context->log().write(pxa::LogLevel::info,message);}

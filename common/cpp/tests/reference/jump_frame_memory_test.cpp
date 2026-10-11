@@ -1,3 +1,4 @@
+#include "pxa_control_capture.h"
 #include "frame_memory.hpp"
 #include "jump3d_render.hpp"
 #include <pxa/game_upload.hpp>
@@ -30,7 +31,7 @@ void draw(pxa::game::Renderer& renderer,pxa::ui::DisplayMetrics display,
     j3_render_configure(&render,display.width,display.height,renderer.capabilities());
     j3_render_adapt(&render,display);
     const auto bytes=reuse?memory.draw():std::span{separate_draw};
-    assert(j3_render_frame(&render,&game,renderer,bytes.data(),bytes.size(),1));
+    assert(j3_render_frame(&render,&game,renderer,bytes.data(),bytes.size()));
     auto& pixels=reuse?actual_pixels:expected_pixels;
     pixels.fill(0x5a5a);
     pxa_raster_target_t target{};
@@ -52,7 +53,7 @@ void resources(pxa::game::Renderer& renderer,std::uint8_t scheme,bool reuse,bool
     assert(j3_font_upload(renderer,upload.data(),upload.size()));
 }
 }
-extern "C" int32_t pxa_submit(const uint8_t*,uint32_t){return 0;}
+extern "C" int32_t pxa_test_control(const uint8_t*,uint32_t){return 0;}
 extern "C" int32_t pxa_io(uint64_t handle,uint32_t operation,uint8_t* data,uint32_t size) {
     assert(handle==77 && current);
     if(operation==0x101) {
@@ -81,6 +82,7 @@ extern "C" int32_t pxa_io(uint64_t handle,uint32_t operation,uint8_t* data,uint3
 int main() {
     pxa::Transport transport;transport.phase(pxa::Phase::event);
     pxa::game::Renderer renderer(transport,77,PXA_RASTER_CAP_KNOWN_MASK);
+    pxa::game::Renderer shared_renderer(transport,77,PXA_RASTER_CAP_KNOWN_MASK);
     dedicated.resources.capabilities=shared.resources.capabilities=renderer.capabilities();
     unsigned comparisons=0;
     for(unsigned tier=0;tier<3;++tier) {
@@ -91,13 +93,13 @@ int main() {
             game.jump_count=15*scheme;
             j3_font_set_tier(tier);
             current=&dedicated;resources(renderer,scheme,false,scheme==0);
-            current=&shared;resources(renderer,scheme,true,scheme==0);
+            current=&shared;resources(shared_renderer,scheme,true,scheme==0);
             assert(dedicated.palette==shared.palette && dedicated.textures==shared.textures);
             for(unsigned phase=0;phase<3;++phase) {
                 if(phase==1){j3_game_press(&game);for(int i=0;i<36;++i)j3_game_tick(&game,.02f);}
                 if(phase==2){j3_game_release(&game);j3_game_tick(&game,.02f);}
                 current=&dedicated;draw(renderer,display,game,false);
-                current=&shared;draw(renderer,display,game,true);
+                current=&shared;draw(shared_renderer,display,game,true);
                 assert(dedicated.draw_bytes==shared.draw_bytes);
                 assert(std::memcmp(dedicated.draw.data(),shared.draw.data(),shared.draw_bytes)==0);
                 assert(expected_pixels==actual_pixels);++comparisons;
@@ -106,7 +108,7 @@ int main() {
             // change must reconstruct it, including every light-level row.
             current=&shared;
             auto upload=memory.upload();j3_font_set_tier((tier+1)%3);
-            assert(j3_font_upload(renderer,upload.data(),upload.size()));
+            assert(j3_font_upload(shared_renderer,upload.data(),upload.size()));
         }
     }
     std::printf("shared/dedicated scratch resource, command and Host pixel parity passed (%u frames)\n",comparisons);

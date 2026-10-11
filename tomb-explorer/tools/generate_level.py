@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compile tools/level.json into level_data.c for the PXA tomb-explorer port.
+"""Compile tools/level.json into level_data.cpp for the PXA tomb-explorer port.
 
 Ported from micropixel guest/apps/tomb-explorer/tools/generate_level.py; the
 mesh building code is unchanged, only the checked-in output is plain C. Rooms
@@ -434,14 +434,14 @@ def render(level):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--check', action='store_true', help='verify level_data.c is up to date')
+    parser.add_argument('--check', action='store_true', help='verify level_data.cpp is up to date')
     args = parser.parse_args()
     level = Level(json.loads((APP / 'tools/level.json').read_text()))
     text, stats = render(level)
-    output = APP / 'level_data.c'
+    output = APP / 'level_data.cpp'
     if args.check:
         if not output.exists() or output.read_text() != text:
-            raise SystemExit('stale: level_data.c')
+            raise SystemExit('stale: level_data.cpp')
         print('tomb-explorer level up to date')
         return
     output.write_text(text)

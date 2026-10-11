@@ -21,10 +21,10 @@ messages:
     source: Start adventure
     context: Continue campaign button
   action.select_level:
-    source: Select level
+    source: Levels
     context: Open level selection button
   action.open_almanac:
-    source: Plant almanac
+    source: Plants
     context: Open plant collection button
   action.continue:
     source: Continue
