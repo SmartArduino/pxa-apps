@@ -1,0 +1,12 @@
+PXA Pinyin IME Lite
+
+The immutable character mapping and shared T9 implementation are derived from
+lvgl_pinyin_ime by VanillaNahida and contributors (Apache License, Version 2.0):
+https://github.com/VanillaNahida/lvgl_pinyin_ime
+Revision: 037169998150a768ff43863fc44d563222d4b801
+
+Only single GB2312 Han characters and their spellings are retained. Candidates
+are ordered by the source frequency. No statistical decoder or word/sentence
+model is included. The source SHA256 and generation procedure are recorded in
+data/pinyin.tsv and tools/generate_table.py. Original T9 notices are retained in
+../pinyin-ime/core and ../pinyin-ime/generated. See LICENSE.
