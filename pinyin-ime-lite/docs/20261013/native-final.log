@@ -1,0 +1,3 @@
+syllables=410 readings=7292 unique_characters=6749 table_bytes=19504
+T9: exact readings, multi-syllable prefix, bounded ambiguous input and reset passed
+PXA lite: complete character table, segmentation, aliases, bounds and 10000 stress inputs passed

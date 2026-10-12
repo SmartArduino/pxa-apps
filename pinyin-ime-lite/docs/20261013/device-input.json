@@ -1,0 +1,1019 @@
+{
+  "passed": true,
+  "rows": [
+    {
+      "command": "INPUT CAPABILITIES",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "protocol=1;width=296;height=240;max_pointers=2;keys=back,home,volume-up,volume-down;coordinates=logical"
+        }
+      ]
+    },
+    {
+      "command": "IME",
+      "frames": [
+        {
+          "kind": "SELECTED",
+          "payload": ""
+        },
+        {
+          "kind": "TIMING",
+          "payload": "count=9;queue_us=219651;processing_us=11001;queue_max_us=31796;processing_max_us=2217;provider_load_us=1014901;keyboard_drawn=0;first_draw_ms=0;candidates_ready=0;candidates_ready_ms=0;provider_steps=20;provider_step_max_us=317145"
+        },
+        {
+          "kind": "METHOD",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite"
+        },
+        {
+          "kind": "OK",
+          "payload": "listed"
+        }
+      ]
+    },
+    {
+      "command": "PACKAGES",
+      "frames": [
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-maze-evil\tMaze Evil\t0.1.4\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft-cpp\tVoxel Craft C++\t0.12.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite\t轻量拼音输入法\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-ime-heartbeat\tIME heartbeat fixture\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "IME select 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "selected"
+        }
+      ]
+    },
+    {
+      "command": "INPUT KEY HOME",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=199;device_us=26237981255;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 148 216 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=200;device_us=26237982784;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER MOVE 148 70 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=201;device_us=26238104771;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 148 70 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=202;device_us=26238226768;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=203;device_us=26238227535;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "PACKAGE run pxa-ime-heartbeat",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "launch_queued"
+        }
+      ]
+    },
+    {
+      "command": "PACKAGES",
+      "frames": [
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-maze-evil\tMaze Evil\t0.1.4\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft-cpp\tVoxel Craft C++\t0.12.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite\t轻量拼音输入法\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-ime-heartbeat\tIME heartbeat fixture\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "PACKAGES",
+      "frames": [
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-maze-evil\tMaze Evil\t0.1.4\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft-cpp\tVoxel Craft C++\t0.12.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite\t轻量拼音输入法\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-ime-heartbeat\tIME heartbeat fixture\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "PACKAGES",
+      "frames": [
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-maze-evil\tMaze Evil\t0.1.4\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft-cpp\tVoxel Craft C++\t0.12.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite\t轻量拼音输入法\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-ime-heartbeat\tIME heartbeat fixture\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "PACKAGES",
+      "frames": [
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-maze-evil\tMaze Evil\t0.1.4\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft-cpp\tVoxel Craft C++\t0.12.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite\t轻量拼音输入法\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-ime-heartbeat\tIME heartbeat fixture\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "PACKAGES",
+      "frames": [
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-maze-evil\tMaze Evil\t0.1.4\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft-cpp\tVoxel Craft C++\t0.12.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite\t轻量拼音输入法\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-ime-heartbeat\tIME heartbeat fixture\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "PACKAGES",
+      "frames": [
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-maze-evil\tMaze Evil\t0.1.4\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft-cpp\tVoxel Craft C++\t0.12.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite\t轻量拼音输入法\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-ime-heartbeat\tIME heartbeat fixture\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=1"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 35 55 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=204;device_us=26239284772;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 35 55 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=205;device_us=26239409038;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=206;device_us=26239410109;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "IME",
+      "frames": [
+        {
+          "kind": "SELECTED",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite"
+        },
+        {
+          "kind": "TIMING",
+          "payload": "count=0;queue_us=0;processing_us=0;queue_max_us=0;processing_max_us=0;provider_load_us=0;keyboard_drawn=1;first_draw_ms=24;candidates_ready=0;candidates_ready_ms=0;provider_steps=1;provider_step_max_us=97581"
+        },
+        {
+          "kind": "METHOD",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite"
+        },
+        {
+          "kind": "OK",
+          "payload": "listed"
+        }
+      ]
+    },
+    {
+      "command": "IME",
+      "frames": [
+        {
+          "kind": "SELECTED",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite"
+        },
+        {
+          "kind": "TIMING",
+          "payload": "count=0;queue_us=0;processing_us=0;queue_max_us=0;processing_max_us=0;provider_load_us=0;keyboard_drawn=1;first_draw_ms=24;candidates_ready=0;candidates_ready_ms=0;provider_steps=2;provider_step_max_us=308156"
+        },
+        {
+          "kind": "METHOD",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite"
+        },
+        {
+          "kind": "OK",
+          "payload": "listed"
+        }
+      ]
+    },
+    {
+      "command": "IME",
+      "frames": [
+        {
+          "kind": "SELECTED",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite"
+        },
+        {
+          "kind": "TIMING",
+          "payload": "count=0;queue_us=0;processing_us=0;queue_max_us=0;processing_max_us=0;provider_load_us=0;keyboard_drawn=1;first_draw_ms=24;candidates_ready=0;candidates_ready_ms=0;provider_steps=4;provider_step_max_us=308156"
+        },
+        {
+          "kind": "METHOD",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite"
+        },
+        {
+          "kind": "OK",
+          "payload": "listed"
+        }
+      ]
+    },
+    {
+      "command": "IME",
+      "frames": [
+        {
+          "kind": "SELECTED",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite"
+        },
+        {
+          "kind": "TIMING",
+          "payload": "count=0;queue_us=0;processing_us=0;queue_max_us=0;processing_max_us=0;provider_load_us=0;keyboard_drawn=1;first_draw_ms=24;candidates_ready=0;candidates_ready_ms=0;provider_steps=10;provider_step_max_us=308156"
+        },
+        {
+          "kind": "METHOD",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite"
+        },
+        {
+          "kind": "OK",
+          "payload": "listed"
+        }
+      ]
+    },
+    {
+      "command": "IME",
+      "frames": [
+        {
+          "kind": "SELECTED",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite"
+        },
+        {
+          "kind": "TIMING",
+          "payload": "count=0;queue_us=0;processing_us=0;queue_max_us=0;processing_max_us=0;provider_load_us=0;keyboard_drawn=1;first_draw_ms=24;candidates_ready=0;candidates_ready_ms=0;provider_steps=19;provider_step_max_us=308156"
+        },
+        {
+          "kind": "METHOD",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite"
+        },
+        {
+          "kind": "OK",
+          "payload": "listed"
+        }
+      ]
+    },
+    {
+      "command": "IME",
+      "frames": [
+        {
+          "kind": "SELECTED",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite"
+        },
+        {
+          "kind": "TIMING",
+          "payload": "count=0;queue_us=0;processing_us=0;queue_max_us=0;processing_max_us=0;provider_load_us=0;keyboard_drawn=1;first_draw_ms=24;candidates_ready=0;candidates_ready_ms=0;provider_steps=19;provider_step_max_us=308156"
+        },
+        {
+          "kind": "METHOD",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite"
+        },
+        {
+          "kind": "OK",
+          "payload": "listed"
+        }
+      ]
+    },
+    {
+      "command": "IME",
+      "frames": [
+        {
+          "kind": "SELECTED",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite"
+        },
+        {
+          "kind": "TIMING",
+          "payload": "count=0;queue_us=0;processing_us=0;queue_max_us=0;processing_max_us=0;provider_load_us=923542;keyboard_drawn=1;first_draw_ms=24;candidates_ready=1;candidates_ready_ms=976;provider_steps=20;provider_step_max_us=308156"
+        },
+        {
+          "kind": "METHOD",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite"
+        },
+        {
+          "kind": "OK",
+          "payload": "listed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 179 163 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=207;device_us=26240569050;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 179 163 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=208;device_us=26240690807;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=209;device_us=26240691662;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 50 163 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=210;device_us=26241093789;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 50 163 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=211;device_us=26241215784;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=212;device_us=26241216641;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 232 99 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=213;device_us=26241710146;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 232 99 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=214;device_us=26241832780;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=215;device_us=26241833696;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 45 119 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=216;device_us=26242329062;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 45 119 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=217;device_us=26242450784;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=218;device_us=26242451881;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 30 119 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=219;device_us=26242957790;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 30 119 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=220;device_us=26243079778;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=221;device_us=26243080640;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 210 142 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=222;device_us=26243567770;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 210 142 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=223;device_us=26243694780;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=224;device_us=26243695797;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 161 163 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=225;device_us=26244197863;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 161 163 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=226;device_us=26244319787;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=227;device_us=26244320660;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 32 163 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=228;device_us=26244722778;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 32 163 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=229;device_us=26244844776;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=230;device_us=26244846408;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 239 142 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=231;device_us=26245249051;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 239 142 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=232;device_us=26245370779;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=233;device_us=26245372151;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 45 119 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=234;device_us=26245872788;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 45 119 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=235;device_us=26245994774;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=236;device_us=26245996368;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "IME",
+      "frames": [
+        {
+          "kind": "SELECTED",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite"
+        },
+        {
+          "kind": "TIMING",
+          "payload": "count=8;queue_us=191968;processing_us=9449;queue_max_us=30970;processing_max_us=2060;provider_load_us=923542;keyboard_drawn=1;first_draw_ms=24;candidates_ready=1;candidates_ready_ms=4356;provider_steps=20;provider_step_max_us=308156"
+        },
+        {
+          "kind": "METHOD",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite"
+        },
+        {
+          "kind": "OK",
+          "payload": "listed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 265 184 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=237;device_us=26246502782;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 265 184 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=238;device_us=26246624772;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=239;device_us=26246625736;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "PING",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "pong"
+        }
+      ]
+    },
+    {
+      "command": "PACKAGE stop pxa-ime-heartbeat",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "stop_queued"
+        }
+      ]
+    },
+    {
+      "command": "PACKAGES",
+      "frames": [
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-maze-evil\tMaze Evil\t0.1.4\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft-cpp\tVoxel Craft C++\t0.12.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite\t轻量拼音输入法\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-ime-heartbeat\tIME heartbeat fixture\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=1"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "PACKAGES",
+      "frames": [
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-maze-evil\tMaze Evil\t0.1.4\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft-cpp\tVoxel Craft C++\t0.12.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite\t轻量拼音输入法\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-ime-heartbeat\tIME heartbeat fixture\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "IME select builtin",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "selected"
+        }
+      ]
+    }
+  ],
+  "logs": [
+    {
+      "kind": "LOG",
+      "payload": "26035664\tI (26035664) PXA_WAMR_MEMMAP: AOT released: ibus=0x42b30000 dbus=0x3c510000 size=157360 free_psram=6699996->6896608 delta=196612"
+    },
+    {
+      "kind": "LOG",
+      "payload": "26239124\tI (26239124) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b30000 dbus=0x3c510000 request=157360 map=196608 alloc=196608 free_psram=6527340"
+    },
+    {
+      "kind": "LOG",
+      "payload": "26240881\tI (26240881) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b60000 dbus=0x3c580000 request=118708 map=131072 alloc=131072 free_psram=6217648"
+    },
+    {
+      "kind": "LOG",
+      "payload": "26247212\tI (26247212) PXA_WAMR_MEMMAP: AOT released: ibus=0x42b60000 dbus=0x3c580000 size=118708 free_psram=6377156->6508232 delta=131076"
+    },
+    {
+      "kind": "LOG",
+      "payload": "26247242\t\u001b[32m[PXA app=pxa-ime-heartbeat component=65537 level=INFO] IME submitted\u001b[0m"
+    },
+    {
+      "kind": "LOG",
+      "payload": "26247242\t\u001b[32m[PXA app=pxa-ime-heartbeat component=65537 level=INFO] 你好\u001b[0m"
+    },
+    {
+      "kind": "LOG",
+      "payload": "26248078\tI (26248078) PXA_WAMR_MEMMAP: AOT released: ibus=0x42b30000 dbus=0x3c510000 size=157360 free_psram=6700120->6896732 delta=196612"
+    }
+  ],
+  "selected_restored": "",
+  "cleanup_errors": [],
+  "visual_review_required": true
+}

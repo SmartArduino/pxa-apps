@@ -1,0 +1,60 @@
+{
+  "original_six_preserved": true,
+  "lite_installed": true,
+  "temporary_fixture_removed": true,
+  "foreground_idle": true,
+  "selection_restored": "builtin",
+  "firmware_updated": false,
+  "packages": [
+    {
+      "kind": "PKG",
+      "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+    },
+    {
+      "kind": "PKG",
+      "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+    },
+    {
+      "kind": "PKG",
+      "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+    },
+    {
+      "kind": "PKG",
+      "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-maze-evil\tMaze Evil\t0.1.4\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+    },
+    {
+      "kind": "PKG",
+      "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft-cpp\tVoxel Craft C++\t0.12.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+    },
+    {
+      "kind": "PKG",
+      "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+    },
+    {
+      "kind": "PKG",
+      "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite\t轻量拼音输入法\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+    },
+    {
+      "kind": "OK",
+      "payload": ""
+    }
+  ],
+  "ime": [
+    {
+      "kind": "SELECTED",
+      "payload": ""
+    },
+    {
+      "kind": "TIMING",
+      "payload": "count=9;queue_us=217510;processing_us=10045;queue_max_us=30970;processing_max_us=2060;provider_load_us=923542;keyboard_drawn=0;first_draw_ms=0;candidates_ready=0;candidates_ready_ms=0;provider_steps=20;provider_step_max_us=308156"
+    },
+    {
+      "kind": "METHOD",
+      "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite"
+    },
+    {
+      "kind": "OK",
+      "payload": "listed"
+    }
+  ]
+}

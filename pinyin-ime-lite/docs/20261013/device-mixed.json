@@ -1,0 +1,1596 @@
+{
+  "passed": true,
+  "provider": "pxa-pinyin-ime-lite",
+  "device": "protocol=1;mode=normal;capabilities=info,memory,logcat,packages,package-deploy,package-run,package-stop,fs,reboot,doctor,input-v2,screenshot-rgb565,screenshot-jpeg,poweroff,perf-raster,heap-local,ime;max_chunk=1024;fs_offset=1;fs_sha256=1;target=esp32s3;serial=a4:cb:8f:d6:8d:a4;version=3c22b31-dirty",
+  "phases": [
+    {
+      "name": "closed-pxa-selected",
+      "callbacks": 258,
+      "median_gap_us": 15024.5,
+      "p95_gap_us": 20041,
+      "max_gap_us": 25333,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "0",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0",
+        "provider_steps": "0",
+        "provider_step_max_us": "0"
+      }
+    },
+    {
+      "name": "chinese-load",
+      "callbacks": 194,
+      "median_gap_us": 15034.0,
+      "p95_gap_us": 20856,
+      "max_gap_us": 521636,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "1247232",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "60",
+        "candidates_ready": "1",
+        "candidates_ready_ms": "1342",
+        "provider_steps": "28",
+        "provider_step_max_us": "317279"
+      },
+      "memory": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320491;sram_free=54703;sram_min=51199;sram_largest=19456;psram_total=8358572;psram_free=6188128;psram_min=6167548;psram_largest=6029312"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16631;peak_internal=27468;peak_external=16631;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=239"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=boot"
+        }
+      ]
+    },
+    {
+      "name": "english",
+      "callbacks": 278,
+      "median_gap_us": 15036.0,
+      "p95_gap_us": 20138,
+      "max_gap_us": 63223,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "1247232",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "60",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "1342",
+        "provider_steps": "28",
+        "provider_step_max_us": "317279"
+      },
+      "memory": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320491;sram_free=55455;sram_min=51355;sram_largest=19456;psram_total=8358572;psram_free=6526480;psram_min=6185148;psram_largest=6422528"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16631;peak_internal=27468;peak_external=16631;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=239"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=boot"
+        }
+      ]
+    },
+    {
+      "name": "closed-after-use",
+      "callbacks": 265,
+      "median_gap_us": 15023,
+      "p95_gap_us": 20084,
+      "max_gap_us": 44176,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "1247232",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0",
+        "provider_steps": "28",
+        "provider_step_max_us": "317279"
+      }
+    },
+    {
+      "name": "chinese-reopen-0",
+      "callbacks": 197,
+      "median_gap_us": 15051,
+      "p95_gap_us": 21245,
+      "max_gap_us": 522791,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "1265259",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "46",
+        "candidates_ready": "1",
+        "candidates_ready_ms": "1338",
+        "provider_steps": "28",
+        "provider_step_max_us": "318114"
+      },
+      "memory": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320491;sram_free=54703;sram_min=51199;sram_largest=19456;psram_total=8358572;psram_free=6187772;psram_min=6167148;psram_largest=6029312"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16631;peak_internal=27468;peak_external=16631;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=239"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=boot"
+        }
+      ]
+    },
+    {
+      "name": "closed-reopen-0",
+      "callbacks": 264,
+      "median_gap_us": 15032.0,
+      "p95_gap_us": 20092,
+      "max_gap_us": 47648,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "1265259",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0",
+        "provider_steps": "28",
+        "provider_step_max_us": "318114"
+      }
+    },
+    {
+      "name": "chinese-reopen-1",
+      "callbacks": 199,
+      "median_gap_us": 15028,
+      "p95_gap_us": 24807,
+      "max_gap_us": 411718,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "1267401",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "46",
+        "candidates_ready": "1",
+        "candidates_ready_ms": "1340",
+        "provider_steps": "28",
+        "provider_step_max_us": "317705"
+      },
+      "memory": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320491;sram_free=54667;sram_min=51199;sram_largest=19456;psram_total=8358572;psram_free=6187760;psram_min=6167116;psram_largest=6029312"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16631;peak_internal=27468;peak_external=16631;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=239"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=boot"
+        }
+      ]
+    },
+    {
+      "name": "closed-reopen-1",
+      "callbacks": 264,
+      "median_gap_us": 15015.5,
+      "p95_gap_us": 20100,
+      "max_gap_us": 47143,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "1267401",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0",
+        "provider_steps": "28",
+        "provider_step_max_us": "317705"
+      }
+    },
+    {
+      "name": "chinese-reopen-2",
+      "callbacks": 195,
+      "median_gap_us": 15030,
+      "p95_gap_us": 21823,
+      "max_gap_us": 526448,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "1265404",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "48",
+        "candidates_ready": "1",
+        "candidates_ready_ms": "1340",
+        "provider_steps": "28",
+        "provider_step_max_us": "321102"
+      },
+      "memory": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320491;sram_free=54703;sram_min=51199;sram_largest=19456;psram_total=8358572;psram_free=6187788;psram_min=6167140;psram_largest=6029312"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16631;peak_internal=27468;peak_external=16631;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=239"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=boot"
+        }
+      ]
+    },
+    {
+      "name": "closed-reopen-2",
+      "callbacks": 267,
+      "median_gap_us": 15040,
+      "p95_gap_us": 20044,
+      "max_gap_us": 37054,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "1265404",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0",
+        "provider_steps": "28",
+        "provider_step_max_us": "321102"
+      }
+    },
+    {
+      "name": "cancel-close",
+      "callbacks": 257,
+      "median_gap_us": 15025,
+      "p95_gap_us": 20087,
+      "max_gap_us": 232092,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "0",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0",
+        "provider_steps": "1",
+        "provider_step_max_us": "143367"
+      },
+      "memory": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320491;sram_free=55419;sram_min=51319;sram_largest=19456;psram_total=8358572;psram_free=6530624;psram_min=6274724;psram_largest=6160384"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16631;peak_internal=27468;peak_external=16631;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=239"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=boot"
+        }
+      ]
+    },
+    {
+      "name": "closed-builtin-selected",
+      "callbacks": 254,
+      "median_gap_us": 15019.0,
+      "p95_gap_us": 20066,
+      "max_gap_us": 20673,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "0",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0",
+        "provider_steps": "1",
+        "provider_step_max_us": "143367"
+      }
+    }
+  ],
+  "rows": [
+    {
+      "command": "INPUT CAPABILITIES",
+      "elapsed_ms": 1.5039329882711172,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "protocol=1;width=296;height=240;max_pointers=2;keys=back,home,volume-up,volume-down;coordinates=logical"
+        }
+      ]
+    },
+    {
+      "command": "IME select 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime-lite",
+      "elapsed_ms": 3.5555409849621356,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "selected"
+        }
+      ]
+    },
+    {
+      "command": "INPUT KEY HOME",
+      "elapsed_ms": 0.8222850156016648,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=21;device_us=25514729068;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 148 216 0",
+      "elapsed_ms": 1.466361980419606,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=22;device_us=25514930764;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER MOVE 148 70 0",
+      "elapsed_ms": 1.8606169614940882,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=23;device_us=25515052767;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 148 70 0",
+      "elapsed_ms": 1.2833159998990595,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=24;device_us=25515173957;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "elapsed_ms": 0.7925080135464668,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=25;device_us=25515174927;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "PACKAGE run pxa-ime-heartbeat",
+      "elapsed_ms": 25.471205997746438,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "launch_queued"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY",
+      "elapsed_ms": 4.425985971465707,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320491;sram_free=55455;sram_min=18256;sram_largest=19456;psram_total=8358572;psram_free=6531248;psram_min=6277628;psram_largest=6160384"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16631;peak_internal=27468;peak_external=16631;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=239"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "MEMORY START",
+      "elapsed_ms": 2.7119870064780116,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=local"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 35 55 0",
+      "elapsed_ms": 2.007904986385256,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=26;device_us=25520719014;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 35 55 0",
+      "elapsed_ms": 1.5064270119182765,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=27;device_us=25520840776;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "elapsed_ms": 1.1630390072241426,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=28;device_us=25520841807;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY STOP",
+      "elapsed_ms": 5.719862005207688,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320491;sram_free=54703;sram_min=51199;sram_largest=19456;psram_total=8358572;psram_free=6188128;psram_min=6167548;psram_largest=6029312"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16631;peak_internal=27468;peak_external=16631;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=239"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=boot"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY",
+      "elapsed_ms": 4.944015003275126,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320491;sram_free=54703;sram_min=18256;sram_largest=19456;psram_total=8358572;psram_free=6188156;psram_min=6167548;psram_largest=6029312"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16631;peak_internal=27468;peak_external=16631;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=239"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "MEMORY START",
+      "elapsed_ms": 3.502731036860496,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=local"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 109 209 0",
+      "elapsed_ms": 2.6302519836463034,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=29;device_us=25525017771;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 109 209 0",
+      "elapsed_ms": 3.8233170052990317,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=30;device_us=25525141784;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "elapsed_ms": 1.9078359473496675,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=31;device_us=25525144466;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 32 163 0",
+      "elapsed_ms": 36.90745501080528,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=32;device_us=25525263784;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 32 163 0",
+      "elapsed_ms": 5.01082104165107,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=33;device_us=25525387783;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "elapsed_ms": 1.369768986478448,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=34;device_us=25525392126;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY STOP",
+      "elapsed_ms": 5.069282022304833,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320491;sram_free=55455;sram_min=51355;sram_largest=19456;psram_total=8358572;psram_free=6526480;psram_min=6185148;psram_largest=6422528"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16631;peak_internal=27468;peak_external=16631;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=239"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=boot"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 258 209 0",
+      "elapsed_ms": 1.394075050484389,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=35;device_us=25529539021;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 258 209 0",
+      "elapsed_ms": 1.5545880305580795,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=36;device_us=25529660779;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "elapsed_ms": 0.9601149940863252,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=37;device_us=25529661706;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY",
+      "elapsed_ms": 4.115710966289043,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320491;sram_free=55455;sram_min=18256;sram_largest=19456;psram_total=8358572;psram_free=6530640;psram_min=6167548;psram_largest=6160384"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16631;peak_internal=27468;peak_external=16631;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=239"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "MEMORY START",
+      "elapsed_ms": 0.5269059911370277,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=local"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 35 55 0",
+      "elapsed_ms": 2.6562910061329603,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=38;device_us=25533793976;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 35 55 0",
+      "elapsed_ms": 1.532536989543587,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=39;device_us=25533915773;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "elapsed_ms": 1.2270190054550767,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=40;device_us=25533916736;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY STOP",
+      "elapsed_ms": 4.591599979903549,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320491;sram_free=54703;sram_min=51199;sram_largest=19456;psram_total=8358572;psram_free=6187772;psram_min=6167148;psram_largest=6029312"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16631;peak_internal=27468;peak_external=16631;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=239"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=boot"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 258 209 0",
+      "elapsed_ms": 2.2565550170838833,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=41;device_us=25538062841;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 258 209 0",
+      "elapsed_ms": 1.6931509599089622,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=42;device_us=25538184801;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "elapsed_ms": 1.119797001592815,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=43;device_us=25538185825;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY",
+      "elapsed_ms": 4.259251989424229,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320491;sram_free=55455;sram_min=18256;sram_largest=19456;psram_total=8358572;psram_free=6530652;psram_min=6167148;psram_largest=6160384"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16631;peak_internal=27468;peak_external=16631;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=239"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "MEMORY START",
+      "elapsed_ms": 0.4736750270240009,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=local"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 35 55 0",
+      "elapsed_ms": 1.2666749535128474,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=44;device_us=25542317768;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 35 55 0",
+      "elapsed_ms": 1.6955650062300265,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=45;device_us=25542439780;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "elapsed_ms": 1.0082960361614823,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=46;device_us=25542440625;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY STOP",
+      "elapsed_ms": 5.363988981116563,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320491;sram_free=54667;sram_min=51199;sram_largest=19456;psram_total=8358572;psram_free=6187760;psram_min=6167116;psram_largest=6029312"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16631;peak_internal=27468;peak_external=16631;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=239"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=boot"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 258 209 0",
+      "elapsed_ms": 1.3436699518933892,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=47;device_us=25546577100;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 258 209 0",
+      "elapsed_ms": 2.410506014712155,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=48;device_us=25546699775;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "elapsed_ms": 0.9351280168630183,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=49;device_us=25546700799;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY",
+      "elapsed_ms": 4.553236998617649,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320491;sram_free=55455;sram_min=18256;sram_largest=19456;psram_total=8358572;psram_free=6530652;psram_min=6167116;psram_largest=6160384"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16631;peak_internal=27468;peak_external=16631;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=239"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "MEMORY START",
+      "elapsed_ms": 0.8841609815135598,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=local"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 35 55 0",
+      "elapsed_ms": 1.3477879692800343,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=50;device_us=25550826768;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 35 55 0",
+      "elapsed_ms": 2.2284229635261,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=51;device_us=25550949068;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "elapsed_ms": 1.072276965714991,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=52;device_us=25550950080;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY STOP",
+      "elapsed_ms": 5.475259968079627,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320491;sram_free=54703;sram_min=51199;sram_largest=19456;psram_total=8358572;psram_free=6187788;psram_min=6167140;psram_largest=6029312"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16631;peak_internal=27468;peak_external=16631;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=239"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=boot"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 258 209 0",
+      "elapsed_ms": 2.1316700149327517,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=53;device_us=25555063784;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 258 209 0",
+      "elapsed_ms": 11.409008002374321,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=54;device_us=25555186789;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "elapsed_ms": 1.3142150128260255,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=55;device_us=25555196745;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY",
+      "elapsed_ms": 7.8397400211542845,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320491;sram_free=55455;sram_min=18256;sram_largest=19456;psram_total=8358572;psram_free=6530652;psram_min=6167116;psram_largest=6160384"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16631;peak_internal=27468;peak_external=16631;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=239"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "MEMORY START",
+      "elapsed_ms": 4.903230001218617,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=local"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 35 55 0",
+      "elapsed_ms": 5.707829957827926,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=56;device_us=25559358977;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 35 55 0",
+      "elapsed_ms": 2.5060680345632136,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=57;device_us=25559426783;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "elapsed_ms": 1.1460569803602993,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=58;device_us=25559427880;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 258 209 0",
+      "elapsed_ms": 3.123383969068527,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=59;device_us=25559510881;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 258 209 0",
+      "elapsed_ms": 7.805675966665149,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=60;device_us=25559573810;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "elapsed_ms": 3.321608994156122,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=61;device_us=25559580543;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY STOP",
+      "elapsed_ms": 6.595108017791063,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320491;sram_free=55419;sram_min=51319;sram_largest=19456;psram_total=8358572;psram_free=6530624;psram_min=6274724;psram_largest=6160384"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16631;peak_internal=27468;peak_external=16631;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=239"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=boot"
+        }
+      ]
+    },
+    {
+      "command": "IME select builtin",
+      "elapsed_ms": 3.8098720251582563,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "selected"
+        }
+      ]
+    },
+    {
+      "command": "PACKAGE stop pxa-ime-heartbeat",
+      "elapsed_ms": 7.156468986067921,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "stop_queued"
+        }
+      ]
+    },
+    {
+      "command": "IME select builtin",
+      "elapsed_ms": 6.265253992751241,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "selected"
+        }
+      ]
+    }
+  ],
+  "cleanup_errors": []
+}

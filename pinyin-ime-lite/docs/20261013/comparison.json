@@ -1,0 +1,857 @@
+{
+  "method": "Same simulator binary, ordinary system-input foreground, 13 display profiles, full sentence versus lite sequential single-character expectations; no claim of identical language quality.",
+  "packages": {
+    "full-s3-aot": {
+      "container": {
+        "bytes": 1231146,
+        "sha256": "cb800eae1b60d4901ed16f3a3042ace488b618a3f19405869f88ef9f69fc8ee5"
+      },
+      "installed_file_bytes": 1494303,
+      "files": {
+        "signature.pxs": {
+          "bytes": 108,
+          "sha256": "44d07b68e0b3ef3b4d1499536000c97168e05caaafe89481e6f5e6d068170c40"
+        },
+        "manifest.pxm": {
+          "bytes": 1017,
+          "sha256": "24858dde7d60ce255e14a673cb3482b241a0723550a57b5c1a3d19b4aad78107"
+        },
+        "assets/resources.pxi": {
+          "bytes": 64,
+          "sha256": "e2b1ff70f89d7c1de54903226b845ab46a5ffb1d49b82505b94d5c051cabd5c4"
+        },
+        "assets/dict_pinyin.dat": {
+          "bytes": 1068442,
+          "sha256": "179311c55ab9b912a07ef040e5a95af97e704e2248b7b97735f17a3e05d13b67"
+        },
+        "artifacts/provider.esp32-s3.aot": {
+          "bytes": 323416,
+          "sha256": "2443fdc6ada7ce035ff9c53de619ea46e3d77dc9ce7ae895c7fdb2ba26efb87f"
+        },
+        "artifacts/main.esp32-s3.aot": {
+          "bytes": 101256,
+          "sha256": "04dab767e88e53beb53535abe66675b0afae430f29b37846f43513cf5fe71464"
+        }
+      }
+    },
+    "lite-s3-aot": {
+      "container": {
+        "bytes": 203122,
+        "sha256": "3edf44e4a8368e0166b32ce5ecc1613642bf558fc1099412810533844f778afe"
+      },
+      "installed_file_bytes": 266271,
+      "files": {
+        "signature.pxs": {
+          "bytes": 108,
+          "sha256": "cab7763a864572cf599f6b73e3bd8d83a23b68cdb874bbfcfa51127cb5b15732"
+        },
+        "manifest.pxm": {
+          "bytes": 895,
+          "sha256": "35ac76a1ba7a53bfef55e6965aad1ae40745dfcee60c6fff1ace745cf40924b7"
+        },
+        "artifacts/provider.esp32-s3.aot": {
+          "bytes": 161668,
+          "sha256": "f20d2030ce624a66eb2f0f89e0791f251002a729f346ac2bec86a2fba658119a"
+        },
+        "artifacts/main.esp32-s3.aot": {
+          "bytes": 103600,
+          "sha256": "482ee61721ddee4f4d42ff3f6686d62f2c3147ec8ba44fe8d091b83a14589535"
+        }
+      }
+    },
+    "full-s3-both": {
+      "container": {
+        "bytes": 1337779,
+        "sha256": "833605cb4840fd58b2fe37d39a5641571fce3925ab9dbb278d4e390bb6213196"
+      },
+      "installed_file_bytes": 1669842,
+      "files": {
+        "signature.pxs": {
+          "bytes": 108,
+          "sha256": "7636b636c12c87f042e695227aa858df504ee7b0d5ecf9a8303b8076325f63ea"
+        },
+        "manifest.pxm": {
+          "bytes": 1273,
+          "sha256": "591e850cebaa8804e3d5d09977823242b3629a73018c3b6bc9d7d80fe94b9c6d"
+        },
+        "assets/resources.pxi": {
+          "bytes": 64,
+          "sha256": "e2b1ff70f89d7c1de54903226b845ab46a5ffb1d49b82505b94d5c051cabd5c4"
+        },
+        "assets/dict_pinyin.dat": {
+          "bytes": 1068442,
+          "sha256": "179311c55ab9b912a07ef040e5a95af97e704e2248b7b97735f17a3e05d13b67"
+        },
+        "artifacts/provider.esp32-s3.aot": {
+          "bytes": 323416,
+          "sha256": "2443fdc6ada7ce035ff9c53de619ea46e3d77dc9ce7ae895c7fdb2ba26efb87f"
+        },
+        "artifacts/main.esp32-s3.aot": {
+          "bytes": 101256,
+          "sha256": "04dab767e88e53beb53535abe66675b0afae430f29b37846f43513cf5fe71464"
+        },
+        "artifacts/provider.wasm": {
+          "bytes": 134541,
+          "sha256": "2f9de1854386368cd764a8c051310d784fd4f42b2701092eec65422801c111d3"
+        },
+        "artifacts/main.wasm": {
+          "bytes": 40742,
+          "sha256": "b5955769eda32c39c86f61aa1a2fd256a69387c50c8ea0b0b3011f036987f395"
+        }
+      }
+    },
+    "lite-s3-both": {
+      "container": {
+        "bytes": 282156,
+        "sha256": "d9bf7f4e888cf58da00550c0d2744bb2be7cb2aff1e54618a7aca7887118e51f"
+      },
+      "installed_file_bytes": 388571,
+      "files": {
+        "signature.pxs": {
+          "bytes": 108,
+          "sha256": "3c07dc434ccd8cd13a33f64425fb352a9bdcaae8f5650160a655eb9ee457e6e5"
+        },
+        "manifest.pxm": {
+          "bytes": 1151,
+          "sha256": "f55228f53a0c819d43f67e38a62500c1d311463604d59ac184438f7a44bfc5c9"
+        },
+        "artifacts/provider.esp32-s3.aot": {
+          "bytes": 161668,
+          "sha256": "f20d2030ce624a66eb2f0f89e0791f251002a729f346ac2bec86a2fba658119a"
+        },
+        "artifacts/main.esp32-s3.aot": {
+          "bytes": 103600,
+          "sha256": "482ee61721ddee4f4d42ff3f6686d62f2c3147ec8ba44fe8d091b83a14589535"
+        },
+        "artifacts/provider.wasm": {
+          "bytes": 80874,
+          "sha256": "d4acf19ffdde7e5015dd9e22fecac4653d9b6a14a7735d1726ec65c99af19564"
+        },
+        "artifacts/main.wasm": {
+          "bytes": 41170,
+          "sha256": "83bdc374666375c2781e8be840fa14426aed9e33725a68d7c1d1d521a755163f"
+        }
+      }
+    }
+  },
+  "simulator": {
+    "full-aot": [
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 89189,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 112639,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 89189,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 112639,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 89189,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 112639,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 89189,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 112639,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 89189,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 112639,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 89189,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 112639,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 89189,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 112639,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 89189,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 112639,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 89189,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 112639,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 89189,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 112639,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 89189,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 112639,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 89189,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 112639,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 89189,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 112639,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      }
+    ],
+    "lite-aot": [
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 91730,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 108530,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 91730,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 108530,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 91730,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 108530,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 91730,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 108530,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 91730,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 108530,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 91730,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 108530,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 91730,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 108530,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 91730,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 108530,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 91730,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 108530,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 91730,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 108530,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 91730,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 108530,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 91730,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 108530,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 91730,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 108530,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 0,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      }
+    ],
+    "full-wasm": [
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 443631,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 460431,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 134541,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 443631,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 460431,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 134541,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 443631,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 460431,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 134541,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 443631,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 460431,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 134541,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 443631,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 460431,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 134541,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 443631,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 460431,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 134541,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 443631,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 460431,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 134541,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 443631,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 460431,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 134541,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 443631,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 460431,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 134541,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 443631,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 460431,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 134541,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 443631,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 460431,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 134541,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 443631,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 460431,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 134541,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 443631,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 460431,
+        "idle_linear": 131072,
+        "loaded_linear": 1376256,
+        "closed_linear": 131072,
+        "run_linear_peak": 1376256,
+        "loaded_artifact_buffers": 134541,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      }
+    ],
+    "lite-wasm": [
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 217312,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 234112,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 80874,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 217312,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 234112,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 80874,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 217312,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 234112,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 80874,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 217312,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 234112,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 80874,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 217312,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 234112,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 80874,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 217312,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 234112,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 80874,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 217312,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 234112,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 80874,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 217312,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 234112,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 80874,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 217312,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 234112,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 80874,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 217312,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 234112,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 80874,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 217312,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 234112,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 80874,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 217312,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 234112,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 80874,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      },
+      {
+        "idle_wamr": 32235,
+        "loaded_wamr": 217312,
+        "closed_wamr": 32235,
+        "run_wamr_peak": 234112,
+        "idle_linear": 131072,
+        "loaded_linear": 262144,
+        "closed_linear": 131072,
+        "run_linear_peak": 262144,
+        "loaded_artifact_buffers": 80874,
+        "closed_artifact_buffers": 0,
+        "loaded_event_buffers": 192
+      }
+    ]
+  },
+  "checks": {
+    "lite-aot": {
+      "log": "lite-aot-regression.log",
+      "sha256": "d0b00b83defd1eb2b3d2bd9189ab83cec760121afb2981d7ed36a6c3784ad8cf"
+    },
+    "lite-wasm": {
+      "log": "lite-wasm-regression.log",
+      "sha256": "52023e35426cec0a3a0e9ca32fbb8e71152ed12f81e9e267e32f3b1702a9240c"
+    },
+    "full-aot": {
+      "log": "full-aot-regression.log",
+      "sha256": "b1fbd64645d3d57e12815659eb9a5565d851e9e86a8b860ae172cb496a7e982d"
+    },
+    "full-wasm": {
+      "log": "full-wasm-regression.log",
+      "sha256": "4a24719e81acc137df2b735a100f431b880835a02815eda60bac0ba8ab2ea305"
+    },
+    "ctest": {
+      "log": "ctest.log",
+      "sha256": "7d511dc2e4846d18e6387e27af0eee0875e78eec50e5cb8b3f4b8cc8d49ed03f"
+    },
+    "native": {
+      "log": "native-final.log",
+      "sha256": "57f15f3632a9937ea9efdb76d2d471fa5f16e85d5921f3c6ac72bfae7aef8c82"
+    }
+  },
+  "source_sha256": {
+    "local/pxa-apps/pinyin-ime/session.hpp": "91f9eafe93e3bb75235d969c529090535fa37b4b8556219bea5ca8fd4ca282e4",
+    "local/pxa-apps/pinyin-ime/google_engine.hpp": "0c7e7e76fac220b7f9a5b03c35a93a715b3172a7ab4856c077d1a6124cabfdd4",
+    "local/pxa-apps/pinyin-ime-lite/engine.hpp": "0961df8af39b5e3c243a840e3d703baaaebd39d4a8c1ef97c40d94ce5caef35c",
+    "local/pxa-apps/pinyin-ime-lite/generated/characters.hpp": "d90b90ffb707c294af182acc6da4202c3bd6d69db9c2c50603f4834eaf6f6b04",
+    "local/pxa-apps/pinyin-ime-lite/provider.cpp": "8c67db5c7823b7ebcb937e0173f8bf547d6841697751388279f802d20caee6ab",
+    "deps/pxa-system/libpxa/adapters/lvgl/pxa_lvgl_ime.c": "d2ca941b5dbec9061d14cdc6186aeb337a551575f282e0a9c648491402f2f7b3"
+  }
+}
