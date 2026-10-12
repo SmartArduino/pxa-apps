@@ -1,10 +1,11 @@
 #include <pxa/app.hpp>
 #include <pxa/startup.hpp>
 #include "session.hpp"
+#include "google_engine.hpp"
 #include "port/dictionary.hpp"
 
 struct PinyinProvider {
-    Session session;
+    PinyinSession<GooglePinyinEngine> session;
     bool open = false;
     pxa::Result<void> on_start(pxa::Context& ctx, std::span<const std::byte> config) {
         auto dictionary = pxa::detail::configuration_record(config, 13);
