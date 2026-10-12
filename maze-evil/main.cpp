@@ -34,7 +34,7 @@
 #define FALLBACK_FRAME_BYTES (DISPLAY_WIDTH * DISPLAY_HEIGHT * 2u)
 #define FRAME_PERIOD_MS 33u
 #define STATS_TICKS 30u
-#define POINTER_NODE 2u
+#define POINTER_NODE 1u
 #define CREATE_REQUEST UINT32_C(1)
 #define CONFIGURE_REQUEST UINT32_C(2)
 #define QUERY_REQUEST UINT32_C(100)
@@ -315,20 +315,13 @@ static void send_query(uint64_t timestamp_us) {
 }
 
 static int setup_pointer_node(void) {
-    // Only an input layer is needed: create it directly in one transaction,
-    // without an empty Canvas frame, secondary packet buffer or later patch.
-    // The RGB565 Surface is below the UI, so the root must be transparent.
+    // The Surface draws the game. A transparent, clickable root is sufficient
+    // for input; no Canvas object or ancestor pointer subscription is needed.
     pxa_ui_transaction_t transaction = {};
     if (!pxa_ui_transaction_begin(&transaction, 1,
             PXA_UI_TRANSACTION_REPLACE_SURFACE, g_packet, sizeof(g_packet)) ||
-        !pxa_ui_create(&transaction, 1, 0, 0, PXA_UI_NODE_ROOT) ||
-        !pxa_ui_create(&transaction, POINTER_NODE, 1, 0, PXA_UI_NODE_CANVAS) ||
-        !pxa_ui_set_rgba(&transaction, 1, PXA_UI_PROPERTY_BACKGROUND, 0) ||
-        !pxa_ui_set_event_mask(&transaction, 1, PXA_UI_EVENT_MASK_POINTER) ||
-        !pxa_ui_set_length(&transaction, POINTER_NODE, PXA_UI_PROPERTY_WIDTH,
-            PXA_UI_LENGTH_FILL, 0) ||
-        !pxa_ui_set_length(&transaction, POINTER_NODE, PXA_UI_PROPERTY_HEIGHT,
-            PXA_UI_LENGTH_FILL, 0) ||
+        !pxa_ui_create(&transaction, POINTER_NODE, 0, 0, PXA_UI_NODE_ROOT) ||
+        !pxa_ui_set_rgba(&transaction, POINTER_NODE, PXA_UI_PROPERTY_BACKGROUND, 0) ||
         !pxa_ui_set_event_mask(&transaction, POINTER_NODE, PXA_UI_EVENT_MASK_POINTER) ||
         !pxa_ui_transaction_commit(&transaction)) {
         if (transaction.active) (void)pxa_ui_transaction_cancel(&transaction);
@@ -460,7 +453,7 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     if (parsed.service == PXA_UI_SERVICE && parsed.opcode == PXA_UI_EVENT) {
         pxa_ui_pointer_data_t pointer;
         if (!pxa_ui_parse_pointer(&parsed, &pointer) ||
-            (pointer.node != POINTER_NODE && pointer.node != 1u)) {
+            pointer.node != POINTER_NODE) {
             return PXA_EVENT_UNHANDLED;
         }
         if (!g_started) {
@@ -491,8 +484,11 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         } else if (pointer.phase == PXA_POINTER_MOVE) {
             touch_on_move(&g_touch, pointer.pointer_id, pointer.x, pointer.y,
                           pointer.timestamp_us);
+        } else if (pointer.phase == PXA_POINTER_UP) {
+            touch_on_release(&g_touch, pointer.pointer_id, pointer.x, pointer.y,
+                             pointer.timestamp_us);
         } else {
-            touch_on_up(&g_touch, pointer.pointer_id, pointer.timestamp_us);
+            touch_on_cancel(&g_touch, pointer.pointer_id);
         }
         return PXA_EVENT_HANDLED;
     }

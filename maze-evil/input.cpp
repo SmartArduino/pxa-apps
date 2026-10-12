@@ -37,6 +37,10 @@ void touch_init(touch_controls_t *controls, int view_width) {
 
 void touch_on_down(touch_controls_t *controls, uint32_t id, int x, int y,
                    uint64_t now_us) {
+    // A duplicate DOWN must not assign one pointer to both controls when it
+    // crosses the centre. Ownership lasts until its matching UP or CANCEL.
+    if ((controls->stick.down && controls->stick.id == id) ||
+        (controls->look.down && controls->look.id == id)) return;
     touch_finger_t *finger =
         x < controls->half_width ? &controls->stick : &controls->look;
     if (finger->down) {
