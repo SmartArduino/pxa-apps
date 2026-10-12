@@ -574,7 +574,6 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
             }
             pump_sounds();
         }
-        audio_tick(&g_audio, timestamp_us);
 
         /* Keep one timestamp request in flight so the reference frame cannot
          * be overwritten before its completion arrives. */
