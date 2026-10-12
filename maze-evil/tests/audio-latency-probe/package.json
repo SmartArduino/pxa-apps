@@ -1,0 +1,56 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [
+    2,
+    0
+  ],
+  "target_sdk": [
+    2,
+    0
+  ],
+  "compile_sdk": [
+    2,
+    0
+  ],
+  "id": "pxa-audio-latency-probe",
+  "version": "1.0.0",
+  "name": "Audio latency probe",
+  "description": "Permission and Audio session example",
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 1048576,
+      "pinned": true
+    }
+  },
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "scope": "media",
+      "required": false
+    }
+  ],
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "services": [
+        "ui",
+        "audio",
+        "log",
+        "permission"
+      ],
+      "cmake_target": "pxa_main",
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "release_sequence": 3
+}

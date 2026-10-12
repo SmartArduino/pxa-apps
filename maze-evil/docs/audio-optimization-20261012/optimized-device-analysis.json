@@ -1,0 +1,326 @@
+{
+  "scope": "Summarize AudioTrace software timestamps; never estimates acoustic onset.",
+  "passed": true,
+  "phases": [
+    {
+      "name": "isolated",
+      "accepted": 6,
+      "rejected": 0,
+      "metrics": {
+        "fifo_ahead_ms": {
+          "count": 0
+        },
+        "render_wait_ms": {
+          "count": 6,
+          "mean": 0.9926666666666666,
+          "min": 0.963,
+          "max": 1.059
+        },
+        "release_sample_to_submit_ms": {
+          "count": 6,
+          "mean": 21.606333333333335,
+          "min": 7.804,
+          "max": 32.069
+        },
+        "quiet_submit_to_uart_ms": {
+          "count": 6,
+          "mean": 1.2905,
+          "min": 1.242,
+          "max": 1.378
+        },
+        "quiet_release_sample_to_uart_ms": {
+          "count": 6,
+          "mean": 22.896833333333333,
+          "min": 9.065,
+          "max": 33.434
+        }
+      },
+      "tones": [
+        {
+          "kind": "effect",
+          "us": 495721659,
+          "session": 3,
+          "packet": 0,
+          "layers": 3,
+          "track": 0,
+          "queued": 3840,
+          "render_wait_ms": 0.966,
+          "release_sample_to_submit_ms": 24.76,
+          "quiet_submit_to_uart_ms": 1.248,
+          "quiet_release_sample_to_uart_ms": 26.008
+        },
+        {
+          "kind": "effect",
+          "us": 496912678,
+          "session": 3,
+          "packet": 0,
+          "layers": 3,
+          "track": 0,
+          "queued": 3840,
+          "render_wait_ms": 1.059,
+          "release_sample_to_submit_ms": 15.084,
+          "quiet_submit_to_uart_ms": 1.378,
+          "quiet_release_sample_to_uart_ms": 16.462
+        },
+        {
+          "kind": "effect",
+          "us": 498131677,
+          "session": 3,
+          "packet": 0,
+          "layers": 3,
+          "track": 0,
+          "queued": 3840,
+          "render_wait_ms": 0.97,
+          "release_sample_to_submit_ms": 31.088,
+          "quiet_submit_to_uart_ms": 1.249,
+          "quiet_release_sample_to_uart_ms": 32.337
+        },
+        {
+          "kind": "effect",
+          "us": 499321433,
+          "session": 3,
+          "packet": 0,
+          "layers": 3,
+          "track": 0,
+          "queued": 3840,
+          "render_wait_ms": 0.963,
+          "release_sample_to_submit_ms": 18.833,
+          "quiet_submit_to_uart_ms": 1.242,
+          "quiet_release_sample_to_uart_ms": 20.075
+        },
+        {
+          "kind": "effect",
+          "us": 500506591,
+          "session": 3,
+          "packet": 0,
+          "layers": 3,
+          "track": 0,
+          "queued": 3840,
+          "render_wait_ms": 0.981,
+          "release_sample_to_submit_ms": 7.804,
+          "quiet_submit_to_uart_ms": 1.261,
+          "quiet_release_sample_to_uart_ms": 9.065
+        },
+        {
+          "kind": "effect",
+          "us": 501731640,
+          "session": 3,
+          "packet": 0,
+          "layers": 3,
+          "track": 0,
+          "queued": 3840,
+          "render_wait_ms": 1.017,
+          "release_sample_to_submit_ms": 32.069,
+          "quiet_submit_to_uart_ms": 1.365,
+          "quiet_release_sample_to_uart_ms": 33.434
+        }
+      ]
+    },
+    {
+      "name": "rapid",
+      "accepted": 8,
+      "rejected": 0,
+      "metrics": {
+        "fifo_ahead_ms": {
+          "count": 0
+        },
+        "render_wait_ms": {
+          "count": 8,
+          "mean": 1.077625,
+          "min": 0.985,
+          "max": 1.193
+        },
+        "release_sample_to_submit_ms": {
+          "count": 8,
+          "mean": 16.859875,
+          "min": 5.657,
+          "max": 33.851
+        },
+        "quiet_submit_to_uart_ms": {
+          "count": 0
+        },
+        "quiet_release_sample_to_uart_ms": {
+          "count": 0
+        }
+      },
+      "tones": [
+        {
+          "kind": "effect",
+          "us": 506617649,
+          "session": 4,
+          "packet": 0,
+          "layers": 3,
+          "track": 0,
+          "queued": 3840,
+          "render_wait_ms": 1.026,
+          "release_sample_to_submit_ms": 16.216
+        },
+        {
+          "kind": "effect",
+          "us": 507213331,
+          "session": 4,
+          "packet": 0,
+          "layers": 3,
+          "track": 0,
+          "queued": 3840,
+          "render_wait_ms": 1.193,
+          "release_sample_to_submit_ms": 13.913
+        },
+        {
+          "kind": "effect",
+          "us": 507807943,
+          "session": 4,
+          "packet": 0,
+          "layers": 3,
+          "track": 0,
+          "queued": 3840,
+          "render_wait_ms": 1.067,
+          "release_sample_to_submit_ms": 9.138
+        },
+        {
+          "kind": "effect",
+          "us": 508432720,
+          "session": 4,
+          "packet": 0,
+          "layers": 3,
+          "track": 0,
+          "queued": 3840,
+          "render_wait_ms": 1.165,
+          "release_sample_to_submit_ms": 33.851
+        },
+        {
+          "kind": "effect",
+          "us": 509027542,
+          "session": 4,
+          "packet": 0,
+          "layers": 3,
+          "track": 0,
+          "queued": 3840,
+          "render_wait_ms": 1.103,
+          "release_sample_to_submit_ms": 27.424
+        },
+        {
+          "kind": "effect",
+          "us": 509622635,
+          "session": 4,
+          "packet": 0,
+          "layers": 3,
+          "track": 0,
+          "queued": 3840,
+          "render_wait_ms": 1.083,
+          "release_sample_to_submit_ms": 18.951
+        },
+        {
+          "kind": "effect",
+          "us": 510212575,
+          "session": 4,
+          "packet": 0,
+          "layers": 3,
+          "track": 0,
+          "queued": 3840,
+          "render_wait_ms": 0.985,
+          "release_sample_to_submit_ms": 9.729
+        },
+        {
+          "kind": "effect",
+          "us": 510807728,
+          "session": 4,
+          "packet": 0,
+          "layers": 3,
+          "track": 0,
+          "queued": 3840,
+          "render_wait_ms": 0.999,
+          "release_sample_to_submit_ms": 5.657
+        }
+      ]
+    },
+    {
+      "name": "long-tap",
+      "accepted": 4,
+      "rejected": 0,
+      "metrics": {
+        "fifo_ahead_ms": {
+          "count": 0
+        },
+        "render_wait_ms": {
+          "count": 4,
+          "mean": 1.11775,
+          "min": 0.979,
+          "max": 1.307
+        },
+        "release_sample_to_submit_ms": {
+          "count": 4,
+          "mean": 19.735500000000002,
+          "min": 7.928,
+          "max": 35.06
+        },
+        "quiet_submit_to_uart_ms": {
+          "count": 4,
+          "mean": 1.4455,
+          "min": 1.29,
+          "max": 1.639
+        },
+        "quiet_release_sample_to_uart_ms": {
+          "count": 4,
+          "mean": 21.180999999999997,
+          "min": 9.567,
+          "max": 36.553
+        }
+      },
+      "tones": [
+        {
+          "kind": "effect",
+          "us": 515272887,
+          "session": 5,
+          "packet": 0,
+          "layers": 3,
+          "track": 0,
+          "queued": 3840,
+          "render_wait_ms": 1.307,
+          "release_sample_to_submit_ms": 7.928,
+          "quiet_submit_to_uart_ms": 1.639,
+          "quiet_release_sample_to_uart_ms": 9.567
+        },
+        {
+          "kind": "effect",
+          "us": 516492413,
+          "session": 5,
+          "packet": 0,
+          "layers": 3,
+          "track": 0,
+          "queued": 3840,
+          "render_wait_ms": 0.979,
+          "release_sample_to_submit_ms": 20.875,
+          "quiet_submit_to_uart_ms": 1.29,
+          "quiet_release_sample_to_uart_ms": 22.165
+        },
+        {
+          "kind": "effect",
+          "us": 517682608,
+          "session": 5,
+          "packet": 0,
+          "layers": 3,
+          "track": 0,
+          "queued": 3840,
+          "render_wait_ms": 1.017,
+          "release_sample_to_submit_ms": 15.079,
+          "quiet_submit_to_uart_ms": 1.36,
+          "quiet_release_sample_to_uart_ms": 16.439
+        },
+        {
+          "kind": "effect",
+          "us": 518902733,
+          "session": 5,
+          "packet": 0,
+          "layers": 3,
+          "track": 0,
+          "queued": 3840,
+          "render_wait_ms": 1.168,
+          "release_sample_to_submit_ms": 35.06,
+          "quiet_submit_to_uart_ms": 1.493,
+          "quiet_release_sample_to_uart_ms": 36.553
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,262 @@
+{
+  "scope": "Synthetic overlapping effects through real C++ SDK on pai-touch; UART is not acoustic onset",
+  "passed": true,
+  "logs": [
+    "dropped=5",
+    "66286\t\u001b[32m[PXA app=pxa-audio-latency-probe component=65537 level=INFO] Probe case shotgun\u001b[0m",
+    "66286\tAudioTrace: tone us=65754199 session=1 packet=0 duration=220 delay=0 queued=3520",
+    "66287\tAudioTrace: render us=65754906 voice=0 packet=0 duration=220 delay=0",
+    "66288\t\u001b[32m[PXA app=pxa-audio-latency-probe component=65537 level=INFO] Probe tone accepted\u001b[0m",
+    "66286\t\u001b[32m[PXA app=pxa-audio-latency-probe component=65537 level=INFO] Probe case shotgun\u001b[0m",
+    "66286\tAudioTrace: tone us=65754199 session=1 packet=0 duration=220 delay=0 queued=3520",
+    "66287\tAudioTrace: render us=65754906 voice=0 packet=0 duration=220 delay=0",
+    "66288\t\u001b[32m[PXA app=pxa-audio-latency-probe component=65537 level=INFO] Probe tone accepted\u001b[0m",
+    "66289\tAudioTrace: tone us=65756877 session=1 packet=1 duration=120 delay=0 queued=5120",
+    "66289\t\u001b[32m[PXA app=pxa-audio-latency-probe component=65537 level=INFO] Probe tone accepted\u001b[0m",
+    "66289\tAudioTrace: tone us=65757331 session=1 packet=2 duration=200 delay=40 queued=8960",
+    "66289\t\u001b[32m[PXA app=pxa-audio-latency-probe component=65537 level=INFO] Probe tone accepted\u001b[0m",
+    "66293\tAudioTrace: uart us=65761650 samples=160 nonzero=1",
+    "66507\tAudioTrace: render us=65974914 voice=0 packet=1 duration=120 delay=0",
+    "66626\tAudioTrace: render us=66094530 voice=0 packet=2 duration=200 delay=40",
+    "66633\tAudioTrace: uart us=66101036 samples=160 nonzero=0",
+    "66673\tAudioTrace: uart us=66141038 samples=160 nonzero=1",
+    "dropped=11",
+    "68846\t\u001b[32m[PXA app=pxa-audio-latency-probe component=65537 level=INFO] Probe case alert-shotgun\u001b[0m",
+    "68847\tAudioTrace: tone us=68314902 session=1 packet=3 duration=180 delay=0 queued=2880",
+    "68847\tAudioTrace: render us=68315634 voice=0 packet=3 duration=180 delay=0",
+    "68848\tAudioTrace: uart us=68316006 samples=160 nonzero=1",
+    "66673\tAudioTrace: uart us=66141038 samples=160 nonzero=1",
+    "68846\t\u001b[32m[PXA app=pxa-audio-latency-probe component=65537 level=INFO] Probe case alert-shotgun\u001b[0m",
+    "68847\tAudioTrace: tone us=68314902 session=1 packet=3 duration=180 delay=0 queued=2880",
+    "68847\tAudioTrace: render us=68315634 voice=0 packet=3 duration=180 delay=0",
+    "68848\tAudioTrace: uart us=68316006 samples=160 nonzero=1",
+    "68848\t\u001b[32m[PXA app=pxa-audio-latency-probe component=65537 level=INFO] Probe tone accepted\u001b[0m",
+    "68848\tAudioTrace: tone us=68316742 session=1 packet=0 duration=160 delay=160 queued=7680",
+    "68849\t\u001b[32m[PXA app=pxa-audio-latency-probe component=65537 level=INFO] Probe tone accepted\u001b[0m",
+    "68849\tAudioTrace: tone us=68317148 session=1 packet=1 duration=200 delay=300 queued=15680",
+    "68849\t\u001b[32m[PXA app=pxa-audio-latency-probe component=65537 level=INFO] Probe tone accepted\u001b[0m",
+    "68849\tAudioTrace: tone us=68317624 session=1 packet=2 duration=220 delay=0 queued=19200",
+    "68850\t\u001b[32m[PXA app=pxa-audio-latency-probe component=65537 level=INFO] Probe tone accepted\u001b[0m",
+    "68850\tAudioTrace: tone_rejected us=68318082 session=1 duration=120 delay=0",
+    "68850\t\u001b[32m[PXA app=pxa-audio-latency-probe component=65537 level=INFO] Probe tone rejected\u001b[0m",
+    "68851\tAudioTrace: tone_rejected us=68318919 session=1 duration=200 delay=40",
+    "68851\t\u001b[32m[PXA app=pxa-audio-latency-probe component=65537 level=INFO] Probe tone rejected\u001b[0m",
+    "69027\tAudioTrace: render us=68495544 voice=0 packet=0 duration=160 delay=160",
+    "69028\tAudioTrace: uart us=68496178 samples=160 nonzero=0",
+    "69188\tAudioTrace: uart us=68656137 samples=160 nonzero=1",
+    "69347\tAudioTrace: render us=68815523 voice=0 packet=1 duration=200 delay=300",
+    "69348\tAudioTrace: uart us=68816286 samples=160 nonzero=0",
+    "69648\tAudioTrace: uart us=69116124 samples=160 nonzero=1",
+    "69848\tAudioTrace: render us=69315836 voice=0 packet=2 duration=220 delay=0",
+    "dropped=9",
+    "71411\t\u001b[32m[PXA app=pxa-audio-latency-probe component=65537 level=INFO] Probe case door\u001b[0m",
+    "71412\tAudioTrace: tone us=70879799 session=1 packet=3 duration=300 delay=0 queued=4800",
+    "71412\tAudioTrace: render us=70880500 voice=0 packet=3 duration=300 delay=0",
+    "71413\tAudioTrace: uart us=70880852 samples=160 nonzero=1",
+    "69648\tAudioTrace: uart us=69116124 samples=160 nonzero=1",
+    "69848\tAudioTrace: render us=69315836 voice=0 packet=2 duration=220 delay=0",
+    "71411\t\u001b[32m[PXA app=pxa-audio-latency-probe component=65537 level=INFO] Probe case door\u001b[0m",
+    "71412\tAudioTrace: tone us=70879799 session=1 packet=3 duration=300 delay=0 queued=4800",
+    "71412\tAudioTrace: render us=70880500 voice=0 packet=3 duration=300 delay=0",
+    "71413\tAudioTrace: uart us=70880852 samples=160 nonzero=1",
+    "71414\t\u001b[32m[PXA app=pxa-audio-latency-probe component=65537 level=INFO] Probe tone accepted\u001b[0m",
+    "71415\tAudioTrace: tone us=70882966 session=1 packet=0 duration=300 delay=280 queued=13760",
+    "71415\t\u001b[32m[PXA app=pxa-audio-latency-probe component=65537 level=INFO] Probe tone accepted\u001b[0m",
+    "71415\tAudioTrace: tone us=70883453 session=1 packet=1 duration=300 delay=0 queued=18560",
+    "71415\t\u001b[32m[PXA app=pxa-audio-latency-probe component=65537 level=INFO] Probe tone accepted\u001b[0m",
+    "71416\tAudioTrace: tone us=70883846 session=1 packet=2 duration=300 delay=280 queued=27840",
+    "71416\t\u001b[32m[PXA app=pxa-audio-latency-probe component=65537 level=INFO] Probe tone accepted\u001b[0m",
+    "71416\tAudioTrace: tone_rejected us=70884163 session=1 duration=580 delay=0",
+    "71416\t\u001b[32m[PXA app=pxa-audio-latency-probe component=65537 level=INFO] Probe tone rejected\u001b[0m",
+    "71712\tAudioTrace: render us=71180534 voice=0 packet=0 duration=300 delay=280",
+    "71713\tAudioTrace: uart us=71181123 samples=160 nonzero=0",
+    "71993\tAudioTrace: uart us=71461061 samples=160 nonzero=1",
+    "72293\tAudioTrace: render us=71760908 voice=0 packet=1 duration=300 delay=0",
+    "72592\tAudioTrace: render us=72060531 voice=0 packet=2 duration=300 delay=280",
+    "72593\tAudioTrace: uart us=72061087 samples=160 nonzero=0",
+    "72873\tAudioTrace: uart us=72341033 samples=160 nonzero=1"
+  ],
+  "rows": [
+    {
+      "command": "INPUT POINTER DOWN 90 110 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=2;device_us=65668817;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 90 110 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=3;device_us=65751807;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=4;device_us=65752767;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "LOGSUB",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "subscribed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 90 110 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=5;device_us=68229812;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 90 110 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=6;device_us=68312826;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=7;device_us=68313871;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "LOGSUB",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "subscribed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 90 110 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=8;device_us=70794812;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 90 110 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=9;device_us=70876808;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=10;device_us=70877844;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "LOGSUB",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "subscribed"
+        }
+      ]
+    },
+    {
+      "command": "SCREENSHOT JPEG",
+      "frames": [
+        {
+          "kind": "META",
+          "payload": "format=jpeg;width=296;height=240;orientation=logical;frame_id=0;device_us=71098080;source=lvgl;bytes=5447;sha256=c2887219113a17263de7dac6c9c5b2ffe88bfba21a13539aebe89c99aa1374b2"
+        },
+        {
+          "kind": "DATA",
+          "payload": "0\t/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8lJCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/2wBDAQoLCw4NDhwQEBw7KCIoOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozv/wAARCADwASgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDyaiiiszQKKKKACiitG60O6s9Ht9Ukkt3guHKKIpldlOA2GC52nBHB5HcUAZ1Fa8Hh24ksYrue8srMTqWgjuZtjzKOMjjAGQQCxAOKz7O1a9ukt0kijLn780gRFAGSST0oAgorTv8AQbixt4LmOe3vbe4cxJLasWG8YypBAIPI7c5p+o+H5tLhdri+sTcRECW1SbMsZPYjGCR3AJx3oHYyaguf4fxqeoLn+H8aa3Jex3Pj/wAKeFfCPn2FvD4j+3/L9muLlYvsk33S+GABbCtjjo2KPH/gLSvDfn/2ZcXkP2Pb5n9puq/bN+3H2bao8zZuO/8Au8VjeP8AxX/wl3iee/t5rz7B8v2a3uW/1PyKHwoJC5Zc8deKPH/iv/hLvE89/bzXn2D5fs1vct/qfkUPhQSFyy5468VZB0HjrwPoHhi1vo7Kw8UyXFt5ey9mhjNkdxXOXCg9GI/3uKNZ8D6BB4O1fWbKw8U2Fxp/k7F1iGOJJd8gU7QFycDOeRjIo1nxxoE/g7V9Gsr/AMU39xqHkw=="
+        },
+        {
+          "kind": "DATA",
+          "payload": "1024\tsbWJo5Ui2SBjtIbIyM54OcCjWfHGgT+DtX0ayv8AxTf3GoeTsbWJo5Ui2SBjtIbIyM54OcCgDzmvRvHXgfQPDFrfR2Vh4pkuLby9l7NDGbI7iucuFB6MR/vcVwt1/ZX9l2P2T7Z9v/efbfN2+V97935eOfu5znv0rutZ8caBP4O1fRrK/wDFN/cah5OxtYmjlSLZIGO0hsjIzng5wKAPOa7/AMf+AtK8N+f/AGZcXkP2Pb5n9puq/bN+3H2bao8zZuO/+7xXAV3/AIs8e6V4k/4SPfb3k32z7L/ZP2lFb7Hs2+dj5j5e/b/D97jNAEOp6D4Lfwde6zpUmu2txH5f2NdUaFEvMyBX8sKMvsGd2DxkZrhq39Y1611Dwd4c0aGOZbjSvtXnM6gI3mSBl2nOTwOcgfjWBQB6l4x+Elr4Y0HXNZW8mkt7b7P/AGepkBc7mVZPNGwDq3y7T9ap6z4H0CDwdq+s2Vh4psLjT/J2LrEMcSS75Ap2gLk4Gc8jGRR4n+JVrr1r4qtVbUWt9V+x/wBnxTEFLfyyDJkbiF3EZ+XOe+KPHXjjQPE9rfSWV/4pjuLny9llNNGLIbSucoGJ6KT/AL3NAB468D6B4Ytb6OysPFMlxbeXsvZoYzZHcVzlwoPRiP8Ae4rz+2/i/CvTPGPxK0DXtB1y1sm11rjVfs+yK7MZt7fy2UnYAxK7gCT1ycdK890nTrvUDKLaMME2glnVBk5wMsQMnsOppPYa3GUVcg0m+uYpJIrckRsVIZgpLAZIAJyxA5IGSKY2n3SWiXRi/dORghgTznGRnIBwcEioLK1FPlieCZ4ZBh0YqwznBHXpXQf8IxapNNbST6rNcWzmKcWWmCaNJB1XcZFzg+woBtJXZzlFdL/wjFr/AHfEX/gkH/x6q114ejEU32GS+e4gVXkt7uy8hyrOEBUB23fMyjHHXvQJSi9EzDop0kbxSNHIjI6EqysMFSOoIptAwooooAKKKKACiiigAortfBr2mj6YdS1CFJI9SvEsAHUHEWMysM/VBmsi18LTT+KLvQpJ/JktRMS5TdnYCemR1A/WlcdjBropYpR8O4MxuMarKT8p6eVHzVDTNGOo6bqd4JxGNPhWUrtzvywXGc8da6BFv10C3m1/xjqFlDfxkW9oGkn3x9Msu4AKemOcigEX5bS2vta0DTLrRd8N7p1upuHaRZIwI8My4IUBSCTkHPOeCK5Fk1G8020tI9OMkETSvFNFbHdKOC+WA+YDH4V3d7NrP/CY2OkaVrstpG2lxtvjy0bbYSc7DjqF69enpXJaFZXd3p7X91rU2m6Zpj/JKCzMsj/wxqCPmOMnkUimbFpcWcljoGoJa/2ZY22sIkluzA=="
+        },
+        {
+          "kind": "DATA",
+          "payload": "2048\tXSUnDNLuPJwFAIOQOMVT1K0trq38Q/aNKWyuNNkDJOHcu7NKFKvuOGJBLDAHT0qr4otbya0tdXOuTa1YzM0Uc8xYPE45KMrE7Tjng89axrnVtSvbWK1ur+5ngh/1cckrMq9uATTE2VKKKKZIUUUUAFFFFABRRRQAUUUUAFSQTGGUMVDpkb4ySFkAIO04IOOKjooA9Ls/FWu3Phu+1iwfRrDTrGQRjTPIGHBx+Pf2zg9K4PV9SXU7+a4hs4rGGVg32aDIjVsYyB/nrVCilYbdzU8NqD4isJWlhijguI5ZHllWMBQ4zyxGfoOaswW3m2F1pwubaK4W7jm3NcoEKbWBIbODjI4BzyfQ1hUUwudgL60vNXt9RiuIY4LTVZ7mVXkCsYy6uCFPLZCkYGeg9azLHVo1tS0yKjxiOMOGyzYJ2kL/ALIyc+qqO5zhUUrBc1NcjtY5Y/IWBWJfIgk3rs3fIc5POP6HvXoOn6hdWV7q0keiarfW97qEt1BcWVsZY3jcgjkewryqigyq0oVY8stj2P8At+6/6FbxF/4Lz/jWLfarJaa1Jrt9pd9Y28UFvFGl3F5TzMl1HKQoPX5Vb8q82oosY0cJSoy54LUu6zepqWuX9/GrIl1cyTKrdQGYkA/nVKiimdQUUUUAFFFFABRRRQB2er+IodHtdN0Swt9L1CGztVaSSaBLgec/zSbW5GOQPwrSh1jTbrxbpOuz3ttC2p2DwXmHAEEwQx5Yfwg/LjPavOqKVirnZ2dhb6B4f8QW13q1g93c2qLFDBOsm4CRT1HGfReuATxSajZweKdI0e7s9SsYJbKySzuobq4WIx7CcOM9QQe2a42iiwrno6alpkfxC06dNStntYtJERuPMCpu8hhg56HOODzzisDRXt9W8IXXh5ryC0u1vVvLc3DhEl+TYybjwDjkZ61y9FFgudTrDW+j+D4PD4u4Lq8kvTeT/Z5BIkICbFXcOCTkk4rlqKKYBRRRQIKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAoq0NL1BrYXQsLkwEZEohbZj1zjFVaACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAOr1nVdQ0y18Ny2N5Nbsmmqw8tyBnzZOo6GrmtaVpltq2u6rc2nmRWpt9tmjGNTLMm5skchVIbgY7CsaLxZNHbWcbaVps0tjEIoLiWJ2dQGLDgttJyT1Wq1p4ivILi8luVjv0v+bqK5BKynOQeCCCD0IIxSKujYg8Pabql7o91AslpZw=="
+        },
+        {
+          "kind": "DATA",
+          "payload": "3072\tfxTyTwB97RmEEuEJ7EAYznBJ61Tmt9L1XQL7ULGwOnzae8e5BM0iyo5K87uQwOOnByeBVaTxNf8A9o2d5bLDaCwXbbQQr+7jU5yMEknOTnJOc02+197qxextrC00+3lkEkyWwb96wzjJZicDJwBgDNAaFvxXbaVpd2dMsbJllVYpHuHlJPzRhioXpj5hycnPtXPVc1XU5tX1B724WNZHVFIjBAwqhR1J7KKp0xMKKKKBBRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRXcaH8ML7VNPjvLu9WxWZQ0aeV5jYPQnkYrS/4U/wD9R3/yU/8As6jnj3NlQqNXSPNaK9K/4U//ANR3/wAlP/s6P+FP/wDUd/8AJT/7Oj2ke4/q9Tsea0V6V/wp/wD6jv8A5Kf/AGdH/Cn/APqO/wDkp/8AZ0e0j3D6vU7HmtFelf8ACn/+o7/5Kf8A2dH/AAp//qO/+Sn/ANnR7SPcPq9Tsea0V6V/wp//AKjv/kp/9nR/wp//AKjv/kp/9nR7SPcPq9Tsea0V6V/wp/8A6jv/AJKf/Z0f8Kf/AOo7/wCSn/2dHtI9w+r1Ox5rRXpX/Cn/APqO/wDkp/8AZ0f8Kf8A+o7/AOSn/wBnR7SPcPq9Tsea0V6RJ8IHEbGLW1Z8cBrXaD+O4/yrg9V0u60bUZbC9QJNEecHII7EH0NNST2InTnD4kU6KKKozCiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD6UACgAAADgAUUVleIbu5s7CFrWYQyS3MURk2htoZgCcHiuI9s1aKwI9SutP1drS5vkv4RavcOyxqrxbSOuOMHJx9K0v7WtvLsH+fF+QIePVS3PpwKALtFY9x4ns7c3P8Ao93ItpIUuHjhysWO5OenPbJ9q1JJ44rZ7gnMaoXJHOQBmgCSism28SWd1PaxrBdJHdj9xNJFtRzjOAeucZ7YOOKdceIbS3mlUxXDwwPsnuEjzHE3oTnPGRnAOO9AGpRWfca5Z2r3Uc3mLJbbMpt+aTdwuz1yePrVeLW5X8Rz6abOfyo44yHCDgktkk5+7wMfjQBsUVk6zrMum3lhBHayzC4lKvsTdkBWOByOcgfhmn3OuwW8rRLbXU7xxiSYQx7vJB5G7nr7DJoA06KzZ9dto5Yo4Ibi8aSETgW6BsRno3JHX0HNQQ65LL4im077HP5SRRkP5eMFi2SeemAMcetAGzXkXxYAHim3IAGbJCff53r12vI/iz/yNFt/15J/6G9aU/iObE/wzh6KKK6TzQooooAKKKKACiiigAooooAKKA=="
+        },
+        {
+          "kind": "DATA",
+          "payload": "4096\tooAKKKKACiiigAooooAKKKKACiiigD6UrK8Q2EmpWUEEcKzKLqF5EbGCgYFs568Z4rTjkSWJZY2DI6hlYdCD0NOriPbOfi0N7G71C1sbaNLHUICQyhV8mXG3GOu0jnjoQfWoLW21WYaHFLprQLpzgTO8qHOI2XKgE5H68jjrXT0UBc586XeHR/ENv5P7y9lmaBdw+cNGoHfjkHrWo9vKdEa2C/vTbbNuR97bjGfrVyigDA/sy8/s7w9D5Pz2UkRnG4fIBEVPfnk9qp/2I0M95bXOm3t5DczvIjwXrJGVc5Idd4xjJ6A5rq6KAuc5qWl391qg1OGBQ2nFRaQsy/6QP48nt6LnoRnvVtYru38TSXYs5JILu3jjLqy/umUtncCemG7ZrYooAydcguWm067trdrj7Jcb3jQgMVKMvGSB3Hes6fTJo9Wurt9PvrmK9COq214YmiYKFKsA6g9ByM109FAHN6lpxSCCKy0i6SWG3CW09tcqrRH+4xLDKjjruB5qxawahaa6Lie2a4FzaQxSzRFQqSKW3EgkHHzZ4zW5RQAV5H8Wf+Rotv8AryT/ANDevXK8h+K0iP4qhVWBKWaKwHY7nOPyIrSn8RzYn+GcTRRRXSeaFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFAHT6L8Qdc0SyWziaC4hjGI1uELbB6Agg4+taP/C2de/59NO/79v/APF1w9FTyx7GiqzSsmdx/wALZ17/AJ9NO/79v/8AF0f8LZ17/n007/v2/wD8XXD0Uckew/bVO53H/C2de/59NO/79v8A/F0f8LZ17/n007/v2/8A8XXD0Uckewe2qdzuP+Fs69/z6ad/37f/AOLo/wCFs69/z6ad/wB+3/8Ai64eijkj2D21Tudx/wALZ17/AJ9NO/79v/8AF0f8LZ17/n007/v2/wD8XXD0Uckewe2qdzuP+Fs69/z6ad/37f8A+Lo/4Wzr3/Ppp3/ft/8A4uuHoo5I9g9tU7ncf8LZ17/n007/AL9v/wDF0f8AC2de/wCfTTv+/b//ABdcPRRyR7B7ap3O2k+K3iB42VbewjJHDLE+R+bEVx95eXF/dyXd3M008rbndupNQ0U1FLYmU5S3YUUUUyAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiig=="
+        },
+        {
+          "kind": "DATA",
+          "payload": "5120\tACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP/Z"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "INPUT CANCEL",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=11;device_us=73419695;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "PACKAGE stop pxa-audio-latency-probe",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "stop_queued"
+        }
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "name": "shotgun",
+      "log_begin": 0,
+      "log_end": 18
+    },
+    {
+      "name": "alert-shotgun",
+      "log_begin": 18,
+      "log_end": 46
+    },
+    {
+      "name": "door",
+      "log_begin": 46,
+      "log_end": 73
+    }
+  ],
+  "device": "pai-touch;296x240;serial suffix d5:d4:f0;application firmware 1d7d760-dirty;Maze Evil 0.1.7"
+}

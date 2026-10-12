@@ -1,0 +1,18 @@
+{"scope":"Host sample clock; excludes scheduling, sink and speaker","profiles":[
+{"name":"Shotgun","desired_duration_ms":240,"rendered_duration_ms":240.000,"accepted":3,"dropped":0,"actual_onsets_ms":[0.000,0.000,40.000],"desired_onsets_ms":[0,0,40]},
+{"name":"EmptyClick","desired_duration_ms":25,"rendered_duration_ms":25.000,"accepted":2,"dropped":0,"actual_onsets_ms":[0.000,0.000],"desired_onsets_ms":[0,0]},
+{"name":"ImpAlert","desired_duration_ms":500,"rendered_duration_ms":500.000,"accepted":3,"dropped":0,"actual_onsets_ms":[0.000,160.000,300.000],"desired_onsets_ms":[0,160,300]},
+{"name":"ImpFireball","desired_duration_ms":320,"rendered_duration_ms":320.000,"accepted":4,"dropped":0,"actual_onsets_ms":[0.000,0.000,80.000,160.000],"desired_onsets_ms":[0,0,80,160]},
+{"name":"ImpMelee","desired_duration_ms":200,"rendered_duration_ms":200.000,"accepted":3,"dropped":0,"actual_onsets_ms":[0.000,80.000,0.000],"desired_onsets_ms":[0,80,0]},
+{"name":"ImpPain","desired_duration_ms":180,"rendered_duration_ms":180.000,"accepted":2,"dropped":0,"actual_onsets_ms":[0.000,80.000],"desired_onsets_ms":[0,80]},
+{"name":"ImpDeath","desired_duration_ms":720,"rendered_duration_ms":720.000,"accepted":4,"dropped":0,"actual_onsets_ms":[0.000,170.000,360.000,0.000],"desired_onsets_ms":[0,170,360,0]},
+{"name":"FireballExplode","desired_duration_ms":300,"rendered_duration_ms":300.000,"accepted":3,"dropped":0,"actual_onsets_ms":[0.000,0.000,60.000],"desired_onsets_ms":[0,0,60]},
+{"name":"PlayerPain","desired_duration_ms":230,"rendered_duration_ms":230.000,"accepted":2,"dropped":0,"actual_onsets_ms":[0.000,100.000],"desired_onsets_ms":[0,100]},
+{"name":"PickupHealth","desired_duration_ms":320,"rendered_duration_ms":320.000,"accepted":3,"dropped":0,"actual_onsets_ms":[0.000,70.000,140.000],"desired_onsets_ms":[0,70,140]},
+{"name":"PickupAmmo","desired_duration_ms":210,"rendered_duration_ms":210.000,"accepted":2,"dropped":0,"actual_onsets_ms":[0.000,60.000],"desired_onsets_ms":[0,60]},
+{"name":"DoorOpen","desired_duration_ms":580,"rendered_duration_ms":580.000,"accepted":5,"dropped":0,"actual_onsets_ms":[0.000,280.000,0.000,280.000,0.000],"desired_onsets_ms":[0,280,0,280,0]},
+{"name":"DoorClose","desired_duration_ms":670,"rendered_duration_ms":670.000,"accepted":4,"dropped":0,"actual_onsets_ms":[0.000,280.000,0.000,550.000],"desired_onsets_ms":[0,280,0,550]},
+{"name":"ExitSealed","desired_duration_ms":500,"rendered_duration_ms":500.000,"accepted":2,"dropped":0,"actual_onsets_ms":[0.000,180.000],"desired_onsets_ms":[0,180]},
+{"name":"Win","desired_duration_ms":1120,"rendered_duration_ms":1120.000,"accepted":6,"dropped":0,"actual_onsets_ms":[0.000,130.000,260.000,390.000,520.000,520.000],"desired_onsets_ms":[0,130,260,390,520,520]},
+{"name":"Die","desired_duration_ms":1300,"rendered_duration_ms":1300.000,"accepted":5,"dropped":0,"actual_onsets_ms":[0.000,280.000,600.000,0.000,400.000],"desired_onsets_ms":[0,280,600,0,400]}
+]}

@@ -1,0 +1,40 @@
+{
+  "before": {
+    "fps": 30.414719913378878,
+    "sram_stable": 286280,
+    "sram_window_peak": 286368,
+    "psram_stable": 2092840,
+    "psram_window_peak": 2093440,
+    "startup_heap": [
+      {
+        "sram_total": 320491,
+        "sram_free": 34211,
+        "sram_min": 32411,
+        "sram_largest": 19456,
+        "psram_total": 8358572,
+        "psram_free": 6267840,
+        "psram_min": 5545148,
+        "psram_largest": 5373952
+      }
+    ]
+  },
+  "after": {
+    "fps": 30.376547685104555,
+    "sram_stable": 279936,
+    "sram_window_peak": 280060,
+    "psram_stable": 2063720,
+    "psram_window_peak": 2068984,
+    "startup_heap": [
+      {
+        "sram_total": 320491,
+        "sram_free": 40739,
+        "sram_min": 40703,
+        "sram_largest": 19456,
+        "psram_total": 8358572,
+        "psram_free": 6296968,
+        "psram_min": 5574304,
+        "psram_largest": 5636096
+      }
+    ]
+  }
+}

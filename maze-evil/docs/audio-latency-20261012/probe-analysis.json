@@ -1,0 +1,217 @@
+{
+  "scope": "Summarize AudioTrace software timestamps; never estimates acoustic onset.",
+  "passed": true,
+  "phases": [
+    {
+      "name": "shotgun",
+      "accepted": 3,
+      "rejected": 0,
+      "metrics": {
+        "fifo_ahead_ms": {
+          "count": 3,
+          "mean": 173.33333333333334,
+          "min": 0.0,
+          "max": 320.0
+        },
+        "render_wait_ms": {
+          "count": 3,
+          "mean": 185.31433333333334,
+          "min": 0.707,
+          "max": 337.199
+        },
+        "release_sample_to_submit_ms": {
+          "count": 0
+        },
+        "quiet_submit_to_uart_ms": {
+          "count": 0
+        },
+        "quiet_release_sample_to_uart_ms": {
+          "count": 0
+        }
+      },
+      "tones": [
+        {
+          "kind": "tone",
+          "us": 65754199,
+          "session": 1,
+          "packet": 0,
+          "duration": 220,
+          "delay": 0,
+          "queued": 3520,
+          "fifo_ahead_ms": 0.0,
+          "render_wait_ms": 0.707
+        },
+        {
+          "kind": "tone",
+          "us": 65756877,
+          "session": 1,
+          "packet": 1,
+          "duration": 120,
+          "delay": 0,
+          "queued": 5120,
+          "fifo_ahead_ms": 200.0,
+          "render_wait_ms": 218.037
+        },
+        {
+          "kind": "tone",
+          "us": 65757331,
+          "session": 1,
+          "packet": 2,
+          "duration": 200,
+          "delay": 40,
+          "queued": 8960,
+          "fifo_ahead_ms": 320.0,
+          "render_wait_ms": 337.199
+        }
+      ]
+    },
+    {
+      "name": "alert-shotgun",
+      "accepted": 4,
+      "rejected": 2,
+      "metrics": {
+        "fifo_ahead_ms": {
+          "count": 4,
+          "mean": 405.0,
+          "min": 0.0,
+          "max": 980.0
+        },
+        "render_wait_ms": {
+          "count": 4,
+          "mean": 419.03025,
+          "min": 0.732,
+          "max": 998.212
+        },
+        "release_sample_to_submit_ms": {
+          "count": 0
+        },
+        "quiet_submit_to_uart_ms": {
+          "count": 0
+        },
+        "quiet_release_sample_to_uart_ms": {
+          "count": 0
+        }
+      },
+      "tones": [
+        {
+          "kind": "tone",
+          "us": 68314902,
+          "session": 1,
+          "packet": 3,
+          "duration": 180,
+          "delay": 0,
+          "queued": 2880,
+          "fifo_ahead_ms": 0.0,
+          "render_wait_ms": 0.732
+        },
+        {
+          "kind": "tone",
+          "us": 68316742,
+          "session": 1,
+          "packet": 0,
+          "duration": 160,
+          "delay": 160,
+          "queued": 7680,
+          "fifo_ahead_ms": 160.0,
+          "render_wait_ms": 178.802
+        },
+        {
+          "kind": "tone",
+          "us": 68317148,
+          "session": 1,
+          "packet": 1,
+          "duration": 200,
+          "delay": 300,
+          "queued": 15680,
+          "fifo_ahead_ms": 480.0,
+          "render_wait_ms": 498.375
+        },
+        {
+          "kind": "tone",
+          "us": 68317624,
+          "session": 1,
+          "packet": 2,
+          "duration": 220,
+          "delay": 0,
+          "queued": 19200,
+          "fifo_ahead_ms": 980.0,
+          "render_wait_ms": 998.212
+        }
+      ]
+    },
+    {
+      "name": "door",
+      "accepted": 4,
+      "rejected": 1,
+      "metrics": {
+        "fifo_ahead_ms": {
+          "count": 4,
+          "mean": 575.0,
+          "min": 0.0,
+          "max": 1160.0
+        },
+        "render_wait_ms": {
+          "count": 4,
+          "mean": 588.10225,
+          "min": 0.701,
+          "max": 1176.685
+        },
+        "release_sample_to_submit_ms": {
+          "count": 0
+        },
+        "quiet_submit_to_uart_ms": {
+          "count": 0
+        },
+        "quiet_release_sample_to_uart_ms": {
+          "count": 0
+        }
+      },
+      "tones": [
+        {
+          "kind": "tone",
+          "us": 70879799,
+          "session": 1,
+          "packet": 3,
+          "duration": 300,
+          "delay": 0,
+          "queued": 4800,
+          "fifo_ahead_ms": 0.0,
+          "render_wait_ms": 0.701
+        },
+        {
+          "kind": "tone",
+          "us": 70882966,
+          "session": 1,
+          "packet": 0,
+          "duration": 300,
+          "delay": 280,
+          "queued": 13760,
+          "fifo_ahead_ms": 280.0,
+          "render_wait_ms": 297.568
+        },
+        {
+          "kind": "tone",
+          "us": 70883453,
+          "session": 1,
+          "packet": 1,
+          "duration": 300,
+          "delay": 0,
+          "queued": 18560,
+          "fifo_ahead_ms": 860.0,
+          "render_wait_ms": 877.455
+        },
+        {
+          "kind": "tone",
+          "us": 70883846,
+          "session": 1,
+          "packet": 2,
+          "duration": 300,
+          "delay": 280,
+          "queued": 27840,
+          "fifo_ahead_ms": 1160.0,
+          "render_wait_ms": 1176.685
+        }
+      ]
+    }
+  ]
+}

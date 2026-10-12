@@ -1,0 +1,1514 @@
+{
+  "scope": "Measure Maze Evil software audio latency with PXA_AUDIO_LATENCY_TRACE.\n\nUses the device clock in AudioTrace logs, not serial command round-trip time.\nUART submission is not speaker onset. Does not record a microphone or modify\nvolume/settings/save data. Requires an inactive installed game and trace build.\n",
+  "rows": [
+    {
+      "command": "INPUT KEY HOME",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=13;device_us=105517660;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "PACKAGE run pxa-maze-evil",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "launch_queued"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 148 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=14;device_us=107521000;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 148 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=15;device_us=107582814;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=16;device_us=107583862;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY START",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=local"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=17;device_us=108586854;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=18;device_us=108649831;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=19;device_us=108651417;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "LOGSUB",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "subscribed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=20;device_us=109786813;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=21;device_us=109851098;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=22;device_us=109852626;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "LOGSUB",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "subscribed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=23;device_us=110986851;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=24;device_us=111048812;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=25;device_us=111050216;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "LOGSUB",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "subscribed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=26;device_us=112188813;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=27;device_us=112251135;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=28;device_us=112252172;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "LOGSUB",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "subscribed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=29;device_us=113386850;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=30;device_us=113448812;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=31;device_us=113449757;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "LOGSUB",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "subscribed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=32;device_us=114587822;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=33;device_us=114650953;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=34;device_us=114652044;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "LOGSUB",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "subscribed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY STOP",
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320475;sram_free=40539;sram_min=40367;sram_largest=17408;psram_total=8358572;psram_free=6275264;psram_min=6271536;psram_largest=5636096"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=28956;external=16627;peak_internal=28956;peak_external=16637;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=28956;external=235"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=boot"
+        }
+      ]
+    },
+    {
+      "command": "PACKAGE stop pxa-maze-evil",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "stop_queued"
+        }
+      ]
+    },
+    {
+      "command": "PACKAGE run pxa-maze-evil",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "launch_queued"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 148 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=35;device_us=118712815;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 148 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=36;device_us=118775817;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=37;device_us=118776713;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY START",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=local"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=38;device_us=119479870;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=39;device_us=119541815;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=40;device_us=119542944;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "LOGSUB",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "subscribed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=41;device_us=120079828;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=42;device_us=120141850;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=43;device_us=120143007;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "LOGSUB",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "subscribed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=44;device_us=120679823;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=45;device_us=120742828;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=46;device_us=120744159;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "LOGSUB",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "subscribed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=47;device_us=121281827;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=48;device_us=121346820;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=49;device_us=121348131;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "LOGSUB",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "subscribed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=50;device_us=121881297;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=51;device_us=121946138;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=52;device_us=121947255;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "LOGSUB",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "subscribed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=53;device_us=122479815;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=54;device_us=122542154;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=55;device_us=122543179;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "LOGSUB",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "subscribed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=56;device_us=123079819;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=57;device_us=123141810;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=58;device_us=123142778;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "LOGSUB",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "subscribed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=59;device_us=123681333;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=60;device_us=123743815;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=61;device_us=123744916;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "LOGSUB",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "subscribed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY STOP",
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320475;sram_free=40539;sram_min=40339;sram_largest=17408;psram_total=8358572;psram_free=6275236;psram_min=6271376;psram_largest=5373952"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=28956;external=16627;peak_internal=28956;peak_external=16637;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=28956;external=235"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=boot"
+        }
+      ]
+    },
+    {
+      "command": "PACKAGE stop pxa-maze-evil",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "stop_queued"
+        }
+      ]
+    },
+    {
+      "command": "PACKAGE run pxa-maze-evil",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "launch_queued"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 148 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=62;device_us=127203814;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 148 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=63;device_us=127267812;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=64;device_us=127268765;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY START",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=local"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=65;device_us=127971857;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=66;device_us=128175829;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=67;device_us=128177194;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "LOGSUB",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "subscribed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=68;device_us=129172809;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=69;device_us=129376079;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=70;device_us=129378410;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "LOGSUB",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "subscribed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=71;device_us=130371816;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=72;device_us=130573826;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=73;device_us=130574936;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "LOGSUB",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "subscribed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=74;device_us=131571814;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 220 120 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=75;device_us=131773815;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=76;device_us=131774966;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "LOGSUB",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "subscribed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY STOP",
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320475;sram_free=40495;sram_min=40367;sram_largest=17408;psram_total=8358572;psram_free=6275224;psram_min=6269904;psram_largest=5373952"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=28956;external=16627;peak_internal=28956;peak_external=16637;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=28956;external=235"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=boot"
+        }
+      ]
+    },
+    {
+      "command": "INPUT CANCEL",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=77;device_us=134295437;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "PACKAGE stop pxa-maze-evil",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "stop_queued"
+        }
+      ]
+    }
+  ],
+  "logs": [
+    "109128\tAudioTrace: input us=108596493 sampled=108586771 phase=0 x=220 y=120",
+    "dropped=3",
+    "109193\tAudioTrace: input us=108661117 sampled=108649583 phase=2 x=220 y=120",
+    "109206\tAudioTrace: tone us=108674646 session=2 packet=0 duration=220 delay=0 queued=3520",
+    "109207\tAudioTrace: render us=108675466 voice=0 packet=0 duration=220 delay=0",
+    "108078\tAudioTrace: input us=107545497 sampled=107520681 phase=0 x=148 y=120",
+    "108117\tAudioTrace: input us=107585414 sampled=107582643 phase=2 x=148 y=120",
+    "109128\tAudioTrace: input us=108596493 sampled=108586771 phase=0 x=220 y=120",
+    "109193\tAudioTrace: input us=108661117 sampled=108649583 phase=2 x=220 y=120",
+    "109206\tAudioTrace: tone us=108674646 session=2 packet=0 duration=220 delay=0 queued=3520",
+    "109207\tAudioTrace: render us=108675466 voice=0 packet=0 duration=220 delay=0",
+    "109208\tAudioTrace: uart us=108675788 samples=160 nonzero=1",
+    "109208\tAudioTrace: tone us=108676553 session=2 packet=1 duration=120 delay=0 queued=5120",
+    "109209\tAudioTrace: tone us=108676840 session=2 packet=2 duration=200 delay=40 queued=8960",
+    "109428\tAudioTrace: render us=108896124 voice=0 packet=1 duration=120 delay=0",
+    "109547\tAudioTrace: render us=109015186 voice=0 packet=2 duration=200 delay=40",
+    "109548\tAudioTrace: uart us=109016334 samples=160 nonzero=0",
+    "109588\tAudioTrace: uart us=109056538 samples=160 nonzero=1",
+    "110320\tAudioTrace: input us=109787886 sampled=109786915 phase=0 x=220 y=120",
+    "110384\tAudioTrace: input us=109852471 sampled=109850350 phase=2 x=220 y=120",
+    "dropped=1",
+    "110396\tAudioTrace: tone us=109864681 session=2 packet=3 duration=220 delay=0 queued=3520",
+    "110397\tAudioTrace: render us=109865535 voice=0 packet=3 duration=220 delay=0",
+    "110398\tAudioTrace: uart us=109865867 samples=160 nonzero=1",
+    "110398\tAudioTrace: tone us=109866626 session=2 packet=0 duration=120 delay=0 queued=5120",
+    "109428\tAudioTrace: render us=108896124 voice=0 packet=1 duration=120 delay=0",
+    "109547\tAudioTrace: render us=109015186 voice=0 packet=2 duration=200 delay=40",
+    "109548\tAudioTrace: uart us=109016334 samples=160 nonzero=0",
+    "109588\tAudioTrace: uart us=109056538 samples=160 nonzero=1",
+    "110320\tAudioTrace: input us=109787886 sampled=109786915 phase=0 x=220 y=120",
+    "110384\tAudioTrace: input us=109852471 sampled=109850350 phase=2 x=220 y=120",
+    "110396\tAudioTrace: tone us=109864681 session=2 packet=3 duration=220 delay=0 queued=3520",
+    "110397\tAudioTrace: render us=109865535 voice=0 packet=3 duration=220 delay=0",
+    "110398\tAudioTrace: uart us=109865867 samples=160 nonzero=1",
+    "110398\tAudioTrace: tone us=109866626 session=2 packet=0 duration=120 delay=0 queued=5120",
+    "110399\tAudioTrace: tone us=109866922 session=2 packet=1 duration=200 delay=40 queued=8960",
+    "110618\tAudioTrace: render us=110085979 voice=0 packet=0 duration=120 delay=0",
+    "110737\tAudioTrace: render us=110205611 voice=0 packet=1 duration=200 delay=40",
+    "110738\tAudioTrace: uart us=110206257 samples=160 nonzero=0",
+    "110778\tAudioTrace: uart us=110246272 samples=160 nonzero=1",
+    "111538\tAudioTrace: input us=111006045 sampled=110987206 phase=0 x=220 y=120",
+    "111605\tAudioTrace: input us=111072867 sampled=111048430 phase=2 x=220 y=120",
+    "dropped=1",
+    "111616\tAudioTrace: tone us=111084673 session=2 packet=2 duration=220 delay=0 queued=3520",
+    "111617\tAudioTrace: render us=111085495 voice=0 packet=2 duration=220 delay=0",
+    "111618\tAudioTrace: uart us=111085834 samples=160 nonzero=1",
+    "111618\tAudioTrace: tone us=111086588 session=2 packet=3 duration=120 delay=0 queued=5120",
+    "110399\tAudioTrace: tone us=109866922 session=2 packet=1 duration=200 delay=40 queued=8960",
+    "110618\tAudioTrace: render us=110085979 voice=0 packet=0 duration=120 delay=0",
+    "110737\tAudioTrace: render us=110205611 voice=0 packet=1 duration=200 delay=40",
+    "110738\tAudioTrace: uart us=110206257 samples=160 nonzero=0",
+    "110778\tAudioTrace: uart us=110246272 samples=160 nonzero=1",
+    "111538\tAudioTrace: input us=111006045 sampled=110987206 phase=0 x=220 y=120",
+    "111605\tAudioTrace: input us=111072867 sampled=111048430 phase=2 x=220 y=120",
+    "111616\tAudioTrace: tone us=111084673 session=2 packet=2 duration=220 delay=0 queued=3520",
+    "111617\tAudioTrace: render us=111085495 voice=0 packet=2 duration=220 delay=0",
+    "111618\tAudioTrace: uart us=111085834 samples=160 nonzero=1",
+    "111618\tAudioTrace: tone us=111086588 session=2 packet=3 duration=120 delay=0 queued=5120",
+    "111619\tAudioTrace: tone us=111086854 session=2 packet=0 duration=200 delay=40 queued=8960",
+    "111838\tAudioTrace: render us=111305989 voice=0 packet=3 duration=120 delay=0",
+    "111957\tAudioTrace: render us=111425577 voice=0 packet=0 duration=200 delay=40",
+    "111958\tAudioTrace: uart us=111426150 samples=160 nonzero=0",
+    "111998\tAudioTrace: uart us=111466201 samples=160 nonzero=1",
+    "112725\tAudioTrace: input us=112193505 sampled=112188859 phase=0 x=220 y=120",
+    "dropped=3",
+    "112795\tAudioTrace: input us=112263713 sampled=112250634 phase=2 x=220 y=120",
+    "112801\tAudioTrace: tone us=112269703 session=2 packet=1 duration=220 delay=0 queued=3520",
+    "112802\tAudioTrace: render us=112270476 voice=0 packet=1 duration=220 delay=0",
+    "111838\tAudioTrace: render us=111305989 voice=0 packet=3 duration=120 delay=0",
+    "111957\tAudioTrace: render us=111425577 voice=0 packet=0 duration=200 delay=40",
+    "111958\tAudioTrace: uart us=111426150 samples=160 nonzero=0",
+    "111998\tAudioTrace: uart us=111466201 samples=160 nonzero=1",
+    "112725\tAudioTrace: input us=112193505 sampled=112188859 phase=0 x=220 y=120",
+    "112795\tAudioTrace: input us=112263713 sampled=112250634 phase=2 x=220 y=120",
+    "112801\tAudioTrace: tone us=112269703 session=2 packet=1 duration=220 delay=0 queued=3520",
+    "112802\tAudioTrace: render us=112270476 voice=0 packet=1 duration=220 delay=0",
+    "112803\tAudioTrace: uart us=112270793 samples=160 nonzero=1",
+    "112803\tAudioTrace: tone us=112271508 session=2 packet=2 duration=120 delay=0 queued=5120",
+    "112803\tAudioTrace: tone us=112271759 session=2 packet=3 duration=200 delay=40 queued=8960",
+    "113023\tAudioTrace: render us=112490992 voice=0 packet=2 duration=120 delay=0",
+    "113142\tAudioTrace: render us=112610582 voice=0 packet=3 duration=200 delay=40",
+    "113143\tAudioTrace: uart us=112611232 samples=160 nonzero=0",
+    "113183\tAudioTrace: uart us=112651512 samples=160 nonzero=1",
+    "113920\tAudioTrace: input us=113387987 sampled=113387184 phase=0 x=220 y=120",
+    "113981\tAudioTrace: input us=113449432 sampled=113448618 phase=2 x=220 y=120",
+    "dropped=1",
+    "113992\tAudioTrace: tone us=113459766 session=2 packet=0 duration=220 delay=0 queued=3520",
+    "113992\tAudioTrace: render us=113460601 voice=0 packet=0 duration=220 delay=0",
+    "113993\tAudioTrace: uart us=113460961 samples=160 nonzero=1",
+    "113994\tAudioTrace: tone us=113461871 session=2 packet=1 duration=120 delay=0 queued=5120",
+    "112803\tAudioTrace: tone us=112271759 session=2 packet=3 duration=200 delay=40 queued=8960",
+    "113023\tAudioTrace: render us=112490992 voice=0 packet=2 duration=120 delay=0",
+    "113142\tAudioTrace: render us=112610582 voice=0 packet=3 duration=200 delay=40",
+    "113143\tAudioTrace: uart us=112611232 samples=160 nonzero=0",
+    "113183\tAudioTrace: uart us=112651512 samples=160 nonzero=1",
+    "113920\tAudioTrace: input us=113387987 sampled=113387184 phase=0 x=220 y=120",
+    "113981\tAudioTrace: input us=113449432 sampled=113448618 phase=2 x=220 y=120",
+    "113992\tAudioTrace: tone us=113459766 session=2 packet=0 duration=220 delay=0 queued=3520",
+    "113992\tAudioTrace: render us=113460601 voice=0 packet=0 duration=220 delay=0",
+    "113993\tAudioTrace: uart us=113460961 samples=160 nonzero=1",
+    "113994\tAudioTrace: tone us=113461871 session=2 packet=1 duration=120 delay=0 queued=5120",
+    "113994\tAudioTrace: tone us=113462524 session=2 packet=2 duration=200 delay=40 queued=8960",
+    "114213\tAudioTrace: render us=113681115 voice=0 packet=1 duration=120 delay=0",
+    "114332\tAudioTrace: render us=113800581 voice=0 packet=2 duration=200 delay=40",
+    "114333\tAudioTrace: uart us=113801173 samples=160 nonzero=0",
+    "114373\tAudioTrace: uart us=113841484 samples=160 nonzero=1",
+    "115132\tAudioTrace: input us=114599818 sampled=114587631 phase=0 x=220 y=120",
+    "115204\tAudioTrace: input us=114672625 sampled=114650615 phase=2 x=220 y=120",
+    "dropped=1",
+    "115215\tAudioTrace: tone us=114683179 session=2 packet=3 duration=220 delay=0 queued=3520",
+    "115216\tAudioTrace: render us=114683975 voice=0 packet=3 duration=220 delay=0",
+    "115216\tAudioTrace: uart us=114684255 samples=160 nonzero=1",
+    "115217\tAudioTrace: tone us=114684997 session=2 packet=0 duration=120 delay=0 queued=5120",
+    "113994\tAudioTrace: tone us=113462524 session=2 packet=2 duration=200 delay=40 queued=8960",
+    "114213\tAudioTrace: render us=113681115 voice=0 packet=1 duration=120 delay=0",
+    "114332\tAudioTrace: render us=113800581 voice=0 packet=2 duration=200 delay=40",
+    "114333\tAudioTrace: uart us=113801173 samples=160 nonzero=0",
+    "114373\tAudioTrace: uart us=113841484 samples=160 nonzero=1",
+    "115132\tAudioTrace: input us=114599818 sampled=114587631 phase=0 x=220 y=120",
+    "115204\tAudioTrace: input us=114672625 sampled=114650615 phase=2 x=220 y=120",
+    "115215\tAudioTrace: tone us=114683179 session=2 packet=3 duration=220 delay=0 queued=3520",
+    "115216\tAudioTrace: render us=114683975 voice=0 packet=3 duration=220 delay=0",
+    "115216\tAudioTrace: uart us=114684255 samples=160 nonzero=1",
+    "115217\tAudioTrace: tone us=114684997 session=2 packet=0 duration=120 delay=0 queued=5120",
+    "115217\tAudioTrace: tone us=114685543 session=2 packet=1 duration=200 delay=40 queued=8960",
+    "115435\tAudioTrace: render us=114903543 voice=0 packet=0 duration=120 delay=0",
+    "115555\tAudioTrace: render us=115023464 voice=0 packet=1 duration=200 delay=40",
+    "115556\tAudioTrace: uart us=115024234 samples=160 nonzero=0",
+    "115596\tAudioTrace: uart us=115064073 samples=160 nonzero=1",
+    "120012\tAudioTrace: input us=119480327 sampled=119477568 phase=0 x=220 y=120",
+    "dropped=3",
+    "120076\tAudioTrace: input us=119544701 sampled=119541555 phase=2 x=220 y=120",
+    "120081\tAudioTrace: tone us=119549571 session=3 packet=0 duration=220 delay=0 queued=3520",
+    "120082\tAudioTrace: render us=119550386 voice=0 packet=0 duration=220 delay=0",
+    "119246\tAudioTrace: input us=118714407 sampled=118713218 phase=0 x=148 y=120",
+    "119320\tAudioTrace: input us=118788357 sampled=118775497 phase=2 x=148 y=120",
+    "120012\tAudioTrace: input us=119480327 sampled=119477568 phase=0 x=220 y=120",
+    "120076\tAudioTrace: input us=119544701 sampled=119541555 phase=2 x=220 y=120",
+    "120081\tAudioTrace: tone us=119549571 session=3 packet=0 duration=220 delay=0 queued=3520",
+    "120082\tAudioTrace: render us=119550386 voice=0 packet=0 duration=220 delay=0",
+    "120082\tAudioTrace: uart us=119550670 samples=160 nonzero=1",
+    "120083\tAudioTrace: tone us=119551722 session=3 packet=1 duration=120 delay=0 queued=5120",
+    "120084\tAudioTrace: tone us=119552375 session=3 packet=2 duration=200 delay=40 queued=8960",
+    "120303\tAudioTrace: render us=119771002 voice=0 packet=1 duration=120 delay=0",
+    "120422\tAudioTrace: render us=119890167 voice=0 packet=2 duration=200 delay=40",
+    "120423\tAudioTrace: uart us=119891195 samples=160 nonzero=0",
+    "120463\tAudioTrace: uart us=119931481 samples=160 nonzero=1",
+    "120632\tAudioTrace: input us=120100340 sampled=120079686 phase=0 x=220 y=120",
+    "dropped=2",
+    "120676\tAudioTrace: input us=120144706 sampled=120141405 phase=2 x=220 y=120",
+    "120679\tAudioTrace: tone us=120146828 session=3 packet=3 duration=220 delay=0 queued=3520",
+    "120679\tAudioTrace: tone us=120147184 session=3 packet=0 duration=120 delay=0 queued=5440",
+    "120083\tAudioTrace: tone us=119551722 session=3 packet=1 duration=120 delay=0 queued=5120",
+    "120084\tAudioTrace: tone us=119552375 session=3 packet=2 duration=200 delay=40 queued=8960",
+    "120303\tAudioTrace: render us=119771002 voice=0 packet=1 duration=120 delay=0",
+    "120422\tAudioTrace: render us=119890167 voice=0 packet=2 duration=200 delay=40",
+    "120423\tAudioTrace: uart us=119891195 samples=160 nonzero=0",
+    "120463\tAudioTrace: uart us=119931481 samples=160 nonzero=1",
+    "120632\tAudioTrace: input us=120100340 sampled=120079686 phase=0 x=220 y=120",
+    "120676\tAudioTrace: input us=120144706 sampled=120141405 phase=2 x=220 y=120",
+    "120679\tAudioTrace: tone us=120146828 session=3 packet=3 duration=220 delay=0 queued=3520",
+    "120679\tAudioTrace: tone us=120147184 session=3 packet=0 duration=120 delay=0 queued=5440",
+    "120679\tAudioTrace: tone us=120147506 session=3 packet=1 duration=200 delay=40 queued=9280",
+    "120683\tAudioTrace: render us=120150910 voice=0 packet=3 duration=220 delay=0",
+    "120903\tAudioTrace: render us=120370961 voice=0 packet=0 duration=120 delay=0",
+    "121022\tAudioTrace: render us=120490704 voice=0 packet=1 duration=200 delay=40",
+    "121023\tAudioTrace: uart us=120491325 samples=160 nonzero=0",
+    "121063\tAudioTrace: uart us=120531224 samples=160 nonzero=1",
+    "121221\tAudioTrace: input us=120689478 sampled=120679672 phase=0 x=220 y=120",
+    "121295\tAudioTrace: input us=120762939 sampled=120742519 phase=2 x=220 y=120",
+    "121301\tAudioTrace: tone us=120769712 session=3 packet=2 duration=220 delay=0 queued=3520",
+    "121303\tAudioTrace: render us=120770844 voice=0 packet=2 duration=220 delay=0",
+    "121303\tAudioTrace: uart us=120771230 samples=160 nonzero=1",
+    "121304\tAudioTrace: tone us=120771863 session=3 packet=3 duration=120 delay=0 queued=5120",
+    "121304\tAudioTrace: tone us=120772423 session=3 packet=0 duration=200 delay=40 queued=8960",
+    "120683\tAudioTrace: render us=120150910 voice=0 packet=3 duration=220 delay=0",
+    "120903\tAudioTrace: render us=120370961 voice=0 packet=0 duration=120 delay=0",
+    "121022\tAudioTrace: render us=120490704 voice=0 packet=1 duration=200 delay=40",
+    "121023\tAudioTrace: uart us=120491325 samples=160 nonzero=0",
+    "121063\tAudioTrace: uart us=120531224 samples=160 nonzero=1",
+    "121221\tAudioTrace: input us=120689478 sampled=120679672 phase=0 x=220 y=120",
+    "121295\tAudioTrace: input us=120762939 sampled=120742519 phase=2 x=220 y=120",
+    "121301\tAudioTrace: tone us=120769712 session=3 packet=2 duration=220 delay=0 queued=3520",
+    "121303\tAudioTrace: render us=120770844 voice=0 packet=2 duration=220 delay=0",
+    "121303\tAudioTrace: uart us=120771230 samples=160 nonzero=1",
+    "121304\tAudioTrace: tone us=120771863 session=3 packet=3 duration=120 delay=0 queued=5120",
+    "121304\tAudioTrace: tone us=120772423 session=3 packet=0 duration=200 delay=40 queued=8960",
+    "121522\tAudioTrace: render us=120990584 voice=0 packet=3 duration=120 delay=0",
+    "121642\tAudioTrace: render us=121110559 voice=0 packet=0 duration=200 delay=40",
+    "121643\tAudioTrace: uart us=121111270 samples=160 nonzero=0",
+    "121683\tAudioTrace: uart us=121151524 samples=160 nonzero=1",
+    "121818\tAudioTrace: input us=121286587 sampled=121282044 phase=0 x=220 y=120",
+    "dropped=2",
+    "121886\tAudioTrace: input us=121354212 sampled=121346585 phase=2 x=220 y=120",
+    "121896\tAudioTrace: tone us=121364457 session=3 packet=1 duration=220 delay=0 queued=3520",
+    "121896\tAudioTrace: tone us=121364746 session=3 packet=2 duration=120 delay=0 queued=5440",
+    "121304\tAudioTrace: tone us=120771863 session=3 packet=3 duration=120 delay=0 queued=5120",
+    "121304\tAudioTrace: tone us=120772423 session=3 packet=0 duration=200 delay=40 queued=8960",
+    "121522\tAudioTrace: render us=120990584 voice=0 packet=3 duration=120 delay=0",
+    "121642\tAudioTrace: render us=121110559 voice=0 packet=0 duration=200 delay=40",
+    "121643\tAudioTrace: uart us=121111270 samples=160 nonzero=0",
+    "121683\tAudioTrace: uart us=121151524 samples=160 nonzero=1",
+    "121818\tAudioTrace: input us=121286587 sampled=121282044 phase=0 x=220 y=120",
+    "121886\tAudioTrace: input us=121354212 sampled=121346585 phase=2 x=220 y=120",
+    "121896\tAudioTrace: tone us=121364457 session=3 packet=1 duration=220 delay=0 queued=3520",
+    "121896\tAudioTrace: tone us=121364746 session=3 packet=2 duration=120 delay=0 queued=5440",
+    "121897\tAudioTrace: tone us=121364850 session=3 packet=3 duration=200 delay=40 queued=9280",
+    "121902\tAudioTrace: render us=121370442 voice=0 packet=1 duration=220 delay=0",
+    "122123\tAudioTrace: render us=121590989 voice=0 packet=2 duration=120 delay=0",
+    "122242\tAudioTrace: render us=121710673 voice=0 packet=3 duration=200 delay=40",
+    "122243\tAudioTrace: uart us=121711318 samples=160 nonzero=0",
+    "122283\tAudioTrace: uart us=121751244 samples=160 nonzero=1",
+    "122416\tAudioTrace: input us=121884193 sampled=121881256 phase=0 x=220 y=120",
+    "dropped=2",
+    "122481\tAudioTrace: input us=121949358 sampled=121945505 phase=2 x=220 y=120",
+    "122491\tAudioTrace: tone us=121959502 session=3 packet=0 duration=220 delay=0 queued=3520",
+    "122492\tAudioTrace: tone us=121959808 session=3 packet=1 duration=120 delay=0 queued=5440",
+    "121902\tAudioTrace: render us=121370442 voice=0 packet=1 duration=220 delay=0",
+    "122123\tAudioTrace: render us=121590989 voice=0 packet=2 duration=120 delay=0",
+    "122242\tAudioTrace: render us=121710673 voice=0 packet=3 duration=200 delay=40",
+    "122243\tAudioTrace: uart us=121711318 samples=160 nonzero=0",
+    "122283\tAudioTrace: uart us=121751244 samples=160 nonzero=1",
+    "122416\tAudioTrace: input us=121884193 sampled=121881256 phase=0 x=220 y=120",
+    "122481\tAudioTrace: input us=121949358 sampled=121945505 phase=2 x=220 y=120",
+    "122491\tAudioTrace: tone us=121959502 session=3 packet=0 duration=220 delay=0 queued=3520",
+    "122492\tAudioTrace: tone us=121959808 session=3 packet=1 duration=120 delay=0 queued=5440",
+    "122492\tAudioTrace: tone us=121959917 session=3 packet=2 duration=200 delay=40 queued=9280",
+    "122502\tAudioTrace: render us=121970558 voice=0 packet=0 duration=220 delay=0",
+    "122723\tAudioTrace: render us=122191038 voice=0 packet=1 duration=120 delay=0",
+    "122842\tAudioTrace: render us=122310675 voice=0 packet=2 duration=200 delay=40",
+    "122844\tAudioTrace: uart us=122312216 samples=160 nonzero=0",
+    "122884\tAudioTrace: uart us=122352053 samples=160 nonzero=1",
+    "123012\tAudioTrace: input us=122480327 sampled=122479606 phase=0 x=220 y=120",
+    "dropped=1",
+    "123077\tAudioTrace: input us=122545366 sampled=122541524 phase=2 x=220 y=120",
+    "123086\tAudioTrace: tone us=122554691 session=3 packet=3 duration=220 delay=0 queued=3520",
+    "123087\tAudioTrace: tone us=122555211 session=3 packet=0 duration=120 delay=0 queued=5440",
+    "123103\tAudioTrace: render us=122570982 voice=0 packet=3 duration=220 delay=0",
+    "122492\tAudioTrace: tone us=121959917 session=3 packet=2 duration=200 delay=40 queued=9280",
+    "122502\tAudioTrace: render us=121970558 voice=0 packet=0 duration=220 delay=0",
+    "122723\tAudioTrace: render us=122191038 voice=0 packet=1 duration=120 delay=0",
+    "122842\tAudioTrace: render us=122310675 voice=0 packet=2 duration=200 delay=40",
+    "122844\tAudioTrace: uart us=122312216 samples=160 nonzero=0",
+    "122884\tAudioTrace: uart us=122352053 samples=160 nonzero=1",
+    "123012\tAudioTrace: input us=122480327 sampled=122479606 phase=0 x=220 y=120",
+    "123077\tAudioTrace: input us=122545366 sampled=122541524 phase=2 x=220 y=120",
+    "123086\tAudioTrace: tone us=122554691 session=3 packet=3 duration=220 delay=0 queued=3520",
+    "123087\tAudioTrace: tone us=122555211 session=3 packet=0 duration=120 delay=0 queued=5440",
+    "123087\tAudioTrace: tone us=122555352 session=3 packet=1 duration=200 delay=40 queued=9280",
+    "123103\tAudioTrace: render us=122570982 voice=0 packet=3 duration=220 delay=0",
+    "123323\tAudioTrace: render us=122790993 voice=0 packet=0 duration=120 delay=0",
+    "123442\tAudioTrace: render us=122910571 voice=0 packet=1 duration=200 delay=40",
+    "123443\tAudioTrace: uart us=122911143 samples=160 nonzero=0",
+    "123483\tAudioTrace: uart us=122951192 samples=160 nonzero=1",
+    "123635\tAudioTrace: input us=123103091 sampled=123079721 phase=0 x=220 y=120",
+    "dropped=2",
+    "123675\tAudioTrace: input us=123143432 sampled=123141495 phase=2 x=220 y=120",
+    "123677\tAudioTrace: tone us=123145283 session=3 packet=2 duration=220 delay=0 queued=3520",
+    "123677\tAudioTrace: tone us=123145630 session=3 packet=3 duration=120 delay=0 queued=5440",
+    "123087\tAudioTrace: tone us=122555352 session=3 packet=1 duration=200 delay=40 queued=9280",
+    "123103\tAudioTrace: render us=122570982 voice=0 packet=3 duration=220 delay=0",
+    "123323\tAudioTrace: render us=122790993 voice=0 packet=0 duration=120 delay=0",
+    "123442\tAudioTrace: render us=122910571 voice=0 packet=1 duration=200 delay=40",
+    "123443\tAudioTrace: uart us=122911143 samples=160 nonzero=0",
+    "123483\tAudioTrace: uart us=122951192 samples=160 nonzero=1",
+    "123635\tAudioTrace: input us=123103091 sampled=123079721 phase=0 x=220 y=120",
+    "123675\tAudioTrace: input us=123143432 sampled=123141495 phase=2 x=220 y=120",
+    "123677\tAudioTrace: tone us=123145283 session=3 packet=2 duration=220 delay=0 queued=3520",
+    "123677\tAudioTrace: tone us=123145630 session=3 packet=3 duration=120 delay=0 queued=5440",
+    "123678\tAudioTrace: tone us=123145837 session=3 packet=0 duration=200 delay=40 queued=9280",
+    "123683\tAudioTrace: render us=123150885 voice=0 packet=2 duration=220 delay=0",
+    "123903\tAudioTrace: render us=123370997 voice=0 packet=3 duration=120 delay=0",
+    "124022\tAudioTrace: render us=123490687 voice=0 packet=0 duration=200 delay=40",
+    "124023\tAudioTrace: uart us=123491305 samples=160 nonzero=0",
+    "124063\tAudioTrace: uart us=123531517 samples=160 nonzero=1",
+    "124227\tAudioTrace: input us=123695653 sampled=123680667 phase=0 x=220 y=120",
+    "124296\tAudioTrace: input us=123763877 sampled=123743506 phase=2 x=220 y=120",
+    "dropped=1",
+    "124306\tAudioTrace: tone us=123774674 session=3 packet=1 duration=220 delay=0 queued=3520",
+    "124307\tAudioTrace: render us=123775500 voice=0 packet=1 duration=220 delay=0",
+    "124308\tAudioTrace: uart us=123775843 samples=160 nonzero=1",
+    "124309\tAudioTrace: tone us=123776756 session=3 packet=2 duration=120 delay=0 queued=5120",
+    "123683\tAudioTrace: render us=123150885 voice=0 packet=2 duration=220 delay=0",
+    "123903\tAudioTrace: render us=123370997 voice=0 packet=3 duration=120 delay=0",
+    "124022\tAudioTrace: render us=123490687 voice=0 packet=0 duration=200 delay=40",
+    "124023\tAudioTrace: uart us=123491305 samples=160 nonzero=0",
+    "124063\tAudioTrace: uart us=123531517 samples=160 nonzero=1",
+    "124227\tAudioTrace: input us=123695653 sampled=123680667 phase=0 x=220 y=120",
+    "124296\tAudioTrace: input us=123763877 sampled=123743506 phase=2 x=220 y=120",
+    "124306\tAudioTrace: tone us=123774674 session=3 packet=1 duration=220 delay=0 queued=3520",
+    "124307\tAudioTrace: render us=123775500 voice=0 packet=1 duration=220 delay=0",
+    "124308\tAudioTrace: uart us=123775843 samples=160 nonzero=1",
+    "124309\tAudioTrace: tone us=123776756 session=3 packet=2 duration=120 delay=0 queued=5120",
+    "124309\tAudioTrace: tone us=123777390 session=3 packet=3 duration=200 delay=40 queued=8960",
+    "124528\tAudioTrace: render us=123995985 voice=0 packet=2 duration=120 delay=0",
+    "124647\tAudioTrace: render us=124115250 voice=0 packet=3 duration=200 delay=40",
+    "124648\tAudioTrace: uart us=124116393 samples=160 nonzero=0",
+    "124688\tAudioTrace: uart us=124156188 samples=160 nonzero=1",
+    "128525\tAudioTrace: input us=127992843 sampled=127972125 phase=0 x=220 y=120",
+    "128722\tAudioTrace: input us=128190369 sampled=128175607 phase=2 x=220 y=120",
+    "128734\tAudioTrace: tone us=128201762 session=4 packet=0 duration=220 delay=0 queued=3520",
+    "128734\tAudioTrace: render us=128202597 voice=0 packet=0 duration=220 delay=0",
+    "dropped=1",
+    "128735\tAudioTrace: uart us=128202895 samples=160 nonzero=1",
+    "128735\tAudioTrace: tone us=128203605 session=4 packet=1 duration=120 delay=0 queued=5120",
+    "127736\tAudioTrace: input us=127204494 sampled=127203680 phase=0 x=148 y=120",
+    "127803\tAudioTrace: input us=127271178 sampled=127267785 phase=2 x=148 y=120",
+    "128525\tAudioTrace: input us=127992843 sampled=127972125 phase=0 x=220 y=120",
+    "128722\tAudioTrace: input us=128190369 sampled=128175607 phase=2 x=220 y=120",
+    "128734\tAudioTrace: tone us=128201762 session=4 packet=0 duration=220 delay=0 queued=3520",
+    "128734\tAudioTrace: render us=128202597 voice=0 packet=0 duration=220 delay=0",
+    "128735\tAudioTrace: uart us=128202895 samples=160 nonzero=1",
+    "128735\tAudioTrace: tone us=128203605 session=4 packet=1 duration=120 delay=0 queued=5120",
+    "128736\tAudioTrace: tone us=128203946 session=4 packet=2 duration=200 delay=40 queued=8960",
+    "128955\tAudioTrace: render us=128422959 voice=0 packet=1 duration=120 delay=0",
+    "129074\tAudioTrace: render us=128542582 voice=0 packet=2 duration=200 delay=40",
+    "129075\tAudioTrace: uart us=128543191 samples=160 nonzero=0",
+    "129115\tAudioTrace: uart us=128583242 samples=160 nonzero=1",
+    "129709\tAudioTrace: input us=129176840 sampled=129172752 phase=0 x=220 y=120",
+    "dropped=3",
+    "129912\tAudioTrace: input us=129379443 sampled=129375125 phase=2 x=220 y=120",
+    "129918\tAudioTrace: tone us=129386435 session=4 packet=3 duration=220 delay=0 queued=3520",
+    "129919\tAudioTrace: render us=129387234 voice=0 packet=3 duration=220 delay=0",
+    "128736\tAudioTrace: tone us=128203946 session=4 packet=2 duration=200 delay=40 queued=8960",
+    "128955\tAudioTrace: render us=128422959 voice=0 packet=1 duration=120 delay=0",
+    "129074\tAudioTrace: render us=128542582 voice=0 packet=2 duration=200 delay=40",
+    "129075\tAudioTrace: uart us=128543191 samples=160 nonzero=0",
+    "129115\tAudioTrace: uart us=128583242 samples=160 nonzero=1",
+    "129709\tAudioTrace: input us=129176840 sampled=129172752 phase=0 x=220 y=120",
+    "129912\tAudioTrace: input us=129379443 sampled=129375125 phase=2 x=220 y=120",
+    "129918\tAudioTrace: tone us=129386435 session=4 packet=3 duration=220 delay=0 queued=3520",
+    "129919\tAudioTrace: render us=129387234 voice=0 packet=3 duration=220 delay=0",
+    "129919\tAudioTrace: uart us=129387530 samples=160 nonzero=1",
+    "129920\tAudioTrace: tone us=129388037 session=4 packet=0 duration=120 delay=0 queued=5120",
+    "129920\tAudioTrace: tone us=129388268 session=4 packet=1 duration=200 delay=40 queued=8960",
+    "130138\tAudioTrace: render us=129606534 voice=0 packet=0 duration=120 delay=0",
+    "130258\tAudioTrace: render us=129726250 voice=0 packet=1 duration=200 delay=40",
+    "130259\tAudioTrace: uart us=129727196 samples=160 nonzero=0",
+    "130299\tAudioTrace: uart us=129767538 samples=160 nonzero=1",
+    "130904\tAudioTrace: input us=130372348 sampled=130371634 phase=0 x=220 y=120",
+    "dropped=3",
+    "131108\tAudioTrace: input us=130576400 sampled=130573219 phase=2 x=220 y=120",
+    "131110\tAudioTrace: tone us=130578270 session=4 packet=2 duration=220 delay=0 queued=3520",
+    "131111\tAudioTrace: render us=130579147 voice=0 packet=2 duration=220 delay=0",
+    "129920\tAudioTrace: tone us=129388268 session=4 packet=1 duration=200 delay=40 queued=8960",
+    "130138\tAudioTrace: render us=129606534 voice=0 packet=0 duration=120 delay=0",
+    "130258\tAudioTrace: render us=129726250 voice=0 packet=1 duration=200 delay=40",
+    "130259\tAudioTrace: uart us=129727196 samples=160 nonzero=0",
+    "130299\tAudioTrace: uart us=129767538 samples=160 nonzero=1",
+    "130904\tAudioTrace: input us=130372348 sampled=130371634 phase=0 x=220 y=120",
+    "131108\tAudioTrace: input us=130576400 sampled=130573219 phase=2 x=220 y=120",
+    "131110\tAudioTrace: tone us=130578270 session=4 packet=2 duration=220 delay=0 queued=3520",
+    "131111\tAudioTrace: render us=130579147 voice=0 packet=2 duration=220 delay=0",
+    "131111\tAudioTrace: uart us=130579446 samples=160 nonzero=1",
+    "131112\tAudioTrace: tone us=130580639 session=4 packet=3 duration=120 delay=0 queued=5120",
+    "131113\tAudioTrace: tone us=130581298 session=4 packet=0 duration=200 delay=40 queued=8960",
+    "131330\tAudioTrace: render us=130798501 voice=0 packet=3 duration=120 delay=0",
+    "131450\tAudioTrace: render us=130918185 voice=0 packet=0 duration=200 delay=40",
+    "131451\tAudioTrace: uart us=130919225 samples=160 nonzero=0",
+    "131491\tAudioTrace: uart us=130959545 samples=160 nonzero=1",
+    "132119\tAudioTrace: input us=131586834 sampled=131571794 phase=0 x=220 y=120",
+    "dropped=3",
+    "132323\tAudioTrace: input us=131791036 sampled=131773576 phase=2 x=220 y=120",
+    "132328\tAudioTrace: tone us=131796375 session=4 packet=1 duration=220 delay=0 queued=3520",
+    "132329\tAudioTrace: render us=131797142 voice=0 packet=1 duration=220 delay=0",
+    "131113\tAudioTrace: tone us=130581298 session=4 packet=0 duration=200 delay=40 queued=8960",
+    "131330\tAudioTrace: render us=130798501 voice=0 packet=3 duration=120 delay=0",
+    "131450\tAudioTrace: render us=130918185 voice=0 packet=0 duration=200 delay=40",
+    "131451\tAudioTrace: uart us=130919225 samples=160 nonzero=0",
+    "131491\tAudioTrace: uart us=130959545 samples=160 nonzero=1",
+    "132119\tAudioTrace: input us=131586834 sampled=131571794 phase=0 x=220 y=120",
+    "132323\tAudioTrace: input us=131791036 sampled=131773576 phase=2 x=220 y=120",
+    "132328\tAudioTrace: tone us=131796375 session=4 packet=1 duration=220 delay=0 queued=3520",
+    "132329\tAudioTrace: render us=131797142 voice=0 packet=1 duration=220 delay=0",
+    "132329\tAudioTrace: uart us=131797432 samples=160 nonzero=1",
+    "132330\tAudioTrace: tone us=131798020 session=4 packet=2 duration=120 delay=0 queued=5120",
+    "132330\tAudioTrace: tone us=131798241 session=4 packet=3 duration=200 delay=40 queued=8960",
+    "132549\tAudioTrace: render us=132016778 voice=0 packet=2 duration=120 delay=0",
+    "132668\tAudioTrace: render us=132136590 voice=0 packet=3 duration=200 delay=40",
+    "132669\tAudioTrace: uart us=132137198 samples=160 nonzero=0",
+    "132709\tAudioTrace: uart us=132177506 samples=160 nonzero=1"
+  ],
+  "phases": [
+    {
+      "name": "isolated",
+      "interval": 1.2,
+      "shots": 6,
+      "hold": 0.06,
+      "log_begin": 0,
+      "log_end": 129,
+      "memory": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320475;sram_free=40539;sram_min=40367;sram_largest=17408;psram_total=8358572;psram_free=6275264;psram_min=6271536;psram_largest=5636096"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=28956;external=16627;peak_internal=28956;peak_external=16637;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=28956;external=235"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=boot"
+        }
+      ]
+    },
+    {
+      "name": "rapid",
+      "interval": 0.6,
+      "shots": 8,
+      "hold": 0.06,
+      "log_begin": 129,
+      "log_end": 298,
+      "memory": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320475;sram_free=40539;sram_min=40339;sram_largest=17408;psram_total=8358572;psram_free=6275236;psram_min=6271376;psram_largest=5373952"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=28956;external=16627;peak_internal=28956;peak_external=16637;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=28956;external=235"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=boot"
+        }
+      ]
+    },
+    {
+      "name": "long-tap",
+      "interval": 1.2,
+      "shots": 4,
+      "hold": 0.2,
+      "log_begin": 298,
+      "log_end": 381,
+      "memory": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320475;sram_free=40495;sram_min=40367;sram_largest=17408;psram_total=8358572;psram_free=6275224;psram_min=6269904;psram_largest=5373952"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=28956;external=16627;peak_internal=28956;peak_external=16637;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=28956;external=235"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=boot"
+        }
+      ]
+    }
+  ],
+  "passed": true,
+  "device": "pai-touch;296x240;serial suffix d5:d4:f0;application firmware 1d7d760-dirty;Maze Evil 0.1.7",
+  "backend_counters": [
+    "73955\tI (73955) PxaHost: Audio: active=1 queued=0/12 peak_queued=4 submitted=11 rendered=178 tones=11/178 tone_drop=3 voice_exhaust=0 queue_full=3 stale=0 rejected=0 assets=0/0 asset_fail=0 storage=8640 stack=4096",
+    "106749\tI (106749) PxaHost: Audio: active=0 queued=0/12 peak_queued=4 submitted=11 rendered=178 tones=11/178 tone_drop=3 voice_exhaust=0 queue_full=3 stale=0 rejected=0 assets=0/0 asset_fail=0 storage=8640 stack=4096",
+    "117843\tI (117843) PxaHost: Audio: active=1 queued=0/12 peak_queued=4 submitted=29 rendered=352 tones=29/352 tone_drop=3 voice_exhaust=0 queue_full=3 stale=0 rejected=0 assets=0/0 asset_fail=0 storage=8640 stack=4096",
+    "118444\tI (118444) PxaHost: Audio: active=0 queued=0/12 peak_queued=4 submitted=29 rendered=352 tones=29/352 tone_drop=3 voice_exhaust=0 queue_full=3 stale=0 rejected=0 assets=0/0 asset_fail=0 storage=8640 stack=4096",
+    "126338\tI (126338) PxaHost: Audio: active=1 queued=0/12 peak_queued=4 submitted=53 rendered=584 tones=53/584 tone_drop=3 voice_exhaust=0 queue_full=3 stale=0 rejected=0 assets=0/0 asset_fail=0 storage=8640 stack=4096",
+    "126937\tI (126937) PxaHost: Audio: active=0 queued=0/12 peak_queued=4 submitted=53 rendered=584 tones=53/584 tone_drop=3 voice_exhaust=0 queue_full=3 stale=0 rejected=0 assets=0/0 asset_fail=0 storage=8640 stack=4096",
+    "134832\tI (134832) PxaHost: Audio: active=1 queued=0/12 peak_queued=4 submitted=65 rendered=700 tones=65/700 tone_drop=3 voice_exhaust=0 queue_full=3 stale=0 rejected=0 assets=0/0 asset_fail=0 storage=8640 stack=4096"
+  ]
+}

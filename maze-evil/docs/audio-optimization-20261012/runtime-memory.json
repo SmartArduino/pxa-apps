@@ -1,0 +1,20 @@
+{
+  "scope": "Device runtime accounting from the three activation windows; categories may overlap and are not summed",
+  "records": [
+    "[serial] I (6858) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b30000 dbus=0x3c4f0000 request=112480 map=131072 alloc=131072 free_psram=6508456",
+    "[serial] I (6987) PxaHost: WAMR dynamic: peak=229250 current=229250 linear=475136 linear_peak=475136 artifact=0 events=128",
+    "[serial] I (8887) PXA_WAMR_MEMMAP: AOT released: ibus=0x42b30000 dbus=0x3c4f0000 size=112480 free_psram=7051188->7182264 delta=131076",
+    "[serial] I (8923) PxaHost: WAMR dynamic: peak=229254 current=416 linear=0 linear_peak=475136 artifact=0 events=0",
+    "[serial] I (8924) PxaHost: Activation memory: workspaces=19 blocks=3 used=13235 reserved=17809 peak_used=13235 peak_reserved=17809",
+    "[serial] I (10351) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b30000 dbus=0x3c500000 request=112480 map=131072 alloc=131072 free_psram=6470124",
+    "[serial] I (10479) PxaHost: WAMR dynamic: peak=229250 current=229250 linear=475136 linear_peak=475136 artifact=0 events=128",
+    "[serial] I (12907) PXA_WAMR_MEMMAP: AOT released: ibus=0x42b30000 dbus=0x3c500000 size=112480 free_psram=7013128->7144204 delta=131076",
+    "[serial] I (12945) PxaHost: WAMR dynamic: peak=229254 current=416 linear=0 linear_peak=475136 artifact=0 events=0",
+    "[serial] I (12946) PxaHost: Activation memory: workspaces=19 blocks=3 used=13235 reserved=17809 peak_used=13235 peak_reserved=17809",
+    "[serial] I (14374) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b30000 dbus=0x3c500000 request=112480 map=131072 alloc=131072 free_psram=6470164",
+    "[serial] I (14502) PxaHost: WAMR dynamic: peak=229250 current=229250 linear=475136 linear_peak=475136 artifact=0 events=128",
+    "[serial] I (16928) PXA_WAMR_MEMMAP: AOT released: ibus=0x42b30000 dbus=0x3c500000 size=112480 free_psram=7013140->7144216 delta=131076",
+    "[serial] I (16965) PxaHost: WAMR dynamic: peak=229254 current=416 linear=0 linear_peak=475136 artifact=0 events=0",
+    "[serial] I (16967) PxaHost: Activation memory: workspaces=19 blocks=3 used=13235 reserved=17809 peak_used=13235 peak_reserved=17809"
+  ]
+}

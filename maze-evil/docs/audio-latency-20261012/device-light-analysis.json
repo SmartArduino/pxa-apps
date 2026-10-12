@@ -1,0 +1,749 @@
+{
+  "scope": "Summarize AudioTrace software timestamps; never estimates acoustic onset.",
+  "passed": true,
+  "phases": [
+    {
+      "name": "isolated",
+      "accepted": 18,
+      "rejected": 0,
+      "metrics": {
+        "fifo_ahead_ms": {
+          "count": 18,
+          "mean": 173.33333333333334,
+          "min": 0.0,
+          "max": 320.0
+        },
+        "render_wait_ms": {
+          "count": 18,
+          "mean": 186.1698888888889,
+          "min": 0.773,
+          "max": 338.823
+        },
+        "release_sample_to_submit_ms": {
+          "count": 6,
+          "mean": 23.069666666666667,
+          "min": 11.148,
+          "max": 36.243
+        },
+        "quiet_submit_to_uart_ms": {
+          "count": 6,
+          "mean": 1.1416666666666666,
+          "min": 1.076,
+          "max": 1.195
+        },
+        "quiet_release_sample_to_uart_ms": {
+          "count": 6,
+          "mean": 24.211333333333332,
+          "min": 12.343,
+          "max": 37.404
+        }
+      },
+      "tones": [
+        {
+          "kind": "tone",
+          "us": 108674646,
+          "session": 2,
+          "packet": 0,
+          "duration": 220,
+          "delay": 0,
+          "queued": 3520,
+          "fifo_ahead_ms": 0.0,
+          "render_wait_ms": 0.82,
+          "release_sample_to_submit_ms": 25.063,
+          "quiet_submit_to_uart_ms": 1.142,
+          "quiet_release_sample_to_uart_ms": 26.205
+        },
+        {
+          "kind": "tone",
+          "us": 108676553,
+          "session": 2,
+          "packet": 1,
+          "duration": 120,
+          "delay": 0,
+          "queued": 5120,
+          "fifo_ahead_ms": 200.0,
+          "render_wait_ms": 219.571
+        },
+        {
+          "kind": "tone",
+          "us": 108676840,
+          "session": 2,
+          "packet": 2,
+          "duration": 200,
+          "delay": 40,
+          "queued": 8960,
+          "fifo_ahead_ms": 320.0,
+          "render_wait_ms": 338.346
+        },
+        {
+          "kind": "tone",
+          "us": 109864681,
+          "session": 2,
+          "packet": 3,
+          "duration": 220,
+          "delay": 0,
+          "queued": 3520,
+          "fifo_ahead_ms": 0.0,
+          "render_wait_ms": 0.854,
+          "release_sample_to_submit_ms": 14.331,
+          "quiet_submit_to_uart_ms": 1.186,
+          "quiet_release_sample_to_uart_ms": 15.517
+        },
+        {
+          "kind": "tone",
+          "us": 109866626,
+          "session": 2,
+          "packet": 0,
+          "duration": 120,
+          "delay": 0,
+          "queued": 5120,
+          "fifo_ahead_ms": 200.0,
+          "render_wait_ms": 219.353
+        },
+        {
+          "kind": "tone",
+          "us": 109866922,
+          "session": 2,
+          "packet": 1,
+          "duration": 200,
+          "delay": 40,
+          "queued": 8960,
+          "fifo_ahead_ms": 320.0,
+          "render_wait_ms": 338.689
+        },
+        {
+          "kind": "tone",
+          "us": 111084673,
+          "session": 2,
+          "packet": 2,
+          "duration": 220,
+          "delay": 0,
+          "queued": 3520,
+          "fifo_ahead_ms": 0.0,
+          "render_wait_ms": 0.822,
+          "release_sample_to_submit_ms": 36.243,
+          "quiet_submit_to_uart_ms": 1.161,
+          "quiet_release_sample_to_uart_ms": 37.404
+        },
+        {
+          "kind": "tone",
+          "us": 111086588,
+          "session": 2,
+          "packet": 3,
+          "duration": 120,
+          "delay": 0,
+          "queued": 5120,
+          "fifo_ahead_ms": 200.0,
+          "render_wait_ms": 219.401
+        },
+        {
+          "kind": "tone",
+          "us": 111086854,
+          "session": 2,
+          "packet": 0,
+          "duration": 200,
+          "delay": 40,
+          "queued": 8960,
+          "fifo_ahead_ms": 320.0,
+          "render_wait_ms": 338.723
+        },
+        {
+          "kind": "tone",
+          "us": 112269703,
+          "session": 2,
+          "packet": 1,
+          "duration": 220,
+          "delay": 0,
+          "queued": 3520,
+          "fifo_ahead_ms": 0.0,
+          "render_wait_ms": 0.773,
+          "release_sample_to_submit_ms": 19.069,
+          "quiet_submit_to_uart_ms": 1.09,
+          "quiet_release_sample_to_uart_ms": 20.159
+        },
+        {
+          "kind": "tone",
+          "us": 112271508,
+          "session": 2,
+          "packet": 2,
+          "duration": 120,
+          "delay": 0,
+          "queued": 5120,
+          "fifo_ahead_ms": 200.0,
+          "render_wait_ms": 219.484
+        },
+        {
+          "kind": "tone",
+          "us": 112271759,
+          "session": 2,
+          "packet": 3,
+          "duration": 200,
+          "delay": 40,
+          "queued": 8960,
+          "fifo_ahead_ms": 320.0,
+          "render_wait_ms": 338.823
+        },
+        {
+          "kind": "tone",
+          "us": 113459766,
+          "session": 2,
+          "packet": 0,
+          "duration": 220,
+          "delay": 0,
+          "queued": 3520,
+          "fifo_ahead_ms": 0.0,
+          "render_wait_ms": 0.835,
+          "release_sample_to_submit_ms": 11.148,
+          "quiet_submit_to_uart_ms": 1.195,
+          "quiet_release_sample_to_uart_ms": 12.343
+        },
+        {
+          "kind": "tone",
+          "us": 113461871,
+          "session": 2,
+          "packet": 1,
+          "duration": 120,
+          "delay": 0,
+          "queued": 5120,
+          "fifo_ahead_ms": 200.0,
+          "render_wait_ms": 219.244
+        },
+        {
+          "kind": "tone",
+          "us": 113462524,
+          "session": 2,
+          "packet": 2,
+          "duration": 200,
+          "delay": 40,
+          "queued": 8960,
+          "fifo_ahead_ms": 320.0,
+          "render_wait_ms": 338.057
+        },
+        {
+          "kind": "tone",
+          "us": 114683179,
+          "session": 2,
+          "packet": 3,
+          "duration": 220,
+          "delay": 0,
+          "queued": 3520,
+          "fifo_ahead_ms": 0.0,
+          "render_wait_ms": 0.796,
+          "release_sample_to_submit_ms": 32.564,
+          "quiet_submit_to_uart_ms": 1.076,
+          "quiet_release_sample_to_uart_ms": 33.64
+        },
+        {
+          "kind": "tone",
+          "us": 114684997,
+          "session": 2,
+          "packet": 0,
+          "duration": 120,
+          "delay": 0,
+          "queued": 5120,
+          "fifo_ahead_ms": 200.0,
+          "render_wait_ms": 218.546
+        },
+        {
+          "kind": "tone",
+          "us": 114685543,
+          "session": 2,
+          "packet": 1,
+          "duration": 200,
+          "delay": 40,
+          "queued": 8960,
+          "fifo_ahead_ms": 320.0,
+          "render_wait_ms": 337.921
+        }
+      ]
+    },
+    {
+      "name": "rapid",
+      "accepted": 24,
+      "rejected": 0,
+      "metrics": {
+        "fifo_ahead_ms": {
+          "count": 24,
+          "mean": 181.66666666666666,
+          "min": 0.0,
+          "max": 340.0
+        },
+        "render_wait_ms": {
+          "count": 24,
+          "mean": 191.62725,
+          "min": 0.815,
+          "max": 355.219
+        },
+        "release_sample_to_submit_ms": {
+          "count": 8,
+          "mean": 15.078,
+          "min": 3.788,
+          "max": 31.168
+        },
+        "quiet_submit_to_uart_ms": {
+          "count": 0
+        },
+        "quiet_release_sample_to_uart_ms": {
+          "count": 0
+        }
+      },
+      "tones": [
+        {
+          "kind": "tone",
+          "us": 119549571,
+          "session": 3,
+          "packet": 0,
+          "duration": 220,
+          "delay": 0,
+          "queued": 3520,
+          "fifo_ahead_ms": 0.0,
+          "render_wait_ms": 0.815,
+          "release_sample_to_submit_ms": 8.016
+        },
+        {
+          "kind": "tone",
+          "us": 119551722,
+          "session": 3,
+          "packet": 1,
+          "duration": 120,
+          "delay": 0,
+          "queued": 5120,
+          "fifo_ahead_ms": 200.0,
+          "render_wait_ms": 219.28
+        },
+        {
+          "kind": "tone",
+          "us": 119552375,
+          "session": 3,
+          "packet": 2,
+          "duration": 200,
+          "delay": 40,
+          "queued": 8960,
+          "fifo_ahead_ms": 320.0,
+          "render_wait_ms": 337.792
+        },
+        {
+          "kind": "tone",
+          "us": 120146828,
+          "session": 3,
+          "packet": 3,
+          "duration": 220,
+          "delay": 0,
+          "queued": 3520,
+          "fifo_ahead_ms": 0.0,
+          "render_wait_ms": 4.082,
+          "release_sample_to_submit_ms": 5.423
+        },
+        {
+          "kind": "tone",
+          "us": 120147184,
+          "session": 3,
+          "packet": 0,
+          "duration": 120,
+          "delay": 0,
+          "queued": 5440,
+          "fifo_ahead_ms": 220.0,
+          "render_wait_ms": 223.777
+        },
+        {
+          "kind": "tone",
+          "us": 120147506,
+          "session": 3,
+          "packet": 1,
+          "duration": 200,
+          "delay": 40,
+          "queued": 9280,
+          "fifo_ahead_ms": 340.0,
+          "render_wait_ms": 343.198
+        },
+        {
+          "kind": "tone",
+          "us": 120769712,
+          "session": 3,
+          "packet": 2,
+          "duration": 220,
+          "delay": 0,
+          "queued": 3520,
+          "fifo_ahead_ms": 0.0,
+          "render_wait_ms": 1.132,
+          "release_sample_to_submit_ms": 27.193
+        },
+        {
+          "kind": "tone",
+          "us": 120771863,
+          "session": 3,
+          "packet": 3,
+          "duration": 120,
+          "delay": 0,
+          "queued": 5120,
+          "fifo_ahead_ms": 200.0,
+          "render_wait_ms": 218.721
+        },
+        {
+          "kind": "tone",
+          "us": 120772423,
+          "session": 3,
+          "packet": 0,
+          "duration": 200,
+          "delay": 40,
+          "queued": 8960,
+          "fifo_ahead_ms": 320.0,
+          "render_wait_ms": 338.136
+        },
+        {
+          "kind": "tone",
+          "us": 121364457,
+          "session": 3,
+          "packet": 1,
+          "duration": 220,
+          "delay": 0,
+          "queued": 3520,
+          "fifo_ahead_ms": 0.0,
+          "render_wait_ms": 5.985,
+          "release_sample_to_submit_ms": 17.872
+        },
+        {
+          "kind": "tone",
+          "us": 121364746,
+          "session": 3,
+          "packet": 2,
+          "duration": 120,
+          "delay": 0,
+          "queued": 5440,
+          "fifo_ahead_ms": 220.0,
+          "render_wait_ms": 226.243
+        },
+        {
+          "kind": "tone",
+          "us": 121364850,
+          "session": 3,
+          "packet": 3,
+          "duration": 200,
+          "delay": 40,
+          "queued": 9280,
+          "fifo_ahead_ms": 340.0,
+          "render_wait_ms": 345.823
+        },
+        {
+          "kind": "tone",
+          "us": 121959502,
+          "session": 3,
+          "packet": 0,
+          "duration": 220,
+          "delay": 0,
+          "queued": 3520,
+          "fifo_ahead_ms": 0.0,
+          "render_wait_ms": 11.056,
+          "release_sample_to_submit_ms": 13.997
+        },
+        {
+          "kind": "tone",
+          "us": 121959808,
+          "session": 3,
+          "packet": 1,
+          "duration": 120,
+          "delay": 0,
+          "queued": 5440,
+          "fifo_ahead_ms": 220.0,
+          "render_wait_ms": 231.23
+        },
+        {
+          "kind": "tone",
+          "us": 121959917,
+          "session": 3,
+          "packet": 2,
+          "duration": 200,
+          "delay": 40,
+          "queued": 9280,
+          "fifo_ahead_ms": 340.0,
+          "render_wait_ms": 350.758
+        },
+        {
+          "kind": "tone",
+          "us": 122554691,
+          "session": 3,
+          "packet": 3,
+          "duration": 220,
+          "delay": 0,
+          "queued": 3520,
+          "fifo_ahead_ms": 0.0,
+          "render_wait_ms": 16.291,
+          "release_sample_to_submit_ms": 13.167
+        },
+        {
+          "kind": "tone",
+          "us": 122555211,
+          "session": 3,
+          "packet": 0,
+          "duration": 120,
+          "delay": 0,
+          "queued": 5440,
+          "fifo_ahead_ms": 220.0,
+          "render_wait_ms": 235.782
+        },
+        {
+          "kind": "tone",
+          "us": 122555352,
+          "session": 3,
+          "packet": 1,
+          "duration": 200,
+          "delay": 40,
+          "queued": 9280,
+          "fifo_ahead_ms": 340.0,
+          "render_wait_ms": 355.219
+        },
+        {
+          "kind": "tone",
+          "us": 123145283,
+          "session": 3,
+          "packet": 2,
+          "duration": 220,
+          "delay": 0,
+          "queued": 3520,
+          "fifo_ahead_ms": 0.0,
+          "render_wait_ms": 5.602,
+          "release_sample_to_submit_ms": 3.788
+        },
+        {
+          "kind": "tone",
+          "us": 123145630,
+          "session": 3,
+          "packet": 3,
+          "duration": 120,
+          "delay": 0,
+          "queued": 5440,
+          "fifo_ahead_ms": 220.0,
+          "render_wait_ms": 225.367
+        },
+        {
+          "kind": "tone",
+          "us": 123145837,
+          "session": 3,
+          "packet": 0,
+          "duration": 200,
+          "delay": 40,
+          "queued": 9280,
+          "fifo_ahead_ms": 340.0,
+          "render_wait_ms": 344.85
+        },
+        {
+          "kind": "tone",
+          "us": 123774674,
+          "session": 3,
+          "packet": 1,
+          "duration": 220,
+          "delay": 0,
+          "queued": 3520,
+          "fifo_ahead_ms": 0.0,
+          "render_wait_ms": 0.826,
+          "release_sample_to_submit_ms": 31.168
+        },
+        {
+          "kind": "tone",
+          "us": 123776756,
+          "session": 3,
+          "packet": 2,
+          "duration": 120,
+          "delay": 0,
+          "queued": 5120,
+          "fifo_ahead_ms": 200.0,
+          "render_wait_ms": 219.229
+        },
+        {
+          "kind": "tone",
+          "us": 123777390,
+          "session": 3,
+          "packet": 3,
+          "duration": 200,
+          "delay": 40,
+          "queued": 8960,
+          "fifo_ahead_ms": 320.0,
+          "render_wait_ms": 337.86
+        }
+      ]
+    },
+    {
+      "name": "long-tap",
+      "accepted": 12,
+      "rejected": 0,
+      "metrics": {
+        "fifo_ahead_ms": {
+          "count": 12,
+          "mean": 173.33333333333334,
+          "min": 0.0,
+          "max": 320.0
+        },
+        "render_wait_ms": {
+          "count": 12,
+          "mean": 185.80025,
+          "min": 0.767,
+          "max": 338.636
+        },
+        "release_sample_to_submit_ms": {
+          "count": 4,
+          "mean": 16.32875,
+          "min": 5.051,
+          "max": 26.155
+        },
+        "quiet_submit_to_uart_ms": {
+          "count": 4,
+          "mean": 1.11525,
+          "min": 1.057,
+          "max": 1.176
+        },
+        "quiet_release_sample_to_uart_ms": {
+          "count": 4,
+          "mean": 17.444,
+          "min": 6.227,
+          "max": 27.288
+        }
+      },
+      "tones": [
+        {
+          "kind": "tone",
+          "us": 128201762,
+          "session": 4,
+          "packet": 0,
+          "duration": 220,
+          "delay": 0,
+          "queued": 3520,
+          "fifo_ahead_ms": 0.0,
+          "render_wait_ms": 0.835,
+          "release_sample_to_submit_ms": 26.155,
+          "quiet_submit_to_uart_ms": 1.133,
+          "quiet_release_sample_to_uart_ms": 27.288
+        },
+        {
+          "kind": "tone",
+          "us": 128203605,
+          "session": 4,
+          "packet": 1,
+          "duration": 120,
+          "delay": 0,
+          "queued": 5120,
+          "fifo_ahead_ms": 200.0,
+          "render_wait_ms": 219.354
+        },
+        {
+          "kind": "tone",
+          "us": 128203946,
+          "session": 4,
+          "packet": 2,
+          "duration": 200,
+          "delay": 40,
+          "queued": 8960,
+          "fifo_ahead_ms": 320.0,
+          "render_wait_ms": 338.636
+        },
+        {
+          "kind": "tone",
+          "us": 129386435,
+          "session": 4,
+          "packet": 3,
+          "duration": 220,
+          "delay": 0,
+          "queued": 3520,
+          "fifo_ahead_ms": 0.0,
+          "render_wait_ms": 0.799,
+          "release_sample_to_submit_ms": 11.31,
+          "quiet_submit_to_uart_ms": 1.095,
+          "quiet_release_sample_to_uart_ms": 12.405
+        },
+        {
+          "kind": "tone",
+          "us": 129388037,
+          "session": 4,
+          "packet": 0,
+          "duration": 120,
+          "delay": 0,
+          "queued": 5120,
+          "fifo_ahead_ms": 200.0,
+          "render_wait_ms": 218.497
+        },
+        {
+          "kind": "tone",
+          "us": 129388268,
+          "session": 4,
+          "packet": 1,
+          "duration": 200,
+          "delay": 40,
+          "queued": 8960,
+          "fifo_ahead_ms": 320.0,
+          "render_wait_ms": 337.982
+        },
+        {
+          "kind": "tone",
+          "us": 130578270,
+          "session": 4,
+          "packet": 2,
+          "duration": 220,
+          "delay": 0,
+          "queued": 3520,
+          "fifo_ahead_ms": 0.0,
+          "render_wait_ms": 0.877,
+          "release_sample_to_submit_ms": 5.051,
+          "quiet_submit_to_uart_ms": 1.176,
+          "quiet_release_sample_to_uart_ms": 6.227
+        },
+        {
+          "kind": "tone",
+          "us": 130580639,
+          "session": 4,
+          "packet": 3,
+          "duration": 120,
+          "delay": 0,
+          "queued": 5120,
+          "fifo_ahead_ms": 200.0,
+          "render_wait_ms": 217.862
+        },
+        {
+          "kind": "tone",
+          "us": 130581298,
+          "session": 4,
+          "packet": 0,
+          "duration": 200,
+          "delay": 40,
+          "queued": 8960,
+          "fifo_ahead_ms": 320.0,
+          "render_wait_ms": 336.887
+        },
+        {
+          "kind": "tone",
+          "us": 131796375,
+          "session": 4,
+          "packet": 1,
+          "duration": 220,
+          "delay": 0,
+          "queued": 3520,
+          "fifo_ahead_ms": 0.0,
+          "render_wait_ms": 0.767,
+          "release_sample_to_submit_ms": 22.799,
+          "quiet_submit_to_uart_ms": 1.057,
+          "quiet_release_sample_to_uart_ms": 23.856
+        },
+        {
+          "kind": "tone",
+          "us": 131798020,
+          "session": 4,
+          "packet": 2,
+          "duration": 120,
+          "delay": 0,
+          "queued": 5120,
+          "fifo_ahead_ms": 200.0,
+          "render_wait_ms": 218.758
+        },
+        {
+          "kind": "tone",
+          "us": 131798241,
+          "session": 4,
+          "packet": 3,
+          "duration": 200,
+          "delay": 40,
+          "queued": 8960,
+          "fifo_ahead_ms": 320.0,
+          "render_wait_ms": 338.349
+        }
+      ]
+    }
+  ]
+}

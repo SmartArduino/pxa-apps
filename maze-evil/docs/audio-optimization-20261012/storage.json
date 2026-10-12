@@ -1,0 +1,8 @@
+{
+  "mixer_before_bytes": 8640,
+  "mixer_after_bytes": 8592,
+  "game_audio_before_bytes": 2320,
+  "game_audio_after_bytes": 24,
+  "guest_linear_maximum_bytes": 1048576,
+  "phase_timing_scope": "device software timestamps, not speaker onset"
+}
