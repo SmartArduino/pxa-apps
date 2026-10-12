@@ -1,0 +1,49 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [
+    2,
+    0
+  ],
+  "target_sdk": [
+    2,
+    0
+  ],
+  "compile_sdk": [
+    2,
+    0
+  ],
+  "id": "pxa-ime-heartbeat",
+  "version": "1.0.0",
+  "name": "IME heartbeat fixture",
+  "description": "C++ TextInputRef with system IME and system theme",
+  "build": {
+    "system": "cmake",
+    "source_dir": "."
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "services": [
+        {
+          "name": "ui",
+          "features": [
+            "dynamic-text",
+            "text-input-control"
+          ]
+        },
+        "log",
+        "clock"
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    }
+  ]
+}

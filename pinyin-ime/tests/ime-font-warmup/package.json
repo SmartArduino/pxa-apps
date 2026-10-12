@@ -1,0 +1,18 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [2, 0],
+  "target_sdk": [2, 0],
+  "compile_sdk": [2, 0],
+  "id": "pxa-ime-font-warmup",
+  "version": "1.0.0",
+  "name": "IME font warmup fixture",
+  "description": "Test-only numeric glyph cache normalization",
+  "build": {"system": "cmake", "source_dir": "."},
+  "components": [{
+    "id": "main",
+    "kind": "ui",
+    "cmake_target": "pxa_main",
+    "services": ["ui"],
+    "wasi": {"version": "preview1", "libc": "wasi-libc", "features": ["monotonic-clock", "wall-clock"]}
+  }]
+}

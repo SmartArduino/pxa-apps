@@ -1,0 +1,69 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [
+    2,
+    0
+  ],
+  "target_sdk": [
+    2,
+    0
+  ],
+  "compile_sdk": [
+    2,
+    0
+  ],
+  "id": "pxa-pinyin-ime",
+  "version": "1.0.0",
+  "name": "拼音输入法",
+  "description": "可安装的 PXA 拼音输入法：词句、九键与全键盘",
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 4194304,
+      "pinned": false
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "services": [
+        "ui"
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    },
+    {
+      "id": "provider",
+      "kind": "service",
+      "cmake_target": "pxa_provider",
+      "services": [
+        {
+          "name": "ime",
+          "features": [
+            "latin",
+            "pinyin",
+            "provider",
+            "t9"
+          ]
+        }
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    }
+  ]
+}

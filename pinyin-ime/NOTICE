@@ -1,0 +1,13 @@
+PXA Pinyin IME
+
+This product includes work from lvgl_pinyin_ime by VanillaNahida and contributors:
+https://github.com/VanillaNahida/lvgl_pinyin_ime
+Revision: 037169998150a768ff43863fc44d563222d4b801
+Licensed under Apache License, Version 2.0 (LICENSE).
+
+The libgooglepinyin decoder includes Android Open Source Project and Google Inc.
+code, licensed under Apache License, Version 2.0. Original copyright notices
+remain in each vendored source. The upstream word list is obtained from the
+same pinned lvgl_pinyin_ime tree; tools/rebuild_dictionary.py rebuilds the model.
+
+Modified files and porting details are recorded in third_party/README.pxa.md.
