@@ -1,0 +1,53 @@
+[1/13] Performing build step for 'bootloader'
+[1/1] cd /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/firmware/pai-touch/bootloader && /home/lucinhu/esp/esp-idf-toolchain/python_env/idf6.2_py3.14_env/bin/python /home/lucinhu/esp/esp-idf/esp-idf-main/components/partition_table/check_sizes.py --offset 0x8000 bootloader 0x0 /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/firmware/pai-touch/bootloader/bootloader.bin
+Bootloader binary size 0x5d10 bytes. 0x22f0 bytes (27%) free.
+[2/13] No install step for 'bootloader'
+[3/13] Completed 'bootloader'
+[4/13] Building C object esp-idf/pxa/CMakeFiles/__idf_pxa.dir/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/deps/pxa-system/libpxa/adapters/lvgl/pxa_lvgl_ime.c.obj
+In file included from /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/firmware/managed_components/lvgl__lvgl/include/lvgl/3d/lv_3dmath.h:17,
+                 from /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/firmware/managed_components/lvgl__lvgl/include/lvgl/lvgl.h:5,
+                 from /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/firmware/managed_components/lvgl__lvgl/lvgl.h:1,
+                 from /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/deps/pxa-system/libpxa/adapters/lvgl/pxa_lvgl_ime.c:2:
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/firmware/managed_components/lvgl__lvgl/include/lvgl/3d/../config/lv_conf_internal.h:4976:10: warning: #warning "LV_ASSERT_HANDLER_INCLUDE is deprecated and will be removed in a future release. Use LV_ASSERT_CUSTOM_INCLUDE and define LV_ASSERT_HANDLER inside. To suppress this warning, remove LV_ASSERT_HANDLER_INCLUDE or enable LV_DISABLE_ASSERT_HANDLER_INCLUDE_WARNING." [-Wcpp]
+ 4976 |         #warning "LV_ASSERT_HANDLER_INCLUDE is deprecated and will be removed in a future release. Use LV_ASSERT_CUSTOM_INCLUDE and define LV_ASSERT_HANDLER inside. To suppress this warning, remove LV_ASSERT_HANDLER_INCLUDE or enable LV_DISABLE_ASSERT_HANDLER_INCLUDE_WARNING."
+      |          ^~~~~~~
+[5/13] Linking C static library esp-idf/pxa/libpxa.a
+[6/13] Building CXX object esp-idf/pxadb/CMakeFiles/__idf_pxadb.dir/src_pxa_service.cc.obj
+[7/13] Linking C static library esp-idf/pxadb/libpxadb.a
+[8/13] Building CXX object esp-idf/pxa_integration/CMakeFiles/__idf_pxa_integration.dir/pxa_integration.cc.obj
+In file included from /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/firmware/managed_components/lvgl__lvgl/include/lvgl/3d/lv_3dmath.h:17,
+                 from /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/firmware/managed_components/lvgl__lvgl/include/lvgl/lvgl.h:5,
+                 from /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/firmware/managed_components/lvgl__lvgl/lvgl.h:1,
+                 from /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/firmware/managed_components/espressif__esp_lvgl_port/include/esp_lvgl_port.h:16,
+                 from /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/firmware/components/pxa_integration/pxa_integration.cc:22:
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/firmware/managed_components/lvgl__lvgl/include/lvgl/3d/../config/lv_conf_internal.h:4976:10: warning: #warning "LV_ASSERT_HANDLER_INCLUDE is deprecated and will be removed in a future release. Use LV_ASSERT_CUSTOM_INCLUDE and define LV_ASSERT_HANDLER inside. To suppress this warning, remove LV_ASSERT_HANDLER_INCLUDE or enable LV_DISABLE_ASSERT_HANDLER_INCLUDE_WARNING." [-Wcpp]
+ 4976 |         #warning "LV_ASSERT_HANDLER_INCLUDE is deprecated and will be removed in a future release. Use LV_ASSERT_CUSTOM_INCLUDE and define LV_ASSERT_HANDLER inside. To suppress this warning, remove LV_ASSERT_HANDLER_INCLUDE or enable LV_DISABLE_ASSERT_HANDLER_INCLUDE_WARNING."
+      |          ^~~~~~~
+[9/13] Linking C static library esp-idf/pxa_integration/libpxa_integration.a
+[10/13] Generating esp-idf/esp_system/ld/sections.ld
+NOTE: /home/lucinhu/esp/esp-idf/esp-idf-main/components/bootloader/Kconfig.app_rollback:17: Trying to set symbol BOOTLOADER_APP_ROLLBACK_CONFIRM_ON_STARTUP to n, but it is currently selected by choice BOOTLOADER_APP_ROLLBACK_CONFIRM_MODE. For setting it to n, set another choice symbol to y instead.
+Skipping linker fragment parsing, fragment files unchanged
+[11/13] Linking CXX executable pxa_esp_platform.elf; Checking codec allocations use the shared resource budget; Checking ioctl definition overlaps
+/home/lucinhu/esp/esp-idf-toolchain/tools/xtensa-esp-elf/esp-16.1.0_20260609/xtensa-esp-elf/xtensa-esp-elf/bin/ld: warning: _sqrtf.o: missing .note.GNU-stack section implies executable stack
+/home/lucinhu/esp/esp-idf-toolchain/tools/xtensa-esp-elf/esp-16.1.0_20260609/xtensa-esp-elf/xtensa-esp-elf/bin/ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+Codec memory audit passed: 85 selected objects, four strong budget hooks
+[12/13] Generating binary image from built executable
+esptool v5.4.0
+Creating ESP32-S3 image...
+Merged 3 ELF sections.
+Successfully created ESP32-S3 image.
+Generated /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/firmware/pai-touch/pxa_esp_platform.bin
+[13/13] cd /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/firmware/pai-touch && /home/lucinhu/esp/esp-idf-toolchain/python_env/idf6.2_py3.14_env/bin/python /home/lucinhu/esp/esp-idf/esp-idf-main/components/partition_table/check_sizes.py --offset 0x8000 partition --type app /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/firmware/pai-touch/partition_table/partition-table.bin /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/firmware/pai-touch/pxa_esp_platform.bin
+pxa_esp_platform.bin binary size 0x336680 bytes. Smallest app partition is 0x6f0000 bytes. 0x3b9980 bytes (54%) free.
+Executing action: all (aliases: build)
+Running ninja in directory /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/firmware/pai-touch
+Executing "ninja all"...
+
+Project build complete. To flash, run:
+ idf.py flash
+or
+ idf.py -p PORT flash
+or
+ python -m esptool --chip esp32s3 -b 460800 --before default-reset --after hard-reset write-flash --flash-mode dio --flash-size 16MB --flash-freq 80m 0x0 build/firmware/pai-touch/bootloader/bootloader.bin 0x8000 build/firmware/pai-touch/partition_table/partition-table.bin 0x10000 build/firmware/pai-touch/pxa_esp_platform.bin
+or from the "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/firmware/pai-touch" directory
+ python -m esptool --chip esp32s3 -b 460800 --before default-reset --after hard-reset write-flash "@flash_args"

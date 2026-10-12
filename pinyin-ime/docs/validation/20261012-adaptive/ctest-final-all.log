@@ -1,0 +1,185 @@
+Test project /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/simulator/pai-touch
+      Start 19: pxsys_cpp_service_safety_test
+      Start 18: pxsys_declarative_ui_test
+      Start 16: pxsys_i18n_app_test
+      Start 17: pxsys_sdk_patterns_test
+ 1/90 Test #17: pxsys_sdk_patterns_test .................   Passed   16.12 sec
+      Start  3: pxsys_product_core2_pressure
+ 2/90 Test #16: pxsys_i18n_app_test .....................   Passed   18.38 sec
+      Start  4: pxsys_product_core2_ipc
+ 3/90 Test #18: pxsys_declarative_ui_test ...............   Passed   19.50 sec
+      Start 14: pxsys_ime_app_test
+ 4/90 Test #19: pxsys_cpp_service_safety_test ...........   Passed   26.48 sec
+      Start 59: pxa_generated_wire_vectors_test
+ 5/90 Test #59: pxa_generated_wire_vectors_test .........   Passed    2.00 sec
+      Start 29: pxa_container_tool_test
+ 6/90 Test #29: pxa_container_tool_test .................   Passed    1.00 sec
+      Start 23: pxa_asset_worker_test
+ 7/90 Test #23: pxa_asset_worker_test ...................   Passed    2.19 sec
+      Start 43: pxa_resource_compiler_test
+ 8/90 Test #43: pxa_resource_compiler_test ..............   Passed    0.16 sec
+      Start 13: pxsys_system_gestures_test
+ 9/90 Test #13: pxsys_system_gestures_test ..............   Passed    0.12 sec
+      Start 10: pxsys_desktop_visual_phone_dark_zh
+10/90 Test  #3: pxsys_product_core2_pressure ............   Passed   16.51 sec
+      Start  9: pxsys_desktop_visual_phone_light_en
+11/90 Test #10: pxsys_desktop_visual_phone_dark_zh ......   Passed    0.93 sec
+      Start 12: pxsys_desktop_visual_round_custom_zh
+12/90 Test  #9: pxsys_desktop_visual_phone_light_en .....   Passed    0.98 sec
+      Start 11: pxsys_desktop_visual_round_light_en
+13/90 Test #12: pxsys_desktop_visual_round_custom_zh ....   Passed    0.84 sec
+      Start 26: pxa_asset_stream_test
+14/90 Test #26: pxa_asset_stream_test ...................   Passed    0.09 sec
+      Start 30: pxa_lvgl_ui_test
+15/90 Test #30: pxa_lvgl_ui_test ........................   Passed    0.09 sec
+      Start 27: pxa_asset_blob_test
+16/90 Test #27: pxa_asset_blob_test .....................   Passed    0.07 sec
+      Start 24: pxa_asset_input_test
+17/90 Test #24: pxa_asset_input_test ....................   Passed    0.07 sec
+      Start  8: pxsys_desktop_visual_compact_dark_zh
+18/90 Test  #4: pxsys_product_core2_ipc .................   Passed   15.73 sec
+      Start  7: pxsys_desktop_visual_compact_light_en
+19/90 Test #11: pxsys_desktop_visual_round_light_en .....   Passed    0.70 sec
+      Start 40: pxa_resource_budget_test
+20/90 Test #40: pxa_resource_budget_test ................   Passed    0.06 sec
+      Start 60: pxa_ui_vectors_test
+21/90 Test #60: pxa_ui_vectors_test .....................   Passed    0.05 sec
+      Start 15: pxsys_audio_test
+22/90 Test  #8: pxsys_desktop_visual_compact_dark_zh ....   Passed    0.54 sec
+      Start 22: pxsys_wamr_source_pin_test
+23/90 Test #22: pxsys_wamr_source_pin_test ..............   Passed    0.07 sec
+      Start 28: pxa_adapters_test
+24/90 Test  #7: pxsys_desktop_visual_compact_light_en ...   Passed    0.55 sec
+      Start 33: pxa_sensor_engine_test
+25/90 Test #33: pxa_sensor_engine_test ..................   Passed    0.01 sec
+      Start 87: pxsys_reference_layout_test
+26/90 Test #28: pxa_adapters_test .......................   Passed    0.03 sec
+      Start 34: pxa_scheduler_engine_test
+27/90 Test #34: pxa_scheduler_engine_test ...............   Passed    0.01 sec
+      Start 32: pxa_ipc_engine_test
+28/90 Test #87: pxsys_reference_layout_test .............   Passed    0.02 sec
+      Start 35: pxa_net_audio_engine_test
+29/90 Test #32: pxa_ipc_engine_test .....................   Passed    0.01 sec
+      Start  6: pxsys_desktop_simulator_self_test
+30/90 Test #35: pxa_net_audio_engine_test ...............   Passed    0.02 sec
+      Start 21: pxsys_resource_budget_test
+31/90 Test #21: pxsys_resource_budget_test ..............   Passed    0.07 sec
+      Start  5: pxsys_desktop_simulator_smoke
+32/90 Test #15: pxsys_audio_test ........................   Passed    0.37 sec
+      Start 25: pxa_storage_gate_test
+33/90 Test #25: pxa_storage_gate_test ...................   Passed    0.02 sec
+      Start 50: pxa_core_test
+34/90 Test #50: pxa_core_test ...........................   Passed    0.01 sec
+      Start 31: pxa_wamr_engine_test
+35/90 Test #31: pxa_wamr_engine_test ....................   Passed    0.02 sec
+      Start 57: pxa_ui_test
+36/90 Test #57: pxa_ui_test .............................   Passed    0.00 sec
+      Start  1: pxsys_desktop_package_store_test
+37/90 Test  #1: pxsys_desktop_package_store_test ........   Passed    0.01 sec
+      Start 58: pxa_package_test
+38/90 Test #58: pxa_package_test ........................   Passed    0.00 sec
+      Start 53: pxa_game_render_test
+39/90 Test #53: pxa_game_render_test ....................   Passed    0.00 sec
+      Start  2: pxsys_desktop_net_headers_test
+40/90 Test  #2: pxsys_desktop_net_headers_test ..........   Passed    0.01 sec
+      Start 67: pxsys_intent_wire_test
+41/90 Test #67: pxsys_intent_wire_test ..................   Passed    0.00 sec
+      Start 70: pxsys_role_host_test
+42/90 Test #70: pxsys_role_host_test ....................   Passed    0.00 sec
+      Start 56: pxa_raster_test
+43/90 Test #56: pxa_raster_test .........................   Passed    0.00 sec
+      Start 47: pxa_audio_playback_test
+44/90 Test #47: pxa_audio_playback_test .................   Passed    0.00 sec
+      Start 90: pxsys_reference_ime_test
+45/90 Test #90: pxsys_reference_ime_test ................   Passed    0.01 sec
+      Start 42: pxa_asset_catalog_test
+46/90 Test #42: pxa_asset_catalog_test ..................   Passed    0.00 sec
+      Start 76: pxsys_event_broker_test
+47/90 Test #76: pxsys_event_broker_test .................   Passed    0.00 sec
+      Start 51: pxa_handle64_test
+48/90 Test #51: pxa_handle64_test .......................   Passed    0.00 sec
+      Start 37: pxa_guest_image_set_test
+49/90 Test #37: pxa_guest_image_set_test ................   Passed    0.00 sec
+      Start 41: pxa_asset_cache_test
+50/90 Test #41: pxa_asset_cache_test ....................   Passed    0.00 sec
+      Start 61: pxsys_app_registry_test
+51/90 Test #61: pxsys_app_registry_test .................   Passed    0.00 sec
+      Start 74: pxsys_renderer_host_test
+52/90 Test #74: pxsys_renderer_host_test ................   Passed    0.00 sec
+      Start 68: pxsys_task_manager_test
+53/90 Test #68: pxsys_task_manager_test .................   Passed    0.00 sec
+      Start 64: pxsys_api_compile_test
+54/90 Test #64: pxsys_api_compile_test ..................   Passed    0.00 sec
+      Start 69: pxsys_role_registry_test
+55/90 Test #69: pxsys_role_registry_test ................   Passed    0.00 sec
+      Start 80: pxsys_window_test
+56/90 Test #80: pxsys_window_test .......................   Passed    0.00 sec
+      Start 66: pxsys_intent_test
+57/90 Test #66: pxsys_intent_test .......................   Passed    0.00 sec
+      Start 62: pxsys_app_metadata_test
+58/90 Test #62: pxsys_app_metadata_test .................   Passed    0.00 sec
+      Start 44: pxa_raster_assets_test
+59/90 Test #44: pxa_raster_assets_test ..................   Passed    0.00 sec
+      Start 78: pxsys_system_status_test
+60/90 Test #78: pxsys_system_status_test ................   Passed    0.00 sec
+      Start 72: pxsys_locale_test
+61/90 Test #72: pxsys_locale_test .......................   Passed    0.00 sec
+      Start 77: pxsys_display_test
+62/90 Test #77: pxsys_display_test ......................   Passed    0.00 sec
+      Start 75: pxsys_service_registry_test
+63/90 Test #75: pxsys_service_registry_test .............   Passed    0.00 sec
+      Start 36: pxa_asset_read_test
+64/90 Test #36: pxa_asset_read_test .....................   Passed    0.00 sec
+      Start 38: pxa_assets_service_test
+65/90 Test #38: pxa_assets_service_test .................   Passed    0.00 sec
+      Start 39: pxa_asset_scene_test
+66/90 Test #39: pxa_asset_scene_test ....................   Passed    0.00 sec
+      Start 45: pxa_audio_mixer_test
+67/90 Test #45: pxa_audio_mixer_test ....................   Passed    0.00 sec
+      Start 63: pxsys_app_lifecycle_test
+68/90 Test #63: pxsys_app_lifecycle_test ................   Passed    0.00 sec
+      Start 81: pxsys_pxa_binding_test
+69/90 Test #81: pxsys_pxa_binding_test ..................   Passed    0.00 sec
+      Start 52: pxa_surface_test
+70/90 Test #52: pxa_surface_test ........................   Passed    0.00 sec
+      Start 46: pxa_audio_buffer_test
+71/90 Test #46: pxa_audio_buffer_test ...................   Passed    0.00 sec
+      Start 48: pxa_audio_notification_test
+72/90 Test #48: pxa_audio_notification_test .............   Passed    0.00 sec
+      Start 49: pxa_api_compile_test
+73/90 Test #49: pxa_api_compile_test ....................   Passed    0.00 sec
+      Start 20: pxsys_raster_test
+74/90 Test #20: pxsys_raster_test .......................   Passed    0.01 sec
+      Start 84: pxsys_pxa_interop_test
+75/90 Test #84: pxsys_pxa_interop_test ..................   Passed    0.00 sec
+      Start 71: pxsys_theme_test
+76/90 Test #71: pxsys_theme_test ........................   Passed    0.00 sec
+      Start 85: pxsys_pxa_gateway_wire_test
+77/90 Test #85: pxsys_pxa_gateway_wire_test .............   Passed    0.00 sec
+      Start 79: pxsys_toast_test
+78/90 Test #79: pxsys_toast_test ........................   Passed    0.00 sec
+      Start 73: pxsys_resources_test
+79/90 Test #73: pxsys_resources_test ....................   Passed    0.00 sec
+      Start 83: pxsys_pxa_catalog_test
+80/90 Test #83: pxsys_pxa_catalog_test ..................   Passed    0.00 sec
+      Start 86: pxsys_standard_system_test
+81/90 Test #86: pxsys_standard_system_test ..............   Passed    0.00 sec
+      Start 55: pxa_log_test
+82/90 Test #55: pxa_log_test ............................   Passed    0.00 sec
+      Start 88: pxsys_headless_renderer_test
+83/90 Test #88: pxsys_headless_renderer_test ............   Passed    0.00 sec
+      Start 89: pxsys_lvgl_renderer_test
+84/90 Test #89: pxsys_lvgl_renderer_test ................   Passed    0.00 sec
+      Start 82: pxsys_pxa_runtime_test
+85/90 Test #82: pxsys_pxa_runtime_test ..................   Passed    0.00 sec
+      Start 54: pxa_ime_test
+86/90 Test #54: pxa_ime_test ............................   Passed    0.00 sec
+      Start 65: pxsys_runtime_test
+87/90 Test #65: pxsys_runtime_test ......................   Passed    0.00 sec
+88/90 Test  #6: pxsys_desktop_simulator_self_test .......   Passed    0.38 sec
+89/90 Test  #5: pxsys_desktop_simulator_smoke ...........   Passed    0.32 sec
+90/90 Test #14: pxsys_ime_app_test ......................   Passed   27.94 sec
+
+100% tests passed out of 90
+
+Total Test time (real) =  47.45 sec

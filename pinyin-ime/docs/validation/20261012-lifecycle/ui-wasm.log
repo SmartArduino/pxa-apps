@@ -1,0 +1,635 @@
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] IME submitted[0m
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] 你h[0m
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME unloaded
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA Guest exception: component=917506 Exception: terminated by user
+PXA Guest exception: component=917506 Exception: terminated by user
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA MUSIC INPUT read_bytes=0 read_calls=0
+PXA STORAGE lane=0 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA STORAGE lane=1 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA MUSIC BUFFER underruns=0 recoveries=0 missing_samples=0 consumed=0 high_water=0 low_water=0 low_water_valid=0 ready_max_us=0
+PXA MUSIC DECODE calls=0 total_us=0 max_us=0 excludes_input_io=1
+PXA RESOURCE BUDGET peak_internal=0 peak_external=0 remaining_internal=0 remaining_external=0 denied=0 counter_storage=1856 allocator_storage=576
+PXA TEMPORARY BUDGET peak_internal=0 peak_external=0 limit_internal=16384 limit_external=524288
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] IME submitted[0m
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] 你h[0m
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME unloaded
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA Guest exception: component=917506 Exception: terminated by user
+PXA Guest exception: component=917506 Exception: terminated by user
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA MUSIC INPUT read_bytes=0 read_calls=0
+PXA STORAGE lane=0 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA STORAGE lane=1 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA MUSIC BUFFER underruns=0 recoveries=0 missing_samples=0 consumed=0 high_water=0 low_water=0 low_water_valid=0 ready_max_us=0
+PXA MUSIC DECODE calls=0 total_us=0 max_us=0 excludes_input_io=1
+PXA RESOURCE BUDGET peak_internal=0 peak_external=0 remaining_internal=0 remaining_external=0 denied=0 counter_storage=1856 allocator_storage=576
+PXA TEMPORARY BUDGET peak_internal=0 peak_external=0 limit_internal=16384 limit_external=524288
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] IME submitted[0m
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] 你h[0m
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME unloaded
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA Guest exception: component=917506 Exception: terminated by user
+PXA Guest exception: component=917506 Exception: terminated by user
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA MUSIC INPUT read_bytes=0 read_calls=0
+PXA STORAGE lane=0 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA STORAGE lane=1 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA MUSIC BUFFER underruns=0 recoveries=0 missing_samples=0 consumed=0 high_water=0 low_water=0 low_water_valid=0 ready_max_us=0
+PXA MUSIC DECODE calls=0 total_us=0 max_us=0 excludes_input_io=1
+PXA RESOURCE BUDGET peak_internal=0 peak_external=0 remaining_internal=0 remaining_external=0 denied=0 counter_storage=1856 allocator_storage=576
+PXA TEMPORARY BUDGET peak_internal=0 peak_external=0 limit_internal=16384 limit_external=524288
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] IME submitted[0m
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] 你h[0m
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME unloaded
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA Guest exception: component=851970 Exception: terminated by user
+PXA Guest exception: component=851970 Exception: terminated by user
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA MUSIC INPUT read_bytes=0 read_calls=0
+PXA STORAGE lane=0 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA STORAGE lane=1 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA MUSIC BUFFER underruns=0 recoveries=0 missing_samples=0 consumed=0 high_water=0 low_water=0 low_water_valid=0 ready_max_us=0
+PXA MUSIC DECODE calls=0 total_us=0 max_us=0 excludes_input_io=1
+PXA RESOURCE BUDGET peak_internal=0 peak_external=0 remaining_internal=0 remaining_external=0 denied=0 counter_storage=1856 allocator_storage=576
+PXA TEMPORARY BUDGET peak_internal=0 peak_external=0 limit_internal=16384 limit_external=524288
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] IME submitted[0m
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] 你h[0m
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME unloaded
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA Guest exception: component=917506 Exception: terminated by user
+PXA Guest exception: component=917506 Exception: terminated by user
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA MUSIC INPUT read_bytes=0 read_calls=0
+PXA STORAGE lane=0 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA STORAGE lane=1 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA MUSIC BUFFER underruns=0 recoveries=0 missing_samples=0 consumed=0 high_water=0 low_water=0 low_water_valid=0 ready_max_us=0
+PXA MUSIC DECODE calls=0 total_us=0 max_us=0 excludes_input_io=1
+PXA RESOURCE BUDGET peak_internal=0 peak_external=0 remaining_internal=0 remaining_external=0 denied=0 counter_storage=1856 allocator_storage=576
+PXA TEMPORARY BUDGET peak_internal=0 peak_external=0 limit_internal=16384 limit_external=524288
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] IME submitted[0m
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] 你h[0m
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME unloaded
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA Guest exception: component=917506 Exception: terminated by user
+PXA Guest exception: component=917506 Exception: terminated by user
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA MUSIC INPUT read_bytes=0 read_calls=0
+PXA STORAGE lane=0 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA STORAGE lane=1 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA MUSIC BUFFER underruns=0 recoveries=0 missing_samples=0 consumed=0 high_water=0 low_water=0 low_water_valid=0 ready_max_us=0
+PXA MUSIC DECODE calls=0 total_us=0 max_us=0 excludes_input_io=1
+PXA RESOURCE BUDGET peak_internal=0 peak_external=0 remaining_internal=0 remaining_external=0 denied=0 counter_storage=1856 allocator_storage=576
+PXA TEMPORARY BUDGET peak_internal=0 peak_external=0 limit_internal=16384 limit_external=524288
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] IME submitted[0m
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] 你h[0m
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME unloaded
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA Guest exception: component=917506 Exception: terminated by user
+PXA Guest exception: component=917506 Exception: terminated by user
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA MUSIC INPUT read_bytes=0 read_calls=0
+PXA STORAGE lane=0 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA STORAGE lane=1 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA MUSIC BUFFER underruns=0 recoveries=0 missing_samples=0 consumed=0 high_water=0 low_water=0 low_water_valid=0 ready_max_us=0
+PXA MUSIC DECODE calls=0 total_us=0 max_us=0 excludes_input_io=1
+PXA RESOURCE BUDGET peak_internal=0 peak_external=0 remaining_internal=0 remaining_external=0 denied=0 counter_storage=1856 allocator_storage=576
+PXA TEMPORARY BUDGET peak_internal=0 peak_external=0 limit_internal=16384 limit_external=524288
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] IME submitted[0m
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] 你h[0m
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME unloaded
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA Guest exception: component=917506 Exception: terminated by user
+PXA Guest exception: component=917506 Exception: terminated by user
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA MUSIC INPUT read_bytes=0 read_calls=0
+PXA STORAGE lane=0 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA STORAGE lane=1 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA MUSIC BUFFER underruns=0 recoveries=0 missing_samples=0 consumed=0 high_water=0 low_water=0 low_water_valid=0 ready_max_us=0
+PXA MUSIC DECODE calls=0 total_us=0 max_us=0 excludes_input_io=1
+PXA RESOURCE BUDGET peak_internal=0 peak_external=0 remaining_internal=0 remaining_external=0 denied=0 counter_storage=1856 allocator_storage=576
+PXA TEMPORARY BUDGET peak_internal=0 peak_external=0 limit_internal=16384 limit_external=524288
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] IME submitted[0m
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] 你h[0m
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME unloaded
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA Guest exception: component=851970 Exception: terminated by user
+PXA Guest exception: component=851970 Exception: terminated by user
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA MUSIC INPUT read_bytes=0 read_calls=0
+PXA STORAGE lane=0 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA STORAGE lane=1 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA MUSIC BUFFER underruns=0 recoveries=0 missing_samples=0 consumed=0 high_water=0 low_water=0 low_water_valid=0 ready_max_us=0
+PXA MUSIC DECODE calls=0 total_us=0 max_us=0 excludes_input_io=1
+PXA RESOURCE BUDGET peak_internal=0 peak_external=0 remaining_internal=0 remaining_external=0 denied=0 counter_storage=1856 allocator_storage=576
+PXA TEMPORARY BUDGET peak_internal=0 peak_external=0 limit_internal=16384 limit_external=524288
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] IME submitted[0m
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] 你h[0m
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME unloaded
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA Guest exception: component=917506 Exception: terminated by user
+PXA Guest exception: component=917506 Exception: terminated by user
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA MUSIC INPUT read_bytes=0 read_calls=0
+PXA STORAGE lane=0 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA STORAGE lane=1 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA MUSIC BUFFER underruns=0 recoveries=0 missing_samples=0 consumed=0 high_water=0 low_water=0 low_water_valid=0 ready_max_us=0
+PXA MUSIC DECODE calls=0 total_us=0 max_us=0 excludes_input_io=1
+PXA RESOURCE BUDGET peak_internal=0 peak_external=0 remaining_internal=0 remaining_external=0 denied=0 counter_storage=1856 allocator_storage=576
+PXA TEMPORARY BUDGET peak_internal=0 peak_external=0 limit_internal=16384 limit_external=524288
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] IME submitted[0m
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] 你h[0m
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME unloaded
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA Guest exception: component=917506 Exception: terminated by user
+PXA Guest exception: component=917506 Exception: terminated by user
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA MUSIC INPUT read_bytes=0 read_calls=0
+PXA STORAGE lane=0 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA STORAGE lane=1 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA MUSIC BUFFER underruns=0 recoveries=0 missing_samples=0 consumed=0 high_water=0 low_water=0 low_water_valid=0 ready_max_us=0
+PXA MUSIC DECODE calls=0 total_us=0 max_us=0 excludes_input_io=1
+PXA RESOURCE BUDGET peak_internal=0 peak_external=0 remaining_internal=0 remaining_external=0 denied=0 counter_storage=1856 allocator_storage=576
+PXA TEMPORARY BUDGET peak_internal=0 peak_external=0 limit_internal=16384 limit_external=524288
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] IME submitted[0m
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] 你h[0m
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME unloaded
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA Guest exception: component=851970 Exception: terminated by user
+PXA Guest exception: component=851970 Exception: terminated by user
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA MUSIC INPUT read_bytes=0 read_calls=0
+PXA STORAGE lane=0 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA STORAGE lane=1 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA MUSIC BUFFER underruns=0 recoveries=0 missing_samples=0 consumed=0 high_water=0 low_water=0 low_water_valid=0 ready_max_us=0
+PXA MUSIC DECODE calls=0 total_us=0 max_us=0 excludes_input_io=1
+PXA RESOURCE BUDGET peak_internal=0 peak_external=0 remaining_internal=0 remaining_external=0 denied=0 counter_storage=1856 allocator_storage=576
+PXA TEMPORARY BUDGET peak_internal=0 peak_external=0 limit_internal=16384 limit_external=524288
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] IME submitted[0m
+[32m[PXA app=pxa-cpp-system-input component=65537 level=INFO] 你h[0m
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME unloaded
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA Guest exception: component=917506 Exception: terminated by user
+PXA Guest exception: component=917506 Exception: terminated by user
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2121
+PXA IME unloaded
+PXA MUSIC INPUT read_bytes=0 read_calls=0
+PXA STORAGE lane=0 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA STORAGE lane=1 reads=0 bytes=0 wait_us=0 max_wait_us=0 service_us=0 max_service_us=0 max_read=0 errors=0 elapsed_us=0 stalls=0 stall_us=0
+PXA MUSIC BUFFER underruns=0 recoveries=0 missing_samples=0 consumed=0 high_water=0 low_water=0 low_water_valid=0 ready_max_us=0
+PXA MUSIC DECODE calls=0 total_us=0 max_us=0 excludes_input_io=1
+PXA RESOURCE BUDGET peak_internal=0 peak_external=0 remaining_internal=0 remaining_external=0 denied=0 counter_storage=1856 allocator_storage=576
+PXA TEMPORARY BUDGET peak_internal=0 peak_external=0 limit_internal=16384 limit_external=524288
+PXA IME: separate signed provider, composition, Chinese/English edits, submit and 8 unload/restart cycles passed

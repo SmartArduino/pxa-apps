@@ -1,0 +1,314 @@
+{
+  "passed": true,
+  "source": "delivery-after",
+  "keyboard_timing": [
+    {
+      "count": 0,
+      "queue_us": 0,
+      "processing_us": 0,
+      "queue_max_us": 0,
+      "processing_max_us": 0,
+      "provider_load_us": 2506254,
+      "keyboard_drawn": 1,
+      "first_draw_ms": 174,
+      "candidates_ready": 1,
+      "candidates_ready_ms": 2880,
+      "provider_steps": 96,
+      "provider_step_max_us": 792464
+    },
+    {
+      "count": 5,
+      "queue_us": 74094,
+      "processing_us": 152044,
+      "queue_max_us": 26053,
+      "processing_max_us": 71209,
+      "provider_load_us": 2506254,
+      "keyboard_drawn": 1,
+      "first_draw_ms": 174,
+      "candidates_ready": 1,
+      "candidates_ready_ms": 2880,
+      "provider_steps": 96,
+      "provider_step_max_us": 792464
+    },
+    {
+      "count": 0,
+      "queue_us": 0,
+      "processing_us": 0,
+      "queue_max_us": 0,
+      "processing_max_us": 0,
+      "provider_load_us": 2428474,
+      "keyboard_drawn": 1,
+      "first_draw_ms": 28,
+      "candidates_ready": 1,
+      "candidates_ready_ms": 2482,
+      "provider_steps": 96,
+      "provider_step_max_us": 754341
+    },
+    {
+      "count": 0,
+      "queue_us": 0,
+      "processing_us": 0,
+      "queue_max_us": 0,
+      "processing_max_us": 0,
+      "provider_load_us": 2488259,
+      "keyboard_drawn": 1,
+      "first_draw_ms": 28,
+      "candidates_ready": 1,
+      "candidates_ready_ms": 2546,
+      "provider_steps": 96,
+      "provider_step_max_us": 789811
+    },
+    {
+      "count": 0,
+      "queue_us": 0,
+      "processing_us": 0,
+      "queue_max_us": 0,
+      "processing_max_us": 0,
+      "provider_load_us": 2482071,
+      "keyboard_drawn": 1,
+      "first_draw_ms": 28,
+      "candidates_ready": 1,
+      "candidates_ready_ms": 2538,
+      "provider_steps": 96,
+      "provider_step_max_us": 788848
+    }
+  ],
+  "memory_snapshots": [
+    {
+      "sram_stable": 264864,
+      "sram_peak": 301459,
+      "psram_stable": 1810628,
+      "psram_peak": 2160084
+    },
+    {
+      "sram_stable": 264864,
+      "sram_peak": 302219,
+      "psram_stable": 1827540,
+      "psram_peak": 3948004
+    },
+    {
+      "sram_stable": 265624,
+      "sram_peak": 269724,
+      "psram_stable": 3512964,
+      "psram_peak": 3517596
+    },
+    {
+      "sram_stable": 264864,
+      "sram_peak": 269724,
+      "psram_stable": 1827560,
+      "psram_peak": 3517596
+    },
+    {
+      "sram_stable": 265624,
+      "sram_peak": 269724,
+      "psram_stable": 3513020,
+      "psram_peak": 3517828
+    },
+    {
+      "sram_stable": 264864,
+      "sram_peak": 269724,
+      "psram_stable": 1827560,
+      "psram_peak": 3517828
+    },
+    {
+      "sram_stable": 265624,
+      "sram_peak": 269724,
+      "psram_stable": 3513008,
+      "psram_peak": 3517828
+    },
+    {
+      "sram_stable": 264864,
+      "sram_peak": 269724,
+      "psram_stable": 1827532,
+      "psram_peak": 3517828
+    },
+    {
+      "sram_stable": 264200,
+      "sram_peak": 302219,
+      "psram_stable": 1451716,
+      "psram_peak": 3948004
+    }
+  ],
+  "windows": [
+    {
+      "sram_stable": 265624,
+      "sram_peak": 269812,
+      "psram_stable": 3503288,
+      "psram_peak": 3508388
+    },
+    {
+      "sram_stable": 264864,
+      "sram_peak": 269724,
+      "psram_stable": 1827532,
+      "psram_peak": 3517828
+    },
+    {
+      "sram_stable": 265624,
+      "sram_peak": 269724,
+      "psram_stable": 3513448,
+      "psram_peak": 3518260
+    },
+    {
+      "sram_stable": 264864,
+      "sram_peak": 265624,
+      "psram_stable": 1832120,
+      "psram_peak": 3525296
+    },
+    {
+      "sram_stable": 264864,
+      "sram_peak": 268964,
+      "psram_stable": 1828008,
+      "psram_peak": 2083680
+    }
+  ],
+  "heartbeat_phases": [
+    {
+      "name": "closed-pxa-selected",
+      "callbacks": 256,
+      "median_gap_us": 15025.5,
+      "p95_gap_us": 20094,
+      "max_gap_us": 21930,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "2482071",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0",
+        "provider_steps": "96",
+        "provider_step_max_us": "788848"
+      }
+    },
+    {
+      "name": "chinese-load",
+      "callbacks": 156,
+      "median_gap_us": 15057.0,
+      "p95_gap_us": 29459,
+      "max_gap_us": 794578,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "2546642",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "24",
+        "candidates_ready": "1",
+        "candidates_ready_ms": "2600",
+        "provider_steps": "96",
+        "provider_step_max_us": "765904"
+      },
+      "memory": {
+        "sram_stable": 265624,
+        "sram_peak": 269724,
+        "psram_stable": 3513448,
+        "psram_peak": 3518260
+      }
+    },
+    {
+      "name": "english",
+      "callbacks": 288,
+      "median_gap_us": 15039.0,
+      "p95_gap_us": 20142,
+      "max_gap_us": 55063,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "2546642",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "24",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "2600",
+        "provider_steps": "96",
+        "provider_step_max_us": "765904"
+      },
+      "memory": {
+        "sram_stable": 264864,
+        "sram_peak": 265624,
+        "psram_stable": 1832120,
+        "psram_peak": 3525296
+      }
+    },
+    {
+      "name": "closed-after-use",
+      "callbacks": 264,
+      "median_gap_us": 15028.5,
+      "p95_gap_us": 20096,
+      "max_gap_us": 43881,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "2546642",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0",
+        "provider_steps": "96",
+        "provider_step_max_us": "765904"
+      }
+    },
+    {
+      "name": "cancel-close",
+      "callbacks": 256,
+      "median_gap_us": 15037.0,
+      "p95_gap_us": 20087,
+      "max_gap_us": 232585,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "0",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0",
+        "provider_steps": "1",
+        "provider_step_max_us": "163139"
+      },
+      "memory": {
+        "sram_stable": 264864,
+        "sram_peak": 268964,
+        "psram_stable": 1828008,
+        "psram_peak": 2083680
+      }
+    },
+    {
+      "name": "closed-builtin-selected",
+      "callbacks": 252,
+      "median_gap_us": 15037.5,
+      "p95_gap_us": 20040,
+      "max_gap_us": 21411,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "0",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0",
+        "provider_steps": "1",
+        "provider_step_max_us": "163139"
+      }
+    }
+  ],
+  "all_window_maxima": {
+    "sram_peak": 269812,
+    "psram_peak": 3525296
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "original_files_verified": 93,
+  "historical_package_files_verified": 27,
+  "retained_current_files_verified": 6,
+  "newer_private_files_preserved": 0,
+  "temporary_fixtures_removed": 3,
+  "tested_provider_removed_after_validation": true,
+  "final_apps": 6,
+  "input_method_selection": "builtin",
+  "preferences": "automatic/Chinese",
+  "wifi": "original enabled state after reboot",
+  "boot_ready_ms": [
+    10140.8,
+    14822.0,
+    9598.2
+  ],
+  "wifi_tile_matches_original_enabled_state": true
+}

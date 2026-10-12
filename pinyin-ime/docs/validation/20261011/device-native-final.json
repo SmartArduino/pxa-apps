@@ -1,0 +1,188 @@
+{
+  "rows": [
+    {
+      "command": "MEMORY",
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320491;sram_free=55455;sram_min=31072;sram_largest=19456;psram_total=8358572;psram_free=6554192;psram_min=4722928;psram_largest=5898240"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16628;peak_internal=27468;peak_external=16634;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=236"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "MEMORY START",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=local"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 260 55 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=174;device_us=2329921944;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 260 55 0",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=175;device_us=2330043975;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=176;device_us=2330044641;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "IME",
+      "frames": [
+        {
+          "kind": "SELECTED",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime"
+        },
+        {
+          "kind": "TIMING",
+          "payload": "count=0;queue_us=0;processing_us=0;queue_max_us=0;processing_max_us=0"
+        },
+        {
+          "kind": "METHOD",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime"
+        },
+        {
+          "kind": "OK",
+          "payload": "listed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY STOP",
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320491;sram_free=54703;sram_min=50479;sram_largest=19456;psram_total=8358572;psram_free=4868708;psram_min=4858992;psram_largest=4063232"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16628;peak_internal=27468;peak_external=16634;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=236"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=boot"
+        }
+      ]
+    }
+  ],
+  "logs": [
+    "2216536\tI (2216536) PxaHost: Activation memory: workspaces=17 blocks=3 used=12788 reserved=17534 peak_used=12788 peak_reserved=17534",
+    "2216540\tI (2216537) PxaHost: Heap[launch-cleanup]: SRAM used=263844 free=56647 total=320491 min_free=56171 largest=19456 exec_free=6902152 exec_largest=5898240; PSRAM used=1456420 free=6902152 total=8358572 min_free=6358620 largest=5898240",
+    "2216540\tW (2216540) PxaHost: Package launch failed: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter",
+    "2221665\tI (2221665) PxaHost: Queueing launch request: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime",
+    "2221732\tI (2221732) PxaHost: Processing launch request: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime",
+    "2221839\tI (2221839) PxaHost: Audio: active=0 queued=0/0 peak_queued=0 submitted=0 rendered=0 tones=0/0 tone_drop=0 voice_exhaust=0 queue_full=0 stale=0 rejected=0 assets=0/0 asset_fail=0 storage=0 stack=0",
+    "2221852\tI (2221849) PxaHost: Heap[launch-begin]: SRAM used=263880 free=56611 total=320491 min_free=31072 largest=19456 exec_free=6900896 exec_largest=6160384; PSRAM used=1457676 free=6900896 total=8358572 min_free=4722928 largest=6160384",
+    "2221991\tI (2221991) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b20000 dbus=0x3c540000 request=86344 map=131072 alloc=131072 free_psram=6636996",
+    "2222055\tI (2222052) PxaHost: Component memory: id=main status=0 sram_delta=752 free_sram=55455 largest_sram=19456 psram_delta=305268 free_psram=6557508 largest_psram=5898240 wamr_delta=24193 wamr_current=24609",
+    "2222079\tI (2222079) PxaBridge: Application foregrounded: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime",
+    "2222079\tI (2222079) PxaBridge: Launch completion: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime intent=0 status=0",
+    "2222091\tI (2222077) PxaHost: Heap[launch-ready]: SRAM used=265036 free=55455 total=320491 min_free=31072 largest=19456 exec_free=6560212 exec_largest=5898240; PSRAM used=1798360 free=6560212 total=8358572 min_free=4722928 largest=5898240",
+    "2222091\tI (2222091) PxaHost: WAMR dynamic: peak=24613 current=24609 linear=131072 linear_peak=131072 artifact=0 events=128",
+    "2222091\tI (2222091) PxaHost: Started verified Package 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime",
+    "2222092\tI (2222092) PxaHost: UI lifecycle: component=65537 foreground=1 requested=1 display_interactive=1",
+    "2222240\tI (2222240) PxaBridge: Application backgrounded: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime",
+    "2332280\tI (2332280) AdcBatteryMonitor: Battery: channel=1 raw=3374 adc=2815mV battery=4251mV level=100% charging=1",
+    "2333249\tI (2333249) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b40000 dbus=0x3c5b0000 request=273108 map=327680 alloc=327680 free_psram=5900596",
+    "2333716\tI (2333716) PxaIme: load status=0 us=2890729 metadata=2835",
+    "2221665\tI (2221665) PxaHost: Queueing launch request: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime",
+    "2221732\tI (2221732) PxaHost: Processing launch request: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime",
+    "2221839\tI (2221839) PxaHost: Audio: active=0 queued=0/0 peak_queued=0 submitted=0 rendered=0 tones=0/0 tone_drop=0 voice_exhaust=0 queue_full=0 stale=0 rejected=0 assets=0/0 asset_fail=0 storage=0 stack=0",
+    "2221852\tI (2221849) PxaHost: Heap[launch-begin]: SRAM used=263880 free=56611 total=320491 min_free=31072 largest=19456 exec_free=6900896 exec_largest=6160384; PSRAM used=1457676 free=6900896 total=8358572 min_free=4722928 largest=6160384",
+    "2221991\tI (2221991) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b20000 dbus=0x3c540000 request=86344 map=131072 alloc=131072 free_psram=6636996",
+    "2222055\tI (2222052) PxaHost: Component memory: id=main status=0 sram_delta=752 free_sram=55455 largest_sram=19456 psram_delta=305268 free_psram=6557508 largest_psram=5898240 wamr_delta=24193 wamr_current=24609",
+    "2222079\tI (2222079) PxaBridge: Application foregrounded: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime",
+    "2222079\tI (2222079) PxaBridge: Launch completion: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime intent=0 status=0",
+    "2222091\tI (2222077) PxaHost: Heap[launch-ready]: SRAM used=265036 free=55455 total=320491 min_free=31072 largest=19456 exec_free=6560212 exec_largest=5898240; PSRAM used=1798360 free=6560212 total=8358572 min_free=4722928 largest=5898240",
+    "2222091\tI (2222091) PxaHost: WAMR dynamic: peak=24613 current=24609 linear=131072 linear_peak=131072 artifact=0 events=128",
+    "2222091\tI (2222091) PxaHost: Started verified Package 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime",
+    "2222092\tI (2222092) PxaHost: UI lifecycle: component=65537 foreground=1 requested=1 display_interactive=1",
+    "2222240\tI (2222240) PxaBridge: Application backgrounded: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime",
+    "2332280\tI (2332280) AdcBatteryMonitor: Battery: channel=1 raw=3374 adc=2815mV battery=4251mV level=100% charging=1",
+    "2333249\tI (2333249) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b40000 dbus=0x3c5b0000 request=273108 map=327680 alloc=327680 free_psram=5900596",
+    "2333716\tI (2333716) PxaIme: load status=0 us=2890729 metadata=2835"
+  ]
+}

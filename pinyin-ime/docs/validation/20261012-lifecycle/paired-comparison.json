@@ -1,0 +1,427 @@
+{
+  "scope": "Same five packages; Wi-Fi off; all numeric system font sizes prewarmed; same input and two foreground fixtures. Heap excludes screenshots. First draw timestamps are not LCD completion.",
+  "before_firmware": {
+    "head": "3bd81ae-dirty",
+    "bytes": 3363536,
+    "sha256": "50749d38122923f82fcd440997ad50a93183fc32461bbb6ad2e687bab72e60d9"
+  },
+  "after_firmware": {
+    "head": "1d7d760-dirty",
+    "bytes": 3368480,
+    "sha256": "85a41d9309debcce1d3c4ba1839816049c58c1699fbcaebcb3913544bcfa074f"
+  },
+  "static_ime_bss_bytes": {
+    "before_flag_packing": 544,
+    "final": 536
+  },
+  "before": {
+    "warm_draw_ms": [
+      28,
+      28,
+      28
+    ],
+    "warm_ready_ms": [
+      3314,
+      3314,
+      3326
+    ],
+    "warm_ready_median_ms": 3314,
+    "first_ready_ms": 3656,
+    "first_draw_ms": 0,
+    "first_open": {
+      "sram": {
+        "stable_bytes": 265644,
+        "local_peak_bytes": 269744
+      },
+      "psram": {
+        "stable_bytes": 3504852,
+        "local_peak_bytes": 3509668
+      }
+    },
+    "warm_repeat_end": {
+      "sram": {
+        "stable_bytes": 264892,
+        "local_peak_bytes": 269832
+      },
+      "psram": {
+        "stable_bytes": 1828316,
+        "local_peak_bytes": 3519904
+      }
+    },
+    "warm_open_median": {
+      "sram": 265644,
+      "psram": 3514804
+    },
+    "warm_closed_median": {
+      "sram": 264892,
+      "psram": 1828324
+    },
+    "closed_range": {
+      "sram": [
+        264892,
+        264892
+      ],
+      "psram": [
+        1828316,
+        1828324
+      ]
+    },
+    "five_key": {
+      "count": 5,
+      "queue_us": 125185,
+      "processing_us": 146514,
+      "queue_max_us": 26816,
+      "processing_max_us": 80797
+    }
+  },
+  "after": {
+    "warm_draw_ms": [
+      28,
+      28,
+      28
+    ],
+    "warm_ready_ms": [
+      2482,
+      2546,
+      2538
+    ],
+    "warm_ready_median_ms": 2538,
+    "first_ready_ms": 2880,
+    "first_draw_ms": 174,
+    "first_open": {
+      "sram": {
+        "stable_bytes": 265624,
+        "local_peak_bytes": 269812
+      },
+      "psram": {
+        "stable_bytes": 3503288,
+        "local_peak_bytes": 3508388
+      }
+    },
+    "warm_repeat_end": {
+      "sram": {
+        "stable_bytes": 264864,
+        "local_peak_bytes": 269724
+      },
+      "psram": {
+        "stable_bytes": 1827532,
+        "local_peak_bytes": 3517828
+      }
+    },
+    "warm_open_median": {
+      "sram": 265624,
+      "psram": 3513008
+    },
+    "warm_closed_median": {
+      "sram": 264864,
+      "psram": 1827560
+    },
+    "closed_range": {
+      "sram": [
+        264864,
+        264864
+      ],
+      "psram": [
+        1827532,
+        1827560
+      ]
+    },
+    "five_key": {
+      "count": 5,
+      "queue_us": 74094,
+      "processing_us": 152044,
+      "queue_max_us": 26053,
+      "processing_max_us": 71209
+    }
+  },
+  "foreground_before": {
+    "closed-pxa-selected": {
+      "callbacks": 257,
+      "median_gap_us": 15050,
+      "max_gap_us": 21587,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "3271360",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0"
+      }
+    },
+    "chinese-load": {
+      "callbacks": 56,
+      "median_gap_us": 15068.5,
+      "max_gap_us": 3394661,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "3295662",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "26",
+        "candidates_ready": "1",
+        "candidates_ready_ms": "3360"
+      },
+      "memory": {
+        "sram": {
+          "stable_bytes": 265644,
+          "local_peak_bytes": 269832
+        },
+        "psram": {
+          "stable_bytes": 3515072,
+          "local_peak_bytes": 3520180
+        }
+      }
+    },
+    "english": {
+      "callbacks": 289,
+      "median_gap_us": 15050,
+      "max_gap_us": 51809,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "3295662",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "26",
+        "candidates_ready": "1",
+        "candidates_ready_ms": "4594"
+      },
+      "memory": {
+        "sram": {
+          "stable_bytes": 265644,
+          "local_peak_bytes": 265732
+        },
+        "psram": {
+          "stable_bytes": 3515188,
+          "local_peak_bytes": 3526908
+        }
+      }
+    },
+    "closed-after-use": {
+      "callbacks": 265,
+      "median_gap_us": 15053,
+      "max_gap_us": 39710,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "3295662",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0"
+      }
+    },
+    "cancel-close": {
+      "callbacks": 64,
+      "median_gap_us": 15112.0,
+      "max_gap_us": 3320950,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "3220325",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0"
+      },
+      "memory": {
+        "sram": {
+          "stable_bytes": 264892,
+          "local_peak_bytes": 269744
+        },
+        "psram": {
+          "stable_bytes": 1828748,
+          "local_peak_bytes": 3519604
+        }
+      }
+    },
+    "closed-builtin-selected": {
+      "callbacks": 252,
+      "median_gap_us": 15052.0,
+      "max_gap_us": 21622,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "3220325",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0"
+      }
+    }
+  },
+  "foreground_after": {
+    "closed-pxa-selected": {
+      "callbacks": 256,
+      "median_gap_us": 15025.5,
+      "max_gap_us": 21930,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "2482071",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0",
+        "provider_steps": "96",
+        "provider_step_max_us": "788848"
+      }
+    },
+    "chinese-load": {
+      "callbacks": 156,
+      "median_gap_us": 15057.0,
+      "max_gap_us": 794578,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "2546642",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "24",
+        "candidates_ready": "1",
+        "candidates_ready_ms": "2600",
+        "provider_steps": "96",
+        "provider_step_max_us": "765904"
+      },
+      "memory": {
+        "sram": {
+          "stable_bytes": 265624,
+          "local_peak_bytes": 269724
+        },
+        "psram": {
+          "stable_bytes": 3513448,
+          "local_peak_bytes": 3518260
+        }
+      }
+    },
+    "english": {
+      "callbacks": 288,
+      "median_gap_us": 15039.0,
+      "max_gap_us": 55063,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "2546642",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "24",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "2600",
+        "provider_steps": "96",
+        "provider_step_max_us": "765904"
+      },
+      "memory": {
+        "sram": {
+          "stable_bytes": 264864,
+          "local_peak_bytes": 265624
+        },
+        "psram": {
+          "stable_bytes": 1832120,
+          "local_peak_bytes": 3525296
+        }
+      }
+    },
+    "closed-after-use": {
+      "callbacks": 264,
+      "median_gap_us": 15028.5,
+      "max_gap_us": 43881,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "2546642",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0",
+        "provider_steps": "96",
+        "provider_step_max_us": "765904"
+      }
+    },
+    "cancel-close": {
+      "callbacks": 256,
+      "median_gap_us": 15037.0,
+      "max_gap_us": 232585,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "0",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0",
+        "provider_steps": "1",
+        "provider_step_max_us": "163139"
+      },
+      "memory": {
+        "sram": {
+          "stable_bytes": 264864,
+          "local_peak_bytes": 268964
+        },
+        "psram": {
+          "stable_bytes": 1828008,
+          "local_peak_bytes": 2083680
+        }
+      }
+    },
+    "closed-builtin-selected": {
+      "callbacks": 252,
+      "median_gap_us": 15037.5,
+      "max_gap_us": 21411,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "0",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0",
+        "provider_steps": "1",
+        "provider_step_max_us": "163139"
+      }
+    }
+  },
+  "overall_local_peak": {
+    "before": {
+      "sram": 269832,
+      "psram": 3526908
+    },
+    "after": {
+      "sram": 269812,
+      "psram": 3525296
+    }
+  }
+}

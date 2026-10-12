@@ -1,0 +1,308 @@
+{
+  "passed": true,
+  "build": {
+    "serial": "a4:cb:8f:d6:8d:a4",
+    "retained_files_verified": 6,
+    "firmware": {
+      "bytes": 3375072,
+      "sha256": "8784da78d9d9ea7f73c374211f19c4002927d14eb461d402572aa1561be07520"
+    },
+    "provider": {
+      "bytes": 1231113,
+      "sha256": "e3a8fad1bdbfd52bc6c034995e5562dcc5b188ed00740b938c959ad078435e97"
+    },
+    "touch_base": "4e6b59f"
+  },
+  "keyboard_timing": [
+    {
+      "count": 0,
+      "queue_us": 0,
+      "processing_us": 0,
+      "queue_max_us": 0,
+      "processing_max_us": 0,
+      "provider_load_us": 2212802,
+      "keyboard_drawn": 1,
+      "first_draw_ms": 184,
+      "candidates_ready": 1,
+      "candidates_ready_ms": 2576,
+      "provider_steps": 97,
+      "provider_step_max_us": 716012
+    },
+    {
+      "count": 5,
+      "queue_us": 148556,
+      "processing_us": 137583,
+      "queue_max_us": 34764,
+      "processing_max_us": 70516,
+      "provider_load_us": 2212802,
+      "keyboard_drawn": 1,
+      "first_draw_ms": 184,
+      "candidates_ready": 1,
+      "candidates_ready_ms": 2576,
+      "provider_steps": 97,
+      "provider_step_max_us": 716012
+    },
+    {
+      "count": 0,
+      "queue_us": 0,
+      "processing_us": 0,
+      "queue_max_us": 0,
+      "processing_max_us": 0,
+      "provider_load_us": 2239855,
+      "keyboard_drawn": 1,
+      "first_draw_ms": 40,
+      "candidates_ready": 1,
+      "candidates_ready_ms": 2308,
+      "provider_steps": 97,
+      "provider_step_max_us": 739534
+    },
+    {
+      "count": 0,
+      "queue_us": 0,
+      "processing_us": 0,
+      "queue_max_us": 0,
+      "processing_max_us": 0,
+      "provider_load_us": 2227208,
+      "keyboard_drawn": 1,
+      "first_draw_ms": 40,
+      "candidates_ready": 1,
+      "candidates_ready_ms": 2294,
+      "provider_steps": 97,
+      "provider_step_max_us": 736260
+    },
+    {
+      "count": 0,
+      "queue_us": 0,
+      "processing_us": 0,
+      "queue_max_us": 0,
+      "processing_max_us": 0,
+      "provider_load_us": 2229465,
+      "keyboard_drawn": 1,
+      "first_draw_ms": 42,
+      "candidates_ready": 1,
+      "candidates_ready_ms": 2298,
+      "provider_steps": 97,
+      "provider_step_max_us": 738872
+    }
+  ],
+  "benchmark_windows": [
+    {
+      "sram_stable": 265628,
+      "sram_peak": 269728,
+      "psram_stable": 3502864,
+      "psram_peak": 3507668
+    },
+    {
+      "sram_stable": 264868,
+      "sram_peak": 269816,
+      "psram_stable": 1826288,
+      "psram_peak": 3517136
+    }
+  ],
+  "memory_snapshots": [
+    {
+      "sram_stable": 264868,
+      "sram_peak": 301463,
+      "psram_stable": 1810240,
+      "psram_peak": 2159724
+    },
+    {
+      "sram_stable": 264868,
+      "sram_peak": 302223,
+      "psram_stable": 1826248,
+      "psram_peak": 3947012
+    },
+    {
+      "sram_stable": 265628,
+      "sram_peak": 269728,
+      "psram_stable": 3512172,
+      "psram_peak": 3516820
+    },
+    {
+      "sram_stable": 264868,
+      "sram_peak": 269728,
+      "psram_stable": 1826348,
+      "psram_peak": 3516820
+    },
+    {
+      "sram_stable": 265628,
+      "sram_peak": 269728,
+      "psram_stable": 3512108,
+      "psram_peak": 3516820
+    },
+    {
+      "sram_stable": 264868,
+      "sram_peak": 269728,
+      "psram_stable": 1826288,
+      "psram_peak": 3516820
+    },
+    {
+      "sram_stable": 265628,
+      "sram_peak": 269816,
+      "psram_stable": 3512052,
+      "psram_peak": 3517136
+    },
+    {
+      "sram_stable": 264868,
+      "sram_peak": 269816,
+      "psram_stable": 1826288,
+      "psram_peak": 3517136
+    },
+    {
+      "sram_stable": 263668,
+      "sram_peak": 302223,
+      "psram_stable": 1417536,
+      "psram_peak": 3947012
+    }
+  ],
+  "heartbeat_phases": [
+    {
+      "name": "closed-pxa-selected",
+      "callbacks": 257,
+      "median_gap_us": 15033,
+      "p95_gap_us": 20055,
+      "max_gap_us": 21863,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "2229465",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0",
+        "provider_steps": "97",
+        "provider_step_max_us": "738872"
+      }
+    },
+    {
+      "name": "chinese-load",
+      "callbacks": 170,
+      "median_gap_us": 15062.0,
+      "p95_gap_us": 25240,
+      "max_gap_us": 754975,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "2358174",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "22",
+        "candidates_ready": "1",
+        "candidates_ready_ms": "2406",
+        "provider_steps": "97",
+        "provider_step_max_us": "732676"
+      },
+      "memory": {
+        "sram_stable": 265628,
+        "sram_peak": 269816,
+        "psram_stable": 3512544,
+        "psram_peak": 3517616
+      }
+    },
+    {
+      "name": "english",
+      "callbacks": 292,
+      "median_gap_us": 15042.0,
+      "p95_gap_us": 20186,
+      "max_gap_us": 54487,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "2358174",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "22",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "2406",
+        "provider_steps": "97",
+        "provider_step_max_us": "732676"
+      },
+      "memory": {
+        "sram_stable": 264868,
+        "sram_peak": 265716,
+        "psram_stable": 1830672,
+        "psram_peak": 3524328
+      }
+    },
+    {
+      "name": "closed-after-use",
+      "callbacks": 266,
+      "median_gap_us": 15027.5,
+      "p95_gap_us": 20061,
+      "max_gap_us": 39963,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "2358174",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0",
+        "provider_steps": "97",
+        "provider_step_max_us": "732676"
+      }
+    },
+    {
+      "name": "cancel-close",
+      "callbacks": 262,
+      "median_gap_us": 15031.5,
+      "p95_gap_us": 20066,
+      "max_gap_us": 200462,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "0",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0",
+        "provider_steps": "1",
+        "provider_step_max_us": "123421"
+      },
+      "memory": {
+        "sram_stable": 264868,
+        "sram_peak": 268968,
+        "psram_stable": 1826812,
+        "psram_peak": 2082476
+      }
+    },
+    {
+      "name": "closed-builtin-selected",
+      "callbacks": 253,
+      "median_gap_us": 15046,
+      "p95_gap_us": 20019,
+      "max_gap_us": 24557,
+      "timing": {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "0",
+        "keyboard_drawn": "0",
+        "first_draw_ms": "0",
+        "candidates_ready": "0",
+        "candidates_ready_ms": "0",
+        "provider_steps": "1",
+        "provider_step_max_us": "123421"
+      }
+    }
+  ],
+  "all_window_maxima": {
+    "sram_peak": 269816,
+    "psram_peak": 3524328
+  }
+}

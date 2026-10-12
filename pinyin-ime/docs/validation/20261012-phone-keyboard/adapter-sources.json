@@ -1,0 +1,23 @@
+{
+  "source_hashes": {
+    "deps/pxa-system/libpxa/adapters/lvgl/pxa_lvgl_ime.c": {
+      "before_sha256": "024d379fcb116cbe21e96167adb974c949dd549264c0acc7967441702fb1c5a3",
+      "after_sha256": "8dd8b41e1e82cf29f943d440326ffbbbda3baabdb3f23d5f18e5f89b6ca1c6b2"
+    },
+    "deps/pxa-system/libpxa/adapters/include/pxa/lvgl/pxa_lvgl_ime.h": {
+      "before_sha256": "a5e63d2181f3d912fce02c7ecb4feac209fba353f4cb9c22f39a59c367b02495",
+      "after_sha256": "e38d426ddaa2ef8c5e16be40c5f9b54592706fde02c9640e7fc84a4540e2fde3"
+    },
+    "firmware/components/pxa/src/runtime/pxa_esp_ime.c": {
+      "before_sha256": "e68761556f3da637b09072e358329b343e88533479a37ea4595fffbc506274cb",
+      "after_sha256": "0fbfe0b15e14b8aeb04f72b30fb6def9cfa952eaed462b2496b7fc03993da427"
+    },
+    "deps/pxa-system/simulator/desktop/product_runner.c": {
+      "before_sha256": "e0ba4f535004fafb8517146086f6bf496a508607f456f9eb0151e8ab0ab6e068",
+      "after_sha256": "f49d1063381d7dbbbb12f401d316de092c05de7faa02bbcd106ebe37a6371e73"
+    }
+  },
+  "patch": "adapter-change.patch",
+  "reverse_apply_from_final": "patch -R -p1 < adapter-change.patch (from pxa-projects in an isolated checkout)",
+  "scope": "Only the keyboard adapter and provider-release acknowledgement. Unrelated working changes are excluded from the patch."
+}

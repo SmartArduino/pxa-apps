@@ -1,0 +1,15 @@
+Test project /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/simulator/pai-touch
+    Start 14: pxsys_ime_app_test
+1/5 Test #14: pxsys_ime_app_test ...............   Passed   71.51 sec
+    Start 54: pxa_ime_test
+2/5 Test #54: pxa_ime_test .....................   Passed    0.00 sec
+    Start 65: pxsys_runtime_test
+3/5 Test #65: pxsys_runtime_test ...............   Passed    0.00 sec
+    Start 82: pxsys_pxa_runtime_test
+4/5 Test #82: pxsys_pxa_runtime_test ...........   Passed    0.00 sec
+    Start 90: pxsys_reference_ime_test
+5/5 Test #90: pxsys_reference_ime_test .........   Passed    0.02 sec
+
+100% tests passed out of 5
+
+Total Test time (real) =  71.55 sec

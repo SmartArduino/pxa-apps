@@ -1,0 +1,1675 @@
+{
+  "passed": true,
+  "rows": [
+    {
+      "command": "INPUT CAPABILITIES",
+      "start_ms": 0.007,
+      "end_ms": 1.515,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "protocol=1;width=296;height=240;max_pointers=1;keys=back,home,volume-up,volume-down;coordinates=logical"
+        }
+      ]
+    },
+    {
+      "command": "IME",
+      "start_ms": 1.533,
+      "end_ms": 3.141,
+      "frames": [
+        {
+          "kind": "SELECTED",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime"
+        },
+        {
+          "kind": "TIMING",
+          "payload": "count=0;queue_us=0;processing_us=0;queue_max_us=0;processing_max_us=0;provider_load_us=0;keyboard_drawn=0;first_draw_ms=0;candidates_ready=0;candidates_ready_ms=0"
+        },
+        {
+          "kind": "METHOD",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime"
+        },
+        {
+          "kind": "OK",
+          "payload": "listed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT KEY HOME",
+      "start_ms": 3.164,
+      "end_ms": 3.889,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=1;device_us=27784825;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 148 216 0",
+      "start_ms": 204.004,
+      "end_ms": 204.82,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=2;device_us=27985806;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER MOVE 148 70 0",
+      "start_ms": 324.926,
+      "end_ms": 326.096,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=3;device_us=28107020;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 148 70 0",
+      "start_ms": 446.182,
+      "end_ms": 446.917,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=4;device_us=28227905;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "start_ms": 446.923,
+      "end_ms": 447.283,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=5;device_us=28228454;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "PACKAGE run pxa-cpp-system-input",
+      "start_ms": 447.285,
+      "end_ms": 448.103,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "launch_queued"
+        }
+      ]
+    },
+    {
+      "command": "PACKAGES",
+      "start_ms": 448.11,
+      "end_ms": 452.33,
+      "frames": [
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-system-input\t系统输入法示例\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime\t拼音输入法\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "PACKAGES",
+      "start_ms": 652.449,
+      "end_ms": 657.151,
+      "frames": [
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-system-input\t系统输入法示例\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime\t拼音输入法\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "PACKAGES",
+      "start_ms": 857.303,
+      "end_ms": 864.309,
+      "frames": [
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-system-input\t系统输入法示例\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime\t拼音输入法\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "PACKAGES",
+      "start_ms": 1064.425,
+      "end_ms": 1069.87,
+      "frames": [
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-system-input\t系统输入法示例\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime\t拼音输入法\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "PACKAGES",
+      "start_ms": 1269.973,
+      "end_ms": 1273.964,
+      "frames": [
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-system-input\t系统输入法示例\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime\t拼音输入法\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "PACKAGES",
+      "start_ms": 1474.125,
+      "end_ms": 1477.972,
+      "frames": [
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-system-input\t系统输入法示例\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=1"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime\t拼音输入法\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "MEMORY",
+      "start_ms": 2478.121,
+      "end_ms": 2482.064,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320475;sram_free=55603;sram_min=31316;sram_largest=19456;psram_total=8358572;psram_free=6524868;psram_min=6271380;psram_largest=6160384"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16634;peak_internal=27468;peak_external=16634;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=242"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "MEMORY START",
+      "start_ms": 2482.08,
+      "end_ms": 2482.628,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=local"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 35 55 0",
+      "start_ms": 2482.643,
+      "end_ms": 2483.449,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=6;device_us=30264292;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 35 55 0",
+      "start_ms": 2633.582,
+      "end_ms": 2634.768,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=7;device_us=30415483;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "start_ms": 2634.777,
+      "end_ms": 2636.42,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=8;device_us=30416595;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "IME",
+      "start_ms": 7036.613,
+      "end_ms": 7038.692,
+      "frames": [
+        {
+          "kind": "SELECTED",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime"
+        },
+        {
+          "kind": "TIMING",
+          "payload": "count=0;queue_us=0;processing_us=0;queue_max_us=0;processing_max_us=0;provider_load_us=2884912;keyboard_drawn=1;first_draw_ms=272;candidates_ready=1;candidates_ready_ms=3350"
+        },
+        {
+          "kind": "METHOD",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime"
+        },
+        {
+          "kind": "OK",
+          "payload": "listed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY STOP",
+      "start_ms": 7038.753,
+      "end_ms": 7043.511,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320475;sram_free=54667;sram_min=50531;sram_largest=19456;psram_total=8358572;psram_free=4828812;psram_min=4822592;psram_largest=4456448"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16634;peak_internal=27468;peak_external=16634;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=242"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=boot"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 218 153 0",
+      "start_ms": 7134.237,
+      "end_ms": 7135.096,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=9;device_us=34916060;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 218 153 0",
+      "start_ms": 7285.191,
+      "end_ms": 7286.154,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=10;device_us=35066968;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "start_ms": 7286.162,
+      "end_ms": 7287.36,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=11;device_us=35068012;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 69 153 0",
+      "start_ms": 7687.463,
+      "end_ms": 7688.435,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=12;device_us=35469208;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 69 153 0",
+      "start_ms": 7838.525,
+      "end_ms": 7839.345,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=13;device_us=35620272;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "start_ms": 7839.352,
+      "end_ms": 7839.82,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=14;device_us=35620974;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 69 153 0",
+      "start_ms": 8239.914,
+      "end_ms": 8240.955,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=15;device_us=36021871;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 69 153 0",
+      "start_ms": 8391.053,
+      "end_ms": 8391.938,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=16;device_us=36172839;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "start_ms": 8391.946,
+      "end_ms": 8392.4,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=17;device_us=36173513;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 148 128 0",
+      "start_ms": 8792.536,
+      "end_ms": 8793.669,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=18;device_us=36574391;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 148 128 0",
+      "start_ms": 8943.762,
+      "end_ms": 8944.773,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=19;device_us=36725664;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "start_ms": 8944.78,
+      "end_ms": 8945.367,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=20;device_us=36726439;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 218 153 0",
+      "start_ms": 9345.467,
+      "end_ms": 9346.322,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=21;device_us=37127227;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 218 153 0",
+      "start_ms": 9496.448,
+      "end_ms": 9497.343,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=22;device_us=37278204;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "start_ms": 9497.35,
+      "end_ms": 9498.044,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=23;device_us=37278922;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "IME",
+      "start_ms": 9898.175,
+      "end_ms": 9900.132,
+      "frames": [
+        {
+          "kind": "SELECTED",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime"
+        },
+        {
+          "kind": "TIMING",
+          "payload": "count=5;queue_us=102335;processing_us=154212;queue_max_us=26723;processing_max_us=71026;provider_load_us=2884912;keyboard_drawn=1;first_draw_ms=272;candidates_ready=1;candidates_ready_ms=3350"
+        },
+        {
+          "kind": "METHOD",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime"
+        },
+        {
+          "kind": "OK",
+          "payload": "listed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 133 102 0",
+      "start_ms": 10006.86,
+      "end_ms": 10007.654,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=24;device_us=37788579;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 133 102 0",
+      "start_ms": 10157.782,
+      "end_ms": 10158.622,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=25;device_us=37939550;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "start_ms": 10158.629,
+      "end_ms": 10159.131,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=26;device_us=37940199;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 54 209 0",
+      "start_ms": 10643.071,
+      "end_ms": 10643.929,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=27;device_us=38424826;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 54 209 0",
+      "start_ms": 10794.018,
+      "end_ms": 10794.752,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=28;device_us=38575780;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "start_ms": 10794.757,
+      "end_ms": 10795.177,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=29;device_us=38576322;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 71 142 0",
+      "start_ms": 11195.328,
+      "end_ms": 11196.309,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=30;device_us=38977110;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 71 142 0",
+      "start_ms": 11346.401,
+      "end_ms": 11347.251,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=31;device_us=39128178;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "start_ms": 11347.258,
+      "end_ms": 11347.765,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=32;device_us=39128835;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 55 107 0",
+      "start_ms": 11747.901,
+      "end_ms": 11748.709,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=33;device_us=39529650;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 55 107 0",
+      "start_ms": 11898.799,
+      "end_ms": 11899.959,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=34;device_us=39680720;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "start_ms": 11899.966,
+      "end_ms": 11900.861,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=35;device_us=39681836;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 101 107 0",
+      "start_ms": 12300.991,
+      "end_ms": 12301.916,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=36;device_us=40082765;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 101 107 0",
+      "start_ms": 12452.045,
+      "end_ms": 12452.88,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=37;device_us=40233817;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "start_ms": 12452.888,
+      "end_ms": 12453.343,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=38;device_us=40234470;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 147 107 0",
+      "start_ms": 12853.456,
+      "end_ms": 12854.501,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=39;device_us=40635238;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 147 107 0",
+      "start_ms": 13004.595,
+      "end_ms": 13005.877,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=40;device_us=40786493;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "start_ms": 13005.884,
+      "end_ms": 13006.37,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=41;device_us=40787502;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 147 209 0",
+      "start_ms": 13492.851,
+      "end_ms": 13493.573,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=42;device_us=41274613;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 147 209 0",
+      "start_ms": 14593.688,
+      "end_ms": 14594.488,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=43;device_us=42375466;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "start_ms": 14594.496,
+      "end_ms": 14594.876,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=44;device_us=42376070;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 240 209 0",
+      "start_ms": 15170.183,
+      "end_ms": 15170.986,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=45;device_us=42951990;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 240 209 0",
+      "start_ms": 15321.105,
+      "end_ms": 15322.038,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=46;device_us=43102935;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "start_ms": 15322.045,
+      "end_ms": 15322.595,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=47;device_us=43103639;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY",
+      "start_ms": 16122.826,
+      "end_ms": 16127.188,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320475;sram_free=55419;sram_min=18036;sram_largest=19456;psram_total=8358572;psram_free=6504944;psram_min=4379516;psram_largest=5767168"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16634;peak_internal=27468;peak_external=16634;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=242"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "MEMORY START",
+      "start_ms": 16127.217,
+      "end_ms": 16127.634,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=local"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 35 55 0",
+      "start_ms": 16127.644,
+      "end_ms": 16128.239,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=48;device_us=43909310;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 35 55 0",
+      "start_ms": 16278.345,
+      "end_ms": 16279.202,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=49;device_us=44060094;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "start_ms": 16279.209,
+      "end_ms": 16279.742,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=50;device_us=44060807;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "IME",
+      "start_ms": 20679.991,
+      "end_ms": 20682.678,
+      "frames": [
+        {
+          "kind": "SELECTED",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime"
+        },
+        {
+          "kind": "TIMING",
+          "payload": "count=0;queue_us=0;processing_us=0;queue_max_us=0;processing_max_us=0;provider_load_us=2858636;keyboard_drawn=1;first_draw_ms=28;candidates_ready=1;candidates_ready_ms=2914"
+        },
+        {
+          "kind": "METHOD",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime"
+        },
+        {
+          "kind": "OK",
+          "payload": "listed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY",
+      "start_ms": 20682.709,
+      "end_ms": 20687.038,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320475;sram_free=54667;sram_min=50531;sram_largest=19456;psram_total=8358572;psram_free=4818588;psram_min=4813912;psram_largest=4128768"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16634;peak_internal=27468;peak_external=16634;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=242"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 240 209 0",
+      "start_ms": 20687.068,
+      "end_ms": 20687.763,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=51;device_us=48468810;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 240 209 0",
+      "start_ms": 20837.85,
+      "end_ms": 20838.695,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=52;device_us=48619631;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "start_ms": 20838.702,
+      "end_ms": 20839.224,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=53;device_us=48620295;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY",
+      "start_ms": 21739.455,
+      "end_ms": 21744.048,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320475;sram_free=55419;sram_min=50531;sram_largest=19456;psram_total=8358572;psram_free=6504924;psram_min=4813912;psram_largest=5767168"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16634;peak_internal=27468;peak_external=16634;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=242"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 35 55 0",
+      "start_ms": 21744.063,
+      "end_ms": 21744.634,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=54;device_us=49525807;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 35 55 0",
+      "start_ms": 21894.756,
+      "end_ms": 21895.822,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=55;device_us=49676566;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "start_ms": 21895.828,
+      "end_ms": 21896.374,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=56;device_us=49677465;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "IME",
+      "start_ms": 26296.592,
+      "end_ms": 26298.451,
+      "frames": [
+        {
+          "kind": "SELECTED",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime"
+        },
+        {
+          "kind": "TIMING",
+          "payload": "count=0;queue_us=0;processing_us=0;queue_max_us=0;processing_max_us=0;provider_load_us=2850987;keyboard_drawn=1;first_draw_ms=28;candidates_ready=1;candidates_ready_ms=2904"
+        },
+        {
+          "kind": "METHOD",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime"
+        },
+        {
+          "kind": "OK",
+          "payload": "listed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY",
+      "start_ms": 26298.49,
+      "end_ms": 26303.425,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320475;sram_free=54667;sram_min=50531;sram_largest=19456;psram_total=8358572;psram_free=4818596;psram_min=4812368;psram_largest=4128768"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16634;peak_internal=27468;peak_external=16634;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=242"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 240 209 0",
+      "start_ms": 26303.44,
+      "end_ms": 26304.095,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=57;device_us=54085194;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 240 209 0",
+      "start_ms": 26454.22,
+      "end_ms": 26455.851,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=58;device_us=54236090;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "start_ms": 26455.857,
+      "end_ms": 26457.313,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=59;device_us=54238004;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY",
+      "start_ms": 27357.503,
+      "end_ms": 27361.936,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320475;sram_free=55419;sram_min=50531;sram_largest=19456;psram_total=8358572;psram_free=6504924;psram_min=4812368;psram_largest=5767168"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16634;peak_internal=27468;peak_external=16634;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=242"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 35 55 0",
+      "start_ms": 27361.954,
+      "end_ms": 27362.502,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=60;device_us=55143696;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 35 55 0",
+      "start_ms": 27512.623,
+      "end_ms": 27513.499,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=61;device_us=55294451;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "start_ms": 27513.506,
+      "end_ms": 27514.005,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=62;device_us=55295122;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "IME",
+      "start_ms": 31914.442,
+      "end_ms": 31916.554,
+      "frames": [
+        {
+          "kind": "SELECTED",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime"
+        },
+        {
+          "kind": "TIMING",
+          "payload": "count=0;queue_us=0;processing_us=0;queue_max_us=0;processing_max_us=0;provider_load_us=2859046;keyboard_drawn=1;first_draw_ms=26;candidates_ready=1;candidates_ready_ms=2914"
+        },
+        {
+          "kind": "METHOD",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime"
+        },
+        {
+          "kind": "OK",
+          "payload": "listed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY",
+      "start_ms": 31916.604,
+      "end_ms": 31920.868,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320475;sram_free=54667;sram_min=50479;sram_largest=19456;psram_total=8358572;psram_free=4818592;psram_min=4812304;psram_largest=4128768"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16634;peak_internal=27468;peak_external=16634;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=242"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER DOWN 240 209 0",
+      "start_ms": 31920.88,
+      "end_ms": 31921.688,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=63;device_us=59702737;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT POINTER UP 240 209 0",
+      "start_ms": 32071.828,
+      "end_ms": 32072.679,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=64;device_us=59853649;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "INPUT SYNC",
+      "start_ms": 32072.685,
+      "end_ms": 32073.246,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "event=65;device_us=59854330;status=processed"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY",
+      "start_ms": 32973.481,
+      "end_ms": 32977.684,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320475;sram_free=55419;sram_min=50479;sram_largest=19456;psram_total=8358572;psram_free=6504924;psram_min=4812304;psram_largest=5767168"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16634;peak_internal=27468;peak_external=16634;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=242"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "MEMORY STOP",
+      "start_ms": 32977.695,
+      "end_ms": 32981.996,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320475;sram_free=55419;sram_min=50479;sram_largest=19456;psram_total=8358572;psram_free=6504924;psram_min=4812304;psram_largest=5767168"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16634;peak_internal=27468;peak_external=16634;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=242"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": "minimum_scope=boot"
+        }
+      ]
+    },
+    {
+      "command": "PACKAGES",
+      "start_ms": 32982.008,
+      "end_ms": 32985.052,
+      "frames": [
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-system-input\t系统输入法示例\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=1"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime\t拼音输入法\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "PKG",
+          "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    {
+      "command": "PACKAGE stop pxa-cpp-system-input",
+      "start_ms": 32985.083,
+      "end_ms": 32987.091,
+      "frames": [
+        {
+          "kind": "OK",
+          "payload": "stop_queued"
+        }
+      ]
+    },
+    {
+      "command": "MEMORY",
+      "start_ms": 33487.217,
+      "end_ms": 33639.784,
+      "frames": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320475;sram_free=56003;sram_min=18036;sram_largest=19456;psram_total=8358572;psram_free=6928224;psram_min=4379516;psram_largest=5767168"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=16516;peak_internal=27468;peak_external=16634;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=124"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+PACKAGES [('PKG', '17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0'), ('PKG', '17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0'), ('PKG', '17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-system-input\t系统输入法示例\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=1'), ('PKG', '17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0'), ('PKG', '17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime\t拼音输入法\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0'), ('PKG', '17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0'), ('OK', '')]
+PACKAGE stop pxa-cpp-system-input [('OK', 'stop_queued')]
+IME select builtin [('OK', 'selected')]
+PACKAGE uninstall pxa-cpp-system-input [('OK', '')]
+PACKAGE uninstall pxa-pinyin-ime [('OK', '')]
+FSUNLOCK 10 [('OK', 'system;seconds=600')]
+uploading /tmp/pxa-ime-integration/device/backup/pxa-voxel-craft-cpp.pxa -> PXA storage/pxa-state/inbox/pxa-voxel-craft-cpp.pxa (592910 bytes)
+upload 0%
+upload 10%
+upload 20%
+upload 30%
+upload 40%
+upload 50%
+upload 60%
+upload 70%
+upload 80%
+upload 90%
+upload 100%
+PACKAGE deploy pxa-voxel-craft-cpp [('OK', '')]
+FSLOCK [('OK', 'locked')]
+IME [('SELECTED', ''), ('TIMING', 'count=0;queue_us=0;processing_us=0;queue_max_us=0;processing_max_us=0;provider_load_us=3026685;keyboard_drawn=0;first_draw_ms=0;candidates_ready=0;candidates_ready_ms=0'), ('OK', 'listed')]
+PACKAGES [('PKG', '17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-counter\tC++ Counter\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0'), ('PKG', '17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-i18n\tC++ I18n\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0'), ('PKG', '17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d-cpp\tJump Jump 3D C++\t0.1.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0'), ('PKG', '17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-weather\tWeather\t0.3.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0'), ('PKG', '17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft-cpp\tVoxel Craft C++\t0.12.2\tbuiltin=0;installed=1;staged=0;enabled=1;active=0'), ('OK', '')]
+INFO [('OK', 'target=esp32s3;serial=a4:cb:8f:d6:8d:a4;version=3bd81ae-dirty;free_heap=6913387;pxa=ready;storage_total=9437184;storage_used=7340032;storage_free=2097152')]
+Original five packages restored, builtin selected, 93 size/SHA256 checks passed

@@ -1,0 +1,25 @@
+{
+  "passed": true,
+  "device_font_sha256": "17f6e5bd2b8fbac78e38f16a8d454a551a064f6edc0070917c152c9caeaab543",
+  "device_font_bytes": 3224544,
+  "device_names": [
+    {
+      "id": 1,
+      "name": "Noto Sans SC"
+    },
+    {
+      "id": 2,
+      "name": "Regular"
+    },
+    {
+      "id": 4,
+      "name": "Noto Sans SC Regular"
+    },
+    {
+      "id": 6,
+      "name": "NotoSansSC-Regular"
+    }
+  ],
+  "label_source_font_sha256": "7b89dc0cb85fec0458461953a7e9a08c4012a0f84c3ce44e64407743a248bd10",
+  "same_font_file": false
+}

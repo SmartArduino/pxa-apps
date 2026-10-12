@@ -1,0 +1,246 @@
+[
+  {
+    "command": "INPUT KEY HOME",
+    "start_ms": 0.01,
+    "end_ms": 1.52,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "event=67;device_us=125550424;status=processed"
+      }
+    ]
+  },
+  {
+    "command": "INPUT POINTER DOWN 148 216 0",
+    "start_ms": 201.59,
+    "end_ms": 202.3,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "event=68;device_us=125751144;status=processed"
+      }
+    ]
+  },
+  {
+    "command": "INPUT POINTER MOVE 148 70 0",
+    "start_ms": 322.38,
+    "end_ms": 323.25,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "event=69;device_us=125871986;status=processed"
+      }
+    ]
+  },
+  {
+    "command": "INPUT POINTER UP 148 70 0",
+    "start_ms": 443.35,
+    "end_ms": 444.13,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "event=70;device_us=125992933;status=processed"
+      }
+    ]
+  },
+  {
+    "command": "INPUT SYNC",
+    "start_ms": 444.14,
+    "end_ms": 444.57,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "event=71;device_us=125993544;status=processed"
+      }
+    ]
+  },
+  {
+    "command": "PACKAGE run pxa-cpp-system-input",
+    "start_ms": 644.65,
+    "end_ms": 645.94,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "launch_queued"
+      }
+    ]
+  },
+  {
+    "command": "INPUT POINTER DOWN 39 100 0",
+    "start_ms": 2146.04,
+    "end_ms": 2146.91,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "event=72;device_us=127695645;status=processed"
+      }
+    ]
+  },
+  {
+    "command": "INPUT POINTER UP 39 100 0",
+    "start_ms": 2266.99,
+    "end_ms": 2268.02,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "event=73;device_us=127816816;status=processed"
+      }
+    ]
+  },
+  {
+    "command": "INPUT SYNC",
+    "start_ms": 2268.02,
+    "end_ms": 2269.17,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "event=74;device_us=127817564;status=processed"
+      }
+    ]
+  },
+  {
+    "command": "INPUT POINTER DOWN 54 209 0",
+    "start_ms": 2669.28,
+    "end_ms": 2670.63,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "event=75;device_us=128219026;status=processed"
+      }
+    ]
+  },
+  {
+    "command": "INPUT POINTER UP 54 209 0",
+    "start_ms": 2790.94,
+    "end_ms": 2792.15,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "event=76;device_us=128340780;status=processed"
+      }
+    ]
+  },
+  {
+    "command": "INPUT SYNC",
+    "start_ms": 2792.15,
+    "end_ms": 2793.03,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "event=77;device_us=128341860;status=processed"
+      }
+    ]
+  },
+  {
+    "command": "INPUT POINTER DOWN 71 139 0",
+    "start_ms": 3193.13,
+    "end_ms": 3194.45,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "event=78;device_us=128743236;status=processed"
+      }
+    ]
+  },
+  {
+    "command": "INPUT POINTER UP 71 139 0",
+    "start_ms": 3314.57,
+    "end_ms": 3315.71,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "event=79;device_us=128864427;status=processed"
+      }
+    ]
+  },
+  {
+    "command": "INPUT SYNC",
+    "start_ms": 3315.72,
+    "end_ms": 3316.8,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "event=80;device_us=128865648;status=processed"
+      }
+    ]
+  },
+  {
+    "command": "INPUT POINTER DOWN 56 107 0",
+    "start_ms": 3716.89,
+    "end_ms": 3717.99,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "event=81;device_us=129266533;status=processed"
+      }
+    ]
+  },
+  {
+    "command": "INPUT POINTER UP 56 107 0",
+    "start_ms": 3838.04,
+    "end_ms": 3839.43,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "event=82;device_us=129388099;status=processed"
+      }
+    ]
+  },
+  {
+    "command": "INPUT SYNC",
+    "start_ms": 3839.44,
+    "end_ms": 3840.39,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "event=83;device_us=129388976;status=processed"
+      }
+    ]
+  },
+  {
+    "command": "IME",
+    "start_ms": 4365.23,
+    "end_ms": 4368.25,
+    "frames": [
+      {
+        "kind": "SELECTED",
+        "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime"
+      },
+      {
+        "kind": "TIMING",
+        "payload": "count=0;queue_us=0;processing_us=0;queue_max_us=0;processing_max_us=0;provider_load_us=0;keyboard_drawn=1;first_draw_ms=38;candidates_ready=0;candidates_ready_ms=0"
+      },
+      {
+        "kind": "METHOD",
+        "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime"
+      },
+      {
+        "kind": "OK",
+        "payload": "listed"
+      }
+    ]
+  },
+  {
+    "command": "IME",
+    "start_ms": 6368.34,
+    "end_ms": 6370.46,
+    "frames": [
+      {
+        "kind": "SELECTED",
+        "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime"
+      },
+      {
+        "kind": "TIMING",
+        "payload": "count=0;queue_us=0;processing_us=0;queue_max_us=0;processing_max_us=0;provider_load_us=3026685;keyboard_drawn=1;first_draw_ms=38;candidates_ready=1;candidates_ready_ms=3226"
+      },
+      {
+        "kind": "METHOD",
+        "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime"
+      },
+      {
+        "kind": "OK",
+        "payload": "listed"
+      }
+    ]
+  }
+]

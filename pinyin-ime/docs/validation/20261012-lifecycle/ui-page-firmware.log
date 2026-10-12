@@ -1,0 +1,318 @@
+[0/1] Re-running CMake...
+-- Minimal build - ON
+-- esp-idf-configdep will be used for faster recompilation
+-- ccache will be used for faster recompilation
+-- Compiler launcher chain: esp-idf-configdep -> ccache
+-- Building ESP-IDF components for target esp32s3
+NOTE: Skipping optional dependency: espressif/libjpeg-turbo
+NOTE: Skipping optional dependency: espressif/libpng
+NOTE: Skipping optional dependency: espressif/lz4
+NOTE: Processing 13 dependencies:
+NOTE: [1/13] 78/esp-wifi-connect (3.1.5)
+NOTE: [2/13] espressif/adc_battery_estimation (0.2.2)
+NOTE: [3/13] espressif/button (4.2.1)
+NOTE: [4/13] espressif/cjson (1.7.19~2)
+NOTE: [5/13] espressif/cmake_utilities (1.1.1)
+NOTE: [6/13] espressif/esp_audio_codec (2.5.0)
+NOTE: [7/13] espressif/esp_lcd_touch (1.2.1)
+NOTE: [8/13] espressif/esp_lvgl_port (2.9.0)
+NOTE: [9/13] espressif/esp_new_jpeg (1.0.2)
+NOTE: [10/13] espressif/freetype (2.14.3~1)
+NOTE: [11/13] joltwallet/littlefs (1.22.3)
+NOTE: [12/13] lvgl/lvgl (9.6.0~1)
+NOTE: [13/13] idf (6.2.0)
+NOTE: Skipping optional dependency: espressif/libjpeg-turbo
+NOTE: Skipping optional dependency: espressif/libpng
+NOTE: Skipping optional dependency: espressif/lz4
+-- KCONFIG_REPORT_VERBOSITY not set, using default
+-- Project sdkconfig file /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/sdkconfig.pai-touch
+Loading defaults file /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/sdkconfig.defaults...
+Loading defaults file /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/boards/pai-touch/sdkconfig.defaults...
+NOTE: /home/lucinhu/esp/esp-idf/esp-idf-main/components/bootloader/Kconfig.app_rollback:17: Trying to set symbol BOOTLOADER_APP_ROLLBACK_CONFIRM_ON_STARTUP to n, but it is currently selected by choice BOOTLOADER_APP_ROLLBACK_CONFIRM_MODE. For setting it to n, set another choice symbol to y instead.
+NOTE: Kconfig parser version: 1
+NOTE: Kconfig defaults policy: use sdkconfig
+NOTE: Status: Finished with notifications
+NOTE: /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hw_support/Kconfig:416: ESP_INTR_IN_IRAM has user-set value y from /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/sdkconfig.pai-touch but is not visible (disabled dependency)
+NOTE: /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_libc/Kconfig:46: LIBC_MISC_IN_IRAM has user-set value y from /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/sdkconfig.pai-touch but is not visible (disabled dependency)
+NOTE: /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_rom/Kconfig:3: ESP_ROM_PRINT_IN_IRAM has user-set value y from /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/sdkconfig.pai-touch but is not visible (disabled dependency)
+NOTE: /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_system/Kconfig:12: ESP_SYSTEM_IN_IRAM has user-set value y from /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/sdkconfig.pai-touch but is not visible (disabled dependency)
+NOTE: /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_timer/Kconfig:3: ESP_TIMER_IN_IRAM has user-set value y from /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/sdkconfig.pai-touch but is not visible (disabled dependency)
+NOTE: /home/lucinhu/esp/esp-idf/esp-idf-main/components/freertos/Kconfig:263: FREERTOS_USE_STATS_FORMATTING_FUNCTIONS has user-set value n from /tmp/kconfgen_tmpumq3xdew but is not visible (disabled dependency)
+NOTE: /home/lucinhu/esp/esp-idf/esp-idf-main/components/log/Kconfig:79: LOG_IN_IRAM has user-set value y from /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/sdkconfig.pai-touch but is not visible (disabled dependency)
+NOTE: /home/lucinhu/esp/esp-idf/esp-idf-main/components/spi_flash/Kconfig:99: SPI_FLASH_PLACE_FUNCTIONS_IN_IRAM has user-set value y from /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/sdkconfig.pai-touch but is not visible (disabled dependency)
+-- Compiler supported targets: xtensa-esp-elf
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Adding linker script /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_regi2c/esp32s3/rom.regi2c.ld
+-- App "pxa_esp_platform" version: 4e6b59f-dirty
+-- Adding linker script /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_wdt/esp32s3/rom.wdt.ld
+-- Adding linker script /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_system/ld/esp32s3/memory.ld.in
+--   -> Preprocessing .in script: /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_system/ld/esp32s3/memory.ld.in
+-- Adding linker script /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_system/ld/esp32s3/sections.ld.in
+--   -> Preprocessing .in script: /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_system/ld/esp32s3/sections.ld.in
+--   -> Applying ldgen processing: /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-snapshot-build/esp-idf/esp_system/ld/sections.ld.in
+-- Adding linker script /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_rom/esp32s3/ld/esp32s3.rom.ld
+-- Adding linker script /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_rom/esp32s3/ld/esp32s3.rom.api.ld
+-- Adding linker script /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_rom/esp32s3/ld/esp32s3.rom.bt_funcs.ld
+-- Adding linker script /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_rom/esp32s3/ld/esp32s3.rom.libgcc.ld
+-- Adding linker script /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_rom/esp32s3/ld/esp32s3.rom.version.ld
+-- Adding linker script /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_rom/esp32s3/ld/esp32s3.rom.ble_master.ld
+-- Adding linker script /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_rom/esp32s3/ld/esp32s3.rom.ble_50.ld
+-- Adding linker script /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_rom/esp32s3/ld/esp32s3.rom.ble_smp.ld
+-- Adding linker script /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_rom/esp32s3/ld/esp32s3.rom.ble_dtm.ld
+-- Adding linker script /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_rom/esp32s3/ld/esp32s3.rom.ble_test.ld
+-- Adding linker script /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_rom/esp32s3/ld/esp32s3.rom.ble_scan.ld
+-- Adding linker script /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_rom/esp32s3/ld/esp32s3.rom.libc.ld
+-- Adding linker script /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_rom/esp32s3/ld/esp32s3.rom.newlib.ld
+-- Adding linker script /home/lucinhu/esp/esp-idf/esp-idf-main/components/soc/esp32s3/ld/esp32s3.peripherals.ld
+-- Setting up mbedtls configuration
+78/esp_wifi_connect: IDF_VER is v6.1-dev-7975-ge4df0c12f70
+78/esp_wifi_connect: idf_component_register for v6 used
+-- ADC_BATTERY_ESTIMATION: 0.2.2
+-- BUTTON: 4.2.1
+-- Could NOT find ZLIB (missing: ZLIB_INCLUDE_DIR) 
+-- Could NOT find PNG (missing: PNG_LIBRARY PNG_PNG_INCLUDE_DIR) 
+-- Could NOT find ZLIB (missing: ZLIB_INCLUDE_DIR) 
+-- LVGL version: 9.6.0~1
+-- WAMR version: 2.4.3
+-- Build Configurations:
+     Build as target XTENSA
+     Build for platform esp-idf
+     CMAKE_BUILD_TYPE Release
+     BUILD_SHARED_LIBS OFF
+     WAMR Interpreter enabled
+     Fast interpreter enabled
+     WAMR AOT enabled
+     WAMR Fast JIT disabled
+     WAMR LLVM ORC JIT disabled
+     Libc builtin enabled
+     Libc WASI enabled
+     Thread manager enabled
+     Lib pthread enabled
+     Multiple modules disabled
+     Shared memory enabled
+     Wakeup of blocking operations enabled
+     Dump call stack enabled
+     GC performance profiling disabled
+     Module instance context enabled
+     Quick AOT/JIT entries enabled
+     AOT intrinsics enabled
+     Shrunk memory enabled
+     Extended constant expression disabled
+-- About Wasm Proposals:
+     Always-on:
+       "Import/Export of Mutable Globals"
+       "Multi-value"
+       "Non-trapping float-to-int Conversions"
+       "Sign-extension Operators"
+       "WebAssembly C and C++ API"
+     Configurable. 0 is OFF. 1 is ON:
+       "Branch Hinting" via WAMR_BUILD_BRANCH_HINTS: 
+       "Bulk Memory Operation" via WAMR_BUILD_BULK_MEMORY: 1
+       "Bulk-memory-opt" via WAMR_BUILD_BULK_MEMORY_OPT: 1
+       "Call-indirect-overlong" via WAMR_BUILD_CALL_INDIRECT_OVERLONG: 1
+       "Extended Constant Expressions" via WAMR_BUILD_EXTENDED_CONST_EXPR: 0
+       "Fixed-width SIMD" via WAMR_BUILD_SIMD: 
+       "Garbage Collection" via WAMR_BUILD_GC: 0
+       "Legacy Exception Handling" via WAMR_BUILD_EXCE_HANDLING: 0
+       "Memory64" via WAMR_BUILD_MEMORY64: 0
+       "Multiple Memories" via WAMR_BUILD_MULTI_MEMORY: 0
+       "Reference Types" via WAMR_BUILD_REF_TYPES: 1
+       "Reference-Typed Strings" via WAMR_BUILD_STRINGREF: 0
+       "Tail Call" via WAMR_BUILD_TAIL_CALL: 0
+       "Threads" via WAMR_BUILD_SHARED_MEMORY: 1
+       "Typed Function References" via WAMR_BUILD_GC: 0
+     Unsupported (>= Phase4):
+       "Custom Annotation Syntax in the Text Format"
+       "Exception Handling"
+       "JS String Builtins"
+       "Relaxed SIMD"
+
+-- Prepared WAMR overlay at /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-snapshot-build/esp-idf/pxa/pxsys-wamr-overlay (3 files)
+CMake Warning at /home/lucinhu/esp/esp-idf/esp-idf-main/tools/cmake/component_validation.cmake:106 (message):
+  Private include directory
+  '/home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_wifi/wifi_apps/roaming_app/include'
+  belongs to component esp_wifi but is being used by component
+  wpa_supplicant.  It is recommended to define the component dependency for
+  wpa_supplicant on the component esp_wifi, i.e.  'idf_component_register(...
+  PRIV_REQUIRES esp_wifi)' in the CMakeLists.txt of wpa_supplicant, and
+  specify the included directory as idf_component_register(...
+  PRIV_INCLUDE_DIRS <dir relative to component>) in the CMakeLists.txt of
+  component esp_wifi.
+Call Stack (most recent call first):
+  /home/lucinhu/esp/esp-idf/esp-idf-main/tools/cmake/component_validation.cmake:130 (__component_validation_check_include_dirs)
+  /home/lucinhu/esp/esp-idf/esp-idf-main/CMakeLists.txt:437 (__component_validation_run_checks)
+
+
+CMake Warning at /home/lucinhu/esp/esp-idf/esp-idf-main/tools/cmake/component_validation.cmake:106 (message):
+  Private include directory
+  '/home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_wifi/wifi_apps/roaming_app/src'
+  belongs to component esp_wifi but is being used by component
+  wpa_supplicant.  It is recommended to define the component dependency for
+  wpa_supplicant on the component esp_wifi, i.e.  'idf_component_register(...
+  PRIV_REQUIRES esp_wifi)' in the CMakeLists.txt of wpa_supplicant, and
+  specify the included directory as idf_component_register(...
+  PRIV_INCLUDE_DIRS <dir relative to component>) in the CMakeLists.txt of
+  component esp_wifi.
+Call Stack (most recent call first):
+  /home/lucinhu/esp/esp-idf/esp-idf-main/tools/cmake/component_validation.cmake:130 (__component_validation_check_include_dirs)
+  /home/lucinhu/esp/esp-idf/esp-idf-main/CMakeLists.txt:437 (__component_validation_run_checks)
+
+
+CMake Warning at /home/lucinhu/esp/esp-idf/esp-idf-main/tools/cmake/component_validation.cmake:106 (message):
+  Private include directory
+  '/home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_wifi/wifi_apps/include/apps_private'
+  belongs to component esp_wifi but is being used by component
+  wpa_supplicant.  It is recommended to define the component dependency for
+  wpa_supplicant on the component esp_wifi, i.e.  'idf_component_register(...
+  PRIV_REQUIRES esp_wifi)' in the CMakeLists.txt of wpa_supplicant, and
+  specify the included directory as idf_component_register(...
+  PRIV_INCLUDE_DIRS <dir relative to component>) in the CMakeLists.txt of
+  component esp_wifi.
+Call Stack (most recent call first):
+  /home/lucinhu/esp/esp-idf/esp-idf-main/tools/cmake/component_validation.cmake:130 (__component_validation_check_include_dirs)
+  /home/lucinhu/esp/esp-idf/esp-idf-main/CMakeLists.txt:437 (__component_validation_run_checks)
+
+
+CMake Warning at /home/lucinhu/esp/esp-idf/esp-idf-main/tools/cmake/component_validation.cmake:106 (message):
+  Private include directory
+  '/home/lucinhu/esp/esp-idf/esp-idf-main/components/wpa_supplicant/src'
+  belongs to component wpa_supplicant but is being used by component
+  esp_wifi.  It is recommended to define the component dependency for
+  esp_wifi on the component wpa_supplicant, i.e.  'idf_component_register(...
+  PRIV_REQUIRES wpa_supplicant)' in the CMakeLists.txt of esp_wifi, and
+  specify the included directory as idf_component_register(...
+  PRIV_INCLUDE_DIRS <dir relative to component>) in the CMakeLists.txt of
+  component wpa_supplicant.
+Call Stack (most recent call first):
+  /home/lucinhu/esp/esp-idf/esp-idf-main/tools/cmake/component_validation.cmake:130 (__component_validation_check_include_dirs)
+  /home/lucinhu/esp/esp-idf/esp-idf-main/CMakeLists.txt:437 (__component_validation_run_checks)
+
+
+CMake Warning at /home/lucinhu/esp/esp-idf/esp-idf-main/tools/cmake/component_validation.cmake:106 (message):
+  Private include directory
+  '/home/lucinhu/esp/esp-idf/esp-idf-main/components/wpa_supplicant/esp_supplicant/src'
+  belongs to component wpa_supplicant but is being used by component
+  esp_wifi.  It is recommended to define the component dependency for
+  esp_wifi on the component wpa_supplicant, i.e.  'idf_component_register(...
+  PRIV_REQUIRES wpa_supplicant)' in the CMakeLists.txt of esp_wifi, and
+  specify the included directory as idf_component_register(...
+  PRIV_INCLUDE_DIRS <dir relative to component>) in the CMakeLists.txt of
+  component wpa_supplicant.
+Call Stack (most recent call first):
+  /home/lucinhu/esp/esp-idf/esp-idf-main/tools/cmake/component_validation.cmake:130 (__component_validation_check_include_dirs)
+  /home/lucinhu/esp/esp-idf/esp-idf-main/CMakeLists.txt:437 (__component_validation_run_checks)
+
+
+-- Linker: /home/lucinhu/esp/esp-idf-toolchain/tools/xtensa-esp-elf/esp-16.1.0_20260609/xtensa-esp-elf/bin/xtensa-esp32s3-elf-ld (GNU ld (crosstool-NG esp-16.1.0_20260609) 2.46)
+-- Components: 78__esp-wifi-connect bootloader bootloader_support cxx driver efuse esp-tls esp_adc esp_app_format esp_blockdev esp_bootloader_format esp_coex esp_common esp_driver_bitscrambler esp_driver_dma esp_driver_gpio esp_driver_i2c esp_driver_i2s esp_driver_ledc esp_driver_parlio esp_driver_spi esp_driver_uart esp_driver_usb_serial_jtag esp_event esp_hal_ana_conv esp_hal_clock esp_hal_debug_assist esp_hal_dma esp_hal_gpio esp_hal_gpspi esp_hal_i2c esp_hal_i2s esp_hal_lcd esp_hal_ledc esp_hal_mspi esp_hal_parlio esp_hal_pmu esp_hal_regi2c esp_hal_rtc_timer esp_hal_sd esp_hal_security esp_hal_systimer esp_hal_timg esp_hal_touch_sens esp_hal_twai esp_hal_uart esp_hal_usb esp_hal_wdt esp_http_client esp_http_server esp_hw_support esp_lcd esp_lcd_touch_cst826 esp_libc esp_mm esp_mspi esp_netif esp_netif_stack esp_partition esp_phy esp_pm esp_psram esp_ringbuf esp_rom esp_security esp_stdio esp_system esp_timer esp_usb_cdc_rom_console esp_wifi espressif__adc_battery_estimation espressif__button espressif__cjson espressif__cmake_utilities espressif__esp_audio_codec espressif__esp_lcd_touch espressif__esp_lvgl_port espressif__esp_new_jpeg espressif__freetype esptool_py freertos hal heap http_parser joltwallet__littlefs log lvgl__lvgl lwip lz4 main mbedtls nvs_flash nvs_sec_provider pai-touch partition_table pthread pxa pxa_board_api pxa_board_common pxa_integration pxa_lvgl_input pxa_system_core pxa_system_esp pxa_system_native pxa_system_pxa pxa_system_reference_ui pxa_system_renderer_lvgl pxa_system_standard pxadb sdmmc soc spi_flash tcp_transport vfs wamr wpa_supplicant xtensa
+-- Component paths: /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/managed_components/78__esp-wifi-connect /home/lucinhu/esp/esp-idf/esp-idf-main/components/bootloader /home/lucinhu/esp/esp-idf/esp-idf-main/components/bootloader_support /home/lucinhu/esp/esp-idf/esp-idf-main/components/cxx /home/lucinhu/esp/esp-idf/esp-idf-main/components/driver /home/lucinhu/esp/esp-idf/esp-idf-main/components/efuse /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp-tls /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_adc /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_app_format /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_blockdev /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_bootloader_format /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_coex /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_common /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_driver_bitscrambler /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_driver_dma /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_driver_gpio /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_driver_i2c /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_driver_i2s /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_driver_ledc /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_driver_parlio /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_driver_spi /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_driver_uart /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_driver_usb_serial_jtag /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_event /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_ana_conv /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_clock /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_debug_assist /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_dma /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_gpio /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_gpspi /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_i2c /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_i2s /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_lcd /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_ledc /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_mspi /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_parlio /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_pmu /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_regi2c /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_rtc_timer /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_sd /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_security /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_systimer /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_timg /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_touch_sens /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_twai /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_uart /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_usb /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hal_wdt /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_http_client /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_http_server /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_hw_support /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_lcd /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/components/esp_lcd_touch_cst826 /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_libc /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_mm /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_mspi /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_netif /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_netif_stack /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_partition /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_phy /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_pm /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_psram /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_ringbuf /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_rom /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_security /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_stdio /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_system /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_timer /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_usb_cdc_rom_console /home/lucinhu/esp/esp-idf/esp-idf-main/components/esp_wifi /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/managed_components/espressif__adc_battery_estimation /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/managed_components/espressif__button /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/managed_components/espressif__cjson /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/managed_components/espressif__cmake_utilities /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/managed_components/espressif__esp_audio_codec /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/managed_components/espressif__esp_lcd_touch /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/managed_components/espressif__esp_lvgl_port /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/managed_components/espressif__esp_new_jpeg /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/managed_components/espressif__freetype /home/lucinhu/esp/esp-idf/esp-idf-main/components/esptool_py /home/lucinhu/esp/esp-idf/esp-idf-main/components/freertos /home/lucinhu/esp/esp-idf/esp-idf-main/components/hal /home/lucinhu/esp/esp-idf/esp-idf-main/components/heap /home/lucinhu/esp/esp-idf/esp-idf-main/components/http_parser /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/managed_components/joltwallet__littlefs /home/lucinhu/esp/esp-idf/esp-idf-main/components/log /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/managed_components/lvgl__lvgl /home/lucinhu/esp/esp-idf/esp-idf-main/components/lwip /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/components/lz4 /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/main /home/lucinhu/esp/esp-idf/esp-idf-main/components/mbedtls /home/lucinhu/esp/esp-idf/esp-idf-main/components/nvs_flash /home/lucinhu/esp/esp-idf/esp-idf-main/components/nvs_sec_provider /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/boards/pai-touch /home/lucinhu/esp/esp-idf/esp-idf-main/components/partition_table /home/lucinhu/esp/esp-idf/esp-idf-main/components/pthread /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/components/pxa /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/components/pxa_board_api /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/components/pxa_board_common /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/components/pxa_integration /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/components/pxa_lvgl_input /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/components/pxa_system_core /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/components/pxa_system_esp /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/components/pxa_system_native /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/components/pxa_system_pxa /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/components/pxa_system_reference_ui /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/components/pxa_system_renderer_lvgl /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/components/pxa_system_standard /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/components/pxadb /home/lucinhu/esp/esp-idf/esp-idf-main/components/sdmmc /home/lucinhu/esp/esp-idf/esp-idf-main/components/soc /home/lucinhu/esp/esp-idf/esp-idf-main/components/spi_flash /home/lucinhu/esp/esp-idf/esp-idf-main/components/tcp_transport /home/lucinhu/esp/esp-idf/esp-idf-main/components/vfs /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/deps/pxa-system/wamr /home/lucinhu/esp/esp-idf/esp-idf-main/components/wpa_supplicant /home/lucinhu/esp/esp-idf/esp-idf-main/components/xtensa
+-- Configuring done (109.5s)
+-- Generating done (3.1s)
+-- Build files have been written to: /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-snapshot-build
+[1/59] Building C object esp-idf/esp_app_format/CMakeFiles/__idf_esp_app_format.dir/esp_app_desc.c.obj
+[2/59] Linking C static library esp-idf/esp_app_format/libesp_app_format.a
+[3/59] Performing build step for 'bootloader'
+[1/1] cd /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-snapshot-build/bootloader && /home/lucinhu/esp/esp-idf-toolchain/python_env/idf6.2_py3.14_env/bin/python /home/lucinhu/esp/esp-idf/esp-idf-main/components/partition_table/check_sizes.py --offset 0x8000 bootloader 0x0 /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-snapshot-build/bootloader/bootloader.bin
+Bootloader binary size 0x5d10 bytes. 0x22f0 bytes (27%) free.
+[4/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/shared/platform/esp-idf/espidf_malloc.c.obj
+[5/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/shared/platform/esp-idf/espidf_clock.c.obj
+[6/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/shared/platform/esp-idf/espidf_platform.c.obj
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/deps/pxa-system/wamr/core/shared/platform/esp-idf/espidf_platform.c: In function 'os_thread_get_stack_boundary':
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/deps/pxa-system/wamr/core/shared/platform/esp-idf/espidf_platform.c:86:5: warning: 'pxTaskGetStackStart' is deprecated: Use xTaskGetStackStart() for improved type safety [-Wdeprecated-declarations]
+   86 |     return (uint8 *)xTaskGetStackStart(NULL);
+      |     ^~~~~~
+In file included from /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/deps/pxa-system/platforms/esp-idf/wamr/wamr_espidf_compat.h:10,
+                 from <command-line>:
+/home/lucinhu/esp/esp-idf/esp-idf-main/components/freertos/esp_additions/include/freertos/idf_additions.h:635:11: note: declared here
+  635 | uint8_t * pxTaskGetStackStart( TaskHandle_t xTask ) __attribute__((deprecated("Use xTaskGetStackStart() for improved type safety")));
+      |           ^~~~~~~~~~~~~~~~~~~
+[7/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/shared/platform/esp-idf/espidf_socket.c.obj
+[8/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/shared/utils/bh_assert.c.obj
+[9/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/shared/platform/esp-idf/espidf_thread.c.obj
+[10/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/shared/mem-alloc/ems/ems_gc.c.obj
+[11/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/shared/mem-alloc/ems/ems_kfc.c.obj
+[12/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/shared/utils/bh_bitmap.c.obj
+[13/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/shared/utils/bh_hashmap.c.obj
+[14/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/shared/mem-alloc/ems/ems_alloc.c.obj
+[15/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/shared/mem-alloc/ems/ems_hmu.c.obj
+[16/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/shared/mem-alloc/mem_alloc.c.obj
+[17/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/shared/utils/bh_common.c.obj
+[18/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/shared/utils/bh_list.c.obj
+[19/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/shared/utils/bh_queue.c.obj
+[20/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/shared/utils/bh_leb128.c.obj
+[21/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/shared/utils/bh_log.c.obj
+[22/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/shared/utils/bh_vector.c.obj
+[23/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/shared/utils/runtime_timer.c.obj
+[24/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/libraries/libc-builtin/libc_builtin_wrapper.c.obj
+[25/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/libraries/libc-wasi/libc_wasi_wrapper.c.obj
+[26/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/libraries/libc-wasi/sandboxed-system-primitives/src/blocking_op.c.obj
+[27/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/libraries/libc-wasi/sandboxed-system-primitives/src/random.c.obj
+[28/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/libraries/libc-wasi/sandboxed-system-primitives/src/posix.c.obj
+[29/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/libraries/libc-wasi/sandboxed-system-primitives/src/str.c.obj
+[30/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/common/wasm_application.c.obj
+[31/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/common/wasm_blocking_op.c.obj
+[32/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/common/wasm_exec_env.c.obj
+[33/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/common/wasm_loader_common.c.obj
+[34/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/common/wasm_c_api.c.obj
+[35/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/common/wasm_memory.c.obj
+[36/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/common/wasm_native.c.obj
+[37/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/common/wasm_runtime_common.c.obj
+[38/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/common/wasm_shared_memory.c.obj
+[39/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/aot/aot_intrinsic.c.obj
+[40/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/interpreter/wasm_loader.c.obj
+[41/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/interpreter/wasm_runtime.c.obj
+[42/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/interpreter/wasm_interp_fast.c.obj
+[43/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/aot/aot_loader.c.obj
+[44/59] No install step for 'bootloader'
+[45/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/aot/aot_runtime.c.obj
+[46/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/libraries/lib-pthread/lib_pthread_wrapper.c.obj
+[47/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/__/pxa/pxsys-wamr-overlay/core/shared/platform/esp-idf/espidf_file.c.obj
+[48/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/core/iwasm/libraries/thread-mgr/thread_manager.c.obj
+[49/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/__/pxa/pxsys-wamr-overlay/core/iwasm/aot/arch/aot_reloc_xtensa.c.obj
+[50/59] Building C object esp-idf/wamr/CMakeFiles/__idf_wamr.dir/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/deps/pxa-system/platforms/esp-idf/wamr/overrides/espidf_memmap.c.obj
+[51/59] Completed 'bootloader'
+[52/59] Linking C static library esp-idf/wamr/libwamr.a
+[53/59] Building C object esp-idf/pxa_system_reference_ui/CMakeFiles/__idf_pxa_system_reference_ui.dir/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/deps/pxa-system/ui/reference/lvgl/src/reference_lvgl.c.obj
+In file included from /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/managed_components/lvgl__lvgl/include/lvgl/3d/lv_3dmath.h:17,
+                 from /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/managed_components/lvgl__lvgl/include/lvgl/lvgl.h:5,
+                 from /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/managed_components/lvgl__lvgl/lvgl.h:1,
+                 from /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/deps/pxa-system/ui/reference/lvgl/include/pxsys/reference_lvgl.h:7,
+                 from /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/deps/pxa-system/ui/reference/lvgl/src/reference_lvgl.c:1:
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-source-snapshot/firmware/managed_components/lvgl__lvgl/include/lvgl/3d/../config/lv_conf_internal.h:4976:10: warning: #warning "LV_ASSERT_HANDLER_INCLUDE is deprecated and will be removed in a future release. Use LV_ASSERT_CUSTOM_INCLUDE and define LV_ASSERT_HANDLER inside. To suppress this warning, remove LV_ASSERT_HANDLER_INCLUDE or enable LV_DISABLE_ASSERT_HANDLER_INCLUDE_WARNING." [-Wcpp]
+ 4976 |         #warning "LV_ASSERT_HANDLER_INCLUDE is deprecated and will be removed in a future release. Use LV_ASSERT_CUSTOM_INCLUDE and define LV_ASSERT_HANDLER inside. To suppress this warning, remove LV_ASSERT_HANDLER_INCLUDE or enable LV_DISABLE_ASSERT_HANDLER_INCLUDE_WARNING."
+      |          ^~~~~~~
+[54/59] Linking C static library esp-idf/pxa_system_reference_ui/libpxa_system_reference_ui.a
+[55/59] Generating esp-idf/esp_system/ld/sections.ld
+NOTE: /home/lucinhu/esp/esp-idf/esp-idf-main/components/bootloader/Kconfig.app_rollback:17: Trying to set symbol BOOTLOADER_APP_ROLLBACK_CONFIRM_ON_STARTUP to n, but it is currently selected by choice BOOTLOADER_APP_ROLLBACK_CONFIRM_MODE. For setting it to n, set another choice symbol to y instead.
+Skipping linker fragment parsing, fragment files unchanged
+[56/59] Linking CXX executable pxa_esp_platform.elf; Checking codec allocations use the shared resource budget; Checking ioctl definition overlaps
+/home/lucinhu/esp/esp-idf-toolchain/tools/xtensa-esp-elf/esp-16.1.0_20260609/xtensa-esp-elf/xtensa-esp-elf/bin/ld: warning: _sqrtf.o: missing .note.GNU-stack section implies executable stack
+/home/lucinhu/esp/esp-idf-toolchain/tools/xtensa-esp-elf/esp-16.1.0_20260609/xtensa-esp-elf/xtensa-esp-elf/bin/ld: NOTE: This behaviour is deprecated and will be removed in a future version of the linker
+Codec memory audit passed: 85 selected objects, four strong budget hooks
+[57/59] Generating binary image from built executable
+esptool v5.4.0
+Creating ESP32-S3 image...
+Merged 3 ELF sections.
+Successfully created ESP32-S3 image.
+Generated /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-snapshot-build/pxa_esp_platform.bin
+[58/59] cd /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-snapshot-build && /home/lucinhu/esp/esp-idf-toolchain/python_env/idf6.2_py3.14_env/bin/python /home/lucinhu/esp/esp-idf/esp-idf-main/components/partition_table/check_sizes.py --offset 0x8000 partition --type app /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-snapshot-build/partition_table/partition-table.bin /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-snapshot-build/pxa_esp_platform.bin
+pxa_esp_platform.bin binary size 0x337e00 bytes. Smallest app partition is 0x6f0000 bytes. 0x3b8200 bytes (54%) free.
+Executing action: all (aliases: build)
+Running ninja in directory /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-snapshot-build
+Executing "ninja all"...
+
+Project build complete. To flash, run:
+ idf.py flash
+or
+ idf.py -p PORT flash
+or
+ python -m esptool --chip esp32s3 -b 460800 --before default-reset --after hard-reset write-flash --flash-mode dio --flash-size 16MB --flash-freq 80m 0x0 local/ime-device-recovery-20261012/resume/ui-snapshot-build/bootloader/bootloader.bin 0x8000 local/ime-device-recovery-20261012/resume/ui-snapshot-build/partition_table/partition-table.bin 0x10000 local/ime-device-recovery-20261012/resume/ui-snapshot-build/pxa_esp_platform.bin
+or from the "/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-device-recovery-20261012/resume/ui-snapshot-build" directory
+ python -m esptool --chip esp32s3 -b 460800 --before default-reset --after hard-reset write-flash "@flash_args"

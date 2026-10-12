@@ -1,0 +1,61 @@
+{
+  "conditions": {
+    "display": [
+      296,
+      240
+    ],
+    "density_dpi": 160,
+    "selected_provider": "pxa-pinyin-ime",
+    "same_provider_and_dictionary": true,
+    "same_five_packages": true,
+    "fresh_boot_each": true,
+    "wifi": "off",
+    "font_warmup": "one identical numeric warmup per system font role",
+    "dictionary_bytes": 1068442,
+    "typed_nine_keys": "64426",
+    "english_text": "abc",
+    "first_draw_is_lvgl_not_lcd": true
+  },
+  "before": {
+    "sram_peak": 269816,
+    "psram_peak": 3524328,
+    "cold_draw_ms": 184,
+    "cold_ready_ms": 2576,
+    "warm_draw_ms": [
+      40,
+      40,
+      42
+    ],
+    "warm_ready_ms": [
+      2308,
+      2294,
+      2298
+    ],
+    "warm_ready_median_ms": 2298,
+    "five_keys_queue_mean_us": 29711.2,
+    "five_keys_processing_mean_us": 27516.6
+  },
+  "after": {
+    "sram_peak": 269816,
+    "psram_peak": 3514868,
+    "cold_draw_ms": 32,
+    "cold_ready_ms": 2260,
+    "warm_draw_ms": [
+      42,
+      42,
+      44
+    ],
+    "warm_ready_ms": [
+      2242,
+      2278,
+      2302
+    ],
+    "warm_ready_median_ms": 2278,
+    "five_keys_queue_mean_us": 25142.0,
+    "five_keys_processing_mean_us": 25067.8
+  },
+  "heap_peak_non_growth": {
+    "sram_peak": true,
+    "psram_peak": true
+  }
+}

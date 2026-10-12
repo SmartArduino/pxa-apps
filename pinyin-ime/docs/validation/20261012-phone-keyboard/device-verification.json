@@ -1,0 +1,98 @@
+{
+  "passed": true,
+  "checks": [
+    "swipe-and-choice-sequence; screenshots require visual review",
+    "eight-ready-close-cycles",
+    "foreground-switch-during-load",
+    "stop-during-load-and-restart"
+  ],
+  "visual_reviewed": true,
+  "cycles": [
+    {
+      "cycle": 0,
+      "ready_ms": 2380,
+      "closed_memory": {
+        "sram_stable": 264876,
+        "sram_peak": 269728,
+        "psram_stable": 1823040,
+        "psram_peak": 3519420
+      }
+    },
+    {
+      "cycle": 1,
+      "ready_ms": 2394,
+      "closed_memory": {
+        "sram_stable": 264876,
+        "sram_peak": 269816,
+        "psram_stable": 1823040,
+        "psram_peak": 3519492
+      }
+    },
+    {
+      "cycle": 2,
+      "ready_ms": 2388,
+      "closed_memory": {
+        "sram_stable": 264876,
+        "sram_peak": 269816,
+        "psram_stable": 1823040,
+        "psram_peak": 3519492
+      }
+    },
+    {
+      "cycle": 3,
+      "ready_ms": 2394,
+      "closed_memory": {
+        "sram_stable": 264876,
+        "sram_peak": 269816,
+        "psram_stable": 1823040,
+        "psram_peak": 3519492
+      }
+    },
+    {
+      "cycle": 4,
+      "ready_ms": 2360,
+      "closed_memory": {
+        "sram_stable": 264876,
+        "sram_peak": 269816,
+        "psram_stable": 1823040,
+        "psram_peak": 3519492
+      }
+    },
+    {
+      "cycle": 5,
+      "ready_ms": 2412,
+      "closed_memory": {
+        "sram_stable": 264876,
+        "sram_peak": 269816,
+        "psram_stable": 1823096,
+        "psram_peak": 3519492
+      }
+    },
+    {
+      "cycle": 6,
+      "ready_ms": 2386,
+      "closed_memory": {
+        "sram_stable": 264876,
+        "sram_peak": 269816,
+        "psram_stable": 1823040,
+        "psram_peak": 3519512
+      }
+    },
+    {
+      "cycle": 7,
+      "ready_ms": 2396,
+      "closed_memory": {
+        "sram_stable": 264876,
+        "sram_peak": 269816,
+        "psram_stable": 1823008,
+        "psram_peak": 3519512
+      }
+    }
+  ],
+  "window": {
+    "sram_stable": 264876,
+    "sram_peak": 269816,
+    "psram_stable": 1823008,
+    "psram_peak": 3519512
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "warm_draw_ms": [
+    24,
+    22,
+    24
+  ],
+  "warm_ready_ms": [
+    2332,
+    2322,
+    2328
+  ],
+  "warm_ready_median_ms": 2328,
+  "first_ready_ms": 2612,
+  "first_draw_ms": 184,
+  "first_open": {
+    "sram": {
+      "stable_bytes": 265628,
+      "local_peak_bytes": 269728
+    },
+    "psram": {
+      "stable_bytes": 3502816,
+      "local_peak_bytes": 3507624
+    }
+  },
+  "warm_repeat_end": {
+    "sram": {
+      "stable_bytes": 264876,
+      "local_peak_bytes": 269816
+    },
+    "psram": {
+      "stable_bytes": 1826692,
+      "local_peak_bytes": 3517108
+    }
+  },
+  "warm_open_median": {
+    "sram": 265628,
+    "psram": 3512036
+  },
+  "warm_closed_median": {
+    "sram": 264876,
+    "psram": 1826692
+  },
+  "closed_range": {
+    "sram": [
+      264876,
+      264876
+    ],
+    "psram": [
+      1826692,
+      1826692
+    ]
+  },
+  "five_key": {
+    "count": 5,
+    "queue_us": 115583,
+    "processing_us": 139078,
+    "queue_max_us": 33228,
+    "processing_max_us": 71344
+  }
+}

@@ -1,0 +1,326 @@
+[
+  {
+    "command": "INPUT TAP 246 203",
+    "at": 277044.790935928,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "event=11;device_us=335633795;status=processed"
+      }
+    ]
+  },
+  {
+    "command": "INPUT SYNC",
+    "at": 277044.792302794,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "event=12;device_us=335635086;status=processed"
+      }
+    ]
+  },
+  {
+    "command": "MEMORY",
+    "at": 277045.296708463,
+    "frames": [
+      {
+        "kind": "DATA",
+        "payload": "scope=heap;sram_total=320507;sram_free=55451;sram_min=27748;sram_largest=19456;psram_total=8358572;psram_free=6538352;psram_min=3635196;psram_largest=6029312"
+      },
+      {
+        "kind": "DATA",
+        "payload": "scope=budget;internal=27468;external=16634;peak_internal=27468;peak_external=16634;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+      },
+      {
+        "kind": "DATA",
+        "payload": "scope=kind;name=raster;internal=0;external=0"
+      },
+      {
+        "kind": "DATA",
+        "payload": "scope=kind;name=image;internal=0;external=0"
+      },
+      {
+        "kind": "DATA",
+        "payload": "scope=kind;name=audio;internal=0;external=16392"
+      },
+      {
+        "kind": "DATA",
+        "payload": "scope=kind;name=temporary;internal=0;external=0"
+      },
+      {
+        "kind": "DATA",
+        "payload": "scope=kind;name=metadata;internal=27468;external=242"
+      },
+      {
+        "kind": "DATA",
+        "payload": "scope=kind;name=frame;internal=0;external=0"
+      },
+      {
+        "kind": "DATA",
+        "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+      },
+      {
+        "kind": "OK",
+        "payload": ""
+      }
+    ]
+  },
+  {
+    "command": "MEMORY START",
+    "at": 277045.297225762,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "minimum_scope=local"
+      }
+    ]
+  },
+  {
+    "command": "INPUT TAP 39 100",
+    "at": 277045.33299569,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "event=13;device_us=336175796;status=processed"
+      }
+    ]
+  },
+  {
+    "command": "INPUT SYNC",
+    "at": 277045.333737062,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "event=14;device_us=336176734;status=processed"
+      }
+    ]
+  },
+  {
+    "command": "PING",
+    "at": 277045.834489139,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "pong"
+      }
+    ]
+  },
+  {
+    "command": "PING",
+    "at": 277046.335478846,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "pong"
+      }
+    ]
+  },
+  {
+    "command": "PING",
+    "at": 277046.836659745,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "pong"
+      }
+    ]
+  },
+  {
+    "command": "PING",
+    "at": 277047.337460194,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "pong"
+      }
+    ]
+  },
+  {
+    "command": "PING",
+    "at": 277047.838323813,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "pong"
+      }
+    ]
+  },
+  {
+    "command": "PING",
+    "at": 277048.338974348,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "pong"
+      }
+    ]
+  },
+  {
+    "command": "PING",
+    "at": 277048.839745782,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "pong"
+      }
+    ]
+  },
+  {
+    "command": "PING",
+    "at": 277049.340483292,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "pong"
+      }
+    ]
+  },
+  {
+    "command": "PING",
+    "at": 277049.841299191,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "pong"
+      }
+    ]
+  },
+  {
+    "command": "PING",
+    "at": 277050.342080073,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "pong"
+      }
+    ]
+  },
+  {
+    "command": "PING",
+    "at": 277050.842833914,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "pong"
+      }
+    ]
+  },
+  {
+    "command": "PING",
+    "at": 277051.343523133,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "pong"
+      }
+    ]
+  },
+  {
+    "command": "PING",
+    "at": 277051.844267937,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "pong"
+      }
+    ]
+  },
+  {
+    "command": "PING",
+    "at": 277052.345060431,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "pong"
+      }
+    ]
+  },
+  {
+    "command": "PING",
+    "at": 277052.845871451,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "pong"
+      }
+    ]
+  },
+  {
+    "command": "PING",
+    "at": 277053.346818097,
+    "frames": [
+      {
+        "kind": "OK",
+        "payload": "pong"
+      }
+    ]
+  },
+  {
+    "command": "IME",
+    "at": 277053.34822618,
+    "frames": [
+      {
+        "kind": "SELECTED",
+        "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime"
+      },
+      {
+        "kind": "TIMING",
+        "payload": "count=0;queue_us=0;processing_us=0;queue_max_us=0;processing_max_us=0"
+      },
+      {
+        "kind": "METHOD",
+        "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-pinyin-ime"
+      },
+      {
+        "kind": "OK",
+        "payload": "listed"
+      }
+    ]
+  },
+  {
+    "command": "MEMORY STOP",
+    "at": 277053.35338512,
+    "frames": [
+      {
+        "kind": "DATA",
+        "payload": "scope=heap;sram_total=320507;sram_free=54607;sram_min=50471;sram_largest=19456;psram_total=8358572;psram_free=5582264;psram_min=5075868;psram_largest=4456448"
+      },
+      {
+        "kind": "DATA",
+        "payload": "scope=budget;internal=27468;external=16634;peak_internal=27468;peak_external=16634;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+      },
+      {
+        "kind": "DATA",
+        "payload": "scope=kind;name=raster;internal=0;external=0"
+      },
+      {
+        "kind": "DATA",
+        "payload": "scope=kind;name=image;internal=0;external=0"
+      },
+      {
+        "kind": "DATA",
+        "payload": "scope=kind;name=audio;internal=0;external=16392"
+      },
+      {
+        "kind": "DATA",
+        "payload": "scope=kind;name=temporary;internal=0;external=0"
+      },
+      {
+        "kind": "DATA",
+        "payload": "scope=kind;name=metadata;internal=27468;external=242"
+      },
+      {
+        "kind": "DATA",
+        "payload": "scope=kind;name=frame;internal=0;external=0"
+      },
+      {
+        "kind": "DATA",
+        "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+      },
+      {
+        "kind": "OK",
+        "payload": "minimum_scope=boot"
+      }
+    ]
+  }
+]

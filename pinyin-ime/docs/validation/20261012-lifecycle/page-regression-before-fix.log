@@ -1,0 +1,4 @@
+PXA IME load status=0 metadata_bytes=2753
+PXA IME unloaded
+PXA IME load status=0 metadata_bytes=2753
+pxsys_ime_test: /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/deps/pxa-system/simulator/desktop/tests/ime_app_test.c:342: pump_test: Assertion `!lv_buttonmatrix_has_button_ctrl(page_strip,2,LV_BUTTONMATRIX_CTRL_HIDDEN)' failed.

@@ -1,0 +1,27 @@
+[
+  {
+    "name": "pxa_esp_platform.bin",
+    "bytes": 3363536,
+    "sha256": "50749d38122923f82fcd440997ad50a93183fc32461bbb6ad2e687bab72e60d9"
+  },
+  {
+    "name": "provider.esp32-s3.aot",
+    "bytes": 317408,
+    "sha256": "d3743af868b2a5e8f0cd4bb5176c5449879dc18514198ae49dd2ac448b0a07f5"
+  },
+  {
+    "name": "provider.linux-x86_64.aot",
+    "bytes": 225184,
+    "sha256": "7574b94fae34ce4a5954dcfd858ee3e26f389623e218088b0bdc6ade03108788"
+  },
+  {
+    "name": "provider.wasm",
+    "bytes": 131966,
+    "sha256": "47536a63da26d81413898d380de930adfb271c5bad27776cacc2b319ec7ff5be"
+  },
+  {
+    "name": "dict_pinyin.dat",
+    "bytes": 1068442,
+    "sha256": "179311c55ab9b912a07ef040e5a95af97e704e2248b7b97735f17a3e05d13b67"
+  }
+]

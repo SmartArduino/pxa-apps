@@ -1,0 +1,168 @@
+{
+  "before-benchmark": {
+    "timing": [
+      {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "2745401",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "24",
+        "candidates_ready": "1",
+        "candidates_ready_ms": "2802"
+      },
+      {
+        "count": "5",
+        "queue_us": "125815",
+        "processing_us": "148059",
+        "queue_max_us": "27032",
+        "processing_max_us": "82291",
+        "provider_load_us": "2745401",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "24",
+        "candidates_ready": "1",
+        "candidates_ready_ms": "2802"
+      },
+      {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "2707851",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "28",
+        "candidates_ready": "1",
+        "candidates_ready_ms": "2764"
+      },
+      {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "2701101",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "0",
+        "candidates_ready": "1",
+        "candidates_ready_ms": "2752"
+      },
+      {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "2692068",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "28",
+        "candidates_ready": "1",
+        "candidates_ready_ms": "2748"
+      }
+    ],
+    "memory": [
+      {
+        "sram_stable_bytes": 265796,
+        "sram_run_peak_bytes": 269932,
+        "psram_stable_bytes": 3552564,
+        "psram_run_peak_bytes": 3558848
+      },
+      {
+        "sram_stable_bytes": 265044,
+        "sram_run_peak_bytes": 270060,
+        "psram_stable_bytes": 1866152,
+        "psram_run_peak_bytes": 3558792
+      }
+    ]
+  },
+  "final-benchmark": {
+    "timing": [
+      {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "2523597",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "220",
+        "candidates_ready": "1",
+        "candidates_ready_ms": "2948",
+        "provider_steps": "96",
+        "provider_step_max_us": "803615"
+      },
+      {
+        "count": "5",
+        "queue_us": "124017",
+        "processing_us": "136290",
+        "queue_max_us": "26920",
+        "processing_max_us": "70852",
+        "provider_load_us": "2523597",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "220",
+        "candidates_ready": "1",
+        "candidates_ready_ms": "2948",
+        "provider_steps": "96",
+        "provider_step_max_us": "803615"
+      },
+      {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "2504001",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "26",
+        "candidates_ready": "1",
+        "candidates_ready_ms": "2558",
+        "provider_steps": "96",
+        "provider_step_max_us": "793504"
+      },
+      {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "2507237",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "26",
+        "candidates_ready": "1",
+        "candidates_ready_ms": "2562",
+        "provider_steps": "96",
+        "provider_step_max_us": "796108"
+      },
+      {
+        "count": "0",
+        "queue_us": "0",
+        "processing_us": "0",
+        "queue_max_us": "0",
+        "processing_max_us": "0",
+        "provider_load_us": "2490835",
+        "keyboard_drawn": "1",
+        "first_draw_ms": "26",
+        "candidates_ready": "1",
+        "candidates_ready_ms": "2546",
+        "provider_steps": "96",
+        "provider_step_max_us": "793740"
+      }
+    ],
+    "memory": [
+      {
+        "sram_stable_bytes": 265796,
+        "sram_run_peak_bytes": 269932,
+        "psram_stable_bytes": 3471800,
+        "psram_run_peak_bytes": 3479896
+      },
+      {
+        "sram_stable_bytes": 265044,
+        "sram_run_peak_bytes": 270060,
+        "psram_stable_bytes": 1796784,
+        "psram_run_peak_bytes": 3490344
+      }
+    ]
+  }
+}

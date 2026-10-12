@@ -1,0 +1,19 @@
+{
+  "aot_profiles": 13,
+  "wasm_profiles": 13,
+  "native_tests": 5,
+  "system_tests_final": 91,
+  "invalid_package_classes": 6,
+  "t9_fuzz_cases": 1000,
+  "font_regeneration_identical": true,
+  "device_repeat_cycles": 8,
+  "device_panels_visual_reviewed": true,
+  "log_sha256": {
+    "aot": "1ddf811ce5d5d6091d0f951f306a6743e4e70fafc56bd9fb3cdbc3372c1b1542",
+    "wasm": "9c555d6be09eaf56857db25bb7ff75058b96dfea202bd7381846c3548a81dc43",
+    "native": "c007afc5a00de1021a7cba40c937906cfc1aec46fb7182b1cc9dde458324c6c7",
+    "packages": "4dc3123ac7fa5cc60864503dc380a886d89f9a100b191aa18b15e27d5dc4cc1d",
+    "system": "a06a45d7d3ca72e63c96ebab6123de899b5010dab8e40ee087b4a8f8f07b14a4",
+    "t9": "781d1875ed50e187776d22c0d3a50a3b555a0f6fbd28275cec7987cb8eb12fd7"
+  }
+}

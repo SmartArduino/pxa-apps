@@ -1,0 +1,20 @@
+-- PXA optional C++ library features: inplace_vector=; function_ref=
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/app-build-cache/ime-font-warmup-wasm-22a88fdc4641f5f6/cmake-build
+ninja: no work to do.
+Create AoT compiler with:
+  target:        xtensa
+  target cpu:    esp32s3
+  target triple: xtensa-pc-linux-gnu
+  cpu features:  
+  opt level:     3
+  size level:    0
+  output format: AoT file
+Compile success, file /tmp/pxa-ime-font-warmup-esp32s3.jAuAGI/package/artifacts/main.esp32-s3.aot was generated.
+pxa-ime-font-warmup publisher=17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171 files=1
+/tmp/pxa-ime-lifecycle/font-warmup-packages/pxa-ime-font-warmup.pxa files=1 packed=62241 unpacked=81632
+Package directory: /tmp/pxa-ime-lifecycle/font-warmup-packages/pxa-ime-font-warmup
+Container for pxadb: /tmp/pxa-ime-lifecycle/font-warmup-packages/pxa-ime-font-warmup.pxa
+Architecture artifacts in /tmp/pxa-ime-lifecycle/font-warmup-packages/pxa-ime-font-warmup/artifacts:
+main.esp32-s3.aot

@@ -1,0 +1,31 @@
+Test project /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/simulator/pai-touch
+      Start 10: pxsys_desktop_visual_phone_dark_zh
+      Start  9: pxsys_desktop_visual_phone_light_en
+ 1/13 Test #10: pxsys_desktop_visual_phone_dark_zh ......   Passed    1.24 sec
+      Start 12: pxsys_desktop_visual_round_custom_zh
+ 2/13 Test  #9: pxsys_desktop_visual_phone_light_en .....   Passed    1.28 sec
+      Start 11: pxsys_desktop_visual_round_light_en
+ 3/13 Test #12: pxsys_desktop_visual_round_custom_zh ....   Passed    0.99 sec
+      Start  8: pxsys_desktop_visual_compact_dark_zh
+ 4/13 Test #11: pxsys_desktop_visual_round_light_en .....   Passed    0.99 sec
+      Start  7: pxsys_desktop_visual_compact_light_en
+ 5/13 Test  #8: pxsys_desktop_visual_compact_dark_zh ....   Passed    0.67 sec
+      Start 88: pxsys_reference_layout_test
+ 6/13 Test #88: pxsys_reference_layout_test .............   Passed    0.06 sec
+      Start  6: pxsys_desktop_simulator_self_test
+ 7/13 Test  #7: pxsys_desktop_visual_compact_light_en ...   Passed    0.68 sec
+      Start  5: pxsys_desktop_simulator_smoke
+ 8/13 Test  #5: pxsys_desktop_simulator_smoke ...........   Passed    0.33 sec
+      Start 31: pxa_lvgl_ui_test
+ 9/13 Test  #6: pxsys_desktop_simulator_self_test .......   Passed    0.38 sec
+      Start 13: pxsys_system_gestures_test
+10/13 Test #31: pxa_lvgl_ui_test ........................   Passed    0.10 sec
+      Start 28: pxa_ime_preferences_test
+11/13 Test #28: pxa_ime_preferences_test ................   Passed    0.00 sec
+      Start 91: pxsys_reference_ime_test
+12/13 Test #91: pxsys_reference_ime_test ................   Passed    0.02 sec
+13/13 Test #13: pxsys_system_gestures_test ..............   Passed    0.21 sec
+
+100% tests passed out of 13
+
+Total Test time (real) =   3.55 sec
