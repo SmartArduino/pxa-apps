@@ -6,10 +6,13 @@ applications and their shared art live here.
 
 All maintained applications now build as **C++26** against **Core 2.0**.
 The production C versions of Jump Jump, Pixel Dungeon and Voxel Craft have
-been retired; use [`jump-jump-3d-cpp`](jump-jump-3d-cpp/README.md),
-[`pixel-dungeon-cpp`](pixel-dungeon-cpp/README.md) and `voxel-craft-cpp`.
+been retired; use [`jump-jump-3d`](jump-jump-3d/README.md),
+[`pixel-dungeon`](pixel-dungeon/README.md) and `voxel-craft`.
 Their frozen C algorithms remain only under `common/cpp/tests/reference/c`
 for timing, pixel and gameplay comparisons; they have no package manifests.
+
+Application names and package IDs omit implementation-language suffixes. See
+[the naming and existing-save notes](docs/app-names.zh-CN.md).
 
 Callback-based applications use the optional, stateless `pxa::call` path via
 `common/cpp/Application.cmake`. This reuses their bounded protocol helpers
@@ -76,7 +79,7 @@ Regression entry points (from the workspace root):
 bash local/pxa-apps/tests/native/run.sh
 bash local/pxa-apps/tests/native/reference/run.sh
 CC=clang CXX=clang++ bash local/pxa-apps/common/cpp/tests/run.sh -DPXA_C_REFERENCE_BENCH=ON
-bash local/pxa-apps/voxel-craft-cpp/tests/test.sh
+bash local/pxa-apps/voxel-craft/tests/test.sh
 python3 tools/test-app-matrix.py --output local/app-matrix --target all --sdk-examples
 ```
 

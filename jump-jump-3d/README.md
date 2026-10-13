@@ -1,6 +1,6 @@
-# Jump Jump 3D C++
+# Jump Jump 3D
 
-使用独立 PXA C++ SDK 的跳一跳。按住蓄力、松开跳跃，保留 C 版的平台、翻转动作、中心落点连击、特殊平台奖励、最高分、音效和背景音乐。应用 ID 为 `pxa-jump-jump-3d-cpp`，与 C 版独立保存最高分。
+使用独立 PXA C++ SDK 的跳一跳。按住蓄力、松开跳跃，保留 C 版的平台、翻转动作、中心落点连击、特殊平台奖励、最高分、音效和背景音乐。应用 ID 为 `pxa-jump-jump-3d`，与 C 版独立保存最高分。
 
 渲染仍为原来的等距视角和 painter 几何，不新增离屏 UI 层。背景改为 RGB565 量化前的 8×8 Bayer 抖动，用一个 8×256 的小纹理批量平铺；减少原来渐变条带。文字使用真实背景上的 alpha 抗锯齿，按 DPI 和可用安全区域选择三档字体，由 Host 按需加载当前档位的三个字体，Guest 只保留字形度量。圆屏、圆角屏和非对称安全边距用于 HUD，世界背景仍铺满面板。
 
@@ -9,9 +9,9 @@
 从 PXA workspace 根目录构建：
 
 ```sh
-bash tools/app.sh build jump-jump-3d-cpp --target esp32s3 --aot-only --source-root local/pxa-apps --output local/cpp-games/jump-device
-bash tools/app.sh build jump-jump-3d-cpp --target simulator,esp32s3,esp32s31 --source-root local/pxa-apps --output local/cpp-games/jump-all
-python3 tools/pxadb/pxadb.py package install local/cpp-games/jump-device/pxa-jump-jump-3d-cpp.pxa --port /dev/ttyACM0
+bash tools/app.sh build jump-jump-3d --target esp32s3 --aot-only --source-root local/pxa-apps --output local/cpp-games/jump-device
+bash tools/app.sh build jump-jump-3d --target simulator,esp32s3,esp32s31 --source-root local/pxa-apps --output local/cpp-games/jump-all
+python3 tools/pxadb/pxadb.py package install local/cpp-games/jump-device/pxa-jump-jump-3d.pxa --port /dev/ttyACM0
 ```
 
 原生检查需要支持 C++26 的编译器：

@@ -1,6 +1,6 @@
-# Pixel Dungeon C++
+# Pixel Dungeon
 
-使用独立 PXA C++ SDK 的回合制地牢游戏。保留 C 版的 25 层、五个地区、三种职业、五个存档槽、背包、装备、日志、排行榜、地图缩放、触控及手柄操作，以及全部音效和完整背景音乐。应用 ID 为 `pxa-pixel-dungeon-cpp`，存档格式兼容 C 版，私有存储按应用隔离，不自动迁移旧存档。
+使用独立 PXA C++ SDK 的回合制地牢游戏。保留 C 版的 25 层、五个地区、三种职业、五个存档槽、背包、装备、日志、排行榜、地图缩放、触控及手柄操作，以及全部音效和完整背景音乐。应用 ID 为 `pxa-pixel-dungeon`，存档格式兼容 C 版，私有存储按应用隔离，不自动迁移旧存档。
 
 像素画按物理 DPI 选择整数呈现比例，并限制最小逻辑尺寸；480×480 / 305 DPI 使用 240×240 渲染目标，保持文字和按钮可读。安全边距和屏幕形状参与布局、触控坐标只换算一次。短圆屏使用紧凑布局；地图可以铺满轮廓，固定控件避开边缘。字体保留原版 Source Han Sans CN 黑体及抗锯齿贴图。
 
@@ -11,10 +11,10 @@
 从 PXA workspace 根目录构建与验证：
 
 ```sh
-bash tools/app.sh build pixel-dungeon-cpp --target esp32s3 --aot-only --source-root local/pxa-apps --output local/cpp-games/pixel-device
-bash tools/app.sh build pixel-dungeon-cpp --target simulator,esp32s3,esp32s31 --source-root local/pxa-apps --output local/cpp-games/pixel-all
+bash tools/app.sh build pixel-dungeon --target esp32s3 --aot-only --source-root local/pxa-apps --output local/cpp-games/pixel-device
+bash tools/app.sh build pixel-dungeon --target simulator,esp32s3,esp32s31 --source-root local/pxa-apps --output local/cpp-games/pixel-all
 PXA_CPP_GAME_TEST_BUILD="$PWD/local/cpp-games/native-build" bash local/pxa-apps/common/cpp/tests/run.sh -DPXA_C_REFERENCE_BENCH=ON
-python3 tools/pxadb/pxadb.py package install local/cpp-games/pixel-device/pxa-pixel-dungeon-cpp.pxa --port /dev/ttyACM0
+python3 tools/pxadb/pxadb.py package install local/cpp-games/pixel-device/pxa-pixel-dungeon.pxa --port /dev/ttyACM0
 ```
 
 所有目标（模拟器、ESP32-S3、ESP32-S31）统一使用 `assets/music/` 中完整时长、双声道、24 kbps VBR 的 Ogg Opus 音乐，与 C 版逐字节一致。沿用原有小体积设备音轨，六首共 897,857 字节；取消专用资源目录后，多架构包也使用同一套音频。23 个 16 kHz PCM 音效保持原样。可从应用仓库根目录运行 `python3 pixel-dungeon/tools/generate_music.py --spd-assets /path/to/shattered-pixel-dungeon`，直接从上游 Vorbis 原始文件重新生成两版资源，避免重复有损编码。设备包仍建议按目标单独构建，避免携带冗余架构和 Wasm 副本。

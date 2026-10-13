@@ -13,9 +13,9 @@ with pxadb.PxaDbClient(a.port,15)as c,(a.output/'serial.jsonl').open('w',bufferi
  def parse(line):
   stamp=re.match(r'^(\d+)\t',line)
   if a.device and log_epoch and stamp and int(stamp.group(1))<log_epoch:return
-  if '[PXA app='in line and 'app=pxa-voxel-craft-cpp-ui2 'not in line:return
+  if '[PXA app='in line and 'app=pxa-voxel-craft-ui2 'not in line:return
   v={k:int(x)for k,x in re.findall(r'(\w+)=(-?\d+)',line)}
-  if 'Runtime permission prompt queued:'in line and ':pxa-voxel-craft-cpp-ui2 permission=音频播放'in line:ui['audio_prompt']=1
+  if 'Runtime permission prompt queued:'in line and ':pxa-voxel-craft-ui2 permission=音频播放'in line:ui['audio_prompt']=1
   if 'VOXEL-STATE 'in line:state.update(v);ui['screen']=1
   if 'VOXEL-BAG 'in line:bag.update(v)
   if 'VOXEL-TOOLS 'in line:tools.update(v)
@@ -92,14 +92,14 @@ with pxadb.PxaDbClient(a.port,15)as c,(a.output/'serial.jsonl').open('w',bufferi
    req('INPUT POINTER DOWN 148 216 0');req('INPUT SYNC');pump(.08)
    for y in [185,150,115,80,45]:req(f'INPUT POINTER MOVE 148 {y} 0');req('INPUT SYNC');pump(.06)
    req('INPUT POINTER UP 148 45 0');req('INPUT SYNC');pump(.8);req('INPUT KEY HOME')
-   for app in ['pxa-voxel-craft-cpp','pxa-voxel-craft-cpp-ui2']:
+   for app in ['pxa-voxel-craft','pxa-voxel-craft-ui2']:
     try:req('PACKAGE stop '+app);pump(3)
     except pxadb.PxaDbError as e:
      if str(e)!='package_not_running':raise
    sync=req('INPUT SYNC');log_epoch=int(pxadb.info_properties(sync[-1].payload)['device_us'])//1000
    ui.clear();state.clear();bag.clear();tools.clear();events.clear();sounds.clear()
    if a.local_heap:report['memory_before']=memory();req('MEMORY START');monitoring=True
-   req('PACKAGE run pxa-voxel-craft-cpp-ui2')
+   req('PACKAGE run pxa-voxel-craft-ui2')
   if a.device:
    until(lambda:ui.get('audio_prompt')or ui.get('screen')==0)
    if ui.get('audio_prompt'):
@@ -175,7 +175,7 @@ with pxadb.PxaDbClient(a.port,15)as c,(a.output/'serial.jsonl').open('w',bufferi
     frozen_bag={k:bag[k]for k in ['bush','leaves','dirt','wood','plank','table','stone']}
     req('INPUT POINTER DOWN 78 140 0');req('INPUT SYNC');pump(.12)
     req('INPUT POINTER MOVE 78 90 0');req('INPUT SYNC');pump(.2)
-    req('INPUT KEY HOME');pump(1);req('PACKAGE run pxa-voxel-craft-cpp-ui2');pump(2)
+    req('INPUT KEY HOME');pump(1);req('PACKAGE run pxa-voxel-craft-ui2');pump(2)
     assert ui.get('screen')==1 and bag['progress']==0 and all(bag[k]==v for k,v in frozen_bag.items())
     pose=dict(state);pump(1.2);assert all(state[k]==pose[k]for k in ['xq8','zq8','yawq10','pitchq10']);snap('foreground-controls-cancelled')
     report['movement_look_background_checks']=True
@@ -222,6 +222,6 @@ with pxadb.PxaDbClient(a.port,15)as c,(a.output/'serial.jsonl').open('w',bufferi
   req('INPUT CANCEL')
   if a.device:
    if monitoring:report['launch_gameplay_peak']=memory('MEMORY STOP');monitoring=False
-   report['memory']=memory();req('PERF CLEAR');req('PACKAGE stop pxa-voxel-craft-cpp-ui2');pump(3);report['memory_after_stop']=memory()
+   report['memory']=memory();req('PERF CLEAR');req('PACKAGE stop pxa-voxel-craft-ui2');pump(3);report['memory_after_stop']=memory()
   (a.output/'report.json').write_text(json.dumps(report,indent=2)+'\n')
 print('Gameplay fixture mining/quantity/placement/backpack/recipes/save/audio checks passed.',flush=True)

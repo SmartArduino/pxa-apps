@@ -12,11 +12,10 @@
     2,
     0
   ],
-  "id": "pxa-jump-jump-3d-cpp",
+  "id": "pxa-pixel-dungeon",
   "version": "0.1.1",
-  "release_sequence": 2,
-  "name": "Jump Jump 3D C++",
-  "description": "C++ SDK version: Isometric 3D remake of the WeChat Jump Jump: charge, flip, land on the centre, chain perfect hits",
+  "name": "Pixel Dungeon",
+  "description": "Turn-based roguelike dungeon crawler drawn with the GameRender raster API and Shattered Pixel Dungeon art",
   "icon": "assets/icon.png",
   "build": {
     "system": "cmake",
@@ -31,19 +30,13 @@
       "id": "main",
       "kind": "ui",
       "services": [
-        {
-          "name": "audio",
-          "min_version": [
-            0,
-            8
-          ]
-        },
-        "clock",
+        "window",
         "game-render",
         "storage",
         "log",
+        "audio",
+        "clock",
         "permission",
-        "window",
         {
           "name": "ui",
           "features": [
@@ -64,6 +57,7 @@
       }
     }
   ],
+  "release_sequence": 2,
   "permissions": [
     {
       "name": "audio.playback",

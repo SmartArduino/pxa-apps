@@ -17,7 +17,7 @@ import pxadb
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--port", required=True)
-parser.add_argument("--app", required=True, choices=["pxa-jump-jump-3d", "pxa-jump-jump-3d-cpp"])
+parser.add_argument("--app", required=True, choices=["pxa-jump-jump-3d-reference", "pxa-jump-jump-3d"])
 parser.add_argument("--output", type=Path, required=True)
 parser.add_argument("--holds", type=float, nargs="+", default=[.15, .36, .7, .82, 1.2, 2])
 parser.add_argument("--repeat", type=int, default=1)

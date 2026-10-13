@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(pxa_voxel_craft_cpp CXX)
+project(pxa_voxel_craft CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${PXA_CMAKE_MODULE_DIR}")
 include(PxaGuest)

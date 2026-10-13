@@ -1,4 +1,4 @@
-# Voxel Craft C++
+# Voxel Craft
 
 使用独立 PXA C++26 SDK 的体素沙盒。纹理和调色板在初始化时逐个加载、绑定并释放临时句柄，Renderer 持有绑定引用；稳定帧仅提交复用的 DrawList。
 
@@ -75,13 +75,13 @@ Host 遇到系统覆盖层时仍保留合成回退，不绕过遮挡或 UI 检�
 构建：
 
 ```sh
-bash tools/app.sh build voxel-craft-cpp --target all
-bash local/pxa-apps/voxel-craft-cpp/tests/test.sh
+bash tools/app.sh build voxel-craft --target all
+bash local/pxa-apps/voxel-craft/tests/test.sh
 ```
 
 主机测试检查多指输入、后台复位、32 个地图种子的树干/树冠、所有区块的可见面、超容量分页与编辑重建，
 以及绘制路径边界、相同可见面数、树叶 cutout、DrawList 容量和零帧内堆分配。
-`SANITIZE=1 bash local/pxa-apps/voxel-craft-cpp/tests/test.sh` 加跑 ASan/UBSan。
+`SANITIZE=1 bash local/pxa-apps/voxel-craft/tests/test.sh` 加跑 ASan/UBSan。
 `PXA_APP_DEFINES=VOXEL_PROFILE=1` 可启用 Guest 绘图计时；默认不增加帧内 WASI 计时调用。
 
 可重复的绘制对照用 `PXA_APP_DEFINES=VOXEL_BENCH_DISTANCE=24` 固定出生相机、
@@ -117,7 +117,7 @@ World 减少 294912 B，既有帧/深度/命令缓冲不增加。完整计量、
 代码映射、稳定 RAM 与本次启动/保存峰值分别记录，不把文件大小等同于运行占用。
 此回收需要 Host 的 WAMR 初始数据所有权修复，不能仅把 loader 标志打开。
 0.10.0 的交互、大陆黑体、DPI、存档、峰值及固定场景验证见
-[O3、HUD 与交互验收报告](docs/performance/voxel-craft-cpp-ui-20261009.zh-CN.md)。
+[O3、HUD 与交互验收报告](docs/performance/voxel-craft-ui-20261009.zh-CN.md)。
 所有报告和测量汇总见 [性能与验收记录索引](docs/performance/README.zh-CN.md)。
 0.12 的有限背包、合成、六种工具、材质音效、全屏缓存修复及最新同固件测量见
 [玩法与内存验收报告](docs/performance/voxel-gameplay-20261009.zh-CN.md)。本轮等 HUD

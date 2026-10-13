@@ -5,7 +5,7 @@
 #include <pxa/raster.h>
 #undef PXA_APPLICATION
 #define PXA_APPLICATION(AppType)
-#include "../../../../jump-jump-3d-cpp/main.cpp"
+#include "../../../../jump-jump-3d/main.cpp"
 #include "jump_timing_reference.h"
 #include <cassert>
 #include <cmath>

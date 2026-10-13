@@ -57,8 +57,8 @@ with pxadb.PxaDbClient(port,30)as c,(a.output/'serial.jsonl').open('w',buffering
     expected='Voxel audio permission unavailable'if a.deny_audio else'Voxel audio ready'
     assert any(expected in x for x in lines),'Audio grant/denial did not complete'
     end=time.monotonic()+20
-    while time.monotonic()<end and not any('Voxel Craft C++ ready'in x for x in lines):pump(.1)
-    assert any('Voxel Craft C++ ready'in x for x in lines),'Game did not initialize after audio decision'
+    while time.monotonic()<end and not any('Voxel Craft ready'in x for x in lines):pump(.1)
+    assert any('Voxel Craft ready'in x for x in lines),'Game did not initialize after audio decision'
    pump(1);row['steady']=memory(req('MEMORY'));row['local_peak']=memory(req('MEMORY STOP'));monitor=False
   finally:
    if monitor:req('MEMORY STOP')

@@ -59,7 +59,7 @@ void j3_audio_tick(j3_audio_t* audio,uint64_t now) {
     if(!audio->bank.session){if(audio->bank.unavailable)audio->state=J3_AUDIO_UNAVAILABLE;return;}
     audio->state=J3_AUDIO_READY;auto& session=*audio->bank.session;
     for(unsigned i=0;i<J3_CHANNEL_COUNT;++i){auto& v=audio->voices[i];
-        if(v.stop_pending){auto result=i==J3_CHANNEL_BGM?session.control_music(pxa::MusicAction::stop):session.control_sound(i,pxa::MusicAction::stop);
+        if(v.stop_pending){auto result=i==J3_CHANNEL_BGM?session.control_music(pxa::MusicAction::stop):session.control_sound(static_cast<pxa::SoundTrack>(i),pxa::MusicAction::stop);
             if(result){v.stop_pending=0;if(i==J3_CHANNEL_BGM){audio->music_instance=0;audio->music_ready=false;}}continue;}
         if(!v.requested)continue;
         if(v.started){if(!v.loop&&now>=v.ends_us){v.requested=0;v.started=0;}continue;}
@@ -68,7 +68,7 @@ void j3_audio_tick(j3_audio_t* audio,uint64_t now) {
             if(music){audio->music_instance=*music;audio->music_ready=false;audio->music_gain_q12=v.gain_q12;}
             else result=std::unexpected(music.error());
         }else{auto* asset=audio->bank.prepare(v.clip,j3_audio_bank[v.clip].path);if(!asset)continue;
-            result=session.sound_track(*asset,i,v.loop,gain_db(v.gain_q12));}
+            result=session.sound_track(*asset,static_cast<pxa::SoundTrack>(i),v.loop,gain_db(v.gain_q12));}
         if(result){v.started=1;v.ends_us=now+uint64_t(j3_audio_bank[v.clip].samples)*1000000/J3_AUDIO_SAMPLE_RATE;}
         else if(result.error()!=pxa::Error::would_block)v.requested=0;
     }

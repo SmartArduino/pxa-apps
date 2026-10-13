@@ -20,7 +20,7 @@ parser.add_argument("--port", required=True)
 parser.add_argument("--output", type=Path, required=True)
 args = parser.parse_args()
 args.output.mkdir(parents=True, exist_ok=True)
-identity = "pxa-pixel-dungeon-cpp"
+identity = "pxa-pixel-dungeon"
 report = {"production": True, "passed": False, "checks": []}
 logs = []; seen = set()
 with (args.output / "serial.jsonl").open("w", buffering=1) as stream:

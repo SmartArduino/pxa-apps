@@ -1,4 +1,4 @@
-// Voxel Craft C++ - a first-person voxel sandbox on the PXA C++26 Guest SDK.
+// Voxel Craft - a first-person voxel sandbox on the PXA C++26 Guest SDK.
 //
 // Terrain uses clipped, perspective-correct quads and triangles sharing one
 // depth buffer. A full-window Canvas routes touch input to the movement stick,
@@ -862,7 +862,7 @@ struct VoxelCraft {
         // A modal grant or Window attachment may replace the system's active
         // window. Apply immersion once the actual game Surface is attached.
         (void)context.window().fullscreen(pxa::WindowBarMode::hidden);
-        (void)context.log().write(pxa::LogLevel::info, "Voxel Craft C++ ready");
+        (void)context.log().write(pxa::LogLevel::info, "Voxel Craft ready");
         co_return pxa::Result<void>{};
     }
 

@@ -11,14 +11,14 @@ parser.add_argument("output", type=Path, help="isolated source root to create")
 args = parser.parse_args()
 assert args.source.resolve() != args.output.resolve()
 reference = args.source / "common/cpp/tests/reference/c/pixel-dungeon"
-game = args.output / "pixel-dungeon"
+game = args.output / "pixel-dungeon-reference"
 shutil.copytree(reference, game, dirs_exist_ok=True)
 for source in game.glob("*.[ch]"):
     source.write_text(source.read_text().replace('"../../../../../', '"../common/'))
-shutil.copytree(args.source / "pixel-dungeon-cpp/assets", game / "assets", dirs_exist_ok=True)
+shutil.copytree(args.source / "pixel-dungeon/assets", game / "assets", dirs_exist_ok=True)
 # Only an explicitly prepared, isolated reference has a C build manifest.
-manifest = json.loads((args.source / "pixel-dungeon-cpp/package.json").read_text())
-manifest.update(id="pxa-pixel-dungeon", name="Pixel Dungeon timing reference")
+manifest = json.loads((args.source / "pixel-dungeon/package.json").read_text())
+manifest.update(id="pxa-pixel-dungeon-reference", name="Pixel Dungeon timing reference")
 manifest["build"] = {"system": "direct", "linear_memory": {"maximum_bytes": 1048576, "pinned": True}}
 component = manifest["components"][0]
 component.pop("cmake_target", None)
@@ -30,7 +30,7 @@ component["sources"] = ["main.c", "game.c", "dungeon.c", "render.c", "input.c", 
 shutil.copyfile(args.source / "common/pxa_canvas_pixels.h", args.output / "common/pxa_canvas_pixels.h")
 
 def replace(filename, before, after):
-    path = args.output / "pixel-dungeon" / filename
+    path = game / filename
     source = path.read_text()
     assert source.count(before) == 1, (filename, "reference changed; review seed hook")
     path.write_text(source.replace(before, after))

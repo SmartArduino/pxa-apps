@@ -14,7 +14,7 @@ parser.add_argument("source", type=Path)
 parser.add_argument("output", type=Path)
 args = parser.parse_args()
 assert args.source.resolve() != args.output.resolve()
-for name in ("jump-jump-3d-cpp", "common"):
+for name in ("jump-jump-3d", "common"):
     shutil.copytree(args.source / name, args.output / name,
                    ignore=shutil.ignore_patterns("docs", "tests", "__pycache__"),
                    dirs_exist_ok=True)
@@ -23,19 +23,19 @@ for name in ("jump-jump-3d-cpp", "common"):
 # The retired C game is only a reference source tree. Create its temporary
 # build manifest explicitly; it never re-enters the production app inventory.
 reference = args.source / "common/cpp/tests/reference/c/jump-jump-3d"
-shutil.copytree(reference, args.output / "jump-jump-3d", dirs_exist_ok=True)
-for source in (args.output / "jump-jump-3d").glob("*.[ch]"):
+shutil.copytree(reference, args.output / "jump-jump-3d-reference", dirs_exist_ok=True)
+for source in (args.output / "jump-jump-3d-reference").glob("*.[ch]"):
     source.write_text(source.read_text().replace('"../../../../../', '"../common/'))
-shutil.copytree(args.source / "jump-jump-3d-cpp/assets",
-                args.output / "jump-jump-3d/assets", dirs_exist_ok=True)
-manifest = json.loads((args.source / "jump-jump-3d-cpp/package.json").read_text())
-manifest.update(id="pxa-jump-jump-3d", name="Jump timing reference")
+shutil.copytree(args.source / "jump-jump-3d/assets",
+                args.output / "jump-jump-3d-reference/assets", dirs_exist_ok=True)
+manifest = json.loads((args.source / "jump-jump-3d/package.json").read_text())
+manifest.update(id="pxa-jump-jump-3d-reference", name="Jump timing reference")
 manifest["build"] = {"system": "direct", "linear_memory": {"maximum_bytes": 1048576, "pinned": True}}
 component = manifest["components"][0]
 component.pop("cmake_target", None)
 component.pop("wasi", None)
 component["sources"] = ["main.c", "jump3d_audio.c", "jump3d_game.c", "jump3d_render.c", "jump3d_palette.c", "jump3d_font.c"]
-(args.output / "jump-jump-3d/package.json").write_text(json.dumps(manifest, indent=2) + "\n")
+(args.output / "jump-jump-3d-reference/package.json").write_text(json.dumps(manifest, indent=2) + "\n")
 
 def replace(path, before, after):
     source = path.read_text()
@@ -70,7 +70,7 @@ release = """
                     (int)(g_game.land_x*1e6f),(int)(g_game.land_z*1e6f),g_game.state);
                 {log}
 """
-c = args.output / "jump-jump-3d/main.c"
+c = args.output / "jump-jump-3d-reference/main.c"
 replace(c, "#include <stdint.h>", "#include <stdint.h>" + fields + """
 static unsigned trace_field(char *out, unsigned at, const char *key, int64_t value) {
     char digits[24]; unsigned count=0;
@@ -99,7 +99,7 @@ c.write_text(source[:start] + """                const char *keys[]={"down","up"
                     at=trace_field(trace,at,keys[i],values[i]);
 """ + source[end:])
 
-cpp = args.output / "jump-jump-3d-cpp/main.cpp"
+cpp = args.output / "jump-jump-3d/main.cpp"
 replace(cpp, "using namespace jump;", "using namespace jump;" + fields)
 replace(cpp, "        auto draw=frame_memory.draw();", "        if(g_game.state==J3_STATE_CHARGING) ++trace_draws;\n        auto draw=frame_memory.draw();")
 replace(cpp, "        auto steps=stepper.advance(now);", "        auto steps=stepper.advance(now);" + ticks.replace("{now}", "now"))

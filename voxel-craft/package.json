@@ -12,16 +12,16 @@
     2,
     0
   ],
-  "id": "pxa-pixel-dungeon-cpp",
-  "version": "0.1.1",
-  "name": "Pixel Dungeon C++",
-  "description": "C++ SDK version: Turn-based roguelike dungeon crawler drawn with the GameRender raster API and Shattered Pixel Dungeon art",
-  "icon": "assets/icon.png",
+  "id": "pxa-voxel-craft",
+  "version": "0.12.3",
+  "release_sequence": 16,
+  "name": "Voxel Craft",
+  "description": "First-person voxel sandbox on the PXA C++26 SDK with depth-tested scanline rendering, optional bounded-error material paths and touch controls",
   "build": {
     "system": "cmake",
     "source_dir": ".",
     "linear_memory": {
-      "maximum_bytes": 1048576,
+      "maximum_bytes": 2097152,
       "pinned": false
     }
   },
@@ -29,23 +29,19 @@
     {
       "id": "main",
       "kind": "ui",
+      "cmake_target": "pxa_main",
       "services": [
         "window",
-        "game-render",
-        "storage",
         "log",
-        "audio",
         "clock",
-        "permission",
-        {
-          "name": "ui",
-          "features": [
-            "canvas"
-          ]
-        },
-        "assets"
+        "assets",
+        "game-render",
+        "ui",
+        "surface",
+        "fs",
+        "storage",
+        "audio"
       ],
-      "cmake_target": "pxa_main",
       "wasi": {
         "version": "preview1",
         "libc": "wasi-libc",
@@ -57,12 +53,12 @@
       }
     }
   ],
-  "release_sequence": 2,
   "permissions": [
     {
       "name": "audio.playback",
-      "required": false,
-      "scope": "media"
+      "scope": "media",
+      "required": false
     }
-  ]
+  ],
+  "icon": "assets/icon.png"
 }

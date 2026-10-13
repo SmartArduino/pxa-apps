@@ -18,7 +18,7 @@ parser.add_argument('--holds',type=float,nargs='+',default=[.15,.36,.7,.82,1.2,2
 parser.add_argument('--allow-audio',action='store_true',help='Accept the game audio prompt on the 296x240 test display')
 parser.add_argument('--unlock-swipe',type=int,nargs=4,help='Wake/unlock before testing: X1 Y1 X2 Y2')
 args=parser.parse_args();args.output.mkdir(parents=True,exist_ok=True)
-identity='pxa-jump-jump-3d-cpp'
+identity='pxa-jump-jump-3d'
 report={'port':args.port,'diagnostic':True,'fps_benchmark':False,'runs':[],'passed':False}
 seen=set();logs=[]
 with (args.output/'serial.jsonl').open('w',buffering=1) as output:

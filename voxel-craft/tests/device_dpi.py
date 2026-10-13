@@ -1,6 +1,6 @@
 """Check the firmware-to-Guest DPI path and physical touch alignment.
 
-Build tests/build_playtest.py under an isolated pxa-voxel-craft-cpp-ui identity.
+Build tests/build_playtest.py under an isolated pxa-voxel-craft-ui identity.
 Works with a serial port or a simulator unix socket; never changes real saves.
 """
 import argparse
@@ -19,7 +19,7 @@ import pxadb
 
 p = argparse.ArgumentParser(description=__doc__)
 p.add_argument('--port', required=True)
-p.add_argument('--identity', default='pxa-voxel-craft-cpp-ui5')
+p.add_argument('--identity', default='pxa-voxel-craft-ui5')
 p.add_argument('--output', type=Path, required=True)
 p.add_argument('--width', type=int, default=480)
 p.add_argument('--height', type=int, default=480)
@@ -28,7 +28,7 @@ p.add_argument('--safe', type=int, default=12)
 p.add_argument('--log', type=Path, help='Simulator stdout log when Guest logs are external')
 p.add_argument('--no-screenshots', action='store_true')
 a = p.parse_args()
-if not a.identity.startswith('pxa-voxel-craft-cpp-ui'):
+if not a.identity.startswith('pxa-voxel-craft-ui'):
     p.error('Only isolated test identities are permitted.')
 a.output.mkdir(parents=True, exist_ok=True)
 scale = min(a.dpi/160, (a.width-2*a.safe)/250, (a.height-2*a.safe)/208)

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
-app="$root/local/pxa-apps/voxel-craft-cpp"
+app="$root/local/pxa-apps/voxel-craft"
 sdk="$root/deps/pxa-system/sdk/guest-cpp"
 build="$(mktemp -d /tmp/voxel-cpp-test.XXXXXX)"
 trap 'rm -rf "$build"' EXIT

@@ -29,17 +29,17 @@ with pxadb.PxaDbClient(port,30)as c,(out/'serial.log').open('w',buffering=1)as l
  req('INPUT POINTER DOWN 148 216 0');req('INPUT SYNC');pump(.08)
  for y in [185,150,115,80,45]:req(f'INPUT POINTER MOVE 148 {y} 0');req('INPUT SYNC');pump(.06)
  req('INPUT POINTER UP 148 45 0');req('INPUT SYNC');pump(.8);req('INPUT KEY HOME')
- for app in ['pxa-voxel-craft-cpp','pxa-voxel-craft-cpp-ui2']:
+ for app in ['pxa-voxel-craft','pxa-voxel-craft-ui2']:
   try:req('PACKAGE stop '+app);pump(2)
   except pxadb.PxaDbError as e:
    if str(e)!='package_not_running':raise
  for i in range(3):
   row={'kind':'cold'if i==0 and a.cold_first else'warm','before':mem()};result['launches'].append(row);req('MEMORY START');running=False;monitoring=True
   try:
-   req('PACKAGE run pxa-voxel-craft-cpp');running=True;pump(12);row['title']=mem();tap(148,95);pump(10);row['game']=mem();row['local_peak']=mem(req('MEMORY STOP'));monitoring=False
+   req('PACKAGE run pxa-voxel-craft');running=True;pump(12);row['title']=mem();tap(148,95);pump(10);row['game']=mem();row['local_peak']=mem(req('MEMORY STOP'));monitoring=False
   finally:
    if monitoring:req('MEMORY STOP')
-   if running:req('PACKAGE stop pxa-voxel-craft-cpp');pump(4)
+   if running:req('PACKAGE stop pxa-voxel-craft');pump(4)
    req('INPUT CANCEL');row['after_stop']=mem()
    assert all(row['after_stop']['surface'][k]==0 for k in ['frame','scratch','mailbox','probe'])
    assert row['after_stop']['budget']['allocation_failures']==0
