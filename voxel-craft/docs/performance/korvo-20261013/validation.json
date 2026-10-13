@@ -1,0 +1,278 @@
+{
+  "date": "2026-10-13",
+  "results": [
+    {
+      "log": "local/korvo-validation-20261013/core-asan-test.log",
+      "sha256": "d25cdee7c6983a4e5fbed51949950f741f03e552d4b0d4bd3cfd393fb70542c4",
+      "tail": [
+        "      Start 32: pxa_ui_test",
+        "32/35 Test #32: pxa_ui_test .......................   Passed    0.04 sec",
+        "      Start 33: pxa_package_test",
+        "33/35 Test #33: pxa_package_test ..................   Passed    0.05 sec",
+        "      Start 34: pxa_generated_wire_vectors_test",
+        "34/35 Test #34: pxa_generated_wire_vectors_test ...   Passed    1.28 sec",
+        "      Start 35: pxa_ui_vectors_test",
+        "35/35 Test #35: pxa_ui_vectors_test ...............   Passed    0.04 sec",
+        "",
+        "100% tests passed out of 35",
+        "",
+        "Total Test time (real) =   6.29 sec"
+      ]
+    },
+    {
+      "log": "local/korvo-validation-20261013/cpp-games-native.log",
+      "sha256": "9e468d3d56bf72f67fe44d1d12c2ecc092f38c5ea994a32e0d3e53928ccecf2d",
+      "tail": [
+        "    Start 4: pixel_raster",
+        "4/7 Test #4: pixel_raster .....................   Passed    0.54 sec",
+        "    Start 5: sdk_arcade",
+        "5/7 Test #5: sdk_arcade .......................   Passed    0.02 sec",
+        "    Start 6: draw_backpressure",
+        "6/7 Test #6: draw_backpressure ................   Passed    0.01 sec",
+        "    Start 7: jump_raster",
+        "7/7 Test #7: jump_raster ......................   Passed    0.08 sec",
+        "",
+        "100% tests passed out of 7",
+        "",
+        "Total Test time (real) =   0.92 sec"
+      ]
+    },
+    {
+      "log": "local/korvo-validation-20261013/esp-host-native.log",
+      "sha256": "2b0cc589335cca88d476f27cb1de89f7259bf44450c4a58ac6af76dcbcf9c110",
+      "tail": [
+        "ESP assets: cancelled reads, frame-held shutdown, repeated activation and zero leaked allocations passed",
+        "ESP Guest UI startup: default/305 DPI encoded before onStart, no startup events OK",
+        "DMA clock fixture: device_paced=0 frames=320 gaps=1 buffered=2 elapsed_us=6380500",
+        "DMA clock fixture: device_paced=1 frames=320 gaps=0 buffered=5 elapsed_us=6300000",
+        "shared ESP output: bounded cache, total/temporary quota rollback/recovery, command replacement/cancel, prebuffer/EOF/underrun recovery/pause, decoder metrics and old/new owner isolation passed",
+        "codec allocation hooks: overflow, total/temporary quotas, realloc rollback, nested scopes, late free and task isolation passed",
+        "......",
+        "----------------------------------------------------------------------",
+        "Ran 6 tests in 0.001s",
+        "",
+        "OK",
+        "PXA ESP adapter host tests passed"
+      ]
+    },
+    {
+      "log": "local/korvo-validation-20261013/board-common-native-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tail": []
+    },
+    {
+      "log": "local/korvo-validation-20261013/mosaico-native.log",
+      "sha256": "99a452ac1e9b22ea54daa0cc832c5e3fe1b9bd3df623d49bb33dac4242719b3a",
+      "tail": [
+        "ESP-Mosaico DMA pipeline, immutable snapshots, refresh batching, scan-follow timing, touch and compositor tests passed"
+      ]
+    },
+    {
+      "log": "local/korvo-validation-20261013/dev-tests-final.log",
+      "sha256": "2abff8db22a902ba67855e6632b1247ed16cc5d7e1bcdc2f7ade8935abce669e",
+      "tail": [
+        ".............",
+        "----------------------------------------------------------------------",
+        "Ran 13 tests in 0.408s",
+        "",
+        "OK"
+      ]
+    },
+    {
+      "log": "local/korvo-validation-20261013/pxadb-tests-adopted.log",
+      "sha256": "808111d5c4fb6b2a98fc9a010ff961c872f7defeb1bbafaa7495e9e1f14d613a",
+      "tail": [
+        ".....",
+        "----------------------------------------------------------------------",
+        "Ran 68 tests in 0.292s",
+        "",
+        "OK",
+        "unlocked: system;seconds=300",
+        "install: pxa-pixel-dungeon",
+        "run: pxa-voxel-craft",
+        "stop: pxa-voxel-craft",
+        "saved screenshot: frame.jpg",
+        "saved screenshot: screenshot.jpg",
+        "saved screenshot: capture.png"
+      ]
+    },
+    {
+      "log": "local/korvo-validation-20261013/voxel-native-adopted.log",
+      "sha256": "1ed495155d69e131ab6f06e62ecdf562b593aa1ec3881ac2ec8a4d274540ebe3",
+      "tail": [
+        "Session storage 299048 B; inventory 108 B; crafting 9 B; hit table 470 B",
+        "Session: title/pause/navigation, grounded jump, inventory, corrupt headers, transactional mesh staging and all menu commands validated/rasterized OK",
+        "Finite inventory 108 B: stacking, consumption, transfer, full rollback, recipes and per-target mining OK",
+        "Sound: eight distinct material profiles, hit/break/place, bounded PCM packets, click-free ends and no clipping OK",
+        "Layout: landscape/portrait/round-corner/DPI control bounds and display protocol validation OK",
+        "Gameplay: finite mining/drop/place/full-capacity rollback and 4 bounded sound commands OK",
+        "World bytes=246528, chunks=192, max terrain quads=173; World: 32 seeds, 3062 rooted trees, 0 terrain cache overflows; overflow coverage OK",
+        "Voxel render: affine=461 solid=365; same faces, frustum corners, zero frame allocations OK",
+        "Canonical C/C++: 98304 equal voxels, FNV1a=667de4b0, outside=air",
+        "Canonical cache: max quads=50 overflow chunks=0",
+        "C Guest UV: six normals, unequal merged extents, no axis swapping OK",
+        "Voxel C++ input/world/render/benchmark tests OK"
+      ]
+    },
+    {
+      "log": "local/korvo-validation-20261013/build-final-adopted.log",
+      "sha256": "d435809930969c8a1ea9353a32f6bae60ceba21457576be19467835474be6b14",
+      "tail": [
+        "Executing action: all (aliases: build)",
+        "Running ninja in directory /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/firmware/esp32s31-korvo-1",
+        "Executing \"ninja all\"...",
+        "",
+        "Project build complete. To flash, run:",
+        " idf.py flash",
+        "or",
+        " idf.py -p PORT flash",
+        "or",
+        " python -m esptool --chip esp32s31 -b 460800 --before default-reset --after hard-reset --no-stub write-flash --flash-mode dio --flash-size 16MB --flash-freq 80m 0x2000 build/firmware/esp32s31-korvo-1/bootloader/bootloader.bin 0x8000 build/firmware/esp32s31-korvo-1/partition_table/partition-table.bin 0x10000 build/firmware/esp32s31-korvo-1/pxa_esp_platform.bin",
+        "or from the \"/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/firmware/esp32s31-korvo-1\" directory",
+        " python -m esptool --chip esp32s31 -b 460800 --before default-reset --after hard-reset --no-stub write-flash \"@flash_args\""
+      ]
+    },
+    {
+      "log": "local/korvo-validation-20261013/build-mosaico-adopted.log",
+      "sha256": "c6a66d9cb90ed277b22ae19db803938f0d27bfb1a73b24020ccda2e5ffede838",
+      "tail": [
+        "Executing action: all (aliases: build)",
+        "Running ninja in directory /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/firmware/esp-mosaico",
+        "Executing \"ninja all\"...",
+        "",
+        "Project build complete. To flash, run:",
+        " idf.py flash",
+        "or",
+        " idf.py -p PORT flash",
+        "or",
+        " python -m esptool --chip esp32s31 -b 460800 --before no-reset --after hard-reset write-flash --flash-mode dio --flash-size 16MB --flash-freq 80m 0x2000 build/firmware/esp-mosaico/bootloader/bootloader.bin 0x8000 build/firmware/esp-mosaico/partition_table/partition-table.bin 0x10000 build/firmware/esp-mosaico/pxa_esp_platform.bin",
+        "or from the \"/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/firmware/esp-mosaico\" directory",
+        " python -m esptool --chip esp32s31 -b 460800 --before no-reset --after hard-reset write-flash \"@flash_args\""
+      ]
+    },
+    {
+      "log": "local/korvo-validation-20261013/build-watcher-adopted.log",
+      "sha256": "ce0d4603e8eec09fb81bcf82dec46c63cab1eaa676a5fa4c486e65e3fa0cf2db",
+      "tail": [
+        "Generated /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/firmware/sensecap-watcher-validation-20261013/pxa_esp_platform.bin",
+        "[54/55] cd /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/firmware/sensecap-watcher-validation-20261013/esp-idf/esptool_py && /home/lucinhu/esp/esp-idf-toolchain/python_env/idf5.5_py3.14_env/bin/python /home/lucinhu/esp/esp-idf/esp-idf-v5.5.4/components/partition_table/check_sizes.py --offset 0x8000 partition --type app /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/firmware/sensecap-watcher-validation-20261013/partition_table/partition-table.bin /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/firmware/sensecap-watcher-validation-20261013/pxa_esp_platform.bin",
+        "pxa_esp_platform.bin binary size 0x3419b0 bytes. Smallest app partition is 0x6f0000 bytes. 0x3ae650 bytes (53%) free.",
+        "",
+        "Project build complete. To flash, run:",
+        " idf.py flash",
+        "or",
+        " idf.py -p PORT flash",
+        "or",
+        " python -m esptool --chip esp32s3 -b 460800 --before default_reset --after hard_reset write_flash --flash_mode dio --flash_size 32MB --flash_freq 80m 0x0 build/firmware/sensecap-watcher-validation-20261013/bootloader/bootloader.bin 0x8000 build/firmware/sensecap-watcher-validation-20261013/partition_table/partition-table.bin 0x10000 build/firmware/sensecap-watcher-validation-20261013/pxa_esp_platform.bin",
+        "or from the \"/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/firmware/sensecap-watcher-validation-20261013\" directory",
+        " python -m esptool --chip esp32s3 -b 460800 --before default_reset --after hard_reset write_flash \"@flash_args\""
+      ]
+    }
+  ],
+  "cross_builds": {
+    "esp32s31-korvo-1": {
+      "passed": true,
+      "bytes": 3738096,
+      "sha256": "5ace2b8fa19c982dd6a69021dafd3b8fc0763e450fddd57140a7765f04bb1039",
+      "flashed": true,
+      "iram_span": true
+    },
+    "esp-mosaico": {
+      "passed": true,
+      "bytes": 3910880,
+      "sha256": "0f4ad637bb6d48b227346c8d5c98de98d80439c2657fe01999db17d0fd7fb549",
+      "flashed": false,
+      "iram_span": false
+    },
+    "sensecap-watcher": {
+      "passed": true,
+      "bytes": 3414448,
+      "sha256": "79d9f048af0c6fcf993f8192fe6cd63403206ed02a26499aaa4b318814ee1d8c",
+      "flashed": false,
+      "iram_span": false
+    }
+  },
+  "simulator_matrix": {
+    "file": "simulator-matrix.json",
+    "sha256": "37640b25fccc34b03d6835d9746f7d34070f5ee82815bdab58979a5ba3df11c5"
+  },
+  "latest_voxel_simulator": [
+    {
+      "board": "korvo",
+      "returncode": 0,
+      "result": {
+        "width": 800,
+        "height": 480,
+        "density_dpi": 160,
+        "surface_submitted": 2,
+        "surface_presented": 2,
+        "rendered": 2,
+        "visible": 2,
+        "dropped": 0,
+        "wamr": 51250,
+        "wamr_peak": 192296,
+        "linear": 393216,
+        "linear_peak": 393216,
+        "lifecycle_passed": true
+      }
+    },
+    {
+      "board": "mosaico",
+      "returncode": 0,
+      "result": {
+        "width": 480,
+        "height": 480,
+        "density_dpi": 305,
+        "surface_submitted": 2,
+        "surface_presented": 2,
+        "rendered": 2,
+        "visible": 2,
+        "dropped": 0,
+        "wamr": 51250,
+        "wamr_peak": 192296,
+        "linear": 393216,
+        "linear_peak": 393216,
+        "lifecycle_passed": true
+      }
+    },
+    {
+      "board": "watcher",
+      "returncode": 0,
+      "result": {
+        "width": 412,
+        "height": 412,
+        "density_dpi": 284,
+        "surface_submitted": 2,
+        "surface_presented": 2,
+        "rendered": 2,
+        "visible": 2,
+        "dropped": 0,
+        "wamr": 51250,
+        "wamr_peak": 192296,
+        "linear": 393216,
+        "linear_peak": 393216,
+        "lifecycle_passed": true
+      }
+    }
+  ],
+  "original_app": {
+    "app": "pxa-cpp-work",
+    "version": "1.0.0",
+    "min_sdk": [
+      1,
+      0
+    ],
+    "current_core": [
+      2,
+      0
+    ],
+    "manifest_sha256": "6817152f14c7b9eb3cad80e6a61fab3f6afcd45b19f1ccbd151930e2169fcbab",
+    "original_package_retained": true,
+    "data_retained": true,
+    "launch_passed": false,
+    "failure_stage": "prepare-activation-plan",
+    "status": -3,
+    "reason": "Core 1 binary is unsupported by the previously updated Core 2 Host; not replaced by this test",
+    "all_apps_stopped": true
+  }
+}

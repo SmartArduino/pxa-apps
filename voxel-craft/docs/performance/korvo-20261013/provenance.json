@@ -1,0 +1,210 @@
+{
+  "scope": "Selected relevant files in the final uncommitted workspace; earlier unrelated changes preserved. Artifact hashes identify tested builds; rebuilding a frozen package requires new paired measurements.",
+  "git_heads": {
+    ".": "079156a11477cdbb31ab3b4bd377fbb7fee61cbd",
+    "deps/pxa-system": "7030f64b5ecef798e806d953f6682942f8e55fd6",
+    "local/pxa-apps": "a1a6fbbca4b6660a38e4daedf562ee563a4fff23"
+  },
+  "source_files": [
+    {
+      "path": "deps/pxa-system/libpxa/CMakeLists.txt",
+      "sha256": "983f6278e65b895b0331ef52ed64b0f66f4196bf4715b9e6b4b8ef25419faa44"
+    },
+    {
+      "path": "deps/pxa-system/libpxa/include/pxa/ime.h",
+      "sha256": "6b323ebafb0daa13cfc3326b911bc5f0e9fe5fadc856a670252b24240c2ff1dc"
+    },
+    {
+      "path": "deps/pxa-system/libpxa/src/services/surface/raster.c",
+      "sha256": "ee3f0c7e45d8763f71733241341678a3c653768c68747dacf82089d59236d01e"
+    },
+    {
+      "path": "deps/pxa-system/libpxa/tests/raster_span_test.c",
+      "sha256": "e2dfaadcc42b5aab420c3af10c88a6018d7063832325619a88fbaec964214208"
+    },
+    {
+      "path": "factory/profiles/esp32s31-korvo-1.toml",
+      "sha256": "40d8e47c7b93a3eaa95f0ac2cdc4e55c16342fc7554b411e33ab56a781751962"
+    },
+    {
+      "path": "firmware/boards/esp32s31-korvo-1/include/esp32s31_korvo_1_adc_calibration.h",
+      "sha256": "df06f97ad942af8d446f5919883ee02247fd6ede65a13e8340f490ddcb74e5c5"
+    },
+    {
+      "path": "firmware/boards/esp32s31-korvo-1/include/esp32s31_korvo_1_audio.h",
+      "sha256": "979bdd9298e9399def8a5fb789ef40cf28e26af8678a21d0ce058e25935cd398"
+    },
+    {
+      "path": "firmware/boards/esp32s31-korvo-1/include/esp32s31_korvo_1_config.h",
+      "sha256": "5c3ff6a53637e3124426b24b666879ef1c89a53cf2cfe5a50803b697cba228ed"
+    },
+    {
+      "path": "firmware/boards/esp32s31-korvo-1/include/esp32s31_korvo_1_hardware.h",
+      "sha256": "ce9d98d2b0ab1ddd534f4865ed65f46968749fc13ef9dbe22d18d97b126cc2f9"
+    },
+    {
+      "path": "firmware/boards/esp32s31-korvo-1/include/esp32s31_korvo_1_pxa_surface.h",
+      "sha256": "2d1c6cf5e8b28d8e3b2e08eaacbb9c6148b2c3538d2ea39dec21f9d4fa4b183f"
+    },
+    {
+      "path": "firmware/boards/esp32s31-korvo-1/include/pxa_board.h",
+      "sha256": "a812d1f487835eae7e9b4bd3ad7ff079a7ebfc951010f249cbbd4a07a26e6da7"
+    },
+    {
+      "path": "firmware/boards/esp32s31-korvo-1/src/esp32s31_korvo_1_adc_calibration.cc",
+      "sha256": "38c1af0f2069f373079987a4198104def5ba68e20a46d0334fd8f66a24482f28"
+    },
+    {
+      "path": "firmware/boards/esp32s31-korvo-1/src/esp32s31_korvo_1_audio.cc",
+      "sha256": "7057d07056873d78ace498d909c966a82078522f6969ed31cbb4aa9cec824192"
+    },
+    {
+      "path": "firmware/boards/esp32s31-korvo-1/src/esp32s31_korvo_1_board_port.cc",
+      "sha256": "f0868bb047155ebfad8e0e435379014703532820c62f0b99ac7687615395d0d7"
+    },
+    {
+      "path": "firmware/boards/esp32s31-korvo-1/src/esp32s31_korvo_1_hardware.cc",
+      "sha256": "c70b3574f709489e0f00e064ddde9a5c035b5b32dd02e925ea1cdc69c6568bec"
+    },
+    {
+      "path": "firmware/boards/esp32s31-korvo-1/src/esp32s31_korvo_1_pxa_surface.cc",
+      "sha256": "2e3fef721c4e0ed4d5213492cfc12859031bfa3190b9a5a371a10ed120161ce4"
+    },
+    {
+      "path": "firmware/boards/sensecap-watcher/include/board_sensecap_watcher.h",
+      "sha256": "6277388919ade71d34f4bd4d06c7426a78127583c1c8418e71c1d7993b7af80d"
+    },
+    {
+      "path": "firmware/boards/sensecap-watcher/include/pxa_board.h",
+      "sha256": "aebf255216b88ecae5f3c8366eb42883e8b9bfafbb18e509ec2b96e49e9f493e"
+    },
+    {
+      "path": "firmware/boards/sensecap-watcher/include/sensecap_watcher_config.h",
+      "sha256": "a5d0a25f4b986459da561ed2bd3966d33e5f1056635747e6fe3a0f8a54b8f213"
+    },
+    {
+      "path": "firmware/boards/sensecap-watcher/include/watcher_audio.h",
+      "sha256": "98ed607920fdde55cacbbf2b07d66f390e87c6a45f4d2d36ef301948dbccd779"
+    },
+    {
+      "path": "firmware/boards/sensecap-watcher/include/watcher_battery.h",
+      "sha256": "473ed456327c4ec7e6cf478a78698f1e2350b6dc980f8d7abc84fa227b5bb086"
+    },
+    {
+      "path": "firmware/boards/sensecap-watcher/include/watcher_hardware.h",
+      "sha256": "441efe6b41d70dfb442ab63a73bb8a3b8bbb77b1b73ecc5ef2f92441b50e945d"
+    },
+    {
+      "path": "firmware/boards/sensecap-watcher/include/watcher_io_expander.h",
+      "sha256": "94ae509c9036936e6c88e7d68e27c5673b087df2e475fa3562bf0c11e70c4a0d"
+    },
+    {
+      "path": "firmware/boards/sensecap-watcher/include/watcher_pxa_surface.h",
+      "sha256": "53d3525efffed1268f707dcaa612f30914f3d5a407e08297c3cc7b7bc4f44e43"
+    },
+    {
+      "path": "firmware/boards/sensecap-watcher/include/watcher_spd2010_touch.h",
+      "sha256": "2cbdd3ee8866f39af91aac8745909265ddb084d256922548f3444310a7ec5607"
+    },
+    {
+      "path": "firmware/boards/sensecap-watcher/src/sensecap_watcher_board_port.cc",
+      "sha256": "63ba4515bf1f1877903ad3d9b4a2e91e3bd165d024f5a20e34ad76a0f786990d"
+    },
+    {
+      "path": "firmware/boards/sensecap-watcher/src/watcher_audio.cc",
+      "sha256": "b7e2e657e169f591d3a7c2323d7f62a3a89f12cbd13b75915af46a92dcee704c"
+    },
+    {
+      "path": "firmware/boards/sensecap-watcher/src/watcher_battery.cc",
+      "sha256": "b1192a1813af38823a488fb4c5a0ed9e1dffe613b2200c54f4bc23132a6c4553"
+    },
+    {
+      "path": "firmware/boards/sensecap-watcher/src/watcher_hardware.cc",
+      "sha256": "b4d811fe94f886fb9624603c8feadb6f1cd7c21a74ed53c3c18b9941a540af11"
+    },
+    {
+      "path": "firmware/boards/sensecap-watcher/src/watcher_io_expander.cc",
+      "sha256": "4510ca226023af2b06252bfdf5ee71e3224b750890af52178fd4f69a11b8ffbb"
+    },
+    {
+      "path": "firmware/boards/sensecap-watcher/src/watcher_pxa_surface.cc",
+      "sha256": "403fc77c0516768470aabda6d528e9928287d9fc26cd25cee6b5420e0c2e3c09"
+    },
+    {
+      "path": "firmware/components/pxa/CMakeLists.txt",
+      "sha256": "17f4ee5e98b703d77525f2f2af7a42ba6ab6d8abf66a266107b0f977ebe62fd0"
+    },
+    {
+      "path": "firmware/components/pxa/include/pxa/pxa_esp_surface.h",
+      "sha256": "8c969841f2ff4d46fe935c7fd406eb1e45065b3c17a77ec328fff2ce5c2b0c23"
+    },
+    {
+      "path": "firmware/components/pxa/raster_span.lf",
+      "sha256": "366936d35dacca00b9e77dfbaf2b2bf2486cf124d4ca3fb6d2a02d669dcf3070"
+    },
+    {
+      "path": "firmware/components/pxa/tests/pxa_audio_output_test.cc",
+      "sha256": "86cd9e58d2f5d6a8c8028e0673b7cbd65923465d5678aef4947f9878624ca775"
+    },
+    {
+      "path": "firmware/components/pxa/tests/pxa_esp_surface_backend_test.c",
+      "sha256": "207f3a356492773d8a5830f7bf4be5372179655db39a3744e8fe931629e58ac9"
+    },
+    {
+      "path": "firmware/components/pxa_board_common/include/pxa_board_common/display_completion.h",
+      "sha256": "ba23e2ba3cc303451df2ef3a6d2b59fc1d12db6d9c102c4e9c680daee2397d15"
+    },
+    {
+      "path": "firmware/components/pxa_board_common/include/pxa_board_common/display_profile.h",
+      "sha256": "5b9ab374a29b4a6eca60efe26910f3f1de6772a5067d8a004ab1812a31b27351"
+    },
+    {
+      "path": "firmware/components/pxa_board_common/src/display_profile.cc",
+      "sha256": "cd7bb36ec4d629a327ff97d072951b5cc41007164028eda981680524d8ceadd2"
+    },
+    {
+      "path": "firmware/components/pxa_integration/pxa_integration.cc",
+      "sha256": "d37f7dd7abafbae7e7b914a928f0ebcdbe975608b9fc2d0571814941b1990489"
+    },
+    {
+      "path": "local/pxa-apps/pixel-dungeon/render.cpp",
+      "sha256": "21c035427b0a03bdd8ef1c394a440140ea455829ebfb8837d35ec076ca516a28"
+    },
+    {
+      "path": "local/pxa-apps/voxel-craft/tests/session_test.cpp",
+      "sha256": "9185ee44a6b3564d4ea92f807b79ef35484ba40a6e56d05b86d775c7438f8d79"
+    },
+    {
+      "path": "local/pxa-apps/voxel-craft/voxel_session.inc",
+      "sha256": "8e2b4d1963f4d4349bcd1c5edda6987f2955282494c3c0244b89674601feedff"
+    },
+    {
+      "path": "simulator/profiles/sensecap-watcher.toml",
+      "sha256": "880b94b86dfd2b52cf0ff50a52d7320a9b0843e196c6661ed4573673aa210c64"
+    },
+    {
+      "path": "tools/measure-device-gameplay.py",
+      "sha256": "10fde2698b220c1c0809759b657e2cd896ca8d0516a76a62bc55a2a3be52bb58"
+    },
+    {
+      "path": "tools/pxadb/pxadb.py",
+      "sha256": "0fc16a6b3e9da14d8e4a5844d6f1235f6d0e37e17734af4aa25e690c552f2439"
+    },
+    {
+      "path": "tools/pxadb/test_pxadb.py",
+      "sha256": "2c8264af9b26f80e51a94fb9d2d877ce668306fb7d709763df1f9127f48f94c0"
+    }
+  ],
+  "final_firmware": {
+    "bytes": 3738096,
+    "sha256": "5ace2b8fa19c982dd6a69021dafd3b8fc0763e450fddd57140a7765f04bb1039"
+  },
+  "fixed_package_sha256": "158e7d6616a33723c51ee35c69020cacd4c271d74a0a81b7a822bef76a103faf",
+  "normal_package_sha256": "7d74822dc90fe2c4ad92c894368a3a00425b311abc5bb0ed4264a64359690b24",
+  "firmware_backup_sha256": "8a9c46907e3f382b65cd51f3ddabba2a0fe49d806f8d09cff0bbb5165a68d2cd",
+  "flashed_partition": {
+    "address": 65536,
+    "size": 4194304
+  },
+  "pxa_data_written_by_firmware_flash": false
+}

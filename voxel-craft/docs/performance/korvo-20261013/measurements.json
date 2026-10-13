@@ -1,0 +1,805 @@
+{
+  "fixed_baseline_package_sha256": "158e7d6616a33723c51ee35c69020cacd4c271d74a0a81b7a822bef76a103faf",
+  "normal_package_sha256": "7d74822dc90fe2c4ad92c894368a3a00425b311abc5bb0ed4264a64359690b24",
+  "firmwares": {
+    "baseline": {
+      "bytes": 3726784,
+      "sha256": "37f934e828314f64b13256f0421a0247c2c68f372a7a31c8c9d769dac0762cdd"
+    },
+    "opt1": {
+      "bytes": 3737168,
+      "sha256": "c0b3f2f47ec134d9e614279c8a0a1d2ea99088f13193fe617266dfe86028b939"
+    },
+    "opt2": {
+      "bytes": 3737328,
+      "sha256": "200a92a4276a1cbadc2b68a2fa2559e2b5f82fdd6e1c740ceb1a98be97b423fc"
+    },
+    "opt3": {
+      "bytes": 3727456,
+      "sha256": "5f03eb7460a1ad98bc7b2d7a682006fd469f7ab58ebd97108e59648fbf0dfe28"
+    },
+    "iram-span": {
+      "bytes": 3738096,
+      "sha256": "5ace2b8fa19c982dd6a69021dafd3b8fc0763e450fddd57140a7765f04bb1039"
+    }
+  },
+  "reports": {
+    "voxel-fixed-baseline": {
+      "passed": true,
+      "package_sha256": "158e7d6616a33723c51ee35c69020cacd4c271d74a0a81b7a822bef76a103faf",
+      "scenes": {
+        "idle": {
+          "fps_mean": 8.880684805999373,
+          "fps_runs": [
+            8.792688502680514,
+            8.96868110931823
+          ],
+          "raster_ms": 85.68525,
+          "guest_ms": 0.0,
+          "guest_p95_max_ms": 0.0,
+          "present_ms": 0.0,
+          "present_p95_max_ms": 0.0,
+          "visible_ms": 0.0,
+          "visible_p95_max_ms": 0.0,
+          "heap_windows": [
+            {
+              "repeat": 0,
+              "before_launch": {
+                "sram_total": 663539,
+                "sram_free": 84607,
+                "sram_min": 84607,
+                "sram_largest": 43008,
+                "psram_total": 16741256,
+                "psram_free": 10944400,
+                "psram_min": 10944400,
+                "psram_largest": 6684672
+              },
+              "startup": {
+                "sram_total": 663539,
+                "sram_free": 69151,
+                "sram_min": 65051,
+                "sram_largest": 43008,
+                "psram_total": 16741256,
+                "psram_free": 8684308,
+                "psram_min": 7058860,
+                "psram_largest": 6684672
+              },
+              "steady": {
+                "sram_total": 663539,
+                "sram_free": 69151,
+                "sram_min": 69151,
+                "sram_largest": 43008,
+                "psram_total": 16741256,
+                "psram_free": 8682192,
+                "psram_min": 8682136,
+                "psram_largest": 6684672
+              },
+              "surface": {
+                "frame": 1536000,
+                "scratch": 768000,
+                "mailbox": 0,
+                "probe": 2112,
+                "peak_total": 2355264
+              }
+            },
+            {
+              "repeat": 1,
+              "before_launch": {
+                "sram_total": 663539,
+                "sram_free": 84607,
+                "sram_min": 84607,
+                "sram_largest": 43008,
+                "psram_total": 16741256,
+                "psram_free": 10944332,
+                "psram_min": 10944332,
+                "psram_largest": 6684672
+              },
+              "startup": {
+                "sram_total": 663539,
+                "sram_free": 69151,
+                "sram_min": 65051,
+                "sram_largest": 43008,
+                "psram_total": 16741256,
+                "psram_free": 8684328,
+                "psram_min": 4754900,
+                "psram_largest": 4325376
+              },
+              "steady": {
+                "sram_total": 663539,
+                "sram_free": 69151,
+                "sram_min": 69151,
+                "sram_largest": 43008,
+                "psram_total": 16741256,
+                "psram_free": 8682212,
+                "psram_min": 8682156,
+                "psram_largest": 4325376
+              },
+              "surface": {
+                "frame": 1536000,
+                "scratch": 768000,
+                "mailbox": 0,
+                "probe": 2112,
+                "peak_total": 2355264
+              }
+            }
+          ]
+        },
+        "turn": {
+          "fps_mean": 8.272094318438434,
+          "fps_runs": [
+            8.398318503938812,
+            8.145870132938056
+          ],
+          "raster_ms": 90.68819209558824,
+          "guest_ms": 7.902276923076923,
+          "guest_p95_max_ms": 10.0,
+          "present_ms": 31.07263076923077,
+          "present_p95_max_ms": 36.0,
+          "visible_ms": 254.55681967213116,
+          "visible_p95_max_ms": 345.867,
+          "heap_windows": [
+            {
+              "repeat": 0,
+              "before_launch": {
+                "sram_total": 663539,
+                "sram_free": 84607,
+                "sram_min": 84607,
+                "sram_largest": 43008,
+                "psram_total": 16741256,
+                "psram_free": 10944316,
+                "psram_min": 10944316,
+                "psram_largest": 6684672
+              },
+              "startup": {
+                "sram_total": 663539,
+                "sram_free": 69151,
+                "sram_min": 65051,
+                "sram_largest": 43008,
+                "psram_total": 16741256,
+                "psram_free": 8684320,
+                "psram_min": 4754864,
+                "psram_largest": 4325376
+              },
+              "steady": {
+                "sram_total": 663539,
+                "sram_free": 69151,
+                "sram_min": 69151,
+                "sram_largest": 43008,
+                "psram_total": 16741256,
+                "psram_free": 8682204,
+                "psram_min": 8682148,
+                "psram_largest": 4325376
+              },
+              "surface": {
+                "frame": 1536000,
+                "scratch": 768000,
+                "mailbox": 0,
+                "probe": 2112,
+                "peak_total": 2355264
+              }
+            },
+            {
+              "repeat": 1,
+              "before_launch": {
+                "sram_total": 663539,
+                "sram_free": 84607,
+                "sram_min": 84607,
+                "sram_largest": 43008,
+                "psram_total": 16741256,
+                "psram_free": 10944376,
+                "psram_min": 10944376,
+                "psram_largest": 6684672
+              },
+              "startup": {
+                "sram_total": 663539,
+                "sram_free": 69151,
+                "sram_min": 65051,
+                "sram_largest": 43008,
+                "psram_total": 16741256,
+                "psram_free": 8684328,
+                "psram_min": 7058904,
+                "psram_largest": 6684672
+              },
+              "steady": {
+                "sram_total": 663539,
+                "sram_free": 69151,
+                "sram_min": 69151,
+                "sram_largest": 43008,
+                "psram_total": 16741256,
+                "psram_free": 8682208,
+                "psram_min": 8682152,
+                "psram_largest": 6684672
+              },
+              "surface": {
+                "frame": 1536000,
+                "scratch": 768000,
+                "mailbox": 0,
+                "probe": 2112,
+                "peak_total": 2355264
+              }
+            }
+          ]
+        }
+      }
+    },
+    "voxel-fixed-opt2": {
+      "passed": true,
+      "package_sha256": "158e7d6616a33723c51ee35c69020cacd4c271d74a0a81b7a822bef76a103faf",
+      "scenes": {
+        "idle": {
+          "fps_mean": 9.340445951896317,
+          "fps_runs": [
+            9.417365418212471,
+            9.263526485580163
+          ],
+          "raster_ms": 80.65597901849218,
+          "guest_ms": 0.0,
+          "guest_p95_max_ms": 0.0,
+          "present_ms": 0.0,
+          "present_p95_max_ms": 0.0,
+          "visible_ms": 0.0,
+          "visible_p95_max_ms": 0.0,
+          "heap_windows": [
+            {
+              "repeat": 0,
+              "before_launch": {
+                "sram_total": 663539,
+                "sram_free": 105063,
+                "sram_min": 105063,
+                "sram_largest": 55296,
+                "psram_total": 16741256,
+                "psram_free": 12511404,
+                "psram_min": 12511404,
+                "psram_largest": 12320768
+              },
+              "startup": {
+                "sram_total": 663539,
+                "sram_free": 83303,
+                "sram_min": 79167,
+                "sram_largest": 55296,
+                "psram_total": 16741256,
+                "psram_free": 10254444,
+                "psram_min": 6321916,
+                "psram_largest": 5111808
+              },
+              "steady": {
+                "sram_total": 663539,
+                "sram_free": 83119,
+                "sram_min": 82843,
+                "sram_largest": 55296,
+                "psram_total": 16741256,
+                "psram_free": 10252352,
+                "psram_min": 10246308,
+                "psram_largest": 5111808
+              },
+              "surface": {
+                "frame": 1536000,
+                "scratch": 768000,
+                "mailbox": 0,
+                "probe": 2112,
+                "peak_total": 2306112
+              }
+            },
+            {
+              "repeat": 1,
+              "before_launch": {
+                "sram_total": 663539,
+                "sram_free": 98575,
+                "sram_min": 98575,
+                "sram_largest": 55296,
+                "psram_total": 16741256,
+                "psram_free": 12514504,
+                "psram_min": 12514504,
+                "psram_largest": 12320768
+              },
+              "startup": {
+                "sram_total": 663539,
+                "sram_free": 83119,
+                "sram_min": 79019,
+                "sram_largest": 55296,
+                "psram_total": 16741256,
+                "psram_free": 10254468,
+                "psram_min": 6325000,
+                "psram_largest": 5373952
+              },
+              "steady": {
+                "sram_total": 663539,
+                "sram_free": 83119,
+                "sram_min": 83119,
+                "sram_largest": 55296,
+                "psram_total": 16741256,
+                "psram_free": 10252352,
+                "psram_min": 10252296,
+                "psram_largest": 5373952
+              },
+              "surface": {
+                "frame": 1536000,
+                "scratch": 768000,
+                "mailbox": 0,
+                "probe": 2112,
+                "peak_total": 2306112
+              }
+            }
+          ]
+        },
+        "turn": {
+          "fps_mean": 8.90835491721301,
+          "fps_runs": [
+            8.908397997697561,
+            8.90831183672846
+          ],
+          "raster_ms": 84.53143055555556,
+          "guest_ms": 6.647676056338028,
+          "guest_p95_max_ms": 10.0,
+          "present_ms": 27.0562,
+          "present_p95_max_ms": 34.0,
+          "visible_ms": 134.0134696969697,
+          "visible_p95_max_ms": 215.053,
+          "heap_windows": [
+            {
+              "repeat": 0,
+              "before_launch": {
+                "sram_total": 663539,
+                "sram_free": 98575,
+                "sram_min": 98575,
+                "sram_largest": 55296,
+                "psram_total": 16741256,
+                "psram_free": 12514496,
+                "psram_min": 12514496,
+                "psram_largest": 11272192
+              },
+              "startup": {
+                "sram_total": 663539,
+                "sram_free": 83119,
+                "sram_min": 79019,
+                "sram_largest": 55296,
+                "psram_total": 16741256,
+                "psram_free": 10254424,
+                "psram_min": 8629008,
+                "psram_largest": 9175040
+              },
+              "steady": {
+                "sram_total": 663539,
+                "sram_free": 83119,
+                "sram_min": 83119,
+                "sram_largest": 55296,
+                "psram_total": 16741256,
+                "psram_free": 10252312,
+                "psram_min": 10252252,
+                "psram_largest": 9175040
+              },
+              "surface": {
+                "frame": 1536000,
+                "scratch": 768000,
+                "mailbox": 0,
+                "probe": 2112,
+                "peak_total": 2306112
+              }
+            },
+            {
+              "repeat": 1,
+              "before_launch": {
+                "sram_total": 663539,
+                "sram_free": 98575,
+                "sram_min": 98575,
+                "sram_largest": 55296,
+                "psram_total": 16741256,
+                "psram_free": 12514508,
+                "psram_min": 12514508,
+                "psram_largest": 11272192
+              },
+              "startup": {
+                "sram_total": 663539,
+                "sram_free": 83119,
+                "sram_min": 79019,
+                "sram_largest": 55296,
+                "psram_total": 16741256,
+                "psram_free": 10254500,
+                "psram_min": 6325068,
+                "psram_largest": 5636096
+              },
+              "steady": {
+                "sram_total": 663539,
+                "sram_free": 83119,
+                "sram_min": 83119,
+                "sram_largest": 55296,
+                "psram_total": 16741256,
+                "psram_free": 10252380,
+                "psram_min": 10252316,
+                "psram_largest": 5636096
+              },
+              "surface": {
+                "frame": 1536000,
+                "scratch": 768000,
+                "mailbox": 0,
+                "probe": 2112,
+                "peak_total": 2306112
+              }
+            }
+          ]
+        }
+      }
+    },
+    "voxel-fixed-iram": {
+      "passed": true,
+      "package_sha256": "158e7d6616a33723c51ee35c69020cacd4c271d74a0a81b7a822bef76a103faf",
+      "firmware": "iram-span",
+      "scenes": {
+        "idle": {
+          "fps_mean": 9.03557453569243,
+          "fps_runs": [
+            9.162832699910101,
+            8.908316371474756
+          ],
+          "raster_ms": 82.85666666666665,
+          "guest_ms": 0,
+          "guest_p95_max_ms": 0,
+          "present_ms": 0,
+          "present_p95_max_ms": 0,
+          "visible_ms": 0,
+          "visible_p95_max_ms": 0,
+          "heap_windows": [
+            {
+              "repeat": 0,
+              "before_launch": {
+                "sram_total": 662995,
+                "sram_free": 112647,
+                "sram_min": 112647,
+                "sram_largest": 63488,
+                "psram_total": 16741256,
+                "psram_free": 12511140,
+                "psram_min": 12511140,
+                "psram_largest": 12320768
+              },
+              "startup": {
+                "sram_total": 662995,
+                "sram_free": 90851,
+                "sram_min": 86751,
+                "sram_largest": 63488,
+                "psram_total": 16741256,
+                "psram_free": 10251096,
+                "psram_min": 6321688,
+                "psram_largest": 5111808
+              },
+              "steady": {
+                "sram_total": 662995,
+                "sram_free": 90671,
+                "sram_min": 90671,
+                "sram_largest": 63488,
+                "psram_total": 16741256,
+                "psram_free": 10248980,
+                "psram_min": 10248924,
+                "psram_largest": 5111808
+              },
+              "surface": {
+                "frame": 1536000,
+                "scratch": 768000,
+                "mailbox": 0,
+                "probe": 2112,
+                "peak_total": 2306112
+              }
+            },
+            {
+              "repeat": 1,
+              "before_launch": {
+                "sram_total": 662995,
+                "sram_free": 106127,
+                "sram_min": 106127,
+                "sram_largest": 63488,
+                "psram_total": 16741256,
+                "psram_free": 12511120,
+                "psram_min": 12511120,
+                "psram_largest": 11272192
+              },
+              "startup": {
+                "sram_total": 662995,
+                "sram_free": 90671,
+                "sram_min": 86571,
+                "sram_largest": 63488,
+                "psram_total": 16741256,
+                "psram_free": 10251032,
+                "psram_min": 6321600,
+                "psram_largest": 5636096
+              },
+              "steady": {
+                "sram_total": 662995,
+                "sram_free": 90671,
+                "sram_min": 90671,
+                "sram_largest": 63488,
+                "psram_total": 16741256,
+                "psram_free": 10248912,
+                "psram_min": 10248852,
+                "psram_largest": 5636096
+              },
+              "surface": {
+                "frame": 1536000,
+                "scratch": 768000,
+                "mailbox": 0,
+                "probe": 2112,
+                "peak_total": 2306112
+              }
+            }
+          ]
+        },
+        "turn": {
+          "fps_mean": 8.51497674209143,
+          "fps_runs": [
+            8.491638052419654,
+            8.538315431763206
+          ],
+          "raster_ms": 88.27272605042018,
+          "guest_ms": 4.569371428571428,
+          "guest_p95_max_ms": 11.0,
+          "present_ms": 27.047044117647058,
+          "present_p95_max_ms": 34.0,
+          "visible_ms": 138.2785,
+          "visible_p95_max_ms": 153.42,
+          "heap_windows": [
+            {
+              "repeat": 0,
+              "before_launch": {
+                "sram_total": 662995,
+                "sram_free": 106127,
+                "sram_min": 106127,
+                "sram_largest": 63488,
+                "psram_total": 16741256,
+                "psram_free": 12511132,
+                "psram_min": 12511132,
+                "psram_largest": 9961472
+              },
+              "startup": {
+                "sram_total": 662995,
+                "sram_free": 90671,
+                "sram_min": 86571,
+                "sram_largest": 63488,
+                "psram_total": 16741256,
+                "psram_free": 10251072,
+                "psram_min": 6321636,
+                "psram_largest": 5636096
+              },
+              "steady": {
+                "sram_total": 662995,
+                "sram_free": 90635,
+                "sram_min": 90395,
+                "sram_largest": 63488,
+                "psram_total": 16741256,
+                "psram_free": 10246796,
+                "psram_min": 10245368,
+                "psram_largest": 5636096
+              },
+              "surface": {
+                "frame": 1536000,
+                "scratch": 768000,
+                "mailbox": 0,
+                "probe": 2112,
+                "peak_total": 2306112
+              }
+            },
+            {
+              "repeat": 1,
+              "before_launch": {
+                "sram_total": 662995,
+                "sram_free": 106127,
+                "sram_min": 106127,
+                "sram_largest": 63488,
+                "psram_total": 16741256,
+                "psram_free": 12511100,
+                "psram_min": 12511100,
+                "psram_largest": 12320768
+              },
+              "startup": {
+                "sram_total": 662995,
+                "sram_free": 90671,
+                "sram_min": 86571,
+                "sram_largest": 63488,
+                "psram_total": 16741256,
+                "psram_free": 10251036,
+                "psram_min": 6321588,
+                "psram_largest": 5373952
+              },
+              "steady": {
+                "sram_total": 662995,
+                "sram_free": 90671,
+                "sram_min": 90671,
+                "sram_largest": 63488,
+                "psram_total": 16741256,
+                "psram_free": 10248920,
+                "psram_min": 10248864,
+                "psram_largest": 5373952
+              },
+              "surface": {
+                "frame": 1536000,
+                "scratch": 768000,
+                "mailbox": 0,
+                "probe": 2112,
+                "peak_total": 2306112
+              }
+            }
+          ]
+        }
+      }
+    },
+    "voxel-adopted": {
+      "passed": true,
+      "package_sha256": "7d74822dc90fe2c4ad92c894368a3a00425b311abc5bb0ed4264a64359690b24",
+      "firmware": "iram-span",
+      "scenes": {
+        "walk": {
+          "fps_mean": 7.762253558152346,
+          "fps_runs": [
+            7.762253558152346
+          ],
+          "raster_ms": 101.5390625,
+          "guest_ms": 11.52209090909091,
+          "guest_p95_max_ms": 62.0,
+          "present_ms": 25.349366666666665,
+          "present_p95_max_ms": 31.0,
+          "visible_ms": 148.7169655172414,
+          "visible_p95_max_ms": 163.342,
+          "heap_windows": [
+            {
+              "repeat": 0,
+              "before_launch": {
+                "sram_total": 662995,
+                "sram_free": 92155,
+                "sram_min": 92155,
+                "sram_largest": 53248,
+                "psram_total": 16741256,
+                "psram_free": 12501248,
+                "psram_min": 12501248,
+                "psram_largest": 12320768
+              },
+              "startup": {
+                "sram_total": 662995,
+                "sram_free": 76699,
+                "sram_min": 72083,
+                "sram_largest": 53248,
+                "psram_total": 16741256,
+                "psram_free": 10167404,
+                "psram_min": 8583208,
+                "psram_largest": 9175040
+              },
+              "steady": {
+                "sram_total": 662995,
+                "sram_free": 76699,
+                "sram_min": 76699,
+                "sram_largest": 53248,
+                "psram_total": 16741256,
+                "psram_free": 10165288,
+                "psram_min": 10165228,
+                "psram_largest": 9175040
+              },
+              "surface": {
+                "frame": 1536000,
+                "scratch": 768000,
+                "mailbox": 0,
+                "probe": 2112,
+                "peak_total": 2306112
+              }
+            }
+          ]
+        },
+        "idle": {
+          "fps_mean": 9.31471391020564,
+          "fps_runs": [
+            9.31471391020564
+          ],
+          "raster_ms": 81.1232162162162,
+          "guest_ms": 0,
+          "guest_p95_max_ms": 0,
+          "present_ms": 0,
+          "present_p95_max_ms": 0,
+          "visible_ms": 0,
+          "visible_p95_max_ms": 0,
+          "heap_windows": [
+            {
+              "repeat": 0,
+              "before_launch": {
+                "sram_total": 662995,
+                "sram_free": 105067,
+                "sram_min": 105067,
+                "sram_largest": 63488,
+                "psram_total": 16741256,
+                "psram_free": 12501212,
+                "psram_min": 12501212,
+                "psram_largest": 12320768
+              },
+              "startup": {
+                "sram_total": 662995,
+                "sram_free": 76699,
+                "sram_min": 72083,
+                "sram_largest": 53248,
+                "psram_total": 16741256,
+                "psram_free": 10167348,
+                "psram_min": 8583136,
+                "psram_largest": 8912896
+              },
+              "steady": {
+                "sram_total": 662995,
+                "sram_free": 76699,
+                "sram_min": 76699,
+                "sram_largest": 53248,
+                "psram_total": 16741256,
+                "psram_free": 10165232,
+                "psram_min": 10165172,
+                "psram_largest": 8912896
+              },
+              "surface": {
+                "frame": 1536000,
+                "scratch": 768000,
+                "mailbox": 0,
+                "probe": 2112,
+                "peak_total": 2306112
+              }
+            }
+          ]
+        },
+        "turn": {
+          "fps_mean": 7.76363293944166,
+          "fps_runs": [
+            7.76363293944166
+          ],
+          "raster_ms": 102.89903125,
+          "guest_ms": 9.43175,
+          "guest_p95_max_ms": 56.0,
+          "present_ms": 23.7119,
+          "present_p95_max_ms": 30.0,
+          "visible_ms": 150.70651724137932,
+          "visible_p95_max_ms": 167.024,
+          "heap_windows": [
+            {
+              "repeat": 0,
+              "before_launch": {
+                "sram_total": 662995,
+                "sram_free": 92155,
+                "sram_min": 92155,
+                "sram_largest": 53248,
+                "psram_total": 16741256,
+                "psram_free": 12501240,
+                "psram_min": 12501240,
+                "psram_largest": 9699328
+              },
+              "startup": {
+                "sram_total": 662995,
+                "sram_free": 76699,
+                "sram_min": 72083,
+                "sram_largest": 53248,
+                "psram_total": 16741256,
+                "psram_free": 10167372,
+                "psram_min": 9693884,
+                "psram_largest": 8912896
+              },
+              "steady": {
+                "sram_total": 662995,
+                "sram_free": 76699,
+                "sram_min": 76699,
+                "sram_largest": 53248,
+                "psram_total": 16741256,
+                "psram_free": 10165256,
+                "psram_min": 10165196,
+                "psram_largest": 8912896
+              },
+              "surface": {
+                "frame": 1536000,
+                "scratch": 768000,
+                "mailbox": 0,
+                "probe": 2112,
+                "peak_total": 2306112
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "evidence_sha256": {
+    "voxel-adopted.json": "80c6077bbed9b5a54dbcbe01e7a21001cb20dc52d026a536ecf7191ec409bb85",
+    "voxel-cold-baseline.json": "36b2069151eb64be81b06c1f5cd8cd409737cf1b2bfb7fb3594e5fd6ee30b999",
+    "voxel-fixed-baseline.json": "7717cb75ce2cea7d67b77a57c5ac742f8ae3be99de0efb48c0926fd4685d9f82",
+    "voxel-fixed-iram.json": "7c1e147713ac95a3988c2ca380277ce05123541e803e7bf51d90e5025a58e2f0",
+    "voxel-fixed.jpg": "d078a53084f80377241454528ff9c822c4928640de2af1494c59e3dd20b7b994",
+    "voxel-inventory.jpg": "2466c8f3f557b96604ac864997e1bf6a82586a7bc778ee2cd1aa321f27a3ac56",
+    "voxel-pause.jpg": "a1ccd7f1aac52b7fffa294466213db1f15c68298561c61e2faa682619e529fce",
+    "voxel-play.jpg": "8e73d7b456cfd79c4479f365e9dfe43f0096ef8b4b7ca2539ff82ee84defe4a0"
+  }
+}

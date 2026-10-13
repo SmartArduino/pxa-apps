@@ -203,15 +203,32 @@ static void ui_button(const pd_rect_t *rect, const char *label) {
 }
 
 static void ui_title_button(const pd_rect_t *rect, const char *label,
-                            int icon, int icon_width, int icon_height) {
+                            int icon, int icon_width, int icon_height,
+                            const char *compact_label = nullptr) {
     const int icon_size = rect->h >= 40 ? 20 : 16;
+    constexpr int label_height = 16; // CJK cells are taller than ASCII cells.
+    if (compact_label && pd_font_width(label, 1) > rect->w - 8)
+        label = compact_label;
     ui_ninepatch(PD_UI_BUTTON, rect->x, rect->y, rect->w, rect->h, 4);
+    // At high DPI on a round panel the three secondary buttons are narrow.
+    // Stack their icon and label when a horizontal row would overlap, keeping
+    // both readable without changing the hit target or allocating a cache.
+    if (pd_font_width(label, 1) + icon_width * icon_size / 16 + 15 > rect->w) {
+        const int size = std::clamp(rect->h - label_height - 6, 8, icon_size);
+        const int width = icon_width * size / 16;
+        const int height = icon_height * size / 16;
+        const int top = rect->y + (rect->h - height - label_height - 2) / 2;
+        ui_sprite(icon, rect->x + (rect->w - width) / 2, top, width, height);
+        text_center(rect->x + rect->w / 2, top + height + 2,
+                    label, rgb565(238, 234, 220), 1);
+        return;
+    }
     ui_sprite(icon, rect->x + 5,
               rect->y + (rect->h - icon_size) / 2,
               icon_width * icon_size / 16,
               icon_height * icon_size / 16);
     text_center(rect->x + (rect->w + icon_size + 5) / 2,
-                rect->y + (rect->h - 12) / 2,
+                rect->y + (rect->h - label_height) / 2,
                 label, rgb565(238, 234, 220), 1);
 }
 
@@ -1220,11 +1237,14 @@ static void draw_title(const pd_game_t *game, const pd_layout_t *layout) {
     ui_title_button(&layout->menu_primary, pd_str(PD_STR_ENTER_GAME),
                     PD_UI_TITLE_ENTER, 16, 16);
     ui_title_button(&layout->title_rankings, pd_str(PD_STR_RANKINGS),
-                    PD_UI_TITLE_RANKINGS, 17, 16);
+                    PD_UI_TITLE_RANKINGS, 17, 16,
+                    pd_strings_chinese() ? "排行" : "RANK");
     ui_title_button(&layout->title_journal, pd_str(PD_STR_JOURNAL),
-                    PD_UI_TITLE_JOURNAL, 17, 15);
+                    PD_UI_TITLE_JOURNAL, 17, 15,
+                    pd_strings_chinese() ? "日志" : "LOG");
     ui_title_button(&layout->title_settings, pd_str(PD_STR_SETTINGS),
-                    PD_UI_PREFS, 14, 14);
+                    PD_UI_PREFS, 14, 14,
+                    pd_strings_chinese() ? "设置" : "SET");
     if (game->deepest > 1) {
         char line[32];
         pd_str_format(line, sizeof(line), PD_STR_BEST_DEPTH, game->deepest);

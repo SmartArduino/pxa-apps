@@ -1,0 +1,77 @@
+{
+  "included_in_final_three_run_fps": false,
+  "initial_audio_grant": true,
+  "launch_heap": {
+    "sram_used": 286252,
+    "sram_peak_used": 290904,
+    "psram_used": 2934584,
+    "psram_peak_used": 3219164
+  },
+  "launch_memory": {
+    "heap": {
+      "sram_total": 321019,
+      "sram_free": 34767,
+      "sram_min": 30115,
+      "sram_largest": 19456,
+      "psram_total": 8358572,
+      "psram_free": 5423988,
+      "psram_min": 5139408,
+      "psram_largest": 5242880
+    },
+    "budget": {
+      "internal": 28956,
+      "external": 62244,
+      "peak_internal": 28956,
+      "peak_external": 62244,
+      "temporary_peak_internal": 0,
+      "temporary_peak_external": 0,
+      "fixed": 2224,
+      "denied": 0,
+      "allocation_failures": 0
+    },
+    "kind:raster": {
+      "internal": 0,
+      "external": 35396
+    },
+    "kind:image": {
+      "internal": 0,
+      "external": 0
+    },
+    "kind:audio": {
+      "internal": 0,
+      "external": 16392
+    },
+    "kind:temporary": {
+      "internal": 0,
+      "external": 0
+    },
+    "kind:metadata": {
+      "internal": 28956,
+      "external": 10456
+    },
+    "kind:frame": {
+      "internal": 0,
+      "external": 0
+    },
+    "surface": {
+      "frame": 284160,
+      "scratch": 142080,
+      "mailbox": 0,
+      "probe": 0,
+      "peak_total": 426240
+    }
+  },
+  "title": {
+    "format": "jpeg",
+    "width": "296",
+    "height": "240",
+    "orientation": "logical",
+    "frame_id": "1",
+    "device_us": "129579528",
+    "source": "surface",
+    "bytes": "7559",
+    "sha256": "2608e0d16e7db06610639a8bb44efae4747c38b8a16482ae9fab7e17bb6062d8"
+  },
+  "trial_suite_completed": false,
+  "trial_suite_stop_reason": "Second title was captured before asynchronous assets/menu initialization finished; final harness waits eight seconds and all final scenes were verified."
+}

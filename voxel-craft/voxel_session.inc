@@ -235,5 +235,12 @@
         updated.safe.left=std::max(updated.safe.left,window.safe_insets.left);
         updated.safe.top=std::max(updated.safe.top,window.safe_insets.top);
         updated.safe.right=std::max(updated.safe.right,window.safe_insets.right);
-        updated.safe.bottom=std::max(updated.safe.bottom,window.safe_insets.bottom);apply_display(updated);
+        updated.safe.bottom=std::max(updated.safe.bottom,window.safe_insets.bottom);
+        // Hidden system chrome can still reserve edge gestures for input.
+        // Keep controls outside these regions without shrinking the 3D frame.
+        updated.safe.left=std::max(updated.safe.left,window.system_bar_insets.left);
+        updated.safe.top=std::max(updated.safe.top,window.system_bar_insets.top);
+        updated.safe.right=std::max(updated.safe.right,window.system_bar_insets.right);
+        updated.safe.bottom=std::max(updated.safe.bottom,window.system_bar_insets.bottom);
+        apply_display(updated);
     }

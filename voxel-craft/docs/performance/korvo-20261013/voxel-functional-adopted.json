@@ -1,0 +1,134 @@
+{
+  "screens": {
+    "title": {
+      "format": "jpeg",
+      "width": "800",
+      "height": "480",
+      "orientation": "logical",
+      "frame_id": "1",
+      "device_us": "826389776",
+      "source": "direct-displayed",
+      "bytes": "11826",
+      "sha256": "4c567d27d87dcc99221da6b2d9709ebde84a33610c7e96f3e96702c953b0800c"
+    },
+    "play": {
+      "format": "jpeg",
+      "width": "800",
+      "height": "480",
+      "orientation": "logical",
+      "frame_id": "110",
+      "device_us": "836469583",
+      "source": "direct-displayed",
+      "bytes": "27093",
+      "sha256": "6ffdfccd55e2202cd9b1d5a0e1a2ba69c9ee8bc65ad55a163388b2487ca59668"
+    },
+    "pause": {
+      "format": "jpeg",
+      "width": "800",
+      "height": "480",
+      "orientation": "logical",
+      "frame_id": "115",
+      "device_us": "838704171",
+      "source": "direct-displayed",
+      "bytes": "11381",
+      "sha256": "a1ccd7f1aac52b7fffa294466213db1f15c68298561c61e2faa682619e529fce"
+    },
+    "resumed": {
+      "format": "jpeg",
+      "width": "800",
+      "height": "480",
+      "orientation": "logical",
+      "frame_id": "134",
+      "device_us": "840771542",
+      "source": "direct-displayed",
+      "bytes": "27093",
+      "sha256": "6ffdfccd55e2202cd9b1d5a0e1a2ba69c9ee8bc65ad55a163388b2487ca59668"
+    },
+    "inventory": {
+      "format": "jpeg",
+      "width": "800",
+      "height": "480",
+      "orientation": "logical",
+      "frame_id": "139",
+      "device_us": "843010043",
+      "source": "direct-displayed",
+      "bytes": "12182",
+      "sha256": "2466c8f3f557b96604ac864997e1bf6a82586a7bc778ee2cd1aa321f27a3ac56"
+    },
+    "inventory-closed": {
+      "format": "jpeg",
+      "width": "800",
+      "height": "480",
+      "orientation": "logical",
+      "frame_id": "158",
+      "device_us": "845097968",
+      "source": "direct-displayed",
+      "bytes": "27093",
+      "sha256": "6ffdfccd55e2202cd9b1d5a0e1a2ba69c9ee8bc65ad55a163388b2487ca59668"
+    },
+    "looking-down": {
+      "format": "jpeg",
+      "width": "800",
+      "height": "480",
+      "orientation": "logical",
+      "frame_id": "179",
+      "device_us": "847360949",
+      "source": "direct-displayed",
+      "bytes": "21327",
+      "sha256": "97a41e4eb1c67e11e76a150a907bdf961aa594ad0c92e7d20e837d7032211aa6"
+    },
+    "mining-progress": {
+      "format": "jpeg",
+      "width": "800",
+      "height": "480",
+      "orientation": "logical",
+      "frame_id": "184",
+      "device_us": "848078138",
+      "source": "direct-displayed",
+      "bytes": "21507",
+      "sha256": "663f62e9cd1e83c5c43bcf368246eaa3c516707c228874bf6a320789b7095708"
+    },
+    "after-mining": {
+      "format": "jpeg",
+      "width": "800",
+      "height": "480",
+      "orientation": "logical",
+      "frame_id": "218",
+      "device_us": "851583766",
+      "source": "direct-displayed",
+      "bytes": "26248",
+      "sha256": "61f70a3370a9e4c942b65156f960ead5035c044676d3d7d3d0ec4bd18c588ab3"
+    }
+  },
+  "completed": true,
+  "whole_run_memory": [
+    "scope=heap;sram_total=662995;sram_free=76699;sram_min=41783;sram_largest=53248;psram_total=16741256;psram_free=10167388;psram_min=7808020;psram_largest=8912896",
+    "scope=budget;internal=28500;external=62688;peak_internal=44924;peak_external=227774;temporary_peak_internal=0;temporary_peak_external=50334;fixed=2224;denied=0;allocation_failures=0",
+    "scope=kind;name=raster;internal=0;external=35780",
+    "scope=kind;name=image;internal=0;external=0",
+    "scope=kind;name=audio;internal=0;external=16400",
+    "scope=kind;name=temporary;internal=0;external=0",
+    "scope=kind;name=metadata;internal=28500;external=10508",
+    "scope=kind;name=frame;internal=0;external=0",
+    "scope=surface;frame=1536000;scratch=768000;mailbox=0;probe=0;peak_total=2355264"
+  ],
+  "stopped_memory": [
+    "scope=heap;sram_total=662995;sram_free=78207;sram_min=19176;sram_largest=53248;psram_total=16741256;psram_free=11273040;psram_min=6321588;psram_largest=6684672",
+    "scope=budget;internal=27004;external=62688;peak_internal=44924;peak_external=227774;temporary_peak_internal=0;temporary_peak_external=50334;fixed=2224;denied=0;allocation_failures=0",
+    "scope=kind;name=raster;internal=0;external=35780",
+    "scope=kind;name=image;internal=0;external=0",
+    "scope=kind;name=audio;internal=0;external=16400",
+    "scope=kind;name=temporary;internal=0;external=0",
+    "scope=kind;name=metadata;internal=27004;external=10508",
+    "scope=kind;name=frame;internal=0;external=0",
+    "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=2355264"
+  ],
+  "packages": [
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-work\tC++ Work\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d\tJump Jump 3D\t0.1.1\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-maze-evil\tMaze Evil\t0.1.8\tbuiltin=0;installed=1;staged=0;enabled=1;active=0",
+    "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft\tVoxel Craft\t0.12.3\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+  ],
+  "firmware_sha256": "5ace2b8fa19c982dd6a69021dafd3b8fc0763e450fddd57140a7765f04bb1039",
+  "package_sha256": "7d74822dc90fe2c4ad92c894368a3a00425b311abc5bb0ed4264a64359690b24"
+}

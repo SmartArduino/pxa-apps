@@ -1,0 +1,163 @@
+183059	I (183059) PxaHost: Audio: active=0 queued=0/12 peak_queued=2 submitted=33 rendered=33 tones=0/0 tone_drop=0 voice_exhaust=0 queue_full=0 stale=0 rejected=0 assets=0/0 asset_fail=0 storage=8640 stack=4096
+183497	I (183497) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b20000 dbus=0x3c5b0000 request=630772 map=655360 alloc=655360 free_psram=5430940
+183625	I (183625) PxaHost: WAMR dynamic: peak=63731 current=47865 linear=393216 linear_peak=393216 artifact=0 events=128
+183701	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] Voxel audio ready[0m
+278018	I (278018) PxaHost: Audio: active=0 queued=0/12 peak_queued=2 submitted=33 rendered=33 tones=0/0 tone_drop=0 voice_exhaust=0 queue_full=0 stale=0 rejected=0 assets=0/0 asset_fail=0 storage=8640 stack=4096
+278455	I (278455) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b20000 dbus=0x3c5b0000 request=630772 map=655360 alloc=655360 free_psram=5430452
+278581	I (278581) PxaHost: WAMR dynamic: peak=63731 current=47865 linear=393216 linear_peak=393216 artifact=0 events=128
+278597	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] Voxel audio ready[0m
+287232	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=55 faces=461 batches=519 view=32 q=0 raster_us=0 affine=0 solid=0[0m
+288246	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=98 faces=461 batches=519 view=32 q=0 raster_us=36937 affine=0 solid=0[0m
+289248	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=98 faces=461 batches=519 view=32 q=0 raster_us=36937 affine=0 solid=0[0m
+290263	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=99 faces=461 batches=519 view=32 q=0 raster_us=38064 affine=0 solid=0[0m
+291270	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=99 faces=461 batches=519 view=32 q=0 raster_us=38064 affine=0 solid=0[0m
+292363	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=82 faces=461 batches=519 view=32 q=0 raster_us=37709 affine=0 solid=0[0m
+293373	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=98 faces=461 batches=519 view=32 q=0 raster_us=37709 affine=0 solid=0[0m
+294379	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=99 faces=461 batches=519 view=32 q=0 raster_us=37181 affine=0 solid=0[0m
+295391	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=98 faces=461 batches=519 view=32 q=0 raster_us=37181 affine=0 solid=0[0m
+296489	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=100 faces=461 batches=519 view=32 q=0 raster_us=38096 affine=0 solid=0[0m
+297495	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=99 faces=461 batches=519 view=32 q=0 raster_us=38096 affine=0 solid=0[0m
+298499	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=99 faces=461 batches=519 view=32 q=0 raster_us=37086 affine=0 solid=0[0m
+299513	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=98 faces=461 batches=519 view=32 q=0 raster_us=37086 affine=0 solid=0[0m
+300520	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=99 faces=461 batches=519 view=32 q=0 raster_us=37867 affine=0 solid=0[0m
+301532	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=99 faces=461 batches=519 view=32 q=0 raster_us=37867 affine=0 solid=0[0m
+302541	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=98 faces=461 batches=519 view=32 q=0 raster_us=38079 affine=0 solid=0[0m
+303550	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=98 faces=461 batches=519 view=32 q=0 raster_us=38079 affine=0 solid=0[0m
+304600	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=95 faces=461 batches=519 view=32 q=0 raster_us=38241 affine=0 solid=0[0m
+305614	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=98 faces=461 batches=519 view=32 q=0 raster_us=38241 affine=0 solid=0[0m
+306619	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=99 faces=461 batches=519 view=32 q=0 raster_us=38318 affine=0 solid=0[0m
+307625	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=98 faces=461 batches=519 view=32 q=0 raster_us=38318 affine=0 solid=0[0m
+308641	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=98 faces=461 batches=519 view=32 q=0 raster_us=37422 affine=0 solid=0[0m
+309646	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=99 faces=461 batches=519 view=32 q=0 raster_us=37422 affine=0 solid=0[0m
+310695	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=76 faces=461 batches=519 view=32 q=0 raster_us=45314 affine=0 solid=0[0m
+311760	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=104 faces=307 batches=353 view=32 q=0 raster_us=45314 affine=0 solid=0[0m
+312803	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=112 faces=208 batches=238 view=30 q=0 raster_us=39274 affine=0 solid=0[0m
+313870	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=104 faces=276 batches=309 view=30 q=0 raster_us=39274 affine=0 solid=0[0m
+314889	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=116 faces=217 batches=250 view=30 q=0 raster_us=42889 affine=0 solid=0[0m
+315934	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=105 faces=251 batches=280 view=30 q=0 raster_us=42889 affine=0 solid=0[0m
+316967	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=96 faces=162 batches=186 view=30 q=0 raster_us=75891 affine=0 solid=0[0m
+317990	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=126 faces=162 batches=186 view=30 q=0 raster_us=75891 affine=0 solid=0[0m
+319033	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=115 faces=162 batches=186 view=28 q=0 raster_us=49075 affine=0 solid=0[0m
+320080	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=114 faces=162 batches=186 view=28 q=0 raster_us=49075 affine=0 solid=0[0m
+321125	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=115 faces=227 batches=259 view=26 q=0 raster_us=48060 affine=0 solid=0[0m
+322164	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=115 faces=227 batches=259 view=26 q=0 raster_us=48060 affine=0 solid=0[0m
+323195	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=116 faces=217 batches=247 view=24 q=0 raster_us=44560 affine=0 solid=0[0m
+324223	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=96 faces=162 batches=186 view=24 q=0 raster_us=44560 affine=0 solid=0[0m
+325222	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=129 faces=162 batches=186 view=24 q=0 raster_us=43414 affine=0 solid=0[0m
+326244	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=134 faces=128 batches=146 view=24 q=0 raster_us=43414 affine=0 solid=0[0m
+327328	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=121 faces=128 batches=146 view=24 q=0 raster_us=39841 affine=0 solid=0[0m
+328360	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=116 faces=135 batches=153 view=24 q=0 raster_us=39841 affine=0 solid=0[0m
+329362	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=118 faces=135 batches=153 view=24 q=0 raster_us=41750 affine=0 solid=0[0m
+330413	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=114 faces=138 batches=156 view=24 q=0 raster_us=41750 affine=0 solid=0[0m
+331431	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=126 faces=138 batches=156 view=24 q=0 raster_us=43093 affine=0 solid=0[0m
+332446	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=128 faces=138 batches=156 view=24 q=0 raster_us=43093 affine=0 solid=0[0m
+333455	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=108 faces=138 batches=156 view=24 q=0 raster_us=48373 affine=0 solid=0[0m
+336044	I (336044) PxaHost: Audio: active=1 queued=0/12 peak_queued=2 submitted=52 rendered=52 tones=0/0 tone_drop=0 voice_exhaust=0 queue_full=0 stale=0 rejected=0 assets=0/0 asset_fail=0 storage=8640 stack=4096
+336058	I (336058) PxaHost: WAMR dynamic: peak=63731 current=416 linear=0 linear_peak=393216 artifact=0 events=0
+336058	I (336058) PXA_WAMR_MEMMAP: AOT released: ibus=0x42b20000 dbus=0x3c5b0000 size=630772 free_psram=6316128->6971492 delta=655364
+338321	I (338321) PxaHost: Audio: active=0 queued=0/12 peak_queued=2 submitted=52 rendered=52 tones=0/0 tone_drop=0 voice_exhaust=0 queue_full=0 stale=0 rejected=0 assets=0/0 asset_fail=0 storage=8640 stack=4096
+338753	I (338753) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b20000 dbus=0x3c5b0000 request=630772 map=655360 alloc=655360 free_psram=5430424
+338880	I (338880) PxaHost: WAMR dynamic: peak=63731 current=47865 linear=393216 linear_peak=393216 artifact=0 events=128
+338955	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] Voxel audio ready[0m
+347472	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=58 faces=509 batches=555 view=32 q=0 raster_us=0 affine=0 solid=0[0m
+348525	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=104 faces=509 batches=555 view=32 q=0 raster_us=40775 affine=0 solid=0[0m
+349562	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=106 faces=509 batches=555 view=32 q=0 raster_us=40775 affine=0 solid=0[0m
+350618	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=103 faces=509 batches=555 view=32 q=0 raster_us=38679 affine=0 solid=0[0m
+351660	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=104 faces=509 batches=555 view=32 q=0 raster_us=38679 affine=0 solid=0[0m
+352690	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=87 faces=509 batches=555 view=32 q=0 raster_us=39370 affine=0 solid=0[0m
+353734	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=104 faces=509 batches=555 view=32 q=0 raster_us=39370 affine=0 solid=0[0m
+354786	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=104 faces=509 batches=555 view=32 q=0 raster_us=40897 affine=0 solid=0[0m
+355829	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=105 faces=509 batches=555 view=32 q=0 raster_us=40897 affine=0 solid=0[0m
+356869	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=105 faces=509 batches=555 view=32 q=0 raster_us=38542 affine=0 solid=0[0m
+357907	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=106 faces=509 batches=555 view=32 q=0 raster_us=38542 affine=0 solid=0[0m
+358951	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=105 faces=509 batches=555 view=32 q=0 raster_us=39857 affine=0 solid=0[0m
+359987	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=106 faces=509 batches=555 view=32 q=0 raster_us=39857 affine=0 solid=0[0m
+361027	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=105 faces=509 batches=555 view=32 q=0 raster_us=39108 affine=0 solid=0[0m
+362066	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=105 faces=509 batches=555 view=32 q=0 raster_us=39108 affine=0 solid=0[0m
+363106	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=106 faces=509 batches=555 view=32 q=0 raster_us=38176 affine=0 solid=0[0m
+364153	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=105 faces=509 batches=555 view=32 q=0 raster_us=38176 affine=0 solid=0[0m
+365235	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=101 faces=509 batches=555 view=32 q=0 raster_us=37567 affine=0 solid=0[0m
+366269	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=105 faces=509 batches=555 view=32 q=0 raster_us=37567 affine=0 solid=0[0m
+367308	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=106 faces=509 batches=555 view=32 q=0 raster_us=38740 affine=0 solid=0[0m
+368351	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=105 faces=509 batches=555 view=32 q=0 raster_us=38740 affine=0 solid=0[0m
+369390	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=105 faces=509 batches=555 view=32 q=0 raster_us=39373 affine=0 solid=0[0m
+370427	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=106 faces=509 batches=555 view=32 q=0 raster_us=39373 affine=0 solid=0[0m
+371518	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=83 faces=431 batches=463 view=32 q=0 raster_us=41445 affine=0 solid=0[0m
+372571	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=103 faces=301 batches=323 view=32 q=0 raster_us=41445 affine=0 solid=0[0m
+373586	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=109 faces=341 batches=370 view=32 q=0 raster_us=50579 affine=0 solid=0[0m
+374627	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=104 faces=277 batches=301 view=32 q=0 raster_us=50579 affine=0 solid=0[0m
+375708	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=111 faces=332 batches=357 view=30 q=0 raster_us=48848 affine=0 solid=0[0m
+376714	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=108 faces=249 batches=267 view=30 q=0 raster_us=48848 affine=0 solid=0[0m
+377749	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=96 faces=250 batches=268 view=28 q=0 raster_us=43096 affine=0 solid=0[0m
+378782	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=115 faces=250 batches=268 view=28 q=0 raster_us=43096 affine=0 solid=0[0m
+379812	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=117 faces=250 batches=268 view=28 q=0 raster_us=48631 affine=0 solid=0[0m
+380827	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=118 faces=250 batches=268 view=28 q=0 raster_us=48631 affine=0 solid=0[0m
+381837	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=117 faces=221 batches=239 view=26 q=0 raster_us=46210 affine=0 solid=0[0m
+382851	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=118 faces=221 batches=239 view=26 q=0 raster_us=46210 affine=0 solid=0[0m
+383866	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=118 faces=219 batches=239 view=24 q=0 raster_us=46963 affine=0 solid=0[0m
+384898	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=97 faces=250 batches=268 view=24 q=0 raster_us=46963 affine=0 solid=0[0m
+385911	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=118 faces=200 batches=224 view=22 q=0 raster_us=47838 affine=0 solid=0[0m
+386986	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=116 faces=200 batches=224 view=22 q=0 raster_us=47838 affine=0 solid=0[0m
+388039	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=110 faces=200 batches=226 view=20 q=0 raster_us=41959 affine=0 solid=0[0m
+389119	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=102 faces=206 batches=232 view=20 q=0 raster_us=41959 affine=0 solid=0[0m
+390219	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=99 faces=206 batches=232 view=20 q=0 raster_us=45073 affine=0 solid=0[0m
+391289	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=102 faces=209 batches=235 view=20 q=0 raster_us=45073 affine=0 solid=0[0m
+392347	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=103 faces=208 batches=232 view=18 q=0 raster_us=45448 affine=0 solid=0[0m
+393360	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=88 faces=208 batches=232 view=18 q=0 raster_us=45448 affine=0 solid=0[0m
+395322	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=128 faces=169 batches=199 view=16 q=0 raster_us=43706 affine=0 solid=0[0m
+396291	I (396291) PxaHost: Audio: active=1 queued=0/12 peak_queued=2 submitted=77 rendered=77 tones=0/0 tone_drop=0 voice_exhaust=0 queue_full=0 stale=0 rejected=0 assets=0/0 asset_fail=0 storage=8640 stack=4096
+396298	I (396298) PXA_WAMR_MEMMAP: AOT released: ibus=0x42b20000 dbus=0x3c5b0000 size=630772 free_psram=6315920->6971284 delta=655364
+396308	I (396308) PxaHost: WAMR dynamic: peak=63731 current=416 linear=0 linear_peak=393216 artifact=0 events=0
+398560	I (398560) PxaHost: Audio: active=0 queued=0/12 peak_queued=2 submitted=77 rendered=77 tones=0/0 tone_drop=0 voice_exhaust=0 queue_full=0 stale=0 rejected=0 assets=0/0 asset_fail=0 storage=8640 stack=4096
+398997	I (398997) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b20000 dbus=0x3c5b0000 request=630772 map=655360 alloc=655360 free_psram=5430456
+399125	I (399125) PxaHost: WAMR dynamic: peak=63731 current=47865 linear=393216 linear_peak=393216 artifact=0 events=128
+399218	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] Voxel audio ready[0m
+407731	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=49 faces=450 batches=505 view=32 q=0 raster_us=0 affine=0 solid=0[0m
+408738	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=79 faces=450 batches=505 view=32 q=0 raster_us=65711 affine=0 solid=0[0m
+409736	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=79 faces=450 batches=505 view=32 q=0 raster_us=65711 affine=0 solid=0[0m
+410865	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=80 faces=441 batches=494 view=30 q=0 raster_us=63466 affine=0 solid=0[0m
+411870	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=79 faces=441 batches=494 view=30 q=0 raster_us=63466 affine=0 solid=0[0m
+412885	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=69 faces=441 batches=494 view=30 q=0 raster_us=62885 affine=0 solid=0[0m
+413994	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=80 faces=401 batches=454 view=28 q=0 raster_us=62885 affine=0 solid=0[0m
+415098	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=81 faces=366 batches=415 view=26 q=0 raster_us=62801 affine=0 solid=0[0m
+416173	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=83 faces=366 batches=415 view=26 q=0 raster_us=62801 affine=0 solid=0[0m
+417241	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=83 faces=311 batches=354 view=24 q=0 raster_us=63054 affine=0 solid=0[0m
+418257	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=88 faces=311 batches=354 view=24 q=0 raster_us=63054 affine=0 solid=0[0m
+419265	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=89 faces=271 batches=314 view=22 q=0 raster_us=59860 affine=0 solid=0[0m
+420364	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=90 faces=271 batches=314 view=22 q=0 raster_us=59860 affine=0 solid=0[0m
+421358	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=89 faces=240 batches=281 view=20 q=0 raster_us=60212 affine=0 solid=0[0m
+422413	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=94 faces=240 batches=281 view=20 q=0 raster_us=60212 affine=0 solid=0[0m
+423454	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=95 faces=198 batches=235 view=18 q=0 raster_us=57486 affine=0 solid=0[0m
+424448	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=99 faces=198 batches=235 view=18 q=0 raster_us=57486 affine=0 solid=0[0m
+425483	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=97 faces=176 batches=211 view=16 q=0 raster_us=56267 affine=0 solid=0[0m
+426551	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=102 faces=176 batches=211 view=16 q=0 raster_us=56267 affine=0 solid=0[0m
+427600	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=104 faces=148 batches=181 view=14 q=0 raster_us=55192 affine=0 solid=0[0m
+428612	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=107 faces=148 batches=181 view=14 q=0 raster_us=55192 affine=0 solid=0[0m
+429619	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=109 faces=129 batches=158 view=12 q=1 raster_us=55211 affine=0 solid=0[0m
+430680	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=113 faces=129 batches=158 view=12 q=1 raster_us=55211 affine=0 solid=0[0m
+431707	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=87 faces=125 batches=156 view=12 q=1 raster_us=57450 affine=0 solid=0[0m
+432752	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=105 faces=125 batches=156 view=12 q=1 raster_us=57450 affine=0 solid=0[0m
+433818	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=103 faces=172 batches=196 view=12 q=1 raster_us=52726 affine=0 solid=0[0m
+434837	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=106 faces=137 batches=163 view=12 q=1 raster_us=52726 affine=0 solid=0[0m
+435862	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=107 faces=178 batches=194 view=12 q=1 raster_us=52400 affine=0 solid=0[0m
+436865	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=109 faces=132 batches=154 view=12 q=1 raster_us=52400 affine=0 solid=0[0m
+437927	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=94 faces=122 batches=151 view=12 q=1 raster_us=52475 affine=0 solid=0[0m
+438965	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=106 faces=122 batches=151 view=12 q=1 raster_us=52475 affine=0 solid=0[0m
+440004	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=105 faces=122 batches=151 view=12 q=1 raster_us=59838 affine=0 solid=0[0m
+441042	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=106 faces=119 batches=138 view=12 q=1 raster_us=59838 affine=0 solid=0[0m
+442080	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=105 faces=119 batches=138 view=12 q=1 raster_us=59380 affine=0 solid=0[0m
+443119	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=106 faces=119 batches=138 view=12 q=1 raster_us=59380 affine=0 solid=0[0m
+444161	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=105 faces=122 batches=151 view=12 q=1 raster_us=56840 affine=0 solid=0[0m
+445209	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=94 faces=122 batches=151 view=12 q=1 raster_us=56840 affine=0 solid=0[0m
+446254	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=121 faces=53 batches=74 view=12 q=1 raster_us=45596 affine=0 solid=0[0m
+447328	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=122 faces=53 batches=74 view=12 q=1 raster_us=45596 affine=0 solid=0[0m
+448381	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=121 faces=53 batches=73 view=12 q=1 raster_us=40127 affine=0 solid=0[0m
+449395	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=129 faces=55 batches=75 view=12 q=1 raster_us=40127 affine=0 solid=0[0m
+450454	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=122 faces=57 batches=77 view=12 q=1 raster_us=41149 affine=0 solid=0[0m
+451541	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=120 faces=58 batches=78 view=12 q=1 raster_us=41149 affine=0 solid=0[0m
+452562	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=127 faces=61 batches=81 view=12 q=1 raster_us=43656 affine=0 solid=0[0m
+453604	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=115 faces=61 batches=81 view=12 q=1 raster_us=43656 affine=0 solid=0[0m
+455499	[32m[PXA app=pxa-voxel-craft-cpp-ui-perf component=65537 level=INFO] VOXEL-CPP fps10=155 faces=61 batches=81 view=12 q=1 raster_us=37957 affine=0 solid=0[0m
+456391	I (456391) PxaHost: Audio: active=1 queued=0/12 peak_queued=2 submitted=107 rendered=107 tones=0/0 tone_drop=0 voice_exhaust=0 queue_full=0 stale=0 rejected=0 assets=0/0 asset_fail=0 storage=8640 stack=4096
+456405	I (456405) PXA_WAMR_MEMMAP: AOT released: ibus=0x42b20000 dbus=0x3c5b0000 size=630772 free_psram=6316104->6971468 delta=655364
+456406	I (456406) PxaHost: WAMR dynamic: peak=63731 current=416 linear=0 linear_peak=393216 artifact=0 events=0

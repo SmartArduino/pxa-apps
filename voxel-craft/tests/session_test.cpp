@@ -34,6 +34,15 @@ extern "C" std::int32_t pxa_io(std::uint64_t handle,std::uint32_t opcode,std::ui
 int main(){
     using enum voxel::Screen;
     static VoxelCraft app;app.apply_display({});assert(app.screen==title);assert(!app.settings.flight&&!app.settings.invert_y&&app.settings.auto_jump);
+    pxa::WindowMetrics fullscreen;
+    fullscreen.pixel_width=800;fullscreen.pixel_height=480;
+    fullscreen.logical_width=800;fullscreen.logical_height=480;
+    fullscreen.system_bar_insets={16,24,0,28};
+    app.on_window_changed(fullscreen);
+    assert(app.controls.width()==800&&app.controls.height()==480);
+    assert(app.controls.bag.y+app.controls.bag.h<=452);
+    assert(app.controls.menu.y>=24);
+    app.apply_display({});
     app.new_game();assert(app.screen==voxel::Screen::game&&app.session_ready);
     auto pose=app.camera;auto old=app.world.at(10,2,10);app.show(pause);
     pxa::Context ctx;app.velocity_y=7;app.move_forward=1;

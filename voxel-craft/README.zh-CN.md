@@ -117,7 +117,7 @@ World 减少 294912 B，既有帧/深度/命令缓冲不增加。完整计量、
 代码映射、稳定 RAM 与本次启动/保存峰值分别记录，不把文件大小等同于运行占用。
 此回收需要 Host 的 WAMR 初始数据所有权修复，不能仅把 loader 标志打开。
 0.10.0 的交互、大陆黑体、DPI、存档、峰值及固定场景验证见
-[O3、HUD 与交互验收报告](docs/performance/voxel-craft-ui-20261009.zh-CN.md)。
+[O3、HUD 与交互验收报告](docs/performance/voxel-craft-cpp-ui-20261009.zh-CN.md)。
 所有报告和测量汇总见 [性能与验收记录索引](docs/performance/README.zh-CN.md)。
 0.12 的有限背包、合成、六种工具、材质音效、全屏缓存修复及最新同固件测量见
 [玩法与内存验收报告](docs/performance/voxel-gameplay-20261009.zh-CN.md)。本轮等 HUD

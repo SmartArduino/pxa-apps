@@ -1,0 +1,36 @@
+{
+  "settings_changed": [],
+  "permission_grants": "new test game audio permissions only",
+  "firmware_flash": "application partition at 0x10000 only; no erase-all or pxa_data flash",
+  "normal_voxel_restored": true,
+  "hello": "protocol=1;mode=normal;capabilities=info,memory,logcat,packages,package-deploy,package-run,package-stop,fs,reboot,doctor,input-v2,screenshot-rgb565,screenshot-jpeg,perf-raster,heap-local,ime;max_chunk=1024;fs_offset=1;fs_sha256=1;target=esp32s31;serial=30:ed:a0:f3:de:10;version=b9a8007-dirty",
+  "INFO": [
+    {
+      "kind": "OK",
+      "payload": "target=esp32s31;serial=30:ed:a0:f3:de:10;version=b9a8007-dirty;free_heap=12589007;pxa=ready;storage_total=12517376;storage_used=7356416;storage_free=5160960"
+    }
+  ],
+  "PACKAGES": [
+    {
+      "kind": "PKG",
+      "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-cpp-work\tC++ Work\t1.0.0\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+    },
+    {
+      "kind": "PKG",
+      "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d\tJump Jump 3D\t0.1.1\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+    },
+    {
+      "kind": "PKG",
+      "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-maze-evil\tMaze Evil\t0.1.8\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+    },
+    {
+      "kind": "PKG",
+      "payload": "17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-voxel-craft\tVoxel Craft\t0.12.3\tbuiltin=0;installed=1;staged=0;enabled=1;active=0"
+    },
+    {
+      "kind": "OK",
+      "payload": ""
+    }
+  ],
+  "all_apps_stopped": true
+}
