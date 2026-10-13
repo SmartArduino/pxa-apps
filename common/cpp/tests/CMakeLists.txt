@@ -63,6 +63,12 @@ target_link_libraries(draw_retry_test PRIVATE sdk)
 add_test(NAME draw_backpressure COMMAND draw_retry_test)
 add_test(NAME jump_raster COMMAND jump_preview --frames 3 --auto 8 --out "${CMAKE_BINARY_DIR}/jump")
 
+add_executable(jump_audio_recovery_test reference/jump_audio_recovery_test.cpp "${JUMP}/jump3d_audio.cpp")
+target_link_libraries(jump_audio_recovery_test PRIVATE sdk)
+add_test(NAME jump_audio_pressure COMMAND jump_audio_recovery_test pressure)
+add_test(NAME jump_audio_late_completion COMMAND jump_audio_recovery_test late)
+add_test(NAME jump_audio_music_recovery COMMAND jump_audio_recovery_test music)
+
 # Optional, reproducible reference comparison; the maintained games use only
 # the C++ SDK. This target deliberately retains the original C SDK baseline.
 option(PXA_C_REFERENCE_BENCH "Build the original C rendering comparison" OFF)

@@ -22,7 +22,7 @@ for game in args.games:
  for name,w,h,dpi,corner,round_ in variants:
   if args.profiles and name not in args.profiles:continue
   directory=out/f'{game}-{name}';directory.mkdir(exist_ok=True)
-  package=args.artifacts.resolve()/f'{game}-all'/('pxa-jump-jump-3d-cpp'if game=='jump'else'pxa-pixel-dungeon-cpp')
+  package=args.artifacts.resolve()/f'{game}-all'/('pxa-jump-jump-3d'if game=='jump'else'pxa-pixel-dungeon')
   cmd=[str(args.simulator.resolve() if args.simulator else root/'build/simulator/pai-touch/pxsys_product_simulator'),'--package',str(package),'--publisher-key',str(args.publisher_key.resolve() if args.publisher_key else root/'deps/pxa-system/apps/pxa/.dev-signing/publisher-public.der'),'--state-root',str(state),'--pxadb-control-socket',sock,'--width',str(w),'--height',str(h),'--density-dpi',str(dpi),'--safe-insets','8,10,8,10','--locale','zh-CN']
   cmd+=['--round']if round_ else ['--corner-radius',str(corner)]
   env=os.environ|{'SDL_VIDEODRIVER':'dummy','SDL_AUDIODRIVER':'dummy'}
@@ -48,7 +48,7 @@ for game in args.games:
      if game=='jump':
       c.request(f'INPUT POINTER DOWN {w//2} {h//2} 0');c.request('INPUT SYNC');time.sleep(.36)
       c.request(f'INPUT POINTER UP {w//2} {h//2} 0');c.request('INPUT SYNC');time.sleep(.2);screenshot('jump')
-      c.request(f'INPUT POINTER CANCEL {w//2} {h//2} 0')
+      c.request('INPUT CANCEL')
      else:
       ready=re.search(r'PDCPP ready pixels=\d+,\d+ dpi_q16=\d+ render=(\d+),(\d+) first=(\d+),(\d+)',log.read_text());assert ready
       rw,rh,x,y=map(int,ready.groups());c.request(f'INPUT TAP {x*w//rw} {y*h//rh}');c.request('INPUT SYNC');time.sleep(.3);screenshot('slots')

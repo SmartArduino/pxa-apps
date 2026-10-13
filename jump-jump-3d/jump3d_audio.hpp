@@ -90,7 +90,7 @@ struct j3_audio_t {
     j3_audio_voice_t voices[J3_CHANNEL_COUNT]{};
     uint64_t tick_us=0,music_instance=0;
     uint16_t music_gain_q12=0;
-    uint8_t state=J3_AUDIO_OFF,preload_index=0;
+    uint8_t state=J3_AUDIO_OFF,preload_index=0,music_retries=0;
     bool music_ready=false;
 };
 void j3_audio_start(j3_audio_t*,pxa::Context&);
