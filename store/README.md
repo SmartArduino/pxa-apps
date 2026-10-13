@@ -183,6 +183,18 @@ clang++ -std=c++26 -Wall -Wextra -Werror -Wno-attributes \
 /tmp/pxa-store-ticket-test
 ```
 
+The catalog parser truncates long text only at complete UTF-8 code points;
+invalid Unicode is rejected even after the display buffer is full. This avoids
+an invalid UI transaction leaving the catalog on its loading screen. Run the
+Chinese, emoji, escaped Unicode and malformed-input regression with:
+
+```sh
+clang++ -std=c++26 -Wall -Wextra -Werror -fsanitize=address,undefined \
+  -Ilocal/pxa-apps/store local/pxa-apps/store/tests/store_utf8_test.cpp \
+  local/pxa-apps/store/store_json.cpp -o /tmp/pxa-store-utf8-test
+/tmp/pxa-store-utf8-test
+```
+
 Pressing **Install** sends a bounded ticket, App ID, size and digest to the
 ESP Host's `store-installer` download API (ABI 0.5, service 20, opcode 2;
 best-effort progress event opcode 0x8001).

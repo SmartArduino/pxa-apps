@@ -1,8 +1,7 @@
 /* Bounded JSON reader for the PXA device catalog envelope.
  *
- * The Guest SDK has no libc, so this reader never allocates and never uses
- * memcpy/memset. Unknown fields are skipped, truncated strings keep the
- * already decoded prefix and malformed input fails closed. */
+ * This reader never allocates. Unknown fields are skipped, truncated strings
+ * keep a complete UTF-8 prefix and malformed input fails closed. */
 
 #include "store_json.h"
 
@@ -63,8 +62,12 @@ static void append_byte(char *output, size_t capacity, size_t *length,
     output[*length] = '\0';
 }
 
-static void append_codepoint(char *output, size_t capacity, size_t *length,
+static int append_codepoint(char *output, size_t capacity, size_t *length,
                              uint32_t codepoint) {
+    const size_t bytes = codepoint <= 0x7fu ? 1u :
+                         codepoint <= 0x7ffu ? 2u :
+                         codepoint <= 0xffffu ? 3u : 4u;
+    if (bytes >= capacity - *length) return 0;
     if (codepoint <= UINT32_C(0x7f)) {
         append_byte(output, capacity, length, (uint8_t)codepoint);
     } else if (codepoint <= UINT32_C(0x7ff)) {
@@ -90,6 +93,26 @@ static void append_codepoint(char *output, size_t capacity, size_t *length,
         append_byte(output, capacity, length,
                     (uint8_t)(0x80u | (codepoint & 0x3fu)));
     }
+    return 1;
+}
+
+static int json_read_codepoint(store_json_t *json, uint8_t first,
+                               uint32_t *output) {
+    if (first < 0x80u) { *output = first; return 1; }
+    const unsigned tails = first >= 0xc2u && first <= 0xdfu ? 1u :
+                           first >= 0xe0u && first <= 0xefu ? 2u :
+                           first >= 0xf0u && first <= 0xf4u ? 3u : 0u;
+    if (!tails || json->size - json->offset < tails) return 0;
+    uint32_t value = first & (0x7fu >> tails);
+    for (unsigned i = 0; i < tails; ++i) {
+        const uint8_t byte = json->data[json->offset++];
+        if ((byte & 0xc0u) != 0x80u) return 0;
+        value = (value << 6) | (byte & 0x3fu);
+    }
+    if (value < (tails == 1 ? 0x80u : tails == 2 ? 0x800u : 0x10000u) ||
+        value > 0x10ffffu || (value >= 0xd800u && value <= 0xdfffu)) return 0;
+    *output = value;
+    return 1;
 }
 
 static int json_read_hex4(store_json_t *json, uint32_t *output) {
@@ -112,6 +135,7 @@ static int json_read_hex4(store_json_t *json, uint32_t *output) {
 
 static int json_read_string(store_json_t *json, char *output, size_t capacity) {
     size_t length = 0;
+    bool truncated = false;
     uint8_t current;
     if (output == NULL || capacity == 0) return 0;
     string_reset(output);
@@ -122,7 +146,10 @@ static int json_read_string(store_json_t *json, char *output, size_t capacity) {
         if (value == '"') return 1;
         if (value < 0x20u) return 0;
         if (value != '\\') {
-            append_byte(output, capacity, &length, value);
+            uint32_t codepoint;
+            if (!json_read_codepoint(json, value, &codepoint)) return 0;
+            if (!truncated)
+                truncated = !append_codepoint(output, capacity, &length, codepoint);
             continue;
         }
         if (json->offset >= json->size) return 0;
@@ -142,7 +169,10 @@ static int json_read_string(store_json_t *json, char *output, size_t capacity) {
                             ((codepoint - UINT32_C(0xd800)) << 10) +
                             (low - UINT32_C(0xdc00));
             }
-            append_codepoint(output, capacity, &length, codepoint);
+            if (codepoint == 0 || (codepoint >= 0xdc00u && codepoint <= 0xdfffu))
+                return 0;
+            if (!truncated)
+                truncated = !append_codepoint(output, capacity, &length, codepoint);
             continue;
         }
         if (value == 'b') value = '\b';
@@ -151,7 +181,8 @@ static int json_read_string(store_json_t *json, char *output, size_t capacity) {
         else if (value == 'r') value = '\r';
         else if (value == 't') value = '\t';
         else if (value != '"' && value != '\\' && value != '/') return 0;
-        append_byte(output, capacity, &length, value);
+        if (!truncated)
+            truncated = !append_codepoint(output, capacity, &length, value);
     }
     return 0;
 }
