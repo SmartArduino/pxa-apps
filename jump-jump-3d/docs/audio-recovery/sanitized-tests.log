@@ -1,0 +1,13 @@
+Test project /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/jump-reference-20261013/sanitized
+    Start  9: jump_input_pacing
+1/4 Test  #9: jump_input_pacing ................   Passed    0.07 sec
+    Start 10: jump_audio_pressure
+2/4 Test #10: jump_audio_pressure ..............   Passed    0.03 sec
+    Start 11: jump_audio_late_completion
+3/4 Test #11: jump_audio_late_completion .......   Passed    0.03 sec
+    Start 12: jump_audio_music_recovery
+4/4 Test #12: jump_audio_music_recovery ........   Passed    0.03 sec
+
+100% tests passed out of 4
+
+Total Test time (real) =   0.16 sec

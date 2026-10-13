@@ -1,0 +1,9 @@
+scope=heap;sram_total=663027;sram_free=59035;sram_min=15076;sram_largest=18432;psram_total=16741256;psram_free=10201832;psram_min=7648484;psram_largest=8650752
+scope=budget;internal=44924;external=360218;peak_internal=61348;peak_external=558692;temporary_peak_internal=0;temporary_peak_external=50334;fixed=2224;denied=0;allocation_failures=0
+scope=kind;name=raster;internal=16424;external=48685
+scope=kind;name=image;internal=0;external=0
+scope=kind;name=audio;internal=0;external=301584
+scope=kind;name=temporary;internal=0;external=0
+scope=kind;name=metadata;internal=28500;external=9949
+scope=kind;name=frame;internal=0;external=0
+scope=surface;frame=2304000;scratch=0;mailbox=49152;probe=0;peak_total=2353152

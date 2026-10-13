@@ -1,0 +1,98 @@
+{
+  "jumps": [
+    {
+      "jump": 1,
+      "kind": 1,
+      "hold_ms": 721
+    },
+    {
+      "jump": 2,
+      "kind": 1,
+      "hold_ms": 868
+    },
+    {
+      "jump": 3,
+      "kind": 2,
+      "hold_ms": 919
+    },
+    {
+      "jump": 4,
+      "kind": 7,
+      "hold_ms": 532
+    },
+    {
+      "jump": 5,
+      "kind": 2,
+      "hold_ms": 674
+    },
+    {
+      "jump": 6,
+      "kind": 1,
+      "hold_ms": 829
+    },
+    {
+      "jump": 7,
+      "kind": 5,
+      "hold_ms": 764
+    },
+    {
+      "jump": 8,
+      "kind": 1,
+      "hold_ms": 572
+    },
+    {
+      "jump": 9,
+      "kind": 8,
+      "hold_ms": 919
+    },
+    {
+      "jump": 10,
+      "kind": 15,
+      "hold_ms": 798
+    },
+    {
+      "jump": 11,
+      "kind": 2,
+      "hold_ms": 703
+    },
+    {
+      "jump": 12,
+      "kind": 3,
+      "hold_ms": 749
+    },
+    {
+      "jump": 13,
+      "kind": 13,
+      "hold_ms": 706
+    },
+    {
+      "jump": 14,
+      "kind": 15,
+      "hold_ms": 725
+    },
+    {
+      "jump": 15,
+      "kind": 7,
+      "hold_ms": 713
+    },
+    {
+      "jump": 16,
+      "kind": 17,
+      "hold_ms": 702
+    },
+    {
+      "jump": 17,
+      "kind": 4,
+      "hold_ms": 826
+    },
+    {
+      "jump": 18,
+      "kind": 19,
+      "hold_ms": 405
+    }
+  ],
+  "final_perf": "2625538\t\u001b[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=2510 rendered=2435 visible=2434 raster_us=44834000 queue_us=7023090 present_us=52931025 dropped=74 draw=7052 score=386 state=0\u001b[0m",
+  "deferred": [
+    "2600417\t\u001b[33m[PXA app=pxa-jump-jump-3d component=65537 level=WARN] C++ game sound deferred id=0 error=-8 path=assets/audio/scale_intro.s16\u001b[0m"
+  ]
+}

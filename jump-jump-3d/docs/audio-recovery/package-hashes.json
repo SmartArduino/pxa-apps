@@ -1,0 +1,27 @@
+{
+  "main.esp32-s3.aot": {
+    "before_bytes": 544240,
+    "after_bytes": 548784,
+    "delta_bytes": 4544,
+    "before_sha256": "7750b5880e4b09b6b3ba5ab7e48106ae45842e4395714dbf5057145500e0479a",
+    "after_sha256": "9d725aa0e4b59ddd5c89d4581ceade41d58e492fe5009a74327bdb89e2a10b04"
+  },
+  "main.linux-x86_64.aot": {
+    "before_bytes": 446140,
+    "after_bytes": 452488,
+    "delta_bytes": 6348,
+    "before_sha256": "39b5c57cae5313a4ca5d4fdd74cb781b3c2b40c04dbd3299fa9c0700fdbb876d",
+    "after_sha256": "5ede5d48e2ce0d7f93f83154dd54c81413c256a6b0ed8cf43a6d4b3ff8b51eaf"
+  },
+  "main.esp32-s31.aot": {
+    "before_bytes": 587756,
+    "after_bytes": 592688,
+    "delta_bytes": 4932,
+    "before_sha256": "158d073d3d09b3e6ef38fdae494656e3326cadb51ddc6df898e1bcf98b0a83f2",
+    "after_sha256": "06dd34ae64e2c49bf3fe1931b60b04571724ee1342675ba64446009194592899"
+  },
+  "device_container": {
+    "bytes": 1530018,
+    "sha256": "fa35372b88fa39184180913a5a0fda2639297884d2fcb3c78c10bf870ba03d77"
+  }
+}

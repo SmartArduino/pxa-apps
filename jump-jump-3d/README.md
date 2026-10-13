@@ -26,3 +26,5 @@ local/cpp-games/native-build/jump_preview --frames 30 --auto 8 --width 296 --hei
 验证结果、截图和真机性能数据见 [本轮报告](docs/2026-10-10-validation.zh-CN.md)。
 
 蓄力计时修复、真实设备回调对照及临时内存复用的验证见 [蓄力修复报告](docs/2026-10-10-charge.zh-CN.md)。生产包不启用 `J3_TRACE_TIMING`；该宏仅用于计时诊断，不能用于 FPS 基准。
+
+0.1.4 修复暂时资源不足导致部分音效永久失效，以及取消后的长音效加载重新占用缓存；补充音乐流的错误恢复。原因、故障注入检查和连续游玩记录见[音频恢复报告](docs/2026-10-13-audio-recovery.zh-CN.md)。

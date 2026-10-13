@@ -1,0 +1,59 @@
+PXA STORAGE CONFIG bytes_per_second=0 latency_us=0 max_read=4096
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] C++ game audio ready[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP clock local=16:52 offset_s=28800 dst=0[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=0 rendered=0 visible=0 raster_us=0 queue_us=0 present_us=0 dropped=0 draw=0 score=0 state=0[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP clock local=16:52 offset_s=28800 dst=0[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP ready pixels=800,480 dpi_q16=88474 render=800,480 scale=0[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP release now=427051518818 charge_us=718653 flight_us=396073 vx_q6=5030571 vy_q6=14577980 land_x_q6=1992474 result=1[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP landed now=427051924044 state=0 score=2 result=1 current=1 next=1 dx_q6=7525 dz_q6=-2432790[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=208 rendered=207 visible=207 raster_us=122801 queue_us=0 present_us=0 dropped=0 draw=8676 score=2 state=0[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP release now=427056090845 charge_us=866792 flight_us=400536 vx_q6=18768 vy_q6=14800188 land_x_q6=1999992 result=1[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP landed now=427056494341 state=0 score=6 result=1 current=1 next=2 dx_q6=2586983 dz_q6=-2529[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=457 rendered=456 visible=456 raster_us=299222 queue_us=0 present_us=0 dropped=0 draw=8184 score=6 state=0[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP release now=427060671630 charge_us=928322 flight_us=402401 vx_q6=6498251 vy_q6=14892483 land_x_q6=4614899 result=1[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP landed now=427061094379 state=0 score=12 result=1 current=2 next=7 dx_q6=-27923 dz_q6=-1455194[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=707 rendered=706 visible=706 raster_us=486727 queue_us=0 present_us=0 dropped=0 draw=9056 score=12 state=0[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP release now=427064891494 charge_us=518001 flight_us=390091 vx_q6=-69566 vy_q6=14277001 land_x_q6=4587762 result=1[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP landed now=427065294138 state=0 score=20 result=1 current=7 next=2 dx_q6=1862058 dz_q6=-40980[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=959 rendered=958 visible=958 raster_us=669386 queue_us=0 present_us=0 dropped=0 draw=8156 score=20 state=0[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP release now=427069235979 charge_us=695000 flight_us=395364 vx_q6=4863822 vy_q6=14542500 land_x_q6=6510743 result=1[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP landed now=427069634159 state=0 score=30 result=1 current=2 next=1 dx_q6=-60922 dz_q6=-2317199[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=1211 rendered=1210 visible=1210 raster_us=840823 queue_us=0 present_us=0 dropped=0 draw=9440 score=30 state=0[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP release now=427073699893 charge_us=809012 flight_us=398790 vx_q6=-148839 vy_q6=14713518 land_x_q6=6451387 result=1[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP landed now=427074113508 state=0 score=42 result=1 current=1 next=5 dx_q6=2126000 dz_q6=-59592[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=1464 rendered=1463 visible=1463 raster_us=1005380 queue_us=0 present_us=0 dropped=0 draw=8588 score=42 state=0[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP release now=427078116353 charge_us=764898 flight_us=397462 vx_q6=5352184 vy_q6=14647346 land_x_q6=8578678 result=1[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP landed now=427078514351 state=0 score=56 result=1 current=5 next=1 dx_q6=-1290 dz_q6=-1567332[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=1718 rendered=1717 visible=1717 raster_us=1163737 queue_us=0 present_us=0 dropped=0 draw=8588 score=61 state=1[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP clock local=16:52 offset_s=28800 dst=0[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP release now=427082345311 charge_us=571499 flight_us=391679 vx_q6=-3293 vy_q6=14357248 land_x_q6=8577388 result=1[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP landed now=427082753467 state=0 score=77 result=1 current=1 next=8 dx_q6=0 dz_q6=-2587926[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP release now=427086988453 charge_us=916898 flight_us=402054 vx_q6=0 vy_q6=14875347 land_x_q6=8577388 result=1[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=1971 rendered=1970 visible=1970 raster_us=1327952 queue_us=0 present_us=0 dropped=0 draw=6824 score=77 state=2[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP landed now=427087394039 state=0 score=95 result=1 current=8 next=15 dx_q6=0 dz_q6=-2225384[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP release now=427091433026 charge_us=800136 flight_us=398523 vx_q6=0 vy_q6=14700204 land_x_q6=8577388 result=1[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP landed now=427091834111 state=0 score=115 result=1 current=15 next=2 dx_q6=1945353 dz_q6=6725[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=2223 rendered=2222 visible=2222 raster_us=1493915 queue_us=0 present_us=0 dropped=0 draw=11452 score=115 state=0[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP release now=427095784724 charge_us=704515 flight_us=395649 vx_q6=4931575 vy_q6=14556772 land_x_q6=10528563 result=1[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP landed now=427096194212 state=0 score=137 result=1 current=2 next=3 dx_q6=-5821 dz_q6=-2082737[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=2473 rendered=2472 visible=2472 raster_us=1664417 queue_us=0 present_us=0 dropped=0 draw=10460 score=137 state=0[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP release now=427100245825 charge_us=753293 flight_us=397113 vx_q6=-14738 vy_q6=14629939 land_x_q6=10522710 result=1[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP landed now=427100653731 state=0 score=161 result=1 current=3 next=13 dx_q6=31 dz_q6=-1956604[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=2724 rendered=2723 visible=2723 raster_us=1835451 queue_us=0 present_us=0 dropped=0 draw=9392 score=161 state=0[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP release now=427104639766 charge_us=700425 flight_us=395526 vx_q6=78 vy_q6=14550637 land_x_q6=10522741 result=1[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP landed now=427105053488 state=0 score=217 result=1 current=13 next=15 dx_q6=2009561 dz_q6=-17345[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=2966 rendered=2965 visible=2965 raster_us=2003242 queue_us=0 present_us=0 dropped=0 draw=8264 score=217 state=0[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP release now=427109019269 charge_us=729204 flight_us=396389 vx_q6=5104237 vy_q6=14593806 land_x_q6=12546009 result=1[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP landed now=427109433452 state=0 score=245 result=1 current=15 next=7 dx_q6=-13706 dz_q6=-1975471[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=3219 rendered=3218 visible=3218 raster_us=2180579 queue_us=0 present_us=0 dropped=0 draw=7400 score=245 state=0[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP release now=427113393449 charge_us=719568 flight_us=396100 vx_q6=-34946 vy_q6=14579352 land_x_q6=12532166 result=1[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP landed now=427113793455 state=0 score=275 result=1 current=7 next=17 dx_q6=136 dz_q6=-1942775[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=3463 rendered=3462 visible=3462 raster_us=2369974 queue_us=0 present_us=0 dropped=0 draw=8084 score=275 state=1[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP release now=427117848156 charge_us=694652 flight_us=395353 vx_q6=341 vy_q6=14541978 land_x_q6=12532302 result=1[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP landed now=427118254172 state=0 score=307 result=1 current=17 next=4 dx_q6=0 dz_q6=-2307441[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=3715 rendered=3714 visible=3714 raster_us=2534952 queue_us=0 present_us=0 dropped=0 draw=7748 score=307 state=1[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP release now=427122325651 charge_us=828315 flight_us=399373 vx_q6=2 vy_q6=14742473 land_x_q6=12532303 result=1[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP landed now=427122734119 state=0 score=339 result=1 current=4 next=19 dx_q6=1095544 dz_q6=8207[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP release now=427126418405 charge_us=398301 flight_us=386558 vx_q6=2788028 vy_q6=14097451 land_x_q6=13610039 result=1[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP landed now=427126813653 state=0 score=386 result=1 current=19 next=1 dx_q6=17808 dz_q6=-1857502[0m
+[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=3968 rendered=3967 visible=3967 raster_us=2698061 queue_us=0 present_us=0 dropped=0 draw=9208 score=386 state=0[0m

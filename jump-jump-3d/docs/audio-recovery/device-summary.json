@@ -1,0 +1,25 @@
+{
+  "version": "0.1.4",
+  "release_sequence": 5,
+  "firmware_updated": false,
+  "jumps": 18,
+  "final_score": 386,
+  "dma_counter_scope": "boot cumulative, sampled during this replay",
+  "dma_samples": 14,
+  "dma_first": [
+    5600,
+    127523,
+    5565,
+    0
+  ],
+  "dma_last": [
+    6900,
+    130709,
+    6865,
+    0
+  ],
+  "maximum_observed_write_errors": 0,
+  "temporary_failures": [
+    "2600417\t\u001b[33m[PXA app=pxa-jump-jump-3d component=65537 level=WARN] C++ game sound deferred id=0 error=-8 path=assets/audio/scale_intro.s16\u001b[0m"
+  ]
+}

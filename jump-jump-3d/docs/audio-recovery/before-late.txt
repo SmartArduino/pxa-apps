@@ -1,0 +1,1 @@
+jump_audio_recovery_test: /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/pxa-apps/common/cpp/tests/reference/jump_audio_recovery_test.cpp:95: int main(int, char **): Assertion `!audio.bank.sounds[i]||audio.bank.ids[i]!=J3_CLIP_SING' failed.

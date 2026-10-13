@@ -1,0 +1,31 @@
+Test project /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/jump-reference-20261013/after-build
+      Start  1: jump_game
+ 1/13 Test  #1: jump_game ........................   Passed    0.07 sec
+      Start  2: jump_frame_memory
+ 2/13 Test  #2: jump_frame_memory ................   Passed   26.50 sec
+      Start  3: pixel_game
+ 3/13 Test  #3: pixel_game .......................   Passed    0.12 sec
+      Start  4: pixel_raster
+ 4/13 Test  #4: pixel_raster .....................   Passed    0.42 sec
+      Start  5: sdk_arcade
+ 5/13 Test  #5: sdk_arcade .......................   Passed    0.01 sec
+      Start  6: draw_backpressure
+ 6/13 Test  #6: draw_backpressure ................   Passed    0.01 sec
+      Start  7: jump_raster
+ 7/13 Test  #7: jump_raster ......................   Passed    0.11 sec
+      Start  8: jump_upstream_motion
+ 8/13 Test  #8: jump_upstream_motion .............   Passed    0.01 sec
+      Start  9: jump_input_pacing
+ 9/13 Test  #9: jump_input_pacing ................   Passed    0.01 sec
+      Start 10: jump_audio_pressure
+10/13 Test #10: jump_audio_pressure ..............   Passed    0.01 sec
+      Start 11: jump_audio_late_completion
+11/13 Test #11: jump_audio_late_completion .......   Passed    0.01 sec
+      Start 12: jump_audio_music_recovery
+12/13 Test #12: jump_audio_music_recovery ........   Passed    0.01 sec
+      Start 13: jump_reference
+13/13 Test #13: jump_reference ...................   Passed    0.07 sec
+
+100% tests passed out of 13
+
+Total Test time (real) =  27.36 sec

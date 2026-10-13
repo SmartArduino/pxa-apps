@@ -1,0 +1,19 @@
+{
+  "scope": "isolated charge, after previous one-shot voices ended; first two live DMA samples before pointer release",
+  "dma_samples": [
+    {
+      "writes": 7000,
+      "blocks": 147196,
+      "nonzero": 6965,
+      "errors": 0
+    },
+    {
+      "writes": 7100,
+      "blocks": 147296,
+      "nonzero": 7065,
+      "errors": 0
+    }
+  ],
+  "nonzero_delta": 100,
+  "write_error_max": 0
+}
