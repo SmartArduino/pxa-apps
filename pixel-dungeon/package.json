@@ -13,9 +13,9 @@
     0
   ],
   "id": "pxa-pixel-dungeon",
-  "version": "0.1.1",
+  "version": "0.2.1",
   "name": "Pixel Dungeon",
-  "description": "Turn-based roguelike dungeon crawler drawn with the GameRender raster API and Shattered Pixel Dungeon art",
+  "description": "回合制 Roguelike 地牢冒险：探索房间、与敌人战斗、拾取装备与道具。使用像素美术与小体积音频，每局地牢变化；请留意角色状态与补给。",
   "icon": "assets/icon.png",
   "build": {
     "system": "cmake",
@@ -57,7 +57,7 @@
       }
     }
   ],
-  "release_sequence": 2,
+  "release_sequence": 3,
   "permissions": [
     {
       "name": "audio.playback",

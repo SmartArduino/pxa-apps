@@ -13,9 +13,9 @@
     0
   ],
   "id": "pxa-store",
-  "version": "0.8.3",
+  "version": "0.8.5",
   "name": "App Store",
-  "description": "Browses the catalog, manages verified downloads and installed apps, and requests confirmed installation",
+  "description": "浏览应用与游戏、查看兼容性、下载签名包、确认安装并检查更新。下载与安装由系统验证，支持已安装应用管理；需要联网及 Host 商店安装服务。",
   "icon": "assets/icon.png",
   "components": [
     {
@@ -52,7 +52,7 @@
       "scope": "https://app.doit.am"
     }
   ],
-  "release_sequence": 11,
+  "release_sequence": 13,
   "build": {
     "system": "cmake",
     "source_dir": "."

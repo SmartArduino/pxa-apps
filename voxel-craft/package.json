@@ -13,10 +13,10 @@
     0
   ],
   "id": "pxa-voxel-craft",
-  "version": "0.12.3",
-  "release_sequence": 16,
+  "version": "0.12.4",
+  "release_sequence": 17,
   "name": "Voxel Craft",
-  "description": "First-person voxel sandbox on the PXA C++26 SDK with depth-tested scanline rendering, optional bounded-error material paths and touch controls",
+  "description": "第一人称体素沙盒，支持新游戏、多个存档、背包与合成、挖掘与放置。左侧移动、右侧转向，长按操作键挖掘；工具与材质影响效率和音效。飞行可在设置中开启。",
   "build": {
     "system": "cmake",
     "source_dir": ".",

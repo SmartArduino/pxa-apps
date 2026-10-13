@@ -13,10 +13,10 @@
     0
   ],
   "id": "pxa-resource-scenes",
-  "version": "0.1.1",
-  "release_sequence": 2,
+  "version": "0.1.2",
+  "release_sequence": 3,
   "name": "Resource Scenes",
-  "description": "20 file textures, four visible, 100 asynchronous scene transitions",
+  "description": "演示文件纹理、异步加载与场景切换：共 20 张纹理，每次显示四张，并循环切换场景。适合验证资源生命周期。",
   "build": {
     "system": "cmake",
     "linear_memory": {

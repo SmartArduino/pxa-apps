@@ -13,10 +13,10 @@
     0
   ],
   "id": "pxa-plane-shooter",
-  "version": "0.3.1",
-  "release_sequence": 5,
+  "version": "0.3.2",
+  "release_sequence": 6,
   "name": "Orbital Strike",
-  "description": "A space combat game with a story campaign, ship hangar, and automatic fire",
+  "description": "太空射击游戏，提供剧情关卡、机库和自动开火。通过触摸移动战机，躲避弹幕并挑战敌人。",
   "icon": "assets/plane-shooter/icon.png",
   "components": [
     {

@@ -13,10 +13,10 @@
     0
   ],
   "id": "pxa-novel-reader",
-  "version": "0.1.1",
-  "release_sequence": 2,
+  "version": "0.1.2",
+  "release_sequence": 3,
   "name": "书页阅读",
-  "description": "C++ novel reader with network sources, search, adaptive typography and offline downloads",
+  "description": "支持离线 TXT 与可配置的 JSON 网络书源，提供搜索、章节导航、下载、自适应字体和自动翻页。网络书源需自行配置；离线阅读不依赖网络。",
   "build": {
     "system": "cmake",
     "source_dir": ".",

@@ -13,10 +13,10 @@
     0
   ],
   "id": "pxa-wasi-lab",
-  "version": "0.1.3",
-  "release_sequence": 4,
+  "version": "0.1.4",
+  "release_sequence": 5,
   "name": "PXA WASI Lab",
-  "description": "Examples of WASI libc, clock, and random capabilities",
+  "description": "检查 WASI libc、时钟与随机数能力，查看设备运行结果。面向开发者的 Core 2 诊断示例。",
   "build": {
     "system": "cmake",
     "source_dir": "."

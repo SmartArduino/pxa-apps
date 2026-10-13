@@ -1,0 +1,257 @@
+{
+  "schema": "pxa-store-listings-1",
+  "applications": {
+    "abi-v1-ipc-smoke": {
+      "name": "Core 2 IPC 检查",
+      "kind": "app",
+      "category": "education",
+      "summary": "验证两个组件之间的请求、响应和事件传递。用于开发与兼容性检查，不是聊天软件。",
+      "description": "验证两个组件之间的请求、响应和事件传递。用于开发与兼容性检查，不是聊天软件。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。\n\n本诊断程序没有图形操作界面，结果在 PXADB 日志中查看；介绍图下半部分为该次实际运行日志。",
+      "language": "zh-CN",
+      "screenshots": [
+        "docs/store/20261014/abi-v1-ipc-smoke.jpg"
+      ],
+      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+    },
+    "abi-v1-smoke": {
+      "name": "Core 2 基础检查",
+      "kind": "app",
+      "category": "education",
+      "summary": "检查签名包、Core 2 调用和事件交付，帮助开发者验证设备运行环境。",
+      "description": "检查签名包、Core 2 调用和事件交付，帮助开发者验证设备运行环境。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。\n\n本诊断程序没有图形操作界面，结果在 PXADB 日志中查看；介绍图下半部分为该次实际运行日志。",
+      "language": "zh-CN",
+      "screenshots": [
+        "docs/store/20261014/abi-v1-smoke.jpg"
+      ],
+      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+    },
+    "arcade": {
+      "name": "PXA 街机合集",
+      "kind": "game",
+      "category": "arcade",
+      "summary": "多款紧凑街机小游戏，使用触摸操作，适合短时间游玩。",
+      "description": "多款紧凑街机小游戏，使用触摸操作，适合短时间游玩。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "language": "zh-CN",
+      "screenshots": [
+        "docs/store/20261014/arcade.jpg"
+      ],
+      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+    },
+    "game-render-bench": {
+      "name": "游戏绘制基准",
+      "kind": "app",
+      "category": "tools",
+      "summary": "分阶段演示与测量 2D、3D、纹理及低分辨率绘制路径。结果随设备与场景变化，不能仅用提交帧率比较性能。",
+      "description": "分阶段演示与测量 2D、3D、纹理及低分辨率绘制路径。结果随设备与场景变化，不能仅用提交帧率比较性能。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "language": "zh-CN",
+      "screenshots": [
+        "docs/store/20261014/game-render-bench.jpg"
+      ],
+      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+    },
+    "garden-guard": {
+      "name": "花园保卫战",
+      "kind": "game",
+      "category": "strategy",
+      "summary": "在昼夜花园中布置植物抵御敌人，包含 12 个关卡与 13 种植物。选择植物、管理资源并保护花园。",
+      "description": "在昼夜花园中布置植物抵御敌人，包含 12 个关卡与 13 种植物。选择植物、管理资源并保护花园。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "language": "zh-CN",
+      "screenshots": [
+        "docs/store/20261014/garden-guard.jpg"
+      ],
+      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+    },
+    "jump-jump-3d": {
+      "name": "跳一跳 3D",
+      "kind": "game",
+      "category": "casual",
+      "summary": "按住蓄力，松开跳跃，在立体平台间连续前进。落在中心可连续得分，包含音效、背景音乐及适配不同 DPI 的触摸界面。",
+      "description": "按住蓄力，松开跳跃，在立体平台间连续前进。落在中心可连续得分，包含音效、背景音乐及适配不同 DPI 的触摸界面。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "language": "zh-CN",
+      "screenshots": [
+        "docs/store/20261014/jump-jump-3d.jpg"
+      ],
+      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+    },
+    "lab": {
+      "name": "PXA 系统实验室",
+      "kind": "app",
+      "category": "tools",
+      "summary": "交互检查设备、时钟、存储、私有文件、WASI 与分配器。面向开发调试，操作前阅读页面提示。",
+      "description": "交互检查设备、时钟、存储、私有文件、WASI 与分配器。面向开发调试，操作前阅读页面提示。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "language": "zh-CN",
+      "screenshots": [
+        "docs/store/20261014/lab.jpg"
+      ],
+      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+    },
+    "maze-evil": {
+      "name": "恶意迷宫",
+      "kind": "game",
+      "category": "action",
+      "summary": "第一人称迷宫射击游戏，使用触摸移动与转向，包含武器、敌人和音效。优化了输入与音效调度，体验仍取决于实际设备。",
+      "description": "第一人称迷宫射击游戏，使用触摸移动与转向，包含武器、敌人和音效。优化了输入与音效调度，体验仍取决于实际设备。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "language": "zh-CN",
+      "screenshots": [
+        "docs/store/20261014/maze-evil.jpg"
+      ],
+      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+    },
+    "maze-spike": {
+      "name": "尖刺迷宫",
+      "kind": "game",
+      "category": "adventure",
+      "summary": "通过触摸探索第一人称迷宫，使用低分辨率画面放大显示。避开危险并寻找出口。",
+      "description": "通过触摸探索第一人称迷宫，使用低分辨率画面放大显示。避开危险并寻找出口。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "language": "zh-CN",
+      "screenshots": [
+        "docs/store/20261014/maze-spike.jpg"
+      ],
+      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+    },
+    "novel-reader": {
+      "name": "书页阅读",
+      "kind": "app",
+      "category": "media",
+      "summary": "支持离线 TXT 与可配置的 JSON 网络书源，提供搜索、章节导航、下载、自适应字体和自动翻页。网络书源需自行配置；离线阅读不依赖网络。",
+      "description": "支持离线 TXT 与可配置的 JSON 网络书源，提供搜索、章节导航、下载、自适应字体和自动翻页。网络书源需自行配置；离线阅读不依赖网络。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "language": "zh-CN",
+      "screenshots": [
+        "docs/store/20261014/novel-reader.jpg"
+      ],
+      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+    },
+    "pinyin-ime": {
+      "name": "拼音输入法",
+      "kind": "app",
+      "category": "system",
+      "summary": "可安装的系统拼音输入法，支持九键、全键盘、词句候选和中英文输入。安装后在系统输入法设置中选择；需要支持 IME provider 的 Core 2 Host。",
+      "description": "可安装的系统拼音输入法，支持九键、全键盘、词句候选和中英文输入。安装后在系统输入法设置中选择；需要支持 IME provider 的 Core 2 Host。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "language": "zh-CN",
+      "screenshots": [
+        "docs/store/20261014/pinyin-ime.jpg"
+      ],
+      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+    },
+    "pinyin-ime-lite": {
+      "name": "轻量拼音输入法",
+      "kind": "app",
+      "category": "system",
+      "summary": "使用小字表逐字输入，支持九键、全键盘与中英文，适合资源较少的设备。没有完整版整词词库；安装后需在系统中选择输入法。",
+      "description": "使用小字表逐字输入，支持九键、全键盘与中英文，适合资源较少的设备。没有完整版整词词库；安装后需在系统中选择输入法。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "language": "zh-CN",
+      "screenshots": [
+        "docs/store/20261014/pinyin-ime-lite.jpg"
+      ],
+      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+    },
+    "pixel-dungeon": {
+      "name": "像素地牢",
+      "kind": "game",
+      "category": "rpg",
+      "summary": "回合制 Roguelike 地牢冒险：探索房间、与敌人战斗、拾取装备与道具。使用像素美术与小体积音频，每局地牢变化；请留意角色状态与补给。",
+      "description": "回合制 Roguelike 地牢冒险：探索房间、与敌人战斗、拾取装备与道具。使用像素美术与小体积音频，每局地牢变化；请留意角色状态与补给。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "language": "zh-CN",
+      "screenshots": [
+        "docs/store/20261014/pixel-dungeon.jpg"
+      ],
+      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+    },
+    "plane-shooter": {
+      "name": "轨道突击",
+      "kind": "game",
+      "category": "action",
+      "summary": "太空射击游戏，提供剧情关卡、机库和自动开火。通过触摸移动战机，躲避弹幕并挑战敌人。",
+      "description": "太空射击游戏，提供剧情关卡、机库和自动开火。通过触摸移动战机，躲避弹幕并挑战敌人。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "language": "zh-CN",
+      "screenshots": [
+        "docs/store/20261014/plane-shooter.jpg"
+      ],
+      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+    },
+    "plane-shooter-raster": {
+      "name": "轨道突击：光栅版",
+      "kind": "game",
+      "category": "action",
+      "summary": "太空射击的光栅绘制版本，按设备调整渲染分辨率。触摸移动、自动开火；画面路径与原版不同，适合体验和比较。",
+      "description": "太空射击的光栅绘制版本，按设备调整渲染分辨率。触摸移动、自动开火；画面路径与原版不同，适合体验和比较。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "language": "zh-CN",
+      "screenshots": [
+        "docs/store/20261014/plane-shooter-raster.jpg"
+      ],
+      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+    },
+    "resource-scenes": {
+      "name": "资源场景示例",
+      "kind": "app",
+      "category": "education",
+      "summary": "演示文件纹理、异步加载与场景切换：共 20 张纹理，每次显示四张，并循环切换场景。适合验证资源生命周期。",
+      "description": "演示文件纹理、异步加载与场景切换：共 20 张纹理，每次显示四张，并循环切换场景。适合验证资源生命周期。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "language": "zh-CN",
+      "screenshots": [
+        "docs/store/20261014/resource-scenes.jpg"
+      ],
+      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+    },
+    "store": {
+      "name": "PXA 应用商店",
+      "kind": "app",
+      "category": "system",
+      "summary": "浏览应用与游戏、查看兼容性、下载签名包、确认安装并检查更新。下载与安装由系统验证，支持已安装应用管理；需要联网及 Host 商店安装服务。",
+      "description": "浏览应用与游戏、查看兼容性、下载签名包、确认安装并检查更新。下载与安装由系统验证，支持已安装应用管理；需要联网及 Host 商店安装服务。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。商店截图来自 pai-touch 真机运行，其余应用截图来自实际模拟器运行，不能据此推断真机帧率。\n\n安装服务仅授予产品预置的可信商店。将此包作为普通应用安装不会获得安装其他应用的权限；产品集成时需通过 factory 配置预置。当前普通覆盖安装商店会失去预置身份，请由产品维护者更新预置包。",
+      "language": "zh-CN",
+      "screenshots": [
+        "docs/store/20261014/store.jpg"
+      ],
+      "changelog": "更新 Core 2 分目标包与中文介绍；修复长中文介绍截断为无效 UTF-8、导致商店目录一直显示加载中的问题。"
+    },
+    "tomb-explorer": {
+      "name": "古墓探索",
+      "kind": "game",
+      "category": "adventure",
+      "summary": "第三人称房间与门洞探索游戏，使用纹理多边形绘制。通过触摸控制角色与视角，在古墓空间中探索。",
+      "description": "第三人称房间与门洞探索游戏，使用纹理多边形绘制。通过触摸控制角色与视角，在古墓空间中探索。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "language": "zh-CN",
+      "screenshots": [
+        "docs/store/20261014/tomb-explorer.jpg"
+      ],
+      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+    },
+    "voxel-craft": {
+      "name": "体素世界",
+      "kind": "game",
+      "category": "sandbox",
+      "summary": "第一人称体素沙盒，支持新游戏、多个存档、背包与合成、挖掘与放置。左侧移动、右侧转向，长按操作键挖掘；工具与材质影响效率和音效。飞行可在设置中开启。",
+      "description": "第一人称体素沙盒，支持新游戏、多个存档、背包与合成、挖掘与放置。左侧移动、右侧转向，长按操作键挖掘；工具与材质影响效率和音效。飞行可在设置中开启。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "language": "zh-CN",
+      "screenshots": [
+        "docs/store/20261014/voxel-craft.jpg"
+      ],
+      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+    },
+    "wasi-lab": {
+      "name": "WASI 实验室",
+      "kind": "app",
+      "category": "education",
+      "summary": "检查 WASI libc、时钟与随机数能力，查看设备运行结果。面向开发者的 Core 2 诊断示例。",
+      "description": "检查 WASI libc、时钟与随机数能力，查看设备运行结果。面向开发者的 Core 2 诊断示例。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "language": "zh-CN",
+      "screenshots": [
+        "docs/store/20261014/wasi-lab.jpg"
+      ],
+      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+    },
+    "weather": {
+      "name": "天气",
+      "kind": "app",
+      "category": "life",
+      "summary": "通过 IP 定位显示当地天气，支持自动切换数据提供方。无需 API key；定位精度与数据可用性取决于网络，不能代替专业预警。",
+      "description": "通过 IP 定位显示当地天气，支持自动切换数据提供方。无需 API key；定位精度与数据可用性取决于网络，不能代替专业预警。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "language": "zh-CN",
+      "screenshots": [
+        "docs/store/20261014/weather.jpg"
+      ],
+      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+    }
+  }
+}

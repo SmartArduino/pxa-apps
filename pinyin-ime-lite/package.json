@@ -13,9 +13,9 @@
     0
   ],
   "id": "pxa-pinyin-ime-lite",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": "轻量拼音输入法",
-  "description": "小字表、无整词词库的 PXA 拼音输入法：九键与全键盘逐字选字",
+  "description": "使用小字表逐字输入，支持九键、全键盘与中英文，适合资源较少的设备。没有完整版整词词库；安装后需在系统中选择输入法。",
   "build": {
     "system": "cmake",
     "source_dir": ".",
@@ -65,5 +65,6 @@
         ]
       }
     }
-  ]
+  ],
+  "release_sequence": 1
 }

@@ -13,10 +13,10 @@
     0
   ],
   "id": "pxa-maze-spike",
-  "version": "0.1.3",
-  "release_sequence": 4,
+  "version": "0.1.4",
+  "release_sequence": 5,
   "name": "Maze Spike",
-  "description": "Guest raycaster using a mapped RGB565 triple buffer and Host 2x presentation",
+  "description": "通过触摸探索第一人称迷宫，使用低分辨率画面放大显示。避开危险并寻找出口。",
   "build": {
     "system": "cmake",
     "linear_memory": {

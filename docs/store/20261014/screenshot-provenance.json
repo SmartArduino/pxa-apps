@@ -1,0 +1,273 @@
+[
+  {
+    "slug": "abi-v1-ipc-smoke",
+    "profile": {
+      "width": 800,
+      "height": 480,
+      "dpi": 216,
+      "locale": "zh-CN",
+      "theme": "dark"
+    },
+    "source": "actual Guest capture with explicitly labelled actual PASS log panel; diagnostic app has no graphical UI",
+    "screenshot": "docs/store/20261014/abi-v1-ipc-smoke.jpg",
+    "visually_reviewed": true
+  },
+  {
+    "slug": "abi-v1-smoke",
+    "profile": {
+      "width": 800,
+      "height": 480,
+      "dpi": 216,
+      "locale": "zh-CN",
+      "theme": "dark"
+    },
+    "source": "actual Guest capture with explicitly labelled actual PASS log panel; diagnostic app has no graphical UI",
+    "screenshot": "docs/store/20261014/abi-v1-smoke.jpg",
+    "visually_reviewed": true
+  },
+  {
+    "slug": "arcade",
+    "profile": {
+      "width": 800,
+      "height": 480,
+      "dpi": 216,
+      "locale": "zh-CN",
+      "theme": "dark"
+    },
+    "source": "actual desktop Guest after 5 seconds",
+    "screenshot": "docs/store/20261014/arcade.jpg",
+    "visually_reviewed": true
+  },
+  {
+    "slug": "game-render-bench",
+    "profile": {
+      "width": 296,
+      "height": 240,
+      "dpi": 160,
+      "locale": "zh-CN",
+      "theme": "dark"
+    },
+    "source": "actual desktop Guest after 14 seconds",
+    "screenshot": "docs/store/20261014/game-render-bench.jpg",
+    "visually_reviewed": true
+  },
+  {
+    "slug": "garden-guard",
+    "profile": {
+      "width": 800,
+      "height": 480,
+      "dpi": 216,
+      "locale": "zh-CN",
+      "theme": "dark"
+    },
+    "source": "actual desktop Guest after 5 seconds",
+    "screenshot": "docs/store/20261014/garden-guard.jpg",
+    "visually_reviewed": true
+  },
+  {
+    "slug": "jump-jump-3d",
+    "profile": {
+      "width": 800,
+      "height": 480,
+      "dpi": 216,
+      "locale": "zh-CN",
+      "theme": "dark"
+    },
+    "source": "actual desktop Guest after 5 seconds",
+    "screenshot": "docs/store/20261014/jump-jump-3d.jpg",
+    "visually_reviewed": true
+  },
+  {
+    "slug": "lab",
+    "profile": {
+      "width": 800,
+      "height": 480,
+      "dpi": 216,
+      "locale": "zh-CN",
+      "theme": "dark"
+    },
+    "source": "actual desktop Guest after 5 seconds",
+    "screenshot": "docs/store/20261014/lab.jpg",
+    "visually_reviewed": true
+  },
+  {
+    "slug": "maze-evil",
+    "profile": {
+      "width": 800,
+      "height": 480,
+      "dpi": 216,
+      "locale": "zh-CN",
+      "theme": "dark"
+    },
+    "source": "actual desktop Guest after 5 seconds",
+    "screenshot": "docs/store/20261014/maze-evil.jpg",
+    "visually_reviewed": true
+  },
+  {
+    "slug": "maze-spike",
+    "profile": {
+      "width": 800,
+      "height": 480,
+      "dpi": 216,
+      "locale": "zh-CN",
+      "theme": "dark"
+    },
+    "source": "actual desktop Guest after 5 seconds",
+    "screenshot": "docs/store/20261014/maze-spike.jpg",
+    "visually_reviewed": true
+  },
+  {
+    "slug": "novel-reader",
+    "profile": {
+      "width": 800,
+      "height": 480,
+      "dpi": 216,
+      "locale": "zh-CN",
+      "theme": "dark"
+    },
+    "source": "actual desktop Guest after 5 seconds",
+    "screenshot": "docs/store/20261014/novel-reader.jpg",
+    "visually_reviewed": true
+  },
+  {
+    "slug": "pinyin-ime",
+    "profile": {
+      "width": 800,
+      "height": 480,
+      "dpi": 216,
+      "locale": "zh-CN",
+      "theme": "dark"
+    },
+    "source": "actual desktop Guest after 5 seconds",
+    "screenshot": "docs/store/20261014/pinyin-ime.jpg",
+    "visually_reviewed": true
+  },
+  {
+    "slug": "pinyin-ime-lite",
+    "profile": {
+      "width": 800,
+      "height": 480,
+      "dpi": 216,
+      "locale": "zh-CN",
+      "theme": "dark"
+    },
+    "source": "actual desktop Guest after 5 seconds",
+    "screenshot": "docs/store/20261014/pinyin-ime-lite.jpg",
+    "visually_reviewed": true
+  },
+  {
+    "slug": "pixel-dungeon",
+    "profile": {
+      "width": 800,
+      "height": 480,
+      "dpi": 216,
+      "locale": "zh-CN",
+      "theme": "dark"
+    },
+    "source": "actual desktop Guest after 5 seconds",
+    "screenshot": "docs/store/20261014/pixel-dungeon.jpg",
+    "visually_reviewed": true
+  },
+  {
+    "slug": "plane-shooter",
+    "profile": {
+      "width": 800,
+      "height": 480,
+      "dpi": 216,
+      "locale": "zh-CN",
+      "theme": "dark"
+    },
+    "source": "actual desktop Guest after 5 seconds",
+    "screenshot": "docs/store/20261014/plane-shooter.jpg",
+    "visually_reviewed": true
+  },
+  {
+    "slug": "plane-shooter-raster",
+    "profile": {
+      "width": 800,
+      "height": 480,
+      "dpi": 216,
+      "locale": "zh-CN",
+      "theme": "dark"
+    },
+    "source": "actual desktop Guest after 5 seconds",
+    "screenshot": "docs/store/20261014/plane-shooter-raster.jpg",
+    "visually_reviewed": true
+  },
+  {
+    "slug": "resource-scenes",
+    "profile": {
+      "width": 800,
+      "height": 480,
+      "dpi": 216,
+      "locale": "zh-CN",
+      "theme": "dark"
+    },
+    "source": "actual desktop Guest after 5 seconds",
+    "screenshot": "docs/store/20261014/resource-scenes.jpg",
+    "visually_reviewed": true
+  },
+  {
+    "slug": "tomb-explorer",
+    "profile": {
+      "width": 800,
+      "height": 480,
+      "dpi": 216,
+      "locale": "zh-CN",
+      "theme": "dark"
+    },
+    "source": "actual desktop Guest after 5 seconds",
+    "screenshot": "docs/store/20261014/tomb-explorer.jpg",
+    "visually_reviewed": true
+  },
+  {
+    "slug": "voxel-craft",
+    "profile": {
+      "width": 800,
+      "height": 480,
+      "dpi": 216,
+      "locale": "zh-CN",
+      "theme": "dark"
+    },
+    "source": "actual desktop Guest after 5 seconds",
+    "screenshot": "docs/store/20261014/voxel-craft.jpg",
+    "visually_reviewed": true
+  },
+  {
+    "slug": "wasi-lab",
+    "profile": {
+      "width": 800,
+      "height": 480,
+      "dpi": 216,
+      "locale": "zh-CN",
+      "theme": "dark"
+    },
+    "source": "actual desktop Guest after 5 seconds",
+    "screenshot": "docs/store/20261014/wasi-lab.jpg",
+    "visually_reviewed": true
+  },
+  {
+    "slug": "weather",
+    "profile": {
+      "width": 800,
+      "height": 480,
+      "dpi": 216,
+      "locale": "zh-CN",
+      "theme": "dark"
+    },
+    "source": "actual desktop Guest after 5 seconds",
+    "screenshot": "docs/store/20261014/weather.jpg",
+    "visually_reviewed": true
+  },
+  {
+    "slug": "store",
+    "profile": {
+      "width": 296,
+      "height": 240,
+      "dpi": 160
+    },
+    "source": "actual pai-touch; Core 2 production store 0.8.5 catalog after UTF-8 fix, before factory provisioning",
+    "screenshot": "docs/store/20261014/store.jpg",
+    "visually_reviewed": true
+  }
+]

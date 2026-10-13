@@ -199,8 +199,12 @@ Pressing **Install** sends a bounded ticket, App ID, size and digest to the
 ESP Host's `store-installer` download API (ABI 0.5, service 20, opcode 2;
 best-effort progress event opcode 0x8001).
 The App receives a Host-owned staging filename and passes it to the install
-API (opcode 3). The old combined opcode 1 remains available. Any signed Guest
-may request installation. The Host accepts only the configured HTTPS origin
+API (opcode 3). The old combined opcode 1 remains available. Only the enabled, installed, firmware-provisioned `pxa-store` may request
+installation. An ordinary installed copy (including a renamed debug copy) is
+rejected with DENIED. Product maintainers must provision the verified package
+through the protected factory root; normal App installation does not grant
+this authority. Current managed overlays do not retain the built-in authority,
+so update the factory package through the product provisioning workflow. The Host accepts only the configured HTTPS origin
 (`CONFIG_PXA_STORE_ORIGIN`) and the artifact-ticket path, streams the container
 into a Host-owned temporary file (at most 4 MiB), verifies its byte count and
 SHA-256, and invokes the existing signed-PXA preview verifier. Only after the

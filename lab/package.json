@@ -13,10 +13,10 @@
     0
   ],
   "id": "pxa-lab",
-  "version": "1.0.1",
-  "release_sequence": 4,
+  "version": "1.0.2",
+  "release_sequence": 5,
   "name": "PXA ABI Lab",
-  "description": "Interactive Core 2 diagnostics for device, clock, storage, private files, WASI and allocator",
+  "description": "交互检查设备、时钟、存储、私有文件、WASI 与分配器。面向开发调试，操作前阅读页面提示。",
   "build": {
     "system": "cmake",
     "source_dir": "."

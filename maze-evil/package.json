@@ -13,9 +13,9 @@
     0
   ],
   "id": "pxa-maze-evil",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "name": "Maze Evil",
-  "description": "Raycasting shooter with mapped RGB565 rendering, touch controls and Host-driven SFX",
+  "description": "第一人称迷宫射击游戏，使用触摸移动与转向，包含武器、敌人和音效。优化了输入与音效调度，体验仍取决于实际设备。",
   "build": {
     "system": "cmake",
     "linear_memory": {
@@ -52,5 +52,5 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 8
+  "release_sequence": 9
 }

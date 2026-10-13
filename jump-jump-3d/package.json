@@ -13,10 +13,10 @@
     0
   ],
   "id": "pxa-jump-jump-3d",
-  "version": "0.1.4",
-  "release_sequence": 5,
+  "version": "0.1.5",
+  "release_sequence": 6,
   "name": "Jump Jump 3D",
-  "description": "Isometric 3D remake of the WeChat Jump Jump: charge, flip, land on the centre, chain perfect hits",
+  "description": "按住蓄力，松开跳跃，在立体平台间连续前进。落在中心可连续得分，包含音效、背景音乐及适配不同 DPI 的触摸界面。",
   "icon": "assets/icon.png",
   "build": {
     "system": "cmake",
