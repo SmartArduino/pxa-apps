@@ -1,46 +1,43 @@
 # PXA Apps
 
-Application sources for the PXA workspace. The PXA runtime, Guest SDK, packaging
-tools, and a minimal `hello` smoke-test app remain in `pxa-system`. All product
-applications and their shared art live here.
+[English](README.en.md)
 
-All maintained applications now build as **C++26** against **Core 2.0**.
-The production C versions of Jump Jump, Pixel Dungeon and Voxel Craft have
-been retired; use [`jump-jump-3d`](jump-jump-3d/README.md),
-[`pixel-dungeon`](pixel-dungeon/README.md) and `voxel-craft`.
-Their frozen C algorithms remain only under `common/cpp/tests/reference/c`
-for timing, pixel and gameplay comparisons; they have no package manifests.
+PXA 的开源应用与共享资源仓库，包括商城、天气、小说阅读器、游戏和诊断示例。系统运行库、SDK 与打包工具在 [pxa-system](https://github.com/SmartArduino/pxa-system)，ESP 固件与板级集成在 [pxa-workspace](https://github.com/SmartArduino/pxa-workspace)。
 
-Application names and package IDs omit implementation-language suffixes. See
-[the naming and existing-save notes](docs/app-names.zh-CN.md).
+所有持续维护的应用使用 **C++26、Core 2.0**。应用名称与包 ID 不再带实现语言后缀：使用 [`jump-jump-3d`](jump-jump-3d/README.md)、[`pixel-dungeon`](pixel-dungeon/README.md) 和 `voxel-craft`。旧 C 算法仅在 `common/cpp/tests/reference/c` 中作为性能、像素与玩法对照，不再提供生产应用清单。
 
-Callback-based applications use the optional, stateless `pxa::call` path via
-`common/cpp/Application.cmake`. This reuses their bounded protocol helpers
-and saved message IDs without allocating a Context, coroutine pool or request
-table. Apps that use asynchronous tasks and declarative UI link the full C++
-SDK. Their PXA imports are only `pxa.core.v2::pxa_call` and `pxa_io`;
-WASI libc imports remain explicitly declared by each component.
+[名称与旧存档说明](docs/app-names.zh-CN.md) · [迁移及真机报告](docs/core2-cpp-migration-20261011.zh-CN.md)
 
-The migration results, device measurements and coverage limits are recorded in
-[the Core 2 / C++26 report](docs/core2-cpp-migration-20261011.zh-CN.md).
+## 用独立 DevKit 运行
 
-[`novel-reader`](novel-reader/README.md) is the C++ network and offline TXT
-reader, with configurable JSON sources, system input, adaptive typography,
-chapter navigation and automatic page turns. Its device measurements and
-reproducible acceptance checks live in the application's `docs` and `tests`.
-
-Clone this repository to `local/pxa-apps` alongside `deps/pxa-system` in
-`pxa-projects`. From the workspace root, for example:
+先[安装 DevKit](https://pxa.doit.am/docs/setup/)，在本仓库的父目录执行：
 
 ```sh
-tools/app.sh build store --target simulator --source-root local/pxa-apps
-tools/simulator.sh product --profile pai-touch \
-  --package local/app-output/pai-touch/pxa-store \
-  --publisher-key deps/pxa-system/apps/pxa/.dev-signing/publisher-public.der
+git clone https://github.com/SmartArduino/pxa-apps.git
+pxa run pxa-apps/pixel-dungeon
+pxa run pxa-apps/voxel-craft --profile sensecap-watcher
 ```
 
-For store publication, build separate signed containers for each runtime
-profile rather than a combined multi-AOT container:
+每次关闭模拟器再执行下一条运行命令。内置屏幕配置用于 DPI、圆屏和安全区检查。应用可能引用 `common/`，复制示例时保留共享源码及资源的相对目录结构。
+
+[`weather`](weather/README.md) 使用 IP 定位与 Open-Meteo，不需要 API key。网络和定位可用性取决于实际运行环境。
+[`novel-reader`](novel-reader/README.md) 支持可配置 JSON 源、离线 TXT、系统输入、自适应字体、章节导航与自动翻页；测量和验收脚本位于其 `docs/` 与 `tests/`。
+
+## 在固件工作区联调
+
+将本仓库克隆到工作区的 `local/pxa-apps`。下面命令均在 **pxa-workspace 根目录**执行：
+
+```sh
+git clone https://github.com/SmartArduino/pxa-apps.git local/pxa-apps
+tools/dev.sh sim pixel-dungeon --source-root local/pxa-apps
+tools/dev.sh sim voxel-craft --profile esp-mosaico --source-root local/pxa-apps
+```
+
+工作区默认自动发现该目录；外部源码可通过 `--source-root` 或被忽略的 `local/apps.toml` 登记。构建输出位于 `local/app-output`，不写进本应用仓库。
+
+## 打包与发布
+
+商城支持一个多目标容器，也支持同一待审版本的分目标包。应用使用不同目标资源时分别构建：
 
 ```sh
 for target in esp32s3 esp32s31 simulator; do
@@ -51,29 +48,19 @@ tools/app.sh build store --target wasm \
   --output local/app-output/store-variants/wasm
 ```
 
-The AOT variants carry only their target architecture (plus any explicitly
-WASM-only component); the portable variant contains only WASM components.
+工作区默认使用 `deps/pxa-system/apps/pxa/.dev-signing` 开发夹具。正式发布设置 `PXA_SIGNING_KEY` 为自己的长期密钥，且各目标保持相同 App ID、版本、release sequence 与发布者身份。[商城发布教程](https://pxa.doit.am/docs/store-publishing/)
 
-Workspace packaging defaults to the development-only key in
-`deps/pxa-system/apps/pxa/.dev-signing`; supply `PXA_SIGNING_KEY` for your own
-publisher. The bundled fixture is not a production credential. Local
-`.dev-signing` files are ignored by this repo; never commit private signing
-material.
+独立 DevKit 自动在用户数据目录生成开发密钥；SDK 不携带私钥。不要提交密钥、令牌、本机设置或 `.dev-signing`。
 
-The Weather example requires a local `weather/weather_config.h` defining
-`PXA_WEATHER_API_KEY` as a quoted string. That file is ignored so API
-credentials do not enter this repository.
+## SDK 使用与性能
 
-Application-specific source checks use the SDK and tools from the neighboring
-`deps/pxa-system` checkout. Build outputs stay in the workspace's ignored
-`local/app-output` directory.
+回调应用通过 `common/cpp/Application.cmake` 使用可选的无状态 `pxa::call`，复用有界协议辅助函数和消息 ID，不分配 Context、协程池或请求表。需要异步任务和声明式 UI 的应用链接完整 C++ SDK。PXA 导入只有 `pxa.core.v2::pxa_call` 与 `pxa_io`，WASI libc 导入按组件声明。
 
-Keep generated font previews and experimental source snapshots outside the
-tracked source tree. Byte-identical display matrices and screenshots share one
-attachment, with report links pointing to that retained file. Keep distinct
-benchmark runs, test configurations, runtime resources and license notices.
+多架构包共享一次加锁的 Wasm 编译，再生成各目标 AOT。`PXA_BUILD_CACHE_DIR` 启用增量构建；`PXA_COMPILER_CACHE=ccache` 可复用相同编译工作，不增加设备内存。缓存键包含容量定义、SDK 与编译器输入，不手工复用布局不同的二进制。
 
-Regression entry points (from the workspace root):
+## 回归检查
+
+在固件工作区根目录运行，SDK 与工具取自相邻的 `deps/pxa-system`：
 
 ```sh
 bash local/pxa-apps/tests/native/run.sh
@@ -83,9 +70,4 @@ bash local/pxa-apps/voxel-craft/tests/test.sh
 python3 tools/test-app-matrix.py --output local/app-matrix --target all --sdk-examples
 ```
 
-Multi-architecture builds share one locked Wasm build and then produce separate
-AOT artifacts. `PXA_BUILD_CACHE_DIR` enables incremental builds;
-`PXA_COMPILER_CACHE=ccache` optionally shares identical compiler work across
-apps. Compiler caching adds no Guest or Host memory. Capacity definitions and
-SDK/compiler inputs participate in compiler cache keys; do not reuse archives
-built with different layout definitions by hand.
+字体预览和实验快照放在生成目录。相同截图可共用附件，但不同测量、测试配置、运行资源及许可证分别保留。性能报告必须说明工作负载、实际显示帧率、阶段耗时与内存，而不是只比较提交 FPS。
