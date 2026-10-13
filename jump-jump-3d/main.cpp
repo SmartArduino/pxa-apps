@@ -32,14 +32,14 @@ struct JumpJump {
     GameClock stepper;
     pxa::game::AdaptiveResolution quality;
     uint8_t quality_ticks=0;
-    uint64_t frame_id=0,window_start=0;
+    uint64_t frame_id=0,window_start=0,charge_start_us=0;
     uint32_t best_saved=0;
     uint8_t g_last_state=0,g_bonus_played=0,scheme=0,scale_shift=0;
     uint16_t g_last_jumps=0;
     uint16_t charge_pointer=256; // Outside the uint8_t pointer ID range.
     uint32_t g_last_score=0;
     float g_bonus_repeat_timer=0,save_timer=0;
-    bool g_bgm_started=false,initializing=false,saving=false;
+    bool g_bgm_started=false,initializing=false,saving=false,result_drawn=false,clock_syncing=false;
     #include "sound_triggers.inc"
     auto view(){return pxa::ui::Canvas().input_only().on_pointer([this](const pxa::ui::CanvasPointer& p){pointer(p);});}
     pxa::Result<void> on_start(pxa::Context& ctx,std::span<const std::byte> config){
@@ -56,6 +56,22 @@ struct JumpJump {
         if(best){g_game.best=*best;best_saved=*best;}co_return pxa::Result<void>{};}
     pxa::Task<void> save_best(uint32_t value){auto saved=co_await context->storage().set_value("best",value);
         if(saved)best_saved=value;saving=false;co_return pxa::Result<void>{};}
+    pxa::Task<void> sync_wall_time(){
+        if(clock_syncing)co_return pxa::Result<void>{};
+        clock_syncing=true;
+        auto sample=co_await context->clock().wall_time();
+        if(sample&&renderer){
+            using namespace std::chrono;
+            const auto local=sample->local();
+            const auto seconds=duration_cast<std::chrono::seconds>(local-floor<days>(local)).count();
+            const auto base=uint32_t((seconds+86400-uint32_t(g_game.time)%86400)%86400);
+            render.clock_minutes=uint16_t(base/60);render.clock_seconds=uint8_t(base%60);
+            char line[112];std::snprintf(line,sizeof(line),"J3CPP clock local=%02u:%02u offset_s=%ld dst=%u",
+                unsigned(seconds/3600),unsigned(seconds/60%60),long(sample->zone.utc_offset.count()),unsigned(sample->zone.daylight_saving));
+            (void)context->log().write(pxa::LogLevel::info,line);
+        }
+        clock_syncing=false;co_return pxa::Result<void>{};
+    }
     pxa::Task<void> initialize(){
         initializing=true;renderer.reset();
         for(;scale_shift<=2;++scale_shift){
@@ -77,6 +93,7 @@ struct JumpJump {
             auto fonts=co_await load_fonts();if(!fonts){
                 renderer.reset();continue;
             }
+            (void)co_await sync_wall_time();
             (void)context->clock().set_period(TICK_MS);stepper.reset();initializing=false;draw_frame();
             char msg[128];std::snprintf(msg,sizeof(msg),"J3CPP ready pixels=%u,%u dpi_q16=%u render=%u,%u scale=%u",display.width,display.height,display.density_q16,options.width,options.height,scale_shift);
             (void)context->log().write(pxa::LogLevel::info,msg);co_return pxa::Result<void>{};
@@ -103,38 +120,60 @@ struct JumpJump {
     void draw_frame(){if(!renderer||initializing||!context->foreground())return;
         ++frame_id;
         auto draw=frame_memory.draw();
-        if(!j3_render_frame(&render,&g_game,*renderer,draw.data(),draw.size()))
+        const bool accepted=j3_render_frame(&render,&g_game,*renderer,draw.data(),draw.size());
+        result_drawn=g_game.state==J3_STATE_OVER&&accepted;
+        if(!accepted)
             (void)context->log().write(pxa::LogLevel::warning,"J3CPP frame not accepted");
     }
+    float advance_to(uint64_t timestamp_us){
+        const float dt=stepper.advance(timestamp_us);
+        if(dt>0){j3_game_tick(&g_game,dt);save_timer-=dt;
+            if(g_bonus_repeat_timer>0)g_bonus_repeat_timer-=dt;}
+        return dt;
+    }
     void pointer(const pxa::ui::CanvasPointer& p){if(!renderer||initializing)return;
-        // The touch driver sends MOVE samples even for a stationary hold.
-        // Charge advances on clock ticks; drawing on every sample floods the
-        // frame queue and starves that clock (which caps catch-up at 40 ms).
-        // Match the C game: only press/release/cancel need an immediate frame.
+        // MOVE samples never render or drive physics. The clock advances the
+        // game, and endpoint timestamps determine the actual hold duration.
         if(p.phase==pxa::ui::pointer_phase_move)return;
         // A second contact must not release the finger that owns the charge.
         // Ignore unmatched endpoints and duplicate presses without drawing.
         if (p.phase == pxa::ui::pointer_phase_down) {if(charge_pointer!=256)return;}
         else if(p.pointer_id!=charge_pointer)return;
-#if J3_TRACE_TIMING
-        const auto trace_charge_us=unsigned(g_game.charge*1e6f);
-#endif
+        advance_to(p.timestamp_us);
         if(p.phase==pxa::ui::pointer_phase_down){
             if(g_game.state==J3_STATE_OVER){auto best=g_game.best;j3_game_reset(&g_game,0x9e3779b9^uint32_t(frame_id));g_game.best=best;
                 g_last_state=g_game.state;g_last_score=0;g_last_jumps=0;g_bonus_played=0;g_bonus_repeat_timer=0;
+                quality_ticks=0;if(auto t=renderer->telemetry())quality.reset(*t);
+                (void)context->tasks().start(sync_wall_time());
                 j3_audio_play(&g_audio,J3_CHANNEL_LAND,J3_CLIP_START,J3_GAIN_FULL,0);
                 j3_audio_stop(&g_audio,J3_CHANNEL_COMBO);j3_audio_stop(&g_audio,J3_CHANNEL_BONUS);
-            }else {j3_game_press(&g_game);if(g_game.state==J3_STATE_CHARGING)charge_pointer=p.pointer_id;}
+            }else {j3_game_press(&g_game);if(g_game.state==J3_STATE_CHARGING){
+                charge_pointer=p.pointer_id;charge_start_us=p.timestamp_us;
+                if(p.timestamp_us && stepper.previous_timestamp()>p.timestamp_us)
+                    j3_game_charge(&g_game,float(stepper.previous_timestamp()-p.timestamp_us)*1e-6f);
+            }}
         }else if(p.phase==pxa::ui::pointer_phase_up) {
             charge_pointer=256;
-            j3_game_release(&g_game);
-        }
-        else if(p.phase==pxa::ui::pointer_phase_cancel){charge_pointer=256;if(g_game.state==J3_STATE_CHARGING){g_game.state=J3_STATE_READY;g_game.charge=0;}}
+            if(charge_start_us && p.timestamp_us>=charge_start_us)
+                j3_game_charge(&g_game,float(p.timestamp_us-charge_start_us)*1e-6f);
 #if J3_TRACE_TIMING
-        char trace[200];std::snprintf(trace,sizeof(trace),"J3CPP input phase=%u now=%llu state=%u charge_us=%u vx_q6=%d vy_q6=%d vz_q6=%d land_x_q6=%d land_z_q6=%d",p.phase,(unsigned long long)p.timestamp_us,g_game.state,trace_charge_us,int(g_game.vx*1e6f),int(g_game.vy*1e6f),int(g_game.vz*1e6f),int(g_game.land_x*1e6f),int(g_game.land_z*1e6f));
-        (void)context->log().write(pxa::LogLevel::info,trace);
+            const auto trace_charge_us=unsigned(g_game.charge*1e6f);
 #endif
-        play_state_sounds();draw_frame();
+            if(p.timestamp_us && stepper.previous_timestamp()>p.timestamp_us)
+                g_game.quick_window+=float(stepper.previous_timestamp()-p.timestamp_us)*1e-6f;
+            j3_game_release(&g_game);
+            // An older UP can follow a newer clock event. Catch the flight up
+            // to that clock without counting the queue delay as extra charge.
+            if(p.timestamp_us && stepper.previous_timestamp()>p.timestamp_us)
+                j3_game_tick(&g_game,float(stepper.previous_timestamp()-p.timestamp_us)*1e-6f);
+#if J3_TRACE_TIMING
+            char trace[192];std::snprintf(trace,sizeof(trace),"J3CPP release now=%llu charge_us=%u flight_us=%u vx_q6=%d vy_q6=%d land_x_q6=%d result=%u",(unsigned long long)p.timestamp_us,trace_charge_us,unsigned(g_game.land_time*1e6f),int(g_game.vx*1e6f),int(g_game.launch_vy*1e6f),int(g_game.land_x*1e6f),g_game.land_result);
+            (void)context->log().write(pxa::LogLevel::info,trace);
+#endif
+
+        }
+        else if(p.phase==pxa::ui::pointer_phase_cancel){charge_pointer=256;j3_game_cancel(&g_game);}
+        play_state_sounds();j3_audio_tick(&g_audio,std::max({p.timestamp_us,stepper.previous_timestamp(),g_audio.tick_us}));draw_frame();
     }
     pxa::Result<bool> on_event(pxa::Context&,const pxa::Event& event){
         j3_audio_event(&g_audio,event);
@@ -149,38 +188,50 @@ struct JumpJump {
                 }else draw_frame();}}
             return true;}
         auto tick=pxa::decode_clock_tick(event);if(!tick)return false;
-        auto now=tick->timestamp_us;j3_audio_tick(&g_audio,now);
+        auto now=tick->timestamp_us;
 #if J3_TRACE_TIMING
-        const auto previous=stepper.previous_timestamp();
+        const auto previous_state=g_game.state;
 #endif
-        auto steps=stepper.advance(now);
-        for(unsigned i=0;i<steps;++i)j3_game_tick(&g_game,.02f);
+        const float dt=advance_to(now);
 #if J3_TRACE_TIMING
-        if(g_game.state==J3_STATE_CHARGING){char trace[136];std::snprintf(trace,sizeof(trace),"J3CPP tick previous=%llu now=%llu steps=%u charge_us=%u",(unsigned long long)previous,(unsigned long long)now,steps,unsigned(g_game.charge*1e6f));(void)context->log().write(pxa::LogLevel::info,trace);}
+        if(previous_state==J3_STATE_FLYING && g_game.state!=J3_STATE_FLYING){
+            char trace[224];std::snprintf(trace,sizeof(trace),"J3CPP landed now=%llu state=%u score=%u result=%u current=%u next=%u dx_q6=%d dz_q6=%d",
+                (unsigned long long)now,g_game.state,g_game.score,g_game.land_result,
+                g_game.blocks[0].kind,g_game.blocks[1].kind,
+                int((g_game.blocks[1].x-g_game.px)*1e6F),int((g_game.blocks[1].z-g_game.pz)*1e6F));
+            (void)context->log().write(pxa::LogLevel::info,trace);
+        }
 #endif
-        if(steps){play_state_sounds();save_timer-=steps*.02f;
+        if(dt>0){play_state_sounds();j3_audio_tick(&g_audio,std::max(now,g_audio.tick_us));
             if(!saving&&save_timer<=0&&g_game.best>best_saved){saving=true;save_timer=2;if(!context->tasks().start(save_best(g_game.best)))saving=false;}
             auto next=uint8_t(g_game.jump_count/15%J3_BG_SCHEMES);
             if(renderer&&next!=scheme){scheme=next;auto upload=frame_memory.upload();auto palette=frame_memory.palette();j3_palette_build(palette.data());
                 (void)j3_render_upload_sky(*renderer,palette.data(),scheme,upload.data(),upload.size());
                 (void)pxa::game::Upload(*renderer,std::as_writable_bytes(std::span{upload})).palette(palette,J3_LIGHT_LEVELS);}}
-        // Presentation stays independent of simulation rounding: a short
-        // callback must not discard an otherwise available display frame.
-        draw_frame();
+        if(dt<=0)j3_audio_tick(&g_audio,std::max(now,g_audio.tick_us));
+        // The result is a retained static image. Retry a rejected final frame,
+        // but keep audio and best-score persistence ticking without redrawing.
+        // Pointer, display and foreground handlers still invalidate the image.
+        if(g_game.state!=J3_STATE_OVER||!result_drawn)draw_frame();
         if constexpr(J3_FORCE_SCALE_SHIFT<0){
-            if(renderer&&!initializing&&++quality_ticks>=48){quality_ticks=0;
+            if(g_game.state==J3_STATE_OVER)quality_ticks=0;
+            else if(renderer&&!initializing&&++quality_ticks>=48){quality_ticks=0;
                 if(auto t=renderer->telemetry())if(int change=quality.observe(*t,scale_shift)){
                     const auto previous=scale_shift;scale_shift=uint8_t(int(scale_shift)+change);
                     if(!context->tasks().start(initialize()))scale_shift=previous;
                 }}
         }
-        if(renderer&&now-window_start>=5000000){window_start=now;if(auto t=renderer->telemetry()){
+        if(renderer&&now-window_start>=5000000){
+            const bool refresh_clock=now/60000000!=window_start/60000000;
+            window_start=now;
+            if(refresh_clock&&!initializing&&!clock_syncing)(void)context->tasks().start(sync_wall_time());
+            if(auto t=renderer->telemetry()){
             char line[232];std::snprintf(line,sizeof(line),"J3CPP perf submitted=%llu rendered=%llu visible=%llu raster_us=%llu queue_us=%llu present_us=%llu dropped=%llu draw=%u score=%u state=%u",(unsigned long long)t->submitted_frames,(unsigned long long)t->rendered_frames,(unsigned long long)t->visible_frames,(unsigned long long)t->host_raster_us,(unsigned long long)t->queue_wait_us,(unsigned long long)t->present_us,(unsigned long long)t->dropped_frames,t->last_draw_list_bytes,g_game.score,g_game.state);
             (void)context->log().write(pxa::LogLevel::info,line);}}
         return true;
     }
-    void on_background(pxa::Context&){charge_pointer=256;j3_audio_pause(&g_audio);(void)context->clock().set_period(0);if(g_game.state==J3_STATE_CHARGING){g_game.state=J3_STATE_READY;g_game.charge=0;}stepper.reset();}
-    void on_foreground(pxa::Context& ctx){j3_audio_resume(&g_audio);stepper.reset();(void)ctx.clock().set_period(TICK_MS);(void)ctx.window().fullscreen(pxa::WindowBarMode::hidden,pxa::WindowBarMode::hidden);draw_frame();}
+    void on_background(pxa::Context&){charge_pointer=256;j3_audio_pause(&g_audio);(void)context->clock().set_period(0);j3_game_cancel(&g_game);stepper.reset();}
+    void on_foreground(pxa::Context& ctx){j3_audio_resume(&g_audio);stepper.reset();(void)ctx.clock().set_period(TICK_MS);(void)ctx.window().fullscreen(pxa::WindowBarMode::hidden,pxa::WindowBarMode::hidden);(void)ctx.tasks().start(sync_wall_time());draw_frame();}
 };
 }
 PXA_APPLICATION(JumpJump)

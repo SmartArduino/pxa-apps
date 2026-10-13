@@ -83,7 +83,7 @@ cmake --build build/simulator/pai-touch --target pxsys_voxel_resources_test --pa
 python3 local/pxa-apps/common/cpp/tests/reference/run_aot_probe.py --simulator-build build/simulator/pai-touch --artifacts local/cpp-game-ports-20261010 --output local/cpp-game-ports-20261010/aot-check
 ```
 
-显示矩阵与真机采样命令参见 [Pixel Dungeon 报告](../../pixel-dungeon-cpp/docs/2026-10-10-validation.zh-CN.md)。新设备包须单独按目标构建，避免带入其他架构。固定画质基准使用 `J3_FORCE_SCALE_SHIFT=0`；桌面准备场景在预热期内不会触发自动降档。
+显示矩阵与真机采样命令参见 [Pixel Dungeon 报告](../../pixel-dungeon/docs/2026-10-10-validation.zh-CN.md)。新设备包须单独按目标构建，避免带入其他架构。固定画质基准使用 `J3_FORCE_SCALE_SHIFT=0`；桌面准备场景在预热期内不会触发自动降档。
 
 **真机补充与限制**
 

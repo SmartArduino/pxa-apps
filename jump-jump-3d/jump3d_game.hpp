@@ -14,7 +14,7 @@ namespace jump {
 #define J3_BLOCK_HALF_HEIGHT (J3_BLOCK_HEIGHT * 0.5F)
 #define J3_BODY_RADIUS 0.12F
 
-#define J3_BLOCK_MAX 6
+#define J3_BLOCK_MAX 3
 #define J3_WAVE_MAX 4
 
 enum {
@@ -23,7 +23,22 @@ enum {
     J3_KIND_MUSIC,
     J3_KIND_STORE,
     J3_KIND_WELL,
-    J3_KIND_RUBIK
+    J3_KIND_RUBIK,
+    J3_KIND_CLOCK,
+    J3_KIND_GLOW,
+    J3_KIND_DISK,
+    J3_KIND_GOLF,
+    J3_KIND_CUP,
+    J3_KIND_MEDICINE,
+    J3_KIND_PAPER,
+    J3_KIND_BOOK,
+    J3_KIND_PARCEL,
+    J3_KIND_GIFT,
+    J3_KIND_STOOL,
+    J3_KIND_CONSOLE,
+    J3_KIND_FACE,
+    J3_KIND_MONEY,
+    J3_KIND_COUNT
 };
 
 enum {
@@ -40,7 +55,8 @@ enum {
     J3_LAND_PERFECT,
     J3_LAND_EDGE,
     J3_LAND_BACK,
-    J3_LAND_MISS
+    J3_LAND_MISS,
+    J3_LAND_NEAR_EDGE
 };
 
 typedef struct {
@@ -59,6 +75,7 @@ typedef struct {
     uint8_t active;
     uint8_t power; /* 1..4 rings awarded by consecutive centre hits */
     float t;
+    float x, z; // A wave stays at its landing position, even after another jump.
 } j3_wave_t;
 
 typedef struct {
@@ -80,6 +97,7 @@ typedef struct {
     /* Charging. */
     float charge;
     float body_scale;
+    float body_width_scale;
 
     /* Player transform. */
     float px, py, pz;
@@ -92,7 +110,11 @@ typedef struct {
 
     /* Analytic landing solved on release. */
     float land_x, land_z, land_time;
+    float flight_elapsed;
+    float launch_x, launch_y, launch_z, launch_vy;
     uint8_t land_result;
+    bool quick_jump; // Captured at release, not after the flight.
+    uint8_t score_multiplier;
 
     /* Feedback. */
     float popup_timer;
@@ -106,6 +128,7 @@ typedef struct {
 
     /* Camera follow point (world). */
     float cam_x, cam_z;
+    float special_age; // Only the occupied special block animates.
 
     j3_block_t blocks[J3_BLOCK_MAX];
     uint8_t block_count;
@@ -118,6 +141,9 @@ void j3_game_reset(j3_game_t *game, uint32_t seed);
  * the restart tap while the result panel is up. */
 void j3_game_press(j3_game_t *game);
 void j3_game_release(j3_game_t *game);
+void j3_game_cancel(j3_game_t *game);
+// Reconcile the visual charge with the actual DOWN/UP timestamps.
+void j3_game_charge(j3_game_t *game, float seconds);
 
 /* Advances by `dt` seconds. */
 void j3_game_tick(j3_game_t *game, float dt);
@@ -131,6 +157,8 @@ float j3_block_top(const j3_block_t *block);
 float j3_block_offset(const j3_block_t *block);
 /* 1 when (x, z) is inside the block footprint. */
 int j3_block_contains(const j3_block_t *block, float x, float z);
+/* Shared footprint classification for collisions and shadows. */
+bool j3_block_round(const j3_block_t *block);
 /* Points awarded when the block's stay bonus triggers (0 for plain blocks). */
 uint16_t j3_block_bonus(const j3_block_t *block);
 

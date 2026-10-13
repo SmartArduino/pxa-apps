@@ -1,0 +1,15 @@
+Test project /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/jump-reference-20261013/sanitized
+    Start 1: jump_game
+1/5 Test #1: jump_game ........................   Passed    0.23 sec
+    Start 2: jump_frame_memory
+2/5 Test #2: jump_frame_memory ................   Passed   62.87 sec
+    Start 5: sdk_arcade
+3/5 Test #5: sdk_arcade .......................   Passed    0.02 sec
+    Start 8: jump_upstream_motion
+4/5 Test #8: jump_upstream_motion .............   Passed    0.02 sec
+    Start 9: jump_input_pacing
+5/5 Test #9: jump_input_pacing ................   Passed    0.03 sec
+
+100% tests passed out of 5
+
+Total Test time (real) =  63.17 sec

@@ -11,7 +11,9 @@
  * Build with tools/preview.sh, for example:
  *   tools/preview.sh --frames 3 --auto 4 --charge 0.34 --out /tmp/opencode/shot
  */
+#ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200809L
+#endif
 
 #include <stdint.h>
 #include <stdio.h>
@@ -262,12 +264,18 @@ static int present(const char *output, int frame) {
 /* Exact charge time that lands on `distance` world units away. */
 static float charge_for_distance(float distance) {
     /* distance = 7 c * 2 (13.5 + 1.5 c) / 72 */
-    const float a = 7.0F * 2.0F * 1.5F / 72.0F;
-    const float b = 7.0F * 2.0F * 13.5F / 72.0F;
-    const float c = -distance;
-    const float discriminant = b * b - 4.0F * a * c;
-    if (discriminant <= 0.0F) return 0.0F;
-    return (-b + __builtin_sqrtf(discriminant)) / (2.0F * a);
+    // Reference ballistic equation, including the compressed launch height.
+    // Binary search is test/preview automation only, outside the game path.
+    float low=0, high=3;
+    for(int i=0;i<32;++i){
+        const float charge=(low+high)*0.5F;
+        const float vy=13.5F+1.5F*charge;
+        const float rise=0.55F*(1-std::max(0.5F,1-0.32F*charge));
+        const float duration=(vy+__builtin_sqrtf(vy*vy-144*rise))/72;
+        const float range=std::min(15.0F,7*charge)*duration;
+        if(range<distance)low=charge;else high=charge;
+    }
+    return (low+high)*0.5F;
 }
 
 int main(int argc, char **argv) {
@@ -281,6 +289,7 @@ int main(int argc, char **argv) {
     int forced_kind = 0;
     int shots = 0;
     int hold = 0;
+    float special_age = -1;
     int shot_ticks = 4;
     float shot_charge = 0.4F;
     float pose_yaw = 0.0F;
@@ -316,6 +325,8 @@ int main(int argc, char **argv) {
             shot_ticks = atoi(argv[++index]);
         else if (strcmp(argv[index], "--shot-charge") == 0 && index + 1 < argc)
             shot_charge = (float)atof(argv[++index]);
+        else if (strcmp(argv[index], "--special-age") == 0 && index + 1 < argc)
+            special_age = (float)atof(argv[++index]);
         else if (strcmp(argv[index], "--kind") == 0 && index + 1 < argc)
             forced_kind = atoi(argv[++index]);
         else if (strcmp(argv[index], "--error") == 0 && index + 1 < argc)
@@ -374,6 +385,11 @@ int main(int argc, char **argv) {
     j3_game_reset(&game, 0x51ED2701u);
     j3_render_configure(&render, g_width, g_height, g_resources.capabilities);
     j3_render_adapt(&render,display);
+    if (special_age >= 0) {
+        game.blocks[0].kind = forced_kind > 0 ? forced_kind : J3_KIND_MUSIC;
+        game.blocks[0].bonus_done = 1;
+        game.special_age = special_age;
+    }
     if (pose_set) {
         /* Freeze the little man in a chosen heading / tumble so a single frame
          * shows exactly which faces survive culling. */

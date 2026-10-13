@@ -3,6 +3,8 @@
 
 No gameplay, clock, audio or draw calls are changed. The trace counts callbacks,
 MOVE events and charging draw attempts so the real workloads can be compared.
+The C reference counts rounded fixed steps; the maintained C++ game advances
+elapsed time directly, so its steps field is zero and ticks counts callbacks.
 """
 import argparse
 import json
@@ -102,8 +104,12 @@ c.write_text(source[:start] + """                const char *keys[]={"down","up"
 cpp = args.output / "jump-jump-3d/main.cpp"
 replace(cpp, "using namespace jump;", "using namespace jump;" + fields)
 replace(cpp, "        auto draw=frame_memory.draw();", "        if(g_game.state==J3_STATE_CHARGING) ++trace_draws;\n        auto draw=frame_memory.draw();")
-replace(cpp, "        auto steps=stepper.advance(now);", "        auto steps=stepper.advance(now);" + ticks.replace("{now}", "now"))
+replace(cpp, "        const float dt=stepper.advance(timestamp_us);",
+        "        const float dt=stepper.advance(timestamp_us);" +
+        ticks.replace("{now}", "timestamp_us").replace("trace_steps += steps;", ""))
 replace(cpp, "    void pointer(const pxa::ui::CanvasPointer& p){if(!renderer||initializing)return;", "    void pointer(const pxa::ui::CanvasPointer& p){if(!renderer||initializing)return;\n        if(p.phase==pxa::ui::pointer_phase_move) ++trace_moves;")
 replace(cpp, "        if(p.phase==pxa::ui::pointer_phase_down){", "        if(p.phase==pxa::ui::pointer_phase_down){\n            " + reset.replace("{pointer}", "p"))
-replace(cpp, "            j3_game_release(&g_game);", release.replace("{pointer}", "p").replace("{log}", '(void)context->log().write(pxa::LogLevel::info,trace);'))
+replace(cpp, "            j3_game_release(&g_game);", "            {" +
+        release.replace("{pointer}", "p").replace("{log}", '(void)context->log().write(pxa::LogLevel::info,trace);') +
+        "            }")
 print("Prepared isolated release-only diagnostics; build with J3_FORCE_SCALE_SHIFT=0")

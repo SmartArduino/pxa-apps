@@ -2,6 +2,7 @@
  * sources without a Host: block generation, the flight solver, the centre-hit
  * scoring ladder, the stay bonuses and both failure paths. */
 #include <assert.h>
+#include <algorithm>
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -17,15 +18,23 @@ static int near(float left, float right, float tolerance) {
 /* Exact charge time that lands `distance` world units away, mirroring the
  * release integration in j3_game_release. */
 static float charge_for_distance(float distance) {
-    const float a = 2.0F * 7.0F * 1.5F / 72.0F;
-    const float b = 2.0F * 7.0F * 13.5F / 72.0F;
-    const float discriminant = b * b + 4.0F * a * distance;
-    return (-b + sqrtf(discriminant)) / (2.0F * a);
+    // Reference ballistic equation, including the compressed launch height.
+    // Binary search is test/preview automation only, outside the game path.
+    float low=0, high=3;
+    for(int i=0;i<32;++i){
+        const float charge=(low+high)*0.5F;
+        const float vy=13.5F+1.5F*charge;
+        const float rise=0.55F*(1-std::max(0.5F,1-0.32F*charge));
+        const float duration=(vy+__builtin_sqrtf(vy*vy-144*rise))/72;
+        const float range=std::min(15.0F,7*charge)*duration;
+        if(range<distance)low=charge;else high=charge;
+    }
+    return (low+high)*0.5F;
 }
 
 /* Presses, charges exactly `charge` seconds and releases. The charge uses a
  * fine tick so the release lands on the requested distance: the game itself
- * runs 20 ms ticks, which is the player's real timing granularity. */
+ * uses the real elapsed DOWN/UP time, independently of clock cadence. */
 static void jump_with_charge(j3_game_t *game, float charge) {
     j3_game_press(game);
     assert(game->state == J3_STATE_CHARGING);
@@ -65,8 +74,8 @@ static void discharge(j3_game_t *game) {
 }
 
 static void test_reset_is_deterministic(void) {
-    j3_game_t first;
-    j3_game_t second;
+    j3_game_t first{};
+    j3_game_t second{};
     int index;
     j3_game_reset(&first, 0x1234u);
     j3_game_reset(&second, 0x1234u);
@@ -88,7 +97,7 @@ static void test_reset_is_deterministic(void) {
 }
 
 static void test_block_helpers(void) {
-    j3_game_t game;
+    j3_game_t game{};
     j3_block_t block;
     j3_game_reset(&game, 7u);
 
@@ -127,7 +136,7 @@ static void test_block_helpers(void) {
 }
 
 static void test_centre_hits_double_the_score(void) {
-    j3_game_t game;
+    j3_game_t game{};
     j3_game_reset(&game, 0x51ED2701u);
     assert(game.state == J3_STATE_READY);
 
@@ -168,7 +177,7 @@ static void test_centre_hits_double_the_score(void) {
 }
 
 static void test_centre_hit_chain_is_capped(void) {
-    j3_game_t game;
+    j3_game_t game{};
     int index;
     j3_game_reset(&game, 0xBEEF01u);
     for (index = 0; index < 24; ++index) {
@@ -183,7 +192,7 @@ static void test_centre_hit_chain_is_capped(void) {
 }
 
 static void test_off_centre_lands_reset_the_chain(void) {
-    j3_game_t game;
+    j3_game_t game{};
     j3_game_reset(&game, 0xA11CEu);
     game.quick_window = 0.0F;
     jump_centred(&game, 0.0F);
@@ -192,6 +201,7 @@ static void test_off_centre_lands_reset_the_chain(void) {
     assert(game.combo == 1u);
 
     /* 0.25 units off the centre is still on the block but far from perfect. */
+    game.quick_window=0;
     jump_centred(&game, 0.25F);
     assert(game.land_result == J3_LAND_OK);
     settle(&game);
@@ -203,38 +213,37 @@ static void test_off_centre_lands_reset_the_chain(void) {
 }
 
 static void test_quick_jump_doubles_a_centre_hit(void) {
-    j3_game_t game;
+    j3_game_t game{};
     j3_game_reset(&game, 0xFA57u);
-    game.quick_window = 0.0F;
+    game.quick_window = 0.8F;
     jump_centred(&game, 0.0F);
+    assert(game.quick_jump);
     settle(&game);
-    assert(game.score == 2u);
-    /* Land again inside the 0.8 s window: the first chain step doubles. */
-    game.quick_window = 0.5F;
-    jump_centred(&game, 0.0F);
-    settle(&game);
-    assert(game.score == 2u + 4u);
-    assert(game.combo == 2u);
-    printf("ok: a quick centre hit doubles the first step\n");
+    assert(game.score == 4u && game.combo==1);
+    // Quick +4 is part of the multiplier ladder: the following perfect is +6.
+    game.quick_window=0;
+    jump_centred(&game,0);settle(&game);
+    assert(game.score==10 && game.popup_points==6);
+    printf("ok: quick is captured on release; the perfect ladder continues 4, 6\n");
 }
 
-static void test_short_jump_tips_over_the_near_block(void) {
-    j3_game_t game;
+static void test_short_jump_returns_to_the_near_block(void) {
+    j3_game_t game{};
     j3_game_reset(&game, 0x5A07u);
     /* Barely any charge: the character lands back on the block it left. */
     jump_with_charge(&game, 0.05F);
     assert(game.land_result == J3_LAND_BACK);
     settle(&game);
-    assert(game.state == J3_STATE_TIP || game.state == J3_STATE_FALL);
-    discharge(&game);
-    assert(game.state == J3_STATE_OVER);
-    assert(game.score == 0u);
+    assert(game.state == J3_STATE_READY);
+    assert(game.score == 0u && game.jump_count == 0u);
     assert(game.combo == 0u);
-    printf("ok: a short jump tips over the near block\n");
+    jump_centred(&game, 0);settle(&game);
+    assert(game.score==2 && game.state==J3_STATE_READY);
+    printf("ok: a short jump returns safely and can be followed by another jump\n");
 }
 
 static void test_overshoot_misses_the_far_block(void) {
-    j3_game_t game;
+    j3_game_t game{};
     j3_game_reset(&game, 0x0091u);
     jump_with_charge(&game, 1.6F);
     assert(game.land_result == J3_LAND_MISS);
@@ -246,7 +255,7 @@ static void test_overshoot_misses_the_far_block(void) {
 }
 
 static void test_stay_bonus_and_cancel(void) {
-    j3_game_t game;
+    j3_game_t game{};
     j3_game_reset(&game, 0x60D5u);
 
     /* Land on a music box and stay: 30 points after two seconds. */
@@ -291,8 +300,56 @@ static void test_stay_bonus_and_cancel(void) {
     printf("ok: stay bonuses award once and cancel on the next jump\n");
 }
 
+static void test_all_platforms_are_playable(void) {
+    for (uint8_t kind = J3_KIND_BOX; kind < J3_KIND_COUNT; ++kind) {
+        j3_game_t game{};
+        j3_game_reset(&game, 123);
+        auto& target = game.blocks[1];
+        target.kind = kind;
+        target.radius = 0.35F;
+        assert(j3_block_contains(&target, target.x, target.z));
+        assert(!j3_block_contains(&target, target.x+0.36F, target.z));
+        const bool corner_inside = j3_block_contains(&target,target.x+0.30F,target.z+0.30F);
+        assert(corner_inside != j3_block_round(&target));
+        if (kind >= J3_KIND_CLOCK) assert(j3_block_bonus(&target) == 0);
+        jump_centred(&game, 0);
+        assert(game.land_result == J3_LAND_PERFECT);
+        settle(&game);
+        assert(game.state == J3_STATE_READY);
+        assert(game.blocks[0].kind == kind);
+        assert(near(game.py,j3_block_top(&game.blocks[0]),0.0001F));
+        const uint32_t score = game.score;
+        j3_game_tick(&game,3);
+        assert(game.score == score + j3_block_bonus(&game.blocks[0]));
+    }
+    printf("ok: all platform footprints, landings and stay rewards\n");
+}
+
+static void test_platform_generation_covers_catalog(void) {
+    bool seen[J3_KIND_COUNT]{};
+    for (unsigned seed : {123u,456u,789u,101112u}) {
+        j3_game_t game{};
+        j3_game_reset(&game,seed);
+        for (unsigned i=0;i<200;++i) {
+            const auto& next=game.blocks[1];
+            const auto& future=game.blocks[2];
+            assert(future.kind>0 && future.kind<J3_KIND_COUNT);
+            seen[future.kind]=true;
+            const float gap=std::abs(future.x-next.x)+std::abs(future.z-next.z)
+                -next.radius-future.radius;
+            assert(gap>=0.0999F && gap<=game.max_distance+0.0001F);
+            game.quick_window=0;
+            jump_centred(&game,0);
+            settle(&game);
+            assert(game.state==J3_STATE_READY);
+        }
+    }
+    for (unsigned i=J3_KIND_BOX;i<J3_KIND_COUNT;++i) assert(seen[i]);
+    printf("ok: deterministic generation reaches every platform and preserves gaps\n");
+}
+
 static void test_difficulty_ramps_up(void) {
-    j3_game_t game;
+    j3_game_t game{};
     float start_min;
     float start_distance;
     int index;
@@ -330,9 +387,11 @@ int main(void) {
     test_centre_hit_chain_is_capped();
     test_off_centre_lands_reset_the_chain();
     test_quick_jump_doubles_a_centre_hit();
-    test_short_jump_tips_over_the_near_block();
+    test_short_jump_returns_to_the_near_block();
     test_overshoot_misses_the_far_block();
     test_stay_bonus_and_cancel();
+    test_all_platforms_are_playable();
+    test_platform_generation_covers_catalog();
     test_difficulty_ramps_up();
     printf("jump-jump-3d gameplay tests passed\n");
     return 0;

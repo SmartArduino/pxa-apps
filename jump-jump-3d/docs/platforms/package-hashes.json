@@ -1,0 +1,34 @@
+{
+  "main.esp32-s3.aot": {
+    "before_bytes": 441772,
+    "after_bytes": 544240,
+    "delta_bytes": 102468,
+    "before_sha256": "5d5d1517f652e37b31d342b09c8e87cf7ac691e1573f34ee8ea089307568f1b2",
+    "after_sha256": "7750b5880e4b09b6b3ba5ab7e48106ae45842e4395714dbf5057145500e0479a"
+  },
+  "main.esp32-s31.aot": {
+    "before_bytes": 465836,
+    "after_bytes": 587756,
+    "delta_bytes": 121920,
+    "before_sha256": "0a976ee9a0f83cb17e2cdcaea0a8d0c78906d517bbd535123da70f1f19e67cc5",
+    "after_sha256": "158d073d3d09b3e6ef38fdae494656e3326cadb51ddc6df898e1bcf98b0a83f2"
+  },
+  "main.linux-x86_64.aot": {
+    "before_bytes": 365300,
+    "after_bytes": 446140,
+    "delta_bytes": 80840,
+    "before_sha256": "b26ded5eb905fc75d1bd4110d7de3c2aa7028628c3c14e1bd0f5b769578f9dab",
+    "after_sha256": "39b5c57cae5313a4ca5d4fdd74cb781b3c2b40c04dbd3299fa9c0700fdbb876d"
+  },
+  "device_container": {
+    "bytes": 1526978,
+    "sha256": "33dde7e0637c839896b3760dd45e670b807bd1a41180adf20d39351f0744eab5",
+    "installed": true,
+    "device_aot_equals_release": true
+  },
+  "device_firmware": {
+    "bytes": 3739952,
+    "sha256": "1bfa5da206e6bae5a30b3eea24b97d80593b4389dbfff6a1c400b3181cebe209",
+    "flashed_partition": "app at 0x10000; existing data retained"
+  }
+}

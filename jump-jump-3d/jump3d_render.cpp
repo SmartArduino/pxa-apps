@@ -122,6 +122,31 @@ static void run_flush(j3_render_t *render) {
     run_begin(render);
 }
 
+// Constant-light rectangles need four coordinates and one RGB565 colour,
+// rather than six lit vertices. Flush pending bodies to keep painter order.
+static void constant_quad(j3_render_t *render, const j3_point_t quad[4],
+                           uint8_t color, float light) {
+    if (!(render->capabilities &
+          pxa::game::capability_bit(pxa::game::RenderCapability::flat_quad))) {
+        run_quad(render,color,quad);
+        return;
+    }
+    std::array<int16_t,8> xy;
+    for (unsigned i=0;i<4;++i) {
+        pxa::game::Vertex vertex;
+        store_vertex(&vertex,quad[i].x,quad[i].y,light);
+        xy[2*i]=vertex.x_q4;xy[2*i+1]=vertex.y_q4;
+    }
+    int64_t area=0;
+    for (unsigned i=0;i<4;++i) {
+        const unsigned next=(i+1)%4;
+        area+=int64_t(xy[2*i])*xy[2*next+1]-int64_t(xy[2*next])*xy[2*i+1];
+    }
+    if (!area) return;
+    run_flush(render);
+    render->list.frame->quad(xy,{j3_color_lit_rgb565(color,unsigned(light))});
+}
+
 /* --------------------------------------------------------------- projection */
 
 static j3_point_t project(const j3_render_t *render, float x, float y, float z,
@@ -153,7 +178,7 @@ static void screen_rect(j3_render_t *render, float x, float y, float width,
     v[1] = screen_point(x + width, y, J3_LIGHT_FULL);
     v[2] = screen_point(x + width, y + height, J3_LIGHT_FULL);
     v[3] = screen_point(x, y + height, J3_LIGHT_FULL);
-    run_quad(render, color, v);
+    constant_quad(render, v, color, J3_LIGHT_FULL);
 }
 
 static void textured_quad(j3_render_t *render, uint8_t slot,
@@ -171,6 +196,10 @@ static void textured_quad(j3_render_t *render, uint8_t slot,
         vertices[index].v_q4 =
             (int16_t)((v0 + (v1 - v0) * k_v[index]) * 16.0F + 0.5F);
     }
+    int64_t area=0;
+    for(unsigned i=0;i<4;++i){const auto& a=vertices[i];const auto& b=vertices[(i+1)%4];
+        area+=int64_t(a.x_q4)*b.y_q4-int64_t(b.x_q4)*a.y_q4;}
+    if(!area)return; // Tiny fading effects can collapse after Q4 quantisation.
     (void)arcade::textured_quad_flags(
         &render->list, vertices, slot,
         arcade::quad_painter | arcade::quad_transparent_index0 | flags);
@@ -236,7 +265,7 @@ static void shadow_fallback(j3_render_t *render, const j3_block_t *block,
     j3_point_t v[4];
     const float y = 0.003F;
     const uint8_t color = J3_INDEX(J3_HUE_UI, 7);
-    if (shape->kind == J3_KIND_ROUND || shape->kind == J3_KIND_WELL) {
+    if (j3_block_round(shape)) {
         int index;
         const j3_point_t center =
             project(render, center_x, y, center_z, J3_LIGHT_FULL);
@@ -267,8 +296,7 @@ static void shadow_fallback(j3_render_t *render, const j3_block_t *block,
 /* Ground shadow under a block: a wide soft spread plus a tighter, darker
  * contact core, matching the original's two-tone blobs. */
 static void draw_ground_shadow(j3_render_t *render, const j3_block_t *block) {
-    const int round_shape =
-        block->kind == J3_KIND_ROUND || block->kind == J3_KIND_WELL;
+    const int round_shape = j3_block_round(block);
     const uint8_t slot = round_shape ? J3_TEXTURE_SHADOW_ROUND
                                      : J3_TEXTURE_SHADOW_SQUARE;
     const float center_x = block->x - 0.07F;
@@ -428,8 +456,9 @@ static void draw_disc(j3_render_t *render, float cx, float cy, float cz,
 
 static void draw_ring(j3_render_t *render, float cx, float cy, float cz,
                       float inner, float outer, uint8_t color, float light,
-                      int segments) {
+                      int segments, bool blend = false) {
     int index;
+    if(blend && render->has_blend)run_flush(render);
     for (index = 0; index < segments; ++index) {
         const float a0 = J3_TWO_PI * (float)index / (float)segments;
         const float a1 = J3_TWO_PI * (float)(index + 1) / (float)segments;
@@ -442,7 +471,10 @@ static void draw_ring(j3_render_t *render, float cx, float cy, float cz,
                           cz + j3_sin(a1) * outer, light);
         quad[3] = project(render, cx + j3_cos(a1) * inner, cy,
                           cz + j3_sin(a1) * inner, light);
-        run_quad(render, color, quad);
+        if(blend && render->has_blend)
+            textured_quad(render,J3_TEXTURE_SOLID,arcade::quad_blend_75,
+                          quad,0.5F,0.5F,0.5F,0.5F,light);
+        else constant_quad(render,quad,color,light);
     }
 }
 
@@ -460,7 +492,7 @@ static void draw_rect_on_top(j3_render_t *render, const j3_block_t *block,
                       block->z + offset_z + half_z, light);
     quad[3] = project(render, block->x + offset_x - half_x, y,
                       block->z + offset_z + half_z, light);
-    run_quad(render, color, quad);
+    constant_quad(render,quad,color,light);
 }
 
 static void draw_round_block(j3_render_t *render, const j3_block_t *block) {
@@ -500,7 +532,7 @@ static void draw_well_block(j3_render_t *render, const j3_block_t *block) {
               block->radius * 0.16F, J3_WELL_DARK, J3_LIGHT_TOP - 2.0F, 8);
 }
 
-static void draw_music_block(j3_render_t *render, const j3_block_t *block) {
+static void draw_music_block(j3_render_t *render, const j3_block_t *block, float age) {
     const float top = j3_block_top(block);
     const float record = block->radius * 0.66F;
     const float arm = block->radius * 0.92F;
@@ -516,6 +548,12 @@ static void draw_music_block(j3_render_t *render, const j3_block_t *block) {
               J3_RING_SEGMENTS);
     draw_disc(render, block->x, top + 0.002F, block->z, record * 0.16F,
               J3_MUSIC_LIGHT, J3_LIGHT_TOP - 1.0F, 8);
+    if (age >= 0) {
+        const float angle = age * 5.0F;
+        draw_disc(render, block->x + j3_cos(angle) * record * 0.5F, top + 0.0025F,
+                  block->z + j3_sin(angle) * record * 0.5F, record * 0.12F,
+                  J3_SOLID_ORANGE, J3_LIGHT_FULL, 6);
+    }
     quad[0] = project(render, block->x + arm, top + 0.003F, block->z - arm,
                       J3_LIGHT_TOP - 2.0F);
     quad[1] = project(render, block->x + arm + 0.05F, top + 0.003F,
@@ -527,7 +565,7 @@ static void draw_music_block(j3_render_t *render, const j3_block_t *block) {
     run_quad(render, J3_MUSIC_LIGHT, quad);
 }
 
-static void draw_store_block(j3_render_t *render, const j3_block_t *block) {
+static void draw_store_block(j3_render_t *render, const j3_block_t *block, float age) {
     const float top = j3_block_top(block);
     const float base = j3_block_offset(block);
     const float low = base + (top - base) * 0.32F;
@@ -544,7 +582,20 @@ static void draw_store_block(j3_render_t *render, const j3_block_t *block) {
                       J3_LIGHT_FRONT + 3.0F);
     quad[3] = project(render, block->x - block->radius * 0.55F, high, front_z,
                       J3_LIGHT_FRONT + 3.0F);
-    run_quad(render, J3_STORE_WINDOW, quad);
+    run_quad(render, age < 0 ? J3_STORE_WINDOW : J3_STORE_DARK, quad);
+    if (age >= 0) {
+        const float opening = j3_clamp(age / 0.25F, 0, 1) * j3_clamp((2.5F - age) / 0.25F, 0, 1);
+        const float half = block->radius * 0.55F;
+        for(int side=0;side<2;++side) {
+            const float edge = side ? half : -half;
+            const float inner = side ? half * opening : -half * opening;
+            quad[0] = project(render, block->x + edge, low, front_z + 0.001F, J3_LIGHT_FRONT + 3);
+            quad[1] = project(render, block->x + inner, low, front_z + 0.001F, J3_LIGHT_FRONT + 3);
+            quad[2] = project(render, block->x + inner, high, front_z + 0.001F, J3_LIGHT_FRONT + 3);
+            quad[3] = project(render, block->x + edge, high, front_z + 0.001F, J3_LIGHT_FRONT + 3);
+            run_quad(render, J3_STORE_WINDOW, quad);
+        }
+    }
 
     quad[0] = project(render, left_x, low, block->z - block->radius * 0.55F,
                       J3_LIGHT_LEFT + 3.0F);
@@ -560,7 +611,7 @@ static void draw_store_block(j3_render_t *render, const j3_block_t *block) {
                      block->radius * 0.26F, J3_STORE_DARK, J3_LIGHT_TOP - 3.0F);
 }
 
-static void draw_rubik_block(j3_render_t *render, const j3_block_t *block) {
+static void draw_rubik_block(j3_render_t *render, const j3_block_t *block, float age) {
     static const uint8_t k_faces[9] = {
         J3_INDEX(J3_HUE_BLOCK, 7),  J3_INDEX(J3_HUE_BLOCK, 9),
         J3_INDEX(J3_HUE_BLOCK, 3),  J3_INDEX(J3_HUE_BLOCK, 4),
@@ -570,6 +621,9 @@ static void draw_rubik_block(j3_render_t *render, const j3_block_t *block) {
     };
     const float top = j3_block_top(block);
     const float pitch = block->radius * 0.55F;
+    const float turn = age < 0 ? 0 : float(int(age / 1.2F)) +
+                       j3_clamp((age - float(int(age / 1.2F)) * 1.2F) / 0.45F, 0, 1);
+    const float cosine = j3_cos(turn * J3_HALF_PI), sine = j3_sin(turn * J3_HALF_PI);
     int row;
     int column;
     draw_box(render, block);
@@ -577,14 +631,22 @@ static void draw_rubik_block(j3_render_t *render, const j3_block_t *block) {
         for (column = 0; column < 3; ++column) {
             const float offset_x = ((float)column - 1.0F) * pitch;
             const float offset_z = ((float)row - 1.0F) * pitch;
-            draw_rect_on_top(render, block, top, offset_x, offset_z,
-                             pitch * 0.44F, pitch * 0.44F,
-                             k_faces[row * 3 + column], J3_LIGHT_TOP - 1.0F);
+            j3_point_t quad[4];
+            for(int corner=0;corner<4;++corner){
+                const float x=offset_x+(corner==0||corner==3 ? -1 : 1)*pitch*0.44F;
+                const float z=offset_z+(corner<2 ? -1 : 1)*pitch*0.44F;
+                quad[corner]=project(render,block->x+x*cosine-z*sine,top+0.002F,
+                                    block->z+x*sine+z*cosine,J3_LIGHT_TOP-1);
+            }
+            run_quad(render,k_faces[row*3+column],quad);
         }
     }
 }
 
-static void draw_block(j3_render_t *render, const j3_block_t *block) {
+#include "jump3d_blocks.inc"
+
+static void draw_block(j3_render_t *render, const j3_block_t *block, float age,
+                       float time, bool occupied) {
     switch (block->kind) {
     case J3_KIND_ROUND:
         draw_round_block(render, block);
@@ -593,16 +655,18 @@ static void draw_block(j3_render_t *render, const j3_block_t *block) {
         draw_well_block(render, block);
         break;
     case J3_KIND_MUSIC:
-        draw_music_block(render, block);
+        draw_music_block(render, block, age);
         break;
     case J3_KIND_STORE:
-        draw_store_block(render, block);
+        draw_store_block(render, block, age);
         break;
     case J3_KIND_RUBIK:
-        draw_rubik_block(render, block);
+        draw_rubik_block(render, block, age);
         break;
     default:
-        draw_box(render, block);
+        if (block->kind >= J3_KIND_CLOCK)
+            draw_decorated_block(render, block, time, occupied);
+        else draw_box(render, block);
         break;
     }
     if (block->center_dot) {
@@ -631,7 +695,7 @@ static void char_point(const j3_game_t *game, float lx, float ly, float lz,
     float x = lx;
     float z = lz;
     float y;
-    const float widen = 1.0F + (1.0F - game->body_scale) * 0.4F;
+    const float widen = game->body_width_scale * (1.0F + (1.0F - game->land_scale) * 0.7F);
     if (game->root_yaw > 2.0F) {
         x = -lx;
         z = -lz;
@@ -644,7 +708,7 @@ static void char_point(const j3_game_t *game, float lx, float ly, float lz,
     }
     x *= widen;
     z *= widen;
-    y = ly * game->body_scale;
+    y = ly * game->body_scale * game->land_scale;
     {
         const float ax = game->dir_z;
         const float az = -game->dir_x;
@@ -667,7 +731,7 @@ static void char_direction(const j3_game_t *game, float nx, float ny, float nz,
     float x = nx;
     float y = ny;
     float z = nz;
-    const float widen = 1.0F + (1.0F - game->body_scale) * 0.4F;
+    const float widen = game->body_width_scale * (1.0F + (1.0F - game->land_scale) * 0.7F);
     if (game->root_yaw > 2.0F) {
         x = -nx;
         z = -nz;
@@ -683,7 +747,7 @@ static void char_direction(const j3_game_t *game, float nx, float ny, float nz,
             x /= widen;
             z /= widen;
         }
-        if (game->body_scale > 0.001F) y /= game->body_scale;
+        if (game->body_scale > 0.001F) y /= game->body_scale * game->land_scale;
     }
     {
         const float ax = game->dir_z;
@@ -907,27 +971,90 @@ static void draw_man_shadow(j3_render_t *render, const j3_game_t *game) {
 /* ---------------------------------------------------------------- feedback */
 
 static void draw_waves(j3_render_t *render, const j3_game_t *game) {
-    const float top = j3_block_top(&game->blocks[0]);
-    int index;
-    for (index = 0; index < J3_WAVE_MAX; ++index) {
-        const j3_wave_t *wave = &game->waves[index];
-        float t;
-        float radius;
-        uint8_t color;
-        float light;
-        if (!wave->active) continue;
-        t = wave->t / 0.62F;
-        radius = (0.22F + 0.34F * t) *
-                 (1.0F + (float)(wave->power - 1) * 0.16F);
-        if (t > 0.5F) {
-            color = J3_INDEX(J3_HUE_NEUTRAL, 13);
-            light = J3_LIGHT_FULL - (t - 0.5F) * 34.0F;
-        } else {
-            color = J3_WHITE;
-            light = J3_LIGHT_FULL;
+    for (int index = 0; index < J3_WAVE_MAX; ++index) {
+        const auto& wave = game->waves[index];
+        if (!wave.active || wave.t < 0) continue;
+        const float t = wave.t / (0.5F / (1 + 0.2F * index));
+        const float scale = 1 + 3 * t;
+        draw_ring(render, wave.x, J3_BLOCK_HEIGHT + 0.01F + index * 0.01F,
+                  wave.z, (0.3F - 0.08F * (1-t)) * scale, 0.3F * scale,
+                  J3_WHITE, J3_LIGHT_FULL, 12, true);
+    }
+}
+
+// Stateless particles: independent of map RNG, no heap or history buffer.
+static float effect_random(uint32_t seed) {
+    seed ^= seed >> 16; seed *= 0x7feb352du; seed ^= seed >> 15;
+    seed *= 0x846ca68bu; seed ^= seed >> 16;
+    return float(seed >> 8) * (1.0F / 16777216.0F);
+}
+
+static void draw_particle(j3_render_t* render, float x, float y, float z,
+                          float size, uint8_t color) {
+    const auto center = project(render,x,y,z,J3_LIGHT_FULL);
+    const float half = size * render->scale;
+    screen_rect(render,center.x-half,center.y-half,half*2,half*2,color);
+}
+
+static void draw_effects(j3_render_t* render, const j3_game_t* game) {
+    if(game->state==J3_STATE_CHARGING) {
+        for(uint32_t i=0;i<20;++i) {
+            const float delay=i<10 ? 0 : 0.5F+effect_random(i+51);
+            const float age=game->charge-delay;
+            if(age<0)continue;
+            const float duration=0.5F+0.4F*effect_random(i+31);
+            const float cycles=age/duration;
+            const float t=cycles-float(uint32_t(cycles));
+            const float pull=(1-t)*(1-t);
+            const float x=(effect_random(i+1)*2-1)*0.8F*pull;
+            const float z=(effect_random(i+21)*2-1)*0.8F*pull;
+            const float y=0.18F+(0.1F+effect_random(i+41)*0.6F)*pull;
+            draw_particle(render,game->px+x,game->py+y,game->pz+z,
+                          0.025F*(0.5F+pull),i<15 ? J3_WHITE : J3_SOLID_GREEN);
         }
-        draw_ring(render, game->px, top + 0.0012F + (float)index * 0.0004F,
-                  game->pz, radius * 0.74F, radius, color, light, 14);
+    }
+    if(game->state==J3_STATE_FLYING) {
+        // Reconstruct the last 100 ms of the parabola instead of storing trail
+        // samples. Four small marks approximate the original pooled tail.
+        for(int i=4;i>0;--i){
+            const float t=game->flight_elapsed-i*0.02F;
+            if(t<0)continue;
+            draw_particle(render,game->launch_x+game->vx*t,
+                          game->launch_y+game->launch_vy*t-36*t*t+0.25F,
+                          game->launch_z+game->vz*t,0.02F*(1-float(i)/5),J3_WHITE);
+        }
+    }
+    const auto& landing=game->waves[0];
+    if(landing.active && landing.t>=0 && landing.t<0.5F) {
+        for(uint32_t i=0;i<10;++i){
+            const float t=landing.t/(0.3F+0.2F*effect_random(i+71));
+            if(t>=1)continue;
+            const float x=(effect_random(i+1)*2-1)*0.2F*(1+t);
+            const float z=(effect_random(i+21)*2-1)*0.2F*(1+t);
+            draw_particle(render,landing.x+x,J3_BLOCK_HEIGHT+0.03F+0.35F*t,
+                          landing.z+z,0.025F*(1-0.8F*t),J3_WHITE);
+        }
+    }
+    if(game->state!=J3_STATE_READY || !game->blocks[0].bonus_done)return;
+    const auto& block=game->blocks[0];
+    if(block.kind==J3_KIND_WELL && game->special_age<1.0F){
+        const float t=game->special_age;
+        draw_ring(render,block.x,J3_BLOCK_HEIGHT+0.004F,block.z,
+                  block.radius*(0.2F+0.6F*t),block.radius*(0.3F+0.6F*t),J3_SOLID_BLUE,J3_LIGHT_TOP,12);
+        for(uint32_t i=0;i<8;++i){
+            const float a=J3_TWO_PI*float(i)/8;
+            draw_particle(render,block.x+j3_cos(a)*t*0.5F,
+                          J3_BLOCK_HEIGHT+1.6F*t*(1-t),block.z+j3_sin(a)*t*0.5F,
+                          0.022F*(1-t),J3_SOLID_BLUE);
+        }
+    }else if(block.kind==J3_KIND_MUSIC){
+        for(uint32_t i=0;i<3;++i){
+            const float age=game->special_age+i*0.37F;
+            const float t=age-float(uint32_t(age));
+            draw_particle(render,block.x+(float(i)-1)*0.22F,
+                          J3_BLOCK_HEIGHT+0.15F+t*0.65F,block.z-0.15F,
+                          0.025F*(1-t),J3_SOLID_GREEN);
+        }
     }
 }
 
@@ -1322,13 +1449,18 @@ int j3_render_frame(j3_render_t *render, const j3_game_t *game,
         const j3_block_t *block = &game->blocks[order[i]];
         run_begin(render);
         if (!J3_PROBE_SKIP(0x02u)) draw_ground_shadow(render, block);
-        if (!J3_PROBE_SKIP(0x04u)) draw_block(render, block);
+        const bool occupied = block == &game->blocks[0] &&
+            (game->state == J3_STATE_READY || game->state == J3_STATE_CHARGING);
+        if (!J3_PROBE_SKIP(0x04u)) draw_block(render, block,
+            occupied && block->bonus_done && game->state == J3_STATE_READY ? game->special_age : -1,
+            game->time, occupied);
         run_flush(render);
     }
 
     if (!J3_PROBE_SKIP(0x08u)) {
         run_begin(render);
         draw_waves(render, game);
+        draw_effects(render, game);
         run_flush(render);
     }
 

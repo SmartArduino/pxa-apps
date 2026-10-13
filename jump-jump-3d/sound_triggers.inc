@@ -16,14 +16,16 @@ void play_state_sounds(void) {
         j3_audio_play(&g_audio, J3_CHANNEL_POP, J3_CLIP_POP, J3_GAIN_SOFT, 0);
         if (g_game.combo > 0u) {
             const uint8_t note = (uint8_t)(J3_CLIP_COMBO1 +
-                                           ((g_game.combo - 1u) % 8u));
+                                           (g_game.combo > 8u ? 7u : g_game.combo - 1u));
             j3_audio_play(&g_audio, J3_CHANNEL_COMBO, note, J3_GAIN_LOUD, 0);
         } else {
             j3_audio_stop(&g_audio, J3_CHANNEL_COMBO);
         }
         g_bonus_repeat_timer = 3.0F;
     }
-    if (g_game.bonus_popup_timer > 0.0F && g_bonus_played == 0u) {
+    if (g_game.bonus_popup_timer > 0.0F && g_bonus_played == 0u &&
+        g_game.state == J3_STATE_READY && g_game.blocks[0].bonus_done &&
+        g_game.blocks[0].kind == g_game.bonus_kind) {
         g_bonus_played = 1;
         g_bonus_repeat_timer = 3.0F;
         switch (g_game.bonus_kind) {
@@ -48,8 +50,7 @@ void play_state_sounds(void) {
             break;
         }
     }
-    if (g_bonus_repeat_timer > 0.0F) {
-        g_bonus_repeat_timer -= (float)TICK_MS * 0.001F;
+    if (g_game.blocks[0].bonus_done && g_game.blocks[0].kind == J3_KIND_MUSIC) {
         if (g_bonus_repeat_timer <= 0.0F && g_bonus_played != 0u &&
             g_game.state == J3_STATE_READY && g_game.bonus_popup_timer <= 0.0F &&
             j3_block_bonus(&g_game.blocks[0]) != 0u &&
@@ -61,14 +62,17 @@ void play_state_sounds(void) {
                           J3_GAIN_SOFT, 0);
         }
     }
-    if ((g_game.state == J3_STATE_TIP || g_game.state == J3_STATE_FALL) &&
-        g_last_state == J3_STATE_FLYING) {
+    if ((g_game.state == J3_STATE_TIP || g_game.state == J3_STATE_FALL || g_game.state == J3_STATE_OVER) &&
+        (g_last_state == J3_STATE_FLYING || g_last_state == J3_STATE_CHARGING)) {
         j3_audio_play(&g_audio, J3_CHANNEL_LAND,
-                      g_game.land_result == J3_LAND_MISS ? J3_CLIP_FALL_2
-                                                         : J3_CLIP_FALL,
+                      g_game.land_result == J3_LAND_MISS ? J3_CLIP_FALL
+                                                         : J3_CLIP_FALL_2,
                       J3_GAIN_FULL, 0);
     }
-    if (g_game.bonus_popup_timer <= 0.0F) g_bonus_played = 0;
+    if (g_game.state != J3_STATE_READY || !g_game.blocks[0].bonus_done) {
+        if(g_bonus_played)j3_audio_stop(&g_audio,J3_CHANNEL_BONUS);
+        g_bonus_played=0;
+    }
     g_last_state = g_game.state;
     g_last_score = g_game.score;
     g_last_jumps = g_game.jump_count;

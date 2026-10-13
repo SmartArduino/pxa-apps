@@ -1,0 +1,56 @@
+{
+  "seconds": 60,
+  "before": {
+    "component": 65537,
+    "submitted": 238,
+    "rendered": 199,
+    "visible": 199,
+    "raster_us": 3363437,
+    "queue_us": 968378,
+    "present_us": 4294620,
+    "dropped": 39,
+    "draw": 3944,
+    "score": 0,
+    "state": 5
+  },
+  "after": {
+    "component": 65537,
+    "submitted": 238,
+    "rendered": 199,
+    "visible": 199,
+    "raster_us": 3363437,
+    "queue_us": 968378,
+    "present_us": 4294620,
+    "dropped": 39,
+    "draw": 3944,
+    "score": 0,
+    "state": 5
+  },
+  "restarted": {
+    "component": 65537,
+    "submitted": 321,
+    "rendered": 266,
+    "visible": 265,
+    "raster_us": 4469818,
+    "queue_us": 1350173,
+    "present_us": 5677972,
+    "dropped": 54,
+    "draw": 5936,
+    "score": 0,
+    "state": 0
+  },
+  "landed": {
+    "component": 65537,
+    "submitted": 719,
+    "rendered": 620,
+    "visible": 619,
+    "raster_us": 10301589,
+    "queue_us": 2818124,
+    "present_us": 13269247,
+    "dropped": 99,
+    "draw": 8740,
+    "score": 2,
+    "state": 0
+  },
+  "renderer_recreated": false
+}

@@ -26,8 +26,8 @@ typedef struct {
 
 typedef struct {
     arcade::DrawList list;
-    int width;
-    int height;
+    uint16_t width;  /* Same bounded dimensions as the Host render surface. */
+    uint16_t height;
     pxa::ui::PixelRect hud;
     float scale;    /* pixels per world unit */
     float anchor_x; /* where the follow point lands */
@@ -36,6 +36,7 @@ typedef struct {
     uint32_t capabilities;
     uint8_t has_blend;
     uint8_t dropped;
+    uint16_t clock_minutes; /* Local clock base, excluding elapsed game time. */
     /* Interface metrics, scaled with the render target so the HUD stays
      * readable after an automatic half-resolution downgrade. The glyph tiers
      * are chosen to match the target size, so text is always drawn at scale 1. */
@@ -50,8 +51,9 @@ typedef struct {
     float button_h;
     j3_run_t runs[J3_RUN_MAX];
     uint16_t run_count;
-    pxa::game::Vertex pool[J3_POOL_VERTS];
     uint16_t pool_used;
+    pxa::game::Vertex pool[J3_POOL_VERTS];
+    uint8_t clock_seconds; /* Seconds within that minute; uses existing tail padding. */
 } j3_render_t;
 
 /* Uploads the two procedural shadow shapes and the solid texel. */

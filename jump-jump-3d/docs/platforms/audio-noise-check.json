@@ -1,0 +1,9 @@
+{
+  "board": "esp32s31-korvo-1",
+  "trigger": "10-second stationary synthetic swipe; continuous charge at 800x480",
+  "observed": "Successive 100-write windows also consume 100 nonzero DMA blocks in 2000 ms; I2S write errors=0; music decoder underruns=0.",
+  "user_feedback": "Noise disappeared after unplugging and reconnecting USB.",
+  "conclusion": "Power/contact instability and codec/amplifier state reset remain alternative hypotheses. No causal proof or acoustic recording.",
+  "diagnostic_firmware_flashed": false,
+  "audio_implementation_changed_for_this_report": false
+}

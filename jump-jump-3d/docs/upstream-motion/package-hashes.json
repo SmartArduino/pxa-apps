@@ -1,0 +1,44 @@
+{
+  "before-package": {
+    "main.linux-x86_64.aot": {
+      "bytes": 343480,
+      "sha256": "850b967a4ad6c0cfe1c46ce4156b6181e36512da7037c590645dc92185f5aba0"
+    },
+    "main.esp32-s31.aot": {
+      "bytes": 440236,
+      "sha256": "59435ee743df093940e26f3e7acdf5733915c50c2ed20595515be260e34839ea"
+    },
+    "container": {
+      "bytes": 1644591,
+      "sha256": "69697863f876656d4ca020703826d9bd7f08f2a82d8cccb09753dc1c8e979f24"
+    }
+  },
+  "final-package": {
+    "main.esp32-s3.aot": {
+      "bytes": 441772,
+      "sha256": "5d5d1517f652e37b31d342b09c8e87cf7ac691e1573f34ee8ea089307568f1b2"
+    },
+    "main.linux-x86_64.aot": {
+      "bytes": 365300,
+      "sha256": "b26ded5eb905fc75d1bd4110d7de3c2aa7028628c3c14e1bd0f5b769578f9dab"
+    },
+    "main.esp32-s31.aot": {
+      "bytes": 465836,
+      "sha256": "0a976ee9a0f83cb17e2cdcaea0a8d0c78906d517bbd535123da70f1f19e67cc5"
+    },
+    "container": {
+      "bytes": 2007004,
+      "sha256": "3ad4e6dc6de02c8dd8fe18c53182ebad4b12ff3b76338debc38f05e350e94876"
+    }
+  },
+  "device-package": {
+    "main.esp32-s31.aot": {
+      "bytes": 465836,
+      "sha256": "0a976ee9a0f83cb17e2cdcaea0a8d0c78906d517bbd535123da70f1f19e67cc5"
+    },
+    "container": {
+      "bytes": 1459060,
+      "sha256": "7ae62946f20851636a9572dfd23a2ab0f9dc5c23613c7341d7711a3be59c2e9b"
+    }
+  }
+}

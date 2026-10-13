@@ -87,10 +87,24 @@ float j3_block_top(const j3_block_t *block) {
     return J3_BLOCK_HEIGHT * block->squash + j3_block_offset(block);
 }
 
+bool j3_block_round(const j3_block_t *block) {
+    switch (block->kind) {
+    case J3_KIND_ROUND:
+    case J3_KIND_WELL:
+    case J3_KIND_GOLF:
+    case J3_KIND_CUP:
+    case J3_KIND_MEDICINE:
+    case J3_KIND_PAPER:
+        return true;
+    default:
+        return false;
+    }
+}
+
 int j3_block_contains(const j3_block_t *block, float x, float z) {
     const float dx = x - block->x;
     const float dz = z - block->z;
-    if (block->kind == J3_KIND_ROUND || block->kind == J3_KIND_WELL) {
+    if (j3_block_round(block)) {
         return dx * dx + dz * dz <= block->radius * block->radius;
     }
     return j3_fabs(dx) <= block->radius && j3_fabs(dz) <= block->radius;
@@ -107,16 +121,16 @@ uint16_t j3_block_bonus(const j3_block_t *block) {
 }
 
 static void j3_start_wave(j3_game_t *game, uint8_t power) {
-    uint8_t index;
-    if (power == 0) power = 1;
+    power = power ? power : 1;
     if (power > J3_WAVE_MAX) power = J3_WAVE_MAX;
-    for (index = 0; index < J3_WAVE_MAX; ++index) {
-        if (!game->waves[index].active) {
-            game->waves[index].active = 1;
-            game->waves[index].power = power;
-            game->waves[index].t = 0.0F;
-            return;
-        }
+    // The reference caps the effect at four rings, staggered by 200 ms.
+    for (uint8_t index = 0; index < J3_WAVE_MAX; ++index) {
+        auto& wave = game->waves[index];
+        wave.active = index < power;
+        wave.power = index + 1;
+        wave.t = -0.2F * index;
+        wave.x = game->land_x;
+        wave.z = game->land_z;
     }
 }
 
@@ -172,6 +186,17 @@ static void j3_spawn_block(j3_game_t *game, j3_block_t *block,
 
     block->kind = j3_random_unit(game) < 0.42F ? J3_KIND_ROUND : J3_KIND_BOX;
 
+    // Keep the two opening platforms and the first generated target familiar.
+    // Decorations use the existing slots and palette; no per-kind asset cache.
+    if (allow_bonus && j3_random_unit(game) < 0.60F) {
+        const uint8_t first = J3_KIND_CLOCK;
+        const uint8_t count = J3_KIND_COUNT - first;
+        uint8_t pick = first + j3_random_range(game, count);
+        if (pick == from->kind) pick = first + (pick - first + 1u) % count;
+        block->kind = pick;
+    }
+
+    const float original_radius = block->radius;
     if (allow_bonus &&
         (uint16_t)(game->jump_count - game->last_bonus_jump) >=
             game->bonus_interval) {
@@ -186,6 +211,18 @@ static void j3_spawn_block(j3_game_t *game, j3_block_t *block,
         game->last_bonus_kind = block->kind;
         game->last_bonus_jump = game->jump_count;
     }
+
+    if (block->kind >= J3_KIND_CLOCK) {
+        const float size = block->kind == J3_KIND_MEDICINE ? 0.66F :
+                           block->kind == J3_KIND_PAPER ? 0.80F :
+                           block->kind == J3_KIND_CUP ? 0.90F :
+                           block->kind == J3_KIND_GOLF ? 1.12F : 1.0F;
+        block->radius = j3_clamp(radius_scale, 0.70F, 1.0F) * 0.5F * size;
+    }
+    // Changing the footprint must preserve the generated edge-to-edge gap.
+    const float correction = block->radius - original_radius;
+    if (block->x != from->x) block->x += correction;
+    else block->z -= correction;
 }
 
 void j3_game_reset(j3_game_t *game, uint32_t seed) {
@@ -223,6 +260,7 @@ void j3_game_reset(j3_game_t *game, uint32_t seed) {
     game->block_count = 2;
     game->state = J3_STATE_READY;
     game->body_scale = 1.0F;
+    game->body_width_scale = 1.0F;
     game->land_scale = 1.0F;
     game->px = game->blocks[0].x;
     game->pz = game->blocks[0].z;
@@ -231,6 +269,7 @@ void j3_game_reset(j3_game_t *game, uint32_t seed) {
     game->cam_z = (game->blocks[0].z + game->blocks[1].z) * 0.5F;
     game->popup_kind = 0;
     game->quick_window = 0.0F;
+    game->score_multiplier = 1;
     j3_face_next(game);
 }
 
@@ -240,6 +279,27 @@ void j3_game_press(j3_game_t *game) {
     game->charge = 0.0F;
     /* Jumping away cancels a pending stay bonus. */
     game->blocks[0].bonus_timer = 0.0F;
+}
+
+void j3_game_charge(j3_game_t *game, float seconds) {
+    if (game->state != J3_STATE_CHARGING) return;
+    game->charge = seconds > 0 ? seconds : 0;
+    game->body_scale = j3_clamp(1.0F - game->charge * J3_CHARGE_SQUASH,
+                              J3_MIN_SQUASH, 1.0F);
+    game->body_width_scale = 1.0F + (1.0F - game->body_scale) * 0.4F;
+    game->blocks[0].squash = game->body_scale;
+    game->py = j3_block_top(&game->blocks[0]);
+}
+
+void j3_game_cancel(j3_game_t *game) {
+    if (game->state != J3_STATE_CHARGING) return;
+    game->state = J3_STATE_READY;
+    game->charge = 0;
+    game->body_scale = game->body_width_scale = game->land_scale = 1;
+    game->blocks[0].squash = 1;
+    game->py = j3_block_top(&game->blocks[0]);
+    if (!game->blocks[0].bonus_done && j3_block_bonus(&game->blocks[0]))
+        game->blocks[0].bonus_timer = J3_BONUS_STAY;
 }
 
 void j3_game_release(j3_game_t *game) {
@@ -268,7 +328,17 @@ void j3_game_release(j3_game_t *game) {
     game->vx = game->dir_x * speed;
     game->vz = game->dir_z * speed;
 
-    game->land_time = 2.0F * game->vy / J3_GRAVITY;
+    game->quick_jump = game->quick_window > 0;
+    game->flight_elapsed = 0;
+    game->launch_x = game->px;
+    game->launch_y = game->py;
+    game->launch_z = game->pz;
+    game->launch_vy = game->vy;
+    // Solve the descending intersection from the compressed launch height.
+    // Unlike frame-stepped Euler, this endpoint agrees with the flown path.
+    const float rise = J3_BLOCK_HEIGHT - game->py;
+    game->land_time = (game->vy + j3_sqrt(game->vy * game->vy -
+                        2.0F * J3_GRAVITY * rise)) / J3_GRAVITY;
     game->land_x = game->px + game->vx * game->land_time;
     game->land_z = game->pz + game->vz * game->land_time;
 
@@ -292,6 +362,9 @@ void j3_game_release(j3_game_t *game) {
     } else if (j3_block_contains(&game->blocks[0], game->land_x,
                                  game->land_z)) {
         game->land_result = J3_LAND_BACK;
+    } else if (j3_block_contains(&game->blocks[0], game->land_x - J3_BODY_RADIUS * game->dir_x,
+                                  game->land_z - J3_BODY_RADIUS * game->dir_z)) {
+        game->land_result = J3_LAND_NEAR_EDGE;
     } else {
         game->land_result = J3_LAND_MISS;
     }
@@ -300,6 +373,7 @@ void j3_game_release(j3_game_t *game) {
     game->state = J3_STATE_FLYING;
     game->charge = 0.0F;
     game->body_scale = 1.0F;
+    game->body_width_scale = 1.0F;
     game->land_scale = 1.0F;
     game->blocks[0].squash = 1.0F;
 }
@@ -308,20 +382,21 @@ static void j3_award_landing(j3_game_t *game) {
     j3_block_t *block = &game->blocks[1];
     uint32_t points = 1;
     const uint8_t perfect = game->land_result == J3_LAND_PERFECT;
-    const uint8_t quick = game->quick_window > 0.0F;
+    const uint8_t quick = game->quick_jump;
 
     if (perfect) {
-        game->combo = (uint16_t)(game->combo + 1u);
-        points = game->combo <= 1u ? 2u : (uint32_t)game->combo * 2u;
-        if (quick && points <= 2u) points *= 2u;
-        if (points > 32u) points = 32u;
-        game->popup_kind = quick ? 3u : 2u;
-        j3_start_wave(game, (uint8_t)game->combo);
+        if (game->combo < 65535) ++game->combo;
+        game->score_multiplier = game->score_multiplier == 1 ? 2 :
+                                 game->score_multiplier + 2;
     } else {
         game->combo = 0;
-        game->popup_kind = 1u;
-        j3_start_wave(game, 1);
+        game->score_multiplier = 1;
     }
+    if (quick && game->score_multiplier <= 2) game->score_multiplier *= 2;
+    if (game->score_multiplier > 32) game->score_multiplier = 32;
+    points = game->score_multiplier;
+    game->popup_kind = quick ? 3 : perfect ? 2 : 1;
+    j3_start_wave(game, perfect ? (uint8_t)(game->combo > 4 ? 4 : game->combo) : 1);
     game->popup_points = (uint16_t)points;
     game->popup_timer = 0.9F;
     game->score += points;
@@ -353,7 +428,9 @@ static void j3_land(j3_game_t *game) {
     game->vy = 0.0F;
     game->spin = 0.0F;
     game->tilt = 0.0F;
-    game->land_scale = 0.82F;
+    game->land_scale = 0.9F;
+    game->body_scale = game->body_width_scale = 1;
+    game->special_age = 0;
     game->jump_count = (uint16_t)(game->jump_count + 1u);
 
     j3_award_landing(game);
@@ -387,8 +464,8 @@ static void j3_fail(j3_game_t *game) {
     game->blocks[1].squash = 1.0F;
     game->blocks[1].bonus_timer = 0.0F;
     if (game->land_result == J3_LAND_EDGE ||
-        game->land_result == J3_LAND_BACK) {
-        const j3_block_t *reference = game->land_result == J3_LAND_BACK
+        game->land_result == J3_LAND_NEAR_EDGE) {
+        const j3_block_t *reference = game->land_result == J3_LAND_NEAR_EDGE
                                           ? &game->blocks[0]
                                           : &game->blocks[1];
         const float forward =
@@ -411,27 +488,57 @@ static void j3_fail(j3_game_t *game) {
     game->vz = game->dir_z * 0.25F;
 }
 
-static void j3_tick_flight(j3_game_t *game, float dt) {
-    const float top = j3_block_top(&game->blocks[1]);
-    game->vy -= J3_GRAVITY * dt;
-    game->px += game->vx * dt;
-    game->py += game->vy * dt;
-    game->pz += game->vz * dt;
-    if (game->land_time > 0.0F) {
-        game->spin -= (J3_TWO_PI / (game->land_time * 0.88F)) * dt;
-        if (game->spin < -J3_TWO_PI) game->spin += J3_TWO_PI;
-    }
+static float j3_ease_out(float t) {
+    t = j3_clamp(t, 0, 1);
+    return t * (2 - t);
+}
 
-    if (game->vy < 0.0F && game->py <= top) {
-        if (game->land_result <= J3_LAND_PERFECT) {
-            j3_land(game);
-            return;
-        }
-        game->py = top;
-        j3_fail(game);
-        return;
+static void j3_tick_flight(j3_game_t *game, float dt) {
+    const float remaining = game->land_time - game->flight_elapsed;
+    const float travel = dt < remaining ? dt : remaining;
+    game->flight_elapsed += travel;
+    const float t = game->flight_elapsed;
+    game->px = game->launch_x + game->vx * t;
+    game->py = game->launch_y + game->launch_vy * t - 0.5F * J3_GRAVITY * t * t;
+    game->pz = game->launch_z + game->vz * t;
+    game->vy = game->launch_vy - J3_GRAVITY * t;
+    // The original flip is two independent tweens, 140 + 180 ms. Never wrap
+    // the angle and start a second tumble just before touching the ground.
+    game->spin = t < 0.14F ? -J3_PI * j3_ease_out(t / 0.14F) :
+                 -J3_PI * (1 + j3_ease_out((t - 0.14F) / 0.18F));
+    const float stretch = j3_clamp(j3_sqrt(game->vx * game->vx + game->vz * game->vz) / 3.5F, 1.2F, 1.4F);
+    if (t < 0.1F) {
+        const float progress = j3_ease_out(t / 0.1F);
+        game->body_scale = 1 + (stretch - 1) * progress;
+        game->body_width_scale = 1 + (1 / stretch - 1) * progress;
+    } else if (t < 0.2F) {
+        const float progress = j3_ease_out((t - 0.1F) / 0.1F);
+        game->body_scale = stretch + (0.9F / stretch - stretch) * progress;
+        game->body_width_scale = 1 / stretch + (stretch - 1 / stretch) * progress;
+    } else {
+        const float progress = j3_ease_out((t - 0.2F) / 0.2F);
+        game->body_scale = 0.9F / stretch + (1 - 0.9F / stretch) * progress;
+        game->body_width_scale = stretch + (1 - stretch) * progress;
     }
-    if (game->py < -2.5F) j3_fail(game);
+    if (dt < remaining) return;
+    // Crossing the surface cannot depend on frame size. Consume the leftover
+    // interval in the new state, so a stalled callback doesn't lose time.
+    if (game->land_result <= J3_LAND_PERFECT) j3_land(game);
+    else if (game->land_result == J3_LAND_BACK) {
+        game->state = J3_STATE_READY;
+        game->py = j3_block_top(&game->blocks[0]);
+        game->vx = game->vy = game->vz = game->spin = 0;
+        game->body_scale = game->body_width_scale = 1;
+        game->land_scale = 0.9F;
+        if (!game->blocks[0].bonus_done && j3_block_bonus(&game->blocks[0]))
+            game->blocks[0].bonus_timer = J3_BONUS_STAY;
+        j3_face_next(game);
+    } else {
+        game->body_scale = game->body_width_scale = 1;
+        game->spin = 0;
+        j3_fail(game);
+    }
+    if (dt > remaining) j3_game_tick(game, dt - remaining);
 }
 
 static void j3_tick_bonus(j3_game_t *game, float dt) {
@@ -448,19 +555,26 @@ static void j3_tick_bonus(j3_game_t *game, float dt) {
     game->bonus_points = points;
     game->bonus_kind = block->kind;
     game->bonus_popup_timer = 1.1F;
+    game->special_age = 0;
 }
 
 void j3_game_tick(j3_game_t *game, float dt) {
+    if (!(dt > 0)) return;
     uint8_t index;
     const float smooth = j3_clamp(dt * 5.5F, 0.0F, 1.0F);
     const float target_x = (game->blocks[0].x + game->blocks[1].x) * 0.5F;
     const float target_z = (game->blocks[0].z + game->blocks[1].z) * 0.5F;
 
-    game->time += dt;
-    if (game->quick_window > 0.0F) {
-        game->quick_window -= dt;
-        if (game->quick_window < 0.0F) game->quick_window = 0.0F;
+    if (game->state == J3_STATE_FLYING && dt > game->land_time - game->flight_elapsed) {
+        const float flight_dt = game->land_time - game->flight_elapsed;
+        j3_game_tick(game, flight_dt);
+        j3_game_tick(game, dt - flight_dt);
+        return;
     }
+    game->time += dt;
+    if (game->blocks[0].bonus_done && game->state == J3_STATE_READY)
+        game->special_age += dt;
+    game->quick_window = j3_clamp(game->quick_window - dt, -3600, J3_QUICK_WINDOW);
     if (game->popup_timer > 0.0F) game->popup_timer -= dt;
     if (game->bonus_popup_timer > 0.0F) game->bonus_popup_timer -= dt;
     if (game->land_scale < 1.0F) {
@@ -470,7 +584,7 @@ void j3_game_tick(j3_game_t *game, float dt) {
     for (index = 0; index < J3_WAVE_MAX; ++index) {
         if (!game->waves[index].active) continue;
         game->waves[index].t += dt;
-        if (game->waves[index].t >= 0.62F) game->waves[index].active = 0;
+        if (game->waves[index].t >= 0.5F / (1 + 0.2F * index)) game->waves[index].active = 0;
     }
     for (index = 0; index < game->block_count; ++index) {
         if (game->blocks[index].appear < 1.0F) {
@@ -482,11 +596,7 @@ void j3_game_tick(j3_game_t *game, float dt) {
 
     switch (game->state) {
     case J3_STATE_CHARGING:
-        game->charge += dt;
-        game->body_scale = 1.0F - game->charge * J3_CHARGE_SQUASH;
-        if (game->body_scale < J3_MIN_SQUASH)
-            game->body_scale = J3_MIN_SQUASH;
-        game->blocks[0].squash = game->body_scale;
+        j3_game_charge(game, game->charge + dt);
         break;
     case J3_STATE_FLYING:
         j3_tick_flight(game, dt);
@@ -506,10 +616,10 @@ void j3_game_tick(j3_game_t *game, float dt) {
         break;
     }
     case J3_STATE_FALL:
+        game->py += game->vy * dt - 0.5F * J3_GRAVITY * 0.55F * dt * dt;
         game->vy -= J3_GRAVITY * 0.55F * dt;
         game->px += game->vx * dt;
         game->pz += game->vz * dt;
-        game->py += game->vy * dt;
         game->spin -= dt * 2.4F;
         if (game->py < -1.8F) {
             game->py = -1.8F;

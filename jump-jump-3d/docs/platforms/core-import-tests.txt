@@ -1,0 +1,2 @@
+PXA Wasm Core import verification OK
+Core 2 call/io accepted; Submit, old generations and non-function imports rejected

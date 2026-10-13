@@ -1,0 +1,42 @@
+Bounded libc++ diagnostics: fatal checks, readable context, truncation and unsupported formats OK
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.002s
+
+OK
+........
+----------------------------------------------------------------------
+Ran 8 tests in 30.388s
+
+OK
+.........
+----------------------------------------------------------------------
+Ran 9 tests in 80.746s
+
+OK
+CLDR 48: 3767 cardinal/ordinal samples, 65 groups; 96 compact/out-of-domain samples excluded
+....
+----------------------------------------------------------------------
+Ran 4 tests in 31.741s
+
+OK
+PXA features: language=202400 explicit_this=1 pack_indexing=1 inplace_vector=1 function_ref=1
+Binary/FixedText/RGB565: golden bytes, bounds, UTF-8, unaligned padded pixels OK
+Transfer: one IO/step, retry/EOF/zero-write/limits/move, zero heap; cursor=32 B
+Codec: golden/version/truncation/tails/boolean; owned creation, two slots including caller, zero heap OK
+Lifecycle/state: retryable close, no stop imports, App task errors/restarts/cancel, immutable updates; Resource=16 B
+UI geometry: asymmetric/full insets, circular letterboxing, odd sizes, integer limits OK
+Typed event routing: 8 valid decoder paths, malformed token/payload retained, Event layout unchanged OK
+i18n dynamic: 32775 UTF-8 bytes, capacity=32775, one allocation; limits checked before allocation
+i18n: Translator=80 Locale=65 bytes; lookup/format/update: zero allocations
+UI page storage: inferred=328 fixed32=3240
+Declarative UI: coalesced bindings, rollback, component removal, transient borrowed callbacks, numeric text, safe area, action errors/cancellation/pool limits, zero allocations OK (29 commits)
+UI lifecycle: initial mount retries, move-only args, partial builds, final modifiers, compound control targets, SafeArea composition/recovery, list/Refresh modifiers, zero heap OK
+UI Environment: selected State storage only, atomic init/notifications, 100 identical metrics/zero submits, zero heap; display=64 B all=152 B
+captured draw list: 11240 bytes
+validate status=0 commands=201
+lit pixels=42725
+Typed storage: wire compatible, owned keys/values, malformed results, peak 2 task slots, pool 8208 B unchanged OK
+Storage ownership/boundaries/aliasing/cancel OK: 17 submits, peak 2 slots, reserved 8208 B
+Permission ownership/boundaries/aliasing/late handles OK: 12 submits, peak 2 slots, reserved 8208 B
+PXA C++ Guest host tests OK

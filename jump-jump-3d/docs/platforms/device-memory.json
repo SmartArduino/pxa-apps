@@ -1,0 +1,352 @@
+{
+  "note": "Heap minima, budget peaks and surface peak_total are cumulative since boot and include other sessions, package installation and screenshot capture. They are NOT this run measured peaks. Stable values are point-in-time samples. Initial after sample is before first screenshot; before version lacks that sample.",
+  "before": {
+    "ready": [
+      {
+        "scope": "heap",
+        "sram_total": 663027,
+        "sram_free": 59195,
+        "sram_min": 19176,
+        "sram_largest": 30720,
+        "psram_total": 16741256,
+        "psram_free": 10434636,
+        "psram_min": 6542980,
+        "psram_largest": 9699328
+      },
+      {
+        "scope": "budget",
+        "internal": 44924,
+        "external": 196938,
+        "peak_internal": 61348,
+        "peak_external": 550906,
+        "temporary_peak_internal": 0,
+        "temporary_peak_external": 50334,
+        "fixed": 2224,
+        "denied": 0,
+        "allocation_failures": 0
+      },
+      {
+        "scope": "kind",
+        "name": "raster",
+        "internal": 16424,
+        "external": 48685
+      },
+      {
+        "scope": "kind",
+        "name": "image",
+        "internal": 0,
+        "external": 0
+      },
+      {
+        "scope": "kind",
+        "name": "audio",
+        "internal": 0,
+        "external": 138304
+      },
+      {
+        "scope": "kind",
+        "name": "temporary",
+        "internal": 0,
+        "external": 0
+      },
+      {
+        "scope": "kind",
+        "name": "metadata",
+        "internal": 28500,
+        "external": 9949
+      },
+      {
+        "scope": "kind",
+        "name": "frame",
+        "internal": 0,
+        "external": 0
+      },
+      {
+        "scope": "surface",
+        "frame": 2304000,
+        "scratch": 0,
+        "mailbox": 49152,
+        "probe": 0,
+        "peak_total": 2545152
+      }
+    ],
+    "end": [
+      {
+        "scope": "heap",
+        "sram_total": 663027,
+        "sram_free": 59195,
+        "sram_min": 19176,
+        "sram_largest": 30720,
+        "psram_total": 16741256,
+        "psram_free": 10362436,
+        "psram_min": 6542980,
+        "psram_largest": 9699328
+      },
+      {
+        "scope": "budget",
+        "internal": 44924,
+        "external": 268698,
+        "peak_internal": 61348,
+        "peak_external": 550906,
+        "temporary_peak_internal": 0,
+        "temporary_peak_external": 50334,
+        "fixed": 2224,
+        "denied": 0,
+        "allocation_failures": 0
+      },
+      {
+        "scope": "kind",
+        "name": "raster",
+        "internal": 16424,
+        "external": 48685
+      },
+      {
+        "scope": "kind",
+        "name": "image",
+        "internal": 0,
+        "external": 0
+      },
+      {
+        "scope": "kind",
+        "name": "audio",
+        "internal": 0,
+        "external": 210064
+      },
+      {
+        "scope": "kind",
+        "name": "temporary",
+        "internal": 0,
+        "external": 0
+      },
+      {
+        "scope": "kind",
+        "name": "metadata",
+        "internal": 28500,
+        "external": 9949
+      },
+      {
+        "scope": "kind",
+        "name": "frame",
+        "internal": 0,
+        "external": 0
+      },
+      {
+        "scope": "surface",
+        "frame": 2304000,
+        "scratch": 0,
+        "mailbox": 49152,
+        "probe": 0,
+        "peak_total": 2545152
+      }
+    ]
+  },
+  "after": {
+    "initial": [
+      {
+        "scope": "heap",
+        "sram_total": 663027,
+        "sram_free": 59035,
+        "sram_min": 19176,
+        "sram_largest": 32768,
+        "psram_total": 16741256,
+        "psram_free": 10385692,
+        "psram_min": 8198468,
+        "psram_largest": 7995392
+      },
+      {
+        "scope": "budget",
+        "internal": 44924,
+        "external": 196938,
+        "peak_internal": 44924,
+        "peak_external": 247272,
+        "temporary_peak_internal": 0,
+        "temporary_peak_external": 50334,
+        "fixed": 2224,
+        "denied": 0,
+        "allocation_failures": 0
+      },
+      {
+        "scope": "kind",
+        "name": "raster",
+        "internal": 16424,
+        "external": 48685
+      },
+      {
+        "scope": "kind",
+        "name": "image",
+        "internal": 0,
+        "external": 0
+      },
+      {
+        "scope": "kind",
+        "name": "audio",
+        "internal": 0,
+        "external": 138304
+      },
+      {
+        "scope": "kind",
+        "name": "temporary",
+        "internal": 0,
+        "external": 0
+      },
+      {
+        "scope": "kind",
+        "name": "metadata",
+        "internal": 28500,
+        "external": 9949
+      },
+      {
+        "scope": "kind",
+        "name": "frame",
+        "internal": 0,
+        "external": 0
+      },
+      {
+        "scope": "surface",
+        "frame": 2304000,
+        "scratch": 0,
+        "mailbox": 49152,
+        "probe": 0,
+        "peak_total": 2353152
+      }
+    ],
+    "ready": [
+      {
+        "scope": "heap",
+        "sram_total": 663027,
+        "sram_free": 59035,
+        "sram_min": 19176,
+        "sram_largest": 32768,
+        "psram_total": 16741256,
+        "psram_free": 10385692,
+        "psram_min": 8024452,
+        "psram_largest": 7995392
+      },
+      {
+        "scope": "budget",
+        "internal": 44924,
+        "external": 196938,
+        "peak_internal": 44924,
+        "peak_external": 247272,
+        "temporary_peak_internal": 0,
+        "temporary_peak_external": 50334,
+        "fixed": 2224,
+        "denied": 0,
+        "allocation_failures": 0
+      },
+      {
+        "scope": "kind",
+        "name": "raster",
+        "internal": 16424,
+        "external": 48685
+      },
+      {
+        "scope": "kind",
+        "name": "image",
+        "internal": 0,
+        "external": 0
+      },
+      {
+        "scope": "kind",
+        "name": "audio",
+        "internal": 0,
+        "external": 138304
+      },
+      {
+        "scope": "kind",
+        "name": "temporary",
+        "internal": 0,
+        "external": 0
+      },
+      {
+        "scope": "kind",
+        "name": "metadata",
+        "internal": 28500,
+        "external": 9949
+      },
+      {
+        "scope": "kind",
+        "name": "frame",
+        "internal": 0,
+        "external": 0
+      },
+      {
+        "scope": "surface",
+        "frame": 2304000,
+        "scratch": 0,
+        "mailbox": 49152,
+        "probe": 0,
+        "peak_total": 2353152
+      }
+    ],
+    "end": [
+      {
+        "scope": "heap",
+        "sram_total": 663027,
+        "sram_free": 59035,
+        "sram_min": 19176,
+        "sram_largest": 32768,
+        "psram_total": 16741256,
+        "psram_free": 10313492,
+        "psram_min": 8005504,
+        "psram_largest": 7995392
+      },
+      {
+        "scope": "budget",
+        "internal": 44924,
+        "external": 268698,
+        "peak_internal": 44924,
+        "peak_external": 268698,
+        "temporary_peak_internal": 0,
+        "temporary_peak_external": 50334,
+        "fixed": 2224,
+        "denied": 0,
+        "allocation_failures": 0
+      },
+      {
+        "scope": "kind",
+        "name": "raster",
+        "internal": 16424,
+        "external": 48685
+      },
+      {
+        "scope": "kind",
+        "name": "image",
+        "internal": 0,
+        "external": 0
+      },
+      {
+        "scope": "kind",
+        "name": "audio",
+        "internal": 0,
+        "external": 210064
+      },
+      {
+        "scope": "kind",
+        "name": "temporary",
+        "internal": 0,
+        "external": 0
+      },
+      {
+        "scope": "kind",
+        "name": "metadata",
+        "internal": 28500,
+        "external": 9949
+      },
+      {
+        "scope": "kind",
+        "name": "frame",
+        "internal": 0,
+        "external": 0
+      },
+      {
+        "scope": "surface",
+        "frame": 2304000,
+        "scratch": 0,
+        "mailbox": 49152,
+        "probe": 0,
+        "peak_total": 2353152
+      }
+    ]
+  }
+}

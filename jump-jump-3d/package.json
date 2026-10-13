@@ -13,8 +13,8 @@
     0
   ],
   "id": "pxa-jump-jump-3d",
-  "version": "0.1.1",
-  "release_sequence": 2,
+  "version": "0.1.4",
+  "release_sequence": 5,
   "name": "Jump Jump 3D",
   "description": "Isometric 3D remake of the WeChat Jump Jump: charge, flip, land on the centre, chain perfect hits",
   "icon": "assets/icon.png",
@@ -38,7 +38,13 @@
             8
           ]
         },
-        "clock",
+        {
+          "name": "clock",
+          "min_version": [
+            0,
+            2
+          ]
+        },
         "game-render",
         "storage",
         "log",

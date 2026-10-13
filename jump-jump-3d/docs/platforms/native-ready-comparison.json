@@ -1,0 +1,23 @@
+{
+  "before": {
+    "raster_us_medians": [
+      304,
+      287,
+      281,
+      281,
+      265
+    ],
+    "median": 281
+  },
+  "after": {
+    "raster_us_medians": [
+      274,
+      271,
+      255,
+      264,
+      254
+    ],
+    "median": 264
+  },
+  "ready_pixel_differences": 0
+}

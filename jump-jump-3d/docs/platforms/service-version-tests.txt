@@ -1,0 +1,2 @@
+Normative Core/Clock metadata agree at 0.2; implicit and explicit default clock declarations resolve to [0.2, 0.65535].
+Actual signed Jump package declares Clock >= 0.2 and loads in the product simulator.

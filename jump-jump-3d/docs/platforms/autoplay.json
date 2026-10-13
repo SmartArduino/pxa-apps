@@ -1,0 +1,182 @@
+[
+  {
+    "jump": 1,
+    "current": 1,
+    "next": 1,
+    "score": 2,
+    "charge_us": 719966,
+    "planned_flight_us": 396112,
+    "landing_callback_us": 405077,
+    "result": 1
+  },
+  {
+    "jump": 2,
+    "current": 1,
+    "next": 2,
+    "score": 6,
+    "charge_us": 870164,
+    "planned_flight_us": 400638,
+    "landing_callback_us": 413883,
+    "result": 1
+  },
+  {
+    "jump": 3,
+    "current": 2,
+    "next": 7,
+    "score": 12,
+    "charge_us": 911815,
+    "planned_flight_us": 401900,
+    "landing_callback_us": 404867,
+    "result": 1
+  },
+  {
+    "jump": 4,
+    "current": 7,
+    "next": 2,
+    "score": 20,
+    "charge_us": 545023,
+    "planned_flight_us": 390892,
+    "landing_callback_us": 397193,
+    "result": 1
+  },
+  {
+    "jump": 5,
+    "current": 2,
+    "next": 1,
+    "score": 30,
+    "charge_us": 674574,
+    "planned_flight_us": 394752,
+    "landing_callback_us": 405573,
+    "result": 1
+  },
+  {
+    "jump": 6,
+    "current": 1,
+    "next": 5,
+    "score": 42,
+    "charge_us": 819773,
+    "planned_flight_us": 399115,
+    "landing_callback_us": 413802,
+    "result": 1
+  },
+  {
+    "jump": 7,
+    "current": 5,
+    "next": 1,
+    "score": 56,
+    "charge_us": 759449,
+    "planned_flight_us": 397298,
+    "landing_callback_us": 400286,
+    "result": 1
+  },
+  {
+    "jump": 8,
+    "current": 1,
+    "next": 8,
+    "score": 77,
+    "charge_us": 580694,
+    "planned_flight_us": 391952,
+    "landing_callback_us": 400050,
+    "result": 1
+  },
+  {
+    "jump": 9,
+    "current": 8,
+    "next": 15,
+    "score": 95,
+    "charge_us": 916902,
+    "planned_flight_us": 402054,
+    "landing_callback_us": 404391,
+    "result": 1
+  },
+  {
+    "jump": 10,
+    "current": 15,
+    "next": 2,
+    "score": 115,
+    "charge_us": 785603,
+    "planned_flight_us": 398085,
+    "landing_callback_us": 414317,
+    "result": 1
+  },
+  {
+    "jump": 11,
+    "current": 2,
+    "next": 3,
+    "score": 137,
+    "charge_us": 697047,
+    "planned_flight_us": 395425,
+    "landing_callback_us": 402880,
+    "result": 1
+  },
+  {
+    "jump": 12,
+    "current": 3,
+    "next": 13,
+    "score": 161,
+    "charge_us": 744673,
+    "planned_flight_us": 396854,
+    "landing_callback_us": 414665,
+    "result": 1
+  },
+  {
+    "jump": 13,
+    "current": 13,
+    "next": 15,
+    "score": 217,
+    "charge_us": 716955,
+    "planned_flight_us": 396022,
+    "landing_callback_us": 403039,
+    "result": 1
+  },
+  {
+    "jump": 14,
+    "current": 15,
+    "next": 7,
+    "score": 245,
+    "charge_us": 731407,
+    "planned_flight_us": 396455,
+    "landing_callback_us": 412232,
+    "result": 1
+  },
+  {
+    "jump": 15,
+    "current": 7,
+    "next": 17,
+    "score": 275,
+    "charge_us": 720020,
+    "planned_flight_us": 396114,
+    "landing_callback_us": 399976,
+    "result": 1
+  },
+  {
+    "jump": 16,
+    "current": 17,
+    "next": 4,
+    "score": 307,
+    "charge_us": 694228,
+    "planned_flight_us": 395341,
+    "landing_callback_us": 407126,
+    "result": 1
+  },
+  {
+    "jump": 17,
+    "current": 4,
+    "next": 19,
+    "score": 339,
+    "charge_us": 826049,
+    "planned_flight_us": 399305,
+    "landing_callback_us": 414227,
+    "result": 1
+  },
+  {
+    "jump": 18,
+    "current": 19,
+    "next": 1,
+    "score": 386,
+    "charge_us": 398845,
+    "planned_flight_us": 386574,
+    "landing_callback_us": 400612,
+    "result": 1
+  }
+]

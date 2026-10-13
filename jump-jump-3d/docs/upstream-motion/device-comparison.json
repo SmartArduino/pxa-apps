@@ -1,0 +1,278 @@
+{
+  "device-before-valid": {
+    "samples": [
+      {
+        "visible_fps": 38.51498908080207,
+        "submit_fps": 48.243001786777846,
+        "raster_ms": 15.18781347150259,
+        "queue_ms": 5.5608497409326425,
+        "present_ms": 21.513098445595855
+      },
+      {
+        "visible_fps": 37.99240151969606,
+        "submit_fps": 48.79024195160967,
+        "raster_ms": 15.429104712041884,
+        "queue_ms": 5.4637068062827225,
+        "present_ms": 21.19698952879581
+      },
+      {
+        "visible_fps": 37.994827929182414,
+        "submit_fps": 48.537895365028845,
+        "raster_ms": 15.37440837696335,
+        "queue_ms": 5.486392670157068,
+        "present_ms": 21.37959162303665
+      }
+    ],
+    "mean": {
+      "visible_fps": 38.16740617656018,
+      "submit_fps": 48.52371303447212,
+      "raster_ms": 15.33044218683594,
+      "queue_ms": 5.503649739124145,
+      "present_ms": 21.363226532476105
+    },
+    "raw_rows": [
+      {
+        "time_ms": 103076,
+        "submitted": 0,
+        "rendered": 0,
+        "visible": 0,
+        "raster_us": 0,
+        "queue_us": 0,
+        "present_us": 0,
+        "dropped": 0,
+        "draw": 0,
+        "score": 0,
+        "state": 0
+      },
+      {
+        "time_ms": 108095,
+        "submitted": 206,
+        "rendered": 167,
+        "visible": 166,
+        "raster_us": 2699283,
+        "queue_us": 872649,
+        "present_us": 3553349,
+        "dropped": 38,
+        "draw": 6088,
+        "score": 0,
+        "state": 0
+      },
+      {
+        "time_ms": 113132,
+        "submitted": 449,
+        "rendered": 360,
+        "visible": 360,
+        "raster_us": 5630531,
+        "queue_us": 1945893,
+        "present_us": 7705377,
+        "dropped": 87,
+        "draw": 6088,
+        "score": 0,
+        "state": 0
+      },
+      {
+        "time_ms": 118133,
+        "submitted": 693,
+        "rendered": 551,
+        "visible": 550,
+        "raster_us": 8577490,
+        "queue_us": 2989461,
+        "present_us": 11754002,
+        "dropped": 141,
+        "draw": 6088,
+        "score": 0,
+        "state": 0
+      },
+      {
+        "time_ms": 123160,
+        "submitted": 937,
+        "rendered": 742,
+        "visible": 741,
+        "raster_us": 11514002,
+        "queue_us": 4037362,
+        "present_us": 15837504,
+        "dropped": 194,
+        "draw": 6088,
+        "score": 0,
+        "state": 0
+      },
+      {
+        "time_ms": 128167,
+        "submitted": 1120,
+        "rendered": 911,
+        "visible": 910,
+        "raster_us": 14315825,
+        "queue_us": 4913309,
+        "present_us": 19511588,
+        "dropped": 208,
+        "draw": 8052,
+        "score": 1,
+        "state": 2
+      },
+      {
+        "time_ms": 133155,
+        "submitted": 1324,
+        "rendered": 1085,
+        "visible": 1084,
+        "raster_us": 17349120,
+        "queue_us": 5800553,
+        "present_us": 23222381,
+        "dropped": 238,
+        "draw": 6088,
+        "score": 0,
+        "state": 4
+      },
+      {
+        "time_ms": 138184,
+        "submitted": 1482,
+        "rendered": 1188,
+        "visible": 1187,
+        "raster_us": 21261444,
+        "queue_us": 6289930,
+        "present_us": 25426919,
+        "dropped": 293,
+        "draw": 4428,
+        "score": 0,
+        "state": 5
+      }
+    ]
+  },
+  "device-final-cold": {
+    "samples": [
+      {
+        "visible_fps": 38.007601520304064,
+        "submit_fps": 47.409481896379276,
+        "raster_ms": 15.405752631578947,
+        "queue_ms": 5.626736842105263,
+        "present_ms": 22.16551052631579
+      },
+      {
+        "visible_fps": 37.826000398168425,
+        "submit_fps": 47.182958391399566,
+        "raster_ms": 15.447178947368421,
+        "queue_ms": 5.985947368421052,
+        "present_ms": 21.361073684210524
+      },
+      {
+        "visible_fps": 38.0,
+        "submit_fps": 47.4,
+        "raster_ms": 15.408215789473685,
+        "queue_ms": 6.153826315789473,
+        "present_ms": 21.74539473684211
+      }
+    ],
+    "mean": {
+      "visible_fps": 37.94453397282416,
+      "submit_fps": 47.330813429259614,
+      "raster_ms": 15.42038245614035,
+      "queue_ms": 5.922170175438596,
+      "present_ms": 21.757326315789474
+    },
+    "raw_rows": [
+      {
+        "time_ms": 135098,
+        "submitted": 0,
+        "rendered": 0,
+        "visible": 0,
+        "raster_us": 0,
+        "queue_us": 0,
+        "present_us": 0,
+        "dropped": 0,
+        "draw": 0,
+        "score": 0,
+        "state": 0
+      },
+      {
+        "time_ms": 140121,
+        "submitted": 196,
+        "rendered": 163,
+        "visible": 162,
+        "raster_us": 2683501,
+        "queue_us": 991871,
+        "present_us": 3504451,
+        "dropped": 32,
+        "draw": 6088,
+        "score": 0,
+        "state": 0
+      },
+      {
+        "time_ms": 145120,
+        "submitted": 433,
+        "rendered": 353,
+        "visible": 352,
+        "raster_us": 5610594,
+        "queue_us": 2060951,
+        "present_us": 7715898,
+        "dropped": 79,
+        "draw": 6088,
+        "score": 0,
+        "state": 0
+      },
+      {
+        "time_ms": 150143,
+        "submitted": 670,
+        "rendered": 543,
+        "visible": 542,
+        "raster_us": 8545558,
+        "queue_us": 3198281,
+        "present_us": 11774502,
+        "dropped": 126,
+        "draw": 6088,
+        "score": 0,
+        "state": 0
+      },
+      {
+        "time_ms": 155143,
+        "submitted": 907,
+        "rendered": 733,
+        "visible": 732,
+        "raster_us": 11473119,
+        "queue_us": 4367508,
+        "present_us": 15906127,
+        "dropped": 173,
+        "draw": 6088,
+        "score": 0,
+        "state": 0
+      },
+      {
+        "time_ms": 160159,
+        "submitted": 1081,
+        "rendered": 897,
+        "visible": 896,
+        "raster_us": 14240827,
+        "queue_us": 5085987,
+        "present_us": 19461282,
+        "dropped": 183,
+        "draw": 8352,
+        "score": 2,
+        "state": 0
+      },
+      {
+        "time_ms": 165188,
+        "submitted": 1251,
+        "rendered": 1062,
+        "visible": 1062,
+        "raster_us": 17342241,
+        "queue_us": 5739953,
+        "present_us": 23046665,
+        "dropped": 187,
+        "draw": 6692,
+        "score": 2,
+        "state": 5
+      },
+      {
+        "time_ms": 170151,
+        "submitted": 1369,
+        "rendered": 1154,
+        "visible": 1153,
+        "raster_us": 21350158,
+        "queue_us": 6354688,
+        "present_us": 25043712,
+        "dropped": 214,
+        "draw": 6692,
+        "score": 2,
+        "state": 5
+      }
+    ]
+  }
+}

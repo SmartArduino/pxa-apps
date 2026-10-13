@@ -1,0 +1,132 @@
+531214	I (531213) PxaAudioOutput: Music cumulative: underruns=0 recovered=0 missing=0 consumed=90878 high_water=8192 low_water=5823 low_water_valid=1 ready_max_us=138820 read_calls=38 read_bytes=27198 read_max_bytes=768 read_us=172236 read_max_us=28295 decode_calls=208 decode_us=356124 decode_max_us=18335
+531570	I (531570) KorvoPxa: PERF direct=37 compose=10/10 ms wait=0/0 ms timeout=0
+531966	I (531966) PxaSurface: Raster: submitted=147 rendered=120 visible=119 dropped=27 list=5936B pixels=443847 raster=15346us split=284 parts=15234/12852us queue_avg=5429us present_avg=21664us mailbox=16384/16384B
+532588	I (532588) KorvoPxa: PERF direct=38 compose=10/11 ms wait=0/0 ms timeout=0
+533222	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=207 rendered=166 visible=165 raster_us=2769836 queue_us=928481 present_us=3538198 dropped=40 draw=5936 score=0 state=0[0m
+533334	I (533334) PxaHost: pointer queued id=0 phase=0 x=463 y=243
+533342	I (533342) PxaHost: pointer delivered id=0 phase=0 x=463 y=243
+533604	I (533604) KorvoPxa: PERF direct=37 compose=10/10 ms wait=0/0 ms timeout=0
+534215	I (534215) PxaHost: pointer queued id=0 phase=2 x=474 y=234
+534217	I (534217) PxaHost: pointer delivered id=0 phase=2 x=474 y=234
+534627	I (534627) KorvoPxa: PERF direct=37 compose=10/10 ms wait=0/0 ms timeout=0
+535277	I (535277) PxaSurface: Raster: submitted=282 rendered=240 visible=239 dropped=42 list=7436B pixels=459631 raster=15895us split=256 parts=15777/15731us queue_avg=5126us present_avg=21467us mailbox=16384/16384B
+535654	I (535654) KorvoPxa: PERF direct=36 compose=10/10 ms wait=0/0 ms timeout=0
+536658	I (536658) KorvoPxa: PERF direct=36 compose=10/10 ms wait=0/0 ms timeout=0
+536931	I (536931) PxaHost: pointer queued id=0 phase=0 x=500 y=231
+536960	I (536960) PxaHost: pointer delivered id=0 phase=0 x=500 y=231
+780603	I (780603) KorvoPxa: PERF direct=33 compose=10/10 ms wait=0/0 ms timeout=0
+781157	I (781157) PxaSurface: Raster: submitted=1614 rendered=1440 visible=1439 dropped=174 list=8284B pixels=460590 raster=17520us split=257 parts=17419/16223us queue_avg=3994us present_avg=21501us mailbox=16384/16384B
+781615	I (781615) KorvoPxa: PERF direct=34 compose=10/10 ms wait=0/0 ms timeout=0
+782634	I (782633) KorvoPxa: PERF direct=34 compose=10/10 ms wait=0/0 ms timeout=0
+783662	I (783662) KorvoPxa: PERF direct=34 compose=10/10 ms wait=0/0 ms timeout=0
+784684	I (784684) KorvoPxa: PERF direct=34 compose=10/10 ms wait=0/0 ms timeout=0
+784763	I (784763) PxaSurface: Raster: submitted=1734 rendered=1560 visible=1559 dropped=174 list=8284B pixels=460590 raster=19273us split=248 parts=16820/19149us queue_avg=3890us present_avg=21461us mailbox=16384/16384B
+784883	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=1738 rendered=1564 visible=1563 raster_us=27233199 queue_us=6076571 present_us=33542080 dropped=174 draw=8284 score=3 state=0[0m
+784886	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP clock local=15:47 offset_s=28800 dst=0[0m
+785708	I (785708) KorvoPxa: PERF direct=34 compose=10/10 ms wait=0/0 ms timeout=0
+786650	I (786649) PxaBridge: Application backgrounded: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d
+787158	I (787158) korvo_hw: PERF frame=5 flush=4 render=28/59 ms draw=17/27 ms sync=ppa4/cpu0 4/9 ms fb=2/10 ms vsync=0/0 ms timeout=0
+787159	I (787159) KorvoPxa: Direct scanout released
+787206	I (787206) PxaHost: UI lifecycle: component=65537 foreground=0 requested=0 display_interactive=1
+787213	I (787213) PxaHost: UI peaks: dynamic=2076 current=1660 assets=0 current_assets=0 largest_decoded=0 asset_count=0 referenced=0 hits=0 misses=0 evictions=0 nodes=2 canvases=0 surfaces=1
+787213	I (787213) PxaHost: Audio: active=1 queued=0/12 peak_queued=1 submitted=10 rendered=10 tones=0/0 tone_drop=0 voice_exhaust=0 queue_full=0 stale=0 rejected=0 assets=3/3 asset_fail=0 storage=8592 stack=4096
+787220	I (787220) PxaHost: Runtime peaks: components=1 requests=3 handles=7 events=4 event_blocks=20 services=18
+787220	I (787220) PxaHost: WAMR dynamic: peak=161931 current=416 linear=0 linear_peak=131072 artifact=0 events=0
+787220	I (787220) PxaHost: Activation memory: workspaces=22 blocks=4 used=40226 reserved=45801 peak_used=40226 peak_reserved=45801
+787221	I (787221) PxaAssets: peak_internal=0 peak_external=160076 metadata=10627 task_stack=6144 evictions=0 failures=0
+787264	I (787263) PxaStorage: lane=0 reads=54 bytes=161532 wait_us=822 max_wait_us=52 service_us=83577 max_service_us=16965 max_read=4096 cancelled=0 errors=0
+787264	I (787264) PxaStorage: lane=1 reads=18 bytes=13599 wait_us=975 max_wait_us=635 service_us=67909 max_service_us=25239 max_read=768 cancelled=0 errors=0
+789088	I (789088) PxaHost: Queueing launch request: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d
+789255	I (789255) korvo_hw: PERF frame=3 flush=3 render=35/42 ms draw=34/42 ms sync=ppa0/cpu0 0/0 ms fb=0/0 ms vsync=0/0 ms timeout=0
+789262	I (789262) PxaHost: Processing launch request: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d
+789346	I (789346) PxaHost: Audio: active=0 queued=0/12 peak_queued=1 submitted=10 rendered=10 tones=0/0 tone_drop=0 voice_exhaust=0 queue_full=0 stale=0 rejected=0 assets=3/3 asset_fail=0 storage=8592 stack=4096
+789348	I (789346) PxaHost: Heap[launch-begin]: SRAM used=571124 free=91903 total=663027 min_free=19176 largest=51200 exec_free=12408424 exec_largest=8912896; PSRAM used=4332832 free=12408424 total=16741256 min_free=7953208 largest=8912896
+790038	I (790038) PxaSurface: Created: 800x480 format=1 buffers=3 flags=0x1a mapped=0
+790047	I (790045) PxaHost: Component memory: id=main status=0 sram_delta=14980 free_sram=76447 largest_sram=51200 psram_delta=3047324 free_psram=9284600 largest_psram=8388608 wamr_delta=37821 wamr_current=38237
+790102	I (790101) PxaBridge: Application foregrounded: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d
+790102	I (790102) PxaBridge: Launch completion: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d intent=0 status=0
+790104	I (790099) PxaHost: Heap[launch-ready]: SRAM used=603992 free=59035 total=663027 min_free=19176 largest=32768 exec_free=9269264 exec_largest=8388608; PSRAM used=7471992 free=9269264 total=16741256 min_free=7953208 largest=8388608
+790142	I (790106) PxaHost: WAMR dynamic: peak=161931 current=38237 linear=131072 linear_peak=131072 artifact=0 events=64
+790143	I (790142) PxaHost: Started verified Package 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d
+790146	I (790146) PxaHost: UI lifecycle: component=65537 foreground=1 requested=1 display_interactive=1
+790192	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] C++ game audio ready[0m
+790195	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP clock local=15:48 offset_s=28800 dst=0[0m
+790246	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=0 rendered=0 visible=0 raster_us=0 queue_us=0 present_us=0 dropped=0 draw=0 score=0 state=0[0m
+790307	I (790307) ESP_ES_PARSER: The version of es_parser is v1.0.1
+790307	I (790307) PxaAudioOutput: Playing Ogg asset
+790507	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP clock local=15:48 offset_s=28800 dst=0[0m
+790538	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP ready pixels=800,480 dpi_q16=88474 render=800,480 scale=0[0m
+790544	I (790544) KorvoPxa: Direct scanout engaged
+790555	I (790555) KorvoPxa: PERF direct=31 compose=10/10 ms wait=0/0 ms timeout=0
+791552	I (791552) korvo_audio: DMA writes=4500 blocks=39486 nonzero=4469 errors=0 first_pcm_to_dma_us=79696
+791569	I (791569) KorvoPxa: PERF direct=32 compose=10/15 ms wait=0/0 ms timeout=0
+792578	I (792577) KorvoPxa: PERF direct=35 compose=10/13 ms wait=0/0 ms timeout=0
+793234	I (793234) PxaAudioOutput: Music cumulative: underruns=0 recovered=0 missing=0 consumed=181756 high_water=8192 low_water=4927 low_water_valid=1 ready_max_us=140492 read_calls=76 read_bytes=54396 read_max_bytes=768 read_us=320092 read_max_us=28975 decode_calls=416 decode_us=710574 decode_max_us=18335
+793596	I (793596) KorvoPxa: PERF direct=37 compose=10/10 ms wait=0/0 ms timeout=0
+793992	I (793992) PxaSurface: Raster: submitted=148 rendered=120 visible=119 dropped=27 list=5936B pixels=443847 raster=18954us split=279 parts=16247/18827us queue_avg=4926us present_avg=21454us mailbox=16384/16384B
+794599	I (794599) KorvoPxa: PERF direct=37 compose=10/10 ms wait=0/0 ms timeout=0
+795054	I (795054) PxaHost: pointer queued id=5 phase=0 x=296 y=207
+795058	I (795058) PxaHost: pointer delivered id=5 phase=0 x=296 y=207
+795280	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=206 rendered=167 visible=166 raster_us=2798625 queue_us=821714 present_us=3566786 dropped=38 draw=6176 score=0 state=1[0m
+795332	I (795332) korvo_audio: DMA writes=4600 blocks=39675 nonzero=4569 errors=0 first_pcm_to_dma_us=79696
+795417	I (795416) PxaHost: pointer queued id=5 phase=2 x=296 y=207
+795466	I (795466) PxaHost: pointer delivered id=5 phase=2 x=296 y=207
+795608	I (795608) KorvoPxa: PERF direct=37 compose=10/10 ms wait=0/0 ms timeout=0
+800270	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=238 rendered=199 visible=199 raster_us=3363437 queue_us=968378 present_us=4294620 dropped=39 draw=3944 score=0 state=5[0m
+805270	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=238 rendered=199 visible=199 raster_us=3363437 queue_us=968378 present_us=4294620 dropped=39 draw=3944 score=0 state=5[0m
+810270	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=238 rendered=199 visible=199 raster_us=3363437 queue_us=968378 present_us=4294620 dropped=39 draw=3944 score=0 state=5[0m
+815290	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=238 rendered=199 visible=199 raster_us=3363437 queue_us=968378 present_us=4294620 dropped=39 draw=3944 score=0 state=5[0m
+820290	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=238 rendered=199 visible=199 raster_us=3363437 queue_us=968378 present_us=4294620 dropped=39 draw=3944 score=0 state=5[0m
+825290	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=238 rendered=199 visible=199 raster_us=3363437 queue_us=968378 present_us=4294620 dropped=39 draw=3944 score=0 state=5[0m
+830290	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=238 rendered=199 visible=199 raster_us=3363437 queue_us=968378 present_us=4294620 dropped=39 draw=3944 score=0 state=5[0m
+833438	I (833438) Pxadb: PXADB control session timed out
+835293	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=238 rendered=199 visible=199 raster_us=3363437 queue_us=968378 present_us=4294620 dropped=39 draw=3944 score=0 state=5[0m
+840294	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=238 rendered=199 visible=199 raster_us=3363437 queue_us=968378 present_us=4294620 dropped=39 draw=3944 score=0 state=5[0m
+845316	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=238 rendered=199 visible=199 raster_us=3363437 queue_us=968378 present_us=4294620 dropped=39 draw=3944 score=0 state=5[0m
+845317	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP clock local=15:48 offset_s=28800 dst=0[0m
+850366	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=238 rendered=199 visible=199 raster_us=3363437 queue_us=968378 present_us=4294620 dropped=39 draw=3944 score=0 state=5[0m
+855372	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=238 rendered=199 visible=199 raster_us=3363437 queue_us=968378 present_us=4294620 dropped=39 draw=3944 score=0 state=5[0m
+860391	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=238 rendered=199 visible=199 raster_us=3363437 queue_us=968378 present_us=4294620 dropped=39 draw=3944 score=0 state=5[0m
+864260	I (864260) PxaBridge: Application backgrounded: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d
+864736	I (864736) korvo_hw: PERF frame=6 flush=5 render=27/50 ms draw=19/30 ms sync=ppa4/cpu0 5/10 ms fb=2/9 ms vsync=0/3 ms timeout=0
+864738	I (864738) KorvoPxa: Direct scanout released
+864738	I (864738) PxaHost: UI lifecycle: component=65537 foreground=0 requested=0 display_interactive=1
+865692	I (865692) PxaBridge: Application foregrounded: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-jump-jump-3d
+865705	I (865705) PxaHost: UI lifecycle: component=65537 foreground=1 requested=1 display_interactive=1
+865713	I (865713) KorvoPxa: PERF compose=8 ppa=8 ui_ppa=0 time=9/9 ms ui=0/0 ms pixels=1742 spans=0 surface=800x480 scale=1 opaque=0 alpha=0(0x0)
+865743	I (865743) korvo_hw: PERF frame=3 flush=3 render=80/194 ms draw=71/193 ms sync=ppa0/cpu0 0/0 ms fb=0/0 ms vsync=0/0 ms timeout=0
+865794	I (865794) KorvoPxa: Direct scanout engaged
+865798	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP clock local=15:49 offset_s=28800 dst=0[0m
+865803	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=239 rendered=200 visible=199 raster_us=3426032 queue_us=969184 present_us=4294620 dropped=39 draw=3944 score=0 state=5[0m
+865805	I (865805) KorvoPxa: PERF direct=21 compose=10/11 ms wait=0/0 ms timeout=0
+869020	I (869020) PxaHost: pointer queued id=5 phase=0 x=296 y=207
+869020	I (869020) PxaHost: pointer delivered id=5 phase=0 x=296 y=207
+869060	I (869060) PxaHost: pointer queued id=5 phase=2 x=296 y=207
+869068	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP clock local=15:49 offset_s=28800 dst=0[0m
+869071	I (869071) KorvoPxa: PERF direct=1 compose=10/10 ms wait=0/0 ms timeout=0
+869144	I (869144) PxaHost: pointer delivered id=5 phase=2 x=296 y=207
+870095	I (870095) KorvoPxa: PERF direct=37 compose=10/11 ms wait=0/0 ms timeout=0
+870138	I (870138) PxaSurface: Raster: submitted=287 rendered=240 visible=239 dropped=47 list=5936B pixels=443847 raster=14687us split=275 parts=13397/14555us queue_avg=5043us present_avg=21469us mailbox=16384/16384B
+870831	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=321 rendered=266 visible=265 raster_us=4469818 queue_us=1350173 present_us=5677972 dropped=54 draw=5936 score=0 state=0[0m
+871108	I (871108) KorvoPxa: PERF direct=38 compose=10/10 ms wait=0/0 ms timeout=0
+872136	I (872136) KorvoPxa: PERF direct=38 compose=10/10 ms wait=0/0 ms timeout=0
+873148	I (873148) KorvoPxa: PERF direct=38 compose=10/10 ms wait=0/0 ms timeout=0
+873352	I (873352) PxaSurface: Raster: submitted=438 rendered=360 visible=359 dropped=78 list=5936B pixels=443847 raster=18989us split=281 parts=16028/18862us queue_avg=5158us present_avg=21525us mailbox=16384/16384B
+874163	I (874163) KorvoPxa: PERF direct=38 compose=10/10 ms wait=0/0 ms timeout=0
+875199	I (875199) KorvoPxa: PERF direct=38 compose=9/10 ms wait=0/0 ms timeout=0
+875589	I (875589) PxaHost: pointer queued id=5 phase=0 x=296 y=207
+875615	I (875615) PxaHost: pointer delivered id=5 phase=0 x=296 y=207
+875835	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=542 rendered=444 visible=443 raster_us=7348473 queue_us=2285641 present_us=9465527 dropped=97 draw=6176 score=0 state=1[0m
+876012	I (876012) korvo_audio: DMA writes=4700 blocks=43709 nonzero=4669 errors=0 first_pcm_to_dma_us=79696
+876225	I (876225) KorvoPxa: PERF direct=30 compose=10/10 ms wait=0/0 ms timeout=0
+876302	I (876302) PxaHost: pointer queued id=5 phase=2 x=296 y=207
+876324	I (876324) PxaHost: pointer delivered id=5 phase=2 x=296 y=207
+876868	I (876868) PxaSurface: Raster: submitted=579 rendered=480 visible=479 dropped=99 list=9764B pixels=448925 raster=17728us split=238 parts=16168/16740us queue_avg=5271us present_avg=21423us mailbox=16384/16384B
+877238	I (877238) KorvoPxa: PERF direct=34 compose=10/12 ms wait=0/0 ms timeout=0
+878255	I (878255) KorvoPxa: PERF direct=36 compose=10/10 ms wait=0/0 ms timeout=0
+879268	I (879268) KorvoPxa: PERF direct=36 compose=10/10 ms wait=0/0 ms timeout=0
+880273	I (880273) PxaSurface: Raster: submitted=699 rendered=600 visible=599 dropped=99 list=8740B pixels=445244 raster=15685us split=270 parts=15335/14651us queue_avg=4629us present_avg=21424us mailbox=16384/16384B
+880284	I (880284) KorvoPxa: PERF direct=36 compose=10/10 ms wait=0/0 ms timeout=0
+880840	[32m[PXA app=pxa-jump-jump-3d component=65537 level=INFO] J3CPP perf submitted=719 rendered=620 visible=619 raster_us=10301589 queue_us=2818124 present_us=13269247 dropped=99 draw=8740 score=2 state=0[0m
+881307	I (881307) KorvoPxa: PERF direct=36 compose=10/10 ms wait=0/0 ms timeout=0
+882322	I (882322) KorvoPxa: PERF direct=36 compose=10/10 ms wait=0/0 ms timeout=0

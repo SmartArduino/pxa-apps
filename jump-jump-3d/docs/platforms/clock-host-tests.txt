@@ -1,0 +1,13 @@
+[ 85%] Built target pxa
+[ 85%] Built target pxa_adapters_openssl
+[100%] Built target pxa_adapters_posix
+[100%] Building C object pxa-system/libpxa/CMakeFiles/pxa_posix_clock_test.dir/adapters/tests/clock_test.c.o
+[100%] Linking C executable pxa_posix_clock_test
+[100%] Built target pxa_posix_clock_test
+Test project /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/simulator/pai-touch
+    Start 25: pxa_posix_clock_test
+1/1 Test #25: pxa_posix_clock_test .............   Passed    0.01 sec
+
+100% tests passed out of 1
+
+Total Test time (real) =   0.03 sec
