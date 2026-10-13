@@ -12,6 +12,12 @@
 #define STORE_RESPONSE_TIMEOUT_MS UINT32_C(15000)
 #define STORE_STREAM_TICK_MS UINT32_C(50)
 
+// An immutable, verified Host baseline, independent of the App's SDK version.
+// Products with a newer verified baseline can override this build definition.
+#ifndef STORE_PROFILE_SUFFIX
+#define STORE_PROFILE_SUFFIX "-pxa-0.3.0"
+#endif
+
 static const char device_permission_name[] = "device.identity";
 static const char device_permission_scope[] = "mac.wifi.station.hardware";
 static const char network_permission_name[] = "net.client";
@@ -46,7 +52,7 @@ int store_client_profile_for_device(char *output, size_t capacity,
         return 0;
     output[0] = '\0';
     return append_text(output, capacity, &offset, target) &&
-           append_text(output, capacity, &offset, "-wamr-2.4.0");
+           append_text(output, capacity, &offset, STORE_PROFILE_SUFFIX);
 }
 
 static int append_text(char *output, size_t capacity, size_t *offset,

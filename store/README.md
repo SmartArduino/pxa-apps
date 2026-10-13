@@ -41,7 +41,7 @@ The Store queries Device ABI 0.2 at startup to select a catalog profile from
 the Host target and supported AOT formats. Catalog profile names are server
 keys, not WAMR engine ABI strings. An unsupported Host or catalog profile does
 not fall back to another board's artifacts. The current catalog must publish
-an `esp32-s31-wamr-2.4.0` profile and matching artifacts before Korvo can
+an `esp32-s31-pxa-0.3.0` profile and matching artifacts before Korvo can
 install apps from it.
 | `PXA_STORE_CHANNEL` | `stable` | `stable` or `beta`. |
 
@@ -207,3 +207,12 @@ simulator Hosts without this service report an installation failure rather
 than writing to Guest storage. See `docs/zh-CN/store-install-abi.md` for the
 protocol and remaining enhancements (progress, cancellation, trusted catalog
 recheck).
+
+## Host baseline selection
+
+The Core 2 client selects the immutable `*-pxa-0.3.0` Host baseline.
+The store retains legacy `*-wamr-2.4.0` profiles and packages independently.
+Profiles describe Host capabilities; package eligibility compares Core, services
+and every component artifact, not the App SDK release number. Products using
+a newer verified Host profile may override `STORE_PROFILE_SUFFIX` at build time.
+The URL/profile buffers and runtime allocations are unchanged.
