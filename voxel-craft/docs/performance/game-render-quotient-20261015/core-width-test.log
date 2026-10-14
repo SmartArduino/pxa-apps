@@ -1,0 +1,13 @@
+Test project /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/game-render-opt-20261014/native-core
+    Start 10: pxa_raster_assets_test
+1/4 Test #10: pxa_raster_assets_test ...........   Passed    0.00 sec
+    Start 20: pxa_game_render_test
+2/4 Test #20: pxa_game_render_test .............   Passed    0.00 sec
+    Start 23: pxa_raster_test
+3/4 Test #23: pxa_raster_test ..................   Passed    0.00 sec
+    Start 24: pxa_raster_span_test
+4/4 Test #24: pxa_raster_span_test .............   Passed    0.01 sec
+
+100% tests passed out of 4
+
+Total Test time (real) =   0.03 sec

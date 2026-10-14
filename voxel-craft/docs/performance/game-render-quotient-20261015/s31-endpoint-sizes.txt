@@ -1,0 +1,3 @@
+00000000 0000004a t painter_depth_span_occluded
+00000000 00000138 t painter_span_depth_textured
+00000000 000000f0 t painter_span_depth_textured_clamped

@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "bytes": 678976,
+  "sha256": "559045fbc167ee75f0346dd5905701305f3a3bc53b90928df433b7ba22ec1090",
+  "size": [
+    412,
+    412
+  ],
+  "scope": "fixed saved-world geometry with diagnostic palette/texture, color plus depth"
+}

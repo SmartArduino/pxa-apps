@@ -1,0 +1,7 @@
+{
+  "first_attempt_passed": false,
+  "first_attempt": "swipe did not unlock; screenshots were LVGL lock screen, excluded from gameplay validation",
+  "fix": "hold DOWN 150 ms before moving; assert screenshot source is PXA direct before gameplay actions",
+  "second_attempt_passed": true,
+  "original_attempt_artifacts": "local/game-render-opt3-20261015/functional-first-attempt/"
+}

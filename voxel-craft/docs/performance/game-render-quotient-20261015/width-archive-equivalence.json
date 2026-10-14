@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "members": 93,
+  "changed_members": [
+    "raster.c.obj"
+  ],
+  "baseline_sha256": "2f14b5c4c06d8a9900108712152f72be4d4a4e2ca61a9d8554f37e00e6a60a3a",
+  "candidate_sha256": "19dfd18ef6186645e08eda73fe8c1689c1d80acb923da98bfed93c258674d173"
+}

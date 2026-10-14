@@ -1,0 +1,25 @@
+{
+  "passed": true,
+  "device": "8c:bf:ea:09:af:6c",
+  "firmware": "width.bin",
+  "world_reloaded_pixel_identical_outside_fps": true,
+  "saved_world_sha256": "sha256=ef6f185dc56835b0e79afa6ab0120551e11885582d997f9a659b9f4ffbab4970;bytes=98492",
+  "leaf_mined_collected_and_mesh_rebuilt": "verified in device screenshots; first hotbar slot gains leaves and canopy changes",
+  "background_foreground": "HOME/run resumes edited state; stop/run/load restores fixed world",
+  "auto_distance_restored": true,
+  "flight_off_invert_off_auto_jump_on": true,
+  "test_apps_stopped": true,
+  "perf_probe_released": true,
+  "screenshot_sources": "all PXA direct after robust unlock",
+  "native_oracle_cases": 12000,
+  "native_painter_cases": 2400,
+  "native_identical_outputs": 20,
+  "core_tests": "4/4",
+  "simulator": "full product Host and both AOT games, 412x412 round 284 DPI",
+  "limitations": [
+    "No optical or acoustic latency measurement",
+    "No candidate hardware A/B on pai-touch or Korvo",
+    "Moving trajectories differ",
+    "Whole-system initialization peaks fluctuate and are not a module-only peak"
+  ]
+}

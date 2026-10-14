@@ -1,0 +1,6 @@
+Voxel render: affine=461 solid=365; same faces, frustum corners, zero frame allocations OK
+Voxel render: affine=0 solid=0; same faces, frustum corners, zero frame allocations OK
+Voxel render: affine=461 solid=365; same faces, frustum corners, zero frame allocations OK
+Voxel render: affine=0 solid=0; same faces, frustum corners, zero frame allocations OK
+[{'name': 'baseline', 'sha256': '4e8a8da09bf2bb67875871e1df084c6f0e17b849b2c4bb0f9da07754bb96a98c', 'bytes': 39331200}, {'name': 'candidate', 'sha256': '4e8a8da09bf2bb67875871e1df084c6f0e17b849b2c4bb0f9da07754bb96a98c', 'bytes': 39331200}]
+Width pixel equality: 20

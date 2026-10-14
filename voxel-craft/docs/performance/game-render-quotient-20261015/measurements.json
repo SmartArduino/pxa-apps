@@ -1,0 +1,2340 @@
+{
+  "baseline-voxel": {
+    "passed": true,
+    "package_sha256": "f4abaf8c522c836d48daa8c2b9430c2963788197cc29ed28ead8039a7a8504d6",
+    "manifest_sha256": "aec508be432b19b0616f1252df7d0ed10a6a0d13e019e699509f7ea8ae4e497b",
+    "scenes": {
+      "idle": {
+        "fps_mean": 10.561008975566343,
+        "fps_runs": [
+          10.471115937472625,
+          10.560698386711653,
+          10.65121260251475
+        ],
+        "raster_ms_mean": 65.07657142857143,
+        "visible_p95_ms_runs": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "guest_dispatch_p95_ms_runs": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "command_byte_ranges": [
+          [
+            23752,
+            23752
+          ],
+          [
+            23752,
+            23752
+          ],
+          [
+            23752,
+            23752
+          ]
+        ],
+        "covered_pixel_ranges": [
+          [
+            250037,
+            250037
+          ],
+          [
+            250037,
+            250037
+          ],
+          [
+            250037,
+            250037
+          ]
+        ]
+      }
+    },
+    "memory": {
+      "startup": {
+        "sram": {
+          "steady_max": 511628,
+          "local_peak_max": 516244,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3587200,
+          "local_peak_max": 4303996,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "memory": {
+        "sram": {
+          "steady_max": 511628,
+          "local_peak_max": 511628,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3589380,
+          "local_peak_max": 3589440,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "typed_game": [
+        {
+          "repeat": 0,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 62232,
+            "peak_internal": 28956,
+            "peak_external": 62232,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 0,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 678976,
+            "scratch": 339488,
+            "mailbox": 0,
+            "probe": 2176,
+            "peak_total": 1020640
+          }
+        },
+        {
+          "repeat": 1,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 62232,
+            "peak_internal": 28956,
+            "peak_external": 62232,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 0,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 678976,
+            "scratch": 339488,
+            "mailbox": 0,
+            "probe": 2176,
+            "peak_total": 1020640
+          }
+        },
+        {
+          "repeat": 2,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 62232,
+            "peak_internal": 28956,
+            "peak_external": 62232,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 0,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 678976,
+            "scratch": 339488,
+            "mailbox": 0,
+            "probe": 2176,
+            "peak_total": 1020640
+          }
+        }
+      ]
+    }
+  },
+  "baseline-jump": {
+    "passed": true,
+    "package_sha256": "da5dc9757979f2a164db7ff94b8ec4a6c95388ae69bedde7743e898fc58376cb",
+    "manifest_sha256": "cea6fd71a576eae7626d8d5fd94a0013dff59685a28274caae4ee8dc331d92ec",
+    "scenes": {
+      "charge": {
+        "fps_mean": 30.552305037344723,
+        "fps_runs": [
+          30.67407537776884,
+          30.430534696920603
+        ],
+        "raster_ms_mean": 21.082219512195124,
+        "visible_p95_ms_runs": [
+          111.579,
+          80.0
+        ],
+        "guest_dispatch_p95_ms_runs": [
+          76.0,
+          42.0
+        ],
+        "command_byte_ranges": [
+          [
+            5116,
+            7528
+          ],
+          [
+            5060,
+            7528
+          ]
+        ],
+        "covered_pixel_ranges": [
+          [
+            207622,
+            227410
+          ],
+          [
+            207674,
+            227378
+          ]
+        ]
+      },
+      "idle": {
+        "fps_mean": 33.72710923073073,
+        "fps_runs": [
+          33.68594642426193,
+          33.76827203719953
+        ],
+        "raster_ms_mean": 19.84442608932462,
+        "visible_p95_ms_runs": [
+          0.0,
+          0.0
+        ],
+        "guest_dispatch_p95_ms_runs": [
+          0.0,
+          0.0
+        ],
+        "command_byte_ranges": [
+          [
+            5116,
+            5116
+          ],
+          [
+            5116,
+            5116
+          ]
+        ],
+        "covered_pixel_ranges": [
+          [
+            213515,
+            213515
+          ],
+          [
+            213515,
+            213515
+          ]
+        ]
+      }
+    },
+    "memory": {
+      "startup": {
+        "sram": {
+          "steady_max": 511628,
+          "local_peak_max": 515988,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3408332,
+          "local_peak_max": 4950532,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "memory": {
+        "sram": {
+          "steady_max": 511628,
+          "local_peak_max": 515728,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3354876,
+          "local_peak_max": 3410568,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "typed_game": [
+        {
+          "repeat": 0,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 191190,
+            "peak_internal": 28956,
+            "peak_external": 240876,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 1018464,
+            "scratch": 0,
+            "mailbox": 49152,
+            "probe": 2176,
+            "peak_total": 1069792
+          }
+        },
+        {
+          "repeat": 0,
+          "scene": "charge",
+          "budget": {
+            "internal": 28956,
+            "external": 191190,
+            "peak_internal": 28956,
+            "peak_external": 240876,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 1018464,
+            "scratch": 0,
+            "mailbox": 49152,
+            "probe": 2176,
+            "peak_total": 1069792
+          }
+        },
+        {
+          "repeat": 1,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 191190,
+            "peak_internal": 28956,
+            "peak_external": 240876,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 1018464,
+            "scratch": 0,
+            "mailbox": 49152,
+            "probe": 2176,
+            "peak_total": 1069792
+          }
+        },
+        {
+          "repeat": 1,
+          "scene": "charge",
+          "budget": {
+            "internal": 28956,
+            "external": 191190,
+            "peak_internal": 28956,
+            "peak_external": 240876,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 1018464,
+            "scratch": 0,
+            "mailbox": 49152,
+            "probe": 2176,
+            "peak_total": 1069792
+          }
+        }
+      ]
+    }
+  },
+  "attributes-voxel": {
+    "passed": true,
+    "package_sha256": "f4abaf8c522c836d48daa8c2b9430c2963788197cc29ed28ead8039a7a8504d6",
+    "manifest_sha256": "aec508be432b19b0616f1252df7d0ed10a6a0d13e019e699509f7ea8ae4e497b",
+    "scenes": {
+      "idle": {
+        "fps_mean": 10.535399269000179,
+        "fps_runs": [
+          10.498821507285808,
+          10.536687460776538,
+          10.570688838938189
+        ],
+        "raster_ms_mean": 65.40652990033223,
+        "visible_p95_ms_runs": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "guest_dispatch_p95_ms_runs": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "command_byte_ranges": [
+          [
+            23752,
+            23752
+          ],
+          [
+            23752,
+            23752
+          ],
+          [
+            23752,
+            23752
+          ]
+        ],
+        "covered_pixel_ranges": [
+          [
+            250037,
+            250037
+          ],
+          [
+            250037,
+            250037
+          ],
+          [
+            250037,
+            250037
+          ]
+        ]
+      }
+    },
+    "memory": {
+      "startup": {
+        "sram": {
+          "steady_max": 511624,
+          "local_peak_max": 516240,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3579332,
+          "local_peak_max": 4296088,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "memory": {
+        "sram": {
+          "steady_max": 511624,
+          "local_peak_max": 511624,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3581512,
+          "local_peak_max": 3581572,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "typed_game": [
+        {
+          "repeat": 0,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 62232,
+            "peak_internal": 28956,
+            "peak_external": 62232,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 0,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 678976,
+            "scratch": 339488,
+            "mailbox": 0,
+            "probe": 2176,
+            "peak_total": 1020640
+          }
+        },
+        {
+          "repeat": 1,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 62232,
+            "peak_internal": 28956,
+            "peak_external": 62232,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 0,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 678976,
+            "scratch": 339488,
+            "mailbox": 0,
+            "probe": 2176,
+            "peak_total": 1020640
+          }
+        },
+        {
+          "repeat": 2,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 62232,
+            "peak_internal": 28956,
+            "peak_external": 62232,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 0,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 678976,
+            "scratch": 339488,
+            "mailbox": 0,
+            "probe": 2176,
+            "peak_total": 1020640
+          }
+        }
+      ]
+    }
+  },
+  "attributes-jump": {
+    "passed": true,
+    "package_sha256": "da5dc9757979f2a164db7ff94b8ec4a6c95388ae69bedde7743e898fc58376cb",
+    "manifest_sha256": "cea6fd71a576eae7626d8d5fd94a0013dff59685a28274caae4ee8dc331d92ec",
+    "scenes": {
+      "charge": {
+        "fps_mean": 30.38206577474503,
+        "fps_runs": [
+          30.041314317515162,
+          30.722817231974897
+        ],
+        "raster_ms_mean": 20.926213821138212,
+        "visible_p95_ms_runs": [
+          86.0,
+          90.0
+        ],
+        "guest_dispatch_p95_ms_runs": [
+          50.0,
+          42.0
+        ],
+        "command_byte_ranges": [
+          [
+            5116,
+            7912
+          ],
+          [
+            5116,
+            7528
+          ]
+        ],
+        "covered_pixel_ranges": [
+          [
+            206500,
+            227965
+          ],
+          [
+            207516,
+            227369
+          ]
+        ]
+      },
+      "idle": {
+        "fps_mean": 33.62323437193852,
+        "fps_runs": [
+          33.71253694332174,
+          33.5339318005553
+        ],
+        "raster_ms_mean": 19.808344435908694,
+        "visible_p95_ms_runs": [
+          0.0,
+          0.0
+        ],
+        "guest_dispatch_p95_ms_runs": [
+          0.0,
+          0.0
+        ],
+        "command_byte_ranges": [
+          [
+            5116,
+            5116
+          ],
+          [
+            5116,
+            5116
+          ]
+        ],
+        "covered_pixel_ranges": [
+          [
+            213515,
+            213515
+          ],
+          [
+            213515,
+            213515
+          ]
+        ]
+      }
+    },
+    "memory": {
+      "startup": {
+        "sram": {
+          "steady_max": 511632,
+          "local_peak_max": 515992,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3400404,
+          "local_peak_max": 4939292,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "memory": {
+        "sram": {
+          "steady_max": 511632,
+          "local_peak_max": 515992,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3365772,
+          "local_peak_max": 3425960,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "typed_game": [
+        {
+          "repeat": 0,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 191190,
+            "peak_internal": 28956,
+            "peak_external": 240876,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 1018464,
+            "scratch": 0,
+            "mailbox": 49152,
+            "probe": 2176,
+            "peak_total": 1069792
+          }
+        },
+        {
+          "repeat": 0,
+          "scene": "charge",
+          "budget": {
+            "internal": 28956,
+            "external": 210102,
+            "peak_internal": 28956,
+            "peak_external": 259788,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 1018464,
+            "scratch": 0,
+            "mailbox": 49152,
+            "probe": 2176,
+            "peak_total": 1069792
+          }
+        },
+        {
+          "repeat": 1,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 191190,
+            "peak_internal": 28956,
+            "peak_external": 259788,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 1018464,
+            "scratch": 0,
+            "mailbox": 49152,
+            "probe": 2176,
+            "peak_total": 1069792
+          }
+        },
+        {
+          "repeat": 1,
+          "scene": "charge",
+          "budget": {
+            "internal": 28956,
+            "external": 191190,
+            "peak_internal": 28956,
+            "peak_external": 259788,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 1018464,
+            "scratch": 0,
+            "mailbox": 49152,
+            "probe": 2176,
+            "peak_total": 1069792
+          }
+        }
+      ]
+    }
+  },
+  "endpoint-voxel": {
+    "passed": true,
+    "package_sha256": "f4abaf8c522c836d48daa8c2b9430c2963788197cc29ed28ead8039a7a8504d6",
+    "manifest_sha256": "aec508be432b19b0616f1252df7d0ed10a6a0d13e019e699509f7ea8ae4e497b",
+    "scenes": {
+      "idle": {
+        "fps_mean": 10.602520544887593,
+        "fps_runs": [
+          10.614639399988091,
+          10.585712514227701,
+          10.607209720446988
+        ],
+        "raster_ms_mean": 64.6650361757106,
+        "visible_p95_ms_runs": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "guest_dispatch_p95_ms_runs": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "command_byte_ranges": [
+          [
+            23752,
+            23752
+          ],
+          [
+            23752,
+            23752
+          ],
+          [
+            23752,
+            23752
+          ]
+        ],
+        "covered_pixel_ranges": [
+          [
+            250037,
+            250037
+          ],
+          [
+            250037,
+            250037
+          ],
+          [
+            250037,
+            250037
+          ]
+        ]
+      }
+    },
+    "memory": {
+      "startup": {
+        "sram": {
+          "steady_max": 511624,
+          "local_peak_max": 516240,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3579408,
+          "local_peak_max": 4780368,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "memory": {
+        "sram": {
+          "steady_max": 511624,
+          "local_peak_max": 511624,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3581588,
+          "local_peak_max": 3581656,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "typed_game": [
+        {
+          "repeat": 0,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 62232,
+            "peak_internal": 28956,
+            "peak_external": 62232,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 0,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 678976,
+            "scratch": 339488,
+            "mailbox": 0,
+            "probe": 2176,
+            "peak_total": 1020640
+          }
+        },
+        {
+          "repeat": 1,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 62232,
+            "peak_internal": 28956,
+            "peak_external": 62232,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 0,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 678976,
+            "scratch": 339488,
+            "mailbox": 0,
+            "probe": 2176,
+            "peak_total": 1020640
+          }
+        },
+        {
+          "repeat": 2,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 62232,
+            "peak_internal": 28956,
+            "peak_external": 62232,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 0,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 678976,
+            "scratch": 339488,
+            "mailbox": 0,
+            "probe": 2176,
+            "peak_total": 1020640
+          }
+        }
+      ]
+    }
+  },
+  "endpoint-jump": {
+    "passed": true,
+    "package_sha256": "da5dc9757979f2a164db7ff94b8ec4a6c95388ae69bedde7743e898fc58376cb",
+    "manifest_sha256": "cea6fd71a576eae7626d8d5fd94a0013dff59685a28274caae4ee8dc331d92ec",
+    "scenes": {
+      "charge": {
+        "fps_mean": 29.94001820227276,
+        "fps_runs": [
+          30.052918390921292,
+          29.827118013624226
+        ],
+        "raster_ms_mean": 21.003241287878787,
+        "visible_p95_ms_runs": [
+          104.83,
+          86.0
+        ],
+        "guest_dispatch_p95_ms_runs": [
+          60.0,
+          44.0
+        ],
+        "command_byte_ranges": [
+          [
+            5060,
+            7912
+          ],
+          [
+            5116,
+            7912
+          ]
+        ],
+        "covered_pixel_ranges": [
+          [
+            207483,
+            228023
+          ],
+          [
+            208297,
+            227981
+          ]
+        ]
+      },
+      "idle": {
+        "fps_mean": 33.86197570973978,
+        "fps_runs": [
+          33.78142460301154,
+          33.94252681646802
+        ],
+        "raster_ms_mean": 19.861911764705884,
+        "visible_p95_ms_runs": [
+          0.0,
+          0.0
+        ],
+        "guest_dispatch_p95_ms_runs": [
+          0.0,
+          0.0
+        ],
+        "command_byte_ranges": [
+          [
+            5116,
+            5116
+          ],
+          [
+            5116,
+            5116
+          ]
+        ],
+        "covered_pixel_ranges": [
+          [
+            213515,
+            213515
+          ],
+          [
+            213515,
+            213515
+          ]
+        ]
+      }
+    },
+    "memory": {
+      "startup": {
+        "sram": {
+          "steady_max": 511624,
+          "local_peak_max": 515984,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3400484,
+          "local_peak_max": 4942648,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "memory": {
+        "sram": {
+          "steady_max": 511624,
+          "local_peak_max": 515984,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3365932,
+          "local_peak_max": 3426084,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "typed_game": [
+        {
+          "repeat": 0,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 191190,
+            "peak_internal": 28956,
+            "peak_external": 240876,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 1018464,
+            "scratch": 0,
+            "mailbox": 49152,
+            "probe": 2176,
+            "peak_total": 1069792
+          }
+        },
+        {
+          "repeat": 0,
+          "scene": "charge",
+          "budget": {
+            "internal": 28956,
+            "external": 210102,
+            "peak_internal": 28956,
+            "peak_external": 259788,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 1018464,
+            "scratch": 0,
+            "mailbox": 49152,
+            "probe": 2180,
+            "peak_total": 1069796
+          }
+        },
+        {
+          "repeat": 1,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 191190,
+            "peak_internal": 28956,
+            "peak_external": 259788,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 1018464,
+            "scratch": 0,
+            "mailbox": 49152,
+            "probe": 2176,
+            "peak_total": 1069796
+          }
+        },
+        {
+          "repeat": 1,
+          "scene": "charge",
+          "budget": {
+            "internal": 28956,
+            "external": 210102,
+            "peak_internal": 28956,
+            "peak_external": 259788,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 1018464,
+            "scratch": 0,
+            "mailbox": 49152,
+            "probe": 2176,
+            "peak_total": 1069796
+          }
+        }
+      ]
+    }
+  },
+  "control-voxel": {
+    "passed": true,
+    "package_sha256": "f4abaf8c522c836d48daa8c2b9430c2963788197cc29ed28ead8039a7a8504d6",
+    "manifest_sha256": "aec508be432b19b0616f1252df7d0ed10a6a0d13e019e699509f7ea8ae4e497b",
+    "scenes": {
+      "idle": {
+        "fps_mean": 10.536218134108589,
+        "fps_runs": [
+          10.52781319859102,
+          10.557275860864154,
+          10.523565342870592
+        ],
+        "raster_ms_mean": 65.18329494278332,
+        "visible_p95_ms_runs": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "guest_dispatch_p95_ms_runs": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "command_byte_ranges": [
+          [
+            23752,
+            23752
+          ],
+          [
+            23752,
+            23752
+          ],
+          [
+            23752,
+            23752
+          ]
+        ],
+        "covered_pixel_ranges": [
+          [
+            250037,
+            250037
+          ],
+          [
+            250037,
+            250037
+          ],
+          [
+            250037,
+            250037
+          ]
+        ]
+      }
+    },
+    "memory": {
+      "startup": {
+        "sram": {
+          "steady_max": 511624,
+          "local_peak_max": 516240,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3579340,
+          "local_peak_max": 4664528,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "memory": {
+        "sram": {
+          "steady_max": 511624,
+          "local_peak_max": 511624,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3581520,
+          "local_peak_max": 3581576,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "typed_game": [
+        {
+          "repeat": 0,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 62232,
+            "peak_internal": 28956,
+            "peak_external": 62232,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 0,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 678976,
+            "scratch": 339488,
+            "mailbox": 0,
+            "probe": 2176,
+            "peak_total": 1020640
+          }
+        },
+        {
+          "repeat": 1,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 62232,
+            "peak_internal": 28956,
+            "peak_external": 62232,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 0,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 678976,
+            "scratch": 339488,
+            "mailbox": 0,
+            "probe": 2176,
+            "peak_total": 1020640
+          }
+        },
+        {
+          "repeat": 2,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 62232,
+            "peak_internal": 28956,
+            "peak_external": 62232,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 0,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 678976,
+            "scratch": 339488,
+            "mailbox": 0,
+            "probe": 2176,
+            "peak_total": 1020640
+          }
+        }
+      ]
+    }
+  },
+  "control-jump": {
+    "passed": true,
+    "package_sha256": "da5dc9757979f2a164db7ff94b8ec4a6c95388ae69bedde7743e898fc58376cb",
+    "manifest_sha256": "cea6fd71a576eae7626d8d5fd94a0013dff59685a28274caae4ee8dc331d92ec",
+    "scenes": {
+      "charge": {
+        "fps_mean": 30.5254606464876,
+        "fps_runs": [
+          30.428654236184194,
+          30.622267056791003
+        ],
+        "raster_ms_mean": 21.110145341863255,
+        "visible_p95_ms_runs": [
+          86.0,
+          76.0
+        ],
+        "guest_dispatch_p95_ms_runs": [
+          54.0,
+          34.0
+        ],
+        "command_byte_ranges": [
+          [
+            5116,
+            7528
+          ],
+          [
+            5060,
+            7528
+          ]
+        ],
+        "covered_pixel_ranges": [
+          [
+            207761,
+            227315
+          ],
+          [
+            206314,
+            227325
+          ]
+        ]
+      },
+      "idle": {
+        "fps_mean": 33.70002199741003,
+        "fps_runs": [
+          33.73769046373966,
+          33.6623535310804
+        ],
+        "raster_ms_mean": 19.833007407407408,
+        "visible_p95_ms_runs": [
+          0.0,
+          0.0
+        ],
+        "guest_dispatch_p95_ms_runs": [
+          0.0,
+          0.0
+        ],
+        "command_byte_ranges": [
+          [
+            5116,
+            5116
+          ],
+          [
+            5116,
+            5116
+          ]
+        ],
+        "covered_pixel_ranges": [
+          [
+            213515,
+            213515
+          ],
+          [
+            213515,
+            213515
+          ]
+        ]
+      }
+    },
+    "memory": {
+      "startup": {
+        "sram": {
+          "steady_max": 511624,
+          "local_peak_max": 515984,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3400440,
+          "local_peak_max": 4942600,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "memory": {
+        "sram": {
+          "steady_max": 511624,
+          "local_peak_max": 515724,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3346936,
+          "local_peak_max": 3402720,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "typed_game": [
+        {
+          "repeat": 0,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 191190,
+            "peak_internal": 28956,
+            "peak_external": 240876,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 1018464,
+            "scratch": 0,
+            "mailbox": 49152,
+            "probe": 2176,
+            "peak_total": 1069792
+          }
+        },
+        {
+          "repeat": 0,
+          "scene": "charge",
+          "budget": {
+            "internal": 28956,
+            "external": 191190,
+            "peak_internal": 28956,
+            "peak_external": 240876,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 1018464,
+            "scratch": 0,
+            "mailbox": 49152,
+            "probe": 2176,
+            "peak_total": 1069792
+          }
+        },
+        {
+          "repeat": 1,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 191190,
+            "peak_internal": 28956,
+            "peak_external": 240876,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 1018464,
+            "scratch": 0,
+            "mailbox": 49152,
+            "probe": 2176,
+            "peak_total": 1069792
+          }
+        },
+        {
+          "repeat": 1,
+          "scene": "charge",
+          "budget": {
+            "internal": 28956,
+            "external": 191190,
+            "peak_internal": 28956,
+            "peak_external": 240876,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 1018464,
+            "scratch": 0,
+            "mailbox": 49152,
+            "probe": 2176,
+            "peak_total": 1069792
+          }
+        }
+      ]
+    }
+  },
+  "control-moving-voxel": {
+    "passed": true,
+    "package_sha256": "f4abaf8c522c836d48daa8c2b9430c2963788197cc29ed28ead8039a7a8504d6",
+    "manifest_sha256": "aec508be432b19b0616f1252df7d0ed10a6a0d13e019e699509f7ea8ae4e497b",
+    "scenes": {
+      "turn": {
+        "fps_mean": 9.657639230753787,
+        "fps_runs": [
+          9.657639230753787
+        ],
+        "raster_ms_mean": 69.96815789473683,
+        "visible_p95_ms_runs": [
+          194.008
+        ],
+        "guest_dispatch_p95_ms_runs": [
+          9.0
+        ],
+        "command_byte_ranges": [
+          [
+            23752,
+            25768
+          ]
+        ],
+        "covered_pixel_ranges": [
+          [
+            250037,
+            250648
+          ]
+        ]
+      },
+      "walk": {
+        "fps_mean": 10.541324627872417,
+        "fps_runs": [
+          10.541324627872417
+        ],
+        "raster_ms_mean": 64.10292857142858,
+        "visible_p95_ms_runs": [
+          124.458
+        ],
+        "guest_dispatch_p95_ms_runs": [
+          32.0
+        ],
+        "command_byte_ranges": [
+          [
+            20056,
+            23752
+          ]
+        ],
+        "covered_pixel_ranges": [
+          [
+            247634,
+            250037
+          ]
+        ]
+      }
+    },
+    "memory": {
+      "startup": {
+        "sram": {
+          "steady_max": 511624,
+          "local_peak_max": 516240,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3579260,
+          "local_peak_max": 4296048,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "memory": {
+        "sram": {
+          "steady_max": 511624,
+          "local_peak_max": 511624,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3581440,
+          "local_peak_max": 3581496,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "typed_game": [
+        {
+          "repeat": 0,
+          "scene": "turn",
+          "budget": {
+            "internal": 28956,
+            "external": 62232,
+            "peak_internal": 28956,
+            "peak_external": 240876,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 678976,
+            "scratch": 339488,
+            "mailbox": 0,
+            "probe": 2176,
+            "peak_total": 1069792
+          }
+        },
+        {
+          "repeat": 0,
+          "scene": "walk",
+          "budget": {
+            "internal": 28956,
+            "external": 62232,
+            "peak_internal": 28956,
+            "peak_external": 240876,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 678976,
+            "scratch": 339488,
+            "mailbox": 0,
+            "probe": 2176,
+            "peak_total": 1069792
+          }
+        }
+      ]
+    }
+  },
+  "control-cold-voxel": {
+    "passed": true,
+    "package_sha256": "f4abaf8c522c836d48daa8c2b9430c2963788197cc29ed28ead8039a7a8504d6",
+    "manifest_sha256": "aec508be432b19b0616f1252df7d0ed10a6a0d13e019e699509f7ea8ae4e497b",
+    "scenes": {
+      "idle": {
+        "fps_mean": 10.617549503328673,
+        "fps_runs": [
+          10.619651614743313,
+          10.615447391914033
+        ],
+        "raster_ms_mean": 64.50135382059801,
+        "visible_p95_ms_runs": [
+          0.0,
+          0.0
+        ],
+        "guest_dispatch_p95_ms_runs": [
+          0.0,
+          0.0
+        ],
+        "command_byte_ranges": [
+          [
+            23752,
+            23752
+          ],
+          [
+            23752,
+            23752
+          ]
+        ],
+        "covered_pixel_ranges": [
+          [
+            250037,
+            250037
+          ],
+          [
+            250037,
+            250037
+          ]
+        ]
+      }
+    },
+    "memory": {
+      "startup": {
+        "sram": {
+          "steady_max": 511660,
+          "local_peak_max": 516240,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3581400,
+          "local_peak_max": 4296040,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "memory": {
+        "sram": {
+          "steady_max": 511624,
+          "local_peak_max": 511624,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3581432,
+          "local_peak_max": 3581492,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "typed_game": [
+        {
+          "repeat": 0,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 62232,
+            "peak_internal": 28956,
+            "peak_external": 62232,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 0,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 678976,
+            "scratch": 339488,
+            "mailbox": 0,
+            "probe": 2176,
+            "peak_total": 1020640
+          }
+        },
+        {
+          "repeat": 1,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 62232,
+            "peak_internal": 28956,
+            "peak_external": 62232,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 0,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 678976,
+            "scratch": 339488,
+            "mailbox": 0,
+            "probe": 2176,
+            "peak_total": 1020640
+          }
+        }
+      ]
+    }
+  },
+  "endpoint-final-voxel": {
+    "passed": true,
+    "package_sha256": "f4abaf8c522c836d48daa8c2b9430c2963788197cc29ed28ead8039a7a8504d6",
+    "manifest_sha256": "aec508be432b19b0616f1252df7d0ed10a6a0d13e019e699509f7ea8ae4e497b",
+    "scenes": {
+      "idle": {
+        "fps_mean": 10.605012942670342,
+        "fps_runs": [
+          10.613232578378723,
+          10.596793306961963
+        ],
+        "raster_ms_mean": 64.63453488372093,
+        "visible_p95_ms_runs": [
+          0.0,
+          0.0
+        ],
+        "guest_dispatch_p95_ms_runs": [
+          0.0,
+          0.0
+        ],
+        "command_byte_ranges": [
+          [
+            23752,
+            23752
+          ],
+          [
+            23752,
+            23752
+          ]
+        ],
+        "covered_pixel_ranges": [
+          [
+            250037,
+            250037
+          ],
+          [
+            250037,
+            250037
+          ]
+        ]
+      }
+    },
+    "memory": {
+      "startup": {
+        "sram": {
+          "steady_max": 511660,
+          "local_peak_max": 516240,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3581752,
+          "local_peak_max": 4780252,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "memory": {
+        "sram": {
+          "steady_max": 511624,
+          "local_peak_max": 511624,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3581496,
+          "local_peak_max": 3581560,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "typed_game": [
+        {
+          "repeat": 0,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 62232,
+            "peak_internal": 28956,
+            "peak_external": 62232,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 0,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 678976,
+            "scratch": 339488,
+            "mailbox": 0,
+            "probe": 2176,
+            "peak_total": 1020640
+          }
+        },
+        {
+          "repeat": 1,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 62232,
+            "peak_internal": 28956,
+            "peak_external": 62232,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 0,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 678976,
+            "scratch": 339488,
+            "mailbox": 0,
+            "probe": 2176,
+            "peak_total": 1020640
+          }
+        }
+      ]
+    }
+  },
+  "width-voxel": {
+    "passed": true,
+    "package_sha256": "f4abaf8c522c836d48daa8c2b9430c2963788197cc29ed28ead8039a7a8504d6",
+    "manifest_sha256": "aec508be432b19b0616f1252df7d0ed10a6a0d13e019e699509f7ea8ae4e497b",
+    "scenes": {
+      "idle": {
+        "fps_mean": 10.720546647933054,
+        "fps_runs": [
+          10.680701447438487,
+          10.76039184842762
+        ],
+        "raster_ms_mean": 63.74422093023256,
+        "visible_p95_ms_runs": [
+          0.0,
+          0.0
+        ],
+        "guest_dispatch_p95_ms_runs": [
+          0.0,
+          0.0
+        ],
+        "command_byte_ranges": [
+          [
+            23752,
+            23752
+          ],
+          [
+            23752,
+            23752
+          ]
+        ],
+        "covered_pixel_ranges": [
+          [
+            250037,
+            250037
+          ],
+          [
+            250037,
+            250037
+          ]
+        ]
+      }
+    },
+    "memory": {
+      "startup": {
+        "sram": {
+          "steady_max": 511660,
+          "local_peak_max": 516240,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3581800,
+          "local_peak_max": 4780300,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "memory": {
+        "sram": {
+          "steady_max": 511624,
+          "local_peak_max": 511624,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3581448,
+          "local_peak_max": 3581516,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "typed_game": [
+        {
+          "repeat": 0,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 62232,
+            "peak_internal": 28956,
+            "peak_external": 62232,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 0,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 678976,
+            "scratch": 339488,
+            "mailbox": 0,
+            "probe": 2176,
+            "peak_total": 1020640
+          }
+        },
+        {
+          "repeat": 1,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 62232,
+            "peak_internal": 28956,
+            "peak_external": 62232,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 0,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 678976,
+            "scratch": 339488,
+            "mailbox": 0,
+            "probe": 2176,
+            "peak_total": 1020640
+          }
+        }
+      ]
+    }
+  },
+  "width-jump": {
+    "passed": true,
+    "package_sha256": "da5dc9757979f2a164db7ff94b8ec4a6c95388ae69bedde7743e898fc58376cb",
+    "manifest_sha256": "cea6fd71a576eae7626d8d5fd94a0013dff59685a28274caae4ee8dc331d92ec",
+    "scenes": {
+      "charge": {
+        "fps_mean": 30.056884257533298,
+        "fps_runs": [
+          30.011224197849995,
+          30.102544317216598
+        ],
+        "raster_ms_mean": 21.124669421487603,
+        "visible_p95_ms_runs": [
+          80.0,
+          78.0
+        ],
+        "guest_dispatch_p95_ms_runs": [
+          44.0,
+          36.0
+        ],
+        "command_byte_ranges": [
+          [
+            5060,
+            7912
+          ],
+          [
+            5060,
+            7912
+          ]
+        ],
+        "covered_pixel_ranges": [
+          [
+            207474,
+            227974
+          ],
+          [
+            207294,
+            228004
+          ]
+        ]
+      },
+      "idle": {
+        "fps_mean": 33.74043495327997,
+        "fps_runs": [
+          33.73691850984781,
+          33.74395139671214
+        ],
+        "raster_ms_mean": 19.818080882352945,
+        "visible_p95_ms_runs": [
+          0.0,
+          0.0
+        ],
+        "guest_dispatch_p95_ms_runs": [
+          0.0,
+          0.0
+        ],
+        "command_byte_ranges": [
+          [
+            5116,
+            5116
+          ],
+          [
+            5116,
+            5116
+          ]
+        ],
+        "covered_pixel_ranges": [
+          [
+            213515,
+            213515
+          ],
+          [
+            213515,
+            213515
+          ]
+        ]
+      }
+    },
+    "memory": {
+      "startup": {
+        "sram": {
+          "steady_max": 511628,
+          "local_peak_max": 515988,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3408184,
+          "local_peak_max": 4947092,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "memory": {
+        "sram": {
+          "steady_max": 511628,
+          "local_peak_max": 515988,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3373608,
+          "local_peak_max": 3433796,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "typed_game": [
+        {
+          "repeat": 0,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 191190,
+            "peak_internal": 28956,
+            "peak_external": 240876,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 1018464,
+            "scratch": 0,
+            "mailbox": 49152,
+            "probe": 2176,
+            "peak_total": 1069792
+          }
+        },
+        {
+          "repeat": 0,
+          "scene": "charge",
+          "budget": {
+            "internal": 28956,
+            "external": 210102,
+            "peak_internal": 28956,
+            "peak_external": 259788,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 1018464,
+            "scratch": 0,
+            "mailbox": 49152,
+            "probe": 2176,
+            "peak_total": 1069792
+          }
+        },
+        {
+          "repeat": 1,
+          "scene": "idle",
+          "budget": {
+            "internal": 28956,
+            "external": 191190,
+            "peak_internal": 28956,
+            "peak_external": 259788,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 1018464,
+            "scratch": 0,
+            "mailbox": 49152,
+            "probe": 2176,
+            "peak_total": 1069792
+          }
+        },
+        {
+          "repeat": 1,
+          "scene": "charge",
+          "budget": {
+            "internal": 28956,
+            "external": 210102,
+            "peak_internal": 28956,
+            "peak_external": 259788,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 1018464,
+            "scratch": 0,
+            "mailbox": 49152,
+            "probe": 2176,
+            "peak_total": 1069792
+          }
+        }
+      ]
+    }
+  },
+  "width-moving-voxel": {
+    "passed": true,
+    "package_sha256": "f4abaf8c522c836d48daa8c2b9430c2963788197cc29ed28ead8039a7a8504d6",
+    "manifest_sha256": "aec508be432b19b0616f1252df7d0ed10a6a0d13e019e699509f7ea8ae4e497b",
+    "scenes": {
+      "turn": {
+        "fps_mean": 9.855438866583034,
+        "fps_runs": [
+          9.855438866583034
+        ],
+        "raster_ms_mean": 68.190575,
+        "visible_p95_ms_runs": [
+          144.128
+        ],
+        "guest_dispatch_p95_ms_runs": [
+          8.0
+        ],
+        "command_byte_ranges": [
+          [
+            23752,
+            25768
+          ]
+        ],
+        "covered_pixel_ranges": [
+          [
+            250037,
+            250648
+          ]
+        ]
+      },
+      "walk": {
+        "fps_mean": 9.489914529213035,
+        "fps_runs": [
+          9.489914529213035
+        ],
+        "raster_ms_mean": 69.91625641025641,
+        "visible_p95_ms_runs": [
+          145.523
+        ],
+        "guest_dispatch_p95_ms_runs": [
+          9.0
+        ],
+        "command_byte_ranges": [
+          [
+            23752,
+            30864
+          ]
+        ],
+        "covered_pixel_ranges": [
+          [
+            247706,
+            250066
+          ]
+        ]
+      }
+    },
+    "memory": {
+      "startup": {
+        "sram": {
+          "steady_max": 511632,
+          "local_peak_max": 516248,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3587032,
+          "local_peak_max": 4303856,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "memory": {
+        "sram": {
+          "steady_max": 511632,
+          "local_peak_max": 511632,
+          "total_range": [
+            551602,
+            551602
+          ]
+        },
+        "psram": {
+          "steady_max": 3589212,
+          "local_peak_max": 3589268,
+          "total_range": [
+            8359512,
+            8359512
+          ]
+        }
+      },
+      "typed_game": [
+        {
+          "repeat": 0,
+          "scene": "turn",
+          "budget": {
+            "internal": 28956,
+            "external": 62232,
+            "peak_internal": 28956,
+            "peak_external": 259788,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 678976,
+            "scratch": 339488,
+            "mailbox": 0,
+            "probe": 2176,
+            "peak_total": 1069792
+          }
+        },
+        {
+          "repeat": 0,
+          "scene": "walk",
+          "budget": {
+            "internal": 28956,
+            "external": 62232,
+            "peak_internal": 28956,
+            "peak_external": 259788,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 49686,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "surface": {
+            "frame": 678976,
+            "scratch": 339488,
+            "mailbox": 0,
+            "probe": 2176,
+            "peak_total": 1069792
+          }
+        }
+      ]
+    }
+  }
+}

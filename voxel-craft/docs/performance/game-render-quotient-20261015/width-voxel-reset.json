@@ -1,0 +1,6 @@
+{
+  "serial": "8c:bf:ea:09:af:6c",
+  "reset": "PXADB REBOOT",
+  "settle_after_reply_seconds": 23.023689909954555,
+  "requested_settle_seconds": 23
+}

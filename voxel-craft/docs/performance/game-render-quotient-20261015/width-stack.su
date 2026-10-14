@@ -1,0 +1,17 @@
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/game-render-opt3-20261015/width-raster.c:641:32:scale_interpolant	48	static
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/game-render-opt3-20261015/width-raster.c:1353:12:painter_advance_chain	112	static
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/game-render-opt3-20261015/width-raster.c:1415:29:painter_span_textured	96	static
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/game-render-opt3-20261015/width-raster.c:1529:33:painter_span_depth_textured_clamped	48	static
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/game-render-opt3-20261015/width-raster.c:1560:33:painter_span_depth_textured	96	static
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/game-render-opt3-20261015/width-raster.c:1588:33:painter_span_depth_flat	32	static
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/game-render-opt3-20261015/width-raster.c:1623:28:painter_depth_span_occluded	32	static
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/game-render-opt3-20261015/width-raster.c:163:21:validate_quad	112	static
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/game-render-opt3-20261015/width-raster.c:2243:17:draw_sprite_instance	128	static
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/game-render-opt3-20261015/width-raster.c:1637:17:draw_painter_polygon	512	static
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/game-render-opt3-20261015/width-raster.c:770:17:draw_triangle	400	static
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/game-render-opt3-20261015/width-raster.c:2160:17:draw_quad	128	static
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/game-render-opt3-20261015/width-raster.c:2476:6:pxa_raster_execute_draw_list_rows$part$0	192	static
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/game-render-opt3-20261015/width-raster.c:87:14:pxa_raster_decode_upload	64	static
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/game-render-opt3-20261015/width-raster.c:460:14:pxa_raster_validate_draw_list	176	static
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/game-render-opt3-20261015/width-raster.c:2476:6:pxa_raster_execute_draw_list_rows	48	static
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/game-render-opt3-20261015/width-raster.c:2580:6:pxa_raster_execute_draw_list	48	static

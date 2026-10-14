@@ -1,0 +1,25 @@
+{
+  "sdk_baseline": "62ffefeb1e5033fdbe2c6890b6558beef27d8aba",
+  "root_baseline": "a72f162ca6349ea2c6d194634d192fe1f60ed1d7",
+  "apps_baseline": "977dcb9c1e285ec9308f0487c41b3cc2c9689e17",
+  "devices": {
+    "watcher": "8c:bf:ea:09:af:6c"
+  },
+  "foreign_changes_preserved": true,
+  "candidate_source_sha256": "38c845cfab57ff1f65792f82edf3cd997d8c20b165ba8abad118da5d96d225c9",
+  "baseline_source_sha256": "c8fe2f10e3e6f08bd600c2373ffd0b68132e661dfc69bf9e8cb3ec2f837ffb1d",
+  "comparison_method": "Frozen libpxa archive: only raster.c.obj replaced; private relink. 93 archive members verified. Previous and control code/data sections identical. Other in-progress workspace changes excluded.",
+  "formal_packages": {
+    "voxel": "f4abaf8c522c836d48daa8c2b9430c2963788197cc29ed28ead8039a7a8504d6",
+    "jump": "da5dc9757979f2a164db7ff94b8ec4a6c95388ae69bedde7743e898fc58376cb"
+  },
+  "native_histogram_scope": "Fixed saved-world Guest geometry with small diagnostic texture/palette; not device runtime telemetry",
+  "selected_variant": "width",
+  "attempted_sources": {
+    "block32": "6f18adf1e321e538de1b4c2ce297183eb8adf2c4d66ed0f42dfb045f234ccc4a",
+    "attributes": "0c238d49f19ad1b5933d9631652e3627292d092624f0612fa662dc438584059d",
+    "endpoint": "07821835dd20ac0d742edc1f12a59d3f66ce2462ea71a2097dfeab2b6a748a47",
+    "width": "38c845cfab57ff1f65792f82edf3cd997d8c20b165ba8abad118da5d96d225c9"
+  },
+  "candidate_sdk_commit": "ae2376016ec632c6fd183b16c7d4dcb01ee3477a"
+}

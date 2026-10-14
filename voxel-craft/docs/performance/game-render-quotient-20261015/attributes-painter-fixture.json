@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "cases": 2400,
+  "variants": [
+    {
+      "name": "baseline",
+      "sha256": "e8fb071b45478f9b65133f21c75fb4be487ae3aface1bbb2f9a3f718655b3e00",
+      "bytes": 39331200
+    },
+    {
+      "name": "candidate",
+      "sha256": "e8fb071b45478f9b65133f21c75fb4be487ae3aface1bbb2f9a3f718655b3e00",
+      "bytes": 39331200
+    }
+  ]
+}

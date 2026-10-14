@@ -5,6 +5,7 @@
 
 | 报告 | 内容 | 测量数据 |
 | --- | --- | --- |
+| [行宽倒数与区块计算](game-render-quotient-20261015.zh-CN.md) | 精确复用相同行宽的浮点倒数；同条件短测约 1% 收益、无新增缓冲/栈帧、撤回无收益候选；记录动态路线和初始化峰值差异 | [measurements.json](game-render-quotient-20261015/measurements.json) |
 | [整行深度遮挡优化](game-render-occlusion-20261015.zh-CN.md) | 在扫描线优化基础上跳过已完全遮挡行的透视计算；同存档多轮 A/B/A、恒定内存结构、未采用的常量除法候选 | [measurements.json](game-render-occlusion-20261015/measurements.json) |
 | [Game-render 扫描线优化](game-render-20261015.zh-CN.md) | Watcher 同存档/视角 A/B/A、专用纯色与 cutout 深度内核、坐标运算外提、真实内存窗口和原生像素一致性；两游戏与三设备检查 | [measurements.json](game-render-20261015/measurements.json)、[validation.json](game-render-20261015/validation.json) |
 | [Korvo-1 真机与整合优化](korvo-20261013.zh-CN.md) | 最终完整固件同负载 FPS、光栅阶段、冷/热真实峰值、输入延迟及透明手势区控件修正 | [measurements.json](korvo-20261013/measurements.json) |
