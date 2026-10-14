@@ -1,0 +1,20 @@
+{
+  "bytes": 98492,
+  "sha256": "ef6f185dc56835b0e79afa6ab0120551e11885582d997f9a659b9f4ffbab4970",
+  "dimensions": [
+    64,
+    24,
+    64
+  ],
+  "generation": 1,
+  "seed": 3646175235,
+  "world_hash": 2893106422,
+  "camera_x_y_z_yaw_pitch_velocity": [
+    32.5,
+    17.000850677490234,
+    32.5,
+    0.0,
+    0.0,
+    0.0
+  ]
+}

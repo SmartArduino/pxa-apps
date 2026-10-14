@@ -1,0 +1,3 @@
+00000000 000000cc t painter_span_depth_flat
+00000000 000000f0 t painter_span_depth_textured_clamped
+00000000 00000138 t painter_span_depth_textured

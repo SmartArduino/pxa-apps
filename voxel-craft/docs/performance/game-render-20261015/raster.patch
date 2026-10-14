@@ -1,0 +1,203 @@
+diff --git a/libpxa/src/services/surface/raster.c b/libpxa/src/services/surface/raster.c
+index dd0c247..32ef67d 100644
+--- a/libpxa/src/services/surface/raster.c
++++ b/libpxa/src/services/surface/raster.c
+@@ -7,8 +7,10 @@
+ 
+ #if defined(__GNUC__) || defined(__clang__)
+ #define RASTER_NOINLINE __attribute__((noinline))
++#define RASTER_ALWAYS_INLINE inline __attribute__((always_inline))
+ #else
+ #define RASTER_NOINLINE
++#define RASTER_ALWAYS_INLINE inline
+ #endif
+ 
+ typedef struct {
+@@ -1396,8 +1398,20 @@ static uint8_t painter_texture_log2(uint16_t dimension) {
+ static inline size_t painter_texture_index_pow2(
+     uint32_t u, uint32_t v, uint32_t mask_u, uint32_t mask_v,
+     uint8_t log2_width) {
+-    return (size_t)(((v >> RASTER_PAINTER_FIXED_SHIFT) & mask_v)
+-                    << log2_width) |
++    /* Shift the invariant mask instead of the sampled row. Masking removes
++     * fractional V bits exposed by the smaller right shift, so wrapping is
++     * identical while the pixel loop needs one fewer shift. */
++    return (size_t)((v >> (RASTER_PAINTER_FIXED_SHIFT - log2_width)) &
++                    (mask_v << log2_width)) |
++           ((u >> RASTER_PAINTER_FIXED_SHIFT) & mask_u);
++}
++
++/* A scanline can scale V and its step once by the texture width. Texture
++ * rows fit in 16 bits (at most 256x256), so unsigned wrap discards only bits
++ * outside the row mask. Both pixel coordinates then use constant shifts. */
++static inline size_t painter_texture_index_row(
++    uint32_t u, uint32_t row_v, uint32_t mask_u, uint32_t row_mask) {
++    return ((row_v >> RASTER_PAINTER_FIXED_SHIFT) & row_mask) |
+            ((u >> RASTER_PAINTER_FIXED_SHIFT) & mask_u);
+ }
+ 
+@@ -1487,6 +1501,63 @@ static RASTER_NOINLINE void painter_span_textured(
+     }
+ }
+ 
++/* The caller proves the whole span fits the reciprocal-depth range. Keep
++ * opaque and cutout loops distinct after inlining: the former must not pay a
++ * material branch per visible pixel. Unsigned stepping also avoids a signed
++ * overflow in the unused step following the last pixel. */
++static RASTER_ALWAYS_INLINE uint32_t
++painter_span_depth_textured_bounded(
++    uint16_t *out, uint16_t *depth, uint32_t count,
++    uint32_t u, uint32_t row_v, int32_t du, uint32_t row_step,
++    const uint8_t *texels, const uint16_t *lit,
++    uint32_t mask_u, uint32_t row_mask,
++    uint32_t w, int32_t dw, int transparent) {
++    uint32_t covered = 0;
++    for (uint32_t i = 0; i < count; ++i) {
++        if (w > depth[i]) {
++            const uint8_t texel = texels[painter_texture_index_row(
++                u, row_v, mask_u, row_mask)];
++            if (!transparent || texel != 0) {
++                out[i] = lit[texel];
++                depth[i] = (uint16_t)w;
++                ++covered;
++            }
++        }
++        u += (uint32_t)du;
++        row_v += row_step;
++        w += (uint32_t)dw;
++    }
++    return covered;
++}
++
++/* Clipped spans with out-of-range depth are uncommon. Keep their wide
++ * arithmetic out of the hot kernel (and its optional internal-code mapping). */
++static RASTER_NOINLINE uint32_t painter_span_depth_textured_clamped(
++    uint16_t *out, uint16_t *depth, uint32_t count,
++    uint32_t u, uint32_t v, int32_t du, int32_t dv,
++    const uint8_t *texels, const uint16_t *lit,
++    uint32_t mask_u, uint32_t mask_v, uint8_t log2_width,
++    int32_t w, int32_t dw, int transparent) {
++    uint32_t covered = 0;
++    int64_t current_w = w;
++    for (uint32_t i = 0; i < count; ++i) {
++        const int64_t inverse = current_w > UINT16_MAX ? UINT16_MAX : current_w;
++        if (inverse > 0 && inverse > depth[i]) {
++            const uint8_t texel = texels[painter_texture_index_pow2(
++                u, v, mask_u, mask_v, log2_width)];
++            if (!transparent || texel != 0) {
++                out[i] = lit[texel];
++                depth[i] = (uint16_t)inverse;
++                ++covered;
++            }
++        }
++        u += (uint32_t)du;
++        v += (uint32_t)dv;
++        current_w += dw;
++    }
++    return covered;
++}
++
+ /* Keep the depth/texture inner loop separate from polygon and perspective
+  * setup. On 32-bit targets their live edge/interpolant state otherwise spills
+  * into this loop. Common spans stay entirely in the 16-bit depth range, so
+@@ -1498,38 +1569,54 @@ static RASTER_NOINLINE uint32_t painter_span_depth_textured(
+     const uint8_t *texels, const uint16_t *lit,
+     uint32_t mask_u, uint32_t mask_v, uint8_t log2_width,
+     int32_t w, int32_t dw, int transparent) {
++    if (count == 0) return 0;
++    const int64_t end_w = (int64_t)w + (int64_t)dw * (count - 1u);
++    if (w > 0 && w <= UINT16_MAX && end_w > 0 && end_w <= UINT16_MAX) {
++        const uint32_t row_v = v << log2_width;
++        const uint32_t row_step = (uint32_t)dv << log2_width;
++        const uint32_t row_mask = mask_v << log2_width;
++        if (transparent)
++            return painter_span_depth_textured_bounded(
++                out, depth, count, u, row_v, du, row_step, texels, lit,
++                mask_u, row_mask, (uint32_t)w, dw, 1);
++        return painter_span_depth_textured_bounded(
++            out, depth, count, u, row_v, du, row_step, texels, lit,
++            mask_u, row_mask, (uint32_t)w, dw, 0);
++    }
++    return painter_span_depth_textured_clamped(
++        out, depth, count, u, v, du, dv, texels, lit,
++        mask_u, mask_v, log2_width, w, dw, transparent);
++}
++
++/* Solid faces need neither UV nor palette sampling. Prove the depth range
++ * once, as for textured spans, instead of clamping each pixel. Keep the rare
++ * out-of-range path wide so clipped/degenerate interpolants cannot overflow. */
++static RASTER_NOINLINE uint32_t painter_span_depth_flat(
++    uint16_t *out, uint16_t *depth, uint32_t count, uint16_t color,
++    int32_t w, int32_t dw) {
+     uint32_t covered = 0;
++    if (count == 0) return 0;
+     const int64_t end_w = (int64_t)w + (int64_t)dw * (count - 1u);
+     if (w > 0 && w <= UINT16_MAX && end_w > 0 && end_w <= UINT16_MAX) {
++        uint32_t current_w = (uint32_t)w;
+         for (uint32_t i = 0; i < count; ++i) {
+-            if ((uint32_t)w > depth[i]) {
+-                const uint8_t texel = texels[painter_texture_index_pow2(
+-                    u, v, mask_u, mask_v, log2_width)];
+-                if (!transparent || texel != 0) {
+-                    out[i] = lit[texel];
+-                    depth[i] = (uint16_t)w;
+-                    ++covered;
+-                }
++            if (current_w > depth[i]) {
++                out[i] = color;
++                depth[i] = (uint16_t)current_w;
++                ++covered;
+             }
+-            u += (uint32_t)du;
+-            v += (uint32_t)dv;
+-            w += dw;
++            current_w += (uint32_t)dw;
+         }
+     } else {
++        int64_t current_w = w;
+         for (uint32_t i = 0; i < count; ++i) {
+-            const int32_t inverse = w > UINT16_MAX ? UINT16_MAX : w;
++            const int64_t inverse = current_w > UINT16_MAX ? UINT16_MAX : current_w;
+             if (inverse > 0 && inverse > depth[i]) {
+-                const uint8_t texel = texels[painter_texture_index_pow2(
+-                    u, v, mask_u, mask_v, log2_width)];
+-                if (!transparent || texel != 0) {
+-                    out[i] = lit[texel];
+-                    depth[i] = (uint16_t)inverse;
+-                    ++covered;
+-                }
++                out[i] = color;
++                depth[i] = (uint16_t)inverse;
++                ++covered;
+             }
+-            u += (uint32_t)du;
+-            v += (uint32_t)dv;
+-            w += dw;
++            current_w += dw;
+         }
+     }
+     return covered;
+@@ -1785,18 +1872,11 @@ static uint32_t draw_painter_polygon(
+                         u += (uint32_t)du * pixels;
+                         v += (uint32_t)dv * pixels;
+                     } else if (flat && !blend_75) {
+-                        for (x = bx0; x < bx1; ++x) {
+-                            const int32_t inverse = depth_w > UINT16_MAX
+-                                ? UINT16_MAX : depth_w;
+-                            if (inverse > 0 && inverse > *depth_out) {
+-                                *out = color_index;
+-                                *depth_out = (uint16_t)inverse;
+-                                ++covered;
+-                            }
+-                            ++out;
+-                            ++depth_out;
+-                            depth_w += dw;
+-                        }
++                        const uint32_t pixels = (uint32_t)(bx1 - bx0);
++                        covered += painter_span_depth_flat(
++                            out, depth_out, pixels, color_index, depth_w, dw);
++                        out += pixels;
++                        depth_out += pixels;
+                     } else {
+                         for (x = bx0; x < bx1; ++x) {
+                             const int32_t inverse = depth_w > UINT16_MAX

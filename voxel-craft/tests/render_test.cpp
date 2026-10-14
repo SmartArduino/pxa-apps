@@ -37,7 +37,8 @@ static voxel::World world;
 static pxa::game::DrawBuffer<49152> buffer;
 static std::array<std::uint16_t, 296 * 240> pixels{}, depth{};
 
-int main() {
+int main(int argc, char** argv) {
+    assert(argc == 1 || argc == 2); // Optional existing directory for pixel A/B checks.
     using voxel::DrawPath;
     std::array<pxa::game::Vertex, 4> quad{{
         {.x_q4=0,.y_q4=0,.depth_q8=4096},
@@ -83,7 +84,7 @@ int main() {
     voxel::DrawBudget budget;
     budget.focal = 240 / (2 * std::tan(1.15f * 0.5f));
     budget.max_distance = 24;
-    unsigned affine = 0, solid = 0;
+    unsigned affine = 0, solid = 0, snapshot = 0;
     for (const float yaw : {0.0f, 1.0f, 2.4f, -1.1f}) {
         camera.yaw = yaw;
         camera.pitch = yaw == 1.0f ? -0.4f : 0.0f;
@@ -105,6 +106,16 @@ int main() {
             assert(pxa_raster_validate_draw_list(commands.data(), command_size, &target,
                                                   &resources, &view) == PXA_STATUS_OK);
             pxa_raster_execute_draw_list(commands.data(), &view, &target, &resources, nullptr);
+            if (argc == 2) {
+                char path[1024];
+                const int size = std::snprintf(path, sizeof(path), "%s/%u.rgb565-depth16", argv[1], snapshot++);
+                assert(size > 0 && size < int(sizeof(path)));
+                auto* file = std::fopen(path, "wb");
+                assert(file);
+                assert(std::fwrite(pixels.data(), sizeof(pixels), 1, file) == 1);
+                assert(std::fwrite(depth.data(), sizeof(depth), 1, file) == 1);
+                assert(std::fclose(file) == 0);
+            }
 #if VOXEL_PROFILE
             const auto previous=commands;
             const auto previous_size=command_size;

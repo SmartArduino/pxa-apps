@@ -1,0 +1,33 @@
+{
+  "native_core_final": "4/4 pass; raster/span/assets/game-render",
+  "span_sanitizers": "6000 independent oracle spans, clang O3 ASan/UBSan, exit 0",
+  "native_games": "12/12 pass",
+  "native_voxel": "ASan tests pass; 32 seeds, 3062 rooted trees, zero frame allocations, finite inventory/mining/tools/material audio/input/DPI/UV checks",
+  "watcher_host": "compositor/LCD IO ASan tests pass",
+  "simulator": "3/3 raster/resource-budget/audio regression; final raster rebuilt and passed; both actual AOT games entered and exercised at 412x412 round 284 DPI",
+  "pixel_equivalence": "19 original/candidate RGB/depth outputs byte-identical; 4 Watcher idle screenshot pairs identical outside top 16px FPS HUD",
+  "preflight_negative_cases": "real Korvo wrong identity rejected with zero app/input commands; wrong package rejected after read-only PACKAGES/FSSHA",
+  "functional_device": {
+    "device_serial": "8c:bf:ea:09:af:6c",
+    "candidate_firmware": "span-v4",
+    "passed": true,
+    "loaded_slot_1": true,
+    "leaf_mined_and_collected": "first quick slot changed from empty to leaves; camera fell into removed canopy blocks, screenshots aim/edited",
+    "mining_progress_capture": "early screenshot returned preceding frame; crack progression not independently confirmed by this device screenshot, covered by native mining tests",
+    "background_foreground": "HOME then PACKAGE run returned to same edited world without restarting",
+    "unsaved_edits_discarded": "stop/run/load restored fixed world; save SHA256 unchanged",
+    "reload_matches_fixed_view_outside_fps": true,
+    "auto_distance_restored": true,
+    "original_flight_off_invert_off_auto_jump_on": true,
+    "all_owned_apps_stopped": true,
+    "perf_probe_released": true,
+    "saved_world_sha256": "sha256=ef6f185dc56835b0e79afa6ab0120551e11885582d997f9a659b9f4ffbab4970;bytes=98492",
+    "screenshot_transport": "first functional pass had one missing JPEG chunk; repeated capture succeeded; not classified as panel rendering failure",
+    "audio_verification": "native material PCM/tests pass; device app sound path retained, no acoustic microphone measurement",
+    "limitations": [
+      "No full candidate firmware A/B on pai-touch or Korvo",
+      "No physical touch-to-photon or acoustic latency measurement",
+      "No long-duration thermal/endurance run"
+    ]
+  }
+}

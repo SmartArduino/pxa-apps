@@ -1,0 +1,22 @@
+[
+  {
+    "repeat": 0,
+    "stage": "before",
+    "same_outside_fps_hud": true
+  },
+  {
+    "repeat": 0,
+    "stage": "after",
+    "same_outside_fps_hud": true
+  },
+  {
+    "repeat": 1,
+    "stage": "before",
+    "same_outside_fps_hud": true
+  },
+  {
+    "repeat": 1,
+    "stage": "after",
+    "same_outside_fps_hud": true
+  }
+]
