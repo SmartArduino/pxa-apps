@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "dimensions": [
+    412,
+    412
+  ],
+  "bytes": 678976,
+  "sha256": "559045fbc167ee75f0346dd5905701305f3a3bc53b90928df433b7ba22ec1090",
+  "source": "same saved blocks/camera/view; original raster vs candidate raster; both RGB565 and R16 depth compared"
+}

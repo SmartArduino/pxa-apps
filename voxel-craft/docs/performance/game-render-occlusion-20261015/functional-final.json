@@ -1,0 +1,23 @@
+{
+  "passed": true,
+  "device": "8c:bf:ea:09:af:6c",
+  "firmware": "row.bin",
+  "world_reloaded_pixel_identical_outside_fps": true,
+  "saved_world_sha256": "sha256=ef6f185dc56835b0e79afa6ab0120551e11885582d997f9a659b9f4ffbab4970;bytes=98492",
+  "leaf_mined_collected_and_mesh_rebuilt": "device screenshots, first hotbar slot changes from empty to leaves, removed canopy visible",
+  "background_foreground": "HOME then PACKAGE run resumes edited state; stop/run/load restores original fixed world",
+  "auto_distance_restored": true,
+  "flight_off_invert_off_auto_jump_on": true,
+  "test_apps_stopped": true,
+  "perf_probe_released": true,
+  "core_tests": "4/4 pass",
+  "simulator_raster": "pass; full product Host rebuilt; both AOT games entered and controlled at 412x412 round 284 DPI",
+  "span_oracle": "9000 cases O3 ASan/UBSan pass",
+  "native_pixels": "19 color/depth files identical plus one exact fixed saved-world 412x412 output",
+  "limits": [
+    "No optical touch-to-photon or acoustic measurement",
+    "No full candidate firmware A/B on pai-touch or Korvo",
+    "No long-duration endurance run",
+    "Mining screenshot does not independently confirm exact crack progression timing"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "baseline": {
+    ".iram0.vectors": "fd1a6bf948c06a4d56a80cc981610f046f9a76488cff4cc3ddbb1943aef930c1",
+    ".iram0.text": "1287b3add4f662d4de0a9d2befb47202242a885f693bd94e932bb594bcadbfcc",
+    ".dram0.data": "73bc7b052509b30169807c810a6253e91fac6b6e52bee12a7a5cce3436a59992",
+    ".flash.text": "c0479fe6193921160a72628b8e37a354515d29e4632b3943acb3f8fe63484d05",
+    ".flash.rodata": "5d88c8b70bc8297787b03e3d9b74d2ddaa7cfe39ca0e7a7d910915546de88367"
+  },
+  "control": {
+    ".iram0.vectors": "fd1a6bf948c06a4d56a80cc981610f046f9a76488cff4cc3ddbb1943aef930c1",
+    ".iram0.text": "1287b3add4f662d4de0a9d2befb47202242a885f693bd94e932bb594bcadbfcc",
+    ".dram0.data": "73bc7b052509b30169807c810a6253e91fac6b6e52bee12a7a5cce3436a59992",
+    ".flash.text": "c0479fe6193921160a72628b8e37a354515d29e4632b3943acb3f8fe63484d05",
+    ".flash.rodata": "5d88c8b70bc8297787b03e3d9b74d2ddaa7cfe39ca0e7a7d910915546de88367"
+  }
+}

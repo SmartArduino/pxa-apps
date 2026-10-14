@@ -1,0 +1,3 @@
+BLOCK_HIST 1:502 2:551 3:310 4:379 5:329 6:281 7:378 8:184 9:245 10:224 11:308 12:282 13:336 14:264 15:233 16:240 17:299 18:173 19:190 20:182 21:196 22:175 23:242 24:2054
+ROWS tested=6382 hidden=831 checks=16797
+Voxel render: affine=0 solid=0; same faces, frustum corners, zero frame allocations OK

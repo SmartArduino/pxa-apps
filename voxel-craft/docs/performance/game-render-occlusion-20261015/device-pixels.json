@@ -1,0 +1,74 @@
+[
+  {
+    "variant": "step-voxel",
+    "repeat": 0,
+    "stage": "before",
+    "same_outside_fps": true
+  },
+  {
+    "variant": "step-voxel",
+    "repeat": 0,
+    "stage": "after",
+    "same_outside_fps": true
+  },
+  {
+    "variant": "step-voxel",
+    "repeat": 1,
+    "stage": "before",
+    "same_outside_fps": true
+  },
+  {
+    "variant": "step-voxel",
+    "repeat": 1,
+    "stage": "after",
+    "same_outside_fps": true
+  },
+  {
+    "variant": "step-voxel",
+    "repeat": 2,
+    "stage": "before",
+    "same_outside_fps": true
+  },
+  {
+    "variant": "step-voxel",
+    "repeat": 2,
+    "stage": "after",
+    "same_outside_fps": true
+  },
+  {
+    "variant": "row-voxel",
+    "repeat": 0,
+    "stage": "before",
+    "same_outside_fps": true
+  },
+  {
+    "variant": "row-voxel",
+    "repeat": 0,
+    "stage": "after",
+    "same_outside_fps": true
+  },
+  {
+    "variant": "row-voxel",
+    "repeat": 1,
+    "stage": "before",
+    "same_outside_fps": true
+  },
+  {
+    "variant": "row-voxel",
+    "repeat": 1,
+    "stage": "after",
+    "same_outside_fps": true
+  },
+  {
+    "variant": "row-voxel",
+    "repeat": 2,
+    "stage": "before",
+    "same_outside_fps": true
+  },
+  {
+    "variant": "row-voxel",
+    "repeat": 2,
+    "stage": "after",
+    "same_outside_fps": true
+  }
+]
