@@ -1,8 +1,32 @@
 namespace: app.pxa-store
 default_locale: en-US
 messages:
+  action.filters:
+    source: Filter
+    context: Show or hide category filters
+    max_bytes: 32
+  action.retry:
+    source: Retry
+    context: Retry a failed catalog page
+    max_bytes: 32
+  media.loading:
+    source: Loading screenshot…
+    context: Store browsing media and detail disclosure
+    max_bytes: 64
+  media.retry:
+    source: Screenshot unavailable · tap to retry
+    context: Store browsing media and detail disclosure
+    max_bytes: 96
+  detail.technical:
+    source: Compatibility and permissions ▾
+    context: Store browsing media and detail disclosure
+    max_bytes: 80
+  detail.less:
+    source: Hide technical information ▴
+    context: Store browsing media and detail disclosure
+    max_bytes: 80
   screen.title:
-    source: App Store
+    source: Store
     context: Store screen title
     max_bytes: 32
   action.refresh:
@@ -298,10 +322,18 @@ messages:
     context: Host could not download or verify the package
     max_bytes: 96
   status.install_failed:
-    source: Installation failed or was cancelled; check the package signature
-    context: Host rejected the package after download
+    source: Installation failed; please try again
+    context: Host could not complete the installation
+    max_bytes: 112
+  status.install_unsupported:
+    source: This Host does not support app installation
+    context: Simulator or firmware has no installer service
     max_bytes: 112
   status.storage_full:
     source: Storage is full; delete downloads or unused apps and try again
     context: Host package installer ran out of persistent storage
     max_bytes: 112
+  status.install_cancelled:
+    source: Installation cancelled or not permitted
+    context: Host denied installation or the user declined the confirmation
+    max_bytes: 96

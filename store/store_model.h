@@ -4,8 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/* The device API caps one network response at 4096 bytes. A compact catalog
- * item is about 1 KiB, so two items per page leave headroom for long names. */
+/* Small initial page; the client adapts page size to the viewport. */
 #define STORE_PAGE_SIZE 2
 #define STORE_MAX_APPS 12
 #define STORE_MAX_QUERY 32
@@ -29,6 +28,17 @@
 #define STORE_MAX_PERMISSION_SCOPE 56
 #define STORE_MAX_SERVICES 8
 #define STORE_MAX_SERVICE_NAME 16
+#define STORE_MAX_MEDIA_URL 192
+#define STORE_MAX_SCREENSHOTS 8
+
+struct store_screenshot_t {
+    char url[STORE_MAX_MEDIA_URL];
+    uint16_t width, height;
+};
+struct store_gallery_t {
+    store_screenshot_t screenshots[STORE_MAX_SCREENSHOTS];
+    uint8_t count;
+};
 
 typedef struct {
     char name[STORE_MAX_PERMISSION_NAME];
@@ -49,6 +59,7 @@ typedef struct {
     char app_id[STORE_MAX_APP_ID];
     char name[STORE_MAX_NAME];
     char summary[STORE_MAX_SUMMARY];
+    char icon_url[STORE_MAX_MEDIA_URL];
     char version[STORE_MAX_VERSION];
     char changelog[STORE_MAX_CHANGELOG];
     char tags[STORE_MAX_TAGS];
@@ -103,7 +114,7 @@ static inline store_app_t *store_catalog_slot(store_catalog_t *catalog) {
     }
     slot = &catalog->apps[catalog->head];
     catalog->head = (uint8_t)((catalog->head + 1u) % STORE_MAX_APPS);
-    catalog->dropped = 1;
+    if (catalog->dropped < STORE_MAX_APPS) ++catalog->dropped;
     return slot;
 }
 

@@ -3,7 +3,13 @@ metadata:
   name: 应用商城
   description: 浏览 DOIT PXA 商城目录，查看设备兼容性、权限与安装要求
 translations:
-  screen.title: 应用商城
+  action.filters: 分类
+  action.retry: 重试
+  media.loading: 正在加载截图…
+  media.retry: 截图暂不可用 · 轻点重试
+  detail.technical: 兼容性与权限 ▾
+  detail.less: 收起技术信息 ▴
+  screen.title: 商城
   action.refresh: 刷新
   action.load_more: 加载更多
   action.back: 返回
@@ -22,7 +28,7 @@ translations:
   status.uninstall_cancelled: 已取消卸载
   status.uninstall_failed: 卸载失败
   screen.installed: 已安装
-  screen.downloads: 下载管理
+  screen.downloads: 下载
   list.no_installed: 暂无已安装应用
   list.no_downloads: 暂无下载记录
   status.update_available: 有可用更新
@@ -76,5 +82,7 @@ translations:
   status.install_loading: 正在处理应用，请在系统弹窗中确认安装
   status.install_success: 安装成功
   status.download_failed: 下载失败，请检查网络或票据
-  status.install_failed: 安装失败或已取消，请检查应用包签名
+  status.install_failed: 安装失败，请重试
+  status.install_unsupported: 当前系统不支持应用安装
   status.storage_full: 存储空间不足，请删除下载记录或不用的应用后重试
+  status.install_cancelled: 安装已取消或未获授权

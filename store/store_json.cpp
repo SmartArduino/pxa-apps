@@ -353,6 +353,7 @@ static void app_reset(store_app_t *app) {
     string_reset(app->app_id);
     string_reset(app->name);
     string_reset(app->summary);
+    string_reset(app->icon_url);
     string_reset(app->version);
     string_reset(app->changelog);
     string_reset(app->tags);
@@ -379,7 +380,8 @@ static int parse_permission(store_json_t *json, store_permission_t *permission) 
     string_reset(permission->scope);
     permission->required = 0;
     if (!json_object_begin(json, &it)) return 0;
-    while (json_next(&it, '}', key, sizeof(key), &more)) {
+    for (;;) {
+        if (!json_next(&it, '}', key, sizeof(key), &more)) return 0;
         if (!more) break;
         if (text_equal(key, "name")) {
             if (!json_read_string(&it.json, permission->name,
@@ -408,7 +410,8 @@ static int parse_service(store_json_t *json, store_service_t *service) {
     service->max_major = 0;
     service->max_minor = 0;
     if (!json_object_begin(json, &it)) return 0;
-    while (json_next(&it, '}', key, sizeof(key), &more)) {
+    for (;;) {
+        if (!json_next(&it, '}', key, sizeof(key), &more)) return 0;
         if (!more) break;
         if (text_equal(key, "name")) {
             if (!json_read_string(&it.json, service->name,
@@ -493,7 +496,8 @@ static int parse_package_targets(store_json_t *json, store_app_t *app) {
     char key[STORE_JSON_KEY_BYTES];
     int more;
     if (!json_object_begin(json, &it)) return 0;
-    while (json_next(&it, '}', key, sizeof(key), &more)) {
+    for (;;) {
+        if (!json_next(&it, '}', key, sizeof(key), &more)) return 0;
         if (!more) break;
         if (text_equal(key, "platforms")) {
             if (!parse_string_list(&it.json, app->platforms,
@@ -514,7 +518,8 @@ static int parse_compatibility(store_json_t *json, store_app_t *app) {
     char key[STORE_JSON_KEY_BYTES];
     int more;
     if (!json_object_begin(json, &it)) return 0;
-    while (json_next(&it, '}', key, sizeof(key), &more)) {
+    for (;;) {
+        if (!json_next(&it, '}', key, sizeof(key), &more)) return 0;
         if (!more) break;
         if (text_equal(key, "permissions")) {
             if (!parse_permissions(&it.json, app)) return 0;
@@ -530,13 +535,51 @@ static int parse_compatibility(store_json_t *json, store_app_t *app) {
     return 1;
 }
 
-static int parse_app(store_json_t *json, store_app_t *app) {
+static int parse_gallery(store_json_t *json, store_gallery_t *gallery) {
+    store_json_iterator_t list;
+    int more;
+    if (!json_array_begin(json, &list)) return 0;
+    gallery->count = 0;
+    for (;;) {
+        if (!json_next(&list, ']', nullptr, 0, &more)) return 0;
+        if (!more) break;
+        if (gallery->count == STORE_MAX_SCREENSHOTS) {
+            if (!json_skip_value(&list.json, 1)) return 0;
+            continue;
+        }
+        store_screenshot_t shot{};
+        store_json_iterator_t entry;
+        char key[STORE_JSON_KEY_BYTES];
+        if (!json_object_begin(&list.json, &entry)) return 0;
+        for (;;) {
+            if (!json_next(&entry, '}', key, sizeof(key), &more)) return 0;
+            if (!more) break;
+            if (text_equal(key, "url")) {
+                if (!json_read_string(&entry.json, shot.url, sizeof(shot.url))) return 0;
+            } else if (text_equal(key, "width") || text_equal(key, "height")) {
+                uint64_t value;
+                if (!json_read_u64(&entry.json, &value)) return 0;
+                if (value > 65535) value = 0;
+                (text_equal(key, "width") ? shot.width : shot.height) = (uint16_t)value;
+            } else if (!json_skip_value(&entry.json, 2)) return 0;
+        }
+        list.json = entry.json;
+        if (shot.url[0] && text_length(shot.url) + 1 < sizeof(shot.url))
+            gallery->screenshots[gallery->count++] = shot;
+    }
+    *json = list.json;
+    return 1;
+}
+
+static int parse_app(store_json_t *json, store_app_t *app,
+                     store_gallery_t *gallery = nullptr) {
     store_json_iterator_t it;
     char key[STORE_JSON_KEY_BYTES];
     int more;
     app_reset(app);
     if (!json_object_begin(json, &it)) return 0;
-    while (json_next(&it, '}', key, sizeof(key), &more)) {
+    for (;;) {
+        if (!json_next(&it, '}', key, sizeof(key), &more)) return 0;
         if (!more) break;
         if (text_equal(key, "app_id")) {
             if (!json_read_string(&it.json, app->app_id,
@@ -547,6 +590,17 @@ static int parse_app(store_json_t *json, store_app_t *app) {
         } else if (text_equal(key, "summary")) {
             if (!json_read_string(&it.json, app->summary,
                                   sizeof(app->summary))) return 0;
+        } else if (text_equal(key, "icon_url")) {
+            uint8_t value;
+            if (!json_peek(&it.json, &value)) return 0;
+            if (value == 'n') {
+                if (!json_skip_value(&it.json, 1)) return 0;
+            } else if (!json_read_string(&it.json, app->icon_url,
+                                         sizeof(app->icon_url))) return 0;
+            if (text_length(app->icon_url) + 1 == sizeof(app->icon_url))
+                app->icon_url[0] = '\0';
+        } else if (text_equal(key, "screenshots") && gallery) {
+            if (!parse_gallery(&it.json, gallery)) return 0;
         } else if (text_equal(key, "version")) {
             if (!json_read_string(&it.json, app->version,
                                   sizeof(app->version))) return 0;
@@ -598,7 +652,9 @@ static int parse_items(store_json_t *json, store_catalog_t *catalog) {
     for (;;) {
         if (!json_next(&it, ']', NULL, 0, &more)) return 0;
         if (!more) break;
-        if (!parse_app(&it.json, store_catalog_slot(catalog))) return 0;
+        store_app_t item{};
+        if (!parse_app(&it.json, &item)) return 0;
+        *store_catalog_slot(catalog) = item;
     }
     *json = it.json;
     return 1;
@@ -614,7 +670,8 @@ static int parse_taxonomy_entry(store_json_t *json, store_taxonomy_entry_t *entr
     string_reset(entry->label);
     string_reset(entry->label_en);
     if (!json_object_begin(json, &it)) return 0;
-    while (json_next(&it, '}', key, sizeof(key), &more)) {
+    for (;;) {
+        if (!json_next(&it, '}', key, sizeof(key), &more)) return 0;
         if (!more) break;
         if (with_kind && text_equal(key, "kind")) {
             if (!json_read_string(&it.json, entry->kind,
@@ -643,7 +700,8 @@ static int parse_taxonomy(store_json_t *json, store_taxonomy_t *taxonomy) {
     taxonomy->kind_count = 0;
     taxonomy->category_count = 0;
     if (!json_object_begin(json, &it)) return 0;
-    while (json_next(&it, '}', key, sizeof(key), &more)) {
+    for (;;) {
+        if (!json_next(&it, '}', key, sizeof(key), &more)) return 0;
         if (!more) break;
         if (text_equal(key, "kinds")) {
             store_json_iterator_t list;
@@ -696,7 +754,8 @@ static int parse_payload(store_json_t *json, store_catalog_t *catalog,
     catalog->next_cursor = 0;
     catalog->dropped = 0;
     if (!json_object_begin(json, &it)) return 0;
-    while (json_next(&it, '}', key, sizeof(key), &more)) {
+    for (;;) {
+        if (!json_next(&it, '}', key, sizeof(key), &more)) return 0;
         if (!more) break;
         if (text_equal(key, "items")) {
             if (!parse_items(&it.json, catalog)) return 0;
@@ -733,7 +792,8 @@ int store_json_parse_catalog(const uint8_t *data, size_t size,
     json.size = size;
     json.offset = 0;
     if (!json_object_begin(&json, &it)) return 0;
-    while (json_next(&it, '}', key, sizeof(key), &more)) {
+    for (;;) {
+        if (!json_next(&it, '}', key, sizeof(key), &more)) return 0;
         if (!more) break;
         if (text_equal(key, "payload")) {
             if (!parse_payload(&it.json, catalog, taxonomy)) return 0;
@@ -742,11 +802,12 @@ int store_json_parse_catalog(const uint8_t *data, size_t size,
             return 0;
         }
     }
-    return parsed;
+    json_skip_whitespace(&it.json);
+    return parsed && it.json.offset == size;
 }
 
 int store_json_parse_app_detail(const uint8_t *data, size_t size,
-                                store_app_t *app) {
+                                store_app_t *app, store_gallery_t *gallery) {
     store_json_t json;
     store_json_iterator_t envelope;
     store_json_iterator_t payload;
@@ -754,19 +815,23 @@ int store_json_parse_app_detail(const uint8_t *data, size_t size,
     int more;
     int parsed = 0;
     if (data == NULL || app == NULL) return 0;
+    store_app_t value{};
+    store_gallery_t images{};
     json.data = data;
     json.size = size;
     json.offset = 0;
     if (!json_object_begin(&json, &envelope)) return 0;
-    while (json_next(&envelope, '}', key, sizeof(key), &more)) {
+    for (;;) {
+        if (!json_next(&envelope, '}', key, sizeof(key), &more)) return 0;
         if (!more) break;
         if (text_equal(key, "payload")) {
             store_json_t payload_json = envelope.json;
             if (!json_object_begin(&payload_json, &payload)) return 0;
-            while (json_next(&payload, '}', key, sizeof(key), &more)) {
+            for (;;) {
+                if (!json_next(&payload, '}', key, sizeof(key), &more)) return 0;
                 if (!more) break;
                 if (text_equal(key, "item")) {
-                    if (!parse_app(&payload.json, app)) return 0;
+                    if (!parse_app(&payload.json, &value, gallery ? &images : nullptr)) return 0;
                     parsed = 1;
                 } else if (!json_skip_value(&payload.json, 1)) {
                     return 0;
@@ -777,5 +842,9 @@ int store_json_parse_app_detail(const uint8_t *data, size_t size,
             return 0;
         }
     }
-    return parsed;
+    json_skip_whitespace(&envelope.json);
+    if (!parsed || envelope.json.offset != size) return 0;
+    *app = value;
+    if (gallery) *gallery = images;
+    return 1;
 }

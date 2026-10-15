@@ -17,6 +17,6 @@ int store_json_parse_catalog(const uint8_t *data, size_t size,
 /* Decodes the single-item envelope produced by
  * GET /api/v2/apps/{app_id}. */
 int store_json_parse_app_detail(const uint8_t *data, size_t size,
-                                store_app_t *app);
+                                store_app_t *app, store_gallery_t *gallery = nullptr);
 
 #endif
