@@ -1,0 +1,18 @@
+[
+  {
+    "case": "corrupt-payload-rejected-old-install-retained",
+    "passed": true
+  },
+  {
+    "case": "signed-package-wrong-identity-rejected-and-cleaned",
+    "passed": true
+  },
+  {
+    "case": "explicit-verified-stage-survives-disconnect-and-reboot",
+    "passed": true
+  },
+  {
+    "case": "container-deploy-consumes-staging-file",
+    "passed": true
+  }
+]

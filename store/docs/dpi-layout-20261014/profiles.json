@@ -1,0 +1,62 @@
+[
+  {
+    "name": "pai-130",
+    "width": 296,
+    "height": 240,
+    "dpi": 130,
+    "radius": 58,
+    "insets": [
+      "8",
+      "10",
+      "8",
+      "10"
+    ],
+    "selected_tab_first_y": 188,
+    "screenshot": "pai-130.png"
+  },
+  {
+    "name": "pai-160",
+    "width": 296,
+    "height": 240,
+    "dpi": 160,
+    "radius": 58,
+    "insets": [
+      "8",
+      "10",
+      "8",
+      "10"
+    ],
+    "selected_tab_first_y": 188,
+    "screenshot": "pai-160.png"
+  },
+  {
+    "name": "phone-320",
+    "width": 720,
+    "height": 1280,
+    "dpi": 320,
+    "radius": 48,
+    "insets": [
+      "24",
+      "12",
+      "48",
+      "12"
+    ],
+    "selected_tab_first_y": 1152,
+    "screenshot": "phone-320.png"
+  },
+  {
+    "name": "wide-216",
+    "width": 800,
+    "height": 480,
+    "dpi": 216,
+    "radius": 24,
+    "insets": [
+      "12",
+      "16",
+      "20",
+      "8"
+    ],
+    "selected_tab_first_y": 400,
+    "screenshot": "wide-216.png"
+  }
+]

@@ -1,0 +1,149 @@
+{
+  "samples": [
+    {
+      "seconds": 0.05264240503311157,
+      "files": []
+    },
+    {
+      "seconds": 0.6069547790102661,
+      "files": []
+    },
+    {
+      "seconds": 1.162571833934635,
+      "files": []
+    },
+    {
+      "seconds": 1.7168578850105405,
+      "files": []
+    },
+    {
+      "seconds": 2.269793377025053,
+      "files": []
+    },
+    {
+      "seconds": 2.8229870969662443,
+      "files": []
+    },
+    {
+      "seconds": 3.3883144280407578,
+      "files": [
+        [
+          "F",
+          0,
+          ".store-f9588ac6.pxa"
+        ]
+      ]
+    },
+    {
+      "seconds": 3.953976711956784,
+      "files": [
+        [
+          "F",
+          0,
+          ".store-f9588ac6.pxa"
+        ]
+      ]
+    },
+    {
+      "seconds": 4.518443870940246,
+      "files": [
+        [
+          "F",
+          0,
+          ".store-f9588ac6.pxa"
+        ]
+      ]
+    },
+    {
+      "seconds": 5.083603300037794,
+      "files": [
+        [
+          "F",
+          0,
+          ".store-f9588ac6.pxa"
+        ]
+      ]
+    },
+    {
+      "seconds": 5.650381642975844,
+      "files": [
+        [
+          "F",
+          0,
+          ".store-f9588ac6.pxa"
+        ]
+      ]
+    },
+    {
+      "seconds": 6.220301636029035,
+      "files": [
+        [
+          "F",
+          0,
+          ".store-f9588ac6.pxa"
+        ]
+      ]
+    },
+    {
+      "seconds": 7.015711582032964,
+      "files": [
+        [
+          "F",
+          0,
+          ".store-f9588ac6.pxa"
+        ]
+      ]
+    },
+    {
+      "seconds": 7.778968860977329,
+      "files": [
+        [
+          "F",
+          0,
+          ".store-f9588ac6.pxa"
+        ]
+      ]
+    },
+    {
+      "seconds": 8.341106978012249,
+      "files": [
+        [
+          "F",
+          0,
+          ".store-f9588ac6.pxa"
+        ]
+      ]
+    },
+    {
+      "seconds": 8.906243402976543,
+      "files": [
+        [
+          "F",
+          0,
+          ".store-f9588ac6.pxa"
+        ]
+      ]
+    },
+    {
+      "seconds": 9.464048419031315,
+      "files": [
+        [
+          "F",
+          0,
+          ".store-f9588ac6.pxa"
+        ]
+      ]
+    }
+  ],
+  "partial_before_stop": [
+    "F",
+    0,
+    ".store-f9588ac6.pxa"
+  ],
+  "stop_seconds": 9.464054140029475,
+  "files_after_stop": [],
+  "cleanup_seconds": 5.419580327928998,
+  "passed": true,
+  "worker_received_bytes": 113630,
+  "expected_container_bytes": 588457
+}

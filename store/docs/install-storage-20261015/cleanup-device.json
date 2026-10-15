@@ -1,0 +1,33 @@
+[
+  {
+    "case": "explicit-abort",
+    "passed": true,
+    "info": "target=esp32s3;serial=a4:cb:8f:d5:d4:f0;version=host-tools-v0.1.0-15-g744d1b8-d;free_heap=6931839;pxa=ready;package_directory_adopt=1;package_receive=1;board=pai-touch;pxa_version=0.3.0;pxa_core=2.0;storage_total=9437184;storage_used=8040448;storage_free=1396736"
+  },
+  {
+    "case": "graceful-disconnect",
+    "passed": true,
+    "info": "target=esp32s3;serial=a4:cb:8f:d5:d4:f0;version=host-tools-v0.1.0-15-g744d1b8-d;free_heap=6931875;pxa=ready;package_directory_adopt=1;package_receive=1;board=pai-touch;pxa_version=0.3.0;pxa_core=2.0;storage_total=9437184;storage_used=8040448;storage_free=1396736"
+  },
+  {
+    "case": "abrupt-disconnect-reconnect",
+    "passed": true,
+    "info": "target=esp32s3;serial=a4:cb:8f:d5:d4:f0;version=host-tools-v0.1.0-15-g744d1b8-d;free_heap=6931875;pxa=ready;package_directory_adopt=1;package_receive=1;board=pai-touch;pxa_version=0.3.0;pxa_core=2.0;storage_total=9437184;storage_used=8040448;storage_free=1396736"
+  },
+  {
+    "case": "idle-timeout-without-reconnect",
+    "passed": true,
+    "info": "target=esp32s3;serial=a4:cb:8f:d5:d4:f0;version=host-tools-v0.1.0-15-g744d1b8-d;free_heap=6931875;pxa=ready;package_directory_adopt=1;package_receive=1;board=pai-touch;pxa_version=0.3.0;pxa_core=2.0;storage_total=9437184;storage_used=8040448;storage_free=1396736"
+  },
+  {
+    "case": "checksum-rejection",
+    "passed": true,
+    "info": "target=esp32s3;serial=a4:cb:8f:d5:d4:f0;version=host-tools-v0.1.0-15-g744d1b8-d;free_heap=6931875;pxa=ready;package_directory_adopt=1;package_receive=1;board=pai-touch;pxa_version=0.3.0;pxa_core=2.0;storage_total=9437184;storage_used=8040448;storage_free=1396736"
+  },
+  {
+    "case": "cold-start",
+    "passed": true,
+    "info": "target=esp32s3;serial=a4:cb:8f:d5:d4:f0;version=host-tools-v0.1.0-15-g744d1b8-d;free_heap=6932355;pxa=ready;package_directory_adopt=1;package_receive=1;board=pai-touch;pxa_version=0.3.0;pxa_core=2.0;storage_total=9437184;storage_used=8048640;storage_free=1388544",
+    "legacy_removed": true
+  }
+]

@@ -1,0 +1,171 @@
+{
+  "scope": "Final signed AOT packages; SDL dummy, 412x412, 284 DPI, circular, zh-CN, deterministic 12-app catalog without images. Three fresh processes per package, 30 warm-up + 240 measured scroll updates. Wall time includes native scroll, Guest dispatch and lv_refr_now. Physical display excluded. CPU frequency not locked. UI bytes describe service metadata, not native LVGL/decoder heap. Per-activation peaks include initialization.",
+  "platform": "Linux-7.2.9-arch1-1-x86_64-with-glibc2.44",
+  "cpu": "AMD Ryzen 7 4800H with Radeon Graphics",
+  "runs": [
+    {
+      "before": {
+        "ui_nodes": 126,
+        "ui_current": 10544,
+        "ui_peak": 37576,
+        "linear_current": 196608,
+        "linear_peak": 196608,
+        "artifact_buffer": 0,
+        "wamr_current": 35111,
+        "wamr_peak": 68978,
+        "shared_current": 20453,
+        "shared_peak": 20453,
+        "list_height_px": 293,
+        "scroll_commits": 0,
+        "samples": 240,
+        "scroll_mean_us": 4033.62,
+        "scroll_median_us": 3971,
+        "scroll_p95_us": 5132
+      },
+      "after": {
+        "ui_nodes": 96,
+        "ui_current": 8216,
+        "ui_peak": 32048,
+        "linear_current": 196608,
+        "linear_peak": 196608,
+        "artifact_buffer": 0,
+        "wamr_current": 48456,
+        "wamr_peak": 114730,
+        "shared_current": 20452,
+        "shared_peak": 20452,
+        "list_height_px": 128,
+        "scroll_commits": 0,
+        "samples": 240,
+        "scroll_mean_us": 3424.0,
+        "scroll_median_us": 3434,
+        "scroll_p95_us": 4025
+      }
+    },
+    {
+      "before": {
+        "ui_nodes": 126,
+        "ui_current": 10544,
+        "ui_peak": 37576,
+        "linear_current": 196608,
+        "linear_peak": 196608,
+        "artifact_buffer": 0,
+        "wamr_current": 35111,
+        "wamr_peak": 68978,
+        "shared_current": 20453,
+        "shared_peak": 20453,
+        "list_height_px": 293,
+        "scroll_commits": 0,
+        "samples": 240,
+        "scroll_mean_us": 4022.89,
+        "scroll_median_us": 4033,
+        "scroll_p95_us": 4638
+      },
+      "after": {
+        "ui_nodes": 96,
+        "ui_current": 8216,
+        "ui_peak": 32048,
+        "linear_current": 196608,
+        "linear_peak": 196608,
+        "artifact_buffer": 0,
+        "wamr_current": 48456,
+        "wamr_peak": 114730,
+        "shared_current": 20452,
+        "shared_peak": 20452,
+        "list_height_px": 128,
+        "scroll_commits": 0,
+        "samples": 240,
+        "scroll_mean_us": 3309.82,
+        "scroll_median_us": 3331,
+        "scroll_p95_us": 3825
+      }
+    },
+    {
+      "before": {
+        "ui_nodes": 126,
+        "ui_current": 10544,
+        "ui_peak": 37576,
+        "linear_current": 196608,
+        "linear_peak": 196608,
+        "artifact_buffer": 0,
+        "wamr_current": 35111,
+        "wamr_peak": 68978,
+        "shared_current": 20453,
+        "shared_peak": 20453,
+        "list_height_px": 293,
+        "scroll_commits": 0,
+        "samples": 240,
+        "scroll_mean_us": 3700.15,
+        "scroll_median_us": 3710,
+        "scroll_p95_us": 4217
+      },
+      "after": {
+        "ui_nodes": 96,
+        "ui_current": 8216,
+        "ui_peak": 32048,
+        "linear_current": 196608,
+        "linear_peak": 196608,
+        "artifact_buffer": 0,
+        "wamr_current": 48456,
+        "wamr_peak": 114730,
+        "shared_current": 20452,
+        "shared_peak": 20452,
+        "list_height_px": 128,
+        "scroll_commits": 0,
+        "samples": 240,
+        "scroll_mean_us": 3053.06,
+        "scroll_median_us": 3102,
+        "scroll_p95_us": 3400
+      }
+    }
+  ],
+  "medians": {
+    "before": {
+      "ui_nodes": 126,
+      "ui_current": 10544,
+      "ui_peak": 37576,
+      "linear_current": 196608,
+      "linear_peak": 196608,
+      "artifact_buffer": 0,
+      "wamr_current": 35111,
+      "wamr_peak": 68978,
+      "shared_current": 20453,
+      "shared_peak": 20453,
+      "list_height_px": 293,
+      "scroll_commits": 0,
+      "samples": 240,
+      "scroll_mean_us": 4022.89,
+      "scroll_median_us": 3971,
+      "scroll_p95_us": 4638
+    },
+    "after": {
+      "ui_nodes": 96,
+      "ui_current": 8216,
+      "ui_peak": 32048,
+      "linear_current": 196608,
+      "linear_peak": 196608,
+      "artifact_buffer": 0,
+      "wamr_current": 48456,
+      "wamr_peak": 114730,
+      "shared_current": 20452,
+      "shared_peak": 20452,
+      "list_height_px": 128,
+      "scroll_commits": 0,
+      "samples": 240,
+      "scroll_mean_us": 3309.82,
+      "scroll_median_us": 3331,
+      "scroll_p95_us": 3825
+    }
+  },
+  "artifacts": {
+    "before": {
+      "package_bytes": 227338,
+      "package_sha256": "0cf876b22c58f69534a5709ae67a226c52b163bd4f06ca94ee1a72bae57900fa",
+      "aot_file_bytes": 220620
+    },
+    "after": {
+      "package_bytes": 368151,
+      "package_sha256": "7126c1d873b83b2fa79e49447e05464d878a719e84fa97854542a7449383c589",
+      "aot_file_bytes": 373960
+    }
+  }
+}
