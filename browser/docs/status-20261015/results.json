@@ -1,0 +1,12 @@
+{
+  "native_sanitizers_passed": true,
+  "display_profiles_passed": 6,
+  "status_profiles_passed": 2,
+  "gif_regression_checks_passed": 12,
+  "device": {
+    "auto_hidden": true,
+    "actual_page_verified": true,
+    "production_restored": true,
+    "preferences_preserved": true
+  }
+}

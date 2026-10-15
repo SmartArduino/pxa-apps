@@ -1,0 +1,28 @@
+{
+  "passed": true,
+  "layout": {
+    "address": [
+      28,
+      10,
+      240,
+      32
+    ],
+    "content": [
+      30,
+      45,
+      236,
+      127
+    ],
+    "toolbar": [
+      28,
+      186,
+      240,
+      32
+    ]
+  },
+  "up_down": true,
+  "release_stops": true,
+  "persistent_restart": true,
+  "preference_restored": true,
+  "sites_preserved": true
+}

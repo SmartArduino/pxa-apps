@@ -1,0 +1,202 @@
+[
+  {
+    "name": "next",
+    "expected": "BROWSER NAV http://192.168.5.226:31878/next",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/next\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=1 first_ms=2 total_ms=2 received=193 text=92 spans=6 links=2\u001b[0m\n"
+  },
+  {
+    "name": "back",
+    "expected": "BROWSER NAV http://192.168.5.226:31878/",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=1 first_ms=1 total_ms=1 received=649 text=210 spans=20 links=8\u001b[0m\n"
+  },
+  {
+    "name": "forward",
+    "expected": "BROWSER NAV http://192.168.5.226:31878/next",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/next\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=1 first_ms=1 total_ms=1 received=193 text=92 spans=6 links=2\u001b[0m\n"
+  },
+  {
+    "name": "back-again",
+    "expected": "BROWSER NAV http://192.168.5.226:31878/",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=2 first_ms=2 total_ms=2 received=649 text=210 spans=20 links=8\u001b[0m\n"
+  },
+  {
+    "name": "form",
+    "expected": "BROWSER NAV http://192.168.5.226:31878/form",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/form\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=2 first_ms=2 total_ms=2 received=340 text=52 spans=10 links=1\u001b[0m\n"
+  },
+  {
+    "name": "field-editor",
+    "expected": "PXA IME load status=0",
+    "log": "PXA IME load status=0 metadata_bytes=2477\n"
+  },
+  {
+    "name": "field-done",
+    "expected": null,
+    "log": "PXA IME unloaded\n"
+  },
+  {
+    "name": "post",
+    "expected": "BROWSER NAV http://192.168.5.226:31878/echo",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/echo\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=1 first_ms=1 total_ms=1 received=159 text=76 spans=6 links=1\u001b[0m\n"
+  },
+  {
+    "name": "post-back",
+    "expected": "BROWSER NAV http://192.168.5.226:31878/form",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/form\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=2 first_ms=2 total_ms=2 received=340 text=52 spans=10 links=1\u001b[0m\n"
+  },
+  {
+    "name": "form-back",
+    "expected": "BROWSER NAV http://192.168.5.226:31878/",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=2 first_ms=2 total_ms=2 received=649 text=210 spans=20 links=8\u001b[0m\n"
+  },
+  {
+    "name": "redirect",
+    "expected": "BROWSER DONE status=200",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/redirect\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=3 first_ms=3 total_ms=3 received=193 text=92 spans=6 links=2\u001b[0m\n"
+  },
+  {
+    "name": "redirect-back",
+    "expected": "BROWSER NAV http://192.168.5.226:31878/",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=1 first_ms=1 total_ms=2 received=649 text=210 spans=20 links=8\u001b[0m\n"
+  },
+  {
+    "name": "slow",
+    "expected": "BROWSER NAV http://192.168.5.226:31878/slow",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/slow\u001b[0m\n"
+  },
+  {
+    "name": "cancel",
+    "expected": null,
+    "log": ""
+  },
+  {
+    "name": "cancel-back",
+    "expected": "BROWSER NAV http://192.168.5.226:31878/",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=2 first_ms=2 total_ms=2 received=649 text=210 spans=20 links=8\u001b[0m\n"
+  },
+  {
+    "name": "large",
+    "expected": "BROWSER NAV http://192.168.5.226:31878/large",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/large\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=2 first_ms=2 total_ms=3 received=57344 text=49152 spans=2 links=0\u001b[0m\n"
+  },
+  {
+    "name": "large-scrolled",
+    "expected": null,
+    "log": ""
+  },
+  {
+    "name": "large-force-full",
+    "expected": null,
+    "log": ""
+  },
+  {
+    "name": "large-back",
+    "expected": "BROWSER NAV http://192.168.5.226:31878/",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=1 first_ms=1 total_ms=1 received=649 text=210 spans=20 links=8\u001b[0m\n"
+  },
+  {
+    "name": "404",
+    "expected": "BROWSER DONE status=404",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/missing\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=404 head_ms=1 first_ms=1 total_ms=1 received=101 text=45 spans=4 links=1\u001b[0m\n"
+  },
+  {
+    "name": "404-back",
+    "expected": "BROWSER NAV http://192.168.5.226:31878/",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=1 first_ms=1 total_ms=1 received=649 text=210 spans=20 links=8\u001b[0m\n"
+  },
+  {
+    "name": "plain",
+    "expected": "BROWSER NAV http://192.168.5.226:31878/plain",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/plain\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=4 first_ms=4 total_ms=4 received=45 text=46 spans=1 links=0\u001b[0m\n"
+  },
+  {
+    "name": "plain-back",
+    "expected": "BROWSER NAV http://192.168.5.226:31878/",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=1 first_ms=1 total_ms=1 received=649 text=210 spans=20 links=8\u001b[0m\n"
+  },
+  {
+    "name": "compressed",
+    "expected": "BROWSER NAV http://192.168.5.226:31878/gzip",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/gzip\u001b[0m\n"
+  },
+  {
+    "name": "compressed-back",
+    "expected": "BROWSER NAV http://192.168.5.226:31878/",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=2 first_ms=2 total_ms=2 received=649 text=210 spans=20 links=8\u001b[0m\n"
+  },
+  {
+    "name": "menu",
+    "expected": null,
+    "log": ""
+  },
+  {
+    "name": "bookmark",
+    "expected": null,
+    "log": ""
+  },
+  {
+    "name": "font-less",
+    "expected": null,
+    "log": ""
+  },
+  {
+    "name": "font-more",
+    "expected": null,
+    "log": ""
+  },
+  {
+    "name": "ua-mobile",
+    "expected": null,
+    "log": ""
+  },
+  {
+    "name": "ua-close",
+    "expected": null,
+    "log": ""
+  },
+  {
+    "name": "ua-mobile-request",
+    "expected": "BROWSER DONE status=200",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=1 first_ms=1 total_ms=1 received=649 text=210 spans=20 links=8\u001b[0m\n"
+  },
+  {
+    "name": "ua-open",
+    "expected": null,
+    "log": ""
+  },
+  {
+    "name": "ua-lightweight",
+    "expected": null,
+    "log": ""
+  },
+  {
+    "name": "ua-close-restored",
+    "expected": null,
+    "log": ""
+  },
+  {
+    "name": "ua-lightweight-request",
+    "expected": "BROWSER DONE status=200",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=1 first_ms=1 total_ms=1 received=649 text=210 spans=20 links=8\u001b[0m\n"
+  },
+  {
+    "name": "home",
+    "expected": null,
+    "log": ""
+  },
+  {
+    "name": "reading-restart",
+    "expected": "BROWSER DONE status=200",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=1 first_ms=1 total_ms=2 received=649 text=210 spans=20 links=8\u001b[0m\n"
+  },
+  {
+    "name": "reading-menu",
+    "expected": null,
+    "log": ""
+  },
+  {
+    "name": "reading",
+    "expected": "BROWSER NAV http://192.168.5.226:31878/reading",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/reading\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=2 first_ms=2 total_ms=2 received=243 text=163 spans=6 links=1\u001b[0m\n"
+  }
+]

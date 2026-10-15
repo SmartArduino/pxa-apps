@@ -1,0 +1,8 @@
+{
+  "base_commits": {
+    "workspace": "69ad37c1f6271c4438167739e8328cd03aac47dc",
+    "sdk": "07c2a08c6ea0471cd627a09f5ab34c58af3c88bf",
+    "apps": "8267cef7ca57fd5a62f4fe471ecc68dc68e413cb"
+  },
+  "uncommitted_changes": true
+}

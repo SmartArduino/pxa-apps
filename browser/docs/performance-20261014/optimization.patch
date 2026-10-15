@@ -1,0 +1,433 @@
+--- a/browser/main.cpp
++++ b/browser/main.cpp
+@@ -20,11 +20,20 @@
+ namespace {
+ constexpr std::string_view home_html =
+     R"(<title>小舟浏览器</title><h1>小舟浏览器</h1><p>在顶部输入关键词即可搜索。</p><p><a href="https://www.bing.com/search?format=rss&amp;q=ESP32+%E5%BC%80%E5%8F%91">搜索 ESP32</a></p><p><a href="https://example.com/">Example · HTTPS 示例</a></p><p><a href="https://pxa.doit.am/">PXA 官网</a></p><h2>使用方法</h2><p>拖动画面滚动，轻点蓝色文字打开链接。底部「更多」可收藏、调整字号和选择搜索引擎。返回和前进保留滚动位置。</p><h2>支持范围</h2><p>支持 UTF-8 网页、链接、文字和基础 GET/POST 表单。图片显示替代文字。不执行 JavaScript，不加载 CSS、视频和跟踪资源。</p><p>页面内容上限 48 KiB；网络传输上限 256 KiB。大页面会提示截断。暂不支持密码输入。</p>)";
+-std::uint64_t millis() {
++// This small clock helper is called from input and streamed reads. Inlining
++// also avoids a permanent AOT function-table entry on constrained Hosts.
++[[gnu::always_inline]] inline std::uint64_t millis() {
+     timespec t{};
+     clock_gettime(CLOCK_MONOTONIC, &t);
+     return std::uint64_t(t.tv_sec) * 1000 + t.tv_nsec / 1000000;
+ }
++#ifdef PXA_BROWSER_PROFILE
++std::uint64_t micros() {
++    timespec t{};
++    clock_gettime(CLOCK_MONOTONIC, &t);
++    return std::uint64_t(t.tv_sec) * 1000000 + t.tv_nsec / 1000;
++}
++#endif
+ struct App;
+ struct Pointer {
+     App *app;
+@@ -50,13 +59,33 @@
+     int scroll = 0, body_font_dp = 15, edit_field = -1, restore_scroll = 0;
+     bool busy = false, dirty = true, layout_dirty = true, editing = false, menu = false,
+          bookmark_save = false, bookmarks_ready = false, focus_pending = false,
+-         preferences_dirty = false, window_pending = true;
++         preferences_dirty = false, window_pending = true, body_dirty = false, mobile_ua = false;
+     int menu_scroll = 0;
+     browser::SearchEngine search_engine = browser::SearchEngine::bing;
+     PointerCapture capture;
+     int down_x = 0, down_y = 0, last_y = 0;
+     bool dragged = false;
+     std::uint64_t last_progress = 0, pressed_at = 0;
++#ifdef PXA_BROWSER_PROFILE
++    struct Profile {
++        std::uint64_t encode_us = 0, submit_us = 0, layout_us = 0;
++        std::uint32_t renders = 0, layouts = 0, bytes = 0, max_submit_us = 0;
++        bool pending = false;
++    } profile;
++    void report_profile() {
++        char text[256];
++        std::snprintf(text, sizeof(text),
++                      "BROWSER PERF renders=%u layouts=%u encode_us=%llu submit_us=%llu "
++                      "layout_us=%llu bytes=%u max_submit_us=%u scroll=%d",
++                      profile.renders, profile.layouts,
++                      static_cast<unsigned long long>(profile.encode_us),
++                      static_cast<unsigned long long>(profile.submit_us),
++                      static_cast<unsigned long long>(profile.layout_us), profile.bytes,
++                      profile.max_submit_us, menu ? menu_scroll : scroll);
++        log(text);
++        profile.pending = false;
++    }
++#endif
+     enum class Action {
+         address,
+         back,
+@@ -72,7 +101,8 @@
+         field,
+         bookmark_open,
+         search_engine,
+-        search
++        search,
++        page_mode
+     };
+     struct Hit {
+         PixelRect box;
+@@ -138,6 +168,9 @@
+         dirty = true;
+     }
+     void rebuild() {
++#ifdef PXA_BROWSER_PROFILE
++        auto begin = micros();
++#endif
+         geometry();
+         page.build(document, content.width, font);
+         if (url == "about:home")
+@@ -145,6 +178,10 @@
+         layout_dirty = false;
+         scroll = std::clamp(scroll, 0, std::max(0, page.height - content.height));
+         dirty = true;
++#ifdef PXA_BROWSER_PROFILE
++        profile.layout_us += micros() - begin;
++        ++profile.layouts;
++#endif
+     }
+     void home(bool record = true) {
+         stop();
+@@ -224,16 +261,17 @@
+         }
+         const auto begin = millis(); // Permission-dialog time is not network latency.
+         for (unsigned redirect = 0; redirect <= 5; ++redirect) {
+-            const std::array<pxa::NetHeaderView, 4> headers{
++            const std::array<pxa::NetHeaderView, 5> headers{
+                 {{"Accept",
+                   "text/html, text/plain;q=0.9, application/rss+xml;q=0.8, text/xml;q=0.7"},
+                  {"Accept-Encoding", "identity"},
+-                 {"User-Agent", "PXA-Browser/0.1"},
++                 {"User-Agent", browser::user_agent(mobile_ua)},
++                 {"Save-Data", "on"},
+                  {"Content-Type", "application/x-www-form-urlencoded"}}};
+             auto exchange = co_await context->http().open(
+                 {.url = browser::transport_url(url),
+                  .method = post ? pxa::HttpMethod::post : pxa::HttpMethod::get,
+-                 .headers = std::span{headers}.first(post ? 4 : 3),
++                 .headers = std::span{headers}.first(post ? 5 : 4),
+                  .body = std::as_bytes(std::span{body.data(), body.size()}),
+                  .options = {.buffer_bytes = 4096,
+                              .header_bytes = 4096,
+@@ -358,6 +396,9 @@
+                           static_cast<unsigned long long>(millis() - begin), received,
+                           document.text.size(), document.spans.size(), document.links.size());
+             log(timing);
++#ifdef PXA_BROWSER_PROFILE
++            profile.pending = true;
++#endif
+             dirty = true;
+             co_return pxa::Result<void>{};
+         }
+@@ -438,6 +479,8 @@
+                                                       : browser::SearchEngine::bing;
+                     layout_dirty = true;
+                 }
++            } else if (line.starts_with("#ua ")) {
++                mobile_ua = line == "#ua mobile";
+             } else if (auto value = browser::resolve({}, line))
+                 bookmarks.push_back(std::move(*value));
+             at = end + 1;
+@@ -578,6 +621,8 @@
+             bookmark_save = true;
+             std::string bytes = "#prefs " + std::to_string(body_font_dp) + " " +
+                                 std::to_string(int(search_engine)) + "\n";
++            if (mobile_ua)
++                bytes += "#ua mobile\n";
+             for (auto &b : bookmarks) {
+                 bytes += b;
+                 bytes += '\n';
+@@ -595,10 +640,23 @@
+             if (page.truncated)
+                 status = "排版已达容量上限 · 可减小字号";
+         }
+-        if (dirty && canvas.mounted()) {
+-            render();
++        if ((dirty || body_dirty) && canvas.mounted()) {
++#ifdef PXA_BROWSER_PROFILE
++            const auto begin = micros(), submitted = profile.submit_us;
++#endif
++            render(!dirty);
+             dirty = false;
+-        }
++            body_dirty = false;
++#ifdef PXA_BROWSER_PROFILE
++            profile.encode_us += micros() - begin - (profile.submit_us - submitted);
++            ++profile.renders;
++            profile.bytes += std::uint32_t(draw.bytes_used());
++#endif
++        }
++#ifdef PXA_BROWSER_PROFILE
++        if (profile.pending)
++            report_profile();
++#endif
+     }
+     void hit(PixelRect box, Action a, int index = 0) {
+         if (hit_count < hits.size())
+@@ -612,7 +670,7 @@
+         if (box.width > 0 && box.height > 0)
+             draw.rect(
+                 box.x, box.y, box.width, box.height, color,
+-                std::uint16_t(std::clamp(surface_to_canvas_coordinate(radius, metrics), 0, 65535)));
++                std::uint16_t(std::clamp(surface_to_canvas_length(radius, metrics), 0, 65535)));
+     }
+     void clip(PixelRect pixels) { draw.clip(region(pixels)); }
+     void line(int x1, int y1, int x2, int y2, std::uint32_t color, int stroke = 1) {
+@@ -620,7 +678,7 @@
+             surface_to_canvas_coordinate(x1, metrics), surface_to_canvas_coordinate(y1, metrics),
+             surface_to_canvas_coordinate(x2, metrics), surface_to_canvas_coordinate(y2, metrics),
+             color,
+-            std::uint16_t(std::clamp(surface_to_canvas_coordinate(stroke, metrics), 1, 65535)));
++            std::uint16_t(std::clamp(surface_to_canvas_length(stroke, metrics), 1, 65535)));
+     }
+     void label(PixelRect box, std::string_view text, std::uint32_t color, int pixels = 0,
+                int align = 0, bool middle = false) {
+@@ -667,14 +725,15 @@
+         rect(box, background, dp(6));
+         const int size = std::max(8, std::min(dp(18), std::min(box.width, box.height) - dp(10)));
+         const int x = box.x + box.width / 2, y = box.y + box.height / 2, r = size / 2;
+-        const int stroke = dp(2);
++        const int stroke = std::max(2, dp(2));
+         auto segment = [&](int x1, int y1, int x2, int y2) { line(x1, y1, x2, y2, color, stroke); };
+         switch (action) {
+         case Action::back:
+         case Action::forward: {
+-            int direction = action == Action::back ? -1 : 1;
+-            segment(x - direction * r / 2, y - r, x + direction * r / 2, y);
+-            segment(x + direction * r / 2, y, x - direction * r / 2, y + r);
++            const int direction = action == Action::back ? -1 : 1;
++            const int tip = x + direction * r / 2, shoulder = x - direction * r / 2;
++            segment(shoulder, y - r * 3 / 4, tip, y);
++            segment(tip, y, shoulder, y + r * 3 / 4);
+             break;
+         }
+         case Action::home:
+@@ -689,18 +748,19 @@
+             if (busy) {
+                 rect({x - r * 2 / 3, y - r * 2 / 3, r * 4 / 3, r * 4 / 3}, color, dp(1));
+             } else {
+-                rect({x - r, y - r, r * 2, r * 2}, color, r);
+-                rect({x - r + stroke, y - r + stroke, std::max(1, r * 2 - stroke * 2),
+-                      std::max(1, r * 2 - stroke * 2)},
+-                     background, std::max(0, r - stroke));
+-                rect({x, y - r - stroke, r + stroke, r + stroke}, background);
+-                segment(x + r, y - r, x + r, y);
+-                segment(x + r, y, x, y);
++                const int radius = std::max(3, r * 4 / 5);
++                draw.arc(surface_to_canvas_coordinate(x, metrics),
++                         surface_to_canvas_coordinate(y, metrics),
++                         surface_to_canvas_length(radius, metrics), 50, 360, color,
++                         std::uint16_t(surface_to_canvas_length(stroke, metrics)));
++                const int tip_x = x + radius, wing = std::max(2, r / 3);
++                segment(tip_x - wing, y - wing, tip_x, y);
++                segment(tip_x, y, tip_x + wing, y - wing);
+             }
+             break;
+         case Action::menu:
+-            for (int dy : {-r * 2 / 3, 0, r * 2 / 3})
+-                segment(x - r, y + dy, x + r, y + dy);
++            for (int dx : {-r * 2 / 3, 0, r * 2 / 3})
++                rect({x + dx - stroke / 2, y - stroke / 2, stroke, stroke}, color, stroke);
+             break;
+         default:
+             break;
+@@ -710,6 +770,18 @@
+     }
+     int home_height() const {
+         return font * 5 / 3 + dp(19) + 3 * (std::max(dp(30), font * 2) + dp(6)) + font * 7;
++    }
++    pxa::Result<void> present(std::span<const CanvasRegion> damage = {}) {
++#ifdef PXA_BROWSER_PROFILE
++        const auto begin = micros();
++#endif
++        auto result = canvas.present(draw, damage);
++#ifdef PXA_BROWSER_PROFILE
++        const auto elapsed = std::uint32_t(micros() - begin);
++        profile.submit_us += elapsed;
++        profile.max_submit_us = std::max(profile.max_submit_us, elapsed);
++#endif
++        return result;
+     }
+     void render_home() {
+         int y = content.y - scroll;
+@@ -746,14 +818,14 @@
+         label({content.x, y + dp(4), content.width, font * 3 / 2}, "轻量阅读 · 不运行 JavaScript",
+               0x718599ff, std::min(font, dp(11)), 1, true);
+     }
+-    void render() {
++    void render(bool body_only) {
+         draw.reset();
+         hit_count = 0;
+         bool dense = false;
+         rect({0, 0, int(metrics.width), int(metrics.height)}, 0xf7f9fcff);
+         if (safe.width < dp(80) || safe.height < dp(90)) {
+             label(safe, "屏幕空间不足", 0x17334aff);
+-            (void)canvas.present(draw);
++            (void)present();
+             return;
+         }
+         rect(address, 0xe8eef3ff, dp(7));
+@@ -779,6 +851,9 @@
+             button({content.x, y, content.width, h},
+                    search_engine == browser::SearchEngine::bing ? "搜索：必应" : "搜索：DuckDuckGo",
+                    Action::search_engine);
++            y += h + dp(3);
++            button({content.x, y, content.width, h},
++                   mobile_ua ? "页面模式：手机兼容" : "页面模式：轻量", Action::page_mode);
+             y += h + dp(3);
+             for (std::size_t i = 0; i < bookmarks.size(); ++i, y += h + dp(3))
+                 if (y + h > content.y && y < content.y + content.height)
+@@ -880,7 +955,14 @@
+             int x = safe.x + i * safe.width / 5, w = (i + 1) * safe.width / 5 - i * safe.width / 5;
+             navigation_button({x + dp(1), toolbar_y, std::max(1, w - dp(2)), row}, actions[i]);
+         }
+-        auto result = canvas.present(draw);
++        // The Host retains a complete command list, so future exposure and
++        // system overlays still repaint correctly. During a drag only the
++        // content, scrollbar and status line need rasterization. No backing
++        // bitmap or second command cache is required.
++        const std::array damage{
++            region({content.x, content.y, content.width, toolbar_y - content.y})};
++        auto result = present(body_only ? std::span<const CanvasRegion>(damage)
++                                        : std::span<const CanvasRegion>{});
+         if (!result)
+             log("BROWSER DRAW ERROR " + std::to_string(int(result.error())));
+     }
+@@ -957,6 +1039,11 @@
+             status = "搜索引擎已切换";
+             preferences_dirty = true;
+             dirty = true;
++            break;
++        case Action::page_mode:
++            mobile_ua = !mobile_ua;
++            status = "下次加载生效 · 简化效果由网站决定";
++            preferences_dirty = true;
+             break;
+         case Action::field:
+             if (i >= 0 && std::size_t(i) < document.fields.size()) {
+@@ -997,6 +1084,9 @@
+             down_y = last_y = y;
+             pressed_at = millis();
+             dragged = false;
++#ifdef PXA_BROWSER_PROFILE
++            profile = {};
++#endif
+             return;
+         }
+         if (!capture.owns(e))
+@@ -1007,20 +1097,25 @@
+             if (dragged && content.contains(down_x, down_y)) {
+                 if (menu) {
+                     int h = dp(32);
+-                    menu_scroll = std::clamp(
++                    const int next = std::clamp(
+                         menu_scroll + last_y - y, 0,
+-                        std::max(0, int(bookmarks.size() + 3) * (h + dp(3)) - content.height));
+-                    dirty = true;
++                        std::max(0, int(bookmarks.size() + 4) * (h + dp(3)) - content.height));
++                    body_dirty |= next != menu_scroll;
++                    menu_scroll = next;
+                 } else {
+-                    scroll = std::clamp(scroll + last_y - y, 0,
+-                                        std::max(0, page.height - content.height));
+-                    dirty = true;
++                    const int next = std::clamp(scroll + last_y - y, 0,
++                                                std::max(0, page.height - content.height));
++                    body_dirty |= next != scroll;
++                    scroll = next;
+                 }
+             }
+             last_y = y;
+             return;
+         }
+         if (e.ended()) {
++#ifdef PXA_BROWSER_PROFILE
++            profile.pending = true;
++#endif
+             capture.release(e);
+             if (e.action() != PointerPhase::up || dragged || std::abs(x - down_x) > dp(6) ||
+                 std::abs(y - down_y) > dp(6))
+--- a/browser/browser_core.hpp
++++ b/browser/browser_core.hpp
+@@ -236,6 +236,13 @@
+ }
+ inline std::string_view transport_url(std::string_view s) { return s.substr(0, s.find('#')); }
+ enum class Style : std::uint8_t { body, heading, code, muted, button };
++// Compatibility is opt-in: a mobile identity does not imply CSS/JS support.
++inline constexpr std::string_view user_agent(bool mobile) noexcept {
++    return mobile
++        ? "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) "
++          "Chrome/143.0.0.0 Mobile Safari/537.36 PXA-Browser/0.1"
++        : "PXA-Browser/0.1 (Mobile; TextMode)";
++}
+ struct Span {
+     std::uint32_t offset = 0, size = 0;
+     std::int16_t link = -1, field = -1;
+@@ -291,7 +298,22 @@
+         else
+             spans.push_back({std::uint32_t(text.size()), std::uint32_t(value.size()),
+                              std::int16_t(link), std::int16_t(field), style});
+-        text += value;
++        if (text.size() + value.size() > text.capacity() && text.capacity() > max_text / 2) {
++            // Normal geometric growth can almost double the 48 KiB ceiling.
++            // Allocate the final capacity only when a large page needs it;
++            // a fresh string also avoids reserve() doubling on some libraries.
++            // Append before swapping so views into text remain valid.
++            std::string grown;
++            grown.reserve(max_text);
++            const auto size = text.size() + value.size();
++            grown.resize_and_overwrite(size, [&](char *out, std::size_t) noexcept {
++                std::copy_n(text.data(), text.size(), out);
++                std::copy_n(value.data(), value.size(), out + text.size());
++                return size;
++            });
++            text.swap(grown);
++        } else
++            text += value;
+     }
+     void newline() {
+         if (!text.empty() && text.back() != '\n')
+@@ -812,7 +834,23 @@
+                 // Full em for unknown glyphs avoids overlaps for CJK/fallback
+                 // fonts. ASCII uses conservative widths for proportional text.
+                 int advance = glyph_advance(c, size);
+-                if (x + advance > width && x) {
++                int word_width = advance;
++                // Keep ordinary Latin words together. Scan only at a word's
++                // start, once per word, without a second token array. Long
++                // URLs still wrap by character; preformatted text is literal.
++                if (s.style != Style::code && lower(char(c)) >= 'a' && lower(char(c)) <= 'z' &&
++                    (p == s.offset || space(d.text[p - 1]) ||
++                     static_cast<unsigned char>(d.text[p - 1]) >= 128)) {
++                    for (auto q = p + 1; q < end && word_width <= width; ++q) {
++                        const auto next = static_cast<unsigned char>(d.text[q]);
++                        if (next >= 128 || space(char(next)))
++                            break;
++                        word_width += glyph_advance(next, size);
++                    }
++                    if (word_width > width)
++                        word_width = advance;
++                }
++                if (x + word_width > width && x) {
+                     emit();
+                     y += line_height;
+                     x = 0;
+--- a/browser/CMakeLists.txt
++++ b/browser/CMakeLists.txt
+@@ -2,6 +2,9 @@
+ project(pxa_browser CXX)
+ list(APPEND CMAKE_MODULE_PATH "${PXA_CMAKE_MODULE_DIR}")
+ add_compile_definitions(PXA_COROUTINE_SLOT_COUNT=8 PXA_COROUTINE_SLOT_BYTES=2048)
++# Keep O3 and let the Wasm linker remove/specialize SDK code across translation
++# units. This is local to this app; it adds no default SDK cache or runtime state.
++set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+ include(PxaGuest)
+ pxa_add_component(pxa_main CPP COMPONENT_ID main SOURCES main.cpp)
+ include(PxaCppDiagnostics)
+@@ -13,3 +16,6 @@
+ if(DEFINED ENV{PXA_BROWSER_TRACE})
+     target_compile_definitions(pxa_main PRIVATE PXA_BROWSER_TRACE=1)
+ endif()
++if(DEFINED ENV{PXA_BROWSER_PROFILE})
++    target_compile_definitions(pxa_main PRIVATE PXA_BROWSER_PROFILE=1)
++endif()

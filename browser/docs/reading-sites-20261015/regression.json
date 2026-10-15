@@ -1,0 +1,9 @@
+{
+  "actions": 40,
+  "passed": true,
+  "large_csp_reading": {
+    "name": "reading",
+    "expected": "BROWSER DONE status=200",
+    "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/reading\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=2 first_ms=2 total_ms=2 received=243 text=163 spans=6 links=1\u001b[0m\n"
+  }
+}

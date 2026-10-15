@@ -1,0 +1,357 @@
+{
+  "date": "2026-10-15",
+  "sdk_commit": "b6ec61ac0c0ea83ba377cdf09e18ad94cd1f6390",
+  "host_commit": "49407240beb98eb70c3a4aa666f398a0dc47e7e9",
+  "browser_code_commit": "0eb63e1f4e13fa4ee8ba65e5c081b71334a65bb9",
+  "cpp_runtime_tests": [
+    {
+      "name": "binary",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "ime",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "features",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "io",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "codec",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "encoding_alias",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "startup",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "ui_geometry",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "locale",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "service_lifetime",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "i18n",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "events",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "ui_wire",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "lifecycle_state",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "ui_display",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "ui_input",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "ui_page",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "core_app",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "ui_volume_keys",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "canvas",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "i18n_app",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "text_input_box",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "ui_widgets",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "ui_controls",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "ui_theme",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "game_painter",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "ui_environment",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "game_painter_replay",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "ui_canvas",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "game_arcade",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "ui_lifecycle",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "ui_declarative",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "list",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "counter_app",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "task",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "navigation",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "assets",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "storage_ownership",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "image_decode",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "permission",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "image_frames",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "storage",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "permission_ownership",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "device",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "storage_value",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "sensor",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "fs",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "clock",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "ipc_contract",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "audio",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "game",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "http",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "net",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "ipc",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "game_pacing",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "game_host",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "game_utils",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "work",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "surface",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "game_service",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "game_loop",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "i18n_dynamic_app",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "task_pool_3",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "task_pool_8",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "task_pool_65",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "name": "direct_control",
+      "passed": true,
+      "exit_code": 0
+    }
+  ],
+  "native_sanitizer_tests": {
+    "count": 8,
+    "passed": true,
+    "gif_skipped": false,
+    "optimization": "O1",
+    "sanitizers": [
+      "address",
+      "undefined"
+    ],
+    "recover": false
+  },
+  "headless_snapshot_tests": {
+    "count": 5,
+    "passed": true
+  },
+  "host_snapshot_tests_passed": true,
+  "browser_native_sanitizers_passed": true,
+  "abi_specification_passed": true,
+  "device_retested_in_this_commit_run": false
+}

@@ -1,0 +1,272 @@
+{
+  "baseline-fixture-esp": {
+    "pxa-browser.pxa.provenance.json": {
+      "bytes": 1955,
+      "sha256": "d48b58f1d9d9af3230517faf15115d97117b872b5d0c46951f3519aa9116a259"
+    },
+    "pxa-browser.pxa": {
+      "bytes": 602684,
+      "sha256": "a657de66c41071fba1b5fa8becfc5ea49ac18be4acfe22e459c99bd67adbad19"
+    },
+    "pxa-browser/manifest.pxm": {
+      "bytes": 1366,
+      "sha256": "68ca4a8dc0b0ac36ee98052711eb505e1f5a32a08eae3a200589c9573db347de"
+    },
+    "pxa-browser/signature.pxs": {
+      "bytes": 108,
+      "sha256": "54f1e184fbc1d61de705dbb09f9eab26f33ab957b43803d69e64d132810a2834"
+    },
+    "pxa-browser/artifacts/main.wasm": {
+      "bytes": 217594,
+      "sha256": "c644ce9b48b4617f6e1c898824eaaa44fa0b74ad22b27ff1fe7204817d150638"
+    },
+    "pxa-browser/artifacts/main.esp32-s3.aot": {
+      "bytes": 601452,
+      "sha256": "881d5b0ad7807d168e02789ff900864e6be2fde52132f582d9d13888123dcfe9"
+    },
+    "pxa-browser/assets/icon.svg": {
+      "bytes": 436,
+      "sha256": "5a201674bc8463b76d5993f421846df22c9b3a397754c9e8dbc595d4fe932aab"
+    },
+    "pxa-browser/assets/icon.png": {
+      "bytes": 5033,
+      "sha256": "f46c27c5442f9a8a62abe9ac3aa7d2497ff0b7c75b951a3ee87d68567e6e5b98"
+    },
+    "pxa-browser/assets/resources.pxi": {
+      "bytes": 96,
+      "sha256": "5bdae34c849ee347adf4adcd153e7703824098d2658e08c3f3903d0c36ce41fa"
+    }
+  },
+  "final-fixture": {
+    "pxa-browser.pxa": {
+      "bytes": 608796,
+      "sha256": "3ca23015315b95af83251638c852ff38aa451ee7b77dfe8f148512581bfbebb6"
+    },
+    "pxa-browser.pxa.provenance.json": {
+      "bytes": 1955,
+      "sha256": "695eacd0bb13e41df87f7eaa6c770561672d934b8bce156cd642ca411d2d333d"
+    },
+    "pxa-browser/manifest.pxm": {
+      "bytes": 1366,
+      "sha256": "851564b5d2fae943fcd1f9687dfbc88ac8c8d149c6839dc50374adc457432495"
+    },
+    "pxa-browser/signature.pxs": {
+      "bytes": 108,
+      "sha256": "2a733cdb29eab639d5f8d15f7a2458d20864074d854a9ea8a25df238f7e9c283"
+    },
+    "pxa-browser/artifacts/main.wasm": {
+      "bytes": 220808,
+      "sha256": "77c2a2f2f6092c9ab6e66cb3509ca3c84db53e2cb6215ad40a803ad6146f7b1d"
+    },
+    "pxa-browser/artifacts/main.esp32-s3.aot": {
+      "bytes": 608848,
+      "sha256": "76a7f762ac3ee6241781ddcb246c55b1c542c3b504390af9216f1ddc1e74ff2f"
+    },
+    "pxa-browser/assets/icon.svg": {
+      "bytes": 436,
+      "sha256": "5a201674bc8463b76d5993f421846df22c9b3a397754c9e8dbc595d4fe932aab"
+    },
+    "pxa-browser/assets/icon.png": {
+      "bytes": 5033,
+      "sha256": "f46c27c5442f9a8a62abe9ac3aa7d2497ff0b7c75b951a3ee87d68567e6e5b98"
+    },
+    "pxa-browser/assets/resources.pxi": {
+      "bytes": 96,
+      "sha256": "5bdae34c849ee347adf4adcd153e7703824098d2658e08c3f3903d0c36ce41fa"
+    }
+  },
+  "chevron-fixture": {
+    "pxa-browser.pxa": {
+      "bytes": 612786,
+      "sha256": "faa36f96ec42fd9b9f16b51f3b5ca9ccfed937afa626b00fa42d202040f5ea97"
+    },
+    "pxa-browser.pxa.provenance.json": {
+      "bytes": 1955,
+      "sha256": "192a7b0bc55632f3d45bfe16adf98f930ad3bd5e15c6ba966244a02bef97abcf"
+    },
+    "pxa-browser/manifest.pxm": {
+      "bytes": 1366,
+      "sha256": "b98cc03ebf24a5a5fb844781f896023650377dd737239c736d7b9a2c5b6e7273"
+    },
+    "pxa-browser/signature.pxs": {
+      "bytes": 108,
+      "sha256": "6aed618179eeda81ab9f9facbd57bf16ff6ee2091ed29132f8fa8bdb825d1539"
+    },
+    "pxa-browser/artifacts/main.wasm": {
+      "bytes": 220795,
+      "sha256": "5544255e27c92f5a7147b402f8d937ea47dafb333e7f3a14683e2a7673a41984"
+    },
+    "pxa-browser/artifacts/main.esp32-s3.aot": {
+      "bytes": 610868,
+      "sha256": "4399a60d3e5c8ba23be7a6ae152e7d05554b12ebe5ddf555c1c503768f9f598e"
+    },
+    "pxa-browser/assets/icon.svg": {
+      "bytes": 436,
+      "sha256": "5a201674bc8463b76d5993f421846df22c9b3a397754c9e8dbc595d4fe932aab"
+    },
+    "pxa-browser/assets/icon.png": {
+      "bytes": 5033,
+      "sha256": "f46c27c5442f9a8a62abe9ac3aa7d2497ff0b7c75b951a3ee87d68567e6e5b98"
+    },
+    "pxa-browser/assets/resources.pxi": {
+      "bytes": 96,
+      "sha256": "5bdae34c849ee347adf4adcd153e7703824098d2658e08c3f3903d0c36ce41fa"
+    }
+  },
+  "lto-fixture": {
+    "pxa-browser.pxa": {
+      "bytes": 608796,
+      "sha256": "6538efbaa8f278fbaa04dc9a442c20ee951de365c20fee16e40868f03ce66d99"
+    },
+    "pxa-browser.pxa.provenance.json": {
+      "bytes": 1955,
+      "sha256": "8e7b7679a450710e86f423b31523bfed9bfe16981ea048c29d22e3e488b2d646"
+    },
+    "pxa-browser/manifest.pxm": {
+      "bytes": 1366,
+      "sha256": "851564b5d2fae943fcd1f9687dfbc88ac8c8d149c6839dc50374adc457432495"
+    },
+    "pxa-browser/signature.pxs": {
+      "bytes": 108,
+      "sha256": "d88c579f989173667b1ac0b30c316d48c1f2072274d6ec2e759c462d717d181f"
+    },
+    "pxa-browser/artifacts/main.wasm": {
+      "bytes": 220808,
+      "sha256": "77c2a2f2f6092c9ab6e66cb3509ca3c84db53e2cb6215ad40a803ad6146f7b1d"
+    },
+    "pxa-browser/artifacts/main.esp32-s3.aot": {
+      "bytes": 608848,
+      "sha256": "76a7f762ac3ee6241781ddcb246c55b1c542c3b504390af9216f1ddc1e74ff2f"
+    },
+    "pxa-browser/assets/icon.svg": {
+      "bytes": 436,
+      "sha256": "5a201674bc8463b76d5993f421846df22c9b3a397754c9e8dbc595d4fe932aab"
+    },
+    "pxa-browser/assets/icon.png": {
+      "bytes": 5033,
+      "sha256": "f46c27c5442f9a8a62abe9ac3aa7d2497ff0b7c75b951a3ee87d68567e6e5b98"
+    },
+    "pxa-browser/assets/resources.pxi": {
+      "bytes": 96,
+      "sha256": "5bdae34c849ee347adf4adcd153e7703824098d2658e08c3f3903d0c36ce41fa"
+    }
+  },
+  "release-esp": {
+    "pxa-browser.pxa.provenance.json": {
+      "bytes": 1955,
+      "sha256": "ba9e1492217cd7d6f14494e1b4d20a6171d17b181204efaca5a7c77e12ae4719"
+    },
+    "pxa-browser.pxa": {
+      "bytes": 605476,
+      "sha256": "11ab85218e167d91f8576fe1eec3d80e7e243497689b7183e45cb0cbf90650fb"
+    },
+    "pxa-browser/manifest.pxm": {
+      "bytes": 1366,
+      "sha256": "eb1400630b327ed332872637948b7f92f3eb5e5506489fcc6813211680a25e9f"
+    },
+    "pxa-browser/signature.pxs": {
+      "bytes": 108,
+      "sha256": "e4d0b60e18be4043401ec2f68e1d6e56ac28ebfc8e23184828a6b3e257da3998"
+    },
+    "pxa-browser/artifacts/main.wasm": {
+      "bytes": 220312,
+      "sha256": "5a975078245e7a5a79883e83a8e15941a6055a05be9a471439b60cb963a92ce5"
+    },
+    "pxa-browser/artifacts/main.esp32-s3.aot": {
+      "bytes": 606544,
+      "sha256": "33a8b3550a4b99799a987412e3a9ffb43a06a7710ca66d389cb266882f0f052c"
+    },
+    "pxa-browser/assets/icon.svg": {
+      "bytes": 436,
+      "sha256": "5a201674bc8463b76d5993f421846df22c9b3a397754c9e8dbc595d4fe932aab"
+    },
+    "pxa-browser/assets/icon.png": {
+      "bytes": 5033,
+      "sha256": "f46c27c5442f9a8a62abe9ac3aa7d2497ff0b7c75b951a3ee87d68567e6e5b98"
+    },
+    "pxa-browser/assets/resources.pxi": {
+      "bytes": 96,
+      "sha256": "5bdae34c849ee347adf4adcd153e7703824098d2658e08c3f3903d0c36ce41fa"
+    }
+  },
+  "release-sim": {
+    "pxa-browser.pxa.provenance.json": {
+      "bytes": 1963,
+      "sha256": "bd3151eb4a01e7f3916ee36c8cd98042d43e60012cc0f9f67d9209acc4bffee4"
+    },
+    "pxa-browser.pxa": {
+      "bytes": 375938,
+      "sha256": "5158d264c4f95ca6aaa81de06a16ccd48d7aea0c02ae740eedf3fdbd614d48f5"
+    },
+    "pxa-browser/manifest.pxm": {
+      "bytes": 1378,
+      "sha256": "e181580c94358b012538057e04a56fc58f90fa303fd6fad026772002528604b9"
+    },
+    "pxa-browser/signature.pxs": {
+      "bytes": 108,
+      "sha256": "7e81e526f5eba4be33a004f0e4554a75f44c3412a586ee47cdfba7bf7669bf5a"
+    },
+    "pxa-browser/artifacts/main.wasm": {
+      "bytes": 220312,
+      "sha256": "5a975078245e7a5a79883e83a8e15941a6055a05be9a471439b60cb963a92ce5"
+    },
+    "pxa-browser/artifacts/main.linux-x86_64.aot": {
+      "bytes": 356656,
+      "sha256": "3ab51900a4b677f4644b41f65d06fb64eb07475459d86cac5cf7536fbf93e588"
+    },
+    "pxa-browser/assets/icon.svg": {
+      "bytes": 436,
+      "sha256": "5a201674bc8463b76d5993f421846df22c9b3a397754c9e8dbc595d4fe932aab"
+    },
+    "pxa-browser/assets/icon.png": {
+      "bytes": 5033,
+      "sha256": "f46c27c5442f9a8a62abe9ac3aa7d2497ff0b7c75b951a3ee87d68567e6e5b98"
+    },
+    "pxa-browser/assets/resources.pxi": {
+      "bytes": 96,
+      "sha256": "5bdae34c849ee347adf4adcd153e7703824098d2658e08c3f3903d0c36ce41fa"
+    }
+  },
+  "final-sim": {
+    "pxa-browser.pxa": {
+      "bytes": 377115,
+      "sha256": "7fe5df81eb83a12a5c8710ffd95b4ef603386a65fbcaf5d7d7b325b3ca63a523"
+    },
+    "pxa-browser.pxa.provenance.json": {
+      "bytes": 1963,
+      "sha256": "a4ea33245479dd8b0f01b1752db573c4ed8cfcca306cdd90fc030cb52de380f9"
+    },
+    "pxa-browser/manifest.pxm": {
+      "bytes": 1378,
+      "sha256": "317024c2df00d2e058674d392805f6b40a08a699393ee0a90a500266a0af5192"
+    },
+    "pxa-browser/signature.pxs": {
+      "bytes": 108,
+      "sha256": "97e3cd49f8581901cafbc31c8358c4f9418cd4e0911b4b4f222dcdba1b8a2a4f"
+    },
+    "pxa-browser/artifacts/main.wasm": {
+      "bytes": 220808,
+      "sha256": "77c2a2f2f6092c9ab6e66cb3509ca3c84db53e2cb6215ad40a803ad6146f7b1d"
+    },
+    "pxa-browser/artifacts/main.linux-x86_64.aot": {
+      "bytes": 357640,
+      "sha256": "16f5f42bb018efed4a55e851e1cfa3f7bfd42db07bd2602a920669dd5e7fa71d"
+    },
+    "pxa-browser/assets/icon.svg": {
+      "bytes": 436,
+      "sha256": "5a201674bc8463b76d5993f421846df22c9b3a397754c9e8dbc595d4fe932aab"
+    },
+    "pxa-browser/assets/icon.png": {
+      "bytes": 5033,
+      "sha256": "f46c27c5442f9a8a62abe9ac3aa7d2497ff0b7c75b951a3ee87d68567e6e5b98"
+    },
+    "pxa-browser/assets/resources.pxi": {
+      "bytes": 96,
+      "sha256": "5bdae34c849ee347adf4adcd153e7703824098d2658e08c3f3903d0c36ce41fa"
+    }
+  },
+  "firmware": {
+    "bytes": 3401008,
+    "sha256": "58703ee3135f542ecd5ba478042ef1b5fa468eb617b93f660c63066db1168ef1"
+  }
+}

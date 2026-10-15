@@ -1,0 +1,9 @@
+Test project /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/deps/pxa-system/build/simulator/desktop
+    Start 3: pxsys_desktop_net_headers_test
+1/2 Test #3: pxsys_desktop_net_headers_test ...   Passed    0.01 sec
+    Start 4: pxsys_desktop_http_stream_test
+2/2 Test #4: pxsys_desktop_http_stream_test ...   Passed    1.78 sec
+
+100% tests passed out of 2
+
+Total Test time (real) =   1.79 sec

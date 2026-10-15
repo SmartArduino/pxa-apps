@@ -1,0 +1,22 @@
+{
+  "build/firmware/pai-touch/pxa_esp_platform.bin": {
+    "bytes": 3412672,
+    "sha256": "63a9a4557c1333bcbc493384dc4147cf9bebce8b1120979c9454f5e9694f5e79"
+  },
+  "local/browser-validation/fps-20261014/release-images-final-esp/pxa-browser.pxa": {
+    "bytes": 699527,
+    "sha256": "dd77ee7c961aaeceb97fe0370fc51a01ca36640f6c20ae6c580858fdc9ca1c56"
+  },
+  "local/browser-validation/fps-20261014/release-images-final-sim/pxa-browser.pxa": {
+    "bytes": 430660,
+    "sha256": "47dfcc7130595eaac93342bb165838f0bb3c49abf09596cd33dbaba0bc94941e"
+  },
+  "local/browser-validation/fps-20261014/release-images-final-esp/pxa-browser/artifacts/main.wasm": {
+    "bytes": 249522,
+    "sha256": "2099a5d6c20dd056e5f6d301bba3c0182db2116f42668a99e77c2d37b5576f27"
+  },
+  "local/browser-validation/fps-20261014/release-images-final-esp/pxa-browser/artifacts/main.esp32-s3.aot": {
+    "bytes": 700936,
+    "sha256": "01fa446062fbe6cfd39150e04c1ad14de420392574d94110f568c2355c41a71b"
+  }
+}

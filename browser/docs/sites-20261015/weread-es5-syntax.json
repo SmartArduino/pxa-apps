@@ -1,0 +1,22 @@
+[
+  {
+    "file": "login.dc74cd.js",
+    "bytes": 5413,
+    "es5_syntax": true
+  },
+  {
+    "file": "global.35483d.js",
+    "bytes": 5369,
+    "es5_syntax": true
+  },
+  {
+    "file": "cookie.0e551c.js",
+    "bytes": 982,
+    "es5_syntax": true
+  },
+  {
+    "file": "es5-shim.min.js",
+    "bytes": 25442,
+    "es5_syntax": true
+  }
+]

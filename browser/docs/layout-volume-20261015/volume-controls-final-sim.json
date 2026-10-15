@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "width": 296,
+  "height": 240,
+  "dpi": 160,
+  "round": false,
+  "manual_site": true,
+  "duplicate_rejected": true,
+  "invalid_kept_editable": true,
+  "long_press_remove": true,
+  "persistent_restart": true,
+  "scrollbar_drag": true,
+  "scrollbar_hide": true,
+  "menu_exit": true,
+  "volume_default_off": true,
+  "volume_up_down": true,
+  "volume_hold_repeat": true,
+  "volume_release_stops": true,
+  "volume_input_suspended": true,
+  "volume_persistent": true
+}

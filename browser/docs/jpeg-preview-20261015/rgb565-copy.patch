@@ -1,0 +1,16 @@
+--- image_decode_before.c
++++ image_decode_after.c
+@@ -117,6 +117,13 @@
+             const uint8_t *p = tile->pixels + (size_t)sy * tile->stride + sx * bpp;
+             uint8_t r, g, b, a = 255;
+             if (tile->format == PXA_IMAGE_RGB565) {
++                /* Preserve native RGB565 samples without expanding and
++                 * requantizing three channels. Other formats keep their
++                 * original path, including single-pixel streaming PNG. */
++                if (t->info.encoding == PXA_ASSET_ENCODING_RGB565) {
++                    memcpy(t->output + 2 * (y * dw + x), p, 2);
++                    continue;
++                }
+                 uint16_t rgb;
+                 memcpy(&rgb, p, 2);
+                 r = (uint8_t)((rgb >> 11) * 255 / 31);

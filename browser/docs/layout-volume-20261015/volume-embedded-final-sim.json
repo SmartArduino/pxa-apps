@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "layout": {
+    "address": [
+      45,
+      2,
+      206,
+      32
+    ],
+    "content": [
+      20,
+      37,
+      256,
+      135
+    ],
+    "toolbar": [
+      18,
+      186,
+      260,
+      32
+    ]
+  },
+  "uncaptured_changes_volume": true,
+  "captured_keeps_volume": true,
+  "background_releases_volume": true
+}

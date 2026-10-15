@@ -1,0 +1,196 @@
+{
+  "fixture": [
+    {
+      "page": "encoding",
+      "chinese_visible": true,
+      "hidden_loading_absent": true
+    },
+    {
+      "page": "encoding-header",
+      "chinese_visible": true,
+      "hidden_loading_absent": true
+    },
+    {
+      "page": "encoding-bom",
+      "bom_overrides_header": true
+    },
+    {
+      "page": "encoding-unsupported",
+      "explicit_warning": true
+    },
+    {
+      "page": "slow",
+      "paragraph_visible_before_eof": true
+    }
+  ],
+  "sites": [
+    {
+      "name": "txt",
+      "url": "http://wap.bookshuku.org/",
+      "done": true,
+      "attempts": [
+        {
+          "done": true,
+          "errors": []
+        }
+      ],
+      "statistics": [
+        "BROWSER DONE status=200 head_ms=3037 first_ms=3037 total_ms=3037 received=9428 text=3435 spans=78 links=33 forms=1 fields=2 title_id=96e41930\u001b[0m"
+      ]
+    },
+    {
+      "name": "10000txt",
+      "url": "https://10000txt.com/",
+      "done": true,
+      "attempts": [
+        {
+          "done": true,
+          "errors": []
+        }
+      ],
+      "statistics": [
+        "BROWSER DONE status=200 head_ms=3042 first_ms=3042 total_ms=3305 received=25116 text=6107 spans=190 links=78 forms=1 fields=2 title_id=5706c628\u001b[0m"
+      ]
+    },
+    {
+      "name": "sina",
+      "url": "https://3g.sina.com.cn/",
+      "done": true,
+      "attempts": [
+        {
+          "done": true,
+          "errors": []
+        }
+      ],
+      "statistics": [
+        "BROWSER DONE status=200 head_ms=778 first_ms=778 total_ms=951 received=138779 text=9790 spans=377 links=96 forms=0 fields=0 title_id=5b65afd9\u001b[0m"
+      ]
+    },
+    {
+      "name": "gmanhua",
+      "url": "https://www.gmanhua.com/",
+      "done": true,
+      "attempts": [
+        {
+          "done": true,
+          "errors": []
+        }
+      ],
+      "statistics": [
+        "BROWSER DONE status=200 head_ms=438 first_ms=438 total_ms=533 received=61518 text=10444 spans=462 links=96 forms=0 fields=0 title_id=caca1382\u001b[0m"
+      ]
+    },
+    {
+      "name": "gmanhua-detail",
+      "url": "https://www.gmanhua.com/manhua2626/",
+      "done": true,
+      "attempts": [
+        {
+          "done": true,
+          "errors": []
+        }
+      ],
+      "statistics": [
+        "BROWSER DONE status=200 head_ms=348 first_ms=348 total_ms=407 received=21338 text=3975 spans=241 links=96 forms=0 fields=0 title_id=7b9d818a\u001b[0m"
+      ]
+    },
+    {
+      "name": "gmanhua-chapter",
+      "url": "https://www.gmanhua.com/ch1-27710/",
+      "done": true,
+      "attempts": [
+        {
+          "done": true,
+          "errors": []
+        }
+      ],
+      "statistics": [
+        "BROWSER DONE status=200 head_ms=341 first_ms=341 total_ms=342 received=11320 text=1817 spans=103 links=49 forms=0 fields=0 title_id=8cd09992\u001b[0m"
+      ]
+    },
+    {
+      "name": "hao123",
+      "url": "https://wap.hao123.com/",
+      "done": true,
+      "attempts": [
+        {
+          "done": true,
+          "errors": []
+        }
+      ],
+      "statistics": [
+        "BROWSER DONE status=200 head_ms=477 first_ms=477 total_ms=650 received=107649 text=3486 spans=131 links=96 forms=1 fields=5 title_id=c235f8a4\u001b[0m"
+      ]
+    },
+    {
+      "name": "2345",
+      "url": "https://www.2345.com/wap.htm",
+      "done": true,
+      "attempts": [
+        {
+          "done": true,
+          "errors": []
+        }
+      ],
+      "statistics": [
+        "BROWSER DONE status=200 head_ms=318 first_ms=318 total_ms=354 received=11645 text=1598 spans=149 links=73 forms=0 fields=0 title_id=976faeeb\u001b[0m"
+      ]
+    },
+    {
+      "name": "nunu",
+      "url": "https://www.nunubook.com/",
+      "done": true,
+      "attempts": [
+        {
+          "done": true,
+          "errors": []
+        }
+      ],
+      "statistics": [
+        "BROWSER DONE status=200 head_ms=1343 first_ms=1343 total_ms=1616 received=83055 text=31167 spans=602 links=96 forms=1 fields=5 title_id=495d441c\u001b[0m"
+      ]
+    },
+    {
+      "name": "nunu-book",
+      "url": "https://www.nunubook.com/lishi/datangmingyue/",
+      "done": true,
+      "attempts": [
+        {
+          "done": true,
+          "errors": []
+        }
+      ],
+      "statistics": [
+        "BROWSER DONE status=200 head_ms=919 first_ms=919 total_ms=921 received=12974 text=1868 spans=108 links=28 forms=1 fields=5 title_id=bce825ba\u001b[0m"
+      ]
+    },
+    {
+      "name": "weread",
+      "url": "https://ink.qq.com/",
+      "done": true,
+      "attempts": [
+        {
+          "done": true,
+          "errors": []
+        }
+      ],
+      "statistics": [
+        "BROWSER DONE status=200 head_ms=1243 first_ms=1243 total_ms=1372 received=31982 text=256 spans=10 links=0 forms=0 fields=0 title_id=94b8c841\u001b[0m"
+      ]
+    },
+    {
+      "name": "nunu-chapter",
+      "url": "https://www.nunubook.com/lishi/datangmingyue/587513.html",
+      "done": true,
+      "attempts": [
+        {
+          "done": true,
+          "errors": []
+        }
+      ],
+      "statistics": [
+        "BROWSER DONE status=200 head_ms=1089 first_ms=1089 total_ms=1977 received=26866 text=17387 spans=12 links=3 forms=0 fields=0 title_id=9c08a4b9\u001b[0m"
+      ]
+    }
+  ]
+}

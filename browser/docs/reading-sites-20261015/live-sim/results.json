@@ -1,0 +1,40 @@
+[
+  {
+    "chapter": "kuangren",
+    "logs": [
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV https://zh.wikisource.org/wiki/%E7%8B%82%E4%BA%BA%E6%97%A5%E8%A8%98\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=415 first_ms=430 total_ms=523 received=73998 text=17732 spans=180 links=68\u001b[0m"
+    ]
+  },
+  {
+    "site": "nahan",
+    "logs": [
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV https://zh.wikisource.org/zh-hans/%E5%90%B6%E5%96%8A\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=434 first_ms=434 total_ms=500 received=54170 text=10372 spans=140 links=61\u001b[0m"
+    ],
+    "home_scroll_restored": true
+  },
+  {
+    "chapter": "zhufu",
+    "logs": [
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV https://zh.wikisource.org/wiki/%E7%A5%9D%E7%A6%8F\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=422 first_ms=422 total_ms=492 received=65414 text=29358 spans=105 links=46\u001b[0m"
+    ]
+  },
+  {
+    "site": "panghuang",
+    "logs": [
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV https://zh.wikisource.org/zh-hans/%E5%BD%B7%E5%BE%A8\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=434 first_ms=442 total_ms=480 received=37576 text=1760 spans=129 links=57\u001b[0m"
+    ],
+    "home_scroll_restored": true
+  },
+  {
+    "site": "alice",
+    "logs": [
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV https://www.cs.cmu.edu/~rgs/alice-I.html\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=865 first_ms=879 total_ms=881 received=12431 text=11735 spans=15 links=4\u001b[0m"
+    ],
+    "home_scroll_restored": true
+  }
+]

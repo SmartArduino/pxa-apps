@@ -1,0 +1,5 @@
+4278791	I (4278791) PxaHost: WAMR dynamic: peak=68966 current=416 linear=0 linear_peak=262144 artifact=0 events=0
+4282472	I (4282472) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b30000 dbus=0x3c670000 request=568348 map=589824 alloc=589824 free_psram=5440960
+4282715	I (4282715) PxaHost: WAMR dynamic: peak=68966 current=42152 linear=131072 linear_peak=131072 artifact=0 events=128
+4282782	[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=31 first_ms=51 total_ms=80 received=649 text=210 spans=20 links=8[0m
+4284624	[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=27 first_ms=55 total_ms=597 received=57344 text=49152 spans=2 links=0[0m

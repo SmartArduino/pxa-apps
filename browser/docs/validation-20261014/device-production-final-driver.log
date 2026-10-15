@@ -1,0 +1,15 @@
+3286956	I (3286956) PxaBridge: Application foregrounded: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-browser
+PASS final-home
+
+PASS final-menu
+
+PASS final-bookmarks
+
+PASS final-home-menu
+3297215	[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV https://www.bing.com/search[0m
+3300195	[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=2918 first_ms=2924 total_ms=2978 received=6174 text=3580 spans=20 links=10[0m
+PASS final-search
+3310514	I (3310514) PxaBridge: Application foregrounded: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-browser
+3310514	I (3310514) PxaBridge: Launch completion: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-browser intent=0 status=0
+PASS final-restart
+final production device checks PASS

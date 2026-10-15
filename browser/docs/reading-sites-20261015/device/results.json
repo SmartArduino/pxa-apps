@@ -1,0 +1,395 @@
+{
+  "startup_memory": {
+    "heap": {
+      "sram_total": 320427,
+      "sram_free": 54835,
+      "sram_min": 31416,
+      "sram_largest": 19456,
+      "psram_total": 8358572,
+      "psram_free": 6133308,
+      "psram_min": 5337816,
+      "psram_largest": 4456448
+    },
+    "budget": {
+      "internal": 27468,
+      "external": 16625,
+      "peak_internal": 27468,
+      "peak_external": 16625,
+      "temporary_peak_internal": 0,
+      "temporary_peak_external": 0,
+      "fixed": 2224,
+      "denied": 0,
+      "allocation_failures": 0
+    },
+    "kind:raster": {
+      "internal": 0,
+      "external": 0
+    },
+    "kind:image": {
+      "internal": 0,
+      "external": 0
+    },
+    "kind:audio": {
+      "internal": 0,
+      "external": 16392
+    },
+    "kind:temporary": {
+      "internal": 0,
+      "external": 0
+    },
+    "kind:metadata": {
+      "internal": 27468,
+      "external": 233
+    },
+    "kind:frame": {
+      "internal": 0,
+      "external": 0
+    },
+    "surface": {
+      "frame": 0,
+      "scratch": 0,
+      "mailbox": 0,
+      "probe": 0,
+      "peak_total": 2176
+    }
+  },
+  "sites": [
+    {
+      "chapter": "kuangren",
+      "logs": [
+        "\n",
+        "\n",
+        "2994879\tI (2994879) PxaHost: pointer queued id=0 phase=0 x=65 y=155",
+        "\n",
+        "2994880\tI (2994880) PxaHost: pointer delivered id=0 phase=0 x=65 y=155",
+        "\n",
+        "\n",
+        "2995004\tI (2995004) PxaHost: pointer queued id=0 phase=2 x=65 y=155",
+        "\n",
+        "2995006\tI (2995006) PxaHost: pointer delivered id=0 phase=2 x=65 y=155",
+        "\n",
+        "2995009\t\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV https://zh.wikisource.org/wiki/%E7%8B%82%E4%BA%BA%E6%97%A5%E8%A8%98\u001b[0m",
+        "\n",
+        "2995010\tI (2995010) PxaNet: HTTP stream GET started: https://zh.wikisource.org/wiki/%E7%8B%82%E4%BA%BA%E6%97%A5%E8%A8%98",
+        "\n",
+        "2996340\tI (2996340) AdcBatteryMonitor: Battery: channel=1 raw=3391 adc=2818mV battery=4255mV level=100% charging=1",
+        "\n",
+        "2997742\tW (2997742) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "2997794\tW (2997794) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "2997846\tW (2997846) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "2997898\tW (2997898) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "2997950\tW (2997950) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "2998570\tI (2998570) PxaNet: HTTP stream completed: status=0 bytes=73998",
+        "\n",
+        "2998604\t\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=3013 first_ms=3014 total_ms=3594 received=73998 text=17732 spans=180 links=68\u001b[0m"
+      ],
+      "readable": true
+    },
+    {
+      "site": "nahan",
+      "logs": [
+        "\n",
+        "\n",
+        "2990347\tI (2990347) PxaHost: pointer queued id=0 phase=0 x=145 y=145",
+        "\n",
+        "2990348\tI (2990348) PxaHost: pointer delivered id=0 phase=0 x=145 y=145",
+        "\n",
+        "\n",
+        "2990472\tI (2990472) PxaHost: pointer queued id=0 phase=2 x=145 y=145",
+        "\n",
+        "2990474\tI (2990474) PxaHost: pointer delivered id=0 phase=2 x=145 y=145",
+        "\n",
+        "2990476\t\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV https://zh.wikisource.org/zh-hans/%E5%90%B6%E5%96%8A\u001b[0m",
+        "\n",
+        "2990479\tI (2990479) PxaNet: HTTP stream GET started: https://zh.wikisource.org/zh-hans/%E5%90%B6%E5%96%8A",
+        "\n",
+        "2993134\tW (2993134) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "2993185\tW (2993185) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "2993237\tW (2993237) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "2993289\tW (2993289) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "2993341\tW (2993341) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "2993784\tI (2993784) PxaNet: HTTP stream completed: status=0 bytes=54170",
+        "\n",
+        "2993824\t\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=2939 first_ms=2939 total_ms=3346 received=54170 text=10372 spans=140 links=61\u001b[0m"
+      ],
+      "memory": {
+        "heap": {
+          "sram_total": 320427,
+          "sram_free": 54835,
+          "sram_min": 31416,
+          "sram_largest": 19456,
+          "psram_total": 8358572,
+          "psram_free": 6065320,
+          "psram_min": 5337816,
+          "psram_largest": 4456448
+        },
+        "budget": {
+          "internal": 27468,
+          "external": 16625,
+          "peak_internal": 27468,
+          "peak_external": 16625,
+          "temporary_peak_internal": 0,
+          "temporary_peak_external": 0,
+          "fixed": 2224,
+          "denied": 0,
+          "allocation_failures": 0
+        },
+        "kind:raster": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:image": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:audio": {
+          "internal": 0,
+          "external": 16392
+        },
+        "kind:temporary": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:metadata": {
+          "internal": 27468,
+          "external": 233
+        },
+        "kind:frame": {
+          "internal": 0,
+          "external": 0
+        },
+        "surface": {
+          "frame": 0,
+          "scratch": 0,
+          "mailbox": 0,
+          "probe": 0,
+          "peak_total": 2176
+        }
+      },
+      "home_scroll_restored": true
+    },
+    {
+      "chapter": "zhufu",
+      "logs": [
+        "\n",
+        "\n",
+        "3015014\tI (3015014) PxaHost: pointer queued id=0 phase=0 x=65 y=132",
+        "\n",
+        "3015015\tI (3015015) PxaHost: pointer delivered id=0 phase=0 x=65 y=132",
+        "\n",
+        "\n",
+        "3015138\tI (3015138) PxaHost: pointer queued id=0 phase=2 x=65 y=132",
+        "\n",
+        "3015141\tI (3015141) PxaHost: pointer delivered id=0 phase=2 x=65 y=132",
+        "\n",
+        "3015144\t\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV https://zh.wikisource.org/wiki/%E7%A5%9D%E7%A6%8F\u001b[0m",
+        "\n",
+        "3015145\tI (3015145) PxaNet: HTTP stream GET started: https://zh.wikisource.org/wiki/%E7%A5%9D%E7%A6%8F",
+        "\n",
+        "3017812\tW (3017812) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "3017863\tW (3017863) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "3017915\tW (3017915) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "3017967\tW (3017967) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "3018019\tW (3018019) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "3018337\tI (3018337) AdcBatteryMonitor: Battery: channel=1 raw=3403 adc=2825mV battery=4266mV level=100% charging=1",
+        "\n",
+        "3018448\tI (3018448) PxaNet: HTTP stream completed: status=0 bytes=65414",
+        "\n",
+        "3018518\t\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=2951 first_ms=2952 total_ms=3373 received=65414 text=29358 spans=105 links=46\u001b[0m"
+      ],
+      "readable": true
+    },
+    {
+      "site": "panghuang",
+      "logs": [
+        "\n",
+        "\n",
+        "3010559\tI (3010559) PxaHost: pointer queued id=0 phase=0 x=145 y=145",
+        "\n",
+        "3010560\tI (3010560) PxaHost: pointer delivered id=0 phase=0 x=145 y=145",
+        "\n",
+        "\n",
+        "3010684\tI (3010684) PxaHost: pointer queued id=0 phase=2 x=145 y=145",
+        "\n",
+        "3010687\tI (3010687) PxaHost: pointer delivered id=0 phase=2 x=145 y=145",
+        "\n",
+        "3010689\t\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV https://zh.wikisource.org/zh-hans/%E5%BD%B7%E5%BE%A8\u001b[0m",
+        "\n",
+        "3010691\tI (3010691) PxaNet: HTTP stream GET started: https://zh.wikisource.org/zh-hans/%E5%BD%B7%E5%BE%A8",
+        "\n",
+        "3013409\tW (3013409) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "3013461\tW (3013461) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "3013513\tW (3013513) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "3013565\tW (3013565) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "3013617\tW (3013617) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "3013933\tI (3013933) PxaNet: HTTP stream completed: status=0 bytes=37576",
+        "\n",
+        "3013968\t\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=3002 first_ms=3003 total_ms=3279 received=37576 text=1760 spans=129 links=57\u001b[0m"
+      ],
+      "memory": {
+        "heap": {
+          "sram_total": 320427,
+          "sram_free": 54835,
+          "sram_min": 31416,
+          "sram_largest": 19456,
+          "psram_total": 8358572,
+          "psram_free": 6029328,
+          "psram_min": 5337816,
+          "psram_largest": 4456448
+        },
+        "budget": {
+          "internal": 27468,
+          "external": 16625,
+          "peak_internal": 27468,
+          "peak_external": 16625,
+          "temporary_peak_internal": 0,
+          "temporary_peak_external": 0,
+          "fixed": 2224,
+          "denied": 0,
+          "allocation_failures": 0
+        },
+        "kind:raster": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:image": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:audio": {
+          "internal": 0,
+          "external": 16392
+        },
+        "kind:temporary": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:metadata": {
+          "internal": 27468,
+          "external": 233
+        },
+        "kind:frame": {
+          "internal": 0,
+          "external": 0
+        },
+        "surface": {
+          "frame": 0,
+          "scratch": 0,
+          "mailbox": 0,
+          "probe": 0,
+          "peak_total": 2176
+        }
+      },
+      "home_scroll_restored": true
+    },
+    {
+      "site": "alice",
+      "logs": [
+        "\n",
+        "\n",
+        "3031377\tI (3031377) PxaHost: pointer queued id=0 phase=0 x=145 y=145",
+        "\n",
+        "3031378\tI (3031378) PxaHost: pointer delivered id=0 phase=0 x=145 y=145",
+        "\n",
+        "\n",
+        "3031502\tI (3031502) PxaHost: pointer queued id=0 phase=2 x=145 y=145",
+        "\n",
+        "3031505\tI (3031505) PxaHost: pointer delivered id=0 phase=2 x=145 y=145",
+        "\n",
+        "3031507\t\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV https://www.cs.cmu.edu/~rgs/alice-I.html\u001b[0m",
+        "\n",
+        "3031508\tI (3031508) PxaNet: HTTP stream GET started: https://www.cs.cmu.edu/~rgs/alice-I.html",
+        "\n",
+        "3032662\tW (3032662) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "3032714\tW (3032714) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "3032766\tW (3032766) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "3032818\tW (3032818) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "3032870\tW (3032870) HTTP_CLIENT: Connection timed out before data was ready!",
+        "\n",
+        "3033033\tI (3033033) PxaNet: HTTP stream completed: status=0 bytes=12431",
+        "\n",
+        "3033107\t\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=1411 first_ms=1434 total_ms=1600 received=12431 text=11735 spans=15 links=4\u001b[0m"
+      ],
+      "memory": {
+        "heap": {
+          "sram_total": 320427,
+          "sram_free": 54835,
+          "sram_min": 31416,
+          "sram_largest": 19456,
+          "psram_total": 8358572,
+          "psram_free": 6005740,
+          "psram_min": 5337816,
+          "psram_largest": 4456448
+        },
+        "budget": {
+          "internal": 27468,
+          "external": 16625,
+          "peak_internal": 27468,
+          "peak_external": 16625,
+          "temporary_peak_internal": 0,
+          "temporary_peak_external": 0,
+          "fixed": 2224,
+          "denied": 0,
+          "allocation_failures": 0
+        },
+        "kind:raster": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:image": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:audio": {
+          "internal": 0,
+          "external": 16392
+        },
+        "kind:temporary": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:metadata": {
+          "internal": 27468,
+          "external": 233
+        },
+        "kind:frame": {
+          "internal": 0,
+          "external": 0
+        },
+        "surface": {
+          "frame": 0,
+          "scratch": 0,
+          "mailbox": 0,
+          "probe": 0,
+          "peak_total": 2176
+        }
+      },
+      "home_scroll_restored": true
+    }
+  ],
+  "passed": true
+}

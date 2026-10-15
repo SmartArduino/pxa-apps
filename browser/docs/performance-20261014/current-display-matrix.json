@@ -1,0 +1,56 @@
+[
+  {
+    "profile": "pai-touch",
+    "width": 296,
+    "height": 240,
+    "dpi": 160,
+    "corner": 58,
+    "round": false,
+    "passed": true
+  },
+  {
+    "profile": "fractional-dpi",
+    "width": 296,
+    "height": 240,
+    "dpi": 130,
+    "corner": 0,
+    "round": false,
+    "passed": true
+  },
+  {
+    "profile": "high-dpi",
+    "width": 480,
+    "height": 480,
+    "dpi": 320,
+    "corner": 60,
+    "round": false,
+    "passed": true
+  },
+  {
+    "profile": "round",
+    "width": 240,
+    "height": 240,
+    "dpi": 160,
+    "corner": 120,
+    "round": true,
+    "passed": true
+  },
+  {
+    "profile": "portrait",
+    "width": 240,
+    "height": 320,
+    "dpi": 160,
+    "corner": 20,
+    "round": false,
+    "passed": true
+  },
+  {
+    "profile": "wide",
+    "width": 640,
+    "height": 360,
+    "dpi": 240,
+    "corner": 24,
+    "round": false,
+    "passed": true
+  }
+]

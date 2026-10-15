@@ -1,0 +1,180 @@
+{
+  "simulator-images": {
+    "case": "images",
+    "width": 296,
+    "height": 240,
+    "dpi": 160,
+    "passed": true,
+    "image_logs": [
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=0 received=3653 pixels=241x135 resident=130235 total_ms=26\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=1 received=6162 pixels=241x135 resident=65165 total_ms=21\u001b[0m"
+    ]
+  },
+  "simulator-errors": {
+    "case": "errors",
+    "width": 296,
+    "height": 240,
+    "dpi": 160,
+    "passed": true,
+    "image_logs": [
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE ERROR index=0 code=-15\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE ERROR index=1 code=-3\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE ERROR index=2 code=-15\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE ERROR index=3 code=-3\u001b[0m"
+    ]
+  },
+  "simulator-tall": {
+    "case": "tall",
+    "width": 296,
+    "height": 240,
+    "dpi": 160,
+    "passed": true,
+    "image_logs": [
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=0 received=3036 pixels=107x303 resident=129779 total_ms=31\u001b[0m"
+    ]
+  },
+  "simulator-capacity": {
+    "case": "capacity",
+    "width": 296,
+    "height": 240,
+    "dpi": 160,
+    "passed": true,
+    "image_logs": [
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=0 received=3653 pixels=241x135 resident=130235 total_ms=8\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=1 received=6162 pixels=241x135 resident=65165 total_ms=6\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=2 received=3653 pixels=241x135 resident=130235 total_ms=9\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=3 received=6162 pixels=241x135 resident=65165 total_ms=4\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=4 received=3653 pixels=241x135 resident=130235 total_ms=9\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=2 received=3653 pixels=241x135 resident=130235 total_ms=19\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=1 received=6162 pixels=241x135 resident=65165 total_ms=5\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=0 received=3653 pixels=241x135 resident=130235 total_ms=8\u001b[0m"
+    ]
+  },
+  "simulator-slow": {
+    "case": "slow",
+    "width": 296,
+    "height": 240,
+    "dpi": 160,
+    "passed": true,
+    "image_logs": []
+  },
+  "simulator-high-dpi": {
+    "case": "images",
+    "width": 480,
+    "height": 480,
+    "dpi": 320,
+    "passed": true,
+    "image_logs": [
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=0 received=3653 pixels=241x135 resident=130235 total_ms=12\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=1 received=6162 pixels=241x135 resident=65165 total_ms=10\u001b[0m"
+    ]
+  },
+  "simulator-fractional": {
+    "case": "display",
+    "width": 296,
+    "height": 240,
+    "dpi": 130,
+    "passed": true,
+    "image_logs": [
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=0 received=3653 pixels=241x135 resident=130235 total_ms=18\u001b[0m"
+    ]
+  },
+  "simulator-round": {
+    "case": "display",
+    "width": 240,
+    "height": 240,
+    "dpi": 160,
+    "passed": true,
+    "image_logs": [
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=0 received=3653 pixels=156x87 resident=54383 total_ms=18\u001b[0m"
+    ]
+  },
+  "simulator-portrait": {
+    "case": "display",
+    "width": 240,
+    "height": 320,
+    "dpi": 160,
+    "passed": true,
+    "image_logs": [
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=0 received=3653 pixels=206x115 resident=94855 total_ms=16\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=1 received=6162 pixels=206x115 resident=47475 total_ms=4\u001b[0m"
+    ]
+  },
+  "simulator-wide": {
+    "case": "display",
+    "width": 640,
+    "height": 360,
+    "dpi": 240,
+    "passed": true,
+    "image_logs": [
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=0 received=3653 pixels=241x135 resident=130235 total_ms=17\u001b[0m"
+    ]
+  },
+  "production-display": [
+    {
+      "profile": "pai-touch",
+      "width": 296,
+      "height": 240,
+      "dpi": 160,
+      "corner": 58,
+      "round": false,
+      "passed": true
+    },
+    {
+      "profile": "fractional-dpi",
+      "width": 296,
+      "height": 240,
+      "dpi": 130,
+      "corner": 0,
+      "round": false,
+      "passed": true
+    },
+    {
+      "profile": "high-dpi",
+      "width": 480,
+      "height": 480,
+      "dpi": 320,
+      "corner": 60,
+      "round": false,
+      "passed": true
+    },
+    {
+      "profile": "round",
+      "width": 240,
+      "height": 240,
+      "dpi": 160,
+      "corner": 120,
+      "round": true,
+      "passed": true
+    },
+    {
+      "profile": "portrait",
+      "width": 240,
+      "height": 320,
+      "dpi": 160,
+      "corner": 20,
+      "round": false,
+      "passed": true
+    },
+    {
+      "profile": "wide",
+      "width": 640,
+      "height": 360,
+      "dpi": 240,
+      "corner": 24,
+      "round": false,
+      "passed": true
+    }
+  ],
+  "native": {
+    "decoder": "streaming images PASS: pixels/alpha, split input, JPEG, truncation, allocation failure, mutation, lifetime\n",
+    "related_services": "Test project /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/libpxa-lvgl96\n    Start 18: pxa_assets_service_test\n1/3 Test #18: pxa_assets_service_test ..........   Passed    0.01 sec\n    Start 19: pxa_image_decode_test\n2/3 Test #19: pxa_image_decode_test ............   Passed   52.69 sec\n    Start 25: pxa_raster_assets_test\n3/3 Test #25: pxa_raster_assets_test ...........   Passed    0.00 sec\n\n100% tests passed out of 3\n\nTotal Test time (real) =  52.71 sec\n",
+    "cpp_sdk": "PXA C++ Guest host tests OK",
+    "firmware_backends": "PXA ESP adapter host tests passed",
+    "spec": "PXA consolidated draft OK (52 Core vectors, 5 package payloads)\n"
+  },
+  "public_https": [
+    "719898\t[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV https://imgs.xkcd.com/comics/standards.png",
+    "721617\t[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=0 received=24305 pixels=240x135 resident=129687 total_ms=1667"
+  ]
+}

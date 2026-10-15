@@ -1,0 +1,1085 @@
+{
+  "capacity": {
+    "case": "capacity",
+    "width": 296,
+    "height": 240,
+    "dpi": 160,
+    "passed": true,
+    "image_logs": [
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=0 received=3653 pixels=241x135 resident=130235 total_ms=10\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=1 received=6162 pixels=241x135 resident=65165 total_ms=5\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=2 received=3653 pixels=241x135 resident=130235 total_ms=8\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=3 received=6162 pixels=241x135 resident=65165 total_ms=4\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=4 received=3653 pixels=241x135 resident=130235 total_ms=12\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=2 received=3653 pixels=241x135 resident=130235 total_ms=8\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=1 received=6162 pixels=241x135 resident=65165 total_ms=6\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=0 received=3653 pixels=241x135 resident=130235 total_ms=8\u001b[0m"
+    ]
+  },
+  "errors": {
+    "case": "errors",
+    "width": 296,
+    "height": 240,
+    "dpi": 160,
+    "passed": true,
+    "image_logs": [
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE ERROR index=0 code=-15\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE ERROR index=1 code=-3\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE ERROR index=2 code=-15\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE ERROR index=3 code=-3\u001b[0m"
+    ]
+  },
+  "high-dpi": {
+    "case": "display",
+    "width": 480,
+    "height": 480,
+    "dpi": 320,
+    "passed": true,
+    "image_logs": [
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=0 received=3653 pixels=241x135 resident=130235 total_ms=10\u001b[0m"
+    ]
+  },
+  "images": {
+    "case": "images",
+    "width": 296,
+    "height": 240,
+    "dpi": 160,
+    "passed": true,
+    "image_logs": [
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=0 received=3653 pixels=241x135 resident=130235 total_ms=15\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=1 received=6162 pixels=241x135 resident=65165 total_ms=7\u001b[0m"
+    ]
+  },
+  "portrait": {
+    "case": "display",
+    "width": 240,
+    "height": 320,
+    "dpi": 160,
+    "passed": true,
+    "image_logs": [
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=0 received=3653 pixels=206x115 resident=94855 total_ms=9\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=1 received=6162 pixels=206x115 resident=47475 total_ms=2\u001b[0m"
+    ]
+  },
+  "production-display": [
+    {
+      "profile": "pai-touch",
+      "width": 296,
+      "height": 240,
+      "dpi": 160,
+      "corner": 58,
+      "round": false,
+      "passed": true
+    },
+    {
+      "profile": "fractional-dpi",
+      "width": 296,
+      "height": 240,
+      "dpi": 130,
+      "corner": 0,
+      "round": false,
+      "passed": true
+    },
+    {
+      "profile": "high-dpi",
+      "width": 480,
+      "height": 480,
+      "dpi": 320,
+      "corner": 60,
+      "round": false,
+      "passed": true
+    },
+    {
+      "profile": "round",
+      "width": 240,
+      "height": 240,
+      "dpi": 160,
+      "corner": 120,
+      "round": true,
+      "passed": true
+    },
+    {
+      "profile": "portrait",
+      "width": 240,
+      "height": 320,
+      "dpi": 160,
+      "corner": 20,
+      "round": false,
+      "passed": true
+    },
+    {
+      "profile": "wide",
+      "width": 640,
+      "height": 360,
+      "dpi": 240,
+      "corner": 24,
+      "round": false,
+      "passed": true
+    }
+  ],
+  "regression": [
+    {
+      "name": "next",
+      "expected": "BROWSER NAV http://127.0.0.1:31878/next",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/next\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=1 first_ms=1 total_ms=1 received=193 text=92 spans=6 links=2\u001b[0m\n"
+    },
+    {
+      "name": "back",
+      "expected": "BROWSER NAV http://127.0.0.1:31878/",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=1 first_ms=1 total_ms=1 received=649 text=200 spans=20 links=8\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE ERROR index=0 code=-15\u001b[0m\n"
+    },
+    {
+      "name": "forward",
+      "expected": "BROWSER NAV http://127.0.0.1:31878/next",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/next\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=1 first_ms=1 total_ms=1 received=193 text=92 spans=6 links=2\u001b[0m\n"
+    },
+    {
+      "name": "back-again",
+      "expected": "BROWSER NAV http://127.0.0.1:31878/",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=1 first_ms=1 total_ms=2 received=649 text=200 spans=20 links=8\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE ERROR index=0 code=-15\u001b[0m\n"
+    },
+    {
+      "name": "form",
+      "expected": "BROWSER NAV http://127.0.0.1:31878/form",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/form\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=1 first_ms=1 total_ms=1 received=340 text=52 spans=10 links=1\u001b[0m\n"
+    },
+    {
+      "name": "field-editor",
+      "expected": "PXA IME load status=0",
+      "log": "PXA IME load status=0 metadata_bytes=2477\n"
+    },
+    {
+      "name": "field-done",
+      "expected": null,
+      "log": "PXA IME unloaded\n"
+    },
+    {
+      "name": "post",
+      "expected": "BROWSER NAV http://127.0.0.1:31878/echo",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/echo\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=1 first_ms=1 total_ms=1 received=159 text=76 spans=6 links=1\u001b[0m\n"
+    },
+    {
+      "name": "post-back",
+      "expected": "BROWSER NAV http://127.0.0.1:31878/form",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/form\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=4 first_ms=4 total_ms=4 received=340 text=52 spans=10 links=1\u001b[0m\n"
+    },
+    {
+      "name": "form-back",
+      "expected": "BROWSER NAV http://127.0.0.1:31878/",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=2 first_ms=2 total_ms=2 received=649 text=200 spans=20 links=8\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE ERROR index=0 code=-15\u001b[0m\n"
+    },
+    {
+      "name": "redirect",
+      "expected": "BROWSER DONE status=200",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/redirect\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=3 first_ms=3 total_ms=3 received=193 text=92 spans=6 links=2\u001b[0m\n"
+    },
+    {
+      "name": "redirect-back",
+      "expected": "BROWSER NAV http://127.0.0.1:31878/",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=2 first_ms=2 total_ms=2 received=649 text=200 spans=20 links=8\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE ERROR index=0 code=-15\u001b[0m\n"
+    },
+    {
+      "name": "slow",
+      "expected": "BROWSER NAV http://127.0.0.1:31878/slow",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/slow\u001b[0m\n"
+    },
+    {
+      "name": "cancel",
+      "expected": null,
+      "log": ""
+    },
+    {
+      "name": "cancel-back",
+      "expected": "BROWSER NAV http://127.0.0.1:31878/",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=3 first_ms=3 total_ms=3 received=649 text=200 spans=20 links=8\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE ERROR index=0 code=-15\u001b[0m\n"
+    },
+    {
+      "name": "large",
+      "expected": "BROWSER NAV http://127.0.0.1:31878/large",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/large\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=2 first_ms=2 total_ms=6 received=57344 text=49152 spans=2 links=0\u001b[0m\n"
+    },
+    {
+      "name": "large-scrolled",
+      "expected": null,
+      "log": ""
+    },
+    {
+      "name": "large-force-full",
+      "expected": null,
+      "log": ""
+    },
+    {
+      "name": "large-back",
+      "expected": "BROWSER NAV http://127.0.0.1:31878/",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=1 first_ms=1 total_ms=1 received=649 text=200 spans=20 links=8\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE ERROR index=0 code=-15\u001b[0m\n"
+    },
+    {
+      "name": "404",
+      "expected": "BROWSER DONE status=404",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/missing\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=404 head_ms=2 first_ms=2 total_ms=2 received=101 text=45 spans=4 links=1\u001b[0m\n"
+    },
+    {
+      "name": "404-back",
+      "expected": "BROWSER NAV http://127.0.0.1:31878/",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=2 first_ms=2 total_ms=2 received=649 text=200 spans=20 links=8\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE ERROR index=0 code=-15\u001b[0m\n"
+    },
+    {
+      "name": "plain",
+      "expected": "BROWSER NAV http://127.0.0.1:31878/plain",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/plain\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=3 first_ms=3 total_ms=3 received=45 text=46 spans=1 links=0\u001b[0m\n"
+    },
+    {
+      "name": "plain-back",
+      "expected": "BROWSER NAV http://127.0.0.1:31878/",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=1 first_ms=1 total_ms=1 received=649 text=200 spans=20 links=8\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE ERROR index=0 code=-15\u001b[0m\n"
+    },
+    {
+      "name": "compressed",
+      "expected": "BROWSER NAV http://127.0.0.1:31878/gzip",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/gzip\u001b[0m\n"
+    },
+    {
+      "name": "compressed-back",
+      "expected": "BROWSER NAV http://127.0.0.1:31878/",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=2 first_ms=2 total_ms=3 received=649 text=200 spans=20 links=8\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE ERROR index=0 code=-15\u001b[0m\n"
+    },
+    {
+      "name": "menu",
+      "expected": null,
+      "log": ""
+    },
+    {
+      "name": "bookmark",
+      "expected": null,
+      "log": ""
+    },
+    {
+      "name": "font-less",
+      "expected": null,
+      "log": ""
+    },
+    {
+      "name": "font-more",
+      "expected": null,
+      "log": ""
+    },
+    {
+      "name": "ua-mobile",
+      "expected": null,
+      "log": ""
+    },
+    {
+      "name": "ua-close",
+      "expected": null,
+      "log": ""
+    },
+    {
+      "name": "ua-mobile-request",
+      "expected": "BROWSER DONE status=200",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=2 first_ms=2 total_ms=2 received=649 text=200 spans=20 links=8\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE ERROR index=0 code=-15\u001b[0m\n"
+    },
+    {
+      "name": "ua-open",
+      "expected": null,
+      "log": ""
+    },
+    {
+      "name": "ua-lightweight",
+      "expected": null,
+      "log": ""
+    },
+    {
+      "name": "ua-close-restored",
+      "expected": null,
+      "log": ""
+    },
+    {
+      "name": "ua-lightweight-request",
+      "expected": "BROWSER DONE status=200",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=1 first_ms=1 total_ms=1 received=649 text=200 spans=20 links=8\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE ERROR index=0 code=-15\u001b[0m\n"
+    },
+    {
+      "name": "home",
+      "expected": null,
+      "log": ""
+    },
+    {
+      "name": "reading-restart",
+      "expected": "BROWSER DONE status=200",
+      "log": "PXA STORAGE CONFIG bytes_per_second=0 latency_us=0 max_read=4096\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=2 first_ms=2 total_ms=2 received=649 text=200 spans=20 links=8\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE ERROR index=0 code=-15\u001b[0m\n"
+    },
+    {
+      "name": "reading-menu",
+      "expected": null,
+      "log": ""
+    },
+    {
+      "name": "reading",
+      "expected": "BROWSER DONE status=200",
+      "log": "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://127.0.0.1:31878/reading\u001b[0m\n\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=2 first_ms=2 total_ms=2 received=243 text=163 spans=6 links=1\u001b[0m\n"
+    }
+  ],
+  "round": {
+    "case": "display",
+    "width": 240,
+    "height": 240,
+    "dpi": 160,
+    "passed": true,
+    "image_logs": [
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=0 received=3653 pixels=156x87 resident=54383 total_ms=9\u001b[0m"
+    ]
+  },
+  "slow": {
+    "case": "slow",
+    "width": 296,
+    "height": 240,
+    "dpi": 160,
+    "passed": true,
+    "image_logs": []
+  },
+  "tall": {
+    "case": "tall",
+    "width": 296,
+    "height": 240,
+    "dpi": 160,
+    "passed": true,
+    "image_logs": [
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=0 received=3036 pixels=107x303 resident=129779 total_ms=40\u001b[0m"
+    ]
+  },
+  "native": {
+    "codec_and_service": "Test project /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/build/libpxa-lvgl96\n    Start 18: pxa_image_service_test\n1/2 Test #18: pxa_image_service_test ...........   Passed    0.00 sec\n    Start 20: pxa_image_decode_test\n2/2 Test #20: pxa_image_decode_test ............   Passed   21.54 sec\n\n100% tests passed out of 2\n\nTotal Test time (real) =  21.54 sec\n",
+    "cpp_sdk": "PXA C++ Guest host tests OK",
+    "firmware_host": "PXA ESP adapter host tests passed",
+    "asan_ubsan": "streaming images PASS: pixels/alpha, split input, JPEG, truncation, allocation failure, mutation, lifetime\n",
+    "core_only_no_codec_dependencies": "[100%] Built target pxa",
+    "spec": "PXA consolidated draft OK (52 Core vectors, 5 package payloads)",
+    "installed_consumer": "installed platform backend PASS",
+    "parser_sanitizers": "browser core PASS: URL, entities, UTF-8 splits, HTML, forms, limits, layout, history, randomized input"
+  },
+  "device": {
+    "passed": true,
+    "runs": [
+      {
+        "before": {
+          "heap": {
+            "sram_total": 320427,
+            "sram_free": 56747,
+            "sram_min": 56747,
+            "sram_largest": 19456,
+            "psram_total": 8358572,
+            "psram_free": 6889968,
+            "psram_min": 6889968,
+            "psram_largest": 6815744
+          },
+          "budget": {
+            "internal": 27468,
+            "external": 16516,
+            "peak_internal": 27468,
+            "peak_external": 16516,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 0,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "kind:raster": {
+            "internal": 0,
+            "external": 0
+          },
+          "kind:image": {
+            "internal": 0,
+            "external": 0
+          },
+          "kind:audio": {
+            "internal": 0,
+            "external": 16392
+          },
+          "kind:temporary": {
+            "internal": 0,
+            "external": 0
+          },
+          "kind:metadata": {
+            "internal": 27468,
+            "external": 124
+          },
+          "kind:frame": {
+            "internal": 0,
+            "external": 0
+          },
+          "surface": {
+            "frame": 0,
+            "scratch": 0,
+            "mailbox": 0,
+            "probe": 0,
+            "peak_total": 0
+          }
+        },
+        "png": {
+          "heap": {
+            "sram_total": 320427,
+            "sram_free": 48415,
+            "sram_min": 44039,
+            "sram_largest": 19456,
+            "psram_total": 8358572,
+            "psram_free": 5978164,
+            "psram_min": 5257512,
+            "psram_largest": 4849664
+          },
+          "budget": {
+            "internal": 27468,
+            "external": 155075,
+            "peak_internal": 27468,
+            "peak_external": 200995,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 45920,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "kind:raster": {
+            "internal": 0,
+            "external": 0
+          },
+          "kind:image": {
+            "internal": 0,
+            "external": 130235
+          },
+          "kind:audio": {
+            "internal": 0,
+            "external": 16392
+          },
+          "kind:temporary": {
+            "internal": 0,
+            "external": 0
+          },
+          "kind:metadata": {
+            "internal": 27468,
+            "external": 8448
+          },
+          "kind:frame": {
+            "internal": 0,
+            "external": 0
+          },
+          "surface": {
+            "frame": 0,
+            "scratch": 0,
+            "mailbox": 0,
+            "probe": 0,
+            "peak_total": 0
+          }
+        },
+        "jpeg": {
+          "heap": {
+            "sram_total": 320427,
+            "sram_free": 48235,
+            "sram_min": 44047,
+            "sram_largest": 19456,
+            "psram_total": 8358572,
+            "psram_free": 5905352,
+            "psram_min": 5880924,
+            "psram_largest": 4849664
+          },
+          "budget": {
+            "internal": 27468,
+            "external": 220240,
+            "peak_internal": 27468,
+            "peak_external": 236820,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 45920,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "kind:raster": {
+            "internal": 0,
+            "external": 0
+          },
+          "kind:image": {
+            "internal": 0,
+            "external": 195400
+          },
+          "kind:audio": {
+            "internal": 0,
+            "external": 16392
+          },
+          "kind:temporary": {
+            "internal": 0,
+            "external": 0
+          },
+          "kind:metadata": {
+            "internal": 27468,
+            "external": 8448
+          },
+          "kind:frame": {
+            "internal": 0,
+            "external": 0
+          },
+          "surface": {
+            "frame": 0,
+            "scratch": 0,
+            "mailbox": 0,
+            "probe": 0,
+            "peak_total": 0
+          }
+        },
+        "after_home": {
+          "heap": {
+            "sram_total": 320427,
+            "sram_free": 48235,
+            "sram_min": 31180,
+            "sram_largest": 19456,
+            "psram_total": 8358572,
+            "psram_free": 6078496,
+            "psram_min": 5257512,
+            "psram_largest": 4849664
+          },
+          "budget": {
+            "internal": 27468,
+            "external": 24840,
+            "peak_internal": 27468,
+            "peak_external": 236820,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 45920,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "kind:raster": {
+            "internal": 0,
+            "external": 0
+          },
+          "kind:image": {
+            "internal": 0,
+            "external": 0
+          },
+          "kind:audio": {
+            "internal": 0,
+            "external": 16392
+          },
+          "kind:temporary": {
+            "internal": 0,
+            "external": 0
+          },
+          "kind:metadata": {
+            "internal": 27468,
+            "external": 8448
+          },
+          "kind:frame": {
+            "internal": 0,
+            "external": 0
+          },
+          "surface": {
+            "frame": 0,
+            "scratch": 0,
+            "mailbox": 0,
+            "probe": 0,
+            "peak_total": 2176
+          }
+        },
+        "perf": {
+          "capacity": 256,
+          "raster": 0,
+          "present": 46,
+          "raster_overflow": 0,
+          "present_overflow": 0,
+          "list_min": 0,
+          "list_max": 0,
+          "pixels_min": 0,
+          "pixels_max": 0,
+          "surface_changed": 0,
+          "completed": 47,
+          "window_us": 1726263,
+          "display": 1
+        },
+        "present_intervals_us": [
+          23837,
+          23824,
+          47539,
+          23763,
+          23782,
+          47694,
+          23787,
+          47538,
+          24208,
+          23244,
+          23960,
+          47562,
+          23756,
+          48045,
+          23466,
+          23689,
+          47643,
+          23642,
+          23795,
+          47608,
+          23865,
+          47456,
+          23818,
+          47618,
+          23672,
+          24035,
+          47495,
+          23784,
+          23673,
+          23708,
+          47712,
+          24143,
+          47152,
+          23906,
+          47466,
+          24110,
+          23683,
+          47710,
+          23572,
+          47517,
+          23944,
+          23607,
+          47668,
+          23725,
+          47552,
+          23896
+        ],
+        "median_us": 23925.0,
+        "p95_us": 47710,
+        "window_fps": 27.226442320781942,
+        "partial_matches_full": true
+      },
+      {
+        "before": {
+          "heap": {
+            "sram_total": 320427,
+            "sram_free": 49427,
+            "sram_min": 49427,
+            "sram_largest": 19456,
+            "psram_total": 8358572,
+            "psram_free": 6835320,
+            "psram_min": 6835320,
+            "psram_largest": 5636096
+          },
+          "budget": {
+            "internal": 27468,
+            "external": 16516,
+            "peak_internal": 27468,
+            "peak_external": 236820,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 45920,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "kind:raster": {
+            "internal": 0,
+            "external": 0
+          },
+          "kind:image": {
+            "internal": 0,
+            "external": 0
+          },
+          "kind:audio": {
+            "internal": 0,
+            "external": 16392
+          },
+          "kind:temporary": {
+            "internal": 0,
+            "external": 0
+          },
+          "kind:metadata": {
+            "internal": 27468,
+            "external": 124
+          },
+          "kind:frame": {
+            "internal": 0,
+            "external": 0
+          },
+          "surface": {
+            "frame": 0,
+            "scratch": 0,
+            "mailbox": 0,
+            "probe": 0,
+            "peak_total": 2176
+          }
+        },
+        "png": {
+          "heap": {
+            "sram_total": 320427,
+            "sram_free": 48235,
+            "sram_min": 44099,
+            "sram_largest": 19456,
+            "psram_total": 8358572,
+            "psram_free": 5952188,
+            "psram_min": 5202928,
+            "psram_largest": 4194304
+          },
+          "budget": {
+            "internal": 27468,
+            "external": 155075,
+            "peak_internal": 27468,
+            "peak_external": 236820,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 45920,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "kind:raster": {
+            "internal": 0,
+            "external": 0
+          },
+          "kind:image": {
+            "internal": 0,
+            "external": 130235
+          },
+          "kind:audio": {
+            "internal": 0,
+            "external": 16392
+          },
+          "kind:temporary": {
+            "internal": 0,
+            "external": 0
+          },
+          "kind:metadata": {
+            "internal": 27468,
+            "external": 8448
+          },
+          "kind:frame": {
+            "internal": 0,
+            "external": 0
+          },
+          "surface": {
+            "frame": 0,
+            "scratch": 0,
+            "mailbox": 0,
+            "probe": 0,
+            "peak_total": 2176
+          }
+        },
+        "jpeg": {
+          "heap": {
+            "sram_total": 320427,
+            "sram_free": 48235,
+            "sram_min": 48071,
+            "sram_largest": 19456,
+            "psram_total": 8358572,
+            "psram_free": 5885440,
+            "psram_min": 5858388,
+            "psram_largest": 4194304
+          },
+          "budget": {
+            "internal": 27468,
+            "external": 220240,
+            "peak_internal": 27468,
+            "peak_external": 236820,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 45920,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "kind:raster": {
+            "internal": 0,
+            "external": 0
+          },
+          "kind:image": {
+            "internal": 0,
+            "external": 195400
+          },
+          "kind:audio": {
+            "internal": 0,
+            "external": 16392
+          },
+          "kind:temporary": {
+            "internal": 0,
+            "external": 0
+          },
+          "kind:metadata": {
+            "internal": 27468,
+            "external": 8448
+          },
+          "kind:frame": {
+            "internal": 0,
+            "external": 0
+          },
+          "surface": {
+            "frame": 0,
+            "scratch": 0,
+            "mailbox": 0,
+            "probe": 0,
+            "peak_total": 2176
+          }
+        },
+        "after_home": {
+          "heap": {
+            "sram_total": 320427,
+            "sram_free": 48235,
+            "sram_min": 31180,
+            "sram_largest": 19456,
+            "psram_total": 8358572,
+            "psram_free": 6081876,
+            "psram_min": 5202928,
+            "psram_largest": 4194304
+          },
+          "budget": {
+            "internal": 27468,
+            "external": 24840,
+            "peak_internal": 27468,
+            "peak_external": 236820,
+            "temporary_peak_internal": 0,
+            "temporary_peak_external": 45920,
+            "fixed": 2224,
+            "denied": 0,
+            "allocation_failures": 0
+          },
+          "kind:raster": {
+            "internal": 0,
+            "external": 0
+          },
+          "kind:image": {
+            "internal": 0,
+            "external": 0
+          },
+          "kind:audio": {
+            "internal": 0,
+            "external": 16392
+          },
+          "kind:temporary": {
+            "internal": 0,
+            "external": 0
+          },
+          "kind:metadata": {
+            "internal": 27468,
+            "external": 8448
+          },
+          "kind:frame": {
+            "internal": 0,
+            "external": 0
+          },
+          "surface": {
+            "frame": 0,
+            "scratch": 0,
+            "mailbox": 0,
+            "probe": 0,
+            "peak_total": 2176
+          }
+        },
+        "perf": {
+          "capacity": 256,
+          "raster": 0,
+          "present": 45,
+          "raster_overflow": 0,
+          "present_overflow": 0,
+          "list_min": 0,
+          "list_max": 0,
+          "pixels_min": 0,
+          "pixels_max": 0,
+          "surface_changed": 0,
+          "completed": 46,
+          "window_us": 1725149,
+          "display": 1
+        },
+        "present_intervals_us": [
+          47377,
+          47829,
+          23471,
+          24051,
+          47370,
+          23761,
+          23835,
+          47444,
+          24019,
+          47802,
+          23421,
+          47445,
+          23803,
+          47656,
+          23723,
+          47577,
+          23930,
+          47385,
+          23875,
+          23802,
+          47630,
+          24418,
+          23349,
+          47244,
+          23723,
+          47703,
+          23641,
+          23854,
+          47528,
+          23940,
+          47519,
+          23737,
+          47479,
+          23759,
+          23796,
+          23783,
+          47748,
+          23672,
+          47646,
+          23689,
+          47601,
+          23766,
+          23760,
+          47525,
+          23629
+        ],
+        "median_us": 23940,
+        "p95_us": 47748,
+        "window_fps": 26.664363483965733,
+        "partial_matches_full": true
+      }
+    ]
+  },
+  "public_https": {
+    "passed": true,
+    "url": "https://imgs.xkcd.com/comics/standards.png",
+    "log": "18135189\t\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV https://imgs.xkcd.com/comics/standards.png\u001b[0m\n18137091\t\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=0 received=24305 pixels=240x135 resident=129687 total_ms=1838\u001b[0m"
+  },
+  "device_grayscale_jpeg": {
+    "passed": true,
+    "expected": "ESP32-S3 ROM grayscale JPEG unsupported",
+    "log": "17924303\t\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31878/picture/gray.jpg\u001b[0m\n17925432\t\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE ERROR index=0 code=-3\u001b[0m"
+  },
+  "provenance": {
+    "platform": "pai-touch ESP32-S3 a4:cb:8f:d5:d4:f0",
+    "serial": "/dev/ttyACM3",
+    "before": "same /images workload; older integrated candidate a72f162-d",
+    "after": "same /images workload; integrated candidate 744d1b8-d",
+    "fps_metric": "LCD completions / measured window, not Guest submission FPS",
+    "limitations": [
+      "two short runs do not prove FPS improvement",
+      "native LVGL/libjpeg/ROM not fully sanitizer-instrumented",
+      "PXA budget peaks cumulative; heap minima scoped per MEMORY START/STOP",
+      "whole-system heap varies with network/system activity"
+    ]
+  },
+  "production_restored": {
+    "passed": true,
+    "production_home_restored": true,
+    "device": [
+      {
+        "kind": "OK",
+        "payload": "target=esp32s3;serial=a4:cb:8f:d5:d4:f0;version=host-tools-v0.1.0-15-g744d1b8-d;free_heap=6116419;pxa=ready;board=pai-touch;pxa_version=0.3.0;pxa_core=2.0;storage_total=9437184;storage_used=6795264;storage_free=2641920"
+      }
+    ],
+    "records": [
+      {
+        "kind": "LOG",
+        "payload": "18135259\tI (18135259) PxaBridge: Application foregrounded: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-browser"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18135259\tI (18135259) PxaBridge: Launch completion: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-browser intent=0 status=0"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18135261\tI (18135256) PxaHost: Heap[launch-ready]: SRAM used=272192 free=48235 total=320427 min_free=31180 largest=19456 exec_free=5768784 exec_largest=4194304; PSRAM used=2589648 free=5768924 total=8358572 min_free=5190556 largest=4194304"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18135261\tI (18135261) PxaHost: WAMR dynamic: peak=68162 current=40976 linear=131072 linear_peak=131072 artifact=0 events=128"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18135261\tI (18135261) PxaHost: Started verified Package 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-browser"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18135262\tI (18135262) PxaHost: UI lifecycle: component=65537 foreground=1 requested=1 display_interactive=1"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18135597\tE (18135597) adc_battery_estimation: Failed to read ADC: ESP_ERR_TIMEOUT"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18135598\tW (18135598) AdcBatteryMonitor: Battery capacity unavailable: ESP_ERR_TIMEOUT"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18136505\tW (18136505) HTTP_CLIENT: Connection timed out before data was ready!"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18136556\tW (18136556) HTTP_CLIENT: Connection timed out before data was ready!"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18136597\tE (18136597) adc_battery_estimation: Failed to read ADC: ESP_ERR_TIMEOUT"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18136608\tW (18136608) HTTP_CLIENT: Connection timed out before data was ready!"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18136660\tW (18136660) HTTP_CLIENT: Connection timed out before data was ready!"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18136712\tW (18136712) HTTP_CLIENT: Connection timed out before data was ready!"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18136951\tI (18136951) PxaNet: HTTP stream completed: status=0 bytes=24305"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18137091\t\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=0 received=24305 pixels=240x135 resident=129687 total_ms=1838\u001b[0m"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18271668\tI (18271668) PxaHost: Queueing launch request: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-browser"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18271714\tI (18271714) PxaHost: Processing launch request: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-browser"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18271886\tI (18271886) PxaHost: Audio: active=0 queued=0/0 peak_queued=0 submitted=0 rendered=0 tones=0/0 tone_drop=0 voice_exhaust=0 queue_full=0 stale=0 rejected=0 assets=0/0 asset_fail=0 storage=0 stack=0"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18271886\tI (18271886) PxaHost: Network: active=0 peak_active=1 started=8 completed=8 cancelled=0 timed_out=0 queue_full=0 bytes=49229 peak_response=24305 slot_storage=4064"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18271898\tI (18271896) PxaHost: Heap[launch-begin]: SRAM used=271000 free=49427 total=320427 min_free=31180 largest=19456 exec_free=6749720 exec_largest=5636096; PSRAM used=1608852 free=6749720 total=8358572 min_free=5190556 largest=5636096"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18272351\tI (18272351) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b30000 dbus=0x3c670000 request=659328 map=720896 alloc=720896 free_psram=5273424"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18272557\tI (18272554) PxaHost: Component memory: id=main status=0 sram_delta=752 free_sram=48235 largest_sram=19456 psram_delta=924028 free_psram=5775300 largest_psram=4194304 wamr_delta=40513 wamr_current=40929"
+      },
+      {
+        "kind": "DROP",
+        "payload": "dropped=2"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18272580\tI (18272580) PxaBridge: Application foregrounded: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-browser"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18272580\tI (18272580) PxaBridge: Launch completion: 17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171:pxa-browser intent=0 status=0"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18272580\tI (18272576) PxaHost: Heap[launch-ready]: SRAM used=272192 free=48235 total=320427 min_free=31180 largest=19456 exec_free=5780180 exec_largest=4194304; PSRAM used=2578392 free=5780180 total=8358572 min_free=5187524 largest=4194304"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18272581\tI (18272581) PxaHost: WAMR dynamic: peak=68019 current=40929 linear=131072 linear_peak=131072 artifact=0 events=128"
+      },
+      {
+        "kind": "LOG",
+        "payload": "18273836\tI (18273836) AdcBatteryMonitor: Battery: channel=1 raw=3398 adc=2822mV battery=4261mV level=100% charging=1"
+      }
+    ]
+  }
+}

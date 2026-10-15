@@ -1,0 +1,4 @@
+{"repeat": 0, "scene": "scroll", "window_fps": 27.49673256911918, "active_fps": 30.69822444139242, "interval": {"count": 46, "mean_us": 32575.17391304348, "median_us": 23950.5, "p95_us": 47646, "max_us": 47774}}
+{"repeat": 1, "scene": "scroll", "window_fps": 25.777695497456797, "active_fps": 28.69271965611442, "interval": {"count": 43, "mean_us": 34852.04651162791, "median_us": 24002, "p95_us": 47772, "max_us": 71397}}
+{"repeat": 2, "scene": "scroll", "window_fps": 26.519617310391943, "active_fps": 30.032795813027825, "interval": {"count": 45, "mean_us": 33296.933333333334, "median_us": 24021, "p95_us": 47763, "max_us": 48244}}
+browser device benchmark PASS

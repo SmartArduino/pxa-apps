@@ -1,0 +1,15 @@
+{
+  "device": "pai-touch",
+  "port": "/dev/ttyACM3",
+  "functional_check": "Reload on home returns to home; simulator matrix also exercises loading/stop state",
+  "packages": {
+    "sim": {
+      "sha256": "0bf44728d40d066aa761c6bb287892fe259893e26d8eea58cafcdd7d85730452",
+      "bytes": 376593
+    },
+    "esp": {
+      "sha256": "fadc7bc5bf3ff22f821b45d239f0b4fc86532af363aa98ab4152c75dba62287f",
+      "bytes": 609037
+    }
+  }
+}

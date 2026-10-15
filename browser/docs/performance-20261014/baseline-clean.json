@@ -1,0 +1,1649 @@
+{
+  "package_sha256": "a657de66c41071fba1b5fa8becfc5ea49ac18be4acfe22e459c99bd67adbad19",
+  "geometry": "pai-touch 296x240, density=1, font=15dp",
+  "scroll": "1 device-timed (150,170)->(150,80) swipes, 1600ms/96 steps each",
+  "scope": "all completed LCD transfers, including system UI; not optical refresh",
+  "runs": [
+    {
+      "repeat": 0,
+      "scene": "scroll",
+      "launch_before": {
+        "heap": {
+          "sram_total": 320427,
+          "sram_free": 55883,
+          "sram_min": 55883,
+          "sram_largest": 19456,
+          "psram_total": 8358572,
+          "psram_free": 6657768,
+          "psram_min": 6657768,
+          "psram_largest": 4980736
+        },
+        "budget": {
+          "internal": 27468,
+          "external": 16516,
+          "peak_internal": 27468,
+          "peak_external": 16625,
+          "temporary_peak_internal": 0,
+          "temporary_peak_external": 0,
+          "fixed": 2224,
+          "denied": 0,
+          "allocation_failures": 0
+        },
+        "kind:raster": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:image": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:audio": {
+          "internal": 0,
+          "external": 16392
+        },
+        "kind:temporary": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:metadata": {
+          "internal": 27468,
+          "external": 124
+        },
+        "kind:frame": {
+          "internal": 0,
+          "external": 0
+        },
+        "surface": {
+          "frame": 0,
+          "scratch": 0,
+          "mailbox": 0,
+          "probe": 0,
+          "peak_total": 2176
+        }
+      },
+      "startup": {
+        "heap": {
+          "sram_total": 320427,
+          "sram_free": 54727,
+          "sram_min": 50591,
+          "sram_largest": 19456,
+          "psram_total": 8358572,
+          "psram_free": 5951868,
+          "psram_min": 5363376,
+          "psram_largest": 4325376
+        },
+        "budget": {
+          "internal": 27468,
+          "external": 16625,
+          "peak_internal": 27468,
+          "peak_external": 16625,
+          "temporary_peak_internal": 0,
+          "temporary_peak_external": 0,
+          "fixed": 2224,
+          "denied": 0,
+          "allocation_failures": 0
+        },
+        "kind:raster": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:image": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:audio": {
+          "internal": 0,
+          "external": 16392
+        },
+        "kind:temporary": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:metadata": {
+          "internal": 27468,
+          "external": 233
+        },
+        "kind:frame": {
+          "internal": 0,
+          "external": 0
+        },
+        "surface": {
+          "frame": 0,
+          "scratch": 0,
+          "mailbox": 0,
+          "probe": 0,
+          "peak_total": 2176
+        }
+      },
+      "before": {
+        "heap": {
+          "sram_total": 320427,
+          "sram_free": 54727,
+          "sram_min": 54727,
+          "sram_largest": 19456,
+          "psram_total": 8358572,
+          "psram_free": 5951932,
+          "psram_min": 5951932,
+          "psram_largest": 4325376
+        },
+        "budget": {
+          "internal": 27468,
+          "external": 16625,
+          "peak_internal": 27468,
+          "peak_external": 16625,
+          "temporary_peak_internal": 0,
+          "temporary_peak_external": 0,
+          "fixed": 2224,
+          "denied": 0,
+          "allocation_failures": 0
+        },
+        "kind:raster": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:image": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:audio": {
+          "internal": 0,
+          "external": 16392
+        },
+        "kind:temporary": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:metadata": {
+          "internal": 27468,
+          "external": 233
+        },
+        "kind:frame": {
+          "internal": 0,
+          "external": 0
+        },
+        "surface": {
+          "frame": 0,
+          "scratch": 0,
+          "mailbox": 0,
+          "probe": 0,
+          "peak_total": 2176
+        }
+      },
+      "memory": {
+        "heap": {
+          "sram_total": 320427,
+          "sram_free": 54727,
+          "sram_min": 54639,
+          "sram_largest": 19456,
+          "psram_total": 8358572,
+          "psram_free": 5948696,
+          "psram_min": 5940320,
+          "psram_largest": 4325376
+        },
+        "budget": {
+          "internal": 27468,
+          "external": 16625,
+          "peak_internal": 27468,
+          "peak_external": 16625,
+          "temporary_peak_internal": 0,
+          "temporary_peak_external": 0,
+          "fixed": 2224,
+          "denied": 0,
+          "allocation_failures": 0
+        },
+        "kind:raster": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:image": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:audio": {
+          "internal": 0,
+          "external": 16392
+        },
+        "kind:temporary": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:metadata": {
+          "internal": 27468,
+          "external": 233
+        },
+        "kind:frame": {
+          "internal": 0,
+          "external": 0
+        },
+        "surface": {
+          "frame": 0,
+          "scratch": 0,
+          "mailbox": 0,
+          "probe": 2176,
+          "peak_total": 2176
+        }
+      },
+      "perf": {
+        "capacity": 256,
+        "raster": 0,
+        "present": 50,
+        "raster_overflow": 0,
+        "present_overflow": 0,
+        "list_min": 0,
+        "list_max": 0,
+        "pixels_min": 0,
+        "pixels_max": 0,
+        "surface_changed": 0,
+        "completed": 51,
+        "window_us": 2065738,
+        "display": 1
+      },
+      "present_us": [
+        23671,
+        47624,
+        23775,
+        47538,
+        23885,
+        47465,
+        24117,
+        47266,
+        24043,
+        47389,
+        23969,
+        47396,
+        24005,
+        47379,
+        23976,
+        47680,
+        23677,
+        47461,
+        24322,
+        47116,
+        23919,
+        47687,
+        23597,
+        47686,
+        47694,
+        23607,
+        47843,
+        23535,
+        47811,
+        23673,
+        24089,
+        47329,
+        24164,
+        47230,
+        23943,
+        47389,
+        47714,
+        23954,
+        47394,
+        23890,
+        47515,
+        23941,
+        47434,
+        24053,
+        47303,
+        24048,
+        47581,
+        47440,
+        24266,
+        47171
+      ],
+      "interval": {
+        "count": 50,
+        "mean_us": 36173.08,
+        "median_us": 47143.5,
+        "p95_us": 47714,
+        "max_us": 47843
+      },
+      "window_fps": 24.688513257731618,
+      "active_fps": 27.644867398629035,
+      "logs": [
+        {
+          "seconds": 3.966747703962028,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 3.9921680819243193,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 3.9924328250344843,
+          "kind": "LOG",
+          "payload": "2574255\tI (2574255) PxaHost: pointer queued id=0 phase=0 x=150 y=170"
+        },
+        {
+          "seconds": 3.992510834010318,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 3.9925741739571095,
+          "kind": "LOG",
+          "payload": "2574256\tI (2574256) PxaHost: pointer delivered id=0 phase=0 x=150 y=170"
+        },
+        {
+          "seconds": 5.9261276490287855,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 5.947796514024958,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 5.948150145937689,
+          "kind": "LOG",
+          "payload": "2576212\tI (2576212) PxaHost: pointer queued id=0 phase=2 x=150 y=80"
+        },
+        {
+          "seconds": 5.94827701698523,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 5.948397306026891,
+          "kind": "LOG",
+          "payload": "2576221\tI (2576221) PxaHost: pointer delivered id=0 phase=2 x=150 y=80"
+        },
+        {
+          "seconds": 6.032995496992953,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 6.037155544967391,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 6.037700320943259,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 6.038471456966363,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 6.0389903240138665,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 6.039141169982031,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 6.039300713920966,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 6.039478722028434,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 6.039697899017483,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 6.0398862769361585,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 6.040063723921776,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 6.041899143951014,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 6.043001199024729,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 6.0444724559783936,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 6.045462958980352,
+          "kind": "RAW",
+          "payload": "\n"
+        }
+      ],
+      "post_probe": {
+        "heap": {
+          "sram_total": 320427,
+          "sram_free": 54691,
+          "sram_min": 31428,
+          "sram_largest": 19456,
+          "psram_total": 8358572,
+          "psram_free": 5950904,
+          "psram_min": 5359200,
+          "psram_largest": 4325376
+        },
+        "budget": {
+          "internal": 27468,
+          "external": 16625,
+          "peak_internal": 27468,
+          "peak_external": 16625,
+          "temporary_peak_internal": 0,
+          "temporary_peak_external": 0,
+          "fixed": 2224,
+          "denied": 0,
+          "allocation_failures": 0
+        },
+        "kind:raster": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:image": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:audio": {
+          "internal": 0,
+          "external": 16392
+        },
+        "kind:temporary": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:metadata": {
+          "internal": 27468,
+          "external": 233
+        },
+        "kind:frame": {
+          "internal": 0,
+          "external": 0
+        },
+        "surface": {
+          "frame": 0,
+          "scratch": 0,
+          "mailbox": 0,
+          "probe": 0,
+          "peak_total": 2176
+        }
+      },
+      "exit_logs": [
+        {
+          "seconds": 6.85894055000972,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 6.885462941019796,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 6.885869815014303,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 6.885952743003145,
+          "kind": "LOG",
+          "payload": "2577147\tI (2577147) PxaHost: UI lifecycle: component=65537 foreground=0 requested=0 display_interactive=1"
+        },
+        {
+          "seconds": 6.886091916938312,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 6.886182789923623,
+          "kind": "LOG",
+          "payload": "2577148\tI (2577148) PxaHost: UI peaks: dynamic=5872 current=5832 assets=0 current_assets=0 largest_decoded=0 asset_count=0 referenced=0 hits=0 misses=0 evictions=0 nodes=4 canvases=1 surfaces=1"
+        },
+        {
+          "seconds": 6.89154665695969,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 6.891836147988215,
+          "kind": "LOG",
+          "payload": "2577148\tI (2577148) PxaHost: Audio: active=0 queued=0/0 peak_queued=0 submitted=0 rendered=0 tones=0/0 tone_drop=0 voice_exhaust=0 queue_full=0 stale=0 rejected=0 assets=0/0 asset_fail=0 storage=0 stack=0"
+        },
+        {
+          "seconds": 6.891934535000473,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 6.892025087028742,
+          "kind": "LOG",
+          "payload": "2577149\tI (2577149) PxaHost: Network: active=0 peak_active=1 started=160 completed=92 cancelled=68 timed_out=0 queue_full=0 bytes=56497 peak_response=650 slot_storage=4064"
+        }
+      ]
+    },
+    {
+      "repeat": 1,
+      "scene": "scroll",
+      "launch_before": {
+        "heap": {
+          "sram_total": 320427,
+          "sram_free": 55919,
+          "sram_min": 55919,
+          "sram_largest": 19456,
+          "psram_total": 8358572,
+          "psram_free": 6767932,
+          "psram_min": 6767932,
+          "psram_largest": 4980736
+        },
+        "budget": {
+          "internal": 27468,
+          "external": 16516,
+          "peak_internal": 27468,
+          "peak_external": 16625,
+          "temporary_peak_internal": 0,
+          "temporary_peak_external": 0,
+          "fixed": 2224,
+          "denied": 0,
+          "allocation_failures": 0
+        },
+        "kind:raster": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:image": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:audio": {
+          "internal": 0,
+          "external": 16392
+        },
+        "kind:temporary": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:metadata": {
+          "internal": 27468,
+          "external": 124
+        },
+        "kind:frame": {
+          "internal": 0,
+          "external": 0
+        },
+        "surface": {
+          "frame": 0,
+          "scratch": 0,
+          "mailbox": 0,
+          "probe": 0,
+          "peak_total": 2176
+        }
+      },
+      "startup": {
+        "heap": {
+          "sram_total": 320427,
+          "sram_free": 54691,
+          "sram_min": 50591,
+          "sram_largest": 19456,
+          "psram_total": 8358572,
+          "psram_free": 5951656,
+          "psram_min": 5358968,
+          "psram_largest": 4325376
+        },
+        "budget": {
+          "internal": 27468,
+          "external": 16625,
+          "peak_internal": 27468,
+          "peak_external": 16625,
+          "temporary_peak_internal": 0,
+          "temporary_peak_external": 0,
+          "fixed": 2224,
+          "denied": 0,
+          "allocation_failures": 0
+        },
+        "kind:raster": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:image": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:audio": {
+          "internal": 0,
+          "external": 16392
+        },
+        "kind:temporary": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:metadata": {
+          "internal": 27468,
+          "external": 233
+        },
+        "kind:frame": {
+          "internal": 0,
+          "external": 0
+        },
+        "surface": {
+          "frame": 0,
+          "scratch": 0,
+          "mailbox": 0,
+          "probe": 0,
+          "peak_total": 2176
+        }
+      },
+      "before": {
+        "heap": {
+          "sram_total": 320427,
+          "sram_free": 54727,
+          "sram_min": 54727,
+          "sram_largest": 19456,
+          "psram_total": 8358572,
+          "psram_free": 5951656,
+          "psram_min": 5951656,
+          "psram_largest": 4325376
+        },
+        "budget": {
+          "internal": 27468,
+          "external": 16625,
+          "peak_internal": 27468,
+          "peak_external": 16625,
+          "temporary_peak_internal": 0,
+          "temporary_peak_external": 0,
+          "fixed": 2224,
+          "denied": 0,
+          "allocation_failures": 0
+        },
+        "kind:raster": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:image": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:audio": {
+          "internal": 0,
+          "external": 16392
+        },
+        "kind:temporary": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:metadata": {
+          "internal": 27468,
+          "external": 233
+        },
+        "kind:frame": {
+          "internal": 0,
+          "external": 0
+        },
+        "surface": {
+          "frame": 0,
+          "scratch": 0,
+          "mailbox": 0,
+          "probe": 0,
+          "peak_total": 2176
+        }
+      },
+      "memory": {
+        "heap": {
+          "sram_total": 320427,
+          "sram_free": 54727,
+          "sram_min": 54563,
+          "sram_largest": 19456,
+          "psram_total": 8358572,
+          "psram_free": 5948420,
+          "psram_min": 5939976,
+          "psram_largest": 4325376
+        },
+        "budget": {
+          "internal": 27468,
+          "external": 16625,
+          "peak_internal": 27468,
+          "peak_external": 16625,
+          "temporary_peak_internal": 0,
+          "temporary_peak_external": 0,
+          "fixed": 2224,
+          "denied": 0,
+          "allocation_failures": 0
+        },
+        "kind:raster": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:image": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:audio": {
+          "internal": 0,
+          "external": 16392
+        },
+        "kind:temporary": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:metadata": {
+          "internal": 27468,
+          "external": 233
+        },
+        "kind:frame": {
+          "internal": 0,
+          "external": 0
+        },
+        "surface": {
+          "frame": 0,
+          "scratch": 0,
+          "mailbox": 0,
+          "probe": 2176,
+          "peak_total": 2176
+        }
+      },
+      "perf": {
+        "capacity": 256,
+        "raster": 0,
+        "present": 60,
+        "raster_overflow": 0,
+        "present_overflow": 0,
+        "list_min": 0,
+        "list_max": 0,
+        "pixels_min": 0,
+        "pixels_max": 0,
+        "surface_changed": 0,
+        "completed": 61,
+        "window_us": 2426935,
+        "display": 1
+      },
+      "present_us": [
+        23797,
+        47741,
+        23897,
+        47373,
+        23733,
+        24021,
+        47389,
+        23933,
+        47659,
+        23682,
+        47721,
+        24021,
+        47453,
+        47339,
+        23878,
+        47704,
+        23649,
+        47502,
+        24004,
+        47461,
+        23853,
+        47644,
+        23748,
+        47577,
+        23826,
+        47588,
+        47468,
+        23879,
+        47792,
+        23569,
+        47603,
+        23811,
+        47691,
+        23668,
+        47693,
+        23707,
+        47481,
+        23919,
+        47586,
+        23741,
+        47700,
+        47414,
+        24039,
+        47345,
+        23926,
+        47630,
+        23746,
+        47732,
+        23713,
+        47382,
+        23930,
+        47545,
+        23800,
+        47854,
+        23639,
+        47586,
+        23695,
+        47588,
+        23831,
+        47601
+      ],
+      "interval": {
+        "count": 60,
+        "mean_us": 36091.61666666667,
+        "median_us": 47342.0,
+        "p95_us": 47732,
+        "max_us": 47854
+      },
+      "window_fps": 25.13458333247491,
+      "active_fps": 27.707265352942073,
+      "logs": [
+        {
+          "seconds": 12.292652415926568,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 12.318194671999663,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 12.318557661958039,
+          "kind": "LOG",
+          "payload": "2582581\tI (2582581) PxaHost: pointer queued id=0 phase=0 x=150 y=170"
+        },
+        {
+          "seconds": 12.318676208029501,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 12.318731894018129,
+          "kind": "LOG",
+          "payload": "2582582\tI (2582582) PxaHost: pointer delivered id=0 phase=0 x=150 y=170"
+        },
+        {
+          "seconds": 14.615172736928798,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 14.625919276033528,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 14.626088407938369,
+          "kind": "LOG",
+          "payload": "2584901\tI (2584901) PxaHost: pointer queued id=0 phase=2 x=150 y=80"
+        },
+        {
+          "seconds": 14.626165814930573,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 14.626240427023731,
+          "kind": "LOG",
+          "payload": "2584902\tI (2584902) PxaHost: pointer delivered id=0 phase=2 x=150 y=80"
+        },
+        {
+          "seconds": 14.719768482958898,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 14.722782362019643,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 14.723791791009717,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 14.724125274922699,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 14.724249831982888,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 14.724537197966129,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 14.724708453984931,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 14.724866995005868,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 14.725027821026742,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 14.725661666016094,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 14.725801471970044,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 14.72702049894724,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 14.727937010931782,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 14.729043704923242,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 14.729927003965713,
+          "kind": "RAW",
+          "payload": "\n"
+        }
+      ],
+      "post_probe": {
+        "heap": {
+          "sram_total": 320427,
+          "sram_free": 54727,
+          "sram_min": 31428,
+          "sram_largest": 19456,
+          "psram_total": 8358572,
+          "psram_free": 5950628,
+          "psram_min": 5358968,
+          "psram_largest": 4325376
+        },
+        "budget": {
+          "internal": 27468,
+          "external": 16625,
+          "peak_internal": 27468,
+          "peak_external": 16625,
+          "temporary_peak_internal": 0,
+          "temporary_peak_external": 0,
+          "fixed": 2224,
+          "denied": 0,
+          "allocation_failures": 0
+        },
+        "kind:raster": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:image": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:audio": {
+          "internal": 0,
+          "external": 16392
+        },
+        "kind:temporary": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:metadata": {
+          "internal": 27468,
+          "external": 233
+        },
+        "kind:frame": {
+          "internal": 0,
+          "external": 0
+        },
+        "surface": {
+          "frame": 0,
+          "scratch": 0,
+          "mailbox": 0,
+          "probe": 0,
+          "peak_total": 2176
+        }
+      },
+      "exit_logs": [
+        {
+          "seconds": 15.51283662498463,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 15.538987878942862,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 15.539278480922803,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 15.539359214017168,
+          "kind": "LOG",
+          "payload": "2585801\tI (2585801) PxaHost: UI lifecycle: component=65537 foreground=0 requested=0 display_interactive=1"
+        },
+        {
+          "seconds": 15.539479322964326,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 15.539762009982951,
+          "kind": "LOG",
+          "payload": "2585802\tI (2585802) PxaHost: UI peaks: dynamic=5872 current=5832 assets=0 current_assets=0 largest_decoded=0 asset_count=0 referenced=0 hits=0 misses=0 evictions=0 nodes=4 canvases=1 surfaces=1"
+        },
+        {
+          "seconds": 15.545135775930248,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 15.545366082922556,
+          "kind": "LOG",
+          "payload": "2585802\tI (2585802) PxaHost: Audio: active=0 queued=0/0 peak_queued=0 submitted=0 rendered=0 tones=0/0 tone_drop=0 voice_exhaust=0 queue_full=0 stale=0 rejected=0 assets=0/0 asset_fail=0 storage=0 stack=0"
+        },
+        {
+          "seconds": 15.545462456997484,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 15.545546937035397,
+          "kind": "LOG",
+          "payload": "2585802\tI (2585802) PxaHost: Network: active=0 peak_active=1 started=162 completed=93 cancelled=69 timed_out=0 queue_full=0 bytes=57146 peak_response=650 slot_storage=4064"
+        }
+      ]
+    },
+    {
+      "repeat": 2,
+      "scene": "scroll",
+      "launch_before": {
+        "heap": {
+          "sram_total": 320427,
+          "sram_free": 55919,
+          "sram_min": 55919,
+          "sram_largest": 19456,
+          "psram_total": 8358572,
+          "psram_free": 6767816,
+          "psram_min": 6767816,
+          "psram_largest": 4980736
+        },
+        "budget": {
+          "internal": 27468,
+          "external": 16516,
+          "peak_internal": 27468,
+          "peak_external": 16625,
+          "temporary_peak_internal": 0,
+          "temporary_peak_external": 0,
+          "fixed": 2224,
+          "denied": 0,
+          "allocation_failures": 0
+        },
+        "kind:raster": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:image": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:audio": {
+          "internal": 0,
+          "external": 16392
+        },
+        "kind:temporary": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:metadata": {
+          "internal": 27468,
+          "external": 124
+        },
+        "kind:frame": {
+          "internal": 0,
+          "external": 0
+        },
+        "surface": {
+          "frame": 0,
+          "scratch": 0,
+          "mailbox": 0,
+          "probe": 0,
+          "peak_total": 2176
+        }
+      },
+      "startup": {
+        "heap": {
+          "sram_total": 320427,
+          "sram_free": 54727,
+          "sram_min": 50591,
+          "sram_largest": 19456,
+          "psram_total": 8358572,
+          "psram_free": 5950496,
+          "psram_min": 5363168,
+          "psram_largest": 4325376
+        },
+        "budget": {
+          "internal": 27468,
+          "external": 16625,
+          "peak_internal": 27468,
+          "peak_external": 16625,
+          "temporary_peak_internal": 0,
+          "temporary_peak_external": 0,
+          "fixed": 2224,
+          "denied": 0,
+          "allocation_failures": 0
+        },
+        "kind:raster": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:image": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:audio": {
+          "internal": 0,
+          "external": 16392
+        },
+        "kind:temporary": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:metadata": {
+          "internal": 27468,
+          "external": 233
+        },
+        "kind:frame": {
+          "internal": 0,
+          "external": 0
+        },
+        "surface": {
+          "frame": 0,
+          "scratch": 0,
+          "mailbox": 0,
+          "probe": 0,
+          "peak_total": 2176
+        }
+      },
+      "before": {
+        "heap": {
+          "sram_total": 320427,
+          "sram_free": 54727,
+          "sram_min": 54727,
+          "sram_largest": 19456,
+          "psram_total": 8358572,
+          "psram_free": 5950496,
+          "psram_min": 5950496,
+          "psram_largest": 4325376
+        },
+        "budget": {
+          "internal": 27468,
+          "external": 16625,
+          "peak_internal": 27468,
+          "peak_external": 16625,
+          "temporary_peak_internal": 0,
+          "temporary_peak_external": 0,
+          "fixed": 2224,
+          "denied": 0,
+          "allocation_failures": 0
+        },
+        "kind:raster": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:image": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:audio": {
+          "internal": 0,
+          "external": 16392
+        },
+        "kind:temporary": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:metadata": {
+          "internal": 27468,
+          "external": 233
+        },
+        "kind:frame": {
+          "internal": 0,
+          "external": 0
+        },
+        "surface": {
+          "frame": 0,
+          "scratch": 0,
+          "mailbox": 0,
+          "probe": 0,
+          "peak_total": 2176
+        }
+      },
+      "memory": {
+        "heap": {
+          "sram_total": 320427,
+          "sram_free": 54727,
+          "sram_min": 54639,
+          "sram_largest": 19456,
+          "psram_total": 8358572,
+          "psram_free": 5948316,
+          "psram_min": 5938528,
+          "psram_largest": 4325376
+        },
+        "budget": {
+          "internal": 27468,
+          "external": 16625,
+          "peak_internal": 27468,
+          "peak_external": 16625,
+          "temporary_peak_internal": 0,
+          "temporary_peak_external": 0,
+          "fixed": 2224,
+          "denied": 0,
+          "allocation_failures": 0
+        },
+        "kind:raster": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:image": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:audio": {
+          "internal": 0,
+          "external": 16392
+        },
+        "kind:temporary": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:metadata": {
+          "internal": 27468,
+          "external": 233
+        },
+        "kind:frame": {
+          "internal": 0,
+          "external": 0
+        },
+        "surface": {
+          "frame": 0,
+          "scratch": 0,
+          "mailbox": 0,
+          "probe": 2176,
+          "peak_total": 2176
+        }
+      },
+      "perf": {
+        "capacity": 256,
+        "raster": 0,
+        "present": 62,
+        "raster_overflow": 0,
+        "present_overflow": 0,
+        "list_min": 0,
+        "list_max": 0,
+        "pixels_min": 0,
+        "pixels_max": 0,
+        "surface_changed": 0,
+        "completed": 63,
+        "window_us": 2494681,
+        "display": 1
+      },
+      "present_us": [
+        24091,
+        47429,
+        47532,
+        23787,
+        47567,
+        23720,
+        47771,
+        23579,
+        24140,
+        47348,
+        23965,
+        47441,
+        23730,
+        47496,
+        47770,
+        23707,
+        47579,
+        23944,
+        47478,
+        23701,
+        47657,
+        23958,
+        47450,
+        23942,
+        47478,
+        23843,
+        47800,
+        23553,
+        47620,
+        23950,
+        47531,
+        47571,
+        23830,
+        47489,
+        23958,
+        47504,
+        23754,
+        24238,
+        47208,
+        23816,
+        47492,
+        24106,
+        47405,
+        23878,
+        47518,
+        23951,
+        47343,
+        24019,
+        47474,
+        23893,
+        47398,
+        47996,
+        23702,
+        47338,
+        23985,
+        47460,
+        24030,
+        47596,
+        47464,
+        23917,
+        47405,
+        23779
+      ],
+      "interval": {
+        "count": 62,
+        "mean_us": 36081.83870967742,
+        "median_us": 47273.0,
+        "p95_us": 47770,
+        "max_us": 47996
+      },
+      "window_fps": 25.253729835598218,
+      "active_fps": 27.714773851915492,
+      "logs": [
+        {
+          "seconds": 20.77305231592618,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 20.799135157023557,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 20.799342260928825,
+          "kind": "LOG",
+          "payload": "2591061\tI (2591061) PxaHost: pointer queued id=0 phase=0 x=150 y=170"
+        },
+        {
+          "seconds": 20.79942716192454,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 20.79948199703358,
+          "kind": "LOG",
+          "payload": "2591062\tI (2591062) PxaHost: pointer delivered id=0 phase=0 x=150 y=170"
+        },
+        {
+          "seconds": 21.875379620003514,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 21.875799207016826,
+          "kind": "LOG",
+          "payload": "2592136\tI (2592136) AdcBatteryMonitor: Battery: channel=1 raw=3405 adc=2827mV battery=4269mV level=100% charging=1"
+        },
+        {
+          "seconds": 22.87852117593866,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 22.878823379985988,
+          "kind": "LOG",
+          "payload": "2593148\tE (2593148) adc_battery_estimation: Failed to read ADC: ESP_ERR_TIMEOUT"
+        },
+        {
+          "seconds": 22.879446053993888,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 22.879701058962382,
+          "kind": "LOG",
+          "payload": "2593148\tW (2593148) AdcBatteryMonitor: Battery capacity unavailable: ESP_ERR_TIMEOUT"
+        },
+        {
+          "seconds": 23.162277644965798,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 23.183803112013265,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 23.1840044449782,
+          "kind": "LOG",
+          "payload": "2593448\tI (2593448) PxaHost: pointer queued id=0 phase=2 x=150 y=80"
+        },
+        {
+          "seconds": 23.184083424974233,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 23.184161333017983,
+          "kind": "LOG",
+          "payload": "2593449\tI (2593449) PxaHost: pointer delivered id=0 phase=2 x=150 y=80"
+        },
+        {
+          "seconds": 23.268259463948198,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 23.27221256797202,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 23.27270785998553,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 23.273134029936045,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 23.273448837921023,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 23.27373846899718,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 23.27442681696266,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 23.274851294001564,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 23.27500867296476,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 23.275122519931756,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 23.27523684699554,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 23.27749202400446,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 23.279057650011964,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 23.280559694976546,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 23.281778762000613,
+          "kind": "RAW",
+          "payload": "\n"
+        }
+      ],
+      "post_probe": {
+        "heap": {
+          "sram_total": 320427,
+          "sram_free": 54727,
+          "sram_min": 31428,
+          "sram_largest": 19456,
+          "psram_total": 8358572,
+          "psram_free": 5950524,
+          "psram_min": 5358968,
+          "psram_largest": 4325376
+        },
+        "budget": {
+          "internal": 27468,
+          "external": 16625,
+          "peak_internal": 27468,
+          "peak_external": 16625,
+          "temporary_peak_internal": 0,
+          "temporary_peak_external": 0,
+          "fixed": 2224,
+          "denied": 0,
+          "allocation_failures": 0
+        },
+        "kind:raster": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:image": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:audio": {
+          "internal": 0,
+          "external": 16392
+        },
+        "kind:temporary": {
+          "internal": 0,
+          "external": 0
+        },
+        "kind:metadata": {
+          "internal": 27468,
+          "external": 233
+        },
+        "kind:frame": {
+          "internal": 0,
+          "external": 0
+        },
+        "surface": {
+          "frame": 0,
+          "scratch": 0,
+          "mailbox": 0,
+          "probe": 0,
+          "peak_total": 2176
+        }
+      },
+      "exit_logs": [
+        {
+          "seconds": 24.07545567699708,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 24.102002197992988,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 24.102384865982458,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 24.102512368001044,
+          "kind": "LOG",
+          "payload": "2594365\tI (2594365) PxaHost: UI lifecycle: component=65537 foreground=0 requested=0 display_interactive=1"
+        },
+        {
+          "seconds": 24.102739759953693,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 24.102883202955127,
+          "kind": "LOG",
+          "payload": "2594367\tI (2594367) PxaHost: UI peaks: dynamic=5872 current=5832 assets=0 current_assets=0 largest_decoded=0 asset_count=0 referenced=0 hits=0 misses=0 evictions=0 nodes=4 canvases=1 surfaces=1"
+        },
+        {
+          "seconds": 24.103003881988116,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 24.103235041955486,
+          "kind": "LOG",
+          "payload": "2594367\tI (2594367) PxaHost: Audio: active=0 queued=0/0 peak_queued=0 submitted=0 rendered=0 tones=0/0 tone_drop=0 voice_exhaust=0 queue_full=0 stale=0 rejected=0 assets=0/0 asset_fail=0 storage=0 stack=0"
+        },
+        {
+          "seconds": 24.10337130096741,
+          "kind": "RAW",
+          "payload": "\n"
+        },
+        {
+          "seconds": 24.103494604933076,
+          "kind": "LOG",
+          "payload": "2594367\tI (2594367) PxaHost: Network: active=0 peak_active=1 started=164 completed=94 cancelled=70 timed_out=0 queue_full=0 bytes=57795 peak_response=650 slot_storage=4064"
+        }
+      ]
+    }
+  ],
+  "passed": true,
+  "hello": "protocol=1;mode=normal;capabilities=info,memory,logcat,packages,package-deploy,package-run,package-stop,fs,reboot,doctor,input-v2,screenshot-rgb565,screenshot-jpeg,poweroff,perf-raster,heap-local,ime;max_chunk=1024;fs_offset=1;fs_sha256=1;target=esp32s3;serial=a4:cb:8f:d5:d4:f0;version=host-tools-v0.1.0-10-g69ad37c-d"
+}

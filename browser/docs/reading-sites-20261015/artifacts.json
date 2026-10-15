@@ -1,0 +1,30 @@
+{
+  "release-reading-esp": {
+    "pxa-browser.pxa": {
+      "bytes": 608172,
+      "sha256": "f9847ae66a03b110fb3ea5d9f87f36d0913b5f1a3bf9c124f84d3b9146ce84f8"
+    },
+    "pxa-browser/artifacts/main.wasm": {
+      "bytes": 220813,
+      "sha256": "3c6bfa7e750d3f52b3d887834f5b54685f7d254380a406fbe3dd1eed0d146c66"
+    },
+    "pxa-browser/artifacts/main.esp32-s3.aot": {
+      "bytes": 608504,
+      "sha256": "8b21058481dac0e0862be898e6088e92a72b2504d903c30526e4b021151da375"
+    }
+  },
+  "release-reading-sim": {
+    "pxa-browser.pxa": {
+      "bytes": 376055,
+      "sha256": "f46ad25e8139900aadf7ed68064f64636b7f45335e1807349cf58b8dd0a3a20d"
+    },
+    "pxa-browser/artifacts/main.wasm": {
+      "bytes": 220813,
+      "sha256": "3c6bfa7e750d3f52b3d887834f5b54685f7d254380a406fbe3dd1eed0d146c66"
+    },
+    "pxa-browser/artifacts/main.linux-x86_64.aot": {
+      "bytes": 356736,
+      "sha256": "4479b0be3083f2bc3863e9acf1d65f904ec2f8940552dffe3a774f999aea758e"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+701101	I (701101) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b30000 dbus=0x3c610000 request=706844 map=720896 alloc=720896 free_psram=5215436
+701359	I (701359) PxaHost: WAMR dynamic: peak=72712 current=42022 linear=131072 linear_peak=131072 artifact=0 events=64
+891141	I (891141) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b30000 dbus=0x3c610000 request=706844 map=720896 alloc=720896 free_psram=5216532
+891386	I (891386) PxaHost: WAMR dynamic: peak=72712 current=42022 linear=131072 linear_peak=131072 artifact=0 events=128
+905957	I (905957) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b30000 dbus=0x3c610000 request=706844 map=720896 alloc=720896 free_psram=5215896
+906206	I (906206) PxaHost: WAMR dynamic: peak=72712 current=42022 linear=131072 linear_peak=131072 artifact=0 events=128
