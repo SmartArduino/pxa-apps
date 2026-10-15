@@ -1,0 +1,121 @@
+{
+  "date": "2026-10-15",
+  "version": "0.1.1",
+  "passed": true,
+  "sdk": {
+    "passed": true,
+    "native_main_groups": 63,
+    "extra_configurations_passed": true,
+    "asan_ubsan_targeted": true,
+    "gesture_state_native_bytes": 40,
+    "default_pages_native_bytes_before": [
+      144,
+      184,
+      480
+    ],
+    "default_pages_native_bytes_after": [
+      144,
+      184,
+      480
+    ],
+    "demo": {
+      "passed": true,
+      "held_before_release": true,
+      "held_once": true,
+      "no_release_clickthrough": true,
+      "tap": true,
+      "drag_out_and_back_cancels": true,
+      "cancel": true,
+      "held_visible_ms": 574.4,
+      "app_has_frame_callback": false
+    }
+  },
+  "scope": {
+    "base_revision": "ca1ae0ad7fd626e5dbc12190fe21526716a692a8",
+    "scope": "gesture changes only; concurrent script-engine edits retained in original working tree"
+  },
+  "ui": {
+    "passed": true,
+    "width": 296,
+    "height": 240,
+    "dpi": 160,
+    "round": false,
+    "manual_site": true,
+    "duplicate_rejected": true,
+    "invalid_kept_editable": true,
+    "long_press_remove": true,
+    "long_press_before_release": true,
+    "no_release_clickthrough": true,
+    "back_cancels_hold": true,
+    "persistent_restart": true,
+    "scrollbar_drag": true,
+    "scrollbar_hide": true,
+    "menu_exit": true,
+    "volume_default_off": true,
+    "volume_up_down": true,
+    "volume_hold_repeat": true,
+    "volume_release_stops": true,
+    "volume_input_suspended": true,
+    "volume_persistent": true
+  },
+  "round_ui": {
+    "passed": true,
+    "width": 480,
+    "height": 480,
+    "dpi": 320,
+    "round": true,
+    "manual_site": true,
+    "duplicate_rejected": true,
+    "invalid_kept_editable": true,
+    "long_press_remove": true,
+    "long_press_before_release": true,
+    "no_release_clickthrough": true,
+    "back_cancels_hold": true,
+    "persistent_restart": true,
+    "scrollbar_drag": true,
+    "scrollbar_hide": true,
+    "menu_exit": true,
+    "volume_default_off": true,
+    "volume_up_down": true,
+    "volume_hold_repeat": true,
+    "volume_release_stops": true,
+    "volume_input_suspended": true,
+    "volume_persistent": true
+  },
+  "linked_image": {
+    "case": "linked",
+    "width": 296,
+    "height": 240,
+    "dpi": 160,
+    "passed": true,
+    "image_logs": [
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE DONE index=0 received=3653 pixels=241x135 resident=130235 total_ms=377\u001b[0m",
+      "\u001b[32m[PXA app=pxa-browser component=65537 level=INFO] BROWSER IMAGE VIEW index=0\u001b[0m"
+    ]
+  },
+  "production": {
+    "passed": true,
+    "production": true,
+    "held_before_release": true,
+    "no_release_clickthrough": true,
+    "drag_out_and_back_cancels": true,
+    "cancel": true,
+    "persist_observed_ms": 693.6
+  },
+  "artifact": {
+    "path": "local/gesture-sdk-20261015/browser-release/pxa-browser.pxa",
+    "bytes": 1908461,
+    "sha256": "6908edbaa079475f53e0e2c912556bc66ef957cc73c68be40d8e101f71767120"
+  },
+  "qa_artifact": {
+    "path": "local/gesture-sdk-20261015/browser-qa/pxa-browser.pxa",
+    "bytes": 450833,
+    "sha256": "27bcc2d3d6b937a847b4d36640445c16cd2f7a5eac2ac2d85960236021f87040"
+  },
+  "aot_targets": [
+    "linux-x86_64",
+    "esp32-s3",
+    "esp32-s31"
+  ],
+  "hardware_run": false
+}

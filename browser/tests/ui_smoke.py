@@ -116,14 +116,27 @@ def main():
                 shot('invalid-site');assert 'javascript:' not in saved()
                 command('KEY BACK');time.sleep(.3)
                 # Long press removes the saved site; adding it again persists.
-                x,y,w,h=geometry(text())['content'];tap(x+w//2,y+dp(8)+2*(dp(32)+dp(6))+dp(16),.7)
-                wait(lambda:root+'/reading\n' not in saved())
-                shot('removed-site');add(root+'/reading')
+                x,y,w,h=geometry(text())['content']
+                bx,by=x+w//2,y+dp(8)+2*(dp(32)+dp(6))+dp(16)
+                command(f'TOUCH DOWN 0 {bx} {by}')
+                wait(lambda:root+'/reading\n' not in saved())  # Finger is still down.
+                shot('removed-site-held')
+                navigation_count=text().count('BROWSER NAV ')
+                command(f'TOUCH UP 0 {bx} {by}');time.sleep(.3)
+                assert text().count('BROWSER NAV ')==navigation_count,'held removal clicked through on release'
+                shot('removed-site')
+                # Back closes the tools menu and cancels a still-held toolbar tooltip.
+                nav(4);tx,ty=navigation(geometry(text()),0)
+                mark=len(text());command(f'TOUCH DOWN 0 {tx} {ty}');time.sleep(.15)
+                command('KEY BACK');time.sleep(.65)
+                assert 'BROWSER LONG ' not in text()[mark:],'Back left a held action pending'
+                command(f'TOUCH UP 0 {tx} {ty}');time.sleep(.2)
+                add(root+'/reading')
                 # A real page is required to verify scrollbar movement.
                 x,y,w,h=geometry(text())['address'];tap(x+w//2,y+h//2)
                 enter(root+'/large');wait(lambda:'BROWSER NAV '+root+'/large' in text())
                 time.sleep(1.1);top=shot('scrollbar-hidden-top')
-                x,y,w,h=geometry(text())['content'];body=(x,y,x+w-dp(10),y+h)
+                x,y,w,h=geometry(text())['content'];body=(x,y,x+w-dp(10),min(y+h,geometry(text()).get('status',(0,y+h,0,0))[1]))
                 assert '#volume-scroll' not in saved()
                 command('KEY VOLUME_DOWN');time.sleep(1.1)
                 assert not ImageChops.difference(top.crop(body),shot('volume-disabled').crop(body)).getbbox()
@@ -153,7 +166,7 @@ def main():
                 time.sleep(1.15);hidden=shot('scrollbar-hidden-bottom')
                 strip=(x+w-dp(8),y,x+w,y+h)
                 assert ImageChops.difference(visible.crop(strip),hidden.crop(strip)).getbbox()
-                body=(x,y,x+w-dp(10),y+h)
+                body=(x,y,x+w-dp(10),min(y+h,geometry(text()).get('status',(0,y+h,0,0))[1]))
                 assert not ImageChops.difference(visible.crop(body),hidden.crop(body)).getbbox()
                 # Drag back to the top, checking the boundary without page taps.
                 command(f'TOUCH DOWN 0 {edge} {y+h-dp(8)}');time.sleep(.12)
@@ -172,7 +185,7 @@ def main():
                 (a.output/'results.json').write_text(json.dumps(dict(passed=True,
                     width=a.width,height=a.height,dpi=a.dpi,round=a.round,
                     manual_site=True,duplicate_rejected=True,invalid_kept_editable=True,
-                    long_press_remove=True,persistent_restart=True,
+                    long_press_remove=True,long_press_before_release=True,no_release_clickthrough=True,back_cancels_hold=True,persistent_restart=True,
                     scrollbar_drag=True,scrollbar_hide=True,menu_exit=True,
                     volume_default_off=True,volume_up_down=True,volume_hold_repeat=True,
                     volume_release_stops=True,volume_input_suspended=True,

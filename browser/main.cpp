@@ -92,14 +92,14 @@ struct App {
          preferences_dirty = false, window_pending = true, body_dirty = false, mobile_ua = false;
     int menu_scroll = 0;
     browser::SearchEngine search_engine = browser::SearchEngine::bing;
-    PointerCapture capture;
-    int down_x = 0, down_y = 0, last_x = 0, last_y = 0;
-    bool dragged = false;
+    PressGesture press;
+    int last_x = 0, last_y = 0;
+    bool hold_enabled = false;
     bool scrollbar_dragging = false;
     enum class ExitState : std::uint8_t { none, saving, queued };
     ExitState exit_state = ExitState::none;
     std::uint64_t scrollbar_until = 0;
-    std::uint64_t last_progress = 0, pressed_at = 0;
+    std::uint64_t last_progress = 0;
 #ifdef PXA_BROWSER_PROFILE
     struct Profile {
         std::uint64_t encode_us = 0, submit_us = 0, layout_us = 0;
@@ -146,6 +146,8 @@ struct App {
         volume_keys, history_list, history_open, history_clear, directory, site_open,
         image_setting, gif_setting, clear_sessions
     };
+    Action pressed_action = Action::address;
+    int pressed_index = -1;
     struct Hit {
         PixelRect box;
         Action action;
@@ -283,6 +285,7 @@ struct App {
 #endif
     }
     void home(bool record = true, int position = 0) {
+        press.reset();
         stop();
         clear_images();
         url = "about:home";
@@ -329,6 +332,7 @@ struct App {
     }
     void navigate(std::string target, bool record = true, std::string body = {}, bool post = false,
                   int position = 0) {
+        press.reset();
         if (editing)
             finish_edit(false);
         if (target == "about:home") {
@@ -703,7 +707,7 @@ struct App {
         start(load_image(index, unsigned(slot - images.data())));
     }
     void load_visible_image() {
-        if (!show_images || !foreground || busy || editing || menu || image_view.active() || capture.active() ||
+        if (!show_images || !foreground || busy || editing || menu || image_view.active() || press.active() ||
             url == "about:home")
             return;
         for (auto it = visible_begin();
@@ -874,7 +878,7 @@ struct App {
     }
     void animate_visible_images() {
         if (!foreground || !show_images || !show_gif || busy || editing || menu ||
-            capture.active() || animation_slot >= 0) return;
+            press.active() || animation_slot >= 0) return;
         for (unsigned slot = 0; slot < images.size(); ++slot) {
             auto &image = images[slot];
             if (!image.asset || image.asset->frame_info().last || millis() < image.next_frame ||
@@ -890,6 +894,7 @@ struct App {
         }
     }
     void edit(int field = -1) {
+        press.reset();
         image_view = {};
         editing = true;
         password_input.set(field >= 0 && document.fields[field].type == browser::FieldType::password);
@@ -1092,7 +1097,7 @@ struct App {
         if (editing)
             finish_edit(false);
         stop();
-        capture.reset();
+        press.reset();
         // Background browsers keep no live GIF decoder. Foreground visibility
         // reloads those entries; ordinary static cached pictures remain valid.
         for (auto &image : images)
@@ -1111,10 +1116,12 @@ struct App {
         system_insets = window.system_bar_insets;
         layout_dirty = true;
         dirty = true;
-        capture.reset();
+        press.reset();
         scrollbar_dragging = false;
     }
     pxa::BackAction on_back() {
+        press.reset();
+        scrollbar_dragging = false;
         if (exit_state == ExitState::queued)
             return pxa::BackAction::close;
         if (exit_state == ExitState::saving)
@@ -1146,7 +1153,7 @@ struct App {
                 metrics = *value;
                 layout_dirty = true;
                 dirty = true;
-                capture.reset();
+                press.reset();
                 scrollbar_dragging = false;
             }
         if (event.is<pxa::PermissionRevoked>()) {
@@ -1156,7 +1163,8 @@ struct App {
         }
         return false;
     }
-    void on_frame(pxa::Context &, pxa::game::FrameTick) {
+    void on_frame(pxa::Context &, pxa::game::FrameTick tick) {
+        if (press.advance(tick.timestamp_us, press_options())) long_press();
         capture_volume_keys.set(volume_scroll && foreground && !editing &&
                                 exit_state == ExitState::none);
         if (!capture_volume_keys.get()) volume_direction = 0;
@@ -1885,6 +1893,39 @@ struct App {
         }
         dirty = true;
     }
+    PressOptions press_options() const {
+        return {.long_press=std::chrono::microseconds{hold_enabled ? 500000 : 0}, .slop=6};
+    }
+    const Hit* hit_at(int x, int y) const {
+        for (std::size_t n=hit_count; n>0; --n)
+            if (hits[n-1].box.contains(x,y) &&
+                (!menu || hits[n-1].action==Action::address ||
+                 (hits[n-1].action>=Action::back && hits[n-1].action<=Action::menu) || content.contains(x,y)))
+                return &hits[n-1];
+        return nullptr;
+    }
+    void long_press() {
+#ifdef PXA_BROWSER_TRACE
+        log("BROWSER LONG action=" + std::to_string(int(pressed_action)) +
+            " index=" + std::to_string(pressed_index));
+#endif
+        if (pressed_action==Action::bookmark_open && !bookmark_save && bookmarks_ready &&
+            pressed_index>=0 && std::size_t(pressed_index)<bookmarks.size()) {
+            bookmarks.erase(bookmarks.begin()+pressed_index);
+            preferences_dirty=layout_dirty=dirty=true;
+            set_status("已移除网站");
+        } else if (pressed_action==Action::image && cached_image(pressed_index)) {
+            preview_image(pressed_index);
+        } else if (pressed_action>=Action::back && pressed_action<=Action::menu) {
+            constexpr std::array labels{"返回", "前进", "首页", "刷新页面", "更多工具"};
+            const auto label=pressed_action==Action::reload && busy ? "停止加载" :
+                labels[unsigned(pressed_action)-unsigned(Action::back)];
+            (void)context->window().toast(label);
+        } else if (pressed_action>=Action::image_close && pressed_action<=Action::image_more) {
+            constexpr std::array labels{"返回网页", "缩小", "适合屏幕", "放大"};
+            (void)context->window().toast(labels[unsigned(pressed_action)-unsigned(Action::image_close)]);
+        }
+    }
     void pointer(const CanvasPointer &e) {
         int x = canvas_to_surface_coordinate(e.x, metrics),
             y = canvas_to_surface_coordinate(e.y, metrics);
@@ -1892,20 +1933,28 @@ struct App {
         log("BROWSER POINTER phase=" + std::to_string(e.phase) + " x=" + std::to_string(x) +
             " y=" + std::to_string(y));
 #endif
+        press.rebase(e.generation); // Page filters stale Canvas events before dispatch.
         if (e.action() == PointerPhase::down) {
-            if (!capture.try_capture(e))
-                return;
-            down_x = last_x = x;
-            down_y = last_y = y;
-            pressed_at = millis();
-            dragged = false;
+            if (press.active()) return;
+            (void)press.update(e, press_options());
+            if (!press.owns(e)) return;
+            last_x = x; last_y = y;
+            pressed_index = -1; hold_enabled = false;
+            if (const auto* selected=hit_at(x,y)) {
+                pressed_action=selected->action; pressed_index=selected->index;
+                hold_enabled=(pressed_action==Action::bookmark_open && !bookmark_save && bookmarks_ready) ||
+                    (pressed_action==Action::image && cached_image(pressed_index)) ||
+                    (pressed_action>=Action::back && pressed_action<=Action::menu) ||
+                    (pressed_action>=Action::image_close && pressed_action<=Action::image_more);
+            }
             scrollbar_dragging = !image_view.active() && content.contains(x, y) &&
                 x >= content.x + content.width - dp(14) && scrollbar().range() > 0;
             if (scrollbar_dragging) {
                 const auto bar = scrollbar();
-                down_y = y >= bar.thumb_top() && y < bar.thumb_top() + bar.thumb_height()
+                hold_enabled = false;
+                last_y = y >= bar.thumb_top() && y < bar.thumb_top() + bar.thumb_height()
                     ? y - bar.thumb_top() : bar.thumb_height() / 2;
-                scroll_position() = bar.position_at(y, down_y);
+                scroll_position() = bar.position_at(y, last_y);
                 body_dirty = true;
                 reveal_scrollbar();
             }
@@ -1914,16 +1963,18 @@ struct App {
 #endif
             return;
         }
-        if (!capture.owns(e))
-            return;
+        if (!press.owns(e)) return;
+        const bool held = press.long_pressed();
+        const auto down_x=canvas_to_surface_coordinate(press.start_x(),metrics);
+        const auto down_y=canvas_to_surface_coordinate(press.start_y(),metrics);
+        const auto result=press.update(e,press_options());
         if (scrollbar_dragging) {
             if (e.action() == PointerPhase::move) {
-                const int next = scrollbar().position_at(y, down_y);
+                const int next = scrollbar().position_at(y, last_y);
                 body_dirty |= next != scroll_position();
                 scroll_position() = next;
             }
             if (e.ended()) {
-                capture.release(e);
                 scrollbar_dragging = false;
                 body_dirty = true;
             }
@@ -1931,9 +1982,8 @@ struct App {
             return;
         }
         if (e.action() == PointerPhase::move) {
-            if (std::abs(x - down_x) > dp(6) || std::abs(y - down_y) > dp(6))
-                dragged = true;
-            if (dragged && content.contains(down_x, down_y)) {
+            if (held) return;
+            if (press.dragged() && content.contains(down_x, down_y)) {
                 if (image_view.active()) {
                     if (const auto *image = cached_image(image_view.index)) {
                         const auto info = image->descriptor();
@@ -1963,52 +2013,16 @@ struct App {
 #ifdef PXA_BROWSER_PROFILE
             profile.pending = true;
 #endif
-            capture.release(e);
-            if (e.action() != PointerPhase::up || dragged || std::abs(x - down_x) > dp(6) ||
-                std::abs(y - down_y) > dp(6))
-                return;
-            for (std::size_t n = hit_count; n > 0; --n)
-                if (hits[n - 1].box.contains(x, y) &&
-                    (!menu || hits[n - 1].action == Action::address ||
-                     (hits[n - 1].action >= Action::back && hits[n - 1].action <= Action::menu) ||
-                     content.contains(x, y))) {
-                    auto selected = hits[n - 1];
-                    if (millis() - pressed_at >= 500 && selected.action == Action::bookmark_open &&
-                        !bookmark_save && bookmarks_ready) {
-                        bookmarks.erase(bookmarks.begin() + selected.index);
-                        preferences_dirty = layout_dirty = dirty = true;
-                        set_status("已移除网站");
-                        break;
-                    }
-                    if (millis() - pressed_at >= 500 && selected.action == Action::image &&
-                        cached_image(selected.index)) {
-                        preview_image(selected.index);
-                        break;
-                    }
-                    if (millis() - pressed_at >= 500 && selected.action >= Action::back &&
-                        selected.action <= Action::menu) {
-                        constexpr std::array labels{"返回", "前进", "首页", "刷新页面", "更多工具"};
-                        auto label =
-                            selected.action == Action::reload && busy
-                                ? "停止加载"
-                                : labels[unsigned(selected.action) - unsigned(Action::back)];
-                        (void)context->window().toast(label);
-                        break;
-                    }
-                    if (millis() - pressed_at >= 500 && selected.action >= Action::image_close &&
-                        selected.action <= Action::image_more) {
-                        constexpr std::array labels{"返回网页", "缩小", "适合屏幕", "放大"};
-                        (void)context->window().toast(
-                            labels[unsigned(selected.action) - unsigned(Action::image_close)]);
-                        break;
-                    }
+            if (result==PressResult::long_press) { long_press(); return; }
+            if (result!=PressResult::tap) return;
+            if (const auto* selected=hit_at(x,y); selected && selected->action==pressed_action &&
+                selected->index==pressed_index) {
 #ifdef PXA_BROWSER_TRACE
-                    log("BROWSER HIT action=" + std::to_string(int(selected.action)) +
-                        " index=" + std::to_string(selected.index));
+                log("BROWSER HIT action=" + std::to_string(int(selected->action)) +
+                    " index=" + std::to_string(selected->index));
 #endif
-                    action(selected.action, selected.index);
-                    break;
-                }
+                action(selected->action,selected->index);
+            }
         }
     }
 };

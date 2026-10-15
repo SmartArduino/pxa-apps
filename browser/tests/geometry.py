@@ -19,4 +19,6 @@ def navigation(layout, index, count=5):
 
 def content_crop(layout, inset=1):
     x, y, width, height = layout['content']
-    return x+inset, y+inset, x+width-inset, y+height-inset
+    # Status hints are transient chrome drawn over the lower content edge.
+    bottom = min(y+height, layout.get('status', (0,y+height,0,0))[1])
+    return x+inset, y+inset, x+width-inset, bottom-inset

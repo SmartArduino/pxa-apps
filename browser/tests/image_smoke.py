@@ -113,7 +113,14 @@ def main():
                         image_y = (top+bottom_band)//2
                         def viewer_button(index):tap(*navigation(layout,index,4))
                         mark = logs().count('BROWSER IMAGE DONE index=0')
-                        tap(args.width//2,image_y, .7 if args.case=='linked' else .12)
+                        if args.case=='linked':
+                            # A linked image must preview while held, and never open its link on UP.
+                            command(f'TOUCH DOWN 0 {args.width//2} {image_y}')
+                            wait_for(lambda:'BROWSER IMAGE VIEW index=0' in logs())
+                            screenshot('viewer-held')
+                            command(f'TOUCH UP 0 {args.width//2} {image_y}');time.sleep(.25)
+                            assert 'BROWSER NAV http://127.0.0.1:31878/next' not in logs()
+                        else:tap(args.width//2,image_y)
                         assert 'BROWSER IMAGE VIEW index=0' in logs()
                         fitted = screenshot('viewer-fit')
                         viewer_button(3);zoomed = screenshot('viewer-zoom')

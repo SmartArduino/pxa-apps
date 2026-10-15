@@ -151,3 +151,8 @@ python3 local/pxa-apps/browser/tests/fixture.py --bind 0.0.0.0
 网站增量、文字编码、实际截图及兼容性边界见 [验证报告](docs/sites-encoding-20261015.zh-CN.md)。
 
 状态提示的空间利用、自动隐藏、内存边界和截图见 [验证报告](docs/status-20261015.zh-CN.md)。
+
+0.1.1 使用 C++ SDK `PressGesture` 统一点击、拖动取消与长按。移除收藏网站、
+带链接图片预览以及工具提示均在按住约 0.5 秒时触发，松手不再执行短按。
+后台及屏幕变化取消捕获；图片和滚动继续复用已有帧循环。
+验收见 [SDK 手势迁移](docs/2026-10-15-sdk-gestures.zh-CN.md)。
