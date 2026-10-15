@@ -1,0 +1,88 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [
+    2,
+    0
+  ],
+  "target_sdk": [
+    2,
+    0
+  ],
+  "compile_sdk": [
+    2,
+    0
+  ],
+  "id": "pxa-browser",
+  "version": "0.1.0",
+  "release_sequence": 1,
+  "name": "PXA 浏览器",
+  "localizations": {
+    "en": {
+      "name": "PXA Browser"
+    }
+  },
+  "description": "直接浏览 HTTP/HTTPS 轻量网页，支持中文、历史列表、书签、基础登录与搜索表单，按需显示 PNG/JPEG/GIF；适配 DPI 与圆角屏幕。不支持 JavaScript 和完整 CSS。",
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 524288,
+      "pinned": false
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "services": [
+        {
+          "name": "ui",
+          "features": [
+            "dynamic-text",
+            "password-input",
+            "sized-text",
+            "text-input-control"
+          ]
+        },
+        {
+          "name": "window",
+          "min_version": [
+            0,
+            3
+          ]
+        },
+        {
+          "name": "assets",
+          "features": [
+            "image-decode",
+            "image-frames"
+          ]
+        },
+        "net",
+        "permission",
+        "fs",
+        "storage",
+        "clock",
+        "log"
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "random",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "net.client",
+      "scope": "web",
+      "required": false
+    }
+  ],
+  "icon": "assets/icon.png"
+}

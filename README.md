@@ -22,6 +22,7 @@ pxa run pxa-apps/voxel-craft --profile sensecap-watcher
 
 [`weather`](weather/README.md) 使用 IP 定位与 Open-Meteo，不需要 API key。网络和定位可用性取决于实际运行环境。
 [`novel-reader`](novel-reader/README.md) 支持可配置 JSON 源、离线 TXT、系统输入、自适应字体、章节导航与自动翻页；测量和验收脚本位于其 `docs/` 与 `tests/`。
+[`browser`](browser/README.md) 是 PXA 浏览器，支持 HTTP/HTTPS 轻量阅读、关键词搜索、链接、书签和基础表单，使用最新流式网络 SDK。
 
 ## 在固件工作区联调
 

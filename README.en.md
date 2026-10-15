@@ -31,6 +31,10 @@ reader, with configurable JSON sources, system input, adaptive typography,
 chapter navigation and automatic page turns. Its device measurements and
 reproducible acceptance checks live in the application's `docs` and `tests`.
 
+[`browser`](browser/README.en.md) is PXA Browser, a small-screen reading browser with streaming
+HTTP/HTTPS, keyword search, links, history, bookmarks and basic forms. It adapts
+to DPI and screen safe areas and does not run JavaScript or a full CSS engine.
+
 ## Independent DevKit workflow
 
 Install [DevKit](https://pxa.doit.am/docs/setup/), then from this repository's parent directory:
