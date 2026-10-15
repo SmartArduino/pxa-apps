@@ -1,0 +1,22 @@
+{
+  "format": "pxa-reader-source-2",
+  "name": "我的静态书站",
+  "kind": "html",
+  "searchUrl": "https://example.org/search?q={{key}}",
+  "search": {
+    "items": "#books .book",
+    "title": "a.title",
+    "link": "a.title@href",
+    "author": ".author",
+    "next": "a.next@href"
+  },
+  "toc": {
+    "items": "#chapters a",
+    "title": "",
+    "link": "@href"
+  },
+  "content": {
+    "selector": "#content",
+    "remove": [".ad", ".toolbar"]
+  }
+}

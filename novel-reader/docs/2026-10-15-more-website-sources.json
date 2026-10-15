@@ -1,0 +1,1090 @@
+{
+  "version": "0.2.2",
+  "release_sequence": 6,
+  "date": "2026-10-15",
+  "source_revision": 2,
+  "state_version": 4,
+  "runtime_source_sha256": {
+    "main.cpp": "a3d75253cb685fa5de5f883639e90c8285f8b900a3f56b6c6e0e88a122fd74a8",
+    "reader_core.hpp": "864f5ba233ce9d0fe9008839295c47fd3333fe17645805a7e4523824eaa7574f",
+    "reader_catalog.hpp": "43ef134f9558bfe6400f7a585c742b0ea5e1b6a85fa8863bc575cb27ea7bd284",
+    "reader_paging.hpp": "397b4583dc0d19a5de984907a6a8916d24d3f561ee25307c7067a8715da2dc6c",
+    "reader_state.hpp": "a61085991c5f52d6d3033b96f48367a672acd64f7070478a9ebb02b69c99eacf",
+    "reader_sources.hpp": "9fa8e2f9dfd17629e414c4b8145e6a09da52e0525e091daee5bec2e9ef7f7e45",
+    "reader_web.hpp": "ebe3d7c9b465e70234b4c02153d9bfb8186d34a1d3e3ec7402a75f2d496c4905",
+    "reader_window.hpp": "2a7007a88acf99bd20287fb5292ccc265a779f64c4a1a34ed5e343635fd6ed83",
+    "reader_ui.inc": "2e1b904effa395b44b7a051fb3c39c045a641b2fe853fcdd030165a4bb5572b4"
+  },
+  "native": {
+    "passed": true,
+    "asan_ubsan": true,
+    "real_novel_bytes": 2264071,
+    "real_novel_chapters": 100,
+    "log": {
+      "path": "local/reader-more-sources-20261015/native-checks.log",
+      "bytes": 1121,
+      "sha256": "47969b5fa000236e81b16efd6e120d047114e97c0342d9a718849346593891bc"
+    },
+    "compiled_examples_match": true
+  },
+  "website_matrix": {
+    "passed": true,
+    "sources": [
+      {
+        "key": "nunu",
+        "passed": true,
+        "name": "努努书坊",
+        "query": "长夜难明",
+        "results": 1,
+        "extra_search_results": 0,
+        "result_index": 0,
+        "book": {
+          "title": "长夜难明",
+          "author": "作者:紫金陈",
+          "url": "",
+          "toc": "https://www.nunubook.com/xuanyi/changyenanming/",
+          "validator": "",
+          "position": 0,
+          "total": 0,
+          "complete": false,
+          "source": "https://www.nunubook.com/e/search/index.php",
+          "chapter": 0
+        },
+        "toc_count": 69,
+        "bodies": [
+          {
+            "index": 0,
+            "title": "楔子",
+            "url": "https://www.nunubook.com/xuanyi/changyenanming/15333.html",
+            "parts": 1,
+            "bytes": 282,
+            "sha256": "0d1da2f7669b1b10afe505a7e4116882a8b298654d38140512fea42e9005e8c9"
+          },
+          {
+            "index": 11,
+            "title": "第十二章",
+            "url": "https://www.nunubook.com/xuanyi/changyenanming/15355.html",
+            "parts": 1,
+            "bytes": 6545,
+            "sha256": "2927adf84375755916197cad69d90d6c653a0480511aab69e677204027fb547c"
+          }
+        ],
+        "requests": [
+          {
+            "url": "https://www.nunubook.com/e/search/index.php",
+            "method": "POST",
+            "status": 200,
+            "final_url": "https://www.nunubook.com/e/search/result/?searchid=105",
+            "bytes": 3899,
+            "sha256": "10d7d363a10ef3b376268bb1c6a66e5e14110c19e55989bda1c71ab05972f7ec",
+            "ms": 2060.95
+          },
+          {
+            "url": "https://www.nunubook.com/xuanyi/changyenanming/",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.nunubook.com/xuanyi/changyenanming/",
+            "bytes": 18037,
+            "sha256": "096e689177333189c19f4d2f0bc9697d546e96b66d71f1dc59768dcfd9b6544a",
+            "ms": 1147.1
+          },
+          {
+            "url": "https://www.nunubook.com/e/extend/bookpage/pages.php?id=51&pageNum=0&dz=asc",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.nunubook.com/e/extend/bookpage/pages.php?id=51&pageNum=0&dz=asc",
+            "bytes": 1195,
+            "sha256": "86d2113fc14574c9e70fc74a3ac0552cf47b9c41e259ecd35dde89706ac0674c",
+            "ms": 1183.39
+          },
+          {
+            "url": "https://www.nunubook.com/e/extend/bookpage/pages.php?id=51&pageNum=1&dz=asc",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.nunubook.com/e/extend/bookpage/pages.php?id=51&pageNum=1&dz=asc",
+            "bytes": 1261,
+            "sha256": "598b6a5498860cc80db978a74222445d13dcb8d76f3ed8c781b35f08750d81c9",
+            "ms": 1197.04
+          },
+          {
+            "url": "https://www.nunubook.com/e/extend/bookpage/pages.php?id=51&pageNum=2&dz=asc",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.nunubook.com/e/extend/bookpage/pages.php?id=51&pageNum=2&dz=asc",
+            "bytes": 1315,
+            "sha256": "be2243dd73e1802f427b1c05b4b774250dfeab0ba63a42d7c7443313d2c0fc33",
+            "ms": 1051.47
+          },
+          {
+            "url": "https://www.nunubook.com/e/extend/bookpage/pages.php?id=51&pageNum=3&dz=asc",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.nunubook.com/e/extend/bookpage/pages.php?id=51&pageNum=3&dz=asc",
+            "bytes": 1315,
+            "sha256": "2d2200f02d2e5c7b428f9eff269c13f17550645bfdeffb6cb6a6eb4a5ef9929b",
+            "ms": 964.88
+          },
+          {
+            "url": "https://www.nunubook.com/e/extend/bookpage/pages.php?id=51&pageNum=4&dz=asc",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.nunubook.com/e/extend/bookpage/pages.php?id=51&pageNum=4&dz=asc",
+            "bytes": 1315,
+            "sha256": "e373aa63204a837043fdaa8ce9c4b55ab347b1b1a7fa3610d2823ca5f34c076e",
+            "ms": 1197.92
+          },
+          {
+            "url": "https://www.nunubook.com/e/extend/bookpage/pages.php?id=51&pageNum=5&dz=asc",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.nunubook.com/e/extend/bookpage/pages.php?id=51&pageNum=5&dz=asc",
+            "bytes": 1315,
+            "sha256": "0f7c7f9df5e7decde4d1f804c2acf539db950be3350e612fb39fb16089e88047",
+            "ms": 910.29
+          },
+          {
+            "url": "https://www.nunubook.com/e/extend/bookpage/pages.php?id=51&pageNum=6&dz=asc",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.nunubook.com/e/extend/bookpage/pages.php?id=51&pageNum=6&dz=asc",
+            "bytes": 1230,
+            "sha256": "76fe6854875bb67a6ecc2ca642ccd7f46ea4e02a26287850c0517311bb188b6b",
+            "ms": 1255.48
+          },
+          {
+            "url": "https://www.nunubook.com/xuanyi/changyenanming/15333.html",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.nunubook.com/xuanyi/changyenanming/15333.html",
+            "bytes": 6708,
+            "sha256": "212dc7c0d6664e76b1bd25cb27ad4409cd55b1752ed944deda60c41c6a4e3b43",
+            "ms": 938.56
+          },
+          {
+            "url": "https://www.nunubook.com/xuanyi/changyenanming/15355.html",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.nunubook.com/xuanyi/changyenanming/15355.html",
+            "bytes": 13943,
+            "sha256": "f964dba8679cba47ba910cb7a23b4a6bba97fa39b7d92924d6c3e41f5ec25496",
+            "ms": 992.51
+          }
+        ],
+        "rule_sha256": "d921bfd48ff07e05067c357a260159edcf2299b4b1f93032a933e731a3c6b69f"
+      },
+      {
+        "key": "shuzhaige",
+        "passed": true,
+        "name": "书斋阁",
+        "query": "三体",
+        "results": 1,
+        "extra_search_results": 0,
+        "result_index": 0,
+        "book": {
+          "title": "三体",
+          "author": "刘慈欣",
+          "url": "",
+          "toc": "https://www.shuzhaige.com/santi/",
+          "validator": "",
+          "position": 0,
+          "total": 0,
+          "complete": false,
+          "source": "https://www.shuzhaige.com/e/search/index.php",
+          "chapter": 0
+        },
+        "toc_count": 121,
+        "bodies": [
+          {
+            "index": 0,
+            "title": "1. 疯狂年代中国，1967年。",
+            "url": "https://www.shuzhaige.com/santi/103511.html",
+            "parts": 1,
+            "bytes": 18136,
+            "sha256": "ec13b4fe2d4dc712b97f31f39fba49af3a7f600971b792426bf7d8ce579ecb0e"
+          },
+          {
+            "index": 1,
+            "title": "2.寂静的春天两年以后，大兴安岭。",
+            "url": "https://www.shuzhaige.com/santi/103513.html",
+            "parts": 1,
+            "bytes": 26230,
+            "sha256": "31648fe419665d6112c3f4d3e77879fe07622607cf0bab6fa0464c8d49c73b8d"
+          }
+        ],
+        "requests": [
+          {
+            "url": "https://www.shuzhaige.com/e/search/index.php",
+            "method": "POST",
+            "status": 200,
+            "final_url": "https://www.shuzhaige.com/e/search/result/?searchid=427",
+            "bytes": 4125,
+            "sha256": "01a1f6799ff14624874a1f4da9e7ef4fcb3ec0ed610ff230cb996510d46b1010",
+            "ms": 2352.04
+          },
+          {
+            "url": "https://www.shuzhaige.com/santi/",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.shuzhaige.com/santi/",
+            "bytes": 36775,
+            "sha256": "ffc83118857e790f59820c1d8d99469cdb5e144bc00bd7342bb5d95c5f36ff6a",
+            "ms": 1641.66
+          },
+          {
+            "url": "https://www.shuzhaige.com/santi/103511.html",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.shuzhaige.com/santi/103511.html",
+            "bytes": 25988,
+            "sha256": "07979c6a4dd956f37a596332f106944ab2c0e3b030c2ac1b15dd72bbe6484975",
+            "ms": 1198.13
+          },
+          {
+            "url": "https://www.shuzhaige.com/santi/103513.html",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.shuzhaige.com/santi/103513.html",
+            "bytes": 35149,
+            "sha256": "8585bd891071e38d8f8a2fece944133e08cd0edf824a1b2c3fda07ea803d4e18",
+            "ms": 1631.54
+          }
+        ],
+        "rule_sha256": "953f01a3b5180efa6f69bdcc54928a4875a40a1ba1fb85e2ae4ebc591102a1cb"
+      },
+      {
+        "key": "biquche",
+        "passed": true,
+        "name": "笔趣阁 · biquche",
+        "query": "庆余年",
+        "results": 14,
+        "extra_search_results": 0,
+        "result_index": 12,
+        "book": {
+          "title": "庆余年",
+          "author": "猫腻",
+          "url": "",
+          "toc": "https://www.biquche.com/book/0/16/",
+          "validator": "",
+          "position": 0,
+          "total": 0,
+          "complete": false,
+          "source": "https://www.biquche.com/search.php?q={{key}}",
+          "chapter": 0
+        },
+        "toc_count": 813,
+        "bodies": [
+          {
+            "index": 0,
+            "title": "五竹自述（作者：昨夜小楼春风）",
+            "url": "https://www.biquche.com/book/0/16/43248.html",
+            "parts": 1,
+            "bytes": 2441,
+            "sha256": "8f5f670104c9c67296789b46f29672ba1fcb00e27b9c316761dbd008217b8a7a"
+          },
+          {
+            "index": 12,
+            "title": "路过宜昌 作者：顿淮",
+            "url": "https://www.biquche.com/book/0/16/43260.html",
+            "parts": 3,
+            "bytes": 5992,
+            "sha256": "863bd5cc1579b8f3aa39294bb17e32703e1216486f032c8915a3ad7a83134d2c"
+          }
+        ],
+        "requests": [
+          {
+            "url": "https://www.biquche.com/search.php?q=%E5%BA%86%E4%BD%99%E5%B9%B4",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.biquche.com/search.php?q=%E5%BA%86%E4%BD%99%E5%B9%B4",
+            "bytes": 14247,
+            "sha256": "8f4b5145bc6f66e3184639f1210cbc0e30594f23295a9ee1104af99b645ba5c0",
+            "ms": 1651.19
+          },
+          {
+            "url": "https://www.biquche.com/book/0/16/",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.biquche.com/book/0/16/",
+            "bytes": 32261,
+            "sha256": "7b76dfe44cf39967527ed1dda7f8bd712ceb9549a43584d3f4984a046aeab1e7",
+            "ms": 1427.63
+          },
+          {
+            "url": "https://www.biquche.com/book/0/16/index_2.html",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.biquche.com/book/0/16/index_2.html",
+            "bytes": 34680,
+            "sha256": "39e09d5ab2650de5a6e04b4429740d951a1db0e515a237114a775d77a0745296",
+            "ms": 1385.82
+          },
+          {
+            "url": "https://www.biquche.com/book/0/16/index_3.html",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.biquche.com/book/0/16/index_3.html",
+            "bytes": 35099,
+            "sha256": "1b8ecbd02ffc73f46c0c860d8aae2c276cf23ee8c97898b96edeb75c3a13a29e",
+            "ms": 1441.96
+          },
+          {
+            "url": "https://www.biquche.com/book/0/16/index_4.html",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.biquche.com/book/0/16/index_4.html",
+            "bytes": 36012,
+            "sha256": "23128167cadfb1726b3342acf6c891532f9b3bc3279a37b14ff62f81bfde189e",
+            "ms": 1330.33
+          },
+          {
+            "url": "https://www.biquche.com/book/0/16/index_5.html",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.biquche.com/book/0/16/index_5.html",
+            "bytes": 36214,
+            "sha256": "f48dcb64df268cc9bd304fb504a1b69f1f13b19d55fd5e7e821324d763e0b36d",
+            "ms": 1493.36
+          },
+          {
+            "url": "https://www.biquche.com/book/0/16/index_6.html",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.biquche.com/book/0/16/index_6.html",
+            "bytes": 35715,
+            "sha256": "5999632b82d98a1211a53546b945485104ca8481a44532b33a3454d07a159f05",
+            "ms": 1234.17
+          },
+          {
+            "url": "https://www.biquche.com/book/0/16/index_7.html",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.biquche.com/book/0/16/index_7.html",
+            "bytes": 35632,
+            "sha256": "d5e37e48e82d162d7947649bea929d948e86aaa121ea9f77146b30fb55a27e5f",
+            "ms": 1199.68
+          },
+          {
+            "url": "https://www.biquche.com/book/0/16/index_8.html",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.biquche.com/book/0/16/index_8.html",
+            "bytes": 35749,
+            "sha256": "da4968fe73376bad2bf524cb4096833d4eeb9c93790ffd5eb2f94c38f9579482",
+            "ms": 1165.59
+          },
+          {
+            "url": "https://www.biquche.com/book/0/16/index_9.html",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.biquche.com/book/0/16/index_9.html",
+            "bytes": 16165,
+            "sha256": "7caacdedd4cf3157e26f4963712afac175f941ea5bd33f878976cdcd4b93e1c3",
+            "ms": 2445.2
+          },
+          {
+            "url": "https://www.biquche.com/book/0/16/43248.html",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.biquche.com/book/0/16/43248.html",
+            "bytes": 9278,
+            "sha256": "9542ca30267e2caa0a9eecc6b3ca512ccc8b4c9296013525193a8327a7714c18",
+            "ms": 981.06
+          },
+          {
+            "url": "https://www.biquche.com/book/0/16/43260.html",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.biquche.com/book/0/16/43260.html",
+            "bytes": 8600,
+            "sha256": "f72c71b9640f0ef5f8db61d6af6551e84b4aa6a35edd6b048c9c47cca6a5a69f",
+            "ms": 1215.33
+          },
+          {
+            "url": "https://www.biquche.com/book/0/16/43260_2.html",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.biquche.com/book/0/16/43260_2.html",
+            "bytes": 8690,
+            "sha256": "9879cfe9fbd404940fdf20d654257c771ba0b017bfb89e8bbbc3c3be4ee669b5",
+            "ms": 1141.69
+          },
+          {
+            "url": "https://www.biquche.com/book/0/16/43260_3.html",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.biquche.com/book/0/16/43260_3.html",
+            "bytes": 8252,
+            "sha256": "c95454795cb1c48ce33353617d23ead280a68816550a6d20570a9e4c4104d42e",
+            "ms": 1206.99
+          }
+        ],
+        "rule_sha256": "c58010e578a957c414d37240c0368492d92bca4f4f3d721b4f504aa71709e928"
+      },
+      {
+        "key": "wenlinshe",
+        "passed": true,
+        "name": "文林社",
+        "query": "儒林外史",
+        "results": 1,
+        "extra_search_results": 14,
+        "result_index": 0,
+        "book": {
+          "title": "儒林外史",
+          "author": "作者：吴敬梓（清代）",
+          "url": "",
+          "toc": "https://www.wenlinshe.com/book/changpianjingdian/ru-lin-wai-shi.html",
+          "validator": "",
+          "position": 0,
+          "total": 0,
+          "complete": false,
+          "source": "https://www.wenlinshe.com/search?q={{key}}",
+          "chapter": 0
+        },
+        "toc_count": 56,
+        "bodies": [
+          {
+            "index": 0,
+            "title": "第一回 借名流隐括全文 说楔子敷陈大义",
+            "url": "https://www.wenlinshe.com/chapter/changpianjingdian/ru-lin-wai-shi/di-yi-hui-jie-ming-liu-yin-kuo-quan-wen-shuo-xie-zi-fu-chen-da-yi.html",
+            "parts": 1,
+            "bytes": 21051,
+            "sha256": "a6d1bd8c150ed1a750b166a05b4e285bbf3063c55dabae437799616fed83f761"
+          }
+        ],
+        "requests": [
+          {
+            "url": "https://www.wenlinshe.com/search?q=%E5%84%92%E6%9E%97%E5%A4%96%E5%8F%B2",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.wenlinshe.com/book/changpianjingdian/ru-lin-wai-shi.html",
+            "bytes": 51123,
+            "sha256": "fb8adc3c79052bbe83adedd9c1d9b43e8ad8e12a72e3855ee7d286969c209bf7",
+            "ms": 3292.81
+          },
+          {
+            "url": "https://www.wenlinshe.com/book/changpianjingdian/ru-lin-wai-shi.html",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.wenlinshe.com/book/changpianjingdian/ru-lin-wai-shi.html",
+            "bytes": 51123,
+            "sha256": "a990f3905e63e42b527f2d841aa577a5bc6d823a7659e0ebedf136ff13e6d972",
+            "ms": 1184.21
+          },
+          {
+            "url": "https://www.wenlinshe.com/chapter/changpianjingdian/ru-lin-wai-shi/di-yi-hui-jie-ming-liu-yin-kuo-quan-wen-shuo-xie-zi-fu-chen-da-yi.html",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.wenlinshe.com/chapter/changpianjingdian/ru-lin-wai-shi/di-yi-hui-jie-ming-liu-yin-kuo-quan-wen-shuo-xie-zi-fu-chen-da-yi.html",
+            "bytes": 59974,
+            "sha256": "5ef0e35c688e76352119552867530e80d2d7b826e7d16c579a4cd90bd21052cf",
+            "ms": 1266.92
+          },
+          {
+            "url": "https://www.wenlinshe.com/search?q=%E4%B8%89%E5%9B%BD",
+            "method": "GET",
+            "status": 200,
+            "final_url": "https://www.wenlinshe.com/search?q=%E4%B8%89%E5%9B%BD",
+            "bytes": 40328,
+            "sha256": "fa3f5d9b50fea8d7a37e968cb31f57878fc6a55f3efc9344cf77baa805db45fb",
+            "ms": 1738.92
+          }
+        ],
+        "rule_sha256": "9ea01553da649bd8181a748ed3920f92c8f7c11bd29bd67ac1d76544c87f07a3"
+      }
+    ]
+  },
+  "simulator_websites": {
+    "passed": true,
+    "sources": [
+      {
+        "key": "nunu",
+        "passed": true,
+        "width": 800,
+        "height": 480,
+        "dpi": 160,
+        "round": false,
+        "expected_first_chapter_bytes": 291,
+        "first_chapter_matches_native": true,
+        "no_body_files": true,
+        "compact_rules": true,
+        "multipart_chapter_matches_native": false,
+        "later_html_toc_verified": false,
+        "initial_linear_pages": 2,
+        "max_linear_pages": 3,
+        "task_pool_peak": 8,
+        "failures": 0
+      },
+      {
+        "key": "shuzhaige",
+        "passed": true,
+        "width": 800,
+        "height": 480,
+        "dpi": 160,
+        "round": false,
+        "expected_first_chapter_bytes": 18173,
+        "first_chapter_matches_native": true,
+        "no_body_files": true,
+        "compact_rules": true,
+        "multipart_chapter_matches_native": false,
+        "later_html_toc_verified": false,
+        "initial_linear_pages": 2,
+        "max_linear_pages": 4,
+        "task_pool_peak": 8,
+        "failures": 0
+      },
+      {
+        "key": "biquche",
+        "passed": true,
+        "width": 800,
+        "height": 480,
+        "dpi": 160,
+        "round": false,
+        "expected_first_chapter_bytes": 2489,
+        "first_chapter_matches_native": true,
+        "no_body_files": true,
+        "compact_rules": true,
+        "multipart_chapter_matches_native": true,
+        "later_html_toc_verified": true,
+        "initial_linear_pages": 2,
+        "max_linear_pages": 4,
+        "task_pool_peak": 8,
+        "failures": 0
+      },
+      {
+        "key": "wenlinshe",
+        "passed": true,
+        "width": 800,
+        "height": 480,
+        "dpi": 160,
+        "round": false,
+        "expected_first_chapter_bytes": 21107,
+        "first_chapter_matches_native": true,
+        "no_body_files": true,
+        "compact_rules": true,
+        "multipart_chapter_matches_native": false,
+        "later_html_toc_verified": false,
+        "initial_linear_pages": 2,
+        "max_linear_pages": 4,
+        "task_pool_peak": 8,
+        "failures": 0
+      }
+    ],
+    "package_sha256": "06a860f23f4a384217cfbe93da89f541d478eb1b76a7add4536ec874be0cb54a",
+    "comparison_scope": "Guest chapter size including title/newlines is compared to native parsing; not a full Guest text hash"
+  },
+  "sessions": {
+    "delivery-session-html": {
+      "passed": true,
+      "width": 296,
+      "height": 240,
+      "dpi": 160,
+      "round": false,
+      "requests": [
+        {
+          "path": "/catalog.json?q=%E6%9E%97%E9%97%B4",
+          "range": null
+        },
+        {
+          "path": "/book.txt",
+          "range": "bytes=0-8191"
+        },
+        {
+          "path": "/book.txt",
+          "range": "bytes=2151-10342"
+        },
+        {
+          "path": "/book.txt",
+          "range": "bytes=4339-12530"
+        },
+        {
+          "path": "/book.txt",
+          "range": "bytes=6501-14692"
+        },
+        {
+          "path": "/book.txt",
+          "range": "bytes=4339-12530"
+        },
+        {
+          "path": "/book.txt",
+          "range": "bytes=0-8191"
+        },
+        {
+          "path": "/book.txt",
+          "range": "bytes=2151-10342"
+        },
+        {
+          "path": "/book.txt",
+          "range": "bytes=2151-10342"
+        },
+        {
+          "path": "/book.txt",
+          "range": "bytes=2019-10210"
+        },
+        {
+          "path": "/book.txt",
+          "range": "bytes=0-8191"
+        },
+        {
+          "path": "/catalog.json?q=%E6%9E%97%E9%97%B4",
+          "range": null
+        },
+        {
+          "path": "/web-source.json",
+          "range": null
+        },
+        {
+          "path": "/search.html?q=%E5%B1%B1%E9%97%B4",
+          "range": null
+        },
+        {
+          "path": "/book/1/index.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/1.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/1_2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/1.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/1_2.html",
+          "range": null
+        },
+        {
+          "path": "/toc-html?page=2",
+          "range": null
+        },
+        {
+          "path": "/toc-html?page=2",
+          "range": null
+        },
+        {
+          "path": "/book/1/2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/2_2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/2_2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/index.html",
+          "range": null
+        },
+        {
+          "path": "/toc-html?page=2",
+          "range": null
+        },
+        {
+          "path": "/book/1/2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/2_2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/index.html",
+          "range": null
+        },
+        {
+          "path": "/toc-html?page=2",
+          "range": null
+        },
+        {
+          "path": "/toc-html?page=3",
+          "range": null
+        },
+        {
+          "path": "/book/1/1.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/1_2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/2_2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/3.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/3_2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/index.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/1.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/1_2.html",
+          "range": null
+        },
+        {
+          "path": "/catalog.json?q=%E5%B1%B1%E9%97%B4",
+          "range": null
+        },
+        {
+          "path": "/catalog.json?q=%E9%94%99%E8%AF%AF",
+          "range": null
+        },
+        {
+          "path": "/invalid.txt",
+          "range": "bytes=0-8191"
+        }
+      ],
+      "source_import": true,
+      "txt_no_body_files": true,
+      "html_no_body_files": true,
+      "explicit_offline": true,
+      "cache_cleanup": true,
+      "invalid_utf8_rejected": true,
+      "searches": [
+        "错误",
+        "山间",
+        "林间"
+      ],
+      "state_bytes": 1586,
+      "stress": true,
+      "preferences": true,
+      "auto_turn": true,
+      "paged_toc": false,
+      "html_paged": true,
+      "pool_peak": 8,
+      "ime_submit": false,
+      "ime_hide_keeps_query": true,
+      "allocation_failures": 0
+    },
+    "delivery-session-round": {
+      "passed": true,
+      "width": 480,
+      "height": 480,
+      "dpi": 320,
+      "round": true,
+      "requests": [
+        {
+          "path": "/catalog.json?q=%E6%9E%97%E9%97%B4",
+          "range": null
+        },
+        {
+          "path": "/book.txt",
+          "range": "bytes=0-8191"
+        },
+        {
+          "path": "/catalog.json?q=%E6%9E%97%E9%97%B4",
+          "range": null
+        },
+        {
+          "path": "/web-source.json",
+          "range": null
+        },
+        {
+          "path": "/search.html?q=%E5%B1%B1%E9%97%B4",
+          "range": null
+        },
+        {
+          "path": "/book/1/index.html",
+          "range": null
+        },
+        {
+          "path": "/toc-api?id=1&page=0",
+          "range": null
+        },
+        {
+          "path": "/book/1/1.html",
+          "range": null
+        },
+        {
+          "path": "/toc-api?id=1&page=1",
+          "range": null
+        },
+        {
+          "path": "/toc-api?id=1&page=1",
+          "range": null
+        },
+        {
+          "path": "/book/1/2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/index.html",
+          "range": null
+        },
+        {
+          "path": "/toc-api?id=1&page=0",
+          "range": null
+        },
+        {
+          "path": "/toc-api?id=1&page=1",
+          "range": null
+        },
+        {
+          "path": "/book/1/2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/index.html",
+          "range": null
+        },
+        {
+          "path": "/toc-api?id=1&page=0",
+          "range": null
+        },
+        {
+          "path": "/toc-api?id=1&page=1",
+          "range": null
+        },
+        {
+          "path": "/toc-api?id=1&page=2",
+          "range": null
+        },
+        {
+          "path": "/book/1/1.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/3.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/index.html",
+          "range": null
+        },
+        {
+          "path": "/toc-api?id=1&page=0",
+          "range": null
+        },
+        {
+          "path": "/book/1/1.html",
+          "range": null
+        },
+        {
+          "path": "/catalog.json?q=%E5%B1%B1%E9%97%B4",
+          "range": null
+        },
+        {
+          "path": "/catalog.json?q=%E9%94%99%E8%AF%AF",
+          "range": null
+        },
+        {
+          "path": "/invalid.txt",
+          "range": "bytes=0-8191"
+        }
+      ],
+      "source_import": true,
+      "txt_no_body_files": true,
+      "html_no_body_files": true,
+      "explicit_offline": true,
+      "cache_cleanup": true,
+      "invalid_utf8_rejected": true,
+      "searches": [
+        "错误",
+        "山间",
+        "林间"
+      ],
+      "state_bytes": 1525,
+      "stress": false,
+      "preferences": true,
+      "auto_turn": false,
+      "paged_toc": true,
+      "html_paged": false,
+      "pool_peak": 8,
+      "ime_submit": false,
+      "ime_hide_keeps_query": false,
+      "allocation_failures": 0
+    }
+  },
+  "production_replay": {
+    "passed": true,
+    "production": true,
+    "matching_pages": 37,
+    "progress_preserved": true,
+    "cache_unchanged": true,
+    "package_sha256": "18947399b89e83421314a3c3403fc5d27f856322560636a6a8a438226b2377d2",
+    "reference_sha256": "b854d3f73bddbf816c654db1276aad10eacbf80fe309409db57f19f56fd4c608"
+  },
+  "artifacts": {
+    "qa": {
+      "path": "local/reader-more-sources-20261015/qa-final/artifacts/pxa-novel-reader.pxa",
+      "bytes": 573260,
+      "sha256": "06a860f23f4a384217cfbe93da89f541d478eb1b76a7add4536ec874be0cb54a"
+    },
+    "release": {
+      "path": "local/reader-more-sources-20261015/release/pxa-novel-reader.pxa",
+      "bytes": 2693129,
+      "sha256": "18947399b89e83421314a3c3403fc5d27f856322560636a6a8a438226b2377d2"
+    },
+    "aot": [
+      {
+        "path": "local/reader-more-sources-20261015/release/pxa-novel-reader/artifacts/main.esp32-s3.aot",
+        "bytes": 1431260,
+        "sha256": "02d92358c2354be50d65ba6652439e6c0c6647351899fddca0c08c43983c254e"
+      },
+      {
+        "path": "local/reader-more-sources-20261015/release/pxa-novel-reader/artifacts/main.esp32-s31.aot",
+        "bytes": 1463348,
+        "sha256": "8237f39a52a88e19528b73853ef85b40ffedc4593f7f8a617569eb0b5fa07ff2"
+      },
+      {
+        "path": "local/reader-more-sources-20261015/release/pxa-novel-reader/artifacts/main.linux-x86_64.aot",
+        "bytes": 796304,
+        "sha256": "2eab38af15ec84d9dee3210229d6f0227cd62877567a167d471c3d9d8d766783"
+      }
+    ]
+  },
+  "previous_release_package": {
+    "path": "local/reader-sources-20261015/release/pxa-novel-reader.pxa",
+    "bytes": 2518698,
+    "sha256": "90382f4c75cf6a69367c636384d780109a444f0eee647171680c71ba4b159e8f"
+  },
+  "package_size_delta_bytes": 174431,
+  "aot_size_delta_bytes": {
+    "main.esp32-s3.aot": 104640,
+    "main.esp32-s31.aot": 102948,
+    "main.linux-x86_64.aot": 52020
+  },
+  "fixed_budgets": {
+    "txt_window_bytes": 8192,
+    "canvas_command_bytes": 3600,
+    "task_pool_bytes": 16400,
+    "linear_c_stack_bytes": 65536,
+    "linear_max_bytes": 2097152,
+    "native_control_nodes": 48,
+    "native_control_callbacks": 16,
+    "max_rules_bytes": 4096,
+    "max_sources": 8,
+    "max_chapters": 1024,
+    "metadata_response_bytes": 98304,
+    "chapter_response_and_assembled_text_bytes": 65536,
+    "max_pagination_pages": 128
+  },
+  "observed_memory": {
+    "nunu": {
+      "fresh_process": true,
+      "initial_linear_pages": 2,
+      "max_linear_pages": 3,
+      "page_bytes": 65536,
+      "pool_peak_slots": 8,
+      "allocation_failures": 0,
+      "is_allocator_peak": false,
+      "is_device_sram_psram": false
+    },
+    "shuzhaige": {
+      "fresh_process": true,
+      "initial_linear_pages": 2,
+      "max_linear_pages": 4,
+      "page_bytes": 65536,
+      "pool_peak_slots": 8,
+      "allocation_failures": 0,
+      "is_allocator_peak": false,
+      "is_device_sram_psram": false
+    },
+    "biquche": {
+      "fresh_process": true,
+      "initial_linear_pages": 2,
+      "max_linear_pages": 4,
+      "page_bytes": 65536,
+      "pool_peak_slots": 8,
+      "allocation_failures": 0,
+      "is_allocator_peak": false,
+      "is_device_sram_psram": false
+    },
+    "wenlinshe": {
+      "fresh_process": true,
+      "initial_linear_pages": 2,
+      "max_linear_pages": 4,
+      "page_bytes": 65536,
+      "pool_peak_slots": 8,
+      "allocation_failures": 0,
+      "is_allocator_peak": false,
+      "is_device_sram_psram": false
+    },
+    "delivery-session-html": {
+      "initial_linear_pages": 2,
+      "max_linear_pages": 3,
+      "page_bytes": 65536,
+      "is_allocator_peak": false,
+      "is_device_sram_psram": false
+    },
+    "delivery-session-round": {
+      "initial_linear_pages": 2,
+      "max_linear_pages": 3,
+      "page_bytes": 65536,
+      "is_allocator_peak": false,
+      "is_device_sram_psram": false
+    }
+  },
+  "simulator_binaries": {
+    "pxsys_desktop_simulator": {
+      "path": "build/simulator/reader-validation/pxsys_desktop_simulator",
+      "bytes": 3485880,
+      "sha256": "ef43aa535135557bfa8e3bfa93ac65dafb5ec835233fd9fe35dc688b246e1c52"
+    },
+    "pxsys_product_simulator": {
+      "path": "build/simulator/reader-validation/pxsys_product_simulator",
+      "bytes": 3082584,
+      "sha256": "51a8ad0e17916f898fa2b7370f0cd66ed4937ee258187ff56726d3f1922f4ff8"
+    },
+    "pxsys_package_installer": {
+      "path": "build/simulator/reader-validation/pxsys_package_installer",
+      "bytes": 106624,
+      "sha256": "20b3744abe7b69babb4b3aed634a9cae6565273d953e031a7365658d0709e080"
+    }
+  },
+  "migrations": {
+    "legacy_versions": [
+      1,
+      2,
+      3
+    ],
+    "old_catalog_revision": 1,
+    "new_catalog_revision": 2,
+    "new_defaults_once": true,
+    "empty_and_custom_only_preserved": true,
+    "removed_sources_not_readded_at_same_revision": true,
+    "custom_rules_preserved": true,
+    "default_rule_documents_in_state": false
+  },
+  "rejected_candidate": {
+    "bqge9": "Follow-up chapter page repeatedly timed out; not shipped"
+  },
+  "scope": {
+    "device_tested": false,
+    "store_uploaded": false,
+    "memory_comparison": "Nunu same sample matches 0.2.1 linear pages; other sources have different workload, not a memory reduction claim",
+    "website_entries_not_publisher_completeness": true,
+    "http_times_not_device_latency": true
+  }
+}

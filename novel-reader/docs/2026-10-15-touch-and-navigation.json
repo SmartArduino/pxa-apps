@@ -1,0 +1,530 @@
+{
+  "version": "0.2.4",
+  "release_sequence": 8,
+  "date": "2026-10-15",
+  "state_version": 4,
+  "source_revision": 2,
+  "hold_threshold_us": 550000,
+  "interaction": {
+    "passed": true,
+    "cases": [
+      {
+        "profile": "296x240-160",
+        "passed": true,
+        "held_opens_before_release": true,
+        "held_ms": 572.1,
+        "release_no_clickthrough": true,
+        "drag_cancels": true,
+        "touch_cancels": true,
+        "tap_opens": true,
+        "shelf_pages": 8,
+        "source_pages": 3,
+        "toc_pages": 13,
+        "all_items_reachable": true,
+        "short_last_page_previous_correct": true,
+        "max_linear_pages": 3,
+        "pool_peak": 8,
+        "allocation_failures": 0
+      },
+      {
+        "profile": "480x480-320-round",
+        "passed": true,
+        "held_opens_before_release": true,
+        "held_ms": 571.6,
+        "release_no_clickthrough": true,
+        "drag_cancels": true,
+        "touch_cancels": true,
+        "tap_opens": true,
+        "shelf_pages": 8,
+        "source_pages": 3,
+        "toc_pages": 13,
+        "all_items_reachable": true,
+        "short_last_page_previous_correct": true,
+        "max_linear_pages": 3,
+        "pool_peak": 8,
+        "allocation_failures": 0
+      },
+      {
+        "profile": "240x240-160-round",
+        "passed": true,
+        "held_opens_before_release": true,
+        "held_ms": 573.9,
+        "release_no_clickthrough": true,
+        "drag_cancels": true,
+        "touch_cancels": true,
+        "tap_opens": true,
+        "shelf_pages": 8,
+        "source_pages": 3,
+        "toc_pages": 13,
+        "all_items_reachable": true,
+        "short_last_page_previous_correct": true,
+        "max_linear_pages": 3,
+        "pool_peak": 8,
+        "allocation_failures": 0
+      },
+      {
+        "profile": "800x480-160",
+        "passed": true,
+        "held_opens_before_release": true,
+        "held_ms": 564.9,
+        "release_no_clickthrough": true,
+        "drag_cancels": true,
+        "touch_cancels": true,
+        "tap_opens": true,
+        "shelf_pages": 3,
+        "source_pages": 2,
+        "toc_pages": 4,
+        "all_items_reachable": true,
+        "short_last_page_previous_correct": true,
+        "max_linear_pages": 3,
+        "pool_peak": 8,
+        "allocation_failures": 0
+      }
+    ],
+    "package_sha256": "e6c71b67850b35e98fa0dc98cf7e2237f4bb8ab58252ca9d50ae6d8ffc4e0175"
+  },
+  "sessions": {
+    "session-html": {
+      "passed": true,
+      "width": 296,
+      "height": 240,
+      "dpi": 160,
+      "round": false,
+      "requests": [
+        {
+          "path": "/catalog.json?q=%E6%9E%97%E9%97%B4",
+          "range": null
+        },
+        {
+          "path": "/book.txt",
+          "range": "bytes=0-8191"
+        },
+        {
+          "path": "/book.txt",
+          "range": "bytes=2151-10342"
+        },
+        {
+          "path": "/book.txt",
+          "range": "bytes=4339-12530"
+        },
+        {
+          "path": "/book.txt",
+          "range": "bytes=6501-14692"
+        },
+        {
+          "path": "/book.txt",
+          "range": "bytes=4339-12530"
+        },
+        {
+          "path": "/book.txt",
+          "range": "bytes=0-8191"
+        },
+        {
+          "path": "/book.txt",
+          "range": "bytes=2151-10342"
+        },
+        {
+          "path": "/book.txt",
+          "range": "bytes=2151-10342"
+        },
+        {
+          "path": "/book.txt",
+          "range": "bytes=2019-10210"
+        },
+        {
+          "path": "/book.txt",
+          "range": "bytes=0-8191"
+        },
+        {
+          "path": "/catalog.json?q=%E6%9E%97%E9%97%B4",
+          "range": null
+        },
+        {
+          "path": "/web-source.json",
+          "range": null
+        },
+        {
+          "path": "/search.html?q=%E5%B1%B1%E9%97%B4",
+          "range": null
+        },
+        {
+          "path": "/book/1/index.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/1.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/1_2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/1.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/1_2.html",
+          "range": null
+        },
+        {
+          "path": "/toc-html?page=2",
+          "range": null
+        },
+        {
+          "path": "/toc-html?page=2",
+          "range": null
+        },
+        {
+          "path": "/book/1/2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/2_2.html",
+          "range": null
+        },
+        {
+          "path": "/toc-html?page=3",
+          "range": null
+        },
+        {
+          "path": "/book/1/2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/2_2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/index.html",
+          "range": null
+        },
+        {
+          "path": "/toc-html?page=2",
+          "range": null
+        },
+        {
+          "path": "/book/1/2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/2_2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/index.html",
+          "range": null
+        },
+        {
+          "path": "/toc-html?page=2",
+          "range": null
+        },
+        {
+          "path": "/toc-html?page=3",
+          "range": null
+        },
+        {
+          "path": "/book/1/1.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/1_2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/2_2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/3.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/3_2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/index.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/1.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/1_2.html",
+          "range": null
+        },
+        {
+          "path": "/catalog.json?q=%E5%B1%B1%E9%97%B4",
+          "range": null
+        },
+        {
+          "path": "/catalog.json?q=%E9%94%99%E8%AF%AF",
+          "range": null
+        },
+        {
+          "path": "/invalid.txt",
+          "range": "bytes=0-8191"
+        }
+      ],
+      "source_import": true,
+      "txt_no_body_files": true,
+      "html_no_body_files": true,
+      "explicit_offline": true,
+      "cache_cleanup": true,
+      "invalid_utf8_rejected": true,
+      "searches": [
+        "错误",
+        "山间",
+        "林间"
+      ],
+      "state_bytes": 1586,
+      "stress": true,
+      "preferences": true,
+      "auto_turn": true,
+      "paged_toc": false,
+      "html_paged": true,
+      "toc_partial_page_completed": true,
+      "pool_peak": 8,
+      "ime_submit": false,
+      "ime_hide_keeps_query": true,
+      "allocation_failures": 0
+    },
+    "session-round": {
+      "passed": true,
+      "width": 480,
+      "height": 480,
+      "dpi": 320,
+      "round": true,
+      "requests": [
+        {
+          "path": "/catalog.json?q=%E6%9E%97%E9%97%B4",
+          "range": null
+        },
+        {
+          "path": "/book.txt",
+          "range": "bytes=0-8191"
+        },
+        {
+          "path": "/catalog.json?q=%E6%9E%97%E9%97%B4",
+          "range": null
+        },
+        {
+          "path": "/web-source.json",
+          "range": null
+        },
+        {
+          "path": "/search.html?q=%E5%B1%B1%E9%97%B4",
+          "range": null
+        },
+        {
+          "path": "/book/1/index.html",
+          "range": null
+        },
+        {
+          "path": "/toc-api?id=1&page=0",
+          "range": null
+        },
+        {
+          "path": "/book/1/1.html",
+          "range": null
+        },
+        {
+          "path": "/toc-api?id=1&page=1",
+          "range": null
+        },
+        {
+          "path": "/toc-api?id=1&page=1",
+          "range": null
+        },
+        {
+          "path": "/book/1/2.html",
+          "range": null
+        },
+        {
+          "path": "/toc-api?id=1&page=2",
+          "range": null
+        },
+        {
+          "path": "/book/1/2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/index.html",
+          "range": null
+        },
+        {
+          "path": "/toc-api?id=1&page=0",
+          "range": null
+        },
+        {
+          "path": "/toc-api?id=1&page=1",
+          "range": null
+        },
+        {
+          "path": "/book/1/2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/index.html",
+          "range": null
+        },
+        {
+          "path": "/toc-api?id=1&page=0",
+          "range": null
+        },
+        {
+          "path": "/toc-api?id=1&page=1",
+          "range": null
+        },
+        {
+          "path": "/toc-api?id=1&page=2",
+          "range": null
+        },
+        {
+          "path": "/book/1/1.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/2.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/3.html",
+          "range": null
+        },
+        {
+          "path": "/book/1/index.html",
+          "range": null
+        },
+        {
+          "path": "/toc-api?id=1&page=0",
+          "range": null
+        },
+        {
+          "path": "/book/1/1.html",
+          "range": null
+        },
+        {
+          "path": "/catalog.json?q=%E5%B1%B1%E9%97%B4",
+          "range": null
+        },
+        {
+          "path": "/catalog.json?q=%E9%94%99%E8%AF%AF",
+          "range": null
+        },
+        {
+          "path": "/invalid.txt",
+          "range": "bytes=0-8191"
+        }
+      ],
+      "source_import": true,
+      "txt_no_body_files": true,
+      "html_no_body_files": true,
+      "explicit_offline": true,
+      "cache_cleanup": true,
+      "invalid_utf8_rejected": true,
+      "searches": [
+        "错误",
+        "山间",
+        "林间"
+      ],
+      "state_bytes": 1525,
+      "stress": false,
+      "preferences": true,
+      "auto_turn": false,
+      "paged_toc": true,
+      "html_paged": false,
+      "toc_partial_page_completed": true,
+      "pool_peak": 8,
+      "ime_submit": false,
+      "ime_hide_keeps_query": false,
+      "allocation_failures": 0
+    }
+  },
+  "native_checks": {
+    "asan_ubsan": true,
+    "passed": true,
+    "log": {
+      "path": "local/reader-touch-20261015/native.log",
+      "bytes": 166,
+      "sha256": "a7415d97435a304e76716e9bf3a964906521d9e0c9a23d71df0bc1d087ef27d6"
+    }
+  },
+  "production_replay": {
+    "passed": true,
+    "production": true,
+    "matching_pages": 37,
+    "progress_preserved": true,
+    "cache_unchanged": true,
+    "package_sha256": "f1a3cb213139dc10660b327accaef4c02048de24e8a71b4cb9ac69c526d35ec8",
+    "reference_sha256": "b854d3f73bddbf816c654db1276aad10eacbf80fe309409db57f19f56fd4c608"
+  },
+  "runtime_source_sha256": {
+    "main.cpp": "81f69f4a6ce1fe1d3a83c9a3402c6798c398d1fdae5f01b7d1a34591510054e8",
+    "reader_ui.inc": "203407bb3001803ab10d5c66d66ceb1708158958728b6de039274cfecdc41d08",
+    "reader_core.hpp": "864f5ba233ce9d0fe9008839295c47fd3333fe17645805a7e4523824eaa7574f",
+    "reader_catalog.hpp": "43ef134f9558bfe6400f7a585c742b0ea5e1b6a85fa8863bc575cb27ea7bd284",
+    "reader_paging.hpp": "397b4583dc0d19a5de984907a6a8916d24d3f561ee25307c7067a8715da2dc6c",
+    "reader_state.hpp": "a61085991c5f52d6d3033b96f48367a672acd64f7070478a9ebb02b69c99eacf",
+    "reader_sources.hpp": "9fa8e2f9dfd17629e414c4b8145e6a09da52e0525e091daee5bec2e9ef7f7e45",
+    "reader_web.hpp": "ebe3d7c9b465e70234b4c02153d9bfb8186d34a1d3e3ec7402a75f2d496c4905",
+    "reader_window.hpp": "2a7007a88acf99bd20287fb5292ccc265a779f64c4a1a34ed5e343635fd6ed83"
+  },
+  "artifacts": {
+    "release": {
+      "path": "local/reader-touch-20261015/release/pxa-novel-reader.pxa",
+      "bytes": 2693190,
+      "sha256": "f1a3cb213139dc10660b327accaef4c02048de24e8a71b4cb9ac69c526d35ec8"
+    },
+    "qa": {
+      "path": "local/reader-touch-20261015/qa-delivery/artifacts/pxa-novel-reader.pxa",
+      "bytes": 578702,
+      "sha256": "e6c71b67850b35e98fa0dc98cf7e2237f4bb8ab58252ca9d50ae6d8ffc4e0175"
+    },
+    "aot": [
+      {
+        "path": "local/reader-touch-20261015/release/pxa-novel-reader/artifacts/main.esp32-s3.aot",
+        "bytes": 1429580,
+        "sha256": "64b3cf9616f17dab7dde039b70dd5aa8fa6420a6ea7f1dff468e9f61fd1b044c"
+      },
+      {
+        "path": "local/reader-touch-20261015/release/pxa-novel-reader/artifacts/main.esp32-s31.aot",
+        "bytes": 1459856,
+        "sha256": "f47bad4a595a5c3b4b60e9ebf3f1350a4d62f67abffdbb35e944bf353b7d6279"
+      },
+      {
+        "path": "local/reader-touch-20261015/release/pxa-novel-reader/artifacts/main.linux-x86_64.aot",
+        "bytes": 795368,
+        "sha256": "92386d5f999a55bc97e3ee3942a1dfdc3478945ec434b766f81a65384c941b97"
+      }
+    ]
+  },
+  "fixed_budgets": {
+    "control_nodes": 48,
+    "control_callbacks": 16,
+    "canvas_bytes": 3600,
+    "txt_window_bytes": 8192,
+    "task_pool_bytes": 16400,
+    "linear_c_stack_bytes": 65536,
+    "linear_max_bytes": 2097152
+  },
+  "scope": {
+    "device_tested": false,
+    "store_uploaded": false,
+    "hold_measurement": "Desktop QA wall clock until UI trace, not optical display/input latency",
+    "navigation": "Icon page navigation, not continuous scrolling",
+    "linear_memory": "Per-run Wasm linear pages, not malloc peak or device SRAM/PSRAM"
+  },
+  "previous_package": {
+    "path": "local/reader-icon-20261015/release/pxa-novel-reader.pxa",
+    "bytes": 2697548,
+    "sha256": "d7fb2dba0e5035df85ea4d06942c89c730cb59ebf6ae0acf1aa4f650e36a21f3"
+  },
+  "package_delta_bytes": -4358
+}

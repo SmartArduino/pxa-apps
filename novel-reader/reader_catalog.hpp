@@ -1,6 +1,19 @@
 #pragma once
 #include "reader_core.hpp"
 namespace reader {
+inline std::optional<std::string> search_address(std::string_view pattern,std::string_view key) {
+    const auto escaped=percent(key);std::string out;
+    while(!pattern.empty()) {
+        const auto marker=pattern.find("{{key}}");
+        const auto prefix=pattern.substr(0,marker);
+        if(prefix.size()>512-out.size())return {};
+        out+=prefix;
+        if(marker==pattern.npos)break;
+        if(escaped.size()>512-out.size())return {};
+        out+=escaped;pattern.remove_prefix(marker+7);
+    }
+    return out;
+}
 struct Classic { std::string_view title, author, aliases; unsigned id; bool git; };
 // Metadata only: no book bodies or allocated search index in the package.
 inline constexpr std::array classics{

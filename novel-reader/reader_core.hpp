@@ -181,18 +181,38 @@ inline std::string origin(std::string_view url) {
       return {};
   return std::string(url.substr(0, end));
 }
-inline std::string resolve(std::string_view base, std::string_view path) {
-  if (!origin(path).empty())
-    return std::string(path);
-  auto root = origin(base);
-  if (root.empty() || path.empty() || path.starts_with("//"))
-    return {};
-  if (path.front() == '/')
-    return root + std::string(path);
-  auto end = base.find_last_of('/');
-  if (end < root.size())
-    return root + "/" + std::string(path);
-  return std::string(base.substr(0, end + 1)) + std::string(path);
+inline std::string resolve(std::string_view base,std::string_view ref) {
+  while(!ref.empty() && (ref.front()==' ' || ref.front()=='\t' || ref.front()=='\r' || ref.front()=='\n'))ref.remove_prefix(1);while(!ref.empty() && (ref.back()==' ' || ref.back()=='\t' || ref.back()=='\r' || ref.back()=='\n'))ref.remove_suffix(1);if(ref.empty())return {};
+  for(unsigned char c:ref) if(c<=32 || c==127 || c=='\\')return {};
+  if(ref.starts_with("//")) return resolve(base,std::string(base.substr(0,base.find(':')))+":"+std::string(ref));
+  if(auto colon=ref.find(':');colon!=ref.npos && colon<ref.find_first_of("/?#")) {
+    if(origin(ref).empty())return {};
+  }
+  auto absolute=!origin(ref).empty()?std::string(ref):std::string{};
+  const auto root=origin(base);if(absolute.empty() && root.empty())return {};
+  if(absolute.empty()) {
+    auto clean=base.substr(0,base.find('#'));
+    if(ref.front()=='#') absolute=std::string(clean)+std::string(ref);
+    else if(ref.front()=='?') absolute=std::string(clean.substr(0,clean.find('?')))+std::string(ref);
+    else {
+      clean=clean.substr(0,clean.find('?'));
+      absolute=ref.front()=='/'?root+std::string(ref):std::string(clean.substr(0,std::max(root.size(),clean.find_last_of('/'))))+"/"+std::string(ref);
+    }
+  }
+  const auto host=origin(absolute);if(host.empty())return {};
+  auto path=std::string_view(absolute).substr(host.size());path=path.substr(0,path.find('#'));
+  const auto query=path.find('?');const auto tail=query==path.npos?std::string_view{}:path.substr(query);
+  path=path.substr(0,query);
+  std::string normalized=host;normalized+='/';
+  std::size_t at=path.starts_with('/')?1:0;
+  while(at<path.size()) {
+    auto end=path.find('/',at);if(end==path.npos)end=path.size();auto part=path.substr(at,end-at);
+    if(part=="..") {if(normalized.size()>host.size()+1){if(normalized.back()=='/')normalized.pop_back();normalized.resize(normalized.find_last_of('/')+1);}}
+    else if(part!="." && !part.empty()) {normalized.append(part);if(end<path.size())normalized+='/';}
+    at=end+1;
+  }
+  normalized+=tail;
+  return normalized.size()<=512?normalized:std::string{};
 }
 inline std::uint64_t hash(std::string_view text) {
   std::uint64_t h = 14695981039346656037ull;
@@ -471,17 +491,20 @@ private:
   std::string_view text_;
 };
 
-enum class SourceKind : std::uint8_t { gutenberg, json, classics, gitenberg };
+enum class SourceKind : std::uint8_t { gutenberg, json, classics, gitenberg, html };
 struct Source {
   std::string name, url;
   SourceKind kind = SourceKind::json;
   bool enabled = true;
+  std::string rules{}; // Validated declarative HTML config; never executable.
 };
 struct Book {
   std::string title, author, url, toc;
   std::uint32_t position = 0, total = 0;
   bool complete = false;
   std::string validator{}; // strong ETag or Last-Modified for safe range resume
+  std::string source{}; // HTML parser identity; cached TXT does not depend on it.
+  std::uint32_t chapter = 0; // Local chapter position in on-demand mode.
 };
 struct Chapter {
   std::string title, url;
@@ -490,6 +513,7 @@ struct Chapter {
 struct Settings {
   std::uint8_t font = 16, line_gap = 6, theme = 3, auto_seconds = 15;
   bool automatic = false;
+  bool offline = false; // New network books do not write body files by default.
 };
 struct Rect {
   int x, y, w, h;

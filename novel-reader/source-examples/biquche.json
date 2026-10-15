@@ -1,0 +1,39 @@
+{
+  "format": "pxa-reader-source-2",
+  "kind": "html",
+  "name": "笔趣阁 · biquche",
+  "searchUrl": "https://www.biquche.com/search.php?q={{key}}",
+  "search": {
+    "items": "dl",
+    "title": "dt img@alt",
+    "link": "h3 a@href",
+    "author": ".book_other span"
+  },
+  "toc": {
+    "items": ".book_list2 a",
+    "title": "",
+    "link": "@href",
+    "paged": {
+      "format": "html",
+      "url": "index_{{page}}.html",
+      "start": 1,
+      "pages": ".pagination .disabled a"
+    }
+  },
+  "content": {
+    "selector": "article.font_max",
+    "remove": [
+      "ins",
+      "script",
+      "style"
+    ],
+    "paged": {
+      "url": "{{stem}}_{{page}}.html",
+      "pages": "article.font_max",
+      "start": 1,
+      "header": "第({{page}}/{{total}})页",
+      "detectLink": true
+    }
+  },
+  "userAgent": "Mozilla/5.0"
+}

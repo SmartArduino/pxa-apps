@@ -1,0 +1,31 @@
+{
+  "format": "pxa-reader-source-2",
+  "kind": "html",
+  "name": "文林社",
+  "searchUrl": "https://www.wenlinshe.com/search?q={{key}}",
+  "referer": "https://www.wenlinshe.com/",
+  "search": {
+    "items": ".book-search-results-item",
+    "title": ".book-search-results-name",
+    "link": "a.book-search-results-link@href",
+    "single": {
+      "title": "h1",
+      "link": "link[rel=canonical]@href",
+      "author": ".book-author-name",
+      "stripTitleSuffix": "全文在线阅读"
+    }
+  },
+  "toc": {
+    "items": "#chapterList a",
+    "title": "",
+    "link": "@href"
+  },
+  "content": {
+    "selector": "#chapterContent",
+    "remove": [
+      "h2.structural",
+      ".chapter-inline-ad"
+    ]
+  },
+  "userAgent": "Mozilla/5.0"
+}

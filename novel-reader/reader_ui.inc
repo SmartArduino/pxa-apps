@@ -13,6 +13,7 @@ bool ReaderApp::Controls::render(Owner& owner, std::uint32_t parent) {
   using reader::Rect;
   auto l = app->layout();
   std::size_t rendered_rows = 0;
+  std::size_t page_rows = 1;
   const WidgetColor bg = screen == reading ? WidgetColor(app->body_background()) : WidgetColor(Color::background);
   const WidgetColor ink = screen == reading && state.settings.theme != 3 ? WidgetColor(app->body_foreground()) : WidgetColor(Color::text);
   const WidgetColor muted = Color::muted;
@@ -25,7 +26,7 @@ bool ReaderApp::Controls::render(Owner& owner, std::uint32_t parent) {
     return CanvasRegion{x, y, std::max(1, int(std::ceil((r.x + r.w) / density)) - x),
                         std::max(1, int(std::ceil((r.y + r.h) / density)) - y)};
   };
-  auto font_for_pixels = [](int pixels) {
+  auto font_role = [](int pixels) {
     return pixels >= 28 ? Font::display : pixels >= 24 ? Font::headline :
            pixels >= 20 ? Font::title : pixels >= 16 ? Font::body :
            pixels >= 14 ? Font::label : Font::caption;
@@ -35,6 +36,9 @@ bool ReaderApp::Controls::render(Owner& owner, std::uint32_t parent) {
            font == Font::title ? 20 : font == Font::body ? 16 :
            font == Font::label ? 14 : 12;
   };
+  const auto host_scale=app->native_density()*float(app->metrics.font_scale_q16)/65536.f;
+  auto font_for_pixels=[&](int pixels){return font_role(int(pixels/std::max(.1f,host_scale)));};
+  auto physical_font_pixels=[&](Font font){return std::max(1,int(font_pixels(font)*host_scale+.5f));};
   int button_pixels = l.ui_font;
   if (screen == settings) {
     const int first_y = l.top + l.row + gap / 2 + l.caption + gap / 2;
@@ -84,7 +88,7 @@ bool ReaderApp::Controls::render(Owner& owner, std::uint32_t parent) {
   auto text = [&] [[gnu::noinline]] (Rect r, std::string_view value, int pixels, WidgetColor color, std::uint8_t align = 0, State<std::string>* binding = nullptr) {
     if (r.w <= 0 || r.h < 16) return;
     Font font = screen == reading ? Font::caption : font_for_pixels(std::min(pixels, r.h * 5 / 8));
-    pixels = screen == reading ? l.ui_font : font_pixels(font);
+    pixels = screen == reading ? l.ui_font : physical_font_pixels(font);
     const int line_h = reader::text_line_height(pixels);
     std::array<char, 192> scratch{};
     auto shown = reader::ellipsize(value, pixels, r.w, scratch);
@@ -110,7 +114,7 @@ bool ReaderApp::Controls::render(Owner& owner, std::uint32_t parent) {
     Font font = font_for_pixels(preferred);
     // Complete control labels are fitted before selecting a Host font role.
     std::array<char, 192> scratch{};
-    if (data_label) label = reader::ellipsize(label, font_pixels(font), r.w - inset, scratch);
+    if (data_label) label = reader::ellipsize(label, physical_font_pixels(font), r.w - inset, scratch);
     const bool destructive = a == confirm_remove;
     auto control = Button(label, WidgetStyle{region(r), destructive ? WidgetColor(Color::on_error_container) : selected ? WidgetColor(Color::on_primary) : WidgetColor(Color::text),
                                    destructive ? WidgetColor(Color::error_container) : selected ? accent : surface,
@@ -143,9 +147,9 @@ bool ReaderApp::Controls::render(Owner& owner, std::uint32_t parent) {
     const int cover_font = std::max(12, l.ui_font * 3 / 4);
     text({cover.x + 2, cover.y, cover.w - 4, cover.h}, "书页", cover_font, Color::on_primary_container, 1);
     const int x = cover.x + cover.w + inset / 2, w = r.x + r.w - x - inset / 2;
-    const int title_h = reader::text_line_height(font_pixels(font_for_pixels(l.ui_font)));
+    const int title_h = reader::text_line_height(physical_font_pixels(font_for_pixels(l.ui_font)));
     const int detail_font = std::max(12, l.ui_font * 3 / 4);
-    const int detail_h = reader::text_line_height(font_pixels(font_for_pixels(detail_font)));
+    const int detail_h = reader::text_line_height(physical_font_pixels(font_for_pixels(detail_font)));
     const int content_y = y + inset / 2, content_h = h - inset;
     text({x, content_y, w, std::min(content_h, title_h)}, book.title, l.ui_font, ink);
     if (content_h >= title_h + detail_h)
@@ -163,9 +167,21 @@ bool ReaderApp::Controls::render(Owner& owner, std::uint32_t parent) {
   };
   if (screen != reading && screen != settings) rectangle({0, 0, l.width, l.height}, bg, 0);
   auto header = l.box(l.top, l.row);
-  const bool has_settings = screen == shelf;
-  const int settings_width = has_settings ? l.ui_font * 2 + inset + 2 :
-                              screen == search && !results.empty() ? 2 * l.row : 0;
+  const bool has_settings = screen == shelf || screen==settings;
+  const bool has_add = screen == sources;
+  const bool has_pager = screen == sources || screen == toc ||
+      (screen == shelf && state.shelf.size() > 1) || (screen == search && !results.empty());
+  const int pager_width=std::max(28,int(28*l.density));
+  const int utility_width = has_settings ? l.ui_font * 2 + inset + 2 : has_add ? l.row : 0;
+  // On a round/high-DPI display the title's chord can be very narrow. Move
+  // the arrows into the existing, wider caption row instead of losing title
+  // characters or adding another toolbar row.
+  const bool caption_pager = has_pager && screen != search &&
+      header.w - utility_width - gap / 2 - 2 * pager_width <
+          reader::text_width(app->header_title(), physical_font_pixels(Font::caption));
+  const bool header_pager = has_pager && !caption_pager;
+  const int utility_gap = utility_width && header_pager ? gap / 2 : 0;
+  const int header_controls = utility_width + utility_gap + (header_pager ? 2 * pager_width : 0);
   if (screen == reading) {
     // Font roles already scale in the Host. Selecting a role using scaled
     // pixels inflated the book name a second time on high-DPI screens.
@@ -176,34 +192,59 @@ bool ReaderApp::Controls::render(Owner& owner, std::uint32_t parent) {
         " pixels="+reader::number_string(l.ui_font)+" text="+app->header_text.get());
 #endif
   } else {
-    const int header_size = std::min({int(23 * l.density), l.row - gap,
-        has_settings ? std::max(8, (header.w - settings_width) / 2) : header.w});
-    text({header.x, header.y + gap / 2, header.w - settings_width, header.h}, app->header_title(), header_size, ink, 0, &app->header_text);
+    const int preferred = std::min({int(23 * l.density), l.row - gap,
+        has_settings ? std::max(8, (header.w - header_controls) / 2) : header.w});
+    const int header_size=reader::fit_text_size(app->header_title(),preferred,{0,0,header.w-header_controls,header.h});
+    text({header.x, header.y + gap / 2, header.w - header_controls, header.h}, app->header_title(), header_size, ink, 0, &app->header_text);
   }
-  if (has_settings) button({header.x + header.w - settings_width, header.y, settings_width, l.row - gap}, "设置", options);
-  if (screen == search && !results.empty()) {
-    button({header.x + header.w - 2 * l.row, header.y, l.row - gap / 2, l.row - gap}, "‹", list_previous);
-    button({header.x + header.w - l.row, header.y, l.row, l.row - gap}, "›", list_next);
-  }
+  if (has_settings) button({header.x + header.w - utility_width, header.y, utility_width, l.row - gap}, screen==settings ? "缓存" : "设置",screen==settings ? cache_options : options);
+  if (has_add) button({header.x + header.w - utility_width, header.y, utility_width, l.row - gap}, "+", add_source);
+  auto pager = [&](int right, int yy, int height) {
+    button({right - 2 * pager_width, yy, pager_width - gap / 2, height}, "‹", list_previous);
+    button({right - pager_width, yy, pager_width, height}, "›", list_next);
+  };
+  if (header_pager) pager(header.x + header.w - utility_width - utility_gap, header.y, l.row - gap);
   int y = l.top + l.row + gap / 2;
   if (screen != reading && screen != search && screen != settings) {
-    text(l.box(y, l.caption), app->subtitle(), std::max(8, l.ui_font * 4 / 5), muted, 0, &app->subtitle_text);
+    auto caption = l.box(y, l.caption);
+    if (caption_pager) {
+      const int right = caption.x + caption.w;
+      caption.w -= 2 * pager_width + gap;
+      pager(right, y, l.caption);
+    }
+    text(caption, app->subtitle(), std::max(8, l.ui_font * 4 / 5), muted, 0, &app->subtitle_text);
     y += l.caption + gap / 2;
   }
   TextInputBox native_input{};
-  const int stop = screen == search ? l.bottom - l.row - gap : l.bottom - l.row * 2;
+  const int stop = l.bottom - l.row - gap;
+  // Use the page's full capacity, including on the final short page. Going
+  // back must return to the previous page start rather than subtracting the
+  // number of items that happened to remain.
+  auto list_capacity = [&](int height, std::size_t per_row, std::size_t trailing,
+                           std::size_t node_limit = SIZE_MAX) {
+    const auto geometry = std::size_t(std::max(0, stop - y - l.row + height) / height);
+    const auto handlers = callbacks.size() > callback_count + trailing
+        ? (callbacks.size() - callback_count - trailing) / per_row : 0;
+    return std::min({geometry, handlers, node_limit});
+  };
   if (screen == read_menu) {
     pair(y, "继续阅读", back, "章节目录", contents); y += l.row;
-    pair(y, busy ? "停止下载" : "下载全文", busy ? cancel_job : download, "保存进度", bookmark); y += l.row;
+    pair(y, busy ? "停止下载" : state.shelf[active].complete ? "离线管理" : "下载离线", busy ? cancel_job : state.shelf[active].complete ? cache_options : download, "保存进度", bookmark); y += l.row;
     pair(y, "阅读偏好", options, "返回书架", home); y += l.row;
   } else if (screen == book_menu) {
     row(y, "继续阅读", open_book, int(active)); y += l.row;
-    row(y, state.shelf[active].complete ? "已缓存 · 离线可读" : "继续缓存全文", download); y += l.row;
+    row(y, "下载与缓存管理", cache_options); y += l.row;
     row(y, "移除书籍…", remove_book);
   } else if (screen == remove_confirm) {
     text(l.box(y, l.row), "将移除书架记录与本地缓存", std::max(12, l.ui_font * 4 / 5), muted); y += l.row;
     row(y, "确认移除", confirm_remove); y += l.row;
     row(y, "取消", back);
+  } else if(screen==cache_settings) {
+    row(y,state.settings.offline ? "默认：自动下载全文" : "默认：按需阅读 · 不存正文",cache_mode);y+=l.row;
+    if(!state.shelf.empty() && !state.shelf[active].url.starts_with("sample:")) {
+      row(y,state.shelf[active].complete ? "已离线 · "+reader::number_string((state.shelf[active].total+1023)/1024)+" KiB" : "下载当前书籍",download);y+=l.row;
+      row(y,"清除本书正文缓存",erase_cache);
+    }
   } else if (screen == settings) {
     // Compact native controls leave two true-size body lines on small panels.
     const auto sample = reader::preference_preview(l, state.settings);
@@ -221,66 +262,82 @@ bool ReaderApp::Controls::render(Owner& owner, std::uint32_t parent) {
   } else if (screen == search || screen == source_add) {
     auto r = l.box(y, l.row); rectangle(r, surface, 12, true);
     int reserved = std::max(l.row, int(l.row * 1.3));
-    Rect edit{r.x + inset / 2, y + gap / 2, std::max(1, r.w - reserved - inset), r.h - gap};
+    const int clear_width=screen==search?std::max(20,l.row*3/4):0;
+    Rect edit{r.x + inset / 2, y + gap / 2, std::max(1, r.w - reserved - clear_width - inset), r.h - gap};
     // Hint belongs above the field, never below the transparent native editor.
     const Font font = font_for_pixels(std::min(l.ui_font, (l.row - gap) * 5 / 8));
     native_input = {region(edit), true, font, app->system_color(Color::text)};
+    if(screen==search)button({r.x+r.w-reserved-clear_width,y,clear_width,r.h-gap/2},"×",clear_search);
 #ifdef READER_VALIDATE
     trace_hit(30, 0, edit);
 #endif
     button({r.x + r.w - reserved, y, reserved, r.h - gap / 2}, screen == search ? (busy ? "取消" : "搜索") : "添加",
             screen == search ? (busy ? cancel_job : search_go) : import_source, 0, true); y += l.row + gap / 2;
     if (screen == search) {
-      row(y, state.sources[source_index].name + (results.empty() ? " ›" : " · " + reader::number_string(results.size()) + " 部 ›"), source_select, 0, true); y += l.row;
-      for (std::size_t i = list_start; i < results.size() && y + l.row <= stop; ++i) {
+      row(y, state.sources.empty()?"添加书源 ›":state.sources[source_index].name + (results.empty() ? " ›" : " · " + reader::number_string(results.size()) + " 部 ›"), source_select, 0, true); y += l.row;
+      page_rows = list_capacity(l.row, 1, 3);
+      for (std::size_t i = list_start; i < results.size() && rendered_rows < page_rows; ++i) {
         ++rendered_rows; book_card(y, l.row - gap / 2, results[i], int(i), i == list_start); y += l.row;
       }
       if (results.empty() && notice_deadline && y + l.row <= stop) {
         text(l.box(y, l.row), status, std::max(12, l.ui_font * 4 / 5), muted);
         y += l.row;
       }
-      if (results.empty() && !busy && y + l.row <= stop) {
-        auto r = l.box(y, l.row - gap / 2); int w = (r.w - gap) / 2;
-        button({r.x, y, w, r.h}, "西游记", search_classic);
-        button({r.x + w + gap, y, r.w - w - gap, r.h}, "红楼梦", search_classic, 1);
+      if (results.empty() && !busy) {
+        if(state.searches.empty() && !notice_deadline) {
+          text(l.box(y,std::min(l.row,stop-y)),"输入书名或作者，回车即可搜索",std::max(12,l.ui_font*4/5),muted);
+        } else if(!state.searches.empty()) {
+          if(y+l.caption+l.row<=stop) {
+            auto r=l.box(y,l.caption);const int clear=3*l.ui_font+inset;
+            text({r.x,y,r.w-clear,r.h},"最近搜索",std::max(12,l.ui_font*4/5),muted);
+            button({r.x+r.w-clear,y,clear,r.h},"清空",clear_history);y+=l.caption;
+          }
+          for(std::size_t i=0;i<state.searches.size() && y+l.row<=stop;i+=2) {
+            auto r=l.box(y,l.row-gap/2);int w=(r.w-gap)/2;
+            button({r.x,y,w,r.h},state.searches[i],search_history,int(i),false,true);
+            if(i+1<state.searches.size())button({r.x+w+gap,y,r.w-w-gap,r.h},state.searches[i+1],search_history,int(i+1),false,true);
+            y+=l.row;
+          }
+        }
       }
 
     } else {
-      text(l.box(y, l.row), "粘贴目录 JSON 或书源配置链接", std::max(8, l.ui_font * 4 / 5), muted);
+      text(l.box(y, l.row), "粘贴 JSON 目录或 HTML 书源规则链接", std::max(8, l.ui_font * 4 / 5), muted);
       row(y + l.row, "返回书源列表", source_list);
     }
   } else if (screen == sources) {
-    auto plus = l.box(l.top, l.row - gap);
-    button({plus.x + plus.w - l.row, plus.y, l.row, plus.h}, "+", add_source);
-    for (std::size_t i = list_start; i < state.sources.size() && y + l.row <= stop; ++i) {
+    page_rows = list_capacity(l.row, 2, 3);
+    for (std::size_t i = list_start; i < state.sources.size() && rendered_rows < page_rows; ++i) {
       ++rendered_rows; auto r = l.box(y, l.row - gap / 2); int w = r.w - l.row;
       // Preserve the state suffix even when a user-defined source name is long.
       std::array<char, 192> scratch{};
       const std::string_view suffix = state.sources[i].enabled ? " · 已启用" : " · 已停用";
-      const auto source_name = reader::ellipsize(state.sources[i].name, 12,
-          w - inset - reader::text_width(suffix, 12), scratch);
+      const int label_pixels=physical_font_pixels(Font::caption);
+      const auto source_name = reader::ellipsize(state.sources[i].name, label_pixels,
+          w - inset - reader::text_width(suffix, label_pixels), scratch);
       button({r.x, y, w, r.h}, std::string(source_name) + std::string(suffix),
              source_toggle, int(i), state.sources[i].enabled);
       button({r.x + w + gap / 2, y, r.w - w - gap / 2, r.h}, "−", remove_source, int(i)); y += l.row;
     }
-    pair(l.bottom - l.row * 2, "上一组", list_previous, "下一组", list_next);
   } else if (screen == toc) {
     if (chapters.empty()) text(l.box(y, l.row), busy ? "正在整理章节…" : "暂无目录，可以按页阅读", l.ui_font, muted);
-    for (std::size_t i = list_start; i < chapters.size() && y + l.row <= stop; ++i) {
-      ++rendered_rows; row(y, (chapters[i].offset < app->cached_bytes || state.shelf[active].url.starts_with("sample:") ? "" : "待缓存 · ") + chapters[i].title, open_chapter, int(i), true); y += l.row;
+    page_rows = list_capacity(l.row, 1, 1);
+    for (std::size_t i = list_start; i < chapters.size() && rendered_rows < page_rows; ++i) {
+      ++rendered_rows; row(y, (app->transient || chapters[i].offset < app->cached_bytes || state.shelf[active].url.starts_with("sample:") ? "" : "待缓存 · ") + chapters[i].title, open_chapter, int(i), true); y += l.row;
     }
-    pair(l.bottom - l.row * 2, "上一组", list_previous, "下一组", list_next);
   } else if (screen == shelf) {
     int height = std::max(l.row, int(l.row * 1.7));
-    for (std::size_t i = list_start; i < state.shelf.size() && y + l.row <= stop; ++i) {
+    // A full card uses at most six nodes; reserve twelve for the page shell.
+    constexpr auto max_cards = (capacity.nodes - 12) / 6;
+    page_rows = list_capacity(height, 1, 3, max_cards);
+    for (std::size_t i = list_start; i < state.shelf.size() && rendered_rows < page_rows; ++i) {
       const int card_h = std::min(height, stop - y);
       ++rendered_rows; book_card(y, card_h - gap / 2, state.shelf[i], int(i), i == list_start); y += card_h;
     }
-    if (state.shelf.size() > rendered_rows) pair(l.bottom - l.row * 2, "上一组", list_previous, "下一组", list_next);
     if (state.shelf.empty()) text(l.box(y, l.row * 2), "这里等着你的第一本书", l.ui_font, muted);
   }
   if (screen != reading) {
-    if (screen == toc || screen == settings || screen == read_menu || screen == book_menu || screen == remove_confirm)
+    if (screen == toc || screen == settings || screen == read_menu || screen == book_menu || screen == remove_confirm || screen==cache_settings)
       row(l.bottom - l.row, screen == settings ? "完成" : "返回", back);
     else {
       auto r = l.box(l.bottom - l.row, l.row - gap / 2); rectangle(r, Color::surface_container);
@@ -305,14 +362,24 @@ bool ReaderApp::Controls::render(Owner& owner, std::uint32_t parent) {
            );
 #endif
 #endif
-  app->visible_rows = std::max<std::size_t>(1, rendered_rows);
+  app->visible_rows = std::max<std::size_t>(1, page_rows);
   app->input_box.set(native_input);
   return ok;
 }
 void ReaderApp::render() {
   auto l = layout();
-  draw.reset();
-  if (screen == reading || screen == settings) {
+  std::string next_footer;
+  if(screen==reading && page.count && !state.shelf.empty()) {
+    std::array<char,96> scratch{};
+    next_footer=page_numbers.label(state.shelf[active].position,scratch);
+    if(transient && state.shelf[active].toc.empty())
+      next_footer=(page_numbers.current?"第"+reader::number_string(page_numbers.current)+"页 · ":"")+std::string("按需阅读");
+    else if(transient)next_footer="第"+reader::number_string(state.shelf[active].chapter+1)+"章 · "+next_footer;
+  }
+  const bool full=body_dirty || canvas_screen!=screen || screen==settings;
+  const bool footer_changed=next_footer!=footer_label;
+  if ((screen == reading || screen == settings) && (full || footer_changed)) {
+    draw.reset();
     const auto ink = body_foreground();
     const double density = native_density();
     auto region = [&](reader::Rect r) {
@@ -320,8 +387,8 @@ void ReaderApp::render() {
       return CanvasRegion{x, y, std::max(1, int(std::ceil((r.x + r.w) / density)) - x),
                           std::max(1, int(std::ceil((r.y + r.h) / density)) - y)};
     };
-    auto full = region({0, 0, l.width, l.height});
-    draw.rect(full.x, full.y, full.width, full.height,
+    auto canvas_box = region({0, 0, l.width, l.height});
+    draw.rect(canvas_box.x, canvas_box.y, canvas_box.width, canvas_box.height,
               screen == reading ? body_background() : system_color(Color::background));
     if (screen == settings) {
       const auto preview = reader::preference_preview(l, state.settings);
@@ -345,7 +412,7 @@ void ReaderApp::render() {
       // Draw initial feedback with the body, so the first cached page clears
       // it immediately without retaining a native label above the text.
       auto box = region(l.box(std::max(l.body_start(), (l.height - l.row) / 2), l.row * 2));
-      const auto message = busy ? std::string_view("正在打开章节…") : std::string_view(status);
+      const auto message = busy || page_busy ? std::string_view("正在打开章节…") : std::string_view(status);
       if (sized_text_supported) draw.text_sized(box, ink, message, std::uint16_t(l.ui_font));
       else draw.text(box.x, box.y, box.width, ink, message);
     }
@@ -365,8 +432,7 @@ void ReaderApp::render() {
       }
     }
     if (screen==reading && page.count && !state.shelf.empty()) {
-      std::array<char,96> scratch{};
-      const auto label=page_numbers.label(state.shelf[active].position,scratch);
+      const std::string_view label=next_footer;
       const auto box=l.page_number_box();
       const int pixels=reader::fit_text_size(label,std::max(8,int(10*l.density)),box);
       if (sized_text_supported) draw.text_sized(region(box),ink,label,std::uint16_t(pixels),1);
@@ -377,12 +443,19 @@ void ReaderApp::render() {
           " height="+reader::number_string(box.h)+" pixels="+reader::number_string(pixels)+" text="+std::string(label));
 #endif
     }
-    auto submitted = canvas.present(draw);
+    const std::array<CanvasRegion,1> damage{region(l.page_number_box())};
+    auto submitted = canvas.present(draw,full ? std::span<const CanvasRegion>{} : std::span<const CanvasRegion>{damage});
     if (!submitted) error("绘制", submitted.error());
-  } else {
-    // Discard retained body commands outside reading and its typography preview.
-    auto submitted = canvas.present(draw);
+    else {body_dirty=false;footer_label=std::move(next_footer);canvas_screen=screen;}
+#ifdef READER_VALIDATE
+    if(full)++body_presents;else ++footer_presents;
+    log("READER-RENDER full="+reader::number_string(full)+" body="+reader::number_string(body_presents)+" footer="+reader::number_string(footer_presents)+" bytes="+reader::number_string(draw.bytes_used()));
+#endif
+  } else if(screen!=reading && screen!=settings && canvas_screen!=screen) {
+    // An empty Canvas needs publishing only on a screen transition.
+    draw.reset();auto submitted = canvas.present(draw);
     if (!submitted) error("绘制", submitted.error());
+    else {canvas_screen=screen;footer_label.clear();body_dirty=false;}
   }
   auto label = [](State<std::string>& state, std::string_view text, int size, int width) {
     std::array<char, 192> scratch{};
@@ -392,7 +465,8 @@ void ReaderApp::render() {
   if (screen != reading) label(subtitle_text, subtitle(), subtitle_font, subtitle_width);
   // Text/progress updates preserve pressed native controls. Rebuild only when
   // structure, geometry or button state changes, not on every cache range.
-  if ((controls_dirty || rendered_busy != busy) && !(screen == toc && pressed_book != -1)) {
+  if ((controls_dirty || (screen!=reading && rendered_busy != busy)) &&
+      !((screen == shelf || screen == toc) && pressed_book != -1)) {
     ui_revision.update([](auto value) { return value + 1; });
     controls_dirty = false; rendered_busy = busy;
   }
@@ -422,7 +496,8 @@ void ReaderApp::book_pointer(int index, const CanvasPointer& event) {
     pressed_book = -1;
   } else if (event.phase == pointer_phase_up && pressed_book == index) {
     pressed_book = -1;
-    action(event.timestamp_us >= press_time + 550000 ? manage_book : open_book, index);
+    if (std::abs(event.x - press_x) <= 8 && std::abs(event.y - press_y) <= 8)
+      action(open_book, index);
   }
 }
 void ReaderApp::pointer(const CanvasPointer &event) {
@@ -490,10 +565,12 @@ void ReaderApp::action(Action a, int arg) {
     break;
   case contents:
     change(toc);
+    notice(toc_cursor && !toc_cursor->total?"已读取 "+reader::number_string(chapters.size())+" 章 · 后续按需加载":
+      "共 "+reader::number_string(chapter_count())+" 章"+(more_chapters()?" · 目录按需读取":""));
     break;
   case download:
     if (state.shelf[active].complete) { notice("已缓存全文，可离线阅读"); break; }
-    if (screen == book_menu) change(reading);
+    if (screen == book_menu || screen==cache_settings) change(reading);
     if (!busy) {
       context->foreground_tasks().cancel();
       page_busy = false;
@@ -536,28 +613,47 @@ void ReaderApp::action(Action a, int arg) {
     save();
     break;
   case back:
+    if(screen==cache_settings){change(cache_return);break;}
     if (screen == book_menu || screen == remove_confirm) { change(shelf); break; }
-    change(screen == settings ? (return_screen == read_menu ? reading : shelf)
-                              : reading);
+    if(screen==settings && return_screen!=read_menu)change(shelf);
+    else resume_reading();
     break;
   case search_go:
     (void)input_ref.hide_keyboard();
     cancel_network();
     start(search_books());
     break;
-  case search_classic:
-    input.set(arg == 1 ? "红楼梦" : "西游记");
-    start(search_books());
+  case search_history:
+    if(arg>=0 && std::size_t(arg)<state.searches.size()) {
+      input.set(state.searches[arg]);cancel_network();start(search_books());
+    }
+    break;
+  case clear_search:
+    cancel_network();input.set("");results.clear();next_results.clear();notice_deadline=0;status.clear();list_start=0;
+    break;
+  case clear_history:
+    state.searches.clear();save();notice_deadline=0;
+    break;
+  case cache_mode:
+    state.settings.offline=!state.settings.offline;save();
+    break;
+  case cache_options:
+    cache_return=screen;change(cache_settings);
+    break;
+  case erase_cache:
+    cancel_network();start(erase_body_cache());
     break;
   case source_select:
     cancel_network();
+    if(state.sources.empty()){search_query=input.get();input.set("");change(source_add);break;}
     for (std::size_t i = 0; i < state.sources.size(); ++i) {
       source_index = (source_index + 1) % state.sources.size();
       if (state.sources[source_index].enabled)
         break;
     }
     results.clear();
-    next_results.clear();
+    next_results.clear();notice_deadline=0;
+    if(!reader::web::trim(input.get()).empty())start(search_books());
     break;
   case add_source:
     search_query = input.get();
@@ -570,34 +666,53 @@ void ReaderApp::action(Action a, int arg) {
     break;
   case source_toggle:
     state.sources[arg].enabled = !state.sources[arg].enabled;
+    if(std::size_t(arg)==source_index){results.clear();next_results.clear();}
     save();
     break;
   case remove_source:
-    if (state.sources.size() > 1) {
+    if (arg>=0 && std::size_t(arg)<state.sources.size()) {
       state.sources.erase(state.sources.begin() + arg);
-      source_index = 0;
+      source_index = 0;list_start=0;
+      results.clear();next_results.clear();result_query.clear();
       save();
-    } else
-      notice("请至少保留一个书源");
+    }
     break;
   case list_previous:
+    if(screen==toc && (busy || page_busy))break;
     list_start = std::size_t(std::max(0, int(list_start) - int(list_rows)));
     break;
   case list_next: {
-    auto count = screen == toc       ? chapters.size()
+    if(screen==toc && (busy || page_busy))break;
+    const auto before=list_start;
+    // A remote TOC can end halfway through the visible page. Fill that page
+    // before advancing so newly fetched chapters cannot be skipped.
+    if(screen==toc && more_chapters() && chapters.size()<list_start+list_rows) {
+      start(load_toc_rows(before));
+      break;
+    }
+    auto count = screen == toc       ? chapter_count()
                  : screen == search  ? results.size()
                  : screen == sources ? state.sources.size()
                                      : state.shelf.size();
-    if (list_start + list_rows < count)
+    if (list_start + list_rows < count || (screen==toc && more_chapters())) {
       list_start += list_rows;
+      if(screen==toc && transient && list_start+list_rows>chapters.size())start(load_toc_rows(before));
+    }
     else if (screen == search && !next_results.empty() && !busy)
       start(search_books(next_results));
     break;
   }
   case open_chapter:
+    if(page_busy)break;
+    if(busy && toc_cursor && !toc_cursor->complete())break;
     if (arg < 0 || std::size_t(arg) >= chapters.size()) break;
-    if (chapters[arg].offset >= cached_bytes && !state.shelf[active].url.starts_with("sample:")) {
+    if (!transient && chapters[arg].offset >= cached_bytes && !state.shelf[active].url.starts_with("sample:")) {
       notice("这一章还未缓存，请稍候或继续下载"); break;
+    }
+    if(transient) {
+      state.shelf[active].chapter=std::uint32_t(arg);state.shelf[active].position=0;
+      chapter_text.clear();window.clear();page={};previous_count=0;reset_page_numbers();
+      save();change(reading);start(stream_chapter());break;
     }
     state.shelf[active].position = chapters[arg].offset;
     previous_count = 0;
@@ -626,4 +741,5 @@ void ReaderApp::action(Action a, int arg) {
   }
   dirty = true;
   controls_dirty = true;
+  if(screen==settings || a==theme_change)body_dirty=true;
 }

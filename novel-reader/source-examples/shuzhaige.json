@@ -1,0 +1,27 @@
+{
+  "format": "pxa-reader-source-2",
+  "kind": "html",
+  "name": "书斋阁",
+  "searchUrl": "https://www.shuzhaige.com/e/search/index.php",
+  "search": {
+    "method": "POST",
+    "body": "tbname=bookname&show=title%2Cwriter&tempid=1&keyboard={{key}}",
+    "items": ".table tr",
+    "title": "a",
+    "link": "a@href",
+    "author": "td.col-sm-4"
+  },
+  "toc": {
+    "items": "#play_0 a",
+    "title": "",
+    "link": "@href"
+  },
+  "content": {
+    "selector": "#content",
+    "remove": [
+      "script",
+      "style"
+    ]
+  },
+  "userAgent": "Mozilla/5.0"
+}

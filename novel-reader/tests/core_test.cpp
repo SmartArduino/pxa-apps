@@ -73,8 +73,8 @@ int main(int argc,char** argv) {
   assert(search_classics("", SourceKind::gitenberg).size() == 3);
   assert(search_classics("nothing", SourceKind::classics).empty());
   auto old = encoded;
-  old.replace(old.find("\"version\":2"), 11, "\"version\":1");
-  // Version 1 shelves remain intact and receive the optional fast catalogs.
+  old.replace(old.find("\"version\":4"), 11, "\"version\":1");
+  // Existing shelves and custom sources survive the default-catalog migration.
   assert(restored.decode(old) && restored.shelf[0].position == 123);
 
   for (auto dims :

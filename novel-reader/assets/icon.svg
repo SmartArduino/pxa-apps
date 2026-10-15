@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <title>书页阅读</title>
+  <rect width="128" height="128" rx="28" fill="#16776b"/>
+  <!-- A simple silhouette stays readable at launcher sizes. -->
+  <path d="M23 45c15-5 28-3 41 4 13-7 26-9 41-4v47c-15-4-28-2-41 5-13-7-26-9-41-5z" fill="#0c514b"/>
+  <path d="M27 35c14-3 26 0 37 7v47c-11-7-23-10-37-7z" fill="#fff3d6"/>
+  <path d="M64 42c11-7 23-10 37-7v47c-14-3-26 0-37 7z" fill="#fffdf5"/>
+  <path d="M64 43v44" fill="none" stroke="#d5e5d8" stroke-width="3"/>
+  <g fill="none" stroke="#75a397" stroke-width="3" stroke-linecap="round">
+    <path d="M36 49c6 0 11 1 17 4M36 60c6 0 11 1 17 4M36 71c6 0 11 1 17 4"/>
+    <path d="M75 64c5-2 11-3 17-3M75 75c5-2 11-3 17-3"/>
+  </g>
+  <path d="M81 36c4-1 8-1 12-1v23l-6-4-6 4z" fill="#f4bc58"/>
+</svg>

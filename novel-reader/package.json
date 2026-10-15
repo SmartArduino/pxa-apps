@@ -13,10 +13,11 @@
     0
   ],
   "id": "pxa-novel-reader",
-  "version": "0.1.2",
-  "release_sequence": 3,
+  "version": "0.2.4",
+  "release_sequence": 8,
   "name": "书页阅读",
-  "description": "支持离线 TXT 与可配置的 JSON 网络书源，提供搜索、章节导航、下载、自适应字体和自动翻页。网络书源需自行配置；离线阅读不依赖网络。",
+  "icon": "assets/icon.png",
+  "description": "真实阅读网站站内搜索、完整分章目录，默认按需阅读不保存正文；支持离线下载、自定义 TXT/JSON/HTML 书源和自适应排版。",
   "build": {
     "system": "cmake",
     "source_dir": ".",

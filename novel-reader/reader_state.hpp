@@ -1,5 +1,6 @@
 #pragma once
 #include "reader_core.hpp"
+#include "reader_sources.hpp"
 #include <charconv>
 namespace reader {
 [[gnu::noinline]] inline void append_quoted(std::string& out, std::string_view value) {
@@ -20,25 +21,31 @@ inline std::string quote(std::string_view value) { std::string out; append_quote
   out.append(buffer.data(), std::size_t(end - buffer.data()));
 }
 struct SavedState {
+  // Eight escaped 4 KiB rule documents plus sixteen bounded book records.
+  // This is an input limit, never a preallocated buffer or per-frame reserve.
+  static constexpr std::size_t max_state_bytes = 160 * 1024;
   Settings settings;
+  std::uint32_t source_revision=current_source_revision;
   std::vector<Book> shelf;
-  std::vector<Source> sources{
-      {"经典直读 · 即时搜索", "https://www.gutenberg.org/cache/epub/", SourceKind::classics},
-      {"GITenberg · 即时搜索", "https://raw.githubusercontent.com/GITenberg/", SourceKind::gitenberg},
-      {"古腾堡中文小说",
-       "https://gutendex.com/books/"
-       "?languages=zh&copyright=false&mime_type=text%2Fplain",
-       SourceKind::gutenberg},
-      {"古腾堡世界文学",
-       "https://gutendex.com/books/"
-       "?copyright=false&mime_type=text%2Fplain&topic=fiction",
-       SourceKind::gutenberg}};
+  std::vector<std::string> searches;
+  void remember_search(std::string_view key) {
+    key=web::trim(key);
+    if(key.empty() || key.size()>96)return;
+    std::erase(searches,key);
+    searches.insert(searches.begin(),std::string(key));
+    if(searches.size()>6)searches.pop_back();
+  }
+  std::vector<Source> sources=default_sources();
   std::string encode() const {
-    std::string out = "{\"version\":2,\"settings\":{\"font\":";
+    std::string out = "{\"version\":4,\"settings\":{\"font\":";
     append_number(out, settings.font); out += ",\"gap\":"; append_number(out, settings.line_gap);
     out += ",\"theme\":"; append_number(out, settings.theme);
     out += ",\"seconds\":"; append_number(out, settings.auto_seconds);
-    out += "},\"sources\":[";
+    out += ",\"offline\":";out += settings.offline ? "true" : "false";
+    out += "},\"sourceRevision\":";append_number(out,source_revision);out+=",\"searches\":[";
+    bool history_comma=false;
+    for(const auto& key:searches){if(history_comma)out+=',';history_comma=true;append_quoted(out,key);}
+    out += "],\"sources\":[";
     bool comma = false;
     for (const auto& source : sources) {
       if (comma) out += ',';
@@ -46,7 +53,9 @@ struct SavedState {
       out += "{\"name\":"; append_quoted(out, source.name);
       out += ",\"url\":"; append_quoted(out, source.url);
       out += ",\"kind\":"; append_number(out, unsigned(source.kind));
-      out += ",\"enabled\":"; out += source.enabled ? "true}" : "false}";
+      out += ",\"enabled\":"; out += source.enabled ? "true" : "false";
+      if(!source.rules.empty()){out+=",\"rules\":";append_quoted(out,source.rules);}
+      out+='}';
     }
     out += "],\"shelf\":["; comma = false;
     for (const auto& book : shelf) {
@@ -59,7 +68,9 @@ struct SavedState {
       out += ",\"validator\":"; append_quoted(out, book.validator);
       out += ",\"position\":"; append_number(out, book.position);
       out += ",\"total\":"; append_number(out, book.total);
-      out += ",\"complete\":"; out += book.complete ? "true}" : "false}";
+      out += ",\"complete\":"; out += book.complete ? "true" : "false";
+      if(!book.source.empty()){out+=",\"source\":";append_quoted(out,book.source);}
+      out+=",\"chapter\":";append_number(out,book.chapter);out+='}';
     }
     out += "]}";
     return out;
@@ -67,9 +78,11 @@ struct SavedState {
   bool decode(std::string_view text) {
     Json j(text);
     auto version = j.get("version").number();
-    if (text.size() > 32768 || !j.valid() || !version || (*version != 1 && *version != 2))
+    if (text.size() > max_state_bytes || !j.valid() || !version || *version<1 || *version>4)
       return false;
-    SavedState candidate;
+    SavedState candidate{.settings={},.shelf={},.searches={},.sources={}};
+    const auto previous_revision=*version<4?0:j.get("sourceRevision").number().value_or(1);
+    candidate.source_revision=std::max(previous_revision,current_source_revision);
     auto s = j.get("settings");
     auto font = s.get("font").number(), gap = s.get("gap").number(),
          theme = s.get("theme").number(), seconds = s.get("seconds").number();
@@ -78,6 +91,7 @@ struct SavedState {
       return false;
     candidate.settings = {std::uint8_t(*font), std::uint8_t(*gap),
                           std::uint8_t(*theme), std::uint8_t(*seconds), false};
+    candidate.settings.offline=s.get("offline").raw()=="true";
     candidate.sources.clear();
     bool ok = true;
     bool sources_valid = j.get("sources").each(
@@ -85,13 +99,20 @@ struct SavedState {
           auto name = row.get("name").string(96),
                url = row.get("url").string(512);
           auto kind = row.get("kind").number();
-          if (!name || !url || origin(*url).empty() || !kind || *kind > 3 ||
+          if (!name || !url || origin(*url).empty() || !kind || *kind > 4 ||
               candidate.sources.size() >= max_sources) {
             ok = false;
             return false;
           }
           candidate.sources.push_back({*name, *url, SourceKind(*kind),
                                        row.get("enabled").raw() != "false"});
+          if(*kind==4) {
+            auto rules=row.get("rules").string(web::max_rules_bytes);
+            auto& source=candidate.sources.back();
+            if(rules)source.rules=std::move(*rules);
+            if(!web::rules(source_rules(source))){ok=false;return false;}
+            if(const auto* builtin=builtin_source(source.url);builtin && source.rules==builtin->rules)std::string{}.swap(source.rules);
+          }
           return true;
         },
         max_sources + 1);
@@ -120,20 +141,26 @@ struct SavedState {
                *total,
                row.get("complete").raw() == "true"};
           b.validator = row.get("validator").string(128).value_or("");
+          b.source=row.get("source").string(512).value_or("");
+          b.chapter=row.get("chapter").number().value_or(0);
+          if((!b.source.empty() && origin(b.source).empty()) || b.chapter>=max_chapters){ok=false;return false;}
           candidate.shelf.push_back(std::move(b));
           return true;
         },
         max_shelf + 1);
-    if (!ok || !sources_valid || !shelf_valid || candidate.sources.empty())
+    if (!ok || !sources_valid || !shelf_valid)
       return false;
-    if (*version == 1) {
-      for (const auto& extra : std::array{
-          Source{"经典直读 · 即时搜索", "https://www.gutenberg.org/cache/epub/", SourceKind::classics},
-          Source{"GITenberg · 即时搜索", "https://raw.githubusercontent.com/GITenberg/", SourceKind::gitenberg}}) {
-        if (candidate.sources.size() < max_sources &&
-            std::none_of(candidate.sources.begin(), candidate.sources.end(), [&](const auto& source) { return source.kind == extra.kind; }))
-          candidate.sources.push_back(extra);
-      }
+    if(!j.get("searches").raw().empty()) {
+      if(!j.get("searches").each([&](Json value){auto key=value.string(96);if(!key || key->empty() || candidate.searches.size()==6){ok=false;return false;}candidate.searches.push_back(std::move(*key));return true;},7) || !ok)return false;
+    }
+    const bool replace_legacy=*version<4 && std::erase_if(candidate.sources,old_default_source);
+    const bool uses_builtin=std::any_of(candidate.sources.begin(),candidate.sources.end(),
+      [](const auto& source){return source.kind==SourceKind::html && builtin_source(source.url);});
+    if(replace_legacy || (uses_builtin && previous_revision<current_source_revision)) {
+      for(const auto& extra:builtin_sources)
+        if((replace_legacy || extra.introduced>previous_revision) && candidate.sources.size()<max_sources &&
+           std::none_of(candidate.sources.begin(),candidate.sources.end(),[&](const auto& source){return source.url==extra.url;}))
+          candidate.sources.push_back(make_source(extra));
     }
     *this = std::move(candidate);
     return true;

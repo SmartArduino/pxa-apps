@@ -16,7 +16,7 @@ shutil.copytree(Path(__file__).resolve().parents[1],app,ignore=shutil.ignore_pat
 for name in ['common','.dev-signing']:(source/name).symlink_to(root/'local/pxa-apps'/name,target_is_directory=True) if not (source/name).exists() else None
 manifest=app/'package.json';m=json.loads(manifest.read_text());m.update(id=a.identity,name='书页验收',release_sequence=10);manifest.write_text(json.dumps(m,ensure_ascii=False,indent=2)+'\n')
 if a.source:
- f=app/'reader_state.hpp';text=f.read_text();marker='std::vector<Source> sources{';assert marker in text;text=text.replace(marker,marker+'{"验收书源",'+json.dumps(a.source)+',SourceKind::json},\n        ',1);f.write_text(text)
+ f=app/'reader_state.hpp';text=f.read_text();marker='std::vector<Source> sources=default_sources();';assert marker in text;text=text.replace(marker,'std::vector<Source> sources{{"验收书源",'+json.dumps(a.source)+',SourceKind::json}};',1);f.write_text(text)
  # Test the real source-import button without depending on a desktop keyboard.
  f=app/'reader_ui.inc';text=f.read_text();marker='case add_source:';at=text.index(marker);pos=text.index('input.set("");',at);text=text[:pos]+text[pos:].replace('input.set("");','input.set('+json.dumps(a.source.rsplit('/',1)[0]+'/source.json')+');',1);f.write_text(text)
 if a.long_labels:

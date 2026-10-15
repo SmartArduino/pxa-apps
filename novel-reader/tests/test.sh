@@ -9,3 +9,5 @@ flags=(-std=c++2c -Wno-attributes -O3 -Wall -Wextra -Werror -Wno-misleading-inde
 if [[ "${SANITIZE:-0}" == 1 ]]; then flags+=(-fsanitize=address,undefined -fno-omit-frame-pointer -g); fi
 "$compiler" "${flags[@]}" "$app_dir/tests/core_test.cpp" -o "$out/core_test"
 "$out/core_test" "$@"
+"$compiler" "${flags[@]}" "$app_dir/tests/web_test.cpp" -o "$out/web_test"
+"$out/web_test"
