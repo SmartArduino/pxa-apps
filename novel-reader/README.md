@@ -146,3 +146,7 @@ bash tools/app.sh build novel-reader --target simulator,esp32s3 --aot-only
 正文索引从本地 TXT 中识别常见“第…章/回/卷”和英文 Chapter 标题，不能保证识别所有书的目录格式。缓存书源和图书字符串有容量上限，界面热路径没有无限增长的容器。
 
 动态输入与替换安装验收：[DYNAMIC_INPUT-20261010.md](docs/DYNAMIC_INPUT-20261010.md)。
+
+0.2.5 将书架长按、目录点击和正文翻页统一到 C++ SDK `PressGesture`，复用现有帧钟，
+无需应用自行维护长按时间与拖动判定。接口及回归记录见
+[SDK 手势迁移验收](docs/2026-10-15-sdk-gestures.zh-CN.md)。

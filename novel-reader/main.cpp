@@ -168,8 +168,8 @@ struct ReaderApp {
 #endif
   std::uint64_t auto_deadline = 0, frame_time = 0, notice_deadline = 0;
   std::uint32_t next_offset = 0, cached_bytes = 0;
-  std::uint64_t press_time = 0;
-  int pressed_book = -1, press_x = 0, press_y = 0;
+  PressGesture press;
+  int pressed_book = -1;
   std::string search_query, result_query;
   unsigned reading_theme() const { return state.settings.theme == 3 ? (system_dark ? 2 : 0) : state.settings.theme; }
   void cancel_network() {
@@ -286,6 +286,7 @@ struct ReaderApp {
     if (screen == source_add && value != source_add) input.set(search_query);
     screen = value;
     controls_dirty = true;
+    press.reset();
     pressed_book = -1;
     list_start = 0;
     auto_deadline = 0;
@@ -326,6 +327,7 @@ struct ReaderApp {
     return {};
   }
   void on_background(pxa::Context &) {
+    press.reset();
     pressed_book = -1;
     (void)input_ref.hide_keyboard();
     auto_deadline = 0;
@@ -371,6 +373,7 @@ struct ReaderApp {
     if (event.is<DisplayMetrics>()) {
       auto value = decode_display_metrics(event);
       if (value) {
+        press.reset();
         pressed_book = -1;
         metrics = *value;
         reset_page_numbers(page_numbers.origin);
@@ -394,12 +397,8 @@ struct ReaderApp {
   void on_frame(pxa::Context &, pxa::game::FrameTick tick) {
     reader_stack_probe(false);
     frame_time = tick.timestamp_us;
-    if (screen == shelf && pressed_book >= 0 && frame_time >= press_time &&
-        frame_time - press_time >= 550000) {
-      const int index = pressed_book;
-      pressed_book = -1;
-      action(manage_book, index);
-    }
+    if (screen == shelf && pressed_book >= 0 && press.advance(frame_time))
+      action(manage_book, pressed_book);
     if(progress_pending && frame_time>=progress_deadline){progress_pending=false;save();}
     if (notice_deadline && frame_time >= notice_deadline) {
       notice_deadline = 0;
@@ -1097,7 +1096,7 @@ struct ReaderApp {
   pxa::Task<void> load_page() {
     if(page_busy || publishing || state.shelf.empty())co_return pxa::Result<void>{};
     if(transient && !state.shelf[active].toc.empty() && chapter_text.empty()) {
-      co_await stream_chapter();co_return pxa::Result<void>{};
+      co_return co_await stream_chapter();
     }
     if(page_available()){prepare_page();co_return pxa::Result<void>{};}
     page_busy=true;

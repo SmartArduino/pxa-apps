@@ -1,0 +1,131 @@
+{
+  "date": "2026-10-15",
+  "version": "0.2.5",
+  "passed": true,
+  "sdk": {
+    "passed": true,
+    "native_main_groups": 63,
+    "extra_configurations_passed": true,
+    "asan_ubsan_targeted": true,
+    "gesture_state_native_bytes": 40,
+    "default_pages_native_bytes_before": [
+      144,
+      184,
+      480
+    ],
+    "default_pages_native_bytes_after": [
+      144,
+      184,
+      480
+    ],
+    "demo": {
+      "passed": true,
+      "held_before_release": true,
+      "held_once": true,
+      "no_release_clickthrough": true,
+      "tap": true,
+      "drag_out_and_back_cancels": true,
+      "cancel": true,
+      "held_visible_ms": 574.4,
+      "app_has_frame_callback": false
+    }
+  },
+  "interaction": {
+    "passed": true,
+    "cases": [
+      {
+        "profile": "296x240-160",
+        "passed": true,
+        "held_opens_before_release": true,
+        "held_ms": 570.0,
+        "release_no_clickthrough": true,
+        "drag_cancels": true,
+        "touch_cancels": true,
+        "tap_opens": true,
+        "shelf_pages": 8,
+        "source_pages": 3,
+        "toc_pages": 13,
+        "all_items_reachable": true,
+        "short_last_page_previous_correct": true,
+        "max_linear_pages": 3,
+        "pool_peak": 8,
+        "allocation_failures": 0
+      },
+      {
+        "profile": "480x480-320-round",
+        "passed": true,
+        "held_opens_before_release": true,
+        "held_ms": 570.7,
+        "release_no_clickthrough": true,
+        "drag_cancels": true,
+        "touch_cancels": true,
+        "tap_opens": true,
+        "shelf_pages": 8,
+        "source_pages": 3,
+        "toc_pages": 13,
+        "all_items_reachable": true,
+        "short_last_page_previous_correct": true,
+        "max_linear_pages": 3,
+        "pool_peak": 8,
+        "allocation_failures": 0
+      },
+      {
+        "profile": "240x240-160-round",
+        "passed": true,
+        "held_opens_before_release": true,
+        "held_ms": 565.2,
+        "release_no_clickthrough": true,
+        "drag_cancels": true,
+        "touch_cancels": true,
+        "tap_opens": true,
+        "shelf_pages": 8,
+        "source_pages": 3,
+        "toc_pages": 13,
+        "all_items_reachable": true,
+        "short_last_page_previous_correct": true,
+        "max_linear_pages": 3,
+        "pool_peak": 8,
+        "allocation_failures": 0
+      },
+      {
+        "profile": "800x480-160",
+        "passed": true,
+        "held_opens_before_release": true,
+        "held_ms": 570.7,
+        "release_no_clickthrough": true,
+        "drag_cancels": true,
+        "touch_cancels": true,
+        "tap_opens": true,
+        "shelf_pages": 3,
+        "source_pages": 2,
+        "toc_pages": 4,
+        "all_items_reachable": true,
+        "short_last_page_previous_correct": true,
+        "max_linear_pages": 3,
+        "pool_peak": 8,
+        "allocation_failures": 0
+      }
+    ],
+    "package_sha256": "afbb875189f3eebe916b5b1aebf29645600d4dfaf2f091bb188a560cf1e1267b"
+  },
+  "production": {
+    "passed": true,
+    "production": true,
+    "matching_pages": 37,
+    "progress_preserved": true,
+    "cache_unchanged": true,
+    "package_sha256": "0e998eb7d641e807bf2b3ce268cbe9c88048a812c4c543b9e187d85c40373d4c",
+    "reference_sha256": "b854d3f73bddbf816c654db1276aad10eacbf80fe309409db57f19f56fd4c608"
+  },
+  "artifact": {
+    "path": "local/gesture-sdk-20261015/reader-release/pxa-novel-reader.pxa",
+    "bytes": 2705160,
+    "sha256": "0e998eb7d641e807bf2b3ce268cbe9c88048a812c4c543b9e187d85c40373d4c"
+  },
+  "aot_targets": [
+    "linux-x86_64",
+    "esp32-s3",
+    "esp32-s31"
+  ],
+  "hardware_run": false
+}

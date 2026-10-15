@@ -466,7 +466,7 @@ void ReaderApp::render() {
   // Text/progress updates preserve pressed native controls. Rebuild only when
   // structure, geometry or button state changes, not on every cache range.
   if ((controls_dirty || (screen!=reading && rendered_busy != busy)) &&
-      !((screen == shelf || screen == toc) && pressed_book != -1)) {
+      !((screen == shelf || screen == toc) && press.active())) {
     ui_revision.update([](auto value) { return value + 1; });
     controls_dirty = false; rendered_busy = busy;
   }
@@ -474,53 +474,29 @@ void ReaderApp::render() {
 void ReaderApp::ControlAction::operator()() const { app->action(action, arg); }
 void ReaderApp::ControlAction::operator()(const CanvasPointer& event) const {
   if (app->screen != toc) { app->book_pointer(arg,event); return; }
-  // New chapters may arrive while a directory button is pressed. Keep this
-  // native tree mounted until release; reuse the shelf's dormant press fields.
-  if (event.phase == pointer_phase_down) {
-    app->pressed_book = 0; app->press_x = event.x; app->press_y = event.y;
-  } else if (event.phase == pointer_phase_move &&
-             (std::abs(event.x-app->press_x)>8 || std::abs(event.y-app->press_y)>8)) {
-    app->pressed_book = -2;
-  } else if (event.phase == pointer_phase_up || event.phase == pointer_phase_cancel) {
-    const bool clicked = app->pressed_book == 0 && event.phase == pointer_phase_up;
-    app->pressed_book = -1; app->dirty = true;
-    if (clicked) app->action(action,arg);
-  }
+  // Preserve native controls while their pointer is captured, even if chapters arrive.
+  app->press.rebase(event.generation);
+  const bool owned = app->press.owns(event);
+  const auto result = app->press.update(event, {.long_press = std::chrono::microseconds{0}});
+  if (owned && event.ended()) app->dirty = true;
+  if (result == PressResult::tap) app->action(action,arg);
 }
 void ReaderApp::book_pointer(int index, const CanvasPointer& event) {
   if (screen != shelf) return;
-  if (event.phase == pointer_phase_down) {
-    pressed_book = index; press_time = event.timestamp_us; press_x = event.x; press_y = event.y;
-  } else if (event.phase == pointer_phase_cancel ||
-             (event.phase == pointer_phase_move && (std::abs(event.x - press_x) > 8 || std::abs(event.y - press_y) > 8))) {
-    pressed_book = -1;
-  } else if (event.phase == pointer_phase_up && pressed_book == index) {
-    pressed_book = -1;
-    if (std::abs(event.x - press_x) <= 8 && std::abs(event.y - press_y) <= 8)
-      action(open_book, index);
-  }
+  press.rebase(event.generation); // Page has already rejected stale events.
+  const bool was_active = press.active(), owned = press.owns(event);
+  const auto result = press.update(event);
+  if (!was_active && press.owns(event)) pressed_book = index;
+  if (owned && event.ended()) { pressed_book = -1; dirty = true; }
+  if (result == PressResult::tap) action(open_book, index);
+  else if (result == PressResult::long_press) action(manage_book, index);
 }
 void ReaderApp::pointer(const CanvasPointer &event) {
   if (screen != reading) return;
-  // Reuse the list gesture fields: a drag or cancelled system gesture must
-  // never turn a page or open the menu on release.
-  if (event.phase == pointer_phase_down) {
-    pressed_book = 0; press_x = event.x; press_y = event.y;
-    return;
-  }
-  if (event.phase == pointer_phase_cancel ||
-      (event.phase == pointer_phase_move &&
-       (std::abs(event.x - press_x) > 8 || std::abs(event.y - press_y) > 8))) {
-    pressed_book = -1;
-    return;
-  }
-  if (event.phase != pointer_phase_up) return;
-  const bool tapped = pressed_book == 0 &&
-      std::abs(event.x - press_x) <= 8 && std::abs(event.y - press_y) <= 8;
-  pressed_book = -1;
-  if (!tapped) return;
+  press.rebase(event.generation);
+  if (press.update(event, {.long_press = std::chrono::microseconds{0}}) != PressResult::tap) return;
   int x = canvas_to_surface_coordinate(event.x, metrics);
-  if (x < metrics.width / 3) turn(-1);
+  if (x < int(metrics.width) / 3) turn(-1);
   else if (x > int(metrics.width) * 2 / 3) turn(1);
   else change(read_menu);
 }
