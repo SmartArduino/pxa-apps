@@ -13,6 +13,7 @@ static void first(CharacterEngine& engine, std::string_view text, std::string_vi
                   std::string_view tail = {}) {
     assert(engine.search(text)); assert(candidate(engine,0) == expected);
     engine.choose(0); assert(engine.remaining() == tail);
+    assert(engine.consumed() == text.size() - tail.size());
 }
 int main() {
     CharacterEngine engine;
@@ -49,6 +50,31 @@ int main() {
         engine.choose(syllable.count-1); assert(engine.remaining().empty());
     }
     assert(total==std::size(pinyin_lite::table::characters));
+    // Partial spellings span several syllables. Compare every visible and
+    // far-page candidate against a linear reference, including exact-spelling
+    // precedence, instead of merely checking that UTF-8 is well formed.
+    for (const auto& row : pinyin_lite::table::syllables) {
+        auto spelling = std::string_view(row.spelling);
+        for (std::size_t length=1; length<=spelling.size(); ++length) {
+            auto prefix=spelling.substr(0,length);
+            auto count=engine.search(prefix);
+            const auto* exact=std::find_if(std::begin(pinyin_lite::table::syllables),
+                std::end(pinyin_lite::table::syllables),[prefix](const auto& s) { return prefix==s.spelling; });
+            std::size_t index=0;
+            for (const auto& syllable : pinyin_lite::table::syllables) {
+                if (exact!=std::end(pinyin_lite::table::syllables) ? &syllable!=exact :
+                    !std::string_view(syllable.spelling).starts_with(prefix)) continue;
+                for (std::size_t i=0;i<syllable.count;++i) {
+                    auto text=candidate(engine,index++); assert(text.size()==3);
+                    auto cp=((static_cast<unsigned char>(text[0])&15)<<12) |
+                            ((static_cast<unsigned char>(text[1])&63)<<6) |
+                            (static_cast<unsigned char>(text[2])&63);
+                    assert(cp==pinyin_lite::table::characters[syllable.offset+i]);
+                }
+            }
+            assert(count==index && candidate(engine,count).empty());
+        }
+    }
     // Deterministic malformed/partial spelling and index stress under sanitizers.
     std::uint32_t random=42;
     for (unsigned trial=0;trial<10000;++trial) {

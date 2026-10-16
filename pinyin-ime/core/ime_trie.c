@@ -9,10 +9,9 @@
  *   - "which syllables can 94 still grow into?"  -> ime_trie_children()
  *   - "is 946 a prefix of any syllable?"         -> ime_trie_is_prefix()
  *
- * Both are answered by a linear walk over the generated table
- * (src/generated/ime_t9_syllables.h). The table holds 413 entries of at most
- * five digits, so a full walk is a few microseconds on the ESP32-S3 and never
- * needs a node table, allocation-free after init, or a code-generated trie.
+ * A generated 288-byte directory selects one/two-digit ranges in constant time.
+ * Remaining digits are read from the canonical spellings: there is no second
+ * string table, pointer relocation, allocated index or startup work.
  * The scan order is stabilised by sorting the matches by syllable length, which
  * is the order the 9-key candidate row wants.
  *
@@ -58,28 +57,49 @@ const char *ime_trie_syllable(size_t index)
     return ime_t9_syllables[index].syllable;
 }
 
-const char *ime_trie_syllable_digits(size_t index)
+#if defined(__GNUC__)
+__attribute__((noinline))
+#endif
+bool ime_trie_match_tail(const ime_t9_syllable_t *row, const char *digits, size_t length)
 {
-    if (index >= IME_T9_SYLLABLE_COUNT) {
-        return NULL;
+#if defined(__clang__)
+#pragma clang loop unroll(disable)
+#endif
+    for (size_t i = 2; i < length; ++i) {
+        if (ime_t9_letter_digits[row->syllable[i] - 'a'] != digits[i]) return false;
     }
-    return ime_t9_syllables[index].digits;
+    return true;
+}
+
+ime_t9_range_t ime_trie_prefix_range(const char *prefix, size_t length)
+{
+    ime_t9_range_t empty = {IME_T9_SYLLABLE_COUNT, IME_T9_SYLLABLE_COUNT};
+    if (!prefix || !length || length > IME_T9_SYLLABLE_MAX_DIGITS) return empty;
+#if defined(__clang__)
+#pragma clang loop unroll(disable)
+#endif
+    for (size_t i = 0; i < length; ++i) {
+        if (prefix[i] < '2' || prefix[i] > '9') return empty;
+    }
+    size_t index = length == 1 ? 64 + prefix[0] - '2' :
+        (prefix[0] - '2') * 8 + prefix[1] - '2';
+    ime_t9_range_t range = ime_t9_prefixes[index];
+    if (length <= 2) return range;
+    while (range.begin < range.end &&
+           (ime_t9_syllables[range.begin].length < length ||
+            !ime_trie_match_tail(&ime_t9_syllables[range.begin], prefix, length))) ++range.begin;
+    uint16_t end = range.begin;
+    while (end < range.end && ime_t9_syllables[end].length >= length &&
+           ime_trie_match_tail(&ime_t9_syllables[end], prefix, length)) ++end;
+    range.end = end;
+    return range;
 }
 
 bool ime_trie_is_prefix(const char *prefix)
 {
-    if (prefix == NULL || prefix[0] == '\0') {
-        return false;
-    }
-
-    size_t len = strlen(prefix);
-    for (size_t i = 0; i < IME_T9_SYLLABLE_COUNT; i++) {
-        const char *digits = ime_t9_syllables[i].digits;
-        if (strlen(digits) >= len && strncmp(digits, prefix, len) == 0) {
-            return true;
-        }
-    }
-    return false;
+    if (!prefix) return false;
+    ime_t9_range_t range = ime_trie_prefix_range(prefix, strlen(prefix));
+    return range.begin < range.end;
 }
 
 size_t ime_trie_children(const char *prefix, ime_trie_match_t *out, size_t max)
@@ -90,16 +110,12 @@ size_t ime_trie_children(const char *prefix, ime_trie_match_t *out, size_t max)
 
     size_t len = strlen(prefix);
     size_t count = 0;
-
-    for (size_t i = 0; i < IME_T9_SYLLABLE_COUNT && count < max; i++) {
-        const char *digits = ime_t9_syllables[i].digits;
-        if (strlen(digits) < len || strncmp(digits, prefix, len) != 0) {
-            continue;
-        }
+    ime_t9_range_t range = ime_trie_prefix_range(prefix, len);
+    for (size_t i = range.begin; i < range.end && count < max; i++) {
 
         out[count].syllable = ime_t9_syllables[i].syllable;
-        out[count].digits = digits;
-        out[count].is_exact = (strlen(digits) == len);
+        out[count].length = ime_t9_syllables[i].length;
+        out[count].is_exact = (ime_t9_syllables[i].length == len);
         count++;
     }
 
@@ -108,7 +124,7 @@ size_t ime_trie_children(const char *prefix, ime_trie_match_t *out, size_t max)
     for (size_t i = 1; i < count; i++) {
         ime_trie_match_t item = out[i];
         size_t j = i;
-        while (j > 0 && strlen(out[j - 1].syllable) > strlen(item.syllable)) {
+        while (j > 0 && out[j - 1].length > item.length) {
             out[j] = out[j - 1];
             j--;
         }
@@ -125,14 +141,9 @@ bool ime_trie_exact(const char *digits, size_t *out_index)
     }
 
     size_t len = strlen(digits);
-    for (size_t i = 0; i < IME_T9_SYLLABLE_COUNT; i++) {
-        const char *d = ime_t9_syllables[i].digits;
-        if (strlen(d) == len && strcmp(d, digits) == 0) {
-            if (out_index != NULL) {
-                *out_index = i;
-            }
-            return true;
-        }
-    }
-    return false;
+    ime_t9_range_t range = ime_trie_prefix_range(digits, len);
+    size_t index = range.begin;
+    if (index == range.end || ime_t9_syllables[index].length != len) return false;
+    if (out_index != NULL) *out_index = index;
+    return true;
 }

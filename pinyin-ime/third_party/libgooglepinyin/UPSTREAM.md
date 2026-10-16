@@ -8,15 +8,15 @@
 * Licence: Apache-2.0 (see `LICENSE` in the repository root for the project,
   and the per-file headers for upstream).
 
-`src/` and `include/` are copied verbatim from upstream. `tools/` holds only
+`src/` and `include/` derive from upstream with the patches below. `tools/` holds only
 `pinyinime_dictbuilder.cpp`, the offline model builder, so that
 `tools/gen_dict.py` can rebuild `dict_pinyin.dat` without network access.
 
 ## Patches
 
-Upstream is unchanged except for patch **P0**, which is one guarded `#define`
-in `include/dictdef.h`. Everything else is done from the build system, so a
-`diff -ru` against upstream stays readable.
+The original portability changes are listed as P0–P7. PXA-specific runtime
+fixes are recorded separately below; keep these changes local rather than
+mixing generated dictionary data with runtime changes.
 
 | # | Where | Change | Why |
 | --- | --- | --- | --- |
@@ -28,6 +28,11 @@ in `include/dictdef.h`. Everything else is done from the build system, so a
 | P5 | not applicable | Upstream `userdict.cpp` already writes back only from `close_dict()`; our user dictionary work (stage S5) will add the explicit flush policy on top. | — |
 | P6 | no code change | Upstream's runtime `printf`s are all behind `const bool kPrintDebugX = false`, so a release build is silent. | Verified by inspection; see the grep in the S1 commit. |
 | P7 | build system | `-w` on the `libgooglepinyin` component only; our own sources keep the project warning level. | Keeps third-party warnings out of the build log without touching upstream. |
+| PXA bounds | `src/matrixsearch.cpp` | Reject out-of-range candidate indices; let a missing root handle use the existing no-match path. | Candidate retrieval previously indexed past its list; long ambiguous input can exhaust the bounded milestone pool and must not abort a debug build. Neither change enlarges the search pools. |
+| PXA pool limits | `src/dicttrie.cpp`, `src/matrixsearch.cpp` | Only count parsing marks actually stored; stop extension at milestone/DMI capacity and discard cached candidates lacking a valid predecessor. | Repeated initials exhausted the 100-milestone pool and wrote beyond it. Limits and allocations remain unchanged; normal successful extensions keep their order. |
+| PXA cleanup | `src/dicttrie.cpp` | Free `lma_idx_buf_` instead of testing `nodes_ge1_` a second time after nulling it. | Closing/reopening the native decoder leaked 195,333 B per model load. Guest unloading already reclaimed its whole linear memory; this fixes decoder-local ownership too. |
+| PXA spelling ownership | `src/spellingtrie.cpp` | Release the previous node tree before rebuilding; use scalar delete for scalar sentinel nodes; clear the singleton pointer without recursively deleting itself. | Same-process reopen leaked the old tree. No larger tree, cache or lookup-state allocation is introduced. |
+| PXA read-only Provider | `src/matrixsearch.cpp` | `PINYINIME_SYSTEM_DICT_ONLY` omits the unused `UserDict` construction and rejects a nonempty user-dictionary path. | The PXA Provider has no writable user-dictionary capability. Previously an empty-path open always failed after constructing the object, while its virtual table retained unused code. Other library consumers can omit this define. |
 
 ## API notes discovered while porting
 
@@ -39,9 +44,9 @@ in `include/dictdef.h`. Everything else is done from the build system, so a
   **plain ASCII bytes**, not UTF-16, and `sps_len` counts characters.
   `pi'ao` is accepted and decoded as two syllables, which is what the 分词 key
   relies on (verified on the host: `pi'ao` → 皮奥, `piao` → 票).
-* `MatrixSearch::init()` rejects a **NULL** user dictionary path even though it
-  tolerates a path that does not exist, so `ime_engine_open()` substitutes an
-  empty string for "keep the user dictionary in RAM only".
+* `MatrixSearch::init()` rejects a **NULL** user dictionary path. The PXA
+  read-only Provider explicitly uses system-dictionary-only mode and an empty
+  path; no in-memory learning or persistent user dictionary is implied.
 * `im_get_predicts()` uses a C++ reference parameter, so it cannot be called
   from C; `ime_engine_predict()` / `ime_engine_predict_item()` wrap it.
 * Upstream has **no double pinyin support** at all (no `SetDpScheme`, no scheme

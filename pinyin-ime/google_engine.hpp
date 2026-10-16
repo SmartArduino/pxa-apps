@@ -11,6 +11,7 @@ struct GooglePinyinEngine {
         return ime_engine_candidate(index, output.data(), output.size());
     }
     void choose(std::size_t index) { (void)ime_engine_choose(index); }
+    std::size_t consumed() { return ime_engine_consumed_pinyin(); }
     std::string_view remaining() {
         std::size_t length = 0;
         const char* text = ime_engine_remaining_pinyin(&length);

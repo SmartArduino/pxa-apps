@@ -137,13 +137,29 @@ size_t ime_engine_search(const char *pinyin_utf8, size_t len)
     memcpy(s_pinyin8, pinyin_utf8, len);
     s_pinyin8[len] = '\0';
 
-    return im_search(s_pinyin8, len);
+    size_t count = im_search(s_pinyin8, len);
+    if (len > kMaxSearchSteps - 1) {
+        size_t decoded = 0;
+        (void)im_get_sps_str(&decoded);
+        // A clipped final syllable may turn "hao" into "ha" + "o" on the
+        // next choice. Keep that whole syllable in the session's next window.
+        if (decoded && decoded < len && s_pinyin8[decoded] != '\'' && s_pinyin8[decoded-1] != '\'') {
+            const uint16 *starts = NULL;
+            size_t syllables = im_get_spl_start_pos(starts);
+            if (starts && syllables && starts[syllables-1]) {
+                size_t boundary = starts[syllables-1];
+                s_pinyin8[boundary] = '\0';
+                count = im_search(s_pinyin8, boundary);
+            }
+        }
+    }
+    return count;
 }
 
 size_t ime_engine_candidate(size_t index, char *out_utf8, size_t out_size)
 {
-    char16 buf[kTextMax16];
-    char16 *got = im_get_candidate(index, buf, kTextMax16);
+    char16 buf[IME_ENGINE_MAX_TEXT_LEN + 1];
+    char16 *got = im_get_candidate(index, buf, IME_ENGINE_MAX_TEXT_LEN + 1);
     if (got == NULL) {
         return 0;
     }
@@ -163,33 +179,27 @@ size_t ime_engine_fixed_len(void)
     return im_get_fixed_len();
 }
 
-const char *ime_engine_remaining_pinyin(size_t *out_len)
+size_t ime_engine_consumed_pinyin(void)
 {
     size_t decoded_len = 0;
     const char *pys = im_get_sps_str(&decoded_len);
 
     /*
-     * The engine keeps the whole input and records how much of it is already
-     * fixed, so the still-live part starts after the fixed spellings rather than
+     * The decoder records how much of its current window is already fixed,
+     * so the still-live part starts after the fixed spellings rather than
      * at the front. get_spl_start() gives those boundaries: element [n] is the
      * start of the n-th spelling, and the array has one extra entry holding the
      * end, so [fixed] is exactly the offset of the first unfixed syllable.
      */
     size_t fixed = im_get_fixed_len();
     if (pys == NULL) {
-        if (out_len != NULL) {
-            *out_len = 0;
-        }
-        return NULL;
+        return 0;
     }
 
     const uint16 *spl_start = NULL;
     size_t spl_num = im_get_spl_start_pos(spl_start);
     if (spl_start == NULL || fixed > spl_num) {
-        if (out_len != NULL) {
-            *out_len = 0;
-        }
-        return NULL;
+        return 0;
     }
 
     size_t offset = spl_start[fixed];
@@ -197,9 +207,16 @@ const char *ime_engine_remaining_pinyin(size_t *out_len)
         offset = decoded_len;
     }
 
-    if (out_len != NULL) {
-        *out_len = decoded_len - offset;
-    }
+    return offset;
+}
+
+const char *ime_engine_remaining_pinyin(size_t *out_len)
+{
+    size_t decoded_len = 0;
+    const char *pys = im_get_sps_str(&decoded_len);
+    size_t offset = ime_engine_consumed_pinyin();
+    if (out_len != NULL) *out_len = decoded_len - offset;
+    if (pys == NULL) return NULL;
     return pys + offset;
 }
 

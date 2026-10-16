@@ -1,0 +1,1 @@
+{"matching_states": 32736, "random_operations": 10000, "exhaustive_digit_lengths": [1, 2, 3, 4], "known_change": "rejected digit preserves selection"}

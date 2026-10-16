@@ -63,9 +63,9 @@ void DictTrie::free_resource(bool free_dict_list) {
     free(nodes_ge1_);
   nodes_ge1_ = NULL;
 
-  if (NULL != nodes_ge1_)
-    free(nodes_ge1_);
-  nodes_ge1_ = NULL;
+  if (NULL != lma_idx_buf_)
+    free(lma_idx_buf_);
+  lma_idx_buf_ = NULL;
 
   if (free_dict_list) {
     if (NULL != dict_list_) {
@@ -371,6 +371,12 @@ MileStoneHandle DictTrie::extend_dict(MileStoneHandle from_handle,
   if (NULL == dep)
     return 0;
 
+  if (mile_stones_pos_ >= kMaxMileStone ||
+      parsing_marks_pos_ >= kMaxParsingMark) {
+    *lpi_num = 0;
+    return 0;
+  }
+
   // from LmaNodeLE0 (root) to LmaNodeLE0
   if (0 == from_handle) {
     assert(0 == dep->splids_extended);
@@ -498,9 +504,8 @@ MileStoneHandle DictTrie::extend_dict1(MileStoneHandle from_handle,
                 mile_stones_[mile_stones_pos_].mark_start =
                   parsing_marks_pos_;
               parsing_marks_pos_++;
+              ret_val++;
             }
-
-            ret_val++;
           }
           break;
         }  // for son_pos
@@ -576,9 +581,8 @@ MileStoneHandle DictTrie::extend_dict2(MileStoneHandle from_handle,
                 mile_stones_[mile_stones_pos_].mark_start =
                   parsing_marks_pos_;
               parsing_marks_pos_++;
+              ret_val++;
             }
-
-            ret_val++;
           }
           break;
         }

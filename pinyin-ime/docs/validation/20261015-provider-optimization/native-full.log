@@ -1,0 +1,12 @@
+T9: 413 rows, 3206 immutable bytes, one definition
+T9: exact readings, multi-syllable prefix, bounded ambiguous input and reset passed
+T9 index: every generated prefix, exact lookup, capacity and stable reading order passed
+Full provider: long tail, pool exhaustion, bounds, 1000 stress searches and reopen passed
+{"engine": "full", "workload": 0, "cpu_us_per_cycle": 4581.447, "reply_hash": "779bec1ef92bee1a"}
+{"engine": "full", "workload": 1, "cpu_us_per_cycle": 1316.773, "reply_hash": "afcc733385611b99"}
+{"engine": "full", "workload": 2, "cpu_us_per_cycle": 317.638, "reply_hash": "6aeba016a996c171"}
+{"engine": "full", "workload": 3, "cpu_us_per_cycle": 546.047, "reply_hash": "8f9d7e524e475042"}
+{"engine": "lite", "workload": 0, "cpu_us_per_cycle": 157.497, "reply_hash": "a53c93a0afcea680"}
+{"engine": "lite", "workload": 1, "cpu_us_per_cycle": 261.184, "reply_hash": "886e7f2f18b75da1"}
+{"engine": "lite", "workload": 2, "cpu_us_per_cycle": 44.288, "reply_hash": "18df1953d097109d"}
+{"engine": "lite", "workload": 3, "cpu_us_per_cycle": 226.861, "reply_hash": "8f021c8ed02ccee6"}

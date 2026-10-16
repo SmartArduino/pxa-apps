@@ -1,0 +1,5 @@
+syllables=410 readings=7292 unique_characters=6749 table_bytes=19504
+T9: 413 rows, 3206 immutable bytes, one definition
+T9: exact readings, multi-syllable prefix, bounded ambiguous input and reset passed
+T9 index: every generated prefix, exact lookup, capacity and stable reading order passed
+PXA lite: complete character table, segmentation, aliases, bounds and 10000 stress inputs passed

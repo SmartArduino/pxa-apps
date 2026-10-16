@@ -2,14 +2,15 @@
  * SPDX-FileCopyrightText: 2026 lvgl_pinyin_ime contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * Index over the T9 syllable table. See ime_trie.c for why this is a scan and
- * not a node table.
+ * Generated prefix ranges over the immutable, digit-sorted T9 syllable table.
  */
 
 #pragma once
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
+#include "generated/ime_t9_syllables.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,7 +19,7 @@ extern "C" {
 /** One syllable that matches a digit prefix. */
 typedef struct {
     const char *syllable; /**< full pinyin, for example "xiang" */
-    const char *digits;   /**< its key sequence, for example "94264" */
+    uint8_t length;       /**< spelling/digit count */
     bool is_exact;        /**< true when the digits match the prefix exactly */
 } ime_trie_match_t;
 
@@ -37,8 +38,12 @@ size_t ime_trie_syllable_count(void);
 /** Syllable string at an absolute table index, or NULL. */
 const char *ime_trie_syllable(size_t index);
 
-/** Digit string of the syllable at an absolute table index, or NULL. */
-const char *ime_trie_syllable_digits(size_t index);
+/** Matching half-open range; empty if invalid. No allocation or startup index. */
+ime_t9_range_t ime_trie_prefix_range(const char *prefix, size_t length);
+
+/** Compare the remaining digits after the range already matched the first two.
+ * Caller supplies a row from that range and length <= row->length. */
+bool ime_trie_match_tail(const ime_t9_syllable_t *row, const char *digits, size_t length);
 
 /** True when @p prefix can still be extended into a syllable. */
 bool ime_trie_is_prefix(const char *prefix);

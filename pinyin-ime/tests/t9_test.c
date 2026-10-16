@@ -38,6 +38,11 @@ int main(void) {
     assert(ime_t9_restore("ni'") && !strcmp(ime_t9_selected_pinyin(),"ni'"));
     ime_t9_backspace(); assert(!strcmp(ime_t9_selected_pinyin(),"ni"));
     assert(!ime_t9_restore("a'wrong") && !strcmp(ime_t9_selected_pinyin(),"ni"));
+    digits("645"); assert(ime_t9_count() > 1);
+    assert(ime_t9_select(ime_t9_count()-1));
+    char selected[IME_T9_MAX_PINYIN_LEN+1]; strcpy(selected,ime_t9_selected_pinyin());
+    assert(!ime_t9_push_digit('5'));
+    assert(!strcmp(selected,ime_t9_selected_pinyin()) && !strcmp(ime_t9_digits(),"645"));
     for (unsigned trial=0;trial<1000;++trial) {
         ime_t9_reset();
         for(unsigned i=0;i<IME_T9_MAX_DIGITS;++i) (void)ime_t9_push_digit('7');

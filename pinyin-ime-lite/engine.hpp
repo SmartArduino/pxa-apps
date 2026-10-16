@@ -12,7 +12,7 @@ namespace pinyin_lite {
 class CharacterEngine {
 public:
     static constexpr std::size_t max_pinyin = 64;
-    void reset() { size_ = consumed_ = count_ = first_ = last_ = 0; }
+    void reset() { size_ = consumed_ = count_ = offset_ = 0; }
 
     std::size_t search(std::string_view text) {
         reset();
@@ -32,14 +32,12 @@ public:
             // A partially typed syllable offers completions. Once another
             // syllable follows, consume the longest complete prefix. Explicit
             // separators disambiguate xi'an from xian; no word model is used.
-            auto prefix = lookup(normalized);
+            auto prefix = exact;
             if (prefix != std::end(table::syllables) && std::string_view(prefix->spelling).starts_with(normalized)) {
-                first_ = prefix - std::begin(table::syllables);
-                last_ = first_;
-                while (last_ < std::size(table::syllables) &&
-                       std::string_view(table::syllables[last_].spelling).starts_with(normalized)) {
-                    count_ += table::syllables[last_++].count;
-                }
+                const auto* end = std::partition_point(prefix, std::end(table::syllables),
+                    [normalized](const auto& syllable) { return std::string_view(syllable.spelling).starts_with(normalized); });
+                offset_ = prefix->offset;
+                count_ = end[-1].offset + end[-1].count - offset_;
                 consumed_ = start + segment.size();
             } else {
                 for (std::size_t n = std::min<std::size_t>(6, segment.size()); n > 0; --n) {
@@ -56,17 +54,14 @@ public:
 
     std::size_t candidate(std::size_t index, std::span<char> output) const {
         if (index >= count_ || output.size() < 4) return 0;
-        for (std::size_t i = first_; i < last_; ++i) {
-            const auto& syllable = table::syllables[i];
-            if (index >= syllable.count) { index -= syllable.count; continue; }
-            const auto cp = table::characters[syllable.offset + index];
-            output[0] = static_cast<char>(0xe0 | (cp >> 12));
-            output[1] = static_cast<char>(0x80 | ((cp >> 6) & 0x3f));
-            output[2] = static_cast<char>(0x80 | (cp & 0x3f));
-            output[3] = '\0';
-            return 3;
-        }
-        return 0;
+        // Prefix matches occupy one contiguous range in the immutable table.
+        // Direct indexing also makes far candidate pages constant-time.
+        const auto cp = table::characters[offset_ + index];
+        output[0] = static_cast<char>(0xe0 | (cp >> 12));
+        output[1] = static_cast<char>(0x80 | ((cp >> 6) & 0x3f));
+        output[2] = static_cast<char>(0x80 | (cp & 0x3f));
+        output[3] = '\0';
+        return 3;
     }
 
     void choose(std::size_t index) {
@@ -76,6 +71,7 @@ public:
     std::string_view remaining() const {
         return {spelling_.data() + consumed_, static_cast<std::size_t>(size_ - consumed_)};
     }
+    std::size_t consumed() const { return consumed_; }
 
 private:
     static std::string_view normalize(std::string_view text) {
@@ -88,11 +84,11 @@ private:
             [](const auto& syllable, auto value) { return std::string_view(syllable.spelling) < value; });
     }
     void select(const table::Syllable* syllable, std::size_t consumed) {
-        first_ = syllable - std::begin(table::syllables); last_ = first_ + 1;
+        offset_ = syllable->offset;
         count_ = syllable->count; consumed_ = consumed;
     }
     std::array<char, max_pinyin> spelling_{};
-    std::uint16_t size_ = 0, consumed_ = 0, count_ = 0, first_ = 0, last_ = 0;
+    std::uint16_t size_ = 0, consumed_ = 0, count_ = 0, offset_ = 0;
 };
 static_assert(sizeof(CharacterEngine) <= 80);
 }

@@ -13,7 +13,7 @@
     0
   ],
   "id": "pxa-pinyin-ime",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "name": "拼音输入法",
   "description": "可安装的系统拼音输入法，支持九键、全键盘、词句候选和中英文输入。安装后在系统输入法设置中选择；需要支持 IME provider 的 Core 2 Host。",
   "build": {
@@ -66,5 +66,5 @@
       }
     }
   ],
-  "release_sequence": 1
+  "release_sequence": 2
 }

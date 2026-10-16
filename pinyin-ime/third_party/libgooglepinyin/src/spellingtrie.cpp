@@ -93,17 +93,14 @@ SpellingTrie::~SpellingTrie() {
   }
 
   if (NULL != dumb_node_) {
-    delete [] dumb_node_;
+    delete dumb_node_;
   }
 
   if (NULL != splitter_node_) {
-    delete [] splitter_node_;
+    delete splitter_node_;
   }
 
-  if (NULL != instance_) {
-    delete instance_;
-    instance_ = NULL;
-  }
+  if (instance_ == this) instance_ = NULL;
 
   if (NULL != ym_buf_)
     delete [] ym_buf_;
@@ -315,6 +312,12 @@ bool SpellingTrie::construct(const char* spelling_arr, size_t item_size,
 #ifdef ___BUILD_MODEL___
   node_num_ = 1;
 #endif
+
+  // The singleton can load another model after decoder close. Release the
+  // previous tree before replacing its owning pointers.
+  if (root_) { free_son_trie(root_); delete root_; root_ = NULL; }
+  delete dumb_node_; dumb_node_ = NULL;
+  delete splitter_node_; splitter_node_ = NULL;
 
   root_ = new SpellingNode();
   memset(root_, 0, sizeof(SpellingNode));

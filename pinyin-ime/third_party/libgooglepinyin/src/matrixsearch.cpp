@@ -71,7 +71,9 @@ bool MatrixSearch::alloc_resource() {
   free_resource();
 
   dict_trie_ = new DictTrie();
+#ifndef PINYINIME_SYSTEM_DICT_ONLY
   user_dict_ = static_cast<AtomDictBase*>(new UserDict());
+#endif
   spl_parser_ = new SpellingParser();
 
   size_t mtrx_nd_size = sizeof(MatrixNode) * kMtrxNdPoolSize;
@@ -86,7 +88,10 @@ bool MatrixSearch::alloc_resource() {
   // share_buf's size is determined by the buffers for search.
   share_buf_ = new size_t[mtrx_nd_size + dmi_size + matrix_size + dep_size];
 
-  if (NULL == dict_trie_ || NULL == user_dict_ || NULL == spl_parser_ ||
+  if (NULL == dict_trie_ || NULL == spl_parser_ ||
+#ifndef PINYINIME_SYSTEM_DICT_ONLY
+      NULL == user_dict_ ||
+#endif
       NULL == share_buf_)
     return false;
 
@@ -123,6 +128,9 @@ void MatrixSearch::free_resource() {
 bool MatrixSearch::init(const char *fn_sys_dict, const char *fn_usr_dict) {
   if (NULL == fn_sys_dict || NULL == fn_usr_dict)
     return false;
+#ifdef PINYINIME_SYSTEM_DICT_ONLY
+  if (fn_usr_dict[0]) return false;
+#endif
 
   if (!alloc_resource())
     return false;
@@ -132,10 +140,10 @@ bool MatrixSearch::init(const char *fn_sys_dict, const char *fn_usr_dict) {
 
   // If engine fails to load the user dictionary, reset the user dictionary
   // to NULL.
-  if (!user_dict_->load_dict(fn_usr_dict, kUserDictIdStart, kUserDictIdEnd)) {
+  if (user_dict_ && !user_dict_->load_dict(fn_usr_dict, kUserDictIdStart, kUserDictIdEnd)) {
     delete user_dict_;
     user_dict_ = NULL;
-  } else{
+  } else if (user_dict_) {
     user_dict_->set_total_lemma_count_of_others(NGram::kSysDictTotalFreq);
   }
 
@@ -149,6 +157,9 @@ bool MatrixSearch::init_fd(int sys_fd, long start_offset, long length,
                            const char *fn_usr_dict) {
   if (NULL == fn_usr_dict)
     return false;
+#ifdef PINYINIME_SYSTEM_DICT_ONLY
+  if (fn_usr_dict[0]) return false;
+#endif
 
   if (!alloc_resource())
     return false;
@@ -156,10 +167,10 @@ bool MatrixSearch::init_fd(int sys_fd, long start_offset, long length,
   if (!dict_trie_->load_dict_fd(sys_fd, start_offset, length, 1, kSysDictIdEnd))
     return false;
 
-  if (!user_dict_->load_dict(fn_usr_dict, kUserDictIdStart, kUserDictIdEnd)) {
+  if (user_dict_ && !user_dict_->load_dict(fn_usr_dict, kUserDictIdStart, kUserDictIdEnd)) {
     delete user_dict_;
     user_dict_ = NULL;
-  } else {
+  } else if (user_dict_) {
     user_dict_->set_total_lemma_count_of_others(NGram::kSysDictTotalFreq);
   }
 
@@ -603,7 +614,8 @@ size_t MatrixSearch::get_candidate_num() {
 
 char16* MatrixSearch::get_candidate(size_t cand_id, char16 *cand_str,
                                     size_t max_len) {
-  if (!inited_ || 0 == pys_decoded_len_ || NULL == cand_str)
+  if (!inited_ || 0 == pys_decoded_len_ || NULL == cand_str ||
+      cand_id >= get_candidate_num())
     return NULL;
 
   if (0 == cand_id) {
@@ -1401,8 +1413,10 @@ size_t MatrixSearch::get_spl_start(const uint16 *&spl_start) {
 }
 
 size_t MatrixSearch::extend_dmi(DictExtPara *dep, DictMatchInfo *dmi_s) {
-  if (dmi_pool_used_ >= kDmiPoolSize) return 0;
-
+  if (dmi_pool_used_ >= kDmiPoolSize) {
+    lpi_total_ = 0;
+    return 0;
+  }
   if (dmi_c_phrase_)
     return extend_dmi_c(dep, dmi_s);
 
@@ -1441,7 +1455,8 @@ size_t MatrixSearch::extend_dmi(DictExtPara *dep, DictMatchInfo *dmi_s) {
     lpi_total_ = lpi_num;
 
   if (NULL == dmi_s) {  // from root
-    assert(0 != handles[0]);
+    // A root match can be absent when the bounded dictionary milestone pool
+    // is exhausted. The common no-handle path below already returns no match.
     mtrx_dmi_fr = dmi_pool_used_;
   }
 
@@ -1462,8 +1477,12 @@ size_t MatrixSearch::extend_dmi(DictExtPara *dep, DictMatchInfo *dmi_s) {
     }
   }
 
+  if (0 == handles[0] && 0 == handles[1]) {
+    lpi_total_ = 0;
+    return 0;
+  }
+
   if (0 != handles[0] || 0 != handles[1]) {
-    if (dmi_pool_used_ >= kDmiPoolSize) return 0;
 
     DictMatchInfo *dmi_add = dmi_pool_ + dmi_pool_used_;
     if (NULL == dmi_s) {

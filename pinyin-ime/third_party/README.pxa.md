@@ -11,15 +11,17 @@ Copied from `VanillaNahida/lvgl_pinyin_ime` commit
 - The generated dictionary from the upstream licensed word list → `assets/dict_pinyin.dat`.
 
 The decoder upstream revision is recorded in `libgooglepinyin/UPSTREAM_REVISION.txt`.
-`libgooglepinyin/UPSTREAM.md` is retained as historical upstream documentation;
-its “unchanged except P0” claim is outdated: the source already includes P9
-explicit-width dictionary serialization. We retain that portability patch.
+`libgooglepinyin/UPSTREAM.md` records the runtime fixes and retained historical
+portability patches. Explicit-width dictionary serialization is retained.
 
 PXA changes:
 
 - `core/ime_t9.h`: 24 digits, 32 spelling results, 64 bytes per reading; no large
   default candidate cache. `core/ime_t9.c`: bounded DFS (256 nodes per pass),
-  and partial-tail segmentation after a complete first syllable.
+  and partial-tail segmentation after a complete first syllable. The frozen
+  upstream rows in `data/t9.tsv` now generate one pointer-free spelling table
+  and 72 immutable prefix ranges; `tools/generate_t9_table.py --check` verifies
+  that data. Reading order and search budgets remain unchanged.
 - `libgooglepinyin/src/userdict.cpp`: include the PXA single-owner mutex shim;
   calls to ambient POSIX file mutation are redirected to unsupported stubs in
   Wasm. Native builds preserve their original POSIX calls.
@@ -29,8 +31,15 @@ PXA changes:
 - `port/single_owner_mutex.h`: no-op mutex on the serialized single-owner Wasm
   instance, native pthread elsewhere. It is not safe for a future concurrent
   decoder instance unless this shim is replaced.
-- Only 15 runtime decoder files are linked. Offline builder sources remain for
+- The build compiles 15 runtime decoder files and discards unused code. Offline builder sources remain for
   traceability; model generation uses a clean, pinned upstream checkout.
+- `PINYINIME_SYSTEM_DICT_ONLY` is enabled only for this read-only Provider. It
+  avoids the failed empty-path user-dictionary initialization and lets the
+  linker discard its unused implementation; no supported input feature is
+  removed. The general library path is retained without that define.
+- Decoder pool bounds, candidate bounds and close/reopen ownership fixes are
+  listed in `libgooglepinyin/UPSTREAM.md`. The facade reports consumed spelling
+  bytes so the shared session retains text beyond the decoder's 39-byte window.
 - `provider.cpp`, `session.hpp`, `main.cpp`, `port/`, CMake/package files and tests
   are the PXA integration, replacing upstream editor pointers/global UI session.
 

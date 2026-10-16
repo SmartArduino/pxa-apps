@@ -70,17 +70,23 @@ size_t ime_engine_choose(size_t index);
 size_t ime_engine_fixed_len(void);
 
 /**
- * The pinyin the engine still holds, after the syllables that have already been
- * consumed by ime_engine_choose().
+ * The unfixed pinyin in the decoder's current bounded search window, after
+ * the syllables consumed by ime_engine_choose().
  *
  * This is what makes partial commits work: choosing 拉 out of "lawanle" leaves
  * the engine with "wanle", so the caller can keep composing instead of throwing
- * the rest of the input away. Valid until the next search/choose/reset.
+ * the rest of the input away. A longer original input must be retained by the
+ * session and trimmed with ime_engine_consumed_pinyin(), since the decoder's
+ * window may exclude its tail. Valid until the next search/choose/reset.
  *
  * @param out_len  receives the decoded length in bytes
  * @return NUL terminated pinyin, or NULL when there is none
  */
 const char *ime_engine_remaining_pinyin(size_t *out_len);
+
+/** Number of original pinyin bytes fixed by choose(), excluding any undecoded
+ * suffix beyond the decoder's bounded search window. */
+size_t ime_engine_consumed_pinyin(void);
 
 /** Undo the last ime_engine_choose(). */
 size_t ime_engine_cancel_choice(void);

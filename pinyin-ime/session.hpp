@@ -17,7 +17,7 @@ concept PinyinEngine = requires(E& engine, std::string_view text, std::size_t in
     { engine.search(text) } -> std::same_as<std::size_t>;
     { engine.candidate(index, output) } -> std::same_as<std::size_t>;
     engine.choose(index);
-    { engine.remaining() } -> std::same_as<std::string_view>;
+    { engine.consumed() } -> std::same_as<std::size_t>;
 };
 
 // A Guest instance has one decoder and one active editor. Host generations
@@ -56,9 +56,7 @@ public:
                 } else {
                     // Punctuation commits the live composition before itself.
                     while (!pinyin_.empty()) {
-                        const auto previous = pinyin_.size();
-                        commit += this->choose(0);
-                        if (pinyin_.size() >= previous) { commit += pinyin_; this->reset(); }
+                        this->choose(0, commit);
                     }
                     commit.append(input.text);
                     if (!commit.empty()) edit = pxa::ime::Edit::insert;
@@ -72,12 +70,12 @@ public:
             else edit = pxa::ime::Edit::backspace;
             break;
         case confirm:
-            if (!pinyin_.empty()) { commit = this->choose(0); edit = pxa::ime::Edit::insert; }
+            if (!pinyin_.empty()) { this->choose(0, commit); edit = pxa::ime::Edit::insert; }
             else if (input.value == 0) { commit = " "; edit = pxa::ime::Edit::insert; }
             else edit = pxa::ime::Edit::submit;
             break;
         case choose:
-            if (input.value < count_) { commit = this->choose(input.value); edit = pxa::ime::Edit::insert; }
+            if (input.value < count_) { this->choose(input.value, commit); edit = pxa::ime::Edit::insert; }
             break;
         case page: page_ = std::min<std::size_t>(input.value, count_ ? count_ - 1 : 0); break;
         case choose_pinyin:
@@ -112,19 +110,25 @@ private:
         page_ = 0;
         count_ = pinyin_.empty() ? 0 : engine_.search(pinyin_);
     }
-    std::string choose(std::size_t index) {
-        if (pinyin_.empty()) return {};
+    void choose(std::size_t index, std::string& commit) {
+        if (pinyin_.empty()) return;
         std::array<char, max_pinyin * 3 + 1> buffer;
         auto n = count_ ? engine_.candidate(index, buffer) : 0;
-        if (!n) { auto raw = pinyin_; reset(); return raw; }
-        std::string chosen(buffer.data(), n);
-        engine_.choose(index);
-        std::string next(engine_.remaining());
-        reset();
-        pinyin_ = std::move(next);
+        std::size_t consumed = 0;
+        if (n) { engine_.choose(index); consumed = engine_.consumed(); }
+        if (!consumed || consumed > pinyin_.size()) { commit.append(pinyin_); reset(); return; }
+        // The decoder may only accept a prefix of a long spelling. Remove
+        // exactly the consumed prefix from our original text, retaining the
+        // undecoded tail. Size the owned tail to its actual length: retaining
+        // the original capacity overlaps later commit growth and raises peaks.
+        {
+            std::string tail(pinyin_.data() + consumed, pinyin_.size() - consumed);
+            reset();
+            pinyin_.swap(tail);
+        } // Release the old spelling capacity before growing the commit.
+        commit.append(buffer.data(), n);
         if (layout_ == pxa::ime::Layout::nine && !pinyin_.empty()) (void)ime_t9_restore(pinyin_.c_str());
         search();
-        return chosen;
     }
     std::uint64_t session_ = 0;
     pxa::ime::Layout layout_ = pxa::ime::Layout::full;

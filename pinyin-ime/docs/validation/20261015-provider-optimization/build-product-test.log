@@ -1,0 +1,9 @@
+[0/2] Re-checking globbed directories...
+[1/9] Building C object pxa-system/libpxa/CMakeFiles/pxa.dir/src/services/game_render/game_render_service.c.o
+[2/9] Building C object pxa-system/libpxa/CMakeFiles/pxa.dir/src/services/assets/assets_service.c.o
+[3/9] Building C object pxa-system/libpxa/CMakeFiles/pxa.dir/src/services/audio/audio_service.c.o
+[4/9] Linking C static library pxa-system/libpxa/libpxa.a
+[5/9] Building C object pxa-system/libpxa/CMakeFiles/pxa_adapters_wamr.dir/adapters/wamr/pxa_wamr_engine.c.o
+[6/9] Linking C static library pxa-system/libpxa/libpxa_adapters_wamr.a
+[7/9] Building C object CMakeFiles/pxsys_ime_test.dir/tests/ime_app_test.c.o
+[8/9] Linking C executable pxsys_ime_test

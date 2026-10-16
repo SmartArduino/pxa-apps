@@ -1,0 +1,64 @@
+-- PXA optional C++ library features: inplace_vector=; function_ref=
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-provider-20261015/guest-cache/pinyin-ime-wasm-4317a6041de4aed8/cmake-build
+[1/2] Building CXX object CMakeFiles/pxa_provider.dir/provider.cpp.obj
+[2/2] Linking CXX executable /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-provider-20261015/guest-cache/pinyin-ime-wasm-4317a6041de4aed8/artifacts/provider.wasm
+Verified bounded linear memory: min=2 max=64 pages
+Verified bounded linear memory: min=19 max=64 pages
+Create AoT compiler with:
+  target:        x86_64
+  target cpu:    
+  target triple: x86_64-pc-linux-gnu
+  cpu features:  
+  opt level:     3
+  size level:    3
+  output format: AoT file
+Compile success, file /tmp/pxa-pinyin-ime-simulator.mcO9I5/package/artifacts/main.linux-x86_64.aot was generated.
+Create AoT compiler with:
+  target:        x86_64
+  target cpu:    
+  target triple: x86_64-pc-linux-gnu
+  cpu features:  
+  opt level:     3
+  size level:    3
+  output format: AoT file
+Compile success, file /tmp/pxa-pinyin-ime-simulator.mcO9I5/package/artifacts/provider.linux-x86_64.aot was generated.
+pxa-pinyin-ime publisher=17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171 files=6
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-provider-20261015/simulator/pxa-pinyin-ime.pxa files=6 packed=1166332 unpacked=1469269
+-- PXA optional C++ library features: inplace_vector=; function_ref=
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-provider-20261015/guest-cache/pinyin-ime-wasm-4317a6041de4aed8/cmake-build
+ninja: no work to do.
+Verified bounded linear memory: min=2 max=64 pages
+Verified bounded linear memory: min=19 max=64 pages
+Create AoT compiler with:
+  target:        xtensa
+  target cpu:    esp32s3
+  target triple: xtensa-pc-linux-gnu
+  cpu features:  
+  opt level:     3
+  size level:    0
+  output format: AoT file
+Compile success, file /tmp/pxa-pinyin-ime-esp32s3.VpMpGl/package/artifacts/main.esp32-s3.aot was generated.
+Create AoT compiler with:
+  target:        xtensa
+  target cpu:    esp32s3
+  target triple: xtensa-pc-linux-gnu
+  cpu features:  
+  opt level:     3
+  size level:    0
+  output format: AoT file
+Compile success, file /tmp/pxa-pinyin-ime-esp32s3.VpMpGl/package/artifacts/provider.esp32-s3.aot was generated.
+pxa-pinyin-ime publisher=17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171 files=6
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-provider-20261015/esp32s3/pxa-pinyin-ime.pxa files=6 packed=1281773 unpacked=1591497
+-- PXA optional C++ library features: inplace_vector=; function_ref=
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-provider-20261015/guest-cache/pinyin-ime-wasm-4317a6041de4aed8/cmake-build
+ninja: no work to do.
+Verified bounded linear memory: min=2 max=64 pages
+Verified bounded linear memory: min=19 max=64 pages
+pxa-pinyin-ime publisher=17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171 files=4
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/ime-provider-20261015/wasm/pxa-pinyin-ime.pxa files=4 packed=1000563 unpacked=1219701

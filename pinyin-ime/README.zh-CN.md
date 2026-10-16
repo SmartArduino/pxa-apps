@@ -29,6 +29,8 @@
 bash tools/app.sh build pinyin-ime --target simulator --source-root local/pxa-apps
 bash tools/app.sh build pinyin-ime --target esp32s3 --aot-only --source-root local/pxa-apps
 bash local/pxa-apps/pinyin-ime/tests/run_t9.sh
+# 完整解码器、长输入、重开/释放与 ASan/UBSan/LSan 回归（Linux）。
+bash local/pxa-apps/pinyin-ime/tests/run.sh
 bash deps/pxa-system/tools/package/test_cpp_ime_app.sh \
   build/simulator/pai-touch/pxsys_ime_test \
   local/app-output/pai-touch/pxa-pinyin-ime \
@@ -37,14 +39,20 @@ bash deps/pxa-system/tools/package/test_cpp_ime_app.sh \
 
 集成测试使用签名输入法和普通 C++ TextInput 应用，覆盖中文词句、全键/九键、数字与英文、长按删除、确认、正文重置、背压重试、密码隔离、故障回退与重复加载释放，并渲染 13 种分辨率、DPI 和屏幕形状。Host 协议与生命周期说明见 pxa-system 的 `docs/zh-CN/input-methods.md`。代码审查、九键防误删和动态密码模式回归见 [审查记录](docs/validation/20261013-review.zh-CN.md)。本轮布局、真机配对及限制见 [手机键盘验证](docs/validation/20261012-phone-keyboard.zh-CN.md)。按需生命周期、前台停顿和内存对照见 [生命周期优化记录](docs/validation/20261012-lifecycle.zh-CN.md)。截图、打开时序、峰值内存和限制见 [自适应与快速打开验证](docs/validation/20261012-adaptive.zh-CN.md)；最初版本的测量保留在 [实现验证](docs/validation/20261011.zh-CN.md)。
 
+九键索引、候选检索、超长拼音与解码器释放优化见 [20261015 两版 Provider 验证](docs/validation/20261015-provider-optimization.zh-CN.md)，包含固定 CPU 的 O3 前后对照、AOT/Wasm 内存与原始数据。原生 CPU 时间不代表触摸到显示的延迟。
+
 ## 词典与限制
 
 词典来自固定版本 `lvgl_pinyin_ime` 的许可词表，使用其 libgooglepinyin 解码器；来源、版本和移植修改见 [third_party/README.pxa.md](third_party/README.pxa.md)、[NOTICE](NOTICE) 和 [LICENSE](LICENSE)。
 
 ```sh
 python3 local/pxa-apps/pinyin-ime/tools/rebuild_dictionary.py
+# 九键表独立于二进制词典；修改 data/t9.tsv 后更新，CI/测试核对 --check。
+python3 local/pxa-apps/pinyin-ime/tools/generate_t9_table.py --check
 ```
 
 生成的词典应为 1,068,442 字节，SHA256 为 `179311c55ab9b912a07ef040e5a95af97e704e2248b7b97735f17a3e05d13b67`。它通过组件私有只读文件能力直接读入最终解码表，不额外保留整份原始词典。
 
 当前支持最多 64 字节拼音、24 位九键输入；每次最多传输 12 个候选及 32 个拼音，搜索有工作量上限。引擎输出字形限于 BMP；编辑器本身仍支持 UTF-8。暂未实现用户词频持久化、双拼、模糊音、云候选和手写，不能将这些视为已支持功能。
+
+完整版解码器每次处理最多 39 字节，选字后从会话保存的原始拼音继续处理尾段，不会丢掉窗口之外的输入。PXA Provider 使用只读系统词典构建，不创建会打开空路径失败的用户词典；底层库仍保留不启用 `PINYINIME_SYSTEM_DICT_ONLY` 的通用路径。

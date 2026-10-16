@@ -10,10 +10,13 @@ foreach(name IN LISTS decoder_sources)
     list(APPEND decoder_files "third_party/libgooglepinyin/src/${name}.cpp")
 endforeach()
 pxa_add_component(pxa_provider CPP COMPONENT_ID provider SOURCES
-    provider.cpp port/dictionary.cpp core/ime_engine_port.cpp core/ime_t9.c core/ime_trie.c
+    provider.cpp port/dictionary.cpp core/ime_engine_port.cpp core/ime_t9.c core/ime_trie.c generated/ime_t9_syllables.c
     ${decoder_files})
 target_include_directories(pxa_provider PRIVATE . include third_party/libgooglepinyin/include)
-target_compile_definitions(pxa_provider PRIVATE PINYINIME_RUNTIME_ONLY)
+# This read-only Provider has no writable user-dictionary capability. Avoid
+# constructing a UserDict only to fail its empty-path open; other lib users
+# can omit SYSTEM_DICT_ONLY when they implement persistence.
+target_compile_definitions(pxa_provider PRIVATE PINYINIME_RUNTIME_ONLY PINYINIME_SYSTEM_DICT_ONLY)
 # The shipped model already grows to 19 pages after initialization. Start only
 # this on-demand Component at that measured size to avoid ESP realloc copies
 # during decoding. This neither pins the 4 MiB limit nor enlarges the UI app.
