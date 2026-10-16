@@ -1,8 +1,8 @@
 // Voxel Craft - a first-person voxel sandbox on the PXA C++26 Guest SDK.
 //
 // Terrain uses clipped, perspective-correct quads and triangles sharing one
-// depth buffer. A full-window Canvas routes touch input to the movement stick,
-// camera and HUD; simulation catch-up remains bounded independently of FPS.
+// depth buffer. Application input drives touch, controller, camera and HUD;
+// simulation catch-up remains bounded independently of FPS.
 #include <pxa/app.hpp>
 #include <pxa/game3d.hpp>
 #include <pxa/game_utils.hpp>
@@ -31,6 +31,7 @@
 #include "voxel_crafting.hpp"
 #include "voxel_sound.hpp"
 #include "voxel_item_draw.hpp"
+#include "voxel_controller_look.hpp"
 
 #ifndef VOXEL_BENCH_DISTANCE
 #define VOXEL_BENCH_DISTANCE 0
@@ -194,6 +195,13 @@ struct VoxelCraft {
     std::uint32_t fps_frames = 0;
 
     voxel::HudLayout hud;
+    pxa::input::Controller controller;
+    voxel::ControllerLookAxis controller_yaw,controller_pitch;
+    std::uint32_t controller_blocked=0;
+    std::uint64_t menu_repeat_us=0;
+    float place_repeat_seconds=0;
+    int menu_focus=-1;
+    bool controller_navigation=false,controller_wait_release=false;
 #include "voxel_session.inc"
 #include "voxel_menu.inc"
 
@@ -280,9 +288,14 @@ struct VoxelCraft {
     bool mine(const voxel::RayHit& hit) noexcept {
         if (!hit.hit) return false;
         const std::uint8_t removed = world.at(hit.x, hit.y, hit.z),tool=selected_block();
+        const bool empty_hand=!inventory.slots[hotbar].count;
         if(voxel::mining_seconds(removed)==0||!inventory.add(removed))return false;
+        // An empty selected slot should not hide newly collected quickbar
+        // blocks. Preserve an equipped tool or an explicitly selected material.
+        if(empty_hand)for(int i=0;i<kQuickCount;++i)
+            if(inventory.slots[i].block==removed&&inventory.slots[i].count){hotbar=i;break;}
         world.set(hit.x, hit.y, hit.z, voxel::kAir);
-        dirty_save=true;
+        action_hint_seconds=0;dirty_save=true;
 #if VOXEL_VALIDATE
         record_edit(hit.x, hit.y, hit.z, removed, 1);
         if(app_context){char msg[96];std::snprintf(msg,sizeof(msg),"VOXEL-MINED block=%u tool=%u elapsed_ms=%u",unsigned(removed),unsigned(tool),unsigned(digging.elapsed*1000));(void)app_context->log().write(pxa::LogLevel::info,msg);}
@@ -292,18 +305,22 @@ struct VoxelCraft {
         play_effect(removed,1);return true;
     }
 
-    void place() noexcept {
-        const auto block=selected_block();
-        if(block==voxel::kAir||block>=voxel::kBedrock)return;
+    bool place() noexcept {
+        const auto reject=[this](const char* message){
+            action_hint=message;action_hint_seconds=1.8f;return false;
+        };
+        const auto stack=inventory.slots[hotbar];
+        if(!stack.count||stack.block==voxel::kAir)return reject("空手 先挖掘方块");
+        const auto block=stack.block;
+        if(block>=voxel::kBedrock||!voxel::valid_item(block))return reject("请选择方块");
         const voxel::RayHit hit = target();
-        if (!hit.hit) return;
+        if (!hit.hit) return reject("准星未指向方块");
         const int x = hit.x + hit.nx;
         const int y = hit.y + hit.ny;
         const int z = hit.z + hit.nz;
-        if (!world.in_bounds(x, y, z)) return;
-        const std::uint8_t existing = world.at(x, y, z);
+        if (!world.in_bounds(x, y, z)) return reject("此处无法放置");
         // Leaves and glass are real blocks; placing cannot delete them for free.
-        if (existing != voxel::kAir) return;
+        if (world.at(x, y, z) != voxel::kAir) return reject("此处无法放置");
         const float fx = static_cast<float>(x);
         const float fy = static_cast<float>(y);
         const float fz = static_cast<float>(z);
@@ -313,18 +330,21 @@ struct VoxelCraft {
                               fz < camera.z + kPlayerRadius &&
                               fy + 1.0f > camera.y &&
                               fy < camera.y + kPlayerHeight;
-        if (overlaps) return;
-        if(!inventory.consume(hotbar))return;
+        if (overlaps) return reject("此处无法放置");
+        if(!inventory.consume(hotbar))return reject("空手 先挖掘方块");
         world.set(x, y, z, block);digging.reset();
+        action_hint_seconds=0;
         dirty_save=true;
 #if VOXEL_VALIDATE
         record_edit(x, y, z, block, 2);
 #endif
         spawn_debris(x, y, z, block);play_effect(block,2);
+        return true;
     }
 
     void cycle_hotbar(int delta) noexcept {
         hotbar = (hotbar + delta + kQuickCount) % kQuickCount;
+        action_hint_seconds=0;
     }
 
     std::uint8_t selected_block() const noexcept {
@@ -333,7 +353,7 @@ struct VoxelCraft {
 
     /* ---- UI ------------------------------------------------------------ */
 
-    /* ---- input: raw pointer events through the SDK canvas -------------- */
+    /* ---- application input -------------------------------------------- */
 
     /* Left half drives a movement stick, the right half looks around, the
      * right-hand buttons mine/place/jump/fly and the hotbar selects a block:
@@ -357,13 +377,7 @@ struct VoxelCraft {
     bool up_held = false;
     bool down_held = false;
 
-    auto view() {
-        using namespace pxa::ui;
-        /* One full-window canvas supplies the pointer events; every pixel of
-         * the HUD is drawn by the renderer below. */
-        return Canvas().input_only().on_pointer(
-            [this](const CanvasPointer& pointer) { on_pointer(pointer); });
-    }
+    void on_pointer(pxa::Context&,const pxa::input::Pointer& pointer)noexcept {on_pointer(pointer);}
 
     static constexpr int kActionButtons = 5;
 
@@ -377,10 +391,11 @@ struct VoxelCraft {
         pointer.x=pxa::ui::canvas_to_surface_coordinate(input.x,display);
         pointer.y=pxa::ui::canvas_to_surface_coordinate(input.y,display);
         using namespace pxa::ui;using enum voxel::Screen;
+        if(pointer.phase==pointer_phase_down){controller_navigation=false;ui_dirty=true;}
         if(screen!=game){
             if(busy||initializing)return;
             if(pointer.phase==pointer_phase_down&&ui_pointer<0){
-                for(unsigned i=0;i<menu_hit_count;++i)if(menu_hits[i].rect.contains(pointer.x,pointer.y)){ui_pointer=pointer.pointer_id;ui_pressed=int(i);ui_dirty=true;break;}
+                for(unsigned i=0;i<menu_hit_count;++i)if(menu_hits[i].rect.contains(pointer.x,pointer.y)){ui_pointer=pointer.pointer_id;ui_pressed=menu_focus=int(i);ui_dirty=true;break;}
             }else if(pointer.pointer_id==ui_pointer&&(pointer.phase==pointer_phase_up||pointer.phase==pointer_phase_cancel)){
                 int pressed=ui_pressed;ui_pointer=ui_pressed=-1;ui_dirty=true;
                 if(pointer.phase==pointer_phase_up&&pressed>=0&&unsigned(pressed)<menu_hit_count&&menu_hits[pressed].rect.contains(pointer.x,pointer.y)){auto hit=menu_hits[pressed];menu_action(hit.action,hit.argument);}
@@ -392,7 +407,7 @@ struct VoxelCraft {
             if(controls.bag.contains(pointer.x,pointer.y)){show(inventory);return;}
             for(int i=0;i<(flying?5:3);++i)if(controls.actions[i].contains(pointer.x,pointer.y)){
                 if(i==0){
-                    if(mine_pointer<0){mine_pointer=pointer.pointer_id;mining=true;mine_timer=0;mine_long_pressed=false;digging.reset();}
+                    begin_mining(pointer.pointer_id);
                 }else if(i==1)place();
                 else if(i==2){if(!flying&&on_ground){velocity_y=kJumpSpeed;on_ground=false;}}
                 else if(i==3&&up_pointer<0){up_pointer=pointer.pointer_id;up_held=true;}
@@ -424,9 +439,7 @@ struct VoxelCraft {
         }
         if(pointer.phase==pointer_phase_up||pointer.phase==pointer_phase_cancel){
             if(pointer.pointer_id==mine_pointer){
-                const bool use=pointer.phase==pointer_phase_up&&!mine_long_pressed&&controls.actions[0].contains(pointer.x,pointer.y);
-                mining=false;mine_pointer=-1;mine_timer=0;digging.reset();
-                if(use){auto hit=target();if(hit.hit&&world.at(hit.x,hit.y,hit.z)==voxel::kTable)show(workbench);}
+                finish_mining(pointer.phase==pointer_phase_up&&controls.actions[0].contains(pointer.x,pointer.y));
             }
             if(pointer.pointer_id==up_pointer){up_held=false;up_pointer=-1;}
             if(pointer.pointer_id==down_pointer){down_held=false;down_pointer=-1;}
@@ -434,6 +447,8 @@ struct VoxelCraft {
             if(pointer.pointer_id==look_pointer){look_active=false;look_pointer=-1;}
         }
     }
+
+#include "voxel_controller.inc"
 
     /* C-style built-in HUD drawn from the atlas asset: bottom hotbar with
      * block icons and stack counts, round action buttons on the right. */
@@ -465,6 +480,30 @@ struct VoxelCraft {
         frame.textured_quad(pxa::game::AtlasBinding{
                                 static_cast<std::uint8_t>(kHudTexture)},
                             quad, options);
+    }
+
+    static float text_width(std::string_view text,float scale)noexcept {
+        int width=0;
+        for(std::size_t at=0;at<text.size();)width+=voxel::font_next(text,at)<128?8:12;
+        return width*scale;
+    }
+
+    void draw_text(pxa::game::Frame& frame,std::string_view message,float x,float y,
+                   float scale,float sx,float sy)const noexcept {
+        // Fixed small batches use 16 bytes per glyph; INDEX8 is interpreted
+        // as grayscale coverage, blended against the actual background.
+        std::array<pxa::game::Sprite,8> batch{};unsigned count=0;
+        auto flush=[&]{if(count){frame.sprites({46},std::span{batch}.first(count),{.transparent_index0=true,.solid_color=true,.texel_alpha=true,.color={0xffff}});count=0;}};
+        const int cell=font_size;
+        for(std::size_t at=0;at<message.size();){auto c=voxel::font_next(message,at);auto index=voxel::font_index(c);
+            if(index>=0&&c!=' '){batch[count++]={
+                .x=std::int16_t(std::lround(x*sx/16)),.y=std::int16_t(std::lround(y*sy/16)),
+                .width=std::uint16_t(std::max(1l,std::lround(12*scale*sx/16))),.height=std::uint16_t(std::max(1l,std::lround(12*scale*sy/16))),
+                .source_x=std::uint16_t((index%11)*cell),.source_y=std::uint16_t((index/11)*cell),
+                .source_width=std::uint16_t(cell),.source_height=std::uint16_t(cell)};
+                if(count==batch.size())flush();
+            }x+=(c<128?8:12)*scale;
+        }flush();
     }
 
     void draw_hud(pxa::game::Frame& frame, std::uint16_t width,
@@ -547,6 +586,34 @@ struct VoxelCraft {
                 rect(x0+2,y0+slot-3,x0+slot-2,y0+slot-2,kPanel);
                 rect(x0+2,y0+slot-3,x0+2+used,y0+slot-2,{0x87e0});
             }
+        }
+
+        if(controller.connected()){
+            using namespace pxa::input;
+            const bool aiming=(controller.buttons()&~controller_blocked&controller_select)!=0;
+            const float x=controls.display.safe.left+5*controls.scale;
+            const float y=controls.display.safe.top+6*controls.scale;
+            const float text_scale=controls.text_scale*.8f;
+            constexpr std::string_view help="SELECT 上下视角",actions="X 挖掘  B 放置";
+            const float line=12*text_scale;
+            const float w=std::max(text_width(help,text_scale),text_width(actions,text_scale))+6*controls.scale;
+            const float h=2*line+4*controls.scale;
+            rect(x,y,x+w,y+h,kPanel);
+            if(aiming)rect(x,y+h-1.5f,x+w,y+h,kSelect);
+            draw_text(frame,help,x+3*controls.scale,y+2*controls.scale,text_scale,scale_x,scale_y);
+            draw_text(frame,actions,x+3*controls.scale,y+2*controls.scale+line,text_scale,scale_x,scale_y);
+        }
+        if(action_hint_seconds>0){
+            const float y=controls.hotbar.y-18*controls.scale;
+            const auto [left,right]=controls.horizontal(int(y),int(16*controls.scale));
+            float scale=controls.text_scale*.85f;
+            const float available=std::max(1.f,float(right-left)-12*controls.scale);
+            const float wanted=text_width(action_hint,scale);
+            if(wanted>available)scale*=available/wanted;
+            const float w=text_width(action_hint,scale)+8*controls.scale,h=12*scale+4*controls.scale;
+            const float x=(left+right-w)*.5f;
+            rect(x,y,x+w,y+h,kPanel);
+            draw_text(frame,action_hint,x+4*controls.scale,y+2*controls.scale,scale,scale_x,scale_y);
         }
 
         for (int index = 0; index < (flying?5:3); ++index) {
@@ -942,6 +1009,7 @@ struct VoxelCraft {
     }
 
     void on_background(pxa::Context&) {
+        controller.reset();controller_wait_release=true;
         cancel_controls();ui_dirty=true;
         stick_active = look_active = mining = up_held = down_held = false;
         stick_pointer = look_pointer = mine_pointer = up_pointer = down_pointer = -1;
@@ -964,14 +1032,37 @@ struct VoxelCraft {
 #endif
         const float dt =
             std::min(static_cast<float>(delta_us) / 1000000.0f, 0.05f);
+        action_hint_seconds=std::max(0.f,action_hint_seconds-dt);
+        const auto buttons=controller.buttons()&~controller_blocked;
+        using namespace pxa::input;
+        if(place_repeat_seconds>0){
+            if(!(buttons&controller_b)||(buttons&controller_select))place_repeat_seconds=0;
+            else if((place_repeat_seconds-=dt)<=0){
+                (void)place();place_repeat_seconds+=.18f;
+            }
+        }
+        const bool aiming=(buttons&controller_select)!=0;
+        const bool fly_up=flying&&!aiming&&(buttons&controller_a);
+        const bool fly_down=fly_up&&(buttons&controller_down);
+        const float forward=move_forward+(aiming||fly_down?0.f:
+            float(bool(buttons&controller_up))-float(bool(buttons&controller_down)));
+        const float right=move_right+(aiming?0.f:
+            float(bool(buttons&controller_right))-float(bool(buttons&controller_left)));
+        const float sensitivity[]={.65f,1.f,1.5f};
+        const int yaw=int(bool(buttons&controller_r))-int(bool(buttons&controller_l))+
+            (aiming?int(bool(buttons&controller_right))-int(bool(buttons&controller_left)):0);
+        const int pitch=aiming?int(bool(buttons&controller_down))-int(bool(buttons&controller_up)):0;
+        const float turn=controller_yaw.step(yaw,dt,2.f*sensitivity[settings.sensitivity]);
+        const float tilt=controller_pitch.step(pitch,dt,1.4f*sensitivity[settings.sensitivity]);
+        if(turn||tilt){look(turn,tilt*(settings.invert_y?-1.f:1.f));dirty_save=true;}
         const float old_x=camera.x,old_y=camera.y,old_z=camera.z;
         const float speed = flying ? kFlySpeed : kWalkSpeed;
         const float rx = std::cos(camera.yaw);
         const float rz = -std::sin(camera.yaw);
         // Ground movement follows yaw independently of look pitch. Preserve
         // analog stick magnitude; normalize only an overlong diagonal.
-        float wish_x = -rz * move_forward + rx * move_right;
-        float wish_z = rx * move_forward + rz * move_right;
+        float wish_x = -rz * forward + rx * right;
+        float wish_z = rx * forward + rz * right;
         const float length_squared = wish_x * wish_x + wish_z * wish_z;
         if (length_squared > 1.0f) {
             const float inverse_length = 1.0f / std::sqrt(length_squared);
@@ -1003,8 +1094,8 @@ struct VoxelCraft {
         }
         if (flying) {
             velocity_y = 0.0f;
-            if (up_held) move_axis(1, kFlySpeed * dt);
-            if (down_held) move_axis(1, -kFlySpeed * dt);
+            const bool rise=up_held||(fly_up&&!fly_down),descend=down_held||fly_down;
+            if(rise!=descend)move_axis(1,(rise?1.f:-1.f)*kFlySpeed*dt);
         } else {
             velocity_y -= kGravity * dt;
             if (velocity_y < -30.0f) velocity_y = -30.0f;

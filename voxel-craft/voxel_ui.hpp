@@ -2,6 +2,8 @@
 #include <pxa/ui_display.hpp>
 #include <algorithm>
 #include <cmath>
+#include <span>
+#include <limits>
 namespace voxel {
 struct Rect {
     int x=0,y=0,w=0,h=0;
@@ -86,6 +88,26 @@ struct MenuHit {
     MenuHit(Rect r,UiAction a,int arg)noexcept:rect{std::int16_t(r.x),std::int16_t(r.y),std::int16_t(r.w),std::int16_t(r.h)},action(a),argument(std::int8_t(arg)){}
 };
 static_assert(sizeof(MenuHit)==10);
+
+// MenuHit contains only enabled targets. Navigate their actual geometry so
+// the same code handles vertical menus, inventory rows and crafting grids.
+inline int menu_neighbor(std::span<const MenuHit> hits,int current,int dx,int dy)noexcept {
+    if(hits.empty())return -1;
+    if(current<0||std::size_t(current)>=hits.size())return 0;
+    if(!dx&&!dy)return current;
+    const Rect origin=hits[current].rect;
+    int next=current;
+    auto best=std::numeric_limits<std::int64_t>::max();
+    for(std::size_t i=0;i<hits.size();++i){
+        const Rect candidate=hits[i].rect;
+        const int x=candidate.cx()-origin.cx(),y=candidate.cy()-origin.cy();
+        const int forward=dy?y*dy:x*dx,cross=dy?x:y;
+        if(forward<=0)continue;
+        const auto cost=std::int64_t(forward)*forward+4*std::int64_t(cross)*cross;
+        if(cost<best){best=cost;next=int(i);}
+    }
+    return next;
+}
 struct Settings {
     std::uint8_t sensitivity=1;bool invert_y=false,auto_distance=true,flight=false,auto_jump=true;
 };

@@ -17,21 +17,25 @@
     bool mine_long_pressed=false;
     bool session_ready=false,ui_dirty=true,busy=false,dirty_save=false,catalog_ready=false;
     const char* ui_status="";
+    const char* action_hint="";
+    float action_hint_seconds=0;
 
     void apply_display(pxa::ui::DisplayMetrics value)noexcept {
         display=value;controls=voxel::ControlLayout::make(value,VOXEL_BENCH_SCENE?8:kQuickCount);
         hud.width=controls.width();hud.height=controls.height();hud.slot=controls.slot;hud.slot_gap=controls.gap;
         hud.hotbar_x=controls.hotbar.x;hud.hotbar_y=controls.hotbar.y;hud.button=controls.actions[0].w;
         hud.button_gap=std::max(2,int(6*controls.scale));hud.button_x=controls.actions[0].x;hud.button_y=controls.actions[0].y;
-        cancel_controls();menu_hit_count=0;ui_dirty=true;
+        cancel_controls();menu_hit_count=0;menu_focus=-1;ui_dirty=true;
     }
     void cancel_controls()noexcept {
+        controller_blocked=controller.buttons();menu_repeat_us=0;
+        controller_yaw.reset();controller_pitch.reset();place_repeat_seconds=action_hint_seconds=0;
         stick_active=look_active=mining=up_held=down_held=false;
         stick_pointer=look_pointer=mine_pointer=up_pointer=down_pointer=-1;
         move_right=move_forward=0;mine_timer=0;mine_long_pressed=false;digging.reset();last_draw_tick_us=0;ui_pointer=ui_pressed=-1;
     }
     void show(voxel::Screen next)noexcept {
-        cancel_controls();inventory_source=-1;crafting.clear();screen=next;ui_dirty=true;menu_hit_count=0;ui_status="";
+        cancel_controls();inventory_source=-1;crafting.clear();screen=next;ui_dirty=true;menu_hit_count=0;menu_focus=-1;ui_status="";
         fps_window_frames=fps_window_us=0;
     }
     void new_game()noexcept {

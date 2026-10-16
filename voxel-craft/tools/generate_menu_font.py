@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 """Bake three grayscale coverage atlases. The Guest loads just one of them."""
+import json
 import re
 from pathlib import Path
 from PIL import Image,ImageDraw,ImageFont
 root=Path(__file__).resolve().parents[1]
 labels=[]
-for name in ['voxel_session.inc','voxel_menu.inc','voxel_items.hpp']:
+for name in ['voxel_session.inc','voxel_menu.inc','voxel_items.hpp','main.cpp']:
  for text in re.findall(r'"([^"\n]*)"',(root/name).read_text()):
   if re.search('[\u4e00-\u9fff]',text):labels.append(text)
-chars=''.join(dict.fromkeys('VOXEL CRAFT0123456789'+''.join(labels)))
+chars=''.join(dict.fromkeys('VOXEL CRAFT0123456789SELECT'+''.join(labels)))
 chars=''.join(c for c in chars if c.isalnum() or c==' ')
-assert len(chars)<=121,len(chars)
+assert len(chars)<=154,len(chars)
 # TTC face 0 is CL, not the mainland Simplified Chinese face. Do not rely
 # on fontconfig's locale fallback or the collection's default face.
 font_path='/usr/share/fonts/sarasa-gothic/Sarasa-Regular.ttc'
 font_face=1
+description=json.loads((root/'resources.json').read_text())
 for size in [10,14,18]:
  cell=size;rows=(len(chars)+10)//11
  font=ImageFont.truetype(font_path,size,index=font_face)
@@ -27,7 +29,11 @@ for size in [10,14,18]:
   draw.text((x,y),c,font=font,fill=255)
  (root/f'resources/menu-font-{size}.a8').write_bytes(im.tobytes())
  im.save(root/f'tools/menu-font-{size}-preview.png')
+ for asset in description['assets']:
+  if asset['path']==f'assets/menu-font-{size}.pxr':
+   asset.update(width=im.width,height=im.height)
  print('Font',size,'glyphs',len(chars),'bytes',len(im.tobytes()))
+(root/'resources.json').write_text(json.dumps(description,ensure_ascii=False,indent=2)+'\n')
 (root/'voxel_font.hpp').write_text('''#pragma once
 #include <string_view>
 #include <cstdint>

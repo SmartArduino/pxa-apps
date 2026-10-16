@@ -332,21 +332,21 @@
       "source": "resources/menu-font-10.a8",
       "path": "assets/menu-font-10.pxr",
       "width": 110,
-      "height": 110
+      "height": 130
     },
     {
       "kind": "index8",
       "source": "resources/menu-font-14.a8",
       "path": "assets/menu-font-14.pxr",
       "width": 154,
-      "height": 154
+      "height": 182
     },
     {
       "kind": "index8",
       "source": "resources/menu-font-18.a8",
       "path": "assets/menu-font-18.pxr",
       "width": 198,
-      "height": 198
+      "height": 234
     }
   ]
 }

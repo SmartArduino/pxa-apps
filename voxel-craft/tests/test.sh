@@ -31,6 +31,8 @@ fi
 "${CXX:-clang++}" "${flags[@]}" "$app/tests/input_test.cpp" "$app/voxel_world.cpp" "$app/voxel_render.cpp" "$app/voxel_mesher.cpp" "$sdk"/src/*.cpp -o "$build/input"
 "${CXX:-clang++}" "${flags[@]}" -I"$host/include" "$app/tests/session_test.cpp" "$app/voxel_world.cpp" "$app/voxel_render.cpp" "$app/voxel_mesher.cpp" "$sdk"/src/*.cpp "$build/raster.o" "$build/wire.o" -o "$build/session"
 "$build/session"
+"${CXX:-clang++}" "${flags[@]}" -I"$host/include" "$app/tests/controller_test.cpp" "$app/voxel_world.cpp" "$app/voxel_render.cpp" "$app/voxel_mesher.cpp" "$sdk"/src/*.cpp "$build/raster.o" "$build/wire.o" -o "$build/controller"
+"$build/controller"
 "${CXX:-clang++}" "${flags[@]}" "$app/tests/inventory_test.cpp" -o "$build/inventory"
 "$build/inventory"
 "${CXX:-clang++}" "${flags[@]}" "$app/tests/sound_test.cpp" -o "$build/sound"

@@ -6,22 +6,8 @@
         auto qx=[sx](float x){return std::int16_t(std::lround(x*sx));};
         auto qy=[sy](float y){return std::int16_t(std::lround(y*sy));};
         auto rectangle=[&](voxel::Rect r,std::uint16_t color){frame.quad({qx(r.x),qy(r.y),qx(r.x+r.w),qy(r.y),qx(r.x+r.w),qy(r.y+r.h),qx(r.x),qy(r.y+r.h)},{color});};
-        auto text_width=[](std::string_view text,float scale){int w=0;for(std::size_t at=0;at<text.size();){auto c=voxel::font_next(text,at);w+=c<128?8:12;}return float(w)*scale;};
         auto text=[&](std::string_view message,float x,float y,float scale){
-            // Fixed small batches use 16 bytes per glyph; INDEX8 is interpreted
-            // as grayscale coverage, blended against the actual background.
-            std::array<pxa::game::Sprite,8> batch{};unsigned count=0;
-            auto flush=[&]{if(count){frame.sprites({46},std::span{batch}.first(count),{.transparent_index0=true,.solid_color=true,.texel_alpha=true,.color={0xffff}});count=0;}};
-            const int cell=font_size;
-            for(std::size_t at=0;at<message.size();){auto c=voxel::font_next(message,at);auto index=voxel::font_index(c);
-                if(index>=0&&c!=' '){batch[count++]={
-                    .x=std::int16_t(std::lround(x*sx/16)),.y=std::int16_t(std::lround(y*sy/16)),
-                    .width=std::uint16_t(std::max(1l,std::lround(12*scale*sx/16))),.height=std::uint16_t(std::max(1l,std::lround(12*scale*sy/16))),
-                    .source_x=std::uint16_t((index%11)*cell),.source_y=std::uint16_t((index/11)*cell),
-                    .source_width=std::uint16_t(cell),.source_height=std::uint16_t(cell)};
-                    if(count==batch.size())flush();
-                }x+=(c<128?8:12)*scale;
-            }flush();
+            draw_text(frame,message,x,y,scale,sx,sy);
         };
         auto centered=[&](std::string_view value,int y,float scale){
             auto span=controls.horizontal(y,std::max(1,int(std::ceil(12*scale))));
@@ -145,6 +131,16 @@
         else if(*ui_status){
             // A short status is kept on screen, never hidden solely in a toast.
             centered(ui_status,bottom-int(10*font),font*.8f);
+        }
+        // Draw last, entirely inside the target: all four edges remain visible.
+        if(controller_navigation&&menu_hit_count){
+            if(menu_focus<0||unsigned(menu_focus)>=menu_hit_count)menu_focus=0;
+            const voxel::Rect r=menu_hits[menu_focus].rect;
+            const int stroke=std::min({2,r.w/2,r.h/2});
+            rectangle({r.x,r.y,r.w,stroke},0xfd20);
+            rectangle({r.x,r.y+r.h-stroke,r.w,stroke},0xfd20);
+            rectangle({r.x,r.y,stroke,r.h},0xfd20);
+            rectangle({r.x+r.w-stroke,r.y,stroke,r.h},0xfd20);
         }
         const auto submitted=frame.submit();ui_dirty=!submitted;
         if(!submitted&&submitted.error()!=pxa::Error::would_block&&app_context){char error[80];std::snprintf(error,sizeof(error),"Menu draw failed: %d bytes=%u",int(submitted.error()),unsigned(frame.bytes_used()));(void)app_context->log().write(pxa::LogLevel::error,error);}
