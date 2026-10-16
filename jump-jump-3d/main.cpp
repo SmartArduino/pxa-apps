@@ -36,12 +36,15 @@ struct JumpJump {
     uint32_t best_saved=0;
     uint8_t g_last_state=0,g_bonus_played=0,scheme=0,scale_shift=0;
     uint16_t g_last_jumps=0;
-    uint16_t charge_pointer=256; // Outside the uint8_t pointer ID range.
+    // Touch IDs are 0..255; 256 is idle and 257 is the controller owner.
+    static constexpr uint16_t controller_source=257;
+    uint16_t charge_pointer=256;
+    pxa::input::Controller controller;
+    bool controller_wait_release=false;
     uint32_t g_last_score=0;
     float g_bonus_repeat_timer=0,save_timer=0;
     bool g_bgm_started=false,initializing=false,saving=false,result_drawn=false,clock_syncing=false;
     #include "sound_triggers.inc"
-    auto view(){return pxa::ui::Canvas().input_only().on_pointer([this](const pxa::ui::CanvasPointer& p){pointer(p);});}
     pxa::Result<void> on_start(pxa::Context& ctx,std::span<const std::byte> config){
         context=&ctx;arcade::logging_transport=&ctx.transport();
         if(auto metrics=pxa::ui::decode_start_display(config))display=*metrics;
@@ -131,16 +134,34 @@ struct JumpJump {
             if(g_bonus_repeat_timer>0)g_bonus_repeat_timer-=dt;}
         return dt;
     }
-    void pointer(const pxa::ui::CanvasPointer& p){if(!renderer||initializing)return;
+    void on_pointer(pxa::Context&,const pxa::input::Pointer& p){pointer(p);}
+    void pointer(const pxa::input::Pointer& p){charge_event(p.pointer_id,p.action(),p.timestamp_us);}
+    void on_controller(pxa::Context& ctx,const pxa::input::ControllerState& state){
+        using namespace pxa::input;
+        if(!controller.update(state))return;
+        if(!state.connected){controller_wait_release=true;charge_event(controller_source,PointerPhase::cancel,state.timestamp_us);return;}
+        if(controller_wait_release){if(!controller.buttons())controller_wait_release=false;return;}
+        if(controller.pressed(controller_b)){
+            charge_event(controller_source,PointerPhase::cancel,state.timestamp_us);
+            (void)ctx.window().request_back();return;
+        }
+        if(controller.pressed(controller_a)||(g_game.state==J3_STATE_OVER&&controller.pressed(controller_start)))
+            charge_event(controller_source,PointerPhase::down,state.timestamp_us);
+        if(controller.released(controller_a))charge_event(controller_source,PointerPhase::up,state.timestamp_us);
+    }
+    void charge_event(uint16_t source,pxa::input::PointerPhase phase,uint64_t timestamp_us){if(!renderer||initializing){
+            if(phase==pxa::input::PointerPhase::cancel&&charge_pointer==source){charge_pointer=256;charge_start_us=0;j3_game_cancel(&g_game);}
+            return;
+        }
         // MOVE samples never render or drive physics. The clock advances the
         // game, and endpoint timestamps determine the actual hold duration.
-        if(p.phase==pxa::ui::pointer_phase_move)return;
-        // A second contact must not release the finger that owns the charge.
+        if(phase==pxa::input::PointerPhase::move)return;
+        // Touch and controller endpoints only release their own charge.
         // Ignore unmatched endpoints and duplicate presses without drawing.
-        if (p.phase == pxa::ui::pointer_phase_down) {if(charge_pointer!=256)return;}
-        else if(p.pointer_id!=charge_pointer)return;
-        advance_to(p.timestamp_us);
-        if(p.phase==pxa::ui::pointer_phase_down){
+        if (phase == pxa::input::PointerPhase::down) {if(charge_pointer!=256)return;}
+        else if(source!=charge_pointer)return;
+        advance_to(timestamp_us);
+        if(phase==pxa::input::PointerPhase::down){
             if(g_game.state==J3_STATE_OVER){auto best=g_game.best;j3_game_reset(&g_game,0x9e3779b9^uint32_t(frame_id));g_game.best=best;
                 g_last_state=g_game.state;g_last_score=0;g_last_jumps=0;g_bonus_played=0;g_bonus_repeat_timer=0;
                 quality_ticks=0;if(auto t=renderer->telemetry())quality.reset(*t);
@@ -148,32 +169,32 @@ struct JumpJump {
                 j3_audio_play(&g_audio,J3_CHANNEL_LAND,J3_CLIP_START,J3_GAIN_FULL,0);
                 j3_audio_stop(&g_audio,J3_CHANNEL_COMBO);j3_audio_stop(&g_audio,J3_CHANNEL_BONUS);
             }else {j3_game_press(&g_game);if(g_game.state==J3_STATE_CHARGING){
-                charge_pointer=p.pointer_id;charge_start_us=p.timestamp_us;
-                if(p.timestamp_us && stepper.previous_timestamp()>p.timestamp_us)
-                    j3_game_charge(&g_game,float(stepper.previous_timestamp()-p.timestamp_us)*1e-6f);
+                charge_pointer=source;charge_start_us=timestamp_us;
+                if(timestamp_us && stepper.previous_timestamp()>timestamp_us)
+                    j3_game_charge(&g_game,float(stepper.previous_timestamp()-timestamp_us)*1e-6f);
             }}
-        }else if(p.phase==pxa::ui::pointer_phase_up) {
+        }else if(phase==pxa::input::PointerPhase::up) {
             charge_pointer=256;
-            if(charge_start_us && p.timestamp_us>=charge_start_us)
-                j3_game_charge(&g_game,float(p.timestamp_us-charge_start_us)*1e-6f);
+            if(charge_start_us && timestamp_us>=charge_start_us)
+                j3_game_charge(&g_game,float(timestamp_us-charge_start_us)*1e-6f);
 #if J3_TRACE_TIMING
             const auto trace_charge_us=unsigned(g_game.charge*1e6f);
 #endif
-            if(p.timestamp_us && stepper.previous_timestamp()>p.timestamp_us)
-                g_game.quick_window+=float(stepper.previous_timestamp()-p.timestamp_us)*1e-6f;
+            if(timestamp_us && stepper.previous_timestamp()>timestamp_us)
+                g_game.quick_window+=float(stepper.previous_timestamp()-timestamp_us)*1e-6f;
             j3_game_release(&g_game);
             // An older UP can follow a newer clock event. Catch the flight up
             // to that clock without counting the queue delay as extra charge.
-            if(p.timestamp_us && stepper.previous_timestamp()>p.timestamp_us)
-                j3_game_tick(&g_game,float(stepper.previous_timestamp()-p.timestamp_us)*1e-6f);
+            if(timestamp_us && stepper.previous_timestamp()>timestamp_us)
+                j3_game_tick(&g_game,float(stepper.previous_timestamp()-timestamp_us)*1e-6f);
 #if J3_TRACE_TIMING
-            char trace[192];std::snprintf(trace,sizeof(trace),"J3CPP release now=%llu charge_us=%u flight_us=%u vx_q6=%d vy_q6=%d land_x_q6=%d result=%u",(unsigned long long)p.timestamp_us,trace_charge_us,unsigned(g_game.land_time*1e6f),int(g_game.vx*1e6f),int(g_game.launch_vy*1e6f),int(g_game.land_x*1e6f),g_game.land_result);
+            char trace[192];std::snprintf(trace,sizeof(trace),"J3CPP release now=%llu charge_us=%u flight_us=%u vx_q6=%d vy_q6=%d land_x_q6=%d result=%u",(unsigned long long)timestamp_us,trace_charge_us,unsigned(g_game.land_time*1e6f),int(g_game.vx*1e6f),int(g_game.launch_vy*1e6f),int(g_game.land_x*1e6f),g_game.land_result);
             (void)context->log().write(pxa::LogLevel::info,trace);
 #endif
 
         }
-        else if(p.phase==pxa::ui::pointer_phase_cancel){charge_pointer=256;j3_game_cancel(&g_game);}
-        play_state_sounds();j3_audio_tick(&g_audio,std::max({p.timestamp_us,stepper.previous_timestamp(),g_audio.tick_us}));draw_frame();
+        else if(phase==pxa::input::PointerPhase::cancel){charge_pointer=256;j3_game_cancel(&g_game);}
+        play_state_sounds();j3_audio_tick(&g_audio,std::max({timestamp_us,stepper.previous_timestamp(),g_audio.tick_us}));draw_frame();
     }
     pxa::Result<bool> on_event(pxa::Context&,const pxa::Event& event){
         j3_audio_event(&g_audio,event);
@@ -230,7 +251,7 @@ struct JumpJump {
             (void)context->log().write(pxa::LogLevel::info,line);}}
         return true;
     }
-    void on_background(pxa::Context&){charge_pointer=256;j3_audio_pause(&g_audio);(void)context->clock().set_period(0);j3_game_cancel(&g_game);stepper.reset();}
+    void on_background(pxa::Context&){controller.reset();controller_wait_release=true;charge_pointer=256;charge_start_us=0;j3_audio_pause(&g_audio);(void)context->clock().set_period(0);j3_game_cancel(&g_game);stepper.reset();}
     void on_foreground(pxa::Context& ctx){j3_audio_resume(&g_audio);stepper.reset();(void)ctx.clock().set_period(TICK_MS);(void)ctx.window().fullscreen(pxa::WindowBarMode::hidden,pxa::WindowBarMode::hidden);(void)ctx.tasks().start(sync_wall_time());draw_frame();}
 };
 }

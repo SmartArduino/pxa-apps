@@ -23,20 +23,27 @@ struct AudioBank {
     std::bitset<256> failed{};
     bool loading=false,unavailable=false,discard_loading=false;
     uint8_t loading_id=255,retries=0,retry_delay=0;
+    void initialization_failed(const char* stage,pxa::Error error) {
+        unavailable=true;
+        char message[112];
+        std::snprintf(message,sizeof(message),"C++ game audio %s failed error=%d",stage,int(error));
+        (void)context->log().write(pxa::LogLevel::warning,message);
+    }
     [[gnu::noinline]] pxa::Task<void> open(int16_t gain,pxa::EqBand band) {
         std::array<std::byte,64> packet{};constexpr std::string_view scope="media";
         auto grant=co_await context->permissions().acquire("audio.playback",std::as_bytes(std::span{scope.data(),scope.size()}),packet);
-        if(!grant){unavailable=true;co_return pxa::Result<void>{};}
+        if(!grant){initialization_failed("permission",grant.error());co_return pxa::Result<void>{};}
         permission.emplace(std::move(*grant));auto opened=co_await context->audio().open(*permission);
-        if(!opened){unavailable=true;permission.reset();co_return pxa::Result<void>{};}
+        if(!opened){initialization_failed("session",opened.error());permission.reset();co_return pxa::Result<void>{};}
         auto configured=co_await opened->graph(gain,{&band,1});
-        if(!configured){unavailable=true;opened=std::unexpected(pxa::Error::internal);permission.reset();co_return pxa::Result<void>{};}
+        if(!configured){initialization_failed("graph",configured.error());opened=std::unexpected(pxa::Error::internal);permission.reset();co_return pxa::Result<void>{};}
         session.emplace(std::move(*opened));
         (void)context->log().write(pxa::LogLevel::info,"C++ game audio ready");
         co_return pxa::Result<void>{};
     }
     void start(pxa::Context& ctx,int16_t gain,pxa::EqBand band) {
-        context=&ctx;auto result=ctx.tasks().start(open(gain,band));if(!result)unavailable=true;
+        context=&ctx;auto result=ctx.tasks().start(open(gain,band));
+        if(!result)initialization_failed("task",result.error());
     }
     [[gnu::noinline]] pxa::Task<void> load(uint8_t id,unsigned slot,const char* path) {
         auto sound=co_await context->assets().load(pxa::AssetKind::audio,path);
