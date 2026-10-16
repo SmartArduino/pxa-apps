@@ -1,6 +1,22 @@
 namespace: app.pxa-store
 default_locale: en-US
 messages:
+  media.open:
+    source: Open screenshot preview
+    context: Accessible label on a screenshot thumbnail
+    max_bytes: 96
+  media.screenshots:
+    source: Screenshot
+    context: Screenshot viewer title followed by the current page number
+    max_bytes: 48
+  media.zoom_fit:
+    source: Zoom
+    context: Zoom action while the screenshot fits the viewport
+    max_bytes: 32
+  media.zoom:
+    source: Zoom image; double-tap to zoom or reset, drag to pan when zoomed
+    context: Accessible label for the screenshot zoom control
+    max_bytes: 128
   action.filters:
     source: Filter
     context: Show or hide category filters
@@ -204,8 +220,8 @@ messages:
     context: Row label for the release version
     max_bytes: 24
   detail.size:
-    source: Package size
-    context: Row label for the artifact size
+    source: .pxa file size
+    context: Complete downloaded .pxa container size in bytes
     max_bytes: 32
   detail.channel:
     source: Channel
@@ -324,6 +340,18 @@ messages:
   status.install_failed:
     source: Installation failed; please try again
     context: Host could not complete the installation
+    max_bytes: 112
+  status.install_denied:
+    source: The system denied the installation service request
+    context: A synchronous installer service rejection, not a network failure
+    max_bytes: 112
+  status.install_busy:
+    source: Another app operation is still in progress; please retry shortly
+    context: Host is already handling a package operation
+    max_bytes: 112
+  status.install_resources:
+    source: The system has insufficient memory; please retry shortly
+    context: Host could not allocate installation resources
     max_bytes: 112
   status.install_unsupported:
     source: This Host does not support app installation

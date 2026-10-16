@@ -37,11 +37,11 @@ int main(void) {
     store_app_t app = {};
     char url[512];
     assert(store_client_profile_for_device(url, sizeof(url), "esp32-s3", "xtensa", "wamr", 3));
-    assert(strcmp(url, "esp32-s3-pxa-0.3.0") == 0);
+    assert(strcmp(url, "esp32-s3-pxa-0.3.0-r2") == 0);
     assert(store_client_profile_for_device(url, sizeof(url), "esp32-s31", "riscv32", "wamr", 3));
-    assert(strcmp(url, "esp32-s31-pxa-0.3.0") == 0);
+    assert(strcmp(url, "esp32-s31-pxa-0.3.0-r2") == 0);
     assert(store_client_profile_for_device(url, sizeof(url), "linux-x86_64", "x86_64", "wamr", 3));
-    assert(strcmp(url, "linux-x86_64-pxa-0.3.0") == 0);
+    assert(strcmp(url, "linux-x86_64-pxa-0.3.0-r2") == 0);
     assert(!store_client_profile_for_device(url, sizeof(url), "esp32-s31", "xtensa", "wamr", 3));
     assert(store_client_build_catalog_url(url, sizeof(url), "esp32-s3-pxa-0.3.0", "", 0, "", "", "", 6));
     assert(strstr(url, "page_size=6") != NULL);

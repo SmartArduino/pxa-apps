@@ -51,6 +51,8 @@ for entry in 'plane-shooter images_test images.cpp' 'store search_image_test sea
              'store store_utf8_test store_json.cpp' \
              'store store_media_test store_json.cpp store_media_url.cpp' \
              'store store_layout_test' \
+             'store store_viewer_test' \
+             'store store_size_test' \
              'weather weather_providers_test weather_providers.cpp'; do
     read -ra units <<< "$entry"
     app="${units[0]}"; name="${units[1]}"; sources=()

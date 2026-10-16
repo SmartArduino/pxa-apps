@@ -6,7 +6,7 @@
 #include <cstdio>
 static void store_ui_command_failed(unsigned opcode, int status) {
     char text[80];
-    std::snprintf(text, sizeof(text), "store: UI opcode=%u failed status=%d", opcode, status);
+    std::snprintf(text, sizeof(text), "store: UI transaction opcode=%u failed status=%d", opcode, status);
     (void)pxa_log_write(3, text);
 }
 #define PXA_UI_COMMAND_FAILED(opcode, status) store_ui_command_failed(opcode, status)
@@ -24,6 +24,9 @@ static void store_ui_command_failed(unsigned opcode, int status) {
 #include "store_json.h"
 #include "store_model.h"
 #include "store_layout.h"
+#include "store_viewer.hpp"
+#include "store_size.hpp"
+#include <pxa/ui_wire.hpp>
 #include "store_media.hpp"
 #include <cstdlib>
 #include <cstdio>
@@ -34,6 +37,7 @@ static void store_ui_command_failed(unsigned opcode, int status) {
 #define STORE_SCREEN_INSTALLED 3
 #define STORE_SCREEN_DOWNLOADS 4
 #define STORE_SCREEN_SUCCESS 5
+#define STORE_SCREEN_VIEWER 6
 
 #define STORE_IDLE 0
 #define STORE_LOADING 1
@@ -108,6 +112,7 @@ static void store_ui_command_failed(unsigned opcode, int status) {
 #define NODE_SEARCH_TEXT 46u
 #define NODE_SEARCH_KEYBOARD 47u
 #define NODE_SEARCH_ICON 48u
+#define NODE_SEARCH_SUBMIT 56u
 #define NODE_SEARCH_EMPTY 53u
 #define NODE_SEARCH_EMPTY_ICON 54u
 #define NODE_SEARCH_EMPTY_TEXT 55u
@@ -131,8 +136,6 @@ static void store_ui_command_failed(unsigned opcode, int status) {
 #define NODE_DOWNLOADS_ACTION_LABEL 84u
 #define NODE_INSTALLED_ACTION_ICON 1022u
 #define NODE_DOWNLOADS_ACTION_ICON 1023u
-#define NODE_DOWNLOAD_BUTTON 85u
-#define NODE_DOWNLOAD_LABEL 86u
 #define NODE_LIBRARY_STATUS 87u
 #define NODE_LIBRARY_CHECK 88u
 #define NODE_LIBRARY_CHECK_LABEL 89u
@@ -172,6 +175,17 @@ static void store_ui_command_failed(unsigned opcode, int status) {
 #define NODE_GALLERY_COUNT 1616u
 #define NODE_GALLERY_NEXT 1617u
 #define NODE_GALLERY_NEXT_LABEL 1618u
+#define NODE_VIEWPORT 1620u
+#define NODE_VIEWER_CONTENT 1621u
+#define NODE_VIEWER_IMAGE 1622u
+#define NODE_VIEWER_STATUS 1623u
+#define NODE_VIEWER_CONTROLS 1624u
+#define NODE_VIEWER_PREV 1625u
+#define NODE_VIEWER_PREV_LABEL 1626u
+#define NODE_VIEWER_ZOOM 1627u
+#define NODE_VIEWER_ZOOM_LABEL 1628u
+#define NODE_VIEWER_NEXT 1629u
+#define NODE_VIEWER_NEXT_LABEL 1630u
 
 #define SECTION_SUMMARY 0u
 #define SECTION_CHANGELOG 1u
@@ -205,6 +219,7 @@ typedef struct {
     store_app_t detail;
     store_gallery_t gallery;
     uint8_t screenshot;
+    uint8_t viewer_zoom;
     uint8_t technical_expanded;
     uint8_t filters_expanded;
     uint64_t bound_icons[STORE_MAX_APPS];
@@ -221,7 +236,6 @@ typedef struct {
     uint8_t install_feedback;
     uint8_t uninstall_feedback;
     uint8_t install_refresh;
-    uint8_t download_only;
     uint8_t downloading;
     uint8_t progress_rendered;
     uint64_t downloaded_bytes;
@@ -293,6 +307,7 @@ typedef struct {
     uint8_t *body;
     uint32_t body_capacity;
     uint32_t body_limit;
+    store::ViewerGesture viewer_gesture;
 } store_state_t;
 
 static store_state_t app;
@@ -331,7 +346,7 @@ typedef struct {
  * list_gap, tab_height, hero_icon, search_height, key_height, key_gap,
  * title_role */
 static const store_metrics_t metrics_compact = {
-    38, 0, 48, 10, 2, 30, 9, 26, 10, 5, 28, 5, 6, 8, 32, 10, 5, 38, 36, 32,
+    38, 0, 48, 10, 2, 30, 9, 26, 10, 5, 28, 5, 6, 8, 32, 10, 5, 42, 36, 32,
     25, 3, PXA_UI_FONT_ROLE_BODY};
 static const store_metrics_t metrics_regular = {
     60, 18, 84, 16, 4, 32, 12, 32, 14, 8, 42, 10, 8, 8, 48, 16, 7, 48, 56,
@@ -455,31 +470,7 @@ static void store_trace(const char *tag, uint32_t value) {
 }
 
 static void format_size(char *output, size_t capacity, uint64_t bytes) {
-    static const char units[] = "KMGT";
-    uint64_t unit = 1024;
-    uint8_t index = 0;
-    size_t offset = 0;
-    if (capacity == 0) return;
-    output[0] = '\0';
-    if (bytes < 1024u) {
-        offset = append_u64(output, capacity, offset, bytes);
-        (void)append_text(output, capacity, offset, " B");
-        return;
-    }
-    while (index + 1u < sizeof(units) - 1u && bytes >= unit * 1024u) {
-        unit *= 1024u;
-        ++index;
-    }
-    offset = append_u64(output, capacity, offset, bytes / unit);
-    if ((bytes % unit) * 10u / unit != 0) {
-        offset = append_text(output, capacity, offset, ".");
-        offset = append_u64(output, capacity, offset,
-                            (bytes % unit) * 10u / unit);
-    }
-    offset = append_text(output, capacity, offset, " ");
-    output[offset] = units[index];
-    output[offset + 1u] = 'B';
-    output[offset + 2u] = '\0';
+    store::format_package_size({output, capacity}, bytes);
 }
 
 /* Shows only the leading bytes of a long digest or key identifier. */
@@ -663,7 +654,7 @@ static const char *status_text(void) {
 
 static pxa_i18n_message_id_t install_feedback_message(void) {
     switch (app.install_feedback) {
-        case 1: return app.download_only || app.downloading ?
+        case 1: return app.downloading ?
             PXA_MSG_STATUS_DOWNLOADING : PXA_MSG_STATUS_INSTALL_LOADING;
         case 2: return PXA_MSG_STATUS_INSTALL_SUCCESS;
         case 4: return PXA_MSG_STATUS_DOWNLOAD_FAILED;
@@ -729,6 +720,14 @@ static void toast_failure(pxa_i18n_message_id_t title, int32_t status) {
         case STORE_ERROR_NOT_FOUND: reason = PXA_MSG_STATUS_NOT_FOUND; break;
         default: break;
     }
+    if (title == PXA_MSG_STATUS_INSTALL_FAILED || title == PXA_MSG_STATUS_DOWNLOAD_FAILED) {
+        if (status == PXA_STATUS_DENIED) reason = PXA_MSG_STATUS_INSTALL_DENIED;
+        else if (status == PXA_STATUS_BUSY) reason = PXA_MSG_STATUS_INSTALL_BUSY;
+        else if (status == PXA_STATUS_RESOURCE_LIMIT) reason = PXA_MSG_STATUS_INSTALL_RESOURCES;
+        else if (status == PXA_STATUS_UNSUPPORTED) reason = PXA_MSG_STATUS_INSTALL_UNSUPPORTED;
+        else if (status == PXA_STATUS_QUOTA_EXCEEDED) reason = PXA_MSG_STATUS_STORAGE_FULL;
+        else if (status == PXA_STATUS_INVALID_ARGUMENT) reason = PXA_MSG_STATUS_PROTOCOL;
+    }
     copy_text(text, sizeof(text), message(title));
     size = string_length(text);
     if (size + 3u < sizeof(text)) {
@@ -768,7 +767,9 @@ static int create_action_button(pxa_ui_transaction_t *transaction, uint32_t node
                                 uint32_t label_node, const char *text,
                                 uint8_t enabled) {
     const store_metrics_t *m = metrics();
-    const char *icon = node == NODE_BACK ? ICON_BACK : message(PXA_MSG_ACTION_FILTERS);
+    const bool symbol = node == NODE_BACK || node == NODE_LIBRARY_CHECK;
+    const char *visual = node == NODE_BACK ? ICON_BACK :
+                         node == NODE_LIBRARY_CHECK ? ICON_REFRESH : text;
     return pxa_ui_create_typed(transaction, node, NODE_HEADER_ROW, 0,
                                  PXA_UI_NODE_CONTROL, PXA_UI_CONTROL_BUTTON) &&
              pxa_ui_set_length(transaction, node, PXA_UI_PROPERTY_WIDTH,
@@ -819,10 +820,10 @@ static int create_action_button(pxa_ui_transaction_t *transaction, uint32_t node
                      pxa_ui_set_event_mask(transaction, label_node, 0))
                   : (pxa_ui_create(transaction, label_node, node, 0,
                                     PXA_UI_NODE_TEXT) &&
-                     pxa_ui_set_text(transaction, label_node, icon,
-                                     string_length(icon)) &&
+                     pxa_ui_set_text(transaction, label_node, visual,
+                                     string_length(visual)) &&
                      pxa_ui_set_font_role(transaction, label_node,
-                                          node == NODE_REFRESH ? PXA_UI_FONT_ROLE_CAPTION : PXA_UI_FONT_ROLE_ICON) &&
+                                          symbol ? PXA_UI_FONT_ROLE_ICON : PXA_UI_FONT_ROLE_CAPTION) &&
                      pxa_ui_set_theme_color(transaction, label_node,
                                             PXA_UI_PROPERTY_FOREGROUND,
                                             node == NODE_BACK ? PXA_UI_THEME_TEXT :
@@ -1210,7 +1211,7 @@ static int32_t catalog_content_height(void) {
 static void sync_media(void) {
     store::MediaRequest visible[store::media_capacity];
     unsigned count = 0;
-    if (app.screen == STORE_SCREEN_DETAIL) {
+    if (app.screen == STORE_SCREEN_DETAIL || app.screen == STORE_SCREEN_VIEWER) {
         const auto *item = detail_item();
         if (item->icon_url[0]) visible[count++] = {item->icon_url};
         if (app.screenshot < app.gallery.count)
@@ -1308,15 +1309,27 @@ static int create_catalog_list(pxa_ui_transaction_t *transaction) {
     return ok;
 }
 
+static const char *catalog_footer_label() {
+    return message(app.busy ? PXA_MSG_STATUS_LOADING :
+        app.state == STORE_FAILED ? PXA_MSG_ACTION_RETRY : PXA_MSG_ACTION_LOAD_MORE);
+}
+
+// Keep a stable identity for insertion, but remove the end-of-catalog footer
+// from layout and hit testing. Compact screens need these updates too.
+static int update_catalog_footer(pxa_ui_transaction_t *transaction) {
+    const bool visible = app.busy || app.state == STORE_FAILED || app.catalog.has_more;
+    const char *label = catalog_footer_label();
+    return pxa_ui_set_text(transaction, NODE_LOAD_MORE, label, string_length(label)) &&
+        pxa_ui_set_u8(transaction, NODE_FOOTER, PXA_UI_PROPERTY_VISIBLE, visible) &&
+        pxa_ui_set_event_mask(transaction, NODE_FOOTER,
+            visible && !app.busy ? PXA_UI_EVENT_MASK_CLICK : 0);
+}
+
 static int create_footer(pxa_ui_transaction_t *transaction) {
     const store_metrics_t *m = metrics();
-    const char *label;
     uint8_t columns = catalog_columns();
     uint8_t rows = (uint8_t)((app.catalog.count + columns - 1u) / columns);
-    label = app.busy ? message(PXA_MSG_STATUS_LOADING) :
-        app.state == STORE_FAILED ? message(PXA_MSG_ACTION_RETRY) :
-        app.catalog.has_more ? message(PXA_MSG_ACTION_LOAD_MORE) : message(PXA_MSG_ACTION_REFRESH);
-    /* Automatic paging with a refresh/retry/load-more fallback. */
+    /* Automatic paging with a retry/load-more fallback. */
     return pxa_ui_create(transaction, NODE_FOOTER, NODE_LIST, 0,
                          PXA_UI_NODE_BOX) &&
            (columns == 1u || rows == 0 ||
@@ -1327,7 +1340,6 @@ static int create_footer(pxa_ui_transaction_t *transaction) {
                              PXA_UI_LENGTH_FILL, 0) &&
            pxa_ui_set_length(transaction, NODE_FOOTER, PXA_UI_PROPERTY_HEIGHT,
                              PXA_UI_LENGTH_PX, m->action_height) &&
-           pxa_ui_set_event_mask(transaction, NODE_FOOTER, app.busy ? 0 : PXA_UI_EVENT_MASK_CLICK) &&
            pxa_ui_set_u8(transaction, NODE_FOOTER, PXA_UI_PROPERTY_LAYOUT,
                          PXA_UI_LAYOUT_ROW) &&
            pxa_ui_set_u8(transaction, NODE_FOOTER, PXA_UI_PROPERTY_JUSTIFY,
@@ -1337,22 +1349,21 @@ static int create_footer(pxa_ui_transaction_t *transaction) {
                                   PXA_UI_THEME_BACKGROUND) &&
            pxa_ui_create(transaction, NODE_LOAD_MORE, NODE_FOOTER, 0,
                          PXA_UI_NODE_TEXT) &&
-           pxa_ui_set_text(transaction, NODE_LOAD_MORE, label,
-                           string_length(label)) &&
            pxa_ui_set_font_role(transaction, NODE_LOAD_MORE,
                                 PXA_UI_FONT_ROLE_CAPTION) &&
            pxa_ui_set_theme_color(transaction, NODE_LOAD_MORE,
                                   PXA_UI_PROPERTY_FOREGROUND,
-                                  PXA_UI_THEME_MUTED);
+                                  PXA_UI_THEME_MUTED) &&
+           update_catalog_footer(transaction);
 }
 
 /* Four destinations pinned above the system navigation bar. */
 static int create_tab(pxa_ui_transaction_t *transaction, uint32_t tab,
                       uint32_t label, uint32_t icon_node,
                       const char *icon, const char *text, uint8_t active) {
-    uint16_t icon_height = app.width < 340u ? 20u : 26u;
     return pxa_ui_create_typed(transaction, tab, NODE_TABBAR, 0,
                                PXA_UI_NODE_CONTROL, PXA_UI_CONTROL_BUTTON) &&
+           pxa_ui_set_padding(transaction, tab, 0, 0, 0, 0) &&
            pxa_ui_set_u16(transaction, tab, PXA_UI_PROPERTY_GROW, 1) &&
            pxa_ui_set_length(transaction, tab, PXA_UI_PROPERTY_HEIGHT,
                              PXA_UI_LENGTH_FILL, 0) &&
@@ -1372,7 +1383,7 @@ static int create_tab(pxa_ui_transaction_t *transaction, uint32_t tab,
                                text, string_length(text)) &&
            pxa_ui_create(transaction, icon_node, tab, 0, PXA_UI_NODE_TEXT) &&
            pxa_ui_set_length(transaction, icon_node, PXA_UI_PROPERTY_HEIGHT,
-                             PXA_UI_LENGTH_PX, icon_height) &&
+                             PXA_UI_LENGTH_CONTENT, 0) &&
            pxa_ui_set_text(transaction, icon_node, icon, string_length(icon)) &&
            pxa_ui_set_font_role(transaction, icon_node, PXA_UI_FONT_ROLE_ICON) &&
            pxa_ui_set_theme_color(transaction, icon_node,
@@ -1450,21 +1461,22 @@ static int render_catalog(void) {
     return 1;
 }
 
-static int patch_catalog_status(void) {
+static int patch_catalog_status(bool include_footer = true) {
     pxa_ui_transaction_t transaction{};
     char status[64];
     uint32_t next;
-    if (metrics()->status_height == 0) return 1;
+    if (!include_footer && metrics()->status_height == 0) return 1;
     (void)footer_status_text(status, sizeof(status));
     next = app.generation + 1u;
     if (next == 0 ||
         !pxa_ui_transaction_begin(&transaction, next, PXA_UI_TRANSACTION_PATCH,
                                   app.packet, sizeof(app.packet)))
         return 0;
-    if (!pxa_ui_set_text(&transaction, NODE_HEADER_STATUS, status,
-                         string_length(status)) ||
-        !pxa_ui_set_theme_color(&transaction, NODE_HEADER_STATUS,
-                                PXA_UI_PROPERTY_FOREGROUND, status_color()) ||
+    const bool header_ok = metrics()->status_height == 0 ||
+        (pxa_ui_set_text(&transaction, NODE_HEADER_STATUS, status, string_length(status)) &&
+         pxa_ui_set_theme_color(&transaction, NODE_HEADER_STATUS,
+                                PXA_UI_PROPERTY_FOREGROUND, status_color()));
+    if (!header_ok || (include_footer && !update_catalog_footer(&transaction)) ||
         !pxa_ui_transaction_commit(&transaction)) {
         if (transaction.active) (void)pxa_ui_transaction_cancel(&transaction);
         return 0;
@@ -1489,7 +1501,7 @@ static int render_catalog_list(void) {
         return 0;
     }
     app.generation = next;
-    return patch_catalog_status();
+    return patch_catalog_status(false);
 }
 
 // Append a page to the retained scroll node. Existing cards keep their object
@@ -1500,7 +1512,10 @@ static int append_catalog_page(uint8_t before) {
     const uint32_t next = app.generation + 1;
     if (!next || !pxa_ui_transaction_begin(&tx, next, PXA_UI_TRANSACTION_PATCH,
         app.packet, sizeof(app.packet))) return 0;
-    int ok = pxa_ui_remove(&tx, NODE_FOOTER);
+    // A PATCH cannot remove and recreate the same identity. Keep the footer
+    // alive, then move it after the appended cards and update it in place.
+    // MOVE is also honored by deployed Hosts that ignore CREATE.before.
+    int ok = 1;
     const auto columns = catalog_columns();
     if (columns > 1) {
         pxa_ui_grid_track_t rows[PXA_UI_GRID_MAX_TRACKS];
@@ -1509,13 +1524,16 @@ static int append_catalog_page(uint8_t before) {
         ok = ok && pxa_ui_set_grid_rows(&tx, NODE_LIST, rows, count);
     }
     for (uint8_t i = before; ok && i < app.catalog.count; ++i) ok = create_card(&tx, i);
-    ok = ok && create_footer(&tx);
+    ok = ok && pxa_ui_move(&tx, NODE_FOOTER, NODE_LIST, 0) && update_catalog_footer(&tx);
+    if (columns > 1)
+        ok = ok && pxa_ui_set_grid_cell(&tx, NODE_FOOTER, 0,
+            (app.catalog.count + columns - 1) / columns, columns, 1);
     if (!ok || !pxa_ui_transaction_commit(&tx)) {
         if (tx.active) (void)pxa_ui_transaction_cancel(&tx);
         return 0;
     }
     app.generation = next;
-    return patch_catalog_status();
+    return patch_catalog_status(false);
 }
 
 static int create_library_button(pxa_ui_transaction_t *transaction,
@@ -2059,6 +2077,54 @@ static void build_install_text(char *output, size_t capacity) {
     }
 }
 
+static store::ViewerGeometry viewer_geometry(void) {
+    const auto *m = metrics();
+    const auto &shot = app.gallery.screenshots[app.screenshot];
+    const auto horizontal = inset_padding(3, m->list_pad_h) +
+                            inset_padding(1, m->list_pad_h) + 2u * m->list_pad_h;
+    const auto vertical = inset_padding(0, m->header_pad_v) + effective_inset(2) +
+                          m->header_height + std::max(36u, unsigned(m->action_height)) + 12u;
+    return store::viewer_geometry(app.width > horizontal ? app.width - horizontal : 1u,
+        app.height > vertical ? app.height - vertical : 1u,
+        shot.width, shot.height, app.viewer_zoom);
+}
+
+static int create_viewer_content(pxa_ui_transaction_t *tx) {
+    const auto &shot = app.gallery.screenshots[app.screenshot];
+    const auto handle = store::media_handle(shot.url, true);
+    const auto size = viewer_geometry();
+    int ok = pxa_ui_create(tx, NODE_VIEWER_CONTENT, NODE_VIEWPORT, 0, PXA_UI_NODE_BOX) &&
+        pxa_ui_set_length(tx, NODE_VIEWER_CONTENT, PXA_UI_PROPERTY_WIDTH,
+                          PXA_UI_LENGTH_PX, size.canvas_width) &&
+        pxa_ui_set_length(tx, NODE_VIEWER_CONTENT, PXA_UI_PROPERTY_HEIGHT,
+                          PXA_UI_LENGTH_PX, size.canvas_height) &&
+        pxa_ui_set_padding(tx, NODE_VIEWER_CONTENT, 0, 0, 0, 0) &&
+        pxa_ui_set_u8(tx, NODE_VIEWER_CONTENT, PXA_UI_PROPERTY_LAYOUT, PXA_UI_LAYOUT_COLUMN) &&
+        pxa_ui_set_u8(tx, NODE_VIEWER_CONTENT, PXA_UI_PROPERTY_JUSTIFY, PXA_UI_ALIGN_CENTER) &&
+        pxa_ui_set_u8(tx, NODE_VIEWER_CONTENT, PXA_UI_PROPERTY_ALIGN, PXA_UI_ALIGN_CENTER);
+    if (handle) {
+        ok = ok && pxa_ui_create(tx, NODE_VIEWER_IMAGE, NODE_VIEWER_CONTENT, 0, PXA_UI_NODE_IMAGE) &&
+            pxa_ui_set_length(tx, NODE_VIEWER_IMAGE, PXA_UI_PROPERTY_WIDTH,
+                              PXA_UI_LENGTH_PX, size.image_width) &&
+            pxa_ui_set_length(tx, NODE_VIEWER_IMAGE, PXA_UI_PROPERTY_HEIGHT,
+                              PXA_UI_LENGTH_PX, size.image_height) &&
+            pxa_ui_set_image(tx, NODE_VIEWER_IMAGE, handle) &&
+            pxa_ui_set_u8(tx, NODE_VIEWER_IMAGE, PXA_UI_PROPERTY_IMAGE_FIT, PXA_UI_IMAGE_FIT_CONTAIN);
+    } else {
+        const char *text = message(store::media_failed(shot.url, true) ?
+            PXA_MSG_MEDIA_RETRY : PXA_MSG_MEDIA_LOADING);
+        ok = ok && pxa_ui_create(tx, NODE_VIEWER_STATUS, NODE_VIEWER_CONTENT, 0, PXA_UI_NODE_TEXT) &&
+            pxa_ui_set_length(tx, NODE_VIEWER_STATUS, PXA_UI_PROPERTY_WIDTH,
+                              PXA_UI_LENGTH_FILL, 0) &&
+            pxa_ui_set_u8(tx, NODE_VIEWER_STATUS, PXA_UI_PROPERTY_TEXT_ALIGN, 1) &&
+            pxa_ui_set_text(tx, NODE_VIEWER_STATUS, text, string_length(text)) &&
+            pxa_ui_set_font_role(tx, NODE_VIEWER_STATUS, PXA_UI_FONT_ROLE_CAPTION) &&
+            pxa_ui_set_theme_color(tx, NODE_VIEWER_STATUS, PXA_UI_PROPERTY_FOREGROUND, PXA_UI_THEME_MUTED);
+    }
+    app.bound_screenshot = handle;
+    return ok;
+}
+
 static int create_gallery(pxa_ui_transaction_t *tx) {
     if (!app.gallery.count) return 1;
     const auto &shot = app.gallery.screenshots[app.screenshot];
@@ -2078,10 +2144,14 @@ static int create_gallery(pxa_ui_transaction_t *tx) {
             handle ? PXA_UI_NODE_IMAGE : PXA_UI_NODE_CONTROL,
             handle ? 0 : PXA_UI_CONTROL_BUTTON) &&
         pxa_ui_set_length(tx, NODE_GALLERY_IMAGE, PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_FILL, 0) &&
-        pxa_ui_set_length(tx, NODE_GALLERY_IMAGE, PXA_UI_PROPERTY_HEIGHT, PXA_UI_LENGTH_PX, height);
+        pxa_ui_set_length(tx, NODE_GALLERY_IMAGE, PXA_UI_PROPERTY_HEIGHT, PXA_UI_LENGTH_PX, height) &&
+        pxa_ui_set_event_mask(tx, NODE_GALLERY_IMAGE,
+            PXA_UI_EVENT_MASK_CLICK | PXA_UI_EVENT_MASK_POINTER) &&
+        pxa_ui_set_property(tx, NODE_GALLERY_IMAGE, PXA_UI_PROPERTY_ACCESSIBILITY_LABEL,
+            message(PXA_MSG_MEDIA_OPEN), string_length(message(PXA_MSG_MEDIA_OPEN)));
     if (handle) ok = ok && pxa_ui_set_image(tx, NODE_GALLERY_IMAGE, handle) &&
         pxa_ui_set_u8(tx, NODE_GALLERY_IMAGE, PXA_UI_PROPERTY_IMAGE_FIT, PXA_UI_IMAGE_FIT_CONTAIN);
-    else ok = ok && pxa_ui_set_event_mask(tx, NODE_GALLERY_IMAGE, PXA_UI_EVENT_MASK_CLICK) &&
+    else ok = ok &&
         pxa_ui_set_u8(tx, NODE_GALLERY_IMAGE, PXA_UI_PROPERTY_LAYOUT, PXA_UI_LAYOUT_ROW) &&
         pxa_ui_set_u8(tx, NODE_GALLERY_IMAGE, PXA_UI_PROPERTY_JUSTIFY, PXA_UI_ALIGN_CENTER) &&
         pxa_ui_set_u8(tx, NODE_GALLERY_IMAGE, PXA_UI_PROPERTY_ALIGN, PXA_UI_ALIGN_CENTER) &&
@@ -2118,7 +2188,7 @@ static int render_detail(void) {
     const store_app_t *item = detail_item();
     uint32_t next = app.generation + 1u;
     char id_text[STORE_MAX_KEY_ID + 8];
-    char size_text[24];
+    char size_text[32];
     char sequence_text[24];
     char sdk_text[40];
     int ok;
@@ -2162,7 +2232,6 @@ static int render_detail(void) {
          pxa_ui_set_theme_color(&transaction, NODE_DETAIL_STATUS,
                                 PXA_UI_PROPERTY_FOREGROUND,
                                 detail_status_color());
-    ok = ok && create_gallery(&transaction);
     /* Icon and release line; the header already carries the display name. */
     {
         char hero_meta[64];
@@ -2211,6 +2280,7 @@ static int render_detail(void) {
                                     PXA_UI_PROPERTY_FOREGROUND,
                                     PXA_UI_THEME_MUTED);
     }
+    ok = ok && create_gallery(&transaction);
     app.scratch[0] = '\0';
     (void)append_text(app.scratch, sizeof(app.scratch), 0, item->summary);
     ok = ok && create_section(&transaction, SECTION_SUMMARY,
@@ -2226,7 +2296,7 @@ static int render_detail(void) {
         NODE_TECHNICAL_LABEL, NODE_DETAIL_SCROLL,
         message(app.technical_expanded ? PXA_MSG_DETAIL_LESS : PXA_MSG_DETAIL_TECHNICAL), 1);
     if (app.technical_expanded) {
-    format_size(size_text, sizeof(size_text), item->size);
+    store::format_package_bytes(size_text, item->size);
     sequence_text[0] = '\0';
     (void)append_u64(sequence_text, sizeof(sequence_text), 0,
                      item->release_sequence);
@@ -2284,8 +2354,7 @@ static int render_detail(void) {
              pxa_ui_set_length(&transaction, NODE_FOOTER, PXA_UI_PROPERTY_WIDTH,
                                PXA_UI_LENGTH_FILL, 0) &&
              pxa_ui_set_u8(&transaction, NODE_FOOTER, PXA_UI_PROPERTY_LAYOUT,
-                           PXA_UI_LAYOUT_ROW) &&
-             pxa_ui_set_dp(&transaction, NODE_FOOTER, PXA_UI_PROPERTY_GAP, 6) &&
+                           PXA_UI_LAYOUT_COLUMN) &&
              pxa_ui_set_padding(&transaction, NODE_FOOTER, 12, 2, 12, 6) &&
              pxa_ui_set_theme_color(&transaction, NODE_FOOTER,
                                     PXA_UI_PROPERTY_BACKGROUND,
@@ -2293,8 +2362,8 @@ static int render_detail(void) {
              pxa_ui_create_typed(&transaction, NODE_INSTALL_BUTTON, NODE_FOOTER,
                                  0, PXA_UI_NODE_CONTROL,
                                  PXA_UI_CONTROL_BUTTON) &&
-             pxa_ui_set_u16(&transaction, NODE_INSTALL_BUTTON,
-                             PXA_UI_PROPERTY_GROW, 1) &&
+             pxa_ui_set_length(&transaction, NODE_INSTALL_BUTTON,
+                               PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_FILL, 0) &&
              pxa_ui_set_length(&transaction, NODE_INSTALL_BUTTON,
                                PXA_UI_PROPERTY_HEIGHT, PXA_UI_LENGTH_PX,
                                (uint16_t)(m->action_height + 8)) &&
@@ -2316,7 +2385,7 @@ static int render_detail(void) {
                                     PXA_UI_PROPERTY_BACKGROUND,
                                     PXA_UI_THEME_PRIMARY) &&
              pxa_ui_set_u8(&transaction, NODE_INSTALL_BUTTON,
-                           PXA_UI_PROPERTY_ENABLED, (uint8_t)(!app.busy)) &&
+                           PXA_UI_PROPERTY_ENABLED, (uint8_t)(!app.busy && !app.downloading)) &&
              pxa_ui_set_event_mask(&transaction, NODE_INSTALL_BUTTON,
                                    PXA_UI_EVENT_MASK_CLICK) &&
              pxa_ui_create(&transaction, NODE_INSTALL_LABEL,
@@ -2328,16 +2397,6 @@ static int render_detail(void) {
              pxa_ui_set_theme_color(&transaction, NODE_INSTALL_LABEL,
                                     PXA_UI_PROPERTY_FOREGROUND,
                                     PXA_UI_THEME_ON_PRIMARY);
-        if (ok && (current == NULL || has_update(item))) {
-            ok = create_library_button(&transaction, NODE_DOWNLOAD_BUTTON,
-                                       NODE_DOWNLOAD_LABEL, NODE_FOOTER,
-                                       message(PXA_MSG_ACTION_DOWNLOAD), 1) &&
-                 pxa_ui_set_length(&transaction, NODE_DOWNLOAD_BUTTON,
-                                    PXA_UI_PROPERTY_HEIGHT, PXA_UI_LENGTH_PX,
-                                    (uint16_t)(m->action_height + 8u)) &&
-                 pxa_ui_set_u16(&transaction, NODE_DOWNLOAD_BUTTON,
-                                 PXA_UI_PROPERTY_GROW, 1);
-        }
     }
     if (!ok || !pxa_ui_transaction_commit(&transaction)) {
         if (transaction.active) (void)pxa_ui_transaction_cancel(&transaction);
@@ -2345,6 +2404,65 @@ static int render_detail(void) {
     }
     app.generation = next;
     app.bound_hero = store::media_handle(item->icon_url);
+    return 1;
+}
+
+static int render_viewer(void) {
+    if (!app.gallery.count) {
+        app.screen = STORE_SCREEN_DETAIL;
+        return render_detail();
+    }
+    const auto *m = metrics();
+    char title[64], zoom[24];
+    std::snprintf(title, sizeof(title), "%s %u / %u", message(PXA_MSG_MEDIA_SCREENSHOTS),
+                  app.screenshot + 1, app.gallery.count);
+    if (app.viewer_zoom == 1) copy_text(zoom, sizeof(zoom), message(PXA_MSG_MEDIA_ZOOM_FIT));
+    else std::snprintf(zoom, sizeof(zoom), "%u×", app.viewer_zoom);
+    pxa_ui_transaction_t tx{};
+    const auto next = app.generation + 1;
+    if (!next || !pxa_ui_transaction_begin(&tx, next, PXA_UI_TRANSACTION_REPLACE_SURFACE,
+                                           app.packet, sizeof(app.packet))) return 0;
+    int ok = create_header(&tx, STORE_SCREEN_DETAIL, title, string_length(title)) &&
+        pxa_ui_create(&tx, NODE_VIEWPORT, NODE_ROOT, 0, PXA_UI_NODE_SCROLL) &&
+        pxa_ui_set_length(&tx, NODE_VIEWPORT, PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_FILL, 0) &&
+        pxa_ui_set_length(&tx, NODE_VIEWPORT, PXA_UI_PROPERTY_HEIGHT, PXA_UI_LENGTH_PX, 0) &&
+        pxa_ui_set_u16(&tx, NODE_VIEWPORT, PXA_UI_PROPERTY_GROW, 1) &&
+        pxa_ui_set_u8(&tx, NODE_VIEWPORT, PXA_UI_PROPERTY_LAYOUT, PXA_UI_LAYOUT_COLUMN) &&
+        pxa_ui_set_u8(&tx, NODE_VIEWPORT, PXA_UI_PROPERTY_SCROLL_AXIS, app.viewer_zoom > 1 ? 3 : 0) &&
+        pxa_ui_set_u8(&tx, NODE_VIEWPORT, PXA_UI_PROPERTY_SCROLLBAR, 0) &&
+        pxa_ui_set_padding(&tx, NODE_VIEWPORT, m->list_pad_h, 0, m->list_pad_h, 0) &&
+        pxa_ui_set_event_mask(&tx, NODE_VIEWPORT, PXA_UI_EVENT_MASK_POINTER) &&
+        create_viewer_content(&tx) &&
+        pxa_ui_create(&tx, NODE_VIEWER_CONTROLS, NODE_ROOT, 0, PXA_UI_NODE_BOX) &&
+        pxa_ui_set_length(&tx, NODE_VIEWER_CONTROLS, PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_FILL, 0) &&
+        pxa_ui_set_length(&tx, NODE_VIEWER_CONTROLS, PXA_UI_PROPERTY_HEIGHT,
+                          PXA_UI_LENGTH_PX, std::max(36u, unsigned(m->action_height)) + 12u) &&
+        pxa_ui_set_padding(&tx, NODE_VIEWER_CONTROLS, m->list_pad_h, 6, m->list_pad_h, 6) &&
+        pxa_ui_set_u8(&tx, NODE_VIEWER_CONTROLS, PXA_UI_PROPERTY_LAYOUT, PXA_UI_LAYOUT_ROW) &&
+        pxa_ui_set_dp(&tx, NODE_VIEWER_CONTROLS, PXA_UI_PROPERTY_GAP, 6);
+    if (app.gallery.count > 1) ok = ok &&
+        create_library_button(&tx, NODE_VIEWER_PREV, NODE_VIEWER_PREV_LABEL, NODE_VIEWER_CONTROLS, "‹", 1) &&
+        pxa_ui_set_length(&tx, NODE_VIEWER_PREV, PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_PX, 36) &&
+        pxa_ui_set_u8(&tx, NODE_VIEWER_PREV, PXA_UI_PROPERTY_ENABLED, app.screenshot > 0);
+    ok = ok && create_library_button(&tx, NODE_VIEWER_ZOOM, NODE_VIEWER_ZOOM_LABEL,
+                                     NODE_VIEWER_CONTROLS, zoom, 1) &&
+        pxa_ui_set_u16(&tx, NODE_VIEWER_ZOOM, PXA_UI_PROPERTY_GROW, 1) &&
+        pxa_ui_set_property(&tx, NODE_VIEWER_ZOOM, PXA_UI_PROPERTY_ACCESSIBILITY_LABEL,
+            message(PXA_MSG_MEDIA_ZOOM), string_length(message(PXA_MSG_MEDIA_ZOOM)));
+    if (app.gallery.count > 1) ok = ok &&
+        create_library_button(&tx, NODE_VIEWER_NEXT, NODE_VIEWER_NEXT_LABEL, NODE_VIEWER_CONTROLS, "›", 1) &&
+        pxa_ui_set_length(&tx, NODE_VIEWER_NEXT, PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_PX, 36) &&
+        pxa_ui_set_u8(&tx, NODE_VIEWER_NEXT, PXA_UI_PROPERTY_ENABLED, app.screenshot + 1 < app.gallery.count);
+    for (const auto node : {NODE_VIEWER_PREV, NODE_VIEWER_ZOOM, NODE_VIEWER_NEXT}) {
+        if (node != NODE_VIEWER_ZOOM && app.gallery.count == 1) continue;
+        ok = ok && pxa_ui_set_length(&tx, node, PXA_UI_PROPERTY_HEIGHT,
+            PXA_UI_LENGTH_PX, std::max(36u, unsigned(m->action_height)));
+    }
+    if (!ok || !pxa_ui_transaction_commit(&tx)) {
+        if (tx.active) (void)pxa_ui_transaction_cancel(&tx);
+        return 0;
+    }
+    app.generation = next;
     return 1;
 }
 
@@ -2375,6 +2493,17 @@ static int patch_media(void) {
             if (!replace_icon(card + 1, card + 2, card, metrics()->card_icon, item)) return 0;
             app.bound_icons[i] = handle;
         }
+    } else if (app.screen == STORE_SCREEN_VIEWER && app.gallery.count) {
+        pxa_ui_transaction_t tx{};
+        const auto next = app.generation + 1;
+        if (!next || !pxa_ui_transaction_begin_target(&tx, next, next,
+            PXA_UI_PRIMARY_SURFACE, NODE_VIEWER_CONTENT, PXA_UI_TRANSACTION_REPLACE_SUBTREE,
+            app.packet, sizeof(app.packet))) return 0;
+        if (!create_viewer_content(&tx) || !pxa_ui_transaction_commit(&tx)) {
+            if (tx.active) (void)pxa_ui_transaction_cancel(&tx);
+            return 0;
+        }
+        app.generation = next;
     } else if (app.screen == STORE_SCREEN_DETAIL) {
         const auto *item = detail_item();
         const auto handle = store::media_handle(item->icon_url);
@@ -2607,7 +2736,30 @@ static int render_search(void) {
          pxa_ui_set_theme_color(&transaction, NODE_SEARCH_BAR,
                                 PXA_UI_PROPERTY_BACKGROUND,
                                 PXA_UI_THEME_SURFACE_CONTAINER_HIGH) &&
-         pxa_ui_create(&transaction, NODE_SEARCH_ICON, NODE_SEARCH_BAR, 0,
+         pxa_ui_create_typed(&transaction, NODE_SEARCH_SUBMIT, NODE_SEARCH_BAR, 0,
+                             PXA_UI_NODE_CONTROL, PXA_UI_CONTROL_BUTTON) &&
+         pxa_ui_set_length(&transaction, NODE_SEARCH_SUBMIT,
+                           PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_PX, 36) &&
+         pxa_ui_set_length(&transaction, NODE_SEARCH_SUBMIT,
+                           PXA_UI_PROPERTY_HEIGHT, PXA_UI_LENGTH_PX, bar_height - 2u) &&
+         pxa_ui_set_u8(&transaction, NODE_SEARCH_SUBMIT, PXA_UI_PROPERTY_LAYOUT,
+                       PXA_UI_LAYOUT_ROW) &&
+         pxa_ui_set_u8(&transaction, NODE_SEARCH_SUBMIT, PXA_UI_PROPERTY_JUSTIFY,
+                       PXA_UI_ALIGN_CENTER) &&
+         pxa_ui_set_u8(&transaction, NODE_SEARCH_SUBMIT, PXA_UI_PROPERTY_ALIGN,
+                       PXA_UI_ALIGN_CENTER) &&
+         pxa_ui_set_padding(&transaction, NODE_SEARCH_SUBMIT, 0, 0, 0, 0) &&
+         pxa_ui_set_dp(&transaction, NODE_SEARCH_SUBMIT,
+                       PXA_UI_PROPERTY_BORDER_WIDTH, 0) &&
+         pxa_ui_set_rgba(&transaction, NODE_SEARCH_SUBMIT,
+                         PXA_UI_PROPERTY_BACKGROUND, 0) &&
+         pxa_ui_set_event_mask(&transaction, NODE_SEARCH_SUBMIT,
+                               PXA_UI_EVENT_MASK_CLICK) &&
+         pxa_ui_set_property(&transaction, NODE_SEARCH_SUBMIT,
+                             PXA_UI_PROPERTY_ACCESSIBILITY_LABEL,
+                             (const uint8_t *)message(PXA_MSG_ACTION_SEARCH),
+                             string_length(message(PXA_MSG_ACTION_SEARCH))) &&
+         pxa_ui_create(&transaction, NODE_SEARCH_ICON, NODE_SEARCH_SUBMIT, 0,
                        PXA_UI_NODE_IMAGE) &&
          pxa_ui_set_length(&transaction, NODE_SEARCH_ICON,
                            PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_PX, 20) &&
@@ -2650,6 +2802,10 @@ static int render_search(void) {
              pxa_ui_set_event_mask(&transaction, NODE_SEARCH_FIELD,
                                    PXA_UI_EVENT_MASK_CLICK |
                                        PXA_UI_EVENT_MASK_TEXT) &&
+             pxa_ui_set_u8(&transaction, NODE_SEARCH_FIELD,
+                            pxa::ui::protocol::text_single_line, 1) &&
+             pxa_ui_set_u32(&transaction, NODE_SEARCH_FIELD,
+                             pxa::ui::protocol::text_max_bytes, STORE_MAX_QUERY - 1u) &&
              pxa_ui_set_text(&transaction, NODE_SEARCH_FIELD, app.draft,
                              string_length(app.draft)) &&
              pxa_ui_create(&transaction, NODE_SEARCH_TEXT, NODE_SEARCH_FIELD,
@@ -2828,6 +2984,21 @@ static int sync_search_decoration(uint8_t update_field) {
     return 1;
 }
 
+static int patch_search_images(void) {
+    pxa_ui_transaction_t transaction{};
+    const auto next = app.generation + 1u;
+    if (!next || !pxa_ui_transaction_begin(&transaction, next,
+            PXA_UI_TRANSACTION_PATCH, app.packet, sizeof(app.packet))) return 0;
+    if (!store_search_image_set(&transaction, NODE_SEARCH_ICON) ||
+        !store_search_image_set(&transaction, NODE_SEARCH_EMPTY_ICON) ||
+        !pxa_ui_transaction_commit(&transaction)) {
+        if (transaction.active) (void)pxa_ui_transaction_cancel(&transaction);
+        return 0;
+    }
+    app.generation = next;
+    return 1;
+}
+
 /* Copies the text the system input method reported into the draft query. */
 static void adopt_field_text(const char *text, size_t length) {
     size_t copy = length < sizeof(app.draft) ? length : sizeof(app.draft) - 1u;
@@ -2841,6 +3012,7 @@ static int render(void) {
     sync_media();
     if (app.screen == STORE_SCREEN_SEARCH) return render_search();
     if (app.screen == STORE_SCREEN_DETAIL) return render_detail();
+    if (app.screen == STORE_SCREEN_VIEWER) return render_viewer();
     if (app.screen == STORE_SCREEN_INSTALLED || app.screen == STORE_SCREEN_DOWNLOADS)
         return render_library();
     if (app.screen == STORE_SCREEN_SUCCESS) return render_success();
@@ -2876,6 +3048,30 @@ static int restore_scroll(uint32_t node, int32_t offset) {
     return 1;
 }
 
+static int close_viewer(void) {
+    app.viewer_gesture.cancel();
+    app.screen = STORE_SCREEN_DETAIL;
+    return render() && restore_scroll(NODE_DETAIL_SCROLL, app.detail_scroll);
+}
+
+static int viewer_page(int delta) {
+    const int selected = int(app.screenshot) + delta;
+    if (selected < 0 || selected >= app.gallery.count) return 1;
+    app.screenshot = uint8_t(selected);
+    app.viewer_zoom = 1;
+    app.viewer_gesture.cancel();
+    return render();
+}
+
+static int restart_catalog(const char *query);
+
+static int restart_pending_catalog(void) {
+    const char *query = app.pending_search_valid ? app.pending_search : app.query;
+    app.pending_search_valid = 0;
+    app.pending_restart = 0;
+    return restart_catalog(query);
+}
+
 static int fail_request(uint8_t error) {
     store_trace("catalog failure", error);
     (void)pxa_clock_set_period(0);
@@ -2884,8 +3080,10 @@ static int fail_request(uint8_t error) {
     app.state = STORE_FAILED;
     app.error = error;
     app.busy = 0;
+    if (app.pending_restart || app.pending_search_valid)
+        return restart_pending_catalog();
     toast_current_error();
-    return render();
+    return app.screen == STORE_SCREEN_SEARCH || render();
 }
 
 static int ensure_body_capacity(void) {
@@ -2959,8 +3157,6 @@ static int start_detail_fetch(void) {
     app.busy = 1;
     return 1;
 }
-
-static int restart_catalog(const char *query);
 
 static int next_update_check(void) {
     while (app.update_index < app.installed_count) {
@@ -3116,14 +3312,6 @@ static int apply_search(void) {
     return restart_catalog(app.draft);
 }
 
-/* Applies a query that arrived while a request was running. */
-static int apply_pending_search(void) {
-    if (!app.pending_search_valid) return 1;
-    app.pending_search_valid = 0;
-    if (text_equal(app.query, app.pending_search)) return 1;
-    return restart_catalog(app.pending_search);
-}
-
 static int select_kind(uint8_t chip_index) {
     app.kind_index = chip_index;
     if (chip_index != 0u && chip_index <= app.taxonomy.kind_count)
@@ -3207,29 +3395,20 @@ static int finish_catalog_body(void) {
         app.catalog.dropped = 0;
     }
     app.busy = 0;
-    if (app.pending_restart) {
-        app.pending_restart = 0;
-        app.pending_search_valid = 0;
-        return restart_catalog(app.query);
-    }
-    if (app.pending_search_valid) {
-        /* A query submitted while this request was running. */
-        app.pending_search_valid = 0;
-        if (!text_equal(app.query, app.pending_search))
-            return restart_catalog(app.pending_search);
-    }
+    if (app.pending_restart || app.pending_search_valid)
+        return restart_pending_catalog();
     if (!moved && app.catalog.has_more &&
         app.chain < STORE_MAX_CHAIN) {
         ++app.chain;
         app.state = STORE_READY;
-        if (!render()) return 0;
+        if (app.screen != STORE_SCREEN_SEARCH && !render()) return 0;
         if (!start_catalog_fetch()) return fail_request(STORE_ERROR_UNSUPPORTED);
-        return 1;
+        return app.screen != STORE_SCREEN_CATALOG || patch_catalog_status();
     }
     app.state = STORE_READY;
     if (moved) app.auto_load_mark = -1;
     ensure_window_snapshot();
-    if (!(app.screen == STORE_SCREEN_CATALOG && before != 0u ?
+    if (app.screen != STORE_SCREEN_SEARCH && !(app.screen == STORE_SCREEN_CATALOG && before != 0u ?
           window_shifted ? render_catalog_list() : append_catalog_page(before) : render())) return 0;
     if (app.screen == STORE_SCREEN_CATALOG) {
         if (store::media_changed() && !patch_media()) return 0;
@@ -3244,6 +3423,7 @@ static int finish_catalog_body(void) {
         app.request_cursor = app.catalog.next_cursor;
         app.chain = 0;
         if (!start_catalog_fetch()) return fail_request(STORE_ERROR_UNSUPPORTED);
+        return patch_catalog_status();
     }
     return 1;
 }
@@ -3287,24 +3467,30 @@ static int fail_detail(uint8_t error) {
     return render();
 }
 
-static int send_package_request(void) {
+static int32_t send_package_request(void) {
     const store_app_t *item = detail_item();
-    int sent = app.detail_ready && item->size != 0 &&
-        item->sha256[0] != '\0' &&
-        store_client_build_download_url(app.url, sizeof(app.url),
-                                        item->download_ticket_url) &&
-        pxa_store_request_package(app.download_only ? PXA_STORE_DOWNLOAD_REQUEST :
-                                                     PXA_STORE_INSTALL_REQUEST,
-                           app.download_only ? STORE_REQUEST_DOWNLOAD : STORE_REQUEST_INSTALL,
+    if (!app.detail_ready) return PXA_STATUS_BAD_STATE;
+    if (item->size == 0 || item->sha256[0] == '\0' ||
+        !store_client_build_download_url(app.url, sizeof(app.url),
+                                         item->download_ticket_url))
+        return PXA_STATUS_PROTOCOL_ERROR;
+    const int32_t status = pxa_store_request_package_status(PXA_STORE_INSTALL_REQUEST,
+                           STORE_REQUEST_INSTALL,
                            item->app_id,
                            item->download_ticket_url, item->sha256,
                            item->size, app.packet, sizeof(app.packet));
-    if (sent) {
+    if (status == PXA_STATUS_OK) {
         app.downloading = 1u;
         app.downloaded_bytes = 0u;
         app.download_total = item->size;
     }
-    return sent;
+    else {
+        char text[96];
+        std::snprintf(text, sizeof(text), "store: install request rejected status=%ld",
+                      (long)status);
+        (void)pxa_log_write(3, text);
+    }
+    return status;
 }
 
 static int finish_detail_body(void) {
@@ -3325,10 +3511,10 @@ static int finish_detail_body(void) {
     app.detail_state = STORE_READY;
     if (app.install_refresh) {
         app.install_refresh = 0;
-        if (!send_package_request()) {
+        const int32_t status = send_package_request();
+        if (status != PXA_STATUS_OK) {
             app.install_feedback = 3;
-            toast_failure(app.download_only ? PXA_MSG_STATUS_DOWNLOAD_FAILED :
-                          PXA_MSG_STATUS_INSTALL_FAILED, PXA_STATUS_UNAVAILABLE);
+            toast_failure(PXA_MSG_STATUS_INSTALL_FAILED, status);
         }
     }
     store_trace("detail ready", 1);
@@ -3404,12 +3590,9 @@ static int handle_json_result(const pxa_event_t *parsed) {
             app.state = STORE_FAILED;
         }
         app.busy = 0;
-        if (app.pending_restart) {
-            app.pending_restart = 0;
-            return restart_catalog(app.query);
-        }
-        if (!apply_pending_search()) return 0;
-        return render();
+        if (app.pending_restart || app.pending_search_valid)
+            return restart_pending_catalog();
+        return app.screen == STORE_SCREEN_SEARCH || render();
     }
     app.client.http_status = result.status_code;
     app.client.response_flags = result.flags;
@@ -3433,7 +3616,9 @@ static int handle_json_result(const pxa_event_t *parsed) {
             app.state = STORE_FAILED;
         }
         app.busy = 0;
-        return render();
+        if (app.pending_restart || app.pending_search_valid)
+            return restart_pending_catalog();
+        return app.screen == STORE_SCREEN_SEARCH || render();
     }
     return continue_body();
 }
@@ -3677,6 +3862,10 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     if (store_search_image_on_event(&parsed)) {
         if (store_search_image_handle()) {
             pxa_log_write(2,"store: search image ready");
+#if STORE_SEARCH_TEXT_INPUT
+            if (app.screen == STORE_SCREEN_SEARCH)
+                return patch_search_images() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+#endif
             return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
         }
         if (store_search_image_error()) pxa_log_write(3,"store: search image unavailable");
@@ -3717,6 +3906,8 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
     if (pxa_window_is_back_requested(&parsed)) {
+        if (app.screen == STORE_SCREEN_VIEWER)
+            return close_viewer() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
         if (app.screen == STORE_SCREEN_SUCCESS) {
             app.screen = app.success_return_screen;
             return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
@@ -3840,7 +4031,6 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
                                    app.packet, sizeof(app.packet));
             app.install_feedback = 5;
         }
-        app.download_only = 0;
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
     if (parsed.service == PXA_SERVICE_STORE_INSTALLER &&
@@ -3848,7 +4038,6 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
          parsed.opcode == PXA_STORE_INSTALL_REQUEST) &&
         parsed.token == STORE_REQUEST_INSTALL) {
         app.downloading = 0u;
-        app.download_only = 0u;
         if (parsed.opcode == PXA_STORE_INSTALL_FILE_REQUEST)
             (void)pxa_store_manage(PXA_STORE_DOWNLOAD_LIST_REQUEST,
                                    STORE_REQUEST_DOWNLOADS, NULL,
@@ -3885,6 +4074,43 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     if (!pxa_ui_parse_event(&parsed, &ui_event)) return PXA_EVENT_UNHANDLED;
     if (ui_event.kind == PXA_UI_EVENT_POINTER_KIND) {
         pxa_ui_pointer_data_t pointer;
+        if (app.screen == STORE_SCREEN_VIEWER && ui_event.node == NODE_VIEWPORT &&
+            pxa_ui_parse_pointer(&parsed, &pointer)) {
+            auto &gesture = app.viewer_gesture;
+            if (pointer.phase == PXA_POINTER_DOWN) gesture.begin(pointer.x, pointer.y);
+            else if (pointer.phase == PXA_POINTER_MOVE) gesture.move(pointer.x, pointer.y);
+            else if (pointer.phase == PXA_POINTER_UP) {
+                const bool active = gesture.active;
+                const auto action = gesture.end(pointer.x, pointer.y, pointer.timestamp_us, app.viewer_zoom);
+                if (action == store::ViewerAction::next || action == store::ViewerAction::previous)
+                    return viewer_page(action == store::ViewerAction::next ? 1 : -1)
+                        ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+                if (action == store::ViewerAction::zoom) {
+                    app.viewer_zoom = app.viewer_zoom == 1 ? 2 : 1;
+                    return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+                }
+                if (active && !gesture.moved && app.gallery.count &&
+                    store::media_failed(app.gallery.screenshots[app.screenshot].url, true)) {
+                    store::media_retry();
+                    return patch_media() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+                }
+            } else gesture.cancel();
+            return PXA_EVENT_HANDLED;
+        }
+        if (app.screen == STORE_SCREEN_DETAIL && ui_event.node == NODE_GALLERY_IMAGE &&
+            pxa_ui_parse_pointer(&parsed, &pointer)) {
+            if (pointer.phase == PXA_POINTER_DOWN) {
+                app.viewer_gesture.begin(pointer.x, pointer.y);
+                app.drag_active = 0;
+            } else if (pointer.phase == PXA_POINTER_MOVE) {
+                app.viewer_gesture.move(pointer.x, pointer.y);
+                app.drag_active = app.viewer_gesture.moved;
+            } else if (pointer.phase != PXA_POINTER_UP) {
+                app.viewer_gesture.cancel();
+                app.drag_active = 1;
+            }
+            return PXA_EVENT_HANDLED;
+        }
         if ((ui_event.node == NODE_LIST || ui_event.node == NODE_FILTERS ||
              ui_event.node == NODE_HEADER) &&
             pxa_ui_parse_pointer(&parsed, &pointer)) {
@@ -3922,7 +4148,8 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
                 app.auto_load_mark = offset;
                 app.request_cursor = app.catalog.next_cursor;
                 app.chain = 0;
-                (void)start_catalog_request();
+                if (!start_catalog_request() || !patch_catalog_status())
+                    return PXA_STATUS_INTERNAL;
             }
         } else if (ui_event.node == NODE_DETAIL_SCROLL) {
             app.detail_scroll = ui_event.value > 0 ? ui_event.value : 0;
@@ -3955,6 +4182,7 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     if (app.drag_active) {
         app.drag_active = 0;
         if (ui_event.node == NODE_LIST || ui_event.node == NODE_FILTERS ||
+            ui_event.node == NODE_GALLERY_IMAGE ||
             ui_event.node == NODE_CATEGORY_ALL ||
             (ui_event.node >= NODE_CATEGORY_BASE &&
              ui_event.node < NODE_CATEGORY_BASE +
@@ -3983,8 +4211,7 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
             return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
 #endif
         }
-        if (ui_event.node == NODE_SEARCH_FIELD) {
-            if (app.busy) return PXA_EVENT_HANDLED;
+        if (ui_event.node == NODE_SEARCH_FIELD || ui_event.node == NODE_SEARCH_SUBMIT) {
             if (!apply_search()) return PXA_EVENT_HANDLED;
             return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
         }
@@ -4003,7 +4230,6 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
             } else if (key == 26u) {
                 draft_backspace();
             } else {
-                if (app.busy) return PXA_EVENT_HANDLED;
                 if (!apply_search()) return PXA_EVENT_HANDLED;
                 return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
             }
@@ -4026,6 +4252,11 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
             if (app.kind_index == next && app.catalog_kind == requested_kind)
                 return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
         } else if (app.kind_index == next && app.catalog_kind == requested_kind) {
+            if (!app.busy) {
+                store::media_retry();
+                return restart_catalog(app.query) && render() ?
+                    PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+            }
             return PXA_EVENT_HANDLED;
         }
         app.catalog_kind = requested_kind;
@@ -4053,8 +4284,28 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         app.technical_expanded = !app.technical_expanded;
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
+    if (app.screen == STORE_SCREEN_VIEWER) {
+        if (ui_event.node == NODE_BACK)
+            return close_viewer() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+        if (ui_event.node == NODE_VIEWER_PREV || ui_event.node == NODE_VIEWER_NEXT)
+            return viewer_page(ui_event.node == NODE_VIEWER_NEXT ? 1 : -1)
+                ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+        if (ui_event.node == NODE_VIEWER_ZOOM) {
+            app.viewer_zoom = uint8_t(app.viewer_zoom % 3 + 1);
+            app.viewer_gesture.cancel();
+            return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+        }
+        return PXA_EVENT_HANDLED;
+    }
+    if (app.screen == STORE_SCREEN_DETAIL && ui_event.node == NODE_GALLERY_IMAGE && app.gallery.count) {
+        app.screen = STORE_SCREEN_VIEWER;
+        app.viewer_zoom = 1;
+        app.viewer_gesture.cancel();
+        app.drag_active = 0;
+        return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+    }
     if (app.screen == STORE_SCREEN_DETAIL && (ui_event.node == NODE_GALLERY_PREV ||
-        ui_event.node == NODE_GALLERY_NEXT || ui_event.node == NODE_GALLERY_IMAGE)) {
+        ui_event.node == NODE_GALLERY_NEXT)) {
         if (ui_event.node == NODE_GALLERY_PREV && app.screenshot) --app.screenshot;
         if (ui_event.node == NODE_GALLERY_NEXT && app.screenshot + 1 < app.gallery.count) ++app.screenshot;
         store::media_retry();
@@ -4068,7 +4319,8 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     if (ui_event.node == NODE_FOOTER && app.screen == STORE_SCREEN_CATALOG && !app.busy) {
         if (app.catalog.has_more) {
             app.request_cursor = app.catalog.next_cursor;
-            return start_catalog_request() && render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+            return start_catalog_request() && patch_catalog_status() ?
+                PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
         }
         store_search_image_retry();
         store::media_retry();
@@ -4206,20 +4458,18 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         }
         return PXA_EVENT_HANDLED;
     }
-    if (ui_event.node == NODE_INSTALL_BUTTON || ui_event.node == NODE_DOWNLOAD_BUTTON) {
+    if (ui_event.node == NODE_INSTALL_BUTTON) {
         if (app.install_feedback == 1) return PXA_EVENT_HANDLED;
         const store_app_t *item = detail_item();
-        if (ui_event.node == NODE_INSTALL_BUTTON &&
-            installed_for(item->app_id) != NULL && !has_update(item)) {
+        if (installed_for(item->app_id) != NULL && !has_update(item)) {
             (void)pxa_store_manage(PXA_STORE_LAUNCH_REQUEST, STORE_REQUEST_LAUNCH,
                                    item->app_id, app.packet, sizeof(app.packet));
             return PXA_EVENT_HANDLED;
         }
         copy_text(app.completed_app_id, sizeof(app.completed_app_id), item->app_id);
-        app.download_only = ui_event.node == NODE_DOWNLOAD_BUTTON;
         if (!app.detail_ready || app.busy) {
             app.install_feedback = 3;
-            toast_failure(PXA_MSG_STATUS_DOWNLOAD_FAILED, PXA_STATUS_BUSY);
+            toast_failure(PXA_MSG_STATUS_INSTALL_FAILED, PXA_STATUS_BUSY);
         } else {
             app.install_feedback = 1;
             app.install_refresh = 1;
@@ -4227,7 +4477,7 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
                 app.install_feedback = 3;
                 app.install_refresh = 0;
                 app.busy = 0;
-                toast_failure(PXA_MSG_STATUS_DOWNLOAD_FAILED, PXA_STATUS_UNAVAILABLE);
+                toast_failure(PXA_MSG_STATUS_INSTALL_FAILED, PXA_STATUS_UNAVAILABLE);
             }
         }
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;

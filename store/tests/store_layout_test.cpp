@@ -21,7 +21,7 @@ int main() {
 
     // Converting a physical edge to a dp style must cover the edge again;
     // otherwise a bottom gap or unsafe hit area appears after DPI scaling.
-    for (const auto dpi : {80u, 130u, 160u, 216u, 320u, 480u}) {
+    for (const auto dpi : {80u, 130u, 160u, 216u, 305u, 320u, 480u}) {
         const auto density = dpi * 65536u / 160u;
         for (std::uint32_t pixels = 0; pixels <= 4096; ++pixels) {
             const auto dp = pixels_to_dp(pixels, density);

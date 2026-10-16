@@ -21,6 +21,10 @@ translations:
   status.update_check_failed: 部分更新检查失败
   action.open: 打开
   action.download: 下载
+  media.open: 打开截图预览
+  media.screenshots: 截图
+  media.zoom_fit: 放大
+  media.zoom: 缩放图片；双击放大或恢复，放大后拖动查看
   action.delete: 删除
   action.uninstall: 卸载
   status.uninstall_waiting: 请在系统弹窗中确认卸载
@@ -53,7 +57,7 @@ translations:
   detail.permissions: 权限
   detail.services: 依赖服务
   detail.version: 版本
-  detail.size: 安装包大小
+  detail.size: .pxa 文件大小
   detail.channel: 渠道
   detail.sequence: 发布序号
   detail.publisher: 发布者
@@ -83,6 +87,9 @@ translations:
   status.install_success: 安装成功
   status.download_failed: 下载失败，请检查网络或票据
   status.install_failed: 安装失败，请重试
+  status.install_denied: 系统拒绝了安装服务请求
+  status.install_busy: 另一个应用操作尚未完成，请稍后重试
+  status.install_resources: 系统可用内存不足，请稍后重试
   status.install_unsupported: 当前系统不支持应用安装
   status.storage_full: 存储空间不足，请删除下载记录或不用的应用后重试
   status.install_cancelled: 安装已取消或未获授权

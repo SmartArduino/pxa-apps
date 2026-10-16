@@ -45,7 +45,7 @@ The Store queries Device ABI 0.2 at startup to select a catalog profile from
 the Host target and supported AOT formats. Catalog profile names are server
 keys, not WAMR engine ABI strings. An unsupported Host or catalog profile does
 not fall back to another board's artifacts. The current catalog must publish
-an `esp32-s31-pxa-0.3.0` profile and matching artifacts before Korvo can
+an `esp32-s31-pxa-0.3.0-r2` profile and matching artifacts before Korvo can
 install apps from it.
 
 String overrides belong in `store_client.h` (or a properly quoted compiler
@@ -117,6 +117,10 @@ state; descriptions remain available on the detail page. Card borders, nested
 name-row boxes, navigation capsules and the extra navigation wrapper are gone.
 The detail page folds compatibility, permissions and other technical metadata
 into an expandable section, without removing the information.
+Its screenshot gallery sits below the App icon and release information, above
+the description and changelog.
+Its footer has one full-width action: **Install**, **Update**, or **Open**, as
+appropriate. Install includes downloading; there is no separate Download button.
 
 Wide displays (`>= 480` logical pixels, `>= 1100` for three columns) render the
 catalog as a grid with fractional, equally sized columns through the UI grid
@@ -150,6 +154,13 @@ stream ring, at most 128 KiB encoded data, and Host decoding limits of 64×64 /
 4096 pixels for icons or 320×320 / 32768 pixels for previews. Encoded bodies and
 pixel buffers do not pass through Guest memory. PNG/JPEG support comes from
 the Host image service. A single-image gallery has no redundant paging bar.
+
+Tap a screenshot to open its viewer. Previous/next controls and horizontal
+swipes at fit size select another screenshot; double-tap or the zoom button
+enlarges it. Zoomed images pan through the native scroll object. Returning to
+the detail page restores its scroll position. The viewer reuses the same
+bounded decoded image, so zooming does not fetch an original-resolution image
+or allocate another framebuffer.
 
 Image completion replaces only its icon/preview subtree. Scrolling without new
 data emits no UI commits and does not rebuild the list. There is no full-screen
@@ -242,9 +253,10 @@ desktop simulator. See [device verification](docs/dpi-layout-20261014/README.zh-
 Pressing **Install** sends a bounded ticket, App ID, size and digest to the
 ESP Host's combined `store-installer` API (ABI 0.5, service 20, opcode 1;
 best-effort progress event opcode 0x8001).
-The Host downloads, asks for confirmation and installs in one request. Explicit
-**Download** uses opcode 2 to retain a verified offline package; **Install** in
-Downloads uses opcode 3. Any signed running App may request installation;
+The Host downloads, asks for confirmation and installs in one request. The SDK
+also exposes opcode 2 for verified offline downloads; previously saved packages
+remain manageable in Downloads, whose **Install** action uses opcode 3.
+Any signed running App may request installation;
 each request requires the Host's confirmation dialog. The Host accepts only the configured HTTPS origin
 (`CONFIG_PXA_STORE_ORIGIN`) and the artifact-ticket path, streams the container
 into a Host-owned temporary file (at most 4 MiB), verifies its byte count and
@@ -260,6 +272,14 @@ in progress finishes safely. The Guest's
 catalog response memory and 65536-byte private FS quota do not apply to this
 Host-owned download.
 
+Since 0.8.7 the App preserves synchronous installer errors instead of reporting
+every rejected request as a network outage. The ESP Host must include the open
+installer policy: older firmware only accepts built-in `pxa-store` packages and
+rejects a normally installed or updated Store with `DENIED`. Updating the App
+alone cannot change that Host policy. Every install/update/offline install still
+requires a fresh native confirmation; the API has no silent-install option.
+See [the Mosaico diagnosis and validation](docs/install-access-20261016/README.zh-CN.md).
+
 The Host origin must match `PXA_STORE_ORIGIN`; changing either requires
 rebuilding the product firmware and the App. The ticket is short-lived, so
 pressing Install first reloads detail to obtain a fresh one. Desktop
@@ -270,7 +290,10 @@ recheck).
 
 ## Host baseline selection
 
-The Core 2 client selects the immutable `*-pxa-0.3.0` Host baseline.
+Since 0.8.11 the Core 2 client selects the immutable `*-pxa-0.3.0-r2` Host
+capability snapshot (Window 0.3, UI 0.9, Net 0.4 and Assets 2.3). This names
+a capability revision, not a new toolchain or AOT ABI. The original
+`*-pxa-0.3.0` baseline remains available for older firmware and Apps.
 The store retains legacy `*-wamr-2.4.0` profiles and packages independently.
 Profiles describe Host capabilities; package eligibility compares Core, services
 and every component artifact, not the App SDK release number. Products using
@@ -286,3 +309,45 @@ memory comparison, see
 [the 2026-10-15 report](docs/store-refactor-20261015/README.zh-CN.md).
 The report includes the probe build/run commands and distinguishes desktop
 results from unmeasured hardware performance.
+
+The [Mosaico DPI and paging regression report](docs/mosaico-dpi-20261016/README.zh-CN.md)
+covers 305 DPI device font sizing and the deterministic `paged` probe mode.
+The [screenshot viewer report](docs/screenshot-viewer-20261016/README.zh-CN.md)
+covers the single install action, zoom/pan, paging, scroll restoration, and six
+resolution/density/shape profiles with the production AOT and UI backend.
+
+
+## Search submission and package size (2026-10-16)
+
+The search field is explicitly single-line, with a byte limit matching the query
+buffer. The system IME **Done** key emits the normal input submit action; the
+inline magnifier is also a button. A submit while a catalog request is running
+retains the latest query and replays it after either success or failure. Catalog
+and search-image completions patch or preserve an open editor, keeping focus,
+text and the keyboard intact. No additional request queue or dynamic container
+is introduced.
+
+Catalog and detail sizes use the complete selected `.pxa` download byte count,
+including container headers, manifest, signatures, code and resources. Compact
+sizes use rounded KiB/MiB; the technical detail shows the exact byte count. A
+simulator package, device package and multi-architecture package can differ in
+size, so compare the same target and version. `store_size.hpp` formats bounded
+buffers without allocation.
+
+The production Host/AOT probe now also checks native input submission, the
+magnifier, deferred Chinese queries, editor identity across a late response and
+recovery after HTTP failure, in six resolution/DPI/screen-shape profiles. Run:
+
+```sh
+python local/pxa-apps/store/tests/run_viewer_probe.py \
+  --build build/simulator/sensecap-watcher \
+  --package local/app-output/simulator/pxa-store \
+  --publisher deps/pxa-system/apps/pxa/.dev-signing/publisher-public.der \
+  --ime-package local/app-output/simulator/pxa-pinyin-ime \
+  --output local/store-ui-check
+```
+
+The provider argument supplies real text-input capability to the isolated
+product Host. The older multiline search fails the new assertion before a
+submit is attempted. The full signed-provider keyboard flow is also exercised
+with the production product simulator.
