@@ -724,7 +724,7 @@
     "dpi": 305,
     "source": "signed production application in desktop product simulator",
     "content": "actual application state",
-    "sha256": "285022768a9af06cb030060edb61dfe3be4934a6a96449b094212b1e6fdde743",
+    "sha256": "23704350e98b0603d0ca37ff23f2290eb3192229fc063bf44ed9e69a8cdb059a",
     "visually_reviewed": true
   },
   {
@@ -738,7 +738,7 @@
     "dpi": 305,
     "source": "signed production application in desktop product simulator",
     "content": "actual application state",
-    "sha256": "2a897f45124ae244ebba565acbca93957f51204097552582ca18fd1d969dd557",
+    "sha256": "89ae3241f0f97571ffac9857e559a177f4204d4ef330c25e956e7fb0c7e1b958",
     "visually_reviewed": true
   },
   {
@@ -752,7 +752,7 @@
     "dpi": 305,
     "source": "signed production application in desktop product simulator",
     "content": "actual application state",
-    "sha256": "08e7358027247319fd37cf910339569fbd092e45a431dcf2dcc2a2434b2e5490",
+    "sha256": "1108e1e59376726e2750045fea5a4f4cf6624d46f019fdf7a4ca723d47d8e1c5",
     "visually_reviewed": true
   },
   {
