@@ -65,13 +65,15 @@
       "name": "跳一跳 3D",
       "kind": "game",
       "category": "casual",
-      "summary": "按住蓄力，松开跳跃，在立体平台间连续前进。落在中心可连续得分，包含音效、背景音乐及适配不同 DPI 的触摸界面。",
-      "description": "按住蓄力，松开跳跃，在立体平台间连续前进。落在中心可连续得分，包含音效、背景音乐及适配不同 DPI 的触摸界面。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "summary": "按住蓄力，松开跳跃，在立体平台间连续前进；精准落在中心可获得连续奖励。提供音效、背景音乐及适配不同 DPI 的触摸界面。",
+      "description": "按住蓄力，松开跳跃，在立体平台间连续前进；精准落在中心可获得连续奖励。提供音效、背景音乐及适配不同 DPI 的触摸界面。\n\n保留熟悉的蓄力节奏，使用带抖动的渐变背景减轻低色深色带；屏幕分辨率、DPI 与安全区域参与界面布局。\n\n支持平台、所需系统能力和权限见版本详情。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261014/jump-jump-3d.jpg"
+        "docs/store/20261016/jump-jump-3d-ready.png",
+        "docs/store/20261016/jump-jump-3d-charging.png",
+        "docs/store/20261016/jump-jump-3d-jumping.png"
       ],
-      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+      "changelog": "同步当前游戏输入、时钟和音频实现，完善板级显示路径兼容性，并更新准备、蓄力和落地的实际运行截图。"
     },
     "lab": {
       "name": "PXA 系统实验室",
@@ -113,25 +115,29 @@
       "name": "书页阅读",
       "kind": "app",
       "category": "media",
-      "summary": "支持离线 TXT 与可配置的 JSON 网络书源，提供搜索、章节导航、下载、自适应字体和自动翻页。网络书源需自行配置；离线阅读不依赖网络。",
-      "description": "支持离线 TXT 与可配置的 JSON 网络书源，提供搜索、章节导航、下载、自适应字体和自动翻页。网络书源需自行配置；离线阅读不依赖网络。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "summary": "支持阅读网站搜索与分章目录，也可添加 TXT、JSON、HTML 书源。按需阅读、离线下载、自适应排版、字号与配色设置兼顾小屏和高 DPI。",
+      "description": "支持阅读网站搜索与分章目录，也可添加 TXT、JSON、HTML 书源。按需阅读、离线下载、自适应排版、字号与配色设置兼顾小屏和高 DPI。\n\n内置原创 CC0 短篇《林间书屋》，无需联网即可试读。网络作品默认按需读取；需要离线时可主动下载。保留书架和阅读进度。第三方书源的可用性与网页结构可能变化。\n\n支持平台、所需系统能力和权限见版本详情。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261014/novel-reader.jpg"
+        "docs/store/20261016/novel-reader-reading.png",
+        "docs/store/20261016/novel-reader-library.png",
+        "docs/store/20261016/novel-reader-preferences.png"
       ],
-      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+      "changelog": "更新当前网站书源、分页阅读、阅读偏好与缓存管理实现，使用实际 CC0 试读正文与设置页面展示。"
     },
     "pinyin-ime": {
       "name": "拼音输入法",
       "kind": "app",
       "category": "system",
-      "summary": "可安装的系统拼音输入法，支持九键、全键盘、词句候选和中英文输入。安装后在系统输入法设置中选择；需要支持 IME provider 的 Core 2 Host。",
-      "description": "可安装的系统拼音输入法，支持九键、全键盘、词句候选和中英文输入。安装后在系统输入法设置中选择；需要支持 IME provider 的 Core 2 Host。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "summary": "可安装的系统拼音输入法，支持九键、全键盘、词句候选、中英文、数字与符号。安装后在系统输入法设置中选择；词库按需加载。",
+      "description": "可安装的系统拼音输入法，支持九键、全键盘、词句候选、中英文、数字与符号。安装后在系统输入法设置中选择；词库按需加载。\n\n拼音与汉字候选分别左右滑动，支持展开候选、长按删除与光标移动。关闭键盘后释放词库，密码由系统键盘处理。布局由 Host 根据 DPI、圆角或圆屏适配；需要提供 IME provider 服务的系统固件。暂不支持手写、云候选、模糊音和持久化用户词频。\n\n支持平台、所需系统能力和权限见版本详情。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261014/pinyin-ime.jpg"
+        "docs/store/20261016/pinyin-ime-full.png",
+        "docs/store/20261016/pinyin-ime-nine.png",
+        "docs/store/20261016/pinyin-ime-expanded-candidates.png"
       ],
-      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+      "changelog": "优化词句检索、九键索引和长输入处理，完善候选滑动与词库生命周期，新增多种屏幕配置的实际键盘截图。"
     },
     "pinyin-ime-lite": {
       "name": "轻量拼音输入法",
@@ -149,13 +155,16 @@
       "name": "像素地牢",
       "kind": "game",
       "category": "rpg",
-      "summary": "回合制 Roguelike 地牢冒险：探索房间、与敌人战斗、拾取装备与道具。使用像素美术与小体积音频，每局地牢变化；请留意角色状态与补给。",
-      "description": "回合制 Roguelike 地牢冒险：探索房间、与敌人战斗、拾取装备与道具。使用像素美术与小体积音频，每局地牢变化；请留意角色状态与补给。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "summary": "探索随机地牢，选择三种职业，管理装备与补给，在回合制战斗中逐层冒险。",
+      "description": "三种职业、25 层与五个地区，探索房间、战斗、拾取物品，管理背包和装备。提供五个存档槽、日志、排行榜及地图缩放，支持触摸和手柄操作。\n\n像素画面按屏幕分辨率与 DPI 选择整数呈现比例，控件避开安全区域。保留 23 种音效和六首完整音乐，所有平台统一使用小体积 Opus 音轨。\n\n美术、音乐及派生代码来自 Shattered Pixel Dungeon 与本项目，遵循 GPL-3.0；这是面向 PXA 的移植版本，不声称完整复现上游全部内容。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261014/pixel-dungeon.jpg"
+        "docs/store/20261016/pixel-dungeon-title.png",
+        "docs/store/20261016/pixel-dungeon-classes.png",
+        "docs/store/20261016/pixel-dungeon-gameplay.png",
+        "docs/store/20261016/pixel-dungeon-inventory.png"
       ],
-      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+      "changelog": "更新当前 SDK 的四种分架构签名包；验证游戏、存档与 Host 光栅输出，补充职业选择、实际冒险、装备背包及标题截图。"
     },
     "plane-shooter": {
       "name": "轨道突击",
@@ -197,13 +206,15 @@
       "name": "PXA 应用商店",
       "kind": "app",
       "category": "system",
-      "summary": "浏览应用与游戏、查看兼容性、下载签名包、确认安装并检查更新。下载与安装由系统验证，支持已安装应用管理；需要联网及 Host 商店安装服务。",
-      "description": "浏览应用与游戏、查看兼容性、下载签名包、确认安装并检查更新。下载与安装由系统验证，支持已安装应用管理；需要联网及 Host 商店安装服务。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。商店截图来自 pai-touch 真机运行，其余应用截图来自实际模拟器运行，不能据此推断真机帧率。\n\n安装服务仅授予产品预置的可信商店。将此包作为普通应用安装不会获得安装其他应用的权限；产品集成时需通过 factory 配置预置。当前普通覆盖安装商店会失去预置身份，请由产品维护者更新预置包。",
+      "summary": "边加载边浏览应用与游戏，查看图标、多张截图和兼容性，一键下载安装并由系统确认，支持已安装应用、下载管理和更新检查。",
+      "description": "边加载边浏览应用与游戏，查看图标、多张截图和兼容性，一键下载安装并由系统确认，支持已安装应用、下载管理和更新检查。\n\n按设备 DPI 与安全区域排版；截图支持预览、翻页、双击放大及拖动查看。新版 Host 允许普通签名商城申请安装，每次安装都必须经过系统确认；旧版固件可能需要升级。\n\n支持平台、所需系统能力和权限见版本详情。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261014/store.jpg"
+        "docs/store/20261016/store-catalog.png",
+        "docs/store/20261016/store-detail.png",
+        "docs/store/20261016/store-preview.png"
       ],
-      "changelog": "更新 Core 2 分目标包与中文介绍；修复长中文介绍截断为无效 UTF-8、导致商店目录一直显示加载中的问题。"
+      "changelog": "简化浏览和安装操作，支持多张截图预览、缩放与滑动。修复输入法完成键无法搜索、加载期间提交被丢弃和旧请求失败后的搜索恢复；搜索框与键盘在后台数据到达时保持不变。使用 KiB/MiB 和完整 .pxa 文件的精确字节数，安装仍需系统确认。"
     },
     "tomb-explorer": {
       "name": "古墓探索",
@@ -221,13 +232,16 @@
       "name": "体素世界",
       "kind": "game",
       "category": "sandbox",
-      "summary": "第一人称体素沙盒，支持新游戏、多个存档、背包与合成、挖掘与放置。左侧移动、右侧转向，长按操作键挖掘；工具与材质影响效率和音效。飞行可在设置中开启。",
-      "description": "第一人称体素沙盒，支持新游戏、多个存档、背包与合成、挖掘与放置。左侧移动、右侧转向，长按操作键挖掘；工具与材质影响效率和音效。飞行可在设置中开启。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "summary": "第一人称体素沙盒，支持多个存档、背包与合成、挖掘和放置。左侧移动、右侧转向；长按操作键挖掘，材质与工具影响效率及音效。",
+      "description": "第一人称体素沙盒，支持多个存档、背包与合成、挖掘和放置。左侧移动、右侧转向；长按操作键挖掘，材质与工具影响效率及音效。\n\n提供标题页、游戏菜单和移动控制；支持视角灵敏度、反转上下、自动跳跃和可选飞行模式。界面根据分辨率、DPI 和屏幕安全区域适配，初次启动进入标题页。\n\n支持平台、所需系统能力和权限见版本详情。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261014/voxel-craft.jpg"
+        "docs/store/20261016/voxel-craft-forest.png",
+        "docs/store/20261016/voxel-craft-inventory.png",
+        "docs/store/20261016/voxel-craft-settings.png",
+        "docs/store/20261016/voxel-craft-title.png"
       ],
-      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+      "changelog": "完善手柄转向、挖掘和连续放置，自动选择新收集的材料，并提供放置失败提示；保留触摸控制、带深度的透明树叶、存档、合成和分材质音效。"
     },
     "wasi-lab": {
       "name": "WASI 实验室",
@@ -245,13 +259,29 @@
       "name": "天气",
       "kind": "app",
       "category": "life",
-      "summary": "通过 IP 定位显示当地天气，支持自动切换数据提供方。无需 API key；定位精度与数据可用性取决于网络，不能代替专业预警。",
-      "description": "通过 IP 定位显示当地天气，支持自动切换数据提供方。无需 API key；定位精度与数据可用性取决于网络，不能代替专业预警。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
+      "summary": "查看当前天气、逐小时与七日预报，支持搜索城市、保存位置及公网 IP 估算定位。",
+      "description": "查看温度、体感、湿度与风速，浏览未来 8 小时和 7 天天气、降雨概率、紫外线以及日出日落；可选空气质量与近期历史天气。点击位置可搜索城市并保存，也可恢复公网 IP 估算定位。\n\n无需填写 API key。当前天气在数据源不可用时尝试备用服务，缺失的数据会明确标注。公网 IP 定位可能指向代理出口；历史数据来自模型再分析，不能代替当地测站或专业预警。\n\n支持系统主题、DPI 与圆角安全区域，数据随网络和服务可用性变化。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261014/weather.jpg"
+        "docs/store/20261016/weather-current.png",
+        "docs/store/20261016/weather-forecast.png",
+        "docs/store/20261016/weather-cities.png"
       ],
-      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+      "changelog": "更新当前 SDK 签名包，重新验证定位、天气解析与预报显示；完善城市选择、预报和实时天气的商城说明与多张实际截图。"
+    },
+    "browser": {
+      "name": "PXA 浏览器",
+      "kind": "app",
+      "category": "network",
+      "summary": "轻量 HTTP/HTTPS 网页浏览器，支持中文、书签、历史、基础表单与登录会话，按需显示 PNG、JPEG 和 GIF，并提供可选网页脚本。",
+      "description": "轻量 HTTP/HTTPS 网页浏览器，支持中文、书签、历史、基础表单与登录会话，按需显示 PNG、JPEG 和 GIF，并提供可选网页脚本。\n\n使用按需运行的独立脚本组件，支持基本 DOM、事件及异步请求，并提供脚本时间与内存边界。可调整字号、图片、GIF、页面模式与脚本开关。适配 DPI 与圆角安全区域；不提供完整 CSS、浏览器 API、DRM 或大型现代网站的完整兼容性。\n\n支持平台、所需系统能力和权限见版本详情。",
+      "language": "zh-CN",
+      "screenshots": [
+        "docs/store/20261016/browser-home.png",
+        "docs/store/20261016/browser-website.png",
+        "docs/store/20261016/browser-tools.png"
+      ],
+      "changelog": "首次上架：提供轻量网页、书签与历史、表单、图片/GIF，以及独立按需运行的脚本组件；发布 S3、S31、桌面与 Wasm 包。"
     }
   }
 }

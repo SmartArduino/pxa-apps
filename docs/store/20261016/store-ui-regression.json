@@ -1,0 +1,74 @@
+{
+  "mosaico": {
+    "passed": true,
+    "search_requests": 6,
+    "queued_failure_recovery": true,
+    "editor_preserved": true,
+    "pan_commits": 0,
+    "peak_http_exchanges": 1,
+    "image_requests": 3,
+    "ui_nodes": 30,
+    "ui_current": 4328,
+    "ui_peak": 11000
+  },
+  "pai": {
+    "passed": true,
+    "search_requests": 6,
+    "queued_failure_recovery": true,
+    "editor_preserved": true,
+    "pan_commits": 0,
+    "peak_http_exchanges": 1,
+    "image_requests": 3,
+    "ui_nodes": 33,
+    "ui_current": 4328,
+    "ui_peak": 11064
+  },
+  "watcher": {
+    "passed": true,
+    "search_requests": 6,
+    "queued_failure_recovery": true,
+    "editor_preserved": true,
+    "pan_commits": 0,
+    "peak_http_exchanges": 1,
+    "image_requests": 3,
+    "ui_nodes": 30,
+    "ui_current": 4328,
+    "ui_peak": 11000
+  },
+  "small": {
+    "passed": true,
+    "search_requests": 6,
+    "queued_failure_recovery": true,
+    "editor_preserved": true,
+    "pan_commits": 0,
+    "peak_http_exchanges": 1,
+    "image_requests": 3,
+    "ui_nodes": 30,
+    "ui_current": 4328,
+    "ui_peak": 11000
+  },
+  "low-dpi": {
+    "passed": true,
+    "search_requests": 6,
+    "queued_failure_recovery": true,
+    "editor_preserved": true,
+    "pan_commits": 0,
+    "peak_http_exchanges": 1,
+    "image_requests": 3,
+    "ui_nodes": 33,
+    "ui_current": 4328,
+    "ui_peak": 11064
+  },
+  "high-dpi": {
+    "passed": true,
+    "search_requests": 6,
+    "queued_failure_recovery": true,
+    "editor_preserved": true,
+    "pan_commits": 0,
+    "peak_http_exchanges": 1,
+    "image_requests": 3,
+    "ui_nodes": 30,
+    "ui_current": 4328,
+    "ui_peak": 11000
+  }
+}

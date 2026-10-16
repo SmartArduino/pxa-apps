@@ -13,8 +13,8 @@
     0
   ],
   "id": "pxa-weather",
-  "version": "0.3.4",
-  "release_sequence": 6,
+  "version": "0.3.5",
+  "release_sequence": 7,
   "name": "Weather",
   "description": "通过 IP 定位显示当地天气，支持自动切换数据提供方。无需 API key；定位精度与数据可用性取决于网络，不能代替专业预警。",
   "icon": "assets/icon.png",

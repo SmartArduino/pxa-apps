@@ -1,0 +1,32 @@
+[
+  {
+    "slug": "store",
+    "version": "0.8.10",
+    "sequence": 18
+  },
+  {
+    "slug": "voxel-craft",
+    "version": "0.12.8",
+    "sequence": 21
+  },
+  {
+    "slug": "jump-jump-3d",
+    "version": "0.1.7",
+    "sequence": 8
+  },
+  {
+    "slug": "novel-reader",
+    "version": "0.2.5",
+    "sequence": 9
+  },
+  {
+    "slug": "browser",
+    "version": "0.1.1",
+    "sequence": 2
+  },
+  {
+    "slug": "pinyin-ime",
+    "version": "1.0.2",
+    "sequence": 2
+  }
+]

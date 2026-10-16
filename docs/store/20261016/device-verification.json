@@ -1,0 +1,14 @@
+{
+  "board": "esp-mosaico",
+  "target": "esp32s31",
+  "port": "/dev/ttyACM2",
+  "baud": 2000000,
+  "identity": "target=esp32s31;serial=1c:29:04:d0:ad:04;version=host-tools-v0.1.0-25-g75673a9-d;free_heap=12945319;pxa=ready;package_directory_adopt=1;package_receive=1;board=esp-mosaico;pxa_version=0.3.0;pxa_core=2.0;storage_total=12517376;storage_used=8404992;storage_free=4112384",
+  "installed_verified_version": "0.8.12",
+  "latest_version": "0.8.13",
+  "latest_install_verified": false,
+  "reason": "USB port disappeared during final update; pending reconnection",
+  "firmware_flashed": false,
+  "other_apps_deleted": false,
+  "settings_modified": false
+}

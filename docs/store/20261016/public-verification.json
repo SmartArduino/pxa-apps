@@ -1,0 +1,519 @@
+{
+  "passed": true,
+  "downloads": [
+    {
+      "slug": "browser",
+      "target": "esp32s3",
+      "version": "0.1.1",
+      "release_sequence": 2,
+      "bytes": 1438363,
+      "sha256": "e67bfe2688deda9cc49ffbbb8da8c733b66d6d6bf66dba7db867bbe21dc48ab7",
+      "artifact_id": 174,
+      "content_length": 1438363,
+      "passed": true
+    },
+    {
+      "slug": "jump-jump-3d",
+      "target": "esp32s3",
+      "version": "0.1.7",
+      "release_sequence": 8,
+      "bytes": 1517879,
+      "sha256": "cfedc86a870720eb12ef18353bfbe5696963fdb94a75180d156e7bd0219ab667",
+      "artifact_id": 178,
+      "content_length": 1517879,
+      "passed": true
+    },
+    {
+      "slug": "novel-reader",
+      "target": "esp32s3",
+      "version": "0.2.5",
+      "release_sequence": 9,
+      "bytes": 1101760,
+      "sha256": "2cb35136373612d98e13ed2a112bfa0baf042bd5bd9e0bcc58a15246470cb374",
+      "artifact_id": 182,
+      "content_length": 1101760,
+      "passed": true
+    },
+    {
+      "slug": "pinyin-ime",
+      "target": "esp32s3",
+      "version": "1.0.2",
+      "release_sequence": 2,
+      "bytes": 1193040,
+      "sha256": "2f5cd07adac7aee07b9be2a0725752a279dc56a749c99c2a8f6ee515849ef2cf",
+      "artifact_id": 186,
+      "content_length": 1193040,
+      "passed": true
+    },
+    {
+      "slug": "store",
+      "target": "esp32s3",
+      "version": "0.8.13",
+      "release_sequence": 21,
+      "bytes": 412640,
+      "sha256": "946f7c410516c5b351118e32bcfd784c2077213ffa6d078c213eb716564334cd",
+      "artifact_id": 214,
+      "content_length": 412640,
+      "passed": true
+    },
+    {
+      "slug": "voxel-craft",
+      "target": "esp32s3",
+      "version": "0.12.8",
+      "release_sequence": 21,
+      "bytes": 613089,
+      "sha256": "281949fa7c63469bd5c9e1d5a84689e3c276217bda67c654894cf89e954015fa",
+      "artifact_id": 194,
+      "content_length": 613089,
+      "passed": true
+    },
+    {
+      "slug": "weather",
+      "target": "esp32s3",
+      "version": "0.3.5",
+      "release_sequence": 7,
+      "bytes": 136938,
+      "sha256": "6bb36ffb453c1cd1acccf9cf0da71fc799f22b7d98f7e4636ca7942a0c66ab93",
+      "artifact_id": 210,
+      "content_length": 136938,
+      "passed": true
+    },
+    {
+      "slug": "pixel-dungeon",
+      "target": "esp32s3",
+      "version": "0.2.2",
+      "release_sequence": 4,
+      "bytes": 1658619,
+      "sha256": "2d1cb973a7c960cd2414518c439bb8290e7d67744a1227ab99cb28be39e01baf",
+      "artifact_id": 202,
+      "content_length": 1658619,
+      "passed": true
+    },
+    {
+      "slug": "browser",
+      "target": "esp32s31",
+      "version": "0.1.1",
+      "release_sequence": 2,
+      "bytes": 1409532,
+      "sha256": "60c336146baab2825b0bdadeb929e2b0e27406d791993717e095f7e904f2080c",
+      "artifact_id": 175,
+      "content_length": 1409532,
+      "passed": true
+    },
+    {
+      "slug": "jump-jump-3d",
+      "target": "esp32s31",
+      "version": "0.1.7",
+      "release_sequence": 8,
+      "bytes": 1531566,
+      "sha256": "8e4ad42850784ce151b9531fdc9e57b90214043382beb2fff0dfdd00e79c789c",
+      "artifact_id": 179,
+      "content_length": 1531566,
+      "passed": true
+    },
+    {
+      "slug": "novel-reader",
+      "target": "esp32s31",
+      "version": "0.2.5",
+      "release_sequence": 9,
+      "bytes": 1089823,
+      "sha256": "aefee304a9dc85177464b2b1f27a370cbc304d051f5845cd01bf60c4eae6612d",
+      "artifact_id": 183,
+      "content_length": 1089823,
+      "passed": true
+    },
+    {
+      "slug": "pinyin-ime",
+      "target": "esp32s31",
+      "version": "1.0.2",
+      "release_sequence": 2,
+      "bytes": 1186780,
+      "sha256": "18c932f72716f959d924a5f6efdc6e85001a7e514ac626f9e7954f48672b74ed",
+      "artifact_id": 187,
+      "content_length": 1186780,
+      "passed": true
+    },
+    {
+      "slug": "store",
+      "target": "esp32s31",
+      "version": "0.8.13",
+      "release_sequence": 21,
+      "bytes": 401242,
+      "sha256": "86ccf416a7f8855491729d2d83f7bdec42fbdb5a63bdfe59ec2c1a59cad8450b",
+      "artifact_id": 215,
+      "content_length": 401242,
+      "passed": true
+    },
+    {
+      "slug": "voxel-craft",
+      "target": "esp32s31",
+      "version": "0.12.8",
+      "release_sequence": 21,
+      "bytes": 610842,
+      "sha256": "88278a6f27932972f9fddf470921a1b127ef059af6cd2cb87cf99a090586c559",
+      "artifact_id": 195,
+      "content_length": 610842,
+      "passed": true
+    },
+    {
+      "slug": "weather",
+      "target": "esp32s31",
+      "version": "0.3.5",
+      "release_sequence": 7,
+      "bytes": 135690,
+      "sha256": "36bd4e9309e1cde9c60969dd6dbd1baf4d79ac025195a9c161ca5f8092ea5167",
+      "artifact_id": 211,
+      "content_length": 135690,
+      "passed": true
+    },
+    {
+      "slug": "pixel-dungeon",
+      "target": "esp32s31",
+      "version": "0.2.2",
+      "release_sequence": 4,
+      "bytes": 1645047,
+      "sha256": "5ec82bd1949543e8061a9e84db9253b0b6ab4f0b7d2cfd5ed7d2e85feff495b5",
+      "artifact_id": 203,
+      "content_length": 1645047,
+      "passed": true
+    },
+    {
+      "slug": "browser",
+      "target": "simulator",
+      "version": "0.1.1",
+      "release_sequence": 2,
+      "bytes": 946288,
+      "sha256": "38f7f71e41ad0db2490d6f06570f56ad9eaeee2f4df16e737baf3994b69697fe",
+      "artifact_id": 176,
+      "content_length": 946288,
+      "passed": true
+    },
+    {
+      "slug": "jump-jump-3d",
+      "target": "simulator",
+      "version": "0.1.7",
+      "release_sequence": 8,
+      "bytes": 1375352,
+      "sha256": "9f1bff81805f4a8a2fe6b63326d05707abcb962e1cf2de6b121ade68701a5140",
+      "artifact_id": 180,
+      "content_length": 1375352,
+      "passed": true
+    },
+    {
+      "slug": "novel-reader",
+      "target": "simulator",
+      "version": "0.2.5",
+      "release_sequence": 9,
+      "bytes": 534871,
+      "sha256": "c7b7788d12834a44774dfcc8db49b2a0bbb5200bce159c7c7231e55a0186fe86",
+      "artifact_id": 184,
+      "content_length": 534871,
+      "passed": true
+    },
+    {
+      "slug": "pinyin-ime",
+      "target": "simulator",
+      "version": "1.0.2",
+      "release_sequence": 2,
+      "bytes": 1075959,
+      "sha256": "95e87e7adfa23e3da636b9157561957d1afe29bdc3e8f12827f57c3a27b29285",
+      "artifact_id": 188,
+      "content_length": 1075959,
+      "passed": true
+    },
+    {
+      "slug": "store",
+      "target": "simulator",
+      "version": "0.8.13",
+      "release_sequence": 21,
+      "bytes": 248760,
+      "sha256": "f3ae5ae83f693a0c7969719cbad361227c3bb386d39a417dcc882ce54ca2796a",
+      "artifact_id": 216,
+      "content_length": 248760,
+      "passed": true
+    },
+    {
+      "slug": "voxel-craft",
+      "target": "simulator",
+      "version": "0.12.8",
+      "release_sequence": 21,
+      "bytes": 394505,
+      "sha256": "5ebb524c1112f82e5acc25eb1dd749aa9d0795dce42a940b359748c12b5b13e8",
+      "artifact_id": 196,
+      "content_length": 394505,
+      "passed": true
+    },
+    {
+      "slug": "weather",
+      "target": "simulator",
+      "version": "0.3.5",
+      "release_sequence": 7,
+      "bytes": 99261,
+      "sha256": "4477e93a12a2c20f1153db53272a742c52214a859fc08d8545ea45b4cd358450",
+      "artifact_id": 212,
+      "content_length": 99261,
+      "passed": true
+    },
+    {
+      "slug": "pixel-dungeon",
+      "target": "simulator",
+      "version": "0.2.2",
+      "release_sequence": 4,
+      "bytes": 1434663,
+      "sha256": "806a2c8a251a00d51d70d026a9cf982441a848f11c41e5fa99598689a2b151e8",
+      "artifact_id": 204,
+      "content_length": 1434663,
+      "passed": true
+    },
+    {
+      "slug": "browser",
+      "target": "wasm",
+      "version": "0.1.1",
+      "release_sequence": 2,
+      "bytes": 762658,
+      "sha256": "56cabea53c3abe7b4f1464eb78e21c5a2ae9e42d1a53b5137ce200420f3e965f",
+      "artifact_id": 177,
+      "content_length": 762658,
+      "passed": true
+    },
+    {
+      "slug": "jump-jump-3d",
+      "target": "wasm",
+      "version": "0.1.7",
+      "release_sequence": 8,
+      "bytes": 1231984,
+      "sha256": "c4ee068dc7463fd1f61ab5ca8fddd98f8ffcb64c8c280f66b1bb0b6f496ec1db",
+      "artifact_id": 181,
+      "content_length": 1231984,
+      "passed": true
+    },
+    {
+      "slug": "novel-reader",
+      "target": "wasm",
+      "version": "0.2.5",
+      "release_sequence": 9,
+      "bytes": 284027,
+      "sha256": "eae2b95841b8d4c7b2a05cf059d8d5a8a4e1d2200008a4343d197b769a9bd4d7",
+      "artifact_id": 185,
+      "content_length": 284027,
+      "passed": true
+    },
+    {
+      "slug": "pinyin-ime",
+      "target": "wasm",
+      "version": "1.0.2",
+      "release_sequence": 2,
+      "bytes": 1000721,
+      "sha256": "af0fdbc006ac8ee91045c01918f263f73db9bf0050a4d1ff319238403cd4e803",
+      "artifact_id": 189,
+      "content_length": 1000721,
+      "passed": true
+    },
+    {
+      "slug": "store",
+      "target": "wasm",
+      "version": "0.8.13",
+      "release_sequence": 21,
+      "bytes": 146566,
+      "sha256": "ace1b8bfabd4702a8650d33c833ebf48a53c25ccee8003d05faeb2c352cdc2d1",
+      "artifact_id": 217,
+      "content_length": 146566,
+      "passed": true
+    },
+    {
+      "slug": "voxel-craft",
+      "target": "wasm",
+      "version": "0.12.8",
+      "release_sequence": 21,
+      "bytes": 234387,
+      "sha256": "6a3ab126b135dada50ff2d559d606ebbd3d327bc0b2965372a3aea2b6c8d5fb7",
+      "artifact_id": 197,
+      "content_length": 234387,
+      "passed": true
+    },
+    {
+      "slug": "weather",
+      "target": "wasm",
+      "version": "0.3.5",
+      "release_sequence": 7,
+      "bytes": 70932,
+      "sha256": "868621ee39c872819b4ff2dddf384b37dd7ff0cfd965d74a4b1b27203e61def5",
+      "artifact_id": 213,
+      "content_length": 70932,
+      "passed": true
+    },
+    {
+      "slug": "pixel-dungeon",
+      "target": "wasm",
+      "version": "0.2.2",
+      "release_sequence": 4,
+      "bytes": 1304614,
+      "sha256": "d65c63e8f07895f07ea000ae2d03a802536fe5f66debe2b9ab78f8667f6a5e29",
+      "artifact_id": 205,
+      "content_length": 1304614,
+      "passed": true
+    }
+  ],
+  "media": [
+    {
+      "slug": "browser",
+      "count": 3,
+      "dimensions": [
+        [
+          640,
+          480
+        ],
+        [
+          640,
+          480
+        ],
+        [
+          640,
+          480
+        ]
+      ],
+      "passed": true
+    },
+    {
+      "slug": "jump-jump-3d",
+      "count": 3,
+      "dimensions": [
+        [
+          480,
+          480
+        ],
+        [
+          480,
+          480
+        ],
+        [
+          480,
+          480
+        ]
+      ],
+      "passed": true
+    },
+    {
+      "slug": "novel-reader",
+      "count": 3,
+      "dimensions": [
+        [
+          600,
+          800
+        ],
+        [
+          600,
+          800
+        ],
+        [
+          600,
+          800
+        ]
+      ],
+      "passed": true
+    },
+    {
+      "slug": "pinyin-ime",
+      "count": 3,
+      "dimensions": [
+        [
+          480,
+          480
+        ],
+        [
+          480,
+          480
+        ],
+        [
+          480,
+          480
+        ]
+      ],
+      "passed": true
+    },
+    {
+      "slug": "pixel-dungeon",
+      "count": 4,
+      "dimensions": [
+        [
+          480,
+          480
+        ],
+        [
+          480,
+          480
+        ],
+        [
+          480,
+          480
+        ],
+        [
+          480,
+          480
+        ]
+      ],
+      "passed": true
+    },
+    {
+      "slug": "store",
+      "count": 3,
+      "dimensions": [
+        [
+          480,
+          480
+        ],
+        [
+          480,
+          480
+        ],
+        [
+          480,
+          480
+        ]
+      ],
+      "passed": true
+    },
+    {
+      "slug": "voxel-craft",
+      "count": 4,
+      "dimensions": [
+        [
+          640,
+          480
+        ],
+        [
+          640,
+          480
+        ],
+        [
+          640,
+          480
+        ],
+        [
+          640,
+          480
+        ]
+      ],
+      "passed": true
+    },
+    {
+      "slug": "weather",
+      "count": 3,
+      "dimensions": [
+        [
+          600,
+          800
+        ],
+        [
+          600,
+          800
+        ],
+        [
+          600,
+          800
+        ]
+      ],
+      "passed": true
+    }
+  ]
+}
