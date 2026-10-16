@@ -13,8 +13,8 @@
     0
   ],
   "id": "pxa-arcade",
-  "version": "0.1.4",
-  "release_sequence": 5,
+  "version": "0.1.5",
+  "release_sequence": 6,
   "name": "PXA Arcade",
   "description": "多款紧凑街机小游戏，使用触摸操作，适合短时间游玩。",
   "icon": "assets/flappy-bird/icon.png",

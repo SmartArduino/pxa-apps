@@ -13,8 +13,8 @@
     0
   ],
   "id": "pxa-maze-spike",
-  "version": "0.1.4",
-  "release_sequence": 5,
+  "version": "0.1.5",
+  "release_sequence": 6,
   "name": "Maze Spike",
   "description": "通过触摸探索第一人称迷宫，使用低分辨率画面放大显示。避开危险并寻找出口。",
   "build": {

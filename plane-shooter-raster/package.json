@@ -13,7 +13,7 @@
     0
   ],
   "id": "pxa-plane-shooter-raster",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "name": "Orbital Strike Raster",
   "description": "太空射击的光栅绘制版本，按设备调整渲染分辨率。触摸移动、自动开火；画面路径与原版不同，适合体验和比较。",
   "build": {
@@ -42,5 +42,5 @@
       }
     }
   ],
-  "release_sequence": 6
+  "release_sequence": 7
 }

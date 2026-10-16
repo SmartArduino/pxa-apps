@@ -5,8 +5,8 @@
   ],
   "schema": "pxa-lock-1",
   "sdk": {
-    "digest": "778d0528c7cdf9ef0a8d4dda657698e537f8c09008e496314149203c81f41fde",
-    "release": "0.3.0"
+    "release": "0.4.0",
+    "digest": "747d72858af96fff1dcd5a5569a9e3e8ca4e39d4202f3f4768db7f58f6710494"
   },
   "toolchain": {
     "clang_sha256": "061f88b9f4c48f3742434c2513d5038ab7fa4dc27abff5cb13b5eaedcb51d6ea",

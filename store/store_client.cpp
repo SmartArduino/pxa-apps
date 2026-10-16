@@ -15,7 +15,7 @@
 // An immutable, verified Host baseline, independent of the App's SDK version.
 // Products with a newer verified baseline can override this build definition.
 #ifndef STORE_PROFILE_SUFFIX
-#define STORE_PROFILE_SUFFIX "-pxa-0.3.0-r2"
+#define STORE_PROFILE_SUFFIX "-pxa-0.4.0"
 #endif
 
 static const char device_permission_name[] = "device.identity";
