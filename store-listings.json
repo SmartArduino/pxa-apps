@@ -6,24 +6,28 @@
       "kind": "app",
       "category": "education",
       "summary": "验证两个组件之间的请求、响应和事件传递。用于开发与兼容性检查，不是聊天软件。",
-      "description": "验证两个组件之间的请求、响应和事件传递。用于开发与兼容性检查，不是聊天软件。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。\n\n本诊断程序没有图形操作界面，结果在 PXADB 日志中查看；介绍图下半部分为该次实际运行日志。",
+      "description": "验证两个组件之间的请求、响应和事件传递。用于开发与兼容性检查，不是聊天软件。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。\n\n可在结果、服务和 ABI 三个页面查看诊断结果与覆盖范围；详细记录仍可通过 PXADB 日志查看。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261014/abi-v1-ipc-smoke.jpg"
+        "docs/store/20261016-release/abi-v1-ipc-smoke-results.png",
+        "docs/store/20261016-release/abi-v1-ipc-smoke-services.png",
+        "docs/store/20261016-release/abi-v1-ipc-smoke-abi.png"
       ],
-      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+      "changelog": "使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。新增可切换的诊断结果、服务与 ABI 页面。"
     },
     "abi-v1-smoke": {
       "name": "Core 2 基础检查",
       "kind": "app",
       "category": "education",
       "summary": "检查签名包、Core 2 调用和事件交付，帮助开发者验证设备运行环境。",
-      "description": "检查签名包、Core 2 调用和事件交付，帮助开发者验证设备运行环境。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。\n\n本诊断程序没有图形操作界面，结果在 PXADB 日志中查看；介绍图下半部分为该次实际运行日志。",
+      "description": "检查签名包、Core 2 调用和事件交付，帮助开发者验证设备运行环境。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。\n\n可在结果、服务和 ABI 三个页面查看诊断结果与覆盖范围；详细记录仍可通过 PXADB 日志查看。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261014/abi-v1-smoke.jpg"
+        "docs/store/20261016-release/abi-v1-smoke-results.png",
+        "docs/store/20261016-release/abi-v1-smoke-services.png",
+        "docs/store/20261016-release/abi-v1-smoke-abi.png"
       ],
-      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+      "changelog": "使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。新增可切换的诊断结果、服务与 ABI 页面。"
     },
     "arcade": {
       "name": "PXA 街机合集",
@@ -33,9 +37,11 @@
       "description": "多款紧凑街机小游戏，使用触摸操作，适合短时间游玩。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261014/arcade.jpg"
+        "docs/store/20261016-release/arcade-home.png",
+        "docs/store/20261016-release/arcade-brick-breaker.png",
+        "docs/store/20261016-release/arcade-brick-play.png"
       ],
-      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+      "changelog": "使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
     },
     "game-render-bench": {
       "name": "游戏绘制基准",
@@ -45,9 +51,11 @@
       "description": "分阶段演示与测量 2D、3D、纹理及低分辨率绘制路径。结果随设备与场景变化，不能仅用提交帧率比较性能。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261014/game-render-bench.jpg"
+        "docs/store/20261016-release/game-render-bench-phase-1.png",
+        "docs/store/20261016-release/game-render-bench-phase-2.png",
+        "docs/store/20261016-release/game-render-bench-phase-3.png"
       ],
-      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+      "changelog": "使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
     },
     "garden-guard": {
       "name": "花园保卫战",
@@ -57,9 +65,11 @@
       "description": "在昼夜花园中布置植物抵御敌人，包含 12 个关卡与 13 种植物。选择植物、管理资源并保护花园。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261014/garden-guard.jpg"
+        "docs/store/20261016-release/garden-guard-home.png",
+        "docs/store/20261016-release/garden-guard-almanac.png",
+        "docs/store/20261016-release/garden-guard-battle.png"
       ],
-      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+      "changelog": "使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
     },
     "jump-jump-3d": {
       "name": "跳一跳 3D",
@@ -69,11 +79,11 @@
       "description": "按住蓄力，松开跳跃，在立体平台间连续前进；精准落在中心可获得连续奖励。提供音效、背景音乐及适配不同 DPI 的触摸界面。\n\n保留熟悉的蓄力节奏，使用带抖动的渐变背景减轻低色深色带；屏幕分辨率、DPI 与安全区域参与界面布局。\n\n支持平台、所需系统能力和权限见版本详情。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261016/jump-jump-3d-ready.png",
-        "docs/store/20261016/jump-jump-3d-charging.png",
-        "docs/store/20261016/jump-jump-3d-jumping.png"
+        "docs/store/20261016-release/jump-jump-3d-title.png",
+        "docs/store/20261016-release/jump-jump-3d-charging.png",
+        "docs/store/20261016-release/jump-jump-3d-jumping.png"
       ],
-      "changelog": "同步当前游戏输入、时钟和音频实现，完善板级显示路径兼容性，并更新准备、蓄力和落地的实际运行截图。"
+      "changelog": "使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。同步当前游戏输入、时钟和音频实现，完善板级显示路径兼容性，并更新准备、蓄力和落地的实际运行截图。"
     },
     "lab": {
       "name": "PXA 系统实验室",
@@ -83,9 +93,11 @@
       "description": "交互检查设备、时钟、存储、私有文件、WASI 与分配器。面向开发调试，操作前阅读页面提示。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261014/lab.jpg"
+        "docs/store/20261016-release/lab-square.png",
+        "docs/store/20261016-release/lab-compact.png",
+        "docs/store/20261016-release/lab-portrait.png"
       ],
-      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+      "changelog": "使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
     },
     "maze-evil": {
       "name": "恶意迷宫",
@@ -95,9 +107,11 @@
       "description": "第一人称迷宫射击游戏，使用触摸移动与转向，包含武器、敌人和音效。优化了输入与音效调度，体验仍取决于实际设备。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261014/maze-evil.jpg"
+        "docs/store/20261016-release/maze-evil-ready.png",
+        "docs/store/20261016-release/maze-evil-look.png",
+        "docs/store/20261016-release/maze-evil-exploration.png"
       ],
-      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+      "changelog": "使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
     },
     "maze-spike": {
       "name": "尖刺迷宫",
@@ -107,9 +121,11 @@
       "description": "通过触摸探索第一人称迷宫，使用低分辨率画面放大显示。避开危险并寻找出口。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261014/maze-spike.jpg"
+        "docs/store/20261016-release/maze-spike-ready.png",
+        "docs/store/20261016-release/maze-spike-walking.png",
+        "docs/store/20261016-release/maze-spike-turning.png"
       ],
-      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+      "changelog": "使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
     },
     "novel-reader": {
       "name": "书页阅读",
@@ -119,11 +135,11 @@
       "description": "支持阅读网站搜索与分章目录，也可添加 TXT、JSON、HTML 书源。按需阅读、离线下载、自适应排版、字号与配色设置兼顾小屏和高 DPI。\n\n内置原创 CC0 短篇《林间书屋》，无需联网即可试读。网络作品默认按需读取；需要离线时可主动下载。保留书架和阅读进度。第三方书源的可用性与网页结构可能变化。\n\n支持平台、所需系统能力和权限见版本详情。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261016/novel-reader-reading.png",
-        "docs/store/20261016/novel-reader-library.png",
-        "docs/store/20261016/novel-reader-preferences.png"
+        "docs/store/20261016-release/novel-reader-title.png",
+        "docs/store/20261016-release/novel-reader-book.png",
+        "docs/store/20261016-release/novel-reader-preferences.png"
       ],
-      "changelog": "更新当前网站书源、分页阅读、阅读偏好与缓存管理实现，使用实际 CC0 试读正文与设置页面展示。"
+      "changelog": "使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。更新当前网站书源、分页阅读、阅读偏好与缓存管理实现，使用实际 CC0 试读正文与设置页面展示。"
     },
     "pinyin-ime": {
       "name": "拼音输入法",
@@ -133,11 +149,11 @@
       "description": "可安装的系统拼音输入法，支持九键、全键盘、词句候选、中英文、数字与符号。安装后在系统输入法设置中选择；词库按需加载。\n\n拼音与汉字候选分别左右滑动，支持展开候选、长按删除与光标移动。关闭键盘后释放词库，密码由系统键盘处理。布局由 Host 根据 DPI、圆角或圆屏适配；需要提供 IME provider 服务的系统固件。暂不支持手写、云候选、模糊音和持久化用户词频。\n\n支持平台、所需系统能力和权限见版本详情。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261016/pinyin-ime-full.png",
-        "docs/store/20261016/pinyin-ime-nine.png",
-        "docs/store/20261016/pinyin-ime-expanded-candidates.png"
+        "docs/store/20261016-release/pinyin-ime-full.png",
+        "docs/store/20261016-release/pinyin-ime-nine.png",
+        "docs/store/20261016-release/pinyin-ime-expanded-candidates.png"
       ],
-      "changelog": "优化词句检索、九键索引和长输入处理，完善候选滑动与词库生命周期，新增多种屏幕配置的实际键盘截图。"
+      "changelog": "使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。优化词句检索、九键索引和长输入处理，完善候选滑动与词库生命周期，新增多种屏幕配置的实际键盘截图。"
     },
     "pinyin-ime-lite": {
       "name": "轻量拼音输入法",
@@ -147,9 +163,11 @@
       "description": "使用小字表逐字输入，支持九键、全键盘与中英文，适合资源较少的设备。没有完整版整词词库；安装后需在系统中选择输入法。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261014/pinyin-ime-lite.jpg"
+        "docs/store/20261016-release/pinyin-ime-lite-full.png",
+        "docs/store/20261016-release/pinyin-ime-lite-nine.png",
+        "docs/store/20261016-release/pinyin-ime-lite-expanded-candidates.png"
       ],
-      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+      "changelog": "使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
     },
     "pixel-dungeon": {
       "name": "像素地牢",
@@ -159,12 +177,11 @@
       "description": "三种职业、25 层与五个地区，探索房间、战斗、拾取物品，管理背包和装备。提供五个存档槽、日志、排行榜及地图缩放，支持触摸和手柄操作。\n\n像素画面按屏幕分辨率与 DPI 选择整数呈现比例，控件避开安全区域。保留 23 种音效和六首完整音乐，所有平台统一使用小体积 Opus 音轨。\n\n美术、音乐及派生代码来自 Shattered Pixel Dungeon 与本项目，遵循 GPL-3.0；这是面向 PXA 的移植版本，不声称完整复现上游全部内容。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261016/pixel-dungeon-title.png",
-        "docs/store/20261016/pixel-dungeon-classes.png",
-        "docs/store/20261016/pixel-dungeon-gameplay.png",
-        "docs/store/20261016/pixel-dungeon-inventory.png"
+        "docs/store/20261016-release/pixel-dungeon-title.png",
+        "docs/store/20261016-release/pixel-dungeon-classes.png",
+        "docs/store/20261016-release/pixel-dungeon-dungeon.png"
       ],
-      "changelog": "更新当前 SDK 的四种分架构签名包；验证游戏、存档与 Host 光栅输出，补充职业选择、实际冒险、装备背包及标题截图。"
+      "changelog": "使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。更新当前 SDK 的四种分架构签名包；验证游戏、存档与 Host 光栅输出，补充职业选择、实际冒险、装备背包及标题截图。"
     },
     "plane-shooter": {
       "name": "轨道突击",
@@ -174,9 +191,11 @@
       "description": "太空射击游戏，提供剧情关卡、机库和自动开火。通过触摸移动战机，躲避弹幕并挑战敌人。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261014/plane-shooter.jpg"
+        "docs/store/20261016-release/plane-shooter-home.png",
+        "docs/store/20261016-release/plane-shooter-hangar.png",
+        "docs/store/20261016-release/plane-shooter-mission.png"
       ],
-      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+      "changelog": "使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
     },
     "plane-shooter-raster": {
       "name": "轨道突击：光栅版",
@@ -186,9 +205,11 @@
       "description": "太空射击的光栅绘制版本，按设备调整渲染分辨率。触摸移动、自动开火；画面路径与原版不同，适合体验和比较。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261014/plane-shooter-raster.jpg"
+        "docs/store/20261016-release/plane-shooter-raster-ready.png",
+        "docs/store/20261016-release/plane-shooter-raster-left.png",
+        "docs/store/20261016-release/plane-shooter-raster-right.png"
       ],
-      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+      "changelog": "使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
     },
     "resource-scenes": {
       "name": "资源场景示例",
@@ -198,9 +219,11 @@
       "description": "演示文件纹理、异步加载与场景切换：共 20 张纹理，每次显示四张，并循环切换场景。适合验证资源生命周期。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261014/resource-scenes.jpg"
+        "docs/store/20261016-release/resource-scenes-sample-00.png",
+        "docs/store/20261016-release/resource-scenes-sample-01.png",
+        "docs/store/20261016-release/resource-scenes-sample-02.png"
       ],
-      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+      "changelog": "使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
     },
     "store": {
       "name": "PXA 应用商店",
@@ -210,11 +233,11 @@
       "description": "边加载边浏览应用与游戏，查看图标、多张截图和兼容性，一键下载安装并由系统确认，支持已安装应用、下载管理和更新检查。\n\n按设备 DPI 与安全区域排版；截图支持预览、翻页、双击放大及拖动查看。新版 Host 允许普通签名商城申请安装，每次安装都必须经过系统确认；旧版固件可能需要升级。\n\n支持平台、所需系统能力和权限见版本详情。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261016/store-catalog.png",
-        "docs/store/20261016/store-detail.png",
-        "docs/store/20261016/store-preview.png"
+        "docs/store/20261016-release/store-catalog.png",
+        "docs/store/20261016-release/store-detail.png",
+        "docs/store/20261016-release/store-preview.png"
       ],
-      "changelog": "简化浏览和安装操作，支持多张截图预览、缩放与滑动。修复输入法完成键无法搜索、加载期间提交被丢弃和旧请求失败后的搜索恢复；搜索框与键盘在后台数据到达时保持不变。使用 KiB/MiB 和完整 .pxa 文件的精确字节数，安装仍需系统确认。"
+      "changelog": "使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。简化浏览和安装操作，支持多张截图预览、缩放与滑动。修复输入法完成键无法搜索、加载期间提交被丢弃和旧请求失败后的搜索恢复；搜索框与键盘在后台数据到达时保持不变。使用 KiB/MiB 和完整 .pxa 文件的精确字节数，安装仍需系统确认。"
     },
     "tomb-explorer": {
       "name": "古墓探索",
@@ -224,9 +247,11 @@
       "description": "第三人称房间与门洞探索游戏，使用纹理多边形绘制。通过触摸控制角色与视角，在古墓空间中探索。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261014/tomb-explorer.jpg"
+        "docs/store/20261016-release/tomb-explorer-ready.png",
+        "docs/store/20261016-release/tomb-explorer-walking.png",
+        "docs/store/20261016-release/tomb-explorer-turning.png"
       ],
-      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+      "changelog": "使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
     },
     "voxel-craft": {
       "name": "体素世界",
@@ -236,12 +261,11 @@
       "description": "第一人称体素沙盒，支持多个存档、背包与合成、挖掘和放置。左侧移动、右侧转向；长按操作键挖掘，材质与工具影响效率及音效。\n\n提供标题页、游戏菜单和移动控制；支持视角灵敏度、反转上下、自动跳跃和可选飞行模式。界面根据分辨率、DPI 和屏幕安全区域适配，初次启动进入标题页。\n\n支持平台、所需系统能力和权限见版本详情。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261016/voxel-craft-forest.png",
-        "docs/store/20261016/voxel-craft-inventory.png",
-        "docs/store/20261016/voxel-craft-settings.png",
-        "docs/store/20261016/voxel-craft-title.png"
+        "docs/store/20261016-release/voxel-craft-title.png",
+        "docs/store/20261016-release/voxel-craft-world.png",
+        "docs/store/20261016-release/voxel-craft-pause.png"
       ],
-      "changelog": "完善手柄转向、挖掘和连续放置，自动选择新收集的材料，并提供放置失败提示；保留触摸控制、带深度的透明树叶、存档、合成和分材质音效。"
+      "changelog": "使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。完善手柄转向、挖掘和连续放置，自动选择新收集的材料，并提供放置失败提示；保留触摸控制、带深度的透明树叶、存档、合成和分材质音效。"
     },
     "wasi-lab": {
       "name": "WASI 实验室",
@@ -251,9 +275,11 @@
       "description": "检查 WASI libc、时钟与随机数能力，查看设备运行结果。面向开发者的 Core 2 诊断示例。\n\n此版本使用 PXA C++26 SDK 与 Core 2.0，提供 ESP32-S3、ESP32-S31、桌面 x86_64 和可移植 WASM 分目标包。商店根据设备能力选择版本；旧 Core Host 需先更新系统。截图来自实际模拟器运行，不能据此推断真机帧率。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261014/wasi-lab.jpg"
+        "docs/store/20261016-release/wasi-lab-square.png",
+        "docs/store/20261016-release/wasi-lab-compact.png",
+        "docs/store/20261016-release/wasi-lab-portrait.png"
       ],
-      "changelog": "更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
+      "changelog": "使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。更新至当前 C++26 / Core 2 实现，重新验证分目标签名包，并更新中文介绍与实际运行截图。"
     },
     "weather": {
       "name": "天气",
@@ -263,11 +289,11 @@
       "description": "查看温度、体感、湿度与风速，浏览未来 8 小时和 7 天天气、降雨概率、紫外线以及日出日落；可选空气质量与近期历史天气。点击位置可搜索城市并保存，也可恢复公网 IP 估算定位。\n\n无需填写 API key。当前天气在数据源不可用时尝试备用服务，缺失的数据会明确标注。公网 IP 定位可能指向代理出口；历史数据来自模型再分析，不能代替当地测站或专业预警。\n\n支持系统主题、DPI 与圆角安全区域，数据随网络和服务可用性变化。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261016/weather-current.png",
-        "docs/store/20261016/weather-forecast.png",
-        "docs/store/20261016/weather-cities.png"
+        "docs/store/20261016-release/weather-current.png",
+        "docs/store/20261016-release/weather-cities.png",
+        "docs/store/20261016-release/weather-forecast.png"
       ],
-      "changelog": "更新当前 SDK 签名包，重新验证定位、天气解析与预报显示；完善城市选择、预报和实时天气的商城说明与多张实际截图。"
+      "changelog": "使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。更新当前 SDK 签名包，重新验证定位、天气解析与预报显示；完善城市选择、预报和实时天气的商城说明与多张实际截图。"
     },
     "browser": {
       "name": "PXA 浏览器",
@@ -277,11 +303,11 @@
       "description": "轻量 HTTP/HTTPS 网页浏览器，支持中文、书签、历史、基础表单与登录会话，按需显示 PNG、JPEG 和 GIF，并提供可选网页脚本。\n\n使用按需运行的独立脚本组件，支持基本 DOM、事件及异步请求，并提供脚本时间与内存边界。可调整字号、图片、GIF、页面模式与脚本开关。适配 DPI 与圆角安全区域；不提供完整 CSS、浏览器 API、DRM 或大型现代网站的完整兼容性。\n\n支持平台、所需系统能力和权限见版本详情。",
       "language": "zh-CN",
       "screenshots": [
-        "docs/store/20261016/browser-home.png",
-        "docs/store/20261016/browser-website.png",
-        "docs/store/20261016/browser-tools.png"
+        "docs/store/20261016-release/browser-home.png",
+        "docs/store/20261016-release/browser-website.png",
+        "docs/store/20261016-release/browser-tools.png"
       ],
-      "changelog": "首次上架：提供轻量网页、书签与历史、表单、图片/GIF，以及独立按需运行的脚本组件；发布 S3、S31、桌面与 Wasm 包。"
+      "changelog": "使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。使用 PXA 0.4.0 SDK 和固定版本工具链重新构建 ESP32-S3、ESP32-S31、桌面及可移植 Wasm 包；更新多张实际运行截图。首次上架：提供轻量网页、书签与历史、表单、图片/GIF，以及独立按需运行的脚本组件；发布 S3、S31、桌面与 Wasm 包。"
     }
   }
 }
