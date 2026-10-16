@@ -1,0 +1,10 @@
+{
+  "passed": [
+    "password input, special-character POST, duplicate Set-Cookie and 303 login redirect",
+    "protected page GET retains session",
+    "menu history list opens selected entry",
+    "clear sessions removes cookies; protected page rejects after reload",
+    "independent image/GIF settings persisted",
+    "home navigation directory opens without replacing custom sites"
+  ]
+}

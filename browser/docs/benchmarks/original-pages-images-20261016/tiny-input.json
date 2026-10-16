@@ -1,0 +1,13 @@
+{
+  "before": {
+    "bytes": 3505,
+    "temporary_peak": 6368,
+    "charged_peak": 71549
+  },
+  "after": {
+    "bytes": 3505,
+    "temporary_peak": 6456,
+    "charged_peak": 71637
+  },
+  "note": "POSIX codec owned metadata +88 B on this tiny input; not a whole-browser memory result. No universal zero-growth claim."
+}

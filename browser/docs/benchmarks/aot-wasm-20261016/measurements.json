@@ -1,0 +1,1028 @@
+{
+  "device": {
+    "model": "pai-touch",
+    "resolution": [
+      296,
+      240
+    ],
+    "dpi": 160,
+    "host_version": "host-tools-v0.1.0-25-g75673a9-d",
+    "firmware_changed_during_comparison": false,
+    "cold_device_boot": false
+  },
+  "method": "Whole-package stop/start; 60 identical rows; display-completion intervals during drag; run-local heap minima; screenshots outside measured windows; one short window per condition, not a statistical FPS claim",
+  "memory_note": "Net whole-system heap use versus immediately before application start. Does not separately measure physical guest-linear memory/code/framebuffer/IPC queue; budget surface zeros do not mean no system framebuffer. Native-64 WAMR probes are not ESP32 memory measurements.",
+  "runs": {
+    "single_aot": {
+      "static": {
+        "passed": true,
+        "display_interval_fps": 28.865045245958424,
+        "present_intervals_us": [
+          47735,
+          23673,
+          47493,
+          23824,
+          23850,
+          47434,
+          23937,
+          47455,
+          23860,
+          23899,
+          47704,
+          47293,
+          24240,
+          47138,
+          23886,
+          47709,
+          23597,
+          23843,
+          48027,
+          23298,
+          47494,
+          23939,
+          47516,
+          23821,
+          47555,
+          24180,
+          23800,
+          47106,
+          23996,
+          47456,
+          23710,
+          47623,
+          23733,
+          47712,
+          24032,
+          23710,
+          23595,
+          47691,
+          47280,
+          23722,
+          47942,
+          23422,
+          24028,
+          47410,
+          23764,
+          47491
+        ],
+        "completed_display_intervals": 46,
+        "script_updates_during_drag": 0,
+        "stable_heap_increment": {
+          "sram": 1192,
+          "psram": 2937592
+        },
+        "startup_window_peak_heap_increment": {
+          "sram": 5256,
+          "psram": 3794476
+        },
+        "drag_window_extra_peak": {
+          "sram": 52,
+          "psram": 12260
+        },
+        "script": []
+      },
+      "dynamic": {
+        "passed": true,
+        "display_interval_fps": 30.555810187307117,
+        "present_intervals_us": [
+          23672,
+          23699,
+          47597,
+          24203,
+          47264,
+          23949,
+          47491,
+          23919,
+          23737,
+          47756,
+          23611,
+          47760,
+          23613,
+          23770,
+          47740,
+          23810,
+          23695,
+          47712,
+          23625,
+          24106,
+          47364,
+          24150,
+          23501,
+          47637,
+          23816,
+          23993,
+          47390,
+          23793,
+          47564,
+          23934,
+          23627,
+          47731,
+          47472,
+          23867,
+          23858,
+          47583,
+          24060,
+          23651,
+          47676,
+          23683,
+          23701,
+          47592,
+          23930,
+          23686,
+          47479,
+          24057,
+          23720,
+          47652
+        ],
+        "completed_display_intervals": 48,
+        "script_updates_during_drag": 0,
+        "stable_heap_increment": {
+          "sram": 1192,
+          "psram": 3207560
+        },
+        "startup_window_peak_heap_increment": {
+          "sram": 5328,
+          "psram": 3794408
+        },
+        "drag_window_extra_peak": {
+          "sram": 88,
+          "psram": 8836
+        },
+        "script": [
+          "BROWSER JS OPEN active=1",
+          "BROWSER JS INITIALIZED total_us=192231 max_step_us=78294",
+          "BROWSER JS STAGE COMPILE",
+          "BROWSER JS STAGE EXECUTE",
+          "BROWSER JS STAGE EXECUTED",
+          "BROWSER JS READY heap=208468 peak=211468 errors=0 turns=25 max_us=44360",
+          "BROWSER JS UPDATE revision=1 text=3069 links=0 fields=0 markup_us=24884 markup_turns=24",
+          "BROWSER JS UPDATE revision=2 text=3065 links=0 fields=0 markup_us=24884 markup_turns=48",
+          "BROWSER JS UPDATE revision=3 text=3065 links=0 fields=0 markup_us=67180 markup_turns=72",
+          "BROWSER JS UPDATE revision=4 text=3065 links=0 fields=0 markup_us=67180 markup_turns=96",
+          "BROWSER JS UPDATE revision=5 text=3066 links=0 fields=0 markup_us=67180 markup_turns=120",
+          "BROWSER JS UPDATE revision=6 text=3066 links=0 fields=0 markup_us=67180 markup_turns=144",
+          "BROWSER JS UPDATE revision=7 text=3066 links=0 fields=0 markup_us=67180 markup_turns=168",
+          "BROWSER JS UPDATE revision=8 text=3066 links=0 fields=0 markup_us=67180 markup_turns=192",
+          "BROWSER JS UPDATE revision=9 text=3066 links=0 fields=0 markup_us=67180 markup_turns=216",
+          "BROWSER JS UPDATE revision=10 text=3066 links=0 fields=0 markup_us=67180 markup_turns=240",
+          "BROWSER JS UPDATE revision=11 text=3066 links=0 fields=0 markup_us=67180 markup_turns=264"
+        ]
+      }
+    },
+    "mixed_final": {
+      "static": {
+        "passed": true,
+        "display_interval_fps": 28.98482971412543,
+        "present_intervals_us": [
+          23448,
+          47951,
+          47356,
+          23713,
+          23751,
+          47441,
+          23879,
+          47489,
+          23851,
+          47636,
+          23582,
+          23853,
+          47463,
+          24082,
+          47295,
+          23839,
+          47544,
+          23645,
+          47774,
+          23511,
+          23828,
+          47555,
+          23886,
+          47488,
+          23791,
+          47608,
+          47246,
+          23854,
+          47533,
+          23729,
+          23981,
+          47288,
+          24036,
+          47502,
+          23934,
+          23639,
+          47312,
+          24190,
+          47158,
+          24031,
+          47300,
+          24022,
+          49832,
+          21299,
+          47607,
+          23777,
+          23942,
+          47263,
+          24409,
+          46934,
+          23843,
+          47510,
+          23839,
+          47523,
+          47389,
+          24010,
+          23630,
+          47836,
+          23488,
+          47576,
+          23841,
+          23488
+        ],
+        "completed_display_intervals": 62,
+        "script_updates_during_drag": 0,
+        "stable_heap_increment": {
+          "sram": 1192,
+          "psram": 1239732
+        },
+        "startup_window_peak_heap_increment": {
+          "sram": 5328,
+          "psram": 2033360
+        },
+        "drag_window_extra_peak": {
+          "sram": 124,
+          "psram": 13140
+        },
+        "script": [],
+        "stopped_heap_increment": {
+          "sram": 0,
+          "psram": 392
+        }
+      },
+      "dynamic": {
+        "passed": true,
+        "display_interval_fps": 30.307303689079227,
+        "present_intervals_us": [
+          23645,
+          48076,
+          47121,
+          23605,
+          23915,
+          47571,
+          23813,
+          23660,
+          47774,
+          23600,
+          47735,
+          23574,
+          23767,
+          47731,
+          23532,
+          24025,
+          47495,
+          23826,
+          23701,
+          47413,
+          23952,
+          23739,
+          47694,
+          47365,
+          24336,
+          23245,
+          47444,
+          23918,
+          24124,
+          47188,
+          24107,
+          47329,
+          23589,
+          23833,
+          47600,
+          23587,
+          23899,
+          47501,
+          23824,
+          23893,
+          47394,
+          23897,
+          47605,
+          23654,
+          23776,
+          47766,
+          24118,
+          23234,
+          47582
+        ],
+        "completed_display_intervals": 49,
+        "script_updates_during_drag": 0,
+        "stable_heap_increment": {
+          "sram": 1896,
+          "psram": 3734940
+        },
+        "startup_window_peak_heap_increment": {
+          "sram": 6032,
+          "psram": 4072616
+        },
+        "drag_window_extra_peak": {
+          "sram": 124,
+          "psram": 9300
+        },
+        "script": [
+          "BROWSER JS OPEN active=1",
+          "BROWSER JS STAGE INIT_BEGIN 0",
+          "BROWSER JS STAGE INIT_END 0 us=89830",
+          "BROWSER JS STAGE INIT_BEGIN 1",
+          "BROWSER JS STAGE INIT_END 1 us=113415",
+          "BROWSER JS STAGE INIT_BEGIN 2",
+          "BROWSER JS STAGE INIT_END 2 us=22988",
+          "BROWSER JS STAGE INIT_BEGIN 3",
+          "BROWSER JS STAGE INIT_END 3 us=63840",
+          "BROWSER JS STAGE INIT_BEGIN 4",
+          "BROWSER JS STAGE INIT_END 4 us=227995",
+          "BROWSER JS STAGE INIT_BEGIN 5",
+          "BROWSER JS STAGE INIT_END 5 us=251050",
+          "BROWSER JS INITIALIZED total_us=769118 max_step_us=251050",
+          "BROWSER JS STAGE COMPILE",
+          "BROWSER JS STAGE EXECUTE",
+          "BROWSER JS STAGE EXECUTED",
+          "BROWSER JS READY heap=207426 peak=211498 errors=0 turns=94 max_us=131908",
+          "BROWSER JS UPDATE revision=1 text=3069 links=0 fields=0 markup_us=64045 markup_turns=94",
+          "BROWSER JS UPDATE revision=2 text=3065 links=0 fields=0 markup_us=64045 markup_turns=188",
+          "BROWSER JS UPDATE revision=3 text=3065 links=0 fields=0 markup_us=64045 markup_turns=282",
+          "BROWSER JS UPDATE revision=4 text=3065 links=0 fields=0 markup_us=64045 markup_turns=376",
+          "BROWSER JS UPDATE revision=5 text=3065 links=0 fields=0 markup_us=64045 markup_turns=470",
+          "BROWSER JS UPDATE revision=6 text=3065 links=0 fields=0 markup_us=64045 markup_turns=564"
+        ],
+        "stopped_heap_increment": {
+          "sram": 36,
+          "psram": 356
+        }
+      },
+      "network": {
+        "passed": true,
+        "display_interval_fps": 4.889616898516001,
+        "present_intervals_us": [
+          47565,
+          24032,
+          47221,
+          880057,
+          23700
+        ],
+        "completed_display_intervals": 5,
+        "script_updates_during_drag": 0,
+        "stable_heap_increment": {
+          "sram": 1896,
+          "psram": 3735328
+        },
+        "startup_window_peak_heap_increment": {
+          "sram": 6032,
+          "psram": 4069816
+        },
+        "drag_window_extra_peak": {
+          "sram": 124,
+          "psram": 9096
+        },
+        "script": [
+          "BROWSER JS OPEN active=1",
+          "BROWSER JS STAGE INIT_BEGIN 0",
+          "BROWSER JS STAGE INIT_END 0 us=89324",
+          "BROWSER JS STAGE INIT_BEGIN 1",
+          "BROWSER JS STAGE INIT_END 1 us=113828",
+          "BROWSER JS STAGE INIT_BEGIN 2",
+          "BROWSER JS STAGE INIT_END 2 us=23394",
+          "BROWSER JS STAGE INIT_BEGIN 3",
+          "BROWSER JS STAGE INIT_END 3 us=64724",
+          "BROWSER JS STAGE INIT_BEGIN 4",
+          "BROWSER JS STAGE INIT_END 4 us=228529",
+          "BROWSER JS STAGE INIT_BEGIN 5",
+          "BROWSER JS STAGE INIT_END 5 us=249586",
+          "BROWSER JS INITIALIZED total_us=769385 max_step_us=249586",
+          "BROWSER JS STAGE COMPILE",
+          "BROWSER JS STAGE EXECUTE",
+          "BROWSER JS STAGE EXECUTED",
+          "BROWSER JS STAGE COMPILE",
+          "BROWSER JS STAGE EXECUTE",
+          "BROWSER JS STAGE EXECUTED",
+          "BROWSER JS READY heap=179098 peak=186514 errors=0 turns=17 max_us=135812",
+          "BROWSER JS UPDATE revision=1 text=78 links=1 fields=1 markup_us=36045 markup_turns=22",
+          "BROWSER JS UPDATE revision=2 text=84 links=1 fields=1 markup_us=38632 markup_turns=82",
+          "BROWSER JS UPDATE revision=3 text=81 links=1 fields=1 markup_us=38632 markup_turns=97"
+        ],
+        "stopped_heap_increment": {
+          "sram": 0,
+          "psram": 804
+        }
+      },
+      "timeout": {
+        "passed": true,
+        "display_interval_fps": null,
+        "present_intervals_us": [],
+        "completed_display_intervals": 0,
+        "script_updates_during_drag": 0,
+        "stable_heap_increment": {
+          "sram": 1896,
+          "psram": 3733916
+        },
+        "startup_window_peak_heap_increment": {
+          "sram": 5996,
+          "psram": 4069892
+        },
+        "drag_window_extra_peak": {
+          "sram": 128,
+          "psram": 4052
+        },
+        "script": [
+          "BROWSER JS OPEN active=1",
+          "BROWSER JS STAGE INIT_BEGIN 0",
+          "BROWSER JS STAGE INIT_END 0 us=86591",
+          "BROWSER JS STAGE INIT_BEGIN 1",
+          "BROWSER JS STAGE INIT_END 1 us=110250",
+          "BROWSER JS STAGE INIT_BEGIN 2",
+          "BROWSER JS STAGE INIT_END 2 us=21677",
+          "BROWSER JS STAGE INIT_BEGIN 3",
+          "BROWSER JS STAGE INIT_END 3 us=65093",
+          "BROWSER JS STAGE INIT_BEGIN 4",
+          "BROWSER JS STAGE INIT_END 4 us=224944",
+          "BROWSER JS STAGE INIT_BEGIN 5",
+          "BROWSER JS STAGE INIT_END 5 us=248657",
+          "BROWSER JS INITIALIZED total_us=757212 max_step_us=248657",
+          "BROWSER JS STAGE COMPILE",
+          "BROWSER JS STAGE EXECUTE",
+          "BROWSER JS STAGE EXECUTED",
+          "BROWSER JS ERROR 脚本执行超时"
+        ],
+        "stopped_heap_increment": {
+          "sram": -36,
+          "psram": 440
+        }
+      },
+      "oom": {
+        "passed": true,
+        "display_interval_fps": null,
+        "present_intervals_us": [],
+        "completed_display_intervals": 0,
+        "script_updates_during_drag": 0,
+        "stable_heap_increment": {
+          "sram": 1896,
+          "psram": 4551340
+        },
+        "startup_window_peak_heap_increment": {
+          "sram": 6032,
+          "psram": 5485824
+        },
+        "drag_window_extra_peak": {
+          "sram": 88,
+          "psram": 5700
+        },
+        "script": [
+          "BROWSER JS OPEN active=1",
+          "BROWSER JS STAGE INIT_BEGIN 0",
+          "BROWSER JS STAGE INIT_END 0 us=87790",
+          "BROWSER JS STAGE INIT_BEGIN 1",
+          "BROWSER JS STAGE INIT_END 1 us=110766",
+          "BROWSER JS STAGE INIT_BEGIN 2",
+          "BROWSER JS STAGE INIT_END 2 us=22146",
+          "BROWSER JS STAGE INIT_BEGIN 3",
+          "BROWSER JS STAGE INIT_END 3 us=63638",
+          "BROWSER JS STAGE INIT_BEGIN 4",
+          "BROWSER JS STAGE INIT_END 4 us=228058",
+          "BROWSER JS STAGE INIT_BEGIN 5",
+          "BROWSER JS STAGE INIT_END 5 us=246726",
+          "BROWSER JS INITIALIZED total_us=759124 max_step_us=246726",
+          "BROWSER JS STAGE COMPILE",
+          "BROWSER JS STAGE EXECUTE",
+          "BROWSER JS STAGE EXECUTED",
+          "BROWSER JS ERROR 脚本内存达到上限"
+        ],
+        "stopped_heap_increment": {
+          "sram": 36,
+          "psram": 420
+        }
+      },
+      "stack": {
+        "passed": true,
+        "display_interval_fps": null,
+        "present_intervals_us": [],
+        "completed_display_intervals": 0,
+        "script_updates_during_drag": 0,
+        "stable_heap_increment": {
+          "sram": 1860,
+          "psram": 3733696
+        },
+        "startup_window_peak_heap_increment": {
+          "sram": 5996,
+          "psram": 4069572
+        },
+        "drag_window_extra_peak": {
+          "sram": 124,
+          "psram": 5700
+        },
+        "script": [
+          "BROWSER JS OPEN active=1",
+          "BROWSER JS STAGE INIT_BEGIN 0",
+          "BROWSER JS STAGE INIT_END 0 us=89299",
+          "BROWSER JS STAGE INIT_BEGIN 1",
+          "BROWSER JS STAGE INIT_END 1 us=113219",
+          "BROWSER JS STAGE INIT_BEGIN 2",
+          "BROWSER JS STAGE INIT_END 2 us=23739",
+          "BROWSER JS STAGE INIT_BEGIN 3",
+          "BROWSER JS STAGE INIT_END 3 us=63174",
+          "BROWSER JS STAGE INIT_BEGIN 4",
+          "BROWSER JS STAGE INIT_END 4 us=232292",
+          "BROWSER JS STAGE INIT_BEGIN 5",
+          "BROWSER JS STAGE INIT_END 5 us=244223",
+          "BROWSER JS INITIALIZED total_us=765946 max_step_us=244223",
+          "BROWSER JS STAGE COMPILE",
+          "BROWSER JS STAGE EXECUTE",
+          "BROWSER JS STAGE EXECUTED",
+          "BROWSER JS ERROR 部分网页脚本不受支持",
+          "BROWSER JS STAGE COMPILE",
+          "BROWSER JS STAGE EXECUTE",
+          "BROWSER JS STAGE EXECUTED",
+          "BROWSER JS READY heap=174490 peak=179603 errors=1 turns=3 max_us=118443",
+          "BROWSER JS UPDATE revision=1 text=22 links=0 fields=0 markup_us=26180 markup_turns=2"
+        ],
+        "stopped_heap_increment": {
+          "sram": -36,
+          "psram": 384
+        }
+      },
+      "parser": {
+        "passed": true,
+        "display_interval_fps": null,
+        "present_intervals_us": [],
+        "completed_display_intervals": 0,
+        "script_updates_during_drag": 0,
+        "stable_heap_increment": {
+          "sram": 1896,
+          "psram": 3734292
+        },
+        "startup_window_peak_heap_increment": {
+          "sram": 5996,
+          "psram": 4073744
+        },
+        "drag_window_extra_peak": {
+          "sram": 0,
+          "psram": 3968
+        },
+        "script": [
+          "BROWSER JS OPEN active=1",
+          "BROWSER JS STAGE INIT_BEGIN 0",
+          "BROWSER JS STAGE INIT_END 0 us=88525",
+          "BROWSER JS STAGE INIT_BEGIN 1",
+          "BROWSER JS STAGE INIT_END 1 us=109942",
+          "BROWSER JS STAGE INIT_BEGIN 2",
+          "BROWSER JS STAGE INIT_END 2 us=22262",
+          "BROWSER JS STAGE INIT_BEGIN 3",
+          "BROWSER JS STAGE INIT_END 3 us=64533",
+          "BROWSER JS STAGE INIT_BEGIN 4",
+          "BROWSER JS STAGE INIT_END 4 us=224733",
+          "BROWSER JS STAGE INIT_BEGIN 5",
+          "BROWSER JS STAGE INIT_END 5 us=249062",
+          "BROWSER JS INITIALIZED total_us=759057 max_step_us=249062",
+          "BROWSER JS STAGE COMPILE",
+          "BROWSER JS ERROR 部分网页脚本不受支持",
+          "BROWSER JS STAGE COMPILE",
+          "BROWSER JS STAGE EXECUTE",
+          "BROWSER JS STAGE EXECUTED",
+          "BROWSER JS READY heap=174490 peak=182442 errors=1 turns=3 max_us=62828",
+          "BROWSER JS UPDATE revision=1 text=28 links=0 fields=0 markup_us=26127 markup_turns=2"
+        ],
+        "stopped_heap_increment": {
+          "sram": -36,
+          "psram": -24
+        }
+      }
+    }
+  },
+  "packages": {
+    "before-bench": {
+      "packed_bytes": 2263822,
+      "packed_sha256": "6f16228b4aff0883169d38e337a5291a4a301ddf0f8c3129846c2f2bfad28364",
+      "installed_file_bytes": 3093910,
+      "payload_bytes": 3091860,
+      "files": {
+        "manifest.pxm": {
+          "bytes": 1942,
+          "sha256": "f75bd26a5e854e7c755fcf69760101b6e483e69c6e1d6e24920f3c26a81a5d6d"
+        },
+        "signature.pxs": {
+          "bytes": 108,
+          "sha256": "29e79c5413293b1fb9aa8487764a8c9c69961403bd171aa355845b06fe80d423"
+        },
+        "artifacts/main.esp32-s3.aot": {
+          "bytes": 2952644,
+          "sha256": "9bcc2ed8551dc1d614a3fa1fee451f39b2690f24d55d325c422d65d9755cfc50"
+        },
+        "assets/icon.svg": {
+          "bytes": 409,
+          "sha256": "646b5915b02c785182479e6356c9455c8074af5b42738e3b18f7cfe0b7e3c4ad"
+        },
+        "assets/icon.png": {
+          "bytes": 5350,
+          "sha256": "9906d4af7855020c5e9ba2dfa037e0d50972f0c9f19d5f896bfc309decc1aad2"
+        },
+        "assets/gb18030.bin": {
+          "bytes": 49536,
+          "sha256": "4168af99aff74e8b92b788cd7db7a446c6a4417256d56f68669a8b3368291e8f"
+        },
+        "assets/encoding-license.txt": {
+          "bytes": 16529,
+          "sha256": "7f1d31b39b985b8dbca9e43ee7092141dc7d10833a608160c83eab6c9a7bc814"
+        },
+        "assets/browser-runtime.qjb": {
+          "bytes": 15953,
+          "sha256": "fe563761c06d2a9cf076ff25682383b2ba2f004a2bd3ad25dc0954709bf9d7ed"
+        },
+        "assets/quickjs-license.txt": {
+          "bytes": 1130,
+          "sha256": "598fd7fc928e4350abce36e337ba5a1346923c5c692f5be92c3d8e29ddd7c18d"
+        },
+        "assets/weread-login.qjb": {
+          "bytes": 3483,
+          "sha256": "ad9a3e95e9597c6af0da4544e224cfd10a84e54c479e13444707410f0be1e4e3"
+        },
+        "assets/weread-pages.qjb": {
+          "bytes": 4402,
+          "sha256": "e61df37dd6cd570dfcff1c867a8a19f169a1399593f20f70a8def7c67e1a9d0d"
+        },
+        "assets/weread-cjk.bin": {
+          "bytes": 41984,
+          "sha256": "c9dfa7a903fc6b5ec95f17785d1e957a1dd800e676584e001beab481f27652ec"
+        },
+        "assets/resources.pxi": {
+          "bytes": 440,
+          "sha256": "6b7acf57ccd7315b7a958044d70963dd43f3af531c317fcccae7b0e7fab86a19"
+        }
+      }
+    },
+    "final-bench": {
+      "packed_bytes": 1479459,
+      "packed_sha256": "f700c42e8a3f148933f5189dc05d3efee309cbec06dd0718e94ed4a093db1019",
+      "installed_file_bytes": 1991792,
+      "payload_bytes": 1989323,
+      "files": {
+        "manifest.pxm": {
+          "bytes": 2361,
+          "sha256": "596075fa2e5776b05f717be52421f9015cda575df56ddba19b7a4ae7b416ff38"
+        },
+        "signature.pxs": {
+          "bytes": 108,
+          "sha256": "4fcb67de8a266c6b91ae443f0072cc5467c69a80bd37d9399d0132b8a4779c78"
+        },
+        "artifacts/script.wasm": {
+          "bytes": 579301,
+          "sha256": "a560047c3286131a4d51f48caa7c4189b53b63103b60ccd3809f911d6e39ec10"
+        },
+        "artifacts/main.esp32-s3.aot": {
+          "bytes": 1270576,
+          "sha256": "2876f25ae48ede25baeebcb020d032503c7237c0b13ded55102c3306edb595e7"
+        },
+        "assets/icon.svg": {
+          "bytes": 409,
+          "sha256": "646b5915b02c785182479e6356c9455c8074af5b42738e3b18f7cfe0b7e3c4ad"
+        },
+        "assets/icon.png": {
+          "bytes": 5350,
+          "sha256": "9906d4af7855020c5e9ba2dfa037e0d50972f0c9f19d5f896bfc309decc1aad2"
+        },
+        "assets/gb18030.bin": {
+          "bytes": 49536,
+          "sha256": "4168af99aff74e8b92b788cd7db7a446c6a4417256d56f68669a8b3368291e8f"
+        },
+        "assets/encoding-license.txt": {
+          "bytes": 16529,
+          "sha256": "7f1d31b39b985b8dbca9e43ee7092141dc7d10833a608160c83eab6c9a7bc814"
+        },
+        "assets/browser-runtime.qjb": {
+          "bytes": 16183,
+          "sha256": "3699f5b22174fe008bd231f597abc2963503858152d0f1d22d72411ef0172c12"
+        },
+        "assets/quickjs-license.txt": {
+          "bytes": 1130,
+          "sha256": "598fd7fc928e4350abce36e337ba5a1346923c5c692f5be92c3d8e29ddd7c18d"
+        },
+        "assets/weread-login.qjb": {
+          "bytes": 3483,
+          "sha256": "ad9a3e95e9597c6af0da4544e224cfd10a84e54c479e13444707410f0be1e4e3"
+        },
+        "assets/weread-pages.qjb": {
+          "bytes": 4402,
+          "sha256": "e61df37dd6cd570dfcff1c867a8a19f169a1399593f20f70a8def7c67e1a9d0d"
+        },
+        "assets/weread-cjk.bin": {
+          "bytes": 41984,
+          "sha256": "c9dfa7a903fc6b5ec95f17785d1e957a1dd800e676584e001beab481f27652ec"
+        },
+        "assets/resources.pxi": {
+          "bytes": 440,
+          "sha256": "b3e0b29ae399c961d4284aabba46a77f4271ff0fce71318bdc7aa320921ba2be"
+        }
+      }
+    },
+    "final-product": {
+      "packed_bytes": 1446929,
+      "packed_sha256": "a3595d08950e3cc0a54d1b1567ea225dc83d9ff2029db7c68f41f9d35cec8ff6",
+      "installed_file_bytes": 1941913,
+      "payload_bytes": 1939444,
+      "files": {
+        "manifest.pxm": {
+          "bytes": 2361,
+          "sha256": "197ee07af00f82969889bd5175f852157631a9f38281d6db56748b8ac911804a"
+        },
+        "signature.pxs": {
+          "bytes": 108,
+          "sha256": "599f4b1fd7551aec36352eb4e1a665155df49a4deebecf67577f85ec3ea1cfe0"
+        },
+        "artifacts/script.wasm": {
+          "bytes": 579070,
+          "sha256": "8153fb9e7acf9f5e8f50a442c04b0bb6fefb65bbfcc442d77255f4ea67f34217"
+        },
+        "artifacts/main.esp32-s3.aot": {
+          "bytes": 1220928,
+          "sha256": "daf93173a9a589f66129f6ad40f46bad3f7e26998247086faab8cbaa2cb57a7d"
+        },
+        "assets/icon.svg": {
+          "bytes": 409,
+          "sha256": "646b5915b02c785182479e6356c9455c8074af5b42738e3b18f7cfe0b7e3c4ad"
+        },
+        "assets/icon.png": {
+          "bytes": 5350,
+          "sha256": "9906d4af7855020c5e9ba2dfa037e0d50972f0c9f19d5f896bfc309decc1aad2"
+        },
+        "assets/gb18030.bin": {
+          "bytes": 49536,
+          "sha256": "4168af99aff74e8b92b788cd7db7a446c6a4417256d56f68669a8b3368291e8f"
+        },
+        "assets/encoding-license.txt": {
+          "bytes": 16529,
+          "sha256": "7f1d31b39b985b8dbca9e43ee7092141dc7d10833a608160c83eab6c9a7bc814"
+        },
+        "assets/browser-runtime.qjb": {
+          "bytes": 16183,
+          "sha256": "3699f5b22174fe008bd231f597abc2963503858152d0f1d22d72411ef0172c12"
+        },
+        "assets/quickjs-license.txt": {
+          "bytes": 1130,
+          "sha256": "598fd7fc928e4350abce36e337ba5a1346923c5c692f5be92c3d8e29ddd7c18d"
+        },
+        "assets/weread-login.qjb": {
+          "bytes": 3483,
+          "sha256": "ad9a3e95e9597c6af0da4544e224cfd10a84e54c479e13444707410f0be1e4e3"
+        },
+        "assets/weread-pages.qjb": {
+          "bytes": 4402,
+          "sha256": "e61df37dd6cd570dfcff1c867a8a19f169a1399593f20f70a8def7c67e1a9d0d"
+        },
+        "assets/weread-cjk.bin": {
+          "bytes": 41984,
+          "sha256": "c9dfa7a903fc6b5ec95f17785d1e957a1dd800e676584e001beab481f27652ec"
+        },
+        "assets/resources.pxi": {
+          "bytes": 440,
+          "sha256": "b3e0b29ae399c961d4284aabba46a77f4271ff0fce71318bdc7aa320921ba2be"
+        }
+      }
+    },
+    "final-product-s31": {
+      "packed_bytes": 1419940,
+      "packed_sha256": "6245042bbdd5ecbea60ab36b92228fb74dc50015a801770e593732dd575f51f4",
+      "installed_file_bytes": 1917708,
+      "payload_bytes": 1915236,
+      "files": {
+        "manifest.pxm": {
+          "bytes": 2364,
+          "sha256": "48597ee9c2d0550870f9cbe21a5594144f0f2891ed4934e346e512d87c14c4f2"
+        },
+        "signature.pxs": {
+          "bytes": 108,
+          "sha256": "5ef54579214ef5ed0a32edf3428634f54acc8cc57148469f43b714bf6247f917"
+        },
+        "artifacts/script.wasm": {
+          "bytes": 579070,
+          "sha256": "8153fb9e7acf9f5e8f50a442c04b0bb6fefb65bbfcc442d77255f4ea67f34217"
+        },
+        "artifacts/main.esp32-s31.aot": {
+          "bytes": 1196720,
+          "sha256": "98631c007d084cf3ec618bdb4fce78cbaccd1b9b42483604242b0bced8e24463"
+        },
+        "assets/icon.svg": {
+          "bytes": 409,
+          "sha256": "646b5915b02c785182479e6356c9455c8074af5b42738e3b18f7cfe0b7e3c4ad"
+        },
+        "assets/icon.png": {
+          "bytes": 5350,
+          "sha256": "9906d4af7855020c5e9ba2dfa037e0d50972f0c9f19d5f896bfc309decc1aad2"
+        },
+        "assets/gb18030.bin": {
+          "bytes": 49536,
+          "sha256": "4168af99aff74e8b92b788cd7db7a446c6a4417256d56f68669a8b3368291e8f"
+        },
+        "assets/encoding-license.txt": {
+          "bytes": 16529,
+          "sha256": "7f1d31b39b985b8dbca9e43ee7092141dc7d10833a608160c83eab6c9a7bc814"
+        },
+        "assets/browser-runtime.qjb": {
+          "bytes": 16183,
+          "sha256": "3699f5b22174fe008bd231f597abc2963503858152d0f1d22d72411ef0172c12"
+        },
+        "assets/quickjs-license.txt": {
+          "bytes": 1130,
+          "sha256": "598fd7fc928e4350abce36e337ba5a1346923c5c692f5be92c3d8e29ddd7c18d"
+        },
+        "assets/weread-login.qjb": {
+          "bytes": 3483,
+          "sha256": "ad9a3e95e9597c6af0da4544e224cfd10a84e54c479e13444707410f0be1e4e3"
+        },
+        "assets/weread-pages.qjb": {
+          "bytes": 4402,
+          "sha256": "e61df37dd6cd570dfcff1c867a8a19f169a1399593f20f70a8def7c67e1a9d0d"
+        },
+        "assets/weread-cjk.bin": {
+          "bytes": 41984,
+          "sha256": "c9dfa7a903fc6b5ec95f17785d1e957a1dd800e676584e001beab481f27652ec"
+        },
+        "assets/resources.pxi": {
+          "bytes": 440,
+          "sha256": "b3e0b29ae399c961d4284aabba46a77f4271ff0fce71318bdc7aa320921ba2be"
+        }
+      }
+    }
+  },
+  "simulator_parser_cases": [
+    {
+      "case": "unary",
+      "passed": true
+    },
+    {
+      "case": "group",
+      "passed": true
+    },
+    {
+      "case": "array",
+      "passed": true
+    },
+    {
+      "case": "object",
+      "passed": true
+    },
+    {
+      "case": "function",
+      "passed": true
+    },
+    {
+      "case": "block",
+      "passed": true
+    },
+    {
+      "case": "conditional",
+      "passed": true
+    },
+    {
+      "case": "assignment",
+      "passed": true
+    },
+    {
+      "case": "logical",
+      "passed": true
+    },
+    {
+      "case": "power",
+      "passed": true
+    },
+    {
+      "case": "arrow",
+      "passed": true
+    },
+    {
+      "case": "class",
+      "passed": true
+    },
+    {
+      "case": "template",
+      "passed": true
+    },
+    {
+      "case": "json-parse",
+      "passed": true
+    },
+    {
+      "case": "json-stringify",
+      "passed": true
+    },
+    {
+      "case": "destructure",
+      "passed": true
+    },
+    {
+      "case": "supported-data",
+      "passed": true
+    },
+    {
+      "case": "getter-reentry",
+      "passed": true
+    },
+    {
+      "case": "reviver-reentry",
+      "passed": true
+    },
+    {
+      "case": "eval-reentry",
+      "passed": true
+    }
+  ],
+  "fixture_auth": {
+    "fixture_only": true,
+    "passed": [
+      "bounded inline PNG decoded through existing Host; temporary source removed",
+      "synthetic scan result -> weblogin -> HttpOnly cookie -> shelf navigation, with Origin",
+      "navigation cancels pending login and prevents stale authenticated redirect",
+      "expired and malformed QR responses retain error/retry UI without executing data URLs",
+      "4MiB policy permits >1MiB live script allocation; no eager reservation",
+      "memory policy survives a complete package restart"
+    ],
+    "observations": [
+      [
+        "origin",
+        true
+      ],
+      [
+        "poll",
+        true
+      ],
+      [
+        "origin",
+        true
+      ],
+      [
+        "login_body",
+        true
+      ],
+      [
+        "shelf_cookie",
+        true
+      ],
+      [
+        "origin",
+        true
+      ],
+      [
+        "poll",
+        true
+      ],
+      [
+        "origin",
+        true
+      ],
+      [
+        "poll",
+        true
+      ]
+    ]
+  },
+  "real_weread_reading_verified": false,
+  "final_restore": {
+    "normal_home_verified": true,
+    "home_verification": "Original screenshot visually inspected; release excludes test URL/TRACE/PROFILE; all installed files match SHA256. OCR not used as the final criterion.",
+    "app_left_running": true,
+    "firmware_changed": false,
+    "device_settings_changed": false,
+    "installed_files_sha256_match": 14
+  },
+  "verification": {
+    "native_asan_ubsan": true,
+    "native_wasi_model": true,
+    "wire_client_asan_ubsan": true,
+    "upstream_native": [
+      "test_language",
+      "test_closure",
+      "test_loop"
+    ],
+    "fixed_seed_bytecode_cases": 164,
+    "fixed_seed": 20261016,
+    "bytecode_identical": true,
+    "actual_mixed_simulator_full_script_smoke": true,
+    "inline_cache_change_remove_and_stopped_invalid_ancestor": true,
+    "session_fixture_checks": 6,
+    "auth_fixture_round_screen": {
+      "width": 480,
+      "height": 480,
+      "dpi": 240,
+      "checks": 6
+    },
+    "device_cases_passed": 7
+  },
+  "native64_loader_probe": {
+    "final-bench": {
+      "file": 579301,
+      "module": 1790015,
+      "peak": 1791719
+    },
+    "final-product": {
+      "file": 579070,
+      "module": 1789154,
+      "peak": 1790858
+    },
+    "note": "Native 64-bit WAMR module allocation only, excluding the separately allocated input Wasm buffer and instances; not ESP32 physical memory."
+  },
+  "s31_hardware_verified": false,
+  "s3_s31_worker_byte_identical": true
+}

@@ -1,0 +1,56 @@
+{
+  "checked_at": "2026-10-15T17:55:53.816208+00:00",
+  "user_agent": "Mozilla/5.0 (X11; U; Linux armv7l like Android; en-us) AppleWebKit/531.2+ (KHTML, like Gecko) Version/5.0 Safari/533.2+ Kindle/3.0+",
+  "authenticated": false,
+  "requests": [
+    {
+      "url": "https://weread.qq.com/wrwebsimplenjlogic/shelf",
+      "status": 200,
+      "final_url": "https://weread.qq.com/wrwebsimplenjlogic/login",
+      "redirects": [
+        {
+          "from": "https://weread.qq.com/wrwebsimplenjlogic/shelf",
+          "status": 302,
+          "to": "https://weread.qq.com/wrwebsimplenjlogic/login"
+        }
+      ],
+      "bytes": 31982,
+      "sha256": "084543f9a27687af7b1c9aad0c4b5ffa5c80c8f1ad952a8171d37cb55a0ac100",
+      "login_marker": true,
+      "shelf_marker": false,
+      "scripts": [
+        "https://cdn.weread.qq.com/web/wrwebsimplenjlogic/static/es5-shim.min.js",
+        "https://cdn.weread.qq.com/web/wrwebsimplenjlogic/client/global.35483d.js",
+        "https://cdn.weread.qq.com/web/wrwebsimplenjlogic/client/cookie.0e551c.js",
+        "https://cdn.weread.qq.com/web/wrwebsimplenjlogic/client/login.dc74cd.js"
+      ]
+    },
+    {
+      "url": "https://ink.qq.com/",
+      "status": 200,
+      "final_url": "https://weread.qq.com/wrwebsimplenjlogic/login",
+      "redirects": [
+        {
+          "from": "https://ink.qq.com/",
+          "status": 302,
+          "to": "https://weread.qq.com/wrwebsimplenjlogic/shelf"
+        },
+        {
+          "from": "https://weread.qq.com/wrwebsimplenjlogic/shelf",
+          "status": 302,
+          "to": "https://weread.qq.com/wrwebsimplenjlogic/login"
+        }
+      ],
+      "bytes": 31982,
+      "sha256": "084543f9a27687af7b1c9aad0c4b5ffa5c80c8f1ad952a8171d37cb55a0ac100",
+      "login_marker": true,
+      "shelf_marker": false,
+      "scripts": [
+        "https://cdn.weread.qq.com/web/wrwebsimplenjlogic/static/es5-shim.min.js",
+        "https://cdn.weread.qq.com/web/wrwebsimplenjlogic/client/global.35483d.js",
+        "https://cdn.weread.qq.com/web/wrwebsimplenjlogic/client/cookie.0e551c.js",
+        "https://cdn.weread.qq.com/web/wrwebsimplenjlogic/client/login.dc74cd.js"
+      ]
+    }
+  ]
+}

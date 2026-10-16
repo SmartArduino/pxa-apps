@@ -6,13 +6,64 @@
 #include "../browser_cookies.hpp"
 #include "../browser_site_forms.hpp"
 #include "../browser_sites.hpp"
+#include "../browser_memory.hpp"
+#include <pxa/ui_resource_pressure.hpp>
 #include <cassert>
 #include <iostream>
 #include <random>
 using namespace browser;
 int main() {
     {
-        assert(sites.size() == 7);
+        using enum ReferrerPolicy;
+        const auto page = "https://EXAMPLE.test:443/chapter?key=x#private";
+        assert(referrer_policy("origin, unknown, NO-REFERRER") == no_referrer);
+        assert(!referrer_policy("unknown"));
+        assert(request_referrer(page,"https://cdn.test/a") == "https://example.test/");
+        assert(request_referrer(page,"https://example.test/b") ==
+               "https://example.test:443/chapter?key=x");
+        assert(request_referrer(page,"https://cdn.test/a",no_referrer_when_downgrade) ==
+               "https://example.test:443/chapter?key=x");
+        for (auto policy : {no_referrer_when_downgrade,strict_origin,strict_origin_when_cross_origin})
+            assert(request_referrer(page,"http://cdn.test/a",policy).empty());
+        assert(request_referrer(page,"https://cdn.test/a",same_origin).empty());
+        assert(request_referrer(page,"https://example.test/a",origin) == "https://example.test/");
+        assert(request_referrer(page,"http://cdn.test/a",unsafe_url) ==
+               "https://example.test:443/chapter?key=x");
+        assert(request_referrer("https://user:pass@example.test/a","https://cdn.test/a").empty());
+        assert(request_referrer("about:home","https://cdn.test/a").empty());
+        Document d;d.clear(page);Parser p(d);
+        p.feed("<head><meta name=referrer content=no-referrer-when-downgrade></head>"
+               "<img src='https://cdn.test/p.jpg' referrerpolicy=no-referrer>"
+               "<img src='https://cdn.test/q.jpg'>");p.finish();
+        assert(d.referrer == no_referrer_when_downgrade && d.images.size() == 2);
+        assert(d.images[0].referrer == no_referrer && !d.images[1].referrer);
+        d.clear(page);assert(d.referrer == strict_origin_when_cross_origin);
+    }
+    {
+        assert(memory::budget(0)==1024*1024 && memory::budget(5)==4*1024*1024);
+        assert(memory::budget(99)==memory::budget(0));
+        assert(memory::budget(5,1)==256*1024 && memory::budget(3,2)==256*1024);
+        std::array<std::byte,4> bytes{std::byte{1}};
+        pxa::Event event{3,0x8003,0,bytes};
+        assert(pxa::ui::decode_resource_pressure(event)==pxa::ui::ResourcePressure::constrained);
+        bytes[1]=std::byte{1};assert(!pxa::ui::decode_resource_pressure(event));bytes[1]=std::byte{};
+        bytes[0]=std::byte{3};assert(!pxa::ui::decode_resource_pressure(event));
+        event.service=2;assert(!pxa::ui::decode_resource_pressure(event));
+    }
+    {
+        using namespace browser::inline_image;
+        auto p=payload("data:image/png;base64,iVBORw0KGgo=");assert(p);
+        std::array<std::byte,12> output{};assert(decode(*p,output)==8);
+        assert(output[0]==std::byte{0x89} && output[1]==std::byte{'P'});
+        for(auto uri:{"data:image/svg+xml;base64,PHN2Zz4=","data:text/html;base64,AAAA","data:image/png;base64,A===","data:image/png;base64,AB==","data:image/png;base64,AAAA=","data:image/png;base64,AA A","data:image/png;base64,"}) assert(!payload(uri));
+        Document d;d.clear("https://example.test/");Parser parser(d);
+        const std::string large="data:image/png;base64,"+std::string(3000,'A');
+        for(int i=0;i<8;++i)parser.feed("<img src='"+large+"' width=180 height=180>");
+        parser.finish();assert(d.images.size()==2);
+        assert(!resolve(d.base,"data:image/png;base64,AAAA"));
+    }
+    {
+        assert(sites.size() == 8);
         assert(site_user_agent("https://ink.qq.com/", "default").find("Kindle/3.0+") != std::string_view::npos);
         assert(site_user_agent("https://weread.qq.com:443/wrwebsimplenjlogic/login", "default").find("Kindle/3.0+") != std::string_view::npos);
         for (auto url : {"https://weread.qq.com.evil.test/", "https://evil.test/?weread.qq.com", "about:home"})

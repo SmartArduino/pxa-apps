@@ -1,0 +1,157 @@
+{
+  "production_host_modified": false,
+  "unsafe_packages_not_installed_on_device": true,
+  "scope": "isolated simulator; no account scan; page errors can omit caught runtime errors",
+  "cases": [
+    {
+      "case": "control-64k",
+      "operand_stack_per_component": 65536,
+      "experimental_only": true,
+      "physical_device_accessed": false,
+      "guest_trap": false,
+      "forced_shutdown": false,
+      "stack_configuration_confirmed": true,
+      "guest_guard_limits": [
+        88,
+        24,
+        8
+      ],
+      "ready_metrics": {
+        "heap": 212797,
+        "peak": 222815,
+        "errors": 3,
+        "turns": 56,
+        "max_us": 7236
+      },
+      "image_outputs": [
+        {
+          "received_bytes": 5426,
+          "width": 256,
+          "height": 54
+        }
+      ],
+      "original_qr_image_observed": false,
+      "login_verified": false
+    },
+    {
+      "case": "experimental-64k",
+      "operand_stack_per_component": 65536,
+      "experimental_only": true,
+      "physical_device_accessed": false,
+      "guest_trap": false,
+      "forced_shutdown": false,
+      "stack_configuration_confirmed": true,
+      "guest_guard_limits": [
+        352,
+        24,
+        8
+      ],
+      "ready_metrics": {
+        "heap": 257327,
+        "peak": 362678,
+        "errors": 0,
+        "turns": 56,
+        "max_us": 198354
+      },
+      "image_outputs": [
+        {
+          "received_bytes": 5426,
+          "width": 256,
+          "height": 54
+        }
+      ],
+      "original_qr_image_observed": false,
+      "login_verified": false
+    },
+    {
+      "case": "experimental-32k",
+      "operand_stack_per_component": 32768,
+      "experimental_only": true,
+      "physical_device_accessed": false,
+      "guest_trap": false,
+      "forced_shutdown": false,
+      "stack_configuration_confirmed": true,
+      "guest_guard_limits": [
+        352,
+        24,
+        8
+      ],
+      "ready_metrics": {
+        "heap": 257327,
+        "peak": 362678,
+        "errors": 0,
+        "turns": 56,
+        "max_us": 193781
+      },
+      "image_outputs": [
+        {
+          "received_bytes": 5426,
+          "width": 256,
+          "height": 54
+        }
+      ],
+      "original_qr_image_observed": false,
+      "login_verified": false
+    },
+    {
+      "case": "wide-32k-retry",
+      "operand_stack_per_component": 32768,
+      "experimental_only": true,
+      "physical_device_accessed": false,
+      "guest_trap": false,
+      "forced_shutdown": false,
+      "stack_configuration_confirmed": true,
+      "guest_guard_limits": [
+        352,
+        48,
+        16
+      ],
+      "ready_metrics": {
+        "heap": 261399,
+        "peak": 362678,
+        "errors": 0,
+        "turns": 56,
+        "max_us": 198579
+      },
+      "image_outputs": [
+        {
+          "received_bytes": 5426,
+          "width": 256,
+          "height": 54
+        },
+        {
+          "received_bytes": 1973,
+          "width": 180,
+          "height": 180
+        }
+      ],
+      "original_qr_image_observed": true,
+      "login_verified": false
+    },
+    {
+      "case": "wide-16k",
+      "operand_stack_per_component": 16384,
+      "experimental_only": true,
+      "physical_device_accessed": false,
+      "guest_trap": true,
+      "forced_shutdown": false,
+      "stack_configuration_confirmed": true,
+      "guest_guard_limits": [
+        352,
+        48,
+        16
+      ],
+      "ready_metrics": null,
+      "image_outputs": [
+        {
+          "received_bytes": 5426,
+          "width": 256,
+          "height": 54
+        }
+      ],
+      "original_qr_image_observed": false,
+      "login_verified": false,
+      "trap": "wasm operand stack overflow"
+    }
+  ]
+}

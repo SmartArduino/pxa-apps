@@ -1,0 +1,119 @@
+{
+  "wasm_sha256": "6886a932987caad2b9a1799d9d67ee4411beb8b7c4a4a0f2adfdc94c35e9be94",
+  "wasm_bytes": 961545,
+  "scope": "isolated WASI probe; not browser integration, native-stack, FPS or device validation",
+  "promise_scope": "constructor/then presence only; not microtask ordering",
+  "all_passed": false,
+  "results": [
+    {
+      "case": "arithmetic",
+      "passed": true,
+      "expected": "normal",
+      "exit": 0,
+      "fresh_realm_passed": true,
+      "fatal_recovered": false,
+      "stdout": "exception=0\nheap_used=130808 heap_peak=138960\nexception=0\nheap_used=130808 heap_peak=138960\n",
+      "stderr": ""
+    },
+    {
+      "case": "modern",
+      "passed": true,
+      "expected": "normal",
+      "exit": 0,
+      "fresh_realm_passed": true,
+      "fatal_recovered": false,
+      "stdout": "exception=0\nheap_used=134900 heap_peak=138960\nexception=0\nheap_used=130808 heap_peak=138960\n",
+      "stderr": ""
+    },
+    {
+      "case": "descriptors",
+      "passed": true,
+      "expected": "normal",
+      "exit": 0,
+      "fresh_realm_passed": true,
+      "fatal_recovered": false,
+      "stdout": "exception=0\nheap_used=134900 heap_peak=143020\nexception=0\nheap_used=130808 heap_peak=138960\n",
+      "stderr": ""
+    },
+    {
+      "case": "unicode_json",
+      "passed": true,
+      "expected": "normal",
+      "exit": 0,
+      "fresh_realm_passed": true,
+      "fatal_recovered": false,
+      "stdout": "exception=0\nheap_used=130808 heap_peak=138960\nexception=0\nheap_used=130808 heap_peak=138960\n",
+      "stderr": ""
+    },
+    {
+      "case": "regexp",
+      "passed": true,
+      "expected": "normal",
+      "exit": 0,
+      "fresh_realm_passed": true,
+      "fatal_recovered": false,
+      "stdout": "exception=0\nheap_used=130808 heap_peak=143020\nexception=0\nheap_used=130808 heap_peak=138960\n",
+      "stderr": ""
+    },
+    {
+      "case": "promise",
+      "passed": true,
+      "expected": "normal",
+      "exit": 0,
+      "fresh_realm_passed": true,
+      "fatal_recovered": false,
+      "stdout": "exception=0\nheap_used=130808 heap_peak=138960\nexception=0\nheap_used=130808 heap_peak=138960\n",
+      "stderr": ""
+    },
+    {
+      "case": "syntax_error",
+      "passed": true,
+      "expected": "exception",
+      "exit": 0,
+      "fresh_realm_passed": true,
+      "fatal_recovered": false,
+      "stdout": "exception=1\nerror=SyntaxError: variable name expected\nheap_used=130808 heap_peak=138960\nexception=0\nheap_used=130808 heap_peak=138960\n",
+      "stderr": ""
+    },
+    {
+      "case": "infinite_loop",
+      "passed": true,
+      "expected": "exception",
+      "exit": 0,
+      "fresh_realm_passed": true,
+      "fatal_recovered": false,
+      "stdout": "exception=1\nerror=InternalError: interrupted\nheap_used=130808 heap_peak=138960\nexception=0\nheap_used=130808 heap_peak=138960\n",
+      "stderr": ""
+    },
+    {
+      "case": "out_of_memory",
+      "passed": true,
+      "expected": "exception",
+      "exit": 0,
+      "fresh_realm_passed": true,
+      "fatal_recovered": false,
+      "stdout": "exception=1\nerror=InternalError: out of memory\nheap_used=523783 heap_peak=523783\nexception=0\nheap_used=130808 heap_peak=138960\n",
+      "stderr": ""
+    },
+    {
+      "case": "regexp_deadline",
+      "passed": true,
+      "expected": "bounded",
+      "exit": 0,
+      "fresh_realm_passed": true,
+      "fatal_recovered": false,
+      "stdout": "exception=1\nerror=InternalError: interrupted\nheap_used=130808 heap_peak=139620\nexception=0\nheap_used=130808 heap_peak=138960\n",
+      "stderr": ""
+    },
+    {
+      "case": "bridge_source",
+      "passed": false,
+      "expected": "normal",
+      "exit": 0,
+      "fresh_realm_passed": true,
+      "fatal_recovered": false,
+      "stdout": "exception=1\nerror=InternalError: stack overflow\nheap_used=130808 heap_peak=163160\nexception=0\nheap_used=130808 heap_peak=138960\n",
+      "stderr": ""
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "name": "es5-shim",
+    "source_bytes": 25442,
+    "source_sha256": "e548d543be343288b431ce45a4964ecde1ff362dfa792a3c0a5360b4aa8af91d",
+    "bytecode_identical": true
+  },
+  {
+    "name": "global",
+    "source_bytes": 5369,
+    "source_sha256": "7da516dc6f27774b7011d4dc4b112332246797b935f95edd97f73c1aed3659b2",
+    "bytecode_identical": true
+  },
+  {
+    "name": "cookie",
+    "source_bytes": 982,
+    "source_sha256": "209ccd70442621b46d99c96516c86fa8a9057bee0da949ef249fb3fb63bb363a",
+    "bytecode_identical": true
+  },
+  {
+    "name": "login",
+    "source_bytes": 5413,
+    "source_sha256": "5008ac8ca0627dd8870f98cd57cd19f406c3f6583bc50acf03485b358d37a91e",
+    "bytecode_identical": true
+  }
+]

@@ -1,0 +1,94 @@
+[
+  {
+    "case": "unary",
+    "passed": true
+  },
+  {
+    "case": "group",
+    "passed": true
+  },
+  {
+    "case": "array",
+    "passed": true
+  },
+  {
+    "case": "object",
+    "passed": true
+  },
+  {
+    "case": "function",
+    "passed": true
+  },
+  {
+    "case": "block",
+    "passed": true
+  },
+  {
+    "case": "conditional",
+    "passed": true
+  },
+  {
+    "case": "assignment",
+    "passed": true
+  },
+  {
+    "case": "logical",
+    "passed": true
+  },
+  {
+    "case": "power",
+    "passed": true
+  },
+  {
+    "case": "arrow",
+    "passed": true
+  },
+  {
+    "case": "class",
+    "passed": true
+  },
+  {
+    "case": "template",
+    "passed": true
+  },
+  {
+    "case": "json-parse",
+    "passed": true
+  },
+  {
+    "case": "json-stringify",
+    "passed": true
+  },
+  {
+    "case": "destructure",
+    "passed": true
+  },
+  {
+    "case": "factory-budget",
+    "passed": true
+  },
+  {
+    "case": "nested-factories",
+    "passed": true
+  },
+  {
+    "case": "member-grammar",
+    "passed": true
+  },
+  {
+    "case": "supported-data",
+    "passed": true
+  },
+  {
+    "case": "getter-reentry",
+    "passed": true
+  },
+  {
+    "case": "reviver-reentry",
+    "passed": true
+  },
+  {
+    "case": "eval-reentry",
+    "passed": true
+  }
+]

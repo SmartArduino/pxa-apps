@@ -1,0 +1,204 @@
+{
+  "device": "pai-touch 296x240 / 160 dpi",
+  "firmware_sha256": "2888648beb53b8db69e85d16e01dad86b8df2f7d3dba92a158c092a2efa27fe4",
+  "font_sha256": "121cb206d826af5259cfb78418defde651a9daa80fa1d7d51de3eea716c934a4",
+  "auth_payloads_omitted": true,
+  "real_account_verified": true,
+  "source_helper": {
+    "ready_live_heap": 186532,
+    "ready_heap_peak": 194484,
+    "max_turn_us": 165780,
+    "memory": {
+      "baseline": {
+        "sram_total": 320715,
+        "sram_free": 56835,
+        "sram_min": 56835,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6940852,
+        "psram_min": 6940852,
+        "psram_largest": 6684672
+      },
+      "loaded": {
+        "sram_total": 320715,
+        "sram_free": 48503,
+        "sram_min": 17888,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 3555448,
+        "psram_min": 3134416,
+        "psram_largest": 2228224
+      },
+      "startup_window": {
+        "sram_total": 320715,
+        "sram_free": 48503,
+        "sram_min": 42619,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 3555420,
+        "psram_min": 3134416,
+        "psram_largest": 2228224
+      },
+      "incremental_sram_peak": 14216,
+      "incremental_psram_peak": 3806436,
+      "stable_incremental_psram": 3385404
+    }
+  },
+  "compiled_helper": {
+    "ready_live_heap": 178532,
+    "ready_heap_peak": 179150,
+    "observed_max_turn_us": [
+      56430,
+      33174
+    ],
+    "qr_decode_event_ms": 6848,
+    "official_qr_decodes": true,
+    "memory": {
+      "baseline": {
+        "sram_total": 320715,
+        "sram_free": 49695,
+        "sram_min": 49695,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6887540,
+        "psram_min": 6887540,
+        "psram_largest": 3670016
+      },
+      "loaded": {
+        "sram_total": 320715,
+        "sram_free": 48391,
+        "sram_min": 43855,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 3508728,
+        "psram_min": 3089124,
+        "psram_largest": 2424832
+      },
+      "startup_window": {
+        "sram_total": 320715,
+        "sram_free": 48391,
+        "sram_min": 43855,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 3508728,
+        "psram_min": 3089124,
+        "psram_largest": 2424832
+      },
+      "incremental_sram_peak": 5840,
+      "incremental_psram_peak": 3798416,
+      "stable_incremental_psram": 3378812
+    },
+    "script": [
+      "BROWSER JS INITIALIZED total_us=227455 max_step_us=76421",
+      "BROWSER JS READY heap=178532 peak=179150 errors=0 turns=3 max_us=33174",
+      "BROWSER JS UPDATE revision=1 text=37 links=0 fields=0 markup_us=28818 markup_turns=2",
+      "BROWSER JS UPDATE revision=2 text=80 links=0 fields=0 markup_us=43921 markup_turns=6"
+    ]
+  },
+  "build": {
+    "initial_linear_bytes": 196608,
+    "maximum_linear_bytes": 8388608,
+    "product_packed_bytes": 2172532,
+    "product_unpacked_bytes": 2983920,
+    "files": {
+      "artifacts/main.esp32-s3.aot": {
+        "bytes": 2889292,
+        "sha256": "21dd45eb14b36a0f010fe5c8dc13cecf1e2f97aae8dfc26abfffb7357ef27a0c"
+      },
+      "assets/browser-runtime.qjb": {
+        "bytes": 15953,
+        "sha256": "fe563761c06d2a9cf076ff25682383b2ba2f004a2bd3ad25dc0954709bf9d7ed"
+      },
+      "assets/encoding-license.txt": {
+        "bytes": 16529,
+        "sha256": "7f1d31b39b985b8dbca9e43ee7092141dc7d10833a608160c83eab6c9a7bc814"
+      },
+      "assets/gb18030.bin": {
+        "bytes": 49536,
+        "sha256": "4168af99aff74e8b92b788cd7db7a446c6a4417256d56f68669a8b3368291e8f"
+      },
+      "assets/icon.png": {
+        "bytes": 5350,
+        "sha256": "9906d4af7855020c5e9ba2dfa037e0d50972f0c9f19d5f896bfc309decc1aad2"
+      },
+      "assets/icon.svg": {
+        "bytes": 409,
+        "sha256": "646b5915b02c785182479e6356c9455c8074af5b42738e3b18f7cfe0b7e3c4ad"
+      },
+      "assets/quickjs-license.txt": {
+        "bytes": 1130,
+        "sha256": "598fd7fc928e4350abce36e337ba5a1346923c5c692f5be92c3d8e29ddd7c18d"
+      },
+      "assets/resources.pxi": {
+        "bytes": 344,
+        "sha256": "c904af84711e7c8e9c24da07658d53924781e2a4e5bae88d79b3beffe322a035"
+      },
+      "assets/weread-login.qjb": {
+        "bytes": 3483,
+        "sha256": "ad9a3e95e9597c6af0da4544e224cfd10a84e54c479e13444707410f0be1e4e3"
+      },
+      "manifest.pxm": {
+        "bytes": 1786,
+        "sha256": "3e3766124ac8661195d9c9142ce6fac9baf7debf2e85c35eefe5b090025b1e9b"
+      },
+      "signature.pxs": {
+        "bytes": 108,
+        "sha256": "36f7446e1fbf31a09ea5a861776dc9bee81f54c7978c68e7d06c541f08865b7f"
+      }
+    }
+  },
+  "tests": {
+    "native_script_wasi_asan": "PASS",
+    "native_core_asan_ubsan": "PASS",
+    "script_smoke": "PASS",
+    "session_smoke": "PASS",
+    "offline_small": [
+      "bounded inline PNG decoded through existing Host; temporary source removed",
+      "synthetic scan result -> weblogin -> HttpOnly cookie -> shelf navigation, with Origin",
+      "navigation cancels pending login and prevents stale authenticated redirect",
+      "expired and malformed QR responses retain error/retry UI without executing data URLs",
+      "4MiB policy permits >1MiB live script allocation; no eager reservation",
+      "memory policy survives a complete package restart"
+    ],
+    "offline_round": [
+      "bounded inline PNG decoded through existing Host; temporary source removed",
+      "synthetic scan result -> weblogin -> HttpOnly cookie -> shelf navigation, with Origin",
+      "navigation cancels pending login and prevents stale authenticated redirect",
+      "expired and malformed QR responses retain error/retry UI without executing data URLs",
+      "4MiB policy permits >1MiB live script allocation; no eager reservation",
+      "memory policy survives a complete package restart"
+    ],
+    "round_dimensions": [
+      480,
+      480,
+      240
+    ]
+  },
+  "final_device": {
+    "normal_home": true,
+    "official_qr_decodes": true,
+    "inline_source_removed": true,
+    "script": [
+      "BROWSER JS INITIALIZED total_us=203448 max_step_us=80854",
+      "BROWSER JS READY heap=178532 peak=179150 errors=0 turns=3 max_us=40613"
+    ],
+    "passed": true,
+    "verified_file_count": 11,
+    "package_hashes_match": true
+  },
+  "post_login": {
+    "scope": "Real QR confirmation and cookie-preserving reload only; shelf rendering and reading still incomplete",
+    "user_confirmed_scan": true,
+    "authenticated_shelf_reload": {
+      "path": "/wrwebsimplenjlogic/shelf",
+      "status": 200,
+      "received_bytes": 41808,
+      "text_bytes": 140,
+      "spans": 8,
+      "links": 0,
+      "head_ms": 833,
+      "total_ms": 1224
+    },
+    "limitation": "HTML exceeded original 32768-byte script capture; runtime did not start"
+  }
+}

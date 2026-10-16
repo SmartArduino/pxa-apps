@@ -1,0 +1,22 @@
+{
+  "vendor/quickjs/quickjs.c": {
+    "sha256": "0b7aebea0e39945d890839c2537b364a7b277b36eb4a625bb0bba49209c3c37a",
+    "bytes": 2033754
+  },
+  "assets/browser-runtime.qjb": {
+    "sha256": "70f4008751a5ebf76851b454b6595797cb684775be4cbf4944dad500f1f9fed9",
+    "bytes": 16960
+  },
+  "script.wasm": {
+    "sha256": "47c14731b98cdc5dac4e6c21f88b4616dc988a88b642206a913aab4f28093907",
+    "bytes": 582068
+  },
+  "product-esp32s3/artifacts/main.esp32-s3.aot": {
+    "sha256": "a8c51fb164538dceaf439052895702106b2e39c749b6dc32de70a6dd18a0946e",
+    "bytes": 1233128
+  },
+  "product-esp32s3/artifacts/script.wasm": {
+    "sha256": "733dd26c2a7937dea6a8f209f8aed0c82a4fcd15d00633705b7358ddc2aa6ec0",
+    "bytes": 581819
+  }
+}

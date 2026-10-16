@@ -7,6 +7,7 @@ save real credentials in fixtures, screenshots, command arguments or logs.
 import argparse,json,time
 from pathlib import Path
 from harness import Browser
+from geometry import TOOL_ROWS, CLEAR_SESSIONS_ROW
 
 def main():
  p=argparse.ArgumentParser(description=__doc__)
@@ -28,8 +29,17 @@ def main():
   b.command(f'TOUCH DOWN 0 {edge} {y+3}');time.sleep(.08)
   b.command(f'TOUCH MOVE 0 {edge} {y+h-1}');time.sleep(.12)
   b.command(f'TOUCH UP 0 {edge} {y+h-1}');time.sleep(.25)
- def row(index,count=9):
-  x,y,w,h=b.box('content');offset=max(0,count*35-h)
+ def row(index,count=TOOL_ROWS):
+  # Locate a row from a known top position instead of assuming every row
+  # remains visible when the menu is scrolled to its end.
+  b.nav(4);b.nav(4)
+  x,y,w,h=b.box('content');offset=min(max(0,count*35-h),max(0,index*35-h//2))
+  remaining=offset
+  while remaining:
+   amount=min(remaining,h-20);cx=x+w//2;start=y+h-10
+   b.command(f'TOUCH DOWN 0 {cx} {start}');time.sleep(.08)
+   for step in range(1,9):b.command(f'TOUCH MOVE 0 {cx} {start-amount*step//8}');time.sleep(.025)
+   b.command(f'TOUCH UP 0 {cx} {start-amount}');time.sleep(.2);remaining-=amount
   b.tap(x+w//2,y+index*35-offset+16)
  try:
   b.wait(lambda:'BROWSER METRICS' in b.logs())
@@ -46,7 +56,7 @@ def main():
   results.append('menu history list opens selected entry')
   menu_end();row(5);x,y,w,h=b.box('content');b.tap(x+w//2,y+16);b.shot('history-cleared')
   b.command('KEY BACK');time.sleep(.3);b.nav(4) # Close tools.
-  menu_end();row(8);b.shot('sessions-cleared');b.nav(4)
+  menu_end();row(CLEAR_SESSIONS_ROW);b.shot('sessions-cleared');b.nav(4)
   mark=len(b.logs());b.nav(3);done(mark,401);b.shot('session-expired')
   results.append('clear sessions removes cookies; protected page rejects after reload')
   # Toggle images and GIF separately; atomic preferences persist both flags.

@@ -1,0 +1,16 @@
+[
+  {
+    "name": "common",
+    "width": 600,
+    "height": 1200,
+    "bytes": 229193,
+    "sha256": "b097240b85f3599cf325ac1eb4b6f68ab299202f28a4b868b986f35867fdd2e0"
+  },
+  {
+    "name": "large",
+    "width": 1199,
+    "height": 2533,
+    "bytes": 90591,
+    "sha256": "6afbce7b318d7c6552ba518ae05efbd9e1affc774a99f323b6f3913de951d859"
+  }
+]

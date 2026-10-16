@@ -1,0 +1,5 @@
+/home/lucinhu/Documents/workspace/esp32/zuowei_paixueji_touch/pxa-projects/local/pxa-apps/browser/vendor/quickjs/quickjs.c:29845:7: warning: assigning to 'char *' from 'const char *' discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+ 29845 |     p = strrchr(base_name, '/');
+       |       ^ ~~~~~~~~~~~~~~~~~~~~~~~
+1 warning generated.
+script regression passed: DOM, order, events, XHR/fetch, policies, limits, idle, restart

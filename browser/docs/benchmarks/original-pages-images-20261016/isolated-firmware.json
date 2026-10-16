@@ -1,0 +1,254 @@
+{
+  "baseline_segments_identical": true,
+  "changed_members": {
+    "libpai-touch.a": [
+      "pai_touch_hardware.cc.obj",
+      "pai_touch_board_port.cc.obj",
+      "te_sync_panel.cc.obj"
+    ],
+    "libpxa.a": [
+      "pxa_esp_rom_image.c.obj",
+      "pxa_stream_png.c.obj",
+      "image_decode.c.obj"
+    ]
+  },
+  "shared_build_modified": false,
+  "images": {
+    "restore": {
+      "sha256": "51362b62af8fd704eeb7b301cc4453901ffbc2426c8984e9b87944c429500e02",
+      "bytes": 3445184
+    },
+    "baseline-ime": {
+      "sha256": "51362b62af8fd704eeb7b301cc4453901ffbc2426c8984e9b87944c429500e02",
+      "bytes": 3445184
+    },
+    "drain-only": {
+      "sha256": "feb95d27512ffef80997edc9e446f5d663dcd8f5eef559e4214f35b558544e86",
+      "bytes": 3445024
+    },
+    "drain-jpeg": {
+      "sha256": "d0f8638c3d083a39da7cd3a053a9141c64d44f4dcb639532ff2a47250e925b2e",
+      "bytes": 3445952
+    }
+  },
+  "context_bytes": {
+    "before": 952,
+    "after": 864
+  },
+  "incomplete_variant_rejected_before_flashing": true,
+  "sections": {
+    "baseline-ime": {
+      ".rtc.text": 0,
+      ".rtc.force_fast": 0,
+      ".rtc_noinit": 0,
+      ".rtc.force_slow": 36,
+      ".rtc_reserved": 24,
+      ".iram0.vectors": 1028,
+      ".iram0.text": 114267,
+      ".dram0.dummy": 99072,
+      ".dram0.data": 32210,
+      ".noinit": 2,
+      ".dram0.bss": 18552,
+      ".flash.text": 2525240,
+      ".flash_rodata_dummy": 2555904,
+      ".flash.appdesc": 256,
+      ".flash.rodata": 758356,
+      ".eh_frame": 13672,
+      ".flash.tdata": 8,
+      ".flash.rodata_noload": 17011,
+      ".ext_ram.dummy": 3342304,
+      ".ext_ram.bss": 30084,
+      ".ext_ram_noinit": 0,
+      ".iram0.text_end": 161,
+      ".iram0.data": 0,
+      ".iram0.bss": 0,
+      ".dram0.heap_start": 0,
+      ".noload": 4,
+      ".comment": 228,
+      ".xtensa.info": 56,
+      ".xt.prop": 9684,
+      ".xt.lit": 240
+    },
+    "drain-only": {
+      ".rtc.text": 0,
+      ".rtc.force_fast": 0,
+      ".rtc_noinit": 0,
+      ".rtc.force_slow": 36,
+      ".rtc_reserved": 24,
+      ".iram0.vectors": 1028,
+      ".iram0.text": 114235,
+      ".dram0.dummy": 99072,
+      ".dram0.data": 32210,
+      ".noinit": 2,
+      ".dram0.bss": 18552,
+      ".flash.text": 2525148,
+      ".flash_rodata_dummy": 2555904,
+      ".flash.appdesc": 256,
+      ".flash.rodata": 758356,
+      ".eh_frame": 13644,
+      ".flash.tdata": 8,
+      ".flash.rodata_noload": 17011,
+      ".ext_ram.dummy": 3342304,
+      ".ext_ram.bss": 30084,
+      ".ext_ram_noinit": 0,
+      ".iram0.text_end": 193,
+      ".iram0.data": 0,
+      ".iram0.bss": 0,
+      ".dram0.heap_start": 0,
+      ".noload": 4,
+      ".comment": 228,
+      ".xtensa.info": 56,
+      ".xt.prop": 9624,
+      ".xt.lit": 240
+    },
+    "drain-jpeg": {
+      ".rtc.text": 0,
+      ".rtc.force_fast": 0,
+      ".rtc_noinit": 0,
+      ".rtc.force_slow": 36,
+      ".rtc_reserved": 24,
+      ".iram0.vectors": 1028,
+      ".iram0.text": 114235,
+      ".dram0.dummy": 99072,
+      ".dram0.data": 32210,
+      ".noinit": 2,
+      ".dram0.bss": 18552,
+      ".flash.text": 2526068,
+      ".flash_rodata_dummy": 2555904,
+      ".flash.appdesc": 256,
+      ".flash.rodata": 758356,
+      ".eh_frame": 13644,
+      ".flash.tdata": 8,
+      ".flash.rodata_noload": 17011,
+      ".ext_ram.dummy": 3342304,
+      ".ext_ram.bss": 30084,
+      ".ext_ram_noinit": 0,
+      ".iram0.text_end": 193,
+      ".iram0.data": 0,
+      ".iram0.bss": 0,
+      ".dram0.heap_start": 0,
+      ".noload": 4,
+      ".comment": 228,
+      ".xtensa.info": 56,
+      ".xt.prop": 9624,
+      ".xt.lit": 240
+    }
+  },
+  "mapped_segments": {
+    "baseline-ime": [
+      {
+        "address": "0x3c270020",
+        "bytes": 772284,
+        "span_64k_pages": 12
+      },
+      {
+        "address": "0x3fca0300",
+        "bytes": 14132,
+        "span_64k_pages": 1
+      },
+      {
+        "address": "0x42000020",
+        "bytes": 2525240,
+        "span_64k_pages": 39
+      },
+      {
+        "address": "0x3fca3a34",
+        "bytes": 18080,
+        "span_64k_pages": 1
+      },
+      {
+        "address": "0x40374000",
+        "bytes": 115296,
+        "span_64k_pages": 3
+      },
+      {
+        "address": "0x50000000",
+        "bytes": 36,
+        "span_64k_pages": 1
+      }
+    ],
+    "drain-only": [
+      {
+        "address": "0x3c270020",
+        "bytes": 772256,
+        "span_64k_pages": 12
+      },
+      {
+        "address": "0x3fca0300",
+        "bytes": 14160,
+        "span_64k_pages": 1
+      },
+      {
+        "address": "0x42000020",
+        "bytes": 2525148,
+        "span_64k_pages": 39
+      },
+      {
+        "address": "0x3fca3a50",
+        "bytes": 18052,
+        "span_64k_pages": 1
+      },
+      {
+        "address": "0x40374000",
+        "bytes": 115264,
+        "span_64k_pages": 3
+      },
+      {
+        "address": "0x50000000",
+        "bytes": 36,
+        "span_64k_pages": 1
+      }
+    ],
+    "drain-jpeg": [
+      {
+        "address": "0x3c270020",
+        "bytes": 772256,
+        "span_64k_pages": 12
+      },
+      {
+        "address": "0x3fca0300",
+        "bytes": 14160,
+        "span_64k_pages": 1
+      },
+      {
+        "address": "0x42000020",
+        "bytes": 2526068,
+        "span_64k_pages": 39
+      },
+      {
+        "address": "0x3fca3a50",
+        "bytes": 18052,
+        "span_64k_pages": 1
+      },
+      {
+        "address": "0x40374000",
+        "bytes": 115264,
+        "span_64k_pages": 3
+      },
+      {
+        "address": "0x50000000",
+        "bytes": 36,
+        "span_64k_pages": 1
+      }
+    ]
+  },
+  "source_hashes": {
+    "deps/pxa-system/libpxa/src/services/assets/image/image_decode.c": "f40019aa84605353384db18c48879dfe14308a6eea4260c9c1d35446f70de571",
+    "deps/pxa-system/libpxa/adapters/image/pxa_stream_png.c": "62d5fbc566a87205fd361622c3a91628e5c073424ea1b44b80d13c8ccc89b43f",
+    "deps/pxa-system/libpxa/adapters/image/image_buffer.h": "9984f9c72019bc514001db7e925cf1a37ecf9d5037caf2971e0f0cef68ed5f00",
+    "deps/pxa-system/libpxa/adapters/image/README.md": "ee2d5000c5102785d3df1e7afddd903e9393418720f9ad0491afdd37c3b0448a",
+    "deps/pxa-system/libpxa/adapters/image/image_chunks.h": "70554c57a672e9e832bf211fac804d459d7ffac9f2625c9264558e6c2bc81306",
+    "deps/pxa-system/libpxa/adapters/image/image_jpeg.h": "b275ca41312b372790afc4404b5128637219e9701e4f7f393eb96c3c271380e3",
+    "deps/pxa-system/libpxa/adapters/esp/pxa_esp_rom_image.c": "744340795a85ca8e9417ebb9cecf3e6220c9e405b8f649ee32593cf7ce6bddd9",
+    "deps/pxa-system/libpxa/adapters/image/vendor/pngle.c": "677d648cc5745ae96de2a8006d0b1b3d89fd858ed69b2093b7ad47e23604be49",
+    "deps/pxa-system/libpxa/adapters/image/vendor/pngle.h": "c70ddd84e0d0a74b5fc4fd54697c0194833047986f329938a574b6779da076e6",
+    "deps/pxa-system/libpxa/adapters/image/vendor/miniz.c": "d8d19c2280e33a63345bf94840d99760faa4bc93146c9a156cc3d90539742242",
+    "deps/pxa-system/libpxa/adapters/image/vendor/miniz.h": "8a638511f9f98e8240fc00522989fe7908a06f73a6386191e4374046c993cfa0",
+    "deps/pxa-system/libpxa/adapters/image/vendor/LICENSE.pngle": "f965b67dece0b41367e5b66ba8b6787a93381e61d81121dbb5d87f6b2f330b39",
+    "deps/pxa-system/libpxa/adapters/image/vendor/README.md": "47174e245c710da66ea1476dca49dda628fc63fc16c9a650847b9180dc3b9eb3",
+    "firmware/boards/pai-touch/include/parallel_sw_rotation_flush.h": "bb3e5e455508538fcc4301c511f26f4cb917dfe4d7345741e374a1a21a4ca3b6",
+    "firmware/boards/pai-touch/src/pai_touch_hardware.cc": "09f1307edc3a2a28fc68d7cbf6ceddfd851fa942e735008af55dfb798abc92e3",
+    "firmware/boards/pai-touch/src/pai_touch_board_port.cc": "23a8b4c093a586ccb60e2bdc4edcd74bfb57cc48e3bd15e2fc85c4d88de1c554",
+    "firmware/boards/pai-touch/src/te_sync_panel.cc": "30f34e3de0290230729899d5abcc80c042b4ce87cfb8050fbe3fc91c6336b996"
+  }
+}

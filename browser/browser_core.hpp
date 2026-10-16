@@ -10,6 +10,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include "browser_inline_image.hpp"
 
 namespace browser {
 using namespace std::literals;
@@ -236,6 +237,49 @@ inline std::expected<std::string, Error> resolve(std::string_view base, std::str
     return out;
 }
 inline std::string_view transport_url(std::string_view s) { return s.substr(0, s.find('#')); }
+enum class ReferrerPolicy : std::uint8_t {
+    no_referrer, no_referrer_when_downgrade, origin, origin_when_cross_origin,
+    same_origin, strict_origin, strict_origin_when_cross_origin, unsafe_url
+};
+inline std::optional<ReferrerPolicy> referrer_policy(std::string_view value) {
+    constexpr std::array names{"no-referrer"sv, "no-referrer-when-downgrade"sv, "origin"sv,
+        "origin-when-cross-origin"sv, "same-origin"sv, "strict-origin"sv,
+        "strict-origin-when-cross-origin"sv, "unsafe-url"sv};
+    std::optional<ReferrerPolicy> result;
+    // HTTP permits a comma-separated fallback list; the last understood entry wins.
+    for (;;) {
+        const auto comma = value.find(',');
+        const auto item = lowercase(trim(value.substr(0, comma)));
+        for (std::size_t i = 0; i < names.size(); ++i)
+            if (item == names[i]) result = ReferrerPolicy(i);
+        if (comma == value.npos) return result;
+        value.remove_prefix(comma + 1);
+    }
+}
+inline std::string request_referrer(std::string_view source, std::string_view target,
+    ReferrerPolicy policy = ReferrerPolicy::strict_origin_when_cross_origin) {
+    // resolve rejects credentials and control characters and normalizes paths.
+    const auto from = resolve({}, source), to = resolve({}, target);
+    if (!from || !to) return {};
+    auto url_origin = [](std::string_view u) {
+        const auto end = u.find_first_of("/?#", u.find("://") + 3);
+        auto value = u.substr(0, end);
+        if ((u.starts_with("https:") && value.ends_with(":443")) ||
+            (u.starts_with("http:") && value.ends_with(":80")))
+            value = value.substr(0, value.rfind(':'));
+        return value;
+    };
+    const bool same = url_origin(*from) == url_origin(*to);
+    const bool downgrade = from->starts_with("https:") && to->starts_with("http:");
+    using enum ReferrerPolicy;
+    if (policy == no_referrer || (policy == same_origin && !same) ||
+        (downgrade && (policy == no_referrer_when_downgrade || policy == strict_origin ||
+                       policy == strict_origin_when_cross_origin))) return {};
+    if (policy == origin || policy == strict_origin ||
+        (!same && (policy == origin_when_cross_origin || policy == strict_origin_when_cross_origin)))
+        return std::string(url_origin(*from)) + "/";
+    return std::string(transport_url(*from));
+}
 // HTML ids contain decoded UTF-8; URL fragments may contain percent escapes.
 // Compare without a temporary string. Unlike form data, '+' remains literal.
 constexpr bool fragment_matches(std::string_view id, std::string_view fragment) noexcept {
@@ -280,9 +324,11 @@ struct Span {
 struct Image {
     std::string source;
     std::uint16_t width = 240, height = 150;
+    std::optional<ReferrerPolicy> referrer{};
 };
 struct Link {
     std::string target;
+    std::uint32_t script_node = 0;
 };
 struct Anchor {
     std::string name;
@@ -298,6 +344,7 @@ struct Field {
     std::int16_t form = -1;
     FieldType type = FieldType::text;
     bool checked = false;
+    std::uint32_t script_node = 0;
 };
 struct Document {
     std::string text, title, base;
@@ -308,6 +355,7 @@ struct Document {
     std::vector<Field> fields;
     std::vector<Image> images;
     bool truncated = false, wml = false, links_limited = false;
+    ReferrerPolicy referrer = ReferrerPolicy::strict_origin_when_cross_origin;
     void clear(std::string url) {
         text.clear();
         title.clear();
@@ -319,6 +367,7 @@ struct Document {
         fields.clear();
         images.clear();
         truncated = wml = links_limited = false;
+        referrer = ReferrerPolicy::strict_origin_when_cross_origin;
     }
     int add_link(std::string target) {
         const auto found = std::ranges::find(links, target, &Link::target);
@@ -455,6 +504,11 @@ inline std::optional<std::string_view> static_navigation(std::string_view code) 
 // arbitrary transport boundaries. Script/style raw text never becomes content.
 class Parser {
     Document &doc_;
+    bool scripted_ = false;
+    static std::uint32_t node_id(std::string_view value) {
+        std::uint32_t id = 0; auto [end, error] = std::from_chars(value.data(), value.data()+value.size(), id);
+        return error == std::errc{} && end == value.data()+value.size() ? id : 0;
+    }
     std::string pending_, raw_, entity_, label_, hidden_;
     unsigned hidden_depth_ = 0;
     bool in_label_ = false;
@@ -598,6 +652,10 @@ class Parser {
             head_ = !t.closing;
             return;
         }
+        if (n == "meta" && !t.closing && lowercase(t.get("name")) == "referrer") {
+            if (auto policy = referrer_policy(t.get("content"))) doc_.referrer = *policy;
+            return;
+        }
         if (n == "title") {
             title_ = !t.closing;
             return;
@@ -668,7 +726,13 @@ class Parser {
             else {
                 link_ = -1;
                 auto href = t.get("href");
-                if (!href.empty())
+                if (const auto id = scripted_ ? node_id(t.get("data-pxa-click")) : 0) {
+                    if (doc_.links.size() < max_links) {
+                        link_ = int(doc_.links.size());
+                        const auto target = resolve(doc_.base, href);
+                        doc_.links.push_back({target ? *target : std::string{}, id});
+                    }
+                } else if (!href.empty())
                     if (auto url = resolve(doc_.base, href); url)
                         link_ = doc_.add_link(std::move(*url));
             }
@@ -679,6 +743,13 @@ class Parser {
             if (src.empty())
                 src = t.get("data-src");
             auto source = resolve(doc_.base, src);
+            if (inline_image::payload(src)) {
+                std::size_t used = 0;
+                for (const auto& image : doc_.images)
+                    if (image.source.starts_with(inline_image::png_prefix)) used += image.source.size();
+                if (src.size() <= inline_image::document_budget - std::min(used, inline_image::document_budget))
+                    source = std::string(src);
+            }
             auto dimension = [&](std::string_view name, int fallback) {
                 auto value = t.get(name);
                 int parsed = 0;
@@ -695,7 +766,8 @@ class Parser {
             if (!src.empty() && source && doc_.images.size() < max_images) {
                 int index = int(doc_.images.size());
                 doc_.newline();
-                doc_.images.push_back({std::move(*source), std::uint16_t(w), std::uint16_t(h)});
+                doc_.images.push_back({std::move(*source), std::uint16_t(w), std::uint16_t(h),
+                    referrer_policy(t.get("referrerpolicy"))});
                 doc_.append(alt.empty() ? "图片" : alt, Style::muted, link_, -1, index);
                 doc_.newline();
             } else
@@ -722,12 +794,12 @@ class Parser {
         if ((n == "input" || n == "button") && !t.closing && form_ >= 0 &&
             doc_.fields.size() >= max_fields)
             doc_.forms[form_].supported = false;
-        if ((n == "input" || n == "button") && !t.closing && form_ >= 0 &&
+        if ((n == "input" || n == "button") && !t.closing && (form_ >= 0 || scripted_) &&
             doc_.fields.size() < max_fields) {
             auto type = lowercase(t.get("type"));
             if (type == "reset" || type == "button") return;
             if (type == "file" || type == "image" || type == "radio") {
-                doc_.forms[form_].supported = false;
+                if (form_ >= 0) doc_.forms[form_].supported = false;
                 return;
             }
             if (t.has("disabled"))
@@ -739,7 +811,7 @@ class Parser {
                                                         : FieldType::text;
             auto name = t.get("name"), v = t.get("value"), label = t.get("placeholder");
             if (name.size() > 128 || v.size() > 512 || label.size() > 128) {
-                doc_.forms[form_].supported = false;
+                if (form_ >= 0) doc_.forms[form_].supported = false;
                 return;
             }
             if (label.empty() && ft == FieldType::submit) label = v;
@@ -754,7 +826,7 @@ class Parser {
                 v = "on";
             int index = int(doc_.fields.size());
             doc_.fields.push_back({std::move(name), std::move(v), std::move(label),
-                                   std::int16_t(form_), ft, t.has("checked")});
+                                   std::int16_t(form_), ft, t.has("checked"), scripted_ ? node_id(t.get("data-pxa-field")) : 0});
             if (ft != FieldType::hidden) {
                 doc_.newline();
                 doc_.append(doc_.fields.back().label, Style::button, -1, index);
@@ -766,7 +838,7 @@ class Parser {
     }
 
   public:
-    explicit Parser(Document &d) : doc_(d) {
+    explicit Parser(Document &d, bool scripted = false) : doc_(d), scripted_(scripted) {
         pending_.reserve(2048);
         entity_.reserve(32);
     }
@@ -831,7 +903,9 @@ class Parser {
                     quote_ = 0;
                     continue;
                 }
-                if (pending_.size() >= 2048) {
+                const bool image_tag = pending_.size() >= 4 && lower(pending_[0]) == 'i' &&
+                    lower(pending_[1]) == 'm' && lower(pending_[2]) == 'g' && space(pending_[3]);
+                if (pending_.size() >= (image_tag ? 4608u : 2048u)) {
                     discard_tag_ = true;
                     pending_.clear();
                 }

@@ -1,0 +1,319 @@
+{
+  "before": {
+    "heap": {
+      "sram_total": 320715,
+      "sram_free": 56859,
+      "sram_min": 56859,
+      "sram_largest": 19456,
+      "psram_total": 8358524,
+      "psram_free": 6939920,
+      "psram_min": 6939920,
+      "psram_largest": 6422528
+    },
+    "budget": {
+      "internal": 27468,
+      "external": 16516,
+      "peak_internal": 27468,
+      "peak_external": 16516,
+      "temporary_peak_internal": 0,
+      "temporary_peak_external": 0,
+      "fixed": 2224,
+      "denied": 0,
+      "allocation_failures": 0
+    },
+    "kind:raster": {
+      "internal": 0,
+      "external": 0
+    },
+    "kind:image": {
+      "internal": 0,
+      "external": 0
+    },
+    "kind:audio": {
+      "internal": 0,
+      "external": 16392
+    },
+    "kind:temporary": {
+      "internal": 0,
+      "external": 0
+    },
+    "kind:metadata": {
+      "internal": 27468,
+      "external": 124
+    },
+    "kind:frame": {
+      "internal": 0,
+      "external": 0
+    },
+    "surface": {
+      "frame": 0,
+      "scratch": 0,
+      "mailbox": 0,
+      "probe": 0,
+      "peak_total": 0
+    }
+  },
+  "loaded": {
+    "heap": {
+      "sram_total": 320715,
+      "sram_free": 47823,
+      "sram_min": 43487,
+      "sram_largest": 19456,
+      "psram_total": 8358524,
+      "psram_free": 3046132,
+      "psram_min": 2520156,
+      "psram_largest": 2031616
+    },
+    "budget": {
+      "internal": 27468,
+      "external": 90607,
+      "peak_internal": 27468,
+      "peak_external": 444415,
+      "temporary_peak_internal": 0,
+      "temporary_peak_external": 353808,
+      "fixed": 2224,
+      "denied": 0,
+      "allocation_failures": 0
+    },
+    "kind:raster": {
+      "internal": 0,
+      "external": 0
+    },
+    "kind:image": {
+      "internal": 0,
+      "external": 65567
+    },
+    "kind:audio": {
+      "internal": 0,
+      "external": 16392
+    },
+    "kind:temporary": {
+      "internal": 0,
+      "external": 0
+    },
+    "kind:metadata": {
+      "internal": 27468,
+      "external": 8648
+    },
+    "kind:frame": {
+      "internal": 0,
+      "external": 0
+    },
+    "surface": {
+      "frame": 0,
+      "scratch": 0,
+      "mailbox": 0,
+      "probe": 0,
+      "peak_total": 0
+    }
+  },
+  "startup_peak": {
+    "heap": {
+      "sram_total": 320715,
+      "sram_free": 47823,
+      "sram_min": 43487,
+      "sram_largest": 19456,
+      "psram_total": 8358524,
+      "psram_free": 3046132,
+      "psram_min": 2520156,
+      "psram_largest": 2031616
+    },
+    "budget": {
+      "internal": 27468,
+      "external": 90607,
+      "peak_internal": 27468,
+      "peak_external": 444415,
+      "temporary_peak_internal": 0,
+      "temporary_peak_external": 353808,
+      "fixed": 2224,
+      "denied": 0,
+      "allocation_failures": 0
+    },
+    "kind:raster": {
+      "internal": 0,
+      "external": 0
+    },
+    "kind:image": {
+      "internal": 0,
+      "external": 65567
+    },
+    "kind:audio": {
+      "internal": 0,
+      "external": 16392
+    },
+    "kind:temporary": {
+      "internal": 0,
+      "external": 0
+    },
+    "kind:metadata": {
+      "internal": 27468,
+      "external": 8648
+    },
+    "kind:frame": {
+      "internal": 0,
+      "external": 0
+    },
+    "surface": {
+      "frame": 0,
+      "scratch": 0,
+      "mailbox": 0,
+      "probe": 0,
+      "peak_total": 0
+    }
+  },
+  "stopped": {
+    "heap": {
+      "sram_total": 320715,
+      "sram_free": 49683,
+      "sram_min": 27596,
+      "sram_largest": 19456,
+      "psram_total": 8358524,
+      "psram_free": 6761612,
+      "psram_min": 2520156,
+      "psram_largest": 3538944
+    },
+    "budget": {
+      "internal": 27468,
+      "external": 16516,
+      "peak_internal": 27468,
+      "peak_external": 444415,
+      "temporary_peak_internal": 0,
+      "temporary_peak_external": 353808,
+      "fixed": 2224,
+      "denied": 0,
+      "allocation_failures": 0
+    },
+    "kind:raster": {
+      "internal": 0,
+      "external": 0
+    },
+    "kind:image": {
+      "internal": 0,
+      "external": 0
+    },
+    "kind:audio": {
+      "internal": 0,
+      "external": 16392
+    },
+    "kind:temporary": {
+      "internal": 0,
+      "external": 0
+    },
+    "kind:metadata": {
+      "internal": 27468,
+      "external": 124
+    },
+    "kind:frame": {
+      "internal": 0,
+      "external": 0
+    },
+    "surface": {
+      "frame": 0,
+      "scratch": 0,
+      "mailbox": 0,
+      "probe": 0,
+      "peak_total": 2176
+    }
+  },
+  "script": [
+    "BROWSER JS INITIALIZED total_us=819770 max_step_us=265850",
+    "BROWSER JS READY heap=179173 peak=179362 errors=0 turns=12 max_us=66614",
+    "BROWSER JS UPDATE revision=1 text=59 links=0 fields=0 markup_us=81384 markup_turns=12"
+  ],
+  "image": [
+    "BROWSER IMAGE DONE index=0 received=340611 pixels=124x264 resident=65559 total_ms=5769"
+  ],
+  "present_us": [
+    24017,
+    47437,
+    47372,
+    47628,
+    47659,
+    23561,
+    47438,
+    47541,
+    24029,
+    47401,
+    47494,
+    47611,
+    24131,
+    47053,
+    47606,
+    47454,
+    24137,
+    47145,
+    47751,
+    23783,
+    47323,
+    47467,
+    47505,
+    24292,
+    47226,
+    47379,
+    47519,
+    47463,
+    23924,
+    71132,
+    24093,
+    47271,
+    47616,
+    47443,
+    23995,
+    47304,
+    47404,
+    47576,
+    24118,
+    47204,
+    47465,
+    23980,
+    47476,
+    47414,
+    47467,
+    23993,
+    47440,
+    47387,
+    47542,
+    23975,
+    47425,
+    47502,
+    47719,
+    47287,
+    47648,
+    47375,
+    95049,
+    760416
+  ],
+  "display_perf": {
+    "capacity": "256",
+    "raster": "0",
+    "present": "58",
+    "raster_overflow": "0",
+    "present_overflow": "0",
+    "list_min": "0",
+    "list_max": "0",
+    "pixels_min": "0",
+    "pixels_max": "0",
+    "surface_changed": "0",
+    "completed": "59",
+    "window_us": "4482225",
+    "display": "1"
+  },
+  "scroll_display_fps": 18.07945108292795,
+  "window_excludes_screenshots": true,
+  "synthetic": true,
+  "real_site_reading_verified": false,
+  "real_display_accepted": false,
+  "user_report": "Screen froze with tearing lines after the test; candidate withdrawn despite earlier completion counters.",
+  "candidate": {
+    "host-before.bin": {
+      "bytes": 3444960,
+      "sha256": "6036e4cae795273504db3c1bb71c4d09d21e55c3301ab205f83a5e160ce10275"
+    },
+    "host-candidate.bin": {
+      "bytes": 3559088,
+      "sha256": "11b1d07a94ceff9f04fc4b57f119a509c46cdb7f3e5aeb916861e0eef8870dab"
+    }
+  },
+  "restored_previous_firmware": true,
+  "normal_home_package_restored": true
+}

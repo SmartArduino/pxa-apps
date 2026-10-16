@@ -1,0 +1,2 @@
+# Preserve upstream source bytes instead of reformatting vendored code.
+quickjs/** -whitespace

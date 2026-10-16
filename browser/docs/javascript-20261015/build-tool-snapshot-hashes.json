@@ -1,0 +1,26 @@
+{
+  "tools/pxa_tools/project.py": {
+    "bytes": 5129,
+    "sha256": "375b3b47b0c00aa3c73bd74f738b410103aa4ce6fa08e875b34bccf254532e11"
+  },
+  "tools/pxa_tools/build.py": {
+    "bytes": 12893,
+    "sha256": "ed6b475b58be2c3a8b35880cc58681adc24a4d7684853954548d1b0df00d1053"
+  },
+  "tools/pxa_tools/test_tools.py": {
+    "bytes": 5812,
+    "sha256": "5f0d8e7bc176f74cf931fa6d08f5370ba8760495262fc9ce218cba72acf3826e"
+  },
+  "tools/package/package_app.sh": {
+    "bytes": 19810,
+    "sha256": "1b0b5c61349eea78ccfedf30d66dee09ee2770b07c38e99ca088251b5c636f6b"
+  },
+  "tools/package/build_package_manifest.py": {
+    "bytes": 28025,
+    "sha256": "47a4970c87fd477e1c1b92e6e6c3afb9325f26949d76432ea89a393c070ac2bc"
+  },
+  "spec/draft/package.md": {
+    "bytes": 16191,
+    "sha256": "2a396930968a5788ad6ec9db39b8c764b375f762129295cbdb8063470075a0cf"
+  }
+}

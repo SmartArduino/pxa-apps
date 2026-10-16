@@ -2,18 +2,23 @@
 #include "browser_core.hpp"
 #include <chrono>
 #include <limits>
+#include <span>
 
 namespace browser {
 // Session-only and host-bound by design. Domain is validated but never widens
 // scope to siblings: no bundled public-suffix database and no cross-site jar.
 // Storage grows on demand, capped at 16 cookies / 4 KiB of strings.
 class Cookies {
+public:
+    // Session transfer between this app's UI and script components. Never
+    // persisted; HttpOnly remains enforced by request(..., true)/receive().
     struct Cookie {
         std::string host, path, name, value;
         std::uint64_t expires = 0;
-        bool secure = false;
+        bool secure = false, http_only = false;
         std::size_t bytes() const { return host.size() + path.size() + name.size() + value.size(); }
     };
+private:
     std::vector<Cookie> items_;
     struct Address { std::string_view host, path; bool secure; };
     static Address address(std::string_view url) {
@@ -75,10 +80,24 @@ class Cookies {
         return duration_cast<seconds>(sys_days(ymd).time_since_epoch()).count() + hour * 3600 + minute * 60 + second;
     }
 public:
+    std::span<const Cookie> snapshot() const noexcept { return items_; }
+    bool restore(std::vector<Cookie> items) {
+        if (items.size()>16) return false;
+        std::size_t total=0;
+        auto clean=[](std::string_view s) { return std::ranges::none_of(s,[](unsigned char c){return c<32 || c==127;}); };
+        for (std::size_t i=0;i<items.size();++i) {
+            const auto& c=items[i]; total+=c.bytes();
+            if(total>4096 || c.host.empty() || c.path.empty() || c.path[0]!='/' || c.name.empty() ||
+               !clean(c.host) || !clean(c.path) || !clean(c.name) || !clean(c.value) ||
+               c.name.find_first_of("=;")!=c.name.npos) return false;
+            for(std::size_t j=0;j<i;++j) if(items[j].host==c.host && items[j].path==c.path && items[j].name==c.name) return false;
+        }
+        items_=std::move(items); return true;
+    }
     void clear() { std::vector<Cookie>{}.swap(items_); }
     std::size_t size() const { return items_.size(); }
     std::size_t bytes() const { std::size_t n = 0; for (auto &c : items_) n += c.bytes(); return n; }
-    void receive(std::string_view url, std::string_view header, std::uint64_t now, std::int64_t wall) {
+    void receive(std::string_view url, std::string_view header, std::uint64_t now, std::int64_t wall, bool from_script = false) {
         if (header.empty() || header.size() > 1536 || std::ranges::any_of(header, [](unsigned char c) { return c < 32 || c == 127; })) return;
         const auto a = address(url);
         auto end = header.find(';');
@@ -97,6 +116,7 @@ public:
             auto key = lowercase(trim(item.substr(0, equals)));
             auto value = equals == item.npos ? ""sv : trim(item.substr(equals + 1));
             if (key == "secure") c.secure = true;
+            else if (key == "httponly") { if (from_script) return; c.http_only = true; }
             else if (key == "path" && value.starts_with('/')) c.path = value;
             else if (key == "domain") {
                 domain_attribute = true;
@@ -114,7 +134,7 @@ public:
             (c.name.starts_with("__Host-") && (!c.secure || !a.secure || domain_attribute || c.path != "/"))) return;
         auto old = std::ranges::find_if(items_, [&](auto &v) { return v.host == c.host && v.path == c.path && v.name == c.name; });
         // An insecure response cannot replace a secure cookie with this key.
-        if (old != items_.end() && old->secure && !a.secure) return;
+        if (old != items_.end() && ((old->secure && !a.secure) || (from_script && old->http_only))) return;
         bool remove = age ? *age <= 0 : expires && wall > 0 && *expires <= wall;
         if (remove) { if (old != items_.end()) items_.erase(old); return; }
         if (age) c.expires = now + std::uint64_t(std::min<std::int64_t>(*age, 31536000));
@@ -124,11 +144,11 @@ public:
         if (old != items_.end()) *old = std::move(c);
         else items_.push_back(std::move(c));
     }
-    std::string request(std::string_view url, std::uint64_t now) {
+    std::string request(std::string_view url, std::uint64_t now, bool for_script = false) {
         std::erase_if(items_, [&](auto &c) { return c.expires && c.expires <= now; });
         auto a = address(url);
         std::array<const Cookie*,16> selected{}; std::size_t count = 0;
-        for (auto &c : items_) if (c.host == a.host && (!c.secure || a.secure) && path_matches(a.path, c.path)) selected[count++] = &c;
+        for (auto &c : items_) if ((!for_script || !c.http_only) && c.host == a.host && (!c.secure || a.secure) && path_matches(a.path, c.path)) selected[count++] = &c;
         // Stable longest-path first, then creation order. Insertion sort is
         // bounded, allocation-free, and does not disturb replacement ordering.
         for (std::size_t i=1;i<count;++i) for (std::size_t j=i;j>0 && selected[j]->path.size()>selected[j-1]->path.size();--j) std::swap(selected[j],selected[j-1]);

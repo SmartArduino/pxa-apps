@@ -1,0 +1,62 @@
+[
+  {
+    "index": 393,
+    "name": "JS_CallBytecode",
+    "bytes": 1184
+  },
+  {
+    "index": 958,
+    "name": "js_parse_statement_or_decl",
+    "bytes": 104
+  },
+  {
+    "index": 992,
+    "name": "js_parse_assign_expr2",
+    "bytes": 476
+  },
+  {
+    "index": 1010,
+    "name": "js_parse_return",
+    "bytes": 132
+  },
+  {
+    "index": 1011,
+    "name": "js_parse_if",
+    "bytes": 124
+  },
+  {
+    "index": 1012,
+    "name": "js_parse_var_statement",
+    "bytes": 104
+  },
+  {
+    "index": 1013,
+    "name": "js_parse_statement_complex",
+    "bytes": 600
+  },
+  {
+    "index": 1070,
+    "name": "js_parse_postfix_expr",
+    "bytes": 320
+  },
+  {
+    "index": 1073,
+    "name": "js_parse_unary_ops",
+    "bytes": 324
+  },
+  {
+    "index": 1074,
+    "name": "js_parse_logical_tail",
+    "bytes": 276
+  },
+  {
+    "index": 1082,
+    "name": "js_parse_primary",
+    "bytes": 356
+  },
+  {
+    "index": 1083,
+    "name": "js_parse_postfix_tail",
+    "bytes": 384
+  }
+]

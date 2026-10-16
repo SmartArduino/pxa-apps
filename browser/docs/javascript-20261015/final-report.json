@@ -1,0 +1,1545 @@
+{
+  "format": "pxa-browser-guest-js-validation-1",
+  "validation_local_dates": [
+    "2026-10-15",
+    "2026-10-16"
+  ],
+  "status": "implemented_and_validated",
+  "host_abi_or_firmware_modified_by_this_task": false,
+  "device": {
+    "model": "pai-touch",
+    "mac": "a4:cb:8f:d5:d4:f0",
+    "resolution": [
+      296,
+      240
+    ],
+    "dpi": 160,
+    "firmware_sha256": "42256b9fb7f4defbc6f897bec2b0356eef3b22e004bc5651d95a14f67d8eae5d",
+    "font_sha256": "c705d23f6a239e43f21075a660ec2739cf399fd7926140687dc516a3f6e4f698",
+    "font_bytes": 2805772,
+    "font_note": "Simulator used updated local font; device remained unchanged throughout paired measurements."
+  },
+  "engine": {
+    "name": "QuickJS",
+    "version": "2026-06-04",
+    "license": "MIT",
+    "archive_url": "https://bellard.org/quickjs/quickjs-2026-06-04.tar.xz",
+    "archive_sha256": "b376e839b322978313d929fd20663b11ba58b75df5a46c126dd19ea2fa70ad2a",
+    "heap_limit_bytes": 262144,
+    "wasm_c_stack_bytes": 49152,
+    "linear_stack_check_bytes": 16384,
+    "bytecode_depth_limit": 8,
+    "weighted_call_entry_limit": 24,
+    "weighted_parse_entry_limit": 16,
+    "cooperative_call_deadline_ms": 50,
+    "trusted_init_phase_deadline_ms": 200,
+    "snapshot_max_items_per_idle_turn": 8,
+    "minimum_commit_interval_ms": 100,
+    "initial_linear_bytes": 196608,
+    "max_linear_bytes": 1048576,
+    "compiler": "UI/SDK O3, engine Oz, app/engine full LTO, AOT native-stack checks enabled"
+  },
+  "measurement": {
+    "fixture": "/bench-menu cases 0..5; static and dynamic contain same 60 Chinese paragraphs",
+    "gesture": {
+      "duration_ms": 1600,
+      "points": 96
+    },
+    "fps_definition": "Completed LCD interval samples / summed interval time. Completion count / whole window is separately retained.",
+    "latency": "No optical or touch-to-photon latency measured.",
+    "memory": "Stable total heap used and independent MEMORY START/STOP startup/steady window peaks, per pool. Before/stopped historical minima are not per-run peaks. Per-pool peaks need not be simultaneous.",
+    "raster": "Host UI path was not sampled by PERF raster; zero raster samples is not zero raster cost.",
+    "instrumentation": "Paired device packages all TRACE/PROFILE; product package has neither and was functionally checked, not used to claim these FPS values."
+  },
+  "runs": [
+    {
+      "name": "device-baseline-final-1",
+      "passed": true,
+      "case": 0,
+      "active_interval_fps": 29.584217183447578,
+      "completed_frames": 58,
+      "window_us": 2139398,
+      "completed_window_fps": 27.11043013034508,
+      "interval_samples": 57,
+      "median_interval_us": 23937,
+      "p95_interval_us": 47937,
+      "max_interval_us": 48341,
+      "script_updates_during_drag": null,
+      "script": [],
+      "memory": {
+        "before": {
+          "sram_total": 320715,
+          "sram_free": 56771,
+          "sram_min": 56771,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 6859872,
+          "psram_min": 6859872,
+          "psram_largest": 6029312,
+          "sram_used": 263944,
+          "psram_used": 1498652
+        },
+        "loaded": {
+          "sram_total": 320715,
+          "sram_free": 48491,
+          "sram_min": 44151,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 5794788,
+          "psram_min": 4634284,
+          "psram_largest": 3932160,
+          "sram_used": 272224,
+          "psram_used": 2563736
+        },
+        "startup_peak": {
+          "sram_total": 320715,
+          "sram_free": 48527,
+          "sram_min": 44151,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 5794788,
+          "psram_min": 4634284,
+          "psram_largest": 3932160,
+          "sram_used": 272188,
+          "psram_used": 2563736,
+          "sram_window_peak_used": 276564,
+          "psram_window_peak_used": 3724240
+        },
+        "steady_before": {
+          "sram_total": 320715,
+          "sram_free": 48527,
+          "sram_min": 48527,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 5794788,
+          "psram_min": 5794788,
+          "psram_largest": 3932160,
+          "sram_used": 272188,
+          "psram_used": 2563736
+        },
+        "steady_peak": {
+          "sram_total": 320715,
+          "sram_free": 48527,
+          "sram_min": 44427,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 5791912,
+          "psram_min": 5785892,
+          "psram_largest": 3932160,
+          "sram_used": 272188,
+          "psram_used": 2566612,
+          "sram_window_peak_used": 276288,
+          "psram_window_peak_used": 2572632
+        },
+        "stopped": {
+          "sram_total": 320715,
+          "sram_free": 49719,
+          "sram_min": 18040,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 6818796,
+          "psram_min": 4492332,
+          "psram_largest": 4849664,
+          "sram_used": 270996,
+          "psram_used": 1539728
+        }
+      },
+      "aot_mappings": [
+        {
+          "request": 932368,
+          "map": 983040,
+          "alloc": 983040
+        }
+      ],
+      "linear_observations": [
+        {
+          "linear": 131072,
+          "component_linear_peak": 131072
+        }
+      ],
+      "initialization": [],
+      "ready": [],
+      "snapshot_observations": [],
+      "raw_result": "device-baseline-final-1.json",
+      "filtered_log": "device-baseline-final-1.log"
+    },
+    {
+      "name": "device-baseline-final-2",
+      "passed": true,
+      "case": 0,
+      "active_interval_fps": 30.17292548771319,
+      "completed_frames": 62,
+      "window_us": 2214804,
+      "completed_window_fps": 27.99344772720295,
+      "interval_samples": 61,
+      "median_interval_us": 24015,
+      "p95_interval_us": 47641,
+      "max_interval_us": 47774,
+      "script_updates_during_drag": null,
+      "script": [],
+      "memory": {
+        "before": {
+          "sram_total": 320715,
+          "sram_free": 49719,
+          "sram_min": 49719,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 6818788,
+          "psram_min": 6818788,
+          "psram_largest": 4849664,
+          "sram_used": 270996,
+          "psram_used": 1539736
+        },
+        "loaded": {
+          "sram_total": 320715,
+          "sram_free": 48527,
+          "sram_min": 44391,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 5793436,
+          "psram_min": 4593084,
+          "psram_largest": 3932160,
+          "sram_used": 272188,
+          "psram_used": 2565088
+        },
+        "startup_peak": {
+          "sram_total": 320715,
+          "sram_free": 48527,
+          "sram_min": 44391,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 5793436,
+          "psram_min": 4593084,
+          "psram_largest": 3932160,
+          "sram_used": 272188,
+          "psram_used": 2565088,
+          "sram_window_peak_used": 276324,
+          "psram_window_peak_used": 3765440
+        },
+        "steady_before": {
+          "sram_total": 320715,
+          "sram_free": 48527,
+          "sram_min": 48527,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 5793436,
+          "psram_min": 5793436,
+          "psram_largest": 3932160,
+          "sram_used": 272188,
+          "psram_used": 2565088
+        },
+        "steady_peak": {
+          "sram_total": 320715,
+          "sram_free": 48527,
+          "sram_min": 48439,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 5791256,
+          "psram_min": 5784836,
+          "psram_largest": 3932160,
+          "sram_used": 272188,
+          "psram_used": 2567268,
+          "sram_window_peak_used": 272276,
+          "psram_window_peak_used": 2573688
+        },
+        "stopped": {
+          "sram_total": 320715,
+          "sram_free": 49719,
+          "sram_min": 18040,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 6818084,
+          "psram_min": 4492332,
+          "psram_largest": 4849664,
+          "sram_used": 270996,
+          "psram_used": 1540440
+        }
+      },
+      "aot_mappings": [
+        {
+          "request": 932368,
+          "map": 983040,
+          "alloc": 983040
+        }
+      ],
+      "linear_observations": [
+        {
+          "linear": 131072,
+          "component_linear_peak": 131072
+        }
+      ],
+      "initialization": [],
+      "ready": [],
+      "snapshot_observations": [],
+      "raw_result": "device-baseline-final-2.json",
+      "filtered_log": "device-baseline-final-2.log"
+    },
+    {
+      "name": "device-safe-static-1",
+      "passed": true,
+      "case": 0,
+      "active_interval_fps": 30.04638236933753,
+      "completed_frames": 66,
+      "window_us": 2344827,
+      "completed_window_fps": 28.14706586029588,
+      "interval_samples": 65,
+      "median_interval_us": 24001,
+      "p95_interval_us": 47565,
+      "max_interval_us": 47787,
+      "script_updates_during_drag": 0,
+      "script": [],
+      "memory": {
+        "before": {
+          "sram_total": 320715,
+          "sram_free": 49767,
+          "sram_min": 49767,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 6820376,
+          "psram_min": 6818640,
+          "psram_largest": 3080192,
+          "sram_used": 270948,
+          "psram_used": 1538148
+        },
+        "loaded": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 44511,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 4014276,
+          "psram_min": 649528,
+          "psram_largest": 3080192,
+          "sram_used": 272104,
+          "psram_used": 4344248
+        },
+        "startup_peak": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 44511,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 4014276,
+          "psram_min": 649528,
+          "psram_largest": 3080192,
+          "sram_used": 272104,
+          "psram_used": 4344248,
+          "sram_window_peak_used": 276204,
+          "psram_window_peak_used": 7708996
+        },
+        "steady_before": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 48611,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 4014284,
+          "psram_min": 4014284,
+          "psram_largest": 3080192,
+          "sram_used": 272104,
+          "psram_used": 4344240
+        },
+        "steady_peak": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 48523,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 4011048,
+          "psram_min": 4000624,
+          "psram_largest": 3080192,
+          "sram_used": 272104,
+          "psram_used": 4347476,
+          "sram_window_peak_used": 272192,
+          "psram_window_peak_used": 4357900
+        },
+        "stopped": {
+          "sram_total": 320715,
+          "sram_free": 49803,
+          "sram_min": 27596,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 6819988,
+          "psram_min": 398452,
+          "psram_largest": 3080192,
+          "sram_used": 270912,
+          "psram_used": 1538536
+        }
+      },
+      "aot_mappings": [
+        {
+          "request": 2488116,
+          "map": 2490368,
+          "alloc": 2490368
+        }
+      ],
+      "linear_observations": [
+        {
+          "linear": 0,
+          "component_linear_peak": 393216
+        },
+        {
+          "linear": 196608,
+          "component_linear_peak": 196608
+        },
+        {
+          "linear": 0,
+          "component_linear_peak": 196608
+        }
+      ],
+      "initialization": [],
+      "ready": [],
+      "snapshot_observations": [],
+      "raw_result": "device-safe-static-1.json",
+      "filtered_log": "device-safe-static-1.log"
+    },
+    {
+      "name": "device-safe-dynamic-1",
+      "passed": true,
+      "case": 1,
+      "active_interval_fps": 30.21763264555374,
+      "completed_frames": 47,
+      "window_us": 1718384,
+      "completed_window_fps": 27.35127887596719,
+      "interval_samples": 46,
+      "median_interval_us": 23992.0,
+      "p95_interval_us": 47569,
+      "max_interval_us": 47674,
+      "script_updates_during_drag": 0,
+      "script": [
+        "BROWSER JS OPEN active=1",
+        "BROWSER JS INITIALIZED total_us=191539 max_step_us=76513",
+        "BROWSER JS STAGE COMPILE",
+        "BROWSER JS STAGE EXECUTE",
+        "BROWSER JS STAGE EXECUTED",
+        "BROWSER JS READY heap=208468 peak=211468 errors=0 turns=25 max_us=42695",
+        "BROWSER JS UPDATE revision=1 text=3069 links=0 fields=0 markup_us=26461 markup_turns=24",
+        "BROWSER JS UPDATE revision=2 text=3065 links=0 fields=0 markup_us=26461 markup_turns=48",
+        "BROWSER JS UPDATE revision=3 text=3065 links=0 fields=0 markup_us=26461 markup_turns=72",
+        "BROWSER JS UPDATE revision=4 text=3066 links=0 fields=0 markup_us=27285 markup_turns=96",
+        "BROWSER JS UPDATE revision=5 text=3066 links=0 fields=0 markup_us=27285 markup_turns=120",
+        "BROWSER JS UPDATE revision=6 text=3066 links=0 fields=0 markup_us=27285 markup_turns=144",
+        "BROWSER JS UPDATE revision=7 text=3066 links=0 fields=0 markup_us=27285 markup_turns=168",
+        "BROWSER JS UPDATE revision=8 text=3066 links=0 fields=0 markup_us=27285 markup_turns=192",
+        "BROWSER JS UPDATE revision=9 text=3066 links=0 fields=0 markup_us=27285 markup_turns=216",
+        "BROWSER JS UPDATE revision=10 text=3066 links=0 fields=0 markup_us=33224 markup_turns=240",
+        "BROWSER JS UPDATE revision=11 text=3066 links=0 fields=0 markup_us=40554 markup_turns=264"
+      ],
+      "memory": {
+        "before": {
+          "sram_total": 320715,
+          "sram_free": 49803,
+          "sram_min": 49803,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 6819960,
+          "psram_min": 6819960,
+          "psram_largest": 3080192,
+          "sram_used": 270912,
+          "psram_used": 1538564
+        },
+        "loaded": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 44475,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3746596,
+          "psram_min": 648972,
+          "psram_largest": 2228224,
+          "sram_used": 272104,
+          "psram_used": 4611928
+        },
+        "startup_peak": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 44475,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3746596,
+          "psram_min": 648972,
+          "psram_largest": 2228224,
+          "sram_used": 272104,
+          "psram_used": 4611928,
+          "sram_window_peak_used": 276240,
+          "psram_window_peak_used": 7709552
+        },
+        "steady_before": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 48611,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3746596,
+          "psram_min": 3746596,
+          "psram_largest": 2228224,
+          "sram_used": 272104,
+          "psram_used": 4611928
+        },
+        "steady_peak": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 48523,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3744416,
+          "psram_min": 3738196,
+          "psram_largest": 2228224,
+          "sram_used": 272104,
+          "psram_used": 4614108,
+          "sram_window_peak_used": 272192,
+          "psram_window_peak_used": 4620328
+        },
+        "stopped": {
+          "sram_total": 320715,
+          "sram_free": 49803,
+          "sram_min": 27596,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 6819532,
+          "psram_min": 398452,
+          "psram_largest": 3080192,
+          "sram_used": 270912,
+          "psram_used": 1538992
+        }
+      },
+      "aot_mappings": [
+        {
+          "request": 2488116,
+          "map": 2490368,
+          "alloc": 2490368
+        }
+      ],
+      "linear_observations": [
+        {
+          "linear": 0,
+          "component_linear_peak": 196608
+        },
+        {
+          "linear": 196608,
+          "component_linear_peak": 196608
+        },
+        {
+          "linear": 0,
+          "component_linear_peak": 458752
+        }
+      ],
+      "initialization": [
+        {
+          "total_us": 191539,
+          "max_step_us": 76513
+        }
+      ],
+      "ready": [
+        {
+          "heap": 208468,
+          "peak_so_far": 211468,
+          "errors": 0,
+          "turns": 25,
+          "max_turn_us_so_far": 42695
+        }
+      ],
+      "snapshot_observations": [
+        {
+          "revision": 1,
+          "max_markup_call_us_so_far": 26461,
+          "cumulative_markup_turns": 24
+        },
+        {
+          "revision": 2,
+          "max_markup_call_us_so_far": 26461,
+          "cumulative_markup_turns": 48
+        },
+        {
+          "revision": 3,
+          "max_markup_call_us_so_far": 26461,
+          "cumulative_markup_turns": 72
+        },
+        {
+          "revision": 4,
+          "max_markup_call_us_so_far": 27285,
+          "cumulative_markup_turns": 96
+        },
+        {
+          "revision": 5,
+          "max_markup_call_us_so_far": 27285,
+          "cumulative_markup_turns": 120
+        },
+        {
+          "revision": 6,
+          "max_markup_call_us_so_far": 27285,
+          "cumulative_markup_turns": 144
+        },
+        {
+          "revision": 7,
+          "max_markup_call_us_so_far": 27285,
+          "cumulative_markup_turns": 168
+        },
+        {
+          "revision": 8,
+          "max_markup_call_us_so_far": 27285,
+          "cumulative_markup_turns": 192
+        },
+        {
+          "revision": 9,
+          "max_markup_call_us_so_far": 27285,
+          "cumulative_markup_turns": 216
+        },
+        {
+          "revision": 10,
+          "max_markup_call_us_so_far": 33224,
+          "cumulative_markup_turns": 240
+        },
+        {
+          "revision": 11,
+          "max_markup_call_us_so_far": 40554,
+          "cumulative_markup_turns": 264
+        },
+        {
+          "revision": 12,
+          "max_markup_call_us_so_far": 45747,
+          "cumulative_markup_turns": 288
+        }
+      ],
+      "raw_result": "device-safe-dynamic-1.json",
+      "filtered_log": "device-safe-dynamic-1.log"
+    },
+    {
+      "name": "device-safe-basic-1",
+      "passed": true,
+      "case": 2,
+      "active_interval_fps": 6.008135014810053,
+      "completed_frames": 7,
+      "window_us": 1705498,
+      "completed_window_fps": 4.104373033565563,
+      "interval_samples": 6,
+      "median_interval_us": 35782.0,
+      "p95_interval_us": 261355,
+      "max_interval_us": 618253,
+      "script_updates_during_drag": 0,
+      "script": [
+        "BROWSER JS OPEN active=1",
+        "BROWSER JS INITIALIZED total_us=193575 max_step_us=75327",
+        "BROWSER JS STAGE COMPILE",
+        "BROWSER JS STAGE EXECUTE",
+        "BROWSER JS STAGE EXECUTED",
+        "BROWSER JS STAGE COMPILE",
+        "BROWSER JS STAGE EXECUTE",
+        "BROWSER JS STAGE EXECUTED",
+        "BROWSER JS READY heap=179068 peak=182412 errors=0 turns=17 max_us=44835",
+        "BROWSER JS UPDATE revision=1 text=78 links=1 fields=1 markup_us=26014 markup_turns=4",
+        "BROWSER JS UPDATE revision=2 text=84 links=1 fields=1 markup_us=26014 markup_turns=16",
+        "BROWSER JS UPDATE revision=3 text=81 links=1 fields=1 markup_us=46566 markup_turns=20"
+      ],
+      "memory": {
+        "before": {
+          "sram_total": 320715,
+          "sram_free": 49803,
+          "sram_min": 49803,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 6819504,
+          "psram_min": 6819504,
+          "psram_largest": 3080192,
+          "sram_used": 270912,
+          "psram_used": 1539020
+        },
+        "loaded": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 44387,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3811288,
+          "psram_min": 648588,
+          "psram_largest": 2686976,
+          "sram_used": 272104,
+          "psram_used": 4547236
+        },
+        "startup_peak": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 44387,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3811288,
+          "psram_min": 648588,
+          "psram_largest": 2686976,
+          "sram_used": 272104,
+          "psram_used": 4547236,
+          "sram_window_peak_used": 276328,
+          "psram_window_peak_used": 7709936
+        },
+        "steady_before": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 48611,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3811288,
+          "psram_min": 3811288,
+          "psram_largest": 2686976,
+          "sram_used": 272104,
+          "psram_used": 4547236
+        },
+        "steady_peak": {
+          "sram_total": 320715,
+          "sram_free": 48575,
+          "sram_min": 48523,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3809108,
+          "psram_min": 3802292,
+          "psram_largest": 2686976,
+          "sram_used": 272140,
+          "psram_used": 4549416,
+          "sram_window_peak_used": 272192,
+          "psram_window_peak_used": 4556232
+        },
+        "stopped": {
+          "sram_total": 320715,
+          "sram_free": 49803,
+          "sram_min": 27596,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 6818760,
+          "psram_min": 398452,
+          "psram_largest": 3080192,
+          "sram_used": 270912,
+          "psram_used": 1539764
+        }
+      },
+      "aot_mappings": [
+        {
+          "request": 2488116,
+          "map": 2490368,
+          "alloc": 2490368
+        }
+      ],
+      "linear_observations": [
+        {
+          "linear": 0,
+          "component_linear_peak": 458752
+        },
+        {
+          "linear": 0,
+          "component_linear_peak": 393216
+        }
+      ],
+      "initialization": [
+        {
+          "total_us": 193575,
+          "max_step_us": 75327
+        }
+      ],
+      "ready": [
+        {
+          "heap": 179068,
+          "peak_so_far": 182412,
+          "errors": 0,
+          "turns": 17,
+          "max_turn_us_so_far": 44835
+        }
+      ],
+      "snapshot_observations": [
+        {
+          "revision": 12,
+          "max_markup_call_us_so_far": 45747,
+          "cumulative_markup_turns": 288
+        },
+        {
+          "revision": 1,
+          "max_markup_call_us_so_far": 26014,
+          "cumulative_markup_turns": 4
+        },
+        {
+          "revision": 2,
+          "max_markup_call_us_so_far": 26014,
+          "cumulative_markup_turns": 16
+        },
+        {
+          "revision": 3,
+          "max_markup_call_us_so_far": 46566,
+          "cumulative_markup_turns": 20
+        }
+      ],
+      "raw_result": "device-safe-basic-1.json",
+      "filtered_log": "device-safe-basic-1.log"
+    },
+    {
+      "name": "device-safe-timeout-1",
+      "passed": true,
+      "case": 3,
+      "active_interval_fps": null,
+      "completed_frames": 0,
+      "window_us": 1708058,
+      "completed_window_fps": 0.0,
+      "interval_samples": 0,
+      "median_interval_us": null,
+      "p95_interval_us": null,
+      "max_interval_us": null,
+      "script_updates_during_drag": 0,
+      "script": [
+        "BROWSER JS OPEN active=1",
+        "BROWSER JS INITIALIZED total_us=194138 max_step_us=75805",
+        "BROWSER JS STAGE COMPILE",
+        "BROWSER JS STAGE EXECUTE",
+        "BROWSER JS STAGE EXECUTED",
+        "BROWSER JS ERROR 脚本执行超时"
+      ],
+      "memory": {
+        "before": {
+          "sram_total": 320715,
+          "sram_free": 49803,
+          "sram_min": 49803,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 6818732,
+          "psram_min": 6818732,
+          "psram_largest": 3080192,
+          "sram_used": 270912,
+          "psram_used": 1539792
+        },
+        "loaded": {
+          "sram_total": 320715,
+          "sram_free": 48575,
+          "sram_min": 44475,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3811840,
+          "psram_min": 647712,
+          "psram_largest": 2686976,
+          "sram_used": 272140,
+          "psram_used": 4546684
+        },
+        "startup_peak": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 44475,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3811840,
+          "psram_min": 647712,
+          "psram_largest": 2686976,
+          "sram_used": 272104,
+          "psram_used": 4546684,
+          "sram_window_peak_used": 276240,
+          "psram_window_peak_used": 7710812
+        },
+        "steady_before": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 48611,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3811840,
+          "psram_min": 3811840,
+          "psram_largest": 2686976,
+          "sram_used": 272104,
+          "psram_used": 4546684
+        },
+        "steady_peak": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 48523,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3809660,
+          "psram_min": 3807864,
+          "psram_largest": 2686976,
+          "sram_used": 272104,
+          "psram_used": 4548864,
+          "sram_window_peak_used": 272192,
+          "psram_window_peak_used": 4550660
+        },
+        "stopped": {
+          "sram_total": 320715,
+          "sram_free": 49803,
+          "sram_min": 27596,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 6818268,
+          "psram_min": 398452,
+          "psram_largest": 3080192,
+          "sram_used": 270912,
+          "psram_used": 1540256
+        }
+      },
+      "aot_mappings": [
+        {
+          "request": 2488116,
+          "map": 2490368,
+          "alloc": 2490368
+        }
+      ],
+      "linear_observations": [
+        {
+          "linear": 0,
+          "component_linear_peak": 393216
+        },
+        {
+          "linear": 196608,
+          "component_linear_peak": 196608
+        },
+        {
+          "linear": 0,
+          "component_linear_peak": 393216
+        }
+      ],
+      "initialization": [
+        {
+          "total_us": 194138,
+          "max_step_us": 75805
+        }
+      ],
+      "ready": [],
+      "snapshot_observations": [],
+      "raw_result": "device-safe-timeout-1.json",
+      "filtered_log": "device-safe-timeout-1.log"
+    },
+    {
+      "name": "device-safe-oom-1",
+      "passed": true,
+      "case": 4,
+      "active_interval_fps": null,
+      "completed_frames": 0,
+      "window_us": 1705706,
+      "completed_window_fps": 0.0,
+      "interval_samples": 0,
+      "median_interval_us": null,
+      "p95_interval_us": null,
+      "max_interval_us": null,
+      "script_updates_during_drag": 0,
+      "script": [
+        "BROWSER JS OPEN active=1",
+        "BROWSER JS INITIALIZED total_us=191075 max_step_us=77028",
+        "BROWSER JS STAGE COMPILE",
+        "BROWSER JS STAGE EXECUTE",
+        "BROWSER JS STAGE EXECUTED",
+        "BROWSER JS ERROR 脚本内存达到上限"
+      ],
+      "memory": {
+        "before": {
+          "sram_total": 320715,
+          "sram_free": 49803,
+          "sram_min": 49803,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 6818240,
+          "psram_min": 6818240,
+          "psram_largest": 3080192,
+          "sram_used": 270912,
+          "psram_used": 1540284
+        },
+        "loaded": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 44423,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3745816,
+          "psram_min": 647208,
+          "psram_largest": 2228224,
+          "sram_used": 272104,
+          "psram_used": 4612708
+        },
+        "startup_peak": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 44423,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3745816,
+          "psram_min": 647208,
+          "psram_largest": 2228224,
+          "sram_used": 272104,
+          "psram_used": 4612708,
+          "sram_window_peak_used": 276292,
+          "psram_window_peak_used": 7711316
+        },
+        "steady_before": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 48611,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3745816,
+          "psram_min": 3745816,
+          "psram_largest": 2228224,
+          "sram_used": 272104,
+          "psram_used": 4612708
+        },
+        "steady_peak": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 48575,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3743636,
+          "psram_min": 3740048,
+          "psram_largest": 2228224,
+          "sram_used": 272104,
+          "psram_used": 4614888,
+          "sram_window_peak_used": 272140,
+          "psram_window_peak_used": 4618476
+        },
+        "stopped": {
+          "sram_total": 320715,
+          "sram_free": 49803,
+          "sram_min": 27596,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 6817824,
+          "psram_min": 398452,
+          "psram_largest": 3080192,
+          "sram_used": 270912,
+          "psram_used": 1540700
+        }
+      },
+      "aot_mappings": [
+        {
+          "request": 2488116,
+          "map": 2490368,
+          "alloc": 2490368
+        }
+      ],
+      "linear_observations": [
+        {
+          "linear": 0,
+          "component_linear_peak": 393216
+        },
+        {
+          "linear": 196608,
+          "component_linear_peak": 196608
+        },
+        {
+          "linear": 0,
+          "component_linear_peak": 458752
+        }
+      ],
+      "initialization": [
+        {
+          "total_us": 191075,
+          "max_step_us": 77028
+        }
+      ],
+      "ready": [],
+      "snapshot_observations": [],
+      "raw_result": "device-safe-oom-1.json",
+      "filtered_log": "device-safe-oom-1.log"
+    },
+    {
+      "name": "device-safe-stack-1",
+      "passed": true,
+      "case": 5,
+      "active_interval_fps": null,
+      "completed_frames": 0,
+      "window_us": 1706075,
+      "completed_window_fps": 0.0,
+      "interval_samples": 0,
+      "median_interval_us": null,
+      "p95_interval_us": null,
+      "max_interval_us": null,
+      "script_updates_during_drag": 0,
+      "script": [
+        "BROWSER JS OPEN active=1",
+        "BROWSER JS INITIALIZED total_us=197722 max_step_us=76906",
+        "BROWSER JS STAGE COMPILE",
+        "BROWSER JS STAGE EXECUTE",
+        "BROWSER JS STAGE EXECUTED",
+        "BROWSER JS ERROR 部分网页脚本不受支持",
+        "BROWSER JS STAGE COMPILE",
+        "BROWSER JS STAGE EXECUTE",
+        "BROWSER JS STAGE EXECUTED",
+        "BROWSER JS UPDATE revision=1 text=22 links=0 fields=0 markup_us=12601 markup_turns=1",
+        "BROWSER JS READY heap=174460 peak=179573 errors=1 turns=2 max_us=50919"
+      ],
+      "memory": {
+        "before": {
+          "sram_total": 320715,
+          "sram_free": 49803,
+          "sram_min": 49803,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 6817796,
+          "psram_min": 6817796,
+          "psram_largest": 3080192,
+          "sram_used": 270912,
+          "psram_used": 1540728
+        },
+        "loaded": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 44475,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3810984,
+          "psram_min": 646800,
+          "psram_largest": 2686976,
+          "sram_used": 272104,
+          "psram_used": 4547540
+        },
+        "startup_peak": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 44475,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3810984,
+          "psram_min": 646800,
+          "psram_largest": 2686976,
+          "sram_used": 272104,
+          "psram_used": 4547540,
+          "sram_window_peak_used": 276240,
+          "psram_window_peak_used": 7711724
+        },
+        "steady_before": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 48611,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3810984,
+          "psram_min": 3810984,
+          "psram_largest": 2686976,
+          "sram_used": 272104,
+          "psram_used": 4547540
+        },
+        "steady_peak": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 48523,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3808804,
+          "psram_min": 3807012,
+          "psram_largest": 2686976,
+          "sram_used": 272104,
+          "psram_used": 4549720,
+          "sram_window_peak_used": 272192,
+          "psram_window_peak_used": 4551512
+        },
+        "stopped": {
+          "sram_total": 320715,
+          "sram_free": 49803,
+          "sram_min": 27596,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 6817296,
+          "psram_min": 398452,
+          "psram_largest": 3080192,
+          "sram_used": 270912,
+          "psram_used": 1541228
+        }
+      },
+      "aot_mappings": [
+        {
+          "request": 2488116,
+          "map": 2490368,
+          "alloc": 2490368
+        }
+      ],
+      "linear_observations": [
+        {
+          "linear": 0,
+          "component_linear_peak": 458752
+        },
+        {
+          "linear": 0,
+          "component_linear_peak": 393216
+        }
+      ],
+      "initialization": [
+        {
+          "total_us": 197722,
+          "max_step_us": 76906
+        }
+      ],
+      "ready": [
+        {
+          "heap": 174460,
+          "peak_so_far": 179573,
+          "errors": 1,
+          "turns": 2,
+          "max_turn_us_so_far": 50919
+        }
+      ],
+      "snapshot_observations": [
+        {
+          "revision": 1,
+          "max_markup_call_us_so_far": 12601,
+          "cumulative_markup_turns": 1
+        }
+      ],
+      "raw_result": "device-safe-stack-1.json",
+      "filtered_log": "device-safe-stack-1.log"
+    },
+    {
+      "name": "device-safe-static-2",
+      "passed": true,
+      "case": 0,
+      "active_interval_fps": 30.149404001099995,
+      "completed_frames": 67,
+      "window_us": 2359663,
+      "completed_window_fps": 28.393885059010547,
+      "interval_samples": 66,
+      "median_interval_us": 23948.0,
+      "p95_interval_us": 47701,
+      "max_interval_us": 48264,
+      "script_updates_during_drag": 0,
+      "script": [],
+      "memory": {
+        "before": {
+          "sram_total": 320715,
+          "sram_free": 49803,
+          "sram_min": 49803,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 6817268,
+          "psram_min": 6817268,
+          "psram_largest": 3080192,
+          "sram_used": 270912,
+          "psram_used": 1541256
+        },
+        "loaded": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 44511,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 4010292,
+          "psram_min": 646452,
+          "psram_largest": 3080192,
+          "sram_used": 272104,
+          "psram_used": 4348232
+        },
+        "startup_peak": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 44511,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 4010292,
+          "psram_min": 646452,
+          "psram_largest": 3080192,
+          "sram_used": 272104,
+          "psram_used": 4348232,
+          "sram_window_peak_used": 276204,
+          "psram_window_peak_used": 7712072
+        },
+        "steady_before": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 48611,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 4010292,
+          "psram_min": 4010292,
+          "psram_largest": 3080192,
+          "sram_used": 272104,
+          "psram_used": 4348232
+        },
+        "steady_peak": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 48523,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 4008112,
+          "psram_min": 4001296,
+          "psram_largest": 3080192,
+          "sram_used": 272104,
+          "psram_used": 4350412,
+          "sram_window_peak_used": 272192,
+          "psram_window_peak_used": 4357228
+        },
+        "stopped": {
+          "sram_total": 320715,
+          "sram_free": 49803,
+          "sram_min": 27596,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 6816936,
+          "psram_min": 398452,
+          "psram_largest": 3080192,
+          "sram_used": 270912,
+          "psram_used": 1541588
+        }
+      },
+      "aot_mappings": [
+        {
+          "request": 2488116,
+          "map": 2490368,
+          "alloc": 2490368
+        }
+      ],
+      "linear_observations": [
+        {
+          "linear": 0,
+          "component_linear_peak": 393216
+        },
+        {
+          "linear": 196608,
+          "component_linear_peak": 196608
+        },
+        {
+          "linear": 0,
+          "component_linear_peak": 196608
+        }
+      ],
+      "initialization": [],
+      "ready": [],
+      "snapshot_observations": [],
+      "raw_result": "device-safe-static-2.json",
+      "filtered_log": "device-safe-static-2.log"
+    },
+    {
+      "name": "device-safe-dynamic-2",
+      "passed": true,
+      "case": 1,
+      "active_interval_fps": 30.009242846796813,
+      "completed_frames": 46,
+      "window_us": 1706792,
+      "completed_window_fps": 26.95114577523213,
+      "interval_samples": 45,
+      "median_interval_us": 23944,
+      "p95_interval_us": 47689,
+      "max_interval_us": 47993,
+      "script_updates_during_drag": 0,
+      "script": [
+        "BROWSER JS OPEN active=1",
+        "BROWSER JS INITIALIZED total_us=192035 max_step_us=76550",
+        "BROWSER JS STAGE COMPILE",
+        "BROWSER JS STAGE EXECUTE",
+        "BROWSER JS STAGE EXECUTED",
+        "BROWSER JS READY heap=208468 peak=211468 errors=0 turns=25 max_us=42123",
+        "BROWSER JS UPDATE revision=1 text=3069 links=0 fields=0 markup_us=27936 markup_turns=24",
+        "BROWSER JS UPDATE revision=2 text=3065 links=0 fields=0 markup_us=27936 markup_turns=48",
+        "BROWSER JS UPDATE revision=3 text=3065 links=0 fields=0 markup_us=27936 markup_turns=72",
+        "BROWSER JS UPDATE revision=4 text=3066 links=0 fields=0 markup_us=27936 markup_turns=96",
+        "BROWSER JS UPDATE revision=5 text=3066 links=0 fields=0 markup_us=27936 markup_turns=120",
+        "BROWSER JS UPDATE revision=6 text=3066 links=0 fields=0 markup_us=27936 markup_turns=144",
+        "BROWSER JS UPDATE revision=7 text=3066 links=0 fields=0 markup_us=27936 markup_turns=168",
+        "BROWSER JS UPDATE revision=8 text=3066 links=0 fields=0 markup_us=27936 markup_turns=192",
+        "BROWSER JS UPDATE revision=9 text=3066 links=0 fields=0 markup_us=27936 markup_turns=216",
+        "BROWSER JS UPDATE revision=10 text=3066 links=0 fields=0 markup_us=32607 markup_turns=240",
+        "BROWSER JS UPDATE revision=11 text=3066 links=0 fields=0 markup_us=40969 markup_turns=264"
+      ],
+      "memory": {
+        "before": {
+          "sram_total": 320715,
+          "sram_free": 49803,
+          "sram_min": 49803,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 6816908,
+          "psram_min": 6816908,
+          "psram_largest": 3080192,
+          "sram_used": 270912,
+          "psram_used": 1541616
+        },
+        "loaded": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 44475,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3744072,
+          "psram_min": 646004,
+          "psram_largest": 2228224,
+          "sram_used": 272104,
+          "psram_used": 4614452
+        },
+        "startup_peak": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 44475,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3744072,
+          "psram_min": 646004,
+          "psram_largest": 2228224,
+          "sram_used": 272104,
+          "psram_used": 4614452,
+          "sram_window_peak_used": 276240,
+          "psram_window_peak_used": 7712520
+        },
+        "steady_before": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 48611,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3744072,
+          "psram_min": 3744072,
+          "psram_largest": 2228224,
+          "sram_used": 272104,
+          "psram_used": 4614452
+        },
+        "steady_peak": {
+          "sram_total": 320715,
+          "sram_free": 48611,
+          "sram_min": 48575,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 3741892,
+          "psram_min": 3734688,
+          "psram_largest": 2228224,
+          "sram_used": 272104,
+          "psram_used": 4616632,
+          "sram_window_peak_used": 272140,
+          "psram_window_peak_used": 4623836
+        },
+        "stopped": {
+          "sram_total": 320715,
+          "sram_free": 49803,
+          "sram_min": 27596,
+          "sram_largest": 19456,
+          "psram_total": 8358524,
+          "psram_free": 6816932,
+          "psram_min": 398452,
+          "psram_largest": 3080192,
+          "sram_used": 270912,
+          "psram_used": 1541592
+        }
+      },
+      "aot_mappings": [
+        {
+          "request": 2488116,
+          "map": 2490368,
+          "alloc": 2490368
+        }
+      ],
+      "linear_observations": [
+        {
+          "linear": 0,
+          "component_linear_peak": 196608
+        },
+        {
+          "linear": 196608,
+          "component_linear_peak": 196608
+        },
+        {
+          "linear": 0,
+          "component_linear_peak": 458752
+        }
+      ],
+      "initialization": [
+        {
+          "total_us": 192035,
+          "max_step_us": 76550
+        }
+      ],
+      "ready": [
+        {
+          "heap": 208468,
+          "peak_so_far": 211468,
+          "errors": 0,
+          "turns": 25,
+          "max_turn_us_so_far": 42123
+        }
+      ],
+      "snapshot_observations": [
+        {
+          "revision": 1,
+          "max_markup_call_us_so_far": 27936,
+          "cumulative_markup_turns": 24
+        },
+        {
+          "revision": 2,
+          "max_markup_call_us_so_far": 27936,
+          "cumulative_markup_turns": 48
+        },
+        {
+          "revision": 3,
+          "max_markup_call_us_so_far": 27936,
+          "cumulative_markup_turns": 72
+        },
+        {
+          "revision": 4,
+          "max_markup_call_us_so_far": 27936,
+          "cumulative_markup_turns": 96
+        },
+        {
+          "revision": 5,
+          "max_markup_call_us_so_far": 27936,
+          "cumulative_markup_turns": 120
+        },
+        {
+          "revision": 6,
+          "max_markup_call_us_so_far": 27936,
+          "cumulative_markup_turns": 144
+        },
+        {
+          "revision": 7,
+          "max_markup_call_us_so_far": 27936,
+          "cumulative_markup_turns": 168
+        },
+        {
+          "revision": 8,
+          "max_markup_call_us_so_far": 27936,
+          "cumulative_markup_turns": 192
+        },
+        {
+          "revision": 9,
+          "max_markup_call_us_so_far": 27936,
+          "cumulative_markup_turns": 216
+        },
+        {
+          "revision": 10,
+          "max_markup_call_us_so_far": 32607,
+          "cumulative_markup_turns": 240
+        },
+        {
+          "revision": 11,
+          "max_markup_call_us_so_far": 40969,
+          "cumulative_markup_turns": 264
+        },
+        {
+          "revision": 12,
+          "max_markup_call_us_so_far": 40969,
+          "cumulative_markup_turns": 288
+        }
+      ],
+      "raw_result": "device-safe-dynamic-2.json",
+      "filtered_log": "device-safe-dynamic-2.log"
+    }
+  ],
+  "artifacts": "artifact-comparison.json",
+  "test_summary": "test-summary.json",
+  "device_restored": {
+    "normal_home_package": true,
+    "all_files_verified_on_device": true,
+    "data_and_wifi_preserved": true,
+    "browser_stopped": true,
+    "monitoring_stopped_and_perf_cleared": true,
+    "lease_released_to_ime_task": true,
+    "evidence": "device-product-restored.json"
+  },
+  "device_repeated_start_drift": {
+    "psram_free_before_first": 6820376,
+    "psram_free_after_last": 6816932,
+    "sram_free_before_first": 49767,
+    "sram_free_after_last": 49803,
+    "note": "Whole-system 3444B PSRAM decrease, 36B SRAM increase across eight runs; not attributed to cache or leak. Guest native restart sanitizer checks passed; not a long-term no-leak proof."
+  },
+  "iterations_not_performance_evidence": [
+    "Early Os engine failed AOT load; engine Oz and AOT-only format selected.",
+    "30ms trusted initialization failed on target; six deferred phases and 200ms trusted phase guard used.",
+    "Deep empty parser precedence and native call frames overflowed 12KiB physical task stack; parser/call split and bounded WASI guards applied.",
+    "8ms website deadline killed ordinary ~20ms target callbacks; switched to 50ms cooperative exception deadline and incremental snapshots.",
+    "ThinLTO/96KiB C stack warm loads failed at fourth/fifth run; full LTO/48KiB uses three initial pages and passed final eight-run suite.",
+    "Generic nesting guard alone still trapped during stack error formatting; separate eight-bytecode-layer precheck and cheap WASI error path passed real recursion recovery."
+  ],
+  "remaining_limits": [
+    "Guest-only engine is mapped even for static pages/JS off; package and PSRAM costs grew. This is not a no-memory-growth change.",
+    "Target startup PSRAM peak exceeds 7MiB including system; only this 8MiB device validated, not 4MiB targets.",
+    "50ms cooperative deadline is not preemptive/resumable; initialization, compilation, intrinsics, GC and snapshots can exceed one display frame.",
+    "Long-document DOM commit rate ~2Hz in this fixture, intentionally coalesced and paused during interaction; not 50fps Web animation.",
+    "Limited DOM/CSS and API subset; no modern-site, WeRead, jQuery or full browser security compatibility claim.",
+    "WASI nesting limits deliberately reject deep valid scripts; physical AOT backstop can terminate a component if a different native stack path reaches the boundary.",
+    "Web Storage persists only within browser process, not to disk; CSP pages conservatively use static rendering.",
+    "Frozen desktop simulator required forced process-group cleanup after functional lifecycle tests.",
+    "Small whole-device stopped-heap drift across eight runs remains unattributed; no claim of long-term zero leaks."
+  ]
+}

@@ -21,14 +21,15 @@
       "name": "PXA Browser"
     }
   },
-  "description": "直接浏览 HTTP/HTTPS 轻量网页，支持中文、历史列表、书签、基础登录与搜索表单，按需显示 PNG/JPEG/GIF；适配 DPI 与圆角屏幕。不支持 JavaScript 和完整 CSS。",
+  "description": "直接浏览 HTTP/HTTPS 轻量网页，支持中文、历史列表、书签、基础登录与搜索表单，按需显示 PNG/JPEG/GIF；适配 DPI 与圆角屏幕。按需运行轻量网页 JavaScript，支持基本 DOM、事件与异步请求；不支持完整 CSS 和现代复杂网页。",
   "build": {
     "system": "cmake",
     "source_dir": ".",
     "linear_memory": {
-      "maximum_bytes": 524288,
+      "maximum_bytes": 8388608,
       "pinned": false
-    }
+    },
+    "native_stack_checks": true
   },
   "components": [
     {
@@ -64,6 +65,27 @@
         "fs",
         "storage",
         "clock",
+        "log",
+        "ipc"
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "random",
+          "wall-clock"
+        ]
+      },
+      "artifact": "aot"
+    },
+    {
+      "id": "script",
+      "kind": "service",
+      "cmake_target": "pxa_script",
+      "services": [
+        "assets",
+        "ipc",
         "log"
       ],
       "wasi": {
@@ -74,7 +96,8 @@
           "random",
           "wall-clock"
         ]
-      }
+      },
+      "artifact": "wasm"
     }
   ],
   "permissions": [
@@ -84,5 +107,11 @@
       "required": false
     }
   ],
-  "icon": "assets/icon.png"
+  "icon": "assets/icon.png",
+  "ipc_endpoints": [
+    {
+      "name": "pxa.browser.script.v1",
+      "component": "script"
+    }
+  ]
 }

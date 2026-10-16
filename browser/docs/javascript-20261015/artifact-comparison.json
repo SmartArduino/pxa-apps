@@ -1,0 +1,195 @@
+{
+  "baseline_aot_only": {
+    "files": {
+      "artifacts/main.esp32-s3.aot": {
+        "bytes": 994028,
+        "sha256": "04d5cf00198045e7d999da4f7c60e3528e6f4b52687f7bc47008f4e23b45e3ec"
+      },
+      "assets/encoding-license.txt": {
+        "bytes": 16529,
+        "sha256": "7f1d31b39b985b8dbca9e43ee7092141dc7d10833a608160c83eab6c9a7bc814"
+      },
+      "assets/gb18030.bin": {
+        "bytes": 49536,
+        "sha256": "4168af99aff74e8b92b788cd7db7a446c6a4417256d56f68669a8b3368291e8f"
+      },
+      "assets/icon.png": {
+        "bytes": 5350,
+        "sha256": "9906d4af7855020c5e9ba2dfa037e0d50972f0c9f19d5f896bfc309decc1aad2"
+      },
+      "assets/icon.svg": {
+        "bytes": 409,
+        "sha256": "646b5915b02c785182479e6356c9455c8074af5b42738e3b18f7cfe0b7e3c4ad"
+      },
+      "assets/resources.pxi": {
+        "bytes": 192,
+        "sha256": "cbb412ef054215d919bc850abcd88799eedaceb6c5b1cc9d6ecaeb97655d15c9"
+      },
+      "manifest.pxm": {
+        "bytes": 1455,
+        "sha256": "84e71e4b493d2dabf8737bc2b3f307d722e41911d8db5b99e65221f9942ddef5"
+      },
+      "signature.pxs": {
+        "bytes": 108,
+        "sha256": "b1d676a991f9f6b7784091822041ae7a0d8567a2b3e8d002c07cc459642c131b"
+      }
+    },
+    "container": {
+      "bytes": 829084,
+      "sha256": "493afa022e26fb4b8d83ca9acaa903fe56256d861ee9fbee85ef8004ac090628"
+    },
+    "unpacked_bytes": 1067607
+  },
+  "final_qa_s3": {
+    "files": {
+      "artifacts/main.esp32-s3.aot": {
+        "bytes": 2850412,
+        "sha256": "e8093c3cfb05e06a5856b0d17a9954ad8988570a408fc286f4a67cfb43a64cca"
+      },
+      "assets/browser-runtime.qjb": {
+        "bytes": 15934,
+        "sha256": "eb44974a5b606fd77677deb2600086cfd2dd5d58d68de8c9e9cc613b8bf37211"
+      },
+      "assets/encoding-license.txt": {
+        "bytes": 16529,
+        "sha256": "7f1d31b39b985b8dbca9e43ee7092141dc7d10833a608160c83eab6c9a7bc814"
+      },
+      "assets/gb18030.bin": {
+        "bytes": 49536,
+        "sha256": "4168af99aff74e8b92b788cd7db7a446c6a4417256d56f68669a8b3368291e8f"
+      },
+      "assets/icon.png": {
+        "bytes": 5350,
+        "sha256": "9906d4af7855020c5e9ba2dfa037e0d50972f0c9f19d5f896bfc309decc1aad2"
+      },
+      "assets/icon.svg": {
+        "bytes": 409,
+        "sha256": "646b5915b02c785182479e6356c9455c8074af5b42738e3b18f7cfe0b7e3c4ad"
+      },
+      "assets/quickjs-license.txt": {
+        "bytes": 1130,
+        "sha256": "598fd7fc928e4350abce36e337ba5a1346923c5c692f5be92c3d8e29ddd7c18d"
+      },
+      "assets/resources.pxi": {
+        "bytes": 296,
+        "sha256": "92914b5fb036a08030ec4ca7994c52ba765e9ba90e59608e1222c132e859fdd3"
+      },
+      "manifest.pxm": {
+        "bytes": 1707,
+        "sha256": "d88a6a3500869b612c76b53c12f7d414dcd0cb39f958d16eb8d6e722f0111eb2"
+      },
+      "signature.pxs": {
+        "bytes": 108,
+        "sha256": "97b9a8e3bc9feaa6059b03b41e48deee694d4b91b7f64d00e58cf6b70545c9d3"
+      }
+    },
+    "container": {
+      "bytes": 2138002,
+      "sha256": "90c43b21abd46f77478683ce7ece7080f4813c44ab680ded4ec5ac0c9b9d2e3b"
+    },
+    "unpacked_bytes": 2941411
+  },
+  "final_product_s3": {
+    "files": {
+      "artifacts/main.esp32-s3.aot": {
+        "bytes": 2801592,
+        "sha256": "7eafd04913074e57325b5b7c9fc7b81f73f19df9d645e1ec18b6e338afa7b8da"
+      },
+      "assets/browser-runtime.qjb": {
+        "bytes": 15934,
+        "sha256": "eb44974a5b606fd77677deb2600086cfd2dd5d58d68de8c9e9cc613b8bf37211"
+      },
+      "assets/encoding-license.txt": {
+        "bytes": 16529,
+        "sha256": "7f1d31b39b985b8dbca9e43ee7092141dc7d10833a608160c83eab6c9a7bc814"
+      },
+      "assets/gb18030.bin": {
+        "bytes": 49536,
+        "sha256": "4168af99aff74e8b92b788cd7db7a446c6a4417256d56f68669a8b3368291e8f"
+      },
+      "assets/icon.png": {
+        "bytes": 5350,
+        "sha256": "9906d4af7855020c5e9ba2dfa037e0d50972f0c9f19d5f896bfc309decc1aad2"
+      },
+      "assets/icon.svg": {
+        "bytes": 409,
+        "sha256": "646b5915b02c785182479e6356c9455c8074af5b42738e3b18f7cfe0b7e3c4ad"
+      },
+      "assets/quickjs-license.txt": {
+        "bytes": 1130,
+        "sha256": "598fd7fc928e4350abce36e337ba5a1346923c5c692f5be92c3d8e29ddd7c18d"
+      },
+      "assets/resources.pxi": {
+        "bytes": 296,
+        "sha256": "92914b5fb036a08030ec4ca7994c52ba765e9ba90e59608e1222c132e859fdd3"
+      },
+      "manifest.pxm": {
+        "bytes": 1707,
+        "sha256": "eb651b7e270270f89c0ed39ff085f581fab3b72b6795fb1c694aa9030697533c"
+      },
+      "signature.pxs": {
+        "bytes": 108,
+        "sha256": "652ff8e7a6caa10632b9f5bfb18e97618eeaedb468112d58f79be81449e8703d"
+      }
+    },
+    "container": {
+      "bytes": 2101833,
+      "sha256": "1d6b9d2bcc1e1e089213d501bcb617ae2b1cd0fc0d13c1fdb2c16cd4b7c0a45e"
+    },
+    "unpacked_bytes": 2892591
+  },
+  "final_qa_simulator": {
+    "files": {
+      "artifacts/main.linux-x86_64.aot": {
+        "bytes": 1852260,
+        "sha256": "2d32d5c39c372d3c29f99a8e66d0c8060c43d54f190cd85bf2e76092ee21d008"
+      },
+      "assets/browser-runtime.qjb": {
+        "bytes": 15934,
+        "sha256": "eb44974a5b606fd77677deb2600086cfd2dd5d58d68de8c9e9cc613b8bf37211"
+      },
+      "assets/encoding-license.txt": {
+        "bytes": 16529,
+        "sha256": "7f1d31b39b985b8dbca9e43ee7092141dc7d10833a608160c83eab6c9a7bc814"
+      },
+      "assets/gb18030.bin": {
+        "bytes": 49536,
+        "sha256": "4168af99aff74e8b92b788cd7db7a446c6a4417256d56f68669a8b3368291e8f"
+      },
+      "assets/icon.png": {
+        "bytes": 5350,
+        "sha256": "9906d4af7855020c5e9ba2dfa037e0d50972f0c9f19d5f896bfc309decc1aad2"
+      },
+      "assets/icon.svg": {
+        "bytes": 409,
+        "sha256": "646b5915b02c785182479e6356c9455c8074af5b42738e3b18f7cfe0b7e3c4ad"
+      },
+      "assets/quickjs-license.txt": {
+        "bytes": 1130,
+        "sha256": "598fd7fc928e4350abce36e337ba5a1346923c5c692f5be92c3d8e29ddd7c18d"
+      },
+      "assets/resources.pxi": {
+        "bytes": 296,
+        "sha256": "92914b5fb036a08030ec4ca7994c52ba765e9ba90e59608e1222c132e859fdd3"
+      },
+      "manifest.pxm": {
+        "bytes": 1719,
+        "sha256": "72988be20e162cef0a8fa90f60ab7735cea6c5fa3a49d514544f6e0888a47a4a"
+      },
+      "signature.pxs": {
+        "bytes": 108,
+        "sha256": "722af054e2bc13b8ac2968212d5dd1a6fbb001a349c10c89c0e82f0867efb3bf"
+      }
+    },
+    "container": {
+      "bytes": 1196310,
+      "sha256": "6c19fbb5ceecb9e6b520c2e7fafa2a4ec018ed3e4f37ec8ad9688f791e4ab790"
+    },
+    "unpacked_bytes": 1943271
+  },
+  "notes": [
+    "All compared current S3 packages are AOT-only; QA has TRACE/PROFILE and fixture URL.",
+    "Product has no TRACE/PROFILE/fixed test URL. Its code size is smaller than QA.",
+    "Original dual-format baseline 1037008 B and initial JS/O3 dual-format 3827331 B are historical, not equal-format baselines."
+  ]
+}

@@ -1,4 +1,6 @@
 #include "browser_core.hpp"
+#include "browser_script.hpp"
+#include "browser_script_client.hpp"
 #include "browser_search.hpp"
 #include "browser_image_view.hpp"
 #include "browser_geometry.hpp"
@@ -6,6 +8,7 @@
 #include "browser_cookies.hpp"
 #include "browser_sites.hpp"
 #include "browser_site_forms.hpp"
+#include "browser_memory.hpp"
 #include "browser_encoding.hpp"
 #include <pxa/ui_volume_keys.hpp>
 #include <cstdio>
@@ -22,6 +25,7 @@
 #include <pxa/log.hpp>
 #include <pxa/ui_geometry.hpp>
 #include <pxa/ui_widgets.hpp>
+#include <pxa/ui_resource_pressure.hpp>
 
 #ifndef PXA_BROWSER_START_URL
 #define PXA_BROWSER_START_URL ""
@@ -58,8 +62,30 @@ struct App {
     State<bool> capture_volume_keys{false};
     State<bool> password_input{false};
     browser::Cookies cookies;
-    bool show_images = true, show_gif = true;
-    enum class MenuPage : std::uint8_t { tools, history, directory };
+    browser::ReferrerPolicy response_referrer = browser::ReferrerPolicy::strict_origin_when_cross_origin;
+    bool show_images = true, show_gif = true, show_scripts = true;
+    std::unique_ptr<browser::script::Client> script_engine;
+    struct ScriptSession {
+        browser::script::Client& page;
+        explicit ScriptSession(browser::script::Client& client):page(client){}
+        ~ScriptSession(){page.close();}
+        std::string html;
+        browser::script::Module module = browser::script::Module::page;
+        std::array<std::byte, 1024> receive{};
+        std::uint32_t request = 0;
+        std::size_t configured_heap_bytes = 256*1024;
+        std::size_t response_limit = 16384;
+        bool boot_ready = false, boot_loading = true, started = false, initialized_reported = false, reported = false;
+        unsigned revision = 0;
+        std::uint64_t next_paint = 0;
+        std::string error;
+        // Last member: cancel suspended coroutines before freeing their buffers.
+        pxa::TaskScope tasks;
+    };
+    std::unique_ptr<ScriptSession> js;
+    enum class MenuPage : std::uint8_t { tools, history, directory, script_memory };
+    unsigned script_memory_choice = 0;
+    ResourcePressure resource_pressure = ResourcePressure::normal;
     MenuPage menu_page = MenuPage::tools;
     bool volume_scroll = false;
     int volume_direction = 0;
@@ -68,6 +94,7 @@ struct App {
     State<TextInputBox> editor_box{TextInputBox{{}, false, Font::body, 0x17334aff}};
     pxa::Permission permission;
     browser::Document document;
+    std::uint32_t early_field_edits = 0;
     browser::Layout page;
     browser::History history;
     std::vector<std::string> bookmarks;
@@ -144,7 +171,7 @@ struct App {
         image_fit,
         image_more,
         volume_keys, history_list, history_open, history_clear, directory, site_open,
-        image_setting, gif_setting, clear_sessions
+        image_setting, gif_setting, script_setting, clear_sessions, memory_settings, memory_choice
     };
     Action pressed_action = Action::address;
     int pressed_index = -1;
@@ -237,6 +264,13 @@ struct App {
         }
     }
     void stop() {
+        if (js) {
+            js->tasks.cancel();
+            if (!js->boot_ready) js.reset();
+            else if (js->request) {
+                js->page.complete({.id=js->request, .failed=true}); js->request = 0;
+            }
+        }
         const bool interrupted = busy || loading_image >= 0;
         const int cancelled_frame = animation_slot;
         context->foreground_tasks().cancel();
@@ -286,10 +320,12 @@ struct App {
     }
     void home(bool record = true, int position = 0) {
         press.reset();
+        js.reset();
         stop();
         clear_images();
         url = "about:home";
         document.clear("https://pxa.doit.am/");
+        early_field_edits=0;
         scroll = position;
         set_status("PXA 浏览器 · 轻量网页阅读");
         layout_dirty = true;
@@ -356,6 +392,8 @@ struct App {
             return;
         }
         auto initiator = url;
+        auto initiator_referrer = document.referrer;
+        js.reset();
         stop();
         clear_images();
         menu = false;
@@ -363,15 +401,16 @@ struct App {
         scroll = 0;
         restore_scroll = position;
         document.clear(url);
+        early_field_edits=0;
         layout_dirty = true;
         if (record)
             history.visit(post ? std::string(browser::transport_url(url)) : url);
         busy = true;
         set_status("正在连接…");
         log("BROWSER NAV " + url.substr(0, url.find_first_of("?#")));
-        start(fetch(std::move(body), post, std::move(initiator)));
+        start(fetch(std::move(body), post, std::move(initiator), initiator_referrer));
     }
-    pxa::Task<void> fetch(std::string body, bool post, std::string initiator) {
+    pxa::Task<void> fetch(std::string body, bool post, std::string initiator, browser::ReferrerPolicy initiator_referrer) {
         std::uint64_t first = 0, head = 0;
         std::size_t received = 0;
         if (!permission) {
@@ -383,9 +422,10 @@ struct App {
         const auto begin = millis(); // Permission-dialog time is not network latency.
         // Filter unused policy headers before the response-head budget. Retain
         // repeated Set-Cookie fields individually, including on redirects.
-        static constexpr std::array<std::string_view, 4> wanted_headers{
-            "content-type", "content-encoding", "location", "set-cookie"};
-        for (unsigned redirect = 0; redirect <= 5; ++redirect) {
+        static constexpr std::array<std::string_view, 6> wanted_headers{
+            "content-type", "content-encoding", "location", "set-cookie", "referrer-policy", "content-security-policy"};
+        bool inspect_policy=show_scripts, scripts_allowed=show_scripts;
+        for (int redirect = 0; redirect <= 5; ++redirect) {
             const auto cookie = cookies.request(url, millis() / 1000);
             std::array<pxa::NetHeaderView, 8> headers{
                 {{"Accept", "text/html, text/plain;q=0.9, application/rss+xml;q=0.8, "
@@ -399,28 +439,38 @@ struct App {
             auto origin = [](std::string_view value) {
                 return value.substr(0, value.find_first_of("/?#", value.find("://") + 3));
             };
-            const bool http_source = initiator.starts_with("http:") || initiator.starts_with("https:");
-            if (http_source && !(initiator.starts_with("https:") && url.starts_with("http:"))) {
-                // Origin-only referrer avoids leaking queries and path tokens.
-                headers[header_count++] = {"Referer", origin(initiator)};
-                if (post) headers[header_count++] = {"Origin", origin(initiator)};
-            }
+            const auto referrer = browser::request_referrer(initiator,url,initiator_referrer);
+            if (!referrer.empty()) headers[header_count++] = {"Referer",referrer};
+            if (post && browser::script::same_origin(initiator,initiator))
+                headers[header_count++] = {"Origin",origin(initiator)};
             auto exchange = co_await context->http().open(
                 {.url = browser::transport_url(url),
                  .method = post ? pxa::HttpMethod::post : pxa::HttpMethod::get,
                  .headers = std::span{headers}.first(header_count),
-                 .wanted_headers = wanted_headers,
+                 .wanted_headers = std::span{wanted_headers}.first(inspect_policy ? 6 : 5),
                  .body = std::as_bytes(std::span{body.data(), body.size()}),
                  .options = {.buffer_bytes = 4096,
                              .header_bytes = 4096,
-                             .max_body_bytes = 262144,
+                             .max_body_bytes = 524288,
                              .timeout_ms = 20000}},
                 permission);
             if (!exchange)
                 co_return std::unexpected(exchange.error());
             auto response = co_await std::move(*exchange).response();
-            if (!response)
+            if (!response) {
+                // A policy larger than the response-head budget must not make
+                // a static GET unreadable. Retry without executing scripts.
+                // Never replay a POST whose response could already exist.
+                if (inspect_policy && !post && response.error()==pxa::Error::limit_exceeded) {
+                    inspect_policy=scripts_allowed=false; --redirect; continue;
+                }
                 co_return std::unexpected(response.error());
+            }
+            if (response->headers.first("content-security-policy")) scripts_allowed=false;
+            response_referrer = browser::ReferrerPolicy::strict_origin_when_cross_origin;
+            for (auto value : response->headers.values("referrer-policy"))
+                if (auto policy=browser::referrer_policy(value)) response_referrer=*policy;
+            document.referrer=response_referrer;
             head = millis() - begin;
             const auto code = response->status_code;
             for (auto value : response->headers.values("set-cookie"))
@@ -441,6 +491,7 @@ struct App {
                     post = false;
                     body.clear();
                 }
+                if (response->headers.first("referrer-policy")) initiator_referrer=response_referrer;
                 url = std::move(*next);
                 document.base = url;
                 continue;
@@ -535,6 +586,8 @@ struct App {
             if (!legacy_map.empty()) converted.reserve(1545);
             if (!plain && !rss && !wml) browser::site_forms(document, url);
             browser::Parser parser(document);
+            browser::script::Capture script_capture;
+            const bool capture_script = scripts_allowed && !plain && !rss && !wml;
             std::optional<browser::RssParser> feed;
             if (rss)
                 feed.emplace(document);
@@ -546,6 +599,7 @@ struct App {
                         converted.clear(); decoder.feed(part, converted);
                         chunk.remove_prefix(part.size()); part = converted;
                     } else chunk = {};
+                    if (capture_script) script_capture.append(part);
                     if (feed) feed->feed(part);
                     else if (plain) parser.feed_plain(part);
                     else parser.feed(part);
@@ -574,6 +628,7 @@ struct App {
             }
             if (!legacy_map.empty()) {
                 converted.clear(); decoder.finish(converted);
+                if (capture_script) script_capture.append(converted);
                 if (feed) feed->feed(converted);
                 else if (plain) parser.feed_plain(converted);
                 else parser.feed(converted);
@@ -622,9 +677,184 @@ struct App {
             profile.pending = true;
 #endif
             dirty = true;
+            if (capture_script && script_capture.has_script()) {
+                if (script_capture.limited()) set_status("脚本页面过大 · 显示静态内容");
+                else prepare_script(script_capture.take());
+            }
             co_return pxa::Result<void>{};
         }
         co_return std::unexpected(pxa::Error::protocol_error);
+    }
+    void sync_script_field(const browser::Field& field) {
+        if (js && field.script_node) js->page.change_field(field.script_node, field.value, field.checked);
+        else if (show_scripts) {
+            const auto index = &field-document.fields.data();
+            if (index>=0 && std::size_t(index)<document.fields.size() && index<24) early_field_edits |= 1u<<index;
+        }
+    }
+    void prepare_script(std::string html) {
+        if (resource_pressure == ResourcePressure::critical) { set_status("设备内存紧张 · 保留静态页面"); return; }
+        // Keep the downloaded document and its scripts. Compatibility belongs
+        // in the shared Web environment, never an automatic site replacement.
+        if(!script_engine)script_engine=std::make_unique<browser::script::Client>(context->transport(),cookies);
+        js = std::make_unique<ScriptSession>(*script_engine);
+        js->html = std::move(html);
+        js->boot_ready=true;js->boot_loading=false;
+    }
+    pxa::Task<void> fetch_script(browser::script::Request request) {
+        browser::script::Response result{.id=request.id};
+        static constexpr std::array<std::string_view,4> wanted{"content-type","location","set-cookie","content-encoding"};
+        for (unsigned hop=0; hop<6; ++hop) {
+            const auto cookie = cookies.request(request.url, millis()/1000);
+            auto origin = std::string_view(url).substr(0, url.find_first_of("/?#", url.find("://")+3));
+            auto referrer=browser::request_referrer(url,request.url,document.referrer);
+            std::array<pxa::NetHeaderView,7> headers{{
+                {"Accept-Encoding","identity"}, {"User-Agent",browser::site_user_agent(url,browser::user_agent(mobile_ua))},
+                {"Accept",request.script ? "application/javascript, text/javascript;q=0.9, */*;q=0.1" : "*/*"},
+                {"Content-Type",request.content_type.empty() ? std::string_view("text/plain;charset=UTF-8") : std::string_view(request.content_type)},
+                {"Cookie",cookie}, {"Origin",origin}, {"Referer",referrer}}};
+            const std::size_t limit = request.script ? 32768 : js->response_limit;
+            auto exchange = co_await context->http().open({.url=request.url,
+                .method=request.post ? pxa::HttpMethod::post : pxa::HttpMethod::get,
+                .headers=std::span{headers}.first(referrer.empty()?6u:7u),.wanted_headers=wanted,
+                .body=std::as_bytes(std::span{request.body.data(),request.body.size()}),
+                .options={.buffer_bytes=1024,.header_bytes=4096,.max_body_bytes=std::uint32_t(limit),.timeout_ms=request.timeout_ms}}, permission);
+            if (!exchange) break;
+            auto response = co_await std::move(*exchange).response();
+            if (!response) break;
+            for (auto value : response->headers.values("set-cookie"))
+                cookies.receive(request.url,value,millis()/1000,std::time(nullptr));
+            const auto code = response->status_code;
+            if (code==301 || code==302 || code==303 || code==307 || code==308) {
+                auto location = response->headers.first("location");
+                if (!location) break;
+                auto target = browser::resolve(request.url,*location);
+                if (!target || !browser::script::script_url_allowed(url,*target,request.script) ||
+                    (request.post && !browser::script::same_origin(request.url,*target))) break;
+                request.url = std::move(*target);
+                if (code==303 || ((code==301 || code==302) && request.post)) { request.post=false; request.body.clear(); }
+                continue;
+            }
+            const auto encoding = response->headers.first("content-encoding");
+            if (encoding && !pxa::http_header_equal(browser::trim(*encoding),"identity")) break;
+            // Do not execute an HTML error/login page as JavaScript.
+            const auto mime = response->headers.first("content-type");
+            if (request.script && mime && browser::lowercase(*mime).starts_with("text/html")) break;
+            bool failed = false;
+            for (;;) {
+                auto n = co_await response->body.read_some(js->receive);
+                if (!n) { failed=true; break; }
+                if (!*n) break;
+                if (*n > limit-result.body.size()) { failed=true; break; }
+                result.body.append(reinterpret_cast<const char*>(js->receive.data()), *n);
+            }
+            result.status=code; result.failed=failed;
+            js->page.complete(std::move(result)); js->request=0;
+            co_return pxa::Result<void>{};
+        }
+        result.failed=true; js->page.complete(std::move(result)); js->request=0;
+        co_return pxa::Result<void>{};
+    }
+    void apply_script_markup(std::string_view markup) {
+        // Page download is complete; these foreground tasks only own images.
+        // Script requests live in their own scope and cannot retain image refs.
+        context->foreground_tasks().cancel();
+        if (animation_slot>=0) { images[animation_slot].asset.reset(); images[animation_slot].index=-1; }
+        animation_slot=-1; loading_image=-1;
+        // Move the existing, bounded table rather than duplicating URL strings.
+        // Failed requests stay failed when unrelated DOM text changes.
+        auto previous_images=std::move(document.images);
+        const auto previous_states=image_states;
+        std::vector<std::pair<std::size_t,browser::Field>> edited;
+        if (early_field_edits) {
+            for (std::size_t i=0;i<document.fields.size();++i) if (early_field_edits & (1u<<i)) edited.emplace_back(i,document.fields[i]);
+            early_field_edits=0;
+        }
+        document.clear(url);
+        document.referrer=response_referrer;
+        browser::Parser parser(document,true); parser.feed(markup); parser.finish();
+        for (const auto& [index,old] : edited) {
+            auto matches=[&](const auto& f) { return f.name==old.name && f.type==old.type && f.form==old.form; };
+            auto field=index<document.fields.size() && matches(document.fields[index]) ? document.fields.begin()+index :
+                std::ranges::find_if(document.fields,matches);
+            if (field!=document.fields.end()) {
+                field->value=old.value;field->checked=old.checked;
+                if (field->script_node) js->page.change_field(field->script_node,field->value,field->checked);
+            }
+        }
+        image_states.fill(ImageState::unseen); image_view={};
+        for (std::size_t i=0;i<previous_images.size();++i) if (previous_states[i]==ImageState::failed) {
+            for (std::size_t j=0;j<document.images.size();++j)
+                if (document.images[j].source==previous_images[i].source) image_states[j]=ImageState::failed;
+        }
+        for (unsigned i=0;i<images.size();++i) {
+            const auto source=images[i].index>=0 && images[i].asset ?
+                std::string_view(previous_images[images[i].index].source) : std::string_view{};
+            auto found = std::ranges::find_if(document.images,[&](const auto& image) {
+                return image.source==source && image_states[&image-document.images.data()]!=ImageState::ready;
+            });
+            if (!source.empty() && found!=document.images.end()) {
+                images[i].index=int(found-document.images.begin()); image_states[images[i].index]=ImageState::ready;
+                const auto info=images[i].asset->image().descriptor();
+                set_image_dimensions(*found, info);
+            } else { images[i].asset.reset(); images[i].index=-1; }
+        }
+        layout_dirty=true;
+#ifdef PXA_BROWSER_TRACE
+        log("BROWSER JS UPDATE revision="+std::to_string(++js->revision)+" text="+std::to_string(document.text.size())+" links="+std::to_string(document.links.size())+" fields="+std::to_string(document.fields.size())+" markup_us="+std::to_string(js->page.stats().max_markup_us)+" markup_turns="+std::to_string(js->page.stats().markup_turns));
+#endif
+    }
+    void pump_script() {
+        if(script_engine)script_engine->maintain();
+        if (!js) return;
+        js->tasks.reap();
+        if (!foreground || press.active() || scrollbar_dragging || editing || menu ||
+            image_view.active()) return;
+        if (!js->boot_loading && !js->boot_ready) { set_status(js->error); js.reset(); return; }
+        if (!js->boot_ready) return;
+        if (!js->started) {
+            js->started=true;
+            browser::script::Limits limits;
+            js->configured_heap_bytes=browser::memory::budget(script_memory_choice);
+            limits.heap_bytes=browser::memory::budget(script_memory_choice,std::to_underlying(resource_pressure));
+            js->response_limit=limits.response_bytes;
+            js->page.open(std::move(js->html),url,unsigned(js->module),
+                {content.width,content.height,double(metrics.density_q16)/65536,std::string(browser::site_user_agent(url,browser::user_agent(mobile_ua)))},limits);
+            log("BROWSER JS OPEN active="+std::to_string(js->page.active()));
+            return;
+        }
+        if (js->request && !js->page.pending(js->request)) { js->tasks.cancel(); js->request=0; }
+        js->page.step();
+        if (js->page.initialized() && !js->initialized_reported) {
+            js->initialized_reported=true;
+            const auto stats=js->page.stats();
+            log("BROWSER JS INITIALIZED total_us="+std::to_string(stats.initialization_us)+" max_step_us="+std::to_string(stats.max_initialization_step_us));
+        }
+        if (auto next=js->page.take_navigation()) { navigate(std::move(next->url),true,std::move(next->body),next->post); return; }
+        // Coalesce DOM paints; timer/network callbacks never force a layout
+        // for each mutation, and dragging always has priority over this work.
+        // Keep the current document's image indices valid until its download
+        // or frame advance finishes. Rebuilding every 100 ms would otherwise
+        // repeatedly cancel slow images and animated decoders.
+        if (!busy && animation_slot<0 && millis()>=js->next_paint) if (auto markup=js->page.take_markup()) {
+            apply_script_markup(*markup); js->next_paint=millis()+100;
+        }
+        if (!js->request) if (auto request=js->page.take_request()) {
+            js->request=request->id;
+            if (!js->tasks.start(fetch_script(std::move(*request)))) {
+                js->page.complete({.id=js->request,.failed=true}); js->request=0;
+            }
+        }
+        if (!js->page.error().empty() && js->error!=js->page.error()) {
+            js->error=js->page.error(); set_status(js->error+" · 可在菜单关闭脚本");
+            log("BROWSER JS ERROR "+js->error);
+        }
+        if (!js->page.active()) { js->tasks.cancel(); js.reset(); return; }
+        if (js->page.ready() && !js->reported) {
+            js->reported=true;
+            auto stats=js->page.stats();
+            log("BROWSER JS READY heap="+std::to_string(stats.current_bytes)+" peak="+std::to_string(stats.peak_bytes)+" errors="+std::to_string(stats.errors)+" turns="+std::to_string(stats.turns)+" max_us="+std::to_string(stats.max_turn_us));
+        }
     }
     auto visible_begin() const {
         auto begin =
@@ -681,7 +911,7 @@ struct App {
         if (animation_slot >= 0) stop();
         ImageCache *slot = nullptr;
         for (auto &item : images)
-            if (item.index < 0) {
+            if (!slot && item.index < 0) {
                 slot = &item;
                 break;
             }
@@ -750,13 +980,16 @@ struct App {
         if (!result) {
             images[slot].index = -1;
             image_states[index] = ImageState::failed;
-            set_status("图片未加载 · 轻点可重试");
+            set_status(result.error()==pxa::Error::limit_exceeded ?
+                "图片超过当前解码预算" : "图片未加载 · 轻点可重试");
             log("BROWSER IMAGE ERROR index=" + std::to_string(index) +
                 " code=" + std::to_string(int(result.error())));
         }
         co_return pxa::Result<void>{};
     }
     pxa::Task<void> fetch_image(int index, unsigned slot) {
+        if (document.images[index].source.starts_with(browser::inline_image::png_prefix))
+            co_return co_await fetch_inline_image(index, slot);
         auto target = document.images[index].source;
         if (url.starts_with("https:") && target.starts_with("http:"))
             co_return std::unexpected(pxa::Error::denied);
@@ -764,7 +997,7 @@ struct App {
         static constexpr std::array<std::string_view, 4> wanted{"content-type", "content-encoding",
                                                                 "location", "set-cookie"};
         std::array<pxa::NetHeaderView, 6> headers{
-            {{"Accept", "image/png, image/jpeg);q=0.9, image/gif;q=0.8"},
+            {{"Accept", "image/png, image/jpeg;q=0.9, image/gif;q=0.8"},
              {"Accept-Encoding", "identity"},
              {"User-Agent", browser::user_agent(mobile_ua)},
              {"Save-Data", "on"}}};
@@ -773,16 +1006,15 @@ struct App {
             headers[2].value = browser::site_user_agent(target, browser::user_agent(mobile_ua));
             std::size_t header_count = 4;
             if (!cookie.empty()) headers[header_count++] = {"Cookie", cookie};
-            if (!(url.starts_with("https:") && target.starts_with("http:"))) {
-                auto source = std::string_view(url);
-                headers[header_count++] = {"Referer", source.substr(0, source.find_first_of("/?#", source.find("://")+3))};
-            }
+            const auto referrer=browser::request_referrer(url,target,
+                document.images[index].referrer.value_or(document.referrer));
+            if (!referrer.empty()) headers[header_count++] = {"Referer",referrer};
             auto exchange = co_await context->http().open({.url = browser::transport_url(target),
                                                            .headers = std::span{headers}.first(header_count),
                                                            .wanted_headers = wanted,
                                                            .options = {.buffer_bytes = 4096,
                                                                        .header_bytes = 1024,
-                                                                       .max_body_bytes = 131072,
+                                                                       .max_body_bytes = 524288,
                                                                        .timeout_ms = 15000}},
                                                           permission);
             if (!exchange)
@@ -825,21 +1057,64 @@ struct App {
         }
         co_return std::unexpected(pxa::Error::protocol_error);
     }
-    pxa::Task<void> read_image(pxa::HttpExchange &body, int index, unsigned slot,
+    void set_image_dimensions(browser::Image& image, const pxa::AssetDescriptor& info) const {
+        image.width = info.source_width; image.height = info.source_height;
+        if (image.source.starts_with(browser::inline_image::png_prefix)) {
+            // Leave the complete small inline image visible above the toolbar.
+            auto available=content.height;
+            if(status_box.y>=content.y && status_box.y<content.y+content.height)
+                available=std::min(available,status_box.y-content.y);
+            const auto extent = std::max(48, available - font / 2) * 15 / std::max(1, font);
+            const auto w = std::max(1, std::min(int(image.width), extent));
+            image.height = std::uint16_t(std::max(1, w * int(image.height) / std::max(1, int(image.width))));
+            image.width = std::uint16_t(w);
+        }
+    }
+    pxa::Task<void> fetch_inline_image(int index, unsigned slot) {
+        const auto begin=millis();
+        auto payload = browser::inline_image::payload(document.images[index].source);
+        if (!payload) co_return std::unexpected(pxa::Error::invalid_argument);
+        auto file = co_await context->fs().open("inline-image.tmp", pxa::OpenMode::read |
+            pxa::OpenMode::write | pxa::OpenMode::create | pxa::OpenMode::truncate);
+        if (!file) co_return std::unexpected(file.error());
+        pxa::Result<void> status;
+        std::array<std::byte, 768> chunk{};
+        for (std::size_t at=0; at<payload->size();) {
+            const auto n=std::min<std::size_t>(1024,payload->size()-at);
+            const auto bytes=browser::inline_image::decode(payload->substr(at,n),chunk);
+            auto remaining=std::span<const std::byte>(chunk).first(bytes);
+            while (!remaining.empty()) {
+                auto written=file->write(remaining);
+                if (!written || !*written) { status=std::unexpected(written ? pxa::Error::io_error : written.error()); break; }
+                remaining=remaining.subspan(*written);
+            }
+            if (!status) break;
+            at+=n;
+        }
+        if (status) {
+            auto position=co_await file->seek(0);
+            if (!position) status=std::unexpected(position.error());
+        }
+        if (status) status=co_await read_image(*file,index,slot,begin);
+        if (*file) (void)file->close();
+        (void)co_await context->fs().remove("inline-image.tmp");
+        co_return status;
+    }
+    template<class Source>
+    pxa::Task<void> read_image(Source &body, int index, unsigned slot,
                                std::uint64_t begin) {
         auto decoded = co_await context->assets().images().decode(std::move(body),
             {.max_width = std::uint16_t(std::clamp(content.width, 1, 512)),
-             .max_height = 512,
-             .max_pixels = 32768,
-             .max_encoded_bytes = 131072,
+             .max_height = std::uint16_t(1024),
+             .max_pixels = 32768u,
+             .max_encoded_bytes = 524288,
              .formats = show_gif ? pxa::ImageFormats::any :
                                   pxa::ImageFormats::png | pxa::ImageFormats::jpeg},
             {.max_pixels = 8192, .max_encoded_bytes = 65536});
         if (!decoded)
             co_return std::unexpected(decoded.error());
         const auto info = decoded->image().descriptor();
-        document.images[index].width = info.source_width;
-        document.images[index].height = info.source_height;
+        set_image_dimensions(document.images[index], info);
         images[slot].asset.emplace(std::move(*decoded));
         images[slot].next_frame = millis() + std::max(30u, images[slot].asset->frame_info().delay_ms);
         image_states[index] = ImageState::ready;
@@ -957,10 +1232,13 @@ struct App {
                 return;
             }
             document.fields[field].value = std::move(value);
+            sync_script_field(document.fields[field]);
             set_status("已更新输入");
         }
     }
     pxa::Task<void> load_bookmarks() {
+        // A cancelled/crashed inline decode can leave only this bounded file.
+        (void)co_await context->fs().remove("inline-image.tmp");
         auto file = co_await context->fs().open("bookmarks.txt", pxa::OpenMode::read);
         bookmarks_ready = true;
         if (!file) {
@@ -1002,6 +1280,12 @@ struct App {
                 mobile_ua = line == "#ua mobile";
             } else if (line == "#images 0") {
                 show_images = false;
+            } else if (line == "#scripts 0") {
+                show_scripts = false;
+            } else if (line.starts_with("#script-memory ")) {
+                auto value=line.substr(15);unsigned choice=0;
+                auto [end,error]=std::from_chars(value.data(),value.data()+value.size(),choice);
+                if(error==std::errc{} && end==value.data()+value.size() && choice<browser::memory::choices.size()) script_memory_choice=choice;
             } else if (line == "#gif 0") {
                 show_gif = false;
             } else if (line == "#volume-scroll 1") {
@@ -1135,7 +1419,7 @@ struct App {
             return pxa::BackAction::stay;
         }
         if (menu) {
-            if (menu_page == MenuPage::history) { menu_page = MenuPage::tools; menu_scroll = 0; }
+            if (menu_page == MenuPage::history || menu_page == MenuPage::script_memory) { menu_page = MenuPage::tools; menu_scroll = 0; }
             else menu = false;
             dirty = true;
             return pxa::BackAction::stay;
@@ -1148,6 +1432,18 @@ struct App {
     }
     void on_error(pxa::Context &, pxa::Error e) { fail(e); }
     pxa::Result<bool> on_event(pxa::Context &, const pxa::Event &event) {
+        if(script_engine && script_engine->event(event))return true;
+        if (event.is<ResourcePressure>()) {
+            auto value=decode_resource_pressure(event);
+            if(!value) return std::unexpected(value.error());
+            resource_pressure=*value;
+            const auto budget=js && *value==ResourcePressure::normal ? js->configured_heap_bytes : std::size_t(256*1024);
+            if(js && (*value==ResourcePressure::critical ||
+                (js->started && !js->page.set_heap_limit(budget)))) {
+                js.reset();set_status("设备内存紧张 · 已停止网页脚本");
+            }
+            return true;
+        }
         if (event.is<DisplayMetrics>())
             if (auto value = decode_display_metrics(event)) {
                 metrics = *value;
@@ -1157,6 +1453,7 @@ struct App {
                 scrollbar_dragging = false;
             }
         if (event.is<pxa::PermissionRevoked>()) {
+            js.reset();
             stop();
             permission.reset();
             set_status("网络权限已撤销");
@@ -1189,6 +1486,8 @@ struct App {
                 bytes += "#volume-scroll 1\n";
             if (!show_images) bytes += "#images 0\n";
             if (!show_gif) bytes += "#gif 0\n";
+            if (!show_scripts) bytes += "#scripts 0\n";
+            bytes += "#script-memory "+std::to_string(script_memory_choice)+"\n";
             for (auto &b : bookmarks) {
                 bytes += b;
                 bytes += '\n';
@@ -1213,6 +1512,7 @@ struct App {
             if (!r)
                 fail(r.error());
         }
+        pump_script();
         if (layout_dirty) {
             rebuild();
             if (page.truncated)
@@ -1393,7 +1693,8 @@ struct App {
     int scroll_height() const {
         if (!menu) return page.height;
         const auto count = menu_page == MenuPage::history ? history.entries().size() + 1 :
-            menu_page == MenuPage::directory ? browser::sites.size() + 1 : bookmarks.size() + 9;
+            menu_page == MenuPage::directory ? browser::sites.size() + 1 :
+            menu_page == MenuPage::script_memory ? browser::memory::choices.size() + 1 : bookmarks.size() + 11;
         return int(count) * (dp(32) + dp(3));
     }
     int &scroll_position() { return menu ? menu_scroll : scroll; }
@@ -1528,6 +1829,16 @@ struct App {
                         title += entry.url == "about:home" ? "主页" : entry.url;
                         button({content.x, y, content.width, h}, title, Action::history_open, int(n-1), 0);
                     }
+            } else if (menu_page == MenuPage::script_memory) {
+                button({content.x,y,content.width,h},"返回设置",Action::memory_settings);
+                for(std::size_t n=0;n<browser::memory::choices.size();++n) {
+                    y+=h+dp(3);
+                    if(y+h>content.y && y<content.y+content.height) {
+                        std::string title=n==script_memory_choice ? "● " : "";
+                        title+=browser::memory::choices[n].label;
+                        button({content.x,y,content.width,h},title,Action::memory_choice,int(n));
+                    }
+                }
             } else if (menu_page == MenuPage::directory) {
                 label({content.x, y, content.width, h}, "轻量网站 · 已验证入口", 0x718599ff, std::min(font, dp(13)), 1, true);
                 y += h + dp(3);
@@ -1559,7 +1870,11 @@ struct App {
             y += h + dp(3);
             button({content.x, y, content.width, h}, show_gif ? "加载 GIF：开" : "加载 GIF：关", Action::gif_setting);
             y += h + dp(3);
+            button({content.x, y, content.width, h}, show_scripts ? "网页脚本：开" : "网页脚本：关", Action::script_setting);
+            y += h + dp(3);
             button({content.x, y, content.width, h}, "清除登录会话", Action::clear_sessions);
+            y += h + dp(3);
+            button({content.x, y, content.width, h}, "脚本内存预算", Action::memory_settings);
             y += h + dp(3);
             for (std::size_t i = 0; i < bookmarks.size(); ++i, y += h + dp(3))
                 if (y + h > content.y && y < content.y + content.height)
@@ -1603,7 +1918,7 @@ struct App {
                             if (bottom - top >= font * 3)
                                 label({box.x + dp(4), top + font * 2, box.width - dp(8),
                                        font * 3 / 2},
-                                      image_states[span.image] == ImageState::loading
+                                      image_states[span.image] == ImageState::failed ? "轻点重试" : image_states[span.image] == ImageState::loading
                                           ? "正在加载…"
                                           : "轻点加载图片",
                                       0x1469acff, std::min(font, dp(13)), 1, true);
@@ -1766,6 +2081,15 @@ struct App {
         case Action::history_list:
             history.position(scroll);
             menu_page = MenuPage::history; menu_scroll = 0; break;
+        case Action::memory_settings:
+            menu_page=menu_page==MenuPage::script_memory ? MenuPage::tools : MenuPage::script_memory;
+            menu_scroll=0;break;
+        case Action::memory_choice:
+            if(i>=0 && std::size_t(i)<browser::memory::choices.size()) {
+                script_memory_choice=unsigned(i);preferences_dirty=true;
+                set_status("内存预算已保存 · 重新加载网页后生效");
+            }
+            break;
         case Action::history_open:
             history.position(scroll);
             if (i >= 0) if (auto entry = history.select(std::size_t(i)))
@@ -1780,7 +2104,13 @@ struct App {
                 history.position(scroll); navigate(std::string(browser::sites[i].url));
             }
             break;
+        case Action::script_setting:
+            show_scripts = !show_scripts;
+            if (!show_scripts) js.reset();
+            preferences_dirty = true;
+            set_status("网页脚本设置已保存 · 重新加载生效"); break;
         case Action::clear_sessions:
+            js.reset(); if(script_engine)script_engine->clear_storage();
             if (busy) stop();
             cookies.clear();
             for (auto &field : document.fields)
@@ -1797,6 +2127,7 @@ struct App {
             if (bookmarks_ready && !bookmark_save) edit(-2);
             break;
         case Action::exit:
+            js.reset();
             stop();
             if (editing) finish_edit(false);
             exit_state = ExitState::saving;
@@ -1818,6 +2149,10 @@ struct App {
             break;
         case Action::link:
             if (i >= 0 && std::size_t(i) < document.links.size()) {
+                if (document.links[i].script_node) {
+                    if (js && js->page.active()) { js->page.click(document.links[i].script_node); break; }
+                    if (document.links[i].target.empty()) { set_status("网页脚本已停止 · 请重新加载"); break; }
+                }
                 auto target = browser::wml_target(document, document.links[i].target);
                 if (target) {
                     history.position(scroll);
@@ -1885,6 +2220,7 @@ struct App {
                     }
                 } else if (field.type == browser::FieldType::checkbox) {
                     field.checked = !field.checked;
+                    sync_script_field(field);
                     dirty = true;
                 } else
                     edit(i);

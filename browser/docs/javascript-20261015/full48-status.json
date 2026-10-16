@@ -1,0 +1,40 @@
+[
+  {
+    "profile": "small",
+    "status_below_toolbar": false,
+    "status_box": [
+      20,
+      169,
+      256,
+      14
+    ],
+    "content_box": [
+      20,
+      37,
+      256,
+      146
+    ],
+    "auto_hidden": true,
+    "repeated_message": true,
+    "passed": true
+  },
+  {
+    "profile": "round-high-dpi",
+    "status_below_toolbar": true,
+    "status_box": [
+      129,
+      420,
+      222,
+      28
+    ],
+    "content_box": [
+      33,
+      134,
+      414,
+      212
+    ],
+    "auto_hidden": true,
+    "repeated_message": true,
+    "passed": true
+  }
+]

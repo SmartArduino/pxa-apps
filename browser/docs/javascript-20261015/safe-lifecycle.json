@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "checks": [
+    "background pause",
+    "foreground same realm",
+    "navigation cancels delayed script",
+    "two package restarts"
+  ],
+  "updates_before_background": 4
+}

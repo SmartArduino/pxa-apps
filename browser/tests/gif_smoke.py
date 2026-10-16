@@ -10,7 +10,7 @@ import time
 from PIL import Image, ImageChops
 from pathlib import Path
 from harness import Browser
-from geometry import content_crop, navigation
+from geometry import TOOL_ROWS, content_crop, navigation
 
 
 def main():
@@ -49,7 +49,7 @@ def main():
         b.command(f'TOUCH MOVE 0 {edge} {y+h-1}')
         b.command(f'TOUCH UP 0 {edge} {y+h-1}')
         time.sleep(.3)
-        offset = max(0, 9 * 35 - h)
+        offset = max(0, TOOL_ROWS * 35 - h)
         b.tap(x+w//2, y + row*35 - offset + 16)
         b.nav(4)
 

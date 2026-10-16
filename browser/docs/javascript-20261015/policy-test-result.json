@@ -1,0 +1,25 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "path": "/js-csp",
+      "static_readable": true,
+      "script_runtime_created": false
+    },
+    {
+      "path": "/js-csp-big",
+      "static_readable": true,
+      "script_runtime_created": false
+    },
+    {
+      "path": "/js-csp-meta",
+      "static_readable": true,
+      "script_runtime_created": false
+    },
+    {
+      "path": "/reading",
+      "static_readable": true,
+      "script_runtime_created": false
+    }
+  ]
+}

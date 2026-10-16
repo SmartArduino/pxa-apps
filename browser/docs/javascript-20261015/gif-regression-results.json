@@ -1,0 +1,15 @@
+{
+  "passed": [
+    "real GIF pixels change across at least three frames",
+    "preview keeps GIF advancing without cancelling or downloading again",
+    "menu pauses GIF; closing menu resumes without a catch-up queue",
+    "offscreen GIF pauses and resumes after scrolling back",
+    "transparent/disposal GIF displays changing pixels",
+    "single-frame GIF retains no animation work",
+    "GIF off rejects an octet-stream .bin signature while PNG still loads",
+    "GIF on accepts the same disguised image",
+    "truncated GIF fails safely; slow download cancels before publication",
+    "repeated animated page load and home navigation",
+    "normal stop releases all image/temporary budget charges"
+  ]
+}

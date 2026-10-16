@@ -1,0 +1,4 @@
+runtime/*.js text eol=lf
+runtime/compiled.sha256 text eol=lf
+assets/*.qjb binary
+vendor/quickjs/* text eol=lf

@@ -10,7 +10,7 @@ inline void site_forms(Document &doc, std::string_view url) {
     const auto end = url.find('/', begin + 3);
     const auto host = url.substr(begin + 3, end - begin - 3);
     if (host == "ink.qq.com" || host == "weread.qq.com") {
-        doc.append("已使用墨水屏页面。二维码和登录需要 JavaScript，当前暂不支持登录阅读。", Style::muted);
+        doc.append("已请求墨水屏页面；登录和阅读兼容性仍有限。", Style::muted);
         doc.newline();
         return;
     }

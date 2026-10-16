@@ -1,0 +1,49 @@
+{
+  "passed": true,
+  "source": [
+    1199,
+    2533
+  ],
+  "encoded_bytes": 340611,
+  "screen": [
+    296,
+    240,
+    160
+  ],
+  "round": false,
+  "referrer_checks": [
+    {
+      "case": "default",
+      "passed": true,
+      "referrer": "http://127.0.0.1:46203/"
+    },
+    {
+      "case": "meta",
+      "passed": true,
+      "referrer": "http://127.0.0.1:46203/meta?query=keep"
+    },
+    {
+      "case": "header",
+      "passed": true,
+      "referrer": "http://127.0.0.1:46203/header?query=keep"
+    },
+    {
+      "case": "none",
+      "passed": true,
+      "referrer": ""
+    },
+    {
+      "case": "element",
+      "passed": true,
+      "referrer": ""
+    }
+  ],
+  "images": [
+    "BROWSER IMAGE DONE index=0 received=340611 pixels=124x264 resident=65567 total_ms=11\u001b[0m",
+    "BROWSER IMAGE DONE index=0 received=340611 pixels=124x264 resident=65567 total_ms=14\u001b[0m",
+    "BROWSER IMAGE DONE index=0 received=340611 pixels=124x264 resident=65567 total_ms=10\u001b[0m",
+    "BROWSER IMAGE DONE index=0 received=340611 pixels=124x264 resident=65567 total_ms=13\u001b[0m",
+    "BROWSER IMAGE DONE index=0 received=340611 pixels=124x264 resident=65567 total_ms=7\u001b[0m"
+  ],
+  "synthetic": true
+}

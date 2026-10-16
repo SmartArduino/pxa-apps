@@ -13,7 +13,7 @@ import subprocess
 import tempfile
 import time
 from PIL import Image, ImageChops
-from geometry import geometry, navigation
+from geometry import TOOL_ROWS, geometry, navigation
 
 
 def main():
@@ -99,7 +99,7 @@ def main():
                 command(f'TOUCH MOVE 0 {x+w//2} {y+12}');time.sleep(.12)
                 command(f'TOUCH UP 0 {x+w//2} {y+12}');time.sleep(.25)
                 count=sum(bool(line) and not line.startswith('#') for line in saved().splitlines())
-                offset=min(h-dp(24),max(0,(count+9)*(dp(32)+dp(3))-h))
+                offset=min(h-dp(24),max(0,(count+TOOL_ROWS)*(dp(32)+dp(3))-h))
                 tap(x+w//2,y+4*(dp(32)+dp(3))-offset+dp(16))
                 shot('volume-option');nav(4)
             try:

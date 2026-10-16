@@ -1,0 +1,29 @@
+{
+  "fixture": [
+    {
+      "page": "encoding",
+      "chinese_visible": true,
+      "hidden_loading_absent": true
+    },
+    {
+      "page": "encoding-header",
+      "chinese_visible": true,
+      "hidden_loading_absent": true
+    },
+    {
+      "page": "encoding-bom",
+      "bom_overrides_header": true
+    },
+    {
+      "page": "encoding-unsupported",
+      "explicit_warning": true
+    },
+    {
+      "page": "slow",
+      "paragraph_visible_before_eof": true
+    }
+  ],
+  "sites": [],
+  "fixture_passed": true,
+  "passed": true
+}

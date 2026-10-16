@@ -1,0 +1,160 @@
+{
+  "workload": "320x180 baseline JPEG + APP metadata; same output; desktop O3; fresh PXA budget per run; 1 warmup + 100 measurements per pair",
+  "baseline_commit": "ae507ad413189705aab3283909b48264d66ce1e9",
+  "pairs": [
+    {
+      "before": {
+        "bytes": 253525,
+        "repeats": 100,
+        "write_mean_us": 206.861,
+        "finish_mean_us": 586.089,
+        "temporary_peak": 394528,
+        "charged_peak": 394528,
+        "checksum": 2833627033
+      },
+      "after": {
+        "bytes": 253525,
+        "repeats": 100,
+        "write_mean_us": 14.722,
+        "finish_mean_us": 668.961,
+        "temporary_peak": 258264,
+        "charged_peak": 323445,
+        "checksum": 2833627033
+      }
+    },
+    {
+      "after": {
+        "bytes": 253525,
+        "repeats": 100,
+        "write_mean_us": 13.973,
+        "finish_mean_us": 635.562,
+        "temporary_peak": 258264,
+        "charged_peak": 323445,
+        "checksum": 2833627033
+      },
+      "before": {
+        "bytes": 253525,
+        "repeats": 100,
+        "write_mean_us": 197.432,
+        "finish_mean_us": 603.367,
+        "temporary_peak": 394528,
+        "charged_peak": 394528,
+        "checksum": 2833627033
+      }
+    },
+    {
+      "before": {
+        "bytes": 253525,
+        "repeats": 100,
+        "write_mean_us": 199.738,
+        "finish_mean_us": 575.581,
+        "temporary_peak": 394528,
+        "charged_peak": 394528,
+        "checksum": 2833627033
+      },
+      "after": {
+        "bytes": 253525,
+        "repeats": 100,
+        "write_mean_us": 14.245,
+        "finish_mean_us": 599.264,
+        "temporary_peak": 258264,
+        "charged_peak": 323445,
+        "checksum": 2833627033
+      }
+    },
+    {
+      "after": {
+        "bytes": 253525,
+        "repeats": 100,
+        "write_mean_us": 26.513,
+        "finish_mean_us": 619.008,
+        "temporary_peak": 258264,
+        "charged_peak": 323445,
+        "checksum": 2833627033
+      },
+      "before": {
+        "bytes": 253525,
+        "repeats": 100,
+        "write_mean_us": 206.243,
+        "finish_mean_us": 573.272,
+        "temporary_peak": 394528,
+        "charged_peak": 394528,
+        "checksum": 2833627033
+      }
+    },
+    {
+      "before": {
+        "bytes": 253525,
+        "repeats": 100,
+        "write_mean_us": 193.669,
+        "finish_mean_us": 610.317,
+        "temporary_peak": 394528,
+        "charged_peak": 394528,
+        "checksum": 2833627033
+      },
+      "after": {
+        "bytes": 253525,
+        "repeats": 100,
+        "write_mean_us": 27.293,
+        "finish_mean_us": 610.908,
+        "temporary_peak": 258264,
+        "charged_peak": 323445,
+        "checksum": 2833627033
+      }
+    },
+    {
+      "after": {
+        "bytes": 253525,
+        "repeats": 100,
+        "write_mean_us": 25.521,
+        "finish_mean_us": 602.027,
+        "temporary_peak": 258264,
+        "charged_peak": 323445,
+        "checksum": 2833627033
+      },
+      "before": {
+        "bytes": 253525,
+        "repeats": 100,
+        "write_mean_us": 207.233,
+        "finish_mean_us": 649.918,
+        "temporary_peak": 394528,
+        "charged_peak": 394528,
+        "checksum": 2833627033
+      }
+    },
+    {
+      "before": {
+        "bytes": 253525,
+        "repeats": 100,
+        "write_mean_us": 232.662,
+        "finish_mean_us": 627.501,
+        "temporary_peak": 394528,
+        "charged_peak": 394528,
+        "checksum": 2833627033
+      },
+      "after": {
+        "bytes": 253525,
+        "repeats": 100,
+        "write_mean_us": 27.069,
+        "finish_mean_us": 644.793,
+        "temporary_peak": 258264,
+        "charged_peak": 323445,
+        "checksum": 2833627033
+      }
+    }
+  ],
+  "median": {
+    "before": {
+      "write_mean_us": 206.243,
+      "finish_mean_us": 603.367,
+      "temporary_peak": 394528,
+      "charged_peak": 394528
+    },
+    "after": {
+      "write_mean_us": 25.521,
+      "finish_mean_us": 619.008,
+      "temporary_peak": 258264,
+      "charged_peak": 323445
+    }
+  }
+}

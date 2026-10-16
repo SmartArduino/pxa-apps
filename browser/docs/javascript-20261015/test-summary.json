@@ -1,0 +1,92 @@
+{
+  "safe-smoke": {
+    "passed": true,
+    "artifact": "final_qa_simulator",
+    "result": "safe-smoke.json"
+  },
+  "safe-round": {
+    "passed": true,
+    "artifact": "final_qa_simulator",
+    "result": "safe-round.json"
+  },
+  "safe-input": {
+    "passed": true,
+    "artifact": "final_qa_simulator",
+    "result": "safe-input.json"
+  },
+  "safe-lifecycle": {
+    "passed": true,
+    "artifact": "final_qa_simulator",
+    "result": "safe-lifecycle.json"
+  },
+  "full48-session": {
+    "passed": true,
+    "result": "full48-session.json",
+    "scope": "Same C++ UI implementation before final WASI engine recursion guard changes; not the final engine artifact."
+  },
+  "full48-gif": {
+    "passed": true,
+    "result": "full48-gif.json",
+    "scope": "Same C++ UI implementation before final WASI engine recursion guard changes; not the final engine artifact."
+  },
+  "full48-encoding": {
+    "passed": true,
+    "result": "full48-encoding.json",
+    "scope": "Same C++ UI implementation before final WASI engine recursion guard changes; not the final engine artifact."
+  },
+  "full48-status": {
+    "passed": true,
+    "result": "full48-status.json",
+    "scope": "Same C++ UI implementation before final WASI engine recursion guard changes; not the final engine artifact."
+  },
+  "engine_sanitizers": {
+    "passed": true,
+    "log": "final-wasi-sanitizers.log",
+    "scope": "Complete engine ASan/UBSan/LSan, WASI model branches; 64-bit uses 512KiB heap and 256KiB linear-stack check."
+  },
+  "upstream_semantics": {
+    "passed": true,
+    "log": "upstream-language.log",
+    "scope": "Pinned test_language.js/test_closure.js/test_loop.js after parser/call split; later guards are WASI-only."
+  },
+  "build_tool_flag": {
+    "passed": true,
+    "count": 7,
+    "log": "build-tools-unit.log"
+  },
+  "browser_core": {
+    "passed": true,
+    "log": "core-delivery.log"
+  },
+  "device_suite": {
+    "passed": true,
+    "sequence": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      0,
+      1
+    ],
+    "runs": [
+      "device-safe-static-1",
+      "device-safe-dynamic-1",
+      "device-safe-basic-1",
+      "device-safe-timeout-1",
+      "device-safe-oom-1",
+      "device-safe-stack-1",
+      "device-safe-static-2",
+      "device-safe-dynamic-2"
+    ]
+  },
+  "older_layout_and_csp": {
+    "scope": "Earlier iteration evidence in display-matrix-results.json / policy-test-result.json; final native tests also cover CSP. Do not interpret older screenshots as final target performance."
+  },
+  "simulator_shutdown": {
+    "functional_pass": true,
+    "clean_shutdown": false,
+    "note": "Frozen desktop control process timed out after TERM; harness cleaned its own process group. No Host changes."
+  }
+}

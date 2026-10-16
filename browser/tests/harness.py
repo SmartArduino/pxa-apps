@@ -1,9 +1,9 @@
 """Small control-socket harness for the real PXA simulator; no web engine."""
-import os,shutil,socket,subprocess,tempfile,time
+import os,shutil,signal,socket,subprocess,tempfile,time
 from pathlib import Path
 from geometry import geometry,navigation
 class Browser:
-    def __init__(self,simulator,package,publisher,ime,output,width=296,height=240,dpi=160,corner=58,state=None,shell=False,round_screen=False):
+    def __init__(self,simulator,package,publisher,ime,output,width=296,height=240,dpi=160,corner=58,state=None,shell=False,round_screen=False,environment=None):
         self.output=Path(output);self.output.mkdir(parents=True,exist_ok=True)
         self.scratch=tempfile.TemporaryDirectory(prefix='pxa-reader-')
         self.socket=Path(self.scratch.name)/'control.sock'
@@ -17,7 +17,9 @@ class Browser:
             shutil.copytree(ime,packages/'pxa-pinyin-ime',dirs_exist_ok=True)
             args+=['--installed-packages-root',str(packages),'--product-runner',str(Path(simulator).resolve().parent/'pxsys_product_simulator'),'--launch','pxa-browser','--gestures']
         else:args+=['--package',str(Path(package).resolve())]
-        self.process=subprocess.Popen(args,env=dict(os.environ,SDL_VIDEODRIVER='dummy',SDL_AUDIODRIVER='dummy',PXA_IME_PACKAGE=str(Path(ime).resolve())),stdout=self.log,stderr=subprocess.STDOUT)
+        runtime_environment=dict(os.environ,SDL_VIDEODRIVER='dummy',SDL_AUDIODRIVER='dummy',PXA_IME_PACKAGE=str(Path(ime).resolve()))
+        if environment:runtime_environment.update(environment)
+        self.process=subprocess.Popen(args,env=runtime_environment,stdout=self.log,stderr=subprocess.STDOUT,start_new_session=True)
         self.dpi=dpi;self.wait(lambda:self.socket.exists())
     def logs(self):return self.log_path.read_text(errors='replace')
     def wait(self,condition,timeout=25):
@@ -54,5 +56,17 @@ class Browser:
         # Existing text is selected by Host focus (same as tapping URL bar).
         self.enter(url)
     def close(self):
-        if self.process.poll() is None:self.process.terminate()
-        self.process.wait(timeout=8);self.log.close();self.scratch.cleanup()
+        self.forced_shutdown=False
+        try:
+            if self.process.poll() is None:
+                try:os.killpg(self.process.pid,signal.SIGTERM)
+                except ProcessLookupError:pass
+            try:self.process.wait(timeout=8)
+            except subprocess.TimeoutExpired:
+                self.forced_shutdown=True
+                try:os.killpg(self.process.pid,signal.SIGKILL)
+                except ProcessLookupError:pass
+                self.process.wait(timeout=3)
+                print('Simulator control process required forced shutdown',flush=True)
+        finally:
+            self.log.close();self.scratch.cleanup()

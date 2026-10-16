@@ -11,7 +11,8 @@ inline constexpr std::array sites{
     Site{"手机新浪网", "https://3g.sina.com.cn/"},
     Site{"手机漫画网", "https://www.gmanhua.com/"},
     Site{"hao123", "https://wap.hao123.com/"},
-    Site{"2345", "https://www.2345.com/wap.htm"}
+    Site{"2345", "https://www.2345.com/wap.htm"},
+    Site{"微信读书（扫码登录）", "https://ink.qq.com/"}
 };
 // Per-origin compatibility, recomputed after every redirect. Do not claim to
 // be a modern JS engine globally or send the reader UA to unrelated sites.

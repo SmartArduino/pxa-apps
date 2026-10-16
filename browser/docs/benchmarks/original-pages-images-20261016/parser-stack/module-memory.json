@@ -1,0 +1,16 @@
+[
+  {
+    "input_bytes": 579434,
+    "runtime_requested_bytes": 1791849,
+    "runtime_requested_peak_bytes": 1793553,
+    "remaining_bytes": 0,
+    "case": "before"
+  },
+  {
+    "input_bytes": 582068,
+    "runtime_requested_bytes": 1802618,
+    "runtime_requested_peak_bytes": 1804322,
+    "remaining_bytes": 0,
+    "case": "after"
+  }
+]

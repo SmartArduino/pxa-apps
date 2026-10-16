@@ -1,6 +1,9 @@
 """Read actual pixel geometry from a PXA_BROWSER_TRACE=1 test package."""
 import re
 
+TOOL_ROWS = 11
+CLEAR_SESSIONS_ROW = 9
+
 
 def geometry(logs):
     matches = re.findall(r'BROWSER VIEWPORT address=([\d,]+) content=([\d,]+) toolbar=([\d,]+)', logs)

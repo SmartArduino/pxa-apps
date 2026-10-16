@@ -1,0 +1,19 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [2, 0],
+  "target_sdk": [2, 0],
+  "compile_sdk": [2, 0],
+  "id": "pxa-image-probe",
+  "version": "1.0.0",
+  "name": "Image diagnostic fixture",
+  "description": "Test-only offline image decoding and display lifetime probe",
+  "build": {
+    "system": "cmake", "source_dir": ".",
+    "linear_memory": {"maximum_bytes": 1048576, "pinned": false}
+  },
+  "components": [{
+    "id": "main", "kind": "ui", "cmake_target": "pxa_main",
+    "services": ["ui", {"name":"assets","features":["image-decode","image-frames"]}, "fs", "log"],
+    "wasi": {"version": "preview1", "libc": "wasi-libc", "features": ["monotonic-clock", "wall-clock"]}
+  }]
+}

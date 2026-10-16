@@ -1,0 +1,136 @@
+9503054	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=2 x=148 y=57
+9503103	[PXA app=pxa-browser component=65537 level=INFO] BROWSER PERF renders=49 layouts=0 encode_us=137178 submit_us=672041 layout_us=0 bytes=57613 max_submit_us=26561 scroll=109
+9503565	[PXA app=pxa-browser component=65537 level=INFO] BROWSER JS UPDATE revision=12 text=3066 links=0 fields=0 markup_us=45747 markup_turns=288
+9503567	[PXA app=pxa-browser component=65537 level=INFO] BROWSER VIEWPORT address=28,10,240,32 content=30,45,236,138 toolbar=28,186,240,32 status=30,169,236,14
+9503904	I (9503904) PXA_WAMR_MEMMAP: AOT released: ibus=0x42b30000 dbus=0x3c7a0000 size=2488116 free_psram=4477228->6967600 delta=2490372
+9503906	I (9503906) PxaHost: WAMR dynamic: peak=575721 current=416 linear=0 linear_peak=458752 artifact=0 events=0
+9507828	I (9507828) PXA_WAMR_MEMMAP: AOT mapped: ibus=0x42b30000 dbus=0x3c7a0000 request=2488116 map=2490368 alloc=2490368 free_psram=1325904
+9508369	[PXA app=pxa-browser component=65537 level=INFO] BROWSER VIEWPORT address=28,10,240,32 content=14,45,268,150 toolbar=28,198,240,32 status=14,181,268,14
+9508371	[PXA app=pxa-browser component=65537 level=INFO] BROWSER METRICS width=296 height=240 density=65536 content=14,45,268,150 toolbar=198
+9508428	[PXA app=pxa-browser component=65537 level=INFO] BROWSER NAV http://192.168.5.226:31925/bench-menu
+9508555	[PXA app=pxa-browser component=65537 level=INFO] BROWSER VIEWPORT address=28,10,240,32 content=30,45,236,138 toolbar=28,186,240,32 status=30,169,236,14
+9508557	[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=39 first_ms=41 total_ms=68 received=258 text=81 spans=12 links=6 forms=0 fields=0 title_id=811c9dc5
+9508575	[PXA app=pxa-browser component=65537 level=INFO] BROWSER PERF renders=1 layouts=1 encode_us=1873 submit_us=5172 layout_us=1663 bytes=1241 max_submit_us=5172 scroll=0
+9509011	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=0 x=50 y=99
+9509014	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=50 y=99
+9509047	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=50 y=99
+9509049	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=2 x=50 y=99
+9509064	[PXA app=pxa-browser component=65537 level=INFO] BROWSER VIEWPORT address=28,10,240,32 content=30,45,236,138 toolbar=28,186,240,32 status=30,169,236,14
+9509073	[PXA app=pxa-browser component=65537 level=INFO] BROWSER PERF renders=1 layouts=1 encode_us=1171 submit_us=6103 layout_us=1411 bytes=771 max_submit_us=6103 scroll=0
+9509290	[PXA app=pxa-browser component=65537 level=INFO] BROWSER VIEWPORT address=28,10,240,32 content=30,45,236,138 toolbar=28,186,240,32 status=30,169,236,14
+9509292	[PXA app=pxa-browser component=65537 level=INFO] BROWSER DONE status=200 head_ms=46 first_ms=228 total_ms=239 received=830 text=65 spans=2 links=0 forms=0 fields=0 title_id=cbdb89ec
+9509314	[PXA app=pxa-browser component=65537 level=INFO] BROWSER PERF renders=3 layouts=2 encode_us=6214 submit_us=14701 layout_us=2650 bytes=2567 max_submit_us=7393 scroll=0
+9509783	[PXA app=pxa-browser component=65537 level=INFO] BROWSER JS OPEN active=1
+9510010	[PXA app=pxa-browser component=65537 level=INFO] BROWSER JS INITIALIZED total_us=193575 max_step_us=75327
+9510284	[PXA app=pxa-browser component=65537 level=INFO] BROWSER JS STAGE COMPILE
+9510287	[PXA app=pxa-browser component=65537 level=INFO] BROWSER JS STAGE EXECUTE
+9510288	[PXA app=pxa-browser component=65537 level=INFO] BROWSER JS STAGE EXECUTED
+9510303	[PXA app=pxa-browser component=65537 level=INFO] BROWSER JS STAGE COMPILE
+9510322	[PXA app=pxa-browser component=65537 level=INFO] BROWSER JS STAGE EXECUTE
+9510323	[PXA app=pxa-browser component=65537 level=INFO] BROWSER JS STAGE EXECUTED
+9510391	[PXA app=pxa-browser component=65537 level=INFO] BROWSER JS READY heap=179068 peak=182412 errors=0 turns=17 max_us=44835
+9510475	[PXA app=pxa-browser component=65537 level=INFO] BROWSER JS UPDATE revision=1 text=78 links=1 fields=1 markup_us=26014 markup_turns=4
+9510476	[PXA app=pxa-browser component=65537 level=INFO] BROWSER VIEWPORT address=28,10,240,32 content=30,45,236,138 toolbar=28,186,240,32 status=30,169,236,14
+9510850	[PXA app=pxa-browser component=65537 level=INFO] BROWSER JS UPDATE revision=2 text=84 links=1 fields=1 markup_us=26014 markup_turns=16
+9510852	[PXA app=pxa-browser component=65537 level=INFO] BROWSER VIEWPORT address=28,10,240,32 content=30,45,236,138 toolbar=28,186,240,32 status=30,169,236,14
+9510899	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=0 x=59 y=87
+9510901	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=59 y=87
+9510918	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=59 y=87
+9510924	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=2 x=59 y=87
+9510956	[PXA app=pxa-browser component=65537 level=INFO] BROWSER PERF renders=1 layouts=0 encode_us=1432 submit_us=1751 layout_us=0 bytes=1188 max_submit_us=1751 scroll=0
+9511079	[PXA app=pxa-browser component=65537 level=INFO] BROWSER JS UPDATE revision=3 text=81 links=1 fields=1 markup_us=46566 markup_turns=20
+9511080	[PXA app=pxa-browser component=65537 level=INFO] BROWSER VIEWPORT address=28,10,240,32 content=30,45,236,138 toolbar=28,186,240,32 status=30,169,236,14
+9512828	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=0 x=148 y=171
+9512831	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=171
+9512865	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=169
+9512883	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=168
+9512904	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=167
+9512921	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=166
+9512938	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=164
+9512959	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=163
+9512975	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=162
+9513012	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=158
+9513045	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=156
+9513076	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=155
+9513094	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=154
+9513111	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=151
+9513128	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=150
+9513144	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=149
+9513161	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=148
+9513178	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=147
+9513194	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=145
+9513211	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=144
+9513228	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=143
+9513246	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=142
+9513263	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=141
+9513282	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=139
+9513301	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=138
+9513319	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=138
+9513341	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=137
+9513358	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=135
+9513378	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=132
+9513399	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=131
+9513417	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=130
+9513433	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=129
+9513451	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=128
+9513468	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=126
+9513485	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=125
+9513503	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=124
+9513523	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=123
+9513542	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=122
+9513560	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=120
+9513576	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=119
+9513594	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=118
+9513611	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=116
+9513628	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=114
+9513644	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=113
+9513661	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=112
+9513677	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=112
+9513694	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=111
+9513711	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=109
+9513728	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=107
+9513745	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=106
+9513761	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=105
+9513778	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=104
+9513794	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=103
+9513811	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=101
+9513828	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=100
+9513844	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=99
+9513861	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=98
+9513878	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=97
+9513894	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=95
+9513911	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=94
+9513933	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=94
+9513949	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=92
+9513969	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=92
+9513985	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=90
+9514002	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=88
+9514018	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=87
+9514038	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=86
+9514057	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=85
+9514074	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=84
+9514094	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=82
+9514111	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=80
+9514128	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=79
+9514144	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=78
+9514161	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=76
+9514178	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=75
+9514194	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=74
+9514211	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=73
+9514228	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=72
+9514244	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=71
+9514261	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=69
+9514278	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=68
+9514294	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=67
+9514311	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=66
+9514328	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=65
+9514345	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=63
+9514363	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=62
+9514380	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=61
+9514396	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=60
+9514413	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=59
+9514430	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=1 x=148 y=57
+9514433	[PXA app=pxa-browser component=65537 level=INFO] BROWSER POINTER phase=2 x=148 y=57
+9514444	[PXA app=pxa-browser component=65537 level=INFO] BROWSER PERF renders=6 layouts=0 encode_us=16216 submit_us=58173 layout_us=0 bytes=7120 max_submit_us=23422 scroll=7
+9515173	I (9515173) PXA_WAMR_MEMMAP: AOT released: ibus=0x42b30000 dbus=0x3c7a0000 size=2488116 free_psram=4476372->6966744 delta=2490372
+9515174	I (9515174) PxaHost: WAMR dynamic: peak=575721 current=416 linear=0 linear_peak=393216 artifact=0 events=0

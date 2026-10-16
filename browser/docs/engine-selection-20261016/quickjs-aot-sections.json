@@ -1,0 +1,44 @@
+{
+  "artifact": "quickjs-probe-bounded.aot",
+  "file_bytes": 1617464,
+  "sections": [
+    {
+      "type": 0,
+      "name": "target_info",
+      "bytes": 48,
+      "percent": 0.003
+    },
+    {
+      "type": 1,
+      "name": "initialization_data",
+      "bytes": 92780,
+      "percent": 5.7361
+    },
+    {
+      "type": 2,
+      "name": "native_text",
+      "bytes": 1336212,
+      "percent": 82.6115
+    },
+    {
+      "type": 3,
+      "name": "function_metadata",
+      "bytes": 17568,
+      "percent": 1.0861
+    },
+    {
+      "type": 4,
+      "name": "exports",
+      "bytes": 35,
+      "percent": 0.0022
+    },
+    {
+      "type": 5,
+      "name": "relocations",
+      "bytes": 170764,
+      "percent": 10.5575
+    }
+  ],
+  "headers_and_alignment_bytes": 57,
+  "scope": "whole isolated QuickJS/WASI probe, not a pure engine library or runtime heap"
+}

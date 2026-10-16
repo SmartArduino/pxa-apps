@@ -25,7 +25,7 @@ def main():
   time.sleep(1)
   return b.logs()[mark:],ocr(name)
  try:
-  b.wait(lambda:'BROWSER DONE status=200' in b.logs())
+  b.wait(lambda:'BROWSER METRICS' in b.logs())
   for path in ['encoding','encoding-header']:
    logs,text=go(a.fixture_url.rstrip('/')+'/'+path,path)
    assert 'BROWSER DONE status=200' in logs and 'BROWSER ERROR' not in logs,logs

@@ -15,7 +15,7 @@ def main():
   def crop(name):
    b.shot(name);x,y,w,h=b.box('status');return Image.open(out/(name+'.png')).convert('RGB').crop((x,y,x+w,y+h))
   try:
-   b.wait(lambda:'BROWSER DONE status=200' in b.logs())
+   b.wait(lambda:'BROWSER METRICS' in b.logs())
    b.nav(2);visible=crop('visible');status=b.box('status');toolbar=b.box('toolbar');content=b.box('content')
    below=status[1]>=toolbar[1]+toolbar[3];assert below==circle,(status,toolbar)
    assert content[1]+content[3] == toolbar[1]-b.dp(3)

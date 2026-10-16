@@ -1,0 +1,17 @@
+{
+  "passed": false,
+  "physical_display_accepted": false,
+  "reason": "12-second swipe acknowledgement assertion failed; acknowledgement payload not retained",
+  "image_loaded": true,
+  "image_end_to_end_ms": 13023,
+  "image_event": {
+    "started_monotonic_ns": 694249875727038,
+    "completed_monotonic_ns": 694262636812902
+  },
+  "flash_write": {
+    "write_started_ns": 694249906674949,
+    "write_completed_ns": 694257539087760
+  },
+  "image_done_observed_during_write": false,
+  "capture_device_us": 89735373
+}

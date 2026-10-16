@@ -1,0 +1,14 @@
+[
+  {
+    "case": "test_language.js",
+    "passed": true
+  },
+  {
+    "case": "test_closure.js",
+    "passed": true
+  },
+  {
+    "case": "test_loop.js",
+    "passed": true
+  }
+]

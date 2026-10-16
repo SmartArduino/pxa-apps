@@ -1,0 +1,9 @@
+{
+  "passed": false,
+  "physical_display_accepted": false,
+  "reason": "device Wi-Fi No AP found; no image request received; not an image decode failure",
+  "restore_firmware_sha256": "51362b62af8fd704eeb7b301cc4453901ffbc2426c8984e9b87944c429500e02",
+  "files_unchanged": true,
+  "image_requests_received": 0,
+  "variants_tested": []
+}
