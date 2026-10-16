@@ -13,7 +13,7 @@
     0
   ],
   "id": "pxa-abi-v1-smoke",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "name": "Core 2 Smoke",
   "description": "检查签名包、Core 2 调用和事件交付，帮助开发者验证设备运行环境。",
   "build": {
@@ -54,5 +54,5 @@
       "scope": "mac.wifi.station.hardware"
     }
   ],
-  "release_sequence": 3
+  "release_sequence": 4
 }

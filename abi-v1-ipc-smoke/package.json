@@ -13,7 +13,7 @@
     0
   ],
   "id": "pxa-abi-v1-ipc-smoke",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "name": "Core 2 IPC Smoke",
   "description": "验证两个组件之间的请求、响应和事件传递。用于开发与兼容性检查，不是聊天软件。",
   "build": {
@@ -43,7 +43,8 @@
       "kind": "ui",
       "services": [
         "ipc",
-        "log"
+        "log",
+        "ui"
       ],
       "cmake_target": "pxa_main",
       "wasi": {
@@ -59,5 +60,5 @@
       "component": "echo"
     }
   ],
-  "release_sequence": 3
+  "release_sequence": 4
 }

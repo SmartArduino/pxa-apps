@@ -9,6 +9,9 @@
 #include "pxa_fs.h"
 #include "pxa_clock.h"
 #include "pxa_ui_wire.h"
+#include "../common/cpp/diagnostic_ui.hpp"
+
+static pxa_examples::DiagnosticUi diagnostic{"Core 2 运行检查", "请求、取消与槽位复用\n64 位句柄与失效拒绝\n设备、权限、窗口、存储\n文件系统、时钟与 UI\nGameRender 提交与遥测"};
 
 #define INFO_TOKEN UINT64_C(0x123456789abcdef0)
 #define INITIAL_REQUESTS 16u
@@ -120,6 +123,7 @@ static int submit_clear_frame(uint64_t handle) {
 }
 
 extern "C" int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
+    (void)diagnostic.start(config, length);
     uint8_t packet[PXA_HEADER_BYTES];
     uint32_t packet_size = 0;
     (void)config;
@@ -179,6 +183,7 @@ extern "C" int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
 }
 
 extern "C" int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t length) {
+    if (diagnostic.handle(bytes, length)) return 1;
     pxa_event_t event;
     pxa_device_runtime_info_t info;
     pxa_game_render_create_result_t render;
@@ -454,6 +459,7 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t length) {
         if (!pxa_ui_wire_parse_theme(&event, UI_THEME_TOKEN, &theme) ||
             theme.status != 0 || theme.generation == 0 ||
             theme.typography_px[0] == 0) return -1;
+        (void)diagnostic.passed("检查通过\n\n17 个请求完成与槽位复用\n64 位句柄 IO 与失效拒绝\n窗口、存储、文件、时钟和 UI 正常\n\n切换上方页面查看覆盖范围和 ABI。");
         return pxa_log_write(2, "Core 2 UI theme completion OK") == 0
                    ? 1 : -1;
     }
