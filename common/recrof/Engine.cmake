@@ -38,7 +38,23 @@ function(pxa_recrof_component)
     file(READ "${PXA_GUEST_SDK_DIR}/pxa-imports.txt" imports)
     file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/port-imports.txt"
         "${imports}\nunwind\nstop_unwind\nrewind_stack\nstop_rewind\n")
-    target_link_options(pxa_main PRIVATE -Wl,-z,stack-size=524288
+    if(NOT DEFINED PXA_RECROF_ENGINE_STACK_BYTES)
+        set(PXA_RECROF_ENGINE_STACK_BYTES 262144)
+    endif()
+    if(NOT DEFINED PXA_RECROF_CALLBACK_STACK_BYTES)
+        set(PXA_RECROF_CALLBACK_STACK_BYTES 262144)
+    endif()
+    foreach(bytes IN ITEMS PXA_RECROF_ENGINE_STACK_BYTES PXA_RECROF_CALLBACK_STACK_BYTES)
+        math(EXPR remainder "${${bytes}} % 16")
+        if(${${bytes}} LESS 16384 OR NOT remainder EQUAL 0)
+            message(FATAL_ERROR "${bytes} must be at least 16384 and aligned to 16")
+        endif()
+    endforeach()
+    math(EXPR total_stack "${PXA_RECROF_ENGINE_STACK_BYTES} + ${PXA_RECROF_CALLBACK_STACK_BYTES}")
+    target_compile_definitions(pxa_main PRIVATE
+        PORT_ENGINE_STACK_BYTES=${PXA_RECROF_ENGINE_STACK_BYTES}
+        PORT_CALLBACK_STACK_BYTES=${PXA_RECROF_CALLBACK_STACK_BYTES})
+    target_link_options(pxa_main PRIVATE -Wl,-z,stack-size=${total_stack}
         "-Wl,--allow-undefined-file=${CMAKE_CURRENT_BINARY_DIR}/port-imports.txt")
     foreach(fn fopen fclose fread fwrite fseek ftell rewind fflush feof ferror clearerr
         fgetc getc fputc putc fgets fputs fprintf printf puts putchar vprintf open close read write lseek

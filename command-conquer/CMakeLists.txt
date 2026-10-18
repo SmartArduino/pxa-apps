@@ -5,6 +5,8 @@ set(VC_DIR ${CMAKE_CURRENT_LIST_DIR}/vendor/Vanilla-Conquer)
 set(VC_COMMON ${VC_DIR}/common)
 set(VC_TD ${VC_DIR}/tiberiandawn)
 set(VC_RA ${VC_DIR}/redalert)
+set_source_files_properties(${VC_COMMON}/file.cpp PROPERTIES
+    COMPILE_DEFINITIONS Resolve_File=Pxa_Resolve_File_Uncached)
 if(NOT DEFINED CNC_GAME)
     set(CNC_GAME td)
 endif()
@@ -27,6 +29,7 @@ set(VC_COMMON_SRC
 list(TRANSFORM VC_COMMON_SRC PREPEND ${VC_COMMON}/)
 # movie sound (replaces vqaaudio_openal.cpp), compiled as game code
 list(APPEND VC_COMMON_SRC ${CMAKE_CURRENT_LIST_DIR}/cnc_vqaaudio.cpp)
+list(APPEND VC_COMMON_SRC ${CMAKE_CURRENT_LIST_DIR}/resolve_file.cpp)
 
 set(VC_TD_SRC
     aadata.cpp abstract.cpp adata.cpp aircraft.cpp anim.cpp audio.cpp base.cpp bbdata.cpp bdata.cpp

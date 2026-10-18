@@ -18,6 +18,15 @@
 
 #define SLOT_COUNT 64
 #define FD_BASE 100
+/* A single Guest owns its private namespace. RTS filename resolution may
+ * cache a spelling only until the next possible namespace mutation. */
+#ifdef PORT_RTS
+static uint64_t namespace_revision;
+uint64_t port_filesystem_revision(void) { return namespace_revision; }
+#define NAMESPACE_CHANGED() (++namespace_revision)
+#else
+#define NAMESPACE_CHANGED() ((void)0)
+#endif
 static struct File {
   uint64_t handle,features,read_cookie;
   int used, eof, error, asset, external;
@@ -83,6 +92,7 @@ static int path(const char *s, char *out) {
   return 1;
 }
 static int simple(uint16_t op, const char *s) {
+  NAMESPACE_CHANGED();
   char p[256];
   uint8_t packet[320];
   uint32_t n;
@@ -112,6 +122,7 @@ static int asset_info(const char *p, char *name, pxa_asset_result_t *info) {
          !info->status && info->info.kind == PXA_ASSET_BLOB;
 }
 static int openfile(const char *name, uint32_t flags) {
+  if(flags & (PXA_FS_OPEN_CREATE|PXA_FS_OPEN_TRUNCATE)) NAMESPACE_CHANGED();
   char p[256];
   if (!path(name, p))
     return -1;
@@ -477,16 +488,22 @@ int __wrap_access(const char *s, int mode) {
 }
 int __wrap_mkdir(const char *s, mode_t mode) {
   (void)mode;
-  struct stat st;
-  if (__wrap_stat(s, &st) == 0) {
-    errno = EEXIST;
-    return -1;
-  }
-  return simple(PXA_FS_MAKE_DIRECTORY, s);
+  /* Resource directories on read-only SD do not create the corresponding
+   * private save directory. Query only the writable layer for mkdir. */
+  char p[256];uint8_t packet[320];uint32_t n;
+  if(!path(s,p) || !pxa_fs_build_path(packet,sizeof(packet),PXA_FS_STAT,1,
+                                      p,strlen(p),&n))return -1;
+  const pxa_event_t *e=port_rpc_packet(packet,n);
+  pxa_fs_stat_result_t info;
+  if(!e || !pxa_fs_parse_stat(e,e->token,&info)) {errno=EIO;return -1;}
+  if(!info.status) {errno=EEXIST;return -1;}
+  if(info.status!=PXA_STATUS_NOT_FOUND) {errno=EIO;return -1;}
+  return simple(PXA_FS_MAKE_DIRECTORY,s);
 }
 int __wrap_unlink(const char *s) { return simple(PXA_FS_REMOVE, s); }
 int __wrap_remove(const char *s) { return __wrap_unlink(s); }
 static int move_file(const char *a, const char *b, unsigned opcode) {
+  NAMESPACE_CHANGED();
   char p[256], q[256];
   uint8_t packet[600];
   uint32_t n;
@@ -540,6 +557,7 @@ char *__wrap_getcwd(char *s, size_t n) {
   return s;
 }
 int __wrap_chdir(const char *s) {
+  NAMESPACE_CHANGED();
   char p[256];
   struct stat st;
   if (!path(s, p) || __wrap_stat(s, &st) || !S_ISDIR(st.st_mode))

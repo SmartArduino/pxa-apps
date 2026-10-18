@@ -71,20 +71,26 @@ void port_draw_text(uint16_t *dest, int w, int h, int x, int y, const char *s) {
   }
 }
 typedef struct {int x,y,w,h; const char *label; int key;} Control;
+#ifdef PORT_RTS
+#define RTS_CONFIRM , {240,0,40,24,"OK",13}
+#else
+#define RTS_CONFIRM
+#endif
 #define CONTROL_DEFAULTS \
   {0,0,38,23,"MENU",27}, {280,0,40,24,"WPN",'q'}, \
   {276,116,44,26,"USE",'e'}, {276,148,44,28,"JMP",' '}, \
-  {268,192,52,48,"FIRE",200}, {280,0,40,24,"RMB",202}
+  {268,192,52,48,"FIRE",200}, {280,0,40,24,"RMB",202} RTS_CONFIRM
 static const Control control_defaults[] = {CONTROL_DEFAULTS};
 static Control controls[] = {CONTROL_DEFAULTS};
 #undef CONTROL_DEFAULTS
+#undef RTS_CONFIRM
 static int clamp(int value,int low,int high) {
   return value<low?low:value>high?high:value;
 }
 void port_controls_safe_area(int top,int right,int bottom,int left) {
   top=clamp(top,0,239);bottom=clamp(bottom,0,239-top);
   left=clamp(left,0,319);right=clamp(right,0,319-left);
-  for(unsigned i=0;i<6;++i) {
+  for(unsigned i=0;i<sizeof(controls)/sizeof(controls[0]);++i) {
     controls[i]=control_defaults[i];
     Control *b=&controls[i];
     if(b->w>320-left-right)b->w=320-left-right;
@@ -94,14 +100,14 @@ void port_controls_safe_area(int top,int right,int bottom,int left) {
   }
 }
 int port_control_key_at(int x,int y,int rts) {
-  for(unsigned i=rts?5:0;i<(rts?6:5);++i) {
+  for(unsigned i=rts?5:0;i<(rts?sizeof(controls)/sizeof(controls[0]):5);++i) {
     const Control *b=&controls[i];
     if(x>=b->x && x<b->x+b->w && y>=b->y && y<b->y+b->h)return b->key;
   }
   return 0;
 }
 void port_draw_controls(uint16_t *dest, int w, int h, int rts) {
-  for (unsigned i = rts ? 5 : 0; i < (rts ? 6 : 5); ++i) {
+  for (unsigned i = rts ? 5 : 0; i < (rts ? sizeof(controls)/sizeof(controls[0]) : 5); ++i) {
     int bx=controls[i].x, by=controls[i].y, bw=controls[i].w, bh=controls[i].h;
     if (w==320 && h==240) {
       for(int y=by;y<by+bh;++y) {

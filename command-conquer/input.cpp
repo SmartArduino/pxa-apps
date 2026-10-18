@@ -9,12 +9,13 @@ struct Event {
 static Event queue[128];
 static unsigned head, tail;
 static int cursor_x = 160, cursor_y = 120, primary_key = 200;
-static bool right_button(int x, int y) { return x >= 280 && y < 24; }
+static bool right_button(int x, int y) { return port_control_key_at(x,y,1)==202; }
+static bool control_button(int x, int y) { return port_control_key_at(x,y,1)!=0; }
 static void push(int key, int down) {
   unsigned next = (head + 1) & 127;
   if (next != tail) {
     int x = port_mouse_x(), y = port_mouse_y();
-    if (right_button(x, y)) { x = cursor_x; y = cursor_y; }
+    if (control_button(x, y)) { x = cursor_x; y = cursor_y; }
     queue[head] = {key, down, x, y};
     head = next;
   }
@@ -36,7 +37,7 @@ public:
     if(head==tail){
       if(++idle_polls==64){idle_polls=0;port_sleep(0);}
     }else idle_polls=0;
-    if (!right_button(port_mouse_x(), port_mouse_y())) {
+    if (!control_button(port_mouse_x(), port_mouse_y())) {
       cursor_x = port_mouse_x(); cursor_y = port_mouse_y();
     }
     videoSetMouse(cursor_x, cursor_y);

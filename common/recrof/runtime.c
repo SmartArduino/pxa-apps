@@ -20,6 +20,10 @@
 #include <time.h>
 
 #define NOINLINE __attribute__((noinline))
+#ifndef PORT_TICK_US
+#define PORT_TICK_US (PORT_TICK_MS*1000u)
+#endif
+_Static_assert(PORT_TICK_US>0 && PORT_TICK_US<=60000000u,"invalid preferred Clock period");
 _Static_assert(PORT_TICK_MS>=16 && PORT_TICK_MS<=1000,"Clock period must be 16..1000 ms");
 __attribute__((import_module("asyncify"), import_name("start_unwind"))) void
 unwind(void *);
@@ -32,8 +36,18 @@ stop_rewind(void);
 extern uintptr_t port_stack_get(void);
 extern void port_stack_set(uintptr_t);
 /* Both C stacks live inside the linker-declared auxiliary stack, so WAMR
- * interpreter and AOT bounds checks agree. The upper half serves callbacks. */
+ * interpreter and AOT bounds checks agree. The upper region serves callbacks. */
 extern unsigned char __stack_low[];
+#ifndef PORT_ENGINE_STACK_BYTES
+#define PORT_ENGINE_STACK_BYTES 262144u
+#endif
+#ifndef PORT_CALLBACK_STACK_BYTES
+#define PORT_CALLBACK_STACK_BYTES 262144u
+#endif
+_Static_assert(PORT_ENGINE_STACK_BYTES>=16384 && PORT_ENGINE_STACK_BYTES%16==0,
+               "invalid engine stack size");
+_Static_assert(PORT_CALLBACK_STACK_BYTES>=16384 && PORT_CALLBACK_STACK_BYTES%16==0,
+               "invalid callback stack size");
 #ifndef PORT_CONTINUATION_BYTES
 #define PORT_CONTINUATION_BYTES 262144u
 #endif
@@ -61,6 +75,21 @@ static uint64_t window_revision;
 static int keys[256];
 static uint8_t packet[512];
 static uint64_t token_cursor = 100;
+static uint64_t clock_pending;
+static uint32_t clock_requested;
+static int clock_timing;
+/* Keep the validated legacy timer running until negotiation completes. */
+static int clock_apply(void) {
+  if(clock_timing) {
+    clock_requested=background?0:PORT_TICK_US;
+    clock_pending=++token_cursor;
+    int status=pxa_clock_configure(clock_pending,clock_requested);
+    if(!status)return 0;
+    clock_timing=0;clock_pending=0;
+    port_log("PXA Clock configure unavailable: %d; legacy fallback",status);
+  }
+  return pxa_clock_set_period(background?0:PORT_TICK_MS);
+}
 static uint64_t waiting_token;
 static pxa_event_t reply;
 static uint8_t reply_data[PXA_MAX_CONTROL_BYTES];
@@ -153,12 +182,12 @@ NOINLINE static void pump(void) {
   uintptr_t callback_stack = port_stack_get();
   if (!started) started = 1;
   if (!engine_running) {
-    memset(__stack_low,0xa5,262144);
+    memset(__stack_low,0xa5,PORT_ENGINE_STACK_BYTES);
     callback_stack_floor = callback_stack;
-    if(callback_stack > (uintptr_t)__stack_low+262144)
-      memset(__stack_low+262144,0xa5,callback_stack-(uintptr_t)__stack_low-262144);
+    if(callback_stack > (uintptr_t)__stack_low+PORT_ENGINE_STACK_BYTES)
+      memset(__stack_low+PORT_ENGINE_STACK_BYTES,0xa5,callback_stack-(uintptr_t)__stack_low-PORT_ENGINE_STACK_BYTES);
   }
-  port_stack_set(suspended ? engine_sp : (uintptr_t)__stack_low + 262144);
+  port_stack_set(suspended ? engine_sp : (uintptr_t)__stack_low + PORT_ENGINE_STACK_BYTES);
   if (suspended) {
     suspended = 0;
     rewinding = 1;
@@ -282,11 +311,11 @@ void port_frame_cursor(const uint8_t *p, int w, int h, int pitch,
              (unsigned long long)perf_draw_us,perf_skipped,
              (unsigned)__builtin_wasm_memory_size(0)*65536u);
     port_log("PXA SCHED yields=%u wait_us=%llu",perf_yields,(unsigned long long)perf_wait_us);
-    uint8_t *low=__stack_low,*engine=low,*callback=low+262144;
-    while(engine<low+262144 && *engine==0xa5)++engine;
+    uint8_t *low=__stack_low,*engine=low,*callback=low+PORT_ENGINE_STACK_BYTES;
+    while(engine<low+PORT_ENGINE_STACK_BYTES && *engine==0xa5)++engine;
     while((uintptr_t)callback<callback_stack_floor && *callback==0xa5)++callback;
     port_log("PXA STACK engine=%u callback=%u continuation=%u",
-             (unsigned)(low+262144-engine),(unsigned)(low+524288-callback),continuation_peak);
+             (unsigned)(low+PORT_ENGINE_STACK_BYTES-engine),(unsigned)(low+PORT_ENGINE_STACK_BYTES+PORT_CALLBACK_STACK_BYTES-callback),continuation_peak);
     port_game_stats();
     perf_since=end; perf_frames=perf_skipped=0; perf_draw_us=0;
     perf_wait_us=0;perf_yields=0;
@@ -502,13 +531,35 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t n) {
     controls_window(&window);
     return PXA_EVENT_HANDLED;
   }
+  if(e.service==PXA_CLOCK_SERVICE && e.opcode==PXA_CLOCK_LIMITS && e.token==14) {
+    pxa_clock_limits_result_t limits;
+    if(pxa_clock_parse_limits(&e,14,&limits) && !limits.status &&
+       pxa_clock_period_supported(&limits.limits,PORT_TICK_US)) {
+      clock_timing=1;
+      int status=clock_apply();
+      if(status)port_log("PXA Clock negotiation failed: %d",status);
+    } else port_log("PXA Clock preferred=%u us unavailable; legacy=%u us",PORT_TICK_US,PORT_TICK_MS*1000u);
+    return PXA_EVENT_HANDLED;
+  }
+  if(e.service==PXA_CLOCK_SERVICE && e.opcode==PXA_CLOCK_CONFIGURE) {
+    if(e.token==clock_pending) {
+      pxa_clock_configure_result_t result;
+      clock_pending=0;
+      if(!pxa_clock_parse_configure(&e,e.token,clock_requested,&result) || result.status) {
+        clock_timing=0;
+        int status=clock_apply();
+        port_log("PXA Clock rejected preferred period; legacy fallback status=%d",status);
+      } else port_log("PXA Clock accepted period_us=%u",result.period_us);
+    }
+    return PXA_EVENT_HANDLED;
+  }
   uint8_t life;
   if (pxa_lifecycle_parse(&e, &life)) {
     background = life == PXA_SYSTEM_LIFECYCLE_BACKGROUND;
     release_input();
     if (audio)
       pxa_audio_flush(13, audio);
-    int clock_status=pxa_clock_set_period(background ? 0 : PORT_TICK_MS);
+    int clock_status=clock_apply();
     if(clock_status) port_log("PXA Clock lifecycle failed: %d",clock_status);
     return PXA_EVENT_HANDLED;
   }
@@ -544,8 +595,12 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t n) {
     if (pxa_surface_build_configure_layer(packet, sizeof(packet), 2, surface, 0,
                                           0, surface_w, surface_h, 0, 1, &size))
       pxa_control_packet(packet, size);
-    int clock_status=pxa_clock_set_period(PORT_TICK_MS);
+    int clock_status=clock_apply();
     if(clock_status) {port_log("PXA Clock start failed: %d",clock_status);return clock_status;}
+    if(PORT_TICK_US!=PORT_TICK_MS*1000u) {
+      int status=pxa_clock_limits(14);
+      if(status)port_log("PXA Clock limits unavailable: %d; legacy=%u us",status,PORT_TICK_MS*1000u);
+    }
     return PXA_EVENT_HANDLED;
   }
   if (e.service == PXA_PERMISSION_SERVICE && e.token == 10) {

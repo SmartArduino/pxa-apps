@@ -21,3 +21,13 @@
 RTS 的 `*data.cpp` 关闭函数内联；其 post-link 步骤保持 C++ 初始化器同步，并限制 Binaryen 内联，避免 WAMR 快速解释器为常量池保留双倍帧空间时超过宿主的 16 KiB 操作数栈。图形、鼠标键盘等待和音频实现均由 PXA 适配层提供。
 
 后续存储与性能实现：FS read-at 的逻辑 seek/有界同步读、保留 legacy 路径；Duke 已有批量保存边界接入分页 NVM 聚合；SD 变体独立配置 32ms 计算预算、合法 16ms Clock 与 128KiB continuation。320×240 的 RGB565 成对输出及控件绘制快速路径保持原像素，其他尺寸走通用缩放。Duke `Game/src/game.c` 中每帧调试耗时打印改为显式 `PXA_DUKE_FRAME_TIMING` 开关，默认关闭，仍保留每五秒汇总统计。同步工具通过三方合并保留这些 vendor 差异。
+
+
+2026-10-19 增补：
+
+- Quake `vendor/quake/host.c` 仅增加条件编译的分阶段计时钩子；统计实现、字节缓存与读取调度仍在平台层。
+- Quake II `ref_soft/r_image.c` 用 `PXA_STREAM_PCX` 接入有界流式PCX解码；原实现保留。出生点回调通过平台层类型正确的链接包装适配。
+- Quake II 离线网络层遵循上游无服务器套接字时立即返回的NET_Sleep语义，避免服务器10Hz等待限制渲染。
+- C&C公共 `keyframe.cpp` 只增加可配置的可回收图形缓存大小；普通变体保留上游默认值。RA SD分别为256/128KiB。
+- RTS文件解析缓存有16个固定条目、500ms期限，私有命名空间变化立即失效；实现位于vendor之外，通过链接符号重命名保留原解析函数。
+- C栈与续体缓冲可按独立变体配置，默认值保持原普通应用配置；SD变体协商Clock 0.3的8ms，旧Host回退16ms。

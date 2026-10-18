@@ -1,10 +1,38 @@
 #include "port.h"
+#include "audio_convert.h"
+#include "vflash.h"
 #include "audio.h"
 #include "esp_parallel.h"
 #include "graphics.h"
 #include "keyboard.h"
 #include "quakedef.h"
 static int mdx, mdy;
+#ifdef PXA_FRAME_PROFILE
+static uint64_t profile_stamp, profile_part[3], profile_total[3];
+static unsigned profile_frames;
+void Pxa_QuakeProfile(unsigned stage) {
+  uint64_t now = port_time_us();
+  if (stage) profile_part[stage-1] = now-profile_stamp;
+  profile_stamp = now;
+  if (stage == 3) {
+    for (unsigned i=0; i<3; ++i) profile_total[i] += profile_part[i];
+    ++profile_frames;
+  }
+}
+#endif
+void port_game_stats(void) {
+  vflash_stats_t io;vflash_stats(&io,1);
+  port_log("PXA IO hit=%llu miss=%llu read_us=%llu cache_bytes=%u",
+    (unsigned long long)io.hits,(unsigned long long)io.misses,
+    (unsigned long long)io.read_us,io.cache_bytes);
+#ifdef PXA_FRAME_PROFILE
+  port_log("PXA QUAKE complete=%u engine_us=%llu render_us=%llu sound_us=%llu",
+    profile_frames, (unsigned long long)profile_total[0],
+    (unsigned long long)profile_total[1], (unsigned long long)profile_total[2]);
+  memset(profile_total, 0, sizeof(profile_total));
+  profile_frames = 0;
+#endif
+}
 static struct {
   int k, d;
 } keyq[128];
@@ -147,12 +175,8 @@ uint32_t audioGetPlayIndex(void) {
 void port_game_audio(void) {
   static unsigned played;
   unsigned end = audioGetPlayIndex();
-  while (played != end) {
-    int16_t s[2] = {((uint8_t)audioBuffer[played * 2] - 128) * 256,
-                    ((uint8_t)audioBuffer[played * 2 + 1] - 128) * 256};
-    port_pcm(s, 1, 11025, 2);
-    played = (played + 1) & (AUDIO_BUFFER_LENGTH - 1);
-  }
+  played=port_audio_u8_stereo_ring((const uint8_t *)audioBuffer,
+      AUDIO_BUFFER_LENGTH-1,played,end,11025);
 }
 void port_game_main(void) {
   initGraphics();

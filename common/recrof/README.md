@@ -8,10 +8,10 @@
 
 ```sh
 local/pxa-apps/common/recrof/tools/setup.sh
-tools/app.sh build quake --source-root local/pxa-apps --target esp32s3,x86 --output local/recrof-build/final
+tools/app.sh build quake-sd --board doit-gamekit --source-root local/pxa-apps --target esp32s31 --output local/recrof-build/final
 ```
 
-把 `quake` 替换成其他应用名即可。`--target wasm` 生成便携 WASM 包；`esp32s3,x86` 同时生成 Xtensa 和模拟器 AOT。输出文件为 `pxa-<应用名>.pxa`，使用本工作区的开发发布者密钥签名。设备必须信任对应发布者。
+把 `quake-sd` 替换成其他应用名即可。GameKit 是 ESP32-S31 / RISC-V32，须使用 `esp32s31`；ESP32-S3 使用 `esp32s3`，两种 AOT 不能混用。`--target wasm` 生成便携 WASM 包；逗号分隔目标可合并多架构 AOT。输出文件为 `pxa-<应用名>.pxa`，使用本工作区的开发发布者密钥签名。设备必须信任对应发布者。
 
 CMake 在链接后使用 Asyncify 将原引擎的阻塞主循环转换成可暂停的 PXA 事件回调。宿主只接收标准 PXA Core 2 导入；Asyncify 导入在构建时消除。SD 变体另外要求支持 FS 0.3 `app-media-root` 的固件；固定映射缓冲也要求宿主正确实现 pinned linear memory 的原地增长。
 
@@ -49,16 +49,16 @@ Quake II 使用标准 `baseq2/pak0.pak`。C&C 可导入 DOS 试玩版的 DEMO.MI
 
 射击游戏：左半屏拖动控制前后移动和横移；右半屏拖动转向；按钮 MENU 打开菜单，WPN 切武器，USE 使用，JMP 跳跃，FIRE 射击。菜单内用左侧上下拖动选择，FIRE 确认。手柄方向键移动，A 射击/确认，B 跳跃，START 菜单，SELECT 回车，X 使用，Y 切武器。
 
-策略游戏：触摸映射鼠标左键，带右键标志的指针映射右键；右上角 RMB 按钮在上一个游戏光标位置执行右键，便于触屏取消选择。手柄 A/B 分别为左键/右键，START 为 Escape，SELECT 为回车。策略游戏的原有阻塞键盘等待会主动让出执行权，以便接收后续 PXA 输入事件。当前没有联机功能。
+策略游戏：触摸映射鼠标左键，带右键标志的指针映射右键；右上角 OK 确认任务/简报，RMB 按钮在上一个游戏光标位置执行右键，便于触屏取消选择。手柄 A/B 分别为左键/右键，START 为 Escape，SELECT 为回车。策略游戏的原有阻塞键盘等待会主动让出执行权，以便接收后续 PXA 输入事件。当前没有联机功能。
 
 ## 平台适配与限制
 
 - 软件绘制、RGB565 双缓冲 guest-mapped Surface；以 320×240 为逻辑屏幕，按显示器尺寸缩放。
 - PXA Clock 驱动，独立的引擎 C 栈与 Asyncify 续体栈，后台暂停并释放按键。
-- 可选 `audio.playback` 权限，PCM 混音后输出 16 kHz 单声道；拒绝权限仍可游戏。实际设备音频尚未验证。
+- 可选 `audio.playback` 权限，PCM 混音后输出 16 kHz 单声道；拒绝权限仍可游戏。Duke 已在真机开启音乐和音效并核对设置，持续输出与欠载情况仍需分别量化。
 - 标准 stdio/POSIX 调用桥接到私有 FS 与签名资源，虚拟 Flash 使用文件保存 NOR 数据。
 - 不使用 ESP32 的 GPIO、SDMMC、DMA、FreeRTOS 或 Flash 直映射驱动。
-- 目前清单的线性内存上限：Quake 3 MiB、Quake II 12 MiB、Duke3D 4 MiB、C&C 10 MiB、RA 14 MiB；另需宿主、AOT 和显示内存。SD Duke 变体当前最大3.875MiB、实际场景3.75MiB。不能据此承诺在 8 MiB PSRAM 的设备上均可运行。大型资源包还需要足够的存储空间。
+- 目前清单的线性内存上限：Quake 3 MiB、Quake II 12 MiB、Duke3D 4 MiB、C&C 10 MiB、RA 14 MiB；另需宿主、AOT 和显示内存。SD 变体另有独立上限：Quake 4MiB、Quake II 10.375MiB、Duke3D 3.875MiB、C&C 7MiB、RA 9.5625MiB；实际场景与设备装载资格见 `VALIDATION.md`。不能据此承诺在 8 MiB PSRAM 的设备上均可运行。大型资源包还需要足够的存储空间。
 - WAMR 无 Wasm 异常处理，原引擎 setjmp/longjmp 错误恢复改为显示错误并等待重新打开应用。正常主循环不依赖 longjmp。
 - `duke3d-sd` 已在 16 MiB PSRAM 的 GameKit / ESP32-S31 上自动读取固定 SD 资源并进入屋顶关卡，完成短时 FPS 与内存测量；其他游戏、音频连续性及长期稳定性仍待真机验收，见 `VALIDATION.md`。
 
@@ -81,7 +81,7 @@ python3 local/pxa-apps/common/recrof/tools/upstream.py apply /tmp/duke-update
 
 冲突不会自动覆盖，二进制冲突也需明确解决；`resolve --take local` 或 `--take upstream` 可明确选择一边。`apply` 在写入前校验本地与候选哈希、文件模式、路径及全部冲突状态，拒绝过期方案，对普通写入异常回滚，并最后更新版本锁。它不自动提交或推送。合并后检查 Git diff，重新构建并做真机回归；上游资源格式变化时须重新运行转换器。干净合并仅说明源码合并成功。
 
-2026-10-18 检查四个上游 HEAD 均与当前锁定提交一致；四套真实映射的无更新准备结果均为 0 个修改、0 个冲突，现有适配补丁已可单独导出。测试覆盖新增、删除、局部适配保留、文本/二进制冲突、过期编辑、符号链接/越界路径、模式变化和失败回滚。
+2026-10-19 检查四个上游 HEAD 均与当前锁定提交一致；四套真实映射的无更新准备结果均为 0 个修改、0 个冲突，现有适配补丁已可单独导出。测试覆盖新增、删除、局部适配保留、文本/二进制冲突、过期编辑、符号链接/越界路径、模式变化和失败回滚。
 
 ## 测试工具
 
@@ -96,3 +96,30 @@ python3 -m unittest discover -s local/pxa-apps/common/recrof/tests -p 'test_*.py
 Quake 的门和开关沿用原作自动触发机制，USE 按钮在 Quake 中没有独立动作。
 
 策略游戏的资源版本说明参考上游 [VanillaTD 安装说明](https://github.com/TheAssemblyArmada/Vanilla-Conquer/wiki/Installing-VanillaTD) 和 [VanillaRA 安装说明](https://github.com/TheAssemblyArmada/Vanilla-Conquer/wiki/Installing-VanillaRA)。
+
+
+## 固定 SD 资源与真机性能目标
+
+`quake-sd`、`quake2-sd`、`duke3d-sd`、`command-conquer-sd`、`red-alert-sd`
+自动使用 `/PXA/media/<AppKey>/`，无需选择目录。资源仍先按 `TEST_DATA.md`
+导入到对应原版应用的 `assets/game`；SD 变体的包只携带引擎，私有配置与存档仍在内部存储。
+
+先查看导入计划；实际传输只指定设备，不填写目录：
+
+```sh
+python3 local/pxa-apps/common/recrof/tools/stage_sd.py quake
+PXADB_BAUD=2000000 python3 local/pxa-apps/common/recrof/tools/stage_sd.py quake --deploy \
+  --port /dev/ttyACM0 --expected-serial 1c:29:04:d0:af:5e \
+  --pxadb-dir /absolute/path/to/pxa-projects/tools/pxadb
+```
+
+默认使用开发根公钥 `.dev-signing/publisher-public.der`，发布身份可用
+`--publisher-key` 指定根公钥 DER；有公钥轮换时应使用签名谱系的根公钥。
+AppKey 包含发布身份与应用 ID，两个应用或发布者不会自动共用资源目录。
+传输使用 PXADB 的完整 SHA-256 校验，重复导入相同文件可直接验证；资源导入不会发布应用。
+
+本轮最低性能目标调整为 **真实设备、实际关卡至少 15fps**，保留原画质、音乐和音效。
+分别记录稳定窗口的中位数、平均值、最低值和异常，加载或菜单不作为关卡 FPS。
+构建与协议宿主运行均不能代替真机验收；各游戏结果与未完成项见工作区 `docs/validation`。
+SD 变体优先协商 Clock 0.3 的 8000us，设备不支持或配置失败时回退合法的 16ms。
+后台取消、回到前台恢复；周期表示调度请求，不能据此直接推断游戏帧率。

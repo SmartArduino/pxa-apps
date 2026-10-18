@@ -184,6 +184,11 @@ LoadPCX
 */
 void LoadPCX (char *filename, byte **pic, byte **palette, int *width, int *height)
 {
+#ifdef PXA_STREAM_PCX
+  extern void Pxa_LoadPCX(char *,byte **,byte **,int *,int *,int);
+  Pxa_LoadPCX(filename,pic,palette,width,height,r_image_permanent);
+#else
+
 	byte	*raw;
 	pcx_t	*pcx;
 	int		x, y;
@@ -278,6 +283,8 @@ void LoadPCX (char *filename, byte **pic, byte **palette, int *width, int *heigh
 	}
 
 	ri.FS_FreeFile (pcx);
+
+#endif
 }
 
 /*

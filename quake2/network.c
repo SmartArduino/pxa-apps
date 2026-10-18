@@ -78,4 +78,6 @@ void NET_SendPacket(netsrc_t sock, int n, void *p, netadr_t to) {
 void NET_Config(qboolean multi) { (void)multi; }
 void NET_Init(void) {}
 void NET_Shutdown(void) {}
-void NET_Sleep(int ms) { port_sleep(ms); }
+/* net_udp.c returns immediately without a server socket. Sleeping here made
+ * the local 10 Hz server also throttle rendering and input to about 10 fps. */
+void NET_Sleep(int ms) { (void)ms; }

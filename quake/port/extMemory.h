@@ -47,6 +47,8 @@ extern uint32_t currentExtAddress;
 extern uint32_t extCacheLastBlock;          // last PAK block accessed (file offset / EXT_CACHE_BLOCK_SIZE)
 extern const uint8_t *extCacheLastData;     // its data
 extern uint8_t extMemAsynchByte;
+extern unsigned extMemByteReads;
+void extMemPollBytes(void);
 
 static inline void extMemSetCurrentAddress(uint32_t address)
 {
@@ -54,6 +56,8 @@ static inline void extMemSetCurrentAddress(uint32_t address)
 }
 static inline uint8_t extMemGetByteFromAddress(const void *addr)
 {
+    if ((++extMemByteReads & 255u) == 0)
+        extMemPollBytes();
     uint32_t offset = (uint32_t) addr & SPI_ADDRESS_MASK;
     currentExtAddress = offset + 1;
     uint32_t fileOffset = offset - PAK_FILE_OFFSET;

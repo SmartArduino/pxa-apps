@@ -1,5 +1,6 @@
 /* PXA adapter for recrof's Quake II engine. GPL-2.0-or-later. */
 #include "port.h"
+#include "audio_convert.h"
 #include "client/client.h"
 #include "client/keys.h"
 #include "client/snd_loc.h"
@@ -97,10 +98,7 @@ void port_game_audio(void) {
   unsigned count = (end - played) & 2047;
   if (count > 1102)
     played = (end - 1102) & 2047;
-  while (played != end) {
-    port_pcm((int16_t *)snd + played * 2, 1, 11025, 2);
-    played = (played + 1) & 2047;
-  }
+  played=port_audio_s16_stereo_ring((const int16_t *)snd,2047,played,end,11025);
 }
 void port_game_main(void) {
   mkdir("/data/baseq2", 0700);
@@ -109,9 +107,10 @@ void port_game_main(void) {
     port_error("Missing baseq2/pak0.pak.\nImport Quake II game data with the "
                "included tools.");
   fclose(f);
-  char *argv[] = {"quake2", "+set",        "basedir", "/data",   "+set",
-                  "cddir",  "/data",       "+set",    "sw_mode", "0",
-                  "+set",   "s_initsound", "1",       NULL};
+  /* basedir already searches SD through the resource bridge. Repeating the
+   * same path as cddir duplicates the PAK directory and startup probes. */
+  char *argv[] = {"quake2", "+set", "basedir", "/data", "+set", "sw_mode", "0",
+                  "+set", "s_initsound", "1", NULL};
   Quake2_Init((int)(sizeof(argv) / sizeof(argv[0])) - 1, argv);
   uint64_t prev = port_time_us();
   for (;;) {
@@ -127,4 +126,12 @@ void port_game_main(void) {
     Quake2_Frame(ms);
     port_sleep(1);
   }
+}
+
+/* Upstream defines this no-op as (void), but its spawn table calls (edict_t*).
+ * Wasm checks indirect signatures; preserve the no-op via a typed link wrapper. */
+void __real_SP_info_player_intermission(void);
+void __wrap_SP_info_player_intermission(void *entity) {
+  (void)entity;
+  __real_SP_info_player_intermission();
 }

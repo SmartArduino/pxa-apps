@@ -735,6 +735,10 @@ void _Host_Frame(float time)
 // decide the simulation time
     if (!Host_FilterTime(time))
         return;			// don't run too fast, or packets will flood out
+#ifdef PXA_FRAME_PROFILE
+    extern void Pxa_QuakeProfile(unsigned stage);
+    Pxa_QuakeProfile(0);
+#endif
 //	if (_g->cls.netcon && _g->cls.netcon->receiveMessageLength)
 //	    while(1) FIXME("RECEIVE MESSAGELENGTH NOT 0");
 
@@ -805,7 +809,13 @@ void _Host_Frame(float time)
     if (host_speeds)
         time1 = Sys_FloatTime();
 #endif
+#ifdef PXA_FRAME_PROFILE
+    Pxa_QuakeProfile(1);
+#endif
     SCR_UpdateScreen();
+#ifdef PXA_FRAME_PROFILE
+    Pxa_QuakeProfile(2);
+#endif
 
 #if WIN32
     screenUpdated = 0;
@@ -828,6 +838,9 @@ void _Host_Frame(float time)
         S_Update(vec3_origin, vec3_origin, vec3_origin, vec3_origin);
 
     CDAudio_Update();
+#ifdef PXA_FRAME_PROFILE
+    Pxa_QuakeProfile(3);
+#endif
 #if WIN32
     if (host_speeds)
     {

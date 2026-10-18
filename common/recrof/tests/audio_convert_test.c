@@ -2,10 +2,10 @@
 #include <stdint.h>
 #include <stdio.h>
 static int16_t captured[2048];
-static unsigned written,calls;
+static unsigned written,calls,expected_channels=1;
 void port_pcm(const int16_t *p,unsigned count,unsigned rate,unsigned channels) {
-  assert(rate==11025 && channels==1 && count<=64);
-  ++calls;for(unsigned i=0;i<count;++i)captured[written++]=p[i];
+  assert(rate==11025 && channels==expected_channels && count<=64);
+  ++calls;for(unsigned i=0;i<count;++i)captured[written++]=channels==1?p[i]:((int)p[i*2]+p[i*2+1])/2;
 }
 #include "audio_convert.h"
 int main(void) {
@@ -26,6 +26,16 @@ int main(void) {
     assert(written==count && calls==(count+63)/64);
     for(unsigned i=0;i<count;++i){unsigned j=(start+i)&2047;
       assert(captured[i]==(((int)ring[j*2]-128)*256+((int)ring[j*2+1]-128)*256)/2);}
+  }
+  int16_t stereo[4096];
+  for(unsigned i=0;i<4096;++i)stereo[i]=(int16_t)(i*173+32761);
+  expected_channels=2;
+  for(unsigned start=0;start<2048;start+=31)for(unsigned count=0;count<2048;count+=43) {
+    written=calls=0;unsigned end=(start+count)&2047;
+    assert(port_audio_s16_stereo_ring(stereo,2047,start,end,11025)==end);
+    assert(written==count && calls<=((count+63)/64)+1);
+    for(unsigned i=0;i<count;++i){unsigned j=(start+i)&2047;
+      assert(captured[i]==((int)stereo[j*2]+stereo[j*2+1])/2);}
   }
   puts("PASS: all 65536 stereo pairs, ring wrap, empty and batched output");
 }

@@ -18,3 +18,18 @@ static inline unsigned port_audio_u8_stereo_ring(const uint8_t *ring,
   }
   return played;
 }
+
+/* Keep stereo input for port_pcm's original signed averaging (C truncates
+ * negative odd sums toward zero). Submit contiguous ring spans without copies. */
+static inline unsigned port_audio_s16_stereo_ring(const int16_t *ring,
+    unsigned ring_mask, unsigned played, unsigned end, unsigned rate) {
+  while(played!=end) {
+    unsigned count=(end-played)&ring_mask;
+    unsigned contiguous=ring_mask+1-played;
+    if(count>contiguous)count=contiguous;
+    if(count>64)count=64;
+    port_pcm(ring+played*2,count,rate,2);
+    played=(played+count)&ring_mask;
+  }
+  return played;
+}

@@ -14,6 +14,7 @@ const ioDelayWord=new Int32Array(new SharedArrayBuffer(4));
 const requireIoCoop=process.env.PXA_TEST_REQUIRE_IO_COOP==='1';
 let callbackSequence=0,lastSlowIoCallback=-1,ioBoundaryChecks=0;
 let clockPeriod=0,lastTick=0;
+const callOps={},ioOps={},pathOps={};
 let stopping=false;
 let instance, frame, frames=0, seq=100, ticks=0, calls=0, mapped=0, mappedBytes=0, bufferIndex=0, firstFrameAt;
 const frameWindows=new Map();
@@ -39,19 +40,30 @@ function windowSnapshot(){
 }
 function pxa_call(route,token,ptr,len){
  if(stopping)throw Error('Core imports during stop are forbidden');
- calls++;const service=route&65535,op=route>>>16,p=Buffer.from(instance.exports.memory.buffer,ptr,len);let r;
+ calls++;const service=route&65535,op=route>>>16;callOps[service+':'+op]=(callOps[service+':'+op]||0)+1;const p=Buffer.from(instance.exports.memory.buffer,ptr,len);let r;
  if(requireIoCoop && service===5 && lastSlowIoCallback>=0){
   if(lastSlowIoCallback===callbackSequence)throw Error('slow I/O followed by FS control without a callback boundary');
   ioBoundaryChecks++;lastSlowIoCallback=-1;
  }
- if(service===19){const s=p.subarray(1).toString();logs.push(s);console.log(s);if(process.env.PXA_TEST_TRACE_EXIT&&(s.includes("Game exited")||s.includes("Invalid game Free")))console.trace("Engine exit");return 0;}
+ if(service===19){const s=p.subarray(1).toString();logs.push(s);console.log(s);if(process.env.PXA_TEST_TRACE_EXIT&&(s.includes("Game exited")||s.includes("Invalid game Free")))console.trace("Engine exit");if(process.env.PXA_TEST_TRACE_ALLOC&&s.startsWith("PXA ALLOC"))console.trace("Allocation caller");return 0;}
  if(service===1&&op===2){const h=p.readBigUInt64LE();const f=files.get(h);if(f?.fd!==undefined)fs.closeSync(f.fd);files.delete(h);return 0;}
  if(service===2&&op===2)r=windowSnapshot();
  else if(service===16&&op===1){r=result(0,24);r.writeBigUInt64LE(0x100000001n,4);r.writeUInt32LE(640,12);r.writeUInt32LE(153600,16);r[20]=2;}
  else if(service===16&&op===2)r=result(0);
  else if(service===11)r=result(-3);
- else if(service===4 && op===1){if(p.length!==2)return -2;const period=p.readUInt16LE();if(period && (period<16 || period>1000))return -2;clockPeriod=period;return 0;}
+ else if(service===4 && op===1){if(p.length!==2)return -1;const period=p.readUInt16LE();if(period && (period<16 || period>1000))return -1;clockPeriod=period;return 0;}
+ else if(service===4 && (op===4 || op===5)){
+  if(process.env.PXA_TEST_CLOCK_TIMING==='0')return -3;
+  const minimum=Number(process.env.PXA_TEST_CLOCK_MIN_US||1000);
+  if(op===4){if(p.length || !token)return -1;r=result(0,24);[minimum,60000000,1,1000,3].forEach((v,i)=>r.writeUInt32LE(v,4+i*4));}
+  else {if(p.length!==4 || !token)return -1;const period=p.readUInt32LE();
+   if(process.env.PXA_TEST_CLOCK_REJECT==='1')r=result(-4);
+   else if(period && (period<minimum || period>60000000))r=result(-1);
+   else {clockPeriod=period/1000;r=result(0,8);r.writeUInt32LE(period,4);}
+  }
+ }
  else if(service===5){
+  if([1,5].includes(op)){const name=records(p).get(1)?.toString();if(name)pathOps[name]=(pathOps[name]||0)+1;}
   try{
    if(op===1){const m=records(p),name=hostPath(m.get(1).toString()),flags=m.get(3).readUInt32LE();let f;
     if(flags&64)f={entries:fs.readdirSync(name,{withFileTypes:true}),at:0,name};else{
@@ -74,7 +86,7 @@ function pxa_call(route,token,ptr,len){
    else if(op===11){if(p.readUInt32LE(8)!==1)throw Error('media write');const name=mediaPath(p,14),st=fs.statSync(name);r=result(0,32);r.writeBigUInt64LE(handle({fd:fs.openSync(name,'r'),pos:0,readonly:true}),4);r[12]=1;r.writeBigUInt64LE(1n,16);r.writeBigUInt64LE(BigInt(st.size),24);}
    else if(op===16){const st=fs.statSync(mediaPath(p,10));r=result(0,20);r[4]=st.isDirectory()?2:1;r.writeBigUInt64LE(BigInt(st.size),12);}
    else throw Error('unimplemented FS op '+op);
-  }catch(e){if(!['ENOENT','EEXIST','ENOTDIR','EISDIR'].includes(e.code))throw e;r=result(-6);}
+  }catch(e){if(!['ENOENT','EEXIST','ENOTDIR','EISDIR'].includes(e.code))throw e;r=result(['ENOENT','ENOTDIR'].includes(e.code)?-5:-2);}
  }else if(service===21){try{
     const name=asset(p),st=fs.statSync(name);if(!st.isFile())throw Object.assign(new Error('not an asset'),{code:'ENOENT'});
     if(op===1){r=result(0,24);r[4]=5;r[5]=0;r.writeUInt32LE(st.size,12);r.writeUInt32LE(st.size,16);}
@@ -85,7 +97,7 @@ function pxa_call(route,token,ptr,len){
  if(r&&token)events.push({service,op,token,payload:Buffer.from(r)});
  return 0;
 }
-function pxa_io(h,op,ptr,len){if(stopping)throw Error('Core I/O during stop is forbidden');const p=Buffer.from(instance.exports.memory.buffer,ptr,len);
+function pxa_io(h,op,ptr,len){if(stopping)throw Error('Core I/O during stop is forbidden');ioOps[op]=(ioOps[op]||0)+1;const p=Buffer.from(instance.exports.memory.buffer,ptr,len);
  if(ioDelayMs && files.get(h)?.fd!==undefined){Atomics.wait(ioDelayWord,0,0,ioDelayMs);lastSlowIoCallback=callbackSequence;}
  if(h===0x100000001n){
   if(op===0x100){mapped=ptr;mappedBytes=len/2;return len;}
@@ -137,7 +149,7 @@ if(frame){const rgb=Buffer.alloc(320*240*3);for(let i=0;i<320*240;i++){const c=f
 for(const f of files.values())if(f.fd!==undefined)fs.closeSync(f.fd);
 files.clear();clockPeriod=0;stopping=true;
 instance.exports.pxa_app_stop(0);
-const report={frames,ticks,calls,bytes:instance.exports.memory.buffer.byteLength,
+const report={frames,ticks,calls,callOps,ioOps,pathOps,bytes:instance.exports.memory.buffer.byteLength,
  dataEnd:instance.exports.__data_end?.value,heapBase:instance.exports.__heap_base?.value,
  elapsedMs:Date.now()-start,firstFrameMs:firstFrameAt-start,frameWindows:Object.fromEntries(frameWindows),ioBoundaryChecks,
  scope:'Node protocol host, not device FPS',logs};fs.writeFileSync(output+'.json',JSON.stringify(report,null,2));if(!frames)throw Error('No frame submitted');

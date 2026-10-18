@@ -7,6 +7,9 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#ifdef PORT_TEST_QUAKE_BYTES
+#include "extMemory.h"
+#endif
 #define PAGE 8192u
 #define VIRTUAL_SIZE (1024u*1024u)
 #define NVM_SIZE (4u*PAGE)
@@ -40,7 +43,7 @@ int main(void){
   snprintf(data_path,sizeof(data_path),"%s/data.pak",directory);
   snprintf(save_path,sizeof(save_path),"%s/state.nvm",directory);
   uint8_t data[PAGE*2],expected[NVM_SIZE],actual[NVM_SIZE],write[12000];
-  for(unsigned i=0;i<sizeof(data);++i)data[i]=i*13;
+  for(unsigned i=0;i<sizeof(data);++i)data[i]=i*13+(i/PAGE)*31;
   FILE *f=fopen(data_path,"wb");assert(fwrite(data,1,sizeof(data),f)==sizeof(data));fclose(f);
   memset(expected,255,sizeof(expected));
   vflash_init(data_path,VIRTUAL_SIZE,NVM_SIZE);
@@ -149,6 +152,24 @@ int main(void){
   f=fopen(save_path,"wb");fputs("invalid",f);fclose(f);
   expect_error=1;
   if(!setjmp(errors)){vflash_init(data_path,VIRTUAL_SIZE,NVM_SIZE);assert(!"corrupt save accepted");}
+#ifdef PORT_TEST_QUAKE_BYTES
+  /* Sequential bytes, page changes and intervening bulk reads must agree.
+   * In particular, bulk cache eviction must never leave a stale byte view. */
+  for(unsigned i=0;i<sizeof(data);++i)
+    assert(extMemGetByteFromAddress((const void *)(uintptr_t)(4+i))==data[i]);
+  for(unsigned i=0;i<32;++i) {
+    unsigned at=i*37;
+    assert(extMemGetByteFromAddress((const void *)(uintptr_t)(4+at))==data[at]);
+    vflash_read(4+PAGE,actual,PAGE);
+    assert(extMemGetByteFromAddress((const void *)(uintptr_t)(5+at))==data[at+1]);
+  }
+  expect_error=1;
+  if(!setjmp(errors)) {
+    extMemGetByteFromAddress((const void *)(uintptr_t)(4+sizeof(data)));
+    assert(!"byte read outside archive accepted");
+  }
+  expect_error=0;
+#endif
   unlink(data_path);unlink(save_path);rmdir(directory);
   puts("PASS: compact/legacy NOR, erased pages, cross-page AND, reopen, bounded storage and corrupt header");
 }
