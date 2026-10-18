@@ -28,7 +28,7 @@ static int relative(const char *path,uint8_t *out,size_t *size) {
     for(size_t i=0;i<*size;++i) out[i]=(path[i]>='A' && path[i]<='Z')?path[i]+('a'-'A'):path[i];
     return 1;
 }
-int port_external_open(const char *path,uint64_t *handle,uint32_t *size) {
+int port_external_open(const char *path,uint64_t *handle,uint32_t *size,uint64_t *features) {
     uint8_t payload[270];size_t length;pxa_fs_at_result_t file;
     if(!relative(path,payload+14,&length)) return 0;
     pxa_store_u64(payload,data_root);pxa_store_u32(payload+8,1);
@@ -36,7 +36,7 @@ int port_external_open(const char *path,uint64_t *handle,uint32_t *size) {
     const pxa_event_t *e=port_rpc(5,11,payload,14+length);
     if(!e || !pxa_fs_parse_open_at(e,e->token,&file) || file.status) return 0;
     if(file.kind!=1 || file.size>INT32_MAX) {pxa_close_handle(file.handle);return 0;}
-    *handle=file.handle;*size=(uint32_t)file.size;return 1;
+    *handle=file.handle;*size=(uint32_t)file.size;*features=file.features;return 1;
 }
 int port_external_stat(const char *path,uint8_t *kind,uint64_t *size) {
     uint8_t payload[266];size_t length;
@@ -53,6 +53,6 @@ void port_external_shutdown(void) {
 #else
 int port_external_prepare(void) {return 1;}
 void port_external_shutdown(void) {}
-int port_external_open(const char *p,uint64_t *h,uint32_t *s) {(void)p;(void)h;(void)s;return 0;}
+int port_external_open(const char *p,uint64_t *h,uint32_t *s,uint64_t *f) {(void)p;(void)h;(void)s;(void)f;return 0;}
 int port_external_stat(const char *p,uint8_t *k,uint64_t *s) {(void)p;(void)k;(void)s;return 0;}
 #endif

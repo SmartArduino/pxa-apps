@@ -20,6 +20,7 @@
 #include <time.h>
 
 #define NOINLINE __attribute__((noinline))
+_Static_assert(PORT_TICK_MS>=16 && PORT_TICK_MS<=1000,"Clock period must be 16..1000 ms");
 __attribute__((import_module("asyncify"), import_name("start_unwind"))) void
 unwind(void *);
 __attribute__((import_module("asyncify"), import_name("stop_unwind"))) void
@@ -33,7 +34,12 @@ extern void port_stack_set(uintptr_t);
 /* Both C stacks live inside the linker-declared auxiliary stack, so WAMR
  * interpreter and AOT bounds checks agree. The upper half serves callbacks. */
 extern unsigned char __stack_low[];
-static uint8_t saved_stack[262144] __attribute__((aligned(16)));
+#ifndef PORT_CONTINUATION_BYTES
+#define PORT_CONTINUATION_BYTES 262144u
+#endif
+_Static_assert(PORT_CONTINUATION_BYTES>=16384 && PORT_CONTINUATION_BYTES%16==0,
+               "invalid continuation buffer size");
+static uint8_t saved_stack[PORT_CONTINUATION_BYTES] __attribute__((aligned(16)));
 static struct {
   void *cursor, *end;
 } continuation;
@@ -62,6 +68,8 @@ static uint64_t audio_permission, audio_pending;
 static int audio_decision_pending;
 static uint32_t pad_buttons;
 static uint64_t perf_since, perf_draw_us;
+static uint64_t perf_yield_at, perf_wait_us;
+static uint32_t perf_yields;
 static uint32_t perf_frames, perf_skipped;
 __attribute__((weak)) void port_game_stats(void) {}
 
@@ -103,9 +111,12 @@ NOINLINE void port_yield(void) {
     rewinding = 0;
     stop_rewind();
     last_cooperative_us=port_time_us();
+    perf_wait_us += last_cooperative_us-perf_yield_at;
     return;
   }
   last_cooperative_us=port_time_us();
+  perf_yield_at=last_cooperative_us;
+  ++perf_yields;
   continuation.cursor = saved_stack;
   continuation.end = saved_stack + sizeof(saved_stack);
   /* Rewind restores Wasm locals, but it skips the C stack prologues.
@@ -268,6 +279,7 @@ void port_frame_cursor(const uint8_t *p, int w, int h, int pitch,
              perf_frames,(unsigned long long)(end-perf_since),
              (unsigned long long)perf_draw_us,perf_skipped,
              (unsigned)__builtin_wasm_memory_size(0)*65536u);
+    port_log("PXA SCHED yields=%u wait_us=%llu",perf_yields,(unsigned long long)perf_wait_us);
     uint8_t *low=__stack_low,*engine=low,*callback=low+262144;
     while(engine<low+262144 && *engine==0xa5)++engine;
     while((uintptr_t)callback<callback_stack_floor && *callback==0xa5)++callback;
@@ -275,6 +287,7 @@ void port_frame_cursor(const uint8_t *p, int w, int h, int pitch,
              (unsigned)(low+262144-engine),(unsigned)(low+524288-callback),continuation_peak);
     port_game_stats();
     perf_since=end; perf_frames=perf_skipped=0; perf_draw_us=0;
+    perf_wait_us=0;perf_yields=0;
   }
   port_game_audio();
 #ifndef PORT_PACED_BY_MAIN
@@ -461,7 +474,8 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t n) {
     release_input();
     if (audio)
       pxa_audio_flush(13, audio);
-    pxa_clock_set_period(background ? 0 : 16);
+    int clock_status=pxa_clock_set_period(background ? 0 : PORT_TICK_MS);
+    if(clock_status) port_log("PXA Clock lifecycle failed: %d",clock_status);
     return PXA_EVENT_HANDLED;
   }
   if (e.token == waiting_token && waiting_token) {
@@ -496,7 +510,8 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t n) {
     if (pxa_surface_build_configure_layer(packet, sizeof(packet), 2, surface, 0,
                                           0, surface_w, surface_h, 0, 1, &size))
       pxa_control_packet(packet, size);
-    pxa_clock_set_period(16);
+    int clock_status=pxa_clock_set_period(PORT_TICK_MS);
+    if(clock_status) {port_log("PXA Clock start failed: %d",clock_status);return clock_status;}
     return PXA_EVENT_HANDLED;
   }
   if (e.service == PXA_PERMISSION_SERVICE && e.token == 10) {

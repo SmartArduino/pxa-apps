@@ -19,9 +19,18 @@ void port_blit(uint16_t *dest, int dw, int dh, const uint8_t *pixels,
   for (int y = 0; y < dh; ++y) {
     const uint8_t *row = pixels + (size_t)source_y[y] * pitch;
     uint16_t *out = dest + (size_t)y * dw;
-    if (dw == 320 && sw == 320)
+    if (dw == 320 && sw == 320) {
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+      if (!((uintptr_t)out & 3u)) {
+        out = __builtin_assume_aligned(out, 4);
+        for (int x = 0; x < dw; x += 2) {
+          uint32_t pair = palette[row[x]] | (uint32_t)palette[row[x+1]] << 16;
+          __builtin_memcpy(out+x, &pair, sizeof(pair));
+        }
+      } else
+#endif
       for (int x = 0; x < dw; ++x) out[x] = palette[row[x]];
-    else
+    } else
       for (int x = 0; x < dw; ++x) out[x] = palette[row[source_x[x]]];
   }
   if (!cursor || !cursor->pixels || cursor->width <= 0 || cursor->height <= 0)
@@ -45,6 +54,7 @@ static int scaled(int value, int size, int logical) {
 }
 static void pixel(uint16_t *dest, int w, int h, int x, int y, uint16_t c) {
   if (x < 0 || x >= 320 || y < 0 || y >= 240) return;
+  if (w == 320 && h == 240) {dest[y*320+x]=c;return;}
   for (int dy = scaled(y,h,240); dy < scaled(y+1,h,240); ++dy)
     for (int dx = scaled(x,w,320); dx < scaled(x+1,w,320); ++dx)
       dest[dy*w+dx] = c;
@@ -66,7 +76,17 @@ void port_draw_controls(uint16_t *dest, int w, int h, int rts) {
     {276,148,44,28,"JMP"}, {268,192,52,48,"FIRE"}, {280,0,40,24,"RMB"}};
   for (unsigned i = rts ? 5 : 0; i < (rts ? 6 : 5); ++i) {
     int bx=buttons[i].x, by=buttons[i].y, bw=buttons[i].w, bh=buttons[i].h;
-    for (int y=scaled(by,h,240); y<scaled(by+bh,h,240); ++y)
+    if (w==320 && h==240) {
+      for(int y=by;y<by+bh;++y) {
+        uint16_t *row=dest+y*w+bx;
+        if(y==by || y==by+bh-1) {
+          for(int x=0;x<bw;++x)row[x]=0xffff;
+        } else {
+          row[0]=row[bw-1]=0xffff;
+          for(int x=1;x<bw-1;++x)row[x]=rts?0:(row[x]&0xf7de)>>1;
+        }
+      }
+    } else for (int y=scaled(by,h,240); y<scaled(by+bh,h,240); ++y)
       for (int x=scaled(bx,w,320); x<scaled(bx+bw,w,320); ++x) {
         int lx=x*320/w, ly=y*240/h;
         uint16_t *p=&dest[y*w+x];

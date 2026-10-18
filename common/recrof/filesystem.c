@@ -2,6 +2,7 @@
 #include "port.h"
 #include "pxa_assets.h"
 #include "pxa_fs.h"
+#include "pxa_fs_roots.h"
 #include "rpc.h"
 #include "external.h"
 #include <ctype.h>
@@ -18,7 +19,7 @@
 #define SLOT_COUNT 64
 #define FD_BASE 100
 static struct File {
-  uint64_t handle;
+  uint64_t handle,features,read_cookie;
   int used, eof, error, asset, external;
   uint32_t size;
   long position;
@@ -131,10 +132,10 @@ static int openfile(const char *name, uint32_t flags) {
   pxa_fs_open_result_t r;
   if (!e || !pxa_fs_parse_open(e, e->token, &r) || r.status) {
     if (flags == PXA_FS_OPEN_READ) {
-      uint64_t external_handle;uint32_t external_size;
-      if(port_external_open(p,&external_handle,&external_size)) {
+      uint64_t external_handle,features;uint32_t external_size;
+      if(port_external_open(p,&external_handle,&external_size,&features)) {
         memset(&files[i],0,sizeof(files[i]));files[i].used=files[i].external=1;
-        files[i].handle=external_handle;files[i].size=external_size;
+        files[i].handle=external_handle;files[i].size=external_size;files[i].features=features;
         return i+FD_BASE;
       }
       pxa_asset_result_t info;
@@ -242,6 +243,18 @@ ssize_t __wrap_read(int fd, void *p, size_t n) {
     f->eof = (uint32_t)f->position == f->size;
     return done;
   }
+  if(f->external && (f->features & PXA_FS_FILE_FEATURE_READ_AT)) {
+    uint8_t packet[24+PXA_FS_READ_AT_MAX_BYTES];
+    while(done<n) {
+      uint32_t count=n-done>4096 ? 4096 : n-done;
+      int r=pxa_fs_read_at(f->handle,f->position,++f->read_cookie,packet,24+count);
+      if(r<0) {f->error=1;errno=EIO;return done?(ssize_t)done:-1;}
+      memcpy((uint8_t *)p+done,packet+24,r);done+=r;f->position+=r;
+      if(port_cooperate_due(port_time_us(),PORT_COOPERATE_BUDGET_US))port_sleep(0);
+      if(!r) {f->eof=1;break;}
+    }
+    return done;
+  }
   while (done < n) {
     size_t maximum=f->external?4096:32768;
     uint32_t chunk = n - done > maximum ? maximum : n - done;
@@ -255,7 +268,7 @@ ssize_t __wrap_read(int fd, void *p, size_t n) {
     f->position += r;
     /* A synchronous Host read can consume most of a callback deadline.
      * Return to the event loop before the engine issues its next seek. */
-    if(port_cooperate_due(port_time_us(),8000)) port_sleep(0);
+    if(port_cooperate_due(port_time_us(),PORT_COOPERATE_BUDGET_US)) port_sleep(0);
     if (r == 0) {
       f->eof = 1;
       break;
@@ -280,7 +293,7 @@ ssize_t __wrap_write(int fd, const void *p, size_t n) {
     }
     done += r;
     f->position += r;
-    if(port_cooperate_due(port_time_us(),8000)) port_sleep(0);
+    if(port_cooperate_due(port_time_us(),PORT_COOPERATE_BUDGET_US)) port_sleep(0);
   }
   return done;
 }
@@ -290,7 +303,7 @@ off_t __wrap_lseek(int fd, off_t off, int whence) {
     errno = EBADF;
     return -1;
   }
-  if (f->asset) {
+  if (f->asset || (f->external && (f->features & PXA_FS_FILE_FEATURE_READ_AT))) {
     int64_t pos = (whence == SEEK_SET   ? 0
                    : whence == SEEK_CUR ? f->position
                    : whence == SEEK_END ? f->size
@@ -478,7 +491,7 @@ static int move_file(const char *a, const char *b, unsigned opcode) {
   uint8_t packet[600];
   uint32_t n;
   if (!path(a, p) || !path(b, q) ||
-      !pxa_fs_build_rename(packet, sizeof(packet), 1, p, strlen(p), q,
+      !pxa_fs_build_move(packet, sizeof(packet), opcode, 1, p, strlen(p), q,
                            strlen(q), &n))
     return -1;
   const pxa_event_t *e = port_rpc(PXA_FS_SERVICE, opcode,
@@ -491,7 +504,7 @@ int __wrap_rename(const char *a, const char *b) {
 }
 int port_replace(const char *a, const char *b) {
   /* FS 0.2 replace (8) has the same path records as rename. */
-  return move_file(a,b,8);
+  return move_file(a,b,PXA_FS_REPLACE);
 }
 DIR *__wrap_opendir(const char *s) {
   int fd = openfile(s, PXA_FS_OPEN_READ | PXA_FS_OPEN_DIRECTORY);

@@ -35,6 +35,9 @@ static char page_directory[320];
 static uint8_t page_state[NVM_PAGES]; /* absent, present */
 static FILE *page_file;
 static unsigned page_index;
+static uint8_t batch_block[PAGE];
+static unsigned batch_index,batch_depth;
+static int batch_valid,batch_dirty;
 static void page_path(char *path, size_t capacity, unsigned index) {
   if(snprintf(path,capacity,"%s/%03u",page_directory,index)>=(int)capacity)
     port_error("NVM page path too long.");
@@ -71,7 +74,22 @@ static void write_overlay(unsigned index, const uint8_t *block) {
   if(failed || port_replace(pending,path)) port_error("Cannot publish NVM page.");
   page_state[index]=1;
 }
+static void flush_batch(void) {
+  if(batch_dirty) {write_overlay(batch_index,batch_block);batch_dirty=0;}
+}
 #endif
+void vflash_begin_batch(void) {
+#ifdef PORT_VFLASH_PAGED_NVM
+  if(batch_depth==UINT32_MAX)port_error("NVM batch overflow.");
+  ++batch_depth;
+#endif
+}
+void vflash_end_batch(void) {
+#ifdef PORT_VFLASH_PAGED_NVM
+  if(!batch_depth)port_error("Unbalanced NVM batch.");
+  if(--batch_depth==0) {flush_batch();batch_valid=0;}
+#endif
+}
 static void nvm_init(uint32_t bytes) {
   nvm_pages = bytes / PAGE;
   if (!nvm_pages || nvm_pages > NVM_PAGES || bytes % PAGE)
@@ -104,6 +122,8 @@ static void nvm_init(uint32_t bytes) {
   save_length=(uint32_t)length;
 ready:
 #ifdef PORT_VFLASH_PAGED_NVM
+  if(batch_depth || batch_dirty)port_error("Cannot reopen an unfinished NVM save.");
+  batch_valid=0;
   if(page_file) {fclose(page_file);page_file=NULL;}
   memset(page_state,0,sizeof(page_state));
   if(snprintf(page_directory,sizeof(page_directory),"%s/nvm-%u",port_data_path(),bytes)
@@ -144,6 +164,10 @@ static void nvm_read(uint32_t offset, void *dest, uint32_t length) {
     unsigned index=offset/PAGE, within=offset%PAGE, count=PAGE-within;
     if(count>length)count=length;
 #ifdef PORT_VFLASH_PAGED_NVM
+    if(batch_valid && batch_index==index) {
+      memcpy(out,batch_block+within,count);
+      offset+=count;out+=count;length-=count;continue;
+    }
     uint64_t before=port_time_us();
     if(read_overlay(index,within,out,count)) {
       ++io_stats.nvm_reads;io_stats.nvm_read_us+=port_time_us()-before;
@@ -162,11 +186,22 @@ static void nvm_read(uint32_t offset, void *dest, uint32_t length) {
   }
 }
 static void nvm_write(uint32_t offset, const uint8_t *data, uint32_t length,int erase) {
-  uint8_t block[PAGE];
+  uint8_t scratch[PAGE];
   while(length) {
     unsigned index=offset/PAGE, within=offset%PAGE, count=PAGE-within;
     if(count>length)count=length;
-    nvm_read(index*PAGE,block,PAGE);
+    uint8_t *block=scratch;
+#ifdef PORT_VFLASH_PAGED_NVM
+    if(batch_depth) {
+      if(!batch_valid || batch_index!=index) {
+        flush_batch();batch_valid=0;
+        nvm_read(index*PAGE,batch_block,PAGE);
+        batch_index=index;batch_valid=1;
+      }
+      block=batch_block;
+    } else
+#endif
+      nvm_read(index*PAGE,block,PAGE);
     int changed=0;
     for (unsigned i=0;i<count;++i) {
       uint8_t value=erase ? 255 : block[within+i]&data[i];
@@ -174,7 +209,8 @@ static void nvm_write(uint32_t offset, const uint8_t *data, uint32_t length,int 
     }
     if(!changed) {offset+=count;length-=count;if(!erase)data+=count;continue;}
 #ifdef PORT_VFLASH_PAGED_NVM
-    write_overlay(index,block);
+    if(batch_depth)batch_dirty=1;
+    else write_overlay(index,block);
 #else
     uint32_t at=legacy_nvm ? index*PAGE : nvm_offsets[index];
     if (!legacy_nvm && !at) {
@@ -254,7 +290,7 @@ void *vflash_read(uint32_t address, void *dest, uint32_t length) {
   /* A hot page cache removes the I/O waits that otherwise service input and
    * bound callbacks. Poll at a bounded call interval, not per copied byte. */
   if ((++read_calls & 255u) == 0 &&
-      port_cooperate_due(port_time_us(),8000)) port_sleep(0);
+      port_cooperate_due(port_time_us(),PORT_COOPERATE_BUDGET_US)) port_sleep(0);
 #endif
   address &= mask;
   uint8_t *out = dest;

@@ -10100,7 +10100,7 @@ int dn3dmain(int argc,char  **argv)
     hlineasm4calls = 0;
     hlineasm4pix = 0;
 #endif // WIN32
-#if !WIN32
+#if !WIN32 && defined(PXA_DUKE_FRAME_TIMING)
 #if EXCLUDE_PRINTF_FROM_FRAME_TIME_CALCULATION
      // rendering time calculation, excluding printf.
      int timenow = I_GetTimeMicrosecs();

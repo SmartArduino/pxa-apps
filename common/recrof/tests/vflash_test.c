@@ -62,6 +62,19 @@ int main(void){
 #endif
   vflash_write(VIRTUAL_SIZE-NVM_SIZE,NULL,NVM_SIZE,1);
   assert(size(save_path)==32); // Erasing unwritten NOR allocates no pages.
+#ifdef PORT_VFLASH_PAGED_NVM
+  unsigned before_batch=replace_count;
+  vflash_begin_batch();vflash_begin_batch();
+  for(unsigned i=0;i<200;++i) {
+    uint32_t value=0x12340000u+i;
+    vflash_write(VIRTUAL_SIZE-NVM_SIZE+i*4,&value,4,0);
+    memcpy(expected+i*4,&value,4);
+  }
+  vflash_read(VIRTUAL_SIZE-NVM_SIZE,actual,NVM_SIZE);
+  assert(!memcmp(expected,actual,NVM_SIZE));
+  vflash_end_batch();assert(replace_count==before_batch);
+  vflash_end_batch();assert(replace_count==before_batch+1);
+#endif
   for(unsigned round=0;round<12;++round){
     for(unsigned i=0;i<sizeof(write);++i)write[i]=(i*7+round*31)&255;
     unsigned offset=round*997%(NVM_SIZE-sizeof(write));

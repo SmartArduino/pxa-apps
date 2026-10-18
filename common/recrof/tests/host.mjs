@@ -13,6 +13,7 @@ if(!Number.isFinite(ioDelayMs)||ioDelayMs<0||ioDelayMs>1000)throw Error('invalid
 const ioDelayWord=new Int32Array(new SharedArrayBuffer(4));
 const requireIoCoop=process.env.PXA_TEST_REQUIRE_IO_COOP==='1';
 let callbackSequence=0,lastSlowIoCallback=-1,ioBoundaryChecks=0;
+let clockPeriod=0,lastTick=0;
 let instance, frame, frames=0, seq=100, ticks=0, calls=0, mapped=0, mappedBytes=0, bufferIndex=0, firstFrameAt;
 const frameWindows=new Map();
 const files=new Map(), events=[],logs=[];
@@ -35,6 +36,7 @@ function pxa_call(route,token,ptr,len){
  if(service===16&&op===1){r=result(0,24);r.writeBigUInt64LE(0x100000001n,4);r.writeUInt32LE(640,12);r.writeUInt32LE(153600,16);r[20]=2;}
  else if(service===16&&op===2)r=result(0);
  else if(service===11)r=result(-3);
+ else if(service===4 && op===1){if(p.length!==2)return -2;const period=p.readUInt16LE();if(period && (period<16 || period>1000))return -2;clockPeriod=period;return 0;}
  else if(service===5){
   try{
    if(op===1){const m=records(p),name=hostPath(m.get(1).toString()),flags=m.get(3).readUInt32LE();let f;
@@ -55,7 +57,7 @@ function pxa_call(route,token,ptr,len){
     }
    }
    else if(op===9){if(!mediaRoot || p.length!==28 || p[0]!==5)throw Error('app media configuration');r=result(0,16);r.writeBigUInt64LE(handle({media:true}),4);r.writeUInt32LE(3,12);}
-   else if(op===11){if(p.readUInt32LE(8)!==1)throw Error('media write');const name=mediaPath(p,14),st=fs.statSync(name);r=result(0,32);r.writeBigUInt64LE(handle({fd:fs.openSync(name,'r'),pos:0,readonly:true}),4);r[12]=1;r.writeBigUInt64LE(BigInt(st.size),24);}
+   else if(op===11){if(p.readUInt32LE(8)!==1)throw Error('media write');const name=mediaPath(p,14),st=fs.statSync(name);r=result(0,32);r.writeBigUInt64LE(handle({fd:fs.openSync(name,'r'),pos:0,readonly:true}),4);r[12]=1;r.writeBigUInt64LE(1n,16);r.writeBigUInt64LE(BigInt(st.size),24);}
    else if(op===16){const st=fs.statSync(mediaPath(p,10));r=result(0,20);r[4]=st.isDirectory()?2:1;r.writeBigUInt64LE(BigInt(st.size),12);}
    else throw Error('unimplemented FS op '+op);
   }catch(e){if(!['ENOENT','EEXIST','ENOTDIR','EISDIR'].includes(e.code))throw e;r=result(-6);}
@@ -79,6 +81,16 @@ function pxa_io(h,op,ptr,len){const p=Buffer.from(instance.exports.memory.buffer
   throw Error('Unsupported surface I/O '+op);
  }
  const f=files.get(h);if(!f)return -6;
+ if(op===16 || op===17){
+  if(!f.readonly)return -3;
+  if(op===17){if(len!==8||!p.readBigUInt64LE())return -2;f.retired=p.readBigUInt64LE()>(f.retired??0n)?p.readBigUInt64LE():f.retired;return 0;}
+  if(len<24)return -2;const offset=p.readBigUInt64LE(),cookie=p.readBigUInt64LE(8),count=p.readUInt32LE(16);
+  if(!cookie||!count||count>4096||len!==24+count||p.readUInt32LE(20))return -2;
+  if(cookie<=(f.retired??0n))return -10;f.retired=cookie;
+  if(offset>=BigInt(fs.fstatSync(f.fd).size))return 0;
+  return fs.readSync(f.fd,p,24,count,Number(offset));
+ }
+
  if(op===1){const n=fs.readSync(f.fd,p,0,len,f.pos);f.pos+=n;return n;}
  if(op===2){if(f.readonly)return -6;const n=fs.writeSync(f.fd,p,0,len,f.pos);f.pos+=n;return n;}
  return -3;
@@ -102,7 +114,7 @@ while(Date.now()<end){
  while(controls.length&&(Date.now()-start)/1000>=controls[0][0])controller(controls.shift()[1]);
  while(pointers.length&&(Date.now()-start)/1000>=pointers[0][0])pointer(...pointers.shift().slice(1));
  for(let i=0;i<1000&&events.length;i++)event(events.shift());
- const payload=Buffer.alloc(8);payload.writeBigUInt64LE(BigInt(Date.now())*1000n);event({service:4,op:0x8001,payload});ticks++;
+ if(clockPeriod && Date.now()-lastTick>=clockPeriod){const payload=Buffer.alloc(8);payload.writeBigUInt64LE(BigInt(Date.now())*1000n);event({service:4,op:0x8001,payload});ticks++;lastTick=Date.now();}
  await new Promise(r=>setTimeout(r,1));
 }
 if(requireIoCoop && !ioBoundaryChecks)throw Error('no slow I/O boundary checked');

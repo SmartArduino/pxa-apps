@@ -1,6 +1,7 @@
 #include "extMemory.h"
 #include "vflash.h"
 static uint32_t address;
+static int memory_busy;
 uint8_t *ext_memory = (uint8_t *)EXT_FLASH_BASE;
 bool extMemInit(void) {
   vflash_init("/data/DUKE3D.GRP", EXT_MEMORY_SIZE, 4 * 1024 * 1024);
@@ -39,7 +40,10 @@ void *extMemStartAsynchDataRead(uint32_t a, void *p, uint32_t n) {
   address = a + n;
   return (uint8_t *)p + align;
 }
-void extMemSetMemBusyBackgroundTask(void *t) { (void)t; }
+void extMemSetMemBusyBackgroundTask(void *t) {
+  if(t && !memory_busy) {vflash_begin_batch();memory_busy=1;}
+  if(!t && memory_busy) {vflash_end_batch();memory_busy=0;}
+}
 void extMemErase(uint32_t a, uint32_t n) { vflash_write(a, 0, n, 1); }
 void extMemProgram(uint32_t a, uint8_t *p, uint32_t n) {
   vflash_write(a, p, n, 0);

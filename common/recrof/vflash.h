@@ -10,3 +10,7 @@ typedef struct {
   uint32_t cache_bytes;
 } vflash_stats_t;
 void vflash_stats(vflash_stats_t *out, int reset);
+/* Coalesce a synchronous bulk-save operation; end publishes the last page
+ * before returning success. Non-paged backends retain write-through behavior. */
+void vflash_begin_batch(void);
+void vflash_end_batch(void);

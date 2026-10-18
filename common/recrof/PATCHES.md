@@ -19,3 +19,5 @@
 公共适配层使用 GPL-3.0-or-later，字体来自 Daniel Hepper 的公有领域 font8x8。原引擎及转换器保留其原版权与授权条款。C&C/RA 还保留 EA 源码授权文件中列明的附加条款。
 
 RTS 的 `*data.cpp` 关闭函数内联；其 post-link 步骤保持 C++ 初始化器同步，并限制 Binaryen 内联，避免 WAMR 快速解释器为常量池保留双倍帧空间时超过宿主的 16 KiB 操作数栈。图形、鼠标键盘等待和音频实现均由 PXA 适配层提供。
+
+后续存储与性能实现：FS read-at 的逻辑 seek/有界同步读、保留 legacy 路径；Duke 已有批量保存边界接入分页 NVM 聚合；SD 变体独立配置 32ms 计算预算、合法 16ms Clock 与 128KiB continuation。320×240 的 RGB565 成对输出及控件绘制快速路径保持原像素，其他尺寸走通用缩放。Duke `Game/src/game.c` 中每帧调试耗时打印改为显式 `PXA_DUKE_FRAME_TIMING` 开关，默认关闭，仍保留每五秒汇总统计。同步工具通过三方合并保留这些 vendor 差异。

@@ -2,6 +2,12 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "framebuffer.h"
+#ifndef PORT_COOPERATE_BUDGET_US
+#define PORT_COOPERATE_BUDGET_US 8000u
+#endif
+#ifndef PORT_TICK_MS
+#define PORT_TICK_MS 16u
+#endif
 #ifdef __cplusplus
 extern "C" {
 #endif

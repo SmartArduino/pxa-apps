@@ -58,7 +58,7 @@ Quake II 使用标准 `baseq2/pak0.pak`。C&C 可导入 DOS 试玩版的 DEMO.MI
 - 可选 `audio.playback` 权限，PCM 混音后输出 16 kHz 单声道；拒绝权限仍可游戏。实际设备音频尚未验证。
 - 标准 stdio/POSIX 调用桥接到私有 FS 与签名资源，虚拟 Flash 使用文件保存 NOR 数据。
 - 不使用 ESP32 的 GPIO、SDMMC、DMA、FreeRTOS 或 Flash 直映射驱动。
-- 目前清单的线性内存上限：Quake 3 MiB、Quake II 12 MiB、Duke3D 4 MiB、C&C 10 MiB、RA 14 MiB；另需宿主、AOT 和显示内存。不能据此承诺在 8 MiB PSRAM 的设备上均可运行。大型资源包还需要足够的存储空间。
+- 目前清单的线性内存上限：Quake 3 MiB、Quake II 12 MiB、Duke3D 4 MiB、C&C 10 MiB、RA 14 MiB；另需宿主、AOT 和显示内存。SD Duke 变体当前最大3.875MiB、实际场景3.75MiB。不能据此承诺在 8 MiB PSRAM 的设备上均可运行。大型资源包还需要足够的存储空间。
 - WAMR 无 Wasm 异常处理，原引擎 setjmp/longjmp 错误恢复改为显示错误并等待重新打开应用。正常主循环不依赖 longjmp。
 - `duke3d-sd` 已在 16 MiB PSRAM 的 GameKit / ESP32-S31 上自动读取固定 SD 资源并进入屋顶关卡，完成短时 FPS 与内存测量；其他游戏、音频连续性及长期稳定性仍待真机验收，见 `VALIDATION.md`。
 

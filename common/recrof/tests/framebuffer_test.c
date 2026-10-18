@@ -60,6 +60,12 @@ int main(void){
         assert(!memcmp(expected,actual,(size_t)dw*dh*2));
       }
   puts("PASS: 70 sampling/cursor/control cases match original pixels");
+  reference(320,240,320,240,320,NULL,1);
+  actual[0]=0x5678;
+  port_blit(actual+1,320,240,source,320,240,320,palette,NULL);
+  port_draw_controls(actual+1,320,240,0);
+  assert(actual[0]==0x5678 && !memcmp(expected,actual+1,320*240*2));
+  puts("PASS: unaligned RGB565 destination retains identical output");
   const int iterations=500;
   double before=now();
   for(int i=0;i<iterations;++i){source[0]=i;reference(296,222,640,400,672,NULL,0);}

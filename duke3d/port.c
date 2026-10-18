@@ -157,7 +157,7 @@ void __wrap_sampletimer(void) {
     port_game_audio();
     last_audio=now;
   }
-  if(port_cooperate_due(now,8000)) port_sleep(0);
+  if(port_cooperate_due(now,PORT_COOPERATE_BUDGET_US)) port_sleep(0);
 }
 int dn3dmain(int argc, char **argv);
 void port_game_main(void) {
