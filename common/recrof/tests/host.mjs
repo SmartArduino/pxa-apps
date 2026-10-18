@@ -14,6 +14,7 @@ const ioDelayWord=new Int32Array(new SharedArrayBuffer(4));
 const requireIoCoop=process.env.PXA_TEST_REQUIRE_IO_COOP==='1';
 let callbackSequence=0,lastSlowIoCallback=-1,ioBoundaryChecks=0;
 let clockPeriod=0,lastTick=0;
+let stopping=false;
 let instance, frame, frames=0, seq=100, ticks=0, calls=0, mapped=0, mappedBytes=0, bufferIndex=0, firstFrameAt;
 const frameWindows=new Map();
 const files=new Map(), events=[],logs=[];
@@ -25,7 +26,19 @@ function asset(p){const len=p.readUInt16LE(0);const name=p.subarray(p.length-len
 function hostPath(p){if(p.startsWith('/')||p.split('/').includes('..'))throw Error('private path');return path.join(state,p);}
 function mediaPath(p,offset){if(!mediaRoot || !files.get(p.readBigUInt64LE())?.media)throw Error('media handle');const name=p.subarray(offset).toString();if(!name||name.startsWith('/')||name.split('/').some(s=>!s||s==='.'||s==='..'))throw Error('media path');return path.join(mediaRoot,name);}
 function handle(resource){const h=0x100000000n+BigInt(++seq);files.set(h,resource);return h;}
+const systemBars=JSON.parse(process.env.PXA_TEST_SYSTEM_BAR_INSETS??'[0,0,0,0]');
+if(!Array.isArray(systemBars)||systemBars.length!==4||systemBars.some((n,i)=>
+ !Number.isInteger(n)||n<0||n>(i%2?320:240)))throw Error('invalid system bar insets');
+function windowSnapshot(){
+ const rev=Buffer.alloc(8);rev.writeBigUInt64LE(1n);
+ const dims=Buffer.alloc(8);dims.writeUInt32LE(320);dims.writeUInt32LE(240,4);
+ const density=Buffer.alloc(8);density.writeUInt32LE(1);density.writeUInt32LE(1,4);
+ const bars=Buffer.alloc(16);[systemBars[3],systemBars[0],systemBars[1],systemBars[2]].forEach((v,i)=>bars.writeUInt32LE(v,i*4));
+ return Buffer.concat([result(0),record(1,rev),record(2,dims),record(3,dims),
+  record(4,density),record(5,Buffer.alloc(16)),record(6,bars),record(7,Buffer.from([2])),record(8,Buffer.from([1]))]);
+}
 function pxa_call(route,token,ptr,len){
+ if(stopping)throw Error('Core imports during stop are forbidden');
  calls++;const service=route&65535,op=route>>>16,p=Buffer.from(instance.exports.memory.buffer,ptr,len);let r;
  if(requireIoCoop && service===5 && lastSlowIoCallback>=0){
   if(lastSlowIoCallback===callbackSequence)throw Error('slow I/O followed by FS control without a callback boundary');
@@ -33,7 +46,8 @@ function pxa_call(route,token,ptr,len){
  }
  if(service===19){const s=p.subarray(1).toString();logs.push(s);console.log(s);if(process.env.PXA_TEST_TRACE_EXIT&&(s.includes("Game exited")||s.includes("Invalid game Free")))console.trace("Engine exit");return 0;}
  if(service===1&&op===2){const h=p.readBigUInt64LE();const f=files.get(h);if(f?.fd!==undefined)fs.closeSync(f.fd);files.delete(h);return 0;}
- if(service===16&&op===1){r=result(0,24);r.writeBigUInt64LE(0x100000001n,4);r.writeUInt32LE(640,12);r.writeUInt32LE(153600,16);r[20]=2;}
+ if(service===2&&op===2)r=windowSnapshot();
+ else if(service===16&&op===1){r=result(0,24);r.writeBigUInt64LE(0x100000001n,4);r.writeUInt32LE(640,12);r.writeUInt32LE(153600,16);r[20]=2;}
  else if(service===16&&op===2)r=result(0);
  else if(service===11)r=result(-3);
  else if(service===4 && op===1){if(p.length!==2)return -2;const period=p.readUInt16LE();if(period && (period<16 || period>1000))return -2;clockPeriod=period;return 0;}
@@ -71,7 +85,7 @@ function pxa_call(route,token,ptr,len){
  if(r&&token)events.push({service,op,token,payload:Buffer.from(r)});
  return 0;
 }
-function pxa_io(h,op,ptr,len){const p=Buffer.from(instance.exports.memory.buffer,ptr,len);
+function pxa_io(h,op,ptr,len){if(stopping)throw Error('Core I/O during stop is forbidden');const p=Buffer.from(instance.exports.memory.buffer,ptr,len);
  if(ioDelayMs && files.get(h)?.fd!==undefined){Atomics.wait(ioDelayWord,0,0,ioDelayMs);lastSlowIoCallback=callbackSequence;}
  if(h===0x100000001n){
   if(op===0x100){mapped=ptr;mappedBytes=len/2;return len;}
@@ -119,6 +133,9 @@ while(Date.now()<end){
 }
 if(requireIoCoop && !ioBoundaryChecks)throw Error('no slow I/O boundary checked');
 if(frame){const rgb=Buffer.alloc(320*240*3);for(let i=0;i<320*240;i++){const c=frame.readUInt16LE(i*2);rgb[i*3]=(c>>11)*255/31;rgb[i*3+1]=((c>>5)&63)*255/63;rgb[i*3+2]=(c&31)*255/31;}fs.writeFileSync(output+'.ppm',Buffer.concat([Buffer.from('P6\n320 240\n255\n'),rgb]));}
+// Host revocation precedes the stop callback, where Core imports are forbidden.
+for(const f of files.values())if(f.fd!==undefined)fs.closeSync(f.fd);
+files.clear();clockPeriod=0;stopping=true;
 instance.exports.pxa_app_stop(0);
 const report={frames,ticks,calls,bytes:instance.exports.memory.buffer.byteLength,
  dataEnd:instance.exports.__data_end?.value,heapBase:instance.exports.__heap_base?.value,

@@ -66,6 +66,26 @@ int main(void){
   port_draw_controls(actual+1,320,240,0);
   assert(actual[0]==0x5678 && !memcmp(expected,actual+1,320*240*2));
   puts("PASS: unaligned RGB565 destination retains identical output");
+  port_controls_safe_area(24,0,16,0);
+  assert(!port_control_key_at(18,12,0));
+  assert(port_control_key_at(18,35,0)==27);
+  assert(port_control_key_at(300,35,0)=='q');
+  assert(port_control_key_at(300,35,1)==202);
+  assert(port_control_key_at(292,212,0)==200);
+  assert(!port_control_key_at(292,230,0));
+  for(unsigned i=0;i<320*240;++i)actual[i]=0x1234;
+  port_draw_controls(actual,320,240,0);
+  for(int y=0;y<240;++y)for(int x=0;x<320;++x)
+    if(y<24 || y>=224)assert(actual[y*320+x]==0x1234);
+  assert(actual[24*320]==0xffff && actual[24*320+280]==0xffff);
+  /* Extreme valid insets still keep every write within the safe rectangle. */
+  port_controls_safe_area(230,310,9,9);
+  for(unsigned i=0;i<320*240;++i)actual[i]=0x1234;
+  port_draw_controls(actual,320,240,0);
+  for(int y=0;y<240;++y)for(int x=0;x<320;++x)
+    if(y!=230 || x!=9)assert(actual[y*320+x]==0x1234);
+  port_controls_safe_area(0,0,0,0);
+  puts("PASS: shared safe-area drawing and hit-testing, including tiny viewports");
   const int iterations=500;
   double before=now();
   for(int i=0;i<iterations;++i){source[0]=i;reference(296,222,640,400,672,NULL,0);}

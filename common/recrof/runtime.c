@@ -56,6 +56,8 @@ static uint16_t surface_w = 320, surface_h = 240;
 static uint8_t pending_buffer = 255;
 static uint64_t pending_frame;
 static int display_w = 320, display_h = 240, mouse_x = 160, mouse_y = 120;
+static uint32_t shape_insets[4],bar_insets[4];
+static uint64_t window_revision;
 static int keys[256];
 static uint8_t packet[512];
 static uint64_t token_cursor = 100;
@@ -371,25 +373,11 @@ static void input_pointer(const pxa_ui_pointer_data_t *p) {
         .active = 1, .id = p->pointer_id, .x = x, .y = y, .cx = x, .cy = y};
 #ifdef PORT_RTS
     t->role = 3;
-    t->key = (p->buttons & 2) ? 202 : 200;
+    t->key = port_control_key_at(x,y,1);
+    if(!t->key)t->key = (p->buttons & 2) ? 202 : 200;
 #else
-    if (x < 36 && y < 30) {
-      t->role = 3;
-      t->key = 27;
-    } else if (x > 278 && y < 40) {
-      t->role = 3;
-      t->key = 'q';
-    } else if (x > 276 && y > 116 && y < 144) {
-      t->role = 3;
-      t->key = 'e';
-    } else if (x > 270 && y > 144 && y < 185) {
-      t->role = 3;
-      t->key = ' ';
-    } else if (x > 258 && y > 185) {
-      t->role = 3;
-      t->key = 200;
-    } else
-      t->role = x < 160 ? 1 : 2;
+    t->key = port_control_key_at(x,y,0);
+    t->role = t->key ? 3 : x < 160 ? 1 : 2;
 #endif
   }
   if (!t)
@@ -423,13 +411,52 @@ static void input_pointer(const pxa_ui_pointer_data_t *p) {
     }
   update_keys();
 }
+static void update_control_layout(void) {
+  int scale=pxa_surface_fit_scale(surface_w,surface_h,display_w,display_h);
+  if(scale<1)scale=1;
+  int width=surface_w*scale,height=surface_h*scale;
+  int x=(display_w-width)/2,y=(display_h-height)/2;
+  /* Intersect the device safe area with the letterboxed game surface. Round
+   * inward so the first control pixel also accepts pointer input. */
+  int insets[4];
+  for(unsigned i=0;i<4;++i)insets[i]=(int)(shape_insets[i]>bar_insets[i]?shape_insets[i]:bar_insets[i]);
+  int top=insets[0]-y;
+  int right=insets[1]-(display_w-x-width);
+  int bottom=insets[2]-(display_h-y-height);
+  int left=insets[3]-x;
+  port_controls_safe_area(top>0?(top*240+height-1)/height:0,
+      right>0?(right*320+width-1)/width:0,
+      bottom>0?(bottom*240+height-1)/height:0,
+      left>0?(left*320+width-1)/width:0);
+}
+static void controls_environment(const pxa_ui_environment_t *env) {
+  memcpy(shape_insets,env->safe_insets,sizeof(shape_insets));
+  update_control_layout();
+}
+static void controls_window(const pxa_window_snapshot_t *snapshot) {
+  if(snapshot->status || snapshot->revision<=window_revision)return;
+  window_revision=snapshot->revision;
+  shape_insets[0]=snapshot->safe_insets.top;
+  shape_insets[1]=snapshot->safe_insets.right;
+  shape_insets[2]=snapshot->safe_insets.bottom;
+  shape_insets[3]=snapshot->safe_insets.left;
+  bar_insets[0]=snapshot->system_bar_insets.top;
+  bar_insets[1]=snapshot->system_bar_insets.right;
+  bar_insets[2]=snapshot->system_bar_insets.bottom;
+  bar_insets[3]=snapshot->system_bar_insets.left;
+  update_control_layout();
+  release_input();
+}
 int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
-  pxa_ui_environment_t env;
+  pxa_ui_environment_t env={0};
   if (pxa_ui_parse_start_environment(config, length, &env)) {
     display_w = env.width;
     display_h = env.height;
   }
   pxa_window_fullscreen();
+  /* Shape insets from UI do not include transient system/gesture bars. */
+  int window_status=pxa_window_request_snapshot(20);
+  if(window_status)port_log("PXA Window snapshot unavailable: %d",window_status);
   uint32_t n;
   pxa_ui_transaction_t tx = {0};
   if (!pxa_ui_transaction_begin(&tx, 1, PXA_UI_TRANSACTION_REPLACE_SURFACE,
@@ -450,6 +477,7 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
       surface_w = display_h * 4 / 3;
     }
   }
+  controls_environment(&env);
   pxa_surface_desc_t d = {.width = surface_w,
                           .height = surface_h,
                           .format = PXA_SURFACE_RGB565,
@@ -468,6 +496,12 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t n) {
   pxa_event_t e;
   if (!pxa_parse_event(bytes, n, &e))
     return PXA_EVENT_UNHANDLED;
+  pxa_window_snapshot_t window;
+  if(pxa_window_parse_metrics_changed(&e,&window) ||
+     pxa_window_parse_snapshot(&e,20,&window)) {
+    controls_window(&window);
+    return PXA_EVENT_HANDLED;
+  }
   uint8_t life;
   if (pxa_lifecycle_parse(&e, &life)) {
     background = life == PXA_SYSTEM_LIFECYCLE_BACKGROUND;
@@ -570,6 +604,7 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t n) {
     if (pxa_ui_parse_environment_event(&e, &env)) {
       display_w = env.width;
       display_h = env.height;
+      controls_environment(&env);
       release_input();
     }
     return PXA_EVENT_HANDLED;
@@ -588,12 +623,6 @@ void pxa_app_stop(uint32_t reason) {
   (void)reason;
   finished = 1;
   release_input();
-  port_external_shutdown();
-  pxa_clock_set_period(0);
-  if (audio_pending)
-    pxa_close_handle(audio_pending);
-  if (audio_permission)
-    pxa_close_handle(audio_permission);
-  if (surface)
-    pxa_close_handle(surface);
+  /* Core imports are forbidden here. The Host has already revoked Clock,
+   * Surface, audio and filesystem handles before entering this callback. */
 }

@@ -70,12 +70,39 @@ void port_draw_text(uint16_t *dest, int w, int h, int x, int y, const char *s) {
         if (glyph[j] & (1 << i)) pixel(dest,w,h,x+i,y+j,0xffff);
   }
 }
+typedef struct {int x,y,w,h; const char *label; int key;} Control;
+#define CONTROL_DEFAULTS \
+  {0,0,38,23,"MENU",27}, {280,0,40,24,"WPN",'q'}, \
+  {276,116,44,26,"USE",'e'}, {276,148,44,28,"JMP",' '}, \
+  {268,192,52,48,"FIRE",200}, {280,0,40,24,"RMB",202}
+static const Control control_defaults[] = {CONTROL_DEFAULTS};
+static Control controls[] = {CONTROL_DEFAULTS};
+#undef CONTROL_DEFAULTS
+static int clamp(int value,int low,int high) {
+  return value<low?low:value>high?high:value;
+}
+void port_controls_safe_area(int top,int right,int bottom,int left) {
+  top=clamp(top,0,239);bottom=clamp(bottom,0,239-top);
+  left=clamp(left,0,319);right=clamp(right,0,319-left);
+  for(unsigned i=0;i<6;++i) {
+    controls[i]=control_defaults[i];
+    Control *b=&controls[i];
+    if(b->w>320-left-right)b->w=320-left-right;
+    if(b->h>240-top-bottom)b->h=240-top-bottom;
+    b->x=clamp(b->x,left,320-right-b->w);
+    b->y=clamp(b->y,top,240-bottom-b->h);
+  }
+}
+int port_control_key_at(int x,int y,int rts) {
+  for(unsigned i=rts?5:0;i<(rts?6:5);++i) {
+    const Control *b=&controls[i];
+    if(x>=b->x && x<b->x+b->w && y>=b->y && y<b->y+b->h)return b->key;
+  }
+  return 0;
+}
 void port_draw_controls(uint16_t *dest, int w, int h, int rts) {
-  static const struct {int x,y,w,h; const char *label;} buttons[] = {
-    {0,0,38,23,"MENU"}, {280,0,40,24,"WPN"}, {276,116,44,26,"USE"},
-    {276,148,44,28,"JMP"}, {268,192,52,48,"FIRE"}, {280,0,40,24,"RMB"}};
   for (unsigned i = rts ? 5 : 0; i < (rts ? 6 : 5); ++i) {
-    int bx=buttons[i].x, by=buttons[i].y, bw=buttons[i].w, bh=buttons[i].h;
+    int bx=controls[i].x, by=controls[i].y, bw=controls[i].w, bh=controls[i].h;
     if (w==320 && h==240) {
       for(int y=by;y<by+bh;++y) {
         uint16_t *row=dest+y*w+bx;
@@ -93,7 +120,8 @@ void port_draw_controls(uint16_t *dest, int w, int h, int rts) {
         *p=lx==bx || lx==bx+bw-1 || ly==by || ly==by+bh-1
                ? 0xffff : rts ? 0 : (*p & 0xf7de) >> 1;
       }
-    port_draw_text(dest,w,h,bx+(bw-(int)strlen(buttons[i].label)*8)/2,
-                    by+(bh-8)/2,buttons[i].label);
+    if(bw>=(int)strlen(controls[i].label)*8 && bh>=8)
+      port_draw_text(dest,w,h,bx+(bw-(int)strlen(controls[i].label)*8)/2,
+                    by+(bh-8)/2,controls[i].label);
   }
 }

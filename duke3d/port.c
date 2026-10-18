@@ -1,4 +1,5 @@
 #include "port.h"
+#include "audio_convert.h"
 #include "audio.h"
 #include "display_frame.h"
 #include "extMemory.h"
@@ -139,12 +140,7 @@ void port_game_audio(void) {
   if (!audio_ready) return;
   static unsigned played;
   unsigned end = audioGetPlayIndex();
-  while (played != end) {
-    int16_t s[2] = {(audioBuffer[played * 2] - 128) * 256,
-                    (audioBuffer[played * 2 + 1] - 128) * 256};
-    port_pcm(s, 1, 11025, 2);
-    played = (played + 1) & (AUDIO_BUFFER_LENGTH - 1);
-  }
+  played=port_audio_u8_stereo_ring(audioBuffer,AUDIO_BUFFER_LENGTH-1,played,end,11025);
 }
 void __real_sampletimer(void);
 void __wrap_sampletimer(void) {
