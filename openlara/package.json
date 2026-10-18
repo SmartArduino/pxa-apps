@@ -13,7 +13,7 @@
     0
   ],
   "id": "pxa-openlara",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "name": "OpenLara",
   "description": "Complete OpenLara TR1 gameplay engine for PXA; original PC game data and software rendering",
   "build": {
@@ -67,7 +67,7 @@
       "artifact": "aot"
     }
   ],
-  "release_sequence": 18,
+  "release_sequence": 19,
   "permissions": [
     {
       "name": "audio.playback",
