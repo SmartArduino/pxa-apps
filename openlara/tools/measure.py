@@ -17,6 +17,7 @@ p.add_argument('--package',type=Path,required=True)
 p.add_argument('--output',type=Path,required=True)
 p.add_argument('--samples',type=int,default=20)
 p.add_argument('--level',type=int,choices=(1,2,3),default=2)
+p.add_argument('--classic',action='store_true',help='use the complete-engine menu layout (0.3.x)')
 p.add_argument('--reuse-running',action='store_true',help='measure a fresh level transition in the existing foreground instance')
 p.add_argument('--allow-audio',action='store_true',help='answer this app audio playback permission on the identified device')
 p.add_argument('--inventory',action='store_true',help='also open and close the inventory after timing')
@@ -88,7 +89,7 @@ with (a.output/'serial.jsonl').open('w',buffering=1) as log, pxadb.PxaDbClient(a
         capture('before-level' if a.reuse_running else 'title');pump(.5)
         request('INPUT TAP 180 220');pump(.4)
         selection={1:5,2:3,3:4}[a.level]
-        request(f'INPUT TAP 160 {48+selection*20}');pump(.4)
+        request(f'INPUT TAP 160 {44+selection*18 if a.classic else 48+selection*20}');pump(.4)
         end=time.monotonic()+100;keep_awake=time.monotonic()+5
         while not ready and time.monotonic()<end:
             pump(.2)

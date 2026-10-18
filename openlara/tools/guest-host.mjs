@@ -13,7 +13,7 @@ function u32(n) {let b=Buffer.alloc(4);b.writeUInt32LE(n);return b;}
 export async function runGuest(wasm,assets,files=new Map(),options={}) {
     const wasi=new WASI({version:'preview1',args:[],env:{},preopens:{},returnOnExit:true});
     let instance,now=1000000n,eventPtr,mapped,bufferBytes,index=0,frames=0,nextHandle=10n;
-    const events=[],handles=new Map(),logs=[],pcmHash=crypto.createHash('sha256'),frameHash=crypto.createHash('sha256');
+    const events=[],handles=new Map(),assetCache=new Map(),logs=[],pcmHash=crypto.createHash('sha256'),frameHash=crypto.createHash('sha256');
     let lastFrame;
     let submitted=0,accepted=0,queued=0,audioTime=now,nonzero=0,blocks=0,denied=false;
     const memory=(ptr,n)=>Buffer.from(instance.exports.memory.buffer,ptr,n);
@@ -31,6 +31,18 @@ export async function runGuest(wasm,assets,files=new Map(),options={}) {
                 if(flags&2) {files.set(name,Buffer.alloc(0));}
                 if(!files.has(name))r=status(-6);
                 else {const handle=0x200000000n+nextHandle++;handles.set(handle,{name,pos:0,write:!!(flags&2)});r=status(0,12);r.writeBigUInt64LE(handle,4);}
+            } else if(op===9 && options.mediaRoot) {
+                r=status(0,16);r.writeBigUInt64LE(0x500000001n,4);r.writeUInt32LE(3,12);
+            } else if(op===11 && options.mediaRoot) {
+                const name=p.subarray(14,14+p.readUInt16LE(12)).toString();
+                assert(!name.includes('..') && !path.isAbsolute(name));
+                const file=path.join(options.mediaRoot,name);
+                if(!fs.existsSync(file))r=status(-6);
+                else {const data=fs.readFileSync(file),handle=0x200000000n+nextHandle++;handles.set(handle,{name,pos:0,media:data});r=status(0,32);r.writeBigUInt64LE(handle,4);r[12]=1;r.writeBigUInt64LE(BigInt(data.length),24);}
+            } else if(op===6 && handles.has(p.readBigUInt64LE())) {
+                const f=handles.get(p.readBigUInt64LE()),offset=Number(p.readBigInt64LE(8));
+                assert.equal(p[16],0);assert(offset>=0);f.pos=offset;
+                r=status(0,12);r.writeBigUInt64LE(BigInt(offset),4);
             } else if(op===8) {
                 const a=records(p),src=a.get(1).toString(),dst=a.get(2).toString();
                 if(options.failReplace)r=status(-11);
@@ -39,8 +51,15 @@ export async function runGuest(wasm,assets,files=new Map(),options={}) {
         } else if(service===21 && op===5) {
             const n=p.readUInt16LE(),name=p.subarray(12,12+n).toString();
             assert(name.startsWith('assets/game/'));
-            const data=fs.readFileSync(path.join(assets,name.slice(7))),offset=p.readUInt32LE(4),count=Math.min(p.readUInt32LE(8),data.length-offset);
-            r=status(0,12+count);r.writeUInt32LE(offset,4);r.writeUInt32LE(data.length,8);data.copy(r,12,offset,offset+count);
+            const file=path.join(assets,name.slice(7));
+            if(!fs.existsSync(file))r=status(-6);
+            else {
+                if(!assetCache.has(file))assetCache.set(file,fs.readFileSync(file));
+                const data=assetCache.get(file),offset=p.readUInt32LE(4);
+                const limit=(token>>48n)===0x4d55n && options.musicChunk?options.musicChunk:0xffffffff;
+                const count=Math.min(p.readUInt32LE(8),data.length-offset,limit);
+                assert(count>=0);r=status(0,12+count);r.writeUInt32LE(offset,4);r.writeUInt32LE(data.length,8);data.copy(r,12,offset,offset+count);
+            }
         } else if(service===11 && op===2) {
             denied=!!options.denyAudio;r=status(denied?-4:0,denied?4:12);if(!denied)r.writeBigUInt64LE(0x300000001n,4);
         } else if(service===10) {
@@ -62,13 +81,14 @@ export async function runGuest(wasm,assets,files=new Map(),options={}) {
             pcmHash.update(p);for(let i=0;i<len;i+=2)if(p.readInt16LE(i))++nonzero;return len;
         } else if(handles.has(h)) {
             const f=handles.get(h);
-            if(op===1) {const data=files.get(f.name),n=Math.min(len,data.length-f.pos);data.copy(p,0,f.pos,f.pos+n);f.pos+=n;return n;}
+            if(op===1) {const data=f.media??files.get(f.name),n=Math.min(len,data.length-f.pos,f.media?(options.ioChunk??0xffffffff):0xffffffff);data.copy(p,0,f.pos,f.pos+n);f.pos+=n;return n;}
             if(op===2) {const n=Math.min(len,options.partialWrite?111:len);files.set(f.name,Buffer.concat([files.get(f.name),p.subarray(0,n)]));f.pos+=n;return n;}
         }
         throw Error('unknown I/O '+h+' '+op);
     }
     instance=(await WebAssembly.instantiate(fs.readFileSync(wasm),{wasi_snapshot_preview1:{...wasi.wasiImport,clock_time_get:(_c,_p,ptr)=>{memory(ptr,8).writeBigUInt64LE(now*1000n);return 0;}},'pxa.core.v2':{pxa_call:call,pxa_io:io}})).instance;
-    wasi.initialize(instance);eventPtr=instance.exports.__heap_base.value;
+    wasi.initialize(instance);eventPtr=instance.exports.malloc?instance.exports.malloc(8192):instance.exports.__heap_base.value;
+    assert(eventPtr,'event scratch allocation failed');
     const needed=eventPtr+8192-instance.exports.memory.buffer.byteLength;if(needed>0)instance.exports.memory.grow(Math.ceil(needed/65536));
     function event({service,op,token=0n,payload}) {
         const b=Buffer.alloc(20+payload.length);b.writeUInt16LE(service);b.writeUInt16LE(op,2);b.writeBigUInt64LE(token,4);b.writeUInt32LE(payload.length,12);payload.copy(b,20);memory(eventPtr,b.length).set(b);
@@ -82,6 +102,8 @@ export async function runGuest(wasm,assets,files=new Map(),options={}) {
     function press(mask) {buttons(mask);tick();buttons(0);tick();}
     function menu(selection) {press(128);for(let i=0;i<selection;++i)press(2);press(16);tick(100);}
     assert.equal(instance.exports.pxa_app_start(0,0),0);drain();tick(10);
+    for(let i=0;i<4000 && !logs.some(s=>s.includes('ready level=0'));++i)tick();
     assert(logs.some(s=>s.includes('ready level=0')),'title failed to load');
-    return {tick,buttons,pointer,focus,press,menu,logs,frame:()=>Buffer.from(lastFrame),stop:()=>instance.exports.pxa_app_stop(0),info:()=>({frames,submitted,accepted,nonzero,blocks,denied,frame_sha256:frameHash.copy().digest('hex'),pcm_sha256:pcmHash.copy().digest('hex'),linear_bytes:instance.exports.memory.buffer.byteLength})};
+    function waitFor(text,limit=10000) {for(let n=0;n<limit;++n) {if(logs.some(s=>s.includes(text)))return;tick();}assert.fail('timed out: '+text);}
+    return {tick,buttons,pointer,focus,press,menu,waitFor,logs,frame:()=>Buffer.from(lastFrame),stop:()=>instance.exports.pxa_app_stop(0),info:()=>({frames,submitted,accepted,nonzero,blocks,denied,frame_sha256:frameHash.copy().digest('hex'),pcm_sha256:pcmHash.copy().digest('hex'),linear_bytes:instance.exports.memory.buffer.byteLength})};
 }

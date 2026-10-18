@@ -10,6 +10,8 @@ p.add_argument('--allow-audio',action='store_true')
 p.add_argument('--resume-functional',action='store_true',help='resume post-benchmark checks from this output; never reinstall or resample')
 p.add_argument('--baseline-evidence',type=Path,help='reuse a passed baseline from the same firmware; record its provenance')
 p.add_argument('--candidate-samples',type=int,default=60)
+p.add_argument('--classic',action='store_true',help='complete engine: benchmark PC demo City, use the 0.3.x menu')
+p.add_argument('--baseline-only',action='store_true',help='record the baseline and save; leave candidate for a later build')
 p.add_argument('--pxadb-dir',type=Path,default=Path(__file__).resolve().parents[4]/'tools/pxadb')
 a=p.parse_args();sys.path.insert(0,str(a.pxadb_dir));import pxadb
 os.environ['PXADB_BAUD']=a.baud;os.environ['PXADB_UART_UPLOAD_CHUNK']='1024'
@@ -52,7 +54,7 @@ def wait_message(text,after=0,timeout=100):
   request('PING')
  raise RuntimeError('Timed out waiting for '+text)
 def menu(selection):
- tap(180,220);tap(160,48+selection*20)
+ tap(180,220);tap(160,44+selection*18 if a.classic else 48+selection*20)
 def hold(x,y,seconds):
  request(f'INPUT POINTER DOWN {x} {y} 0');request('INPUT SYNC');pump(seconds)
  request(f'INPUT POINTER UP {x} {y} 0');request('INPUT SYNC');pump(1.5)
@@ -61,6 +63,8 @@ def position():
   m=re.search(r'pos=(-?\d+),(-?\d+),(-?\d+) yaw=(-?\d+)',s)
   if m:return tuple(map(int,m.groups()))
  raise RuntimeError('No engine position sample')
+def same_pose(left,right):
+ return tuple(left[:3])==tuple(right[:3]) and abs((left[3]-right[3]+32768)%65536-32768)<=(1 if a.classic else 0)
 def stop():
  try:request('PACKAGE stop pxa-openlara');pump(.5)
  except pxadb.PxaDbRejectedError as exc:
@@ -107,9 +111,9 @@ def benchmark(name,source,samples):
  if name=='candidate':
   start=len(messages);menu(2);wait_message('OpenLara save restored',start);pump(5.2)
   report['upgrade_restored_position']=position()
-  assert position()==tuple(report['runs']['baseline']['saved_position'])
+  assert same_pose(position(),report['runs']['baseline']['saved_position'])
   capture('candidate-upgrade-restored')
- level(3,2);pump(3)
+ level(4 if a.classic else 3,3 if a.classic else 2);pump(3)
  memory_start=[f.payload for f in request('MEMORY STOP') if f.kind=='DATA'];capture(name+'-idle')
  request('MEMORY START');pump(1);fps=[]
  for i in range(samples):
@@ -129,7 +133,7 @@ def benchmark(name,source,samples):
  result['saved_position']=before
  hold(120,170,.8);hold(70,115,.8);pump(5.2);assert position()!=before
  start=len(messages);menu(2);wait_message('OpenLara save restored',start);pump(5.2)
- result['restored_position']=position();assert position()==before;capture(name+'-restored')
+ result['restored_position']=position();assert same_pose(position(),before);capture(name+'-restored')
  # The original inventory is separate from the PXA pause menu.
  tap(200,20);pump(1);capture(name+'-inventory');tap(200,20);pump(1);capture(name+'-inventory-return')
  report['runs'][name]=result
@@ -167,16 +171,22 @@ try:
   report['baseline_evidence']={'path':str(a.baseline_evidence),'sha256':hashlib.sha256(a.baseline_evidence.read_bytes()).hexdigest()}
   capture('before');final=benchmark('candidate',a.candidate,a.candidate_samples)
  else:
-  capture('before');base=benchmark('baseline',a.baseline,20);final=benchmark('candidate',a.candidate,a.candidate_samples)
+  capture('before');base=benchmark('baseline',a.baseline,20)
+  if a.baseline_only:
+   report['passed']=True
+   raise SystemExit(0)
+  final=benchmark('candidate',a.candidate,a.candidate_samples)
  phase='final-functional'
  # Retain an OFF setting over a real reboot, then restore the initial ON value.
  if not a.resume_functional:
-  menu(7);start=len(messages);tap(160,75);wait_message('OpenLara settings committed',start);capture('candidate-music-off')
+  menu(7);start=len(messages);tap(160,77 if a.classic else 75);wait_message('OpenLara settings committed',start);capture('candidate-music-off')
  reboot();launch();menu(7);capture('candidate-settings-after-reboot')
- start=len(messages);tap(160,75);wait_message('OpenLara settings committed',start);tap(160,175)
- start=len(messages);tap(160,88);wait_message('OpenLara save restored',start);pump(5.2)
- assert position()==tuple(final['saved_position']);report['reboot_restored_position']=position();capture('candidate-reboot-restored')
- level(4,3);capture('candidate-city');level(5,1);capture('candidate-gym');level(3,2)
+ start=len(messages);tap(160,77 if a.classic else 75);wait_message('OpenLara settings committed',start);tap(160,177 if a.classic else 175)
+ start=len(messages);tap(160,80 if a.classic else 88);wait_message('OpenLara save restored',start);pump(5.2)
+ assert same_pose(position(),final['saved_position']);report['reboot_restored_position']=position();capture('candidate-reboot-restored')
+ level(4,3);capture('candidate-city')
+ if not a.classic:
+  level(5,1);capture('candidate-gym');level(3,2)
  # Verify the lifecycle pause/resume route; leave the app ready on screen.
  request('INPUT KEY HOME');pump(2);request('PACKAGE run pxa-openlara');pump(3)
  capture('candidate-final');report['packages_after']=[f.payload for f in request('PACKAGES') if f.kind=='PKG']

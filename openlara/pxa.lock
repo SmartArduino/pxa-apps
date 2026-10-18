@@ -1,0 +1,27 @@
+{
+  "core": [
+    2,
+    0
+  ],
+  "schema": "pxa-lock-1",
+  "sdk": {
+    "digest": "9725a1b1609a1a87f8cbe2856d449701431dcb9fc6f35e5268263e0df8efec3e",
+    "release": "0.4.0"
+  },
+  "toolchain": {
+    "clang_sha256": "061f88b9f4c48f3742434c2513d5038ab7fa4dc27abff5cb13b5eaedcb51d6ea",
+    "recipe": {
+      "commit": "6a54186abc1c10c37c28e443107107c97af8f25f",
+      "engine_abi": "wamr-pxa-aot-v6-core-1",
+      "llvm": {
+        "commit": "344b928e67bfc1d07cb150609c55548e86a9bf19",
+        "ref": "xtensa_release_18.1.2",
+        "repository": "https://github.com/espressif/llvm-project.git"
+      },
+      "repository": "https://github.com/78/wasm-micro-runtime.git",
+      "version": "78-wamr-6a54186a"
+    },
+    "wamrc_sha256": "a95da596d14100e722d2d6fff4615003c06b602cf3adabefd93f039f3edd66ea",
+    "wasi_version": "34.0\nwasi-libc: 2e6fb9d8ee0c\nllvm: 895aa2c896ad\nllvm-version: 23.1.0\nconfig: f992bcc08219"
+  }
+}

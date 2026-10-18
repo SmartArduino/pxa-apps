@@ -1,5 +1,6 @@
 #include "engine.h"
 #include "storage.h"
+#include "levels.h"
 bool osValidateSave();
 #include "game.h"
 
@@ -14,6 +15,11 @@ static uint64_t time_us;
 static bool initialized, restore_pending;
 static uint8_t save_blob[SAVEGAME_SIZE];
 static uint8_t title_screen[FRAME_WIDTH * FRAME_HEIGHT];
+bool ol_allocate_level(unsigned bytes) {return bytes<=OL_LEVEL_CAPACITY;}
+const char *ol_level_file(unsigned id) {return id<OL_LEVEL_COUNT?OL_LEVELS[id].file:"";}
+void ol_set_levels_mask(uint32_t) {}
+bool ol_level_available(unsigned id) {return id<OL_LEVEL_COUNT;}
+int ol_first_level() {return 2;}
 
 int32 osGetSystemTimeMS() { return int32(time_us / 1000); }
 void ol_set_time(uint64_t us) { time_us = us; }
@@ -28,12 +34,12 @@ static bool saved_header(SaveGame &sg) {
     unsigned n;
     if(!store_read(1,save_blob,sizeof(save_blob),&n) || n<sizeof(SaveGame))return false;
     memcpy(&sg,save_blob,sizeof(sg));
-    return sg.version==SAVEGAME_VER && sg.level>=1 && sg.level<=3 &&
+    return sg.version==SAVEGAME_VER && ol_playable_level(sg.level) &&
         sg.dataSize==n-sizeof(SaveGame) && sg.dataSize>0 && sg.track>=-1 && sg.track<64;
 }
 bool osCheckSave() {SaveGame sg;return saved_header(sg);}
 bool osSaveGame() {
-    if(gLevelID<LVL_TR1_GYM || int(gLevelID)>3 || gSaveGame.dataSize>sizeof(gSaveData))return false;
+    if(!ol_playable_level(gLevelID) || gSaveGame.dataSize>sizeof(gSaveData))return false;
     memcpy(save_blob,&gSaveGame,sizeof(gSaveGame));
     memcpy(save_blob+sizeof(gSaveGame),gSaveData,gSaveGame.dataSize);
     return store_write(1,save_blob,sizeof(gSaveGame)+gSaveGame.dataSize);
@@ -160,11 +166,66 @@ void ol_draw_menu(unsigned selected,bool help,bool settings) {
             if(i==selected)drawText(12,40+i*25,">",TEXT_ALIGN_LEFT);
         }
     } else {
-        const char *lines[]={"Resume", "Save game", "Load game", "New game: Caves", "City of Vilcabamba", "Lara's home", "Title", "Settings", "Controls"};
-        drawText(0,20,"OPENLARA",TEXT_ALIGN_CENTER);
-        for(unsigned i=0;i<9;++i) {drawText(0,38+i*20,lines[i],TEXT_ALIGN_CENTER);if(i==selected)drawText(12,38+i*20,">",TEXT_ALIGN_LEFT);}
+        const char *lines[]={"Resume", "Save game", "Load game", "New game: Caves", "City of Vilcabamba", "Lara's home", "Title", "Settings", "Controls", "All levels"};
+        drawText(0,16,"OPENLARA",TEXT_ALIGN_CENTER);
+        for(unsigned i=0;i<10;++i) {drawText(0,35+i*18,lines[i],TEXT_ALIGN_CENTER);if(i==selected)drawText(12,35+i*18,">",TEXT_ALIGN_LEFT);}
     }
     flush();
+}
+
+void ol_draw_levels(unsigned selected) {
+    unsigned black=0;
+    for(unsigned i=1;i<256;++i)if(ol_palette[i]<ol_palette[black])black=i;
+    memset(fb,black,FRAME_WIDTH*FRAME_HEIGHT);
+    unsigned page=selected/8;
+    drawText(0,16,page?"LEVELS 2/2":"LEVELS 1/2",TEXT_ALIGN_CENTER);
+    for(unsigned row=0;row<8;++row) {
+        unsigned i=page*8+row;
+        if(i>=OL_PLAYABLE_COUNT)break;
+        drawText(0,38+row*20,OL_LEVELS[OL_PLAYABLE_IDS[i]].name,TEXT_ALIGN_CENTER);
+        if(i==selected)drawText(12,38+row*20,">",TEXT_ALIGN_LEFT);
+    }
+    drawText(0,218,"Left/right: page   B: back",TEXT_ALIGN_CENTER);flush();
+}
+
+const char *ol_validate_level(unsigned bytes) {
+    if(bytes<sizeof(Level) || memcmp(ol_level_data,"GBA ",4))return "Invalid PKD header";
+    const Level *h=reinterpret_cast<const Level*>(ol_level_data);
+    if(!h->roomsCount || h->roomsCount>MAX_ROOMS || h->itemsCount>=MAX_ITEMS ||
+       h->modelsCount>MAX_MODELS || h->meshesCount>MAX_MESHES ||
+       h->staticMeshesCount>MAX_STATIC_MESHES || h->boxesCount>MAX_BOXES ||
+       h->texturesCount>MAX_TEXTURES || h->spritesCount>MAX_SPRITES ||
+       h->camerasCount>MAX_CAMERAS || h->soundOffsetsCount>MAX_SAMPLES)
+        return "PKD exceeds engine limits";
+    const uint32_t *offsets=reinterpret_cast<const uint32_t*>(ol_level_data+32);
+    for(unsigned i=0;i<35;++i)if(offsets[i]<sizeof(Level) || offsets[i]>bytes || offsets[i]%4)
+        return "Invalid PKD offset";
+    auto span=[&](unsigned i,unsigned count,unsigned width) {return uint64_t(offsets[i])+uint64_t(count)*width<=bytes;};
+    if(!span(0,256,2) || !span(1,32*256,1) || !span(2,h->tilesCount,65536) ||
+       !span(3,h->roomsCount,sizeof(RoomInfo)) || !span(6,h->meshesCount,4) ||
+       !span(13,h->modelsCount,sizeof(Model)) || !span(14,h->staticMeshesCount,sizeof(StaticMesh)) ||
+       !span(15,h->texturesCount,sizeof(Texture)) || !span(16,h->spritesCount,sizeof(Sprite)) ||
+       !span(17,h->spriteSequencesCount,sizeof(SpriteSeq)) || !span(18,h->camerasCount,sizeof(FixedCamera)) ||
+       !span(19,h->soundSourcesCount,sizeof(SoundSource)) || !span(20,h->boxesCount,sizeof(Box)) ||
+       !span(29,h->itemsCount,sizeof(ItemObjInfo)) || !span(30,h->cameraFramesCount,sizeof(CameraFrame)) ||
+       !span(31,256,2) || !span(34,h->soundOffsetsCount,4))return "Truncated PKD section";
+    const auto *ri=reinterpret_cast<const RoomInfo*>(ol_level_data+offsets[3]);
+    for(unsigned i=0;i<h->roomsCount;++i) {
+        const auto &r=ri[i];
+        if(((!r.xSectors || !r.zSectors) && (r.quadsCount || r.trianglesCount || r.portalsCount)) || r.portalsCount>MAX_PORTALS ||
+           (r.alternateRoom!=NO_ROOM && r.alternateRoom>=h->roomsCount))return "Invalid room limits";
+        const uint32_t *p=reinterpret_cast<const uint32_t*>(&r.data);
+        unsigned counts[]={r.quadsCount,r.trianglesCount,r.verticesCount,r.spritesCount,r.portalsCount,
+                           unsigned(r.xSectors)*r.zSectors,r.lightsCount,r.meshesCount};
+        unsigned widths[]={sizeof(RoomQuad),sizeof(RoomTriangle),sizeof(RoomVertex),sizeof(RoomSprite),
+                           sizeof(Portal),sizeof(Sector),sizeof(Light),sizeof(RoomMesh)};
+        for(unsigned j=0;j<8;++j)if(p[j]>bytes || uint64_t(p[j])+uint64_t(counts[j])*widths[j]>bytes)
+            return "Truncated room section";
+    }
+    const auto *item=reinterpret_cast<const ItemObjInfo*>(ol_level_data+offsets[29]);
+    for(unsigned i=0;i<h->itemsCount;++i)if(item[i].roomIndex>=h->roomsCount || item[i].type>=ITEM_MAX)
+        return "Invalid item record";
+    return nullptr;
 }
 
 bool ol_toggle_setting(unsigned index) {

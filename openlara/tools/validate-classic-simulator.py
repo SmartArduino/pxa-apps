@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+"""Exercise the running SDL Host through real keyboard events (PC demo City)."""
+import argparse
+import hashlib
+import json
+from pathlib import Path
+import re
+import socket
+import time
+
+p=argparse.ArgumentParser(description=__doc__)
+p.add_argument('--socket',type=Path,required=True)
+p.add_argument('--log',type=Path,required=True)
+p.add_argument('--output',type=Path,required=True)
+a=p.parse_args();a.output.mkdir(parents=True,exist_ok=True)
+report={'passed':False,'input_path':'SDL keyboard events -> desktop controller -> Core 2 controller state -> complete OpenLara Guest'}
+def command(text):
+    with socket.socket(socket.AF_UNIX,socket.SOCK_STREAM) as s:
+        s.settimeout(10);s.connect(str(a.socket));s.sendall((text+'\n').encode());data=bytearray()
+        while chunk:=s.recv(65536):data.extend(chunk)
+    if text.startswith('SCREENSHOT'):
+        header,_,png=bytes(data).partition(b'\n');assert header==b'PNG '+str(len(png)).encode();return png
+    assert bytes(data)==b'OK\n',(text,data)
+def logs():return a.log.read_text(errors='replace')
+def wait(text,after,timeout=100):
+    end=time.monotonic()+timeout
+    while time.monotonic()<end:
+        if text in logs()[after:]:return
+        time.sleep(.1)
+    raise RuntimeError('timed out: '+text)
+def key(name,seconds=.12):
+    command('KEY_DOWN '+name);time.sleep(seconds);command('KEY_UP '+name);time.sleep(.2)
+def menu(index):
+    key('TAB')
+    for _ in range(index):key('DOWN')
+    key('Z')
+def capture(name):
+    data=command('SCREENSHOT AFTER_PRESENT');(a.output/(name+'.png')).write_bytes(data)
+    return hashlib.sha256(data).hexdigest()
+def position():
+    matches=re.findall(r'pos=(-?\d+),(-?\d+),(-?\d+) yaw=(-?\d+)',logs())
+    assert matches,'no position log';return list(map(int,matches[-1]))
+try:
+    start=len(logs());menu(4);wait('OpenLara ready level=3',start);time.sleep(5.3)
+    capture('city');key('RIGHT',1.2);key('UP',1.2);time.sleep(5.3)
+    saved=position();start=len(logs());menu(1);wait('OpenLara save committed',start)
+    capture('saved');key('RIGHT',1.0);key('UP',1.0);time.sleep(5.3)
+    moved=position();assert moved!=saved,'SDL input did not move Lara'
+    start=len(logs());menu(2);wait('OpenLara save restored',start);time.sleep(5.3)
+    restored=position()
+    # Upstream saves yaw in 16 bits; its float round trip can change the log
+    # by one unit (360/65536 degrees). Integer position must remain exact.
+    assert restored[:3]==saved[:3] and abs((restored[3]-saved[3]+32768)%65536-32768)<=1,(saved,restored)
+    report['yaw_log_tolerance_units']=1
+    report.update(saved_position=saved,moved_position=moved,restored_position=restored,save_load=True)
+    before=capture('restored');key('ENTER');time.sleep(1);inventory=capture('inventory')
+    assert before!=inventory;key('ENTER');time.sleep(1);capture('inventory-return')
+    report['start_inventory']=True
+    key('TAB');capture('pause');key('TAB');report['select_pause']=True
+    menu(8);capture('controls');key('X')
+    start=len(logs());menu(9);key('DOWN');key('Z');time.sleep(.5)
+    capture('missing-level');assert 'ready level=4' not in logs()[start:]
+    key('X');key('X');report['missing_level_guard']=True
+    capture('final');report['controller_only_level_selection']=True;report['passed']=True
+finally:
+    (a.output/'metrics.json').write_text(json.dumps(report,indent=2)+'\n')
+print(json.dumps(report,indent=2))

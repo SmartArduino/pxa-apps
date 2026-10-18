@@ -1,6 +1,7 @@
 // XProger/OpenLara GBA C++ mixer, BSD-2-Clause; PXA signed mixing and bank bounds.
 #include "engine.h"
 #include "common.h"
+#include "music-stream.h"
 
 uint8 ADPCM4_ADAPT[] = { // IWRAM !
     192,192,136,136,128,128,128,128, // -8..-1
@@ -87,20 +88,27 @@ struct Music
     const uint8*  data;
     int32         size;
     int32         pos;
+    bool          pcm;
     ADPCM4_STATE  state;
 
     void fill(int8* buffer)
     {
-        int32 len = X_MIN(size - pos, SND_SAMPLES >> 1);
+        int32 len = X_MIN(size - pos, pcm?SND_SAMPLES:(SND_SAMPLES >> 1));
 
-        sndADPCM4_fill(state, buffer, data + pos, len);
+        uint8 encoded[SND_SAMPLES];
+        if (music_stream_failed()) { data=NULL; memset(buffer,0,SND_SAMPLES); return; }
+        if (music_stream_read(encoded,len)!=unsigned(len)) {
+            memset(buffer,0,SND_SAMPLES);return;
+        }
+        if(pcm)memcpy(buffer,encoded,len);else sndADPCM4_fill(state, buffer, encoded, len);
 
         pos += len;
 
         if (pos >= size)
         {
             data = NULL;
-            memset(buffer + (len << 1), 0, (SND_SAMPLES - (len << 1)) * sizeof(buffer[0]));
+            int32 samples=pcm?len:len*2;
+            memset(buffer + samples, 0, (SND_SAMPLES - samples) * sizeof(buffer[0]));
         }
     }
 };
@@ -220,27 +228,30 @@ void sndPlayTrack(int32 track)
     
     if (track < 0 || track >= 64 || !ol_tracks_size) return;
     const TrackInfo* info = (const TrackInfo*)TRACKS_AD4 + track;
-    if (info->offset < 512 || info->size < 0 || uint32(info->offset) > ol_tracks_size ||
-        uint32(info->size) > ol_tracks_size - uint32(info->offset)) return;
+    uint32 bytes=uint32(info->size)&0x7fffffffu;
+    if (info->offset < 2048 || uint32(info->offset) > ol_tracks_size ||
+        bytes > ol_tracks_size - uint32(info->offset)) return;
 
-    if (!info->size)
+    if (!bytes)
         return;
 
     // Clear music.data before setup, and write it after to ensure
     // music.fill() has a consistent state at any point in time
     music.data = NULL;
-    music.size = info->size;
+    music.size = bytes;music.pcm=(uint32(info->size)>>31)!=0;
     music.pos = 0;
     //music.volume = (1 << SND_VOL_SHIFT);
     music.state.zM1   = 0;
     music.state.zM2   = 0;
     music.state.tap   = 0;
     music.state.quant = 0x0800;
-    music.data = (const uint8*)TRACKS_AD4 + info->offset;
+    music_stream_begin(info->offset,bytes);
+    music.data = (const uint8*)TRACKS_AD4;
 }
 
 void sndStopTrack()
 {
+    music_stream_stop();
     music.data = NULL;
     music.size = 0;
     music.pos = 0;

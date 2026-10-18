@@ -9,11 +9,14 @@
 #include "engine.h"
 #include "storage.h"
 #include "audio.h"
+#include "music-stream.h"
+#include "levels.h"
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
 
 static uint8_t packet[512];
+static uint8_t level_index[16];
 alignas(PXA_SURFACE_BUFFER_ALIGNMENT) static uint16_t buffers[2][320*240];
 static uint64_t surface, media_root, file, frame_id;
 static uint32_t loaded, total, pad_keys, touch_keys;
@@ -22,7 +25,7 @@ static int level_id=0, load_state, pending_buffer=-1, load_kind;
 static uint8_t *load_dest;
 static uint32_t load_capacity;
 static const char *load_name;
-static bool root_ready,boot_started,menu,help,settings;
+static bool root_ready,boot_started,menu,help,settings,levels;
 static unsigned menu_selection;
 static uint32_t controller_last,controller_suppressed;
 static uint64_t message_until;
@@ -38,7 +41,6 @@ static void status(const char *text) {
 static bool ready, background;
 static uint64_t previous_us, simulation_units, stats_since, render_us, convert_us;
 static uint32_t frames, updates, skipped;
-static const char *const level_names[]={"title.pkd", "gym.pkd", "level1.pkd", "level2.pkd"};
 static uint64_t time_us() {
     timespec t{}; clock_gettime(CLOCK_MONOTONIC, &t);
     return uint64_t(t.tv_sec)*1000000u + t.tv_nsec/1000u;
@@ -50,7 +52,9 @@ static void error(const char *why) {
 }
 static void asset_read() {
     char path[64]; snprintf(path,sizeof(path),"assets/game/%s",load_name);
-    if (pxa_assets_read(20,path,loaded,PXA_ASSETS_READ_MAX_BYTES)) error("OpenLara asset request failed");
+    unsigned count=load_capacity-loaded;
+    if(count>PXA_ASSETS_READ_MAX_BYTES)count=PXA_ASSETS_READ_MAX_BYTES;
+    if (pxa_assets_read(20,path,loaded,count)) error("OpenLara asset request failed");
 }
 static void open_data(const char *name,uint8_t *dest,uint32_t capacity) {
     ready=false;load_state=1;loaded=total=0;load_dest=dest;load_capacity=capacity;load_name=name;
@@ -60,17 +64,12 @@ static void open_data(const char *name,uint8_t *dest,uint32_t capacity) {
     } else {load_state=3;asset_read();}
 }
 static void open_level(int id) {
-    if(id<0 || id>3) {error("OpenLara supports TITLE, GYM, LEVEL1 and LEVEL2");return;}
-    level_id=id;load_kind=2;menu=help=settings=false;pad_keys=touch_keys=0;audio_flush();
-    open_data(level_names[id],ol_level_data,OL_LEVEL_CAPACITY);
+    if(id<0 || unsigned(id)>=OL_LEVEL_COUNT) {error("Unknown OpenLara level");return;}
+    level_id=id;load_kind=2;menu=help=settings=levels=false;pad_keys=touch_keys=0;audio_flush();
+    open_data(ol_level_file(id),ol_level_data,OL_LEVEL_CAPACITY);
 }
 static void start_engine() {
-    if (loaded<172 || memcmp(ol_level_data,"GBA ",4)) { error("OpenLara: incompatible or truncated GBA PKD data"); return; }
-    // The upstream packed file stores wasm32-compatible 32-bit offsets.
-    for (unsigned offset=32; offset<172; offset+=4)
-        if (pxa_load_u32(ol_level_data+offset)>=loaded) {
-            error("OpenLara: invalid level data offset"); return;
-        }
+    if(const char *why=ol_validate_level(loaded)) {error(why);return;}
     ol_set_time(time_us()); ol_start(level_id);
     status("");ready=true; load_state=0; previous_us=stats_since=time_us();
     simulation_units=0; render_us=convert_us=0; frames=updates=skipped=0;
@@ -80,18 +79,41 @@ static void start_engine() {
 static void data_done() {
     if(load_kind==0) {
         if(loaded!=240*160) {error("Invalid TITLE.SCR: expected 240x160 indexed image");return;}
+#if OL_CLASSIC
+        load_kind=4;open_data("title.pal",ol_title_palette_data,sizeof(ol_title_palette_data));
+    } else if(load_kind==4) {
+        if(loaded!=512) {error("Invalid TITLE.PAL: expected RGB565 palette");return;}
+#endif
         load_kind=1;open_data("tracks.ad4",ol_tracks_data,OL_TRACKS_CAPACITY);
     } else if(load_kind==1) {
-        if(loaded<2048) {error("Invalid TRACKS.AD4");return;}
+        if(loaded!=2048) {error("Invalid TRACKS.AD4 directory");return;}
         for(unsigned i=0;i<64;++i) {
-            uint32_t offset=pxa_load_u32(ol_tracks_data+i*8),size=pxa_load_u32(ol_tracks_data+i*8+4);
-            if(size && (offset<2048 || offset>loaded || size>loaded-offset)) {error("Invalid music bank range");return;}
+            uint32_t offset=pxa_load_u32(ol_tracks_data+i*8),size=pxa_load_u32(ol_tracks_data+i*8+4)&0x7fffffffu;
+            if(size && (offset<2048 || offset>ol_tracks_size || size>ol_tracks_size-offset)) {error("Invalid music bank range");return;}
         }
-        ol_tracks_size=loaded;open_level(0);
+        music_stream_config(media_root,ol_tracks_size);
+#if OL_CLASSIC
+        load_kind=3;open_data("levels.idx",level_index,sizeof(level_index));
+#else
+        open_level(0);
+#endif
+    } else if(load_kind==3) {
+        if(loaded!=16 || memcmp(level_index,"OLCI",4) || pxa_load_u32(level_index+4)!=1 ||
+           pxa_load_u32(level_index+12)!=OL_LEVEL_COUNT || !(pxa_load_u32(level_index+8)&1u)) {
+            error("Invalid OpenLara level catalog; prepare game data again");return;
+        }
+        ol_set_levels_mask(pxa_load_u32(level_index+8));open_level(0);
     } else start_engine();
 }
 static void notify(const char *text,uint64_t now) {notification=text;message_until=now+3000000u;}
 static void choose_menu(unsigned selection) {
+    if(levels) {
+        if(selection<OL_PLAYABLE_COUNT) {
+            if(ol_level_available(OL_PLAYABLE_IDS[selection]))open_level(OL_PLAYABLE_IDS[selection]);
+            else notify("Level data not installed",time_us());
+        }
+        return;
+    }
     if(settings) {
         if(selection==5) {settings=false;menu_selection=0;}
         else {menu_selection=selection;notify(ol_toggle_setting(selection)?"Saving settings...":"Settings busy",time_us());}
@@ -102,17 +124,23 @@ static void choose_menu(unsigned selection) {
         case 0:break;
         case 1:notify(ol_quick_save()?"Saving game...":"Cannot save here",previous_us);break;
         case 2:notify(ol_quick_load()?"Loading saved game...":"No saved game",previous_us);break;
-        case 3:open_level(2);break;
-        case 4:open_level(3);break;
-        case 5:open_level(1);break;
+        case 3:{int id=ol_first_level();if(id>=0)open_level(id);else notify("Install full game data",previous_us);break;}
+        case 4:if(ol_level_available(3))open_level(3);else notify("Level data not installed",previous_us);break;
+        case 5:if(ol_level_available(1))open_level(1);else notify("Level data not installed",previous_us);break;
         case 6:open_level(0);break;
         case 7:menu=settings=true;menu_selection=0;break;
         case 8:help=true;break;
+        case 9:
+            menu=levels=true;menu_selection=0;
+            for(unsigned i=0;i<OL_PLAYABLE_COUNT;++i)if(OL_PLAYABLE_IDS[i]==unsigned(level_id))menu_selection=i;
+            break;
     }
 }
 static void convert(uint16_t *dest) {
     const uint8_t *src=ol_pixels();
-#if OL_OPTIMIZED
+#if OL_CLASSIC
+    memcpy(dest,src,320u*240u*sizeof(uint16_t));
+#elif OL_OPTIMIZED
     // The engine owns an aligned, even-size INDEX8 framebuffer. Four input
     // pixels share one bounds-checked load and two RGB565 stores.
     const auto *in=reinterpret_cast<const uint32_t*>(src);
@@ -132,6 +160,7 @@ static void tick(uint64_t now) {
         boot_started=true;load_kind=0;open_data("title.scr",ol_title_data,sizeof(ol_title_data));
     }
     if (background || !surface || load_state<0) return;
+    music_stream_tick();
     if (load_state==2) {
         uint32_t count=total-loaded; if (count>8192) count=8192;
         int32_t n=pxa_fs_read(file,load_dest+loaded,count);
@@ -170,7 +199,8 @@ static void tick(uint64_t now) {
     if(!menu && !help && !store_busy()) {ol_update(steps,pad_keys|touch_keys);updates+=steps;}
     else simulation_units=0;
     ol_render();
-    if(menu || help) ol_draw_menu(menu_selection,help,settings);
+    if(levels)ol_draw_levels(menu_selection);
+    else if(menu || help) ol_draw_menu(menu_selection,help,settings);
     if(begin<message_until)ol_draw_message(notification);
     uint64_t rendered=time_us(); convert(buffers[index]); uint64_t converted=time_us();
     render_us+=rendered-begin; convert_us+=converted-rendered;
@@ -198,7 +228,14 @@ static void pointer(const pxa_ui_pointer_data_t &p) {
     int y=(int(p.y)-(int(display_h)-240*scale)/2)/scale;
     if (p.phase==PXA_POINTER_UP || p.phase==PXA_POINTER_CANCEL) {touch_keys=0;return;}
     if(help) {if(p.phase==PXA_POINTER_DOWN)help=false;touch_keys=0;return;}
-    if(menu) {if(p.phase==PXA_POINTER_DOWN && y>=(settings?40:38) && y<(settings?190:218))choose_menu(unsigned(y-(settings?40:38))/(settings?25:20));touch_keys=0;return;}
+    if(menu) {
+        if(p.phase==PXA_POINTER_DOWN) {
+            if(levels && y>=38 && y<198)choose_menu((menu_selection/8)*8+unsigned(y-38)/20);
+            else if(levels && y>=210)menu_selection=(menu_selection+8)%OL_PLAYABLE_COUNT;
+            else if(!levels && y>=(settings?40:35) && y<(settings?190:215))choose_menu(unsigned(y-(settings?40:35))/(settings?25:18));
+        }
+        touch_keys=0;return;
+    }
     if(p.phase==PXA_POINTER_DOWN && x>=140 && x<=220 && y>200) {menu=true;settings=false;menu_selection=0;touch_keys=0;return;}
     if (x<140) {
         touch_keys=0;
@@ -236,7 +273,7 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *bytes,uint32_t length) {
         pad_keys=touch_keys=controller_last=controller_suppressed=0;previous_us=time_us();
         audio_flush();pxa_clock_set_period(background?0:16);return PXA_EVENT_HANDLED;
     }
-    if(store_event(e) || audio_event(e))return PXA_EVENT_HANDLED;
+    if(store_event(e) || audio_event(e) || music_stream_event(e))return PXA_EVENT_HANDLED;
     if (e.service==PXA_SURFACE_SERVICE && e.opcode==PXA_SURFACE_CREATE && e.token==1) {
         pxa_surface_create_result_t result;
         if (!pxa_surface_parse_create(&e,1,&result) || result.status) return PXA_STATUS_INTERNAL;
@@ -259,18 +296,31 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *bytes,uint32_t length) {
         if (!pxa_fs_parse_open_at(&e,12,&result) || result.status) {
             load_state=3;asset_read();return PXA_EVENT_HANDLED;
         }
-        if (result.kind!=PXA_FS_KIND_REGULAR || result.size>load_capacity || !result.size) {
+        if (result.kind!=PXA_FS_KIND_REGULAR || !result.size ||
+            (load_kind==1 ? (result.size<2048 || result.size>UINT32_MAX) : result.size>load_capacity)) {
             pxa_close_handle(result.handle);error("OpenLara: invalid SD level size");return PXA_EVENT_HANDLED;
         }
-        file=result.handle;total=uint32_t(result.size);load_state=2;
+        if(load_kind==1)ol_tracks_size=uint32_t(result.size);
+        if(load_kind==2) {
+            if(!ol_allocate_level(uint32_t(result.size))) {pxa_close_handle(result.handle);error("OpenLara: insufficient level memory");return PXA_EVENT_HANDLED;}
+            load_dest=ol_level_data;
+        }
+        file=result.handle;total=load_kind==1?2048:uint32_t(result.size);load_state=2;
         return PXA_EVENT_HANDLED;
     }
     if (e.service==PXA_ASSETS_SERVICE && e.token==20) {
         pxa_asset_read_result_t result;
-        if (!pxa_assets_parse_read(&e,20,&result) || result.status || result.total_bytes>load_capacity || !result.total_bytes || !result.bytes || result.bytes>load_capacity-loaded || result.offset!=loaded) {
+        if (!pxa_assets_parse_read(&e,20,&result) || result.status ||
+            (load_kind==1?result.total_bytes<2048:result.total_bytes>load_capacity) ||
+            !result.total_bytes || !result.bytes || result.bytes>load_capacity-loaded || result.offset!=loaded) {
             error("OpenLara: missing level. Install GBA PKD files in the app's fixed SD media directory.");return PXA_EVENT_HANDLED;
         }
-        memcpy(load_dest+loaded,result.data,result.bytes);loaded+=result.bytes;total=result.total_bytes;
+        if(load_kind==1)ol_tracks_size=result.total_bytes;
+        if(load_kind==2 && !loaded) {
+            if(!ol_allocate_level(result.total_bytes)) {error("OpenLara: insufficient level memory");return PXA_EVENT_HANDLED;}
+            load_dest=ol_level_data;
+        }
+        memcpy(load_dest+loaded,result.data,result.bytes);loaded+=result.bytes;total=load_kind==1?2048:result.total_bytes;
         if (loaded==total) data_done(); else asset_read();
         return PXA_EVENT_HANDLED;
     }
@@ -281,14 +331,20 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *bytes,uint32_t length) {
         uint32_t buttons=c.connected?c.buttons:0;
         controller_suppressed&=buttons;
         uint32_t hits=buttons&~controller_last;controller_last=buttons;
-        if(hits&PXA_CONTROLLER_SELECT) {menu=!menu;help=settings=false;menu_selection=0;pad_keys=touch_keys=0;controller_suppressed|=PXA_CONTROLLER_SELECT;}
+        if(load_state<0 && (hits&PXA_CONTROLLER_SELECT)) {open_level(0);return PXA_EVENT_HANDLED;}
+        if(hits&PXA_CONTROLLER_SELECT) {menu=!menu;help=settings=levels=false;menu_selection=0;pad_keys=touch_keys=0;controller_suppressed|=PXA_CONTROLLER_SELECT;}
         if(menu || help) {
             controller_suppressed|=buttons&(PXA_CONTROLLER_A|PXA_CONTROLLER_B|PXA_CONTROLLER_SELECT);
-            if(hits&PXA_CONTROLLER_B) {menu=help=settings=false;pad_keys=touch_keys=0;}
+            if(hits&PXA_CONTROLLER_B) {
+                if(levels) {levels=false;menu_selection=9;}
+                else menu=help=settings=false;
+                pad_keys=touch_keys=0;
+            }
             else if(menu) {
-                unsigned count=settings?6:9;
+                unsigned count=levels?OL_PLAYABLE_COUNT:(settings?6:10);
                 if(hits&PXA_CONTROLLER_UP)menu_selection=(menu_selection+count-1)%count;
                 if(hits&PXA_CONTROLLER_DOWN)menu_selection=(menu_selection+1)%count;
+                if(levels && (hits&(PXA_CONTROLLER_LEFT|PXA_CONTROLLER_RIGHT)))menu_selection=(menu_selection+8)%count;
                 if(hits&PXA_CONTROLLER_A)choose_menu(menu_selection);
             }
             return PXA_EVENT_HANDLED;
@@ -302,7 +358,8 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *bytes,uint32_t length) {
     }
     if (e.service==PXA_WINDOW_SERVICE && e.opcode==PXA_WINDOW_BACK_REQUESTED) {
         // A back request is an impulse; do not leave a controller key held.
-        if(ready) {menu=!menu;help=settings=false;menu_selection=0;pad_keys=touch_keys=0;}
+        if(load_state<0)open_level(0);
+        else if(ready) {menu=!menu;help=settings=levels=false;menu_selection=0;pad_keys=touch_keys=0;}
         return PXA_EVENT_HANDLED;
     }
     if(e.service==PXA_UI_SERVICE && e.opcode==PXA_UI_ENVIRONMENT_CHANGED) {
@@ -323,7 +380,7 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *bytes,uint32_t length) {
     return PXA_EVENT_UNHANDLED;
 }
 extern "C" void pxa_app_stop(uint32_t) {
-    pxa_clock_set_period(0);audio_stop();store_stop();ol_free();
+    pxa_clock_set_period(0);audio_stop();music_stream_stop();store_stop();ol_free();
     if(file)pxa_close_handle(file);if(media_root)pxa_close_handle(media_root);
     if(surface)pxa_close_handle(surface);
 }

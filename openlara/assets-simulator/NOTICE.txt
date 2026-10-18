@@ -1,5 +1,13 @@
 OpenLara engine: https://github.com/XProger/OpenLara
 
+Engine source is pinned to 3b268ca4bf986c380f44a26ffd9218bf6d376249.
+Prepared media is separate from the engine license below. The default test
+media uses the public PC demo TITLE/LEVEL2 from LostArtefacts/TRX-data at
+121815b61ae16884a6f775dc0966173cea5e891f, plus the pinned OpenLara GBA title
+art/palette and AD4 bank. It contains one campaign level, not the retail game.
+Imported original game files are supplied separately by the user. Consult
+game/data-manifest.json for hashes, installed levels and missing data.
+
 BSD 2-Clause License
 
 Copyright (c) 2018, Timur "XProger" Gagiev

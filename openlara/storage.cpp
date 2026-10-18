@@ -2,9 +2,18 @@
 #include "pxa_fs.h"
 #include <string.h>
 
+#if OL_CLASSIC
+static const char *const paths[]={"data/classic-settings.bin","data/classic-save.bin"};
+static const char *const temps[]={"data/classic-settings.tmp","data/classic-save.tmp"};
+static constexpr unsigned SETTINGS_CAPACITY=1024,SAVE_CAPACITY=128*1024;
+#else
 static const char *const paths[]={"data/settings.bin","data/save.bin"};
-static const unsigned caps[]={128,8192};
-static uint8_t cache[2][8192], work[8192+17];
+static const char *const temps[]={"data/settings.tmp","data/save.tmp"};
+static constexpr unsigned SETTINGS_CAPACITY=128,SAVE_CAPACITY=8192;
+#endif
+static const unsigned caps[]={SETTINGS_CAPACITY,SAVE_CAPACITY};
+static uint8_t settings_cache[SETTINGS_CAPACITY],save_cache[SAVE_CAPACITY],work[SAVE_CAPACITY+17];
+static uint8_t *const cache[]={settings_cache,save_cache};
 static unsigned sizes[2], kind, used, length;
 static uint64_t handle;
 enum State { MKDIR, OPEN_READ, READING, IDLE, OPEN_WRITE, WRITING, COMMIT };
@@ -43,6 +52,10 @@ void store_start() {
 }
 bool store_ready() {return initialized;}
 bool store_busy() {return initialized && state!=IDLE;}
+const uint8_t *store_view(unsigned k,unsigned *size) {
+    if(k>1 || !sizes[k])return nullptr;
+    *size=sizes[k];return cache[k];
+}
 const char *store_message() {return message;}
 bool store_read(unsigned k,void *dest,unsigned capacity,unsigned *size) {
     if(k>1 || !sizes[k] || sizes[k]>capacity)return false;
@@ -54,13 +67,14 @@ bool store_write(unsigned k,const void *data,unsigned n) {
     pxa_store_u32(work+4,1);pxa_store_u32(work+8,n);
     memcpy(work+16,data,n);pxa_store_u32(work+12,crc(work+16,n));
     message=k?"Saving game...":"Saving settings...";state=OPEN_WRITE;
-    const char *tmp=k?"data/save.tmp":"data/settings.tmp";
+    const char *tmp=temps[k];
     if(pxa_fs_request_open(102,tmp,strlen(tmp),PXA_FS_OPEN_WRITE|PXA_FS_OPEN_CREATE|PXA_FS_OPEN_TRUNCATE)) {fail();return false;}
     return true;
 }
 void store_tick() {
     if(state==READING) {
-        int n=pxa_fs_read(handle,work+used,sizeof(work)-used);
+        unsigned count=sizeof(work)-used;if(count>8192)count=8192;
+        int n=pxa_fs_read(handle,work+used,count);
         if(n==PXA_STATUS_WOULD_BLOCK)return;
         if(n<0 || n>int(sizeof(work)-used)) {used=0;read_done();return;}
         used+=unsigned(n);
@@ -73,7 +87,7 @@ void store_tick() {
         used+=unsigned(r);
         if(used==length) {
             close_file();uint8_t p[128];uint32_t bytes;
-            const char *tmp=kind?"data/save.tmp":"data/settings.tmp";
+            const char *tmp=temps[kind];
             state=COMMIT;
             if(!pxa_fs_build_replace(p,sizeof(p),103,tmp,strlen(tmp),paths[kind],strlen(paths[kind]),&bytes) || pxa_control_packet(p,bytes))fail();
         }

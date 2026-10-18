@@ -13,14 +13,14 @@
     0
   ],
   "id": "pxa-openlara",
-  "version": "0.2.7",
+  "version": "0.3.3",
   "name": "OpenLara",
-  "description": "OpenLara fixed-point Tomb Raider engine for PXA; fixed SD media and software rendering",
+  "description": "Complete OpenLara TR1 gameplay engine for PXA; original PC game data and software rendering",
   "build": {
     "system": "cmake",
     "source_dir": ".",
     "linear_memory": {
-      "maximum_bytes": 8388608,
+      "maximum_bytes": 11534336,
       "pinned": true
     }
   },
@@ -67,7 +67,7 @@
       "artifact": "aot"
     }
   ],
-  "release_sequence": 14,
+  "release_sequence": 18,
   "permissions": [
     {
       "name": "audio.playback",
