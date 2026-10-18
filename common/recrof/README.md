@@ -62,6 +62,27 @@ Quake II 使用标准 `baseq2/pak0.pak`。C&C 可导入 DOS 试玩版的 DEMO.MI
 - WAMR 无 Wasm 异常处理，原引擎 setjmp/longjmp 错误恢复改为显示错误并等待重新打开应用。正常主循环不依赖 longjmp。
 - `duke3d-sd` 已在 16 MiB PSRAM 的 GameKit / ESP32-S31 上自动读取固定 SD 资源并进入屋顶关卡，完成短时 FPS 与内存测量；其他游戏、音频连续性及长期稳定性仍待真机验收，见 `VALIDATION.md`。
 
+## 同步上游
+
+上游引擎、转换器和许可证的映射集中在 `upstreams.json`，PXA 平台实现单独维护。Duke SD 复用 Duke 引擎；C&C 与 RA 共用引擎并一起更新两个版本锁。无需复制第二份源码。
+
+在工作区根目录执行：
+
+```sh
+python3 local/pxa-apps/common/recrof/tools/upstream.py check all
+python3 local/pxa-apps/common/recrof/tools/upstream.py prepare duke3d --output /tmp/duke-update
+# 审阅 plan.json、files/ 以及 adaptations.patch。
+# 有冲突时编辑 files/ 内的文件，再登记解决结果：
+python3 local/pxa-apps/common/recrof/tools/upstream.py resolve /tmp/duke-update duke3d/vendor/Game/src/control.c
+python3 local/pxa-apps/common/recrof/tools/upstream.py apply /tmp/duke-update
+```
+
+`check` 只查询远端提交。`prepare` 缓存 Git 对象，用锁定的旧上游、本地 PXA 版本和目标上游做三方合并，输出审阅目录；它不修改工作区，也不执行下载的代码。默认目标为远端 HEAD，`--ref` 可指定完整提交 SHA；指定 SHA 且缓存已有对象时可以离线准备。全局 `--cache` 可以复用已有仓库，例如 `--cache local/upstream`。
+
+冲突不会自动覆盖，二进制冲突也需明确解决；`resolve --take local` 或 `--take upstream` 可明确选择一边。`apply` 在写入前校验本地与候选哈希、文件模式、路径及全部冲突状态，拒绝过期方案，对普通写入异常回滚，并最后更新版本锁。它不自动提交或推送。合并后检查 Git diff，重新构建并做真机回归；上游资源格式变化时须重新运行转换器。干净合并仅说明源码合并成功。
+
+2026-10-18 检查四个上游 HEAD 均与当前锁定提交一致；四套真实映射的无更新准备结果均为 0 个修改、0 个冲突，现有适配补丁已可单独导出。测试覆盖新增、删除、局部适配保留、文本/二进制冲突、过期编辑、符号链接/越界路径、模式变化和失败回滚。
+
 ## 测试工具
 
 `tests/host.mjs` 是协议级 Node 22 测试宿主，执行真实引擎并读取真实资源；它不能代替正式 PXA 模拟器。`tests/simulator.py` 启动正式签名包、捕获运行日志和截图，检查异常、空白画面与正常 HOME 退出。`tests/fixture` 验证暂停期间的 C 栈对象、C++ 字符串、虚拟文件和路径解析。资源导入单元测试：
