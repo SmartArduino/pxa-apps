@@ -16,7 +16,7 @@ p.add_argument('--pxadb-dir',type=Path,default=Path(__file__).resolve().parents[
 a=p.parse_args();sys.path.insert(0,str(a.pxadb_dir));import pxadb
 os.environ['PXADB_BAUD']=a.baud;os.environ['PXADB_UART_UPLOAD_CHUNK']='1024'
 a.output.mkdir(parents=True,exist_ok=True)
-report={'passed':False,'runs':{}};messages=[];permission_pending=False;phase='acquire'
+report={'passed':False,'runs':{}};messages=[];permission_pending=False;phase='acquire';unresponsive=False;memory_started=False
 if a.resume_functional:
  report=json.loads((a.output/'metrics.json').read_text())
  for name,source in [('baseline',a.baseline),('candidate',a.candidate)]:
@@ -24,20 +24,30 @@ if a.resume_functional:
  report['passed']=False
 log=(a.output/'serial.jsonl').open('a' if a.resume_functional else 'w',buffering=1)
 def record(kind,payload):
- global permission_pending
+ global permission_pending,unresponsive
  log.write(json.dumps({'t':time.monotonic(),'phase':phase,'kind':kind,'payload':payload})+'\n')
  if 'OpenLara' in payload:print(payload,flush=True)
  if 'Runtime permission prompt queued:' in payload and 'pxa-openlara' in payload:permission_pending=True
+ if 'awaiting user decision' in payload:unresponsive=True
  if kind=='LOG':messages.append(payload)
 def request(cmd,timeout=30):
+ global memory_started
  record('COMMAND',cmd);rows=c.request(cmd,timeout=timeout)
  for f in rows:
   if f.kind!='DATA' or not cmd.startswith('SCREENSHOT'):record(f.kind,f.payload)
+ if cmd=='MEMORY START':memory_started=True
+ if cmd=='MEMORY STOP':memory_started=False
  return rows
+def require_target():
+ rows=request('PACKAGES')
+ active=[f.payload for f in rows if f.kind=='PKG' and 'active=1' in f.payload]
+ if unresponsive:raise RuntimeError('OpenLara Guest timeout; FPS samples invalid, dismiss its dialog on the device')
+ if len(active)!=1 or ':pxa-openlara\t' not in active[0]:raise RuntimeError('OpenLara is no longer the sole active app; FPS samples invalid')
 def pump(seconds):
  end=time.monotonic()+seconds
  while time.monotonic()<end:c.pump_logs();time.sleep(.01)
 def tap(x,y):
+ require_target()
  request(f'INPUT POINTER DOWN {x} {y} 0');request('INPUT SYNC');pump(.12)
  request(f'INPUT POINTER UP {x} {y} 0');request('INPUT SYNC');pump(.3)
 def capture(name):
@@ -47,6 +57,7 @@ def wait_message(text,after=0,timeout=100):
  end=time.monotonic()+timeout
  while time.monotonic()<end:
   pump(.1)
+  if unresponsive:raise RuntimeError('OpenLara Guest timeout; validation aborted')
   if any(text in s for s in messages[after:]):return
   if permission_pending:
    if not a.allow_audio:raise RuntimeError('Audio permission needs approval on the device')
@@ -56,6 +67,7 @@ def wait_message(text,after=0,timeout=100):
 def menu(selection):
  tap(180,220);tap(160,44+selection*18 if a.classic else 48+selection*20)
 def hold(x,y,seconds):
+ require_target()
  request(f'INPUT POINTER DOWN {x} {y} 0');request('INPUT SYNC');pump(seconds)
  request(f'INPUT POINTER UP {x} {y} 0');request('INPUT SYNC');pump(1.5)
 def position():
@@ -118,10 +130,11 @@ def benchmark(name,source,samples):
  request('MEMORY START');pump(1);fps=[]
  for i in range(samples):
   if i%5==0:tap(70,170)
-  pump(1)
+  pump(1);require_target()
   properties={}
   for f in request('PERF FPS'):
    if f.kind in ('DATA','OK'):properties.update(pxadb.info_properties(f.payload))
+  require_target()
   fps.append(int(properties['presentation_fps_x10'])/10)
  memory_steady=[f.payload for f in request('MEMORY STOP') if f.kind=='DATA']
  result={'package_sha256':hashlib.sha256(source.with_suffix('.pxa').read_bytes()).hexdigest(),
@@ -194,7 +207,10 @@ try:
  report['passed']=True
 finally:
  if c:
-  try:request('INPUT CANCEL');request('MEMORY STOP')
+  try:
+   active=[f.payload for f in request('PACKAGES') if f.kind=='PKG' and 'active=1' in f.payload]
+   if len(active)==1 and ':pxa-openlara\t' in active[0]:request('INPUT CANCEL')
+   if memory_started:request('MEMORY STOP')
   except Exception:pass
   c.close()
  (a.output/'metrics.json').write_text(json.dumps(report,indent=2)+'\n');log.close()

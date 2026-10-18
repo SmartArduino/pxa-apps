@@ -30,13 +30,16 @@ report={'package_sha256':hashlib.sha256(a.package.read_bytes()).hexdigest(),'sam
 ready=False
 title_ready=False
 permission_pending=False
+unresponsive=False
+memory_started=False
 with (a.output/'serial.jsonl').open('w',buffering=1) as log, pxadb.PxaDbClient(a.port,15) as c:
     def record(kind,payload):
-        global ready,title_ready,permission_pending
+        global ready,title_ready,permission_pending,unresponsive
         log.write(json.dumps({'t':time.monotonic(),'kind':kind,'payload':payload})+'\n')
         if f'OpenLara ready level={a.level}' in payload: ready=True
         if 'OpenLara ready level=0' in payload:title_ready=True
         if 'Runtime permission prompt queued:' in payload and 'pxa-openlara' in payload:permission_pending=True
+        if 'awaiting user decision' in payload:unresponsive=True
         if 'OpenLara' in payload: print(payload,flush=True)
     c.log_callback=lambda f:record(f.kind,f.payload)
     c.raw_callback=lambda b:record('RAW',b.decode('utf-8','replace'))
@@ -45,6 +48,11 @@ with (a.output/'serial.jsonl').open('w',buffering=1) as log, pxadb.PxaDbClient(a
         for f in rows:
             if not cmd.startswith('SCREENSHOT') or f.kind!='DATA':record(f.kind,f.payload)
         return rows
+    def require_target():
+        rows=request('PACKAGES')
+        active=[f.payload for f in rows if f.kind=='PKG' and 'active=1' in f.payload]
+        if unresponsive:raise RuntimeError('OpenLara Guest timeout; FPS samples invalid, dismiss its dialog on the device')
+        if len(active)!=1 or ':pxa-openlara\t' not in active[0]:raise RuntimeError('OpenLara is no longer the sole active app; FPS samples invalid')
     def pump(seconds):
         end=time.monotonic()+seconds
         while time.monotonic()<end:
@@ -71,7 +79,7 @@ with (a.output/'serial.jsonl').open('w',buffering=1) as log, pxadb.PxaDbClient(a
         request('INPUT POINTER UP 160 53 0');request('INPUT SYNC');pump(.4)
         capture('before-launch')
         ready=title_ready=permission_pending=False
-        request('MEMORY START');request('PACKAGE run pxa-openlara')
+        request('MEMORY START');memory_started=True;request('PACKAGE run pxa-openlara')
         # The full port boots to the original title. Wait for it before opening
         # the touch pause menu and explicitly choosing the benchmark level.
         title_end=time.monotonic()+100
@@ -81,6 +89,7 @@ with (a.output/'serial.jsonl').open('w',buffering=1) as log, pxadb.PxaDbClient(a
         else:report['startup_boundary']='fresh instance from title startup'
         while not title_ready and time.monotonic()<title_end:
             pump(.2);request('PING')
+            if unresponsive:raise RuntimeError('OpenLara Guest timeout; validation aborted')
             if permission_pending:
                 if not a.allow_audio:raise RuntimeError('Allow audio on the device, or pass --allow-audio for this identified test device')
                 capture('audio-permission');request('INPUT TAP 211 183');request('INPUT SYNC');permission_pending=False;pump(2)
@@ -95,18 +104,20 @@ with (a.output/'serial.jsonl').open('w',buffering=1) as log, pxadb.PxaDbClient(a
             pump(.2)
             request('PING')
             if time.monotonic()>=keep_awake:
-                request('INPUT TAP 70 170');keep_awake=time.monotonic()+5
+                require_target();request('INPUT TAP 70 170');keep_awake=time.monotonic()+5
         if not ready:raise RuntimeError('OpenLara did not become ready')
-        pump(3)
+        require_target();pump(3);require_target()
         report['startup_memory']=[f.payload for f in request('MEMORY STOP') if f.kind=='DATA']
         capture('idle')
         request('MEMORY START');pump(1)
         for i in range(a.samples):
+            require_target()
             if i%5==0:request('INPUT TAP 70 170') # neutral D-pad point, refresh wake timer
             pump(1)
             props={}
             for f in request('PERF FPS'):
                 if f.kind in ('DATA','OK'):props.update(pxadb.info_properties(f.payload))
+            require_target()
             report['samples'].append({'index':i,'properties':props})
         report['steady_memory']=[f.payload for f in request('MEMORY STOP') if f.kind=='DATA']
         fps=[int(s['properties']['presentation_fps_x10'])/10 for s in report['samples']]
@@ -125,7 +136,12 @@ with (a.output/'serial.jsonl').open('w',buffering=1) as log, pxadb.PxaDbClient(a
     except Exception as exc:
         report['error']=str(exc);raise
     finally:
-        for command in ('INPUT CANCEL','MEMORY STOP','PACKAGE stop pxa-openlara','INPUT KEY HOME'):
+        cleanup=['MEMORY STOP'] if memory_started else []
+        try:
+            active=[f.payload for f in request('PACKAGES') if f.kind=='PKG' and 'active=1' in f.payload]
+            if len(active)==1 and ':pxa-openlara\t' in active[0]:cleanup=['INPUT CANCEL',*cleanup,'PACKAGE stop pxa-openlara','INPUT KEY HOME']
+        except Exception as exc:record('CLEANUP_ERROR',str(exc))
+        for command in cleanup:
             try:request(command)
             except Exception as exc:record('CLEANUP_ERROR',str(exc))
         (a.output/'metrics.json').write_text(json.dumps(report,indent=2)+'\n')
