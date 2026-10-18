@@ -6,6 +6,8 @@ GameKit / ESP32-S31 的 `duke3d-sd` 已自动读取固定 SD 资源并进入 Hol
 
 资源导入器的 6 个测试通过，覆盖大小写冲突、缺失主资源、Quake II 安装目录、RA 展开 MIX、TD DOS demo 和符号链接。
 
+0.1.7 的 SD 变体改用按需 NVM 页文件，避免反复随机改写同一个大文件；其它变体保留 NVM2 格式，但跳过未变化的 NOR 写入。默认、分页及 48 页缓存三个 ASan/UBSan 配置通过；旧格式迁移、失败发布和损坏页均有回归。新 Node 协议宿主支持固定只读媒体根、真实目录枚举及 FS replace，首次进入和重开均观察到屋顶场景；设备 AOT 已构建，真机复测仍待设备空闲。详见 `duke3d-sd/README.md`，不能将协议宿主帧数作为设备 FPS。
+
 `tests/fixture` 在正式 PXA 产品模拟器的 WASM 运行时通过：C 栈哨兵、长短 C++ 字符串、带虚方法的文件对象在多次异步操作后保持完整；私有文件写入和读回一致。模拟器日志包含 `FIXTURE PASS`。两个 C 栈都位于链接器声明的辅助栈范围内，兼容 WAMR 的边界检查。
 
 Node 协议宿主已经运行五个真实引擎并进入实际关卡：Quake shareware、Quake II 3.14 demo、Duke3D 1.3D shareware、Tiberian Dawn DOS demo、Red Alert 95 demo。后台暂停/恢复检查已在 Quake II、Duke3D 上通过。该宿主仅为协议与游戏逻辑测试，不代替正式产品模拟器。

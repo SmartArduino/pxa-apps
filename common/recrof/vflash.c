@@ -2,7 +2,10 @@
 #include "vflash.h"
 #include "port.h"
 #include <stdio.h>
+#include <errno.h>
+#include <dirent.h>
 #include <string.h>
+#include <sys/stat.h>
 #define PAGE 8192u
 #ifndef PORT_VFLASH_CACHE_PAGES
 #define PORT_VFLASH_CACHE_PAGES 16u
@@ -24,6 +27,51 @@ void vflash_stats(vflash_stats_t *out, int reset) {
 #define NVM_PAGES 512u
 static uint32_t nvm_offsets[NVM_PAGES], nvm_pages, save_length;
 static int legacy_nvm;
+#ifdef PORT_VFLASH_PAGED_NVM
+/* Keep the old NVM file as a read-only migration source. Publishing one small
+ * page avoids LittleFS copying a large CTZ tail after every random NOR write.
+ * Only touched pages acquire overlays; the old file is never rewritten. */
+static char page_directory[320];
+static uint8_t page_state[NVM_PAGES]; /* absent, present */
+static FILE *page_file;
+static unsigned page_index;
+static void page_path(char *path, size_t capacity, unsigned index) {
+  if(snprintf(path,capacity,"%s/%03u",page_directory,index)>=(int)capacity)
+    port_error("NVM page path too long.");
+}
+static int read_overlay(unsigned index, unsigned within, void *out, unsigned count) {
+  if(!page_state[index]) return 0;
+  if(!page_file || page_index!=index) {
+    if(page_file) {fclose(page_file);page_file=NULL;}
+    char path[352];page_path(path,sizeof(path),index);
+    page_file=fopen(path,"rb");
+    if(!page_file) port_error("Cannot open NVM page.");
+    page_index=index;
+    uint32_t header[4],expected[4];
+    memcpy(expected,"PXA-NVP1",8);expected[2]=nvm_pages*PAGE;expected[3]=index;
+    if(fread(header,1,sizeof(header),page_file)!=sizeof(header) ||
+        memcmp(header,expected,sizeof(header)) || fseek(page_file,0,SEEK_END) ||
+        ftell(page_file)!=(long)(16+PAGE)) port_error("Invalid NVM page.");
+  }
+  if(fseek(page_file,16+within,SEEK_SET) || fread(out,1,count,page_file)!=count)
+    port_error("NVM page read failed.");
+  return 1;
+}
+static void write_overlay(unsigned index, const uint8_t *block) {
+  if(page_file) {fclose(page_file);page_file=NULL;}
+  char path[352],pending[352];page_path(path,sizeof(path),index);
+  snprintf(pending,sizeof(pending),"%s/pending",page_directory);
+  uint32_t header[4];
+  memcpy(header,"PXA-NVP1",8);header[2]=nvm_pages*PAGE;header[3]=index;
+  FILE *file=fopen(pending,"wb");
+  if(!file) port_error("Cannot create NVM page.");
+  int failed=fwrite(header,1,sizeof(header),file)!=sizeof(header) ||
+      fwrite(block,1,PAGE,file)!=PAGE || fflush(file);
+  if(fclose(file)) failed=1;
+  if(failed || port_replace(pending,path)) port_error("Cannot publish NVM page.");
+  page_state[index]=1;
+}
+#endif
 static void nvm_init(uint32_t bytes) {
   nvm_pages = bytes / PAGE;
   if (!nvm_pages || nvm_pages > NVM_PAGES || bytes % PAGE)
@@ -32,7 +80,7 @@ static void nvm_init(uint32_t bytes) {
   fseek(save_file,0,SEEK_END);
   long length=ftell(save_file);
   legacy_nvm = length == (long)bytes;
-  if (legacy_nvm) return;
+  if (legacy_nvm) goto ready;
   uint32_t header[4];
   memcpy(header,"PXA-NVM2",8);header[2]=bytes;header[3]=PAGE;
   if (!length) {
@@ -54,12 +102,54 @@ static void nvm_init(uint32_t bytes) {
         port_error("Invalid compact NVM page.");
   }
   save_length=(uint32_t)length;
+ready:
+#ifdef PORT_VFLASH_PAGED_NVM
+  if(page_file) {fclose(page_file);page_file=NULL;}
+  memset(page_state,0,sizeof(page_state));
+  if(snprintf(page_directory,sizeof(page_directory),"%s/nvm-%u",port_data_path(),bytes)
+      >=(int)sizeof(page_directory)) port_error("NVM directory path too long.");
+  if(mkdir(page_directory,0700)) {
+    if(errno!=EEXIST) port_error("Cannot create NVM directory.");
+    DIR *dir=opendir(page_directory);
+    if(!dir) port_error("Cannot enumerate NVM directory.");
+    struct dirent *entry;unsigned count=0;
+    for(;;) {
+      errno=0;entry=readdir(dir);
+      if(!entry) {
+        if(errno) port_error("NVM directory read failed.");
+        break;
+      }
+      if(++count>NVM_PAGES+3) port_error("Too many NVM pages.");
+      const char *name=entry->d_name;
+      if(strlen(name)!=3 || name[0]<'0' || name[0]>'9' ||
+          name[1]<'0' || name[1]>'9' || name[2]<'0' || name[2]>'9') continue;
+      unsigned index=(name[0]-'0')*100+(name[1]-'0')*10+name[2]-'0';
+      if(index>=nvm_pages) port_error("Invalid NVM page index.");
+      page_state[index]=1;
+    }
+    closedir(dir);
+  }
+  /* The initial header is now committed; no further writes touch this file. */
+  if(fclose(save_file)) port_error("Cannot close NVM migration source.");
+  char source[320];snprintf(source,sizeof(source),"%s/state.nvm",port_data_path());
+  save_file=fopen(source,"rb");
+  if(!save_file) port_error("Cannot reopen NVM migration source.");
+#else
+  ;
+#endif
 }
 static void nvm_read(uint32_t offset, void *dest, uint32_t length) {
   uint8_t *out=dest;
   while (length) {
     unsigned index=offset/PAGE, within=offset%PAGE, count=PAGE-within;
     if(count>length)count=length;
+#ifdef PORT_VFLASH_PAGED_NVM
+    uint64_t before=port_time_us();
+    if(read_overlay(index,within,out,count)) {
+      ++io_stats.nvm_reads;io_stats.nvm_read_us+=port_time_us()-before;
+      offset+=count;out+=count;length-=count;continue;
+    }
+#endif
     uint32_t at=legacy_nvm ? offset : nvm_offsets[index]+within;
     if (!legacy_nvm && !nvm_offsets[index]) memset(out,255,count);
     else {
@@ -77,7 +167,15 @@ static void nvm_write(uint32_t offset, const uint8_t *data, uint32_t length,int 
     unsigned index=offset/PAGE, within=offset%PAGE, count=PAGE-within;
     if(count>length)count=length;
     nvm_read(index*PAGE,block,PAGE);
-    for (unsigned i=0;i<count;++i) block[within+i]=erase ? 255 : block[within+i]&data[i];
+    int changed=0;
+    for (unsigned i=0;i<count;++i) {
+      uint8_t value=erase ? 255 : block[within+i]&data[i];
+      changed|=value!=block[within+i];block[within+i]=value;
+    }
+    if(!changed) {offset+=count;length-=count;if(!erase)data+=count;continue;}
+#ifdef PORT_VFLASH_PAGED_NVM
+    write_overlay(index,block);
+#else
     uint32_t at=legacy_nvm ? index*PAGE : nvm_offsets[index];
     if (!legacy_nvm && !at) {
       unsigned i=0;while(i<PAGE && block[i]==255)++i;
@@ -92,6 +190,7 @@ static void nvm_write(uint32_t offset, const uint8_t *data, uint32_t length,int 
         port_error("Save index write failed.");
       nvm_offsets[index]=at;save_length+=PAGE;
     }
+#endif
     offset+=count;length-=count;if(!erase)data+=count;
   }
 }

@@ -55,6 +55,16 @@ extern "C" void port_game_main() {
     if (strcmp(s, "fixture sentinel"))
       port_error("CONTENT FAILED");
   }
+  for(int i=0;i<2;++i) {
+    File object;
+    FILE *f=fopen("/data/pending", "wb");
+    if(!f || fwrite("published",1,9,f)!=9 || fclose(f) ||
+        port_replace("/data/pending","/data/committed"))
+      port_error("PUBLICATION FAILED");
+    f=fopen("/data/committed","rb");char text[10]={0};
+    if(!f || fread(text,1,9,f)!=9 || fclose(f) || strcmp(text,"published"))
+      port_error("PUBLISHED CONTENT FAILED");
+  }
   port_error("FIXTURE PASS");
 }
 extern "C" void port_game_key(int, int) {}

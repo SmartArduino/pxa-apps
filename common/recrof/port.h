@@ -23,6 +23,8 @@ void port_pcm(const int16_t *samples, unsigned frames, unsigned rate,
 void port_error(const char *message);
 void port_log(const char *fmt, ...);
 const char *port_data_path(void);
+/* Atomically publish a closed private file, replacing an existing file. */
+int port_replace(const char *source, const char *destination);
 int port_mouse_x(void);
 int port_mouse_y(void);
 int port_key_down(int key);

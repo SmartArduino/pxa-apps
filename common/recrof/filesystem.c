@@ -473,7 +473,7 @@ int __wrap_mkdir(const char *s, mode_t mode) {
 }
 int __wrap_unlink(const char *s) { return simple(PXA_FS_REMOVE, s); }
 int __wrap_remove(const char *s) { return __wrap_unlink(s); }
-int __wrap_rename(const char *a, const char *b) {
+static int move_file(const char *a, const char *b, unsigned opcode) {
   char p[256], q[256];
   uint8_t packet[600];
   uint32_t n;
@@ -481,9 +481,17 @@ int __wrap_rename(const char *a, const char *b) {
       !pxa_fs_build_rename(packet, sizeof(packet), 1, p, strlen(p), q,
                            strlen(q), &n))
     return -1;
-  const pxa_event_t *e = port_rpc_packet(packet, n);
+  const pxa_event_t *e = port_rpc(PXA_FS_SERVICE, opcode,
+      packet + PXA_HEADER_BYTES, n - PXA_HEADER_BYTES);
   return !e || e->payload_size < 4 || (int32_t)pxa_load_u32(e->payload) ? -1
                                                                         : 0;
+}
+int __wrap_rename(const char *a, const char *b) {
+  return move_file(a,b,PXA_FS_RENAME);
+}
+int port_replace(const char *a, const char *b) {
+  /* FS 0.2 replace (8) has the same path records as rename. */
+  return move_file(a,b,8);
 }
 DIR *__wrap_opendir(const char *s) {
   int fd = openfile(s, PXA_FS_OPEN_READ | PXA_FS_OPEN_DIRECTORY);
@@ -496,8 +504,11 @@ struct dirent *__wrap_readdir(DIR *d) {
   pxa_store_u64(p, f->handle);
   const pxa_event_t *e = port_rpc(PXA_FS_SERVICE, PXA_FS_READ_DIRECTORY, p, 8);
   pxa_fs_directory_result_t r;
-  if (!e || !pxa_fs_parse_directory(e, e->token, &r) || r.status || r.end)
+  if (!e || !pxa_fs_parse_directory(e, e->token, &r) || r.status) {
+    errno=EIO;
     return NULL;
+  }
+  if(r.end) return NULL;
   memset(&f->entry, 0, sizeof(f->entry));
   size_t n = r.name_size;
   if (n >= 256)

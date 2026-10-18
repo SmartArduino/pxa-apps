@@ -16,10 +16,13 @@ let callbackSequence=0,lastSlowIoCallback=-1,ioBoundaryChecks=0;
 let instance, frame, frames=0, seq=100, ticks=0, calls=0, mapped=0, mappedBytes=0, bufferIndex=0, firstFrameAt;
 const frameWindows=new Map();
 const files=new Map(), events=[],logs=[];
+const mediaRoot=process.env.PXA_TEST_APP_MEDIA;
 function result(status,n=4){const b=Buffer.alloc(n);b.writeInt32LE(status);return b;}
+function record(tag,payload){const b=Buffer.alloc(4+payload.length);b.writeUInt16LE(tag);b.writeUInt16LE(payload.length,2);payload.copy(b,4);return b;}
 function records(p){const m=new Map();for(let i=0;i+4<=p.length;){const tag=p.readUInt16LE(i),n=p.readUInt16LE(i+2);m.set(tag,p.subarray(i+4,i+4+n));i+=4+n;}return m;}
 function asset(p){const len=p.readUInt16LE(0);const name=p.subarray(p.length-len).toString();if(!name.startsWith('assets/'))throw Error('asset path');return path.join(assets,name.slice(7));}
 function hostPath(p){if(p.startsWith('/')||p.split('/').includes('..'))throw Error('private path');return path.join(state,p);}
+function mediaPath(p,offset){if(!mediaRoot || !files.get(p.readBigUInt64LE())?.media)throw Error('media handle');const name=p.subarray(offset).toString();if(!name||name.startsWith('/')||name.split('/').some(s=>!s||s==='.'||s==='..'))throw Error('media path');return path.join(mediaRoot,name);}
 function handle(resource){const h=0x100000000n+BigInt(++seq);files.set(h,resource);return h;}
 function pxa_call(route,token,ptr,len){
  calls++;const service=route&65535,op=route>>>16,p=Buffer.from(instance.exports.memory.buffer,ptr,len);let r;
@@ -35,7 +38,7 @@ function pxa_call(route,token,ptr,len){
  else if(service===5){
   try{
    if(op===1){const m=records(p),name=hostPath(m.get(1).toString()),flags=m.get(3).readUInt32LE();let f;
-    if(flags&64)f={entries:fs.readdirSync(name,{withFileTypes:true}),at:0};else{
+    if(flags&64)f={entries:fs.readdirSync(name,{withFileTypes:true}),at:0,name};else{
      let fl=(flags&2)?((flags&16)?'w+':(flags&32)?'a+':'r+'):'r';
      if((flags&4)&&!fs.existsSync(name))fs.writeFileSync(name,Buffer.alloc(0));
      f={fd:fs.openSync(name,fl),pos:0};}
@@ -43,8 +46,17 @@ function pxa_call(route,token,ptr,len){
    }else if(op===5){const name=hostPath(records(p).get(1).toString()),st=fs.statSync(name);r=result(0,13);r[4]=st.isDirectory()?2:1;r.writeBigUInt64LE(BigInt(st.size),5);}
    else if(op===2){fs.mkdirSync(hostPath(records(p).get(1).toString()));r=result(0);}
    else if(op===3){fs.rmSync(hostPath(records(p).get(1).toString()));r=result(0);}
+   else if(op===8){const m=records(p);fs.renameSync(hostPath(m.get(1).toString()),hostPath(m.get(2).toString()));r=result(0);}
    else if(op===6){const f=files.get(p.readBigUInt64LE()),offset=Number(p.readBigInt64LE(8)),origin=p[16];f.pos=(origin===0?0:origin===1?f.pos:fs.fstatSync(f.fd).size)+offset;r=result(0,12);r.writeBigUInt64LE(BigInt(f.pos),4);}
-   else if(op===7){r=result(0,8);r.writeUInt16LE(7,4);}
+   else if(op===7){const f=files.get(p.readBigUInt64LE()),entry=f.entries[f.at++];
+    if(!entry){r=result(0,8);r.writeUInt16LE(7,4);}else{
+     const size=Buffer.alloc(8);size.writeBigUInt64LE(BigInt(fs.statSync(path.join(f.name,entry.name)).size));
+     r=Buffer.concat([result(0),record(4,Buffer.from(entry.name)),record(5,Buffer.from([entry.isDirectory()?2:1])),record(6,size)]);
+    }
+   }
+   else if(op===9){if(!mediaRoot || p.length!==28 || p[0]!==5)throw Error('app media configuration');r=result(0,16);r.writeBigUInt64LE(handle({media:true}),4);r.writeUInt32LE(3,12);}
+   else if(op===11){if(p.readUInt32LE(8)!==1)throw Error('media write');const name=mediaPath(p,14),st=fs.statSync(name);r=result(0,32);r.writeBigUInt64LE(handle({fd:fs.openSync(name,'r'),pos:0,readonly:true}),4);r[12]=1;r.writeBigUInt64LE(BigInt(st.size),24);}
+   else if(op===16){const st=fs.statSync(mediaPath(p,10));r=result(0,20);r[4]=st.isDirectory()?2:1;r.writeBigUInt64LE(BigInt(st.size),12);}
    else throw Error('unimplemented FS op '+op);
   }catch(e){if(!['ENOENT','EEXIST','ENOTDIR','EISDIR'].includes(e.code))throw e;r=result(-6);}
  }else if(service===21){try{
@@ -68,7 +80,7 @@ function pxa_io(h,op,ptr,len){const p=Buffer.from(instance.exports.memory.buffer
  }
  const f=files.get(h);if(!f)return -6;
  if(op===1){const n=fs.readSync(f.fd,p,0,len,f.pos);f.pos+=n;return n;}
- if(op===2){const n=fs.writeSync(f.fd,p,0,len,f.pos);f.pos+=n;return n;}
+ if(op===2){if(f.readonly)return -6;const n=fs.writeSync(f.fd,p,0,len,f.pos);f.pos+=n;return n;}
  return -3;
 }
 const imports={wasi_snapshot_preview1:wasi.wasiImport,'pxa.core.v2':{pxa_call,pxa_io}};
