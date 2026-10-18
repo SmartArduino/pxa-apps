@@ -1,0 +1,42 @@
+{
+  "upstream_commit": "3b268ca4bf986c380f44a26ffd9218bf6d376249",
+  "scope": "upstream game data; separate from the BSD engine license",
+  "files": [
+    {
+      "file": "title.scr",
+      "bytes": 38400,
+      "sha256": "0c50621380fb9f8f6d4ba37f3c9299a748dda25fe43a8c86878078c77953e60c",
+      "source": "https://raw.githubusercontent.com/XProger/OpenLara/3b268ca4bf986c380f44a26ffd9218bf6d376249/src/platform/gba/data/TITLE.SCR"
+    },
+    {
+      "file": "tracks.ad4",
+      "bytes": 3006108,
+      "sha256": "80931c24839936cf35bd17e135ef83d3a8b1221072cc05b7d9948a7e9d85ba38",
+      "source": "https://raw.githubusercontent.com/XProger/OpenLara/3b268ca4bf986c380f44a26ffd9218bf6d376249/src/platform/gba/data/TRACKS.AD4"
+    },
+    {
+      "file": "title.pkd",
+      "bytes": 313700,
+      "sha256": "556fce53180036d2660a149370d9da89d8a94228f82109b703d6bbb8bfca368b",
+      "source": "https://raw.githubusercontent.com/XProger/OpenLara/3b268ca4bf986c380f44a26ffd9218bf6d376249/src/platform/gba/data/TITLE.PKD"
+    },
+    {
+      "file": "gym.pkd",
+      "bytes": 1465004,
+      "sha256": "c9b32008bc976f4049962d0df61e75b818dc487b18da7d4fb1de5129ff45d715",
+      "source": "https://raw.githubusercontent.com/XProger/OpenLara/3b268ca4bf986c380f44a26ffd9218bf6d376249/src/platform/gba/data/GYM.PKD"
+    },
+    {
+      "file": "level1.pkd",
+      "bytes": 2356992,
+      "sha256": "511bbc9dc65f71a7aa85307faf6f8e100ff42e04b4f561fc9a036afe5ae14d77",
+      "source": "https://raw.githubusercontent.com/XProger/OpenLara/3b268ca4bf986c380f44a26ffd9218bf6d376249/src/platform/gba/data/LEVEL1.PKD"
+    },
+    {
+      "file": "level2.pkd",
+      "bytes": 2616756,
+      "sha256": "8d63f2a161a229b802befcf6f026c534a08dcea617ba38afa64727007b7b552d",
+      "source": "https://raw.githubusercontent.com/XProger/OpenLara/3b268ca4bf986c380f44a26ffd9218bf6d376249/src/platform/gba/data/LEVEL2.PKD"
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [
+    2,
+    0
+  ],
+  "target_sdk": [
+    2,
+    0
+  ],
+  "compile_sdk": [
+    2,
+    0
+  ],
+  "id": "pxa-openlara",
+  "version": "0.2.7",
+  "name": "OpenLara",
+  "description": "OpenLara fixed-point Tomb Raider engine for PXA; fixed SD media and software rendering",
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 8388608,
+      "pinned": true
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "services": [
+        "surface",
+        "clock",
+        "window",
+        "ui",
+        "log",
+        {
+          "name": "assets",
+          "min_version": [
+            2,
+            0
+          ]
+        },
+        {
+          "name": "fs",
+          "min_version": [
+            0,
+            3
+          ],
+          "features": [
+            "app-media-root",
+            "scoped-roots"
+          ]
+        },
+        "audio",
+        "permission"
+      ],
+      "cmake_target": "pxa_main",
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      },
+      "artifact": "aot"
+    }
+  ],
+  "release_sequence": 14,
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "required": false,
+      "scope": "media"
+    }
+  ]
+}
