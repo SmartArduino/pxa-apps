@@ -1,0 +1,3 @@
+#pragma once
+#define INTERNAL_FLASH_CACHE_SIZE (1024*1024)
+#define EXT_CACHE_BLOCK_SIZE 8192

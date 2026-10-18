@@ -1,0 +1,67 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [
+    2,
+    0
+  ],
+  "target_sdk": [
+    2,
+    0
+  ],
+  "compile_sdk": [
+    2,
+    0
+  ],
+  "id": "pxa-command-conquer",
+  "version": "0.1.0",
+  "name": "Command & Conquer",
+  "description": "Command & Conquer 原版引擎 PXA 移植，需要自行导入游戏资源。",
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 10485760,
+      "pinned": true
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "services": [
+        "surface",
+        "audio",
+        "clock",
+        "permission",
+        "window",
+        "log",
+        "ui",
+        "fs",
+        {
+          "name": "assets",
+          "min_version": [
+            2,
+            0
+          ]
+        }
+      ],
+      "cmake_target": "pxa_main",
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "required": false,
+      "scope": "media"
+    }
+  ],
+  "release_sequence": 1
+}
