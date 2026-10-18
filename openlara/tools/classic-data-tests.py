@@ -56,6 +56,9 @@ def main():
         assert not destination.exists()
         manifest=prepare(destination,source,upstream=args.upstream,allow_partial=True)
         assert not manifest['campaign_data_complete'] and manifest['campaign_levels']==1
+        assert next(level for level in manifest['levels'] if level['id']==3)['lara_entities']==[
+            {'index':91,'room':90,'position':[78336,-1024,12800],'rotation':0}]
+        report['public_demo_lara_entity_identified']=True
         before={p.name:fingerprint(p) for p in destination.iterdir()}
         (source/'level2.phd').write_bytes(originals['level2.phd'][:-20])
         try:

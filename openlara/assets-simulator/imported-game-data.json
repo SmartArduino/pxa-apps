@@ -66,6 +66,7 @@
       "item_types": {
         "73": 1
       },
+      "lara_entities": [],
       "pc_demo_layout": true,
       "source": {
         "url": "https://raw.githubusercontent.com/LostArtefacts/TRX-data/121815b61ae16884a6f775dc0966173cea5e891f/tr1-demo-pc/ship/games/tr1-demo-pc/levels/title.phd",
@@ -137,6 +138,18 @@
         "62": 2,
         "0": 1
       },
+      "lara_entities": [
+        {
+          "index": 91,
+          "room": 90,
+          "position": [
+            78336,
+            -1024,
+            12800
+          ],
+          "rotation": 0
+        }
+      ],
       "pc_demo_layout": true,
       "source": {
         "url": "https://raw.githubusercontent.com/LostArtefacts/TRX-data/121815b61ae16884a6f775dc0966173cea5e891f/tr1-demo-pc/ship/games/tr1-demo-pc/levels/level2.phd",

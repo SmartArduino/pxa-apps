@@ -58,6 +58,8 @@ ESP32-S3 需要用 `--target esp32s3` 单独生成 AOT，尚未验收。完整�
 | 原版背包 | Start | Enter |
 | PXA 暂停菜单 | Select / Back | Tab |
 
+设置中的 Swap A/B 同时交换动作与跳跃、原版背包的确认与取消及其提示；保存设置后重启仍有效。PXA 暂停菜单自身保持 A 确认、B 返回。
+
 触屏左方向区 `(120,170)` 转向、`(70,115)` 前进，右侧动作区，`(200,20)` 原版背包，`(180,220)` 暂停菜单。菜单提供保存/恢复、New Game、City、Home、标题、设置、操作说明、全关卡选择。New Game 选择已安装的首个主线关；完整数据从 Caves 开始。全关卡列表两页，左右翻页，B 返回，缺失关卡不能进入。
 
 ## 存档、内存和音频
@@ -76,12 +78,17 @@ node local/pxa-apps/openlara/tools/classic-integration.mjs main.wasm \
   local/pxa-apps/openlara/assets-simulator integration.json
 node local/pxa-apps/openlara/tools/controller.mjs main.wasm \
   local/pxa-apps/openlara/assets-simulator controller.json
+node local/pxa-apps/openlara/tools/classic-controls-settings.mjs main.wasm \
+  local/pxa-apps/openlara/assets-simulator controls-settings.json
 node local/pxa-apps/openlara/tools/classic-compare.mjs reference.wasm optimized.wasm \
   local/pxa-apps/openlara/assets-simulator comparison.json
+python3 local/pxa-apps/openlara/tools/validate-classic-simulator.py \
+  --socket /tmp/pxa-simulator-1000/doit-gamekit.control.sock \
+  --log /path/to/simulator.log --output /path/to/simulator-evidence --swap
 python3 local/pxa-apps/openlara/tools/measure.py \
   --port /dev/ttyACM0 --serial 1c:29:04:d0:af:5e --classic --level 3 \
   --package local/openlara-full-build/pxa-openlara.pxa \
   --output local/openlara-full-measure --samples 60 --inventory --allow-audio
 ```
 
-`classic-integration.mjs` 覆盖完整 Guest 的保存/跨实例恢复、损坏记录、失败原子替换、旧存档保留、音乐设置、SD seek/短读和缺失关卡。`streaming-tests.mjs` 对正常、大银行及 97 字节短读比较实际 PCM。`classic-compare.mjs` 对同一 City 的 360 帧逐帧比较 RGB565。`validate-device.py --classic` 验证 City 的真机帧率、移动、背包、保存恢复及重启设置；演示资源不足以替代全关卡验收。
+`classic-integration.mjs` 覆盖完整 Guest 的保存/跨实例恢复、损坏记录、失败原子替换、旧存档保留、音乐设置、SD seek/短读和缺失关卡。它从 PHD 元数据定位实际 Lara，独立比较玩家日志与可变长度 OLS2 实体记录；运行前用新版准备脚本更新元数据。City 演示专用回归请使用独立演示资源目录，保留已导入的完整资源。`classic-controls-settings.mjs` 检查交换后的确认/取消、提示、设置持久化及跳跃；`validate-classic-simulator.py --swap` 通过实际 SDL 键盘路径复验。`streaming-tests.mjs` 对正常、大银行及 97 字节短读比较实际 PCM。`classic-compare.mjs` 对同一 City 的 360 帧逐帧比较 RGB565。`validate-device.py --classic` 验证 City 的真机帧率、移动、背包、保存恢复及重启设置；演示资源不足以替代全关卡验收。

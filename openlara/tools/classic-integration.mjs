@@ -3,23 +3,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import {runGuest} from './guest-host.mjs';
+import {checkpoint as decodeCheckpoint,telemetry,assertRestored} from './classic-save-probe.mjs';
 const [wasm,assets,output]=process.argv.slice(2);
 if(!output)throw Error('usage: node classic-integration.mjs MAIN.wasm ASSETS_DIR REPORT.json');
 const files=new Map([['data/save.bin',Buffer.from('legacy fixed save kept')]]),report={};
 const savedPath='data/classic-save.bin';
+const manifest=JSON.parse(fs.readFileSync(path.join(assets,'game/data-manifest.json'))),
+    lara=manifest.levels.find(level=>level.id===3)?.lara_entities?.[0];
+assert(lara,'prepare PC demo data again to include Lara entity metadata');
+const checkpoint=file=>decodeCheckpoint(file,lara);
 async function guest(options={}) {return runGuest(wasm,assets,files,options);}
-function checkpoint(file) {
-    assert.equal(file.subarray(0,4).toString(),'OLPX');
-    const data=file.subarray(16);assert.equal(data.subarray(0,4).toString(),'OLS2');
-    for(let p=4;p<data.length;) {
-        const n=data.readUInt32LE(p);p+=4;const slot=data.subarray(p,p+n);p+=n;
-        if(slot.readUInt32LE()>>>31) {
-            const count=slot.readUInt32LE(32),first=36+count*4+292+4;
-            assert(slot.readUInt32LE(first-4)>0);return {slot,pose:slot.subarray(first,first+14)};
-        }
-    }
-    assert.fail('checkpoint missing');
-}
 const a=await guest({partialWrite:true});
 a.tick(180);
 const titlePixels=a.frame(),titleArt=fs.readFileSync(path.join(assets,'game/title.scr')),
@@ -34,11 +27,19 @@ assert(colored>0);report.title_art_palette=true;
 a.menu(3);assert(a.logs.some(s=>s.includes('ready level=3')),'demo New Game must choose installed Vilcabamba');
 a.buttons(1);a.tick(40);a.buttons(0);a.tick(30);a.menu(1);
 assert(a.logs.includes('OpenLara save committed'));const saved=Buffer.from(files.get(savedPath)),pose=Buffer.from(checkpoint(saved).pose);
-a.buttons(8);a.tick(30);a.buttons(0);a.menu(2);a.menu(1);
+const savedLara=checkpoint(saved);
+assert.throws(()=>decodeCheckpoint(saved,{...lara,index:0}),/not Lara/,'trap record was accepted as player state');
+assert.notDeepEqual(savedLara.position,lara.position,'Lara did not move before saving');
+a.buttons(8);a.tick(30);a.buttons(0);a.tick(180);
+const displaced=telemetry(a.logs);
+assert.notEqual(displaced[3]&65535,savedLara.rotation,'turn input did not change Lara rotation');
+a.menu(2);a.tick(180);assertRestored(telemetry(a.logs),savedLara);a.menu(1);
 assert(a.logs.includes('OpenLara save restored'));assert.deepEqual(checkpoint(files.get(savedPath)).pose,pose);
+report.lara_entity_index=lara.index;report.saved_lara={position:savedLara.position,rotation:savedLara.rotation,room:savedLara.room};
+report.displaced_lara=displaced;report.restored_lara=telemetry(a.logs);
 assert.equal(files.get('data/save.bin').toString(),'legacy fixed save kept');
 report.same_instance_restore=true;report.run=a.info();assert(report.run.nonzero>1000);assert(report.run.blocks>0);a.stop();
-const b=await guest();b.menu(2);b.menu(1);
+const b=await guest();b.menu(2);b.tick(180);assertRestored(telemetry(b.logs),savedLara);b.menu(1);
 assert(b.logs.includes('OpenLara save restored'));assert.deepEqual(checkpoint(files.get(savedPath)).pose,pose);
 report.cross_instance_restore=true;b.stop();
 const beforeFailure=Buffer.from(files.get(savedPath));

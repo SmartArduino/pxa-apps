@@ -1186,10 +1186,20 @@ struct Inventory {
         Input::Joystick &joyMain = Input::joy[0];
 
         ControlKey key = cMAX;
+        #ifdef _OS_PXA
+        const Core::Settings::Controls &controls = Core::settings.controls[playerIndex];
+        unsigned select = controls.keys[cAction].joy;
+        unsigned back = controls.keys[cJump].joy;
+        if (select < jkMAX && joy.down[select])
+            key = cAction;
+        else if (back < jkMAX && joy.down[back])
+            key = cInventory;
+        #else
         if (Input::down[ikCtrl] || Input::down[ikEnter] || Input::lastState[playerIndex] == cAction || joy.down[jkA])
             key = cAction;
         else if (Input::down[ikAlt]   || joy.down[jkB])
             key = cInventory;
+        #endif
         else if (Input::down[ikLeft]  || joy.down[jkLeft]  || joy.L.x < -0.5f || joyMain.down[jkLeft]  || joyMain.L.x < -0.5f)
             key = cLeft;
         else if (Input::down[ikRight] || joy.down[jkRight] || joy.L.x >  0.5f || joyMain.down[jkRight] || joyMain.L.x > 0.5f)
@@ -2089,7 +2099,13 @@ struct Inventory {
             const char *bSelect = STR[STR_KEY_FIRST + ikEnter];
             const char *bBack   = STR[STR_KEY_FIRST + Core::settings.controls[playerIndex].keys[cInventory].key];
 
-            #if defined(_OS_SWITCH) || defined(_OS_3DS) || defined(_OS_GCW0) || defined(_OS_XBOX) || defined(_OS_XB1) || defined(_OS_PXA)
+            #if defined(_OS_PXA)
+                const Core::Settings::Controls &controls = Core::settings.controls[playerIndex];
+                unsigned select = controls.keys[cAction].joy;
+                unsigned back = controls.keys[cJump].joy;
+                bSelect = STR[STR_JOY_FIRST + (select < jkMAX ? select : jkNone)];
+                bBack   = STR[STR_JOY_FIRST + (back < jkMAX ? back : jkNone)];
+            #elif defined(_OS_SWITCH) || defined(_OS_3DS) || defined(_OS_GCW0) || defined(_OS_XBOX) || defined(_OS_XB1)
                 bSelect = "A";
                 bBack   = "B";
             #endif

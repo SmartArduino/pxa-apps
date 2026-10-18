@@ -134,11 +134,16 @@ def inspect_phd(path):
     array('animated_texture_words',2)
     start, n = array('items',22,limit=1024)
     types = {}
+    lara_entities = []
     for i in range(n):
         ident, room = struct.unpack_from('<Hh',data,start+i*22)
         if not 0 <= room < rooms or ident >= 256:
             raise ValueError(f'{path}: invalid item {i}')
         types[str(ident)] = types.get(str(ident),0)+1
+        if ident == 0:
+            x, y, z, rotation = struct.unpack_from('<iiih',data,start+i*22+4)
+            lara_entities.append({'index':i,'room':room,'position':[x,y,z],
+                                  'rotation':rotation&0xffff})
     take(8192)
     if not demo:
         take(768)
@@ -151,4 +156,4 @@ def inspect_phd(path):
     if pos != len(data):
         raise ValueError(f'{path}: {len(data)-pos} unexpected trailing bytes')
     return {**fingerprint(path),'counts':{k:v for k,v in counts.items() if not k.startswith('room_')},
-            'item_types':types,'pc_demo_layout':demo}
+            'item_types':types,'lara_entities':lara_entities,'pc_demo_layout':demo}
