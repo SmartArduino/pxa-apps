@@ -19,6 +19,9 @@ extern "C" void port_game_main() {
     port_error("Missing game MIX archives.\nImport game data with the included "
                "tools.");
   fclose(f);
+#ifdef PORT_LOADING_TRACE
+  port_log("PXA LOAD required archives checked");
+#endif
 #ifdef CNC_GAME_RA
   const char *config_name = "/data/redalert.ini";
   char name[] = "/data/vanillara";
@@ -39,6 +42,9 @@ extern "C" void port_game_main() {
     fclose(f);
   }
   char *argv[] = {name, nullptr};
+#ifdef PORT_LOADING_TRACE
+  port_log("PXA LOAD settings ready; entering engine");
+#endif
   int status = cnc_game_main(1, argv);
   port_log("Game returned %d", status);
   port_error("Game closed.");

@@ -19,6 +19,11 @@ static bool same_path(const char *a,const char *b) {
 }
 void Resolve_File(char *name) {
     if(!name)return;
+#ifdef PORT_CNC_CANONICAL_PATHS
+    /* Both PXA private paths and the fixed SD importer are canonical. There
+     * is no directory scan to perform for every archived SHP/FNT/AUD name. */
+    for(char *p=name;*p;++p)if(*p>='A'&&*p<='Z')*p+='a'-'A';
+#else
     uint64_t now=port_time_us(),current=port_filesystem_revision();
     if(current!=revision) { memset(cache,0,sizeof(cache));revision=current; }
     if(strlen(name)>=sizeof(cache[0].path)) { Pxa_Resolve_File_Uncached(name);return; }
@@ -28,4 +33,5 @@ void Resolve_File(char *name) {
     Pxa_Resolve_File_Uncached(name);
     auto &entry=cache[next_slot++%16];
     strcpy(entry.path,name);entry.expires=now+500000;
+#endif
 }

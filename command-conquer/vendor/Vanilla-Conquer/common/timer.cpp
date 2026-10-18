@@ -299,7 +299,8 @@ unsigned int WinTimerClass::Get_User_Tick_Count()
 
 unsigned long long WinTimerClass::Now()
 {
-    return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    // Simulation elapsed time must survive RTC/NTP wall-clock changes.
+    return duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
 }
 
 int SystemTimerClass::operator()() const

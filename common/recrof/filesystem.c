@@ -18,6 +18,14 @@
 
 #define SLOT_COUNT 64
 #define FD_BASE 100
+#ifdef PORT_LOADING_TRACE
+static unsigned loading_opens,loading_reads,loading_seeks,loading_stats;
+static char loading_path[96];
+void port_filesystem_loading_stats(void) {
+  port_log("PXA LOAD FS opens=%u reads=%u seeks=%u stats=%u last_open=%s",
+    loading_opens,loading_reads,loading_seeks,loading_stats,loading_path);
+}
+#endif
 /* A single Guest owns its private namespace. RTS filename resolution may
  * cache a spelling only until the next possible namespace mutation. */
 #ifdef PORT_RTS
@@ -38,15 +46,22 @@ static struct File {
     char entry_storage[512];
   };
 } files[SLOT_COUNT];
-/* Two bounded pages amortize byte-at-a-time INI/header reads without giving
- * every open file a buffer. Signed assets are immutable, so entries can be
- * reused across close/reopen. Private mutable files never enter this cache. */
+/* Two pages amortize small INI/header reads without per-file buffers. Signed
+ * assets reuse pages across close/reopen; read-only SD pages belong to one
+ * open handle and are invalidated on close. Private reads are uncached. */
 static struct {
+  uint64_t external_handle;
   char path[256];
   uint32_t offset, bytes, age;
-  uint8_t data[PXA_ASSETS_READ_MAX_BYTES];
+  uint8_t data[PXA_FS_READ_AT_MAX_BYTES>PXA_ASSETS_READ_MAX_BYTES ?
+               PXA_FS_READ_AT_MAX_BYTES:PXA_ASSETS_READ_MAX_BYTES];
 } read_cache[2];
 static uint32_t cache_age;
+static unsigned cached_reads;
+static void cached_read_cooperate(void) {
+  if((++cached_reads&255u)==0 &&
+      port_cooperate_due(port_time_us(),PORT_COOPERATE_BUDGET_US))port_sleep(0);
+}
 static char cwd[256] = "/data";
 static struct File *slot(int fd) {
   return fd >= FD_BASE && fd < FD_BASE + SLOT_COUNT && files[fd - FD_BASE].used
@@ -73,6 +88,11 @@ static int path(const char *s, char *out) {
     snprintf(out, 256, "%s", s);
   else
     snprintf(out, 256, "%s/%s", cwd, s);
+#ifdef PORT_CNC_CANONICAL_PATHS
+  /* The DOS-facing RTS namespace uses the same lowercase spelling as the
+   * resource importer. Apply it to private writes as well as reads. */
+  for(char *p=out;*p;++p)if(*p>='A'&&*p<='Z')*p+='a'-'A';
+#endif
   /* Engines are confined to /data; strip redundant ./ segments. */
   for (char *p; (p = strstr(out, "/./"));)
     memmove(p, p + 2, strlen(p + 2) + 1);
@@ -107,6 +127,11 @@ static int simple(uint16_t op, const char *s) {
   return 0;
 }
 static int asset_info(const char *p, char *name, pxa_asset_result_t *info) {
+#ifdef PORT_EXTERNAL_GAME_DATA
+  /* SD variants contain code only. A missing SD resource is not a request
+   * to consult a second, absent package archive. */
+  (void)p;(void)name;(void)info;return 0;
+#else
   if (strncmp(p, "data/", 5))
     return 0;
   snprintf(name, 256, "assets/game/%s", p + 5);
@@ -120,8 +145,12 @@ static int asset_info(const char *p, char *name, pxa_asset_result_t *info) {
   const pxa_event_t *e = port_rpc_packet(packet, n);
   return e && pxa_assets_parse_result(e, e->token, PXA_ASSETS_QUERY, info) &&
          !info->status && info->info.kind == PXA_ASSET_BLOB;
+#endif
 }
 static int openfile(const char *name, uint32_t flags) {
+#ifdef PORT_LOADING_TRACE
+  ++loading_opens;snprintf(loading_path,sizeof(loading_path),"%s",name?name:"");
+#endif
   if(flags & (PXA_FS_OPEN_CREATE|PXA_FS_OPEN_TRUNCATE)) NAMESPACE_CHANGED();
   char p[256];
   if (!path(name, p))
@@ -185,10 +214,15 @@ int __wrap_close(int fd) {
   }
   if (!f->asset)
     pxa_close_handle(f->handle);
+  if(f->external)for(unsigned i=0;i<2;++i)
+    if(read_cache[i].external_handle==f->handle)read_cache[i].bytes=0;
   f->used = 0;
   return 0;
 }
 ssize_t __wrap_read(int fd, void *p, size_t n) {
+#ifdef PORT_LOADING_TRACE
+  ++loading_reads;
+#endif
   struct File *f = slot(fd);
   if (!f) {
     errno = EBADF;
@@ -200,7 +234,8 @@ ssize_t __wrap_read(int fd, void *p, size_t n) {
       unsigned victim=0;
       int hit=-1;
       for(unsigned i=0;i<2;++i) {
-        if(read_cache[i].bytes && !strcmp(read_cache[i].path,f->asset_path) &&
+        if(read_cache[i].bytes && !read_cache[i].external_handle &&
+            !strcmp(read_cache[i].path,f->asset_path) &&
             (uint32_t)f->position>=read_cache[i].offset &&
             (uint32_t)f->position-read_cache[i].offset<read_cache[i].bytes) hit=i;
         if(read_cache[i].age<read_cache[victim].age)victim=i;
@@ -211,6 +246,7 @@ ssize_t __wrap_read(int fd, void *p, size_t n) {
         if(count>n-done)count=n-done;
         memcpy((uint8_t *)p+done,read_cache[hit].data+within,count);
         f->position+=count;done+=count;read_cache[hit].age=++cache_age;
+        cached_read_cooperate();
         continue;
       }
       uint32_t count = n-done > PXA_ASSETS_READ_MAX_BYTES
@@ -218,6 +254,7 @@ ssize_t __wrap_read(int fd, void *p, size_t n) {
       uint32_t offset=f->position;
       int prefetch=count<512;
       if(prefetch) {
+        read_cache[victim].external_handle=0;
         offset=offset/PXA_ASSETS_READ_MAX_BYTES*PXA_ASSETS_READ_MAX_BYTES;
         count=f->size-offset;
       }
@@ -257,6 +294,36 @@ ssize_t __wrap_read(int fd, void *p, size_t n) {
   if(f->external && (f->features & PXA_FS_FILE_FEATURE_READ_AT)) {
     uint8_t packet[24+PXA_FS_READ_AT_MAX_BYTES];
     while(done<n) {
+      if((uint32_t)f->position>=f->size){f->eof=1;break;}
+      if(n-done<512) {
+        unsigned victim=0;int hit=-1;
+        for(unsigned i=0;i<2;++i) {
+          if(read_cache[i].bytes && read_cache[i].external_handle==f->handle &&
+             (uint32_t)f->position>=read_cache[i].offset &&
+             (uint32_t)f->position-read_cache[i].offset<read_cache[i].bytes)hit=i;
+          if(read_cache[i].age<read_cache[victim].age)victim=i;
+        }
+        if(hit>=0) {
+          uint32_t within=(uint32_t)f->position-read_cache[hit].offset;
+          size_t count=read_cache[hit].bytes-within;if(count>n-done)count=n-done;
+          memcpy((uint8_t *)p+done,read_cache[hit].data+within,count);
+          f->position+=count;done+=count;read_cache[hit].age=++cache_age;
+          cached_read_cooperate();continue;
+        }
+        uint32_t offset=(uint32_t)f->position/PXA_FS_READ_AT_MAX_BYTES*PXA_FS_READ_AT_MAX_BYTES;
+        uint32_t count=f->size-offset;
+        if(count>PXA_FS_READ_AT_MAX_BYTES)count=PXA_FS_READ_AT_MAX_BYTES;
+        int r=pxa_fs_read_at(f->handle,offset,++f->read_cookie,packet,24+count);
+        if(r<=0 || (uint32_t)r>count || (uint32_t)f->position-offset>=(uint32_t)r) {
+          f->error=1;errno=EIO;return done?(ssize_t)done:-1;
+        }
+        read_cache[victim].external_handle=f->handle;
+        read_cache[victim].offset=offset;read_cache[victim].bytes=r;
+        read_cache[victim].age=++cache_age;
+        memcpy(read_cache[victim].data,packet+24,r);
+        if(port_cooperate_due(port_time_us(),PORT_COOPERATE_BUDGET_US))port_sleep(0);
+        continue;
+      }
       uint32_t count=n-done>4096 ? 4096 : n-done;
       int r=pxa_fs_read_at(f->handle,f->position,++f->read_cookie,packet,24+count);
       if(r<0) {f->error=1;errno=EIO;return done?(ssize_t)done:-1;}
@@ -309,6 +376,9 @@ ssize_t __wrap_write(int fd, const void *p, size_t n) {
   return done;
 }
 off_t __wrap_lseek(int fd, off_t off, int whence) {
+#ifdef PORT_LOADING_TRACE
+  ++loading_seeks;
+#endif
   struct File *f = slot(fd);
   if (!f) {
     errno = EBADF;
@@ -452,6 +522,9 @@ int __wrap_puts(const char *s) {
   return 0;
 }
 int __wrap_stat(const char *s, struct stat *st) {
+#ifdef PORT_LOADING_TRACE
+  ++loading_stats;
+#endif
   char p[256];
   uint8_t packet[320];
   uint32_t n;

@@ -13,7 +13,7 @@
     0
   ],
   "id": "pxa-duke3d-sd",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "name": "Duke Nukem 3D SD",
   "description": "Duke Nukem 3D engine with automatically bound fixed SD resources and internal saves",
   "build": {
@@ -75,5 +75,5 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 19
+  "release_sequence": 20
 }

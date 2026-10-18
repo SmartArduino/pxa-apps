@@ -29,6 +29,12 @@ python3 local/pxa-apps/common/recrof/tools/import_data.py red-alert /path/to/Red
 
 导入后重新构建。只读资源放在签名的 `assets/game` 中，通过 Assets 2 分块读取，不占用应用私有 FS 的 8 MB 配额。设置和存档写入私有 `data` 目录。导入器统一小写文件名，并检查大小写冲突和符号链接。
 
+SD 变体只有代码，通过固定媒体根读取资源，不对缺失文件查询包内 Assets。
+两页共享缓存合并小于512字节的只读 SD 请求，按打开的句柄隔离，关闭即失效；
+大块顺序读取直接走 READ_AT，私有文件不缓存。C&C/RA SD 的 DOS 虚拟路径统一
+ASCII 小写，包括私有设置和存档的写入，避免为每个归档成员重复扫描目录。
+普通变体保留原有大小写解析。替换 SD 游戏资源后应重新打开游戏。
+
 Quake 必须使用上游 MG24Quake 2.0 转换器生成的 PAK；普通 PC PAK 不能直接使用。转换器源码位于 `quake/tools/MCUPackConverter`，在有 `pak0.pak` 的目录运行转换器会生成 `pak0conv.pak`。目前只接入 `pak0.pak`，未验证完整注册版的其他 PAK。转换器可在 Linux 下编译：
 
 ```sh

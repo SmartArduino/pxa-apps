@@ -666,6 +666,16 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t n) {
   }
   uint64_t now;
   if (pxa_clock_parse_tick(&e, &now)) {
+#ifdef PORT_LOADING_TRACE
+    static uint64_t loading_log;
+    if(engine_running && !perf_since && now-loading_log>=5000000) {
+      extern void port_filesystem_loading_stats(void);
+      loading_log=now;
+      port_log("PXA LOAD pending=%llu reply=%u suspended=%u finished=%u background=%u",
+        (unsigned long long)waiting_token,reply_ready,suspended,finished,background);
+      port_filesystem_loading_stats();
+    }
+#endif
     if (surface) {
       started = 1;
       pump();

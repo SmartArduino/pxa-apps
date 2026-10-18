@@ -14,6 +14,16 @@ void Pxa_Resolve_File_Uncached(char *name) {
 }
 int main() {
     char a[256]="/DATA/SOUNDS.MIX";Resolve_File(a);
+#ifdef PORT_CNC_CANONICAL_PATHS
+    assert(!strcmp(a,"/data/sounds.mix") && scans==0);
+    ++revision;now=1000000;
+    strcpy(a,"/Data/Mission/SaveGame.INI");Resolve_File(a);
+    assert(!strcmp(a,"/data/mission/savegame.ini") && scans==0);
+    std::string longer(300,'A');Resolve_File(longer.data());
+    assert(longer==std::string(300,'a') && scans==0);
+    strcpy(a,"/data/\xc3\xa9/SAFE-NAME_01.mix");Resolve_File(a);
+    assert(!strcmp(a,"/data/\xc3\xa9/safe-name_01.mix") && scans==0);
+#else
     assert(!strcmp(a,"/data/sounds.mix") && scans==1);
     strcpy(a,"/Data/Sounds.Mix");Resolve_File(a);assert(scans==1);
     ++revision;strcpy(a,"/DATA/SOUNDS.MIX");Resolve_File(a);assert(scans==2);
@@ -25,5 +35,6 @@ int main() {
     }
     assert(scans==44);
     strcpy(a,"/DATA/SOUNDS.MIX");Resolve_File(a);assert(scans==45);
+#endif
     Resolve_File(nullptr);
 }

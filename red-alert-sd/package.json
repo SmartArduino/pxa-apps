@@ -13,7 +13,7 @@
     0
   ],
   "id": "pxa-red-alert-sd",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "name": "Red Alert SD",
   "description": "Engine with automatically bound fixed SD resources and internal saves",
   "build": {
@@ -75,5 +75,5 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 1
+  "release_sequence": 2
 }
