@@ -1,6 +1,6 @@
 # OpenLara for PXA
 
-0.5.0 默认使用 [XProger/OpenLara](https://github.com/XProger/OpenLara) 的完整 TR1 主引擎 `src/`，上游固定为 `3b268ca4bf986c380f44a26ffd9218bf6d376249`。目标为 PXA Core 2、DOIT GameKit / ESP32-S31、320×240 RGB565 软件渲染。保留原版敌人、机关、碰撞、动画、翻转房间、物品、背包和关卡流程；支持 TR1 的 15 个主线关卡、Lara's Home、标题和 4 个引擎过场关卡。引擎及修改遵循 BSD-2-Clause，见 `vendor/LICENSE`、`vendor/classic/UPSTREAM.md`。
+0.5.2 默认使用 [XProger/OpenLara](https://github.com/XProger/OpenLara) 的完整 TR1 主引擎 `src/`，上游固定为 `3b268ca4bf986c380f44a26ffd9218bf6d376249`。目标为 PXA Core 2、DOIT GameKit / ESP32-S31、320×240 RGB565 软件渲染。保留原版敌人、机关、碰撞、动画、翻转房间、物品、背包和关卡流程；支持 TR1 的 15 个主线关卡、Lara's Home、标题和 4 个引擎过场关卡。引擎及修改遵循 BSD-2-Clause，见 `vendor/LICENSE`、`vendor/classic/UPSTREAM.md`。
 
 **完整引擎不包含完整商业游戏资源，也不代表全关卡已经验收。** 默认资源只有公开 PC 演示版的标题和 City of Vilcabamba（1/15 主线），缺失关卡在菜单中标记 missing。完整原版数据尚未提供，15 关通关、引擎过场和大型关卡内存仍待验证。外部 FMV 视频暂未接入；SD 音乐支持独立导入。旧 fixed/GBA alpha 作为开发备用保留，说明见 `README-fixed.md`。
 
@@ -42,7 +42,7 @@ python3 tools/pxadb/pxadb.py package install local/openlara-full-build/pxa-openl
 python3 tools/pxadb/pxadb.py package run pxa-openlara --port /dev/ttyACM0 --baud 2000000
 ```
 
-ESP32-S3 需要用 `--target esp32s3` 单独生成 AOT，尚未验收。0.5.0 完整引擎的 S31 AOT 约 2.6 MiB，设备需为安装保留足够闪存。更新保持 App ID、发布者身份及递增 release_sequence。archive 只归档代码并保留私有数据；不要清除数据。测试设备短 ID stop 可能返回 package_not_running，更新后通过设备重启确认新代码加载。首次允许媒体音频；拒绝后游戏仍可运行。
+ESP32-S3 需要用 `--target esp32s3` 单独生成 AOT，尚未验收。0.5.2 完整引擎的 S31 AOT 约 2.6 MiB，设备需为安装保留足够闪存。更新保持 App ID、发布者身份及递增 release_sequence。archive 只归档代码并保留私有数据；不要清除数据。测试设备短 ID stop 可能返回 package_not_running，更新后通过设备重启确认新代码加载。首次允许媒体音频；拒绝后游戏仍可运行。
 
 桌面 Host 支持 SDL GameController、25% 左摇杆死区及热插拔。键盘模拟支持组合输入；失焦、切后台或断开时清除按住状态。板载手柄使用同样的 controller 状态。
 
@@ -68,7 +68,7 @@ ESP32-S3 需要用 `--target esp32s3` 单独生成 AOT，尚未验收。0.5.0 �
 
 原始 PHD 数组借用输入缓冲，静态网格转移所有权，避免重复分配。音乐银行只驻留 2048 字节目录和 64 KiB FIFO，支持 SD seek、短读、大于 8 MiB 的音乐银行；关卡切换取消旧请求。完整 City 常驻约 7.4 MiB，20 次关卡切换的测试峰值约 8.63 MiB，随后保持稳定；线性内存最大 11 MiB、pinned。**其他关卡是否能在这块板的内存内运行仍需原版数据实测**。
 
-原版音效经完整引擎混音，再从 44.1 kHz 立体声转成 Host 16 kHz 单声道。音乐支持原 AD4 和导入 PCM8，媒体增益 -6 dB。音频背压保留待提交包；无音源时跳过静音，后台与加载时清空队列。光栅热循环独立 O3 编译，主引擎 O1；PXA 入口校验原版 PC PHD 格式。保留 `OL_OPTIMIZED=0` 作为原始扫描线参考。优化需以同关卡、同固件的真实 PERF FPS 为准；Node 固定时间运行不作为设备 FPS。
+原版音效经完整引擎混音，再从 44.1 kHz 立体声转成 Host 16 kHz 单声道。音乐支持原 AD4 和导入 PCM8，媒体增益 -6 dB。音频背压保留待提交包；无音源时跳过静音，后台与加载时清空队列。光栅与边缘步进独立 O3 编译，主引擎 O2；PXA 入口校验原版 PC PHD 格式。保留 `OL_OPTIMIZED=0` 作为原始扫描线参考。优化需以同关卡、同固件的真实 PERF FPS 为准；Node 固定时间运行不作为设备 FPS。
 
 ## 验证
 
@@ -105,7 +105,7 @@ node local/pxa-apps/openlara/tools/classic-latency.mjs baseline.wasm candidate.w
 node local/pxa-apps/openlara/tools/classic-catalog.mjs candidate.wasm \
   local/pxa-apps/openlara/assets-simulator catalog.json
 python3 local/pxa-apps/openlara/tools/classic-device-latency.py \
-  --port /dev/ttyACM0 --serial 1c:29:04:d0:af:5e --version 0.5.0 \
+  --port /dev/ttyACM0 --serial 1c:29:04:d0:af:5e --version 0.5.2 \
   --package local/openlara-full-build/pxa-openlara.pxa --output device-evidence --samples 60
 ```
 
@@ -141,3 +141,11 @@ c++ -std=c++11 -O3 -fwrapv -Ilocal/pxa-apps/openlara \
 设置增加 **3D resolution**：320×240 原画面、240×180 和160×120。后两档仅缩小3D绘制目标并保持4:3视野，再放大到320×240；不改变逻辑更新、关卡、活动敌人数或可见距离。标题、原版背包和平台菜单仍使用320×240。默认保留原画面，选择会保存并在重启后恢复；该字段复用设置记录的保留字节，存档格式不变。
 
 `classic-resolution.mjs` 用相同输入验证三档完整游戏存档逐字节一致、设置重启持久化及标题/平台UI不变。`classic-scale-test.cpp` 独立检查两个缩放比例与缓冲边界。真机测量脚本可用 `--resolution 320|240|160`，分别测量同一City起点。
+
+## 0.5.2 原分辨率优化
+
+保持 320×240，主引擎按 O2 编译；PXA 的四边形/三角形设置、边缘步进和像素循环放在同一个 O3 单元，像素内核强制内联，避免每条扫描线跨 Wasm 函数边界。保留原整数除法、UV/光照插值、深度测试/写入、透明索引和裁剪；未启用 fast-math。通用软件路径继续作为数值对照。
+
+`classic-raster-batch-test.cpp` 对照 4000 组三角形/四边形的完整颜色与深度缓冲，覆盖绕序、非零裁剪框、透明纹素和深度开关。`classic-compare.mjs` 同时比较 360 帧 RGB565 和 PCM；使用 `--checkpoint` 可在同代适配层间额外比较完整存档，覆盖隐藏的游戏状态。旧版本的适配层可能有不同的内部状态初始化，旧版画面对照不要求存档逐字节相同；存档兼容另由升级测试验证。
+
+同固件、同City起点的320×240真机平均FPS：0.5.0重测7.97（30个一秒窗口），0.5.2为8.82（60个），约提升10.7%。仍只有约9FPS。0.5.2真机移动、存档和背包通过；60秒计时完成后USB断开，20次短按及物理重启复验未完成。详细计数、画面对照和验收范围见工作区 `docs/validation/2026-10-19-openlara-320-perf.zh-CN.md`。

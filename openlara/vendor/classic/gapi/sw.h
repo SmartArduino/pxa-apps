@@ -182,6 +182,9 @@ namespace GAPI {
     bool swDepthTest, swDepthWrite;
     short4  swClipRect;
 
+#ifdef _OS_PXA
+    typedef OlRasterVertex VertexSW;
+#else
     struct VertexSW {
         int32 x, y, z, w;
         int32 u, v, l;
@@ -234,6 +237,8 @@ namespace GAPI {
             return ret;
         }
     };
+
+#endif
 
     Array<VertexSW> swVertices;
     Array<Index>    swIndices;
@@ -357,6 +362,7 @@ namespace GAPI {
                ((c->x - a->x) >> 16) * (b->y - a->y) <= 0;
     }
 
+#if !defined(_OS_PXA) || !OL_OPTIMIZED || defined(DITHER_FILTER)
     inline void sortVertices(VertexSW *&t, VertexSW *&m, VertexSW *&b) {
         if (t->y > m->y) swap(t, m);
         if (t->y > b->y) swap(t, b);
@@ -613,6 +619,8 @@ namespace GAPI {
         if (m->y != o->y) drawPart(*m, *n, *p, *o);
         if (o->y != b->y) drawPart(*p, *o, *b, *b);
     }
+
+#endif
 
     void applyLighting(VertexSW &result, const Vertex &vertex, float depth) {
         float lighting = 0.0f;
@@ -888,6 +896,13 @@ namespace GAPI {
             curTile = (Tile8*)swGradient;
         }
 
+#if defined(_OS_PXA) && OL_OPTIMIZED && !defined(DITHER_FILTER)
+        const OlRasterState raster = {swColor, swDepth, curTile->index, swLightmap, swPalette,
+            Core::width, swClipRect.x, swClipRect.y, swClipRect.z, swClipRect.w,
+            swDepthTest, swDepthWrite};
+        ol_classic_draw(raster, swVertices.items, swIndices.items,
+            swQuads.items, swQuads.length, swTriangles.items, swTriangles.length);
+#else
         for (int i = 0; i < swQuads.length; i++) {
             drawQuad(&swIndices[swQuads[i]]);
         }
@@ -895,6 +910,8 @@ namespace GAPI {
         for (int i = 0; i < swTriangles.length; i++) {
             drawTriangle(&swIndices[swTriangles[i]]);
         }
+
+#endif
 
         curTile = oldTile;
 #if OL_RENDER_PROFILE

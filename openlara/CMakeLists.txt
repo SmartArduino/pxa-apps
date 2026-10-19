@@ -25,7 +25,9 @@ if(OL_CLASSIC)
         SOURCES main.cpp classic-engine.cpp classic-raster.cpp level-catalog.cpp storage.cpp audio.cpp music-stream.cpp
             vendor/classic/libs/tinf/tinflate.c
         INCLUDE_DIRS . vendor/classic DEFINITIONS __PXA_CLASSIC__=1 OL_CLASSIC_MEMORY=1)
-    set_source_files_properties(classic-engine.cpp PROPERTIES COMPILE_OPTIONS "-O1;-std=c++11")
+    # This translation unit also contains geometry, clipping and scanline setup.
+    # Optimize those paths without changing floating-point arithmetic rules.
+    set_source_files_properties(classic-engine.cpp PROPERTIES COMPILE_OPTIONS "-O2;-std=c++11")
     set_source_files_properties(classic-raster.cpp PROPERTIES COMPILE_OPTIONS "-O3")
     target_compile_options(pxa_main PRIVATE -Wno-invalid-source-encoding)
 else()
