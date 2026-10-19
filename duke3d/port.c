@@ -9,6 +9,7 @@
 #include "board.h"
 #include "port/keyboard.h"
 #include "vflash.h"
+#include "keymap.h"
 #include <string.h>
 static displayFrame_t frame;
 static uint8_t scq[256], downq[256];
@@ -16,6 +17,7 @@ static unsigned kh, kt;
 static bool menu = true;
 static bool audio_ready;
 static int mx, my;
+void port_duke_input_stats(void);
 void port_game_stats(void) {
   vflash_stats_t io;
   vflash_stats(&io,1);
@@ -25,6 +27,7 @@ void port_game_stats(void) {
     (unsigned long long)io.hits,(unsigned long long)io.misses,
     (unsigned long long)io.read_us,(unsigned long long)io.nvm_reads,
     (unsigned long long)io.nvm_read_us,io.cache_bytes);
+  port_duke_input_stats();
 }
 uint8_t audioBuffer[AUDIO_BUFFER_LENGTH * 2];
 
@@ -79,47 +82,7 @@ void port_game_key(int key, int down) {
       inputPostKeyEvent(pressed[key], false);
     return;
   }
-  int sc = 0;
-  switch (key) {
-  case 27:
-    sc = 1;
-    break;
-  case 13:
-    sc = 28;
-    break;
-  case 128:
-  case 'w':
-    sc = 0x48;
-    break;
-  case 129:
-  case 's':
-    sc = 0x50;
-    break;
-  case 130:
-    sc = 0x4b;
-    break;
-  case 131:
-    sc = 0x4d;
-    break;
-  case 'a':
-    sc = menu ? 0x4b : 0x10;
-    break;
-  case 'd':
-    sc = menu ? 0x4d : 0x12;
-    break;
-  case ' ':
-    sc = menu ? 28 : 0x2d;
-    break;
-  case 'e':
-    sc = 0x39;
-    break;
-  case 'q':
-    sc = 0x19;
-    break;
-  case 200:
-    sc = menu ? 28 : 0x1d;
-    break;
-  }
+  int sc = port_duke_scancode(key, menu);
   if (key >= 0 && key < 256)
     pressed[key] = sc;
   if (sc)

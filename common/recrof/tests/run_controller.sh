@@ -16,3 +16,7 @@ trap 'rm -rf "$build"' EXIT
   "$tests/../../../command-conquer/input.cpp" "$tests/rts_input_test.cpp" \
   -o "$build/rts-input"
 "$build/rts-input"
+"${CC:-cc}" -std=c11 -Wall -Wextra -Werror \
+  -fsanitize=address,undefined -fno-omit-frame-pointer -g \
+  "$tests/duke_keymap_test.c" -o "$build/duke-keymap"
+"$build/duke-keymap"

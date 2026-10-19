@@ -27,7 +27,8 @@ void initKeyboard();
 void getKeys(uint16_t *keys);
 // Joystick deflections in -128..127: lx/ly move, rx/ry turn/look.
 void getAnalogInput(int32_t * lx, int32_t *ly, int32_t *rx, int32_t *ry);
-// Scancode events (DOS set 1 codes, as used by the game's sc_* constants).
+// Engine sc_* key IDs. Extended arrows use the game's normalized IDs,
+// not raw PC Set-1/E0 bytes; ESP's KB_KeyEvent consumes these directly.
 // Returns false when the queue is empty.
 bool inputGetKeyEvent(uint8_t *scancode, bool *pressed);
 // Set by the game: in menus the trackball and touch screen navigate (arrows,
