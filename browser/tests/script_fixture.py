@@ -29,6 +29,19 @@ fetch('/js-data').then(r=>r.json()).then(r=>{document.getElementById('network').
             time.sleep(2);self.respond("document.getElementById('q').onchange=function(){document.getElementById('echo').textContent='输入:'+this.value};",mime='application/javascript')
         elif p=='/js-external.js':self.respond("window.externalLoaded=true;",mime='application/javascript')
         elif p=='/js-data':self.respond(json.dumps({'text':'异步网络成功'},ensure_ascii=False),mime='application/json')
+        elif p in ('/js-projection-small','/js-projection-large'):
+            self.respond('''<h1 id="n">投影测试</h1><img id="image" width="180" height="180"><p id="text"></p>
+<script>fetch('''+json.dumps(p+'.json')+''').then(r=>r.json()).then(r=>{
+document.getElementById('image').src=r.data;
+document.getElementById('text').textContent=r.text;
+let n=0;setInterval(()=>document.getElementById('n').textContent='投影测试 '+(++n),20);
+});</script>''')
+        elif p in ('/js-projection-small.json','/js-projection-large.json'):
+            import base64
+            from image_fixtures import projection_image
+            data='data:image/png;base64,'+base64.b64encode(projection_image(4 if 'small' in p else 3)).decode()
+            assert 2800<len(data)<4096
+            self.respond(json.dumps({'data':data,'text':'<>&"\0 中文𠳐'}),mime='application/json')
         elif p in ('/js-image','/js-gif','/js-image-error','/js-two-images'):
             source={'/js-image':'/js-image.png','/js-gif':'/picture/animation.gif','/js-image-error':'/missing-image.png','/js-two-images':'/picture/alpha.png'}[p]
             self.respond('<h1 id="n">图片与脚本</h1><img src="'+source+'"'+(' width="32" height="32"' if p=='/js-two-images' else '')+'>'+('<img src="'+source+'" width="32" height="32">' if p=='/js-two-images' else '')+'<script>let n=0;setInterval(()=>document.getElementById("n").textContent="图片与脚本 "+(++n),20);</script>')

@@ -808,8 +808,10 @@ struct App {
         if(script_engine)script_engine->maintain();
         if (!js) return;
         js->tasks.reap();
-        if (!foreground || press.active() || scrollbar_dragging || editing || menu ||
-            image_view.active()) return;
+        // Idle image preview still needs page timers/network callbacks (for
+        // example a QR login). Touch/scroll always take priority; keep its
+        // image indices/pixels stable by deferring DOM projection below.
+        if (!foreground || press.active() || scrollbar_dragging || editing || menu) return;
         if (!js->boot_loading && !js->boot_ready) { set_status(js->error); js.reset(); return; }
         if (!js->boot_ready) return;
         if (!js->started) {
@@ -824,7 +826,7 @@ struct App {
             return;
         }
         if (js->request && !js->page.pending(js->request)) { js->tasks.cancel(); js->request=0; }
-        js->page.step();
+        js->page.step(!image_view.active());
         if (js->page.initialized() && !js->initialized_reported) {
             js->initialized_reported=true;
             const auto stats=js->page.stats();
@@ -836,7 +838,7 @@ struct App {
         // Keep the current document's image indices valid until its download
         // or frame advance finishes. Rebuilding every 100 ms would otherwise
         // repeatedly cancel slow images and animated decoders.
-        if (!busy && animation_slot<0 && millis()>=js->next_paint) if (auto markup=js->page.take_markup()) {
+        if (!busy && animation_slot<0 && !image_view.active() && millis()>=js->next_paint) if (auto markup=js->page.take_markup()) {
             apply_script_markup(*markup); js->next_paint=millis()+100;
         }
         if (!js->request) if (auto request=js->page.take_request()) {
@@ -2010,7 +2012,11 @@ struct App {
                           unsigned(image.width), unsigned(image.height), image_view.zoom);
         }
         const bool status_below = status_box.y >= toolbar.y + toolbar.height;
-        if (status_until && !editing && !menu && status_box.height) {
+        // Fit preview must show every pixel, including a QR's quiet border.
+        // Keep metadata only when the layout has a separate status band.
+        const bool covers_image=image_view.active() && status_box.y<content.y+content.height &&
+                                status_box.y+status_box.height>content.y;
+        if (status_until && !editing && !menu && !covers_image && status_box.height) {
             if (!status_below) rect(status_box, 0xe8eef3ff, dp(4));
             label({status_box.x + dp(4), status_box.y,
                    std::max(0, status_box.width - dp(8)), status_box.height},

@@ -38,6 +38,13 @@ try:
   assert not re.search(r'BROWSER (ERROR|DRAW ERROR)',b.logs()[mark:])
  mark=load('/js-stack');assert re.search(r'BROWSER JS READY[^\n]* errors=1',b.logs()[mark:]);b.shot('js-stack')
  mark=load('/js-parser');assert re.search(r'BROWSER JS READY[^\n]* errors=1',b.logs()[mark:]);b.shot('js-parser')
+ for path in ('/js-projection-small','/js-projection-large'):
+  mark=load(path)
+  b.wait(lambda:re.search(r'BROWSER IMAGE DONE[^\n]*pixels=180x180',b.logs()[mark:]),timeout=20)
+  b.wait(lambda:len(re.findall('BROWSER JS UPDATE',b.logs()[mark:]))>=3)
+  time.sleep(.4);b.shot(path[1:])
+  assert len(re.findall('BROWSER IMAGE DONE',b.logs()[mark:]))==1, 'Projection restarted inline image decoding'
+  assert not re.search(r'BROWSER (?:JS|IMAGE) ERROR',b.logs()[mark:]), 'Long attribute projection failed'
  for path in ['/js-image','/js-gif']:
   mark=load(path)
   b.wait(lambda:'BROWSER IMAGE DONE' in b.logs()[mark:],timeout=20)

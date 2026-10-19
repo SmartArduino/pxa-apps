@@ -6,6 +6,23 @@ from PIL import Image, ImageDraw
 
 
 @cache
+def projection_image(step=3):
+    """Non-scannable 180px marker; base64 approaches the 4096-char DOM limit."""
+    import random, struct, zlib
+    def chunk(kind, data):
+        return struct.pack('>I', len(data)) + kind + data + struct.pack(
+            '>I', zlib.crc32(kind + data) & 0xffffffff)
+    rng = random.Random(0x505841)
+    colors = [(32, 64, 192), (240, 128, 32), (240, 240, 240), (48, 48, 48)]
+    cells = (180 + step - 1) // step
+    grid = [[rng.choice(colors) for _ in range(cells)] for _ in range(cells)]
+    raw = b''.join(b'\0' + b''.join(bytes(grid[y // step][x // step])
+                   for x in range(180)) for y in range(180))
+    return (b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB',
+            180, 180, 8, 2, 0, 0, 0)) + chunk(b'IDAT', zlib.compress(raw)) + chunk(b'IEND', b''))
+
+
+@cache
 def fixtures():
     image = Image.new('RGBA', (320, 180))
     for y in range(image.height):
