@@ -731,7 +731,7 @@ extern "C" int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     options.width = RENDER_WIDTH;
     options.height = RENDER_HEIGHT;
     options.buffer_count = 3;
-    options.prefer_direct_scanout = 1;
+    options.flags = PXA_GAME_RENDER_FLAG_PREFER_DIRECT_SCANOUT;
     options.max_draw_bytes = BENCH_DRAW_BYTES;
     if (!pxa_game_render_build_create(g_packet, sizeof(g_packet),
                                           CREATE_REQUEST, &options,

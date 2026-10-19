@@ -57,3 +57,10 @@ Quake II 0.1.9 SD / 0.1.2 普通变体在已有五秒统计周期内报告真实
 菜单目的地及引擎方向键状态。仅 `ca_active && !cl.attractloop` 时输出，防止
 把开场演示误计为可操作关卡；使用引擎 `K_UPARROW/K_DOWNARROW` 命名常量。
 实现仍位于 PXA 平台层，没有新增 vendor 差异。
+
+GameRender 1.0 试验：Quake `d_scan.c` 增加有条件的批量调用，具体适配在
+`port/host_spans.h`，原来的 lit-span 函数保持为差分基准与拒绝时回退路径。
+`global_data.h` / `d_polyse.c` 增加固定全局状态直接寻址选项，真机验证后默认启用；
+上游同步继续通过三方合并维护这些小差异。Quake II 的构建精度设置与上游
+`-fsingle-precision-constant` 一致，WASI Clang 使用经 IR 检查的前端选项，
+显式 double 运算继续保留。原生 span 功能测试不等于游戏 FPS。

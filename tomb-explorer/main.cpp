@@ -438,7 +438,7 @@ extern "C" int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     options.width = (uint16_t)g_render_width;
     options.height = (uint16_t)g_render_height;
     options.buffer_count = TOMB_BUFFER_COUNT;
-    options.prefer_direct_scanout = 1;
+    options.flags = PXA_GAME_RENDER_FLAG_PREFER_DIRECT_SCANOUT;
     options.scratch_mode = 1;
     options.max_draw_bytes = sizeof(g_draw);
     if (!pxa_game_render_build_create(g_packet, sizeof(g_packet),

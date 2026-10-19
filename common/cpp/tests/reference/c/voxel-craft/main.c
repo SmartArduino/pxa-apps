@@ -822,7 +822,7 @@ static int request_surface_create(void) {
             .width = g_surface_width,
             .height = g_surface_height,
             .buffer_count = SURFACE_BUFFER_COUNT,
-            .prefer_direct_scanout = 1,
+            .flags = PXA_GAME_RENDER_FLAG_PREFER_DIRECT_SCANOUT,
             .max_draw_bytes = PXA_RASTER_MAX_DRAW_BYTES};
         uint32_t packet_size = 0;
         sent = pxa_game_render_build_create(

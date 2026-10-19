@@ -13,7 +13,7 @@
     0
   ],
   "id": "pxa-quake-sd",
-  "version": "0.1.10",
+  "version": "0.2.3",
   "name": "Quake SD",
   "description": "Engine with automatically bound fixed SD resources and internal saves",
   "build": {
@@ -49,10 +49,13 @@
           ]
         },
         {
-          "name": "assets",
+          "name": "game-render",
           "min_version": [
-            2,
+            1,
             0
+          ],
+          "features": [
+            "borrowed-indexed-spans"
           ]
         }
       ],
@@ -75,5 +78,5 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 11
+  "release_sequence": 103
 }

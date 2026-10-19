@@ -210,7 +210,7 @@ static void request_context(uint8_t shift, uint64_t request_id) {
     options.width = (uint16_t)g_target_w;
     options.height = (uint16_t)g_target_h;
     options.buffer_count = 3;
-    options.prefer_direct_scanout = 1;
+    options.flags = PXA_GAME_RENDER_FLAG_PREFER_DIRECT_SCANOUT;
     options.scratch_mode = 0;
     options.max_draw_bytes = sizeof(g_draw);
     g_create_token = request_id;

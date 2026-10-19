@@ -27,3 +27,6 @@ set_source_files_properties(${RENDER_SOURCES} ${Q}/game/q_shared.c
     PROPERTIES COMPILE_OPTIONS -O3)
 # Model parsing is cold; keep renderer loops at O3 without enlarging loaders.
 set_source_files_properties(${Q}/ref_soft/r_model.c PROPERTIES COMPILE_OPTIONS -Os)
+# Match the upstream ESP32-S3 build. Clang ignores GCC's
+# -fsingle-precision-constant; its frontend option is required on WASI.
+target_compile_options(pxa_main PRIVATE -Xclang -cl-single-precision-constant)

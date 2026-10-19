@@ -351,7 +351,12 @@ typedef struct
     };
 
 } global_data_t;
+#if defined(PXA_STATIC_QUAKE_GLOBALS)
+extern global_data_t global;
+#define _g (&global)
+#else
 extern global_data_t *const _g;
+#endif
 #if ASYNCH_ALIAS_SINGLE_RENDERING
 static inline void flushAliasPendingPixel(void)
 {

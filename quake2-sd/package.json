@@ -13,14 +13,14 @@
     0
   ],
   "id": "pxa-quake2-sd",
-  "version": "0.1.11",
+  "version": "0.1.13",
   "name": "Quake II SD",
   "description": "Engine with automatically bound fixed SD resources and internal saves",
   "build": {
     "system": "cmake",
     "source_dir": ".",
     "linear_memory": {
-      "maximum_bytes": 10878976,
+      "maximum_bytes": 10682368,
       "pinned": true
     }
   },
@@ -75,5 +75,5 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 12
+  "release_sequence": 14
 }

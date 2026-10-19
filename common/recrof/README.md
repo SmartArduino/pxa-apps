@@ -170,3 +170,26 @@ AppKey 包含发布身份与应用 ID，两个应用或发布者不会自动共�
 构建与协议宿主运行均不能代替真机验收；各游戏结果与未完成项见工作区 `docs/validation`。
 SD 变体优先协商 Clock 0.3 的 8000us，设备不支持或配置失败时回退合法的 16ms。
 后台取消、回到前台恢复；周期表示调度请求，不能据此直接推断游戏帧率。
+
+## GameRender 1.0 原生 span 试验
+
+Quake 可通过 CMake `PXA_QUAKE_HOST_SPANS=ON` 试用同步的原生 INDEX8
+光照 span；默认关闭，首版真机关卡测得性能回退，尚未达到 20fps 目标。
+该路径只借用本次调用的 Guest 内存，不额外复制纹理、帧缓冲或深度缓冲。
+失败时在原表面状态仍有效时回放原渲染器；显示仍沿用 GuestMapped Surface。
+
+`PXA_QUAKE_STATIC_GLOBALS` 直接使用固定状态对象地址，真机关卡达到约 6.9fps，现默认启用。SDK 默认编译器
+没有被替换；测试包通过私有构建配置选择已做边界检查的对齐编译器。
+
+真实上游内核的像素差分检查（需要工作区中的新 SDK）：
+
+```sh
+python3 local/pxa-apps/common/recrof/tests/run_quake_host_spans.py
+```
+
+测试直接提取当前 vendor 的 lit-span 宏，覆盖 20 万组、40 万条 span、
+八种内核、负坐标与重叠写入。它验证新内核，不替代完整场景的性能或画质验收。
+
+Quake II SD 0.1.13 的线性内存上限调整为 163 页（10.1875MiB），
+与 GameKit 16MiB PSRAM 的已验证装载配置一致；引擎 arena 仍为 7.5MiB。
+Quake 另做过渲染相关文件的单精度常量试验；中位数仍为 6.9fps，未纳入公开构建配置。

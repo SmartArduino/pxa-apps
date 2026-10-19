@@ -6,6 +6,10 @@
 #include "graphics.h"
 #include "keyboard.h"
 #include "quakedef.h"
+#include "pxa_game_render_spans.h"
+#if PXA_GAME_RENDER_SPANS
+extern uint64_t port_game_render_context;
+#endif
 static int mdx, mdy;
 #ifdef PXA_FRAME_PROFILE
 #include "render_profile.h"
@@ -29,24 +33,52 @@ void Pxa_QuakeProfile(unsigned stage) {
 }
 #endif
 void port_game_stats(void) {
-  vflash_stats_t io;vflash_stats(&io,1);
-  port_log("PXA IO hit=%llu miss=%llu read_us=%llu cache_bytes=%u",
-    (unsigned long long)io.hits,(unsigned long long)io.misses,
-    (unsigned long long)io.read_us,io.cache_bytes);
+  vflash_stats_t io; vflash_stats(&io, 1);
+  uint8_t stats[64] = {0};
+#if PXA_GAME_RENDER_SPANS
+  if (port_game_render_context)
+    pxa_io(port_game_render_context, PXA_GAME_RENDER_IO_SPAN_TELEMETRY, stats, sizeof(stats));
+#endif
 #ifdef PXA_FRAME_PROFILE
-  port_log("PXA QUAKE complete=%u engine_us=%llu render_us=%llu sound_us=%llu",
-    profile_frames, (unsigned long long)profile_total[0],
-    (unsigned long long)profile_total[1], (unsigned long long)profile_total[2]);
-  port_log("PXA RENDER view_us=%llu world_us=%llu brush_us=%llu scan_us=%llu surfaces_us=%llu entities_us=%llu gun_us=%llu particles_us=%llu",
-    (unsigned long long)render_total[0],(unsigned long long)render_total[1],
-    (unsigned long long)render_total[2],(unsigned long long)render_total[3],
-    (unsigned long long)render_total[4],(unsigned long long)render_total[5],
-    (unsigned long long)render_total[6],(unsigned long long)render_total[7]);
-  memset(render_total,0,sizeof(render_total));
+  int ready = _g->cls.state == ca_connected && _g->cls.signon == SIGNONS &&
+    !_g->cls.demoplayback && _g->cl.worldmodel && key_dest == key_game &&
+    _g->cl.stats[STAT_HEALTH] > 0;
+  /* Stay within the 256-byte Log ABI and the four-slot device queue.
+   * Timings are per completed engine frame; Host counters are window deltas. */
+  static uint64_t previous[6];
+  uint64_t delta[6];
+  for (unsigned i=0; i<6; ++i) {
+    uint64_t value = pxa_load_u64(stats + i*8);
+    delta[i] = value >= previous[i] ? value-previous[i] : value;
+    previous[i] = value;
+  }
+  unsigned frames = profile_frames ? profile_frames : 1;
+  port_log("PXA QUAKE ready=%d hp=%d xyz=%d,%d,%d n=%u eng=%llu view=%llu world=%llu scan=%llu surf=%llu ent=%llu snd=%llu io=%llu hb=%llu hr=%llu px=%llu hv=%llu hx=%llu",
+    ready, _g->cl.stats[STAT_HEALTH],
+    (int)_g->r_refdef.vieworg[0], (int)_g->r_refdef.vieworg[1], (int)_g->r_refdef.vieworg[2],
+    profile_frames, (unsigned long long)(profile_total[0]/frames),
+    (unsigned long long)(render_total[0]/frames),
+    (unsigned long long)(render_total[1]/frames),
+    (unsigned long long)(render_total[3]/frames),
+    (unsigned long long)(render_total[4]/frames),
+    (unsigned long long)(render_total[5]/frames),
+    (unsigned long long)(profile_total[2]/frames),
+    (unsigned long long)(io.read_us/frames),
+    (unsigned long long)delta[0], (unsigned long long)delta[1],
+    (unsigned long long)delta[3], (unsigned long long)(delta[4]/frames),
+    (unsigned long long)(delta[5]/frames));
+  memset(render_total, 0, sizeof(render_total));
   memset(profile_total, 0, sizeof(profile_total));
   profile_frames = 0;
+#else
+  port_log("PXA IO hit=%llu miss=%llu read_us=%llu cache_bytes=%u host_batches=%llu host_rejected=%llu native_us=%llu",
+    (unsigned long long)io.hits, (unsigned long long)io.misses,
+    (unsigned long long)io.read_us, io.cache_bytes,
+    (unsigned long long)pxa_load_u64(stats), (unsigned long long)pxa_load_u64(stats + 8),
+    (unsigned long long)pxa_load_u64(stats + 40));
 #endif
 }
+
 static struct {
   int k, d;
 } keyq[128];

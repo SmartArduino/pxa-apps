@@ -13,10 +13,10 @@
     0
   ],
   "id": "pxa-jump-jump-3d",
-  "version": "0.1.8",
-  "release_sequence": 9,
+  "version": "0.1.9",
+  "release_sequence": 10,
   "name": "Jump Jump 3D",
-  "description": "按住蓄力，松开跳跃，在立体平台间连续前进。落在中心可连续得分，包含音效、背景音乐及适配不同 DPI 的触摸界面。",
+  "description": "\u6309\u4f4f\u84c4\u529b\uff0c\u677e\u5f00\u8df3\u8dc3\uff0c\u5728\u7acb\u4f53\u5e73\u53f0\u95f4\u8fde\u7eed\u524d\u8fdb\u3002\u843d\u5728\u4e2d\u5fc3\u53ef\u8fde\u7eed\u5f97\u5206\uff0c\u5305\u542b\u97f3\u6548\u3001\u80cc\u666f\u97f3\u4e50\u53ca\u9002\u914d\u4e0d\u540c DPI \u7684\u89e6\u6478\u754c\u9762\u3002",
   "icon": "assets/icon.png",
   "build": {
     "system": "cmake",

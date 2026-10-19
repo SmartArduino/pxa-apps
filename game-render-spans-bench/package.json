@@ -1,0 +1,58 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [
+    2,
+    0
+  ],
+  "target_sdk": [
+    2,
+    0
+  ],
+  "compile_sdk": [
+    2,
+    0
+  ],
+  "id": "pxa-game-render-spans-bench",
+  "version": "1.0.2",
+  "release_sequence": 3,
+  "name": "GameRender Native Spans",
+  "description": "Validate native indexed span batches and report compute time; not a game FPS benchmark",
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 524288,
+      "pinned": false
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "artifact": "aot",
+      "services": [
+        "log",
+        {
+          "name": "game-render",
+          "min_version": [
+            1,
+            0
+          ],
+          "features": [
+            "borrowed-indexed-spans"
+          ]
+        }
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": []
+}

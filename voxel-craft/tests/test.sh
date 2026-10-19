@@ -26,7 +26,7 @@ cflags=(-std=c11 -O2 -I"$host/include" -I"$root/deps/pxa-system/sdk/testing")
 if [[ "${SANITIZE:-0}" == 1 ]]; then
     cflags+=(-g -fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
-"${CC:-clang}" "${cflags[@]}" -c "$host/src/services/surface/raster.c" -o "$build/raster.o"
+"${CC:-clang}" "${cflags[@]}" -c "$host/src/services/game_render/raster.c" -o "$build/raster.o"
 "${CC:-clang}" "${cflags[@]}" -c "$host/src/core/wire.c" -o "$build/wire.o"
 "${CXX:-clang++}" "${flags[@]}" "$app/tests/input_test.cpp" "$app/voxel_world.cpp" "$app/voxel_render.cpp" "$app/voxel_mesher.cpp" "$sdk"/src/*.cpp -o "$build/input"
 "${CXX:-clang++}" "${flags[@]}" -I"$host/include" "$app/tests/session_test.cpp" "$app/voxel_world.cpp" "$app/voxel_render.cpp" "$app/voxel_mesher.cpp" "$sdk"/src/*.cpp "$build/raster.o" "$build/wire.o" -o "$build/session"

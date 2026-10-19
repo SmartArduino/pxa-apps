@@ -2,7 +2,7 @@
 /* preview_render.c - developer harness for Jump Jump 3D.
  *
  * Runs the Guest draw list through the real Host raster kernel
- * (libpxa/src/services/surface/raster.c) at full resolution and writes a PPM
+ * (libpxa/src/services/game_render/raster.c) at full resolution and writes a PPM
  * per frame, so the game can be inspected without a display, a simulator
  * window or a board. It also drives the game headlessly: automatic jumps land
  * exactly on a block centre (or with a deliberate error) so scoring, camera

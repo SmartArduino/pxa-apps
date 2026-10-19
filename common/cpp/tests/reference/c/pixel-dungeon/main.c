@@ -414,7 +414,7 @@ static void request_context(void) {
     pxa_game_render_options_t options = {0};
     uint32_t packet_size = 0;
     options.buffer_count = 3;
-    options.prefer_direct_scanout = 1;
+    options.flags = PXA_GAME_RENDER_FLAG_PREFER_DIRECT_SCANOUT;
     options.max_draw_bytes = sizeof(g_draw);
     if (g_create_attempt < 2) {
         options.requested_scale = g_want_scale;

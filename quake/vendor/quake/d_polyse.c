@@ -53,7 +53,9 @@ int aliasPixelsDrawnSingle = 0;
 // 1 extra for spanpackage that marks end
 
 global_data_t global;
+#if !defined(PXA_STATIC_QUAKE_GLOBALS)
 global_data_t *const _g = &global;
+#endif
 #if ENABLE_RECURSIVE_DRAWING && !MODELS_HAVE_ORIGINAL_SKIN_TOO
 mtriangleOffsetData_t *recursiveMtod;
 byte * recursive_ptex;
