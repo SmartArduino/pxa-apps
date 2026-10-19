@@ -13,6 +13,13 @@ static int dx, dy;
 void port_game_stats(void) {
   port_log("PXA Q2 arena_total=%d used=%d peak=%d largest=%d",
            Q_Arena_Total(),Q_Arena_Used(),Q_Arena_Peak(),Q_Arena_Largest());
+  /* Attract demos also report ca_active. Only a playable level qualifies. */
+  if (cls.state == ca_active && !cl.attractloop)
+    port_log("PXA Q2 INPUT x=%d y=%d z=%d destination=%d up=%d down=%d",
+             cl.frame.playerstate.pmove.origin[0],
+             cl.frame.playerstate.pmove.origin[1],
+             cl.frame.playerstate.pmove.origin[2], cls.key_dest,
+             port_key_down(K_UPARROW), port_key_down(K_DOWNARROW));
 }
 void QG_SetPalette(unsigned char p[768]) { port_palette(p, 0); }
 void QG_DrawFrame(void *p) { port_frame(p, 320, 240, 320); }
