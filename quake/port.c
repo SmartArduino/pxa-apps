@@ -8,6 +8,14 @@
 #include "quakedef.h"
 static int mdx, mdy;
 #ifdef PXA_FRAME_PROFILE
+#include "render_profile.h"
+static uint64_t render_stamp[PXA_QUAKE_RENDER_STAGES],render_total[PXA_QUAKE_RENDER_STAGES];
+void Pxa_QuakeRenderProfile(unsigned stage,int begin) {
+  if(stage>=PXA_QUAKE_RENDER_STAGES)return;
+  uint64_t now=port_time_us();
+  if(begin)render_stamp[stage]=now;
+  else if(now>=render_stamp[stage])render_total[stage]+=now-render_stamp[stage];
+}
 static uint64_t profile_stamp, profile_part[3], profile_total[3];
 static unsigned profile_frames;
 void Pxa_QuakeProfile(unsigned stage) {
@@ -29,6 +37,12 @@ void port_game_stats(void) {
   port_log("PXA QUAKE complete=%u engine_us=%llu render_us=%llu sound_us=%llu",
     profile_frames, (unsigned long long)profile_total[0],
     (unsigned long long)profile_total[1], (unsigned long long)profile_total[2]);
+  port_log("PXA RENDER view_us=%llu world_us=%llu brush_us=%llu scan_us=%llu surfaces_us=%llu entities_us=%llu gun_us=%llu particles_us=%llu",
+    (unsigned long long)render_total[0],(unsigned long long)render_total[1],
+    (unsigned long long)render_total[2],(unsigned long long)render_total[3],
+    (unsigned long long)render_total[4],(unsigned long long)render_total[5],
+    (unsigned long long)render_total[6],(unsigned long long)render_total[7]);
+  memset(render_total,0,sizeof(render_total));
   memset(profile_total, 0, sizeof(profile_total));
   profile_frames = 0;
 #endif

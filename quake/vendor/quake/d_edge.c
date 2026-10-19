@@ -29,6 +29,12 @@
 
 // d_edge.c
 #include "quakedef.h"
+#ifdef PXA_FRAME_PROFILE
+#include "render_profile.h"
+#else
+#define PXA_RENDER_BEGIN(stage) ((void)0)
+#define PXA_RENDER_END(stage) ((void)0)
+#endif
 #include "d_local.h"
 
 #if WIN32
@@ -304,6 +310,7 @@ DRAWSURF_SEC void sortSurfs(void)
 #endif // SORT_SURFS
 DRAWSURF_SEC void D_DrawSurfaces(void)
 {
+    PXA_RENDER_BEGIN(PXA_QUAKE_RENDER_SURFACES);
     surf_t *s;
     msurface_t *pface;
     //surfcache_t		*pcurrentcache;
@@ -594,5 +601,6 @@ DRAWSURF_SEC void D_DrawSurfaces(void)
             lastSurfFlags = getSurfFlags(s);
         }
     }
+    PXA_RENDER_END(PXA_QUAKE_RENDER_SURFACES);
 }
 

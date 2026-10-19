@@ -28,6 +28,12 @@
  */
 // r_edge.c
 #include "quakedef.h"
+#ifdef PXA_FRAME_PROFILE
+#include "render_profile.h"
+#else
+#define PXA_RENDER_BEGIN(stage) ((void)0)
+#define PXA_RENDER_END(stage) ((void)0)
+#endif
 #include "r_local.h"
 #if 0
 // FIXME
@@ -1952,6 +1958,7 @@ void copyColorsToRam(void)
 #endif
 void R_ScanEdges(void)
 {
+    PXA_RENDER_BEGIN(PXA_QUAKE_RENDER_SCAN);
     int iv, bottom;
     byte basespans[MAXSPANS * sizeof(espan_t)];
     // next-hack: added this to prevent compiler complaining a pointer is outside bounds
@@ -2088,6 +2095,7 @@ void R_ScanEdges(void)
 #if WIN32
               printf("BLEAH\r\n"); // This message is clear, isn't it ?
 #endif
+                PXA_RENDER_END(PXA_QUAKE_RENDER_SCAN);
                 return;
             }
             // clear the surface span pointers
@@ -2146,5 +2154,6 @@ void R_ScanEdges(void)
     D_DrawSurfaces();
 #endif
 //    printf("span used %d\r\n", span_p - basespan_p);
+    PXA_RENDER_END(PXA_QUAKE_RENDER_SCAN);
 }
 

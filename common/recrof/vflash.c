@@ -11,9 +11,15 @@
 #define PORT_VFLASH_CACHE_PAGES 16u
 #endif
 #define PAGES PORT_VFLASH_CACHE_PAGES
+/* Index the existing fully associative cache. Collisions stay in short slot
+ * chains; only misses scan ages to select the same LRU victim as before. */
+#define BUCKETS (PAGES * 2u + 1u)
+#define NO_SLOT UINT16_MAX
+_Static_assert(PAGES > 0 && PAGES < NO_SLOT, "invalid ROM cache capacity");
 static FILE *data_file, *save_file;
 static uint32_t data_size, mask, nvm_start, virtual_end;
 static uint32_t tags[PAGES], ages[PAGES], clock_tick;
+static uint16_t buckets[BUCKETS], links[PAGES];
 static uint8_t cache[PAGES][PAGE];
 static unsigned recent_page;
 static vflash_stats_t io_stats;
@@ -237,6 +243,8 @@ void vflash_init(const char *path, uint32_t virtual_size, uint32_t nvm_size) {
   nvm_start = virtual_size - nvm_size;
   for (unsigned i = 0; i < PAGES; i++)
     tags[i] = ~0u;
+  memset(buckets, 255, sizeof(buckets));
+  memset(links, 255, sizeof(links));
   recent_page=0;
   if (data_file) fclose(data_file);
   if (save_file) fclose(save_file);
@@ -262,13 +270,16 @@ static const uint8_t *page(uint32_t address) {
     ++io_stats.hits; ages[recent_page]=++clock_tick;
     return cache[recent_page];
   }
-  unsigned best = 0;
-  for (unsigned i = 0; i < PAGES; i++) {
+  unsigned bucket = tag % BUCKETS;
+  for (unsigned i = buckets[bucket]; i != NO_SLOT; i = links[i]) {
     if (tags[i] == tag) {
       ++io_stats.hits; recent_page=i;
       ages[i] = ++clock_tick;
       return cache[i];
     }
+  }
+  unsigned best = 0;
+  for (unsigned i = 0; i < PAGES; i++) {
     if (tags[i] == ~0u || ages[i] < ages[best])
       best = i;
   }
@@ -280,7 +291,14 @@ static const uint8_t *page(uint32_t address) {
   size_t n = fread(cache[best], 1, PAGE, data_file);
   if (!n)
     port_error("Game data read failed.");
+  if (tags[best] != ~0u) {
+    uint16_t *link = &buckets[tags[best] % BUCKETS];
+    while (*link != best) link = &links[*link];
+    *link = links[best];
+  }
   tags[best] = tag;
+  links[best] = buckets[bucket];
+  buckets[bucket] = (uint16_t)best;
   ages[best] = ++clock_tick;
   recent_page=best; io_stats.read_us+=port_time_us()-before;
   return cache[best];

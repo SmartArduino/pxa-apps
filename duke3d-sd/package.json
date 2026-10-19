@@ -13,14 +13,14 @@
     0
   ],
   "id": "pxa-duke3d-sd",
-  "version": "0.1.19",
+  "version": "0.1.22",
   "name": "Duke Nukem 3D SD",
   "description": "Duke Nukem 3D engine with automatically bound fixed SD resources and internal saves",
   "build": {
     "system": "cmake",
     "source_dir": ".",
     "linear_memory": {
-      "maximum_bytes": 4063232,
+      "maximum_bytes": 3670016,
       "pinned": true
     }
   },
@@ -75,5 +75,5 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 20
+  "release_sequence": 23
 }

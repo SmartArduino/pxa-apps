@@ -28,6 +28,12 @@
  */
 // r_main.c
 #include "quakedef.h"
+#ifdef PXA_FRAME_PROFILE
+#include "render_profile.h"
+#else
+#define PXA_RENDER_BEGIN(stage) ((void)0)
+#define PXA_RENDER_END(stage) ((void)0)
+#endif
 #include "r_local.h"
 #if ESP_PLATFORM
 #include "esp_parallel.h"
@@ -1113,7 +1119,9 @@ void R_EdgeDrawing(void)
 #endif
     // clear surface buffer used temporarily to store cachededgesoffets
     clearCachedEdgeOffsets();
+    PXA_RENDER_BEGIN(PXA_QUAKE_RENDER_WORLD);
     R_RenderWorld();
+    PXA_RENDER_END(PXA_QUAKE_RENDER_WORLD);
 
 #if r_drawculledpolys
 		R_ScanEdges ();
@@ -1128,7 +1136,9 @@ void R_EdgeDrawing(void)
 		db_time1 = rw_time2;
 	}
 #endif
+    PXA_RENDER_BEGIN(PXA_QUAKE_RENDER_BRUSH);
     R_DrawBEntitiesOnList();
+    PXA_RENDER_END(PXA_QUAKE_RENDER_BRUSH);
 #if PROFILE_SPEED
 
 	if (r_dspeeds)
@@ -1242,7 +1252,9 @@ SetVisibilityByPassages ();
 		de_time1 = se_time2;
 	}
 #endif
+    PXA_RENDER_BEGIN(PXA_QUAKE_RENDER_ENTITIES);
     R_DrawEntitiesOnList();
+    PXA_RENDER_END(PXA_QUAKE_RENDER_ENTITIES);
 #if PROFILE_SPEED
 	if (r_dspeeds)
 	{
@@ -1250,7 +1262,9 @@ SetVisibilityByPassages ();
 		dv_time1 = de_time2;
 	}
 #endif
+    PXA_RENDER_BEGIN(PXA_QUAKE_RENDER_VIEWMODEL);
     R_DrawViewModel();
+    PXA_RENDER_END(PXA_QUAKE_RENDER_VIEWMODEL);
 #if PROFILE_SPEED
 	if (r_dspeeds)
 	{
@@ -1258,7 +1272,9 @@ SetVisibilityByPassages ();
 		dp_time1 = Sys_FloatTime ();
 	}
 #endif
+    PXA_RENDER_BEGIN(PXA_QUAKE_RENDER_PARTICLES);
     R_DrawParticles();
+    PXA_RENDER_END(PXA_QUAKE_RENDER_PARTICLES);
 #if PROFILE_SPEED
 	if (r_dspeeds)
 		dp_time2 = Sys_FloatTime ();
@@ -1301,8 +1317,9 @@ SetVisibilityByPassages ();
 
 void R_RenderView(void)
 {
-
+    PXA_RENDER_BEGIN(PXA_QUAKE_RENDER_TOTAL);
     R_RenderView_();
+    PXA_RENDER_END(PXA_QUAKE_RENDER_TOTAL);
 }
 
 /*
