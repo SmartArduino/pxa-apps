@@ -64,3 +64,10 @@ GameRender 1.0 试验：Quake `d_scan.c` 增加有条件的批量调用，具体
 上游同步继续通过三方合并维护这些小差异。Quake II 的构建精度设置与上游
 `-fsingle-precision-constant` 一致，WASI Clang 使用经 IR 检查的前端选项，
 显式 double 运算继续保留。原生 span 功能测试不等于游戏 FPS。
+
+GameRender 1.1 投影扫描行试验：`d_scan.c` 只增加两个表面入口的条件钩子，
+平台封装位于 `port/host_projected_spans.h`。批次包含原始扫描行和投影系数，
+Host 执行同样的 32 像素细分、光照和可选深度写入；整批预检失败时回退原函数。
+`PXA_QUAKE_PROJECTED_SPANS` 在完成真机对比前保持关闭。
+`tests/run_quake_projected_spans.py` 直接提取当前 vendor 的透视和深度函数，
+上游同步后运行它及原 lit-span 差分测试，避免单独维护一份参考实现。

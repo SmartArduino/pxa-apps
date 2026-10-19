@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 static uint8_t pixels[320 * 200], texture[64 * 64], colormap[64 * 256];
+static uint16_t depth[320 * 200];
 static uint32_t lights[34 * 34];
 static uint8_t packet[72 + 200 * 24];
 static uint64_t stamp(void) {
@@ -91,5 +92,51 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t size) {
         (unsigned long long)(pxa_load_u64(stats + 32) - validation_before),
         (unsigned long long)(pxa_load_u64(stats + 40) - execution_before));
     pxa_log_write(2, line);
+    pxa_game_render_projection_wire_t projection = {0};
+    projection.z_origin_bits = 0x3d800000; /* 1 / 16 */
+    projection.s_du_bits = projection.t_dv_bits = 0x3d800000;
+    projection.s_max = (320 << 16) - 1; projection.t_max = (200 << 16) - 1;
+    projection.pitch = 320; projection.flags = PXA_GAME_RENDER_PROJECTED_WRITE_DEPTH;
+    projection.depth_offset = (uint32_t)(uintptr_t)depth;
+    projection.depth_bytes = sizeof(depth); projection.depth_pitch = 640;
+    pxa_game_render_projected_batch_t projected;
+    pxa_game_render_projected_batch_begin(&projected, packet, sizeof(packet), &h, &projection);
+    for (unsigned y = 0; y < 200; ++y) {
+        pxa_game_render_row_wire_t row = {0, y, 320, 0};
+        if (!pxa_game_render_projected_append(&projected, &row)) return PXA_STATUS_INTERNAL;
+    }
+    const uint64_t projected_started = stamp();
+    const uint64_t projected_validation_before = pxa_load_u64(stats + 32);
+    const uint64_t projected_execution_before = pxa_load_u64(stats + 40);
+    uint8_t *projected_pixels = grown_pixels;
+    for (unsigned i = 0; i < 8; ++i) {
+        if (i == 4) {
+            size_t previous_pages = __builtin_wasm_memory_grow(0, 1);
+            if (previous_pages == (size_t)-1) return PXA_STATUS_RESOURCE_LIMIT;
+            projected_pixels = (uint8_t *)(uintptr_t)(previous_pages * 65536u);
+            pxa_store_u32(packet + 16, (uint32_t)(uintptr_t)projected_pixels);
+        }
+        int r = pxa_game_render_execute_projected_spans(result.handle, &projected);
+        if (r < 0) return r;
+    }
+    const uint64_t projected_elapsed = stamp() - projected_started;
+    unsigned projected_mismatches = 0;
+    for (unsigned y = 0; y < 200; ++y)
+        for (unsigned x = 0; x < 320; ++x) {
+            /* The upstream final segment floors its fixed reciprocal, then
+             * truncates the 16.16 step to 10.6 before sampling. */
+            unsigned sx = x < 288 ? x : (288 * 64 + (x - 288) * 63) / 64;
+            uint8_t expected = (uint8_t)(texture[(y & 63) * 64 + (sx & 63)] ^ 63);
+            projected_mismatches += grown_pixels[y * 320 + x] != expected;
+            projected_mismatches += projected_pixels[y * 320 + x] != expected;
+            projected_mismatches += depth[y * 320 + x] != 0x0800;
+        }
+    if (pxa_io(result.handle, 0x105, stats, sizeof(stats)) != 64) return PXA_STATUS_INTERNAL;
+    snprintf(line, sizeof(line), "PXA PROJECTED SPANS pass=%u mismatches=%u batches=8 pixels=512000 elapsed_us=%llu validate_us=%llu native_us=%llu zero_scratch=1 grow_pages=1 depth=1",
+        !projected_mismatches, projected_mismatches, (unsigned long long)projected_elapsed,
+        (unsigned long long)(pxa_load_u64(stats + 32) - projected_validation_before),
+        (unsigned long long)(pxa_load_u64(stats + 40) - projected_execution_before));
+    pxa_log_write(2, line);
+    if (projected_mismatches) return PXA_STATUS_INTERNAL;
     return mismatches ? PXA_STATUS_INTERNAL : PXA_EVENT_HANDLED;
 }

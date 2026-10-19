@@ -1464,6 +1464,9 @@ static void drawLitSpan(uint8_t *pdest, int count, int s, int t, int sstep, int 
 #if PXA_GAME_RENDER_SPANS
 #include "host_spans.h"
 #endif
+#if PXA_GAME_RENDER_PROJECTED_SPANS
+#include "host_projected_spans.h"
+#endif
 #define MAX_SPAN_COUNT 32    // next-hack: Quake originally used 8, which gives more precise rendering. With 8, you lose on average 2 fps (so timedemo 3 will run on 26.1 avg fps). We prefer speed over accuracy, which is barely noticeable.
 #if ESP_PLATFORM
 // parity: 0 even rows, 1 odd rows, -1 all (see D_DrawSpans8 below)
@@ -2035,12 +2038,18 @@ static void D_DrawSpans8AndZOdd(void *pspan)
 
 void D_DrawSpans8(espan_t *pspan)
 {
+#if PXA_GAME_RENDER_PROJECTED_SPANS
+    if (Pxa_TryProjectedSurface(pspan, 0)) return;
+#endif
     D_DrawSpans8Rows(pspan, -1);
 }
 
 // D_DrawSpans8() and D_DrawZSpans()
 void D_DrawSpans8AndZ(espan_t *pspan)
 {
+#if PXA_GAME_RENDER_PROJECTED_SPANS
+    if (Pxa_TryProjectedSurface(pspan, 1)) return;
+#endif
     if (!parallelPost(D_DrawSpans8AndZOdd, pspan))
     {
         D_DrawSpans8Rows(pspan, -1);

@@ -23,7 +23,8 @@ with tempfile.TemporaryDirectory(prefix='pxa-host-spans-') as name:
            '-fsanitize=address,undefined', '-fno-omit-frame-pointer',
            '-I' + str(out), '-I' + str(sdk / 'include'),
            str(here / 'quake_host_spans_test.c'),
-           str(sdk / 'src/services/game_render/raster_spans.c'), '-o', str(out / 'test')]
+           str(sdk / 'src/services/game_render/raster_spans.c'),
+           str(sdk / 'src/services/game_render/raster_projected_spans.c'), '-ffp-contract=off', '-o', str(out / 'test')]
     subprocess.run(cmd, check=True)
     subprocess.run([str(out / 'test')], check=True,
         env=dict(os.environ, UBSAN_OPTIONS='halt_on_error=1', ASAN_OPTIONS='detect_leaks=1'))

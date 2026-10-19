@@ -12,7 +12,10 @@
 #include "pxa_permission.h"
 #include "external.h"
 #include "pxa_surface.h"
-#if PXA_GAME_RENDER_SPANS
+#ifndef PXA_GAME_RENDER_PROJECTED_SPANS
+#define PXA_GAME_RENDER_PROJECTED_SPANS 0
+#endif
+#if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS
 #include "pxa_game_render_spans.h"
 uint64_t port_game_render_context;
 #endif
@@ -538,7 +541,7 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     }
   }
   controls_environment(&env);
-#if PXA_GAME_RENDER_SPANS
+#if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS
   int raster_status = pxa_game_render_create_raster(30, 256);
   if (raster_status) return raster_status;
 #endif
@@ -560,7 +563,7 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t n) {
   pxa_event_t e;
   if (!pxa_parse_event(bytes, n, &e))
     return PXA_EVENT_UNHANDLED;
-#if PXA_GAME_RENDER_SPANS
+#if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS
   if (e.service == PXA_GAME_RENDER_SERVICE &&
       e.opcode == PXA_GAME_RENDER_CREATE_RASTER_CONTEXT && e.token == 30) {
     pxa_game_render_raster_result_t result;
@@ -568,7 +571,9 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t n) {
     if (result.status) return result.status;
     port_game_render_context = result.handle;
     port_log("PXA GameRender native spans ready max=%u guest_batch_bytes=%u",
-        result.max_spans, PXA_GAME_RENDER_SPANS_HEADER_BYTES + 256 * PXA_GAME_RENDER_SPAN_BYTES);
+        result.max_spans, PXA_GAME_RENDER_PROJECTED_SPANS ?
+        PXA_GAME_RENDER_PROJECTED_PREFIX_BYTES + 256 * PXA_GAME_RENDER_ROW_BYTES :
+        PXA_GAME_RENDER_SPANS_HEADER_BYTES + 256 * PXA_GAME_RENDER_SPAN_BYTES);
     return PXA_EVENT_HANDLED;
   }
 #endif

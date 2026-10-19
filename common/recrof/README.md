@@ -193,3 +193,10 @@ python3 local/pxa-apps/common/recrof/tests/run_quake_host_spans.py
 Quake II SD 0.1.13 的线性内存上限调整为 163 页（10.1875MiB），
 与 GameKit 16MiB PSRAM 的已验证装载配置一致；引擎 arena 仍为 7.5MiB。
 Quake 另做过渲染相关文件的单精度常量试验；中位数仍为 6.9fps，未纳入公开构建配置。
+
+
+GameRender投影试验：`PXA_QUAKE_PROJECTED_SPANS` 默认关闭。直接运行
+`python3 common/recrof/tests/run_quake_projected_spans.py` 可将Host投影、
+光照和深度输出与当前vendor函数对比（需主工程deps/pxa-system）。
+GameKit实际出生点私有候选中位3.9fps，低于6.9fps默认基线；不依据合成吞吐
+启用该选项。公开0.3.1使用Guest原路径，最低15fps及期望20fps仍待后续优化。

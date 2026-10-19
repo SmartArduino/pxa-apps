@@ -7,7 +7,7 @@
 #include "keyboard.h"
 #include "quakedef.h"
 #include "pxa_game_render_spans.h"
-#if PXA_GAME_RENDER_SPANS
+#if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS
 extern uint64_t port_game_render_context;
 #endif
 static int mdx, mdy;
@@ -35,7 +35,7 @@ void Pxa_QuakeProfile(unsigned stage) {
 void port_game_stats(void) {
   vflash_stats_t io; vflash_stats(&io, 1);
   uint8_t stats[64] = {0};
-#if PXA_GAME_RENDER_SPANS
+#if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS
   if (port_game_render_context)
     pxa_io(port_game_render_context, PXA_GAME_RENDER_IO_SPAN_TELEMETRY, stats, sizeof(stats));
 #endif

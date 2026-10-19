@@ -13,7 +13,7 @@
     0
   ],
   "id": "pxa-quake",
-  "version": "0.2.3",
+  "version": "0.3.1",
   "name": "Quake",
   "description": "Quake \u539f\u7248\u5f15\u64ce PXA \u79fb\u690d\uff0c\u9700\u8981\u81ea\u884c\u5bfc\u5165\u6e38\u620f\u8d44\u6e90\u3002",
   "build": {
@@ -73,5 +73,5 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 103
+  "release_sequence": 111
 }
