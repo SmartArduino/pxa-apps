@@ -33,3 +33,14 @@ done
 "$cpp_compiler" "${cpp_flags[@]}" "${objects[@]}" \
     "$cache"/{quickjs,dtoa,libregexp,libunicode,cutils}.o -lm -o "$cache/script-test"
 ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/script-test" "$app/assets/browser-runtime.qjb"
+"$cpp_compiler" "${cpp_flags[@]}" "$app/tests/library_test.cpp" "${objects[@]:0:2}" \
+    "$cache"/{quickjs,dtoa,libregexp,libunicode,cutils}.o -lm -o "$cache/library-test"
+ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/library-test" \
+    "$app/assets/browser-runtime.qjb" "$app/vendor/es5-shim/es5-shim.min.js"
+python3 "$app/tests/library_generator_test.py" "$app/tools/compile_libraries.py"
+"$compiler" -std=gnu11 "${engine_flags[@]}" "$app/tests/compile_interrupt_test.c" \
+    "$cache"/{quickjs,dtoa,libregexp,libunicode,cutils}.o -lm -o "$cache/compile-interrupt-test"
+ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/compile-interrupt-test"
+"$compiler" -std=gnu11 "${engine_flags[@]}" "$app/tests/array_interrupt_test.c" \
+    "$cache"/{quickjs,dtoa,libregexp,libunicode,cutils}.o -lm -o "$cache/array-interrupt-test"
+ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/array-interrupt-test"

@@ -56,7 +56,11 @@ int main() {
         client.pause(true);client.click(3);client.step();assert(calls.back().header.op==w::Op::click);
         auto s=state();s.wake=0;finish(client,s);
         const auto paused=calls.size();client.step();assert(calls.size()==paused);
-        client.pause(false);client.step();assert(calls.back().header.execute);
+        client.pause(false);client.step();assert(calls.back().header.mode==w::PollMode::update);
+        auto mode_state=state();mode_state.wake=0;finish(client,mode_state);
+        client.step(false);assert(calls.back().header.mode==w::PollMode::callbacks);
+        mode_state=state();mode_state.wake=0;finish(client,mode_state);
+        client.step();assert(calls.back().header.mode==w::PollMode::update);
         // Replace a page before its old asynchronous reply arrives.
         const auto old=state();assert(client.open("new","https://a.test/b",0,{},{}));
         finish(client,old,w::Output::markup,"stale markup");

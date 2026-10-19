@@ -117,15 +117,13 @@
     for (const key of ['id','name','value','src','href','type','className','alt','title']) {
         const attribute = key === 'className' ? 'class' : key;
         Object.defineProperty(Node.prototype, key, {
-            get() { return this.getAttribute(attribute) || ''; },
+            get() { const attrs=this._attrs; return attrs && own(attrs,attribute) ? attrs[attribute] || '' : ''; },
             set(v) { this.setAttribute(attribute, v); }});
     }
     for (const key of ['checked','disabled','hidden']) Object.defineProperty(Node.prototype, key, {
         get() { return this.hasAttribute(key); },
         set(v) { if (v) this.setAttribute(key, ''); else this.removeAttribute(key); }});
-    Object.defineProperties(Node.prototype, {
-        style: {get() { return this._style || (this._style = Object.create(null)); }, set(v) { this._style = v; }},
-        textContent: {get() {
+    const textContent = {get() {
                 const todo=[this], parts=[]; let visited=0;
                 while (todo.length) {
                     if (++visited>512) throw new RangeError('DOM traversal limit');
@@ -143,8 +141,10 @@
                 for (const n of this.childNodes) n.parentNode = null;
                 this.childNodes = [];
                 if (v) this.appendChild(new Node('', v)); else changed();
-            }},
-        innerText: {get() { return this.textContent; }, set(v) { this.textContent = v; }},
+            }};
+    Object.defineProperties(Node.prototype, {
+        style: {get() { return this._style || (this._style = Object.create(null)); }, set(v) { this._style = v; }},
+        textContent, innerText: textContent,
         innerHTML: {get() { const parts=[]; for(const n of this.childNodes) parts.push(serialize(n,false)); return parts.join(''); },
             set(v) { v = String(v); if (v.indexOf('<') < 0 && v.indexOf('&') < 0) this.textContent = v;
                 else { for (const n of this.childNodes) n.parentNode = null; this.childNodes = []; native.fragment(this, v); changed(); } }},

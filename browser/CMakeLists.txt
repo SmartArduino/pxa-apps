@@ -19,6 +19,10 @@ if(DEFINED ENV{PXA_BROWSER_START_URL})
 endif()
 if(DEFINED ENV{PXA_BROWSER_TRACE})
     target_compile_definitions(pxa_main PRIVATE PXA_BROWSER_TRACE=1)
+endif()
+# Script-only phase profiling keeps the production UI binary and avoids its
+# per-touch/layout logging cost. Both switches are absent from normal builds.
+if(DEFINED ENV{PXA_BROWSER_TRACE} OR DEFINED ENV{PXA_BROWSER_SCRIPT_TRACE})
     target_compile_definitions(pxa_script PRIVATE PXA_BROWSER_TRACE=1)
 endif()
 if(DEFINED ENV{PXA_BROWSER_PROFILE})

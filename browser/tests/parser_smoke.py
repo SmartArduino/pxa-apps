@@ -2,7 +2,9 @@
 """Exercise parser limits in the real PXA interpreter, including recovery.
 
 Native sanitizers cannot model WAMR's separate operand stack. Each generated
-case must raise one ordinary JS exception, execute the next script and render.
+parser case must raise one ordinary JS exception. Recursive runtime cases must
+catch the expected stack error; supported cases must succeed. All must execute
+the next script and render.
 No website code or credentials are used. Each case uses a fresh simulator so
 the complete result also identifies independent faults.
 """
@@ -22,10 +24,19 @@ def main():
     for name in ('simulator', 'package', 'publisher-key', 'ime-package', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--case', action='append', help='Run only these named cases (repeatable).')
+    parser.add_argument('--runtime', action='store_true',
+                        help='Also check recursive callbacks and VM semantics in the real interpreter.')
     args = parser.parse_args()
     sources = cases()
     expected_errors = dict.fromkeys(sources, 1)
     supported = supported_cases()
+    if args.runtime:
+        from runtime_cases import recursive_cases, semantic_cases, checked_recursion
+        recursive = recursive_cases()
+        sources.update({name: checked_recursion(source, proxy='proxy' in name)
+                        for name, source in recursive.items()})
+        expected_errors.update(dict.fromkeys(recursive, 0))
+        supported.update(semantic_cases())
     sources.update(supported)
     expected_errors.update(dict.fromkeys(supported, 0))
     if args.case:
@@ -33,17 +44,25 @@ def main():
         if unknown:parser.error('unknown cases: '+', '.join(sorted(unknown)))
         sources={name:sources[name] for name in dict.fromkeys(args.case)}
 
+    recovered = set()
+
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *_):
             pass
 
         def do_GET(self):
+            if self.path.startswith('/recovered/') and self.path[11:] in sources:
+                recovered.add(self.path[11:])
+                self.send_response(204)
+                self.end_headers()
+                return
             source = sources.get(self.path[1:])
             if source is None:
                 self.send_error(404)
                 return
             body = ('<p id=a>Safe</p><script>' + source + ';</script>'
-                    '<script>document.getElementById("a").textContent="Recovered";</script>').encode()
+                    '<script>document.getElementById("a").textContent="Recovered";'
+                    'fetch("/recovered/' + self.path[1:] + '");</script>').encode()
             self.send_response(200)
             self.send_header('Content-Type', 'text/html; charset=utf-8')
             self.send_header('Content-Length', str(len(body)))
@@ -65,6 +84,7 @@ def main():
                 assert 'Guest exception' not in browser.logs(), 'Guest trap'
                 assert re.search(r'BROWSER JS READY[^\n]* errors=' + str(expected_errors[name]) + r'\b', browser.logs())
                 browser.wait(lambda: 'BROWSER JS UPDATE revision=1' in browser.logs())
+                browser.wait(lambda: name in recovered)
                 browser.shot('recovered')
                 result = {'case': name, 'passed': True}
             except Exception as error:

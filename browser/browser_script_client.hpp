@@ -14,7 +14,9 @@ public:
     bool open(std::string html,std::string url,unsigned module,Metrics,Limits);
     void close();
     void clear_storage();
-    void step();
+    // Defer DOM projection while an image overlay borrows the current page.
+    // Timers/network still run, without another markup buffer or serialization.
+    void step(bool project=true);
     void maintain();
     bool event(const pxa::Event&);
     void complete(Response);
@@ -63,9 +65,9 @@ private:
     std::array<std::byte,1024> reply_{};
     static std::uint64_t now();
     void fail(std::string_view);
-    void drive(bool);
+    void drive(bool,bool=true);
     void upload(wire::Op,std::string);
-    void send(wire::Op,bool=false);
+    void send(wire::Op,bool=false,bool=true);
     bool receive(std::span<const std::byte>);
     bool deliver(wire::Output,std::string);
 };

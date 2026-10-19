@@ -69,8 +69,8 @@ void Client::upload(wire::Op op,std::string data) {
     upload_op_=op;upload_=std::move(data);upload_offset_=0;
 }
 void Client::maintain(){drive(false);}
-void Client::step(){drive(true);}
-void Client::drive(bool execute) {
+void Client::step(bool project){drive(true,project);}
+void Client::drive(bool execute,bool project) {
     if(token_) {
         if(now()-started_us_>15000000)fail("脚本服务响应超时");
         return;
@@ -100,12 +100,12 @@ void Client::drive(bool execute) {
         upload(wire::Op::click,std::move(e.data));send(upload_op_);return;
     }
     if(limit_) {wire::Encoder e;e.u32(std::uint32_t(*limit_));limit_.reset();upload(wire::Op::limit,std::move(e.data));send(upload_op_);return;}
-    if(execute && !paused_ && !markup_ && now()>=summary_.wake)send(wire::Op::poll,true);
+    if(execute && !paused_ && (!project || !markup_) && now()>=summary_.wake)send(wire::Op::poll,true,project);
 }
-void Client::send(wire::Op op,bool execute) {
+void Client::send(wire::Op op,bool execute,bool project) {
     constexpr auto prefix=8+wire::endpoint.size();
     auto body=std::span(packet_).subspan(prefix,wire::packet_bytes);
-    wire::Header h;h.op=op;h.execute=execute;h.generation=generation_;h.key=key_;
+    wire::Header h;h.op=op;h.mode=execute?(project?wire::PollMode::update:wire::PollMode::callbacks):wire::PollMode::drain;h.generation=generation_;h.key=key_;
     const bool uploading=op!=wire::Op::poll && op!=wire::Op::close && op!=wire::Op::clear;
     const auto amount=uploading?std::min(wire::packet_bytes-wire::header_bytes,upload_.size()-upload_offset_):0;
     if(uploading){h.offset=std::uint32_t(upload_offset_);h.total=std::uint32_t(upload_.size());}

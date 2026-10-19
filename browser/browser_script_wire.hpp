@@ -14,6 +14,9 @@ inline constexpr std::string_view endpoint="pxa.browser.script.v1";
 inline constexpr std::size_t packet_bytes=1024, header_bytes=40, max_blob=65536;
 enum class Op : std::uint8_t { open=1, response, field, click, limit, close, poll, clear };
 enum class Output : std::uint8_t { none, cookie, request, navigation, markup };
+// Drain queued outputs, execute and project DOM, or execute callbacks only.
+// Modes 0/1 retain their previous encoding; UI and worker ship together.
+enum class PollMode : std::uint8_t { drain, update, callbacks };
 using Key=std::array<std::byte,16>;
 inline std::span<const std::byte> bytes(std::string_view s) { return std::as_bytes(std::span(s.data(),s.size())); }
 inline std::string_view text(std::span<const std::byte> s) { return {reinterpret_cast<const char*>(s.data()),s.size()}; }
@@ -40,25 +43,25 @@ struct Reader {
 };
 struct Header {
     Op op=Op::poll;
-    bool execute=false;
+    PollMode mode=PollMode::drain;
     std::uint64_t generation=0;
     Key key{};
     std::uint32_t offset=0,total=0;
     void encode(std::span<std::byte> out) const {
         pxa::wire::put32(out.data(),0x31534a42);out[4]=std::byte{1};out[5]=std::byte(op);
-        out[6]=std::byte(execute);out[7]=std::byte{0};pxa::wire::put64(out.data()+8,generation);
+        out[6]=std::byte(mode);out[7]=std::byte{0};pxa::wire::put64(out.data()+8,generation);
         std::copy(key.begin(),key.end(),out.begin()+16);
         pxa::wire::put32(out.data()+32,offset);pxa::wire::put32(out.data()+36,total);
     }
     static std::optional<Header> decode(std::span<const std::byte> in) {
         if(in.size()<header_bytes || in.size()>packet_bytes || pxa::wire::get32(in.data())!=0x31534a42 ||
-           in[4]!=std::byte{1} || in[7]!=std::byte{0} || std::to_integer<unsigned>(in[6])>1) return {};
-        Header h;h.op=Op(std::to_integer<unsigned>(in[5]));h.execute=in[6]==std::byte{1};
+           in[4]!=std::byte{1} || in[7]!=std::byte{0} || std::to_integer<unsigned>(in[6])>unsigned(PollMode::callbacks)) return {};
+        Header h;h.op=Op(std::to_integer<unsigned>(in[5]));h.mode=PollMode(std::to_integer<unsigned>(in[6]));
         if(h.op<Op::open || h.op>Op::clear) return {};
         h.generation=pxa::wire::get64(in.data()+8);std::copy_n(in.begin()+16,16,h.key.begin());
         h.offset=pxa::wire::get32(in.data()+32);h.total=pxa::wire::get32(in.data()+36);
         if(!h.generation || h.total>max_blob || h.offset>h.total || in.size()-header_bytes>h.total-h.offset) return {};
-        if(h.execute && h.op!=Op::poll)return {};
+        if(h.mode!=PollMode::drain && h.op!=Op::poll)return {};
         return h;
     }
 };

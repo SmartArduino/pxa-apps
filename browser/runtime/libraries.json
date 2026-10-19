@@ -1,0 +1,11 @@
+{
+  "format": "pxa-browser-script-libraries-1",
+  "libraries": [
+    {
+      "id": "es5-shim-4.5.7",
+      "source": "vendor/es5-shim/es5-shim.min.js",
+      "license": "vendor/es5-shim/LICENSE",
+      "filename": "es5-shim.min.js"
+    }
+  ]
+}

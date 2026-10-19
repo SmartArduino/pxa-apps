@@ -1,5 +1,5 @@
-1a631b630947eec66cd0e92ea584ffdca03902471a92598862411850f85539cc  browser-runtime.js
-70f4008751a5ebf76851b454b6595797cb684775be4cbf4944dad500f1f9fed9  ../assets/browser-runtime.qjb
+5e0fd3212bb103c6e778a790dbdedf19ce7ced0b18fe6e8150aab632ba31b06a  browser-runtime.js
+44830b6dec62904a7b6e5e11def4937c6c262fe060de9d4c5d9653e9a281a5f5  ../assets/browser-runtime.qjb
 b73a403a59da30726257ddbdf5e399298941c1def997782ee0d4d33f796a80a2  ../vendor/quickjs/cutils.c
 d2da6d06a75b9e6c116c82b7a41df6bcc170c8b1779f374fa953ecf688eda647  ../vendor/quickjs/cutils.h
 05abbf5cde3c7d544dc509fc867c6320b1e002dbeb76fc78a3df33ae62120d0f  ../vendor/quickjs/dtoa.c
@@ -13,8 +13,16 @@ ce310152bc80d7415dcb657e23abd9a40bf83e393c0d05d325dae384bb01d259  ../vendor/quic
 181c6b25d9d0e4853315d36a6e6fab3b2c3554271693d898a439384ba0f67c2b  ../vendor/quickjs/list.h
 342194359417664e652f54e7d682ee2ef91dd982e91f74decbde992a2c848236  ../vendor/quickjs/quickjs-atom.h
 a9c60a8c9366820733d9d2acbb805f48b2e9e2778df526e6bcb845fdb6b47834  ../vendor/quickjs/quickjs-opcode.h
-0b7aebea0e39945d890839c2537b364a7b277b36eb4a625bb0bba49209c3c37a  ../vendor/quickjs/quickjs.c
+5f62acb9ec35f4969361a22fdda874e750c8d5650473c75e4a446c99fd297207  ../vendor/quickjs/quickjs.c
 2165f47772af9faee1798999a599fa9de850d1bf0259502dade1c25d4a588316  ../vendor/quickjs/quickjs.h
 234057c4079458cba9862d4bbb6f8a059ac2e4a194947673da0ad38ca16a37fd  ../vendor/quickjs/VERSION
-71be392679fa74fc4bc774838f2f7c5f23dd6f90a9110990413f7e7614d17f02  ../tools/compile_runtime.c
-908b36f94f0dafe3e3d459dba98e42be23022a95628554cbc402c0ca54b1f212  ../tools/compile_runtime.sh
+36f21261436c35647f659669dc5ba0840879b7d662d45de42ef94177a7b72474  ../tools/compile_runtime.c
+94457e2c12aeecb4c5068fa6f5cb73e183c6b1d888b5daadccc9031f44abaa9d  ../tools/compile_runtime.sh
+74242a33aba004b92743f1d678475d7724dce82607ffca42997863378cc5d55b  ../tools/compile_libraries.py
+c89e093df935bed26e9c85ea44b54c044a585b2a2af8581dfd16365919e920ec  libraries.json
+d90398ece0f9d04d2dc54452f4dd6eff88cd6689d732f7bf2d5d5b0392d981be  ../browser_script_libraries.hpp
+68f7e459f79180b490520f06eddb1715650d5f1af5583ff3f8447e795b2a6a2f  ../assets/script-libraries/LICENSE.es5-shim-4.5.7.txt
+aadfb43d799c0e6fb42ca97580f6032d6c5092b7d96ec4961bcd119a9b202948  ../assets/script-libraries/e548d543be343288b431ce45a4964ecde1ff362dfa792a3c0a5360b4aa8af91d.qjb
+68f7e459f79180b490520f06eddb1715650d5f1af5583ff3f8447e795b2a6a2f  ../vendor/es5-shim/LICENSE
+920994c748f75b6c4f61c3c782a05c9807fc4bed70e66aabcf1c1bf461cb8a35  ../vendor/es5-shim/UPSTREAM.md
+e548d543be343288b431ce45a4964ecde1ff362dfa792a3c0a5360b4aa8af91d  ../vendor/es5-shim/es5-shim.min.js

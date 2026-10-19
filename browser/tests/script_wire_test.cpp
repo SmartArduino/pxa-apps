@@ -9,6 +9,13 @@ int main() {
     auto decoded=w::Header::decode(packet);assert(decoded && decoded->key==h.key && decoded->generation==9);
     auto corrupt=packet;corrupt[7]=std::byte{1};assert(!w::Header::decode(corrupt));
     corrupt=packet;corrupt[6]=std::byte{1};assert(!w::Header::decode(corrupt));
+    for(auto mode:{w::PollMode::drain,w::PollMode::update,w::PollMode::callbacks}) {
+        auto poll=h;poll.op=w::Op::poll;poll.mode=mode;poll.total=0;
+        poll.encode(std::span(packet).first(w::header_bytes));
+        auto roundtrip=w::Header::decode(std::span(packet).first(w::header_bytes));
+        assert(roundtrip && roundtrip->mode==mode);
+    }
+    packet[6]=std::byte{3};assert(!w::Header::decode(std::span(packet).first(w::header_bytes)));
     h.total=100;h.encode(packet);assert(!w::Header::decode(packet)); // declared length cannot hold chunk
     h.total=2000;h.encode(packet);
     w::Upload upload;assert(upload.append(h,std::span(packet).subspan(w::header_bytes)));

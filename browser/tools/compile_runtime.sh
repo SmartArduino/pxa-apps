@@ -15,6 +15,12 @@ for name in quickjs dtoa libregexp libunicode cutils; do
 done
 "$compiler" "${flags[@]}" "$app/tools/compile_runtime.c" "$cache"/{quickjs,dtoa,libregexp,libunicode,cutils}.o -lm -o "$cache/compile-runtime"
 "$cache/compile-runtime" "$app/runtime/browser-runtime.js" "$app/assets/browser-runtime.qjb"
-(cd "$app/runtime" && sha256sum browser-runtime.js ../assets/browser-runtime.qjb \
-    ../vendor/quickjs/*.[ch] ../vendor/quickjs/VERSION \
-    ../tools/compile_runtime.c ../tools/compile_runtime.sh > compiled.sha256)
+python3 "$app/tools/compile_libraries.py" "$cache/compile-runtime"
+(cd "$app/runtime"
+    shopt -s nullglob
+    inputs=(browser-runtime.js ../assets/browser-runtime.qjb
+        ../vendor/quickjs/*.[ch] ../vendor/quickjs/VERSION
+        ../tools/compile_runtime.c ../tools/compile_runtime.sh ../tools/compile_libraries.py
+        libraries.json ../browser_script_libraries.hpp ../assets/script-libraries/*
+        ../vendor/es5-shim/*)
+    sha256sum "${inputs[@]}" > compiled.sha256)

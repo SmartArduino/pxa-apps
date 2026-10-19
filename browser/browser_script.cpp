@@ -7,6 +7,7 @@
 #include <cstdio>
 #endif
 #include <chrono>
+#include <charconv>
 #include <cstdlib>
 #include <cstring>
 #include <limits>
@@ -15,6 +16,13 @@
 
 namespace browser::script {
 namespace {
+// Native tests can observe phases. Production Wasm includes diagnostics only
+// when requested by the same build flag as the UI/service trace output.
+#if defined(__wasi__) && !defined(PXA_BROWSER_TRACE)
+constexpr bool trace_enabled=false;
+#else
+constexpr bool trace_enabled=true;
+#endif
 using namespace detail;
 #ifdef PXA_SCRIPT_INTERPRETED
 // Intrinsic registration and the signed bridge are much slower under WAMR.
@@ -25,6 +33,9 @@ constexpr unsigned dom_batch_nodes=2;
 constexpr std::uint64_t bootstrap_turn_us=200000;
 constexpr unsigned dom_batch_nodes=8;
 #endif
+// The lexer and compiler phase boundaries poll this deadline. Keep a final
+// check for work that completes without another poll; parsing is not resumable.
+constexpr std::uint64_t compile_turn_us = 2000000;
 struct Value {
     JSContext* ctx = nullptr;
     JSValue value = JS_UNDEFINED;
@@ -90,10 +101,12 @@ struct Page::Impl {
     Limits limits;
     Hooks hooks;
     Metrics metrics;
-    std::string html, url, problem, bootstrap, setup_program, setup_data, markup_buffer;
+    std::string html, url, problem, bootstrap, markup_buffer;
     JSRuntime* runtime = nullptr;
     JSContext* ctx = nullptr;
-    Value bridge, bindings, factory;
+    // Initialization's factory and a compiled page script have disjoint
+    // lifetimes. Reuse the same root; no extra persistent program/cache.
+    Value bridge, bindings, prepared;
     unsigned initialization_stage = 0;
     std::size_t cursor = 0, source_bytes = 0;
     unsigned node_count = 0, script_count = 0;
@@ -109,7 +122,7 @@ struct Page::Impl {
     std::vector<FieldChange> fields;
     bool dom_dirty = true, snapshot_pending = false;
     std::uint64_t timer_at = UINT64_MAX;
-    bool finished = false, stopped = false, paused = false;
+    bool finished = false, stopped = false, paused = false, prepared_response = false;
     std::uint64_t deadline = 0;
     Stats counters;
     std::uint64_t markup_hash = 0;
@@ -117,7 +130,7 @@ struct Page::Impl {
     ~Impl() {
         bridge = {};
         bindings = {};
-        factory = {};
+        prepared = {};
         if (ctx) JS_FreeContext(ctx);
         if (runtime) JS_FreeRuntime(runtime);
     }
@@ -320,7 +333,7 @@ struct Page::Impl {
             if (!check((JS_AddIntrinsicDate(ctx) || JS_AddIntrinsicEval(ctx) || JS_AddIntrinsicJSON(ctx)) ? JS_EXCEPTION : JS_UNDEFINED)) return false;
             break;
         case 3:
-            if (!check((JS_AddIntrinsicRegExp(ctx) || JS_AddIntrinsicPromise(ctx)) ? JS_EXCEPTION : JS_UNDEFINED)) return false;
+            if (!check((JS_AddIntrinsicRegExp(ctx) || JS_AddIntrinsicPromise(ctx) || JS_AddIntrinsicProxy(ctx)) ? JS_EXCEPTION : JS_UNDEFINED)) return false;
             JS_AddIntrinsicRegExpCompiler(ctx);
             break;
         case 4: {
@@ -342,19 +355,19 @@ struct Page::Impl {
             if (bootstrap.starts_with("PXAQJS1\n")) {
                 Value compiled(ctx, JS_ReadObject(ctx, reinterpret_cast<const std::uint8_t*>(bootstrap.data()+8), bootstrap.size()-8, JS_READ_OBJ_BYTECODE));
                 if (!check(compiled.value)) return false;
-                factory = Value(ctx, JS_EvalFunction(ctx, compiled.release()));
+                prepared = Value(ctx, JS_EvalFunction(ctx, compiled.release()));
             } else {
-                factory = Value(ctx, JS_Eval(ctx, bootstrap.c_str(), bootstrap.size(), "pxa-browser-runtime.js", JS_EVAL_TYPE_GLOBAL));
+                prepared = Value(ctx, JS_Eval(ctx, bootstrap.c_str(), bootstrap.size(), "pxa-browser-runtime.js", JS_EVAL_TYPE_GLOBAL));
             }
-            if (!check(factory.value)) return false;
+            if (!check(prepared.value)) return false;
             std::string{}.swap(bootstrap);
             break;
         }
         case 5: {
             JSValue argument = bindings.value;
-            bridge = Value(ctx, JS_Call(ctx, factory.value, JS_UNDEFINED, 1, &argument));
+            bridge = Value(ctx, JS_Call(ctx, prepared.value, JS_UNDEFINED, 1, &argument));
             if (!check(bridge.value)) return false;
-            bindings = {}; factory = {};
+            bindings = {}; prepared = {};
             break;
         }
         default: return true;
@@ -362,21 +375,64 @@ struct Page::Impl {
         ++initialization_stage;
         return true;
     }
-    void evaluate(std::string_view source, std::string_view name) {
+    bool prepare_script(std::string_view source, std::uint32_t response_id=0) {
         if (source.size() > limits.script_bytes || source.size() > limits.source_bytes - std::min(source_bytes, limits.source_bytes)) {
-            problem = "网页脚本超过容量限制"; ++counters.errors; return;
+            problem = "网页脚本超过容量限制"; ++counters.errors; return true;
+        }
+        CompiledScript cached;
+        if(response_id && hooks.compiled_script) {
+            cached=hooks.compiled_script(hooks.owner,response_id,source);
+            if(cached.state==CompiledScript::State::loading)return false;
         }
         source_bytes += source.size();
-        const std::string filename(name);
-        // QuickJS requires a trailing NUL even when an explicit length is supplied.
-        const std::string terminated(source);
-        if (hooks.trace) hooks.trace(hooks.owner,"COMPILE");
-        Value compiled(ctx, JS_Eval(ctx, terminated.c_str(), terminated.size(), filename.c_str(), JS_EVAL_TYPE_GLOBAL|JS_EVAL_FLAG_COMPILE_ONLY));
-        if (!check(compiled.value)) return;
-        if (hooks.trace) hooks.trace(hooks.owner,"EXECUTE");
-        Value result(ctx,JS_EvalFunction(ctx,compiled.release()));
+        // Compilation is a separate idle turn. Source copies can be released
+        // before execution, which receives the ordinary callback deadline.
+        deadline = now() + compile_turn_us;
+        if(cached.state==CompiledScript::State::bytecode) {
+            if(!cached.bytes.starts_with("PXAQJS1\n") || cached.bytes.size()>65536) {
+                problem="预编译脚本资源无效";++counters.errors;stopped=true;return true;
+            }
+            trace("COMPILED_LIBRARY");
+            prepared=Value(ctx,JS_ReadObject(ctx,reinterpret_cast<const std::uint8_t*>(cached.bytes.data()+8),cached.bytes.size()-8,JS_READ_OBJ_BYTECODE));
+#ifdef PXA_BROWSER_TRACE
+            trace("COMPILED_LIBRARY_READ");
+#endif
+        } else {
+            // A response body is already an owning, NUL-terminated string and
+            // stays in its slot throughout this synchronous call. Inline HTML
+            // slices need their own terminator; never borrow one past the view.
+            const std::string terminated=response_id?std::string{}:std::string(source);
+            const char* input=response_id?source.data():terminated.c_str();
+            trace("COMPILE");
+            prepared = Value(ctx, JS_Eval(ctx, input, source.size(), url.c_str(), JS_EVAL_TYPE_GLOBAL|JS_EVAL_FLAG_COMPILE_ONLY));
+        }
+        if (!check(prepared.value)) {
+            if (counters.timeouts) problem="脚本编译超时";
+            prepared={}; return true;
+        }
+        if (now() >= deadline) {
+            prepared={};problem="脚本编译超时";stopped=true;
+            ++counters.errors;++counters.timeouts;
+        }
+        return true;
+    }
+    [[gnu::noinline]] void execute_script() {
+        std::uint32_t id=0;
+        bool parser_script=false;
+        if (prepared_response) {
+            id=responses.front().id;responses.erase(responses.begin());
+            parser_script=waiting_script==id;
+            if (parser_script) waiting_script=0;
+            retire(id);prepared_response=false;
+        }
+        const auto before=counters.errors;
+        Value program=std::move(prepared);
+        trace("EXECUTE");
+        Value result(ctx,JS_EvalFunction(ctx,program.release()));
         check(result.value);
-        if (hooks.trace) hooks.trace(hooks.owner,"EXECUTED");
+        trace("EXECUTED");
+        if (id && !parser_script && !stopped)
+            invoke("scriptResponse",JS_NewUint32(ctx,id),JS_NewBool(ctx,before!=counters.errors));
     }
     void build_one(std::string_view source, std::size_t& at, bool scripts) {
         const auto item = token(source, at);
@@ -397,7 +453,7 @@ struct Page::Impl {
             if (!scripts || t.name != "script" || !executable(t)) return;
             if (++script_count > limits.scripts) { problem = "网页脚本数量达到上限"; ++counters.errors; return; }
             const auto src = t.get("src");
-            if (src.empty()) evaluate(body, url);
+            if (src.empty()) prepare_script(body);
             else {
                 const auto target = browser::resolve(url, src);
                 if (!target || !script_url_allowed(url, *target, true)) { ++counters.errors; problem = "脚本地址已拦截"; return; }
@@ -423,23 +479,106 @@ struct Page::Impl {
         const bool empty = trim(item.text).ends_with('/') || voids.find(" " + t.name + " ") != voids.npos;
         invoke("open", name.value, attrs.value, JS_NewBool(ctx, empty));
     }
+    void trace(std::string_view phase) {
+        if constexpr(trace_enabled)if(hooks.trace)hooks.trace(hooks.owner,phase);
+    }
+    [[gnu::noinline]] void trace_initialization(unsigned stage, std::optional<std::uint64_t> elapsed = {}) {
+        if constexpr(!trace_enabled)return;
+        if (!hooks.trace) return;
+        // Prefix, 10-digit stage, separator and 20-digit duration fit in 64 B.
+        char buffer[64];
+        auto* at = buffer;
+        const auto append = [&](std::string_view text) {
+            at = std::copy(text.begin(), text.end(), at);
+        };
+        append(elapsed ? "INIT_END "sv : "INIT_BEGIN "sv);
+        at = std::to_chars(at, std::end(buffer), stage).ptr;
+        if (elapsed) {
+            append(" us="sv);
+            at = std::to_chars(at, std::end(buffer), *elapsed).ptr;
+        }
+        hooks.trace(hooks.owner, {buffer, std::size_t(at-buffer)});
+    }
+    // WAMR FAST retains a function's locals and constant pool on every call.
+    // Keep phase-specific state out of the recursive engine's caller frame.
+    [[gnu::noinline]] void initialize_turn() {
+        const auto begin = now();
+        const auto stage=initialization_stage;
+        trace_initialization(stage);
+        if (runtime) JS_UpdateStackTop(runtime);
+        if (!initialize_step()) stopped = true;
+        if (heap.failed && !stopped) { problem="脚本内存达到上限"; stopped=true; ++counters.errors; }
+        const auto elapsed=now()-begin;
+        counters.initialization_us+=elapsed;
+        counters.max_initialization_step_us=std::max(counters.max_initialization_step_us,elapsed);
+        trace_initialization(stage, elapsed);
+        deadline=0;
+    }
+    [[gnu::noinline]] void handle_response() {
+        const auto before=counters.errors;
+        const auto& front=responses.front();
+        const bool script=pending(front.id) && pending_script(front.id);
+        if (script && !front.failed && front.status >= 200 && front.status < 300) {
+            if(!prepare_script(front.body,front.id))return;
+            if (prepared.ctx) {
+                // Retain only the response's existing metadata until the next
+                // turn. Keeping its slot also preserves parser/script order.
+                prepared_response=true;
+                std::string{}.swap(responses.front().body);
+                return;
+            }
+        }
+        auto response=std::move(responses.front());responses.erase(responses.begin());
+        if (!pending(response.id)) return;
+        const bool parser_script=waiting_script==response.id;
+        retire(response.id);
+        if (script) {
+            if (parser_script) waiting_script=0;
+            const bool failed=response.failed || response.status<200 || response.status>=300;
+            if (failed && parser_script) { ++counters.errors;problem="部分脚本未能加载"; }
+            if (!parser_script && !stopped)
+                invoke("scriptResponse",JS_NewUint32(ctx,response.id),JS_NewBool(ctx,failed || before!=counters.errors));
+        } else {
+            auto text=string(response.body);
+            if (check(text.value)) invoke("response",JS_NewUint32(ctx,response.id),JS_NewUint32(ctx,response.status),text.value,JS_NewBool(ctx,response.failed));
+        }
+    }
+    [[gnu::noinline]] void build_dom_batch() {
+        for (unsigned i = 0; i < dom_batch_nodes && cursor < html.size() && !stopped && !waiting_script; ++i) {
+            const auto scripts_before = script_count;
+            build_one(html, cursor, true);
+            if (script_count != scripts_before || now() >= deadline) break;
+        }
+        if (cursor == html.size() && !stopped && !waiting_script && !prepared.ctx) {
+            finished = true; invoke("finish");
+            std::string{}.swap(html);
+        }
+    }
+    [[gnu::noinline]] void dispatch_event() {
+        dom_dirty = true;
+        if (click_count) {
+            // Bound autonomous loads between genuine UI actions. A long
+            // comic must not exhaust its lifetime script/source allowance
+            // simply because the user has turned more than twelve pages.
+            script_count=0;source_bytes=0;
+            const auto id = clicks[0]; std::move(clicks.begin()+1,clicks.begin()+click_count,clicks.begin()); --click_count;
+            if (prepare_inline(id, "click")) invoke("click", JS_NewUint32(ctx,id));
+        } else if (!fields.empty()) {
+            script_count=0;source_bytes=0;
+            auto field = std::move(fields.front()); fields.erase(fields.begin());
+            auto value = string(field.value);
+            if (check(value.value) && prepare_inline(field.id, "input") && prepare_inline(field.id, "change"))
+                invoke("field", JS_NewUint32(ctx,field.id), value.value, JS_NewBool(ctx,field.checked));
+        } else invoke("pump");
+        if (!stopped && now() < deadline && JS_IsJobPending(runtime)) {
+            JSContext* job_context = nullptr;
+            if (JS_ExecutePendingJob(runtime, &job_context) < 0) check(JS_EXCEPTION);
+        }
+    }
     void step() {
         if (stopped || paused) return;
-        if (initialization_stage < 6) {
-            const auto begin = now();
-            const auto stage=initialization_stage;
-            if(hooks.trace)hooks.trace(hooks.owner,"INIT_BEGIN "+std::to_string(stage));
-            if (runtime) JS_UpdateStackTop(runtime);
-            if (!initialize_step()) stopped = true;
-            if (heap.failed && !stopped) { problem="脚本内存达到上限"; stopped=true; ++counters.errors; }
-            const auto elapsed=now()-begin;
-            counters.initialization_us+=elapsed;
-            counters.max_initialization_step_us=std::max(counters.max_initialization_step_us,elapsed);
-            if(hooks.trace)hooks.trace(hooks.owner,"INIT_END "+std::to_string(stage)+" us="+std::to_string(elapsed));
-            deadline=0;
-            return;
-        }
-        if (finished && responses.empty() && !click_count && fields.empty() && now() < timer_at && !JS_IsJobPending(runtime)) return;
+        if (initialization_stage < 6) { initialize_turn(); return; }
+        if (finished && !prepared.ctx && responses.empty() && !click_count && fields.empty() && now() < timer_at && !JS_IsJobPending(runtime)) return;
         if (snapshot_pending && responses.empty() && !click_count && fields.empty()) return;
         JS_UpdateStackTop(runtime);
         const auto begin = now(); deadline = begin + limits.turn_us;
@@ -449,78 +588,12 @@ struct Page::Impl {
             if (stopped) { deadline=0; return; }
         }
         ++counters.turns;
-        if (!setup_program.empty()) {
-            // Install the signed presentation hooks before website scripts.
-            // Keep this outside DOM/onload callbacks so their stack allowance
-            // is not consumed by evaluating the site's initial source.
-            deadline=now()+bootstrap_turn_us;
-            Value global(ctx,JS_GetGlobalObject(ctx));
-            if(!setup_data.empty()) {
-                Value data=string(setup_data);
-                if(!check(data.value) || JS_SetPropertyStr(ctx,global.value,"__pxaAppData",data.release())<0)stopped=true;
-                std::string{}.swap(setup_data);
-            }
-            Value program(ctx,JS_ReadObject(ctx,reinterpret_cast<const std::uint8_t*>(setup_program.data()+8),setup_program.size()-8,JS_READ_OBJ_BYTECODE));
-            if(!check(program.value) || stopped) stopped=true;
-            else {
-                Value result(ctx,JS_EvalFunction(ctx,program.release()));
-                if(!check(result.value)) stopped=true;
-            }
-            JS_SetPropertyStr(ctx,global.value,"__pxaAppData",JS_UNDEFINED);
-            std::string{}.swap(setup_program);
-        }
-        else if (!responses.empty()) {
-            auto response = std::move(responses.front()); responses.erase(responses.begin());
-            if (pending(response.id)) {
-                const bool script=pending_script(response.id);
-                retire(response.id);
-                if (script) {
-                    const bool parsed=waiting_script==response.id;
-                    if(parsed)waiting_script=0;
-                    const auto before=counters.errors;
-                    if (!response.failed && response.status >= 200 && response.status < 300) evaluate(response.body, url);
-                    else if(parsed) { ++counters.errors; problem = "部分脚本未能加载"; }
-                    if(!parsed && !stopped)invoke("scriptResponse",JS_NewUint32(ctx,response.id),
-                        JS_NewBool(ctx,response.failed || response.status<200 || response.status>=300 || before!=counters.errors));
-                } else {
-                    auto text = string(response.body);
-                    if (check(text.value)) invoke("response", JS_NewUint32(ctx,response.id), JS_NewUint32(ctx,response.status), text.value, JS_NewBool(ctx,response.failed));
-                }
-            }
-        } else if (!finished && !waiting_script) {
-            for (unsigned i = 0; i < dom_batch_nodes && cursor < html.size() && !stopped && !waiting_script; ++i) {
-                const auto scripts_before = script_count;
-                build_one(html, cursor, true);
-                if (script_count != scripts_before || now() >= deadline) break;
-            }
-            if (cursor == html.size() && !stopped && !waiting_script) {
-                finished = true; invoke("finish");
-                std::string{}.swap(html);
-            }
-        } else if (finished) {
-            dom_dirty = true;
-            if (click_count) {
-                // Bound autonomous loads between genuine UI actions. A long
-                // comic must not exhaust its lifetime script/source allowance
-                // simply because the user has turned more than twelve pages.
-                script_count=0;source_bytes=0;
-                const auto id = clicks[0]; std::move(clicks.begin()+1,clicks.begin()+click_count,clicks.begin()); --click_count;
-                if (prepare_inline(id, "click")) invoke("click", JS_NewUint32(ctx,id));
-            } else if (!fields.empty()) {
-                script_count=0;source_bytes=0;
-                auto field = std::move(fields.front()); fields.erase(fields.begin());
-                auto value = string(field.value);
-                if (check(value.value) && prepare_inline(field.id, "input") && prepare_inline(field.id, "change"))
-                    invoke("field", JS_NewUint32(ctx,field.id), value.value, JS_NewBool(ctx,field.checked));
-            } else invoke("pump");
-            if (!stopped && now() < deadline && JS_IsJobPending(runtime)) {
-                JSContext* job_context = nullptr;
-                if (JS_ExecutePendingJob(runtime, &job_context) < 0) check(JS_EXCEPTION);
-            }
-        }
+        if (prepared.ctx) execute_script();
+        else if (!responses.empty()) handle_response();
+        else if (!finished && !waiting_script) build_dom_batch();
+        else if (finished) dispatch_event();
         if (heap.failed && !stopped) { problem="脚本内存达到上限"; stopped=true; ++counters.errors; }
-        const auto elapsed = now() - begin;
-        counters.max_turn_us = std::max(counters.max_turn_us, elapsed);
+        counters.max_turn_us = std::max(counters.max_turn_us, now()-begin);
         deadline = 0;
     }
 };
@@ -534,13 +607,10 @@ bool Page::open(std::string html, std::string url, Bootstrap bootstrap, Hooks ho
     if (!impl_) return false;
     auto& self = *impl_; self.limits = limits; self.hooks = hooks; self.metrics = std::move(metrics);
     if (html.size() > limits.html_bytes || bootstrap.runtime.size() > 64*1024 ||
-        bootstrap.setup.size() > 16*1024 || bootstrap.data.size()>64*1024 ||
-        (!bootstrap.setup.empty() && !bootstrap.setup.starts_with("PXAQJS1\n")) || origin(url).empty()) {
+        origin(url).empty()) {
         self.problem = "脚本页面超过限制"; self.stopped = true; return false;
     }
     self.html = std::move(html); self.url = std::move(url); self.bootstrap = std::move(bootstrap.runtime);
-    self.setup_program=std::move(bootstrap.setup);
-    self.setup_data=std::move(bootstrap.data);
     return true;
 }
 void Page::step() { if (impl_) impl_->step(); }
@@ -629,7 +699,7 @@ Stats Page::stats() const noexcept {
 std::uint64_t Page::next_wake_us() const noexcept {
     if(!active() || impl_->paused) return UINT64_MAX;
     const auto& s=*impl_;
-    if(s.initialization_stage<6 || (!s.finished && !s.waiting_script) || !s.responses.empty() ||
+    if(s.initialization_stage<6 || s.prepared.ctx || (!s.finished && !s.waiting_script) || !s.responses.empty() ||
        s.click_count || !s.fields.empty() || (s.finished && (s.dom_dirty || s.snapshot_pending)) || JS_IsJobPending(s.runtime)) return 0;
     return s.timer_at;
 }

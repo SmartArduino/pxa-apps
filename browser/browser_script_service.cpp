@@ -1,7 +1,10 @@
 #include "browser_script_wire.hpp"
+#include "browser_script_library.hpp"
 #include <pxa/app.hpp>
 #include <pxa/events.hpp>
 #include <ctime>
+#include <memory>
+#include <type_traits>
 
 namespace {
 namespace js=browser::script;
@@ -19,7 +22,10 @@ struct ScriptService {
     js::Metrics metrics;
     js::Limits limits;
     unsigned module=0;
-    std::uint32_t loading_call=0;
+    std::uint32_t loading_call=0,library_id=0;
+    enum class LibraryState : unsigned char { idle, hashing, loading, miss, ready };
+    LibraryState library_state=LibraryState::idle;
+    std::string library_bytecode;
     std::array<std::uint32_t,4> known{};
     std::vector<std::string> cookie_changes;
     std::size_t cookie_bytes=0;
@@ -27,7 +33,14 @@ struct ScriptService {
     std::string outgoing;
     std::size_t outgoing_offset=0;
     std::optional<std::string> markup;
-    std::array<std::byte,1024> asset_buffer{};
+    // Hashing and asset I/O never overlap. Reuse the same storage, with explicit
+    // union lifetimes, instead of retaining another digest beside the I/O buffer.
+    union AssetScratch {
+        std::array<std::byte,1024> bytes;
+        js::SourceDigest digest;
+        AssetScratch():bytes{}{}
+    } asset_scratch;
+    static_assert(std::is_trivially_destructible_v<js::SourceDigest>);
     std::array<std::byte,1044> packet{};
     wire::Encoder encoded;
     pxa::Context* context=nullptr;
@@ -41,6 +54,7 @@ struct ScriptService {
     }
     void reset() {
         page={};cookies.clear();incoming.clear();bootstrap={};std::string{}.swap(html);problem.clear();
+        library_id=0;library_state=LibraryState::idle;std::string{}.swap(library_bytecode);
         known={};cookie_changes.clear();cookie_bytes=0;markup.reset();
         std::string{}.swap(outgoing);outgoing_kind=wire::Output::none;outgoing_offset=0;opening=false;
     }
@@ -90,15 +104,79 @@ struct ScriptService {
         if(result)(void)context->transport().send(7,2,context->transport().next_token(),std::span(packet).first(*result));
     }
     void cancel_loading() {
-        if(!loading_call)return;
-        context->tasks().cancel();auto call=std::exchange(loading_call,0u);reply(call,pxa::Error::cancelled);
+        if(!loading_call && library_state!=LibraryState::loading)return;
+        context->tasks().cancel();auto call=std::exchange(loading_call,0u);
+        if(call)reply(call,pxa::Error::cancelled);
+    }
+    pxa::Task<void> load_bytecode(bool initial,std::string path) {
+        bool good=true;
+        auto& buffer=*std::construct_at(&asset_scratch.bytes);
+        auto& output=initial?bootstrap.runtime:library_bytecode;
+        for(std::size_t at=0;;) {
+            auto part=co_await context->assets().read(path,at,buffer);
+            if(!part || part->total_bytes>65536u || !part->bytes){good=false;break;}
+            if(!at)output.reserve(part->total_bytes);
+            output.append(reinterpret_cast<const char*>(buffer.data()),part->bytes);
+            at+=part->bytes;if(at==part->total_bytes)break;
+        }
+        good=good && output.starts_with("PXAQJS1\n");
+        if(initial) {
+            if(!good)problem="脚本运行环境加载失败";
+            else if(!page.open(std::move(html),url,std::move(bootstrap),hooks(),std::move(metrics),limits))problem=page.error();
+            opening=false;reply(std::exchange(loading_call,0u));
+        } else if(!good) {
+            std::string{}.swap(output);library_state=LibraryState::miss;
+        } else library_state=LibraryState::ready;
+        co_return pxa::Result<void>{};
     }
     js::Hooks hooks() {
         js::Hooks h;h.owner=this;
+        h.compiled_script=[](void* p,std::uint32_t id,std::string_view source){
+            auto& self=*static_cast<ScriptService*>(p);
+            using State=js::CompiledScript::State;
+            if(self.library_id!=id) {
+                if(self.library_state==LibraryState::loading)self.context->tasks().cancel();
+                std::string{}.swap(self.library_bytecode);self.library_id=0;
+                self.library_state=LibraryState::idle;
+                if(!js::library_candidate(source.size()))return js::CompiledScript{};
+                self.library_id=id;self.library_state=LibraryState::hashing;std::construct_at(&self.asset_scratch.digest);
+#ifdef PXA_BROWSER_TRACE
+                (void)self.context->log().write(pxa::LogLevel::info,"BROWSER JS LIBRARY HASH BEGIN");
+#endif
+            }
+            if(self.library_state==LibraryState::hashing) {
+                // A whole 25 KiB SHA pass is expensive under interpretation.
+                // Advance on foreground idle polls, preserving the source slot.
+                const auto begin=now(),end=begin+8000;
+                do {
+                    if(self.asset_scratch.digest.advance(source)) {
+                        auto path=js::matching_library_path(source.size(),self.asset_scratch.digest);
+                        if(path.empty())self.library_state=LibraryState::miss;
+                        else {
+                            self.library_state=LibraryState::loading;
+#ifdef PXA_BROWSER_TRACE
+                            (void)self.context->log().write(pxa::LogLevel::info,"BROWSER JS LIBRARY LOAD");
+#endif
+                            if(!self.context->tasks().start(self.load_bytecode(false,std::move(path))))
+                                self.library_state=LibraryState::miss;
+                        }
+                        break;
+                    }
+                } while(now()<end);
+#ifdef PXA_BROWSER_TRACE
+                (void)self.context->log().write(pxa::LogLevel::info,"BROWSER JS LIBRARY HASH STEP us="+std::to_string(now()-begin));
+#endif
+                if(self.library_state==LibraryState::hashing)return js::CompiledScript{State::loading,{}};
+            }
+            if(self.library_state==LibraryState::loading)return js::CompiledScript{State::loading,{}};
+            const bool found=self.library_state==LibraryState::ready;
+            self.library_state=LibraryState::idle;self.library_id=0;
+            return js::CompiledScript{found?State::bytecode:State::source,std::move(self.library_bytecode)};
+        };
 #ifdef PXA_BROWSER_TRACE
         h.trace=[](void* p,std::string_view phase){
             auto* self=static_cast<ScriptService*>(p);
-            (void)self->context->log().write(pxa::LogLevel::info,"BROWSER JS STAGE "+std::string(phase));
+            (void)self->context->log().write(pxa::LogLevel::info,"BROWSER JS STAGE "+std::string(phase)+" at_us="+std::to_string(now()));
         };
 #endif
         h.cookie_get=[](void* p,std::string_view u){return static_cast<ScriptService*>(p)->cookies.request(u,now()/1000000,true);};
@@ -111,20 +189,6 @@ struct ScriptService {
         h.storage_get=[](void* p,std::string_view u,std::string_view k,bool session){return static_cast<ScriptService*>(p)->storage.get(u,k,session);};
         h.storage_set=[](void* p,std::string_view u,std::string_view k,const std::string* v,bool session,bool clear){return static_cast<ScriptService*>(p)->storage.set(u,k,v,session,clear);};
         return h;
-    }
-    pxa::Task<void> load_runtime() {
-        bool good=true;
-        auto& output=bootstrap.runtime;
-        for(std::size_t at=0;;) {
-            auto part=co_await context->assets().read("assets/browser-runtime.qjb",at,asset_buffer);
-            if(!part || part->total_bytes>65536u || !part->bytes){good=false;break;}
-            output.append(reinterpret_cast<const char*>(asset_buffer.data()),part->bytes);
-            at+=part->bytes;if(at==part->total_bytes)break;
-        }
-        if(!good)problem="脚本运行环境加载失败";
-        else if(!page.open(std::move(html),url,std::move(bootstrap),hooks(),std::move(metrics),limits))problem=page.error();
-        opening=false;reply(std::exchange(loading_call,0u));
-        co_return pxa::Result<void>{};
     }
     bool commit(wire::Op op) {
         wire::Reader r{incoming.data};
@@ -182,8 +246,8 @@ struct ScriptService {
         }
         if(h->op==wire::Op::poll) {
             if(h->total || request->payload.size()!=wire::header_bytes){reply(request->call_id,pxa::Error::protocol_error);return true;}
-            if(h->execute && !opening && problem.empty() && outgoing_kind==wire::Output::none && cookie_changes.empty() && !markup) {
-                page.step();if(page.ready())markup=page.take_markup();
+            if(h->mode!=wire::PollMode::drain && !opening && problem.empty() && outgoing_kind==wire::Output::none && cookie_changes.empty() && !markup) {
+                page.step();if(h->mode==wire::PollMode::update && page.ready())markup=page.take_markup();
             }
             reply(request->call_id,pxa::Error{},true);return true;
         }
@@ -193,7 +257,7 @@ struct ScriptService {
             incoming.clear();
             if(h->op==wire::Op::open) {
                 loading_call=request->call_id;
-                if(!context->tasks().start(load_runtime())){opening=false;problem="脚本资源不足";reply(std::exchange(loading_call,0u));}
+                if(!context->tasks().start(load_bytecode(true,"assets/browser-runtime.qjb"))){opening=false;problem="脚本资源不足";reply(std::exchange(loading_call,0u));}
                 return true;
             }
         }

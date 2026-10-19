@@ -26,10 +26,17 @@ struct Limits {
     std::uint64_t turn_us = 50000;
 };
 struct Metrics { int width = 296, height = 240; double density = 1; std::string user_agent = "PXA-Browser"; };
+// Only signed app assets may supply bytecode. Network responses remain source.
+struct CompiledScript {
+    enum class State : unsigned char { source, loading, bytecode };
+    State state=State::source;
+    std::string bytes;
+};
 struct Hooks {
     void* owner = nullptr;
     std::uint64_t (*now_us)(void*) = nullptr;
     void (*trace)(void*,std::string_view) = nullptr;
+    CompiledScript (*compiled_script)(void*,std::uint32_t,std::string_view) = nullptr;
     std::string (*cookie_get)(void*, std::string_view) = nullptr;
     void (*cookie_set)(void*, std::string_view, std::string_view) = nullptr;
     std::optional<std::string> (*storage_get)(void*, std::string_view, std::string_view, bool) = nullptr;
@@ -39,7 +46,10 @@ struct Request {
     std::uint32_t id = 0;
     bool script = false, post = false;
     std::string url, body, content_type;
-    std::uint32_t timeout_ms = 12000;
+    // The Host admits at most 60 s per exchange. Use that allowance when the
+    // page leaves XHR.timeout at its default zero; a short implicit timeout
+    // breaks long polling. Explicit nonzero page timeouts still take priority.
+    std::uint32_t timeout_ms = 60000;
 };
 struct Response {
     std::uint32_t id = 0;
@@ -49,8 +59,8 @@ struct Response {
 };
 struct Navigation { std::string url, body; bool post = false; };
 // App-owned, version-pinned bytecode from signed package assets only. Never
-// populate setup from a page/network response: QuickJS bytecode is trusted.
-struct Bootstrap { std::string runtime, setup, data; };
+// populate it from a page/network response: QuickJS bytecode is trusted.
+struct Bootstrap { std::string runtime; };
 struct Stats {
     std::size_t current_bytes = 0, peak_bytes = 0;
     std::uint32_t turns = 0, errors = 0, timeouts = 0;

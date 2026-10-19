@@ -35,6 +35,20 @@ int main(int argc,char** argv) {
     assert(!script_url_allowed("https://example.test","http://example.test/x",true));
     assert(!script_url_allowed("https://example.test","https://other.test/x",false));
     assert(script_url_allowed("https://example.test","https://other.test/x",true));
+    {
+        auto p=open(R"HTML(<p id=a></p><script>
+        for (let timeout of [undefined,0,1500,60000]) {
+            let x=new XMLHttpRequest();x.open('POST','/wait');
+            if(timeout!==undefined)x.timeout=timeout;x.send('waiting');
+        }
+        </script>)HTML");
+        run(p);
+        for(auto timeout:{60000u,60000u,1500u,60000u}) {
+            auto q=p.take_request();assert(q && q->post && q->timeout_ms==timeout);
+            p.complete({q->id,200,"ok"});
+        }
+        assert(!p.take_request() && p.stats().errors==0);
+    }
     Capture c;c.append("<!--<script>--><p>static</p><script type='application/json'>{}</script>");assert(!c.has_script());
     c.append("<script src='/code.js'></script>");assert(c.has_script());c.append(std::string(32768,'x'));assert(c.limited());
     {
@@ -66,6 +80,43 @@ int main(int argc,char** argv) {
         std::string html;
         for(unsigned i=0;i<256;++i){p.step();if(auto next=p.take_markup())html=*next;}
         assert(html.find("Dynamic 42")!=html.npos && !p.take_request() && p.stats().errors==0);
+    }
+    {
+        auto p=open(R"HTML(<p id=a></p><script>
+        var order=[],d=document.createElement('script');d.src='/dynamic';
+        d.onload=function(){order.push('loaded')};document.body.appendChild(d);
+        </script><script src='/parser'></script><script>
+        order.push('inline');document.getElementById('a').textContent=order.join(',');
+        </script>)HTML");
+        std::optional<Request> dynamic,parser;
+        for(unsigned i=0;i<256 && (!dynamic || !parser);++i) {
+            p.step();(void)p.take_markup();
+            while(auto request=p.take_request()) {
+                if(request->url.ends_with("/dynamic"))dynamic=std::move(request);
+                else if(request->url.ends_with("/parser"))parser=std::move(request);
+            }
+        }
+        assert(dynamic && parser);
+        p.complete({dynamic->id,200,"order.push('dynamic');"});
+        for(unsigned i=0;i<64;++i){p.step();(void)p.take_markup();}
+        assert(!p.ready() && p.pending(parser->id));
+        p.complete({parser->id,200,"order.push('parser');"});
+        auto html=run(p);
+        assert(html.find("dynamic,loaded,parser,inline")!=html.npos && p.stats().errors==0);
+    }
+    {
+        Page p;assert(p.open("<p id=a>Before</p><script>document.getElementById('a').textContent='Final script';</script>","https://example.test/final",bootstrap,{}, {},policy()));
+        auto html=run(p);assert(html.find("Final script")!=html.npos && p.stats().errors==0);
+    }
+    {
+        // A slow compiler must not execute the program after its deadline.
+        std::uint64_t clock=1000;
+        Hooks hooks;hooks.owner=&clock;
+        hooks.now_us=[](void* p){return *static_cast<std::uint64_t*>(p);};
+        hooks.trace=[](void* p,std::string_view phase){if(phase=="COMPILE")*static_cast<std::uint64_t*>(p)+=30000000;};
+        Page p;assert(p.open("<script>fetch('/must-not-execute');</script>","https://example.test/slow",bootstrap,hooks,{},policy()));
+        run(p);
+        assert(!p.active() && p.error()=="脚本编译超时" && p.stats().timeouts==1 && !p.take_request());
     }
     {
         auto p=open(R"HTML(<p id="a">Before</p><script>
@@ -127,6 +178,67 @@ int main(int argc,char** argv) {
         assert(run(p).find("Precedence OK")!=std::string::npos);assert(p.error().empty());
     }
     {
+        // Escaping is shared by text, attributes and incremental rendering.
+        // Compare UTF-16 in the realm as well as the final native snapshot.
+        // Dense escaping also retains the independent reference's match list.
+        auto limits=policy();limits.heap_bytes=2*1024*1024;limits.turn_us=2000000;
+        auto p=open(R"HTML(<p id=out>Before</p><script>
+        const table={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\0':'&#xfffd;'};
+        const reference=s=>String(s).replace(/[&<>"\u0000]/g,c=>table[c]);
+        const values=['','plain','&<>"\0','&amp;&#xfffd;','中文𠳐😀',
+            '\ud800','\udc00','\ud800&\udc00','\ud800\udc00','\0\0&"<>'];
+        for(const size of [1,31,257,4096]) {
+            values.push('A+/='.repeat(1024).slice(0,size));
+            values.push('&<>"\0中'.repeat(683).slice(0,size));
+        }
+        const node=document.createElement('span');
+        for(const value of values) {
+            node.textContent=value;node.setAttribute('title',value);
+            const escaped=reference(value);
+            if(node.innerHTML!==escaped ||
+                node.outerHTML!=='<span title="'+escaped+'">'+escaped+'</span>')
+                throw Error('serialization changed');
+        }
+        const image=document.createElement('img');
+        image.src='data:image/png;base64,'+'A+/='.repeat(1000);
+        if(image.outerHTML!=='<img src="'+image.src+'">')throw Error('long image attribute');
+        document.getElementById('out').textContent='Escaping <>&"\0 中文𠳐';
+        </script>)HTML",limits);
+        const auto html=run(p);
+        if(p.stats().errors)std::cerr<<"Escaping regression: "<<p.error()<<" errors="<<p.stats().errors<<" peak="<<p.stats().peak_bytes<<" html="<<html<<'\n';
+        assert(html.find("Escaping &lt;&gt;&amp;&quot;&#xfffd; 中文𠳐")!=html.npos);
+        assert(p.error().empty() && p.stats().errors==0);
+    }
+    {
+        // Native snapshots must not UTF-8 encode half a surrogate pair when
+        // a long text/attribute spans incremental rendering batches.
+        auto p=open(R"HTML(<p id=out></p><script>
+        const value='A'.repeat(511)+'𠳐'+'B'.repeat(510)+'😀'+'C'.repeat(600);
+        document.getElementById('out').title=value;
+        document.getElementById('out').textContent=value;
+        </script>)HTML");
+        const auto value=std::string(511,'A')+"𠳐"+std::string(510,'B')+"😀"+std::string(600,'C');
+        const auto html=run(p);
+        assert(html.find("title=\""+value+"\"")!=html.npos);
+        assert(html.find(">"+value+"</p>")!=html.npos && p.stats().errors==0);
+    }
+    {
+        // Long fields can split an opening tag across work units, including
+        // later attributes and generated style. Commit only the complete tag.
+        auto p=open(R"HTML(<p id=out></p><script>
+        const out=document.getElementById('out');
+        out.setAttribute('first','A'.repeat(520)+'&<"\0');
+        out.setAttribute('second','B'.repeat(700)+'&<"\0');
+        out.style.backgroundImage='url('+'C'.repeat(600)+'&<")';
+        out.textContent='Complete tag';
+        </script>)HTML");
+        const auto html=run(p);
+        assert(html.find("first=\""+std::string(520,'A')+"&amp;&lt;&quot;&#xfffd;\"")!=html.npos);
+        assert(html.find("second=\""+std::string(700,'B')+"&amp;&lt;&quot;&#xfffd;\"")!=html.npos);
+        assert(html.find("style=\"background-image:url("+std::string(600,'C')+"&amp;&lt;&quot;);\">Complete tag</p>")!=html.npos);
+        assert(p.stats().errors==0);
+    }
+    {
         auto p=open("<div id=a></div><script>window.onload=()=>{document.getElementById('a').innerHTML='<b>Onload fragment</b>';};</script>");
         assert(run(p).find("<b>Onload fragment</b>")!=std::string::npos);assert(p.error().empty());
     }
@@ -164,6 +276,20 @@ int main(int argc,char** argv) {
         p.complete({request->id,200,"document.getElementById('a').textContent='External';"});auto html=run(p);assert(html.find("External-ordered")!=html.npos);
     }
     {
+        // Compile a full-budget response, release its body, then execute the
+        // retained function from a later inline script. Inline slices still
+        // require a terminator before the following HTML closing tag.
+        auto p=open("<p id=a>Waiting</p><script src='/full.js'></script><script>document.getElementById('a').textContent=payload();</script><p>After inline</p>");
+        std::optional<Request> request;
+        for(unsigned i=0;i<256 && !request;++i){p.step();(void)p.take_markup();request=p.take_request();}
+        assert(request && request->script);
+        std::string source="function payload(){return 'Complete 中文';}/*";
+        source.append(policy().script_bytes-source.size()-2,'x');source+="*/";
+        assert(source.size()==policy().script_bytes);
+        p.complete({request->id,200,std::move(source)});
+        const auto html=run(p);assert(html.find("Complete 中文")!=html.npos && html.find("After inline")!=html.npos && p.stats().errors==0);
+    }
+    {
         auto p=open("<p id='a'>Waiting</p><script>fetch('/data').then(r=>r.json()).then(r=>document.getElementById('a').innerHTML='<b>'+r.text+'</b>');</script>");
         run(p);auto request=p.take_request();assert(request && !request->script);
         p.complete({request->id,200,"{\"text\":\"Network OK\"}"});std::string html;
@@ -199,6 +325,20 @@ int main(int argc,char** argv) {
     {
         auto p=open("<p id=a></p><script>function recurse(){return recurse()};recurse();</script><script>document.getElementById('a').textContent='Stack recovered';</script>");
         assert(run(p).find("Stack recovered")!=std::string::npos);assert(p.stats().errors==1);
+    }
+    for (const auto* source : {
+        "var o={valueOf(){return +o}};+o",
+        "var o={[Symbol.toPrimitive](){return +o}};+o",
+        "var o={toString(){return String(o)}};String(o)",
+    }) {
+        // Coercion owns a reference: rejection must free it and unwind the
+        // nesting counters before the next script performs normal coercion.
+        auto p=open("<p id=a></p><script>"s+source+";</script><script>"
+                    "var n=({valueOf(){return 7}})+1;"
+                    "document.getElementById('a').textContent=n===8?'Coercion recovered':'Wrong';"
+                    "</script>");
+        assert(run(p).find("Coercion recovered")!=std::string::npos);
+        assert(p.stats().errors==1);
     }
     {
         // An endless microtask chain advances one bounded job per browser turn.
@@ -243,7 +383,7 @@ int main(int argc,char** argv) {
         p.change_field(1,"FIRST",false);p.change_field(2,"SECOND",false);p.step();p.step();auto html=snapshot(p);assert(html && html->find("FIRST")!=html->npos && html->find("SECOND")!=html->npos);
     }
     {
-        std::string body="<input id=q value=old><p id=a>Before</p>";
+        std::string body="<input id=q value=old><p id=a title=\""+std::string(3000,'A')+"\">Before</p>";
         for(int i=0;i<40;++i)body+="<p>snapshot chunk</p>";
         body+="<button onclick=\"document.getElementById('a').textContent='Clicked '+(++n)\">Tap</button><script>let n=0;</script>";
         auto p=open(body);assert(!run(p).empty());

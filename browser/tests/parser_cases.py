@@ -2,7 +2,7 @@
 
 
 def cases(depth=100):
-    return {
+    result = {
         'unary': '!' * depth + 'true',
         'group': '(' * depth + '1' + ')' * depth,
         'array': '[' * depth + '1' + ']' * depth,
@@ -19,13 +19,25 @@ def cases(depth=100):
         'json-parse': "JSON.parse('" + '[' * depth + '0' + ']' * depth + "')",
         'json-stringify': 'var v=0;for(var i=0;i<100;i++)v=[v];JSON.stringify(v)',
         'destructure': 'let ' + '[' * depth + 'a' + ']' * depth + '=[]',
-        'factory-budget': "var v=(function(){return (function(){return (function(){return [{a:17}][0].a})()})()})();",
     }
+    result['mixed-operators']='1+2*3<4&5^6|7&&('*24+'1'+')'*24
+    for name,wrappers in {
+        'mixed-array-logical':[('true&&(',')'),('[','][0]')],
+        'mixed-conditional-template':[('true?1:(',')'),('`x${','}`')],
+        'mixed-call-new':[('new (function(){return (',')})()'),('(()=>(', '))()')],
+    }.items():
+        source='1'
+        for i in range(60):
+            left,right=wrappers[i%len(wrappers)]
+            source=left+source+right
+        result[name]=source
+    return result
 
 
 def supported_cases(depth=100):
     json = "JSON.parse('" + '[' * depth + '0' + ']' * depth + "')"
     return {
+        'factory-budget': "var v=(function(){return (function(){return (function(){return [{a:17}][0].a})()})()})();",
         'nested-factories': "var v=(function(){var n=10;return (function(){var x=7;return (function(){return n+x})()})()})();if(v!==17)throw Error('factory');",
         'member-grammar': "class C{#x=3;m(){return this.#x}static ok(o){return #x in o}};var c=new C;if(c.m()!==3||!C.ok(c)||C.ok({}))throw Error('class');var o={v:4,m(){return this.v}};if(o?.m?.()!==4||null?.m!==undefined||new (function(){this.x=7})().x!==7)throw Error('member');",
         'supported-data': "window.__NUXT__={state:{reader:{},shelf:{books:[{bookId:'fixture',title:'Synthetic book'}],bookReaderUrls:[{bId:'fixture',param:'fixture-only'}],totalCount:1,kkIdx:2}}};if(window.__NUXT__.state.shelf.books[0].bookId!=='fixture')throw Error('data');",
