@@ -1429,8 +1429,15 @@ defineDrawLitSpan(0, 0)
 defineDrawLitSpan(1, 0)
 defineDrawLitSpan(2, 0)
 defineDrawLitSpan(3, 0)
+#if defined(PXA_LIT_ROW_CACHE)
+#include "lit_span.h"
+#endif
 static void drawLitSpan(uint8_t *pdest, int count, int s, int t, int sstep, int tstep)
 {
+#if defined(PXA_LIT_ROW_CACHE)
+    if (Pxa_TryCachedLitSpan(pdest,count,s,t,sstep,tstep))
+        return;
+#endif
     if (!sdd.textureType)
     {
         switch (r_drawsurf.surfmip & 3)

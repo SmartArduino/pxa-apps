@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 project(pxa_quake C CXX)
+option(PXA_QUAKE_LIT_CACHE "Enable experimental exact-pixel lighting cache" OFF)
 include(../common/recrof/Engine.cmake)
 file(GLOB ENGINE CONFIGURE_DEPENDS vendor/quake/*.c)
 # Keep the renderer and movement math fast without expanding cold parsers,
@@ -14,4 +15,9 @@ pxa_recrof_component(TITLE "Quake" SOURCES ${ENGINE} port.c extmemory.c ../commo
     INCLUDES port vendor/quake DEFINITIONS ESP_PLATFORM=1 PORT_PACED_BY_MAIN=1)
 if(PXA_QUAKE_FRAME_PROFILE)
     target_compile_definitions(pxa_main PRIVATE PXA_FRAME_PROFILE=1)
+endif()
+
+# Enable only for measured comparisons until the GameKit A/B is complete.
+if(PXA_QUAKE_LIT_CACHE)
+    target_compile_definitions(pxa_main PRIVATE PXA_LIT_ROW_CACHE=1)
 endif()

@@ -93,6 +93,13 @@ bash local/pxa-apps/common/recrof/tests/run_controller.sh
 
 ## 平台适配与限制
 
+Quake另有默认关闭的`PXA_QUAKE_LIT_CACHE`性能实验：在变体的`CMakeLists.txt`
+中于`add_subdirectory(../quake ...)`前设置该选项为`ON`，可测试保持逐像素相同
+结果的光照系数缓存。短跨度或纹理行变化快时走原内核，不增加堆缓存。先运行
+`python3 local/pxa-apps/common/recrof/tests/run_quake_lit_span.py`；该测试从当前
+vendor提取参考算法，检查20万组跨度并运行ASan/UBSan。桌面热点收益不代表
+设备FPS，尚未通过相同场景设备A/B前保持默认关闭。
+
 - 软件绘制、RGB565 双缓冲 guest-mapped Surface；以 320×240 为逻辑屏幕，按显示器尺寸缩放。
 - PXA Clock 驱动，独立的引擎 C 栈与 Asyncify 续体栈，后台暂停并释放按键。
 - 可选 `audio.playback` 权限，PCM 混音后输出 16 kHz 单声道；拒绝权限仍可游戏。Duke 已在真机开启音乐和音效并核对设置，持续输出与欠载情况仍需分别量化。
