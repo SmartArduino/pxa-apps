@@ -1,0 +1,47 @@
+{
+  "host_candidate": {
+    "production_sha256": "51362b62af8fd704eeb7b301cc4453901ffbc2426c8984e9b87944c429500e02",
+    "baseline_load_segments_identical": true,
+    "changed_archive_members": [
+      "assets_service.c.obj",
+      "image_decode.c.obj",
+      "pxa_stream_png.c.obj",
+      "pngle.c.obj"
+    ],
+    "candidate_sha256": "d878949377ee5d0135da3b1b5b98e4f6879a009e5b70b2bc1fda67ce68dbb97d",
+    "candidate_bytes": 3445408,
+    "candidate_elf_sha256": "593c5ee3cfbbf50016aca55b716725d675bb788f4215570487fa6fd30caffe24",
+    "shared_outputs_modified": false,
+    "production_core_source_cap": 4194304,
+    "device_accessed": true
+  },
+  "host_static_memory": {
+    ".rtc.force_slow": true,
+    ".rtc_reserved": true,
+    ".iram0.vectors": true,
+    ".iram0.text": true,
+    ".dram0.dummy": true,
+    ".dram0.data": true,
+    ".noinit": true,
+    ".dram0.bss": true,
+    ".flash_rodata_dummy": true,
+    ".flash.rodata": true,
+    ".flash.tdata": true,
+    ".ext_ram.dummy": true,
+    ".ext_ram.bss": true,
+    ".iram0.text_end": true
+  },
+  "simulator_real": {
+    "authorized_image_visible": true,
+    "source_dimensions": [
+      1280,
+      1778
+    ],
+    "source_bytes": 196948,
+    "linear_peak_bytes": 1441792
+  },
+  "device_validation": "actual illustration visible; stepped Guest no watchdog; loading input delay 1.169s still unresolved",
+  "gif": "static first frame only",
+  "device_report": "device-stepped.json",
+  "next_guest_candidate": "cooperative preparation + object cursor + 8ms work slices; local testing in progress, not installed"
+}

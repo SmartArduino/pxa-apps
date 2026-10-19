@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-17",
+  "official_source_commit": "d98e66ee60a8c7bcd35da549d0643c4470439643",
+  "koreader_source_commit": "2bee0cc66c871c8781fef5078f1636662618e24e",
+  "official_gateway_status": 200,
+  "official_gateway_errcode": 0,
+  "api_count": 17,
+  "api_names": [
+    "/book/bestbookmarks",
+    "/book/bookmarklist",
+    "/book/chapterinfo",
+    "/book/getprogress",
+    "/book/info",
+    "/book/readreviews",
+    "/book/recommend",
+    "/book/similar",
+    "/book/underlines",
+    "/discover/interact/type3",
+    "/readdata/detail",
+    "/review/list",
+    "/review/list/mine",
+    "/review/single",
+    "/shelf/sync",
+    "/store/search",
+    "/user/notebooks"
+  ],
+  "gateway_chapter_count": 34,
+  "gateway_chapters_bytes": 49442,
+  "web_catalog_chapter_count": 34,
+  "web_catalog_bytes": 51792,
+  "decode_checks": {
+    "1": {
+      "checksum_verified": true,
+      "decoded_utf8_bytes": 1638,
+      "body_tag_count": 1,
+      "nonempty_decoded_content": true
+    },
+    "11": {
+      "checksum_verified": true,
+      "decoded_utf8_bytes": 0,
+      "body_tag_count": 0,
+      "nonempty_decoded_content": false
+    }
+  },
+  "purchased_later_chapter_fixed": false,
+  "device_touched": false,
+  "product_runtime_changed": false,
+  "performance_comparison_performed": false
+}

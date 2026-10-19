@@ -1,0 +1,86 @@
+{
+  "platform": "Linux native GCC 16.2 O3, one pinned allowed CPU; not ESP32/LCD latency",
+  "baseline": "original algorithms with source area cap raised to same 4M for equal-work comparison",
+  "source_bytes": 196948,
+  "source_sha256": "22a3a40f492af7b5bdf136050dc65520dc7f540e291c5a1a46489e831f88dbde",
+  "source_dimensions": [
+    1280,
+    1778
+  ],
+  "output_pixel_limit": 32768,
+  "cpu": 0,
+  "batches": [
+    {
+      "kind": "baseline",
+      "bytes": 196948,
+      "repeats": 8,
+      "chunk": 64,
+      "max_write_us": 1932.53,
+      "write_mean_us": 383019.248,
+      "finish_mean_us": 1.632,
+      "temporary_peak": 49920,
+      "charged_peak": 180387,
+      "checksum": 2701055540
+    },
+    {
+      "kind": "candidate",
+      "bytes": 196948,
+      "repeats": 8,
+      "chunk": 64,
+      "max_write_us": 696.465,
+      "write_mean_us": 157061.56,
+      "finish_mean_us": 1.554,
+      "temporary_peak": 49920,
+      "charged_peak": 180387,
+      "checksum": 2701055540
+    },
+    {
+      "kind": "candidate",
+      "bytes": 196948,
+      "repeats": 8,
+      "chunk": 64,
+      "max_write_us": 1064.044,
+      "write_mean_us": 245338.117,
+      "finish_mean_us": 1.956,
+      "temporary_peak": 49920,
+      "charged_peak": 180387,
+      "checksum": 2701055540
+    },
+    {
+      "kind": "baseline",
+      "bytes": 196948,
+      "repeats": 8,
+      "chunk": 64,
+      "max_write_us": 1883.92,
+      "write_mean_us": 417039.541,
+      "finish_mean_us": 1.799,
+      "temporary_peak": 49920,
+      "charged_peak": 180387,
+      "checksum": 2701055540
+    },
+    {
+      "kind": "baseline",
+      "bytes": 196948,
+      "repeats": 8,
+      "chunk": 64,
+      "max_write_us": 1810.237,
+      "write_mean_us": 460045.32,
+      "finish_mean_us": 1.903,
+      "temporary_peak": 49920,
+      "charged_peak": 180387,
+      "checksum": 2701055540
+    },
+    {
+      "kind": "candidate",
+      "bytes": 196948,
+      "repeats": 8,
+      "chunk": 64,
+      "max_write_us": 1083.111,
+      "write_mean_us": 289325.119,
+      "finish_mean_us": 2.034,
+      "temporary_peak": 49920,
+      "charged_peak": 180387,
+      "checksum": 2701055540
+    }
+  ]
+}

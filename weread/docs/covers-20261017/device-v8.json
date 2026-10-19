@@ -1,0 +1,37 @@
+{
+  "variant": "covers-fields v8",
+  "html_bytes": 241046,
+  "text_bytes": 901,
+  "phase_wall_ms": {
+    "prepare_project": 2294,
+    "model": 285,
+    "text_and_first_mapping_asset_io": 1387,
+    "total": 3967
+  },
+  "loading_guest_delivery": {
+    "guest_total_us": 3201800,
+    "guest_count": 44,
+    "guest_p95_us": 361751,
+    "guest_max_us": 361751
+  },
+  "warm_guest_delivery": {
+    "guest_total_us": 233387,
+    "guest_count": 80,
+    "guest_p95_us": 8000,
+    "guest_max_us": 8801
+  },
+  "linear_peak_bytes": 589824,
+  "aot_request_bytes": 1324000,
+  "aot_mapped_bytes": 1376256,
+  "stable_sram_free": 48579,
+  "stable_psram_free": 4446496,
+  "cold_local_sram_min": 44479,
+  "cold_local_psram_min": 3903852,
+  "physical_lcd_latency_measured": false,
+  "comparability_limits": [
+    "Complete-directory test warmed the retained Host font cache between v7 and v8. Heap free values are observations, not an attributable SDK memory delta.",
+    "Model stage fell 325 to 285 ms in these samples, but overall parser wall time rose 3400 to 3967 ms. Do not call this an overall load improvement.",
+    "Per-instance linear peak and mapped pages unchanged; low-level metadata and transient stack may differ.",
+    "Resource budget peak values are since boot and excluded from per-run peak claims."
+  ]
+}

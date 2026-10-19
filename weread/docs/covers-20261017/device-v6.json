@@ -1,0 +1,23 @@
+{
+  "variant": "covers v6, not latest optimization",
+  "html_bytes": 241046,
+  "decoded_text_bytes": 901,
+  "parser_wall_ms": 3812,
+  "linear_peak_bytes": 589824,
+  "aot_mapped_bytes": 1376256,
+  "aot_request_bytes": 1316760,
+  "stable_sram_free": 48615,
+  "stable_psram_free": 4669548,
+  "cold_local_sram_min": 44427,
+  "cold_local_psram_min": 4129148,
+  "loading_guest_input_p95_us": 519553,
+  "loading_guest_input_max_us": 519553,
+  "loading_input_count": 44,
+  "warm_guest_input_p95_us": 9000,
+  "warm_guest_input_max_us": 8695,
+  "warm_input_count": 84,
+  "scope": "Guest delivery only, present/visible latency counters unavailable; physical LCD latency not measured",
+  "first_real_covers": true,
+  "host_unchanged": true,
+  "known_limit": "additional code map page +65536B and ~7KiB metadata versus no-covers baseline; loading latency still high"
+}

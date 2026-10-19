@@ -1,0 +1,50 @@
+{
+  "aot": {
+    "covers": 6,
+    "core": 19,
+    "chapter_images": 18
+  },
+  "wasm": {
+    "covers": 6,
+    "core": 19,
+    "chapter_images": 18
+  },
+  "actual_network": {
+    "five_visible_covers": true,
+    "authorized_illustration": true,
+    "normal_cleanup": true
+  },
+  "device": "v10 covers-read installed and validated",
+  "limits": {
+    "visible_cover_requests": 10,
+    "shared_decoded_pixels": 65536,
+    "guest_maximum_bytes": 2097152,
+    "http_buffer_bytes": 1024,
+    "simultaneous_image_transfers": 1
+  },
+  "s3_aot_bytes": 1420304,
+  "sliced_s3_aot_bytes": 1338340,
+  "no_new_host_changes": true,
+  "previous_covers_v6_aot_bytes": 1408220,
+  "fixed_workload_linear_peak_bytes": 589824,
+  "current_mapped_code_bytes": 1376256,
+  "old_mapped_code_bytes": 1310720,
+  "physical_lcd_latency_measured": false,
+  "owned_primer_full_text": "unresolved official web authorization discrepancy",
+  "catalog_actual_device": {
+    "rows": 635,
+    "chapters": 34,
+    "forward_backward_windows": true,
+    "terminal_extra_taps_no_parse": true
+  },
+  "final_device_report": "device-map-read.json",
+  "actual_access_message": true,
+  "reopen_restores": 3,
+  "repeated_load_linear_peak_bytes": 655360,
+  "mapping_read_max_bytes": 4064,
+  "mapping_read_cold_pair_ms": {
+    "before": 1407,
+    "after": 350
+  },
+  "whole_heap_bitwise_invariance_claimed": false
+}

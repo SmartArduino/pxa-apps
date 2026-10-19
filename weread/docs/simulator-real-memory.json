@@ -1,0 +1,11 @@
+{
+  "samples": 3494,
+  "linear_current_bytes": 1310720,
+  "linear_peak_bytes": 1376256,
+  "wamr_current_bytes": 54949,
+  "wamr_peak_bytes": 433826,
+  "artifact_buffer_bytes": 0,
+  "event_buffer_bytes": 2048,
+  "scope": "fresh Linux simulator engine; not ESP32 heap; allocator/linear/artifact/event counters overlap",
+  "source": "snapshot-reader-budget-20261017"
+}

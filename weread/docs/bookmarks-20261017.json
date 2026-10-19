@@ -1,0 +1,217 @@
+{
+  "status": "candidate_device_restored_functional_incomplete",
+  "started": "2026-10-17",
+  "updated": "2026-10-18",
+  "compiler": {
+    "cpp_standard": 26,
+    "optimization": "O3",
+    "lto": "full"
+  },
+  "native_suites": [
+    {
+      "suite": "agent_test.cpp",
+      "passed": true
+    },
+    {
+      "suite": "bookmarks_test.cpp",
+      "passed": true
+    },
+    {
+      "suite": "catalog_test.cpp",
+      "passed": true
+    },
+    {
+      "suite": "diagnostics_test.cpp",
+      "passed": true
+    },
+    {
+      "suite": "document_test.cpp",
+      "passed": true
+    },
+    {
+      "suite": "hydration_test.cpp",
+      "passed": true
+    },
+    {
+      "suite": "layout_test.cpp",
+      "passed": true
+    },
+    {
+      "suite": "notes_test.cpp",
+      "passed": true
+    },
+    {
+      "suite": "protocol_test.cpp",
+      "passed": true
+    },
+    {
+      "suite": "utf8_test.cpp",
+      "passed": true
+    },
+    {
+      "suite": "writer_test.cpp",
+      "passed": true
+    }
+  ],
+  "regression_completed_suites": [
+    {
+      "runtime": "aot",
+      "suite": "images",
+      "passed": true,
+      "returncode": 0
+    },
+    {
+      "runtime": "aot",
+      "suite": "bookmarks",
+      "passed": true,
+      "returncode": 0
+    },
+    {
+      "runtime": "aot",
+      "suite": "renewal",
+      "passed": true,
+      "returncode": 0
+    },
+    {
+      "runtime": "aot",
+      "suite": "agent",
+      "passed": true,
+      "returncode": 0
+    },
+    {
+      "runtime": "aot",
+      "suite": "smoke",
+      "passed": true,
+      "returncode": 0
+    },
+    {
+      "runtime": "aot",
+      "suite": "covers",
+      "passed": true,
+      "returncode": 0
+    },
+    {
+      "runtime": "aot",
+      "suite": "network",
+      "passed": true,
+      "returncode": 0
+    },
+    {
+      "runtime": "aot",
+      "suite": "notes",
+      "passed": true,
+      "returncode": 0
+    },
+    {
+      "runtime": "wasm",
+      "suite": "images",
+      "passed": true,
+      "returncode": 0
+    },
+    {
+      "runtime": "wasm",
+      "suite": "bookmarks",
+      "passed": true,
+      "returncode": 0
+    },
+    {
+      "runtime": "wasm",
+      "suite": "renewal",
+      "passed": true,
+      "returncode": 0
+    },
+    {
+      "runtime": "wasm",
+      "suite": "agent",
+      "passed": true,
+      "returncode": 0
+    },
+    {
+      "runtime": "wasm",
+      "suite": "smoke",
+      "passed": true,
+      "returncode": 0
+    },
+    {
+      "runtime": "wasm",
+      "suite": "covers",
+      "passed": true,
+      "returncode": 0
+    },
+    {
+      "runtime": "wasm",
+      "suite": "network",
+      "passed": true,
+      "returncode": 0
+    },
+    {
+      "runtime": "wasm",
+      "suite": "notes",
+      "passed": true,
+      "returncode": 0
+    }
+  ],
+  "regression_complete": true,
+  "expected_cases_per_runtime": 102,
+  "s3": {
+    "old_aot_bytes": 1454440,
+    "candidate_aot_bytes": 1562076,
+    "old_text_bytes": 1370116,
+    "candidate_text_bytes": 1471444,
+    "old_mapping_pages": 21,
+    "candidate_mapping_pages": 23,
+    "mapping_page_bytes": 65536,
+    "additional_mapping_bytes": 131072,
+    "physical_device_peaks_measured": false,
+    "device_installed_temporarily": true,
+    "device_restored": true,
+    "physical_device_peaks_measured_for_default_shelf": true,
+    "physical_device_peaks_measured_for_bookmark_use": false,
+    "candidate_currently_installed": false
+  },
+  "canonical_observer_sha256": "45d3adbd7ce5f7835024b0b8996e9a45172032790db64773606b7aa0cc47db0f",
+  "preservation": {
+    "device_accessed_this_iteration": false,
+    "cloud_write_requested": false,
+    "real_credentials_used": false
+  },
+  "test_setup_failures_retained": [
+    "Frame comparison before queued BACK became visible",
+    "Legacy observer missing image resource field",
+    "Observer relinked against old PNG source limit; canonical validated observer restored"
+  ],
+  "remaining": [
+    "Improve dense bookmark captions",
+    "Evaluate bounded on-demand lifecycle/shared code or justify measured new-feature cost; no performance gain claimed",
+    "S3 correctness, background/foreground, touch and physical memory validation"
+  ],
+  "scope": "Functional development evidence; no S3 performance or no-memory-growth claim",
+  "regression_cases": {
+    "aot": {
+      "images": 18,
+      "bookmarks": 16,
+      "renewal": 9,
+      "agent": 12,
+      "smoke": 19,
+      "covers": 6,
+      "network": 4,
+      "notes": 18
+    },
+    "wasm": {
+      "images": 18,
+      "bookmarks": 16,
+      "renewal": 9,
+      "agent": 12,
+      "smoke": 19,
+      "covers": 6,
+      "network": 4,
+      "notes": 18
+    }
+  },
+  "total_regression_cases": 204,
+  "latest_card_related_cases": {
+    "aot": 16,
+    "wasm": 16
+  },
+  "latest_device_report": "bookmarks-device-20261018.json"
+}

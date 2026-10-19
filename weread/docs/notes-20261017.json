@@ -1,0 +1,193 @@
+{
+  "date": "2026-10-17",
+  "status": "paired_host_guest_adopted",
+  "production_app": "notes-ready with full-main-stack Host",
+  "implementation": {
+    "personal_highlights": "read-only, adopted with fixed Host",
+    "personal_thoughts": "read-only, adopted with fixed Host",
+    "precise_cursor_bits": 64,
+    "response_limit_bytes": 131072,
+    "single_text_limit_bytes": 8192,
+    "formatted_document_limit_bytes": 32768,
+    "default_note_cache": false
+  },
+  "compiler": {
+    "cpp_standard": 26,
+    "optimization": "O3",
+    "lto": "full",
+    "size_optimization": false
+  },
+  "normal_candidate_integration": {
+    "aot_cases": 86,
+    "wasm_cases": 86,
+    "passed": true,
+    "suites": {
+      "aot": {
+        "renewal": 9,
+        "agent": 12,
+        "smoke": 19,
+        "covers": 6,
+        "images": 18,
+        "network": 4,
+        "notes": 18
+      },
+      "wasm": {
+        "renewal": 9,
+        "agent": 12,
+        "smoke": 19,
+        "covers": 6,
+        "images": 18,
+        "network": 4,
+        "notes": 18
+      }
+    },
+    "scope": "notes-ready isolated16KiB fixture builds; does not prove actual S3 production URL paths"
+  },
+  "native": {
+    "asan_ubsan_suites": 10,
+    "passed": true
+  },
+  "aot_simulator_diagnostic": {
+    "variant": "notes-ready",
+    "reserved_stack_bytes": 16384,
+    "coroutine_slots": 8,
+    "coroutine_slot_bytes": 1536,
+    "suites": {
+      "renewal": 9,
+      "agent": 12,
+      "smoke": 19,
+      "covers": 6,
+      "images": 18,
+      "network": 4,
+      "notes": 18
+    },
+    "max_stack_upper_bytes": 5320,
+    "max_task_slots": 6,
+    "task_allocation_failures": 0,
+    "scope": "Diagnostic AOT simulator; includes 4KiB stack self-test. Not a formal worst-case bound or production physical heap measurement.",
+    "total_cases": 86,
+    "passed": true
+  },
+  "desktop_microbenchmarks": {
+    "paired_trials": 5,
+    "json_lookup": {
+      "operations": 70000,
+      "old_median_ms": 44.5,
+      "candidate_median_ms": 27.18,
+      "old_allocations": 200000,
+      "candidate_allocations": 0
+    },
+    "note_parse": {
+      "parses": 100,
+      "chapters": 256,
+      "notes": 10,
+      "old_median_ms": 476.27,
+      "candidate_median_ms": 286.6,
+      "same_checksum": true
+    },
+    "icon_encoding": {
+      "icons": 50000,
+      "old_median_ms": 16.598288,
+      "candidate_median_ms": 12.893631,
+      "old_command_bytes": 7080000,
+      "candidate_command_bytes": 5680000,
+      "same_shelf_pixels": true
+    },
+    "scope": "Desktop model/actual SDK encoding, not ESP32 FPS"
+  },
+  "symbol_stripping_experiment": {
+    "adopted": false,
+    "aot_metadata_sections_reduced": false,
+    "native_heap_benefit_demonstrated": false
+  },
+  "preservation": {
+    "adopted": true,
+    "host_sha256": "234edd1978bdefb9c513fc9547328c43004c37ba379f513b38fdf43ec883838e",
+    "guest_sha256": "b2b44db157352ea65644ec6bd9d6b25eb58ebe3a3e88099479c40e1e5b936dfa",
+    "other_packages_exact": true,
+    "new_package_verified": true,
+    "private_files_verified": 3,
+    "native_rotation_retained": [],
+    "font_exact": true,
+    "no_app_running": true,
+    "monitors_stopped": true,
+    "input_cancelled": true,
+    "filesystem_locked": true,
+    "font_changed": false,
+    "paid_later_chapter_requested": false,
+    "credential_rollback": false,
+    "serial_released": true,
+    "native_same_account_rotation_during_matrix_retained": true
+  },
+  "remaining": [
+    "Worst-case large-note synchronous parse latency",
+    "Other devices and deployment capability negotiation",
+    "End-to-end visible touch latency",
+    "Unimplemented client features tracked in README"
+  ],
+  "additional_local_reopen": {
+    "aot_passed": true,
+    "wasm_passed": true,
+    "shelf_rows": 20,
+    "response_bytes": 4475,
+    "synthetic_saved_cookie_count": 5,
+    "synthetic_saved_cookie_header_bytes": 89,
+    "default_guest_linear_bytes": 65536,
+    "resources_released": true,
+    "scope": "Local replay of metadata with synthetic restored auth, no Tencent requests or real credentials. Does not reproduce or invalidate S3 failure."
+  },
+  "earlier_failed_experiment": {
+    "status": "candidate_rejected_device_restored",
+    "production_app": "model-boundary",
+    "s3_fixed_experiment": {
+      "planned_samples": 8,
+      "completed_baseline": 2,
+      "completed_candidate_faults": 2,
+      "further_candidate_sample_aborted": 1,
+      "remaining_samples_not_run": 3,
+      "complete": false,
+      "old_shelf_launch_seconds": [
+        5.411639284000557,
+        5.114486421000038
+      ],
+      "candidate_exception": "wasm auxiliary stack overflow",
+      "aot_code_map_bytes_both": 1376256,
+      "old_guest_linear_bytes": 131072,
+      "failed_candidate_guest_linear_bytes": 65536,
+      "old_wamr_loaded_peak_bytes": 220332,
+      "failed_candidate_wamr_loaded_peak_bytes": 225794,
+      "failed_candidate_is_not_a_usable_memory_win": true,
+      "end_to_end_visible_input_latency_available": false,
+      "candidate_adopted": false
+    },
+    "s3_additional_diagnostic": {
+      "stack_bytes": 49152,
+      "default_shelf_with_two_covers_passed": true,
+      "shelf_seconds": 5.800582329000463,
+      "stack_upper_observed_bytes": 4904,
+      "task_peak_slots": 4,
+      "task_allocation_failures": 0,
+      "details_completion_event_timed_out": true,
+      "lost_log_lines": 4,
+      "failure_screen_before_cleanup_not_captured": true,
+      "complete_flow_passed": false,
+      "scope": "Instrumented private S3 build, cannot substitute for normal memory acceptance"
+    },
+    "preservation": {
+      "host_flashed": false,
+      "font_changed": false,
+      "installed_files_exact": 29,
+      "private_files_exact": 3,
+      "credential_rotation": false,
+      "credential_rollback": false,
+      "paid_later_chapter_requested": false,
+      "no_app_running": true,
+      "monitoring_stopped": true,
+      "touch_cancelled": true,
+      "filesystem_locked": true,
+      "serial_released": true,
+      "final_aot_sha256": "99c3940e7bde50d171adfe4b89f0ad9ca9aca3f13410c184578d3b53f97e89f0"
+    }
+  },
+  "current_runtime_experiment_report": "runtime-stack-20261017.json"
+}

@@ -1,0 +1,131 @@
+{
+  "date": "2026-10-17",
+  "state": "in-progress",
+  "login_real_account_simulator": true,
+  "authorized_prose_real_account_simulator": true,
+  "chapter_and_local_paging_real_simulator": true,
+  "desktop_auth_storage": "private-only; not included",
+  "hardware": {
+    "serial": "a4:cb:8f:d5:d4:f0",
+    "host_version": "host-tools-v0.1.0-25-g75673a9-d",
+    "host_changed": false,
+    "package_aot_bytes": 893416,
+    "signed_package_bytes": 719299,
+    "qr_service_and_host_decode_wall_s": 1.84,
+    "qr_time_scope": "From first network authorization to software QR-ready; excludes app cold start and is not LCD completion latency",
+    "reading_authenticated": true,
+    "observed_initial_build_memory": {
+      "aot_file_bytes": 893416,
+      "aot_mapped_psram_bytes": 851968,
+      "guest_linear_bytes": 131072,
+      "qr_image_resource_external_bytes": 129695,
+      "device_total_sram_bytes": 320715,
+      "device_total_psram_bytes": 8358524,
+      "qr_window_sram_min_free_bytes": 44239,
+      "qr_window_psram_min_free_bytes": 5206668,
+      "scope": "First network permission grant to software QR-ready, MEMORY START/STOP; includes Host and all device services. PXA budget peaks are historical, not this window."
+    },
+    "installed_build": "snapshot-reader-budget-20261017",
+    "initial_reading": {
+      "local_turns": 10,
+      "chapter_refetch_during_turns": 0,
+      "display_completed": 11,
+      "display_window_us": 3933148,
+      "guest_input_events": 45,
+      "guest_input_mean_us": 128871.84444444445,
+      "guest_input_p95_us": 669069,
+      "canvas_present_samples": 0,
+      "canvas_visible_samples": 0,
+      "interpretation": "Paced workload, not maximum FPS; input metric has no Canvas sample-to-visible endpoint. Investigating persistence I/O."
+    },
+    "three_restarts_same_page": true,
+    "aot_file_bytes_current": 1237816,
+    "guest_linear_peak_initial_core": 589824,
+    "io_refinement": {
+      "matched_reading_pixels": true,
+      "slow_guest_p95_before_us": [
+        556163,
+        875056
+      ],
+      "slow_guest_p95_after_us": [
+        7000,
+        7000
+      ],
+      "input_cadence_ms": {
+        "hold": 60,
+        "pause": 240
+      },
+      "measurement": "Guest event delivery histogram; no Canvas-to-visible samples; new build includes native input/search UI; not optical latency or peak FPS"
+    },
+    "aot_mapped_psram_bytes_current": 1179648,
+    "guest_linear_peak_current": 393216,
+    "large_search_hardware_tested": false
+  },
+  "unfinished": [
+    "cloud reading progress/time",
+    "discovery/details/shelf management",
+    "notes/highlights and synchronization",
+    "book images/comics/PDF/offline",
+    "audiobooks/social/membership purchase flow",
+    "large search book and optical latency on physical hardware",
+    "CJK punctuation line breaking and transient message visual refinement"
+  ],
+  "local_position_real_account_simulator": true,
+  "catalog_real_api_read_only": {
+    "http_status": 200,
+    "chapter_infos": 80,
+    "reader_urls": 80
+  },
+  "simulator_modes": [
+    "linux-x86_64 AOT",
+    "Wasm interpreter"
+  ],
+  "screen_matrix": [
+    {
+      "width": 296,
+      "height": 240,
+      "dpi": 160,
+      "corner": 58
+    },
+    {
+      "width": 480,
+      "height": 480,
+      "dpi": 280,
+      "corner": 56
+    },
+    {
+      "width": 240,
+      "height": 240,
+      "dpi": 160,
+      "round": true
+    },
+    {
+      "width": 480,
+      "height": 800,
+      "dpi": 240,
+      "corner": 32
+    }
+  ],
+  "real_search": {
+    "result_list": true,
+    "opening_first_large_book": true,
+    "local_turns_without_refetch": 8,
+    "actual_input_html_bytes": 501302,
+    "full_expanded_json_bytes": 546671,
+    "projected_reader_json_bytes": 40654,
+    "chapter_total": 1645,
+    "window": 300,
+    "runtime": "Linux-x86_64 AOT; latest aggregate-budget candidate verified"
+  },
+  "large_fixture": {
+    "aot": true,
+    "wasm_interpreter": true,
+    "aliases": 5117,
+    "chapters": 900,
+    "window": 300,
+    "guest_maximum_bytes": 2097152,
+    "true_guest_peak": "not yet measured",
+    "aggregate_760000_byte_rejected_preserving_previous_page": true,
+    "true_guest_peak_AOT_including_rejected_case": 1703936
+  }
+}

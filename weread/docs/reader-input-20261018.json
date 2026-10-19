@@ -1,0 +1,456 @@
+{
+  "status": "development source updated; not device adopted",
+  "device_access_this_turn": false,
+  "shared_host_or_sdk_changes_this_turn": false,
+  "full_response_diagnosis": {
+    "wire_bytes": 950096,
+    "body_html_bytes": 115612,
+    "nuxt_bytes": 781098,
+    "aliases": 8548,
+    "field_initializers": 27,
+    "directory_rows": 2538,
+    "unicode_escapes": 19,
+    "private_source_not_distributed": true
+  },
+  "limits": {
+    "guest_maximum_bytes": 2097152,
+    "parser_logical_working_budget_bytes": 1310720,
+    "reader_input_limit_bytes": 1302528,
+    "body_html_limit_bytes": 196608,
+    "catalog_window_rows": 300,
+    "large_growth_extra_max_bytes": 65536,
+    "all_allocations_guaranteed_recoverable": false
+  },
+  "same_ui_isolated_comparison": [
+    {
+      "variant": "budget-control",
+      "ui": "same bookmarks candidate",
+      "cases": [
+        {
+          "case": "known",
+          "passed": true,
+          "linear_peak_bytes": 1310720,
+          "wamr_current_bytes": 59440,
+          "wamr_peak_bytes": 566993,
+          "first_png_sha256": "ed6b84ae6a93871b8af287fa991e0f302a10b501540e9444397851255a895428"
+        },
+        {
+          "case": "unknown",
+          "passed": false,
+          "failure": "Guest trap"
+        }
+      ]
+    },
+    {
+      "variant": "split",
+      "ui": "same bookmarks candidate",
+      "cases": [
+        {
+          "case": "known",
+          "passed": true,
+          "linear_peak_bytes": 1703936,
+          "wamr_current_bytes": 60369,
+          "wamr_peak_bytes": 583278,
+          "first_png_sha256": "ed6b84ae6a93871b8af287fa991e0f302a10b501540e9444397851255a895428"
+        },
+        {
+          "case": "unknown",
+          "passed": true,
+          "linear_peak_bytes": 1703936,
+          "wamr_current_bytes": 60369,
+          "wamr_peak_bytes": 583278,
+          "first_png_sha256": "ed6b84ae6a93871b8af287fa991e0f302a10b501540e9444397851255a895428"
+        }
+      ]
+    },
+    {
+      "variant": "buffer",
+      "ui": "same bookmarks candidate",
+      "cases": [
+        {
+          "case": "known",
+          "passed": true,
+          "linear_peak_bytes": 1310720,
+          "wamr_current_bytes": 60156,
+          "wamr_peak_bytes": 578877,
+          "first_png_sha256": "ed6b84ae6a93871b8af287fa991e0f302a10b501540e9444397851255a895428"
+        },
+        {
+          "case": "unknown",
+          "passed": false,
+          "failure": "controlled resource_limit"
+        }
+      ]
+    },
+    {
+      "variant": "buffer-bounded",
+      "ui": "same bookmarks candidate",
+      "cases": [
+        {
+          "case": "unknown",
+          "passed": true,
+          "linear_peak_bytes": 1572864,
+          "wamr_current_bytes": 60156,
+          "wamr_peak_bytes": 578877,
+          "first_png_sha256": "ed6b84ae6a93871b8af287fa991e0f302a10b501540e9444397851255a895428"
+        },
+        {
+          "case": "fragmented",
+          "passed": true,
+          "linear_peak_bytes": 1310720,
+          "wamr_current_bytes": 60156,
+          "wamr_peak_bytes": 578877,
+          "first_png_sha256": "ed6b84ae6a93871b8af287fa991e0f302a10b501540e9444397851255a895428"
+        }
+      ]
+    }
+  ],
+  "integration_checks": [
+    {
+      "scope": "notes-derived AOT",
+      "test": "large",
+      "passed": 3
+    },
+    {
+      "scope": "notes-derived AOT",
+      "test": "smoke",
+      "passed": 19
+    },
+    {
+      "scope": "notes-derived AOT",
+      "test": "network",
+      "passed": 4
+    },
+    {
+      "scope": "notes-derived AOT",
+      "test": "renewal",
+      "passed": 9
+    },
+    {
+      "scope": "notes-derived AOT",
+      "test": "images",
+      "passed": 18
+    },
+    {
+      "scope": "notes-derived AOT",
+      "test": "notes",
+      "passed": 18
+    },
+    {
+      "scope": "notes-derived AOT",
+      "test": "agent",
+      "passed": 12
+    },
+    {
+      "scope": "notes-derived AOT",
+      "test": "covers",
+      "passed": 6
+    },
+    {
+      "scope": "notes-derived AOT",
+      "test": "private complete-page replay",
+      "passed": 2,
+      "response_bytes": 950096,
+      "normalized_text_bytes": 9133,
+      "source_not_distributed": true
+    },
+    {
+      "scope": "root-aot",
+      "test": "large",
+      "passed": 3
+    },
+    {
+      "scope": "root-aot",
+      "test": "replay",
+      "passed": 2
+    },
+    {
+      "scope": "root-aot",
+      "test": "small",
+      "passed": 2
+    },
+    {
+      "scope": "root-aot",
+      "test": "limits",
+      "passed": 4
+    },
+    {
+      "scope": "root-aot",
+      "test": "bookmarks",
+      "passed": 16
+    },
+    {
+      "scope": "base-wasm",
+      "test": "large",
+      "passed": 3
+    },
+    {
+      "scope": "base-wasm",
+      "test": "replay",
+      "passed": 2
+    },
+    {
+      "scope": "base-wasm",
+      "test": "small",
+      "passed": 2
+    },
+    {
+      "scope": "base-wasm",
+      "test": "limits",
+      "passed": 4
+    },
+    {
+      "scope": "base-wasm",
+      "test": "network",
+      "passed": 4
+    },
+    {
+      "scope": "base-wasm",
+      "test": "renewal",
+      "passed": 9
+    },
+    {
+      "scope": "base-aot",
+      "test": "small",
+      "passed": 2
+    },
+    {
+      "scope": "root-wasm",
+      "test": "bookmarks",
+      "passed": 16
+    }
+  ],
+  "integration_case_count": 160,
+  "native_sanitizers": [
+    {
+      "test": "hydration",
+      "returncode": 0,
+      "elapsed_seconds": 210.3580567399913
+    },
+    {
+      "test": "reader_input",
+      "returncode": 0,
+      "elapsed_seconds": 13.31493592800689
+    },
+    {
+      "test": "protocol",
+      "returncode": 0,
+      "elapsed_seconds": 210.34981147100916
+    },
+    {
+      "test": "catalog",
+      "returncode": 0,
+      "elapsed_seconds": 75.93871111300541
+    },
+    {
+      "test": "document",
+      "returncode": 0,
+      "elapsed_seconds": 42.3535710080032
+    },
+    {
+      "test": "notes",
+      "returncode": 0,
+      "elapsed_seconds": 19.85543106799014
+    },
+    {
+      "test": "bookmarks",
+      "returncode": 0,
+      "elapsed_seconds": 22.04590513999574
+    }
+  ],
+  "full_directory_tail_sanitizers_passed": true,
+  "artifacts": {
+    "notes-ready-device": {
+      "bytes": 1454440,
+      "sha256": "b2b44db157352ea65644ec6bd9d6b25eb58ebe3a3e88099479c40e1e5b936dfa",
+      "text_section_bytes": 1370116,
+      "expected_code_map_pages": 21,
+      "expected_code_map_bytes": 1376256
+    },
+    "reader-owned-device": {
+      "bytes": 1458888,
+      "sha256": "167ce771980454c811d4338b82c9bb3a6200e3d1fec92a371cc5609f12242dce",
+      "text_section_bytes": 1374192,
+      "expected_code_map_pages": 21,
+      "expected_code_map_bytes": 1376256
+    }
+  },
+  "paired_small_page_simulator_aot": {
+    "baseline": [
+      {
+        "case": "known",
+        "before": {
+          "samples": 1,
+          "linear_current_bytes": 65536,
+          "linear_peak_bytes": 65536,
+          "wamr_current_bytes": 56308,
+          "wamr_peak_bytes": 528845,
+          "artifact_buffer_bytes": 0,
+          "event_buffer_bytes": 128,
+          "resource_current_bytes": 11169,
+          "resource_peak_internal_bytes": 0,
+          "resource_peak_external_bytes": 11169,
+          "image_current_bytes": 0,
+          "temporary_current_bytes": 0,
+          "temporary_peak_internal_bytes": 0,
+          "temporary_peak_external_bytes": 0,
+          "scope": "current simulator engine; overlapping counters"
+        },
+        "reading": {
+          "samples": 81,
+          "linear_current_bytes": 196608,
+          "linear_peak_bytes": 196608,
+          "wamr_current_bytes": 56308,
+          "wamr_peak_bytes": 528845,
+          "artifact_buffer_bytes": 0,
+          "event_buffer_bytes": 128,
+          "resource_current_bytes": 15257,
+          "resource_peak_internal_bytes": 0,
+          "resource_peak_external_bytes": 62638,
+          "image_current_bytes": 0,
+          "temporary_current_bytes": 4088,
+          "temporary_peak_internal_bytes": 0,
+          "temporary_peak_external_bytes": 44958,
+          "scope": "current simulator engine; overlapping counters"
+        },
+        "first_png_sha256": "0c001474483caf3552b070f33332ba4bb86093029510e7af973131b44cd16ced"
+      },
+      {
+        "case": "unknown",
+        "before": {
+          "samples": 1,
+          "linear_current_bytes": 65536,
+          "linear_peak_bytes": 65536,
+          "wamr_current_bytes": 56308,
+          "wamr_peak_bytes": 528845,
+          "artifact_buffer_bytes": 0,
+          "event_buffer_bytes": 128,
+          "resource_current_bytes": 11169,
+          "resource_peak_internal_bytes": 0,
+          "resource_peak_external_bytes": 11169,
+          "image_current_bytes": 0,
+          "temporary_current_bytes": 0,
+          "temporary_peak_internal_bytes": 0,
+          "temporary_peak_external_bytes": 0,
+          "scope": "current simulator engine; overlapping counters"
+        },
+        "reading": {
+          "samples": 86,
+          "linear_current_bytes": 196608,
+          "linear_peak_bytes": 196608,
+          "wamr_current_bytes": 56308,
+          "wamr_peak_bytes": 528845,
+          "artifact_buffer_bytes": 0,
+          "event_buffer_bytes": 128,
+          "resource_current_bytes": 15257,
+          "resource_peak_internal_bytes": 0,
+          "resource_peak_external_bytes": 62638,
+          "image_current_bytes": 0,
+          "temporary_current_bytes": 4088,
+          "temporary_peak_internal_bytes": 0,
+          "temporary_peak_external_bytes": 44958,
+          "scope": "current simulator engine; overlapping counters"
+        },
+        "first_png_sha256": "0c001474483caf3552b070f33332ba4bb86093029510e7af973131b44cd16ced"
+      }
+    ],
+    "candidate": [
+      {
+        "case": "known",
+        "before": {
+          "samples": 1,
+          "linear_current_bytes": 65536,
+          "linear_peak_bytes": 65536,
+          "wamr_current_bytes": 56467,
+          "wamr_peak_bytes": 531064,
+          "artifact_buffer_bytes": 0,
+          "event_buffer_bytes": 128,
+          "resource_current_bytes": 11170,
+          "resource_peak_internal_bytes": 0,
+          "resource_peak_external_bytes": 11170,
+          "image_current_bytes": 0,
+          "temporary_current_bytes": 0,
+          "temporary_peak_internal_bytes": 0,
+          "temporary_peak_external_bytes": 0,
+          "scope": "current simulator engine; overlapping counters"
+        },
+        "reading": {
+          "samples": 127,
+          "linear_current_bytes": 196608,
+          "linear_peak_bytes": 196608,
+          "wamr_current_bytes": 56467,
+          "wamr_peak_bytes": 531064,
+          "artifact_buffer_bytes": 0,
+          "event_buffer_bytes": 4096,
+          "resource_current_bytes": 11170,
+          "resource_peak_internal_bytes": 0,
+          "resource_peak_external_bytes": 62639,
+          "image_current_bytes": 0,
+          "temporary_current_bytes": 0,
+          "temporary_peak_internal_bytes": 0,
+          "temporary_peak_external_bytes": 44958,
+          "scope": "current simulator engine; overlapping counters"
+        },
+        "first_png_sha256": "0c001474483caf3552b070f33332ba4bb86093029510e7af973131b44cd16ced"
+      },
+      {
+        "case": "unknown",
+        "before": {
+          "samples": 1,
+          "linear_current_bytes": 65536,
+          "linear_peak_bytes": 65536,
+          "wamr_current_bytes": 56467,
+          "wamr_peak_bytes": 531064,
+          "artifact_buffer_bytes": 0,
+          "event_buffer_bytes": 128,
+          "resource_current_bytes": 11170,
+          "resource_peak_internal_bytes": 0,
+          "resource_peak_external_bytes": 11170,
+          "image_current_bytes": 0,
+          "temporary_current_bytes": 0,
+          "temporary_peak_internal_bytes": 0,
+          "temporary_peak_external_bytes": 0,
+          "scope": "current simulator engine; overlapping counters"
+        },
+        "reading": {
+          "samples": 118,
+          "linear_current_bytes": 196608,
+          "linear_peak_bytes": 196608,
+          "wamr_current_bytes": 56467,
+          "wamr_peak_bytes": 531064,
+          "artifact_buffer_bytes": 0,
+          "event_buffer_bytes": 4096,
+          "resource_current_bytes": 11170,
+          "resource_peak_internal_bytes": 0,
+          "resource_peak_external_bytes": 62639,
+          "image_current_bytes": 0,
+          "temporary_current_bytes": 0,
+          "temporary_peak_internal_bytes": 0,
+          "temporary_peak_external_bytes": 44958,
+          "scope": "current simulator engine; overlapping counters"
+        },
+        "first_png_sha256": "0c001474483caf3552b070f33332ba4bb86093029510e7af973131b44cd16ced"
+      }
+    ],
+    "same_first_page_pixels": true,
+    "linear_peak_delta_bytes": 0,
+    "wamr_current_delta_bytes": 159,
+    "wamr_process_peak_delta_bytes": 2219,
+    "strict_non_growth_gate_passed": false,
+    "scope": "desktop simulator, same small page; WAMR peak includes first module load, not a pure reading window; not SRAM/PSRAM"
+  },
+  "cpp26_optional_trace_syntax_passed": true,
+  "root_source_sha256": {
+    "main.cpp": "e788f6a5488f3565e58b18cfca68bf9564ff3d79685fb0c34f40cc97250d707e",
+    "reader_input.hpp": "b6e1ffe876d578dca205b4aaddd02a60bd7fbf716d822522c71cdf39c172a6de",
+    "hydration.hpp": "90b7e3005bae9c49e16ed7799e9888c0dc62f48278206e1235c187b545da6293"
+  },
+  "limits_and_missing_evidence": [
+    "No new real-device read/physical SRAM/PSRAM cold or repeated-start measurements",
+    "Small-page simulator WAMR stable +159 B and process peak +2219 B; strict non-growth gate not passed",
+    "Notes-derived S3 candidate excludes development bookmarks UI; no cross-workload default-memory comparison",
+    "Test wait seconds include tap and polling sleeps; not frame-rate or end-to-end latency",
+    "Existing paid-book Web availability restrictions unchanged",
+    "Broader client feature matrix remains incomplete"
+  ]
+}

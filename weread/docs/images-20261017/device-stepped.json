@@ -1,0 +1,69 @@
+{
+  "scope": "pai-touch; stepped directory projection; PNG d878; 2026-10-17",
+  "host": {
+    "file_bytes": 3445408,
+    "delta_file_bytes": 224,
+    "static_memory_unchanged": true,
+    "sha256": "d878949377ee5d0135da3b1b5b98e4f6879a009e5b70b2bc1fda67ce68dbb97d",
+    "original_jpeg_display_ime_preserved": true
+  },
+  "guest": {
+    "aot_bytes": 1387728,
+    "previous_image_aot_bytes": 1374016,
+    "mapped_bytes": 1310720,
+    "previous_image_mapped_bytes": 1310720,
+    "reported_linear_peak_bytes": 1179648,
+    "simulator_real_flow_linear_peak_bytes": 1441792,
+    "linear_peak_workload": "full image instance including lock/background reload and later cancellation; pure image stage linear peak not separately sampled",
+    "same_prose_restart_linear_peak_bytes": 393216,
+    "other_big_book_restart_linear_peak_bytes": 917504
+  },
+  "real_image": {
+    "visible": true,
+    "source_width": 1280,
+    "source_height": 1778,
+    "resource_charge_bytes": 22019,
+    "temporary_charge_after_bytes": 0,
+    "watchdog_in_test_capture": false
+  },
+  "warm_prose_input": {
+    "before_guest_p95_us": 8000,
+    "after_guest_p95_us": 7000,
+    "after_guest_max_us": 8760,
+    "before_samples": 83,
+    "after_samples": 81,
+    "alternating_taps": 12,
+    "present_samples": 0,
+    "visible_samples": 0,
+    "optical_latency_measured": false
+  },
+  "loading_input": {
+    "guest_samples": 10,
+    "guest_p95_us": 1169160,
+    "guest_max_us": 1169160,
+    "acceptable": false,
+    "remaining_synchronous_preparation": true
+  },
+  "image_local_heap_window": {
+    "sram_free_after": 48615,
+    "sram_min_free": 43791,
+    "psram_free_after": 4517780,
+    "psram_min_free": 3670884,
+    "minimum_scope": "local",
+    "budget_peaks_are_historical_not_window": true
+  },
+  "lifecycle": {
+    "cancel_at_parse_no_late_reader_image_ready": true,
+    "authenticated_shelf_restarts": 3,
+    "same_prose_restart_count": 1,
+    "other_restarts_different_shelf_books": 2,
+    "session_preserved": true,
+    "other_packages_private_font_verified": true,
+    "monitors_stopped_and_fs_locked": true
+  },
+  "limits": [
+    "Large chapter first loading still has 1.17s Guest input delay; cooperative preparation candidate is not yet device validated.",
+    "No physical input-to-LCD latency or interactive FPS established.",
+    "No animated GIF, comic zoom, PDF, offline library, cloud reading progress/notes or audio implemented."
+  ]
+}

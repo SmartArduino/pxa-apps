@@ -1,0 +1,154 @@
+{
+  "comparison": {
+    "v9": {
+      "html_bytes": 241046,
+      "text_bytes": 901,
+      "phase_wall_ms": {
+        "prepare_project": 1922,
+        "model": 289,
+        "text_and_first_map": 1407,
+        "total": 3619
+      },
+      "before_app_heap": {
+        "sram_total": 320715,
+        "sram_free": 57135,
+        "sram_min": 27896,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6837844,
+        "psram_min": 6735648,
+        "psram_largest": 6815744
+      },
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 48619,
+        "sram_min": 43895,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 4874844,
+        "psram_min": 4353644,
+        "psram_largest": 4325376
+      },
+      "stable_heap": {
+        "sram_total": 320715,
+        "sram_free": 48619,
+        "sram_min": 48583,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 4877024,
+        "psram_min": 4875236,
+        "psram_largest": 4325376
+      },
+      "window_max_allocated_since_before": {
+        "sram": 13240,
+        "psram": 2484200
+      },
+      "budget_peaks_since_same_boot": {
+        "internal": 27468,
+        "external": 24887,
+        "peak_internal": 27468,
+        "peak_external": 125930,
+        "temporary_peak_internal": 0,
+        "temporary_peak_external": 98512,
+        "fixed": 2224,
+        "denied": 0,
+        "allocation_failures": 0
+      },
+      "linear_peak_bytes": 589824,
+      "aot_map": 1376256,
+      "wamr_native_peak": 248638,
+      "loading_guest_delivery": {
+        "guest_total_us": 2302519,
+        "guest_count": 44,
+        "guest_p95_us": 335701,
+        "guest_max_us": 335701
+      },
+      "warm_guest_delivery": {
+        "guest_total_us": 256111,
+        "guest_count": 82,
+        "guest_p95_us": 7000,
+        "guest_max_us": 12140
+      }
+    },
+    "v10": {
+      "html_bytes": 241046,
+      "text_bytes": 901,
+      "phase_wall_ms": {
+        "prepare_project": 1944,
+        "model": 281,
+        "text_and_first_map": 350,
+        "total": 2576
+      },
+      "before_app_heap": {
+        "sram_total": 320715,
+        "sram_free": 57127,
+        "sram_min": 27596,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6836988,
+        "psram_min": 6737744,
+        "psram_largest": 6815744
+      },
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 48579,
+        "sram_min": 43863,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 4873976,
+        "psram_min": 4352736,
+        "psram_largest": 4325376
+      },
+      "stable_heap": {
+        "sram_total": 320715,
+        "sram_free": 48579,
+        "sram_min": 48579,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 4876156,
+        "psram_min": 4874368,
+        "psram_largest": 4325376
+      },
+      "window_max_allocated_since_before": {
+        "sram": 13264,
+        "psram": 2484252
+      },
+      "budget_peaks_since_same_boot": {
+        "internal": 27468,
+        "external": 24887,
+        "peak_internal": 27468,
+        "peak_external": 125930,
+        "temporary_peak_internal": 0,
+        "temporary_peak_external": 98512,
+        "fixed": 2224,
+        "denied": 0,
+        "allocation_failures": 0
+      },
+      "linear_peak_bytes": 589824,
+      "aot_map": 1376256,
+      "wamr_native_peak": 248638,
+      "loading_guest_delivery": {
+        "guest_total_us": 2510465,
+        "guest_count": 47,
+        "guest_p95_us": 328339,
+        "guest_max_us": 328339
+      },
+      "warm_guest_delivery": {
+        "guest_total_us": 290833,
+        "guest_count": 84,
+        "guest_p95_us": 8000,
+        "guest_max_us": 24939
+      }
+    }
+  },
+  "same_reader_pixels": true,
+  "fresh_boot_each": true,
+  "physical_lcd_latency_measured": false,
+  "limits": [
+    "Single pair, no statistical confidence interval.",
+    "Before-launch heap differs by 8B SRAM/856B PSRAM; net window peaks differ by 24B/52B. Do not claim exact whole-heap invariance.",
+    "Guest linear/code-map/WAMR native/resource budget peaks equal.",
+    "Whole-heap net deltas include system scheduling, metadata and rendering; attribution of tiny difference not established.",
+    "Host asset temporary result may grow by 3040B but does not exceed observed same-boot global resource peak."
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "iterations_per_batch": 50,
+  "native_linux_O3_ms_per_parse": {
+    "before": [
+      21.917800000000003,
+      19.00486,
+      24.5448
+    ],
+    "after": [
+      25.437600000000003,
+      21.53,
+      22.7404
+    ]
+  },
+  "scope": "native Linux O3, real captured page; three alternating batches; system under development load; not device performance"
+}

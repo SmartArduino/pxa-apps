@@ -1,0 +1,160 @@
+{
+  "passed": [
+    {
+      "screen": "compact",
+      "format": "png",
+      "visible_pixels": 5481,
+      "bounds": [
+        25,
+        49,
+        88,
+        136
+      ]
+    },
+    {
+      "screen": "compact",
+      "format": "jpeg",
+      "visible_pixels": 15836,
+      "bounds": [
+        94,
+        50,
+        201,
+        198
+      ]
+    },
+    {
+      "screen": "compact",
+      "format": "gif",
+      "visible_pixels": 15836,
+      "bounds": [
+        94,
+        50,
+        201,
+        198
+      ]
+    },
+    {
+      "screen": "hidpi",
+      "format": "png",
+      "visible_pixels": 17316,
+      "bounds": [
+        29,
+        71,
+        141,
+        227
+      ]
+    },
+    {
+      "screen": "hidpi",
+      "format": "jpeg",
+      "visible_pixels": 87096,
+      "bounds": [
+        113,
+        72,
+        364,
+        419
+      ]
+    },
+    {
+      "screen": "hidpi",
+      "format": "gif",
+      "visible_pixels": 86750,
+      "bounds": [
+        113,
+        72,
+        364,
+        419
+      ]
+    },
+    {
+      "screen": "round",
+      "format": "png",
+      "visible_pixels": 5481,
+      "bounds": [
+        44,
+        64,
+        107,
+        151
+      ]
+    },
+    {
+      "screen": "round",
+      "format": "jpeg",
+      "visible_pixels": 9545,
+      "bounds": [
+        78,
+        64,
+        161,
+        179
+      ]
+    },
+    {
+      "screen": "round",
+      "format": "gif",
+      "visible_pixels": 9545,
+      "bounds": [
+        78,
+        64,
+        161,
+        179
+      ]
+    },
+    {
+      "screen": "portrait",
+      "format": "png",
+      "visible_pixels": 12313,
+      "bounds": [
+        21,
+        57,
+        116,
+        188
+      ]
+    },
+    {
+      "screen": "portrait",
+      "format": "jpeg",
+      "visible_pixels": 262136,
+      "bounds": [
+        22,
+        57,
+        457,
+        661
+      ]
+    },
+    {
+      "screen": "portrait",
+      "format": "gif",
+      "visible_pixels": 262136,
+      "bounds": [
+        22,
+        57,
+        457,
+        661
+      ]
+    },
+    {
+      "multiple_visible_images": 20,
+      "aggregate_image_charge": 255660,
+      "decoded_pixel_budget": 65536,
+      "disable_releases_images": true
+    },
+    {
+      "image_retry": true
+    },
+    {
+      "cancel_while_downloading": true,
+      "stale_pixels_rejected": true
+    },
+    {
+      "cdn_redirect": true,
+      "raw_signed_query_preserved": true,
+      "cdn_cookie_not_forwarded": true
+    },
+    {
+      "redirect-loop": true
+    },
+    {
+      "redirect-reject": true
+    }
+  ]
+}

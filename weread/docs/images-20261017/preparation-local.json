@@ -1,0 +1,18 @@
+{
+  "scope": "Linux diagnostic only; different optimization flags and CPU contention; not an A/B speed claim",
+  "semantic_cases": 25021,
+  "real_projected_byte_equivalence": {
+    "501302": 40654,
+    "135043": 25748
+  },
+  "prepare_fixed_object_x86_bytes": 144,
+  "median_step_us": {
+    "old_full_projection_initialization": 19645.3,
+    "new_projection_largest_step": 945.8544999999999,
+    "new_prepare_largest_step": 231.6975
+  },
+  "limitations": [
+    "Not S3 timing, whole-load speedup, CPU throughput or optical latency.",
+    "Preparation total CPU increased in the diagnostic; batching/yield scheduling and actual S3 checks remain necessary."
+  ]
+}

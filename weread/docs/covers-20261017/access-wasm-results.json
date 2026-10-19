@@ -1,0 +1,26 @@
+[
+  {
+    "layout": "compact",
+    "persistent_access_messages": true,
+    "denied_page_preserved": true,
+    "limited_free_readable": true
+  },
+  {
+    "layout": "hidpi",
+    "persistent_access_messages": true,
+    "denied_page_preserved": true,
+    "limited_free_readable": true
+  },
+  {
+    "layout": "round",
+    "persistent_access_messages": true,
+    "denied_page_preserved": true,
+    "limited_free_readable": true
+  },
+  {
+    "layout": "portrait",
+    "persistent_access_messages": true,
+    "denied_page_preserved": true,
+    "limited_free_readable": true
+  }
+]

@@ -1,0 +1,22 @@
+{
+  "baseline-x86": {
+    "pxa_codec_size": 40,
+    "pxa_decoder_size": 168,
+    "pxa_target_size": 104
+  },
+  "baseline-esp32s3": {
+    "pxa_codec_size": 20,
+    "pxa_decoder_size": 116,
+    "pxa_target_size": 76
+  },
+  "candidate-x86": {
+    "pxa_codec_size": 40,
+    "pxa_decoder_size": 168,
+    "pxa_target_size": 104
+  },
+  "candidate-esp32s3": {
+    "pxa_codec_size": 20,
+    "pxa_decoder_size": 116,
+    "pxa_target_size": 76
+  }
+}

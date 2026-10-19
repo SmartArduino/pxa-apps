@@ -1,0 +1,87 @@
+{
+  "status": "isolated; real selected data still exceeds original budget",
+  "versions": {
+    "bookmarks-card-device": {
+      "sha256": "7c4a0c2325229cd7cc80d974728023c5c086b8353aafbeee1b3e16118351b6f1",
+      "aot_bytes": 1562076,
+      "text_bytes": 1471444,
+      "expected_code_map_bytes": 1507328
+    },
+    "bookmarks-http-head-device": {
+      "sha256": "bd880d2fe777f851a4629939823e33be8a33550dc155bc5d532f6e26359d0337",
+      "aot_bytes": 1568472,
+      "text_bytes": 1477560,
+      "expected_code_map_bytes": 1507328
+    },
+    "reader-document-device": {
+      "sha256": "505932549749f9d96eb7b46cf61c12c8a7b48f77137dce1d97873068c8fa4baf",
+      "aot_bytes": 1576692,
+      "text_bytes": 1484248,
+      "expected_code_map_bytes": 1507328
+    },
+    "reader-document-reason-device": {
+      "sha256": "6f68fb2e63dc5c4feaa9157b136e8d31bd465dd8474c513341363b4bd16f9015",
+      "aot_bytes": 1579116,
+      "text_bytes": 1486608,
+      "expected_code_map_bytes": 1507328
+    }
+  },
+  "synthetic_streaming": {
+    "aot": 61,
+    "wasm": 61,
+    "passed": true
+  },
+  "native_sanitizers_passed": true,
+  "limits": {
+    "input_bytes": 8388608,
+    "selected_bytes": 786432,
+    "body_bytes": 196608
+  },
+  "real_http_head_bytes": 950098,
+  "device_adopted": false,
+  "full_real_bookmarks_passed": false,
+  "real_selection_failure": {
+    "offered_input_bytes": 839680,
+    "retained_bytes": 786023,
+    "limit": "selected",
+    "code": -16
+  },
+  "latest_numeric_reason_checks": {
+    "native_sanitizers": true,
+    "aot_limit_cases": 8
+  },
+  "normal_disabled_binary_identical": true,
+  "partial_structure_diagnosis": {
+    "capture_bytes": 581632,
+    "capture_complete": false,
+    "capture_timeout_ms": 20000,
+    "body_bytes": 115612,
+    "function_parameters": 8548,
+    "current_parameter_limit": 8192,
+    "partial_unicode_escape_occurrences": 10
+  },
+  "final_device_restored": true,
+  "device_keeps_accepted_guest": true,
+  "sdk_temporary_file_cleanup_verified": true,
+  "host_unchanged": true,
+  "font_unchanged": true,
+  "next_steps": [
+    "Complete private structure capture with own-identity SDK cleanup; never use debug private-path mutation",
+    "Design a shared input/index/output budget; preserve directory and authorization correctness",
+    "Actual successful same-book reader/bookmarks and memory matrix remain required"
+  ],
+  "historical_selector_retired": true,
+  "replacement_report": "reader-input-20261018.json",
+  "complete_capture": {
+    "response_bytes": 950096,
+    "body_bytes": 115612,
+    "nuxt_bytes": 781098,
+    "aliases": 8548,
+    "initializer_fields": 27,
+    "directory_rows": 2538,
+    "unicode_escapes": 19,
+    "private_source_only": true,
+    "sdk_temporary_cleanup_verified": true,
+    "original_29_package_and_3_private_files_exact": true
+  }
+}

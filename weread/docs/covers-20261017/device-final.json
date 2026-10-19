@@ -1,0 +1,43 @@
+{
+  "variant": "covers-access v9 final",
+  "s3_aot_bytes": 1420224,
+  "html_bytes": 241046,
+  "text_bytes": 901,
+  "phase_wall_ms": {
+    "prepare_project": 1958,
+    "model": 286,
+    "text_and_first_mapping_asset_io": 1391,
+    "total": 3636
+  },
+  "loading_guest_delivery": {
+    "guest_total_us": 1881142,
+    "guest_count": 44,
+    "guest_p95_us": 296606,
+    "guest_max_us": 296606
+  },
+  "warm_guest_delivery": {
+    "guest_total_us": 285904,
+    "guest_count": 81,
+    "guest_p95_us": 8000,
+    "guest_max_us": 8880
+  },
+  "linear_peak_first_same_chapter": 589824,
+  "linear_peak_repeated_load_and_denied": 655360,
+  "aot_request": 1327772,
+  "aot_map": 1376256,
+  "stable_sram_free": 48615,
+  "stable_psram_free": 4446408,
+  "cold_local_sram_min": 44391,
+  "cold_local_psram_min": 3903864,
+  "actual_persistent_denied_message": true,
+  "previous_reader_pixels_preserved": true,
+  "reopen_restores": 3,
+  "physical_lcd_latency_measured": false,
+  "notes": [
+    "Same first chapter workload; one controlled sample, not statistical speed guarantee.",
+    "Whole-heap readings include retained Host font cache warmed by full outline traversal.",
+    "Repeated chapter/error test uses a separate instance; do not replace its larger true peak with first-chapter peak.",
+    "Asset read stage contains asynchronous 1KiB mapping reads; potential next optimization, not implemented.",
+    "Later purchased chapter authorization discrepancy remains unresolved."
+  ]
+}

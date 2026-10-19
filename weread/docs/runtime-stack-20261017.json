@@ -1,0 +1,633 @@
+{
+  "date": "2026-10-17",
+  "status": "paired_host_guest_adopted",
+  "device": "pai-touch ESP32-S3",
+  "host_old_sha256": "d878949377ee5d0135da3b1b5b98e4f6879a009e5b70b2bc1fda67ce68dbb97d",
+  "host_new_sha256": "234edd1978bdefb9c513fc9547328c43004c37ba379f513b38fdf43ec883838e",
+  "guest_new_sha256": "b2b44db157352ea65644ec6bd9d6b25eb58ebe3a3e88099479c40e1e5b936dfa",
+  "host_new_bytes": 3445248,
+  "guest_new_bytes": 1454440,
+  "protocol": {
+    "registered_before_sampling": true,
+    "fixed_samples": 8,
+    "no_extra_samples_to_seek_pass": true,
+    "launch": "20 shelf rows, first two covers complete, then 1s settle; no screenshots or raster PERF during launch window",
+    "input": "four settings/back pairs, after launch memory window",
+    "gate": "physical SRAM/PSRAM stable and fresh-window peak, Guest/code map; report overlapping module counters separately",
+    "fresh_window_source": "heap-local MEMORY START/STOP; not boot cumulative minimum",
+    "old_protocol_failures_reclassified": false,
+    "setup_failure_before_samples": "INPUT CANCEL input_unavailable during boot; preserved and recovered, no candidate flashed"
+  },
+  "samples": [
+    {
+      "label": "0-old-old-cold",
+      "host": "old",
+      "guest": "old",
+      "phase": "cold",
+      "passed": true,
+      "launch_seconds": 8.479481751004641,
+      "ui_seconds": 3.4037857289949898,
+      "sram": {
+        "idle_used": 263580,
+        "stable_used": 272132,
+        "run_peak_used": 277948,
+        "stable_above_idle": 8552,
+        "peak_above_idle": 14368
+      },
+      "psram": {
+        "idle_used": 1523928,
+        "stable_used": 2984296,
+        "run_peak_used": 3740508,
+        "stable_above_idle": 1460368,
+        "peak_above_idle": 2216580
+      },
+      "wamr": [
+        {
+          "peak": 220332,
+          "current": 49443,
+          "linear": 131072,
+          "linear_peak": 131072,
+          "artifact": 0,
+          "events": 64
+        },
+        {
+          "peak": 220332,
+          "current": 416,
+          "linear": 0,
+          "linear_peak": 131072,
+          "artifact": 0,
+          "events": 0
+        }
+      ],
+      "aot_map": [
+        1376256
+      ],
+      "host_input_sample_to_guest": {
+        "guest_total_us": 205616,
+        "guest_count": 55,
+        "guest_p95_us": 8000,
+        "guest_max_us": 10552
+      },
+      "ui_display": {
+        "raster_overflow": 0,
+        "present_overflow": 0,
+        "surface_changed": 0,
+        "completed": 12,
+        "window_us": 3406691
+      }
+    },
+    {
+      "label": "1-old-old-warm",
+      "host": "old",
+      "guest": "old",
+      "phase": "warm",
+      "passed": true,
+      "launch_seconds": 5.849879123998107,
+      "ui_seconds": 3.3200166069946135,
+      "sram": {
+        "idle_used": 270904,
+        "stable_used": 272096,
+        "run_peak_used": 276232,
+        "stable_above_idle": 1192,
+        "peak_above_idle": 5328
+      },
+      "psram": {
+        "idle_used": 1561704,
+        "stable_used": 2993508,
+        "run_peak_used": 3778348,
+        "stable_above_idle": 1431804,
+        "peak_above_idle": 2216644
+      },
+      "wamr": [
+        {
+          "peak": 220332,
+          "current": 49443,
+          "linear": 131072,
+          "linear_peak": 131072,
+          "artifact": 0,
+          "events": 64
+        }
+      ],
+      "aot_map": [
+        1376256
+      ],
+      "host_input_sample_to_guest": {
+        "guest_total_us": 178181,
+        "guest_count": 56,
+        "guest_p95_us": 8000,
+        "guest_max_us": 8571
+      },
+      "ui_display": {
+        "raster_overflow": 0,
+        "present_overflow": 0,
+        "surface_changed": 0,
+        "completed": 14,
+        "window_us": 3323260
+      }
+    },
+    {
+      "label": "2-new-old-cold",
+      "host": "new",
+      "guest": "old",
+      "phase": "cold",
+      "passed": true,
+      "launch_seconds": 6.530368605002877,
+      "ui_seconds": 3.3920724199997494,
+      "sram": {
+        "idle_used": 263600,
+        "stable_used": 272248,
+        "run_peak_used": 276808,
+        "stable_above_idle": 8648,
+        "peak_above_idle": 13208
+      },
+      "psram": {
+        "idle_used": 1519900,
+        "stable_used": 2979928,
+        "run_peak_used": 3737356,
+        "stable_above_idle": 1460028,
+        "peak_above_idle": 2217456
+      },
+      "wamr": [
+        {
+          "peak": 220332,
+          "current": 49399,
+          "linear": 131072,
+          "linear_peak": 131072,
+          "artifact": 0,
+          "events": 64
+        },
+        {
+          "peak": 220332,
+          "current": 416,
+          "linear": 0,
+          "linear_peak": 131072,
+          "artifact": 0,
+          "events": 0
+        }
+      ],
+      "aot_map": [
+        1376256
+      ],
+      "host_input_sample_to_guest": {
+        "guest_total_us": 211773,
+        "guest_count": 55,
+        "guest_p95_us": 8000,
+        "guest_max_us": 17138
+      },
+      "ui_display": {
+        "raster_overflow": 0,
+        "present_overflow": 0,
+        "surface_changed": 0,
+        "completed": 13,
+        "window_us": 3395082
+      }
+    },
+    {
+      "label": "3-new-old-warm",
+      "host": "new",
+      "guest": "old",
+      "phase": "warm",
+      "passed": true,
+      "launch_seconds": 5.229242130997591,
+      "ui_seconds": 3.3247923759990954,
+      "sram": {
+        "idle_used": 271008,
+        "stable_used": 272248,
+        "run_peak_used": 276348,
+        "stable_above_idle": 1240,
+        "peak_above_idle": 5340
+      },
+      "psram": {
+        "idle_used": 1557512,
+        "stable_used": 2989168,
+        "run_peak_used": 3774052,
+        "stable_above_idle": 1431656,
+        "peak_above_idle": 2216540
+      },
+      "wamr": [
+        {
+          "peak": 220332,
+          "current": 49399,
+          "linear": 131072,
+          "linear_peak": 131072,
+          "artifact": 0,
+          "events": 64
+        },
+        {
+          "peak": 220332,
+          "current": 416,
+          "linear": 0,
+          "linear_peak": 131072,
+          "artifact": 0,
+          "events": 0
+        }
+      ],
+      "aot_map": [
+        1376256
+      ],
+      "host_input_sample_to_guest": {
+        "guest_total_us": 172836,
+        "guest_count": 56,
+        "guest_p95_us": 7000,
+        "guest_max_us": 7114
+      },
+      "ui_display": {
+        "raster_overflow": 0,
+        "present_overflow": 0,
+        "surface_changed": 0,
+        "completed": 15,
+        "window_us": 3329077
+      }
+    },
+    {
+      "label": "4-new-new-cold",
+      "host": "new",
+      "guest": "new",
+      "phase": "cold",
+      "passed": true,
+      "launch_seconds": 6.0255375529959565,
+      "ui_seconds": 3.3922132219959167,
+      "sram": {
+        "idle_used": 263580,
+        "stable_used": 272132,
+        "run_peak_used": 276820,
+        "stable_above_idle": 8552,
+        "peak_above_idle": 13240
+      },
+      "psram": {
+        "idle_used": 1521072,
+        "stable_used": 2914584,
+        "run_peak_used": 3671624,
+        "stable_above_idle": 1393512,
+        "peak_above_idle": 2150552
+      },
+      "wamr": [
+        {
+          "peak": 225794,
+          "current": 50501,
+          "linear": 65536,
+          "linear_peak": 65536,
+          "artifact": 0,
+          "events": 64
+        },
+        {
+          "peak": 225794,
+          "current": 416,
+          "linear": 0,
+          "linear_peak": 65536,
+          "artifact": 0,
+          "events": 0
+        }
+      ],
+      "aot_map": [
+        1376256
+      ],
+      "host_input_sample_to_guest": {
+        "guest_total_us": 202564,
+        "guest_count": 55,
+        "guest_p95_us": 8000,
+        "guest_max_us": 10570
+      },
+      "ui_display": {
+        "raster_overflow": 0,
+        "present_overflow": 0,
+        "surface_changed": 0,
+        "completed": 15,
+        "window_us": 3394924
+      }
+    },
+    {
+      "label": "5-new-new-warm",
+      "host": "new",
+      "guest": "new",
+      "phase": "warm",
+      "passed": true,
+      "launch_seconds": 5.383225595003751,
+      "ui_seconds": 3.3184161620010855,
+      "sram": {
+        "idle_used": 270900,
+        "stable_used": 272096,
+        "run_peak_used": 276232,
+        "stable_above_idle": 1196,
+        "peak_above_idle": 5332
+      },
+      "psram": {
+        "idle_used": 1558356,
+        "stable_used": 2924084,
+        "run_peak_used": 3708912,
+        "stable_above_idle": 1365728,
+        "peak_above_idle": 2150556
+      },
+      "wamr": [
+        {
+          "peak": 225794,
+          "current": 50501,
+          "linear": 65536,
+          "linear_peak": 65536,
+          "artifact": 0,
+          "events": 64
+        }
+      ],
+      "aot_map": [
+        1376256
+      ],
+      "host_input_sample_to_guest": {
+        "guest_total_us": 178689,
+        "guest_count": 56,
+        "guest_p95_us": 8000,
+        "guest_max_us": 8982
+      },
+      "ui_display": {
+        "raster_overflow": 0,
+        "present_overflow": 0,
+        "surface_changed": 0,
+        "completed": 12,
+        "window_us": 3320316
+      }
+    },
+    {
+      "label": "6-new-new-cold",
+      "host": "new",
+      "guest": "new",
+      "phase": "cold",
+      "passed": true,
+      "launch_seconds": 5.688307814001746,
+      "ui_seconds": 3.392900891994941,
+      "sram": {
+        "idle_used": 263580,
+        "stable_used": 272096,
+        "run_peak_used": 276820,
+        "stable_above_idle": 8516,
+        "peak_above_idle": 13240
+      },
+      "psram": {
+        "idle_used": 1521188,
+        "stable_used": 2914928,
+        "run_peak_used": 3671668,
+        "stable_above_idle": 1393740,
+        "peak_above_idle": 2150480
+      },
+      "wamr": [
+        {
+          "peak": 225794,
+          "current": 50501,
+          "linear": 65536,
+          "linear_peak": 65536,
+          "artifact": 0,
+          "events": 64
+        },
+        {
+          "peak": 225794,
+          "current": 416,
+          "linear": 0,
+          "linear_peak": 65536,
+          "artifact": 0,
+          "events": 0
+        }
+      ],
+      "aot_map": [
+        1376256
+      ],
+      "host_input_sample_to_guest": {
+        "guest_total_us": 201845,
+        "guest_count": 55,
+        "guest_p95_us": 8000,
+        "guest_max_us": 13211
+      },
+      "ui_display": {
+        "raster_overflow": 0,
+        "present_overflow": 0,
+        "surface_changed": 0,
+        "completed": 15,
+        "window_us": 3394674
+      }
+    },
+    {
+      "label": "7-new-new-warm",
+      "host": "new",
+      "guest": "new",
+      "phase": "warm",
+      "passed": true,
+      "launch_seconds": 5.188503967001452,
+      "ui_seconds": 3.3159799109998858,
+      "sram": {
+        "idle_used": 270904,
+        "stable_used": 272096,
+        "run_peak_used": 276232,
+        "stable_above_idle": 1192,
+        "peak_above_idle": 5328
+      },
+      "psram": {
+        "idle_used": 1558180,
+        "stable_used": 2923848,
+        "run_peak_used": 3708784,
+        "stable_above_idle": 1365668,
+        "peak_above_idle": 2150604
+      },
+      "wamr": [
+        {
+          "peak": 225794,
+          "current": 50501,
+          "linear": 65536,
+          "linear_peak": 65536,
+          "artifact": 0,
+          "events": 64
+        },
+        {
+          "peak": 225794,
+          "current": 416,
+          "linear": 0,
+          "linear_peak": 65536,
+          "artifact": 0,
+          "events": 0
+        }
+      ],
+      "aot_map": [
+        1376256
+      ],
+      "host_input_sample_to_guest": {
+        "guest_total_us": 181243,
+        "guest_count": 56,
+        "guest_p95_us": 7000,
+        "guest_max_us": 9060
+      },
+      "ui_display": {
+        "raster_overflow": 0,
+        "present_overflow": 0,
+        "surface_changed": 0,
+        "completed": 13,
+        "window_us": 3319535
+      }
+    }
+  ],
+  "physical_gates": [
+    {
+      "phase": "cold",
+      "heap": "sram",
+      "metric": "stable_used",
+      "old_worst": 272132,
+      "new_worst": 272132,
+      "passed": true
+    },
+    {
+      "phase": "cold",
+      "heap": "sram",
+      "metric": "run_peak_used",
+      "old_worst": 277948,
+      "new_worst": 276820,
+      "passed": true
+    },
+    {
+      "phase": "cold",
+      "heap": "psram",
+      "metric": "stable_used",
+      "old_worst": 2984296,
+      "new_worst": 2914928,
+      "passed": true
+    },
+    {
+      "phase": "cold",
+      "heap": "psram",
+      "metric": "run_peak_used",
+      "old_worst": 3740508,
+      "new_worst": 3671668,
+      "passed": true
+    },
+    {
+      "phase": "warm",
+      "heap": "sram",
+      "metric": "stable_used",
+      "old_worst": 272096,
+      "new_worst": 272096,
+      "passed": true
+    },
+    {
+      "phase": "warm",
+      "heap": "sram",
+      "metric": "run_peak_used",
+      "old_worst": 276232,
+      "new_worst": 276232,
+      "passed": true
+    },
+    {
+      "phase": "warm",
+      "heap": "psram",
+      "metric": "stable_used",
+      "old_worst": 2993508,
+      "new_worst": 2924084,
+      "passed": true
+    },
+    {
+      "phase": "warm",
+      "heap": "psram",
+      "metric": "run_peak_used",
+      "old_worst": 3778348,
+      "new_worst": 3708912,
+      "passed": true
+    }
+  ],
+  "same_new_host_guest_change_psram_bytes": {
+    "cold": {
+      "stable_used": -65000,
+      "run_peak_used": -65688
+    },
+    "warm": {
+      "stable_used": -65084,
+      "run_peak_used": -65140
+    }
+  },
+  "runtime": {
+    "policy": "WASM_ENABLE_HEAP_AUX_STACK_ALLOCATION=1 for complete WAMR target",
+    "main_stack_old_16k_actual_bytes": 3264,
+    "main_stack_new_16k_actual_bytes": 16384,
+    "abi_changed": false,
+    "imports_expanded": false,
+    "default_buffer_added": false,
+    "requires_fixed_host": true,
+    "deployment_capability_guard_implemented": false,
+    "native_policy_tests_passed": 8,
+    "pthread_libpxa_tests_passed": 40,
+    "firmware_static_sections": [
+      {
+        "section": ".iram0.text",
+        "old_bytes": 114267,
+        "new_bytes": 114267,
+        "delta": 0
+      },
+      {
+        "section": ".dram0.data",
+        "old_bytes": 32210,
+        "new_bytes": 32210,
+        "delta": 0
+      },
+      {
+        "section": ".dram0.bss",
+        "old_bytes": 18552,
+        "new_bytes": 18552,
+        "delta": 0
+      },
+      {
+        "section": ".ext_ram.bss",
+        "old_bytes": 30084,
+        "new_bytes": 30084,
+        "delta": 0
+      },
+      {
+        "section": ".flash.text",
+        "old_bytes": 2525460,
+        "new_bytes": 2525312,
+        "delta": -148
+      },
+      {
+        "section": ".flash.rodata",
+        "old_bytes": 758356,
+        "new_bytes": 758356,
+        "delta": 0
+      }
+    ]
+  },
+  "functionality": {
+    "shelf_covers_all_8_passed": true,
+    "real_intro_highlights_thoughts_local_navigation_passed": true,
+    "new_cloud_writes": false,
+    "paid_later_chapters_attempted": false
+  },
+  "latency": {
+    "host_sample_to_guest_p95_us": [
+      7000,
+      8000
+    ],
+    "old_combined_max_us": 10552,
+    "new_combined_max_us": 13211,
+    "end_to_end_visible_measured": false,
+    "throughput_fps_measured": false
+  },
+  "reproducible_root_aot_sha256_matches_frozen": true,
+  "post_install_smoke": {
+    "passed": true,
+    "seconds": 5.62964642100269,
+    "included_in_fixed_performance_samples": false
+  },
+  "adoption": {
+    "adopted": true,
+    "host_sha256": "234edd1978bdefb9c513fc9547328c43004c37ba379f513b38fdf43ec883838e",
+    "guest_sha256": "b2b44db157352ea65644ec6bd9d6b25eb58ebe3a3e88099479c40e1e5b936dfa",
+    "other_packages_exact": true,
+    "new_package_verified": true,
+    "private_files_verified": 3,
+    "native_rotation_retained": [],
+    "font_exact": true,
+    "no_app_running": true,
+    "monitors_stopped": true,
+    "input_cancelled": true,
+    "filesystem_locked": true
+  },
+  "private_evidence": "local/weread-validation/private/device-aux-policy-20261017 (not distributed)",
+  "limitations": [
+    "Other devices not validated",
+    "Worst-case synchronous large-note latency not bounded on device",
+    "End-to-end physical touch-to-visible latency not measured",
+    "No deployment capability guard for old Host stack partitioning",
+    "Client features tracked in README remain incomplete"
+  ]
+}

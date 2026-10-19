@@ -1,0 +1,250 @@
+{
+  "status": "default_cost_measured_functional_not_passed",
+  "host_sha256": "234edd1978bdefb9c513fc9547328c43004c37ba379f513b38fdf43ec883838e",
+  "new_guest_sha256": "7c4a0c2325229cd7cc80d974728023c5c086b8353aafbeee1b3e16118351b6f1",
+  "new_aot_bytes": 1562076,
+  "new_text_bytes": 1471444,
+  "new_mapping_pages": 23,
+  "samples": [
+    {
+      "label": "old-cold",
+      "guest": "old",
+      "phase": "cold",
+      "passed": true,
+      "launch_seconds": 6.99071350399754,
+      "minimum_scope": "local snapshot before monitor stop; trailing OK describes subsequent boot scope",
+      "sram": {
+        "stable_used_bytes": 272104,
+        "window_peak_used_bytes": 276828
+      },
+      "psram": {
+        "stable_used_bytes": 2919112,
+        "window_peak_used_bytes": 3675076
+      },
+      "aot_mapped_bytes": [
+        1376256
+      ],
+      "wamr": [
+        {
+          "peak": 225794,
+          "current": 50501,
+          "linear": 65536,
+          "linear_peak": 65536,
+          "artifact": 0,
+          "events": 64
+        },
+        {
+          "peak": 225794,
+          "current": 416,
+          "linear": 0,
+          "linear_peak": 65536,
+          "artifact": 0,
+          "events": 0
+        }
+      ],
+      "ui_input": [
+        "guest_total_us=214125;guest_count=55;guest_p95_us=9000;guest_max_us=12941",
+        "present_total_us=0;present_count=0;present_p95_us=0;present_max_us=0",
+        "visible_total_us=0;visible_count=0;visible_p95_us=0;visible_max_us=0"
+      ],
+      "ui_display": [],
+      "native_renewal_count": 1
+    },
+    {
+      "label": "old-warm",
+      "guest": "old",
+      "phase": "warm",
+      "passed": true,
+      "launch_seconds": 4.952812878000259,
+      "minimum_scope": "local snapshot before monitor stop; trailing OK describes subsequent boot scope",
+      "sram": {
+        "stable_used_bytes": 272104,
+        "window_peak_used_bytes": 276240
+      },
+      "psram": {
+        "stable_used_bytes": 2928320,
+        "window_peak_used_bytes": 3713256
+      },
+      "aot_mapped_bytes": [
+        1376256
+      ],
+      "wamr": [
+        {
+          "peak": 225794,
+          "current": 50501,
+          "linear": 65536,
+          "linear_peak": 65536,
+          "artifact": 0,
+          "events": 64
+        }
+      ],
+      "ui_input": [
+        "guest_total_us=155296;guest_count=56;guest_p95_us=7000;guest_max_us=7758",
+        "present_total_us=0;present_count=0;present_p95_us=0;present_max_us=0",
+        "visible_total_us=0;visible_count=0;visible_p95_us=0;visible_max_us=0"
+      ],
+      "ui_display": [],
+      "native_renewal_count": 0
+    },
+    {
+      "label": "new-cold",
+      "guest": "new",
+      "phase": "cold",
+      "passed": true,
+      "launch_seconds": 5.728991896001389,
+      "minimum_scope": "local snapshot before monitor stop; trailing OK describes subsequent boot scope",
+      "sram": {
+        "stable_used_bytes": 272108,
+        "window_peak_used_bytes": 276860
+      },
+      "psram": {
+        "stable_used_bytes": 3049840,
+        "window_peak_used_bytes": 3807676
+      },
+      "aot_mapped_bytes": [
+        1507328
+      ],
+      "wamr": [
+        {
+          "peak": 242469,
+          "current": 53240,
+          "linear": 65536,
+          "linear_peak": 65536,
+          "artifact": 0,
+          "events": 64
+        },
+        {
+          "peak": 242469,
+          "current": 416,
+          "linear": 0,
+          "linear_peak": 65536,
+          "artifact": 0,
+          "events": 0
+        }
+      ],
+      "ui_input": [
+        "guest_total_us=191708;guest_count=56;guest_p95_us=8000;guest_max_us=7761",
+        "present_total_us=0;present_count=0;present_p95_us=0;present_max_us=0",
+        "visible_total_us=0;visible_count=0;visible_p95_us=0;visible_max_us=0"
+      ],
+      "ui_display": [],
+      "native_renewal_count": 0
+    },
+    {
+      "label": "new-warm",
+      "guest": "new",
+      "phase": "warm",
+      "passed": true,
+      "launch_seconds": 5.195473311003298,
+      "minimum_scope": "local snapshot before monitor stop; trailing OK describes subsequent boot scope",
+      "sram": {
+        "stable_used_bytes": 272144,
+        "window_peak_used_bytes": 276244
+      },
+      "psram": {
+        "stable_used_bytes": 3058888,
+        "window_peak_used_bytes": 3844704
+      },
+      "aot_mapped_bytes": [
+        1507328
+      ],
+      "wamr": [
+        {
+          "peak": 242469,
+          "current": 53240,
+          "linear": 65536,
+          "linear_peak": 65536,
+          "artifact": 0,
+          "events": 64
+        },
+        {
+          "peak": 242469,
+          "current": 416,
+          "linear": 0,
+          "linear_peak": 65536,
+          "artifact": 0,
+          "events": 0
+        }
+      ],
+      "ui_input": [
+        "guest_total_us=170988;guest_count=55;guest_p95_us=8000;guest_max_us=8699",
+        "present_total_us=0;present_count=0;present_p95_us=0;present_max_us=0",
+        "visible_total_us=0;visible_count=0;visible_p95_us=0;visible_max_us=0"
+      ],
+      "ui_display": [],
+      "native_renewal_count": 0
+    }
+  ],
+  "deltas_new_minus_old": {
+    "cold": {
+      "sram": {
+        "stable_used_bytes": 4,
+        "window_peak_used_bytes": 32
+      },
+      "psram": {
+        "stable_used_bytes": 130728,
+        "window_peak_used_bytes": 132600
+      }
+    },
+    "warm": {
+      "sram": {
+        "stable_used_bytes": 40,
+        "window_peak_used_bytes": 4
+      },
+      "psram": {
+        "stable_used_bytes": 130568,
+        "window_peak_used_bytes": 131448
+      }
+    }
+  },
+  "actual_aot_mapping_delta_bytes": 131072,
+  "no_memory_growth_claim": false,
+  "s3_local_bookmark_functionality_passed": false,
+  "s3_failures": [
+    "Original guarded target not located; no reader attempted",
+    "Fresh functional-only novel target matched but reader request returned limit_exceeded -16 before READER PARSE"
+  ],
+  "default_samples_replaced_or_repeated": false,
+  "candidate_adopted": false,
+  "remaining": [
+    "Locate the exact reader request limit and support the real authorized page within bounded memory",
+    "Complete real-book local bookmark/lifecycle checks",
+    "Evaluate default code and physical memory cost with full functionality retained"
+  ],
+  "preservation": {
+    "first_attempt": {
+      "restored": true,
+      "original_package_files_exact": 29,
+      "private_files_verified": 3,
+      "font_exact": true,
+      "no_app_running": true,
+      "monitoring_stopped": true,
+      "input_cancelled": true,
+      "filesystem_locked": true,
+      "candidate_adopted": false
+    },
+    "second_attempt": {
+      "restored": true,
+      "original_package_files_exact": 29,
+      "private_files_verified": 3,
+      "font_exact": true,
+      "no_app_running": true,
+      "monitoring_stopped": true,
+      "input_cancelled": true,
+      "filesystem_locked": true,
+      "candidate_adopted": false
+    },
+    "normal_native_session_rotation_retained": true
+  },
+  "date": "2026-10-18",
+  "latest_card_related_cases": {
+    "aot": 16,
+    "wasm": 16
+  },
+  "previous_full_matrix_cases": 204,
+  "normal_build_reproducible_after_opt_in_diagnostics": true,
+  "trace_build_runtime_verified": false,
+  "trace_simulator_cases_passed": 23,
+  "trace_s3_runtime_verified": false,
+  "trace_runtime_events_observed": 177
+}

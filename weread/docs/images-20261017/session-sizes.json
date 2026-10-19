@@ -1,0 +1,6 @@
+{
+  "baseline-x86": 584,
+  "baseline-esp32s3": 568,
+  "candidate-x86": 584,
+  "candidate-esp32s3": 568
+}

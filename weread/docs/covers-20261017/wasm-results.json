@@ -1,0 +1,42 @@
+{
+  "passed": [
+    {
+      "layout": "compact",
+      "visible_only": true,
+      "page_change": true,
+      "raw_query_preserved": true,
+      "cookies_not_forwarded": true,
+      "images_released_at_exit": true
+    },
+    {
+      "layout": "hidpi",
+      "visible_only": true,
+      "page_change": true,
+      "raw_query_preserved": true,
+      "cookies_not_forwarded": true,
+      "images_released_at_exit": true
+    },
+    {
+      "layout": "round",
+      "visible_only": true,
+      "page_change": true,
+      "raw_query_preserved": true,
+      "cookies_not_forwarded": true,
+      "images_released_at_exit": true
+    },
+    {
+      "layout": "portrait",
+      "visible_only": true,
+      "page_change": true,
+      "raw_query_preserved": true,
+      "cookies_not_forwarded": true,
+      "images_released_at_exit": true
+    },
+    {
+      "blocked_cover_cancelled_for_next_page": true
+    },
+    {
+      "corrupt_covers_fallback_no_retry_loop": true
+    }
+  ]
+}

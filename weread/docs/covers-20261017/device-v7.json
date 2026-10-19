@@ -1,0 +1,40 @@
+{
+  "variant": "covers-fast v7",
+  "same_workload": {
+    "html_bytes": 241046,
+    "text_bytes": 901,
+    "catalog_rows": 300
+  },
+  "phase_wall_ms": {
+    "preparation_projection": 1952,
+    "model": 325,
+    "text_and_first_mapping_asset_io": 1123,
+    "total_parser_to_ready": 3400
+  },
+  "loading_guest_delivery": {
+    "guest_total_us": 2570116,
+    "guest_count": 44,
+    "guest_p95_us": 375658,
+    "guest_max_us": 375658
+  },
+  "warm_guest_delivery": {
+    "guest_total_us": 245672,
+    "guest_count": 80,
+    "guest_p95_us": 7000,
+    "guest_max_us": 9332
+  },
+  "linear_peak_bytes": 589824,
+  "code_mapping_bytes": 1376256,
+  "cold_local_sram_min": 44479,
+  "cold_local_psram_min": 4126724,
+  "stable_sram_free": 48615,
+  "stable_psram_free": 4668196,
+  "host_unchanged": true,
+  "physical_lcd_latency_measured": false,
+  "notes": [
+    "One controlled same-firmware run, not statistical distribution across runs.",
+    "Guest timing includes event queue delivery; present/visible counters absent.",
+    "Text stage includes asynchronous first character-map asset reads; not pure text CPU.",
+    "Resource budget peaks are historical since boot and excluded from run peak claims."
+  ]
+}

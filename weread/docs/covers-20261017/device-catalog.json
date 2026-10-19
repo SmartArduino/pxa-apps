@@ -1,0 +1,30 @@
+{
+  "variant": "covers-fast v7",
+  "actual_device": true,
+  "outline_rows": 635,
+  "actual_chapters": 34,
+  "retained_window_limit": 300,
+  "loaded_windows": [
+    {
+      "offset": 0,
+      "rows": 300
+    },
+    {
+      "offset": 300,
+      "rows": 300
+    },
+    {
+      "offset": 600,
+      "rows": 35
+    },
+    {
+      "offset": 300,
+      "rows": 300
+    }
+  ],
+  "terminal_extra_taps_no_parse": true,
+  "denied_chapter_keeps_previous_reader": true,
+  "service_authorization_solved": false,
+  "denied_ui": "toast-only, inadequate; persistent message candidate pending",
+  "excluded_attempt": "First tap script repeated a menu action before framebuffer caught up and selected another chapter; not counted as directory traversal."
+}

@@ -1,0 +1,21 @@
+{
+  "source": "snapshot-reader-budget-20261017",
+  "main_cpp_sha256": "fb6d3d9da51f3234b2bb2d505deedb89b1ea080335eeb18731cfbea725b4ddf4",
+  "hydration_hpp_sha256": "30910231bcdd54836b375fd7f65419e0b85de3c6ccbd1ed5fd81465eac22ff3d",
+  "aot_bytes": 1237816,
+  "aot_sha256": "eb04e34887abe562bb9d8e099d27d96640c004b3fde46bab8bc2ed8d9d7189a1",
+  "mapped_psram_bytes": 1179648,
+  "aot_mapping_requested_bytes": 1157504,
+  "guest_linear_peak_bytes": 393216,
+  "wamr_allocator_peak_bytes": 216064,
+  "wamr_allocator_after_stop_bytes": 416,
+  "guest_linear_after_stop_bytes": 0,
+  "scope": "Fresh instance, existing fixed prose chapter and local turns; not large search book; counters are not additive",
+  "same_reading_pixels": true,
+  "three_restart_same_page": true,
+  "all_other_package_files_unchanged": true,
+  "private_data_after_install_unchanged": true,
+  "session_after_runtime_unchanged": true,
+  "host_firmware_changed": false,
+  "font_changed": false
+}

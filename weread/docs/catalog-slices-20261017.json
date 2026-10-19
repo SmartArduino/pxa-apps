@@ -1,0 +1,410 @@
+{
+  "baseline": {
+    "artifact_bytes": 1450304,
+    "artifact_sha256": "6f9ae53f731b2118406bf9bfa61b41a173c9a4e7728da451c0a6a0268c9a0452",
+    "code": {
+      "request": 1368116,
+      "map": 1376256,
+      "alloc": 1376256
+    },
+    "wamr": {
+      "peak": 220332,
+      "current": 416,
+      "linear": 0,
+      "linear_peak": 589824,
+      "artifact": 0,
+      "events": 0
+    },
+    "stages_ms": {
+      "hydration": 1523,
+      "model": 192,
+      "text_and_mapping": 413,
+      "parse_to_guest_ready": 2128
+    },
+    "windows": {
+      "launch": {
+        "sram_stable_used": 272092,
+        "sram_window_peak_used": 276816,
+        "psram_stable_used": 2982496,
+        "psram_window_peak_used": 3740208,
+        "psram_largest_free": 4718592,
+        "input": {
+          "guest_count": 0,
+          "guest_p95_us": 0,
+          "guest_max_us": 0
+        },
+        "display": {
+          "completed": 15,
+          "window_us": 4877757
+        }
+      },
+      "reader": {
+        "sram_stable_used": 272092,
+        "sram_window_peak_used": 276352,
+        "psram_stable_used": 3477636,
+        "psram_window_peak_used": 3998864,
+        "psram_largest_free": 4325376,
+        "input": {
+          "guest_count": 54,
+          "guest_p95_us": 151264,
+          "guest_max_us": 151264
+        },
+        "display": {
+          "completed": 4,
+          "window_us": 5955141
+        }
+      },
+      "turns": {
+        "sram_stable_used": 272092,
+        "sram_window_peak_used": 276228,
+        "psram_stable_used": 3501404,
+        "psram_window_peak_used": 3505824,
+        "psram_largest_free": 4325376,
+        "input": {
+          "guest_count": 83,
+          "guest_p95_us": 8000,
+          "guest_max_us": 8625
+        },
+        "display": {
+          "completed": 19,
+          "window_us": 4311014
+        }
+      }
+    },
+    "reading_and_after_turns_pixels_equal": true
+  },
+  "candidate": {
+    "artifact_bytes": 1456828,
+    "artifact_sha256": "16369dfb79c8c24369dc76aaae1dc803d13b1e5edabf33d7b5f30de821818a49",
+    "code": {
+      "request": 1374352,
+      "map": 1376256,
+      "alloc": 1376256
+    },
+    "wamr": {
+      "peak": 221091,
+      "current": 416,
+      "linear": 0,
+      "linear_peak": 589824,
+      "artifact": 0,
+      "events": 0
+    },
+    "stages_ms": {
+      "hydration": 1490,
+      "model": 210,
+      "text_and_mapping": 419,
+      "parse_to_guest_ready": 2120
+    },
+    "windows": {
+      "launch": {
+        "sram_stable_used": 272108,
+        "sram_window_peak_used": 276836,
+        "psram_stable_used": 2983876,
+        "psram_window_peak_used": 3741580,
+        "psram_largest_free": 4587520,
+        "input": {
+          "guest_count": 0,
+          "guest_p95_us": 0,
+          "guest_max_us": 0
+        },
+        "display": {
+          "completed": 17,
+          "window_us": 4943463
+        }
+      },
+      "reader": {
+        "sram_stable_used": 272108,
+        "sram_window_peak_used": 276244,
+        "psram_stable_used": 3479188,
+        "psram_window_peak_used": 4000432,
+        "psram_largest_free": 4063232,
+        "input": {
+          "guest_count": 63,
+          "guest_p95_us": 70000,
+          "guest_max_us": 124873
+        },
+        "display": {
+          "completed": 3,
+          "window_us": 5428060
+        }
+      },
+      "turns": {
+        "sram_stable_used": 272108,
+        "sram_window_peak_used": 276356,
+        "psram_stable_used": 3502960,
+        "psram_window_peak_used": 3506520,
+        "psram_largest_free": 4063232,
+        "input": {
+          "guest_count": 81,
+          "guest_p95_us": 6000,
+          "guest_max_us": 6623
+        },
+        "display": {
+          "completed": 19,
+          "window_us": 4309018
+        }
+      }
+    },
+    "reading_and_after_turns_pixels_equal": true
+  },
+  "same_body_pixels": true,
+  "decision": {
+    "cooperative_candidate_adopted": false,
+    "reason": [
+      "model stage elapsed longer",
+      "PSRAM window peak increased",
+      "WAMR native peak increased"
+    ],
+    "device_expected_final": "original runtime plus catalog integer overflow guards; split-builder candidate rejected",
+    "host_changed": false,
+    "font_changed": false,
+    "same_workload": {
+      "html_bytes": 241046,
+      "projected_bytes": 43366,
+      "text_bytes": 901,
+      "outline_rows": 300,
+      "input_probes": 10,
+      "local_turns": 12
+    },
+    "limits": [
+      "one cold-boot pair",
+      "input counters are Guest-side intervals, not touch-to-photon",
+      "static waits prevent display-counter averages from representing saturated FPS",
+      "8ms between-row budget is not a hard bound for initial metadata/individual row work",
+      "candidate installed and file-verified after reboot; baseline directly launched after reboot"
+    ]
+  },
+  "retained_source": {
+    "catalog_uint32_overflow_checks": true,
+    "partial_memory_snapshot_retry": true,
+    "native_asan_ubsan_passed": true,
+    "esp32s3_build_passed": true,
+    "esp32s3_artifact_bytes": 1450384,
+    "esp32s3_text_bytes": 1368196,
+    "expected_text_pages": 21,
+    "device_deployed": true,
+    "integration_matrix": "128 passed; 64 AOT + 64 Wasm",
+    "artifact_sha256": "99c3940e7bde50d171adfe4b89f0ad9ca9aca3f13410c184578d3b53f97e89f0",
+    "manifest_sha256": "503c32c04c78c13f53688d23762e1bd7160ed2a4b5e59713c0ddd31eebde85dd",
+    "signature_sha256": "4e1b75615abdbe0f34c1a8844dcd746ec7b53a4c724fc90b7decb3e26be740ad",
+    "actual_code_map_bytes": 1376256,
+    "guest_linear_peak_bytes": 589824,
+    "wamr_native_peak_bytes": 220332,
+    "normal_measurements": {
+      "candidate": {
+        "passed": true,
+        "cold_start": false,
+        "stages_ms": {
+          "hydration": 1517,
+          "model": 183,
+          "text_and_mapping": 361,
+          "parse_to_guest_ready": 2062
+        },
+        "windows": {
+          "launch": {
+            "sram_stable_used": 272124,
+            "psram_stable_used": 2986004,
+            "sram_window_peak_used": 276848,
+            "psram_window_peak_used": 3744692,
+            "psram_largest_free": 4718592,
+            "guest_input_max_us": 0,
+            "display_completed": 17
+          },
+          "reader": {
+            "sram_stable_used": 272124,
+            "psram_stable_used": 3481012,
+            "sram_window_peak_used": 276260,
+            "psram_window_peak_used": 4002244,
+            "psram_largest_free": 4194304,
+            "guest_input_max_us": 207863,
+            "display_completed": 3
+          },
+          "turns": {
+            "sram_stable_used": 272124,
+            "psram_stable_used": 3504764,
+            "sram_window_peak_used": 276368,
+            "psram_window_peak_used": 3508360,
+            "psram_largest_free": 4194304,
+            "guest_input_max_us": 35805,
+            "display_completed": 17
+          }
+        },
+        "performance_comparison": false
+      },
+      "network-ready": {
+        "passed": true,
+        "cold_start": false,
+        "stages_ms": {
+          "hydration": 1533,
+          "model": 186,
+          "text_and_mapping": 348,
+          "parse_to_guest_ready": 2068
+        },
+        "windows": {
+          "launch": {
+            "sram_stable_used": 272108,
+            "psram_stable_used": 2995036,
+            "sram_window_peak_used": 276756,
+            "psram_window_peak_used": 3769852,
+            "psram_largest_free": 4587520,
+            "guest_input_max_us": 0,
+            "display_completed": 14
+          },
+          "reader": {
+            "sram_stable_used": 272108,
+            "psram_stable_used": 3490104,
+            "sram_window_peak_used": 276244,
+            "psram_window_peak_used": 4011216,
+            "psram_largest_free": 3997696,
+            "guest_input_max_us": 226983,
+            "display_completed": 4
+          },
+          "turns": {
+            "sram_stable_used": 272108,
+            "psram_stable_used": 3513836,
+            "sram_window_peak_used": 276400,
+            "psram_window_peak_used": 3517436,
+            "psram_largest_free": 3997696,
+            "guest_input_max_us": 8436,
+            "display_completed": 23
+          }
+        },
+        "performance_comparison": false
+      }
+    },
+    "overflow_reproduction": {
+      "old": {
+        "accepted": true,
+        "begin": 4294967295,
+        "end": 0,
+        "original_retained": false
+      },
+      "fixed": {
+        "accepted": false,
+        "begin": 0,
+        "end": 1,
+        "original_retained": true
+      }
+    },
+    "cold_start": {
+      "passed": false,
+      "first_request_dns_failure": true,
+      "shelf_ready_within_50s": false,
+      "log_drop_records": 5,
+      "guest_error_delivery": "unresolved; dropped logs and no in-failure screenshot",
+      "network_ready_reopen_passed": true,
+      "no_catalog_executed": true
+    },
+    "network_regression": {
+      "aot": [
+        {
+          "case": "close-before-headers",
+          "passed": true,
+          "authentication_unchanged": true,
+          "resources_released": true
+        },
+        {
+          "case": "truncated-body",
+          "passed": true,
+          "authentication_unchanged": true,
+          "resources_released": true
+        },
+        {
+          "case": "cancel-before-headers",
+          "passed": true,
+          "authentication_unchanged": true,
+          "resources_released": true
+        },
+        {
+          "case": "connection-refused",
+          "passed": true,
+          "authentication_unchanged": true,
+          "resources_released": true
+        }
+      ],
+      "wasm": [
+        {
+          "case": "close-before-headers",
+          "passed": true,
+          "authentication_unchanged": true,
+          "resources_released": true
+        },
+        {
+          "case": "truncated-body",
+          "passed": true,
+          "authentication_unchanged": true,
+          "resources_released": true
+        },
+        {
+          "case": "cancel-before-headers",
+          "passed": true,
+          "authentication_unchanged": true,
+          "resources_released": true
+        },
+        {
+          "case": "connection-refused",
+          "passed": true,
+          "authentication_unchanged": true,
+          "resources_released": true
+        }
+      ]
+    },
+    "cold_start_followup": {
+      "ordinary_reboot_same_package": true,
+      "package_installed": false,
+      "host_written": false,
+      "wifi_changed": false,
+      "shelf_ready": true,
+      "screenshots_at_seconds": [
+        3,
+        8
+      ],
+      "covers_visible": true,
+      "failure_reproduced": false,
+      "manual_retry_exercised": false,
+      "previous_failure_retained": true,
+      "esp_error_delivery_remains_unverified": true,
+      "installed_file_count": 29,
+      "private_file_count": 3,
+      "installed_and_private_sets_and_sha256_equal": true,
+      "font_unchanged": true,
+      "no_app_running": true,
+      "device_released": true
+    }
+  },
+  "experiment_rollback_preservation": {
+    "reader_restored": true,
+    "installed_files_verified": 29,
+    "unrelated_package_files_verified": 22,
+    "unrelated_private_unchanged": true,
+    "own_reading_state_bytes_unchanged": true,
+    "own_session_service_updated": true,
+    "latest_native_session_preserved": true,
+    "same_account": true,
+    "preferences_preserved": true,
+    "successful_reopens": 3,
+    "font_sha256": "121cb206d826af5259cfb78418defde651a9daa80fa1d7d51de3eea716c934a4",
+    "host_written": false,
+    "no_app_running": true,
+    "monitors_stopped": true,
+    "fs_locked": true,
+    "device_released_to_browser_thread": true
+  },
+  "preservation": {
+    "stage": "final boundary package lease",
+    "reader_package_files_verified": 7,
+    "unrelated_package_files_verified": 22,
+    "all_original_private_file_set_and_sha256_equal": true,
+    "own_session_bytes_unchanged": true,
+    "own_reading_state_bytes_unchanged": true,
+    "same_account": true,
+    "preferences_preserved": true,
+    "successful_reopens": 3,
+    "font_sha256": "121cb206d826af5259cfb78418defde651a9daa80fa1d7d51de3eea716c934a4",
+    "host_written": false,
+    "no_app_running": true,
+    "monitors_stopped": true,
+    "fs_locked": true,
+    "device_released_to_browser_thread": true
+  }
+}

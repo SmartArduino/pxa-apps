@@ -1,0 +1,104 @@
+{
+  "passed": [
+    {
+      "layout": "compact",
+      "login": true,
+      "reading": true,
+      "local_turns": 4,
+      "saved_offset": 780,
+      "previous_after_restart": true,
+      "preferences": true,
+      "logout": true,
+      "volume_keys": true,
+      "line_height": true
+    },
+    {
+      "layout": "hidpi",
+      "login": true,
+      "reading": true,
+      "local_turns": 4,
+      "saved_offset": 1092,
+      "previous_after_restart": true,
+      "preferences": true,
+      "logout": true,
+      "volume_keys": true,
+      "line_height": true
+    },
+    {
+      "layout": "round",
+      "login": true,
+      "reading": true,
+      "local_turns": 4,
+      "saved_offset": 384,
+      "previous_after_restart": true,
+      "preferences": true,
+      "logout": true,
+      "volume_keys": true,
+      "line_height": true
+    },
+    {
+      "layout": "portrait",
+      "login": true,
+      "reading": true,
+      "local_turns": 4,
+      "saved_offset": 3264,
+      "previous_after_restart": true,
+      "preferences": true,
+      "logout": true,
+      "volume_keys": true,
+      "line_height": true
+    },
+    {
+      "shelf_cursor_rollback": true,
+      "previous_server_batch": true
+    },
+    {
+      "layout": "compact",
+      "native_search": true,
+      "official_catalog_entry": true
+    },
+    {
+      "layout": "hidpi",
+      "native_search": true,
+      "official_catalog_entry": true
+    },
+    {
+      "layout": "round",
+      "native_search": true,
+      "official_catalog_entry": true
+    },
+    {
+      "layout": "portrait",
+      "native_search": true,
+      "official_catalog_entry": true
+    },
+    {
+      "large_reader": true,
+      "aliases": 5117,
+      "chapters": 900,
+      "window": 300,
+      "guest_maximum_bytes": 2097152
+    },
+    {
+      "aggregate_reader_budget_rejected": true,
+      "response_bytes": 760000,
+      "previous_reading_pixels_retained": true
+    },
+    {
+      "invalid_qr_rejected": true
+    }
+  ],
+  "requests": {
+    "/wrwebsimplenjlogic/api/getuid": 15,
+    "/wrwebsimplenjlogic/api/qrcode": 15,
+    "/wrwebsimplenjlogic/api/getlogininfo": 14,
+    "/wrwebsimplenjlogic/api/weblogin": 10,
+    "/wrwebsimplenjlogic/api/shelfloadmore": 17,
+    "/wrwebsimplenjlogic/reader": 14,
+    "/api/store/search": 4,
+    "/wrwebsimplenjlogic/api/catalogloadmore": 4
+  },
+  "source": "snapshot-reader-budget-20261017",
+  "runner_sha256": "827d0de8b6a01f4c43534e6b900359bcaaf59414521113bd0c2a4bf161350965",
+  "runtime": "read-only memory observer around unmodified product runner"
+}
