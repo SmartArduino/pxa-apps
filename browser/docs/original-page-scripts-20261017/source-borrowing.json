@@ -1,0 +1,191 @@
+{
+  "adopted": true,
+  "kind": "P38: borrow already-owned external source during synchronous compilation; reuse page URL filename; retain terminated copy for inline HTML views. Guest-only.",
+  "normal_builds": {
+    "p32": {
+      "memory": {
+        "input_bytes": 596148,
+        "runtime_requested_bytes": 1853862,
+        "runtime_requested_peak_bytes": 1855566,
+        "remaining_bytes": 0,
+        "instance_requested_bytes": 1941528,
+        "instance_requested_peak_bytes": 1941528
+      },
+      "artifacts": {
+        "script.wasm": {
+          "bytes": 596148,
+          "sha256": "d0bf9f912c269f932a863eae9657d95ae7dcc6f11345795bde4f2bcc5a45af63"
+        },
+        "main.linux-x86_64.aot": {
+          "bytes": 687816,
+          "sha256": "bd62d91d988c3aaa20503258fa815b886364483eafb9ee0b6729615dc5aa7ea1"
+        }
+      },
+      "package_bytes": 951779
+    },
+    "p38": {
+      "memory": {
+        "input_bytes": 596055,
+        "runtime_requested_bytes": 1853583,
+        "runtime_requested_peak_bytes": 1855287,
+        "remaining_bytes": 0,
+        "instance_requested_bytes": 1941249,
+        "instance_requested_peak_bytes": 1941249
+      },
+      "artifacts": {
+        "script.wasm": {
+          "bytes": 596055,
+          "sha256": "b567eceddbf386b249f61922479e1b9fcf71fd6ec43aad7c14366aaad8ccf326"
+        },
+        "main.linux-x86_64.aot": {
+          "bytes": 687816,
+          "sha256": "bd62d91d988c3aaa20503258fa815b886364483eafb9ee0b6729615dc5aa7ea1"
+        }
+      },
+      "package_bytes": 951549
+    },
+    "s3": {
+      "p32": {
+        "package_bytes": 1443970,
+        "artifacts": {
+          "script.wasm": {
+            "bytes": 596148,
+            "sha256": "d0bf9f912c269f932a863eae9657d95ae7dcc6f11345795bde4f2bcc5a45af63"
+          },
+          "main.esp32-s3.aot": {
+            "bytes": 1237160,
+            "sha256": "45a2100989e34bb956dd2942d3ffa87e03bd2cc3942aa7e8efe09884302d6b58"
+          }
+        }
+      },
+      "p38": {
+        "package_bytes": 1443740,
+        "artifacts": {
+          "script.wasm": {
+            "bytes": 596055,
+            "sha256": "b567eceddbf386b249f61922479e1b9fcf71fd6ec43aad7c14366aaad8ccf326"
+          },
+          "main.esp32-s3.aot": {
+            "bytes": 1237160,
+            "sha256": "45a2100989e34bb956dd2942d3ffa87e03bd2cc3942aa7e8efe09884302d6b58"
+          }
+        }
+      }
+    }
+  },
+  "native_cpp_allocation_window": {
+    "p32": {
+      "passed": true,
+      "scope": "native C++ operator-new requests only; QuickJS malloc, Wasm pages and module excluded",
+      "source_bytes": 32768,
+      "pending_bytes": 66710,
+      "at_external_compile_bytes": 99506,
+      "external_peak_bytes": 99506
+    },
+    "p38": {
+      "passed": true,
+      "scope": "native C++ operator-new requests only; QuickJS malloc, Wasm pages and module excluded",
+      "source_bytes": 32768,
+      "pending_bytes": 66710,
+      "at_external_compile_bytes": 66710,
+      "external_peak_bytes": 66710
+    }
+  },
+  "boundary_linear": {
+    "source_bytes": 32768,
+    "scope": "actual PXA simulator script component memory.size high-water; no Host allocation headers or growth overlap",
+    "results": [
+      {
+        "package": "linear-p32",
+        "passed": true,
+        "pages": [
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "ready": [
+          "BROWSER JS READY heap=175101 peak=179352 errors=0 turns=9 max_us=10580"
+        ]
+      },
+      {
+        "package": "linear-p38",
+        "passed": true,
+        "pages": [
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "ready": [
+          "BROWSER JS READY heap=175101 peak=179352 errors=0 turns=9 max_us=6007"
+        ]
+      }
+    ]
+  },
+  "caller_matrix": [
+    {
+      "case": "group",
+      "passed": true
+    },
+    {
+      "case": "mixed-call-new",
+      "passed": true
+    },
+    {
+      "case": "recursive-proxy-accessor",
+      "passed": true
+    },
+    {
+      "case": "recursive-getter-eval",
+      "passed": true
+    },
+    {
+      "case": "member-grammar",
+      "passed": true
+    },
+    {
+      "case": "numeric-lookahead",
+      "passed": true
+    },
+    {
+      "case": "sparse-max-length",
+      "passed": true
+    },
+    {
+      "case": "vm-arguments",
+      "passed": true
+    }
+  ],
+  "hardware_tested": true,
+  "limits": [
+    "C++ allocation-window numbers are native requested bytes, exclude QuickJS malloc, allocator overhead, Wasm pages and module.",
+    "No whole-device memory or latency improvement is claimed for P38.",
+    "Original protocol fixture uses original HTML and source scripts with synthetic APIs and session; not real account login.",
+    "P33 device timings are the preceding P32 source version and must not be relabelled P38."
+  ],
+  "original_protocol_fixture": {
+    "passed": true,
+    "linear_pages": [
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "ready": [
+      "BROWSER JS READY heap=257327 peak=274768 errors=0 turns=70 max_us=61617"
+    ]
+  },
+  "native_validation": "ASan/UBSan/LSan + WASI depth/dispatch model: full Page suite, full-budget source/inline lifetime, signed library/generator, compiler cancellation/recovery812, array cancellation/recovery3; exact product Page/test bytes.",
+  "hardware_validation": {
+    "version": "P50 P38 baseline only",
+    "complete_original_scripts": true,
+    "qr_180x180": true,
+    "real_account_login": false,
+    "evidence": "device-resource-read-candidate.json",
+    "note": "One P38/P49 pair; no P32/P38 hardware speed or heap improvement conclusion."
+  }
+}

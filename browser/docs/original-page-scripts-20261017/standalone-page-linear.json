@@ -1,0 +1,153 @@
+{
+  "scope": "Standalone Page inside actual WAMR, 16KiB operand stack/48KiB linear C stack, same binary per variant, original captured HTML/four scripts, trusted es5-shim bytecode, deterministic synthetic QR. No PXA UI, network, image decode, IPC, source hash scheduling, or real account. Probe retains file/cache/fixture inputs; initial6/final10 pages are specific to this probe and cannot be assigned to the product component. Memory.grow does not shrink, so final page count is the run high-water mark.",
+  "fixtures": {
+    "html_sha256": "084543f9a27687af7b1c9aad0c4b5ffa5c80c8f1ad952a8171d37cb55a0ac100",
+    "qr_json_bytes": 3997,
+    "qr_json_sha256": "4420db17d315a9058bdf59073b4e1bcec78d5f300369971297b83630da583c8d",
+    "non_scannable": true
+  },
+  "samples": [
+    {
+      "variant": "old",
+      "result": {
+        "complete": true,
+        "scripts": 4,
+        "requests": 8,
+        "cache_hits": 1,
+        "polls": 116,
+        "js_current": 269476,
+        "js_peak": 283654,
+        "linear_initial_pages": 6,
+        "linear_final_peak_pages": 10,
+        "markup_max_us": 2275,
+        "script_max_us": 13563
+      }
+    },
+    {
+      "variant": "p65",
+      "result": {
+        "complete": true,
+        "scripts": 4,
+        "requests": 8,
+        "cache_hits": 1,
+        "polls": 150,
+        "js_current": 270229,
+        "js_peak": 275521,
+        "linear_initial_pages": 6,
+        "linear_final_peak_pages": 10,
+        "markup_max_us": 538,
+        "script_max_us": 14166
+      }
+    },
+    {
+      "variant": "p65",
+      "result": {
+        "complete": true,
+        "scripts": 4,
+        "requests": 8,
+        "cache_hits": 1,
+        "polls": 150,
+        "js_current": 270229,
+        "js_peak": 275521,
+        "linear_initial_pages": 6,
+        "linear_final_peak_pages": 10,
+        "markup_max_us": 489,
+        "script_max_us": 13968
+      }
+    },
+    {
+      "variant": "old",
+      "result": {
+        "complete": true,
+        "scripts": 4,
+        "requests": 8,
+        "cache_hits": 1,
+        "polls": 116,
+        "js_current": 269476,
+        "js_peak": 283654,
+        "linear_initial_pages": 6,
+        "linear_final_peak_pages": 10,
+        "markup_max_us": 2076,
+        "script_max_us": 11838
+      }
+    },
+    {
+      "variant": "p62",
+      "result": {
+        "complete": true,
+        "scripts": 4,
+        "requests": 8,
+        "cache_hits": 1,
+        "polls": 121,
+        "js_current": 270217,
+        "js_peak": 275509,
+        "linear_initial_pages": 6,
+        "linear_final_peak_pages": 10,
+        "markup_max_us": 675,
+        "script_max_us": 12798
+      }
+    }
+  ],
+  "negative_control": {
+    "succ_zero_with_same_data_must_not_complete": true,
+    "reason": "Captured page contains an initial embedded PNG. Completion requires the exact generated fixture data URI, four scripts, one cached-library hit and no JS errors; generic PNG presence is insufficient.",
+    "samples": [
+      {
+        "variant": "old",
+        "result": {
+          "complete": false,
+          "scripts": 4,
+          "requests": 8,
+          "cache_hits": 1,
+          "polls": 4096,
+          "js_current": 265465,
+          "js_peak": 283340,
+          "linear_initial_pages": 6,
+          "linear_final_peak_pages": 10,
+          "markup_max_us": 805,
+          "script_max_us": 13815
+        }
+      },
+      {
+        "variant": "p62",
+        "result": {
+          "complete": false,
+          "scripts": 4,
+          "requests": 8,
+          "cache_hits": 1,
+          "polls": 4096,
+          "js_current": 266206,
+          "js_peak": 284081,
+          "linear_initial_pages": 6,
+          "linear_final_peak_pages": 10,
+          "markup_max_us": 1045,
+          "script_max_us": 19524
+        }
+      },
+      {
+        "variant": "p65",
+        "result": {
+          "complete": false,
+          "scripts": 4,
+          "requests": 8,
+          "cache_hits": 1,
+          "polls": 4096,
+          "js_current": 266218,
+          "js_peak": 284093,
+          "linear_initial_pages": 6,
+          "linear_final_peak_pages": 10,
+          "markup_max_us": 555,
+          "script_max_us": 15411
+        }
+      }
+    ]
+  },
+  "adopted": false,
+  "interpretation": "P65 JS current+753B and P62+741B vs old in this representative Page case; both JS peaks lower, same linear highwater. Earlier12simple-native cases cannot establish stable-JS nonincrease for original pages. No physical RAM or hardware timing claim.",
+  "public_source_verified": true,
+  "probe_wasm": {
+    "bytes": 781005,
+    "sha256": "782eb695befd2fedd1d2bf6f51e1da146fc67522d45fa59673f560f2cdbf5255"
+  },
+  "probe_source_sha256": "5c812c487cade7a9f331c21787165d21880a250c11b6aa75458b5e5ef34fe9a9"
+}

@@ -1,0 +1,118 @@
+{
+  "kind": "pai-touch actual original official HTTP page; production UI and P32 script-only diagnostics; no account scan",
+  "device_run": "P33",
+  "passed": true,
+  "elapsed_s_including_network_and_driver_waits": 27.093570845001523,
+  "initialization": {
+    "total_us": 789635,
+    "max_step_us": 255125
+  },
+  "ready": {
+    "errors": 0,
+    "js_current_bytes": 257327,
+    "js_peak_bytes": 274768,
+    "turns": 209,
+    "max_turn_us": 1417676
+  },
+  "hash": {
+    "pieces": 50,
+    "sum_monotonic_us": 459908,
+    "median_piece_us": 8634.5,
+    "max_piece_us": 18234,
+    "wall_first_to_last_ms": 2536,
+    "last_piece_to_library_read_ms": 2107,
+    "limits": "8ms cooperative target; includes scheduling and instrumentation; not CPU time or hard preemption."
+  },
+  "library_read_object_wall_us": 301454,
+  "library_execution_wall_us": 990556,
+  "compile_begin_to_next_execute_wall_us": {
+    "inline1239B": 312260,
+    "global5369B": 1424635,
+    "cookie982B": 284933,
+    "login5413B": 1285055
+  },
+  "memory": {
+    "before_app": {
+      "scope": "heap",
+      "sram_total": 320715,
+      "sram_free": 49807,
+      "sram_min": 27596,
+      "sram_largest": 19456,
+      "psram_total": 8358524,
+      "psram_free": 6789348,
+      "psram_min": 4352736,
+      "psram_largest": 6291456
+    },
+    "through_full_qr_local_window": {
+      "scope": "heap",
+      "sram_total": 320715,
+      "sram_free": 47799,
+      "sram_min": 43663,
+      "sram_largest": 19456,
+      "psram_total": 8358524,
+      "psram_free": 2564748,
+      "psram_min": 2343256,
+      "psram_largest": 2359296
+    },
+    "after_window_boot_minimum_scope": {
+      "scope": "heap",
+      "sram_total": 320715,
+      "sram_free": 47799,
+      "sram_min": 27596,
+      "sram_largest": 19456,
+      "psram_total": 8358524,
+      "psram_free": 2564780,
+      "psram_min": 2343256,
+      "psram_largest": 2359296
+    },
+    "local_window_used_peak_bytes": {
+      "sram": 277052,
+      "psram": 6015268
+    },
+    "steady_used_bytes": {
+      "sram": 272916,
+      "psram": 5793744
+    },
+    "semantics": "MEMORY START uses heap_caps_monitor_local_minimum_free_size_start; STOP emits local snapshot before restoring boot scope. Per-heap minima capture allocations freed between queries. These are whole-device heaps, not solely browser allocations; independent heap peaks are not one simultaneous aggregate."
+  },
+  "resource_budget_snapshot": {
+    "scope": "budget",
+    "internal": 27468,
+    "external": 202222,
+    "peak_internal": 27468,
+    "peak_external": 247594,
+    "temporary_peak_internal": 0,
+    "temporary_peak_external": 98512,
+    "fixed": 2224,
+    "denied": 0,
+    "allocation_failures": 0
+  },
+  "display_gesture_raw": [
+    {
+      "kind": "OK",
+      "payload": "capacity=256;raster=0;present=26;raster_overflow=0;present_overflow=0;list_min=0;list_max=0;pixels_min=0;pixels_max=0;surface_changed=0;completed=27;window_us=1669663;display=1"
+    }
+  ],
+  "display_limits": "Four200ms swipes with gaps; not a continuous scrolling FPS measurement or controlled P26 comparison. Compiler/execute input latency not measured in this run.",
+  "images": [
+    "236x50",
+    "72x73",
+    "180x180"
+  ],
+  "complete_qr_and_preview": true,
+  "account_scan": false,
+  "shelf_and_reading_verified": false,
+  "preservation": {
+    "original_signed_files_identical": 29,
+    "original_private_files_identical": 3,
+    "weread_v10_aot_bytes": 1420304,
+    "host_font_wifi_settings_unchanged": true,
+    "device_released": true
+  },
+  "remaining": [
+    "Synchronous compilation and library execution still have long turns.",
+    "P26 memory window ended before QR; it is not a matching full-path peak comparison.",
+    "Wasm component linear and code mapping were not separately sampled in this hardware run.",
+    "No real account login, shelf or reader verification."
+  ]
+}

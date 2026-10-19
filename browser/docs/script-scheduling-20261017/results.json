@@ -1,0 +1,621 @@
+{
+  "schema": 1,
+  "date": "2026-10-17",
+  "platform": "Linux x86_64 PXA simulator; AOT UI + WAMR FAST Wasm script",
+  "baseline_app_commit": "cb4fabb39e0afcf358e68a275d9cb2e683d27f87",
+  "memory_unit": "bytes requested from the diagnostic allocator; mmap/input storage/allocator overhead/app execution excluded unless explicitly added",
+  "memory": [
+    {
+      "variant": "normal-before",
+      "input_bytes": 581819,
+      "runtime_requested_bytes": 1801757,
+      "runtime_requested_peak_bytes": 1803461,
+      "remaining_bytes": 0,
+      "instance_requested_bytes": 1886591,
+      "instance_requested_peak_bytes": 1886591,
+      "script_sha256": "733dd26c2a7937dea6a8f209f8aed0c82a4fcd15d00633705b7358ddc2aa6ec0",
+      "input_plus_instance_requested_bytes": 2468410
+    },
+    {
+      "variant": "normal-phase-only",
+      "input_bytes": 581114,
+      "runtime_requested_bytes": 1800403,
+      "runtime_requested_peak_bytes": 1802107,
+      "remaining_bytes": 0,
+      "instance_requested_bytes": 1885381,
+      "instance_requested_peak_bytes": 1885381,
+      "script_sha256": "74300398241be0470af8e8b80fdd1d368437b4f588194a8a01f881d33c8d1d94",
+      "input_plus_instance_requested_bytes": 2466495
+    },
+    {
+      "variant": "normal-final",
+      "input_bytes": 581270,
+      "runtime_requested_bytes": 1800943,
+      "runtime_requested_peak_bytes": 1802647,
+      "remaining_bytes": 0,
+      "instance_requested_bytes": 1885921,
+      "instance_requested_peak_bytes": 1885921,
+      "script_sha256": "6e72d4af7d7257c14fccf8c1a2691bd1d82c79f06cb88a7ba4bae5689f1532da",
+      "input_plus_instance_requested_bytes": 2467191
+    },
+    {
+      "variant": "trace-before",
+      "input_bytes": 582068,
+      "runtime_requested_bytes": 1802618,
+      "runtime_requested_peak_bytes": 1804322,
+      "remaining_bytes": 0,
+      "instance_requested_bytes": 1887556,
+      "instance_requested_peak_bytes": 1887556,
+      "script_sha256": "47c14731b98cdc5dac4e6c21f88b4616dc988a88b642206a913aab4f28093907",
+      "input_plus_instance_requested_bytes": 2469624
+    },
+    {
+      "variant": "trace-final",
+      "input_bytes": 581712,
+      "runtime_requested_bytes": 1802877,
+      "runtime_requested_peak_bytes": 1804581,
+      "remaining_bytes": 0,
+      "instance_requested_bytes": 1888007,
+      "instance_requested_peak_bytes": 1888007,
+      "script_sha256": "e37113b282b18c2d0c4447893c904d6bf56ca127500e88c84f12f68b6ad72901",
+      "input_plus_instance_requested_bytes": 2469719
+    }
+  ],
+  "stack": {
+    "operand_capacity_before": 16384,
+    "operand_capacity_after": 16384,
+    "linear_c_stack_before": 49152,
+    "linear_c_stack_after": 49152,
+    "bytecode_depth_before": 8,
+    "bytecode_depth_after": 6,
+    "phase_only_retained_frames": {
+      "external_before": 1824,
+      "external_after": 956,
+      "inline_before": 2316,
+      "inline_after": 1320
+    },
+    "frame_measurement": "x86_64 retained caller frames, not total stack peak; ESP32 frame headers differ"
+  },
+  "tests": {
+    "real_wasm_matrix": [
+      {
+        "case": "unary",
+        "passed": true
+      },
+      {
+        "case": "group",
+        "passed": true
+      },
+      {
+        "case": "array",
+        "passed": true
+      },
+      {
+        "case": "object",
+        "passed": true
+      },
+      {
+        "case": "function",
+        "passed": true
+      },
+      {
+        "case": "block",
+        "passed": true
+      },
+      {
+        "case": "conditional",
+        "passed": true
+      },
+      {
+        "case": "assignment",
+        "passed": true
+      },
+      {
+        "case": "logical",
+        "passed": true
+      },
+      {
+        "case": "power",
+        "passed": true
+      },
+      {
+        "case": "arrow",
+        "passed": true
+      },
+      {
+        "case": "class",
+        "passed": true
+      },
+      {
+        "case": "template",
+        "passed": true
+      },
+      {
+        "case": "json-parse",
+        "passed": true
+      },
+      {
+        "case": "json-stringify",
+        "passed": true
+      },
+      {
+        "case": "destructure",
+        "passed": true
+      },
+      {
+        "case": "factory-budget",
+        "passed": true
+      },
+      {
+        "case": "recursive-function",
+        "passed": true
+      },
+      {
+        "case": "recursive-method",
+        "passed": true
+      },
+      {
+        "case": "recursive-getter",
+        "passed": true
+      },
+      {
+        "case": "recursive-setter",
+        "passed": true
+      },
+      {
+        "case": "recursive-proxy-get",
+        "passed": true
+      },
+      {
+        "case": "recursive-proxy-apply",
+        "passed": true
+      },
+      {
+        "case": "recursive-bind",
+        "passed": true
+      },
+      {
+        "case": "recursive-map",
+        "passed": true
+      },
+      {
+        "case": "recursive-sort",
+        "passed": true
+      },
+      {
+        "case": "recursive-tojson",
+        "passed": true
+      },
+      {
+        "case": "recursive-valueof",
+        "passed": true
+      },
+      {
+        "case": "recursive-primitive",
+        "passed": true
+      },
+      {
+        "case": "recursive-tostring",
+        "passed": true
+      },
+      {
+        "case": "recursive-proxy-keys",
+        "passed": true
+      },
+      {
+        "case": "recursive-iterator",
+        "passed": true
+      },
+      {
+        "case": "nested-factories",
+        "passed": true
+      },
+      {
+        "case": "member-grammar",
+        "passed": true
+      },
+      {
+        "case": "supported-data",
+        "passed": true
+      },
+      {
+        "case": "getter-reentry",
+        "passed": true
+      },
+      {
+        "case": "reviver-reentry",
+        "passed": true
+      },
+      {
+        "case": "eval-reentry",
+        "passed": true
+      },
+      {
+        "case": "vm-arguments",
+        "passed": true
+      },
+      {
+        "case": "vm-constructor",
+        "passed": true
+      },
+      {
+        "case": "vm-iterators",
+        "passed": true
+      },
+      {
+        "case": "vm-eval",
+        "passed": true
+      },
+      {
+        "case": "vm-arithmetic",
+        "passed": true
+      },
+      {
+        "case": "coercion-recovery",
+        "passed": true
+      }
+    ],
+    "common_runtime_baseline": [
+      {
+        "case": "recursive-function",
+        "passed": true
+      },
+      {
+        "case": "recursive-method",
+        "passed": true
+      },
+      {
+        "case": "recursive-getter",
+        "passed": false,
+        "reason": "Guest trap or blocked shutdown"
+      },
+      {
+        "case": "recursive-setter",
+        "passed": false,
+        "reason": "Guest trap or blocked shutdown"
+      },
+      {
+        "case": "recursive-proxy-get",
+        "passed": true
+      },
+      {
+        "case": "recursive-proxy-apply",
+        "passed": true
+      },
+      {
+        "case": "recursive-bind",
+        "passed": true
+      },
+      {
+        "case": "recursive-map",
+        "passed": false,
+        "reason": "Guest trap or blocked shutdown"
+      },
+      {
+        "case": "recursive-sort",
+        "passed": false,
+        "reason": "Guest trap or blocked shutdown"
+      },
+      {
+        "case": "recursive-tojson",
+        "passed": false,
+        "reason": "Guest trap or blocked shutdown"
+      },
+      {
+        "case": "recursive-valueof",
+        "passed": false,
+        "reason": "Guest trap or blocked shutdown"
+      },
+      {
+        "case": "recursive-proxy-keys",
+        "passed": true
+      },
+      {
+        "case": "recursive-iterator",
+        "passed": false,
+        "reason": "Guest trap or blocked shutdown"
+      },
+      {
+        "case": "vm-arguments",
+        "passed": true
+      },
+      {
+        "case": "vm-constructor",
+        "passed": true
+      },
+      {
+        "case": "vm-iterators",
+        "passed": true
+      },
+      {
+        "case": "vm-eval",
+        "passed": true
+      },
+      {
+        "case": "vm-arithmetic",
+        "passed": true
+      }
+    ],
+    "browser_smoke": {
+      "passed": true,
+      "width": 296,
+      "height": 240,
+      "dpi": 160
+    },
+    "native_sanitizers": {
+      "wasi_model": true,
+      "interpreted_dispatch": true,
+      "asan": true,
+      "ubsan": true,
+      "final_independent_process_passes": 3,
+      "initial_parallel_build_run": {
+        "passed": false,
+        "assertion": "Repeated fragment",
+        "cause": "Not established; no per-page error detail retained"
+      },
+      "last_two_runs": [
+        {
+          "run": 0,
+          "exit_code": 0,
+          "seconds": 1.1557724229996893
+        },
+        {
+          "run": 1,
+          "exit_code": 0,
+          "seconds": 0.7777214140005526
+        }
+      ]
+    },
+    "recovery_network_ack_verified": true,
+    "public_benchmark_cli": {
+      "passed": true,
+      "rounds": 1,
+      "samples": [
+        {
+          "package": "before",
+          "round": 0,
+          "kind": "integer",
+          "ms": 33,
+          "sum": 14000
+        },
+        {
+          "package": "before",
+          "round": 0,
+          "kind": "coercion",
+          "ms": 7,
+          "sum": 2000
+        },
+        {
+          "package": "after",
+          "round": 0,
+          "kind": "integer",
+          "ms": 34,
+          "sum": 14000
+        },
+        {
+          "package": "after",
+          "round": 0,
+          "kind": "coercion",
+          "ms": 6,
+          "sum": 2000
+        }
+      ]
+    }
+  },
+  "hardware_access_this_round": false,
+  "original_page_weread_login_verified": false,
+  "unverified": [
+    "Actual hardware stable/peak SRAM and PSRAM",
+    "Actual display FPS and input latency",
+    "Original-page WeRead QR/login/session/bookshelf/reading"
+  ],
+  "ui_aot_sha256_before": "75fb0b5e73d253a70d96686abfee5b0c6eeaf0e5176595e34a36bdba971e476c",
+  "ui_aot_sha256_after": "75fb0b5e73d253a70d96686abfee5b0c6eeaf0e5176595e34a36bdba971e476c",
+  "ui_aot_bytes_before": 687656,
+  "ui_aot_bytes_after": 687656,
+  "source_sha256": {
+    "browser_script.cpp": "896f2ab0100ec3c835f99bc326953095cfc6e7aef761c5610761599ec8a4de0a",
+    "vendor/quickjs/quickjs.c": "2975549eafffb08ecefd282ca6f8eeaa3c1c99f26c6ffadba9d98ade3ab6043d",
+    "runtime/compiled.sha256": "32e5381990eab22294233aefdc608ff15e782ad8990a8edb4ad94db4b5d2c095",
+    "assets/browser-runtime.qjb": "70f4008751a5ebf76851b454b6595797cb684775be4cbf4944dad500f1f9fed9",
+    "tests/parser_smoke.py": "c751c421b65548bf227303b4559d3a575c0fd0175722ebba63dc1cb6ef4e1512",
+    "tests/runtime_cases.py": "fcfd8f9d7288e67524786cbb670f712613c07278a5ebbd2167143cecfd6c0af4",
+    "tests/script_test.cpp": "1bac8d1ab64dacb439eb36419adcc0446e08bb09bf6483877b41552249eaab76",
+    "tests/wasm_module_probe.c": "f644e02e54288d41685461946ce3a251b18d167865f93de1f190f158dc207682",
+    "tests/script_bench.py": "464c7afe8d0fff9ab21706c3c9917e55a24e89866d42a51f8ce3a269e1fd7b75"
+  },
+  "trusted_bytecode_unchanged": true,
+  "esp32s3_build": {
+    "passed": true,
+    "hardware_executed": false,
+    "artifacts": [
+      {
+        "name": "main.esp32-s3.aot",
+        "bytes": 1236744,
+        "sha256": "e1f2ce632cc3fc7fb3c2615bf0de20757871f9ffcf504aef9a0e0e3c1ea37670"
+      },
+      {
+        "name": "script.wasm",
+        "bytes": 581270,
+        "sha256": "6e72d4af7d7257c14fccf8c1a2691bd1d82c79f06cb88a7ba4bae5689f1532da"
+      }
+    ]
+  },
+  "script_microbench": {
+    "clock": "Date.now integer milliseconds",
+    "rounds": 5,
+    "order": "before/after, after/before alternating",
+    "integer_iterations": 4000,
+    "coercion_iterations": 250,
+    "samples": [
+      {
+        "package": "page-before-trace",
+        "round": 0,
+        "kind": "integer",
+        "ms": 14,
+        "sum": 14000
+      },
+      {
+        "package": "page-before-trace",
+        "round": 0,
+        "kind": "coercion",
+        "ms": 2,
+        "sum": 2000
+      },
+      {
+        "package": "guard-v2",
+        "round": 0,
+        "kind": "integer",
+        "ms": 9,
+        "sum": 14000
+      },
+      {
+        "package": "guard-v2",
+        "round": 0,
+        "kind": "coercion",
+        "ms": 1,
+        "sum": 2000
+      },
+      {
+        "package": "guard-v2",
+        "round": 1,
+        "kind": "integer",
+        "ms": 6,
+        "sum": 14000
+      },
+      {
+        "package": "guard-v2",
+        "round": 1,
+        "kind": "coercion",
+        "ms": 2,
+        "sum": 2000
+      },
+      {
+        "package": "page-before-trace",
+        "round": 1,
+        "kind": "integer",
+        "ms": 18,
+        "sum": 14000
+      },
+      {
+        "package": "page-before-trace",
+        "round": 1,
+        "kind": "coercion",
+        "ms": 2,
+        "sum": 2000
+      },
+      {
+        "package": "page-before-trace",
+        "round": 2,
+        "kind": "integer",
+        "ms": 11,
+        "sum": 14000
+      },
+      {
+        "package": "page-before-trace",
+        "round": 2,
+        "kind": "coercion",
+        "ms": 1,
+        "sum": 2000
+      },
+      {
+        "package": "guard-v2",
+        "round": 2,
+        "kind": "integer",
+        "ms": 10,
+        "sum": 14000
+      },
+      {
+        "package": "guard-v2",
+        "round": 2,
+        "kind": "coercion",
+        "ms": 2,
+        "sum": 2000
+      },
+      {
+        "package": "guard-v2",
+        "round": 3,
+        "kind": "integer",
+        "ms": 36,
+        "sum": 14000
+      },
+      {
+        "package": "guard-v2",
+        "round": 3,
+        "kind": "coercion",
+        "ms": 3,
+        "sum": 2000
+      },
+      {
+        "package": "page-before-trace",
+        "round": 3,
+        "kind": "integer",
+        "ms": 14,
+        "sum": 14000
+      },
+      {
+        "package": "page-before-trace",
+        "round": 3,
+        "kind": "coercion",
+        "ms": 2,
+        "sum": 2000
+      },
+      {
+        "package": "page-before-trace",
+        "round": 4,
+        "kind": "integer",
+        "ms": 11,
+        "sum": 14000
+      },
+      {
+        "package": "page-before-trace",
+        "round": 4,
+        "kind": "coercion",
+        "ms": 1,
+        "sum": 2000
+      },
+      {
+        "package": "guard-v2",
+        "round": 4,
+        "kind": "integer",
+        "ms": 6,
+        "sum": 14000
+      },
+      {
+        "package": "guard-v2",
+        "round": 4,
+        "kind": "coercion",
+        "ms": 2,
+        "sum": 2000
+      }
+    ],
+    "summary": {
+      "page-before-trace": {
+        "integer": {
+          "median_ms": 14,
+          "minimum_ms": 11,
+          "maximum_ms": 18
+        },
+        "coercion": {
+          "median_ms": 2,
+          "minimum_ms": 1,
+          "maximum_ms": 2
+        }
+      },
+      "guard-v2": {
+        "integer": {
+          "median_ms": 9,
+          "minimum_ms": 6,
+          "maximum_ms": 36
+        },
+        "coercion": {
+          "median_ms": 2,
+          "minimum_ms": 1,
+          "maximum_ms": 3
+        }
+      }
+    },
+    "checksums_passed": true,
+    "interpretation": "Coarse timer and visible OS scheduling outlier; not a displayed-FPS or throughput improvement claim."
+  }
+}

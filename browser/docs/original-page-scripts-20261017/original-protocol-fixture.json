@@ -1,0 +1,23 @@
+{
+  "passed": true,
+  "kind": "unmodified original login page and four scripts; synthetic non-account API/QR/session and terminal fixture shelf",
+  "guest_trap": false,
+  "requests": [
+    "/1/wrwebsimplenjlogic/login",
+    "/3/web/wrwebsimplenjlogic/server/img/icon_logo_2x.576fabd.png",
+    "/3/web/wrwebsimplenjlogic/static/es5-shim.min.js",
+    "/3/web/wrwebsimplenjlogic/client/global.35483d.js",
+    "/3/web/wrwebsimplenjlogic/client/cookie.0e551c.js",
+    "/3/web/wrwebsimplenjlogic/client/login.dc74cd.js",
+    "/1/wrwebsimplenjlogic/api/getuid",
+    "/1/wrwebsimplenjlogic/api/kvlog",
+    "/1/wrwebsimplenjlogic/api/qrcode",
+    "/1/wrwebsimplenjlogic/api/getlogininfo",
+    "/1/wrwebsimplenjlogic/api/weblogin",
+    "/1/wrwebsimplenjlogic/shelf"
+  ],
+  "caught_errors": [],
+  "js": [
+    "BROWSER JS READY heap=261399 peak=362678 errors=0 turns=61 max_us=563611\u001b[0m"
+  ]
+}

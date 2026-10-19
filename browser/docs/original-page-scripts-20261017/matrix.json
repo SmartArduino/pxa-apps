@@ -1,0 +1,354 @@
+[
+  {
+    "case": "unary",
+    "passed": true
+  },
+  {
+    "case": "group",
+    "passed": true
+  },
+  {
+    "case": "array",
+    "passed": true
+  },
+  {
+    "case": "object",
+    "passed": true
+  },
+  {
+    "case": "function",
+    "passed": true
+  },
+  {
+    "case": "block",
+    "passed": true
+  },
+  {
+    "case": "conditional",
+    "passed": true
+  },
+  {
+    "case": "assignment",
+    "passed": true
+  },
+  {
+    "case": "logical",
+    "passed": true
+  },
+  {
+    "case": "power",
+    "passed": true
+  },
+  {
+    "case": "arrow",
+    "passed": true
+  },
+  {
+    "case": "class",
+    "passed": true
+  },
+  {
+    "case": "template",
+    "passed": true
+  },
+  {
+    "case": "json-parse",
+    "passed": true
+  },
+  {
+    "case": "json-stringify",
+    "passed": true
+  },
+  {
+    "case": "destructure",
+    "passed": true
+  },
+  {
+    "case": "mixed-operators",
+    "passed": true
+  },
+  {
+    "case": "mixed-array-logical",
+    "passed": true
+  },
+  {
+    "case": "mixed-conditional-template",
+    "passed": true
+  },
+  {
+    "case": "mixed-call-new",
+    "passed": true
+  },
+  {
+    "case": "recursive-constructor",
+    "passed": true
+  },
+  {
+    "case": "recursive-class-constructor",
+    "passed": true
+  },
+  {
+    "case": "recursive-call-thunk",
+    "passed": true
+  },
+  {
+    "case": "recursive-apply-thunk",
+    "passed": true
+  },
+  {
+    "case": "recursive-apply-argument",
+    "passed": true
+  },
+  {
+    "case": "recursive-proxy-accessor",
+    "passed": true
+  },
+  {
+    "case": "recursive-constructor-accessor",
+    "passed": true
+  },
+  {
+    "case": "recursive-getter-call",
+    "passed": true
+  },
+  {
+    "case": "recursive-getter-eval",
+    "passed": true
+  },
+  {
+    "case": "recursive-direct-eval",
+    "passed": true
+  },
+  {
+    "case": "recursive-indirect-eval",
+    "passed": true
+  },
+  {
+    "case": "recursive-function",
+    "passed": true
+  },
+  {
+    "case": "recursive-method",
+    "passed": true
+  },
+  {
+    "case": "recursive-getter",
+    "passed": true
+  },
+  {
+    "case": "recursive-setter",
+    "passed": true
+  },
+  {
+    "case": "recursive-proxy-get",
+    "passed": true
+  },
+  {
+    "case": "recursive-proxy-apply",
+    "passed": true
+  },
+  {
+    "case": "recursive-bind",
+    "passed": true
+  },
+  {
+    "case": "recursive-map",
+    "passed": true
+  },
+  {
+    "case": "recursive-sort",
+    "passed": true
+  },
+  {
+    "case": "recursive-tojson",
+    "passed": true
+  },
+  {
+    "case": "recursive-valueof",
+    "passed": true
+  },
+  {
+    "case": "recursive-primitive",
+    "passed": true
+  },
+  {
+    "case": "recursive-tostring",
+    "passed": true
+  },
+  {
+    "case": "recursive-proxy-keys",
+    "passed": true
+  },
+  {
+    "case": "recursive-iterator",
+    "passed": true
+  },
+  {
+    "case": "recursive-proxy-set",
+    "passed": true
+  },
+  {
+    "case": "recursive-proxy-has",
+    "passed": true
+  },
+  {
+    "case": "recursive-proxy-delete",
+    "passed": true
+  },
+  {
+    "case": "recursive-proxy-descriptor",
+    "passed": true
+  },
+  {
+    "case": "recursive-proxy-define",
+    "passed": true
+  },
+  {
+    "case": "recursive-proxy-getprototype",
+    "passed": true
+  },
+  {
+    "case": "recursive-proxy-setprototype",
+    "passed": true
+  },
+  {
+    "case": "recursive-proxy-extensible",
+    "passed": true
+  },
+  {
+    "case": "recursive-proxy-prevent",
+    "passed": true
+  },
+  {
+    "case": "recursive-array-copy-getter",
+    "passed": true
+  },
+  {
+    "case": "recursive-array-splice-getter",
+    "passed": true
+  },
+  {
+    "case": "recursive-transparent-get",
+    "passed": true
+  },
+  {
+    "case": "recursive-transparent-has",
+    "passed": true
+  },
+  {
+    "case": "factory-budget",
+    "passed": true
+  },
+  {
+    "case": "nested-factories",
+    "passed": true
+  },
+  {
+    "case": "member-grammar",
+    "passed": true
+  },
+  {
+    "case": "supported-data",
+    "passed": true
+  },
+  {
+    "case": "getter-reentry",
+    "passed": true
+  },
+  {
+    "case": "reviver-reentry",
+    "passed": true
+  },
+  {
+    "case": "eval-reentry",
+    "passed": true
+  },
+  {
+    "case": "sparse-splice-left",
+    "passed": true
+  },
+  {
+    "case": "sparse-splice-right",
+    "passed": true
+  },
+  {
+    "case": "sparse-copy-holes",
+    "passed": true
+  },
+  {
+    "case": "sparse-copy-backward",
+    "passed": true
+  },
+  {
+    "case": "sparse-dense-prefix",
+    "passed": true
+  },
+  {
+    "case": "sparse-named-getter",
+    "passed": true
+  },
+  {
+    "case": "sparse-own-getter",
+    "passed": true
+  },
+  {
+    "case": "sparse-inherited-index",
+    "passed": true
+  },
+  {
+    "case": "sparse-proxy-prototype",
+    "passed": true
+  },
+  {
+    "case": "sparse-nonconfigurable",
+    "passed": true
+  },
+  {
+    "case": "sparse-nonextensible",
+    "passed": true
+  },
+  {
+    "case": "sparse-u32-boundary",
+    "passed": true
+  },
+  {
+    "case": "sparse-null-prototype",
+    "passed": true
+  },
+  {
+    "case": "sparse-max-length",
+    "passed": true
+  },
+  {
+    "case": "proxy-semantics",
+    "passed": true
+  },
+  {
+    "case": "numeric-lookahead",
+    "passed": true
+  },
+  {
+    "case": "vm-arguments",
+    "passed": true
+  },
+  {
+    "case": "vm-constructor",
+    "passed": true
+  },
+  {
+    "case": "vm-iterators",
+    "passed": true
+  },
+  {
+    "case": "vm-eval",
+    "passed": true
+  },
+  {
+    "case": "vm-arithmetic",
+    "passed": true
+  },
+  {
+    "case": "coercion-recovery",
+    "passed": true
+  }
+]

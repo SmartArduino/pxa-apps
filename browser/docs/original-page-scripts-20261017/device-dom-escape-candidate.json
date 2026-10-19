@@ -1,0 +1,575 @@
+{
+  "scope": "P59 same d878 pai-touch Host/font and production UI; P55 diagnostics byte-identical between versions. Only signed bootstrap differs. Software reboot before each version, then confirmed complete stop/reopen. Original official HTML/four scripts and real unauthenticated QR APIs; no account scan or reading. Network QR payload varies and timings include logging/scheduling; no FPS/CPU/touch-latency claim. MEMORY windows start before App launch and include3s after QR; screenshots/preview outside windows. Log history filtered by newest service-start timestamp.",
+  "samples": {
+    "old-cold": {
+      "passed": true,
+      "errors": [],
+      "qr_elapsed_s": 24.733909253998718,
+      "observed_elapsed_s": 27.740207342001668,
+      "response_observations": [
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 46,
+          "interrupt": false,
+          "elapsed_us": 72553
+        },
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 10,
+          "interrupt": false,
+          "elapsed_us": 34507
+        },
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 2796,
+          "interrupt": false,
+          "elapsed_us": 169568
+        }
+      ],
+      "failure_observations": [],
+      "markup_count": 80,
+      "markup_max_observed_us": 201224,
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 56947,
+        "sram_min": 27596,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6823180,
+        "psram_min": 6717104,
+        "psram_largest": 6553600
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47799,
+        "sram_min": 43663,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2596092,
+        "psram_min": 2367436,
+        "psram_largest": 2359296
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47799,
+        "sram_min": 27596,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2596120,
+        "psram_min": 2367436,
+        "psram_largest": 2359296
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272916,
+          "window_peak_used": 277052,
+          "stable_increment_from_cold": 9148,
+          "window_increment_from_cold": 13284
+        },
+        "psram": {
+          "stable_used": 5762404,
+          "window_peak_used": 5991088,
+          "stable_increment_from_cold": 4227060,
+          "window_increment_from_cold": 4455744
+        }
+      },
+      "preview_opened": false,
+      "ready_js_statistics_scope": "Initial READY only, not final QR/API callback heap peak.",
+      "ready_js": [
+        [
+          257327,
+          274768,
+          0,
+          1414873
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        },
+        {
+          "encoded_bytes": 1985,
+          "pixels": "180x180"
+        }
+      ]
+    },
+    "old-warm1": {
+      "passed": true,
+      "errors": [],
+      "qr_elapsed_s": 23.72209996199672,
+      "observed_elapsed_s": 26.729249922995223,
+      "response_observations": [
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 46,
+          "interrupt": false,
+          "elapsed_us": 69311
+        },
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 10,
+          "interrupt": false,
+          "elapsed_us": 34979
+        },
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 2800,
+          "interrupt": false,
+          "elapsed_us": 171004
+        }
+      ],
+      "failure_observations": [],
+      "markup_count": 80,
+      "markup_max_observed_us": 203333,
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 49807,
+        "sram_min": 27596,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6755400,
+        "psram_min": 2367436,
+        "psram_largest": 3276800
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47763,
+        "sram_min": 43647,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2594996,
+        "psram_min": 2362884,
+        "psram_largest": 2490368
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47799,
+        "sram_min": 27596,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2595028,
+        "psram_min": 2362884,
+        "psram_largest": 2490368
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272916,
+          "window_peak_used": 277068,
+          "stable_increment_from_cold": 2008,
+          "window_increment_from_cold": 6160
+        },
+        "psram": {
+          "stable_used": 5763496,
+          "window_peak_used": 5995640,
+          "stable_increment_from_cold": 4160372,
+          "window_increment_from_cold": 4392516
+        }
+      },
+      "preview_opened": false,
+      "ready_js_statistics_scope": "Initial READY only, not final QR/API callback heap peak.",
+      "ready_js": [
+        [
+          257327,
+          274768,
+          0,
+          1422946
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        },
+        {
+          "encoded_bytes": 1988,
+          "pixels": "180x180"
+        }
+      ]
+    },
+    "new-cold": {
+      "passed": true,
+      "errors": [],
+      "qr_elapsed_s": 24.388224166999862,
+      "observed_elapsed_s": 27.394516334999935,
+      "response_observations": [
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 46,
+          "interrupt": false,
+          "elapsed_us": 69771
+        },
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 10,
+          "interrupt": false,
+          "elapsed_us": 28276
+        },
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 2756,
+          "interrupt": false,
+          "elapsed_us": 167778
+        }
+      ],
+      "failure_observations": [],
+      "markup_count": 86,
+      "markup_max_observed_us": 77489,
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 56919,
+        "sram_min": 27832,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6825756,
+        "psram_min": 6723808,
+        "psram_largest": 6684672
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47807,
+        "sram_min": 42771,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2598788,
+        "psram_min": 2370220,
+        "psram_largest": 2359296
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47807,
+        "sram_min": 27832,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2598816,
+        "psram_min": 2370220,
+        "psram_largest": 2359296
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272908,
+          "window_peak_used": 277944,
+          "stable_increment_from_cold": 9112,
+          "window_increment_from_cold": 14148
+        },
+        "psram": {
+          "stable_used": 5759708,
+          "window_peak_used": 5988304,
+          "stable_increment_from_cold": 4226940,
+          "window_increment_from_cold": 4455536
+        }
+      },
+      "preview_opened": false,
+      "ready_js_statistics_scope": "Initial READY only, not final QR/API callback heap peak.",
+      "ready_js": [
+        [
+          257327,
+          274768,
+          0,
+          1400066
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        },
+        {
+          "encoded_bytes": 1956,
+          "pixels": "180x180"
+        }
+      ]
+    },
+    "new-warm1": {
+      "passed": true,
+      "errors": [],
+      "qr_elapsed_s": 23.39263330900576,
+      "observed_elapsed_s": 26.401465080998605,
+      "response_observations": [
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 46,
+          "interrupt": false,
+          "elapsed_us": 70738
+        },
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 10,
+          "interrupt": false,
+          "elapsed_us": 28408
+        },
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 2740,
+          "interrupt": false,
+          "elapsed_us": 169882
+        }
+      ],
+      "failure_observations": [],
+      "markup_count": 82,
+      "markup_max_observed_us": 73215,
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 49815,
+        "sram_min": 27832,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6757988,
+        "psram_min": 2370220,
+        "psram_largest": 3276800
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47771,
+        "sram_min": 43671,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2597168,
+        "psram_min": 2366752,
+        "psram_largest": 2490368
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47771,
+        "sram_min": 27832,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2597196,
+        "psram_min": 2366752,
+        "psram_largest": 2490368
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272944,
+          "window_peak_used": 277044,
+          "stable_increment_from_cold": 2044,
+          "window_increment_from_cold": 6144
+        },
+        "psram": {
+          "stable_used": 5761328,
+          "window_peak_used": 5991772,
+          "stable_increment_from_cold": 4160792,
+          "window_increment_from_cold": 4391236
+        }
+      },
+      "preview_opened": false,
+      "ready_js_statistics_scope": "Initial READY only, not final QR/API callback heap peak.",
+      "ready_js": [
+        [
+          257327,
+          274768,
+          0,
+          1416827
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        },
+        {
+          "encoded_bytes": 1942,
+          "pixels": "180x180"
+        }
+      ]
+    },
+    "new-warm2": {
+      "passed": true,
+      "errors": [],
+      "qr_elapsed_s": 23.422815663994697,
+      "observed_elapsed_s": 26.42701763999503,
+      "response_observations": [
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 46,
+          "interrupt": false,
+          "elapsed_us": 69514
+        },
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 10,
+          "interrupt": false,
+          "elapsed_us": 31244
+        },
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 2740,
+          "interrupt": false,
+          "elapsed_us": 169920
+        }
+      ],
+      "failure_observations": [],
+      "markup_count": 82,
+      "markup_max_observed_us": 79479,
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 49815,
+        "sram_min": 27832,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6756552,
+        "psram_min": 2366752,
+        "psram_largest": 3276800
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47807,
+        "sram_min": 43671,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2597208,
+        "psram_min": 2366944,
+        "psram_largest": 2490368
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47807,
+        "sram_min": 27832,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2597248,
+        "psram_min": 2366752,
+        "psram_largest": 2490368
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272908,
+          "window_peak_used": 277044,
+          "stable_increment_from_cold": 2008,
+          "window_increment_from_cold": 6144
+        },
+        "psram": {
+          "stable_used": 5761276,
+          "window_peak_used": 5991580,
+          "stable_increment_from_cold": 4159304,
+          "window_increment_from_cold": 4389608
+        }
+      },
+      "preview_opened": true,
+      "ready_js_statistics_scope": "Initial READY only, not final QR/API callback heap peak.",
+      "ready_js": [
+        [
+          257327,
+          274768,
+          0,
+          1415514
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        },
+        {
+          "encoded_bytes": 1943,
+          "pixels": "180x180"
+        }
+      ]
+    }
+  },
+  "paired_differences": {
+    "new-cold": {
+      "complete_workloads": true,
+      "heap_delta": {
+        "sram": {
+          "stable_used": -8,
+          "window_peak_used": 892,
+          "stable_increment_from_cold": -36,
+          "window_increment_from_cold": 864
+        },
+        "psram": {
+          "stable_used": -2696,
+          "window_peak_used": -2784,
+          "stable_increment_from_cold": -120,
+          "window_increment_from_cold": -208
+        }
+      }
+    },
+    "new-warm1": {
+      "complete_workloads": true,
+      "heap_delta": {
+        "sram": {
+          "stable_used": 28,
+          "window_peak_used": -24,
+          "stable_increment_from_cold": 36,
+          "window_increment_from_cold": -16
+        },
+        "psram": {
+          "stable_used": -2168,
+          "window_peak_used": -3868,
+          "stable_increment_from_cold": 420,
+          "window_increment_from_cold": -1280
+        }
+      }
+    },
+    "new-warm2": {
+      "complete_workloads": true,
+      "heap_delta": {
+        "sram": {
+          "stable_used": -8,
+          "window_peak_used": -24,
+          "stable_increment_from_cold": 0,
+          "window_increment_from_cold": -16
+        },
+        "psram": {
+          "stable_used": -2220,
+          "window_peak_used": -4060,
+          "stable_increment_from_cold": -1068,
+          "window_increment_from_cold": -2908
+        }
+      }
+    }
+  },
+  "strict_no_growth_in_these_pairs": false,
+  "restoration": {
+    "signed_files": 29,
+    "private_files": 3,
+    "all_byte_identical": true,
+    "host_font_wifi_unchanged": true
+  },
+  "builds": {
+    "old": {
+      "artifacts/main.esp32-s3.aot": {
+        "bytes": 1237160,
+        "sha256": "45a2100989e34bb956dd2942d3ffa87e03bd2cc3942aa7e8efe09884302d6b58"
+      },
+      "artifacts/script.wasm": {
+        "bytes": 599231,
+        "sha256": "3955fc70ce6b20704d1fff0220e2e03d825fc0d216f32084130da69605ecdbdc"
+      },
+      "assets/browser-runtime.qjb": {
+        "bytes": 16931,
+        "sha256": "44830b6dec62904a7b6e5e11def4937c6c262fe060de9d4c5d9653e9a281a5f5"
+      }
+    },
+    "new": {
+      "artifacts/main.esp32-s3.aot": {
+        "bytes": 1237160,
+        "sha256": "45a2100989e34bb956dd2942d3ffa87e03bd2cc3942aa7e8efe09884302d6b58"
+      },
+      "artifacts/script.wasm": {
+        "bytes": 599231,
+        "sha256": "3955fc70ce6b20704d1fff0220e2e03d825fc0d216f32084130da69605ecdbdc"
+      },
+      "assets/browser-runtime.qjb": {
+        "bytes": 16813,
+        "sha256": "ecd1484cf98bd6461f0574296eca8897987c07ce9921e1b2be1e4111b4e37c03"
+      }
+    }
+  }
+}

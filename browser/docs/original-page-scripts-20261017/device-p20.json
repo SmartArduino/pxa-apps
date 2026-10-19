@@ -1,0 +1,160 @@
+{
+  "before": [
+    {
+      "kind": "DATA",
+      "payload": "scope=heap;sram_total=320715;sram_free=48615;sram_min=48615;sram_largest=19456;psram_total=8358524;psram_free=5484092;psram_min=5484092;psram_largest=4849664"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=budget;internal=27468;external=25040;peak_internal=27468;peak_external=96678;temporary_peak_internal=0;temporary_peak_external=49772;fixed=2224;denied=0;allocation_failures=0"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=kind;name=raster;internal=0;external=0"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=kind;name=image;internal=0;external=0"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=kind;name=audio;internal=0;external=16392"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=kind;name=temporary;internal=0;external=0"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=kind;name=metadata;internal=27468;external=8648"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=kind;name=frame;internal=0;external=0"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=2176"
+    },
+    {
+      "kind": "OK",
+      "payload": ""
+    }
+  ],
+  "gesture_window_s": 4.707985565000854,
+  "perf": [
+    {
+      "kind": "OK",
+      "payload": "capacity=256;raster=0;present=15;raster_overflow=0;present_overflow=0;list_min=0;list_max=0;pixels_min=0;pixels_max=0;surface_changed=0;completed=16;window_us=4710804;display=1"
+    }
+  ],
+  "elapsed_s": 11.41844782300177,
+  "peak_window": [
+    {
+      "kind": "DATA",
+      "payload": "scope=heap;sram_total=320715;sram_free=47911;sram_min=42731;sram_largest=19456;psram_total=8358524;psram_free=2629936;psram_min=2166072;psram_largest=1933312"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=budget;internal=27468;external=72335;peak_internal=27468;peak_external=119675;temporary_peak_internal=0;temporary_peak_external=49772;fixed=2224;denied=0;allocation_failures=0"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=kind;name=raster;internal=0;external=0"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=kind;name=image;internal=0;external=47295"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=kind;name=audio;internal=0;external=16392"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=kind;name=temporary;internal=0;external=0"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=kind;name=metadata;internal=27468;external=8648"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=kind;name=frame;internal=0;external=0"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=2176"
+    },
+    {
+      "kind": "OK",
+      "payload": "minimum_scope=boot"
+    }
+  ],
+  "loaded": [
+    {
+      "kind": "DATA",
+      "payload": "scope=heap;sram_total=320715;sram_free=47651;sram_min=28040;sram_largest=19456;psram_total=8358524;psram_free=2629968;psram_min=2166072;psram_largest=1933312"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=budget;internal=27468;external=72335;peak_internal=27468;peak_external=119675;temporary_peak_internal=0;temporary_peak_external=49772;fixed=2224;denied=0;allocation_failures=0"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=kind;name=raster;internal=0;external=0"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=kind;name=image;internal=0;external=47295"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=kind;name=audio;internal=0;external=16392"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=kind;name=temporary;internal=0;external=0"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=kind;name=metadata;internal=27468;external=8648"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=kind;name=frame;internal=0;external=0"
+    },
+    {
+      "kind": "DATA",
+      "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=2176"
+    },
+    {
+      "kind": "OK",
+      "payload": ""
+    }
+  ],
+  "script": [
+    "BROWSER JS OPEN active=1",
+    "BROWSER JS INITIALIZED total_us=774785 max_step_us=253175",
+    "BROWSER JS ERROR 脚本编译超时"
+  ],
+  "guest_trap": false,
+  "image_done": 1,
+  "real_login_performed": false,
+  "platform": "pai-touch / esp32s3",
+  "host_sha256_from_readback_verified_handoff": "d878949377ee5d0135da3b1b5b98e4f6879a009e5b70b2bc1fda67ce68dbb97d",
+  "host_written_by_this_test": false,
+  "compilation_budget_s": 2,
+  "accepted_for_original_login": false,
+  "image_done_is": "static site logo; not a QR or login proof",
+  "display_note": "15 present intervals in 4.708s of gestures, not accepted as smooth scrolling; page compilation failed",
+  "restoration": {
+    "all_original_signed_files_identical": true,
+    "all_other_app_private_files_identical": true,
+    "browser_test_data_changes": [],
+    "weread_package_and_session_untouched": true,
+    "host_font_wifi_unchanged_by_task": true,
+    "browser_code_archived_as_before": true,
+    "no_running_app": true
+  }
+}

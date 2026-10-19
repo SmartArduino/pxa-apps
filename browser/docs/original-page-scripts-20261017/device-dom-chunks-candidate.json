@@ -1,0 +1,2324 @@
+{
+  "scope": "P63 preregistered ABBA repetitions; equal attempted cold/warm counts, all samples retained; only completed baseline paths enter memory/time comparison. Same d878 Host/font, normal production UI and engine binaries; only signed bootstrap differs. Original webpage/4scripts/real publicQRs, no account scan. Payload bytes vary. No per-turn phase diagnostics. QR wall timings, not FPS/CPU/input latency. Optional new diagnostic timing is separate; oldP56/P59 observations are historical, not concurrent pairs. Each memory window begins before App launch and ends3s after QR; screenshots/preview outside. No additional sample seeking a pass.",
+  "protocol": {
+    "declared_at_utc": "2026-10-17T12:05:06.394552+00:00",
+    "before_any_p63_device_access": true,
+    "candidate": "P62 character-bounded projection, includes literal escaping; old P38",
+    "source_sha256": "297d24449b5d3e84f809f72acd0bbc32bd42833ffc911cbafb25ff4299134584",
+    "blocks": [
+      {
+        "version": "old",
+        "starts": 2
+      },
+      {
+        "version": "new",
+        "starts": 2
+      },
+      {
+        "version": "new",
+        "starts": 2
+      },
+      {
+        "version": "old",
+        "starts": 2
+      }
+    ],
+    "per_version_counts": {
+      "software_cold": 2,
+      "registry_inactive_then_reopen": 2
+    },
+    "software_reboot_before_each_block": true,
+    "packages": {
+      "old": "borrow-source-s3-p38",
+      "new": "chunks-normal-s3-p62"
+    },
+    "normal_artifacts_identical_except_signed_bootstrap": true,
+    "memory_window": "Whole App launch through 3seconds after READY errors0 and180x180decode; no screenshot/PERF inside. MEMORYSTART local minimum, separately record stable heap. Fixed2seconds log drain after registry inactive, not full teardown proof.",
+    "gate": "All4 candidate attempts must complete. Equal4 attempted starts per variant; compare phase-matched stable and localwindowpeak maxima using ONLY completed same QR paths, independently SRAM andPSRAM. Candidate maxima must not exceed completed-old maxima; at least one completed old per phase required. Failed-old attempts retained and never used for memory/time benefit. No append to seek pass.",
+    "gate_change_vs_p60": "A baseline timeout is an existing defect, not automatically a candidate defect. Unlike P60 all10 prerequisite, allow improvement if candidate is complete and all its per-heap maxima do not exceed completed baseline paths; fewer complete baselines make this max comparison conservative and counts explicit. No allowance for memory growth.",
+    "optional_diagnostic": "One separate new diagnostic QR observation, excluded from normal heap gate; traceUI/engine differs so never mix values. Measures per-turn phases, preview and cache hit, not FPS or real account.",
+    "account": "No user QRscan, no credential reuse/import. Original HTML+4scripts; publicQRAPI images can vary; retain encoded sizes.",
+    "preservation": "Fresh current boundary99c394 signed29/private3 sets+SHA; no Hostd878/font121c/Wifi modifications; browser initiallyarchived and archivedafter; no other App touched.",
+    "diagnostic_addendum_before_capture": {
+      "at_utc": "2026-10-17T12:12:47.436920+00:00",
+      "change": "Optional diagnostic ONLY: take extra MEMORY snapshots after observed init/library/ready/largecallback markers, for coarse peak-stage attribution. Normal8 runs unchanged; diagnostic queries may perturb memory/timing and are excluded from normal gate."
+    }
+  },
+  "samples": {
+    "old-b0-cold": {
+      "post_stop_runtime": [
+        {
+          "kind": "wamr",
+          "host_ms": 115181,
+          "fields": {
+            "peak": 1437531,
+            "current": 416,
+            "linear": 0,
+            "linear_peak": 655360,
+            "artifact": 0,
+            "events": 0
+          },
+          "after_qr_observation": true,
+          "scope": "Host log; if before QR it does not establish the full script-session linear peak. Historical reset scope is not independently asserted."
+        },
+        {
+          "kind": "code_mapping",
+          "host_ms": 81688,
+          "fields": {
+            "ibus": 0,
+            "dbus": 0,
+            "request": 1146984,
+            "map": 1179648,
+            "alloc": 1179648,
+            "free_psram": 5501712
+          }
+        }
+      ],
+      "version": "old",
+      "block": 0,
+      "phase": "cold",
+      "passed": true,
+      "guest_trap": false,
+      "errors": [],
+      "qr_elapsed_s": 25.445046029999503,
+      "observation_s": 28.451238794004894,
+      "markup_max_observed_us": null,
+      "response_observations": [],
+      "failure_observations": [],
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 56951,
+        "sram_min": 27660,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6823176,
+        "psram_min": 6718904,
+        "psram_largest": 6684672
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47803,
+        "sram_min": 42735,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2604020,
+        "psram_min": 2371648,
+        "psram_largest": 2359296
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47803,
+        "sram_min": 27660,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2604048,
+        "psram_min": 2371648,
+        "psram_largest": 2359296
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272912,
+          "window_peak_used": 277980
+        },
+        "psram": {
+          "stable_used": 5754476,
+          "window_peak_used": 5986876
+        }
+      },
+      "ready_js_statistics_scope": "Initial READY only, not final callback peak.",
+      "ready_js": [
+        [
+          257327,
+          274768,
+          0,
+          1414806
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        },
+        {
+          "encoded_bytes": 1973,
+          "pixels": "180x180"
+        }
+      ],
+      "preview_opened": false,
+      "resource_snapshots": {
+        "cold_baseline": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=56951;sram_min=27660;sram_largest=19456;psram_total=8358524;psram_free=6823176;psram_min=6718904;psram_largest=6684672"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=16516;peak_internal=27468;peak_external=16516;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=124"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": ""
+          }
+        ],
+        "window": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=47803;sram_min=42735;sram_largest=19456;psram_total=8358524;psram_free=2604020;psram_min=2371648;psram_largest=2359296"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=202222;peak_internal=27468;peak_external=247594;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=176990"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=8840"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": "minimum_scope=boot"
+          }
+        ],
+        "loaded": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=47803;sram_min=27660;sram_largest=19456;psram_total=8358524;psram_free=2604048;psram_min=2371648;psram_largest=2359296"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=202222;peak_internal=27468;peak_external=247594;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=176990"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=8840"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": ""
+          }
+        ]
+      },
+      "resource_peak_scope": "Whole-device heap local minimum is the current run window. Budget and surface peak fields are retained as historical unless independently reset; their stable/current fields remain separate. No per-session linear peak is inferred from early WAMR startup logs."
+    },
+    "old-b0-warm1": {
+      "post_stop_runtime": [
+        {
+          "kind": "wamr",
+          "host_ms": 144103,
+          "fields": {
+            "peak": 1437531,
+            "current": 416,
+            "linear": 0,
+            "linear_peak": 655360,
+            "artifact": 0,
+            "events": 0
+          },
+          "after_qr_observation": false,
+          "scope": "Host log; if before QR it does not establish the full script-session linear peak. Historical reset scope is not independently asserted."
+        },
+        {
+          "kind": "code_mapping",
+          "host_ms": 118723,
+          "fields": {
+            "ibus": 0,
+            "dbus": 0,
+            "request": 1146984,
+            "map": 1179648,
+            "alloc": 1179648,
+            "free_psram": 5433836
+          }
+        }
+      ],
+      "version": "old",
+      "block": 0,
+      "phase": "warm",
+      "passed": false,
+      "guest_trap": false,
+      "errors": [
+        "BROWSER JS ERROR \u811a\u672c\u6267\u884c\u8d85\u65f6"
+      ],
+      "qr_elapsed_s": null,
+      "observation_s": 21.794979773003433,
+      "markup_max_observed_us": null,
+      "response_observations": [],
+      "failure_observations": [],
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 49811,
+        "sram_min": 27660,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6755220,
+        "psram_min": 2371648,
+        "psram_largest": 3407872
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47195,
+        "sram_min": 43355,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2727796,
+        "psram_min": 2372884,
+        "psram_largest": 2293760
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47419,
+        "sram_min": 27660,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2727716,
+        "psram_min": 2371648,
+        "psram_largest": 2293760
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 273296,
+          "window_peak_used": 277360
+        },
+        "psram": {
+          "stable_used": 5630808,
+          "window_peak_used": 5985640
+        }
+      },
+      "ready_js_statistics_scope": "Initial READY only, not final callback peak.",
+      "ready_js": [
+        [
+          257327,
+          274768,
+          0,
+          1417290
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        }
+      ],
+      "preview_opened": false,
+      "resource_snapshots": {
+        "cold_baseline": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=49811;sram_min=27660;sram_largest=19456;psram_total=8358524;psram_free=6755220;psram_min=2371648;psram_largest=3407872"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=16516;peak_internal=27468;peak_external=247594;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=124"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": ""
+          }
+        ],
+        "window": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=47195;sram_min=43355;sram_largest=19456;psram_total=8358524;psram_free=2727796;psram_min=2372884;psram_largest=2293760"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=72527;peak_internal=27468;peak_external=247594;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=47295"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=8840"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": "minimum_scope=boot"
+          }
+        ],
+        "loaded": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=47419;sram_min=27660;sram_largest=19456;psram_total=8358524;psram_free=2727716;psram_min=2371648;psram_largest=2293760"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=72527;peak_internal=27468;peak_external=247594;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=47295"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=8840"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": ""
+          }
+        ]
+      },
+      "resource_peak_scope": "Whole-device heap local minimum is the current run window. Budget and surface peak fields are retained as historical unless independently reset; their stable/current fields remain separate. No per-session linear peak is inferred from early WAMR startup logs."
+    },
+    "new-b1-cold": {
+      "post_stop_runtime": [
+        {
+          "kind": "wamr",
+          "host_ms": 111698,
+          "fields": {
+            "peak": 1437531,
+            "current": 416,
+            "linear": 0,
+            "linear_peak": 655360,
+            "artifact": 0,
+            "events": 0
+          },
+          "after_qr_observation": true,
+          "scope": "Host log; if before QR it does not establish the full script-session linear peak. Historical reset scope is not independently asserted."
+        },
+        {
+          "kind": "code_mapping",
+          "host_ms": 78937,
+          "fields": {
+            "ibus": 0,
+            "dbus": 0,
+            "request": 1146984,
+            "map": 1179648,
+            "alloc": 1179648,
+            "free_psram": 5504736
+          }
+        }
+      ],
+      "version": "new",
+      "block": 1,
+      "phase": "cold",
+      "passed": true,
+      "guest_trap": false,
+      "errors": [],
+      "qr_elapsed_s": 24.603616769003565,
+      "observation_s": 27.60934128000372,
+      "markup_max_observed_us": null,
+      "response_observations": [],
+      "failure_observations": [],
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 56935,
+        "sram_min": 27736,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6826216,
+        "psram_min": 6724268,
+        "psram_largest": 6684672
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47787,
+        "sram_min": 43231,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2607132,
+        "psram_min": 2378288,
+        "psram_largest": 2359296
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47787,
+        "sram_min": 27736,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2607160,
+        "psram_min": 2378288,
+        "psram_largest": 2359296
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272928,
+          "window_peak_used": 277484
+        },
+        "psram": {
+          "stable_used": 5751364,
+          "window_peak_used": 5980236
+        }
+      },
+      "ready_js_statistics_scope": "Initial READY only, not final callback peak.",
+      "ready_js": [
+        [
+          258068,
+          275509,
+          0,
+          1400622
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        },
+        {
+          "encoded_bytes": 1970,
+          "pixels": "180x180"
+        }
+      ],
+      "preview_opened": false,
+      "resource_snapshots": {
+        "cold_baseline": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=56935;sram_min=27736;sram_largest=19456;psram_total=8358524;psram_free=6826216;psram_min=6724268;psram_largest=6684672"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=16516;peak_internal=27468;peak_external=16516;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=124"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": ""
+          }
+        ],
+        "window": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=47787;sram_min=43231;sram_largest=19456;psram_total=8358524;psram_free=2607132;psram_min=2378288;psram_largest=2359296"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=202222;peak_internal=27468;peak_external=247594;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=176990"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=8840"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": "minimum_scope=boot"
+          }
+        ],
+        "loaded": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=47787;sram_min=27736;sram_largest=19456;psram_total=8358524;psram_free=2607160;psram_min=2378288;psram_largest=2359296"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=202222;peak_internal=27468;peak_external=247594;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=176990"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=8840"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": ""
+          }
+        ]
+      },
+      "resource_peak_scope": "Whole-device heap local minimum is the current run window. Budget and surface peak fields are retained as historical unless independently reset; their stable/current fields remain separate. No per-session linear peak is inferred from early WAMR startup logs."
+    },
+    "new-b1-warm1": {
+      "post_stop_runtime": [
+        {
+          "kind": "wamr",
+          "host_ms": 146198,
+          "fields": {
+            "peak": 1437531,
+            "current": 416,
+            "linear": 0,
+            "linear_peak": 655360,
+            "artifact": 0,
+            "events": 0
+          },
+          "after_qr_observation": true,
+          "scope": "Host log; if before QR it does not establish the full script-session linear peak. Historical reset scope is not independently asserted."
+        },
+        {
+          "kind": "code_mapping",
+          "host_ms": 115640,
+          "fields": {
+            "ibus": 0,
+            "dbus": 0,
+            "request": 1146984,
+            "map": 1179648,
+            "alloc": 1179648,
+            "free_psram": 5436832
+          }
+        }
+      ],
+      "version": "new",
+      "block": 1,
+      "phase": "warm",
+      "passed": true,
+      "guest_trap": false,
+      "errors": [],
+      "qr_elapsed_s": 23.4893910460014,
+      "observation_s": 26.497665896997205,
+      "markup_max_observed_us": null,
+      "response_observations": [],
+      "failure_observations": [],
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 49759,
+        "sram_min": 27736,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6758220,
+        "psram_min": 2378288,
+        "psram_largest": 3407872
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47787,
+        "sram_min": 43635,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2606032,
+        "psram_min": 2375756,
+        "psram_largest": 2359296
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47787,
+        "sram_min": 27736,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2606060,
+        "psram_min": 2375756,
+        "psram_largest": 2359296
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272928,
+          "window_peak_used": 277080
+        },
+        "psram": {
+          "stable_used": 5752464,
+          "window_peak_used": 5982768
+        }
+      },
+      "ready_js_statistics_scope": "Initial READY only, not final callback peak.",
+      "ready_js": [
+        [
+          258068,
+          275509,
+          0,
+          1421623
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        },
+        {
+          "encoded_bytes": 1963,
+          "pixels": "180x180"
+        }
+      ],
+      "preview_opened": false,
+      "resource_snapshots": {
+        "cold_baseline": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=49759;sram_min=27736;sram_largest=19456;psram_total=8358524;psram_free=6758220;psram_min=2378288;psram_largest=3407872"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=16516;peak_internal=27468;peak_external=247594;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=124"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": ""
+          }
+        ],
+        "window": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=47787;sram_min=43635;sram_largest=19456;psram_total=8358524;psram_free=2606032;psram_min=2375756;psram_largest=2359296"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=202222;peak_internal=27468;peak_external=247594;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=176990"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=8840"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": "minimum_scope=boot"
+          }
+        ],
+        "loaded": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=47787;sram_min=27736;sram_largest=19456;psram_total=8358524;psram_free=2606060;psram_min=2375756;psram_largest=2359296"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=202222;peak_internal=27468;peak_external=247594;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=176990"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=8840"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": ""
+          }
+        ]
+      },
+      "resource_peak_scope": "Whole-device heap local minimum is the current run window. Budget and surface peak fields are retained as historical unless independently reset; their stable/current fields remain separate. No per-session linear peak is inferred from early WAMR startup logs."
+    },
+    "new-b2-cold": {
+      "post_stop_runtime": [
+        {
+          "kind": "wamr",
+          "host_ms": 109109,
+          "fields": {
+            "peak": 1437531,
+            "current": 416,
+            "linear": 0,
+            "linear_peak": 655360,
+            "artifact": 0,
+            "events": 0
+          },
+          "after_qr_observation": true,
+          "scope": "Host log; if before QR it does not establish the full script-session linear peak. Historical reset scope is not independently asserted."
+        },
+        {
+          "kind": "code_mapping",
+          "host_ms": 77206,
+          "fields": {
+            "ibus": 0,
+            "dbus": 0,
+            "request": 1146984,
+            "map": 1179648,
+            "alloc": 1179648,
+            "free_psram": 5503980
+          }
+        }
+      ],
+      "version": "new",
+      "block": 2,
+      "phase": "cold",
+      "passed": true,
+      "guest_trap": false,
+      "errors": [],
+      "qr_elapsed_s": 24.129101256003196,
+      "observation_s": 27.137174180003058,
+      "markup_max_observed_us": null,
+      "response_observations": [],
+      "failure_observations": [],
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 56955,
+        "sram_min": 27852,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6825504,
+        "psram_min": 6723556,
+        "psram_largest": 6684672
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47807,
+        "sram_min": 43671,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2607056,
+        "psram_min": 2378544,
+        "psram_largest": 2359296
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47771,
+        "sram_min": 27852,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2607084,
+        "psram_min": 2378544,
+        "psram_largest": 2359296
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272944,
+          "window_peak_used": 277044
+        },
+        "psram": {
+          "stable_used": 5751440,
+          "window_peak_used": 5979980
+        }
+      },
+      "ready_js_statistics_scope": "Initial READY only, not final callback peak.",
+      "ready_js": [
+        [
+          258068,
+          275509,
+          0,
+          1412988
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        },
+        {
+          "encoded_bytes": 1973,
+          "pixels": "180x180"
+        }
+      ],
+      "preview_opened": false,
+      "resource_snapshots": {
+        "cold_baseline": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=56955;sram_min=27852;sram_largest=19456;psram_total=8358524;psram_free=6825504;psram_min=6723556;psram_largest=6684672"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=16516;peak_internal=27468;peak_external=16516;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=124"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": ""
+          }
+        ],
+        "window": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=47807;sram_min=43671;sram_largest=19456;psram_total=8358524;psram_free=2607056;psram_min=2378544;psram_largest=2359296"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=202222;peak_internal=27468;peak_external=247594;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=176990"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=8840"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": "minimum_scope=boot"
+          }
+        ],
+        "loaded": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=47771;sram_min=27852;sram_largest=19456;psram_total=8358524;psram_free=2607084;psram_min=2378544;psram_largest=2359296"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=202222;peak_internal=27468;peak_external=247594;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=176990"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=8840"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": ""
+          }
+        ]
+      },
+      "resource_peak_scope": "Whole-device heap local minimum is the current run window. Budget and surface peak fields are retained as historical unless independently reset; their stable/current fields remain separate. No per-session linear peak is inferred from early WAMR startup logs."
+    },
+    "new-b2-warm1": {
+      "post_stop_runtime": [
+        {
+          "kind": "wamr",
+          "host_ms": 144289,
+          "fields": {
+            "peak": 1437531,
+            "current": 416,
+            "linear": 0,
+            "linear_peak": 655360,
+            "artifact": 0,
+            "events": 0
+          },
+          "after_qr_observation": true,
+          "scope": "Host log; if before QR it does not establish the full script-session linear peak. Historical reset scope is not independently asserted."
+        },
+        {
+          "kind": "code_mapping",
+          "host_ms": 112604,
+          "fields": {
+            "ibus": 0,
+            "dbus": 0,
+            "request": 1146984,
+            "map": 1179648,
+            "alloc": 1179648,
+            "free_psram": 5436368
+          }
+        }
+      ],
+      "version": "new",
+      "block": 2,
+      "phase": "warm",
+      "passed": true,
+      "guest_trap": false,
+      "errors": [],
+      "qr_elapsed_s": 23.380582948004303,
+      "observation_s": 26.38468587200623,
+      "markup_max_observed_us": null,
+      "response_observations": [],
+      "failure_observations": [],
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 49815,
+        "sram_min": 27852,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6757788,
+        "psram_min": 2378544,
+        "psram_largest": 3276800
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47771,
+        "sram_min": 42739,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2605160,
+        "psram_min": 2374732,
+        "psram_largest": 2490368
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47771,
+        "sram_min": 27852,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2605200,
+        "psram_min": 2374732,
+        "psram_largest": 2490368
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272944,
+          "window_peak_used": 277976
+        },
+        "psram": {
+          "stable_used": 5753324,
+          "window_peak_used": 5983792
+        }
+      },
+      "ready_js_statistics_scope": "Initial READY only, not final callback peak.",
+      "ready_js": [
+        [
+          258068,
+          275509,
+          0,
+          1428708
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        },
+        {
+          "encoded_bytes": 1921,
+          "pixels": "180x180"
+        }
+      ],
+      "preview_opened": true,
+      "resource_snapshots": {
+        "cold_baseline": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=49815;sram_min=27852;sram_largest=19456;psram_total=8358524;psram_free=6757788;psram_min=2378544;psram_largest=3276800"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=16516;peak_internal=27468;peak_external=247594;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=124"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": ""
+          }
+        ],
+        "window": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=47771;sram_min=42739;sram_largest=19456;psram_total=8358524;psram_free=2605160;psram_min=2374732;psram_largest=2490368"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=202222;peak_internal=27468;peak_external=247594;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=176990"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=8840"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": "minimum_scope=boot"
+          }
+        ],
+        "loaded": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=47771;sram_min=27852;sram_largest=19456;psram_total=8358524;psram_free=2605200;psram_min=2374732;psram_largest=2490368"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=202222;peak_internal=27468;peak_external=247594;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=176990"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=8840"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": ""
+          }
+        ]
+      },
+      "resource_peak_scope": "Whole-device heap local minimum is the current run window. Budget and surface peak fields are retained as historical unless independently reset; their stable/current fields remain separate. No per-session linear peak is inferred from early WAMR startup logs."
+    },
+    "old-b3-cold": {
+      "post_stop_runtime": [
+        {
+          "kind": "wamr",
+          "host_ms": 111585,
+          "fields": {
+            "peak": 1437531,
+            "current": 416,
+            "linear": 0,
+            "linear_peak": 655360,
+            "artifact": 0,
+            "events": 0
+          },
+          "after_qr_observation": true,
+          "scope": "Host log; if before QR it does not establish the full script-session linear peak. Historical reset scope is not independently asserted."
+        },
+        {
+          "kind": "code_mapping",
+          "host_ms": 78758,
+          "fields": {
+            "ibus": 0,
+            "dbus": 0,
+            "request": 1146984,
+            "map": 1179648,
+            "alloc": 1179648,
+            "free_psram": 5503584
+          }
+        }
+      ],
+      "version": "old",
+      "block": 3,
+      "phase": "cold",
+      "passed": true,
+      "guest_trap": false,
+      "errors": [],
+      "qr_elapsed_s": 24.840919059002772,
+      "observation_s": 27.847039608997875,
+      "markup_max_observed_us": null,
+      "response_observations": [],
+      "failure_observations": [],
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 59363,
+        "sram_min": 27856,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6825180,
+        "psram_min": 6723220,
+        "psram_largest": 6684672
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 50215,
+        "sram_min": 45147,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2607212,
+        "psram_min": 2378396,
+        "psram_largest": 2424832
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 50215,
+        "sram_min": 27856,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2607240,
+        "psram_min": 2378396,
+        "psram_largest": 2424832
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 270500,
+          "window_peak_used": 275568
+        },
+        "psram": {
+          "stable_used": 5751284,
+          "window_peak_used": 5980128
+        }
+      },
+      "ready_js_statistics_scope": "Initial READY only, not final callback peak.",
+      "ready_js": [
+        [
+          257327,
+          274768,
+          0,
+          1414491
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        },
+        {
+          "encoded_bytes": 1960,
+          "pixels": "180x180"
+        }
+      ],
+      "preview_opened": false,
+      "resource_snapshots": {
+        "cold_baseline": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=59363;sram_min=27856;sram_largest=19456;psram_total=8358524;psram_free=6825180;psram_min=6723220;psram_largest=6684672"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=16516;peak_internal=27468;peak_external=16516;temporary_peak_internal=0;temporary_peak_external=0;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=124"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": ""
+          }
+        ],
+        "window": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=50215;sram_min=45147;sram_largest=19456;psram_total=8358524;psram_free=2607212;psram_min=2378396;psram_largest=2424832"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=202222;peak_internal=27468;peak_external=247594;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=176990"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=8840"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": "minimum_scope=boot"
+          }
+        ],
+        "loaded": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=50215;sram_min=27856;sram_largest=19456;psram_total=8358524;psram_free=2607240;psram_min=2378396;psram_largest=2424832"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=202222;peak_internal=27468;peak_external=247594;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=176990"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=8840"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": ""
+          }
+        ]
+      },
+      "resource_peak_scope": "Whole-device heap local minimum is the current run window. Budget and surface peak fields are retained as historical unless independently reset; their stable/current fields remain separate. No per-session linear peak is inferred from early WAMR startup logs."
+    },
+    "old-b3-warm1": {
+      "post_stop_runtime": [
+        {
+          "kind": "wamr",
+          "host_ms": 146106,
+          "fields": {
+            "peak": 1437531,
+            "current": 416,
+            "linear": 0,
+            "linear_peak": 655360,
+            "artifact": 0,
+            "events": 0
+          },
+          "after_qr_observation": true,
+          "scope": "Host log; if before QR it does not establish the full script-session linear peak. Historical reset scope is not independently asserted."
+        },
+        {
+          "kind": "code_mapping",
+          "host_ms": 115123,
+          "fields": {
+            "ibus": 0,
+            "dbus": 0,
+            "request": 1146984,
+            "map": 1179648,
+            "alloc": 1179648,
+            "free_psram": 5436952
+          }
+        }
+      ],
+      "version": "old",
+      "block": 3,
+      "phase": "warm",
+      "passed": true,
+      "guest_trap": false,
+      "errors": [],
+      "qr_elapsed_s": 24.039166431000922,
+      "observation_s": 27.046776210001553,
+      "markup_max_observed_us": null,
+      "response_observations": [],
+      "failure_observations": [],
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 52187,
+        "sram_min": 27856,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6758296,
+        "psram_min": 2378396,
+        "psram_largest": 3407872
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 50215,
+        "sram_min": 46079,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2605012,
+        "psram_min": 2374696,
+        "psram_largest": 2359296
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 50215,
+        "sram_min": 27856,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2605040,
+        "psram_min": 2374696,
+        "psram_largest": 2359296
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 270500,
+          "window_peak_used": 274636
+        },
+        "psram": {
+          "stable_used": 5753484,
+          "window_peak_used": 5983828
+        }
+      },
+      "ready_js_statistics_scope": "Initial READY only, not final callback peak.",
+      "ready_js": [
+        [
+          257327,
+          274768,
+          0,
+          1403488
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        },
+        {
+          "encoded_bytes": 1940,
+          "pixels": "180x180"
+        }
+      ],
+      "preview_opened": false,
+      "resource_snapshots": {
+        "cold_baseline": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=52187;sram_min=27856;sram_largest=19456;psram_total=8358524;psram_free=6758296;psram_min=2378396;psram_largest=3407872"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=16516;peak_internal=27468;peak_external=247594;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=124"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": ""
+          }
+        ],
+        "window": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=50215;sram_min=46079;sram_largest=19456;psram_total=8358524;psram_free=2605012;psram_min=2374696;psram_largest=2359296"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=202222;peak_internal=27468;peak_external=247594;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=176990"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=8840"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": "minimum_scope=boot"
+          }
+        ],
+        "loaded": [
+          {
+            "kind": "DATA",
+            "payload": "scope=heap;sram_total=320715;sram_free=50215;sram_min=27856;sram_largest=19456;psram_total=8358524;psram_free=2605040;psram_min=2374696;psram_largest=2359296"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=budget;internal=27468;external=202222;peak_internal=27468;peak_external=247594;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=raster;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=image;internal=0;external=176990"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=audio;internal=0;external=16392"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=temporary;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=metadata;internal=27468;external=8840"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=kind;name=frame;internal=0;external=0"
+          },
+          {
+            "kind": "DATA",
+            "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+          },
+          {
+            "kind": "OK",
+            "payload": ""
+          }
+        ]
+      },
+      "resource_peak_scope": "Whole-device heap local minimum is the current run window. Budget and surface peak fields are retained as historical unless independently reset; their stable/current fields remain separate. No per-session linear peak is inferred from early WAMR startup logs."
+    }
+  },
+  "summary_by_phase": {
+    "cold": {
+      "old": {
+        "attempted_count": 2,
+        "completed_count": 2,
+        "all_pass": true,
+        "heap_maxima": {
+          "sram": {
+            "stable_used": 272912,
+            "window_peak_used": 277980
+          },
+          "psram": {
+            "stable_used": 5754476,
+            "window_peak_used": 5986876
+          }
+        },
+        "qr_elapsed_samples_s": [
+          25.445046029999503,
+          24.840919059002772
+        ],
+        "markup_max_samples_us": [
+          null,
+          null
+        ]
+      },
+      "new": {
+        "attempted_count": 2,
+        "completed_count": 2,
+        "all_pass": true,
+        "heap_maxima": {
+          "sram": {
+            "stable_used": 272944,
+            "window_peak_used": 277484
+          },
+          "psram": {
+            "stable_used": 5751440,
+            "window_peak_used": 5980236
+          }
+        },
+        "qr_elapsed_samples_s": [
+          24.603616769003565,
+          24.129101256003196
+        ],
+        "markup_max_samples_us": [
+          null,
+          null
+        ]
+      },
+      "completed_workload_comparison_available": true,
+      "raw_heap_maxima_scope": "Maxima use only complete same QR paths. Attempt counts equal; completed counts explicit. All failures remain in raw samples. Never derive a benefit from incomplete loads.",
+      "new_minus_old_heap_maxima": {
+        "sram": {
+          "stable_used": 32,
+          "window_peak_used": -496
+        },
+        "psram": {
+          "stable_used": -3036,
+          "window_peak_used": -6640
+        }
+      }
+    },
+    "warm": {
+      "old": {
+        "attempted_count": 2,
+        "completed_count": 1,
+        "all_pass": false,
+        "heap_maxima": {
+          "sram": {
+            "stable_used": 270500,
+            "window_peak_used": 274636
+          },
+          "psram": {
+            "stable_used": 5753484,
+            "window_peak_used": 5983828
+          }
+        },
+        "qr_elapsed_samples_s": [
+          24.039166431000922
+        ],
+        "markup_max_samples_us": [
+          null
+        ]
+      },
+      "new": {
+        "attempted_count": 2,
+        "completed_count": 2,
+        "all_pass": true,
+        "heap_maxima": {
+          "sram": {
+            "stable_used": 272944,
+            "window_peak_used": 277976
+          },
+          "psram": {
+            "stable_used": 5753324,
+            "window_peak_used": 5983792
+          }
+        },
+        "qr_elapsed_samples_s": [
+          23.4893910460014,
+          23.380582948004303
+        ],
+        "markup_max_samples_us": [
+          null,
+          null
+        ]
+      },
+      "completed_workload_comparison_available": true,
+      "raw_heap_maxima_scope": "Maxima use only complete same QR paths. Attempt counts equal; completed counts explicit. All failures remain in raw samples. Never derive a benefit from incomplete loads.",
+      "new_minus_old_heap_maxima": {
+        "sram": {
+          "stable_used": 2444,
+          "window_peak_used": 3340
+        },
+        "psram": {
+          "stable_used": -160,
+          "window_peak_used": -36
+        }
+      }
+    }
+  },
+  "strict_preregistered_gate": false,
+  "restoration": {
+    "signed_files": 29,
+    "private_files": 3,
+    "all_exact": true,
+    "host_font_wifi_unchanged": true
+  },
+  "adopted": false,
+  "separate_diagnostic": {
+    "passed": true,
+    "stage_memory": {
+      "initialized": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320715;sram_free=47775;sram_min=42631;sram_largest=19456;psram_total=8358524;psram_free=2968216;psram_min=2696076;psram_largest=2359296"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=72527;peak_internal=27468;peak_external=119867;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=47295"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=8840"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ],
+      "library_compiled": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320715;sram_free=47811;sram_min=42631;sram_largest=19456;psram_total=8358524;psram_free=2771396;psram_min=2369888;psram_largest=2490368"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=72527;peak_internal=27468;peak_external=119867;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=47295"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=8840"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ],
+      "ready": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320715;sram_free=47351;sram_min=42631;sram_largest=19456;psram_total=8358524;psram_free=2735796;psram_min=2369888;psram_largest=2490368"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=72527;peak_internal=27468;peak_external=119867;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=47295"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=8840"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ],
+      "large_callback": [
+        {
+          "kind": "DATA",
+          "payload": "scope=heap;sram_total=320715;sram_free=47811;sram_min=42631;sram_largest=19456;psram_total=8358524;psram_free=2770120;psram_min=2369888;psram_largest=2490368"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=budget;internal=27468;external=72527;peak_internal=27468;peak_external=119867;temporary_peak_internal=0;temporary_peak_external=47340;fixed=2224;denied=0;allocation_failures=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=raster;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=image;internal=0;external=47295"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=audio;internal=0;external=16392"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=temporary;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=metadata;internal=27468;external=8840"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=kind;name=frame;internal=0;external=0"
+        },
+        {
+          "kind": "DATA",
+          "payload": "scope=surface;frame=0;scratch=0;mailbox=0;probe=0;peak_total=0"
+        },
+        {
+          "kind": "OK",
+          "payload": ""
+        }
+      ]
+    },
+    "qr_elapsed_s": 24.31746784000279,
+    "markup_observations_us": [
+      17401,
+      27740,
+      29576,
+      15133,
+      25361,
+      52542,
+      54378,
+      63729,
+      72162,
+      71341,
+      19523,
+      43891,
+      13072,
+      37505,
+      21224,
+      44351,
+      35720,
+      20240,
+      34782,
+      35228,
+      20293,
+      32387,
+      69027,
+      71651,
+      62907,
+      16060,
+      27707,
+      37525,
+      20308,
+      33141,
+      70041,
+      68660,
+      79394,
+      60738,
+      57937,
+      14016,
+      34704,
+      10783,
+      28799,
+      21300,
+      51749,
+      16200,
+      34339,
+      27289,
+      17903,
+      31849,
+      67613,
+      72687,
+      77248,
+      69596,
+      62287,
+      13835,
+      35288,
+      10767,
+      29866,
+      21814,
+      45794,
+      31907,
+      10349,
+      11848,
+      43891,
+      32540,
+      52571,
+      31967,
+      30279,
+      29020,
+      28688,
+      23029,
+      10313,
+      44694,
+      10913,
+      34638,
+      11136,
+      7928,
+      44279,
+      11637,
+      16416,
+      24761,
+      7348,
+      41318,
+      42199,
+      25290,
+      11767,
+      27288,
+      7960,
+      32580,
+      7953,
+      8184,
+      8487,
+      10452,
+      10712,
+      9929
+    ],
+    "failure_observations": [],
+    "scope": "One extra private diagnostic sample excluded from normal heap gate; not a matched timing/FPS/input comparison."
+  },
+  "warm_stop_scope": "Registry active=0 was observed before restart. Host cleanup unpublishes this field before final runtime statistics, so it does not independently prove complete engine teardown.",
+  "vm_peak_scope": "Available WAMR logs precede QR/script work; they do not establish the complete Guest/session linear peak.",
+  "normal_builds": {
+    "old": {
+      "artifacts/main.esp32-s3.aot": {
+        "bytes": 1237160,
+        "sha256": "45a2100989e34bb956dd2942d3ffa87e03bd2cc3942aa7e8efe09884302d6b58"
+      },
+      "artifacts/script.wasm": {
+        "bytes": 596055,
+        "sha256": "b567eceddbf386b249f61922479e1b9fcf71fd6ec43aad7c14366aaad8ccf326"
+      },
+      "assets/browser-runtime.qjb": {
+        "bytes": 16931,
+        "sha256": "44830b6dec62904a7b6e5e11def4937c6c262fe060de9d4c5d9653e9a281a5f5"
+      }
+    },
+    "new": {
+      "artifacts/main.esp32-s3.aot": {
+        "bytes": 1237160,
+        "sha256": "45a2100989e34bb956dd2942d3ffa87e03bd2cc3942aa7e8efe09884302d6b58"
+      },
+      "artifacts/script.wasm": {
+        "bytes": 596055,
+        "sha256": "b567eceddbf386b249f61922479e1b9fcf71fd6ec43aad7c14366aaad8ccf326"
+      },
+      "assets/browser-runtime.qjb": {
+        "bytes": 17490,
+        "sha256": "941f72f3be4e97e372632aacf1694873e0c812dafccddd72c31db943b121974a"
+      }
+    }
+  },
+  "diagnostic_interpretation": "Maximum all projection turns79394us, not10ms for the whole path. Some escaped long-field pieces are around10ms, while other two-node pieces remain~69-79ms; 50ms is not a hard guarantee. No claim all rendering is below50ms.",
+  "startup_baseline_change": {
+    "old_b0_cold_sram_used": 263764,
+    "old_b3_cold_sram_used": 261352,
+    "difference_before_app_launch": -2412,
+    "interpretation": "Change already exists before App starts; not attributed to candidate or subtracted to force a pass. New cold stable max still+32B; normal gate failed."
+  }
+}

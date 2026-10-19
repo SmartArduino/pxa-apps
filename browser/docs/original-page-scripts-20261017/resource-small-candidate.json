@@ -1,0 +1,47 @@
+{
+  "adopted": false,
+  "scope": "P51 isolated small-read variant, same1024-byte request bound as P38. Static signed catalog and direct destination writes; no read-count reduction. Cold hardware QR passed, but cold SRAM peak +504B and subsequent warm callback timed out before QR. Candidate remains unmerged; no speed/latency/FPS improvement claimed.",
+  "requested_memory": {
+    "borrow-source-p38": {
+      "input_bytes": 596055,
+      "runtime_requested_bytes": 1853583,
+      "runtime_requested_peak_bytes": 1855287,
+      "remaining_bytes": 0,
+      "instance_requested_bytes": 1941249,
+      "instance_requested_peak_bytes": 1941249,
+      "aggregate_input_plus_instance": 2537304
+    },
+    "catalog-resource-p49": {
+      "input_bytes": 595908,
+      "runtime_requested_bytes": 1853073,
+      "runtime_requested_peak_bytes": 1854777,
+      "remaining_bytes": 0,
+      "instance_requested_bytes": 1940739,
+      "instance_requested_peak_bytes": 1940739,
+      "aggregate_input_plus_instance": 2536647
+    },
+    "catalog-small-p51": {
+      "input_bytes": 595908,
+      "runtime_requested_bytes": 1853073,
+      "runtime_requested_peak_bytes": 1854777,
+      "remaining_bytes": 0,
+      "instance_requested_bytes": 1940739,
+      "instance_requested_peak_bytes": 1940739,
+      "aggregate_input_plus_instance": 2536647
+    }
+  },
+  "native_service_cases": 84,
+  "native_sanitizers": "ASan/UBSan/leak",
+  "slow_storage_cancel_retry": true,
+  "ui_unchanged_simulator_and_esp32s3": true,
+  "host_sdk_firmware_unchanged": true,
+  "hardware_tested": true,
+  "hardware_result": {
+    "report": "device-resource-small-candidate.json",
+    "cold_complete": true,
+    "warm_complete": false,
+    "warm_error": "script execution timeout after initial READY; no Guest trap",
+    "sram_cold_window_peak_growth_bytes": 504,
+    "adopted": false
+  }
+}

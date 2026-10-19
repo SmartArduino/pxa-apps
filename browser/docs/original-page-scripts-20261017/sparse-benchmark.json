@@ -1,0 +1,149 @@
+{
+  "scope": "fresh real PXA simulators; same UI AOT; Date.now wall milliseconds; shared workstation load, not device FPS or input latency",
+  "ui_aot_sha256": "5d839d32bd64c391b49990551c281c774015a46d6a06c80bcff98c40ec25d43e",
+  "final_p20_pairs": [
+    {
+      "package": "before",
+      "round": 0,
+      "kind": "sparse-splice",
+      "ms": 936,
+      "sum": 1
+    },
+    {
+      "package": "after",
+      "round": 0,
+      "kind": "sparse-splice",
+      "ms": 0,
+      "sum": 1
+    },
+    {
+      "package": "after",
+      "round": 1,
+      "kind": "sparse-splice",
+      "ms": 1,
+      "sum": 1
+    },
+    {
+      "package": "before",
+      "round": 1,
+      "kind": "sparse-splice",
+      "ms": 924,
+      "sum": 1
+    },
+    {
+      "package": "before",
+      "round": 2,
+      "kind": "sparse-splice",
+      "ms": 1046,
+      "sum": 1
+    },
+    {
+      "package": "after",
+      "round": 2,
+      "kind": "sparse-splice",
+      "ms": 1,
+      "sum": 1
+    },
+    {
+      "package": "after",
+      "round": 3,
+      "kind": "sparse-splice",
+      "ms": 1,
+      "sum": 1
+    },
+    {
+      "package": "before",
+      "round": 3,
+      "kind": "sparse-splice",
+      "ms": 889,
+      "sum": 1
+    },
+    {
+      "package": "before",
+      "round": 4,
+      "kind": "sparse-splice",
+      "ms": 1014,
+      "sum": 1
+    },
+    {
+      "package": "after",
+      "round": 4,
+      "kind": "sparse-splice",
+      "ms": 1,
+      "sum": 1
+    }
+  ],
+  "earlier_p18_pairs": [
+    {
+      "package": "before",
+      "round": 0,
+      "kind": "sparse-splice",
+      "ms": 134,
+      "sum": 1
+    },
+    {
+      "package": "after",
+      "round": 0,
+      "kind": "sparse-splice",
+      "ms": 0,
+      "sum": 1
+    },
+    {
+      "package": "after",
+      "round": 1,
+      "kind": "sparse-splice",
+      "ms": 0,
+      "sum": 1
+    },
+    {
+      "package": "before",
+      "round": 1,
+      "kind": "sparse-splice",
+      "ms": 107,
+      "sum": 1
+    },
+    {
+      "package": "before",
+      "round": 2,
+      "kind": "sparse-splice",
+      "ms": 115,
+      "sum": 1
+    },
+    {
+      "package": "after",
+      "round": 2,
+      "kind": "sparse-splice",
+      "ms": 0,
+      "sum": 1
+    },
+    {
+      "package": "after",
+      "round": 3,
+      "kind": "sparse-splice",
+      "ms": 1,
+      "sum": 1
+    },
+    {
+      "package": "before",
+      "round": 3,
+      "kind": "sparse-splice",
+      "ms": 142,
+      "sum": 1
+    },
+    {
+      "package": "before",
+      "round": 4,
+      "kind": "sparse-splice",
+      "ms": 132,
+      "sum": 1
+    },
+    {
+      "package": "after",
+      "round": 4,
+      "kind": "sparse-splice",
+      "ms": 0,
+      "sum": 1
+    }
+  ],
+  "zero_means": "below 1ms clock resolution, not zero CPU time"
+}

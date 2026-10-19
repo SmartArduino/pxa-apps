@@ -1,0 +1,87 @@
+{
+  "original-normal-final": {
+    "artifacts": {
+      "script.wasm": {
+        "bytes": 584957,
+        "sha256": "153b0089da61461fbb638bf1d9b97fb7a9d834585eddaf558e977d609baf3f47"
+      },
+      "main.linux-x86_64.aot": {
+        "bytes": 687656,
+        "sha256": "75fb0b5e73d253a70d96686abfee5b0c6eeaf0e5176595e34a36bdba971e476c"
+      }
+    },
+    "requested_memory": {
+      "input_bytes": 584957,
+      "runtime_requested_bytes": 1817902,
+      "runtime_requested_peak_bytes": 1819606,
+      "remaining_bytes": 0,
+      "instance_requested_bytes": 1904368,
+      "instance_requested_peak_bytes": 1904368
+    }
+  },
+  "original-normal-p17": {
+    "artifacts": {
+      "script.wasm": {
+        "bytes": 585221,
+        "sha256": "ecc434cc6f2c53b841f61f6f4cd266ad76f74d83d17c478af8ffd93792c745ce"
+      },
+      "main.linux-x86_64.aot": {
+        "bytes": 687656,
+        "sha256": "75fb0b5e73d253a70d96686abfee5b0c6eeaf0e5176595e34a36bdba971e476c"
+      }
+    },
+    "requested_memory": {
+      "input_bytes": 585221,
+      "runtime_requested_bytes": 1819011,
+      "runtime_requested_peak_bytes": 1820715,
+      "remaining_bytes": 0,
+      "instance_requested_bytes": 1905573,
+      "instance_requested_peak_bytes": 1905573
+    }
+  },
+  "original-s3-final": {
+    "artifacts": {
+      "script.wasm": {
+        "bytes": 584957,
+        "sha256": "153b0089da61461fbb638bf1d9b97fb7a9d834585eddaf558e977d609baf3f47"
+      },
+      "main.esp32-s3.aot": {
+        "bytes": 1236744,
+        "sha256": "e1f2ce632cc3fc7fb3c2615bf0de20757871f9ffcf504aef9a0e0e3c1ea37670"
+      }
+    }
+  },
+  "original-s3-p17": {
+    "artifacts": {
+      "script.wasm": {
+        "bytes": 585221,
+        "sha256": "ecc434cc6f2c53b841f61f6f4cd266ad76f74d83d17c478af8ffd93792c745ce"
+      },
+      "main.esp32-s3.aot": {
+        "bytes": 1236744,
+        "sha256": "e1f2ce632cc3fc7fb3c2615bf0de20757871f9ffcf504aef9a0e0e3c1ea37670"
+      }
+    }
+  },
+  "validation": {
+    "native_cancellation": 812,
+    "interpreter_cancellation": 812,
+    "native_sanitizers": "ASan/UBSan/leak check; seven source shapes, persistent and one-shot cancellation, same-runtime recovery",
+    "interpreter": "WAMR 16KiB operand stack, 48KiB linear C stack; standalone C API probe, not whole-browser timing",
+    "browser_matrix": 60,
+    "generic_browser_smoke": true,
+    "original_protocol_fixture": true,
+    "real_device_tested_this_phase": false,
+    "heap_fixture": {
+      "before_steady": 261399,
+      "after_steady": 261399,
+      "before_peak": 362678,
+      "after_peak": 362678
+    },
+    "limitations": [
+      "No resumable compiler; individual lexer conversions/native operations/compiler passes remain synchronous.",
+      "Not a strict 2s guarantee; compilation and execution remain separate policies.",
+      "Original WeRead on hardware still not accepted; no real account login or reading in this phase."
+    ]
+  }
+}

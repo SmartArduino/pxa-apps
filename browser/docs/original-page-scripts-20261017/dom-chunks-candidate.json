@@ -1,0 +1,589 @@
+{
+  "candidate": "P62",
+  "adopted": false,
+  "cause": "Two nodes per interpreted projection do not bound a single long data-image attribute. Use512 UTF16codeunits per escaped field piece and reuse existing snapshot stacks/atomic native buffer. Keep surrogate pairs intact at batch-to-UTF8 boundary.",
+  "scope": "JS/native Page ASan/UBSan/WASI-model, not whole-device peak or FPS. Test-only2MiB/2seconds for legacy dense regex reference; app budgets unchanged.",
+  "native_balanced_order": [
+    "old",
+    "new",
+    "new",
+    "old"
+  ],
+  "native_maxima": [
+    {
+      "kind": "plain",
+      "length": 31,
+      "js_current": {
+        "old_max": 159776,
+        "new_max": 159120,
+        "delta": -656
+      },
+      "js_peak": {
+        "old_max": 175462,
+        "new_max": 175003,
+        "delta": -459
+      }
+    },
+    {
+      "kind": "plain",
+      "length": 257,
+      "js_current": {
+        "old_max": 160002,
+        "new_max": 159346,
+        "delta": -656
+      },
+      "js_peak": {
+        "old_max": 175645,
+        "new_max": 175186,
+        "delta": -459
+      }
+    },
+    {
+      "kind": "plain",
+      "length": 4096,
+      "js_current": {
+        "old_max": 163841,
+        "new_max": 163473,
+        "delta": -368
+      },
+      "js_peak": {
+        "old_max": 179653,
+        "new_max": 179025,
+        "delta": -628
+      }
+    },
+    {
+      "kind": "dense",
+      "length": 31,
+      "js_current": {
+        "old_max": 159776,
+        "new_max": 159120,
+        "delta": -656
+      },
+      "js_peak": {
+        "old_max": 179559,
+        "new_max": 179100,
+        "delta": -459
+      }
+    },
+    {
+      "kind": "dense",
+      "length": 257,
+      "js_current": {
+        "old_max": 160002,
+        "new_max": 159346,
+        "delta": -656
+      },
+      "js_peak": {
+        "old_max": 235922,
+        "new_max": 179283,
+        "delta": -56639
+      }
+    },
+    {
+      "kind": "dense",
+      "length": 4096,
+      "js_current": {
+        "old_max": 163841,
+        "new_max": 163473,
+        "delta": -368
+      },
+      "js_peak": {
+        "old_max": 1331294,
+        "new_max": 183122,
+        "delta": -1148172
+      }
+    },
+    {
+      "kind": "unicode",
+      "length": 31,
+      "js_current": {
+        "old_max": 159806,
+        "new_max": 159150,
+        "delta": -656
+      },
+      "js_peak": {
+        "old_max": 208236,
+        "new_max": 207777,
+        "delta": -459
+      }
+    },
+    {
+      "kind": "unicode",
+      "length": 257,
+      "js_current": {
+        "old_max": 160258,
+        "new_max": 159602,
+        "delta": -656
+      },
+      "js_peak": {
+        "old_max": 208675,
+        "new_max": 208216,
+        "delta": -459
+      }
+    },
+    {
+      "kind": "unicode",
+      "length": 4096,
+      "js_current": {
+        "old_max": 167936,
+        "new_max": 167568,
+        "delta": -368
+      },
+      "js_peak": {
+        "old_max": 216353,
+        "new_max": 215894,
+        "delta": -459
+      }
+    },
+    {
+      "kind": "sparse",
+      "length": 31,
+      "js_current": {
+        "old_max": 159632,
+        "new_max": 158976,
+        "delta": -656
+      },
+      "js_peak": {
+        "old_max": 163390,
+        "new_max": 160804,
+        "delta": -2586
+      }
+    },
+    {
+      "kind": "sparse",
+      "length": 257,
+      "js_current": {
+        "old_max": 159858,
+        "new_max": 159202,
+        "delta": -656
+      },
+      "js_peak": {
+        "old_max": 164162,
+        "new_max": 161719,
+        "delta": -2443
+      }
+    },
+    {
+      "kind": "sparse",
+      "length": 4096,
+      "js_current": {
+        "old_max": 163697,
+        "new_max": 163473,
+        "delta": -224
+      },
+      "js_peak": {
+        "old_max": 179586,
+        "new_max": 167709,
+        "delta": -11877
+      }
+    }
+  ],
+  "native_long_field_tests": {
+    "p61_missing_surrogate_guard_failed": true,
+    "p62_guard_passed": true,
+    "long_later_attributes_style_passed": true,
+    "mutation_cancels_partial_snapshot_passed": true,
+    "library_regression_passed": true
+  },
+  "wasm_original_fixture_passes": [
+    {
+      "passed": true,
+      "kind": "P57 normal release, no script diagnostics; original HTML/four scripts and seeded colored non-scannable180x180 PNG near real response size; synthetic API/session; full image and polling/navigation mandatory; no device or real account conclusion",
+      "guest_trap": false,
+      "png_bytes": 2161,
+      "json_response_bytes": 2929,
+      "attribute_bytes": 2906,
+      "observations": [],
+      "requests": [
+        "/1/wrwebsimplenjlogic/login",
+        "/3/web/wrwebsimplenjlogic/server/img/icon_logo_2x.576fabd.png",
+        "/3/web/wrwebsimplenjlogic/static/es5-shim.min.js",
+        "/3/web/wrwebsimplenjlogic/client/global.35483d.js",
+        "/3/web/wrwebsimplenjlogic/client/cookie.0e551c.js",
+        "/3/web/wrwebsimplenjlogic/client/login.dc74cd.js",
+        "/1/wrwebsimplenjlogic/api/getuid",
+        "/1/wrwebsimplenjlogic/api/kvlog",
+        "/1/wrwebsimplenjlogic/api/qrcode",
+        "/1/wrwebsimplenjlogic/api/getlogininfo",
+        "/1/wrwebsimplenjlogic/api/weblogin",
+        "/1/wrwebsimplenjlogic/shelf"
+      ],
+      "caught_errors": [],
+      "js": [
+        "BROWSER JS READY heap=258068 peak=275509 errors=0 turns=69 max_us=26627\u001b[0m"
+      ]
+    },
+    {
+      "passed": true,
+      "kind": "P57 normal release, no script diagnostics; original HTML/four scripts and seeded colored non-scannable180x180 PNG near real response size; synthetic API/session; full image and polling/navigation mandatory; no device or real account conclusion",
+      "guest_trap": false,
+      "png_bytes": 2963,
+      "json_response_bytes": 3997,
+      "attribute_bytes": 3974,
+      "observations": [],
+      "requests": [
+        "/1/wrwebsimplenjlogic/login",
+        "/3/web/wrwebsimplenjlogic/server/img/icon_logo_2x.576fabd.png",
+        "/3/web/wrwebsimplenjlogic/static/es5-shim.min.js",
+        "/3/web/wrwebsimplenjlogic/client/global.35483d.js",
+        "/3/web/wrwebsimplenjlogic/client/cookie.0e551c.js",
+        "/3/web/wrwebsimplenjlogic/client/login.dc74cd.js",
+        "/1/wrwebsimplenjlogic/api/getuid",
+        "/1/wrwebsimplenjlogic/api/kvlog",
+        "/1/wrwebsimplenjlogic/api/qrcode",
+        "/1/wrwebsimplenjlogic/api/getlogininfo",
+        "/1/wrwebsimplenjlogic/api/weblogin",
+        "/1/wrwebsimplenjlogic/shelf"
+      ],
+      "caught_errors": [],
+      "js": [
+        "BROWSER JS READY heap=258068 peak=275509 errors=0 turns=67 max_us=23886\u001b[0m"
+      ]
+    },
+    {
+      "passed": true,
+      "kind": "P55 script-only diagnostic with production UI; original HTML/four scripts and seeded colored non-scannable180x180 PNG near real response size; synthetic API/session; full image and polling/navigation mandatory; no device or real account conclusion",
+      "guest_trap": false,
+      "png_bytes": 2161,
+      "json_response_bytes": 2929,
+      "attribute_bytes": 2906,
+      "observations": [
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=364 at_us=41119722406",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=653 at_us=41119728959",
+        "BROWSER JS STAGE RESPONSE_OBS phase=3 bytes=47 interrupt=0 elapsed_us=1489 at_us=41119790578",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=338 at_us=41119790986",
+        "BROWSER JS STAGE RESPONSE_OBS phase=3 bytes=2 interrupt=0 elapsed_us=683 at_us=41119809645",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=385 at_us=41119810106",
+        "BROWSER JS STAGE RESPONSE_OBS phase=3 bytes=2929 interrupt=0 elapsed_us=3375 at_us=41119852353",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=352 at_us=41119852778",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=713 at_us=41119869422",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=726 at_us=41119889278",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=392 at_us=41119908687",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=676 at_us=41119929350",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1339 at_us=41119949659",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=669 at_us=41119969337",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1439 at_us=41119989664",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1326 at_us=41120009916",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1318 at_us=41120030420",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=354 at_us=41120048931",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=911 at_us=41120069812",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=345 at_us=41120089263",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=730 at_us=41120108934",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=611 at_us=41120129504",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1162 at_us=41120149716",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=787 at_us=41120169485",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=306 at_us=41120188666",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=290 at_us=41120208916",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=997 at_us=41120229970",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=871 at_us=41120249760",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=750 at_us=41120269571",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=710 at_us=41120289222",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=801 at_us=41120309936",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=694 at_us=41120329557",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=592 at_us=41120349246",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=554 at_us=41120369739",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=320 at_us=41120389049",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=941 at_us=41120409988",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=302 at_us=41120429149",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=887 at_us=41120449989",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=193 at_us=41120469166",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=166 at_us=41120489261",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1071 at_us=41120510179",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=281 at_us=41120529359",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=411 at_us=41120548746",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=639 at_us=41120569398",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=213 at_us=41120588603",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=497 at_us=41120609175",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=989 at_us=41120629101",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=691 at_us=41120649689",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=165 at_us=41120668780",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=379 at_us=41120689268",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=217 at_us=41120708427",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=409 at_us=41120728620",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=207 at_us=41120748892",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=158 at_us=41120769109",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=260 at_us=41120789339",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=299 at_us=41120808670",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=304 at_us=41120828991",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=175 at_us=41120849238",
+        "BROWSER JS STAGE RESPONSE_OBS phase=3 bytes=58 interrupt=0 elapsed_us=11037 at_us=41121559874",
+        "BROWSER JS STAGE RESPONSE_OBS phase=3 bytes=73 interrupt=0 elapsed_us=2109 at_us=41121611147",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=410 at_us=41121611644",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=864 at_us=41121629449",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=672 at_us=41121649130",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=421 at_us=41121669499",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=727 at_us=41121689255",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1331 at_us=41121709631",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1017 at_us=41121729550",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1235 at_us=41121749575",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=962 at_us=41121769625",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=958 at_us=41121789538",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=312 at_us=41121808902",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=860 at_us=41121829856",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=314 at_us=41121849195",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=702 at_us=41121868823",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=589 at_us=41121889439",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1187 at_us=41121909628",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=826 at_us=41121929340",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=306 at_us=41121948601",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=316 at_us=41121968962",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1102 at_us=41121990033",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=829 at_us=41122009721",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1180 at_us=41122029891",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=811 at_us=41122049614",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=770 at_us=41122069375",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=710 at_us=41122089087",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=647 at_us=41122109610",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=667 at_us=41122129388",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=281 at_us=41122148541",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1082 at_us=41122169407",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=281 at_us=41122188721",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=826 at_us=41122209547",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=313 at_us=41122228706",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=208 at_us=41122248784",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1142 at_us=41122269938",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=329 at_us=41122289152",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=431 at_us=41122309521",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=703 at_us=41122329281",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=221 at_us=41122348323",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1000 at_us=41122369207",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=950 at_us=41122390027",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=638 at_us=41122409640",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=281 at_us=41122428821",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=647 at_us=41122449257",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=228 at_us=41122468402",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=821 at_us=41122489119",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=231 at_us=41122509208",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=240 at_us=41122529248",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=217 at_us=41122549271",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=291 at_us=41122568556",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=313 at_us=41122588877",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=295 at_us=41122609097",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=363 at_us=41122649680",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=793 at_us=41122669628"
+      ],
+      "requests": [
+        "/1/wrwebsimplenjlogic/login",
+        "/3/web/wrwebsimplenjlogic/server/img/icon_logo_2x.576fabd.png",
+        "/3/web/wrwebsimplenjlogic/static/es5-shim.min.js",
+        "/3/web/wrwebsimplenjlogic/client/global.35483d.js",
+        "/3/web/wrwebsimplenjlogic/client/cookie.0e551c.js",
+        "/3/web/wrwebsimplenjlogic/client/login.dc74cd.js",
+        "/1/wrwebsimplenjlogic/api/getuid",
+        "/1/wrwebsimplenjlogic/api/kvlog",
+        "/1/wrwebsimplenjlogic/api/qrcode",
+        "/1/wrwebsimplenjlogic/api/getlogininfo",
+        "/1/wrwebsimplenjlogic/api/weblogin",
+        "/1/wrwebsimplenjlogic/shelf"
+      ],
+      "caught_errors": [],
+      "js": [
+        "BROWSER JS READY heap=258068 peak=275509 errors=0 turns=66 max_us=26082\u001b[0m"
+      ]
+    },
+    {
+      "passed": true,
+      "kind": "P55 script-only diagnostic with production UI; original HTML/four scripts and seeded colored non-scannable180x180 PNG near real response size; synthetic API/session; full image and polling/navigation mandatory; no device or real account conclusion",
+      "guest_trap": false,
+      "png_bytes": 2963,
+      "json_response_bytes": 3997,
+      "attribute_bytes": 3974,
+      "observations": [
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=326 at_us=41127776468",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=718 at_us=41127785222",
+        "BROWSER JS STAGE RESPONSE_OBS phase=3 bytes=47 interrupt=0 elapsed_us=1563 at_us=41127845198",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=355 at_us=41127845631",
+        "BROWSER JS STAGE RESPONSE_OBS phase=3 bytes=2 interrupt=0 elapsed_us=397 at_us=41127864117",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=200 at_us=41127864367",
+        "BROWSER JS STAGE RESPONSE_OBS phase=3 bytes=3997 interrupt=0 elapsed_us=3958 at_us=41127907364",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=386 at_us=41127907834",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=775 at_us=41127924663",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=639 at_us=41127944284",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=416 at_us=41127964642",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=687 at_us=41127984375",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1275 at_us=41128004708",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1302 at_us=41128025034",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1446 at_us=41128045633",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1399 at_us=41128065071",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1247 at_us=41128085300",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=388 at_us=41128103746",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=962 at_us=41128124943",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=258 at_us=41128144132",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=772 at_us=41128165069",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=679 at_us=41128184905",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1199 at_us=41128205161",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=884 at_us=41128224259",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=310 at_us=41128244586",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=294 at_us=41128263837",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1326 at_us=41128285437",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=865 at_us=41128304281",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1394 at_us=41128325605",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1063 at_us=41128344836",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=799 at_us=41128364651",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=657 at_us=41128384352",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=827 at_us=41128404287",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=692 at_us=41128424184",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=572 at_us=41128444835",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=316 at_us=41128464185",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1078 at_us=41128485213",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=294 at_us=41128504425",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=977 at_us=41128524715",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=339 at_us=41128544056",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=231 at_us=41128564425",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1128 at_us=41128584680",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=345 at_us=41128604154",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=425 at_us=41128624640",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=665 at_us=41128644260",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=222 at_us=41128663650",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1058 at_us=41128684694",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1365 at_us=41128705143",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=676 at_us=41128724996",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=278 at_us=41128744376",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=488 at_us=41128764778",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=162 at_us=41128783892",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=737 at_us=41128804563",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=192 at_us=41128823656",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=130 at_us=41128843869",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=241 at_us=41128864173",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=307 at_us=41128884573",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=274 at_us=41128903761",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=295 at_us=41128924249",
+        "BROWSER JS STAGE RESPONSE_OBS phase=3 bytes=58 interrupt=0 elapsed_us=6395 at_us=41129610686",
+        "BROWSER JS STAGE RESPONSE_OBS phase=3 bytes=73 interrupt=0 elapsed_us=1574 at_us=41129665294",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=197 at_us=41129665548",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=685 at_us=41129684108",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=470 at_us=41129704431",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=401 at_us=41129724676",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=392 at_us=41129744081",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=830 at_us=41129764910",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1431 at_us=41129785208",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1515 at_us=41129805720",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1541 at_us=41129825378",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1286 at_us=41129845579",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=376 at_us=41129863826",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=835 at_us=41129884568",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=186 at_us=41129903873",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=785 at_us=41129924745",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=418 at_us=41129944056",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1086 at_us=41129965158",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=559 at_us=41129984710",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=182 at_us=41130003685",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=243 at_us=41130023732",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=840 at_us=41130044413",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=690 at_us=41130064163",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=766 at_us=41130084903",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=861 at_us=41130104622",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=987 at_us=41130124793",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=474 at_us=41130144260",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=638 at_us=41130164910",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=442 at_us=41130184216",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=553 at_us=41130204768",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=389 at_us=41130224344",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=841 at_us=41130245128",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=270 at_us=41130264246",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=821 at_us=41130284979",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=260 at_us=41130304092",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=273 at_us=41130324336",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=615 at_us=41130343900",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=344 at_us=41130364206",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=429 at_us=41130384631",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=492 at_us=41130403960",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=258 at_us=41130424249",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1026 at_us=41130445309",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=1019 at_us=41130465180",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=683 at_us=41130484795",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=326 at_us=41130504227",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=965 at_us=41130524398",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=260 at_us=41130543717",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=870 at_us=41130564564",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=229 at_us=41130583913",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=231 at_us=41130604272",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=343 at_us=41130623655",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=341 at_us=41130644046",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=310 at_us=41130664274",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=253 at_us=41130684551",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=544 at_us=41130725240",
+        "BROWSER JS STAGE MARKUP_OBS phase=6 bytes=0 interrupt=0 elapsed_us=783 at_us=41130745357"
+      ],
+      "requests": [
+        "/1/wrwebsimplenjlogic/login",
+        "/3/web/wrwebsimplenjlogic/server/img/icon_logo_2x.576fabd.png",
+        "/3/web/wrwebsimplenjlogic/static/es5-shim.min.js",
+        "/3/web/wrwebsimplenjlogic/client/global.35483d.js",
+        "/3/web/wrwebsimplenjlogic/client/cookie.0e551c.js",
+        "/3/web/wrwebsimplenjlogic/client/login.dc74cd.js",
+        "/1/wrwebsimplenjlogic/api/getuid",
+        "/1/wrwebsimplenjlogic/api/kvlog",
+        "/1/wrwebsimplenjlogic/api/qrcode",
+        "/1/wrwebsimplenjlogic/api/getlogininfo",
+        "/1/wrwebsimplenjlogic/api/weblogin",
+        "/1/wrwebsimplenjlogic/shelf"
+      ],
+      "caught_errors": [],
+      "js": [
+        "BROWSER JS READY heap=258068 peak=275509 errors=0 turns=69 max_us=24252\u001b[0m"
+      ]
+    }
+  ],
+  "ui_smoke": [
+    {
+      "case": "chunks-script-p62-small",
+      "passed": true
+    },
+    {
+      "case": "chunks-script-p62-round",
+      "passed": true
+    },
+    {
+      "case": "chunks-preview-p62-small",
+      "passed": true
+    },
+    {
+      "case": "chunks-preview-p62-round",
+      "passed": true
+    }
+  ],
+  "builds": {
+    "chunks-normal-p62": {
+      "artifacts/main.linux-x86_64.aot": {
+        "bytes": 687816,
+        "sha256": "bd62d91d988c3aaa20503258fa815b886364483eafb9ee0b6729615dc5aa7ea1",
+        "baseline_bytes": 687816,
+        "same_as_p38": true
+      },
+      "artifacts/script.wasm": {
+        "bytes": 596055,
+        "sha256": "b567eceddbf386b249f61922479e1b9fcf71fd6ec43aad7c14366aaad8ccf326",
+        "baseline_bytes": 596055,
+        "same_as_p38": true
+      },
+      "assets/browser-runtime.qjb": {
+        "bytes": 17490,
+        "sha256": "941f72f3be4e97e372632aacf1694873e0c812dafccddd72c31db943b121974a",
+        "baseline_bytes": 16931,
+        "same_as_p38": false
+      }
+    },
+    "chunks-normal-s3-p62": {
+      "artifacts/main.esp32-s3.aot": {
+        "bytes": 1237160,
+        "sha256": "45a2100989e34bb956dd2942d3ffa87e03bd2cc3942aa7e8efe09884302d6b58",
+        "baseline_bytes": 1237160,
+        "same_as_p38": true
+      },
+      "artifacts/script.wasm": {
+        "bytes": 596055,
+        "sha256": "b567eceddbf386b249f61922479e1b9fcf71fd6ec43aad7c14366aaad8ccf326",
+        "baseline_bytes": 596055,
+        "same_as_p38": true
+      },
+      "assets/browser-runtime.qjb": {
+        "bytes": 17490,
+        "sha256": "941f72f3be4e97e372632aacf1694873e0c812dafccddd72c31db943b121974a",
+        "baseline_bytes": 16931,
+        "same_as_p38": false
+      }
+    }
+  }
+}

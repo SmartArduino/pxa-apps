@@ -1,0 +1,86 @@
+--- a/runtime/browser-runtime.js
++++ b/runtime/browser-runtime.js
+@@ -7,10 +7,8 @@
+     const own = Object.hasOwn;
+     let dirty = false, building = true, nextHit = 1, hits = Object.create(null);
+     let nextTimer = 1, timers = [], pending = Object.create(null);
+-    const escapePattern = /[&<>"\u0000]/g;
+-    const escapeCharacters = {'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', '\0':'&#xfffd;'};
+-    const escapeCharacter = c => escapeCharacters[c];
+-    const escape = s => String(s).replace(escapePattern, escapeCharacter);
++    const escape = s => String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;')
++        .replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll('\0', '&#xfffd;');
+     function changed() { if (!building) { dirty = true; native.changed(); } }
+     function event(type) {
+         return {type, target:null, currentTarget:null, defaultPrevented:false,
+@@ -265,9 +263,22 @@
+         const {todo,endings,render}=state, parts=[]; let count=0;
+         while (todo.length && count++<budget) {
+             const n=todo.pop(), ending=endings.pop();
++            if (typeof n==='string') {
++                let end=Math.min(n.length,ending+512);
++                const tail=n.charCodeAt(end-1),next=n.charCodeAt(end);
++                if(tail>=0xd800 && tail<=0xdbff && next>=0xdc00 && next<=0xdfff)--end;
++                parts.push(escape(n.slice(ending,end)));
++                if(end<n.length) {todo.push(n);endings.push(end);}
++                continue;
++            }
+             if (ending) { parts.push(ending); continue; }
+             if (++state.visited>512) throw new RangeError('DOM traversal limit');
+-            if (n.nodeType===3) { parts.push(escape(n._text)); continue; }
++            if (n.nodeType===3) {
++                const text=String(n._text);
++                if(render && text.length>512) {todo.push(text);endings.push(0);}
++                else parts.push(escape(text));
++                continue;
++            }
+             if (n.nodeType===9) {
+                 for(let i=n.childNodes.length-1;i>=0;--i) { todo.push(n.childNodes[i]);endings.push(''); }
+                 continue;
+@@ -275,7 +286,7 @@
+             if (n.nodeName==='SCRIPT' || n.nodeName==='STYLE') continue;
+             const attributes=n._attrs, styleValues=n._style;
+             const type=attributes && attributes.type ? attributes.type.toLowerCase() : '';
+-            let tag=n.nodeName.toLowerCase(), attrs='', style='';
++            let tag=n.nodeName.toLowerCase(), attrs='', style='', tokens=null, chars=0;
+             if (render && (tag==='a' || tag==='button' || type==='submit' || typeof n.onclick==='function' ||
+                     attributes && own(attributes,'onclick') || n._listeners && n._listeners.click)) {
+                 if (!n._hit) n._hit=nextHit++;
+@@ -288,15 +299,30 @@
+                 state.hits[n._hit]=n;attrs+=' data-pxa-field="'+n._hit+'"';
+             }
+             if (attributes) for(const k of Object.keys(attributes))
+-                if (k!=='style' && !k.startsWith('on') && !k.startsWith('data-pxa-')) attrs+=' '+k+'="'+escape(attributes[k])+'"';
++                if (k!=='style' && !k.startsWith('on') && !k.startsWith('data-pxa-')) {
++                    const value=String(attributes[k]);chars+=value.length;
++                    if(render && (tokens || chars>512)) {
++                        if(!tokens) {tokens=[];attrs='<'+tag+attrs;}
++                        tokens.push(attrs+' '+k+'="',value);attrs='"';
++                    } else attrs+=' '+k+'="'+escape(value)+'"';
++                }
+             if (styleValues) for(const key of Object.keys(styleValues)) if(styleValues[key])
+                 style+=key.replace(/[A-Z]/g,c=>'-'+c.toLowerCase())+':'+styleValues[key]+';';
+-            if(style) attrs+=' style="'+escape(style)+'"';
+-            parts.push('<'+tag+attrs+'>');
+-            if(tag==='img' || tag==='input' || tag==='br' || tag==='hr' || tag==='meta' || tag==='link') continue;
+-            if(tag==='a' && n.nodeName==='INPUT') { parts.push(escape(attributes.value || '提交'),'</a>');continue; }
+-            todo.push(null);endings.push('</'+tag+'>');
+-            for(let i=n.childNodes.length-1;i>=0;--i) { todo.push(n.childNodes[i]);endings.push(''); }
++            if(style) {
++                if(render && (tokens || chars+style.length>512)) {
++                    if(!tokens) {tokens=[];attrs='<'+tag+attrs;}
++                    tokens.push(attrs+' style="',style);attrs='"';
++                } else attrs+=' style="'+escape(style)+'"';
++            }
++            if(tag!=='img' && tag!=='input' && tag!=='br' && tag!=='hr' && tag!=='meta' && tag!=='link') {
++                todo.push(null);endings.push('</'+tag+'>');
++                if(tag==='a' && n.nodeName==='INPUT') {todo.push(String(attributes.value || '提交'));endings.push(0);}
++                else for(let i=n.childNodes.length-1;i>=0;--i) {todo.push(n.childNodes[i]);endings.push('');}
++            }
++            if(tokens) {
++                tokens.push(attrs+'>');
++                for(let i=tokens.length-1;i>=0;--i) {todo.push(i%2?tokens[i]:null);endings.push(i%2?0:tokens[i]);}
++            } else parts.push('<'+tag+attrs+'>');
+         }
+         return {text:parts.join(''),complete:todo.length===0};
+     }

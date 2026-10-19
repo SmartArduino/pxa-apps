@@ -1,0 +1,6 @@
+{
+  "runtime-before": "[sizeof=768, align=8]",
+  "runtime-candidate": "[sizeof=768, align=8]",
+  "page-before": "[sizeof=520, dsize=516, align=8,\n           |  nvsize=516, nvalign=8]",
+  "page-candidate": "[sizeof=520, dsize=516, align=8,\n           |  nvsize=516, nvalign=8]"
+}

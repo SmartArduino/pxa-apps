@@ -1,0 +1,46 @@
+{
+  "adopted": false,
+  "p65": {
+    "source_sha256": "702bdbefa0a933e97f1bd1b68f5bb8b7efdce3e99e0f20e8c295074e4cf5f340",
+    "qjb_bytes": 17502,
+    "native_asan_ubsan_semantics_passed": true,
+    "native_heap_balanced_all_cases_nonincrease": true,
+    "desktop_original_flow_passed": true,
+    "projection_turns": 168,
+    "max_projection_observed_us": 1021,
+    "hardware_validated": false,
+    "patch": "dom-chunks-p65.patch"
+  },
+  "synthetic_cookie_protocol": {
+    "passed": true,
+    "fixture_authentication_checks": {
+      "login_body": true,
+      "shelf_cookie": true,
+      "fingerprint_cookie": true
+    },
+    "kind": "P57 normal release, no script diagnostics; original HTML/four scripts and seeded colored non-scannable180x180 PNG near real response size; synthetic API/session; full image and polling/navigation mandatory; no device or real account conclusion",
+    "guest_trap": false,
+    "png_bytes": 2963,
+    "json_response_bytes": 3997,
+    "attribute_bytes": 3974,
+    "observations": [],
+    "requests": [
+      "/1/wrwebsimplenjlogic/login",
+      "/3/web/wrwebsimplenjlogic/server/img/icon_logo_2x.576fabd.png",
+      "/3/web/wrwebsimplenjlogic/static/es5-shim.min.js",
+      "/3/web/wrwebsimplenjlogic/client/global.35483d.js",
+      "/3/web/wrwebsimplenjlogic/client/cookie.0e551c.js",
+      "/3/web/wrwebsimplenjlogic/client/login.dc74cd.js",
+      "/1/wrwebsimplenjlogic/api/getuid",
+      "/1/wrwebsimplenjlogic/api/kvlog",
+      "/1/wrwebsimplenjlogic/api/qrcode",
+      "/1/wrwebsimplenjlogic/api/getlogininfo",
+      "/1/wrwebsimplenjlogic/api/weblogin",
+      "/1/wrwebsimplenjlogic/shelf"
+    ],
+    "caught_errors": [],
+    "js": [
+      "BROWSER JS READY heap=258068 peak=275509 errors=0 turns=66 max_us=20528\u001b[0m"
+    ]
+  }
+}

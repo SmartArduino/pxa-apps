@@ -1,0 +1,337 @@
+{
+  "scope": "One software-cold launch after ordinary Host reboot before package installation, then one warm relaunch after confirmed inactive state, for each P38/P51 version in chronological order on the same pai-touch d878 Host. Production AOT UI unchanged; original official page/four scripts and actual network QR without login. MEMORY local-minimum windows span each launch through complete QR; no SCREENSHOT/PERF inside a window. Two launches per version are not a statistical speed or allocator conclusion. Independent heap peaks are not summed. No FPS, CPU-time, touch-latency, power-cycle or real-account reading conclusion.",
+  "versions": {
+    "p38-cold": {
+      "artifacts": {
+        "script.wasm": {
+          "bytes": 598294,
+          "sha256": "f382b07372ea750c555ec0f720a97a3809fb9a92885a246ed348739da3c89e7a"
+        },
+        "main.esp32-s3.aot": {
+          "bytes": 1237160,
+          "sha256": "45a2100989e34bb956dd2942d3ffa87e03bd2cc3942aa7e8efe09884302d6b58"
+        }
+      },
+      "passed": true,
+      "qr_180x180": true,
+      "cache_hit": true,
+      "observation_elapsed_s": 25.951342276996,
+      "elapsed_through_post_qr_stability_s": 25.951342276996,
+      "error_messages": [],
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 56907,
+        "sram_min": 27892,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6825776,
+        "psram_min": 6723740,
+        "psram_largest": 6684672
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47795,
+        "sram_min": 43239,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2600640,
+        "psram_min": 2371820,
+        "psram_largest": 2359296
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47795,
+        "sram_min": 27892,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2600836,
+        "psram_min": 2371820,
+        "psram_largest": 2359296
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272920,
+          "window_peak_used": 277476,
+          "stable_increment_from_cold": 9112,
+          "window_increment_from_cold": 13668
+        },
+        "psram": {
+          "stable_used": 5757688,
+          "window_peak_used": 5986704,
+          "stable_increment_from_cold": 4224940,
+          "window_increment_from_cold": 4453956
+        }
+      },
+      "js": [
+        {
+          "current": 257327,
+          "peak": 274768,
+          "errors": 0,
+          "max_turn_us": 1407359
+        }
+      ],
+      "library_host_log_interval_ms": 2085
+    },
+    "p38-warm": {
+      "artifacts": {
+        "script.wasm": {
+          "bytes": 598294,
+          "sha256": "f382b07372ea750c555ec0f720a97a3809fb9a92885a246ed348739da3c89e7a"
+        },
+        "main.esp32-s3.aot": {
+          "bytes": 1237160,
+          "sha256": "45a2100989e34bb956dd2942d3ffa87e03bd2cc3942aa7e8efe09884302d6b58"
+        }
+      },
+      "passed": true,
+      "qr_180x180": true,
+      "cache_hit": true,
+      "observation_elapsed_s": 24.89273290100391,
+      "elapsed_through_post_qr_stability_s": 24.89273290100391,
+      "error_messages": [],
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 49803,
+        "sram_min": 27892,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6756884,
+        "psram_min": 2371820,
+        "psram_largest": 3014656
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47795,
+        "sram_min": 43659,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2599048,
+        "psram_min": 2368744,
+        "psram_largest": 2490368
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47795,
+        "sram_min": 27892,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2599076,
+        "psram_min": 2368744,
+        "psram_largest": 2490368
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272920,
+          "window_peak_used": 277056,
+          "stable_increment_from_cold": 2008,
+          "window_increment_from_cold": 6144
+        },
+        "psram": {
+          "stable_used": 5759448,
+          "window_peak_used": 5989780,
+          "stable_increment_from_cold": 4157808,
+          "window_increment_from_cold": 4388140
+        }
+      },
+      "js": [
+        {
+          "current": 257327,
+          "peak": 274768,
+          "errors": 0,
+          "max_turn_us": 1420970
+        }
+      ],
+      "library_host_log_interval_ms": 2097
+    },
+    "p51-cold": {
+      "artifacts": {
+        "script.wasm": {
+          "bytes": 598121,
+          "sha256": "fa4765ad8863a6a5764a4e60e8cb6dd5144a567f53a1a02cafe3da82d7736767"
+        },
+        "main.esp32-s3.aot": {
+          "bytes": 1237160,
+          "sha256": "45a2100989e34bb956dd2942d3ffa87e03bd2cc3942aa7e8efe09884302d6b58"
+        }
+      },
+      "passed": true,
+      "qr_180x180": true,
+      "cache_hit": true,
+      "observation_elapsed_s": 25.30387426899688,
+      "elapsed_through_post_qr_stability_s": 25.30387426899688,
+      "error_messages": [],
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 56951,
+        "sram_min": 27756,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6825880,
+        "psram_min": 6725648,
+        "psram_largest": 6553600
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47803,
+        "sram_min": 42735,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2601724,
+        "psram_min": 2373184,
+        "psram_largest": 2359296
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47803,
+        "sram_min": 27756,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2601752,
+        "psram_min": 2373184,
+        "psram_largest": 2359296
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272912,
+          "window_peak_used": 277980,
+          "stable_increment_from_cold": 9148,
+          "window_increment_from_cold": 14216
+        },
+        "psram": {
+          "stable_used": 5756772,
+          "window_peak_used": 5985340,
+          "stable_increment_from_cold": 4224128,
+          "window_increment_from_cold": 4452696
+        }
+      },
+      "js": [
+        {
+          "current": 257327,
+          "peak": 274768,
+          "errors": 0,
+          "max_turn_us": 1432006
+        }
+      ],
+      "library_host_log_interval_ms": 1591
+    },
+    "p51-warm": {
+      "artifacts": {
+        "script.wasm": {
+          "bytes": 598121,
+          "sha256": "fa4765ad8863a6a5764a4e60e8cb6dd5144a567f53a1a02cafe3da82d7736767"
+        },
+        "main.esp32-s3.aot": {
+          "bytes": 1237160,
+          "sha256": "45a2100989e34bb956dd2942d3ffa87e03bd2cc3942aa7e8efe09884302d6b58"
+        }
+      },
+      "passed": false,
+      "qr_180x180": false,
+      "cache_hit": true,
+      "observation_elapsed_s": 20.84907084600127,
+      "elapsed_through_post_qr_stability_s": null,
+      "error_messages": [
+        "BROWSER JS ERROR \u811a\u672c\u6267\u884c\u8d85\u65f6"
+      ],
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 49775,
+        "sram_min": 27756,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6758168,
+        "psram_min": 2373184,
+        "psram_largest": 3014656
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47455,
+        "sram_min": 43691,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2725212,
+        "psram_min": 2370568,
+        "psram_largest": 2490368
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47455,
+        "sram_min": 27756,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2725448,
+        "psram_min": 2370568,
+        "psram_largest": 2490368
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 273260,
+          "window_peak_used": 277024,
+          "stable_increment_from_cold": 2320,
+          "window_increment_from_cold": 6084
+        },
+        "psram": {
+          "stable_used": 5633076,
+          "window_peak_used": 5987956,
+          "stable_increment_from_cold": 4032720,
+          "window_increment_from_cold": 4387600
+        }
+      },
+      "js": [
+        {
+          "current": 257327,
+          "peak": 274768,
+          "errors": 0,
+          "max_turn_us": 1419581
+        }
+      ],
+      "library_host_log_interval_ms": 1595
+    }
+  },
+  "elapsed_scope": "Reported elapsed includes network/driver delays and an additional0.8s pump after ready+QR detection; not an exact first-QR timestamp. Failed observations never count as completed load times.",
+  "js_statistics_scope": "READY snapshot only: current, peak and maximum turn as of initial script readiness, not final QR/API callback statistics.",
+  "preservation": {
+    "signed_files": 29,
+    "private_files": 3,
+    "exactly_restored": true,
+    "host_firmware_and_font_unchanged": true,
+    "weread_session_bytes_unchanged": true
+  },
+  "differences": {
+    "cold": {
+      "sram": {
+        "stable_used": -8,
+        "window_peak_used": 504,
+        "stable_increment_from_cold": 36,
+        "window_increment_from_cold": 548
+      },
+      "psram": {
+        "stable_used": -916,
+        "window_peak_used": -1364,
+        "stable_increment_from_cold": -812,
+        "window_increment_from_cold": -1260
+      }
+    },
+    "warm": {
+      "sram": {
+        "stable_used": 340,
+        "window_peak_used": -32,
+        "stable_increment_from_cold": 312,
+        "window_increment_from_cold": -60
+      },
+      "psram": {
+        "stable_used": -126372,
+        "window_peak_used": -1824,
+        "stable_increment_from_cold": -125088,
+        "window_increment_from_cold": -540
+      }
+    }
+  },
+  "complete_workload_by_phase": {
+    "cold": true,
+    "warm": false
+  },
+  "candidate_adopted": false,
+  "failed_workload_memory_not_benefit_evidence": true,
+  "heap_gate_non_growing_this_pair": false
+}

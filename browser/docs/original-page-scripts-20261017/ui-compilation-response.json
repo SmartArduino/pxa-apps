@@ -1,0 +1,78 @@
+{
+  "passed": true,
+  "fresh_processes": 5,
+  "source_bytes": 27256,
+  "source_sha256": "2264b03fa15800a14e19fb6b728c86a98c58805fc0a1b2c6f3f9aa0640b45c33",
+  "scope": "Desktop simulator wall time and actual changed content pixels; not LCD/device latency or FPS. Synthetic compile workload, not an official-page performance comparison.",
+  "cases": {
+    "pending-network-baseline": {
+      "pixel_change_upper_ms": [
+        45.13387,
+        42.906624,
+        45.649104,
+        45.848998,
+        42.056108
+      ],
+      "pixel_change_median_ms": 45.13387,
+      "touch_down_command_ms": [
+        1.296541,
+        3.513318,
+        0.433088,
+        0.293195,
+        4.615282
+      ],
+      "touch_down_command_median_ms": 1.296541
+    },
+    "compile-in-flight": {
+      "pixel_change_upper_ms": [
+        117.423658,
+        103.523012,
+        113.694774,
+        109.91677,
+        94.987275
+      ],
+      "pixel_change_median_ms": 109.91677,
+      "touch_down_command_ms": [
+        82.311163,
+        72.727917,
+        97.853764,
+        96.381583,
+        73.505494
+      ],
+      "touch_down_command_median_ms": 82.311163
+    },
+    "completed-recovery": {
+      "pixel_change_upper_ms": [
+        40.762409,
+        40.224843,
+        18.26319,
+        43.141305,
+        47.119705
+      ],
+      "pixel_change_median_ms": 40.762409,
+      "touch_down_command_ms": [
+        2.911561,
+        2.697007,
+        3.587839,
+        3.709294,
+        2.745269
+      ],
+      "touch_down_command_median_ms": 2.911561
+    }
+  },
+  "compile_ms": [
+    81.693,
+    71.94,
+    96.695,
+    95.394,
+    72.967
+  ],
+  "limits": [
+    "No real-device or LCD measurement.",
+    "Independent same-level-function synthetic source, not original WeRead end-to-end or language comparison.",
+    "Screenshots/control are sequential observers and include capture/delivery overhead; first observed changed pixels are latency upper bounds, not panel scanout.",
+    "Shared workstation and one fixed order (baseline, compilation, recovery), not an isolated CPU timing benchmark.",
+    "Three image regions stay identical except ordinary touch scrolling; scripts make no DOM mutations."
+  ],
+  "compile_median_ms": 81.693
+}

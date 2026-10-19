@@ -1,0 +1,46 @@
+{
+  "kind": "Diagnostic instrumented PXA simulator; one run under shared workstation load, not a controlled speed comparison or hardware timing",
+  "host_sha256": "eee492d3cacb13853a8db6c4256758f579c514f948864b8ca1526effac61e720",
+  "package": "original-profile-v1; private timestamp probes, no shipping Host/ABI changes",
+  "raw_page": "Official HTML/four external scripts unchanged; API/session/QR are synthetic non-account fixtures",
+  "rows": [
+    {
+      "source_bytes": 25442,
+      "parse_wall_us": 401823,
+      "backend_wall_us": 186508,
+      "execute_wall_us": 822861
+    },
+    {
+      "source_bytes": 1239,
+      "parse_wall_us": 11513,
+      "backend_wall_us": 1659,
+      "execute_wall_us": 1340
+    },
+    {
+      "source_bytes": 5369,
+      "parse_wall_us": 49266,
+      "backend_wall_us": 31833,
+      "execute_wall_us": 2054
+    },
+    {
+      "source_bytes": 982,
+      "parse_wall_us": 11167,
+      "backend_wall_us": 6208,
+      "execute_wall_us": 775
+    },
+    {
+      "source_bytes": 5413,
+      "parse_wall_us": 41814,
+      "backend_wall_us": 21300,
+      "execute_wall_us": 561
+    }
+  ],
+  "total_parse_wall_us": 515583,
+  "total_backend_wall_us": 247508,
+  "total_execute_wall_us": 827591,
+  "findings": [
+    "Compilation and execution both retain the scheduler for long turns.",
+    "50ms is an interrupt-handler deadline, not a preemptive bound; execution of the largest script exceeded it without invoking the handler in time.",
+    "These wall times include scheduling and diagnostic log overhead; they are not per-phase CPU or device measurements."
+  ]
+}

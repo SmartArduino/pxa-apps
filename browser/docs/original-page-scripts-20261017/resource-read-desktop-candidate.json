@@ -1,0 +1,99 @@
+{
+  "scope": "Five alternating fresh-process desktop PXA runs with identical production UI; original HTML and four scripts plus synthetic API/session. Cache hit mandatory. Start observed by log polling; end uses service monotonic timestamp. Shared workstation; not CPU time, LCD FPS, real-device latency or real login.",
+  "samples": [
+    {
+      "trial": 0,
+      "package": "source-borrow-trace-p38",
+      "library_load_wall_upper_sampling_error_us": 10667,
+      "load_begin_observed_monotonic_us": 32538408426,
+      "compiled_stage_monotonic_us": 32538544702,
+      "library_load_wall_observed_us": 136276,
+      "fixture_pass": true
+    },
+    {
+      "trial": 0,
+      "package": "catalog-resource-trace-p49",
+      "library_load_wall_upper_sampling_error_us": 7327,
+      "load_begin_observed_monotonic_us": 32547169744,
+      "compiled_stage_monotonic_us": 32547205944,
+      "library_load_wall_observed_us": 36200,
+      "fixture_pass": true
+    },
+    {
+      "trial": 1,
+      "package": "catalog-resource-trace-p49",
+      "library_load_wall_upper_sampling_error_us": 3897,
+      "load_begin_observed_monotonic_us": 32554868346,
+      "compiled_stage_monotonic_us": 32554905352,
+      "library_load_wall_observed_us": 37006,
+      "fixture_pass": true
+    },
+    {
+      "trial": 1,
+      "package": "source-borrow-trace-p38",
+      "library_load_wall_upper_sampling_error_us": 4336,
+      "load_begin_observed_monotonic_us": 32562942570,
+      "compiled_stage_monotonic_us": 32563080627,
+      "library_load_wall_observed_us": 138057,
+      "fixture_pass": true
+    },
+    {
+      "trial": 2,
+      "package": "source-borrow-trace-p38",
+      "library_load_wall_upper_sampling_error_us": 4344,
+      "load_begin_observed_monotonic_us": 32571586876,
+      "compiled_stage_monotonic_us": 32571721373,
+      "library_load_wall_observed_us": 134497,
+      "fixture_pass": true
+    },
+    {
+      "trial": 2,
+      "package": "catalog-resource-trace-p49",
+      "library_load_wall_upper_sampling_error_us": 6180,
+      "load_begin_observed_monotonic_us": 32579742449,
+      "compiled_stage_monotonic_us": 32579779895,
+      "library_load_wall_observed_us": 37446,
+      "fixture_pass": true
+    },
+    {
+      "trial": 3,
+      "package": "catalog-resource-trace-p49",
+      "library_load_wall_upper_sampling_error_us": 5821,
+      "load_begin_observed_monotonic_us": 32588215900,
+      "compiled_stage_monotonic_us": 32588268931,
+      "library_load_wall_observed_us": 53031,
+      "fixture_pass": true
+    },
+    {
+      "trial": 3,
+      "package": "source-borrow-trace-p38",
+      "library_load_wall_upper_sampling_error_us": 4504,
+      "load_begin_observed_monotonic_us": 32596267491,
+      "compiled_stage_monotonic_us": 32596401887,
+      "library_load_wall_observed_us": 134396,
+      "fixture_pass": true
+    },
+    {
+      "trial": 4,
+      "package": "source-borrow-trace-p38",
+      "library_load_wall_upper_sampling_error_us": 2696,
+      "load_begin_observed_monotonic_us": 32603524068,
+      "compiled_stage_monotonic_us": 32603655150,
+      "library_load_wall_observed_us": 131082,
+      "fixture_pass": true
+    },
+    {
+      "trial": 4,
+      "package": "catalog-resource-trace-p49",
+      "library_load_wall_upper_sampling_error_us": 4434,
+      "load_begin_observed_monotonic_us": 32611402160,
+      "compiled_stage_monotonic_us": 32611440520,
+      "library_load_wall_observed_us": 38360,
+      "fixture_pass": true
+    }
+  ],
+  "median_us": {
+    "source-borrow-trace-p38": 134497,
+    "catalog-resource-trace-p49": 37446
+  }
+}

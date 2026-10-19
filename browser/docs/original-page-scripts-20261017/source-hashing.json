@@ -1,0 +1,407 @@
+{
+  "revision": "P32",
+  "scope": "Browser Guest only; original page/source retained; no Host/SDK changes",
+  "builds": {
+    "p26": {
+      "requested_memory": {
+        "input_bytes": 596900,
+        "runtime_requested_bytes": 1856045,
+        "runtime_requested_peak_bytes": 1857749,
+        "remaining_bytes": 0,
+        "instance_requested_bytes": 1943855,
+        "instance_requested_peak_bytes": 1943855
+      },
+      "artifacts": {
+        "normal/script.wasm": {
+          "bytes": 596900,
+          "sha256": "7fc1196f2438be578e6cde6024677f843c33b8ab85ed3c22393924f760d9f338"
+        },
+        "normal/main.linux-x86_64.aot": {
+          "bytes": 687816,
+          "sha256": "bd62d91d988c3aaa20503258fa815b886364483eafb9ee0b6729615dc5aa7ea1"
+        },
+        "s3/script.wasm": {
+          "bytes": 596900,
+          "sha256": "7fc1196f2438be578e6cde6024677f843c33b8ab85ed3c22393924f760d9f338"
+        },
+        "s3/main.esp32-s3.aot": {
+          "bytes": 1237160,
+          "sha256": "45a2100989e34bb956dd2942d3ffa87e03bd2cc3942aa7e8efe09884302d6b58"
+        }
+      },
+      "normal_package_bytes": 952766,
+      "s3_package_bytes": 1444957
+    },
+    "p32": {
+      "requested_memory": {
+        "input_bytes": 596148,
+        "runtime_requested_bytes": 1853862,
+        "runtime_requested_peak_bytes": 1855566,
+        "remaining_bytes": 0,
+        "instance_requested_bytes": 1941528,
+        "instance_requested_peak_bytes": 1941528
+      },
+      "artifacts": {
+        "normal/script.wasm": {
+          "bytes": 596148,
+          "sha256": "d0bf9f912c269f932a863eae9657d95ae7dcc6f11345795bde4f2bcc5a45af63"
+        },
+        "normal/main.linux-x86_64.aot": {
+          "bytes": 687816,
+          "sha256": "bd62d91d988c3aaa20503258fa815b886364483eafb9ee0b6729615dc5aa7ea1"
+        },
+        "s3/script.wasm": {
+          "bytes": 596148,
+          "sha256": "d0bf9f912c269f932a863eae9657d95ae7dcc6f11345795bde4f2bcc5a45af63"
+        },
+        "s3/main.esp32-s3.aot": {
+          "bytes": 1237160,
+          "sha256": "45a2100989e34bb956dd2942d3ffa87e03bd2cc3942aa7e8efe09884302d6b58"
+        }
+      },
+      "normal_package_bytes": 951779,
+      "s3_package_bytes": 1443970
+    }
+  },
+  "hash_probe": {
+    "kind": "baseline monolithic vs optimized incremental core, identical source/flags, balanced alternating fresh WAMR interpreter processes, pinned CPU; shared desktop monotonic wall, not ESP32/FPS",
+    "cpu": 0,
+    "source_sha256": "0241c2171b56ba16e3f6bdb0079951374faa0b5d3820666f74c2d05cc9a4fb01",
+    "summary": {
+      "26": {
+        "median_us": 19594.0,
+        "min_us": 14467,
+        "max_us": 25949
+      },
+      "28": {
+        "median_us": 7805.0,
+        "min_us": 6073,
+        "max_us": 11552
+      }
+    },
+    "samples": [
+      {
+        "pair": 0,
+        "version": 26,
+        "whole_hash_us": [
+          25949,
+          23517,
+          21413,
+          21583,
+          21766
+        ]
+      },
+      {
+        "pair": 0,
+        "version": 28,
+        "whole_hash_us": [
+          10354,
+          11552,
+          10595,
+          10090,
+          9836
+        ]
+      },
+      {
+        "pair": 1,
+        "version": 28,
+        "whole_hash_us": [
+          9907,
+          10613,
+          10100,
+          10208,
+          10332
+        ]
+      },
+      {
+        "pair": 1,
+        "version": 26,
+        "whole_hash_us": [
+          19124,
+          18370,
+          18010,
+          18458,
+          20631
+        ]
+      },
+      {
+        "pair": 2,
+        "version": 26,
+        "whole_hash_us": [
+          20887,
+          22350,
+          20064,
+          21643,
+          20070
+        ]
+      },
+      {
+        "pair": 2,
+        "version": 28,
+        "whole_hash_us": [
+          9487,
+          8890,
+          7945,
+          7999,
+          7717
+        ]
+      },
+      {
+        "pair": 3,
+        "version": 28,
+        "whole_hash_us": [
+          8142,
+          8044,
+          7876,
+          7734,
+          7452
+        ]
+      },
+      {
+        "pair": 3,
+        "version": 26,
+        "whole_hash_us": [
+          18917,
+          21055,
+          22285,
+          21868,
+          23889
+        ]
+      },
+      {
+        "pair": 4,
+        "version": 26,
+        "whole_hash_us": [
+          21462,
+          18671,
+          16140,
+          15465,
+          14467
+        ]
+      },
+      {
+        "pair": 4,
+        "version": 28,
+        "whole_hash_us": [
+          6073,
+          6270,
+          6391,
+          6691,
+          7321
+        ]
+      },
+      {
+        "pair": 5,
+        "version": 28,
+        "whole_hash_us": [
+          7563,
+          7678,
+          7940,
+          8303,
+          8037
+        ]
+      },
+      {
+        "pair": 5,
+        "version": 26,
+        "whole_hash_us": [
+          20674,
+          21506,
+          21708,
+          19041,
+          18752
+        ]
+      },
+      {
+        "pair": 6,
+        "version": 26,
+        "whole_hash_us": [
+          17285,
+          16381,
+          15468,
+          15281,
+          15472
+        ]
+      },
+      {
+        "pair": 6,
+        "version": 28,
+        "whole_hash_us": [
+          6277,
+          6338,
+          6176,
+          6389,
+          6442
+        ]
+      },
+      {
+        "pair": 7,
+        "version": 28,
+        "whole_hash_us": [
+          6829,
+          6841,
+          7057,
+          6772,
+          6480
+        ]
+      },
+      {
+        "pair": 7,
+        "version": 26,
+        "whole_hash_us": [
+          16225,
+          16472,
+          17270,
+          17321,
+          20325
+        ]
+      }
+    ]
+  },
+  "linear_component": {
+    "p26": {
+      "passed": true,
+      "pages": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "js": [
+        "BROWSER JS READY heap=257327 peak=274768 errors=0 turns=67 max_us=13436\u001b[0m"
+      ]
+    },
+    "p32": {
+      "passed": true,
+      "pages": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "js": [
+        "BROWSER JS READY heap=257327 peak=274768 errors=0 turns=67 max_us=22466\u001b[0m"
+      ]
+    }
+  },
+  "service_layout": {
+    "p26": "[sizeof=2392, dsize=2388, align=8,\n           |  nvsize=2388, nvalign=8]",
+    "profile29": "[sizeof=2392, dsize=2388, align=8,\n           |  nvsize=2388, nvalign=8]"
+  },
+  "validation": {
+    "native_sanitizers": "ASan/UBSan/LSan WASI interpreter model; full Page/cache suite, partial digest reset/clone/relocated source, compiler cancellation/recovery812, array cancellation",
+    "production_no_trace_protocol_fixture": true,
+    "diagnostic_original_protocol_fixture": true,
+    "same_length_changed_source_miss": true,
+    "callbacks_and_navigation_during_preview": true,
+    "real_account_login": false,
+    "bookshelf_reading": false,
+    "p32_hardware_run": false,
+    "device_attempt": {
+      "reason": "two TRACE uploads refused by conservative per-file128KiB reserve, before deploy; not a runtime failure or performance sample",
+      "original_signed_files_restored": 29,
+      "original_private_files_unchanged": 3,
+      "weread_current_aot_bytes": 1420224,
+      "browser_started": false,
+      "host_font_settings_updated": false,
+      "device_released": true
+    },
+    "interpreter_stack_caller_subset": [
+      {
+        "case": "group",
+        "passed": true
+      },
+      {
+        "case": "mixed-call-new",
+        "passed": true
+      },
+      {
+        "case": "recursive-proxy-accessor",
+        "passed": true
+      },
+      {
+        "case": "recursive-getter-eval",
+        "passed": true
+      },
+      {
+        "case": "member-grammar",
+        "passed": true
+      },
+      {
+        "case": "numeric-lookahead",
+        "passed": true
+      },
+      {
+        "case": "sparse-max-length",
+        "passed": true
+      },
+      {
+        "case": "vm-arguments",
+        "passed": true
+      }
+    ],
+    "official_live_page": "P29 diagnostic original official HTTP page; same incremental hash core before final in-place compare and release tracing cleanup; QR decoded180x180, no account scan",
+    "default_build_unchanged_after_trace_option": true,
+    "p33_hardware_full_qr_pipeline": true,
+    "p33_hardware_report": "device-source-hashing.json"
+  },
+  "source_sha256": {
+    "browser_script.cpp": "17d1a9746368aeb0403379bbc1e6ccd126d0fcec166a253e1fb3ccc3655cbbcd",
+    "browser_script_service.cpp": "5f87f8daa4f8f1c181d3d90f75214a0b3b44db98f6df044506dbadc276bc9dc4",
+    "browser_script_library.hpp": "2ae260cf62f9e4d1e9b3c2ab18e04850cf33223b93a92c335a7599f1afe0f0f6",
+    "CMakeLists.txt": "2f8c78aba28effdbf94b48df0b848fff370be03a754d56ccbd3fede2e7e7eddb"
+  },
+  "limitations": [
+    "Hash microbenchmark is desktop WAMR monotonic wall time under shared load; not ESP32/FPS/whole-page time.",
+    "Linear pages are component high-water, not Host realloc overlap or whole-device SRAM/PSRAM.",
+    "Private diagnostic100us slice validates mid-hash cancellation; product target8ms is cooperative, not hard preemption.",
+    "P32 hardware pipeline remains unverified: TRACE package exceeded guarded staging allowance and was not deployed. Both attempts restored every original package/private hash. P26 remains the hardware latency reference."
+  ],
+  "script_only_diagnostics": {
+    "production_ui_identical": true,
+    "full_trace_script_identical": true,
+    "unpacked_bytes": 1960044,
+    "full_trace_unpacked_bytes": 1997832,
+    "saved_bytes": 37788,
+    "package_bytes": 1446425,
+    "sha256": {
+      "script.wasm": "db035d753c8364927608a8aaeb3e2969a106a955faa477d2b777ba40175df887",
+      "main.esp32-s3.aot": "45a2100989e34bb956dd2942d3ffa87e03bd2cc3942aa7e8efe09884302d6b58"
+    },
+    "runtime_tested_on_device": false
+  },
+  "rejected_asset_frame_candidate": {
+    "adopted": false,
+    "reason": "input-plus-instance requests +357 B against P32 with unchanged7-page linear high-water; retained root P32",
+    "module": {
+      "input_bytes": 596281,
+      "runtime_requested_bytes": 1854086,
+      "runtime_requested_peak_bytes": 1855790,
+      "remaining_bytes": 0,
+      "instance_requested_bytes": 1941752,
+      "instance_requested_peak_bytes": 1941752
+    },
+    "linear_pages": [
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "service_bytes_before": 2392,
+    "service_bytes_after": 1400,
+    "wasm_coroutine_frame_bytes": [
+      1704,
+      408
+    ],
+    "slot_bytes": 2048,
+    "slot_count_unchanged": 8,
+    "pool_has_heap_fallback": false,
+    "native_llvm_frame_probe": "service-p35-frame-shape.txt",
+    "full_protocol_fixture": true,
+    "slow_asset_cancel_retry": true,
+    "hardware_tested": false
+  }
+}

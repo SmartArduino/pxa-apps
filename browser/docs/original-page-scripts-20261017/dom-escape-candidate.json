@@ -1,0 +1,76 @@
+{
+  "adopted": false,
+  "reason": "P59 individual SRAM readings exceed paired old values; pending preregistered balanced repetitions.",
+  "bootstrap_bytes": {
+    "old": 16931,
+    "new": 16813
+  },
+  "normal_s3_package_bytes": {
+    "old": 1443740,
+    "new": 1443618
+  },
+  "normal_artifacts": {
+    "old": {
+      "script.wasm": {
+        "bytes": 596055,
+        "sha256": "b567eceddbf386b249f61922479e1b9fcf71fd6ec43aad7c14366aaad8ccf326"
+      },
+      "main.linux-x86_64.aot": {
+        "bytes": 687816,
+        "sha256": "bd62d91d988c3aaa20503258fa815b886364483eafb9ee0b6729615dc5aa7ea1"
+      }
+    },
+    "new": {
+      "script.wasm": {
+        "bytes": 596055,
+        "sha256": "b567eceddbf386b249f61922479e1b9fcf71fd6ec43aad7c14366aaad8ccf326"
+      },
+      "main.linux-x86_64.aot": {
+        "bytes": 687816,
+        "sha256": "bd62d91d988c3aaa20503258fa815b886364483eafb9ee0b6729615dc5aa7ea1"
+      }
+    }
+  },
+  "normal_module": {
+    "old": {
+      "input_bytes": 596055,
+      "runtime_requested_bytes": 1853583,
+      "runtime_requested_peak_bytes": 1855287,
+      "remaining_bytes": 0,
+      "instance_requested_bytes": 1941249,
+      "instance_requested_peak_bytes": 1941249
+    },
+    "new": {
+      "input_bytes": 596055,
+      "runtime_requested_bytes": 1853583,
+      "runtime_requested_peak_bytes": 1855287,
+      "remaining_bytes": 0,
+      "instance_requested_bytes": 1941249,
+      "instance_requested_peak_bytes": 1941249
+    }
+  },
+  "checks": {
+    "native_page_utf16_nul_dense_sparse_and_library_asan_ubsan_leak": "pass for old and new",
+    "compiler_cancellation": 812,
+    "array_cancellation_recovery": "pass",
+    "original_html_four_scripts_synthetic_api_large_image": "six diagnostic old/new pairs and two normal-production candidate flows pass;2.9/4.0KiB response;non-scannable marker, no real account",
+    "full_actual_wamr_ui_smoke": [
+      {
+        "size": "296x240",
+        "dpi": 160,
+        "corner": 58,
+        "passed": true
+      },
+      {
+        "size": "480x480",
+        "dpi": 240,
+        "round": true,
+        "passed": true
+      }
+    ],
+    "new_full_smoke_coverage": "large inline image throughJSON/repeatedDOM, no repeated decode/errors; existing GIF/policies/drag/navigation/idle preserved"
+  },
+  "application_budgets_unchanged": true,
+  "native_reference_test_only": "2MiB/2s to retain independent regex reference for4096dense characters; not shipping policy.",
+  "scope": "Guest bootstrap assets only. UI/engine byte identical; no Host/SDK/defaultcache changes. Requested allocations are desktop module probe, not physicalESP heaps. Real scan/login/shelf/reading unverified."
+}

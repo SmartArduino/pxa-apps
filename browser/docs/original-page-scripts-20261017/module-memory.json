@@ -1,0 +1,130 @@
+{
+  "normal-guard-v2": {
+    "artifacts": {
+      "script.wasm": {
+        "bytes": 581270,
+        "sha256": "6e72d4af7d7257c14fccf8c1a2691bd1d82c79f06cb88a7ba4bae5689f1532da"
+      },
+      "main.linux-x86_64.aot": {
+        "bytes": 687656,
+        "sha256": "75fb0b5e73d253a70d96686abfee5b0c6eeaf0e5176595e34a36bdba971e476c"
+      }
+    },
+    "runtime_qjb": {
+      "bytes": 16960,
+      "sha256": "70f4008751a5ebf76851b454b6595797cb684775be4cbf4944dad500f1f9fed9"
+    },
+    "requested_memory": {
+      "input_bytes": 581270,
+      "runtime_requested_bytes": 1800943,
+      "runtime_requested_peak_bytes": 1802647,
+      "remaining_bytes": 0,
+      "instance_requested_bytes": 1885921,
+      "instance_requested_peak_bytes": 1885921
+    }
+  },
+  "original-normal-final": {
+    "artifacts": {
+      "script.wasm": {
+        "bytes": 584957,
+        "sha256": "153b0089da61461fbb638bf1d9b97fb7a9d834585eddaf558e977d609baf3f47"
+      },
+      "main.linux-x86_64.aot": {
+        "bytes": 687656,
+        "sha256": "75fb0b5e73d253a70d96686abfee5b0c6eeaf0e5176595e34a36bdba971e476c"
+      }
+    },
+    "runtime_qjb": {
+      "bytes": 16931,
+      "sha256": "44830b6dec62904a7b6e5e11def4937c6c262fe060de9d4c5d9653e9a281a5f5"
+    },
+    "requested_memory": {
+      "input_bytes": 584957,
+      "runtime_requested_bytes": 1817902,
+      "runtime_requested_peak_bytes": 1819606,
+      "remaining_bytes": 0,
+      "instance_requested_bytes": 1904368,
+      "instance_requested_peak_bytes": 1904368
+    }
+  },
+  "normal-guard-v2-s3": {
+    "artifacts": {
+      "script.wasm": {
+        "bytes": 581270,
+        "sha256": "6e72d4af7d7257c14fccf8c1a2691bd1d82c79f06cb88a7ba4bae5689f1532da"
+      },
+      "main.esp32-s3.aot": {
+        "bytes": 1236744,
+        "sha256": "e1f2ce632cc3fc7fb3c2615bf0de20757871f9ffcf504aef9a0e0e3c1ea37670"
+      }
+    },
+    "runtime_qjb": {
+      "bytes": 16960,
+      "sha256": "70f4008751a5ebf76851b454b6595797cb684775be4cbf4944dad500f1f9fed9"
+    }
+  },
+  "original-s3-final": {
+    "artifacts": {
+      "script.wasm": {
+        "bytes": 584957,
+        "sha256": "153b0089da61461fbb638bf1d9b97fb7a9d834585eddaf558e977d609baf3f47"
+      },
+      "main.esp32-s3.aot": {
+        "bytes": 1236744,
+        "sha256": "e1f2ce632cc3fc7fb3c2615bf0de20757871f9ffcf504aef9a0e0e3c1ea37670"
+      }
+    },
+    "runtime_qjb": {
+      "bytes": 16931,
+      "sha256": "44830b6dec62904a7b6e5e11def4937c6c262fe060de9d4c5d9653e9a281a5f5"
+    }
+  },
+  "original-normal-compile-budget": {
+    "artifacts": {
+      "script.wasm": {
+        "bytes": 584957,
+        "sha256": "3c689e2f08ba12ebba46a5a43f1d93bcc4bbda8b982566695ee64693754b31f5"
+      },
+      "main.linux-x86_64.aot": {
+        "bytes": 687656,
+        "sha256": "75fb0b5e73d253a70d96686abfee5b0c6eeaf0e5176595e34a36bdba971e476c"
+      }
+    },
+    "runtime_qjb": {
+      "bytes": 16931,
+      "sha256": "44830b6dec62904a7b6e5e11def4937c6c262fe060de9d4c5d9653e9a281a5f5"
+    },
+    "requested_memory": {
+      "input_bytes": 584957,
+      "runtime_requested_bytes": 1817902,
+      "runtime_requested_peak_bytes": 1819606,
+      "remaining_bytes": 0,
+      "instance_requested_bytes": 1904368,
+      "instance_requested_peak_bytes": 1904368
+    }
+  },
+  "original-s3-compile-budget": {
+    "artifacts": {
+      "script.wasm": {
+        "bytes": 584957,
+        "sha256": "3c689e2f08ba12ebba46a5a43f1d93bcc4bbda8b982566695ee64693754b31f5"
+      },
+      "main.esp32-s3.aot": {
+        "bytes": 1236744,
+        "sha256": "e1f2ce632cc3fc7fb3c2615bf0de20757871f9ffcf504aef9a0e0e3c1ea37670"
+      }
+    },
+    "runtime_qjb": {
+      "bytes": 16931,
+      "sha256": "44830b6dec62904a7b6e5e11def4937c6c262fe060de9d4c5d9653e9a281a5f5"
+    },
+    "requested_memory": {
+      "input_bytes": 584957,
+      "runtime_requested_bytes": 1817902,
+      "runtime_requested_peak_bytes": 1819606,
+      "remaining_bytes": 0,
+      "instance_requested_bytes": 1904368,
+      "instance_requested_peak_bytes": 1904368
+    }
+  }
+}

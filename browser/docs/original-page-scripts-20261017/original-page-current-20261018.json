@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-18",
+  "device": "pai-touch",
+  "screen_pixels": [
+    296,
+    240
+  ],
+  "host_sha256": "234edd1978bdefb9c513fc9547328c43004c37ba379f513b38fdf43ec883838e",
+  "host_changed_by_browser_task": false,
+  "font_changed_by_browser_task": false,
+  "page": "https://weread.qq.com/wrwebsimplenjlogic/login",
+  "response_replacement": false,
+  "synthetic_authentication": false,
+  "guest_ui": "AOT O3/fullLTO; private test starts at the official login URL",
+  "guest_engine": "interpreted Wasm, existing P38 runtime; no P57/P62/P65 candidates adopted",
+  "runtime_sha256": "44830b6dec62904a7b6e5e11def4937c6c262fe060de9d4c5d9653e9a281a5f5",
+  "script_wasm_sha256": "b567eceddbf386b249f61922479e1b9fcf71fd6ec43aad7c14366aaad8ccf326",
+  "compiled_fingerprints_verified": 28,
+  "observations": {
+    "html_status": 200,
+    "html_bytes": 31982,
+    "js_errors_at_ready": 0,
+    "js_heap_at_ready_bytes": 257327,
+    "js_heap_peak_at_ready_bytes": 274768,
+    "max_reported_js_turn_us": 1415922,
+    "qr_source_pixels": [
+      180,
+      180
+    ],
+    "qr_encoded_bytes": 1946,
+    "js_open_to_qr_image_done_ms": 22760
+  },
+  "timing_scope": "Single functional run; OPEN-to-image interval includes Guest, scheduling, network, and rendering work. The earlier lock-screen pause is excluded. Not an old/new performance comparison.",
+  "memory_scope": "JS engine counters at READY only, not Guest linear memory, module mapping, whole-device memory, or an authenticated-path peak.",
+  "verified": [
+    "Original HTML and scripts fetched without replacement",
+    "Script READY errors=0",
+    "Real 180x180 QR decoded and fully previewed"
+  ],
+  "pending": [
+    "User scans QR and confirms login",
+    "Actual login redirect and authenticated shelf",
+    "Original-page basic reading",
+    "Restart-persistent browser session"
+  ],
+  "interaction_limit": "The longest reported JS turn remains about 1.42 s; this run does not establish smooth scrolling or low input latency.",
+  "preservation": "Temporary browser stopped and code archived to its original state. Full original29 installed-file and3 private-file sets/SHA match the fresh morning snapshot. No App running; INPUT CANCEL, MEMORY/PERF stopped/cleared, FSLOCK; serial unowned. No Host/font/settings writes by this browser task.",
+  "real_authentication_observed": false,
+  "qr_currently_active": false
+}

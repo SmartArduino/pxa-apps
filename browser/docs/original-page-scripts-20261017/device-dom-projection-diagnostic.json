@@ -1,0 +1,213 @@
+{
+  "scope": "P55 private script diagnostics over unchanged P38 service/engine and production UI, same d878 Host, real original page/4 scripts and network QR, five starts with full stop confirmation; no real scan/login. Timing includes instrumentation and system scheduling, not a performance comparison. Interrupt flag records actual deadline-handler expiry, without inspecting/logging response contents.",
+  "logcat_history_filter": "Use maximum BROWSER SCRIPT SERVICE START host timestamp per run; ignore older replayed frames even when delivered late. Driver flags retained for audit.",
+  "samples": [
+    {
+      "run": 0,
+      "current_service_start_host_ms": 90438,
+      "ready": true,
+      "full_qr": true,
+      "errors": [],
+      "current_run_pass": true,
+      "driver_pass": true,
+      "observation_s": 28.752038184997218,
+      "response_observations": [
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 46,
+          "interrupt": false,
+          "elapsed_us": 70457
+        },
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 10,
+          "interrupt": false,
+          "elapsed_us": 35552
+        },
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 2760,
+          "interrupt": false,
+          "elapsed_us": 168784
+        }
+      ],
+      "failure_observations": [],
+      "markup_count": 85,
+      "markup_max_observed_us": 201775
+    },
+    {
+      "run": 1,
+      "current_service_start_host_ms": 123133,
+      "ready": true,
+      "full_qr": true,
+      "errors": [],
+      "current_run_pass": true,
+      "driver_pass": true,
+      "observation_s": 26.746951143999468,
+      "response_observations": [
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 46,
+          "interrupt": false,
+          "elapsed_us": 72125
+        },
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 10,
+          "interrupt": false,
+          "elapsed_us": 30160
+        },
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 2828,
+          "interrupt": false,
+          "elapsed_us": 169540
+        }
+      ],
+      "failure_observations": [],
+      "markup_count": 80,
+      "markup_max_observed_us": 203618
+    },
+    {
+      "run": 2,
+      "current_service_start_host_ms": 155031,
+      "ready": true,
+      "full_qr": false,
+      "errors": [
+        "BROWSER JS ERROR \u811a\u672c\u6267\u884c\u8d85\u65f6"
+      ],
+      "current_run_pass": false,
+      "driver_pass": false,
+      "observation_s": 21.4745278219998,
+      "response_observations": [
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 46,
+          "interrupt": false,
+          "elapsed_us": 77973
+        },
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 10,
+          "interrupt": false,
+          "elapsed_us": 30461
+        },
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 2768,
+          "interrupt": false,
+          "elapsed_us": 171022
+        }
+      ],
+      "failure_observations": [
+        {
+          "kind": "FAIL_CONTEXT",
+          "phase": 6,
+          "bytes": 0,
+          "interrupt": true,
+          "elapsed_us": 71278
+        }
+      ],
+      "markup_count": 40,
+      "markup_max_observed_us": 91902
+    },
+    {
+      "run": 3,
+      "current_service_start_host_ms": 182433,
+      "ready": true,
+      "full_qr": false,
+      "errors": [
+        "BROWSER JS ERROR \u811a\u672c\u6267\u884c\u8d85\u65f6"
+      ],
+      "current_run_pass": false,
+      "driver_pass": false,
+      "observation_s": 21.446812034002505,
+      "response_observations": [
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 46,
+          "interrupt": false,
+          "elapsed_us": 69166
+        },
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 10,
+          "interrupt": false,
+          "elapsed_us": 35637
+        },
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 2772,
+          "interrupt": false,
+          "elapsed_us": 168971
+        }
+      ],
+      "failure_observations": [
+        {
+          "kind": "FAIL_CONTEXT",
+          "phase": 6,
+          "bytes": 0,
+          "interrupt": true,
+          "elapsed_us": 88808
+        }
+      ],
+      "markup_count": 39,
+      "markup_max_observed_us": 90819
+    },
+    {
+      "run": 4,
+      "current_service_start_host_ms": 209787,
+      "ready": true,
+      "full_qr": true,
+      "errors": [],
+      "current_run_pass": true,
+      "driver_pass": true,
+      "observation_s": 27.042104022002604,
+      "response_observations": [
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 46,
+          "interrupt": false,
+          "elapsed_us": 69640
+        },
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 10,
+          "interrupt": false,
+          "elapsed_us": 30937
+        },
+        {
+          "kind": "RESPONSE_OBS",
+          "phase": 3,
+          "bytes": 2772,
+          "interrupt": false,
+          "elapsed_us": 168461
+        }
+      ],
+      "failure_observations": [],
+      "markup_count": 83,
+      "markup_max_observed_us": 200477
+    }
+  ],
+  "restoration": {
+    "signed_files": 29,
+    "private_files": 3,
+    "all_byte_identical": true,
+    "host_font_unchanged_by_task": true
+  },
+  "diagnostic_not_shipped": true
+}

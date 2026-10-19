@@ -1,0 +1,245 @@
+{
+  "scope": "Native Page probe, identical ASan/UBSan binary and P38 engine; old/new/new/old bootstrap runs. Deliberate2MiB TEST heap and2s TEST deadlines cover4096dense escaping. Application budgets unchanged. JS heap only, not device memory or S3 time. Shared workstation raw timing samples retained.",
+  "cases": [
+    {
+      "kind": "plain",
+      "length": 31,
+      "old": {
+        "js_current": 159776,
+        "js_peak": 175462,
+        "markup_us_samples": [
+          352,
+          187
+        ]
+      },
+      "new": {
+        "js_current": 158404,
+        "js_peak": 174287,
+        "markup_us_samples": [
+          158,
+          127
+        ]
+      }
+    },
+    {
+      "kind": "plain",
+      "length": 257,
+      "old": {
+        "js_current": 160002,
+        "js_peak": 175645,
+        "markup_us_samples": [
+          268,
+          136
+        ]
+      },
+      "new": {
+        "js_current": 158630,
+        "js_peak": 174470,
+        "markup_us_samples": [
+          123,
+          113
+        ]
+      }
+    },
+    {
+      "kind": "plain",
+      "length": 4096,
+      "old": {
+        "js_current": 163841,
+        "js_peak": 179653,
+        "markup_us_samples": [
+          784,
+          502
+        ]
+      },
+      "new": {
+        "js_current": 162469,
+        "js_peak": 178309,
+        "markup_us_samples": [
+          199,
+          192
+        ]
+      }
+    },
+    {
+      "kind": "dense",
+      "length": 31,
+      "old": {
+        "js_current": 159776,
+        "js_peak": 179559,
+        "markup_us_samples": [
+          843,
+          590
+        ]
+      },
+      "new": {
+        "js_current": 158404,
+        "js_peak": 178384,
+        "markup_us_samples": [
+          148,
+          132
+        ]
+      }
+    },
+    {
+      "kind": "dense",
+      "length": 257,
+      "old": {
+        "js_current": 160002,
+        "js_peak": 235922,
+        "markup_us_samples": [
+          5200,
+          2893
+        ]
+      },
+      "new": {
+        "js_current": 158630,
+        "js_peak": 178567,
+        "markup_us_samples": [
+          226,
+          207
+        ]
+      }
+    },
+    {
+      "kind": "dense",
+      "length": 4096,
+      "old": {
+        "js_current": 163841,
+        "js_peak": 1331294,
+        "markup_us_samples": [
+          60414,
+          43142
+        ]
+      },
+      "new": {
+        "js_current": 162469,
+        "js_peak": 241358,
+        "markup_us_samples": [
+          1886,
+          1640
+        ]
+      }
+    },
+    {
+      "kind": "unicode",
+      "length": 31,
+      "old": {
+        "js_current": 159806,
+        "js_peak": 208236,
+        "markup_us_samples": [
+          210,
+          158
+        ]
+      },
+      "new": {
+        "js_current": 158434,
+        "js_peak": 207061,
+        "markup_us_samples": [
+          98,
+          141
+        ]
+      }
+    },
+    {
+      "kind": "unicode",
+      "length": 257,
+      "old": {
+        "js_current": 160258,
+        "js_peak": 208675,
+        "markup_us_samples": [
+          363,
+          328
+        ]
+      },
+      "new": {
+        "js_current": 158886,
+        "js_peak": 207500,
+        "markup_us_samples": [
+          305,
+          122
+        ]
+      }
+    },
+    {
+      "kind": "unicode",
+      "length": 4096,
+      "old": {
+        "js_current": 167936,
+        "js_peak": 216353,
+        "markup_us_samples": [
+          831,
+          549
+        ]
+      },
+      "new": {
+        "js_current": 166564,
+        "js_peak": 215178,
+        "markup_us_samples": [
+          226,
+          232
+        ]
+      }
+    },
+    {
+      "kind": "sparse",
+      "length": 31,
+      "old": {
+        "js_current": 159632,
+        "js_peak": 163390,
+        "markup_us_samples": [
+          259,
+          195
+        ]
+      },
+      "new": {
+        "js_current": 158260,
+        "js_peak": 160088,
+        "markup_us_samples": [
+          122,
+          101
+        ]
+      }
+    },
+    {
+      "kind": "sparse",
+      "length": 257,
+      "old": {
+        "js_current": 159858,
+        "js_peak": 164162,
+        "markup_us_samples": [
+          283,
+          199
+        ]
+      },
+      "new": {
+        "js_current": 158486,
+        "js_peak": 161003,
+        "markup_us_samples": [
+          129,
+          117
+        ]
+      }
+    },
+    {
+      "kind": "sparse",
+      "length": 4096,
+      "old": {
+        "js_current": 163697,
+        "js_peak": 179586,
+        "markup_us_samples": [
+          694,
+          474
+        ]
+      },
+      "new": {
+        "js_current": 162325,
+        "js_peak": 178279,
+        "markup_us_samples": [
+          251,
+          234
+        ]
+      }
+    }
+  ]
+}

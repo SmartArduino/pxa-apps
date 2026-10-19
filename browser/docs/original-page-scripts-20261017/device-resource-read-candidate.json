@@ -1,0 +1,167 @@
+{
+  "scope": "One chronological P38/P49 pair on the same pai-touch d878 Host, unchanged production AOT UI, original official page and four original scripts, actual network QR without login. MEMORY local-minimum window spans launch through complete QR; no SCREENSHOT/PERF inside the window. Same-process prior Host caches and network may affect one pair. No FPS, CPU-time, touch-latency or real-account reading conclusion.",
+  "versions": {
+    "p38": {
+      "artifacts": {
+        "script.wasm": {
+          "bytes": 598294,
+          "sha256": "f382b07372ea750c555ec0f720a97a3809fb9a92885a246ed348739da3c89e7a"
+        },
+        "main.esp32-s3.aot": {
+          "bytes": 1237160,
+          "sha256": "45a2100989e34bb956dd2942d3ffa87e03bd2cc3942aa7e8efe09884302d6b58"
+        }
+      },
+      "passed": true,
+      "qr_180x180": true,
+      "cache_hit": true,
+      "elapsed_through_post_qr_stability_s": 26.10508038199623,
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 49803,
+        "sram_min": 28040,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6846132,
+        "psram_min": 4609596,
+        "psram_largest": 6291456
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47795,
+        "sram_min": 42731,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2631628,
+        "psram_min": 2402680,
+        "psram_largest": 2424832
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47795,
+        "sram_min": 28040,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2631656,
+        "psram_min": 2402680,
+        "psram_largest": 2424832
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272920,
+          "window_peak_used": 277984,
+          "stable_increment_from_cold": 2008,
+          "window_increment_from_cold": 7072
+        },
+        "psram": {
+          "stable_used": 5726868,
+          "window_peak_used": 5955844,
+          "stable_increment_from_cold": 4214476,
+          "window_increment_from_cold": 4443452
+        }
+      },
+      "js": [
+        {
+          "current": 257327,
+          "peak": 274768,
+          "errors": 0,
+          "max_turn_us": 1426900
+        }
+      ],
+      "library_host_log_interval_ms": 2083
+    },
+    "p49": {
+      "artifacts": {
+        "script.wasm": {
+          "bytes": 598121,
+          "sha256": "6db0019cbdf06d4bfd924a58168ebc0bd94e3855214094124959fdab40323643"
+        },
+        "main.esp32-s3.aot": {
+          "bytes": 1237160,
+          "sha256": "45a2100989e34bb956dd2942d3ffa87e03bd2cc3942aa7e8efe09884302d6b58"
+        }
+      },
+      "passed": true,
+      "qr_180x180": true,
+      "cache_hit": true,
+      "elapsed_through_post_qr_stability_s": 22.95740028,
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 49803,
+        "sram_min": 28040,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6793188,
+        "psram_min": 2402680,
+        "psram_largest": 3407872
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47795,
+        "sram_min": 43695,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2630912,
+        "psram_min": 2397056,
+        "psram_largest": 2424832
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47795,
+        "sram_min": 28040,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2630940,
+        "psram_min": 2397056,
+        "psram_largest": 2424832
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272920,
+          "window_peak_used": 277020,
+          "stable_increment_from_cold": 2008,
+          "window_increment_from_cold": 6108
+        },
+        "psram": {
+          "stable_used": 5727584,
+          "window_peak_used": 5961468,
+          "stable_increment_from_cold": 4162248,
+          "window_increment_from_cold": 4396132
+        }
+      },
+      "js": [
+        {
+          "current": 257327,
+          "peak": 274768,
+          "errors": 0,
+          "max_turn_us": 1422900
+        }
+      ],
+      "library_host_log_interval_ms": 669
+    }
+  },
+  "elapsed_scope": "Reported elapsed includes network/driver delays and an additional0.8s pump after ready+QR detection; not an exact first-QR timestamp. Failed observations never count as completed load times.",
+  "js_statistics_scope": "READY snapshot only: current, peak and maximum turn as of initial script readiness, not final QR/API callback statistics.",
+  "preservation": {
+    "signed_files": 29,
+    "private_files": 3,
+    "exactly_restored": true,
+    "host_firmware_and_font_unchanged": true,
+    "weread_session_bytes_unchanged": true
+  },
+  "differences": {
+    "sram": {
+      "stable_used": 0,
+      "window_peak_used": -964,
+      "stable_increment_from_cold": 0,
+      "window_increment_from_cold": -964
+    },
+    "psram": {
+      "stable_used": 716,
+      "window_peak_used": 5624,
+      "stable_increment_from_cold": -52228,
+      "window_increment_from_cold": -47320
+    }
+  },
+  "heap_gate_non_growing_this_pair": false
+}

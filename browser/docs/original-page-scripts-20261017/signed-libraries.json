@@ -1,0 +1,187 @@
+{
+  "kind": "signed exact-source library / P26 normal artifact and separate instrumented same-UI memory comparison",
+  "before": {
+    "script.wasm": {
+      "bytes": 594464,
+      "sha256": "54eccf816b7421ec7959d5b578036bb121cc7de18163840451dd2beb3d369951"
+    },
+    "main.esp32-s3.aot": {
+      "bytes": 1236744,
+      "sha256": "e1f2ce632cc3fc7fb3c2615bf0de20757871f9ffcf504aef9a0e0e3c1ea37670"
+    },
+    "package_bytes": 1416401
+  },
+  "after": {
+    "script.wasm": {
+      "bytes": 596900,
+      "sha256": "7fc1196f2438be578e6cde6024677f843c33b8ab85ed3c22393924f760d9f338"
+    },
+    "main.esp32-s3.aot": {
+      "bytes": 1237160,
+      "sha256": "45a2100989e34bb956dd2942d3ffa87e03bd2cc3942aa7e8efe09884302d6b58"
+    },
+    "package_bytes": 1444957
+  },
+  "before_module": {
+    "input_bytes": 594464,
+    "runtime_requested_bytes": 1849639,
+    "runtime_requested_peak_bytes": 1851343,
+    "remaining_bytes": 0,
+    "instance_requested_bytes": 1937393,
+    "instance_requested_peak_bytes": 1937393
+  },
+  "after_module": {
+    "input_bytes": 596900,
+    "runtime_requested_bytes": 1856045,
+    "runtime_requested_peak_bytes": 1857749,
+    "remaining_bytes": 0,
+    "instance_requested_bytes": 1943855,
+    "instance_requested_peak_bytes": 1943855
+  },
+  "linear_samples": [
+    {
+      "phase": "p20",
+      "fresh_instance": "flow",
+      "pages": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        9
+      ],
+      "highwater_bytes": 589824,
+      "passed": true
+    },
+    {
+      "phase": "p20",
+      "fresh_instance": "repeat",
+      "pages": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        9
+      ],
+      "highwater_bytes": 589824,
+      "passed": true
+    },
+    {
+      "phase": "p23",
+      "fresh_instance": "flow",
+      "pages": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "highwater_bytes": 458752,
+      "passed": true
+    },
+    {
+      "phase": "p23",
+      "fresh_instance": "repeat",
+      "pages": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "highwater_bytes": 458752,
+      "passed": true
+    }
+  ],
+  "linear_scope": "memory.size of script component in fresh real PXA simulator, P20/P23 with identical diagnostic UI; not transient physical allocation or device PSRAM",
+  "js_heap": {
+    "before_current": 261399,
+    "before_run_peak": 362678,
+    "after_current": 257327,
+    "after_run_peak": 274768
+  },
+  "library": {
+    "source_bytes": 25442,
+    "source_sha256": "e548d543be343288b431ce45a4964ecde1ff362dfa792a3c0a5360b4aa8af91d",
+    "bytecode_bytes": 33018,
+    "license_bytes": 1114,
+    "source_unchanged": true,
+    "network_bytecode_accepted": false
+  },
+  "object_layouts": {
+    "wasm32_page_impl_before": 520,
+    "wasm32_page_impl_after": 496,
+    "runtime_unchanged": 768
+  },
+  "checks": {
+    "actual_wasm_cases": 88,
+    "native_asan_ubsan_lsan": true,
+    "generator_hermetic": true,
+    "cache_miss_same_size_source_change": true,
+    "slow_load_cancel_retry": true,
+    "image_preview_callbacks_and_projection": true
+  },
+  "preview_screens": [
+    {
+      "passed": true,
+      "screen": [
+        296,
+        240,
+        160
+      ],
+      "round": false,
+      "callbacks_in_preview": true,
+      "stable_preview": true,
+      "deferred_projection": true,
+      "both_borders_visible": true
+    },
+    {
+      "passed": true,
+      "screen": [
+        240,
+        240,
+        160
+      ],
+      "round": true,
+      "callbacks_in_preview": true,
+      "stable_preview": true,
+      "deferred_projection": true,
+      "both_borders_visible": true
+    },
+    {
+      "passed": true,
+      "screen": [
+        480,
+        480,
+        240
+      ],
+      "round": true,
+      "callbacks_in_preview": true,
+      "stable_preview": true,
+      "deferred_projection": true,
+      "both_borders_visible": true
+    },
+    {
+      "passed": true,
+      "screen": [
+        360,
+        640,
+        240
+      ],
+      "round": false,
+      "callbacks_in_preview": true,
+      "stable_preview": true,
+      "deferred_projection": true,
+      "both_borders_visible": true
+    }
+  ],
+  "device": {
+    "host": "d878949377ee5d0135da3b1b5b98e4f6879a009e5b70b2bc1fda67ce68dbb97d",
+    "script_ready_errors": 0,
+    "maximum_reported_turn_us": 1399468,
+    "real_qr_visible": true,
+    "real_account_login_verified": false,
+    "limitation": "1.4 s long turn still present; no real-account proof yet"
+  }
+}

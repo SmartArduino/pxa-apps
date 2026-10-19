@@ -1,0 +1,1208 @@
+{
+  "scope": "P60 preregistered ABBA repetitions; fixed equal cold/warm counts, all samples retained. Same d878 Host/font, normal production UI and engine binaries; only signed bootstrap differs. Original webpage/4scripts/real publicQRs, no account scan. Payload bytes vary. No per-turn phase diagnostics. QR wall timings, not FPS/CPU/input latency. P59 diagnostic timings are separate. Each memory window begins before App launch and ends3s after QR; screenshots/preview outside. No additional sample seeking a pass.",
+  "protocol": {
+    "declared_before_any_p60_device_access": true,
+    "p59_candidate_adopted": false,
+    "reason": "P59 asset-only candidate reduced projection time and JS/PSRAM usage but cold SRAM window peak+892B and one warm stable+28B. Source attribution is uncertain; do not silently waive gate.",
+    "blocks": [
+      {
+        "version": "old",
+        "starts": 3
+      },
+      {
+        "version": "new",
+        "starts": 3
+      },
+      {
+        "version": "new",
+        "starts": 2
+      },
+      {
+        "version": "old",
+        "starts": 2
+      }
+    ],
+    "software_reboot_before_each_block": true,
+    "per_version_counts": {
+      "software_cold": 2,
+      "confirmed_stop_then_reopen": 3
+    },
+    "payload": "Same original official page/4scripts and real public unauthenticatedQR path; encoded image/JSON varies and byte sizes must be reported. No auth scan, credential import, user-session use, or website replacement. Separately retain exact-input12case native heap results.",
+    "primary_gate": "All ten starts complete original4scripts/READY errors0/fullQR with no trap/error; compare per-phase maxima of stable_used and window_peak_used independently for SRAM andPSRAM, equal counts. New must not exceed old. All raw samples retained, no additional sample seeking pass. Signed cache hit covered separately by P59 traces/native tests; normal phase logs intentionally absent.",
+    "secondary": "Report P59 separately plus combined all samples with unequal sample counts explicitly; no cherry-picked pairs. P56 demonstrates legacy failure, not a paired timing/memory baseline.",
+    "remaining_limits": "Diagnostics affect timing; no FPS/touch-latency claim.50ms cooperative deadline is not hard. Root staysP38 until adequate evidence. Real account login/shelf/reading still pending user scan.",
+    "device_preservation": "Wait for peer explicit release, fresh snapshots/latest session, preserve Hostd878/font121c/all existing files; only browser code installed/archived; all original set/SHA exact on finish.",
+    "protocol_revision": 2,
+    "amended_at_utc": "2026-10-17T11:18:39.046046+00:00",
+    "amendment_before_any_p60_capture": "Use normal release packages for physical heap gate, excluding per-turn diagnostic log allocations/scheduling. P59 diagnostic results retained and not reinterpreted as normal memory. Same ABBA counts and strict heap gate.",
+    "packages": {
+      "old": "borrow-source-s3-p38",
+      "new": "escape-normal-s3-p58"
+    },
+    "normal_artifacts_byte_identical_except_signed_bootstrap": true,
+    "post_stop_log_drain_s": 0.35
+  },
+  "samples": {
+    "old-b0-cold": {
+      "post_stop_runtime": [
+        {
+          "kind": "wamr",
+          "host_ms": 81412,
+          "fields": {
+            "peak": 240018,
+            "current": 53041,
+            "linear": 131072,
+            "linear_peak": 131072,
+            "artifact": 0,
+            "events": 64
+          },
+          "after_qr_observation": false,
+          "scope": "Host log; if before QR it does not establish the full script-session linear peak. Historical reset scope is not independently asserted."
+        },
+        {
+          "kind": "code_mapping",
+          "host_ms": 80666,
+          "fields": {
+            "ibus": 0,
+            "dbus": 0,
+            "request": 1146984,
+            "map": 1179648,
+            "alloc": 1179648,
+            "free_psram": 5503236
+          }
+        }
+      ],
+      "version": "old",
+      "block": 0,
+      "phase": "cold",
+      "passed": true,
+      "guest_trap": false,
+      "errors": [],
+      "qr_elapsed_s": 24.552529906002746,
+      "observation_s": 27.55307879800239,
+      "markup_max_observed_us": null,
+      "response_observations": [],
+      "failure_observations": [],
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 56915,
+        "sram_min": 27852,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6824776,
+        "psram_min": 6723256,
+        "psram_largest": 6684672
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47803,
+        "sram_min": 43667,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2606516,
+        "psram_min": 2377948,
+        "psram_largest": 2359296
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47803,
+        "sram_min": 27852,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2606544,
+        "psram_min": 2377948,
+        "psram_largest": 2359296
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272912,
+          "window_peak_used": 277048
+        },
+        "psram": {
+          "stable_used": 5751980,
+          "window_peak_used": 5980576
+        }
+      },
+      "ready_js_statistics_scope": "Initial READY only, not final callback peak.",
+      "ready_js": [
+        [
+          257327,
+          274768,
+          0,
+          1404175
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        },
+        {
+          "encoded_bytes": 1969,
+          "pixels": "180x180"
+        }
+      ],
+      "preview_opened": false
+    },
+    "old-b0-warm1": {
+      "post_stop_runtime": [
+        {
+          "kind": "wamr",
+          "host_ms": 116175,
+          "fields": {
+            "peak": 240018,
+            "current": 53041,
+            "linear": 131072,
+            "linear_peak": 131072,
+            "artifact": 0,
+            "events": 64
+          },
+          "after_qr_observation": false,
+          "scope": "Host log; if before QR it does not establish the full script-session linear peak. Historical reset scope is not independently asserted."
+        },
+        {
+          "kind": "code_mapping",
+          "host_ms": 115429,
+          "fields": {
+            "ibus": 0,
+            "dbus": 0,
+            "request": 1146984,
+            "map": 1179648,
+            "alloc": 1179648,
+            "free_psram": 5436248
+          }
+        }
+      ],
+      "version": "old",
+      "block": 0,
+      "phase": "warm",
+      "passed": true,
+      "guest_trap": false,
+      "errors": [],
+      "qr_elapsed_s": 23.6820748550017,
+      "observation_s": 26.689369254003395,
+      "markup_max_observed_us": null,
+      "response_observations": [],
+      "failure_observations": [],
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 49811,
+        "sram_min": 27852,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6757632,
+        "psram_min": 2377948,
+        "psram_largest": 3080192
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47803,
+        "sram_min": 43667,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2605508,
+        "psram_min": 2375184,
+        "psram_largest": 2490368
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47803,
+        "sram_min": 27852,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2605548,
+        "psram_min": 2375184,
+        "psram_largest": 2490368
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272912,
+          "window_peak_used": 277048
+        },
+        "psram": {
+          "stable_used": 5752976,
+          "window_peak_used": 5983340
+        }
+      },
+      "ready_js_statistics_scope": "Initial READY only, not final callback peak.",
+      "ready_js": [
+        [
+          257327,
+          274768,
+          0,
+          1408365
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        },
+        {
+          "encoded_bytes": 2011,
+          "pixels": "180x180"
+        }
+      ],
+      "preview_opened": false
+    },
+    "old-b0-warm2": {
+      "post_stop_runtime": [
+        {
+          "kind": "wamr",
+          "host_ms": 149065,
+          "fields": {
+            "peak": 240018,
+            "current": 53041,
+            "linear": 131072,
+            "linear_peak": 131072,
+            "artifact": 0,
+            "events": 64
+          },
+          "after_qr_observation": false,
+          "scope": "Host log; if before QR it does not establish the full script-session linear peak. Historical reset scope is not independently asserted."
+        },
+        {
+          "kind": "code_mapping",
+          "host_ms": 148327,
+          "fields": {
+            "ibus": 0,
+            "dbus": 0,
+            "request": 1146984,
+            "map": 1179648,
+            "alloc": 1179648,
+            "free_psram": 5434936
+          }
+        }
+      ],
+      "version": "old",
+      "block": 0,
+      "phase": "warm",
+      "passed": true,
+      "guest_trap": false,
+      "errors": [],
+      "qr_elapsed_s": 23.66087364399573,
+      "observation_s": 26.670801086998836,
+      "markup_max_observed_us": null,
+      "response_observations": [],
+      "failure_observations": [],
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 49811,
+        "sram_min": 27852,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6756344,
+        "psram_min": 2375184,
+        "psram_largest": 3080192
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47803,
+        "sram_min": 43579,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2605200,
+        "psram_min": 2374924,
+        "psram_largest": 2359296
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47803,
+        "sram_min": 27852,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2605232,
+        "psram_min": 2374924,
+        "psram_largest": 2359296
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272912,
+          "window_peak_used": 277136
+        },
+        "psram": {
+          "stable_used": 5753292,
+          "window_peak_used": 5983600
+        }
+      },
+      "ready_js_statistics_scope": "Initial READY only, not final callback peak.",
+      "ready_js": [
+        [
+          257327,
+          274768,
+          0,
+          1427297
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        },
+        {
+          "encoded_bytes": 1942,
+          "pixels": "180x180"
+        }
+      ],
+      "preview_opened": false
+    },
+    "new-b1-cold": {
+      "post_stop_runtime": [
+        {
+          "kind": "wamr",
+          "host_ms": 79788,
+          "fields": {
+            "peak": 240018,
+            "current": 53041,
+            "linear": 131072,
+            "linear_peak": 131072,
+            "artifact": 0,
+            "events": 64
+          },
+          "after_qr_observation": false,
+          "scope": "Host log; if before QR it does not establish the full script-session linear peak. Historical reset scope is not independently asserted."
+        },
+        {
+          "kind": "code_mapping",
+          "host_ms": 79040,
+          "fields": {
+            "ibus": 0,
+            "dbus": 0,
+            "request": 1146984,
+            "map": 1179648,
+            "alloc": 1179648,
+            "free_psram": 5503436
+          }
+        }
+      ],
+      "version": "new",
+      "block": 1,
+      "phase": "cold",
+      "passed": true,
+      "guest_trap": false,
+      "errors": [],
+      "qr_elapsed_s": 24.333865048996813,
+      "observation_s": 27.337864520995936,
+      "markup_max_observed_us": null,
+      "response_observations": [],
+      "failure_observations": [],
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 56943,
+        "sram_min": 27644,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6825088,
+        "psram_min": 6725668,
+        "psram_largest": 6684672
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47791,
+        "sram_min": 42723,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2606956,
+        "psram_min": 2378404,
+        "psram_largest": 2359296
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47791,
+        "sram_min": 27644,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2606996,
+        "psram_min": 2378404,
+        "psram_largest": 2359296
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272924,
+          "window_peak_used": 277992
+        },
+        "psram": {
+          "stable_used": 5751528,
+          "window_peak_used": 5980120
+        }
+      },
+      "ready_js_statistics_scope": "Initial READY only, not final callback peak.",
+      "ready_js": [
+        [
+          257327,
+          274768,
+          0,
+          1399844
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        },
+        {
+          "encoded_bytes": 1967,
+          "pixels": "180x180"
+        }
+      ],
+      "preview_opened": false
+    },
+    "new-b1-warm1": {
+      "post_stop_runtime": [
+        {
+          "kind": "wamr",
+          "host_ms": 114425,
+          "fields": {
+            "peak": 240018,
+            "current": 53041,
+            "linear": 131072,
+            "linear_peak": 131072,
+            "artifact": 0,
+            "events": 64
+          },
+          "after_qr_observation": false,
+          "scope": "Host log; if before QR it does not establish the full script-session linear peak. Historical reset scope is not independently asserted."
+        },
+        {
+          "kind": "code_mapping",
+          "host_ms": 113679,
+          "fields": {
+            "ibus": 0,
+            "dbus": 0,
+            "request": 1146984,
+            "map": 1179648,
+            "alloc": 1179648,
+            "free_psram": 5436540
+          }
+        }
+      ],
+      "version": "new",
+      "block": 1,
+      "phase": "warm",
+      "passed": true,
+      "guest_trap": false,
+      "errors": [],
+      "qr_elapsed_s": 23.348174006998306,
+      "observation_s": 26.351546129997587,
+      "markup_max_observed_us": null,
+      "response_observations": [],
+      "failure_observations": [],
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 49799,
+        "sram_min": 27644,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6757984,
+        "psram_min": 2378404,
+        "psram_largest": 3080192
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47791,
+        "sram_min": 43655,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2605896,
+        "psram_min": 2371976,
+        "psram_largest": 2490368
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47791,
+        "sram_min": 27644,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2605924,
+        "psram_min": 2371976,
+        "psram_largest": 2490368
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272924,
+          "window_peak_used": 277060
+        },
+        "psram": {
+          "stable_used": 5752600,
+          "window_peak_used": 5986548
+        }
+      },
+      "ready_js_statistics_scope": "Initial READY only, not final callback peak.",
+      "ready_js": [
+        [
+          257327,
+          274768,
+          0,
+          1410973
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        },
+        {
+          "encoded_bytes": 1969,
+          "pixels": "180x180"
+        }
+      ],
+      "preview_opened": false
+    },
+    "new-b1-warm2": {
+      "post_stop_runtime": [
+        {
+          "kind": "wamr",
+          "host_ms": 147154,
+          "fields": {
+            "peak": 240018,
+            "current": 53041,
+            "linear": 131072,
+            "linear_peak": 131072,
+            "artifact": 0,
+            "events": 64
+          },
+          "after_qr_observation": false,
+          "scope": "Host log; if before QR it does not establish the full script-session linear peak. Historical reset scope is not independently asserted."
+        },
+        {
+          "kind": "code_mapping",
+          "host_ms": 146406,
+          "fields": {
+            "ibus": 0,
+            "dbus": 0,
+            "request": 1146984,
+            "map": 1179648,
+            "alloc": 1179648,
+            "free_psram": 5435736
+          }
+        }
+      ],
+      "version": "new",
+      "block": 1,
+      "phase": "warm",
+      "passed": true,
+      "guest_trap": false,
+      "errors": [],
+      "qr_elapsed_s": 23.35905773000559,
+      "observation_s": 26.360285034999833,
+      "markup_max_observed_us": null,
+      "response_observations": [],
+      "failure_observations": [],
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 49763,
+        "sram_min": 27644,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6757200,
+        "psram_min": 2371976,
+        "psram_largest": 3080192
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47791,
+        "sram_min": 43691,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2605852,
+        "psram_min": 2375540,
+        "psram_largest": 2490368
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47791,
+        "sram_min": 27644,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2605880,
+        "psram_min": 2371976,
+        "psram_largest": 2490368
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272924,
+          "window_peak_used": 277024
+        },
+        "psram": {
+          "stable_used": 5752644,
+          "window_peak_used": 5982984
+        }
+      },
+      "ready_js_statistics_scope": "Initial READY only, not final callback peak.",
+      "ready_js": [
+        [
+          257327,
+          274768,
+          0,
+          1415138
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        },
+        {
+          "encoded_bytes": 1946,
+          "pixels": "180x180"
+        }
+      ],
+      "preview_opened": false
+    },
+    "new-b2-cold": {
+      "post_stop_runtime": [
+        {
+          "kind": "wamr",
+          "host_ms": 78990,
+          "fields": {
+            "peak": 240018,
+            "current": 53041,
+            "linear": 131072,
+            "linear_peak": 131072,
+            "artifact": 0,
+            "events": 64
+          },
+          "after_qr_observation": false,
+          "scope": "Host log; if before QR it does not establish the full script-session linear peak. Historical reset scope is not independently asserted."
+        },
+        {
+          "kind": "code_mapping",
+          "host_ms": 78243,
+          "fields": {
+            "ibus": 0,
+            "dbus": 0,
+            "request": 1146984,
+            "map": 1179648,
+            "alloc": 1179648,
+            "free_psram": 5504212
+          }
+        }
+      ],
+      "version": "new",
+      "block": 2,
+      "phase": "cold",
+      "passed": true,
+      "guest_trap": false,
+      "errors": [],
+      "qr_elapsed_s": 23.90583779800363,
+      "observation_s": 26.911493377003353,
+      "markup_max_observed_us": null,
+      "response_observations": [],
+      "failure_observations": [],
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 56951,
+        "sram_min": 27892,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6825652,
+        "psram_min": 6723704,
+        "psram_largest": 6684672
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47803,
+        "sram_min": 42735,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2607468,
+        "psram_min": 2378920,
+        "psram_largest": 2359296
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47767,
+        "sram_min": 27892,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2607496,
+        "psram_min": 2378920,
+        "psram_largest": 2359296
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272948,
+          "window_peak_used": 277980
+        },
+        "psram": {
+          "stable_used": 5751028,
+          "window_peak_used": 5979604
+        }
+      },
+      "ready_js_statistics_scope": "Initial READY only, not final callback peak.",
+      "ready_js": [
+        [
+          257327,
+          274768,
+          0,
+          1411688
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        },
+        {
+          "encoded_bytes": 1935,
+          "pixels": "180x180"
+        }
+      ],
+      "preview_opened": false
+    },
+    "new-b2-warm1": {
+      "post_stop_runtime": [
+        {
+          "kind": "wamr",
+          "host_ms": 112937,
+          "fields": {
+            "peak": 240018,
+            "current": 53041,
+            "linear": 131072,
+            "linear_peak": 131072,
+            "artifact": 0,
+            "events": 64
+          },
+          "after_qr_observation": false,
+          "scope": "Host log; if before QR it does not establish the full script-session linear peak. Historical reset scope is not independently asserted."
+        },
+        {
+          "kind": "code_mapping",
+          "host_ms": 112192,
+          "fields": {
+            "ibus": 0,
+            "dbus": 0,
+            "request": 1146984,
+            "map": 1179648,
+            "alloc": 1179648,
+            "free_psram": 5436928
+          }
+        }
+      ],
+      "version": "new",
+      "block": 2,
+      "phase": "warm",
+      "passed": true,
+      "guest_trap": false,
+      "errors": [],
+      "qr_elapsed_s": 22.95200501599902,
+      "observation_s": 25.95324044199515,
+      "markup_max_observed_us": null,
+      "response_observations": [],
+      "failure_observations": [],
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 49811,
+        "sram_min": 27892,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6758336,
+        "psram_min": 2378920,
+        "psram_largest": 3276800
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47803,
+        "sram_min": 43667,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2606140,
+        "psram_min": 2375852,
+        "psram_largest": 2359296
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47803,
+        "sram_min": 27892,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2606172,
+        "psram_min": 2375852,
+        "psram_largest": 2359296
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272912,
+          "window_peak_used": 277048
+        },
+        "psram": {
+          "stable_used": 5752352,
+          "window_peak_used": 5982672
+        }
+      },
+      "ready_js_statistics_scope": "Initial READY only, not final callback peak.",
+      "ready_js": [
+        [
+          257327,
+          274768,
+          0,
+          1408959
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        },
+        {
+          "encoded_bytes": 1982,
+          "pixels": "180x180"
+        }
+      ],
+      "preview_opened": true
+    },
+    "old-b3-cold": {
+      "post_stop_runtime": [
+        {
+          "kind": "wamr",
+          "host_ms": 104703,
+          "fields": {
+            "peak": 1437531,
+            "current": 416,
+            "linear": 0,
+            "linear_peak": 655360,
+            "artifact": 0,
+            "events": 0
+          },
+          "after_qr_observation": false,
+          "scope": "Host log; if before QR it does not establish the full script-session linear peak. Historical reset scope is not independently asserted."
+        },
+        {
+          "kind": "code_mapping",
+          "host_ms": 77872,
+          "fields": {
+            "ibus": 0,
+            "dbus": 0,
+            "request": 1146984,
+            "map": 1179648,
+            "alloc": 1179648,
+            "free_psram": 5503976
+          }
+        }
+      ],
+      "version": "old",
+      "block": 3,
+      "phase": "cold",
+      "passed": false,
+      "guest_trap": false,
+      "errors": [
+        "BROWSER JS ERROR \u811a\u672c\u6267\u884c\u8d85\u65f6"
+      ],
+      "qr_elapsed_s": null,
+      "observation_s": 22.354148300000816,
+      "markup_max_observed_us": null,
+      "response_observations": [],
+      "failure_observations": [],
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 56955,
+        "sram_min": 28040,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6825552,
+        "psram_min": 6723596,
+        "psram_largest": 6684672
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47163,
+        "sram_min": 42995,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2732316,
+        "psram_min": 2379784,
+        "psram_largest": 2555904
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47303,
+        "sram_min": 28040,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2731868,
+        "psram_min": 2379784,
+        "psram_largest": 2555904
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 273412,
+          "window_peak_used": 277720
+        },
+        "psram": {
+          "stable_used": 5626656,
+          "window_peak_used": 5978740
+        }
+      },
+      "ready_js_statistics_scope": "Initial READY only, not final callback peak.",
+      "ready_js": [
+        [
+          257327,
+          274768,
+          0,
+          1416469
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        }
+      ],
+      "preview_opened": false
+    },
+    "old-b3-warm1": {
+      "post_stop_runtime": [
+        {
+          "kind": "wamr",
+          "host_ms": 107690,
+          "fields": {
+            "peak": 240018,
+            "current": 53041,
+            "linear": 131072,
+            "linear_peak": 131072,
+            "artifact": 0,
+            "events": 64
+          },
+          "after_qr_observation": false,
+          "scope": "Host log; if before QR it does not establish the full script-session linear peak. Historical reset scope is not independently asserted."
+        },
+        {
+          "kind": "code_mapping",
+          "host_ms": 106941,
+          "fields": {
+            "ibus": 0,
+            "dbus": 0,
+            "request": 1146984,
+            "map": 1179648,
+            "alloc": 1179648,
+            "free_psram": 5434504
+          }
+        }
+      ],
+      "version": "old",
+      "block": 3,
+      "phase": "warm",
+      "passed": true,
+      "guest_trap": false,
+      "errors": [],
+      "qr_elapsed_s": 23.639385578004294,
+      "observation_s": 26.642908733003424,
+      "markup_max_observed_us": null,
+      "response_observations": [],
+      "failure_observations": [],
+      "cold_heap": {
+        "sram_total": 320715,
+        "sram_free": 49815,
+        "sram_min": 28040,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 6755760,
+        "psram_min": 2379784,
+        "psram_largest": 3407872
+      },
+      "window_heap": {
+        "sram_total": 320715,
+        "sram_free": 47771,
+        "sram_min": 42739,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2601276,
+        "psram_min": 2367384,
+        "psram_largest": 2293760
+      },
+      "loaded_heap": {
+        "sram_total": 320715,
+        "sram_free": 47771,
+        "sram_min": 28040,
+        "sram_largest": 19456,
+        "psram_total": 8358524,
+        "psram_free": 2601316,
+        "psram_min": 2367384,
+        "psram_largest": 2293760
+      },
+      "heap": {
+        "sram": {
+          "stable_used": 272944,
+          "window_peak_used": 277976
+        },
+        "psram": {
+          "stable_used": 5757208,
+          "window_peak_used": 5991140
+        }
+      },
+      "ready_js_statistics_scope": "Initial READY only, not final callback peak.",
+      "ready_js": [
+        [
+          257327,
+          274768,
+          0,
+          1430733
+        ]
+      ],
+      "images": [
+        {
+          "encoded_bytes": 5426,
+          "pixels": "236x50"
+        },
+        {
+          "encoded_bytes": 1993,
+          "pixels": "180x180"
+        }
+      ],
+      "preview_opened": false
+    }
+  },
+  "summary_by_phase": {
+    "cold": {
+      "old": {
+        "count": 2,
+        "all_pass": false,
+        "heap_maxima": {
+          "sram": {
+            "stable_used": 273412,
+            "window_peak_used": 277720
+          },
+          "psram": {
+            "stable_used": 5751980,
+            "window_peak_used": 5980576
+          }
+        },
+        "qr_elapsed_samples_s": [
+          24.552529906002746,
+          null
+        ],
+        "markup_max_samples_us": [
+          null,
+          null
+        ]
+      },
+      "new": {
+        "count": 2,
+        "all_pass": true,
+        "heap_maxima": {
+          "sram": {
+            "stable_used": 272948,
+            "window_peak_used": 277992
+          },
+          "psram": {
+            "stable_used": 5751528,
+            "window_peak_used": 5980120
+          }
+        },
+        "qr_elapsed_samples_s": [
+          24.333865048996813,
+          23.90583779800363
+        ],
+        "markup_max_samples_us": [
+          null,
+          null
+        ]
+      },
+      "complete_equal_workloads": false,
+      "raw_heap_maxima_scope": "All attempts, including failures. Incomplete workloads cannot establish a performance or memory benefit.",
+      "new_minus_old_heap_maxima": null
+    },
+    "warm": {
+      "old": {
+        "count": 3,
+        "all_pass": true,
+        "heap_maxima": {
+          "sram": {
+            "stable_used": 272944,
+            "window_peak_used": 277976
+          },
+          "psram": {
+            "stable_used": 5757208,
+            "window_peak_used": 5991140
+          }
+        },
+        "qr_elapsed_samples_s": [
+          23.6820748550017,
+          23.66087364399573,
+          23.639385578004294
+        ],
+        "markup_max_samples_us": [
+          null,
+          null,
+          null
+        ]
+      },
+      "new": {
+        "count": 3,
+        "all_pass": true,
+        "heap_maxima": {
+          "sram": {
+            "stable_used": 272924,
+            "window_peak_used": 277060
+          },
+          "psram": {
+            "stable_used": 5752644,
+            "window_peak_used": 5986548
+          }
+        },
+        "qr_elapsed_samples_s": [
+          23.348174006998306,
+          23.35905773000559,
+          22.95200501599902
+        ],
+        "markup_max_samples_us": [
+          null,
+          null,
+          null
+        ]
+      },
+      "complete_equal_workloads": true,
+      "raw_heap_maxima_scope": "All attempts, including failures. Incomplete workloads cannot establish a performance or memory benefit.",
+      "new_minus_old_heap_maxima": {
+        "sram": {
+          "stable_used": -20,
+          "window_peak_used": -916
+        },
+        "psram": {
+          "stable_used": -4564,
+          "window_peak_used": -4592
+        }
+      }
+    }
+  },
+  "strict_preregistered_gate": false,
+  "restoration": {
+    "signed_files": 29,
+    "private_files": 3,
+    "all_exact": true,
+    "host_font_wifi_unchanged": true
+  },
+  "adopted": false,
+  "warm_stop_scope": "Registry active=0 was observed before restart. Host cleanup unpublishes this field before final runtime statistics, so it does not independently prove complete engine teardown.",
+  "vm_peak_scope": "Available WAMR logs precede QR/script work; they do not establish the complete Guest/session linear peak.",
+  "normal_builds": {
+    "old": {
+      "artifacts/main.esp32-s3.aot": {
+        "bytes": 1237160,
+        "sha256": "45a2100989e34bb956dd2942d3ffa87e03bd2cc3942aa7e8efe09884302d6b58"
+      },
+      "artifacts/script.wasm": {
+        "bytes": 596055,
+        "sha256": "b567eceddbf386b249f61922479e1b9fcf71fd6ec43aad7c14366aaad8ccf326"
+      },
+      "assets/browser-runtime.qjb": {
+        "bytes": 16931,
+        "sha256": "44830b6dec62904a7b6e5e11def4937c6c262fe060de9d4c5d9653e9a281a5f5"
+      }
+    },
+    "new": {
+      "artifacts/main.esp32-s3.aot": {
+        "bytes": 1237160,
+        "sha256": "45a2100989e34bb956dd2942d3ffa87e03bd2cc3942aa7e8efe09884302d6b58"
+      },
+      "artifacts/script.wasm": {
+        "bytes": 596055,
+        "sha256": "b567eceddbf386b249f61922479e1b9fcf71fd6ec43aad7c14366aaad8ccf326"
+      },
+      "assets/browser-runtime.qjb": {
+        "bytes": 16813,
+        "sha256": "ecd1484cf98bd6461f0574296eca8897987c07ce9921e1b2be1e4111b4e37c03"
+      }
+    }
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-18",
+  "change": "Default unspecified XHR/fetch timeout12000->60000ms, bounded by existing Host admission; explicit nonzero page timeouts still honored. No page substitutions, retries of POST, Host, ABI or SDK changes.",
+  "observed_mobile_expiry": "User reported expiry in WeChat on phone. The client timeout defect is proven, but its causal relationship to server-side QR invalidation is not yet proven.",
+  "qr_checks": {
+    "official_confirmation_shape": true,
+    "all_three_observed_uid_distinct": true,
+    "screenshot_qr_decodes": true,
+    "no_decoded_nonce_recorded": true
+  },
+  "anonymous_service_probe": {
+    "unshared_no_account_qr": true,
+    "getlogininfo_no_response_within_s": 45,
+    "cancellation_probe": "After12s transport timeout, a second sameUID/samecgiKey poll was still pending at8s. This does not establish server invalidation on disconnect."
+  },
+  "simulator": {
+    "scope": "same captured original HTML/four scripts with deterministic non-account API/session and18second delayed longpoll over actual simulator HTTP backend",
+    "old12s": {
+      "passed": false,
+      "guest_trap": false,
+      "observed_error": "login-requestLoginInfo error status0; no weblogin/shelf navigation"
+    },
+    "new60s": {
+      "passed": true,
+      "login_body": true,
+      "shelf_httponly_cookie": true,
+      "fingerprint_cookie": true,
+      "caught_errors": []
+    }
+  },
+  "native": "ASan/UBSan/leak+WASI/interpreted model regression passed, including default/zero/explicit1500/60000 timeout cases; library/generator checks,812 compile cancellation/recovery and array-copy cancellation/recovery passed.",
+  "builds": [
+    {
+      "path": "artifacts/main.esp32-s3.aot",
+      "old_bytes": 1238036,
+      "new_bytes": 1238036,
+      "identical": true,
+      "new_sha256": "fd5c20d1a01dd5b681b334f1e0f970f48ca15f222c830a1a4abd2aff472c9b10",
+      "changed_byte_count": 0
+    },
+    {
+      "path": "artifacts/script.wasm",
+      "old_bytes": 596055,
+      "new_bytes": 596055,
+      "identical": false,
+      "new_sha256": "12fb37a65da5c641362e0bc5d7812d3b3142677aba462cde496951b26edb14c3",
+      "changed_byte_count": 4
+    },
+    {
+      "path": "assets/browser-runtime.qjb",
+      "old_bytes": 16931,
+      "new_bytes": 16931,
+      "identical": true,
+      "new_sha256": "44830b6dec62904a7b6e5e11def4937c6c262fe060de9d4c5d9653e9a281a5f5",
+      "changed_byte_count": 0
+    }
+  ],
+  "memory_scope": "No additional fields, buffers, queue slots or code/artifact bytes. Guest/physical authenticated-path stable and peak memory still require actual account measurement; longer requests retain the existing transport resources for longer.",
+  "remaining": "Actual user scan, server acceptance and browser authenticated shelf/reading are not yet verified. Existing Host has a60s absolute exchange cap; zero does not yet mean unlimited waiting. Network retries are not silently added to POST.",
+  "standard": "https://xhr.spec.whatwg.org/#the-timeout-attribute",
+  "device": {
+    "new_guest_installed": true,
+    "host_font_not_changed": true,
+    "original_login_ready_errors": 0,
+    "js_heap_at_ready_bytes": 257327,
+    "js_peak_at_ready_bytes": 274768,
+    "real180x180_qr_decoded_and_previewed": true,
+    "phone_acceptance_verified": false,
+    "authenticated_shelf_or_reading_verified": false,
+    "cleanup": "Original29 installed+3 private complete sets and SHA identical to fresh preflight; browser code archived, no App, serial released; no Host/font/settings writes."
+  }
+}
