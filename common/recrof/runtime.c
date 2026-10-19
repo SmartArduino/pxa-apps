@@ -666,6 +666,10 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t n) {
   }
   uint64_t now;
   if (pxa_clock_parse_tick(&e, &now)) {
+#ifdef PORT_CNC_MEDIA_HANDLES
+    extern void port_filesystem_tick(uint64_t);
+    port_filesystem_tick(now);
+#endif
 #ifdef PORT_LOADING_TRACE
     static uint64_t loading_log;
     if(engine_running && !perf_since && now-loading_log>=5000000) {

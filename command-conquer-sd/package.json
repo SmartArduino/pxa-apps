@@ -13,7 +13,7 @@
     0
   ],
   "id": "pxa-command-conquer-sd",
-  "version": "0.1.7",
+  "version": "0.1.9",
   "name": "Command & Conquer SD",
   "description": "Engine with automatically bound fixed SD resources and internal saves",
   "build": {
@@ -75,5 +75,5 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 8
+  "release_sequence": 10
 }

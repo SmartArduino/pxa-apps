@@ -62,6 +62,59 @@ static void cached_read_cooperate(void) {
   if((++cached_reads&255u)==0 &&
       port_cooperate_due(port_time_us(),PORT_COOPERATE_BUDGET_US))port_sleep(0);
 }
+static void invalidate_external_page(uint64_t handle) {
+  for(unsigned i=0;i<2;++i)
+    if(read_cache[i].external_handle==handle)read_cache[i].bytes=0;
+}
+#ifdef PORT_CNC_MEDIA_HANDLES
+#ifndef PORT_RTS
+#error "RTS archive reuse requires tracked private namespace mutations"
+#endif
+/* MIX archives are read-only resources. Retain at most two idle Host handles
+ * for half a second, preserving cookies and resetting only the Guest cursor.
+ * Private writes invalidate the overlay decision before the next reuse. */
+static struct {
+  uint64_t handle,features,cookie,revision,expires;
+  uint32_t size;
+  char path[256];
+} media_handles[2];
+static void expire_media_handles(uint64_t now) {
+  for(unsigned i=0;i<2;++i)if(media_handles[i].handle &&
+      (media_handles[i].revision!=namespace_revision || media_handles[i].expires<=now)) {
+    invalidate_external_page(media_handles[i].handle);
+    pxa_close_handle(media_handles[i].handle);media_handles[i].handle=0;
+  }
+}
+void port_filesystem_tick(uint64_t now) { expire_media_handles(now); }
+static int reuse_media_handle(const char *path,struct File *file) {
+  expire_media_handles(port_time_us());
+  for(unsigned i=0;i<2;++i)if(media_handles[i].handle && !strcmp(media_handles[i].path,path)) {
+    memset(file,0,sizeof(*file));file->used=file->external=1;
+    file->handle=media_handles[i].handle;file->features=media_handles[i].features;
+    file->read_cookie=media_handles[i].cookie;file->size=media_handles[i].size;
+    strcpy(file->asset_path,path);media_handles[i].handle=0;return 1;
+  }
+  return 0;
+}
+static int retain_media_handle(struct File *file) {
+  size_t length=strlen(file->asset_path);
+  if(file->error || !(file->features&PXA_FS_FILE_FEATURE_READ_AT) ||
+      length<4 || strcmp(file->asset_path+length-4,".mix"))return 0;
+  uint64_t now=port_time_us();expire_media_handles(now);
+  unsigned victim=0;
+  for(unsigned i=0;i<2;++i)
+    if(!media_handles[i].handle || (media_handles[victim].handle &&
+        media_handles[i].expires<media_handles[victim].expires))victim=i;
+  if(media_handles[victim].handle) {
+    invalidate_external_page(media_handles[victim].handle);
+    pxa_close_handle(media_handles[victim].handle);
+  }
+  media_handles[victim].handle=file->handle;media_handles[victim].features=file->features;
+  media_handles[victim].cookie=file->read_cookie;media_handles[victim].size=file->size;
+  media_handles[victim].revision=namespace_revision;media_handles[victim].expires=now+500000;
+  strcpy(media_handles[victim].path,file->asset_path);return 1;
+}
+#endif
 static char cwd[256] = "/data";
 static struct File *slot(int fd) {
   return fd >= FD_BASE && fd < FD_BASE + SLOT_COUNT && files[fd - FD_BASE].used
@@ -162,6 +215,9 @@ static int openfile(const char *name, uint32_t flags) {
     errno = EMFILE;
     return -1;
   }
+#ifdef PORT_CNC_MEDIA_HANDLES
+  if(flags==PXA_FS_OPEN_READ && reuse_media_handle(p,&files[i]))return i+FD_BASE;
+#endif
   uint8_t packet[320];
   uint32_t n;
   if (!pxa_fs_build_open(packet, sizeof(packet), 1, p, strlen(p), flags, &n)) {
@@ -176,6 +232,7 @@ static int openfile(const char *name, uint32_t flags) {
       if(port_external_open(p,&external_handle,&external_size,&features)) {
         memset(&files[i],0,sizeof(files[i]));files[i].used=files[i].external=1;
         files[i].handle=external_handle;files[i].size=external_size;files[i].features=features;
+        strcpy(files[i].asset_path,p);
         return i+FD_BASE;
       }
       pxa_asset_result_t info;
@@ -212,10 +269,13 @@ int __wrap_close(int fd) {
     errno = EBADF;
     return -1;
   }
-  if (!f->asset)
+  int retained=0;
+#ifdef PORT_CNC_MEDIA_HANDLES
+  if(f->external)retained=retain_media_handle(f);
+#endif
+  if (!f->asset && !retained)
     pxa_close_handle(f->handle);
-  if(f->external)for(unsigned i=0;i<2;++i)
-    if(read_cache[i].external_handle==f->handle)read_cache[i].bytes=0;
+  if(f->external && !retained)invalidate_external_page(f->handle);
   f->used = 0;
   return 0;
 }
