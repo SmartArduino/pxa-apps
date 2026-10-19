@@ -200,3 +200,24 @@ GameRender投影试验：`PXA_QUAKE_PROJECTED_SPANS` 默认关闭。直接运行
 光照和深度输出与当前vendor函数对比（需主工程deps/pxa-system）。
 GameKit实际出生点私有候选中位3.9fps，低于6.9fps默认基线；不依据合成吞吐
 启用该选项。公开0.3.1使用Guest原路径，最低15fps及期望20fps仍待后续优化。
+
+
+## GameRender 1.2 跨材质批次
+
+`PXA_QUAKE_FRAME_SPANS` 使用已有Surface后缓冲保存命令与材质快照，
+世界绘制完成后同步执行，再覆盖为RGB565显示帧。Host不新增纹理、帧或深度堆缓冲。
+`PXA_RECROF_HOST_BLIT` 可单独将INDEX8颜色转换及透明光标交给Host；保持原缩放规则。
+两项都是默认关闭的实验选项，需要GameRender 1.2。不能把原生计算测试的吞吐当成游戏FPS。
+
+`PXA_QUAKE_FRAME_BULK_COPY` 仅作用于整帧批次的大块资源快照，使用WASM `memory.copy`；
+没有给整个引擎开启bulk-memory编译开关。可关闭此选项复现普通memmove候选。
+上游原函数继续保留，原生批次拒绝时按捕获状态整体回退。
+
+```sh
+python3 local/pxa-apps/common/recrof/tests/run_quake_frame_adapter.py
+PXA_QUAKE_TEST_BULK_COPY=0 python3 local/pxa-apps/common/recrof/tests/run_quake_frame_adapter.py
+python3 local/pxa-apps/common/recrof/tests/run_host_indexed_blit.py
+```
+
+第一项在WASM中使用当前上游Rows函数验证来源复用后的回退，第二项覆盖非bulk配置，
+第三项使用原`port_blit`作参考。主工程的`tools/game-perf/profiles`保留独立比较配置。

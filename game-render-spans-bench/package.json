@@ -13,15 +13,15 @@
     0
   ],
   "id": "pxa-game-render-spans-bench",
-  "version": "1.1.0",
-  "release_sequence": 4,
+  "version": "1.2.1",
+  "release_sequence": 6,
   "name": "GameRender Native Spans",
   "description": "Validate native indexed span batches and report compute time; not a game FPS benchmark",
   "build": {
     "system": "cmake",
     "source_dir": ".",
     "linear_memory": {
-      "maximum_bytes": 524288,
+      "maximum_bytes": 1048576,
       "pinned": false
     }
   },
@@ -37,10 +37,12 @@
           "name": "game-render",
           "min_version": [
             1,
-            1
+            2
           ],
           "features": [
+            "borrowed-indexed-blit",
             "borrowed-indexed-spans",
+            "indexed-frame-batches",
             "projected-indexed-spans"
           ]
         }

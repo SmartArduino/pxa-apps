@@ -1464,6 +1464,12 @@ static void drawLitSpan(uint8_t *pdest, int count, int s, int t, int sstep, int 
 #if PXA_GAME_RENDER_SPANS
 #include "host_spans.h"
 #endif
+#if PXA_GAME_RENDER_PROJECTED_SPANS || PXA_GAME_RENDER_FRAME_SPANS
+#include "host_material.h"
+#endif
+#if PXA_GAME_RENDER_FRAME_SPANS
+#include "host_frame_spans.h"
+#endif
 #if PXA_GAME_RENDER_PROJECTED_SPANS
 #include "host_projected_spans.h"
 #endif
@@ -2038,6 +2044,9 @@ static void D_DrawSpans8AndZOdd(void *pspan)
 
 void D_DrawSpans8(espan_t *pspan)
 {
+#if PXA_GAME_RENDER_FRAME_SPANS
+    if (Pxa_QueueProjectedSurface(pspan, 0)) return;
+#endif
 #if PXA_GAME_RENDER_PROJECTED_SPANS
     if (Pxa_TryProjectedSurface(pspan, 0)) return;
 #endif
@@ -2047,6 +2056,9 @@ void D_DrawSpans8(espan_t *pspan)
 // D_DrawSpans8() and D_DrawZSpans()
 void D_DrawSpans8AndZ(espan_t *pspan)
 {
+#if PXA_GAME_RENDER_FRAME_SPANS
+    if (Pxa_QueueProjectedSurface(pspan, 1)) return;
+#endif
 #if PXA_GAME_RENDER_PROJECTED_SPANS
     if (Pxa_TryProjectedSurface(pspan, 1)) return;
 #endif

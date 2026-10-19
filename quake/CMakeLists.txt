@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 project(pxa_quake C CXX)
 option(PXA_QUAKE_LIT_CACHE "Enable experimental exact-pixel lighting cache" OFF)
+option(PXA_QUAKE_FRAME_SPANS "Experimental cross-material GameRender batches using the acquired back buffer" OFF)
+option(PXA_QUAKE_FRAME_BULK_COPY "Use WASM memory.copy for frame material snapshots" ON)
 option(PXA_QUAKE_PROJECTED_SPANS "Experimental GameRender projected colour/depth batches" OFF)
 option(PXA_QUAKE_HOST_SPANS "Experimental GameRender native indexed light-grid batches" OFF)
 option(PXA_QUAKE_STATIC_GLOBALS "Use direct addresses for the fixed engine state" ON)
@@ -33,4 +35,12 @@ endif()
 
 if(PXA_QUAKE_PROJECTED_SPANS)
     target_compile_definitions(pxa_main PRIVATE PXA_GAME_RENDER_PROJECTED_SPANS=1)
+endif()
+
+if(PXA_QUAKE_FRAME_SPANS)
+    if(PXA_QUAKE_HOST_SPANS OR PXA_QUAKE_PROJECTED_SPANS OR PXA_QUAKE_LIT_CACHE)
+        message(FATAL_ERROR "Frame batches require the other experimental renderers to be disabled")
+    endif()
+    target_compile_definitions(pxa_main PRIVATE PXA_GAME_RENDER_FRAME_SPANS=1
+        PXA_FRAME_BULK_COPY=$<BOOL:${PXA_QUAKE_FRAME_BULK_COPY}>)
 endif()

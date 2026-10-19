@@ -12,10 +12,16 @@
 #include "pxa_permission.h"
 #include "external.h"
 #include "pxa_surface.h"
+#ifndef PXA_GAME_RENDER_BLIT
+#define PXA_GAME_RENDER_BLIT 0
+#endif
+#ifndef PXA_GAME_RENDER_FRAME_SPANS
+#define PXA_GAME_RENDER_FRAME_SPANS 0
+#endif
 #ifndef PXA_GAME_RENDER_PROJECTED_SPANS
 #define PXA_GAME_RENDER_PROJECTED_SPANS 0
 #endif
-#if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS
+#if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS || PXA_GAME_RENDER_FRAME_SPANS || PXA_GAME_RENDER_BLIT
 #include "pxa_game_render_spans.h"
 uint64_t port_game_render_context;
 #endif
@@ -280,6 +286,15 @@ static int acquire(void) {
 static uint16_t *output(int index) {
   return (uint16_t *)surface_buffers + (size_t)index * surface_w * surface_h;
 }
+static int reserved_compute_buffer = -1;
+void *port_frame_scratch(size_t *bytes) {
+  if (!bytes) return NULL;
+  *bytes = 0;
+  if (reserved_compute_buffer < 0) reserved_compute_buffer = acquire();
+  if (reserved_compute_buffer < 0) return NULL;
+  *bytes = (size_t)surface_w * surface_h * 2;
+  return output(reserved_compute_buffer);
+}
 static void present(int index) {
   pending_frame = ++frame_id;
   int r = pxa_surface_present_buffer(surface,index,pending_frame);
@@ -305,9 +320,36 @@ void port_frame_cursor(const uint8_t *p, int w, int h, int pitch,
   if (!p || w <= 0 || h <= 0 || pitch < w) return;
   uint64_t begin = port_time_us();
   if (!perf_since) perf_since = begin;
-  int index = acquire();
+  int index = reserved_compute_buffer;
+  reserved_compute_buffer = -1;
+  if (index < 0) index = acquire();
   if (index >= 0) {
     uint16_t *dest = output(index);
+#if PXA_GAME_RENDER_BLIT
+    int32_t blit_result = PXA_STATUS_UNSUPPORTED;
+    if (port_game_render_context && w <= 65535 && h <= 65535 &&
+        (uint64_t)(h-1)*(unsigned)pitch + (unsigned)w <= UINT32_MAX &&
+        (!cursor || !cursor->pixels || cursor->width <= 0 || cursor->height <= 0 ||
+         (cursor->width <= 65535 && cursor->height <= 65535))) {
+      pxa_game_render_blit_wire_t frame = {0};
+      frame.source_offset = (uint32_t)(uintptr_t)p;
+      frame.source_bytes = (uint32_t)((uint64_t)(h-1)*(unsigned)pitch + (unsigned)w);
+      frame.source_width = w; frame.source_height = h; frame.source_pitch = pitch;
+      frame.palette_offset = (uint32_t)(uintptr_t)palette; frame.palette_bytes = sizeof(palette);
+      frame.target_offset = (uint32_t)(uintptr_t)dest;
+      frame.target_bytes = surface_w*surface_h*2;
+      frame.target_width = surface_w; frame.target_height = surface_h; frame.target_pitch = surface_w*2;
+      if (cursor && cursor->pixels && cursor->width > 0 && cursor->height > 0 &&
+          cursor->width <= 65535 && cursor->height <= 65535) {
+        frame.cursor_offset = (uint32_t)(uintptr_t)cursor->pixels;
+        frame.cursor_width = cursor->width; frame.cursor_height = cursor->height;
+        frame.cursor_pitch = cursor->width; frame.cursor_bytes = (uint32_t)cursor->width*(uint32_t)cursor->height;
+        frame.cursor_x = cursor->x; frame.cursor_y = cursor->y;
+      }
+      blit_result = pxa_game_render_blit_indexed_frame(port_game_render_context, &frame);
+    }
+    if (blit_result < 0)
+#endif
     port_blit(dest,surface_w,surface_h,p,w,h,pitch,palette,cursor);
 #ifdef PORT_RTS
     port_draw_controls(dest,surface_w,surface_h,1);
@@ -541,7 +583,7 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     }
   }
   controls_environment(&env);
-#if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS
+#if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS || PXA_GAME_RENDER_FRAME_SPANS || PXA_GAME_RENDER_BLIT
   int raster_status = pxa_game_render_create_raster(30, 256);
   if (raster_status) return raster_status;
 #endif
@@ -563,15 +605,16 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t n) {
   pxa_event_t e;
   if (!pxa_parse_event(bytes, n, &e))
     return PXA_EVENT_UNHANDLED;
-#if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS
+#if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS || PXA_GAME_RENDER_FRAME_SPANS || PXA_GAME_RENDER_BLIT
   if (e.service == PXA_GAME_RENDER_SERVICE &&
       e.opcode == PXA_GAME_RENDER_CREATE_RASTER_CONTEXT && e.token == 30) {
     pxa_game_render_raster_result_t result;
     if (!pxa_game_render_parse_raster(&e, 30, &result)) return PXA_STATUS_INTERNAL;
     if (result.status) return result.status;
     port_game_render_context = result.handle;
-    port_log("PXA GameRender native spans ready max=%u guest_batch_bytes=%u",
-        result.max_spans, PXA_GAME_RENDER_PROJECTED_SPANS ?
+    port_log("PXA GameRender compute ready max=%u packet_capacity=%u",
+        result.max_spans, PXA_GAME_RENDER_FRAME_SPANS ? (unsigned)(surface_w * surface_h * 2) :
+        PXA_GAME_RENDER_BLIT ? PXA_GAME_RENDER_BLIT_BYTES : PXA_GAME_RENDER_PROJECTED_SPANS ?
         PXA_GAME_RENDER_PROJECTED_PREFIX_BYTES + 256 * PXA_GAME_RENDER_ROW_BYTES :
         PXA_GAME_RENDER_SPANS_HEADER_BYTES + 256 * PXA_GAME_RENDER_SPAN_BYTES);
     return PXA_EVENT_HANDLED;

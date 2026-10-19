@@ -26,6 +26,9 @@ uint64_t port_time_us(void);
 int port_cooperate_due(uint64_t now, uint32_t budget_us);
 void port_palette(const uint8_t *rgb, int sixbit);
 void port_palette_rgb565(const uint16_t *rgb, int swapped);
+/* Exclusive temporary bytes in an acquired display buffer. Complete all
+ * borrowing before port_frame overwrites it; no pointer survives present. */
+void *port_frame_scratch(size_t *bytes);
 void port_frame(const uint8_t *pixels, int width, int height, int pitch);
 void port_frame_cursor(const uint8_t *pixels, int width, int height, int pitch,
                         const port_cursor_t *cursor);

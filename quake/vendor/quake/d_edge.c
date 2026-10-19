@@ -570,6 +570,10 @@ DRAWSURF_SEC void D_DrawSurfaces(void)
 
                 _g->cacheblock = getSurfBuffer(pface, miplevel, &_g->cachewidth);
 #else
+#if PXA_GAME_RENDER_FRAME_SPANS
+                extern void Pxa_ReserveProjectedSurface(msurface_t *, int);
+                Pxa_ReserveProjectedSurface(pface, miplevel);
+#endif
                 _g->cacheblock = getSurfBuffer(pface, surfPos, _g->surfNum, miplevel, &_g->cachewidth);
                 //
 #endif
@@ -601,6 +605,10 @@ DRAWSURF_SEC void D_DrawSurfaces(void)
             lastSurfFlags = getSurfFlags(s);
         }
     }
+#if PXA_GAME_RENDER_FRAME_SPANS
+    extern void Pxa_FlushProjectedFrame(void);
+    Pxa_FlushProjectedFrame();
+#endif
     PXA_RENDER_END(PXA_QUAKE_RENDER_SURFACES);
 }
 

@@ -3,6 +3,7 @@ list(APPEND CMAKE_MODULE_PATH "${PXA_CMAKE_MODULE_DIR}")
 include(PxaGuest)
 set(PXA_RECROF_DIR "${CMAKE_CURRENT_LIST_DIR}")
 function(pxa_recrof_component)
+    option(PXA_RECROF_HOST_BLIT "Experimental GameRender indexed frame resolve" OFF)
     cmake_parse_arguments(ENGINE "RTS" "TITLE" "SOURCES;INCLUDES;DEFINITIONS" ${ARGN})
     find_program(PXA_WASM_OPT wasm-opt HINTS "$ENV{PXA_BINARYEN_DIR}/bin"
         "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/.tools/binaryen-version_130/bin"
@@ -24,6 +25,9 @@ function(pxa_recrof_component)
         "${PXA_RECROF_DIR}/framebuffer.c" "${PXA_RECROF_DIR}/stack.S"
         INCLUDE_DIRS ${ENGINE_INCLUDES} "${PXA_RECROF_DIR}" "${PXA_RECROF_DIR}/compat"
         DEFINITIONS ${ENGINE_DEFINITIONS} "PORT_TITLE=\"${ENGINE_TITLE}\"")
+    if(PXA_RECROF_HOST_BLIT)
+        target_compile_definitions(pxa_main PRIVATE PXA_GAME_RENDER_BLIT=1)
+    endif()
     if(ENGINE_RTS)
         target_compile_definitions(pxa_main PRIVATE PORT_RTS=1)
         target_compile_options(pxa_main PRIVATE -Os)
