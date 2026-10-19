@@ -1,0 +1,75 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [
+    2,
+    0
+  ],
+  "target_sdk": [
+    2,
+    0
+  ],
+  "compile_sdk": [
+    2,
+    0
+  ],
+  "id": "pxa-weread",
+  "version": "0.1.0",
+  "release_sequence": 1,
+  "name": "微信读书",
+  "description": "PXA 原生微信读书客户端，独立扫码登录、书架与专注阅读。非腾讯官方客户端。",
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 2097152,
+      "pinned": false
+    },
+    "native_stack_checks": true
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "services": [
+        {
+          "name": "ui",
+          "features": [
+            "dynamic-text",
+            "sized-text",
+            "text-input-control"
+          ]
+        },
+        "window",
+        "net",
+        {
+          "name": "assets",
+          "features": [
+            "image-decode"
+          ]
+        },
+        "fs",
+        "permission",
+        "clock",
+        "log"
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "random",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "net.client",
+      "scope": "web",
+      "required": false
+    }
+  ],
+  "icon": "assets/icon.png"
+}
