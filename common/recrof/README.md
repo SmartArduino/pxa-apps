@@ -59,7 +59,37 @@ Quake II 使用标准 `baseq2/pak0.pak`。C&C 可导入 DOS 试玩版的 DEMO.MI
 
 射击游戏：左半屏拖动控制前后移动和横移；右半屏拖动转向；按钮 MENU 打开菜单，WPN 切武器，USE 使用，JMP 跳跃，FIRE 射击。菜单内用左侧上下拖动选择，FIRE 确认。手柄方向键移动，A 射击/确认，B 跳跃，START 菜单，SELECT 回车，X 使用，Y 切武器。
 
-策略游戏：触摸映射鼠标左键，带右键标志的指针映射右键；右上角 OK 确认任务/简报，RMB 按钮在上一个游戏光标位置执行右键，便于触屏取消选择。手柄 A/B 分别为左键/右键，START 为 Escape，SELECT 为回车。策略游戏的原有阻塞键盘等待会主动让出执行权，以便接收后续 PXA 输入事件。当前没有联机功能。
+策略游戏：触摸映射鼠标左键，带右键标志的指针映射右键；右上角 OK 确认任务/简报，RMB 按钮在上一个游戏光标位置执行右键，便于触屏取消选择。策略游戏的原有阻塞键盘等待会主动让出执行权，以便接收后续 PXA 输入事件。当前没有联机功能。
+
+GameKit 手柄使用 PXA 的 controller 0。普通版与 SD 版共享以下映射：
+
+| 按键 | Quake / Quake II / Duke3D 游戏内 | 射击游戏菜单 | C&C / Red Alert |
+| --- | --- | --- | --- |
+| 方向键 | 前进、后退、左右转向 | 导航 | 移动光标 |
+| A | 射击 | 确认 | 左键，按住并移动可拖选 |
+| B | 跳跃 | 返回 | 右键、取消选择 |
+| X | 使用（按引擎原有绑定） | — | 回车、确认简报 |
+| Y | 下一武器 | — | H，回到基地 |
+| L / R | 左右平移 | — | L + 方向键滚动地图，R 加速光标 |
+| START | 打开菜单 | 返回 | Escape、菜单 |
+| SELECT | 回车、引擎原有功能 | 回车 | 回车 |
+
+方向移动由 Clock 按经过时间累计，重复的完整状态刷新不重复按下，不重新开始
+计时。长时间阻塞每次最多累计64ms，避免恢复时突然转向或跳动。进入或离开
+射击游戏菜单会释放旧动作；当时按住的键须松开后再按。切后台、环境变化和
+controller 0 断开会释放输入；其他编号不会抢占这一单人席位。触摸和手柄可以
+并用，某一来源松开不会释放另一来源仍按住的动作。策略游戏的手柄点击使用
+游戏光标位置，不会被触摸 RMB/OK 覆盖层改写。
+
+目前 SDK 的控制器事件只有12位数字按键，没有模拟轴、扳机强度或震动数据；
+这里不将其描述为模拟摇杆支持。SELECT+START、SELECT+X、SELECT+L/R 等
+GameKit 系统组合键由板卡先处理，保留原有桌面、鼠标与音量操作。
+
+手柄策略与 RTS 适配器的原生 ASan/UBSan 测试：
+
+```sh
+bash local/pxa-apps/common/recrof/tests/run_controller.sh
+```
 
 ## 平台适配与限制
 
@@ -68,7 +98,7 @@ Quake II 使用标准 `baseq2/pak0.pak`。C&C 可导入 DOS 试玩版的 DEMO.MI
 - 可选 `audio.playback` 权限，PCM 混音后输出 16 kHz 单声道；拒绝权限仍可游戏。Duke 已在真机开启音乐和音效并核对设置，持续输出与欠载情况仍需分别量化。
 - 标准 stdio/POSIX 调用桥接到私有 FS 与签名资源，虚拟 Flash 使用文件保存 NOR 数据。
 - 不使用 ESP32 的 GPIO、SDMMC、DMA、FreeRTOS 或 Flash 直映射驱动。
-- 目前清单的线性内存上限：Quake 3 MiB、Quake II 12 MiB、Duke3D 4 MiB、C&C 10 MiB、RA 14 MiB；另需宿主、AOT 和显示内存。SD 变体另有独立上限：Quake 4MiB、Quake II 10.375MiB、Duke3D 3.875MiB、C&C 7MiB、RA 9.5625MiB；实际场景与设备装载资格见 `VALIDATION.md`。不能据此承诺在 8 MiB PSRAM 的设备上均可运行。大型资源包还需要足够的存储空间。
+- 目前清单的线性内存上限：Quake 3 MiB、Quake II 12 MiB、Duke3D 4 MiB、C&C 10 MiB、RA 14 MiB；另需宿主、AOT 和显示内存。SD 变体另有独立上限：Quake 3.5MiB、Quake II 10.375MiB、Duke3D 3.5MiB、C&C 7MiB、RA 9.5625MiB；实际场景与设备装载资格见 `VALIDATION.md`。不能据此承诺在 8 MiB PSRAM 的设备上均可运行。大型资源包还需要足够的存储空间。
 - WAMR 无 Wasm 异常处理，原引擎 setjmp/longjmp 错误恢复改为显示错误并等待重新打开应用。正常主循环不依赖 longjmp。
 - `duke3d-sd` 已在 16 MiB PSRAM 的 GameKit / ESP32-S31 上自动读取固定 SD 资源并进入屋顶关卡，完成短时 FPS 与内存测量；其他游戏、音频连续性及长期稳定性仍待真机验收，见 `VALIDATION.md`。
 

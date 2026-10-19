@@ -14,6 +14,11 @@ extern "C" {
 void port_game_main(void);
 void port_game_key(int key, int down);
 void port_game_motion(int dx, int dy);
+int port_game_in_menu(void);
+#ifdef PORT_RTS
+void port_game_scroll(int dx, int dy);
+void port_game_move_cursor(int dx, int dy, int *x, int *y);
+#endif
 void port_game_audio(void);
 void port_yield(void);
 void port_sleep(unsigned ms);

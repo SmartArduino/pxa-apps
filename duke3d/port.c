@@ -55,6 +55,7 @@ void getAnalogInput(int32_t *a, int32_t *b, int32_t *c, int32_t *d) {
 }
 void inputSetMenuMode(bool m) { menu = m; }
 bool inputIsMenuMode(void) { return menu; }
+int port_game_in_menu(void) { return menu; }
 void inputPostKeyEvent(uint8_t sc, bool down) {
   unsigned next = (kh + 1) & 255;
   if (next != kt) {

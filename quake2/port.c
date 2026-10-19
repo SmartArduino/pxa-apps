@@ -39,6 +39,7 @@ void port_game_motion(int x, int y) {
   dx += x;
   dy += y;
 }
+int port_game_in_menu(void) { return cls.key_dest != key_game; }
 void port_game_key(int key, int down) {
   static int pressed[256];
   int original = key;

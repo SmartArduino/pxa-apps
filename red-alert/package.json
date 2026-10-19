@@ -13,9 +13,9 @@
     0
   ],
   "id": "pxa-red-alert",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "name": "Red Alert",
-  "description": "Red Alert 原版引擎 PXA 移植，需要自行导入游戏资源。",
+  "description": "Red Alert \u539f\u7248\u5f15\u64ce PXA \u79fb\u690d\uff0c\u9700\u8981\u81ea\u884c\u5bfc\u5165\u6e38\u620f\u8d44\u6e90\u3002",
   "build": {
     "system": "cmake",
     "source_dir": ".",
@@ -63,5 +63,5 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 1
+  "release_sequence": 2
 }

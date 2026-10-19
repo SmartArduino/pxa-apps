@@ -13,7 +13,7 @@
     0
   ],
   "id": "pxa-quake2-sd",
-  "version": "0.1.5",
+  "version": "0.1.8",
   "name": "Quake II SD",
   "description": "Engine with automatically bound fixed SD resources and internal saves",
   "build": {
@@ -75,5 +75,5 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 6
+  "release_sequence": 9
 }

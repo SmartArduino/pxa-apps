@@ -20,6 +20,7 @@ function(pxa_recrof_component)
         SOURCES ${ENGINE_SOURCES} "${PXA_RECROF_DIR}/runtime.c"
         "${PXA_RECROF_DIR}/filesystem.c" "${PXA_RECROF_DIR}/font8x8.c"
         "${PXA_RECROF_DIR}/external.c"
+        "${PXA_RECROF_DIR}/controller.c"
         "${PXA_RECROF_DIR}/framebuffer.c" "${PXA_RECROF_DIR}/stack.S"
         INCLUDE_DIRS ${ENGINE_INCLUDES} "${PXA_RECROF_DIR}" "${PXA_RECROF_DIR}/compat"
         DEFINITIONS ${ENGINE_DEFINITIONS} "PORT_TITLE=\"${ENGINE_TITLE}\"")

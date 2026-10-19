@@ -1,6 +1,7 @@
 /* Cooperative PXA Core 2 runtime for the recrof engine ports. GPL-3.0-or-later.
  */
 #include "port.h"
+#include "controller.h"
 #include "pxa.h"
 #include "rpc.h"
 #define PXA_UI_COMMAND_FAILED(op, status)                                      \
@@ -97,7 +98,12 @@ static int reply_ready;
 static unsigned audio_rate = 16000, audio_channels = 1;
 static uint64_t audio_permission, audio_pending;
 static int audio_decision_pending;
-static uint32_t pad_buttons;
+static port_controller_t controller;
+#ifdef PORT_RTS
+#define CONTROLLER_RTS 1
+#else
+#define CONTROLLER_RTS 0
+#endif
 static uint64_t perf_since, perf_draw_us;
 static uint64_t perf_yield_at, perf_wait_us;
 static uint32_t perf_yields;
@@ -109,7 +115,8 @@ typedef struct {
   uint8_t id;
 } Touch;
 static Touch touches[8];
-static int touch_keys[256], pad_keys[256];
+static int touch_keys[256];
+static uint8_t pad_keys[256];
 
 uint64_t port_time_us(void) {
   struct timespec t;
@@ -364,8 +371,28 @@ static void release_input(void) {
   memset(touches, 0, sizeof(touches));
   memset(touch_keys, 0, sizeof(touch_keys));
   memset(pad_keys, 0, sizeof(pad_keys));
-  pad_buttons = 0;
+  memset(&controller, 0, sizeof(controller));
+#ifdef PORT_RTS
+  port_game_scroll(0, 0);
+#endif
   update_keys();
+}
+static void controller_tick(void) {
+  if (background || !controller.buttons) return;
+  if (port_controller_menu(&controller, port_game_in_menu(), CONTROLLER_RTS,
+                           pad_keys)) update_keys();
+  port_controller_motion_t move = port_controller_step(&controller,
+      port_time_us(), CONTROLLER_RTS);
+  if (!move.x && !move.y) return;
+#ifdef PORT_RTS
+  if (move.scroll) {
+    port_game_scroll(move.x, move.y);
+    return;
+  }
+  port_game_move_cursor(move.x, move.y, &mouse_x, &mouse_y);
+#else
+  port_game_motion(move.x, move.y);
+#endif
 }
 static void input_pointer(const pxa_ui_pointer_data_t *p) {
   int scale = pxa_surface_fit_scale(surface_w, surface_h, display_w, display_h);
@@ -638,14 +665,12 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t n) {
   }
   pxa_ui_controller_data_t c;
   if (pxa_ui_parse_controller(&e, &c)) {
-    static const int map[12] = {128, 129, 130, 131, 200, ' ',
-                                27,  13,  'e', 'q', 'a', 'd'};
-    memset(pad_keys, 0, sizeof(pad_keys));
-    pad_buttons = c.connected ? c.buttons : 0;
-    for (int i = 0; i < 12; i++)
-      if (pad_buttons & (1u << i))
-        pad_keys[map[i]] = 1;
-    update_keys();
+    if (!background && port_controller_state(&controller, c.controller,
+        c.connected, c.buttons, port_game_in_menu(), CONTROLLER_RTS, pad_keys)) {
+      update_keys();
+      port_log("PXA PAD controller=0 connected=%u buttons=%u", c.connected,
+               c.connected ? (unsigned)c.buttons : 0u);
+    }
     return PXA_EVENT_HANDLED;
   }
   if (e.service == PXA_WINDOW_SERVICE &&
@@ -666,6 +691,7 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t n) {
   }
   uint64_t now;
   if (pxa_clock_parse_tick(&e, &now)) {
+    controller_tick();
 #ifdef PORT_CNC_MEDIA_HANDLES
     extern void port_filesystem_tick(uint64_t);
     port_filesystem_tick(now);

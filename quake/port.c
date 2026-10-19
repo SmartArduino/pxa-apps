@@ -117,6 +117,7 @@ void getKeys(uint16_t *k) { *k = 0; }
 void getAnalogInput(int32_t *a, int32_t *b, int32_t *c, int32_t *d) {
   *a = *b = *c = *d = 0;
 }
+int port_game_in_menu(void) { return key_dest != key_game; }
 void port_game_key(int key, int down) {
   static int pressed[256];
   int original = key;

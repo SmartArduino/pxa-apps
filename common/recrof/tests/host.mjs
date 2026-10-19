@@ -131,13 +131,13 @@ let pauseAt=-1,resumeAt=-1,pausedFrames=-1;
 if(process.env.PXA_TEST_BACKGROUND){pauseAt=start+1000;resumeAt=start+2000;}
 const controls=actions?actions.split(',').map(s=>s.split(':').map(Number)):[];
 const pointers=JSON.parse(process.env.PXA_TEST_POINTERS??'[]');
-function controller(buttons){const payload=Buffer.alloc(32);payload.writeUInt32LE(1);payload.writeUInt32LE(1,4);payload.writeUInt32LE(1,8);payload.writeUInt16LE(10,12);payload.writeBigUInt64LE(BigInt(Date.now())*1000n,16);payload[25]=1;payload.writeUInt32LE(buttons,28);event({service:3,op:0x8001,payload});}
+function controller(buttons,connected=1,id=0){const payload=Buffer.alloc(32);payload.writeUInt32LE(1);payload.writeUInt32LE(1,4);payload.writeUInt32LE(1,8);payload.writeUInt16LE(10,12);payload.writeBigUInt64LE(BigInt(Date.now())*1000n,16);payload[24]=id;payload[25]=connected;payload.writeUInt32LE(buttons,28);event({service:3,op:0x8001,payload});}
 function pointer(phase,x,y){const payload=Buffer.alloc(36);payload.writeUInt32LE(1);payload.writeUInt32LE(1,4);payload.writeUInt32LE(1,8);payload.writeUInt16LE(7,12);payload.writeBigUInt64LE(BigInt(Date.now())*1000n,16);payload[25]=phase;payload.writeUInt16LE(1,26);payload.writeInt32LE(x,28);payload.writeInt32LE(y,32);event({service:3,op:0x8001,payload});}
 while(Date.now()<end){
  if(pauseAt>0 && Date.now()>=pauseAt){event({service:17,op:0x8005,payload:Buffer.from([0])});pausedFrames=frames;pauseAt=-1;}
  if(resumeAt>0 && Date.now()>=resumeAt){if(frames!==pausedFrames)throw Error('frames advanced in background');event({service:17,op:0x8005,payload:Buffer.from([1])});resumeAt=-1;logs.push('BACKGROUND RESUME PASS');}
 
- while(controls.length&&(Date.now()-start)/1000>=controls[0][0])controller(controls.shift()[1]);
+ while(controls.length&&(Date.now()-start)/1000>=controls[0][0])controller(...controls.shift().slice(1));
  while(pointers.length&&(Date.now()-start)/1000>=pointers[0][0])pointer(...pointers.shift().slice(1));
  for(let i=0;i<1000&&events.length;i++)event(events.shift());
  if(clockPeriod && Date.now()-lastTick>=clockPeriod){const payload=Buffer.alloc(8);payload.writeBigUInt64LE(BigInt(Date.now())*1000n);event({service:4,op:0x8001,payload});ticks++;lastTick=Date.now();}
