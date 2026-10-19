@@ -13,7 +13,8 @@ function u32(n) {let b=Buffer.alloc(4);b.writeUInt32LE(n);return b;}
 export async function runGuest(wasm,assets,files=new Map(),options={}) {
     const wasi=new WASI({version:'preview1',args:[],env:{},preopens:{},returnOnExit:true});
     let instance,now=1000000n,eventPtr,mapped,bufferBytes,index=0,frames=0,nextHandle=10n;
-    const events=[],handles=new Map(),assetCache=new Map(),logs=[],pcmHash=crypto.createHash('sha256'),frameHash=crypto.createHash('sha256');
+    const mediaOpens=[],events=[],handles=new Map(),assetCache=new Map(),logs=[],pcmHash=crypto.createHash('sha256'),frameHash=crypto.createHash('sha256');
+    let clockPeriod=0;const clockEvents=[];
     let lastFrame;
     let submitted=0,accepted=0,queued=0,audioTime=now,nonzero=0,blocks=0,denied=false;
     const memory=(ptr,n)=>Buffer.from(instance.exports.memory.buffer,ptr,n);
@@ -22,6 +23,16 @@ export async function runGuest(wasm,assets,files=new Map(),options={}) {
     function call(route,token,ptr,len) {
         const service=route&65535,op=route>>>16,p=memory(ptr,len);let r;
         if(service===19)logs.push(p.subarray(1).toString());
+        else if(service===4) {
+            if(op===1) {clockPeriod=p.readUInt16LE()*1000;clockEvents.push({op:'legacy',period_us:clockPeriod});}
+            else if(op===4) {
+                if(options.legacyClock)r=status(-3);
+                else {r=status(0,24);r.writeUInt32LE(1000,4);r.writeUInt32LE(60000000,8);r.writeUInt32LE(1,12);r.writeUInt32LE(1,16);r.writeUInt32LE(3,20);}
+            } else if(op===5) {
+                if(options.failFineClock)r=status(-3);
+                else {clockPeriod=p.readUInt32LE();r=status(0,8);r.writeUInt32LE(clockPeriod,4);clockEvents.push({op:'configure',period_us:clockPeriod});}
+            }
+        }
         else if(service===16 && op===1) {r=status(0,24);r.writeBigUInt64LE(0x100000001n,4);r.writeUInt32LE(640,12);r.writeUInt32LE(153600,16);r[20]=2;}
         else if(service===16 && op===2)r=status(0);
         else if(service===5) {
@@ -36,6 +47,7 @@ export async function runGuest(wasm,assets,files=new Map(),options={}) {
             } else if(op===11 && options.mediaRoot) {
                 const name=p.subarray(14,14+p.readUInt16LE(12)).toString();
                 assert(!name.includes('..') && !path.isAbsolute(name));
+                mediaOpens.push(name);
                 const file=path.join(options.mediaRoot,name);
                 if(!fs.existsSync(file))r=status(-6);
                 else {const data=fs.readFileSync(file),handle=0x200000000n+nextHandle++;handles.set(handle,{name,pos:0,media:data});r=status(0,32);r.writeBigUInt64LE(handle,4);r[12]=1;r.writeBigUInt64LE(BigInt(data.length),24);}
@@ -74,7 +86,7 @@ export async function runGuest(wasm,assets,files=new Map(),options={}) {
         if(h===0x100000001n) {
             if(op===0x100) {mapped=ptr;bufferBytes=len/2;return len;}
             if(op===0x101) {p.fill(0);p[0]=index;index^=1;return 4;}
-            if(op===0x102) {lastFrame=Buffer.from(memory(mapped+p[0]*bufferBytes,bufferBytes));frameHash.update(lastFrame);++frames;return 16;}
+            if(op===0x102) {lastFrame=Buffer.from(memory(mapped+p[0]*bufferBytes,bufferBytes));frameHash.update(lastFrame);++frames;clockEvents.push({op:'present',period_us:clockPeriod});now+=BigInt(options.presentationCostUs??0);return 16;}
         } else if(h===0x400000001n) {
             advanceAudio();if(queued+len/2>1280) {++blocks;return -7;}
             assert.equal(len,640);queued+=len/2;submitted+=len/2;
@@ -95,7 +107,8 @@ export async function runGuest(wasm,assets,files=new Map(),options={}) {
         assert(instance.exports.pxa_app_on_event(eventPtr,b.length)>=0);
     }
     function drain() {let n=0;while(events.length) {assert(++n<5000);event(events.shift());}}
-    function tick(n=1) {while(n--) {now+=33334n;event({service:4,op:0x8001,payload:u64(now)});drain();}}
+    function tick(n=1,stepUs=33334) {while(n--) {now+=BigInt(stepUs);if(clockPeriod)event({service:4,op:0x8001,payload:u64(now)});drain();}}
+    function release(stepUs=20000) {now+=BigInt(stepUs);const p=Buffer.alloc(20);p.writeBigUInt64LE(0x100000001n);p.writeBigUInt64LE(BigInt(frames),12);event({service:16,op:0x8001,payload:p});drain();}
     function buttons(buttons,connected=true) {const p=Buffer.alloc(32);p.writeUInt32LE(1);p.writeUInt32LE(1,4);p.writeUInt32LE(1,8);p.writeUInt16LE(10,12);p.writeBigUInt64LE(now,16);p[25]=connected?1:0;p.writeUInt32LE(buttons,28);event({service:3,op:0x8001,payload:p});drain();}
     function pointer(x,y,phase) {const p=Buffer.alloc(36);p.writeUInt32LE(1);p.writeUInt32LE(1,4);p.writeUInt32LE(1,8);p.writeUInt16LE(7,12);p.writeBigUInt64LE(now,16);p[25]=phase;p.writeInt32LE(x,28);p.writeInt32LE(y,32);event({service:3,op:0x8001,payload:p});drain();}
     function focus(foreground) {event({service:17,op:0x8005,payload:Buffer.from([foreground?1:0])});drain();}
@@ -105,5 +118,5 @@ export async function runGuest(wasm,assets,files=new Map(),options={}) {
     for(let i=0;i<4000 && !logs.some(s=>s.includes('ready level=0'));++i)tick();
     assert(logs.some(s=>s.includes('ready level=0')),'title failed to load');
     function waitFor(text,limit=10000) {for(let n=0;n<limit;++n) {if(logs.some(s=>s.includes(text)))return;tick();}assert.fail('timed out: '+text);}
-    return {tick,buttons,pointer,focus,press,menu,waitFor,logs,frame:()=>Buffer.from(lastFrame),stop:()=>instance.exports.pxa_app_stop(0),info:()=>({frames,submitted,accepted,nonzero,blocks,denied,frame_sha256:frameHash.copy().digest('hex'),pcm_sha256:pcmHash.copy().digest('hex'),linear_bytes:instance.exports.memory.buffer.byteLength})};
+    return {tick,release,buttons,pointer,focus,press,menu,waitFor,logs,mediaOpens,clockEvents,frame:()=>Buffer.from(lastFrame),stop:()=>instance.exports.pxa_app_stop(0),info:()=>({frames,submitted,accepted,nonzero,blocks,denied,frame_sha256:frameHash.copy().digest('hex'),pcm_sha256:pcmHash.copy().digest('hex'),linear_bytes:instance.exports.memory.buffer.byteLength,clock_period_us:clockPeriod})};
 }

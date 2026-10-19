@@ -11,6 +11,9 @@
 #include "audio.h"
 #include "music-stream.h"
 #include "levels.h"
+#if OL_CLASSIC
+#include "level-catalog.h"
+#endif
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -19,13 +22,14 @@ static uint8_t packet[512];
 static uint8_t level_index[16];
 alignas(PXA_SURFACE_BUFFER_ALIGNMENT) static uint16_t buffers[2][320*240];
 static uint64_t surface, media_root, file, frame_id;
-static uint32_t loaded, total, pad_keys, touch_keys;
+static uint32_t loaded, total, pad_keys, touch_keys,pressed_keys;
 static uint32_t display_w=320, display_h=240;
 static int level_id=0, load_state, pending_buffer=-1, load_kind;
 static uint8_t *load_dest;
 static uint32_t load_capacity;
 static const char *load_name;
-static bool root_ready,boot_started,menu,help,settings,levels;
+static bool root_ready,boot_started,menu,help,settings,levels,data_help,scanning;
+static uint32_t base_levels_mask;
 static unsigned menu_selection;
 static uint32_t controller_last,controller_suppressed;
 static uint64_t message_until;
@@ -39,11 +43,38 @@ static void status(const char *text) {
     }
 }
 static bool ready, background;
-static uint64_t previous_us, simulation_units, stats_since, render_us, convert_us;
+static uint64_t previous_us, simulation_units, stats_since, render_us, logic_us, convert_us;
 static uint32_t frames, updates, skipped;
+static uint64_t pending_input_us,pending_input_received_us,input_total_us,input_max_us;
+static uint64_t input_ingress_total_us,input_ingress_max_us,input_frame_total_us,input_frame_max_us;
+static uint32_t input_samples;
+static constexpr uint64_t CLOCK_LIMITS_TOKEN=0x434c4c, CLOCK_FRAME_TOKEN=0x434c46;
+static pxa_clock_limits_t frame_clock_limits;
+static bool frame_clock;
+static uint32_t frame_clock_period;
 static uint64_t time_us() {
     timespec t{}; clock_gettime(CLOCK_MONOTONIC, &t);
     return uint64_t(t.tv_sec)*1000000u + t.tv_nsec/1000u;
+}
+static void loading_clock() {pxa_clock_set_period(background?0:16);}
+static void next_frame_clock(uint64_t begin) {
+    if(!frame_clock)return;
+    uint64_t elapsed=time_us()-begin;
+    uint32_t delay=elapsed<16000u?16000u-uint32_t(elapsed):1000u;
+    if(delay<frame_clock_limits.min_period_us)delay=frame_clock_limits.min_period_us;
+    uint32_t step=frame_clock_limits.period_step_us;
+    frame_clock_period=((delay+step-1)/step)*step;
+    if(frame_clock_period>frame_clock_limits.max_period_us ||
+       pxa_clock_configure(CLOCK_FRAME_TOKEN,frame_clock_period)) {
+        frame_clock=false;loading_clock();
+        pxa_log_write(3,"OpenLara frame clock: configure failed, periodic fallback");
+    }
+}
+static void note_input(uint64_t sampled) {
+    if(!ready || background)return;
+    uint64_t now=time_us();
+    if(!sampled || sampled>now)sampled=now;
+    if(!pending_input_us) {pending_input_us=sampled;pending_input_received_us=now;}
 }
 static void error(const char *why) {
     pxa_log_write(4, why); status(why);ready=false; load_state=-1;
@@ -58,6 +89,7 @@ static void asset_read() {
 }
 static void open_data(const char *name,uint8_t *dest,uint32_t capacity) {
     ready=false;load_state=1;loaded=total=0;load_dest=dest;load_capacity=capacity;load_name=name;
+    loading_clock();
     char message[96];snprintf(message,sizeof(message),"Loading %s...",name);status(message);
     if(media_root) {
         if(pxa_fs_request_open_at(12,media_root,name,strlen(name),PXA_FS_OPEN_READ))error("OpenLara SD open request failed");
@@ -65,14 +97,27 @@ static void open_data(const char *name,uint8_t *dest,uint32_t capacity) {
 }
 static void open_level(int id) {
     if(id<0 || unsigned(id)>=OL_LEVEL_COUNT) {error("Unknown OpenLara level");return;}
-    level_id=id;load_kind=2;menu=help=settings=levels=false;pad_keys=touch_keys=0;audio_flush();
+    level_id=id;load_kind=2;menu=help=settings=levels=data_help=false;pad_keys=touch_keys=pressed_keys=0;pending_input_us=0;audio_flush();
+#if OL_CLASSIC
+    open_data(catalog_level_path(id),ol_level_data,OL_LEVEL_CAPACITY);
+#else
     open_data(ol_level_file(id),ol_level_data,OL_LEVEL_CAPACITY);
+#endif
 }
+#if OL_CLASSIC
+static void scan_original_data() {
+    ready=false;scanning=true;load_state=0;menu=help=settings=levels=data_help=false;
+    loading_clock();
+    pad_keys=touch_keys=pressed_keys=0;pending_input_us=0;audio_flush();status("Scanning original DATA folder...");
+    catalog_start(media_root,base_levels_mask);
+    if(!catalog_busy()) {scanning=false;ol_set_levels_mask(catalog_mask());open_level(0);}
+}
+#endif
 static void start_engine() {
     if(const char *why=ol_validate_level(loaded)) {error(why);return;}
     ol_set_time(time_us()); ol_start(level_id);
     status("");ready=true; load_state=0; previous_us=stats_since=time_us();
-    simulation_units=0; render_us=convert_us=0; frames=updates=skipped=0;
+    simulation_units=0; render_us=logic_us=convert_us=0; frames=updates=skipped=0;
     char message[160]; snprintf(message,sizeof(message),"OpenLara ready level=%d bytes=%u linear_bytes=%u",level_id,loaded,
         (unsigned)__builtin_wasm_memory_size(0)*65536u); pxa_log_write(2,message);
 }
@@ -102,7 +147,7 @@ static void data_done() {
            pxa_load_u32(level_index+12)!=OL_LEVEL_COUNT || !(pxa_load_u32(level_index+8)&1u)) {
             error("Invalid OpenLara level catalog; prepare game data again");return;
         }
-        ol_set_levels_mask(pxa_load_u32(level_index+8));open_level(0);
+        base_levels_mask=pxa_load_u32(level_index+8);scan_original_data();
     } else start_engine();
 }
 static void notify(const char *text,uint64_t now) {notification=text;message_until=now+3000000u;}
@@ -119,7 +164,7 @@ static void choose_menu(unsigned selection) {
         else {menu_selection=selection;notify(ol_toggle_setting(selection)?"Saving settings...":"Settings busy",time_us());}
         return;
     }
-    menu=false;pad_keys=touch_keys=0;previous_us=time_us();simulation_units=0;
+    menu=false;pad_keys=touch_keys=pressed_keys=0;previous_us=time_us();simulation_units=0;
     switch(selection) {
         case 0:break;
         case 1:notify(ol_quick_save()?"Saving game...":"Cannot save here",previous_us);break;
@@ -134,6 +179,9 @@ static void choose_menu(unsigned selection) {
             menu=levels=true;menu_selection=0;
             for(unsigned i=0;i<OL_PLAYABLE_COUNT;++i)if(OL_PLAYABLE_IDS[i]==unsigned(level_id))menu_selection=i;
             break;
+#if OL_CLASSIC
+        case 10:data_help=true;break;
+#endif
     }
 }
 static void convert(uint16_t *dest) {
@@ -156,6 +204,9 @@ static void convert(uint16_t *dest) {
 }
 static void tick(uint64_t now) {
     store_tick();
+#if OL_CLASSIC
+    if(scanning && !catalog_busy()) {scanning=false;ol_set_levels_mask(catalog_mask());open_level(0);return;}
+#endif
     if(!boot_started && root_ready && store_ready()) {
         boot_started=true;load_kind=0;open_data("title.scr",ol_title_data,sizeof(ol_title_data));
     }
@@ -170,6 +221,9 @@ static void tick(uint64_t now) {
         return; // Each SD read returns to Host: no long blocking startup callback.
     }
     if (!ready) return;
+    // A tick already superseded by a rendered frame must not start more work
+    // ahead of input waiting in the Host queue.
+    if(now<previous_us)return;
     audio_tick(time_us());
     const char *m=store_message();
     if(m!=last_store_message) {last_store_message=m;notify(m,time_us());}
@@ -182,61 +236,116 @@ static void tick(uint64_t now) {
     if (next>=0) {open_level(next);return;}
     if (pending_buffer>=0) {
         int r=pxa_surface_present_buffer(surface,pending_buffer,frame_id);
-        if (r==PXA_STATUS_WOULD_BLOCK) {++skipped;return;}
+        if (r==PXA_STATUS_WOULD_BLOCK) {++skipped;loading_clock();return;}
         if (r!=16) {error("OpenLara present retry failed");return;}
         pending_buffer=-1;
     }
     uint8_t index;
     int r=pxa_surface_acquire_buffer(surface,&index);
-    if (r==PXA_STATUS_WOULD_BLOCK) {++skipped;return;}
+    if (r==PXA_STATUS_WOULD_BLOCK) {++skipped;loading_clock();return;}
     if (r!=4 || index>=2) {error("OpenLara buffer acquisition failed");return;}
+    // Re-arm behind controller commands collected during this frame.
+    if(frame_clock)pxa_clock_set_period(0);
     uint64_t begin=time_us();
     uint64_t dt=begin-previous_us; previous_us=begin;
     if (dt>250000) dt=250000;
     simulation_units+=dt*30u;
     unsigned steps=unsigned(simulation_units/1000000u); simulation_units%=1000000u;
     ol_set_time(begin);
-    if(!menu && !help && !store_busy()) {ol_update(steps,pad_keys|touch_keys);updates+=steps;}
-    else simulation_units=0;
+    if(!menu && !help && !data_help && !store_busy()) {
+        // A press/release pair can arrive while the previous frame is still
+        // rendering. Deliver each rising edge to at least one game update.
+        ol_update(steps,pad_keys|touch_keys|pressed_keys);pressed_keys=0;updates+=steps;
+    }
+    else {
+        simulation_units=0;
+#if OL_CLASSIC
+        ol_idle_time();
+#endif
+    }
+    logic_us+=time_us()-begin;
+#if OL_CLASSIC
+    // These screens replace every pixel. Prepare the UI frame without
+    // rendering a complete 3D scene that will immediately be cleared.
+    bool opaque_overlay=menu || help || data_help;
+    if(opaque_overlay)ol_overlay_begin();else ol_render();
+#else
     ol_render();
+#endif
+#if OL_CLASSIC
+    if(data_help) {
+        unsigned installed=0;
+        for(unsigned i=0;i<OL_LEVEL_COUNT;++i)if(OL_LEVELS[i].kind==2 && ol_level_available(i))++installed;
+        ol_draw_data(installed,media_root!=0);
+    } else
+#endif
     if(levels)ol_draw_levels(menu_selection);
     else if(menu || help) ol_draw_menu(menu_selection,help,settings);
     if(begin<message_until)ol_draw_message(notification);
+#if OL_CLASSIC
+    if(opaque_overlay)ol_overlay_end();
+#endif
     uint64_t rendered=time_us(); convert(buffers[index]); uint64_t converted=time_us();
     render_us+=rendered-begin; convert_us+=converted-rendered;
     r=pxa_surface_present_buffer(surface,index,++frame_id);
     if (r==PXA_STATUS_WOULD_BLOCK) pending_buffer=index;
     else if (r!=16) {error("OpenLara present failed");return;}
     ++frames;
+    if(pending_input_us) {
+        uint64_t lag=converted-pending_input_us;input_total_us+=lag;if(lag>input_max_us)input_max_us=lag;
+        uint64_t ingress=pending_input_received_us-pending_input_us,frame=converted-pending_input_received_us;
+        input_ingress_total_us+=ingress;if(ingress>input_ingress_max_us)input_ingress_max_us=ingress;
+        input_frame_total_us+=frame;if(frame>input_frame_max_us)input_frame_max_us=frame;
+        ++input_samples;pending_input_us=0;
+    }
     if (converted-stats_since>=5000000u) {
         int32_t pos[4]; ol_player_position(pos);
-        char message[256];
-        snprintf(message,sizeof(message),"OpenLara frames=%u elapsed_us=%llu render_us=%llu convert_us=%llu updates=%u skipped=%u pos=%d,%d,%d yaw=%d",
+        char message[320];
+        snprintf(message,sizeof(message),"OpenLara frames=%u elapsed_us=%llu render_us=%llu logic_us=%llu convert_us=%llu updates=%u skipped=%u pos=%d,%d,%d yaw=%d",
             frames,(unsigned long long)(converted-stats_since),(unsigned long long)render_us,
-            (unsigned long long)convert_us,updates,skipped,pos[0],pos[1],pos[2],pos[3]);
+            (unsigned long long)logic_us,(unsigned long long)convert_us,updates,skipped,pos[0],pos[1],pos[2],pos[3]);
         pxa_log_write(2,message); ol_set_fps(frames*1000000u/(converted-stats_since));
-        frames=updates=skipped=0; render_us=convert_us=0; stats_since=converted;
+        if(input_samples) {
+            snprintf(message,sizeof(message),"OpenLara input samples=%u avg_us=%llu max_us=%llu ingress_avg_us=%llu ingress_max_us=%llu frame_avg_us=%llu frame_max_us=%llu",input_samples,
+                (unsigned long long)(input_total_us/input_samples),(unsigned long long)input_max_us,
+                (unsigned long long)(input_ingress_total_us/input_samples),(unsigned long long)input_ingress_max_us,
+                (unsigned long long)(input_frame_total_us/input_samples),(unsigned long long)input_frame_max_us);
+            pxa_log_write(2,message);input_samples=0;input_total_us=input_max_us=0;
+            input_ingress_total_us=input_ingress_max_us=input_frame_total_us=input_frame_max_us=0;
+        }
+        frames=updates=skipped=0; render_us=logic_us=convert_us=0; stats_since=converted;
     }
     audio_tick(time_us());
-    (void)now;
+    next_frame_clock(begin);
 }
 static void pointer(const pxa_ui_pointer_data_t &p) {
+    if(scanning)return;
+    note_input(p.timestamp_us);
+    uint32_t previous_touch=touch_keys;
     // A fixed D-pad and action buttons also allow PXADB pointer validation.
     int scale=pxa_surface_fit_scale(320,240,display_w,display_h);
     if(scale<1)scale=1;
     int x=(int(p.x)-(int(display_w)-320*scale)/2)/scale;
     int y=(int(p.y)-(int(display_h)-240*scale)/2)/scale;
-    if (p.phase==PXA_POINTER_UP || p.phase==PXA_POINTER_CANCEL) {touch_keys=0;return;}
+    if (p.phase==PXA_POINTER_UP || p.phase==PXA_POINTER_CANCEL) {
+        touch_keys=0;if(p.phase==PXA_POINTER_CANCEL)pressed_keys=0;return;
+    }
     if(help) {if(p.phase==PXA_POINTER_DOWN)help=false;touch_keys=0;return;}
+#if OL_CLASSIC
+    if(data_help) {
+        if(p.phase==PXA_POINTER_DOWN) {if(y>=155 && y<195)scan_original_data();else {data_help=false;menu=true;menu_selection=10;}}
+        touch_keys=0;return;
+    }
+#endif
     if(menu) {
         if(p.phase==PXA_POINTER_DOWN) {
             if(levels && y>=38 && y<198)choose_menu((menu_selection/8)*8+unsigned(y-38)/20);
             else if(levels && y>=210)menu_selection=(menu_selection+8)%OL_PLAYABLE_COUNT;
-            else if(!levels && y>=(settings?40:35) && y<(settings?190:215))choose_menu(unsigned(y-(settings?40:35))/(settings?25:18));
+            else if(!levels && y>=(settings?40:35) && y<(settings?190:(OL_CLASSIC?235:215)))choose_menu(unsigned(y-(settings?40:35))/(settings?25:18));
         }
         touch_keys=0;return;
     }
-    if(p.phase==PXA_POINTER_DOWN && x>=140 && x<=220 && y>200) {menu=true;settings=false;menu_selection=0;touch_keys=0;return;}
+    if(p.phase==PXA_POINTER_DOWN && x>=140 && x<=220 && y>200) {menu=true;settings=false;menu_selection=0;touch_keys=pressed_keys=0;return;}
     if (x<140) {
         touch_keys=0;
         if (x<40) touch_keys|=1u<<3; else if (x>95) touch_keys|=1u<<1;
@@ -245,8 +354,10 @@ static void pointer(const pxa_ui_pointer_data_t &p) {
     else if (x>260 && y>175) touch_keys=1u<<4; // action
     else if (x>220 && y>120) touch_keys=1u<<7; // jump
     else touch_keys=1u<<8; // draw/holster
+    if(ready)pressed_keys|=touch_keys&~previous_touch;
 }
 extern "C" int32_t pxa_app_start(const uint8_t *config,uint32_t length) {
+    pxa_clock_limits(CLOCK_LIMITS_TOKEN);
     pxa_ui_environment_t env;
     if (pxa_ui_parse_start_environment(config,length,&env)) {display_w=env.width;display_h=env.height;}
     pxa_window_fullscreen();
@@ -267,13 +378,36 @@ extern "C" int32_t pxa_app_start(const uint8_t *config,uint32_t length) {
 }
 extern "C" int32_t pxa_app_on_event(const uint8_t *bytes,uint32_t length) {
     pxa_event_t e; if (!pxa_parse_event(bytes,length,&e)) return PXA_EVENT_UNHANDLED;
+    pxa_clock_limits_result_t limits_result;
+    if(pxa_clock_parse_limits(&e,CLOCK_LIMITS_TOKEN,&limits_result)) {
+        if(!limits_result.status && limits_result.limits.min_period_us<16000u &&
+           limits_result.limits.max_period_us>=16000u) {
+            frame_clock_limits=limits_result.limits;frame_clock=true;
+            pxa_log_write(2,"OpenLara frame clock: paced timing available");
+        } else pxa_log_write(2,"OpenLara frame clock: periodic fallback");
+        return PXA_EVENT_HANDLED;
+    }
+    pxa_clock_configure_result_t configured;
+    if(pxa_clock_parse_configure(&e,CLOCK_FRAME_TOKEN,frame_clock_period,&configured)) {
+        if(configured.status) {
+            frame_clock=false;loading_clock();
+            pxa_log_write(3,"OpenLara frame clock: configuration rejected, periodic fallback");
+        }
+        return PXA_EVENT_HANDLED;
+    }
     uint8_t life;
     if (pxa_lifecycle_parse(&e,&life)) {
         background=life==PXA_SYSTEM_LIFECYCLE_BACKGROUND;
-        pad_keys=touch_keys=controller_last=controller_suppressed=0;previous_us=time_us();
+        pad_keys=touch_keys=pressed_keys=controller_last=controller_suppressed=0;pending_input_us=0;previous_us=time_us();
+#if OL_CLASSIC
+        ol_set_time(previous_us);ol_idle_time();
+#endif
         audio_flush();pxa_clock_set_period(background?0:16);return PXA_EVENT_HANDLED;
     }
     if(store_event(e) || audio_event(e) || music_stream_event(e))return PXA_EVENT_HANDLED;
+#if OL_CLASSIC
+    if(catalog_event(e))return PXA_EVENT_HANDLED;
+#endif
     if (e.service==PXA_SURFACE_SERVICE && e.opcode==PXA_SURFACE_CREATE && e.token==1) {
         pxa_surface_create_result_t result;
         if (!pxa_surface_parse_create(&e,1,&result) || result.status) return PXA_STATUS_INTERNAL;
@@ -313,7 +447,8 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *bytes,uint32_t length) {
         if (!pxa_assets_parse_read(&e,20,&result) || result.status ||
             (load_kind==1?result.total_bytes<2048:result.total_bytes>load_capacity) ||
             !result.total_bytes || !result.bytes || result.bytes>load_capacity-loaded || result.offset!=loaded) {
-            error("OpenLara: missing level. Install GBA PKD files in the app's fixed SD media directory.");return PXA_EVENT_HANDLED;
+            error(OL_CLASSIC?"OpenLara: missing data. Add original PC DATA to SD media; press Select for import help.":
+                "OpenLara: missing level. Install GBA PKD files in the app's fixed SD media directory.");return PXA_EVENT_HANDLED;
         }
         if(load_kind==1)ol_tracks_size=result.total_bytes;
         if(load_kind==2 && !loaded) {
@@ -329,10 +464,20 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *bytes,uint32_t length) {
     pxa_ui_controller_data_t c;
     if (pxa_ui_parse_controller(&e,&c)) {
         uint32_t buttons=c.connected?c.buttons:0;
+        if(buttons!=controller_last)note_input(c.timestamp_us);
         controller_suppressed&=buttons;
         uint32_t hits=buttons&~controller_last;controller_last=buttons;
+        if(scanning) {pad_keys=touch_keys=0;return PXA_EVENT_HANDLED;}
         if(load_state<0 && (hits&PXA_CONTROLLER_SELECT)) {open_level(0);return PXA_EVENT_HANDLED;}
-        if(hits&PXA_CONTROLLER_SELECT) {menu=!menu;help=settings=levels=false;menu_selection=0;pad_keys=touch_keys=0;controller_suppressed|=PXA_CONTROLLER_SELECT;}
+        if(hits&PXA_CONTROLLER_SELECT) {menu=!menu;help=settings=levels=data_help=false;menu_selection=0;pad_keys=touch_keys=pressed_keys=0;controller_suppressed|=PXA_CONTROLLER_SELECT;}
+#if OL_CLASSIC
+        if(data_help) {
+            controller_suppressed|=buttons&(PXA_CONTROLLER_A|PXA_CONTROLLER_B);
+            if(hits&PXA_CONTROLLER_B) {data_help=false;menu=true;menu_selection=10;}
+            else if(hits&PXA_CONTROLLER_A)scan_original_data();
+            pad_keys=touch_keys=0;return PXA_EVENT_HANDLED;
+        }
+#endif
         if(menu || help) {
             controller_suppressed|=buttons&(PXA_CONTROLLER_A|PXA_CONTROLLER_B|PXA_CONTROLLER_SELECT);
             if(hits&PXA_CONTROLLER_B) {
@@ -341,7 +486,7 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *bytes,uint32_t length) {
                 pad_keys=touch_keys=0;
             }
             else if(menu) {
-                unsigned count=levels?OL_PLAYABLE_COUNT:(settings?6:10);
+                unsigned count=levels?OL_PLAYABLE_COUNT:(settings?6:(OL_CLASSIC?11:10));
                 if(hits&PXA_CONTROLLER_UP)menu_selection=(menu_selection+count-1)%count;
                 if(hits&PXA_CONTROLLER_DOWN)menu_selection=(menu_selection+1)%count;
                 if(levels && (hits&(PXA_CONTROLLER_LEFT|PXA_CONTROLLER_RIGHT)))menu_selection=(menu_selection+8)%count;
@@ -353,26 +498,29 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *bytes,uint32_t length) {
         // Select belongs to the pause menu; don't also pass it to the
         // engine's free-camera key. Menu confirmation stays consumed until up.
         buttons&=~controller_suppressed;
+        uint32_t previous_pad=pad_keys;
         pad_keys=0; if (c.connected) for(unsigned i=0;i<12;++i) if(i!=7 && (buttons&(1u<<i)))pad_keys|=1u<<map[i];
+        if(!c.connected)pressed_keys=0;
+        else if(ready)pressed_keys|=pad_keys&~previous_pad;
         return PXA_EVENT_HANDLED;
     }
     if (e.service==PXA_WINDOW_SERVICE && e.opcode==PXA_WINDOW_BACK_REQUESTED) {
         // A back request is an impulse; do not leave a controller key held.
         if(load_state<0)open_level(0);
-        else if(ready) {menu=!menu;help=settings=levels=false;menu_selection=0;pad_keys=touch_keys=0;}
+        else if(ready) {menu=!menu;help=settings=levels=data_help=false;menu_selection=0;pad_keys=touch_keys=pressed_keys=0;}
         return PXA_EVENT_HANDLED;
     }
     if(e.service==PXA_UI_SERVICE && e.opcode==PXA_UI_ENVIRONMENT_CHANGED) {
         pxa_ui_environment_t env;
         if(pxa_ui_parse_environment_event(&e,&env)) {display_w=env.width;display_h=env.height;}
-        pad_keys=touch_keys=controller_last=controller_suppressed=0;return PXA_EVENT_HANDLED;
+        pad_keys=touch_keys=pressed_keys=controller_last=controller_suppressed=0;return PXA_EVENT_HANDLED;
     }
 #if OL_OPTIMIZED
     pxa_surface_released_t released;
     if (pxa_surface_parse_released(&e,&released)) {
-        // Reliable release makes the buffer acquirable. Fill it immediately;
-        // the clock remains the fallback and the simulation stays at 30 Hz.
-        if (released.handle==surface && ready) tick(time_us());
+        // The clock owns frame production. Rendering from release callbacks
+        // lets display notifications repeatedly run expensive guest work
+        // before the Host can dispatch queued controller changes.
         return PXA_EVENT_HANDLED;
     }
 #endif

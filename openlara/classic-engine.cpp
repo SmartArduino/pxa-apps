@@ -16,7 +16,7 @@ uint32_t ol_tracks_size;
 uint16_t ol_palette[256];
 static uint16_t pixels[320*240];
 static unsigned input_bytes;
-static uint64_t current_us,last_update_us;
+static uint64_t current_us;
 static bool initialized,swap_actions,show_fps;
 static unsigned gamma_value,current_id;
 static int fps_value,requested=-1;
@@ -169,7 +169,7 @@ const char *ol_validate_level(unsigned n) {
         ol_level_data[1]==0 && ol_level_data[2]==0 && ol_level_data[3]==0?nullptr:"Expected original PC TR1 PHD data";
 }
 void ol_start(int id) {
-    current_id=id;last_update_us=current_us;
+    current_id=id;
     Stream *stream=pending_stream;pending_stream=nullptr;requested=-1;
     if(!stream)stream=new Stream(ol_level_file(id),ol_level_data,input_bytes);
     else {stream->data=reinterpret_cast<char*>(ol_level_data);stream->size=input_bytes;stream->pos=0;}
@@ -185,9 +185,11 @@ void ol_update(unsigned,uint32_t keys) {
     if(!initialized || !Game::level)return;
     const JoyKey map[]={jkUp,jkRight,jkDown,jkLeft,jkA,jkY,jkNone,jkB,jkX,jkNone,jkLB,jkRB,jkNone,jkNone,jkNone,jkStart};
     for(unsigned i=0;i<16;++i)if(map[i]!=jkNone)Input::setJoyDown(0,map[i],(keys&(1u<<i))!=0);
-    if(current_us-last_update_us>250000u)Core::resetTime();
-    last_update_us=current_us;Game::update();
+    // Game::update already caps catch-up at 200 ms. Resetting its clock on
+    // every slow frame prevented any simulation/input update below 4 FPS.
+    Game::update();
 }
+void ol_idle_time() {if(initialized)Core::resetTime();}
 void olClassicTitleBackground(unsigned alpha) {
     // Render-target clearing is deferred until state validation. Finish it
     // before writing the direct RGB565 background, as normal draw calls do.
@@ -206,6 +208,21 @@ void ol_render() {
     if(!initialized || !Game::level)return;
     Game::render();
     if(show_fps) {char s[24];snprintf(s,sizeof(s),"%d FPS",fps_value);text_begin();text(8,8,s,false);UI::end();}
+}
+static uint8_t *overlay_lightmap;
+static decltype(GAPI::swPalette) overlay_palette;
+void ol_overlay_begin() {
+    overlay_lightmap=GAPI::swLightmap;overlay_palette=GAPI::swPalette;
+    Game::frameBegin();
+    // Core::reset does not mark the scissor dirty. Restore the full target
+    // explicitly instead of inheriting the last 3D portal's clipping box.
+    Core::setTarget(nullptr,nullptr,RT_STORE_COLOR);
+    Core::setViewport(Core::x,Core::y,Core::width,Core::height);
+    Core::setScissor(Core::viewport);Core::validateRenderState();
+    GAPI::setPalette(GAPI::swPaletteColor);GAPI::setShading(false);
+}
+void ol_overlay_end() {
+    Game::frameEnd();GAPI::swLightmap=overlay_lightmap;GAPI::setPalette(overlay_palette);
 }
 const uint8_t *ol_pixels() {return reinterpret_cast<const uint8_t*>(pixels);}
 int ol_next_level() {int id=requested;requested=-1;return id;}
@@ -241,8 +258,8 @@ void ol_draw_menu(unsigned selected,bool help,bool settings) {
         text(0,16,"SETTINGS");
         for(unsigned i=0;i<6;++i) {char s[64];if(i<4)snprintf(s,sizeof(s),"%s: %s",labels[i],values[i]?"ON":"OFF");else if(i==4)snprintf(s,sizeof(s),"Brightness: %u",gamma_value);else strcpy(s,labels[i]);text(0,40+i*25,s);if(i==selected)text(12,40+i*25,">",false);}
     } else {
-        const char *lines[]={"Resume","Save game","Load game","New game","City of Vilcabamba","Lara's home","Title","Settings","Controls","All levels"};
-        text(0,16,"OPENLARA - TR1");for(unsigned i=0;i<10;++i) {text(0,35+i*18,lines[i]);if(i==selected)text(12,35+i*18,">",false);}
+        const char *lines[]={"Resume","Save game","Load game","New game","City of Vilcabamba","Lara's home","Title","Settings","Controls","All levels","Import game data"};
+        text(0,16,"OPENLARA - TR1");for(unsigned i=0;i<11;++i) {text(0,35+i*18,lines[i]);if(i==selected)text(12,35+i*18,">",false);}
     }
     UI::end();
 }
@@ -255,6 +272,13 @@ void ol_draw_levels(unsigned selected) {
         text(0,38+row*20,s);if(i==selected)text(12,38+row*20,">",false);
     }
     text(0,218,"Left/right: page  B: back");UI::end();
+}
+void ol_draw_data(unsigned installed,bool sd) {
+    memset(pixels,0,sizeof(pixels));text_begin();
+    char count[48];snprintf(count,sizeof(count),"Installed campaign levels: %u / 15",installed);
+    const char *lines[]={"ORIGINAL GAME DATA",count,"Copy your original PC DATA folder", "into OpenLara's SD media folder.",
+        "Keep the original *.PHD filenames.","PC importer also accepts GAME.GOG.",sd?"A: Scan DATA folder and reload":"SD media unavailable; use PC importer","B: Back"};
+    for(unsigned i=0;i<8;++i)text(0,22+i*26,lines[i]);UI::end();
 }
 bool ol_toggle_setting(unsigned index) {
     if(store_busy())return false;

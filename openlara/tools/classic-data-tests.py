@@ -8,6 +8,10 @@ import shutil
 import struct
 import tempfile
 import wave
+import importlib.util
+import contextlib
+import io
+import sys
 from game_data import inspect_phd, fingerprint
 from classic_data import prepare
 from disc_data import extract_phd
@@ -59,6 +63,27 @@ def main():
         assert next(level for level in manifest['levels'] if level['id']==3)['lara_entities']==[
             {'index':91,'room':90,'position':[78336,-1024,12800],'rotation':0}]
         report['public_demo_lara_entity_identified']=True
+        # Exercise the automatic user inbox through the actual CLI entry,
+        # without --game-data. An incomplete copy must leave existing media.
+        spec=importlib.util.spec_from_file_location('openlara_prepare_cli',Path(__file__).with_name('prepare-classic-data.py'))
+        cli=importlib.util.module_from_spec(spec);spec.loader.exec_module(cli)
+        app=root/'inbox-app';drop=app/'game-data/DATA';drop.mkdir(parents=True)
+        for name,data in originals.items():(drop/name.upper()).write_bytes(data)
+        cli.ROOT=app;previous_argv=sys.argv
+        sys.argv=['prepare-data.py','--output',str(destination),'--upstream',str(args.upstream)]
+        unchanged={p.name:fingerprint(p) for p in destination.iterdir()}
+        try:
+            with contextlib.redirect_stdout(io.StringIO()),contextlib.redirect_stderr(io.StringIO()):
+                try:cli.main()
+                except SystemExit as error:assert error.code==1
+                else:raise AssertionError('incomplete auto inbox accepted as full campaign')
+            assert unchanged=={p.name:fingerprint(p) for p in destination.iterdir()}
+            sys.argv+=['--allow-partial']
+            with contextlib.redirect_stdout(io.StringIO()):cli.main()
+            auto=json.loads((destination/'data-manifest.json').read_text())
+            assert auto['campaign_levels']==1 and not auto['campaign_data_complete']
+            report['automatic_user_inbox_and_strict_incomplete_guard']=True
+        finally:sys.argv=previous_argv
         before={p.name:fingerprint(p) for p in destination.iterdir()}
         (source/'level2.phd').write_bytes(originals['level2.phd'][:-20])
         try:

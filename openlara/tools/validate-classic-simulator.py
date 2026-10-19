@@ -63,6 +63,8 @@ try:
     capture('missing-level');assert 'ready level=4' not in logs()[start:]
     key('X');key('X');report['missing_level_guard']=True
     report['controller_only_level_selection']=True
+    menu(10);capture('import-game-data');key('X');key('X')
+    report['original_data_entry']=True
     if a.swap:
         from PIL import Image
         start=len(logs());menu(6);wait('OpenLara ready level=0',start);time.sleep(1.2)

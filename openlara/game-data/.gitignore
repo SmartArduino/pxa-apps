@@ -1,0 +1,7 @@
+*
+!.gitignore
+!README.zh-CN.md
+!DATA/
+!DATA/.gitkeep
+!audio/
+!audio/.gitkeep

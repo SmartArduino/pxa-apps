@@ -12,6 +12,19 @@ from classic_data import prepare
 from game_data import ROOT
 
 
+def inbox_data(directory):
+    """Choose an explicit user drop-in before falling back to the public demo."""
+    directory=Path(directory)
+    for name in ('DATA','data'):
+        folder=directory/name
+        if folder.is_dir() and any(p.is_file() and p.suffix.lower()=='.phd' for p in folder.rglob('*')):
+            return folder
+    images=sorted(p for p in directory.glob('*') if p.is_file() and p.suffix.lower() in ('.gog','.iso','.bin'))
+    if len(images)>1:
+        raise ValueError('multiple game-data disc images; select one with --game-data')
+    return images[0] if images else None
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--game-data',type=Path,help='original DATA directory, game root, or GAME.GOG/ISO/BIN disc image')
@@ -33,6 +46,13 @@ def main():
     if args.demo and args.game_data:
         parser.error('--demo and --game-data are mutually exclusive')
     try:
+        if not args.game_data and not args.demo:
+            args.game_data=inbox_data(ROOT/'game-data')
+            if args.game_data:
+                print('Using original game-data inbox: '+str(args.game_data),flush=True)
+                audio_inbox=ROOT/'game-data/audio'
+                if not args.audio and any(p.is_file() and p.suffix.lower() in ('.mp3','.ogg','.wav','.flac') for p in audio_inbox.glob('*')):
+                    args.audio=audio_inbox
         publisher=bytes.fromhex(args.publisher_id)
         if len(publisher)!=32:
             raise ValueError('--publisher-id must encode 32 bytes')

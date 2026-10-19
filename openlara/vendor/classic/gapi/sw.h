@@ -179,6 +179,7 @@ namespace GAPI {
 
     ColorSW *swColor;
     DepthSW *swDepth;
+    bool swDepthTest, swDepthWrite;
     short4  swClipRect;
 
     struct VertexSW {
@@ -255,7 +256,7 @@ namespace GAPI {
 
     void resize() {
         delete[] swDepth;
-        //swDepth = new DepthSW[Core::width * Core::height];
+        swDepth = new DepthSW[Core::width * Core::height];
     }
 
     inline mat4::ProjRange getProjRange() {
@@ -298,7 +299,7 @@ namespace GAPI {
         }
 
         if (depth) {
-            //memset(swDepth, 0xFF, Core::width * Core::height * sizeof(DepthSW));
+            memset(swDepth, 0xFF, Core::width * Core::height * sizeof(DepthSW));
         }
     }
 
@@ -313,9 +314,9 @@ namespace GAPI {
         swClipRect.w = Core::active.viewport.w - s.y;
     }
 
-    void setDepthTest(bool enable) {}
+    void setDepthTest(bool enable) { swDepthTest = enable; }
 
-    void setDepthWrite(bool enable) {}
+    void setDepthWrite(bool enable) { swDepthWrite = enable; }
 
     void setColorWrite(bool r, bool g, bool b, bool a) {}
 
@@ -389,7 +390,7 @@ namespace GAPI {
         int32 x2 = R.x >> 16;
 
         int32 f = x2 - x1;
-        if (f == 0) return;
+        if (f <= 0) return;
 
         VertexSW dS = (R - L) / f;
         VertexSW S  = L;
@@ -405,8 +406,12 @@ namespace GAPI {
         int32 i = y * Core::width;
 
     #if defined(_OS_PXA) && OL_OPTIMIZED && !defined(DITHER_FILTER)
-        ol_classic_span(swColor+i+x1,x2-x1,S.u,S.v,S.l,dS.u,dS.v,dS.l,
-            curTile->index,swLightmap,swPalette);
+        if (swDepthTest)
+            ol_classic_depth_span(swColor+i+x1,swDepth+i+x1,x2-x1,S.z,dS.z,
+                S.u,S.v,S.l,dS.u,dS.v,dS.l,curTile->index,swLightmap,swPalette,swDepthWrite);
+        else
+            ol_classic_span(swColor+i+x1,x2-x1,S.u,S.v,S.l,dS.u,dS.v,dS.l,
+                curTile->index,swLightmap,swPalette);
         return;
     #endif
 
@@ -415,11 +420,9 @@ namespace GAPI {
     #endif
 
         for (int x = i + x1; x < i + x2; x++) {
-            S.z += dS.z;
+            DepthSW z = DepthSW(uint32(S.z) >> 15);
 
-            DepthSW z = DepthSW(uint32(S.z) >> 16);
-
-            {//if (swDepth[x] >= z) {
+            if (!swDepthTest || swDepth[x] >= z) {
             #ifdef DITHER_FILTER
                 const int *dithX = dithY + (x & 1);
 
@@ -436,11 +439,12 @@ namespace GAPI {
                     index = swLightmap[((S.l >> (16 + 3)) << 8) + index];
 
                     swColor[x] = swPalette[index];
-                    //swDepth[x] = z;
+                    if (swDepthTest && swDepthWrite) swDepth[x] = z;
                 }
             }
 
             step(S, dS);
+            S.z += dS.z;
         }
     }
 
@@ -622,6 +626,91 @@ namespace GAPI {
         result.l = (255 - min(255, int32(lighting))) << 16;
     }
 
+    // Only boundary-crossing faces use this path; ordinary faces retain the
+    // original transform and quad rasterizer. Never discard an entire wall
+    // just because one of its corners is behind the camera.
+    void clipPrimitive(const mat4 &matrix, const Index *indices, const Vertex *vertices,
+                       int start, int vStart, bool triangle, bool colored) {
+        struct ClipVertex { vec4 c; int32 u, v, l; } buffers[2][12];
+        ClipVertex *input = buffers[0], *output = buffers[1];
+        int count = triangle ? 3 : 4;
+        unsigned allOutside = 63, anyOutside = 0;
+        for (int j = 0; j < count; ++j) {
+            const Vertex &vertex = vertices[vStart + indices[start + (j == 3 ? 5 : j)]];
+            input[j].c = matrix * vec4(vertex.coord.x, vertex.coord.y, vertex.coord.z, 1.0f);
+            const vec4 &c = input[j].c;
+            unsigned outside = (c.z < 0.0f) | ((c.w > SW_MAX_DIST) << 1) |
+                ((c.x < 0.0f) << 2) | ((c.x > c.w * Core::width) << 3) |
+                ((c.y < 0.0f) << 4) | ((c.y > c.w * Core::height) << 5);
+            allOutside &= outside; anyOutside |= outside;
+        }
+        // Reject a common outside plane before lighting. Only intersect the
+        // planes that the original face actually crosses.
+        if (allOutside) return;
+        for (int j = 0; j < count; ++j) {
+            const Vertex &vertex = vertices[vStart + indices[start + (j == 3 ? 5 : j)]];
+            ClipVertex &p = input[j];
+            p.u = (colored ? vertex.color.x : vertex.texCoord.x) << 16;
+            p.v = colored ? 0 : vertex.texCoord.y << 16;
+            VertexSW lit;
+            lit.l = (vertex.light.x * ambient) >> 8;
+            applyLighting(lit, vertex, p.c.w);
+            p.l = lit.l;
+        }
+        for (int plane = 0; plane < 6 && count; ++plane) {
+            if (!(anyOutside & (1u << plane))) continue;
+            auto distance = [plane](const ClipVertex &p) {
+                switch (plane) {
+                    case 0: return p.c.z;
+                    case 1: return SW_MAX_DIST - p.c.w;
+                    case 2: return p.c.x;
+                    case 3: return p.c.w * Core::width - p.c.x;
+                    case 4: return p.c.y;
+                    default: return p.c.w * Core::height - p.c.y;
+                }
+            };
+            int n = 0;
+            ClipVertex previous = input[count - 1];
+            float a = distance(previous);
+            for (int j = 0; j < count; ++j) {
+                const ClipVertex &p = input[j];
+                float b = distance(p);
+                if ((a < 0.0f) != (b < 0.0f)) {
+                    float t = a / (a - b);
+                    ClipVertex &q = output[n++];
+                    q.c = previous.c + (p.c - previous.c) * t;
+                    q.u = int32(previous.u + float(p.u - previous.u) * t);
+                    q.v = int32(previous.v + float(p.v - previous.v) * t);
+                    q.l = int32(previous.l + float(p.l - previous.l) * t);
+                }
+                if (b >= 0.0f) output[n++] = p;
+                previous = p; a = b;
+            }
+            count = n; swap(input, output);
+        }
+        if (count < 3) return;
+        int first = swIndices.length;
+        for (int j = 0; j < count; ++j) {
+            const ClipVertex &p = input[j];
+            if (p.c.w <= 0.0f) return;
+            VertexSW result;
+            result.x = int32(clamp(p.c.x / p.c.w, -16384.0f, 16384.0f)) << 16;
+            result.y = int32(clamp(p.c.y / p.c.w, -16384.0f, 16384.0f));
+            result.z = int32(clamp(p.c.z / p.c.w, 0.0f, 1.0f) * 2147418112.0f);
+            result.w = int32(p.c.w) << 16;
+            result.u = p.u; result.v = p.v; result.l = p.l;
+            swIndices.push(swVertices.push(result));
+        }
+        // Reserve three explicit indices for each fan triangle because DIP
+        // consumes contiguous triples, rather than an indexed polygon.
+        for (int j = 1; j + 1 < count; ++j) {
+            Index a = swIndices[first], b = swIndices[first + j], c = swIndices[first + j + 1];
+            int offset = swIndices.length;
+            swIndices.push(a); swIndices.push(b); swIndices.push(c);
+            swTriangles.push(offset);
+        }
+    }
+
     bool transform(const Index *indices, const Vertex *vertices, int iStart, int iCount, int vStart) {
         swVertices.reset();
         swIndices.reset();
@@ -629,11 +718,12 @@ namespace GAPI {
         swQuads.reset();
 
         mat4 swMatrix;
-        swMatrix.viewport(0.0f, (float)Core::height, (float)Core::width, -(float)Core::height, 0.0f, 1.0f);
+        swMatrix.viewport(0.0f, (float)Core::height, (float)Core::width, -(float)Core::height, -1.0f, 1.0f);
         swMatrix = swMatrix * mViewProj * mModel;
 
         const bool colored = vertices[vStart + indices[iStart]].color.w == 142;
         int vIndex = 0;
+        int faceIndex = 0, faceVertices = 0, faceIndices = 0;
         bool isTriangle = false;
 
         for (int i = 0; i < iCount; i++) {
@@ -644,6 +734,7 @@ namespace GAPI {
 
             if (vIndex == 1) {
                 isTriangle = vertex.normal.w == 1;
+                faceIndex = i; faceVertices = swVertices.length; faceIndices = swIndices.length;
             } else {
                 if (vIndex == 4) { // loader splits quads to two triangles with indices 012[02]3, we ignore [02] to make it quad again!
                     vIndex++;
@@ -655,12 +746,14 @@ namespace GAPI {
             vec4 c;
             c = swMatrix * vec4(vertex.coord.x, vertex.coord.y, vertex.coord.z, 1.0f);
 
-            if (c.w < 0.0f || c.w > SW_MAX_DIST) { // skip primitive
-                if (isTriangle) {
-                    i += 3 - vIndex;
-                } else {
-                    i += 6 - vIndex;
-                }
+            // Ordinary screen-edge clipping stays in the integer scanline
+            // path. Homogeneous clipping is only needed across near/far or
+            // outside this safe fixed-point range (also bounds cross products).
+            if (c.z < 0.0f || c.w <= 0.0f || c.w > SW_MAX_DIST ||
+                fabsf(c.x) > c.w * 4096.0f || fabsf(c.y) > c.w * 4096.0f) {
+                swVertices.length = faceVertices; swIndices.length = faceIndices;
+                clipPrimitive(swMatrix, indices, vertices, iStart + faceIndex, vStart, isTriangle, colored);
+                i = faceIndex + (isTriangle ? 3 : 6) - 1;
                 vIndex = 0;
                 continue;
             }
@@ -674,7 +767,9 @@ namespace GAPI {
             VertexSW result;
             result.x = int32(c.x) << 16;
             result.y = int32(c.y);
-            result.z = uint32(clamp(c.z, 0.0f, 1.0f) * 65535.0f) << 16;
+            // Keep differences/interpolation inside signed 32-bit range.
+            // The old unused 16.16 depth overflowed across the near plane.
+            result.z = int32(clamp(c.z, 0.0f, 1.0f) * 2147418112.0f);
             result.w = int32(c.w);
 
             if (colored) {
