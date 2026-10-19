@@ -13,6 +13,7 @@ p.add_argument('--socket',type=Path,required=True)
 p.add_argument('--log',type=Path,required=True)
 p.add_argument('--output',type=Path,required=True)
 p.add_argument('--swap',action='store_true',help='also verify swapped native confirmation/cancel and persisted hints')
+p.add_argument('--video-modes',action='store_true',help='also cycle all3D resolutions through SDL keys and restart in160x120')
 a=p.parse_args();a.output.mkdir(parents=True,exist_ok=True)
 report={'passed':False,'input_path':'SDL keyboard events -> desktop controller -> Core 2 controller state -> complete OpenLara Guest'}
 def command(text):
@@ -85,6 +86,18 @@ try:
         menu(7);key('DOWN');key('DOWN');start=len(logs());key('Z')
         wait('OpenLara settings committed',start);key('X')
         start=len(logs());menu(4);wait('OpenLara ready level=3',start);time.sleep(1)
+    if a.video_modes:
+        for width in [240,160,320]:
+            menu(7)
+            for _ in range(5):key('DOWN')
+            start=len(logs());key('Z');wait(f'OpenLara video gameplay={width}x{width*3//4}',start)
+            wait('OpenLara settings committed',start);key('X');time.sleep(.8);capture(f'resolution-{width}')
+            if width==160:
+                command('PACKAGE stop pxa-openlara');time.sleep(.5);start=len(logs());command('PACKAGE run pxa-openlara')
+                wait('OpenLara ready level=0',start);wait('OpenLara video gameplay=160x120',start);time.sleep(1)
+                capture('resolution-160-restarted-title');start=len(logs());menu(2);wait('OpenLara save restored',start);time.sleep(1)
+                report['resolution_restart_persisted']=True
+        report['keyboard_resolution_modes']=[320,240,160]
     capture('final');report['passed']=True
 finally:
     (a.output/'metrics.json').write_text(json.dumps(report,indent=2)+'\n')

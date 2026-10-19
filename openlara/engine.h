@@ -23,6 +23,7 @@ void ol_update(unsigned frames, uint32_t buttons);
 void ol_render();
 #if OL_CLASSIC
 void ol_idle_time();
+void ol_set_framebuffer(uint16_t *output);
 void ol_draw_data(unsigned installed,bool sd);
 void ol_overlay_begin();
 void ol_overlay_end();

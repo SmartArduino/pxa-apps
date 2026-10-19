@@ -14,11 +14,18 @@ uint8_t ol_title_data[240*160];
 uint8_t ol_title_palette_data[512];
 uint32_t ol_tracks_size;
 uint16_t ol_palette[256];
-static uint16_t pixels[320*240];
+static uint16_t fallback_pixels[320*240];
+static uint16_t *pixels=fallback_pixels;
 static unsigned input_bytes;
 static uint64_t current_us;
 static bool initialized,swap_actions,show_fps;
 static unsigned gamma_value,current_id;
+static uint8_t video_mode;
+static unsigned video_width() {return video_mode==1?240u:video_mode==2?160u:320u;}
+static void log_video() {
+    char s[80];snprintf(s,sizeof(s),"OpenLara video gameplay=%ux%u ui=320x240",video_width(),video_width()*3/4);
+    pxa_log_write(2,s);
+}
 static int fps_value,requested=-1;
 static Stream *pending_stream;
 static uint8_t *pending_write[2];
@@ -99,7 +106,7 @@ static bool write_private(unsigned kind,const void *data,unsigned n) {
 }
 static bool save_settings() {
     PersistedSettings p{};p.magic=0x33434c4f;p.version=1;p.settings=Core::settings;
-    p.swap=swap_actions;p.show_fps=show_fps;p.gamma=gamma_value;
+    p.swap=swap_actions;p.show_fps=show_fps;p.gamma=gamma_value;p.reserved=video_mode;
     return write_private(0,&p,sizeof(p));
 }
 void osCacheRead(Stream *stream) {
@@ -107,9 +114,9 @@ void osCacheRead(Stream *stream) {
     bool ok=p && n==sizeof(settings);
     if(ok) {
         memcpy(&settings,p,n);ok=settings.magic==0x33434c4f && settings.version==1 &&
-            settings.settings.version==SETTINGS_VERSION && settings.gamma<32 && settings.swap<=1 && settings.show_fps<=1;
+            settings.settings.version==SETTINGS_VERSION && settings.gamma<32 && settings.swap<=1 && settings.show_fps<=1 && settings.reserved<3;
     }
-    if(ok) {swap_actions=settings.swap;show_fps=settings.show_fps;gamma_value=settings.gamma;}
+    if(ok) {swap_actions=settings.swap;show_fps=settings.show_fps;gamma_value=settings.gamma;video_mode=settings.reserved;}
     if(stream->callback)stream->callback(ok?new Stream(stream->name,&settings.settings,sizeof(settings.settings)):nullptr,stream->userData);
     delete stream;
 }
@@ -179,6 +186,7 @@ void ol_start(int id) {
         Game::init(stream);initialized=true;
     } else Game::startLevel(stream);
     brightness();GAPI::resize();GAPI::swColor=pixels;Core::resetTime();
+    log_video();
     if(restoring)pxa_log_write(restore_valid?2:3,restore_valid?"OpenLara save restored":"OpenLara invalid save; level restarted");
 }
 void ol_update(unsigned,uint32_t keys) {
@@ -206,7 +214,17 @@ static void text(unsigned x,unsigned y,const char *s,bool centered=true) {
 }
 void ol_render() {
     if(!initialized || !Game::level)return;
+    // Rendering alone uses the smaller target. Restore native dimensions
+    // before the next simulation tick and before any platform overlay.
+    unsigned width=ol_playable_level(current_id) && !inventory->isActive()?video_width():320;
+    Core::width=width;Core::height=width*3/4;
     Game::render();
+    if(width!=320) {
+        ol_classic_upscale(pixels,width);
+        Core::width=320;Core::height=240;
+        Core::setViewport(Core::x,Core::y,320,240);
+        Core::setScissor(Core::viewport);
+    }
     if(show_fps) {char s[24];snprintf(s,sizeof(s),"%d FPS",fps_value);text_begin();text(8,8,s,false);UI::end();}
 }
 static uint8_t *overlay_lightmap;
@@ -225,6 +243,10 @@ void ol_overlay_end() {
     Game::frameEnd();GAPI::swLightmap=overlay_lightmap;GAPI::setPalette(overlay_palette);
 }
 const uint8_t *ol_pixels() {return reinterpret_cast<const uint8_t*>(pixels);}
+void ol_set_framebuffer(uint16_t *output) {
+    pixels=output?output:fallback_pixels;
+    GAPI::swColor=pixels;
+}
 int ol_next_level() {int id=requested;requested=-1;return id;}
 void ol_player_position(int32_t out[4]) {
     auto *lara=initialized && Game::level?Game::level->players[0]:nullptr;
@@ -248,15 +270,15 @@ bool ol_quick_load() {
 void ol_show_title() {loadSlot=-1;requested=0;}
 void ol_draw_message(const char *message) {if(initialized && Game::level && message && *message) {text_begin();text(0,216,message);UI::end();}}
 void ol_draw_menu(unsigned selected,bool help,bool settings) {
-    memset(pixels,0,sizeof(pixels));text_begin();
+    memset(pixels,0,320u*240u*sizeof(*pixels));text_begin();
     if(help) {
         const char *lines[]={"CONTROLS","D-pad: move / turn","A: action  B: jump","X: weapon  Y: roll","L: look  R: walk","Start: inventory  Select: menu","PC: arrows  Z/X  A/S  Q/W","PC: Enter/Tab = Start/Select","Bottom centre: menu"};
         for(unsigned i=0;i<9;++i)text(0,20+i*22,lines[i]);
     } else if(settings) {
-        const char *labels[]={"Sound effects","Music","Swap action/jump","Show FPS","Brightness","Back"};
+        const char *labels[]={"Sound effects","Music","Swap action/jump","Show FPS","Brightness","3D resolution","Back"};
         unsigned values[]={Core::settings.audio.sound!=0,Core::settings.audio.music!=0,swap_actions,show_fps,gamma_value};
         text(0,16,"SETTINGS");
-        for(unsigned i=0;i<6;++i) {char s[64];if(i<4)snprintf(s,sizeof(s),"%s: %s",labels[i],values[i]?"ON":"OFF");else if(i==4)snprintf(s,sizeof(s),"Brightness: %u",gamma_value);else strcpy(s,labels[i]);text(0,40+i*25,s);if(i==selected)text(12,40+i*25,">",false);}
+        for(unsigned i=0;i<7;++i) {char s[64];if(i<4)snprintf(s,sizeof(s),"%s: %s",labels[i],values[i]?"ON":"OFF");else if(i==4)snprintf(s,sizeof(s),"Brightness: %u",gamma_value);else if(i==5)snprintf(s,sizeof(s),"3D resolution: %ux%u",video_width(),video_width()*3/4);else strcpy(s,labels[i]);text(0,40+i*25,s);if(i==selected)text(12,40+i*25,">",false);}
     } else {
         const char *lines[]={"Resume","Save game","Load game","New game","City of Vilcabamba","Lara's home","Title","Settings","Controls","All levels","Import game data"};
         text(0,16,"OPENLARA - TR1");for(unsigned i=0;i<11;++i) {text(0,35+i*18,lines[i]);if(i==selected)text(12,35+i*18,">",false);}
@@ -264,7 +286,7 @@ void ol_draw_menu(unsigned selected,bool help,bool settings) {
     UI::end();
 }
 void ol_draw_levels(unsigned selected) {
-    memset(pixels,0,sizeof(pixels));text_begin();unsigned page=selected/8;
+    memset(pixels,0,320u*240u*sizeof(*pixels));text_begin();unsigned page=selected/8;
     text(0,16,page?"LEVELS 2/2":"LEVELS 1/2");
     for(unsigned row=0;row<8;++row) {
         unsigned i=page*8+row;if(i>=OL_PLAYABLE_COUNT)break;unsigned id=OL_PLAYABLE_IDS[i];
@@ -274,7 +296,7 @@ void ol_draw_levels(unsigned selected) {
     text(0,218,"Left/right: page  B: back");UI::end();
 }
 void ol_draw_data(unsigned installed,bool sd) {
-    memset(pixels,0,sizeof(pixels));text_begin();
+    memset(pixels,0,320u*240u*sizeof(*pixels));text_begin();
     char count[48];snprintf(count,sizeof(count),"Installed campaign levels: %u / 15",installed);
     const char *lines[]={"ORIGINAL GAME DATA",count,"Copy your original PC DATA folder", "into OpenLara's SD media folder.",
         "Keep the original *.PHD filenames.","PC importer also accepts GAME.GOG.",sd?"A: Scan DATA folder and reload":"SD media unavailable; use PC importer","B: Back"};
@@ -290,6 +312,7 @@ bool ol_toggle_setting(unsigned index) {
         case 2:swap_actions=!swap_actions;controls();break;
         case 3:show_fps=!show_fps;break;
         case 4:gamma_value=(gamma_value+4)&31;brightness();break;
+        case 5:video_mode=(video_mode+1)%3;log_video();break;
         default:return false;
     }
     return save_settings();

@@ -294,6 +294,9 @@ namespace GAPI {
     void waitVBlank() {}
 
     void clear(bool color, bool depth) {
+#if OL_RENDER_PROFILE
+        uint64_t begin = ol_render_clock_us();
+#endif
         if (color) {
             memset(swColor, 0x00, Core::width * Core::height * sizeof(ColorSW));
         }
@@ -301,6 +304,9 @@ namespace GAPI {
         if (depth) {
             memset(swDepth, 0xFF, Core::width * Core::height * sizeof(DepthSW));
         }
+#if OL_RENDER_PROFILE
+        ol_render_profile.clear_us += ol_render_clock_us() - begin;
+#endif
     }
 
     void setClearColor(const vec4 &color) {}
@@ -402,6 +408,10 @@ namespace GAPI {
             x1 = swClipRect.x;
         }
         if (x2 > swClipRect.z) x2 = swClipRect.z;
+#if OL_RENDER_PROFILE
+        ++ol_render_profile.spans;
+        if (x2 > x1) ol_render_profile.pixels += x2 - x1;
+#endif
 
         int32 i = y * Core::width;
 
@@ -605,15 +615,17 @@ namespace GAPI {
     }
 
     void applyLighting(VertexSW &result, const Vertex &vertex, float depth) {
-        vec3 coord  = vec3(float(vertex.coord.x), float(vertex.coord.y), float(vertex.coord.z));
-        vec3 normal = vec3(float(vertex.normal.x), float(vertex.normal.y), float(vertex.normal.z)).normal();
         float lighting = 0.0f;
-        for (int i = 0; i < lightsCount; i++) {
-            LightSW &light = lightsRel[i];
-            vec3 dir = (light.pos - coord) * light.radius;
-            float att = dir.length2();
-            float lum = normal.dot(dir / sqrtf(att));
-            lighting += (max(0.0f, lum) * max(0.0f, 1.0f - att)) * light.intensity;
+        if (lightsCount) {
+            vec3 coord  = vec3(float(vertex.coord.x), float(vertex.coord.y), float(vertex.coord.z));
+            vec3 normal = vec3(float(vertex.normal.x), float(vertex.normal.y), float(vertex.normal.z)).normal();
+            for (int i = 0; i < lightsCount; i++) {
+                LightSW &light = lightsRel[i];
+                vec3 dir = (light.pos - coord) * light.radius;
+                float att = dir.length2();
+                float lum = normal.dot(dir / sqrtf(att));
+                lighting += (max(0.0f, lum) * max(0.0f, 1.0f - att)) * light.intensity;
+            }
         }
 
         lighting += result.l;
@@ -631,13 +643,31 @@ namespace GAPI {
     // just because one of its corners is behind the camera.
     void clipPrimitive(const mat4 &matrix, const Index *indices, const Vertex *vertices,
                        int start, int vStart, bool triangle, bool colored) {
+#if OL_RENDER_PROFILE
+        ++ol_render_profile.clipped;
+#endif
         struct ClipVertex { vec4 c; int32 u, v, l; } buffers[2][12];
         ClipVertex *input = buffers[0], *output = buffers[1];
         int count = triangle ? 3 : 4;
         unsigned allOutside = 63, anyOutside = 0;
+        bool allNear = true, allFar = true;
+        // Many room faces are entirely behind the camera. Test the two depth
+        // planes first, retaining the exact matrix operation order, so those
+        // faces never pay for X/Y projection or screen-plane classification.
         for (int j = 0; j < count; ++j) {
             const Vertex &vertex = vertices[vStart + indices[start + (j == 3 ? 5 : j)]];
-            input[j].c = matrix * vec4(vertex.coord.x, vertex.coord.y, vertex.coord.z, 1.0f);
+            float x = vertex.coord.x, y = vertex.coord.y, z = vertex.coord.z;
+            vec4 &c = input[j].c;
+            c.z = matrix.e20 * x + matrix.e21 * y + matrix.e22 * z + matrix.e23;
+            c.w = matrix.e30 * x + matrix.e31 * y + matrix.e32 * z + matrix.e33;
+            allNear &= c.z < 0.0f; allFar &= c.w > SW_MAX_DIST;
+        }
+        if (allNear || allFar) return;
+        for (int j = 0; j < count; ++j) {
+            const Vertex &vertex = vertices[vStart + indices[start + (j == 3 ? 5 : j)]];
+            float x = vertex.coord.x, y = vertex.coord.y, z = vertex.coord.z;
+            input[j].c.x = matrix.e00 * x + matrix.e01 * y + matrix.e02 * z + matrix.e03;
+            input[j].c.y = matrix.e10 * x + matrix.e11 * y + matrix.e12 * z + matrix.e13;
             const vec4 &c = input[j].c;
             unsigned outside = (c.z < 0.0f) | ((c.w > SW_MAX_DIST) << 1) |
                 ((c.x < 0.0f) << 2) | ((c.x > c.w * Core::width) << 3) |
@@ -711,6 +741,20 @@ namespace GAPI {
         }
     }
 
+    bool visibleFace(const VertexSW *v, int count) {
+        // Match drawTriangle/drawQuad's integer tests before doing lighting
+        // or appending scratch vertices. This only removes faces the raster
+        // stage already discards; visibility distance and scene data stay intact.
+        if (checkBackface(v, v + 1, v + 2)) return false;
+        bool left = true, right = true, top = true, bottom = true;
+        const int32 minX = swClipRect.x << 16, maxX = swClipRect.z << 16;
+        for (int j = 0; j < count; ++j) {
+            left &= v[j].x < minX; right &= v[j].x > maxX;
+            top &= v[j].y < swClipRect.y; bottom &= v[j].y > swClipRect.w;
+        }
+        return !(left || right || top || bottom);
+    }
+
     bool transform(const Index *indices, const Vertex *vertices, int iStart, int iCount, int vStart) {
         swVertices.reset();
         swIndices.reset();
@@ -725,6 +769,10 @@ namespace GAPI {
         int vIndex = 0;
         int faceIndex = 0, faceVertices = 0, faceIndices = 0;
         bool isTriangle = false;
+        VertexSW face[4];
+        const Vertex *sources[4];
+        float depths[4];
+        int faceCount = 0;
 
         for (int i = 0; i < iCount; i++) {
             const Index  index   = indices[iStart + i];
@@ -734,7 +782,7 @@ namespace GAPI {
 
             if (vIndex == 1) {
                 isTriangle = vertex.normal.w == 1;
-                faceIndex = i; faceVertices = swVertices.length; faceIndices = swIndices.length;
+                faceIndex = i; faceVertices = swVertices.length; faceIndices = swIndices.length; faceCount = 0;
             } else {
                 if (vIndex == 4) { // loader splits quads to two triangles with indices 012[02]3, we ignore [02] to make it quad again!
                     vIndex++;
@@ -782,15 +830,20 @@ namespace GAPI {
             result.w = result.w << 16;
             result.l = ((vertex.light.x * ambient) >> 8);
 
-            applyLighting(result, vertex, c.w);
-
-            swIndices.push(swVertices.push(result));
-
-            if (isTriangle && vIndex == 3) {
-                swTriangles.push(swIndices.length - 3);
-                vIndex = 0;
-            } else if (vIndex == 6) {
-                swQuads.push(swIndices.length - 4);
+            face[faceCount] = result; sources[faceCount] = &vertex; depths[faceCount] = c.w;
+            ++faceCount;
+            if ((isTriangle && vIndex == 3) || vIndex == 6) {
+                if (visibleFace(face, faceCount)) {
+                    for (int j = 0; j < faceCount; ++j) {
+                        applyLighting(face[j], *sources[j], depths[j]);
+                        swIndices.push(swVertices.push(face[j]));
+                    }
+                    if (isTriangle) swTriangles.push(swIndices.length - 3);
+                    else swQuads.push(swIndices.length - 4);
+                }
+#if OL_RENDER_PROFILE
+                else ++ol_render_profile.rejected;
+#endif
                 vIndex = 0;
             }
         }
@@ -799,6 +852,7 @@ namespace GAPI {
     }
 
     void transformLights() {
+        if (!lightsCount) return;
         memcpy(lightsRel, lights, sizeof(LightSW) * lightsCount);
 
         mat4 mModelInv = mModel.inverseOrtho();
@@ -813,9 +867,20 @@ namespace GAPI {
             return;
         }
 
+#if OL_RENDER_PROFILE
+        uint64_t begin = ol_render_clock_us();
+#endif
         transformLights();
 
         bool colored = transform(mesh->iBuffer, mesh->vBuffer, range.iStart, range.iCount, range.vStart);
+#if OL_RENDER_PROFILE
+        uint64_t transformed = ol_render_clock_us();
+        ol_render_profile.transform_us += transformed - begin;
+        ++ol_render_profile.draws;
+        ol_render_profile.vertices += swVertices.length;
+        ol_render_profile.quads += swQuads.length;
+        ol_render_profile.triangles += swTriangles.length;
+#endif
 
         Tile8 *oldTile = curTile;
 
@@ -832,6 +897,9 @@ namespace GAPI {
         }
 
         curTile = oldTile;
+#if OL_RENDER_PROFILE
+        ol_render_profile.raster_us += ol_render_clock_us() - transformed;
+#endif
     }
 
     void initPalette(Color24 *palette, uint8 *lightmap) {

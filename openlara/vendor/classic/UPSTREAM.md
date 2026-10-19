@@ -35,3 +35,9 @@ level-version storage and parsing structure. The main engine
 translation unit uses O1. Game::update owns slow-frame catch-up; only an
 explicit PXA pause/background resets its clock. Opaque platform overlays use
 the normal frame setup and unshaded glyph palette without drawing hidden 3D.
+
+Ordinary faces now perform the same integer backface and clip-rectangle rejection
+before lighting or scratch-array insertion. Vertices retain their exact projected
+coordinates and surviving faces retain original lighting inputs. Empty dynamic
+light lists skip normal normalization and inverse matrices. Optional render-stage
+profiling is disabled in release builds. Gameplay/enemy/collision code is unchanged.

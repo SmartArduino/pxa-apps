@@ -6,7 +6,9 @@ from PIL import Image
 p=argparse.ArgumentParser(description=__doc__)
 p.add_argument('--port',required=True);p.add_argument('--serial',required=True)
 p.add_argument('--version',required=True);p.add_argument('--package',type=Path,required=True)
+p.add_argument('--resolution',type=int,choices=[320,240,160],help='configure the saved gameplay resolution before timing; UI stays320x240')
 p.add_argument('--output',type=Path,required=True);p.add_argument('--samples',type=int,default=30)
+p.add_argument('--timing-only',action='store_true',help='only benchmark the stationary scene; skip controller/checkpoint tests')
 p.add_argument('--install',action='store_true',help='replace only OpenLara with this signed package before testing')
 p.add_argument('--reboot-check',action='store_true',help='also restore the checkpoint after a physical device reboot')
 p.add_argument('--baud',default='2000000');p.add_argument('--wait-seconds',type=int,default=900)
@@ -21,7 +23,7 @@ def record(kind,payload):
  if kind=='LOG':messages.append(payload)
  if kind=='LOG' and 'OpenLara frames=' in payload:last_stats_at=time.monotonic()
  if 'awaiting user decision' in payload:unresponsive=True
- if 'OpenLara frames=' in payload or 'OpenLara input ' in payload or 'OpenLara frame clock:' in payload:print(payload,flush=True)
+ if 'OpenLara frames=' in payload or 'OpenLara input ' in payload or 'OpenLara frame clock:' in payload or 'OpenLara raster ' in payload:print(payload,flush=True)
 def request(cmd,timeout=30):
  record('COMMAND',cmd);rows=c.request(cmd,timeout=timeout)
  for row in rows:
@@ -36,9 +38,10 @@ def require_target():
  if unresponsive:raise RuntimeError('Guest timeout; samples invalid')
  if len(active)!=1 or ':pxa-openlara\t' not in active[0]:raise RuntimeError('OpenLara lost foreground; samples invalid')
  if timing and time.monotonic()-last_stats_at>8:raise RuntimeError('Game telemetry stopped; foreground/FPS samples invalid')
+class PhysicalInputError(RuntimeError):pass
 def state(buttons):
  rows=request(f'INPUT CONTROLLER 0 1 {buttons}')
- if any('status=rejected' in r.payload for r in rows):raise RuntimeError('Physical input took over; controller test cancelled')
+ if any('status=rejected' in r.payload for r in rows):raise PhysicalInputError('Physical input took over; controller test cancelled')
 def press(buttons):
  require_target();state(buttons);pump(.25);state(0);pump(.25)
 def shot(name):
@@ -77,6 +80,11 @@ def position():
   if match:return list(map(int,match.groups()))
  raise RuntimeError('no actual player telemetry')
 def same(left,right):return left[:3]==right[:3] and abs((left[3]-right[3]+32768)%65536-32768)<=1
+def video_width():
+ for message in reversed(messages):
+  match=re.search(r'OpenLara video gameplay=(\d+)x(\d+)',message)
+  if match:return int(match[1])
+ raise RuntimeError('gameplay resolution telemetry missing')
 try:
  deadline=time.monotonic()+a.wait_seconds
  while time.monotonic()<deadline:
@@ -121,8 +129,24 @@ try:
  if firmware.exists():report['firmware']=json.loads(firmware.read_text())
  if not any('active=1' in r for r in rows):
   start=len(messages);request('PACKAGE run pxa-openlara');wait('OpenLara ready level=0',start);pump(2)
- require_target();request('INPUT CANCEL');state(0);input_owned=True;pump(1)
+ require_target();request('INPUT CANCEL')
+ neutral_deadline=time.monotonic()+min(a.wait_seconds,120);waiting_neutral=False
+ while True:
+  try:state(0);break
+  except PhysicalInputError:
+   if not waiting_neutral:print('Waiting for all physical controller buttons to be released',flush=True);waiting_neutral=True
+   if time.monotonic()>=neutral_deadline:raise
+   pump(.25)
+ input_owned=True;pump(1)
  start=len(messages);menu(6);wait('OpenLara ready level=0',start);pump(1)
+ if a.resolution:
+  for _ in range(3):
+   if video_width()==a.resolution:break
+   menu(7)
+   for _ in range(5):press(2)
+   start=len(messages);press(16);wait('OpenLara settings committed',start);press(32);pump(.5)
+  assert video_width()==a.resolution,'requested gameplay resolution not applied'
+  report['gameplay_resolution']=[a.resolution,a.resolution*3//4];report['ui_resolution']=[320,240]
  start=len(messages);menu(4);wait('OpenLara ready level=3',start);pump(5.5);shot('idle')
  stationary=position();assert stationary[:3]==[78336,-1024,12800],('unexpected City start',stationary)
  report['stationary_position']=stationary;request('MEMORY START');timing_start=len(messages);timing=True
@@ -136,37 +160,43 @@ try:
  timing=False;report['memory']=[r.payload for r in request('MEMORY STOP') if r.kind=='DATA']
  fps=report['samples'];assert min(fps)>0;report['fps']={'median':statistics.median(fps),'mean':statistics.mean(fps),'min':min(fps),'max':max(fps)}
  report['stationary_throughout_timing']=True;print(json.dumps(report['fps']),flush=True)
- # Functional controller and checkpoint tests are outside timing. Wait for
- # a settled telemetry sample before saving, rather than a stale moving pose.
- state(8);pump(.8);state(0);pump(5.5);turned=position();assert turned[3]!=stationary[3],'controller right press was lost';shot('turned')
- state(1);pump(.8);state(0);pump(5.5);saved=position();assert saved[:3]!=turned[:3],'controller forward press was lost';shot('walked')
- start=len(messages);menu(1);wait('OpenLara save committed',start);pump(1)
- state(8);pump(.8);state(0);pump(5.5);assert not same(position(),saved)
- start=len(messages);menu(2);wait('OpenLara save restored',start);wait('OpenLara ready level=3',start);pump(5.5)
- restored=position();assert same(saved,restored),(saved,restored);shot('restored')
- press(64);pump(1);shot('inventory');press(64);pump(1);shot('inventory-return')
- report.update(controller_turn=True,controller_walk=True,saved_position=saved,restored_position=restored,save_restore=True)
- pump(5.5) # Flush inventory/menu input from the preceding five-second window.
- response_start=len(messages);record('NOTE','Twenty120ms right pulses;500ms neutral gaps; gameplay response timing')
- for _ in range(20):state(8);pump(.12);state(0);pump(.5)
- pump(5.5);report['pulse_input_reports']=[m for m in messages[response_start:] if 'OpenLara input ' in m]
- assert sum(int(re.search(r'samples=(\d+)',m)[1]) for m in report['pulse_input_reports'])>=20,'brief controller pulses were lost or response reports missing'
- report['twenty_brief_controller_pulses']=True
- if a.reboot_check:
-  request('INPUT CANCEL');request('REBOOT');time.sleep(3)
-  c._hello_completed=False;c.log_subscribed=False;c.serial.buffer.clear();c.serial.reset_input_buffer();c.pending_frames.clear()
-  end=time.monotonic()+45
-  while True:
-   try:c.hello();break
-   except pxadb.PxaDbError:
-    if time.monotonic()>=end:raise
-    time.sleep(1)
-  assert pxadb.info_properties(c.device_info)['serial']==a.serial
-  c.subscribe_logs();pump(2);start=len(messages);request('PACKAGE run pxa-openlara');wait('OpenLara ready level=0',start);pump(2)
-  state(0);start=len(messages);menu(2);wait('OpenLara save restored',start);wait('OpenLara ready level=3',start);pump(5.5)
-  assert same(position(),saved),('checkpoint differs after hardware reboot',saved,position())
-  report['physical_reboot_restore']=True;shot('reboot-restored')
+ report['validation_scope']='stationary timing only' if a.timing_only else 'stationary timing and controller/checkpoint/reboot checks'
+ if not a.timing_only:
+  # Functional controller and checkpoint tests are outside timing. Wait for
+  # a settled telemetry sample before saving, rather than a stale moving pose.
+  state(8);pump(.8);state(0);pump(5.5);turned=position();assert turned[3]!=stationary[3],'controller right press was lost';shot('turned')
+  state(1);pump(.8);state(0);pump(5.5);saved=position();assert saved[:3]!=turned[:3],'controller forward press was lost';shot('walked')
+  start=len(messages);menu(1);wait('OpenLara save committed',start);pump(1)
+  state(8);pump(.8);state(0);pump(5.5);assert not same(position(),saved)
+  start=len(messages);menu(2);wait('OpenLara save restored',start);wait('OpenLara ready level=3',start);pump(5.5)
+  restored=position();assert same(saved,restored),(saved,restored);shot('restored')
+  press(64);pump(1);shot('inventory');press(64);pump(1);shot('inventory-return')
+  report.update(controller_turn=True,controller_walk=True,saved_position=saved,restored_position=restored,save_restore=True)
+  pump(5.5) # Flush inventory/menu input from the preceding five-second window.
+  response_start=len(messages);record('NOTE','Twenty120ms right pulses;500ms neutral gaps; gameplay response timing')
+  for _ in range(20):state(8);pump(.12);state(0);pump(.5)
+  pump(5.5);report['pulse_input_reports']=[m for m in messages[response_start:] if 'OpenLara input ' in m]
+  assert sum(int(re.search(r'samples=(\d+)',m)[1]) for m in report['pulse_input_reports'])>=20,'brief controller pulses were lost or response reports missing'
+  report['twenty_brief_controller_pulses']=True
+  if a.reboot_check:
+   request('INPUT CANCEL');request('REBOOT');time.sleep(3)
+   c._hello_completed=False;c.log_subscribed=False;c.serial.buffer.clear();c.serial.reset_input_buffer();c.pending_frames.clear()
+   end=time.monotonic()+45
+   while True:
+    try:c.hello();break
+    except pxadb.PxaDbError:
+     if time.monotonic()>=end:raise
+     time.sleep(1)
+   assert pxadb.info_properties(c.device_info)['serial']==a.serial
+   c.subscribe_logs();pump(2);start=len(messages);request('PACKAGE run pxa-openlara');wait('OpenLara ready level=0',start);pump(2)
+   state(0);start=len(messages);menu(2);wait('OpenLara save restored',start);wait('OpenLara ready level=3',start);pump(5.5)
+   assert same(position(),saved),('checkpoint differs after hardware reboot',saved,position())
+   if a.resolution:
+    assert video_width()==a.resolution,'resolution setting did not survive device reboot'
+    report['physical_reboot_resolution_restored']=True
+   report['physical_reboot_restore']=True;shot('reboot-restored')
  report['input_reports']=[m for m in messages if 'OpenLara input ' in m]
+ report['render_profile_reports']=[m for m in messages[timing_start:] if 'OpenLara raster ' in m]
  report['frame_clock_reports']=[m for m in messages if 'OpenLara frame clock:' in m]
  report['packages_after']=packages();require_target();report['passed']=True
 except BaseException as error:

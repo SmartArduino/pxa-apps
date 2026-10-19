@@ -39,6 +39,16 @@ int main() {
     memset(pixels,0,sizeof(pixels));memset(depth,255,sizeof(depth));
     GAPI::drawQuad(&GAPI::swIndices[GAPI::swQuads[0]]);
     assert(pixels[120*320+160]==0xffff && pixels[20*320+20]==0xffff);
+    // Reversed winding and a fully offscreen face must be rejected before
+    // scratch allocation/lighting, matching the raster stage's old rejection.
+    indices[7]=7;indices[11]=5;
+    GAPI::transform(indices,vertices,6,6,0);
+    assert(GAPI::swQuads.length==0 && GAPI::swTriangles.length==0);
+    indices[7]=5;indices[11]=7;
+    vertices[4].coord.x=vertices[5].coord.x=-3;
+    vertices[6].coord.x=vertices[7].coord.x=-2;
+    GAPI::transform(indices,vertices,6,6,0);
+    assert(GAPI::swQuads.length==0 && GAPI::swTriangles.length==0);
     // A wall crossing the near plane must survive with bounded screen coords.
     Core::mViewProj=GAPI::perspective(65,4.0f/3.0f,32,46080,0);
     vertices[4].coord=short4(-100,-100,-16,0);vertices[5].coord=short4(-100,100,-16,0);
@@ -54,5 +64,5 @@ int main() {
     GAPI::transform(indices,vertices,6,6,0);
     assert(GAPI::swTriangles.length==0 && GAPI::swQuads.length==0);
     GAPI::swDepth=nullptr;
-    puts("clip: nonzero mesh offset, integer screen edges, safety range, near plane, hidden face passed");
+    puts("clip: nonzero mesh offset, screen edges, early backface/offscreen rejection, safety range, near plane, hidden face passed");
 }

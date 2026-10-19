@@ -1,6 +1,6 @@
 # OpenLara for PXA
 
-0.4.3 默认使用 [XProger/OpenLara](https://github.com/XProger/OpenLara) 的完整 TR1 主引擎 `src/`，上游固定为 `3b268ca4bf986c380f44a26ffd9218bf6d376249`。目标为 PXA Core 2、DOIT GameKit / ESP32-S31、320×240 RGB565 软件渲染。保留原版敌人、机关、碰撞、动画、翻转房间、物品、背包和关卡流程；支持 TR1 的 15 个主线关卡、Lara's Home、标题和 4 个引擎过场关卡。引擎及修改遵循 BSD-2-Clause，见 `vendor/LICENSE`、`vendor/classic/UPSTREAM.md`。
+0.5.0 默认使用 [XProger/OpenLara](https://github.com/XProger/OpenLara) 的完整 TR1 主引擎 `src/`，上游固定为 `3b268ca4bf986c380f44a26ffd9218bf6d376249`。目标为 PXA Core 2、DOIT GameKit / ESP32-S31、320×240 RGB565 软件渲染。保留原版敌人、机关、碰撞、动画、翻转房间、物品、背包和关卡流程；支持 TR1 的 15 个主线关卡、Lara's Home、标题和 4 个引擎过场关卡。引擎及修改遵循 BSD-2-Clause，见 `vendor/LICENSE`、`vendor/classic/UPSTREAM.md`。
 
 **完整引擎不包含完整商业游戏资源，也不代表全关卡已经验收。** 默认资源只有公开 PC 演示版的标题和 City of Vilcabamba（1/15 主线），缺失关卡在菜单中标记 missing。完整原版数据尚未提供，15 关通关、引擎过场和大型关卡内存仍待验证。外部 FMV 视频暂未接入；SD 音乐支持独立导入。旧 fixed/GBA alpha 作为开发备用保留，说明见 `README-fixed.md`。
 
@@ -42,7 +42,7 @@ python3 tools/pxadb/pxadb.py package install local/openlara-full-build/pxa-openl
 python3 tools/pxadb/pxadb.py package run pxa-openlara --port /dev/ttyACM0 --baud 2000000
 ```
 
-ESP32-S3 需要用 `--target esp32s3` 单独生成 AOT，尚未验收。0.4.3 完整引擎的 S31 AOT 约 2.6 MiB，设备需为安装保留足够闪存。更新保持 App ID、发布者身份及递增 release_sequence。archive 只归档代码并保留私有数据；不要清除数据。测试设备短 ID stop 可能返回 package_not_running，更新后通过设备重启确认新代码加载。首次允许媒体音频；拒绝后游戏仍可运行。
+ESP32-S3 需要用 `--target esp32s3` 单独生成 AOT，尚未验收。0.5.0 完整引擎的 S31 AOT 约 2.6 MiB，设备需为安装保留足够闪存。更新保持 App ID、发布者身份及递增 release_sequence。archive 只归档代码并保留私有数据；不要清除数据。测试设备短 ID stop 可能返回 package_not_running，更新后通过设备重启确认新代码加载。首次允许媒体音频；拒绝后游戏仍可运行。
 
 桌面 Host 支持 SDL GameController、25% 左摇杆死区及热插拔。键盘模拟支持组合输入；失焦、切后台或断开时清除按住状态。板载手柄使用同样的 controller 状态。
 
@@ -93,7 +93,7 @@ python3 local/pxa-apps/openlara/tools/measure.py \
 
 `classic-upgrade.mjs` 验证旧版存档在新版恢复，再重存后回到旧版读取的双向兼容。`classic-integration.mjs` 覆盖完整 Guest 的保存/跨实例恢复、损坏记录、失败原子替换、旧存档保留、音乐设置、SD seek/短读和缺失关卡。它从 PHD 元数据定位实际 Lara，独立比较玩家日志与可变长度 OLS2 实体记录；运行前用新版准备脚本更新元数据。City 演示专用回归请使用独立演示资源目录，保留已导入的完整资源。`classic-controls-settings.mjs` 检查交换后的确认/取消、提示、设置持久化及跳跃；`validate-classic-simulator.py --swap` 通过实际 SDL 键盘路径复验。`streaming-tests.mjs` 对正常、大银行及 97 字节短读比较实际 PCM。`classic-compare.mjs` 对同一 City 的 360 帧逐帧比较 RGB565。`validate-device.py --classic` 验证 City 的真机帧率、移动、背包、保存恢复及重启设置；演示资源不足以替代全关卡验收。
 
-## 0.4.3 输入延迟修复
+## 0.5.0 输入延迟修复
 
 只由时钟生产画面，缓冲释放通知立即返回 Host，避免这些通知反复渲染并拖延排队的手柄状态；已被画面超越的旧时钟也不再重复绘制。支持细粒度时钟的 Host 在绘制前暂停周期计时，提交画面后再安排下一帧，令绘制期间到达的手柄命令先进入队列；不支持时继续使用 16 ms 周期计时。短按的按下沿保持到下一次游戏更新，松开、断开和后台状态分别处理。修复低于 4 FPS 时每帧重置引擎时钟导致更新停滞的问题；暂停菜单与后台仍冻结游戏时间。不透明暂停/帮助页跳过被覆盖的 3D 绘制。
 
@@ -105,13 +105,13 @@ node local/pxa-apps/openlara/tools/classic-latency.mjs baseline.wasm candidate.w
 node local/pxa-apps/openlara/tools/classic-catalog.mjs candidate.wasm \
   local/pxa-apps/openlara/assets-simulator catalog.json
 python3 local/pxa-apps/openlara/tools/classic-device-latency.py \
-  --port /dev/ttyACM0 --serial 1c:29:04:d0:af:5e --version 0.4.3 \
+  --port /dev/ttyACM0 --serial 1c:29:04:d0:af:5e --version 0.5.0 \
   --package local/openlara-full-build/pxa-openlara.pxa --output device-evidence --samples 60
 ```
 
 真机脚本使用 GameKit controller-0 调试注入走板载上报路径，分别验证静止帧率、转向/前进、存档恢复和背包，退出时清除注入接管；物理按键接管或其他应用前台时终止/等待。`--install` 仅替换 OpenLara 代码，保持发布者和私有数据。
 
-## 0.4.3 遮挡与裁剪
+## 0.5.0 遮挡与裁剪
 
 上游软件后端原先关闭深度缓冲，按提交顺序覆盖画面；PXA 现在启用 16 位逐像素深度测试及原引擎的深度写入状态。索引 0 的透明纹素不写颜色和深度，UI 仍使用无深度路径。320×240 深度缓冲增加 150 KiB 堆占用。投影深度使用有符号范围内的 15.16 固定点插值，避免近远顶点相减溢出。
 
@@ -131,3 +131,13 @@ c++ -std=c++11 -O3 -fwrapv -Ilocal/pxa-apps/openlara \
 ```
 
 `classic-clip-test.cpp` 额外验证非零网格起始偏移、屏幕边界、跨近面和完全隐藏面；用当前 `vendor/classic` 包含路径与 `_GAPI_SW` 编译，音频解码库使用上游自带文件。
+
+## 0.5.0 保持原画面的绘制优化
+
+保留 320×240、活动敌人数、可见距离、原始关卡和玩法。普通三角形/四边形先执行原扫描线已有的整数背面和屏幕边界剔除，只有原本会绘出的面才进入光照计算和临时顶点数组；裁剪先测试原有近/远深度平面，完全隐藏的面不再计算屏幕 X/Y；跨近面可见部分仍完整裁剪。没有动态光源时不再计算无用法线归一化与逆矩阵。引擎直接写入 Host 已取得的空闲 RGB565 缓冲，提交后等待释放，省去整帧复制。深度测试、透明纹素和 UI 路径保持一致。
+
+`PXA_APP_DEFINES=OL_RENDER_PROFILE=1` 构建可输出变换、光栅、清屏、面片、扫描线和像素计数；正式构建默认关闭。计时调用本身在真机有开销，只能用相同开关比较两个诊断包，最终 FPS 应使用关闭剖析的正式包。`classic-device-latency.py --timing-only` 只测静止场景，完整控制、短按及重启验证应另行执行。当前性能与逐帧一致性证据位于 workspace 的 validation 文档。
+
+设置增加 **3D resolution**：320×240 原画面、240×180 和160×120。后两档仅缩小3D绘制目标并保持4:3视野，再放大到320×240；不改变逻辑更新、关卡、活动敌人数或可见距离。标题、原版背包和平台菜单仍使用320×240。默认保留原画面，选择会保存并在重启后恢复；该字段复用设置记录的保留字节，存档格式不变。
+
+`classic-resolution.mjs` 用相同输入验证三档完整游戏存档逐字节一致、设置重启持久化及标题/平台UI不变。`classic-scale-test.cpp` 独立检查两个缩放比例与缓冲边界。真机测量脚本可用 `--resolution 320|240|160`，分别测量同一City起点。

@@ -7,6 +7,9 @@
 #include "pxa_ui.h"
 #include "pxa_window.h"
 #include "engine.h"
+#if OL_CLASSIC
+#include "classic-raster.h"
+#endif
 #include "storage.h"
 #include "audio.h"
 #include "music-stream.h"
@@ -118,6 +121,9 @@ static void start_engine() {
     ol_set_time(time_us()); ol_start(level_id);
     status("");ready=true; load_state=0; previous_us=stats_since=time_us();
     simulation_units=0; render_us=logic_us=convert_us=0; frames=updates=skipped=0;
+#if OL_CLASSIC && OL_RENDER_PROFILE
+    ol_render_profile={};
+#endif
     char message[160]; snprintf(message,sizeof(message),"OpenLara ready level=%d bytes=%u linear_bytes=%u",level_id,loaded,
         (unsigned)__builtin_wasm_memory_size(0)*65536u); pxa_log_write(2,message);
 }
@@ -160,7 +166,7 @@ static void choose_menu(unsigned selection) {
         return;
     }
     if(settings) {
-        if(selection==5) {settings=false;menu_selection=0;}
+        if(selection==(OL_CLASSIC?6:5)) {settings=false;menu_selection=0;}
         else {menu_selection=selection;notify(ol_toggle_setting(selection)?"Saving settings...":"Settings busy",time_us());}
         return;
     }
@@ -187,7 +193,8 @@ static void choose_menu(unsigned selection) {
 static void convert(uint16_t *dest) {
     const uint8_t *src=ol_pixels();
 #if OL_CLASSIC
-    memcpy(dest,src,320u*240u*sizeof(uint16_t));
+    if(reinterpret_cast<const uint8_t*>(dest)!=src)
+        memcpy(dest,src,320u*240u*sizeof(uint16_t));
 #elif OL_OPTIMIZED
     // The engine owns an aligned, even-size INDEX8 framebuffer. Four input
     // pixels share one bounds-checked load and two RGB565 stores.
@@ -244,6 +251,11 @@ static void tick(uint64_t now) {
     int r=pxa_surface_acquire_buffer(surface,&index);
     if (r==PXA_STATUS_WOULD_BLOCK) {++skipped;loading_clock();return;}
     if (r!=4 || index>=2) {error("OpenLara buffer acquisition failed");return;}
+#if OL_CLASSIC
+    // Only acquired buffers are writable. The engine draws directly into the
+    // free buffer; a submitted buffer stays untouched until Host releases it.
+    ol_set_framebuffer(buffers[index]);
+#endif
     // Re-arm behind controller commands collected during this frame.
     if(frame_clock)pxa_clock_set_period(0);
     uint64_t begin=time_us();
@@ -305,6 +317,13 @@ static void tick(uint64_t now) {
             frames,(unsigned long long)(converted-stats_since),(unsigned long long)render_us,
             (unsigned long long)logic_us,(unsigned long long)convert_us,updates,skipped,pos[0],pos[1],pos[2],pos[3]);
         pxa_log_write(2,message); ol_set_fps(frames*1000000u/(converted-stats_since));
+#if OL_CLASSIC && OL_RENDER_PROFILE
+        auto &p=ol_render_profile;
+        snprintf(message,sizeof(message),"OpenLara raster transform_us=%llu raster_us=%llu clear_us=%llu draws=%u vertices=%u quads=%u triangles=%u clipped=%u spans=%u pixels=%u rejected=%u",
+            (unsigned long long)p.transform_us,(unsigned long long)p.raster_us,(unsigned long long)p.clear_us,
+            p.draws,p.vertices,p.quads,p.triangles,p.clipped,p.spans,p.pixels,p.rejected);
+        pxa_log_write(2,message);p={};
+#endif
         if(input_samples) {
             snprintf(message,sizeof(message),"OpenLara input samples=%u avg_us=%llu max_us=%llu ingress_avg_us=%llu ingress_max_us=%llu frame_avg_us=%llu frame_max_us=%llu",input_samples,
                 (unsigned long long)(input_total_us/input_samples),(unsigned long long)input_max_us,
@@ -341,7 +360,7 @@ static void pointer(const pxa_ui_pointer_data_t &p) {
         if(p.phase==PXA_POINTER_DOWN) {
             if(levels && y>=38 && y<198)choose_menu((menu_selection/8)*8+unsigned(y-38)/20);
             else if(levels && y>=210)menu_selection=(menu_selection+8)%OL_PLAYABLE_COUNT;
-            else if(!levels && y>=(settings?40:35) && y<(settings?190:(OL_CLASSIC?235:215)))choose_menu(unsigned(y-(settings?40:35))/(settings?25:18));
+            else if(!levels && y>=(settings?40:35) && y<(settings?(OL_CLASSIC?215:190):(OL_CLASSIC?235:215)))choose_menu(unsigned(y-(settings?40:35))/(settings?25:18));
         }
         touch_keys=0;return;
     }
@@ -486,7 +505,7 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *bytes,uint32_t length) {
                 pad_keys=touch_keys=0;
             }
             else if(menu) {
-                unsigned count=levels?OL_PLAYABLE_COUNT:(settings?6:(OL_CLASSIC?11:10));
+                unsigned count=levels?OL_PLAYABLE_COUNT:(settings?(OL_CLASSIC?7:6):(OL_CLASSIC?11:10));
                 if(hits&PXA_CONTROLLER_UP)menu_selection=(menu_selection+count-1)%count;
                 if(hits&PXA_CONTROLLER_DOWN)menu_selection=(menu_selection+1)%count;
                 if(levels && (hits&(PXA_CONTROLLER_LEFT|PXA_CONTROLLER_RIGHT)))menu_selection=(menu_selection+8)%count;
