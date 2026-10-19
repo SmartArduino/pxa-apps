@@ -192,7 +192,14 @@ void Com_Error (int code, char *fmt, ...)
 	va_start (argptr,fmt);
 	vsprintf (msg,fmt,argptr);
 	va_end (argptr);
-	
+
+#if defined(PXA_CAPTURE_ENGINE_ERROR)
+	{
+		extern void port_quake2_record_error(int, const char *);
+		port_quake2_record_error(code, msg);
+	}
+#endif
+
 	{
 		extern void Mem_Report (void);
 		extern void Q_Arena_Dump (int minsize);

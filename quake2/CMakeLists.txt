@@ -12,8 +12,9 @@ if(NOT DEFINED PXA_QUAKE2_ARENA_BYTES)
     set(PXA_QUAKE2_ARENA_BYTES 8388608)
 endif()
 pxa_recrof_component(TITLE "Quake II" SOURCES ${ENGINE} ${Q}/null/cd_null.c
-    ${Q}/port_esp32.c port.c network.c pcx.c ../common/recrof/pcx_stream.c INCLUDES ${Q}
-    DEFINITIONS PXA_STREAM_PCX=1 QUAKE_MEMSIZE=${PXA_QUAKE2_ARENA_BYTES} PORT_PACED_BY_MAIN=1)
+    ${Q}/port_esp32.c port.c network.c pcx.c ../common/recrof/pcx_stream.c INCLUDES ${Q} compat
+    DEFINITIONS PXA_STREAM_PCX=1 PXA_CAPTURE_ENGINE_ERROR=1
+        QUAKE_MEMSIZE=${PXA_QUAKE2_ARENA_BYTES} PORT_PACED_BY_MAIN=1)
 
 # Match the spawn table signature without editing the upstream source.
 target_link_options(pxa_main PRIVATE -Wl,--wrap=SP_info_player_intermission)

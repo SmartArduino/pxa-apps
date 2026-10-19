@@ -10,16 +10,43 @@
 #include <string.h>
 #include <sys/stat.h>
 static int dx, dy;
+static char engine_error[192];
+static int engine_error_code;
+static uint64_t frame_total_us;
+static unsigned completed_frames;
+extern int scr_draw_loading;
+void port_quake2_record_error(int code, const char *message) {
+  engine_error_code = code;
+  snprintf(engine_error, sizeof(engine_error), "%s", message);
+  port_log("PXA Q2 ERROR code=%d %s", code, engine_error);
+}
+void port_quake2_abort(void) {
+  if (!engine_error[0])
+    port_error("Engine aborted this session. Reopen the game to restart.");
+  char message[224];
+  snprintf(message, sizeof(message), "Engine error %d:\n%s",
+           engine_error_code, engine_error);
+  port_error(message);
+}
 void port_game_stats(void) {
-  port_log("PXA Q2 arena_total=%d used=%d peak=%d largest=%d",
-           Q_Arena_Total(),Q_Arena_Used(),Q_Arena_Peak(),Q_Arena_Largest());
-  /* Attract demos also report ca_active. Only a playable level qualifies. */
-  if (cls.state == ca_active && !cl.attractloop)
-    port_log("PXA Q2 INPUT x=%d y=%d z=%d destination=%d up=%d down=%d",
+  /* One bounded record shares the four-slot device log queue with the three
+   * common records. Keep the actual movement fields ahead of allocator data. */
+  if (cls.state == ca_active && !cl.attractloop && cl.refresh_prepped &&
+      !cls.disable_screen && !cl.cinematictime && !scr_draw_loading)
+    port_log("PXA Q2 INPUT x=%d y=%d z=%d destination=%d up=%d down=%d hp=%d arena_total=%d used=%d peak=%d largest=%d frames=%u frame_us=%llu",
              cl.frame.playerstate.pmove.origin[0],
              cl.frame.playerstate.pmove.origin[1],
              cl.frame.playerstate.pmove.origin[2], cls.key_dest,
-             port_key_down(K_UPARROW), port_key_down(K_DOWNARROW));
+             port_key_down(K_UPARROW), port_key_down(K_DOWNARROW),
+             cl.frame.playerstate.stats[STAT_HEALTH], Q_Arena_Total(),
+             Q_Arena_Used(), Q_Arena_Peak(), Q_Arena_Largest(),
+             completed_frames, (unsigned long long)frame_total_us);
+  else
+    port_log("PXA Q2 STATE connection=%d destination=%d attract=%d server=%d prepped=%d loading=%d arena_total=%d used=%d peak=%d largest=%d",
+             cls.state, cls.key_dest, cl.attractloop, Com_ServerState(),
+             cl.refresh_prepped, !!cls.disable_screen || !!scr_draw_loading,
+             Q_Arena_Total(), Q_Arena_Used(), Q_Arena_Peak(), Q_Arena_Largest());
+  completed_frames = 0; frame_total_us = 0;
 }
 void QG_SetPalette(unsigned char p[768]) { port_palette(p, 0); }
 void QG_DrawFrame(void *p) { port_frame(p, 320, 240, 320); }
@@ -118,7 +145,7 @@ void port_game_main(void) {
   /* basedir already searches SD through the resource bridge. Repeating the
    * same path as cddir duplicates the PAK directory and startup probes. */
   char *argv[] = {"quake2", "+set", "basedir", "/data", "+set", "sw_mode", "0",
-                  "+set", "s_initsound", "1", NULL};
+                  "+set", "s_initsound", "1", "+menu_main", NULL};
   Quake2_Init((int)(sizeof(argv) / sizeof(argv[0])) - 1, argv);
   uint64_t prev = port_time_us();
   for (;;) {
@@ -131,7 +158,10 @@ void port_game_main(void) {
     if (ms > 100)
       ms = 100;
     prev = now;
+    uint64_t frame_start = port_time_us();
     Quake2_Frame(ms);
+    frame_total_us += port_time_us() - frame_start;
+    ++completed_frames;
     port_sleep(1);
   }
 }
