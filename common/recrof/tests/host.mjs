@@ -12,6 +12,10 @@ const ioDelayMs=Number(process.env.PXA_TEST_IO_DELAY_MS || 0);
 if(!Number.isFinite(ioDelayMs)||ioDelayMs<0||ioDelayMs>1000)throw Error('invalid test I/O delay');
 const ioDelayWord=new Int32Array(new SharedArrayBuffer(4));
 const requireIoCoop=process.env.PXA_TEST_REQUIRE_IO_COOP==='1';
+const mainLoop=process.env.PXA_TEST_MAIN_LOOP==='1';
+const nativeEnd=Symbol('native main-loop deadline');
+const eventPort=0x200000001n;
+let nativeWaits=0,queuingNativeInput=false;
 let callbackSequence=0,lastSlowIoCallback=-1,ioBoundaryChecks=0;
 let clockPeriod=0,lastTick=0;
 const callOps={},ioOps={},pathOps={};
@@ -47,7 +51,8 @@ function pxa_call(route,token,ptr,len){
  }
  if(service===19){const s=p.subarray(1).toString();logs.push(s);console.log(s);if(process.env.PXA_TEST_TRACE_EXIT&&(s.includes("Game exited")||s.includes("Invalid game Free")))console.trace("Engine exit");if(process.env.PXA_TEST_TRACE_ALLOC&&s.startsWith("PXA ALLOC"))console.trace("Allocation caller");return 0;}
  if(service===1&&op===2){const h=p.readBigUInt64LE();const f=files.get(h);if(f?.fd!==undefined)fs.closeSync(f.fd);files.delete(h);return 0;}
- if(service===2&&op===2)r=windowSnapshot();
+ if(service===1&&op===5){if(!mainLoop)return -3;r=result(0,12);r.writeBigUInt64LE(eventPort,4);}
+ else if(service===2&&op===2)r=windowSnapshot();
  else if(service===16&&op===1){r=result(0,24);r.writeBigUInt64LE(0x100000001n,4);r.writeUInt32LE(640,12);r.writeUInt32LE(153600,16);r[20]=2;}
  else if(service===16&&op===2)r=result(0);
  else if(service===11)r=result(-3);
@@ -98,6 +103,26 @@ function pxa_call(route,token,ptr,len){
  return 0;
 }
 function pxa_io(h,op,ptr,len){if(stopping)throw Error('Core I/O during stop is forbidden');ioOps[op]=(ioOps[op]||0)+1;const p=Buffer.from(instance.exports.memory.buffer,ptr,len);
+ if(h===eventPort && mainLoop){
+  if(op!==0x201 || len<20 || len>4096)return -1;
+  const timeout=Number(p.readBigUInt64LE())/1000,until=Date.now()+timeout;
+  if(timeout>60000)return -16;
+  ++nativeWaits;++callbackSequence;
+  for(;;){
+   if(Date.now()>=end)throw nativeEnd;
+   queuingNativeInput=true;
+   try{maintainInputs();}finally{queuingNativeInput=false;}
+   if(clockPeriod && Date.now()-lastTick>=clockPeriod){
+    const payload=Buffer.alloc(8);payload.writeBigUInt64LE(BigInt(Date.now())*1000n);
+    events.push({service:4,op:0x8001,payload});ticks++;lastTick=Date.now();
+   }
+   if(events.length){const bytes=eventBytes(events[0]);if(bytes.length>len)return -9;
+    bytes.copy(p);events.shift();return bytes.length;}
+   if(!timeout)return -7;
+   if(Date.now()>=until)return -12;
+   Atomics.wait(ioDelayWord,0,0,1);
+  }
+ }
  if(ioDelayMs && files.get(h)?.fd!==undefined){Atomics.wait(ioDelayWord,0,0,ioDelayMs);lastSlowIoCallback=callbackSequence;}
  if(h===0x100000001n){
   if(op===0x100){mapped=ptr;mappedBytes=len/2;return len;}
@@ -124,7 +149,8 @@ function pxa_io(h,op,ptr,len){if(stopping)throw Error('Core I/O during stop is f
 const imports={wasi_snapshot_preview1:wasi.wasiImport,'pxa.core.v2':{pxa_call,pxa_io}};
 instance=(await WebAssembly.instantiate(fs.readFileSync(wasm),imports)).instance;
 wasi.initialize(instance);
-function event(e){callbackSequence++;const b=Buffer.alloc(20+e.payload.length);b.writeUInt16LE(e.service);b.writeUInt16LE(e.op,2);b.writeBigUInt64LE(e.token??0n,4);b.writeUInt32LE(e.payload.length,12);e.payload.copy(b,20);const ptr=instance.exports.malloc(b.length);Buffer.from(instance.exports.memory.buffer,ptr,b.length).set(b);const r=instance.exports.pxa_app_on_event(ptr,b.length);instance.exports.free(ptr);if(r<0)throw Error('event rejected '+r);}
+function eventBytes(e){const b=Buffer.alloc(20+e.payload.length);b.writeUInt16LE(e.service);b.writeUInt16LE(e.op,2);b.writeBigUInt64LE(e.token??0n,4);b.writeUInt32LE(e.payload.length,12);e.payload.copy(b,20);return b;}
+function event(e){if(queuingNativeInput){events.push(e);return;}callbackSequence++;const b=eventBytes(e);const ptr=instance.exports.malloc(b.length);Buffer.from(instance.exports.memory.buffer,ptr,b.length).set(b);const r=instance.exports.pxa_app_on_event(ptr,b.length);instance.exports.free(ptr);if(r<0)throw Error('event rejected '+r);}
 const rc=instance.exports.pxa_app_start(0,0);if(rc)throw Error('start '+rc);
 const start=Date.now(),end=start+Number(seconds)*1000;
 let pauseAt=-1,resumeAt=-1,pausedFrames=-1;
@@ -133,23 +159,26 @@ const controls=actions?actions.split(',').map(s=>s.split(':').map(Number)):[];
 const pointers=JSON.parse(process.env.PXA_TEST_POINTERS??'[]');
 function controller(buttons,connected=1,id=0){const payload=Buffer.alloc(32);payload.writeUInt32LE(1);payload.writeUInt32LE(1,4);payload.writeUInt32LE(1,8);payload.writeUInt16LE(10,12);payload.writeBigUInt64LE(BigInt(Date.now())*1000n,16);payload[24]=id;payload[25]=connected;payload.writeUInt32LE(buttons,28);event({service:3,op:0x8001,payload});}
 function pointer(phase,x,y){const payload=Buffer.alloc(36);payload.writeUInt32LE(1);payload.writeUInt32LE(1,4);payload.writeUInt32LE(1,8);payload.writeUInt16LE(7,12);payload.writeBigUInt64LE(BigInt(Date.now())*1000n,16);payload[25]=phase;payload.writeUInt16LE(1,26);payload.writeInt32LE(x,28);payload.writeInt32LE(y,32);event({service:3,op:0x8001,payload});}
-while(Date.now()<end){
+function maintainInputs(){
  if(pauseAt>0 && Date.now()>=pauseAt){event({service:17,op:0x8005,payload:Buffer.from([0])});pausedFrames=frames;pauseAt=-1;}
  if(resumeAt>0 && Date.now()>=resumeAt){if(frames!==pausedFrames)throw Error('frames advanced in background');event({service:17,op:0x8005,payload:Buffer.from([1])});resumeAt=-1;logs.push('BACKGROUND RESUME PASS');}
 
  while(controls.length&&(Date.now()-start)/1000>=controls[0][0])controller(...controls.shift().slice(1));
  while(pointers.length&&(Date.now()-start)/1000>=pointers[0][0])pointer(...pointers.shift().slice(1));
+}
+try{while(Date.now()<end){
+ maintainInputs();
  for(let i=0;i<1000&&events.length;i++)event(events.shift());
  if(clockPeriod && Date.now()-lastTick>=clockPeriod){const payload=Buffer.alloc(8);payload.writeBigUInt64LE(BigInt(Date.now())*1000n);event({service:4,op:0x8001,payload});ticks++;lastTick=Date.now();}
  await new Promise(r=>setTimeout(r,1));
-}
+}}catch(error){if(error!==nativeEnd)throw error;}
 if(requireIoCoop && !ioBoundaryChecks)throw Error('no slow I/O boundary checked');
 if(frame){const rgb=Buffer.alloc(320*240*3);for(let i=0;i<320*240;i++){const c=frame.readUInt16LE(i*2);rgb[i*3]=(c>>11)*255/31;rgb[i*3+1]=((c>>5)&63)*255/63;rgb[i*3+2]=(c&31)*255/31;}fs.writeFileSync(output+'.ppm',Buffer.concat([Buffer.from('P6\n320 240\n255\n'),rgb]));}
 // Host revocation precedes the stop callback, where Core imports are forbidden.
 for(const f of files.values())if(f.fd!==undefined)fs.closeSync(f.fd);
 files.clear();clockPeriod=0;stopping=true;
 instance.exports.pxa_app_stop(0);
-const report={frames,ticks,calls,callOps,ioOps,pathOps,bytes:instance.exports.memory.buffer.byteLength,
+const report={frames,ticks,calls,callOps,ioOps,pathOps,mainLoop,nativeWaits,bytes:instance.exports.memory.buffer.byteLength,
  dataEnd:instance.exports.__data_end?.value,heapBase:instance.exports.__heap_base?.value,
  elapsedMs:Date.now()-start,firstFrameMs:firstFrameAt-start,frameWindows:Object.fromEntries(frameWindows),ioBoundaryChecks,
  scope:'Node protocol host, not device FPS',logs};fs.writeFileSync(output+'.json',JSON.stringify(report,null,2));if(!frames)throw Error('No frame submitted');

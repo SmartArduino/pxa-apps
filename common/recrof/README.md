@@ -132,7 +132,9 @@ python3 local/pxa-apps/common/recrof/tools/upstream.py apply /tmp/duke-update
 
 ## 测试工具
 
-`tests/host.mjs` 是协议级 Node 22 测试宿主，执行真实引擎并读取真实资源；它不能代替正式 PXA 模拟器。`tests/simulator.py` 启动正式签名包、捕获运行日志和截图，检查异常、空白画面与正常 HOME 退出。`tests/fixture` 验证暂停期间的 C 栈对象、C++ 字符串、虚拟文件和路径解析。资源导入单元测试：
+`PXA_RECROF_MAIN_LOOP=ON` 选择实验性的 Core 2.1 事件端口路径。包须声明至少 `[2,1]`，且唯一的 `main` UI Component 须包含 `"execution_model":"main-loop"`；Host 必须支持该执行模式。引擎在现有运行线程保留调用栈，`port_yield` 等待普通事件并直接分发，不使用 Asyncify 进口或续栈缓冲。RPC 等待期间仍处理输入和生命周期；后台暂停游戏，停止或替换由 Host 终止整个调用。默认仍为回调路径。此开关本身不证明真机帧率或完整音频质量。
+
+`tests/host.mjs` 是协议级 Node 22 测试宿主，执行真实引擎并读取真实资源；它不能代替正式 PXA 模拟器。原生主循环包可设置 `PXA_TEST_MAIN_LOOP=1`，在同一文件、输入和后台测试中使用事件端口。`tests/simulator.py` 启动正式签名包、捕获运行日志和截图，检查异常、空白画面与正常 HOME 退出。`tests/fixture` 验证暂停期间的 C 栈对象、C++ 字符串、虚拟文件和路径解析。资源导入单元测试：
 
 ```sh
 python3 -m unittest discover -s local/pxa-apps/common/recrof/tests -p 'test_*.py'

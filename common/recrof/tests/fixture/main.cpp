@@ -70,3 +70,4 @@ extern "C" void port_game_main() {
 extern "C" void port_game_key(int, int) {}
 extern "C" void port_game_motion(int, int) {}
 extern "C" void port_game_audio() {}
+extern "C" int port_game_in_menu() { return 0; }

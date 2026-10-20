@@ -12,6 +12,12 @@
 #include "pxa_permission.h"
 #include "external.h"
 #include "pxa_surface.h"
+#ifndef PORT_NATIVE_MAIN_LOOP
+#define PORT_NATIVE_MAIN_LOOP 0
+#endif
+#if PORT_NATIVE_MAIN_LOOP
+#include "pxa_event_port.h"
+#endif
 #ifndef PXA_GAME_RENDER_BLIT
 #define PXA_GAME_RENDER_BLIT 0
 #endif
@@ -39,6 +45,7 @@ uint64_t port_game_render_context;
 #endif
 _Static_assert(PORT_TICK_US>0 && PORT_TICK_US<=60000000u,"invalid preferred Clock period");
 _Static_assert(PORT_TICK_MS>=16 && PORT_TICK_MS<=1000,"Clock period must be 16..1000 ms");
+#if !PORT_NATIVE_MAIN_LOOP
 __attribute__((import_module("asyncify"), import_name("start_unwind"))) void
 unwind(void *);
 __attribute__((import_module("asyncify"), import_name("stop_unwind"))) void
@@ -47,6 +54,7 @@ __attribute__((import_module("asyncify"), import_name("start_rewind"))) void
 rewind_stack(void *);
 __attribute__((import_module("asyncify"), import_name("stop_rewind"))) void
 stop_rewind(void);
+#endif
 extern uintptr_t port_stack_get(void);
 extern void port_stack_set(uintptr_t);
 /* Both C stacks live inside the linker-declared auxiliary stack, so WAMR
@@ -67,11 +75,17 @@ _Static_assert(PORT_CALLBACK_STACK_BYTES>=16384 && PORT_CALLBACK_STACK_BYTES%16=
 #endif
 _Static_assert(PORT_CONTINUATION_BYTES>=16384 && PORT_CONTINUATION_BYTES%16==0,
                "invalid continuation buffer size");
+#if !PORT_NATIVE_MAIN_LOOP
 static uint8_t saved_stack[PORT_CONTINUATION_BYTES] __attribute__((aligned(16)));
 static struct {
   void *cursor, *end;
 } continuation;
 static uintptr_t engine_sp;
+#else
+static uint64_t event_port;
+static uint8_t event_bytes[PXA_MAX_CONTROL_BYTES];
+static int32_t handle_event(const uint8_t *bytes, uint32_t n);
+#endif
 static uint32_t continuation_peak;
 static uintptr_t callback_stack_floor;
 static int suspended, rewinding, finished, background, started, engine_running;
@@ -158,6 +172,32 @@ int port_key_down(int k) { return k >= 0 && k < 256 ? keys[k] : 0; }
  * out of the optimizer's inliner. No host-specific continuation imports remain
  * after the Binaryen post-link step. */
 NOINLINE void port_yield(void) {
+#if PORT_NATIVE_MAIN_LOOP
+  const uint64_t began = port_time_us();
+  ++perf_yields;
+  for (;;) {
+    uint64_t now = port_time_us(), timeout = 0;
+    if (background || (waiting_token && !reply_ready)) timeout = 1000000;
+    else if (now < wake_at) timeout = wake_at - now;
+    int count = pxa_event_port_wait(event_port, event_bytes, sizeof(event_bytes), timeout);
+    if (count > 0) {
+      if (handle_event(event_bytes, (uint32_t)count) < 0) {
+        port_log("PXA main-loop event failed");
+        __builtin_trap();
+      }
+    } else if (count != PXA_STATUS_WOULD_BLOCK && count != PXA_STATUS_TIMED_OUT) {
+      port_log("PXA main-loop wait failed: %d", count);
+      __builtin_trap();
+    }
+    now = port_time_us();
+    if (!background &&
+        (waiting_token ? reply_ready : now >= wake_at && (count <= 0 || now - began >= 2000)))
+      break;
+  }
+  wake_at = 0;
+  last_cooperative_us = port_time_us();
+  perf_wait_us += last_cooperative_us - began;
+#else
   if (rewinding) {
     rewinding = 0;
     stop_rewind();
@@ -176,6 +216,7 @@ NOINLINE void port_yield(void) {
   engine_sp = port_stack_get();
   suspended = 1;
   unwind(&continuation);
+#endif
 }
 int port_cooperate_due(uint64_t now,uint32_t budget_us) {
   return now>=last_cooperative_us && now-last_cooperative_us>=budget_us;
@@ -188,17 +229,22 @@ NOINLINE static void run_game(void) {
   port_game_main();
 }
 NOINLINE static void pump(void) {
+#if PORT_NATIVE_MAIN_LOOP
+  if (!event_port || engine_running) return;
+#endif
 #ifdef PORT_EXTERNAL_GAME_DATA
   if(audio_decision_pending) return;
 #endif
   if (finished || background)
     return;
+#if !PORT_NATIVE_MAIN_LOOP
   if (suspended) {
     if (waiting_token && !reply_ready)
       return;
     if (!waiting_token && port_time_us() < wake_at)
       return;
   }
+#endif
   uintptr_t callback_stack = port_stack_get();
   if (!started) started = 1;
   if (!engine_running) {
@@ -207,18 +253,24 @@ NOINLINE static void pump(void) {
     if(callback_stack > (uintptr_t)__stack_low+PORT_ENGINE_STACK_BYTES)
       memset(__stack_low+PORT_ENGINE_STACK_BYTES,0xa5,callback_stack-(uintptr_t)__stack_low-PORT_ENGINE_STACK_BYTES);
   }
+#if PORT_NATIVE_MAIN_LOOP
+  port_stack_set((uintptr_t)__stack_low + PORT_ENGINE_STACK_BYTES);
+#else
   port_stack_set(suspended ? engine_sp : (uintptr_t)__stack_low + PORT_ENGINE_STACK_BYTES);
   if (suspended) {
     suspended = 0;
     rewinding = 1;
     rewind_stack(&continuation);
   }
+#endif
   run_game();
+#if !PORT_NATIVE_MAIN_LOOP
   if (suspended) {
     stop_unwind();
     uint32_t bytes=(uint8_t *)continuation.cursor-saved_stack;
     if(bytes>continuation_peak)continuation_peak=bytes;
   } else
+#endif
     finished = 1;
   port_stack_set(callback_stack);
 }
@@ -557,6 +609,10 @@ static void controls_window(const pxa_window_snapshot_t *snapshot) {
   release_input();
 }
 int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
+#if PORT_NATIVE_MAIN_LOOP
+  int port_status = pxa_event_port_open(31);
+  if (port_status) return port_status;
+#endif
   pxa_ui_environment_t env={0};
   if (pxa_ui_parse_start_environment(config, length, &env)) {
     display_w = env.width;
@@ -605,10 +661,20 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
   audio_decision_pending=pxa_control_packet(packet, n)==0;
   return 0;
 }
-int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t n) {
+static int32_t handle_event(const uint8_t *bytes, uint32_t n) {
   pxa_event_t e;
   if (!pxa_parse_event(bytes, n, &e))
     return PXA_EVENT_UNHANDLED;
+#if PORT_NATIVE_MAIN_LOOP
+  if (e.service == PXA_CORE_SERVICE && e.opcode == PXA_CORE_OPEN_EVENT_PORT && e.token == 31) {
+    pxa_event_port_result_t result;
+    if (!pxa_event_port_parse_open(&e, 31, &result)) return PXA_STATUS_INTERNAL;
+    if (result.status) return result.status;
+    event_port = result.handle;
+    port_log("PXA native main-loop ready; continuation copies disabled");
+    return PXA_EVENT_HANDLED;
+  }
+#endif
 #if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS || PXA_GAME_RENDER_FRAME_SPANS || PXA_GAME_RENDER_BLIT
   if (e.service == PXA_GAME_RENDER_SERVICE &&
       e.opcode == PXA_GAME_RENDER_CREATE_RASTER_CONTEXT && e.token == 30) {
@@ -669,7 +735,9 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t n) {
     reply = e;
     reply.payload = reply_data;
     reply_ready = 1;
+#if !PORT_NATIVE_MAIN_LOOP
     pump();
+#endif
     return PXA_EVENT_HANDLED;
   }
   if (e.service == PXA_SURFACE_SERVICE && e.opcode == PXA_SURFACE_CREATE &&
@@ -780,11 +848,20 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t n) {
 #endif
     if (surface) {
       started = 1;
+#if !PORT_NATIVE_MAIN_LOOP
       pump();
+#endif
     }
     return PXA_EVENT_HANDLED;
   }
   return PXA_EVENT_UNHANDLED;
+}
+int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t n) {
+  int32_t result = handle_event(bytes, n);
+#if PORT_NATIVE_MAIN_LOOP
+  if (result >= 0 && surface) pump();
+#endif
+  return result;
 }
 void pxa_app_stop(uint32_t reason) {
   (void)reason;

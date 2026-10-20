@@ -3,6 +3,7 @@ list(APPEND CMAKE_MODULE_PATH "${PXA_CMAKE_MODULE_DIR}")
 include(PxaGuest)
 set(PXA_RECROF_DIR "${CMAKE_CURRENT_LIST_DIR}")
 function(pxa_recrof_component)
+    option(PXA_RECROF_MAIN_LOOP "Core 2.1 native event port; signed main-loop component required" OFF)
     option(PXA_RECROF_HOST_BLIT "Experimental GameRender indexed frame resolve" OFF)
     option(PXA_RECROF_BULK_READ_COPY "Use WASM memory.copy for large file/cache reads" OFF)
     option(PXA_RECROF_PACKED_GAME_CODEC "Use layout-proven bulk encoding of GameRender commands" OFF)
@@ -30,6 +31,9 @@ function(pxa_recrof_component)
     if(PXA_RECROF_HOST_BLIT)
         target_compile_definitions(pxa_main PRIVATE PXA_GAME_RENDER_BLIT=1)
     endif()
+    if(PXA_RECROF_MAIN_LOOP)
+        target_compile_definitions(pxa_main PRIVATE PORT_NATIVE_MAIN_LOOP=1)
+    endif()
     if(PXA_RECROF_BULK_READ_COPY)
         target_compile_definitions(pxa_main PRIVATE PXA_RECROF_BULK_READ_COPY=1)
     endif()
@@ -49,8 +53,12 @@ function(pxa_recrof_component)
         -Wno-error=return-type -fno-optimize-sibling-calls
         "$<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions;-fno-rtti;-Wno-narrowing>")
     file(READ "${PXA_GUEST_SDK_DIR}/pxa-imports.txt" imports)
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/port-imports.txt"
-        "${imports}\nunwind\nstop_unwind\nrewind_stack\nstop_rewind\n")
+    if(PXA_RECROF_MAIN_LOOP)
+        file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/port-imports.txt" "${imports}\n")
+    else()
+        file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/port-imports.txt"
+            "${imports}\nunwind\nstop_unwind\nrewind_stack\nstop_rewind\n")
+    endif()
     if(NOT DEFINED PXA_RECROF_ENGINE_STACK_BYTES)
         set(PXA_RECROF_ENGINE_STACK_BYTES 262144)
     endif()
@@ -77,6 +85,21 @@ function(pxa_recrof_component)
     endforeach()
     if(NOT ENGINE_RTS)
         set(asyncify_script "${PXA_RECROF_DIR}/tools/asyncify.py")
+    endif()
+    if(PXA_RECROF_MAIN_LOOP)
+        # Keep the same optimization policy as the callback build while
+        # removing continuation instrumentation and its entire import surface.
+        add_custom_command(TARGET pxa_main POST_BUILD
+            COMMAND "${PXA_WASM_OPT}" "$<TARGET_FILE:pxa_main>"
+                -O2 --always-inline-max-function-size=0
+                --one-caller-inline-max-function-size=0 --flexible-inline-max-function-size=0
+                -g --enable-bulk-memory --enable-sign-ext
+                --enable-nontrapping-float-to-int --enable-mutable-globals
+                -o "$<TARGET_FILE:pxa_main>.native"
+            COMMAND "${CMAKE_COMMAND}" -E rename
+                "$<TARGET_FILE:pxa_main>.native" "$<TARGET_FILE:pxa_main>"
+            VERBATIM)
+        return()
     endif()
     set_property(TARGET pxa_main APPEND PROPERTY LINK_DEPENDS "${asyncify_script}")
     find_package(Python3 REQUIRED COMPONENTS Interpreter)
