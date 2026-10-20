@@ -25,6 +25,8 @@ const callOps={},ioOps={},pathOps={};
 let stopping=false;
 let instance, frame, frames=0, seq=100, ticks=0, calls=0, mapped=0, mappedBytes=0, bufferIndex=0, firstFrameAt;
 const frameWindows=new Map();
+const captureTimes=JSON.parse(process.env.PXA_TEST_CAPTURE_TIMES??'[]');
+const captures=[];
 const files=new Map(), events=[],logs=[];
 const mediaRoot=process.env.PXA_TEST_APP_MEDIA;
 function result(status,n=4){const b=Buffer.alloc(n);b.writeInt32LE(status);return b;}
@@ -150,7 +152,12 @@ function pxa_io(h,op,ptr,len){if(stopping)throw Error('Core I/O during stop is f
   if(op===0x100){mapped=ptr;mappedBytes=len/2;return len;}
   if(op===0x101){p.fill(0);p[0]=bufferIndex;bufferIndex^=1;return 4;}
   if(op===0x102){frame=Buffer.from(instance.exports.memory.buffer,mapped+p[0]*mappedBytes,mappedBytes);frame=Buffer.from(frame);frames++;
-   firstFrameAt??=Date.now();const second=Math.floor((Date.now()-firstFrameAt)/1000);frameWindows.set(second,(frameWindows.get(second)??0)+1);return 16;}
+   firstFrameAt??=Date.now();const second=Math.floor((Date.now()-firstFrameAt)/1000);frameWindows.set(second,(frameWindows.get(second)??0)+1);
+   while(captureTimes.length && (Date.now()-start)/1000>=captureTimes[0]){
+    const requested=captureTimes.shift(),file=output+'.frame-'+captures.length+'.rgb565';
+    fs.writeFileSync(file,frame);captures.push({requested,seconds:(Date.now()-start)/1000,frames,file});
+   }
+   return 16;}
   throw Error('Unsupported surface I/O '+op);
  }
  const f=files.get(h);if(!f)return -6;
@@ -215,7 +222,7 @@ files.clear();clockPeriod=0;stopping=true;
 instance.exports.pxa_app_stop(0);
 const report={audioOpens,audioRetries,audioBytes:audioPackets.reduce((n,p)=>n+p.length,0),frames,ticks,calls,callOps,ioOps,pathOps,mainLoop,requireTickStart,nativeWaits,bytes:instance.exports.memory.buffer.byteLength,
  dataEnd:instance.exports.__data_end?.value,heapBase:instance.exports.__heap_base?.value,
- elapsedMs:Date.now()-start,firstFrameMs:firstFrameAt-start,frameWindows:Object.fromEntries(frameWindows),ioBoundaryChecks,
+ elapsedMs:Date.now()-start,firstFrameMs:firstFrameAt-start,frameWindows:Object.fromEntries(frameWindows),captures,ioBoundaryChecks,
  scope:'Node protocol host, not device FPS',logs};fs.writeFileSync(output+'.json',JSON.stringify(report,null,2));if(!frames)throw Error('No frame submitted');
 if(testAudio){if(!audioOpens||!audioRetries||!report.audioBytes)throw Error('PCM path not exercised');fs.writeFileSync(output+'.pcm',Buffer.concat(audioPackets));}
 console.log(JSON.stringify({frames,ticks,calls,bytes:report.bytes}));

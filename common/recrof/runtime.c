@@ -541,9 +541,12 @@ static void update_keys(void) {
   for (int k = 0; k < 256; k++)
     setkey(k, touch_keys[k] || pad_keys[k]);
 }
-static void release_input(void) {
+static void release_touch(void) {
   memset(touches, 0, sizeof(touches));
   memset(touch_keys, 0, sizeof(touch_keys));
+}
+static void release_input(void) {
+  release_touch();
   memset(pad_keys, 0, sizeof(pad_keys));
   memset(&controller, 0, sizeof(controller));
 #ifdef PORT_RTS
@@ -569,6 +572,19 @@ static void controller_tick(void) {
 #endif
 }
 static void input_pointer(const pxa_ui_pointer_data_t *p) {
+  if (background) return;
+  if (p->phase == PXA_POINTER_DOWN && !port_controls_visible()) {
+    port_controls_set_visible(1);
+    port_log("PXA CONTROLS source=touch visible=1");
+    /* Consume this whole gesture: there is no Touch slot for its move/up.
+     * Revealing FIRE/OK must not activate the previously invisible button. */
+    return;
+  }
+  Touch *t = NULL;
+  for (unsigned i = 0; i < 8; i++)
+    if (touches[i].active && touches[i].id == p->pointer_id)
+      t = &touches[i];
+  if (!t && p->phase != PXA_POINTER_DOWN) return;
   int scale = pxa_surface_fit_scale(surface_w, surface_h, display_w, display_h);
   if (scale < 1)
     scale = 1;
@@ -586,10 +602,6 @@ static void input_pointer(const pxa_ui_pointer_data_t *p) {
     y = 239;
   mouse_x = x;
   mouse_y = y;
-  Touch *t = NULL;
-  for (unsigned i = 0; i < 8; i++)
-    if (touches[i].active && touches[i].id == p->pointer_id)
-      t = &touches[i];
   if (p->phase == PXA_POINTER_DOWN) {
     if (!t)
       for (unsigned i = 0; i < 8; i++)
@@ -879,11 +891,30 @@ static int32_t handle_event(const uint8_t *bytes, uint32_t n) {
   }
   pxa_ui_controller_data_t c;
   if (pxa_ui_parse_controller(&e, &c)) {
-    if (!background && port_controller_state(&controller, c.controller,
-        c.connected, c.buttons, port_game_in_menu(), CONTROLLER_RTS, pad_keys)) {
-      update_keys();
-      port_log("PXA PAD controller=0 connected=%u buttons=%u", c.connected,
-               c.connected ? (unsigned)c.buttons : 0u);
+    if (!background && c.controller == 0) {
+      const uint32_t buttons = c.connected ? c.buttons & PXA_CONTROLLER_BUTTON_MASK : 0;
+      /* Full-state refreshes and releases are not a new input method.
+       * After touching the display, a held pad key must not hide it again. */
+      const uint32_t pressed = buttons & ~controller.buttons;
+      const int released_touch = pressed && port_controls_set_visible(0);
+      if (released_touch) {
+        release_touch();
+#ifdef PORT_RTS
+        /* An overlay touch leaves mouse_x/y over RMB/OK. Preserve the engine
+         * cursor before those rectangles stop intercepting the pointer. */
+        port_game_move_cursor(0, 0, &mouse_x, &mouse_y);
+#endif
+        port_log("PXA CONTROLS source=controller visible=0");
+      } else if (!c.connected && port_controls_set_visible(1)) {
+        port_log("PXA CONTROLS source=disconnect visible=1");
+      }
+      const int changed = port_controller_state(&controller, c.controller,
+          c.connected, buttons, port_game_in_menu(), CONTROLLER_RTS, pad_keys);
+      if (released_touch || changed) update_keys();
+      if (changed) {
+        port_log("PXA PAD controller=0 connected=%u buttons=%u", c.connected,
+                 (unsigned)buttons);
+      }
     }
     return PXA_EVENT_HANDLED;
   }

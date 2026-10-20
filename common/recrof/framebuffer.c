@@ -82,6 +82,7 @@ typedef struct {int x,y,w,h; const char *label; int key;} Control;
   {268,192,52,48,"FIRE",200}, {280,0,40,24,"RMB",202} RTS_CONFIRM
 static const Control control_defaults[] = {CONTROL_DEFAULTS};
 static Control controls[] = {CONTROL_DEFAULTS};
+static int controls_visible = 1;
 #undef CONTROL_DEFAULTS
 #undef RTS_CONFIRM
 static int clamp(int value,int low,int high) {
@@ -99,7 +100,15 @@ void port_controls_safe_area(int top,int right,int bottom,int left) {
     b->y=clamp(b->y,top,240-bottom-b->h);
   }
 }
+int port_controls_set_visible(int visible) {
+  visible = !!visible;
+  int changed = controls_visible != visible;
+  controls_visible = visible;
+  return changed;
+}
+int port_controls_visible(void) { return controls_visible; }
 int port_control_key_at(int x,int y,int rts) {
+  if (!controls_visible) return 0;
   for(unsigned i=rts?5:0;i<(rts?sizeof(controls)/sizeof(controls[0]):5);++i) {
     const Control *b=&controls[i];
     if(x>=b->x && x<b->x+b->w && y>=b->y && y<b->y+b->h)return b->key;
@@ -107,6 +116,7 @@ int port_control_key_at(int x,int y,int rts) {
   return 0;
 }
 void port_draw_controls(uint16_t *dest, int w, int h, int rts) {
+  if (!controls_visible) return;
   for (unsigned i = rts ? 5 : 0; i < (rts ? sizeof(controls)/sizeof(controls[0]) : 5); ++i) {
     int bx=controls[i].x, by=controls[i].y, bw=controls[i].w, bh=controls[i].h;
     if (w==320 && h==240) {

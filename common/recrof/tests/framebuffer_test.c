@@ -86,6 +86,24 @@ int main(void){
     if(y!=230 || x!=9)assert(actual[y*320+x]==0x1234);
   port_controls_safe_area(0,0,0,0);
   puts("PASS: shared safe-area drawing and hit-testing, including tiny viewports");
+  assert(port_controls_visible() && port_controls_set_visible(0));
+  assert(!port_controls_visible() && !port_controls_set_visible(0));
+  for (int rts=0;rts<2;++rts) {
+    for(unsigned i=0;i<320*240+1;++i)actual[i]=0x1234;
+    port_draw_controls(actual,320,240,rts);
+    for(int y=0;y<240;++y)for(int x=0;x<320;++x) {
+      assert(!port_control_key_at(x,y,rts));
+      assert(actual[y*320+x]==0x1234);
+    }
+    assert(actual[320*240]==0x1234);
+  }
+  /* Layout notifications cannot accidentally restore a hidden overlay. */
+  port_controls_safe_area(24,0,16,0);
+  assert(!port_controls_visible() && !port_control_key_at(300,35,1));
+  assert(port_controls_set_visible(1) && !port_controls_set_visible(1));
+  assert(port_control_key_at(300,35,1)==202);
+  port_controls_safe_area(0,0,0,0);
+  puts("PASS: hidden controls leave every game pixel and hit target untouched");
   const int iterations=500;
   double before=now();
   for(int i=0;i<iterations;++i){source[0]=i;reference(296,222,640,400,672,NULL,0);}
