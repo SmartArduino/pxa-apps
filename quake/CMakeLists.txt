@@ -6,6 +6,7 @@ option(PXA_QUAKE_FRAME_BULK_COPY "Use WASM memory.copy for frame material snapsh
 option(PXA_QUAKE_PROJECTED_SPANS "Experimental GameRender projected colour/depth batches" OFF)
 option(PXA_QUAKE_HOST_SPANS "Experimental GameRender native indexed light-grid batches" OFF)
 option(PXA_QUAKE_STATIC_GLOBALS "Use direct addresses for the fixed engine state" ON)
+option(PXA_QUAKE_RENDER_PROBE "Private same-AOT render comparisons and sampled surface timings" OFF)
 include(../common/recrof/Engine.cmake)
 file(GLOB ENGINE CONFIGURE_DEPENDS vendor/quake/*.c)
 # Keep the renderer and movement math fast without expanding cold parsers,
@@ -20,6 +21,12 @@ pxa_recrof_component(TITLE "Quake" SOURCES ${ENGINE} port.c extmemory.c ../commo
     INCLUDES port vendor/quake DEFINITIONS ESP_PLATFORM=1 PORT_PACED_BY_MAIN=1)
 if(PXA_QUAKE_FRAME_PROFILE)
     target_compile_definitions(pxa_main PRIVATE PXA_FRAME_PROFILE=1)
+endif()
+if(PXA_QUAKE_RENDER_PROBE)
+    if(NOT PXA_QUAKE_FRAME_PROFILE OR NOT PXA_QUAKE_FRAME_SPANS OR NOT PXA_RECROF_HOST_BLIT)
+        message(FATAL_ERROR "Render probe requires frame profiling, frame spans and native blit")
+    endif()
+    target_compile_definitions(pxa_main PRIVATE PXA_QUAKE_RENDER_PROBE=1)
 endif()
 
 # Enable only for measured comparisons until the GameKit A/B is complete.

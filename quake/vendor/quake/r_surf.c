@@ -30,6 +30,7 @@
 #include "quakedef.h"
 #include "r_local.h"
 #include "d_local.h"
+#include "surface_probe.h"
 drawsurf_t r_drawsurf;
 
 #if PRE_LIGHT_SURFACES
@@ -308,6 +309,7 @@ int lightcells = 0;
 #endif // WIN32
 DRAWSURF_SEC void R_BuildLightMap(void)
 {
+    PXA_SURFACE_BEGIN(PXA_QUAKE_RENDER_LIGHT_PACK);
     int smax, tmax;
     int t;
     int i, size;
@@ -338,6 +340,7 @@ DRAWSURF_SEC void R_BuildLightMap(void)
 	{
 		for (i=0 ; i<size ; i++)
 			_g->blocklights[i] = 0;
+		PXA_SURFACE_END(PXA_QUAKE_RENDER_LIGHT_PACK);
 		return;
 	}
 
@@ -430,6 +433,7 @@ DRAWSURF_SEC void R_BuildLightMap(void)
 
 #endif
 #endif
+    PXA_SURFACE_END(PXA_QUAKE_RENDER_LIGHT_PACK);
 }
 
 /*

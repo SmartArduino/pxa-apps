@@ -327,7 +327,11 @@ void port_frame_cursor(const uint8_t *p, int w, int h, int pitch,
     uint16_t *dest = output(index);
 #if PXA_GAME_RENDER_BLIT
     int32_t blit_result = PXA_STATUS_UNSUPPORTED;
-    if (port_game_render_context && w <= 65535 && h <= 65535 &&
+    if (port_game_render_context &&
+#ifdef PXA_QUAKE_RENDER_PROBE
+        (port_render_probe_mode & PORT_RENDER_PROBE_NATIVE_BLIT) &&
+#endif
+        w <= 65535 && h <= 65535 &&
         (uint64_t)(h-1)*(unsigned)pitch + (unsigned)w <= UINT32_MAX &&
         (!cursor || !cursor->pixels || cursor->width <= 0 || cursor->height <= 0 ||
          (cursor->width <= 65535 && cursor->height <= 65535))) {

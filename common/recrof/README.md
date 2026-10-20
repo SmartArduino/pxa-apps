@@ -240,3 +240,26 @@ PXA_QUAKE_TEST_PACKED_CODEC=1 python3 local/pxa-apps/common/recrof/tests/run_qua
 组合较早期 5.9fps 候选收回部分开销，仍未证明优于默认路径，故新选项继续默认关闭。
 最低 15fps 和期望 20fps 均未达到。公开 Quake/SD 源码为 0.4.5（seq125），
 本轮上机的是私有比较包，不把公开源码版本视为已验收的二进制发布。
+
+
+## 同一 AOT 的私有渲染诊断
+
+`PXA_QUAKE_RENDER_PROBE` 默认关闭，仅在整帧批次、原生输出和帧统计同时启用时可用。
+它在显示提交完成后读取应用私有的 `/data/pxa-render-probe-mode` 单字节文件：
+0 为 Guest 路径，1 仅原生输出，2 仅原生世界批次，3 两项启用。
+模式切换不发生在借用命令执行期间；非法或未完成写入保持原模式。
+1/16 的引擎帧分别采样表面准备、梯度、跨度、光照读取/混合和光照打包时间，
+以定位开销；诊断包的计时开销不能冒充发布配置的性能。
+
+```sh
+PXA_QUAKE_TEST_RENDER_PROBE=1 PXA_QUAKE_TEST_PACKED_CODEC=1 \
+  python3 local/pxa-apps/common/recrof/tests/run_quake_frame_adapter.py
+```
+
+Duke 原生输出候选在原有输入状态记录中附带 Host 批次、拒绝和执行计数，
+用于核实加速路径实际执行。默认构建未因此增加新的日志条目。
+
+2026-10-20 音频审计更正：现有公共桥接与 ESP Host 只提供 16kHz 单声道。
+锁定 C&C 上游默认是 22.05kHz 立体声，其 PXA 混音器也曾改成 16kHz。
+这意味着已有“音频开启”的 FPS 数据不能证明保留原音频质量；
+完整采样率、声道和连续性验收仍待完成，不能靠静音或降低音质认定目标达标。

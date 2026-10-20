@@ -3,6 +3,12 @@
 #include <stdint.h>
 #include <string.h>
 #include "framebuffer.h"
+#ifdef PXA_QUAKE_RENDER_PROBE
+/* Private comparison builds only; changed between completed frames. */
+extern unsigned port_render_probe_mode;
+#define PORT_RENDER_PROBE_NATIVE_BLIT 1u
+#define PORT_RENDER_PROBE_FRAME_SPANS 2u
+#endif
 #ifndef PORT_COOPERATE_BUDGET_US
 #define PORT_COOPERATE_BUDGET_US 8000u
 #endif

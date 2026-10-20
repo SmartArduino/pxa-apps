@@ -30,6 +30,7 @@
 #include "quakedef.h"
 #include "d_local.h"
 #include "r_local.h"
+#include "surface_probe.h"
 static  byte tmpLightMap[18 * 18 * 4];  // TBD: I'd like to save on this.
 //float           surfscale;
 #if WIN32
@@ -566,6 +567,7 @@ void loadAndBuildLighting(int currentSurfIndex, int loadRequired)
 static void loadAndBuildLighting(int currentSurfIndex)
 #endif
 {
+    PXA_SURFACE_BEGIN(PXA_QUAKE_RENDER_LIGHT_LOAD);
     tcbPrintf("Load lighting\r\n");
     surf_t *s = &_g->surfaces[surfIdx[currentSurfIndex]];
     msurface_t *surf = (msurface_t*) s->data;
@@ -576,6 +578,7 @@ static void loadAndBuildLighting(int currentSurfIndex)
     {
         for (int i = 0; i < size; i++)
             _g->blocklights[i] = 0;
+        PXA_SURFACE_END(PXA_QUAKE_RENDER_LIGHT_LOAD);
         return;
     }
     int lmnum;
@@ -625,6 +628,7 @@ static void loadAndBuildLighting(int currentSurfIndex)
             lightmap += size;	// skip to next lightmap
         }
     }
+    PXA_SURFACE_END(PXA_QUAKE_RENDER_LIGHT_LOAD);
 }
 static DRAWSURF_SEC void pauseLoadingTexture(textureCacheBuffer_t *tcb)
 {
@@ -1026,6 +1030,7 @@ extern void *lastTextureEmd;
 
 DRAWSURF_SEC void* getSurfBuffer(msurface_t *surface, int surfPos, int surfNum, int miplevel, int *width)
 {
+    PXA_SURFACE_BEGIN(PXA_QUAKE_RENDER_PREP);
 #if MSURFACE_HAS_TEXINFO_POINTER
     r_drawsurf.texture = R_TextureAnimation(surface->texinfo->texture);
 
@@ -1066,6 +1071,7 @@ DRAWSURF_SEC void* getSurfBuffer(msurface_t *surface, int surfPos, int surfNum, 
 //        FIXME("ALL 0!");
 #endif
     *width = r_drawsurf.surfwidth;
+    PXA_SURFACE_END(PXA_QUAKE_RENDER_PREP);
     return getCurrentTextureCacheAddress();
 }
 

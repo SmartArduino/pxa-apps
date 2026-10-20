@@ -138,6 +138,9 @@ void Pxa_FlushProjectedFrame(void) {
     pxa_frame_colormap_source = NULL; pxa_frame_unavailable = 0;
 }
 static int Pxa_BeginProjectedFrame(void) {
+#ifdef PXA_QUAKE_RENDER_PROBE
+    if (!(port_render_probe_mode & PORT_RENDER_PROBE_FRAME_SPANS)) return 0;
+#endif
     if (!port_game_render_context || pxa_frame_unavailable) return 0;
     if (pxa_frame_batch.bytes) return !pxa_frame_batch.status;
     size_t capacity;

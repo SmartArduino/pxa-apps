@@ -11,18 +11,48 @@
 extern uint64_t port_game_render_context;
 #endif
 static int mdx, mdy;
+#ifdef PXA_QUAKE_RENDER_PROBE
+unsigned port_render_probe_mode;
+static unsigned probe_serial, probe_selected, probe_completed;
+static uint64_t probe_view;
+/* An explicitly private build polls one private byte only after presentation.
+ * No partial render or borrowed command packet survives a
+ * mode change; ordinary App builds do not contain this control. */
+static void probe_poll_mode(void) {
+  FILE *f = fopen("/data/pxa-render-probe-mode", "rb");
+  if (!f) return;
+  int value = fgetc(f), end = fgetc(f);
+  fclose(f);
+  if (value >= '0' && value <= '3' && end == EOF)
+    port_render_probe_mode = (unsigned)(value - '0');
+}
+#endif
 #ifdef PXA_FRAME_PROFILE
 #include "render_profile.h"
 static uint64_t render_stamp[PXA_QUAKE_RENDER_STAGES],render_total[PXA_QUAKE_RENDER_STAGES];
 void Pxa_QuakeRenderProfile(unsigned stage,int begin) {
   if(stage>=PXA_QUAKE_RENDER_STAGES)return;
+#ifdef PXA_QUAKE_RENDER_PROBE
+  if(stage>=PXA_QUAKE_RENDER_PREP && !probe_selected)return;
+#endif
   uint64_t now=port_time_us();
   if(begin)render_stamp[stage]=now;
-  else if(now>=render_stamp[stage])render_total[stage]+=now-render_stamp[stage];
+  else if(now>=render_stamp[stage]) {
+    render_total[stage]+=now-render_stamp[stage];
+#ifdef PXA_QUAKE_RENDER_PROBE
+    if(stage==PXA_QUAKE_RENDER_TOTAL && probe_selected) {
+      probe_view+=now-render_stamp[stage];
+      ++probe_completed;
+    }
+#endif
+  }
 }
 static uint64_t profile_stamp, profile_part[3], profile_total[3];
 static unsigned profile_frames;
 void Pxa_QuakeProfile(unsigned stage) {
+#ifdef PXA_QUAKE_RENDER_PROBE
+  if(!stage)probe_selected=(++probe_serial & 15u)==0;
+#endif
   uint64_t now = port_time_us();
   if (stage) profile_part[stage-1] = now-profile_stamp;
   profile_stamp = now;
@@ -53,6 +83,24 @@ void port_game_stats(void) {
     previous[i] = value;
   }
   unsigned frames = profile_frames ? profile_frames : 1;
+#ifdef PXA_QUAKE_RENDER_PROBE
+  unsigned sampled = probe_completed ? probe_completed : 1;
+  port_log("PXA QUAKE ready=%d hp=%d xyz=%d,%d,%d n=%u mode=%u pn=%u view=%llu sv=%llu prep=%llu grad=%llu rows=%llu load=%llu pack=%llu io=%llu hb=%llu hr=%llu hv=%llu hx=%llu",
+    ready, _g->cl.stats[STAT_HEALTH],
+    (int)_g->r_refdef.vieworg[0], (int)_g->r_refdef.vieworg[1], (int)_g->r_refdef.vieworg[2],
+    profile_frames, port_render_probe_mode, probe_completed,
+    (unsigned long long)(render_total[0]/frames), (unsigned long long)(probe_view/sampled),
+    (unsigned long long)(render_total[PXA_QUAKE_RENDER_PREP]/sampled),
+    (unsigned long long)(render_total[PXA_QUAKE_RENDER_GRADIENTS]/sampled),
+    (unsigned long long)(render_total[PXA_QUAKE_RENDER_ROWS]/sampled),
+    (unsigned long long)(render_total[PXA_QUAKE_RENDER_LIGHT_LOAD]/sampled),
+    (unsigned long long)(render_total[PXA_QUAKE_RENDER_LIGHT_PACK]/sampled),
+    (unsigned long long)(io.read_us/frames), (unsigned long long)delta[0],
+    (unsigned long long)delta[1], (unsigned long long)(delta[4]/frames),
+    (unsigned long long)(delta[5]/frames));
+  probe_view=0;probe_completed=0;
+  probe_poll_mode();
+#else
   port_log("PXA QUAKE ready=%d hp=%d xyz=%d,%d,%d n=%u eng=%llu view=%llu world=%llu scan=%llu surf=%llu ent=%llu snd=%llu io=%llu hb=%llu hr=%llu px=%llu hv=%llu hx=%llu",
     ready, _g->cl.stats[STAT_HEALTH],
     (int)_g->r_refdef.vieworg[0], (int)_g->r_refdef.vieworg[1], (int)_g->r_refdef.vieworg[2],
@@ -67,6 +115,7 @@ void port_game_stats(void) {
     (unsigned long long)delta[0], (unsigned long long)delta[1],
     (unsigned long long)delta[3], (unsigned long long)(delta[4]/frames),
     (unsigned long long)(delta[5]/frames));
+#endif
   memset(render_total, 0, sizeof(render_total));
   memset(profile_total, 0, sizeof(profile_total));
   profile_frames = 0;
@@ -226,6 +275,9 @@ void port_game_audio(void) {
       AUDIO_BUFFER_LENGTH-1,played,end,11025);
 }
 void port_game_main(void) {
+#ifdef PXA_QUAKE_RENDER_PROBE
+  probe_poll_mode();
+#endif
   initGraphics();
   extMemInit();
   Z_Init();

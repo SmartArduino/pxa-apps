@@ -67,6 +67,9 @@ static espan_t *getNextSpan(espan_t *s, int null_end) {
 #include "quake_original_projected.h"
 static texture_t *R_TextureAnimation(texture_t *t) { return t; }
 uint64_t port_game_render_context = 77;
+#ifdef PXA_QUAKE_RENDER_PROBE
+unsigned port_render_probe_mode;
+#endif
 static uint32_t packet_calls, replay_logs;
 static union { uint64_t align; uint8_t bytes[153600]; } packet;
 void *port_frame_scratch(size_t *size) { *size=sizeof(packet.bytes); return packet.bytes; }
@@ -93,6 +96,14 @@ int main(void) {
     r_drawsurf.surf=&surface;r_drawsurf.texture=&texture;
     for(unsigned i=0;i<sizeof(colormaps);++i)((uint8_t*)colormaps)[i]=random32();
     for(unsigned iteration=0;iteration<256;++iteration) {
+#ifdef PXA_QUAKE_RENDER_PROBE
+        port_render_probe_mode=iteration&1u;
+        pxa_game_render_frame_batch_t before_mode_test=pxa_frame_batch;
+        assert(!Pxa_BeginProjectedFrame());
+        assert(!Pxa_QueueProjectedSurface(spans+1,1));
+        assert(!memcmp(&before_mode_test,&pxa_frame_batch,sizeof(pxa_frame_batch)));
+        port_render_probe_mode=2u|(iteration&1u);
+#endif
         memset(target.bytes,0xa5,sizeof(target.bytes));memset(depth.bytes,0x5a,sizeof(depth.bytes));
         _g->d_viewbuffer=target.bytes;_g->d_pzbuffer=(short*)(void*)depth.bytes;
         _g->basespan_p=spans;_g->basespanV_p=ys;

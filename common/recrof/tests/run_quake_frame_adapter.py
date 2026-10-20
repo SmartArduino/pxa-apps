@@ -9,7 +9,8 @@ with tempfile.TemporaryDirectory(prefix='pxa-quake-frame-adapter-') as name:
     out=Path(name)
     write_reference(out)
     clang=os.environ.get('WASI_CLANG',str(sdk.parent/'.pxa/wasi-sdk-34.0-x86_64-linux/bin/clang'))
-    subprocess.run([clang,'-DPXA_FRAME_BULK_COPY='+os.environ.get('PXA_QUAKE_TEST_BULK_COPY','1'),'-DPXA_GAME_RENDER_WASM_PACKED_CODEC='+os.environ.get('PXA_QUAKE_TEST_PACKED_CODEC','0'),'-std=gnu11','-O2','-fno-builtin','-fwrapv','-ffp-contract=off',
+    probe_args=['-DPXA_QUAKE_RENDER_PROBE=1'] if os.environ.get('PXA_QUAKE_TEST_RENDER_PROBE')=='1' else []
+    subprocess.run([clang,*probe_args,'-DPXA_FRAME_BULK_COPY='+os.environ.get('PXA_QUAKE_TEST_BULK_COPY','1'),'-DPXA_GAME_RENDER_WASM_PACKED_CODEC='+os.environ.get('PXA_QUAKE_TEST_PACKED_CODEC','0'),'-std=gnu11','-O2','-fno-builtin','-fwrapv','-ffp-contract=off',
         '-Wno-unused-variable','-Wno-incompatible-pointer-types-discards-qualifiers',
         '-I'+str(out),'-I'+str(sdk.parent/'sdk/guest-c/include'),
         '-I'+str(here.parents[2]/'quake/port'),'-I'+str(here.parent),

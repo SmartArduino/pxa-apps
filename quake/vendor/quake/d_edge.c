@@ -29,6 +29,7 @@
 
 // d_edge.c
 #include "quakedef.h"
+#include "surface_probe.h"
 #ifdef PXA_FRAME_PROFILE
 #include "render_profile.h"
 #else
@@ -577,14 +578,18 @@ DRAWSURF_SEC void D_DrawSurfaces(void)
                 _g->cacheblock = getSurfBuffer(pface, surfPos, _g->surfNum, miplevel, &_g->cachewidth);
                 //
 #endif
+                PXA_SURFACE_BEGIN(PXA_QUAKE_RENDER_GRADIENTS);
                 D_CalcGradients(pface, miplevel);
+                PXA_SURFACE_END(PXA_QUAKE_RENDER_GRADIENTS);
                 espan_t *span = getSurfSpans(s, 0);
+                PXA_SURFACE_BEGIN(PXA_QUAKE_RENDER_ROWS);
 #if ESP_PLATFORM
                 D_DrawSpans8AndZ(span);     // on both cores
 #else
                 D_DrawSpans8(span);
                 D_DrawZSpans(span);
 #endif
+                PXA_SURFACE_END(PXA_QUAKE_RENDER_ROWS);
 
                 if (s->insubmodel && ENABLESUBMODEL)
                 {
