@@ -12,6 +12,8 @@ const ioDelayMs=Number(process.env.PXA_TEST_IO_DELAY_MS || 0);
 if(!Number.isFinite(ioDelayMs)||ioDelayMs<0||ioDelayMs>1000)throw Error('invalid test I/O delay');
 const ioDelayWord=new Int32Array(new SharedArrayBuffer(4));
 const requireIoCoop=process.env.PXA_TEST_REQUIRE_IO_COOP==='1';
+const testAudio=process.env.PXA_TEST_AUDIO_PCM==='1';
+const audioPackets=[];let audioOpens=0,audioRetries=0;
 const mainLoop=process.env.PXA_TEST_MAIN_LOOP==='1';
 const requireTickStart=process.env.PXA_TEST_REQUIRE_TICK_START==='1';
 const nativeEnd=Symbol('native main-loop deadline');
@@ -59,7 +61,23 @@ function pxa_call(route,token,ptr,len){
  else if(service===2&&op===2)r=windowSnapshot();
  else if(service===16&&op===1){r=result(0,24);r.writeBigUInt64LE(0x100000001n,4);r.writeUInt32LE(640,12);r.writeUInt32LE(153600,16);r[20]=2;}
  else if(service===16&&op===2)r=result(0);
- else if(service===11)r=result(-3);
+ else if(service===11) {r=testAudio ? result(0,12) : result(-3);if(testAudio)r.writeBigUInt64LE(0x300000001n,4);}
+ else if(service===10&&testAudio){
+  if(op===5){
+   if(p.length!==16 || p.readBigUInt64LE()!==0x300000001n || p[13] || p[14] || p[15])throw Error('PCM open request');
+   const rate=p.readUInt32LE(8),channels=p[12];
+   if(rate<8000||rate>48000||![1,2].includes(channels))throw Error('PCM format');
+   const h=handle({audio:true,rate,channels,attempt:0});++audioOpens;
+   const hbytes=Buffer.alloc(8);hbytes.writeBigUInt64LE(h);
+   const ratebytes=Buffer.alloc(4);ratebytes.writeUInt32LE(rate);
+   const frame=Buffer.alloc(2);frame.writeUInt16LE(20);
+   const sink=Buffer.alloc(4);sink.writeUInt32LE(48000);
+   const queue=Buffer.alloc(4);queue.writeUInt32LE(Math.floor(rate/50)*4);
+   r=Buffer.concat([result(0),record(3,hbytes),record(4,ratebytes),record(5,Buffer.from([channels])),
+     record(6,frame),record(7,sink),record(8,Buffer.from([1])),record(9,queue)]);
+  } else if(op===2 || op===4)r=result(0);
+  else throw Error('unexpected PCM control '+op);
+ }
  else if(service===4 && op===1){if(p.length!==2)return -1;const period=p.readUInt16LE();if(period && (period<16 || period>1000))return -1;clockPeriod=period;return 0;}
  else if(service===4 && (op===4 || op===5)){
   if(process.env.PXA_TEST_CLOCK_TIMING==='0')return -3;
@@ -136,6 +154,12 @@ function pxa_io(h,op,ptr,len){if(stopping)throw Error('Core I/O during stop is f
   throw Error('Unsupported surface I/O '+op);
  }
  const f=files.get(h);if(!f)return -6;
+ if(f.audio){
+  if(op!==2 || !len || len%(f.channels*2) || len>Math.floor(f.rate/50)*f.channels*2)throw Error('PCM write shape');
+  if(f.pending){if(!p.equals(f.pending))throw Error('PCM retry changed bytes');f.pending=null;}
+  else if((++f.attempt)%3===1){f.pending=Buffer.from(p);++audioRetries;return -7;}
+  audioPackets.push(Buffer.from(p));return len;
+ }
  if(op===16 || op===17){
   if(!f.readonly)return -3;
   if(op===17){if(len!==8||!p.readBigUInt64LE())return -2;f.retired=p.readBigUInt64LE()>(f.retired??0n)?p.readBigUInt64LE():f.retired;return 0;}
@@ -189,8 +213,9 @@ if(frame){const rgb=Buffer.alloc(320*240*3);for(let i=0;i<320*240;i++){const c=f
 for(const f of files.values())if(f.fd!==undefined)fs.closeSync(f.fd);
 files.clear();clockPeriod=0;stopping=true;
 instance.exports.pxa_app_stop(0);
-const report={frames,ticks,calls,callOps,ioOps,pathOps,mainLoop,requireTickStart,nativeWaits,bytes:instance.exports.memory.buffer.byteLength,
+const report={audioOpens,audioRetries,audioBytes:audioPackets.reduce((n,p)=>n+p.length,0),frames,ticks,calls,callOps,ioOps,pathOps,mainLoop,requireTickStart,nativeWaits,bytes:instance.exports.memory.buffer.byteLength,
  dataEnd:instance.exports.__data_end?.value,heapBase:instance.exports.__heap_base?.value,
  elapsedMs:Date.now()-start,firstFrameMs:firstFrameAt-start,frameWindows:Object.fromEntries(frameWindows),ioBoundaryChecks,
  scope:'Node protocol host, not device FPS',logs};fs.writeFileSync(output+'.json',JSON.stringify(report,null,2));if(!frames)throw Error('No frame submitted');
+if(testAudio){if(!audioOpens||!audioRetries||!report.audioBytes)throw Error('PCM path not exercised');fs.writeFileSync(output+'.pcm',Buffer.concat(audioPackets));}
 console.log(JSON.stringify({frames,ticks,calls,bytes:report.bytes}));

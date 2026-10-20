@@ -15,6 +15,22 @@ tools/app.sh build quake-sd --board doit-gamekit --source-root local/pxa-apps --
 
 CMake 在链接后使用 Asyncify 将原引擎的阻塞主循环转换成可暂停的 PXA 事件回调。宿主只接收标准 PXA Core 2 导入；Asyncify 导入在构建时消除。SD 变体另外要求支持 FS 0.3 `app-media-root` 的固件；固定映射缓冲也要求宿主正确实现 pinned linear memory 的原地增长。
 
+## 精确 PCM 音频候选
+
+`PXA_RECROF_NATIVE_PCM=ON` 与 `PXA_RECROF_MAIN_LOOP=ON` 配合使用，签名清单需声明
+Audio `[0, 10]` 和 Core 2.1 主循环执行模型。选项默认关闭，现有回调包继续使用旧路径。
+首次收到引擎 PCM 时按实际采样率、声道数打开会话，C/C++ 主循环通过事件端口等待结果。
+Quake、Quake II、Duke3D 保留 11025Hz 双声道；C&C/RA 恢复上游的 22050Hz 双声道混音。
+游戏端只合并至最多20ms的数据包，不再重采样、混成单声道或忽略满队列错误。
+
+Host 返回 `WOULD_BLOCK` 时先协作让出执行权，再重试同一包；后台/恢复时丢弃旧的
+未提交分包，与 Host 的 flush 一致。采样率或声道改变会重开会话，无法提供精确格式
+时记录错误并停止音频提交。日志 `PXA PCM source=… sink=…` 分别显示源与实际输出格式。
+单扬声器的 Host 会合并两侧音源；该日志不表示设备具有立体声扬声器。
+
+该路径仍需在设备上验证声音、DMA连续性和帧率。Node 的 PCM 逐字节测试只能证明
+提交协议、分包和重试行为，不能作为物理播放或设备性能数据。
+
 ## 导入资源
 
 引擎源码不包含商业游戏资源。为本地测试导入的数据不会加入 Git。请使用自己有权使用的版本，重新分发应用包前核对资源授权。

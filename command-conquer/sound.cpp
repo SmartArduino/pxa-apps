@@ -4,7 +4,12 @@
 #include "soundio_imp.h"
 #include <stdlib.h>
 #include <string.h>
+#if PORT_NATIVE_PCM
+#define AUDIO_SAMPLE_RATE 22050
+#else
 #define AUDIO_SAMPLE_RATE 16000
+#endif
+#define PCM_FRAMES (AUDIO_SAMPLE_RATE / 50)
 #define TRACKER_BUFFER_COUNT 4   // queued buffers per tracker
 #define TRACKER_BUFFER_SIZE 8192 // soundio_common.cpp BUFFER_CHUNK_SIZE
 #define FILL_BUFFERS_MAX 2       // free buffers reported at once (as OpenAL)
@@ -88,25 +93,25 @@ extern "C" void port_game_audio() {
   uint64_t now = port_time_us();
   if (!last)
     last = now;
-  unsigned frames = (now - last) * 16000 / 1000000;
-  if (frames > 1600) {
-    frames = 1600;
+  unsigned frames = (now - last) * AUDIO_SAMPLE_RATE / 1000000;
+  if (frames > AUDIO_SAMPLE_RATE / 10) {
+    frames = AUDIO_SAMPLE_RATE / 10;
     last = now - 100000;
   }
-  static int32_t acc[320 * 2];
-  static int16_t out[320 * 2];
-  while (frames >= 320) {
+  static int32_t acc[PCM_FRAMES * 2];
+  static int16_t out[PCM_FRAMES * 2];
+  while (frames >= PCM_FRAMES) {
     memset(acc, 0, sizeof(acc));
     if (!paused)
       for (int i = 0; i < MAX_TRACKERS; i++)
         if (trackers[i].Used && trackers[i].Started)
-          mixTracker(&trackers[i], acc, 320);
-    for (int i = 0; i < 640; i++) {
+          mixTracker(&trackers[i], acc, PCM_FRAMES);
+    for (int i = 0; i < PCM_FRAMES * 2; i++) {
       int v = acc[i] >> (8 + MASTER_SHIFT);
       out[i] = v > 32767 ? 32767 : v < -32768 ? -32768 : v;
     }
-    port_pcm(out, 320, 16000, 2);
-    frames -= 320;
+    port_pcm(out, PCM_FRAMES, AUDIO_SAMPLE_RATE, 2);
+    frames -= PCM_FRAMES;
     last += 20000;
   }
 }

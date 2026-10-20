@@ -12,8 +12,14 @@
 #include "pxa_permission.h"
 #include "external.h"
 #include "pxa_surface.h"
+#ifndef PORT_NATIVE_PCM
+#define PORT_NATIVE_PCM 0
+#endif
 #ifndef PORT_NATIVE_MAIN_LOOP
 #define PORT_NATIVE_MAIN_LOOP 0
+#endif
+#if PORT_NATIVE_PCM && !PORT_NATIVE_MAIN_LOOP
+#error "Native PCM requires the native event port"
 #endif
 #if PORT_NATIVE_MAIN_LOOP
 #include "pxa_event_port.h"
@@ -123,6 +129,11 @@ static pxa_event_t reply;
 static uint8_t reply_data[PXA_MAX_CONTROL_BYTES];
 static int reply_ready;
 static unsigned audio_rate = 16000, audio_channels = 1;
+#if PORT_NATIVE_PCM
+static int16_t audio_packet[960 * 2];
+static unsigned audio_fill, audio_epoch;
+static int audio_failed;
+#endif
 static uint64_t audio_permission, audio_pending;
 static int audio_decision_pending;
 static port_controller_t controller;
@@ -440,8 +451,65 @@ void port_frame_cursor(const uint8_t *p, int w, int h, int pitch,
 void port_frame(const uint8_t *p, int w, int h, int pitch) {
   port_frame_cursor(p,w,h,pitch,NULL);
 }
+#if PORT_NATIVE_PCM
+static int open_native_pcm(unsigned rate, unsigned channels) {
+  uint8_t request[16] = {0};
+  pxa_store_u64(request, audio_permission); pxa_store_u32(request+8, rate);
+  request[12] = (uint8_t)channels;
+  const pxa_event_t *event = port_rpc(PXA_AUDIO_SERVICE, PXA_AUDIO_OPEN_PCM, request, sizeof(request));
+  pxa_audio_pcm_result_t opened = {0};
+  if (!event || !pxa_audio_parse_pcm(event, event->token, &opened) || opened.source.status ||
+      opened.source.sample_rate != rate || opened.source.channels != channels) {
+    if (opened.source.handle >> 32) pxa_close_handle(opened.source.handle);
+    port_log("PXA original PCM unavailable: rate=%u channels=%u status=%d", rate, channels,
+      event ? opened.source.status : PXA_STATUS_IO_ERROR);
+    return 0;
+  }
+  uint8_t command[64]; uint32_t bytes = 0;
+  const pxa_audio_graph_t graph = {.gain_db_q8 = -1536};
+  const uint64_t session = opened.source.handle;
+  int32_t status = PXA_STATUS_INTERNAL;
+  if (pxa_audio_build_graph(command, sizeof(command), 1, session, &graph, &bytes)) {
+    event = port_rpc_packet(command, bytes);
+    if (!event || !pxa_audio_parse_status(event, event->token, PXA_AUDIO_COMMIT_GRAPH, &status))
+      status = PXA_STATUS_INTERNAL;
+  }
+  if (status) { pxa_close_handle(session); return 0; }
+  audio = session; audio_rate = rate; audio_channels = channels; audio_fill = 0;
+  port_log("PXA PCM source=%uHz/%uch S16LE sink=%uHz/%uch queue=%u source-frames",
+    rate, channels, opened.sink_rate, opened.sink_channels, opened.queue_frames);
+  return 1;
+}
+#endif
 void port_pcm(const int16_t *p, unsigned frames, unsigned rate,
               unsigned channels) {
+#if PORT_NATIVE_PCM
+  if (!p || !frames || rate < 8000 || rate > 48000 || channels < 1 || channels > 2 ||
+      !audio_permission || audio_failed) return;
+  if (audio && (audio_rate != rate || audio_channels != channels)) {
+    pxa_close_handle(audio); audio = 0; audio_fill = 0;
+  }
+  if (!audio && !open_native_pcm(rate, channels)) { audio_failed = 1; return; }
+  const unsigned packet_frames = rate / 50, epoch = audio_epoch;
+  while (frames) {
+    const unsigned count = frames < packet_frames-audio_fill ? frames : packet_frames-audio_fill;
+    memcpy(audio_packet + audio_fill*channels, p, count*channels*sizeof(*p));
+    audio_fill += count; p += count*channels; frames -= count;
+    if (audio_fill != packet_frames) continue;
+    const uint32_t bytes = packet_frames*channels*2;
+    for (;;) {
+      int32_t status = pxa_audio_write_pcm(audio, (uint8_t*)audio_packet, bytes);
+      if (status == (int32_t)bytes) break;
+      if (status != PXA_STATUS_WOULD_BLOCK) {
+        port_log("PXA PCM write failed: %d", status);
+        pxa_close_handle(audio); audio = 0; audio_failed = 1; audio_fill = 0; return;
+      }
+      port_sleep(1);
+      if (epoch != audio_epoch) return; /* Lifecycle flush discarded the old packet. */
+    }
+    audio_fill = 0;
+  }
+#else
   static int16_t out[320];
   static unsigned fill;
   static uint64_t phase;
@@ -461,6 +529,7 @@ void port_pcm(const int16_t *p, unsigned frames, unsigned rate,
       }
     }
   }
+#endif
 }
 static void setkey(int key, int down) {
   if (key < 0 || key >= 256 || keys[key] == down)
@@ -721,6 +790,9 @@ static int32_t handle_event(const uint8_t *bytes, uint32_t n) {
   uint8_t life;
   if (pxa_lifecycle_parse(&e, &life)) {
     background = life == PXA_SYSTEM_LIFECYCLE_BACKGROUND;
+#if PORT_NATIVE_PCM
+    audio_fill = 0; ++audio_epoch;
+#endif
     release_input();
     if (audio)
       pxa_audio_flush(13, audio);
@@ -775,7 +847,9 @@ static int32_t handle_event(const uint8_t *bytes, uint32_t n) {
     pxa_permission_acquire_result_t r;
     if (pxa_permission_parse_acquire(&e, 10, &r) && !r.status) {
       audio_permission = r.handle;
+#if !PORT_NATIVE_PCM
       pxa_audio_open_media(11, r.handle);
+#endif
     }
     return PXA_EVENT_HANDLED;
   }

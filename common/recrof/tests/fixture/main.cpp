@@ -65,6 +65,12 @@ extern "C" void port_game_main() {
     if(!f || fread(text,1,9,f)!=9 || fclose(f) || strcmp(text,"published"))
       port_error("PUBLISHED CONTENT FAILED");
   }
+#if PORT_PCM_FIXTURE
+  int16_t samples[660*2];
+  for (unsigned i=0; i<660; ++i) { samples[i*2] = (int16_t)(i*317u); samples[i*2+1] = (int16_t)(i*719u+11u); }
+  for (unsigned i=0; i<660;) { unsigned n=660-i; if(n>64)n=64; port_pcm(samples+i*2,n,11025,2);i+=n; }
+  port_log("PCM FIXTURE PASS");
+#endif
   port_error("FIXTURE PASS");
 }
 extern "C" void port_game_key(int, int) {}
