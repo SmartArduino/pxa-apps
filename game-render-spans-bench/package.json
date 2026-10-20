@@ -13,8 +13,8 @@
     0
   ],
   "id": "pxa-game-render-spans-bench",
-  "version": "1.2.1",
-  "release_sequence": 6,
+  "version": "1.2.3",
+  "release_sequence": 8,
   "name": "GameRender Native Spans",
   "description": "Validate native indexed span batches and report compute time; not a game FPS benchmark",
   "build": {

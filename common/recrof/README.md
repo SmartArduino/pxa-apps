@@ -149,7 +149,8 @@ Quake 的门和开关沿用原作自动触发机制，USE 按钮在 Quake 中没
 
 `quake-sd`、`quake2-sd`、`duke3d-sd`、`command-conquer-sd`、`red-alert-sd`
 自动使用 `/PXA/media/<AppKey>/`，无需选择目录。资源仍先按 `TEST_DATA.md`
-导入到对应原版应用的 `assets/game`；SD 变体的包只携带引擎，私有配置与存档仍在内部存储。
+导入到对应原版应用的 `assets/game`；SD 变体的包只携带引擎。私有配置与存档使用
+系统提供的应用私有目录，随应用所在存储卷分配，也适用于仅有 SD 存储的设备。
 
 先查看导入计划；实际传输只指定设备，不填写目录：
 
@@ -199,7 +200,7 @@ GameRender投影试验：`PXA_QUAKE_PROJECTED_SPANS` 默认关闭。直接运行
 `python3 common/recrof/tests/run_quake_projected_spans.py` 可将Host投影、
 光照和深度输出与当前vendor函数对比（需主工程deps/pxa-system）。
 GameKit实际出生点私有候选中位3.9fps，低于6.9fps默认基线；不依据合成吞吐
-启用该选项。公开0.3.1使用Guest原路径，最低15fps及期望20fps仍待后续优化。
+启用该选项。公开构建继续使用Guest原路径，最低15fps及期望20fps仍待后续优化。
 
 
 ## GameRender 1.2 跨材质批次
@@ -221,3 +222,14 @@ python3 local/pxa-apps/common/recrof/tests/run_host_indexed_blit.py
 
 第一项在WASM中使用当前上游Rows函数验证来源复用后的回退，第二项覆盖非bulk配置，
 第三项使用原`port_blit`作参考。主工程的`tools/game-perf/profiles`保留独立比较配置。
+
+`PXA_RECROF_BULK_READ_COPY` 仅给至少128字节的文件及虚拟flash读取使用WASM
+`memory.copy`；小型元数据保留普通复制。`PXA_RECROF_PACKED_GAME_CODEC` 启用SDK
+的可选WASM布局编码：固定记录的大小与所有字段偏移必须在编译期逐项匹配wire布局，
+然后整块编码；其他平台继续使用逐字段编码。两项默认关闭，按游戏实测决定启用。
+没有增加缓存或扩大线性内存，也没有为整个引擎启用bulk-memory。
+
+```sh
+python3 local/pxa-apps/common/recrof/tests/run_read_copy.py
+PXA_QUAKE_TEST_PACKED_CODEC=1 python3 local/pxa-apps/common/recrof/tests/run_quake_frame_adapter.py
+```

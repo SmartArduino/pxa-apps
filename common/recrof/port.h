@@ -1,6 +1,7 @@
 #pragma once
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 #include "framebuffer.h"
 #ifndef PORT_COOPERATE_BUDGET_US
 #define PORT_COOPERATE_BUDGET_US 8000u
@@ -8,6 +9,23 @@
 #ifndef PORT_TICK_MS
 #define PORT_TICK_MS 16u
 #endif
+#ifndef PXA_RECROF_BULK_READ_COPY
+#define PXA_RECROF_BULK_READ_COPY 0
+#endif
+/* Keep small metadata copies under the ordinary compiler settings. Only large
+ * read-only file/cache transfers opt into the WASM bulk instruction. */
+#if PXA_RECROF_BULK_READ_COPY && defined(__wasm__) && defined(__clang__)
+__attribute__((target("bulk-memory"), noinline))
+static void port_copy_read_bulk(void *destination, const void *source, size_t bytes) {
+    __builtin_memcpy(destination, source, bytes);
+}
+#endif
+static inline void port_copy_read(void *destination, const void *source, size_t bytes) {
+#if PXA_RECROF_BULK_READ_COPY && defined(__wasm__) && defined(__clang__)
+    if (bytes >= 128) { port_copy_read_bulk(destination, source, bytes); return; }
+#endif
+    memcpy(destination, source, bytes);
+}
 #ifdef __cplusplus
 extern "C" {
 #endif

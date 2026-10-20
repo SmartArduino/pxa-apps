@@ -35,7 +35,13 @@ static uint32_t Pxa_StoreProjectedSource(const void *source, uint32_t bytes) {
 }
 
 static float Pxa_BitsFloat(uint32_t bits) {
-    float value; memcpy(&value, &bits, sizeof(value)); return value;
+    float value;
+#if defined(__GNUC__) || defined(__clang__)
+    __builtin_memcpy(&value, &bits, sizeof(value));
+#else
+    memcpy(&value, &bits, sizeof(value));
+#endif
+    return value;
 }
 static void Pxa_SetProjection(const pxa_game_render_projection_wire_t *p) {
     _g->d_sdivzorigin = Pxa_BitsFloat(p->s_origin_bits);

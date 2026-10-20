@@ -5,14 +5,22 @@
 #include <string.h>
 static uint32_t Pxa_FloatBits(float value) {
     uint32_t bits;
+#if defined(__GNUC__) || defined(__clang__)
+    __builtin_memcpy(&bits, &value, sizeof(bits));
+#else
     memcpy(&bits, &value, sizeof(bits));
+#endif
     return bits;
 }
 
 static void Pxa_DescribeProjectedSurface(pxa_game_render_spans_header_wire_t *h,
     pxa_game_render_projection_wire_t *p, int write_depth) {
     unsigned shift = 4 - (r_drawsurf.surfmip & 3);
+#if defined(__GNUC__) || defined(__clang__)
+    __builtin_memset(h, 0, sizeof(*h));
+#else
     memset(h, 0, sizeof(*h));
+#endif
     h->target_offset = (uint32_t)(uintptr_t)_g->d_viewbuffer;
     h->target_bytes = screenwidth * VID_HEIGHT;
     h->texture_offset = (uint32_t)(uintptr_t)sdd.r_source;
@@ -30,7 +38,11 @@ static void Pxa_DescribeProjectedSurface(pxa_game_render_spans_header_wire_t *h,
     h->flags = (!sdd.textureType ? PXA_GAME_RENDER_SPANS_POW2 : 0) |
         (r_fullbright ? PXA_GAME_RENDER_SPANS_FULLBRIGHT : 0);
     h->wrap_s = sdd.qcs; h->wrap_t = sdd.qct;
+#if defined(__GNUC__) || defined(__clang__)
+    __builtin_memset(p, 0, sizeof(*p));
+#else
     memset(p, 0, sizeof(*p));
+#endif
     p->s_origin_bits = Pxa_FloatBits(_g->d_sdivzorigin);
     p->s_du_bits = Pxa_FloatBits(_g->d_sdivzstepu);
     p->s_dv_bits = Pxa_FloatBits(_g->d_sdivzstepv);

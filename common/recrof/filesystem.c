@@ -304,7 +304,7 @@ ssize_t __wrap_read(int fd, void *p, size_t n) {
         uint32_t within=(uint32_t)f->position-read_cache[hit].offset;
         size_t count=read_cache[hit].bytes-within;
         if(count>n-done)count=n-done;
-        memcpy((uint8_t *)p+done,read_cache[hit].data+within,count);
+        port_copy_read((uint8_t *)p+done,read_cache[hit].data+within,count);
         f->position+=count;done+=count;read_cache[hit].age=++cache_age;
         cached_read_cooperate();
         continue;
@@ -336,13 +336,13 @@ ssize_t __wrap_read(int fd, void *p, size_t n) {
         strcpy(read_cache[victim].path,f->asset_path);
         read_cache[victim].offset=offset;read_cache[victim].bytes=r.bytes;
         read_cache[victim].age=++cache_age;
-        memcpy(read_cache[victim].data,r.data,r.bytes);
+        port_copy_read(read_cache[victim].data,r.data,r.bytes);
         if (!r.bytes || (uint32_t)f->position-offset>=r.bytes) {
           f->error=1;errno=EIO;return done ? (ssize_t)done : -1;
         }
         continue;
       }
-      memcpy((uint8_t *)p + done, r.data, r.bytes);
+      port_copy_read((uint8_t *)p + done, r.data, r.bytes);
       done += r.bytes;
       f->position += r.bytes;
       if (!r.bytes)
@@ -366,7 +366,7 @@ ssize_t __wrap_read(int fd, void *p, size_t n) {
         if(hit>=0) {
           uint32_t within=(uint32_t)f->position-read_cache[hit].offset;
           size_t count=read_cache[hit].bytes-within;if(count>n-done)count=n-done;
-          memcpy((uint8_t *)p+done,read_cache[hit].data+within,count);
+          port_copy_read((uint8_t *)p+done,read_cache[hit].data+within,count);
           f->position+=count;done+=count;read_cache[hit].age=++cache_age;
           cached_read_cooperate();continue;
         }
@@ -380,14 +380,14 @@ ssize_t __wrap_read(int fd, void *p, size_t n) {
         read_cache[victim].external_handle=f->handle;
         read_cache[victim].offset=offset;read_cache[victim].bytes=r;
         read_cache[victim].age=++cache_age;
-        memcpy(read_cache[victim].data,packet+24,r);
+        port_copy_read(read_cache[victim].data,packet+24,r);
         if(port_cooperate_due(port_time_us(),PORT_COOPERATE_BUDGET_US))port_sleep(0);
         continue;
       }
       uint32_t count=n-done>4096 ? 4096 : n-done;
       int r=pxa_fs_read_at(f->handle,f->position,++f->read_cookie,packet,24+count);
       if(r<0) {f->error=1;errno=EIO;return done?(ssize_t)done:-1;}
-      memcpy((uint8_t *)p+done,packet+24,r);done+=r;f->position+=r;
+      port_copy_read((uint8_t *)p+done,packet+24,r);done+=r;f->position+=r;
       if(port_cooperate_due(port_time_us(),PORT_COOPERATE_BUDGET_US))port_sleep(0);
       if(!r) {f->eof=1;break;}
     }

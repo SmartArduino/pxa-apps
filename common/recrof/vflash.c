@@ -171,7 +171,7 @@ static void nvm_read(uint32_t offset, void *dest, uint32_t length) {
     if(count>length)count=length;
 #ifdef PORT_VFLASH_PAGED_NVM
     if(batch_valid && batch_index==index) {
-      memcpy(out,batch_block+within,count);
+      port_copy_read(out,batch_block+within,count);
       offset+=count;out+=count;length-=count;continue;
     }
     uint64_t before=port_time_us();
@@ -334,7 +334,7 @@ void *vflash_read(uint32_t address, void *dest, uint32_t length) {
     unsigned n = PAGE - offset % PAGE;
     if (n > length)
       n = length;
-    memcpy(out, page(offset) + offset % PAGE, n);
+    port_copy_read(out, page(offset) + offset % PAGE, n);
     out += n;
     offset += n;
     length -= n;
