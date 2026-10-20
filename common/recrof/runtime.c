@@ -848,20 +848,18 @@ static int32_t handle_event(const uint8_t *bytes, uint32_t n) {
 #endif
     if (surface) {
       started = 1;
-#if !PORT_NATIVE_MAIN_LOOP
+      /* The Host only posts Clock ticks after foregrounding this UI. Resource
+       * and permission replies can arrive earlier; they must not start the
+       * retained game call while launch is still in the background. In the
+       * native loop pump() immediately returns when the engine is running. */
       pump();
-#endif
     }
     return PXA_EVENT_HANDLED;
   }
   return PXA_EVENT_UNHANDLED;
 }
 int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t n) {
-  int32_t result = handle_event(bytes, n);
-#if PORT_NATIVE_MAIN_LOOP
-  if (result >= 0 && surface) pump();
-#endif
-  return result;
+  return handle_event(bytes, n);
 }
 void pxa_app_stop(uint32_t reason) {
   (void)reason;

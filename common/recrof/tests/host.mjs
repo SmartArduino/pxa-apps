@@ -13,9 +13,10 @@ if(!Number.isFinite(ioDelayMs)||ioDelayMs<0||ioDelayMs>1000)throw Error('invalid
 const ioDelayWord=new Int32Array(new SharedArrayBuffer(4));
 const requireIoCoop=process.env.PXA_TEST_REQUIRE_IO_COOP==='1';
 const mainLoop=process.env.PXA_TEST_MAIN_LOOP==='1';
+const requireTickStart=process.env.PXA_TEST_REQUIRE_TICK_START==='1';
 const nativeEnd=Symbol('native main-loop deadline');
 const eventPort=0x200000001n;
-let nativeWaits=0,queuingNativeInput=false;
+let nativeWaits=0,queuingNativeInput=false,currentEvent;
 let callbackSequence=0,lastSlowIoCallback=-1,ioBoundaryChecks=0;
 let clockPeriod=0,lastTick=0;
 const callOps={},ioOps={},pathOps={};
@@ -49,7 +50,10 @@ function pxa_call(route,token,ptr,len){
   if(lastSlowIoCallback===callbackSequence)throw Error('slow I/O followed by FS control without a callback boundary');
   ioBoundaryChecks++;lastSlowIoCallback=-1;
  }
- if(service===19){const s=p.subarray(1).toString();logs.push(s);console.log(s);if(process.env.PXA_TEST_TRACE_EXIT&&(s.includes("Game exited")||s.includes("Invalid game Free")))console.trace("Engine exit");if(process.env.PXA_TEST_TRACE_ALLOC&&s.startsWith("PXA ALLOC"))console.trace("Allocation caller");return 0;}
+ if(service===19){const s=p.subarray(1).toString();
+  if(requireTickStart && s.startsWith('Starting ') && (currentEvent?.service!==4 || currentEvent?.op!==0x8001))
+   throw Error('Engine started before a foreground Clock event');
+  logs.push(s);console.log(s);if(process.env.PXA_TEST_TRACE_EXIT&&(s.includes("Game exited")||s.includes("Invalid game Free")))console.trace("Engine exit");if(process.env.PXA_TEST_TRACE_ALLOC&&s.startsWith("PXA ALLOC"))console.trace("Allocation caller");return 0;}
  if(service===1&&op===2){const h=p.readBigUInt64LE();const f=files.get(h);if(f?.fd!==undefined)fs.closeSync(f.fd);files.delete(h);return 0;}
  if(service===1&&op===5){if(!mainLoop)return -3;r=result(0,12);r.writeBigUInt64LE(eventPort,4);}
  else if(service===2&&op===2)r=windowSnapshot();
@@ -150,7 +154,14 @@ const imports={wasi_snapshot_preview1:wasi.wasiImport,'pxa.core.v2':{pxa_call,px
 instance=(await WebAssembly.instantiate(fs.readFileSync(wasm),imports)).instance;
 wasi.initialize(instance);
 function eventBytes(e){const b=Buffer.alloc(20+e.payload.length);b.writeUInt16LE(e.service);b.writeUInt16LE(e.op,2);b.writeBigUInt64LE(e.token??0n,4);b.writeUInt32LE(e.payload.length,12);e.payload.copy(b,20);return b;}
-function event(e){if(queuingNativeInput){events.push(e);return;}callbackSequence++;const b=eventBytes(e);const ptr=instance.exports.malloc(b.length);Buffer.from(instance.exports.memory.buffer,ptr,b.length).set(b);const r=instance.exports.pxa_app_on_event(ptr,b.length);instance.exports.free(ptr);if(r<0)throw Error('event rejected '+r);}
+function event(e){
+ if(queuingNativeInput){events.push(e);return;}
+ callbackSequence++;const b=eventBytes(e),ptr=instance.exports.malloc(b.length);
+ Buffer.from(instance.exports.memory.buffer,ptr,b.length).set(b);
+ const previous=currentEvent;currentEvent=e;
+ try{const r=instance.exports.pxa_app_on_event(ptr,b.length);if(r<0)throw Error('event rejected '+r);}
+ finally{currentEvent=previous;instance.exports.free(ptr);}
+}
 const rc=instance.exports.pxa_app_start(0,0);if(rc)throw Error('start '+rc);
 const start=Date.now(),end=start+Number(seconds)*1000;
 let pauseAt=-1,resumeAt=-1,pausedFrames=-1;
@@ -178,7 +189,7 @@ if(frame){const rgb=Buffer.alloc(320*240*3);for(let i=0;i<320*240;i++){const c=f
 for(const f of files.values())if(f.fd!==undefined)fs.closeSync(f.fd);
 files.clear();clockPeriod=0;stopping=true;
 instance.exports.pxa_app_stop(0);
-const report={frames,ticks,calls,callOps,ioOps,pathOps,mainLoop,nativeWaits,bytes:instance.exports.memory.buffer.byteLength,
+const report={frames,ticks,calls,callOps,ioOps,pathOps,mainLoop,requireTickStart,nativeWaits,bytes:instance.exports.memory.buffer.byteLength,
  dataEnd:instance.exports.__data_end?.value,heapBase:instance.exports.__heap_base?.value,
  elapsedMs:Date.now()-start,firstFrameMs:firstFrameAt-start,frameWindows:Object.fromEntries(frameWindows),ioBoundaryChecks,
  scope:'Node protocol host, not device FPS',logs};fs.writeFileSync(output+'.json',JSON.stringify(report,null,2));if(!frames)throw Error('No frame submitted');
