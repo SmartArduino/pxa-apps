@@ -7,6 +7,33 @@
 #include "keyboard.h"
 #include "quakedef.h"
 #include "pxa_game_render_spans.h"
+#if PXA_QUAKE_HOST_AUDIO_MIX
+#include "pxa_audio.h"
+#include "host_audio_mix.h"
+int Pxa_QuakeMixS8(void *paintbuffer, const void *source,
+    int count, int left, int right) {
+  static int unavailable, announced;
+  const uint64_t session = port_audio_session();
+  if (!session || unavailable || count <= 0 || count > PXA_AUDIO_MIX_MAX_FRAMES ||
+      left < 0 || left > 256 || right < 0 || right > 256) return 0;
+  uint8_t record[PXA_AUDIO_MIX_SPAN_BYTES];
+  const pxa_audio_mix_span_t span = {
+    .source_offset = (uint32_t)(uintptr_t)source, .source_bytes = (uint32_t)count,
+    .step_q16 = 65536, .frames = (uint32_t)count,
+    .left_gain_q8 = (uint16_t)left, .right_gain_q8 = (uint16_t)right,
+    .encoding = PXA_AUDIO_MIX_S8, .channels = 1};
+  if (!pxa_audio_encode_mix_span(record, sizeof(record), &span)) return 0;
+  int32_t status = pxa_audio_mix_pcm(session, (uint32_t)(uintptr_t)paintbuffer,
+    (uint32_t)count, (uint32_t)(uintptr_t)record, 1);
+  if (status == PXA_STATUS_UNSUPPORTED) unavailable = 1;
+  if (status) return 0;
+  if (!announced) {
+    announced = 1;
+    port_log("PXA AUDIO Host S8 accumulation active; engine timing and quantization retained");
+  }
+  return 1;
+}
+#endif
 #if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS || PXA_GAME_RENDER_FRAME_SPANS || PXA_GAME_RENDER_BLIT
 extern uint64_t port_game_render_context;
 #endif

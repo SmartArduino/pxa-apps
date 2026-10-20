@@ -29,6 +29,9 @@
 // snd_mix.c -- portable code to mix sounds for snd_dma.c
 #if !WIN32
 #include "quakedef.h"
+#if PXA_QUAKE_HOST_AUDIO_MIX
+#include "host_audio_mix.h"
+#endif
 
 #if !WIN32
 #include "audio.h"
@@ -405,6 +408,10 @@ void SND_PaintChannelFrom8(portable_samplepair_t *paintbuffer, channel_t *ch, sf
   int lvol = ch->leftvol  >> 3;
   int rvol = ch->rightvol  >> 3;
 
+#endif
+#if PXA_QUAKE_HOST_AUDIO_MIX
+    if (Pxa_QuakeMixS8(paintbuffer, sfx, count, lvol, rvol))
+        return;
 #endif
     for (i = 0; i < (count & 3); i++)
     {

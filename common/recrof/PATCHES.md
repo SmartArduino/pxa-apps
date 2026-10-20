@@ -71,3 +71,10 @@ Host 执行同样的 32 像素细分、光照和可选深度写入；整批预�
 `PXA_QUAKE_PROJECTED_SPANS` 在完成真机对比前保持关闭。
 `tests/run_quake_projected_spans.py` 直接提取当前 vendor 的透视和深度函数，
 上游同步后运行它及原 lit-span 差分测试，避免单独维护一份参考实现。
+
+Audio 0.11 试验：Quake `snd_mix.c` 只在采样加载与音量量化之后增加条件钩子；
+平台实现位于 `port.c` / `port/host_audio_mix.h`。Host 同步累加 S8 到原 S32
+双声道 paintbuffer，保留引擎原时钟、循环、主音量、饱和和 U8 输出量化。
+`PXA_QUAKE_HOST_AUDIO_MIX` 默认关闭，Host 拒绝整次调用时执行原循环。
+`tests/run_quake_host_audio.py` 直接提取当前 vendor 原混音循环进行差分比较，
+同步上游后必须重跑；不要复制一份脱离上游的固定参考函数。

@@ -58,6 +58,8 @@ void port_frame_cursor(const uint8_t *pixels, int width, int height, int pitch,
                         const port_cursor_t *cursor);
 void port_pcm(const int16_t *samples, unsigned frames, unsigned rate,
               unsigned channels);
+/* Borrow the existing playback session only for synchronous Audio operations. */
+uint64_t port_audio_session(void);
 void port_error(const char *message);
 void port_log(const char *fmt, ...);
 const char *port_data_path(void);

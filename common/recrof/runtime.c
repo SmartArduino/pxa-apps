@@ -481,6 +481,7 @@ static int open_native_pcm(unsigned rate, unsigned channels) {
   return 1;
 }
 #endif
+uint64_t port_audio_session(void) { return audio; }
 void port_pcm(const int16_t *p, unsigned frames, unsigned rate,
               unsigned channels) {
 #if PORT_NATIVE_PCM
