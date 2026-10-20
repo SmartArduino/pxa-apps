@@ -233,3 +233,10 @@ python3 local/pxa-apps/common/recrof/tests/run_host_indexed_blit.py
 python3 local/pxa-apps/common/recrof/tests/run_read_copy.py
 PXA_QUAKE_TEST_PACKED_CODEC=1 python3 local/pxa-apps/common/recrof/tests/run_quake_frame_adapter.py
 ```
+
+
+2026-10-20 GameKit 同固件 START 出生点 60 秒比较：默认 Guest 路径中位 6.9fps、
+平均 7.017fps；批次、原生输出、批量读取及编码组合中位 6.9fps、平均 6.817fps。
+组合较早期 5.9fps 候选收回部分开销，仍未证明优于默认路径，故新选项继续默认关闭。
+最低 15fps 和期望 20fps 均未达到。公开 Quake/SD 源码为 0.4.5（seq125），
+本轮上机的是私有比较包，不把公开源码版本视为已验收的二进制发布。
