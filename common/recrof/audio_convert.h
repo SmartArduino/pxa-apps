@@ -1,4 +1,4 @@
-/* Exact unsigned stereo -> signed mono batching. GPL-3.0-or-later. */
+/* Exact unsigned stereo -> signed stereo batching. GPL-3.0-or-later. */
 #pragma once
 #include "port.h"
 
@@ -6,15 +6,18 @@
  * input synchronously, so the fixed scratch block needs no heap allocation. */
 static inline unsigned port_audio_u8_stereo_ring(const uint8_t *ring,
     unsigned ring_mask, unsigned played, unsigned end, unsigned rate) {
-  int16_t samples[64];
+  int16_t samples[64 * 2];
   while(played!=end) {
     unsigned count=0;
     while(count<64 && played!=end) {
-      int sum=(int)ring[played*2]+ring[played*2+1]-256;
-      samples[count++]=(int16_t)(sum*128);
+      samples[count*2]=(int16_t)(((int)ring[played*2]-128)*256);
+      samples[count*2+1]=(int16_t)(((int)ring[played*2+1]-128)*256);
+      ++count;
       played=(played+1)&ring_mask;
     }
-    port_pcm(samples,count,rate,1);
+    /* Preserve both source channels until the negotiated output boundary.
+     * The legacy mono port_pcm still produces exactly the previous average. */
+    port_pcm(samples,count,rate,2);
   }
   return played;
 }

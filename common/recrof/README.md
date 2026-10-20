@@ -245,11 +245,13 @@ PXA_QUAKE_TEST_PACKED_CODEC=1 python3 local/pxa-apps/common/recrof/tests/run_qua
 ## 同一 AOT 的私有渲染诊断
 
 `PXA_QUAKE_RENDER_PROBE` 默认关闭，仅在整帧批次、原生输出和帧统计同时启用时可用。
-它在显示提交完成后读取应用私有的 `/data/pxa-render-probe-mode` 单字节文件：
+它在显示提交完成后读取 `/data/pxa-render-probe-mode` 单字节文件：
 0 为 Guest 路径，1 仅原生输出，2 仅原生世界批次，3 两项启用。
 模式切换不发生在借用命令执行期间；非法或未完成写入保持原模式。
 1/16 的引擎帧分别采样表面准备、梯度、跨度、光照读取/混合和光照打包时间，
 以定位开销；诊断包的计时开销不能冒充发布配置的性能。
+SD 包可使用现有只读 App-media 回退，从固定 `PXA/media/<AppKey>` 读取该文件。
+PXADB 保持禁止写应用私有目录；测试只替换自己创建的 SD 探针文件。
 
 ```sh
 PXA_QUAKE_TEST_RENDER_PROBE=1 PXA_QUAKE_TEST_PACKED_CODEC=1 \
@@ -263,3 +265,12 @@ Duke 原生输出候选在原有输入状态记录中附带 Host 批次、拒绝
 锁定 C&C 上游默认是 22.05kHz 立体声，其 PXA 混音器也曾改成 16kHz。
 这意味着已有“音频开启”的 FPS 数据不能证明保留原音频质量；
 完整采样率、声道和连续性验收仍待完成，不能靠静音或降低音质认定目标达标。
+
+后续源代码先保留 U8 到 S16 转换中的左右声道，不在环形缓冲辅助函数提前下混。
+旧的单声道 `port_pcm` 得到的平均值逐样本不变；源采样率、环绕顺序和每批最多
+64 帧保持不变，临时转换块由 128 增至 256 字节，位于既有 Guest 栈内，不新增
+Host SRAM/队列。GCC/Clang ASan/UBSan 与 WASM 测试覆盖全部 65536 种 U8 声道对、
+U8/S16 环绕、空数据、批次及旧单声道结果。这只是保留来源的前置改动，当前 Host
+仍然输出 16kHz 单声道，不能当作立体声或完整音频保真已实现。
+公开源码 Quake/SD 为 0.4.8 / seq128，Duke SD 为 0.1.30 / seq31，Duke 为 0.1.3 / seq4；
+这些新源码包尚未以新 AOT 上机，本轮真机数据对应更早、摘要已记录的测试产物。
