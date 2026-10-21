@@ -6,6 +6,7 @@
 #include "graphics.h"
 #include "keyboard.h"
 #include "quakedef.h"
+#include "lightmap_cache.h"
 #include "pxa_game_render_spans.h"
 #if PXA_QUAKE_HOST_AUDIO_MIX
 #include "pxa_audio.h"
@@ -50,8 +51,10 @@ static void probe_poll_mode(void) {
   if (!f) return;
   int value = fgetc(f), end = fgetc(f);
   fclose(f);
-  if (value >= '0' && value <= '3' && end == EOF)
-    port_render_probe_mode = (unsigned)(value - '0');
+  if (end == EOF) {
+    if (value >= '0' && value <= '9') port_render_probe_mode = (unsigned)(value - '0');
+    else if (value >= 'a' && value <= 'f') port_render_probe_mode = (unsigned)(value - 'a' + 10);
+  }
 }
 #endif
 #ifdef PXA_FRAME_PROFILE
@@ -90,6 +93,7 @@ void Pxa_QuakeProfile(unsigned stage) {
 }
 #endif
 void port_game_stats(void) {
+  Pxa_QuakeLightStats();
   vflash_stats_t io; vflash_stats(&io, 1);
   uint8_t stats[64] = {0};
 #if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS || PXA_GAME_RENDER_FRAME_SPANS || PXA_GAME_RENDER_BLIT

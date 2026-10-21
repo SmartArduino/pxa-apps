@@ -28,6 +28,7 @@
  */
 // r_main.c
 #include "quakedef.h"
+#include "lightmap_cache.h"
 #ifdef PXA_FRAME_PROFILE
 #include "render_profile.h"
 #else
@@ -261,6 +262,7 @@ void R_Init(void)
  */
 void R_NewMap(void)
 {
+    Pxa_QuakeLightReset();
 
 // clear out efrags in case the level hasn't been reloaded
 // FIXME: is this one short?

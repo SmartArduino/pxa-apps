@@ -43,6 +43,7 @@ def main():
             str(sdk / 'src/services/game_render/raster_frame_spans.c'),
             str(sdk / 'src/services/game_render/raster_blit.c'),
             str(sdk / 'src/services/game_render/raster_projected_spans.c'), '-o', str(out / 'test')]
+        command.insert(command.index('-o'), str(sdk / 'src/services/game_render/raster_prepared.c'))
         subprocess.run(command, check=True)
         subprocess.run([str(out / 'test')], check=True,
             env=dict(os.environ, UBSAN_OPTIONS='halt_on_error=1', ASAN_OPTIONS='detect_leaks=1'))

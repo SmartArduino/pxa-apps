@@ -2,20 +2,20 @@
   "format": "pxa-package-source-0.1",
   "min_sdk": [
     2,
-    0
+    1
   ],
   "target_sdk": [
     2,
-    0
+    1
   ],
   "compile_sdk": [
     2,
-    0
+    1
   ],
   "id": "pxa-quake-sd",
-  "version": "0.4.8",
+  "version": "0.4.24",
   "name": "Quake SD",
-  "description": "Engine with automatically bound fixed SD resources and app-private saves",
+  "description": "Quake with native indexed output, exact light-grid caching and fixed SD resources",
   "build": {
     "system": "cmake",
     "source_dir": ".",
@@ -30,7 +30,13 @@
       "kind": "ui",
       "services": [
         "surface",
-        "audio",
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            10
+          ]
+        },
         "clock",
         "permission",
         "window",
@@ -52,10 +58,10 @@
           "name": "game-render",
           "min_version": [
             1,
-            0
+            2
           ],
           "features": [
-            "borrowed-indexed-spans"
+            "borrowed-indexed-blit"
           ]
         }
       ],
@@ -68,7 +74,8 @@
           "wall-clock"
         ]
       },
-      "artifact": "aot"
+      "artifact": "aot",
+      "execution_model": "main-loop"
     }
   ],
   "permissions": [
@@ -78,5 +85,5 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 128
+  "release_sequence": 144
 }

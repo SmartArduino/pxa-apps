@@ -31,6 +31,7 @@
 #include "d_local.h"
 #include "r_local.h"
 #include "surface_probe.h"
+#include "lightmap_cache.h"
 static  byte tmpLightMap[18 * 18 * 4];  // TBD: I'd like to save on this.
 //float           surfscale;
 #if WIN32
@@ -571,6 +572,10 @@ static void loadAndBuildLighting(int currentSurfIndex)
     tcbPrintf("Load lighting\r\n");
     surf_t *s = &_g->surfaces[surfIdx[currentSurfIndex]];
     msurface_t *surf = (msurface_t*) s->data;
+    if (Pxa_QuakeLightLoad(surf)) {
+        PXA_SURFACE_END(PXA_QUAKE_RENDER_LIGHT_LOAD);
+        return;
+    }
     int smax = (surf->extents[0] >> 4) + 1;
     int tmax = (surf->extents[1] >> 4) + 1;
     int size = smax * tmax;

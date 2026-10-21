@@ -13,7 +13,7 @@ with tempfile.TemporaryDirectory(prefix='pxa-indexed-blit-') as name:
         '-I' + str(common), '-I' + str(sdk / 'include'), str(here / 'host_indexed_blit_test.c'),
         str(common / 'framebuffer.c'), str(common / 'font8x8.c')]
     command += [str(sdk / 'src/services/game_render' / source) for source in
-        ['raster_spans.c', 'raster_projected_spans.c', 'raster_frame_spans.c', 'raster_blit.c']]
+        ['raster_spans.c', 'raster_projected_spans.c', 'raster_frame_spans.c', 'raster_blit.c', 'raster_prepared.c']]
     command += ['-o', str(Path(name) / 'test')]
     subprocess.run(command, check=True)
     subprocess.run([str(Path(name) / 'test')], check=True,

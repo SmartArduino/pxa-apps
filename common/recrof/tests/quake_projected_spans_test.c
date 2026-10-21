@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <stddef.h>
 #include "pxa/raster_spans.h"
 #define SPAN_PRECISION 6
 #define mipShift(m) (4 - (m))
@@ -61,6 +62,7 @@ int main(void) {
     fn refs[] = {drawLitSpan0_1, drawLitSpan1_1, drawLitSpan2_1, drawLitSpan3_1,
         drawLitSpan0_0, drawLitSpan1_0, drawLitSpan2_0, drawLitSpan3_0};
     uint8_t packet[152 + 4 * 8], expected[TARGET_BYTES];
+    union { max_align_t align; uint8_t bytes[4096]; } prepared;
     union { uint64_t align; uint8_t bytes[2 * TARGET_BYTES]; } depth;
     uint8_t *m = storage.bytes;
     uint32_t *lights = (uint32_t *)(void *)(m + 65536);
@@ -145,8 +147,28 @@ int main(void) {
                 fprintf(stderr, "mismatch kind=%u case=%u depth=%u\n", kind, j, p.flags); return 1;
             }
             ++cases;
+            /* The retained projection and bounded-arena fallback must both
+             * match the original functions, including split depth writes. */
+            for (unsigned capacity = 128; capacity <= sizeof(prepared.bytes); capacity *= 32) {
+                memset(prepared.bytes, 0xc7, sizeof(prepared.bytes));
+                assert(pxa_raster_projected_spans_prepare(packet, sizeof(packet), m,
+                    sizeof(storage.bytes), 4, prepared.bytes, capacity, &batch) == PXA_STATUS_OK);
+                assert((batch.prepared != NULL) == (capacity == sizeof(prepared.bytes)));
+                if (j & 1) {
+                    split = pxa_raster_spans_split_hint(&batch, (uint8_t)(1u + j % 255u));
+                    assert(split <= TARGET_BYTES);
+                }
+                for (unsigned guard = capacity; guard < sizeof(prepared.bytes); ++guard)
+                    assert(prepared.bytes[guard] == 0xc7);
+                memset(m + h.target_offset, 0xa5, TARGET_BYTES);
+                memset(m + h.target_offset + TARGET_BYTES, 0x5a, TARGET_BYTES * 2);
+                pxa_raster_spans_execute_range(&batch, split, TARGET_BYTES);
+                pxa_raster_spans_execute_range(&batch, 0, split);
+                assert(!memcmp(expected, m + h.target_offset, TARGET_BYTES));
+                assert(!memcmp(depth.bytes, m + h.target_offset + TARGET_BYTES, TARGET_BYTES * 2));
+            }
         }
     }
-    printf("PASS: %u original projection/light/depth comparisons; split ranges, overlap, negative offsets, eight kernels\n", cases);
+    printf("PASS: %u original projection/light/depth cases in ordinary, prepared and exhausted-arena paths; split ranges, overlap, negative offsets, eight kernels\n", cases);
     return cases != 40000;
 }

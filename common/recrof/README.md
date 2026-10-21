@@ -1,5 +1,10 @@
 # recrof 引擎的 PXA Core 2 移植
 
+
+Quake SD 0.4.24 的当前配置见 [专用说明](../../quake-sd/README.md)：Core 2.1
+主循环、原采样率 PCM、Host 显示转换与有界光照缓存。下文按日期保留的实验结果
+不代表当前生产配置；基础 `quake` 与其他游戏的默认值不因此改变。
+
 四个上游仓库对应五个独立应用：`quake`、`quake2`、`duke3d`、`command-conquer` 和 `red-alert`。后两者共享 Vanilla-Conquer 源码。每个应用的 `upstream.json` 固定了移植使用的上游提交。引擎源码和授权文件保留在各自目录中。
 
 ## 构建
@@ -277,7 +282,9 @@ PXA_QUAKE_TEST_PACKED_CODEC=1 python3 local/pxa-apps/common/recrof/tests/run_qua
 
 `PXA_QUAKE_RENDER_PROBE` 默认关闭，仅在整帧批次、原生输出和帧统计同时启用时可用。
 它在显示提交完成后读取 `/data/pxa-render-probe-mode` 单字节文件：
-0 为 Guest 路径，1 仅原生输出，2 仅原生世界批次，3 两项启用。
+低两位：0 为 Guest 路径，1 仅原生输出，2 仅原生世界批次，3 两项启用。
+另有位 4 启用光照网格缓存，位 8 对命中重跑原引擎并严格比对实际采样数据；
+文件使用单个十六进制字符，例如 `5` 是 Guest 世界加缓存，`d` 是其验证模式。
 模式切换不发生在借用命令执行期间；非法或未完成写入保持原模式。
 1/16 的引擎帧分别采样表面准备、梯度、跨度、光照读取/混合和光照打包时间，
 以定位开销；诊断包的计时开销不能冒充发布配置的性能。

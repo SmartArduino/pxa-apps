@@ -31,6 +31,7 @@
 #include "r_local.h"
 #include "d_local.h"
 #include "surface_probe.h"
+#include "lightmap_cache.h"
 drawsurf_t r_drawsurf;
 
 #if PRE_LIGHT_SURFACES
@@ -310,6 +311,10 @@ int lightcells = 0;
 DRAWSURF_SEC void R_BuildLightMap(void)
 {
     PXA_SURFACE_BEGIN(PXA_QUAKE_RENDER_LIGHT_PACK);
+    if (Pxa_QuakeLightPacked()) {
+        PXA_SURFACE_END(PXA_QUAKE_RENDER_LIGHT_PACK);
+        return;
+    }
     int smax, tmax;
     int t;
     int i, size;
@@ -433,6 +438,7 @@ DRAWSURF_SEC void R_BuildLightMap(void)
 
 #endif
 #endif
+    Pxa_QuakeLightStore();
     PXA_SURFACE_END(PXA_QUAKE_RENDER_LIGHT_PACK);
 }
 
