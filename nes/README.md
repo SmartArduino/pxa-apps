@@ -62,7 +62,7 @@ python3 tools/pxadb/pxadb.py package run pxa-nes --port /dev/ttyACM1
 入口有两种来源（空来源自动隐藏）：
 
 - **FLASH**：应用私有文件系统内的 `roms/` 目录。主机允许的文件管理工具可向此目录复制文件；部分旧固件禁止 PXADB 写私有目录，此时建议使用 SD 卡媒体目录。
-- **SD**：主机选定的只读应用媒体根。新 Host 的常见位置是 `/PXA/media/lucinhu/pxa-nes/`，重名作者可能带短指纹后缀，具体路径由 FS 0.4 查询返回。将 `.nes` 直接放在该目录（无需再建 `roms/` 子目录）。Host 在授权媒体根前迁移原 AppKey 目录，SD 未插入时延后迁移；不要自行合并两个已有目录。旧版 Host 使用 `/PXA/media/<AppKey>/`。
+- **SD**：主机选定的只读应用媒体根，统一使用 `/PXA/media/<作者>/<应用>/`；例如 `/PXA/media/lucinhu/pxa-nes/`。重名作者可能带短指纹后缀，具体路径由 FS 0.4 查询返回。将 `.nes` 直接放在该目录（无需再建 `roms/` 子目录）。固件不再生成、扫描或迁移旧的 AppKey 长目录。
 
 桌面产品模拟器的媒体目录仍为实例状态根下的 `media/<AppKey>/`，FS 0.4 查询返回模拟器实际位置；flash 私有目录为 `private-files/<publisher>-pxa-nes/roms/`。历史 PAI Touch 测试固件只有 FS 0.2，需要升级 Host 后才能安装 0.1.36；0.1.35 及以前的兼容性以各版本要求为准。
 
