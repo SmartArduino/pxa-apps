@@ -72,12 +72,12 @@ static void test_i18n(void) {
         (const uint8_t*)"en-US",5,&n));
     assert(pxa_wire_record_encode(config,sizeof(config),PXA_SYSTEM_CONFIG_ENVIRONMENT,records,n,&m));
     assert(!pxa_app_start(config,m));
-    assert(!strcmp(UI_TITLE,"PXA NES") && !strcmp(controls.buttons[6].label,"MENU"));
+    assert(!strcmp(UI_TITLE,"NES Emulator") && !strcmp(controls.buttons[6].label,"MENU"));
     char formatted[112];format_number(PXA_MSG_UI_DISPLAY,"frames",2,formatted,sizeof(formatted));
     assert(!strcmp(formatted,"Frame interval: 2"));
     mode=PLAYING;controls.alpha=5;controls.controller_hidden=1;pad[0]=64;
     locale_event("zh-CN");
-    assert(!strcmp(UI_TITLE,"PXA 红白机") && !strcmp(controls.buttons[6].label,"MENU"));
+    assert(!strcmp(UI_TITLE,"NES模拟器") && !strcmp(controls.buttons[6].label,"MENU"));
     assert(mode==PLAYING && controls.alpha==5 && controls.controller_hidden && pad[0]==64);
     format_number(PXA_MSG_UI_KEYS_ALPHA,"opacity",63,formatted,sizeof(formatted));
     assert(!strcmp(formatted,"按键：不透明度 63%"));

@@ -2,7 +2,7 @@ namespace: app.pxa-nes
 default_locale: en-US
 messages:
   ui.title:
-    source: "PXA NES"
+    source: "NES Emulator"
     context: NES ui title menu label
     max_bytes: 112
   ui.paused:

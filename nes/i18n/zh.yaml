@@ -1,9 +1,9 @@
 locale: zh
 metadata:
-  name: PXA 红白机
+  name: NES模拟器
   description: 支持 SD 卡与存储游戏、声音和手柄的红白机模拟器
 translations:
-  ui.title: "PXA 红白机"
+  ui.title: "NES模拟器"
   ui.paused: "游戏已暂停"
   ui.saving: "正在保存进度…"
   ui.save.error: "存档失败，请重试"

@@ -101,7 +101,7 @@ with (args.output/'serial.log').open('w', buffering=1) as log, pxadb.PxaDbClient
     report['packages'] = [f.payload for f in c.request('PACKAGES') if f.kind == 'PKG']
     active = next((row for row in report['packages'] if ':'+args.app_id+'\t' in row and 'active=1' in row), None)
     if not active:
-        raise SystemExit('Unlock the selected board, start PXA NES and load a ROM first')
+        raise SystemExit('Unlock the selected board, start NES Emulator and load a ROM first')
     if input_mode in ('controller','touch'):
         def release_input():
             # Neutral injection still overrides GPIO. Clear the diagnostic

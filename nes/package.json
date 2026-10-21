@@ -15,7 +15,7 @@
   "id": "pxa-nes",
   "version": "0.1.37",
   "release_sequence": 43,
-  "name": "PXA NES",
+  "name": "NES Emulator",
   "description": "NES emulator with SD/flash ROM library, audio, controllers and independent frame skipping",
   "build": {
     "system": "cmake",
