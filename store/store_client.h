@@ -35,6 +35,7 @@
 #define STORE_REQUEST_UPDATE_CHECK UINT32_C(13)
 #define STORE_REQUEST_UNINSTALL UINT32_C(14)
 #define STORE_REQUEST_RUNTIME_INFO UINT32_C(15)
+#define STORE_REQUEST_NAMESPACE UINT32_C(16)
 
 #define STORE_BODY_ERROR 0
 #define STORE_BODY_DONE 1
@@ -78,6 +79,9 @@ int store_client_build_catalog_url(char *output, size_t capacity,
 int store_client_build_app_url(char *output, size_t capacity,
                                const char *profile, const char *app_id,
                                const char *device_id);
+
+int store_client_build_identity_url(char *output,size_t capacity,const char *profile,
+    const char *app_id,const char *lineage_root_key_id,const char *device_id);
 
 int store_client_profile_for_device(char *output, size_t capacity,
                                     const char *target, const char *architecture,

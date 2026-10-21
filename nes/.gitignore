@@ -1,0 +1,11 @@
+# Local builds, device output and user game data.
+/build/
+/out/
+*.log
+*.nes
+*.NES
+*.sav
+*.pns
+
+# Upstream reference documents include a bundled test-ROM archive.
+/vendor/nofrendo/docs/

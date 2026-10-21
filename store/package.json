@@ -13,7 +13,7 @@
     0
   ],
   "id": "pxa-store",
-  "version": "0.8.14",
+  "version": "0.8.15",
   "name": "App Store",
   "description": "边加载边浏览应用与游戏，查看图标、截图和兼容性，下载、安装并检查更新。支持已安装应用与下载管理；签名验证和安装由系统完成，需要联网及 Host 商店安装服务。",
   "icon": "assets/icon.png",
@@ -46,7 +46,13 @@
     },
     "clock",
     "log",
-    "store-installer",
+    {
+      "name": "store-installer",
+      "min_version": [
+        0,
+        7
+      ]
+    },
     "assets"
   ],
   "permissions": [
@@ -61,9 +67,13 @@
       "scope": "https://app.doit.am"
     }
   ],
-  "release_sequence": 22,
+  "release_sequence": 23,
   "build": {
     "system": "cmake",
     "source_dir": "."
+  },
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
   }
 }

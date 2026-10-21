@@ -1,0 +1,29 @@
+{
+  "url": "https://github.com/ducalex/retro-go",
+  "commit": "4ced120669750ca7228fd0414211430c1d923166",
+  "path": "retro-core/components/nofrendo",
+  "license": "GPL-2.0 (COPYING); individual Nofrendo files retain their LGPL-2.0 notices",
+  "patches": [
+    "PXA logging and actual CRC32 in nes/utils.h",
+    "Reject truncated ROM after database fixups in nes/rom.c",
+    "Fractional audio sample accumulator in nes/apu.c",
+    "Memory-only loading avoids unused host stdio paths",
+    "CPU zero-page pointer wrap, ANC carry, ATX and SHX/SHY page crossing; byte-safe word fetches",
+    "Joypad strobe and post-eight-bit reads",
+    "Expose CPU context for diagnostic tests",
+    "Frame scan timing hooks for performance measurement",
+    "On skipped frames without mapper sprite latches, inspect sprite zero only; compared against original OAM traversal in 25 native cases",
+    "Direct CPU reads/writes for built-in RAM and PPU register address ranges; mapper-controlled ranges keep original bus dispatch",
+    "iNES PAL fallback and trainer copy in frontend core wrapper",
+    "Fast CPU reads from live mapped pages without read handlers; mapper and unmapped paths retain original dispatch",
+    "OAM DMA bulk copy from mapped low-address pages without read handlers; preserve address wrapping, side effects on other pages and existing 513-cycle stall",
+    "Background four-pixel palette lookup tables with scanline palette-key checks and live CHR plane fetches",
+    "Scanline OAM membership masks invalidated by OAM writes, DMA, sprite-height changes and reset; retain ordered sprite composition and scalar NES_REFERENCE_PPU path; mid-frame OAM changes use scalar evaluation until next frame",
+    "Batch side-effect-free absolute self jumps within each existing CPU execute budget; preserve cycle overshoot, live mapping/handler guards and interrupt boundaries; NES_REFERENCE_IDLE disables optimization",
+    "Choose regular or guarded-idle scanline specialization once per frame using live CPU state; ordinary frames avoid per-slice idle checks and indirect CPU calls",
+    "Preserve WASM LTO inlining of PPU scanlines, APU frame mixing and NMI after the idle specialization adds callers; prevents per-scanline call overhead",
+    "Cache live nametable page within each background span; refresh on horizontal page crossing and after mapper latch callbacks; original lookup retained by NES_REFERENCE_PPU",
+    "Guarded whole-iteration batching for plain zero-page LDA/LDX/LDY plus BEQ/BNE back loops; preserve final partial iteration, flags, page-cross cycles, DMA and interrupt boundaries",
+    "Add Mapper 241: 32 KiB PRG bank register and fixed CHR, verified with synthetic banks and a user-provided ROM against FCEUX"
+  ]
+}

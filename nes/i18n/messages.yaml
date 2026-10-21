@@ -1,0 +1,215 @@
+namespace: app.pxa-nes
+default_locale: en-US
+messages:
+  ui.title:
+    source: "PXA NES"
+    context: NES ui title menu label
+    max_bytes: 112
+  ui.paused:
+    source: "Game paused"
+    context: NES ui paused menu label
+    max_bytes: 112
+  ui.saving:
+    source: "Saving progress..."
+    context: NES ui saving menu label
+    max_bytes: 112
+  ui.save.error:
+    source: "Save failed - retry"
+    context: NES ui save error menu label
+    max_bytes: 112
+  ui.resume:
+    source: "Resume game"
+    context: NES ui resume menu label
+    max_bytes: 112
+  ui.library:
+    source: "Choose game"
+    context: NES ui library menu label
+    max_bytes: 112
+  ui.sound.on:
+    source: "Sound: ON"
+    context: NES ui sound on menu label
+    max_bytes: 112
+  ui.sound.off:
+    source: "Sound: OFF"
+    context: NES ui sound off menu label
+    max_bytes: 112
+  ui.sound.starting:
+    source: "Sound: starting..."
+    context: NES ui sound starting menu label
+    max_bytes: 112
+  ui.sound.failed:
+    source: "Sound: retry"
+    context: NES ui sound failed menu label
+    max_bytes: 112
+  ui.keys.auto:
+    source: "Keys: auto-hidden"
+    context: NES ui keys auto menu label
+    max_bytes: 112
+  ui.keys.off:
+    source: "Keys: hidden"
+    context: NES ui keys off menu label
+    max_bytes: 112
+  ui.loading:
+    source: "Loading game..."
+    context: NES ui loading menu label
+    max_bytes: 112
+  ui.load.error:
+    source: "Cannot load game"
+    context: NES ui load error menu label
+    max_bytes: 112
+  ui.error.detail:
+    source: "Check ROM and storage"
+    context: NES ui error detail menu label
+    max_bytes: 112
+  ui.host.unsupported:
+    source: "Please update host firmware"
+    context: NES ui host unsupported menu label
+    max_bytes: 112
+  ui.error.retry:
+    source: "Return to library and retry"
+    context: NES ui error retry menu label
+    max_bytes: 112
+  ui.back.library:
+    source: "Back to library"
+    context: NES ui back library menu label
+    max_bytes: 112
+  ui.pack:
+    source: "PACK"
+    context: NES ui pack menu label
+    max_bytes: 112
+  ui.flash:
+    source: "FLASH"
+    context: NES ui flash menu label
+    max_bytes: 112
+  ui.sd:
+    source: "SD"
+    context: NES ui sd menu label
+    max_bytes: 112
+  ui.prev:
+    source: "Prev"
+    context: NES ui prev menu label
+    max_bytes: 112
+  ui.next:
+    source: "Next"
+    context: NES ui next menu label
+    max_bytes: 112
+  ui.refresh:
+    source: "Refresh"
+    context: NES ui refresh menu label
+    max_bytes: 112
+  ui.display:
+    source: "Frame interval: {frames}"
+    context: NES ui display menu label
+    max_bytes: 112
+    placeholders:
+      frames: u32
+  ui.keys.alpha:
+    source: "Keys: opacity {opacity}%"
+    context: NES ui keys alpha menu label
+    max_bytes: 112
+    placeholders:
+      opacity: u32
+  ui.scanning:
+    source: "Scanning..."
+    context: NES ui scanning menu label
+    max_bytes: 112
+  ui.no.roms:
+    source: "No games found"
+    context: NES ui no roms menu label
+    max_bytes: 112
+  ui.hint:
+    source: "Choose a game to start"
+    context: NES ui hint menu label
+    max_bytes: 112
+  ui.metal:
+    source: "Metal Max (Chinese)"
+    context: NES ui metal menu label
+    max_bytes: 112
+  ui.mario:
+    source: "Super Mario Bros."
+    context: NES ui mario menu label
+    max_bytes: 112
+  ui.demo:
+    source: "Display and input test"
+    context: NES ui demo menu label
+    max_bytes: 112
+  control.select:
+    source: "SEL"
+    context: Floating game control label
+    max_bytes: 112
+  control.start:
+    source: "START"
+    context: Floating game control label
+    max_bytes: 112
+  control.menu:
+    source: "MENU"
+    context: Floating game control label
+    max_bytes: 112
+  ui.bomberman:
+    source: "Bomberman"
+    context: Bundled game display name
+    max_bytes: 112
+  ui.contra:
+    source: "Contra"
+    context: Bundled game display name
+    max_bytes: 112
+  ui.ninja:
+    source: "Ninja Gaiden"
+    context: Bundled game display name
+    max_bytes: 112
+  ui.tmnt3:
+    source: "TMNT III"
+    context: Bundled game display name
+    max_bytes: 112
+  ui.toads:
+    source: "Battletoads"
+    context: Bundled game display name
+    max_bytes: 112
+  ui.xunqin:
+    source: "Xun Qin Ji"
+    context: Bundled game display name
+    max_bytes: 112
+  ui.states:
+    source: "Snapshots"
+    context: NES library and snapshot actions
+    max_bytes: 112
+  ui.state.error:
+    source: "Snapshot failed; retry"
+    context: NES library and snapshot actions
+    max_bytes: 112
+  ui.state.loaded:
+    source: "Snapshot loaded"
+    context: NES library and snapshot actions
+    max_bytes: 112
+  ui.no.states:
+    source: "No snapshots yet"
+    context: NES library and snapshot actions
+    max_bytes: 112
+  ui.new.state:
+    source: "Save new"
+    context: NES library and snapshot actions
+    max_bytes: 112
+  ui.back:
+    source: "Back"
+    context: NES library and snapshot actions
+    max_bytes: 112
+  ui.exit:
+    source: "Exit emulator"
+    context: NES library and snapshot actions
+    max_bytes: 112
+  ui.exit.back:
+    source: "Use system Back to exit"
+    context: NES library and snapshot actions
+    max_bytes: 112
+  ui.empty.help:
+    source: "Add .nes games, then refresh"
+    context: NES library and snapshot actions
+    max_bytes: 112
+  ui.flash.path:
+    source: "Storage: app private folder"
+    context: NES library and snapshot actions
+    max_bytes: 112
+  ui.sd.path:
+    source: "SD card folder:"
+    context: NES library and snapshot actions
+    max_bytes: 112

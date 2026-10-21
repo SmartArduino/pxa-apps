@@ -43,6 +43,11 @@ int main(void) {
     assert(store_client_profile_for_device(url, sizeof(url), "linux-x86_64", "x86_64", "wamr", 3));
     assert(strcmp(url, "linux-x86_64-pxa-0.4.0") == 0);
     assert(!store_client_profile_for_device(url, sizeof(url), "esp32-s31", "xtensa", "wamr", 3));
+    const char root[]="17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171";
+    assert(store_client_build_identity_url(url,sizeof(url),"esp32-s31-pxa-0.4.0","pxa-nes",root,""));
+    assert(strstr(url,"&lineage_root_key_id=17982acd08493944"));
+    assert(!store_client_build_identity_url(url,sizeof(url),"p","pxa-nes","short",""));
+    assert(!store_client_build_identity_url(url,100,"p","pxa-nes",root,""));
     assert(store_client_build_catalog_url(url, sizeof(url), "esp32-s3-pxa-0.3.0", "", 0, "", "", "", 6));
     assert(strstr(url, "page_size=6") != NULL);
     assert(!store_client_build_catalog_url(url, sizeof(url), "esp32-s3-pxa-0.3.0", "", 0, "", "", "", 0));

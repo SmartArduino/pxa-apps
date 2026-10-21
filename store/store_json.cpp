@@ -358,6 +358,8 @@ static void app_reset(store_app_t *app) {
     string_reset(app->changelog);
     string_reset(app->tags);
     string_reset(app->publisher_key_id);
+    string_reset(app->lineage_root_key_id);
+    string_reset(app->publisher_binding);
     string_reset(app->sha256);
     string_reset(app->download_ticket_url);
     string_reset(app->target_profile);
@@ -613,6 +615,11 @@ static int parse_app(store_json_t *json, store_app_t *app,
         } else if (text_equal(key, "publisher_key_id")) {
             if (!json_read_string(&it.json, app->publisher_key_id,
                                   sizeof(app->publisher_key_id))) return 0;
+        } else if (text_equal(key, "lineage_root_key_id")) {
+            if (!json_read_string(&it.json, app->lineage_root_key_id,
+                                  sizeof(app->lineage_root_key_id))) return 0;
+        } else if (text_equal(key, "publisher_binding")) {
+            if (!json_read_string(&it.json, app->publisher_binding,sizeof(app->publisher_binding))) return 0;
         } else if (text_equal(key, "sha256")) {
             if (!json_read_string(&it.json, app->sha256,
                                   sizeof(app->sha256))) return 0;

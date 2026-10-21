@@ -64,6 +64,8 @@ typedef struct {
     char changelog[STORE_MAX_CHANGELOG];
     char tags[STORE_MAX_TAGS];
     char publisher_key_id[STORE_MAX_KEY_ID];
+    char lineage_root_key_id[STORE_MAX_KEY_ID];
+    char publisher_binding[529];
     char sha256[STORE_MAX_DIGEST];
     char download_ticket_url[STORE_MAX_DOWNLOAD_TICKET];
     char target_profile[STORE_MAX_PROFILE];

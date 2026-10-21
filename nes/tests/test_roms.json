@@ -1,0 +1,10 @@
+{
+  "cpu_suite": "https://github.com/christopherpow/nes-test-roms/tree/master/instr_test-v5",
+  "cpu_cases": 16,
+  "cpu_downloads": "https://raw.githubusercontent.com/christopherpow/nes-test-roms/master/instr_test-v5/rom_singles/{name}.nes",
+  "demo": "make_demo.py produces original CC0 diagnostic ROM; mapper fixtures are derived from this ROM",
+  "commercial_roms_bundled": false,
+  "native_cases": 25,
+  "synthetic_cases": 9,
+  "reference_comparison": "CPU, RAM, video CRC vs original OAM and generic bus dispatch"
+}

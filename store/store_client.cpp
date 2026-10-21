@@ -233,6 +233,15 @@ int store_client_build_app_url(char *output, size_t capacity,
     return offset != 0;
 }
 
+int store_client_build_identity_url(char *output,size_t capacity,const char *profile,
+    const char *app_id,const char *root,const char *device_id) {
+    if(!root)return 0;
+    for(size_t i=0;i<64;++i)if(!((root[i]>='0' && root[i]<='9') || (root[i]>='a' && root[i]<='f')))return 0;
+    if(root[64] || !store_client_build_app_url(output,capacity,profile,app_id,device_id))return 0;
+    size_t offset=0;while(output[offset])++offset;
+    return append_text(output,capacity,&offset,"&lineage_root_key_id=") && append_text(output,capacity,&offset,root);
+}
+
 int store_client_build_download_url(char *output, size_t capacity,
                                     const char *ticket_path) {
     size_t offset = 0;

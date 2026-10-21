@@ -20,6 +20,7 @@ static void store_ui_command_failed(unsigned opcode, int status) {
 #include "pxa_window.h"
 
 #include "store_client.h"
+#include "store_binding.h"
 #include "search_image.h"
 #include "store_json.h"
 #include "store_model.h"
@@ -257,6 +258,10 @@ typedef struct {
     pxa_store_download_entry_t downloads[PXA_STORE_DOWNLOAD_MAX];
     char failed_apps[PXA_STORE_DOWNLOAD_MAX][STORE_MAX_APP_ID];
     char completed_app_id[STORE_MAX_APP_ID];
+    char completed_identity[130];
+    char expected_detail_identity[130];
+    struct { char identity[130],ticket[256],sha256[65];uint64_t size; } install_candidate;
+    uint8_t namespace_waiting;
     /* A query submitted while a catalog request is in flight is applied as
      * soon as that request completes. */
     char pending_search[STORE_MAX_QUERY];
@@ -381,15 +386,26 @@ static const store_app_t *detail_item(void) {
                            : store_catalog_at_const(&app.catalog, app.selected);
 }
 
-static const pxa_store_installed_app_t *installed_for(const char *app_id) {
-    for (uint8_t index = 0; index < app.installed_count; ++index)
-        if (text_equal(app.installed[index].app_id, app_id))
-            return &app.installed[index];
+static int item_identity(const store_app_t *item,char identity[130]) {
+    if(!item)return 0;
+    int n=snprintf(identity,130,"%s:%s",item->lineage_root_key_id,item->app_id);
+    return n>0 && n<130 && pxa_store_identity_valid(identity);
+}
+static const pxa_store_installed_app_t *installed_for(const store_app_t *item) {
+    char identity[130];if(!item_identity(item,identity))return NULL;
+    for(uint8_t index=0;index<app.installed_count;++index)
+        if(text_equal(app.installed[index].identity,identity))return &app.installed[index];
     return NULL;
+}
+static void toast_failure(pxa_i18n_message_id_t,int32_t);
+static void launch_item(const store_app_t *item) {
+    char identity[130];
+    if(!item_identity(item,identity) || !pxa_store_manage(PXA_STORE_LAUNCH_IDENTITY_REQUEST,STORE_REQUEST_LAUNCH,
+            identity,app.packet,sizeof(app.packet)))toast_failure(PXA_MSG_STATUS_FAILED,PXA_STATUS_BAD_STATE);
 }
 
 static int has_update(const store_app_t *item) {
-    const pxa_store_installed_app_t *installed = installed_for(item->app_id);
+    const pxa_store_installed_app_t *installed = installed_for(item);
     return installed != NULL &&
         (item->release_sequence != 0 && installed->sequence != 0
             ? item->release_sequence > installed->sequence
@@ -398,6 +414,8 @@ static int has_update(const store_app_t *item) {
 
 static int newer_than_installed(const store_app_t *item,
                                 const pxa_store_installed_app_t *installed) {
+    char identity[130];
+    if(!item_identity(item,identity) || !text_equal(identity,installed->identity))return 0;
     return item->release_sequence != 0 && installed->sequence != 0
         ? item->release_sequence > installed->sequence
         : !text_equal(item->version, installed->version);
@@ -1121,7 +1139,7 @@ static int create_card(pxa_ui_transaction_t *transaction, uint8_t index) {
     app.scratch[0] = '\0';
     offset = append_text(app.scratch, sizeof(app.scratch), 0, "v");
     offset = append_text(app.scratch, sizeof(app.scratch), offset, item->version);
-    if (installed_for(item->app_id) != NULL) {
+    if (installed_for(item) != NULL) {
         offset = append_text(app.scratch, sizeof(app.scratch), offset, " · ");
         (void)append_text(app.scratch, sizeof(app.scratch), offset,
                           message(has_update(item) ? PXA_MSG_STATUS_UPDATE_AVAILABLE :
@@ -1728,6 +1746,12 @@ static int render_library(void) {
         } else if (installed) {
             const pxa_store_installed_app_t *entry = &app.installed[index];
             name = entry->app_id;
+            for(uint8_t other=0;other<app.installed_count;++other) {
+                if(other!=index && text_equal(app.installed[other].app_id,entry->app_id)) {
+                    std::snprintf(progress,sizeof(progress),"%s · %.8s",entry->app_id,entry->identity);
+                    name=progress;break;
+                }
+            }
             detail = entry->version;
             action = message(PXA_MSG_ACTION_OPEN);
             if (entry->uninstallable &&
@@ -1739,7 +1763,7 @@ static int render_library(void) {
             }
             for (uint8_t candidate = 0; candidate < app.catalog.count && !secondary; ++candidate) {
                 const store_app_t *item = store_catalog_at_const(&app.catalog, candidate);
-                if (text_equal(item->app_id, entry->app_id) && has_update(item)) {
+                if (installed_for(item)==entry && has_update(item)) {
                     detail = message(PXA_MSG_STATUS_UPDATE_AVAILABLE);
                     secondary = message(PXA_MSG_ACTION_UPDATE);
                     break;
@@ -2345,7 +2369,7 @@ static int render_detail(void) {
     }
     }
     if (ok) {
-        const pxa_store_installed_app_t *current = installed_for(item->app_id);
+        const pxa_store_installed_app_t *current = installed_for(item);
         const char *label = message(current == NULL ? PXA_MSG_ACTION_INSTALL :
                                     has_update(item) ? PXA_MSG_ACTION_UPDATE :
                                                        PXA_MSG_ACTION_OPEN);
@@ -3145,8 +3169,9 @@ static int start_detail_fetch(void) {
         app.detail_state = STORE_FAILED;
         return 0;
     }
-    if (!store_client_build_app_url(app.url, sizeof(app.url), app.profile, item->app_id,
-                                    app.device_id))
+    if (!item_identity(item,app.expected_detail_identity) ||
+        !store_client_build_identity_url(app.url, sizeof(app.url), app.profile, item->app_id,
+                                    item->lineage_root_key_id,app.device_id))
         return 0;
     app.pending_request = STORE_REQUEST_DETAIL;
     if (!ensure_body_capacity()) return 0;
@@ -3160,9 +3185,11 @@ static int start_detail_fetch(void) {
 
 static int next_update_check(void) {
     while (app.update_index < app.installed_count) {
-        const char *app_id = app.installed[app.update_index].app_id;
-        if (store_client_build_app_url(app.url, sizeof(app.url), app.profile, app_id,
-                                       app.device_id) &&
+        const auto *installed=&app.installed[app.update_index];char root[65];
+        if(!pxa_store_identity_valid(installed->identity)){app.update_failed=1;++app.update_index;continue;}
+        memcpy(root,installed->identity,64);root[64]=0;
+        if (store_client_build_identity_url(app.url, sizeof(app.url), app.profile, installed->app_id,
+                                       root,app.device_id) &&
             ensure_body_capacity() &&
             store_client_fetch(&app.client, STORE_REQUEST_UPDATE_CHECK,
                                app.url, string_length(app.url),
@@ -3467,22 +3494,15 @@ static int fail_detail(uint8_t error) {
     return render();
 }
 
-static int32_t send_package_request(void) {
-    const store_app_t *item = detail_item();
-    if (!app.detail_ready) return PXA_STATUS_BAD_STATE;
-    if (item->size == 0 || item->sha256[0] == '\0' ||
-        !store_client_build_download_url(app.url, sizeof(app.url),
-                                         item->download_ticket_url))
-        return PXA_STATUS_PROTOCOL_ERROR;
-    const int32_t status = pxa_store_request_package_status(PXA_STORE_INSTALL_REQUEST,
-                           STORE_REQUEST_INSTALL,
-                           item->app_id,
-                           item->download_ticket_url, item->sha256,
-                           item->size, app.packet, sizeof(app.packet));
+static int32_t submit_install_candidate(void) {
+    const int32_t status = pxa_store_install_identity_status(STORE_REQUEST_INSTALL,
+                           app.install_candidate.identity,
+                           app.install_candidate.ticket, app.install_candidate.sha256,
+                           app.install_candidate.size, app.packet, sizeof(app.packet));
     if (status == PXA_STATUS_OK) {
         app.downloading = 1u;
         app.downloaded_bytes = 0u;
-        app.download_total = item->size;
+        app.download_total = app.install_candidate.size;
     }
     else {
         char text[96];
@@ -3491,6 +3511,27 @@ static int32_t send_package_request(void) {
         (void)pxa_log_write(3, text);
     }
     return status;
+}
+
+static int32_t send_package_request(void) {
+    const store_app_t *item = detail_item();
+    if (!app.detail_ready) return PXA_STATUS_BAD_STATE;
+    if (item->size == 0 || item->sha256[0] == '\0' ||
+        !store_client_build_download_url(app.url, sizeof(app.url),
+                                         item->download_ticket_url))
+        return PXA_STATUS_PROTOCOL_ERROR;
+    if(!item_identity(item,app.install_candidate.identity))return PXA_STATUS_PROTOCOL_ERROR;
+    copy_text(app.install_candidate.ticket,sizeof(app.install_candidate.ticket),item->download_ticket_url);
+    copy_text(app.install_candidate.sha256,sizeof(app.install_candidate.sha256),item->sha256);
+    app.install_candidate.size=item->size;
+    if(item->publisher_binding[0]) {
+        uint8_t binding[396];size_t bytes=store_binding_decode(item->publisher_binding,binding);
+        if(!bytes || !store_binding_matches(binding,bytes,app.install_candidate.identity))return PXA_STATUS_PROTOCOL_ERROR;
+        int32_t status=pxa_store_register_namespace_status(STORE_REQUEST_NAMESPACE,binding,bytes,app.packet,sizeof(app.packet));
+        if(status==PXA_STATUS_OK){app.namespace_waiting=1;app.busy=1;return status;}
+        return status;
+    }
+    return submit_install_candidate();
 }
 
 static int finish_detail_body(void) {
@@ -3505,6 +3546,9 @@ static int finish_detail_body(void) {
     if (detail_request_stale()) return resume_detail_navigation();
     if (!store_json_parse_app_detail(app.body, app.client.response_size,
                                      &app.detail, &app.gallery))
+        return fail_detail(STORE_ERROR_PROTOCOL);
+    char received_identity[130];
+    if(!item_identity(&app.detail,received_identity) || !text_equal(received_identity,app.expected_detail_identity))
         return fail_detail(STORE_ERROR_PROTOCOL);
     if (app.screenshot >= app.gallery.count) app.screenshot = 0;
     app.detail_ready = 1;
@@ -3961,7 +4005,7 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
     if (parsed.service == PXA_SERVICE_STORE_INSTALLER &&
-        parsed.opcode == PXA_STORE_UNINSTALL_REQUEST &&
+        (parsed.opcode == PXA_STORE_UNINSTALL_REQUEST || parsed.opcode == PXA_STORE_UNINSTALL_IDENTITY_REQUEST) &&
         parsed.token == STORE_REQUEST_UNINSTALL) {
         int32_t status;
         app.uninstall_feedback = pxa_store_uninstall_result(&parsed, &status) ?
@@ -3996,6 +4040,20 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
                                    STORE_REQUEST_DOWNLOADS, NULL,
                                    app.packet, sizeof(app.packet));
         }
+        return PXA_EVENT_HANDLED;
+    }
+    if(parsed.service==PXA_SERVICE_STORE_INSTALLER && parsed.opcode==PXA_STORE_REGISTER_NAMESPACE_REQUEST && parsed.token==STORE_REQUEST_NAMESPACE) {
+        if(!app.namespace_waiting)return PXA_EVENT_HANDLED;
+        app.namespace_waiting=0;app.busy=0;
+        int32_t status=parsed.payload_size==4?(int32_t)pxa_load_u32(parsed.payload):PXA_STATUS_PROTOCOL_ERROR;
+        // Products without configured issuer policy/clock retain offline author paths.
+        if(status==PXA_STATUS_OK || status==PXA_STATUS_UNAVAILABLE)status=submit_install_candidate();
+        if(status!=PXA_STATUS_OK){app.install_feedback=3;toast_failure(PXA_MSG_STATUS_INSTALL_FAILED,status);}
+        return render()?PXA_EVENT_HANDLED:PXA_STATUS_INTERNAL;
+    }
+    if(parsed.service==PXA_SERVICE_STORE_INSTALLER && parsed.opcode==PXA_STORE_LAUNCH_IDENTITY_REQUEST && parsed.token==STORE_REQUEST_LAUNCH) {
+        int32_t status=parsed.payload_size==4?(int32_t)pxa_load_u32(parsed.payload):PXA_STATUS_PROTOCOL_ERROR;
+        if(status!=PXA_STATUS_OK)toast_failure(PXA_MSG_STATUS_FAILED,status);
         return PXA_EVENT_HANDLED;
     }
     if (parsed.service == PXA_SERVICE_STORE_INSTALLER &&
@@ -4035,7 +4093,7 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     }
     if (parsed.service == PXA_SERVICE_STORE_INSTALLER &&
         (parsed.opcode == PXA_STORE_INSTALL_FILE_REQUEST ||
-         parsed.opcode == PXA_STORE_INSTALL_REQUEST) &&
+         parsed.opcode == PXA_STORE_INSTALL_REQUEST || parsed.opcode == PXA_STORE_INSTALL_IDENTITY_REQUEST) &&
         parsed.token == STORE_REQUEST_INSTALL) {
         app.downloading = 0u;
         if (parsed.opcode == PXA_STORE_INSTALL_FILE_REQUEST)
@@ -4375,8 +4433,15 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
     if (ui_event.node == NODE_SUCCESS_OPEN) {
-        (void)pxa_store_manage(PXA_STORE_LAUNCH_REQUEST, STORE_REQUEST_LAUNCH,
-                               app.completed_app_id, app.packet, sizeof(app.packet));
+        if(!app.completed_identity[0]) {
+            const pxa_store_installed_app_t *candidate=NULL;unsigned matches=0;
+            for(uint8_t i=0;i<app.installed_count;++i)if(text_equal(app.installed[i].app_id,app.completed_app_id)){candidate=&app.installed[i];++matches;}
+            if(matches==1)copy_text(app.completed_identity,sizeof(app.completed_identity),candidate->identity);
+        }
+        if(!pxa_store_identity_valid(app.completed_identity) ||
+           !pxa_store_manage(PXA_STORE_LAUNCH_IDENTITY_REQUEST,STORE_REQUEST_LAUNCH,
+                            app.completed_identity,app.packet,sizeof(app.packet)))
+            toast_failure(PXA_MSG_STATUS_FAILED,PXA_STATUS_BAD_STATE);
         return PXA_EVENT_HANDLED;
     }
     if ((app.screen == STORE_SCREEN_INSTALLED || app.screen == STORE_SCREEN_DOWNLOADS) &&
@@ -4393,9 +4458,9 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         }
         if (app.screen == STORE_SCREEN_INSTALLED && index < app.installed_count) {
             if (action == 3u) {
-                (void)pxa_store_manage(PXA_STORE_LAUNCH_REQUEST,
+                (void)pxa_store_manage(PXA_STORE_LAUNCH_IDENTITY_REQUEST,
                                        STORE_REQUEST_LAUNCH,
-                                       app.installed[index].app_id,
+                                       app.installed[index].identity,
                                        app.packet, sizeof(app.packet));
                 return PXA_EVENT_HANDLED;
             }
@@ -4403,8 +4468,7 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
                 int available = app.update_available[index];
                 for (uint8_t candidate = 0; candidate < app.catalog.count; ++candidate) {
                     const store_app_t *item = store_catalog_at_const(&app.catalog, candidate);
-                    if (text_equal(item->app_id, app.installed[index].app_id) &&
-                        has_update(item)) available = 1;
+                    if (installed_for(item)==&app.installed[index] && has_update(item)) available = 1;
                 }
                 if (!available) return PXA_EVENT_HANDLED;
                 app.screen = STORE_SCREEN_DETAIL;
@@ -4419,6 +4483,10 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
                 app.detail = (store_app_t){0};
                 copy_text(app.detail.app_id, sizeof(app.detail.app_id),
                           app.installed[index].app_id);
+                if(pxa_store_identity_valid(app.installed[index].identity)) {
+                    memcpy(app.detail.lineage_root_key_id,app.installed[index].identity,64);
+                    app.detail.lineage_root_key_id[64]=0;
+                }
                 (void)start_detail_fetch();
                 return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
             }
@@ -4426,14 +4494,15 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
                 !text_equal(app.installed[index].app_id, "pxa-store") &&
                 app.uninstall_feedback != 1u) {
                 app.uninstall_feedback = pxa_store_manage(
-                    PXA_STORE_UNINSTALL_REQUEST, STORE_REQUEST_UNINSTALL,
-                    app.installed[index].app_id, app.packet,
+                    PXA_STORE_UNINSTALL_IDENTITY_REQUEST, STORE_REQUEST_UNINSTALL,
+                    app.installed[index].identity, app.packet,
                     sizeof(app.packet)) ? 1u : 3u;
                 return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
             }
         } else if (app.screen == STORE_SCREEN_DOWNLOADS &&
                    index < app.download_count && action == 3u &&
                    app.install_feedback != 1u) {
+            app.completed_identity[0]=0;
             copy_text(app.completed_app_id, sizeof(app.completed_app_id),
                       app.downloads[index].app_id);
             app.install_feedback = pxa_store_install_file(STORE_REQUEST_INSTALL,
@@ -4461,12 +4530,13 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     if (ui_event.node == NODE_INSTALL_BUTTON) {
         if (app.install_feedback == 1) return PXA_EVENT_HANDLED;
         const store_app_t *item = detail_item();
-        if (installed_for(item->app_id) != NULL && !has_update(item)) {
-            (void)pxa_store_manage(PXA_STORE_LAUNCH_REQUEST, STORE_REQUEST_LAUNCH,
-                                   item->app_id, app.packet, sizeof(app.packet));
+        if (installed_for(item) != NULL && !has_update(item)) {
+            launch_item(item);
             return PXA_EVENT_HANDLED;
         }
         copy_text(app.completed_app_id, sizeof(app.completed_app_id), item->app_id);
+        app.completed_identity[0]=0;
+        (void)item_identity(item,app.completed_identity);
         if (!app.detail_ready || app.busy) {
             app.install_feedback = 3;
             toast_failure(PXA_MSG_STATUS_INSTALL_FAILED, PXA_STATUS_BUSY);
