@@ -1,9 +1,9 @@
 # recrof 引擎的 PXA Core 2 移植
 
 
-Quake SD 0.4.24 的当前配置见 [专用说明](../../quake-sd/README.md)：Core 2.1
+Quake 0.5.0 的当前配置见 [专用说明](../../quake/README.md)：Core 2.1
 主循环、原采样率 PCM、Host 显示转换与有界光照缓存。下文按日期保留的实验结果
-不代表当前生产配置；基础 `quake` 与其他游戏的默认值不因此改变。
+不代表当前生产配置。五个正式入口统一从 SD 读取游戏资源，不再提供包内资源版本。桌面[图标及来源](ICONS.md)随引擎包安装。
 
 四个上游仓库对应五个独立应用：`quake`、`quake2`、`duke3d`、`command-conquer` 和 `red-alert`。后两者共享 Vanilla-Conquer 源码。每个应用的 `upstream.json` 固定了移植使用的上游提交。引擎源码和授权文件保留在各自目录中。
 
@@ -13,17 +13,17 @@ Quake SD 0.4.24 的当前配置见 [专用说明](../../quake-sd/README.md)：Co
 
 ```sh
 local/pxa-apps/common/recrof/tools/setup.sh
-tools/app.sh build quake-sd --board doit-gamekit --source-root local/pxa-apps --target esp32s31 --output local/recrof-build/final
+tools/app.sh build quake --board doit-gamekit --source-root local/pxa-apps --target esp32s31 --output local/recrof-build/final
 ```
 
-把 `quake-sd` 替换成其他应用名即可。GameKit 是 ESP32-S31 / RISC-V32，须使用 `esp32s31`；ESP32-S3 使用 `esp32s3`，两种 AOT 不能混用。`--target wasm` 生成便携 WASM 包；逗号分隔目标可合并多架构 AOT。输出文件为 `pxa-<应用名>.pxa`，使用本工作区的开发发布者密钥签名。设备必须信任对应发布者。
+把 `quake` 替换成其他应用名即可。GameKit 是 ESP32-S31 / RISC-V32，须使用 `esp32s31`；ESP32-S3 使用 `esp32s3`，两种 AOT 不能混用。`--target wasm` 生成便携 WASM 包；逗号分隔目标可合并多架构 AOT。输出文件为 `pxa-<应用名>.pxa`，使用本工作区的开发发布者密钥签名。设备必须信任对应发布者。
 
-CMake 在链接后使用 Asyncify 将原引擎的阻塞主循环转换成可暂停的 PXA 事件回调。宿主只接收标准 PXA Core 2 导入；Asyncify 导入在构建时消除。SD 变体另外要求支持 FS 0.3 `app-media-root` 的固件；固定映射缓冲也要求宿主正确实现 pinned linear memory 的原地增长。
+Quake 和 Duke3D 默认使用 Core 2.1 主循环；其他游戏的回调构建使用 Asyncify。所有正式入口要求 FS 0.3 `app-media-root`，通过 Host 绑定固定资源目录；固定映射缓冲要求宿主正确实现 pinned linear memory 原地增长。
 
 ## 精确 PCM 音频候选
 
 `PXA_RECROF_NATIVE_PCM=ON` 与 `PXA_RECROF_MAIN_LOOP=ON` 配合使用，签名清单需声明
-Audio `[0, 10]` 和 Core 2.1 主循环执行模型。选项默认关闭，现有回调包继续使用旧路径。
+Audio `[0, 10]` 和 Core 2.1 主循环执行模型。Quake 和 Duke3D 正式包默认开启，其他游戏继续使用各自已验证的配置。
 首次收到引擎 PCM 时按实际采样率、声道数打开会话，C/C++ 主循环通过事件端口等待结果。
 Quake、Quake II、Duke3D 保留 11025Hz 双声道；C&C/RA 恢复上游的 22050Hz 双声道混音。
 游戏端只合并至最多20ms的数据包，不再重采样、混成单声道或忽略满队列错误。
@@ -48,15 +48,15 @@ python3 local/pxa-apps/common/recrof/tools/import_data.py command-conquer /path/
 python3 local/pxa-apps/common/recrof/tools/import_data.py red-alert /path/to/RedAlert-data
 ```
 
-导入后重新构建。只读资源放在签名的 `assets/game` 中，通过 Assets 2 分块读取，不占用应用私有 FS 的 8 MB 配额。设置和存档写入私有 `data` 目录。导入器统一小写文件名，并检查大小写冲突和符号链接。
+资源统一导入 `.game-data/<游戏>/files/`，与应用源码和签名包分离。导入资源无需重新编译引擎，使用下文的部署工具写入 Host 指定的媒体根。设置和存档写入应用私有 `data/`。导入器统一小写文件名，检查大小写冲突、符号链接和已有文件内容；不同内容不会被静默覆盖。构建时如果发现旧 `assets/game`，会报错，防止误打包大型资源。
 
-SD 变体只有代码，通过固定媒体根读取资源，不对缺失文件查询包内 Assets。
+正式包只携带引擎和少量元数据，通过固定媒体根读取资源，不对缺失文件查询包内 Assets。
 两页共享缓存合并小于512字节的只读 SD 请求，按打开的句柄隔离，关闭即失效；
-大块顺序读取直接走 READ_AT，私有文件不缓存。C&C/RA SD 的 DOS 虚拟路径统一
+大块顺序读取直接走 READ_AT，私有文件不缓存。C&C/RA 的 DOS 虚拟路径统一
 ASCII 小写，包括私有设置和存档的写入，避免为每个归档成员重复扫描目录。
-普通变体保留原有大小写解析。替换 SD 游戏资源后应重新打开游戏。
+替换 SD 游戏资源后应重新打开游戏。
 
-C&C SD 还复用最多两个空闲的只读 MIX 归档句柄，重开时恢复零游标并保留请求
+C&C 还复用最多两个空闲的只读 MIX 归档句柄，重开时恢复零游标并保留请求
 cookie。空闲500ms后由Clock关闭；私有命名空间变化会使旧的覆盖层判断失效，
 读取报错的句柄不复用。这样不必为每个归档成员重新执行打开/关闭协议。
 
@@ -82,7 +82,7 @@ Quake II 使用标准 `baseq2/pak0.pak`。C&C 可导入 DOS 试玩版的 DEMO.MI
 
 策略游戏：触摸映射鼠标左键，带右键标志的指针映射右键；右上角 OK 确认任务/简报，RMB 按钮在上一个游戏光标位置执行右键，便于触屏取消选择。策略游戏的原有阻塞键盘等待会主动让出执行权，以便接收后续 PXA 输入事件。当前没有联机功能。
 
-GameKit 手柄使用 PXA 的 controller 0。普通版与 SD 版共享以下映射：
+GameKit 手柄使用 PXA 的 controller 0。所有游戏使用以下映射：
 
 | 按键 | Quake / Quake II / Duke3D 游戏内 | 射击游戏菜单 | C&C / Red Alert |
 | --- | --- | --- | --- |
@@ -135,17 +135,17 @@ vendor提取参考算法，检查20万组跨度并运行ASan/UBSan。桌面热�
 设备FPS，尚未通过相同场景设备A/B前保持默认关闭。
 
 - 软件绘制、RGB565 双缓冲 guest-mapped Surface；以 320×240 为逻辑屏幕，按显示器尺寸缩放。
-- PXA Clock 驱动，独立的引擎 C 栈与 Asyncify 续体栈，后台暂停并释放按键。
-- 可选 `audio.playback` 权限，PCM 混音后输出 16 kHz 单声道；拒绝权限仍可游戏。Duke 已在真机开启音乐和音效并核对设置，持续输出与欠载情况仍需分别量化。
-- 标准 stdio/POSIX 调用桥接到私有 FS 与签名资源，虚拟 Flash 使用文件保存 NOR 数据。
+- 使用 PXA Clock 和独立引擎栈；Quake、Duke3D 使用原生主循环，其他正式配置使用 Asyncify，后台暂停并释放按键。
+- 可选 `audio.playback` 权限；Quake、Duke3D 提交原采样率 PCM，其他回调构建仍使用 16 kHz 单声道；拒绝权限仍可游戏。Duke 已在真机开启音乐和音效并核对设置，持续输出与欠载情况仍需分别量化。
+- 标准 stdio/POSIX 调用桥接到私有 FS 与只读 SD 媒体根，虚拟 Flash 使用文件保存 NOR 数据。
 - 不使用 ESP32 的 GPIO、SDMMC、DMA、FreeRTOS 或 Flash 直映射驱动。
-- 目前清单的线性内存上限：Quake 3 MiB、Quake II 12 MiB、Duke3D 4 MiB、C&C 10 MiB、RA 14 MiB；另需宿主、AOT 和显示内存。SD 变体另有独立上限：Quake 3.5MiB、Quake II 10.375MiB、Duke3D 3.5MiB、C&C 7MiB、RA 9.5625MiB；实际场景与设备装载资格见 `VALIDATION.md`。不能据此承诺在 8 MiB PSRAM 的设备上均可运行。大型资源包还需要足够的存储空间。
+- 当前正式清单的线性内存上限：Quake 3.5 MiB、Quake II 10.1875 MiB、Duke3D 3.5 MiB、C&C 7 MiB、RA 9.5625 MiB；另需 Host、AOT、显示和音频内存。实际装载资格需要真机验证，不能据此承诺在 8 MiB PSRAM 设备上均可运行。
 - WAMR 无 Wasm 异常处理，原引擎 setjmp/longjmp 错误恢复改为显示错误并等待重新打开应用。正常主循环不依赖 longjmp。
 - `duke3d-sd` 已在 16 MiB PSRAM 的 GameKit / ESP32-S31 上自动读取固定 SD 资源并进入屋顶关卡，完成短时 FPS 与内存测量；其他游戏、音频连续性及长期稳定性仍待真机验收，见 `VALIDATION.md`。
 
 ## 同步上游
 
-上游引擎、转换器和许可证的映射集中在 `upstreams.json`，PXA 平台实现单独维护。Duke SD 复用 Duke 引擎；C&C 与 RA 共用引擎并一起更新两个版本锁。无需复制第二份源码。
+上游引擎、转换器和许可证的映射集中在 `upstreams.json`，PXA 平台实现单独维护。正式入口只有一份；C&C 与 RA 共用引擎并一起更新两个版本锁。无需复制第二份源码。
 
 在工作区根目录执行：
 
@@ -166,7 +166,7 @@ python3 local/pxa-apps/common/recrof/tools/upstream.py apply /tmp/duke-update
 
 ## 测试工具
 
-`PXA_RECROF_MAIN_LOOP=ON` 选择实验性的 Core 2.1 事件端口路径。包须声明至少 `[2,1]`，且唯一的 `main` UI Component 须包含 `"execution_model":"main-loop"`；Host 必须支持该执行模式。引擎在现有运行线程保留调用栈，`port_yield` 等待普通事件并直接分发，不使用 Asyncify 进口或续栈缓冲。RPC 等待期间仍处理输入和生命周期；后台暂停游戏，停止或替换由 Host 终止整个调用。默认仍为回调路径。此开关本身不证明真机帧率或完整音频质量。
+`PXA_RECROF_MAIN_LOOP=ON` 选择实验性的 Core 2.1 事件端口路径。包须声明至少 `[2,1]`，且唯一的 `main` UI Component 须包含 `"execution_model":"main-loop"`；Host 必须支持该执行模式。引擎在现有运行线程保留调用栈，`port_yield` 等待普通事件并直接分发，不使用 Asyncify 进口或续栈缓冲。RPC 等待期间仍处理输入和生命周期；后台暂停游戏，停止或替换由 Host 终止整个调用。公共层默认回调路径；Quake 和 Duke3D 正式包选择主循环。此开关本身不证明真机帧率或完整音频质量。
 
 `tests/host.mjs` 是协议级 Node 22 测试宿主，执行真实引擎并读取真实资源；它不能代替正式 PXA 模拟器。原生主循环包可设置 `PXA_TEST_MAIN_LOOP=1`，在同一文件、输入和后台测试中使用事件端口。`tests/simulator.py` 启动正式签名包、捕获运行日志和截图，检查异常、空白画面与正常 HOME 退出。`tests/fixture` 验证暂停期间的 C 栈对象、C++ 字符串、虚拟文件和路径解析。资源导入单元测试：
 
@@ -183,10 +183,14 @@ Quake 的门和开关沿用原作自动触发机制，USE 按钮在 Quake 中没
 
 ## 固定 SD 资源与真机性能目标
 
-`quake-sd`、`quake2-sd`、`duke3d-sd`、`command-conquer-sd`、`red-alert-sd`
-自动使用 `/PXA/media/<AppKey>/`，无需选择目录。资源仍先按 `TEST_DATA.md`
-导入到对应原版应用的 `assets/game`；SD 变体的包只携带引擎。私有配置与存档使用
-系统提供的应用私有目录，随应用所在存储卷分配，也适用于仅有 SD 存储的设备。
+`quake`、`quake2`、`duke3d`、`command-conquer`、`red-alert` 是唯一正式入口，
+包 ID 为 `pxa-<游戏>`，桌面名称没有 `SD` 后缀。它们只读取 Host 的 `app-media-root`，
+不要求选择目录，也不会在 SD 不可用时退回 Flash 媒体目录。
+
+新包携带签名发布者资料，通常对应 `/PXA/media/lucinhu/pxa-<游戏>/`；
+同名发布者冲突时由 Host 注册表分配独立目录，部署工具查询真实绑定，不拼接昵称。
+所选卷由设备策略决定，支持不同分区和挂载名称。私有数据跟随系统指定的应用存储根，
+不假设设备有内部存储分区。`.game-data` 仅是开发电脑上的待导入资源。
 
 先查看导入计划；实际传输只指定设备，不填写目录：
 
@@ -199,13 +203,28 @@ PXADB_BAUD=2000000 python3 local/pxa-apps/common/recrof/tools/stage_sd.py quake 
 
 默认使用开发根公钥 `.dev-signing/publisher-public.der`，发布身份可用
 `--publisher-key` 指定根公钥 DER；有公钥轮换时应使用签名谱系的根公钥。
-AppKey 包含发布身份与应用 ID，两个应用或发布者不会自动共用资源目录。
+完整身份由发布者根密钥和应用 ID 组成；两个应用或发布者不会自动共用资源目录。
 传输使用 PXADB 的完整 SHA-256 校验，重复导入相同文件可直接验证；资源导入不会发布应用。
+
+迁移旧 `-sd` 包：先安装新引擎、停止应用，再运行以下命令。去掉 `--apply` 只检查计划。
+需要支持 `package-storage`、`package-move-data` 和 `FSMOVE` 的 Host。
+
+```sh
+PXADB_BAUD=2000000 python3 local/pxa-apps/common/recrof/tools/migrate_sd.py quake \
+  --port /dev/ttyACM0 --expected-serial 1c:29:04:d0:af:5e \
+  --backup /path/to/local-backup/quake --apply
+```
+
+迁移会校验设备与发布者，先备份并验证全部存档，再由运行时所有者移动私有 `data/`，
+逐文件迁移 SD 资源。已有目标存档或内容不同的资源会拒绝覆盖；应答丢失或完整记录写入后的中断，可使用同一个备份目录重试。迁移记录损坏时保留数据并报错。
+能力授权元数据不跨 ID 迁移；新 ID 首次启动会重新显示音频等权限提示，确认后才会继续游戏。新包启动并确认存档、资源正常后，再归档旧包代码；工具不自动卸载旧包。
+空间不足时可在备份旧包代码后归档旧包（保留数据），再安装新包；不要使用清除数据或卸载。
+同一所选媒体卷内使用重命名，不复制整个 PAK。跨文件系统移动明确失败，保留数据供恢复。
 
 本轮最低性能目标调整为 **真实设备、实际关卡至少 15fps**，保留原画质、音乐和音效。
 分别记录稳定窗口的中位数、平均值、最低值和异常，加载或菜单不作为关卡 FPS。
 构建与协议宿主运行均不能代替真机验收；各游戏结果与未完成项见工作区 `docs/validation`。
-SD 变体优先协商 Clock 0.3 的 8000us，设备不支持或配置失败时回退合法的 16ms。
+游戏优先协商 Clock 0.3 的 8000us，设备不支持或配置失败时回退合法的 16ms。
 后台取消、回到前台恢复；周期表示调度请求，不能据此直接推断游戏帧率。
 
 ## GameRender 1.0 原生 span 试验

@@ -2,27 +2,16 @@
 """Plan or deploy imported resources to the identity's fixed SD media root.
 
 No remote-directory option: the target is derived from the public signing
-identity and the SD package's application ID, using the Host's AppKey contract.
+identity and the installed application ID. The Host resolves the selected volume
+and its authoritative directory binding; no mount name is guessed.
 """
 import argparse
 import hashlib
 import json
 import re
-import struct
 import sys
-import time
 from pathlib import Path
 from import_data import APPS, collect
-
-
-def app_key(publisher_id, app_id):
-    if not re.fullmatch(r'[0-9a-f]{64}', publisher_id):
-        raise ValueError('Expected a lowercase SHA-256 publisher key ID')
-    if not re.fullmatch(r'[a-z0-9][a-z0-9._-]{0,63}', app_id):
-        raise ValueError('Invalid application ID')
-    name = app_id.encode('ascii')
-    return hashlib.sha256(b'PXA-APPKEY-1' + bytes.fromhex(publisher_id) +
-                          struct.pack('<H', len(name)) + name).hexdigest()
 
 
 def digest(file):
@@ -31,12 +20,15 @@ def digest(file):
 
 
 def plan(apps_root, game, publisher_id):
-    manifest = json.loads((apps_root / (game + '-sd') / 'package.json').read_text())
+    manifest = json.loads((apps_root / game / 'package.json').read_text())
     identity = manifest['id']
-    key = app_key(publisher_id, identity)
-    files = collect(game, apps_root / game / 'assets/game')
-    return {'app_id': identity, 'publisher_key_id': publisher_id, 'app_key': key,
-            'sd_root': 'sdcard/PXA/media/' + key,
+    if not re.fullmatch(r'[0-9a-f]{64}', publisher_id):
+        raise ValueError('Expected a lowercase SHA-256 publisher key ID')
+    if identity != 'pxa-' + game:
+        raise ValueError('Canonical game manifest has an unexpected application ID')
+    files = collect(game, apps_root / '.game-data' / game / 'files')
+    return {'app_id': identity, 'publisher_key_id': publisher_id,
+            'media_root': 'host-resolved at deployment',
             'files': [{'path': name, 'source': str(source),
                        'bytes': source.stat().st_size, 'sha256': digest(source)}
                       for name, source in sorted(files.items())]}
@@ -56,37 +48,55 @@ def ensure_parent(fs, remote):
         parent = parent + '/' + segment if parent else segment
 
 
+def package_paths(client, identity):
+    paths = {}
+    for frame in client.request('PACKAGE paths ' + identity):
+        if frame.kind == 'PATH':
+            kind, path = frame.payload.split('\t', 1)
+            if path.startswith('/') or any(p in ('', '.', '..') for p in path.split('/')):
+                raise ValueError('Host returned an invalid storage path')
+            paths[kind] = path
+    if 'private' not in paths:
+        raise ValueError('Firmware does not support authoritative package storage paths')
+    return paths
+
+
+def installed_identity(client, layout):
+    expected = layout['publisher_key_id'] + ':' + layout['app_id']
+    found = False
+    for frame in client.request('PACKAGES'):
+        if frame.kind != 'PKG':
+            continue
+        identity, _name, _version, flags = frame.payload.split('\t', 3)
+        if identity.endswith(':' + layout['app_id']):
+            if identity != expected:
+                raise ValueError('Installed application has a different publisher')
+            found = 'installed=1' in flags
+        if 'active=1' in flags:
+            raise ValueError('Stop the active application before transferring resources')
+    if not found:
+        raise ValueError('Install the canonical signed engine package first')
+    return expected
+
+
 def deploy(pxadb, port, serial, layout):
     with pxadb.open_client(port, 15) as client:
         properties = pxadb.info_properties(client.device_info)
         if properties.get('serial') != serial:
             raise ValueError('Device serial differs from --expected-serial')
-        active = False
-        for frame in client.request('PACKAGES'):
-            if frame.kind != 'PKG':
-                continue
-            identity = frame.payload.split('\t', 1)[0]
-            publisher, separator, app = identity.partition(':')
-            if separator and app == layout['app_id']:
-                if publisher != layout['publisher_key_id']:
-                    raise ValueError('Installed application has a different publisher')
-                active = 'active=1' in frame.payload
-        try:
-            if active:
-                client.request('PACKAGE stop ' + layout['app_id'])
-                time.sleep(2)
-            fs = pxadb.NormalFsClient(client)
-            for row in layout['files']:
-                source = Path(row['source'])
-                if digest(source) != row['sha256']:
-                    raise ValueError('Resource changed after planning: ' + str(source))
-                remote = layout['sd_root'] + '/' + row['path']
-                ensure_parent(fs, remote)
-                fs.put(source, remote)
-        finally:
-            if active:
-                client.request('INPUT SWIPE 160 205 160 30 300 12')
-                client.request('PACKAGE run ' + layout['app_id'])
+        identity = installed_identity(client, layout)
+        paths = package_paths(client, identity)
+        if 'media' not in paths:
+            raise ValueError('SD storage is unavailable; refusing an internal-folder fallback')
+        layout['media_root'] = paths['media']
+        fs = pxadb.NormalFsClient(client)
+        for row in layout['files']:
+            source = Path(row['source'])
+            if digest(source) != row['sha256']:
+                raise ValueError('Resource changed after planning: ' + str(source))
+            remote = paths['media'] + '/' + row['path']
+            ensure_parent(fs, remote)
+            fs.put(source, remote)
 
 
 def main():

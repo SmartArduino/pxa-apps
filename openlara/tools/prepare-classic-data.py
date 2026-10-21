@@ -5,11 +5,11 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import struct
 import sys
 import time
 from classic_data import prepare
 from game_data import ROOT
+from media_storage import DEFAULT_MEDIA, external_destination, deploy_media
 
 
 def inbox_data(directory):
@@ -33,12 +33,12 @@ def main():
     parser.add_argument('--demo',action='store_true',help='explicitly replace the catalog with the public PC demo')
     parser.add_argument('--allow-partial',action='store_true',help='development only: import an incomplete original data set')
     parser.add_argument('--upstream',type=Path,help='reuse pinned title/AD4 assets from an OpenLara checkout')
-    parser.add_argument('--output',type=Path,default=ROOT/'assets-simulator/game')
-    parser.add_argument('--port',help='explicit PXADB port; omit to prepare simulator media only')
+    parser.add_argument('--output',type=Path,default=DEFAULT_MEDIA)
+    parser.add_argument('--port',help='explicit PXADB port; omit to prepare external media only')
     parser.add_argument('--baud',default='2000000')
     parser.add_argument('--serial',help='required expected device identity when copying to SD')
     parser.add_argument('--wait-seconds',type=float,default=120,help='wait for another task to release the serial device')
-    parser.add_argument('--publisher-id',default='17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171')
+    parser.add_argument('--publisher-id',help='publisher root key ID; default derives from the local public signing key')
     parser.add_argument('--pxadb-dir',type=Path,default=ROOT.parents[2]/'tools/pxadb')
     args=parser.parse_args()
     if args.port and not args.serial:
@@ -53,19 +53,14 @@ def main():
                 audio_inbox=ROOT/'game-data/audio'
                 if not args.audio and any(p.is_file() and p.suffix.lower() in ('.mp3','.ogg','.wav','.flac') for p in audio_inbox.glob('*')):
                     args.audio=audio_inbox
-        publisher=bytes.fromhex(args.publisher_id)
-        if len(publisher)!=32:
-            raise ValueError('--publisher-id must encode 32 bytes')
+        args.output=external_destination(args.output)
         manifest=prepare(args.output,args.game_data,args.audio,args.audio_numbering,
                          args.upstream,args.demo,args.allow_partial)
     except Exception as error:
         parser.exit(1,str(error)+'\n')
-    app=b'pxa-openlara'
-    key=hashlib.sha256(b'PXA-APPKEY-1'+publisher+struct.pack('<H',len(app))+app).hexdigest()
-    destination='/sdcard/PXA/media/'+key
     print(f"Prepared {manifest['campaign_levels']}/15 campaign levels; complete_data={manifest['campaign_data_complete']}",flush=True)
-    print('App media directory: '+destination,flush=True)
-    if args.output.resolve()==(ROOT/'assets-simulator/game').resolve():
+    print('Media directory: resolved by the installed app and Host storage policy',flush=True)
+    if args.output.resolve()==DEFAULT_MEDIA.resolve():
         (args.output.parent/'imported-game-data.json').write_text(json.dumps(manifest,indent=2)+'\n')
     if not args.port:
         return
@@ -76,29 +71,14 @@ def main():
     deadline=time.monotonic()+max(0,args.wait_seconds)
     while True:
         try:
-            client=pxadb.PxaDbClient(args.port,30)
+            destination=deploy_media(pxadb,args.port,args.serial,args.output,manifest,args.publisher_id)
+            print('Installed media: '+destination,flush=True)
             break
         except OSError as error:
             if 'exclusively lock' not in str(error) or time.monotonic()>=deadline:
                 raise
             print('Waiting for another task to release '+args.port,flush=True)
             time.sleep(1)
-    with client:
-        hello=client.hello()
-        if pxadb.info_properties(hello).get('serial')!=args.serial:
-            raise RuntimeError('Unexpected device; no writes performed')
-        files=pxadb.NormalFsClient(client)
-        for folder in ('/sdcard/PXA','/sdcard/PXA/media',destination):
-            try:
-                files.list(folder)
-            except pxadb.PxaDbRejectedError:
-                files.mkdir(folder)
-        # The catalog is copied after all media. Existing private saves and
-        # every other app's media remain outside this identity-scoped directory.
-        names=[f['file'] for f in manifest['files'] if f['file']!='levels.idx']
-        names+=['data-manifest.json','levels.idx']
-        for name in names:
-            files.put(args.output/name,destination+'/'+name)
 
 
 if __name__=='__main__':

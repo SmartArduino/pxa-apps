@@ -1,6 +1,6 @@
 # OpenLara fixed/GBA 0.2.7 历史说明
 
-0.3.x 默认主引擎见 README.md；以下为旧 alpha 路线。使用本文构建命令时需设置 `PXA_APP_DEFINES=OL_CLASSIC=0`。
+当前默认主引擎见 README.md；以下为旧 alpha 路线及历史测量。使用本文构建命令时需设置 `PXA_APP_DEFINES=OL_CLASSIC=0`。当前两条路线均只读取 Host 媒体根，不再打包游戏媒体或回退到包内文件。fixed 的准备输出为 `local/pxa-apps/.game-data/openlara-fixed/files/`；首次上传前需先安装引擎包。
 
 移植 [XProger/OpenLara](https://github.com/XProger/OpenLara) 的 fixed 定点引擎，目标为 PXA Core 2.0、DOIT GameKit / ESP32-S31 / 320×240。保留原来的 Lara、敌人、动画、碰撞、关卡、背包、门洞裁剪和软件光栅化。上游固定在 `3b268ca4bf986c380f44a26ffd9218bf6d376249`，引擎为 BSD-2-Clause，见 `vendor/LICENSE`、`vendor/UPSTREAM.md`。
 
@@ -23,7 +23,7 @@ python3 tools/pxadb/pxadb.py package install local/openlara-build/pxa-openlara \
 python3 tools/pxadb/pxadb.py package run pxa-openlara --port /dev/ttyACM0 --baud 2000000
 ```
 
-资源是 `title.scr`、`tracks.ad4`、`title.pkd`、`gym.pkd`、`level1.pkd`、`level2.pkd`，脚本逐个校验固定 SHA-256。游戏资源独立于引擎许可证，不纳入源码 Git，也不嵌入硬件包。资源位于该签名身份的固定 SD AppKey 目录。本工作区开发签名对应 `/sdcard/PXA/media/78670e6ca3833ee694be1ba9443f4d04b9e6ffc7617c7fbd7fe4a5363419135c/`；使用自己的签名时传入 `--publisher-id`。
+资源是 `title.scr`、`tracks.ad4`、`title.pkd`、`gym.pkd`、`level1.pkd`、`level2.pkd`，脚本逐个校验固定 SHA-256。游戏资源独立于引擎许可证，不纳入源码 Git，也不嵌入安装包。当前目录由 `PACKAGE paths` 查询，默认发布者对应 SD 上的 `/PXA/media/lucinhu/pxa-openlara/`；使用自己的签名时传入 `--publisher-id`。固定引擎与主引擎共用应用身份，切换时应部署对应资源。
 
 应用使用 FS 0.3 `app-media-root`、`scoped-roots`。每回调最多读 8192 字节，显示加载状态并返回 Host。首次启动请在系统权限窗口允许媒体音频；拒绝后游戏仍可运行。音乐银行约 3 MB，固定驻留线性内存，避免播放时 SD 阻塞；线性内存当前约 6.38 MiB，上限 8 MiB。
 
@@ -71,10 +71,10 @@ GameKit 板载手柄由既有固件发送同样的 12 位 controller 状态。�
 ```sh
 # 实际 WASM、异步文件、短写、失败替换、跨实例存档、设置、音频背压/拒绝、全部关卡。
 node local/pxa-apps/openlara/tools/integration.mjs \
-  main.wasm local/pxa-apps/openlara/assets-simulator integration.json
+  main.wasm local/pxa-apps/.game-data/openlara-fixed integration.json
 # baseline / optimized 使用相同固定时间和输入逐帧比较 RGB565。
 node local/pxa-apps/openlara/tools/compare-render.mjs \
-  reference.wasm optimized.wasm local/pxa-apps/openlara/assets-simulator comparison.json
+  reference.wasm optimized.wasm local/pxa-apps/.game-data/openlara-fixed comparison.json
 python3 local/pxa-apps/openlara/tools/measure.py \
   --port /dev/ttyACM0 --serial 1c:29:04:d0:af:5e \
   --package local/openlara-build/pxa-openlara.pxa \
@@ -83,7 +83,7 @@ python3 local/pxa-apps/openlara/tools/measure.py \
 
 完整设备回归使用 `tools/validate-device.py --port PORT --serial SERIAL --baseline BASELINE_PACKAGE_DIR --candidate CANDIDATE_PACKAGE_DIR --output EVIDENCE_DIR --allow-audio`。它等待其他任务释放设备，持续持有串口，分别冷启动两组包，采样 20/60 次，验证保存后移动再恢复、升级保留存档、重启保留设置、三张关卡和后台恢复。比较包需要按 baseline → candidate 的顺序使用更高且递增的 release_sequence；重复执行时重新构建递增版本，保留应用和发布者身份。
 
-测量脚本核对串号、从标题选择关卡，用 PERF FPS 采样实际 LCD 完成帧率。截图和内存查询在计时窗口之外，INFO 不用于轮询性能。首次权限窗口只在显式 `--allow-audio` 时自动点击允许。Node 固定时间结果不代表设备 FPS。`assets-simulator/game` 在 simulator 构建时独立打入资源包。桌面 Host 现提供只读应用媒体根 `local/simulator/PROFILE/media/<AppKey>/`，没有对应文件时使用包内测试资源。模拟器结果不替代硬件验证。
+测量脚本核对串号、从标题选择关卡，用 PERF FPS 采样实际 LCD 完成帧率。截图和内存查询在计时窗口之外，INFO 不用于轮询性能。首次权限窗口只在显式 `--allow-audio` 时自动点击允许。Node 固定时间结果不代表设备 FPS。模拟器也须将准备好的文件放到其 Host 绑定的只读媒体根，不再打包媒体；缺失时显示加载错误。模拟器结果不替代硬件验证。
 
 未进行全关卡通关、其他板型验收、物理按键扫描延迟或扬声器声学录音。软件验证覆盖设备音频后端消费计数和非零混音样本，不宣称测量了扬声器音压。上游震动钩子无 PXA 硬件实现。
 

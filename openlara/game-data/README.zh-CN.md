@@ -19,10 +19,12 @@ python3 local/pxa-apps/openlara/tools/prepare-data.py --upstream local/upstream-
 
 真机也可以直接复制 `DATA` 文件夹到 OpenLara 的 SD 媒体目录，选择暂停菜单的 **Import game data**，按 A 扫描。识别大小写文件名，扫描后回到标题，New Game 从已安装的首个主线关开始。
 
-本项目默认开发签名对应的实际目录是：
+默认发布者在 SD 卡中的固定目录如下；电脑部署脚本通过 Host 查询实际挂载点，不需要选择设备目录：
 
 ```text
-/sdcard/PXA/media/78670e6ca3833ee694be1ba9443f4d04b9e6ffc7617c7fbd7fe4a5363419135c/DATA/
+/PXA/media/lucinhu/pxa-openlara/DATA/
 ```
 
 这里只放 `.PHD`；已有 `tracks.ad4`、`title.scr`、`title.pal` 等基础媒体保留在上一级。原始 `GAME.GOG` 需先用上面的电脑端脚本提取，不在真机上解压。外部 FMV 视频尚未接入。
+
+电脑端准备结果统一保存在 `.game-data/openlara/files/`，不再放进 `assets-simulator`，模拟器与设备均走外部媒体根。

@@ -2,13 +2,13 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import assert from 'node:assert/strict';
-import {runGuest} from './guest-host.mjs';
+import {runGuest,mediaDirectory} from './guest-host.mjs';
 const [wasm,assets,out]=process.argv.slice(2),report={};
 if(!out)throw Error('usage: node classic-catalog.mjs MAIN.wasm ASSETS REPORT.json');
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'openlara-data-inbox-'));
 function wait(a,text,start) {for(let i=0;i<2000 && !a.logs.slice(start).some(s=>s.includes(text));++i)a.tick();assert(a.logs.slice(start).some(s=>s.includes(text)),text);}
 try {
- for(const name of ['title.phd','level2.phd','title.scr','title.pal','tracks.ad4','levels.idx'])fs.copyFileSync(path.join(assets,'game',name),path.join(dir,name));
+ for(const name of ['title.phd','level2.phd','title.scr','title.pal','tracks.ad4','levels.idx'])fs.copyFileSync(path.join(mediaDirectory(assets),name),path.join(dir,name));
  const a=await runGuest(wasm,assets,new Map(),{mediaRoot:dir});a.menu(4);assert(a.mediaOpens.includes('level2.phd'));
  fs.mkdirSync(path.join(dir,'DATA'));
  for(const name of ['title.phd','level2.phd'])fs.copyFileSync(path.join(dir,name),path.join(dir,'DATA',name.toUpperCase()));

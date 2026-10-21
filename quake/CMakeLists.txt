@@ -1,5 +1,20 @@
 cmake_minimum_required(VERSION 3.20)
 project(pxa_quake C CXX)
+# The signed package declares Core 2.1 main-loop execution and native PCM.
+if(NOT DEFINED PXA_RECROF_MAIN_LOOP)
+    set(PXA_RECROF_MAIN_LOOP ON)
+endif()
+if(NOT DEFINED PXA_RECROF_NATIVE_PCM)
+    set(PXA_RECROF_NATIVE_PCM ON)
+endif()
+option(PXA_RECROF_HOST_BLIT "Resolve indexed output in GameRender" ON)
+option(PXA_RECROF_BULK_READ_COPY "Use bulk copies for large resource reads" ON)
+option(PXA_RECROF_PACKED_GAME_CODEC "Use layout-checked command encoding" ON)
+option(PXA_QUAKE_LIT_CACHE "Reuse exact light interpolation coefficients" ON)
+option(PXA_QUAKE_LIGHTMAP_CACHE "Cache unchanged packed surface light grids" ON)
+set(PXA_QUAKE_FRAME_PROFILE ON)
+set(PXA_RECROF_ENGINE_STACK_BYTES 65536)
+set(PXA_RECROF_CALLBACK_STACK_BYTES 16384)
 option(PXA_QUAKE_LIT_CACHE "Enable experimental exact-pixel lighting cache" OFF)
 option(PXA_QUAKE_LIGHTMAP_CACHE "Cache unchanged packed surface light grids" OFF)
 option(PXA_QUAKE_FRAME_SPANS "Experimental cross-material GameRender batches using the acquired back buffer" OFF)
@@ -63,3 +78,7 @@ if(PXA_QUAKE_FRAME_SPANS)
     target_compile_definitions(pxa_main PRIVATE PXA_GAME_RENDER_FRAME_SPANS=1
         PXA_FRAME_BULK_COPY=$<BOOL:${PXA_QUAKE_FRAME_BULK_COPY}>)
 endif()
+
+target_compile_definitions(pxa_main PRIVATE PORT_EXTERNAL_GAME_DATA=1 PORT_COOPERATE_BUDGET_US=32000
+    PORT_TICK_US=8000 PORT_CONTINUATION_BYTES=16384
+    PORT_VFLASH_CACHE_PAGES=128 PORT_VFLASH_COOPERATE=1 PORT_VFLASH_PAGED_NVM=1)

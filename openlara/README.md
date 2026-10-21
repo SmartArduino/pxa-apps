@@ -1,6 +1,6 @@
 # OpenLara for PXA
 
-0.5.2 默认使用 [XProger/OpenLara](https://github.com/XProger/OpenLara) 的完整 TR1 主引擎 `src/`，上游固定为 `3b268ca4bf986c380f44a26ffd9218bf6d376249`。目标为 PXA Core 2、DOIT GameKit / ESP32-S31、320×240 RGB565 软件渲染。保留原版敌人、机关、碰撞、动画、翻转房间、物品、背包和关卡流程；支持 TR1 的 15 个主线关卡、Lara's Home、标题和 4 个引擎过场关卡。引擎及修改遵循 BSD-2-Clause，见 `vendor/LICENSE`、`vendor/classic/UPSTREAM.md`。
+0.6.0 默认使用 [XProger/OpenLara](https://github.com/XProger/OpenLara) 的完整 TR1 主引擎 `src/`，上游固定为 `3b268ca4bf986c380f44a26ffd9218bf6d376249`。目标为 PXA Core 2、DOIT GameKit / ESP32-S31、320×240 RGB565 软件渲染。保留原版敌人、机关、碰撞、动画、翻转房间、物品、背包和关卡流程；支持 TR1 的 15 个主线关卡、Lara's Home、标题和 4 个引擎过场关卡。引擎及修改遵循 BSD-2-Clause，见 `vendor/LICENSE`、`vendor/classic/UPSTREAM.md`。
 
 **完整引擎不包含完整商业游戏资源，也不代表全关卡已经验收。** 默认资源只有公开 PC 演示版的标题和 City of Vilcabamba（1/15 主线），缺失关卡在菜单中标记 missing。完整原版数据尚未提供，15 关通关、引擎过场和大型关卡内存仍待验证。外部 FMV 视频暂未接入；SD 音乐支持独立导入。旧 fixed/GBA alpha 作为开发备用保留，说明见 `README-fixed.md`。
 
@@ -21,24 +21,29 @@ python3 local/pxa-apps/openlara/tools/prepare-data.py --game-data /path/to/GAME.
 
 可选 `--audio` 接收编号 MP3/OGG/WAV/FLAC，调用 ffmpeg 转成 10512 Hz 有符号 PCM8 流式音乐银行。默认识别 PC/PSX 编号方式，可用 `--audio-numbering pc|psx` 指定。不传音乐目录时保留上游固定的 AD4 音乐银行，**不声称包含完整原版配乐**。输出目录中的 `data-manifest.json` 记录已安装关卡、缺失清单、来源和 SHA-256。
 
-资源独立于引擎许可证，不提交游戏二进制到 Git。准备结果位于 `assets-simulator/game/`。复制到真机时追加实际端口和串号：
+资源独立于引擎许可证，不提交游戏二进制到 Git。准备结果位于外部暂存目录 `.game-data/openlara/files/`，所有构建目标只打包引擎、图标和许可文本。复制到真机时追加实际端口和串号：
 
 ```sh
 python3 local/pxa-apps/openlara/tools/prepare-data.py \
   --port /dev/ttyACM0 --baud 2000000 --serial 1c:29:04:d0:af:5e
 ```
 
-脚本校验设备身份，等待独占串口释放，最后上传关卡索引；私有存档及其他应用资源不受影响。默认开发签名的 SD AppKey 为 `/sdcard/PXA/media/78670e6ca3833ee694be1ba9443f4d04b9e6ffc7617c7fbd7fe4a5363419135c/`。更换签名身份需传 `--publisher-id`。每关原始文件上限 6 MiB。也可直接复制原版 `DATA/` 到这个 SD 目录，再在暂停菜单选择 **Import game data**、按 A 扫描；支持 DATA/data 与大小写 PHD 文件名。GAME.GOG 必须先在电脑提取。扫描检查文件头和大小，完整二进制验证在实际载入时执行。
+脚本校验设备身份，等待独占串口释放，最后上传关卡索引；私有存档及其他应用资源不受影响。媒体目录由已安装包的签名身份和 Host 的卷选择策略绑定，当前默认发布者的 SD 路径为 `/PXA/media/lucinhu/pxa-openlara/`。脚本通过 `PACKAGE paths` 查询实际挂载点，支持不同存储卷；无可用媒体卷时停止，不在 Flash 中伪造 SD 目录。默认从本地公钥派生发布者 ID，换用发布者根密钥时可显式传 `--publisher-id`。对旧 AppKey 目录中 SHA-256 完全一致的资源，采用同卷重命名复用；不同内容保留在旧目录，目录索引最后传输。每关原始文件上限 6 MiB。也可直接复制原版 `DATA/` 到这个 SD 目录，再在暂停菜单选择 **Import game data**、按 A 扫描；支持 DATA/data 与大小写 PHD 文件名。GAME.GOG 必须先在电脑提取。扫描检查文件头和大小，完整二进制验证在实际载入时执行。
+
+首次部署先安装下面的引擎包，再执行带 `--port` 的资源准备命令；Host 需要已安装包的签名身份来确定媒体目录。
 
 ## 模拟器和真机
 
 ```sh
+# 模拟器也需要将 .game-data/openlara/files 中的媒体放到其 Host 绑定的媒体根。
 ./tools/dev.sh sim --board doit-gamekit openlara
 ./tools/app.sh build openlara --board doit-gamekit --target esp32s31 \
   --output local/openlara-full-build --aot-only
 deps/pxa-system/bin/pxa publish local/openlara-full-build/pxa-openlara.pxa --check-only
 python3 tools/pxadb/pxadb.py package install local/openlara-full-build/pxa-openlara \
   --port /dev/ttyACM0 --baud 2000000 --yes
+python3 local/pxa-apps/openlara/tools/prepare-data.py \
+  --port /dev/ttyACM0 --baud 2000000 --serial 1c:29:04:d0:af:5e
 python3 tools/pxadb/pxadb.py package run pxa-openlara --port /dev/ttyACM0 --baud 2000000
 ```
 
@@ -75,13 +80,13 @@ ESP32-S3 需要用 `--target esp32s3` 单独生成 AOT，尚未验收。0.5.2 �
 ```sh
 python3 local/pxa-apps/openlara/tools/classic-data-tests.py --help
 node local/pxa-apps/openlara/tools/classic-integration.mjs main.wasm \
-  local/pxa-apps/openlara/assets-simulator integration.json
+  local/pxa-apps/.game-data/openlara integration.json
 node local/pxa-apps/openlara/tools/controller.mjs main.wasm \
-  local/pxa-apps/openlara/assets-simulator controller.json
+  local/pxa-apps/.game-data/openlara controller.json
 node local/pxa-apps/openlara/tools/classic-controls-settings.mjs main.wasm \
-  local/pxa-apps/openlara/assets-simulator controls-settings.json
+  local/pxa-apps/.game-data/openlara controls-settings.json
 node local/pxa-apps/openlara/tools/classic-compare.mjs reference.wasm optimized.wasm \
-  local/pxa-apps/openlara/assets-simulator comparison.json
+  local/pxa-apps/.game-data/openlara comparison.json
 python3 local/pxa-apps/openlara/tools/validate-classic-simulator.py \
   --socket /tmp/pxa-simulator-1000/doit-gamekit.control.sock \
   --log /path/to/simulator.log --output /path/to/simulator-evidence --swap
@@ -101,11 +106,11 @@ python3 local/pxa-apps/openlara/tools/measure.py \
 
 ```sh
 node local/pxa-apps/openlara/tools/classic-latency.mjs baseline.wasm candidate.wasm \
-  local/pxa-apps/openlara/assets-simulator latency.json
+  local/pxa-apps/.game-data/openlara latency.json
 node local/pxa-apps/openlara/tools/classic-catalog.mjs candidate.wasm \
-  local/pxa-apps/openlara/assets-simulator catalog.json
+  local/pxa-apps/.game-data/openlara catalog.json
 python3 local/pxa-apps/openlara/tools/classic-device-latency.py \
-  --port /dev/ttyACM0 --serial 1c:29:04:d0:af:5e --version 0.5.2 \
+  --port /dev/ttyACM0 --serial 1c:29:04:d0:af:5e --version 0.6.0 \
   --package local/openlara-full-build/pxa-openlara.pxa --output device-evidence --samples 60
 ```
 
@@ -149,3 +154,19 @@ c++ -std=c++11 -O3 -fwrapv -Ilocal/pxa-apps/openlara \
 `classic-raster-batch-test.cpp` 对照 4000 组三角形/四边形的完整颜色与深度缓冲，覆盖绕序、非零裁剪框、透明纹素和深度开关。`classic-compare.mjs` 同时比较 360 帧 RGB565 和 PCM；使用 `--checkpoint` 可在同代适配层间额外比较完整存档，覆盖隐藏的游戏状态。旧版本的适配层可能有不同的内部状态初始化，旧版画面对照不要求存档逐字节相同；存档兼容另由升级测试验证。
 
 同固件、同City起点的320×240真机平均FPS：0.5.0重测7.97（30个一秒窗口），0.5.2为8.82（60个），约提升10.7%。仍只有约9FPS。0.5.2真机移动、存档和背包通过；60秒计时完成后USB断开，20次短按及物理重启复验未完成。详细计数、画面对照和验收范围见工作区 `docs/validation/2026-10-19-openlara-320-perf.zh-CN.md`。
+
+## 0.6.0 固定 SD 媒体与桌面元数据
+
+移除关卡、标题和音乐的包内 Assets 回退。启动和关卡切换只使用 FS 0.3 `app-media-root` 与只读 `open_at`；音乐继续使用 64 KiB FIFO，关卡每次读取至多 8 KiB并返回 Host。缺卡、缺文件显示错误；短读继续读取，`WOULD_BLOCK` 在后续事件重试。私有存档路径和格式不变，切换语言不改变 App ID 或媒体目录。
+
+桌面图标采用经典《古墓丽影》的低多边形劳拉和古墓场景，96×96 PNG，见 [来源与生成提示词](../common/recrof/icons.json)。应用名称通过 `i18n/*.yaml` 的 metadata 写入签名清单；中文系统显示“古墓丽影”，繁体环境显示“古墓奇兵”，默认英文为 OpenLara。此处仅国际化应用名称，未翻译原版游戏文本。
+
+新增验证：
+
+```sh
+python3 -m unittest discover -s local/pxa-apps/openlara/tools -p 'test_media_storage.py'
+node local/pxa-apps/openlara/tools/sd-media-tests.mjs main.wasm \
+  local/pxa-apps/.game-data/openlara sd-media-tests.json
+```
+
+准备数据、部署媒体与安装包为独立步骤。先安装已签名的 `pxa-openlara`，再给准备脚本传 `--port` 和 `--serial`；不需要设备用户选择目录。所有媒体留在 SD 上，Host 决定可执行包及私有数据所在的存储设备。

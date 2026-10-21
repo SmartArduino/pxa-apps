@@ -13,9 +13,9 @@
     0
   ],
   "id": "pxa-openlara",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "name": "OpenLara",
-  "description": "Complete OpenLara TR1 gameplay engine for PXA; original PC game data and software rendering",
+  "description": "OpenLara TR1 engine with fixed SD media and app-private saves",
   "build": {
     "system": "cmake",
     "source_dir": ".",
@@ -34,13 +34,6 @@
         "window",
         "ui",
         "log",
-        {
-          "name": "assets",
-          "min_version": [
-            2,
-            0
-          ]
-        },
         {
           "name": "fs",
           "min_version": [
@@ -67,12 +60,17 @@
       "artifact": "aot"
     }
   ],
-  "release_sequence": 38,
+  "release_sequence": 200,
   "permissions": [
     {
       "name": "audio.playback",
       "required": false,
       "scope": "media"
     }
-  ]
+  ],
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  },
+  "icon": "assets/icon.png"
 }

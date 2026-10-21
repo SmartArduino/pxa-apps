@@ -10,4 +10,4 @@
 | C&C DOS demo | [cc1demo1.zip](https://www.classicdosgames.com/files/games/virgin/cc1demo1.zip) | `29d33849cb450a87262426cc59b25baa5e033b94c2e3495ec94f813f3bc09f87` |
 | Red Alert 95 demo | [ra95demo.zip](https://www.dosgamesarchive.com/file.php?id=946) | `8c48bdb53523ea4d353a7914d9234ce4e3e6f5832eeb47b3b6b005853e8748d2` |
 
-C&C 使用 `cc1demo1.zip` 中的 DOS DEMO/DEMOL/SOUNDS/SPEECH MIX；RA 使用 `ra95demo/INSTALL` 中的 REDALERT.MIX 和 MAIN.MIX。转换后或导入后的逐文件校验和保存在各应用的 `assets/imported-game-data.json`。
+C&C 使用 `cc1demo1.zip` 中的 DOS DEMO/DEMOL/SOUNDS/SPEECH MIX；RA 使用 `ra95demo/INSTALL` 中的 REDALERT.MIX 和 MAIN.MIX。转换后或导入后的逐文件校验和保存在`.game-data/<游戏>/imported-game-data.json`，实际资源位于同级 `files/`（不会被打入应用包）。

@@ -125,8 +125,9 @@ try:
  assert any(':pxa-openlara\t' in r and '\t'+a.version+'\t' in r for r in rows),'installed version differs'
  c.log_callback=lambda r:record(r.kind,r.payload);c.raw_callback=lambda b:record('RAW',b.decode('utf-8','replace'))
  c.subscribe_logs();pump(.2);unresponsive=False
- firmware=Path('local/storage-device/firmware-current.json')
- if firmware.exists():report['firmware']=json.loads(firmware.read_text())
+ report['device_info']={}
+ for row in request('INFO'):
+  if row.kind in ('DATA','OK'):report['device_info'].update(pxadb.info_properties(row.payload))
  if not any('active=1' in r for r in rows):
   start=len(messages);request('PACKAGE run pxa-openlara');wait('OpenLara ready level=0',start);pump(2)
  require_target();request('INPUT CANCEL')
@@ -160,7 +161,8 @@ try:
  timing=False;report['memory']=[r.payload for r in request('MEMORY STOP') if r.kind=='DATA']
  fps=report['samples'];assert min(fps)>0;report['fps']={'median':statistics.median(fps),'mean':statistics.mean(fps),'min':min(fps),'max':max(fps)}
  report['stationary_throughout_timing']=True;print(json.dumps(report['fps']),flush=True)
- report['validation_scope']='stationary timing only' if a.timing_only else 'stationary timing and controller/checkpoint/reboot checks'
+ report['validation_scope']='stationary timing only' if a.timing_only else 'stationary timing and controller/checkpoint checks'
+ if not a.timing_only and a.reboot_check:report['validation_scope']+=' with physical reboot'
  if not a.timing_only:
   # Functional controller and checkpoint tests are outside timing. Wait for
   # a settled telemetry sample before saving, rather than a stale moving pose.

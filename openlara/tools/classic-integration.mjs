@@ -2,21 +2,21 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
-import {runGuest} from './guest-host.mjs';
+import {runGuest,mediaDirectory} from './guest-host.mjs';
 import {checkpoint as decodeCheckpoint,telemetry,assertRestored} from './classic-save-probe.mjs';
 const [wasm,assets,output]=process.argv.slice(2);
 if(!output)throw Error('usage: node classic-integration.mjs MAIN.wasm ASSETS_DIR REPORT.json');
 const files=new Map([['data/save.bin',Buffer.from('legacy fixed save kept')]]),report={};
 const savedPath='data/classic-save.bin';
-const manifest=JSON.parse(fs.readFileSync(path.join(assets,'game/data-manifest.json'))),
+const manifest=JSON.parse(fs.readFileSync(path.join(mediaDirectory(assets),'data-manifest.json'))),
     lara=manifest.levels.find(level=>level.id===3)?.lara_entities?.[0];
 assert(lara,'prepare PC demo data again to include Lara entity metadata');
 const checkpoint=file=>decodeCheckpoint(file,lara);
 async function guest(options={}) {return runGuest(wasm,assets,files,options);}
 const a=await guest({partialWrite:true});
 a.tick(180);
-const titlePixels=a.frame(),titleArt=fs.readFileSync(path.join(assets,'game/title.scr')),
-    titlePalette=fs.readFileSync(path.join(assets,'game/title.pal'));
+const titlePixels=a.frame(),titleArt=fs.readFileSync(path.join(mediaDirectory(assets),'title.scr')),
+    titlePalette=fs.readFileSync(path.join(mediaDirectory(assets),'title.pal'));
 let colored=0;
 for(const y of [20,30])for(const x of [80,120,160,200,240]) {
     const expected=titlePalette.readUInt16LE(2*titleArt[Math.floor(y*160/240)*240+Math.floor(x*240/320)]);
@@ -61,7 +61,7 @@ const g=await guest();g.tick(180);const muted=g.info().nonzero;g.tick(180);
 assert.equal(g.info().nonzero-muted,0,'music disabled setting was not restored');
 g.menu(7);g.press(2);g.press(16);g.tick(120);assert(g.info().nonzero>muted+1000,'music did not restart after enable');
 report.music_setting_persisted=true;g.stop();
-const h=await guest({mediaRoot:path.join(assets,'game'),ioChunk:2048});
+const h=await guest({mediaRoot:mediaDirectory(assets),ioChunk:2048});
 h.menu(3);h.waitFor('ready level=3');h.tick(180);
 assert(!h.logs.some(s=>s.includes('music media read failed')));assert(h.info().nonzero>1000);
 report.sd_seek_and_short_reads=true;report.sd=h.info();h.stop();

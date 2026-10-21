@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Copy owned game data into a PXA app's signed, streaming blob assets.
+"""Import owned game data into local staging outside the signed engine package.
 
 Quake requires a converted MG24Quake 2.0 PAK; Duke requires a converted MG24
 GRP. Run the upstream converters first (see the port README).
 """
-import argparse, hashlib, json, re, shutil
+import argparse, hashlib, json, os, re, shutil, tempfile
 from pathlib import Path
 
 APPS = ('quake', 'quake2', 'duke3d', 'command-conquer', 'red-alert')
@@ -46,6 +46,49 @@ def collect(app, source):
         raise ValueError(f'Missing required file: {required}')
     return result
 
+def digest(path):
+    with path.open('rb') as stream:
+        return hashlib.file_digest(stream, 'sha256').hexdigest()
+
+
+def import_files(apps_root, app, source):
+    if source.is_symlink():
+        raise ValueError(f'Symlinks are not accepted: {source}')
+    files = collect(app, source.resolve(strict=True))
+    dest = apps_root / '.game-data' / app / 'files'
+    rows = []
+    # Validate the entire import before changing any existing resources.
+    for name, src in files.items():
+        dst = dest / name
+        checksum = digest(src)
+        if dst.is_symlink() or any(p.is_symlink() for p in dst.parents):
+            raise ValueError(f'Symlinks are not accepted: {dst}')
+        if dst.exists() and digest(dst) != checksum:
+            raise ValueError(f'Different file already exists: {dst}; remove it explicitly first')
+        rows.append({'path': name, 'bytes': src.stat().st_size, 'sha256': checksum})
+    for name, src in files.items():
+        dst = dest / name
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        if not dst.exists():
+            with tempfile.NamedTemporaryFile(dir=dst.parent, prefix='.import-', delete=False) as output:
+                temporary = Path(output.name)
+            try:
+                with temporary.open('wb') as output, src.open('rb') as stream:
+                    shutil.copyfileobj(stream, output, 256 * 1024)
+                if digest(temporary) != next(r['sha256'] for r in rows if r['path'] == name):
+                    raise ValueError(f'Resource changed during import: {src}')
+                try:
+                    os.link(temporary, dst)  # Atomic no-replace publication.
+                except FileExistsError:
+                    if digest(dst) != digest(temporary):
+                        raise ValueError(f'Different file appeared during import: {dst}')
+            finally:
+                temporary.unlink(missing_ok=True)
+    metadata = dest.parent / 'imported-game-data.json'
+    metadata.write_text(json.dumps({'app': app, 'files': rows}, indent=2) + '\n')
+    return dest, rows
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('app', choices=APPS)
@@ -53,22 +96,7 @@ def main():
     parser.add_argument('--apps-root', type=Path, default=Path(__file__).resolve().parents[3])
     args = parser.parse_args()
     try:
-        if args.source.is_symlink():
-            raise ValueError(f'Symlinks are not accepted: {args.source}')
-        files = collect(args.app, args.source.resolve(strict=True))
-        dest = args.apps_root / args.app / 'assets/game'
-        # A different existing import is never silently overwritten.
-        for name, src in files.items():
-            dst = dest/name
-            if dst.exists() and hashlib.sha256(dst.read_bytes()).digest() != hashlib.sha256(src.read_bytes()).digest():
-                raise ValueError(f'Different file already exists: {dst}; remove it explicitly first')
-        rows = []
-        for name, src in files.items():
-            dst = dest/name; dst.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(src, dst)
-            rows.append({'path':name, 'bytes':dst.stat().st_size, 'sha256':hashlib.sha256(dst.read_bytes()).hexdigest()})
-        (dest/'catalog.txt').write_text(''.join(f"{r['path']}\t{r['bytes']}\n" for r in rows))
-        (dest.parent/'imported-game-data.json').write_text(json.dumps({'app':args.app, 'files':rows}, indent=2)+'\n')
+        dest, rows = import_files(args.apps_root, args.app, args.source)
         print(f'Imported {len(rows)} files, {sum(r["bytes"] for r in rows)} bytes into {dest}')
     except (OSError, ValueError) as error:
         parser.exit(1, f'{error}\n')

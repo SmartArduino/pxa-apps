@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 project(pxa_quake2 C CXX)
+set(PXA_QUAKE2_ARENA_BYTES 7864320)
+set(PXA_RECROF_ENGINE_STACK_BYTES 65536)
+set(PXA_RECROF_CALLBACK_STACK_BYTES 16384)
 include(../common/recrof/Engine.cmake)
 set(Q ${CMAKE_CURRENT_SOURCE_DIR}/vendor/quake2)
 file(GLOB ENGINE CONFIGURE_DEPENDS ${Q}/client/*.c ${Q}/server/sv_*.c
@@ -30,3 +33,6 @@ set_source_files_properties(${Q}/ref_soft/r_model.c PROPERTIES COMPILE_OPTIONS -
 # Match the upstream ESP32-S3 build. Clang ignores GCC's
 # -fsingle-precision-constant; its frontend option is required on WASI.
 target_compile_options(pxa_main PRIVATE -Xclang -cl-single-precision-constant)
+
+target_compile_definitions(pxa_main PRIVATE PORT_EXTERNAL_GAME_DATA=1 PORT_COOPERATE_BUDGET_US=32000
+    PORT_TICK_US=8000 PORT_CONTINUATION_BYTES=16384)

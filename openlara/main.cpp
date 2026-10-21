@@ -1,6 +1,5 @@
 // PXA platform adapter for XProger/OpenLara. BSD-2-Clause.
 #include "pxa.h"
-#include "pxa_assets.h"
 #include "pxa_clock.h"
 #include "pxa_fs_roots.h"
 #include "pxa_surface.h"
@@ -84,19 +83,13 @@ static void error(const char *why) {
     if (file) pxa_close_handle(file);
     file=0;
 }
-static void asset_read() {
-    char path[64]; snprintf(path,sizeof(path),"assets/game/%s",load_name);
-    unsigned count=load_capacity-loaded;
-    if(count>PXA_ASSETS_READ_MAX_BYTES)count=PXA_ASSETS_READ_MAX_BYTES;
-    if (pxa_assets_read(20,path,loaded,count)) error("OpenLara asset request failed");
-}
 static void open_data(const char *name,uint8_t *dest,uint32_t capacity) {
     ready=false;load_state=1;loaded=total=0;load_dest=dest;load_capacity=capacity;load_name=name;
     loading_clock();
     char message[96];snprintf(message,sizeof(message),"Loading %s...",name);status(message);
     if(media_root) {
         if(pxa_fs_request_open_at(12,media_root,name,strlen(name),PXA_FS_OPEN_READ))error("OpenLara SD open request failed");
-    } else {load_state=3;asset_read();}
+    } else error("OpenLara: SD media unavailable. Insert storage and reopen.");
 }
 static void open_level(int id) {
     if(id<0 || unsigned(id)>=OL_LEVEL_COUNT) {error("Unknown OpenLara level");return;}
@@ -222,6 +215,7 @@ static void tick(uint64_t now) {
     if (load_state==2) {
         uint32_t count=total-loaded; if (count>8192) count=8192;
         int32_t n=pxa_fs_read(file,load_dest+loaded,count);
+        if (n==PXA_STATUS_WOULD_BLOCK) return;
         if (n<=0 || uint32_t(n)>count) { error("OpenLara SD read failed or truncated"); return; }
         loaded+=uint32_t(n);
         if (loaded==total) { pxa_close_handle(file); file=0; data_done(); }
@@ -436,18 +430,20 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *bytes,uint32_t length) {
         if (!pxa_surface_build_configure_layer(packet,sizeof(packet),2,surface,0,0,320,240,0,1,&n)) return PXA_STATUS_INTERNAL;
         pxa_control_packet(packet,n); pxa_clock_set_period(16);
         store_start();audio_start();
-        if (pxa_fs_request_app_media(10))root_ready=true;
+        if (pxa_fs_request_app_media(10))error("OpenLara: SD media unavailable. Insert storage and reopen.");
         return PXA_EVENT_HANDLED;
     }
     if (e.service==PXA_FS_SERVICE && e.token==10) {
         pxa_fs_root_result_t result;
-        if (pxa_fs_parse_root(&e,10,&result) && !result.status) media_root=result.handle;
-        root_ready=true;return PXA_EVENT_HANDLED;
+        if (!pxa_fs_parse_root(&e,10,&result) || result.status || !result.handle) {
+            error("OpenLara: SD media unavailable. Insert storage and reopen.");
+        } else {media_root=result.handle;root_ready=true;}
+        return PXA_EVENT_HANDLED;
     }
     if (e.service==PXA_FS_SERVICE && e.token==12) {
         pxa_fs_at_result_t result;
         if (!pxa_fs_parse_open_at(&e,12,&result) || result.status) {
-            load_state=3;asset_read();return PXA_EVENT_HANDLED;
+            error("OpenLara: missing SD game data. Prepare and deploy media first.");return PXA_EVENT_HANDLED;
         }
         if (result.kind!=PXA_FS_KIND_REGULAR || !result.size ||
             (load_kind==1 ? (result.size<2048 || result.size>UINT32_MAX) : result.size>load_capacity)) {
@@ -459,23 +455,6 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *bytes,uint32_t length) {
             load_dest=ol_level_data;
         }
         file=result.handle;total=load_kind==1?2048:uint32_t(result.size);load_state=2;
-        return PXA_EVENT_HANDLED;
-    }
-    if (e.service==PXA_ASSETS_SERVICE && e.token==20) {
-        pxa_asset_read_result_t result;
-        if (!pxa_assets_parse_read(&e,20,&result) || result.status ||
-            (load_kind==1?result.total_bytes<2048:result.total_bytes>load_capacity) ||
-            !result.total_bytes || !result.bytes || result.bytes>load_capacity-loaded || result.offset!=loaded) {
-            error(OL_CLASSIC?"OpenLara: missing data. Add original PC DATA to SD media; press Select for import help.":
-                "OpenLara: missing level. Install GBA PKD files in the app's fixed SD media directory.");return PXA_EVENT_HANDLED;
-        }
-        if(load_kind==1)ol_tracks_size=result.total_bytes;
-        if(load_kind==2 && !loaded) {
-            if(!ol_allocate_level(result.total_bytes)) {error("OpenLara: insufficient level memory");return PXA_EVENT_HANDLED;}
-            load_dest=ol_level_data;
-        }
-        memcpy(load_dest+loaded,result.data,result.bytes);loaded+=result.bytes;total=load_kind==1?2048:result.total_bytes;
-        if (loaded==total) data_done(); else asset_read();
         return PXA_EVENT_HANDLED;
     }
     pxa_ui_pointer_data_t p;

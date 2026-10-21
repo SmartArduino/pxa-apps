@@ -28,4 +28,18 @@ class ImportTests(unittest.TestCase):
             root=Path(d);(root/'real').write_bytes(b'data');(root/'PAK0.PAK').symlink_to(root/'real')
             with self.assertRaisesRegex(ValueError,'Symlinks'):module.collect('quake',root)
 
+    def test_import_stays_outside_package_and_preserves_files(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);source=root/'source.pak';source.write_bytes(b'original')
+            data=root/'input';data.mkdir();(data/'pak0conv.pak').write_bytes(b'original')
+            dest,rows=module.import_files(root,'quake',data)
+            self.assertEqual(dest,root/'.game-data/quake/files')
+            self.assertFalse((root/'quake/assets').exists())
+            self.assertEqual((dest/'pak0.pak').read_bytes(),b'original')
+            module.import_files(root,'quake',data)
+            (data/'pak0conv.pak').write_bytes(b'changed')
+            with self.assertRaisesRegex(ValueError,'Different file'):
+                module.import_files(root,'quake',data)
+            self.assertEqual((dest/'pak0.pak').read_bytes(),b'original')
+
 if __name__=='__main__':unittest.main()

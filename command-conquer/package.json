@@ -13,14 +13,14 @@
     0
   ],
   "id": "pxa-command-conquer",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "name": "Command & Conquer",
-  "description": "Command & Conquer \u539f\u7248\u5f15\u64ce PXA \u79fb\u690d\uff0c\u9700\u8981\u81ea\u884c\u5bfc\u5165\u6e38\u620f\u8d44\u6e90\u3002",
+  "description": "Game engine with fixed SD resources and app-private saves",
   "build": {
     "system": "cmake",
     "source_dir": ".",
     "linear_memory": {
-      "maximum_bytes": 10485760,
+      "maximum_bytes": 7340032,
       "pinned": true
     }
   },
@@ -36,12 +36,16 @@
         "window",
         "log",
         "ui",
-        "fs",
         {
-          "name": "assets",
+          "name": "fs",
           "min_version": [
-            2,
-            0
+            0,
+            3
+          ],
+          "features": [
+            "app-media-root",
+            "read-at",
+            "scoped-roots"
           ]
         }
       ],
@@ -53,7 +57,8 @@
           "monotonic-clock",
           "wall-clock"
         ]
-      }
+      },
+      "artifact": "aot"
     }
   ],
   "permissions": [
@@ -63,5 +68,10 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 2
+  "release_sequence": 200,
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  },
+  "icon": "assets/icon.png"
 }

@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 project(pxa_cnc C CXX)
+if(NOT CNC_GAME STREQUAL "ra")
+set(PXA_RECROF_ENGINE_STACK_BYTES 65536)
+set(PXA_RECROF_CALLBACK_STACK_BYTES 16384)
+endif()
 include(../common/recrof/Engine.cmake)
 set(VC_DIR ${CMAKE_CURRENT_LIST_DIR}/vendor/Vanilla-Conquer)
 set(VC_COMMON ${VC_DIR}/common)
@@ -100,3 +104,9 @@ pxa_recrof_component(RTS TITLE "${GAME_TITLE}" SOURCES ${VC_COMMON_SRC} ${VC_GAM
         FIXIT_FAST_LOAD ESP_PLATFORM_CNC ${VC_GAME_DEFS})
 target_compile_options(pxa_main PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:-std=gnu++14>")
 set_property(SOURCE ${VC_GAME}/startup.cpp APPEND PROPERTY COMPILE_DEFINITIONS main=cnc_game_main)
+
+if(NOT CNC_GAME STREQUAL "ra")
+target_compile_definitions(pxa_main PRIVATE PORT_EXTERNAL_GAME_DATA=1 PORT_COOPERATE_BUDGET_US=32000
+    PORT_TICK_US=8000 PORT_CONTINUATION_BYTES=16384 PORT_LOADING_TRACE=1
+    PORT_CNC_CANONICAL_PATHS=1 PORT_CNC_MEDIA_HANDLES=1)
+endif()
