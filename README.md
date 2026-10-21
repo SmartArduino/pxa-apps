@@ -2,7 +2,9 @@
 
 [English](README.en.md)
 
-PXA 的开源应用与共享资源仓库，包括商城、天气、小说阅读器、游戏和诊断示例。系统运行库、SDK 与打包工具在 [pxa-system](https://github.com/SmartArduino/pxa-system)，ESP 固件与板级集成在 [pxa-workspace](https://github.com/SmartArduino/pxa-workspace)。
+PXA 的开源应用与共享资源仓库，包括商城、天气、小说阅读器和游戏。系统运行库、SDK 与打包工具在 [pxa-system](https://github.com/SmartArduino/pxa-system)，ESP 固件与板级集成在 [pxa-workspace](https://github.com/SmartArduino/pxa-workspace)。
+
+ABI、IPC 和资源生命周期回归夹具位于 `pxa-system/simulator/desktop/tests/apps/`，通过该仓库的 `tools/package/test_core2_smoke.sh`、`test_core2_ipc_smoke.sh` 和 `test_resource_app.sh` 运行。纯诊断应用、渲染基准和实验游戏原型已移出本仓库；历史验收报告与截图保留。
 
 所有持续维护的应用使用 **C++26、Core 2.0**。应用名称与包 ID 不再带实现语言后缀：使用 [`jump-jump-3d`](jump-jump-3d/README.md)、[`pixel-dungeon`](pixel-dungeon/README.md) 和 `voxel-craft`。旧 C 算法仅在 `common/cpp/tests/reference/c` 中作为性能、像素与玩法对照，不再提供生产应用清单。
 

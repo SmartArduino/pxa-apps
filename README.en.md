@@ -6,6 +6,13 @@ Application sources for the PXA workspace. The PXA runtime, Guest SDK, packaging
 tools, and a minimal `hello` smoke-test app remain in `pxa-system`. All product
 applications and their shared art live here.
 
+ABI, IPC and resource lifecycle fixtures live under
+`pxa-system/simulator/desktop/tests/apps/`. Run them with that repository's
+`tools/package/test_core2_smoke.sh`, `test_core2_ipc_smoke.sh` and
+`test_resource_app.sh`. Diagnostic apps, rendering benchmarks and experimental
+game prototypes have been removed from this repository; historical validation
+reports and screenshots are retained.
+
 All maintained applications now build as **C++26** against **Core 2.0**.
 The production C versions of Jump Jump, Pixel Dungeon and Voxel Craft have
 been retired; use [`jump-jump-3d`](jump-jump-3d/README.md),

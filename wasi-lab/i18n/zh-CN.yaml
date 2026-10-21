@@ -1,9 +1,0 @@
-locale: zh-CN
-metadata:
-  name: PXA WASI 实验室
-  description: WASI libc、时钟与随机数能力示例
-translations:
-  screen.title: PXA WASI 实验室
-  screen.capabilities: libc  单调时钟  墙上时钟  随机数
-  screen.policy: 签名能力隔离，不开放文件、环境变量或宿主标准输入输出
-  result.summary: 6 项检查中通过 {passed} 项
