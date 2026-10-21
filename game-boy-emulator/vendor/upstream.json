@@ -1,0 +1,23 @@
+{
+  "url": "https://github.com/ducalex/retro-go",
+  "commit": "4ced120669750ca7228fd0414211430c1d923166",
+  "directory": "retro-core/components/gnuboy",
+  "license": "GPL-2.0-or-later",
+  "patches": [
+    "PXA memory-backed cartridge lifecycle, no host filesystem access",
+    "Portable bounded page maps and defined unaligned little-endian access",
+    "RGB565 full-range green replication and arbitrary output stride",
+    "Bounded ROM bank mapping and hardware cartridge RAM sizes",
+    "Independent gnuboy MBC3 RAM/RTC saves, explicit little-endian encoding",
+    "Audio mute preserves channel state; direct 32768 Hz synthesis",
+    "Fixed frame cycle budget with instruction overshoot carried to the next frame",
+    "CPU timer batches retain upstream period 8; CPU speed changes are accounted in LCD clock units",
+    "Clip negative window X before writing scanline/priority buffers",
+    "Respect DMG background disable and CGB master sprite priority",
+    "Preserve MBC2 nibble RAM mirrors and active CGB WRAM echo banks",
+    "HALT coalescing stops at the original eight-cycle event batch boundary",
+    "64-byte nibble expansion table and stable sprite insertion sort preserve render output",
+    "RAM polling fixed points merge only original complete event batches and stop before LCD, timer overflow, serial and frame boundaries; native differential tests retain the unmerged runner",
+    "HALT event-bounded fast forwarding aggregates whole original counter batches with no pending enabled IRQ; keeps the original event phase and is independently compared against unmerged execution"
+  ]
+}

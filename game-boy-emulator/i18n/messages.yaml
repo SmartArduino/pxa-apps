@@ -1,0 +1,177 @@
+namespace: app.pxa-game-boy
+default_locale: en-US
+messages:
+  ui.title:
+    source: "GB/GBC Emulator"
+    context: Game Boy ui title menu label
+    max_bytes: 112
+  ui.paused:
+    source: "Game paused"
+    context: Game Boy ui paused menu label
+    max_bytes: 112
+  ui.saving:
+    source: "Saving progress..."
+    context: Game Boy ui saving menu label
+    max_bytes: 112
+  ui.save.error:
+    source: "Save failed - retry"
+    context: Game Boy ui save error menu label
+    max_bytes: 112
+  ui.resume:
+    source: "Resume game"
+    context: Game Boy ui resume menu label
+    max_bytes: 112
+  ui.library:
+    source: "Choose game"
+    context: Game Boy ui library menu label
+    max_bytes: 112
+  ui.sound.on:
+    source: "Sound: ON"
+    context: Game Boy ui sound on menu label
+    max_bytes: 112
+  ui.sound.off:
+    source: "Sound: OFF"
+    context: Game Boy ui sound off menu label
+    max_bytes: 112
+  ui.sound.starting:
+    source: "Sound: starting..."
+    context: Game Boy ui sound starting menu label
+    max_bytes: 112
+  ui.sound.failed:
+    source: "Sound: retry"
+    context: Game Boy ui sound failed menu label
+    max_bytes: 112
+  ui.keys.auto:
+    source: "Keys: auto-hidden"
+    context: Game Boy ui keys auto menu label
+    max_bytes: 112
+  ui.keys.off:
+    source: "Keys: hidden"
+    context: Game Boy ui keys off menu label
+    max_bytes: 112
+  ui.loading:
+    source: "Loading game..."
+    context: Game Boy ui loading menu label
+    max_bytes: 112
+  ui.load.error:
+    source: "Cannot load game"
+    context: Game Boy ui load error menu label
+    max_bytes: 112
+  ui.error.detail:
+    source: "Check ROM and storage"
+    context: Game Boy ui error detail menu label
+    max_bytes: 112
+  ui.host.unsupported:
+    source: "Please update host firmware"
+    context: Game Boy ui host unsupported menu label
+    max_bytes: 112
+  ui.error.retry:
+    source: "Return to library and retry"
+    context: Game Boy ui error retry menu label
+    max_bytes: 112
+  ui.back.library:
+    source: "Back to library"
+    context: Game Boy ui back library menu label
+    max_bytes: 112
+  ui.pack:
+    source: "PACK"
+    context: Game Boy ui pack menu label
+    max_bytes: 112
+  ui.flash:
+    source: "FLASH"
+    context: Game Boy ui flash menu label
+    max_bytes: 112
+  ui.sd:
+    source: "SD"
+    context: Game Boy ui sd menu label
+    max_bytes: 112
+  ui.prev:
+    source: "Prev"
+    context: Game Boy ui prev menu label
+    max_bytes: 112
+  ui.next:
+    source: "Next"
+    context: Game Boy ui next menu label
+    max_bytes: 112
+  ui.refresh:
+    source: "Refresh"
+    context: Game Boy ui refresh menu label
+    max_bytes: 112
+  ui.display:
+    source: "Frame interval: {frames}"
+    context: Game Boy ui display menu label
+    max_bytes: 112
+    placeholders:
+      frames: u32
+  ui.keys.alpha:
+    source: "Keys: opacity {opacity}%"
+    context: Game Boy ui keys alpha menu label
+    max_bytes: 112
+    placeholders:
+      opacity: u32
+  ui.scanning:
+    source: "Scanning..."
+    context: Game Boy ui scanning menu label
+    max_bytes: 112
+  ui.no.roms:
+    source: "No games found"
+    context: Game Boy ui no roms menu label
+    max_bytes: 112
+  ui.hint:
+    source: "Choose a game to start"
+    context: Game Boy ui hint menu label
+    max_bytes: 112
+  ui.model:
+    source: "Model: {model}"
+    context: Game Boy ui hardware model label
+    max_bytes: 112
+    placeholders:
+      model: u32
+  control.select:
+    source: "SEL"
+    context: Floating game control label
+    max_bytes: 112
+  control.start:
+    source: "START"
+    context: Floating game control label
+    max_bytes: 112
+  control.menu:
+    source: "MENU"
+    context: Floating game control label
+    max_bytes: 112
+  ui.back:
+    source: "Back"
+    context: Game Boy library actions
+    max_bytes: 112
+  ui.exit:
+    source: "Exit emulator"
+    context: Game Boy library actions
+    max_bytes: 112
+  ui.exit.back:
+    source: "Use system Back to exit"
+    context: Game Boy library actions
+    max_bytes: 112
+  ui.empty.help:
+    source: "Add .gb or .gbc games, then refresh"
+    context: Game Boy library actions
+    max_bytes: 112
+  ui.flash.path:
+    source: "Storage: app private folder"
+    context: Game Boy library actions
+    max_bytes: 112
+  ui.sd.path:
+    source: "SD card folder:"
+    context: Game Boy library actions
+    max_bytes: 112
+  ui.scale.native:
+    source: "Video: original pixels"
+    context: Game Boy display options
+    max_bytes: 112
+  ui.scale.fit:
+    source: "Video: fit aspect ratio"
+    context: Game Boy display options
+    max_bytes: 112
+  ui.sd.query:
+    source: "Querying app media folder..."
+    context: Game Boy display options
+    max_bytes: 112
