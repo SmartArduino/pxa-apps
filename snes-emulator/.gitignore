@@ -1,0 +1,16 @@
+/build/
+/out/
+*.log
+*.gb
+*.gbc
+*.GB
+*.GBC
+*.zip
+*.sav
+*.rtc
+*.tmp
+__pycache__/
+*.pyc
+*.pxa
+*.aot
+*.wasm

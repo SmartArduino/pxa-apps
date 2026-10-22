@@ -172,7 +172,9 @@ static void map_init(rom_t *cart)
             // This will prevent re-triggering on reset as well as make CHR_ANY=>CHR_RAM
             cart->chr_rom_banks = 0;
         }
-        memcpy(cart->chr_ram, cart->chr_rom, 0x2000 * cart->chr_ram_banks);
+        if(nes_port_rom_paged())for(size_t at=0;at<(size_t)0x2000*cart->chr_ram_banks;at+=1024)
+            memcpy(cart->chr_ram+at,nes_port_rom_page(1,at,UINT32_MAX),1024);
+        else memcpy(cart->chr_ram,cart->chr_rom,0x2000*cart->chr_ram_banks);
         mmc_bankchr(8, 0x0000, 0, CHR_RAM);
     }
 }

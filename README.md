@@ -74,3 +74,9 @@ python3 tools/test-app-matrix.py --output local/app-matrix --target all --sdk-ex
 ```
 
 字体预览和实验快照放在生成目录。相同截图可共用附件，但不同测量、测试配置、运行资源及许可证分别保留。性能报告必须说明工作负载、实际显示帧率、阶段耗时与内存，而不是只比较提交 FPS。
+
+## 游戏机模拟器
+
+每个平台独立安装并保存数据，共用高效的 PXA 前端：
+
+[SNES](snes-emulator/README.md) · [Mega Drive](mega-drive-emulator/README.md) · [Master System](master-system-emulator/README.md) · [Game Gear](game-gear-emulator/README.md) · [PC Engine](pc-engine-emulator/README.md).

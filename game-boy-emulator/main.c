@@ -17,6 +17,7 @@
 #include "pxa_audio.h"
 #include "pxa_clock.h"
 #include "pxa_fs_roots.h"
+#include "../common/rom/pxa_rom_source.h"
 #include "pxa_permission.h"
 #include "pxa_surface.h"
 #include "pxa_ui.h"
@@ -72,6 +73,9 @@ static char message[112];
 static char save_path[40], save_tmp[48];
 static uint8_t *rom_data, *save_data;
 static size_t rom_size, rom_used, save_size, save_used;
+static pxa_rom_file_t rom_file;
+static unsigned rom_paged;
+static uint32_t rom_stream_crc;
 static uint32_t saved_crc, pending_save_crc;
 static uint8_t pad[2], touches[16];
 static uint8_t controller_previous[2], controller_connected[2];
@@ -515,8 +519,14 @@ static void game_ready(void) {
 }
 
 static void finish_rom(void) {
-    close_handle(&file);
-    const char *error = gb_core_load(rom_data, rom_size);
+    const char *error;
+    if(rom_paged){
+        memset(&rom_file,0,sizeof(rom_file));rom_file.handle=file;file=0;
+        rom_source_t source={&rom_file,pxa_rom_read,rom_size,rom_stream_crc};
+        error=gb_core_load_source(&source,256u*1024u);
+        free(rom_data);rom_data=NULL;
+    }else {close_handle(&file);error=gb_core_load(rom_data,rom_size);}
+    if(!error && gb_core_rom_cache()->error)error="Cartridge paging read failed";
     if (error) { fail(error); return; }
     snprintf(save_path, sizeof(save_path), "gnuboy-%08x.sav", gb_core_checksum());
     snprintf(save_tmp, sizeof(save_tmp), "%s.tmp", save_path);
@@ -530,6 +540,7 @@ static void finish_rom(void) {
 static void select_rom(unsigned n) {
     if (n >= count || save_pending || writing_save || save_replace_pending) return;
     gb_core_close();
+    close_handle(&rom_file.handle);
     rom_loaded = 0;
     free(rom_data);
     rom_data = NULL;
@@ -541,8 +552,8 @@ static void select_rom(unsigned n) {
     gb_schedule_reset(&schedule);
     char path[150];
     snprintf(path, sizeof(path), "roms/%s", names[n]);
-    int r = source ? pxa_fs_request_open_at(T_ROM, media, names[n], strlen(names[n]), PXA_FS_OPEN_READ)
-                   : pxa_fs_request_open(T_ROM, path, strlen(path), PXA_FS_OPEN_READ);
+    int r = source ? pxa_fs_request_open_at(T_ROM,media,names[n],strlen(names[n]),PXA_FS_OPEN_READ)
+                   : pxa_fs_request_open(T_ROM,path,strlen(path),PXA_FS_OPEN_READ);
     if (r) fail("ROM open request failed");
 }
 
@@ -623,9 +634,10 @@ static __attribute__((noinline)) void io_tick(void) {
         for (unsigned k = 0; k < 8 && micros() - started < 4000; ++k) {
             size_t left = rom_size - rom_used;
             if (left > 4096) left = 4096;
-            int r = pxa_fs_read(file, rom_data + rom_used, left);
+            int r = pxa_fs_read(file, rom_data + (rom_paged?0:rom_used), left);
             if (r == PXA_STATUS_WOULD_BLOCK) break;
             if (r <= 0 || (unsigned) r > left) { close_handle(&file); fail("ROM read failed or truncated"); break; }
+            if(rom_paged)rom_stream_crc=rom_crc32(rom_stream_crc,rom_data,(unsigned)r);
             rom_used += r;
             if (rom_used == rom_size) { finish_rom(); break; }
         }
@@ -718,6 +730,10 @@ static __attribute__((noinline)) void tick(uint64_t now) {
             }
             gb_core_frame_to(p,out+video_renderer.view_y*surface_stride+video_renderer.view_x,surface_stride);
         } else gb_core_frame_render(p,draw_due);
+        if(gb_core_rom_cache()->error){
+            if(index>=0)present((unsigned)index);
+            rom_loaded=0;close_handle(&audio);fail("ROM read failed; check storage and reopen game");break;
+        }
         uint64_t frame_us = micros() - t;
         cpu_us += frame_us;
         core_avg_us = core_avg_us ? (core_avg_us * 7u + frame_us) / 8u : frame_us;
@@ -741,6 +757,12 @@ static __attribute__((noinline)) void tick(uint64_t now) {
     ++tick_count;
     if (wall_now >= metric_at + 5000000) {
         uint64_t elapsed = wall_now - metric_at;
+        if(rom_paged){const rom_cache_t *cache=gb_core_rom_cache();
+            gb_port_log("GB ROM cache_bytes=%u hits=%llu misses=%llu evictions=%llu io_bytes=%llu io_us=%llu max_io_us=%llu",
+                cache->count*cache->page_size,(unsigned long long)cache->hits,(unsigned long long)cache->misses,
+                (unsigned long long)cache->evictions,(unsigned long long)rom_file.read_bytes,
+                (unsigned long long)rom_file.read_us,(unsigned long long)rom_file.max_read_us);
+        }
         gb_port_log("GB PERF version=" GB_APP_VERSION " rom_crc=%08x wall_us=%llu frames=%llu elapsed_us=%llu sim_x100=%llu submit_x100=%llu cpu_avg_us=%llu core_avg_us=%llu paint_avg_us=%llu debt=%llu sound=%u",
                     gb_core_checksum(), (unsigned long long) wall_now, (unsigned long long) n_frames,
                     (unsigned long long) elapsed, (unsigned long long) (n_frames * 100000000 / elapsed),
@@ -749,10 +771,10 @@ static __attribute__((noinline)) void tick(uint64_t now) {
                     (unsigned long long) core_avg_us,
                     (unsigned long long) (paint_frames ? paint_us / paint_frames : 0),
                     (unsigned long long)(schedule.debt/(UINT64_C(1000000)*GB_FRAME_CYCLES)),audio?1u:0u);
-        gb_port_log("GB STATS wall_us=%llu skipped=%llu audio_drop=%llu model=%u keys_auto=%u fit=%u",
+        gb_port_log("GB STATS wall_us=%llu skipped=%llu audio_drop=%llu model=%u keys_auto=%u fit=%u draw_us=%u skip_us=%u interval_q16=%u feedback=%u budget_pct=95",
                     (unsigned long long)wall_now, (unsigned long long)skipped,
                     (unsigned long long)audio_dropped, gb_core_model(), controls.controller_hidden,
-                    video_renderer.fit);
+                    video_renderer.fit,pacer.draw_us,pacer.skip_us,pacer.interval_q16,pacer.feedback);
         if(surface) {
             uint8_t packet[80];uint32_t size;
             if(pxa_surface_build_query_state(packet,sizeof(packet),T_STATS,surface,&size))pxa_control_packet(packet,size);
@@ -984,6 +1006,7 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t size) {
 void pxa_app_stop(uint32_t reason) {
     (void) reason;
     gb_core_close();
+    close_handle(&rom_file.handle);
     free(rom_data);
     free(save_data);
     free(frames_raw);
@@ -1189,7 +1212,11 @@ int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
         }
         if (e.token == T_ROM || e.token == T_ROM + 101) {
             if (rom_size < 0x150 || rom_size > GB_ROM_LIMIT) { close_handle(&file); fail("ROM size invalid (max 8 MiB)"); return PXA_EVENT_HANDLED; }
-            rom_data = malloc(rom_size);
+            rom_paged=0;rom_stream_crc=0;
+            void *reserve=malloc(512u*1024u);
+            rom_data=reserve?malloc(rom_size):NULL;
+            free(reserve);
+            if(!rom_data){rom_paged=1;rom_data=malloc(4096);}
             if (!rom_data) { close_handle(&file); fail("Not enough memory for ROM"); }
             return PXA_EVENT_HANDLED;
         }

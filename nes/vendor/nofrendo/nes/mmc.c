@@ -32,6 +32,7 @@ void mmc_bankprg(unsigned size, unsigned address, int bank, uint8 *base)
 {
    // ASSERT(size == 8 || size == 16 || size == 32);
    int banks = 16;
+   bool paged=nes_port_rom_paged() && (base==PRG_ROM || base==cart->prg_rom);
 
    // if (base == PRG_ANY)
    //    base = cart->prg_rom_banks ? PRG_ROM : PRG_RAM;
@@ -60,11 +61,12 @@ void mmc_bankprg(unsigned size, unsigned address, int bank, uint8 *base)
    }
 
    bank %= banks;
-   base += bank * (size * 1024);
+   if(!paged)base += bank * (size * 1024);
 
    for (size_t i = 0, num = (size * 1024 / MEM_PAGESIZE); i < num; ++i)
    {
-      mem_setpage((address >> MEM_PAGESHIFT) + i, &base[i * MEM_PAGESIZE]);
+      unsigned owner=(address >> MEM_PAGESHIFT)+i;
+      mem_setpage(owner,paged?nes_port_rom_page(0,(size_t)bank*size*1024+i*MEM_PAGESIZE,owner):&base[i*MEM_PAGESIZE]);
    }
 }
 
@@ -73,6 +75,7 @@ void mmc_bankchr(unsigned size, unsigned address, int bank, uint8 *base)
 {
    // ASSERT(size == 1 || size == 2 || size == 4 || size == 8);
    int banks = 128;
+   bool paged=nes_port_rom_paged() && (base==CHR_ROM || base==cart->chr_rom || (base==CHR_ANY && cart->chr_rom_banks));
 
    if (base == CHR_ANY)
       base = cart->chr_rom_banks ? CHR_ROM : CHR_RAM;
@@ -101,11 +104,12 @@ void mmc_bankchr(unsigned size, unsigned address, int bank, uint8 *base)
    }
 
    bank %= banks;
-   base += bank * (size * 1024);
+   if(!paged)base += bank * (size * 1024);
 
    for (size_t i = 0; i < size; ++i)
    {
-      ppu_setpage((address >> PPU_PAGESHIFT) + i, &base[i * PPU_PAGESIZE]);
+      unsigned page=(address >> PPU_PAGESHIFT)+i;
+      ppu_setpage(page,paged?nes_port_rom_page(1,(size_t)bank*size*1024+i*PPU_PAGESIZE,32+page):&base[i*PPU_PAGESIZE]);
    }
 }
 

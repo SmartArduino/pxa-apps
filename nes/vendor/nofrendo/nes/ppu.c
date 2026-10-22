@@ -25,7 +25,10 @@
 
 /* PPU access */
 #define PPU_MEM_READ(x)      (ppu.page[(x) >> PPU_PAGESHIFT][(x)])
-#define PPU_MEM_WRITE(x,v)   (ppu.page[(x) >> PPU_PAGESHIFT][(x)] = (v))
+#define PPU_MEM_WRITE(x,v) do { \
+    uint32 a_=(x);uint8 *p_=&ppu.page[a_>>PPU_PAGESHIFT][a_]; \
+    if(!nes_port_rom_paged() || !nes_port_rom_cached_address(p_))*p_=(v); \
+}while(0)
 
 /* Background (color 0) and solid sprite pixel flags */
 #define BG_TRANS             (0x80)

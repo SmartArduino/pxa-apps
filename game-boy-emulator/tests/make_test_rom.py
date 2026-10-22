@@ -47,7 +47,7 @@ class Asm:
         return bytes(self.code)
 
 
-def build_program():
+def build_program(bank_churn=False):
     a = Asm()
     a.emit(0xF3)                      # DI
     # The LCD is switched off while the video memory is written. Real
@@ -150,6 +150,14 @@ def build_program():
     a.emit(0xF6, 0xE4)                # ORA 0xE4
     a.emit(0xE0, 0x47)                # LDH (0x47), A   BGP
     a.emit(0x0C)                      # INC C
+    if bank_churn:
+        a.emit(0x79,0xEA,0x00,0x20)    # select MBC5 low bank bits
+        a.emit(0x7A,0xE6,0x01,0xEA,0x00,0x30)
+        a.emit(0xFA,0x00,0x40,0xEA,0x01,0xC0) # consume bank data
+        a.emit(0x79,0xB7)             # wrap low counter -> next high bit
+        a.jr("bank_done","nz")
+        a.emit(0x14)                  # INC D
+        a.label("bank_done")
     a.emit(0xEA, 0x00, 0xC0)          # LD (0xC000), A  scratch in work RAM
     # Leave the vertical blank before waiting for the next one, otherwise the
     # palette would keep changing while the frame is being drawn.
@@ -166,20 +174,23 @@ def main():
     parser.add_argument("output")
     parser.add_argument("--cgb", action="store_true",
                         help="mark the cartridge as Game Boy Color only")
+    parser.add_argument("--rom-banks",type=int,choices=[2,4,8,16,32,64,128,256,512],default=2)
+    parser.add_argument("--bank-churn",action="store_true")
     args = parser.parse_args()
 
-    rom = bytearray(0x8000)
+    rom = bytearray(args.rom_banks*16384)
+    for bank in range(2,args.rom_banks):rom[bank*16384:(bank+1)*16384]=bytes([bank&255])*16384
     rom[0x104:0x134] = LOGO
     rom[0x134:0x144] = b"PXA CORE TEST\x00\x00\x00"
     rom[0x143] = 0xC0 if args.cgb else 0x00
-    rom[0x147] = 0x03  # MBC1+RAM+BATTERY
-    rom[0x148] = 0x00  # 32 KiB
+    rom[0x147] = 0x1b if args.rom_banks>2 else 0x03  # MBC1+RAM+BATTERY
+    rom[0x148] = args.rom_banks.bit_length()-2  # 32 KiB
     rom[0x149] = 0x02  # 8 KiB cartridge RAM
     rom[0x14A] = 0x01  # destination code
     rom[0x14B] = 0x33  # old licensee code
     rom[0x14C] = 0x00  # version
 
-    program = build_program()
+    program = build_program(args.bank_churn)
     rom[0x150:0x150 + len(program)] = program
 
     # Entry point: NOP; JP 0x150

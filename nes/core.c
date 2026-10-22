@@ -17,6 +17,29 @@ void nes_port_scan_time(uint64_t us) { scan_us=us; }
 uint64_t nes_core_scan_time(void) { return scan_us; }
 static uint8_t video[NES_SCREEN_PITCH * NES_SCREEN_HEIGHT] __attribute__((aligned(8)));
 static bool loaded, initialized;
+static rom_cache_t cartridge_cache;
+static rom_slice_t cartridge_slice;
+static uint8_t cartridge_header[528];
+static size_t cartridge_prg;
+const rom_cache_t *nes_core_rom_cache(void){return &cartridge_cache;}
+uint32_t nes_port_rom_checksum(void){return cartridge_cache.source.checksum;}
+bool nes_port_rom_cached_address(const uint8_t *p){
+    uintptr_t a=(uintptr_t)p,b=(uintptr_t)cartridge_cache.data,f=(uintptr_t)cartridge_cache.fault_page;
+    return (a>=b && a-b<(size_t)cartridge_cache.count*cartridge_cache.page_size) ||
+        (cartridge_cache.fault_page && a>=f && a-f<cartridge_cache.page_size+16u);
+}
+bool nes_port_rom_paged(void){return cartridge_cache.source.read!=NULL;}
+uint8_t *nes_port_rom_page(unsigned chr,size_t offset,unsigned owner){
+    return rom_cache_get(&cartridge_cache,(chr?cartridge_prg:0)+offset,owner);
+}
+bool nes_port_rom_offset(const uint8_t *p,unsigned *chr,uint32_t *offset){
+    uintptr_t a=(uintptr_t)p,b=(uintptr_t)cartridge_cache.data;
+    if(!nes_port_rom_paged() || a<b || a-b>=(size_t)cartridge_cache.count*cartridge_cache.page_size)return false;
+    size_t k=(a-b)/cartridge_cache.page_size;
+    size_t at=(size_t)cartridge_cache.slots[k].page*cartridge_cache.page_size+(a-b)%cartridge_cache.page_size;
+    *chr=at>=cartridge_prg;*offset=(uint32_t)(at-(*chr?cartridge_prg:0));return true;
+}
+
 static const uint32_t crc_table[256] = {
     0x00000000u, 0x77073096u, 0xee0e612cu, 0x990951bau, 0x076dc419u, 0x706af48fu, 0xe963a535u, 0x9e6495a3u,
     0x0edb8832u, 0x79dcb8a4u, 0xe0d5e91eu, 0x97d2d988u, 0x09b64c2bu, 0x7eb17cbdu, 0xe7b82d07u, 0x90bf1d91u,
@@ -59,7 +82,7 @@ uint32_t nes_port_crc32(uint32_t seed, const void *data, size_t size) {
 }
 
 const char *nes_core_validate(const uint8_t *b, size_t size) {
-    if (!b || size < 16 || size > NES_ROM_LIMIT) return "ROM size invalid (max 3 MiB)";
+    if (!b || size < 16 || size > NES_ROM_LIMIT) return "ROM size invalid (max 6 MiB)";
     if (memcmp(b, "NES\032", 4)) return "Expected an iNES .nes file";
     if ((b[7] & 12) == 8) return "NES 2.0 is not supported by this core";
     if (b[7] & 3) return "VS/PlayChoice console is not supported";
@@ -72,10 +95,17 @@ const char *nes_core_validate(const uint8_t *b, size_t size) {
         if (mappers[i]->number == mapper) return NULL;
     return "Mapper is not supported by Nofrendo";
 }
-const char *nes_core_load(uint8_t *bytes, size_t size) {
+static const char *load_cartridge(uint8_t *bytes,size_t size,const rom_source_t *source,size_t budget) {
     const char *error = nes_core_validate(bytes, size);
     if (error) return error;
     nes_core_close();
+    if(source){
+        unsigned skip=16+((bytes[6]&4)?512:0);
+        cartridge_prg=(size_t)bytes[4]*16384;
+        cartridge_slice=(rom_slice_t){*source,skip};
+        rom_source_t logical={&cartridge_slice,rom_slice_read,size-skip,source->checksum};
+        if(!rom_cache_init(&cartridge_cache,&logical,2048,budget,48))return "Cannot allocate cartridge cache";
+    }
     if (!nes_init(SYS_DETECT, 16000, false, NULL)) return "NES initialization failed";
     initialized = true;
     rom_t *cart = rom_loadmem(bytes, size);
@@ -94,9 +124,15 @@ const char *nes_core_load(uint8_t *bytes, size_t size) {
     memset(video, 0, sizeof(video));
     return NULL;
 }
+const char *nes_core_load(uint8_t *bytes,size_t size){return load_cartridge(bytes,size,NULL,0);}
+const char *nes_core_load_source(const rom_source_t *source,size_t budget){
+    if(!source || !rom_source_read(source,0,cartridge_header,sizeof(cartridge_header)))return "Cannot read iNES header";
+    return load_cartridge(cartridge_header,(size_t)source->size,source,budget);
+}
+
 void nes_core_close(void) {
     if (initialized) nes_shutdown();
-    loaded = initialized = false;
+    loaded = initialized = false;rom_cache_close(&cartridge_cache);
 }
 __attribute__((noinline)) void nes_core_frame(bool draw, uint8_t pad1, uint8_t pad2) {
     if (!loaded) return;

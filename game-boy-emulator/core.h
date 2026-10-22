@@ -72,3 +72,7 @@ unsigned gb_core_model(void);
 const char *gb_core_title(void);
 /* CRC32 over a buffer, used to detect cartridge RAM changes. */
 uint32_t gb_port_crc32(uint32_t seed, const void *data, size_t size);
+
+#include "../common/rom/rom_cache.h"
+const char *gb_core_load_source(const rom_source_t *source,size_t budget);
+const rom_cache_t *gb_core_rom_cache(void);

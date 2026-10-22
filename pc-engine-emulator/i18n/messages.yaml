@@ -1,0 +1,177 @@
+namespace: app.pxa-pc-engine
+default_locale: en-US
+messages:
+  ui.title:
+    source: "PC Engine Emulator"
+    context: PCE ui title menu label
+    max_bytes: 112
+  ui.paused:
+    source: "Game paused"
+    context: PCE ui paused menu label
+    max_bytes: 112
+  ui.saving:
+    source: "Saving progress..."
+    context: PCE ui saving menu label
+    max_bytes: 112
+  ui.save.error:
+    source: "Save failed - retry"
+    context: PCE ui save error menu label
+    max_bytes: 112
+  ui.resume:
+    source: "Resume game"
+    context: PCE ui resume menu label
+    max_bytes: 112
+  ui.library:
+    source: "Choose game"
+    context: PCE ui library menu label
+    max_bytes: 112
+  ui.sound.on:
+    source: "Sound: ON"
+    context: PCE ui sound on menu label
+    max_bytes: 112
+  ui.sound.off:
+    source: "Sound: OFF"
+    context: PCE ui sound off menu label
+    max_bytes: 112
+  ui.sound.starting:
+    source: "Sound: starting..."
+    context: PCE ui sound starting menu label
+    max_bytes: 112
+  ui.sound.failed:
+    source: "Sound: retry"
+    context: PCE ui sound failed menu label
+    max_bytes: 112
+  ui.keys.auto:
+    source: "Keys: auto-hidden"
+    context: PCE ui keys auto menu label
+    max_bytes: 112
+  ui.keys.off:
+    source: "Keys: hidden"
+    context: PCE ui keys off menu label
+    max_bytes: 112
+  ui.loading:
+    source: "Loading game..."
+    context: PCE ui loading menu label
+    max_bytes: 112
+  ui.load.error:
+    source: "Cannot load game"
+    context: PCE ui load error menu label
+    max_bytes: 112
+  ui.error.detail:
+    source: "Check ROM and storage"
+    context: PCE ui error detail menu label
+    max_bytes: 112
+  ui.host.unsupported:
+    source: "Please update host firmware"
+    context: PCE ui host unsupported menu label
+    max_bytes: 112
+  ui.error.retry:
+    source: "Return to library and retry"
+    context: PCE ui error retry menu label
+    max_bytes: 112
+  ui.back.library:
+    source: "Back to library"
+    context: PCE ui back library menu label
+    max_bytes: 112
+  ui.pack:
+    source: "PACK"
+    context: PCE ui pack menu label
+    max_bytes: 112
+  ui.flash:
+    source: "FLASH"
+    context: PCE ui flash menu label
+    max_bytes: 112
+  ui.sd:
+    source: "SD"
+    context: PCE ui sd menu label
+    max_bytes: 112
+  ui.prev:
+    source: "Prev"
+    context: PCE ui prev menu label
+    max_bytes: 112
+  ui.next:
+    source: "Next"
+    context: PCE ui next menu label
+    max_bytes: 112
+  ui.refresh:
+    source: "Refresh"
+    context: PCE ui refresh menu label
+    max_bytes: 112
+  ui.display:
+    source: "Frame interval: {frames}"
+    context: PCE ui display menu label
+    max_bytes: 112
+    placeholders:
+      frames: u32
+  ui.keys.alpha:
+    source: "Keys: opacity {opacity}%"
+    context: PCE ui keys alpha menu label
+    max_bytes: 112
+    placeholders:
+      opacity: u32
+  ui.scanning:
+    source: "Scanning..."
+    context: PCE ui scanning menu label
+    max_bytes: 112
+  ui.no.roms:
+    source: "No games found"
+    context: PCE ui no roms menu label
+    max_bytes: 112
+  ui.hint:
+    source: "Choose a game to start"
+    context: PCE ui hint menu label
+    max_bytes: 112
+  ui.model:
+    source: "Model: {model}"
+    context: PCE ui hardware model label
+    max_bytes: 112
+    placeholders:
+      model: u32
+  control.select:
+    source: "SEL"
+    context: Floating game control label
+    max_bytes: 112
+  control.start:
+    source: "START"
+    context: Floating game control label
+    max_bytes: 112
+  control.menu:
+    source: "MENU"
+    context: Floating game control label
+    max_bytes: 112
+  ui.back:
+    source: "Back"
+    context: PCE library actions
+    max_bytes: 112
+  ui.exit:
+    source: "Exit emulator"
+    context: PCE library actions
+    max_bytes: 112
+  ui.exit.back:
+    source: "Use system Back to exit"
+    context: PCE library actions
+    max_bytes: 112
+  ui.empty.help:
+    source: "Add games for this platform, then refresh"
+    context: PCE library actions
+    max_bytes: 112
+  ui.flash.path:
+    source: "Storage: app private folder"
+    context: PCE library actions
+    max_bytes: 112
+  ui.sd.path:
+    source: "SD card folder:"
+    context: PCE library actions
+    max_bytes: 112
+  ui.scale.native:
+    source: "Video: original pixels"
+    context: PCE display options
+    max_bytes: 112
+  ui.scale.fit:
+    source: "Video: fit aspect ratio"
+    context: PCE display options
+    max_bytes: 112
+  ui.sd.query:
+    source: "Querying app media folder..."
+    context: PCE display options
+    max_bytes: 112

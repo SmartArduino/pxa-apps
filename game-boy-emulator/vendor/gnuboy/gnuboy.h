@@ -130,3 +130,6 @@ int gnuboy_load_state(const char *file);
 int gnuboy_save_state(const char *file);
 
 void gnuboy_rtc_sync(void);
+
+bool gnuboy_rom_banked(void);
+byte *gnuboy_rom_window(unsigned bank,unsigned page,bool load);

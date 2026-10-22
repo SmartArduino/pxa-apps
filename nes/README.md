@@ -2,6 +2,12 @@
 
 PXA Core 2 应用，基于 Retro-Go 的 Nofrendo 内核。NTSC 以每秒 60 个模拟帧运行；PAL 按原制式运行 50 帧，避免把 PAL 游戏加速。屏幕提交受独立跳帧和双缓冲背压控制。线性内存初始值和上限均为 4 MiB，避免旧固件在增长后保留失效的映射缓冲；需要有足够 PSRAM 的主机。**支持列表不等于所有游戏已验收，60fps 也需要按具体设备和 ROM 测量。**
 
+## 大 ROM
+
+iNES 1.0 文件上限为 6 MiB，仍按内核实际 mapper 范围解析。超过 1 MiB 或整块分配失败时，使用至多 256 KiB ROM 缓存，PRG/CHR 均按需读取；CPU 和 PPU 的活动映射分别锁定。小 ROM 保留驻留路径。SD 及私有 Flash 均通过 SDK 的 FS `read-at` 访问，卡带运行期间保留文件句柄；不需要把整个 ROM 放进 4 MiB 线性内存。
+
+分页模式的 ROM 只读，CHR-RAM 和 nametable RAM 仍可写。即时存档使用 v2 保存机器状态、RAM 和逻辑银行映射；驻留路径继续使用 v1。电池存档的 CRC32 身份及格式不变。`NES ROM` 每个统计窗口都给出卡带 CRC 和目标频率，分页时增加缓存容量、缺页、淘汰及读取耗时；存储读失败后停止模拟并保留已有存档。公共缓存契约见 [`common/rom`](../common/rom/README.md)。
+
 ## 构建和运行
 
 在 `pxa-projects` 工作区执行：
@@ -33,7 +39,7 @@ python3 tools/pxadb/pxadb.py package run pxa-nes --port /dev/ttyACM1
 
 菜单读取 Host 的安全区、圆形/圆角屏幕几何；游戏视口和触摸按键使用预先计算的安全矩形。圆屏采用内接矩形，圆角屏结合四角半径和安全边距，保留 NES 原始宽高比与黑边，不增加游戏帧内的逐像素形状裁剪。当前应用 Surface 支持 200–800 像素宽、160–480 像素高。旧主机未报告的物理遮挡无法由应用自行推断；无系统字号接口时保留位图菜单。
 
-0.1.33（release 39）扩展多游戏性能优化：在原有绝对自跳转之外，对实时映射允许的 `LDA/LDX/LDY zp; BEQ/BNE -4` 等待循环合并完整迭代，最后不足一次迭代的部分仍由解释器执行，保留寄存器、周期余数和 IRQ/NMI 边界。PPU 背景绘制在同一名称表区间复用页指针，水平跨表和 Mapper 锁存回调后刷新，CHR 数据继续实时读取。音频队列即将溢出时先重试写入 Host，避免在主机已腾出空间时仍丢旧采样；缓冲大小与正常路径的写入次数不增加。新增 Mapper 241。具体游戏的 LCD 完成帧率、内核耗时、无收益或回退场景见[多游戏性能实测](../../../docs/validation/2026-10-21-nes-library.zh-CN.md)。这些优化保留现有 Host 双核绘制、PCM 输出与 LCD 传输路径，未增加帧缓冲或改变固定 4 MiB 线性内存。
+性能路径：在原有绝对自跳转之外，对实时映射允许的 `LDA/LDX/LDY zp; BEQ/BNE -4` 等待循环合并完整迭代，最后不足一次迭代的部分仍由解释器执行，保留寄存器、周期余数和 IRQ/NMI 边界。PPU 背景绘制在同一名称表区间复用页指针，水平跨表和 Mapper 锁存回调后刷新，CHR 数据继续实时读取。音频队列即将溢出时先重试写入 Host，避免在主机已腾出空间时仍丢旧采样；缓冲大小与正常路径的写入次数不增加。新增 Mapper 241。这些优化保留现有 Host 双核绘制、PCM 输出与 LCD 传输路径，未增加帧缓冲或改变固定 4 MiB 线性内存。
 
 0.1.32（release 38）减少 6502 的空等开销：利用 NMI 发生时已有的 CPU 程序计数器和上一帧实际命中的空等，选择两套直接调用的扫描线循环；避免只检查帧入口漏掉帧中等待，同时不给普通扫描线循环添加探测。历史中断地址只提供提示，每个加速片段仍核对当前实时状态；读取任何指令字节前先检查当前页映射，以支持中断后的银行解除映射。显式保持 WASM LTO 对 PPU 扫描线、APU 混音和 NMI 热函数的内联，避免新增调用点使编译器撤销原有内联；两套帧函数保持独立，限制普通路径的控制流复杂度。在加速路径的 CPU 执行片段入口发现无副作用的绝对 `JMP` 自跳转时，把当前预算内的三周期重复批量计入。待处理的 IRQ 和 DMA 等待仍进入原路径；普通指令循环保持为独立函数。普通总线访问保留已验证的实现。保留最后一条指令的周期余数；扫描线、Mapper、APU 和 IRQ/NMI 的调用边界不变。只对经过实时映射、读处理器和指令字节检查的普通 RAM/ROM 启用，不按游戏名称或固定 ROM 地址启用，也不跳过轮询 I/O 的循环。`NES_REFERENCE_IDLE=1` 可回退原路径，`nes_cpu_idle_{optimized,reference}` 对照周期边界、DMA 等待、跨页、访存副作用、银行切换和中断。此优化不增加帧缓冲，不改变 50/60Hz 制式和模拟时间债务。 绘制调度保留小数间隔，通过轮流跳过不同数量的画面分配预算，避免需求从 2.00 帧轻微变为 2.01 帧时直接把屏幕更新降到每 3 帧一次。CPU/APU 时钟、10% 预算余量、积压反馈和手动绘制间隔继续保留；Surface 背压不会积累一串补画请求。在实际发生背压且预算接近两帧一画时，收紧到稳定的两帧间隔，减少缓冲归还事件尚未处理时的连续重试；更快场景自动退出该限制。反馈仅在一秒内的最低积压仍超过两帧时增加，避免批次入口的短暂峰值触发额外跳帧。历史积压即使不再增长，也会暂时降低绘图频率，让 CPU/APU 实际追赶完成后再恢复，不直接清零时间债务。
 
@@ -41,7 +47,7 @@ python3 tools/pxadb/pxadb.py package run pxa-nes --port /dev/ttyACM1
 
 0.1.29（交付 release 35，代码与测试 release 33 相同）在支持 GameRender 1.3 的 Host 上使用 `BLIT_INDEXED_RECT`：按源/目标矩形直接采样 INDEX8，原生转换 RGB565 并写入已获取的映射 Surface，256×240 原尺寸不会经过旧接口的 320×240 中间采样网格。手柄隐藏悬浮按键时启用；显示触摸按键或 GameRender 1.0–1.2 不支持新操作时自动使用原有渲染器。安装包要求至少 GameRender 1.0，仍提供 0.x 服务的旧固件需要先更新。Host 可把目标范围分给两个核心，调用返回前完成全部写入；不额外复制源图或调色板。LCD 输出仍使用主机已有的缓冲和 DMA 路径。DOIT GameKit-1 固件把显示准备和 PCM 输出放在 CPU0，与 CPU1 的下一帧模拟重叠；Host 按 32ms 时间预算让出 CPU，避免每条短命令后都休眠。
 
-详细扫描线采样默认关闭（`NES_PROFILE=0`）。启用后会输出 `NES PHASE`，但频繁的时钟导入本身有显著开销，不能将其时间当作无扰动 CPU/PPU 耗时，也不能用该版本验收最终帧率。常规 `NES PERF` / `CORE` / `SCHED` / `RASTER` 保留。本轮实测：马里奥约 12.25 → 42.99 LCD fps（PAL 模拟 50 Hz），重装机兵约 29.53 → 26.03 LCD fps（NTSC 模拟 60 Hz）；重装机兵仍有约 11.8% 的显示帧率回退。完整条件与限制见[空等、内联与分数绘图验证](../../../docs/validation/2026-10-21-nes-deep.zh-CN.md)。上轮实测与限制见[并行调度与原生转换验证](../../../docs/validation/2026-10-21-nes-parallel.zh-CN.md)。
+详细扫描线采样默认关闭（`NES_PROFILE=0`）。启用后会输出 `NES PHASE`，但频繁的时钟导入本身有显著开销，不能将其时间当作无扰动 CPU/PPU 耗时，也不能用该版本验收最终帧率。常规 `NES PERF` / `CORE` / `SCHED` / `RASTER` 保留，按卡带的 PAL/NTSC 目标分别验收。
 
 0.1.27（release 31）在 Korvo 使用与面板相同的 800×480 映射 Surface，游戏原始 256×240 像素居中显示，四周留黑边。Host 不再为它执行 2 倍 CPU 放大，可使用已有的不缩放呈现路径。黑边在缓冲失效时清零，之后仅更新变化的游戏图块和按键；菜单仍以原来的物理大小显示，按键命中位置、UI 密度转换、系统 i18n 与手柄自动隐藏继续保留。小于 NES 原始画面的面板仍使用保持比例的最近邻缩小。
 
@@ -49,7 +55,6 @@ python3 tools/pxadb/pxadb.py package run pxa-nes --port /dev/ttyACM1
 
 按键缓存记录每个按钮及其文字的实际包围框和覆盖图块。按下 A 时只更新 A 的反馈，不再扫描整条按键带或重绘菜单按钮下面的游戏区域。缓存/完整绘制的独立逐像素对照覆盖六种尺寸、两个输出缓冲和三种源对齐，共 9,360 帧。固定线性内存仍是 4MiB；800×480 双缓冲占用 1,536,000 字节，比此前实际注册的 400×240 双缓冲多 1,152,000 字节，减少了 Guest 内部可用堆空间。3MiB 是 ROM 格式准入上限，实际可加载大小还取决于画布和 Mapper 的 RAM 需求。
 
-本轮实测及限制见[原生尺寸与动态跳帧验证](../../../docs/validation/2026-10-20-nes-native-pacing.zh-CN.md)。以下历史版本的帧率不代表 0.1.27 的测量结果。
 
 0.1.24（release 28）增加 Korvo 800×480 屏幕支持：Guest 绘制 400×240，宿主 Surface 按整数 2 倍显示到面板；游戏内容保持 256:240 比例，居中显示为 512×480，两侧各留 144 像素黑边。UI 触摸事件使用 dp，先乘环境提供的 `density_q16` 转为面板像素，再除以 2 参与命中判断；环境变化时同步更新密度。双缓冲与按键覆盖图的最大宽度扩至 400，固定 4 MiB 线性内存保持不变。PAI Touch 和 GameKit 继续使用原分辨率。此版本保留 0.1.23 的 PPU 内核优化。
 
@@ -104,7 +109,7 @@ Surface 使用 `GUEST_MAPPED | PREFER_DIRECT_SCANOUT`：注册两个 Guest RGB56
 
 ## 测量和回归
 
-每五秒通过日志输出 `NES PERF`，带版本、单调时间戳、实际完成的 `frames` 和墙钟 `elapsed_us`。帧率由完成帧数除以真实单调时间计算，不采用定时器事件数。测量器直接订阅这些日志，窗口内不读写 flash；历史 `nes-perf.txt` 不再更新或作为验收来源。
+每五秒通过日志输出 `NES PERF`，版本由包元数据生成；结合独立的 `NES ROM` CRC/目标频率记录、单调时间戳、实际完成的 `frames` 和墙钟 `elapsed_us`。帧率由完成帧数除以真实单调时间计算，不采用定时器事件数。测量器直接订阅这些日志，窗口内不读写 flash；历史 `nes-perf.txt` 不再更新或作为验收来源。
 
 - `sim_x100`：真正执行的模拟帧率 ×100。
 - `submit_x100`：成功提交给 Surface 的帧率 ×100，不能当成 LCD 实际完成刷新率。
@@ -120,9 +125,7 @@ Surface 使用 `GUEST_MAPPED | PREFER_DIRECT_SCANOUT`：注册两个 Guest RGB56
 
 `NES DISPLAY` 另记录 Surface 的累计 `submitted`、`consumed`、`replaced` 和空闲缓冲数。`consumed` 表示宿主使用并释放 Guest 缓冲，旋转复制结束即可发生，仍不代表 LCD DMA 完成。支持 `PERF START display` 的固件可在 `PERF STOP` 返回 `display=1` 后，用 `completed * 1e6 / window_us` 计算面板全帧传输完成频率；它也不等于面板内部扫描频率或光学测量。测量过程中不要截图或读取 flash。
 
-0.1.19 同机重新对照时，默认设置的 LCD 完成频率约为马里奥初始场景 7.64fps、持续右+A 5.85fps、重装机兵初始场景 9.32fps；重装机兵 DISPLAY 1/1 约 10.4fps，模拟速度仍约 60fps。元数据缩小与整体 PSRAM 用量不同，内联增加了 AOT 代码体积；完整测量、内存快照和兼容性边界见[第二轮实测](../../../docs/validation/2026-10-20-nes-opt2.zh-CN.md)。当前固件的 GameRender 0.6 不能直接协商本地 SDK 1.0 的借用 INDEX8 路径，应用继续使用映射 Surface。
 
-0.1.18 在 PAI Touch / Clock 0.2、声音开启、全屏半透明按键和默认 DISPLAY 1/4 下，初始场景的 LCD 完成频率为马里奥约 6.79fps、重装机兵约 8.70fps；马里奥持续右+A的短测约 5.20fps。模拟速度仍分别约 50fps（PAL）和 60fps（NTSC）。这些是具体场景的测量，不能推广为所有游戏性能。马里奥改为 DISPLAY 1/1 后没有明显提高显示频率，积压最高 3 帧，未通过积压检查，因此继续保留默认策略。方法和原始结果见[渲染优化实测](../../../docs/validation/2026-10-20-nes-render.zh-CN.md)。
 
 默认使用 FirebrandX Composite Direct 的 64 色调色板。颜色验证可以使用 FCEUX 2.6.6 加载同名 `Composite_Direct_FBX.pal`，用 `gui.gdscreenshot(true)` 保存 256×240 参考帧，再运行 `tests/compare_colors.py` 比较游戏区域。工具比较编码后的 RGB565，兼容实机与桌面 PNG 对 5/6 位通道扩展时相差 1 个 RGB8 单位的情况；静态画面和相同调色板是比较前提。实机顶部 FPS 遮罩可用 `--ignore-top 20` 排除。
 
@@ -146,7 +149,7 @@ python3 local/pxa-apps/nes/tests/device_perf.py --port /dev/ttyACM1 --output loc
 
 跳帧优化对照原始精灵扫描实现，比对 CPU、RAM 和视频 CRC；25 个用例（含 PAL、trainer）的签名必须相同。
 
-`nes_video_test` 将局部重绘和独立的完整重绘逐像素比较，覆盖六种尺寸（含 400×240、800×480 原生像素黑边）、有无缓存、两个缓冲、变化抵消、按键状态和暂停后失效，以及 8/4/1 字节对齐输入，共 9,360 帧。`nes_bus_dma_test` 检查 144 个 DMA 用例及实时 ROM/SRAM 读处理器；历史的 7,800 帧版本和 DMA 测试也曾以 AddressSanitizer/UndefinedBehaviorSanitizer 验证，本轮检查范围以最新验证报告为准。
+`nes_video_test` 将局部重绘和独立的完整重绘逐像素比较，覆盖六种尺寸（含 400×240、800×480 原生像素黑边）、有无缓存、两个缓冲、变化抵消、按键状态和暂停后失效，以及 8/4/1 字节对齐输入，共 9,360 帧。`nes_bus_dma_test` 检查 144 个 DMA 用例及实时 ROM/SRAM 读处理器；对应原生测试可使用 AddressSanitizer / UndefinedBehaviorSanitizer 检查。
 
 回归覆盖 16 组 Blargg 独立指令 ROM、NROM/MMC1/UxROM/CNROM/MMC3/AxROM/GxROM 启动和输入、计时余量、音频采样数、ROM 截断和格式拒绝。Mapper 测试为自行生成的简单程序，不代表完整商业游戏验收。组合版 `official_only.nes` 目前仍未通过，不应把独立测试通过扩展成整个测试库通过。
 
@@ -166,5 +169,3 @@ python3 local/pxa-apps/nes/tests/device_perf.py --port /dev/ttyACM1 --output loc
 历史测试包 `local/nes-work/metal-play-20261020/package/pxa-nes.pxa`（0.1.19 / release 21）曾包含用户提供的重装机兵和马里奥。0.1.35 起发布包与源目录均不附带游戏，连诊断 ROM 也不随包安装；已有游戏保存在应用私有 `roms/` 或 SD 媒体目录。0.1.21 / release 23 的旧候选包及固件位于 `local/nes-work/opt3-20261020`，仅供历史验证记录参考。
 
 当前前端和内核仍使用 C Guest SDK。C++ 前端可以保留 C NES 内核并使用相同的 GuestMapped Surface；切换语言本身不会消除 PPU 绘制、旋转或面板传输成本，性能需同路径同场景实测。
-
-Korvo 的尺寸限制、最近邻色彩修复、多点触摸和最终帧率见[Korvo 实测报告](../../../docs/validation/2026-10-20-korvo-nes-multitouch.zh-CN.md)。该版本马里奥尚未维持 PAL 50Hz，重装机兵所测场景约 60Hz，但 LCD 完成更新均未达到 60fps。

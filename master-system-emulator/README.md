@@ -1,0 +1,32 @@
+# Master System模拟器
+
+独立 PXA App，包 ID 为 `pxa-master-system`。内核为 SMS Plus（retro-go 分支），公共前端位于 [`common/emulator`](../common/emulator/README.md)。
+
+## ROM 与存档
+
+- 文件格式：.sms，文件名扩展名不区分大小写；当前直接读取未压缩文件。
+- SD 卡通常使用 `/sdcard/PXA/media/lucinhu/pxa-master-system/`；空游戏库的 SD 提示中显示系统返回的实际目录。
+- Flash 使用本 App 私有目录中的 `roms/`。在游戏库中用左右方向键切换来源，Y 刷新目录。
+- 电池存档按平台与 ROM CRC32 分开保存；切换游戏、暂停和退出时写入临时文件并原子替换。
+- 范围：4 MiB（另允许 512 字节复制头）；ROM 使用有界缓存，具体可寻址范围取决于 mapper。卡带自动选择已知 mapper，支持 PAL/NTSC。
+
+## 操作与画面
+
+声音使用 SN76489 PSG；当前不提供部分日版 SMS 使用的 YM2413 FM 扩展。
+
+两颗动作键使用 A/B；Start 对应主机 Pause。 支持两个独立手柄输入。Start+Select 打开/关闭游戏菜单，松开组合键后再接收游戏按键。手柄有按键操作后自动隐藏悬浮键；触摸屏空白区域继续游戏，触摸 MENU 打开菜单，支持多指同时按方向和动作键。
+
+默认按平台显示比例放大到屏幕安全区内的最大尺寸并保留黑边，菜单可切换原始尺寸。界面通过 PXA i18n 跟随系统语言，中英文翻译位于 `i18n/`。菜单使用系统字体，游戏中的透明按键使用预计算遮罩与 RGB565 混色表。
+
+声音在游戏菜单中打开并申请播放权限。CPU、图像和声音按同一模拟帧推进；自动跳过部分绘制以减少负载，不通过丢失 CPU 时间来伪造满速。性能与实际支持范围需要结合目标硬件和 ROM 判断。
+
+## 构建与测试
+
+在 PXA 固件工作区根目录执行：
+
+```sh
+tools/app.sh build master-system-emulator --board doit-gamekit-1 --target simulator,esp32s31 --aot-only \
+  --output local/artifacts/console-build/$(date +%Y%m%d-%H%M%S)
+```
+
+可运行的原生测试与测量方法见公共前端说明。内核来源、固定版本和本地修改列在 `vendor/` 的 `*upstream.json`；原许可证保留在对应源码中。使用和分发必须同时遵守这些许可证。

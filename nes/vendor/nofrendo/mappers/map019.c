@@ -141,7 +141,7 @@ static void ram_write(uint32 address, uint8 value)
 static void set_nametable(uint8 i, uint8 value)
 {
     if (value < 0xE0)
-        ppu_setpage(8 + (i & 3), &map019->cart->chr_rom[(value % (map019->cart->chr_rom_banks * 8)) << 10]);
+        ppu_setpage(8 + (i & 3), (nes_port_rom_paged()?nes_port_rom_page(1,(value % (map019->cart->chr_rom_banks*8))<<10,32+8+(i&3)):&map019->cart->chr_rom[(value % (map019->cart->chr_rom_banks * 8)) << 10]));
     else
         ppu_setnametable(i & 3, value & 1);
     map019->nt_map[i & 3] = value;

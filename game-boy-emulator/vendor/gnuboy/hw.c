@@ -270,14 +270,14 @@ void gb_hw_updatemap(void)
 {
 	int rombank = cart.rombank & (cart.romsize - 1);
 
-	if (cart.rombanks[rombank] == NULL)
-	{
-		gnuboy_load_bank(rombank);
-	}
-
-    for (unsigned page = 0; page < 4; ++page) {
-        hw.rmap[page] = cart.rombanks[0] + page * 4096;
-        hw.rmap[page + 4] = cart.rombanks[rombank] + page * 4096;
+    if(gnuboy_rom_banked()){
+        for(unsigned page=0;page<8;++page)hw.rmap[page]=gnuboy_rom_window(page<4?0:(unsigned)rombank,page,false);
+    }else{
+        if(!cart.rombanks[rombank])gnuboy_load_bank(rombank);
+        for(unsigned page=0;page<4;++page){
+            hw.rmap[page]=cart.rombanks[0]+page*4096;
+            hw.rmap[page+4]=cart.rombanks[rombank]+page*4096;
+        }
     }
     if (hw.bios && !(R_BIOS & 1)) hw.rmap[0] = NULL;
     hw.rmap[8] = hw.wmap[8] = hw.vbanks[R_VBK & 1];
@@ -632,11 +632,20 @@ byte gb_hw_read(unsigned a)
 		}
 		// fall through
 	case 0x2000:
-		return cart.rombanks[0][a & 0x3fff];
+		if(gnuboy_rom_banked()){
+            unsigned page=a>>12;byte *p=gnuboy_rom_window(0,page,true);
+            if(!(page==0 && hw.bios && !(R_BIOS&1)))hw.rmap[page]=p;
+            return p[a&4095];
+        }
+        return cart.rombanks[0][a&0x3fff];
 
 	case 0x4000: // Cart ROM
 	case 0x6000:
-		return cart.rombanks[cart.rombank][a & 0x3FFF];
+		if(gnuboy_rom_banked()){
+            unsigned page=a>>12;byte *p=gnuboy_rom_window((unsigned)cart.rombank&(cart.romsize-1),page,true);
+            hw.rmap[page]=p;return p[a&4095];
+        }
+        return cart.rombanks[cart.rombank][a&0x3fff];
 
 	case 0x8000: // Video RAM
 		return hw.vbanks[R_VBK&1][a & 0x1FFF];

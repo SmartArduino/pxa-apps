@@ -8,6 +8,20 @@
 #include <string.h>
 #include <time.h>
 
+#include "../common/rom/rom_cache.h"
+static rom_cache_t cartridge_cache;
+const rom_cache_t *gb_core_rom_cache(void){return &cartridge_cache;}
+bool gnuboy_rom_banked(void){return cartridge_cache.source.read!=NULL;}
+uint8_t *gnuboy_rom_window(unsigned bank,unsigned page,bool load){
+    uint64_t offset=(uint64_t)bank*16384+(page&3)*4096;
+    if(!load){
+        rom_cache_unpin(&cartridge_cache,page);
+        if(offset>=cartridge_cache.source.size || cartridge_cache.lookup[offset>>12]==UINT32_MAX)return NULL;
+    }
+    return rom_cache_get(&cartridge_cache,offset,page);
+}
+
+
 #define AUDIO_CAPACITY 1024u
 static uint16_t video[GB_VIDEO_WIDTH * GB_VIDEO_HEIGHT];
 static int16_t audio[AUDIO_CAPACITY * 2];
@@ -69,12 +83,14 @@ const char *gb_core_validate(const uint8_t *bytes, size_t size) {
 }
 void gb_core_close(void) {
     gnuboy_free_rom();free(GB.rambanks);free(GB.vbanks);free(GB.bios);
+    rom_cache_close(&cartridge_cache);
     memset(&GB,0,sizeof(GB));loaded=false;ram_size=0;checksum=0;
     memset(video,0,sizeof(video));memset(title,0,sizeof(title));
 }
-const char *gb_core_load(const uint8_t *bytes, size_t size) {
+static const char *load_cartridge(const uint8_t *bytes,size_t size,const rom_source_t *source,size_t budget) {
     const char *error=gb_core_validate(bytes,size);if(error)return error;
     gb_core_close();
+    if(source && !rom_cache_init(&cartridge_cache,source,4096,budget,8))return "Cannot allocate cartridge cache";
     if (gnuboy_init(GB_AUDIO_RATE,GB_AUDIO_STEREO_S16,GB_PIXEL_565_LE,NULL,NULL)) {
         gb_core_close();return "Failed to allocate the Game Boy board";
     }
@@ -94,8 +110,15 @@ const char *gb_core_load(const uint8_t *bytes, size_t size) {
     memcpy(title,bytes+0x134,length);title[length]=0;
     for(unsigned i=0;i<length;++i)if((uint8_t)title[i]<32 || (uint8_t)title[i]==255){title[i]=0;break;}
     if(!*title)memcpy(title,"UNNAMED",8);
-    checksum=gb_port_crc32(0,bytes,size);rtc_timestamp=wall_time();loaded=true;
+    checksum=source?source->checksum:gb_port_crc32(0,bytes,size);rtc_timestamp=wall_time();loaded=true;
     return NULL;
+}
+
+const char *gb_core_load(const uint8_t *bytes,size_t size){return load_cartridge(bytes,size,NULL,0);}
+const char *gb_core_load_source(const rom_source_t *source,size_t budget){
+    uint8_t header[512];
+    if(!source || !rom_source_read(source,0,header,sizeof(header)))return "Cannot read cartridge header";
+    return load_cartridge(header,(size_t)source->size,source,budget);
 }
 
 /* RTC uses wall time when read/written/saved; long running games sync once

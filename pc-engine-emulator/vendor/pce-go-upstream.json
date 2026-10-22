@@ -1,0 +1,11 @@
+{
+  "url": "https://github.com/ducalex/retro-go",
+  "commit": "4ced120669750ca7228fd0414211430c1d923166",
+  "directory": "retro-core/components/pce-go",
+  "patches": [
+    "Borrowed HuCard image; removed unused file and snapshot entry points",
+    "RGB333 to RGB565 palette and 16-bit raster output including 512-pixel modes",
+    "Portable 16-bit memory access with bank boundaries and I/O handling",
+    "Bounded non-power-of-two and SF2 bank mapping; checked onboard RAM allocation"
+  ]
+}

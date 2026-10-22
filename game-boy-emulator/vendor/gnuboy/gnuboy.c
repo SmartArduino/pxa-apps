@@ -211,7 +211,7 @@ int gnuboy_load_rom(const byte *data, size_t size)
 	for (size_t pos = 0; pos / BANK_SIZE < (size_t)cart.romsize; pos += BANK_SIZE)
 	{
 		// FIXME: We need a way to tag this as non-freeable...
-		cart.rombanks[pos / BANK_SIZE] = (byte *)(pos + BANK_SIZE <= size ? data + pos : gnuboy_open_bus);
+		cart.rombanks[pos / BANK_SIZE] = gnuboy_rom_banked() ? NULL : (byte *)(pos + BANK_SIZE <= size ? data + pos : gnuboy_open_bus);
 	}
 
 	// Detect colorization palette that the real GBC would be using

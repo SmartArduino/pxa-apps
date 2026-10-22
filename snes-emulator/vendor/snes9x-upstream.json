@@ -1,0 +1,11 @@
+{
+  "url": "https://github.com/ducalex/retro-go",
+  "commit": "4ced120669750ca7228fd0414211430c1d923166",
+  "directory": "retro-core/components/snes9x",
+  "patches": [
+    "Memory-backed borrowed ROM loader with writable mapping guard",
+    "Freed sound allocations on shutdown; 128 KiB SRAM and portable S-RTC save suffix in adapter",
+    "Bounded header scoring shifts; original unsupported enhancement chips rejected by adapter",
+    "Checked partial initialization allocations and avoided null ScreenColors pointer arithmetic"
+  ]
+}

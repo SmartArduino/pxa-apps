@@ -1,5 +1,6 @@
 /* Exercise the actual frontend and event codecs without a display/device. */
 #include "../main.c"
+#include "../vendor/gnuboy/hw.h"
 #include <assert.h>
 
 static unsigned closed,calls[24][24];

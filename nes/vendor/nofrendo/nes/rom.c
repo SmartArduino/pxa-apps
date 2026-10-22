@@ -109,7 +109,7 @@ rom_t *rom_loadmem(uint8 *data, size_t size)
 
       size_t data_offset = rom.trainer ? 0x210 : 0x010;
 
-      rom.checksum = CRC32(0, rom.data_ptr + data_offset, rom.data_len - data_offset);
+      rom.checksum = nes_port_rom_paged()?nes_port_rom_checksum():CRC32(0,rom.data_ptr+data_offset,rom.data_len-data_offset);
 
       const db_game_t *entry = games_database;
       while (entry->crc && entry->crc != rom.checksum)
@@ -169,9 +169,9 @@ rom_t *rom_loadmem(uint8 *data, size_t size)
          return NULL;
       }
 
-      rom.prg_rom = data + data_offset;
+      rom.prg_rom = nes_port_rom_paged()?nes_port_rom_page(0,0,UINT32_MAX):data+data_offset;
       if (rom.chr_rom_banks > 0)
-         rom.chr_rom = data + data_offset + (rom.prg_rom_banks * ROM_PRG_BANK_SIZE);
+         rom.chr_rom = nes_port_rom_paged()?nes_port_rom_page(1,0,UINT32_MAX):data+data_offset+(rom.prg_rom_banks*ROM_PRG_BANK_SIZE);
    }
    else if (!memcmp(data, ROM_FDS_MAGIC, 4) || !memcmp(data, ROM_FDS_RAW_MAGIC, 15))
    {

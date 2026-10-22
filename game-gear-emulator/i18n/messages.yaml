@@ -1,0 +1,177 @@
+namespace: app.pxa-game-gear
+default_locale: en-US
+messages:
+  ui.title:
+    source: "Game Gear Emulator"
+    context: GG ui title menu label
+    max_bytes: 112
+  ui.paused:
+    source: "Game paused"
+    context: GG ui paused menu label
+    max_bytes: 112
+  ui.saving:
+    source: "Saving progress..."
+    context: GG ui saving menu label
+    max_bytes: 112
+  ui.save.error:
+    source: "Save failed - retry"
+    context: GG ui save error menu label
+    max_bytes: 112
+  ui.resume:
+    source: "Resume game"
+    context: GG ui resume menu label
+    max_bytes: 112
+  ui.library:
+    source: "Choose game"
+    context: GG ui library menu label
+    max_bytes: 112
+  ui.sound.on:
+    source: "Sound: ON"
+    context: GG ui sound on menu label
+    max_bytes: 112
+  ui.sound.off:
+    source: "Sound: OFF"
+    context: GG ui sound off menu label
+    max_bytes: 112
+  ui.sound.starting:
+    source: "Sound: starting..."
+    context: GG ui sound starting menu label
+    max_bytes: 112
+  ui.sound.failed:
+    source: "Sound: retry"
+    context: GG ui sound failed menu label
+    max_bytes: 112
+  ui.keys.auto:
+    source: "Keys: auto-hidden"
+    context: GG ui keys auto menu label
+    max_bytes: 112
+  ui.keys.off:
+    source: "Keys: hidden"
+    context: GG ui keys off menu label
+    max_bytes: 112
+  ui.loading:
+    source: "Loading game..."
+    context: GG ui loading menu label
+    max_bytes: 112
+  ui.load.error:
+    source: "Cannot load game"
+    context: GG ui load error menu label
+    max_bytes: 112
+  ui.error.detail:
+    source: "Check ROM and storage"
+    context: GG ui error detail menu label
+    max_bytes: 112
+  ui.host.unsupported:
+    source: "Please update host firmware"
+    context: GG ui host unsupported menu label
+    max_bytes: 112
+  ui.error.retry:
+    source: "Return to library and retry"
+    context: GG ui error retry menu label
+    max_bytes: 112
+  ui.back.library:
+    source: "Back to library"
+    context: GG ui back library menu label
+    max_bytes: 112
+  ui.pack:
+    source: "PACK"
+    context: GG ui pack menu label
+    max_bytes: 112
+  ui.flash:
+    source: "FLASH"
+    context: GG ui flash menu label
+    max_bytes: 112
+  ui.sd:
+    source: "SD"
+    context: GG ui sd menu label
+    max_bytes: 112
+  ui.prev:
+    source: "Prev"
+    context: GG ui prev menu label
+    max_bytes: 112
+  ui.next:
+    source: "Next"
+    context: GG ui next menu label
+    max_bytes: 112
+  ui.refresh:
+    source: "Refresh"
+    context: GG ui refresh menu label
+    max_bytes: 112
+  ui.display:
+    source: "Frame interval: {frames}"
+    context: GG ui display menu label
+    max_bytes: 112
+    placeholders:
+      frames: u32
+  ui.keys.alpha:
+    source: "Keys: opacity {opacity}%"
+    context: GG ui keys alpha menu label
+    max_bytes: 112
+    placeholders:
+      opacity: u32
+  ui.scanning:
+    source: "Scanning..."
+    context: GG ui scanning menu label
+    max_bytes: 112
+  ui.no.roms:
+    source: "No games found"
+    context: GG ui no roms menu label
+    max_bytes: 112
+  ui.hint:
+    source: "Choose a game to start"
+    context: GG ui hint menu label
+    max_bytes: 112
+  ui.model:
+    source: "Model: {model}"
+    context: GG ui hardware model label
+    max_bytes: 112
+    placeholders:
+      model: u32
+  control.select:
+    source: "SEL"
+    context: Floating game control label
+    max_bytes: 112
+  control.start:
+    source: "START"
+    context: Floating game control label
+    max_bytes: 112
+  control.menu:
+    source: "MENU"
+    context: Floating game control label
+    max_bytes: 112
+  ui.back:
+    source: "Back"
+    context: GG library actions
+    max_bytes: 112
+  ui.exit:
+    source: "Exit emulator"
+    context: GG library actions
+    max_bytes: 112
+  ui.exit.back:
+    source: "Use system Back to exit"
+    context: GG library actions
+    max_bytes: 112
+  ui.empty.help:
+    source: "Add games for this platform, then refresh"
+    context: GG library actions
+    max_bytes: 112
+  ui.flash.path:
+    source: "Storage: app private folder"
+    context: GG library actions
+    max_bytes: 112
+  ui.sd.path:
+    source: "SD card folder:"
+    context: GG library actions
+    max_bytes: 112
+  ui.scale.native:
+    source: "Video: original pixels"
+    context: GG display options
+    max_bytes: 112
+  ui.scale.fit:
+    source: "Video: fit aspect ratio"
+    context: GG display options
+    max_bytes: 112
+  ui.sd.query:
+    source: "Querying app media folder..."
+    context: GG display options
+    max_bytes: 112

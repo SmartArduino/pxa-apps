@@ -111,3 +111,9 @@ AOT artifacts. `PXA_BUILD_CACHE_DIR` enables incremental builds;
 apps. Compiler caching adds no Guest or Host memory. Capacity definitions and
 SDK/compiler inputs participate in compiler cache keys; do not reuse archives
 built with different layout definitions by hand.
+
+## Console emulators
+
+Each platform is a separate App with isolated media and saves, using a shared PXA frontend:
+
+[SNES](snes-emulator/README.md) · [Mega Drive](mega-drive-emulator/README.md) · [Master System](master-system-emulator/README.md) · [Game Gear](game-gear-emulator/README.md) · [PC Engine](pc-engine-emulator/README.md).

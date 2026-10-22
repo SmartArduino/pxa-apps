@@ -45,11 +45,13 @@ size_t nes_state_size(void) {
     nes_t *m=nes_getptr();
     if(!m->cart || !m->cart->prg_rom)return 0;
     return sizeof(snapshot_t)+2048+4096+2048+
-        (m->cart->prg_ram_banks+m->cart->chr_ram_banks+m->cart->chr_rom_banks)*8192u+
+        (m->cart->prg_ram_banks+m->cart->chr_ram_banks+(nes_port_rom_paged()?0:m->cart->chr_rom_banks))*8192u+
         NES_SCREEN_PITCH*NES_SCREEN_HEIGHT;
 }
 static int encode(mapping_t *out,const uint8_t *p,size_t span,const region_t r[8]) {
     *out=(mapping_t){0,0};if(!p)return 1;
+    unsigned chr;uint32_t offset;
+    if(nes_port_rom_offset(p,&chr,&offset)){*out=(mapping_t){chr?3:2,offset};return 1;}
     for(unsigned n=1;n<8;++n) {
         uintptr_t a=(uintptr_t)p,b=(uintptr_t)r[n].p;
         if(r[n].p && a>=b && a-b<=r[n].n && span<=r[n].n-(a-b)) {
@@ -62,7 +64,10 @@ static int valid(mapping_t p,size_t span,const region_t r[8]) {
     return p.region<8 && (!p.region ? !p.offset :
         r[p.region].p && p.offset<=r[p.region].n && span<=r[p.region].n-p.offset);
 }
-static uint8_t *decode(mapping_t p,const region_t r[8]) {return p.region?r[p.region].p+p.offset:NULL;}
+static uint8_t *decode(mapping_t p,const region_t r[8],unsigned owner) {
+    if(nes_port_rom_paged() && (p.region==2 || p.region==3))return nes_port_rom_page(p.region==3,p.offset,owner);
+    return p.region?r[p.region].p+p.offset:NULL;
+}
 static uint32_t checksum(const snapshot_t *s,size_t n) {
     size_t offset=offsetof(snapshot_t,rom);
     return nes_port_crc32(0,(const uint8_t*)s+offset,n-offset);
@@ -72,7 +77,7 @@ const char *nes_state_save(void *data,size_t size) {
     if(!need || size!=need || !data)return "Invalid snapshot buffer";
     if(!supported(m))return "Snapshot is not supported for this mapper/audio chip";
     snapshot_t *s=data;memset(s,0,sizeof(*s));memcpy(s->magic,"PXANESST",8);
-    s->version=1;s->bytes=need;s->rom=nes_core_checksum();s->mapper=nes_core_mapper();s->layout=layout();
+    s->version=nes_port_rom_paged()?2:1;s->bytes=need;s->rom=nes_core_checksum();s->mapper=nes_core_mapper();s->layout=layout();
     region_t r[8];regions(m,r);
     s->prg_ram=r[4].n;s->chr_ram=r[5].n;s->prg_rom=r[2].n;s->chr_rom=r[3].n;
     s->scanline=m->scanline;s->cycles=m->cycles;s->timer_period=m->timer_period;
@@ -88,10 +93,10 @@ const char *nes_state_save(void *data,size_t size) {
     for(unsigned n=0;n<PPU_PAGECOUNT;++n)
         if(!encode(&s->ppu_map[n],ppu_getpage(n),PPU_PAGESIZE,r))return "Unrecognized PPU mapping";
     uint8_t *p=(uint8_t*)(s+1);
-    /* This core can corrupt pattern memory on illegal in-render writes.
-     * Preserve CHR bytes as well, including that existing emulated behavior. */
+    /* Resident v1 retains historical CHR bytes; paged v2 maps immutable ROM
+     * and stores only machine state and writable RAM. */
     const unsigned ram[]={1,4,5,6,7,3};
-    for(unsigned n=0;n<6;++n){region_t a=r[ram[n]];if(a.n)memcpy(p,a.p,a.n);p+=a.n;}
+    for(unsigned n=0;n<(nes_port_rom_paged()?5u:6u);++n){region_t a=r[ram[n]];if(a.n)memcpy(p,a.p,a.n);p+=a.n;}
     memcpy(p,nes_core_video()-8,NES_SCREEN_PITCH*NES_SCREEN_HEIGHT);
     s->crc=checksum(s,size);return NULL;
 }
@@ -100,7 +105,7 @@ const char *nes_state_load(const void *data,size_t size) {
     if(!data || !need || size!=need || size<sizeof(snapshot_t))return "Snapshot size mismatch";
     /* The FS buffer is malloc-aligned. Callers may also pass unaligned data. */
     snapshot_t copy;memcpy(&copy,data,sizeof(copy));const snapshot_t *s=&copy;
-    if(memcmp(s->magic,"PXANESST",8) || s->version!=1 || s->bytes!=size || s->layout!=layout())return "Unsupported snapshot format";
+    if(memcmp(s->magic,"PXANESST",8) || s->version!=(nes_port_rom_paged()?2u:1u) || s->bytes!=size || s->layout!=layout())return "Unsupported snapshot format";
     if(s->rom!=nes_core_checksum() || s->mapper!=nes_core_mapper())return "Snapshot belongs to another ROM";
     if(s->crc!=nes_port_crc32(0,(const uint8_t*)data+offsetof(snapshot_t,rom),size - offsetof(snapshot_t,rom)))return "Snapshot checksum failed";
     if(!supported(m))return "Snapshot is not supported for this mapper/audio chip";
@@ -112,15 +117,15 @@ const char *nes_state_load(const void *data,size_t size) {
     for(unsigned n=0;n<MEM_PAGECOUNT;++n)if(!valid(s->cpu_map[n],MEM_PAGESIZE,r))return "Invalid CPU mapping";
     for(unsigned n=0;n<PPU_PAGECOUNT;++n)if(!s->ppu_map[n].region || !valid(s->ppu_map[n],PPU_PAGESIZE,r))return "Invalid PPU mapping";
     const uint8_t *p=(const uint8_t*)data+sizeof(snapshot_t);
-    /* This core can corrupt pattern memory on illegal in-render writes.
-     * Preserve CHR bytes as well, including that existing emulated behavior. */
+    /* Resident v1 retains historical CHR bytes; paged v2 maps immutable ROM
+     * and stores only machine state and writable RAM. */
     const unsigned ram[]={1,4,5,6,7,3};
-    for(unsigned n=0;n<6;++n){region_t a=r[ram[n]];if(a.n)memcpy(a.p,p,a.n);p+=a.n;}
+    for(unsigned n=0;n<(nes_port_rom_paged()?5u:6u);++n){region_t a=r[ram[n]];if(a.n)memcpy(a.p,p,a.n);p+=a.n;}
     if(m->mapper->set_state)m->mapper->set_state(copy.mapper_state);
-    for(unsigned n=0;n<MEM_PAGECOUNT;++n)mem_setpage(n,decode(s->cpu_map[n],r));
+    for(unsigned n=0;n<MEM_PAGECOUNT;++n)mem_setpage(n,decode(s->cpu_map[n],r,n));
     copy.cpu.zp=m->cpu->zp;copy.cpu.stack=m->cpu->stack;copy.cpu.pages=m->cpu->pages;*m->cpu=copy.cpu;
     copy.ppu.nametab=m->ppu->nametab;copy.ppu.latchfunc=m->ppu->latchfunc;copy.ppu.vreadfunc=m->ppu->vreadfunc;
-    for(unsigned n=0;n<PPU_PAGECOUNT;++n)copy.ppu.page[n]=decode(s->ppu_map[n],r)-(n<<PPU_PAGESHIFT);
+    for(unsigned n=0;n<PPU_PAGECOUNT;++n)copy.ppu.page[n]=decode(s->ppu_map[n],r,32+n)-(n<<PPU_PAGESHIFT);
     /* Runtime rendering options and ROM geometry belong to the running app,
      * not to the emulated machine. Keep them live, also preserving the core's
      * constant-option specialization under whole-program optimization. */

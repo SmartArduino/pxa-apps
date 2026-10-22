@@ -1,0 +1,177 @@
+namespace: app.pxa-mega-drive
+default_locale: en-US
+messages:
+  ui.title:
+    source: "Mega Drive Emulator"
+    context: MD ui title menu label
+    max_bytes: 112
+  ui.paused:
+    source: "Game paused"
+    context: MD ui paused menu label
+    max_bytes: 112
+  ui.saving:
+    source: "Saving progress..."
+    context: MD ui saving menu label
+    max_bytes: 112
+  ui.save.error:
+    source: "Save failed - retry"
+    context: MD ui save error menu label
+    max_bytes: 112
+  ui.resume:
+    source: "Resume game"
+    context: MD ui resume menu label
+    max_bytes: 112
+  ui.library:
+    source: "Choose game"
+    context: MD ui library menu label
+    max_bytes: 112
+  ui.sound.on:
+    source: "Sound: ON"
+    context: MD ui sound on menu label
+    max_bytes: 112
+  ui.sound.off:
+    source: "Sound: OFF"
+    context: MD ui sound off menu label
+    max_bytes: 112
+  ui.sound.starting:
+    source: "Sound: starting..."
+    context: MD ui sound starting menu label
+    max_bytes: 112
+  ui.sound.failed:
+    source: "Sound: retry"
+    context: MD ui sound failed menu label
+    max_bytes: 112
+  ui.keys.auto:
+    source: "Keys: auto-hidden"
+    context: MD ui keys auto menu label
+    max_bytes: 112
+  ui.keys.off:
+    source: "Keys: hidden"
+    context: MD ui keys off menu label
+    max_bytes: 112
+  ui.loading:
+    source: "Loading game..."
+    context: MD ui loading menu label
+    max_bytes: 112
+  ui.load.error:
+    source: "Cannot load game"
+    context: MD ui load error menu label
+    max_bytes: 112
+  ui.error.detail:
+    source: "Check ROM and storage"
+    context: MD ui error detail menu label
+    max_bytes: 112
+  ui.host.unsupported:
+    source: "Please update host firmware"
+    context: MD ui host unsupported menu label
+    max_bytes: 112
+  ui.error.retry:
+    source: "Return to library and retry"
+    context: MD ui error retry menu label
+    max_bytes: 112
+  ui.back.library:
+    source: "Back to library"
+    context: MD ui back library menu label
+    max_bytes: 112
+  ui.pack:
+    source: "PACK"
+    context: MD ui pack menu label
+    max_bytes: 112
+  ui.flash:
+    source: "FLASH"
+    context: MD ui flash menu label
+    max_bytes: 112
+  ui.sd:
+    source: "SD"
+    context: MD ui sd menu label
+    max_bytes: 112
+  ui.prev:
+    source: "Prev"
+    context: MD ui prev menu label
+    max_bytes: 112
+  ui.next:
+    source: "Next"
+    context: MD ui next menu label
+    max_bytes: 112
+  ui.refresh:
+    source: "Refresh"
+    context: MD ui refresh menu label
+    max_bytes: 112
+  ui.display:
+    source: "Frame interval: {frames}"
+    context: MD ui display menu label
+    max_bytes: 112
+    placeholders:
+      frames: u32
+  ui.keys.alpha:
+    source: "Keys: opacity {opacity}%"
+    context: MD ui keys alpha menu label
+    max_bytes: 112
+    placeholders:
+      opacity: u32
+  ui.scanning:
+    source: "Scanning..."
+    context: MD ui scanning menu label
+    max_bytes: 112
+  ui.no.roms:
+    source: "No games found"
+    context: MD ui no roms menu label
+    max_bytes: 112
+  ui.hint:
+    source: "Choose a game to start"
+    context: MD ui hint menu label
+    max_bytes: 112
+  ui.model:
+    source: "Model: {model}"
+    context: MD ui hardware model label
+    max_bytes: 112
+    placeholders:
+      model: u32
+  control.select:
+    source: "SEL"
+    context: Floating game control label
+    max_bytes: 112
+  control.start:
+    source: "START"
+    context: Floating game control label
+    max_bytes: 112
+  control.menu:
+    source: "MENU"
+    context: Floating game control label
+    max_bytes: 112
+  ui.back:
+    source: "Back"
+    context: MD library actions
+    max_bytes: 112
+  ui.exit:
+    source: "Exit emulator"
+    context: MD library actions
+    max_bytes: 112
+  ui.exit.back:
+    source: "Use system Back to exit"
+    context: MD library actions
+    max_bytes: 112
+  ui.empty.help:
+    source: "Add games for this platform, then refresh"
+    context: MD library actions
+    max_bytes: 112
+  ui.flash.path:
+    source: "Storage: app private folder"
+    context: MD library actions
+    max_bytes: 112
+  ui.sd.path:
+    source: "SD card folder:"
+    context: MD library actions
+    max_bytes: 112
+  ui.scale.native:
+    source: "Video: original pixels"
+    context: MD display options
+    max_bytes: 112
+  ui.scale.fit:
+    source: "Video: fit aspect ratio"
+    context: MD display options
+    max_bytes: 112
+  ui.sd.query:
+    source: "Querying app media folder..."
+    context: MD display options
+    max_bytes: 112

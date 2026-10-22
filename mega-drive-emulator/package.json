@@ -1,0 +1,91 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [
+    2,
+    0
+  ],
+  "target_sdk": [
+    2,
+    0
+  ],
+  "compile_sdk": [
+    2,
+    0
+  ],
+  "id": "pxa-mega-drive",
+  "version": "0.1.7",
+  "release_sequence": 8,
+  "name": "Mega Drive Emulator",
+  "description": "Mega Drive Emulator for PXA with SD/flash library, audio and touch/gamepad controls",
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 8388608,
+      "pinned": true
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "artifact": "aot",
+      "services": [
+        "surface",
+        "window",
+        "ui",
+        "log",
+        "permission",
+        "audio",
+        {
+          "name": "clock",
+          "min_version": [
+            0,
+            2
+          ],
+          "features": []
+        },
+        {
+          "name": "fs",
+          "min_version": [
+            0,
+            3
+          ],
+          "features": [
+            "app-media-root",
+            "read-at"
+          ]
+        },
+        {
+          "name": "assets",
+          "min_version": [
+            2,
+            0
+          ]
+        }
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "random",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "required": false,
+      "scope": "media"
+    }
+  ],
+  "icon": "assets/icon.png",
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  }
+}

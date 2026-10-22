@@ -49,7 +49,7 @@ static inline void gb_pacer_tick(gb_pacer_t *p,uint64_t now,
       }
     }
     uint32_t interval=2u*65536;
-    uint32_t period=1000000/hz,budget=period-period/10;
+    uint32_t period=1000000/hz,budget=period-period/20;
     if(p->draw_us && p->skip_us) {
         if(p->draw_us<=budget)interval=65536;
         else if(p->skip_us>=budget)interval=16u*65536;

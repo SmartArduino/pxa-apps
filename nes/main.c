@@ -1,5 +1,8 @@
 /* PXA NES frontend. GPL-2.0-or-later. */
 #include "core.h"
+#ifndef NES_APP_VERSION
+#define NES_APP_VERSION "development"
+#endif
 #include "state_snapshot.h"
 #include "audio_fifo.h"
 #include "controls.h"
@@ -15,6 +18,7 @@
 
 #include "pxa_clock.h"
 #include "pxa_fs_roots.h"
+#include "../common/rom/pxa_rom_source.h"
 #include "pxa_game_render_spans.h"
 #include "pxa_permission.h"
 #include "pxa_surface.h"
@@ -57,6 +61,10 @@ static char media_display_path[256]="/PXA/media/";
 static char save_path[40], save_tmp[48];
 static uint8_t *rom_data, *save_data;
 static size_t rom_size, rom_used, save_size, save_used;
+static pxa_rom_file_t rom_file;
+static unsigned rom_paged,rom_crc_start;
+static uint8_t rom_crc_header[16];
+static uint32_t rom_stream_crc;
 static uint32_t saved_crc, pending_save_crc;
 static uint8_t pad[2], touches[16];
 static uint8_t controller_previous[2],controller_connected[2];
@@ -364,8 +372,13 @@ static void game_ready(void) {
     nes_port_log("NES READY name=%s mapper=%u hz=%u bytes=%u crc=%08x",names[selected],nes_core_mapper(),nes_core_rate(),(unsigned)rom_size,nes_core_checksum());
 }
 static void finish_rom(void) {
-    close_handle(&file);
-    const char *error=nes_core_load(rom_data,rom_size);if(error){fail(error);return;}
+    const char *error;
+    if(rom_paged){
+        memset(&rom_file,0,sizeof(rom_file));rom_file.handle=file;file=0;
+        rom_source_t source={&rom_file,pxa_rom_read,rom_size,rom_stream_crc};
+        error=nes_core_load_source(&source,256u*1024u);free(rom_data);rom_data=NULL;
+    }else {close_handle(&file);error=nes_core_load(rom_data,rom_size);}
+    if(!error && nes_core_rom_cache()->error)error="Cartridge paging read failed";if(error){fail(error);return;}
     snprintf(save_path,sizeof(save_path),"nes-%08x.sav",nes_core_checksum());
     snprintf(save_tmp,sizeof(save_tmp),"%s.tmp",save_path);
     saved_crc=0;reading_save=1;
@@ -374,7 +387,7 @@ static void finish_rom(void) {
 }
 static void select_rom(unsigned n) {
     if(n>=count || save_pending || writing_save || save_replace_pending)return;
-    nes_core_close();rom_loaded=0;free(rom_data);rom_data=NULL;rom_size=rom_used=0;
+    nes_core_close();close_handle(&rom_file.handle);rom_loaded=0;free(rom_data);rom_data=NULL;rom_size=rom_used=0;
     selected=n;mode=LOADING;redraw=1;release_input();nes_schedule_reset(&schedule);
     char path[150];snprintf(path,sizeof(path),"roms/%s",names[n]);
     int r=source?pxa_fs_request_open_at(T_ROM,media,names[n],strlen(names[n]),PXA_FS_OPEN_READ):
@@ -422,9 +435,18 @@ static __attribute__((noinline)) void io_tick(void) {
     if(file && rom_data && !reading_save && mode==LOADING) {
         for(unsigned k=0;k<8 && micros()-started<4000;++k) {
             size_t left=rom_size-rom_used;if(left>4096)left=4096;
-            int r=pxa_fs_read(file,rom_data+rom_used,left);
+            int r=pxa_fs_read(file,rom_data+(rom_paged?0:rom_used),left);
             if(r==PXA_STATUS_WOULD_BLOCK)break;
             if(r<=0 || (unsigned)r>left){close_handle(&file);fail("ROM read failed or truncated");break;}
+            if(rom_paged){
+                if(rom_used<16){
+                    unsigned header_bytes=16-rom_used;if(header_bytes>(unsigned)r)header_bytes=(unsigned)r;
+                    memcpy(rom_crc_header+rom_used,rom_data,header_bytes);
+                    if(rom_used+header_bytes==16)rom_crc_start=16+((rom_crc_header[6]&4)?512:0);
+                }
+                unsigned start=rom_used<rom_crc_start?rom_crc_start-rom_used:0;
+                if(start<(unsigned)r)rom_stream_crc=rom_crc32(rom_stream_crc,rom_data+start,(unsigned)r-start);
+            }
             rom_used+=r;if(rom_used==rom_size){finish_rom();break;}
         }
     }
@@ -476,7 +498,9 @@ static __attribute__((noinline)) void tick(uint64_t now) {
         draw=index>=0;
         uint8_t p=pad[0];for(unsigned i=0;i<16;++i)p|=touches[i];
         if((p&0x30)==0x30)p&=~0x30;if((p&0xc0)==0xc0)p&=~0xc0;
-        uint64_t t=micros();nes_core_frame(draw,p,pad[1]);uint64_t core_elapsed=micros()-t;
+        uint64_t t=micros();nes_core_frame(draw,p,pad[1]);
+        if(nes_core_rom_cache()->error){rom_loaded=0;close_handle(&audio);fail("ROM read failed; check storage and reopen game");break;}
+        uint64_t core_elapsed=micros()-t;
         cpu_us+=core_elapsed;if(draw)core_draw_us+=core_elapsed;else core_skip_us+=core_elapsed;
         scan_us+=nes_core_scan_time();
         ++n_frames;nes_schedule_step(&schedule);
@@ -491,17 +515,23 @@ static __attribute__((noinline)) void tick(uint64_t now) {
     tick_us+=wall_now-started;++tick_count;
     if(wall_now>=metric_at+5000000) {
         uint64_t elapsed=wall_now-metric_at;
-        nes_port_log("NES PERF version=0.1.37 wall_us=%llu frames=%llu elapsed_us=%llu sim_x100=%llu submit_x100=%llu cpu_avg_us=%llu scan_avg_us=%llu skipped=%llu debt_frames=%llu audio_drop=%llu mapper=%u paint_avg_us=%llu keys_alpha=%u keys_auto=%u paint_px_avg=%llu",
+        if(rom_paged){const rom_cache_t *cache=nes_core_rom_cache();
+            nes_port_log("NES ROM crc=%08x rate_num=%u rate_den=1 cache_bytes=%u hits=%llu misses=%llu evictions=%llu io_bytes=%llu io_us=%llu max_io_us=%llu",
+                nes_core_checksum(),nes_core_rate(),cache->count*cache->page_size,(unsigned long long)cache->hits,(unsigned long long)cache->misses,
+                (unsigned long long)cache->evictions,(unsigned long long)rom_file.read_bytes,
+                (unsigned long long)rom_file.read_us,(unsigned long long)rom_file.max_read_us);
+        }else nes_port_log("NES ROM crc=%08x rate_num=%u rate_den=1",nes_core_checksum(),nes_core_rate());
+        nes_port_log("NES PERF version=" NES_APP_VERSION " wall_us=%llu frames=%llu elapsed_us=%llu sim_x100=%llu submit_x100=%llu cpu_avg_us=%llu scan_avg_us=%llu skipped=%llu debt_frames=%llu audio_drop=%llu mapper=%u paint_avg_us=%llu keys_alpha=%u keys_auto=%u paint_px_avg=%llu",
             (unsigned long long)wall_now,(unsigned long long)n_frames,(unsigned long long)elapsed,(unsigned long long)(n_frames*100000000/elapsed),(unsigned long long)(n_present*100000000/elapsed),
             (unsigned long long)(cpu_us/(n_frames?n_frames:1)),(unsigned long long)(scan_us/(n_frames?n_frames:1)),
             (unsigned long long)skipped,(unsigned long long)(schedule.debt/1000000),
             (unsigned long long)audio_dropped,nes_core_mapper(),(unsigned long long)(paint_frames?paint_us/paint_frames:0),nes_controls_visible(&controls)?controls.alpha:0,controls.controller_hidden,(unsigned long long)(paint_frames?paint_pixels/paint_frames:0));
-        nes_port_log("NES CORE version=0.1.37 wall_us=%llu drawn_frames=%llu skipped_frames=%llu draw_avg_us=%llu skip_avg_us=%llu",
+        nes_port_log("NES CORE version=" NES_APP_VERSION " wall_us=%llu drawn_frames=%llu skipped_frames=%llu draw_avg_us=%llu skip_avg_us=%llu",
             (unsigned long long)wall_now,(unsigned long long)paint_frames,
             (unsigned long long)(n_frames-paint_frames),
             (unsigned long long)(paint_frames?core_draw_us/paint_frames:0),
             (unsigned long long)(n_frames>paint_frames?core_skip_us/(n_frames-paint_frames):0));
-        nes_port_log("NES SCHED version=0.1.37 wall_us=%llu pacing_skip=%llu buffer_skip=%llu requested=%u every=%u interval_x1000=%u draw_est_us=%u skip_est_us=%u feedback=%u sound=%u ticks=%llu work_us=%llu",
+        nes_port_log("NES SCHED version=" NES_APP_VERSION " wall_us=%llu pacing_skip=%llu buffer_skip=%llu requested=%u every=%u interval_x1000=%u draw_est_us=%u skip_est_us=%u feedback=%u sound=%u ticks=%llu work_us=%llu",
             (unsigned long long)wall_now,(unsigned long long)skip_pacing,
             (unsigned long long)skip_buffer,display_divisor,pacer.every,(unsigned)((uint64_t)pacer.interval_q16*1000/65536),
             pacer.draw_us,pacer.skip_us,pacer.feedback,audio!=0,
@@ -667,7 +697,7 @@ int32_t pxa_app_start(const uint8_t *config,uint32_t size) {
 void pxa_app_stop(uint32_t reason) {
     (void)reason;
     /* Host has already revoked handles. Core imports are forbidden on stop. */
-    nes_core_close();free(rom_data);free(save_data);free(slot_data);slot_data=NULL;slot_phase=0;slot_dir=slot_file=0;rom_data=save_data=NULL;
+    nes_core_close();close_handle(&rom_file.handle);free(rom_data);free(save_data);free(slot_data);slot_data=NULL;slot_phase=0;slot_dir=slot_file=0;rom_data=save_data=NULL;
 }
 int32_t pxa_app_on_event(const uint8_t *data,uint32_t size) {
     pxa_event_t e;if(!pxa_parse_event(data,size,&e))return PXA_EVENT_UNHANDLED;
@@ -685,7 +715,7 @@ int32_t pxa_app_on_event(const uint8_t *data,uint32_t size) {
     if(e.token==T_STATS && e.service==PXA_SURFACE_SERVICE) {
         pxa_surface_state_t state;
         if(pxa_surface_parse_state(&e,T_STATS,&state) && !state.status)
-            nes_port_log("NES DISPLAY version=0.1.37 wall_us=%llu submitted=%llu consumed=%llu replaced=%llu free=%u",
+            nes_port_log("NES DISPLAY version=" NES_APP_VERSION " wall_us=%llu submitted=%llu consumed=%llu replaced=%llu free=%u",
                 (unsigned long long)micros(),(unsigned long long)state.submitted_frames,
                 (unsigned long long)state.presented_frames,(unsigned long long)state.replaced_frames,state.free_buffers);
         return PXA_EVENT_HANDLED;
@@ -796,8 +826,11 @@ int32_t pxa_app_on_event(const uint8_t *data,uint32_t size) {
         }
         if(e.token==T_ROM+101) {pxa_fs_seek_result_t r;if(!pxa_fs_parse_seek(&e,T_ROM+101,&r) || r.status){close_handle(&file);fail("Cannot seek ROM");return PXA_EVENT_HANDLED;}}
         if(e.token==T_ROM || e.token==T_ROM+101) {
-            if(rom_size<16 || rom_size>NES_ROM_LIMIT){close_handle(&file);fail("ROM size invalid (max 3 MiB)");return PXA_EVENT_HANDLED;}
-            rom_data=malloc(rom_size);if(!rom_data){close_handle(&file);fail("Not enough memory for ROM");}
+            if(rom_size<16 || rom_size>NES_ROM_LIMIT){close_handle(&file);fail("ROM size invalid (max 6 MiB)");return PXA_EVENT_HANDLED;}
+            rom_paged=rom_size>1024u*1024u;rom_stream_crc=0;rom_crc_start=16;
+            rom_data=malloc(rom_paged?4096:rom_size);
+            if(!rom_data && !rom_paged){rom_paged=1;rom_data=malloc(4096);}
+            if(!rom_data){close_handle(&file);fail("Not enough memory for ROM");}
             return PXA_EVENT_HANDLED;
         }
         if(e.token==T_SAVE_READ) {

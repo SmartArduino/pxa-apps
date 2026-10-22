@@ -123,3 +123,9 @@ void rom_free(void);
 
 void rom_savesram(const char *filename);
 void rom_loadsram(const char *filename);
+
+bool nes_port_rom_paged(void);
+uint8_t *nes_port_rom_page(unsigned chr,size_t offset,unsigned owner);
+uint32_t nes_port_rom_checksum(void);
+
+bool nes_port_rom_cached_address(const uint8_t *pointer);

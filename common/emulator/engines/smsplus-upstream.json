@@ -1,0 +1,15 @@
+{
+  "url": "https://github.com/ducalex/retro-go",
+  "commit": "4ced120669750ca7228fd0414211430c1d923166",
+  "directory": "retro-core/components/smsplus",
+  "patches": [
+    "Fixed integer widths, removed unused file-based loader and state entry points",
+    "Borrowed ROM mapping and graceful load failure",
+    "RGB565 full-range SMS/GG palettes and persistent palette cache",
+    "Fractional samples from video scanline clock; integer PSG gain",
+    "Freed render lookup buffers on shutdown; bounded scroll scratch, aligned-safe access and unsigned shifts",
+    "Batched HALT cycles with refresh counter, IRQ and EI-shadow preservation; tested against instruction stepping",
+    "Borrowed indexed output for native Host palette conversion/scaling with lazy RGB565 fallback",
+    "68 KiB decoded row cache, invalidated by all three VRAM write entry points and reset; both horizontal orientations"
+  ]
+}

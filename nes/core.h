@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#define NES_ROM_LIMIT (3u * 1024u * 1024u)
+#define NES_ROM_LIMIT (6u * 1024u * 1024u)
 #define NES_VIDEO_PITCH 272u
 const char *nes_core_validate(const uint8_t *bytes, size_t size);
 const char *nes_core_load(uint8_t *bytes, size_t size);
@@ -23,3 +23,10 @@ typedef struct {
     unsigned samples;
 } nes_core_profile_t;
 void nes_core_profile_take(nes_core_profile_t out[2]);
+
+#include "../common/rom/rom_cache.h"
+const char *nes_core_load_source(const rom_source_t *source,size_t budget);
+const rom_cache_t *nes_core_rom_cache(void);
+bool nes_port_rom_paged(void);
+uint8_t *nes_port_rom_page(unsigned chr,size_t offset,unsigned owner);
+bool nes_port_rom_offset(const uint8_t *pointer,unsigned *chr,uint32_t *offset);

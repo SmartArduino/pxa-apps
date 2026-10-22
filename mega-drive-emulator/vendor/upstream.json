@@ -1,0 +1,17 @@
+{
+  "url": "https://github.com/libretro/picodrive",
+  "commit": "1890c2932234c9d30f4cd3851d02228baae8f09e",
+  "submodules": {
+    "pico/sound/emu2413": "a2dfc20ff507e4fd075cd325620bcea655e2c1f7"
+  },
+  "patches": [
+    "Borrowed writable cartridge image with capacity-checked resize and external ownership",
+    "Completed NO_32X and NO_SMS portability guards",
+    "Standalone cartridge platform adapter with portable FAME/CZ80, RGB565 and stereo PCM",
+    "PXA log bridge and built-in mapper database, without WASI stdio/file media dependencies",
+    "Defined unsigned sprite packing shifts",
+    "Preserved unshifted WebAssembly function-table indices in memory handler maps",
+    "Memory-cartridge build omits CD media, unzip and file-I/O constructors; keeps built-in mapper database",
+    "Defined unsigned FAME long fetch and video-port packing shifts"
+  ]
+}

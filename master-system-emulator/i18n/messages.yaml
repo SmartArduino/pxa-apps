@@ -1,0 +1,177 @@
+namespace: app.pxa-master-system
+default_locale: en-US
+messages:
+  ui.title:
+    source: "Master System Emulator"
+    context: SMS ui title menu label
+    max_bytes: 112
+  ui.paused:
+    source: "Game paused"
+    context: SMS ui paused menu label
+    max_bytes: 112
+  ui.saving:
+    source: "Saving progress..."
+    context: SMS ui saving menu label
+    max_bytes: 112
+  ui.save.error:
+    source: "Save failed - retry"
+    context: SMS ui save error menu label
+    max_bytes: 112
+  ui.resume:
+    source: "Resume game"
+    context: SMS ui resume menu label
+    max_bytes: 112
+  ui.library:
+    source: "Choose game"
+    context: SMS ui library menu label
+    max_bytes: 112
+  ui.sound.on:
+    source: "Sound: ON"
+    context: SMS ui sound on menu label
+    max_bytes: 112
+  ui.sound.off:
+    source: "Sound: OFF"
+    context: SMS ui sound off menu label
+    max_bytes: 112
+  ui.sound.starting:
+    source: "Sound: starting..."
+    context: SMS ui sound starting menu label
+    max_bytes: 112
+  ui.sound.failed:
+    source: "Sound: retry"
+    context: SMS ui sound failed menu label
+    max_bytes: 112
+  ui.keys.auto:
+    source: "Keys: auto-hidden"
+    context: SMS ui keys auto menu label
+    max_bytes: 112
+  ui.keys.off:
+    source: "Keys: hidden"
+    context: SMS ui keys off menu label
+    max_bytes: 112
+  ui.loading:
+    source: "Loading game..."
+    context: SMS ui loading menu label
+    max_bytes: 112
+  ui.load.error:
+    source: "Cannot load game"
+    context: SMS ui load error menu label
+    max_bytes: 112
+  ui.error.detail:
+    source: "Check ROM and storage"
+    context: SMS ui error detail menu label
+    max_bytes: 112
+  ui.host.unsupported:
+    source: "Please update host firmware"
+    context: SMS ui host unsupported menu label
+    max_bytes: 112
+  ui.error.retry:
+    source: "Return to library and retry"
+    context: SMS ui error retry menu label
+    max_bytes: 112
+  ui.back.library:
+    source: "Back to library"
+    context: SMS ui back library menu label
+    max_bytes: 112
+  ui.pack:
+    source: "PACK"
+    context: SMS ui pack menu label
+    max_bytes: 112
+  ui.flash:
+    source: "FLASH"
+    context: SMS ui flash menu label
+    max_bytes: 112
+  ui.sd:
+    source: "SD"
+    context: SMS ui sd menu label
+    max_bytes: 112
+  ui.prev:
+    source: "Prev"
+    context: SMS ui prev menu label
+    max_bytes: 112
+  ui.next:
+    source: "Next"
+    context: SMS ui next menu label
+    max_bytes: 112
+  ui.refresh:
+    source: "Refresh"
+    context: SMS ui refresh menu label
+    max_bytes: 112
+  ui.display:
+    source: "Frame interval: {frames}"
+    context: SMS ui display menu label
+    max_bytes: 112
+    placeholders:
+      frames: u32
+  ui.keys.alpha:
+    source: "Keys: opacity {opacity}%"
+    context: SMS ui keys alpha menu label
+    max_bytes: 112
+    placeholders:
+      opacity: u32
+  ui.scanning:
+    source: "Scanning..."
+    context: SMS ui scanning menu label
+    max_bytes: 112
+  ui.no.roms:
+    source: "No games found"
+    context: SMS ui no roms menu label
+    max_bytes: 112
+  ui.hint:
+    source: "Choose a game to start"
+    context: SMS ui hint menu label
+    max_bytes: 112
+  ui.model:
+    source: "Model: {model}"
+    context: SMS ui hardware model label
+    max_bytes: 112
+    placeholders:
+      model: u32
+  control.select:
+    source: "SEL"
+    context: Floating game control label
+    max_bytes: 112
+  control.start:
+    source: "START"
+    context: Floating game control label
+    max_bytes: 112
+  control.menu:
+    source: "MENU"
+    context: Floating game control label
+    max_bytes: 112
+  ui.back:
+    source: "Back"
+    context: SMS library actions
+    max_bytes: 112
+  ui.exit:
+    source: "Exit emulator"
+    context: SMS library actions
+    max_bytes: 112
+  ui.exit.back:
+    source: "Use system Back to exit"
+    context: SMS library actions
+    max_bytes: 112
+  ui.empty.help:
+    source: "Add games for this platform, then refresh"
+    context: SMS library actions
+    max_bytes: 112
+  ui.flash.path:
+    source: "Storage: app private folder"
+    context: SMS library actions
+    max_bytes: 112
+  ui.sd.path:
+    source: "SD card folder:"
+    context: SMS library actions
+    max_bytes: 112
+  ui.scale.native:
+    source: "Video: original pixels"
+    context: SMS display options
+    max_bytes: 112
+  ui.scale.fit:
+    source: "Video: fit aspect ratio"
+    context: SMS display options
+    max_bytes: 112
+  ui.sd.query:
+    source: "Querying app media folder..."
+    context: SMS display options
+    max_bytes: 112
