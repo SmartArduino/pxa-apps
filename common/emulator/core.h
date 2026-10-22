@@ -53,3 +53,8 @@ static inline unsigned emu_core_rate(void){return (EMU_CLOCK_HZ+EMU_FRAME_CYCLES
 static inline unsigned emu_core_model(void){return emu_core_info.model;}
 static inline const char *emu_core_title(void){return emu_core_info.title;}
 static inline unsigned emu_core_audio_rate(void){return emu_core_info.audio_rate;}
+
+/* Complete machine state; cartridge RAM alone is not an instant snapshot. */
+size_t emu_state_size(void);
+const char *emu_state_save(void *data,size_t size);
+const char *emu_state_load(const void *data,size_t size);

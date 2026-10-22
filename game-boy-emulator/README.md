@@ -11,6 +11,8 @@ PXA Core 2 应用，使用 gnuboy 的 GB/CGB 内核，包含中文、英文游�
 
 复制后点“刷新”，或按手柄 Y。文件扩展名不区分大小写；每个来源最多列出 128 个文件，文件名最长 127 字节。应用 ID 保持 `pxa-game-boy`，媒体和私有目录按签名身份隔离。
 
+菜单支持一号、二号手柄：首行向上进入顶部存储来源，左右或 L/R 切换，A/Start 确认、B 返回、Y 刷新；方向长按连续移动。GameKit 固件需支持 Canvas 菜单的 controller 订阅路由。
+
 ## 操作
 
 | 操作 | 手柄 | 触摸 |
@@ -75,3 +77,5 @@ ctest --test-dir local/gb-native --output-on-failure
 ## 来源与许可
 
 gnuboy 来源 <https://github.com/ducalex/retro-go>，固定版本 `4ced120669750ca7228fd0414211430c1d923166`，遵循 GPL-2.0-or-later；保留 `vendor/gnuboy/COPYING` 和 `CREDITS`。PXA 前端沿用 NES 应用的 GPL-2.0-or-later 代码。独立文件保留文件头许可；Noto Sans CJK 字体子集遵循 `licenses/ui-font-OFL.txt`。构建和测试产物存放于 Git 忽略的本地目录，不随源码或 ROM 分发。
+
+即时存档、多存档列表、系统主题配色和悬浮按键布局与[公共前端约定](../common/emulator/README.md)一致。GB/GBC 状态包含 CPU、LCD、APU、RTC、工作 RAM、显存及卡带 RAM，恢复时重建指针和 ROM 分页映射；游戏帧路径不执行存档读写。

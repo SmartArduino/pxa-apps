@@ -76,3 +76,8 @@ uint32_t gb_port_crc32(uint32_t seed, const void *data, size_t size);
 #include "../common/rom/rom_cache.h"
 const char *gb_core_load_source(const rom_source_t *source,size_t budget);
 const rom_cache_t *gb_core_rom_cache(void);
+
+/* Complete pause-only machine snapshots, separate from cartridge battery RAM. */
+size_t gb_state_size(void);
+const char *gb_state_save(void *data,size_t size);
+const char *gb_state_load(const void *data,size_t size);

@@ -130,3 +130,5 @@ bool emu_core_save_import(const uint8_t *data,size_t size){
     }
     memcpy(Memory.SRAM,data,ram_bytes);return true;
 }
+
+#include "state_snapshot.inc"

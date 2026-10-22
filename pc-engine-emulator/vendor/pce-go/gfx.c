@@ -469,3 +469,13 @@ gfx_run(void)
 	/* Always call at least once (to handle pending IRQs) */
 	gfx_irq(-1);
 }
+
+/* Pause-only scalar raster state. Output pointers are borrowed each draw. */
+void gfx_state_get(int values[6]) {
+ values[0]=last_line_counter;values[1]=line_counter;values[2]=gfx_context.scroll_x;
+ values[3]=gfx_context.scroll_y;values[4]=gfx_context.control;values[5]=gfx_context.latched;
+}
+void gfx_state_set(const int values[6]) {
+ last_line_counter=values[0];line_counter=values[1];gfx_context.scroll_x=values[2];
+ gfx_context.scroll_y=values[3];gfx_context.control=values[4];gfx_context.latched=values[5];
+}

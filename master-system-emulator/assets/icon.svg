@@ -1,1 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192"><rect width="192" height="192" rx="40" fill="#252b31"/><path d="M45 63Q33 63 27 83L19 117Q16 139 35 142Q47 145 59 125H133Q145 145 157 142Q176 139 173 117L165 83Q159 63 147 63Z" fill="#e6e9ec"/><rect x="46" y="82" width="13" height="41" rx="3" fill="#252b31"/><rect x="32" y="96" width="41" height="13" rx="3" fill="#252b31"/><circle cx="143" cy="91" r="9" fill="#ef6662"/><circle cx="127" cy="109" r="9" fill="#ef6662"/><rect x="83" y="111" width="12" height="5" rx="2" fill="#717b89"/><rect x="99" y="111" width="12" height="5" rx="2" fill="#717b89"/><text x="96" y="44" font-family="DejaVu Sans,sans-serif" font-weight="bold" font-size="23" text-anchor="middle" fill="#ef6662">SMS</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" role="img" aria-label="SMS console emulator">
+<defs><linearGradient id="bg" x2="0" y2="1"><stop stop-color="#713043"/><stop offset="1" stop-color="#391b2d"/></linearGradient></defs>
+<rect width="192" height="192" rx="40" fill="url(#bg)"/>
+<ellipse cx="96" cy="166" rx="76" ry="13" fill="#000" opacity=".2"/>
+<text x="96" y="33" fill="#fff" font-family="DejaVu Sans,sans-serif" font-size="21" font-weight="bold" letter-spacing="3" text-anchor="middle">SMS</text>
+
+<path d="M25 71L42 55H159L172 72V140L159 154H29L20 145V82Z" fill="#161d2a" stroke="#a5808d" stroke-width="2"/>
+<path d="M42 55H159L172 72H29Z" fill="#3b4050"/>
+<path d="M24 115H169V140H24Z" fill="#cc4056"/>
+<path d="M37 114H159V121H37Z" fill="#f57784"/>
+<path d="M56 67H147V103H56Z" fill="#2c3343" stroke="#667081" stroke-width="2"/>
+<path d="M62 75H141V85H62Z" fill="#080e1c"/>
+<g stroke="#657082" stroke-width="2"><path d="M31 86H44M31 93H44M31 100H44"/></g>
+<rect x="33" y="130" width="20" height="8" rx="2" fill="#0c1521"/>
+<rect x="65" y="128" width="51" height="7" rx="2" fill="#651e35"/>
+<rect x="132" y="128" width="20" height="13" rx="2" fill="#b1bac4"/>
+<circle cx="157" cy="132" r="3" fill="#ff9c77"/>
+<path d="M63 142H129Q137 142 137 151V175H55V151Q55 142 63 142Z" fill="#343c4a" stroke="#a1a6b0" stroke-width="2"/>
+<path d="M69 148h8v7h7v8h-7v7h-8v-7h-7v-8h7Z" fill="#111925"/>
+<rect x="101" y="154" width="13" height="13" rx="3" fill="#d8dce4"/><rect x="119" y="154" width="13" height="13" rx="3" fill="#d8dce4"/>
+
+</svg>

@@ -79,3 +79,5 @@ const int16_t *emu_core_audio(size_t *frames){if(frames)*frames=loaded&&enabled?
 size_t emu_core_save_size(void){return loaded&&Pico.sv.data?Pico.sv.size:0;}
 bool emu_core_save_export(uint8_t *data,size_t size){size_t n=emu_core_save_size();if(!n || !data || size<n)return false;memcpy(data,Pico.sv.data,n);return true;}
 bool emu_core_save_import(const uint8_t *data,size_t size){if(!data || !size || size!=emu_core_save_size())return false;memcpy(Pico.sv.data,data,size);return true;}
+
+#include "state_snapshot.inc"

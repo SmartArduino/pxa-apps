@@ -5150,3 +5150,13 @@ uint8_t DSP4GetByte (uint16_t address)
 
 	return (0x80);
 }
+
+/* Private DSP allocations are rebuilt on ROM load. Their payloads are POD. */
+static void *S9xDSPSnapshotPointer(void) {
+ switch(Settings.DSP) {case 1:return DSP1;case 2:return DSP2;case 3:return DSP3;case 4:return DSP4;default:return NULL;}
+}
+size_t S9xDSPSnapshotSize(void) {
+ switch(Settings.DSP) {case 1:return sizeof(*DSP1);case 2:return sizeof(*DSP2);case 3:return sizeof(*DSP3);case 4:return sizeof(*DSP4);default:return 0;}
+}
+void S9xDSPSnapshotSave(void *data) {if(S9xDSPSnapshotSize())memcpy(data,S9xDSPSnapshotPointer(),S9xDSPSnapshotSize());}
+void S9xDSPSnapshotLoad(const void *data) {if(S9xDSPSnapshotSize())memcpy(S9xDSPSnapshotPointer(),data,S9xDSPSnapshotSize());}

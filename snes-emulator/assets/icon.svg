@@ -1,1 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192"><rect width="192" height="192" rx="40" fill="#28233f"/><path d="M45 63Q33 63 27 83L19 117Q16 139 35 142Q47 145 59 125H133Q145 145 157 142Q176 139 173 117L165 83Q159 63 147 63Z" fill="#e6e9ec"/><rect x="46" y="82" width="13" height="41" rx="3" fill="#28233f"/><rect x="32" y="96" width="41" height="13" rx="3" fill="#28233f"/><circle cx="143" cy="91" r="9" fill="#9c80ff"/><circle cx="127" cy="109" r="9" fill="#9c80ff"/><rect x="83" y="111" width="12" height="5" rx="2" fill="#717b89"/><rect x="99" y="111" width="12" height="5" rx="2" fill="#717b89"/><text x="96" y="44" font-family="DejaVu Sans,sans-serif" font-weight="bold" font-size="23" text-anchor="middle" fill="#9c80ff">SNES</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" role="img" aria-label="SNES console emulator">
+<defs><linearGradient id="bg" x2="0" y2="1"><stop stop-color="#55446e"/><stop offset="1" stop-color="#2e2645"/></linearGradient></defs>
+<rect width="192" height="192" rx="40" fill="url(#bg)"/>
+<ellipse cx="96" cy="166" rx="76" ry="13" fill="#000" opacity=".2"/>
+<text x="96" y="33" fill="#fff" font-family="DejaVu Sans,sans-serif" font-size="21" font-weight="bold" letter-spacing="3" text-anchor="middle">SNES</text>
+
+<path d="M31 60Q31 48 45 47H147Q163 48 163 63V137Q163 153 147 155H45Q29 153 29 138Z" fill="#9da2b0"/>
+<rect x="29" y="46" width="134" height="103" rx="17" fill="#e5e6eb" stroke="#f7f6fa" stroke-width="2"/>
+<path d="M43 48V126Q43 135 53 135H141Q149 135 149 125V48" fill="#c5c8d2"/>
+<rect x="52" y="68" width="86" height="27" rx="6" fill="#a0a5b2"/>
+<rect x="58" y="76" width="74" height="10" rx="4" fill="#292d3b"/>
+<rect x="51" y="104" width="20" height="24" rx="4" fill="#8b91a1"/>
+<rect x="120" y="104" width="20" height="24" rx="4" fill="#8b91a1"/>
+<rect x="79" y="108" width="33" height="19" rx="4" fill="#e5e7ed"/>
+<circle cx="146" cy="61" r="4" fill="#ee4f57"/><circle cx="154" cy="68" r="4" fill="#f4c852"/>
+<circle cx="139" cy="68" r="4" fill="#3fa26a"/><circle cx="146" cy="76" r="4" fill="#537ce8"/>
+<path d="M63 144H127Q140 145 143 158L146 168Q148 177 138 178Q130 178 124 166H68Q60 178 52 178Q43 177 46 167L50 155Q53 145 63 144Z" fill="#d9dce6" stroke="#8b90a3" stroke-width="2"/>
+<path d="M62 150h8v7h7v8h-7v7h-8v-7h-7v-8h7Z" fill="#44475b"/>
+<circle cx="127" cy="153" r="5" fill="#537ce8"/><circle cx="135" cy="161" r="5" fill="#ee4f57"/>
+<circle cx="119" cy="161" r="5" fill="#3fa26a"/><circle cx="127" cy="169" r="5" fill="#f4c852"/>
+<rect x="87" y="159" width="7" height="3" rx="1.5" fill="#70768a"/><rect x="99" y="159" width="7" height="3" rx="1.5" fill="#70768a"/>
+
+</svg>

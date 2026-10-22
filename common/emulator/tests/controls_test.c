@@ -25,12 +25,21 @@ int main(void) {
             if(!b->w || !b->h)continue;
             assert(b->x>=(int)c->safe.x && b->x+b->w<=(int)(c->safe.x+c->safe.width));
             assert(b->y>=(int)c->safe.y && b->y+b->h<=(int)(c->safe.y+c->safe.height));
+            assert(b->y+b->h<=(int)(c->safe.y+c->safe.height)-24);
             int bit=emu_controls_hit(c,b->x+b->w/2,b->y+b->h/2);
             assert(bit==(b->bit?b->bit:-1));
         }
         assert(!emu_controls_hit(c,w/2,h/4));
         unsigned diagonal=emu_controls_hit(c,c->buttons[0].x+1,c->buttons[2].y+1);
         assert(diagonal==(EMU_PAD_LEFT|EMU_PAD_UP));
+        int cx=c->buttons[2].x+c->buttons[2].w/2,cy=c->buttons[0].y+c->buttons[0].h/2;
+        assert(!emu_controls_hit(c,cx,cy));
+        int step=c->buttons[2].w/3;
+        assert(emu_controls_hit(c,cx+step,cy)==EMU_PAD_RIGHT);
+        const emu_control_button_t *action=&c->buttons[8],*menu=&c->buttons[6];
+        assert(emu_controls_hit(c,action->x+action->w+1,action->y+action->h/2)==action->bit);
+        assert(!emu_controls_hit(c,menu->x+menu->w/2,menu->y-3));
+        assert(!emu_controls_hit(c,cx,c->safe.y+c->safe.height-1));
         size_t pixels=stride*h+64;
         uint16_t *a=malloc(pixels*2),*b=malloc(pixels*2);assert(a && b);
         emu_display_rect_t view={w/6,h/7,w*2/3,h*2/3};

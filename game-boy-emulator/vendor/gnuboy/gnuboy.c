@@ -316,3 +316,7 @@ void gnuboy_free_rom(void)
     free(cart.rombanks); free(cart.rambanks);
     memset(&cart, 0, sizeof(cart));
 }
+
+/* Cold snapshot hooks; frame timing retains its original hot path. */
+int gnuboy_state_frame_carry(void) {return frame_carry;}
+void gnuboy_state_set_frame_carry(int value) {frame_carry=value;}

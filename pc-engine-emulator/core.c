@@ -92,3 +92,5 @@ const int16_t *emu_core_audio(size_t *n){if(n)*n=loaded&&enabled?frames:0;return
 size_t emu_core_save_size(void){return loaded&&PCE.ExRAM?0x8000:0;}
 bool emu_core_save_export(uint8_t *data,size_t size){if(!data || !emu_core_save_size() || size<0x8000)return false;memcpy(data,PCE.ExRAM,0x8000);return true;}
 bool emu_core_save_import(const uint8_t *data,size_t size){if(!data || !emu_core_save_size() || size!=0x8000)return false;memcpy(PCE.ExRAM,data,size);return true;}
+
+#include "state_snapshot.inc"

@@ -37,13 +37,14 @@ static void event(unsigned service,unsigned opcode,uint64_t token,const uint8_t 
     assert(pxa_build_message(bytes,sizeof(bytes),service,opcode,token,payload,size,&length));
     assert(pxa_app_on_event(bytes,length)==PXA_EVENT_HANDLED);
 }
-static void controller(uint32_t buttons,unsigned connected) {
+static void menu_test_controller(unsigned player,uint32_t buttons,unsigned connected) {
     uint8_t data[32]={0};
     pxa_store_u32(data,1);pxa_store_u32(data+4,1);pxa_store_u32(data+8,1);
     pxa_store_u16(data+12,PXA_UI_EVENT_CONTROLLER_STATE_KIND);
-    data[25]=connected;pxa_store_u32(data+28,buttons);
+    data[24]=player;data[25]=connected;pxa_store_u32(data+28,buttons);
     event(PXA_SERVICE_UI,PXA_UI_EVENT,0,data,sizeof(data));
 }
+static void controller(uint32_t buttons,unsigned connected) {menu_test_controller(0,buttons,connected);}
 static void reset(void) {
     mode=MENU;background=0;count=3;selected=2;page=0;
     scan_pending=save_pending=writing_save=save_replace_pending=reading_save=rom_loaded=0;
@@ -120,6 +121,10 @@ static void padded_surface(const char *path) {
     puts("PASS: frontend PPU target uses negotiated padded Surface stride");
 }
 
+#define menu_test_reset reset
+#include "../../common/emulator/tests/menu_contract.h"
+#include "../../common/emulator/tests/theme_contract.h"
+
 int main(int argc,char **argv) {
     assert(argc==2);
     width=320;height=240;input_density_q16=65536;
@@ -138,11 +143,11 @@ int main(int argc,char **argv) {
     controller(0,1);assert(!menu_repeat_buttons);
     reset();save_pending=1;request_exit();exit_tick();assert(exit_requested==1);
     save_pending=0;exit_tick();assert(exit_requested==2);
-    reset();mode=PAUSED;pause_action(4);assert(display_divisor==2 && mode==PAUSED);
+    reset();mode=PAUSED;pause_action(5);assert(display_divisor==2 && mode==PAUSED);
     gb_video_init(&video_renderer,320,240,menu_area);
     assert(video_renderer.fit);
-    pause_action(5);assert(!video_renderer.fit && mode==PAUSED);
-    pause_action(5);assert(video_renderer.fit);
+    pause_action(6);assert(!video_renderer.fit && mode==PAUSED);
+    pause_action(6);assert(video_renderer.fit);
     reset();reject_route=(PXA_PERMISSION_ACQUIRE<<16)|PXA_PERMISSION_SERVICE;
     request_audio();assert(audio_failed && !audio_requested && !audio && !permission);
     reset();audio=9;permission=8;audio_requested=1;
@@ -159,6 +164,8 @@ int main(int argc,char **argv) {
     audio_block=0;audio_calls=0;drain_audio();assert(audio_calls==4 && audio_consumed==128);
     while(audio_fifo.count){unsigned before=audio_calls;drain_audio();assert(audio_calls-before<=4);}
     assert(audio_consumed==1000);audio_test=0;audio=0;
+    test_theme_contract();
+    test_menu_contract();
     touch_controls();
     padded_surface(argv[1]);
     puts("PASS: controller focus/repeat/hide/restore, exit-save gate, options, audio retry/bounded draining and SD path");

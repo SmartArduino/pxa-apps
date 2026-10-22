@@ -10,8 +10,6 @@ void plat_munmap(void *p,size_t size){(void)size;free(p);}
 void *plat_mem_get_for_drc(size_t size){(void)size;return NULL;}
 int plat_mem_set_exec(void *p,size_t size){(void)p;(void)size;return -1;}
 void cache_flush_d_inval_i(void *a,void *b){(void)a;(void)b;}
-carthw_state_chunk *carthw_chunks;
-void (*PicoLoadStateHook)(void);
 void *p32x_bios_g,*p32x_bios_m,*p32x_bios_s;
 /* The frontend accepts MD cartridges only. Media codecs and 32X are not exposed. */
 int mp3_get_bitrate(void *f,int n){(void)f;(void)n;return -1;}
@@ -24,3 +22,12 @@ void ogg_update(s32 *b,int n,int s){(void)b;(void)n;(void)s;}
 void vgm_frame(void){}
 void vgm_reset(void){}
 void vgm_finish(void){}
+
+#ifdef PXA_GUEST
+/* Keep upstream invariants enabled without importing libc's stderr/fd layer.
+ * A failed invariant is a guest trap; the Host keeps other apps isolated. */
+__attribute__((noreturn,cold)) void __assert_fail(const char *expression,const char *file,int line,const char *function) {
+    emu_core_log("MD invariant failed: %s (%s:%d %s)",expression,file,line,function);
+    __builtin_trap();
+}
+#endif

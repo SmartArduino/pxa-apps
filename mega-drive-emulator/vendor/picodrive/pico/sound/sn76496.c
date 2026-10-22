@@ -1,3 +1,5 @@
+#include <stddef.h>
+#include <string.h>
 /***************************************************************************
 
   sn76496.c
@@ -322,3 +324,8 @@ int SN76496_init(int clock,int sample_rate)
 	return 0;
 }
 
+
+/* Full pause-only PSG state, including divider and noise phase. */
+size_t SN76496SnapshotSize(void) {return sizeof(ono_sn);}
+void SN76496SnapshotSave(void *data) {memcpy(data,&ono_sn,sizeof(ono_sn));}
+void SN76496SnapshotLoad(const void *data) {memcpy(&ono_sn,data,sizeof(ono_sn));}

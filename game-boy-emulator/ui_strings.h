@@ -44,3 +44,11 @@
 #define UI_SCALE_NATIVE pxa_i18n_cstr(&i18n, PXA_MSG_UI_SCALE_NATIVE)
 #define UI_SCALE_FIT pxa_i18n_cstr(&i18n, PXA_MSG_UI_SCALE_FIT)
 #define UI_SD_QUERY pxa_i18n_cstr(&i18n, PXA_MSG_UI_SD_QUERY)
+#define UI_STATES pxa_i18n_cstr(&i18n,PXA_MSG_UI_STATES)
+#define UI_STATE_ERROR pxa_i18n_cstr(&i18n,PXA_MSG_UI_STATE_ERROR)
+#define UI_STATE_LOADED pxa_i18n_cstr(&i18n,PXA_MSG_UI_STATE_LOADED)
+#define UI_NO_STATES pxa_i18n_cstr(&i18n,PXA_MSG_UI_NO_STATES)
+#define UI_NEW_STATE pxa_i18n_cstr(&i18n,PXA_MSG_UI_NEW_STATE)
+
+#define UI_DELETE_STATE pxa_i18n_cstr(&i18n,PXA_MSG_UI_DELETE_STATE)
+#define UI_DELETE_CONFIRM pxa_i18n_cstr(&i18n,PXA_MSG_UI_DELETE_CONFIRM)

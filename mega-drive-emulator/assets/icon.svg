@@ -1,1 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192"><rect width="192" height="192" rx="40" fill="#17263b"/><path d="M45 63Q33 63 27 83L19 117Q16 139 35 142Q47 145 59 125H133Q145 145 157 142Q176 139 173 117L165 83Q159 63 147 63Z" fill="#e6e9ec"/><rect x="46" y="82" width="13" height="41" rx="3" fill="#17263b"/><rect x="32" y="96" width="41" height="13" rx="3" fill="#17263b"/><circle cx="143" cy="91" r="9" fill="#3ba5ff"/><circle cx="127" cy="109" r="9" fill="#3ba5ff"/><rect x="83" y="111" width="12" height="5" rx="2" fill="#717b89"/><rect x="99" y="111" width="12" height="5" rx="2" fill="#717b89"/><text x="96" y="44" font-family="DejaVu Sans,sans-serif" font-weight="bold" font-size="23" text-anchor="middle" fill="#3ba5ff">MD</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" role="img" aria-label="MD console emulator">
+<defs><linearGradient id="bg" x2="0" y2="1"><stop stop-color="#244752"/><stop offset="1" stop-color="#13262f"/></linearGradient></defs>
+<rect width="192" height="192" rx="40" fill="url(#bg)"/>
+<ellipse cx="96" cy="166" rx="76" ry="13" fill="#000" opacity=".2"/>
+<text x="96" y="33" fill="#fff" font-family="DejaVu Sans,sans-serif" font-size="21" font-weight="bold" letter-spacing="3" text-anchor="middle">MD</text>
+
+<path d="M31 64L48 51H150L173 72V143L157 158H28Q20 155 20 145V83Z" fill="#101820" stroke="#667982" stroke-width="2"/>
+<path d="M23 99H67V149H23Z" fill="#23313b"/>
+<g stroke="#4b5e66" stroke-width="3"><path d="M30 104H58M30 111H58M30 118H58M30 125H58M30 132H58"/></g>
+<circle cx="112" cy="99" r="49" fill="#1d2932" stroke="#566871" stroke-width="3"/>
+<circle cx="112" cy="99" r="41" fill="#111820" stroke="#baab6b" stroke-width="2"/>
+<path d="M72 78Q112 63 152 78" fill="none" stroke="#85939a" stroke-width="3"/>
+<rect x="75" y="87" width="74" height="12" rx="5" fill="#02070d" stroke="#617079" stroke-width="2"/>
+<text x="112" y="122" fill="#e1c875" font-family="DejaVu Sans" font-weight="bold" font-size="17" text-anchor="middle">16</text>
+<rect x="35" y="71" width="16" height="9" rx="3" fill="#e74d60"/><rect x="35" y="85" width="16" height="7" rx="3" fill="#8496a0"/>
+<circle cx="148" cy="145" r="3" fill="#ff6571"/>
+<path d="M68 143H124Q139 144 146 160Q150 173 139 178Q132 180 121 167H71Q60 180 52 178Q41 173 47 161Q53 145 68 143Z" fill="#344650" stroke="#7f949c" stroke-width="2"/>
+<path d="M65 149h8v7h7v8h-7v7h-8v-7h-7v-8h7Z" fill="#0c1922"/>
+<g fill="#c4cbd0"><circle cx="110" cy="162" r="5"/><circle cx="123" cy="158" r="5"/><circle cx="136" cy="155" r="5"/></g>
+<rect x="89" y="151" width="9" height="4" rx="2" fill="#a8bcc3"/>
+
+</svg>

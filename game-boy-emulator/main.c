@@ -21,6 +21,7 @@
 #include "pxa_permission.h"
 #include "pxa_surface.h"
 #include "pxa_ui.h"
+#include "../common/emulator/menu_focus.h"
 #include "pxa_window.h"
 
 #include <stdarg.h>
@@ -30,11 +31,12 @@
 #include <time.h>
 #include <ctype.h>
 
+enum { T_MENU_THEME = 190 };
 enum { T_SURFACE = 1, T_LAYER, T_ROOT, T_DIR, T_ENTRY, T_ROM, T_SAVE_READ,
        T_SAVE_WRITE, T_SAVE_REPLACE, T_AUDIO_PERMISSION, T_AUDIO_OPEN, T_AUDIO_GAIN,
        T_LIMITS, T_CONFIGURE, T_WINDOW, T_MKDIR, T_ASSET, T_STATS, T_MEDIA_PATH };
-enum { MENU, LOADING, PLAYING, PAUSED, ERROR_SCREEN };
-enum { PAUSE_TOP = 68, PAUSE_PITCH = 30, PAUSE_CHOICES = 7 };
+enum { MENU, LOADING, PLAYING, PAUSED, ERROR_SCREEN, STATES };
+enum { PAUSE_TOP = 68, PAUSE_PITCH = 30, PAUSE_CHOICES = 8 };
 
 static uint16_t *frames;
 static void *frames_raw;
@@ -44,7 +46,7 @@ static unsigned surface_stride;
 static int pending_buffer=-1;
 static unsigned clear_frames=3;
 static char sd_media_path[256];
-static unsigned menu_focus,menu_repeat_mode;
+static unsigned menu_focus,menu_repeat_mode,menu_repeat_controller;
 static uint32_t menu_repeat_buttons;
 static uint64_t menu_repeat_at;
 static gb_pacer_t pacer;
@@ -158,8 +160,7 @@ static void text(uint16_t *out, int x, int y, const char *s, uint16_t color, uns
     gb_ui_draw(out, menu_width(), menu_height(), x, y, s, color, max * 8);
 }
 
-enum { UI_BG = 0x0863, UI_CARD = 0x10c5, UI_EDGE = 0x2148, UI_FOCUS = 0x11ea,
-       UI_ACCENT = 0x4ed8, UI_INK = 0xef9f, UI_MUTED = 0x8cb3 };
+#include "../common/emulator/menu_theme.h"
 
 static void card(uint16_t *out, int x, int y, int w, int h, uint16_t color) {
     if (menu_commands) { menu_box(x, y, w, h, 4, color); return; }
@@ -171,11 +172,11 @@ static void card(uint16_t *out, int x, int y, int w, int h, uint16_t color) {
 
 static void button(uint16_t *out, int x, int y, int w, const char *label, uint16_t color) {
     card(out, x, y, w, 23, color);
-    if (menu_commands) { menu_label(x + 5, y + 1, w - 10, 22, label, color == UI_ACCENT ? UI_BG : UI_INK, 1); return; }
+    if (menu_commands) { menu_label(x + 5, y + 1, w - 10, 22, label, color == UI_ACCENT ? UI_ON_ACCENT : UI_INK, 1); return; }
     unsigned label_width = gb_ui_width(label);
     int left = label_width < (unsigned) w - 10 ? x + (w - (int) label_width) / 2 : x + 5;
     gb_ui_draw(out, menu_width(), menu_height(), left, y + 3, label,
-               color == UI_ACCENT ? UI_BG : UI_INK, w - 10);
+               color == UI_ACCENT ? UI_ON_ACCENT : UI_INK, w - 10);
 }
 
 /* Renders the menu at its logical resolution, then scales it into the canvas
@@ -217,6 +218,11 @@ static void present(unsigned i) {
         fail("Surface submission failed");
     }
 }
+
+static void slots_open(void);
+static void slots_tick(void);
+static void paint_slots(uint16_t *out);
+static unsigned list_rows(unsigned top,unsigned bottom,unsigned pitch);
 
 static unsigned pause_rows(void) {
     unsigned n = (menu_height() - PAUSE_TOP - 18) / PAUSE_PITCH;
@@ -276,6 +282,7 @@ static __attribute__((noinline, cold)) void paint_menu(uint16_t *out) {
             if (source_count[n]) {
                 button(out, 24 + slot * (tab + 4), 34, tab, n ? UI_SD : UI_FLASH,
                        source == n ? UI_ACCENT : UI_CARD);
+                if(source==n && menu_focus==MENU_FOCUS_SOURCE)rect(out,24+slot*(tab+4),55,tab,2,UI_INK);
                 ++slot;
             }
         for (unsigned row = 0; row < visible; ++row) {
@@ -301,12 +308,14 @@ static __attribute__((noinline, cold)) void paint_menu(uint16_t *out) {
             scroll_bar(out, page, visible, count, 64, visible * 22 - 2);
         }
         rect(out, 24, h - 45, w - 48, 1, UI_EDGE);
-        button(out, 24, h - 39, (w - 56) / 2, UI_REFRESH, menu_focus==1 ? UI_ACCENT : UI_FOCUS);
+        button(out, 24, h - 39, (w - 56) / 2, UI_REFRESH, menu_focus==1 ? UI_ACCENT : UI_CARD);
         button(out, 32 + (w - 56) / 2, h - 39, (w - 56) / 2, UI_EXIT, menu_focus==2 ? UI_ACCENT : UI_CARD);
+    } else if (mode == STATES) {
+        paint_slots(out);
     } else if (mode == PAUSED) {
         const char *status = save_failed ? UI_SAVE_ERROR :
             (save_pending || writing_save || save_replace_pending ? UI_SAVING : UI_PAUSED);
-        text(out, 32, 36, status, save_failed ? 0xfb8c : UI_MUTED, 28);
+        text(out, 32, 36, status, save_failed ? UI_DANGER : UI_MUTED, 28);
         rect(out, 32, 58, w - 64, 1, UI_EDGE);
         char display[112], keys[112];
         format_number(PXA_MSG_UI_DISPLAY, "frames", display_divisor, display, sizeof(display));
@@ -314,7 +323,7 @@ static __attribute__((noinline, cold)) void paint_menu(uint16_t *out) {
         else if (gb_controls_visible(&controls))
             format_number(PXA_MSG_UI_KEYS_ALPHA, "opacity", controls.alpha * 100 / 8, keys, sizeof(keys));
         else snprintf(keys, sizeof(keys), "%s", UI_KEYS_OFF);
-        const char *labels[] = {UI_RESUME, UI_LIBRARY,
+        const char *labels[] = {UI_RESUME, UI_LIBRARY, UI_STATES,
                                 audio ? UI_SOUND_ON : (audio_requested ? UI_SOUND_STARTING : (audio_failed ? UI_SOUND_FAILED : UI_SOUND_OFF)),
                                 keys, display, video_renderer.fit ? UI_SCALE_FIT : UI_SCALE_NATIVE, UI_EXIT};
         for (unsigned visible = 0; visible < pause_rows() && pause_top + visible < PAUSE_CHOICES; ++visible) {
@@ -695,6 +704,7 @@ static __attribute__((noinline)) void tick(uint64_t now) {
     exit_tick();
     if (background) return;
     if (mode != PLAYING) {
+        slots_tick();
         menu_controller_repeat(now);
         if (redraw) {
             if (system_menu_supported) paint_system_menu();
@@ -805,23 +815,28 @@ static void pause_action(unsigned choice) {
     } else if (choice == 1) {
         open_library();
     } else if (choice == 2) {
-        request_audio();
+        slots_open();
     } else if (choice == 3) {
+        request_audio();
+    } else if (choice == 4) {
         gb_controls_cycle(&controls);clear_frames=3;
         release_input();
         redraw = 1;
-    } else if (choice == 4) {
+    } else if (choice == 5) {
         display_divisor=display_divisor%4+1;
         redraw=1;
-    } else if (choice == 5) {
+    } else if (choice == 6) {
         gb_video_set_fit(&video_renderer,menu_area,!video_renderer.fit);clear_frames=3;
         redraw=1;
-    } else if (choice == 6) {
+    } else if (choice == 7) {
         request_exit();
     }
 }
 
+#include "slots.h"
+
 static void request_exit(void) {
+    if(slot_phase)return;
     exit_requested = 1;
     release_input();
     start_save();
@@ -830,7 +845,7 @@ static void request_exit(void) {
 }
 
 static void exit_tick(void) {
-    if (!exit_requested || save_pending || writing_save || save_replace_pending) return;
+    if (!exit_requested || save_pending || writing_save || save_replace_pending || slot_phase) return;
     exit_requested = 0;
     if (save_failed) { redraw = 1; return; }
     exit_requested = 2;
@@ -842,46 +857,7 @@ static void exit_tick(void) {
 
 #include "menu_controller.h"
 
-static unsigned drag_active, drag_moved, drag_mode, drag_id;
-static int drag_y;
-
-static __attribute__((noinline, cold)) void list_pointer(const pxa_ui_pointer_data_t *p, int x, int y) {
-    if (mode == MENU && scan_pending) return;
-    unsigned top = mode == PAUSED ? PAUSE_TOP : 64;
-    unsigned pitch = mode == PAUSED ? PAUSE_PITCH : 22;
-    unsigned rows = mode == PAUSED ? pause_rows() : (menu_height() - 108) / 22;
-    if (p->phase == PXA_POINTER_DOWN) {
-        if (x < 24 || x >= (int) menu_width() - 24 || y < (int) top || y >= (int) (top + rows * pitch)) return;
-        drag_active = 1;
-        drag_moved = 0;
-        drag_y = y;
-        drag_mode = mode;
-        drag_id = p->pointer_id;
-        return;
-    }
-    if (!drag_active || drag_id != p->pointer_id || drag_mode != mode) return;
-    int delta = drag_y - y;
-    if (delta > 6 || delta < -6) drag_moved = 1;
-    if (drag_moved) {
-        int64_t n = (int64_t) (mode == MENU ? page : pause_top) + delta / (int) pitch;
-        if (n < 0) n = 0;
-        if (mode == MENU) {
-            unsigned max = count > rows ? count - rows : 0;
-            page = n > max ? max : n;
-        } else {
-            unsigned max = PAUSE_CHOICES > rows ? PAUSE_CHOICES - rows : 0;
-            pause_top = n > max ? max : n;
-        }
-        redraw = 1;
-    }
-    if (p->phase == PXA_POINTER_UP) {
-        drag_active = 0;
-        if (drag_moved || x < 24 || x >= (int) menu_width() - 24 || y < (int) top || y >= (int) (top + rows * pitch)) return;
-        unsigned row = (y - top) / pitch;
-        if (mode == MENU) select_rom(page + row);
-        else pause_action(pause_top + row);
-    }
-}
+#include "../common/emulator/menu_list_pointer.h"
 
 static uint16_t map_buttons(uint32_t b) {
     uint16_t pad = 0;
@@ -922,13 +898,19 @@ static void pointer(const pxa_ui_pointer_data_t *p) {
     y -= menu_area.y;
     x = (int) (((int64_t) x << 16) / menu_zoom());
     y = (int) (((int64_t) y << 16) / menu_zoom());
-    if (mode == MENU || mode == PAUSED) {
+    if (mode == MENU || mode == PAUSED || mode == STATES) {
         list_pointer(p, x, y);
         if (p->phase != PXA_POINTER_DOWN) return;
     }
     if (p->phase != PXA_POINTER_DOWN) return;
     if (mode == ERROR_SCREEN) { open_library(); return; }
     if (mode == PAUSED) return;
+    if (mode == STATES) {
+        if(!slot_phase && y>=(int)menu_height()-39 && y<(int)menu_height()-16 && x>=24 && x<(int)menu_width()-24) {
+            if(x<24+(int)(menu_width()-48)/3)slot_new();else if(x<24+2*(int)(menu_width()-48)/3)slot_delete();else{slot_delete_pending=0;mode=PAUSED;redraw=1;}
+        }
+        return;
+    }
     if (mode != MENU || scan_pending) return;
     if (y >= 34 && y < 57 && x >= 24 && x < (int) menu_width() - 24) {
         unsigned tabs = !!source_count[0] + !!source_count[1];
@@ -937,6 +919,7 @@ static void pointer(const pxa_ui_pointer_data_t *p) {
         unsigned slot = (x - 24) / (tab + 4);
         unsigned chosen = source_count[0] ? (slot ? 1 : 0) : 1;
         if (!source_count[chosen]) return;
+        menu_focus=MENU_FOCUS_LIST;
         source = chosen;
         count = source_count[source];
         names = rom_names[source];
@@ -971,6 +954,7 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t size) {
     gb_port_log("GB DISPLAY canvas=%ux%u input_scale=%u density_q16=%u", width, height, input_scale, input_density_q16);
     pxa_window_fullscreen();
     pxa_window_request_snapshot(T_WINDOW);
+    (void)pxa_ui_theme_get(T_MENU_THEME);
     uint8_t packet[512];
     uint32_t n;
     pxa_ui_transaction_t tx = {0};
@@ -1009,6 +993,7 @@ void pxa_app_stop(uint32_t reason) {
     close_handle(&rom_file.handle);
     free(rom_data);
     free(save_data);
+    free(slot_data);slot_data=NULL;slot_dir=slot_file=0;slot_phase=slot_open_pending=0;
     free(frames_raw);
     frames = NULL;
     frames_raw = NULL;
@@ -1047,6 +1032,9 @@ int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
         redraw = 1;
         return PXA_EVENT_HANDLED;
     }
+    pxa_ui_theme_t theme;
+    if(pxa_ui_parse_theme_event(&e,&theme)) {menu_theme_apply(&theme);return PXA_EVENT_HANDLED;}
+    if(slots_event(&e))return PXA_EVENT_HANDLED;
     pxa_ui_pointer_data_t p;
     if (pxa_ui_parse_pointer(&e, &p)) { pointer(&p); return PXA_EVENT_HANDLED; }
     pxa_ui_controller_data_t c;
@@ -1075,7 +1063,7 @@ int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
                 return PXA_EVENT_HANDLED;
             }
             if(mode!=PLAYING) {
-                if(c.controller==0)menu_controller_event(pressed,c.connected?c.buttons:0);
+                menu_controller_event(c.controller,pressed,c.connected?c.buttons:0);
                 pad[c.controller]=0;
                 return PXA_EVENT_HANDLED;
             }
@@ -1097,6 +1085,8 @@ int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
     }
     if (e.service == PXA_WINDOW_SERVICE && e.opcode == PXA_WINDOW_BACK_REQUESTED) {
         if (exit_requested == 2) { exit_requested = 0; return 0; }
+        if(slot_phase)return PXA_EVENT_HANDLED;
+        if(mode==STATES){mode=PAUSED;redraw=1;return PXA_EVENT_HANDLED;}
         if (mode == PLAYING) pause_game();
         else if (mode == PAUSED) pause_action(0);
         else if (mode == MENU) { if (save_pending || writing_save || save_replace_pending) request_exit(); else return 0; }

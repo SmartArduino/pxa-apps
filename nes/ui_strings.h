@@ -54,3 +54,6 @@
 #define UI_EMPTY_HELP pxa_i18n_cstr(&i18n,PXA_MSG_UI_EMPTY_HELP)
 #define UI_FLASH_PATH pxa_i18n_cstr(&i18n,PXA_MSG_UI_FLASH_PATH)
 #define UI_SD_PATH pxa_i18n_cstr(&i18n,PXA_MSG_UI_SD_PATH)
+
+#define UI_DELETE_STATE pxa_i18n_cstr(&i18n,PXA_MSG_UI_DELETE_STATE)
+#define UI_DELETE_CONFIRM pxa_i18n_cstr(&i18n,PXA_MSG_UI_DELETE_CONFIRM)

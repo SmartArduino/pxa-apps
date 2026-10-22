@@ -55,3 +55,6 @@ translations:
   ui.empty.help: "放入 .nes 游戏后刷新"
   ui.flash.path: "存储：应用私有目录下"
   ui.sd.path: "SD 卡目录："
+
+  ui.delete.state: "删除"
+  ui.delete.confirm: "再次确认以删除选中的存档"

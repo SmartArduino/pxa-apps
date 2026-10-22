@@ -133,3 +133,6 @@ void gnuboy_rtc_sync(void);
 
 bool gnuboy_rom_banked(void);
 byte *gnuboy_rom_window(unsigned bank,unsigned page,bool load);
+
+int gnuboy_state_frame_carry(void);
+void gnuboy_state_set_frame_carry(int value);

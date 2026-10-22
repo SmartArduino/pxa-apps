@@ -175,3 +175,32 @@ messages:
     source: "Querying app media folder..."
     context: PCE display options
     max_bytes: 112
+  ui.states:
+    source: "Save states"
+    context: Pause-only machine snapshots
+    max_bytes: 112
+  ui.state.error:
+    source: "State operation failed - retry"
+    context: Pause-only machine snapshots
+    max_bytes: 112
+  ui.state.loaded:
+    source: "State loaded"
+    context: Pause-only machine snapshots
+    max_bytes: 112
+  ui.no.states:
+    source: "No save states yet"
+    context: Pause-only machine snapshots
+    max_bytes: 112
+  ui.new.state:
+    source: "New save"
+    context: Pause-only machine snapshots
+    max_bytes: 112
+
+  ui.delete.state:
+    source: "Delete"
+    context: Remove selected snapshot with confirmation
+    max_bytes: 112
+  ui.delete.confirm:
+    source: "Confirm again to delete selected state"
+    context: Snapshot deletion confirmation
+    max_bytes: 112

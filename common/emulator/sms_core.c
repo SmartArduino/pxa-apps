@@ -120,3 +120,5 @@ const int16_t *emu_core_audio(size_t *frames){if(frames)*frames=loaded&&enabled?
 size_t emu_core_save_size(void){return loaded?0x8000:0;}
 bool emu_core_save_export(uint8_t *data,size_t size){if(!loaded || !data || size<0x8000)return false;memcpy(data,cart.sram,0x8000);return true;}
 bool emu_core_save_import(const uint8_t *data,size_t size){if(!loaded || !data || size!=0x8000)return false;memcpy(cart.sram,data,size);return true;}
+
+#include "sms_state.inc"

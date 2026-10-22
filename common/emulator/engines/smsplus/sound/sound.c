@@ -298,3 +298,9 @@ void fmunit_write(int offset, int data)
   MESSAGE_ERROR("FM Not supported write %02x at %04x\n", data, offset);
   // FM_Write(offset, data);
 }
+
+/* Pause-only fractional resampling clock; otherwise restores drift one sample. */
+uint64_t sound_state_fraction(void) {return sample_fraction;}
+void sound_state_set_fraction(uint64_t value) {
+ sample_fraction=value;samples_per_line=snd.sample_count/lines_per_frame;
+}

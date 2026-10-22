@@ -213,3 +213,12 @@ messages:
     source: "SD card folder:"
     context: NES library and snapshot actions
     max_bytes: 112
+
+  ui.delete.state:
+    source: "Delete"
+    context: Remove selected snapshot with confirmation
+    max_bytes: 112
+  ui.delete.confirm:
+    source: "Confirm again to delete selected state"
+    context: Snapshot deletion confirmation
+    max_bytes: 112

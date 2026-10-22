@@ -13,8 +13,8 @@
     0
   ],
   "id": "pxa-pc-engine",
-  "version": "0.1.11",
-  "release_sequence": 12,
+  "version": "0.1.13",
+  "release_sequence": 18,
   "name": "PC Engine Emulator",
   "description": "PC Engine Emulator for PXA with SD/flash library, audio and touch/gamepad controls",
   "build": {

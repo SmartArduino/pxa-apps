@@ -190,3 +190,5 @@ uint32_t gb_core_checksum(void){return checksum;}
 unsigned gb_core_model(void){return loaded && GB.hwtype==GB_HW_CGB?GB_BOARD_CGB:GB_BOARD_DMG;}
 unsigned gb_core_rate(void){return 60;}
 const char *gb_core_title(void){return title;}
+
+#include "state_snapshot.inc"

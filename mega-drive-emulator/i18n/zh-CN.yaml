@@ -45,3 +45,11 @@ translations:
   ui.scale.native: "画面：原始像素"
   ui.scale.fit: "画面：等比缩放"
   ui.sd.query: "正在查询应用媒体目录…"
+  ui.states: "即时存档"
+  ui.state.error: "存档操作失败，请重试"
+  ui.state.loaded: "已读取存档"
+  ui.no.states: "还没有即时存档"
+  ui.new.state: "新增存档"
+
+  ui.delete.state: "删除"
+  ui.delete.confirm: "再次确认以删除选中的存档"

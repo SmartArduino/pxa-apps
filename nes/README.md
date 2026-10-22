@@ -62,6 +62,8 @@ python3 tools/pxadb/pxadb.py package run pxa-nes --port /dev/ttyACM1
 
 原生构建还提供 `nes_ppu_kernel_test` 和 `nes_ppu_trace_{optimized,reference}`。前者穷举位平面、调色板和对齐并检查索引失效；后者接受 `ROM [frames=1200] [draw_interval=1]`，输出每帧 CPU/RAM/PPU/视频/PCM 签名及单独的绘图/跳帧计时。比较 stdout，stderr 的墙钟计时不参与签名。ROM 对照只说明保留原内核行为，不代表原内核通过所有硬件时序测试。
 
+菜单支持一号、二号手柄：首行向上进入顶部存储来源，左右或 L/R 切换，A/Start 确认、B 返回、Y 刷新；方向长按连续移动。GameKit 固件需支持 Canvas 菜单的 controller 订阅路由。
+
 ## ROM 放置位置
 
 入口有两种来源（空来源自动隐藏）：

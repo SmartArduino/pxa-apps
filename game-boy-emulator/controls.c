@@ -1,5 +1,6 @@
 /* GPL-2.0-or-later. Layout and glyphs adapted from ../nes/controls.c. */
 #include "controls.h"
+#include "../common/controls/touch_layout.h"
 #include "font8x8.h"
 #include <string.h>
 
@@ -20,28 +21,30 @@ static int inside(int x,int y,int w,int h,int radius) {
     return dx*dx+dy*dy<radius*radius;
 }
 void gb_controls_set_labels(gb_controls_t *c,const char *select_label,const char *start_label,const char *menu_label) {
-    unsigned scale=gb_display_ui_scale(c->width,c->height);
     if(!c->safe.width || !c->safe.height)c->safe=(gb_display_rect_t){0,0,c->width,c->height};
-    int y=c->safe.height/scale-72;
-    const gb_control_button_t layout[GB_CONTROLS_COUNT]={
-        {14,y,30,23,GB_PAD_LEFT,0,"<",0},{80,y,30,23,GB_PAD_RIGHT,0,">",0},
-        {47,y-24,30,23,GB_PAD_UP,0,"^",0},{47,y+24,30,23,GB_PAD_DOWN,0,"v",0},
-        {122,y+19,48,23,GB_PAD_SELECT,0,select_label,0},
-        {176,y+19,48,23,GB_PAD_START,0,start_label,0},
-        {128,y-17,72,23,0,0,menu_label,0},
-        {230,y+16,30,27,GB_PAD_B,0x6808,"B",0},
-        {260,y-10,30,27,GB_PAD_A,0x980b,"A",0}};
+    emu_touch_rect_t rects[EMU_TOUCH_COUNT];
+    unsigned q=emu_touch_layout(rects,c->safe.width,c->safe.height,2,c->safe.x,c->safe.y);
+    unsigned scale=(q+32768)>>16;if(!scale)scale=1;
+    gb_control_button_t layout[GB_CONTROLS_COUNT]={
+        {0,0,0,0,GB_PAD_LEFT,0,"<",0},
+        {0,0,0,0,GB_PAD_RIGHT,0,">",0},
+        {0,0,0,0,GB_PAD_UP,0,"^",0},
+        {0,0,0,0,GB_PAD_DOWN,0,"v",0},
+        {0,0,0,0,GB_PAD_SELECT,0,select_label,0},
+        {0,0,0,0,GB_PAD_START,0,start_label,0},
+        {0,0,0,0,0,0,menu_label,0},
+        {0,0,0,0,GB_PAD_B,0x6808,"B",0},
+        {0,0,0,0,GB_PAD_A,0x980b,"A",0},
+    };
     memset(c->mask,0,sizeof(c->mask));c->mask_used=0;c->cached_alpha=255;
     for(unsigned i=0;i<GB_CONTROLS_COUNT;++i) {
         gb_control_button_t *b=&c->buttons[i];*b=layout[i];
-        b->x=c->safe.x+b->x*(int)c->safe.width/296;
-        b->w=b->w*(int)c->safe.width/296;
-        b->y=c->safe.y+b->y*scale;b->h*=scale;
+        b->x=rects[i].x;b->y=rects[i].y;b->w=rects[i].w;b->h=rects[i].h;
         b->mask_offset=c->mask_used;
         unsigned bytes=(unsigned)b->w*b->h;
         if(bytes>GB_CONTROLS_MASK_BYTES-c->mask_used){b->w=b->h=0;continue;}
         c->mask_used+=bytes;
-        int radius=(i>=GB_CONTROL_MENU?11:6)*scale;
+        int radius=emu_touch_px(i>=6?11:6,q);
         if(radius>b->w/2)radius=b->w/2;if(radius>b->h/2)radius=b->h/2;
         if(radius<1)radius=1;
         uint8_t *mask=c->mask+b->mask_offset;
@@ -74,23 +77,14 @@ int gb_controls_visible(const gb_controls_t *c){return c->alpha && !c->controlle
 int gb_controls_use_controller(const gb_controls_t *c){return c->controller_hidden;}
 int gb_controls_use_touch(const gb_controls_t *c){return !c->controller_hidden;}
 int gb_controls_hit(const gb_controls_t *c,int x,int y) {
-    unsigned scale=gb_display_ui_scale(c->width,c->height);
+    unsigned q=emu_touch_scale(c->safe.width,c->safe.height);
     if(!gb_controls_visible(c) || x<(int)c->safe.x || x>=(int)(c->safe.x+c->safe.width) ||
-       y<(int)c->safe.y || y>=(int)(c->safe.y+c->safe.height)-24*(int)scale)return 0;
-    const gb_control_button_t *l=&c->buttons[GB_CONTROL_LEFT],*r=&c->buttons[GB_CONTROL_RIGHT];
-    const gb_control_button_t *u=&c->buttons[GB_CONTROL_UP],*d=&c->buttons[GB_CONTROL_DOWN];
-    if(x>=l->x && x<r->x+r->w && y>=u->y && y<d->y+d->h) {
-        int cx=u->x+u->w/2,cy=l->y+l->h/2;
-        int dx=c->safe.width*15/296,dy=12*scale,bit=0;
-        if(x<cx-dx)bit|=GB_PAD_LEFT;else if(x>cx+dx)bit|=GB_PAD_RIGHT;
-        if(y<cy-dy)bit|=GB_PAD_UP;else if(y>cy+dy)bit|=GB_PAD_DOWN;
-        return bit;
-    }
-    for(unsigned i=0;i<GB_CONTROLS_COUNT;++i) {
-        const gb_control_button_t *b=&c->buttons[i];
-        if(x>=b->x && x<b->x+b->w && y>=b->y && y<b->y+b->h)return b->bit?b->bit:-1;
-    }
-    return 0;
+       y<(int)c->safe.y || y>=(int)(c->safe.y+c->safe.height)-emu_touch_gesture_margin(q))return 0;
+    emu_touch_rect_t b[GB_CONTROLS_COUNT];
+    for(unsigned i=0;i<GB_CONTROLS_COUNT;++i)b[i]=(emu_touch_rect_t){c->buttons[i].x,c->buttons[i].y,c->buttons[i].w,c->buttons[i].h};
+    int target=emu_touch_target(b,GB_CONTROLS_COUNT,x,y,q);
+    if(target>=16){unsigned bits=target-16,result=0;for(unsigned i=0;i<4;++i)if(bits&(1u<<i))result|=c->buttons[i].bit;return result;}
+    return target<0?0:(c->buttons[target].bit?c->buttons[target].bit:-1);
 }
 static void update(gb_controls_t *c,unsigned pressed) {
     if(c->cached_alpha==c->alpha && c->cached_pressed==pressed)return;

@@ -11,6 +11,16 @@ static void controller(unsigned player,uint32_t buttons,unsigned connected){
  assert(pxa_build_message(bytes,sizeof(bytes),PXA_SERVICE_UI,PXA_UI_EVENT,0,data,sizeof(data),&length));
  assert(pxa_app_on_event(bytes,length)==PXA_EVENT_HANDLED);
 }
+static void menu_test_reset(void) {
+ release_input();memset(controller_previous,0,sizeof(controller_previous));
+ memset(controller_raw_previous,0,sizeof(controller_raw_previous));
+ memset(controller_connected,0,sizeof(controller_connected));memset(menu_chord,0,sizeof(menu_chord));
+ menu_repeat_buttons=0;menu_repeat_at=0;menu_repeat_controller=0;
+ pxa_ui_environment_t env={0};menu_environment(&env);
+}
+#define menu_test_controller controller
+#include "menu_contract.h"
+#include "theme_contract.h"
 int main(void){
  emu_controls_init(&controls,320,240);mode=PLAYING;background=0;release_input();
  const uint32_t host[]={PXA_CONTROLLER_UP,PXA_CONTROLLER_DOWN,PXA_CONTROLLER_LEFT,PXA_CONTROLLER_RIGHT,
@@ -32,5 +42,7 @@ int main(void){
  p.pointer_id=1;p.x=a->x+a->w/2;p.y=a->y+a->h/2;pointer(&p);assert(touches[0]==EMU_PAD_RIGHT && touches[1]==EMU_PAD_A);
  p.phase=PXA_POINTER_UP;pointer(&p);assert(touches[0]==EMU_PAD_RIGHT && !touches[1]);
  p.pointer_id=0;pointer(&p);assert(!touches[0]);
+ test_theme_contract();
+ test_menu_contract();
  puts("PASS: 12 gamepad buttons, independent players, auto hide, menu chord and multi-touch");
 }

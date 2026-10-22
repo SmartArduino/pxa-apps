@@ -815,3 +815,7 @@ bool render_copy_palette(uint16* palette)
   pal_dirty = 0;
   return true;
 }
+
+void render_state_reset(void) {
+ prev_line=-1;render_reset();render_invalidate_patterns();
+}

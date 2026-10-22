@@ -1,1 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192"><rect width="192" height="192" rx="40" fill="#3e2518"/><path d="M45 63Q33 63 27 83L19 117Q16 139 35 142Q47 145 59 125H133Q145 145 157 142Q176 139 173 117L165 83Q159 63 147 63Z" fill="#e6e9ec"/><rect x="46" y="82" width="13" height="41" rx="3" fill="#3e2518"/><rect x="32" y="96" width="41" height="13" rx="3" fill="#3e2518"/><circle cx="143" cy="91" r="9" fill="#ffb45d"/><circle cx="127" cy="109" r="9" fill="#ffb45d"/><rect x="83" y="111" width="12" height="5" rx="2" fill="#717b89"/><rect x="99" y="111" width="12" height="5" rx="2" fill="#717b89"/><text x="96" y="44" font-family="DejaVu Sans,sans-serif" font-weight="bold" font-size="23" text-anchor="middle" fill="#ffb45d">PCE</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" role="img" aria-label="PCE console emulator">
+<defs><linearGradient id="bg" x2="0" y2="1"><stop stop-color="#c18a34"/><stop offset="1" stop-color="#705122"/></linearGradient></defs>
+<rect width="192" height="192" rx="40" fill="url(#bg)"/>
+<ellipse cx="96" cy="166" rx="76" ry="13" fill="#000" opacity=".2"/>
+<text x="96" y="33" fill="#fff" font-family="DejaVu Sans,sans-serif" font-size="21" font-weight="bold" letter-spacing="3" text-anchor="middle">PCE</text>
+
+<path d="M44 47H144Q158 47 158 61V143Q156 159 141 160H43Q29 158 29 145V65Z" fill="#b6b3ab"/>
+<rect x="29" y="45" width="126" height="107" rx="9" fill="#f2eee3" stroke="#fff9e9" stroke-width="2"/>
+<path d="M42 51H141V104H42Z" fill="#dedbd1"/>
+<g stroke="#a7a79f" stroke-width="2"><path d="M48 57V73M54 57V73M60 57V73M66 57V73M72 57V73M78 57V73"/></g>
+<rect x="91" y="58" width="43" height="28" rx="3" fill="#f8f5eb"/>
+<rect x="98" y="64" width="29" height="14" rx="2" fill="#ee773d"/>
+<path d="M38 111H145V122H38Z" fill="#454b4e"/>
+<path d="M38 111H145V115H38Z" fill="#a9a99f"/>
+<rect x="48" y="126" width="36" height="10" rx="2" fill="#ef783d"/>
+<rect x="119" y="128" width="15" height="7" rx="2" fill="#a4a79e"/>
+<circle cx="140" cy="131" r="2.5" fill="#ed6a3a"/>
+<rect x="51" y="145" width="99" height="33" rx="9" fill="#efede3" stroke="#a5a8a2" stroke-width="2"/>
+<path d="M65 150h7v7h7v7h-7v7h-7v-7h-7v-7h7Z" fill="#424b50"/>
+<circle cx="121" cy="164" r="7" fill="#ee783c"/><circle cx="139" cy="158" r="7" fill="#ee783c"/>
+<rect x="88" y="159" width="8" height="4" rx="2" fill="#8e9998"/><rect x="99" y="159" width="8" height="4" rx="2" fill="#8e9998"/>
+
+</svg>

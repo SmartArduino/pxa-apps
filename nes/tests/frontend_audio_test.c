@@ -92,13 +92,17 @@ static void test_i18n(void) {
     for(unsigned i=0;i<sizeof(labels)/sizeof(labels[0]);++i)assert(nes_ui_width(labels[i])<=216);
     puts("PASS: system start locale, live locale events, Chinese parent fallback, English fallback, named arguments and preserved game/input settings");
 }
-static void controller(uint32_t buttons,unsigned player) {
+static void menu_test_controller(unsigned player,uint32_t buttons,unsigned connected) {
     uint8_t event[32]={0};
     pxa_store_u32(event,1);pxa_store_u32(event+4,1);pxa_store_u32(event+8,1);
     pxa_store_u16(event+12,PXA_UI_EVENT_CONTROLLER_STATE_KIND);
-    event[24]=player;event[25]=1;pxa_store_u32(event+28,buttons);
+    event[24]=player;event[25]=connected;pxa_store_u32(event+28,buttons);
     send_event(PXA_UI_SERVICE,PXA_UI_EVENT,0,event,sizeof(event));
 }
+static void controller(uint32_t buttons,unsigned player) {menu_test_controller(player,buttons,1);}
+#define menu_test_reset reset
+#include "../../common/emulator/tests/menu_contract.h"
+#include "../../common/emulator/tests/theme_contract.h"
 static void press(uint32_t buttons) {controller(buttons,0);controller(0,0);}
 static void test_controller_menus(void) {
     reset();mode=MENU;count=2;selected=1;page=0;scan_pending=0;
@@ -113,7 +117,8 @@ static void test_controller_menus(void) {
     reset();mode=MENU;count=0;scan_pending=0;
     press(PXA_CONTROLLER_A);assert(scan_pending); /* Empty library can refresh. */
     reset();mode=MENU;count=9;selected=0;scan_pending=0;
-    controller(PXA_CONTROLLER_DOWN,1);assert(!selected); /* One UI cursor. */
+    controller(PXA_CONTROLLER_DOWN,1);assert(selected==1);
+    controller(0,1);selected=0; /* Either pad may own the single UI cursor. */
     controller(PXA_CONTROLLER_DOWN,0);assert(selected==1 && menu_repeat_at);
     uint64_t due=menu_repeat_at;
     menu_controller_repeat(due-1);assert(selected==1);
@@ -123,13 +128,15 @@ static void test_controller_menus(void) {
     press(PXA_CONTROLLER_B);assert(exit_requested==1);
     reset();mode=STATES;slot_total=0;slot_phase=0;
     press(PXA_CONTROLLER_RIGHT);assert(slot_focus==2);
+    press(PXA_CONTROLLER_RIGHT);assert(slot_focus==3);
     press(PXA_CONTROLLER_A);assert(mode==PAUSED);
     reset();mode=STATES;slot_total=40;slot_selected=39;slot_top=34;slot_base=32;slot_cached=8;slot_phase=0;
     press(PXA_CONTROLLER_DOWN);assert(slot_focus==1 && slot_selected==39);
     press(PXA_CONTROLLER_RIGHT);assert(slot_focus==2);
     press(PXA_CONTROLLER_UP);assert(!slot_focus && slot_selected==39);
     press(PXA_CONTROLLER_B);assert(mode==PAUSED);
-    puts("PASS: controller library/footer/empty/snapshot focus, confirm/back, primary cursor and menu-only repeat");
+    test_menu_contract();
+    puts("PASS: controller library/footer/empty/snapshot focus, confirm/back and menu-only repeat");
 }
 static void test_scaled_library(void) {
     reset();width=800;height=480;input_scale=1;input_density_q16=65536;
@@ -229,14 +236,14 @@ int main(void) {
     dp.y=(int64_t)physical.y*65536/input_density_q16;
     pointer(&dp);dp.phase=PXA_POINTER_UP;pointer(&dp);assert(audio_requested);dp.phase=PXA_POINTER_DOWN;
     mode=PLAYING;nes_controls_init(&controls,width,height,colors);
-    dp.pointer_id=0;dp.x=256*65536/88474;dp.y=358*65536/88474;
+    dp.pointer_id=0;dp.x=(controls.buttons[1].x+controls.buttons[1].w/2)*65536/88474;dp.y=(controls.buttons[1].y+controls.buttons[1].h/2)*65536/88474;
     pointer(&dp);assert(touches[0]==128);
-    dp.pointer_id=1;dp.x=742*65536/88474;dp.y=342*65536/88474;
+    dp.pointer_id=1;dp.x=(controls.buttons[8].x+controls.buttons[8].w/2)*65536/88474;dp.y=(controls.buttons[8].y+controls.buttons[8].h/2)*65536/88474;
     pointer(&dp);assert(touches[1]==1 && touches[0]==128);
     dp.phase=PXA_POINTER_CANCEL;pointer(&dp);assert(!touches[1] && touches[0]==128);
     dp.pointer_id=0;pointer(&dp);assert(!touches[0]);
     width=296;height=240;input_scale=1;input_density_q16=65536;
-    reset();test_i18n();test_scaled_library();test_system_menu();test_scroll_and_exit();test_controller_menus();
+    reset();test_theme_contract();test_i18n();test_scaled_library();test_system_menu();test_scroll_and_exit();test_controller_menus();
     reset();tap_sound();tap_sound();assert(audio_requested && !audio && redraw);
     assert(calls[PXA_PERMISSION_SERVICE][PXA_PERMISSION_ACQUIRE]==1);
     granted();opened(16000,1);status(PXA_AUDIO_SERVICE,PXA_AUDIO_COMMIT_GRAPH,T_AUDIO_GAIN,0);

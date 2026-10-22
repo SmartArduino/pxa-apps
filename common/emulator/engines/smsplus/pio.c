@@ -493,3 +493,11 @@ uint8 coleco_pio_r(int port)
 
   return temp;
 }
+
+/* Rebind derived pin directions without triggering an emulated TH edge. */
+void pio_state_get(uint8 values[3]) {
+ values[0]=paddle_toggle[0];values[1]=paddle_toggle[1];values[2]=lightgun_latch;
+}
+void pio_state_set(const uint8 values[3]) {
+ paddle_toggle[0]=values[0];paddle_toggle[1]=values[1];lightgun_latch=values[2];update(sms.ioctrl);
+}

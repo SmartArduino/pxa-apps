@@ -1,5 +1,6 @@
 /* GPL-2.0-or-later */
 #include "controls.h"
+#include "../common/controls/touch_layout.h"
 #include "font8x8.h"
 #include <string.h>
 
@@ -39,25 +40,28 @@ static void pixel(nes_controls_t *c,int x,int y,unsigned style) {
 }
 void nes_controls_set_labels(nes_controls_t *c,const char *select_label,const char *start_label,const char *menu_label) {
     unsigned width=c->width,height=c->height;
-    unsigned scale=nes_display_ui_scale(width,height);
     memset(c->mask,0,sizeof(c->mask));memset(c->row_used,0,sizeof(c->row_used));
-    for(unsigned i=0;i<NES_CONTROLS_COUNT;++i)
-        c->paint_bounds[i]=(nes_control_bounds_t){width,height,0,0};
-    unsigned safe_width=c->safe.width?c->safe.width:width;
-    unsigned safe_height=c->safe.height?c->safe.height:height;
-    int y=safe_height/scale-72;
-    const nes_control_button_t buttons[NES_CONTROLS_COUNT]={
-        {14,y,30,23,64,0,"<"},{80,y,30,23,128,0,">"},
-        {47,y-24,30,23,16,0,"^"},{47,y+24,30,23,32,0,"v"},
-        {122,y+19,48,23,4,0,select_label},{176,y+19,48,23,8,0,start_label},
-        {128,y-17,72,23,0,0,menu_label},
-        {230,y+16,30,27,2,0x6808,"B"},{260,y-10,30,27,1,0x980b,"A"},
+    for(unsigned i=0;i<NES_CONTROLS_COUNT;++i)c->paint_bounds[i]=(nes_control_bounds_t){width,height,0,0};
+    if(!c->safe.width || !c->safe.height)c->safe=(nes_display_rect_t){0,0,c->width,c->height};
+    emu_touch_rect_t rects[EMU_TOUCH_COUNT];
+    unsigned q=emu_touch_layout(rects,c->safe.width,c->safe.height,2,c->safe.x,c->safe.y);
+    unsigned scale=(q+32768)>>16;if(!scale)scale=1;
+    nes_control_button_t buttons[NES_CONTROLS_COUNT]={
+        {0,0,0,0,64,0,"<"},
+        {0,0,0,0,128,0,">"},
+        {0,0,0,0,16,0,"^"},
+        {0,0,0,0,32,0,"v"},
+        {0,0,0,0,4,0,select_label},
+        {0,0,0,0,8,0,start_label},
+        {0,0,0,0,0,0,menu_label},
+        {0,0,0,0,2,0x6808,"B"},
+        {0,0,0,0,1,0x980b,"A"},
     };
     for(unsigned i=0;i<NES_CONTROLS_COUNT;++i) {
         c->buttons[i]=buttons[i];nes_control_button_t *b=&c->buttons[i];
-        b->x=c->safe.x+b->x*(int)safe_width/296;b->w=b->w*(int)safe_width/296;
-        b->y=c->safe.y+b->y*scale;b->h*=scale;
-        int radius=(i>=6?11:6)*scale;
+        b->x=rects[i].x;b->y=rects[i].y;b->w=rects[i].w;b->h=rects[i].h;
+        int radius=emu_touch_px(i>=6?11:6,q);
+        if(radius>b->w/2)radius=b->w/2;if(radius>b->h/2)radius=b->h/2;if(radius<1)radius=1;
         for(int yy=0;yy<b->h;++yy)for(int xx=0;xx<b->w;++xx) {
             if(!inside(xx,yy,b->w,b->h,radius))continue;
             unsigned style=inside(xx-1,yy-1,b->w-2,b->h-2,radius-1)?1:2;
@@ -115,22 +119,12 @@ int nes_controls_use_touch(nes_controls_t *c) {
     int changed=c->controller_hidden;c->controller_hidden=0;return changed;
 }
 int nes_controls_hit(const nes_controls_t *c,int x,int y) {
-    unsigned scale=nes_display_ui_scale(c->width,c->height);
+    unsigned q=emu_touch_scale(c->safe.width,c->safe.height);
     if(!nes_controls_visible(c) || x<(int)c->safe.x || x>=(int)(c->safe.x+c->safe.width) ||
-       y<(int)c->safe.y || y>=(int)(c->safe.y+c->safe.height)-24*(int)scale)return 0;
-    /* One thumb can press a diagonal. The centre is a neutral dead zone. */
-    int left=c->buttons[0].x,right=c->buttons[1].x+c->buttons[1].w;
-    int top=c->buttons[2].y,bottom=c->buttons[3].y+c->buttons[3].h;
-    if(x>=left && x<right && y>=top && y<bottom) {
-        int cx=c->buttons[2].x+c->buttons[2].w/2,cy=c->buttons[0].y+c->buttons[0].h/2;
-        int dx=c->safe.width*15/296,dy=12*scale,bit=0;
-        if(x<cx-dx)bit|=64;else if(x>cx+dx)bit|=128;
-        if(y<cy-dy)bit|=16;else if(y>cy+dy)bit|=32;
-        return bit;
-    }
-    for(unsigned i=0;i<NES_CONTROLS_COUNT;++i) {
-        const nes_control_button_t *b=&c->buttons[i];
-        if(x>=b->x && x<b->x+b->w && y>=b->y && y<b->y+b->h)return b->bit?b->bit:-1;
-    }
-    return 0;
+       y<(int)c->safe.y || y>=(int)(c->safe.y+c->safe.height)-emu_touch_gesture_margin(q))return 0;
+    emu_touch_rect_t b[NES_CONTROLS_COUNT];
+    for(unsigned i=0;i<NES_CONTROLS_COUNT;++i)b[i]=(emu_touch_rect_t){c->buttons[i].x,c->buttons[i].y,c->buttons[i].w,c->buttons[i].h};
+    int target=emu_touch_target(b,NES_CONTROLS_COUNT,x,y,q);
+    if(target>=16){unsigned bits=target-16,result=0;for(unsigned i=0;i<4;++i)if(bits&(1u<<i))result|=c->buttons[i].bit;return result;}
+    return target<0?0:(c->buttons[target].bit?c->buttons[target].bit:-1);
 }

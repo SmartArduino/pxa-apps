@@ -23,6 +23,7 @@
 #include "pxa_permission.h"
 #include "pxa_surface.h"
 #include "pxa_ui.h"
+#include "../common/emulator/menu_focus.h"
 #include "pxa_window.h"
 #include <stdarg.h>
 #include <stdio.h>
@@ -31,6 +32,7 @@
 #include <time.h>
 #include <ctype.h>
 
+enum { T_MENU_THEME = 190 };
 enum { T_SURFACE=1,T_LAYER,T_ROOT,T_DIR,T_ENTRY,T_ROM,T_SAVE_READ,
        T_SAVE_WRITE,T_SAVE_REPLACE,T_AUDIO_PERMISSION,T_AUDIO_OPEN,T_AUDIO_GAIN,
        T_LIMITS,T_CONFIGURE,T_WINDOW,T_MKDIR,T_ASSET,T_STATS,T_RASTER,T_MEDIA_PATH };
@@ -71,10 +73,10 @@ static uint8_t controller_previous[2],controller_connected[2];
 static uint32_t controller_raw_previous[2];
 enum { PAUSE_TOP=68, PAUSE_PITCH=30, PAUSE_CHOICES=7 };
 static unsigned pause_selected,pause_top,exit_requested;
-static unsigned menu_focus; /* 0=ROM list, 1=refresh, 2=exit */
+static unsigned menu_focus;
 static uint32_t menu_repeat_buttons;
 static uint64_t menu_repeat_at;
-static unsigned menu_repeat_mode;
+static unsigned menu_repeat_mode,menu_repeat_controller;
 static pxa_i18n_t i18n;
 static int audio_requested,audio_failed;
 static nes_audio_fifo_t audio_fifo;
@@ -115,8 +117,7 @@ static void text(uint16_t *out,int x,int y,const char *s,uint16_t color,unsigned
     if(menu_commands){menu_label(x,y,max*8,20,s,color,0);return;}
     nes_ui_draw(out,menu_width(),menu_height(),x,y,s,color,max*8);
 }
-enum { UI_BG=0x0863, UI_CARD=0x10c5, UI_EDGE=0x2148, UI_FOCUS=0x11ea,
-       UI_ACCENT=0x4ed8, UI_INK=0xef9f, UI_MUTED=0x8cb3 };
+#include "../common/emulator/menu_theme.h"
 static void card(uint16_t *out,int x,int y,int w,int h,uint16_t color) {
     if(menu_commands){menu_box(x,y,w,h,4,color);return;}
     /* Fixed-radius corners, used only when a menu actually needs repainting. */
@@ -125,11 +126,11 @@ static void card(uint16_t *out,int x,int y,int w,int h,uint16_t color) {
 }
 static void button(uint16_t *out,int x,int y,int w,const char *label,uint16_t color) {
     card(out,x,y,w,23,color);
-    if(menu_commands){menu_label(x+5,y+1,w-10,22,label,color==UI_ACCENT?UI_BG:UI_INK,1);return;}
+    if(menu_commands){menu_label(x+5,y+1,w-10,22,label,color==UI_ACCENT?UI_ON_ACCENT:UI_INK,1);return;}
     unsigned label_width=nes_ui_width(label);
     int left=label_width<(unsigned)w-10?x+(w-(int)label_width)/2:x+5;
     nes_ui_draw(out,menu_width(),menu_height(),left,y+3,label,
-                color==UI_ACCENT?UI_BG:UI_INK,w-10);
+                color==UI_ACCENT?UI_ON_ACCENT:UI_INK,w-10);
 }
 /* Legacy font fallback: scale a transient menu into the safe rectangle.
  * The temporary allocation is released before any game frame is simulated. */
@@ -238,7 +239,9 @@ static __attribute__((noinline,cold)) void paint_menu(uint16_t *out) {
         else text(out,w-24-tw,11,position,UI_MUTED,12);}
         unsigned tabs=!!source_count[0]+!!source_count[1],slot=0,tab=tabs?(w-48-4*(tabs-1))/tabs:0;
         for(unsigned n=0;n<2;++n)if(source_count[n]) {
-            button(out,24+slot*(tab+4),34,tab,n?UI_SD:UI_FLASH,source==n?UI_ACCENT:UI_CARD);++slot;
+            button(out,24+slot*(tab+4),34,tab,n?UI_SD:UI_FLASH,source==n?UI_ACCENT:UI_CARD);
+            if(source==n && menu_focus==MENU_FOCUS_SOURCE)rect(out,24+slot*(tab+4),55,tab,2,UI_INK);
+            ++slot;
         }
         for(unsigned row=0;row<visible;++row) {
             unsigned n=page+row;if(n>=count)break;
@@ -264,7 +267,7 @@ static __attribute__((noinline,cold)) void paint_menu(uint16_t *out) {
     } else if(mode==PAUSED) {
         const char *status=save_failed?UI_SAVE_ERROR:
             (save_pending||writing_save||save_replace_pending?UI_SAVING:UI_PAUSED);
-        text(out,32,36,status,save_failed?0xfb8c:UI_MUTED,28);
+        text(out,32,36,status,save_failed?UI_DANGER:UI_MUTED,28);
         rect(out,32,58,w-64,1,UI_EDGE);
         char display[112],keys[112];
         format_number(PXA_MSG_UI_DISPLAY,"frames",display_divisor,display,sizeof(display));
@@ -583,36 +586,8 @@ static void exit_tick(void) {
         exit_requested=0;pxa_window_show_toast(3000,UI_EXIT_BACK,strlen(UI_EXIT_BACK));
     }
 }
-static unsigned drag_active,drag_moved,drag_mode,drag_id;
-static int drag_y;static uint64_t drag_top;
-static __attribute__((noinline,cold)) void list_pointer(const pxa_ui_pointer_data_t *p,int x,int y) {
-    if((mode==MENU && scan_pending) || (mode==STATES && slot_phase))return;
-    unsigned top=mode==PAUSED?PAUSE_TOP:64,pitch=mode==PAUSED?PAUSE_PITCH:22;
-    unsigned rows=mode==PAUSED?pause_rows():(menu_height()-(mode==STATES?114:108))/22;
-    if(p->phase==PXA_POINTER_DOWN) {
-        if(x<24 || x>=(int)menu_width()-24 || y<(int)top || y>=(int)(top+rows*pitch))return;
-        if(mode==MENU)menu_focus=0;else if(mode==STATES)slot_focus=0;
-        drag_active=1;drag_moved=0;drag_y=y;drag_mode=mode;drag_id=p->pointer_id;
-        drag_top=mode==MENU?page:(mode==PAUSED?pause_top:slot_top);return;
-    }
-    if(!drag_active || drag_id!=p->pointer_id || drag_mode!=mode)return;
-    int delta=drag_y-y;if(delta>6 || delta< -6)drag_moved=1;
-    if(drag_moved) {
-        int64_t n=(int64_t)drag_top+delta/(int)pitch;if(n<0)n=0;
-        if(mode==MENU){unsigned max=count>rows?count-rows:0;page=n>max?max:n;}
-        else if(mode==PAUSED){unsigned max=PAUSE_CHOICES>rows?PAUSE_CHOICES-rows:0;pause_top=n>max?max:n;}
-        else slots_scroll(n);
-        redraw=1;
-    }
-    if(p->phase==PXA_POINTER_UP) {
-        drag_active=0;
-        if(drag_moved || x<24 || x>=(int)menu_width()-24 || y<(int)top || y>=(int)(top+rows*pitch))return;
-        unsigned row=(y-top)/pitch;
-        if(mode==MENU)select_rom(page+row);
-        else if(mode==PAUSED)pause_action(pause_top+row);
-        else slot_load(slot_top+row);
-    }
-}
+#include "../common/emulator/menu_list_pointer.h"
+
 static uint8_t map_buttons(uint32_t b) {
     return ((b&PXA_CONTROLLER_A)?1:0)|((b&PXA_CONTROLLER_B)?2:0)|((b&PXA_CONTROLLER_SELECT)?4:0)|((b&PXA_CONTROLLER_START)?8:0)|
         ((b&PXA_CONTROLLER_UP)?16:0)|((b&PXA_CONTROLLER_DOWN)?32:0)|((b&PXA_CONTROLLER_LEFT)?64:0)|((b&PXA_CONTROLLER_RIGHT)?128:0);
@@ -649,7 +624,7 @@ static void pointer(const pxa_ui_pointer_data_t *p) {
     if(mode==PAUSED)return;
     if(mode==STATES) {
         if(!slot_phase && y>=(int)height-39 && y<(int)height-16) {
-            if(x<(int)menu_width()/2)slot_new();else{mode=PAUSED;redraw=1;}
+            if(x<24+(int)(menu_width()-48)/3)slot_new();else if(x<24+2*(int)(menu_width()-48)/3)slot_delete();else{slot_delete_pending=0;mode=PAUSED;redraw=1;}
         }
         return;
     }
@@ -673,6 +648,7 @@ int32_t pxa_app_start(const uint8_t *config,uint32_t size) {
     if(!input_scale)return PXA_STATUS_INVALID_ARGUMENT;
     nes_port_log("NES DISPLAY canvas=%ux%u input_scale=%u density_q16=%u",width,height,input_scale,input_density_q16);
     pxa_window_fullscreen();pxa_window_request_snapshot(T_WINDOW);
+    (void)pxa_ui_theme_get(T_MENU_THEME);
     uint8_t packet[512];uint32_t n;pxa_ui_transaction_t tx={0};
     if(!pxa_ui_transaction_begin(&tx,1,PXA_UI_TRANSACTION_REPLACE_SURFACE,packet,sizeof(packet)) ||
        !pxa_ui_create(&tx,1,0,0,PXA_UI_NODE_ROOT) || !pxa_ui_set_rgba(&tx,1,PXA_UI_PROPERTY_BACKGROUND,0) ||
@@ -728,6 +704,8 @@ int32_t pxa_app_on_event(const uint8_t *data,uint32_t size) {
         video_renderer.resolve=native_resolve;redraw=1;return PXA_EVENT_HANDLED;
     }
     if(slots_event(&e))return PXA_EVENT_HANDLED;
+    pxa_ui_theme_t theme;
+    if(pxa_ui_parse_theme_event(&e,&theme)) {menu_theme_apply(&theme);return PXA_EVENT_HANDLED;}
     pxa_ui_pointer_data_t p;if(pxa_ui_parse_pointer(&e,&p)){if(p.phase!=PXA_POINTER_MOVE)nes_port_log("NES INPUT phase=%u x=%d y=%d mode=%u",p.phase,p.x,p.y,mode);pointer(&p);return PXA_EVENT_HANDLED;}
     pxa_ui_controller_data_t c;if(pxa_ui_parse_controller(&e,&c)) {
         if(c.controller<2){uint32_t buttons=c.connected?c.buttons:0;
@@ -745,7 +723,7 @@ int32_t pxa_app_on_event(const uint8_t *data,uint32_t size) {
             }
             if((b&12)==12 && (previous&12)!=12 && mode==PLAYING){pause_game();return PXA_EVENT_HANDLED;}
             if(mode!=PLAYING) {
-                if(c.controller==0)menu_controller_event(pressed,buttons);
+                menu_controller_event(c.controller,pressed,buttons);
                 pad[c.controller]=0;return PXA_EVENT_HANDLED;
             }
             pad[c.controller]=background?0:b;

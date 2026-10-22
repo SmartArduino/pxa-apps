@@ -15,6 +15,9 @@
 #include "sound/sn76496.h"
 #include "cd/megasd.h"
 #include "state.h"
+#ifdef PICO_MEMORY_STATE
+#include "pxa_md_state_fields.h"
+#endif
 
 static arearw    *areaRead;
 static arearw    *areaWrite;
@@ -28,6 +31,7 @@ void (*PicoLoadStateHook)(void);
 
 
 /* I/O functions */
+#ifndef PICO_MEMORY_STATE
 static size_t gzRead2(void *p, size_t _size, size_t _n, void *file)
 {
   return gzread(file, p, _size * _n);
@@ -78,6 +82,8 @@ static void *open_save_file(const char *fname, int is_save)
   return afile;
 }
 
+
+#endif
 // ---------------------------------------------------------------------------
 
 typedef enum {
@@ -274,6 +280,8 @@ static int state_save(void *file)
     if (!(PicoIn.opt & POPT_DIS_IDLE_DET))
       SekInitIdleDet();
   }
+
+#ifndef NO_SMS
   else {
     CHECKED_WRITE_BUFF(CHUNK_SMS, Pico.ms);
     // only store the FM unit state if it was really used
@@ -282,6 +290,8 @@ static int state_save(void *file)
       CHECKED_WRITE(CHUNK_YM2413, len, buf2);
     }
   }
+
+#endif
   CHECKED_WRITE(CHUNK_PSG, 28*4, sn76496_regs);
 
   if (!(PicoIn.AHW & PAHW_PICO)) {
@@ -293,11 +303,24 @@ static int state_save(void *file)
   CHECKED_WRITE_BUFF(CHUNK_VRAM,  PicoMem.vram);
   CHECKED_WRITE_BUFF(CHUNK_CRAM,  PicoMem.cram);
 
+#ifdef PICO_MEMORY_STATE
+  struct PicoMisc state_misc={0};pxa_md_state_copy_PicoMisc(&state_misc,&Pico.m);
+  CHECKED_WRITE_BUFF(CHUNK_MISC, state_misc);
+#else
   CHECKED_WRITE_BUFF(CHUNK_MISC,  Pico.m);
+#endif
   len = PicoVideoSave(buf2);
   CHECKED_WRITE(CHUNK_VDP, len, buf2);
+#ifdef PICO_MEMORY_STATE
+  struct PicoVideo state_video={0};pxa_md_state_copy_PicoVideo(&state_video,&Pico.video);
+  CHECKED_WRITE_BUFF(CHUNK_VIDEO, state_video);
+#else
   CHECKED_WRITE_BUFF(CHUNK_VIDEO, Pico.video);
+#endif
 
+  /* The memory callback build serves the MD-only PXA app. CD file
+   * restore must not pull host stdio into its WASI imports. */
+#ifndef PICO_MEMORY_STATE
   if (PicoIn.AHW & PAHW_MCD)
   {
     memset(buff, 0, sizeof(buff));
@@ -331,6 +354,8 @@ static int state_save(void *file)
     if (Pico_mcd->s68k_regs[3] & 4) // convert back
       wram_2M_to_1M(Pico_mcd->word_ram2M);
   }
+
+#endif
 
 #ifndef NO_32X
   if (PicoIn.AHW & PAHW_32X)
@@ -447,7 +472,9 @@ static int state_load(void *file)
   CHECKED_READ(4, &ver);
 
   memset(pcd_event_times, 0, sizeof(pcd_event_times));
+#ifndef NO_32X
   memset(p32x_event_times, 0, sizeof(p32x_event_times));
+#endif
 
   while (!areaEof(file))
   {
@@ -460,8 +487,13 @@ static int state_load(void *file)
 
     // 32X only appears in PicoDrive after it has been enabled, so track this
     has_32x |= CHUNK_32X_FIRST <= chunk && chunk <= CHUNK_32X_LAST;
+#ifdef NO_32X
+    if (has_32x) R_ERROR_RETURN("32X state is not supported");
+#endif
+#ifndef NO_32X
     if (has_32x && !(PicoIn.AHW & PAHW_32X))
       Pico32xStartup();
+#endif
 
     switch (chunk)
     {
@@ -478,8 +510,13 @@ static int state_load(void *file)
       case CHUNK_ZRAM:    CHECKED_READ_BUFF(PicoMem.zram); break;
       case CHUNK_CRAM:    CHECKED_READ_BUFF(PicoMem.cram); break;
       case CHUNK_VSRAM:   CHECKED_READ_BUFF(PicoMem.vsram); break;
+#ifdef PICO_MEMORY_STATE
+      case CHUNK_MISC: {struct PicoMisc state_misc={0};CHECKED_READ_BUFF(state_misc);pxa_md_state_copy_PicoMisc(&Pico.m,&state_misc);break;}
+      case CHUNK_VIDEO: {struct PicoVideo state_video={0};CHECKED_READ_BUFF(state_video);pxa_md_state_copy_PicoVideo(&Pico.video,&state_video);break;}
+#else
       case CHUNK_MISC:    CHECKED_READ_BUFF(Pico.m); break;
       case CHUNK_VIDEO:   CHECKED_READ_BUFF(Pico.video); break;
+#endif
       case CHUNK_VDP:     CHECKED_READ2((len_vdp = len), buff_vdp); break;
 
       case CHUNK_IOPORTS: CHECKED_READ_BUFF(PicoMem.ioports); break;
@@ -491,11 +528,13 @@ static int state_load(void *file)
 
 
       case CHUNK_PSG:     CHECKED_READ2(28*4, sn76496_regs); break;
+#ifndef NO_SMS
       case CHUNK_YM2413:
         CHECKED_READ(len, buf);
         ym2413_unpack_state(buf, len);
         Pico.m.hardware |= PMS_HW_FMUSED;
         break;
+#endif
       case CHUNK_FM:
         ym_regs = YM2612GetRegs();
         CHECKED_READ2(0x200+4, ym_regs);
@@ -512,11 +551,15 @@ static int state_load(void *file)
         CHECKED_READ_BUFF(PicoPicohw);
         break;
 
+#ifndef NO_SMS
       case CHUNK_SMS:
         CHECKED_READ_BUFF(Pico.ms);
         break;
 
+#endif
+
       // cd stuff
+#ifndef PICO_MEMORY_STATE
       case CHUNK_S68K:
         CHECKED_READ_BUFF(buff_s68k);
         break;
@@ -562,6 +605,7 @@ static int state_load(void *file)
         break;
 
       // 32x stuff
+#endif
 #ifndef NO_32X
       case CHUNK_MSH2:
         CHECKED_READ_BUFF(buff_sh2);
@@ -616,15 +660,19 @@ breakswitch:
 readend:
   PicoVideoLoad(buff_vdp, len_vdp);
 
+#ifndef NO_32X
   if (PicoIn.AHW & PAHW_32X)
     if (!has_32x)
       Pico32xShutdown(); // in case of loading a state with 32X disabled
+#endif
 
   if (PicoIn.AHW & PAHW_SMS)
     PicoStateLoadedMS();
 
+#ifndef NO_32X
   if (PicoIn.AHW & PAHW_32X)
     Pico32xStateLoaded(1);
+#endif
 
   if (PicoLoadStateHook != NULL)
     PicoLoadStateHook();
@@ -632,15 +680,23 @@ readend:
   // must unpack 68k and z80 after banks are set up
   if (!(PicoIn.AHW & PAHW_SMS))
     SekUnpackCpu(buff_m68k, 0);
+
+#ifndef PICO_MEMORY_STATE
   if (PicoIn.AHW & PAHW_MCD)
     SekUnpackCpu(buff_s68k, 1);
+#endif
 
   z80_unpack(buff_z80);
 
+#ifndef NO_32X
   if (PicoIn.AHW & PAHW_32X)
     Pico32xStateLoaded(0);
+#endif
+
+#ifndef PICO_MEMORY_STATE
   if (PicoIn.AHW & PAHW_MCD)
     pcd_state_loaded();
+#endif
   if (!(PicoIn.AHW & PAHW_SMS)) {
     Pico.video.status &= ~(SR_VB | SR_F);
     Pico.video.status |= ((Pico.video.reg[1] >> 3) ^ SR_VB) & SR_VB;
@@ -734,6 +790,7 @@ static int pico_state_internal(void *afile, int is_save)
   return ret;
 }
 
+#ifndef PICO_MEMORY_STATE
 int PicoState(const char *fname, int is_save)
 {
   void *afile = NULL;
@@ -748,6 +805,8 @@ int PicoState(const char *fname, int is_save)
   return ret;
 }
 
+
+#endif
 int PicoStateFP(void *afile, int is_save,
   arearw *read, arearw *write, areaeof *eof, areaseek *seek)
 {
@@ -760,6 +819,7 @@ int PicoStateFP(void *afile, int is_save,
   return pico_state_internal(afile, is_save);
 }
 
+#ifndef PICO_MEMORY_STATE
 int PicoStateLoadGfx(const char *fname)
 {
   void *afile;
@@ -859,3 +919,5 @@ void PicoTmpStateRestore(void *data)
 }
 
 // vim:shiftwidth=2:ts=2:expandtab
+
+#endif

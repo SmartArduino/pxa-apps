@@ -1163,4 +1163,15 @@ void S9xPlaySample(int32_t channel)
                   APU.DSP [APU_ADSR2 + (channel << 4)]);
 }
 
+/* Pause-only state; LocalState contains scalar arrays, never pointers. */
+size_t S9xSoundSnapshotSize(void) {return LocalState?sizeof(*LocalState):0;}
+void S9xSoundSnapshotSave(void *data) {memcpy(data,LocalState,sizeof(*LocalState));}
+void S9xSoundSnapshotLoad(const void *data,uint8_t blocks,uint8_t echoes) {
+ memcpy(LocalState,data,sizeof(*LocalState));
+ for(unsigned n=0;n<NUM_CHANNELS;++n) {
+  SoundData.channels[n].block=(blocks&(1u<<n))?SoundData.channels[n].decoded:NULL;
+  SoundData.channels[n].echo_buf_ptr=(echoes&(1u<<n))?EchoBuffer:NULL;
+ }
+}
+
 #endif

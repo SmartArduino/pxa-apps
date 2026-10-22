@@ -819,3 +819,8 @@ void gb_lcd_emulate(int cycles)
 		}
 	}
 }
+
+/* Window origin can outlive a frontend frame boundary. Other line buffers
+ * are derived on the next rendered scanline. */
+void gb_lcd_state_get(int xy[2]) {xy[0]=WX;xy[1]=WY;}
+void gb_lcd_state_set(const int xy[2]) {WX=xy[0];WY=xy[1];pal_dirty=true;}

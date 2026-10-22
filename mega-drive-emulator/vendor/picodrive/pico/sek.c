@@ -207,7 +207,7 @@ PICO_INTERNAL void SekPackCpu(unsigned char *cpu, int is_sub)
   m68k_set_context(oldcontext);
 #elif defined(EMU_F68K)
   M68K_CONTEXT *context = is_sub ? &PicoCpuFS68k : &PicoCpuFM68k;
-  memcpy(cpu,context->dreg,0x40);
+  for(unsigned n=0;n<8;++n){((u32*)cpu)[n]=context->dreg[n].D;((u32*)cpu)[n+8]=context->areg[n].D;}
   *(u32  *)(cpu+0x40)=context->pc;
   *(u32  *)(cpu+0x44)=context->sr;
   *(u32  *)(cpu+0x48)=context->asp;
@@ -252,7 +252,7 @@ PICO_INTERNAL void SekUnpackCpu(const unsigned char *cpu, int is_sub)
   m68k_set_context(oldcontext);
 #elif defined(EMU_F68K)
   M68K_CONTEXT *context = is_sub ? &PicoCpuFS68k : &PicoCpuFM68k;
-  memcpy(context->dreg,cpu,0x40);
+  for(unsigned n=0;n<8;++n){context->dreg[n].D=((const u32*)cpu)[n];context->areg[n].D=((const u32*)cpu)[n+8];}
   context->pc =*(u32 *)(cpu+0x40);
   context->sr =*(u32 *)(cpu+0x44);
   context->asp=*(u32 *)(cpu+0x48);

@@ -11,6 +11,7 @@ set(EMU_ENGINE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/core.c" "${CMAKE_CURRENT_SOU
     "${EMU_PICO}/pico/draw.c"
     "${EMU_PICO}/pico/mode4.c"
     "${EMU_PICO}/pico/misc.c"
+    "${EMU_PICO}/pico/state.c"
     "${EMU_PICO}/pico/eeprom.c"
     "${EMU_PICO}/pico/cd/mcd.c"
     "${EMU_PICO}/pico/cd/memory.c"
@@ -53,3 +54,17 @@ set_source_files_properties("${EMU_PICO}/pico/cart.c" "${EMU_PICO}/pico/cd/cdd.c
 if(EMU_NATIVE_TEST AND CMAKE_C_FLAGS MATCHES "-fsanitize=")
     set_source_files_properties("${EMU_PICO}/cpu/fame/famec.c" PROPERTIES COMPILE_OPTIONS "-O0")
 endif()
+
+set_source_files_properties("${EMU_PICO}/pico/state.c" PROPERTIES COMPILE_DEFINITIONS PICO_MEMORY_STATE)
+
+# The state serializer must copy hot globals by typed fields, including fields
+# added upstream. Generate the schema from the pinned vendor declarations.
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+set(EMU_STATE_FIELDS "${CMAKE_CURRENT_BINARY_DIR}/pxa_md_state_fields.h")
+add_custom_command(OUTPUT "${EMU_STATE_FIELDS}"
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/generate_state_fields.py"
+        "${EMU_PICO}/pico/pico_int.h" "${EMU_STATE_FIELDS}"
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/tests/generate_state_fields.py" "${EMU_PICO}/pico/pico_int.h")
+list(APPEND EMU_ENGINE_SOURCES "${EMU_STATE_FIELDS}")
+set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/core.c" "${EMU_PICO}/pico/state.c"
+    PROPERTIES INCLUDE_DIRECTORIES "${CMAKE_CURRENT_BINARY_DIR}")
