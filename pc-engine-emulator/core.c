@@ -64,6 +64,7 @@ static const char *load_cartridge(uint8_t *rom,size_t size,const rom_source_t *s
     if(InitPCE(32000,true)){emu_core_close();return "PC Engine initialization failed";}
     loaded=true;
     if(source?LoadCardPaged(size,crc):LoadCard(rom,size)){emu_core_close();return "HuCard mapping failed";}
+    h6280_batch_cartridge(source?NULL:PCE.ROM_DATA,(size_t)PCE.ROM_SIZE*8192);
     emu_core_info.width=256;emu_core_info.height=224;emu_core_info.stride=XBUF_WIDTH;
     /* CPU CSH/CSL changes do not change the video frame clock. */
     emu_core_info.rate_num=60;emu_core_info.rate_den=1;

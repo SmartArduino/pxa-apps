@@ -131,6 +131,18 @@ pce_run(void)
 		PCE.VDC.mode_chg = 0;
 	}
 	// Emulate!
+    /* Choose once per frame. Keep the ordinary CPU runner unchanged so
+     * batching does not alter its AOT register allocation or dispatch loop. */
+    if(h6280_batch_available()){
+        for(PCE.Scanline=0;PCE.Scanline<263;++PCE.Scanline){
+            PCE.MaxCycles+=PCE.Timer.cycles_per_line;
+            h6280_run_batched(PCE.MaxCycles);
+            timer_run(PCE.Cycles);
+            PCE.MaxCycles-=PCE.Cycles;PCE.Cycles=0;
+            gfx_run();
+        }
+        return;
+    }
 	for (PCE.Scanline = 0; PCE.Scanline < 263; ++PCE.Scanline) {
 		PCE.MaxCycles += PCE.Timer.cycles_per_line;
 		/*while (PCE.MaxCycles > 0) */ {

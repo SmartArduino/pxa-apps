@@ -27,4 +27,6 @@ GB/GBC 与五个新前端优先尝试整块驻留，并临时保留各核心的�
 
 `tests/pxa_read_at_probe.c` 是独立测试身份使用的设备探针，需要 `fs` 和 `log` 服务；它仅在自身私有目录创建 4 KiB 文件，检查定位读取、短读、取消和顺序游标保持。成功日志为 `ROM PRIVATE READ_AT PROBE PASS`。不要借用已有游戏身份运行该探针。
 
+`tests/pxa_read_at_benchmark.c` 用于独立测试身份的 SD 读取分析，需要 FS `app-media-root`、`read-at` 及 log 服务。在该测试 App 自己的 SD 媒体目录放置至少 8 MiB 的 `probe.bin`，程序以 ABBA 顺序交替把顺序游标置于文件末尾与开头，读取相同的 4 KiB 偏移集合，检查 CRC 与游标保持并记录耗时。此测量不能代替模拟器帧率测试。
+
 ROM 文件仍须符合所在介质的剩余空间和应用配额；分页只降低运行内存，不能扩大 Flash 存储容量。

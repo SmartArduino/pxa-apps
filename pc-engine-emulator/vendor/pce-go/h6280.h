@@ -1,9 +1,13 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 
 void h6280_reset(void);
 void h6280_run(int cycles);
+void h6280_run_batched(int cycles);
+int h6280_batch_available(void);
+void h6280_batch_cartridge(const uint8_t *rom,size_t size);
 void h6280_irq(int);
 void h6280_dump_state(void);
 void h6280_disassemble(void);

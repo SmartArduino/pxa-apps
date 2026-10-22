@@ -9,6 +9,16 @@ import sys
 import time
 
 
+def simulation_target(app_id, row, override=None):
+    if override is not None:
+        return override
+    if int(row.get("rate_num", 0)) > 0 and int(row.get("rate_den", 0)) > 0:
+        return int(row["rate_num"]) / int(row["rate_den"])
+    if app_id == "pxa-game-boy":
+        return 4194304 / 70224
+    return None
+
+
 def measure(client, output, seconds=22, motion=True, expected_crc=None, app_id="pxa-master-system", target_hz=None, buttons=None):
     import pxadb
     output = Path(output)
@@ -114,7 +124,9 @@ def measure(client, output, seconds=22, motion=True, expected_crc=None, app_id="
                 client.log_callback, client.raw_callback = previous
     report["valid"] = len(report["samples"]) >= 2
     report["sustained"] = len(report["samples"]) >= 2 and all(
-        abs(int(r["sim_x100"])-100*(target_hz if target_hz is not None else int(r["rate_num"])/int(r["rate_den"]))) <= 100 and int(r["debt"]) <= 2 for r in report["samples"])
+        (target := simulation_target(app_id, r, target_hz)) is not None and
+        abs(int(r["sim_x100"])-100*target) <= 100 and int(r["debt"]) <= 2
+        for r in report["samples"])
     report["audio_enabled"] = bool(report["samples"]) and all(r.get("sound") == "1" for r in report["samples"])
     (output / "results.json").write_text(json.dumps(report, indent=2)+"\n")
     return report

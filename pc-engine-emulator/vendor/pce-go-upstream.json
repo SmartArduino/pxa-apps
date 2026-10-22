@@ -6,6 +6,7 @@
     "Borrowed HuCard image; removed unused file and snapshot entry points",
     "RGB333 to RGB565 palette and 16-bit raster output including 512-pixel modes",
     "Portable 16-bit memory access with bank boundaries and I/O handling",
-    "Bounded non-power-of-two and SF2 bank mapping; checked onboard RAM allocation"
+    "Bounded non-power-of-two and SF2 bank mapping; checked onboard RAM allocation",
+    "Exact scanline-bounded batching for ROM RAM-counter/poll loops; preserve flags, overflow, partial execution and cycles, reject aliases and RAM code; classify resident ROM once at load to bypass unmatched frame-path detection"
   ]
 }

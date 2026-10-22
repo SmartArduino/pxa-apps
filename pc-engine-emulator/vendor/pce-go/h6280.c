@@ -11,6 +11,19 @@
 
 #include "h6280_instr.h"
 #include "h6280_dbg.h"
+#include "h6280_batch.h"
+
+int h6280_batch_available(void){return PXA_PCE_LOOP_BATCH && h6280_batch_possible;}
+void h6280_run_batched(int max_cycles){
+    if(Cycles>=max_cycles)return;
+    unsigned irq=CPU.irq_lines & ~CPU.irq_mask & INT_MASK;
+    if(!(CPU.P&FL_I) && irq)interrupt(irq);
+    h6280_batch(max_cycles);
+    /* These instructions preserve I and the pending IRQ mask. The original
+     * runner's second IRQ check therefore has no side effects. */
+    h6280_run(max_cycles);
+}
+
 
 
 /**
