@@ -36,6 +36,7 @@
 #define STORE_REQUEST_UNINSTALL UINT32_C(14)
 #define STORE_REQUEST_RUNTIME_INFO UINT32_C(15)
 #define STORE_REQUEST_NAMESPACE UINT32_C(16)
+#define STORE_REQUEST_CAPABILITIES UINT32_C(17)
 
 #define STORE_BODY_ERROR 0
 #define STORE_BODY_DONE 1
@@ -51,7 +52,7 @@ typedef struct {
     uint64_t response_length;
     uint16_t http_status;
     uint8_t stream_waiting;
-    uint8_t has_device_permission;
+    uint8_t device_permission_resolved;
     uint8_t has_network_permission;
     uint8_t has_mac;
     uint8_t mac[6];
@@ -85,7 +86,8 @@ int store_client_build_identity_url(char *output,size_t capacity,const char *pro
 
 int store_client_profile_for_device(char *output, size_t capacity,
                                     const char *target, const char *architecture,
-                                    const char *engine, uint32_t formats);
+                                    const char *engine, uint32_t formats,
+                                    uint32_t installer_features = 0);
 
 int store_client_build_download_url(char *output, size_t capacity,
                                     const char *ticket_path);

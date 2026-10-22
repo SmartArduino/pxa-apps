@@ -306,6 +306,8 @@ typedef struct {
     char device_id[24];
     char profile[64];
     uint8_t profile_ready;
+    uint8_t installer_ready;
+    uint32_t installer_features;
     char scratch[384];
     char status[64];
     uint8_t packet[3072];
@@ -1734,7 +1736,8 @@ static int render_library(void) {
         char progress[64] = {0};
         if (active && index == 0u) {
             size_t offset = append_text(progress, sizeof(progress), 0,
-                                        message(PXA_MSG_STATUS_DOWNLOADING));
+                message(app.download_total && app.downloaded_bytes >= app.download_total ?
+                        PXA_MSG_STATUS_INSTALLING : PXA_MSG_STATUS_DOWNLOADING));
             offset = append_text(progress, sizeof(progress), offset, " · ");
             offset = append_u64(progress, sizeof(progress), offset,
                                 app.download_total == 0u ? 0u :
@@ -1825,7 +1828,7 @@ static int patch_download_progress(void) {
     if (percent > 100u) percent = 100u;
     if (percent == app.progress_rendered) return 1;
     offset = append_text(progress, sizeof(progress), 0,
-                         message(PXA_MSG_STATUS_DOWNLOADING));
+                         message(percent == 100 ? PXA_MSG_STATUS_INSTALLING : PXA_MSG_STATUS_DOWNLOADING));
     offset = append_text(progress, sizeof(progress), offset, " · ");
     offset = append_u64(progress, sizeof(progress), offset, percent);
     (void)append_text(progress, sizeof(progress), offset, "%");
@@ -3254,6 +3257,10 @@ static int finish_update_check(int failed) {
  * identity, network permission, then the catalog request itself. Result
  * handlers call this to continue, so it must not check app.busy. */
 static int advance_catalog_request(void) {
+    if (!app.installer_ready) {
+        if (pxa_store_request_capabilities(STORE_REQUEST_CAPABILITIES) == PXA_STATUS_OK) return 1;
+        app.installer_ready = 1;
+    }
     if (!app.profile_ready) {
         if (pxa_device_request_runtime_info(
                 STORE_REQUEST_RUNTIME_INFO) != PXA_STATUS_OK) {
@@ -3266,7 +3273,7 @@ static int advance_catalog_request(void) {
         (void)fail_request(STORE_ERROR_UNSUPPORTED);
         return 0;
     }
-    if (!app.client.has_device_permission) {
+    if (!app.client.device_permission_resolved) {
         store_trace("acquire device permission", 1);
         if (!store_client_acquire_device_permission(
                 app.packet, sizeof(app.packet))) {
@@ -3671,6 +3678,16 @@ static int handle_permission_result(const pxa_event_t *parsed) {
     pxa_permission_acquire_result_t result;
     if (!pxa_permission_parse_acquire(parsed, parsed->token, &result))
         return fail_request(STORE_ERROR_PROTOCOL);
+    if (parsed->token == STORE_REQUEST_DEVICE_PERMISSION &&
+        result.status != PXA_STATUS_OK) {
+        /* Hardware identity only selects a rollout bucket. Browsing and
+         * installation remain available without sending a device ID. */
+        app.client.device_permission_resolved = 1;
+        app.client.has_mac = 1;
+        copy_text(app.device_id, sizeof(app.device_id), "");
+        (void)advance_catalog_request();
+        return PXA_EVENT_HANDLED;
+    }
     if (result.status != PXA_STATUS_OK) {
         app.state = STORE_DENIED;
         app.busy = 0;
@@ -3678,7 +3695,7 @@ static int handle_permission_result(const pxa_event_t *parsed) {
     }
     if (parsed->token == STORE_REQUEST_DEVICE_PERMISSION) {
         app.client.device_permission = result.handle;
-        app.client.has_device_permission = 1;
+        app.client.device_permission_resolved = 1;
     } else {
         app.client.network_permission = result.handle;
         app.client.has_network_permission = 1;
@@ -3714,7 +3731,7 @@ static int handle_runtime_info(const pxa_event_t *parsed) {
                                                sizeof(app.profile),
                                                info.target, info.architecture,
                                                info.engine,
-                                               info.formats);
+                                               info.formats, app.installer_features);
     }
     if (!advance_catalog_request()) return PXA_EVENT_HANDLED;
     return PXA_EVENT_HANDLED;
@@ -3877,6 +3894,8 @@ extern "C" int32_t pxa_app_start(const uint8_t *config, uint32_t config_length) 
     copy_text(app.device_id, sizeof(app.device_id), "");
     app.profile[0] = '\0';
     app.profile_ready = 0;
+    app.installer_ready = 0;
+    app.installer_features = 0;
     store_trace("start", 1);
     {
         pxa_ui_environment_t environment;
@@ -3978,6 +3997,16 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     if (parsed.service == PXA_PERMISSION_SERVICE &&
         parsed.opcode == PXA_PERMISSION_ACQUIRE)
         return handle_permission_result(&parsed);
+    if (parsed.service == PXA_SERVICE_STORE_INSTALLER &&
+        parsed.opcode == PXA_STORE_CAPABILITIES_REQUEST && parsed.token == STORE_REQUEST_CAPABILITIES) {
+        pxa_store_capabilities_t capabilities;
+        app.installer_ready = 1;
+        if (pxa_store_parse_capabilities(&parsed, STORE_REQUEST_CAPABILITIES, &capabilities) &&
+            capabilities.status == PXA_STATUS_OK && capabilities.major == 0 && capabilities.minor >= 8)
+            app.installer_features = capabilities.features;
+        (void)advance_catalog_request();
+        return PXA_EVENT_HANDLED;
+    }
     if (parsed.service == PXA_DEVICE_SERVICE &&
         parsed.opcode == PXA_DEVICE_GET_RUNTIME_INFO &&
         parsed.token == STORE_REQUEST_RUNTIME_INFO)

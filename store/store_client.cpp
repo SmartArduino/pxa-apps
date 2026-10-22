@@ -7,6 +7,7 @@
 #include "pxa_net.h"
 #include "pxa_permission.h"
 #include "store_model.h"
+#include "pxa_store_installer.h"
 
 #define STORE_URL_CAPACITY 512
 #define STORE_RESPONSE_TIMEOUT_MS UINT32_C(15000)
@@ -37,7 +38,8 @@ static int same_text(const char *left, const char *right) {
 
 int store_client_profile_for_device(char *output, size_t capacity,
                                     const char *target, const char *architecture,
-                                    const char *engine, uint32_t formats) {
+                                    const char *engine, uint32_t formats,
+                                    uint32_t installer_features) {
     size_t offset = 0;
     if (output == NULL || capacity == 0 || target == NULL ||
         architecture == NULL || engine == NULL ||
@@ -52,7 +54,10 @@ int store_client_profile_for_device(char *output, size_t capacity,
         return 0;
     output[0] = '\0';
     return append_text(output, capacity, &offset, target) &&
-           append_text(output, capacity, &offset, STORE_PROFILE_SUFFIX);
+           append_text(output, capacity, &offset,
+             (installer_features & (PXA_STORE_CAP_RESOURCE_INSTALL | PXA_STORE_CAP_VOLUME_PLACEMENT)) ==
+             (PXA_STORE_CAP_RESOURCE_INSTALL | PXA_STORE_CAP_VOLUME_PLACEMENT)
+             ? "-pxa-0.5.0" : STORE_PROFILE_SUFFIX);
 }
 
 static int append_text(char *output, size_t capacity, size_t *offset,
@@ -121,7 +126,7 @@ void store_client_init(store_client_t *client) {
     client->response_length = 0;
     client->http_status = 0;
     client->stream_waiting = 0;
-    client->has_device_permission = 0;
+    client->device_permission_resolved = 0;
     client->has_network_permission = 0;
     client->has_mac = 0;
     for (size_t index = 0; index < sizeof(client->mac); ++index)

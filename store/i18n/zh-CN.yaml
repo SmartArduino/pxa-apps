@@ -39,6 +39,7 @@ translations:
   status.installed: 已安装
   status.downloaded: 下载完成，可安装
   status.downloading: 正在下载
+  status.installing: 正在验证并安装
   dialog.install_success: 可在已安装页查看和打开此应用
   action.done: 完成
   kind.apps: 应用

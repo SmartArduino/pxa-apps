@@ -145,6 +145,10 @@ messages:
     source: Downloading
     context: Live package download progress
     max_bytes: 32
+  status.installing:
+    source: Verifying and installing
+    context: Transfer complete; Host is verifying resources and committing installation
+    max_bytes: 48
   dialog.install_success:
     source: Ready in Installed apps
     context: Description on the installation success card

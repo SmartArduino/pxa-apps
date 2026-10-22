@@ -41,6 +41,10 @@ tools/app.sh build store --target esp32s3 --source-root local/pxa-apps
 | `PXA_STORE_ORIGIN` | `https://app.doit.am` | Must stay byte-identical to the signed `net.client` scope in `package.json`; the Host compares the parsed URL origin with that scope. |
 | `PXA_STORE_CHANNEL` | `stable` | `stable` or `beta`. |
 
+Hardware device identity is optional. Denying `device.identity` continues
+without a rollout device ID; browsing requires only the configured origin's
+network permission.
+
 The Store queries Device ABI 0.2 at startup to select a catalog profile from
 the Host target and supported AOT formats. Catalog profile names are server
 keys, not WAMR engine ABI strings. An unsupported Host or catalog profile does
@@ -250,27 +254,50 @@ and the product's compact Font Awesome font. U+F00B (TH_LIST) is absent in the
 product font and must not be assumed available merely because it works in the
 desktop simulator. See [device verification](docs/dpi-layout-20261014/README.zh-CN.md).
 
-Pressing **Install** sends a bounded ticket, App ID, size and digest to the
-ESP Host's combined `store-installer` API (ABI 0.5, service 20, opcode 1;
-best-effort progress event opcode 0x8001).
-The Host downloads, asks for confirmation and installs in one request. The SDK
-also exposes opcode 2 for verified offline downloads; previously saved packages
-remain manageable in Downloads, whose **Install** action uses opcode 3.
-Any signed running App may request installation;
-each request requires the Host's confirmation dialog. The Host accepts only the configured HTTPS origin
-(`CONFIG_PXA_STORE_ORIGIN`) and the artifact-ticket path, streams the container
-into a Host-owned temporary file (at most 4 MiB), verifies its byte count and
-SHA-256, and invokes the existing signed-PXA preview verifier. Only after the
-Host shows the verified App, version, publisher and permission count and the
-user confirms does the worker invoke the transactional installer. The Host
-accepts only a registered filename owned by the calling app. Failed or
-interrupted downloads and one-step installation containers are removed. A
-completed explicit offline download survives reboot and a declined confirmation;
-an actual installation attempt consumes it, including a failed attempt. Stopping
-the requesting app cancels an unfinished download; an atomic installation already
-in progress finishes safely. The Guest's
-catalog response memory and 65536-byte private FS quota do not apply to this
-Host-owned download.
+Pressing **Install** sends a bounded ticket, identity, size and digest to the
+Host's `store-installer` API (Service 20). The Host authenticates the signed
+manifest prefix before downloading the container, then asks for native
+confirmation. The dialog offers eligible storage volumes, with fixed managed
+directories; the Guest never supplies installation paths. Updates retain their
+current application volume. Explicit relocation requires a separate migration operation.
+
+Store Installer 0.8 authenticates both application and referenced resource
+metadata before confirmation. Its native dialog has separate application/data
+and resource volume choices, normally selecting one fitting volume for both.
+Admission reserves both destinations atomically and accounts for the actual
+transfer/preparation peak. Resources are fully verified before code commits;
+existing immutable generations can be reused. After transfer reaches 100%, the
+Store displays verification and installation while the Host finishes.
+
+The Store queries Host capabilities before choosing its catalog baseline:
+resource installation plus volume placement selects `*-pxa-0.5.0`; older Hosts
+retain `*-pxa-0.4.0`. Capability bits do not imply resource offline caching.
+Resource-bundle DOWNLOAD currently returns UNSUPPORTED; cached code can be
+installed when its exact resources have already been prepared.
+
+The Host reserves the selected volume for the encoded transfer, decoded files,
+local control records and initial private storage. It streams the container
+there, checks its exact size and SHA-256, then runs the signed transactional
+installer. Approval binds the exact manifest and previous installation record;
+a concurrent change fails instead of being silently overwritten. Capacity is
+limited by the selected filesystem and Host profile, rather than a fixed 4 MiB
+Flash staging area. The calling App's private FS quota does not apply.
+
+Opcode 2 retains an offline transport copy and an authenticated ownership
+descriptor on that same volume. Downloads are rediscovered from mounted volumes
+without a primary-Flash index. Opcode 3 accepts only the calling App's cache
+token and asks for a fresh installation confirmation; it does not redownload
+the container. Declining or failing that installation preserves the offline
+copy for retry; successful installation consumes it. Interrupted transfers
+without completion descriptors are reclaimed at startup. Stopping the
+requesting App cancels unfinished work; an atomic commit already in progress
+finishes safely.
+
+The Host accepts only its configured HTTPS origin and artifact-ticket paths.
+The `install-metadata` endpoint serves the bounded signed prefix without
+counting a download. With an older backend, the Host requests a range from the
+container endpoint, reads only the prefix and closes the response. Full
+container and decoded-file verification remain mandatory before installation.
 
 Since 0.8.7 the App preserves synchronous installer errors instead of reporting
 every rejected request as a network outage. The ESP Host must include the open

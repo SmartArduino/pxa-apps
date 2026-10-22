@@ -30,7 +30,7 @@ int main(void) {
         "3c93b01415b64e5f12741f0ca5918a99a9a49afcac761c648a0fc00b629f95ad";
     static const char detail[] =
         "{\"payload\":{\"item\":{\"app_id\":\"demo\",\"size\":538882,"
-        "\"download_ticket_url\":\""
+        "\"requires_resources\":true,\"download_ticket_url\":\""
         "/api/v2/artifacts/3/download?expires=1790157630&signature="
         "3c93b01415b64e5f12741f0ca5918a99a9a49afcac761c648a0fc00b629f95ad"
         "\"}}}";
@@ -55,6 +55,11 @@ int main(void) {
     assert(store_json_parse_app_detail((const uint8_t *)detail,
                                        sizeof(detail) - 1u, &app));
     assert(strcmp(app.download_ticket_url, ticket) == 0);
+    assert(app.requires_resources);
+    assert(store_client_profile_for_device(url, sizeof(url), "esp32-s31", "riscv32", "wamr", 3, 3));
+    assert(strcmp(url, "esp32-s31-pxa-0.5.0") == 0);
+    assert(store_client_profile_for_device(url, sizeof(url), "esp32-s31", "riscv32", "wamr", 3, 1));
+    assert(strcmp(url, "esp32-s31-pxa-0.4.0") == 0);
     assert(store_client_build_download_url(url, sizeof(url), ticket));
     assert(strncmp(url, PXA_STORE_ORIGIN, strlen(PXA_STORE_ORIGIN)) == 0);
     assert(strcmp(url + strlen(PXA_STORE_ORIGIN), ticket) == 0);
