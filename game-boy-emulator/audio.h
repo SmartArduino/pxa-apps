@@ -17,3 +17,8 @@ void gb_audio_configure(gb_audio_t *a,unsigned rate,unsigned channels);
 void gb_audio_start(gb_audio_t *a,unsigned rate,unsigned channels);
 /* 32768 Hz interleaved stereo to the negotiated Host format. */
 unsigned gb_audio_convert(gb_audio_t *a,const int16_t *src,size_t frames,int16_t *dst,unsigned capacity);
+
+/* Exact-rate stereo borrows the core buffer after the one-time start ramp.
+ * scratch_capacity is in stereo frames; NULL indicates insufficient space. */
+const int16_t *gb_audio_native(gb_audio_t *a,const int16_t *src,size_t frames,
+                              int16_t *scratch,size_t scratch_capacity);

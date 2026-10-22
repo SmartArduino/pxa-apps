@@ -164,8 +164,32 @@ int main(int argc,char **argv) {
     audio_block=0;audio_calls=0;drain_audio();assert(audio_calls==4 && audio_consumed==128);
     while(audio_fifo.count){unsigned before=audio_calls;drain_audio();assert(audio_calls-before<=4);}
     assert(audio_consumed==1000);audio_test=0;audio=0;
+
+    /* Exact PCM must fall back only on unsupported Hosts, then preserve the
+     * existing gain transaction and explicit permission gate. */
+    reset();audio_requested=1;permission=UINT64_C(0x100000008);
+    uint8_t unsupported[4];pxa_store_u32(unsupported,(uint32_t)PXA_STATUS_UNSUPPORTED);
+    event(PXA_AUDIO_SERVICE,PXA_AUDIO_OPEN_PCM,T_AUDIO_OPEN,unsupported,4);
+    assert(!audio_failed && audio_requested && calls[PXA_AUDIO_SERVICE][PXA_AUDIO_OPEN_SESSION]==1);
+    uint8_t reply[56]={0},value[8];size_t at=4;
+    pxa_store_u64(value,UINT64_C(0x100000009));assert(pxa_audio_append(reply,sizeof(reply),&at,3,value,8));
+    pxa_store_u32(value,32768);assert(pxa_audio_append(reply,sizeof(reply),&at,4,value,4));
+    value[0]=2;assert(pxa_audio_append(reply,sizeof(reply),&at,5,value,1));
+    pxa_store_u16(value,20);assert(pxa_audio_append(reply,sizeof(reply),&at,6,value,2));
+    pxa_store_u32(value,16000);assert(pxa_audio_append(reply,sizeof(reply),&at,7,value,4));
+    value[0]=1;assert(pxa_audio_append(reply,sizeof(reply),&at,8,value,1));
+    pxa_store_u32(value,3932);assert(pxa_audio_append(reply,sizeof(reply),&at,9,value,4));assert(at==56);
+    reset();audio_requested=1;event(PXA_AUDIO_SERVICE,PXA_AUDIO_OPEN_PCM,T_AUDIO_OPEN,reply,sizeof(reply));
+    assert(audio_pending==UINT64_C(0x100000009) && audio_rate==32768 && audio_channels==2);
+    assert(calls[PXA_AUDIO_SERVICE][PXA_AUDIO_COMMIT_GRAPH]==1 && !audio_failed);
+    uint8_t gain_ok[4]={0};event(PXA_AUDIO_SERVICE,PXA_AUDIO_COMMIT_GRAPH,T_AUDIO_GAIN,gain_ok,4);
+    assert(audio==UINT64_C(0x100000009) && !audio_pending && audio_state.fade_remaining==32768/200);
+    reset();audio=UINT64_C(0x100000009);audio_rate=32768;audio_channels=2;audio_test=1;
+    audio_calls=audio_consumed=0;audio_block=0;
+    enqueue_audio(pcm,64);assert(audio_calls>=1 && audio_consumed==64 && !audio_fifo.count);
+    audio_test=0;audio=0;
     test_theme_contract();
-    test_menu_contract();
+ test_menu_contract();
     touch_controls();
     padded_surface(argv[1]);
     puts("PASS: controller focus/repeat/hide/restore, exit-save gate, options, audio retry/bounded draining and SD path");

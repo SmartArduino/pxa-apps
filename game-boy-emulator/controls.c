@@ -76,6 +76,15 @@ unsigned gb_controls_cycle(gb_controls_t *c) {
 int gb_controls_visible(const gb_controls_t *c){return c->alpha && !c->controller_hidden;}
 int gb_controls_use_controller(const gb_controls_t *c){return c->controller_hidden;}
 int gb_controls_use_touch(const gb_controls_t *c){return !c->controller_hidden;}
+void gb_controls_mark_rows(const gb_controls_t *c,unsigned changed_buttons,uint8_t *rows) {
+    for(unsigned i=0;i<GB_CONTROLS_COUNT;++i){
+        const gb_control_button_t *b=&c->buttons[i];
+        if(!(b->bit&changed_buttons))continue;
+        int top=b->y<0?0:b->y,bottom=b->y+b->h;
+        if(bottom>(int)c->height)bottom=c->height;
+        if(bottom>top)memset(rows+top,1,(unsigned)(bottom-top));
+    }
+}
 int gb_controls_hit(const gb_controls_t *c,int x,int y) {
     unsigned q=emu_touch_scale(c->safe.width,c->safe.height);
     if(!gb_controls_visible(c) || x<(int)c->safe.x || x>=(int)(c->safe.x+c->safe.width) ||

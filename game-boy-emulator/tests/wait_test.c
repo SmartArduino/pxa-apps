@@ -7,6 +7,7 @@
 #include <string.h>
 #ifdef GNUBOY_WAIT_BATCH
 extern int gb_cpu_test_wait_disabled;
+extern unsigned gb_cpu_test_wait_merges;
 int gb_cpu_test_wait(int available);
 #endif
 #ifdef GNUBOY_HALT_BATCH
@@ -48,6 +49,22 @@ int main(int argc,char **argv){
         R_IF=0;GB.cpu->ime=0;assert(!gb_cpu_test_wait(1000));
         gb_core_close();
     }
+    /* Exercise the dispatch hook as well as the fixed-point helper. The JR
+     * displacement must be the taken branch operand, never stale ALU data. */
+    const uint8_t loop[]={0x00,0xfa,0x23,0xc1,0xa7,0x20,0xf9};
+    memcpy(rom+0x200,loop,sizeof(loop));assert(!gb_core_load(rom,sizeof(rom)));
+    GB.cpu->pc.w=0x200;GB.cpu->af.w=0x0120;GB.cpu->ime=GB.cpu->ima=1;
+    R_IF=0;R_IE=0x1f;R_TAC=0;GB.cycles=1000;writeb(0xc123,1);
+    gb_cpu_t entry_cpu=*GB.cpu;gb_t entry_hw=GB;gb_snd_t entry_sound=*GB.snd;
+    gb_cpu_test_wait_merges=0;int fast_cycles=gb_cpu_emulate(500);
+    assert(gb_cpu_test_wait_merges>0);
+    gb_cpu_t result_cpu=*GB.cpu;gb_t result_hw=GB;gb_snd_t result_sound=*GB.snd;
+    GB=entry_hw;*GB.cpu=entry_cpu;*GB.snd=entry_sound;gb_cpu_test_wait_disabled=1;
+    assert(gb_cpu_emulate(500)==fast_cycles);gb_cpu_test_wait_disabled=0;
+    assert(!memcmp(GB.cpu,&result_cpu,sizeof(result_cpu)));
+    assert(!memcmp(&GB,&result_hw,sizeof(GB)));
+    assert(!memcmp(GB.snd,&result_sound,sizeof(result_sound)));gb_core_close();
+
 #endif
 #ifdef GNUBOY_HALT_BATCH
     for(unsigned speed=0;speed<2;++speed)for(unsigned irq=0;irq<2;++irq)

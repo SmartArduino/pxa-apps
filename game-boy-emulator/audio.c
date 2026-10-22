@@ -34,3 +34,19 @@ unsigned gb_audio_convert(gb_audio_t *a,const int16_t *src,size_t frames,int16_t
     }
     return produced;
 }
+
+const int16_t *gb_audio_native(gb_audio_t *a,const int16_t *src,size_t frames,
+                              int16_t *scratch,size_t capacity) {
+    if(!a || !src || a->rate!=GB_AUDIO_STAGE_RATE || a->channels!=2)return NULL;
+    if(!a->fade_remaining)return src;
+    if(!scratch || frames>capacity)return NULL;
+    size_t ramp=frames<a->fade_remaining?frames:a->fade_remaining;
+    for(size_t i=0;i<ramp;++i){
+        unsigned gain=a->fade_total-a->fade_remaining;
+        scratch[i*2]=(int16_t)((int32_t)src[i*2]*(int32_t)gain/(int32_t)a->fade_total);
+        scratch[i*2+1]=(int16_t)((int32_t)src[i*2+1]*(int32_t)gain/(int32_t)a->fade_total);
+        --a->fade_remaining;
+    }
+    memcpy(scratch+ramp*2,src+ramp*2,(frames-ramp)*4);
+    return scratch;
+}

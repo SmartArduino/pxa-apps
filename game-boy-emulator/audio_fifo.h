@@ -2,13 +2,13 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
-#define GB_AUDIO_FIFO_SAMPLES 4096u
+#define GB_AUDIO_FIFO_SAMPLES 16384u
 typedef struct {
     int16_t data[GB_AUDIO_FIFO_SAMPLES];
     unsigned head,count;
 } gb_audio_fifo_t;
 static inline void gb_audio_fifo_clear(gb_audio_fifo_t *q) { q->head=q->count=0; }
-/* Retain the latest 256 ms if the consumer falls irrecoverably behind. */
+/* Retain about 250 ms even at 32768 Hz stereo if the consumer falls irrecoverably behind. */
 static inline unsigned gb_audio_fifo_push(gb_audio_fifo_t *q,const int16_t *p,unsigned n) {
     unsigned dropped=0;
     if(n>=GB_AUDIO_FIFO_SAMPLES) {
@@ -33,4 +33,13 @@ static inline int16_t *gb_audio_fifo_peek(gb_audio_fifo_t *q,unsigned maximum,un
 static inline void gb_audio_fifo_consume(gb_audio_fifo_t *q,unsigned n) {
     if(n>q->count)n=q->count;
     q->head=(q->head+n)%GB_AUDIO_FIFO_SAMPLES;q->count-=n;
+}
+
+/* Keep the latency budget independent of the negotiated source format. */
+static inline unsigned gb_audio_fifo_push_bounded(gb_audio_fifo_t *q,const int16_t *p,unsigned n,unsigned limit) {
+    if(!limit || limit>GB_AUDIO_FIFO_SAMPLES)limit=GB_AUDIO_FIFO_SAMPLES;
+    unsigned dropped=0;
+    if(n>limit){dropped=n-limit;p+=dropped;n=limit;}
+    if(q->count+n>limit){unsigned old=q->count+n-limit;gb_audio_fifo_consume(q,old);dropped+=old;}
+    return dropped+gb_audio_fifo_push(q,p,n);
 }

@@ -1,5 +1,6 @@
 /* Host side regression for the Game Boy audio conversion. */
 #include "audio.h"
+#include "audio_fifo.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -92,6 +93,20 @@ int main(void) {
         fprintf(stderr, "FAIL: tone did not survive the conversion\n");
         return 1;
     }
+    gb_audio_start(&state,32768,2);
+    const int16_t *native=gb_audio_native(&state,source,FRAMES,output,GB_AUDIO_OUT_MAX/2);
+    assert(native==output && output[0]==0 && !state.fade_remaining);
+    for(unsigned i=state.fade_total*2;i<FRAMES*2;++i)assert(output[i]==source[i]);
+    assert(gb_audio_native(&state,source,FRAMES,output,GB_AUDIO_OUT_MAX/2)==source);
+    gb_audio_start(&state,32768,2);
+    assert(!gb_audio_native(&state,source,FRAMES,output,1) && state.fade_remaining==state.fade_total);
+    static gb_audio_fifo_t fifo;
+    static int16_t sequence[18000];for(unsigned i=0;i<18000;++i)sequence[i]=(int16_t)i;
+    assert(gb_audio_fifo_push_bounded(&fifo,sequence,10000,4000)==6000 && fifo.count==4000);
+    unsigned read;const int16_t *old=gb_audio_fifo_peek(&fifo,4000,&read);assert(read==4000 && old[0]==6000);
+    assert(gb_audio_fifo_push_bounded(&fifo,sequence+10000,8000,4000)==8000 && fifo.count==4000);
+    unsigned checked=0;while(fifo.count){old=gb_audio_fifo_peek(&fifo,4000,&read);for(unsigned i=0;i<read;++i)assert(old[i]==14000+checked+i);checked+=read;gb_audio_fifo_consume(&fifo,read);}
+    assert(checked==4000);
     continuous_stream();
     printf("PASS\n");
     return 0;

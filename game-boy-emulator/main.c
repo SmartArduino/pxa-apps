@@ -364,16 +364,20 @@ static int paint_system_menu(void) {
 static void paint(unsigned i, int game) {
     static unsigned control_signature[2];
     static uint8_t dirty_rows[GB_DISPLAY_MAX_HEIGHT];
+    static uint8_t control_rows[GB_DISPLAY_MAX_HEIGHT];
     uint16_t *out = frames + (size_t) i * frame_pixels;
     if (game) {
         uint64_t began = micros();
         unsigned pressed=pad[0]|pad[1];for(unsigned n=0;n<16;++n)pressed|=touches[n];
         unsigned signature=pressed|(controls.alpha<<16)|(controls.controller_hidden<<24);
-        unsigned force=(clear_frames&(1u<<i)) || control_signature[i]!=signature;
+        unsigned changed=control_signature[i]^signature;
+        unsigned force=(clear_frames&(1u<<i)) || (changed&0xffff0000u);
+        memset(control_rows,0,height);
+        if(changed && !force)gb_controls_mark_rows(&controls,changed,control_rows);
         if (game==1 && (clear_frames & (1u<<i))) {
             memset(out,0,frame_bytes);clear_frames &= ~(1u<<i);
         }
-        if(game==1)paint_pixels+=gb_video_render_cached(&video_renderer,out,gb_core_video(),i,force,dirty_rows);
+        if(game==1)paint_pixels+=gb_video_render_cached_rows(&video_renderer,out,gb_core_video(),i,force,control_rows,dirty_rows);
         else {memset(dirty_rows,1,height);paint_pixels+=video_renderer.view_width*video_renderer.view_height;}
         gb_display_rect_t view={video_renderer.view_x,video_renderer.view_y,video_renderer.view_width,video_renderer.view_height};
         gb_controls_clear_bars_rows(&controls,out,&view,dirty_rows);
@@ -627,9 +631,21 @@ static void drain_audio(void) {
 
 static void enqueue_audio(const int16_t *pcm, unsigned samples) {
     if (!audio) return;
+    if(!audio_fifo.count && samples){
+        unsigned limit=(audio_rate/50u)*audio_channels;
+        if(limit && samples<=limit){
+            int written=pxa_audio_write_pcm(audio,(uint8_t*)pcm,samples*2);
+            if(written>0 && !(written&1) && (unsigned)written<=samples*2){
+                pcm+=written/2;samples-=written/2;
+                if(!samples)return;
+            } else if(written!=0 && written!=PXA_STATUS_WOULD_BLOCK){
+                audio_dropped+=samples;audio_failure("direct-pcm",written<0?written:PXA_STATUS_PROTOCOL_ERROR);return;
+            }
+        }
+    }
     if(samples>GB_AUDIO_FIFO_SAMPLES-audio_fifo.count)drain_audio();
     if(!audio)return;
-    audio_dropped += gb_audio_fifo_push(&audio_fifo, pcm, samples);
+    audio_dropped += gb_audio_fifo_push_bounded(&audio_fifo,pcm,samples,(audio_rate*audio_channels)/4u);
     /* LCD/core work may have freed sink capacity since io_tick. Bounded,
      * nonblocking writes also handle ring-wrap fragments and catch-up frames. */
     drain_audio();
@@ -749,16 +765,24 @@ static __attribute__((noinline)) void tick(uint64_t now) {
         core_avg_us = core_avg_us ? (core_avg_us * 7u + frame_us) / 8u : frame_us;
         ++n_frames;
         gb_schedule_step(&schedule);
-        if(draw_due && index<0)index=acquire();
-        if (index >= 0) { paint(index, direct?2:1);gb_pacer_drew(&pacer,micros()); }
-        else ++skipped;
+        /* Submit completed APU samples before scaling/controls. The native
+         * output worker can resample/mix while the Guest paints its Surface. */
         if (audio) {
             GB_PROFILE_SCOPE(GB_PROFILE_OUTPUT);
             size_t frames = 0;
             const int16_t *pcm = gb_core_audio(&frames);
-            unsigned produced = gb_audio_convert(&audio_state, pcm, frames, pcm_out, GB_AUDIO_OUT_MAX/audio_channels);
-            enqueue_audio(pcm_out, produced * audio_channels);
+            if(audio_rate==GB_AUDIO_RATE && audio_channels==2){
+                const int16_t *source=gb_audio_native(&audio_state,pcm,frames,pcm_out,GB_AUDIO_OUT_MAX/2);
+                if(source)enqueue_audio(source,(unsigned)frames*2);
+                else audio_failure("native-pcm",PXA_STATUS_PROTOCOL_ERROR);
+            } else {
+                unsigned produced=gb_audio_convert(&audio_state,pcm,frames,pcm_out,GB_AUDIO_OUT_MAX/audio_channels);
+                enqueue_audio(pcm_out,produced*audio_channels);
+            }
         }
+        if(draw_due && index<0)index=acquire();
+        if (index >= 0) { paint(index, direct?2:1);gb_pacer_drew(&pacer,micros()); }
+        else ++skipped;
         gb_pacer_observe(&pacer,index>=0,micros()-frame_started);
         if (micros() - started >= 24000) break;
     }
@@ -1253,16 +1277,29 @@ int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
         else if (!audio_requested) pxa_close_handle(r.handle);
         else {
             permission = r.handle;
-            /* The media session is the only audio path every Host implements.
-             * The device also offers a PCM stream, but the desktop simulator
-             * does not, so the app resamples to the media format itself. */
-            int status = pxa_audio_open_media(T_AUDIO_OPEN, permission);
+            /* Keep the APU's exact PCM format; the Host mixes and resamples.
+             * Older Hosts can still use the portable media conversion path. */
+            int status=pxa_audio_open_pcm(T_AUDIO_OPEN,permission,GB_AUDIO_RATE,2);
+            if(status==PXA_STATUS_UNSUPPORTED){status=pxa_audio_open_media(T_AUDIO_OPEN,permission);}
             if (status) audio_failure("open-request", status);
         }
     }
     if (e.token == T_AUDIO_OPEN && e.service == PXA_AUDIO_SERVICE) {
         pxa_audio_open_result_t r={0};
-        int parsed = pxa_audio_parse_open(&e, T_AUDIO_OPEN, &r);
+        int parsed;
+        if(e.opcode==PXA_AUDIO_OPEN_PCM){
+            pxa_audio_pcm_result_t pcm={0};parsed=pxa_audio_parse_pcm(&e,T_AUDIO_OPEN,&pcm);r=pcm.source;
+            if(parsed && r.status==PXA_STATUS_UNSUPPORTED && audio_requested){
+                int status=pxa_audio_open_media(T_AUDIO_OPEN,permission);
+                if(status)audio_failure("media-fallback",status);
+                return PXA_EVENT_HANDLED;
+            }
+            if(parsed && !r.status && (r.sample_rate!=GB_AUDIO_RATE || r.channels!=2)){
+                pxa_close_handle(r.handle);audio_failure("native-format",PXA_STATUS_PROTOCOL_ERROR);return PXA_EVENT_HANDLED;
+            }
+            if(parsed && !r.status)gb_port_log("GB PCM source=%u/%u sink=%u/%u queue_frames=%u",
+                r.sample_rate,r.channels,pcm.sink_rate,pcm.sink_channels,pcm.queue_frames);
+        } else parsed=pxa_audio_parse_open(&e,T_AUDIO_OPEN,&r);
         if(!audio_requested) {
             if(parsed && !r.status)pxa_close_handle(r.handle);
         } else if (!parsed || r.status || r.channels < 1 || r.channels > 2 ||

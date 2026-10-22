@@ -37,3 +37,4 @@ void gb_controls_clear_bars(const gb_controls_t *c,uint16_t *out,const gb_displa
 void gb_controls_draw(gb_controls_t *c,uint16_t *out,unsigned pressed);
 void gb_controls_clear_bars_rows(const gb_controls_t *c,uint16_t *out,const gb_display_rect_t *view,const uint8_t *dirty);
 void gb_controls_draw_rows(gb_controls_t *c,uint16_t *out,unsigned pressed,const uint8_t *dirty);
+void gb_controls_mark_rows(const gb_controls_t *c,unsigned changed_buttons,uint8_t *rows);

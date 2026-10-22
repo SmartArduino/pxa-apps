@@ -25,3 +25,7 @@ void gb_video_set_fit(gb_video_renderer_t *r, gb_display_rect_t area, unsigned f
 void gb_video_render(gb_video_renderer_t *r, uint16_t *out, const uint16_t *rgb565);
 unsigned gb_video_render_cached(gb_video_renderer_t *r,uint16_t *out,const uint16_t *rgb565,
                                 unsigned buffer,unsigned force,uint8_t *dirty_rows);
+/* Restore selected output rows underneath changed translucent controls. */
+unsigned gb_video_render_cached_rows(gb_video_renderer_t *r,uint16_t *out,const uint16_t *rgb565,
+                                     unsigned buffer,unsigned force,const uint8_t *restore_rows,
+                                     uint8_t *dirty_rows);

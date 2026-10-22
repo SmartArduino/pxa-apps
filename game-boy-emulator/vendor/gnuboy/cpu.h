@@ -26,7 +26,11 @@
 #define DE W(cpu.de)
 #define HL W(cpu.hl)
 
+#ifdef GNUBOY_LOCAL_PC
+#define PC W(*pc)
+#else
 #define PC W(cpu.pc)
+#endif
 #define SP W(cpu.sp)
 
 #define IMA cpu.ima

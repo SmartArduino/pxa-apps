@@ -18,6 +18,8 @@
     "HALT coalescing stops at the original eight-cycle event batch boundary",
     "64-byte nibble expansion table and stable sprite insertion sort preserve render output",
     "RAM polling fixed points merge only original complete event batches and stop before LCD, timer overflow, serial and frame boundaries; native differential tests retain the unmerged runner",
-    "HALT event-bounded fast forwarding aggregates whole original counter batches with no pending enabled IRQ; keeps the original event phase and is independently compared against unmerged execution"
+    "HALT event-bounded fast forwarding aggregates whole original counter batches with no pending enabled IRQ; keeps the original event phase and is independently compared against unmerged execution",
+    "Optional local program counter in the interpreter; keep other CPU state globally observable and flush PC at call boundaries",
+    "RAM polling dispatch checks the taken JR displacement; differential tests exercise the dispatcher and fixed-point helper"
   ]
 }

@@ -74,8 +74,18 @@ ctest --test-dir local/gb-native --output-on-failure
 
 实机加载游戏后运行 `tests/device_perf.py --port <端口> --serial <序列号> --output <本地产物目录> --rom-crc <CRC32>`。脚本核对设备和 ROM，分别记录模拟吞吐及 LCD 完成率，并在结束时发送 `INPUT CANCEL`。调试控制器注入不代表机械按键验收。
 
+不支持调试控制器输入的设备可用 `--input-mode touch --touch-right X Y --touch-a X Y` 测试双点触摸。固定场景使用 `--stationary --touch-neutral X Y`，中性触点应在游戏画面中不属于按钮的位置。坐标需按实际分辨率与安全区确定；`--input-mode none` 则完全不注入输入。
+
+默认 `--counter display` 统计全部 LCD 传输完成；`--counter game` 统计完成显示的新游戏帧 ID。固件未提供游戏计数器的采样时长时，脚本使用主机单调时钟估算，并在结果中注明串口命令边界的不确定性。
+
 ## 来源与许可
 
 gnuboy 来源 <https://github.com/ducalex/retro-go>，固定版本 `4ced120669750ca7228fd0414211430c1d923166`，遵循 GPL-2.0-or-later；保留 `vendor/gnuboy/COPYING` 和 `CREDITS`。PXA 前端沿用 NES 应用的 GPL-2.0-or-later 代码。独立文件保留文件头许可；Noto Sans CJK 字体子集遵循 `licenses/ui-font-OFL.txt`。构建和测试产物存放于 Git 忽略的本地目录，不随源码或 ROM 分发。
 
 即时存档、多存档列表、系统主题配色和悬浮按键布局与[公共前端约定](../common/emulator/README.md)一致。GB/GBC 状态包含 CPU、LCD、APU、RTC、工作 RAM、显存及卡带 RAM，恢复时重建指针和 ROM 分页映射；游戏帧路径不执行存档读写。
+
+解释器默认在一次执行调用内缓存 PC，返回时写回，其他寄存器保持原来的可见性。RAM 轮询合并仍是默认关闭的实验选项。PAI Touch 使用 32 KiB 指令缓存，减少 PSRAM 中 AOT 代码的缓存失效；音频输出线程固定在 CPU0，与 CPU1 上的应用运行线程配合。
+
+声音优先使用现有 PCM 流接口提交 gnuboy 的 32768 Hz 双声道数据，由 Host 下采样和混音；Host 不支持该格式时回退到媒体会话。完成的音频先于缩放和悬浮按键绘制提交，淡入结束后直接借用核心 PCM 缓冲，减少应用端转换与 FIFO 拷贝。阻塞时仍使用约 250 ms 的有界队列。Host 音频接口为同步拷贝，核心缓冲在调用返回后可重用。
+
+透明悬浮按键的按下/松开只使该按钮覆盖的输出行失效，两个 Surface 缓冲分别保留按键状态；不再因按键变化强制重缩放整幅游戏画面。重绘行从原始 RGB565 恢复后再混合按键，避免半透明颜色重复叠加；布局、透明度或控制器可见性变化仍执行完整刷新。

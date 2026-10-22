@@ -113,7 +113,11 @@ A = LB(acc); }
 #define RES(n,r) { r &= ~(1 << (n)); }
 #define SET(n,r) { r |= (1 << (n)); }
 
+#ifdef GNUBOY_WAIT_BATCH
+#define JR ( b=readb(PC), PC += 1+(n8)b )
+#else
 #define JR ( PC += 1+(n8)readb(PC) )
+#endif
 #define JP ( PC = readw(PC) )
 
 #define NOJR   ( clen--,  PC++ )
@@ -155,6 +159,9 @@ gb_cpu_t *gb_cpu_init(void)
 /* reset */
 void gb_cpu_reset(bool hard)
 {
+#ifdef GNUBOY_LOCAL_PC
+    gb_cpu_reg_t *pc=&cpu.pc;
+#endif
 	cpu.double_speed = 0;
 	cpu.halted = 0;
 	cpu.div = 0;
@@ -256,7 +263,7 @@ int gb_cpu_test_halt(int available) {
 /* Merge only complete, already-stable RAM polling loops. Such a loop has
  * exactly one original counter flush at its final JR. Stop strictly before
  * every possible device event so the normal runner handles the boundary. */
-static int wait_batch(int available)
+static int wait_batch(int available,const gb_cpu_reg_t *pc)
 {
     if (!IME || !IMA || cpu.halted || (R_IF & R_IE) || PC >= 0x8000 ||
         (PC & 0xfff) > 0xff8 || GB.cycles <= 1 || available <= 1) return 0;
@@ -286,11 +293,12 @@ static int wait_batch(int available)
 }
 #ifndef PXA_GUEST
 int gb_cpu_test_wait_disabled;
-int gb_cpu_test_wait(int available) { return wait_batch(available); }
+unsigned gb_cpu_test_wait_merges;
+int gb_cpu_test_wait(int available) { return wait_batch(available,&cpu.pc); }
 #endif
 #endif
 
-static inline int exec_cb(void)
+static inline int exec_cb(gb_cpu_reg_t *pc)
 {
 	// All instructions use 2 cycles + 1 additional cycle per HL read or write
 	uint8_t op = FETCH;
@@ -369,6 +377,14 @@ static inline int exec_cb(void)
 */
 IRAM_ATTR int gb_cpu_emulate(int cycles)
 {
+#ifdef GNUBOY_LOCAL_PC
+    /* Device callbacks observe timer/control state, never PC. Cache just this
+     * frequently fetched pair; leave byte-addressed ALU registers in place. */
+    gb_cpu_reg_t current_pc=cpu.pc;
+    gb_cpu_reg_t *pc=&current_pc;
+#else
+    gb_cpu_reg_t *pc=&cpu.pc;
+#endif
 	int clen, temp;
 	int remaining = cycles;
 	int count = 0;
@@ -852,7 +868,7 @@ next:
 		break;
 
 	case 0xCB: /* CB prefix */
-		clen = exec_cb();
+		clen = exec_cb(pc);
 		break;
 
 	default:
@@ -895,11 +911,20 @@ _skip:;
 #ifndef PXA_GUEST
         && !gb_cpu_test_wait_disabled
 #endif
-    ) remaining-=wait_batch(remaining);
+    ) {
+        int elapsed=wait_batch(remaining,pc);
+#ifndef PXA_GUEST
+        if(elapsed)++gb_cpu_test_wait_merges;
+#endif
+        remaining-=elapsed;
+    }
 #endif
 	if (remaining > 0)
 		goto next;
 
+#ifdef GNUBOY_LOCAL_PC
+    cpu.pc=current_pc;
+#endif
 	return cycles + -remaining;
 }
 
