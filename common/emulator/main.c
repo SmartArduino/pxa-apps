@@ -17,6 +17,7 @@
 #include "pxa_audio.h"
 #include "pxa_clock.h"
 #include "pxa_fs_roots.h"
+#include "rom_names.h"
 #include "../rom/pxa_rom_source.h"
 #include "pxa_permission.h"
 #include "pxa_surface.h"
@@ -71,7 +72,8 @@ static unsigned reading_save, writing_save, save_pending, save_replace_pending, 
 static unsigned save_failed;
 static unsigned rom_loaded, background, redraw = 1;
 static unsigned display_divisor = 1;
-static char rom_names[2][128][128], (*names)[128] = rom_names[0];
+static char **rom_names[2], **names;
+static unsigned name_capacity[2], scan_errors;
 static unsigned source_count[2], preferred_source;
 static char message[112];
 static char save_path[40], save_tmp[48];
@@ -444,7 +446,7 @@ static int has_game_extension(const char *name, size_t size) {
 static void library_scan_source(unsigned which) {
     source = which;
     names = rom_names[source];
-    count = 0;
+    count = scan_errors = 0;
     /* The private folder holds the roms/ directory, the SD card holds the
      * media root the Host selected for this app. */
     int r = source ? pxa_fs_request_app_media(T_ROOT)
@@ -468,14 +470,7 @@ static void library_scanned(void) {
     menu_focus=0;
     if (directory == media) directory = 0;
     else close_handle(&directory);
-    for (unsigned i = 0; i < count; ++i)
-        for (unsigned j = i + 1; j < count; ++j)
-            if (strcmp(names[i], names[j]) > 0) {
-                char tmp[128];
-                memcpy(tmp, names[i], 128);
-                memcpy(names[i], names[j], 128);
-                memcpy(names[j], tmp, 128);
-            }
+    emu_rom_names_sort(names, count);
     source_count[source] = count;
     if (!source) { library_scan_source(1); return; }
     source = source_count[preferred_source] ? preferred_source : (source_count[0] ? 0 : 1);
@@ -493,6 +488,8 @@ static void open_library(void) {
     if (directory == media) directory = 0;
     else close_handle(&directory);
     close_handle(&media);
+    for (unsigned i=0;i<2;++i)
+        emu_rom_names_clear(&rom_names[i],&source_count[i],&name_capacity[i]);
     preferred_source = source > 1 ? 0 : source;
     source_count[0] = source_count[1] = 0;
     count = page = selected = 0;
@@ -584,10 +581,7 @@ static void select_rom(unsigned n) {
     redraw = 1;
     release_input();
     emu_schedule_reset(&schedule);
-    char path[150];
-    snprintf(path, sizeof(path), "roms/%s", names[n]);
-    int r = source ? pxa_fs_request_open_at(T_ROM,media,names[n],strlen(names[n]),PXA_FS_OPEN_READ)
-                   : pxa_fs_request_open(T_ROM,path,strlen(path),PXA_FS_OPEN_READ);
+    int r = emu_rom_open(T_ROM,media,source,names[n]);
     if (r) fail("ROM open request failed");
 }
 
@@ -1191,15 +1185,30 @@ int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
         }
         if (e.token == T_ENTRY) {
             pxa_fs_directory_result_t r;
-            if (!pxa_fs_parse_directory(&e, T_ENTRY, &r) || r.status || r.end || count == 128) {
-                library_scanned();
-            } else {
-                if (r.kind == PXA_FS_KIND_REGULAR && r.name_size >= 4 && r.name_size < 128 &&
-                    has_game_extension((const char *) r.name, r.name_size)) {
-                    memcpy(names[count], r.name, r.name_size);
-                    names[count++][r.name_size] = 0;
+            int parsed=pxa_fs_parse_directory(&e,T_ENTRY,&r);
+            if (!parsed || r.status) {
+                emu_port_log("LIBRARY skipped entry status=%d",parsed?r.status:PXA_STATUS_INVALID_ARGUMENT);
+                /* Only entry-local failures advance past a bad name/file. A
+                 * revoked or unavailable directory ends this scan. Bound retries
+                 * for a backend that fails repeatedly without advancing. */
+                if (++scan_errors<16 && (!parsed || r.status==PXA_STATUS_IO_ERROR ||
+                    r.status==PXA_STATUS_LIMIT_EXCEEDED || r.status==PXA_STATUS_INTERNAL))
+                    pxa_fs_request_read_directory(T_ENTRY,directory);
+                else library_scanned();
+            } else if (r.end) library_scanned();
+            else {
+                scan_errors=0;
+                if (r.kind==PXA_FS_KIND_REGULAR && (has_game_extension((const char *)r.name,r.name_size))) {
+                    if (!emu_rom_names_append(&rom_names[source],&count,&name_capacity[source],r.name,r.name_size)) {
+                        scan_pending=0;
+                        if (directory==media) directory=0; else close_handle(&directory);
+                        fail("ROM list allocation failed");
+                        return PXA_EVENT_HANDLED;
+                    }
+                    names=rom_names[source];
+                    source_count[source]=count;
                 }
-                pxa_fs_request_read_directory(T_ENTRY, directory);
+                pxa_fs_request_read_directory(T_ENTRY,directory);
             }
             return PXA_EVENT_HANDLED;
         }

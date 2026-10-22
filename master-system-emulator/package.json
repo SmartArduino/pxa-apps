@@ -13,8 +13,8 @@
     0
   ],
   "id": "pxa-master-system",
-  "version": "0.1.8",
-  "release_sequence": 10,
+  "version": "0.1.9",
+  "release_sequence": 11,
   "name": "Master System Emulator",
   "description": "Master System Emulator for PXA with SD/flash library, audio and touch/gamepad controls",
   "build": {

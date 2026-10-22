@@ -125,6 +125,7 @@ static void padded_surface(const char *path) {
 #include "../../common/emulator/tests/menu_contract.h"
 #include "../../common/emulator/tests/theme_contract.h"
 
+#include "../../common/emulator/tests/library_contract.h"
 int main(int argc,char **argv) {
     assert(argc==2);
     width=320;height=240;input_density_q16=65536;
@@ -189,6 +190,7 @@ int main(int argc,char **argv) {
     enqueue_audio(pcm,64);assert(audio_calls>=1 && audio_consumed==64 && !audio_fifo.count);
     audio_test=0;audio=0;
     test_theme_contract();
+ test_library_contract("gbc");
  test_menu_contract();
     touch_controls();
     padded_surface(argv[1]);

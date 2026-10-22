@@ -1,6 +1,7 @@
 /* GPL-2.0-or-later: exercise the frontend through real PXA event codecs. */
 #include "../main.c"
 #include <assert.h>
+#include "../../common/emulator/tests/library_contract.h"
 static unsigned calls[20][8],closed,io_calls;
 static uint32_t rejected_route;
 static int io_result=PXA_STATUS_WOULD_BLOCK;
@@ -135,6 +136,7 @@ static void test_controller_menus(void) {
     press(PXA_CONTROLLER_RIGHT);assert(slot_focus==2);
     press(PXA_CONTROLLER_UP);assert(!slot_focus && slot_selected==39);
     press(PXA_CONTROLLER_B);assert(mode==PAUSED);
+    test_library_contract("nes");
     test_menu_contract();
     puts("PASS: controller library/footer/empty/snapshot focus, confirm/back and menu-only repeat");
 }

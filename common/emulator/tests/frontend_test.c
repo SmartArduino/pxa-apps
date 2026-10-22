@@ -21,6 +21,7 @@ static void menu_test_reset(void) {
 #define menu_test_controller controller
 #include "menu_contract.h"
 #include "theme_contract.h"
+#include "library_contract.h"
 int main(void){
  emu_controls_init(&controls,320,240);mode=PLAYING;background=0;release_input();
  const uint32_t host[]={PXA_CONTROLLER_UP,PXA_CONTROLLER_DOWN,PXA_CONTROLLER_LEFT,PXA_CONTROLLER_RIGHT,
@@ -42,6 +43,8 @@ int main(void){
  p.pointer_id=1;p.x=a->x+a->w/2;p.y=a->y+a->h/2;pointer(&p);assert(touches[0]==EMU_PAD_RIGHT && touches[1]==EMU_PAD_A);
  p.phase=PXA_POINTER_UP;pointer(&p);assert(touches[0]==EMU_PAD_RIGHT && !touches[1]);
  p.pointer_id=0;pointer(&p);assert(!touches[0]);
+ char extension[16];size_t length=strcspn(EMU_EXTENSIONS,"|");assert(length<sizeof(extension));
+ memcpy(extension,EMU_EXTENSIONS,length);extension[length]=0;test_library_contract(extension);
  test_theme_contract();
  test_menu_contract();
  puts("PASS: 12 gamepad buttons, independent players, auto hide, menu chord and multi-touch");
