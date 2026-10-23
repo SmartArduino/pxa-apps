@@ -3536,6 +3536,10 @@ static int32_t send_package_request(void) {
         if(!bytes || !store_binding_matches(binding,bytes,app.install_candidate.identity))return PXA_STATUS_PROTOCOL_ERROR;
         int32_t status=pxa_store_register_namespace_status(STORE_REQUEST_NAMESPACE,binding,bytes,app.packet,sizeof(app.packet));
         if(status==PXA_STATUS_OK){app.namespace_waiting=1;app.busy=1;return status;}
+        // A display binding is optional when this Host has no issuer policy.
+        // The installer still validates the full signed application identity.
+        if(status==PXA_STATUS_UNAVAILABLE || status==PXA_STATUS_UNSUPPORTED)
+            return submit_install_candidate();
         return status;
     }
     return submit_install_candidate();
@@ -4076,7 +4080,7 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         app.namespace_waiting=0;app.busy=0;
         int32_t status=parsed.payload_size==4?(int32_t)pxa_load_u32(parsed.payload):PXA_STATUS_PROTOCOL_ERROR;
         // Products without configured issuer policy/clock retain offline author paths.
-        if(status==PXA_STATUS_OK || status==PXA_STATUS_UNAVAILABLE)status=submit_install_candidate();
+        if(status==PXA_STATUS_OK || status==PXA_STATUS_UNAVAILABLE || status==PXA_STATUS_UNSUPPORTED)status=submit_install_candidate();
         if(status!=PXA_STATUS_OK){app.install_feedback=3;toast_failure(PXA_MSG_STATUS_INSTALL_FAILED,status);}
         return render()?PXA_EVENT_HANDLED:PXA_STATUS_INTERNAL;
     }
