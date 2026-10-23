@@ -47,7 +47,7 @@ extern int maxLighting;
 #endif // PROFILE_NUM_ELEMENTS
 
 
-#define FIXME(reason) do{printf("\r\n%s at line %d file %s\r\n", reason, __LINE__, __FILE__); system("pause");}while(0)
+#define FIXME(reason) do { fprintf(stderr,"%s at %s:%d\n", reason, __FILE__, __LINE__); exit(1); } while(0)
 #define vectorize(v) (*(vector *)v)
 #define	QUAKE_GAME			// as opposed to utilities
 #define MTOD_HAS_SENTINEL 0
@@ -106,6 +106,15 @@ static inline float   BigFloat (float l) {return l;}
 static inline float   LittleFloat (float l) {return l;}
 uint8_t * Convert_AliasModel(model_t *mod, void *buffer, uint32_t * size);
 uint8_t * Convert_BrushModel(model_t *mod, uint8_t *buffer, uint32_t * size);
-#define Sys_Error printf
+#include <stdarg.h>
+static inline void Sys_Error(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+    fputc('\n', stderr);
+    exit(EXIT_FAILURE);
+}
 #endif
 

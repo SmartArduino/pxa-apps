@@ -28,6 +28,14 @@ static inline void emu_pacer_observe(emu_pacer_t *p,int drawn,uint64_t elapsed) 
     else p->skip_us=emu_pacer_average(p->skip_us,elapsed);
 }
 
+static inline int emu_pacer_expensive_draw(const emu_pacer_t *p) {
+    /* Once a render alone takes 100 ms, even continuous rendering cannot
+     * exceed 10 FPS. Reserve a simulation-only frame when it is substantially
+     * cheaper; CPU/APU time continues to advance normally. */
+    return p->feedback>=3 && p->draw_us>=100000 &&
+        p->skip_us && p->skip_us<p->draw_us/2;
+}
+
 static inline void emu_pacer_tick(emu_pacer_t *p,uint64_t now,
                                   uint64_t debt,unsigned hz,unsigned requested) {
     if(!p->checked_at){p->checked_at=now;p->previous_debt=debt;p->last_draw_at=now;p->minimum_debt=debt;}
@@ -69,13 +77,28 @@ static inline void emu_pacer_tick(emu_pacer_t *p,uint64_t now,
     else if(p->buffer_limited && interval<2u*65536)interval=2u*65536;
     interval+=p->feedback*65536;
     if(interval>16u*65536)interval=16u*65536;
+    /* Bound video starvation even when CPU/APU alone exceeds the budget.
+     * Persistent lag gets a 90 ms render budget, leaving more CPU time while
+     * targeting >10 LCD completions/sec with dispatch overhead. Before lag
+     * is confirmed, retain the 70 ms budget. This only changes video cadence;
+     * all CPU/APU frames and accumulated scheduler debt remain intact. */
+    if(p->draw_us && p->skip_us) {
+        uint32_t visible_budget=p->feedback>=3?90000:70000;
+        uint32_t visible_interval=65536;
+        if(p->draw_us<visible_budget) {
+            uint64_t extra=(uint64_t)(visible_budget-p->draw_us)*65536/p->skip_us;
+            visible_interval+=extra>15u*65536?15u*65536:(uint32_t)extra;
+        }
+        else if(emu_pacer_expensive_draw(p))visible_interval=2u*65536;
+        if(interval>visible_interval)interval=visible_interval;
+    }
     if(!requested)requested=1;
     if(requested>16)requested=16;
     if(interval<requested*65536)interval=requested*65536;
     p->interval_q16=interval;
     p->every=(interval+65535)/65536;
     p->minimum=requested;
-    p->max_gap_us=200000*requested;
+    p->max_gap_us=(p->feedback>=3?120000:100000)*requested;
 }
 static inline int emu_pacer_due(emu_pacer_t *p,uint64_t now) {
     if(p->since_draw<UINT32_MAX)++p->since_draw;
@@ -84,10 +107,15 @@ static inline int emu_pacer_due(emu_pacer_t *p,uint64_t now) {
      * renders once a buffer becomes available. Keep the fractional remainder. */
     uint32_t cap=p->interval_q16+65535;
     if(p->credit_q16>cap)p->credit_q16=cap;
+    /* The display deadline may already have expired inside a slow render.
+     * Do not immediately draw again forever: measure one skipped frame after
+     * an expensive initial render, and preserve it during sustained overload. */
+    if(p->since_draw==1 && ((!p->skip_us && p->draw_us>=70000) ||
+        emu_pacer_expensive_draw(p)))return 0;
     /* When even a skipped frame is too expensive, keep a bounded opportunity
      * for visual feedback. This is a maximum gap, not a fixed low-FPS mode. */
-    return (p->since_draw>=p->minimum && p->credit_q16>=p->interval_q16) ||
-        now-p->last_draw_at>=p->max_gap_us;
+    return p->since_draw>=p->minimum && (p->credit_q16>=p->interval_q16 ||
+        now-p->last_draw_at+p->skip_us>=p->max_gap_us);
 }
 static inline void emu_pacer_drew(emu_pacer_t *p,uint64_t now) {
     p->since_draw=0;p->last_draw_at=now;

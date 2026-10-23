@@ -112,7 +112,7 @@ static const uint32_t IncreaseRate [32] =
 static INLINE uint8_t* S9xGetSampleAddress(int32_t sample_number)
 {
    uint32_t addr = (((APU.DSP[APU_DIR] << 8) + (sample_number << 2)) & 0xffff);
-   return (IAPU.RAM + addr);
+   return (S9xAPURAM + addr);
 }
 
 void S9xAPUSetEndOfSample(int32_t i, Channel* ch)
@@ -384,7 +384,7 @@ void DecodeBlock(Channel* ch)
       return;
    }
 
-   compressed = (int8_t*) &IAPU.RAM [ch->block_pointer];
+   compressed = (int8_t*) &S9xAPURAM [ch->block_pointer];
 
    filter = *compressed;
    if ((ch->last_block = (bool) (filter & 1)))

@@ -29,8 +29,8 @@
 #include "pakStringGenerator.h"
 #include "wavconverter.h"
 
-#define VERSION_MINOR           2
-#define VERSION_MAJOR           0
+#define VERSION_MINOR           0
+#define VERSION_MAJOR           3
 #define PROCESS_ALIAS_MODELS    1
 #define DEFALUL_PAK             "pak0.pak"
 #define DEFALUL_PAK_CONV        "pak0conv.pak"
@@ -310,7 +310,7 @@ int main(int argc, char* argv[])
     fclose(fo);
     printProfileData(); // just to understand limits.
     printf("------------------------------------ALL PACK STRINGS-------------------------\r\n");
-    FIXME("Press a key");
+
     printAllPakStrings();
     return 0;
 }

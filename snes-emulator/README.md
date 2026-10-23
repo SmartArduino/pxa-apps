@@ -28,3 +28,15 @@ tools/app.sh build snes-emulator --board doit-gamekit-1 --target simulator,esp32
 ```
 
 可运行的原生测试与测量方法见公共前端说明。内核来源、固定版本和本地修改列在 `vendor/` 的 `*upstream.json`；原许可证保留在对应源码中。使用和分发必须同时遵守这些许可证。
+
+默认启用 CPU/APU 事件同步：在端口访问、DMA、CPU 等待和扫描线事件前追上 SPC，保留 CPU 指令边界以维持原来的等待时序。缓存有固定上限，帧结束前清空，不改变存档格式。CPU 等待路径也在解释器内部批量执行 SPC，保留原来的 `APU.Cycles < CPU.NextEvent` 继续执行条件及至少执行一条指令的语义；回归包含端口、空闲循环、SLEEP/STOP 与事件边界。原生构建可用 `-DEMU_SNES_EVENT_SYNC=OFF` 对照逐指令同步。
+
+65C816 指令通过同一编译单元内的直接分派执行，减少 Wasm 间接调用及重复地址检查。构建时从五张 CPU 模式表生成内部 ID 和分派列表，ID 不进入存档。SPC 使用固定的 64 KiB RAM，保留原有 `IAPU.RAM` 别名和指针重定位规则；直接页访问显式限制为 RAM 的前两页。
+
+可选 PGO 使用公共构建模块的 `EMU_PGO_GENERATE`、`EMU_PGO_PROFILE` 和打包环境变量 `PXA_EMU_PGO_PROFILE`。原生目标 `emu_pgo_train ROM [frames=12000] [draw_interval=3]` 提供确定性的启动与操作序列，读取 ROM 并输出音视频校验值，不写游戏存档。用 `LLVM_PROFILE_FILE` 将每个 ROM 的采样保存到独立本地产物文件，再用匹配 Clang 版本的 `llvm-profdata merge` 合并；用多个有代表性的 ROM 训练，并另做回归和设备性能对照。训练配置必须与使用配置相符，修改核心控制流后重新采集。未提供 profile 时保持普通编译，发布包不包含运行时采样代码。
+
+原生目标 `emu_snes_spc_fingerprint <test.rom>` 输出全部 256 条 SPC 指令在 8192 组输入下的状态指纹。重构解释器时，将同一份 `tests/spc_fingerprint.c` 分别链接参考内核和候选内核，逐行比较输出；指纹按字段编码，排除宿主指针和结构体填充。该测试不写存档，也不能代替整段游戏的画面、音频和设备性能回归。
+
+`emu_snes_tile_fingerprint <test.rom>` 用同样方法比较 4096 组普通和裁剪图块，覆盖双向翻转、透明像素、深度边界、非对齐位置及原有深度不变的情况。两端须使用相同缓存格式和宿主字节序；同时比较颜色、深度和源图块，检查未覆盖区域是否被改写。
+
+`-DEMU_SNES_PROFILE=ON` 启用核心、PPU、SPC 和音频混音的阶段采样；原生测量程序还需设置 `EMU_BENCH_LOG=1` 才输出日志。诊断代码会影响耗时，不能用该构建验收 FPS；发布构建默认关闭采样。模拟 Hz 与 LCD 完成 FPS 应分别测量，前端提交计数不等于屏幕刷新率。

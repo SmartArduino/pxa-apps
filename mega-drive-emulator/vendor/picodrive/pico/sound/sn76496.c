@@ -315,6 +315,7 @@ int SN76496_init(int clock,int sample_rate)
 		R->Period[i] = R->UpdateStep;
 	}
 	R->RNG = FB_PNOISE;
+	R->NoiseFB = FB_PNOISE; /* Register 6 resets to periodic noise. */
 	R->Output[3] = R->RNG & 1;
 
 	// added

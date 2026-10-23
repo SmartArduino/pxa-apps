@@ -5,6 +5,7 @@
 #include <limits.h>
 #include "pxa_md_state_fields.h"
 #include "vendor/picodrive/pico/sound/ym2612.h"
+#include "vendor/picodrive/pico/sound/mix.h"
 size_t SN76496SnapshotSize(void);
 void SN76496SnapshotSave(void *);
 void SN76496SnapshotLoad(const void *);
@@ -15,7 +16,7 @@ typedef struct {
     YM2612 fm;
     uint32_t psg_bytes;
 } md_state_metadata_t;
-#define MD_STATE_META ((size_t)sizeof(md_state_metadata_t))
+#define MD_STATE_META ((size_t)sizeof(md_state_metadata_t)+6*sizeof(int))
 typedef struct {uint8_t *data;size_t size,pos;unsigned error;} md_state_stream_t;
 static size_t md_state_write(void *data,size_t unit,size_t count,void *context) {
     md_state_stream_t *s=context;
@@ -54,6 +55,7 @@ const char *emu_state_save(void *data,size_t size) {
     md_state_metadata_t *meta=(md_state_metadata_t*)p;
     meta->core_bytes=bytes;meta->ram_bytes=ram;meta->width=emu_core_info.width;meta->height=emu_core_info.height;
     meta->stride=emu_core_info.stride;meta->line=first_line;meta->status=Pico.video.status;pxa_md_state_copy_PicoTiming(&meta->timing,&Pico.t);pxa_md_state_copy_PicoSound(&meta->sound,&Pico.snd);meta->fm=ym2612;meta->psg_bytes=psg;
+    mix_save_state((int *)(p+sizeof(*meta)));
     md_state_stream_t stream={p+MD_STATE_META,bytes,0,0};
     if(md_state_pack(&stream,1) || stream.error || stream.pos!=bytes)return "Cannot pack MD machine state";
     SN76496SnapshotSave(p+MD_STATE_META+bytes);
@@ -76,21 +78,32 @@ const char *emu_state_load(const void *data,size_t size) {
     if(!loaded)return "No loaded MD cartridge";
     /* Chunk sizes can vary with the mapper/FM serializer. The envelope records
      * the actual length; validate it before the native parser changes anything. */
-    const char *error=pxa_snapshot_check(data,size,size,3,emu_core_checksum(),md_state_layout(),emu_port_crc32);
-    if(error)return error;if(size<PXA_SNAPSHOT_HEADER+MD_STATE_META)return "Wrong MD snapshot length";
+    size_t metadata=MD_STATE_META;
+    uint32_t layout=md_state_layout();
+    uint32_t legacy_layout=layout^(uint32_t)MD_STATE_META^(uint32_t)sizeof(md_state_metadata_t);
+    if(data && size>=PXA_SNAPSHOT_HEADER && pxa_snapshot_u32((const uint8_t *)data+20)==legacy_layout){
+        layout=legacy_layout;metadata=sizeof(md_state_metadata_t);
+    }
+    const char *error=pxa_snapshot_check(data,size,size,3,emu_core_checksum(),layout,emu_port_crc32);
+    if(error)return error;if(size<PXA_SNAPSHOT_HEADER+metadata)return "Wrong MD snapshot length";
     const uint8_t *p=(const uint8_t*)data+PXA_SNAPSHOT_HEADER;
     const md_state_metadata_t *meta=(const md_state_metadata_t*)p;
+    const int *mixer=metadata==MD_STATE_META?(const int *)(p+sizeof(*meta)):NULL;
     size_t bytes=meta->core_bytes,ram=meta->ram_bytes,psg=meta->psg_bytes;
     unsigned w=meta->width,h=meta->height,stride=meta->stride,line=meta->line;
-    if(bytes>size-PXA_SNAPSHOT_HEADER-MD_STATE_META || ram!=emu_core_save_size() || psg!=SN76496SnapshotSize() || bytes+ram+psg!=size-PXA_SNAPSHOT_HEADER-MD_STATE_META ||
-       !w || w>320 || !h || h>240 || stride!=w || line+h>256 || !md_state_chunks_valid(p+MD_STATE_META,bytes) ||
-       meta->fm.OPN.ST.clock!=ym2612.OPN.ST.clock || meta->fm.OPN.ST.rate!=ym2612.OPN.ST.rate || meta->sound.len!=Pico.snd.len || meta->sound.len_e_cnt<0 || meta->sound.len_e_cnt>=65536)
+    if(bytes>size-PXA_SNAPSHOT_HEADER-metadata || ram!=emu_core_save_size() || psg!=SN76496SnapshotSize() || bytes+ram+psg!=size-PXA_SNAPSHOT_HEADER-metadata ||
+       !w || w>320 || !h || h>240 || stride!=w || line+h>256 || !md_state_chunks_valid(p+metadata,bytes) ||
+       meta->fm.OPN.ST.clock!=ym2612.OPN.ST.clock || meta->fm.OPN.ST.rate!=ym2612.OPN.ST.rate || meta->sound.len!=Pico.snd.len || meta->sound.len_e_cnt<0 || meta->sound.len_e_cnt>=65536 ||
+       (mixer && (mixer[0]!=4096 || mixer[3]!=4096)))
         return "Invalid MD snapshot machine state";
     pxa_md_state_copy_PicoTiming(&Pico.t,&meta->timing);
-    md_state_stream_t stream={(uint8_t*)p+MD_STATE_META,bytes,0,0};
+    md_state_stream_t stream={(uint8_t*)p+metadata,bytes,0,0};
     if(md_state_pack(&stream,0) || stream.error)return "Cannot restore MD machine state";
-    if(ram && !emu_core_save_import(p+MD_STATE_META+bytes+psg,ram))return "Cannot restore MD cartridge RAM";
-    ym2612=meta->fm;SN76496SnapshotLoad(p+MD_STATE_META+bytes);
+    if(ram && !emu_core_save_import(p+metadata+bytes+psg,ram))return "Cannot restore MD cartridge RAM";
+    ym2612=meta->fm;SN76496SnapshotLoad(p+metadata+bytes);
+    /* Earlier development states omitted filter history. Keep game progress
+     * loadable; initialize only the missing output-filter history. */
+    if(mixer)mix_load_state(mixer);else mix_reset(0);
     pxa_md_state_copy_PicoTiming(&Pico.t,&meta->timing);pxa_md_state_copy_PicoSound(&Pico.snd,&meta->sound);Pico.video.status=meta->status;
     emu_core_info.width=w;emu_core_info.height=h;emu_core_info.stride=stride;first_line=line;
     PicoDrawSetOutBuf(video,w*2);audio_frames=0;return NULL;

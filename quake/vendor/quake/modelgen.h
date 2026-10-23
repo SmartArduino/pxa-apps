@@ -234,7 +234,7 @@ typedef struct
 } daliasskintype_t;
 
 #define IDPOLYHEADER	            (('O'<<24)+('P'<<16)+('D'<<8)+'I')
-#define IDPOLYHEADER_MEMORY_READY	(('M'<<24)+('P'<<16)+('D'<<8)+'I')
+#define IDPOLYHEADER_MEMORY_READY	(('L'<<24)+('P'<<16)+('D'<<8)+'I')
 
 // little-endian "IDPO"
 

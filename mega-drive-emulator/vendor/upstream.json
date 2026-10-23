@@ -12,6 +12,13 @@
     "Defined unsigned sprite packing shifts",
     "Preserved unshifted WebAssembly function-table indices in memory handler maps",
     "Memory-cartridge build omits CD media, unzip and file-I/O constructors; keeps built-in mapper database",
-    "Defined unsigned FAME long fetch and video-port packing shifts"
+    "Defined unsigned FAME long fetch and video-port packing shifts",
+    "Initialize PSG periodic-noise feedback on cold reset",
+    "Export and restore mixer DC/low-pass histories for exact PCM snapshot replay",
+    "Optional sampled phase diagnostics through existing PicoDrive profiling hooks, compiled out by default",
+    "Single-site FAME computed dispatch with local CPU registers; publish live PC before bus, interrupt, exception and RESET callbacks",
+    "Use the CZ80 switch dispatcher with exact R-register emulation; arithmetic flag tables remain enabled",
+    "Guarded direct calls for common FAME main-bus callbacks; preserve custom handlers and live-PC publication",
+    "Aligned four-pixel RGB565 palette resolve per scanline; generic fallback for odd rows or incomplete groups"
   ]
 }

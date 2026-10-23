@@ -12,3 +12,6 @@ void mix_32_to_16_mono(s16 *dest, s32 *src, int count);
 extern int mix_32_to_16_level;
 void mix_32_to_16_stereo_lvl(s16 *dest, s32 *src, int count);
 void mix_reset(int alpha_q16);
+/* Pause-only state, including both DC-removal/low-pass histories. */
+void mix_save_state(int state[6]);
+void mix_load_state(const int state[6]);

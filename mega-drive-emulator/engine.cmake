@@ -42,7 +42,12 @@ set(EMU_ENGINE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/core.c" "${CMAKE_CURRENT_SOU
     "${EMU_PICO}/zlib/crc32.c"
 )
 set(EMU_ENGINE_INCLUDES "${EMU_PICO}" "${EMU_PICO}/zlib")
-set(EMU_ENGINE_DEFINITIONS EMU_F68K _USE_CZ80 NO_32X NO_SMS FAMEC_NO_GOTOS PICO_NO_DYNAREC)
+set(EMU_ENGINE_DEFINITIONS EMU_F68K _USE_CZ80 NO_32X NO_SMS PICO_NO_DYNAREC)
+option(EMU_MD_PROFILE "Sample inclusive PicoDrive phase costs (diagnostics only)" OFF)
+if(EMU_MD_PROFILE)
+    list(APPEND EMU_ENGINE_DEFINITIONS PXA_MD_PROFILE)
+    list(APPEND EMU_ENGINE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/md_profile.c")
+endif()
 
 # PicoDrive models the MD DAC range rather than stretching it to full white.
 set(EMU_TEST_BLUE 0x001d)

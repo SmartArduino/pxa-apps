@@ -62,15 +62,14 @@ typedef struct
 /* Needed by ILLUSION OF GAIA */
 #define ONE_APU_CYCLE 21
 
-void APUExecute(void);
-
-#define APU_EXECUTE1() \
-APUExecute();
-
+void APUExecute(bool batch, const long *target);
+/* Execute at least one instruction, stopping at the next CPU event. */
+void APUExecuteUntilEvent(void);
+#define APU_EXECUTE1() APUExecute(false, NULL);
 #define APU_EXECUTE() \
-if (IAPU.APUExecuting) \
-    while (APU.Cycles <= CPU.Cycles) \
-      APUExecute();
+if (IAPU.APUExecuting && APU.Cycles <= CPU.Cycles) \
+    APUExecute(true, &CPU.Cycles);
+
 
 #endif
 #endif

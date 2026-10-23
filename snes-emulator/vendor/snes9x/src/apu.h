@@ -9,6 +9,8 @@
 #include "spc700.h"
 
 extern const uint8_t APUROM[64];
+/* Fixed backing store; IAPU.RAM remains an alias for snapshots. */
+extern uint8_t S9xAPURAM[0x10000];
 
 typedef struct
 {

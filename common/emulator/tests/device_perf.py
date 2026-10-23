@@ -19,7 +19,19 @@ def simulation_target(app_id, row, override=None):
     return None
 
 
-def measure(client, output, seconds=22, motion=True, expected_crc=None, app_id="pxa-master-system", target_hz=None, buttons=None):
+def display_target_met(report, minimum_fps):
+    """Require both game submissions and LCD completions above the threshold.
+
+    System overlays may add LCD completions. Never use those alone as evidence
+    that the game is faster. This is independent of full-speed CPU emulation.
+    """
+    rows = report.get("samples", [])
+    return (len(rows) >= 2 and report.get("display_fps", 0) > minimum_fps and
+            all(w["fps"] > minimum_fps for w in report.get("display_windows", []) if w["complete"]) and
+            all(int(row.get("submit_x100", 0)) > minimum_fps * 100 for row in rows))
+
+
+def measure(client, output, seconds=22, motion=True, expected_crc=None, app_id="pxa-master-system", target_hz=None, buttons=None, display_window_seconds=0):
     import pxadb
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
@@ -100,6 +112,18 @@ def measure(client, output, seconds=22, motion=True, expected_crc=None, app_id="
             collect = True
             began = time.monotonic()
             next_input = 0
+            next_display = display_window_seconds
+            def finish_display_window():
+                report["display_stop"] = [f.payload for f in client.request("PERF STOP")]
+                props = pxadb.info_properties(";".join(report["display_stop"]))
+                window_us = int(props.get("window_us", "0"))
+                if window_us:
+                    completed = int(props["completed"])
+                    report.setdefault("display_windows", []).append({
+                        "completed": completed, "window_us": window_us,
+                        "fps": completed * 1000000 / window_us,
+                        "complete": not display_window_seconds or window_us >= display_window_seconds * 800000})
+                client.request("PERF CLEAR")
             while time.monotonic()-began < seconds:
                 client.pump_logs()
                 elapsed = time.monotonic()-began
@@ -107,14 +131,17 @@ def measure(client, output, seconds=22, motion=True, expected_crc=None, app_id="
                     bits = buttons if buttons is not None else (8 | (16 if elapsed % 1.05 < .22 else 0)) if motion else 0
                     client._write_command(client._next_sequence(), f"INPUT CONTROLLER 0 1 {bits}")
                     next_input = elapsed+.12
+                if display_window_seconds and "display_start" in report and elapsed >= next_display:
+                    finish_display_window()
+                    client.request("PERF START display")
+                    next_display = time.monotonic()-began+display_window_seconds
                 time.sleep(.005)
             collect = False
             if "display_start" in report:
-                report["display_stop"] = [f.payload for f in client.request("PERF STOP")]
-                props = pxadb.info_properties(";".join(report["display_stop"]))
-                if int(props.get("window_us", "0")):
-                    report["display_fps"] = int(props["completed"])*1000000/int(props["window_us"])
-                client.request("PERF CLEAR")
+                finish_display_window()
+                windows=report.get("display_windows", [])
+                if windows:
+                    report["display_fps"] = sum(w["completed"] for w in windows)*1000000/sum(w["window_us"] for w in windows)
             report["memory"] = [f.payload for f in client.request("MEMORY")]
         finally:
             try:
@@ -137,6 +164,8 @@ def main():
     p.add_argument("--buttons", type=lambda s:int(s,0), help="Optional constant controller mask, 0..4095; default moves Right and pulses A")
     p.add_argument("--app-id", required=True)
     p.add_argument("--target-hz", type=float, help="Optional override for older builds without rate metadata")
+    p.add_argument("--minimum-display-fps", type=float, help="Require game submissions in every complete window and LCD completions strictly above this FPS; independent of full-speed emulation")
+    p.add_argument("--display-window-seconds", type=float, default=0, help="Optionally split LCD counters into short windows to expose slower scenes; 0 records one window")
     p.add_argument("--port", required=True)
     p.add_argument("--baud", type=int, default=2000000)
     p.add_argument("--serial", required=True)
@@ -146,13 +175,19 @@ def main():
     p.add_argument("--pxadb-dir", type=Path, default=Path(__file__).resolve().parents[5]/"tools/pxadb")
     args = p.parse_args()
     if args.buttons is not None and not 0<=args.buttons<=4095:p.error("--buttons must be 0..4095")
+    if args.display_window_seconds and args.display_window_seconds<2:p.error("--display-window-seconds must be zero or at least 2")
     sys.path.insert(0, str(args.pxadb_dir))
     import pxadb
     os.environ["PXADB_BAUD"] = str(args.baud)
     with pxadb.PxaDbClient(args.port, 15) as client:
         assert pxadb.info_properties(client.hello()).get("serial") == args.serial
-        report = measure(client, args.output, args.seconds,expected_crc=args.rom_crc,app_id=args.app_id,target_hz=args.target_hz,buttons=args.buttons)
-    print(json.dumps({"sustained": report["sustained"], "display_fps": report.get("display_fps"), "audio_enabled": report["audio_enabled"]}))
+        report = measure(client, args.output, args.seconds,expected_crc=args.rom_crc,app_id=args.app_id,target_hz=args.target_hz,buttons=args.buttons,display_window_seconds=args.display_window_seconds)
+    summary={"sustained": report["sustained"], "display_fps": report.get("display_fps"), "audio_enabled": report["audio_enabled"]}
+    if args.minimum_display_fps is not None:
+        summary["display_target_met"]=display_target_met(report,args.minimum_display_fps)
+    print(json.dumps(summary))
+    if args.minimum_display_fps is not None and not summary["display_target_met"]:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

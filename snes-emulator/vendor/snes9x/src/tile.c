@@ -166,13 +166,15 @@ static uint8_t ConvertTile(uint8_t* pCache, uint32_t TileAddr)
       }
       break;
    }
-   return non_zero ? (0x10|BG.Depth) : BLANK_TILE;
+   return TILE_CACHE_VALID | BG.Depth | (non_zero ? 0 : TILE_CACHE_BLANK);
 }
 
 #define PLOT_PIXEL(screen, pixel) (pixel)
 
 static INLINE void WRITE_4PIXELS16(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
 {
+   const uint8_t tile_z1=GFX.Z1;
+   const uint8_t tile_z2=GFX.Z2;
 #if defined(__MIPSEL) && defined(__GNUC__) && !defined(NO_ASM)
 	uint16_t *Screen = (uint16_t *) GFX.S + Offset;
 	uint8_t  *Depth = GFX.DB + Offset;
@@ -239,7 +241,7 @@ static INLINE void WRITE_4PIXELS16(int32_t Offset, uint8_t* Pixels, uint16_t* Sc
 		"5:                                    \n"
 		".set reorder                          \n"
 		: /* output */  [In8A] "=&r" (Pixel_A), [In8B] "=&r" (Pixel_B), [In8C] "=&r" (Pixel_C), [In8D] "=&r" (Pixel_D), [ZA] "=&r" (Depth_A), [ZB] "=&r" (Depth_B), [ZC] "=&r" (Depth_C), [ZD] "=&r" (Depth_D), [Cond] "=&r" (Cond), [Temp] "=&r" (Temp)
-		: /* input */   [Out16] "r" (Screen), [Z] "r" (Depth), [In8] "r" (Pixels), [Palette] "r" (ScreenColors), [ZCompare] "r" (GFX.Z1), [ZSet] "r" (GFX.Z2)
+		: /* input */   [Out16] "r" (Screen), [Z] "r" (Depth), [In8] "r" (Pixels), [Palette] "r" (ScreenColors), [ZCompare] "r" (tile_z1), [ZSet] "r" (tile_z2)
 		: /* clobber */ "memory"
 	);
 #else
@@ -249,10 +251,10 @@ static INLINE void WRITE_4PIXELS16(int32_t Offset, uint8_t* Pixels, uint16_t* Sc
 
    for (N = 0; N < 4; N++)
    {
-      if (GFX.Z1 > Depth [N] && (Pixel = Pixels[N]))
+      if (tile_z1 > Depth [N] && (Pixel = Pixels[N]))
       {
          Screen [N] = ScreenColors [Pixel];
-         Depth [N] = GFX.Z2;
+         Depth [N] = tile_z2;
       }
    }
 #endif
@@ -260,6 +262,8 @@ static INLINE void WRITE_4PIXELS16(int32_t Offset, uint8_t* Pixels, uint16_t* Sc
 
 static INLINE void WRITE_4PIXELS16_FLIPPED(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
 {
+   const uint8_t tile_z1=GFX.Z1;
+   const uint8_t tile_z2=GFX.Z2;
 #if defined(__MIPSEL) && defined(__GNUC__) && !defined(NO_ASM)
 	uint16_t *Screen = (uint16_t *) GFX.S + Offset;
 	uint8_t  *Depth = GFX.DB + Offset;
@@ -326,7 +330,7 @@ static INLINE void WRITE_4PIXELS16_FLIPPED(int32_t Offset, uint8_t* Pixels, uint
 		"5:                                    \n"
 		".set reorder                          \n"
 		: /* output */  [In8A] "=&r" (Pixel_A), [In8B] "=&r" (Pixel_B), [In8C] "=&r" (Pixel_C), [In8D] "=&r" (Pixel_D), [ZA] "=&r" (Depth_A), [ZB] "=&r" (Depth_B), [ZC] "=&r" (Depth_C), [ZD] "=&r" (Depth_D), [Cond] "=&r" (Cond), [Temp] "=&r" (Temp)
-		: /* input */   [Out16] "r" (Screen), [Z] "r" (Depth), [In8] "r" (Pixels), [Palette] "r" (ScreenColors), [ZCompare] "r" (GFX.Z1), [ZSet] "r" (GFX.Z2)
+		: /* input */   [Out16] "r" (Screen), [Z] "r" (Depth), [In8] "r" (Pixels), [Palette] "r" (ScreenColors), [ZCompare] "r" (tile_z1), [ZSet] "r" (tile_z2)
 		: /* clobber */ "memory"
 	);
 #else
@@ -336,10 +340,10 @@ static INLINE void WRITE_4PIXELS16_FLIPPED(int32_t Offset, uint8_t* Pixels, uint
 
    for (N = 0; N < 4; N++)
    {
-      if (GFX.Z1 > Depth [N] && (Pixel = Pixels[3 - N]))
+      if (tile_z1 > Depth [N] && (Pixel = Pixels[3 - N]))
       {
          Screen [N] = ScreenColors [Pixel];
-         Depth [N] = GFX.Z2;
+         Depth [N] = tile_z2;
       }
    }
 #endif
@@ -347,96 +351,108 @@ static INLINE void WRITE_4PIXELS16_FLIPPED(int32_t Offset, uint8_t* Pixels, uint
 
 static void WRITE_4PIXELS16_HALFWIDTH(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
 {
+   const uint8_t tile_z1=GFX.Z1;
+   const uint8_t tile_z2=GFX.Z2;
    uint8_t  Pixel, N;
    uint16_t* Screen = (uint16_t*) GFX.S + Offset;
    uint8_t*  Depth = GFX.DB + Offset;
 
    for (N = 0; N < 4; N += 2)
    {
-      if (GFX.Z1 > Depth [N] && (Pixel = Pixels[N]))
+      if (tile_z1 > Depth [N] && (Pixel = Pixels[N]))
       {
          Screen [N >> 1] = ScreenColors [Pixel];
-         Depth [N >> 1] = GFX.Z2;
+         Depth [N >> 1] = tile_z2;
       }
    }
 }
 
 static void WRITE_4PIXELS16_FLIPPED_HALFWIDTH(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
 {
+   const uint8_t tile_z1=GFX.Z1;
+   const uint8_t tile_z2=GFX.Z2;
    uint8_t  Pixel, N;
    uint16_t* Screen = (uint16_t*) GFX.S + Offset;
    uint8_t*  Depth = GFX.DB + Offset;
 
    for (N = 0; N < 4; N += 2)
    {
-      if (GFX.Z1 > Depth [N] && (Pixel = Pixels[2 - N]))
+      if (tile_z1 > Depth [N] && (Pixel = Pixels[2 - N]))
       {
          Screen [N >> 1] = ScreenColors [Pixel];
-         Depth [N >> 1] = GFX.Z2;
+         Depth [N >> 1] = tile_z2;
       }
    }
 }
 
 static void WRITE_4PIXELS16x2(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
 {
+   const uint8_t tile_z1=GFX.Z1;
+   const uint8_t tile_z2=GFX.Z2;
    uint8_t  Pixel, N;
    uint16_t* Screen = (uint16_t*) GFX.S + Offset;
    uint8_t*  Depth = GFX.DB + Offset;
 
    for (N = 0; N < 4; N++)
    {
-      if (GFX.Z1 > Depth [N * 2] && (Pixel = Pixels[N]))
+      if (tile_z1 > Depth [N * 2] && (Pixel = Pixels[N]))
       {
          Screen [N * 2] = Screen [N * 2 + 1] = ScreenColors [Pixel];
-         Depth [N * 2] = Depth [N * 2 + 1] = GFX.Z2;
+         Depth [N * 2] = Depth [N * 2 + 1] = tile_z2;
       }
    }
 }
 
 static void WRITE_4PIXELS16_FLIPPEDx2(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
 {
+   const uint8_t tile_z1=GFX.Z1;
+   const uint8_t tile_z2=GFX.Z2;
    uint8_t  Pixel, N;
    uint16_t* Screen = (uint16_t*) GFX.S + Offset;
    uint8_t*  Depth = GFX.DB + Offset;
 
    for (N = 0; N < 4; N++)
    {
-      if (GFX.Z1 > Depth [N * 2] && (Pixel = Pixels[3 - N]))
+      if (tile_z1 > Depth [N * 2] && (Pixel = Pixels[3 - N]))
       {
          Screen [N * 2] = Screen [N * 2 + 1] = ScreenColors [Pixel];
-         Depth [N * 2] = Depth [N * 2 + 1] = GFX.Z2;
+         Depth [N * 2] = Depth [N * 2 + 1] = tile_z2;
       }
    }
 }
 
 static void WRITE_4PIXELS16x2x2(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
 {
+   const uint8_t tile_z1=GFX.Z1;
+   const uint8_t tile_z2=GFX.Z2;
    uint8_t  Pixel, N;
    uint16_t* Screen = (uint16_t*) GFX.S + Offset;
    uint8_t*  Depth = GFX.DB + Offset;
 
    for (N = 0; N < 4; N++)
    {
-      if (GFX.Z1 > Depth [N * 2] && (Pixel = Pixels[N]))
+      if (tile_z1 > Depth [N * 2] && (Pixel = Pixels[N]))
       {
          Screen [N * 2] = Screen [N * 2 + 1] = Screen [(GFX.RealPitch >> 1) + N * 2] = Screen [(GFX.RealPitch >> 1) + N * 2 + 1] = ScreenColors [Pixel];
-         Depth [N * 2] = Depth [N * 2 + 1] = Depth [(GFX.RealPitch >> 1) + N * 2] = Depth [(GFX.RealPitch >> 1) + N * 2 + 1] = GFX.Z2;
+         Depth [N * 2] = Depth [N * 2 + 1] = Depth [(GFX.RealPitch >> 1) + N * 2] = Depth [(GFX.RealPitch >> 1) + N * 2 + 1] = tile_z2;
       }
    }
 }
 
 static void WRITE_4PIXELS16_FLIPPEDx2x2(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
 {
+   const uint8_t tile_z1=GFX.Z1;
+   const uint8_t tile_z2=GFX.Z2;
    uint8_t  Pixel, N;
    uint16_t* Screen = (uint16_t*) GFX.S + Offset;
    uint8_t*  Depth = GFX.DB + Offset;
 
    for (N = 0; N < 4; N++)
    {
-      if (GFX.Z1 > Depth [N * 2] && (Pixel = Pixels[3 - N]))
+      if (tile_z1 > Depth [N * 2] && (Pixel = Pixels[3 - N]))
       {
          Screen [N * 2] = Screen [N * 2 + 1] = Screen [(GFX.RealPitch >> 1) + N * 2] = Screen [(GFX.RealPitch >> 1) + N * 2 + 1] = ScreenColors [Pixel];
-         Depth [N * 2] = Depth [N * 2 + 1] = Depth [(GFX.RealPitch >> 1) + N * 2] = Depth [(GFX.RealPitch >> 1) + N * 2 + 1] = GFX.Z2;
+         Depth [N * 2] = Depth [N * 2 + 1] = Depth [(GFX.RealPitch >> 1) + N * 2] = Depth [(GFX.RealPitch >> 1) + N * 2 + 1] = tile_z2;
       }
    }
 }
@@ -543,6 +559,10 @@ void DrawLargePixel16HalfWidth(uint32_t Tile, int32_t Offset, uint32_t StartPixe
 
 static void WRITE_4PIXELS16_ADD(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
 {
+   const uint8_t tile_z1=GFX.Z1;
+   const uint8_t tile_z2=GFX.Z2;
+   const uint32_t tile_fixedcolour=GFX.FixedColour;
+   const int32_t tile_delta=GFX.Delta;
    uint8_t  Pixel, N;
    uint16_t* Screen = (uint16_t*) GFX.S + Offset;
    uint8_t*  Depth = GFX.ZBuffer + Offset;
@@ -550,7 +570,7 @@ static void WRITE_4PIXELS16_ADD(int32_t Offset, uint8_t* Pixels, uint16_t* Scree
 
    for (N = 0; N < 4; N++)
    {
-      if (GFX.Z1 > Depth [N] && (Pixel = Pixels[N]))
+      if (tile_z1 > Depth [N] && (Pixel = Pixels[N]))
       {
          switch (SubDepth [N])
          {
@@ -558,19 +578,23 @@ static void WRITE_4PIXELS16_ADD(int32_t Offset, uint8_t* Pixels, uint16_t* Scree
             Screen [N] = ScreenColors [Pixel];
             break;
          case 1:
-            Screen [N] = COLOR_ADD(ScreenColors [Pixel], GFX.FixedColour);
+            Screen [N] = COLOR_ADD(ScreenColors [Pixel], tile_fixedcolour);
             break;
          default:
-            Screen [N] = COLOR_ADD(ScreenColors [Pixel], Screen [GFX.Delta + N]);
+            Screen [N] = COLOR_ADD(ScreenColors [Pixel], Screen [tile_delta + N]);
             break;
          }
-         Depth [N] = GFX.Z2;
+         Depth [N] = tile_z2;
       }
    }
 }
 
 static void WRITE_4PIXELS16_FLIPPED_ADD(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
 {
+   const uint8_t tile_z1=GFX.Z1;
+   const uint8_t tile_z2=GFX.Z2;
+   const uint32_t tile_fixedcolour=GFX.FixedColour;
+   const int32_t tile_delta=GFX.Delta;
    uint8_t  Pixel, N;
    uint16_t* Screen = (uint16_t*) GFX.S + Offset;
    uint8_t*  Depth = GFX.ZBuffer + Offset;
@@ -578,7 +602,7 @@ static void WRITE_4PIXELS16_FLIPPED_ADD(int32_t Offset, uint8_t* Pixels, uint16_
 
    for (N = 0; N < 4; N++)
    {
-      if (GFX.Z1 > Depth [N] && (Pixel = Pixels[3 - N]))
+      if (tile_z1 > Depth [N] && (Pixel = Pixels[3 - N]))
       {
          switch (SubDepth [N])
          {
@@ -586,19 +610,23 @@ static void WRITE_4PIXELS16_FLIPPED_ADD(int32_t Offset, uint8_t* Pixels, uint16_
             Screen [N] = ScreenColors [Pixel];
             break;
          case 1:
-            Screen [N] = COLOR_ADD(ScreenColors [Pixel], GFX.FixedColour);
+            Screen [N] = COLOR_ADD(ScreenColors [Pixel], tile_fixedcolour);
             break;
          default:
-            Screen [N] = COLOR_ADD(ScreenColors [Pixel], Screen [GFX.Delta + N]);
+            Screen [N] = COLOR_ADD(ScreenColors [Pixel], Screen [tile_delta + N]);
             break;
          }
-         Depth [N] = GFX.Z2;
+         Depth [N] = tile_z2;
       }
    }
 }
 
 static void WRITE_4PIXELS16_ADD1_2(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
 {
+   const uint8_t tile_z1=GFX.Z1;
+   const uint8_t tile_z2=GFX.Z2;
+   const uint32_t tile_fixedcolour=GFX.FixedColour;
+   const int32_t tile_delta=GFX.Delta;
    uint8_t  Pixel, N;
    uint16_t* Screen = (uint16_t*) GFX.S + Offset;
    uint8_t*  Depth = GFX.ZBuffer + Offset;
@@ -606,7 +634,7 @@ static void WRITE_4PIXELS16_ADD1_2(int32_t Offset, uint8_t* Pixels, uint16_t* Sc
 
    for (N = 0; N < 4; N++)
    {
-      if (GFX.Z1 > Depth [N] && (Pixel = Pixels[N]))
+      if (tile_z1 > Depth [N] && (Pixel = Pixels[N]))
       {
          switch (SubDepth [N])
          {
@@ -614,19 +642,23 @@ static void WRITE_4PIXELS16_ADD1_2(int32_t Offset, uint8_t* Pixels, uint16_t* Sc
             Screen [N] = ScreenColors [Pixel];
             break;
          case 1:
-            Screen [N] = COLOR_ADD(ScreenColors [Pixel], GFX.FixedColour);
+            Screen [N] = COLOR_ADD(ScreenColors [Pixel], tile_fixedcolour);
             break;
          default:
-            Screen [N] = (uint16_t)(COLOR_ADD1_2(ScreenColors [Pixel], Screen [GFX.Delta + N]));
+            Screen [N] = (uint16_t)(COLOR_ADD1_2(ScreenColors [Pixel], Screen [tile_delta + N]));
             break;
          }
-         Depth [N] = GFX.Z2;
+         Depth [N] = tile_z2;
       }
    }
 }
 
 static void WRITE_4PIXELS16_FLIPPED_ADD1_2(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
 {
+   const uint8_t tile_z1=GFX.Z1;
+   const uint8_t tile_z2=GFX.Z2;
+   const uint32_t tile_fixedcolour=GFX.FixedColour;
+   const int32_t tile_delta=GFX.Delta;
    uint8_t  Pixel, N;
    uint16_t* Screen = (uint16_t*) GFX.S + Offset;
    uint8_t*  Depth = GFX.ZBuffer + Offset;
@@ -634,7 +666,7 @@ static void WRITE_4PIXELS16_FLIPPED_ADD1_2(int32_t Offset, uint8_t* Pixels, uint
 
    for (N = 0; N < 4; N++)
    {
-      if (GFX.Z1 > Depth [N] && (Pixel = Pixels[3 - N]))
+      if (tile_z1 > Depth [N] && (Pixel = Pixels[3 - N]))
       {
          switch (SubDepth [N])
          {
@@ -642,19 +674,23 @@ static void WRITE_4PIXELS16_FLIPPED_ADD1_2(int32_t Offset, uint8_t* Pixels, uint
             Screen [N] = ScreenColors [Pixel];
             break;
          case 1:
-            Screen [N] = COLOR_ADD(ScreenColors [Pixel], GFX.FixedColour);
+            Screen [N] = COLOR_ADD(ScreenColors [Pixel], tile_fixedcolour);
             break;
          default:
-            Screen [N] = (uint16_t)(COLOR_ADD1_2(ScreenColors [Pixel], Screen [GFX.Delta + N]));
+            Screen [N] = (uint16_t)(COLOR_ADD1_2(ScreenColors [Pixel], Screen [tile_delta + N]));
             break;
          }
-         Depth [N] = GFX.Z2;
+         Depth [N] = tile_z2;
       }
    }
 }
 
 static void WRITE_4PIXELS16_SUB(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
 {
+   const uint8_t tile_z1=GFX.Z1;
+   const uint8_t tile_z2=GFX.Z2;
+   const uint32_t tile_fixedcolour=GFX.FixedColour;
+   const int32_t tile_delta=GFX.Delta;
    uint8_t  Pixel, N;
    uint16_t* Screen = (uint16_t*) GFX.S + Offset;
    uint8_t*  Depth = GFX.ZBuffer + Offset;
@@ -662,7 +698,7 @@ static void WRITE_4PIXELS16_SUB(int32_t Offset, uint8_t* Pixels, uint16_t* Scree
 
    for (N = 0; N < 4; N++)
    {
-      if (GFX.Z1 > Depth [N] && (Pixel = Pixels[N]))
+      if (tile_z1 > Depth [N] && (Pixel = Pixels[N]))
       {
          switch (SubDepth [N])
          {
@@ -670,19 +706,23 @@ static void WRITE_4PIXELS16_SUB(int32_t Offset, uint8_t* Pixels, uint16_t* Scree
             Screen [N] = ScreenColors [Pixel];
             break;
          case 1:
-            Screen [N] = (uint16_t) COLOR_SUB(ScreenColors [Pixel], GFX.FixedColour);
+            Screen [N] = (uint16_t) COLOR_SUB(ScreenColors [Pixel], tile_fixedcolour);
             break;
          default:
-            Screen [N] = (uint16_t) COLOR_SUB(ScreenColors [Pixel], Screen [GFX.Delta + N]);
+            Screen [N] = (uint16_t) COLOR_SUB(ScreenColors [Pixel], Screen [tile_delta + N]);
             break;
          }
-         Depth [N] = GFX.Z2;
+         Depth [N] = tile_z2;
       }
    }
 }
 
 static void WRITE_4PIXELS16_FLIPPED_SUB(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
 {
+   const uint8_t tile_z1=GFX.Z1;
+   const uint8_t tile_z2=GFX.Z2;
+   const uint32_t tile_fixedcolour=GFX.FixedColour;
+   const int32_t tile_delta=GFX.Delta;
    uint8_t  Pixel, N;
    uint16_t* Screen = (uint16_t*) GFX.S + Offset;
    uint8_t*  Depth = GFX.ZBuffer + Offset;
@@ -690,7 +730,7 @@ static void WRITE_4PIXELS16_FLIPPED_SUB(int32_t Offset, uint8_t* Pixels, uint16_
 
    for (N = 0; N < 4; N++)
    {
-      if (GFX.Z1 > Depth [N] && (Pixel = Pixels[3 - N]))
+      if (tile_z1 > Depth [N] && (Pixel = Pixels[3 - N]))
       {
          switch (SubDepth [N])
          {
@@ -698,19 +738,23 @@ static void WRITE_4PIXELS16_FLIPPED_SUB(int32_t Offset, uint8_t* Pixels, uint16_
             Screen [N] = ScreenColors [Pixel];
             break;
          case 1:
-            Screen [N] = (uint16_t) COLOR_SUB(ScreenColors [Pixel], GFX.FixedColour);
+            Screen [N] = (uint16_t) COLOR_SUB(ScreenColors [Pixel], tile_fixedcolour);
             break;
          default:
-            Screen [N] = (uint16_t) COLOR_SUB(ScreenColors [Pixel], Screen [GFX.Delta + N]);
+            Screen [N] = (uint16_t) COLOR_SUB(ScreenColors [Pixel], Screen [tile_delta + N]);
             break;
          }
-         Depth [N] = GFX.Z2;
+         Depth [N] = tile_z2;
       }
    }
 }
 
 static void WRITE_4PIXELS16_SUB1_2(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
 {
+   const uint8_t tile_z1=GFX.Z1;
+   const uint8_t tile_z2=GFX.Z2;
+   const uint32_t tile_fixedcolour=GFX.FixedColour;
+   const int32_t tile_delta=GFX.Delta;
    uint8_t  Pixel, N;
    uint16_t* Screen = (uint16_t*) GFX.S + Offset;
    uint8_t*  Depth = GFX.ZBuffer + Offset;
@@ -718,7 +762,7 @@ static void WRITE_4PIXELS16_SUB1_2(int32_t Offset, uint8_t* Pixels, uint16_t* Sc
 
    for (N = 0; N < 4; N++)
    {
-      if (GFX.Z1 > Depth [N] && (Pixel = Pixels[N]))
+      if (tile_z1 > Depth [N] && (Pixel = Pixels[N]))
       {
          switch (SubDepth [N])
          {
@@ -726,19 +770,23 @@ static void WRITE_4PIXELS16_SUB1_2(int32_t Offset, uint8_t* Pixels, uint16_t* Sc
             Screen [N] = ScreenColors [Pixel];
             break;
          case 1:
-            Screen [N] = (uint16_t) COLOR_SUB(ScreenColors [Pixel], GFX.FixedColour);
+            Screen [N] = (uint16_t) COLOR_SUB(ScreenColors [Pixel], tile_fixedcolour);
             break;
          default:
-            Screen [N] = (uint16_t) COLOR_SUB1_2(ScreenColors [Pixel], Screen [GFX.Delta + N]);
+            Screen [N] = (uint16_t) COLOR_SUB1_2(ScreenColors [Pixel], Screen [tile_delta + N]);
             break;
          }
-         Depth [N] = GFX.Z2;
+         Depth [N] = tile_z2;
       }
    }
 }
 
 static void WRITE_4PIXELS16_FLIPPED_SUB1_2(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
 {
+   const uint8_t tile_z1=GFX.Z1;
+   const uint8_t tile_z2=GFX.Z2;
+   const uint32_t tile_fixedcolour=GFX.FixedColour;
+   const int32_t tile_delta=GFX.Delta;
    uint8_t  Pixel, N;
    uint16_t* Screen = (uint16_t*) GFX.S + Offset;
    uint8_t*  Depth = GFX.ZBuffer + Offset;
@@ -746,7 +794,7 @@ static void WRITE_4PIXELS16_FLIPPED_SUB1_2(int32_t Offset, uint8_t* Pixels, uint
 
    for (N = 0; N < 4; N++)
    {
-      if (GFX.Z1 > Depth [N] && (Pixel = Pixels[3 - N]))
+      if (tile_z1 > Depth [N] && (Pixel = Pixels[3 - N]))
       {
          switch (SubDepth [N])
          {
@@ -754,13 +802,13 @@ static void WRITE_4PIXELS16_FLIPPED_SUB1_2(int32_t Offset, uint8_t* Pixels, uint
             Screen [N] = ScreenColors [Pixel];
             break;
          case 1:
-            Screen [N] = (uint16_t) COLOR_SUB(ScreenColors [Pixel], GFX.FixedColour);
+            Screen [N] = (uint16_t) COLOR_SUB(ScreenColors [Pixel], tile_fixedcolour);
             break;
          default:
-            Screen [N] = (uint16_t) COLOR_SUB1_2(ScreenColors [Pixel], Screen [GFX.Delta + N]);
+            Screen [N] = (uint16_t) COLOR_SUB1_2(ScreenColors [Pixel], Screen [tile_delta + N]);
             break;
          }
-         Depth [N] = GFX.Z2;
+         Depth [N] = tile_z2;
       }
    }
 }
@@ -768,6 +816,11 @@ static void WRITE_4PIXELS16_FLIPPED_SUB1_2(int32_t Offset, uint8_t* Pixels, uint
 
 void DrawTile16Add(uint32_t Tile, int32_t Offset, uint32_t StartLine, uint32_t LineCount)
 {
+   const uint8_t tile_z1=GFX.Z1;
+   const uint8_t tile_z2=GFX.Z2;
+   const uint32_t tile_fixedcolour=GFX.FixedColour;
+   const int32_t tile_delta=GFX.Delta;
+   const uint32_t tile_ppl=GFX.PPL;
    uint8_t* bp;
    uint8_t Pixel;
    uint16_t* Screen = (uint16_t*) GFX.S + Offset;
@@ -780,12 +833,12 @@ void DrawTile16Add(uint32_t Tile, int32_t Offset, uint32_t StartLine, uint32_t L
    {
    case 0:
       bp = pCache + StartLine;
-      for (l = LineCount; l != 0; l--, bp += 8, Screen += GFX.PPL, Depth += GFX.PPL, SubDepth += GFX.PPL)
+      for (l = LineCount; l != 0; l--, bp += 8, Screen += tile_ppl, Depth += tile_ppl, SubDepth += tile_ppl)
       {
          uint8_t N;
          for (N = 0; N < 8; N++)
          {
-            if (GFX.Z1 > Depth [N] && (Pixel = bp[N]))
+            if (tile_z1 > Depth [N] && (Pixel = bp[N]))
             {
                switch (SubDepth [N])
                {
@@ -793,25 +846,25 @@ void DrawTile16Add(uint32_t Tile, int32_t Offset, uint32_t StartLine, uint32_t L
                   Screen [N] = ScreenColors [Pixel];
                   break;
                case 1:
-                  Screen [N] = COLOR_ADD(ScreenColors [Pixel], GFX.FixedColour);
+                  Screen [N] = COLOR_ADD(ScreenColors [Pixel], tile_fixedcolour);
                   break;
                default:
-                  Screen [N] = COLOR_ADD(ScreenColors [Pixel], Screen [GFX.Delta + N]);
+                  Screen [N] = COLOR_ADD(ScreenColors [Pixel], Screen [tile_delta + N]);
                   break;
                }
-               Depth [N] = GFX.Z2;
+               Depth [N] = tile_z2;
             }
          }
       }
       break;
    case H_FLIP:
       bp = pCache + StartLine;
-      for (l = LineCount; l != 0; l--, bp += 8, Screen += GFX.PPL, Depth += GFX.PPL, SubDepth += GFX.PPL)
+      for (l = LineCount; l != 0; l--, bp += 8, Screen += tile_ppl, Depth += tile_ppl, SubDepth += tile_ppl)
       {
          uint8_t N;
          for (N = 0; N < 8; N++)
          {
-            if (GFX.Z1 > Depth [N] && (Pixel = bp[7 - N]))
+            if (tile_z1 > Depth [N] && (Pixel = bp[7 - N]))
             {
                switch (SubDepth [N])
                {
@@ -819,25 +872,25 @@ void DrawTile16Add(uint32_t Tile, int32_t Offset, uint32_t StartLine, uint32_t L
                   Screen [N] = ScreenColors [Pixel];
                   break;
                case 1:
-                  Screen [N] = COLOR_ADD(ScreenColors [Pixel], GFX.FixedColour);
+                  Screen [N] = COLOR_ADD(ScreenColors [Pixel], tile_fixedcolour);
                   break;
                default:
-                  Screen [N] = COLOR_ADD(ScreenColors [Pixel], Screen [GFX.Delta + N]);
+                  Screen [N] = COLOR_ADD(ScreenColors [Pixel], Screen [tile_delta + N]);
                   break;
                }
-               Depth [N] = GFX.Z2;
+               Depth [N] = tile_z2;
             }
          }
       }
       break;
    case H_FLIP | V_FLIP:
       bp = pCache + 56 - StartLine;
-      for (l = LineCount; l != 0; l--, bp -= 8, Screen += GFX.PPL, Depth += GFX.PPL, SubDepth += GFX.PPL)
+      for (l = LineCount; l != 0; l--, bp -= 8, Screen += tile_ppl, Depth += tile_ppl, SubDepth += tile_ppl)
       {
          uint8_t N;
          for (N = 0; N < 8; N++)
          {
-            if (GFX.Z1 > Depth [N] && (Pixel = bp[7 - N]))
+            if (tile_z1 > Depth [N] && (Pixel = bp[7 - N]))
             {
                switch (SubDepth [N])
                {
@@ -845,25 +898,25 @@ void DrawTile16Add(uint32_t Tile, int32_t Offset, uint32_t StartLine, uint32_t L
                   Screen [N] = ScreenColors [Pixel];
                   break;
                case 1:
-                  Screen [N] = COLOR_ADD(ScreenColors [Pixel], GFX.FixedColour);
+                  Screen [N] = COLOR_ADD(ScreenColors [Pixel], tile_fixedcolour);
                   break;
                default:
-                  Screen [N] = COLOR_ADD(ScreenColors [Pixel], Screen [GFX.Delta + N]);
+                  Screen [N] = COLOR_ADD(ScreenColors [Pixel], Screen [tile_delta + N]);
                   break;
                }
-               Depth [N] = GFX.Z2;
+               Depth [N] = tile_z2;
             }
          }
       }
       break;
    case V_FLIP:
       bp = pCache + 56 - StartLine;
-      for (l = LineCount; l != 0; l--, bp -= 8, Screen += GFX.PPL, Depth += GFX.PPL, SubDepth += GFX.PPL)
+      for (l = LineCount; l != 0; l--, bp -= 8, Screen += tile_ppl, Depth += tile_ppl, SubDepth += tile_ppl)
       {
          uint8_t N;
          for (N = 0; N < 8; N++)
          {
-            if (GFX.Z1 > Depth [N] && (Pixel = bp[N]))
+            if (tile_z1 > Depth [N] && (Pixel = bp[N]))
             {
                switch (SubDepth [N])
                {
@@ -871,13 +924,13 @@ void DrawTile16Add(uint32_t Tile, int32_t Offset, uint32_t StartLine, uint32_t L
                   Screen [N] = ScreenColors [Pixel];
                   break;
                case 1:
-                  Screen [N] = COLOR_ADD(ScreenColors [Pixel], GFX.FixedColour);
+                  Screen [N] = COLOR_ADD(ScreenColors [Pixel], tile_fixedcolour);
                   break;
                default:
-                  Screen [N] = COLOR_ADD(ScreenColors [Pixel], Screen [GFX.Delta + N]);
+                  Screen [N] = COLOR_ADD(ScreenColors [Pixel], Screen [tile_delta + N]);
                   break;
                }
-               Depth [N] = GFX.Z2;
+               Depth [N] = tile_z2;
             }
          }
       }
@@ -957,6 +1010,9 @@ void DrawClippedTile16Sub1_2(uint32_t Tile, int32_t Offset, uint32_t StartPixel,
 
 static void WRITE_4PIXELS16_ADDF1_2(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
 {
+   const uint8_t tile_z1=GFX.Z1;
+   const uint8_t tile_z2=GFX.Z2;
+   const uint32_t tile_fixedcolour=GFX.FixedColour;
    uint8_t  Pixel, N;
    uint16_t* Screen = (uint16_t*) GFX.S + Offset;
    uint8_t*  Depth = GFX.ZBuffer + Offset;
@@ -964,19 +1020,22 @@ static void WRITE_4PIXELS16_ADDF1_2(int32_t Offset, uint8_t* Pixels, uint16_t* S
 
    for (N = 0; N < 4; N++)
    {
-      if (GFX.Z1 > Depth [N] && (Pixel = Pixels[N]))
+      if (tile_z1 > Depth [N] && (Pixel = Pixels[N]))
       {
          if (SubDepth [N] == 1)
-            Screen [N] = (uint16_t)(COLOR_ADD1_2(ScreenColors [Pixel], GFX.FixedColour));
+            Screen [N] = (uint16_t)(COLOR_ADD1_2(ScreenColors [Pixel], tile_fixedcolour));
          else
             Screen [N] = ScreenColors [Pixel];
-         Depth [N] = GFX.Z2;
+         Depth [N] = tile_z2;
       }
    }
 }
 
 static void WRITE_4PIXELS16_FLIPPED_ADDF1_2(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
 {
+   const uint8_t tile_z1=GFX.Z1;
+   const uint8_t tile_z2=GFX.Z2;
+   const uint32_t tile_fixedcolour=GFX.FixedColour;
    uint8_t  Pixel, N;
    uint16_t* Screen = (uint16_t*) GFX.S + Offset;
    uint8_t*  Depth = GFX.ZBuffer + Offset;
@@ -984,19 +1043,22 @@ static void WRITE_4PIXELS16_FLIPPED_ADDF1_2(int32_t Offset, uint8_t* Pixels, uin
 
    for (N = 0; N < 4; N++)
    {
-      if (GFX.Z1 > Depth [N] && (Pixel = Pixels[3 - N]))
+      if (tile_z1 > Depth [N] && (Pixel = Pixels[3 - N]))
       {
          if (SubDepth [N] == 1)
-            Screen [N] = (uint16_t)(COLOR_ADD1_2(ScreenColors [Pixel], GFX.FixedColour));
+            Screen [N] = (uint16_t)(COLOR_ADD1_2(ScreenColors [Pixel], tile_fixedcolour));
          else
             Screen [N] = ScreenColors [Pixel];
-         Depth [N] = GFX.Z2;
+         Depth [N] = tile_z2;
       }
    }
 }
 
 static void WRITE_4PIXELS16_SUBF1_2(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
 {
+   const uint8_t tile_z1=GFX.Z1;
+   const uint8_t tile_z2=GFX.Z2;
+   const uint32_t tile_fixedcolour=GFX.FixedColour;
    uint8_t  Pixel, N;
    uint16_t* Screen = (uint16_t*) GFX.S + Offset;
    uint8_t*  Depth = GFX.ZBuffer + Offset;
@@ -1004,19 +1066,22 @@ static void WRITE_4PIXELS16_SUBF1_2(int32_t Offset, uint8_t* Pixels, uint16_t* S
 
    for (N = 0; N < 4; N++)
    {
-      if (GFX.Z1 > Depth [N] && (Pixel = Pixels[N]))
+      if (tile_z1 > Depth [N] && (Pixel = Pixels[N]))
       {
          if (SubDepth [N] == 1)
-            Screen [N] = (uint16_t) COLOR_SUB1_2(ScreenColors [Pixel], GFX.FixedColour);
+            Screen [N] = (uint16_t) COLOR_SUB1_2(ScreenColors [Pixel], tile_fixedcolour);
          else
             Screen [N] = ScreenColors [Pixel];
-         Depth [N] = GFX.Z2;
+         Depth [N] = tile_z2;
       }
    }
 }
 
 static void WRITE_4PIXELS16_FLIPPED_SUBF1_2(int32_t Offset, uint8_t* Pixels, uint16_t* ScreenColors)
 {
+   const uint8_t tile_z1=GFX.Z1;
+   const uint8_t tile_z2=GFX.Z2;
+   const uint32_t tile_fixedcolour=GFX.FixedColour;
    uint8_t  Pixel, N;
    uint16_t* Screen = (uint16_t*) GFX.S + Offset;
    uint8_t*  Depth = GFX.ZBuffer + Offset;
@@ -1024,13 +1089,13 @@ static void WRITE_4PIXELS16_FLIPPED_SUBF1_2(int32_t Offset, uint8_t* Pixels, uin
 
    for (N = 0; N < 4; N++)
    {
-      if (GFX.Z1 > Depth [N] && (Pixel = Pixels[3 - N]))
+      if (tile_z1 > Depth [N] && (Pixel = Pixels[3 - N]))
       {
          if (SubDepth [N] == 1)
-            Screen [N] = (uint16_t) COLOR_SUB1_2(ScreenColors [Pixel], GFX.FixedColour);
+            Screen [N] = (uint16_t) COLOR_SUB1_2(ScreenColors [Pixel], tile_fixedcolour);
          else
             Screen [N] = ScreenColors [Pixel];
-         Depth [N] = GFX.Z2;
+         Depth [N] = tile_z2;
       }
    }
 }

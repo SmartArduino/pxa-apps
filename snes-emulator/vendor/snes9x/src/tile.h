@@ -3,6 +3,11 @@
 #ifndef _TILE_H_
 #define _TILE_H_
 
+/* Cache validity includes the source bit depth, even for transparent tiles. */
+#define TILE_CACHE_VALID 0x10u
+#define TILE_CACHE_BLANK 0x20u
+#define TILE_CACHE_DEPTH_MASK 0x1fu
+
 #define TILE_PREAMBLE_VARS() \
     uint32_t l; \
     uint16_t *ScreenColors; \
@@ -16,12 +21,12 @@
        TileAddr += BG.NameSelect; \
     TileAddr &= 0xffff; \
     pCache = &BG.Buffer[(TileNumber = (TileAddr >> BG.TileShift)) << 6]; \
-    if (BG.Buffered [TileNumber] != (0x10|BG.Depth)) \
+    if ((BG.Buffered [TileNumber] & TILE_CACHE_DEPTH_MASK) != (TILE_CACHE_VALID | BG.Depth)) \
     { \
       BG.Buffered[TileAddr >> 4] = BG.Buffered[TileAddr >> 5] = BG.Buffered[TileAddr >> 6] = false; \
       BG.Buffered[TileNumber] = ConvertTile (pCache, TileAddr); \
     } \
-    if (BG.Buffered [TileNumber] == BLANK_TILE) \
+    if (BG.Buffered [TileNumber] & TILE_CACHE_BLANK) \
        return; \
     if (BG.DirectColourMode) \
        ScreenColors = &IPPU.DirectColors [((Tile >> 10) & BG.PaletteMask) << 8]; \

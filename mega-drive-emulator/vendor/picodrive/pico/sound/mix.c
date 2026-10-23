@@ -170,3 +170,15 @@ void mix_reset(int alpha_q16)
 	memset(&rfi2, 0, sizeof(rfi2));
 	lfi2.alpha = rfi2.alpha = (0x10000-alpha_q16) >> 4; // filter alpha, Q12
 }
+
+void mix_save_state(int state[6])
+{
+	state[0]=lfi2.alpha;state[1]=lfi2.y[0];state[2]=lfi2.y[1];
+	state[3]=rfi2.alpha;state[4]=rfi2.y[0];state[5]=rfi2.y[1];
+}
+
+void mix_load_state(const int state[6])
+{
+	lfi2.alpha=state[0];lfi2.y[0]=state[1];lfi2.y[1]=state[2];
+	rfi2.alpha=state[3];rfi2.y[0]=state[4];rfi2.y[1]=state[5];
+}

@@ -2,6 +2,20 @@
 #include "video_renderer.h"
 #include <stdlib.h>
 #include <string.h>
+/* WASI's byte-wise memcmp repeatedly checks linear-memory bounds in AOT.
+ * Compare aligned RGB565 rows in native words, with exact tail bounds. Keep
+ * the portable byte path for odd strides and externally supplied buffers. */
+typedef uint32_t emu_video_word_t __attribute__((__may_alias__));
+static int row_equal(const uint16_t *a,const uint16_t *b,unsigned pixels){
+    if(((uintptr_t)a|(uintptr_t)b)&3u)return !memcmp(a,b,pixels*2u);
+    const emu_video_word_t *x=(const emu_video_word_t *)a,*y=(const emu_video_word_t *)b;
+    while(pixels>=8){
+        if((x[0]^y[0])|(x[1]^y[1])|(x[2]^y[2])|(x[3]^y[3]))return 0;
+        x+=4;y+=4;pixels-=8;
+    }
+    while(pixels>=2){if(*x++!=*y++)return 0;pixels-=2;}
+    return !pixels || *(const uint16_t *)x==*(const uint16_t *)y;
+}
 void emu_video_set_fit(emu_video_renderer_t *r,emu_display_rect_t a,unsigned fit){
     r->cache_valid=0;r->fit=!!fit;
     if(!r->width || !r->height || r->width>EMU_DISPLAY_MAX_WIDTH || r->height>EMU_DISPLAY_MAX_HEIGHT){r->view_width=r->view_height=0;return;}
@@ -42,7 +56,7 @@ unsigned emu_video_render_cached(emu_video_renderer_t *r,uint16_t *out,const uin
         unsigned sy=r->sy[y];const uint16_t *line=src+(size_t)sy*r->source_stride;
         uint16_t *prior=r->previous[buffer]?r->previous[buffer]+(size_t)sy*r->source_width:NULL;
         uint16_t *dst=out+(size_t)(r->view_y+y)*r->stride+r->view_x;
-        if((int)sy!=old){changed=force || memcmp(prior,line,r->source_width*2u);if(changed && prior)memcpy(prior,line,r->source_width*2u);}
+        if((int)sy!=old){changed=force || !row_equal(prior,line,r->source_width);if(changed && prior)memcpy(prior,line,r->source_width*2u);}
         if(changed){dirty[r->view_y+y]=1;pixels+=r->view_width;
             if(last && (int)sy==old)memcpy(dst,last,r->view_width*2u);
             else if(r->view_width==r->source_width)memcpy(dst,line,r->view_width*2u);

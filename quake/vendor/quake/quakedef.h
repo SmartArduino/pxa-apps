@@ -32,9 +32,9 @@
 
 //
 // debugging symbols
-#define ENABLE_DEMO                     1           // if 0, it won't load demo.
+#define ENABLE_DEMO                     0           // if 0, it won't load demo.
 #define FORCE_START_GAME_IF_NO_DEMO     1           // if 1, and ENABLE_DEMO is 0, then it will start a new game by default
-#define START_MAP                       "e1m1"      // start map of the new game e.g. "e1m4" or "start"
+#define START_MAP                       "start"      // start map of the new game e.g. "e1m4" or "start"
 #define START_SKILL                     1           // start skill of the new game. 0 = easy, 1 = normal, 2 = hard, 3 = nightmare.
 #ifndef FORCE_TIME_DEMO
 #define FORCE_TIME_DEMO                 0           // if 1, it will force timedemo. Note that ENABLE_DEMO shall be 1 as well
@@ -172,7 +172,7 @@ extern int alias_drawn_pixels;
 #define DRAW_BUFFER_HEIGHT  152
 #if RETAIL_QUAKE_PAK_SUPPORT
 #define MAX_STATIC_ZONE                 ( 48412)
-#define MAX_TEXTURE_SIZE   (16384 + 4096) //note: in the surf buffer the medge cache offset is stored! And there are up to 14.8k medges in the shareware version
+#define MAX_TEXTURE_SIZE   (32768) //note: in the surf buffer the medge cache offset is stored! And there are up to 14.8k medges in the shareware version
 
 #else
 //#define MAX_STATIC_ZONE                 ( 32768 + 3300 + 1300 + 1024 + 768 )

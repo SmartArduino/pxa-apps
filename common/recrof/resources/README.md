@@ -61,7 +61,30 @@ included. Each payload includes the EA non-affiliation notice and modding-policy
 link. Distribution is free and non-commercial; music is excluded as required by
 EA's current guidelines. The original artwork is not used for desktop icons.
 
-Quake and Duke3D currently require converted data, while their
+Quake's Store resource package uses the first Lite level from LibreQuake
+v0.09-beta. The archive is pinned in `librequake-media.json`. Artwork is
+BSD-3-Clause; the generated `pop.lmp` is GPL-2.0. The resource package preserves
+the original licenses and credits, and links to the fixed upstream source.
+No id Software game data, music, demos or external `progs.dat` are included.
+The engine uses its built-in GPL gamecode. This is a single-level free preview,
+not the original Quake campaign.
+
+```sh
+python3 local/pxa-apps/common/recrof/tools/build_librequake_resources.py \
+  --sdk-root deps/pxa-system \
+  --output-root local/artifacts/game-resource-packs/<timestamp>/media \
+  --signing-key /absolute/path/to/publisher-private.pem
+```
+
+The builder preserves model geometry and animation, limits palette-indexed skins
+to 128×128, selects the first Lite map, and makes its exit start a new run. It
+converts the result with the matching MCU format 3 tool. Quake 0.6 uses 10-bit
+vertex indices, 21-bit triangle offsets and the `IDPL` model tag. Keep the signed
+code and media binding together. Older MCU format 2 PAK files require conversion
+again with the current tool. Other LibreQuake levels still require explicit
+checks against the packed BSP, entity, string and working-buffer limits.
+
+Original Quake and Duke3D data require conversion, while their
 shareware terms restrict redistribution and modification. OpenLara's BSD engine
 license does not establish permission to redistribute Tomb Raider assets. These
 recipes do not include their local verification data. A freely downloadable demo
@@ -73,6 +96,7 @@ Original terms and publisher guidance:
 - [Quake II source release: data retains its original terms](https://github.com/id-Software/Quake-2/blob/master/readme.txt)
 - [DOOM shareware terms and redistribution clarification](https://github.com/redox-os/freedoom/blob/master/LICENSE-DOOM1)
 - [Quake shareware agreement](https://github.com/id-Software/Quake/blob/master/WinQuake/data/SLICNSE.TXT)
+- [LibreQuake project and redistribution permission](https://github.com/lavenderdotpet/LibreQuake)
 - [C&C franchise modding guidelines](https://www.ea.com/games/command-and-conquer/news/modding-faq)
 - [OpenLara engine repository](https://github.com/XProger/OpenLara)
 

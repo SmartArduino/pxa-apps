@@ -17,15 +17,16 @@
 #endif
 
 #include "fame.h"
+#include "pico/memory.h"
 
 
 // Options //
-#define FAMEC_ROLL_INLINE
+/* Keep a single dispatch site: avoids a dense indirect-branch CFG in LLVM. */
 #define FAMEC_EMULATE_TRACE
 #define FAMEC_CHECK_BRANCHES
 #define FAMEC_EXTRA_INLINE
 // #define FAMEC_DEBUG
-#define FAMEC_NO_GOTOS
+/* Keep hot CPU registers local across the single computed dispatch. */
 #define FAMEC_ADR_BITS  24
 // #define FAMEC_FETCHBITS 8
 #define FAMEC_DATABITS  8
@@ -41,10 +42,7 @@
 #ifndef __GNUC__
 #define FAMEC_NO_GOTOS
 #endif
-// as of 3.3, clang takes over 3h to compile this in computed goto mode..
-#ifdef __clang__
-#define FAMEC_NO_GOTOS
-#endif
+/* Modern Wasm lowers the single indirect branch to a switch. */
 #endif
  
 #undef INLINE
@@ -330,6 +328,41 @@ static __attribute__((noinline)) void pxa_fame_rebase(M68K_CONTEXT *ctx,u16 **ou
         pxa_fame_rebase(ctx,&PC,&BasePC); \
 }while(0)
 
+/* Promote the common MD bus callback while retaining custom/sub-CPU handlers.
+ * Keep this outside the huge opcode loop to bound code growth. */
+static __attribute__((noinline)) u32 pxa_fame_read8(M68K_CONTEXT *ctx, u32 address)
+{
+    if (ctx->read_byte == m68k_read8) return m68k_read8(address);
+    return ctx->read_byte(address);
+}
+static __attribute__((noinline)) void pxa_fame_write8(M68K_CONTEXT *ctx, u32 address, u8 value)
+{
+    if (ctx->write_byte == m68k_write8) m68k_write8(address, value);
+    else ctx->write_byte(address, value);
+}
+static __attribute__((noinline)) u32 pxa_fame_read16(M68K_CONTEXT *ctx, u32 address)
+{
+    if (ctx->read_word == m68k_read16) return m68k_read16(address);
+    return ctx->read_word(address);
+}
+static __attribute__((noinline)) void pxa_fame_write16(M68K_CONTEXT *ctx, u32 address, u16 value)
+{
+    if (ctx->write_word == m68k_write16) m68k_write16(address, value);
+    else ctx->write_word(address, value);
+}
+static __attribute__((noinline)) u32 pxa_fame_read32(M68K_CONTEXT *ctx, u32 address)
+{
+    if (ctx->read_long == m68k_read32) return m68k_read32(address);
+    return ctx->read_long(address);
+}
+static __attribute__((noinline)) void pxa_fame_write32(M68K_CONTEXT *ctx, u32 address, u32 value)
+{
+    if (ctx->write_long == m68k_write32) m68k_write32(address, value);
+    else ctx->write_long(address, value);
+}
+
+#define PXA_SYNC_PC() ((void)0)
+
 #define PRE_IO                  \
 //	io_cycle_counter = CCnt;
 
@@ -337,29 +370,29 @@ static __attribute__((noinline)) void pxa_fame_rebase(M68K_CONTEXT *ctx,u16 **ou
 //    CCnt = io_cycle_counter;
 
 #define READ_BYTE_F(A, D)           \
-	D = ctx->read_byte(A) & 0xFF;
+	D = (PXA_SYNC_PC(), pxa_fame_read8(ctx, A)) & 0xFF;
 
 #define READ_WORD_F(A, D)           \
-	D = ctx->read_word(A) & 0xFFFF;
+	D = (PXA_SYNC_PC(), pxa_fame_read16(ctx, A)) & 0xFFFF;
 
 #define READ_LONG_F(A, D)           \
-	D = ctx->read_long(A);
+	D = (PXA_SYNC_PC(), pxa_fame_read32(ctx, A));
 
 #define READSX_LONG_F READ_LONG_F
 
 #define WRITE_LONG_F(A, D)          \
-	ctx->write_long(A, D);
+	(PXA_SYNC_PC(), pxa_fame_write32(ctx, A, D));
 
 #define WRITE_LONG_DEC_F(A, D)          \
-	ctx->write_word((A) + 2, (D) & 0xFFFF);    \
-	ctx->write_word((A), (D) >> 16);
+	(PXA_SYNC_PC(), pxa_fame_write16(ctx, (A) + 2, (D) & 0xFFFF));    \
+	(PXA_SYNC_PC(), pxa_fame_write16(ctx, (A), (D) >> 16));
 
 #define PUSH_32_F(D)                        \
 	AREG(7) -= 4;                               \
-	ctx->write_long(AREG(7), D);
+	(PXA_SYNC_PC(), pxa_fame_write32(ctx, AREG(7), D));
 
 #define POP_32_F(D)                         \
-	D = ctx->read_long(AREG(7));         \
+	D = (PXA_SYNC_PC(), pxa_fame_read32(ctx, AREG(7)));         \
 	AREG(7) += 4;
 
 #ifndef FAME_BIG_ENDIAN
@@ -425,23 +458,23 @@ static __attribute__((noinline)) void pxa_fame_rebase(M68K_CONTEXT *ctx,u16 **ou
 #endif
 
 #define READSX_BYTE_F(A, D)             \
-    D = (s8)ctx->read_byte(A);
+    D = (s8)(PXA_SYNC_PC(), pxa_fame_read8(ctx, A));
 
 #define READSX_WORD_F(A, D)             \
-    D = (s16)ctx->read_word(A);
+    D = (s16)(PXA_SYNC_PC(), pxa_fame_read16(ctx, A));
 
 
 #define WRITE_BYTE_F(A, D)      \
-    ctx->write_byte(A, D);
+    (PXA_SYNC_PC(), pxa_fame_write8(ctx, A, D));
 
 #define WRITE_WORD_F(A, D)      \
-    ctx->write_word(A, D);
+    (PXA_SYNC_PC(), pxa_fame_write16(ctx, A, D));
 
 #define PUSH_16_F(D)                    \
-    ctx->write_word(AREG(7) -= 2, D);   \
+    (PXA_SYNC_PC(), pxa_fame_write16(ctx, AREG(7) -= 2, D));   \
 
 #define POP_16_F(D)                     \
-    D = (u16)ctx->read_word(AREG(7));   \
+    D = (u16)(PXA_SYNC_PC(), pxa_fame_read16(ctx, AREG(7)));   \
     AREG(7) += 2;
 
 #define GET_CCR                                     \
@@ -675,8 +708,8 @@ int fm68k_reset(M68K_CONTEXT *ctx)
 	ctx->sr = (ctx->sr & 0xff) | 0x2700;
 
 	// Obtener puntero de pila inicial y PC
-	AREG(7) = ctx->read_long(0);
-	ctx->pc = ctx->read_long(4);
+	AREG(7) = pxa_fame_read32(ctx, 0);
+	ctx->pc = pxa_fame_read32(ctx, 4);
 
 #ifdef FAMEC_DEBUG
 	puts("Reset 68k done!\n");
@@ -697,7 +730,7 @@ u32 fm68k_get_pc(const M68K_CONTEXT *ctx)
 #ifdef FAMEC_NO_GOTOS
 	return (ctx->execinfo & M68K_RUNNING)?(uptr)PC-BasePC:ctx->pc;
 #else
-	return ctx->pc; // approximate PC in this mode
+	return ctx->pc; // live PC is published at every bus/interrupt callout
 #endif
 }
 
@@ -786,6 +819,14 @@ static FAMEC_EXTRA_INLINE u32 execute_exception_group_0(M68K_CONTEXT *ctx, s32 v
 #endif
 
 
+#ifndef FAMEC_NO_GOTOS
+#undef PXA_SYNC_PC
+#define PXA_SYNC_PC() (ctx->pc = GET_PC)
+/* Exceptions use out-of-line helpers; their bus callbacks see the live PC. */
+#define execute_exception(...) (PXA_SYNC_PC(), execute_exception(__VA_ARGS__))
+#define execute_exception_group_0(...) (PXA_SYNC_PC(), execute_exception_group_0(__VA_ARGS__))
+#endif
+
 // main exec function
 //////////////////////
 
@@ -865,7 +906,7 @@ int fm68k_emulate(M68K_CONTEXT *ctx, int cycles, fm68k_call_reason reason)
 		{
 			/* comprobar si hay rutina de acknowledge */
 			if (ctx->iack_handler != NULL)
-				ctx->iack_handler(line);
+				(PXA_SYNC_PC(), ctx->iack_handler(line));
 			else
 				ctx->interrupts[0] = 0;
 
@@ -930,7 +971,7 @@ famec_Exec:
 			if (line>0)
 			{
 				if (ctx->iack_handler != NULL)
-					ctx->iack_handler(line);
+					(PXA_SYNC_PC(), ctx->iack_handler(line));
 				else
 					ctx->interrupts[0] = 0;
 

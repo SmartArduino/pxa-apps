@@ -1,3 +1,4 @@
+#include "../../../apu_sync.h"
 /* This file is part of Snes9x. See LICENSE file. */
 
 #ifndef USE_BLARGG_APU
@@ -10,50 +11,42 @@
 
 extern const int32_t NoiseFreq[32];
 
+uint8_t S9xAPURAM[0x10000];
+
 bool S9xInitAPU()
 {
-   IAPU.RAM = (uint8_t*) malloc(0x10000);
-
-   if (!IAPU.RAM)
-   {
-      S9xDeinitAPU();
-      return false;
-   }
-
+   IAPU.RAM = S9xAPURAM;
    return true;
 }
 
 void S9xDeinitAPU()
 {
-   if (IAPU.RAM)
-   {
-      free(IAPU.RAM);
-      IAPU.RAM = NULL;
-   }
+   IAPU.RAM = NULL;
 }
 
 void S9xResetAPU()
 {
+   snes_apu_reset();
    int32_t i, j;
    Settings.APUEnabled = true;
-   memset(IAPU.RAM, 0, 0x100);
-   memset(IAPU.RAM + 0x20, 0xFF, 0x20);
-   memset(IAPU.RAM + 0x60, 0xFF, 0x20);
-   memset(IAPU.RAM + 0xA0, 0xFF, 0x20);
-   memset(IAPU.RAM + 0xE0, 0xFF, 0x20);
+   memset(S9xAPURAM, 0, 0x100);
+   memset(S9xAPURAM + 0x20, 0xFF, 0x20);
+   memset(S9xAPURAM + 0x60, 0xFF, 0x20);
+   memset(S9xAPURAM + 0xA0, 0xFF, 0x20);
+   memset(S9xAPURAM + 0xE0, 0xFF, 0x20);
 
    for (i = 1; i < 256; i++)
-      memcpy(IAPU.RAM + (i << 8), IAPU.RAM, 0x100);
+      memcpy(S9xAPURAM + (i << 8), S9xAPURAM, 0x100);
 
    memset(APU.OutPorts, 0, sizeof(APU.OutPorts));
-   IAPU.DirectPage = IAPU.RAM;
+   IAPU.DirectPage = S9xAPURAM;
    /* memmove converted: Different mallocs [Neb]
     * DS2 DMA notes: The APU ROM is not 32-byte aligned [Neb] */
-   memcpy(&IAPU.RAM [0xffc0], APUROM, sizeof(APUROM));
+   memcpy(&S9xAPURAM [0xffc0], APUROM, sizeof(APUROM));
    /* memmove converted: Different mallocs [Neb]
     * DS2 DMA notes: The APU ROM is not 32-byte aligned [Neb] */
    memcpy(APU.ExtraRAM, APUROM, sizeof(APUROM));
-   IAPU.PC = IAPU.RAM + IAPU.RAM [0xfffe] + (IAPU.RAM [0xffff] << 8);
+   IAPU.PC = S9xAPURAM + S9xAPURAM [0xfffe] + (S9xAPURAM [0xffff] << 8);
    APU.Cycles = 0;
    IAPU.Registers.YA.W = 0;
    IAPU.Registers.X = 0;
@@ -66,7 +59,7 @@ void S9xResetAPU()
    IAPU.WaitAddress2 = NULL;
    IAPU.WaitCounter = 1;
    APU.ShowROM = true;
-   IAPU.RAM [0xf1] = 0x80;
+   S9xAPURAM [0xf1] = 0x80;
 
    for (i = 0; i < 3; i++)
    {
@@ -94,6 +87,7 @@ void S9xResetAPU()
 
 uint8_t S9xAPUReadPort(int32_t Address)
 {
+   snes_apu_flush();
    IAPU.APUExecuting = Settings.APUEnabled;
    IAPU.WaitCounter++;
 
@@ -124,15 +118,16 @@ uint8_t S9xAPUReadPort(int32_t Address)
 
 void S9xAPUWritePort(int32_t Address, uint8_t Byte)
 {
+   snes_apu_flush();
    Memory.FillRAM [Address] = Byte;
-   IAPU.RAM [(Address & 3) + 0xf4] = Byte;
+   S9xAPURAM [(Address & 3) + 0xf4] = Byte;
    IAPU.APUExecuting = Settings.APUEnabled;
    IAPU.WaitCounter++;
 }
 
 void S9xSetAPUDSP(uint8_t byte)
 {
-   uint8_t reg = IAPU.RAM [0xf2];
+   uint8_t reg = S9xAPURAM [0xf2];
    static uint8_t KeyOn;
    static uint8_t KeyOnPrev;
    int32_t i;
@@ -400,22 +395,22 @@ void S9xSetAPUControl(uint8_t byte)
    if ((byte & 1) && !APU.TimerEnabled [0])
    {
       APU.Timer [0] = 0;
-      IAPU.RAM [0xfd] = 0;
-      if ((APU.TimerTarget [0] = IAPU.RAM [0xfa]) == 0)
+      S9xAPURAM [0xfd] = 0;
+      if ((APU.TimerTarget [0] = S9xAPURAM [0xfa]) == 0)
          APU.TimerTarget [0] = 0x100;
    }
    if ((byte & 2) && !APU.TimerEnabled [1])
    {
       APU.Timer [1] = 0;
-      IAPU.RAM [0xfe] = 0;
-      if ((APU.TimerTarget [1] = IAPU.RAM [0xfb]) == 0)
+      S9xAPURAM [0xfe] = 0;
+      if ((APU.TimerTarget [1] = S9xAPURAM [0xfb]) == 0)
          APU.TimerTarget [1] = 0x100;
    }
    if ((byte & 4) && !APU.TimerEnabled [2])
    {
       APU.Timer [2] = 0;
-      IAPU.RAM [0xff] = 0;
-      if ((APU.TimerTarget [2] = IAPU.RAM [0xfc]) == 0)
+      S9xAPURAM [0xff] = 0;
+      if ((APU.TimerTarget [2] = S9xAPURAM [0xfc]) == 0)
          APU.TimerTarget [2] = 0x100;
    }
    APU.TimerEnabled [0] = !!(byte & 1);
@@ -423,10 +418,10 @@ void S9xSetAPUControl(uint8_t byte)
    APU.TimerEnabled [2] = !!(byte & 4);
 
    if (byte & 0x10)
-      IAPU.RAM [0xF4] = IAPU.RAM [0xF5] = 0;
+      S9xAPURAM [0xF4] = S9xAPURAM [0xF5] = 0;
 
    if (byte & 0x20)
-      IAPU.RAM [0xF6] = IAPU.RAM [0xF7] = 0;
+      S9xAPURAM [0xF6] = S9xAPURAM [0xF7] = 0;
 
    if (byte & 0x80)
    {
@@ -434,7 +429,7 @@ void S9xSetAPUControl(uint8_t byte)
       {
          /* memmove converted: Different mallocs [Neb]
           * DS2 DMA notes: The APU ROM is not 32-byte aligned [Neb] */
-         memcpy(&IAPU.RAM [0xffc0], APUROM, sizeof(APUROM));
+         memcpy(&S9xAPURAM [0xffc0], APUROM, sizeof(APUROM));
          APU.ShowROM = true;
       }
    }
@@ -443,14 +438,14 @@ void S9xSetAPUControl(uint8_t byte)
       APU.ShowROM = false;
       /* memmove converted: Different mallocs [Neb]
        * DS2 DMA notes: The APU ROM is not 32-byte aligned [Neb] */
-      memcpy(&IAPU.RAM [0xffc0], APU.ExtraRAM, sizeof(APUROM));
+      memcpy(&S9xAPURAM [0xffc0], APU.ExtraRAM, sizeof(APUROM));
    }
-   IAPU.RAM [0xf1] = byte;
+   S9xAPURAM [0xf1] = byte;
 }
 
 uint8_t S9xGetAPUDSP()
 {
-   uint8_t reg = IAPU.RAM [0xf2] & 0x7f;
+   uint8_t reg = S9xAPURAM [0xf2] & 0x7f;
    uint8_t byte = APU.DSP [reg];
 
    switch (reg)

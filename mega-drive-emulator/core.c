@@ -1,11 +1,13 @@
 /* PXA Mega Drive cartridge adapter. PicoDrive license: vendor/picodrive/COPYING. */
 #include "core.h"
 #include "rom_pager.h"
+#include "md_profile.h"
 #include "vendor/picodrive/pico/pico_int.h"
 #include <string.h>
 #include <stdio.h>
 static uint16_t video[320*256];
-static int16_t pcm[2048*2];
+static int16_t pcm[2][2048*2];
+static unsigned pcm_completed;
 static unsigned first_line;
 static size_t audio_frames;
 static bool loaded,enabled=true;
@@ -16,7 +18,13 @@ void emu_video_mode_change(int start_line,int lines,int start_col,int columns){
     memset(video,0,sizeof(video));PicoDrawSetOutBuf(video,columns*2);
 }
 void emu_32x_startup(void){}
-static void sound_written(int bytes){audio_frames=bytes>0?(size_t)bytes/4:0;if(audio_frames>2048)audio_frames=2048;}
+static void sound_written(int bytes){
+    audio_frames=bytes>0?(size_t)bytes/4:0;if(audio_frames>2048)audio_frames=2048;
+    /* PicoDrive clears sndOut immediately after this callback. Hand it the
+     * next buffer so the frontend can borrow the completed PCM without a copy. */
+    pcm_completed=PicoIn.sndOut==pcm[1];
+    PicoIn.sndOut=pcm[pcm_completed^1u];
+}
 const char *emu_core_validate(const uint8_t *rom,size_t size){
     if(!rom || size<0x200 || size>EMU_ROM_LIMIT || (size&3))return "Invalid Mega Drive cartridge size";
     if(size%0x4000==512 && size>=0x4200)return NULL;
@@ -44,7 +52,8 @@ static const char *load_cartridge(uint8_t *rom,size_t size,const rom_source_t *s
     if(error){emu_core_close();return error;}
     memset(&PicoIn,0,sizeof(PicoIn));
     PicoIn.opt=POPT_EN_FM|POPT_EN_PSG|POPT_EN_Z80|POPT_EN_STEREO|POPT_DIS_32C_BORDER;
-    PicoIn.sndRate=32000;PicoIn.sndOut=pcm;PicoIn.writeSound=sound_written;
+    memset(pcm,0,sizeof(pcm));pcm_completed=0;
+    PicoIn.sndRate=32000;PicoIn.sndOut=pcm[0];PicoIn.writeSound=sound_written;
     PicoIn.autoRgnOrder=0x184;
     PicoInit();loaded=true;
     if(source)rom=(uint8_t*)(uintptr_t)0x10000000;else Byteswap(rom,rom,(int)size);
@@ -56,7 +65,7 @@ static const char *load_cartridge(uint8_t *rom,size_t size,const rom_source_t *s
     emu_core_info.rate_num=Pico.m.pal?50:60;emu_core_info.rate_den=1;
     emu_core_info.audio_rate=32000;emu_core_info.model=Pico.m.pal;emu_core_info.checksum=crc;
     for(unsigned i=0;i<48;++i){unsigned c=source?*md_rom_pointer((0x150+i)^1,UINT32_MAX):rom[(0x150+i)^1];emu_core_info.title[i]=c>=32 && c<127?(char)c:' ';}emu_core_info.title[48]=0;
-    return NULL;
+    md_profile_reset();return NULL;
 }
 const char *emu_core_load(uint8_t *rom,size_t size){return load_cartridge(rom,size,NULL,0);}
 const char *emu_core_load_source(const rom_source_t *source,size_t budget){
@@ -72,10 +81,10 @@ static uint16_t buttons(uint16_t p){
         ((p&EMU_PAD_R)?0x100:0)|((p&EMU_PAD_L)?0x200:0)|((p&EMU_PAD_X)?0x400:0)|((p&EMU_PAD_SELECT)?0x800:0);
 }
 void emu_core_frame_render(uint16_t p1,uint16_t p2,bool draw){
-    if(!loaded)return;audio_frames=0;PicoIn.pad[0]=buttons(p1);PicoIn.pad[1]=buttons(p2);PicoIn.skipFrame=!draw;PicoFrame();
+    if(!loaded)return;audio_frames=0;PicoIn.pad[0]=buttons(p1);PicoIn.pad[1]=buttons(p2);PicoIn.skipFrame=!draw;PicoFrame();md_profile_frame();
 }
 const uint16_t *emu_core_video(void){return video+(size_t)first_line*emu_core_info.stride;}
-const int16_t *emu_core_audio(size_t *frames){if(frames)*frames=loaded&&enabled?audio_frames:0;return pcm;}
+const int16_t *emu_core_audio(size_t *frames){if(frames)*frames=loaded&&enabled?audio_frames:0;return pcm[pcm_completed];}
 size_t emu_core_save_size(void){return loaded&&Pico.sv.data?Pico.sv.size:0;}
 bool emu_core_save_export(uint8_t *data,size_t size){size_t n=emu_core_save_size();if(!n || !data || size<n)return false;memcpy(data,Pico.sv.data,n);return true;}
 bool emu_core_save_import(const uint8_t *data,size_t size){if(!data || !size || size!=emu_core_save_size())return false;memcpy(Pico.sv.data,data,size);return true;}

@@ -1232,7 +1232,9 @@ do { \
 #endif
 
 // profiling
-#ifdef PPROF
+#if defined(PXA_MD_PROFILE)
+#include "md_profile.h"
+#elif defined(PPROF)
 #include <platform/linux/pprof.h>
 #else
 #define pprof_init()

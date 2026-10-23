@@ -1,3 +1,4 @@
+#include "../../../apu_sync.h"
 #include "../../../rom_pager.h"
 /* This file is part of Snes9x. See LICENSE file. */
 
@@ -15,7 +16,7 @@ void S9xMainLoop()
 {
    do
    {
-      APU_EXECUTE();
+      SNES_APU_DEFER();
       if (CPU.Flags)
       {
          if (CPU.Flags & NMI_FLAG)
@@ -63,14 +64,19 @@ void S9xMainLoop()
       }
       CPU.PCAtOpcodeStart = CPU.PC;
       CPU.Cycles += CPU.MemSpeed;
-      (*ICPU.S9xOpcodes [*CPU.PC++].S9xOpcode)();
+      switch (ICPU.S9xOpcodes[*CPU.PC++].opcode) {
+#define SNES_OPCODE(name) case SNES_OPCODE_ID_##name: name(); break;
+#include "pxa_snes_opcodes.inc"
+#undef SNES_OPCODE
+      }
       if (CPU.Cycles >= CPU.NextEvent)
          S9xDoHBlankProcessing();
    } while(true);
 
+   snes_apu_flush();
    ICPU.Registers.PC = CPU.PC - CPU.PCBase;
 #ifndef USE_BLARGG_APU
-   IAPU.Registers.PC = IAPU.PC - IAPU.RAM;
+   IAPU.Registers.PC = IAPU.PC - S9xAPURAM;
 #endif
 
    S9xPackStatus();
@@ -102,6 +108,7 @@ void S9xClearIRQ(uint32_t source)
 
 void S9xDoHBlankProcessing()
 {
+   snes_apu_flush();
    CPU.WaitCounter++;
    switch (CPU.WhichEvent)
    {
@@ -187,7 +194,7 @@ void S9xDoHBlankProcessing()
          APU.Timer [2] += 4;
          while (APU.Timer [2] >= APU.TimerTarget [2])
          {
-            IAPU.RAM [0xff] = (IAPU.RAM [0xff] + 1) & 0xf;
+            S9xAPURAM [0xff] = (S9xAPURAM [0xff] + 1) & 0xf;
             APU.Timer [2] -= APU.TimerTarget [2];
             IAPU.WaitCounter++;
             IAPU.APUExecuting = true;
@@ -200,7 +207,7 @@ void S9xDoHBlankProcessing()
             APU.Timer [0]++;
             if (APU.Timer [0] >= APU.TimerTarget [0])
             {
-               IAPU.RAM [0xfd] = (IAPU.RAM [0xfd] + 1) & 0xf;
+               S9xAPURAM [0xfd] = (S9xAPURAM [0xfd] + 1) & 0xf;
                APU.Timer [0] = 0;
                IAPU.WaitCounter++;
                IAPU.APUExecuting = true;
@@ -211,7 +218,7 @@ void S9xDoHBlankProcessing()
             APU.Timer [1]++;
             if (APU.Timer [1] >= APU.TimerTarget [1])
             {
-               IAPU.RAM [0xfe] = (IAPU.RAM [0xfe] + 1) & 0xf;
+               S9xAPURAM [0xfe] = (S9xAPURAM [0xfe] + 1) & 0xf;
                APU.Timer [1] = 0;
                IAPU.WaitCounter++;
                IAPU.APUExecuting = true;

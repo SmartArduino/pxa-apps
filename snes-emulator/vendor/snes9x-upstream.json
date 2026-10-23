@@ -6,6 +6,13 @@
     "Memory-backed borrowed ROM loader with writable mapping guard",
     "Freed sound allocations on shutdown; 128 KiB SRAM and portable S-RTC save suffix in adapter",
     "Bounded header scoring shifts; original unsupported enhancement chips rejected by adapter",
-    "Checked partial initialization allocations and avoided null ScreenColors pointer arithmetic"
+    "Checked partial initialization allocations and avoided null ScreenColors pointer arithmetic",
+    "Bounded SPC event synchronization retains original CPU boundaries, including idle hints, DMA and port wakeups",
+    "Cache tile raster depth and color-math scalars within pixel loops",
+    "Optional calibrated CPU/APU/PPU/DSP phase instrumentation; disabled in release builds",
+    "Preserve source bit depth in transparent tile cache entries, with VRAM-write invalidation tests",
+    "Fixed 64 KiB SPC backing with bounded direct-page offsets and snapshot-compatible RAM alias",
+    "Inline 65C816 dispatch generated from the five mode tables; no serialized dispatch IDs",
+    "Batch SPC catch-up during CPU shutdown, speed-hack waits and WAI with the original strict event boundary and mandatory first instruction"
   ]
 }

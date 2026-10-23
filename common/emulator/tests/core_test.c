@@ -17,13 +17,22 @@ int main(int argc,char **argv){
     for(unsigned mode=0;mode<3;++mode){
         if(mode){free(rom);rom=read_rom(argv[1],&size);}
         emu_core_set_indexed_output(mode==2);
+        /* PicoDrive randomizes the 68K power-on phase. Compare the same boot
+         * timing across render modes, including the first audible samples. */
+        srand(1);
         assert(!emu_core_load(rom,size));emu_core_set_audio_enabled(true);
-        uint32_t sound=0;uint64_t count=0;
+        uint32_t sound=0;uint64_t count=0;unsigned signal=0;
         for(unsigned frame=0;frame<180;++frame){
             emu_core_frame_render(frame>60?EMU_PAD_RIGHT|EMU_PAD_A:0,EMU_PAD_B,mode==0 || frame%3==0 || frame==179);
             size_t n;const int16_t *p=emu_core_audio(&n);assert(n<2048);count+=n;sound=emu_port_crc32(sound,p,n*4);
+            for(size_t i=0;i<n*2;++i)signal|=p[i]!=0;
             assert(EMU_VIDEO_WIDTH && EMU_VIDEO_HEIGHT && EMU_VIDEO_WIDTH<=EMU_MAX_SOURCE_WIDTH && EMU_VIDEO_HEIGHT<=EMU_MAX_SOURCE_HEIGHT);
         }
+#ifdef EMU_TEST_AUDIO_SIGNAL
+        /* The PSG diagnostic emits a tone. Equal CRCs of silent buffers must
+         * not pass an audio lifecycle/skip regression. */
+        assert(signal);
+#endif
         uint32_t screen=0;const uint16_t *pixels=emu_core_video();assert(pixels);
         for(unsigned y=0;y<EMU_VIDEO_HEIGHT;++y)screen=emu_port_crc32(screen,pixels+y*emu_core_info.stride,EMU_VIDEO_WIDTH*2u);
         if(!mode){video=screen;pcm=sound;samples=count;assert(samples>60000);assert(pixels[(EMU_VIDEO_HEIGHT/2)*emu_core_info.stride+EMU_VIDEO_WIDTH/2]==EMU_TEST_BLUE);}

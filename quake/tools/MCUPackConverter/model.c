@@ -283,7 +283,7 @@ void * Mod_LoadAliasSkinChunkTri (void * pin, int *pskinindex, int skinsize, dis
 		}
         if (coords[0].s == coords[1].s && coords[1].s == coords[2].s )
             if (coords[0].t == coords[1].t && coords[1].t == coords[2].t )
-                FIXME("Single Point Triangle!");
+                ; /* A uniform texel is a valid degenerate UV triangle. */
         addSkinTriangle(pin, skinwidth, coords);
         chunk_Align4();         //needed to prevent loading unaligned addresses which will result later in 8 cycles per byte memcpy penalty!
 
@@ -1143,9 +1143,9 @@ void* Mod_LoadAliasModel2 (model_t *mod, void *buffer, 	disk_aliashdr_t	*poldHea
         deltax += maxx - minx;
       }
         uint32_t todOffset = (byte *) tod - (byte *)pheader;
-        if (todOffset > 32767 * 4 || (todOffset & 3))
+        if (todOffset > 2097151 * 4 || (todOffset & 3))
         {
-            printf("todOffset > 32767 * 4 %u. OldHeader %p, offset &3 is %d\r\n", todOffset, poldHeader, todOffset & 3);
+            printf("todOffset > 2097151 * 4 %u. OldHeader %p, offset &3 is %d\r\n", todOffset, poldHeader, todOffset & 3);
             while (1) FIXME("OFFSET TOO BIG");
         }
         ptri[i].triangleOffsetDataPos = todOffset >> 2;     // word aligned

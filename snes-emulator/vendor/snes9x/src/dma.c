@@ -1,3 +1,4 @@
+#include "../../../apu_sync.h"
 #include "../../../rom_pager.h"
 /* This file is part of Snes9x. See LICENSE file. */
 
@@ -24,6 +25,7 @@ extern uint8_t* HDMABasePointers [8];
 /**********************************************************************************************/
 void S9xDoDMA(uint8_t Channel)
 {
+   snes_apu_flush();
    uint8_t Work;
    int32_t count;
    int32_t inc;

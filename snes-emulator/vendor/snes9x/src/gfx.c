@@ -2582,8 +2582,10 @@ static void RenderScreen(uint8_t* Screen, bool sub, bool force_no_add, uint8_t D
    }
 }
 
+#include "../../../snes_profile.h"
 void S9xUpdateScreen(void)
 {
+   SNES_PROFILE_SCOPE(SNES_PHASE_PPU);
    int32_t x2 = 1;
    uint32_t starty, endy, black;
 

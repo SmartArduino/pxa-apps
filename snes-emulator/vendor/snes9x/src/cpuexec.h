@@ -5,7 +5,7 @@
 
 typedef struct
 {
-   void (*S9xOpcode)(void);
+   uint16_t opcode;
 } SOpcodes;
 
 #include "ppu.h"

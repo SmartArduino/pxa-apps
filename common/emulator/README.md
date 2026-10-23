@@ -44,10 +44,13 @@ SDK 已有 FS `read-at`，C/C++ 均支持；复用该接口，不添加模拟器
 
 - ROM 直接借给内核，避免保留两份整 ROM。
 - SMS/GG 优先把原始索引画面和调色板同步借给 Host GameRender，直接转换并缩放到映射的双缓冲 Surface，避免中间 RGB565 转换与纹理上传；不支持该接口的 Host 自动使用 RGB565 路径。其他内核生成原生分辨率 RGB565，按需缩放到 Surface。获得 Surface 发生在内核绘制之后，避免运行中改变源分辨率时写越界。
-- 每个显示缓冲各保留源画面快照，只合成变化的行；按键隐藏时不因按钮状态改变强制重绘，额外快照内存不足时退化为完整绘制。LCD/DMA 与下一帧模拟可由 Host 重叠执行。
+- 每个显示缓冲各保留源画面快照，只合成变化的行；对齐的 RGB565 行按 32 位字比较，奇数步长保留通用路径。按键隐藏时不因按钮状态改变强制重绘，额外快照内存不足时退化为完整绘制。LCD/DMA 与下一帧模拟可由 Host 重叠执行。
+- PPU 绘制完成后若 Surface 暂无空闲缓冲，保留核心原图并在后续回调重试，不重新绘制、额外复制整帧或阻塞等待。暂停和打开游戏库会取消这张待提交图；恢复及分辨率变化仍重建显示缓存。
 - 音频使用有界 FIFO 与非阻塞写入，重采样保留跨块相位；屏幕绘制和写声音都不等待设备耗完数据。
 - 单个游戏机的 CPU/PPU/APU 有紧密的时序依赖，当前在同一客体线程中执行；不能随意分到多个线程。公共输出路径允许 Host 的 LCD 和音频任务并行工作。
-- CPU 时间债务与绘制成本分别计量。降低绘制频率时继续推进完整模拟帧，不用重置时间债务掩盖性能不足。
+- CPU 时间债务与绘制成本分别计量。降低绘制频率时继续推进完整模拟帧，不用重置时间债务掩盖性能不足。当 CPU/APU 自身已超过实时预算时，以实测绘制/跳帧成本约束显示间隔，避免欠帧反馈无限增加跳帧。用户指定的绘制间隔仍生效；增加显示机会可能降低模拟 Hz，二者必须分别报告。
+- 持续落后达到三次反馈后，可见帧预算从 70 ms 放宽到 90 ms，给 CPU/APU 留出更多时间；恢复跟上后自动收紧。快内核仍按原机时钟选择绘制频率。这是绘制成本预算，不保证所有游戏的实际显示帧率，验收须同时检查模拟 Hz、游戏提交与 LCD 完成计数。
+- 若单次绘制已达到 100 ms，且跳帧成本低于绘制的一半，保留至少一次纯模拟帧，避免过期的显示期限强制连续重绘。首次慢绘制也会允许采样跳帧成本；恢复到较快场景后自动退出此保护。CPU/APU 和时间债务继续完整推进。
 
 ## 构建与回归
 
@@ -67,7 +70,7 @@ ctest --test-dir "$out" --output-on-failure
 
 `tests/make_test_rom.py` 生成自行编写的诊断卡带，不包含商业游戏。内核测试检查加载/关闭、RGB565、PCM、跳帧及存档；前端测试检查独立双手柄、完整按钮、组合键和多点触摸。渲染测试覆盖动态高分辨率源、源/目标步长、双缓冲缓存和不同尺寸屏幕。地址及未定义行为检查可增加 `-DCMAKE_C_FLAGS='-fsanitize=address,undefined -fno-omit-frame-pointer -g'`。
 
-`emu_benchmark ROM frames draw_interval` 测量本机内核吞吐；该结果不代表 MCU 速度或 LCD 帧率。真实设备加载 ROM 后，可使用：
+`emu_benchmark ROM frames draw_interval` 测量本机内核吞吐；该结果不代表 MCU 速度或 LCD 帧率。测量程序使用固定的随机序列，保证原生与 Wasm 的复位初值一致，便于对照画面和 PCM 校验值；此随机源不进入应用包。真实设备加载 ROM 后，可使用：
 
 ```sh
 python3 local/pxa-apps/common/emulator/tests/device_perf.py \
@@ -75,7 +78,23 @@ python3 local/pxa-apps/common/emulator/tests/device_perf.py \
   --output local/artifacts/console-perf/$(date +%Y%m%d-%H%M%S) --seconds 32
 ```
 
+可选的 Clang PGO 在原生测试中收集执行计数，再用于 Guest 编译。原生配置增加
+`-DCMAKE_C_COMPILER=clang -DEMU_PGO_GENERATE=ON`，运行内核测试或
+`emu_benchmark` 时设置 `LLVM_PROFILE_FILE="$out/game-%p.profraw"`，再用
+`llvm-profdata merge "$out"/*.profraw -o "$out/core.profdata"` 合并。
+应覆盖多款游戏、实际操作及绘制/跳帧路径，计数分布不等于 MCU 上的耗时分布。
+原生正确性对照使用新的构建目录和 `-DEMU_PGO_PROFILE=/绝对路径/core.profdata`；
+打包时设置 `PXA_EMU_PGO_PROFILE=/绝对路径/core.profdata`。工具版本须与剖面格式兼容。
+更改核心控制流后应重新采集，过期的函数剖面会导致编译失败。
+
+PGO 默认关闭，不在设备包中加入计数器。剖面按内容摘要复制到构建目录，替换
+同一路径的剖面会使相关对象失效；打包时取消环境变量会恢复普通构建，允许复用
+原来的缓存目录。剖面、训练输入和构建输出均保留在 `local/artifacts/`。
+是否启用发布包须由原生图像/PCM 回归和同场景设备模拟 Hz、LCD 完成帧率决定。
+
 测量脚本识别 `EMU`、`GB`、`NES` 前缀及 ROM 缓存计数，分别记录 `EMU PERF` 的完成模拟帧与固件 `PERF START display` 的显示完成计数；画面提交数和光学面板刷新率不能代替这些数据。控制器注入只验证软件输入链路，不能称为机械按键测试。脚本最后发送 `INPUT CANCEL` 恢复物理 GPIO 上报。默认会注入方向与 A 键，启动前应选好允许自动操作的场景。
+
+`--minimum-display-fps N` 要求每个完整采样窗口的游戏提交 FPS 和整段 LCD 完成 FPS 都严格超过 N，失败返回非零状态。可加 `--display-window-seconds 10` 分段采集 LCD 完成计数，此时每个完整 LCD 窗口也必须通过，避免较快的片头掩盖后续慢场景。这样系统浮层增加的刷新不能单独满足游戏显示目标。该检查与是否达到平台标称模拟 Hz 的 `sustained` 判定独立。
 
 日志、ROM 输出、截图、跑分和报告均写到工作区被忽略的 `local/artifacts/<topic>/<timestamp>/`；不作为发行包资源或正式文档提交。
 

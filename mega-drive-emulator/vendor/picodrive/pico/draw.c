@@ -1549,7 +1549,24 @@ void FinalizeLine555(int sh, int line, struct PicoEState *est)
     if ((est->rendstatus & PDRAW_BORDER_32) && len < 320)
       pd += (320-len) / 2;
 #if 1
-    h_copy(pd, 320, ps, 320, len, f_pal);
+    /* Preserve per-scanline palette updates and shadow/highlight indices.
+     * The aligned path resolves four indices with one source access and two
+     * destination words. Keep the portable path for caller-supplied odd rows. */
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    if ((((uintptr_t)pd | (uintptr_t)ps) & 3u) == 0 && (len & 3) == 0) {
+      typedef uint32_t alias_word __attribute__((__may_alias__));
+      const alias_word *src = (const alias_word *)ps;
+      alias_word *dst = (alias_word *)pd;
+      for (int i = 0; i < len / 4; ++i) {
+        uint32_t indices = src[i];
+        dst[i * 2] = (uint32_t)pal[indices & 255u] |
+          ((uint32_t)pal[(indices >> 8) & 255u] << 16);
+        dst[i * 2 + 1] = (uint32_t)pal[(indices >> 16) & 255u] |
+          ((uint32_t)pal[indices >> 24] << 16);
+      }
+    } else
+#endif
+    { h_copy(pd, 320, ps, 320, len, f_pal); }
 #else
     extern void amips_clut(unsigned short *dst, unsigned char *src, unsigned short *pal, int count);
     extern void amips_clut_6bit(unsigned short *dst, unsigned char *src, unsigned short *pal, int count);

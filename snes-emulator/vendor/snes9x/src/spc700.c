@@ -1,3 +1,5 @@
+#include <limits.h>
+#include "../../../apu_sync.h"
 /* This file is part of Snes9x. See LICENSE file. */
 
 #ifndef USE_BLARGG_APU
@@ -10,35 +12,40 @@
 #include "cpuexec.h"
 #include "apu.h"
 
+/* The direct page is exactly RAM or RAM + 0x100. Keep that bounded
+ * offset explicit so AOT can prove all direct-page accesses are in RAM. */
+#define S9X_APU_DP (S9xAPURAM + (((uintptr_t)IAPU.DirectPage - \
+                                   (uintptr_t)S9xAPURAM) & 0x100u))
+
 static uint8_t S9xAPUGetByteZ(uint8_t Address)
 {
-   if (Address >= 0xf0 && IAPU.DirectPage == IAPU.RAM)
+   if (Address >= 0xf0 && IAPU.DirectPage == S9xAPURAM)
    {
       if (Address >= 0xf4 && Address <= 0xf7)
       {
          IAPU.WaitAddress2 = IAPU.WaitAddress1;
          IAPU.WaitAddress1 = IAPU.PC;
-         return IAPU.RAM [Address];
+         return S9xAPURAM [Address];
       }
       if (Address >= 0xfd)
       {
-         uint8_t t = IAPU.RAM [Address];
+         uint8_t t = S9xAPURAM [Address];
          IAPU.WaitAddress2 = IAPU.WaitAddress1;
          IAPU.WaitAddress1 = IAPU.PC;
-         IAPU.RAM [Address] = 0;
+         S9xAPURAM [Address] = 0;
          return t;
       }
       else if (Address == 0xf3)
          return S9xGetAPUDSP();
 
-      return IAPU.RAM [Address];
+      return S9xAPURAM [Address];
    }
-   return IAPU.DirectPage [Address];
+   return S9X_APU_DP[Address];
 }
 
 static void S9xAPUSetByteZ(uint8_t byte, uint8_t Address)
 {
-   if (Address >= 0xf0 && IAPU.DirectPage == IAPU.RAM)
+   if (Address >= 0xf0 && IAPU.DirectPage == S9xAPURAM)
    {
       if (Address == 0xf3)
          S9xSetAPUDSP(byte);
@@ -48,7 +55,7 @@ static void S9xAPUSetByteZ(uint8_t byte, uint8_t Address)
          S9xSetAPUControl(byte);
       else if (Address < 0xfd)
       {
-         IAPU.RAM [Address] = byte;
+         S9xAPURAM [Address] = byte;
          if (Address >= 0xfa)
          {
             if (byte == 0)
@@ -59,7 +66,7 @@ static void S9xAPUSetByteZ(uint8_t byte, uint8_t Address)
       }
    }
    else
-      IAPU.DirectPage [Address] = byte;
+      S9X_APU_DP[Address] = byte;
 }
 
 static uint8_t S9xAPUGetByte(uint32_t Address)
@@ -73,7 +80,7 @@ static uint8_t S9xAPUGetByte(uint32_t Address)
       return S9xGetAPUDSP();
 
    zero = (Address >= 0xfd && Address <= 0xff);
-   t    = IAPU.RAM [Address];
+   t    = S9xAPURAM [Address];
 
    if (zero || (Address >= 0xf4 && Address <= 0xf7))
    {
@@ -82,7 +89,7 @@ static uint8_t S9xAPUGetByte(uint32_t Address)
    }
 
    if(zero)
-      IAPU.RAM [Address] = 0;
+      S9xAPURAM [Address] = 0;
 
    return t;
 }
@@ -101,7 +108,7 @@ static void S9xAPUSetByte(uint8_t byte, uint32_t Address)
          S9xSetAPUControl(byte);
       else if (Address < 0xfd)
       {
-         IAPU.RAM [Address] = byte;
+         S9xAPURAM [Address] = byte;
          if (Address >= 0xfa)
          {
             if (byte == 0)
@@ -114,12 +121,12 @@ static void S9xAPUSetByte(uint8_t byte, uint32_t Address)
    else
    {
       if (Address < 0xffc0)
-         IAPU.RAM [Address] = byte;
+         S9xAPURAM [Address] = byte;
       else
       {
          APU.ExtraRAM [Address - 0xffc0] = byte;
          if (!APU.ShowROM)
-            IAPU.RAM [Address] = byte;
+            S9xAPURAM [Address] = byte;
       }
    }
 }
@@ -151,8 +158,8 @@ static void S9xAPUSetByte(uint8_t byte, uint32_t Address)
 
 #define TCALL(n) \
 {\
-    PushW (IAPU.PC - IAPU.RAM + 1); \
-    IAPU.PC = IAPU.RAM + S9xAPUGetByte(0xffc0 + ((15 - n) << 1)) + \
+    PushW (IAPU.PC - S9xAPURAM + 1); \
+    IAPU.PC = S9xAPURAM + S9xAPUGetByte(0xffc0 + ((15 - n) << 1)) + \
        (S9xAPUGetByte(0xffc1 + ((15 - n) << 1)) << 8); \
 }
 
@@ -211,51 +218,51 @@ static void S9xAPUSetByte(uint8_t byte, uint32_t Address)
     APUSetZN8 (b)
 
 #define Push(b) \
-    IAPU.RAM[0x100 + IAPU.Registers.S] = b; \
+    S9xAPURAM[0x100 + IAPU.Registers.S] = b; \
     IAPU.Registers.S--
 
 #define Pop(b) \
     IAPU.Registers.S++; \
-    (b) = IAPU.RAM[0x100 + IAPU.Registers.S]
+    (b) = S9xAPURAM[0x100 + IAPU.Registers.S]
 
 #ifdef FAST_LSB_WORD_ACCESS
 #define PushW(w) \
     if (IAPU.Registers.S == 0) \
     {\
-       IAPU.RAM[0x1ff] = (w); \
-       IAPU.RAM[0x100] = ((w) >> 8); \
+       S9xAPURAM[0x1ff] = (w); \
+       S9xAPURAM[0x100] = ((w) >> 8); \
     } \
     else \
-       *(uint16_t *) (IAPU.RAM + 0xff + IAPU.Registers.S) = w; \
+       *(uint16_t *) (S9xAPURAM + 0xff + IAPU.Registers.S) = w; \
     IAPU.Registers.S -= 2
 
 #define PopW(w) \
     IAPU.Registers.S += 2; \
     if (IAPU.Registers.S == 0) \
-       (w) = IAPU.RAM[0x1ff] | (IAPU.RAM[0x100] << 8); \
+       (w) = S9xAPURAM[0x1ff] | (S9xAPURAM[0x100] << 8); \
     else \
-       (w) = *(uint16_t *) (IAPU.RAM + 0xff + IAPU.Registers.S)
+       (w) = *(uint16_t *) (S9xAPURAM + 0xff + IAPU.Registers.S)
 #else
 #define PushW(w) \
-    IAPU.RAM[0xff + IAPU.Registers.S] = w; \
-    IAPU.RAM[0x100 + IAPU.Registers.S] = ((w) >> 8); \
+    S9xAPURAM[0xff + IAPU.Registers.S] = w; \
+    S9xAPURAM[0x100 + IAPU.Registers.S] = ((w) >> 8); \
     IAPU.Registers.S -= 2
 
 #define PopW(w) \
     IAPU.Registers.S += 2; \
     if(IAPU.Registers.S == 0) \
-       (w) = IAPU.RAM[0x1ff] | (IAPU.RAM[0x100] << 8); \
+       (w) = S9xAPURAM[0x1ff] | (S9xAPURAM[0x100] << 8); \
     else \
-       (w) = IAPU.RAM[0xff + IAPU.Registers.S] + (IAPU.RAM[0x100 + IAPU.Registers.S] << 8)
+       (w) = S9xAPURAM[0xff + IAPU.Registers.S] + (S9xAPURAM[0x100 + IAPU.Registers.S] << 8)
 #endif
 
 #define Relative() \
     Int8 = OP1; \
-    Int16 = (int16_t) (IAPU.PC + 2 - IAPU.RAM) + Int8;
+    Int16 = (int16_t) (IAPU.PC + 2 - S9xAPURAM) + Int8;
 
 #define Relative2() \
     Int8 = OP2; \
-    Int16 = (int16_t) (IAPU.PC + 3 - IAPU.RAM) + Int8;
+    Int16 = (int16_t) (IAPU.PC + 3 - S9xAPURAM) + Int8;
 
 #ifdef FAST_LSB_WORD_ACCESS
 #define IndexedXIndirect() \
@@ -279,8 +286,8 @@ static void S9xAPUSetByte(uint8_t byte, uint32_t Address)
     IAPU.Address = *(uint16_t *) (IAPU.DirectPage + OP1) + IAPU.Registers.YA.B.Y;
 #else
 #define IndexedXIndirect() \
-    IAPU.Address = IAPU.DirectPage[(OP1 + IAPU.Registers.X) & 0xff] + \
-       (IAPU.DirectPage[(OP1 + IAPU.Registers.X + 1) & 0xff] << 8);
+    IAPU.Address = S9X_APU_DP[(OP1 + IAPU.Registers.X) & 0xff] + \
+       (S9X_APU_DP[(OP1 + IAPU.Registers.X + 1) & 0xff] << 8);
 
 #define Absolute() \
     IAPU.Address = OP1 + (OP2 << 8);
@@ -297,8 +304,8 @@ static void S9xAPUSetByte(uint8_t byte, uint32_t Address)
     IAPU.Address &= 0x1fff;
 
 #define IndirectIndexedY() \
-    IAPU.Address = IAPU.DirectPage[OP1] + \
-       (IAPU.DirectPage[OP1 + 1] << 8) + \
+    IAPU.Address = S9X_APU_DP[OP1] + \
+       (S9X_APU_DP[OP1 + 1] << 8) + \
        IAPU.Registers.YA.B.Y;
 #endif
 
@@ -315,7 +322,7 @@ Work8 = OP1; \
 Relative2 (); \
 if (S9xAPUGetByteZ (Work8) & (1 << (b))) \
 { \
-    IAPU.PC = IAPU.RAM + (uint16_t) Int16; \
+    IAPU.PC = S9xAPURAM + (uint16_t) Int16; \
     APU.Cycles += IAPU.TwoCycles; \
 } \
 else \
@@ -326,14 +333,16 @@ Work8 = OP1; \
 Relative2 (); \
 if (!(S9xAPUGetByteZ (Work8) & (1 << (b)))) \
 { \
-    IAPU.PC = IAPU.RAM + (uint16_t) Int16; \
+    IAPU.PC = S9xAPURAM + (uint16_t) Int16; \
     APU.Cycles += IAPU.TwoCycles; \
 } \
 else \
     IAPU.PC += 3
 
-void APUExecute(void/*int32_t target_cycles*/)
+#include "../../../snes_profile.h"
+void APUExecute(bool batch, const long *target)
 {
+   SNES_PROFILE_SCOPE(SNES_PHASE_SPC);
    int8_t   Int8;
    int16_t  Int16;
    int32_t  Int32;
@@ -341,8 +350,13 @@ void APUExecute(void/*int32_t target_cycles*/)
    uint16_t Work16;
    uint32_t Work32;
 
-   // while (APU.Cycles <= target_cycles)
-   // {
+#ifdef PXA_SNES_EVENT_SYNC
+   bool replay=target==&snes_apu_checkpoint;
+#endif
+   do {
+#ifdef PXA_SNES_EVENT_SYNC
+      long instruction_start=APU.Cycles;
+#endif
       uint8_t opcode = *IAPU.PC;
 
       APU.Cycles += S9xAPUCycles[opcode];
@@ -429,19 +443,19 @@ void APUExecute(void/*int32_t target_cycles*/)
          IAPU.PC += 3;
          break;
       case 0x0F: /* BRK */
-         PushW(IAPU.PC + 1 - IAPU.RAM);
+         PushW(IAPU.PC + 1 - S9xAPURAM);
          S9xAPUPackStatus();
          Push(IAPU.Registers.P);
          APUSetBreak();
          APUClearInterrupt();
-         IAPU.PC = IAPU.RAM + S9xAPUGetByte(0xffde) + (S9xAPUGetByte(0xffdf) << 8);
+         IAPU.PC = S9xAPURAM + S9xAPUGetByte(0xffde) + (S9xAPUGetByte(0xffdf) << 8);
          break;
 
       case 0x10: /* BPL */
          Relative();
          if (!APUCheckNegative())
          {
-            IAPU.PC = IAPU.RAM + (uint16_t) Int16;
+            IAPU.PC = S9xAPURAM + (uint16_t) Int16;
             APU.Cycles += IAPU.TwoCycles;
             APUShutdown();
          }
@@ -524,12 +538,12 @@ void APUExecute(void/*int32_t target_cycles*/)
          break;
       case 0x1F: /* JMP (abs+X) */
          Absolute();
-         IAPU.PC = IAPU.RAM + S9xAPUGetByte(IAPU.Address + IAPU.Registers.X) + (S9xAPUGetByte(IAPU.Address + IAPU.Registers.X + 1) << 8);
+         IAPU.PC = S9xAPURAM + S9xAPUGetByte(IAPU.Address + IAPU.Registers.X) + (S9xAPUGetByte(IAPU.Address + IAPU.Registers.X + 1) << 8);
          break;
 
       case 0x20: /* CLRP */
          APUClearDirectPage();
-         IAPU.DirectPage = IAPU.RAM;
+         IAPU.DirectPage = S9xAPURAM;
          IAPU.PC++;
          break;
       case 0x21:
@@ -604,7 +618,7 @@ void APUExecute(void/*int32_t target_cycles*/)
          Relative2();
          if (S9xAPUGetByteZ(Work8) != IAPU.Registers.YA.B.A)
          {
-            IAPU.PC = IAPU.RAM + (uint16_t) Int16;
+            IAPU.PC = S9xAPURAM + (uint16_t) Int16;
             APU.Cycles += IAPU.TwoCycles;
             APUShutdown();
          }
@@ -613,14 +627,14 @@ void APUExecute(void/*int32_t target_cycles*/)
          break;
       case 0x2F: /* BRA */
          Relative();
-         IAPU.PC = IAPU.RAM + (uint16_t) Int16;
+         IAPU.PC = S9xAPURAM + (uint16_t) Int16;
          break;
 
       case 0x30: /* BMI */
          Relative();
          if (APUCheckNegative())
          {
-            IAPU.PC = IAPU.RAM + (uint16_t) Int16;
+            IAPU.PC = S9xAPURAM + (uint16_t) Int16;
             APU.Cycles += IAPU.TwoCycles;
             APUShutdown();
          }
@@ -703,13 +717,13 @@ void APUExecute(void/*int32_t target_cycles*/)
       case 0x3F:  /* CALL absolute */
          Absolute();
          /* 0xB6f for Star Fox 2 */
-         PushW(IAPU.PC + 3 - IAPU.RAM);
-         IAPU.PC = IAPU.RAM + IAPU.Address;
+         PushW(IAPU.PC + 3 - S9xAPURAM);
+         IAPU.PC = S9xAPURAM + IAPU.Address;
          break;
 
       case 0x40: /* SETP */
          APUSetDirectPage();
-         IAPU.DirectPage = IAPU.RAM + 0x100;
+         IAPU.DirectPage = S9xAPURAM + 0x100;
          IAPU.PC++;
          break;
       case 0x41:
@@ -789,15 +803,15 @@ void APUExecute(void/*int32_t target_cycles*/)
          break;
       case 0x4F: /* PCALL $XX */
          Work8 = OP1;
-         PushW(IAPU.PC + 2 - IAPU.RAM);
-         IAPU.PC = IAPU.RAM + 0xff00 + Work8;
+         PushW(IAPU.PC + 2 - S9xAPURAM);
+         IAPU.PC = S9xAPURAM + 0xff00 + Work8;
          break;
 
       case 0x50: /* BVC */
          Relative();
          if (!APUCheckOverflow())
          {
-            IAPU.PC = IAPU.RAM + (uint16_t) Int16;
+            IAPU.PC = S9xAPURAM + (uint16_t) Int16;
             APU.Cycles += IAPU.TwoCycles;
          }
          else
@@ -878,7 +892,7 @@ void APUExecute(void/*int32_t target_cycles*/)
          break;
       case 0x5F: /* JMP abs */
          Absolute();
-         IAPU.PC = IAPU.RAM + IAPU.Address;
+         IAPU.PC = S9xAPURAM + IAPU.Address;
          break;
 
       case 0x60: /* CLRC */
@@ -958,7 +972,7 @@ void APUExecute(void/*int32_t target_cycles*/)
          S9xAPUSetByteZ(W1, Work8);
          if (W1 != 0)
          {
-            IAPU.PC = IAPU.RAM + (uint16_t) Int16;
+            IAPU.PC = S9xAPURAM + (uint16_t) Int16;
             APU.Cycles += IAPU.TwoCycles;
          }
          else
@@ -966,14 +980,14 @@ void APUExecute(void/*int32_t target_cycles*/)
          break;
       case 0x6F: /* RET */
          PopW(IAPU.Registers.PC);
-         IAPU.PC = IAPU.RAM + IAPU.Registers.PC;
+         IAPU.PC = S9xAPURAM + IAPU.Registers.PC;
          break;
 
       case 0x70: /* BVS */
          Relative();
          if (APUCheckOverflow())
          {
-            IAPU.PC = IAPU.RAM + (uint16_t) Int16;
+            IAPU.PC = S9xAPURAM + (uint16_t) Int16;
             APU.Cycles += IAPU.TwoCycles;
          }
          else
@@ -1062,7 +1076,7 @@ void APUExecute(void/*int32_t target_cycles*/)
          Pop(IAPU.Registers.P);
          S9xAPUUnpackStatus();
          PopW(IAPU.Registers.PC);
-         IAPU.PC = IAPU.RAM + IAPU.Registers.PC;
+         IAPU.PC = S9xAPURAM + IAPU.Registers.PC;
          break;
 
       case 0x80: /* SETC */
@@ -1147,9 +1161,9 @@ void APUExecute(void/*int32_t target_cycles*/)
          Pop(IAPU.Registers.P);
          S9xAPUUnpackStatus();
          if (APUCheckDirectPage())
-            IAPU.DirectPage = IAPU.RAM + 0x100;
+            IAPU.DirectPage = S9xAPURAM + 0x100;
          else
-            IAPU.DirectPage = IAPU.RAM;
+            IAPU.DirectPage = S9xAPURAM;
          IAPU.PC++;
          break;
       case 0x8F: /* MOV dp,#00 */
@@ -1162,7 +1176,7 @@ void APUExecute(void/*int32_t target_cycles*/)
          Relative();
          if (!APUCheckCarry())
          {
-            IAPU.PC = IAPU.RAM + (uint16_t) Int16;
+            IAPU.PC = S9xAPURAM + (uint16_t) Int16;
             APU.Cycles += IAPU.TwoCycles;
             APUShutdown();
          }
@@ -1379,7 +1393,7 @@ void APUExecute(void/*int32_t target_cycles*/)
          Relative();
          if (APUCheckCarry())
          {
-            IAPU.PC = IAPU.RAM + (uint16_t) Int16;
+            IAPU.PC = S9xAPURAM + (uint16_t) Int16;
             APU.Cycles += IAPU.TwoCycles;
             APUShutdown();
          }
@@ -1550,7 +1564,7 @@ void APUExecute(void/*int32_t target_cycles*/)
          Relative();
          if (!APUCheckZero())
          {
-            IAPU.PC = IAPU.RAM + (uint16_t) Int16;
+            IAPU.PC = S9xAPURAM + (uint16_t) Int16;
             APU.Cycles += IAPU.TwoCycles;
             APUShutdown();
          }
@@ -1618,7 +1632,7 @@ void APUExecute(void/*int32_t target_cycles*/)
          Relative2();
          if (S9xAPUGetByteZ(Work8) != IAPU.Registers.YA.B.A)
          {
-            IAPU.PC = IAPU.RAM + (uint16_t) Int16;
+            IAPU.PC = S9xAPURAM + (uint16_t) Int16;
             APU.Cycles += IAPU.TwoCycles;
             APUShutdown();
          }
@@ -1719,7 +1733,7 @@ void APUExecute(void/*int32_t target_cycles*/)
          Relative();
          if (APUCheckZero())
          {
-            IAPU.PC = IAPU.RAM + (uint16_t) Int16;
+            IAPU.PC = S9xAPURAM + (uint16_t) Int16;
             APU.Cycles += IAPU.TwoCycles;
             APUShutdown();
          }
@@ -1793,7 +1807,7 @@ void APUExecute(void/*int32_t target_cycles*/)
          IAPU.Registers.YA.B.Y--;
          if (IAPU.Registers.YA.B.Y != 0)
          {
-            IAPU.PC = IAPU.RAM + (uint16_t) Int16;
+            IAPU.PC = S9xAPURAM + (uint16_t) Int16;
             APU.Cycles += IAPU.TwoCycles;
          }
          else
@@ -1805,6 +1819,31 @@ void APUExecute(void/*int32_t target_cycles*/)
          Settings.APUEnabled = false; /* re-enabled on next APU reset */
          break;
       }
-   // }
+#ifdef PXA_SNES_EVENT_SYNC
+      /* Preserve the final original CPU boundary after an SPC idle hint.
+       * A long catch-up must not keep running a sleeping SPC to the end. */
+      if(replay && !IAPU.APUExecuting){
+          snes_apu_checkpoint=snes_apu_idle_deadline(instruction_start);
+          replay=false;
+      }
+#endif
+      /* CPU shutdown uses a live CPU.Cycles pointer, including changes made
+       * by APUShutdown. Single stepping short-circuits the null target. */
+   } while (batch && APU.Cycles <= *target);
+}
+
+/* CPU event dispatch is suspended while the SPC catches up. SPC I/O may
+ * change CPU.Cycles but cannot reschedule CPU.NextEvent. The existing batch
+ * runner uses an inclusive boundary, so subtract one for the shutdown loop's
+ * strict comparison. Both paths retain its mandatory first instruction. */
+void APUExecuteUntilEvent(void)
+{
+   if (CPU.NextEvent == LONG_MIN)
+      APUExecute(false, NULL);
+   else
+   {
+      const long last_cycle = CPU.NextEvent - 1;
+      APUExecute(true, &last_cycle);
+   }
 }
 #endif

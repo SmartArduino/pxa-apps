@@ -19362,7 +19362,7 @@ RET(0)
 #endif
 	}
 	PRE_IO
-	if (ctx->reset_handler) ctx->reset_handler();
+	if (ctx->reset_handler) (PXA_SYNC_PC(), ctx->reset_handler());
 //	CPU->Reset_CallBack();
 	POST_IO
 RET(132)

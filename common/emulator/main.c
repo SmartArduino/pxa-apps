@@ -52,6 +52,8 @@ static unsigned menu_focus,menu_repeat_mode,menu_repeat_controller;
 static uint32_t menu_repeat_buttons;
 static uint64_t menu_repeat_at;
 static emu_pacer_t pacer;
+static unsigned render_pending;
+static uint64_t render_started,render_cost_us;
 static emu_controls_t controls;
 static emu_video_renderer_t video_renderer;
 static emu_audio_t audio_state;
@@ -429,6 +431,21 @@ static void paint(unsigned i, int game) {
     redraw = 0;
 }
 
+/* A completed PPU frame is expensive. If the display is still releasing its
+ * buffers, retain the core image until the next callback instead of rendering
+ * over it. No extra framebuffer/copy and no busy wait on the Host thread. */
+static int flush_rendered_frame(void) {
+    if(!render_pending)return 1;
+    int index=acquire();
+    if(index<0)return 0;
+    uint64_t began=micros();
+    paint((unsigned)index,1);
+    emu_pacer_drew(&pacer,render_started);
+    emu_pacer_observe(&pacer,1,render_cost_us+micros()-began);
+    render_pending=0;
+    return 1;
+}
+
 static int has_game_extension(const char *name, size_t size) {
     const char *ext=EMU_EXTENSIONS;
     while(*ext){
@@ -495,6 +512,7 @@ static void open_library(void) {
     count = page = selected = 0;
     scan_pending = 1;menu_focus=0;menu_repeat_buttons=0;menu_repeat_at=0;
     mode = MENU;
+    render_pending=0;
     redraw = 1;
     library_scan_source(0);
 }
@@ -536,7 +554,7 @@ static void game_ready(void) {
     if (!menu_dismiss()) { fail("Cannot dismiss menu"); return; }
     mode = PLAYING;
     release_input();
-    emu_schedule_reset(&schedule);emu_pacer_reset(&pacer);core_avg_us=0;clear_frames=3;
+    emu_schedule_reset(&schedule);emu_pacer_reset(&pacer);core_avg_us=0;clear_frames=3;render_pending=0;
     metric_at = micros();
     n_frames = n_present = skipped = cpu_us = paint_us = paint_frames = paint_pixels = audio_dropped = 0;
     tick_us = tick_count = 0;
@@ -731,6 +749,7 @@ static __attribute__((noinline)) void tick(uint64_t now) {
         }
         return;
     }
+    if(render_pending){flush_rendered_frame();return;}
     now = micros();
     emu_schedule_tick(&schedule, now, emu_core_rate());
     uint64_t started = micros();
@@ -760,8 +779,8 @@ static __attribute__((noinline)) void tick(uint64_t now) {
         ++n_frames;
         emu_schedule_step(&schedule);
         if(draw_due && index<0)index=acquire();
-        if (index >= 0) { paint(index, direct?2:1);emu_pacer_drew(&pacer,micros()); }
-        else ++skipped;
+        if (index >= 0) { paint(index, direct?2:1);emu_pacer_drew(&pacer,frame_started); }
+        else if(!draw_due)++skipped;
         if (audio) {
             EMU_PROFILE_SCOPE(EMU_PROFILE_OUTPUT);
             size_t frames = 0;
@@ -769,7 +788,11 @@ static __attribute__((noinline)) void tick(uint64_t now) {
             unsigned produced = emu_audio_convert(&audio_state, pcm, frames, pcm_out, EMU_AUDIO_OUT_MAX/audio_channels);
             enqueue_audio(pcm_out, produced * audio_channels);
         }
-        emu_pacer_observe(&pacer,index>=0,micros()-frame_started);
+        if(draw_due && index<0){
+            render_pending=1;render_started=frame_started;render_cost_us=micros()-frame_started;
+            break;
+        }
+        emu_pacer_observe(&pacer,draw_due,micros()-frame_started);
         if (micros() - started >= 24000) break;
     }
     uint64_t wall_now = micros();
@@ -807,6 +830,7 @@ static __attribute__((noinline)) void tick(uint64_t now) {
 
 static void pause_game(void) {
     mode = PAUSED;
+    render_pending=0;
     pause_selected = pause_top = 0;
     redraw = 1;
     release_input();

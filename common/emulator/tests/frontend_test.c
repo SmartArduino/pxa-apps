@@ -2,7 +2,27 @@
 #include "../main.c"
 #include <assert.h>
 int32_t pxa_call(uint32_t route,uint64_t token,const uint8_t *data,uint32_t size){(void)route;(void)token;(void)data;(void)size;return 0;}
-int32_t pxa_io(uint64_t handle,uint32_t operation,uint8_t *data,uint32_t size){(void)handle;(void)operation;(void)data;(void)size;return PXA_STATUS_WOULD_BLOCK;}
+static unsigned surface_ready,surface_presented;
+int32_t pxa_io(uint64_t handle,uint32_t operation,uint8_t *data,uint32_t size){
+ if(handle==123 && surface_ready){
+  if(operation==PXA_SURFACE_IO_ACQUIRE){assert(size==4);data[0]=0;return 4;}
+  if(operation==PXA_SURFACE_IO_PRESENT){assert(size==16);++surface_presented;return 16;}
+ }
+ return PXA_STATUS_WOULD_BLOCK;
+}
+static void test_pending_render(void){
+ surface=123;pending_buffer=-1;render_pending=1;render_started=1;render_cost_us=80000;
+ uint64_t old_frames=n_frames;
+ for(unsigned n=0;n<3;++n){tick(1);assert(render_pending && n_frames==old_frames && !surface_presented);}
+ frame_pixels=320*240;frame_bytes=frame_pixels*2;surface_stride=320;frames=calloc(2,frame_bytes);assert(frames);
+ emu_core_defaults();emu_video_init(&video_renderer,320,240,(emu_display_rect_t){0,0,320,240});
+ controls.controller_hidden=1;surface_ready=1;tick(1);
+ assert(!render_pending && n_frames==old_frames && surface_presented==1);
+ assert(flush_rendered_frame() && surface_presented==1);
+ render_pending=1;pause_game();assert(!render_pending);
+ free(frames);frames=NULL;emu_video_deinit(&video_renderer);surface=surface_ready=0;
+ mode=PLAYING;controls.controller_hidden=0;
+}
 static void controller(unsigned player,uint32_t buttons,unsigned connected){
  uint8_t data[32]={0},bytes[256];uint32_t length;
  pxa_store_u32(data,1);pxa_store_u32(data+4,1);pxa_store_u32(data+8,1);
@@ -24,6 +44,7 @@ static void menu_test_reset(void) {
 #include "library_contract.h"
 int main(void){
  emu_controls_init(&controls,320,240);mode=PLAYING;background=0;release_input();
+ test_pending_render();
  const uint32_t host[]={PXA_CONTROLLER_UP,PXA_CONTROLLER_DOWN,PXA_CONTROLLER_LEFT,PXA_CONTROLLER_RIGHT,
   PXA_CONTROLLER_A,PXA_CONTROLLER_B,PXA_CONTROLLER_X,PXA_CONTROLLER_Y,PXA_CONTROLLER_L,PXA_CONTROLLER_R,PXA_CONTROLLER_SELECT,PXA_CONTROLLER_START};
  const uint16_t game[]={EMU_PAD_UP,EMU_PAD_DOWN,EMU_PAD_LEFT,EMU_PAD_RIGHT,EMU_PAD_A,EMU_PAD_B,EMU_PAD_X,EMU_PAD_Y,EMU_PAD_L,EMU_PAD_R,EMU_PAD_SELECT,EMU_PAD_START};

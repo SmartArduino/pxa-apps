@@ -3,8 +3,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+/* Reset-time entropy must match across libc implementations when comparing
+ * native and Wasm PCM/video fingerprints. This affects the test executable
+ * only; the app retains its platform's random source. */
+static uint64_t benchmark_random_state;
+void srand(unsigned seed) { benchmark_random_state = (uint64_t)seed - 1; }
+int rand(void) {
+ benchmark_random_state = benchmark_random_state * UINT64_C(6364136223846793005) + 1;
+ return (int)(benchmark_random_state >> 33);
+}
 static uint64_t now(void){struct timespec t;clock_gettime(CLOCK_MONOTONIC,&t);return (uint64_t)t.tv_sec*1000000+t.tv_nsec/1000;}
+static void diagnostic_log(const char *line){fprintf(stderr,"%s\n",line);}
 int main(int argc,char **argv){
+ if(getenv("EMU_BENCH_LOG"))emu_core_set_log_sink(diagnostic_log);
  if(argc<2)return 2;FILE *f=fopen(argv[1],"rb");if(!f)return 2;fseek(f,0,SEEK_END);size_t size=ftell(f);rewind(f);uint8_t *rom=calloc(1,EMU_ROM_CAPACITY(size));if(!rom || fread(rom,1,size,f)!=size)return 2;fclose(f);
  const char *error=emu_core_load(rom,size);if(error){fprintf(stderr,"%s\n",error);return 1;}
  unsigned frames=argc>2?atoi(argv[2]):600,interval=argc>3?atoi(argv[3]):1;if(!frames || !interval)return 2;

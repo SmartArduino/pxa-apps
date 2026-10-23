@@ -1,6 +1,8 @@
 /* PXA memory-backed Snes9x adapter. Core license in vendor/snes9x/src/LICENSE. */
 #include "core.h"
 #include "rom_pager.h"
+#include "snes_profile.h"
+#include "apu_sync.h"
 #include "vendor/snes9x/snes9x.h"
 #include <string.h>
 #include <stdlib.h>
@@ -42,6 +44,7 @@ const char *emu_core_validate(const uint8_t *rom,size_t size){
     return NULL;
 }
 void emu_core_close(void){
+    snes_apu_reset();
     if(gfx_ready)S9xDeinitGFX();
     if(sound_ready)S9xDeinitSound();
     if(apu_ready)S9xDeinitAPU();
@@ -78,7 +81,7 @@ static const char *load_cartridge(uint8_t *rom,size_t size,const rom_source_t *s
     snprintf(emu_core_info.title,sizeof(emu_core_info.title),"%s",Memory.ROMName);
     ram_bytes=Memory.SRAMSize && Memory.SRAMSize<16?((size_t)1024<<Memory.SRAMSize):0;
     if(ram_bytes>SRAM_SIZE)ram_bytes=SRAM_SIZE;
-    loaded=true;return NULL;
+    snes_profile_reset();loaded=true;return NULL;
 }
 const char *emu_core_load(uint8_t *rom,size_t size){return load_cartridge(rom,size,NULL,0);}
 const char *emu_core_load_source(const rom_source_t *source,size_t budget){
@@ -89,7 +92,7 @@ const char *emu_core_load_source(const rom_source_t *source,size_t budget){
 void emu_core_set_audio_enabled(bool value){enabled=value;}
 void emu_core_frame_render(uint16_t p1,uint16_t p2,bool draw){
     if(!loaded)return;pads[0]=p1;pads[1]=p2;IPPU.RenderThisFrame=draw;
-    S9xMainLoop();
+    {SNES_PROFILE_SCOPE(SNES_PHASE_MAIN);S9xMainLoop();}
     if(draw){
         unsigned w=IPPU.RenderedScreenWidth,h=IPPU.RenderedScreenHeight;
         if(w && h && w<=512 && h<=512){emu_core_info.width=w;emu_core_info.height=h;emu_core_info.stride=512;}
@@ -98,7 +101,8 @@ void emu_core_frame_render(uint16_t p1,uint16_t p2,bool draw){
     audio_frames=sample_phase/EMU_CLOCK_HZ;sample_phase%=EMU_CLOCK_HZ;
     if(audio_frames>2048)audio_frames=2048;
     /* Mixing also advances envelopes and echo; muting only discards output. */
-    S9xMixSamples(pcm,(int32_t)audio_frames*2);
+    {SNES_PROFILE_SCOPE(SNES_PHASE_MIX);S9xMixSamples(pcm,(int32_t)audio_frames*2);}
+    snes_profile_frame();
 }
 const uint16_t *emu_core_video(void){return (const uint16_t *)color_buffers;}
 const int16_t *emu_core_audio(size_t *frames){if(frames)*frames=loaded&&enabled?audio_frames:0;return pcm;}

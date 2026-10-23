@@ -53,9 +53,12 @@ int main(int argc,char **argv){
     assert(argc==2);FILE *f=fopen(argv[1],"rb");assert(f);fseek(f,0,SEEK_END);size_t n=ftell(f);rewind(f);
     uint8_t *data=calloc(1,EMU_ROM_CAPACITY(n));assert(data && fread(data,1,n,f)==n);fclose(f);
     image_t image={data,n,0,0};rom_source_t source={&image,read_image,n,rom_crc32(0,data,n)};
+    /* Keep PicoDrive's randomized power-on DMA phase identical on each boot. */
+    srand(1);
     assert(!emu_core_load(data,n));emu_core_set_audio_enabled(true);uint32_t expected=run();emu_core_close();
     /* MD's resident adapter transforms its borrowed bytes. Reload pristine. */
     f=fopen(argv[1],"rb");assert(f && fread(data,1,n,f)==n);fclose(f);
+    srand(1);
     const char *error=emu_core_load_source(&source,256*1024);
     if(error){fprintf(stderr,"paging load: %s\n",error);return 2;}
     emu_core_set_audio_enabled(true);assert(run()==expected);assert(!emu_core_rom_cache()->error);
@@ -117,6 +120,7 @@ int main(int argc,char **argv){
     f=fopen(argv[1],"rb");assert(f && fread(plain,1,n,f)==n);fclose(f);
     for(size_t at=0;at<n;at+=16384)for(unsigned i=0;i<8192;++i){data[512+at+i]=plain[at+2*i+1];data[512+at+8192+i]=plain[at+2*i];}
     image=(image_t){data,n+512,0,0};source=(rom_source_t){&image,read_image,n+512,rom_crc32(0,data,n+512)};
+    srand(1);
     assert(!emu_core_load_source(&source,512*1024));emu_core_set_audio_enabled(true);assert(run()==expected);
     emu_core_close();free(data);
     size_t large_size=8u*1024*1024;data=malloc(large_size);assert(data);

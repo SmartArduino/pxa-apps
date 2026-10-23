@@ -67,7 +67,7 @@ extern "C" {
 
 #define PICODRIVE_HACKS			1
 #define CZ80_LITTLE_ENDIAN		CPU_IS_LE
-#define CZ80_USE_JUMPTABLE		1
+#define CZ80_USE_JUMPTABLE		0
 #define CZ80_BIG_FLAGS_ARRAY		1
 //#ifdef BUILD_CPS1PSP
 //#define CZ80_ENCRYPTED_ROM		1

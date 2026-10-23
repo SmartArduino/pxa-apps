@@ -377,10 +377,10 @@ typedef struct mtriangle_s {
 #endif
 	uint32_t				    facesfront : 1;
     uint32_t                    triangleSize :  13;                  //
-    uint32_t		     	    vertindex0:9;  // max 350 vertex. 512 is fine
-	uint32_t		     	    vertindex1:9;
-    uint32_t		     	    vertindex2:9;
-    uint32_t                    triangleOffsetDataPos : 15;
+    uint32_t		     	    vertindex0:10;  // MCU format 3: up to 1024 vertices
+	uint32_t		     	    vertindex1:10;
+    uint32_t		     	    vertindex2:10;
+    uint32_t                    triangleOffsetDataPos :21;
     uint32_t                    triangleOffsetNumber : 8;      //how many colums the triangle has.
 	#endif
 } mtriangle_t;
@@ -944,10 +944,10 @@ typedef struct mtriangle_s {
 
 	uint32_t				    facesfront : 1;
     uint32_t                    triangleSize :  13;                  //
-    uint32_t		     	    vertindex0:9;  // max 350 vertex. 512 is fine
-	uint32_t		     	    vertindex1:9;
-    uint32_t		     	    vertindex2:9;
-    uint32_t                    triangleOffsetDataPos : 15;
+    uint32_t		     	    vertindex0:10;  // MCU format 3: up to 1024 vertices
+	uint32_t		     	    vertindex1:10;
+    uint32_t		     	    vertindex2:10;
+    uint32_t                    triangleOffsetDataPos :21;
     uint32_t                    triangleOffsetNumber : 8;      //how many columns the triangle has.
 #if MTRIANGLE_HAS_OFFSET_DATA
     uint16_t                    offsetS;
