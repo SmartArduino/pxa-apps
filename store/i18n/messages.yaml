@@ -430,7 +430,7 @@ messages:
     context: Device account and shared application likes
     max_bytes: 64
   account.open:
-    source: Open this address on your phone, sign in and enter the code:
+    source: "Open this address on your phone, sign in and enter the code:"
     context: Device account and shared application likes
     max_bytes: 192
   account.waiting:
