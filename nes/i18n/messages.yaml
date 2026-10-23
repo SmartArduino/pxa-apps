@@ -78,11 +78,11 @@ messages:
     context: NES ui pack menu label
     max_bytes: 112
   ui.flash:
-    source: "FLASH"
+    source: "Imported"
     context: NES ui flash menu label
     max_bytes: 112
   ui.sd:
-    source: "SD"
+    source: "App media"
     context: NES ui sd menu label
     max_bytes: 112
   ui.prev:
@@ -210,7 +210,7 @@ messages:
     context: NES library and snapshot actions
     max_bytes: 112
   ui.sd.path:
-    source: "SD card folder:"
+    source: "App media folder:"
     context: NES library and snapshot actions
     max_bytes: 112
 

@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-game-boy",
-  "version": "0.1.58",
-  "release_sequence": 59,
+  "version": "0.1.59",
+  "release_sequence": 60,
   "name": "GB/GBC Emulator",
   "description": "Game Boy and Game Boy Color emulator with SD/flash ROM library, audio and touch or gamepad controls",
   "build": {

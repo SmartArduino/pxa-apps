@@ -1,7 +1,7 @@
 locale: zh
 metadata:
   name: NES模拟器
-  description: 支持 SD 卡与存储游戏、声音和手柄的红白机模拟器
+  description: 支持应用资源与导入游戏、声音和手柄的红白机模拟器
 translations:
   ui.title: "NES模拟器"
   ui.paused: "游戏已暂停"
@@ -22,8 +22,8 @@ translations:
   ui.error.retry: "返回游戏库后重新选择"
   ui.back.library: "返回游戏库"
   ui.pack: "内置"
-  ui.flash: "存储"
-  ui.sd: "SD 卡"
+  ui.flash: "导入目录"
+  ui.sd: "应用资源"
   ui.prev: "上一页"
   ui.next: "下一页"
   ui.refresh: "刷新"
@@ -54,4 +54,4 @@ translations:
   ui.exit.back: "请按系统返回键退出"
   ui.empty.help: "放入 .nes 游戏后刷新"
   ui.flash.path: "存储：应用私有目录下"
-  ui.sd.path: "SD 卡目录："
+  ui.sd.path: "应用资源目录："

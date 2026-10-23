@@ -78,11 +78,11 @@ messages:
     context: Game Boy ui pack menu label
     max_bytes: 112
   ui.flash:
-    source: "FLASH"
+    source: "Imported"
     context: Game Boy ui flash menu label
     max_bytes: 112
   ui.sd:
-    source: "SD"
+    source: "App media"
     context: Game Boy ui sd menu label
     max_bytes: 112
   ui.prev:
@@ -160,7 +160,7 @@ messages:
     context: Game Boy library actions
     max_bytes: 112
   ui.sd.path:
-    source: "SD card folder:"
+    source: "App media folder:"
     context: Game Boy library actions
     max_bytes: 112
   ui.scale.native:
