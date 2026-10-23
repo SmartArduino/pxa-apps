@@ -165,6 +165,7 @@ static void store_ui_command_failed(unsigned opcode, int status) {
 #define NODE_DETAIL_SECTION_STRIDE 4u
 #define NODE_DETAIL_ROW_BASE 1000u
 #define NODE_DETAIL_ROW_STRIDE 4u
+#define NODE_SORT_BASE 1640u
 #define NODE_TECHNICAL 1600u
 #define NODE_TECHNICAL_LABEL 1601u
 #define NODE_GALLERY 1610u
@@ -281,6 +282,7 @@ typedef struct {
     uint8_t display_shape;
     uint8_t kind_index;
     uint8_t catalog_kind;
+    uint8_t sort_index;
     int16_t category_entry;
     uint32_t pending_request;
     uint32_t safe_insets[4];
@@ -1029,6 +1031,10 @@ static int create_filters(pxa_ui_transaction_t *transaction) {
                                         m->chip_height) / 2)) ||
         !pxa_ui_set_dp(transaction, NODE_FILTERS, PXA_UI_PROPERTY_GAP, m->chip_gap))
         return 0;
+    const uint32_t sort_labels[] = {PXA_MSG_SORT_UPDATED, PXA_MSG_SORT_DOWNLOADS, PXA_MSG_SORT_NAME};
+    for (uint8_t order = 0; order < 3; ++order)
+        if (!create_chip(transaction, NODE_SORT_BASE + order * NODE_CHIP_STRIDE,
+                         message(sort_labels[order]), app.sort_index == order)) return 0;
     if (!create_chip(transaction, NODE_CATEGORY_ALL,
                      message(PXA_MSG_FILTER_ALL),
                      (uint8_t)(app.category_entry < 0)))
@@ -3141,11 +3147,12 @@ static int start_catalog_fetch(void) {
     app.busy = 1;
     app.state = STORE_LOADING;
     app.pending_request = STORE_REQUEST_CATALOG;
+    static const char *const sorts[] = {"updated", "downloads", "name"};
     if (!store_client_build_catalog_url(app.url, sizeof(app.url),
                                         app.profile,
                                         app.device_id, app.request_cursor,
                                         app.query, selected_kind_value(),
-                                        selected_category_value(),
+                                        selected_category_value(), sorts[app.sort_index],
                                         catalog_page_size()))
         return 0;
     // Include taxonomy and UTF-8 summaries when budgeting the first page;
@@ -4275,6 +4282,7 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         if (ui_event.node == NODE_LIST || ui_event.node == NODE_FILTERS ||
             ui_event.node == NODE_GALLERY_IMAGE ||
             ui_event.node == NODE_CATEGORY_ALL ||
+            (ui_event.node >= NODE_SORT_BASE && ui_event.node < NODE_SORT_BASE + 3 * NODE_CHIP_STRIDE) ||
             (ui_event.node >= NODE_CATEGORY_BASE &&
              ui_event.node < NODE_CATEGORY_BASE +
                               STORE_MAX_TAXONOMY * NODE_CHIP_STRIDE) ||
@@ -4353,6 +4361,13 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         app.catalog_kind = requested_kind;
         if (!select_kind(next)) return PXA_EVENT_HANDLED;
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+    }
+    if (ui_event.node >= NODE_SORT_BASE && ui_event.node < NODE_SORT_BASE + 3 * NODE_CHIP_STRIDE &&
+        (ui_event.node - NODE_SORT_BASE) % NODE_CHIP_STRIDE == 0) {
+        uint8_t order = (uint8_t)((ui_event.node - NODE_SORT_BASE) / NODE_CHIP_STRIDE);
+        if (app.sort_index == order) return PXA_EVENT_HANDLED;
+        app.sort_index = order;
+        return restart_catalog(app.query) && render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
     if (ui_event.node == NODE_CATEGORY_ALL) {
         if (app.category_entry < 0) return PXA_EVENT_HANDLED;

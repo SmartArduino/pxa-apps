@@ -169,7 +169,7 @@ int store_client_build_catalog_url(char *output, size_t capacity,
                                    const char *profile,
                                    const char *device_id, uint64_t cursor,
                                    const char *query, const char *kind,
-                                   const char *category, uint8_t page_size) {
+                                   const char *category, const char *sort, uint8_t page_size) {
     size_t offset = 0;
     if (output == NULL || capacity == 0 || capacity > STORE_URL_CAPACITY ||
         profile == NULL || profile[0] == '\0' ||
@@ -184,6 +184,11 @@ int store_client_build_catalog_url(char *output, size_t capacity,
         !append_text(output, capacity, &offset, "&view=compact&page_size=") ||
         !append_u64(output, capacity, &offset, page_size))
         return 0;
+    if (sort != NULL && sort[0] != '\0') {
+        if (!same_text(sort, "updated") && !same_text(sort, "downloads") && !same_text(sort, "name")) return 0;
+        if (!append_text(output, capacity, &offset, "&sort=") ||
+            !append_query_value(output, capacity, &offset, sort)) return 0;
+    }
     if (kind != NULL && kind[0] != '\0') {
         if (!append_text(output, capacity, &offset, "&kind=") ||
             !append_query_value(output, capacity, &offset, kind))

@@ -1,20 +1,20 @@
 {
-  "format": "pxa-package-source-0.1",
+  "format": "pxa-package-source-0.2",
   "min_sdk": [
     2,
-    0
+    1
   ],
   "target_sdk": [
     2,
-    0
+    1
   ],
   "compile_sdk": [
     2,
-    0
+    1
   ],
   "id": "pxa-nes",
-  "version": "0.1.42",
-  "release_sequence": 48,
+  "version": "0.1.43",
+  "release_sequence": 49,
   "name": "NES Emulator",
   "description": "NES emulator with SD/flash ROM library, audio, controllers and independent frame skipping",
   "build": {
@@ -96,5 +96,8 @@
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
+  },
+  "resources": {
+    "manifest_sha256": "8fd4d67221cc6196439b8366a6e682f3159124e0f23d27ade11b2e189cddb8d1"
   }
 }

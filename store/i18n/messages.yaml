@@ -18,8 +18,8 @@ messages:
     context: Accessible label for the screenshot zoom control
     max_bytes: 128
   action.filters:
-    source: Filter
-    context: Show or hide category filters
+    source: Sort
+    context: Show or hide sorting and category filters
     max_bytes: 32
   action.retry:
     source: Retry
@@ -369,3 +369,15 @@ messages:
     source: Installation cancelled or not permitted
     context: Host denied installation or the user declined the confirmation
     max_bytes: 96
+  sort.updated:
+    source: Recently updated
+    context: Catalog sort option
+    max_bytes: 48
+  sort.downloads:
+    source: Downloads
+    context: Catalog sort option
+    max_bytes: 48
+  sort.name:
+    source: Name
+    context: Catalog sort option
+    max_bytes: 48

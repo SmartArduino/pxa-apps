@@ -74,7 +74,7 @@ int store_client_build_catalog_url(char *output, size_t capacity,
                                    const char *profile,
                                    const char *device_id, uint64_t cursor,
                                    const char *query, const char *kind,
-                                   const char *category, uint8_t page_size);
+                                   const char *category, const char *sort, uint8_t page_size);
 
 /* Builds "<origin>/api/v2/apps/<app_id>?..." for one catalog entry. */
 int store_client_build_app_url(char *output, size_t capacity,

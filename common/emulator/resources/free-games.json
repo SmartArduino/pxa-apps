@@ -1,0 +1,63 @@
+{
+  "schema": "pxa-free-games-1",
+  "applications": {
+    "game-boy-emulator": {
+      "id": "pxa-game-boy",
+      "title": "2048-gb",
+      "author": "Sanqui; tile graphics by beware; original 2048 by Gabriele Cirulli",
+      "license": "Zlib",
+      "project_url": "https://github.com/Sanqui/2048-gb",
+      "files": [
+        {
+          "path": "2048.gb",
+          "url": "https://sanqui.rustedlogic.net/etc/2048.gb",
+          "sha256": "3ea2376b15b34bd26b10e6b31d2753bf8b086098dbdb5ee84d9c0f03d66d3d7f",
+          "bytes": 32768
+        },
+        {
+          "path": "licenses/2048-gb.txt",
+          "url": "https://raw.githubusercontent.com/Sanqui/2048-gb/e44f94f/LICENSE",
+          "sha256": "5fb5689e87183044f677f61d2317327423f0c4018445914271ab89fca5d75ac2",
+          "bytes": 862
+        },
+        {
+          "path": "sources/2048-gb.tar.gz",
+          "url": "https://codeload.github.com/Sanqui/2048-gb/legacy.tar.gz/e44f94f",
+          "sha256": "e538ee43371d8c0c83555c4c0dedaf77cd9855d5b39572c790a4640d4a43aa5f",
+          "bytes": 15193
+        }
+      ],
+      "version": "2026.10.23.1",
+      "release_sequence": 1
+    },
+    "nes": {
+      "id": "pxa-nes",
+      "title": "Thwaite 0.04",
+      "author": "Damian Yerrick; additional music by Ludwig van Beethoven",
+      "license": "GPL-3.0-or-later",
+      "project_url": "https://github.com/pinobatch/thwaite-nes",
+      "files": [
+        {
+          "path": "Thwaite.nes",
+          "url": "https://github.com/pinobatch/thwaite-nes/releases/download/v0.04/thwaite.nes",
+          "sha256": "a2df24d9c9f72e56c2fdc4c703becc47a5700ad0158da8208247635ebeb3779c",
+          "bytes": 24592
+        },
+        {
+          "path": "licenses/thwaite.txt",
+          "url": "https://raw.githubusercontent.com/pinobatch/thwaite-nes/v0.04/LICENSE.txt",
+          "sha256": "589ed823e9a84c56feb95ac58e7cf384626b9cbf4fda2a907bc36e103de1bad2",
+          "bytes": 35141
+        },
+        {
+          "path": "sources/thwaite.tar.gz",
+          "url": "https://codeload.github.com/pinobatch/thwaite-nes/tar.gz/refs/tags/v0.04",
+          "sha256": "623abf3ede7a40b048a0e9ac9ec09b8dea035b63e4cbc9e2b2c70f35e3843bac",
+          "bytes": 119036
+        }
+      ],
+      "version": "2026.10.23.1",
+      "release_sequence": 1
+    }
+  }
+}

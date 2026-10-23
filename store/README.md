@@ -380,3 +380,9 @@ submit is attempted. The full signed-provider keyboard flow is also exercised
 with the production product simulator.
 
 作者显示绑定为可选能力：Host 同步拒绝或异步完成为 `UNAVAILABLE` / `UNSUPPORTED` 时，商城继续按完整签名身份安装；`DENIED`、格式或签名错误仍会中止。显示绑定不替代安装器的包签名、摘要与应用身份校验。
+
+Catalog sorting uses the same server ordering as the web store: `updated` (default),
+`downloads` (all release downloads), and `name`. Open the Sort control to choose an
+order or category. The numeric continuation is an application ID used as a keyset
+anchor in that order; a sort change resets pagination. Older clients omitting
+`sort` retain the device API's original ID order.

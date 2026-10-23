@@ -48,10 +48,12 @@ int main(void) {
     assert(strstr(url,"&lineage_root_key_id=17982acd08493944"));
     assert(!store_client_build_identity_url(url,sizeof(url),"p","pxa-nes","short",""));
     assert(!store_client_build_identity_url(url,100,"p","pxa-nes",root,""));
-    assert(store_client_build_catalog_url(url, sizeof(url), "esp32-s3-pxa-0.3.0", "", 0, "", "", "", 6));
+    assert(store_client_build_catalog_url(url, sizeof(url), "esp32-s3-pxa-0.3.0", "", 0, "", "", "", "downloads", 6));
     assert(strstr(url, "page_size=6") != NULL);
-    assert(!store_client_build_catalog_url(url, sizeof(url), "esp32-s3-pxa-0.3.0", "", 0, "", "", "", 0));
-    assert(!store_client_build_catalog_url(url, sizeof(url), "esp32-s3-pxa-0.3.0", "", 0, "", "", "", 13));
+    assert(strstr(url, "&sort=downloads") != NULL);
+    assert(!store_client_build_catalog_url(url, sizeof(url), "p", "", 0, "", "", "", "invalid", 6));
+    assert(!store_client_build_catalog_url(url, sizeof(url), "esp32-s3-pxa-0.3.0", "", 0, "", "", "", "updated", 0));
+    assert(!store_client_build_catalog_url(url, sizeof(url), "esp32-s3-pxa-0.3.0", "", 0, "", "", "", "name", 13));
     assert(store_json_parse_app_detail((const uint8_t *)detail,
                                        sizeof(detail) - 1u, &app));
     assert(strcmp(app.download_ticket_url, ticket) == 0);
