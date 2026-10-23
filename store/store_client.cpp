@@ -16,7 +16,7 @@
 // An immutable, verified Host baseline, independent of the App's SDK version.
 // Products with a newer verified baseline can override this build definition.
 #ifndef STORE_PROFILE_SUFFIX
-#define STORE_PROFILE_SUFFIX "-pxa-0.4.0"
+#define STORE_PROFILE_SUFFIX "-pxa-0.4.0-r3"
 #endif
 
 static const char device_permission_name[] = "device.identity";
@@ -57,7 +57,7 @@ int store_client_profile_for_device(char *output, size_t capacity,
            append_text(output, capacity, &offset,
              (installer_features & (PXA_STORE_CAP_RESOURCE_INSTALL | PXA_STORE_CAP_VOLUME_PLACEMENT)) ==
              (PXA_STORE_CAP_RESOURCE_INSTALL | PXA_STORE_CAP_VOLUME_PLACEMENT)
-             ? "-pxa-0.5.0" : STORE_PROFILE_SUFFIX);
+             ? "-pxa-0.5.0-r2" : STORE_PROFILE_SUFFIX);
 }
 
 static int append_text(char *output, size_t capacity, size_t *offset,

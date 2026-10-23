@@ -13,7 +13,7 @@
     0
   ],
   "id": "pxa-pinyin-ime-lite",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "name": "轻量拼音输入法",
   "description": "使用小字表逐字输入，支持九键、全键盘与中英文，适合资源较少的设备。没有完整版整词词库；安装后需在系统中选择输入法。",
   "build": {
@@ -66,5 +66,5 @@
       }
     }
   ],
-  "release_sequence": 2
+  "release_sequence": 3
 }

@@ -270,8 +270,8 @@ existing immutable generations can be reused. After transfer reaches 100%, the
 Store displays verification and installation while the Host finishes.
 
 The Store queries Host capabilities before choosing its catalog baseline:
-resource installation plus volume placement selects `*-pxa-0.5.0`; older Hosts
-retain `*-pxa-0.4.0`. Capability bits do not imply resource offline caching.
+resource installation plus volume placement selects `*-pxa-0.5.0-r2`; older Hosts
+retain `*-pxa-0.4.0-r3`. Capability bits do not imply resource offline caching.
 Resource-bundle DOWNLOAD currently returns UNSUPPORTED; cached code can be
 installed when its exact resources have already been prepared.
 

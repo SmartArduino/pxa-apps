@@ -2,19 +2,19 @@
   "format": "pxa-package-source-0.1",
   "min_sdk": [
     2,
-    0
+    1
   ],
   "target_sdk": [
     2,
-    0
+    1
   ],
   "compile_sdk": [
     2,
-    0
+    1
   ],
   "id": "pxa-weread",
-  "version": "0.1.0",
-  "release_sequence": 1,
+  "version": "0.1.1",
+  "release_sequence": 2,
   "name": "微信读书",
   "description": "PXA 原生微信读书客户端，独立扫码登录、书架与专注阅读。非腾讯官方客户端。",
   "build": {

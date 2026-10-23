@@ -13,8 +13,8 @@
     0
   ],
   "id": "pxa-novel-reader",
-  "version": "0.2.6",
-  "release_sequence": 10,
+  "version": "0.2.7",
+  "release_sequence": 11,
   "name": "书页阅读",
   "icon": "assets/icon.png",
   "description": "真实阅读网站站内搜索、完整分章目录，默认按需阅读不保存正文；支持离线下载、自定义 TXT/JSON/HTML 书源和自适应排版。",
