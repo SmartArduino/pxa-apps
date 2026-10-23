@@ -22,4 +22,19 @@ int main() {
     char tiny[2] = {'x', 'x'};
     store::format_package_size(tiny, 1409532);
     assert(tiny[1] == '\0');
+
+    store_app_t app{};
+    app.size = 3251965;
+    std::uint64_t total;
+    assert(store::package_download_size(app, total) && total == app.size);
+    app.requires_resources = 1;
+    assert(!store::package_download_size(app, total));
+    app.resource_size_known = 1;
+    app.resource_size = 81901993;
+    assert(store::package_download_size(app, total) && total == 85153958);
+    assert(app.size == 3251965); // Installer transport still authenticates only code.
+    store::format_package_size(output, total);
+    assert(std::strcmp(output, "81.21 MiB") == 0);
+    app.size = std::numeric_limits<std::uint64_t>::max();
+    assert(!store::package_download_size(app, total));
 }

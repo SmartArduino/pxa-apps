@@ -369,8 +369,10 @@ static void app_reset(store_app_t *app) {
     string_reset(app->target_sdk);
     string_reset(app->channel);
     app->size = 0;
+    app->resource_size = 0;
     app->release_sequence = 0;
     app->requires_resources = 0;
+    app->resource_size_known = 0;
     app->permission_count = 0;
     app->service_count = 0;
 }
@@ -641,6 +643,16 @@ static int parse_app(store_json_t *json, store_app_t *app,
                                   sizeof(app->channel))) return 0;
         } else if (text_equal(key, "size")) {
             if (!json_read_u64(&it.json, &app->size)) return 0;
+        } else if (text_equal(key, "resource_size")) {
+            uint8_t value;
+            if (!json_peek(&it.json, &value)) return 0;
+            if (value == 'n') {
+                if (!json_skip_value(&it.json, 1)) return 0;
+                app->resource_size_known = 0;
+            } else {
+                if (!json_read_u64(&it.json, &app->resource_size)) return 0;
+                app->resource_size_known = 1;
+            }
         } else if (text_equal(key, "release_sequence")) {
             if (!json_read_u64(&it.json, &app->release_sequence)) return 0;
         } else if (text_equal(key, "requires_resources")) {

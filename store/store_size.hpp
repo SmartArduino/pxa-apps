@@ -3,10 +3,11 @@
 #include <cstdint>
 #include <cstdio>
 #include <span>
+#include <limits>
+#include "store_model.h"
 
 namespace store {
 
-// The byte count is the complete downloaded .pxa container for this device.
 // Binary units are explicit; rounding must not silently truncate the download.
 inline void format_package_size(std::span<char> output, std::uint64_t bytes) {
     constexpr const char *units[] = {"KiB", "MiB", "GiB", "TiB"};
@@ -36,6 +37,17 @@ inline void format_package_size(std::span<char> output, std::uint64_t bytes) {
 inline void format_package_bytes(std::span<char> output, std::uint64_t bytes) {
     std::snprintf(output.data(), output.size(), "%llu B",
                   static_cast<unsigned long long>(bytes));
+}
+
+// Keep app.size as the code container's authenticated transport length.
+// A complete fresh download also includes its bound resource generation.
+inline bool package_download_size(const store_app_t &app, std::uint64_t &bytes) {
+    bytes = app.size;
+    if (!app.requires_resources) return true;
+    if (!app.resource_size_known || app.resource_size >
+        std::numeric_limits<std::uint64_t>::max() - app.size) return false;
+    bytes += app.resource_size;
+    return true;
 }
 
 } // namespace store

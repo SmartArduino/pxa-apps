@@ -27,6 +27,7 @@ static void store_ui_command_failed(unsigned opcode, int status) {
 #include "store_layout.h"
 #include "store_viewer.hpp"
 #include "store_size.hpp"
+#include "store_progress.hpp"
 #include <pxa/ui_wire.hpp>
 #include "store_media.hpp"
 #include <cstdlib>
@@ -140,6 +141,10 @@ static void store_ui_command_failed(unsigned opcode, int status) {
 #define NODE_LIBRARY_STATUS 87u
 #define NODE_LIBRARY_CHECK 88u
 #define NODE_LIBRARY_CHECK_LABEL 89u
+#define NODE_DOWNLOAD_STATUS 1650u
+#define NODE_DOWNLOAD_BYTES 1651u
+#define NODE_DOWNLOAD_TRACK 1652u
+#define NODE_DOWNLOAD_FILL 1653u
 #define NODE_LIBRARY_BASE 1100u
 #define NODE_LIBRARY_STRIDE 12u
 #define NODE_SUCCESS_OVERLAY 1500u
@@ -194,6 +199,7 @@ static void store_ui_command_failed(unsigned opcode, int status) {
 #define SECTION_PERMISSIONS 2u
 #define SECTION_SERVICES 3u
 #define SECTION_INSTALL 4u
+#define SECTION_DOWNLOAD_SIZE 5u
 
 #define ROW_VERSION 0u
 #define ROW_SIZE 1u
@@ -204,6 +210,8 @@ static void store_ui_command_failed(unsigned opcode, int status) {
 #define ROW_PROFILE 6u
 #define ROW_SDK 7u
 #define ROW_PLATFORMS 8u
+#define ROW_CODE_SIZE 9u
+#define ROW_RESOURCE_SIZE 10u
 
 #define ICON_REFRESH "\xef\x80\xa1"
 #define ICON_BACK "\xef\x81\x93"
@@ -239,7 +247,7 @@ typedef struct {
     uint8_t uninstall_feedback;
     uint8_t install_refresh;
     uint8_t downloading;
-    uint8_t progress_rendered;
+    uint8_t download_started;
     uint64_t downloaded_bytes;
     uint64_t download_total;
     uint8_t installed_count;
@@ -493,6 +501,12 @@ static void store_trace(const char *tag, uint32_t value) {
 
 static void format_size(char *output, size_t capacity, uint64_t bytes) {
     store::format_package_size({output, capacity}, bytes);
+}
+
+static void format_download_size(char *output, size_t capacity, const store_app_t *item) {
+    uint64_t bytes;
+    if (store::package_download_size(*item, bytes)) format_size(output, capacity, bytes);
+    else copy_text(output, capacity, "—");
 }
 
 /* Shows only the leading bytes of a long digest or key identifier. */
@@ -1180,11 +1194,16 @@ static int create_card(pxa_ui_transaction_t *transaction, uint8_t index) {
 
     if (item->size != 0) {
         char size[24];
-        format_size(size, sizeof(size), item->size);
+        format_download_size(size, sizeof(size), item);
         if (offset != 0)
             offset = append_text(app.scratch, sizeof(app.scratch), offset,
                                  " · ");
-        (void)append_text(app.scratch, sizeof(app.scratch), offset, size);
+        offset = append_text(app.scratch, sizeof(app.scratch), offset, size);
+        if (item->requires_resources) {
+            offset = append_text(app.scratch, sizeof(app.scratch), offset, " · ");
+            (void)append_text(app.scratch, sizeof(app.scratch), offset,
+                              message(PXA_MSG_DETAIL_INCLUDES_RESOURCES));
+        }
     }
     return pxa_ui_create(transaction, meta, info, 0, PXA_UI_NODE_TEXT) &&
            pxa_ui_set_length(transaction, meta, PXA_UI_PROPERTY_WIDTH,
@@ -1660,6 +1679,49 @@ static int create_library_row(pxa_ui_transaction_t *transaction,
                                                       tertiary, 2u));
 }
 
+static bool download_in_detail(void) {
+    char identity[130];
+    return app.downloading && item_identity(detail_item(), identity) &&
+           text_equal(identity, app.completed_identity);
+}
+
+static void download_progress_text(char *status, size_t status_capacity,
+                                   char *bytes, size_t bytes_capacity) {
+    const auto phase = store::download_phase(app.download_started,
+        app.downloaded_bytes, app.download_total, app.install_candidate.size);
+    const auto label = phase == store::DownloadPhase::waiting ? PXA_MSG_STATUS_INSTALL_CONFIRM :
+        phase == store::DownloadPhase::installing ? PXA_MSG_STATUS_INSTALLING :
+        phase == store::DownloadPhase::resources ? PXA_MSG_STATUS_DOWNLOAD_RESOURCES :
+                                                  PXA_MSG_STATUS_DOWNLOAD_PROGRAM;
+    size_t offset = append_text(status, status_capacity, 0, message(label));
+    if (app.download_total && phase != store::DownloadPhase::waiting) {
+        offset = append_text(status, status_capacity, offset, " · ");
+        offset = append_u64(status, status_capacity, offset,
+            store::download_percent(app.downloaded_bytes, app.download_total));
+        (void)append_text(status, status_capacity, offset, "%");
+    }
+    char received[32], total[32];
+    store::format_package_size(received, app.downloaded_bytes);
+    if (app.download_total) store::format_package_size(total, app.download_total);
+    else copy_text(total, sizeof(total), "—");
+    std::snprintf(bytes, bytes_capacity, "%s / %s", received, total);
+}
+
+static int create_download_bar(pxa_ui_transaction_t *tx, uint32_t parent,
+                                uint32_t track, uint32_t fill) {
+    return pxa_ui_create(tx, track, parent, 0, PXA_UI_NODE_BOX) &&
+        pxa_ui_set_length(tx, track, PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_FILL, 0) &&
+        pxa_ui_set_length(tx, track, PXA_UI_PROPERTY_HEIGHT, PXA_UI_LENGTH_PX, 5) &&
+        pxa_ui_set_dp(tx, track, PXA_UI_PROPERTY_RADIUS, 3) &&
+        pxa_ui_set_theme_color(tx, track, PXA_UI_PROPERTY_BACKGROUND, PXA_UI_THEME_BORDER) &&
+        pxa_ui_create(tx, fill, track, 0, PXA_UI_NODE_BOX) &&
+        pxa_ui_set_length(tx, fill, PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_PERCENT,
+            store::download_percent(app.downloaded_bytes, app.download_total)) &&
+        pxa_ui_set_length(tx, fill, PXA_UI_PROPERTY_HEIGHT, PXA_UI_LENGTH_PX, 5) &&
+        pxa_ui_set_dp(tx, fill, PXA_UI_PROPERTY_RADIUS, 3) &&
+        pxa_ui_set_theme_color(tx, fill, PXA_UI_PROPERTY_BACKGROUND, PXA_UI_THEME_PRIMARY);
+}
+
 static int render_library(void) {
     const store_metrics_t *m = metrics();
     const uint8_t installed = app.screen == STORE_SCREEN_INSTALLED;
@@ -1739,16 +1801,11 @@ static int render_library(void) {
         const char *action;
         const char *secondary = NULL;
         const char *tertiary = NULL;
-        char progress[64] = {0};
+        char progress[192] = {0};
         if (active && index == 0u) {
-            size_t offset = append_text(progress, sizeof(progress), 0,
-                message(app.download_total && app.downloaded_bytes >= app.download_total ?
-                        PXA_MSG_STATUS_INSTALLING : PXA_MSG_STATUS_DOWNLOADING));
-            offset = append_text(progress, sizeof(progress), offset, " · ");
-            offset = append_u64(progress, sizeof(progress), offset,
-                                app.download_total == 0u ? 0u :
-                                app.downloaded_bytes * 100u / app.download_total);
-            (void)append_text(progress, sizeof(progress), offset, "%");
+            char status[112], bytes[72];
+            download_progress_text(status, sizeof(status), bytes, sizeof(bytes));
+            std::snprintf(progress, sizeof(progress), "%s\n%s", status, bytes);
             name = app.completed_app_id;
             detail = progress;
             action = NULL;
@@ -1792,24 +1849,7 @@ static int render_library(void) {
                                 secondary, tertiary);
         if (ok && active && index == 0u) {
             uint32_t row = NODE_LIBRARY_BASE;
-            ok = pxa_ui_create(&transaction, row + 10u, row, 0, PXA_UI_NODE_BOX) &&
-                 pxa_ui_set_length(&transaction, row + 10u, PXA_UI_PROPERTY_WIDTH,
-                                   PXA_UI_LENGTH_FILL, 0) &&
-                 pxa_ui_set_length(&transaction, row + 10u, PXA_UI_PROPERTY_HEIGHT,
-                                   PXA_UI_LENGTH_PX, 5) &&
-                 pxa_ui_set_dp(&transaction, row + 10u, PXA_UI_PROPERTY_RADIUS, 3) &&
-                 pxa_ui_set_theme_color(&transaction, row + 10u,
-                                        PXA_UI_PROPERTY_BACKGROUND, PXA_UI_THEME_BORDER) &&
-                 pxa_ui_create(&transaction, row + 11u, row + 10u, 0, PXA_UI_NODE_BOX) &&
-                 pxa_ui_set_length(&transaction, row + 11u, PXA_UI_PROPERTY_WIDTH,
-                                   PXA_UI_LENGTH_PERCENT_Q16,
-                                   app.download_total == 0u ? 0 :
-                                   (int32_t)(app.downloaded_bytes * 100u / app.download_total)) &&
-                 pxa_ui_set_length(&transaction, row + 11u, PXA_UI_PROPERTY_HEIGHT,
-                                   PXA_UI_LENGTH_PX, 5) &&
-                 pxa_ui_set_dp(&transaction, row + 11u, PXA_UI_PROPERTY_RADIUS, 3) &&
-                 pxa_ui_set_theme_color(&transaction, row + 11u,
-                                        PXA_UI_PROPERTY_BACKGROUND, PXA_UI_THEME_PRIMARY);
+            ok = create_download_bar(&transaction, row, row + 10u, row + 11u);
         }
     }
     if (ok) ok = create_tabbar(&transaction, app.screen);
@@ -1818,41 +1858,31 @@ static int render_library(void) {
         return 0;
     }
     app.generation = next;
-    if (active)
-        app.progress_rendered = (uint8_t)(app.download_total == 0u ? 0u :
-            app.downloaded_bytes * 100u / app.download_total);
     return 1;
 }
 
 static int patch_download_progress(void) {
+    const bool detail = app.screen == STORE_SCREEN_DETAIL && download_in_detail();
+    if (!detail && app.screen != STORE_SCREEN_DOWNLOADS) return 1;
     pxa_ui_transaction_t transaction = {0};
-    uint32_t next = app.generation + 1u;
-    uint8_t percent = (uint8_t)(app.download_total == 0u ? 0u :
-        app.downloaded_bytes * 100u / app.download_total);
-    char progress[64];
-    size_t offset;
-    if (percent > 100u) percent = 100u;
-    if (percent == app.progress_rendered) return 1;
-    offset = append_text(progress, sizeof(progress), 0,
-                         message(percent == 100 ? PXA_MSG_STATUS_INSTALLING : PXA_MSG_STATUS_DOWNLOADING));
-    offset = append_text(progress, sizeof(progress), offset, " · ");
-    offset = append_u64(progress, sizeof(progress), offset, percent);
-    (void)append_text(progress, sizeof(progress), offset, "%");
-    if (next == 0 ||
-        !pxa_ui_transaction_begin(&transaction, next, PXA_UI_TRANSACTION_PATCH,
-                                  app.packet, sizeof(app.packet)))
-        return 0;
-    if (!pxa_ui_set_text(&transaction, NODE_LIBRARY_BASE + 2u, progress,
-                         string_length(progress)) ||
-        !pxa_ui_set_length(&transaction, NODE_LIBRARY_BASE + 11u,
-                            PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_PERCENT_Q16,
-                            percent) ||
-        !pxa_ui_transaction_commit(&transaction)) {
+    const uint32_t next = app.generation + 1u;
+    char status[112], bytes[72], progress[192];
+    download_progress_text(status, sizeof(status), bytes, sizeof(bytes));
+    std::snprintf(progress, sizeof(progress), "%s\n%s", status, bytes);
+    if (!next || !pxa_ui_transaction_begin(&transaction, next, PXA_UI_TRANSACTION_PATCH,
+                                           app.packet, sizeof(app.packet))) return 0;
+    bool ok = detail ?
+        pxa_ui_set_text(&transaction, NODE_DOWNLOAD_STATUS, status, string_length(status)) &&
+        pxa_ui_set_text(&transaction, NODE_DOWNLOAD_BYTES, bytes, string_length(bytes)) :
+        pxa_ui_set_text(&transaction, NODE_LIBRARY_BASE + 2u, progress, string_length(progress));
+    ok = ok && pxa_ui_set_length(&transaction,
+        detail ? NODE_DOWNLOAD_FILL : NODE_LIBRARY_BASE + 11u, PXA_UI_PROPERTY_WIDTH,
+        PXA_UI_LENGTH_PERCENT, store::download_percent(app.downloaded_bytes, app.download_total));
+    if (!ok || !pxa_ui_transaction_commit(&transaction)) {
         if (transaction.active) (void)pxa_ui_transaction_cancel(&transaction);
         return 0;
     }
     app.generation = next;
-    app.progress_rendered = percent;
     return 1;
 }
 
@@ -2093,13 +2123,30 @@ static void build_services_text(char *output, size_t capacity) {
     }
 }
 
-static void build_install_text(char *output, size_t capacity) {
+static void build_size_text(char *output, size_t capacity) {
     const store_app_t *item = detail_item();
     char size[24];
     size_t offset = 0;
     output[0] = '\0';
     format_size(size, sizeof(size), item->size);
+    offset = append_text(output, capacity, offset, message(PXA_MSG_DETAIL_CODE_SIZE));
+    offset = append_text(output, capacity, offset, ": ");
     offset = append_text(output, capacity, offset, size);
+    if (item->requires_resources) {
+        offset = append_text(output, capacity, offset, "\n");
+        offset = append_text(output, capacity, offset, message(PXA_MSG_DETAIL_RESOURCE_SIZE));
+        offset = append_text(output, capacity, offset, ": ");
+        if (item->resource_size_known) format_size(size, sizeof(size), item->resource_size);
+        else copy_text(size, sizeof(size), "—");
+        offset = append_text(output, capacity, offset, size);
+        offset = append_text(output, capacity, offset, "\n");
+        (void)append_text(output, capacity, offset, message(PXA_MSG_DETAIL_RESOURCE_REUSE));
+    }
+}
+
+static void build_install_text(char *output, size_t capacity) {
+    build_size_text(output, capacity);
+    size_t offset = string_length(output);
     offset = append_text(output, capacity, offset, "\n");
     offset = append_text(output, capacity, offset,
                          message(PXA_MSG_INSTALL_HOST_CONFIRM));
@@ -2253,7 +2300,7 @@ static int render_detail(void) {
                        8) &&
          pxa_ui_set_dp(&transaction, NODE_DETAIL_SCROLL,
                        PXA_UI_PROPERTY_SCROLL_POSITION, app.detail_scroll);
-    if (app.detail_state != STORE_READY || app.install_feedback) ok = ok &&
+    if (app.detail_state != STORE_READY || (app.install_feedback && !download_in_detail())) ok = ok &&
          pxa_ui_create(&transaction, NODE_DETAIL_STATUS, NODE_DETAIL_SCROLL, 0,
                        PXA_UI_NODE_TEXT) &&
          pxa_ui_set_length(&transaction, NODE_DETAIL_STATUS,
@@ -2267,10 +2314,10 @@ static int render_detail(void) {
                                 detail_status_color());
     /* Icon and release line; the header already carries the display name. */
     {
-        char hero_meta[64];
+        char hero_meta[96];
         char size_text[24];
         size_t offset;
-        format_size(size_text, sizeof(size_text), item->size);
+        format_download_size(size_text, sizeof(size_text), item);
         hero_meta[0] = '\0';
         offset = append_text(hero_meta, sizeof(hero_meta), 0, "v");
         offset = append_text(hero_meta, sizeof(hero_meta), offset,
@@ -2313,6 +2360,11 @@ static int render_detail(void) {
                                     PXA_UI_PROPERTY_FOREGROUND,
                                     PXA_UI_THEME_MUTED);
     }
+    if (ok && item->requires_resources) {
+        build_size_text(app.scratch, sizeof(app.scratch));
+        ok = create_section(&transaction, SECTION_DOWNLOAD_SIZE,
+                            message(PXA_MSG_DETAIL_SIZE), app.scratch, 0);
+    }
     ok = ok && create_gallery(&transaction);
     app.scratch[0] = '\0';
     (void)append_text(app.scratch, sizeof(app.scratch), 0, item->summary);
@@ -2329,7 +2381,7 @@ static int render_detail(void) {
         NODE_TECHNICAL_LABEL, NODE_DETAIL_SCROLL,
         message(app.technical_expanded ? PXA_MSG_DETAIL_LESS : PXA_MSG_DETAIL_TECHNICAL), 1);
     if (app.technical_expanded) {
-    store::format_package_bytes(size_text, item->size);
+    format_download_size(size_text, sizeof(size_text), item);
     sequence_text[0] = '\0';
     (void)append_u64(sequence_text, sizeof(sequence_text), 0,
                      item->release_sequence);
@@ -2344,8 +2396,16 @@ static int render_detail(void) {
     ok = ok && create_row(&transaction, ROW_VERSION,
                           message(PXA_MSG_DETAIL_VERSION), item->version) &&
          create_row(&transaction, ROW_SIZE, message(PXA_MSG_DETAIL_SIZE),
-                    size_text) &&
-         create_row(&transaction, ROW_CHANNEL, message(PXA_MSG_DETAIL_CHANNEL),
+                    size_text);
+    store::format_package_bytes(size_text, item->size);
+    ok = ok && create_row(&transaction, ROW_CODE_SIZE, message(PXA_MSG_DETAIL_CODE_SIZE), size_text);
+    if (item->requires_resources) {
+        if (item->resource_size_known) store::format_package_bytes(size_text, item->resource_size);
+        else copy_text(size_text, sizeof(size_text), "—");
+        ok = ok && create_row(&transaction, ROW_RESOURCE_SIZE,
+                              message(PXA_MSG_DETAIL_RESOURCE_SIZE), size_text);
+    }
+    ok = ok && create_row(&transaction, ROW_CHANNEL, message(PXA_MSG_DETAIL_CHANNEL),
                     item->channel) &&
          create_row(&transaction, ROW_SEQUENCE,
                     message(PXA_MSG_DETAIL_SEQUENCE), sequence_text) &&
@@ -2392,7 +2452,22 @@ static int render_detail(void) {
              pxa_ui_set_theme_color(&transaction, NODE_FOOTER,
                                     PXA_UI_PROPERTY_BACKGROUND,
                                     PXA_UI_THEME_BACKGROUND) &&
-             pxa_ui_create_typed(&transaction, NODE_INSTALL_BUTTON, NODE_FOOTER,
+             pxa_ui_set_dp(&transaction, NODE_FOOTER, PXA_UI_PROPERTY_GAP, 4);
+        if (ok && download_in_detail()) {
+            char status[112], bytes[72];
+            download_progress_text(status, sizeof(status), bytes, sizeof(bytes));
+            ok = pxa_ui_create(&transaction, NODE_DOWNLOAD_STATUS, NODE_FOOTER, 0, PXA_UI_NODE_TEXT) &&
+                 pxa_ui_set_length(&transaction, NODE_DOWNLOAD_STATUS, PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_FILL, 0) &&
+                 pxa_ui_set_text(&transaction, NODE_DOWNLOAD_STATUS, status, string_length(status)) &&
+                 pxa_ui_set_font_role(&transaction, NODE_DOWNLOAD_STATUS, PXA_UI_FONT_ROLE_CAPTION) &&
+                 pxa_ui_create(&transaction, NODE_DOWNLOAD_BYTES, NODE_FOOTER, 0, PXA_UI_NODE_TEXT) &&
+                 pxa_ui_set_length(&transaction, NODE_DOWNLOAD_BYTES, PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_FILL, 0) &&
+                 pxa_ui_set_text(&transaction, NODE_DOWNLOAD_BYTES, bytes, string_length(bytes)) &&
+                 pxa_ui_set_font_role(&transaction, NODE_DOWNLOAD_BYTES, PXA_UI_FONT_ROLE_CAPTION) &&
+                 pxa_ui_set_theme_color(&transaction, NODE_DOWNLOAD_BYTES, PXA_UI_PROPERTY_FOREGROUND, PXA_UI_THEME_MUTED) &&
+                 create_download_bar(&transaction, NODE_FOOTER, NODE_DOWNLOAD_TRACK, NODE_DOWNLOAD_FILL);
+        }
+        ok = ok && pxa_ui_create_typed(&transaction, NODE_INSTALL_BUTTON, NODE_FOOTER,
                                  0, PXA_UI_NODE_CONTROL,
                                  PXA_UI_CONTROL_BUTTON) &&
              pxa_ui_set_length(&transaction, NODE_INSTALL_BUTTON,
@@ -3516,7 +3591,8 @@ static int32_t submit_install_candidate(void) {
     if (status == PXA_STATUS_OK) {
         app.downloading = 1u;
         app.downloaded_bytes = 0u;
-        app.download_total = app.install_candidate.size;
+        app.download_total = 0u;
+        app.download_started = 0u;
     }
     else {
         char text[96];
@@ -4105,8 +4181,8 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
             app.downloading) {
             app.downloaded_bytes = received;
             app.download_total = total;
-            if (app.screen == STORE_SCREEN_DOWNLOADS)
-                return patch_download_progress() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+            app.download_started = 1u;
+            return patch_download_progress() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
         }
         return PXA_EVENT_HANDLED;
     }
@@ -4576,7 +4652,7 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         return PXA_EVENT_HANDLED;
     }
     if (ui_event.node == NODE_INSTALL_BUTTON) {
-        if (app.install_feedback == 1) return PXA_EVENT_HANDLED;
+        if (app.install_feedback == 1 || app.downloading) return PXA_EVENT_HANDLED;
         const store_app_t *item = detail_item();
         if (installed_for(item) != NULL && !has_update(item)) {
             launch_item(item);

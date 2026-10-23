@@ -58,7 +58,11 @@ translations:
   detail.permissions: 权限
   detail.services: 依赖服务
   detail.version: 版本
-  detail.size: .pxa 文件大小
+  detail.size: 下载大小
+  detail.code_size: 程序包
+  detail.resource_size: 资源包
+  detail.includes_resources: 含资源
+  detail.resource_reuse: 已安装资源可复用，实际下载可能更少。
   detail.channel: 渠道
   detail.sequence: 发布序号
   detail.publisher: 发布者
@@ -97,3 +101,6 @@ translations:
   sort.updated: 最近更新
   sort.downloads: 下载次数
   sort.name: 名称
+  status.install_confirm: 等待系统确认
+  status.download_program: 下载程序中
+  status.download_resources: 下载资源中

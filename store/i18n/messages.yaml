@@ -224,9 +224,25 @@ messages:
     context: Row label for the release version
     max_bytes: 24
   detail.size:
-    source: .pxa file size
-    context: Complete downloaded .pxa container size in bytes
+    source: Download size
+    context: Complete fresh download, including code and bound resources
     max_bytes: 32
+  detail.code_size:
+    source: Program package
+    context: Size of the signed executable package, excluding its resource package
+    max_bytes: 32
+  detail.resource_size:
+    source: Resource package
+    context: Size of the separate signed game or application resource package
+    max_bytes: 32
+  detail.includes_resources:
+    source: Includes resources
+    context: Short catalog size annotation for apps with a bound resource package
+    max_bytes: 32
+  detail.resource_reuse:
+    source: Installed resources may be reused. Actual downloads can be smaller.
+    context: Download estimate; the system decides whether resources can be reused
+    max_bytes: 128
   detail.channel:
     source: Channel
     context: Row label for the release channel
@@ -380,4 +396,16 @@ messages:
   sort.name:
     source: Name
     context: Catalog sort option
+    max_bytes: 48
+  status.install_confirm:
+    source: Waiting for system confirmation
+    context: Installer is checking metadata or waiting for the system dialog
+    max_bytes: 64
+  status.download_program:
+    source: Downloading program
+    context: Program bytes are being downloaded before any needed resource package
+    max_bytes: 48
+  status.download_resources:
+    source: Downloading resources
+    context: Program transfer is complete and the resource package is downloading
     max_bytes: 48

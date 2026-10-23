@@ -4,6 +4,7 @@
 
 #include "store_client.h"
 #include "store_json.h"
+#include "store_size.hpp"
 #include "pxa_store_installer.h"
 
 int main(void) {
@@ -58,6 +59,25 @@ int main(void) {
                                        sizeof(detail) - 1u, &app));
     assert(strcmp(app.download_ticket_url, ticket) == 0);
     assert(app.requires_resources);
+    uint64_t download_size;
+    assert(!app.resource_size_known && !store::package_download_size(app, download_size));
+    static const char with_resources[] =
+        "{\"payload\":{\"item\":{\"resource_size\":81901993,\"size\":3251965,"
+        "\"requires_resources\":true,\"download_size\":85153958}}}";
+    assert(store_json_parse_app_detail((const uint8_t *)with_resources,
+                                       sizeof(with_resources) - 1, &app));
+    assert(store::package_download_size(app, download_size) && download_size == 85153958);
+    assert(app.size == 3251965 && app.resource_size == 81901993);
+    static const char missing_resources[] =
+        "{\"payload\":{\"item\":{\"size\":3251965,\"requires_resources\":true,"
+        "\"resource_size\":null,\"download_size\":null}}}";
+    assert(store_json_parse_app_detail((const uint8_t *)missing_resources,
+                                       sizeof(missing_resources) - 1, &app));
+    assert(!store::package_download_size(app, download_size) && !app.resource_size_known);
+    static const char code_only[] = "{\"payload\":{\"item\":{\"size\":1234}}}";
+    assert(store_json_parse_app_detail((const uint8_t *)code_only, sizeof(code_only) - 1, &app));
+    assert(store::package_download_size(app, download_size) && download_size == 1234);
+    assert(!app.requires_resources && !app.resource_size_known && app.resource_size == 0);
     assert(store_client_profile_for_device(url, sizeof(url), "esp32-s31", "riscv32", "wamr", 3, 3));
     assert(strcmp(url, "esp32-s31-pxa-0.5.0-r2") == 0);
     assert(store_client_profile_for_device(url, sizeof(url), "esp32-s31", "riscv32", "wamr", 3, 1));

@@ -75,8 +75,10 @@ typedef struct {
     char target_sdk[16];
     char channel[8];
     uint64_t size;
+    uint64_t resource_size;
     uint64_t release_sequence;
     uint8_t requires_resources;
+    uint8_t resource_size_known;
     uint8_t permission_count;
     store_permission_t permissions[STORE_MAX_PERMISSIONS];
     uint8_t service_count;

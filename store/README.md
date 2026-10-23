@@ -211,6 +211,18 @@ loads the catalog.
 
 ## Installation
 
+Catalog cards and the detail header show the complete fresh download: the
+selected program container plus its bound resource container. Resource apps
+also show the program/resource breakdown and explain that already installed
+resources may be reused. All sizes use binary units; disk allocation and the
+actual transfer are decided by the Host's install plan.
+
+The parser keeps `size` as the program transport length for the installer and
+reads the additive `resource_size` display field. A missing or null resource
+size produces an unknown total, including with older servers; it never presents
+code-only bytes as the complete download of a resource-dependent app. Total
+addition is checked for overflow and uses no extra payload buffer.
+
 The detail parser retains the short-lived `download_ticket_url`. The
 `store_client_build_download_url` helper only accepts a same-origin artifact
 ticket with the expected route and query shape. The ticket is not a trust
@@ -386,3 +398,5 @@ Catalog sorting uses the same server ordering as the web store: `updated` (defau
 order or category. The numeric continuation is an application ID used as a keyset
 anchor in that order; a sort change resets pagination. Older clients omitting
 `sort` retain the device API's original ID order.
+
+安装时，详情页底部和下载页显示 Host 上报的已下载量、实际传输总量和百分比，区分程序与资源下载；传输完成后显示校验与安装状态。系统确认前不显示估算百分比。资源复用时，进度按 Host 的实际传输总量计算。进度事件仅局部更新文字和进度条，不重建页面或重新拉取资源。
