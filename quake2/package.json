@@ -1,21 +1,21 @@
 {
-  "format": "pxa-package-source-0.1",
+  "format": "pxa-package-source-0.2",
   "min_sdk": [
     2,
-    0
+    1
   ],
   "target_sdk": [
     2,
-    0
+    1
   ],
   "compile_sdk": [
     2,
-    0
+    1
   ],
   "id": "pxa-quake2",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "name": "Quake II",
-  "description": "Game engine with fixed SD resources and app-private saves",
+  "description": "Quake II engine with automatically installed original demo media and app-private saves",
   "build": {
     "system": "cmake",
     "source_dir": ".",
@@ -68,7 +68,10 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 200,
+  "release_sequence": 201,
+  "resources": {
+    "manifest_sha256": "9fe96ab12e6920cfdebd029125c79d9924102426bac13f1d220ac86a027b2492"
+  },
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"

@@ -1,0 +1,97 @@
+{
+  "format": "pxa-package-source-0.2",
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "id": "pxa-doom",
+  "version": "0.1.0",
+  "name": "DOOM",
+  "description": "DOOM episode one shareware with automatically installed original IWAD, touch and controller input",
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  },
+  "release_sequence": 1,
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 8388608,
+      "pinned": true
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "execution_model": "main-loop",
+      "artifact": "aot",
+      "services": [
+        "surface",
+        "clock",
+        "window",
+        "ui",
+        "log",
+        "permission",
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            10
+          ]
+        },
+        {
+          "name": "fs",
+          "min_version": [
+            0,
+            3
+          ],
+          "features": [
+            "app-media-root",
+            "read-at",
+            "scoped-roots"
+          ]
+        },
+        {
+          "name": "game-render",
+          "min_version": [
+            1,
+            2
+          ],
+          "features": [
+            "borrowed-indexed-blit"
+          ]
+        }
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "required": false,
+      "scope": "media"
+    }
+  ],
+  "resources": {
+    "manifest_sha256": "d33cebba3edd8284fe8bcf64a9c12ff49d3fda34155815dad2ea1adda170e8e1"
+  },
+  "icon": "assets/icon.png"
+}

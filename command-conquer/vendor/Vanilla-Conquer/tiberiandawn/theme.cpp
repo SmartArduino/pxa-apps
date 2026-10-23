@@ -195,8 +195,10 @@ void ThemeClass::AI(void)
             **	Start the song playing and then flag it so that a new song will
             **	be picked when this one ends.
             */
-            Play_Song(Pending);
-            Pending = THEME_PICK_ANOTHER;
+            if (Pending != THEME_NONE) {
+                Play_Song(Pending);
+                Pending = THEME_PICK_ANOTHER;
+            }
         }
         Sound_Callback();
     }
@@ -221,37 +223,40 @@ void ThemeClass::AI(void)
  *=============================================================================================*/
 ThemeType ThemeClass::Next_Song(ThemeType theme)
 {
-    if (theme == THEME_NONE) {
-        theme = Next_Song(THEME_PICK_ANOTHER);
-    } else {
-        if (theme == THEME_PICK_ANOTHER || (!_themes[theme].Repeat && !Options.IsScoreRepeat)) {
-            if (Options.IsScoreShuffle) {
-
-                /*
-                **	Shuffle the theme, but never pick the same theme that was just
-                **	playing.
-                */
-                ThemeType newtheme;
-                do {
-                    newtheme = Sim_Random_Pick(THEME_FIRST, THEME_LAST);
-                } while (newtheme == theme || !Is_Allowed(newtheme));
-                theme = newtheme;
-
-            } else {
-
-                /*
-                **	Sequential score playing.
-                */
-                do {
-                    theme++;
-                    if (theme > THEME_LAST) {
-                        theme = THEME_FIRST;
-                    }
-                } while (!Is_Allowed(theme));
+    if (theme == THEME_NONE || theme == THEME_PICK_ANOTHER || (!_themes[theme].Repeat && !Options.IsScoreRepeat)) {
+        // Media packs may contain no music. Never search an empty playlist
+        // indefinitely, or reject the only available track in shuffle mode.
+        int alternatives = 0;
+        ThemeType fallback = THEME_NONE;
+        for (ThemeType candidate = THEME_FIRST; candidate <= THEME_LAST; candidate++) {
+            if (Is_Allowed(candidate)) {
+                fallback = candidate;
+                alternatives += candidate != theme;
             }
         }
+        if (!alternatives) {
+            return fallback;
+        }
+        if (Options.IsScoreShuffle) {
+            int selected = Sim_Random_Pick(0, alternatives - 1);
+            for (ThemeType candidate = THEME_FIRST; candidate <= THEME_LAST; candidate++) {
+                if (candidate != theme && Is_Allowed(candidate) && selected-- == 0) {
+                    return candidate;
+                }
+            }
+        } else {
+            for (int scanned = 0; scanned <= THEME_LAST - THEME_FIRST; scanned++) {
+                if (++theme > THEME_LAST) {
+                    theme = THEME_FIRST;
+                }
+                if (Is_Allowed(theme)) {
+                    return theme;
+                }
+            }
+        }
+        return THEME_NONE;
     }
-    return (theme);
+    return theme;
 }
 
 /***********************************************************************************************

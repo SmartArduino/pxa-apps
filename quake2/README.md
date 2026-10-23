@@ -1,9 +1,18 @@
 # Quake II
 
-资源自动绑定到 Host 分配的固定 SD 媒体根（通常是 `/PXA/media/lucinhu/pxa-quake2/`），无需选择目录。资源名称和转换步骤见 [公共说明](../common/recrof/TEST_DATA.md)。引擎代码与私有存档由 Host 的应用存储策略管理，不假设有内部存储分区。
+0.2.1 通过签名清单绑定 Quake II 3.14 原版试玩资源。Store 安装时同时安装引擎和资源，
+Host 将资源绑定到只读 `app-media-root`；用户无需复制文件或选择目录。
+安装卷由系统安装对话框和存储策略决定，支持 SD、内部存储及其他可安装卷。
+私有存档与不可变资源分开管理，不假设设备有内部存储分区。
+
+资源包含未修改的 `baseq2` 数据、完整原试玩发行包和原始许可，属于试玩版，
+不包含完整零售版内容。仅按原许可免费通过网络分发，不作为售卖硬件的预装资源。
+构建、绑定和更新步骤见 [试玩资源说明](../common/recrof/resources/README.md)。
 
 真机最低目标为实际关卡 15fps；构建成功不代表通过真机验收。测试结果记录在工作区 `docs/validation`。Clock 0.3 协商 8ms，旧 Host 回退 16ms；保持原始画质和音频。
 
-正式入口为 `quake2`，包 ID 为 `pxa-quake2`；仅提供 SD 资源模式。资源导入 `.game-data/quake2/files/`，不进入签名包。旧 `-sd` 身份的迁移步骤见 [公共说明](../common/recrof/README.md#固定-sd-资源与真机性能目标)。
+正式入口为 `quake2`，包 ID 为 `pxa-quake2`。引擎包与资源包分别签名；只更新引擎时，
+资源代次不变便无需重复下载。旧 `-sd` 身份的迁移步骤见
+[公共说明](../common/recrof/README.md#固定-sd-资源与真机性能目标)。
 
 桌面使用根据经典游戏标志重绘的透明图标，来源、尺寸与生成记录见 [图标说明](../common/recrof/ICONS.md)。

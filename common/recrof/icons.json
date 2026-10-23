@@ -52,34 +52,28 @@
     {
       "game": "command-conquer",
       "asset": "command-conquer/assets/icon.png",
-      "width": 96,
-      "height": 96,
-      "bytes": 15721,
-      "sha256": "e726359d6493ad0bcc8759f8a20558d60ab9becac53fed636fc03ac15af50731",
-      "kind": "AI-assisted redraw; not an unchanged original game icon",
-      "tool": "built-in image_gen",
-      "prompt": "Use case: style-transfer. Asset: ONE square launcher icon for a 320x240 handheld gaming device, to be displayed at 48-64 pixels. The user requests a tasteful redraw of the original game icon. Create a polished, visually bold, front-facing sculpted metal emblem, restrained bevels and clean broad highlights, strong simple silhouette, very readable at tiny sizes, centered with about 10% clear space on every edge. Transparent background, no square tile, no backdrop, no environment, no text, no lettering, no caption, no watermark, no decorative particles, no realistic rust or fine grain. Warm top-left studio highlight, dark recessed details, crisp alpha edges. Preserve the game's recognizable visual identity. Output a single icon only. Redraw the original Command & Conquer Tiberian Dawn icon supplied: two overlapping faction insignia, a round GOLD GDI eagle coin behind at upper left and a RED Brotherhood of Nod shield with its dark scorpion-tail insignia in front at lower right. Preserve the two overlapping badges, clear gold-versus-red separation. Simplify eagle and scorpion details to strong emblem silhouettes. No words, no letters, no extraneous objects. The combined emblem should have comparable visual size to one round badge.",
-      "source_url": "https://github.com/electronicarts/CnC_Tiberian_Dawn/blob/e0d372dc582c053a699114942b984dad0457f9b3/CONQUER.ICO",
-      "source_sha256": "41fbb7f2fd0711fe1380fc2c71f5138f1c732a26cf682560093951c38d8895b8",
-      "generated_master_sha256": "d72f43c1f4a783aa02a44cd844b057c1c225445615e07b2e22ac73ec9d3bb723",
-      "export": "Preserve RGBA alpha; resize to 96x96 with Lanczos; optimized lossless PNG",
-      "license": "command-conquer/assets/icon-license.txt"
+      "width": 256,
+      "height": 256,
+      "bytes": 14764,
+      "sha256": "37240eba629178e3c2729e4600de2de960c5ffb89adc67f1dd14d862447d56ab",
+      "kind": "Original SVG tank illustration; no EA artwork or faction logo",
+      "tool": "CairoSVG",
+      "source_url": "https://github.com/SmartArduino/pxa-apps/blob/main/command-conquer/assets/icon.svg",
+      "source_sha256": "d9fce972f469b8bcb204109a3e919633e6990c3f5e9641c0f9ab495092e6cd68",
+      "license": "CC0-1.0"
     },
     {
       "game": "red-alert",
       "asset": "red-alert/assets/icon.png",
-      "width": 96,
-      "height": 96,
-      "bytes": 14262,
-      "sha256": "05a5ac6b7748a1a8798af9f141e2c9ca51ddf5fb7d4121c02970478e6f97fe54",
-      "kind": "AI-assisted redraw; not an unchanged original game icon",
-      "tool": "built-in image_gen",
-      "prompt": "Use case: style-transfer. Asset: ONE square launcher icon for a 320x240 handheld gaming device, to be displayed at 48-64 pixels. The user requests a tasteful redraw of the original game icon. Create a polished, visually bold, front-facing sculpted metal emblem, restrained bevels and clean broad highlights, strong simple silhouette, very readable at tiny sizes, centered with about 10% clear space on every edge. Transparent background, no square tile, no backdrop, no environment, no text, no lettering, no caption, no watermark, no decorative particles, no realistic rust or fine grain. Warm top-left studio highlight, dark recessed details, crisp alpha edges. Preserve the game's recognizable visual identity. Output a single icon only. Redraw the supplied Command & Conquer Red Alert classic icon into a bold clean insignia. Preserve the original golden hammer and sickle symbol across a red central medallion, with the sharp gold diagonal framing accents of the original icon. Small gold star at top if useful. Rich deep red enamel and warm gold, clean simplified geometry for 48 pixel readability. No text, no unrelated insignia.",
-      "source_url": "https://github.com/electronicarts/CnC_Red_Alert/blob/0dc09bb1d6188d1ec79ab4765b22a48b75ffee32/CODE/REDALERT.ICO",
-      "source_sha256": "e8ab764b89dadce55eb507c515c391b13ea5b1356296194b7206fcfc03e80914",
-      "generated_master_sha256": "129ed1bae323f29ca492037f60e1eb176f564c3344596a5e06eba51c3c960a71",
-      "export": "Preserve RGBA alpha; resize to 96x96 with Lanczos; optimized lossless PNG",
-      "license": "red-alert/assets/icon-license.txt"
+      "width": 256,
+      "height": 256,
+      "bytes": 14210,
+      "sha256": "9b6ea70c4a0b73494df71718b3ca450be639f7689048d8c9e6d183796cc08dcd",
+      "kind": "Original SVG tank illustration; no EA artwork or faction logo",
+      "tool": "CairoSVG",
+      "source_url": "https://github.com/SmartArduino/pxa-apps/blob/main/red-alert/assets/icon.svg",
+      "source_sha256": "8e07ca08effd0d4c3faaf144fcfbf9a7c0554c351500f53e325c117e3df85488",
+      "license": "CC0-1.0"
     },
     {
       "game": "openlara",
@@ -96,6 +90,19 @@
       "generated_master_sha256": "ce0f4f397410d288c4a5e64530ed0a3dcd3f3dcfcae46a9abb59c9113a10fce8",
       "export": "Opaque tomb background; RGBA 96x96 Lanczos; optimized PNG",
       "license": "openlara/assets/NOTICE.txt"
+    },
+    {
+      "game": "doom",
+      "asset": "doom/assets/icon.png",
+      "width": 256,
+      "height": 256,
+      "bytes": 38437,
+      "sha256": "525e2bf177035e5dfae34680fda02e66819e95388cda93299a8f88c70cced4c2",
+      "kind": "Original shareware M_DOOM pixels and palette on an original SVG tile",
+      "tool": "CairoSVG",
+      "source_url": "https://github.com/Daivuk/PureDOOM/blob/355cfbd16fac119718879239336ee2ea408886bd/doom1.wad",
+      "source_sha256": "1d7d43be501e67d927e415e0b8f3e29c3bf33075e859721816f652a526cac771",
+      "license_notice": "doom/assets/icon-license.txt"
     }
   ]
 }

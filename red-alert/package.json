@@ -1,5 +1,5 @@
 {
-  "format": "pxa-package-source-0.1",
+  "format": "pxa-package-source-0.2",
   "min_sdk": [
     2,
     0
@@ -13,9 +13,9 @@
     0
   ],
   "id": "pxa-red-alert",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "name": "Red Alert",
-  "description": "Game engine with fixed SD resources and app-private saves",
+  "description": "Community game port with automatically installed demo assets, without original music",
   "build": {
     "system": "cmake",
     "source_dir": ".",
@@ -68,10 +68,13 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 200,
+  "release_sequence": 201,
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "icon": "assets/icon.png"
+  "icon": "assets/icon.png",
+  "resources": {
+    "manifest_sha256": "f42673950753ef21b4ceba9d7532a4c70c34b6be84fcd62a80dec5749b166343"
+  }
 }

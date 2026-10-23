@@ -1,0 +1,5 @@
+DOOM menu wordmark extracted without changes from M_DOOM in the original DOOM shareware IWAD.
+Game artwork copyright id Software. Not licensed under the engine GPL.
+IWAD SHA-256: 1d7d43be501e67d927e415e0b8f3e29c3bf33075e859721816f652a526cac771
+The accompanying shareware resource package includes the original terms and redistribution clarification.
+The launcher tile SVG is original PXA artwork.
