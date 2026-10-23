@@ -2,8 +2,8 @@
  *
  * The raycaster writes a 148x120 canonical RGB565 frame directly into a
  * GuestMapped triple buffer. The Host performs 2x nearest upscale and the panel
- * transform asynchronously. Older Hosts fall back to the original 296x240
- * copied Surface. Input remains in panel coordinates; sound profiles prefer
+ * transform asynchronously. Hosts without mapped buffers use the same 148x120
+ * frame through a copied Surface. Input remains in panel coordinates; sound profiles prefer
  * Host tone commands and retain Guest PCM synthesis as a compatibility path.
  */
 #include <stdint.h>
@@ -31,7 +31,7 @@
 #define SURFACE_BUFFER_COUNT 3u
 #define VIEW_PIXELS (VIEW_WIDTH * VIEW_HEIGHT)
 #define VIEW_FRAME_BYTES (VIEW_PIXELS * 2u)
-#define FALLBACK_FRAME_BYTES (DISPLAY_WIDTH * DISPLAY_HEIGHT * 2u)
+#define FALLBACK_FRAME_BYTES VIEW_FRAME_BYTES
 #define FRAME_PERIOD_MS 33u
 #define STATS_TICKS 30u
 #define POINTER_NODE 1u
@@ -42,7 +42,7 @@
 
 typedef union {
     uint16_t mapped[SURFACE_BUFFER_COUNT * VIEW_PIXELS];
-    uint16_t fallback[DISPLAY_WIDTH * DISPLAY_HEIGHT];
+    uint16_t fallback[VIEW_PIXELS];
 } frame_storage_t;
 
 static frame_storage_t g_frames
@@ -81,6 +81,7 @@ static uint32_t g_tick_count;
 static uint64_t g_tick_max_us;
 static uint32_t g_ticks_since_stats;
 static uint32_t g_query_pending;
+static uint8_t g_query_available;
 static uint64_t g_query_sent_us;
 static uint64_t g_sample_ts_us;
 static uint64_t g_sample_presented;
@@ -131,10 +132,10 @@ static int render_and_submit_frame(void);
 static void update_present_geometry(void) {
     const int width = g_surface_width != 0
                           ? (int)g_surface_width
-                          : (g_request_mapped ? VIEW_WIDTH : DISPLAY_WIDTH);
+                          : VIEW_WIDTH;
     const int height = g_surface_height != 0
                            ? (int)g_surface_height
-                           : (g_request_mapped ? VIEW_HEIGHT : DISPLAY_HEIGHT);
+                           : VIEW_HEIGHT;
     const uint32_t scale =
         pxa_surface_fit_scale((uint32_t)width, (uint32_t)height,
                               (uint32_t)g_display_width,
@@ -167,8 +168,8 @@ static int surface_from_display_y(int value) {
 static int request_surface(void) {
     pxa_surface_desc_t desc = {0};
     uint32_t packet_size = 0;
-    desc.width = g_request_mapped ? VIEW_WIDTH : DISPLAY_WIDTH;
-    desc.height = g_request_mapped ? VIEW_HEIGHT : DISPLAY_HEIGHT;
+    desc.width = VIEW_WIDTH;
+    desc.height = VIEW_HEIGHT;
     desc.format = PXA_SURFACE_RGB565;
     desc.buffer_count = SURFACE_BUFFER_COUNT;
     desc.flags = PXA_SURFACE_PREFER_DIRECT_SCANOUT |
@@ -176,6 +177,20 @@ static int request_surface(void) {
     return pxa_surface_build_create(g_packet, sizeof(g_packet),
                                         CREATE_REQUEST, desc, &packet_size) &&
            pxa_control_packet(g_packet, packet_size) == PXA_STATUS_OK;
+}
+
+/* Both paths keep the same logical resolution and integer scaling. */
+static int request_copied_surface(void) {
+    if (g_surface_handle) (void)pxa_close_handle(g_surface_handle);
+    g_surface_handle = 0;
+    g_surface_mapped = 0;
+    g_request_mapped = 0;
+    pxa_mapped_surface_reset(&g_surface_ownership);
+    g_target.pixels = g_frames.fallback;
+    g_target.width = VIEW_WIDTH;
+    g_target.height = VIEW_HEIGHT;
+    renderer_init(&g_renderer, VIEW_WIDTH, VIEW_HEIGHT, 1);
+    return request_surface();
 }
 
 static int submit_fallback_frame(void) {
@@ -303,6 +318,7 @@ static void log_metrics(void) {
 #endif
 
 static void send_query(uint64_t timestamp_us) {
+    if (!g_query_available) return;
     uint32_t packet_size = 0;
     if (!pxa_surface_build_query_state(
             g_packet, sizeof(g_packet), QUERY_REQUEST, g_surface_handle,
@@ -339,6 +355,7 @@ extern "C" int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     g_frame_id = 0;
     g_clock_pending_token = 0;
     g_query_pending = 0;
+    g_query_available = 1;
     g_request_mapped = 1;
     g_surface_mapped = 0;
     g_surface_frame_bytes = 0;
@@ -392,16 +409,11 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         if (!pxa_surface_parse_create(&parsed, CREATE_REQUEST, &result)) {
             return PXA_STATUS_INTERNAL;
         }
-        if (result.status == PXA_STATUS_UNSUPPORTED && g_request_mapped) {
-            g_request_mapped = 0;
-            g_target.pixels = g_frames.fallback;
-            g_target.width = DISPLAY_WIDTH;
-            g_target.height = DISPLAY_HEIGHT;
-            renderer_init(&g_renderer, DISPLAY_WIDTH, DISPLAY_HEIGHT, 1);
-            return request_surface() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
-        }
-        g_surface_width = g_request_mapped ? VIEW_WIDTH : DISPLAY_WIDTH;
-        g_surface_height = g_request_mapped ? VIEW_HEIGHT : DISPLAY_HEIGHT;
+        if (result.status == PXA_STATUS_UNSUPPORTED && g_request_mapped)
+            return request_copied_surface() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+
+        g_surface_width = VIEW_WIDTH;
+        g_surface_height = VIEW_HEIGHT;
         update_present_geometry();
         g_surface_frame_bytes = g_request_mapped ? VIEW_FRAME_BYTES
                                                  : FALLBACK_FRAME_BYTES;
@@ -418,7 +430,8 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
                 g_surface_handle, g_frames.mapped, g_surface_frame_bytes,
                 SURFACE_BUFFER_COUNT) !=
                 (int32_t)(g_surface_frame_bytes * SURFACE_BUFFER_COUNT)) {
-            return PXA_STATUS_INTERNAL;
+            pxa_log_write(3, "maze: mapped buffers unavailable; using copied frames");
+            return request_copied_surface() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
         }
         return pxa_surface_build_configure_layer(
                    g_packet, sizeof(g_packet), CONFIGURE_REQUEST,
@@ -519,7 +532,11 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         g_query_pending = 0;
         if (!pxa_surface_parse_state(&parsed, QUERY_REQUEST, &result) ||
             result.status != PXA_STATUS_OK) {
-            return PXA_STATUS_INTERNAL;
+            /* Presentation statistics are optional; an older Host reply must
+             * not terminate an otherwise working render loop. */
+            g_query_available = 0;
+            (void)pxa_log_write(3, "maze: surface statistics unavailable");
+            return PXA_EVENT_HANDLED;
         }
         update_stats_from_state(&result);
         return PXA_EVENT_HANDLED;
