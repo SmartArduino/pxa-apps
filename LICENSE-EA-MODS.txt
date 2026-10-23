@@ -1,0 +1,14 @@
+EA has not endorsed and does not support this product.
+
+The command-conquer and red-alert directories contain non-commercial PXA
+community ports for Command & Conquer and Red Alert. Their source retains the
+upstream GPL notices. Original game assets remain the property of Electronic
+Arts / Westwood Studios and are not licensed by the engine GPL.
+
+Separately distributed demo resource packages exclude original game music and
+are provided free of charge under the EA C&C Franchise Modding Guidelines:
+https://www.ea.com/games/command-and-conquer/news/modding-faq
+
+Launcher tank illustrations are original CC0 SVG assets and do not use EA game
+artwork or faction insignia. This notice applies to the C&C community ports;
+other applications retain their own licenses.
