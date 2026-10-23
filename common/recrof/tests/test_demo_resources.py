@@ -1,6 +1,7 @@
 import copy
 import hashlib
 import importlib.util
+import io
 from pathlib import Path
 import tempfile
 import unittest
@@ -13,6 +14,45 @@ SPEC.loader.exec_module(MODULE)
 
 
 class DemoResourcesTest(unittest.TestCase):
+    def test_mapped_original_and_nested_installer_preserve_every_byte(self):
+        for nested in [False, True]:
+            with self.subTest(nested=nested), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                runtime = b'original unchanged runtime bytes'
+                name = 'DATA/GAME.GRP'
+                archive = root / 'demo.zip'
+                inner = io.BytesIO()
+                with zipfile.ZipFile(inner, 'w') as installer:
+                    installer.writestr(name, runtime)
+                    installer.writestr('GAME.EXE', b'complete original executable')
+                with zipfile.ZipFile(archive, 'w') as output:
+                    output.writestr('LICENSE.TXT', b'Original distribution agreement\r\n')
+                    if nested:
+                        output.writestr('INSTALL.SHR', inner.getvalue())
+                    else:
+                        output.writestr(name, runtime)
+                        output.writestr('GAME.EXE', b'complete original executable')
+                entry = {'archive': {'name': archive.name, 'bytes': archive.stat().st_size,
+                    'sha256': MODULE.digest(archive)}, 'runtime_files': {name: 'game.grp'},
+                    'required_files': {'game.grp': {'bytes': len(runtime),
+                    'sha256': hashlib.sha256(runtime).hexdigest()}}, 'license_member': 'LICENSE.TXT',
+                    'title': 'Original demo', 'copyright': 'Original publisher', 'license': 'Original terms',
+                    'runtime_notice': 'Byte-for-byte runtime files.\n'}
+                if nested:
+                    entry.update(nested_zip='INSTALL.SHR', nested_zip_bytes=len(inner.getvalue()))
+                else:
+                    entry['level_index'] = {'mask': 9, 'count': 21}
+                payload = root / 'payload'
+                MODULE.prepare(entry, archive, payload)
+                self.assertEqual((payload / 'original/demo.zip').read_bytes(), archive.read_bytes())
+                self.assertEqual((payload / 'game.grp').read_bytes(), runtime)
+                self.assertEqual((payload / 'licenses/demo-license.txt').read_bytes(), b'Original distribution agreement\r\n')
+                self.assertEqual((payload / 'levels.idx').exists(), not nested)
+                broken = copy.deepcopy(entry)
+                broken['runtime_files'] = {name: '../escape'}
+                with self.assertRaisesRegex(ValueError, 'Unsafe'):
+                    MODULE.prepare(broken, archive, root / 'bad')
+
     def test_preserves_unmodified_doom_shareware_with_original_notice(self):
         recipes = Path(__file__).resolve().parents[1] / 'resources'
         notice = recipes / 'doom-shareware-license.txt'

@@ -8,6 +8,7 @@
 #include "engine.h"
 #if OL_CLASSIC
 #include "classic-raster.h"
+#include "title-pcx.h"
 #endif
 #include "storage.h"
 #include "audio.h"
@@ -121,9 +122,19 @@ static void start_engine() {
         (unsigned)__builtin_wasm_memory_size(0)*65536u); pxa_log_write(2,message);
 }
 static void data_done() {
+#if OL_CLASSIC
+    if(load_kind==5) {
+        if(!ol_decode_title_pcx(ol_level_data,loaded,ol_title_data,320,240,ol_title_palette_data)) {
+            error("Invalid original title PCX");return;
+        }
+        ol_title_width=320;ol_title_height=240;
+        load_kind=1;open_data("tracks.ad4",ol_tracks_data,OL_TRACKS_CAPACITY);
+    } else
+#endif
     if(load_kind==0) {
         if(loaded!=240*160) {error("Invalid TITLE.SCR: expected 240x160 indexed image");return;}
 #if OL_CLASSIC
+        ol_title_width=240;ol_title_height=160;
         load_kind=4;open_data("title.pal",ol_title_palette_data,sizeof(ol_title_palette_data));
     } else if(load_kind==4) {
         if(loaded!=512) {error("Invalid TITLE.PAL: expected RGB565 palette");return;}
@@ -208,7 +219,11 @@ static void tick(uint64_t now) {
     if(scanning && !catalog_busy()) {scanning=false;ol_set_levels_mask(catalog_mask());open_level(0);return;}
 #endif
     if(!boot_started && root_ready && store_ready()) {
+#if OL_CLASSIC
+        boot_started=true;load_kind=5;open_data("title.pcx",nullptr,256*1024);
+#else
         boot_started=true;load_kind=0;open_data("title.scr",ol_title_data,sizeof(ol_title_data));
+#endif
     }
     if (background || !surface || load_state<0) return;
     music_stream_tick();
@@ -442,15 +457,25 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *bytes,uint32_t length) {
     }
     if (e.service==PXA_FS_SERVICE && e.token==12) {
         pxa_fs_at_result_t result;
-        if (!pxa_fs_parse_open_at(&e,12,&result) || result.status) {
+        if (!pxa_fs_parse_open_at(&e,12,&result)) {
             error("OpenLara: missing SD game data. Prepare and deploy media first.");return PXA_EVENT_HANDLED;
         }
+        if(result.status==PXA_STATUS_NOT_FOUND) {
+#if OL_CLASSIC
+            if(load_kind==5) {load_kind=0;open_data("title.scr",ol_title_data,240*160);return PXA_EVENT_HANDLED;}
+#endif
+            if(load_kind==1) {
+                memset(ol_tracks_data,0,sizeof(ol_tracks_data));ol_tracks_size=2048;loaded=2048;
+                data_done();return PXA_EVENT_HANDLED;
+            }
+        }
+        if(result.status) {error("OpenLara: missing or inaccessible game data");return PXA_EVENT_HANDLED;}
         if (result.kind!=PXA_FS_KIND_REGULAR || !result.size ||
             (load_kind==1 ? (result.size<2048 || result.size>UINT32_MAX) : result.size>load_capacity)) {
             pxa_close_handle(result.handle);error("OpenLara: invalid SD level size");return PXA_EVENT_HANDLED;
         }
         if(load_kind==1)ol_tracks_size=uint32_t(result.size);
-        if(load_kind==2) {
+        if(load_kind==2 || load_kind==5) {
             if(!ol_allocate_level(uint32_t(result.size))) {pxa_close_handle(result.handle);error("OpenLara: insufficient level memory");return PXA_EVENT_HANDLED;}
             load_dest=ol_level_data;
         }

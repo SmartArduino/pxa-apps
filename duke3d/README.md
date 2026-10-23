@@ -1,12 +1,15 @@
 # Duke Nukem 3D
 
-正式入口为 `duke3d`，包 ID 为 `pxa-duke3d`，版本 0.2.0。包中只携带引擎和少量元数据；
-资源通过 Host 的固定 `app-media-root` 读取，通常位于 `/PXA/media/lucinhu/pxa-duke3d/`，
-不弹出目录选择器。应用代码和私有存档由 Host 的存储策略管理。
+版本 0.3.0 随安装提供完整的官方第一章试玩原包、未修改的 GRP/RTS 运行文件与
+原始分发条款。资源由系统安装到所选存储卷并提供只读 `app-media-root`，不限定
+SD 卡。程序、资源和私有存档均由系统管理，不需要用户选择目录或转换资源。
 
-使用 MG24 转换后的 `duke3d.grp`。先用 [导入工具](../common/recrof/tools/import_data.py)
-放到 `.game-data/duke3d/files/`，再通过部署工具传入 Host 查询到的目录。
-旧 `-sd` 身份的存档、资源迁移见 [公共说明](../common/recrof/README.md#固定-sd-资源与真机性能目标)。
+引擎直接解析原始 VOC：8 位 PCM 原位读取，16 位 PCM 按小块转换，跨音频块的
+读取只保存至多 8 段的索引。索引存入已有的关卡缓存。多轨 MIDI 用各轨游标稳定
+合并到 64 KiB 缓冲，不分配事件列表或完整输入副本，不产生磁盘转换缓存。
+已转换的 WAV/单轨 MIDI GRP 仍可读取。资源再分发条件来自原试玩协议，不能
+把引擎 GPL 当成完整商业游戏素材的授权。可重现打包方法见
+[资源接入说明](../common/recrof/resources/README.md)。
 
 保留已在设备验证的原生配置：Core 2.1 主循环、Audio 0.10 原采样率 PCM、
 GameRender 1.2 索引图像转换；128 KiB 引擎栈、16 KiB 回调栈，
@@ -20,8 +23,7 @@ bash tools/app.sh build duke3d --board doit-gamekit --source-root local/pxa-apps
   --target esp32s31 --aot-only --output local/duke3d-build
 ```
 
-历史真机性能记录保留旧包版本和名称，见 `common/recrof/VALIDATION.md` 与工作区
-`docs/validation`。本次改名不会自动提高帧率；新版本是否达到 15–20fps 仍以实际关卡测量为准。
+新素材和音频读取路径的设备帧率需重新测量；模拟器帧率不能代替实机结果。
 上游同步仍使用 `common/recrof/tools/upstream.py`，平台层与 vendor 修改保持原有三方合并方式。
 
 若此前构建过旧回调版本，首次切换请指定新的 `PXA_BUILD_CACHE_DIR`；构建会拒绝执行模型与清单不一致的旧缓存。

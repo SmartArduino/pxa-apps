@@ -241,6 +241,10 @@ void playmusic(const char  *fn)
     PlayMusic(fn);
 }
 
+static bool read_original_sound(void *source,uint32_t offset,void *output,uint32_t bytes)
+{
+    extMemGetDataFromAddress(output,(uint8_t *)source+offset,bytes);return true;
+}
 uint8_t  loadsound(uint16_t num, SAMPLE *smpl)  // next-hack: modified so that it will fill ptr and size
 {
     #if USE_EXT_MEM
@@ -265,8 +269,12 @@ uint8_t  loadsound(uint16_t num, SAMPLE *smpl)  // next-hack: modified so that i
 #endif
         if (Sound[num].ptr)  // already loaded
             return 1;
-        if (!p)
-            return 0;
+        memset(&smpl->pcm,0,sizeof(smpl->pcm));
+        if (!p) {
+            p=kGetExtMemAddress(sounds[num],&size);
+            if(!p || !duke_voc_probe(read_original_sound,p,size,&smpl->pcm))return 0;
+            smpl->ptr=p;smpl->length=smpl->pcm.frames;return 1;
+        }
         //Different audio drivers.
 #if WIN32
 

@@ -1,21 +1,21 @@
 {
-  "format": "pxa-package-source-0.1",
+  "format": "pxa-package-source-0.2",
   "min_sdk": [
     2,
-    0
+    1
   ],
   "target_sdk": [
     2,
-    0
+    1
   ],
   "compile_sdk": [
     2,
-    0
+    1
   ],
   "id": "pxa-openlara",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "name": "OpenLara",
-  "description": "OpenLara TR1 engine with fixed SD media and app-private saves",
+  "description": "OpenLara with automatically installed original PC demo media and app-private saves",
   "build": {
     "system": "cmake",
     "source_dir": ".",
@@ -60,7 +60,7 @@
       "artifact": "aot"
     }
   ],
-  "release_sequence": 200,
+  "release_sequence": 201,
   "permissions": [
     {
       "name": "audio.playback",
@@ -72,5 +72,8 @@
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "icon": "assets/icon.png"
+  "icon": "assets/icon.png",
+  "resources": {
+    "manifest_sha256": "cf3156035bfeff66130d2bd4b1488a53061ef31c2955348d70a7d0c9e489953b"
+  }
 }

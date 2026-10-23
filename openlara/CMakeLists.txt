@@ -27,7 +27,7 @@ foreach(definition IN LISTS PXA_APP_DEFINITIONS)
 endforeach()
 if(OL_CLASSIC)
     pxa_add_component(pxa_main COMPONENT_ID main NO_TRANSLATIONS
-        SOURCES main.cpp classic-engine.cpp classic-raster.cpp level-catalog.cpp storage.cpp audio.cpp music-stream.cpp
+        SOURCES main.cpp classic-engine.cpp classic-raster.cpp level-catalog.cpp storage.cpp audio.cpp music-stream.cpp title-pcx.cpp
             vendor/classic/libs/tinf/tinflate.c
         INCLUDE_DIRS . vendor/classic DEFINITIONS __PXA_CLASSIC__=1 OL_CLASSIC_MEMORY=1)
     # This translation unit also contains geometry, clipping and scanline setup.

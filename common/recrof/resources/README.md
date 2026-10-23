@@ -84,12 +84,24 @@ code and media binding together. Older MCU format 2 PAK files require conversion
 again with the current tool. Other LibreQuake levels still require explicit
 checks against the packed BSP, entity, string and working-buffer limits.
 
-Original Quake and Duke3D data require conversion, while their
-shareware terms restrict redistribution and modification. OpenLara's BSD engine
-license does not establish permission to redistribute Tomb Raider assets. These
-recipes do not include their local verification data. A freely downloadable demo
-or freeware release alone does not establish permission for our particular
-repackaging.
+Duke3D uses the complete original 1.3D shareware archive. Its enclosed 1998
+license allows free WWW distribution when all original files remain included
+and unmodified. The runtime GRP and RTS are byte-for-byte copies. VOC samples
+are read from their original segments, and type-one MIDI is merged only in
+runtime memory. No converted data is distributed. Select `duke3d` with the
+`build_demo_resources.py` command above.
+
+OpenLara uses the complete original PC demo archive. Its original README
+explicitly allows Internet distribution with every file included and unaltered.
+The PHD levels and PCX title remain unchanged. The engine decodes the PCX at
+runtime; the resource package does not contain GBA title assets, a GBA music
+bank, or retail game data. Select `openlara` with the same builder. The generated
+`levels.idx` is a platform catalog, separate from the original assets.
+
+These original demo permissions are independent of the engines' GPL/BSD
+licenses. Do not substitute converted Quake/Duke verification data or retail
+Tomb Raider levels. The Quake shareware conversion is for local use with owned
+data; it is not the Store recipe.
 
 Original terms and publisher guidance:
 

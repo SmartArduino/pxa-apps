@@ -1,5 +1,16 @@
 # OpenLara for PXA
 
+0.7.0 商城版随安装提供官方 PC 试玩包，保留完整原始归档、版权与分发说明。
+标题 PHD、Vilcabamba 试玩关卡和 PCX 标题图均为原始文件，不包含完整商业关卡。
+标题在运行时解码到索引缓冲；音乐库为可选项，试玩包不再附带 GBA 标题或音轨。
+旧的个人媒体目录仍支持 TITLE.SCR/TITLE.PAL 与 TRACKS.AD4。
+
+程序通过 Core 2.1/FS 0.3 使用安装卷的媒体根，支持 SD 卡及其他可安装存储卷。
+默认商城安装不需要手工运行下方个人数据导入工具。签名资源包的生成方法见
+[资源接入说明](../common/recrof/resources/README.md)。Guest 线性内存上限仍为
+11 MiB；PCX 解码复用关卡加载缓冲，不分配完整尺寸 RGB 图像。
+
+
 0.6.0 默认使用 [XProger/OpenLara](https://github.com/XProger/OpenLara) 的完整 TR1 主引擎 `src/`，上游固定为 `3b268ca4bf986c380f44a26ffd9218bf6d376249`。目标为 PXA Core 2、DOIT GameKit / ESP32-S31、320×240 RGB565 软件渲染。保留原版敌人、机关、碰撞、动画、翻转房间、物品、背包和关卡流程；支持 TR1 的 15 个主线关卡、Lara's Home、标题和 4 个引擎过场关卡。引擎及修改遵循 BSD-2-Clause，见 `vendor/LICENSE`、`vendor/classic/UPSTREAM.md`。
 
 **完整引擎不包含完整商业游戏资源，也不代表全关卡已经验收。** 默认资源只有公开 PC 演示版的标题和 City of Vilcabamba（1/15 主线），缺失关卡在菜单中标记 missing。完整原版数据尚未提供，15 关通关、引擎过场和大型关卡内存仍待验证。外部 FMV 视频暂未接入；SD 音乐支持独立导入。旧 fixed/GBA alpha 作为开发备用保留，说明见 `README-fixed.md`。

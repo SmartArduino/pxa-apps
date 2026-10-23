@@ -11,9 +11,12 @@ extern uint8_t *ol_level_data;
 extern uint8_t ol_level_data[OL_LEVEL_CAPACITY];
 #endif
 extern uint8_t ol_tracks_data[OL_TRACKS_CAPACITY];
-extern uint8_t ol_title_data[240*160];
 #if OL_CLASSIC
+extern uint8_t ol_title_data[320*240];
+extern unsigned ol_title_width,ol_title_height;
 extern uint8_t ol_title_palette_data[512];
+#else
+extern uint8_t ol_title_data[240*160];
 #endif
 extern uint32_t ol_tracks_size;
 extern uint16_t ol_palette[256];

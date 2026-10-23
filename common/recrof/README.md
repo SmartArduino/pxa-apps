@@ -60,7 +60,7 @@ C&C 还复用最多两个空闲的只读 MIX 归档句柄，重开时恢复零�
 cookie。空闲500ms后由Clock关闭；私有命名空间变化会使旧的覆盖层判断失效，
 读取报错的句柄不复用。这样不必为每个归档成员重新执行打开/关闭协议。
 
-Quake 必须使用上游 MG24Quake 2.0 转换器生成的 PAK；普通 PC PAK 不能直接使用。转换器源码位于 `quake/tools/MCUPackConverter`，在有 `pak0.pak` 的目录运行转换器会生成 `pak0conv.pak`。目前只接入 `pak0.pak`，未验证完整注册版的其他 PAK。转换器可在 Linux 下编译：
+Quake 必须使用上游 PXA MCU 格式 3 转换器生成的 PAK；普通 PC PAK 不能直接使用。转换器源码位于 `quake/tools/MCUPackConverter`，在有 `pak0.pak` 的目录运行转换器会生成 `pak0conv.pak`。目前只接入 `pak0.pak`，未验证完整注册版的其他 PAK。转换器可在 Linux 下编译：
 
 ```sh
 cc -O2 local/pxa-apps/quake/tools/MCUPackConverter/*.c -lm -o /tmp/pxa-quake-pakconvert

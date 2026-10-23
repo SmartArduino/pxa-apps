@@ -1,5 +1,5 @@
 {
-  "format": "pxa-package-source-0.1",
+  "format": "pxa-package-source-0.2",
   "min_sdk": [
     2,
     1
@@ -13,9 +13,9 @@
     1
   ],
   "id": "pxa-duke3d",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "name": "Duke Nukem 3D",
-  "description": "Duke Nukem 3D with SD resources, native PCM and Host indexed rendering",
+  "description": "Duke Nukem 3D with automatically installed original shareware data, native VOC and multi-track MIDI",
   "build": {
     "system": "cmake",
     "source_dir": ".",
@@ -85,10 +85,13 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 200,
+  "release_sequence": 201,
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "icon": "assets/icon.png"
+  "icon": "assets/icon.png",
+  "resources": {
+    "manifest_sha256": "8a6f4a65befeb7a1bb410d1dd408312fbc2c8c5297f8601f6fb3de0e48f7ce28"
+  }
 }

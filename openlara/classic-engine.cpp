@@ -10,7 +10,8 @@
 
 uint8_t *ol_level_data;
 alignas(16) uint8_t ol_tracks_data[OL_TRACKS_CAPACITY];
-uint8_t ol_title_data[240*160];
+uint8_t ol_title_data[320*240];
+unsigned ol_title_width=240,ol_title_height=160;
 uint8_t ol_title_palette_data[512];
 uint32_t ol_tracks_size;
 uint16_t ol_palette[256];
@@ -203,7 +204,7 @@ void olClassicTitleBackground(unsigned alpha) {
     // before writing the direct RGB565 background, as normal draw calls do.
     Core::validateRenderState();
     for(unsigned y=0;y<240;++y)for(unsigned x=0;x<320;++x) {
-        uint16_t c=pxa_load_u16(ol_title_palette_data+2*ol_title_data[(y*160/240)*240+x*240/320]);
+        uint16_t c=pxa_load_u16(ol_title_palette_data+2*ol_title_data[(y*ol_title_height/240)*ol_title_width+x*ol_title_width/320]);
         unsigned r=((c>>11)*alpha+127)/255,g=(((c>>5)&63)*alpha+127)/255,b=((c&31)*alpha+127)/255;
         pixels[y*320+x]=uint16_t((r<<11)|(g<<5)|b);
     }

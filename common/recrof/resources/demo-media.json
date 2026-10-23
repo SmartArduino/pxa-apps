@@ -41,6 +41,76 @@
       "license_file": "doom-shareware-license.txt",
       "license_sha256": "0becc715cc49b666f4e1b23499ece30fa028b84f57942203f1a32ba3e96db548",
       "license_source": "https://raw.githubusercontent.com/redox-os/freedoom/master/LICENSE-DOOM1"
+    },
+    "openlara": {
+      "id": "pxa-openlara",
+      "title": "Tomb Raider original PC demo",
+      "copyright": "Tomb Raider demo copyright Core Design Ltd 1996. All rights reserved.",
+      "license": "Original README permits Internet distribution when every original file is included and remains unaltered.",
+      "version": "2026.10.23.1",
+      "release_sequence": 1,
+      "archive": {
+        "name": "tombdemo.zip",
+        "url": "https://www.classicdosgames.com/files/games/eidos/tombdemo.zip",
+        "bytes": 2194574,
+        "sha256": "e0bd2434a6b5005eee5e038c25f294d7ac0d497a3880f463f74266b53fa6bd5b"
+      },
+      "runtime_files": {
+        "tombraid/DATA/TITLE.PHD": "title.phd",
+        "tombraid/DATA/LEVEL2.PHD": "level2.phd",
+        "tombraid/DATA/TITLEH.PCX": "title.pcx"
+      },
+      "license_member": "tombraid/README.TXT",
+      "required_files": {
+        "title.phd": {
+          "bytes": 316138,
+          "sha256": "e1f4a11b7566fc9ba3be5208806915bf5bfc30a890ce0e610b5be697d664580b"
+        },
+        "level2.phd": {
+          "bytes": 2873406,
+          "sha256": "efaae10c309b266b6ad0c27369b9a4e227ae9d62b9aff6d5f8e076a535e83199"
+        },
+        "title.pcx": {
+          "bytes": 115980,
+          "sha256": "035769add04f3a14cc556e6c090f2560c48beeb594312ddc9f1839948fb4abd0"
+        }
+      },
+      "level_index": {
+        "mask": 9,
+        "count": 21
+      }
+    },
+    "duke3d": {
+      "id": "pxa-duke3d",
+      "title": "Duke Nukem 3D original episode-one shareware",
+      "copyright": "Duke Nukem 3D copyright 1996 3D Realms Entertainment. All rights reserved.",
+      "license": "Original 1998 shareware license permits free WWW distribution with every original file included and unchanged.",
+      "version": "2026.10.23.1",
+      "release_sequence": 1,
+      "archive": {
+        "name": "3dduke13.zip",
+        "url": "https://ftp.gamefilearchive.com/ftp.3drealms.com/share/3dduke13.zip",
+        "bytes": 5924374,
+        "sha256": "c67efd179022bc6d9bde54f404c707cbcbdc15423c20be72e277bc2bdddf3d0e"
+      },
+      "nested_zip": "DN3DSW13.SHR",
+      "nested_zip_bytes": 5848108,
+      "runtime_files": {
+        "DUKE3D.GRP": "duke3d.grp",
+        "DUKE.RTS": "duke.rts"
+      },
+      "license_member": "LICENSE.TXT",
+      "required_files": {
+        "duke3d.grp": {
+          "bytes": 11035779,
+          "sha256": "f943d0c2e2a0803a644a2107c81ea897dec87596d9dd1a6a432131ad6f5818d6"
+        },
+        "duke.rts": {
+          "bytes": 188954,
+          "sha256": "3fbc1d9b221f2a6952825a511ed63756f8eac4f98001eb094a81f17cb0fd05e5"
+        }
+      },
+      "runtime_notice": "Runtime GRP and RTS are byte-for-byte copies from the original shareware.\nVOC samples are read in place; type-one MIDI is merged only in runtime memory.\nNo converted game assets or retail episodes are distributed.\n"
     }
   }
 }
