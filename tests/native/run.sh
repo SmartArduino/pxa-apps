@@ -48,6 +48,7 @@ run_test pxa_garden_guard_test -DGARDEN_DEBUG_UNLOCK_ALL=1
 # App-local resource and parser regressions exercise the maintained C++ sources.
 for entry in 'plane-shooter images_test images.cpp' 'store search_image_test search_image.cpp' \
              'store store_ticket_test store_client.cpp store_json.cpp' \
+             'store store_account_test store_account.cpp store_client.cpp store_json.cpp' \
              'store store_utf8_test store_json.cpp' \
              'store store_media_test store_json.cpp store_media_url.cpp' \
              'store store_layout_test' \

@@ -870,3 +870,45 @@ int store_json_parse_app_detail(const uint8_t *data, size_t size,
     if (gallery) *gallery = images;
     return 1;
 }
+
+
+int store_json_parse_account(const uint8_t *data, size_t size, store_account_response_t *out) {
+    if (!data || !out || size > 2048) return 0;
+    *out = {};
+    store_json_t json = {data, size, 0};
+    store_json_iterator_t it;
+    if (!json_object_begin(&json, &it)) return 0;
+    for (;;) {
+        char key[STORE_JSON_KEY_BYTES]; int more;
+        if (!json_next(&it, '}', key, sizeof(key), &more)) return 0;
+        if (!more) break;
+        uint16_t bit = 0;
+        if (text_equal(key, "device_code")) bit = 1;
+        else if (text_equal(key, "user_code")) bit = 2;
+        else if (text_equal(key, "access_token")) bit = 4;
+        else if (text_equal(key, "display_name")) bit = 8;
+        else if (text_equal(key, "error")) bit = 16;
+        else if (text_equal(key, "expires_in")) bit = 32;
+        else if (text_equal(key, "interval")) bit = 64;
+        else if (text_equal(key, "count")) bit = 128;
+        else if (text_equal(key, "liked")) bit = 256;
+        if (bit && (out->fields & bit)) return 0;
+        out->fields |= bit;
+        int ok = 1;
+        switch (bit) {
+        case 1: ok = json_read_string(&it.json, out->device_code, sizeof(out->device_code)); break;
+        case 2: ok = json_read_string(&it.json, out->user_code, sizeof(out->user_code)); break;
+        case 4: ok = json_read_string(&it.json, out->access_token, sizeof(out->access_token)); break;
+        case 8: ok = json_read_string(&it.json, out->display_name, sizeof(out->display_name)); break;
+        case 16: ok = json_read_string(&it.json, out->error, sizeof(out->error)); break;
+        case 32: ok = json_read_u64(&it.json, &out->expires_in); break;
+        case 64: ok = json_read_u64(&it.json, &out->interval); break;
+        case 128: ok = json_read_u64(&it.json, &out->count); break;
+        case 256: ok = json_read_bool(&it.json, &out->liked); break;
+        default: ok = json_skip_value(&it.json, 1); break;
+        }
+        if (!ok) return 0;
+    }
+    json_skip_whitespace(&it.json);
+    return it.json.offset == size;
+}

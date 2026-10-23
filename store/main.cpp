@@ -20,6 +20,8 @@ static void store_ui_command_failed(unsigned opcode, int status) {
 #include "pxa_window.h"
 
 #include "store_client.h"
+#include "store_account.hpp"
+#include <time.h>
 #include "store_binding.h"
 #include "search_image.h"
 #include "store_json.h"
@@ -40,6 +42,30 @@ static void store_ui_command_failed(unsigned opcode, int status) {
 #define STORE_SCREEN_DOWNLOADS 4
 #define STORE_SCREEN_SUCCESS 5
 #define STORE_SCREEN_VIEWER 6
+#define STORE_SCREEN_ACCOUNT 7
+#define NODE_ACCOUNT_TAB 1800u
+#define NODE_ACCOUNT_TAB_LABEL 1801u
+#define NODE_ACCOUNT_TAB_ICON 1802u
+#define NODE_ACCOUNT_BODY 1803u
+#define NODE_ACCOUNT_TEXT 1804u
+#define NODE_ACCOUNT_URL 1805u
+#define NODE_ACCOUNT_CODE 1806u
+#define NODE_ACCOUNT_HINT 1807u
+#define NODE_ACCOUNT_ACTION 1808u
+#define NODE_ACCOUNT_ACTION_LABEL 1809u
+#define NODE_ACCOUNT_CANCEL 1810u
+#define NODE_ACCOUNT_CANCEL_LABEL 1811u
+#define NODE_ACCOUNT_WARNING 1812u
+#define NODE_LIKE 1813u
+#define NODE_LIKE_LABEL 1814u
+
+static store::Account account;
+static bool account_return_detail;
+static uint64_t account_now() {
+    struct timespec value{};
+    if (clock_gettime(CLOCK_MONOTONIC, &value) != 0) return 0;
+    return (uint64_t)value.tv_sec * 1000 + (uint64_t)value.tv_nsec / 1000000;
+}
 
 #define STORE_IDLE 0
 #define STORE_LOADING 1
@@ -1402,7 +1428,7 @@ static int create_footer(pxa_ui_transaction_t *transaction) {
            update_catalog_footer(transaction);
 }
 
-/* Four destinations pinned above the system navigation bar. */
+/* Destinations pinned above the system navigation bar. */
 static int create_tab(pxa_ui_transaction_t *transaction, uint32_t tab,
                       uint32_t label, uint32_t icon_node,
                       const char *icon, const char *text, uint8_t active) {
@@ -1450,7 +1476,7 @@ static int create_tabbar(pxa_ui_transaction_t *transaction, uint8_t mode) {
     uint8_t apps_active = (uint8_t)text_equal(selected_kind_value(), "app");
     uint8_t games_active = (uint8_t)text_equal(selected_kind_value(), "game");
     if (mode != STORE_SCREEN_CATALOG && mode != STORE_SCREEN_INSTALLED &&
-        mode != STORE_SCREEN_DOWNLOADS)
+        mode != STORE_SCREEN_DOWNLOADS && mode != STORE_SCREEN_ACCOUNT)
         return 1;
     return pxa_ui_create(transaction, NODE_TABBAR, NODE_ROOT, 0,
                          PXA_UI_NODE_BOX) &&
@@ -1480,7 +1506,10 @@ static int create_tabbar(pxa_ui_transaction_t *transaction, uint8_t mode) {
                       NODE_DOWNLOADS_ACTION_LABEL,
                       NODE_DOWNLOADS_ACTION_ICON, ICON_DOWNLOADS,
                       message(PXA_MSG_SCREEN_DOWNLOADS),
-                      (uint8_t)(app.screen == STORE_SCREEN_DOWNLOADS));
+                      (uint8_t)(app.screen == STORE_SCREEN_DOWNLOADS)) &&
+           create_tab(transaction, NODE_ACCOUNT_TAB, NODE_ACCOUNT_TAB_LABEL,
+                      NODE_ACCOUNT_TAB_ICON, "\xef\x80\x93", message(PXA_MSG_ACCOUNT_TITLE),
+                      (uint8_t)(app.screen == STORE_SCREEN_ACCOUNT));
 }
 
 static int render_catalog(void) {
@@ -2262,6 +2291,95 @@ static int create_gallery(pxa_ui_transaction_t *tx) {
     return ok;
 }
 
+/* Native semantic buttons retain system focus/gamepad navigation and theme. */
+static int account_text(pxa_ui_transaction_t *tx, uint32_t node, uint32_t parent,
+                        const char *text, uint16_t role = PXA_UI_FONT_ROLE_BODY) {
+    return pxa_ui_create(tx, node, parent, 0, PXA_UI_NODE_TEXT) &&
+        pxa_ui_set_length(tx, node, PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_FILL, 0) &&
+        pxa_ui_set_length(tx, node, PXA_UI_PROPERTY_HEIGHT, PXA_UI_LENGTH_CONTENT, 0) &&
+        pxa_ui_set_font_role(tx, node, role) &&
+        pxa_ui_set_theme_color(tx, node, PXA_UI_PROPERTY_FOREGROUND, PXA_UI_THEME_TEXT) &&
+        pxa_ui_set_text(tx, node, text, string_length(text));
+}
+static int account_button(pxa_ui_transaction_t *tx, uint32_t node, uint32_t label,
+                          uint32_t parent, const char *text, bool enabled) {
+    return pxa_ui_create_typed(tx, node, parent, 0, PXA_UI_NODE_CONTROL, PXA_UI_CONTROL_BUTTON) &&
+        pxa_ui_set_length(tx, node, PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_FILL, 0) &&
+        pxa_ui_set_length(tx, node, PXA_UI_PROPERTY_HEIGHT, PXA_UI_LENGTH_PX, 44) &&
+        pxa_ui_set_padding(tx, node, 10, 6, 10, 6) &&
+        pxa_ui_set_dp(tx, node, PXA_UI_PROPERTY_RADIUS, 10) &&
+        pxa_ui_set_u8(tx, node, PXA_UI_PROPERTY_LAYOUT, PXA_UI_LAYOUT_ROW) &&
+        pxa_ui_set_u8(tx, node, PXA_UI_PROPERTY_ALIGN, PXA_UI_ALIGN_CENTER) &&
+        pxa_ui_set_u8(tx, node, PXA_UI_PROPERTY_JUSTIFY, PXA_UI_ALIGN_CENTER) &&
+        pxa_ui_set_u8(tx, node, PXA_UI_PROPERTY_ENABLED, enabled) &&
+        pxa_ui_set_theme_color(tx, node, PXA_UI_PROPERTY_BACKGROUND, PXA_UI_THEME_PRIMARY_CONTAINER) &&
+        pxa_ui_set_event_mask(tx, node, PXA_UI_EVENT_MASK_CLICK) &&
+        pxa_ui_set_property(tx, node, PXA_UI_PROPERTY_ACCESSIBILITY_LABEL, text, string_length(text)) &&
+        account_text(tx, label, node, text);
+}
+static int render_account(void) {
+    pxa_ui_transaction_t tx{};
+    const uint32_t next = app.generation + 1;
+    if (!next || !pxa_ui_transaction_begin(&tx, next, PXA_UI_TRANSACTION_REPLACE_SURFACE,
+                                          app.packet, sizeof(app.packet))) return 0;
+    using Phase = store::AccountPhase;
+    pxa_i18n_message_id_t status = PXA_MSG_ACCOUNT_INTRO;
+    if (account.phase == Phase::restoring) status = PXA_MSG_ACCOUNT_RESTORING;
+    else if (account.phase == Phase::starting) status = PXA_MSG_ACCOUNT_PREPARING;
+    else if (account.phase == Phase::waiting) status = PXA_MSG_ACCOUNT_OPEN;
+    else if (account.phase == Phase::signed_in) status = PXA_MSG_ACCOUNT_SIGNED_IN;
+    else if (account.phase == Phase::failed) status = PXA_MSG_ACCOUNT_FAILED;
+    else if (account.phase == Phase::expired) status = PXA_MSG_ACCOUNT_EXPIRED;
+    else if (account.phase == Phase::denied) status = PXA_MSG_ACCOUNT_DENIED;
+    bool ok = create_header(&tx, STORE_SCREEN_ACCOUNT, message(PXA_MSG_ACCOUNT_TITLE),
+                             string_length(message(PXA_MSG_ACCOUNT_TITLE))) &&
+        pxa_ui_create(&tx, NODE_ACCOUNT_BODY, NODE_ROOT, 0, PXA_UI_NODE_SCROLL) &&
+        pxa_ui_set_length(&tx, NODE_ACCOUNT_BODY, PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_FILL, 0) &&
+        pxa_ui_set_length(&tx, NODE_ACCOUNT_BODY, PXA_UI_PROPERTY_HEIGHT, PXA_UI_LENGTH_PX, 0) &&
+        pxa_ui_set_u16(&tx, NODE_ACCOUNT_BODY, PXA_UI_PROPERTY_GROW, 1) &&
+        pxa_ui_set_u8(&tx, NODE_ACCOUNT_BODY, PXA_UI_PROPERTY_LAYOUT, PXA_UI_LAYOUT_COLUMN) &&
+        pxa_ui_set_u8(&tx, NODE_ACCOUNT_BODY, PXA_UI_PROPERTY_SCROLL_AXIS, 2) &&
+        pxa_ui_set_padding(&tx, NODE_ACCOUNT_BODY, 16, 14, 16, 14) &&
+        pxa_ui_set_dp(&tx, NODE_ACCOUNT_BODY, PXA_UI_PROPERTY_GAP, 12) &&
+        account_text(&tx, NODE_ACCOUNT_TEXT, NODE_ACCOUNT_BODY, message(status));
+    if (account.authenticated())
+        ok = ok && account_text(&tx, NODE_ACCOUNT_CODE, NODE_ACCOUNT_BODY, account.display_name, PXA_UI_FONT_ROLE_TITLE);
+    if (account.phase == Phase::waiting) {
+        ok = ok && account_text(&tx, NODE_ACCOUNT_URL, NODE_ACCOUNT_BODY, PXA_STORE_ORIGIN "/device") &&
+            account_text(&tx, NODE_ACCOUNT_CODE, NODE_ACCOUNT_BODY, account.user_code, PXA_UI_FONT_ROLE_TITLE) &&
+            account_text(&tx, NODE_ACCOUNT_HINT, NODE_ACCOUNT_BODY, message(PXA_MSG_ACCOUNT_WAITING));
+    }
+    if (account.authenticated() && !account.persistent)
+        ok = ok && account_text(&tx, NODE_ACCOUNT_WARNING, NODE_ACCOUNT_BODY, message(PXA_MSG_ACCOUNT_TEMPORARY));
+    if (account.phase != Phase::waiting)
+        ok = ok && account_button(&tx, NODE_ACCOUNT_ACTION, NODE_ACCOUNT_ACTION_LABEL, NODE_ACCOUNT_BODY,
+            message(account.authenticated() ? PXA_MSG_ACCOUNT_SIGN_OUT :
+                account.phase == Phase::failed ? PXA_MSG_ACTION_RETRY : PXA_MSG_ACCOUNT_SIGN_IN),
+            !account.busy() && account.phase != Phase::restoring);
+    if (account.phase == Phase::waiting || account.phase == Phase::starting ||
+        account_return_detail || (account.has_credential() && !account.authenticated()))
+        ok = ok && account_button(&tx, NODE_ACCOUNT_CANCEL, NODE_ACCOUNT_CANCEL_LABEL, NODE_ACCOUNT_BODY,
+            message(account.has_credential() ? PXA_MSG_ACCOUNT_SIGN_OUT : PXA_MSG_ACCOUNT_CANCEL), true);
+    ok = ok && create_tabbar(&tx, STORE_SCREEN_ACCOUNT);
+    if (!ok || !pxa_ui_transaction_commit(&tx)) {
+        if (tx.active) (void)pxa_ui_transaction_cancel(&tx);
+        return 0;
+    }
+    app.generation = next;
+    return 1;
+}
+static int create_like(pxa_ui_transaction_t *tx) {
+    char label[128];
+    const char *action = message(!account.authenticated() ? PXA_MSG_LIKES_SIGN_IN :
+        account.like_error ? PXA_MSG_LIKES_RETRY : !account.like_ready ? PXA_MSG_LIKES_LOADING :
+        account.liked ? PXA_MSG_LIKES_LIKED : PXA_MSG_LIKES_LIKE);
+    if (account.like_ready) std::snprintf(label, sizeof(label), "%s  ·  %llu", action,
+                                         (unsigned long long)account.like_count);
+    else copy_text(label, sizeof(label), action);
+    return account_button(tx, NODE_LIKE, NODE_LIKE_LABEL, NODE_DETAIL_SCROLL, label,
+                          !account.authenticated() || !account.busy());
+}
+
 static int render_detail(void) {
     const store_metrics_t *m = metrics();
     pxa_ui_transaction_t transaction = {0};
@@ -2360,6 +2478,7 @@ static int render_detail(void) {
                                     PXA_UI_PROPERTY_FOREGROUND,
                                     PXA_UI_THEME_MUTED);
     }
+    ok = ok && create_like(&transaction);
     if (ok && item->requires_resources) {
         build_size_text(app.scratch, sizeof(app.scratch));
         ok = create_section(&transaction, SECTION_DOWNLOAD_SIZE,
@@ -3117,7 +3236,10 @@ static void adopt_field_text(const char *text, size_t length) {
 #endif
 
 static int render(void) {
+    account.target(app.screen == STORE_SCREEN_DETAIL || account_return_detail ? &app.detail : nullptr, account_now());
+    account.changed = false;
     sync_media();
+    if (app.screen == STORE_SCREEN_ACCOUNT) return render_account();
     if (app.screen == STORE_SCREEN_SEARCH) return render_search();
     if (app.screen == STORE_SCREEN_DETAIL) return render_detail();
     if (app.screen == STORE_SCREEN_VIEWER) return render_viewer();
@@ -3182,7 +3304,7 @@ static int restart_pending_catalog(void) {
 
 static int fail_request(uint8_t error) {
     store_trace("catalog failure", error);
-    (void)pxa_clock_set_period(0);
+
     if (app.client.body_handle != 0)
         (void)store_client_close_body(&app.client);
     app.state = STORE_FAILED;
@@ -3301,7 +3423,7 @@ static int next_update_check(void) {
 }
 
 static int skip_update_check(int failed) {
-    (void)pxa_clock_set_period(0);
+
     if (app.client.body_handle != 0 &&
         !store_client_close_body(&app.client))
         failed = 1;
@@ -3311,7 +3433,7 @@ static int skip_update_check(int failed) {
 }
 
 static int finish_update_check(int failed) {
-    (void)pxa_clock_set_period(0);
+
     if (app.client.body_handle != 0 &&
         !store_client_close_body(&app.client))
         failed = 1;
@@ -3482,7 +3604,7 @@ static int finish_catalog_body(void) {
     uint8_t before = app.catalog.count;
     uint8_t moved;
     uint8_t window_shifted;
-    (void)pxa_clock_set_period(0);
+
     if (app.client.body_handle != 0 &&
         !store_client_close_body(&app.client))
         return fail_request(STORE_ERROR_FAILED);
@@ -3567,7 +3689,7 @@ static int resume_detail_navigation() {
 
 static int fail_detail(uint8_t error) {
     store_trace("detail failure", error);
-    (void)pxa_clock_set_period(0);
+
     if (app.client.body_handle != 0)
         (void)store_client_close_body(&app.client);
     app.busy = 0;
@@ -3629,7 +3751,7 @@ static int32_t send_package_request(void) {
 }
 
 static int finish_detail_body(void) {
-    (void)pxa_clock_set_period(0);
+
     if (app.client.body_handle != 0 &&
         !store_client_close_body(&app.client))
         return fail_detail(STORE_ERROR_FAILED);
@@ -3929,6 +4051,7 @@ extern "C" int32_t pxa_app_start(const uint8_t *config, uint32_t config_length) 
     (void)pxa_i18n_init_from_start_config(&app.i18n, &pxa_app_i18n_bundle,
                                           config, config_length);
     store_client_init(&app.client);
+    account.start();
     store::media_start();
     store_search_image_request();
     app.installed_count = 0;
@@ -3997,7 +4120,7 @@ extern "C" int32_t pxa_app_start(const uint8_t *config, uint32_t config_length) 
     return PXA_STATUS_OK;
 }
 
-extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
+static int32_t store_on_event(const uint8_t *event, uint32_t length) {
     if (store::media_event({reinterpret_cast<const std::byte *>(event), length})) {
         return !store::media_changed() || patch_media() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
@@ -4007,6 +4130,7 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         store_trace("unparsed event length", length);
         return PXA_EVENT_UNHANDLED;
     }
+    if (account.event(parsed, account_now())) return PXA_EVENT_HANDLED;
     store_trace("event service", parsed.service);
     store_trace("event opcode", parsed.opcode);
     if (store_search_image_on_event(&parsed)) {
@@ -4022,6 +4146,8 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         return PXA_EVENT_HANDLED;
     }
     if (parsed.service==PXA_SERVICE_SYSTEM && parsed.opcode==PXA_SYSTEM_LIFECYCLE_EVENT && parsed.payload_size==1) {
+        account.pause(parsed.payload[0]==PXA_SYSTEM_LIFECYCLE_BACKGROUND);
+        if (parsed.payload[0]!=PXA_SYSTEM_LIFECYCLE_BACKGROUND) account.tick(account_now());
         store_search_image_pause(parsed.payload[0]==PXA_SYSTEM_LIFECYCLE_BACKGROUND);
         store::media_pause(parsed.payload[0]==PXA_SYSTEM_LIFECYCLE_BACKGROUND);
         return PXA_EVENT_HANDLED;
@@ -4056,6 +4182,12 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
     if (pxa_window_is_back_requested(&parsed)) {
+        if (app.screen == STORE_SCREEN_ACCOUNT) {
+            account.cancel();
+            app.screen = account_return_detail ? STORE_SCREEN_DETAIL : STORE_SCREEN_CATALOG;
+            account_return_detail = false;
+            return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+        }
         if (app.screen == STORE_SCREEN_VIEWER)
             return close_viewer() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
         if (app.screen == STORE_SCREEN_SUCCESS) {
@@ -4239,6 +4371,7 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     }
     if (parsed.service == PXA_CLOCK_SERVICE &&
         parsed.opcode == PXA_CLOCK_TICK) {
+        account.tick(account_now());
         if (app.client.stream_waiting && app.client.body_handle != 0) {
             app.client.stream_waiting = 0;
             return continue_body() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
@@ -4416,6 +4549,30 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
 #endif
         }
         return PXA_EVENT_HANDLED;
+    }
+    if (ui_event.node == NODE_ACCOUNT_TAB) {
+        account_return_detail = false;
+        app.screen = STORE_SCREEN_ACCOUNT;
+        return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+    }
+    if (ui_event.node == NODE_ACCOUNT_ACTION && app.screen == STORE_SCREEN_ACCOUNT) {
+        if (account.authenticated()) account.logout(account_now());
+        else if (account.phase == store::AccountPhase::failed) account.retry(account_now());
+        else account.login(account_now());
+        return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+    }
+    if (ui_event.node == NODE_ACCOUNT_CANCEL && app.screen == STORE_SCREEN_ACCOUNT) {
+        if (account.has_credential()) account.logout(account_now());
+        else account.cancel();
+        if (account_return_detail) { app.screen = STORE_SCREEN_DETAIL; account_return_detail = false; }
+        return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+    }
+    if (ui_event.node == NODE_LIKE && app.screen == STORE_SCREEN_DETAIL) {
+        if (!account.authenticated()) {
+            account_return_detail = true;
+            app.screen = STORE_SCREEN_ACCOUNT;
+        } else account.toggle_like(account_now());
+        return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
     if (ui_event.node == NODE_TAB_APPS || ui_event.node == NODE_TAB_GAMES) {
         if (app.busy && app.pending_request == STORE_REQUEST_UPDATE_CHECK)
@@ -4704,8 +4861,32 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
     return PXA_EVENT_UNHANDLED;
 }
 
+extern "C" int32_t pxa_app_on_event(const uint8_t *event, uint32_t length) {
+    const int32_t result = store_on_event(event, length);
+    account.network(app.client.has_network_permission ? app.client.network_permission : 0, account_now());
+    if (account_return_detail && account.authenticated() && app.screen == STORE_SCREEN_ACCOUNT) {
+        app.screen = STORE_SCREEN_DETAIL;
+        account_return_detail = false;
+        account.changed = true;
+    }
+    account.target(app.screen == STORE_SCREEN_DETAIL || account_return_detail ? &app.detail : nullptr, account_now());
+    bool ok = true;
+    if (account.changed) {
+        account.changed = false;
+        if (app.screen == STORE_SCREEN_ACCOUNT || app.screen == STORE_SCREEN_DETAIL) ok = render();
+    }
+    static uint16_t previous_period;
+    uint16_t period = app.client.stream_waiting ? 50 : account.clock_period();
+    if (previous_period != period) {
+        (void)pxa_clock_set_period(period);
+        previous_period = period;
+    }
+    return ok ? result : PXA_STATUS_INTERNAL;
+}
+
 extern "C" void pxa_app_stop(uint32_t reason) {
     (void)reason;
+    account.stop();
     store_search_image_stop();
     store::media_stop();
     if (app.client.body_handle) (void)store_client_close_body(&app.client);

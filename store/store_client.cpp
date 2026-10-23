@@ -337,7 +337,7 @@ int store_client_consume_body(store_client_t *client, uint8_t *body,
                                   output, capacity);
         if (count == PXA_STATUS_WOULD_BLOCK) {
             client->stream_waiting = 1;
-            (void)pxa_clock_set_period(STORE_STREAM_TICK_MS);
+
             return STORE_BODY_WAITING;
         }
         if (count < 0 || (remaining == 0 && count != 0) ||

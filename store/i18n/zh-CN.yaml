@@ -104,3 +104,22 @@ translations:
   status.install_confirm: 等待系统确认
   status.download_program: 下载程序中
   status.download_resources: 下载资源中
+  account.title: 账号
+  account.intro: 登录后，点赞会与网站同步。
+  account.sign_in: 登录
+  account.sign_out: 退出登录
+  account.preparing: 正在准备登录…
+  account.open: 在手机打开以下网址，登录并输入验证码：
+  account.waiting: 请在手机确认授权，验证码 10 分钟内有效。
+  account.cancel: 取消
+  account.failed: 无法连接，请检查网络后重试。
+  account.expired: 登录已过期，请重新获取验证码。
+  account.denied: 网页端已拒绝此次登录。
+  account.restoring: 正在验证账号…
+  account.signed_in: 点赞会在设备与网站间同步。
+  account.temporary: 已登录，但设备未能保存凭据，下次打开需重新登录。
+  likes.like: 点赞
+  likes.liked: 已点赞 · 取消
+  likes.sign_in: 登录后点赞
+  likes.loading: 正在加载点赞…
+  likes.retry: 点赞暂不可用 · 重试

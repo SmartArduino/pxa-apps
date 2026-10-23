@@ -409,3 +409,79 @@ messages:
     source: Downloading resources
     context: Program transfer is complete and the resource package is downloading
     max_bytes: 48
+  account.title:
+    source: Account
+    context: Device account and shared application likes
+    max_bytes: 32
+  account.intro:
+    source: Sign in to sync your likes with the website.
+    context: Device account and shared application likes
+    max_bytes: 128
+  account.sign_in:
+    source: Sign in
+    context: Device account and shared application likes
+    max_bytes: 32
+  account.sign_out:
+    source: Sign out
+    context: Device account and shared application likes
+    max_bytes: 40
+  account.preparing:
+    source: Preparing sign-in…
+    context: Device account and shared application likes
+    max_bytes: 64
+  account.open:
+    source: Open this address on your phone, sign in and enter the code:
+    context: Device account and shared application likes
+    max_bytes: 192
+  account.waiting:
+    source: Confirm on your phone. This code expires in 10 minutes.
+    context: Device account and shared application likes
+    max_bytes: 192
+  account.cancel:
+    source: Cancel
+    context: Device account and shared application likes
+    max_bytes: 32
+  account.failed:
+    source: Unable to connect. Check the network and retry.
+    context: Device account and shared application likes
+    max_bytes: 160
+  account.expired:
+    source: Sign-in expired. Request a new code.
+    context: Device account and shared application likes
+    max_bytes: 160
+  account.denied:
+    source: Sign-in was declined on the website.
+    context: Device account and shared application likes
+    max_bytes: 128
+  account.restoring:
+    source: Checking account…
+    context: Device account and shared application likes
+    max_bytes: 80
+  account.signed_in:
+    source: Your likes sync across your devices and the website.
+    context: Device account and shared application likes
+    max_bytes: 160
+  account.temporary:
+    source: Signed in for this session. This device could not save the login.
+    context: Device account and shared application likes
+    max_bytes: 224
+  likes.like:
+    source: Like
+    context: Device account and shared application likes
+    max_bytes: 32
+  likes.liked:
+    source: Liked · undo
+    context: Device account and shared application likes
+    max_bytes: 64
+  likes.sign_in:
+    source: Sign in to like
+    context: Device account and shared application likes
+    max_bytes: 64
+  likes.loading:
+    source: Loading likes…
+    context: Device account and shared application likes
+    max_bytes: 64
+  likes.retry:
+    source: Likes unavailable · retry
+    context: Device account and shared application likes
+    max_bytes: 96
