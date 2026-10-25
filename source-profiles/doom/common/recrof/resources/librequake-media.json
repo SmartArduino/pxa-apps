@@ -1,0 +1,29 @@
+{
+  "schema": "pxa-librequake-media-1",
+  "id": "pxa-quake",
+  "title": "LibreQuake free first-level preview",
+  "version": "2026.10.23.1",
+  "release_sequence": 1,
+  "commit": "d1515ca9bc01e590f2d54dc496f55c9a4ed72369",
+  "archive": {
+    "name": "librequake-v0.09-beta-lite.zip",
+    "url": "https://github.com/lavenderdotpet/LibreQuake/releases/download/v0.09-beta/lite.zip",
+    "bytes": 55987573,
+    "sha256": "428e736b2f01d953e09a08c60bee975bdc4a0ac2219e97fa095c8af41754da83"
+  },
+  "pak_members": {
+    "lite/id1/pak0.pak": 43948916,
+    "lite/id1/pak1.pak": 5856792
+  },
+  "level": "maps/lq_e0m1.bsp",
+  "skin_limit": 128,
+  "license_members": [
+    "COPYING",
+    "CREDITS",
+    "README-IMPORTANT-LICENCE-INFO",
+    "freedoom-docs/COPYING.adoc",
+    "freedoom-docs/CREDITS",
+    "misc-docs/COPYING",
+    "misc-docs/pop.lmp.md"
+  ]
+}

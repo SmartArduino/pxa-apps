@@ -1,0 +1,72 @@
+{
+  "format": "pxa-cnc-demo-media-1",
+  "applications": {
+    "command-conquer": {
+      "title": "Command & Conquer demo assets (without music)",
+      "source_url": "https://www.classicdosgames.com/files/games/virgin/cc1demo1.zip",
+      "files": {
+        "aud.mix": {
+          "bytes": 1890646,
+          "sha256": "497f410042d5f122e60eb00bb079fb5b490f79ded7fd94a1a4eb85f80fcea2c9"
+        },
+        "demo.mix": {
+          "bytes": 2660516,
+          "sha256": "382a85403c5458d1b8f0f4f34dc24dded1446ab8b11af04cdb5d2fa15110769c"
+        },
+        "demol.mix": {
+          "bytes": 341298,
+          "sha256": "1c7bced1445db7c81ecfc844a6dc27f61f208d0f184e2d6b9d5af6eec2a34f38"
+        },
+        "map1.aud": {
+          "bytes": 673940,
+          "sha256": "aa79cf8c9033f99f2eada5ec4be3f36c8d8cbf7d51d480f59a1f0c87cb87744f",
+          "exclude": true
+        },
+        "setup.mix": {
+          "bytes": 1742070,
+          "sha256": "cdd242ae095fd4164b26c098f3ed10e77fbafec6450f7e3703c711f874dfa244"
+        },
+        "sounds.mix": {
+          "bytes": 2121045,
+          "sha256": "37dc88345e68a5514722210bef0a87d6eaf9434be8ec64bb970d03ac521df5a8"
+        },
+        "speech.mix": {
+          "bytes": 947949,
+          "sha256": "4d5e730df355fed1420e85355abf18d1ef04f4015a45d9773c44e2b11e63e71d"
+        },
+        "win1.aud": {
+          "bytes": 448507,
+          "sha256": "52838b2fc340f0aacb3742cde2692e18d7a547f5ef221fd464407efac0906120",
+          "exclude": true
+        }
+      }
+    },
+    "red-alert": {
+      "title": "Red Alert demo assets (without music)",
+      "source_url": "https://www.dosgamesarchive.com/file.php?id=946",
+      "files": {
+        "main.mix": {
+          "bytes": 12687722,
+          "sha256": "d54336e1b721a05a0f787a15a4cf46db4d39d900f0aeb9677ead37fbdfcd4201",
+          "remove": {
+            "SCORES.MIX": null
+          }
+        },
+        "redalert.ini": {
+          "bytes": 93,
+          "sha256": "430e4f14d5bde53c0172fbde14d05d5544e29c60388ba1e22ed71201e7574244"
+        },
+        "redalert.mix": {
+          "bytes": 11736696,
+          "sha256": "5471b50ab05ce449c08f4d81a79377223b5ed945efabe8afcdb8dd86798aa445",
+          "remove": {
+            "LOCAL.MIX": {
+              "INTRO.AUD": null,
+              "MAP.AUD": null
+            }
+          }
+        }
+      }
+    }
+  }
+}

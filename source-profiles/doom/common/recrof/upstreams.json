@@ -1,0 +1,45 @@
+{
+  "quake": {
+    "metadata": [
+      "quake/upstream.json"
+    ],
+    "maps": {
+      "QuakeESP32S3/quake": "quake/vendor/quake",
+      "QuakeESP32S3/tools/MCUPackConverter": "quake/tools/MCUPackConverter",
+      "LICENSE": "quake/LICENSE"
+    }
+  },
+  "quake2": {
+    "metadata": [
+      "quake2/upstream.json"
+    ],
+    "maps": {
+      "components/quake2/source": "quake2/vendor/quake2",
+      "LICENSE": "quake2/LICENSE"
+    }
+  },
+  "duke3d": {
+    "metadata": [
+      "duke3d/upstream.json"
+    ],
+    "maps": {
+      "Duke3D-ESP32S3/Engine": "duke3d/vendor/Engine",
+      "Duke3D-ESP32S3/Game": "duke3d/vendor/Game",
+      "Tools/PythonCVT": "duke3d/tools/PythonCVT",
+      "LICENSE": "duke3d/LICENSE"
+    }
+  },
+  "command-conquer": {
+    "metadata": [
+      "command-conquer/upstream.json",
+      "red-alert/upstream.json"
+    ],
+    "maps": {
+      "Vanilla-Conquer": "command-conquer/vendor/Vanilla-Conquer",
+      "LICENSE": "command-conquer/LICENSE"
+    },
+    "extra_maps": {
+      "LICENSE": "red-alert/LICENSE"
+    }
+  }
+}

@@ -14,7 +14,7 @@
   ],
   "id": "pxa-quake",
   "version": "0.6.9",
-  "name": "Quake \u00b7 LibreQuake",
+  "name": "Quake · LibreQuake",
   "description": "Quake engine with automatically installed LibreQuake free first-level media and app-private saves",
   "build": {
     "system": "cmake",
