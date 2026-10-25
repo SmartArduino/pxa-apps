@@ -30,7 +30,13 @@
       "kind": "ui",
       "services": [
         "surface",
-        "audio",
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            10
+          ]
+        },
         "clock",
         "permission",
         "window",
