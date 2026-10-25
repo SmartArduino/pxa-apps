@@ -1,0 +1,46 @@
+{
+  "schema": "pxa-demo-media-1",
+  "applications": {
+    "quake2": {
+      "id": "pxa-quake2",
+      "title": "Quake II 3.14 demo",
+      "copyright": "Quake II game data copyright id Software. All rights reserved.",
+      "license": "Original limited-use demo license; free electronic distribution only",
+      "version": "2026.10.23.1",
+      "release_sequence": 1,
+      "archive": {
+        "name": "q2-314-demo-x86.exe",
+        "url": "https://www.boxedwine.org/wp-content/uploads/2018/02/q2-314-demo-x86.exe",
+        "bytes": 39015499,
+        "sha256": "7ace5a43983f10d6bdc9d9b6e17a1032ba6223118d389bd170df89b945a04a1e"
+      },
+      "runtime_prefix": "Install/Data/baseq2/",
+      "runtime_root": "baseq2",
+      "license_member": "license.txt",
+      "required_files": {
+        "baseq2/pak0.pak": {
+          "bytes": 49951322,
+          "sha256": "cae257182f34d3913f3d663e1d7cf865d668feda6af393d4ecf3e9e408b48d09"
+        }
+      }
+    },
+    "doom": {
+      "id": "pxa-doom",
+      "title": "DOOM shareware episode one",
+      "copyright": "DOOM game data copyright id Software. All rights reserved.",
+      "license": "Original shareware terms and John Carmack redistribution clarification; unchanged shareware IWAD only",
+      "version": "2026.10.23.1",
+      "release_sequence": 1,
+      "archive": {
+        "name": "doom1.wad",
+        "url": "https://raw.githubusercontent.com/Daivuk/PureDOOM/355cfbd16fac119718879239336ee2ea408886bd/doom1.wad",
+        "bytes": 4196020,
+        "sha256": "1d7d43be501e67d927e415e0b8f3e29c3bf33075e859721816f652a526cac771"
+      },
+      "runtime_file": "doom1.wad",
+      "license_file": "doom-shareware-license.txt",
+      "license_sha256": "0becc715cc49b666f4e1b23499ece30fa028b84f57942203f1a32ba3e96db548",
+      "license_source": "https://raw.githubusercontent.com/redox-os/freedoom/master/LICENSE-DOOM1"
+    }
+  }
+}

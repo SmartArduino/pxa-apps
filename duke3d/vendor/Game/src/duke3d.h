@@ -439,10 +439,12 @@ extern input recsync[RECSYNCBUFSIZ];
 
 extern int32_t movefifosendplc;
 
+#include "media_audio.h"
 typedef struct
 {
     uint8_t  *ptr;
     int length;
+    duke_pcm_t pcm;
 #if USE_CACHE
     volatile uint8_t  lock; // tanguyf: if not volatile, the game can go into an infinite loop in optimised mode
 #endif

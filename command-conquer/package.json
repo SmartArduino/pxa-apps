@@ -2,18 +2,18 @@
   "format": "pxa-package-source-0.2",
   "min_sdk": [
     2,
-    0
+    1
   ],
   "target_sdk": [
     2,
-    0
+    1
   ],
   "compile_sdk": [
     2,
-    0
+    1
   ],
   "id": "pxa-command-conquer",
-  "version": "0.2.1",
+  "version": "0.2.6",
   "name": "Command & Conquer",
   "description": "Community game port with automatically installed demo assets, without original music",
   "build": {
@@ -58,7 +58,8 @@
           "wall-clock"
         ]
       },
-      "artifact": "aot"
+      "artifact": "aot",
+      "execution_model": "main-loop"
     }
   ],
   "permissions": [
@@ -68,7 +69,7 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 201,
+  "release_sequence": 206,
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"

@@ -7,6 +7,7 @@
 #include "maincfg.h"
 #include "al_midi.h"
 #include "opl2.h"
+#include "media_audio.h"
 #define EMIDI_END_LOOP_VALUE    127  // not used.
 #define EMIDI_INCLUDE_TRACK     110
 #define EMIDI_EXCLUDE_TRACK     111
@@ -63,6 +64,9 @@ static uint32_t musicReadIndex = 0;        // the index of the music.
 static uint32_t numberOfReadMusicEvents = 0;
 static uint8_t loopStartSet = 1;
 static int trackDataSize = 0;
+static uint8_t musicPlaying;
+static bool musicInMemory;
+static uint8_t mergedMusic[65536];
 #if WIN32
 uint8_t musicEventBuffer[1024*1024];
 #else
@@ -117,6 +121,10 @@ void loadtmb(char *name)
 
 static uint8_t readMusicEvent(void)
 {
+ if(musicInMemory) {
+     if(musicReadIndex>=(uint32_t)trackDataSize) {musicPlaying=0;return 0;}
+     return currentMusicDataPtr[musicReadIndex++];
+ }
  uint8_t v;
   if (musicReadIndex < numberOfReadMusicEvents)
   {
@@ -165,7 +173,6 @@ void preloadMusic(FILE *f, int size )
     numberOfReadMusicEvents = sizeof(musicEventBuffer);
 }
 #else
-static uint8_t musicPlaying = 0;
 int isMusicPlaying(void)
 {
     return musicPlaying;
@@ -187,12 +194,28 @@ void  MUSIC_Pause( void )
     musicPlaying = 0;
     return 0;
 }
+static bool read_midi_source(void *source,uint32_t offset,void *output,uint32_t bytes)
+{
+    extMemGetDataFromAddress(output,(uint8_t *)source+offset,bytes);return true;
+}
 void PlayMusic(const char *name)
 {
-    uint8_t* p = kGetExtMemAddress(name, NULL);//FILE *f = fopen(fileList[choosen],"rb");
+    uint32_t sourceBytes;
+    musicPlaying=0;musicInMemory=false;
+    uint8_t* p = kGetExtMemAddress(name, &sourceBytes);//FILE *f = fopen(fileList[choosen],"rb");
     if (!p)
         return;
     midi_header_t hdr;
+    uint8_t fileHeader[14];
+    if(sourceBytes<sizeof(fileHeader))return;
+    extMemGetDataFromAddress(fileHeader,p,sizeof(fileHeader));
+    if(fileHeader[8]==0 && fileHeader[9]==1) {
+        uint32_t mergedBytes;
+        if(!duke_midi_merge(read_midi_source,p,sourceBytes,mergedMusic,sizeof(mergedMusic),&mergedBytes))return;
+        musicInMemory=true;currentMusicDataPtr=mergedMusic+22;
+        setMusicParameters(22,((unsigned)fileHeader[12]<<8)|fileHeader[13],mergedBytes-22);
+        musicPlaying=1;loopStartSet=0;return;
+    }
     extMemSetCurrentAddress((uint32_t) p);
     extMemGetDataFromCurrentAddress(&hdr, sizeof(hdr));
     hdr.chunk_header.chunk_size = swap_be_le32(hdr.chunk_header.chunk_size);
@@ -201,9 +224,8 @@ void PlayMusic(const char *name)
     // read track chunk
     extMemGetDataFromCurrentAddress(&trackChunk, sizeof(trackChunk));
     trackChunk.chunk_size = swap_be_le32(trackChunk.chunk_size);
-    setMusicParameters(8 + 6 + 8, hdr.time_division, trackChunk.chunk_size);
     currentMusicDataPtr = p + sizeof(hdr) + sizeof(trackChunk);
-    resetMusicCounters();
+    setMusicParameters(8 + 6 + 8, hdr.time_division, trackChunk.chunk_size);
     musicPlaying = 1;
     loopStartSet = 0;
 

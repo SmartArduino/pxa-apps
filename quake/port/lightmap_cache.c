@@ -8,6 +8,9 @@
 #include "port.h"
 #include <stdint.h>
 #include <string.h>
+#ifdef PXA_QUAKE_COLOR_CACHE
+#include "color_cache.h"
+#endif
 
 #define SETS 256u
 #define POOL_CELLS (96u * 1024u / sizeof(uint32_t))
@@ -16,6 +19,7 @@ typedef struct {
     int lightadj[4], ambient, mip;
     unsigned cells, live_cells, age;
     unsigned offset, capacity;
+    uint32_t serial;
 } light_entry_t;
 static light_entry_t entries[SETS][2];
 static uint32_t pool[POOL_CELLS];
@@ -23,6 +27,19 @@ static unsigned used, pool_resets;
 static light_entry_t *pending;
 static unsigned tick, hits, misses, bypass, verified, packed, unused_tail_changes;
 static int verify;
+static uint32_t current_token,next_token;
+uint32_t Pxa_QuakeLightToken(void) {return current_token;}
+static uint32_t new_token(void) {
+    if(next_token==UINT32_MAX) {
+#ifdef PXA_QUAKE_COLOR_CACHE
+        Pxa_QuakeColorReset();
+#endif
+        for(unsigned i=0;i<SETS;++i)
+            for(unsigned j=0;j<2;++j)entries[i][j].serial=0;
+        next_token=0;
+    }
+    return ++next_token;
+}
 
 static void clear_pool(void) {
     for (unsigned i = 0; i < SETS; ++i)
@@ -34,11 +51,16 @@ static void clear_pool(void) {
 }
 
 void Pxa_QuakeLightReset(void) {
+#ifdef PXA_QUAKE_COLOR_CACHE
+    Pxa_QuakeColorReset();
+#endif
+    current_token=next_token=0;
     clear_pool();
     pending = NULL; packed = 0; tick = 0;
 }
 
 int Pxa_QuakeLightLoad(const void *surface) {
+    current_token=0;
     pending = NULL; packed = 0; verify = 0;
 #ifdef PXA_QUAKE_RENDER_PROBE
     extern unsigned port_render_probe_mode;
@@ -63,6 +85,8 @@ int Pxa_QuakeLightLoad(const void *surface) {
             e->ambient == _g->r_refdef.ambientlight &&
             !memcmp(e->lightadj, r_drawsurf.lightadj, sizeof(e->lightadj))) {
             e->age = ++tick; ++hits; pending = e;
+            if(!e->serial)e->serial=new_token();
+            current_token=e->serial;
             if (verify) return 0;
             port_copy_read(_g->blocklights, pool + e->offset, cells * sizeof(uint32_t));
             packed = 1;
@@ -120,13 +144,26 @@ void Pxa_QuakeLightStore(void) {
         port_copy_read(pool + pending->offset, _g->blocklights, pending->cells * sizeof(uint32_t));
         pending->surface = r_drawsurf.surf;
         pending->age = ++tick;
+        pending->serial=new_token();
     }
+    current_token=pending->serial;
     pending = NULL;
 }
 
 void Pxa_QuakeLightStats(void) {
-    port_log("PXA QLIGHT hit=%u miss=%u bypass=%u verified=%u unused_tail=%u pool_resets=%u pool_used=%u bytes=%u",
+    port_log("PXA QLIGHT hit=%u miss=%u bypass=%u verified=%u unused_tail=%u pool_resets=%u pool_used=%u bytes=%u"
+#ifdef PXA_QUAKE_COLOR_CACHE
+        " color_hit=%u color_miss=%u"
+#endif
+        ,
         hits, misses, bypass, verified, unused_tail_changes, pool_resets, used * (unsigned)sizeof(uint32_t),
-        (unsigned)(sizeof(entries) + sizeof(pool)));
+        (unsigned)(sizeof(entries) + sizeof(pool))
+#ifdef PXA_QUAKE_COLOR_CACHE
+        ,pxa_quake_color_hits,pxa_quake_color_misses
+#endif
+        );
+#ifdef PXA_QUAKE_COLOR_CACHE
+    pxa_quake_color_hits=pxa_quake_color_misses=0;
+#endif
     hits = misses = bypass = verified = unused_tail_changes = pool_resets = 0;
 }

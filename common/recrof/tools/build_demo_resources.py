@@ -3,11 +3,13 @@
 
 import argparse
 import hashlib
+import io
 import json
 import os
 from pathlib import Path, PurePosixPath
 import shutil
 import stat
+import struct
 import subprocess
 import sys
 import tempfile
@@ -39,6 +41,60 @@ def relative_path(name):
 def prepare(entry, archive, destination):
     """Keep the entire original and copy runtime files without altering bytes."""
     verify_archive(archive, entry)
+    if 'runtime_files' in entry:
+        with zipfile.ZipFile(archive) as source:
+            license_bytes = source.read(entry['license_member'])
+            nested = None
+            if 'nested_zip' in entry:
+                member = source.getinfo(str(relative_path(entry['nested_zip'])))
+                if member.file_size != entry['nested_zip_bytes']:
+                    raise ValueError('Unexpected original installer size')
+                nested = zipfile.ZipFile(io.BytesIO(source.read(member)))
+            runtime = nested if nested is not None else source
+            selected = []
+            names = set()
+            for original, target in entry['runtime_files'].items():
+                member = runtime.getinfo(str(relative_path(original)))
+                name = relative_path(target)
+                if member.is_dir() or stat.S_ISLNK(member.external_attr >> 16) or str(name).casefold() in names:
+                    raise ValueError('Ambiguous or symbolic runtime member: ' + original)
+                expected = entry['required_files'][target]
+                if member.file_size != expected['bytes']:
+                    raise ValueError('Runtime file size differs: ' + target)
+                names.add(str(name).casefold())
+                selected.append((member, name))
+            destination.mkdir(parents=True, exist_ok=False)
+            original = destination / 'original' / relative_path(entry['archive']['name'])
+            original.parent.mkdir(parents=True)
+            shutil.copyfile(archive, original)
+            licenses = destination / 'licenses'
+            licenses.mkdir()
+            (licenses / 'demo-license.txt').write_bytes(license_bytes)
+            for member, name in selected:
+                target = destination / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                with runtime.open(member) as data, target.open('wb') as output:
+                    shutil.copyfileobj(data, output, 65536)
+                expected = entry['required_files'][str(name)]
+                if digest(target) != expected['sha256']:
+                    raise ValueError('Runtime file differs from original: ' + str(name))
+            if nested is not None:
+                nested.close()
+            if 'level_index' in entry:
+                catalog = entry['level_index']
+                (destination / 'levels.idx').write_bytes(struct.pack('<4sIII', b'OLCI', 1,
+                    catalog['mask'], catalog['count']))
+        (destination / 'ABOUT.txt').write_text(
+            entry['title'] + '\n' + entry['copyright'] + '\n' + entry['license'] + '\n\n'
+            'The complete original archive is under original/. All its files remain unaltered.\n'
+            + entry.get('runtime_notice',
+                'Runtime PHD and PCX files are byte-for-byte copies from that archive.\n'
+                'levels.idx is an engine catalog, not a modified game asset.\n'
+                'The PCX title is decoded by the engine at runtime.\n'
+                'No GBA title, GBA music bank or retail campaign is included.\n') +
+            'The original distribution notice accompanies the package under licenses/.\n'
+            'These demo assets are separate from the open-source engine license.\n')
+        return
     if 'runtime_file' in entry:
         name = relative_path(entry['runtime_file'])
         license_name = relative_path(entry['license_file'])

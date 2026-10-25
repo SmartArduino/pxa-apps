@@ -1,0 +1,13 @@
+Tiny Elements 1.0.0
+
+All game-specific code, ten-material rules, five scenes, palette, 3x3 cell
+shading, deterministic flame sparks, icon.svg/icon.png and simple synthesized
+confirmation/badge tones were created for this game and released CC0-1.0.
+No downloaded art, fonts, music, maps or third-party game engine are used.
+The original PNG icon is reproducible with generate-icon.py and Pillow.
+
+The shared ../common/pocket-play runtime supplies the PXA lifecycle, storage,
+clipped drawing and its CC0 pixel font. The runtime is a separate common
+component; Tiny Elements does not modify it. The package uses the PXA SDK.
+
+LICENSE-CC0.txt contains the Creative Commons CC0 1.0 Universal legal code.

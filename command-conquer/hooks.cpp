@@ -1,8 +1,8 @@
 #include "function.h"
 #include "port.h"
 
-void Cnc_Stand_By_Begin() {}
-void Cnc_Stand_By_End() {}
+void Cnc_Stand_By_Begin() {port_loading_stage("Loading game artwork");}
+void Cnc_Stand_By_End() {port_loading_stage("Preparing main menu");}
 
 extern "C" void port_game_stats(void) {
   /* Frame advances after simulation logic, unlike presentation during menus

@@ -245,7 +245,9 @@ SessionClass::~SessionClass(void)
 void SessionClass::One_Time(void)
 {
     Read_MultiPlayer_Settings();
+#ifndef ESP_PLATFORM_CNC
     Read_Scenario_Descriptions();
+#endif
 
     UniqueID = Compute_Unique_ID();
 

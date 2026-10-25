@@ -1463,6 +1463,7 @@ const char *const bindnames[][2] =
     {"+klook",      "keyboard look"},
     {"+moveup",     "swim up"},
     {"+movedown",   "swim down"},
+    {"+use",        "use"},
     // next-hack: additional to avoid using Z_zone. Nah, we are not using this anyway...
     #if WIN32
     {"toggleconsole", "toggle console"},
@@ -1497,7 +1498,7 @@ const char *const bindnames[][2] =
 #define NUMCOMMANDS (sizeof(bindnames)/sizeof(bindnames[0]))
 const char* getBindname(unsigned int num)
 {
-    if (num >= NUMCOMMANDS || num == 0)
+    if (num > NUMCOMMANDS || num == 0)
         return NULL;
     else
         return bindnames[num - 1][0];

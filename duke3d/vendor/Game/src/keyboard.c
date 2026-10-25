@@ -250,6 +250,7 @@ void keyhandler(void)
     // Outside gameplay the trackball navigates menus instead of turning.
     int gm = ps[myconnectindex].gm;
     inputSetMenuMode(!(gm & MODE_GAME) || (gm & (MODE_MENU | MODE_TYPE)) || ud.recstat == 2);
+    inputBeginKeyUpdate();
     uint8_t scancode;
     bool pressed;
     while (inputGetKeyEvent(&scancode, &pressed))
@@ -263,9 +264,10 @@ void keyhandler(void)
         {
             KB_LastScan = scancode;
             keyIsWaiting = true;
-            // Leave later events (e.g. this key's release) for the next call,
-            // so a quick tap is still seen as pressed by whoever polls next.
-            break;
+            // Menus consume one navigation/confirmation press at a time.
+            // Gameplay applies simultaneous movement, fire and jump now;
+            // the adapter defers a just-pressed key's release until next poll.
+            if (inputIsMenuMode()) break;
         }
     }
 #else

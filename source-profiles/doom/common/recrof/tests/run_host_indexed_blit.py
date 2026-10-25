@@ -1,0 +1,20 @@
+#!/usr/bin/env python3
+"""Compare borrowed indexed resolve with the unchanged game-frame adapter."""
+import os
+from pathlib import Path
+import subprocess
+import tempfile
+here = Path(__file__).resolve().parent
+sdk = here.parents[4] / 'deps/pxa-system/libpxa'
+common = here.parent
+with tempfile.TemporaryDirectory(prefix='pxa-indexed-blit-') as name:
+    command = [os.environ.get('CC', 'cc'), '-std=c11', '-O2', '-g', '-Wall', '-Wextra',
+        '-Werror', '-ffp-contract=off', '-fsanitize=address,undefined', '-fno-omit-frame-pointer',
+        '-I' + str(common), '-I' + str(sdk / 'include'), str(here / 'host_indexed_blit_test.c'),
+        str(common / 'framebuffer.c'), str(common / 'font8x8.c')]
+    command += [str(sdk / 'src/services/game_render' / source) for source in
+        ['raster_spans.c', 'raster_projected_spans.c', 'raster_frame_spans.c', 'raster_blit.c', 'raster_prepared.c']]
+    command += ['-o', str(Path(name) / 'test')]
+    subprocess.run(command, check=True)
+    subprocess.run([str(Path(name) / 'test')], check=True,
+        env=dict(os.environ, UBSAN_OPTIONS='halt_on_error=1', ASAN_OPTIONS='detect_leaks=1'))

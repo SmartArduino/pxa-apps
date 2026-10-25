@@ -18,6 +18,7 @@
  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "quakedef.h"
+#include "callbacks.h"
 #if !USE_PROGSDAT
 progsvars_t progs;
 #include "cprogs_def.h"
@@ -4827,8 +4828,9 @@ void qcc_T_Damage(int qcc_targ, int qcc_inflictor, int qcc_attacker, float qcc_d
     }
     if (get_qcc_th_pain(PROG_TO_EDICT(progs.qcc_self)))
     {
-        ((void (*)(int,float) )getFunction(get_qcc_th_pain(PROG_TO_EDICT(progs.qcc_self))))(qcc_attacker, qcc_take)// nightmare mode monsters don't go into pain frames often
-;
+        pxa_quake_call_pain(get_qcc_th_pain(PROG_TO_EDICT(progs.qcc_self)),
+                           qcc_attacker, qcc_take);
+        // nightmare mode monsters don't go into pain frames often
         if (progs.qcc_skill == 3)
             set_qcc_pain_finished(PROG_TO_EDICT(progs.qcc_self), progs.qcc_time + 5);
     }

@@ -1,4 +1,5 @@
 #include "port.h"
+#include "pointer_motion.h"
 #include "audio_convert.h"
 #include "audio.h"
 #include "display_frame.h"
@@ -14,19 +15,23 @@
 static displayFrame_t frame;
 static uint8_t scq[256], downq[256];
 static unsigned kh, kt;
+static uint8_t keys_this_update[256];
 static bool menu = true;
 static bool audio_ready;
-static int mx, my;
+static float mx, my;
+static port_pointer_motion_t pointer_motion;
+extern int g_iTickRate, g_iTicksPerFrame;
 void port_duke_input_stats(void);
 void port_game_stats(void) {
   vflash_stats_t io;
   vflash_stats(&io,1);
   port_log("PXA DUKE cache_used=%u cache_free=%d",
            INTERNAL_FLASH_ARENA_SIZE-internalFlashSpaceLeft(),internalFlashSpaceLeft());
-  port_log("PXA IO hit=%llu miss=%llu read_us=%llu nvm_reads=%llu nvm_us=%llu cache_bytes=%u",
+  port_log("PXA IO hit=%llu miss=%llu read_us=%llu nvm_reads=%llu nvm_us=%llu cache_bytes=%u nvm_hit=%llu nvm_miss=%llu",
     (unsigned long long)io.hits,(unsigned long long)io.misses,
     (unsigned long long)io.read_us,(unsigned long long)io.nvm_reads,
-    (unsigned long long)io.nvm_read_us,io.cache_bytes);
+    (unsigned long long)io.nvm_read_us,io.cache_bytes,
+    (unsigned long long)io.nvm_cache_hits,(unsigned long long)io.nvm_cache_misses);
   port_duke_input_stats();
 }
 uint8_t audioBuffer[AUDIO_BUFFER_LENGTH * 2];
@@ -51,12 +56,27 @@ bool displayBusy(void) { return false; }
 void initKeyboard(void) {}
 void getKeys(uint16_t *p) { *p = 0; }
 void getAnalogInput(int32_t *a, int32_t *b, int32_t *c, int32_t *d) {
+  int pad_x, pad_y;
+  /* getinput runs once per fixed simulation step, including catch-up steps.
+   * Sample held directions here so one step cannot consume a whole render
+   * frame's turn and leave the following step with zero input. */
+  const uint32_t elapsed_us = 1000000u * (g_iTickRate / g_iTicksPerFrame) /
+      g_iTickRate;
+  port_sample_controller(elapsed_us, &pad_x, &pad_y);
+  const port_pointer_delta_t touch = port_pointer_sample(&pointer_motion, elapsed_us);
+  mx += touch.x * 3;
+  my += touch.y * 3;
+  const int touch_x = (int)mx, touch_y = (int)my;
   *a = *b = 0;
-  *c = mx;
-  *d = my;
-  mx = my = 0;
+  *c = touch_x + pad_x * 3;
+  *d = touch_y + pad_y * 3;
+  mx -= touch_x;
+  my -= touch_y;
 }
-void inputSetMenuMode(bool m) { menu = m; }
+void inputSetMenuMode(bool m) {
+  if (m != menu) port_game_reset_motion();
+  menu = m;
+}
 bool inputIsMenuMode(void) { return menu; }
 int port_game_in_menu(void) { return menu; }
 void inputPostKeyEvent(uint8_t sc, bool down) {
@@ -67,11 +87,19 @@ void inputPostKeyEvent(uint8_t sc, bool down) {
     kh = next;
   }
 }
+void inputBeginKeyUpdate(void) {
+  memset(keys_this_update, 0, sizeof(keys_this_update));
+  port_poll_input();
+}
 bool inputGetKeyEvent(uint8_t *sc, bool *down) {
   if (kh == kt)
     return false;
+  /* Apply different keys together, but keep a quick down/up visible to at
+   * least one engine poll. Leave the release in order for the next update. */
+  if (!downq[kt] && keys_this_update[scq[kt]]) return false;
   *sc = scq[kt];
   *down = downq[kt];
+  if (*down) keys_this_update[*sc] = 1;
   kt = (kt + 1) & 255;
   return true;
 }
@@ -89,8 +117,11 @@ void port_game_key(int key, int down) {
     inputPostKeyEvent(sc, down);
 }
 void port_game_motion(int x, int y) {
-  mx += x * 3;
-  my += y * 3;
+  if (!menu) port_pointer_push(&pointer_motion, x, y);
+}
+void port_game_reset_motion(void) {
+  port_pointer_reset(&pointer_motion);
+  mx = my = 0;
 }
 void initAudio(void) {
   memset(audioBuffer, 128, sizeof(audioBuffer));

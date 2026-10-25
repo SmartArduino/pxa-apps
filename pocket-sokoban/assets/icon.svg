@@ -1,0 +1,12 @@
+<!-- Original geometry, CC0-1.0. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+ <rect width="96" height="96" rx="18" fill="#0f172a"/>
+ <g fill="#223041"><rect x="9" y="9" width="24" height="24"/><rect x="36" y="9" width="24" height="24"/><rect x="63" y="9" width="24" height="24"/><rect x="9" y="36" width="24" height="24"/><rect x="36" y="36" width="24" height="24"/><rect x="63" y="36" width="24" height="24"/><rect x="9" y="63" width="24" height="24"/><rect x="36" y="63" width="24" height="24"/><rect x="63" y="63" width="24" height="24"/></g>
+ <rect x="13" y="13" width="16" height="16" fill="#495b70"/>
+ <rect x="16" y="66" width="10" height="10" fill="none" stroke="#4ade80" stroke-width="3"/>
+ <rect x="32" y="30" width="34" height="34" rx="3" fill="#fbbf24"/>
+ <path d="M37 35H61V59H37ZM38 36L60 58M60 36L38 58" fill="none" stroke="#92400e" stroke-width="3"/>
+ <rect x="69" y="67" width="14" height="12" fill="#f1f5f9"/>
+ <rect x="66" y="79" width="20" height="9" fill="#38bdf8"/>
+ <path d="M72 71V74M80 71V74" stroke="#0f172a" stroke-width="2"/>
+</svg>

@@ -1,0 +1,1 @@
+This directory preserves the DOOM 0.1.1 source and shared runtime used for the signed ESP32-S31 release. Build with this directory as PXA_APP_SOURCE_ROOT and app id doom. The engine is PureDOOM; the commercial game data is not part of this source. See doom/README.md and the included license files.

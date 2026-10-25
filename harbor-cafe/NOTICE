@@ -1,0 +1,14 @@
+Harbor Cafe 1.0.0 / pxa-harbor-cafe
+
+The cafe scenery, patrons, coffee equipment, tables, chairs, order bubbles,
+coastline, waves, boat, birds, lighthouse, flowers, lighting, icon, gameplay,
+economy, save format, documentation and application tests were authored for
+this project. No downloaded sprites, photographs, recordings or music are used.
+All original Harbor Cafe material is dedicated under CC0-1.0; see LICENSE.
+
+The app links the workspace's frozen common/pocket-play CC0-1.0 runtime,
+including its original 5x7 font and quiet synthesized triangle-wave tones.
+The native drawing test reproduces that CC0 font. Simulator integration uses
+the frozen common/pocket-game test transport as a read-only dependency.
+The SDK, simulator, compiler toolchains and transport dependencies retain their
+own licenses and are not relicensed by this application.

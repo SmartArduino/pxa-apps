@@ -4183,6 +4183,11 @@ int MV_PlayLoopedWAV
       return( MV_Error );
       }
 
+   if(soundNum<NUM_SOUNDS && Sound[soundNum].pcm.count) {
+      memset(&format,0,sizeof(format));memset(&data,0,sizeof(data));
+      format.wFormatTag=1;format.nChannels=1;format.nBitsPerSample=8;
+      format.nSamplesPerSec=Sound[soundNum].pcm.rate;data.size=Sound[soundNum].length;
+   } else {
    //riff = ( riff_header * )ptr;
    extMemGetDataFromAddress(&riff, ptr, sizeof(riff));
 #if WIN32
@@ -4198,7 +4203,7 @@ int MV_PlayLoopedWAV
    extMemGetDataFromAddress(&format, ptr + sizeof(riff), sizeof(format));
    //  data   = ( data_header * )( ( ( char * )format ) + riff->format_size );
    extMemGetDataFromAddress(&data, ptr + sizeof(riff) + sizeof(format), sizeof(data));
-
+   }
 
    // Check if it's PCM data.
    if ( format.wFormatTag != 1 )
@@ -4967,6 +4972,10 @@ typedef struct
     int left;
     int right;
 } portable_samplepair_t;
+static bool read_pcm_source(void *source,uint32_t offset,void *output,uint32_t bytes)
+{
+    extMemGetDataFromAddress(output,(uint8_t *)source+offset,bytes);return true;
+}
 void SND_PaintChannelFrom8(portable_samplepair_t *paintbuffer, VoiceNode *voice, uint8_t *sampleData, float count, float pos)
 {
     int data;
@@ -4974,9 +4983,17 @@ void SND_PaintChannelFrom8(portable_samplepair_t *paintbuffer, VoiceNode *voice,
 
     // load data
     unsigned char tsfx[4 * (AUDIO_BUFFER_LENGTH) + 8]; // note: 4x to take into account that some samples might have a faster sample rate, so given the same interval, the count will be larger.
-    int offs = ((uint32_t) sampleData + (uint32_t) pos) & 3;
-    unsigned char *sfx = extMemGetDataFromAddress((char*) tsfx, (signed char*) (((uint32_t) sampleData + (uint32_t) pos) & ~3), (int) (count + 0.5f + 3 + offs) & ~3);
-    sfx += offs;
+    unsigned char *sfx=tsfx;
+    if(voice->soundNum<NUM_SOUNDS && Sound[voice->soundNum].pcm.count) {
+        const SAMPLE *sample=&Sound[voice->soundNum];
+        unsigned bytes=((unsigned)(count+0.5f)+3)&~3u;
+        if(bytes>sizeof(tsfx) || !duke_pcm_read(read_pcm_source,sample->ptr,&sample->pcm,
+                                             (uint32_t)pos,tsfx,bytes))return;
+    } else {
+        int offs = ((uint32_t) sampleData + (uint32_t) pos) & 3;
+        sfx = extMemGetDataFromAddress((char*) tsfx, (signed char*) (((uint32_t) sampleData + (uint32_t) pos) & ~3), (int) (count + 0.5f + 3 + offs) & ~3);
+        sfx += offs;
+    }
     // get fractional part
     pos = pos - (int) pos;
     int lvol = voice->LeftVolume << 2;

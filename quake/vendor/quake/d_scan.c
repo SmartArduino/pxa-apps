@@ -1432,8 +1432,14 @@ defineDrawLitSpan(3, 0)
 #if defined(PXA_LIT_ROW_CACHE)
 #include "lit_span.h"
 #endif
+#if defined(PXA_QUAKE_COLOR_CACHE)
+#include "color_span.h"
+#endif
 static void drawLitSpan(uint8_t *pdest, int count, int s, int t, int sstep, int tstep)
 {
+#if defined(PXA_QUAKE_COLOR_CACHE)
+    if (Pxa_TryColorLitSpan(pdest,count,s,t,sstep,tstep)) return;
+#endif
 #if defined(PXA_LIT_ROW_CACHE)
     if (Pxa_TryCachedLitSpan(pdest,count,s,t,sstep,tstep))
         return;

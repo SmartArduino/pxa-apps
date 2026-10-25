@@ -8,6 +8,8 @@ uint32_t vflash_data_size(void);
 typedef struct {
   uint64_t hits, misses, read_us, nvm_reads, nvm_read_us;
   uint32_t cache_bytes;
+  uint64_t nvm_cache_hits, nvm_cache_misses;
+  uint32_t nvm_cache_bytes;
 } vflash_stats_t;
 void vflash_stats(vflash_stats_t *out, int reset);
 /* Coalesce a synchronous bulk-save operation; end publishes the last page

@@ -2,25 +2,25 @@
   "format": "pxa-package-source-0.2",
   "min_sdk": [
     2,
-    0
+    1
   ],
   "target_sdk": [
     2,
-    0
+    1
   ],
   "compile_sdk": [
     2,
-    0
+    1
   ],
   "id": "pxa-red-alert",
-  "version": "0.2.1",
+  "version": "0.2.11",
   "name": "Red Alert",
   "description": "Community game port with automatically installed demo assets, without original music",
   "build": {
     "system": "cmake",
     "source_dir": ".",
     "linear_memory": {
-      "maximum_bytes": 10027008,
+      "maximum_bytes": 9633792,
       "pinned": true
     }
   },
@@ -58,7 +58,8 @@
           "wall-clock"
         ]
       },
-      "artifact": "aot"
+      "artifact": "wasm",
+      "execution_model": "main-loop"
     }
   ],
   "permissions": [
@@ -68,7 +69,7 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 201,
+  "release_sequence": 211,
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
