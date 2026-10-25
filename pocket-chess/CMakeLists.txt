@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.20)
+project(pxa_pocket_chess LANGUAGES C CXX)
+include("${CMAKE_CURRENT_LIST_DIR}/../common/cpp/Application.cmake")
+pxa_add_callback_component(pxa_main COMPONENT_ID main SOURCES main.cpp chess.cpp ../common/pocket-game/runtime.cpp)
+target_compile_features(pxa_main PRIVATE cxx_std_17)
+target_compile_options(pxa_main PRIVATE -fwrapv)
+target_link_options(pxa_main PRIVATE -Wl,-z,stack-size=65536)

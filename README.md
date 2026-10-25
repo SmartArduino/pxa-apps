@@ -75,6 +75,26 @@ python3 tools/test-app-matrix.py --output local/app-matrix --target all --sdk-ex
 
 字体预览和实验快照放在生成目录。相同截图可共用附件，但不同测量、测试配置、运行资源及许可证分别保留。性能报告必须说明工作负载、实际显示帧率、阶段耗时与内存，而不是只比较提交 FPS。
 
+## 触屏与手柄小游戏
+
+以下九款游戏使用 SDK 2.1，以 288×224 逻辑画布等比适配实际屏幕，支持触屏与控制器、校验存档、后台暂停和右上角游戏菜单。默认显示简体中文，在暂停菜单第四行切换 English，语言独立保存。构建时可同时输出模拟器、ESP32-S3 和 ESP32-S31 的签名 AOT 包：
+
+| 应用 | 玩法 |
+| --- | --- |
+| [2048](game-2048/README.md) | 滑动合并数字、撤回一步、保存棋盘与最高分 |
+| [Pocket Chess](pocket-chess/README.md) | 国际象棋、人机与双人模式、合法走子提示及升变 |
+| [Pocket Sokoban](pocket-sokoban/README.md) | 34 关推箱子、撤回、步数与推箱次数、解锁进度 |
+| [Pet Garden](pet-garden/README.md) | 原创像素宠物、房间与花园、三条进化路线、装饰商店、接莓果和节奏小游戏 |
+| [Crisp Arcade](crisp-arcade/README.md) | MIT 原版 CAST N、GRAPPLING H、REFLECTOR、COLOR ROLL，独立最高分 |
+| [Marble Islands](marble-islands/README.md) | small3dlib 软件 3D、八座滚珠岛屿、集宝石、定时门、弹柱、刹车和通关奖牌 |
+| [Lantern Grove](lantern-grove/README.md) | 原创 CC0 像素森林放置经营，三种资源、四类建筑、八章目标与有上限的离线生产 |
+| [Harbor Cafe](harbor-cafe/README.md) | 原创 CC0 海边咖啡馆，接单、调饮、送餐、补货、三条升级路线和每日经营结算 |
+| [Tiny Elements](tiny-elements/README.md) | 原创 CC0 粒子沙盒，沙、水、火、蒸汽、植物与熔岩反应，自由绘制与四项挑战 |
+
+六款较新的游戏使用 [Pocket Play](common/pocket-play/README.md)，2048、国际象棋与推箱子使用 [Pocket Game](common/pocket-game/README.md)；复制或开发时保留对应运行时与 [Pocket UI](common/pocket-ui/README.md)。十款游戏均不播放背景音乐，保留操作与事件音效。Lantern Grove、Harbor Cafe 和 Tiny Elements 可在各自帮助页开关音效并保存声音偏好。
+
+[Anarch](anarch/README.md) 使用独立的 160×120 逻辑画布，同样等比适配屏幕和触摸坐标；菜单右上角或控制器 X 切换中英文，帮助按钮或 Y 打开说明。Game Boy 等模拟器中的游戏语言由 ROM 决定。各应用说明包含完整操作、许可证、构建和可复用测试入口。
+
 ## 游戏机模拟器
 
 每个平台独立安装并保存数据，共用高效的 PXA 前端：

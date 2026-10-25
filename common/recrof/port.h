@@ -38,6 +38,8 @@ extern "C" {
 void port_game_main(void);
 void port_game_key(int key, int down);
 void port_game_motion(int dx, int dy);
+void port_game_reset_motion(void);
+void port_sample_controller(uint32_t elapsed_us, int *dx, int *dy);
 int port_game_in_menu(void);
 #ifdef PORT_RTS
 void port_game_scroll(int dx, int dy);
@@ -45,6 +47,8 @@ void port_game_move_cursor(int dx, int dy, int *x, int *y);
 #endif
 void port_game_audio(void);
 void port_yield(void);
+/* Read pending input immediately before the engine consumes its key queue. */
+void port_poll_input(void);
 void port_sleep(unsigned ms);
 uint64_t port_time_us(void);
 int port_cooperate_due(uint64_t now, uint32_t budget_us);
@@ -61,6 +65,10 @@ void port_pcm(const int16_t *samples, unsigned frames, unsigned rate,
 /* Borrow the existing playback session only for synchronous Audio operations. */
 uint64_t port_audio_session(void);
 void port_error(const char *message);
+/* RTS startup feedback ends when the engine presents its next real frame. */
+void port_loading_stage(const char *stage);
+/* RTS absent-file results remain bounded by startup or the next mutation. */
+void port_filesystem_loading_cache(int active);
 void port_log(const char *fmt, ...);
 const char *port_data_path(void);
 /* Atomically publish a closed private file, replacing an existing file. */

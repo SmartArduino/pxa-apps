@@ -1,0 +1,41 @@
+Marble Islands 1.0.0
+
+Original game, all eight level layouts, 3D meshes and colors, text, procedural
+sound, native tests, SVG and PNG icon: PXA contributors, 2026. Released under
+CC0 1.0 Universal. Full text: LICENSE-CC0.txt.
+
+The shared Pocket Play runtime and its original 5x7 font are also CC0-1.0.
+No commercial artwork, downloaded sound recordings or third-party level data
+are used. All tones are synthesized by the runtime.
+
+small3dlib, version 0.905d
+Author: Miloslav Ciz (drummyfish)
+Project: https://gitlab.com/drummyfish/small3dlib
+Header: https://gitlab.com/drummyfish/small3dlib/-/raw/master/small3dlib.h
+Readme: https://gitlab.com/drummyfish/small3dlib/-/raw/master/README.md
+License: CC0 1.0 Universal plus an additional waiver of all intellectual
+property rights. The vendored header and upstream README are unmodified.
+
+Vendored small3dlib.h SHA-256:
+8d466ca6555114eaf1baf567c4d4ab34ce62cf940a9a33f998f00a0a3b3c87b3
+Vendored upstream README.md SHA-256:
+280022b75aee1cac72c4f16d227458949e2cb2402fd9ef7aaa888a0cfdab4f99
+
+Upstream additional waiver, reproduced verbatim from the header:
+
+This work's goal is to never be encumbered by any exclusive intellectual
+property rights. The work is therefore provided under CC0 1.0 + additional
+WAIVER OF ALL INTELLECTUAL PROPERTY RIGHTS that waives the rest of
+intellectual property rights not already waived by CC0 1.0. The WAIVER OF ALL
+INTELLECTUAL PROPERTY RGHTS is as follows:
+
+Each contributor to this work agrees that they waive any exclusive rights,
+including but not limited to copyright, patents, trademark, trade dress,
+industrial design, plant varieties and trade secrets, to any and all ideas,
+concepts, processes, discoveries, improvements and inventions conceived,
+discovered, made, designed, researched or developed by the contributor either
+solely or jointly with others, which relate to this work or result from this
+work. Should any waiver of such right be judged legally invalid or
+ineffective under applicable law, the contributor hereby grants to each
+affected person a royalty-free, non transferable, non sublicensable, non
+exclusive, irrevocable and unconditional license to this right.

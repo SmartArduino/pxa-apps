@@ -29,7 +29,10 @@ void getKeys(uint16_t *keys);
 void getAnalogInput(int32_t * lx, int32_t *ly, int32_t *rx, int32_t *ry);
 // Engine sc_* key IDs. Extended arrows use the game's normalized IDs,
 // not raw PC Set-1/E0 bytes; ESP's KB_KeyEvent consumes these directly.
-// Returns false when the queue is empty.
+// Begin one engine keyboard poll. Different keys can be applied together;
+// a down/up pair for one key remains visible across at least two polls.
+void inputBeginKeyUpdate(void);
+// Returns false when empty or a just-pressed key's release is deferred.
 bool inputGetKeyEvent(uint8_t *scancode, bool *pressed);
 // Set by the game: in menus the trackball and touch screen navigate (arrows,
 // Enter), in game they turn/look and fire.

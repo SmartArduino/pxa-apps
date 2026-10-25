@@ -54,6 +54,20 @@ int main(void) {
      * while advancing more than 10 complete CPU/APU frames per second. */
     cadence_t heavy=simulate(165000,29000,2500,1,1);
     assert(heavy.frames>=150 && heavy.draws>=70 && heavy.draws<100);
+    /* Startup I/O inflates the first skip to 240 ms. The later scene costs
+     * 120/25 ms; stale feedback must not hold it below 9 simulated Hz. */
+    emu_pacer_t recovering;emu_pacer_reset(&recovering);
+    recovering.skip_us=240000;recovering.draw_us=120000;
+    unsigned recovered_frames=0,probes=0;uint64_t probe_now=1;
+    while(probe_now<15000001) {
+        emu_pacer_tick(&recovering,probe_now,probe_now*60,60,1);
+        int draw=emu_pacer_due(&recovering,probe_now);
+        if(draw)emu_pacer_drew(&recovering,probe_now);else ++probes;
+        emu_pacer_observe(&recovering,draw,draw?120000:25000);
+        probe_now+=(draw?120000:25000)+2500;
+        ++recovered_frames;
+    }
+    assert(probes>20 && recovered_frames>160 && recovering.skip_us<30000);
     emu_pacer_t p;emu_pacer_reset(&p);
     /* A costly initial full repaint must allow a skipped-cost measurement,
      * even if no skipped frame has been observed and the deadline expired. */

@@ -1,0 +1,10 @@
+Pocket CJK Bitmap 10
+Derived from Noto Sans CJK SC Regular.
+Copyright 2014-2021 Adobe (http://www.adobe.com/).
+Licensed under SIL Open Font License 1.1; see OFL-NotoSansCJK.txt.
+Source: https://github.com/notofonts/noto-cjk
+Modified: UI-only Unicode subset rasterized to a 10x10 monochrome
+bitmap, embedded in the game component; the derivative font is
+named Pocket CJK Bitmap 10 and remains under OFL-1.1.
+Generator: common/pocket-ui/generate_font.py (Pillow, 10px, SC face 2).
+The original hand-drawn 5x7 ASCII font remains CC0-1.0.

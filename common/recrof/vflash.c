@@ -23,11 +23,30 @@ static uint16_t buckets[BUCKETS], links[PAGES];
 static uint8_t cache[PAGES][PAGE];
 static unsigned recent_page;
 static vflash_stats_t io_stats;
+#ifndef PORT_VFLASH_NVM_CACHE_PAGES
+#define PORT_VFLASH_NVM_CACHE_PAGES 4u
+#endif
+#define NVM_CACHE_PAGES PORT_VFLASH_NVM_CACHE_PAGES
+_Static_assert(NVM_CACHE_PAGES > 0 && NVM_CACHE_PAGES <= 16,
+               "invalid NVM read cache capacity");
+static struct {
+  uint32_t index, age;
+  int valid;
+  uint8_t data[PAGE];
+} nvm_cache[NVM_CACHE_PAGES];
+static uint32_t nvm_cache_tick;
+static void invalidate_nvm_page(unsigned index) {
+  for(unsigned i=0;i<NVM_CACHE_PAGES;++i)
+    if(nvm_cache[i].valid && nvm_cache[i].index==index)nvm_cache[i].valid=0;
+}
 #ifdef PORT_VFLASH_COOPERATE
 static uint32_t read_calls;
 #endif
 void vflash_stats(vflash_stats_t *out, int reset) {
-  if(out) { *out=io_stats; out->cache_bytes=sizeof(cache); }
+  if(out) {
+    *out=io_stats; out->cache_bytes=sizeof(cache);
+    out->nvm_cache_bytes=sizeof(nvm_cache);
+  }
   if(reset) memset(&io_stats,0,sizeof(io_stats));
 }
 #define NVM_PAGES 512u
@@ -164,16 +183,12 @@ ready:
   ;
 #endif
 }
-static void nvm_read(uint32_t offset, void *dest, uint32_t length) {
+static void nvm_read_uncached(uint32_t offset, void *dest, uint32_t length) {
   uint8_t *out=dest;
   while (length) {
     unsigned index=offset/PAGE, within=offset%PAGE, count=PAGE-within;
     if(count>length)count=length;
 #ifdef PORT_VFLASH_PAGED_NVM
-    if(batch_valid && batch_index==index) {
-      port_copy_read(out,batch_block+within,count);
-      offset+=count;out+=count;length-=count;continue;
-    }
     uint64_t before=port_time_us();
     if(read_overlay(index,within,out,count)) {
       ++io_stats.nvm_reads;io_stats.nvm_read_us+=port_time_us()-before;
@@ -188,6 +203,35 @@ static void nvm_read(uint32_t offset, void *dest, uint32_t length) {
         port_error("Save data read failed.");
       ++io_stats.nvm_reads; io_stats.nvm_read_us+=port_time_us()-before;
     }
+    offset+=count;out+=count;length-=count;
+  }
+}
+static void nvm_read(uint32_t offset, void *dest, uint32_t length) {
+  uint8_t *out=dest;
+  while(length) {
+    unsigned index=offset/PAGE,within=offset%PAGE,count=PAGE-within;
+    if(count>length)count=length;
+#ifdef PORT_VFLASH_PAGED_NVM
+    /* Uncommitted NOR changes take precedence over the clean read cache. */
+    if(batch_valid && batch_index==index) {
+      port_copy_read(out,batch_block+within,count);
+      offset+=count;out+=count;length-=count;continue;
+    }
+#endif
+    unsigned victim=0,hit=NVM_CACHE_PAGES;
+    for(unsigned i=0;i<NVM_CACHE_PAGES;++i) {
+      if(nvm_cache[i].valid && nvm_cache[i].index==index)hit=i;
+      if(!nvm_cache[i].valid || (nvm_cache[victim].valid &&
+          nvm_cache[i].age<nvm_cache[victim].age))victim=i;
+    }
+    if(hit==NVM_CACHE_PAGES) {
+      hit=victim;nvm_cache[hit].valid=0;
+      nvm_read_uncached(index*PAGE,nvm_cache[hit].data,PAGE);
+      nvm_cache[hit].index=index;nvm_cache[hit].valid=1;
+      ++io_stats.nvm_cache_misses;
+    } else ++io_stats.nvm_cache_hits;
+    nvm_cache[hit].age=++nvm_cache_tick;
+    port_copy_read(out,nvm_cache[hit].data+within,count);
     offset+=count;out+=count;length-=count;
   }
 }
@@ -233,11 +277,13 @@ static void nvm_write(uint32_t offset, const uint8_t *data, uint32_t length,int 
       nvm_offsets[index]=at;save_length+=PAGE;
     }
 #endif
+    invalidate_nvm_page(index);
     offset+=count;length-=count;if(!erase)data+=count;
   }
 }
 uint32_t vflash_data_size(void) { return data_size; }
 void vflash_init(const char *path, uint32_t virtual_size, uint32_t nvm_size) {
+  memset(nvm_cache,0,sizeof(nvm_cache));nvm_cache_tick=0;
   mask = virtual_size - 1;
   virtual_end = virtual_size;
   nvm_start = virtual_size - nvm_size;

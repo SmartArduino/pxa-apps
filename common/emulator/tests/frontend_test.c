@@ -1,7 +1,8 @@
 /* Exercise actual PXA event codecs: separate pads, twelve buttons and menu chord. */
 #include "../main.c"
 #include <assert.h>
-int32_t pxa_call(uint32_t route,uint64_t token,const uint8_t *data,uint32_t size){(void)route;(void)token;(void)data;(void)size;return 0;}
+static unsigned control_calls;
+int32_t pxa_call(uint32_t route,uint64_t token,const uint8_t *data,uint32_t size){(void)route;(void)token;(void)data;(void)size;++control_calls;return 0;}
 static unsigned surface_ready,surface_presented;
 int32_t pxa_io(uint64_t handle,uint32_t operation,uint8_t *data,uint32_t size){
  if(handle==123 && surface_ready){
@@ -42,7 +43,25 @@ static void menu_test_reset(void) {
 #include "menu_contract.h"
 #include "theme_contract.h"
 #include "library_contract.h"
-int main(void){
+static void test_save_baseline(const char *path) {
+ FILE *f=fopen(path,"rb");assert(f);fseek(f,0,SEEK_END);long bytes=ftell(f);assert(bytes>0);rewind(f);
+ uint8_t *rom=malloc((size_t)bytes);assert(rom && fread(rom,1,(size_t)bytes,f)==(size_t)bytes);fclose(f);
+ assert(!emu_core_load(rom,(size_t)bytes));rom_loaded=1;saved_crc=0;
+ strcpy(save_path,"test.sav");strcpy(save_tmp,"test.sav.tmp");
+ size_t size=emu_core_save_size();
+ if(size) {
+  remember_save_baseline();assert(save_data);uint32_t baseline=saved_crc;
+  unsigned before=control_calls;start_save();assert(!save_pending && control_calls==before);
+  uint8_t *changed=malloc(size);assert(changed && emu_core_save_export(changed,size));
+  changed[size/2]^=0x5a;assert(emu_core_save_import(changed,size));free(changed);
+  start_save();assert(save_pending && control_calls>before && saved_crc==baseline && pending_save_crc!=baseline);
+  /* A failed/incomplete write must not acknowledge the modified progress. */
+  save_pending=0;before=control_calls;start_save();assert(save_pending && control_calls>before && saved_crc==baseline);
+ }
+ save_pending=rom_loaded=0;free(save_data);save_data=NULL;emu_core_close();free(rom);
+}
+int main(int argc,char **argv){
+ assert(argc==2);test_save_baseline(argv[1]);
  emu_controls_init(&controls,320,240);mode=PLAYING;background=0;release_input();
  test_pending_render();
  const uint32_t host[]={PXA_CONTROLLER_UP,PXA_CONTROLLER_DOWN,PXA_CONTROLLER_LEFT,PXA_CONTROLLER_RIGHT,

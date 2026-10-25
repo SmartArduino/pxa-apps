@@ -1,10 +1,13 @@
 /* GPL-2.0-or-later. Rendering budget; never changes the emulated clock. */
 #pragma once
 #include <stdint.h>
+#ifndef EMU_PACER_VISIBLE_BUDGET_US
+#define EMU_PACER_VISIBLE_BUDGET_US 90000u
+#endif
 
 typedef struct {
     uint64_t checked_at, previous_debt, last_draw_at, minimum_debt;
-    uint32_t draw_us, skip_us, since_draw, max_gap_us;
+    uint32_t draw_us, skip_us, since_draw, max_gap_us, draws_since_skip;
     uint32_t interval_q16, credit_q16;
     unsigned minimum, buffer_limited;
     unsigned feedback, every;
@@ -24,8 +27,16 @@ static inline uint32_t emu_pacer_average(uint32_t previous,uint64_t elapsed) {
 }
 
 static inline void emu_pacer_observe(emu_pacer_t *p,int drawn,uint64_t elapsed) {
-    if(drawn)p->draw_us=emu_pacer_average(p->draw_us,elapsed);
-    else p->skip_us=emu_pacer_average(p->skip_us,elapsed);
+    if(drawn) {
+        p->draw_us=emu_pacer_average(p->draw_us,elapsed);
+        if(p->draws_since_skip<UINT32_MAX)++p->draws_since_skip;
+    } else {
+        /* A load/ROM miss can make the initial skipped frame unusually slow.
+         * A fresh probe after many draws describes the current scene better
+         * than an average dominated by that old sample. */
+        p->skip_us=emu_pacer_average(p->draws_since_skip>=30?0:p->skip_us,elapsed);
+        p->draws_since_skip=0;
+    }
 }
 
 static inline int emu_pacer_expensive_draw(const emu_pacer_t *p) {
@@ -83,7 +94,7 @@ static inline void emu_pacer_tick(emu_pacer_t *p,uint64_t now,
      * is confirmed, retain the 70 ms budget. This only changes video cadence;
      * all CPU/APU frames and accumulated scheduler debt remain intact. */
     if(p->draw_us && p->skip_us) {
-        uint32_t visible_budget=p->feedback>=3?90000:70000;
+        uint32_t visible_budget=p->feedback>=3?EMU_PACER_VISIBLE_BUDGET_US:70000;
         uint32_t visible_interval=65536;
         if(p->draw_us<visible_budget) {
             uint64_t extra=(uint64_t)(visible_budget-p->draw_us)*65536/p->skip_us;
@@ -112,6 +123,10 @@ static inline int emu_pacer_due(emu_pacer_t *p,uint64_t now) {
      * an expensive initial render, and preserve it during sustained overload. */
     if(p->since_draw==1 && ((!p->skip_us && p->draw_us>=70000) ||
         emu_pacer_expensive_draw(p)))return 0;
+    /* Recheck simulation-only cost during sustained overload. Otherwise a
+     * costly startup sample can select continuous drawing forever and never
+     * discover that skipping became useful. Caught-up games are unaffected. */
+    if(p->since_draw==1 && p->feedback>=3 && p->draws_since_skip>=30)return 0;
     /* When even a skipped frame is too expensive, keep a bounded opportunity
      * for visual feedback. This is a maximum gap, not a fixed low-FPS mode. */
     return p->since_draw>=p->minimum && (p->credit_q16>=p->interval_q16 ||

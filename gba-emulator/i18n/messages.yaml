@@ -1,0 +1,206 @@
+namespace: app.pxa-gba
+default_locale: en-US
+messages:
+  ui.title:
+    source: "Game Boy Advance Emulator"
+    context: GBA ui title menu label
+    max_bytes: 112
+  ui.paused:
+    source: "Game paused"
+    context: GBA ui paused menu label
+    max_bytes: 112
+  ui.saving:
+    source: "Saving progress..."
+    context: GBA ui saving menu label
+    max_bytes: 112
+  ui.save.error:
+    source: "Save failed - retry"
+    context: GBA ui save error menu label
+    max_bytes: 112
+  ui.resume:
+    source: "Resume game"
+    context: GBA ui resume menu label
+    max_bytes: 112
+  ui.library:
+    source: "Choose game"
+    context: GBA ui library menu label
+    max_bytes: 112
+  ui.sound.on:
+    source: "Sound: ON"
+    context: GBA ui sound on menu label
+    max_bytes: 112
+  ui.sound.off:
+    source: "Sound: OFF"
+    context: GBA ui sound off menu label
+    max_bytes: 112
+  ui.sound.starting:
+    source: "Sound: starting..."
+    context: GBA ui sound starting menu label
+    max_bytes: 112
+  ui.sound.failed:
+    source: "Sound: retry"
+    context: GBA ui sound failed menu label
+    max_bytes: 112
+  ui.keys.auto:
+    source: "Keys: auto-hidden"
+    context: GBA ui keys auto menu label
+    max_bytes: 112
+  ui.keys.off:
+    source: "Keys: hidden"
+    context: GBA ui keys off menu label
+    max_bytes: 112
+  ui.loading:
+    source: "Loading game..."
+    context: GBA ui loading menu label
+    max_bytes: 112
+  ui.load.error:
+    source: "Cannot load game"
+    context: GBA ui load error menu label
+    max_bytes: 112
+  ui.error.detail:
+    source: "Check ROM and storage"
+    context: GBA ui error detail menu label
+    max_bytes: 112
+  ui.host.unsupported:
+    source: "Please update host firmware"
+    context: GBA ui host unsupported menu label
+    max_bytes: 112
+  ui.error.retry:
+    source: "Return to library and retry"
+    context: GBA ui error retry menu label
+    max_bytes: 112
+  ui.back.library:
+    source: "Back to library"
+    context: GBA ui back library menu label
+    max_bytes: 112
+  ui.pack:
+    source: "PACK"
+    context: GBA ui pack menu label
+    max_bytes: 112
+  ui.flash:
+    source: "FLASH"
+    context: GBA ui flash menu label
+    max_bytes: 112
+  ui.sd:
+    source: "SD"
+    context: GBA ui sd menu label
+    max_bytes: 112
+  ui.prev:
+    source: "Prev"
+    context: GBA ui prev menu label
+    max_bytes: 112
+  ui.next:
+    source: "Next"
+    context: GBA ui next menu label
+    max_bytes: 112
+  ui.refresh:
+    source: "Refresh"
+    context: GBA ui refresh menu label
+    max_bytes: 112
+  ui.display:
+    source: "Frame interval: {frames}"
+    context: GBA ui display menu label
+    max_bytes: 112
+    placeholders:
+      frames: u32
+  ui.keys.alpha:
+    source: "Keys: opacity {opacity}%"
+    context: GBA ui keys alpha menu label
+    max_bytes: 112
+    placeholders:
+      opacity: u32
+  ui.scanning:
+    source: "Scanning..."
+    context: GBA ui scanning menu label
+    max_bytes: 112
+  ui.no.roms:
+    source: "No games found"
+    context: GBA ui no roms menu label
+    max_bytes: 112
+  ui.hint:
+    source: "Choose a game to start"
+    context: GBA ui hint menu label
+    max_bytes: 112
+  ui.model:
+    source: "Model: {model}"
+    context: GBA ui hardware model label
+    max_bytes: 112
+    placeholders:
+      model: u32
+  control.select:
+    source: "SEL"
+    context: Floating game control label
+    max_bytes: 112
+  control.start:
+    source: "START"
+    context: Floating game control label
+    max_bytes: 112
+  control.menu:
+    source: "MENU"
+    context: Floating game control label
+    max_bytes: 112
+  ui.back:
+    source: "Back"
+    context: GBA library actions
+    max_bytes: 112
+  ui.exit:
+    source: "Exit emulator"
+    context: GBA library actions
+    max_bytes: 112
+  ui.exit.back:
+    source: "Use system Back to exit"
+    context: GBA library actions
+    max_bytes: 112
+  ui.empty.help:
+    source: "Add games for this platform, then refresh"
+    context: GBA library actions
+    max_bytes: 112
+  ui.flash.path:
+    source: "Storage: app private folder"
+    context: GBA library actions
+    max_bytes: 112
+  ui.sd.path:
+    source: "SD card folder:"
+    context: GBA library actions
+    max_bytes: 112
+  ui.scale.native:
+    source: "Video: original pixels"
+    context: GBA display options
+    max_bytes: 112
+  ui.scale.fit:
+    source: "Video: fit aspect ratio"
+    context: GBA display options
+    max_bytes: 112
+  ui.sd.query:
+    source: "Querying app media folder..."
+    context: GBA display options
+    max_bytes: 112
+  ui.states:
+    source: "Save states"
+    context: Pause-only machine snapshots
+    max_bytes: 112
+  ui.state.error:
+    source: "State operation failed - retry"
+    context: Pause-only machine snapshots
+    max_bytes: 112
+  ui.state.loaded:
+    source: "State loaded"
+    context: Pause-only machine snapshots
+    max_bytes: 112
+  ui.no.states:
+    source: "No save states yet"
+    context: Pause-only machine snapshots
+    max_bytes: 112
+  ui.new.state:
+    source: "New save"
+    context: Pause-only machine snapshots
+    max_bytes: 112
+
+  ui.delete.state:
+    source: "Delete"
+    context: Remove selected snapshot with confirmation
+    max_bytes: 112
+  ui.delete.confirm:
+    source: "Confirm again to delete selected state"
+    context: Snapshot deletion confirmation
+    max_bytes: 112

@@ -1,0 +1,16 @@
+Pocket Sokoban contains separately licensed code and level data:
+
+1. Movement and rewind in core.cpp/core.hpp are adapted from NibbleSokoban,
+   Copyright (c) 2021 snsdosen, under the MIT License. The full original license
+   is in upstream/NibbleSokoban/LICENSE and assets/LICENSE-NibbleSokoban.txt.
+2. The selected generated Boxoban levels are distributed under Apache-2.0.
+   The full license is in upstream/boxoban/LICENSE and assets/LICENSE-Boxoban.txt.
+   The C++ string conversion does not alter the layouts. Original level IDs,
+   repository revisions, file SHA-256, and changes are recorded in SOURCES.json.
+3. Original tutorial layouts, UI, geometric artwork and icons, tests, and build
+   glue are dedicated to the public domain under CC0-1.0. The complete legal
+   code is in LICENSE-CC0.txt and assets/LICENSE-CC0.txt.
+
+The original NibbleSokoban levels, sprites and bitmaps are not included.
+All applicable licenses and attributions are copied into assets for signed
+package redistribution. See assets/NOTICE.txt for source and citation details.

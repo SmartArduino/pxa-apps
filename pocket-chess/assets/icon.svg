@@ -1,0 +1,6 @@
+<!-- SPDX-License-Identifier: CC0-1.0; Original Pocket Chess icon, no external assets. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">
+  <rect width="96" height="96" rx="16" fill="#0f172a"/>
+  <path fill="#4b746e" d="M8 8h20v20H8zM48 8h20v20H48zM28 28h20v20H28zM68 28h20v20H68zM8 48h20v20H8zM48 48h20v20H48zM28 68h20v20H28zM68 68h20v20H68z"/>
+  <path fill="#fffadf" stroke="#14202e" stroke-width="3" stroke-linejoin="round" d="M44 14h8v8h8v8h-8v7h12l-5 28H37l-5-28h12v-7h-8v-8h8zM35 66h26v8H35zM29 75h38v9H29z"/>
+</svg>

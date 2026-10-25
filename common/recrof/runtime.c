@@ -2,6 +2,9 @@
  */
 #include "port.h"
 #include "controller.h"
+#ifdef PORT_RTS
+#include "loading.h"
+#endif
 #include "pxa.h"
 #include "rpc.h"
 #define PXA_UI_COMMAND_FAILED(op, status)                                      \
@@ -146,7 +149,14 @@ static uint64_t perf_since, perf_draw_us;
 static uint64_t perf_yield_at, perf_wait_us;
 static uint32_t perf_yields;
 static uint32_t perf_frames, perf_skipped;
+#ifdef PORT_RTS
+static const char *loading_stage = "Opening game files";
+static uint64_t loading_began, loading_painted;
+static int loading_active;
+static void paint_loading(uint64_t now);
+#endif
 __attribute__((weak)) void port_game_stats(void) {}
+__attribute__((weak)) void port_game_reset_motion(void) {}
 
 typedef struct {
   int active, x, y, cx, cy, role, key;
@@ -178,6 +188,26 @@ void port_log(const char *fmt, ...) {
 int port_mouse_x(void) { return mouse_x; }
 int port_mouse_y(void) { return mouse_y; }
 int port_key_down(int k) { return k >= 0 && k < 256 ? keys[k] : 0; }
+
+void port_poll_input(void) {
+#if PORT_NATIVE_MAIN_LOOP
+  /* Long rendering/file operations may have queued input since the last
+   * yield. Drain without waiting so that this update uses the latest state.
+   * Bound the work even if the host continuously produces events. */
+  for (unsigned pending = 0; pending < 64; ++pending) {
+    int count = pxa_event_port_wait(event_port, event_bytes, sizeof(event_bytes), 0);
+    if (count == PXA_STATUS_WOULD_BLOCK || count == PXA_STATUS_TIMED_OUT) break;
+    if (count <= 0 || handle_event(event_bytes, (uint32_t)count) < 0) {
+      port_log("PXA input poll failed: %d", count);
+      __builtin_trap();
+    }
+    if (background) {
+      port_yield();
+      break;
+    }
+  }
+#endif
+}
 
 /* These two functions are Asyncify's top/bottom runtime boundaries. Keep them
  * out of the optimizer's inliner. No host-specific continuation imports remain
@@ -235,6 +265,7 @@ int port_cooperate_due(uint64_t now,uint32_t budget_us) {
 NOINLINE static void run_game(void) {
   engine_running = 1;
   port_log("Starting %s", PORT_TITLE);
+  port_loading_stage("Opening game files");
   mkdir("/data", 0700);
   if(!port_external_prepare()) return;
   port_game_main();
@@ -364,7 +395,35 @@ static void present(int index) {
   if (r == PXA_STATUS_WOULD_BLOCK) pending_buffer = index;
   else if (r != 16) port_log("PXA present failed: %d",r);
 }
+#ifdef PORT_RTS
+static void paint_loading(uint64_t now) {
+  if(!loading_active || background || !surface || reserved_compute_buffer>=0 ||
+      (loading_painted && now-loading_painted<250000))return;
+  int index=acquire();
+  if(index<0)return;
+  port_draw_loading(output(index),surface_w,surface_h,PORT_TITLE,loading_stage,
+      now>=loading_began?now-loading_began:0);
+  present(index);
+  loading_painted=now?now:1;
+}
+#endif
+void port_loading_stage(const char *stage) {
+#ifdef PORT_RTS
+  if(!stage)return;
+  port_filesystem_loading_cache(1);
+  if(!loading_began) {loading_began=port_time_us();if(!loading_began)loading_began=1;}
+  loading_stage=stage;loading_active=1;loading_painted=0;
+  port_log("PXA LOAD stage=%s",stage);
+  paint_loading(port_time_us());
+#else
+  (void)stage;
+#endif
+}
 void port_error(const char *message) {
+#ifdef PORT_RTS
+  loading_active=0;
+  port_filesystem_loading_cache(0);
+#endif
   port_log("%s",message);
   for (;;) {
     int index = acquire();
@@ -381,6 +440,12 @@ void port_error(const char *message) {
 void port_frame_cursor(const uint8_t *p, int w, int h, int pitch,
                         const port_cursor_t *cursor) {
   if (!p || w <= 0 || h <= 0 || pitch < w) return;
+#ifdef PORT_RTS
+  if(loading_active) {
+    loading_active=0;
+    port_filesystem_loading_cache(0);
+  }
+#endif
   uint64_t begin = port_time_us();
   if (!perf_since) perf_since = begin;
   int index = reserved_compute_buffer;
@@ -545,6 +610,7 @@ static void update_keys(void) {
 static void release_touch(void) {
   memset(touches, 0, sizeof(touches));
   memset(touch_keys, 0, sizeof(touch_keys));
+  port_game_reset_motion();
 }
 static void release_input(void) {
   release_touch();
@@ -555,6 +621,17 @@ static void release_input(void) {
 #endif
   update_keys();
 }
+void port_sample_controller(uint32_t elapsed_us, int *dx, int *dy) {
+  *dx = *dy = 0;
+  if (background) return;
+  if (port_controller_menu(&controller, port_game_in_menu(), CONTROLLER_RTS,
+                           pad_keys)) update_keys();
+  const port_controller_motion_t move = port_controller_advance(&controller,
+      elapsed_us, CONTROLLER_RTS);
+  *dx = move.x;
+  *dy = move.y;
+}
+#ifndef PORT_ENGINE_CONTROLLER
 static void controller_tick(void) {
   if (background || !controller.buttons) return;
   if (port_controller_menu(&controller, port_game_in_menu(), CONTROLLER_RTS,
@@ -572,6 +649,7 @@ static void controller_tick(void) {
   port_game_motion(move.x, move.y);
 #endif
 }
+#endif
 static void input_pointer(const pxa_ui_pointer_data_t *p) {
   if (background) return;
   if (p->phase == PXA_POINTER_DOWN && !port_controls_visible()) {
@@ -627,11 +705,14 @@ static void input_pointer(const pxa_ui_pointer_data_t *p) {
     return;
   t->cx = x;
   t->cy = y;
-  if (p->phase == PXA_POINTER_MOVE && t->role == 2) {
+  if ((p->phase == PXA_POINTER_MOVE || p->phase == PXA_POINTER_UP) && t->role == 2) {
     port_game_motion(x - t->x, y - t->y);
     t->x = x;
     t->y = y;
   }
+  if (p->phase == PXA_POINTER_DOWN)
+    port_log("PXA TOUCH raw=%d,%d logical=%d,%d role=%d key=%d",
+        p->x,p->y,x,y,t->role,t->key);
   if (p->phase == PXA_POINTER_UP || p->phase == PXA_POINTER_CANCEL)
     t->active = 0;
   memset(touch_keys, 0, sizeof(touch_keys));
@@ -937,7 +1018,12 @@ static int32_t handle_event(const uint8_t *bytes, uint32_t n) {
   }
   uint64_t now;
   if (pxa_clock_parse_tick(&e, &now)) {
+#ifdef PORT_RTS
+    if(engine_running)paint_loading(port_time_us());
+#endif
+#ifndef PORT_ENGINE_CONTROLLER
     controller_tick();
+#endif
 #ifdef PORT_CNC_MEDIA_HANDLES
     extern void port_filesystem_tick(uint64_t);
     port_filesystem_tick(now);

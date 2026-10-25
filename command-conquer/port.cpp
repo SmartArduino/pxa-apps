@@ -2,6 +2,7 @@
 #include <stdio.h>
 int cnc_game_main(int, char **);
 extern "C" void port_game_main() {
+  port_loading_stage("Checking game files");
 #ifdef CNC_GAME_RA
   const char *required = "/data/REDALERT.MIX";
 #else
@@ -45,6 +46,7 @@ extern "C" void port_game_main() {
 #ifdef PORT_LOADING_TRACE
   port_log("PXA LOAD settings ready; entering engine");
 #endif
+  port_loading_stage("Preparing game engine");
   int status = cnc_game_main(1, argv);
   port_log("Game returned %d", status);
   port_error("Game closed.");

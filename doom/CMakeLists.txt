@@ -12,6 +12,7 @@ set(PXA_RECROF_CALLBACK_STACK_BYTES 16384)
 include(../common/recrof/Engine.cmake)
 pxa_recrof_component(TITLE "DOOM" SOURCES doom.c INCLUDES .
     DEFINITIONS PORT_EXTERNAL_GAME_DATA=1 PORT_PACED_BY_MAIN=1
+    PORT_DOOM_CONTROLLER=1
     PORT_TICK_US=8000 PORT_COOPERATE_BUDGET_US=8000)
 # Customize labels/roles for a game with no jump, preserving the shared blitter.
 get_target_property(doom_sources pxa_main SOURCES)

@@ -18,7 +18,10 @@ PAK_HEADER = struct.Struct('<4sII')
 PAK_ENTRY = struct.Struct('<56sII')
 DEFAULT_CFG = (b'bind "UPARROW" "+forward"\nbind "DOWNARROW" "+back"\n'
                b'bind "LEFTARROW" "+left"\nbind "RIGHTARROW" "+right"\n'
-               b'bind "CTRL" "+attack"\nbind "SPACE" "+jump"\n')
+               b'bind "CTRL" "+attack"\nbind "MOUSE1" "+attack"\n'
+               b'bind "," "+moveleft"\nbind "." "+moveright"\n'
+               b'bind "SPACE" "+jump"\nbind "/" "impulse 10"\n'
+               b'bind "e" "+use"\n')
 
 
 def unpack_pak(data):

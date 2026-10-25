@@ -23,6 +23,7 @@ static inline unsigned emu_touch_layout(emu_touch_rect_t *out,unsigned width,uns
         {211,cy+9,36,34},{249,cy-21,36,34},
         {223,cy-44,32,32},{195,cy-16,32,32},{10,cy-76,54,24},{232,cy-76,54,24}};
     if(style==2)for(unsigned i=9;i<EMU_TOUCH_COUNT;++i)b[i].w=b[i].h=0;
+    if(style==3)for(unsigned i=9;i<11;++i)b[i].w=b[i].h=0; /* GBA: A/B + L/R */
     if(style==4) {b[7]=(emu_touch_rect_t){223,cy+12,32,32};b[8]=(emu_touch_rect_t){251,cy-16,32,32};}
     if(style==6) {
         const unsigned slots[]={8,7,9,10,11,12};
@@ -31,7 +32,7 @@ static inline unsigned emu_touch_layout(emu_touch_rect_t *out,unsigned width,uns
     int gap=(int)width-emu_touch_px(296,scale),bottom=(int)height-emu_touch_px(240,scale);
     bottom-=emu_touch_gesture_margin(scale)-emu_touch_px(24,scale);
     for(unsigned i=0;i<EMU_TOUCH_COUNT;++i) {
-        int anchor=(i<4 || (style==4 && i==11))?0:(i>=7?gap:gap/2);
+        int anchor=(i<4 || ((style==3 || style==4) && i==11))?0:(i>=7?gap:gap/2);
         out[i]=(emu_touch_rect_t){ox+anchor+emu_touch_px(b[i].x,scale),oy+bottom+emu_touch_px(b[i].y,scale),
             emu_touch_px(b[i].w,scale),emu_touch_px(b[i].h,scale)};
     }

@@ -9,6 +9,7 @@
 static unsigned opens,closes,reads,fail_next,mutation;
 static uint64_t now=1,cookies[4];
 static const uint64_t base=UINT64_C(0x100000000);
+int port_external_open_status(void){return PXA_STATUS_NOT_FOUND;}
 const pxa_event_t *port_rpc_packet(const uint8_t *p,uint32_t n) {
     static pxa_event_t e;static uint8_t payload[4];pxa_wire_view_t v;
     assert(pxa_wire_decode(p,n,PXA_MAX_CONTROL_BYTES,&v) && v.service==PXA_FS_SERVICE);

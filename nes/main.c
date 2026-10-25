@@ -14,6 +14,7 @@
 #include "ui_strings.h"
 #include "pxa.h"
 #include "pxa_audio.h"
+#include "../common/emulator/audio_preferences.h"
 #include "pxa_assets.h"
 
 #include "pxa_clock.h"
@@ -403,13 +404,9 @@ static void audio_failure(const char *stage,int status) {
     nes_audio_fifo_clear(&audio_fifo);audio_requested=0;audio_failed=1;redraw=1;
     nes_port_log("NES SOUND FAILED stage=%s status=%d",stage,status);
 }
-static void request_audio(void) {
-    if(audio) {
-        close_handle(&audio);close_handle(&permission);
-        nes_audio_fifo_clear(&audio_fifo);audio_requested=audio_failed=0;redraw=1;
-        nes_port_log("NES SOUND OFF");return;
-    }
-    if(audio_requested)return;
+static emulator_audio_preferences_t audio_preferences;
+static void start_audio(void) {
+    if(audio || audio_requested)return;
     audio_requested=1;audio_failed=0;redraw=1;
     uint8_t packet[160];uint32_t size;
     if(!pxa_permission_build(packet,sizeof(packet),PXA_PERMISSION_ACQUIRE,T_AUDIO_PERMISSION,"audio.playback",14,(const uint8_t*)"media",5,&size)) {
@@ -419,6 +416,25 @@ static void request_audio(void) {
     if(status)audio_failure("permission-request",status);
     else nes_port_log("NES SOUND STARTING");
 }
+static void apply_audio_preference(bool enabled) {
+    if (enabled) { start_audio(); return; }
+    close_handle(&audio);
+    close_handle(&audio_pending);
+    close_handle(&permission);
+    nes_audio_fifo_clear(&audio_fifo);
+    audio_requested = audio_failed = 0;
+    redraw = 1;
+    nes_port_log("NES SOUND OFF");
+}
+
+static void request_audio(void) {
+    if (audio_requested && !audio) return;
+    bool enabled = !(audio || audio_requested);
+    if (emulator_audio_preferences_set(&audio_preferences, enabled))
+        nes_port_log("Sound preference could not be saved: %d", audio_preferences.error);
+    apply_audio_preference(enabled);
+}
+
 static void drain_audio(void) {
     if(!audio)return;
     for(unsigned attempt=0;attempt<4 && audio_fifo.count;++attempt) {
@@ -578,7 +594,7 @@ static void request_exit(void) {
     redraw=1;
 }
 static void exit_tick(void) {
-    if(!exit_requested || save_pending || writing_save || save_replace_pending || slot_phase)return;
+    if(!exit_requested || audio_preferences.saving || save_pending || writing_save || save_replace_pending || slot_phase)return;
     exit_requested=0;
     if(save_failed){redraw=1;return;}
     /* Window 0.4 has a Host-delivered BACK request, then the normal stop path. */
@@ -669,7 +685,8 @@ int32_t pxa_app_start(const uint8_t *config,uint32_t size) {
     r=pxa_clock_set_period(16);if(r)return r;pxa_clock_limits(T_LIMITS);
     pxa_fs_request_app_media_path(T_MEDIA_PATH);
     pxa_fs_request_path(PXA_FS_MAKE_DIRECTORY,T_MKDIR,"roms",4);
-    open_library();return 0;
+    open_library();emulator_audio_preferences_start(&audio_preferences, apply_audio_preference);
+    return 0;
 }
 void pxa_app_stop(uint32_t reason) {
     (void)reason;
@@ -678,6 +695,10 @@ void pxa_app_stop(uint32_t reason) {
 }
 int32_t pxa_app_on_event(const uint8_t *data,uint32_t size) {
     pxa_event_t e;if(!pxa_parse_event(data,size,&e))return PXA_EVENT_UNHANDLED;
+    if (emulator_audio_preferences_event(&audio_preferences, &e, apply_audio_preference)) {
+        if (audio_preferences.error) nes_port_log("Sound preference storage status=%d", audio_preferences.error);
+        return PXA_EVENT_HANDLED;
+    }
     if(e.service==PXA_GAME_RENDER_SERVICE && e.token==T_RASTER){
         pxa_game_render_raster_result_t r;
         if(pxa_game_render_parse_raster(&e,T_RASTER,&r) && !r.status)
@@ -739,7 +760,7 @@ int32_t pxa_app_on_event(const uint8_t *data,uint32_t size) {
         if(exit_requested==2){exit_requested=0;return 0;}
         if(slot_phase)return PXA_EVENT_HANDLED;
         if(mode==PLAYING)pause_game();else if(mode==PAUSED)pause_action(0);else if(mode==STATES){mode=PAUSED;redraw=1;}
-        else if(mode==MENU){if(save_pending || writing_save || save_replace_pending)request_exit();else return 0;}
+        else if(mode==MENU){if(audio_preferences.saving || save_pending || writing_save || save_replace_pending)request_exit();else return 0;}
         else open_library();return PXA_EVENT_HANDLED;
     }
     if(e.token==T_SURFACE && e.service==PXA_SURFACE_SERVICE) {

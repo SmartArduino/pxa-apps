@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 static const unsigned screens[][2]={{200,160},{296,240},{320,240},{240,320},{480,480},{800,480}};
-static const unsigned sources[][4]={{159,143,10,9},{257,225,4,3},{160,144,10,9},{256,192,4,3},{256,224,4,3},{320,240,4,3},{512,478,4,3}};
+static const unsigned sources[][4]={{159,143,10,9},{257,225,4,3},{160,144,10,9},{240,160,3,2},{256,192,4,3},{256,224,4,3},{320,240,4,3},{512,478,4,3}};
 int main(void){
  emu_core_defaults();
  uint16_t *source=malloc(523u*512u*2u);assert(source);
@@ -21,6 +21,9 @@ int main(void){
    unsigned sw=sources[mode][0],sh=sources[mode][1],ss=sw+11;
    emu_core_info.width=sw;emu_core_info.height=sh;emu_core_info.stride=ss;
    emu_core_info.aspect_num=sources[mode][2];emu_core_info.aspect_den=sources[mode][3];
+   if(sw>EMU_MAX_SOURCE_WIDTH || sh>EMU_MAX_SOURCE_HEIGHT){
+    emu_video_sync(&r);assert(!r.view_width && !r.view_height);continue;
+   }
    emu_video_sync(&r);assert(r.view_width && r.view_height);
    assert(r.view_x+r.view_width<=w && r.view_y+r.view_height<=h);
    for(size_t i=0;i<(size_t)ss*sh;++i)source[i]=(uint16_t)(i*109+73);

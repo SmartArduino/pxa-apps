@@ -20,7 +20,7 @@
     "system": "cmake",
     "source_dir": ".",
     "linear_memory": {
-      "maximum_bytes": 3670016,
+      "maximum_bytes": 5242880,
       "pinned": true
     }
   },

@@ -34,7 +34,7 @@ foreach(source IN LISTS ENGINE)
         set_source_files_properties("${source}" PROPERTIES COMPILE_OPTIONS -Os)
     endif()
 endforeach()
-pxa_recrof_component(TITLE "Quake" SOURCES ${ENGINE} port.c extmemory.c ../common/recrof/vflash.c
+pxa_recrof_component(TITLE "Quake" SOURCES ${ENGINE} port.c extmemory.c port/callbacks.c ../common/recrof/vflash.c
     INCLUDES port vendor/quake DEFINITIONS ESP_PLATFORM=1 PORT_PACED_BY_MAIN=1)
 if(PXA_QUAKE_FRAME_PROFILE)
     target_compile_definitions(pxa_main PRIVATE PXA_FRAME_PROFILE=1)
@@ -79,6 +79,6 @@ if(PXA_QUAKE_FRAME_SPANS)
         PXA_FRAME_BULK_COPY=$<BOOL:${PXA_QUAKE_FRAME_BULK_COPY}>)
 endif()
 
-target_compile_definitions(pxa_main PRIVATE PORT_EXTERNAL_GAME_DATA=1 PORT_COOPERATE_BUDGET_US=32000
+target_compile_definitions(pxa_main PRIVATE PORT_ENGINE_CONTROLLER=1 PORT_EXTERNAL_GAME_DATA=1 PORT_COOPERATE_BUDGET_US=32000
     PORT_TICK_US=8000 PORT_CONTINUATION_BYTES=16384
     PORT_VFLASH_CACHE_PAGES=128 PORT_VFLASH_COOPERATE=1 PORT_VFLASH_PAGED_NVM=1)

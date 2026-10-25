@@ -371,7 +371,7 @@ extern "C" int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     touch_init(&g_touch, g_display_width);
     audio_init(&g_audio);
     g_hud.visible = 1;
-    g_hud.show_perf = 1;
+    g_hud.show_perf = 0;
     if (!setup_pointer_node() ||
         pxa_window_fullscreen() != PXA_STATUS_OK) {
         return PXA_STATUS_INTERNAL;

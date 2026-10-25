@@ -1,0 +1,18 @@
+Crisp Arcade 1.0.0
+
+Original games, game art, font patterns, collision/game core, particles and sound
+composition: Copyright (c) 2022 ABA Games.
+Source: https://github.com/abagames/crisp-game-lib-portable
+Commit: 7c318dc87f1f6fb8cc03449613d8fdba73b380e9
+License: MIT; complete text in LICENSE-crisp-game-lib-portable.txt.
+
+PXA adapter, launcher, launcher symbols, application icon, tests and maintenance
+documentation: Copyright (c) 2026 Crisp Arcade contributors.
+License: MIT; complete text in LICENSE-crisp-arcade.txt.
+The icon and launcher symbols are original geometric artwork, not third-party
+image assets. No additional font, music, or image downloads are required.
+
+Shared Pocket Play runtime and its hand-drawn 5x7 launcher font:
+CC0-1.0, from the containing PXA application workspace. Its source headers retain
+the SPDX notice; this distribution includes the complete CC0 text alongside
+these notices.

@@ -48,6 +48,10 @@
 #include "common/paths.h"
 #include "common/winasm.h"
 #include <time.h>
+#ifdef ESP_PLATFORM_CNC
+extern "C" void port_loading_stage(const char *);
+static bool pxa_multiplayer_maps_ready;
+#endif
 
 /****************************************
 **	Function prototypes for this module **
@@ -475,8 +479,10 @@ bool Init_Game(int, char*[])
     **	Play the introduction movies.
     */
     CCDebugString("C&C95 - About to play the intro movie\n");
+#if !defined(ESP_PLATFORM_CNC)
     if (!Special.IsFromInstall)
         Play_Intro(true);
+#endif
 
     /*
     **	Wait for a VSync; during the vertical blank, set the game palette & blit
@@ -588,7 +594,7 @@ bool Init_Game(int, char*[])
     //#endif //FIX_ME_LATER
     Call_Back();
 
-#ifndef DEMO
+#if !defined(DEMO) && !defined(ESP_PLATFORM_CNC)
     /*
     **	Load multiplayer scenario descriptions
     */
@@ -1073,6 +1079,13 @@ bool Select_Game(bool fade)
             **	network play.
             */
             case SEL_MULTIPLAYER_GAME:
+#if defined(ESP_PLATFORM_CNC) && !defined(DEMO)
+                if(!pxa_multiplayer_maps_ready) {
+                    port_loading_stage("Reading multiplayer maps");
+                    Read_Scenario_Descriptions();
+                    pxa_multiplayer_maps_ready=true;
+                }
+#endif
                 switch (GameToPlay) {
 
                 /*

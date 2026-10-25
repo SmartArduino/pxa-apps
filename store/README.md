@@ -27,6 +27,24 @@ refreshes only after the Host reports success and shows a localized completion
 dialog. The Store does not offer to
 uninstall itself.
 
+## Account and likes
+
+Open **Account → Sign in**, visit `https://app.doit.am/device` on a phone,
+then enter the short code and explicitly confirm the matching device/account.
+Codes expire after ten minutes. The device never handles the website password.
+The revocable credential lasts 30 days and is stored by the app-scoped Storage
+service. Password changes and account suspension invalidate device credentials;
+**Sign out** removes the local credential and revokes it online. If storage is
+unavailable, a successful sign-in lasts only for the current app session.
+
+An application detail includes **Like / Liked · undo**. Counts and personal
+likes share the website's data, keyed by the full PXA application identity.
+Failed requests retain the last confirmed state and provide a retry action.
+Account controls are semantic system buttons, available to touch and gamepads,
+and follow the system language and theme. Authorization polls every five
+seconds while waiting, pauses in the background and stops after expiry;
+ordinary browsing has no account polling.
+
 ## Building
 
 ```sh
@@ -60,7 +78,7 @@ keep the distributed package scoped to its production HTTPS origin.
 
 ## Layout
 
-The catalog, installed apps and downloads share a four-destination bottom
+The catalog, installed apps and downloads share a five-destination bottom
 navigation bar with plain icons and text labels. Search and back are icon
 actions with accessible labels; categories open from **Filter**. Refresh, retry
 and manual paging share the list footer. Library actions live in compact, theme-colored cards; the

@@ -1,0 +1,15 @@
+Pocket Chess adapter, tests, token graphics and icon
+SPDX-License-Identifier: CC0-1.0
+
+To the extent possible under law, the contributors have waived all copyright
+and related or neighboring rights to the original Pocket Chess adapter, tests,
+token graphics and icon under the Creative Commons CC0 1.0 Universal dedication:
+https://creativecommons.org/publicdomain/zero/1.0/
+
+The complete CC0 1.0 legal text is included in
+third_party/smallchesslib/LICENSE.txt.
+
+The unmodified smallchesslib library by Miloslav Číž (drummyfish) is CC0 1.0
+plus the author's additional waiver of all intellectual property rights, as
+preserved verbatim in third_party/smallchesslib/README.md and smallchesslib.h.
+See third_party/SOURCES.json for the exact upstream commit and byte hashes.

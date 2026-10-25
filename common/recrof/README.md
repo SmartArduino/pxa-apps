@@ -18,7 +18,7 @@ tools/app.sh build quake --board doit-gamekit --source-root local/pxa-apps --tar
 
 把 `quake` 替换成其他应用名即可。GameKit 是 ESP32-S31 / RISC-V32，须使用 `esp32s31`；ESP32-S3 使用 `esp32s3`，两种 AOT 不能混用。`--target wasm` 生成便携 WASM 包；逗号分隔目标可合并多架构 AOT。输出文件为 `pxa-<应用名>.pxa`，使用本工作区的开发发布者密钥签名。设备必须信任对应发布者。
 
-Quake 和 Duke3D 默认使用 Core 2.1 主循环；其他游戏的回调构建使用 Asyncify。所有正式入口要求 FS 0.3 `app-media-root`，通过 Host 绑定固定资源目录；固定映射缓冲要求宿主正确实现 pinned linear memory 原地增长。
+Quake、Duke3D、C&C 和 Red Alert 默认使用 Core 2.1 主循环；其他游戏的回调构建使用 Asyncify。所有正式入口要求 FS 0.3 `app-media-root`，通过 Host 绑定固定资源目录；固定映射缓冲要求宿主正确实现 pinned linear memory 原地增长。
 
 ## 精确 PCM 音频候选
 
@@ -78,7 +78,7 @@ Quake II 使用标准 `baseq2/pak0.pak`。C&C 可导入 DOS 试玩版的 DEMO.MI
 
 ## 操作
 
-射击游戏：左半屏拖动控制前后移动和横移；右半屏拖动转向；按钮 MENU 打开菜单，WPN 切武器，USE 使用，JMP 跳跃，FIRE 射击。菜单内用左侧上下拖动选择，FIRE 确认。手柄方向键移动，A 射击/确认，B 跳跃，START 菜单，SELECT 回车，X 使用，Y 切武器。
+射击游戏：左半屏拖动控制前后移动和横移；右半屏拖动转向及俯仰；按钮 MENU 打开菜单，WPN 切武器，USE 使用，JMP 跳跃，FIRE 射击。菜单内用左侧上下拖动选择，FIRE 确认。手柄方向键移动，X/B/Y/A 分别抬头/低头/左转/右转，R 射击、L 跳跃，START 菜单、SELECT 使用。菜单里 A 确认、B 返回。
 
 策略游戏：触摸映射鼠标左键，带右键标志的指针映射右键；右上角 OK 确认任务/简报，RMB 按钮在上一个游戏光标位置执行右键，便于触屏取消选择。策略游戏的原有阻塞键盘等待会主动让出执行权，以便接收后续 PXA 输入事件。当前没有联机功能。
 
@@ -86,17 +86,24 @@ GameKit 手柄使用 PXA 的 controller 0。所有游戏使用以下映射：
 
 | 按键 | Quake / Quake II / Duke3D 游戏内 | 射击游戏菜单 | C&C / Red Alert |
 | --- | --- | --- | --- |
-| 方向键 | 前进、后退、左右转向 | 导航 | 移动光标 |
-| A | 射击 | 确认 | 左键，按住并移动可拖选 |
-| B | 跳跃 | 返回 | 右键、取消选择 |
-| X | 使用（按引擎原有绑定） | — | 回车、确认简报 |
-| Y | 下一武器 | — | H，回到基地 |
-| L / R | 左右平移 | — | L + 方向键滚动地图，R 加速光标 |
+| 方向键 | 前进、后退、左右平移 | 导航 | 移动光标 |
+| A | 右转镜头 | 确认 | 左键，按住并移动可拖选 |
+| B | 低头 | 返回 | 右键、取消选择 |
+| X | 抬头 | — | 回车 |
+| Y | 左转镜头 | — | H，回到基地 |
+| L / R | 跳跃 / 射击 | — | L + 方向键滚动地图，R 加速光标 |
 | START | 打开菜单 | 返回 | Escape、菜单 |
-| SELECT | 回车、引擎原有功能 | 回车 | 回车 |
+| SELECT | 使用（按引擎原有绑定） | 回车 | 回车 |
 
-方向移动由 Clock 按经过时间累计，重复的完整状态刷新不重复按下，不重新开始
-计时。长时间阻塞每次最多累计64ms，避免恢复时突然转向或跳动。进入或离开
+DOOM 使用相同的移动、左右转向和 R 开火布局；经典引擎没有跳跃或上下视角，
+L 改为使用，X 切武器、B 自动地图、SELECT 跑步。菜单仍为 A 确认、B 返回。
+
+Quake 按每个引擎帧的时间采样手柄转向；Duke3D 按固定模拟步长采样，补跑多个
+模拟步时每步都有均匀转向输入，避免将一帧累计量集中交给第一个模拟步。射击、
+跳跃等动作不会重置仍按住的转向计时。两款游戏在消费按键队列前非阻塞读取
+待处理的事件，减少渲染期间排队的输入再多等一个引擎帧。其他移植继续由 Clock 按经过时间累计，
+重复的完整状态刷新不重复按下，不重新开始计时。FPS 每次最多累计250ms，
+策略游戏光标最多累计64ms，限制长时间阻塞后的跳动。进入或离开
 射击游戏菜单会释放旧动作；当时按住的键须松开后再按。切后台、环境变化和
 controller 0 断开会释放手柄输入；其他编号不会抢占这一单人席位。
 按下手柄有效按键后，所有触控悬浮按钮自动隐藏，同时释放此前的触控动作；
@@ -104,8 +111,15 @@ controller 0 断开会释放手柄输入；其他编号不会抢占这一单人�
 命中检测。重新触屏的第一下只恢复按钮，不触发射击、点击或拖动；下一次触屏
 正常操作。手柄断开也会恢复按钮。触屏后仍按住的手柄键不会反复隐藏按钮，
 须有新的按下动作才切回手柄模式。触摸与手柄可以并用，某一来源松开不会释放
-另一来源仍按住的动作。策略游戏的手柄点击使用游戏光标位置，不会被触摸
+另一来源仍按住的动作。Quake 与 Duke3D 的手柄方向键和镜头键彼此独立，可同时移动、
+转头、跳跃和开火。换武器使用触屏 WPN，“使用”由 SELECT 触发；触屏仍可在右半屏空白区域
+上下拖动。策略游戏的手柄点击使用游戏光标位置，不会被触摸
 RMB/OK 覆盖层改写。
+
+Quake 与 Duke3D 的触屏视角位移在引擎更新时采样，使用10ms时间常数分散批量
+到达的移动事件，并保留总位移及小数精度。手柄转向独立取样，不经过该滤波。
+切换输入来源、菜单或前后台时清空剩余触屏位移，避免恢复时突然转动；松指事件
+携带的最后一段移动也会累计。滤波减少输入突跳，不能代替提高画面帧率。
 
 目前 SDK 的控制器事件只有12位数字按键，没有模拟轴、扳机强度或震动数据；
 这里不将其描述为模拟摇杆支持。SELECT+START、SELECT+X、SELECT+L/R 等
@@ -115,14 +129,21 @@ GameKit 系统组合键由板卡先处理，保留原有桌面、鼠标与音量
 
 ```sh
 bash local/pxa-apps/common/recrof/tests/run_controller.sh
+python3 local/pxa-apps/common/recrof/tests/test_quake_controls.py \
+  --output local/artifacts/quake-controls/$(date +%Y%m%d-%H%M%S)
+python3 local/pxa-apps/common/recrof/tests/test_duke_controls.py \
+  --output local/artifacts/duke-controls/$(date +%Y%m%d-%H%M%S)
 ```
+
+Duke3D 游戏内一次键盘更新接收不同按键的并发按下，避免移动、跳跃、开火逐个排队；
+同一个键的快速按下/松开至少保留一次可见的按下状态。菜单仍逐次处理导航和确认。
 
 输入方式自动切换的运行时回归（实际执行 callback/main-loop 与 FPS/RTS 四种
 Wasm 组合，逐帧检查悬浮按钮像素及按键事件；不代表设备帧率）：
 
 ```sh
 python3 local/pxa-apps/common/recrof/tests/run_input_mode.py \
-  --project-root . --output build/game-input-mode
+  --project-root . --output local/artifacts/game-input-mode/$(date +%Y%m%d-%H%M%S)
 ```
 
 ## 平台适配与限制
@@ -135,11 +156,13 @@ vendor提取参考算法，检查20万组跨度并运行ASan/UBSan。桌面热�
 设备FPS，尚未通过相同场景设备A/B前保持默认关闭。
 
 - 软件绘制、RGB565 双缓冲 guest-mapped Surface；以 320×240 为逻辑屏幕，按显示器尺寸缩放。
-- 使用 PXA Clock 和独立引擎栈；Quake、Duke3D 使用原生主循环，其他正式配置使用 Asyncify，后台暂停并释放按键。
+- 使用 PXA Clock 和独立引擎栈；Quake、Duke3D、C&C 和 Red Alert 使用原生主循环，其他正式配置使用 Asyncify，后台暂停并释放按键。
 - 可选 `audio.playback` 权限；Quake、Duke3D 提交原采样率 PCM，其他回调构建仍使用 16 kHz 单声道；拒绝权限仍可游戏。Duke 已在真机开启音乐和音效并核对设置，持续输出与欠载情况仍需分别量化。
 - 标准 stdio/POSIX 调用桥接到私有 FS 与只读 SD 媒体根，虚拟 Flash 使用文件保存 NOR 数据。
 - 不使用 ESP32 的 GPIO、SDMMC、DMA、FreeRTOS 或 Flash 直映射驱动。
-- 当前正式清单的线性内存上限：Quake 3.5 MiB、Quake II 10.1875 MiB、Duke3D 3.5 MiB、C&C 7 MiB、RA 9.5625 MiB；另需 Host、AOT、显示和音频内存。实际装载资格需要真机验证，不能据此承诺在 8 MiB PSRAM 设备上均可运行。
+- 当前正式清单的线性内存上限：Quake 3.5 MiB、Quake II 10.1875 MiB、Duke3D 5 MiB、C&C 7 MiB、RA 9.1875 MiB；另需 Host、代码、显示和音频内存。实际装载资格与速度需要真机验证，不能据此承诺在 8 MiB PSRAM 设备上均可运行。
+- Red Alert 在该 16 MiB 设备使用便携 WASM；AOT 代码还需要连续的可执行内存，应用切换后的碎片会导致分配失败，不能只按总剩余内存判断。
+- Quake/Duke3D 的虚拟 NOR 保存区使用 4 个 8 KiB 页的只读缓存；修改、重新打开和批量保存会保持缓存与已提交页一致，不改变磁盘格式。Duke3D 的资源页缓存为 192 页（1.5 MiB），减少场景内反复读取相同资源。
 - WAMR 无 Wasm 异常处理，原引擎 setjmp/longjmp 错误恢复改为显示错误并等待重新打开应用。正常主循环不依赖 longjmp。
 - `duke3d-sd` 已在 16 MiB PSRAM 的 GameKit / ESP32-S31 上自动读取固定 SD 资源并进入屋顶关卡，完成短时 FPS 与内存测量；其他游戏、音频连续性及长期稳定性仍待真机验收，见 `VALIDATION.md`。
 
@@ -166,7 +189,19 @@ python3 local/pxa-apps/common/recrof/tools/upstream.py apply /tmp/duke-update
 
 ## 测试工具
 
-`PXA_RECROF_MAIN_LOOP=ON` 选择实验性的 Core 2.1 事件端口路径。包须声明至少 `[2,1]`，且唯一的 `main` UI Component 须包含 `"execution_model":"main-loop"`；Host 必须支持该执行模式。引擎在现有运行线程保留调用栈，`port_yield` 等待普通事件并直接分发，不使用 Asyncify 进口或续栈缓冲。RPC 等待期间仍处理输入和生命周期；后台暂停游戏，停止或替换由 Host 终止整个调用。公共层默认回调路径；Quake 和 Duke3D 正式包选择主循环。此开关本身不证明真机帧率或完整音频质量。
+`PXA_RECROF_MAIN_LOOP=ON` 选择 Core 2.1 事件端口路径。包须声明至少 `[2,1]`，且唯一的 `main` UI Component 须包含 `"execution_model":"main-loop"`；Host 必须支持该执行模式。引擎在现有运行线程保留调用栈，`port_yield` 等待普通事件并直接分发，不使用 Asyncify 进口或续栈缓冲。RPC 等待期间仍处理输入和生命周期；后台暂停游戏，停止或替换由 Host 终止整个调用。公共层默认回调路径；Quake、Duke3D、C&C 和 Red Alert 的包选择主循环，以减少续体插桩造成的代码及运行时内存开销。此开关本身不证明真机帧率或完整音频质量。
+
+C&C 和 Red Alert 的掌机配置跳过启动片头；战役影片和游戏内重播入口保留。
+首次进入多人游戏入口时读取多人地图列表，单人启动不提前扫描。
+只读文件查找在私有根和媒体根都明确返回 `NOT_FOUND` 时复用结果。RTS 加载期间
+最多保留64个路径、最长五分钟，首个真实游戏帧清空加载缓存；游戏内过期时间为一秒。路径先统一
+大小写与冗余分隔符，私有命名空间发生修改时立即失效。媒体 I/O 错误、权限拒绝和
+存储不可用不计入该缓存。两个 RTS 端口均短暂复用只读 MIX 句柄及其读缓存。
+
+RTS 启动通过 `port_loading_stage` 显示当前阶段、动态等待条和已用时间；阶段切换后
+更新，真实游戏帧接管显示后停止，错误界面独立显示。等待条不表示完成百分比。
+修改这些路径后运行 `tests/run_startup.py --output <本地产物目录>`，检查真实文件桥
+的重复查找、写入失效及 I/O 重试，以及加载画面在不同尺寸下的绘制边界。
 
 `tests/host.mjs` 是协议级 Node 22 测试宿主，执行真实引擎并读取真实资源；它不能代替正式 PXA 模拟器。原生主循环包可设置 `PXA_TEST_MAIN_LOOP=1`，在同一文件、输入和后台测试中使用事件端口。`tests/simulator.py` 启动正式签名包、捕获运行日志和截图，检查异常、空白画面与正常 HOME 退出。`tests/fixture` 验证暂停期间的 C 栈对象、C++ 字符串、虚拟文件和路径解析。资源导入单元测试：
 

@@ -1,4 +1,7 @@
-Original PXA community-port tank illustration.
-SPDX-License-Identifier: CC0-1.0
-Created as native SVG; no EA game artwork, faction insignia or logo is used.
-The SVG is the editable source; PNG is its rendered desktop icon.
+Classic original game application icon from Electronic Arts public source archive.
+Source: https://github.com/electronicarts/CnC_Red_Alert/blob/0dc09bb1d6188d1ec79ab4765b22a48b75ffee32/CODE/REDALERT.ICO
+Export: largest ICO image (32x32) decoded to RGBA, integer nearest-neighbor scale to 96x96. No semantic redraw.
+Original icon SHA-256: e8ab764b89dadce55eb507c515c391b13ea5b1356296194b7206fcfc03e80914
+Game artwork and trademarks belong to their respective rights holders. This asset is not the CC0 tank illustration.
+Source archive terms: https://github.com/electronicarts/CnC_Red_Alert/blob/0dc09bb1d6188d1ec79ab4765b22a48b75ffee32/LICENSE.md
+The older, unused icon.svg remains an original CC0-1.0 tank illustration.

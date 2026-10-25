@@ -13,7 +13,7 @@
     0
   ],
   "id": "pxa-maze-evil",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "name": "Maze Evil",
   "description": "第一人称迷宫射击游戏，使用触摸移动与转向，包含武器、敌人和音效。优化了输入与音效调度，体验仍取决于实际设备。",
   "build": {
@@ -30,7 +30,13 @@
       "kind": "ui",
       "services": [
         "surface",
-        "audio",
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            10
+          ]
+        },
         "clock",
         "permission",
         "window",
@@ -52,5 +58,5 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 12
+  "release_sequence": 13
 }

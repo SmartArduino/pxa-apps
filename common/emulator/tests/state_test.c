@@ -44,7 +44,7 @@ int main(int argc,char **argv) {
     emu_core_close();memcpy(rom,image,image_size);assert(!emu_core_load(rom,image_size));assert(!emu_state_load(state,bytes));
     advance(37,29,&c,&d);if(a!=c || b!=d)fprintf(stderr,"replay mismatch video=%08x/%08x PCM=%08x/%08x\n",a,c,b,d);assert(a==c&&b==d);
     emu_core_close();rom_source_t source={NULL,read_rom,image_size,emu_port_crc32(0,image,image_size)};
-    assert(!emu_core_load_source(&source,512u*1024));assert(!emu_state_load(state,bytes));
+    assert(!emu_core_load_source(&source,EMU_ROM_CACHE_BUDGET));assert(!emu_state_load(state,bytes));
     advance(37,29,&c,&d);assert(a==c&&b==d && !emu_core_rom_cache()->error);
     assert(!emu_state_save(before,bytes));((uint8_t*)state)[bytes-1]^=0x80;
     assert(emu_state_load(state,bytes));assert(!emu_state_save(state,bytes));assert(!memcmp(state,before,bytes));

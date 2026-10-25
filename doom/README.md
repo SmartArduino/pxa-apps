@@ -76,16 +76,20 @@ python3 -B local/pxa-apps/doom/tools/prepare-data.py \
 | 操作 | 控制器 | 模拟器键盘 |
 |---|---|---|
 | 前进 / 后退 | 上 / 下 | ↑ / ↓ |
-| 转向 | 左 / 右 | ← / → |
-| 左右平移 | L / R | Q / W |
-| 开火；菜单确认 | A | Z |
-| 使用门 / 开关；菜单返回 | B | X |
-| 跑步修饰键 | X | A |
-| 切换已持有武器 | Y | S |
-| 自动地图 | Select | Tab |
+| 左右平移 | 左 / 右 | ← / → |
+| 左右转向 | Y / A | S / Z |
+| 开火 | R | W |
+| 使用门 / 开关 | L | Q |
+| 跑步修饰键 | Select | Tab |
+| 切换已持有武器 | X | A |
+| 自动地图 | B | X |
+| 菜单确认 / 返回 | A / B | Z / X |
 | 打开 / 关闭菜单 | Start | Enter |
 
 菜单用上下和 A/B 选择，确认提示用 A 表示 Yes、B 表示 No。OPTIONS 中可设置 Always Run、音量、画面大小等；关闭菜单时将设置保存到私有数据区。控制器布局由适配层固定，配置文件中的自定义键位不作为用户操作接口。
+
+经典引擎没有跳跃或上下视角；L 用于使用门和开关。移动、转向、使用与开火可并行；
+每次 35Hz 引擎更新前读取待处理输入，减少渲染期间排队的按键延迟。
 
 触屏左侧拖动前后移动/平移，右侧拖动转向。屏幕上的 MENU 打开菜单；游戏中还有 WPN、USE、MAP、FIRE。菜单中对应 UP、BACK、DOWN、OK。控制器活动时触屏控件隐藏，首次触摸仅恢复控件显示，再次触摸执行操作。
 
@@ -100,6 +104,8 @@ python3 -B local/pxa-apps/doom/tools/prepare-data.py \
 ```bash
 python3 -B -m unittest discover \
   -s local/pxa-apps/doom/tools -p test_prepare_data.py -v
+python3 local/pxa-apps/doom/tests/test_controller.py \
+  --output local/artifacts/doom-controls/$(date +%Y%m%d-%H%M%S)
 ```
 
 产品模拟器集成测试程序在 `tests/simulator.py`，运行 `--help` 查看参数。它会发现实际媒体绑定、准备 WAD，验证标题图、进入首关、移动/转向/开火、菜单暂停、触屏导航、存档及重启回读，并检查缺失/损坏资源。`--capture-audio` 使用 SDL disk 驱动记录实际 Host 混音输出，要求出现非零音效采样。

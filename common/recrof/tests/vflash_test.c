@@ -90,6 +90,18 @@ int main(void){
     assert(!memcmp(expected,actual,NVM_SIZE));
   }
   long allocated=size(save_path);assert(allocated<=32+NVM_SIZE);
+  /* Hot private NVM reads must not re-open/re-read their SD page. Verify
+   * the actual backend read count, including after cache evictions above. */
+  vflash_read(VIRTUAL_SIZE-PAGE,actual,1);
+  vflash_stats(&stats,1);
+  for(unsigned i=0;i<100;++i) {
+    unsigned within=(i*17)%PAGE;
+    vflash_read(VIRTUAL_SIZE-PAGE+within,actual,1);
+    assert(actual[0]==expected[NVM_SIZE-PAGE+within]);
+  }
+  vflash_stats(&stats,1);
+  assert(stats.nvm_cache_hits==100 && !stats.nvm_cache_misses && !stats.nvm_reads);
+  assert(stats.nvm_cache_bytes>=2*PAGE);
   for(int round=0;round<10;++round){
     vflash_write(VIRTUAL_SIZE-NVM_SIZE+PAGE-9,NULL,72,1);
     memset(expected+PAGE-9,255,72);

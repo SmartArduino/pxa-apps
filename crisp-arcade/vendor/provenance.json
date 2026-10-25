@@ -1,0 +1,30 @@
+{
+  "repository": "https://github.com/abagames/crisp-game-lib-portable",
+  "branch": "main",
+  "commit": "7c318dc87f1f6fb8cc03449613d8fdba73b380e9",
+  "archive_url": "https://codeload.github.com/abagames/crisp-game-lib-portable/zip/7c318dc87f1f6fb8cc03449613d8fdba73b380e9",
+  "archive_sha256": "e71023094d540365235b0a9cf26e495fd4ee6282a317675b1130a028c32f9d4a",
+  "main_archive_sha256": "ab1df4b3d5b79db990d536e31799dfa863a8cdb89bca9b4271a83eade317abcf",
+  "files": {
+    "LICENSE.txt": "52ca6d86736a899b1e235eea0b7ff064f7dff44133f1dc317169feca6ab8af0e",
+    "src/lib/cglp.c": "7c115f4f76c06abe8818fda145d177f8273c146c80d12f9b64717dbda91773e1",
+    "src/lib/cglp.h": "21bdf516f8212826f213028eed78e6637d296aa73a92290511b7f53e08fec6f5",
+    "src/lib/machineDependent.h": "c80ae9d7f6cc2dee39c0b04dbcd44f8379c49e9b1230b7bd39999e9cc9db2f92",
+    "src/lib/menu.c": "95437c6bbbdd58e257defaf85a9e3bd8aa99f007c2532d329dafdd2919b86e21",
+    "src/lib/menu.h": "d22fd86cc953ed143768a689164eb5b2d6f9e600a0b33198f7db55d44544ff14",
+    "src/lib/particle.c": "6ac2ebedf94b0f78b983720c96796cdbb9958e3239479f1b35c91eccfc6ac496",
+    "src/lib/particle.h": "2e02c7ed6cf7870b65888169a8929d6ea63a1b1c33f7e2795f5e702ed1969da9",
+    "src/lib/random.c": "e7ed6d10766057ab74148e079a3efb15782f45e9da06a4102a2eb7caca3125fa",
+    "src/lib/random.h": "75d707b27d42acb0efd7471d6eb9f498e3c8f326d06f70693e65d4b06ba9519f",
+    "src/lib/sound.c": "5acfd75fd19a64d14e6cca15eeeecfbd79fd44fa405938114580eaa8f29d1536",
+    "src/lib/sound.h": "901808dd5191c9f71751b2be6c38086413c9de994e2a3eda22b648b700f5b713",
+    "src/lib/textPattern.c": "787687b62e76dc6037a38785b09d5f66db3d3a59d9e3c8820d8416f86acaa91a",
+    "src/lib/textPattern.h": "8b8e3791adf1c249b6f9ae46df1492758440d7c3bc4b11e8ba3435ee62606d30",
+    "src/lib/vector.c": "7d0b102eba7c5bf018046e500ada6bee2adc55c235079497dc3b1bc5266d400b",
+    "src/lib/vector.h": "41e02af595ff4ba0837f8c288201b088934aed04d2fea4a004d4005e30cc84cb",
+    "src/games/gameCastN.c": "b9840c88cd110cf2f90c4e6932d5fae4cd54e4c1d1553759852962ebc41ba333",
+    "src/games/gameGrapplingH.c": "d64dc32f5fd864e9e603093f92796977d317b774b3d3ed1b36a92b09a675b197",
+    "src/games/gameReflector.c": "a7b98157e7cea37ccb4815729e6a72aed6fc8aec8878a4b37b06f2b71552bacf",
+    "src/games/gameColorRoll.c": "ab25da61d21100c5281defef02b1e3c6e3e3357842cfe271d15c673663390d27"
+  }
+}
