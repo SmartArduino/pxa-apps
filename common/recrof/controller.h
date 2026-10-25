@@ -22,6 +22,10 @@ int port_controller_menu(port_controller_t *pad, int menu, int rts,
     uint8_t keys[256]);
 port_controller_motion_t port_controller_step(port_controller_t *pad,
     uint64_t now_us, int rts);
+/* Sample once per simulation update. Fixed-step engines pass the duration of
+ * that update even when several updates run between two presented frames. */
+port_controller_motion_t port_controller_advance(port_controller_t *pad,
+    uint64_t elapsed_us, int rts);
 #ifdef __cplusplus
 }
 #endif

@@ -10,7 +10,7 @@
 
 保留已在设备验证的原生配置：Core 2.1 主循环、Audio 0.10 原采样率 PCM、
 GameRender 1.2 索引图像转换；128 KiB 引擎栈、16 KiB 回调栈，
-不分配 Asyncify 续体；48 页虚拟 Flash 缓存、分页 NVM，最大线性内存 3.5 MiB。Clock 优先请求 8ms，不支持时回退 16ms；
+不分配 Asyncify 续体；192 页虚拟 Flash 资源缓存、4 页 NVM 只读缓存及分页 NVM，最大线性内存 5 MiB。Clock 优先请求 8ms，不支持时回退 16ms；
 32ms 为计算期间的协作预算。原有显示、音频和手柄映射继续使用公共移植层。
 
 构建：

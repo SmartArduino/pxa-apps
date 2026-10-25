@@ -7,6 +7,7 @@ void port_game_main(void) {
   uint16_t colors[256] = {0x001f};
   port_palette_rgb565(colors, 0);
   for (;;) {
+    port_poll_input();
     port_frame(pixels, 320, 240, 320);
     port_sleep(16);
   }

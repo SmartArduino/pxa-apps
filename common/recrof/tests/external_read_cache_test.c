@@ -10,6 +10,7 @@
 static unsigned reads,closes,fail_next,revision;
 static uint64_t cookies[4];
 static const uint64_t base=UINT64_C(0x100000000);
+int port_external_open_status(void){return PXA_STATUS_NOT_FOUND;}
 static uint8_t expected(unsigned index,unsigned file) {
     return (uint8_t)(index*37+(index/4096)*17+revision+file*19);
 }

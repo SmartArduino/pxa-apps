@@ -53,11 +53,13 @@ for native in (False, True):
         env.update(PXA_TEST_MAIN_LOOP=str(int(native)), PXA_TEST_REQUIRE_TICK_START="1",
                    PXA_TEST_BACKGROUND="1", PXA_TEST_POINTERS=json.dumps(pointers),
                    PXA_TEST_CAPTURE_TIMES=json.dumps(captures))
+        # Keep RTS A/B clicks; FPS uses shoulder fire/jump while A/B look.
+        input_actions = actions if rts else actions.replace(':16', ':2048').replace(':32', ':1024')
         prefix = out / name
         with (out / f"{name}.log").open("w") as log:
             subprocess.run(["node", str(tests / "host.mjs"), str(wasm),
                             str(out / "assets"), str(out / f"{name}-private"),
-                            str(prefix), "5.2", actions], env=env,
+                            str(prefix), "5.2", input_actions], env=env,
                            stdout=log, stderr=subprocess.STDOUT, check=True)
         report = json.loads(prefix.with_suffix(".json").read_text())
         assert len(report["captures"]) == len(captures)

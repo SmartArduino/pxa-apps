@@ -1,0 +1,25 @@
+{
+  "project": "gpSP",
+  "url": "https://github.com/libretro/gpsp",
+  "commit": "5819380c2ffb0900219d700a382ee68c464ebb99",
+  "license": "GPL-2.0-or-later",
+  "bios": "Upstream GPL-2.0 open BIOS; full corresponding sources in gpsp/bios/source",
+  "changes": [
+    "Bound ROM cache to the PXA budget; skip optional 4 MiB mini-ROM materialization",
+    "Bridge cartridge reads to PXA positional I/O and propagate read errors",
+    "Use the portable ARM/Thumb interpreter; no native JIT inside the PXA guest",
+    "Expose pending mixer samples for exact PXA snapshot replay, outside the BSON size cap",
+    "Fix sound savestate validation loop counters so every channel is checked",
+    "Remove ROM-config stdout logging; use the PXA frontend log without WASI stdio",
+    "Split portable ARM/Thumb dispatch into mode-local loops to simplify Wasm control flow",
+    "Publish NZCV at observable boundaries instead of before every emulated instruction",
+    "Optional compile-time phase and instruction-region profiling; no release hot-path counters",
+    "Use interpreter-only plain RAM/halfword-word VRAM stores while retaining canonical I/O, palette, OAM and byte-VRAM side effects",
+    "Express mapped read alignment in Wasm offsets and bounds-check out-of-bus block reads before indexing the page table",
+    "Scan backup signatures in one pass with first-byte filtering, preserving unaligned and tail signatures and type precedence",
+    "Optional deterministic frame-block benchmark with PCM/video/CPU checksums excluded from measured core time",
+    "Size the cartridge cache to the ROM and caller budget, up to 2 MiB, with a 1 MiB allocation fallback and lazy page fill",
+    "Coalesce proven side-effect-free ARM/Thumb polling within one hardware-event slice, preserving the final partial iteration",
+    "Fuse verified ARM interpolation and copy sequences, reuse IWRAM validation until stores/events, and preserve bus cycles, NZCV, palette conversion, OAM dirty tracking and writable-code behavior"
+  ]
+}

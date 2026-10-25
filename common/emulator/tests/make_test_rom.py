@@ -63,5 +63,28 @@ elif system=='md':
     byte(0x40,0xa10009);byte(0x40,0xa10003)
     code.extend(bytes.fromhex('103900a1000313c000ff000060f2'))
     rom[0x200:0x200+len(code)]=code
+elif system=='gba':
+    # ARM7TDMI diagnostic: blue mode-3 frame, audible PSG and keypad to SRAM.
+    rom=bytearray(32768); words=[]; literals=[]
+    def emit(word):words.append(word)
+    def literal(reg,value):literals.append((len(words),reg,value));emit(0)
+    def write16(address,value):
+        literal(0,address);literal(1,value);emit(0xe1c010b0)
+    write16(0x04000000,0x0403)
+    literal(0,0x06000000);literal(1,0x7c00);literal(2,240*160)
+    loop=len(words);emit(0xe0c010b2);emit(0xe2522001)
+    emit(0x1a000000|((loop-len(words)-2)&0xffffff))
+    write16(0x04000084,0x80);write16(0x04000080,0x2277);write16(0x04000082,2)
+    write16(0x04000068,0xf080);write16(0x0400006c,0x8600)
+    literal(0,0x04000130);literal(1,0x0e000000)
+    loop=len(words);emit(0xe1d030b0);emit(0xe5c13000)
+    emit(0xea000000|((loop-len(words)-2)&0xffffff))
+    for index,reg,value in literals:
+        words[index]=0xe59f0000|(reg<<12)|((len(words)-index-2)*4);emit(value)
+    struct.pack_into('<I',rom,0,0xea00002e)
+    rom[0xa0:0xac]=b'PXA GBA TEST';rom[0xac:0xb0]=b'PXAT';rom[0xb2]=0x96
+    rom[0xbd]=(-sum(rom[0xa0:0xbd])-0x19)&255
+    for i,w in enumerate(words):struct.pack_into('<I',rom,0xc0+i*4,w)
+    rom[0x1000:0x100b]=b'SRAM_V113\x00\x00'
 else:raise SystemExit('Unknown cartridge system: '+system)
 Path(out).write_bytes(rom)

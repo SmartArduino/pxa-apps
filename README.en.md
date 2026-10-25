@@ -42,6 +42,26 @@ reproducible acceptance checks live in the application's `docs` and `tests`.
 HTTP/HTTPS, keyword search, links, history, bookmarks and basic forms. It adapts
 to DPI and screen safe areas and does not run JavaScript or a full CSS engine.
 
+## Touch and controller games
+
+These nine SDK 2.1 games fit a 288×224 logical canvas to the actual display, with touch/controller input, checked saves, background suspension and a top-right pause menu. Simplified Chinese is the default; the fourth menu row switches to English and saves the language separately from game progress. Builds support signed AOT packages for the simulator, ESP32-S3 and ESP32-S31:
+
+| Application | Gameplay |
+| --- | --- |
+| [2048](game-2048/README.md) | Swipe to merge tiles, undo, saved board and high score |
+| [Pocket Chess](pocket-chess/README.md) | Chess against the computer or another player, legal moves and promotion |
+| [Pocket Sokoban](pocket-sokoban/README.md) | 34 box-pushing levels, undo, move/push counters and saved unlocks |
+| [Pet Garden](pet-garden/README.md) | Original pixel pet, cozy home/garden, three evolution routes, decorations, berry catching and rhythm minigames |
+| [Crisp Arcade](crisp-arcade/README.md) | Original MIT CAST N, GRAPPLING H, REFLECTOR and COLOR ROLL, with separate high scores |
+| [Marble Islands](marble-islands/README.md) | Eight software-rendered 3D marble islands, gems, timed gates, pop bumpers, braking and medals |
+| [Lantern Grove](lantern-grove/README.md) | Original CC0 idle pixel woodland, three resources, four building types, eight milestones and capped offline production |
+| [Harbor Cafe](harbor-cafe/README.md) | Original CC0 seaside café, customer orders, drink preparation, table service, supplies, three upgrade routes and daily results |
+| [Tiny Elements](tiny-elements/README.md) | Original CC0 falling-sand sandbox, water/fire/steam/plant/lava reactions, free painting and four challenges |
+
+The six newer games use [Pocket Play](common/pocket-play/README.md); 2048, Chess and Sokoban use [Pocket Game](common/pocket-game/README.md). Keep the corresponding runtime and [Pocket UI](common/pocket-ui/README.md) when copying an app. All ten games keep action and event sounds with background music disabled. Lantern Grove, Harbor Cafe and Tiny Elements have a saved effects switch in their help pages.
+
+[Anarch](anarch/README.md) has its own 160×120 logical canvas, fitted display and matching touch coordinates. Use the top-right menu control or controller X to switch languages, and the help control or Y to open instructions. Games inside the Game Boy and other emulators use the ROM's language. Each app documents controls, licensing, builds and reusable test entry points.
+
 ## Independent DevKit workflow
 
 Install [DevKit](https://pxa.doit.am/docs/setup/), then from this repository's parent directory:

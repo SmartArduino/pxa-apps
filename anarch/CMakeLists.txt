@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.20)
+project(pxa_anarch LANGUAGES C CXX)
+include("${CMAKE_CURRENT_LIST_DIR}/../common/cpp/Application.cmake")
+pxa_add_callback_component(pxa_main COMPONENT_ID main SOURCES main.cpp audio.c)
+target_compile_options(pxa_main PRIVATE -fwrapv)
+target_link_options(pxa_main PRIVATE -Wl,-z,stack-size=65536)

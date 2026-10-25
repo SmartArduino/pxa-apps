@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 project(pxa_cnc C CXX)
+if(NOT DEFINED PXA_RECROF_MAIN_LOOP)
+    set(PXA_RECROF_MAIN_LOOP ON)
+endif()
 if(NOT CNC_GAME STREQUAL "ra")
 set(PXA_RECROF_ENGINE_STACK_BYTES 65536)
 set(PXA_RECROF_CALLBACK_STACK_BYTES 16384)
@@ -74,6 +77,10 @@ set(VC_RA_SRC
 list(TRANSFORM VC_RA_SRC PREPEND ${VC_RA}/)
 
 if(CNC_GAME STREQUAL "ra")
+    # These lossless caches flush and rebuild when full; keep the original
+    # artwork and object heaps while leaving room for the 16 MiB board Host.
+    set_source_files_properties(${VC_COMMON}/keyframe.cpp PROPERTIES
+        COMPILE_DEFINITIONS "PXA_CNC_SHAPE_CACHE_BYTES=131072;PXA_CNC_THEATER_CACHE_BYTES=65536")
     list(FILTER VC_COMMON_SRC EXCLUDE REGEX "/face.cpp$")
     set(VC_GAME ${VC_RA})
     set(VC_GAME_SRC ${VC_RA_SRC})
@@ -103,6 +110,7 @@ pxa_recrof_component(RTS TITLE "${GAME_TITLE}" SOURCES ${VC_COMMON_SRC} ${VC_GAM
     DEFINITIONS TRUE_FALSE_DEFINED ENGLISH SDL_BUILD SDL2_BUILD NEW_VIDEO_BUILD
         FIXIT_FAST_LOAD ESP_PLATFORM_CNC ${VC_GAME_DEFS})
 target_compile_options(pxa_main PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:-std=gnu++14>")
+target_compile_definitions(pxa_main PRIVATE PORT_MISSING_PATHS_CAPACITY=64)
 set_property(SOURCE ${VC_GAME}/startup.cpp APPEND PROPERTY COMPILE_DEFINITIONS main=cnc_game_main)
 
 if(NOT CNC_GAME STREQUAL "ra")

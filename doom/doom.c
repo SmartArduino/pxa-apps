@@ -169,6 +169,7 @@ void port_game_main(void) {
     uint64_t next=port_time_us();unsigned remainder=0;int previous_menu=0;
     for(;;) {
         // Advance exactly one tic. Do not catch up through a long background pause.
+        port_poll_input();
         doom_force_update();
         if(previous_menu && !menuactive)M_SaveDefaults();
         previous_menu=menuactive;

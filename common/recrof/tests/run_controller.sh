@@ -20,3 +20,7 @@ trap 'rm -rf "$build"' EXIT
   -fsanitize=address,undefined -fno-omit-frame-pointer -g \
   "$tests/duke_keymap_test.c" -o "$build/duke-keymap"
 "$build/duke-keymap"
+"${CC:-cc}" -std=c11 -Wall -Wextra -Werror \
+  -fsanitize=address,undefined -fno-omit-frame-pointer -g \
+  -I"$tests/.." "$tests/pointer_motion_test.c" -lm -o "$build/pointer-motion"
+"$build/pointer-motion"

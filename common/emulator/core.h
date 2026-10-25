@@ -4,6 +4,15 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "app_config.h"
+#ifndef EMU_ROM_DIRECT_LIMIT
+#define EMU_ROM_DIRECT_LIMIT EMU_ROM_LIMIT
+#endif
+#ifndef EMU_ROM_CACHE_BUDGET
+#define EMU_ROM_CACHE_BUDGET (512u*1024u)
+#endif
+#ifndef EMU_ROM_MIN_SIZE
+#define EMU_ROM_MIN_SIZE 0x150u
+#endif
 
 enum {
     EMU_PAD_RIGHT=1u<<0, EMU_PAD_LEFT=1u<<1, EMU_PAD_UP=1u<<2, EMU_PAD_DOWN=1u<<3,

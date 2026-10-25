@@ -1,4 +1,5 @@
 #include "port.h"
+#include "pointer_motion.h"
 #include "audio_convert.h"
 #include "vflash.h"
 #include "audio.h"
@@ -38,7 +39,7 @@ int Pxa_QuakeMixS8(void *paintbuffer, const void *source,
 #if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS || PXA_GAME_RENDER_FRAME_SPANS || PXA_GAME_RENDER_BLIT
 extern uint64_t port_game_render_context;
 #endif
-static int mdx, mdy;
+static port_pointer_motion_t pointer_motion;
 #ifdef PXA_QUAKE_RENDER_PROBE
 unsigned port_render_probe_mode;
 static unsigned probe_serial, probe_selected, probe_completed;
@@ -231,6 +232,7 @@ void getAnalogInput(int32_t *a, int32_t *b, int32_t *c, int32_t *d) {
 }
 int port_game_in_menu(void) { return key_dest != key_game; }
 void port_game_key(int key, int down) {
+  if (down && key == 27) port_game_reset_motion();
   static int pressed[256];
   int original = key;
   if (down) {
@@ -256,6 +258,22 @@ void port_game_key(int key, int down) {
         key = '.';
       if (key == 'q')
         key = '/';
+      /* These are the handheld's fixed controls. Media default.cfg and an
+       * existing saved config may omit mouse attack or comma/period strafing.
+       * Bind the actual engine key before delivering its press, so releases
+       * use the same +command even if the menu changed in between. */
+      const char *binding = NULL;
+      switch (key) {
+      case K_UPARROW: binding = "+forward"; break;
+      case K_DOWNARROW: binding = "+back"; break;
+      case ',': binding = "+moveleft"; break;
+      case '.': binding = "+moveright"; break;
+      case K_MOUSE1: binding = "+attack"; break;
+      case K_SPACE: binding = "+jump"; break;
+      case '/': binding = "impulse 10"; break;
+      case 'e': binding = "+use"; break;
+      }
+      if (binding) Key_SetBinding(key, (char *)binding);
     }
     if (original >= 0 && original < 256)
       pressed[original] = key;
@@ -269,10 +287,13 @@ void port_game_key(int key, int down) {
   }
 }
 void port_game_motion(int x, int y) {
-  mdx += x;
-  mdy += y;
+  if (key_dest == key_game) port_pointer_push(&pointer_motion, x, y);
+}
+void port_game_reset_motion(void) {
+  port_pointer_reset(&pointer_motion);
 }
 void Sys_SendKeyEvents(void) {
+  port_poll_input();
   while (kt != kh) {
     Key_Event(keyq[kt].k, keyq[kt].d);
     kt = (kt + 1) % 128;
@@ -284,6 +305,11 @@ void IN_Commands(void) {}
 void IN_Move(usercmd_t *cmd) {
   (void)cmd;
   if (key_dest == key_game) {
+    int pad_x, pad_y;
+    port_sample_controller((uint32_t)(host_frametime * 1000000), &pad_x, &pad_y);
+    const port_pointer_delta_t touch = port_pointer_sample(&pointer_motion,
+        (uint32_t)(host_frametime * 1000000));
+    const float mdx = touch.x + pad_x, mdy = touch.y + pad_y;
     _g->cl.viewangles[YAW] -= mdx * 0.3f;
     _g->cl.viewangles[PITCH] += mdy * 0.3f;
     if (mdy)
@@ -292,8 +318,7 @@ void IN_Move(usercmd_t *cmd) {
       _g->cl.viewangles[PITCH] = 80;
     if (_g->cl.viewangles[PITCH] < -70)
       _g->cl.viewangles[PITCH] = -70;
-  }
-  mdx = mdy = 0;
+  } else port_game_reset_motion();
 }
 void initAudio(void) { memset(audioBuffer, 128, sizeof(audioBuffer)); }
 uint32_t audioGetPlayIndex(void) {

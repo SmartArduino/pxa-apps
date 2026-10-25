@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <title>Marble Islands — original CC0 icon</title>
+  <defs>
+    <linearGradient id="sea" x2="0" y2="1"><stop stop-color="#164563"/><stop offset="1" stop-color="#3c9bbb"/></linearGradient>
+    <radialGradient id="ball" cx=".32" cy=".23" r=".8"><stop stop-color="#fffef9"/><stop offset=".38" stop-color="#d6f0ff"/><stop offset=".73" stop-color="#8eb3ee"/><stop offset="1" stop-color="#476ca8"/></radialGradient>
+  </defs>
+  <rect width="128" height="128" rx="25" fill="url(#sea)"/>
+  <g stroke="#76c7d3" stroke-width="2" stroke-linecap="round" fill="none" opacity=".65">
+    <path d="M12 33h14m67-9h16M10 99h13m80 5h12M18 112h18"/>
+  </g>
+  <path d="M17 74 77 49 114 73 53 106 17 86Z" fill="#75a487"/>
+  <path d="M53 94 114 62 114 76 53 108Z" fill="#6b9b7c"/>
+  <path d="M17 70 53 94 53 108 17 84Z" fill="#548d7b"/>
+  <path d="M17 70 77 44 114 62 53 94Z" fill="#b5db9d"/>
+  <path d="M24 70 77 48 105 62 53 89Z" fill="#c8e4ae"/>
+  <ellipse cx="60" cy="72" rx="21" ry="8" fill="#72aa99"/>
+  <circle cx="58" cy="53" r="24" fill="url(#ball)"/>
+  <path d="M40 55q15 17 37 4" stroke="#f0c5e1" stroke-width="5" fill="none" opacity=".8"/>
+  <ellipse cx="50" cy="40" rx="8" ry="5" fill="#fffef9" opacity=".95" transform="rotate(-30 50 40)"/>
+  <path d="m94 39 7 10-7 10-7-10Z" fill="#ffcd6d" stroke="#fff0b9" stroke-width="2"/>
+  <path d="M89 26V12m-7 7h14" stroke="#d9f5eb" stroke-width="2" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,31 @@
+Pocket Sokoban 0.1.0 — source and redistribution notices
+
+Core: NibbleSokoban, https://github.com/sdosenn/NibbleSokoban
+Commit: 4ef4e56d21fd2dffa5f0b49f3f254326fa0899cb
+MIT License. Copyright (c) 2021 snsdosen.
+Player.ino and LifoBuffer.ino movement/rewind rules were adapted to a checked
+10x10 dual-layer state with static circular undo, PXA input/render hooks,
+progress counters and validated persistence. Arduino animation and audio were
+removed. No original NibbleSokoban levels or graphical assets are included.
+Full MIT text: LICENSE-NibbleSokoban.txt.
+
+Generated level data: google-deepmind/boxoban-levels
+https://github.com/google-deepmind/boxoban-levels
+Commit: 78011d8c86ad423bfb2e1005012393b4c3c24409
+Apache License, Version 2.0. Full text: LICENSE-Boxoban.txt.
+32 boards were selected from unfiltered/test/000.txt and converted from ASCII
+to C++ string arrays without changing their 10x10 geometry. Original dataset
+IDs and SHA-256 checksums are in SOURCES.json. Two additional tutorial boards
+are original CC0 works.
+
+Dataset citation:
+Arthur Guez, Mehdi Mirza, Karol Gregor, Rishabh Kabra, Sebastien Racaniere,
+Theophane Weber, David Raposo, Adam Santoro, Laurent Orseau, Tom Eccles,
+Greg Wayne, David Silver, Timothy Lillicrap and Victor Valdes.
+An investigation of Model-free planning: boxoban levels. 2018.
+https://github.com/deepmind/boxoban-levels/
+This is not an official Google product.
+
+Original tutorial boards, PXA UI, geometric tile artwork and 96x96 PNG/SVG
+icons, tests and build glue: CC0-1.0. Full legal code: LICENSE-CC0.txt.
+No third-party image assets are used. This release is silent.

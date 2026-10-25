@@ -1,4 +1,7 @@
-Original PXA community-port tank illustration.
-SPDX-License-Identifier: CC0-1.0
-Created as native SVG; no EA game artwork, faction insignia or logo is used.
-The SVG is the editable source; PNG is its rendered desktop icon.
+Classic original game application icon from Electronic Arts public source archive.
+Source: https://github.com/electronicarts/CnC_Tiberian_Dawn/blob/e0d372dc582c053a699114942b984dad0457f9b3/CONQUER.ICO
+Export: largest ICO image (48x48) decoded to RGBA, integer nearest-neighbor scale to 96x96. No semantic redraw.
+Original icon SHA-256: 41fbb7f2fd0711fe1380fc2c71f5138f1c732a26cf682560093951c38d8895b8
+Game artwork and trademarks belong to their respective rights holders. This asset is not the CC0 tank illustration.
+Source archive terms: https://github.com/electronicarts/CnC_Tiberian_Dawn/blob/e0d372dc582c053a699114942b984dad0457f9b3/LICENSE.md
+The older, unused icon.svg remains an original CC0-1.0 tank illustration.

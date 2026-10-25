@@ -19,16 +19,25 @@
 #define SLOT_COUNT 64
 #define FD_BASE 100
 #ifdef PORT_LOADING_TRACE
-static unsigned loading_opens,loading_reads,loading_seeks,loading_stats;
+static unsigned loading_opens,loading_reads,loading_seeks,loading_stats,loading_missing_hits;
 static char loading_path[96];
 void port_filesystem_loading_stats(void) {
-  port_log("PXA LOAD FS opens=%u reads=%u seeks=%u stats=%u last_open=%s",
-    loading_opens,loading_reads,loading_seeks,loading_stats,loading_path);
+  port_log("PXA LOAD FS opens=%u reads=%u seeks=%u stats=%u miss_cache=%u last_open=%s",
+    loading_opens,loading_reads,loading_seeks,loading_stats,loading_missing_hits,loading_path);
 }
 #endif
 /* A single Guest owns its private namespace. RTS filename resolution may
  * cache a spelling only until the next possible namespace mutation. */
 #ifdef PORT_RTS
+#include "missing_paths.h"
+static port_missing_paths_t missing_paths;
+static int loading_missing_cache;
+void port_filesystem_loading_cache(int active) {
+  active=!!active;
+  if(loading_missing_cache==active)return;
+  loading_missing_cache=active;
+  memset(&missing_paths,0,sizeof(missing_paths));
+}
 static uint64_t namespace_revision;
 uint64_t port_filesystem_revision(void) { return namespace_revision; }
 #define NAMESPACE_CHANGED() (++namespace_revision)
@@ -208,6 +217,15 @@ static int openfile(const char *name, uint32_t flags) {
   char p[256];
   if (!path(name, p))
     return -1;
+#ifdef PORT_RTS
+  if(flags==PXA_FS_OPEN_READ && port_missing_path_hit(&missing_paths,p,
+      port_time_us(),namespace_revision)) {
+#ifdef PORT_LOADING_TRACE
+    ++loading_missing_hits;
+#endif
+    errno=ENOENT;return -1;
+  }
+#endif
   int i;
   for (i = 0; i < SLOT_COUNT && files[i].used; i++)
     ;
@@ -225,8 +243,11 @@ static int openfile(const char *name, uint32_t flags) {
     return -1;
   }
   const pxa_event_t *e = port_rpc_packet(packet, n);
-  pxa_fs_open_result_t r;
+  pxa_fs_open_result_t r={0};
   if (!e || !pxa_fs_parse_open(e, e->token, &r) || r.status) {
+#ifdef PORT_RTS
+    const int private_missing=e && r.status==PXA_STATUS_NOT_FOUND;
+#endif
     if (flags == PXA_FS_OPEN_READ) {
       uint64_t external_handle,features;uint32_t external_size;
       if(port_external_open(p,&external_handle,&external_size,&features)) {
@@ -244,6 +265,15 @@ static int openfile(const char *name, uint32_t flags) {
         strcpy(files[i].asset_path, name);
         return i + FD_BASE;
       }
+#ifdef PORT_RTS
+      /* Only explicit NOT_FOUND from both roots is reusable. I/O errors,
+       * denied access and unmounted media must be retried normally. */
+      if(private_missing && port_external_open_status()==PXA_STATUS_NOT_FOUND)
+        /* Startup probes span many seconds of SD RPCs. The first real frame
+         * discards this longer-lived working set; private writes invalidate it. */
+        port_missing_path_store_for(&missing_paths,p,port_time_us(),namespace_revision,
+            loading_missing_cache?UINT64_C(300000000):UINT64_C(1000000));
+#endif
     }
     errno = ENOENT;
     return -1;

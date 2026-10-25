@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#24243e"/><stop offset="1" stop-color="#101324"/></linearGradient><linearGradient id="shell" x2="0" y2="1"><stop stop-color="#b8a5ff"/><stop offset="1" stop-color="#7252c7"/></linearGradient></defs>
+<rect width="192" height="192" rx="40" fill="url(#bg)"/>
+<path d="M32 60 Q96 46 160 60 Q179 64 179 88 L174 129 Q172 141 159 143 L33 143 Q20 141 18 129 L13 88 Q13 64 32 60Z" fill="#0b0c19" opacity=".6" transform="translate(0 7)"/>
+<path d="M32 54 Q96 40 160 54 Q179 58 179 82 L174 123 Q172 135 159 137 L33 137 Q20 135 18 123 L13 82 Q13 58 32 54Z" fill="url(#shell)" stroke="#c8b8ff" stroke-width="2"/>
+<rect x="53" y="57" width="86" height="66" rx="8" fill="#282b48"/>
+<rect x="60" y="64" width="72" height="48" rx="3" fill="#a6d7bc"/>
+<path d="M61 99 L76 84 L87 94 L107 74 L131 98 V111 H61Z" fill="#578d85"/><path d="M61 105 L80 95 L98 103 L119 88 L131 101 V111 H61Z" fill="#284f64"/>
+<circle cx="118" cy="75" r="5" fill="#eff6bc"/>
+<path d="M28 78 H38 V88 H48 V98 H38 V108 H28 V98 H18 V88 H28Z" fill="#25263e" stroke="#5b4b86" stroke-width="2"/>
+<circle cx="153" cy="98" r="9" fill="#29263e"/><circle cx="170" cy="82" r="9" fill="#29263e"/>
+<path d="M72 128 H83 M94 128 H105" stroke="#41345f" stroke-width="4" stroke-linecap="round"/>
+<path d="M29 57 L45 54 M147 54 L164 57" stroke="#ded7fb" stroke-width="5" stroke-linecap="round"/>
+<circle cx="145" cy="63" r="2.5" fill="#b7f4a3"/>
+<text x="96" y="164" text-anchor="middle" fill="#ede8ff" font-family="sans-serif" font-weight="bold" font-size="17" letter-spacing="3">GBA</text>
+</svg>

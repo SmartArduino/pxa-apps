@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "application": "pxa-pocket-sokoban",
+  "engine": {
+    "repository": "https://github.com/sdosenn/NibbleSokoban",
+    "pin": "4ef4e56d21fd2dffa5f0b49f3f254326fa0899cb",
+    "license": "MIT",
+    "copyright": "Copyright (c) 2021 snsdosen",
+    "vendored_sha256": {
+      "Player.ino": "c2f86407438a1d22b4afd36e4ed7d1a7c9bb6be60cad97bf770443fa2d6e786b",
+      "LifoBuffer.ino": "209ed41b66896d445e15990b86a8df8913cce236757b5d411888c212c1bff3af",
+      "LICENSE": "0724bec1c4709cffa28dfd16441cd6b7aab882572014fe524690cc668ef1a2c8",
+      "README.md": "0b4d2a4ff43a7f228027ded5d67eed4b84c80740224c452c70f7b585220046cf"
+    },
+    "changes": [
+      "Player.ino four movement branches consolidated in core.cpp, retaining lower/upper board layers.",
+      "Direction plus bit 0x10 records box pushes; LifoBuffer.ino circular rewind adapted to static 2048-byte storage.",
+      "Added complete one- and two-cell bounds checks, moves/push counters, completion/unlock persistence, CRC-32 validation.",
+      "Arduino sound, animation and button flags replaced with PXA hooks; no upstream levels or graphical assets imported."
+    ]
+  },
+  "levels": {
+    "repository": "https://github.com/google-deepmind/boxoban-levels",
+    "pin": "78011d8c86ad423bfb2e1005012393b4c3c24409",
+    "source_path": "unfiltered/test/000.txt",
+    "source_sha256": "272928a4e7c185fdf84daa523b298750b6ff08703cb0c20d3be7eff93acc5256",
+    "license": "Apache-2.0",
+    "selected_dataset_ids": [
+      14,
+      16,
+      12,
+      28,
+      49,
+      9,
+      24,
+      31,
+      41,
+      36,
+      18,
+      51,
+      56,
+      59,
+      62,
+      33,
+      30,
+      0,
+      55,
+      13,
+      25,
+      29,
+      35,
+      53,
+      63,
+      42,
+      45,
+      2,
+      19,
+      10,
+      60,
+      4
+    ],
+    "selection": "Offline push BFS on first 64 boards; choose 32 successful solutions with shortest walking path length, ties by dataset id.",
+    "conversion": "Unchanged 10x10 ASCII geometry copied to SELECTED.txt and concatenated into C++ string arrays in levels.hpp; original dataset ids retained.",
+    "vendored_sha256": {
+      "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "README.md": "d3e231ab2c9d838588d9fdcf00d5a16928c0e8b92f48d488056b411111749d44",
+      "SELECTED.txt": "76f3462127a7d62484dff74aff8061a3447134ef4eecc620394ef104f83dfcd5"
+    },
+    "citation": "Arthur Guez et al. An investigation of Model-free planning: boxoban levels. 2018. https://github.com/deepmind/boxoban-levels/"
+  },
+  "original": {
+    "license": "CC0-1.0",
+    "scope": "Two tutorial layouts (dataset_id -1,-2), UI, geometric graphics, 96x96 icon PNG/SVG, tests and build glue.",
+    "cc0_license_text_source": "https://raw.githubusercontent.com/spdx/license-list-data/main/text/CC0-1.0.txt",
+    "cc0_license_text_sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+  }
+}

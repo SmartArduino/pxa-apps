@@ -73,6 +73,10 @@
 #include "common/vqaconfig.h"
 #include "common/winasm.h"
 #include "intro.h"
+#ifdef ESP_PLATFORM_CNC
+extern "C" void port_loading_stage(const char *);
+static bool pxa_multiplayer_maps_ready;
+#endif
 
 RemapControlType SidebarScheme;
 
@@ -317,7 +321,9 @@ bool Init_Game(int, char*[])
     if (!Special.IsFromInstall) {
         VisiblePage.Clear();
         //		Mono_Printf("Playing Intro\n");
+#if !defined(ESP_PLATFORM_CNC)
         Play_Intro();
+#endif
         memset(CurrentPalette, 0x01, 768);
         WhitePalette.Set();
     } else {
@@ -832,6 +838,13 @@ bool Select_Game(bool fade)
             **	network play.
             */
             case SEL_MULTIPLAYER_GAME:
+#ifdef ESP_PLATFORM_CNC
+                if(!pxa_multiplayer_maps_ready) {
+                    port_loading_stage("Reading multiplayer maps");
+                    Session.Read_Scenario_Descriptions();
+                    pxa_multiplayer_maps_ready=true;
+                }
+#endif
 #ifdef WOLAPI_INTEGRATION
                 if (!pWolapi) {
 #endif
