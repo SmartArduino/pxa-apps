@@ -95,7 +95,7 @@ python3 -B local/pxa-apps/doom/tools/prepare-data.py \
 
 通过原游戏 SAVE GAME / LOAD GAME 菜单存取 6 个槽。空槽自动命名为 `PXA SAVE 1` 等，再按 A/OK 确认，无需软键盘。存档 `doomsav0.dsg` … `doomsav5.dsg` 与 `default.cfg` 写入应用私有 `/data`，先关闭临时文件再用 FS replace 发布。各 IWAD 共用这 6 个槽，切换游戏前应备份或清理不兼容存档。系统 Home 用于返回启动器，DOOM 的 Quit 会显示退出提示页。
 
-画面原始为 320×200 INDEX8，按目标屏幕缩放；320×240 屏幕恢复原 DOOM 的 4:3 显示比例。引擎生成 11025 Hz、双声道 S16 音效，公共运行层转为 Host 普通音频会话的 16000 Hz 单声道 PCM。当前产品 Host 尚未实现 Audio 0.10 的 OPEN_PCM 后端，因此本应用关闭 `PXA_RECROF_NATIVE_PCM`，使用已有 OPEN_SESSION 路径。当前未接 MIDI 合成器，背景音乐选项隐藏。
+画面原始为 320×200 INDEX8，按目标屏幕缩放；320×240 屏幕恢复原 DOOM 的 4:3 显示比例。引擎生成 11025 Hz、双声道 S16 音效，通过 Audio 0.10 的原生 PCM 会话提交，由 Host 适配实际输出格式。队列暂满时保留原包重试；单扬声器设备仍输出单声道。当前未接 MIDI 合成器，背景音乐选项隐藏。
 
 ## 维护与测试
 
