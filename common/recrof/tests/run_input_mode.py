@@ -37,7 +37,8 @@ for native in (False, True):
             f'set(PXA_RECROF_MAIN_LOOP {"ON" if native else "OFF"})\n'
             f'include("{tests.parent}/Engine.cmake")\n'
             f'pxa_recrof_component({"RTS " if rts else ""}TITLE "Input fixture" '
-            f'SOURCES "{tests}/input_fixture.c")\n')
+            f'SOURCES "{tests}/input_fixture.c"'
+            f'{" DEFINITIONS PORT_ENGINE_CONTROLLER=1" if native and not rts else ""})\n')
         env = dict(os.environ, PXA_BUILD_CACHE_DIR=str(out / "cache"))
         with (out / f"{name}-build.txt").open("w") as log:
             subprocess.run(["bash", str(project / "tools/app.sh"), "build", name,
@@ -64,6 +65,12 @@ for native in (False, True):
                             str(prefix), "5.2", input_actions], env=env,
                            stdout=log, stderr=subprocess.STDOUT, check=True)
         report = json.loads(prefix.with_suffix(".json").read_text())
+        if native and not rts:
+            # One foreground tick launches the engine. Input, timed sleeps,
+            # audio/lifecycle replies and resume must work without more ticks.
+            assert 1 <= report["ticks"] <= 3, report["ticks"]
+        else:
+            assert report["ticks"] > 20, report["ticks"]
         assert len(report["captures"]) == len(captures)
         for shot, want_visible in zip(report["captures"], visible):
             assert abs(shot["seconds"] - shot["requested"]) < .15, shot

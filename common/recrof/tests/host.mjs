@@ -224,7 +224,7 @@ function maintainInputs(){
 try{while(Date.now()<end){
  maintainInputs();
  for(let i=0;i<1000&&events.length;i++)event(events.shift());
- if(clockPeriod && Date.now()-lastTick>=clockPeriod){const payload=Buffer.alloc(8);payload.writeBigUInt64LE(BigInt(Date.now())*1000n);event({service:4,op:0x8001,payload});ticks++;lastTick=Date.now();}
+ if(clockPeriod && Date.now()-lastTick>=clockPeriod){const payload=Buffer.alloc(8);payload.writeBigUInt64LE(BigInt(Date.now())*1000n);ticks++;lastTick=Date.now();event({service:4,op:0x8001,payload});}
  await new Promise(r=>setTimeout(r,1));
 }}catch(error){if(error!==nativeEnd)throw error;}
 if(requireIoCoop && !ioBoundaryChecks)throw Error('no slow I/O boundary checked');

@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 project(pxa_doom C CXX)
 set(PXA_RECROF_MAIN_LOOP ON)
-# Product hosts currently implement OPEN_SESSION (16 kHz mono), not OPEN_PCM.
-# Let the shared runtime convert the engine's 11025 Hz stereo stream.
-set(PXA_RECROF_NATIVE_PCM OFF)
+# Audio 0.10 is required by the package. Submit original 11025 Hz stereo PCM
+# and let the sink resample; preserve packets when its queue is temporarily full.
+set(PXA_RECROF_NATIVE_PCM ON)
 set(PXA_RECROF_HOST_BLIT ON)
 set(PXA_RECROF_BULK_READ_COPY ON)
 set(PXA_RECROF_PACKED_GAME_CODEC ON)

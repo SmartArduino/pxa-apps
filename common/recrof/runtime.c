@@ -115,17 +115,24 @@ static uint64_t token_cursor = 100;
 static uint64_t clock_pending;
 static uint32_t clock_requested;
 static int clock_timing;
-/* Keep the validated legacy timer running until negotiation completes. */
+/* A foreground tick starts the retained engine call. Engines which sample
+ * their own controller state then use event-port deadlines for waiting;
+ * periodic ticks would only wake the same loop again. Callback engines and
+ * RTS housekeeping still need their timer. */
 static int clock_apply(void) {
+  int enabled=!background;
+#if PORT_NATIVE_MAIN_LOOP && defined(PORT_ENGINE_CONTROLLER) && !defined(PORT_RTS)
+  enabled=enabled && !engine_running;
+#endif
   if(clock_timing) {
-    clock_requested=background?0:PORT_TICK_US;
+    clock_requested=enabled?PORT_TICK_US:0;
     clock_pending=++token_cursor;
     int status=pxa_clock_configure(clock_pending,clock_requested);
     if(!status)return 0;
     clock_timing=0;clock_pending=0;
     port_log("PXA Clock configure unavailable: %d; legacy fallback",status);
   }
-  return pxa_clock_set_period(background?0:PORT_TICK_MS);
+  return pxa_clock_set_period(enabled?PORT_TICK_MS:0);
 }
 static uint64_t waiting_token;
 static pxa_event_t reply;
@@ -272,6 +279,10 @@ int port_cooperate_due(uint64_t now,uint32_t budget_us) {
 }
 NOINLINE static void run_game(void) {
   engine_running = 1;
+#if PORT_NATIVE_MAIN_LOOP && defined(PORT_ENGINE_CONTROLLER) && !defined(PORT_RTS)
+  int clock_status=clock_apply();
+  if(clock_status)port_log("PXA Clock idle configuration failed: %d",clock_status);
+#endif
   port_log("Starting %s", PORT_TITLE);
   port_loading_stage("Opening game files");
   mkdir("/data", 0700);
