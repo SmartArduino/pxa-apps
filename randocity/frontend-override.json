@@ -1,0 +1,17 @@
+{
+  "path": "frontend.cpp",
+  "bytes": 9595,
+  "sha256": "581607cf08969711597465b4bc41f06181621453c028d096e97d2589ab44d42d",
+  "foundation_path": "arduboy-batch-20261010/frontend.cpp",
+  "foundation_sha256": "81c5e59f8c6c0fdaad5ca4ee292ab4fd8e757f15cd62ef870a36d347b8fbcef5",
+  "patch": "frontend.patch",
+  "old_header": "a/arduboy-batch-20261010/frontend.cpp",
+  "new_header": "b/randocity/frontend.cpp",
+  "mask": 24,
+  "rectangle": [
+    184,
+    276,
+    196,
+    28
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "format": "pxa-dependency-notices-1",
+  "notices": [
+    {
+      "package": "remeda",
+      "version": "2.21.0",
+      "license": "MIT",
+      "path": "licenses/remeda-2.21.0-MIT.txt",
+      "sha256": "acf30083045d768ce20640237313ee31a45d548d66ef76df5bb5fb0745479535",
+      "bytes": 1063,
+      "source_url": "https://raw.githubusercontent.com/remeda/remeda/v2.21.0/LICENSE",
+      "immutable_source_url": "https://raw.githubusercontent.com/remeda/remeda/70db6498e07e9f07b9463b3591dc57b06ae286ab/LICENSE",
+      "repository": "https://github.com/remeda/remeda",
+      "tag": "v2.21.0",
+      "source_commit": "70db6498e07e9f07b9463b3591dc57b06ae286ab",
+      "tag_api_url": "https://api.github.com/repos/remeda/remeda/git/ref/tags/v2.21.0",
+      "npm_metadata_url": "https://registry.npmjs.org/remeda/2.21.0",
+      "npm_git_head": "70db6498e07e9f07b9463b3591dc57b06ae286ab",
+      "npm_integrity": "sha512-ANFqOts3BsvW1MrKOv9SVHG3ly0MzzLa0HIu5qLkiRuEPGPuH9ny3sgd7VdHvC2VOUSN/7RkmabPlAda6JtGgg==",
+      "npm_archive_sha256": "4a384aa73c57758386ae9657e7ebbb21fd9790b9713d420deba1de99e0ca19c2",
+      "reason": "The published 2.21.0 tarball omits LICENSE. Official tag commit equals published npm gitHead.",
+      "retrieved_at_utc": "2026-10-08T05:37:07.984790+00:00"
+    }
+  ]
+}

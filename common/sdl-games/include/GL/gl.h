@@ -1,0 +1,1375 @@
+/* PortableGL enum bridge for the fixed-function game API. GPL-3.0-or-later. */
+#pragma once
+#include "../gl_profile.h"
+#include "../../vendor/portablegl/portablegl.h"
+#ifndef GL_ALIASED_LINE_WIDTH_RANGE
+#define GL_ALIASED_LINE_WIDTH_RANGE GL_ALIASED_LINE_WIDTH_RANGE
+#endif
+#ifndef GL_ALPHA
+#define GL_ALPHA GL_ALPHA
+#endif
+#ifndef GL_ALWAYS
+#define GL_ALWAYS GL_ALWAYS
+#endif
+#ifndef GL_AND
+#define GL_AND GL_AND
+#endif
+#ifndef GL_AND_INVERTED
+#define GL_AND_INVERTED GL_AND_INVERTED
+#endif
+#ifndef GL_AND_REVERSE
+#define GL_AND_REVERSE GL_AND_REVERSE
+#endif
+#ifndef GL_ARRAY_BUFFER
+#define GL_ARRAY_BUFFER GL_ARRAY_BUFFER
+#endif
+#ifndef GL_ARRAY_BUFFER_BINDING
+#define GL_ARRAY_BUFFER_BINDING GL_ARRAY_BUFFER_BINDING
+#endif
+#ifndef GL_BACK
+#define GL_BACK GL_BACK
+#endif
+#ifndef GL_BACK_LEFT
+#define GL_BACK_LEFT GL_BACK_LEFT
+#endif
+#ifndef GL_BACK_RIGHT
+#define GL_BACK_RIGHT GL_BACK_RIGHT
+#endif
+#ifndef GL_BGR
+#define GL_BGR GL_BGR
+#endif
+#ifndef GL_BGRA
+#define GL_BGRA GL_BGRA
+#endif
+#ifndef GL_BITMAP
+#define GL_BITMAP GL_BITMAP
+#endif
+#ifndef GL_BLEND
+#define GL_BLEND GL_BLEND
+#endif
+#ifndef GL_BLEND_DST_ALPHA
+#define GL_BLEND_DST_ALPHA GL_BLEND_DST_ALPHA
+#endif
+#ifndef GL_BLEND_DST_RGB
+#define GL_BLEND_DST_RGB GL_BLEND_DST_RGB
+#endif
+#ifndef GL_BLEND_EQUATION_ALPHA
+#define GL_BLEND_EQUATION_ALPHA GL_BLEND_EQUATION_ALPHA
+#endif
+#ifndef GL_BLEND_EQUATION_RGB
+#define GL_BLEND_EQUATION_RGB GL_BLEND_EQUATION_RGB
+#endif
+#ifndef GL_BLEND_SRC_ALPHA
+#define GL_BLEND_SRC_ALPHA GL_BLEND_SRC_ALPHA
+#endif
+#ifndef GL_BLEND_SRC_RGB
+#define GL_BLEND_SRC_RGB GL_BLEND_SRC_RGB
+#endif
+#ifndef GL_BYTE
+#define GL_BYTE GL_BYTE
+#endif
+#ifndef GL_CCW
+#define GL_CCW GL_CCW
+#endif
+#ifndef GL_CLAMP_TO_BORDER
+#define GL_CLAMP_TO_BORDER GL_CLAMP_TO_BORDER
+#endif
+#ifndef GL_CLAMP_TO_EDGE
+#define GL_CLAMP_TO_EDGE GL_CLAMP_TO_EDGE
+#endif
+#ifndef GL_CLEAR
+#define GL_CLEAR GL_CLEAR
+#endif
+#ifndef GL_COLOR
+#define GL_COLOR GL_COLOR
+#endif
+#ifndef GL_COLOR_ATTACHMENT0
+#define GL_COLOR_ATTACHMENT0 GL_COLOR_ATTACHMENT0
+#endif
+#ifndef GL_COLOR_ATTACHMENT1
+#define GL_COLOR_ATTACHMENT1 GL_COLOR_ATTACHMENT1
+#endif
+#ifndef GL_COLOR_ATTACHMENT2
+#define GL_COLOR_ATTACHMENT2 GL_COLOR_ATTACHMENT2
+#endif
+#ifndef GL_COLOR_ATTACHMENT3
+#define GL_COLOR_ATTACHMENT3 GL_COLOR_ATTACHMENT3
+#endif
+#ifndef GL_COLOR_ATTACHMENT4
+#define GL_COLOR_ATTACHMENT4 GL_COLOR_ATTACHMENT4
+#endif
+#ifndef GL_COLOR_ATTACHMENT5
+#define GL_COLOR_ATTACHMENT5 GL_COLOR_ATTACHMENT5
+#endif
+#ifndef GL_COLOR_ATTACHMENT6
+#define GL_COLOR_ATTACHMENT6 GL_COLOR_ATTACHMENT6
+#endif
+#ifndef GL_COLOR_ATTACHMENT7
+#define GL_COLOR_ATTACHMENT7 GL_COLOR_ATTACHMENT7
+#endif
+#ifndef GL_COLOR_BUFFER_BIT
+#define GL_COLOR_BUFFER_BIT GL_COLOR_BUFFER_BIT
+#endif
+#ifndef GL_COLOR_LOGIC_OP
+#define GL_COLOR_LOGIC_OP GL_COLOR_LOGIC_OP
+#endif
+#ifndef GL_COLOR_WRITEMASK
+#define GL_COLOR_WRITEMASK GL_COLOR_WRITEMASK
+#endif
+#ifndef GL_COMPILE_STATUS
+#define GL_COMPILE_STATUS GL_COMPILE_STATUS
+#endif
+#ifndef GL_COMPRESSED_RED
+#define GL_COMPRESSED_RED GL_COMPRESSED_RED
+#endif
+#ifndef GL_COMPRESSED_RG
+#define GL_COMPRESSED_RG GL_COMPRESSED_RG
+#endif
+#ifndef GL_COMPRESSED_RGB
+#define GL_COMPRESSED_RGB GL_COMPRESSED_RGB
+#endif
+#ifndef GL_COMPRESSED_RGBA
+#define GL_COMPRESSED_RGBA GL_COMPRESSED_RGBA
+#endif
+#ifndef GL_COMPUTE_SHADER
+#define GL_COMPUTE_SHADER GL_COMPUTE_SHADER
+#endif
+#ifndef GL_CONSTANT_ALPHA
+#define GL_CONSTANT_ALPHA GL_CONSTANT_ALPHA
+#endif
+#ifndef GL_CONSTANT_COLOR
+#define GL_CONSTANT_COLOR GL_CONSTANT_COLOR
+#endif
+#ifndef GL_CONTEXT_FLAGS
+#define GL_CONTEXT_FLAGS GL_CONTEXT_FLAGS
+#endif
+#ifndef GL_CONTEXT_FLAG_DEBUG_BIT
+#define GL_CONTEXT_FLAG_DEBUG_BIT GL_CONTEXT_FLAG_DEBUG_BIT
+#endif
+#ifndef GL_COPY
+#define GL_COPY GL_COPY
+#endif
+#ifndef GL_COPY_INVERTED
+#define GL_COPY_INVERTED GL_COPY_INVERTED
+#endif
+#ifndef GL_COPY_READ_BUFFER
+#define GL_COPY_READ_BUFFER GL_COPY_READ_BUFFER
+#endif
+#ifndef GL_COPY_WRITE_BUFFER
+#define GL_COPY_WRITE_BUFFER GL_COPY_WRITE_BUFFER
+#endif
+#ifndef GL_CULL_FACE
+#define GL_CULL_FACE GL_CULL_FACE
+#endif
+#ifndef GL_CULL_FACE_MODE
+#define GL_CULL_FACE_MODE GL_CULL_FACE_MODE
+#endif
+#ifndef GL_CURRENT_PROGRAM
+#define GL_CURRENT_PROGRAM GL_CURRENT_PROGRAM
+#endif
+#ifndef GL_CW
+#define GL_CW GL_CW
+#endif
+#ifndef GL_DEBUG_OUTPUT
+#define GL_DEBUG_OUTPUT GL_DEBUG_OUTPUT
+#endif
+#ifndef GL_DEBUG_OUTPUT_SYNCHRONOUS
+#define GL_DEBUG_OUTPUT_SYNCHRONOUS GL_DEBUG_OUTPUT_SYNCHRONOUS
+#endif
+#ifndef GL_DEBUG_SEVERITY_HIGH
+#define GL_DEBUG_SEVERITY_HIGH GL_DEBUG_SEVERITY_HIGH
+#endif
+#ifndef GL_DEBUG_SEVERITY_LOW
+#define GL_DEBUG_SEVERITY_LOW GL_DEBUG_SEVERITY_LOW
+#endif
+#ifndef GL_DEBUG_SEVERITY_MEDIUM
+#define GL_DEBUG_SEVERITY_MEDIUM GL_DEBUG_SEVERITY_MEDIUM
+#endif
+#ifndef GL_DEBUG_SEVERITY_NOTIFICATION
+#define GL_DEBUG_SEVERITY_NOTIFICATION GL_DEBUG_SEVERITY_NOTIFICATION
+#endif
+#ifndef GL_DEBUG_SOURCE_API
+#define GL_DEBUG_SOURCE_API GL_DEBUG_SOURCE_API
+#endif
+#ifndef GL_DEBUG_SOURCE_APPLICATION
+#define GL_DEBUG_SOURCE_APPLICATION GL_DEBUG_SOURCE_APPLICATION
+#endif
+#ifndef GL_DEBUG_SOURCE_OTHER
+#define GL_DEBUG_SOURCE_OTHER GL_DEBUG_SOURCE_OTHER
+#endif
+#ifndef GL_DEBUG_SOURCE_SHADER_COMPILER
+#define GL_DEBUG_SOURCE_SHADER_COMPILER GL_DEBUG_SOURCE_SHADER_COMPILER
+#endif
+#ifndef GL_DEBUG_SOURCE_THIRD_PARTY
+#define GL_DEBUG_SOURCE_THIRD_PARTY GL_DEBUG_SOURCE_THIRD_PARTY
+#endif
+#ifndef GL_DEBUG_SOURCE_WINDOW_SYSTEM
+#define GL_DEBUG_SOURCE_WINDOW_SYSTEM GL_DEBUG_SOURCE_WINDOW_SYSTEM
+#endif
+#ifndef GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR
+#define GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR
+#endif
+#ifndef GL_DEBUG_TYPE_ERROR
+#define GL_DEBUG_TYPE_ERROR GL_DEBUG_TYPE_ERROR
+#endif
+#ifndef GL_DEBUG_TYPE_MARKER
+#define GL_DEBUG_TYPE_MARKER GL_DEBUG_TYPE_MARKER
+#endif
+#ifndef GL_DEBUG_TYPE_OTHER
+#define GL_DEBUG_TYPE_OTHER GL_DEBUG_TYPE_OTHER
+#endif
+#ifndef GL_DEBUG_TYPE_PERFORMANCE
+#define GL_DEBUG_TYPE_PERFORMANCE GL_DEBUG_TYPE_PERFORMANCE
+#endif
+#ifndef GL_DEBUG_TYPE_POP_GROUP
+#define GL_DEBUG_TYPE_POP_GROUP GL_DEBUG_TYPE_POP_GROUP
+#endif
+#ifndef GL_DEBUG_TYPE_PORTABILITY
+#define GL_DEBUG_TYPE_PORTABILITY GL_DEBUG_TYPE_PORTABILITY
+#endif
+#ifndef GL_DEBUG_TYPE_PUSH_GROUP
+#define GL_DEBUG_TYPE_PUSH_GROUP GL_DEBUG_TYPE_PUSH_GROUP
+#endif
+#ifndef GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR
+#define GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR
+#endif
+#ifndef GL_DECR
+#define GL_DECR GL_DECR
+#endif
+#ifndef GL_DECR_WRAP
+#define GL_DECR_WRAP GL_DECR_WRAP
+#endif
+#ifndef GL_DEPTH
+#define GL_DEPTH GL_DEPTH
+#endif
+#ifndef GL_DEPTH24_STENCIL8
+#define GL_DEPTH24_STENCIL8 GL_DEPTH24_STENCIL8
+#endif
+#ifndef GL_DEPTH32F_STENCIL8
+#define GL_DEPTH32F_STENCIL8 GL_DEPTH32F_STENCIL8
+#endif
+#ifndef GL_DEPTH_ATTACHMENT
+#define GL_DEPTH_ATTACHMENT GL_DEPTH_ATTACHMENT
+#endif
+#ifndef GL_DEPTH_BUFFER_BIT
+#define GL_DEPTH_BUFFER_BIT GL_DEPTH_BUFFER_BIT
+#endif
+#ifndef GL_DEPTH_CLAMP
+#define GL_DEPTH_CLAMP GL_DEPTH_CLAMP
+#endif
+#ifndef GL_DEPTH_CLEAR_VALUE
+#define GL_DEPTH_CLEAR_VALUE GL_DEPTH_CLEAR_VALUE
+#endif
+#ifndef GL_DEPTH_COMPONENT
+#define GL_DEPTH_COMPONENT GL_DEPTH_COMPONENT
+#endif
+#ifndef GL_DEPTH_COMPONENT16
+#define GL_DEPTH_COMPONENT16 GL_DEPTH_COMPONENT16
+#endif
+#ifndef GL_DEPTH_COMPONENT24
+#define GL_DEPTH_COMPONENT24 GL_DEPTH_COMPONENT24
+#endif
+#ifndef GL_DEPTH_COMPONENT32
+#define GL_DEPTH_COMPONENT32 GL_DEPTH_COMPONENT32
+#endif
+#ifndef GL_DEPTH_COMPONENT32F
+#define GL_DEPTH_COMPONENT32F GL_DEPTH_COMPONENT32F
+#endif
+#ifndef GL_DEPTH_FUNC
+#define GL_DEPTH_FUNC GL_DEPTH_FUNC
+#endif
+#ifndef GL_DEPTH_RANGE
+#define GL_DEPTH_RANGE GL_DEPTH_RANGE
+#endif
+#ifndef GL_DEPTH_STENCIL
+#define GL_DEPTH_STENCIL GL_DEPTH_STENCIL
+#endif
+#ifndef GL_DEPTH_STENCIL_ATTACHMENT
+#define GL_DEPTH_STENCIL_ATTACHMENT GL_DEPTH_STENCIL_ATTACHMENT
+#endif
+#ifndef GL_DEPTH_TEST
+#define GL_DEPTH_TEST GL_DEPTH_TEST
+#endif
+#ifndef GL_DONT_CARE
+#define GL_DONT_CARE GL_DONT_CARE
+#endif
+#ifndef GL_DOUBLE
+#define GL_DOUBLE GL_DOUBLE
+#endif
+#ifndef GL_DRAW_FRAMEBUFFER
+#define GL_DRAW_FRAMEBUFFER GL_DRAW_FRAMEBUFFER
+#endif
+#ifndef GL_DRAW_FRAMEBUFFER_BINDING
+#define GL_DRAW_FRAMEBUFFER_BINDING GL_DRAW_FRAMEBUFFER_BINDING
+#endif
+#ifndef GL_DST_ALPHA
+#define GL_DST_ALPHA GL_DST_ALPHA
+#endif
+#ifndef GL_DST_COLOR
+#define GL_DST_COLOR GL_DST_COLOR
+#endif
+#ifndef GL_DYNAMIC_COPY
+#define GL_DYNAMIC_COPY GL_DYNAMIC_COPY
+#endif
+#ifndef GL_DYNAMIC_DRAW
+#define GL_DYNAMIC_DRAW GL_DYNAMIC_DRAW
+#endif
+#ifndef GL_DYNAMIC_READ
+#define GL_DYNAMIC_READ GL_DYNAMIC_READ
+#endif
+#ifndef GL_ELEMENT_ARRAY_BUFFER
+#define GL_ELEMENT_ARRAY_BUFFER GL_ELEMENT_ARRAY_BUFFER
+#endif
+#ifndef GL_ELEMENT_ARRAY_BUFFER_BINDING
+#define GL_ELEMENT_ARRAY_BUFFER_BINDING GL_ELEMENT_ARRAY_BUFFER_BINDING
+#endif
+#ifndef GL_EQUAL
+#define GL_EQUAL GL_EQUAL
+#endif
+#ifndef GL_EQUIV
+#define GL_EQUIV GL_EQUIV
+#endif
+#ifndef GL_FILL
+#define GL_FILL GL_FILL
+#endif
+#ifndef GL_FIRST_VERTEX_CONVENTION
+#define GL_FIRST_VERTEX_CONVENTION GL_FIRST_VERTEX_CONVENTION
+#endif
+#ifndef GL_FLOAT
+#define GL_FLOAT GL_FLOAT
+#endif
+#ifndef GL_FRAGMENT_SHADER
+#define GL_FRAGMENT_SHADER GL_FRAGMENT_SHADER
+#endif
+#ifndef GL_FRAMEBUFFER
+#define GL_FRAMEBUFFER GL_FRAMEBUFFER
+#endif
+#ifndef GL_FRAMEBUFFER_BINDING
+#define GL_FRAMEBUFFER_BINDING GL_FRAMEBUFFER_BINDING
+#endif
+#ifndef GL_FRAMEBUFFER_COMPLETE
+#define GL_FRAMEBUFFER_COMPLETE GL_FRAMEBUFFER_COMPLETE
+#endif
+#ifndef GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT
+#define GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT
+#endif
+#ifndef GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS
+#define GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS
+#endif
+#ifndef GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER
+#define GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER
+#endif
+#ifndef GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT
+#define GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT
+#endif
+#ifndef GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER
+#define GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER
+#endif
+#ifndef GL_FRAMEBUFFER_UNSUPPORTED
+#define GL_FRAMEBUFFER_UNSUPPORTED GL_FRAMEBUFFER_UNSUPPORTED
+#endif
+#ifndef GL_FRONT
+#define GL_FRONT GL_FRONT
+#endif
+#ifndef GL_FRONT_AND_BACK
+#define GL_FRONT_AND_BACK GL_FRONT_AND_BACK
+#endif
+#ifndef GL_FRONT_FACE
+#define GL_FRONT_FACE GL_FRONT_FACE
+#endif
+#ifndef GL_FRONT_LEFT
+#define GL_FRONT_LEFT GL_FRONT_LEFT
+#endif
+#ifndef GL_FRONT_RIGHT
+#define GL_FRONT_RIGHT GL_FRONT_RIGHT
+#endif
+#ifndef GL_FUNC_ADD
+#define GL_FUNC_ADD GL_FUNC_ADD
+#endif
+#ifndef GL_FUNC_REVERSE_SUBTRACT
+#define GL_FUNC_REVERSE_SUBTRACT GL_FUNC_REVERSE_SUBTRACT
+#endif
+#ifndef GL_FUNC_SUBTRACT
+#define GL_FUNC_SUBTRACT GL_FUNC_SUBTRACT
+#endif
+#ifndef GL_GEOMETRY_SHADER
+#define GL_GEOMETRY_SHADER GL_GEOMETRY_SHADER
+#endif
+#ifndef GL_GEQUAL
+#define GL_GEQUAL GL_GEQUAL
+#endif
+#ifndef GL_GREATER
+#define GL_GREATER GL_GREATER
+#endif
+#ifndef GL_INCR
+#define GL_INCR GL_INCR
+#endif
+#ifndef GL_INCR_WRAP
+#define GL_INCR_WRAP GL_INCR_WRAP
+#endif
+#ifndef GL_INFO_LOG_LENGTH
+#define GL_INFO_LOG_LENGTH GL_INFO_LOG_LENGTH
+#endif
+#ifndef GL_INT
+#define GL_INT GL_INT
+#endif
+#ifndef GL_INVALID_ENUM
+#define GL_INVALID_ENUM GL_INVALID_ENUM
+#endif
+#ifndef GL_INVALID_FRAMEBUFFER_OPERATION
+#define GL_INVALID_FRAMEBUFFER_OPERATION GL_INVALID_FRAMEBUFFER_OPERATION
+#endif
+#ifndef GL_INVALID_OPERATION
+#define GL_INVALID_OPERATION GL_INVALID_OPERATION
+#endif
+#ifndef GL_INVALID_VALUE
+#define GL_INVALID_VALUE GL_INVALID_VALUE
+#endif
+#ifndef GL_INVERT
+#define GL_INVERT GL_INVERT
+#endif
+#ifndef GL_KEEP
+#define GL_KEEP GL_KEEP
+#endif
+#ifndef GL_LAST_VERTEX_CONVENTION
+#define GL_LAST_VERTEX_CONVENTION GL_LAST_VERTEX_CONVENTION
+#endif
+#ifndef GL_LEFT
+#define GL_LEFT GL_LEFT
+#endif
+#ifndef GL_LEQUAL
+#define GL_LEQUAL GL_LEQUAL
+#endif
+#ifndef GL_LESS
+#define GL_LESS GL_LESS
+#endif
+#ifndef GL_LINE
+#define GL_LINE GL_LINE
+#endif
+#ifndef GL_LINEAR
+#define GL_LINEAR GL_LINEAR
+#endif
+#ifndef GL_LINEAR_MIPMAP_LINEAR
+#define GL_LINEAR_MIPMAP_LINEAR GL_LINEAR_MIPMAP_LINEAR
+#endif
+#ifndef GL_LINEAR_MIPMAP_NEAREST
+#define GL_LINEAR_MIPMAP_NEAREST GL_LINEAR_MIPMAP_NEAREST
+#endif
+#ifndef GL_LINES
+#define GL_LINES GL_LINES
+#endif
+#ifndef GL_LINES_ADJACENCY
+#define GL_LINES_ADJACENCY GL_LINES_ADJACENCY
+#endif
+#ifndef GL_LINE_LOOP
+#define GL_LINE_LOOP GL_LINE_LOOP
+#endif
+#ifndef GL_LINE_SMOOTH
+#define GL_LINE_SMOOTH GL_LINE_SMOOTH
+#endif
+#ifndef GL_LINE_STRIP
+#define GL_LINE_STRIP GL_LINE_STRIP
+#endif
+#ifndef GL_LINE_STRIP_ADJACENCY
+#define GL_LINE_STRIP_ADJACENCY GL_LINE_STRIP_ADJACENCY
+#endif
+#ifndef GL_LINE_WIDTH
+#define GL_LINE_WIDTH GL_LINE_WIDTH
+#endif
+#ifndef GL_LINK_STATUS
+#define GL_LINK_STATUS GL_LINK_STATUS
+#endif
+#ifndef GL_LOGIC_OP_MODE
+#define GL_LOGIC_OP_MODE GL_LOGIC_OP_MODE
+#endif
+#ifndef GL_LOWER_LEFT
+#define GL_LOWER_LEFT GL_LOWER_LEFT
+#endif
+#ifndef GL_LUMINANCE
+#define GL_LUMINANCE GL_LUMINANCE
+#endif
+#ifndef GL_LUMINANCE_ALPHA
+#define GL_LUMINANCE_ALPHA GL_LUMINANCE_ALPHA
+#endif
+#ifndef GL_MAJOR_VERSION
+#define GL_MAJOR_VERSION GL_MAJOR_VERSION
+#endif
+#ifndef GL_MAX
+#define GL_MAX GL_MAX
+#endif
+#ifndef GL_MAX_3D_TEXTURE_SIZE
+#define GL_MAX_3D_TEXTURE_SIZE GL_MAX_3D_TEXTURE_SIZE
+#endif
+#ifndef GL_MAX_ARRAY_TEXTURE_LAYERS
+#define GL_MAX_ARRAY_TEXTURE_LAYERS GL_MAX_ARRAY_TEXTURE_LAYERS
+#endif
+#ifndef GL_MAX_DEBUG_MESSAGE_LENGTH
+#define GL_MAX_DEBUG_MESSAGE_LENGTH GL_MAX_DEBUG_MESSAGE_LENGTH
+#endif
+#ifndef GL_MAX_TEXTURE_BUFFER_SIZE
+#define GL_MAX_TEXTURE_BUFFER_SIZE GL_MAX_TEXTURE_BUFFER_SIZE
+#endif
+#ifndef GL_MAX_TEXTURE_IMAGE_UNITS
+#define GL_MAX_TEXTURE_IMAGE_UNITS GL_MAX_TEXTURE_IMAGE_UNITS
+#endif
+#ifndef GL_MAX_TEXTURE_LOD_BIAS
+#define GL_MAX_TEXTURE_LOD_BIAS GL_MAX_TEXTURE_LOD_BIAS
+#endif
+#ifndef GL_MAX_TEXTURE_SIZE
+#define GL_MAX_TEXTURE_SIZE GL_MAX_TEXTURE_SIZE
+#endif
+#ifndef GL_MIN
+#define GL_MIN GL_MIN
+#endif
+#ifndef GL_MINOR_VERSION
+#define GL_MINOR_VERSION GL_MINOR_VERSION
+#endif
+#ifndef GL_MIRRORED_REPEAT
+#define GL_MIRRORED_REPEAT GL_MIRRORED_REPEAT
+#endif
+#ifndef GL_NAND
+#define GL_NAND GL_NAND
+#endif
+#ifndef GL_NEAREST
+#define GL_NEAREST GL_NEAREST
+#endif
+#ifndef GL_NEAREST_MIPMAP_LINEAR
+#define GL_NEAREST_MIPMAP_LINEAR GL_NEAREST_MIPMAP_LINEAR
+#endif
+#ifndef GL_NEAREST_MIPMAP_NEAREST
+#define GL_NEAREST_MIPMAP_NEAREST GL_NEAREST_MIPMAP_NEAREST
+#endif
+#ifndef GL_NEVER
+#define GL_NEVER GL_NEVER
+#endif
+#ifndef GL_NONE
+#define GL_NONE GL_NONE
+#endif
+#ifndef GL_NOOP
+#define GL_NOOP GL_NOOP
+#endif
+#ifndef GL_NOR
+#define GL_NOR GL_NOR
+#endif
+#ifndef GL_NOTEQUAL
+#define GL_NOTEQUAL GL_NOTEQUAL
+#endif
+#ifndef GL_NO_ERROR
+#define GL_NO_ERROR GL_NO_ERROR
+#endif
+#ifndef GL_NUM_BUFFER_TYPES
+#define GL_NUM_BUFFER_TYPES GL_NUM_BUFFER_TYPES
+#endif
+#ifndef GL_NUM_TEXTURE_TYPES
+#define GL_NUM_TEXTURE_TYPES GL_NUM_TEXTURE_TYPES
+#endif
+#ifndef GL_ONE
+#define GL_ONE GL_ONE
+#endif
+#ifndef GL_ONE_MINUS_CONSTANT_ALPHA
+#define GL_ONE_MINUS_CONSTANT_ALPHA GL_ONE_MINUS_CONSTANT_ALPHA
+#endif
+#ifndef GL_ONE_MINUS_CONSTANT_COLOR
+#define GL_ONE_MINUS_CONSTANT_COLOR GL_ONE_MINUS_CONSTANT_COLOR
+#endif
+#ifndef GL_ONE_MINUS_DST_ALPHA
+#define GL_ONE_MINUS_DST_ALPHA GL_ONE_MINUS_DST_ALPHA
+#endif
+#ifndef GL_ONE_MINUS_DST_COLOR
+#define GL_ONE_MINUS_DST_COLOR GL_ONE_MINUS_DST_COLOR
+#endif
+#ifndef GL_ONE_MINUS_SRC1_ALPHA
+#define GL_ONE_MINUS_SRC1_ALPHA GL_ONE_MINUS_SRC1_ALPHA
+#endif
+#ifndef GL_ONE_MINUS_SRC1_COLOR
+#define GL_ONE_MINUS_SRC1_COLOR GL_ONE_MINUS_SRC1_COLOR
+#endif
+#ifndef GL_ONE_MINUS_SRC_ALPHA
+#define GL_ONE_MINUS_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+#endif
+#ifndef GL_ONE_MINUS_SRC_COLOR
+#define GL_ONE_MINUS_SRC_COLOR GL_ONE_MINUS_SRC_COLOR
+#endif
+#ifndef GL_OR
+#define GL_OR GL_OR
+#endif
+#ifndef GL_OR_INVERTED
+#define GL_OR_INVERTED GL_OR_INVERTED
+#endif
+#ifndef GL_OR_REVERSE
+#define GL_OR_REVERSE GL_OR_REVERSE
+#endif
+#ifndef GL_OUT_OF_MEMORY
+#define GL_OUT_OF_MEMORY GL_OUT_OF_MEMORY
+#endif
+#ifndef GL_PACK_ALIGNMENT
+#define GL_PACK_ALIGNMENT GL_PACK_ALIGNMENT
+#endif
+#ifndef GL_PIXEL_PACK_BUFFER
+#define GL_PIXEL_PACK_BUFFER GL_PIXEL_PACK_BUFFER
+#endif
+#ifndef GL_PIXEL_UNPACK_BUFFER
+#define GL_PIXEL_UNPACK_BUFFER GL_PIXEL_UNPACK_BUFFER
+#endif
+#ifndef GL_POINT
+#define GL_POINT GL_POINT
+#endif
+#ifndef GL_POINTS
+#define GL_POINTS GL_POINTS
+#endif
+#ifndef GL_POINT_SIZE
+#define GL_POINT_SIZE GL_POINT_SIZE
+#endif
+#ifndef GL_POINT_SPRITE_COORD_ORIGIN
+#define GL_POINT_SPRITE_COORD_ORIGIN GL_POINT_SPRITE_COORD_ORIGIN
+#endif
+#ifndef GL_POLYGON_MODE
+#define GL_POLYGON_MODE GL_POLYGON_MODE
+#endif
+#ifndef GL_POLYGON_OFFSET_FACTOR
+#define GL_POLYGON_OFFSET_FACTOR GL_POLYGON_OFFSET_FACTOR
+#endif
+#ifndef GL_POLYGON_OFFSET_FILL
+#define GL_POLYGON_OFFSET_FILL GL_POLYGON_OFFSET_FILL
+#endif
+#ifndef GL_POLYGON_OFFSET_LINE
+#define GL_POLYGON_OFFSET_LINE GL_POLYGON_OFFSET_LINE
+#endif
+#ifndef GL_POLYGON_OFFSET_POINT
+#define GL_POLYGON_OFFSET_POINT GL_POLYGON_OFFSET_POINT
+#endif
+#ifndef GL_POLYGON_OFFSET_UNITS
+#define GL_POLYGON_OFFSET_UNITS GL_POLYGON_OFFSET_UNITS
+#endif
+#ifndef GL_PROVOKING_VERTEX
+#define GL_PROVOKING_VERTEX GL_PROVOKING_VERTEX
+#endif
+#ifndef GL_READ_FRAMEBUFFER
+#define GL_READ_FRAMEBUFFER GL_READ_FRAMEBUFFER
+#endif
+#ifndef GL_READ_FRAMEBUFFER_BINDING
+#define GL_READ_FRAMEBUFFER_BINDING GL_READ_FRAMEBUFFER_BINDING
+#endif
+#ifndef GL_READ_ONLY
+#define GL_READ_ONLY GL_READ_ONLY
+#endif
+#ifndef GL_READ_WRITE
+#define GL_READ_WRITE GL_READ_WRITE
+#endif
+#ifndef GL_RED
+#define GL_RED GL_RED
+#endif
+#ifndef GL_RENDERBUFFER
+#define GL_RENDERBUFFER GL_RENDERBUFFER
+#endif
+#ifndef GL_RENDERER
+#define GL_RENDERER GL_RENDERER
+#endif
+#ifndef GL_REPEAT
+#define GL_REPEAT GL_REPEAT
+#endif
+#ifndef GL_REPLACE
+#define GL_REPLACE GL_REPLACE
+#endif
+#ifndef GL_RG
+#define GL_RG GL_RG
+#endif
+#ifndef GL_RGB
+#define GL_RGB GL_RGB
+#endif
+#ifndef GL_RGBA
+#define GL_RGBA GL_RGBA
+#endif
+#ifndef GL_RGBA16F
+#define GL_RGBA16F GL_RGBA16F
+#endif
+#ifndef GL_RGBA32F
+#define GL_RGBA32F GL_RGBA32F
+#endif
+#ifndef GL_RIGHT
+#define GL_RIGHT GL_RIGHT
+#endif
+#ifndef GL_SCISSOR_BOX
+#define GL_SCISSOR_BOX GL_SCISSOR_BOX
+#endif
+#ifndef GL_SCISSOR_TEST
+#define GL_SCISSOR_TEST GL_SCISSOR_TEST
+#endif
+#ifndef GL_SET
+#define GL_SET GL_SET
+#endif
+#ifndef GL_SHADING_LANGUAGE_VERSION
+#define GL_SHADING_LANGUAGE_VERSION GL_SHADING_LANGUAGE_VERSION
+#endif
+#ifndef GL_SHORT
+#define GL_SHORT GL_SHORT
+#endif
+#ifndef GL_SMOOTH_LINE_WIDTH_GRANULARITY
+#define GL_SMOOTH_LINE_WIDTH_GRANULARITY GL_SMOOTH_LINE_WIDTH_GRANULARITY
+#endif
+#ifndef GL_SMOOTH_LINE_WIDTH_RANGE
+#define GL_SMOOTH_LINE_WIDTH_RANGE GL_SMOOTH_LINE_WIDTH_RANGE
+#endif
+#ifndef GL_SRC1_ALPHA
+#define GL_SRC1_ALPHA GL_SRC1_ALPHA
+#endif
+#ifndef GL_SRC1_COLOR
+#define GL_SRC1_COLOR GL_SRC1_COLOR
+#endif
+#ifndef GL_SRC_ALPHA
+#define GL_SRC_ALPHA GL_SRC_ALPHA
+#endif
+#ifndef GL_SRC_ALPHA_SATURATE
+#define GL_SRC_ALPHA_SATURATE GL_SRC_ALPHA_SATURATE
+#endif
+#ifndef GL_SRC_COLOR
+#define GL_SRC_COLOR GL_SRC_COLOR
+#endif
+#ifndef GL_SRGB
+#define GL_SRGB GL_SRGB
+#endif
+#ifndef GL_SRGB8
+#define GL_SRGB8 GL_SRGB8
+#endif
+#ifndef GL_SRGB8_ALPHA8
+#define GL_SRGB8_ALPHA8 GL_SRGB8_ALPHA8
+#endif
+#ifndef GL_SRGB_ALPHA
+#define GL_SRGB_ALPHA GL_SRGB_ALPHA
+#endif
+#ifndef GL_STATIC_COPY
+#define GL_STATIC_COPY GL_STATIC_COPY
+#endif
+#ifndef GL_STATIC_DRAW
+#define GL_STATIC_DRAW GL_STATIC_DRAW
+#endif
+#ifndef GL_STATIC_READ
+#define GL_STATIC_READ GL_STATIC_READ
+#endif
+#ifndef GL_STENCIL
+#define GL_STENCIL GL_STENCIL
+#endif
+#ifndef GL_STENCIL_ATTACHMENT
+#define GL_STENCIL_ATTACHMENT GL_STENCIL_ATTACHMENT
+#endif
+#ifndef GL_STENCIL_BACK_FAIL
+#define GL_STENCIL_BACK_FAIL GL_STENCIL_BACK_FAIL
+#endif
+#ifndef GL_STENCIL_BACK_FUNC
+#define GL_STENCIL_BACK_FUNC GL_STENCIL_BACK_FUNC
+#endif
+#ifndef GL_STENCIL_BACK_PASS_DEPTH_FAIL
+#define GL_STENCIL_BACK_PASS_DEPTH_FAIL GL_STENCIL_BACK_PASS_DEPTH_FAIL
+#endif
+#ifndef GL_STENCIL_BACK_PASS_DEPTH_PASS
+#define GL_STENCIL_BACK_PASS_DEPTH_PASS GL_STENCIL_BACK_PASS_DEPTH_PASS
+#endif
+#ifndef GL_STENCIL_BACK_REF
+#define GL_STENCIL_BACK_REF GL_STENCIL_BACK_REF
+#endif
+#ifndef GL_STENCIL_BACK_VALUE_MASK
+#define GL_STENCIL_BACK_VALUE_MASK GL_STENCIL_BACK_VALUE_MASK
+#endif
+#ifndef GL_STENCIL_BACK_WRITE_MASK
+#define GL_STENCIL_BACK_WRITE_MASK GL_STENCIL_BACK_WRITE_MASK
+#endif
+#ifndef GL_STENCIL_BUFFER_BIT
+#define GL_STENCIL_BUFFER_BIT GL_STENCIL_BUFFER_BIT
+#endif
+#ifndef GL_STENCIL_FAIL
+#define GL_STENCIL_FAIL GL_STENCIL_FAIL
+#endif
+#ifndef GL_STENCIL_FUNC
+#define GL_STENCIL_FUNC GL_STENCIL_FUNC
+#endif
+#ifndef GL_STENCIL_INDEX1
+#define GL_STENCIL_INDEX1 GL_STENCIL_INDEX1
+#endif
+#ifndef GL_STENCIL_INDEX16
+#define GL_STENCIL_INDEX16 GL_STENCIL_INDEX16
+#endif
+#ifndef GL_STENCIL_INDEX4
+#define GL_STENCIL_INDEX4 GL_STENCIL_INDEX4
+#endif
+#ifndef GL_STENCIL_INDEX8
+#define GL_STENCIL_INDEX8 GL_STENCIL_INDEX8
+#endif
+#ifndef GL_STENCIL_PASS_DEPTH_FAIL
+#define GL_STENCIL_PASS_DEPTH_FAIL GL_STENCIL_PASS_DEPTH_FAIL
+#endif
+#ifndef GL_STENCIL_PASS_DEPTH_PASS
+#define GL_STENCIL_PASS_DEPTH_PASS GL_STENCIL_PASS_DEPTH_PASS
+#endif
+#ifndef GL_STENCIL_REF
+#define GL_STENCIL_REF GL_STENCIL_REF
+#endif
+#ifndef GL_STENCIL_TEST
+#define GL_STENCIL_TEST GL_STENCIL_TEST
+#endif
+#ifndef GL_STENCIL_VALUE_MASK
+#define GL_STENCIL_VALUE_MASK GL_STENCIL_VALUE_MASK
+#endif
+#ifndef GL_STENCIL_WRITE_MASK
+#define GL_STENCIL_WRITE_MASK GL_STENCIL_WRITE_MASK
+#endif
+#ifndef GL_STREAM_COPY
+#define GL_STREAM_COPY GL_STREAM_COPY
+#endif
+#ifndef GL_STREAM_DRAW
+#define GL_STREAM_DRAW GL_STREAM_DRAW
+#endif
+#ifndef GL_STREAM_READ
+#define GL_STREAM_READ GL_STREAM_READ
+#endif
+#ifndef GL_TESS_CONTROL_SHADER
+#define GL_TESS_CONTROL_SHADER GL_TESS_CONTROL_SHADER
+#endif
+#ifndef GL_TESS_EVALUATION_SHADER
+#define GL_TESS_EVALUATION_SHADER GL_TESS_EVALUATION_SHADER
+#endif
+#ifndef GL_TEXTURE0
+#define GL_TEXTURE0 GL_TEXTURE0
+#endif
+#ifndef GL_TEXTURE1
+#define GL_TEXTURE1 GL_TEXTURE1
+#endif
+#ifndef GL_TEXTURE2
+#define GL_TEXTURE2 GL_TEXTURE2
+#endif
+#ifndef GL_TEXTURE3
+#define GL_TEXTURE3 GL_TEXTURE3
+#endif
+#ifndef GL_TEXTURE4
+#define GL_TEXTURE4 GL_TEXTURE4
+#endif
+#ifndef GL_TEXTURE5
+#define GL_TEXTURE5 GL_TEXTURE5
+#endif
+#ifndef GL_TEXTURE6
+#define GL_TEXTURE6 GL_TEXTURE6
+#endif
+#ifndef GL_TEXTURE7
+#define GL_TEXTURE7 GL_TEXTURE7
+#endif
+#ifndef GL_TEXTURE_1D
+#define GL_TEXTURE_1D GL_TEXTURE_1D
+#endif
+#ifndef GL_TEXTURE_1D_ARRAY
+#define GL_TEXTURE_1D_ARRAY GL_TEXTURE_1D_ARRAY
+#endif
+#ifndef GL_TEXTURE_2D
+#define GL_TEXTURE_2D GL_TEXTURE_2D
+#endif
+#ifndef GL_TEXTURE_2D_ARRAY
+#define GL_TEXTURE_2D_ARRAY GL_TEXTURE_2D_ARRAY
+#endif
+#ifndef GL_TEXTURE_3D
+#define GL_TEXTURE_3D GL_TEXTURE_3D
+#endif
+#ifndef GL_TEXTURE_BASE_LEVEL
+#define GL_TEXTURE_BASE_LEVEL GL_TEXTURE_BASE_LEVEL
+#endif
+#ifndef GL_TEXTURE_BINDING_1D
+#define GL_TEXTURE_BINDING_1D GL_TEXTURE_BINDING_1D
+#endif
+#ifndef GL_TEXTURE_BINDING_1D_ARRAY
+#define GL_TEXTURE_BINDING_1D_ARRAY GL_TEXTURE_BINDING_1D_ARRAY
+#endif
+#ifndef GL_TEXTURE_BINDING_2D
+#define GL_TEXTURE_BINDING_2D GL_TEXTURE_BINDING_2D
+#endif
+#ifndef GL_TEXTURE_BINDING_2D_ARRAY
+#define GL_TEXTURE_BINDING_2D_ARRAY GL_TEXTURE_BINDING_2D_ARRAY
+#endif
+#ifndef GL_TEXTURE_BINDING_2D_MULTISAMPLE
+#define GL_TEXTURE_BINDING_2D_MULTISAMPLE GL_TEXTURE_BINDING_2D_MULTISAMPLE
+#endif
+#ifndef GL_TEXTURE_BINDING_2D_MULTISAMPLE_ARRAY
+#define GL_TEXTURE_BINDING_2D_MULTISAMPLE_ARRAY GL_TEXTURE_BINDING_2D_MULTISAMPLE_ARRAY
+#endif
+#ifndef GL_TEXTURE_BINDING_3D
+#define GL_TEXTURE_BINDING_3D GL_TEXTURE_BINDING_3D
+#endif
+#ifndef GL_TEXTURE_BINDING_BUFFER
+#define GL_TEXTURE_BINDING_BUFFER GL_TEXTURE_BINDING_BUFFER
+#endif
+#ifndef GL_TEXTURE_BINDING_CUBE_MAP
+#define GL_TEXTURE_BINDING_CUBE_MAP GL_TEXTURE_BINDING_CUBE_MAP
+#endif
+#ifndef GL_TEXTURE_BINDING_RECTANGLE
+#define GL_TEXTURE_BINDING_RECTANGLE GL_TEXTURE_BINDING_RECTANGLE
+#endif
+#ifndef GL_TEXTURE_BORDER_COLOR
+#define GL_TEXTURE_BORDER_COLOR GL_TEXTURE_BORDER_COLOR
+#endif
+#ifndef GL_TEXTURE_BUFFER
+#define GL_TEXTURE_BUFFER GL_TEXTURE_BUFFER
+#endif
+#ifndef GL_TEXTURE_COMPARE_FUNC
+#define GL_TEXTURE_COMPARE_FUNC GL_TEXTURE_COMPARE_FUNC
+#endif
+#ifndef GL_TEXTURE_COMPARE_MODE
+#define GL_TEXTURE_COMPARE_MODE GL_TEXTURE_COMPARE_MODE
+#endif
+#ifndef GL_TEXTURE_CUBE_MAP
+#define GL_TEXTURE_CUBE_MAP GL_TEXTURE_CUBE_MAP
+#endif
+#ifndef GL_TEXTURE_CUBE_MAP_NEGATIVE_X
+#define GL_TEXTURE_CUBE_MAP_NEGATIVE_X GL_TEXTURE_CUBE_MAP_NEGATIVE_X
+#endif
+#ifndef GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
+#define GL_TEXTURE_CUBE_MAP_NEGATIVE_Y GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
+#endif
+#ifndef GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+#define GL_TEXTURE_CUBE_MAP_NEGATIVE_Z GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+#endif
+#ifndef GL_TEXTURE_CUBE_MAP_POSITIVE_X
+#define GL_TEXTURE_CUBE_MAP_POSITIVE_X GL_TEXTURE_CUBE_MAP_POSITIVE_X
+#endif
+#ifndef GL_TEXTURE_CUBE_MAP_POSITIVE_Y
+#define GL_TEXTURE_CUBE_MAP_POSITIVE_Y GL_TEXTURE_CUBE_MAP_POSITIVE_Y
+#endif
+#ifndef GL_TEXTURE_CUBE_MAP_POSITIVE_Z
+#define GL_TEXTURE_CUBE_MAP_POSITIVE_Z GL_TEXTURE_CUBE_MAP_POSITIVE_Z
+#endif
+#ifndef GL_TEXTURE_CUBE_MAP_SEAMLESS
+#define GL_TEXTURE_CUBE_MAP_SEAMLESS GL_TEXTURE_CUBE_MAP_SEAMLESS
+#endif
+#ifndef GL_TEXTURE_LOD_BIAS
+#define GL_TEXTURE_LOD_BIAS GL_TEXTURE_LOD_BIAS
+#endif
+#ifndef GL_TEXTURE_MAG_FILTER
+#define GL_TEXTURE_MAG_FILTER GL_TEXTURE_MAG_FILTER
+#endif
+#ifndef GL_TEXTURE_MAX_LEVEL
+#define GL_TEXTURE_MAX_LEVEL GL_TEXTURE_MAX_LEVEL
+#endif
+#ifndef GL_TEXTURE_MAX_LOD
+#define GL_TEXTURE_MAX_LOD GL_TEXTURE_MAX_LOD
+#endif
+#ifndef GL_TEXTURE_MIN_FILTER
+#define GL_TEXTURE_MIN_FILTER GL_TEXTURE_MIN_FILTER
+#endif
+#ifndef GL_TEXTURE_MIN_LOD
+#define GL_TEXTURE_MIN_LOD GL_TEXTURE_MIN_LOD
+#endif
+#ifndef GL_TEXTURE_RECTANGLE
+#define GL_TEXTURE_RECTANGLE GL_TEXTURE_RECTANGLE
+#endif
+#ifndef GL_TEXTURE_SWIZZLE_A
+#define GL_TEXTURE_SWIZZLE_A GL_TEXTURE_SWIZZLE_A
+#endif
+#ifndef GL_TEXTURE_SWIZZLE_B
+#define GL_TEXTURE_SWIZZLE_B GL_TEXTURE_SWIZZLE_B
+#endif
+#ifndef GL_TEXTURE_SWIZZLE_G
+#define GL_TEXTURE_SWIZZLE_G GL_TEXTURE_SWIZZLE_G
+#endif
+#ifndef GL_TEXTURE_SWIZZLE_R
+#define GL_TEXTURE_SWIZZLE_R GL_TEXTURE_SWIZZLE_R
+#endif
+#ifndef GL_TEXTURE_SWIZZLE_RGBA
+#define GL_TEXTURE_SWIZZLE_RGBA GL_TEXTURE_SWIZZLE_RGBA
+#endif
+#ifndef GL_TEXTURE_UNBOUND
+#define GL_TEXTURE_UNBOUND GL_TEXTURE_UNBOUND
+#endif
+#ifndef GL_TEXTURE_WRAP_R
+#define GL_TEXTURE_WRAP_R GL_TEXTURE_WRAP_R
+#endif
+#ifndef GL_TEXTURE_WRAP_S
+#define GL_TEXTURE_WRAP_S GL_TEXTURE_WRAP_S
+#endif
+#ifndef GL_TEXTURE_WRAP_T
+#define GL_TEXTURE_WRAP_T GL_TEXTURE_WRAP_T
+#endif
+#ifndef GL_TRANSFORM_FEEDBACK_BUFFER
+#define GL_TRANSFORM_FEEDBACK_BUFFER GL_TRANSFORM_FEEDBACK_BUFFER
+#endif
+#ifndef GL_TRIANGLES
+#define GL_TRIANGLES GL_TRIANGLES
+#endif
+#ifndef GL_TRIANGLES_ADJACENCY
+#define GL_TRIANGLES_ADJACENCY GL_TRIANGLES_ADJACENCY
+#endif
+#ifndef GL_TRIANGLE_FAN
+#define GL_TRIANGLE_FAN GL_TRIANGLE_FAN
+#endif
+#ifndef GL_TRIANGLE_STRIP
+#define GL_TRIANGLE_STRIP GL_TRIANGLE_STRIP
+#endif
+#ifndef GL_TRIANGLE_STRIP_ADJACENCY
+#define GL_TRIANGLE_STRIP_ADJACENCY GL_TRIANGLE_STRIP_ADJACENCY
+#endif
+#ifndef GL_UNIFORM_BUFFER
+#define GL_UNIFORM_BUFFER GL_UNIFORM_BUFFER
+#endif
+#ifndef GL_UNPACK_ALIGNMENT
+#define GL_UNPACK_ALIGNMENT GL_UNPACK_ALIGNMENT
+#endif
+#ifndef GL_UNSIGNED_BYTE
+#define GL_UNSIGNED_BYTE GL_UNSIGNED_BYTE
+#endif
+#ifndef GL_UNSIGNED_INT
+#define GL_UNSIGNED_INT GL_UNSIGNED_INT
+#endif
+#ifndef GL_UNSIGNED_SHORT
+#define GL_UNSIGNED_SHORT GL_UNSIGNED_SHORT
+#endif
+#ifndef GL_UPPER_LEFT
+#define GL_UPPER_LEFT GL_UPPER_LEFT
+#endif
+#ifndef GL_VENDOR
+#define GL_VENDOR GL_VENDOR
+#endif
+#ifndef GL_VERSION
+#define GL_VERSION GL_VERSION
+#endif
+#ifndef GL_VERTEX_ARRAY_BINDING
+#define GL_VERTEX_ARRAY_BINDING GL_VERTEX_ARRAY_BINDING
+#endif
+#ifndef GL_VERTEX_SHADER
+#define GL_VERTEX_SHADER GL_VERTEX_SHADER
+#endif
+#ifndef GL_VIEWPORT
+#define GL_VIEWPORT GL_VIEWPORT
+#endif
+#ifndef GL_WRITE_ONLY
+#define GL_WRITE_ONLY GL_WRITE_ONLY
+#endif
+#ifndef GL_XOR
+#define GL_XOR GL_XOR
+#endif
+#ifndef GL_ZERO
+#define GL_ZERO GL_ZERO
+#endif
+#ifndef GL_MODELVIEW
+#define GL_MODELVIEW 65536u
+#endif
+#ifndef GL_PROJECTION
+#define GL_PROJECTION 65537u
+#endif
+#ifndef GL_TEXTURE
+#define GL_TEXTURE 65538u
+#endif
+#ifndef GL_MODELVIEW_MATRIX
+#define GL_MODELVIEW_MATRIX 65539u
+#endif
+#ifndef GL_PROJECTION_MATRIX
+#define GL_PROJECTION_MATRIX 65540u
+#endif
+#ifndef GL_TEXTURE_MATRIX
+#define GL_TEXTURE_MATRIX 65541u
+#endif
+#ifndef GL_MATRIX_MODE
+#define GL_MATRIX_MODE 65542u
+#endif
+#ifndef GL_LIGHTING
+#define GL_LIGHTING 65543u
+#endif
+#ifndef GL_LIGHT0
+#define GL_LIGHT0 65544u
+#endif
+#ifndef GL_LIGHT1
+#define GL_LIGHT1 65545u
+#endif
+#ifndef GL_LIGHT2
+#define GL_LIGHT2 65546u
+#endif
+#ifndef GL_LIGHT3
+#define GL_LIGHT3 65547u
+#endif
+#ifndef GL_LIGHT4
+#define GL_LIGHT4 65548u
+#endif
+#ifndef GL_LIGHT5
+#define GL_LIGHT5 65549u
+#endif
+#ifndef GL_LIGHT6
+#define GL_LIGHT6 65550u
+#endif
+#ifndef GL_LIGHT7
+#define GL_LIGHT7 65551u
+#endif
+#ifndef GL_AMBIENT
+#define GL_AMBIENT 65552u
+#endif
+#ifndef GL_DIFFUSE
+#define GL_DIFFUSE 65553u
+#endif
+#ifndef GL_SPECULAR
+#define GL_SPECULAR 65554u
+#endif
+#ifndef GL_EMISSION
+#define GL_EMISSION 65555u
+#endif
+#ifndef GL_SHININESS
+#define GL_SHININESS 65556u
+#endif
+#ifndef GL_POSITION
+#define GL_POSITION 65557u
+#endif
+#ifndef GL_SPOT_DIRECTION
+#define GL_SPOT_DIRECTION 65558u
+#endif
+#ifndef GL_SPOT_EXPONENT
+#define GL_SPOT_EXPONENT 65559u
+#endif
+#ifndef GL_SPOT_CUTOFF
+#define GL_SPOT_CUTOFF 65560u
+#endif
+#ifndef GL_CONSTANT_ATTENUATION
+#define GL_CONSTANT_ATTENUATION 65561u
+#endif
+#ifndef GL_LINEAR_ATTENUATION
+#define GL_LINEAR_ATTENUATION 65562u
+#endif
+#ifndef GL_QUADRATIC_ATTENUATION
+#define GL_QUADRATIC_ATTENUATION 65563u
+#endif
+#ifndef GL_LIGHT_MODEL_AMBIENT
+#define GL_LIGHT_MODEL_AMBIENT 65564u
+#endif
+#ifndef GL_LIGHT_MODEL_TWO_SIDE
+#define GL_LIGHT_MODEL_TWO_SIDE 65565u
+#endif
+#ifndef GL_LIGHT_MODEL_LOCAL_VIEWER
+#define GL_LIGHT_MODEL_LOCAL_VIEWER 65566u
+#endif
+#ifndef GL_AMBIENT_AND_DIFFUSE
+#define GL_AMBIENT_AND_DIFFUSE 65567u
+#endif
+#ifndef GL_COLOR_MATERIAL
+#define GL_COLOR_MATERIAL 65568u
+#endif
+#ifndef GL_NORMALIZE
+#define GL_NORMALIZE 65569u
+#endif
+#ifndef GL_RESCALE_NORMAL
+#define GL_RESCALE_NORMAL 65570u
+#endif
+#ifndef GL_ALPHA_TEST
+#define GL_ALPHA_TEST 65571u
+#endif
+#ifndef GL_TEXTURE_ENV
+#define GL_TEXTURE_ENV 65572u
+#endif
+#ifndef GL_TEXTURE_ENV_MODE
+#define GL_TEXTURE_ENV_MODE 65573u
+#endif
+#ifndef GL_MODULATE
+#define GL_MODULATE 65574u
+#endif
+#ifndef GL_DECAL
+#define GL_DECAL 65575u
+#endif
+#ifndef GL_REPLACE
+#define GL_REPLACE 65576u
+#endif
+#ifndef GL_COMBINE
+#define GL_COMBINE 65577u
+#endif
+#ifndef GL_COMBINE_RGB
+#define GL_COMBINE_RGB 65578u
+#endif
+#ifndef GL_SOURCE0_RGB
+#define GL_SOURCE0_RGB 65579u
+#endif
+#ifndef GL_SOURCE1_RGB
+#define GL_SOURCE1_RGB 65580u
+#endif
+#ifndef GL_SRC0_RGB
+#define GL_SRC0_RGB 65581u
+#endif
+#ifndef GL_SRC1_RGB
+#define GL_SRC1_RGB 65582u
+#endif
+#ifndef GL_PREVIOUS
+#define GL_PREVIOUS 65583u
+#endif
+#ifndef GL_PRIMARY_COLOR
+#define GL_PRIMARY_COLOR 65584u
+#endif
+#ifndef GL_OPERAND0_RGB
+#define GL_OPERAND0_RGB 65585u
+#endif
+#ifndef GL_OPERAND1_RGB
+#define GL_OPERAND1_RGB 65586u
+#endif
+#ifndef GL_RGB_SCALE
+#define GL_RGB_SCALE 65587u
+#endif
+#ifndef GL_TEXTURE_GEN_S
+#define GL_TEXTURE_GEN_S 65588u
+#endif
+#ifndef GL_TEXTURE_GEN_T
+#define GL_TEXTURE_GEN_T 65589u
+#endif
+#ifndef GL_TEXTURE_GEN_MODE
+#define GL_TEXTURE_GEN_MODE 65590u
+#endif
+#ifndef GL_SPHERE_MAP
+#define GL_SPHERE_MAP 65591u
+#endif
+#ifndef GL_S
+#define GL_S 65592u
+#endif
+#ifndef GL_T
+#define GL_T 65593u
+#endif
+#ifndef GL_VERTEX_ARRAY
+#define GL_VERTEX_ARRAY 65594u
+#endif
+#ifndef GL_NORMAL_ARRAY
+#define GL_NORMAL_ARRAY 65595u
+#endif
+#ifndef GL_COLOR_ARRAY
+#define GL_COLOR_ARRAY 65596u
+#endif
+#ifndef GL_TEXTURE_COORD_ARRAY
+#define GL_TEXTURE_COORD_ARRAY 65597u
+#endif
+#ifndef GL_MAX_TEXTURE_UNITS
+#define GL_MAX_TEXTURE_UNITS 65598u
+#endif
+#ifndef GL_CLIP_PLANE0
+#define GL_CLIP_PLANE0 65599u
+#endif
+#ifndef GL_CLIP_PLANE1
+#define GL_CLIP_PLANE1 65600u
+#endif
+#ifndef GL_POINT_DISTANCE_ATTENUATION
+#define GL_POINT_DISTANCE_ATTENUATION 65601u
+#endif
+#ifndef GL_POINT_SIZE_MIN
+#define GL_POINT_SIZE_MIN 65602u
+#endif
+#ifndef GL_POINT_SIZE_MAX
+#define GL_POINT_SIZE_MAX 65603u
+#endif
+#ifndef GL_POINT_SPRITE
+#define GL_POINT_SPRITE 65604u
+#endif
+#ifndef GL_COORD_REPLACE
+#define GL_COORD_REPLACE 65605u
+#endif
+#ifndef GL_CLAMP
+#define GL_CLAMP 65606u
+#endif
+#ifndef GL_MULTISAMPLE
+#define GL_MULTISAMPLE 65607u
+#endif
+#ifndef GL_STENCIL_BITS
+#define GL_STENCIL_BITS 65608u
+#endif
+#ifndef GL_TEXTURE1
+#define GL_TEXTURE1 (GL_TEXTURE0+1u)
+#endif
+#ifndef GL_TEXTURE2
+#define GL_TEXTURE2 (GL_TEXTURE0+2u)
+#endif
+#ifndef GL_BGRA
+#define GL_BGRA 0x20001u
+#endif
+#ifndef APIENTRY
+#define APIENTRY
+#endif
+#ifndef APIENTRYP
+#define APIENTRYP *
+#endif
+void port_glEnable(GLenum cap);
+#define glEnable port_glEnable
+void port_glDisable(GLenum cap);
+#define glDisable port_glDisable
+GLboolean port_glIsEnabled(GLenum cap);
+#define glIsEnabled port_glIsEnabled
+const GLubyte *port_glGetString(GLenum name);
+#define glGetString port_glGetString
+void port_glGetIntegerv(GLenum name,GLint *values);
+#define glGetIntegerv port_glGetIntegerv
+void port_glGetFloatv(GLenum name,GLfloat *values);
+#define glGetFloatv port_glGetFloatv
+void port_glDrawArrays(GLenum mode,GLint first,GLsizei count);
+#define glDrawArrays port_glDrawArrays
+void port_glDrawElements(GLenum mode,GLsizei count,GLenum type,const void *indices);
+#define glDrawElements port_glDrawElements
+void port_glMatrixMode(GLenum mode);
+#define glMatrixMode port_glMatrixMode
+void port_glLoadIdentity(void);
+#define glLoadIdentity port_glLoadIdentity
+void port_glLoadMatrixf(const GLfloat *matrix);
+#define glLoadMatrixf port_glLoadMatrixf
+void port_glMultMatrixf(const GLfloat *matrix);
+#define glMultMatrixf port_glMultMatrixf
+void port_glPushMatrix(void);
+#define glPushMatrix port_glPushMatrix
+void port_glPopMatrix(void);
+#define glPopMatrix port_glPopMatrix
+void port_glTranslatef(GLfloat x,GLfloat y,GLfloat z);
+#define glTranslatef port_glTranslatef
+void port_glScalef(GLfloat x,GLfloat y,GLfloat z);
+#define glScalef port_glScalef
+void port_glRotatef(GLfloat angle,GLfloat x,GLfloat y,GLfloat z);
+#define glRotatef port_glRotatef
+void port_glOrtho(GLdouble l,GLdouble r,GLdouble b,GLdouble t,GLdouble n,GLdouble f);
+#define glOrtho port_glOrtho
+void port_glColor4f(GLfloat r,GLfloat g,GLfloat b,GLfloat a);
+#define glColor4f port_glColor4f
+void port_glColor4ub(GLubyte r,GLubyte g,GLubyte b,GLubyte a);
+#define glColor4ub port_glColor4ub
+void port_glVertexPointer(GLint size,GLenum type,GLsizei stride,const void *pointer);
+#define glVertexPointer port_glVertexPointer
+void port_glTexCoordPointer(GLint size,GLenum type,GLsizei stride,const void *pointer);
+#define glTexCoordPointer port_glTexCoordPointer
+void port_glNormalPointer(GLenum type,GLsizei stride,const void *pointer);
+#define glNormalPointer port_glNormalPointer
+void port_glColorPointer(GLint size,GLenum type,GLsizei stride,const void *pointer);
+#define glColorPointer port_glColorPointer
+void port_glEnableClientState(GLenum array);
+#define glEnableClientState port_glEnableClientState
+void port_glDisableClientState(GLenum array);
+#define glDisableClientState port_glDisableClientState
+void port_glMaterialfv(GLenum face,GLenum name,const GLfloat *values);
+#define glMaterialfv port_glMaterialfv
+void port_glGetMaterialfv(GLenum face,GLenum name,GLfloat *values);
+#define glGetMaterialfv port_glGetMaterialfv
+void port_glLightfv(GLenum light,GLenum name,const GLfloat *values);
+#define glLightfv port_glLightfv
+void port_glLightModelfv(GLenum name,const GLfloat *values);
+#define glLightModelfv port_glLightModelfv
+void port_glLightModeli(GLenum name,GLint value);
+#define glLightModeli port_glLightModeli
+void port_glLightModelf(GLenum name,GLfloat value);
+#define glLightModelf port_glLightModelf
+void port_glAlphaFunc(GLenum function,GLclampf reference);
+#define glAlphaFunc port_glAlphaFunc
+void port_glTexEnvi(GLenum target,GLenum name,GLint value);
+#define glTexEnvi port_glTexEnvi
+void port_glTexGeni(GLenum coord,GLenum name,GLint value);
+#define glTexGeni port_glTexGeni
+void port_glActiveTexture(GLenum unit);
+#define glActiveTexture port_glActiveTexture
+void port_glClientActiveTexture(GLenum unit);
+#define glClientActiveTexture port_glClientActiveTexture
+void port_glBindTexture(GLenum target,GLuint texture);
+#define glBindTexture port_glBindTexture
+void port_glClipPlane(GLenum plane,const GLdouble *equation);
+#define glClipPlane port_glClipPlane
+void port_glPointParameterf(GLenum name,GLfloat value);
+#define glPointParameterf port_glPointParameterf
+void port_glPointParameterfv(GLenum name,const GLfloat *values);
+#define glPointParameterfv port_glPointParameterfv
+GLboolean port_glIsBuffer(GLuint buffer);
+#define glIsBuffer port_glIsBuffer
+
+/* Legacy state not present in the programmable core. */
+#define GL_CLIP_PLANE2 (GL_CLIP_PLANE0+2)
+#define GL_COMBINE_ALPHA 69632u
+#define GL_OPERAND0_ALPHA 69633u
+#define GL_INTERPOLATE 69634u
+#define GL_OPERAND2_RGB 69635u
+#define GL_LIGHT_MODEL_COLOR_CONTROL 69636u
+#define GL_SEPARATE_SPECULAR_COLOR 69637u
+#define GL_EXTENSIONS 69638u
+
+#define GL_RGBA8 GL_RGBA

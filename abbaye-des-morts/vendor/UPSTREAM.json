@@ -1,0 +1,9 @@
+{
+  "url": "https://github.com/nevat/abbayedesmorts-gpl",
+  "commit": "c971eb008f4eec43100e3474512c5b625fef02a9",
+  "changes": [
+    "Guest SDL2/PCM/filesystem bridge",
+    "CRC-checked atomic checkpoint persistence; R on title starts a new game",
+    "Compile-time DATADIR length for WASI"
+  ]
+}

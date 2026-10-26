@@ -3,6 +3,10 @@ project(pxa_cnc C CXX)
 if(NOT DEFINED PXA_RECROF_MAIN_LOOP)
     set(PXA_RECROF_MAIN_LOOP ON)
 endif()
+# Resolve indexed frames and the original mouse cursor in the Host. This avoids
+# doing the full 640x400 -> 320x240 palette conversion in the WASM interpreter.
+set(PXA_RECROF_HOST_BLIT ON)
+set(PXA_RECROF_PACKED_GAME_CODEC ON)
 if(NOT CNC_GAME STREQUAL "ra")
 set(PXA_RECROF_ENGINE_STACK_BYTES 65536)
 set(PXA_RECROF_CALLBACK_STACK_BYTES 16384)
@@ -110,10 +114,18 @@ pxa_recrof_component(RTS TITLE "${GAME_TITLE}" SOURCES ${VC_COMMON_SRC} ${VC_GAM
     DEFINITIONS TRUE_FALSE_DEFINED ENGLISH SDL_BUILD SDL2_BUILD NEW_VIDEO_BUILD
         FIXIT_FAST_LOAD ESP_PLATFORM_CNC ${VC_GAME_DEFS})
 target_compile_options(pxa_main PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:-std=gnu++14>")
-target_compile_definitions(pxa_main PRIVATE PORT_MISSING_PATHS_CAPACITY=64)
+target_compile_definitions(pxa_main PRIVATE PORT_MISSING_PATHS_CAPACITY=64
+    PORT_CNC_MEDIA_CACHE_SLOTS=8 PORT_CNC_PRIVATE_INDEX=1)
 set_property(SOURCE ${VC_GAME}/startup.cpp APPEND PROPERTY COMPILE_DEFINITIONS main=cnc_game_main)
 
 if(NOT CNC_GAME STREQUAL "ra")
+    # The 320-pixel AOT software path is faster on GameKit than crossing the
+    # Host boundary. RA's interpreter still benefits from the indexed blitter.
+    set_property(SOURCE "${PXA_RECROF_DIR}/runtime.c" APPEND PROPERTY
+        COMPILE_DEFINITIONS PORT_SOFTWARE_FRAME_BLIT=1)
+    # The precomputed gather is faster than stride-two loads in S31 AOT.
+    set_property(SOURCE "${PXA_RECROF_DIR}/framebuffer.c" APPEND PROPERTY
+        COMPILE_DEFINITIONS PORT_CNC_GATHER_BLIT=1)
 target_compile_definitions(pxa_main PRIVATE PORT_EXTERNAL_GAME_DATA=1 PORT_COOPERATE_BUDGET_US=32000
     PORT_TICK_US=8000 PORT_CONTINUATION_BYTES=16384 PORT_LOADING_TRACE=1
     PORT_CNC_CANONICAL_PATHS=1 PORT_CNC_MEDIA_HANDLES=1)

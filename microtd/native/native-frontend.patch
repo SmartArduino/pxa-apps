@@ -1,0 +1,11 @@
+--- original/saf.h
++++ native/saf.h
+@@ -3030,6 +3030,8 @@
+ 
+   mp.update();
+ }
++#elif defined(SAF_PLATFORM_NATIVE_TEST)
++/* Research-only frontend. Original SAF algorithms follow unchanged. */
+ #else
+   #error No known SAF frontend specified.
+ #endif // platform frontends

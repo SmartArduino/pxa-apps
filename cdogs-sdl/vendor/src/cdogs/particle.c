@@ -1,0 +1,405 @@
+/*
+	C-Dogs SDL
+	A port of the legendary (and fun) action/arcade cdogs.
+	Copyright (c) 2014-2017, 2019-2021, 2024, 2026 Cong Xu
+	All rights reserved.
+
+	Redistribution and use in source and binary forms, with or without
+	modification, are permitted provided that the following conditions are met:
+
+	Redistributions of source code must retain the above copyright notice, this
+	list of conditions and the following disclaimer.
+	Redistributions in binary form must reproduce the above copyright notice,
+	this list of conditions and the following disclaimer in the documentation
+	and/or other materials provided with the distribution.
+
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+	AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+	IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+	ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+	LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+	CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+	SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+	INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+	CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+	ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+	POSSIBILITY OF SUCH DAMAGE.
+*/
+#include "particle.h"
+
+#include "actors.h"
+#include "collision/collision.h"
+#include "font.h"
+#include "game_events.h"
+#include "gamedata.h"
+#include "objs.h"
+
+CArray gParticles;
+#define MAX_PARTICLES 4096
+
+// Particles get darker when below this height
+#define PARTICLE_DARKEN_Z BULLET_Z
+
+void ParticlesInit(CArray *particles)
+{
+	CArrayInit(particles, sizeof(Particle));
+	CArrayReserve(particles, 256);
+}
+void ParticlesTerminate(CArray *particles)
+{
+	for (int i = 0; i < (int)particles->size; i++)
+	{
+		Particle *p = CArrayGet(particles, i);
+		if (p->isInUse)
+		{
+			ParticleDestroy(particles, i);
+		}
+	}
+	CArrayTerminate(particles);
+}
+
+static bool ParticleUpdate(Particle *p, const int ticks);
+void ParticlesUpdate(CArray *particles, const int ticks)
+{
+	int maxParticleAge = -1;
+	int maxParticleId = -1;
+	int numParticles = 0;
+	CA_FOREACH(Particle, p, *particles)
+	if (!p->isInUse)
+	{
+		continue;
+	}
+	if (!ParticleUpdate(p, ticks))
+	{
+		GameEvent e = GameEventNew(GAME_EVENT_PARTICLE_REMOVE);
+		e.u.ParticleRemoveId = _ca_index;
+		GameEventsEnqueue(&gGameEvents, e);
+	}
+	else
+	{
+		if (p->Count > maxParticleAge)
+		{
+			maxParticleAge = p->Count;
+			maxParticleId = _ca_index;
+		}
+		numParticles++;
+	}
+	CA_FOREACH_END()
+	// Remove oldest particle if we have too many
+	if (numParticles > MAX_PARTICLES && maxParticleId >= 0)
+	{
+		GameEvent e = GameEventNew(GAME_EVENT_PARTICLE_REMOVE);
+		e.u.ParticleRemoveId = maxParticleId;
+		GameEventsEnqueue(&gGameEvents, e);
+	}
+}
+
+typedef struct
+{
+	const Thing *Obj;
+	struct vec2 ColPos;
+	struct vec2 ColNormal;
+	float ColPosDist2;
+} HitWallData;
+static bool CheckWall(const struct vec2i tilePos);
+static bool HitWallFunc(
+	const struct vec2i tilePos, void *data, const struct vec2 col,
+	const struct vec2 normal);
+static bool ParticleUpdate(Particle *p, const int ticks)
+{
+	switch (p->Class->Type)
+	{
+	case PARTICLE_PIC:
+		CPicUpdate(&p->u.Pic, ticks);
+		break;
+	default:
+		break;
+	}
+	p->Count += ticks;
+	const struct vec2 startPos = p->Pos;
+	if (p->isAttached)
+	{
+		const TActor *a = ActorGetByUID(p->ActorUID);
+		if (a != NULL)
+		{
+			// Move by same amount as actor since last update, so it appears
+			// attached to actor
+			p->Pos = svec2_add(
+				p->Pos, svec2_subtract(a->thing.Pos, a->thing.LastPos));
+		}
+	}
+	for (int i = 0; i < ticks; i++)
+	{
+		p->Pos = svec2_add(p->Pos, p->thing.Vel);
+		p->Z += p->DZ;
+		if (p->Class->GravityFactor != 0)
+		{
+			if (p->Z <= 0)
+			{
+				p->Z = 0;
+				if (p->Class->Bounces)
+				{
+					p->DZ = -p->DZ / 2;
+					p->thing.Vel = svec2_scale(
+						p->thing.Vel, 1 - p->Class->BounceFriction);
+				}
+				else
+				{
+					p->DZ = 0;
+				}
+			}
+			else
+			{
+				p->DZ -= p->Class->GravityFactor;
+			}
+			if (fabsf(p->DZ) < fabs(p->Class->GravityFactor) &&
+				nearly_equal(p->Z, 0, 0.1f))
+			{
+				p->thing.Vel = svec2_zero();
+				p->Spin = 0;
+				// Fell to ground, draw below
+				p->thing.flags |= THING_DRAW_BELOW;
+				break;
+			}
+		}
+	}
+	// Wall collision, bounce off walls
+	if (!svec2_is_zero(p->thing.Vel) && p->Class->HitsWalls)
+	{
+		const CollisionParams params = {
+			0, COLLISIONTEAM_NONE, IsPVP(gCampaign.Entry.Mode), false};
+		HitWallData data = {&p->thing, svec2_zero(), svec2_zero(), -1};
+		OverlapThings(
+			&p->thing, startPos, p->thing.Vel, p->thing.size, params, NULL,
+			NULL, CheckWall, HitWallFunc, &data);
+		if (data.ColPosDist2 >= 0)
+		{
+			if (p->Class->WallBounces)
+			{
+				GetWallBouncePosVel(
+					startPos, p->thing.Vel, data.ColPos, data.ColNormal,
+					&p->Pos, &p->thing.Vel);
+			}
+			else
+			{
+				p->thing.Vel = svec2_zero();
+			}
+		}
+	}
+	if (!MapTryMoveThing(&gMap, &p->thing, p->Pos))
+	{
+		// Out of map; destroy
+		return false;
+	}
+
+	// Spin
+	p->Angle += p->Spin;
+	if (p->Angle > 2 * MPI)
+	{
+		p->Angle -= 2 * MPI;
+	}
+	if (p->Angle < 0)
+	{
+		p->Angle += 2 * MPI;
+	}
+
+	return p->Count <= p->Range;
+}
+static void SetClosestCollision(
+	HitWallData *data, const struct vec2 col, const struct vec2 normal);
+static bool CheckWall(const struct vec2i tilePos)
+{
+	const Tile *t = MapGetTile(&gMap, tilePos);
+	return t == NULL || TileIsShootable(t);
+}
+static bool HitWallFunc(
+	const struct vec2i tilePos, void *data, const struct vec2 col,
+	const struct vec2 normal)
+{
+	UNUSED(tilePos);
+	HitWallData *hData = data;
+	SetClosestCollision(hData, col, normal);
+	return true;
+}
+static void SetClosestCollision(
+	HitWallData *data, const struct vec2 col, const struct vec2 normal)
+{
+	// Choose the best collision point (i.e. closest to origin)
+	const float d2 = svec2_distance_squared(col, data->Obj->Pos);
+	if (data->ColPosDist2 < 0 || d2 < data->ColPosDist2)
+	{
+		data->ColPos = col;
+		data->ColPosDist2 = d2;
+		data->ColNormal = normal;
+	}
+}
+
+static void DrawParticle(
+	const struct vec2i pos, const ThingDrawFuncData *data);
+int ParticleAdd(CArray *particles, const AddParticle add)
+{
+	// Find an empty slot in list
+	Particle *p = NULL;
+	int i;
+	for (i = 0; i < (int)particles->size; i++)
+	{
+		Particle *pSlot = CArrayGet(particles, i);
+		if (!pSlot->isInUse)
+		{
+			p = pSlot;
+			break;
+		}
+	}
+	// If no empty slots, add a new one
+	if (p == NULL)
+	{
+		Particle pNew;
+		memset(&pNew, 0, sizeof pNew);
+		CArrayPushBack(particles, &pNew);
+		i = (int)particles->size - 1;
+		p = CArrayGet(particles, i);
+	}
+	memset(p, 0, sizeof *p);
+	p->Class = add.Class;
+	switch (p->Class->Type)
+	{
+	case PARTICLE_PIC:
+		CPicCopyPic(&p->u.Pic, &p->Class->u.Pic);
+		break;
+	case PARTICLE_TEXT:
+		CSTRDUP(p->u.Text, add.Text);
+		break;
+	case PARTICLE_CHAR_SPRITE: {
+		const TActor *actor = ActorGetByUID(add.ActorUID);
+		if (actor)
+		{
+			p->u.Char = ActorGetCharacter(actor);
+		}
+	}
+	break;
+	default:
+		break;
+	}
+	p->ActorUID = add.ActorUID;
+	p->Pos = add.Pos;
+	p->Z = (float)add.Z;
+	p->Angle = add.Angle;
+	p->DZ = (float)add.DZ;
+	p->Spin = add.Spin;
+	p->Range = RAND_INT(add.Class->RangeLow, add.Class->RangeHigh);
+	p->isInUse = true;
+	p->thing.Pos.x = p->thing.Pos.y = -1;
+	p->thing.Vel = add.Vel;
+	p->thing.kind = KIND_PARTICLE;
+	p->thing.id = i;
+	p->thing.drawFunc = DrawParticle;
+	p->thing.drawData.MobObjId = i;
+	p->thing.drawData.Scale =
+		svec2_is_zero(add.DrawScale) ? svec2_one() : add.DrawScale;
+	if (!ColorEquals(add.Mask, colorTransparent))
+	{
+		p->u.Pic.Mask = add.Mask;
+	}
+	if (p->Class->DrawBelow)
+	{
+		p->thing.flags |= THING_DRAW_BELOW;
+	}
+	if (p->Class->DrawAbove)
+	{
+		p->thing.flags |= THING_DRAW_ABOVE;
+	}
+	p->isAttached = add.IsAttached;
+	MapTryMoveThing(&gMap, &p->thing, add.Pos);
+	return i;
+}
+void ParticleDestroy(CArray *particles, const int id)
+{
+	Particle *p = CArrayGet(particles, id);
+	if (!p->isInUse)
+	{
+		return;
+	}
+	MapRemoveThing(&gMap, &p->thing);
+	switch (p->Class->Type)
+	{
+	case PARTICLE_TEXT:
+		CFREE(p->u.Text);
+		break;
+	default:
+		break;
+	}
+	p->isInUse = false;
+}
+
+static void DrawParticle(const struct vec2i pos, const ThingDrawFuncData *data)
+{
+	const Particle *p = CArrayGet(&gParticles, data->MobObjId);
+	CASSERT(p->isInUse, "Cannot draw non-existent particle");
+	// Special case: don't draw mid-air, non-falling particles
+	// if they are on an open door - this is for bulletmarks
+	// Exclude particles that are attached (e.g. muzzle flashes)
+	if (p->Class->GravityFactor == 0 && p->Z > 0 &&
+		svec2_is_zero(p->thing.Vel) && !p->isAttached)
+	{
+		const struct vec2i t = Vec2iToTile(svec2i_assign_vec2(p->Pos));
+		const Tile *tAbove = MapGetTile(&gMap, svec2i(t.x, t.y - 1));
+		if (tAbove != NULL && tAbove->Class->Type == TILE_CLASS_DOOR &&
+			!TileIsShootable(tAbove))
+		{
+			return;
+		}
+	}
+	switch (p->Class->Type)
+	{
+	case PARTICLE_PIC: {
+		CPicDrawContext c = CPicDrawContextNew();
+		c.Dir = RadiansToDirection(p->Angle);
+		const Pic *pic = CPicGetPic(&p->u.Pic, c.Dir);
+		if (p->u.Pic.Type != PICTYPE_DIRECTIONAL)
+		{
+			c.Radians = p->Angle;
+		}
+		c.Offset = svec2i(
+			pic->size.x / -2, pic->size.y / -2 - (int)(p->Z / Z_FACTOR));
+		c.Scale = data->Scale;
+		if (p->Class->ZDarken)
+		{
+			// Darken by 50% when on ground
+			const uint8_t maskF = (uint8_t)CLAMP(
+				p->Z * PARTICLE_DARKEN_Z * Z_FACTOR / 256 + 128, 128, 255);
+			const color_t mask = {maskF, maskF, maskF, 255};
+			c.Mask = mask;
+		}
+		CPicDraw(&gGraphicsDevice, &p->u.Pic, pos, &c);
+		break;
+	}
+	case PARTICLE_TEXT: {
+		FontOpts opts = FontOptsNew();
+		opts.HAlign = ALIGN_CENTER;
+		opts.Mask = p->Class->u.Text.Mask;
+		FontStrOpt(
+			p->u.Text, svec2i(pos.x, pos.y - (int)(p->Z / Z_FACTOR)), opts);
+		break;
+	}
+	case PARTICLE_CHAR_SPRITE: {
+		if (p->u.Char == NULL)
+			break;
+		const int idx = (int)RadiansToDirection(p->Angle);
+		const NamedSprites *ns = PicManagerGetCharSprites(
+			&gPicManager, p->Class->u.CharSprite, &p->u.Char->Colors);
+		if (ns == NULL)
+		{
+			break;
+		}
+		const Pic *pic = CArrayGet(&ns->pics, idx);
+		const struct vec2i offset = svec2i(
+			pic->size.x / -2, pic->size.y / -2 - (int)(p->Z / Z_FACTOR));
+		PicRender(
+			pic, gGraphicsDevice.gameWindow.renderer, svec2i_add(pos, offset),
+			colorWhite, 0, svec2_one(), SDL_FLIP_NONE, Rect2iZero());
+		break;
+	}
+	default:
+		break;
+	}
+}

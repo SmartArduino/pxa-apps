@@ -1,0 +1,12 @@
+{
+  "project": "Brogue: Community Edition",
+  "repository": "https://github.com/tmewett/BrogueCE",
+  "commit": "104a20fedbe7d9360d2dfc8ff665571694212ad8",
+  "engine_version": "1.15.1",
+  "source": "vendor",
+  "logic": "All src/brogue/*.c and src/variants/*.c are compiled directly without editing upstream code",
+  "license": "AGPL-3.0-or-later (some platform files carry GPL-3.0-or-later headers; combined work follows AGPL)",
+  "assets": "No optional tile atlas or bundled SDL fonts used. Game text and symbol tables remain upstream. Frontend bitmap uses DejaVu Sans Mono; see FONT-LICENSE.txt.",
+  "tools": {"wasi-sdk": "34.0", "binaryen": "108", "wamrc": "2.4.3"},
+  "scope": "desktop simulator, 800x552, touch controls; hardware not verified; recording/save files remain volatile"
+}

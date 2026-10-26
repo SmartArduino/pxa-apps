@@ -1,0 +1,28 @@
+{
+  "repository": "https://github.com/Gitonym/ObstacleFlight",
+  "commit": "04668518ccad76aae1563b69c0ac8132a064c976",
+  "default_branch": "master",
+  "license": "Unlicense",
+  "acquired_at_utc": "2026-10-10T07:25:33.328304+00:00",
+  "acquisition": "Official git clone, exact HEAD; prior direct raw HTTPS read timeout retained in local research failure receipt",
+  "files": [
+    {
+      "path": "LICENSE",
+      "bytes": 1210,
+      "sha256": "88d9b4eb60579c191ec391ca04c16130572d7eedc4a86daa58bf28c6e14c9bcd",
+      "source_url": "https://raw.githubusercontent.com/Gitonym/ObstacleFlight/04668518ccad76aae1563b69c0ac8132a064c976/LICENSE"
+    },
+    {
+      "path": "ObstacleFlight.ino",
+      "bytes": 11624,
+      "sha256": "3cf22b53388ed429556d5475af020292f4383a68099d70d2d406a18338ffd409",
+      "source_url": "https://raw.githubusercontent.com/Gitonym/ObstacleFlight/04668518ccad76aae1563b69c0ac8132a064c976/ObstacleFlight.ino"
+    }
+  ],
+  "omitted": [
+    "ObstacleFlight.ino.leonardo.hex",
+    "obstacleflight.hex"
+  ],
+  "omitted_reason": "Precompiled AVR executables not used or executed; source and license included; full pristine repository retained in research",
+  "source_execution": false
+}

@@ -1,0 +1,20 @@
+{
+  "repo": "https://github.com/avrdudes/avr-libc",
+  "tag": "avr-libc-2_0_0-release",
+  "commit": "8c0baff524181d8a8a57889b352d2d326a1a08bb",
+  "retrievals": [
+    {
+      "url": "https://api.github.com/repos/avrdudes/avr-libc/contents/avr-libc/libc/stdlib/rand.c?ref=8c0baff524181d8a8a57889b352d2d326a1a08bb",
+      "error": "<HTTPError 404: 'Not Found'>"
+    },
+    {
+      "url": "https://api.github.com/repos/avrdudes/avr-libc/contents/libc/stdlib/rand.c?ref=8c0baff524181d8a8a57889b352d2d326a1a08bb",
+      "status": 200,
+      "commit": "8c0baff524181d8a8a57889b352d2d326a1a08bb",
+      "path": "libc/stdlib/rand.c",
+      "bytes": 2990,
+      "sha256": "315d6df64304b7289a58ead3ed10ac58d987006e05a1c163073eec2d850af7b1"
+    }
+  ],
+  "fetched_utc": "2026-10-10T02:15:25.139557+00:00"
+}

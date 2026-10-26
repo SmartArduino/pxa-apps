@@ -21,7 +21,7 @@
 #include "pxa_fs_roots.h"
 #include "../common/emulator/rom_names.h"
 #include "../common/rom/pxa_rom_source.h"
-#include "pxa_game_render_spans.h"
+#include "pxa_game_render_compute.h"
 #include "pxa_permission.h"
 #include "pxa_surface.h"
 #include "pxa_ui.h"
@@ -71,6 +71,7 @@ static unsigned rom_paged,rom_crc_start;
 static uint8_t rom_crc_header[16];
 static uint32_t rom_stream_crc;
 static uint32_t saved_crc, pending_save_crc;
+static unsigned save_baseline_valid;
 static uint8_t pad[2], touches[16];
 static uint8_t controller_previous[2],controller_connected[2];
 static uint32_t controller_raw_previous[2];
@@ -362,14 +363,23 @@ static void open_library(void) {
 static void start_save(void) {
     if(!rom_loaded || save_pending || writing_save || save_replace_pending)return;
     size_t size;uint8_t *ram=nes_core_sram(&size);if(!ram || !size)return;
-    uint32_t crc=nes_port_crc32(0,ram,size);if(crc==saved_crc)return;
+    uint32_t crc=nes_port_crc32(0,ram,size);if(save_baseline_valid && crc==saved_crc)return;
     uint8_t *copy=realloc(save_data,size);if(!copy){save_failed=1;redraw=1;nes_port_log("NES SRAM snapshot allocation failed");return;}
     save_data=copy;memcpy(save_data,ram,size);save_size=size;save_used=0;pending_save_crc=crc;
     save_failed=0;save_pending=1;
     int r=pxa_fs_request_open(T_SAVE_WRITE,save_tmp,strlen(save_tmp),PXA_FS_OPEN_WRITE|PXA_FS_OPEN_CREATE|PXA_FS_OPEN_TRUNCATE);
     if(r){save_pending=0;save_failed=1;redraw=1;nes_port_log("NES SRAM open rejected %d",r);}
 }
+/* Take the initial baseline without allocating or touching storage. Keep it
+ * across snapshot restores so restored battery progress is saved normally. */
+static void remember_save_baseline(void) {
+    size_t size;
+    uint8_t *ram=nes_core_sram(&size);
+    save_baseline_valid=ram && size;
+    if(save_baseline_valid)saved_crc=nes_port_crc32(0,ram,size);
+}
 static void game_ready(void) {
+    remember_save_baseline();
     nes_video_reset(&video_renderer);
     reading_save=0;rom_loaded=1;
     if(!menu_dismiss()){fail("Cannot dismiss menu");return;}
@@ -388,7 +398,7 @@ static void finish_rom(void) {
     if(!error && nes_core_rom_cache()->error)error="Cartridge paging read failed";if(error){fail(error);return;}
     snprintf(save_path,sizeof(save_path),"nes-%08x.sav",nes_core_checksum());
     snprintf(save_tmp,sizeof(save_tmp),"%s.tmp",save_path);
-    saved_crc=0;reading_save=1;
+    saved_crc=0;save_baseline_valid=0;reading_save=1;
     int r=pxa_fs_request_open(T_SAVE_READ,save_path,strlen(save_path),PXA_FS_OPEN_READ);
     if(r)game_ready();
 }
@@ -868,7 +878,7 @@ int32_t pxa_app_on_event(const uint8_t *data,uint32_t size) {
         }
         if(e.token==T_SAVE_REPLACE) {
             int32_t status;save_replace_pending=0;
-            if(pxa_fs_parse_status(&e,T_SAVE_REPLACE,PXA_FS_REPLACE,&status) && !status){saved_crc=pending_save_crc;redraw=1;nes_port_log("NES SRAM SAVED bytes=%u crc=%08x",(unsigned)save_size,saved_crc);}
+            if(pxa_fs_parse_status(&e,T_SAVE_REPLACE,PXA_FS_REPLACE,&status) && !status){saved_crc=pending_save_crc;save_baseline_valid=1;redraw=1;nes_port_log("NES SRAM SAVED bytes=%u crc=%08x",(unsigned)save_size,saved_crc);}
             else {save_failed=1;redraw=1;nes_port_log("NES SRAM atomic replace failed");}return PXA_EVENT_HANDLED;
         }
     }

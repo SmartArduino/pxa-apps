@@ -1,0 +1,331 @@
+--- vendor/original/common.h
++++ vendor/platform/common.h
+@@ -16,7 +16,7 @@
+ /*  Typedefs  */
+ 
+ typedef unsigned char   uchar;
+-typedef unsigned int    uint;
++typedef uint16_t        obono_uint;
+ 
+ /*  Global Functions  */
+ 
+--- vendor/original/game.cpp
++++ vendor/platform/game.cpp
+@@ -106,23 +106,23 @@
+     0x90, 51, 0, 200, 0x80, 0, 50,
+     0x90, 50, 0, 220, 0x80, 0, 60,
+     0x90, 49, 0, 240, 0x80, 0, 70,
+-    0x90, 48, 0, 260, 0x80, 0xF0
++    0x90, 48, 0, static_cast<uint8_t>(260), 0x80, 0xF0
+ };
+ 
+ static bool     isStart;
+ static bool     isOver;
+-static uint     score;
++static obono_uint     score;
+ static uchar    scoreTop;
+ static bool     isHiscore;
+-static int      counter;
++static int16_t  counter;
+ static uchar    caveOffset;  // 0...143
+-static int      cavePhase;   // 0...1023
++static int16_t  cavePhase;   // 0...1023
+ static char     caveHollowCnt;
+-static int      caveLoopCnt;
++static int16_t  caveLoopCnt;
+ static uchar    caveMaxGap;
+-static int      caveGap;
+-static int      caveBaseTop;
+-static int      caveBaseBottom;
++static int16_t  caveGap;
++static int16_t  caveBaseTop;
++static int16_t  caveBaseBottom;
+ static COLUMN   caveColumn[18];
+ static uchar    playerX;
+ static uchar    playerColumn;
+@@ -424,3 +424,57 @@
+     }
+     arduboy.drawBitmap(x, y, imgNumber + (value % 10) * 16, 8, 16, WHITE);
+ }
++
++/* PXA: all original mutable statics encoded fieldwise. */
++void obono_reset_game(){
++ isStart=0;
++ isOver=0;
++ score=0;
++ scoreTop=0;
++ isHiscore=0;
++ counter=0;
++ caveOffset=0;
++ cavePhase=0;
++ caveHollowCnt=0;
++ caveLoopCnt=0;
++ caveMaxGap=0;
++ caveGap=0;
++ caveBaseTop=0;
++ caveBaseBottom=0;
++ memset(caveColumn,0,sizeof(caveColumn));
++ playerX=0;
++ playerColumn=0;
++ playerMove=0;
++ playerDir=0;
++ playerJump=0;
++ memset(debris,0,sizeof(debris));
++}
++void obono_pack_game(ObonoWriter&w){
++ w.u8(isStart);
++ w.u8(isOver);
++ w.u16(score);
++ w.u8(scoreTop);
++ w.u8(isHiscore);
++ w.u16(counter);
++ w.u8(caveOffset);
++ w.u16(cavePhase);
++ w.u8(caveHollowCnt);
++ w.u16(caveLoopCnt);
++ w.u8(caveMaxGap);
++ w.u16(caveGap);
++ w.u16(caveBaseTop);
++ w.u16(caveBaseBottom);
++ for(auto&v:caveColumn){w.u8(v.top);w.u8(v.bottom);}
++ w.u8(playerX);
++ w.u8(playerColumn);
++ w.u8(playerMove);
++ w.u8(playerDir);
++ w.u8(playerJump);
++ for(auto&v:debris){w.u8(v.t);w.u8(v.base);}
++}
++void obono_register_game(){
++ obono_audio_register(1,soundStart,sizeof(soundStart));
++ obono_audio_register(2,soundMove,sizeof(soundMove));
++ obono_audio_register(3,soundCrush,sizeof(soundCrush));
++ obono_audio_register(4,soundGameOver,sizeof(soundGameOver));
++}
+--- vendor/original/logo.cpp
++++ vendor/platform/logo.cpp
+@@ -45,7 +45,8 @@
+ bool updateLogo(void)
+ {
+     counter--;
+-    signalOn = (SIGNAL_PTN >> (counter - 15) / 3) & 1;
++    const int signalShift = (counter - 15) / 3;
++    signalOn = signalShift >= 0 && signalShift < 32 && ((SIGNAL_PTN >> signalShift) & 1U);
+     arduboy.setRGBled(0, 0, signalOn * 127);
+     return (counter <= 0);
+ }
+@@ -61,3 +62,13 @@
+     arduboy.drawBitmap(68, 44, imgSoft, 32, 8, WHITE);
+     arduboy.printEx(16, 58, F(APP_CODE " VER " APP_VERSION));
+ }
++
++/* PXA: all original mutable statics encoded fieldwise. */
++void obono_reset_logo(){
++ counter=0;
++ signalOn=0;
++}
++void obono_pack_logo(ObonoWriter&w){
++ w.u8(counter);
++ w.u8(signalOn);
++}
+--- vendor/original/MyArduboy.cpp
++++ vendor/platform/MyArduboy.cpp
+@@ -1,4 +1,6 @@
+ #include "MyArduboy.h"
++#include <new>
++#include <type_traits>
+ 
+ PROGMEM static const uint32_t imgFont[] = {
+     0x00000000, 0x00017000, 0x000C00C0, 0x0A7CA7CA, 0x0855F542, 0x19484253, 0x1251F55E, 0x00003000,
+@@ -17,16 +19,24 @@
+ 
+ MyArduboy::MyArduboy(void)
+ {
+-    pTunes = new ArduboyPlaytune(myAudio.enabled);
++    alignas(ArduboyPlaytune) static uint8_t pxaPlaytuneStorage[sizeof(ArduboyPlaytune)];
++    static_assert(std::is_trivially_destructible<ArduboyPlaytune>::value, "fixed Playtune storage needs no destructor lifecycle");
++    pTunes = new (pxaPlaytuneStorage) ArduboyPlaytune(myAudio.enabled);
+     pTunes->initChannel(PIN_SPEAKER_1);
+ }
+ 
++void MyArduboy::pxaEnsureConstructed(void)
++{
++    // The compiler may fold the provider constructor marker into WASM data
++    // before the remaining dynamic constructor has executed. The existing
++    // canonical channel count is zero only before this original constructor.
++    if (obono_audio_channel_count() == 0) new (this) MyArduboy();
++}
++
+ void MyArduboy::beginNoLogo(void)
+ {
+     boot();
+-    blank();
+-    flashlight();
+-    systemButtons();
++    clear(); // hardware startup utilities omitted
+     myAudio.begin();
+ }
+ 
+@@ -321,3 +331,6 @@
+ {
+     pTunes->stopScore();
+ }
++
++void MyArduboy::pxaReset(){textcolor=WHITE;textbg=BLACK;lastButtonState=currentButtonState=playScorePriority=0;}
++void MyArduboy::pxaPack(ObonoWriter&w)const{w.u8(textcolor);w.u8(textbg);w.u8(lastButtonState);w.u8(currentButtonState);w.u8(playScorePriority);}
+--- vendor/original/MyArduboy.h
++++ vendor/platform/MyArduboy.h
+@@ -1,4 +1,5 @@
+ #pragma once
++#include "owner_compat.h"
+ 
+ //#define USE_ARDUBOY2_LIB
+ 
+@@ -49,6 +50,8 @@
+     void    saveAudioOnOff(void);
+     void    playScore2(const byte *score, uint8_t priority);
+     void    stopScore2(void);
++    void    pxaEnsureConstructed();
++    void    pxaReset();void pxaPack(ObonoWriter&)const;
+ 
+ private:
+     void    myDrawChar(int16_t x, int16_t y, unsigned char c, uint8_t color, uint8_t bg, uint8_t size);
+--- vendor/original/title.cpp
++++ vendor/platform/title.cpp
+@@ -1,4 +1,5 @@
+ #include "common.h"
++#include "owner_ascii_format.h"
+ 
+ /*  Defines  */
+ 
+@@ -223,11 +224,11 @@
+             if (lastScore > 0) {
+                 arduboy.printEx(98, 0, F("LAST"));
+                 arduboy.printEx(98, 6, F("SCORE"));
+-                sprintf(buf, "%5d", lastScore);
++                obono_format_score(buf, sizeof(buf), lastScore);
+                 arduboy.printEx(98, 14, buf);
+             }
+             for (int i = 0; i < 4; i++) {
+-                p = pgm_read_word(menusTable + i);
++                p = menusTable[i];
+                 strcpy_P(buf, p);
+                 arduboy.printEx(64 - (i == menuPos) * 4, i * 6 + 40, buf);
+                 if (p == menuSound) {
+@@ -253,12 +254,12 @@
+             arduboy.print(playCount);
+             arduboy.printEx(16, 54, F("PLAY TIME  "));
+             arduboy.print(playFrames / 3600); // minutes
+-            sprintf(buf, "'%02d\"", playFrames / 60 % 60); // seconds
++            obono_format_seconds(buf, sizeof(buf), playFrames); // seconds
+             arduboy.print(buf);
+             break;
+         case STATE_CREDIT:
+             for (int i = 0; i < 8; i++) {
+-                p = pgm_read_word(creditsTable + i);
++                p = creditsTable[i];
+                 if (p != NULL) {
+                     strcpy_P(buf, p);
+                     uint8_t len = strnlen(buf, sizeof(buf));
+@@ -383,13 +384,13 @@
+ uint8_t eepRead8(void)
+ {
+     eeprom_busy_wait();
+-    return eeprom_read_byte((const uint8_t *) eepAddr++);
++    return eeprom_read_byte((const uint8_t *)(uintptr_t)eepAddr++);
+ }
+ 
+ uint16_t eepRead16(void)
+ {
+     eeprom_busy_wait();
+-    uint16_t ret = eeprom_read_word((const uint16_t *)eepAddr);
++    uint16_t ret = eeprom_read_word((const uint16_t *)(uintptr_t)eepAddr);
+     eepAddr += 2;
+     return ret;
+ }
+@@ -397,7 +398,7 @@
+ uint32_t eepRead32(void)
+ {
+     eeprom_busy_wait();
+-    uint32_t ret = eeprom_read_dword((const uint32_t *) eepAddr);
++    uint32_t ret = eeprom_read_dword((const uint32_t *)(uintptr_t)eepAddr);
+     eepAddr += 4;
+     return ret;
+ }
+@@ -405,34 +406,72 @@
+ void eepReadBlock(void *p, size_t n)
+ {
+     eeprom_busy_wait();
+-    eeprom_read_block(p, (const void *) eepAddr, n);
++    eeprom_read_block(p, (const void *)(uintptr_t)eepAddr, n);
+     eepAddr += n;
+ }
+ 
+ void eepWrite8(uint8_t val)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_byte((uint8_t *) eepAddr, val);
++    eeprom_write_byte((uint8_t *)(uintptr_t)eepAddr, val);
+     eepAddr++;
+ }
+ 
+ void eepWrite16(uint16_t val)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_word((uint16_t *)eepAddr, val);
++    eeprom_write_word((uint16_t *)(uintptr_t)eepAddr, val);
+     eepAddr += 2;
+ }
+ 
+ void eepWrite32(uint32_t val)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_dword((uint32_t *)eepAddr, val);
++    eeprom_write_dword((uint32_t *)(uintptr_t)eepAddr, val);
+     eepAddr += 4;
+ }
+ 
+ void eepWriteBlock(const void *p, size_t n)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_block(p, (void *) eepAddr, n);
++    eeprom_write_block(p, (void *)(uintptr_t)eepAddr, n);
+     eepAddr += n;
+ }
++
++/* PXA: all original mutable statics encoded fieldwise. */
++void obono_reset_title(){
++ state=0;
++ toDraw=0;
++ sound=0;
++ menuPos=0;
++ lastScore=0;
++ recordState=0;
++ eepAddr=0;
++ memset(hiScore,0,sizeof(hiScore));
++ playCount=0;
++ playFrames=0;
++ eyesWait=0;
++ lightColor=0;
++ lightBlink=0;
++ lightWait=0;
++}
++void obono_pack_title(ObonoWriter&w){
++ w.u8(state);
++ w.u8(toDraw);
++ w.u8(sound);
++ w.u8(menuPos);
++ w.u16(lastScore);
++ w.u8(recordState);
++ w.u16(eepAddr);
++ for(auto v:hiScore)w.u16(v);
++ w.u16(playCount);
++ w.u32(playFrames);
++ w.u8(eyesWait);
++ w.u8(lightColor);
++ w.u8(lightBlink);
++ w.u8(lightWait);
++}
++void obono_register_title(){
++ obono_audio_register(16,sound1,sizeof(sound1));
++ obono_audio_register(17,sound2,sizeof(sound2));
++}

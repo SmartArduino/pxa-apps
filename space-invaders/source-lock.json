@@ -1,0 +1,37 @@
+{
+  "source": "https://github.com/TeoJT/Planetary_Intruders",
+  "license": "MIT",
+  "coroutine_functions": [
+    "BuildBarriers",
+    "DisplayInfo",
+    "GameOverMelody",
+    "NewLevel",
+    "PauseGame",
+    "PrepareNewGame",
+    "RunBonusAlienCode",
+    "RunEnemyCode",
+    "RunPlayerCode",
+    "RunUFOCode",
+    "SpawnEnemy",
+    "SpawnLaserIfCommanded",
+    "UFOAppear",
+    "loop",
+    "setup"
+  ],
+  "original_files": {
+    "LICENSE": "99d277c4ca594e5718b5aff3ea4cd537923f1ad098c3b7ac4e25802bc4ff709e",
+    "README.md": "496ad79fb7720a28eff7e544783325a116b63217517383ab5a1c47b1465deb8d",
+    "PlanetaryIntruders\\Aliens.ino": "9afcb2b960f97e64ea537aceb984a6578e11928c233c3a3bc8afef58100323a1",
+    "PlanetaryIntruders\\BackGround.ino": "e26d1f1d91b0dcca6be77f6b4f8d3a2e6214432357f9f9d43a1eb280a09cc801",
+    "PlanetaryIntruders\\Barriers.ino": "a125ffacac5537107035984c7d5ceb5d1b9c5fbf1c31e2be2d1f41e58150b199",
+    "PlanetaryIntruders\\BonusAlien.ino": "b1085aa6563f0fa07c5450ba9d172849c1e1efe8ee3d261c3ecb5b475777f375",
+    "PlanetaryIntruders\\MenuInfoDisplay.ino": "1295f42daf29c84ba61416a1a3993c8926f9020c119d1a7cb01fad60a5bb2458",
+    "PlanetaryIntruders\\Particles.ino": "e77df64650fbfe27b78fa5cb436dc750404f6892cfc913fb6da87af41675a46b",
+    "PlanetaryIntruders\\PlanetaryIntruders.ino": "648d30e82383eedd7ad61b231857d19bbdd05017d309557b86ca2f6268716646",
+    "PlanetaryIntruders\\Player.ino": "e1d50d2f1af1616ae1271c21e440b615b4f282b07d512712a70a83aabff124ca",
+    "PlanetaryIntruders\\Render.ino": "d4a61f084c89742eef64dcb3e3b0762df116ae3aec45cdc60d110ce67d235f04",
+    "PlanetaryIntruders\\SaveData.ino": "9fb34ced299f3ed43b4a0720da7946ec865bc1b33b983497bed1147190ba5ba5",
+    "PlanetaryIntruders\\Sound.ino": "e8252468aeaf150f5e55080e87b10f0f1d583710ff529abadfc3c60586b7ef9d",
+    "PlanetaryIntruders\\UFO.ino": "a6140c774bff0f0d62b2d8d64a3f47fdf522575b37628811677a241c00ffa8fe"
+  }
+}

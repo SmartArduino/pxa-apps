@@ -193,14 +193,27 @@ function event(e){
  try{const r=instance.exports.pxa_app_on_event(ptr,b.length);if(r<0)throw Error('event rejected '+r);}
  finally{currentEvent=previous;instance.exports.free(ptr);}
 }
-const rc=instance.exports.pxa_app_start(0,0);if(rc)throw Error('start '+rc);
+const testDensity=Number(process.env.PXA_TEST_DENSITY_Q16??65536);
+if(!Number.isInteger(testDensity)||testDensity<=0||testDensity>1048576)throw Error('invalid test density');
+// Match the product UI: environment extents use pixels, pointer events use dp.
+const envRecords=[];
+for(let tag=1;tag<=11;++tag){
+ const bytes=Buffer.alloc(tag===6?16:(tag===7||tag===8)?1:(tag===9||tag===10)?8:4);
+ if(bytes.length===4)bytes.writeUInt32LE(({1:1,2:320,3:240,4:testDensity,5:65536,11:65536})[tag]);
+ envRecords.push(record(tag,bytes));
+}
+const config=record(8,Buffer.concat(envRecords));
+const configPtr=instance.exports.malloc(config.length);
+Buffer.from(instance.exports.memory.buffer,configPtr,config.length).set(config);
+const rc=instance.exports.pxa_app_start(configPtr,config.length);
+instance.exports.free(configPtr);if(rc)throw Error('start '+rc);
 const start=Date.now(),end=start+Number(seconds)*1000;
 let pauseAt=-1,resumeAt=-1,pausedFrames=-1;
 if(process.env.PXA_TEST_BACKGROUND){pauseAt=start+1000;resumeAt=start+2000;}
 const controls=actions?actions.split(',').map(s=>s.split(':').map(Number)):[];
 const pointers=JSON.parse(process.env.PXA_TEST_POINTERS??'[]');
 function controller(buttons,connected=1,id=0){const payload=Buffer.alloc(32);payload.writeUInt32LE(1);payload.writeUInt32LE(1,4);payload.writeUInt32LE(1,8);payload.writeUInt16LE(10,12);payload.writeBigUInt64LE(BigInt(Date.now())*1000n,16);payload[24]=id;payload[25]=connected;payload.writeUInt32LE(buttons,28);event({service:3,op:0x8001,payload});}
-function pointer(phase,x,y){const payload=Buffer.alloc(36);payload.writeUInt32LE(1);payload.writeUInt32LE(1,4);payload.writeUInt32LE(1,8);payload.writeUInt16LE(7,12);payload.writeBigUInt64LE(BigInt(Date.now())*1000n,16);payload[25]=phase;payload.writeUInt16LE(1,26);payload.writeInt32LE(x,28);payload.writeInt32LE(y,32);event({service:3,op:0x8001,payload});}
+function pointer(phase,x,y){const payload=Buffer.alloc(36);payload.writeUInt32LE(1);payload.writeUInt32LE(1,4);payload.writeUInt32LE(1,8);payload.writeUInt16LE(7,12);payload.writeBigUInt64LE(BigInt(Date.now())*1000n,16);payload[25]=phase;payload.writeUInt16LE(1,26);payload.writeInt32LE(Math.trunc(x*65536/testDensity),28);payload.writeInt32LE(Math.trunc(y*65536/testDensity),32);event({service:3,op:0x8001,payload});}
 function maintainInputs(){
  if(pauseAt>0 && Date.now()>=pauseAt){event({service:17,op:0x8005,payload:Buffer.from([0])});pausedFrames=frames;pauseAt=-1;}
  if(resumeAt>0 && Date.now()>=resumeAt){if(frames!==pausedFrames)throw Error('frames advanced in background');event({service:17,op:0x8005,payload:Buffer.from([1])});resumeAt=-1;logs.push('BACKGROUND RESUME PASS');}

@@ -1,0 +1,133 @@
+{
+  "repository": "https://github.com/obono/ArduboyWorks",
+  "commit": "d4b1f041789dcd1d71907654e4025d613b4ab420",
+  "game_dir": "toyokumono",
+  "license": "MIT",
+  "original_files": [
+    {
+      "path": "vendor/original/MyArduboy2.cpp",
+      "bytes": 6522,
+      "sha256": "8630ff49e9850206cdadcfe2609f3289a56d8fb987ed962c85c3fb00d4a9307d",
+      "git_blob_sha1": "cdff78e90c59940b4bf73d19109c7a0325c70a0c",
+      "fresh_api_blob_sha1": "cdff78e90c59940b4bf73d19109c7a0325c70a0c",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/toyokumono/MyArduboy2.cpp",
+      "source_path": "toyokumono/MyArduboy2.cpp"
+    },
+    {
+      "path": "vendor/original/MyArduboy2.h",
+      "bytes": 1658,
+      "sha256": "47fa3f5762694b932056d3758cfee7d58f308a0cb6ac36a8596756a5af7fa207",
+      "git_blob_sha1": "64a34f6f77b33a6803a69e51fb31a00e040dd7da",
+      "fresh_api_blob_sha1": "64a34f6f77b33a6803a69e51fb31a00e040dd7da",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/toyokumono/MyArduboy2.h",
+      "source_path": "toyokumono/MyArduboy2.h"
+    },
+    {
+      "path": "vendor/original/MyArduboyPlaytune.cpp",
+      "bytes": 13910,
+      "sha256": "388ef1580fd983498f6d0dd5e8fb8c5bcc8b8fdc636a225e93809a96e03aab18",
+      "git_blob_sha1": "4bb8ec9885d433e674d073eaec865a84a0bf5235",
+      "fresh_api_blob_sha1": "4bb8ec9885d433e674d073eaec865a84a0bf5235",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/toyokumono/MyArduboyPlaytune.cpp",
+      "source_path": "toyokumono/MyArduboyPlaytune.cpp"
+    },
+    {
+      "path": "vendor/original/common.cpp",
+      "bytes": 6483,
+      "sha256": "aef4e2f4d7b92def576e25f7cc0f7ce567391b64b851cfc478a68594a0832a15",
+      "git_blob_sha1": "14c1941dc66d700077449a77c2f26dc96b4db885",
+      "fresh_api_blob_sha1": "14c1941dc66d700077449a77c2f26dc96b4db885",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/toyokumono/common.cpp",
+      "source_path": "toyokumono/common.cpp"
+    },
+    {
+      "path": "vendor/original/common.h",
+      "bytes": 2645,
+      "sha256": "a192ac1797fa5a9b5627ed200927b8ea6213cd653c628d1e6aa80506d5a28820",
+      "git_blob_sha1": "6153b36f4906ba73bc188d66b82ec70d0f18c486",
+      "fresh_api_blob_sha1": "6153b36f4906ba73bc188d66b82ec70d0f18c486",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/toyokumono/common.h",
+      "source_path": "toyokumono/common.h"
+    },
+    {
+      "path": "vendor/original/data.h",
+      "bytes": 7217,
+      "sha256": "6feadfdbe46ce293ca9214b850bd1aae042779532fde5a82978f328ec34978ab",
+      "git_blob_sha1": "2be7108a9b92c96032177ec24b6b5823c2e194ff",
+      "fresh_api_blob_sha1": "2be7108a9b92c96032177ec24b6b5823c2e194ff",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/toyokumono/data.h",
+      "source_path": "toyokumono/data.h"
+    },
+    {
+      "path": "vendor/original/game.cpp",
+      "bytes": 23974,
+      "sha256": "8ca349f34beba1cef555f8319cf910559dab97150c608c2279022f43bc7db514",
+      "git_blob_sha1": "64c8d48664691f349ff5f917645e71b522c2cfd6",
+      "fresh_api_blob_sha1": "64c8d48664691f349ff5f917645e71b522c2cfd6",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/toyokumono/game.cpp",
+      "source_path": "toyokumono/game.cpp"
+    },
+    {
+      "path": "vendor/original/info.json",
+      "bytes": 307,
+      "sha256": "96d40eacbce855672d7c2108f3acdda37dc1db67d9c0a9316219aeb036ba518c",
+      "git_blob_sha1": "fb778e4139073ba0ea0a12e504fb5000672dbd3a",
+      "fresh_api_blob_sha1": "fb778e4139073ba0ea0a12e504fb5000672dbd3a",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/toyokumono/info.json",
+      "source_path": "toyokumono/info.json"
+    },
+    {
+      "path": "vendor/original/logo.cpp",
+      "bytes": 3303,
+      "sha256": "13334fad7cf44d288a9a3f83c820ea2b14ee2f3f0fe08e9677c298df54610fdd",
+      "git_blob_sha1": "00e09b75635df4bf87dbb4bf544ed2c225ed6613",
+      "fresh_api_blob_sha1": "00e09b75635df4bf87dbb4bf544ed2c225ed6613",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/toyokumono/logo.cpp",
+      "source_path": "toyokumono/logo.cpp"
+    },
+    {
+      "path": "vendor/original/menu.cpp",
+      "bytes": 3262,
+      "sha256": "84f2f906d33e95ed667ba0f9b5b87769145494a9f2dbe38b6ac574bd9bc53b8c",
+      "git_blob_sha1": "b15cb4a185a8e48bb3d41714cb3cc8e4f328e7f1",
+      "fresh_api_blob_sha1": "b15cb4a185a8e48bb3d41714cb3cc8e4f328e7f1",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/toyokumono/menu.cpp",
+      "source_path": "toyokumono/menu.cpp"
+    },
+    {
+      "path": "vendor/original/title.cpp",
+      "bytes": 11869,
+      "sha256": "0d719ad82a93c35fd7fa8bf3024c46a91510cf92a1d65f5ab15189be6a5e4a02",
+      "git_blob_sha1": "a286029a2edaf0c9d9cff5ee9ea1636fc2e3249d",
+      "fresh_api_blob_sha1": "a286029a2edaf0c9d9cff5ee9ea1636fc2e3249d",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/toyokumono/title.cpp",
+      "source_path": "toyokumono/title.cpp"
+    },
+    {
+      "path": "vendor/original/toyokumono.ino",
+      "bytes": 1294,
+      "sha256": "81b72aa68a44feba18cbe7c581ec11c256a58631bbf543b3b63d77b169d432f7",
+      "git_blob_sha1": "575de5e88110b7e6be683d34913a3f658029e872",
+      "fresh_api_blob_sha1": "575de5e88110b7e6be683d34913a3f658029e872",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/toyokumono/toyokumono.ino",
+      "source_path": "toyokumono/toyokumono.ino"
+    },
+    {
+      "path": "vendor/original/LICENSE",
+      "bytes": 1077,
+      "sha256": "62a5db2ff173434f94d055a9432f5655267e92f4db92a042b832884e8a48f6bb",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/LICENSE",
+      "source_path": "LICENSE"
+    },
+    {
+      "path": "vendor/original/README.md",
+      "bytes": 5519,
+      "sha256": "1d6aaaa5f548b120938c25547a7f371309bd1d544542e4631cfb804726442a51",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/README.md",
+      "source_path": "README.md"
+    }
+  ],
+  "new_common": "arduboy-batch-20261010",
+  "cache_source": "research/obono-candidates-20261010T015821Z-0336df9f/official",
+  "fresh_api_game_blob_verification": true
+}

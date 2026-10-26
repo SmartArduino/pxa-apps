@@ -1,0 +1,14 @@
+{
+  "path": "frontend.cpp",
+  "bytes": 9398,
+  "sha256": "8e492170689e5f0c325caade047e3af311a66af0bbbc840c0dcb497f3f6acd90",
+  "foundation_path": "frontend.cpp",
+  "foundation_sha256": "81c5e59f8c6c0fdaad5ca4ee292ab4fd8e757f15cd62ef870a36d347b8fbcef5",
+  "patch": "frontend.patch",
+  "old_header": "arduboy-batch-20261010/frontend.cpp",
+  "new_header": "toyokumono/frontend.cpp",
+  "approved_change": "Only trace STATE/STATE2 bounded split; all field expressions and original draw/input/lifecycle unchanged",
+  "approval": "logs/audits/batch65-identical-bounded-front-source-approval-20261010.json",
+  "new_mutable_state": false,
+  "new_imports": false
+}

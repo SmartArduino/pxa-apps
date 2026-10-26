@@ -1,0 +1,36 @@
+{
+  "repository": "https://github.com/epbarger/night-raid",
+  "downloaded_at_utc": "2026-10-10T01:53:58.238434+00:00",
+  "files": [
+    {
+      "path": "LICENSE",
+      "url": "https://raw.githubusercontent.com/epbarger/night-raid/36e7fa0048d39e93d0c093e8ad0a6a55020681fe/LICENSE",
+      "bytes": 1068,
+      "sha256": "1bed179715d394dc72bc9624c2f537a9e4da21dc170046a156e6ef2601ab3579"
+    },
+    {
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/epbarger/night-raid/36e7fa0048d39e93d0c093e8ad0a6a55020681fe/README.md",
+      "bytes": 161,
+      "sha256": "41048b7e83eed4fbd4d19b27794a159fc7d0a63fb5c4bb169ef7a936779c1dbc"
+    },
+    {
+      "path": "night-raid.ino",
+      "url": "https://raw.githubusercontent.com/epbarger/night-raid/36e7fa0048d39e93d0c093e8ad0a6a55020681fe/night-raid.ino",
+      "bytes": 24137,
+      "sha256": "0753930c12dc73778d529de54b1613e0d00c3c2489bf32a892d8f16dd8b85462"
+    }
+  ],
+  "executed_upstream_code": false,
+  "commit": "36e7fa0048d39e93d0c093e8ad0a6a55020681fe",
+  "default_branch": "master",
+  "tree_truncated": false,
+  "github_license": {
+    "key": "mit",
+    "name": "MIT License",
+    "spdx_id": "MIT",
+    "url": "https://api.github.com/licenses/mit",
+    "node_id": "MDc6TGljZW5zZTEz"
+  },
+  "status": "downloaded"
+}

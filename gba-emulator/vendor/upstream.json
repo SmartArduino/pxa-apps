@@ -20,6 +20,9 @@
     "Optional deterministic frame-block benchmark with PCM/video/CPU checksums excluded from measured core time",
     "Size the cartridge cache to the ROM and caller budget, up to 2 MiB, with a 1 MiB allocation fallback and lazy page fill",
     "Coalesce proven side-effect-free ARM/Thumb polling within one hardware-event slice, preserving the final partial iteration",
-    "Fuse verified ARM interpolation and copy sequences, reuse IWRAM validation until stores/events, and preserve bus cycles, NZCV, palette conversion, OAM dirty tracking and writable-code behavior"
+    "Fuse verified ARM interpolated/direct stereo mixing and endpoint/count-based copy sequences, reuse IWRAM validation until stores/events, and preserve bus cycles, NZCV, palette conversion, OAM dirty tracking and writable-code behavior",
+    "Keep interpreter cycle budgets local until slice exit and share nontrivial ARM operand shifters while preserving inline immediate LSL",
+    "Reject ordinary branches before polling analysis; prove short Thumb load/compare fixed points against current memory and NZCV at each event slice",
+    "Fuse checked halfword CpuSet loops within hardware-event budgets, preserving overlap order, mapping boundaries, fallback reads, palette/OAM effects and mirrored writable code"
   ]
 }

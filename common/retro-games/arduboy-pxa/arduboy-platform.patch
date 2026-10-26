@@ -1,0 +1,363 @@
+--- a/src/Arduboy2.cpp
++++ b/src/Arduboy2.cpp
+@@ -30,33 +30,14 @@
+ // Aruduboy2::begin()
+ void Arduboy2Base::begin()
+ {
+-  beginDoFirst();
+-
+-  bootLogo();
+-  // alternative logo functions. Work the same as bootLogo() but may reduce
+-  // memory size if the sketch uses the same bitmap drawing function or
+-  // `Sprites`/`SpritesB` class
+-//  bootLogoCompressed();
+-//  bootLogoSpritesSelfMasked();
+-//  bootLogoSpritesOverwrite();
+-//  bootLogoSpritesBSelfMasked();
+-//  bootLogoSpritesBOverwrite();
+-
+-  waitNoButtons(); // wait for all buttons to be released
++  beginDoFirst(); // software display/audio bootstrap; hardware boot animation omitted
+ }
+ 
+ void Arduboy2Base::beginDoFirst()
+ {
+-  boot(); // raw hardware
+-
+-  display(); // blank the display (sBuffer is global, so cleared automatically)
+-
+-  flashlight(); // light the RGB LED and screen if UP button is being held.
+-
+-  // check for and handle buttons held during start up for system control
+-  systemButtons();
+-
+-  audio.begin();
++  boot();
++  display();
++  audio.begin(); // GPIO/system-button boot utilities omitted
+ }
+ 
+ void Arduboy2Base::flashlight()
+@@ -292,48 +273,8 @@
+   fillScreen(BLACK);
+ }
+ 
+-void Arduboy2Base::drawPixel(int16_t x, int16_t y, uint8_t color)
+-{
+-  if (x < 0 || x > (WIDTH-1) || y < 0 || y > (HEIGHT-1))
+-  {
+-    return;
+-  }
+-
+-  uint16_t row_offset;
+-  uint8_t bit;
+-
+-  asm volatile
+-  (
+-    // bit = 1 << (y & 7)
+-    "ldi  %[bit], 1                    \n" //bit = 1;
+-    "sbrc %[y], 1                      \n" //if (y & _BV(1)) bit = 4;
+-    "ldi  %[bit], 4                    \n"
+-    "sbrc %[y], 0                      \n" //if (y & _BV(0)) bit = bit << 1;
+-    "lsl  %[bit]                       \n"
+-    "sbrc %[y], 2                      \n" //if (y & _BV(2)) bit = (bit << 4) | (bit >> 4);
+-    "swap %[bit]                       \n"
+-    //row_offset = y / 8 * WIDTH + x;
+-    "andi %A[y], 0xf8                  \n" //row_offset = (y & 0xF8) * WIDTH / 8
+-    "mul  %[width_offset], %A[y]       \n"
+-    "movw %[row_offset], r0            \n"
+-    "clr  __zero_reg__                 \n"
+-    "add  %A[row_offset], %[x]         \n" //row_offset += x
+-#if WIDTH != 128
+-    "adc  %B[row_offset], __zero_reg__ \n" // only non 128 width can overflow
+-#endif
+-    : [row_offset]   "=&x" (row_offset),   // upper register (ANDI)
+-      [bit]          "=&d" (bit),          // upper register (LDI)
+-      [y]            "+d"  (y)             // upper register (ANDI), must be writable
+-    : [width_offset] "r"   ((uint8_t)(WIDTH/8)),
+-      [x]            "r"   ((uint8_t)x)
+-    :
+-  );
+-  uint8_t data = sBuffer[row_offset] | bit;
+-  if (!(color & _BV(0))) data ^= bit;
+-  sBuffer[row_offset] = data;
+-}
+-#if 0
+-// For reference, this is the C++ equivalent
++#if 1
++// PXA selects the original portable C++ equivalent
+ void Arduboy2Base::drawPixel(int16_t x, int16_t y, uint8_t color)
+ {
+   if (x < 0 || x > (WIDTH-1) || y < 0 || y > (HEIGHT-1))
+@@ -617,50 +558,7 @@
+ 
+ void Arduboy2Base::fillScreen(uint8_t color)
+ {
+-  // C version:
+-  //
+-  // if (color != BLACK)
+-  // {
+-  //   color = 0xFF; // all pixels on
+-  // }
+-  // for (int16_t i = 0; i < WIDTH * HEIGHT / 8; i++)
+-  // {
+-  //    sBuffer[i] = color;
+-  // }
+-
+-  // This asm version is hard coded for 1024 bytes. It doesn't use the defined
+-  // WIDTH and HEIGHT values. It will have to be modified for a different
+-  // screen buffer size.
+-  // It also assumes color value for BLACK is 0.
+-
+-  // local variable for screen buffer pointer,
+-  // which can be declared a read-write operand
+-  uint8_t* bPtr = sBuffer;
+-
+-  asm volatile
+-  (
+-    // if value is zero, skip assigning to 0xff
+-    "cpse %[color], __zero_reg__\n"
+-    "ldi %[color], 0xFF\n"
+-    // counter = 0
+-    "clr __tmp_reg__\n"
+-    "1:\n"
+-    // (4x) push zero into screen buffer,
+-    // then increment buffer position
+-    "st Z+, %[color]\n"
+-    "st Z+, %[color]\n"
+-    "st Z+, %[color]\n"
+-    "st Z+, %[color]\n"
+-    // increase counter
+-    "inc __tmp_reg__\n"
+-    // repeat for 256 loops
+-    // (until counter rolls over back to 0)
+-    "brne 1b\n"
+-    : [color] "+d" (color),
+-      "+z" (bPtr)
+-    :
+-    :
+-  );
++  memset(sBuffer, color ? 0xff : 0, WIDTH * HEIGHT / 8); // upstream C reference
+ }
+ 
+ void Arduboy2Base::drawRoundRect
+@@ -1169,19 +1067,7 @@
+ // Aruduboy2Base::begin()
+ void Arduboy2::begin()
+ {
+-  beginDoFirst();
+-
+-  bootLogo();
+-  // alternative logo functions. Work the same as bootLogo() but may reduce
+-  // memory size if the sketch uses the same bitmap drawing function or
+-  // `Sprites`/`SpritesB` class
+-//  bootLogoCompressed();
+-//  bootLogoSpritesSelfMasked();
+-//  bootLogoSpritesOverwrite();
+-//  bootLogoSpritesBSelfMasked();
+-//  bootLogoSpritesBOverwrite();
+-
+-  waitNoButtons();
++  beginDoFirst(); // software display/audio bootstrap; hardware boot animation omitted
+ }
+ 
+ void Arduboy2::bootLogo()
+--- a/src/Arduboy2Audio.cpp
++++ b/src/Arduboy2Audio.cpp
+@@ -12,10 +12,7 @@
+ {
+   // fire up audio pins by seting them as outputs
+ #ifdef ARDUBOY_10
+-  bitSet(SPEAKER_1_DDR, SPEAKER_1_BIT);
+-  bitSet(SPEAKER_2_DDR, SPEAKER_2_BIT);
+ #else
+-  bitSet(SPEAKER_1_DDR, SPEAKER_1_BIT);
+ #endif
+   audio_enabled = true;
+ }
+@@ -25,10 +22,7 @@
+   audio_enabled = false;
+   // shut off audio pins by setting them as inputs
+ #ifdef ARDUBOY_10
+-  bitClear(SPEAKER_1_DDR, SPEAKER_1_BIT);
+-  bitClear(SPEAKER_2_DDR, SPEAKER_2_BIT);
+ #else
+-  bitClear(SPEAKER_1_DDR, SPEAKER_1_BIT);
+ #endif
+ }
+ 
+--- a/src/Arduboy2Beep.cpp
++++ b/src/Arduboy2Beep.cpp
+@@ -7,7 +7,7 @@
+ #include <Arduino.h>
+ #include "Arduboy2Beep.h"
+ 
+-#ifndef AB_DEVKIT
++#if 0 /* PXA uses the upstream silent software-duration implementation */
+ 
+ // Speaker pin 1, Timer 3A, Port C bit 6, Arduino pin 5
+ 
+--- a/src/Arduboy2Core.h
++++ b/src/Arduboy2Core.h
+@@ -8,8 +8,6 @@
+ #define ARDUBOY2_CORE_H
+ 
+ #include <Arduino.h>
+-#include <avr/power.h>
+-#include <avr/sleep.h>
+ 
+ 
+ // main hardware compile flags
+--- a/src/Arduboy2Data.cpp
++++ b/src/Arduboy2Data.cpp
+@@ -5,7 +5,7 @@
+  */
+ 
+ #include "Arduboy2.h"
+-#include <avr/pgmspace.h>
++#include <Arduino.h> /* PXA unified readonly address space */
+ 
+ // arduboy_logo.png
+ // drawBitmap() format
+--- a/src/Sprites.cpp
++++ b/src/Sprites.cpp
+@@ -245,120 +245,23 @@
+ 
+ 
+     case SPRITE_PLUS_MASK:
+-      // *2 because we use double the bits (mask + bitmap)
++      // Portable form of the same upstream SpritesB plus-mask loop.
+       bofs = (uint8_t *)(bitmap + ((start_h * w) + xOffset) * 2);
+-
+-      uint8_t xi = rendered_width; // counter for x loop below
+-
+-      asm volatile(
+-        "push r28\n" // save Y
+-        "push r29\n"
+-        "movw r28, %[buffer_ofs]\n" // Y = buffer_ofs_2
+-        "adiw r28, 63\n" // buffer_ofs_2 = buffer_ofs + 128
+-        "adiw r28, 63\n"
+-        "adiw r28, 2\n"
+-        "loop_y:\n"
+-        "loop_x:\n"
+-        // load bitmap and mask data
+-        "lpm %A[bitmap_data], Z+\n"
+-        "lpm %A[mask_data], Z+\n"
+-
+-        // shift mask and buffer data
+-        "tst %[yOffset]\n"
+-        "breq skip_shifting\n"
+-        "mul %A[bitmap_data], %[mul_amt]\n"
+-        "movw %[bitmap_data], r0\n"
+-        "mul %A[mask_data], %[mul_amt]\n"
+-        "movw %[mask_data], r0\n"
+-
+-        // SECOND PAGE
+-        // if yOffset != 0 && sRow < 7
+-        "cpi %[sRow], 7\n"
+-        "brge end_second_page\n"
+-        // then
+-        "ld %[data], Y\n"
+-        "com %B[mask_data]\n" // invert high byte of mask
+-        "and %[data], %B[mask_data]\n"
+-        "or %[data], %B[bitmap_data]\n"
+-        // update buffer, increment
+-        "st Y+, %[data]\n"
+-
+-        "end_second_page:\n"
+-        "skip_shifting:\n"
+-
+-        // FIRST PAGE
+-        // if sRow >= 0
+-        "tst %[sRow]\n"
+-        "brmi skip_first_page\n"
+-        "ld %[data], %a[buffer_ofs]\n"
+-        // then
+-        "com %A[mask_data]\n"
+-        "and %[data], %A[mask_data]\n"
+-        "or %[data], %A[bitmap_data]\n"
+-        // update buffer, increment
+-        "st %a[buffer_ofs]+, %[data]\n"
+-        "jmp end_first_page\n"
+-
+-        "skip_first_page:\n"
+-        // since no ST Z+ when skipped we need to do this manually
+-        "adiw %[buffer_ofs], 1\n"
+-
+-        "end_first_page:\n"
+-
+-        // "x_loop_next:\n"
+-        "dec %[xi]\n"
+-        "brne loop_x\n"
+-
+-        // increment y
+-        "next_loop_y:\n"
+-        "dec %[yi]\n"
+-        "breq finished\n"
+-        "mov %[xi], %[x_count]\n" // reset x counter
+-        // sRow++;
+-        "inc %[sRow]\n"
+-        "clr __zero_reg__\n"
+-        // sprite_ofs += (w - rendered_width) * 2;
+-        "add %A[sprite_ofs], %A[sprite_ofs_jump]\n"
+-        "adc %B[sprite_ofs], __zero_reg__\n"
+-        // buffer_ofs += WIDTH - rendered_width;
+-        "add %A[buffer_ofs], %A[buffer_ofs_jump]\n"
+-        "adc %B[buffer_ofs], __zero_reg__\n"
+-        // buffer_ofs_page_2 += WIDTH - rendered_width;
+-        "add r28, %A[buffer_ofs_jump]\n"
+-        "adc r29, __zero_reg__\n"
+-
+-        "rjmp loop_y\n"
+-        "finished:\n"
+-        // put the Y register back in place
+-        "pop r29\n"
+-        "pop r28\n"
+-        "clr __zero_reg__\n" // just in case
+-        : [xi] "+&a" (xi),
+-        [yi] "+&a" (loop_h),
+-        [sRow] "+&a" (sRow), // CPI requires an upper register (r16-r23)
+-        [data] "=&l" (data),
+-        [mask_data] "=&l" (mask_data),
+-        [bitmap_data] "=&l" (bitmap_data)
+-        :
+-        [screen_width] "M" (WIDTH),
+-        [x_count] "l" (rendered_width), // lower register
+-        [sprite_ofs] "z" (bofs),
+-        [buffer_ofs] "x" (Arduboy2Base::sBuffer+ofs),
+-        [buffer_ofs_jump] "a" (WIDTH-rendered_width), // upper reg (r16-r23)
+-        [sprite_ofs_jump] "a" ((w-rendered_width)*2), // upper reg (r16-r23)
+-
+-        // [sprite_ofs_jump] "r" (0),
+-        [yOffset] "l" (yOffset), // lower register
+-        [mul_amt] "l" (mul_amt) // lower register
+-        // NOTE: We also clobber r28 and r29 (y) but sometimes the compiler
+-        // won't allow us, so in order to make this work we don't tell it
+-        // that we clobber them. Instead, we push/pop to preserve them.
+-        // Then we need to guarantee that the the compiler doesn't put one of
+-        // our own variables into r28/r29.
+-        // We do that by specifying all the inputs and outputs use either
+-        // lower registers (l) or simple (r16-r23) upper registers (a).
+-        : // pushes/clobbers/pops r28 and r29 (y)
+-      );
+-      break;
+-  }
+-}
++      for (uint8_t a = 0; a < loop_h; ++a) {
++        for (uint8_t i = 0; i < rendered_width; ++i) {
++          bitmap_data = pgm_read_byte(bofs) * mul_amt;
++          mask_data = ~(pgm_read_byte(bofs + 1) * mul_amt);
++          if (sRow >= 0) {
++            Arduboy2Base::sBuffer[ofs] = (Arduboy2Base::sBuffer[ofs] & (uint8_t)mask_data) | (uint8_t)bitmap_data;
++          }
++          if (yOffset != 0 && sRow < 7) {
++            const uint16_t index = (uint16_t)(ofs + WIDTH);
++            Arduboy2Base::sBuffer[index] = (Arduboy2Base::sBuffer[index] & (uint8_t)(mask_data >> 8)) | (uint8_t)(bitmap_data >> 8);
++          }
++          ++ofs; bofs += 2;
++        }
++        ++sRow; bofs += (w-rendered_width)*2; ofs += WIDTH-rendered_width;
++      }
++      break;
++  }
++}

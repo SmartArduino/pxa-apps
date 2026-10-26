@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.20)
+project(pxa_pattern C)
+set(PXA_PUZZLE pattern)
+include("${CMAKE_CURRENT_SOURCE_DIR}/../common/retro-games/puzzles/puzzle.cmake")
+target_sources(pxa_main PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/pattern-params.c")
+target_link_options(pxa_main PRIVATE -Wl,--wrap=midend_new -Wl,--wrap=midend_serialise)

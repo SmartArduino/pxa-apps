@@ -1,0 +1,626 @@
+--- vendor/original/MyArduboy2.cpp
++++ vendor/platform/MyArduboy2.cpp
+@@ -21,8 +21,6 @@
+ {
+     boot();
+     display();
+-    flashlight();
+-    systemButtons();
+     audio.begin();
+ }
+ 
+@@ -215,3 +213,7 @@
+         *p++ |= d;
+     }
+ }
++
++#include <new>
++void MyArduboy2::pxaReset(){new(this)MyArduboy2();lastButtonState=currentButtonState=0;}
++void MyArduboy2::pxaPack(ObonoWriter&w)const{w.u8(lastButtonState);w.u8(currentButtonState);}
+--- vendor/original/MyArduboy2.h
++++ vendor/platform/MyArduboy2.h
+@@ -1,5 +1,6 @@
+ #pragma once
+ 
++#include "owner_compat.h"
+ #include <Arduboy2.h>
+ #if ARDUBOY_LIB_VER < 50201
+ #error Unexpected version of Arduboy Library
+@@ -31,6 +32,7 @@
+     void    playScore(const byte *score, uint8_t priority = 0, int8_t pitch = 0);
+     void    stopScore(void);
+ 
++    void pxaReset();void pxaPack(ObonoWriter&)const;
+ private:
+     void    drawChar(int16_t x, int16_t y, unsigned char c, uint8_t color, uint8_t bg, uint8_t size);
+     void    fillBeltBlack(uint8_t *p, uint8_t d, uint8_t w);
+--- vendor/original/MyArduboyPlaytune.cpp
++++ vendor/platform/MyArduboyPlaytune.cpp
+@@ -29,59 +29,27 @@
+  */
+ 
+ #include "MyArduboy2.h"
+-#include <avr/power.h>
+-
+-/*  Defines  */
+-
+-#define AVAILABLE_CHANNELS  2
+-
+-#define TUNE_OP_PLAYNOTE    0x90 // play a note, note is next byte
+-#define TUNE_OP_STOPNOTE    0x80 // stop a note
+-#define TUNE_OP_MARK        0xD0 // set mark to repeat
+-#define TUNE_OP_REPEAT      0xE0 // repeat the score from the marked point
+-#define TUNE_OP_STOP        0xF0 // stop playing
+-
+-#define FREQUENCY_MAX   (0xFFFF / DUTY_CYCLE_MAX)
+-#define FREQUENCY_IDLE  500
+-#define DUTY_CYCLE_MIN  2
+-#define DUTY_CYCLE_MAX  5
+-#define NOTE_MAX        127
+-#define NOTE_MIDDLE     sizeof(midiByteNoteFrequencies)
+-
+-/*  Local Functions  */
+-
+-static void stepScore(void);
+-static void playNote(uint8_t chan, uint8_t note, uint8_t dutyCycle);
+-static void stopNote(uint8_t chan);
+-static void setupTimer(uint8_t timer, uint16_t frequency, uint8_t dutyCycle);
+-
+-/*  Local Functions (macros)  */
+-
+-#define getTimerNum(chan)   ((chan == 0) ? 3 : 1)
+-
+-#define setHighTimerPin(t)  (*timer ## t ## PinPort |= timer ## t ## PinMask)
+-#define setLowTimerPin(t)   (*timer ## t ## PinPort &= ~(timer ## t ## PinMask))
+-#define toggleTimerPin(t)   (*timer ## t ## PinPort ^= timer ## t ## PinMask)
+-
+-#define initTimer(t, port, mask) do { \
+-            TCCR ## t ## A = 0; \
+-            TCCR ## t ## B = _BV(WGM ## t ## 2) | _BV(CS ## t ## 0); \
+-            timer ## t ## PinPort = (port); \
+-            timer ## t ## PinMask = (mask); \
+-        } while (false)
+-
+-#define startTimer(t, ocr, prescalarBits) do { \
+-            TCCR ## t ## B = (TCCR ## t ## B & 0b11111000) | (prescalarBits); \
+-            OCR ## t ## A = (ocr); \
+-            TCNT ## t = 0; /*LJS*/ \
+-            bitSet(TIMSK ## t, OCIE ## t ## A); \
+-        } while (false)
+-
+-#define stopTimer(t) do { \
+-            bitClear(TIMSK ## t, OCIE ## t ## A); \
+-            setLowTimerPin(t); \
+-        } while (false)
+-
++#define AVAILABLE_CHANNELS 2
++#define TUNE_OP_PLAYNOTE 0x90
++#define TUNE_OP_STOPNOTE 0x80
++#define TUNE_OP_MARK 0xD0
++#define TUNE_OP_REPEAT 0xE0
++#define TUNE_OP_STOP 0xF0
++#define FREQUENCY_MAX (0xFFFF/DUTY_CYCLE_MAX)
++#define FREQUENCY_IDLE 500
++#define DUTY_CYCLE_MIN 2
++#define DUTY_CYCLE_MAX 5
++#define NOTE_MAX 127
++#define NOTE_MIDDLE sizeof(midiByteNoteFrequencies)
++#define F_CPU 16000000UL
++#define getTimerNum(chan) ((chan==0)?3:1)
++#define setLowTimerPin(t) ((void)0)
++#define toggleTimerPin(t) ((void)0)
++static void stepScore();static void playNote(uint8_t,uint8_t,uint8_t);static void stopNote(uint8_t);static void setupTimer(uint8_t,uint16_t,uint8_t);
++struct OwnerTimer{uint32_t period,remaining;bool active;};static OwnerTimer timers[2];
++static void owner_stop_timer(uint8_t t){timers[t==3?0:1].active=false;}
++#define stopTimer(t) owner_stop_timer(t)
++struct OwnerSong{const byte*data;size_t size;};static OwnerSong songs[32];static uint8_t audioFault=0;static uint32_t audioClock=0,audioInterrupts=0,audioStarts=0,audioStops=0;
+ /*  Local Variables  */
+ 
+ static uint8_t numChans = 0;
+@@ -93,9 +61,9 @@
+ static volatile byte timer3PinMask;
+ 
+ static volatile uint8_t timer1DutyCycle;
+-static volatile unsigned long timer1ToggleCount;
++static volatile uint32_t timer1ToggleCount;
+ static volatile uint8_t timer3DutyCycle;
+-static volatile unsigned long timer3ToggleCount;
++static volatile uint32_t timer3ToggleCount;
+ static volatile uint16_t timer3Frequency;
+ 
+ static volatile bool isAllMuted = false;         // indicates all sound is muted
+@@ -138,55 +106,8 @@
+ /*                            Initialize & Finalize                          */
+ /*---------------------------------------------------------------------------*/
+ 
+-void MyArduboy2::initAudio(uint8_t chans)
+-{
+-    outputEnabled = audio.enabled;
+-    if (chans == 0 || chans > AVAILABLE_CHANNELS) return;
+-    if (numChans > 0) closeAudio();
+-    numChans = chans;
+-    for (uint8_t chan = 0; chan < chans; chan++) {
+-        byte pin;
+-#ifdef PIN_SPEAKER_2
+-        pin = (chan == 0) ? PIN_SPEAKER_1 : PIN_SPEAKER_2;
+-#else
+-        pin = PIN_SPEAKER_1;
+-#endif
+-        byte pinPort = digitalPinToPort(pin);
+-        byte pinMask = digitalPinToBitMask(pin);
+-        volatile byte *outReg = portOutputRegister(pinPort);
+-
+-        *portModeRegister(pinPort) |= pinMask; // set pin to output mode
+-
+-        switch (getTimerNum(chan)) {
+-        case 1:
+-            initTimer(1, outReg, pinMask);
+-            break;
+-        case 3:
+-            power_timer3_enable();
+-            initTimer(3, outReg, pinMask);
+-            stopNote(0); // start timer 3
+-            break;
+-        }
+-    }
+-}
+-
+-void MyArduboy2::closeAudio(void)
+-{
+-    for (uint8_t chan = 0; chan < numChans; chan++) {
+-        switch (getTimerNum(chan)) {
+-        case 1:
+-            stopTimer(1);
+-            TCCR1B = _BV(CS10) | _BV(CS11);
+-            break;
+-        case 3:
+-            stopTimer(3);
+-            power_timer3_disable();
+-            break;
+-        }
+-    }
+-    numChans = 0;
+-    isScorePlaying = isTonePlaying = isMuteScore = false;
+-}
++void MyArduboy2::initAudio(uint8_t chans){outputEnabled=audio.enabled;if(chans==0||chans>AVAILABLE_CHANNELS)return;if(numChans>0)closeAudio();numChans=chans;stopNote(0);}
++void MyArduboy2::closeAudio(){for(uint8_t chan=0;chan<numChans;chan++)owner_stop_timer(getTimerNum(chan));numChans=0;isScorePlaying=isTonePlaying=isMuteScore=false;}
+ 
+ /*---------------------------------------------------------------------------*/
+ /*                             Control parameters                            */
+@@ -217,7 +138,7 @@
+ /*---------------------------------------------------------------------------*/
+ 
+ void MyArduboy2::playTone(uint16_t frequency, uint16_t duration,
+-        uint8_t priority = 0xFF, uint8_t dutyCycle = DUTY_CYCLE_MIN)
++        uint8_t priority, uint8_t dutyCycle)
+ {
+     if (numChans == 0) return;
+     if (numChans == 1 && isScorePlaying) {
+@@ -228,7 +149,7 @@
+     isAllMuted = !outputEnabled();
+     frequency = min(frequency, FREQUENCY_MAX);
+     dutyCycle = constrain(dutyCycle, DUTY_CYCLE_MIN, DUTY_CYCLE_MAX);
+-    unsigned long toggle_count = ((unsigned long)duration * frequency * dutyCycle + 500) / 1000;
++    uint32_t toggle_count = ((uint32_t)duration * frequency * dutyCycle + 500) / 1000;
+     if (toggle_count == 0) toggle_count = 1;
+ 
+     uint8_t chan = numChans - 1;
+@@ -247,7 +168,7 @@
+     setupTimer(getTimerNum(chan), frequency, dutyCycle);
+ }
+ 
+-void MyArduboy2::playScore(const byte *score, uint8_t priority = 0, int8_t pitch = 0)
++void MyArduboy2::playScore(const byte *score, uint8_t priority, int8_t pitch)
+ {
+     if (isScorePlaying) {
+         if (priority > audioPriority) return;
+@@ -256,6 +177,7 @@
+         isMuteScore = (priority > audioPriority);
+     }
+     audioPriority = priority;
++    ++audioStarts;
+     scoreStart = score;
+     scoreCursor = scoreStart;
+     scorePitchDefault = scorePitch = pitch;
+@@ -266,6 +188,7 @@
+ 
+ void MyArduboy2::stopScore(void)
+ {
++    ++audioStops;
+     for (uint8_t chan = 0; chan < numChans; chan++) {
+         stopNote(chan);
+     }
+@@ -282,10 +205,11 @@
+ If CMD < 0x80, then the other 7 bits and the next byte are a
+ 15-bit big-endian number of msec to wait
+ */
++static uint8_t owner_score_read(){uintptr_t p=(uintptr_t)scoreCursor;for(uint8_t i=0;i<32;i++)if(songs[i].data&&p>=(uintptr_t)songs[i].data&&p<(uintptr_t)songs[i].data+songs[i].size)return *scoreCursor++;audioFault=1;isScorePlaying=false;return 0xf0;}
+ static void stepScore(void)
+ {
+     while (true) {
+-        byte command = pgm_read_byte(scoreCursor++);
++        byte command = owner_score_read();
+         uint8_t opcode = command & 0xF0;
+         uint8_t opvalue = command & 0x0F;
+         uint8_t chan = opvalue & 0x03;
+@@ -294,10 +218,10 @@
+         } else if (opcode == TUNE_OP_PLAYNOTE) { // play note
+             uint8_t dutyCycle = ((opvalue & 0x0C) >> 2) + 2;
+             isAllMuted = !outputEnabled();
+-            playNote(chan, pgm_read_byte(scoreCursor++) + scorePitch, dutyCycle);
++            playNote(chan, owner_score_read() + scorePitch, dutyCycle);
+         } else if (opcode < 0x80) { // wait count in msec.
+-            uint16_t duration = (uint16_t)command << 8 | pgm_read_byte(scoreCursor++);
+-            timer3ToggleCount = ((unsigned long)duration * timer3Frequency + 500) / 1000;
++            uint16_t duration = (uint16_t)command << 8 | owner_score_read();
++            timer3ToggleCount = ((uint32_t)duration * timer3Frequency + 500) / 1000;
+             if (timer3ToggleCount == 0) timer3ToggleCount = 1;
+             break;
+         } else if (opcode == TUNE_OP_MARK) { // set mark to repeat
+@@ -345,35 +269,17 @@
+     }
+ }
+ 
+-static void setupTimer(uint8_t timerNum, uint16_t frequency, uint8_t dutyCycle)
+-{
+-    frequency *= dutyCycle;
+-    unsigned long ocr = F_CPU / frequency - 1;
+-    byte prescalarBits = 0b001;
+-    if (ocr > 0xFFFF) {
+-        ocr = F_CPU / 64 / frequency - 1;
+-        prescalarBits = 0b011;
+-    }
+-
+-    // Set the OCR for the given timer, then turn on the interrupts
+-    switch (timerNum) {
+-    case 1:
+-        timer1DutyCycle = dutyCycle;
+-        startTimer(1, ocr, prescalarBits);
+-        break;
+-    case 3:
+-        timer3DutyCycle = dutyCycle;
+-        timer3Frequency = frequency;
+-        startTimer(3, ocr, prescalarBits);
+-        break;
+-    }
++static void setupTimer(uint8_t timerNum,uint16_t frequency,uint8_t dutyCycle){
++ frequency=(uint16_t)(frequency*dutyCycle);if(!frequency){audioFault=2;return;}uint32_t ocr=F_CPU/frequency-1;uint32_t prescale=1;if(ocr>65535){ocr=F_CPU/64/frequency-1;prescale=64;}
++ OwnerTimer&t=timers[timerNum==3?0:1];t.period=(ocr+1)*prescale;t.remaining=t.period;t.active=true;
++ if(timerNum==1)timer1DutyCycle=dutyCycle;else{timer3DutyCycle=dutyCycle;timer3Frequency=frequency;}
+ }
+ 
+ /*---------------------------------------------------------------------------*/
+ /*                        Interrupt service routines                         */
+ /*---------------------------------------------------------------------------*/
+ 
+-ISR(TIMER1_COMPA_vect) // TIMER 1
++static void owner_timer1_interrupt() // TIMER 1
+ {
+     if (isTonePlaying) {
+         if (timer1ToggleCount > 0) {
+@@ -388,7 +294,7 @@
+     }
+ }
+ 
+-ISR(TIMER3_COMPA_vect) // TIMER 3
++static void owner_timer3_interrupt() // TIMER 3
+ {
+     // Timer 3 is the one assigned first, so we keep it running always
+     // and use it to time score waits, whether or not it is playing a note.
+@@ -399,3 +305,13 @@
+         (isScorePlaying) ? stepScore() : stopNote(0);
+     }
+ }
++
++void obono_audio_register(uint8_t id,const uint8_t*p,size_t n){if(id>=32){audioFault=3;return;}songs[id]={p,n};}
++void obono_audio_advance(uint32_t now){while(audioClock!=now){++audioClock;uint32_t cycles=16000;for(unsigned guard=0;cycles&&guard<1024;guard++){uint32_t dt=cycles;for(auto&t:timers)if(t.active&&t.remaining<dt)dt=t.remaining;if(!dt){audioFault=4;break;}for(auto&t:timers)if(t.active)t.remaining-=dt;cycles-=dt;for(uint8_t i=0;i<2;i++)if(timers[i].active&&!timers[i].remaining){timers[i].remaining=timers[i].period;++audioInterrupts;if(i==0)owner_timer3_interrupt();else owner_timer1_interrupt();}}}}
++void obono_audio_reset(){numChans=audioPriority=timer1DutyCycle=timer3DutyCycle=0;timer1ToggleCount=timer3ToggleCount=timer3Frequency=0;isAllMuted=isMuteScore=isScorePlaying=isWaitTimerPlaying=isTonePlaying=false;outputEnabled=nullptr;scoreStart=scoreCursor=nullptr;scorePitchDefault=scorePitch=0;scoreRepeat=0;memset(timers,0,sizeof(timers));memset(songs,0,sizeof(songs));audioFault=0;audioClock=millis();audioInterrupts=audioStarts=audioStops=0;}
++static uint8_t owner_song_id(const byte*p){if(!p)return 255;for(uint8_t i=0;i<32;i++)if(songs[i].data==p)return i;uintptr_t a=(uintptr_t)p;for(uint8_t i=0;i<32;i++)if(songs[i].data&&a>(uintptr_t)songs[i].data&&a<=(uintptr_t)songs[i].data+songs[i].size)return i;return 254;}
++// Cursor and MARK pointers belong to the same original playScore array.
++// Prefer that array even when its one-past pointer equals the next score start.
++static uint8_t owner_cursor_song_id(const byte*p,uint8_t id){if(!p)return 255;if(id<32){uintptr_t a=(uintptr_t)p,b=(uintptr_t)songs[id].data;if(a>=b&&a<=b+songs[id].size)return id;}return 254;}
++static uint16_t owner_song_offset(const byte*p,uint8_t id){return id<32?(uint16_t)((uintptr_t)p-(uintptr_t)songs[id].data):0;}
++void obono_audio_pack(ObonoWriter&w){w.u8(numChans);w.u8(audioPriority);w.u8(timer1DutyCycle);w.u8(timer3DutyCycle);w.u32(timer1ToggleCount);w.u32(timer3ToggleCount);w.u16(timer3Frequency);w.u8(isAllMuted);w.u8(isMuteScore);w.u8(isScorePlaying);w.u8(isWaitTimerPlaying);w.u8(isTonePlaying);w.u8(outputEnabled?1:0);uint8_t a=owner_song_id((const byte*)scoreStart),b=owner_cursor_song_id((const byte*)scoreCursor,a);w.u8(a);w.u16(owner_song_offset((const byte*)scoreStart,a));w.u8(b);w.u16(owner_song_offset((const byte*)scoreCursor,b));w.u8(scorePitchDefault);w.u8(scorePitch);w.u8(scoreRepeat);for(auto&t:timers){w.u32(t.period);w.u32(t.remaining);w.u8(t.active);}w.u8(audioFault);w.u32(audioClock);w.u32(audioInterrupts);w.u32(audioStarts);w.u32(audioStops);}
+--- vendor/original/ardubullets.ino
++++ vendor/platform/ardubullets.ino
+@@ -2,9 +2,9 @@
+ 
+ /*  Defines  */
+ 
+-#define callInitFunc(idx)   ((void (*)(void)) pgm_read_word((uint16_t) &moduleTable[idx]))()
+-#define callUpdateFunc(idx) ((MODE_T (*)(void)) pgm_read_word((uint16_t) &moduleTable[idx] + 2))()
+-#define callDrawFunc(idx)   ((void (*)(void)) pgm_read_word((uint16_t) &moduleTable[idx] + 4))()
++#define callInitFunc(idx) moduleTable[idx].initFunc()
++#define callUpdateFunc(idx) moduleTable[idx].updateFunc()
++#define callDrawFunc(idx) moduleTable[idx].drawFunc()
+ 
+ /*  Typedefs  */
+ 
+--- vendor/original/common.cpp
++++ vendor/platform/common.cpp
+@@ -29,15 +29,15 @@
+ 
+ static uint16_t calcCheckSum();
+ 
+-static void     eepSeek(int addr);
+-static uint8_t  eepRead8(void);
+-static uint16_t eepRead16(void);
+-static uint32_t eepRead32(void);
+-static void     eepReadBlock(void *p, size_t n);
+-static void     eepWrite8(uint8_t val);
+-static void     eepWrite16(uint16_t val);
+-static void     eepWrite32(uint32_t val);
+-static void     eepWriteBlock(const void *p, size_t n);
++void     eepSeek(int addr);
++uint8_t  eepRead8(void);
++uint16_t eepRead16(void);
++uint32_t eepRead32(void);
++void     eepReadBlock(void *p, size_t n);
++void     eepWrite8(uint8_t val);
++void     eepWrite16(uint16_t val);
++void     eepWrite32(uint32_t val);
++void     eepWriteBlock(const void *p, size_t n);
+ 
+ /*  Local Variables  */
+ 
+@@ -97,9 +97,10 @@
+ static uint16_t calcCheckSum()
+ {
+     uint16_t checkSum = (EEPROM_SIGNATURE & 0xFFFF) + (EEPROM_SIGNATURE >> 16) * 3;
+-    uint16_t *p = (uint16_t *) &record;
++    const uint8_t *p = (const uint8_t *) &record;
+     for (int i = 0; i < sizeof(record) / 2; i++) {
+-        checkSum += *p++ * (i * 2 + 5);
++        uint16_t value=(uint16_t)p[0]|((uint16_t)p[1]<<8);p+=2;
++        checkSum += value * (i * 2 + 5);
+     }
+     return checkSum;
+ }
+@@ -206,13 +207,13 @@
+ uint8_t eepRead8(void)
+ {
+     eeprom_busy_wait();
+-    return eeprom_read_byte((const uint8_t *) eepAddr++);
++    return eeprom_read_byte((const uint8_t *)(uintptr_t)eepAddr++);
+ }
+ 
+ uint16_t eepRead16(void)
+ {
+     eeprom_busy_wait();
+-    uint16_t ret = eeprom_read_word((const uint16_t *)eepAddr);
++    uint16_t ret = eeprom_read_word((const uint16_t *)(uintptr_t)eepAddr);
+     eepAddr += 2;
+     return ret;
+ }
+@@ -220,7 +221,7 @@
+ uint32_t eepRead32(void)
+ {
+     eeprom_busy_wait();
+-    uint32_t ret = eeprom_read_dword((const uint32_t *) eepAddr);
++    uint32_t ret = eeprom_read_dword((const uint32_t *)(uintptr_t)eepAddr);
+     eepAddr += 4;
+     return ret;
+ }
+@@ -228,34 +229,37 @@
+ void eepReadBlock(void *p, size_t n)
+ {
+     eeprom_busy_wait();
+-    eeprom_read_block(p, (const void *) eepAddr, n);
++    eeprom_read_block(p, (const void *)(uintptr_t)eepAddr, n);
+     eepAddr += n;
+ }
+ 
+ void eepWrite8(uint8_t val)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_byte((uint8_t *) eepAddr, val);
++    eeprom_write_byte((uint8_t *)(uintptr_t)eepAddr, val);
+     eepAddr++;
+ }
+ 
+ void eepWrite16(uint16_t val)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_word((uint16_t *)eepAddr, val);
++    eeprom_write_word((uint16_t *)(uintptr_t)eepAddr, val);
+     eepAddr += 2;
+ }
+ 
+ void eepWrite32(uint32_t val)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_dword((uint32_t *)eepAddr, val);
++    eeprom_write_dword((uint32_t *)(uintptr_t)eepAddr, val);
+     eepAddr += 4;
+ }
+ 
+ void eepWriteBlock(const void *p, size_t n)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_block(p, (void *) eepAddr, n);
++    eeprom_write_block(p, (void *)(uintptr_t)eepAddr, n);
+     eepAddr += n;
+ }
++
++void obono_reset_common(){memset(&record,0,sizeof(record));counter=0;padX=padY=padRepeatCount=0;isInvalid=isRecordDirty=false;recordState=RECORD_NOT_READ;eepAddr=0;}
++void obono_pack_common(ObonoWriter&w){w.u32(record.gameSeed|(record.gameRank<<24)|(record.isCodeManual<<28)|(record.isBlinkLED<<29)|(record.isDrawEdge<<30)|(record.isCleared<<31));w.u32(record.playFrames);w.u16(record.playCount);w.u8(counter);w.u8(padX);w.u8(padY);w.u8(padRepeatCount);w.u8(isInvalid);w.u8(isRecordDirty);w.u8(recordState);w.u16(eepAddr);}
+--- vendor/original/common.h
++++ vendor/platform/common.h
+@@ -27,7 +27,7 @@
+ 
+ /*  Typedefs  */
+ 
+-typedef struct {
++typedef struct __attribute__((packed)) {
+     uint32_t    gameSeed:24;
+     uint32_t    gameRank:4;
+     uint32_t    isCodeManual:1;
+@@ -36,7 +36,8 @@
+     uint32_t    isCleared:1;
+     uint32_t    playFrames;
+     uint16_t    playCount;
+-} RECORD_T; // sizeof(RECORD_T) is 10 bytes
++} RECORD_T;
++static_assert(sizeof(RECORD_T)==10,"original AVR record width"); // sizeof(RECORD_T) is 10 bytes
+ 
+ /*  Global Functions (Common)  */
+ 
+--- vendor/original/game.cpp
++++ vendor/platform/game.cpp
+@@ -137,7 +137,7 @@
+ /*  Local Functions (macros)  */
+ 
+ #define circulate(n, v, m)  (((n) + (v) + (m)) % (m))
+-#define callHandlerFunc(n)  ((void (*)(void)) pgm_read_ptr(handlerFuncTable + n))()
++#define callHandlerFunc(n) handlerFuncTable[n]()
+ 
+ /*  Local Variables  */
+ 
+@@ -153,6 +153,7 @@
+ static GROUP_T  groups[GROUP_MAX];
+ static ENEMY_T  enemies[ENEMY_MAX];
+ static EXPLO_T  explo;
++static SHOT_T*shotCursor=shots;static BULLET_T*bulletCursor=bullets;
+ static uint16_t gameFrames;
+ static uint8_t  gameRank, bulletsNum;
+ static uint8_t  playerX, playerY, playerFire, playerSlow;
+@@ -381,7 +382,7 @@
+ 
+ static void newShot(uint8_t g)
+ {
+-    static SHOT_T *pS = shots;
++    SHOT_T *&pS=shotCursor;
+     uint8_t x = playerX / PLAYER_SCALE + SHOT_SPD, y = playerY / PLAYER_SCALE;
+     pS->x = x;
+     pS->y = y - g;
+@@ -465,14 +466,14 @@
+         newGroup(gameFrames / GROUP_INT);
+     }
+ 
+-    GROUP_T *pG = groups - 1;
++    GROUP_T *pG = groups;
+     ENEMY_T *pE = enemies;
+     uint8_t enemyLives = 0;
+     int16_t enemyFrames;
+     bool isDamaged = false;
+     for (int i = 0; i < ENEMY_MAX; i++, pE++) {
+         if (i % ENEMY_UNITY == 0) {
+-            pG++;
++            pG = &groups[i / ENEMY_UNITY];
+             enemyFrames = (gameFrames - (pG - groups) * GROUP_INT) % (GROUP_INT * GROUP_MAX);
+         } else {
+             enemyFrames -= (pG->entryInt + 1) * 4;
+@@ -569,7 +570,7 @@
+     if (bulletsNum == BULLET_MAX) return;
+     //if (!arduboy.collide(Point(x, y), screenRect)) return;
+ 
+-    static BULLET_T *pB = bullets;
++    BULLET_T *&pB=bulletCursor;
+     while (pB->spd) {
+         if (++pB >= &bullets[BULLET_MAX]) pB = bullets;
+     }
+@@ -699,12 +700,12 @@
+ 
+ static void drawEnemies(void)
+ {
+-    GROUP_T *pG = groups - 1;
++    GROUP_T *pG = groups;
+     ENEMY_T *pE = enemies;
+     int16_t enemyFrames;
+     for (int i = 0; i < ENEMY_MAX; i++, pE++) {
+         if (i % ENEMY_UNITY == 0) {
+-            pG++;
++            pG = &groups[i / ENEMY_UNITY];
+             enemyFrames = (gameFrames - (pG - groups) * GROUP_INT) % (GROUP_INT * GROUP_MAX);
+         } else {
+             enemyFrames -= (pG->entryInt + 1) * 4;
+@@ -732,14 +733,29 @@
+     }
+ }
+ 
++/* Original v0.11 AVR flash bytes read through drawBackground's word address.
++ * MIT, OBONO; pinned HEX proof: logs/games/ardubullets/avr-star-basis/proposal/proposal.json.
++ * Address 0x1593, 96 bytes; read offsets 0..94. Fixed data has no runtime state.
++ */
++static const uint8_t avrBackgroundTexture[96] PROGMEM = {
++    0xc0, 0x8b, 0x5f, 0x80, 0x83, 0x32, 0x96, 0x81, 0xe0, 0xe2, 0x37, 0xf8,
++    0x07, 0xb1, 0xf7, 0x08, 0x95, 0x90, 0x91, 0xe3, 0x07, 0x96, 0xfb, 0x33,
++    0x27, 0x30, 0xf9, 0x95, 0xfb, 0x88, 0x27, 0x80, 0xf9, 0x38, 0x1b, 0x94,
++    0xfb, 0x55, 0x27, 0x50, 0xf9, 0x89, 0x2f, 0x88, 0x1f, 0x88, 0x27, 0x88,
++    0x1f, 0x58, 0x1b, 0x80, 0x91, 0x4b, 0x01, 0x42, 0xe0, 0x88, 0x30, 0x31,
++    0xf0, 0x33, 0x23, 0x19, 0xf0, 0x43, 0xe0, 0x51, 0x11, 0x01, 0xc0, 0x44,
++    0xe0, 0x20, 0x91, 0x06, 0x03, 0x34, 0x9f, 0x20, 0x0d, 0x11, 0x24, 0x24,
++    0x3f, 0xd8, 0xf0, 0x23, 0xef, 0x20, 0x93, 0x06, 0x03, 0x30, 0x91, 0x05,
++};
++
+ static void drawBackground(void)
+ {
+     /*  Starts  */
+     uint8_t g = counter & 3;
+     uint8_t d = g * 71;
+-    uint8_t *p = (uint8_t *)drawBackground + g * 3;
+     int16_t s = (state == STATE_START) ? counter - START_DURATION : gameFrames;
+-    for (int16_t y = g * 2; y < HEIGHT; y += 8, p += 12) {
++    for (int16_t y = g * 2; y < HEIGHT; y += 8) {
++        const uint8_t *p = avrBackgroundTexture + g * 3 + (y / 8) * 12;
+         d += pgm_read_byte(p) + 29;
+         int16_t x = (d - (s * ((pgm_read_byte(p + 1) & 15) + 8) >> 6)) & (WIDTH - 1);
+         arduboy.drawPixel(x, y);
+@@ -812,3 +828,8 @@
+     arduboy.print('-');
+     arduboy.print(gameRank);
+ }
++
++void obono_reset_game(){state=STATE_START;memset(shots,0,sizeof(shots));memset(bullets,0,sizeof(bullets));memset(groups,0,sizeof(groups));memset(enemies,0,sizeof(enemies));memset(&explo,0,sizeof(explo));gameFrames=0;gameRank=bulletsNum=playerX=playerY=playerFire=playerSlow=ledLevel=ledRed=ledGreen=ledBlue=0;isDefeated=isMenu=false;shotCursor=shots;bulletCursor=bullets;}
++void obono_pack_game(ObonoWriter&w){w.u8(state);w.u16(gameFrames);w.u8(gameRank);w.u8(bulletsNum);w.u8(playerX);w.u8(playerY);w.u8(playerFire);w.u8(playerSlow);w.u8(ledLevel);w.u8(ledRed);w.u8(ledGreen);w.u8(ledBlue);w.u8(isDefeated);w.u8(isMenu);w.u8(shotCursor-shots);w.u8(bulletCursor-bullets);for(auto&s:shots){w.u8(s.x);w.u8(s.y);}for(auto&b:bullets){w.u16(b.spd|(b.rad<<5));w.u8(b.bx);w.u8(b.by);w.u8(b.deg);}for(auto&g:groups){w.u8(g.type);w.u8(g.xRad);w.u8(g.yRad);w.u8(g.yFlip);w.u8(g.xCoef);w.u8(g.yCoef);w.u8(g.fireGap);w.u8(g.fireTimes);w.u8(g.fireNum);w.u8(g.fireCycle);w.u8(g.fireExSpd);w.u8(g.entryInt);w.u8(g.fireInt);}for(auto&e:enemies){w.u8(e.bx);w.u8(e.by);w.u8(e.life);w.u8(e.framesGap);w.u8(e.fireDeg);}w.u8(explo.x);w.u8(explo.y);w.u8(explo.a);}
++uint8_t obono_game_func_id(void(*p)()){if(!p)return 0;void(*const f[])()={onContinue,onRetry,onConfirmQuit,onQuit};for(uint8_t i=0;i<4;i++)if(p==f[i])return i+32;return 255;}
++void obono_register_game(){obono_audio_register(1,soundStart,sizeof(soundStart));obono_audio_register(2,soundOver,sizeof(soundOver));obono_audio_register(3,soundClear,sizeof(soundClear));obono_audio_register(4,soundEntry,sizeof(soundEntry));obono_audio_register(5,soundDefeat,sizeof(soundDefeat));}
+--- vendor/original/logo.cpp
++++ vendor/platform/logo.cpp
+@@ -57,7 +57,8 @@
+ 
+ void drawLogo(void)
+ {
+-    bool isSignalOn = (SIGNAL_PTN >> (counter - FPS / 4) / (FPS / 20)) & 1;
++    int signalShift=(counter-FPS/4)/(FPS/20);
++    bool isSignalOn=signalShift>=0&&signalShift<32&&((SIGNAL_PTN>>signalShift)&1U);
+     arduboy.setRGBled(0, 0, isSignalOn * 127);
+     arduboy.clear();
+     int shake = (COUNTER_MAX - counter) / (44 * FPS / 60);
+--- vendor/original/menu.cpp
++++ vendor/platform/menu.cpp
+@@ -146,3 +146,7 @@
+     memcpy_P(p + WIDTH * 8 - IMG_SOUND_W - IMG_SOUNDM_W, imgSound, IMG_SOUND_W);
+     memcpy_P(p + WIDTH * 8 - IMG_SOUNDM_W, imgSoundOffOn[arduboy.audio.enabled()], IMG_SOUNDM_W);
+ }
++
++void obono_reset_menu(){menuX=menuY=menuW=menuH=menuItemCount=menuItemPos=0;isFramed=isControlSound=isInvalidMenu=false;memset(menuItemAry,0,sizeof(menuItemAry));}
++static uint8_t label_id(const __FlashStringHelper*p){if(!p)return 0;const char*labels[]={"CONTINUE","RETRY","BACK TO TITLE","OK","CANCEL","NEW BATTLE","SETTINGS","CREDIT","DIFFICULTY","PATTERN","LED BLINK","DETECT EDGE","EXIT"};for(uint8_t i=0;i<13;i++)if(!strcmp((const char*)p,labels[i]))return i+1;return 255;}
++void obono_pack_menu(ObonoWriter&w){w.u8(menuX);w.u8(menuY);w.u8(menuW);w.u8(menuH);w.u8(isFramed);w.u8(isControlSound);w.u8(menuItemCount);w.u8(menuItemPos);w.u8(isInvalidMenu);for(auto&i:menuItemAry){uint8_t id=obono_title_func_id(i.func);if(id==255)id=obono_game_func_id(i.func);w.u8(id);w.u8(label_id(i.label));}}
+--- vendor/original/title.cpp
++++ vendor/platform/title.cpp
+@@ -42,13 +42,13 @@
+ static void drawCredit(void);
+ static void drawCodeEntry(void);
+ static void drawTitleLogo(void);
+-static void drawText(const char *p, int lines);
++static void drawText(const char *p, int16_t lines);
+ 
+ /*  Local Functions (macros)  */
+ 
+ #define circulate(n, v, m)  (((n) + (v) + (m)) % (m))
+-#define callHandlerFunc(n)  ((void (*)(void)) pgm_read_ptr(handlerFuncTable + n))()
+-#define callDrawerFunc(n)   ((void (*)(void)) pgm_read_ptr(drawerFuncTable + n))()
++#define callHandlerFunc(n) handlerFuncTable[n]()
++#define callDrawerFunc(n) drawerFuncTable[n]()
+ 
+ /*  Local Variables  */
+ 
+@@ -415,3 +415,7 @@
+         y += (len == 0) ? 2 : 6;
+     }
+ }
++
++void obono_reset_title(){state=STATE_INIT;gameSeedTmp=0;gameSeedX=0;isSettingChenged=false;}
++void obono_pack_title(ObonoWriter&w){w.u8(state);w.u32(gameSeedTmp);w.u8(gameSeedX);w.u8(isSettingChenged);}
++uint8_t obono_title_func_id(void(*p)()){if(!p)return 0;void(*const f[])()={onTop,onStart,onNewBattle,onSettings,onCredit,onMenuDifficulty,onMenuToggleItem};for(uint8_t i=0;i<7;i++)if(p==f[i])return i+1;return 255;}

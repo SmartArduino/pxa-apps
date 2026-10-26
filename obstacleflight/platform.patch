@@ -1,0 +1,42 @@
+--- vendor/original/obstacleflight/ObstacleFlight.ino
++++ vendor/platform/ObstacleFlight.ino
+@@ -187,7 +187,7 @@
+   for (int i = 0; i < 5; i++) {
+     arduboy.drawFastVLine(64 - leftDepth[i], 0, 64, WHITE);
+     arduboy.drawFastVLine(64 + leftDepth[i], 0, 64, WHITE);
+-    leftDepth[i] += leftDepth[i]/(20 - score/5);
++    leftDepth[i] += leftDepth[i]/max(1, (20 - score/5));
+     if (leftDepth[i] > 64) {
+       leftDepth[i] = 1;
+     }
+@@ -247,7 +247,7 @@
+       arduboy.fillRect(64 - obstacleDepth, 32, obstacleDepth, obstacleDepth / 2, WHITE);
+     }
+     //arduboy.fillRect(64 - obstacleDepth, 32 - obstacleDepth/2, obstacleDepth * 2, obstacleDepth, WHITE);
+-    obstacleDepth += obstacleDepth/(20 - score/5);
++    obstacleDepth += obstacleDepth/max(1, (20 - score/5));
+   }
+ }
+ 
+--- vendor/original/tinyfont/src/Tinyfont.h
++++ vendor/platform/tinyfont/Tinyfont.h
+@@ -18,6 +18,7 @@
+  * \t makes a 9 px long jump in print().
+  */
+ class Tinyfont : public Print {
++  friend struct TinyfontPxaState; // Read-only explicit state observer.
+   public:
+     Tinyfont(uint8_t *screenBuffer, int16_t width, int16_t height);   //!< Needs to be initialized with a screenBuffer where the height is a multiple of 8.
+     virtual size_t write(uint8_t); // used by the Arduino Print class
+--- vendor/original/tinyfont/src/TinyfontSprite.c
++++ vendor/platform/tinyfont/TinyfontSprite.c
+@@ -2,8 +2,7 @@
+ #ifndef TINYFONT_SPRITE_H
+ #define TINYFONT_SPRITE_H
+ 
+-#include <avr/io.h>
+-#include <avr/pgmspace.h>
++#include <Arduino.h> // Portable PROGMEM reader; glyph bytes unchanged.
+ 
+ const unsigned char PROGMEM TINYFONT_SPRITE[] =
+ {

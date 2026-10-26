@@ -1,0 +1,32 @@
+{
+  "format": "map-owned-child-static-serial-1",
+  "wasm_sha256": "d3ef97e8b19893a83d6e965df1bc73d0928eb036ccd0dd85336013a1cd4169ab",
+  "container_sha256": "4349d1adf7be491dab05475992bb73ecb6b8f9740f385026b35ca6b9eeb66364",
+  "serial_offset": 772920,
+  "serial_capacity": 65536,
+  "metadata_offset": 838456,
+  "serial_used_offset": 838456,
+  "serial_total_offset": 838460,
+  "serial_hash_offset": 838464,
+  "data_end": 1171964,
+  "heap_base": 1171968,
+  "memory_min_pages": 18,
+  "memory_max_pages": 512,
+  "rodata_anchors": [
+    524288,
+    525312
+  ],
+  "anchor_bytes": 64,
+  "guard_reservation_bytes": 8589934592,
+  "tool": "official WASI SDK 34.0 llvm-objdump / LLVM 23.1.0",
+  "commands": [
+    "llvm-objdump -d --disassemble-symbols=serial_write main.wasm",
+    "llvm-objdump -d --disassemble-symbols=trace main.wasm"
+  ],
+  "disassembly_files": {
+    "qa-serial-write-disassembly.txt": "2e106a1abbd48942a7b2caea2204bf690d2ec6a0b73fb497c020eaa0b0b8904d",
+    "qa-trace-disassembly.txt": "c2786700f860fba3e4ef94665f4049f7fa9e003b577a48ff6bf5b4a7148f0d28"
+  },
+  "source_frontend_sha256": "3a6c2db486ff4b41a35879ebda5b579a28eed59db52dea304e2247c3884a6298",
+  "access": "read only own child identified WAMR linear memory; two rodata anchors, then exact static serial+metadata; no Host heap, environment, stack, writes or security changes"
+}

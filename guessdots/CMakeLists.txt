@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.20)
+project(pxa_guessdots LANGUAGES C CXX)
+set(ARDU_GAME guessdots)
+set(ARDU_OWNER_EXTRA_SOURCES "${CMAKE_CURRENT_LIST_DIR}/frontend.cpp")
+include(${CMAKE_CURRENT_LIST_DIR}/../common/retro-games/arduboy-batch-20261010/game.cmake)
+set_source_files_properties("${CMAKE_CURRENT_LIST_DIR}/../common/retro-games/arduboy-batch-20261010/frontend.cpp" PROPERTIES HEADER_FILE_ONLY TRUE)

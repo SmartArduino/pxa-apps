@@ -50,8 +50,10 @@ static void test_save_baseline(const char *path) {
  strcpy(save_path,"test.sav");strcpy(save_tmp,"test.sav.tmp");
  size_t size=emu_core_save_size();
  if(size) {
-  remember_save_baseline();assert(save_data);uint32_t baseline=saved_crc;
+  remember_save_baseline();assert(save_baseline_valid && save_data);uint32_t baseline=saved_crc;
   unsigned before=control_calls;start_save();assert(!save_pending && control_calls==before);
+  save_baseline_valid=0;start_save();assert(save_pending);save_pending=0;
+  remember_save_baseline();before=control_calls;
   uint8_t *changed=malloc(size);assert(changed && emu_core_save_export(changed,size));
   changed[size/2]^=0x5a;assert(emu_core_save_import(changed,size));free(changed);
   start_save();assert(save_pending && control_calls>before && saved_crc==baseline && pending_save_crc!=baseline);

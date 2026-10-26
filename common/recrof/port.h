@@ -7,7 +7,6 @@
 /* Private comparison builds only; changed between completed frames. */
 extern unsigned port_render_probe_mode;
 #define PORT_RENDER_PROBE_NATIVE_BLIT 1u
-#define PORT_RENDER_PROBE_FRAME_SPANS 2u
 #endif
 #ifndef PORT_COOPERATE_BUDGET_US
 #define PORT_COOPERATE_BUDGET_US 8000u
@@ -38,6 +37,9 @@ extern "C" {
 void port_game_main(void);
 void port_game_key(int key, int down);
 void port_game_motion(int dx, int dy);
+#ifdef PORT_SDL_CONTROLLER
+void port_game_pointer(int x, int y, unsigned phase, unsigned buttons, unsigned id);
+#endif
 void port_game_reset_motion(void);
 void port_sample_controller(uint32_t elapsed_us, int *dx, int *dy);
 int port_game_in_menu(void);
@@ -58,6 +60,8 @@ void port_palette_rgb565(const uint16_t *rgb, int swapped);
  * borrowing before port_frame overwrites it; no pointer survives present. */
 void *port_frame_scratch(size_t *bytes);
 void port_frame(const uint8_t *pixels, int width, int height, int pitch);
+/* Native colour frames retain RGB565 precision. Pitch is in bytes. */
+void port_frame_rgb565(const uint16_t *pixels, int width, int height, int pitch);
 void port_frame_cursor(const uint8_t *pixels, int width, int height, int pitch,
                         const port_cursor_t *cursor);
 void port_pcm(const int16_t *samples, unsigned frames, unsigned rate,
@@ -67,6 +71,7 @@ uint64_t port_audio_session(void);
 void port_error(const char *message);
 /* RTS startup feedback ends when the engine presents its next real frame. */
 void port_loading_stage(const char *stage);
+void port_loading_restart(const char *stage);
 /* RTS absent-file results remain bounded by startup or the next mutation. */
 void port_filesystem_loading_cache(int active);
 void port_log(const char *fmt, ...);
@@ -78,4 +83,8 @@ int port_mouse_y(void);
 int port_key_down(int key);
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef PORT_SDL_CONTROLLER
+int port_game_finished(void);
 #endif

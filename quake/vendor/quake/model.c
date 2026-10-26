@@ -774,11 +774,7 @@ void Mod_LoadTextures(lump_t *l, int *numTextures)
         if (!Q_strncmp(mt->name, "sky", 3))
         {
             tx->isSky = 1;
-#if MODEL_HAS_NAME_POINTER
-            R_InitFlashSky(mt, loadmodel->name);
-#else
-            R_InitFlashSky(mt, getStringFromIndex(loadmodel->nameIdx));
-#endif
+            R_InitFlashSky(mt, tx->extmemdata[0]);
         }
         loadmodel->brushModelData->textures[i] = tx;
     }

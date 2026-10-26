@@ -1,0 +1,162 @@
+{
+  "game": "evasion",
+  "patch": {
+    "path": "platform.patch",
+    "bytes": 41765,
+    "sha256": "035f20c2de5ebb954b4dfa6a55f7c4b98e39dee41fefacf30d9be71415238273"
+  },
+  "files": [
+    {
+      "old_header": "vendor/original/common.cpp",
+      "new_header": "vendor/platform/common.cpp",
+      "original": {
+        "path": "vendor/original/common.cpp",
+        "bytes": 10911,
+        "sha256": "05031b3ac9a5618dadc5a8f98974b23208410179eeb703f001382fbfd21752c2"
+      },
+      "modified": {
+        "path": "vendor/platform/common.cpp",
+        "bytes": 11457,
+        "sha256": "5be2714e08e0971505747093f9dc7808e3ca5a1400009f9179812cea60f76cdf"
+      }
+    },
+    {
+      "old_header": "vendor/original/common.h",
+      "new_header": "vendor/platform/common.h",
+      "original": {
+        "path": "vendor/original/common.h",
+        "bytes": 3046,
+        "sha256": "43845744a12394ccc712e1f1dcc495e272770baec8064e67197e0c7cbcd489e0"
+      },
+      "modified": {
+        "path": "vendor/platform/common.h",
+        "bytes": 3065,
+        "sha256": "521a55b5ce648237ca56e9c22293de3720b0154d5730a59861bacb25a4d9945b"
+      }
+    },
+    {
+      "old_header": "vendor/original/evasion.ino",
+      "new_header": "vendor/platform/evasion.ino",
+      "original": {
+        "path": "vendor/original/evasion.ino",
+        "bytes": 2099,
+        "sha256": "74bad838f830aac5171d34fc886b0a16b4d647167bc5dd94e7bca12d1363bcae"
+      },
+      "modified": {
+        "path": "vendor/platform/evasion.ino",
+        "bytes": 1946,
+        "sha256": "99d1a391128b0a39eb60f943fb0206af799aa5377b06b0ee66f67f7b138d1112"
+      }
+    },
+    {
+      "old_header": "vendor/original/game.cpp",
+      "new_header": "vendor/platform/game.cpp",
+      "original": {
+        "path": "vendor/original/game.cpp",
+        "bytes": 13647,
+        "sha256": "a4b3129dec1029569c6e4c80cf5e2bba8feeccc4c3088bff3f9bd2656f5a3ada"
+      },
+      "modified": {
+        "path": "vendor/platform/game.cpp",
+        "bytes": 14496,
+        "sha256": "c1613f5a8ff8265c926266b3965661bcd02df73840b2246d7f4291e208794f57"
+      }
+    },
+    {
+      "old_header": "vendor/original/logo.cpp",
+      "new_header": "vendor/platform/logo.cpp",
+      "original": {
+        "path": "vendor/original/logo.cpp",
+        "bytes": 3333,
+        "sha256": "b60551fd863d05af8b371bbfa7c2a02472654889ee49ceca39400b1baa64c513"
+      },
+      "modified": {
+        "path": "vendor/platform/logo.cpp",
+        "bytes": 3339,
+        "sha256": "8425b6eea955063055687330ad925f5ed68f83444f9bb7fb0d734eeedcbe24c6"
+      }
+    },
+    {
+      "old_header": "vendor/original/menu.cpp",
+      "new_header": "vendor/platform/menu.cpp",
+      "original": {
+        "path": "vendor/original/menu.cpp",
+        "bytes": 3771,
+        "sha256": "02f80de8633002dff984f0bc83b047d6508688d64030a331e4b956c732e80215"
+      },
+      "modified": {
+        "path": "vendor/platform/menu.cpp",
+        "bytes": 4224,
+        "sha256": "3af9f8199a31e7caa8cb156e4ece2969892ea486061a541ed5a9605897a06b9a"
+      }
+    },
+    {
+      "old_header": "vendor/original/MyArduboy2.cpp",
+      "new_header": "vendor/platform/MyArduboy2.cpp",
+      "original": {
+        "path": "vendor/original/MyArduboy2.cpp",
+        "bytes": 6522,
+        "sha256": "528e7719a823448de230ab0c23d7519b0b8083804fdbd6787a8f895883e28da7"
+      },
+      "modified": {
+        "path": "vendor/platform/MyArduboy2.cpp",
+        "bytes": 6691,
+        "sha256": "493475900cead537c97107b1be904fef2ef2b9ec67ff3843e53252360231eb67"
+      }
+    },
+    {
+      "old_header": "vendor/original/MyArduboy2.h",
+      "new_header": "vendor/platform/MyArduboy2.h",
+      "original": {
+        "path": "vendor/original/MyArduboy2.h",
+        "bytes": 1658,
+        "sha256": "47fa3f5762694b932056d3758cfee7d58f308a0cb6ac36a8596756a5af7fa207"
+      },
+      "modified": {
+        "path": "vendor/platform/MyArduboy2.h",
+        "bytes": 1750,
+        "sha256": "936f3bfe679b3e205de2cce05c9bde9c48065d892c7bfcd1ca311389db0ffbb6"
+      }
+    },
+    {
+      "old_header": "vendor/original/MyArduboyPlaytune.cpp",
+      "new_header": "vendor/platform/MyArduboyPlaytune.cpp",
+      "original": {
+        "path": "vendor/original/MyArduboyPlaytune.cpp",
+        "bytes": 13883,
+        "sha256": "2deb67b1dbc3bcb09a26b907c423f6561a498d10ef941df92909b27e8c724653"
+      },
+      "modified": {
+        "path": "vendor/platform/MyArduboyPlaytune.cpp",
+        "bytes": 14726,
+        "sha256": "22a34fabed99264145cc09d45fa2f39e2f6e4f93bb65390fe346c3b42d924a24"
+      }
+    },
+    {
+      "old_header": "vendor/original/title.cpp",
+      "new_header": "vendor/platform/title.cpp",
+      "original": {
+        "path": "vendor/original/title.cpp",
+        "bytes": 15026,
+        "sha256": "31df4032e897bc1472b98d1cc8cf7192b77a7b7233293bce17a5ec226bf08f3d"
+      },
+      "modified": {
+        "path": "vendor/platform/title.cpp",
+        "bytes": 15491,
+        "sha256": "94ecd346477f248d11957b3cf653c64bdd38cf6509b8a49e11cbad8f4ce6ff86"
+      }
+    }
+  ],
+  "unchanged": [
+    {
+      "path": "vendor/platform/data.h",
+      "bytes": 14773,
+      "sha256": "5cb7fe14e00c43f79ffba26d99465a73b1250501e4fac7d215f6dd29d4659bac"
+    },
+    {
+      "path": "vendor/platform/info.json",
+      "bytes": 257,
+      "sha256": "73e28cd48ae62c10621fbf898c04eda853bc416da315cbcf4ceb5703ffe364d4"
+    }
+  ]
+}

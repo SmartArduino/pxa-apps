@@ -41,3 +41,8 @@ before lighting or scratch-array insertion. Vertices retain their exact projecte
 coordinates and surviving faces retain original lighting inputs. Empty dynamic
 light lists skip normal normalization and inverse matrices. Optional render-stage
 profiling is disabled in release builds. Gameplay/enemy/collision code is unchanged.
+
+The optional PXA shaded-palette cache combines the existing lightmap with the
+normal/water RGB565 palettes. It is rebuilt during palette initialization and
+after adapter brightness changes; other palettes retain the original lookup.
+It is disabled by default pending target-device performance qualification.

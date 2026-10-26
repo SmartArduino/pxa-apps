@@ -1,0 +1,117 @@
+{
+  "repository": "https://github.com/yinkou/Arduboy-TinyFont",
+  "fork": false,
+  "commit": "c7ab15955ebcbb7f1a714ed8ad545c141137f83b",
+  "tree_sha": "c7ab15955ebcbb7f1a714ed8ad545c141137f83b",
+  "default_branch": "master",
+  "license_metadata": {
+    "key": "bsd-3-clause",
+    "name": "BSD 3-Clause \"New\" or \"Revised\" License",
+    "spdx_id": "BSD-3-Clause",
+    "url": "https://api.github.com/licenses/bsd-3-clause",
+    "node_id": "MDc6TGljZW5zZTU="
+  },
+  "acquired_at_utc": "2026-10-10T01:56:33.555149+00:00",
+  "files": [
+    {
+      "path": ".gitignore",
+      "bytes": 71,
+      "sha256": "c851f92e1a7d1fd2d397b636e40b00933ac6c2c07eff32868c392b75dac945eb",
+      "git_blob_sha1": "599f404b7394e2e1b8fd928873c256d851e9871e",
+      "source_url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/.gitignore"
+    },
+    {
+      "path": ".travis.yml",
+      "bytes": 1501,
+      "sha256": "5512c5cbaf2e172169bebdd394fbe9e18df2cba27e7793cf32d99dfd6d9266ae",
+      "git_blob_sha1": "2c4ff5c9885cd682b31b389d63a97cf8cee91f55",
+      "source_url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/.travis.yml"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 1510,
+      "sha256": "1658fe417a2890929f2a9e10dbefa4be77670b8cbd2f32f11d43a327aad7ae22",
+      "git_blob_sha1": "97351514174911d76a64ff613ecee8c3b8b7ebe8",
+      "source_url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/LICENSE"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2443,
+      "sha256": "6d008c723fcbfe8cb032ae77ad82e53d19fad20a2870aa9fb233b79937cf4f1f",
+      "git_blob_sha1": "20319eac9f01465c02afe564b81bd617d9784d3c",
+      "source_url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/README.md"
+    },
+    {
+      "path": "bitmaps/4x4font.psd",
+      "bytes": 194420,
+      "sha256": "bbcfc0fa372aafa91186dad8f9e7b6dfdc1594f0e9bd915a41b32e8c57f4fb47",
+      "git_blob_sha1": "bf741a10d729f23de0a18720e787c606f3885c45",
+      "source_url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/bitmaps/4x4font.psd"
+    },
+    {
+      "path": "bitmaps/tinyfont-preview.png",
+      "bytes": 3712,
+      "sha256": "235b48ec4117dac8c7dbb3fe84f6f041a82adae94112b3cf2b101f530739eb2a",
+      "git_blob_sha1": "5acc63f2b5fbd85fc8d517df58839259c06d794a",
+      "source_url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/bitmaps/tinyfont-preview.png"
+    },
+    {
+      "path": "bitmaps/tinyfont_8x8.png",
+      "bytes": 690,
+      "sha256": "e702937d7662a547e547e9b969b0ab54167da818a63886ab1571035f3947bad2",
+      "git_blob_sha1": "a19f93a0806077e340beabcc9fc4b86c411f8b16",
+      "source_url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/bitmaps/tinyfont_8x8.png"
+    },
+    {
+      "path": "examples/TinyfontSample/TinyfontSample.ino",
+      "bytes": 1084,
+      "sha256": "b9d763aa24985bef141fb1dbb291dba601e0756fc5740f44d104417c2f0155c4",
+      "git_blob_sha1": "fa6384997474f9f86842aef43813cbe464b643ef",
+      "source_url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/examples/TinyfontSample/TinyfontSample.ino"
+    },
+    {
+      "path": "keywords.txt",
+      "bytes": 168,
+      "sha256": "d02edefe85b8f213db282c2199e3529800fc3b5a52468dabb105acfe4f5f14ae",
+      "git_blob_sha1": "ae8e94425073bd8dec1639f39d26e71698617b81",
+      "source_url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/keywords.txt"
+    },
+    {
+      "path": "library.json",
+      "bytes": 620,
+      "sha256": "96ca5ae99c36ab53224e52f0070b0d7e19bb9a2d6b2a45533e7bfd36b5c475c0",
+      "git_blob_sha1": "8dec1dc37cad58b55522201d4fb5bbd0a3a9b25d",
+      "source_url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/library.json"
+    },
+    {
+      "path": "library.properties",
+      "bytes": 373,
+      "sha256": "c9196a99de3bcf0da010fcdfefe32af6c73cb1f067b66464ae8f74de644583c0",
+      "git_blob_sha1": "cc38514d9b6a7ea4a94f7b067f87d8747b82f77f",
+      "source_url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/library.properties"
+    },
+    {
+      "path": "src/Tinyfont.cpp",
+      "bytes": 2526,
+      "sha256": "90262dcf58d2b87affa1878886d01835a33cdd082810db80d46cf64ecb8c500f",
+      "git_blob_sha1": "9b1a29f8d69cbae7283189dd71f25eacc9d6b747",
+      "source_url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/src/Tinyfont.cpp"
+    },
+    {
+      "path": "src/Tinyfont.h",
+      "bytes": 3408,
+      "sha256": "7250ffe377dec26d7597ec13e0f5ea9e0bc4d3fcfd8bfc8ec4391692bf627226",
+      "git_blob_sha1": "669cb96b04193041b4f7ec632f6c6dc3d9c44352",
+      "source_url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/src/Tinyfont.h"
+    },
+    {
+      "path": "src/TinyfontSprite.c",
+      "bytes": 13214,
+      "sha256": "f8230a600b3d41402b711709bc4e91d32618b9642586ce5975a4a4847b9d0792",
+      "git_blob_sha1": "57a5bde3ccff2418e3350a8a3de35bb64b394a63",
+      "source_url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/src/TinyfontSprite.c"
+    }
+  ],
+  "omitted": [],
+  "source_execution": false
+}

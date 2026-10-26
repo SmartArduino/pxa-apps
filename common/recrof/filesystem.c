@@ -19,11 +19,11 @@
 #define SLOT_COUNT 64
 #define FD_BASE 100
 #ifdef PORT_LOADING_TRACE
-static unsigned loading_opens,loading_reads,loading_seeks,loading_stats,loading_missing_hits;
+static unsigned loading_opens,loading_reads,loading_seeks,loading_stats,loading_missing_hits,loading_private_skips;
 static char loading_path[96];
 void port_filesystem_loading_stats(void) {
-  port_log("PXA LOAD FS opens=%u reads=%u seeks=%u stats=%u miss_cache=%u last_open=%s",
-    loading_opens,loading_reads,loading_seeks,loading_stats,loading_missing_hits,loading_path);
+  port_log("PXA LOAD FS opens=%u reads=%u seeks=%u stats=%u miss_cache=%u private_skips=%u last_open=%s",
+    loading_opens,loading_reads,loading_seeks,loading_stats,loading_missing_hits,loading_private_skips,loading_path);
 }
 #endif
 /* A single Guest owns its private namespace. RTS filename resolution may
@@ -32,11 +32,17 @@ void port_filesystem_loading_stats(void) {
 #include "missing_paths.h"
 static port_missing_paths_t missing_paths;
 static int loading_missing_cache;
+#ifdef PORT_CNC_MEDIA_HANDLES
+static void finish_media_loading(void);
+#endif
 void port_filesystem_loading_cache(int active) {
   active=!!active;
   if(loading_missing_cache==active)return;
   loading_missing_cache=active;
   memset(&missing_paths,0,sizeof(missing_paths));
+#ifdef PORT_CNC_MEDIA_HANDLES
+  if(!active)finish_media_loading();
+#endif
 }
 static uint64_t namespace_revision;
 uint64_t port_filesystem_revision(void) { return namespace_revision; }
@@ -49,12 +55,28 @@ static struct File {
   int used, eof, error, asset, external;
   uint32_t size;
   long position;
+#ifdef PORT_ASSET_INDEX
+  const char *directory_assets;
+  char *directory_seen;
+  size_t directory_seen_size;
+  int directory_host_done;
+#endif
+#ifdef PORT_ASSET_ARCHIVE
+  uint32_t asset_start, asset_total;
+#endif
   union {
     char asset_path[256];
     struct dirent entry;
     char entry_storage[512];
   };
 } files[SLOT_COUNT];
+#ifdef PORT_ASSET_INDEX
+extern const char *port_asset_directory(const char *path);
+#endif
+#ifdef PORT_ASSET_ARCHIVE
+extern int port_asset_file(const char *path,uint32_t *offset,uint32_t *bytes);
+extern const uint32_t port_asset_archive_size;
+#endif
 /* Two pages amortize small INI/header reads without per-file buffers. Signed
  * assets reuse pages across close/reopen; read-only SD pages belong to one
  * open handle and are invalidated on close. Private reads are uncached. */
@@ -79,25 +101,34 @@ static void invalidate_external_page(uint64_t handle) {
 #ifndef PORT_RTS
 #error "RTS archive reuse requires tracked private namespace mutations"
 #endif
-/* MIX archives are read-only resources. Retain at most two idle Host handles
- * for half a second, preserving cookies and resetting only the Guest cursor.
- * Private writes invalidate the overlay decision before the next reuse. */
+/* Startup repeatedly revisits the same read-only MIX archives, often seconds
+ * apart. Keep that bounded working set until its first real frame; gameplay
+ * retains the short idle lifetime. Private mutations invalidate both modes. */
+#ifndef PORT_CNC_MEDIA_CACHE_SLOTS
+#define PORT_CNC_MEDIA_CACHE_SLOTS 2
+#endif
+_Static_assert(PORT_CNC_MEDIA_CACHE_SLOTS > 0 && PORT_CNC_MEDIA_CACHE_SLOTS <= 16,
+               "invalid idle archive capacity");
 static struct {
   uint64_t handle,features,cookie,revision,expires;
   uint32_t size;
   char path[256];
-} media_handles[2];
+} media_handles[PORT_CNC_MEDIA_CACHE_SLOTS];
 static void expire_media_handles(uint64_t now) {
-  for(unsigned i=0;i<2;++i)if(media_handles[i].handle &&
+  for(unsigned i=0;i<PORT_CNC_MEDIA_CACHE_SLOTS;++i)if(media_handles[i].handle &&
       (media_handles[i].revision!=namespace_revision || media_handles[i].expires<=now)) {
     invalidate_external_page(media_handles[i].handle);
     pxa_close_handle(media_handles[i].handle);media_handles[i].handle=0;
   }
 }
+static void finish_media_loading(void) {
+  for(unsigned i=0;i<PORT_CNC_MEDIA_CACHE_SLOTS;++i)media_handles[i].expires=0;
+  expire_media_handles(port_time_us());
+}
 void port_filesystem_tick(uint64_t now) { expire_media_handles(now); }
 static int reuse_media_handle(const char *path,struct File *file) {
   expire_media_handles(port_time_us());
-  for(unsigned i=0;i<2;++i)if(media_handles[i].handle && !strcmp(media_handles[i].path,path)) {
+  for(unsigned i=0;i<PORT_CNC_MEDIA_CACHE_SLOTS;++i)if(media_handles[i].handle && !strcmp(media_handles[i].path,path)) {
     memset(file,0,sizeof(*file));file->used=file->external=1;
     file->handle=media_handles[i].handle;file->features=media_handles[i].features;
     file->read_cookie=media_handles[i].cookie;file->size=media_handles[i].size;
@@ -111,7 +142,7 @@ static int retain_media_handle(struct File *file) {
       length<4 || strcmp(file->asset_path+length-4,".mix"))return 0;
   uint64_t now=port_time_us();expire_media_handles(now);
   unsigned victim=0;
-  for(unsigned i=0;i<2;++i)
+  for(unsigned i=0;i<PORT_CNC_MEDIA_CACHE_SLOTS;++i)
     if(!media_handles[i].handle || (media_handles[victim].handle &&
         media_handles[i].expires<media_handles[victim].expires))victim=i;
   if(media_handles[victim].handle) {
@@ -120,8 +151,63 @@ static int retain_media_handle(struct File *file) {
   }
   media_handles[victim].handle=file->handle;media_handles[victim].features=file->features;
   media_handles[victim].cookie=file->read_cookie;media_handles[victim].size=file->size;
-  media_handles[victim].revision=namespace_revision;media_handles[victim].expires=now+500000;
+  media_handles[victim].revision=namespace_revision;
+  media_handles[victim].expires=now+(loading_missing_cache?UINT64_C(300000000):UINT64_C(500000));
   strcpy(media_handles[victim].path,file->asset_path);return 1;
+}
+#endif
+#ifdef PORT_CNC_PRIVATE_INDEX
+/* A complete snapshot of the flat private root avoids probing it for every
+ * SHP/INI name that the engine resolves through its read-only MIX archives.
+ * Only an explicit directory EOF proves absence. Overflow, malformed replies
+ * and I/O errors retain the original lookup, as do nested paths and writes. */
+static struct {
+  uint64_t revision, expires;
+  unsigned bytes;
+  int attempted, complete;
+  char names[4096];
+} private_index;
+static int private_root_absent(const char *name) {
+  if(!loading_missing_cache || strncmp(name,"data/",5) ||
+      !name[5] || strchr(name+5,'/'))return 0;
+  uint64_t now=port_time_us();
+  if(!private_index.attempted || private_index.revision!=namespace_revision ||
+      now>=private_index.expires) {
+    memset(&private_index,0,sizeof(private_index));
+    private_index.attempted=1;private_index.revision=namespace_revision;
+    private_index.expires=now+UINT64_C(300000000);
+    uint8_t packet[64];uint32_t n;
+    pxa_fs_build_open(packet,sizeof(packet),1,"data",4,
+        PXA_FS_OPEN_READ|PXA_FS_OPEN_DIRECTORY,&n);
+    const pxa_event_t *e=port_rpc_packet(packet,n);pxa_fs_open_result_t opened;
+    if(e && pxa_fs_parse_open(e,e->token,&opened)) {
+      if(opened.status==PXA_STATUS_NOT_FOUND)private_index.complete=1;
+      else if(!opened.status) {
+        uint8_t handle[8];pxa_store_u64(handle,opened.handle);
+        for(unsigned count=0;count<128;++count) {
+          e=port_rpc(PXA_FS_SERVICE,PXA_FS_READ_DIRECTORY,handle,sizeof(handle));
+          pxa_fs_directory_result_t entry;
+          if(!e || !pxa_fs_parse_directory(e,e->token,&entry) || entry.status)break;
+          if(entry.end) {private_index.complete=1;break;}
+          if((size_t)entry.name_size+1>sizeof(private_index.names)-private_index.bytes)break;
+          memcpy(private_index.names+private_index.bytes,entry.name,entry.name_size);
+          private_index.bytes+=entry.name_size;
+          private_index.names[private_index.bytes++]=0;
+        }
+        pxa_close_handle(opened.handle);
+      }
+    }
+    /* Retry failed snapshots soon; never answer absence from partial data. */
+    if(!private_index.complete)private_index.expires=now+UINT64_C(1000000);
+  }
+  if(!private_index.complete)return 0;
+  for(unsigned offset=0;offset<private_index.bytes;
+      offset+=(unsigned)strlen(private_index.names+offset)+1)
+    if(!strcmp(private_index.names+offset,name+5))return 0;
+#ifdef PORT_LOADING_TRACE
+  ++loading_private_skips;
+#endif
+  return 1;
 }
 #endif
 static char cwd[256] = "/data";
@@ -189,14 +275,34 @@ static int simple(uint16_t op, const char *s) {
   return 0;
 }
 static int asset_info(const char *p, char *name, pxa_asset_result_t *info) {
-#ifdef PORT_EXTERNAL_GAME_DATA
+#ifdef PORT_ASSET_ARCHIVE
+  uint32_t offset,size;
+  if (!port_asset_file(p,&offset,&size)) return 0;
+  static int verified;
+  strcpy(name,"assets/data.tar");
+  if (!verified) {
+    uint8_t packet[320];uint32_t n;
+    if (!pxa_assets_build(packet,sizeof(packet),PXA_ASSETS_QUERY,1,name,0,&n)) return 0;
+    const pxa_event_t *event=port_rpc_packet(packet,n);
+    if (!event || !pxa_assets_parse_result(event,event->token,PXA_ASSETS_QUERY,info) ||
+        info->status || info->info.kind!=PXA_ASSET_BLOB ||
+        info->info.stored_bytes!=port_asset_archive_size) return 0;
+    verified=1;
+  }
+  memset(info,0,sizeof(*info));info->info.kind=PXA_ASSET_BLOB;
+  info->info.stored_bytes=info->info.decoded_bytes=size;
+  return 1;
+#elif defined(PORT_EXTERNAL_GAME_DATA)
   /* SD variants contain code only. A missing SD resource is not a request
    * to consult a second, absent package archive. */
   (void)p;(void)name;(void)info;return 0;
 #else
   if (strncmp(p, "data/", 5))
     return 0;
-  snprintf(name, 256, "assets/game/%s", p + 5);
+#ifndef PORT_ASSET_PREFIX
+#define PORT_ASSET_PREFIX "assets/game/"
+#endif
+  snprintf(name, 256, PORT_ASSET_PREFIX "%s", p + 5);
   for (char *q = name; *q; q++)
     *q = tolower((unsigned char)*q);
   uint8_t packet[320];
@@ -230,6 +336,9 @@ static int openfile(const char *name, uint32_t flags) {
   for (i = 0; i < SLOT_COUNT && files[i].used; i++)
     ;
   if (i == SLOT_COUNT) {
+#ifdef PORT_SDL_CONTROLLER
+    port_log("PXA SDL file slots exhausted: %s",name);
+#endif
     errno = EMFILE;
     return -1;
   }
@@ -242,11 +351,17 @@ static int openfile(const char *name, uint32_t flags) {
     errno = EINVAL;
     return -1;
   }
-  const pxa_event_t *e = port_rpc_packet(packet, n);
   pxa_fs_open_result_t r={0};
+#ifdef PORT_CNC_PRIVATE_INDEX
+  const int skip_private=flags==PXA_FS_OPEN_READ && private_root_absent(p);
+  const pxa_event_t *e=skip_private?NULL:port_rpc_packet(packet,n);
+  if(skip_private)r.status=PXA_STATUS_NOT_FOUND;
+#else
+  const pxa_event_t *e = port_rpc_packet(packet, n);
+#endif
   if (!e || !pxa_fs_parse_open(e, e->token, &r) || r.status) {
 #ifdef PORT_RTS
-    const int private_missing=e && r.status==PXA_STATUS_NOT_FOUND;
+    const int private_missing=r.status==PXA_STATUS_NOT_FOUND;
 #endif
     if (flags == PXA_FS_OPEN_READ) {
       uint64_t external_handle,features;uint32_t external_size;
@@ -262,6 +377,10 @@ static int openfile(const char *name, uint32_t flags) {
         memset(&files[i], 0, sizeof(files[i]));
         files[i].used = files[i].asset = 1;
         files[i].size = info.info.decoded_bytes;
+#ifdef PORT_ASSET_ARCHIVE
+        port_asset_file(p,&files[i].asset_start,&files[i].size);
+        files[i].asset_total=port_asset_archive_size;
+#endif
         strcpy(files[i].asset_path, name);
         return i + FD_BASE;
       }
@@ -306,6 +425,9 @@ int __wrap_close(int fd) {
   if (!f->asset && !retained)
     pxa_close_handle(f->handle);
   if(f->external && !retained)invalidate_external_page(f->handle);
+#ifdef PORT_ASSET_INDEX
+  free(f->directory_seen);
+#endif
   f->used = 0;
   return 0;
 }
@@ -320,20 +442,27 @@ ssize_t __wrap_read(int fd, void *p, size_t n) {
   }
   size_t done = 0;
   if (f->asset) {
+#ifdef PORT_ASSET_ARCHIVE
+    const uint32_t base=f->asset_start,total=f->asset_total;
+#else
+    const uint32_t base=0,total=f->size;
+#endif
     while (done < n && (uint32_t)f->position < f->size) {
+      const uint32_t absolute=base+(uint32_t)f->position;
       unsigned victim=0;
       int hit=-1;
       for(unsigned i=0;i<2;++i) {
         if(read_cache[i].bytes && !read_cache[i].external_handle &&
             !strcmp(read_cache[i].path,f->asset_path) &&
-            (uint32_t)f->position>=read_cache[i].offset &&
-            (uint32_t)f->position-read_cache[i].offset<read_cache[i].bytes) hit=i;
+            absolute>=read_cache[i].offset &&
+            absolute-read_cache[i].offset<read_cache[i].bytes) hit=i;
         if(read_cache[i].age<read_cache[victim].age)victim=i;
       }
       if(hit>=0) {
-        uint32_t within=(uint32_t)f->position-read_cache[hit].offset;
+        uint32_t within=absolute-read_cache[hit].offset;
         size_t count=read_cache[hit].bytes-within;
         if(count>n-done)count=n-done;
+        if(count>f->size-(uint32_t)f->position)count=f->size-(uint32_t)f->position;
         port_copy_read((uint8_t *)p+done,read_cache[hit].data+within,count);
         f->position+=count;done+=count;read_cache[hit].age=++cache_age;
         cached_read_cooperate();
@@ -341,12 +470,13 @@ ssize_t __wrap_read(int fd, void *p, size_t n) {
       }
       uint32_t count = n-done > PXA_ASSETS_READ_MAX_BYTES
                             ? PXA_ASSETS_READ_MAX_BYTES : n-done;
-      uint32_t offset=f->position;
+      if(count>f->size-(uint32_t)f->position)count=f->size-(uint32_t)f->position;
+      uint32_t offset=absolute;
       int prefetch=count<512;
       if(prefetch) {
         read_cache[victim].external_handle=0;
         offset=offset/PXA_ASSETS_READ_MAX_BYTES*PXA_ASSETS_READ_MAX_BYTES;
-        count=f->size-offset;
+        count=total-offset;
       }
       if (count > PXA_ASSETS_READ_MAX_BYTES)
         count = PXA_ASSETS_READ_MAX_BYTES;
@@ -357,7 +487,7 @@ ssize_t __wrap_read(int fd, void *p, size_t n) {
       const pxa_event_t *e = port_rpc_packet(packet, size);
       pxa_asset_read_result_t r;
       if (!e || !pxa_assets_parse_read(e, e->token, &r) || r.status ||
-          r.offset!=offset || r.total_bytes!=f->size || r.bytes>count) {
+          r.offset!=offset || r.total_bytes!=total || r.bytes>count) {
         f->error = 1;
         errno = EIO;
         return done ? (ssize_t)done : -1;
@@ -367,7 +497,7 @@ ssize_t __wrap_read(int fd, void *p, size_t n) {
         read_cache[victim].offset=offset;read_cache[victim].bytes=r.bytes;
         read_cache[victim].age=++cache_age;
         port_copy_read(read_cache[victim].data,r.data,r.bytes);
-        if (!r.bytes || (uint32_t)f->position-offset>=r.bytes) {
+        if (!r.bytes || absolute-offset>=r.bytes) {
           f->error=1;errno=EIO;return done ? (ssize_t)done : -1;
         }
         continue;
@@ -621,7 +751,11 @@ int __wrap_stat(const char *s, struct stat *st) {
   if (!path(s, p) || !pxa_fs_build_path(packet, sizeof(packet), PXA_FS_STAT, 1,
                                         p, strlen(p), &n))
     return -1;
+#ifdef PORT_CNC_PRIVATE_INDEX
+  const pxa_event_t *e = private_root_absent(p)?NULL:port_rpc_packet(packet,n);
+#else
   const pxa_event_t *e = port_rpc_packet(packet, n);
+#endif
   pxa_fs_stat_result_t r;
   if (!e || !pxa_fs_parse_stat(e, e->token, &r) || r.status) {
     uint8_t kind;uint64_t external_size;
@@ -633,6 +767,11 @@ int __wrap_stat(const char *s, struct stat *st) {
     pxa_asset_result_t info;
     char name[256];
     if (!asset_info(p, name, &info)) {
+#ifdef PORT_ASSET_INDEX
+      if (port_asset_directory(p)) {
+        memset(st,0,sizeof(*st));st->st_mode=S_IFDIR|0500;return 0;
+      }
+#endif
       errno = ENOENT;
       return -1;
     }
@@ -688,11 +827,41 @@ int port_replace(const char *a, const char *b) {
 }
 DIR *__wrap_opendir(const char *s) {
   int fd = openfile(s, PXA_FS_OPEN_READ | PXA_FS_OPEN_DIRECTORY);
+#ifdef PORT_ASSET_INDEX
+  char normalized[256];
+  const char *assets=path(s,normalized)?port_asset_directory(normalized):NULL;
+  if (fd<0 && assets) {
+    for (int i=0;i<SLOT_COUNT;++i) if (!files[i].used) {
+      memset(&files[i],0,sizeof(files[i]));files[i].used=files[i].asset=1;
+      files[i].directory_host_done=1;fd=i+FD_BASE;break;
+    }
+    if (fd<0)errno=EMFILE;
+  }
+  if (fd>=0)slot(fd)->directory_assets=assets;
+#endif
   return fd < 0 ? NULL : (DIR *)slot(fd);
 }
 int __wrap_closedir(DIR *d) { return __wrap_close(filefd((FILE *)d)); }
 struct dirent *__wrap_readdir(DIR *d) {
   struct File *f = (struct File *)d;
+#ifdef PORT_ASSET_INDEX
+  if (f->directory_host_done) {
+    while(f->directory_assets && *f->directory_assets) {
+      const char *name=f->directory_assets+1;
+      int kind=*f->directory_assets;
+      f->directory_assets=name+strlen(name)+1;
+      int seen=0;
+      for(size_t i=0;i<f->directory_seen_size;i+=strlen(f->directory_seen+i)+1)
+        if (!strcmp(f->directory_seen+i,name)) {seen=1;break;}
+      if(seen)continue;
+      memset(&f->entry,0,sizeof(f->entry));
+      snprintf(f->entry.d_name,256,"%s",name);
+      f->entry.d_type=kind=='D'?DT_DIR:DT_REG;
+      return &f->entry;
+    }
+    return NULL;
+  }
+#endif
   uint8_t p[8];
   pxa_store_u64(p, f->handle);
   const pxa_event_t *e = port_rpc(PXA_FS_SERVICE, PXA_FS_READ_DIRECTORY, p, 8);
@@ -701,7 +870,13 @@ struct dirent *__wrap_readdir(DIR *d) {
     errno=EIO;
     return NULL;
   }
-  if(r.end) return NULL;
+  if(r.end) {
+#ifdef PORT_ASSET_INDEX
+    f->directory_host_done=1;return __wrap_readdir(d);
+#else
+    return NULL;
+#endif
+  }
   memset(&f->entry, 0, sizeof(f->entry));
   size_t n = r.name_size;
   if (n >= 256)
@@ -709,6 +884,14 @@ struct dirent *__wrap_readdir(DIR *d) {
   memcpy(f->entry.d_name, r.name, n);
   f->entry.d_name[n] = 0;
   f->entry.d_type = r.kind == PXA_FS_KIND_DIRECTORY ? DT_DIR : DT_REG;
+#ifdef PORT_ASSET_INDEX
+  if (f->directory_assets) {
+    char *seen=realloc(f->directory_seen,f->directory_seen_size+n+1);
+    if (!seen) {errno=ENOMEM;return NULL;}
+    f->directory_seen=seen;memcpy(seen+f->directory_seen_size,f->entry.d_name,n+1);
+    f->directory_seen_size+=n+1;
+  }
+#endif
   return &f->entry;
 }
 char *__wrap_getcwd(char *s, size_t n) {
@@ -777,6 +960,10 @@ int __wrap_putchar(int c) {
 }
 
 char *__wrap_getenv(const char *name) {
+#ifdef PORT_SDL_CONTROLLER
+  if (!strcmp(name,"HOME")) return "/data";
+  if (!strcmp(name,"XDG_CONFIG_HOME")) return "/data/user";
+#endif
   (void)name;
   return NULL;
 }
@@ -806,3 +993,18 @@ int __wrap_system(const char *s) {
   errno = ENOSYS;
   return -1;
 }
+
+#ifdef PORT_SDL_CONTROLLER
+/* The guest namespace has no symbolic links or POSIX mode metadata. */
+char *__wrap_realpath(const char *name,char *resolved) {
+  char normalized[256];struct stat st;
+  if(!path(name,normalized) || __wrap_stat(name,&st))return NULL;
+  size_t size=strlen(normalized)+2;
+  char *out=resolved?resolved:malloc(size);
+  if(!out){errno=ENOMEM;return NULL;}
+  out[0]='/';memcpy(out+1,normalized,size-1);return out;
+}
+int __wrap_chmod(const char *name,mode_t mode) {
+  (void)name;(void)mode;errno=ENOTSUP;return -1;
+}
+#endif

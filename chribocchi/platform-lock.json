@@ -1,0 +1,123 @@
+{
+  "modified_date": "2026-10-10",
+  "files": {
+    "vendor/platform/chribocchi.ino": {
+      "bytes": 2153,
+      "sha256": "d1e259a26c609a1309dc3fe902fb119ef725f9a23da1a2de1132991124c9f19d"
+    },
+    "vendor/platform/common.h": {
+      "bytes": 1059,
+      "sha256": "64a5fd2d1ee64b6633ffa0bfeb8fd5f6f0ab4c31ebfdfb1091f28e03b87c98e6"
+    },
+    "vendor/platform/game.cpp": {
+      "bytes": 23352,
+      "sha256": "5619757be19132387fda6c8738ce35b21f99205b2c5a3b5d22e372e82b9f66e8"
+    },
+    "vendor/platform/info.json": {
+      "bytes": 280,
+      "sha256": "89e7ecd6e8158d19ccb8a85d6b5ad713c4290af366ce7ec843bee261e6fa2e82"
+    },
+    "vendor/platform/logo.cpp": {
+      "bytes": 3619,
+      "sha256": "f10568394bdd660d492d51a485b26fad39622ff1c6cc79684cc828c5b670c48e"
+    },
+    "vendor/platform/MyArduboy.cpp": {
+      "bytes": 8436,
+      "sha256": "4335187b2887c376d96d99a63db05fb4ab9c06650c3a4a4e9a732795bd7889d0"
+    },
+    "vendor/platform/MyArduboy.h": {
+      "bytes": 2168,
+      "sha256": "8cbfce7fea617e97157af99cc1624ae2e69a93612c7c85421867e72e63885f6f"
+    },
+    "vendor/platform/title.cpp": {
+      "bytes": 14835,
+      "sha256": "2f181b614d58f77e360207924dfc15bca5ae1d22becb500c09358d08249be89c"
+    },
+    "owner/ArduboyPlaytune.cpp": {
+      "bytes": 16494,
+      "sha256": "ab23849df3436e912d9eaae5f5814f9e3898402e6bada5621ab205c0c0e57397"
+    },
+    "owner/ArduboyPlaytune.h": {
+      "bytes": 6667,
+      "sha256": "eb1e135d7dc9dbd380a84a7f8bc07f913ade84a8763ff49be20abdddb6325743"
+    },
+    "owner/audio_registers.h": {
+      "bytes": 814,
+      "sha256": "2ad57aa279e7a37c0cc854b2ce21e907d11ddfccbef3c5dd1092358aeaf7bfec"
+    },
+    "owner/owner_compat.cpp": {
+      "bytes": 3529,
+      "sha256": "c0a6ebc39be3d70a98601925cc09ab34505d57a1e4c73214e841a4b340c5dd10"
+    },
+    "owner/owner_compat.h": {
+      "bytes": 1842,
+      "sha256": "33ab1423ba26436898280807084a8fd407c05ed2e3fc940a776203e4643cc927"
+    },
+    "game.cpp": {
+      "bytes": 829,
+      "sha256": "a387889572d08fa8f84912c4fbf19de9d11d6932c6449e87ad3dcd15ff5fdfd9"
+    },
+    "CMakeLists.txt": {
+      "bytes": 592,
+      "sha256": "df3b8ef92deef29db7fa25a33173ff9b0ac57342feefa78a36b812a3c8fc798c"
+    },
+    "game.cmake": {
+      "bytes": 1324,
+      "sha256": "2f5912c5e21cb13ec848e9f846dc21f3e7a685b7aabe565e19d5e8c01b28234f"
+    },
+    "frontend.cpp": {
+      "bytes": 9398,
+      "sha256": "8e492170689e5f0c325caade047e3af311a66af0bbbc840c0dcb497f3f6acd90"
+    },
+    "package.json": {
+      "bytes": 821,
+      "sha256": "65cd7c732fdc815e69a38438b0f8ca5a9659e6b9a8bffa9e5610a378c16a129a"
+    },
+    "native-check.cpp": {
+      "bytes": 4155,
+      "sha256": "ebaa65b90abdcfa45ea9d56afdcb553d05336767f4012d09186af0a3ebf7ffea"
+    },
+    "native-oracle.cpp": {
+      "bytes": 1004,
+      "sha256": "6ebdc8bc3ca58ee389446ac380a4c2b9f647d244bb375175e0762fd4aaa211a3"
+    },
+    "native-check.py": {
+      "bytes": 3208,
+      "sha256": "6ce6899f6d52bb19b87b173bade406b837e4a1beeee63bffd9dd6c485b88e0ad"
+    },
+    "trace_oracle.py": {
+      "bytes": 11791,
+      "sha256": "c66e4c51cc369f0fdb89f6d0198c3242fb7ab3089b3c0bd2d92b4d3bc8b8eaaf"
+    },
+    "verify.py": {
+      "bytes": 15600,
+      "sha256": "0f94b244e100dfed6377032ff2e21362d47d95d4bfff233f7219f42c805049d7"
+    },
+    "verify-source.py": {
+      "bytes": 2945,
+      "sha256": "ba7dada80297d4f7f8191f2331669e4744ad1dbf9bc4ca24288e501d2aff773a"
+    },
+    "owner_basis.py": {
+      "bytes": 760,
+      "sha256": "19e3030a033f0fa1751a93c8e57b21613d05d1928c689a5720660ad330bc5e9e"
+    },
+    "module-audit.py": {
+      "bytes": 2495,
+      "sha256": "6b4b475b60fa820049aca059ee9a3ebd8d4bed40cdaa0b123002fe97bbc94723"
+    },
+    "build.sh": {
+      "bytes": 396,
+      "sha256": "5695beb80102cb074fbccd8cd1fd2eb5a47af6daa76d122474074a7d68b433df"
+    },
+    "run.sh": {
+      "bytes": 443,
+      "sha256": "48adb7272ffdf622796e44b9835189371403d35ed2c33fa8d6c99e0cdfc81897"
+    },
+    "verify.sh": {
+      "bytes": 181,
+      "sha256": "7ecfdb11e9ccfab46eeaa9022f4cf044f6fe710526e907fad06ad3a9389e301b"
+    }
+  },
+  "patch_sha256": "509d217007de8c9a9356bdad65d18330d28bad12704a8791fb729d615d20798e",
+  "audio_patch_sha256": "3d00ad9ae166387ae5ffcd29a75952e115cd31590acf3735d5ab2153bf8f82f2"
+}

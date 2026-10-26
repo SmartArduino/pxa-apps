@@ -18,10 +18,18 @@ __attribute__((noinline)) static void pxaDrawLitSpan##miplevel##_##power2(      
     /* XOR guarantees a cache miss for the first pixel, for any signed row. */  \
     int last_t = (((int16_t)t6) >> SPAN_PRECISION) ^ 1, last_cell = 0;            \
     int light_base = 0, light_step = 0;                                          \
+    int last_s = INT32_MIN;                                                     \
+    uint8_t last_pixel = 0;                                                     \
     uint8_t *end = pdest + count;                                                \
     do {                                                                        \
         int ss = (int16_t)s6, tt = (int16_t)t6;                                   \
         int si = ss >> SPAN_PRECISION, ti = tt >> SPAN_PRECISION;                 \
+        /* Only power-of-two sampling ignores the fractional coordinate. */   \
+        if (power2 && si == last_s && ti == last_t) {                            \
+            *pdest++ = last_pixel;                                              \
+            s6 += ds; t6 += dt;                                                 \
+            continue;                                                          \
+        }                                                                      \
         int cell = si >> shift;                                                 \
         if (ti != last_t || cell != last_cell) {                                 \
             const int *p = blocklights + cell + lightwidth * (ti >> shift);      \
@@ -37,13 +45,14 @@ __attribute__((noinline)) static void pxaDrawLitSpan##miplevel##_##power2(      
         if (power2) {                                                           \
             y = ti & (height - 1); x = si & (width - 1);                          \
         } else {                                                                \
-            y = ((uint64_t)(qct * (uint32_t)(tt << (16-SPAN_PRECISION)))          \
+            y = ((uint64_t)(qct * ((uint32_t)tt << (16-SPAN_PRECISION)))          \
                  * height) >> 32;                                               \
-            x = ((uint64_t)(qcs * (uint32_t)(ss << (16-SPAN_PRECISION)))          \
+            x = ((uint64_t)(qcs * ((uint32_t)ss << (16-SPAN_PRECISION)))          \
                  * width) >> 32;                                                \
         }                                                                       \
-        *pdest++ = colormap[((light >> shift) & lightMask)                       \
-                            + source[y * width + x]];                           \
+        last_pixel = colormap[((light >> shift) & lightMask)                    \
+                               + source[y * width + x]];                        \
+        *pdest++ = last_pixel; last_s = si;                                      \
         s6 += ds; t6 += dt;                                                     \
     } while (pdest < end);                                                      \
 }

@@ -1,0 +1,82 @@
+{
+  "format": "pxa-owner-wire-layout-1",
+  "game": "evasion",
+  "game_id": 13,
+  "typed_game_bytes": 337,
+  "core_bytes": 3136,
+  "total_bytes": 3473,
+  "little_endian": true,
+  "state_load_interface": false,
+  "fields": [
+    {
+      "name": "header",
+      "offset": 0,
+      "bytes": 3
+    },
+    {
+      "name": "MyArduboy2.originalButtons",
+      "offset": 3,
+      "bytes": 2
+    },
+    {
+      "name": "AVRrand+ownerFault",
+      "offset": 5,
+      "bytes": 9
+    },
+    {
+      "name": "common.record.typedFields",
+      "offset": 14,
+      "bytes": 14
+    },
+    {
+      "name": "common.counter+pad+flags+recordState+eepAddr+invalidInst",
+      "offset": 28,
+      "bytes": 10
+    },
+    {
+      "name": "menu.geometry+count+position+flags",
+      "offset": 38,
+      "bytes": 9
+    },
+    {
+      "name": "menu.callbacksAndLabels6",
+      "offset": 47,
+      "bytes": 30
+    },
+    {
+      "name": "title.state+lastSettings+flags",
+      "offset": 77,
+      "bytes": 5
+    },
+    {
+      "name": "game.state",
+      "offset": 82,
+      "bytes": 1
+    },
+    {
+      "name": "game.pillars16",
+      "offset": 83,
+      "bytes": 48
+    },
+    {
+      "name": "game.dots64.unionRawLE",
+      "offset": 131,
+      "bytes": 128
+    },
+    {
+      "name": "game.score+accelInterval",
+      "offset": 259,
+      "bytes": 4
+    },
+    {
+      "name": "game.indexSpeedOddBaseXY+vxDistanceShakeXY+isHiscore",
+      "offset": 263,
+      "bytes": 10
+    },
+    {
+      "name": "audio.originalAVRregistersAndVirtualTimers",
+      "offset": 273,
+      "bytes": 64
+    }
+  ]
+}

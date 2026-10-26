@@ -1,0 +1,59 @@
+{
+  "format": "pxa-package-source-0.2",
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "id": "pxa-chribocchi",
+  "version": "0.2.1",
+  "release_sequence": 3,
+  "name": "Chri-Bocchi Cat",
+  "description": "Original MIT OBONO two minute bouncing gift cat game at original 60 FPS.",
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 4194304,
+      "pinned": false
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "services": [
+        "clock",
+        {
+          "name": "game-render",
+          "min_version": [
+            1,
+            3
+          ]
+        },
+        "log",
+        "ui",
+        "window"
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": []
+      },
+      "artifact": "aot"
+    }
+  ],
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  },
+  "icon": "assets/icon.png"
+}

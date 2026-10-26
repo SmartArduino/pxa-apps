@@ -1413,8 +1413,8 @@ __attribute__((noinline)) static void drawLitSpan##miplevel##_##power2(uint8_t *
         }                                                                                       \
         else                                                                                    \
         {                                                                                       \
-            y = ((uint64_t) (qct * (uint32_t) (tt << (16 - SPAN_PRECISION))) * height) >> 32;   \
-            x = ((uint64_t) (qcs * (uint32_t) (ss << (16 - SPAN_PRECISION))) * width) >> 32;    \
+            y = ((uint64_t) (qct * ((uint32_t) tt << (16 - SPAN_PRECISION))) * height) >> 32;   \
+            x = ((uint64_t) (qcs * ((uint32_t) ss << (16 - SPAN_PRECISION))) * width) >> 32;    \
         }                                                                                       \
         *pdest++ = colormap[((light >> shift) & lightMask) + source[y * width + x]];            \
         s6 += s6step;                                                                           \
@@ -1467,18 +1467,6 @@ static void drawLitSpan(uint8_t *pdest, int count, int s, int t, int sstep, int 
 }
 #define ESP_LIT_SPAN 1
 #endif
-#if PXA_GAME_RENDER_SPANS
-#include "host_spans.h"
-#endif
-#if PXA_GAME_RENDER_PROJECTED_SPANS || PXA_GAME_RENDER_FRAME_SPANS
-#include "host_material.h"
-#endif
-#if PXA_GAME_RENDER_FRAME_SPANS
-#include "host_frame_spans.h"
-#endif
-#if PXA_GAME_RENDER_PROJECTED_SPANS
-#include "host_projected_spans.h"
-#endif
 #define MAX_SPAN_COUNT 32    // next-hack: Quake originally used 8, which gives more precise rendering. With 8, you lose on average 2 fps (so timedemo 3 will run on 26.1 avg fps). We prefer speed over accuracy, which is barely noticeable.
 #if ESP_PLATFORM
 // parity: 0 even rows, 1 odd rows, -1 all (see D_DrawSpans8 below)
@@ -1489,9 +1477,6 @@ DRAWSURF_SEC void D_DrawSpans8(espan_t *pspan)
 #define MAX_SPAN_COUNT2 64
 #define DYNAMIC_MAX_SPAN_COUNT 0
 {
-#if PXA_GAME_RENDER_SPANS
-    Pxa_BeginHostSpans();
-#endif
 #if DYNAMIC_MAX_SPAN_COUNT
     int count, spancount;
     unsigned char *pdest;
@@ -1937,9 +1922,6 @@ DRAWSURF_SEC void D_DrawSpans8(espan_t *pspan)
             }
             spancount = 0;
 #elif ESP_LIT_SPAN
-#if PXA_GAME_RENDER_SPANS
-            if (!Pxa_QueueHostSpan(pdest, spancount, s, t, sstep, tstep))
-#endif
             drawLitSpan(pdest, spancount, s, t, sstep, tstep);
             pdest += spancount;
 #else
@@ -2032,10 +2014,6 @@ DRAWSURF_SEC void D_DrawSpans8(espan_t *pspan)
     }
     while ((pspan = getNextSpan(pspan, 0)) != _g->basespan_p);
 #endif
-#if PXA_GAME_RENDER_SPANS
-    Pxa_FlushHostSpans();
-    pxa_span_active = 0;
-#endif
 }
 #if ESP_PLATFORM
 // The rows of a surface are split between the two cores: the spans of a surface
@@ -2050,24 +2028,12 @@ static void D_DrawSpans8AndZOdd(void *pspan)
 
 void D_DrawSpans8(espan_t *pspan)
 {
-#if PXA_GAME_RENDER_FRAME_SPANS
-    if (Pxa_QueueProjectedSurface(pspan, 0)) return;
-#endif
-#if PXA_GAME_RENDER_PROJECTED_SPANS
-    if (Pxa_TryProjectedSurface(pspan, 0)) return;
-#endif
     D_DrawSpans8Rows(pspan, -1);
 }
 
 // D_DrawSpans8() and D_DrawZSpans()
 void D_DrawSpans8AndZ(espan_t *pspan)
 {
-#if PXA_GAME_RENDER_FRAME_SPANS
-    if (Pxa_QueueProjectedSurface(pspan, 1)) return;
-#endif
-#if PXA_GAME_RENDER_PROJECTED_SPANS
-    if (Pxa_TryProjectedSurface(pspan, 1)) return;
-#endif
     if (!parallelPost(D_DrawSpans8AndZOdd, pspan))
     {
         D_DrawSpans8Rows(pspan, -1);

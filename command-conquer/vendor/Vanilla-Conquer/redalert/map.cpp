@@ -60,6 +60,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "cnc_cooperate.h"
 #include "lcwpipe.h"
 #include "lcwstraw.h"
 #include "common/endianness.h"
@@ -516,6 +517,7 @@ void MapClass::Init_Cells(void)
 {
     TotalValue = 0;
     for (int index = 0; index < MAP_CELL_TOTAL; index++) {
+        if ((index & 63) == 0) Cnc_Cooperate();
         new (&Array[index]) CellClass;
     }
 }
@@ -1189,6 +1191,7 @@ int MapClass::Overpass(void)
     **	will be reduced in density.
     */
     for (int y = 0; y < MapCellHeight; y++) {
+        Cnc_Cooperate();
         for (int x = 0; x < MapCellWidth; x++) {
             CELL cell = (MapCellY + y) * MAP_CELL_W + (MapCellX + x);
             value += (*this)[cell].Tiberium_Adjust(true);
@@ -1261,12 +1264,14 @@ bool MapClass::Read_Binary(Straw& straw)
     default:
         cellptr = &Array[0];
         for (cell = 0; cell < MAP_CELL_TOTAL; cell++) {
+            if ((cell & 63) == 0) Cnc_Cooperate();
             decomp.Get(&cellptr->TType, sizeof(cellptr->TType));
             cellptr->TType = (TemplateType)le16toh(cellptr->TType);
             cellptr++;
         }
         cellptr = &Array[0];
         for (cell = 0; cell < MAP_CELL_TOTAL; cell++) {
+            if ((cell & 63) == 0) Cnc_Cooperate();
             decomp.Get(&cellptr->TIcon, sizeof(cellptr->TIcon));
             cellptr->Recalc_Attributes();
             cellptr++;
@@ -1278,6 +1283,7 @@ bool MapClass::Read_Binary(Straw& straw)
     case 2:
         cellptr = &Array[0];
         for (cell = 0; cell < MAP_CELL_TOTAL; cell++) {
+            if ((cell & 63) == 0) Cnc_Cooperate();
             decomp.Get(&cellptr->TType, sizeof(cellptr->TType));
             cellptr->TType = (TemplateType)le16toh(cellptr->TType);
             decomp.Get(&cellptr->TIcon, sizeof(cellptr->TIcon));

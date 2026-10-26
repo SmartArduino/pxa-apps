@@ -1,0 +1,303 @@
+--- vendor/original/MyArduboy.cpp
++++ vendor/platform/MyArduboy.cpp
+@@ -1,4 +1,6 @@
+ #include "MyArduboy.h"
++#include <new>
++#include <type_traits>
+ 
+ PROGMEM static const uint32_t imgFont[] = {
+     0x00000000, 0x00017000, 0x000C00C0, 0x0A7CA7CA, 0x0855F542, 0x19484253, 0x1251F55E, 0x00003000,
+@@ -17,16 +19,16 @@
+ 
+ MyArduboy::MyArduboy(void)
+ {
+-    pTunes = new ArduboyPlaytune(myAudio.enabled);
++    alignas(ArduboyPlaytune) static uint8_t pxaPlaytuneStorage[sizeof(ArduboyPlaytune)];
++    static_assert(std::is_trivially_destructible<ArduboyPlaytune>::value,"fixed storage requires trivial destructor");
++    pTunes = new (pxaPlaytuneStorage) ArduboyPlaytune(myAudio.enabled);
+     pTunes->initChannel(PIN_SPEAKER_1);
+ }
+ 
+ void MyArduboy::beginNoLogo(void)
+ {
+     boot();
+-    blank();
+-    flashlight();
+-    systemButtons();
++    clear(); // physical startup utilities omitted
+     myAudio.begin();
+ }
+ 
+@@ -321,3 +323,7 @@
+ {
+     pTunes->stopScore();
+ }
++
++void MyArduboy::pxaEnsureConstructed(){if(obono_audio_channel_count()==0)new(this)MyArduboy();}
++void MyArduboy::pxaReset(){textcolor=WHITE;textbg=BLACK;lastButtonState=currentButtonState=playScorePriority=0;}
++void MyArduboy::pxaPack(ObonoWriter&w)const{w.u8(textcolor);w.u8(textbg);w.u8(lastButtonState);w.u8(currentButtonState);w.u8(playScorePriority);}
+--- vendor/original/MyArduboy.h
++++ vendor/platform/MyArduboy.h
+@@ -1,4 +1,5 @@
+ #pragma once
++#include "owner_compat.h"
+ 
+ //#define USE_ARDUBOY2_LIB
+ 
+@@ -49,6 +50,7 @@
+     void    saveAudioOnOff(void);
+     void    playScore2(const byte *score, uint8_t priority);
+     void    stopScore2(void);
++    void pxaEnsureConstructed();void pxaReset();void pxaPack(ObonoWriter&)const;
+ 
+ private:
+     void    myDrawChar(int16_t x, int16_t y, unsigned char c, uint8_t color, uint8_t bg, uint8_t size);
+--- vendor/original/common.cpp
++++ vendor/platform/common.cpp
+@@ -55,15 +55,15 @@
+ 
+ static uint16_t calcCheckSum();
+ 
+-static void     eepSeek(int addr);
+-static uint8_t  eepRead8(void);
+-static uint16_t eepRead16(void);
+-static uint32_t eepRead32(void);
+-static void     eepReadBlock(void *p, size_t n);
+-static void     eepWrite8(uint8_t val);
+-static void     eepWrite16(uint16_t val);
+-static void     eepWrite32(uint32_t val);
+-static void     eepWriteBlock(const void *p, size_t n);
++void eepSeek(int addr);
++uint8_t eepRead8(void);
++uint16_t eepRead16(void);
++uint32_t eepRead32(void);
++void eepReadBlock(void *p, size_t n);
++void eepWrite8(uint8_t val);
++void eepWrite16(uint16_t val);
++void eepWrite32(uint32_t val);
++void eepWriteBlock(const void *p, size_t n);
+ 
+ /*  Local Variables  */
+ 
+@@ -77,6 +77,10 @@
+ 
+ static RECORD_STATE_T   recordState = RECORD_NOT_READ;
+ static int16_t          eepAddr;
++
++// AVR record layout: exactly 22 little-endian bytes, independent of host padding.
++static void recordEncode(uint8_t out[22]){ObonoWriter w(out);w.u8(record.endlessHiscore);w.u8(record.endlessHiscore>>8);w.u8(record.endlessHiscore>>16);w.u8(record.endlessMaxLevel);w.u8(record.limitedHiscore);w.u8(record.limitedHiscore>>8);w.u8(record.limitedHiscore>>16);w.u8(record.limitedMaxChain);w.u32(record.playFrames);w.u32(record.erasedDice);for(auto v:record.puzzleClearFlag)w.u8(v);w.u8(record.puzzleClearCount);}
++static void recordDecode(const uint8_t p[22]){record.endlessHiscore=(uint32_t)p[0]|((uint32_t)p[1]<<8)|((uint32_t)p[2]<<16);record.endlessMaxLevel=p[3];record.limitedHiscore=(uint32_t)p[4]|((uint32_t)p[5]<<8)|((uint32_t)p[6]<<16);record.limitedMaxChain=p[7];record.playFrames=record.erasedDice=0;for(int i=0;i<4;i++){record.playFrames|=(uint32_t)p[8+i]<<(8*i);record.erasedDice|=(uint32_t)p[12+i]<<(8*i);}for(int i=0;i<5;i++)record.puzzleClearFlag[i]=p[16+i];record.puzzleClearCount=p[21];}
+ 
+ /*---------------------------------------------------------------------------*/
+ /*                             Common Functions                              */
+@@ -87,7 +91,7 @@
+     bool isVerified = false;
+     eepSeek(EEPROM_ADDR_BASE);
+     if (eepRead32() == EEPROM_SIGNATURE) {
+-        eepReadBlock(&record, sizeof(record));
++        uint8_t encoded[22];eepReadBlock(encoded,22);recordDecode(encoded);
+         isVerified = (eepRead16() == calcCheckSum());
+     }
+ 
+@@ -112,7 +116,7 @@
+     } else {
+         eepSeek(EEPROM_ADDR_BASE + 4);
+     }
+-    eepWriteBlock(&record, sizeof(record));
++    uint8_t encoded[22];recordEncode(encoded);eepWriteBlock(encoded,22);
+     eepWrite16(calcCheckSum());
+     arduboy.audio.saveOnOff(); // Save Sound ON/OFF
+     recordState = RECORD_STORED;
+@@ -123,17 +127,15 @@
+ static uint16_t calcCheckSum()
+ {
+     uint16_t checkSum = (EEPROM_SIGNATURE & 0xFFFF) + (EEPROM_SIGNATURE >> 16) * 3;
+-    uint16_t *p = (uint16_t *) &record;
+-    for (int i = 0; i < sizeof(record) / 2; i++) {
+-        checkSum += *p++ * (i * 2 + 5);
+-    }
++    uint8_t encoded[22];recordEncode(encoded);
++    for (int i=0;i<11;i++){uint16_t v=(uint16_t)encoded[2*i]|((uint16_t)encoded[2*i+1]<<8);checkSum+=(uint16_t)(v*(i*2+5));}
+     return checkSum;
+ }
+ 
+ void clearRecord(void)
+ {
+     eepSeek(EEPROM_ADDR_BASE);
+-    for (int i = 0; i < (sizeof(record) + 6) / 4; i++) {
++    for (int i = 0; i < (22 + 6) / 4; i++) {
+         eepWrite32(0);
+     }
+     recordState = RECORD_INITIAL;
+@@ -221,13 +223,13 @@
+ uint8_t eepRead8(void)
+ {
+     eeprom_busy_wait();
+-    return eeprom_read_byte((const uint8_t *) eepAddr++);
++    return eeprom_read_byte((const uint8_t *)(uintptr_t)eepAddr++);
+ }
+ 
+ uint16_t eepRead16(void)
+ {
+     eeprom_busy_wait();
+-    uint16_t ret = eeprom_read_word((const uint16_t *)eepAddr);
++    uint16_t ret = eeprom_read_word((const uint16_t *)(uintptr_t)eepAddr);
+     eepAddr += 2;
+     return ret;
+ }
+@@ -235,7 +237,7 @@
+ uint32_t eepRead32(void)
+ {
+     eeprom_busy_wait();
+-    uint32_t ret = eeprom_read_dword((const uint32_t *) eepAddr);
++    uint32_t ret = eeprom_read_dword((const uint32_t *)(uintptr_t)eepAddr);
+     eepAddr += 4;
+     return ret;
+ }
+@@ -243,34 +245,38 @@
+ void eepReadBlock(void *p, size_t n)
+ {
+     eeprom_busy_wait();
+-    eeprom_read_block(p, (const void *) eepAddr, n);
++    eeprom_read_block(p, (const void *)(uintptr_t)eepAddr, n);
+     eepAddr += n;
+ }
+ 
+ void eepWrite8(uint8_t val)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_byte((uint8_t *) eepAddr, val);
++    eeprom_write_byte((uint8_t *)(uintptr_t)eepAddr, val);
+     eepAddr++;
+ }
+ 
+ void eepWrite16(uint16_t val)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_word((uint16_t *)eepAddr, val);
++    eeprom_write_word((uint16_t *)(uintptr_t)eepAddr, val);
+     eepAddr += 2;
+ }
+ 
+ void eepWrite32(uint32_t val)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_dword((uint32_t *)eepAddr, val);
++    eeprom_write_dword((uint32_t *)(uintptr_t)eepAddr, val);
+     eepAddr += 4;
+ }
+ 
+ void eepWriteBlock(const void *p, size_t n)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_block(p, (void *) eepAddr, n);
++    eeprom_write_block(p, (void *)(uintptr_t)eepAddr, n);
+     eepAddr += n;
+ }
++
++void obono_reset_common(){memset(&record,0,sizeof(record));isRecordDirty=0;padX=padY=padRepeatCount=0;gameMode=GAME_MODE_ENDLESS;isInvalid=0;recordState=RECORD_NOT_READ;eepAddr=0;}
++void obono_pack_common(ObonoWriter&w){uint8_t b[22];recordEncode(b);for(auto v:b)w.u8(v);w.u8(isRecordDirty);w.u8(padX);w.u8(padY);w.u8(padRepeatCount);w.u8(gameMode);w.u8(isInvalid);w.u8(recordState);w.u16(eepAddr);}
++void obono_register_common(){obono_audio_register(16,soundTick,sizeof(soundTick));obono_audio_register(17,soundClick,sizeof(soundClick));}
+--- vendor/original/game.cpp
++++ vendor/platform/game.cpp
+@@ -97,7 +97,7 @@
+ 
+ static void drawField(void);
+ static void drawObject(int x, int y);
+-static bool drawFloorOrBlank(int x, int y, int g);
++static void drawFloorOrBlank(int x, int y, int g);
+ static bool checkNeiborDepth(OBJ_T *pObj);
+ static void drawDie(int16_t dx, int16_t dy, uint16_t type, uint16_t rotate, boolean isWhite);
+ static void drawObjectBitmap(int16_t x, int16_t y, int id, uint8_t c);
+@@ -631,7 +631,7 @@
+ static void setVanishEffect(uint8_t type)
+ {
+     int offset = type - OBJ_TYPE_1;
+-    arduboy.playScore2(pgm_read_word(soundVanishTable + offset), 3);
++    arduboy.playScore2(soundVanishTable[offset], 3);
+     memcpy_P(ledRGB, tableLedRGB + offset * 3, 3);
+     vanishFlashFrames = VANISH_FLASH_FRAMES_MAX;
+ }
+@@ -854,7 +854,7 @@
+     }
+ }
+ 
+-static bool drawFloorOrBlank(int x, int y, int g)
++static void drawFloorOrBlank(int x, int y, int g)
+ {
+     int dx = x * GRID_PIXEL + 24 + DEPTH_PIXEL;
+     int dy = y * GRID_PIXEL + 4  + DEPTH_PIXEL;
+@@ -1029,3 +1029,8 @@
+         arduboy.setTextSize(1);
+     }
+ }
++
++void obono_reset_game(){state=STATE_INIT;memset(field,0,sizeof(field));memset(vanishFlg,0,sizeof(vanishFlg));memset(erasedEachDie,0,sizeof(erasedEachDie));memset(ledRGB,0,sizeof(ledRGB));score=0;gameFrames=0;elaspedFrames=0;maxChain=0;currentChain=0;cursorX=0;cursorY=0;level=0;norm=0;step=0;issue=0;countDice=0;countValidDice=0;countDiceMin=0;countDiceUsual=0;countDiceMax=0;intervalDieUsual=0;intervalDieMax=0;vanishFlashFrames=0;blinkFrameFrames=0;blinkChainFrames=0;blinkLevelFrames=0;overAnimFrames=0;blinkFlg=0;pLargeLabel=NULL;}
++void obono_pack_game(ObonoWriter&w){w.u8(state);for(auto &row:field)for(auto &v:row){w.u8(v.type);w.u8(v.rotate);w.u8(v.mode);w.u16(v.depth);w.u16(v.chain);}for(auto v:vanishFlg)w.u8(v);for(auto v:erasedEachDie)w.u16(v);for(auto v:ledRGB)w.u8(v);w.u32(score);w.u32(gameFrames);w.u16(elaspedFrames);w.u16(maxChain);w.u16(currentChain);w.u8(cursorX);w.u8(cursorY);w.u8(level);w.u8(norm);w.u8(step);w.u8(issue);w.u8(countDice);w.u8(countValidDice);w.u8(countDiceMin);w.u8(countDiceUsual);w.u8(countDiceMax);w.u8(intervalDieUsual);w.u8(intervalDieMax);w.u8(vanishFlashFrames);w.u8(blinkFrameFrames);w.u8(blinkChainFrames);w.u8(blinkLevelFrames);w.u8(overAnimFrames);w.u8(blinkFlg);const char*p=(const char*)pLargeLabel;size_t n=p?strlen(p):0;for(size_t j=0;j<16;j++)w.u8(j<n?(uint8_t)p[j]:0);}
++uint8_t obono_game_function_id(void(*p)()){if(p==onMenuContine)return 16;if(p==onMenuRestart)return 17;if(p==onMenuBackToTitle)return 18;if(p==onMenuNextIssue)return 19;if(p==onMenuPreviousIssue)return 20;if(p==onMenuSelectIssue)return 21;return 0;}
++void obono_register_game(){obono_audio_register(1,soundStart,sizeof(soundStart));obono_audio_register(2,soundAppearDie,sizeof(soundAppearDie));obono_audio_register(3,soundLevelUp,sizeof(soundLevelUp));obono_audio_register(4,soundTimeToBlink,sizeof(soundTimeToBlink));obono_audio_register(5,soundOver,sizeof(soundOver));obono_audio_register(6,soundClear,sizeof(soundClear));obono_audio_register(7,soundAgain,sizeof(soundAgain));obono_audio_register(8,soundVanishDieOne,sizeof(soundVanishDieOne));obono_audio_register(9,soundVanishDieTwo,sizeof(soundVanishDieTwo));obono_audio_register(10,soundVanishDieThree,sizeof(soundVanishDieThree));obono_audio_register(11,soundVanishDieFour,sizeof(soundVanishDieFour));obono_audio_register(12,soundVanishDieFive,sizeof(soundVanishDieFive));obono_audio_register(13,soundVanishDieSix,sizeof(soundVanishDieSix));}
+--- vendor/original/image.h
++++ vendor/platform/image.h
+@@ -140,7 +140,7 @@
+ 
+ PROGMEM static const byte soundOver[] = {
+     0x90, 55, 0, 120, 0x90, 54, 0, 140, 0x90, 53, 0, 160, 0x90, 52, 0, 180,
+-    0x90, 51, 0, 200, 0x90, 50, 0, 220, 0x90, 49, 0, 240, 0x90, 48, 0, 260, 0x80, 0xF0
++    0x90, 51, 0, 200, 0x90, 50, 0, 220, 0x90, 49, 0, 240, 0x90, 48, 0, static_cast<uint8_t>(260), 0x80, 0xF0
+ };
+ PROGMEM static const byte soundClear[] = {
+     0x90, 81, 0, 40, 0x80, 0, 40, 0x90, 86, 0, 40, 0x80, 0, 40,
+--- vendor/original/logo.cpp
++++ vendor/platform/logo.cpp
+@@ -52,7 +52,8 @@
+ MODE_T updateLogo(void)
+ {
+     counter--;
+-    signalOn = (SIGNAL_PTN >> (counter - FPS / 4) / (FPS / 20)) & 1;
++    const int shift=(counter-FPS/4)/(FPS/20);
++    signalOn=shift>=0&&shift<32&&((SIGNAL_PTN>>shift)&1U);
+     arduboy.setRGBled(0, 0, signalOn * 127);
+     MODE_T ret = (counter == 0) ? MODE_TITLE : MODE_LOGO;
+     if (ret) {
+@@ -72,3 +73,6 @@
+     arduboy.drawBitmap(68, 44, imgSoft, 32, 8, WHITE);
+     arduboy.printEx(16, 58, F(APP_CODE " VER " APP_VERSION));
+ }
++
++void obono_reset_logo(){counter=0;signalOn=0;}
++void obono_pack_logo(ObonoWriter&w){w.u8(counter);w.u8(signalOn);}
+--- vendor/original/menu.cpp
++++ vendor/platform/menu.cpp
+@@ -120,3 +120,6 @@
+     arduboy.drawBitmap(107, 57, imgSound, 14, 7, WHITE);
+     arduboy.drawBitmap(122, 57, imgSoundOffOn[arduboy.audio.enabled()], 6, 7, WHITE);
+ }
++
++void obono_reset_menu(){menuX=menuY=menuW=menuH=0;isFramed=isControlSound=0;menuItemCount=menuItemPos=0;isInvalidMenu=0;memset(menuItemAry,0,sizeof(menuItemAry));}
++void obono_pack_menu(ObonoWriter&w){w.u8(menuX);w.u8(menuY);w.u8(menuW);w.u8(menuH);w.u8(isFramed);w.u8(isControlSound);w.u8(menuItemCount);w.u8(menuItemPos);w.u8(isInvalidMenu);for(auto &i:menuItemAry){uint8_t id=obono_title_function_id(i.func);if(!id)id=obono_game_function_id(i.func);w.u8(id);const char*p=(const char*)i.label;size_t n=p?strlen(p):0;for(size_t j=0;j<16;j++)w.u8(j<n?(uint8_t)p[j]:0);}}
+--- vendor/original/psicolo.ino
++++ vendor/platform/psicolo.ino
+@@ -6,9 +6,9 @@
+ 
+ /*  Defines  */
+ 
+-#define callInitFunc(idx)   ((void (*)(void)) pgm_read_word((uint16_t) &moduleTable[idx]))()
+-#define callUpdateFunc(idx) ((MODE_T (*)(void)) pgm_read_word((uint16_t) &moduleTable[idx] + 2))()
+-#define callDrawFunc(idx)   ((void (*)(void)) pgm_read_word((uint16_t) &moduleTable[idx] + 4))()
++#define callInitFunc(idx) moduleTable[idx].initFunc()
++#define callUpdateFunc(idx) moduleTable[idx].updateFunc()
++#define callDrawFunc(idx) moduleTable[idx].drawFunc()
+ 
+ /*  Typedefs  */
+ 
+--- vendor/original/title.cpp
++++ vendor/platform/title.cpp
+@@ -211,3 +211,8 @@
+         p += len + 1;
+     }
+ }
++
++void obono_reset_title(){state=STATE_INIT;}
++void obono_pack_title(ObonoWriter&w){w.u8(state);}
++void obono_register_title(){}
++uint8_t obono_title_function_id(void(*p)()){if(p==onStartEndless)return 1;if(p==onStartLimited)return 2;if(p==onStartPuzzle)return 3;if(p==onRecord)return 4;if(p==onCredit)return 5;return 0;}

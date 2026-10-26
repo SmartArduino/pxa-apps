@@ -1,0 +1,20 @@
+--- a/guess_dots/game.h
++++ b/guess_dots/game.h
+@@ -90,7 +90,7 @@
+   }
+ 
+   void title_screen() {
+-    static bool flash_press_a_to_play = true;
++    bool &flash_press_a_to_play = guessdots_title_flash;
+ 
+     uint8_t btn_state = 0;
+ 
+@@ -150,7 +150,7 @@
+       this->chosen_difficulty = static_cast<lvl::Difficulty>(diff_idx - 1);
+     }
+ 
+-    if (this->arduboy.justPressed(DOWN_BUTTON) && this->chosen_difficulty < lvl::Difficulty::HARD) {
++    else if (this->arduboy.justPressed(DOWN_BUTTON) && this->chosen_difficulty < lvl::Difficulty::HARD) {
+       this->chosen_difficulty = static_cast<lvl::Difficulty>(diff_idx + 1);
+     }
+ 

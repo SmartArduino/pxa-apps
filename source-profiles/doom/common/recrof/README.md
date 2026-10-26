@@ -255,93 +255,23 @@ PXADB_BAUD=2000000 python3 local/pxa-apps/common/recrof/tools/migrate_sd.py quak
 游戏优先协商 Clock 0.3 的 8000us，设备不支持或配置失败时回退合法的 16ms。
 后台取消、回到前台恢复；周期表示调度请求，不能据此直接推断游戏帧率。
 
-## GameRender 1.0 原生 span 试验
+## GameRender 显示转换
 
-Quake 可通过 CMake `PXA_QUAKE_HOST_SPANS=ON` 试用同步的原生 INDEX8
-光照 span；默认关闭，首版真机关卡测得性能回退，尚未达到 20fps 目标。
-该路径只借用本次调用的 Guest 内存，不额外复制纹理、帧缓冲或深度缓冲。
-失败时在原表面状态仍有效时回放原渲染器；显示仍沿用 GuestMapped Surface。
+世界渲染、投影、深度和光照留在应用内。Host 在一次调用中完成
+INDEX8 颜色转换、缩放和光标合成，同步返回后即可复用缓冲。
 
-`PXA_QUAKE_STATIC_GLOBALS` 直接使用固定状态对象地址，真机关卡达到约 6.9fps，现默认启用。SDK 默认编译器
-没有被替换；测试包通过私有构建配置选择已做边界检查的对齐编译器。
-
-真实上游内核的像素差分检查（需要工作区中的新 SDK）：
+`PXA_RECROF_HOST_BLIT` 控制原生颜色转换；`PXA_RECROF_BULK_READ_COPY`
+控制大块文件读取复制；`PXA_RECROF_PACKED_GAME_CODEC` 使用经过布局断言的
+WASM 编码。这些开关的性能须在实际关卡测量。
 
 ```sh
-python3 local/pxa-apps/common/recrof/tests/run_quake_host_spans.py
-```
-
-测试直接提取当前 vendor 的 lit-span 宏，覆盖 20 万组、40 万条 span、
-八种内核、负坐标与重叠写入。它验证新内核，不替代完整场景的性能或画质验收。
-
-Quake II SD 0.1.13 的线性内存上限调整为 163 页（10.1875MiB），
-与 GameKit 16MiB PSRAM 的已验证装载配置一致；引擎 arena 仍为 7.5MiB。
-Quake 另做过渲染相关文件的单精度常量试验；中位数仍为 6.9fps，未纳入公开构建配置。
-
-
-GameRender投影试验：`PXA_QUAKE_PROJECTED_SPANS` 默认关闭。直接运行
-`python3 common/recrof/tests/run_quake_projected_spans.py` 可将Host投影、
-光照和深度输出与当前vendor函数对比（需主工程deps/pxa-system）。
-GameKit实际出生点私有候选中位3.9fps，低于6.9fps默认基线；不依据合成吞吐
-启用该选项。公开构建继续使用Guest原路径，最低15fps及期望20fps仍待后续优化。
-
-
-## GameRender 1.2 跨材质批次
-
-`PXA_QUAKE_FRAME_SPANS` 使用已有Surface后缓冲保存命令与材质快照，
-世界绘制完成后同步执行，再覆盖为RGB565显示帧。Host不新增纹理、帧或深度堆缓冲。
-`PXA_RECROF_HOST_BLIT` 可单独将INDEX8颜色转换及透明光标交给Host；保持原缩放规则。
-两项都是默认关闭的实验选项，需要GameRender 1.2。不能把原生计算测试的吞吐当成游戏FPS。
-
-`PXA_QUAKE_FRAME_BULK_COPY` 仅作用于整帧批次的大块资源快照，使用WASM `memory.copy`；
-没有给整个引擎开启bulk-memory编译开关。可关闭此选项复现普通memmove候选。
-上游原函数继续保留，原生批次拒绝时按捕获状态整体回退。
-
-```sh
-python3 local/pxa-apps/common/recrof/tests/run_quake_frame_adapter.py
-PXA_QUAKE_TEST_BULK_COPY=0 python3 local/pxa-apps/common/recrof/tests/run_quake_frame_adapter.py
 python3 local/pxa-apps/common/recrof/tests/run_host_indexed_blit.py
-```
-
-第一项在WASM中使用当前上游Rows函数验证来源复用后的回退，第二项覆盖非bulk配置，
-第三项使用原`port_blit`作参考。主工程的`tools/game-perf/profiles`保留独立比较配置。
-
-`PXA_RECROF_BULK_READ_COPY` 仅给至少128字节的文件及虚拟flash读取使用WASM
-`memory.copy`；小型元数据保留普通复制。`PXA_RECROF_PACKED_GAME_CODEC` 启用SDK
-的可选WASM布局编码：固定记录的大小与所有字段偏移必须在编译期逐项匹配wire布局，
-然后整块编码；其他平台继续使用逐字段编码。两项默认关闭，按游戏实测决定启用。
-没有增加缓存或扩大线性内存，也没有为整个引擎启用bulk-memory。
-
-```sh
 python3 local/pxa-apps/common/recrof/tests/run_read_copy.py
-PXA_QUAKE_TEST_PACKED_CODEC=1 python3 local/pxa-apps/common/recrof/tests/run_quake_frame_adapter.py
 ```
 
-
-2026-10-20 GameKit 同固件 START 出生点 60 秒比较：默认 Guest 路径中位 6.9fps、
-平均 7.017fps；批次、原生输出、批量读取及编码组合中位 6.9fps、平均 6.817fps。
-组合较早期 5.9fps 候选收回部分开销，仍未证明优于默认路径，故新选项继续默认关闭。
-最低 15fps 和期望 20fps 均未达到。公开 Quake/SD 源码为 0.4.5（seq125），
-本轮上机的是私有比较包，不把公开源码版本视为已验收的二进制发布。
-
-
-## 同一 AOT 的私有渲染诊断
-
-`PXA_QUAKE_RENDER_PROBE` 默认关闭，仅在整帧批次、原生输出和帧统计同时启用时可用。
-它在显示提交完成后读取 `/data/pxa-render-probe-mode` 单字节文件：
-低两位：0 为 Guest 路径，1 仅原生输出，2 仅原生世界批次，3 两项启用。
-另有位 4 启用光照网格缓存，位 8 对命中重跑原引擎并严格比对实际采样数据；
-文件使用单个十六进制字符，例如 `5` 是 Guest 世界加缓存，`d` 是其验证模式。
-模式切换不发生在借用命令执行期间；非法或未完成写入保持原模式。
-1/16 的引擎帧分别采样表面准备、梯度、跨度、光照读取/混合和光照打包时间，
-以定位开销；诊断包的计时开销不能冒充发布配置的性能。
-SD 包可使用现有只读 App-media 回退，从固定 `PXA/media/<AppKey>` 读取该文件。
-PXADB 保持禁止写应用私有目录；测试只替换自己创建的 SD 探针文件。
-
-```sh
-PXA_QUAKE_TEST_RENDER_PROBE=1 PXA_QUAKE_TEST_PACKED_CODEC=1 \
-  python3 local/pxa-apps/common/recrof/tests/run_quake_frame_adapter.py
-```
+私有 `PXA_QUAKE_RENDER_PROBE` 可通过应用媒体中的单字节模式文件选择
+原生颜色转换（位 1）和光照缓存（位 4）。
+位 8 对缓存命中重跑引擎以验证数据；诊断计时不能代替发布配置的测量。
 
 Duke 原生输出候选在原有输入状态记录中附带 Host 批次、拒绝和执行计数，
 用于核实加速路径实际执行。默认构建未因此增加新的日志条目。

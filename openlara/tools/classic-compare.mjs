@@ -9,7 +9,7 @@ if(!output)throw Error('usage: node classic-compare.mjs REFERENCE.wasm CANDIDATE
 // adapter generation. Pixel checks can compare older renderer adapters too.
 const compareCheckpoint=checkpointFlag==='--checkpoint';
 async function run(wasm) {
-    const files=new Map(),g=await runGuest(wasm,assets,files);g.menu(4);g.tick(180);
+    const files=new Map(),g=await runGuest(wasm,assets,files,{stopAtReady:true,alignLevelTime:true});g.menu(4);g.tick(180);
     const actions=new Map([[0,8],[30,0],[45,1],[100,0],[120,32],[121,0],
         [150,256],[151,0],[180,16],[210,0],[240,1024],[260,0],[275,512],[300,0]]);
     const hashes=[];

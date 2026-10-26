@@ -1,0 +1,68 @@
+{
+  "format": "pxa-arduboy-batch-module-export-contract-1",
+  "game": "nightraid",
+  "repository": "https://github.com/epbarger/night-raid",
+  "commit": "36e7fa0048d39e93d0c093e8ad0a6a55020681fe",
+  "game_license": "MIT",
+  "modified_date": "2026-10-10",
+  "common_directory": "arduboy-batch-20261010",
+  "original_frame_period_ms": 16,
+  "typed_game_bytes": 394,
+  "source_locks": [
+    {
+      "path": "upstream-lock.json",
+      "bytes": 1324,
+      "sha256": "c8c255eb683ce30c87bc71d3e2539b9d78735cd92297d866cc8579de86de1b56"
+    },
+    {
+      "path": "platform-lock.json",
+      "bytes": 2269,
+      "sha256": "b67273cd42734b7c6473165c05f765a10d672103f9443ab5e6e12839fdf1ad17"
+    }
+  ],
+  "original_files": [
+    {
+      "path": "vendor/original/LICENSE",
+      "bytes": 1068,
+      "sha256": "1bed179715d394dc72bc9624c2f537a9e4da21dc170046a156e6ef2601ab3579",
+      "url": "https://raw.githubusercontent.com/epbarger/night-raid/36e7fa0048d39e93d0c093e8ad0a6a55020681fe/LICENSE"
+    },
+    {
+      "path": "vendor/original/README.md",
+      "bytes": 161,
+      "sha256": "41048b7e83eed4fbd4d19b27794a159fc7d0a63fb5c4bb169ef7a936779c1dbc",
+      "url": "https://raw.githubusercontent.com/epbarger/night-raid/36e7fa0048d39e93d0c093e8ad0a6a55020681fe/README.md"
+    },
+    {
+      "path": "vendor/original/night-raid.ino",
+      "bytes": 24137,
+      "sha256": "0753930c12dc73778d529de54b1613e0d00c3c2489bf32a892d8f16dd8b85462",
+      "url": "https://raw.githubusercontent.com/epbarger/night-raid/36e7fa0048d39e93d0c093e8ad0a6a55020681fe/night-raid.ino"
+    }
+  ],
+  "platform_patches": [
+    {
+      "path": "platform.patch",
+      "sections": [
+        {
+          "old_header": "vendor/original/night-raid.ino",
+          "new_header": "vendor/platform/night-raid.ino",
+          "original": "vendor/original/night-raid.ino",
+          "modified": "vendor/platform/night-raid.ino"
+        }
+      ]
+    }
+  ],
+  "unchanged_platform_copies": [],
+  "license_files": [
+    "LICENSE.MIT",
+    "NOTICE.md",
+    "assets/LICENSE.MIT",
+    "assets/LICENSE.Arduboy2.txt",
+    "assets/LICENSE.PXA-glue.MIT",
+    "assets/NOTICE.md"
+  ],
+  "dependencies": [],
+  "addon_compiled_sources": [],
+  "owner_software_oled_inversion": "game.cpp; source sBuffer unchanged, display XOR255 after actual original display when original invert flag enabled; flag packed at393"
+}

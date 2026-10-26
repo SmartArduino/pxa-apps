@@ -1,0 +1,60 @@
+{
+  "passed": true,
+  "scope": "AVR GCC7.3 assembly-only isolated expressions; original firmware and physical hardware not run",
+  "compiler_report": "proofs/avr/avr-expressions-execution.json",
+  "pristine_files": {
+    "title.cpp": "53f47c31d47b783d7dea3cec2b6d4f54389bc99ac4a7e425174f6e3dcc31ef59",
+    "game.cpp": "59524cb9c94ef1a8e215d9248b0c732aa0013e375641d4c032dffd95f5432459",
+    "logo.cpp": "28bf79d1cefc0971a1c9e4467385f4e9a3ed681a09c764fa1ba753cdd5d75c48"
+  },
+  "original_random_call_order": {
+    "title": "getLineVx then random(2)",
+    "laser": "random(16,49) then random(2)"
+  },
+  "spark_angle": "actual -Os/-O2 i*90",
+  "logo_shift": "AVR decrements signed8 loop counter; negative has zero shifts and original bit0=0; shifts>=32 yield zero; guard agrees over full original counter120..0",
+  "float_width": "Original AVR double/float32 trigonometric results preserved with explicit cosf/sinf; native/WASM full bitmap replay remains required",
+  "verbatim_body_report": "proofs/avr/avr-verbatim-bodies.json",
+  "bound_proof_files": [
+    {
+      "path": "proofs/avr/avr-original-expressions.cpp",
+      "bytes": 319,
+      "sha256": "4c31f328b5e50eb7ceabb6c8b0c550ec63880e3d4dcdf0c737ca03273286e0fc"
+    },
+    {
+      "path": "proofs/avr/original-Os.s",
+      "bytes": 2198,
+      "sha256": "4a75ff87ac33386faa89d38cdb339f06f2a5b9de9d94fb93d07faa6ad3ab6aac"
+    },
+    {
+      "path": "proofs/avr/original-O2.s",
+      "bytes": 2198,
+      "sha256": "4a75ff87ac33386faa89d38cdb339f06f2a5b9de9d94fb93d07faa6ad3ab6aac"
+    },
+    {
+      "path": "proofs/avr/avr-expressions-execution.json",
+      "bytes": 1557,
+      "sha256": "b96101ab1d3425006e5c58f8be8c3afcc478a86b5ff168c98318d4f03fa55b7e"
+    },
+    {
+      "path": "proofs/avr/avr-verbatim-bodies.cpp",
+      "bytes": 1546,
+      "sha256": "e5635aff1cc1107e20a410ef5a14f3cfa730ba13416bbe8ab31dfbaf786df14a"
+    },
+    {
+      "path": "proofs/avr/verbatim-Os.s",
+      "bytes": 3405,
+      "sha256": "715f507de47b1a185c7e35e735eafab644d6af76ec9fd0f85ddaa425667a3ff6"
+    },
+    {
+      "path": "proofs/avr/verbatim-O2.s",
+      "bytes": 3323,
+      "sha256": "68b53c5fb0eaf60c157834cbd0fadd2f6cb24f87295c84fbe2bc610eb6978612"
+    },
+    {
+      "path": "proofs/avr/avr-verbatim-bodies.json",
+      "bytes": 3163,
+      "sha256": "544c3eea85b535e844d07237bdb1944a9cc54fab952464d97f7259e8493aded8"
+    }
+  ]
+}

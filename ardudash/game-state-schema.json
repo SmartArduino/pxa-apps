@@ -1,0 +1,99 @@
+{
+  "game": "ardudash",
+  "bytes": 571,
+  "endianness": "little",
+  "signed_coordinates": "int16 encoded as unchanged uint16 bits",
+  "no_object_padding_or_pointers": true,
+  "fields": [
+    {
+      "field": "fps",
+      "offset": 0,
+      "bytes": 1
+    },
+    {
+      "field": "stars25xI16x2",
+      "offset": 1,
+      "bytes": 100
+    },
+    {
+      "field": "player",
+      "offset": 101,
+      "bytes": 11
+    },
+    {
+      "field": "obstacle_under_idx",
+      "offset": 112,
+      "bytes": 1
+    },
+    {
+      "field": "floor",
+      "offset": 113,
+      "bytes": 9
+    },
+    {
+      "field": "last_added_segment_idx",
+      "offset": 122,
+      "bytes": 1
+    },
+    {
+      "field": "init_offset",
+      "offset": 123,
+      "bytes": 2
+    },
+    {
+      "field": "pool_free_size",
+      "offset": 125,
+      "bytes": 1
+    },
+    {
+      "field": "player_distance",
+      "offset": 126,
+      "bytes": 2
+    },
+    {
+      "field": "max_score",
+      "offset": 128,
+      "bytes": 2
+    },
+    {
+      "field": "load_cnt",
+      "offset": 130,
+      "bytes": 1
+    },
+    {
+      "field": "level_cnt",
+      "offset": 131,
+      "bytes": 2
+    },
+    {
+      "field": "new_level_cnt",
+      "offset": 133,
+      "bytes": 2
+    },
+    {
+      "field": "do_preload",
+      "offset": 135,
+      "bytes": 1
+    },
+    {
+      "field": "on_pause",
+      "offset": 136,
+      "bytes": 1
+    },
+    {
+      "field": "game_state",
+      "offset": 137,
+      "bytes": 1
+    },
+    {
+      "field": "obstacle_pool48x9",
+      "offset": 138,
+      "bytes": 432
+    },
+    {
+      "field": "death_continuation",
+      "offset": 570,
+      "bytes": 1
+    }
+  ]
+}

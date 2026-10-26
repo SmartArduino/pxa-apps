@@ -60,17 +60,22 @@ int main(void) {
             r_drawsurf.lightadj[0]=(int)i; r_drawsurf.lightadj[1]=(int)round;
             assert(!Pxa_QuakeLightLoad(surfaces+i)); assert(!Pxa_QuakeLightPacked());
             fill(i+round,324); Pxa_QuakeLightStore();
+            uint32_t static_token=Pxa_QuakeLightToken(); assert(static_token);
             memset(_g->blocklights,0,sizeof(_g->blocklights));
             assert(Pxa_QuakeLightLoad(surfaces+i)); assert(Pxa_QuakeLightPacked());
+            assert(Pxa_QuakeLightToken()==static_token);
             assert(!Pxa_QuakeLightPacked());
             for(unsigned j=0;j<324;++j) assert(_g->blocklights[j]==i+round+j*1291);
             nodeHadDlight[i/8]|=1u<<(i%8);
             assert(!Pxa_QuakeLightLoad(surfaces+i)); fill(999,324); Pxa_QuakeLightStore();
+            assert(!Pxa_QuakeLightToken());
             nodeHadDlight[i/8]=0;
             assert(Pxa_QuakeLightLoad(surfaces+i)); assert(Pxa_QuakeLightPacked());
             assert(_g->blocklights[0]==i+round); /* dynamic output never entered cache */
+            assert(Pxa_QuakeLightToken()==static_token);
             _g->r_refdef.ambientlight++;
             assert(!Pxa_QuakeLightLoad(surfaces+i)); fill(17,324); Pxa_QuakeLightStore();
+            assert(Pxa_QuakeLightToken()!=static_token);
             r_drawsurf.lightadj[3]++;
             assert(!Pxa_QuakeLightLoad(surfaces+i)); fill(23,324); Pxa_QuakeLightStore();
             port_render_probe_mode=13;

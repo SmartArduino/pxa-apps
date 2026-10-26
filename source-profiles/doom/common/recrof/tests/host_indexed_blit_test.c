@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "pxa/raster_spans.h"
+#include "pxa/raster_compute.h"
 #include "framebuffer.h"
 static uint32_t rng = 1731;
 static uint32_t random32(void) { rng ^= rng << 13; rng ^= rng >> 17; return rng ^= rng << 5; }
@@ -40,11 +40,11 @@ int main(void) {
         memset(m, 0xa5, 160000); memset(expected, 0xa5, 320*240*2);
         port_blit((uint16_t *)(void *)expected, dw, dh, m + 210000, sw, sh, sp, palette, overlay);
         pxa_game_render_blit_encode(m + 700000, 64, &h);
-        pxa_raster_spans_t batch;
+        pxa_raster_compute_t batch;
         assert(pxa_raster_blit_validate(m + 700000, 64, m, 1000000, 1, &batch) == 0);
         unsigned bytes = dw*dh*2, split = random32()%(bytes + 1);
-        pxa_raster_spans_execute_range(&batch, split, bytes);
-        pxa_raster_spans_execute_range(&batch, 0, split);
+        pxa_raster_compute_execute_range(&batch, split, bytes);
+        pxa_raster_compute_execute_range(&batch, 0, split);
         assert(!memcmp(m + 64, expected, bytes));
         for (unsigned j = 0; j < 64; ++j) assert(m[j] == 0xa5);
         for (unsigned j = 0; j < 16; ++j) assert(m[64 + bytes + j] == 0xa5);
@@ -54,7 +54,7 @@ int main(void) {
     h.source_offset = 210000; h.source_bytes = 16; h.source_width = h.source_height = h.source_pitch = 4;
     h.palette_offset = 200000; h.palette_bytes = 512; h.target_offset = 64; h.target_bytes = 32;
     h.target_width = h.target_height = 4; h.target_pitch = 8;
-    pxa_raster_spans_t batch;
+    pxa_raster_compute_t batch;
     const unsigned offset[] = {0,8,16,40,44,32,36};
     const uint32_t value[] = {999999,65,700000,600000,2,0,7};
     pxa_game_render_blit_encode(m + 700000, 64, &h);
@@ -71,7 +71,7 @@ int main(void) {
     for (unsigned i = 0; i < 4; ++i) m[72 + i] = i + 1;
     pxa_game_render_blit_encode(m + 700000, 64, &h);
     assert(pxa_raster_blit_validate(m + 700000, 64, m, 1000000, 1, &batch) == 0);
-    pxa_raster_spans_execute_range(&batch, 0, 64);
+    pxa_raster_compute_execute_range(&batch, 0, 64);
     for (unsigned y = 0; y < 4; ++y) for (unsigned x = 0; x < 4; ++x)
         assert(pxa_wire_generated_load_u16(m + 64 + y*16 + x*2) == palette[x + 1]);
     for (unsigned i = 0; i < 4; ++i) assert(m[72+i] == i+1);

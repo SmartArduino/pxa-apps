@@ -1,0 +1,4 @@
+ArduDash original game: SuperSolik/arduboy-games commit523b23abb239f0e520a01073acc92cb24fb262b4, Copyright2023SergeiPetrov, fullMIT in LICENSE.ARDUDASH.MIT.
+Arduboy2 library/font/Sprites dependency: MLXXXp/Arduboy2 commitbc460a2cff1a3e116880991aa2f88bae4b2e3160, full multi-notice text in LICENSE.ARDUBOY2.txt and exact original source/headers in ../arduboy-pxa/vendor/original. File-specific BSD3/BSD2/MIT notices remain with copied code.
+Original game source and all original art/map/generation inputs included under vendor/original, with official source pin/hashes. platform.patch only bounds jump indexing and cooperatively resumes the original death reset after250ms.
+Desktop profile: complete128x64 page framebuffer at integer2x,400x416 window; silent audio and sessionRAM EEPROM1024 only. No firmware/hardware validation or external deployment.

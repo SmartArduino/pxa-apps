@@ -1,0 +1,677 @@
+/*
+	C-Dogs SDL
+	A port of the legendary (and fun) action/arcade cdogs.
+	Copyright (c) 2013-2016, 2018-2021, 2026 Cong Xu
+	All rights reserved.
+
+	Redistribution and use in source and binary forms, with or without
+	modification, are permitted provided that the following conditions are met:
+
+	Redistributions of source code must retain the above copyright notice, this
+	list of conditions and the following disclaimer.
+	Redistributions in binary form must reproduce the above copyright notice,
+	this list of conditions and the following disclaimer in the documentation
+	and/or other materials provided with the distribution.
+
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+	AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+	IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+	ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+	LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+	CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+	SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+	INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+	CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+	ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+	POSSIBILITY OF SUCH DAMAGE.
+*/
+#include "events.h"
+
+#include <assert.h>
+#include <stdlib.h>
+
+#include <SDL_timer.h>
+
+#include "config_io.h"
+#include "files.h"
+#ifdef __wasi__
+#include "sound_cache_pxa.h"
+#endif
+#include "font.h"
+#include "gamedata.h"
+#include "log.h"
+#include "music.h"
+#include "pic_manager.h"
+
+EventHandlers gEventHandlers;
+
+void EventInit(EventHandlers *handlers)
+{
+	memset(handlers, 0, sizeof *handlers);
+	KeyInit(&handlers->keyboard);
+	JoyInit(&handlers->joysticks);
+	MouseInit(&handlers->mouse);
+}
+void EventTerminate(EventHandlers *handlers)
+{
+	JoyTerminate(&handlers->joysticks);
+	MouseTerminate(&handlers->mouse);
+}
+void EventReset(EventHandlers *handlers)
+{
+	KeyInit(&handlers->keyboard);
+	JoyReset(&handlers->joysticks);
+	MouseReset(&handlers->mouse);
+}
+
+void EventPoll(
+	EventHandlers *handlers, const Uint32 ticks, int (*onEvent)(SDL_Event *))
+{
+#ifdef __wasi__
+    static Uint32 cache_stats_tick;
+    Uint32 cache_now=SDL_GetTicks();
+    if(cache_now-cache_stats_tick>=5000){cache_stats_tick=cache_now;pxa_sound_cache_stats();}
+#endif
+	SDL_Event e;
+	handlers->HasResolutionChanged = false;
+	handlers->HasLostFocus = false;
+	KeyPrePoll(&handlers->keyboard);
+	MousePrePoll(&handlers->mouse);
+	JoyPrePoll(&handlers->joysticks);
+	SDL_free(handlers->DropFile);
+	handlers->DropFile = NULL;
+	// Don't process mouse events if focus just regained this cycle
+	// This is to prevent bogus click events outside the window, e.g. in the
+	// title bar
+	bool regainedFocus = false;
+	while (SDL_PollEvent(&e))
+	{
+		switch (e.type)
+		{
+		case SDL_AUDIODEVICEADDED: // fallthrough
+		case SDL_AUDIODEVICEREMOVED:
+			if (e.adevice.iscapture)
+			{
+				// Ignore capture devices
+				break;
+			}
+			SoundReopen(&gSoundDevice);
+			break;
+
+		case SDL_KEYDOWN:
+			if (e.key.repeat)
+			{
+				break;
+			}
+			KeyOnKeyDown(&handlers->keyboard, e.key.keysym);
+			break;
+		case SDL_KEYUP:
+			KeyOnKeyUp(&handlers->keyboard, e.key.keysym);
+			break;
+		case SDL_TEXTINPUT:
+			strcpy(handlers->keyboard.Typed, e.text.text);
+			break;
+
+		case SDL_CONTROLLERDEVICEADDED: {
+			const SDL_JoystickID jid = JoyAdded(e.cdevice.which);
+			if (jid == -1)
+			{
+				break;
+			}
+			// If there are players with unset devices,
+			// set this controller to them
+			CA_FOREACH(PlayerData, p, gPlayerDatas)
+			if (p->inputDevice == INPUT_DEVICE_UNSET)
+			{
+				PlayerTrySetInputDevice(p, INPUT_DEVICE_JOYSTICK, jid);
+				LOG(LM_INPUT, LL_INFO, "Joystick %d assigned to player %d",
+					jid, p->UID);
+				break;
+			}
+			CA_FOREACH_END()
+		}
+		break;
+
+		case SDL_CONTROLLERDEVICEREMOVED:
+			JoyRemoved(e.cdevice.which);
+			// If there was a player using this joystick,
+			// set their input device to nothing
+			CA_FOREACH(PlayerData, p, gPlayerDatas)
+			if (p->inputDevice == INPUT_DEVICE_JOYSTICK &&
+				p->deviceIndex == e.cdevice.which)
+			{
+				PlayerTrySetInputDevice(p, INPUT_DEVICE_UNSET, 0);
+				LOG(LM_INPUT, LL_WARN, "Joystick for player %d removed",
+					p->UID);
+				break;
+			}
+			CA_FOREACH_END()
+			break;
+
+		case SDL_CONTROLLERBUTTONDOWN:
+			JoyOnButtonDown(e.cbutton);
+			break;
+
+		case SDL_CONTROLLERBUTTONUP:
+			JoyOnButtonUp(e.cbutton);
+			break;
+
+		case SDL_CONTROLLERAXISMOTION:
+			JoyOnAxis(e.caxis);
+			break;
+
+		case SDL_MOUSEBUTTONDOWN:
+			if (regainedFocus)
+				break;
+			MouseOnButtonDown(&handlers->mouse, e.button.button);
+			break;
+		case SDL_MOUSEBUTTONUP:
+			if (regainedFocus)
+				break;
+			MouseOnButtonUp(&handlers->mouse, e.button.button);
+			break;
+		case SDL_MOUSEWHEEL:
+			if (regainedFocus)
+				break;
+			MouseOnWheel(&handlers->mouse, e.wheel.x, e.wheel.y);
+			break;
+		case SDL_WINDOWEVENT:
+			switch (e.window.event)
+			{
+			case SDL_WINDOWEVENT_FOCUS_GAINED:
+				regainedFocus = true;
+				MusicSetPlaying(&gSoundDevice.music, true);
+				break;
+			case SDL_WINDOWEVENT_FOCUS_LOST:
+				if (!gCampaign.IsClient &&
+					!ConfigGetBool(&gConfig, "StartServer"))
+				{
+					MusicSetPlaying(&gSoundDevice.music, false);
+					handlers->HasLostFocus = true;
+				}
+				// Reset input handlers
+				EventReset(handlers);
+				break;
+			case SDL_WINDOWEVENT_SIZE_CHANGED: {
+				const int w = ConfigGetInt(&gConfig, "Graphics.WindowWidth");
+				const int h = ConfigGetInt(&gConfig, "Graphics.WindowHeight");
+				if (w == e.window.data1 && h == e.window.data2)
+				{
+					// macOS sends spurious size changed events when
+					// switching between fullscreen; don't reinitialise
+					// graphics
+					break;
+				}
+				handlers->HasResolutionChanged = true;
+				const int scale =
+					ConfigGetInt(&gConfig, "Graphics.ScaleFactor");
+				if (!gGraphicsDevice.cachedConfig.IsEditor)
+				{
+					ConfigSetInt(
+						&gConfig, "Graphics.WindowWidth", e.window.data1);
+					ConfigSetInt(
+						&gConfig, "Graphics.WindowHeight", e.window.data2);
+					ConfigSave(&gConfig, GetConfigFilePath(CONFIG_FILE));
+				}
+				GraphicsConfigSet(
+					&gGraphicsDevice.cachedConfig,
+					svec2i(e.window.data1, e.window.data2), false, scale,
+					gGraphicsDevice.cachedConfig.DOSPAR,
+					gGraphicsDevice.cachedConfig.ScaleMode,
+					gGraphicsDevice.cachedConfig.Brightness,
+					gGraphicsDevice.cachedConfig.SecondWindow);
+				GraphicsInitialize(&gGraphicsDevice);
+			}
+			break;
+			case SDL_WINDOWEVENT_CLOSE:
+				handlers->HasQuit = true;
+				break;
+			default:
+				// do nothing
+				break;
+			}
+			break;
+		case SDL_QUIT:
+			handlers->HasQuit = true;
+			break;
+		case SDL_DROPFILE:
+			handlers->DropFile = e.drop.file;
+			break;
+		default:
+			break;
+		}
+		if (onEvent)
+		{
+			onEvent(&e);
+		}
+	}
+	KeyPostPoll(&handlers->keyboard, ticks);
+	MousePostPoll(&handlers->mouse, ticks);
+
+	// Toggle fullscreen
+	if (KeyIsPressed(&handlers->keyboard, SDL_SCANCODE_RETURN) &&
+		(KeyIsDown(&handlers->keyboard, SDL_SCANCODE_LALT) ||
+		 KeyIsDown(&handlers->keyboard, SDL_SCANCODE_RALT)))
+	{
+		ConfigGet(&gConfig, "Graphics.Fullscreen")->u.Bool.Value =
+			!ConfigGet(&gConfig, "Graphics.Fullscreen")->u.Bool.Value;
+		GraphicsConfigSetFromConfig(&gGraphicsDevice.cachedConfig, &gConfig);
+		GraphicsInitialize(&gGraphicsDevice);
+		// The view size (X_TILES/Y_TILES) has changed, so the draw buffers and
+		// live background must be rebuilt for the new resolution before the next
+		// draw. Flag it so the active game loop rebuilds them this frame (same
+		// path used when the resolution is changed from the options menu),
+		// otherwise a stale buffer is drawn for a frame.
+		handlers->HasResolutionChanged = true;
+	}
+
+	// Auto quit on timer
+	if (handlers->DemoQuitTimer > 0)
+	{
+		handlers->DemoQuitTimer -= ticks;
+		if (handlers->DemoQuitTimer <= 0)
+		{
+			LOG(LM_MAIN, LL_INFO, "Auto-quitting");
+			handlers->HasQuit = true;
+		}
+	}
+}
+
+int GetKeyboardCmd(
+	keyboard_t *keyboard, const int kbIndex, const bool isPressed)
+{
+	int cmd = 0;
+	bool (*keyFunc)(const keyboard_t *, const int) =
+		isPressed ? KeyIsPressed : KeyIsDown;
+	const InputKeys *keys = &keyboard->PlayerKeys[kbIndex];
+
+	if (keyFunc(keyboard, keys->left))
+		cmd |= CMD_LEFT;
+	else if (keyFunc(keyboard, keys->right))
+		cmd |= CMD_RIGHT;
+
+	if (keyFunc(keyboard, keys->up))
+		cmd |= CMD_UP;
+	else if (keyFunc(keyboard, keys->down))
+		cmd |= CMD_DOWN;
+
+	if (keyFunc(keyboard, keys->button1))
+		cmd |= CMD_BUTTON1;
+	if (keyFunc(keyboard, keys->button2))
+		cmd |= CMD_BUTTON2;
+	if (keyFunc(keyboard, keys->grenade))
+		cmd |= CMD_GRENADE;
+
+	return cmd;
+}
+
+static int GetJoystickCmd(const SDL_JoystickID id, bool isPressed)
+{
+	int cmd = 0;
+	bool (*joyFunc)(const SDL_JoystickID, const int) =
+		isPressed ? JoyIsPressed : JoyIsDown;
+
+	if (joyFunc(id, CMD_LEFT))
+		cmd |= CMD_LEFT;
+	else if (joyFunc(id, CMD_RIGHT))
+		cmd |= CMD_RIGHT;
+
+	if (joyFunc(id, CMD_UP))
+		cmd |= CMD_UP;
+	else if (joyFunc(id, CMD_DOWN))
+		cmd |= CMD_DOWN;
+
+	if (joyFunc(id, CMD_BUTTON1))
+		cmd |= CMD_BUTTON1;
+	if (joyFunc(id, CMD_BUTTON2))
+		cmd |= CMD_BUTTON2;
+	if (joyFunc(id, CMD_GRENADE))
+		cmd |= CMD_GRENADE;
+
+	if (joyFunc(id, CMD_MAP))
+		cmd |= CMD_MAP;
+
+	if (joyFunc(id, CMD_ESC))
+		cmd |= CMD_ESC;
+
+	return cmd;
+}
+
+int GetGameCmd(EventHandlers *handlers, const PlayerData *playerData)
+{
+	int cmd = 0;
+
+	switch (playerData->inputDevice)
+	{
+	case INPUT_DEVICE_KEYBOARD:
+		cmd = GetKeyboardCmd(
+			&handlers->keyboard, playerData->deviceIndex, false);
+		break;
+	case INPUT_DEVICE_JOYSTICK:
+		cmd = GetJoystickCmd(playerData->deviceIndex, false);
+		break;
+	default:
+		// do nothing
+		break;
+	}
+
+	return cmd;
+}
+
+int GetOnePlayerCmd(
+	EventHandlers *handlers, const bool isPressed, const input_device_e device,
+	const int deviceIndex)
+{
+	int cmd = 0;
+	switch (device)
+	{
+	case INPUT_DEVICE_KEYBOARD:
+		cmd = GetKeyboardCmd(&handlers->keyboard, deviceIndex, isPressed);
+		break;
+	case INPUT_DEVICE_JOYSTICK:
+		cmd = GetJoystickCmd(deviceIndex, isPressed);
+		break;
+	default:
+		// Do nothing
+		break;
+	}
+	return cmd;
+}
+
+void GetPlayerCmds(EventHandlers *handlers, int (*cmds)[MAX_LOCAL_PLAYERS])
+{
+	int idx = 0;
+	for (int i = 0; i < (int)gPlayerDatas.size; i++, idx++)
+	{
+		const PlayerData *p = CArrayGet(&gPlayerDatas, i);
+		if (!p->IsLocal)
+		{
+			idx--;
+			continue;
+		}
+		if (p->inputDevice != INPUT_DEVICE_UNSET)
+		{
+			(*cmds)[idx] = GetOnePlayerCmd(
+				handlers, true, p->inputDevice, p->deviceIndex);
+		}
+	}
+}
+
+int GetMenuCmd(EventHandlers *handlers, const bool useMouse)
+{
+	keyboard_t *kb = &handlers->keyboard;
+	bool firstJoyPressedEsc = false;
+	SDL_JoystickID firstJoyId = 0;
+	if (handlers->joysticks.size > 0)
+	{
+		const Joystick *firstJoy = CArrayGet(&handlers->joysticks, 0);
+		firstJoyId = firstJoy->id;
+		firstJoyPressedEsc = JoyIsPressed(firstJoyId, CMD_ESC);
+	}
+	if (KeyIsPressed(kb, SDL_SCANCODE_ESCAPE) || firstJoyPressedEsc)
+	{
+		return CMD_ESC;
+	}
+
+	// Check first player keyboard
+	int cmd = GetOnePlayerCmd(handlers, true, INPUT_DEVICE_KEYBOARD, 0);
+	if (!cmd)
+	{
+		// Check keyboard
+		if (KeyIsPressed(kb, SDL_SCANCODE_LEFT))
+			cmd |= CMD_LEFT;
+		else if (KeyIsPressed(kb, SDL_SCANCODE_RIGHT))
+			cmd |= CMD_RIGHT;
+
+		if (KeyIsPressed(kb, SDL_SCANCODE_UP))
+			cmd |= CMD_UP;
+		else if (KeyIsPressed(kb, SDL_SCANCODE_DOWN))
+			cmd |= CMD_DOWN;
+
+		if (KeyIsPressed(kb, SDL_SCANCODE_RETURN))
+			cmd |= CMD_BUTTON1;
+
+		if (KeyIsPressed(kb, SDL_SCANCODE_BACKSPACE))
+			cmd |= CMD_BUTTON2;
+	}
+	if (!cmd && handlers->joysticks.size > 0)
+	{
+		// Check joystick 1
+		cmd =
+			GetOnePlayerCmd(handlers, true, INPUT_DEVICE_JOYSTICK, firstJoyId);
+	}
+	if (!cmd)
+	{
+		// Check mouse
+		if (MouseIsPressed(&handlers->mouse, SDL_BUTTON_LEFT) && useMouse)
+			cmd |= CMD_BUTTON1;
+		else if (MouseIsPressed(&handlers->mouse, SDL_BUTTON_RIGHT))
+			cmd |= CMD_BUTTON2;
+	}
+
+	return cmd;
+}
+
+static const char *GetKeyName(const SDL_Scancode key)
+{
+	// Convert some common keys to single characters
+	switch (key)
+	{
+	case SDL_SCANCODE_LEFT:
+		return ARROW_LEFT;
+	case SDL_SCANCODE_RIGHT:
+		return ARROW_RIGHT;
+	case SDL_SCANCODE_UP:
+		return ARROW_UP;
+	case SDL_SCANCODE_DOWN:
+		return ARROW_DOWN;
+	default:
+		return SDL_GetScancodeName(key);
+	}
+}
+
+void InputGetButtonNameColor(
+	const input_device_e d, const int dIndex, const int cmd, char *buf,
+	color_t *color)
+{
+	switch (d)
+	{
+	case INPUT_DEVICE_KEYBOARD:
+#ifdef __GCWZERO__
+		if (color != NULL)
+		{
+			*color = colorBlue;
+		}
+		switch (cmd)
+		{
+		case CMD_LEFT:
+			strcpy(buf, "left");
+			return;
+		case CMD_RIGHT:
+			strcpy(buf, "right");
+			return;
+		case CMD_UP:
+			strcpy(buf, "up");
+			return;
+		case CMD_DOWN:
+			strcpy(buf, "down");
+			return;
+		case CMD_BUTTON1:
+			strcpy(buf, "A");
+			return;
+		case CMD_BUTTON2:
+			strcpy(buf, "B");
+			return;
+		case CMD_GRENADE:
+			*color = colorGray;
+			strcpy(buf, "R");
+			return;
+		case CMD_MAP:
+			*color = colorGray;
+			strcpy(buf, "L");
+			return;
+		case CMD_ESC:
+			strcpy(buf, "SELECT");
+			return;
+		default:
+			CASSERT(false, "unknown button");
+			return;
+		}
+#else
+	{
+		const InputKeys *keys = &gEventHandlers.keyboard.PlayerKeys[dIndex];
+		switch (cmd)
+		{
+		case CMD_LEFT:
+			strcpy(buf, GetKeyName(keys->left));
+			return;
+		case CMD_RIGHT:
+			strcpy(buf, GetKeyName(keys->right));
+			return;
+		case CMD_UP:
+			strcpy(buf, GetKeyName(keys->up));
+			return;
+		case CMD_DOWN:
+			strcpy(buf, GetKeyName(keys->down));
+			return;
+		case CMD_BUTTON1:
+			strcpy(buf, GetKeyName(keys->button1));
+			return;
+		case CMD_BUTTON2:
+			strcpy(buf, GetKeyName(keys->button2));
+			return;
+		case CMD_GRENADE:
+			strcpy(buf, GetKeyName(keys->grenade));
+			return;
+		case CMD_MAP:
+			strcpy(buf, GetKeyName(keys->map));
+			return;
+		case CMD_ESC:
+			strcpy(buf, GetKeyName(SDL_SCANCODE_ESCAPE));
+			return;
+		default:
+			CASSERT(false, "unknown button");
+			return;
+		}
+	}
+#endif
+		break;
+	case INPUT_DEVICE_JOYSTICK: {
+		const Joystick *joy = CArrayGet(&gEventHandlers.joysticks, dIndex);
+		JoyButtonNameColor(joy->id, cmd, buf, color);
+		return;
+	}
+	case INPUT_DEVICE_AI:
+		return;
+	default:
+		CASSERT(false, "unknown input device");
+		return;
+	}
+}
+bool InputHasGrenadeButton(const input_device_e d, const int dIndex)
+{
+	switch (d)
+	{
+	case INPUT_DEVICE_UNSET:
+		return false;
+	case INPUT_DEVICE_KEYBOARD:
+		return KeyGet(
+				   &gEventHandlers.keyboard.PlayerKeys[dIndex],
+				   KEY_CODE_GRENADE) != SDL_SCANCODE_UNKNOWN;
+	case INPUT_DEVICE_JOYSTICK:
+		return true;
+	case INPUT_DEVICE_AI:
+		return false;
+	default:
+		CASSERT(false, "unknown input device");
+		return true;
+	}
+}
+
+SDL_Scancode GetKey(EventHandlers *handlers)
+{
+	SDL_Scancode k = SDL_SCANCODE_UNKNOWN;
+	Uint32 ticksNow = SDL_GetTicks();
+	do
+	{
+		const Uint32 ticksThen = ticksNow;
+		ticksNow = SDL_GetTicks();
+		const Uint32 ticksElapsed = ticksNow - ticksThen;
+		EventPoll(handlers, ticksElapsed, NULL);
+		k = KeyGetPressed(&handlers->keyboard);
+		SDL_Delay(10);
+	} while (k == SDL_SCANCODE_UNKNOWN);
+	return k;
+}
+
+SDL_Scancode EventWaitKeyOrText(EventHandlers *handlers)
+{
+	EventPoll(handlers, 0, NULL);
+	const SDL_Scancode k = KeyGetPressed(&handlers->keyboard);
+	SDL_Delay(10);
+	return k;
+}
+
+static EventWaitResult WaitResult(const bool result);
+EventWaitResult EventWaitForAnyKeyOrButton(void)
+{
+	int cmds[MAX_LOCAL_PLAYERS];
+	memset(cmds, 0, sizeof cmds);
+	GetPlayerCmds(&gEventHandlers, &cmds);
+	for (int i = 0; i < MAX_LOCAL_PLAYERS; i++)
+	{
+		if (AnyButton(cmds[i]))
+		{
+			// Interpret anything other than CMD_BUTTON1 as cancel
+			return WaitResult(Button1(cmds[i]));
+		}
+	}
+
+	// Check menu commands
+	const int menuCmd = GetMenuCmd(&gEventHandlers, true);
+	if (AnyButton(menuCmd))
+	{
+		// Interpret anything other than CMD_BUTTON1 as cancel
+		return WaitResult(Button1(menuCmd));
+	}
+
+	// Check if anyone pressed escape
+	if (EventIsEscape(&gEventHandlers, cmds, menuCmd))
+	{
+		return WaitResult(false);
+	}
+
+	return EVENT_WAIT_CONTINUE;
+}
+static EventWaitResult WaitResult(const bool result)
+{
+	return result ? EVENT_WAIT_OK : EVENT_WAIT_CANCEL;
+}
+
+bool EventIsEscape(
+	EventHandlers *handlers, const int cmds[MAX_LOCAL_PLAYERS],
+	const int menuCmd)
+{
+	for (int i = 0; i < MAX_LOCAL_PLAYERS; i++)
+	{
+		if (cmds[i] & CMD_ESC)
+		{
+			return true;
+		}
+	}
+
+	// Check keyboard escape
+	if (KeyIsPressed(&handlers->keyboard, SDL_SCANCODE_ESCAPE) ||
+		handlers->HasQuit)
+	{
+		return true;
+	}
+
+	// Check menu commands
+	if (menuCmd & CMD_ESC)
+	{
+		return true;
+	}
+
+	return false;
+}

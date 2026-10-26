@@ -1,0 +1,79 @@
+{
+  "format": "nightraid-minimal-platform-edits-1",
+  "original_sha256": "0753930c12dc73778d529de54b1613e0d00c3c2489bf32a892d8f16dd8b85462",
+  "platform_sha256": "daf29ab4d022b70568c3a8e20d9c0241dc85a0280867533da4eba26a0463de4c",
+  "patch_sha256": "280e7757e7132bc2cbda1fc33c63adc3c1f0dd600ca9d6136f0ace48972c22bd",
+  "edits": [
+    {
+      "before": "int highscore =",
+      "after": "int16_t highscore =",
+      "count": 1
+    },
+    {
+      "before": "int targetRubble[8] =",
+      "after": "int16_t targetRubble[8] =",
+      "count": 1
+    },
+    {
+      "before": "int targetRubbleSecondLayer[8] =",
+      "after": "int16_t targetRubbleSecondLayer[8] =",
+      "count": 1
+    },
+    {
+      "before": "int score =",
+      "after": "int16_t score =",
+      "count": 1
+    },
+    {
+      "before": "int nextDifficultyUpdateScore =",
+      "after": "int16_t nextDifficultyUpdateScore =",
+      "count": 1
+    },
+    {
+      "before": "int nextLivesUpdateScore =",
+      "after": "int16_t nextLivesUpdateScore =",
+      "count": 1
+    },
+    {
+      "before": "int nextPlaneUpdateScore =",
+      "after": "int16_t nextPlaneUpdateScore =",
+      "count": 1
+    },
+    {
+      "before": "EEPROM.put(400, 111);",
+      "after": "EEPROM.put(400, int16_t(111));",
+      "count": 1
+    },
+    {
+      "before": "EEPROM.put(420, 0);",
+      "after": "EEPROM.put(420, int16_t(0));",
+      "count": 2
+    },
+    {
+      "before": "EEPROM.put(421, 0);",
+      "after": "EEPROM.put(421, int16_t(0));",
+      "count": 1
+    },
+    {
+      "before": "print(String(highscore))",
+      "after": "print((int)highscore)",
+      "count": 1
+    },
+    {
+      "before": "print(String(score))",
+      "after": "print((int)score)",
+      "count": 1
+    },
+    {
+      "before": "Missile nullMissile;",
+      "after": "Missile nullMissile{};",
+      "count": 1
+    },
+    {
+      "before": "Missile playerMissile;",
+      "after": "Missile playerMissile{};",
+      "count": 1
+    }
+  ],
+  "reason": "explicit AVR16 persistent integers and EEPROM literal widths; integer Print replaces unavailable Arduino String; two original uninitialized Missile locals zero-initialized, including scored used by rendering"
+}

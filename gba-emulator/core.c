@@ -257,5 +257,13 @@ const char *emu_state_load(const void *data,size_t size) {
     free(previous);if(!ok)return "Unsupported GBA snapshot";
     sound_load_mix(p+STATE_HEADER+MIX_OFFSET);
     memcpy(gamepak_backup,p+STATE_HEADER+GBA_STATE_MEM_SIZE,sizeof(gamepak_backup));
-    sample_remainder=get32(p+size-4);pcm_frames=0;return NULL;
+    sample_remainder=get32(p+size-4);pcm_frames=0;
+#ifdef PXA_GBA_BENCHMARK
+    /* Start a reproducible frame sequence after loading a known snapshot. */
+    bench_frames=bench_us=bench_pcm=0;
+#endif
+#ifdef PXA_EMU_PROFILE_PHASES
+    profile_reset();
+#endif
+    return NULL;
 }

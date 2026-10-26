@@ -1,0 +1,132 @@
+{
+  "repository": "https://github.com/obono/ArduboyWorks",
+  "commit": "d4b1f041789dcd1d71907654e4025d613b4ab420",
+  "game_dir": "knightmove",
+  "license": "MIT",
+  "original_files": [
+    {
+      "path": "vendor/original/common.cpp",
+      "bytes": 7513,
+      "sha256": "ce855bcf68717e97a97d67095ca87bd69e725f155f87ff513473918954669225",
+      "source_url": "https://github.com/obono/ArduboyWorks/blob/d4b1f041789dcd1d71907654e4025d613b4ab420/knightmove/common.cpp",
+      "source_path": "knightmove/common.cpp",
+      "git_blob_sha1": "ed1f29f1065236ad66a7483cb14c2887320d89ab"
+    },
+    {
+      "path": "vendor/original/common.h",
+      "bytes": 2710,
+      "sha256": "3f96f0e34570d8798c4814057bb050ac768f3cac67d4e1b3037b22a4c2ccbc42",
+      "source_url": "https://github.com/obono/ArduboyWorks/blob/d4b1f041789dcd1d71907654e4025d613b4ab420/knightmove/common.h",
+      "source_path": "knightmove/common.h",
+      "git_blob_sha1": "ba28b6170b5beddb0c2413233ba55b8480655f46"
+    },
+    {
+      "path": "vendor/original/data.h",
+      "bytes": 18681,
+      "sha256": "1ae87f4136707cd1e0ae3793e1e7e7049a45cae2b12cc871444f6f7799db3450",
+      "source_url": "https://github.com/obono/ArduboyWorks/blob/d4b1f041789dcd1d71907654e4025d613b4ab420/knightmove/data.h",
+      "source_path": "knightmove/data.h",
+      "git_blob_sha1": "bc61accb42bf6a9155addc27e440218ebbfe2d71"
+    },
+    {
+      "path": "vendor/original/game.cpp",
+      "bytes": 20944,
+      "sha256": "97199903221391b76b2d6bcb617611187ecacb0654e8fd606aa74b71955ec182",
+      "source_url": "https://github.com/obono/ArduboyWorks/blob/d4b1f041789dcd1d71907654e4025d613b4ab420/knightmove/game.cpp",
+      "source_path": "knightmove/game.cpp",
+      "git_blob_sha1": "deb79c9e803ecca988d4b97b7f0b084daa230dfc"
+    },
+    {
+      "path": "vendor/original/info.json",
+      "bytes": 267,
+      "sha256": "6fb667efa5e9ff33ca9e7050a39c3706186a8e5457d1434010f7a5f557429c79",
+      "source_url": "https://github.com/obono/ArduboyWorks/blob/d4b1f041789dcd1d71907654e4025d613b4ab420/knightmove/info.json",
+      "source_path": "knightmove/info.json",
+      "git_blob_sha1": "360fd25456ee215e39d23ff327b69c0c5c6c6be3"
+    },
+    {
+      "path": "vendor/original/knightmove.ino",
+      "bytes": 2127,
+      "sha256": "f6a6e39e5ac0c91480f5172eccbb6d925456117ab2c2fa5bbf0373e2cc537e37",
+      "source_url": "https://github.com/obono/ArduboyWorks/blob/d4b1f041789dcd1d71907654e4025d613b4ab420/knightmove/knightmove.ino",
+      "source_path": "knightmove/knightmove.ino",
+      "git_blob_sha1": "e430553838fd6b1a8d43785465bbfba04450dcce"
+    },
+    {
+      "path": "vendor/original/logo.cpp",
+      "bytes": 3443,
+      "sha256": "6bec06036d45a1e68a48e6837e3d933d29089fe2a8770fb666b5b55cee62f780",
+      "source_url": "https://github.com/obono/ArduboyWorks/blob/d4b1f041789dcd1d71907654e4025d613b4ab420/knightmove/logo.cpp",
+      "source_path": "knightmove/logo.cpp",
+      "git_blob_sha1": "5aeb2357c3b4c92bddb5a6bc909395275db740b4"
+    },
+    {
+      "path": "vendor/original/menu.cpp",
+      "bytes": 3542,
+      "sha256": "4fad6953a22673e2eb50e827ade99d1f31a20a14c92298418b029c15d057ff5a",
+      "source_url": "https://github.com/obono/ArduboyWorks/blob/d4b1f041789dcd1d71907654e4025d613b4ab420/knightmove/menu.cpp",
+      "source_path": "knightmove/menu.cpp",
+      "git_blob_sha1": "be41dd3bae01609b84e641488c7fdba5304a9d8d"
+    },
+    {
+      "path": "vendor/original/MyArduboy.cpp",
+      "bytes": 7923,
+      "sha256": "d6a58b41bb0d7d908ba99ea6cd75c1b72d8808dc91b2d99bf051f83c269fb10a",
+      "source_url": "https://github.com/obono/ArduboyWorks/blob/d4b1f041789dcd1d71907654e4025d613b4ab420/knightmove/MyArduboy.cpp",
+      "source_path": "knightmove/MyArduboy.cpp",
+      "git_blob_sha1": "f38ecf3260f11b1b4b33919a912ced32c9b5f878"
+    },
+    {
+      "path": "vendor/original/MyArduboy.h",
+      "bytes": 2046,
+      "sha256": "9a5c41578e75880140cf06f1f3d9f8aab003d53c0f89dcdb9a3a4e0e92c3a6bc",
+      "source_url": "https://github.com/obono/ArduboyWorks/blob/d4b1f041789dcd1d71907654e4025d613b4ab420/knightmove/MyArduboy.h",
+      "source_path": "knightmove/MyArduboy.h",
+      "git_blob_sha1": "e36aac91cdbf14aa3074bee978b3a6df930af6e8"
+    },
+    {
+      "path": "vendor/original/title.cpp",
+      "bytes": 8526,
+      "sha256": "c09cadfc80a8c7f00b1395a50e6cf5f477e8746f9c4436e23b6be05e2c7648d0",
+      "source_url": "https://github.com/obono/ArduboyWorks/blob/d4b1f041789dcd1d71907654e4025d613b4ab420/knightmove/title.cpp",
+      "source_path": "knightmove/title.cpp",
+      "git_blob_sha1": "1c914609df9e9b20d17ce41b6a0d69701a8691d1"
+    },
+    {
+      "path": "vendor/original-playtune/src/ArduboyPlaytune.cpp",
+      "bytes": 13124,
+      "sha256": "a00d916ba7999999e1a0ef2635631100086debf4a5b2d839d072902cf56eee41",
+      "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/src/ArduboyPlaytune.cpp",
+      "source_path": "src/ArduboyPlaytune.cpp"
+    },
+    {
+      "path": "vendor/original-playtune/src/ArduboyPlaytune.h",
+      "bytes": 6701,
+      "sha256": "8248731a184b13df6e64772493682e197958a3f615cdb5f796fdafb3f57dda0f",
+      "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/src/ArduboyPlaytune.h",
+      "source_path": "src/ArduboyPlaytune.h"
+    }
+  ],
+  "playtune": {
+    "repository": "Ar-zz-duboy/ArduboyPlaytune",
+    "commit": "493d3c960a87d1b4716eb85fb297706230c8e937",
+    "license": "MIT",
+    "original_files": [
+      {
+        "path": "vendor/original-playtune/src/ArduboyPlaytune.cpp",
+        "bytes": 13124,
+        "sha256": "a00d916ba7999999e1a0ef2635631100086debf4a5b2d839d072902cf56eee41",
+        "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/src/ArduboyPlaytune.cpp",
+        "source_path": "src/ArduboyPlaytune.cpp"
+      },
+      {
+        "path": "vendor/original-playtune/src/ArduboyPlaytune.h",
+        "bytes": 6701,
+        "sha256": "8248731a184b13df6e64772493682e197958a3f615cdb5f796fdafb3f57dda0f",
+        "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/src/ArduboyPlaytune.h",
+        "source_path": "src/ArduboyPlaytune.h"
+      }
+    ]
+  },
+  "new_common": "arduboy-batch-20261010"
+}

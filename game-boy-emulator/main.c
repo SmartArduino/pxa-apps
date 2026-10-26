@@ -82,6 +82,7 @@ static pxa_rom_file_t rom_file;
 static unsigned rom_paged;
 static uint32_t rom_stream_crc;
 static uint32_t saved_crc, pending_save_crc;
+static unsigned save_baseline_valid;
 static uint8_t pad[2], touches[16];
 static uint8_t controller_previous[2], controller_connected[2];
 static uint32_t controller_raw_previous[2];
@@ -494,7 +495,7 @@ static void start_save(void) {
     save_data = copy;
     if(!gb_core_save_export(save_data,size)){save_failed=1;redraw=1;return;}
     uint32_t crc=gb_port_crc32(0,save_data,size);
-    if(crc==saved_crc)return;
+    if(save_baseline_valid && crc==saved_crc)return;
     save_size = size;
     save_used = 0;
     pending_save_crc = crc;
@@ -510,7 +511,24 @@ static void start_save(void) {
     }
 }
 
+/* Capture the initial battery image once, after loading the cartridge/save.
+ * Snapshot restoration deliberately keeps the previous baseline so restored
+ * progress is persisted on the next pause. No work is added to game frames. */
+static void remember_save_baseline(void) {
+    save_baseline_valid = 0;
+    size_t size = gb_core_save_size();
+    if (!size) return;
+    uint8_t *copy = realloc(save_data, size);
+    if (!copy) return;
+    save_data = copy;
+    if (gb_core_save_export(save_data, size)) {
+        saved_crc = gb_port_crc32(0, save_data, size);
+        save_baseline_valid = 1;
+    }
+}
+
 static void game_ready(void) {
+    remember_save_baseline();
     gb_core_set_audio_enabled(audio!=0);
     reading_save = 0;
     rom_loaded = 1;
@@ -541,7 +559,7 @@ static void finish_rom(void) {
     if (error) { fail(error); return; }
     snprintf(save_path, sizeof(save_path), "gnuboy-%08x.sav", gb_core_checksum());
     snprintf(save_tmp, sizeof(save_tmp), "%s.tmp", save_path);
-    saved_crc = 0;
+    saved_crc = 0; save_baseline_valid = 0;
     if(!gb_core_save_size()){game_ready();return;}
     reading_save = 1;
     int r = pxa_fs_request_open(T_SAVE_READ, save_path, strlen(save_path), PXA_FS_OPEN_READ);
@@ -1283,7 +1301,7 @@ int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
             int32_t status;
             save_replace_pending = 0;
             if (pxa_fs_parse_status(&e, T_SAVE_REPLACE, PXA_FS_REPLACE, &status) && !status) {
-                saved_crc = pending_save_crc;
+                saved_crc = pending_save_crc; save_baseline_valid = 1;
                 redraw = 1;
                 gb_port_log("GB SRAM SAVED bytes=%u crc=%08x", (unsigned) save_size, saved_crc);
             } else { save_failed = 1; redraw = 1; gb_port_log("GB SRAM atomic replace failed"); }

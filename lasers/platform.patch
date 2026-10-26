@@ -1,0 +1,513 @@
+--- vendor/original-playtune/src/ArduboyPlaytune.cpp
++++ vendor/platform/ArduboyPlaytune.cpp
+@@ -60,7 +60,8 @@
+ */
+ 
+ #include "ArduboyPlaytune.h"
+-#include <avr/power.h>
++#include "audio_registers.h"
++#include "owner_compat.h"
+ 
+ static const byte tune_pin_to_timer[] = { 3, 1 };
+ static volatile byte *_tunes_timer1_pin_port;
+@@ -71,9 +72,9 @@
+ static byte _tune_pins[AVAILABLE_TIMERS];
+ static byte _tune_num_chans = 0;
+ static volatile boolean tune_playing = false; // is the score still playing?
+-static volatile unsigned wait_timer_frequency2;       /* its current frequency */
++static volatile uint16_t wait_timer_frequency2;       /* its current frequency */
+ static volatile boolean wait_timer_playing = false;   /* is it currently playing a note? */
+-static volatile unsigned long wait_toggle_count;      /* countdown score waits */
++static volatile uint32_t wait_toggle_count;      /* countdown score waits */
+ static volatile boolean all_muted = false; // indicates all sound is muted
+ static volatile boolean tone_playing = false;
+ static volatile boolean tone_mutes_score = false;
+@@ -97,7 +98,7 @@
+ 69,73,78,82,87,92,98,104,110,117,123,131,139,147,156,165,175,185,196,208,220,
+ 233,247
+ };
+-const unsigned int _midi_word_note_frequencies[80] PROGMEM = {
++const uint16_t _midi_word_note_frequencies[80] PROGMEM = {
+ 262,277,294,311,330,349,370,392,415,440,466,494,523,554,587,622,659,
+ 698,740,784,831,880,932,988,1047,1109,1175,1245,1319,1397,1480,1568,1661,1760,
+ 1865,1976,2093,2217,2349,2489,2637,2794,2960,3136,3322,3520,3729,3951,4186,
+@@ -106,6 +107,9 @@
+ 22351,23680,25088
+ };
+ 
++struct OwnerSong{const byte*data;size_t size;};static OwnerSong ownerSongs[32];
++static uint8_t audioFault=0;static uint32_t audioClock=0,audioInterrupts=0,audioStarts=0,audioStops=0;
++static uint8_t owner_audio_read(const volatile byte*p){uintptr_t a=(uintptr_t)p;for(auto&s:ownerSongs)if(s.data&&a>=(uintptr_t)s.data&&a<(uintptr_t)s.data+s.size)return *p;audioFault=1;return 0xf0;}
+ ArduboyPlaytune::ArduboyPlaytune(boolean (*outEn)())
+ {
+   outputEnabled = outEn;
+@@ -163,8 +167,8 @@
+ {
+   byte timer_num;
+   byte prescalar_bits;
+-  unsigned int frequency2; /* frequency times 2 */
+-  unsigned long ocr;
++  uint16_t frequency2; /* frequency times 2 */
++  uint32_t ocr;
+ 
+   // we can't play on a channel that does not exist
+   if (chan >= _tune_num_chans) {
+@@ -239,7 +243,7 @@
+ 
+ void ArduboyPlaytune::playScore(const byte *score)
+ {
+-  score_start = score;
++  ++audioStarts;score_start = score;
+   score_cursor = score_start;
+   step();  /* execute initial commands */
+   tune_playing = true;  /* release the interrupt routine */
+@@ -247,6 +251,7 @@
+ 
+ void ArduboyPlaytune::stopScore()
+ {
++  ++audioStops;
+   for (uint8_t i = 0; i < _tune_num_chans; i++)
+     stopNote(i);
+   tune_playing = false;
+@@ -267,10 +272,10 @@
+ void ArduboyPlaytune::step()
+ {
+   byte command, opcode, chan;
+-  unsigned duration;
++  uint16_t duration;
+ 
+   while (1) {
+-    command = pgm_read_byte(score_cursor++);
++    command = owner_audio_read(score_cursor++);
+     opcode = command & 0xf0;
+     chan = command & 0x0f;
+     if (opcode == TUNE_OP_STOPNOTE) { /* stop note */
+@@ -278,11 +283,11 @@
+     }
+     else if (opcode == TUNE_OP_PLAYNOTE) { /* play note */
+       all_muted = !outputEnabled();
+-      playNote(chan, pgm_read_byte(score_cursor++));
++      playNote(chan, owner_audio_read(score_cursor++));
+     }
+     else if (opcode < 0x80) { /* wait count in msec. */
+-      duration = ((unsigned)command << 8) | (pgm_read_byte(score_cursor++));
+-      wait_toggle_count = ((unsigned long) wait_timer_frequency2 * duration + 500) / 1000;
++      duration = ((uint16_t)command << 8) | (owner_audio_read(score_cursor++));
++      wait_toggle_count = ((uint32_t) wait_timer_frequency2 * duration + 500) / 1000;
+       if (wait_toggle_count == 0) wait_toggle_count = 1;
+       break;
+     }
+@@ -316,7 +321,7 @@
+   tune_playing = tone_playing = tone_only = mute_score = false;
+ }
+ 
+-void ArduboyPlaytune::tone(unsigned int frequency, unsigned long duration)
++void ArduboyPlaytune::tone(uint16_t frequency, uint32_t duration)
+ {
+   // don't output the tone if sound is muted or
+   // the tone channel isn't initialised
+@@ -401,3 +406,12 @@
+   }
+ }
+ 
++
++void obono_audio_register(uint8_t id,const uint8_t*p,size_t n){if(id>=32){audioFault=2;return;}ownerSongs[id]={p,n};}
++uint8_t obono_audio_channel_count(){return _tune_num_chans;}
++static uint8_t owner_id(const byte*p){if(!p)return 255;for(uint8_t i=0;i<32;i++)if(ownerSongs[i].data==p)return i;return 254;}
++static uint16_t owner_off(const byte*p,uint8_t id){if(!p)return 0;if(id<32){uintptr_t a=(uintptr_t)p,b=(uintptr_t)ownerSongs[id].data;if(a>=b&&a<=b+ownerSongs[id].size)return (uint16_t)(a-b);}return 65535;}
++void obono_audio_reset(){_tune_num_chans=0;memset(_tune_pins,0,sizeof(_tune_pins));_tunes_timer1_pin_port=_tunes_timer3_pin_port=nullptr;_tunes_timer1_pin_mask=_tunes_timer3_pin_mask=0;timer1_toggle_count=0;tune_playing=wait_timer_playing=all_muted=tone_playing=tone_mutes_score=tone_only=mute_score=false;wait_timer_frequency2=0;wait_toggle_count=0;outputEnabled=nullptr;score_start=score_cursor=nullptr;memset(ownerSongs,0,sizeof(ownerSongs));audioFault=0;audioClock=millis();audioInterrupts=audioStarts=audioStops=0;TCCR1A=TCCR1B=TCCR3A=TCCR3B=TIMSK1=TIMSK3=0;OCR1A=OCR3A=0;TCNT1=TCNT3=0;silentPin=silentMode=0;}
++static void advance_timer(uint32_t cycles,bool first){auto&counter=first?TCNT1:TCNT3;auto&ocr=first?OCR1A:OCR3A;auto&mask=first?TIMSK1:TIMSK3;auto&control=first?TCCR1B:TCCR3B;while(cycles){uint32_t prescale=(control&7)==1?1:(control&7)==3?64:0;if(!prescale||!(mask&2))return;uint32_t limit=(uint32_t)ocr+1;uint32_t until=((limit>counter.value?limit-counter.value:1)*prescale)-counter.fraction;uint32_t used=cycles<until?cycles:until;counter.fraction+=used;counter.value=(uint16_t)(counter.value+counter.fraction/prescale);counter.fraction%=prescale;cycles-=used;if(used==until){counter.value=0;counter.fraction=0;++audioInterrupts;if(first)TIMER1_COMPA_vect();else TIMER3_COMPA_vect();}}}
++void obono_audio_advance(uint32_t now){uint32_t delta=now-audioClock;audioClock=now;if(delta>64){audioFault=4;return;}for(uint32_t i=0;i<delta;i++){advance_timer(16000,true);advance_timer(16000,false);}}
++void obono_audio_pack(ObonoWriter&w){w.u8(_tune_num_chans);for(auto v:_tune_pins)w.u8(v);w.u8(_tunes_timer1_pin_port?1:0);w.u8(_tunes_timer3_pin_port?1:0);w.u8(_tunes_timer1_pin_mask);w.u8(_tunes_timer3_pin_mask);w.u32(timer1_toggle_count);w.u8(tune_playing);w.u16(wait_timer_frequency2);w.u8(wait_timer_playing);w.u32(wait_toggle_count);w.u8(all_muted);w.u8(tone_playing);w.u8(tone_mutes_score);w.u8(tone_only);w.u8(mute_score);w.u8(outputEnabled?1:0);uint8_t id=owner_id((const byte*)score_start);w.u8(id);w.u16(owner_off((const byte*)score_start,id));w.u8(id);w.u16(owner_off((const byte*)score_cursor,id));w.u8(TCCR1A);w.u8(TCCR1B);w.u8(TCCR3A);w.u8(TCCR3B);w.u8(TIMSK1);w.u8(TIMSK3);w.u16(OCR1A);w.u16(OCR3A);w.u16(TCNT1.value);w.u16(TCNT3.value);w.u32(TCNT1.fraction);w.u32(TCNT3.fraction);w.u8(silentPin);w.u8(silentMode);w.u8(audioFault);w.u32(audioClock);w.u32(audioInterrupts);w.u32(audioStarts);w.u32(audioStops);}
+--- vendor/original-playtune/src/ArduboyPlaytune.h
++++ vendor/platform/ArduboyPlaytune.h
+@@ -48,7 +48,7 @@
+ #define ARDUBOY_PLAYTUNE_H
+ 
+ #include <Arduino.h>
+-#include <avr/pgmspace.h>
++
+ 
+ #define AVAILABLE_TIMERS  2
+ 
+@@ -167,7 +167,7 @@
+    * first channel continue to play unless `toneMutesScore(true)` has been
+    * called.
+    */
+-  void tone(unsigned int frequency, unsigned long duration);
++  void tone(uint16_t frequency, uint32_t duration);
+ 
+   /** \brief
+    * Set a mode to specify whether playing a tone mutes the first score
+--- vendor/original/MyArduboy.cpp
++++ vendor/platform/MyArduboy.cpp
+@@ -1,4 +1,5 @@
+ #include "MyArduboy.h"
++#include <new>
+ 
+ PROGMEM static const uint32_t imgFont[] = {
+     0x00000000, 0x00017000, 0x000C00C0, 0x0A7CA7CA, 0x0855F542, 0x19484253, 0x1251F55E, 0x00003000,
+@@ -17,7 +18,8 @@
+ 
+ MyArduboy::MyArduboy(void)
+ {
+-    pTunes = new ArduboyPlaytune(myAudio.enabled);
++    alignas(ArduboyPlaytune) static uint8_t storage[sizeof(ArduboyPlaytune)];
++    pTunes = new(storage) ArduboyPlaytune(myAudio.enabled);
+     pTunes->initChannel(PIN_SPEAKER_1);
+ }
+ 
+@@ -321,3 +323,7 @@
+ {
+     pTunes->stopScore();
+ }
++
++void MyArduboy::pxaEnsureConstructed(){if(!pTunes)new(this)MyArduboy();}
++void MyArduboy::pxaReset(){textcolor=WHITE;textbg=BLACK;lastButtonState=currentButtonState=playScorePriority=0;*pTunes=ArduboyPlaytune(myAudio.enabled);pTunes->closeChannels();ArduboyPlaytune::initChannel(PIN_SPEAKER_1);}
++void MyArduboy::pxaPack(ObonoWriter&w)const{w.u8(textcolor);w.u8(textbg);w.u8(lastButtonState);w.u8(currentButtonState);w.u8(playScorePriority);}
+--- vendor/original/MyArduboy.h
++++ vendor/platform/MyArduboy.h
+@@ -1,4 +1,5 @@
+ #pragma once
++#include "owner_compat.h"
+ 
+ //#define USE_ARDUBOY2_LIB
+ 
+@@ -50,6 +51,7 @@
+     void    playScore2(const byte *score, uint8_t priority);
+     void    stopScore2(void);
+ 
++    void pxaEnsureConstructed();void pxaReset();void pxaPack(ObonoWriter&)const;
+ private:
+     void    myDrawChar(int16_t x, int16_t y, unsigned char c, uint8_t color, uint8_t bg, uint8_t size);
+     void    fillBeltBlack(buffer_t *p, uint8_t d, uint8_t w);
+--- vendor/original/common.cpp
++++ vendor/platform/common.cpp
+@@ -23,15 +23,15 @@
+ 
+ static uint16_t calcCheckSum();
+ 
+-static void     eepSeek(int addr);
+-static uint8_t  eepRead8(void);
+-static uint16_t eepRead16(void);
+-static uint32_t eepRead32(void);
+-static void     eepReadBlock(void *p, size_t n);
+-static void     eepWrite8(uint8_t val);
+-static void     eepWrite16(uint16_t val);
+-static void     eepWrite32(uint32_t val);
+-static void     eepWriteBlock(const void *p, size_t n);
++void     eepSeek(int addr);
++uint8_t  eepRead8(void);
++uint16_t eepRead16(void);
++uint32_t eepRead32(void);
++void     eepReadBlock(void *p, size_t n);
++void     eepWrite8(uint8_t val);
++void     eepWrite16(uint16_t val);
++void     eepWrite32(uint32_t val);
++void     eepWriteBlock(const void *p, size_t n);
+ 
+ /*  Local Variables  */
+ 
+@@ -45,6 +45,8 @@
+ 
+ static RECORD_STATE_T   recordState = RECORD_NOT_READ;
+ static int16_t          eepAddr;
++static bool isBlink = true;
++static_assert(sizeof(RECORD_T)==26,"AVR record26");
+ 
+ /*---------------------------------------------------------------------------*/
+ /*                             Common Functions                              */
+@@ -55,7 +57,8 @@
+     bool isVerified = false;
+     eepSeek(EEPROM_ADDR_BASE);
+     if (eepRead32() == EEPROM_SIGNATURE) {
+-        eepReadBlock(&record, sizeof(record));
++        for(int i=0;i<10;i++)record.hiscore[i]=eepRead16();
++        record.playFrames=eepRead32();record.playCount=eepRead16();
+         isVerified = (eepRead16() == calcCheckSum());
+     }
+ 
+@@ -80,7 +83,8 @@
+     } else {
+         eepSeek(EEPROM_ADDR_BASE + 4);
+     }
+-    eepWriteBlock(&record, sizeof(record));
++    for(int i=0;i<10;i++)eepWrite16(record.hiscore[i]);
++    eepWrite32(record.playFrames);eepWrite16(record.playCount);
+     eepWrite16(calcCheckSum());
+     arduboy.audio.saveOnOff(); // Save Sound ON/OFF
+     recordState = RECORD_STORED;
+@@ -91,10 +95,10 @@
+ static uint16_t calcCheckSum()
+ {
+     uint16_t checkSum = (EEPROM_SIGNATURE & 0xFFFF) + (EEPROM_SIGNATURE >> 16) * 3;
+-    uint16_t *p = (uint16_t *) &record;
+-    for (int i = 0; i < sizeof(record) / 2; i++) {
+-        checkSum += *p++ * (i * 2 + 5);
+-    }
++    for(int i=0;i<10;i++)checkSum += record.hiscore[i]*(i*2+5);
++    checkSum += (uint16_t)record.playFrames*25;
++    checkSum += (uint16_t)(record.playFrames>>16)*27;
++    checkSum += record.playCount*29;
+     return checkSum;
+ }
+ 
+@@ -164,32 +168,11 @@
+ 
+ void clearScreenGray(void)
+ {
+-    static bool isBlink = true;
+     uint8_t *sBuffer = arduboy.getBuffer();
+     uint8_t b1 = (isBlink) ? 0x55 : 0xaa;
+     uint8_t b2 = ~b1;
+-    asm volatile (
+-        // load sBuffer pointer into Z
+-        "movw r30, %0\n\t"
+-        // counter = 0
+-        "clr __tmp_reg__ \n\t"
+-        "loopto2: \n\t"
+-        // (4x) push byte data into screen buffer,
+-        // then increment buffer position
+-        "st Z+, %1 \n\t"
+-        "st Z+, %2 \n\t"
+-        "st Z+, %1 \n\t"
+-        "st Z+, %2 \n\t"
+-        // increase counter
+-        "inc __tmp_reg__ \n\t"
+-        // repeat for 256 loops
+-        // (until counter rolls over back to 0)
+-        "brne loopto2 \n\t"
+-        // input: sBuffer, b1, b2
+-        // modified: Z (r30, r31)
+-        :
+-        : "r" (sBuffer), "r" (b1), "r" (b2)
+-    );
++    // Original AVR four stores repeated256 times:1024 alternating bytes.
++    for(unsigned i=0;i<1024;i++)sBuffer[i]=(i&1)?b2:b1;
+     isBlink = !isBlink;
+ }
+ 
+@@ -226,13 +209,13 @@
+ uint8_t eepRead8(void)
+ {
+     eeprom_busy_wait();
+-    return eeprom_read_byte((const uint8_t *) eepAddr++);
++    return eeprom_read_byte((const uint8_t *)(uintptr_t)(uint16_t)eepAddr++);
+ }
+ 
+ uint16_t eepRead16(void)
+ {
+     eeprom_busy_wait();
+-    uint16_t ret = eeprom_read_word((const uint16_t *)eepAddr);
++    uint16_t ret = eeprom_read_word((const uint16_t *)(uintptr_t)(uint16_t)eepAddr);
+     eepAddr += 2;
+     return ret;
+ }
+@@ -240,7 +223,7 @@
+ uint32_t eepRead32(void)
+ {
+     eeprom_busy_wait();
+-    uint32_t ret = eeprom_read_dword((const uint32_t *) eepAddr);
++    uint32_t ret = eeprom_read_dword((const uint32_t *)(uintptr_t)(uint16_t)eepAddr);
+     eepAddr += 4;
+     return ret;
+ }
+@@ -248,34 +231,38 @@
+ void eepReadBlock(void *p, size_t n)
+ {
+     eeprom_busy_wait();
+-    eeprom_read_block(p, (const void *) eepAddr, n);
++    eeprom_read_block(p, (const void *)(uintptr_t)(uint16_t)eepAddr, n);
+     eepAddr += n;
+ }
+ 
+ void eepWrite8(uint8_t val)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_byte((uint8_t *) eepAddr, val);
++    eeprom_write_byte((uint8_t *)(uintptr_t)(uint16_t)eepAddr, val);
+     eepAddr++;
+ }
+ 
+ void eepWrite16(uint16_t val)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_word((uint16_t *)eepAddr, val);
++    eeprom_write_word((uint16_t *)(uintptr_t)(uint16_t)eepAddr, val);
+     eepAddr += 2;
+ }
+ 
+ void eepWrite32(uint32_t val)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_dword((uint32_t *)eepAddr, val);
++    eeprom_write_dword((uint32_t *)(uintptr_t)(uint16_t)eepAddr, val);
+     eepAddr += 4;
+ }
+ 
+ void eepWriteBlock(const void *p, size_t n)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_block(p, (void *) eepAddr, n);
++    eeprom_write_block(p, (void *)(uintptr_t)(uint16_t)eepAddr, n);
+     eepAddr += n;
+ }
++
++void obono_reset_common(){memset(&record,0,sizeof(record));isRecordDirty=false;lastScore=0;isInvalid=false;recordState=RECORD_NOT_READ;eepAddr=0;isBlink=true;}
++void obono_register_common(){obono_audio_register(1,soundTick,sizeof(soundTick));obono_audio_register(2,soundClick,sizeof(soundClick));}
++void obono_pack_common(ObonoWriter&w){for(unsigned i=0;i<10;i++)w.u16(record.hiscore[i]);w.u32(record.playFrames);w.u16(record.playCount);w.u8(isRecordDirty);w.u16(lastScore);w.u8(isInvalid);w.u8(recordState);w.u16(eepAddr);w.u8(isBlink);}
+--- vendor/original/common.h
++++ vendor/platform/common.h
+@@ -29,7 +29,7 @@
+     uint16_t    hiscore[10];
+     uint32_t    playFrames;
+     uint16_t    playCount;
+-} RECORD_T; // sizeof(RECORD_T) must be 26 bytes
++} __attribute__((packed)) RECORD_T; // sizeof(RECORD_T) must be 26 bytes
+ 
+ /*  Global Functions (Common)  */
+ 
+--- vendor/original/data.h
++++ vendor/platform/data.h
+@@ -113,7 +113,7 @@
+ 
+ PROGMEM static const byte soundOver[] = {
+     0x90, 55, 0, 120, 0x90, 54, 0, 140, 0x90, 53, 0, 160, 0x90, 52, 0, 180,
+-    0x90, 51, 0, 200, 0x90, 50, 0, 220, 0x90, 49, 0, 240, 0x90, 48, 0, 260, 0x80, 0xF0
++    0x90, 51, 0, 200, 0x90, 50, 0, 220, 0x90, 49, 0, 240, 0x90, 48, 0, static_cast<byte>(260), 0x80, 0xF0
+ };
+ 
+ PROGMEM static const byte soundToggle[] = {
+--- vendor/original/game.cpp
++++ vendor/platform/game.cpp
+@@ -301,7 +301,7 @@
+     int16_t dx = playerX - p->x;
+     int16_t dy = playerY - calcLaserY(p);
+     float deg = p->d * DEG_COEF;
+-    float vx = cos(deg), vy = -sin(deg);
++    float vx = cosf(deg), vy = -sinf(deg);
+     float lx = dx * vx + dy * vy, ly = dx * vy - dy * vx;
+     if (lx >= 0 && lx < p->r * SCALEF && abs(ly) < PLAYER_DIAM) {
+         p->r = lx / SCALEF;
+@@ -325,7 +325,9 @@
+     p->b = random(HEIGHT);
+     p->a = random(HEIGHT) - p->b;
+     p->d = random(DEG_MAX) * DEG_TO_RAD;
+-    p->vd = random(RAY_VD_MIN, RAY_VD_MAX + 1) * (random(2) * 2 - 1);
++    int8_t speed=random(RAY_VD_MIN,RAY_VD_MAX+1);
++    int8_t direction=random(2)*2-1;
++    p->vd=speed*direction;
+     p->r = 0;
+     p->isWhite = (random(8) >= colorBias);
+     colorBias += p->isWhite * 2 - 1; 
+@@ -381,7 +383,7 @@
+ {
+     /*  Explosion  */
+     for (int i = 0; i < SPARKS_MAX; i++) {
+-        newSpark(i * DEG_MAX / SPARKS_MAX, SPARK_S_MIN_EX, isPlayerWhite);
++        newSpark(i * (DEG_MAX / SPARKS_MAX), SPARK_S_MIN_EX, isPlayerWhite);
+     }
+ 
+     isHiscore = enterScore(score);
+@@ -454,7 +456,7 @@
+     int16_t x = descale(p->x);
+     int16_t y = descale(calcLaserY(p));
+     float deg = p->d * DEG_COEF;
+-    arduboy.drawLine(x, y, x + cos(deg) * p->r, y - sin(deg) * p->r, p->isWhite);
++    arduboy.drawLine(x, y, x + cosf(deg) * p->r, y - sinf(deg) * p->r, p->isWhite);
+ }
+ 
+ static void drawLaser(LASER_T *p)
+@@ -474,7 +476,7 @@
+         if (p->s) {
+             float deg = p->d * DEG_COEF;
+             float r = p->r / 4.0;
+-            arduboy.drawFastHLine(x + cos(deg) * r, y - sin(deg) * r, 2, p->isWhite);
++            arduboy.drawFastHLine(x + cosf(deg) * r, y - sinf(deg) * r, 2, p->isWhite);
+         }
+     }
+ }
+@@ -515,3 +517,9 @@
+     }
+     arduboy.setRGBled(r, g, 0);
+ }
++
++uint8_t obono_game_function_id(void(*f)()){return f==onContinue?4:f==onQuit?5:255;}
++void obono_reset_game(){state=STATE_INIT;memset(lasers,0,sizeof(lasers));memset(sparks,0,sizeof(sparks));score=gameFrames=0;power=playerX=playerY=laserCount=laserWait=0;playerVx=playerVy=playerMoving=colorBias=scoreX=scoreY=powerY=hitSound=lastHitSound=sparkIdx=0;isPlayerWhite=isHiscore=false;pSound=nullptr;}
++void obono_register_game(){obono_audio_register(3,soundStart,sizeof(soundStart));obono_audio_register(4,soundToggle,sizeof(soundToggle));obono_audio_register(5,soundLaserWhite,sizeof(soundLaserWhite));obono_audio_register(6,soundLaserBlack,sizeof(soundLaserBlack));obono_audio_register(7,soundAbsorb,sizeof(soundAbsorb));obono_audio_register(8,soundDamage,sizeof(soundDamage));obono_audio_register(9,soundOver,sizeof(soundOver));}
++static uint8_t psound_id(){return !pSound?0:pSound==soundStart?3:pSound==soundToggle?4:pSound==soundLaserWhite?5:pSound==soundLaserBlack?6:pSound==soundAbsorb?7:pSound==soundDamage?8:pSound==soundOver?9:255;}
++void obono_pack_game(ObonoWriter&w){w.u8(state);for(const auto&i:lasers){w.u16(i.x);w.u8(i.vx);w.u8(i.a);w.u8(i.b);w.u16(i.d);w.u8(i.vd);w.u8(i.r);w.u8(i.isWhite);}for(const auto&i:sparks){w.u16(i.d);w.u8(i.r);w.u8(i.s);w.u8(i.isWhite);}w.u16(score);w.u16(gameFrames);w.u16(power);w.u16(playerX);w.u16(playerY);w.u16(laserCount);w.u16(laserWait);w.u8(playerVx);w.u8(playerVy);w.u8(playerMoving);w.u8(colorBias);w.u8(scoreX);w.u8(scoreY);w.u8(powerY);w.u8(hitSound);w.u8(lastHitSound);w.u8(sparkIdx);w.u8(isPlayerWhite);w.u8(isHiscore);w.u8(psound_id());}
+--- vendor/original/lasers.ino
++++ vendor/platform/lasers.ino
+@@ -6,9 +6,9 @@
+ 
+ /*  Defines  */
+ 
+-#define callInitFunc(idx)   ((void (*)(void)) pgm_read_word((uint16_t) &moduleTable[idx]))()
+-#define callUpdateFunc(idx) ((MODE_T (*)(void)) pgm_read_word((uint16_t) &moduleTable[idx] + 2))()
+-#define callDrawFunc(idx)   ((void (*)(void)) pgm_read_word((uint16_t) &moduleTable[idx] + 4))()
++#define callInitFunc(idx)   moduleTable[idx].initFunc()
++#define callUpdateFunc(idx) moduleTable[idx].updateFunc()
++#define callDrawFunc(idx)   moduleTable[idx].drawFunc()
+ 
+ /*  Typedefs  */
+ 
+--- vendor/original/logo.cpp
++++ vendor/platform/logo.cpp
+@@ -52,7 +52,8 @@
+ MODE_T updateLogo(void)
+ {
+     counter--;
+-    signalOn = (SIGNAL_PTN >> (counter - FPS / 4) / (FPS / 20)) & 1;
++    int shift=(counter-FPS/4)/(FPS/20);
++    signalOn=(shift>=0&&shift<32)?((SIGNAL_PTN>>shift)&1):false;
+     arduboy.setRGBled(0, 0, signalOn * 127);
+     MODE_T ret = (counter == 0) ? MODE_WARN : MODE_LOGO;
+     if (ret) {
+@@ -72,3 +73,6 @@
+     arduboy.drawBitmap(68, 44, imgSoft, 32, 8, WHITE);
+     arduboy.printEx(16, 58, F(APP_CODE " VER " APP_VERSION));
+ }
++
++void obono_reset_logo(){counter=0;signalOn=false;}
++void obono_pack_logo(ObonoWriter&w){w.u8(counter);w.u8(signalOn);}
+--- vendor/original/menu.cpp
++++ vendor/platform/menu.cpp
+@@ -103,3 +103,7 @@
+     arduboy.drawBitmap(x, y, imgSound, 14, 7, WHITE);
+     arduboy.drawBitmap(x + 15, y, imgSoundOffOn[arduboy.audio.enabled()], 6, 7, WHITE);
+ }
++
++void obono_reset_menu(){menuX=menuY=menuW=menuH=menuItemCount=menuItemPos=0;memset(menuItemAry,0,sizeof(menuItemAry));}
++static uint8_t label_id(const __FlashStringHelper*p){if(!p)return 0;const char*s=(const char*)p;const char*names[]={"START GAME","RECORD","CREDIT","CONTINUE","QUIT"};for(unsigned i=0;i<5;i++)if(!strcmp(s,names[i]))return i+1;return 255;}
++void obono_pack_menu(ObonoWriter&w){w.u8(menuX);w.u8(menuY);w.u8(menuW);w.u8(menuH);w.u8(menuItemCount);w.u8(menuItemPos);for(const auto&i:menuItemAry){w.u8(obono_func_id(i.func));w.u8(label_id(i.label));}}
+--- vendor/original/title.cpp
++++ vendor/platform/title.cpp
+@@ -83,7 +83,9 @@
+ 
+     for (LINE_T *p = &lines[0]; p < &lines[LINES_MAX]; p++) {
+         p->x = random(LINE_X_MAX);
+-        p->vx = getLineVx() * (random(2) * 2 - 1);
++        int8_t speed=getLineVx();
++        int8_t direction=random(2)*2-1;
++        p->vx=speed*direction;
+     }
+ 
+     clearMenuItems();
+@@ -238,3 +240,7 @@
+         p += len + 1;
+     }
+ }
++
++uint8_t obono_title_function_id(void(*f)()){return f==onStart?1:f==onRecord?2:f==onCredit?3:255;}
++void obono_reset_title(){state=STATE_INIT;memset(lines,0,sizeof(lines));}
++void obono_pack_title(ObonoWriter&w){w.u8(state);for(const auto&i:lines){w.u16(i.x);w.u8(i.vx);}}
+--- vendor/original/warn.cpp
++++ vendor/platform/warn.cpp
+@@ -62,3 +62,6 @@
+         }
+     }
+ }
++
++void obono_reset_warn(){p=nullptr;x=y=0;}
++void obono_pack_warn(ObonoWriter&w){w.u16(p?(uintptr_t)p-(uintptr_t)warningText:65535);w.u8(x);w.u8(y);}

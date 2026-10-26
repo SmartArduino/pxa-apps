@@ -1,4 +1,5 @@
 #include "classic-raster.h"
+#include <string.h>
 
 #if OL_RENDER_PROFILE
 #include <time.h>
@@ -15,39 +16,77 @@ void ol_classic_upscale(uint16_t *pixels,unsigned width) {
     // preserves unread pixels without another frame buffer or heap allocation.
     for(int y=239;y>=0;--y) {
         auto *dest=pixels+y*320;
+        unsigned source_y=width==240?((y*3)>>2):(y>>1);
+        if(y<239 && source_y==(width==240?(((y+1)*3)>>2):((y+1)>>1))) {
+            memcpy(dest,dest+320,320*sizeof(*dest));
+            continue;
+        }
         const auto *source=pixels+(width==240?((y*3)>>2)*240:(y>>1)*160);
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        if(!((uintptr_t)dest&3u)) {
+            dest=static_cast<uint16_t*>(__builtin_assume_aligned(dest,4));
+            if(width==160) {
+                for(int x=159;x>=0;--x) {
+                    uint32_t p=source[x];p|=p<<16;
+                    __builtin_memcpy(dest+x*2,&p,sizeof(p));
+                }
+            } else {
+                for(int group=79;group>=0;--group) {
+                    // Read all three source pixels before the overlapping
+                    // in-place stores; each triplet expands to a,a,b,c.
+                    uint32_t a=source[group*3],b=source[group*3+1],c=source[group*3+2];
+                    uint32_t left=a|(a<<16),right=b|(c<<16);
+                    __builtin_memcpy(dest+group*4,&left,sizeof(left));
+                    __builtin_memcpy(dest+group*4+2,&right,sizeof(right));
+                }
+            }
+            continue;
+        }
+#endif
         for(int x=319;x>=0;--x)dest[x]=source[width==240?(x*3)>>2:x>>1];
     }
 }
 
-static inline __attribute__((always_inline)) void color_span(uint16_t *output,int count,int32_t u,int32_t v,int32_t l,
+template<bool Cached>
+static inline __attribute__((always_inline)) void color_span_pixels(uint16_t *output,int count,int32_t u,int32_t v,int32_t l,
     int32_t du,int32_t dv,int32_t dl,const uint8_t *tile,
-    const uint8_t *lightmap,const uint16_t *palette) {
+    const uint8_t *lightmap,const uint16_t *palette,const uint16_t *shaded_palette) {
     auto pixel=[&]() {
         unsigned index=tile[((uint32_t(v)>>16)<<8)+(uint32_t(u)>>16)];
-        if(index) *output=palette[lightmap[((l>>19)<<8)+index]];
+        if(index) *output=Cached ? shaded_palette[((l>>19)<<8)+index]
+                                : palette[lightmap[((l>>19)<<8)+index]];
         ++output;u+=du;v+=dv;l+=dl;
     };
     while(count>=4) {pixel();pixel();pixel();pixel();count-=4;}
     while(count-->0)pixel();
 }
 
-void ol_classic_span(uint16_t *output,int count,int32_t u,int32_t v,int32_t l,
+static inline __attribute__((always_inline)) void color_span(uint16_t *output,int count,int32_t u,int32_t v,int32_t l,
     int32_t du,int32_t dv,int32_t dl,const uint8_t *tile,
-    const uint8_t *lightmap,const uint16_t *palette) {
-    color_span(output,count,u,v,l,du,dv,dl,tile,lightmap,palette);
+    const uint8_t *lightmap,const uint16_t *palette,const uint16_t *shaded_palette) {
+#if OL_SHADED_PALETTE_CACHE
+    if(shaded_palette) {color_span_pixels<true>(output,count,u,v,l,du,dv,dl,tile,lightmap,palette,shaded_palette);return;}
+#endif
+    color_span_pixels<false>(output,count,u,v,l,du,dv,dl,tile,lightmap,palette,nullptr);
 }
 
-template<bool Write>
-static inline __attribute__((always_inline)) void depth_span(uint16_t *output,uint16_t *depth,int count,int32_t z,
+void ol_classic_span(uint16_t *output,int count,int32_t u,int32_t v,int32_t l,
+    int32_t du,int32_t dv,int32_t dl,const uint8_t *tile,
+    const uint8_t *lightmap,const uint16_t *palette,const uint16_t *shaded_palette) {
+    color_span(output,count,u,v,l,du,dv,dl,tile,lightmap,palette,shaded_palette);
+}
+
+template<bool Write,bool Cached>
+static inline __attribute__((always_inline)) void depth_span_pixels(uint16_t *output,uint16_t *depth,int count,int32_t z,
     int32_t dz,int32_t u,int32_t v,int32_t l,int32_t du,int32_t dv,int32_t dl,
-    const uint8_t *tile,const uint8_t *lightmap,const uint16_t *palette) {
+    const uint8_t *tile,const uint8_t *lightmap,const uint16_t *palette,const uint16_t *shaded_palette) {
     auto pixel=[&]() {
         const uint16_t value=uint32_t(z)>>15;
         if(value<=*depth) {
             unsigned index=tile[((uint32_t(v)>>16)<<8)+(uint32_t(u)>>16)];
             if(index) {
-                *output=palette[lightmap[((l>>19)<<8)+index]];
+                *output=Cached ? shaded_palette[((l>>19)<<8)+index]
+                               : palette[lightmap[((l>>19)<<8)+index]];
                 if(Write)*depth=value;
             }
         }
@@ -57,11 +96,21 @@ static inline __attribute__((always_inline)) void depth_span(uint16_t *output,ui
     while(count-->0)pixel();
 }
 
+template<bool Write>
+static inline __attribute__((always_inline)) void depth_span(uint16_t *output,uint16_t *depth,int count,int32_t z,
+    int32_t dz,int32_t u,int32_t v,int32_t l,int32_t du,int32_t dv,int32_t dl,
+    const uint8_t *tile,const uint8_t *lightmap,const uint16_t *palette,const uint16_t *shaded_palette) {
+#if OL_SHADED_PALETTE_CACHE
+    if(shaded_palette) {depth_span_pixels<Write,true>(output,depth,count,z,dz,u,v,l,du,dv,dl,tile,lightmap,palette,shaded_palette);return;}
+#endif
+    depth_span_pixels<Write,false>(output,depth,count,z,dz,u,v,l,du,dv,dl,tile,lightmap,palette,nullptr);
+}
+
 void ol_classic_depth_span(uint16_t *output,uint16_t *depth,int count,int32_t z,
     int32_t dz,int32_t u,int32_t v,int32_t l,int32_t du,int32_t dv,int32_t dl,
-    const uint8_t *tile,const uint8_t *lightmap,const uint16_t *palette,bool write) {
-    if(write)depth_span<true>(output,depth,count,z,dz,u,v,l,du,dv,dl,tile,lightmap,palette);
-    else depth_span<false>(output,depth,count,z,dz,u,v,l,du,dv,dl,tile,lightmap,palette);
+    const uint8_t *tile,const uint8_t *lightmap,const uint16_t *palette,bool write,const uint16_t *shaded_palette) {
+    if(write)depth_span<true>(output,depth,count,z,dz,u,v,l,du,dv,dl,tile,lightmap,palette,shaded_palette);
+    else depth_span<false>(output,depth,count,z,dz,u,v,l,du,dv,dl,tile,lightmap,palette,shaded_palette);
 }
 
 namespace {
@@ -135,13 +184,13 @@ struct RasterBatch {
         if (state.depth_test) {
             if(state.depth_write)
                 depth_span<true>(state.color+i+x1,state.depth+i+x1,x2-x1,S.z,dS.z,
-                    S.u,S.v,S.l,dS.u,dS.v,dS.l,state.tile,state.lightmap,state.palette);
+                    S.u,S.v,S.l,dS.u,dS.v,dS.l,state.tile,state.lightmap,state.palette,state.shaded_palette);
             else
                 depth_span<false>(state.color+i+x1,state.depth+i+x1,x2-x1,S.z,dS.z,
-                    S.u,S.v,S.l,dS.u,dS.v,dS.l,state.tile,state.lightmap,state.palette);
+                    S.u,S.v,S.l,dS.u,dS.v,dS.l,state.tile,state.lightmap,state.palette,state.shaded_palette);
         } else
             color_span(state.color+i+x1,x2-x1,S.u,S.v,S.l,dS.u,dS.v,dS.l,
-                state.tile,state.lightmap,state.palette);
+                state.tile,state.lightmap,state.palette,state.shaded_palette);
     }
 
     void drawPart(const VertexSW &a, const VertexSW &b, const VertexSW &c, const VertexSW &d) {

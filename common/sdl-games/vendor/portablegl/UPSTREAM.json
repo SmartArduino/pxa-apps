@@ -1,0 +1,8 @@
+{
+  "url": "https://github.com/rswinkle/PortableGL",
+  "commit": "954231808db1f367569afd74665ef5221cf21c88",
+  "license": "MIT",
+  "changes": [
+    "Correct RGB565 blending quantisation and implicit opaque framebuffer alpha; keep RGBA8 texture render targets independent of window format. Regression: tests/sdl-games/gl_adapter.c."
+  ]
+}

@@ -1,0 +1,456 @@
+{
+  "format": "pxa-arduboy-owner-source-freeze-2",
+  "game": "obstacleflight",
+  "files": {
+    "arduboy-batch-20261010/Arduino.h": {
+      "bytes": 1448,
+      "sha256": "5bb147c485a30d8a65187fc50bc0f0049612986375e886f5b3c0fd31f1629e11"
+    },
+    "arduboy-batch-20261010/EEPROM.h": {
+      "bytes": 980,
+      "sha256": "514d821f6f985bbfcb7ab6b8455a1fa08c409a5ccfe2bbb2db646c4fbf398f3a"
+    },
+    "arduboy-batch-20261010/LICENSE.MIT": {
+      "bytes": 1078,
+      "sha256": "b9210a8d898085595665c26a904e60b1a2111cae8c30ecb24409d9ff84b4d795"
+    },
+    "arduboy-batch-20261010/NOTICE.md": {
+      "bytes": 1836,
+      "sha256": "c2023633ca4210921eaded735fc22ee512c78358511394934e59c2af79864426"
+    },
+    "arduboy-batch-20261010/Print.h": {
+      "bytes": 1578,
+      "sha256": "afe71c1a6e6fc574496410a90be379cfdbb46a9c17bf9edb2cd3cb8cff293fdf"
+    },
+    "arduboy-batch-20261010/README.md": {
+      "bytes": 3619,
+      "sha256": "1ed0d09d514ef93cf20bcf344ed3e7b2281487a9a8f03a6a9f9be4d5e1f28bba"
+    },
+    "arduboy-batch-20261010/arduboy-platform.patch": {
+      "bytes": 11220,
+      "sha256": "33cc27a0175e7f0a761f361556bf79679153cbcee3fe0dbe09c25077ef2050b2"
+    },
+    "arduboy-batch-20261010/audit-wasm.py": {
+      "bytes": 2504,
+      "sha256": "db03d543f1dfe76d02d7f44a102f607bd1898d026674f4cc1fc34d64a601e9d6"
+    },
+    "arduboy-batch-20261010/backend.h": {
+      "bytes": 1462,
+      "sha256": "f4fc89da25b25ab25ae2a17d732653211a05c8d85e94c86df281282cdae9e44c"
+    },
+    "arduboy-batch-20261010/build.sh": {
+      "bytes": 650,
+      "sha256": "b56e2a659df54b484324abc1ee4c4172a15992de079144ac992c6334794235bd"
+    },
+    "arduboy-batch-20261010/compat.cpp": {
+      "bytes": 7203,
+      "sha256": "d96ffe2fc570bfe6820393587e38d70ecad735418243215abecf5b0f5b996e29"
+    },
+    "arduboy-batch-20261010/evidence.py": {
+      "bytes": 1200,
+      "sha256": "571c1e4ac738d2991c8c7f1988e4bb09ae4c12b04fe88590832396c7a4888d9d"
+    },
+    "arduboy-batch-20261010/foundation-lock.json": {
+      "bytes": 8199,
+      "sha256": "5d4cc5f108246ed69e99bfc4b67a0215b217297e04591256593cb0f3d235b724"
+    },
+    "arduboy-batch-20261010/frontend.cpp": {
+      "bytes": 9140,
+      "sha256": "81c5e59f8c6c0fdaad5ca4ee292ab4fd8e757f15cd62ef870a36d347b8fbcef5"
+    },
+    "arduboy-batch-20261010/game.cmake": {
+      "bytes": 1764,
+      "sha256": "96296e8bf2d59ccb516cb23a57ad2346b6b4f11d2f39f8877c852afb6a3dfa4d"
+    },
+    "arduboy-batch-20261010/profile.json": {
+      "bytes": 2163,
+      "sha256": "a46d90d20bd3844fb488f8d82b3027260fe5fbb17ff7843ab4fddaca9b8d4aa4"
+    },
+    "arduboy-batch-20261010/protocol.json": {
+      "bytes": 1951,
+      "sha256": "148c8ad11a6a690d6d7fdcf3a61c7a6fcfaa72bd9ccd1f011b701eca162565fb"
+    },
+    "arduboy-batch-20261010/pxa_framebuffer.h": {
+      "bytes": 9006,
+      "sha256": "2a96a44ad2e91dfd210ec347d5941d78b36c8bb6f01a27aa30bd120f1a4d3658"
+    },
+    "arduboy-batch-20261010/pxa_port_log.h": {
+      "bytes": 1196,
+      "sha256": "f71f1a7ab33e43b6bd808a7b502e425b2347284394a96e72715a7cb4491bf6bf"
+    },
+    "arduboy-batch-20261010/relink.py": {
+      "bytes": 2913,
+      "sha256": "90d650ed6344aa7676654d39812c68f5f46f4796aaa981bbe270d83e0081b6a6"
+    },
+    "arduboy-batch-20261010/retain-link-inputs.py": {
+      "bytes": 2319,
+      "sha256": "d935a8062f34325b687964a455ae32f67d2ccb77872419c7876d1b7750a0ccba"
+    },
+    "arduboy-batch-20261010/runtime.py": {
+      "bytes": 6302,
+      "sha256": "1494fc88551cdbbd25d99b4a379ad090ff760b95d70d6a802524f7743b1e226c"
+    },
+    "arduboy-batch-20261010/upstream-lock.json": {
+      "bytes": 4274,
+      "sha256": "fb1eb64f291c3ec8b73c8be241db899b433de117c72ef2b7267ea21a4b54159c"
+    },
+    "arduboy-batch-20261010/vendor/original/LICENSE.txt": {
+      "bytes": 14561,
+      "sha256": "5b021be5c106fd555169f0c9ca9d7f7f930e3690d900c480d0de4b067130df71"
+    },
+    "arduboy-batch-20261010/vendor/original/library.properties": {
+      "bytes": 783,
+      "sha256": "57ffaef719979764054963016a1331ec4bc6e6a7e2811e4d31a585358c5e98d0"
+    },
+    "arduboy-batch-20261010/vendor/original/src/Arduboy2.cpp": {
+      "bytes": 33307,
+      "sha256": "e83b20f5f089ebde978178e2e37b37efbfba0d258a88393d762ebb1bcaa6d70e"
+    },
+    "arduboy-batch-20261010/vendor/original/src/Arduboy2.h": {
+      "bytes": 79292,
+      "sha256": "f8c470df74268bfa1db2fde6e67aa6a3fe5f0abcd92413be2f3ba9a2df993c7d"
+    },
+    "arduboy-batch-20261010/vendor/original/src/Arduboy2Audio.cpp": {
+      "bytes": 1044,
+      "sha256": "a320a69b7a15de047085e5c52bca3442ae4cdb8d81f90febbaf8ec9c201566b1"
+    },
+    "arduboy-batch-20261010/vendor/original/src/Arduboy2Audio.h": {
+      "bytes": 4554,
+      "sha256": "3a6224603c2d8bd898a44aee0fed5850294d341d383ce87d430809b80c5069f6"
+    },
+    "arduboy-batch-20261010/vendor/original/src/Arduboy2Beep.cpp": {
+      "bytes": 2715,
+      "sha256": "077a7f96afaebe69674d176f5c2d958a4cc4d30a12b214cc0b726cf02ab438ef"
+    },
+    "arduboy-batch-20261010/vendor/original/src/Arduboy2Beep.h": {
+      "bytes": 11980,
+      "sha256": "00d8a85a3784ae3ee371be254931ed7e7c83652c5fd87299b56456f02c1a6b29"
+    },
+    "arduboy-batch-20261010/vendor/original/src/Arduboy2Core.cpp": {
+      "bytes": 17550,
+      "sha256": "37faac4ced4286c7d9dcf29a84ebd5941ae3a4956f7b1c978229b314f7567477"
+    },
+    "arduboy-batch-20261010/vendor/original/src/Arduboy2Core.h": {
+      "bytes": 31882,
+      "sha256": "5f3ab812de9a6b94316baead97a52590a7adf7930ffbae0d9c8816c71f7a5364"
+    },
+    "arduboy-batch-20261010/vendor/original/src/Arduboy2Data.cpp": {
+      "bytes": 11999,
+      "sha256": "67187e521bcaaa23a62250bf4a17b4e93b168c8cdf5280bf9217973743082674"
+    },
+    "arduboy-batch-20261010/vendor/original/src/Sprites.cpp": {
+      "bytes": 11606,
+      "sha256": "cb0b210e5cc5e7d231e0dc8443fdd297b20d625b599372546b9b8b42736ecc93"
+    },
+    "arduboy-batch-20261010/vendor/original/src/Sprites.h": {
+      "bytes": 9974,
+      "sha256": "f1b8da9e11c988dce85fcd6edc91924ad485bf0a50af3eaab816164d8e74820b"
+    },
+    "arduboy-batch-20261010/vendor/original/src/SpritesB.cpp": {
+      "bytes": 5007,
+      "sha256": "20e681e3945cd3ce187a749d484b3b3e864928786a9f134179128b44ee24343c"
+    },
+    "arduboy-batch-20261010/vendor/original/src/SpritesB.h": {
+      "bytes": 4183,
+      "sha256": "b83d82a2d8c5b767b6159cac4ab780acde5e73a2bd1f10bc2697834695e96d74"
+    },
+    "arduboy-batch-20261010/vendor/original/src/SpritesCommon.h": {
+      "bytes": 338,
+      "sha256": "38392fd1198147d9ff83f8985200a7811a17d3e07f19c542328677b9f6e0096d"
+    },
+    "arduboy-batch-20261010/vendor/platform/Arduboy2.cpp": {
+      "bytes": 29934,
+      "sha256": "94528661a91f6f0ed510f1e872bc0c7d7cbb4c3f591c9a2dc2d901693c56dfe3"
+    },
+    "arduboy-batch-20261010/vendor/platform/Arduboy2.h": {
+      "bytes": 79292,
+      "sha256": "f8c470df74268bfa1db2fde6e67aa6a3fe5f0abcd92413be2f3ba9a2df993c7d"
+    },
+    "arduboy-batch-20261010/vendor/platform/Arduboy2Audio.cpp": {
+      "bytes": 798,
+      "sha256": "6952c22a1bfef3f8535c380985e0109c6860fd9bf301296c27feaca0365cc54f"
+    },
+    "arduboy-batch-20261010/vendor/platform/Arduboy2Audio.h": {
+      "bytes": 4554,
+      "sha256": "3a6224603c2d8bd898a44aee0fed5850294d341d383ce87d430809b80c5069f6"
+    },
+    "arduboy-batch-20261010/vendor/platform/Arduboy2Beep.cpp": {
+      "bytes": 2771,
+      "sha256": "366e763ce1921f5fe632e0fbf3dd170a9d74415b4a935b7c40400fb702572a22"
+    },
+    "arduboy-batch-20261010/vendor/platform/Arduboy2Beep.h": {
+      "bytes": 11980,
+      "sha256": "00d8a85a3784ae3ee371be254931ed7e7c83652c5fd87299b56456f02c1a6b29"
+    },
+    "arduboy-batch-20261010/vendor/platform/Arduboy2Core.cpp": {
+      "bytes": 17550,
+      "sha256": "37faac4ced4286c7d9dcf29a84ebd5941ae3a4956f7b1c978229b314f7567477"
+    },
+    "arduboy-batch-20261010/vendor/platform/Arduboy2Core.h": {
+      "bytes": 31836,
+      "sha256": "acb14f3a2f779193ca817af53b079aab005fec9dd95b28230fffe2f016ca0a0d"
+    },
+    "arduboy-batch-20261010/vendor/platform/Arduboy2Data.cpp": {
+      "bytes": 12035,
+      "sha256": "bc0ae52530e6e11ffc6cccd462fe74abb6a2e0d8737234aaf17a3424383301ee"
+    },
+    "arduboy-batch-20261010/vendor/platform/Sprites.cpp": {
+      "bytes": 8524,
+      "sha256": "c9c431871cfa269f4ba6097f83eb211ad71e5f2e1cf8ed7fc95603ef759319bf"
+    },
+    "arduboy-batch-20261010/vendor/platform/Sprites.h": {
+      "bytes": 9974,
+      "sha256": "f1b8da9e11c988dce85fcd6edc91924ad485bf0a50af3eaab816164d8e74820b"
+    },
+    "arduboy-batch-20261010/vendor/platform/SpritesB.cpp": {
+      "bytes": 5007,
+      "sha256": "20e681e3945cd3ce187a749d484b3b3e864928786a9f134179128b44ee24343c"
+    },
+    "arduboy-batch-20261010/vendor/platform/SpritesB.h": {
+      "bytes": 4183,
+      "sha256": "b83d82a2d8c5b767b6159cac4ab780acde5e73a2bd1f10bc2697834695e96d74"
+    },
+    "arduboy-batch-20261010/vendor/platform/SpritesCommon.h": {
+      "bytes": 338,
+      "sha256": "38392fd1198147d9ff83f8985200a7811a17d3e07f19c542328677b9f6e0096d"
+    },
+    "arduboy-batch-20261010/verify-foundation.py": {
+      "bytes": 408,
+      "sha256": "f6cdc115aecba9a222e5fbcae51b69672ed557f152bea1b6d71e4a2ed72fefa1"
+    },
+    "arduboy-batch-20261010/verify-source.py": {
+      "bytes": 994,
+      "sha256": "4460fc210efd816724e5289f485ad56cadf0b1a1402a00c636d5f72724e48b1c"
+    },
+    "obstacleflight/CMakeLists.txt": {
+      "bytes": 335,
+      "sha256": "b104fa2ae2a4d28c8e9ed28f8f0f2c48e8546563e2c6a6b5614ee0af8fa019d1"
+    },
+    "obstacleflight/NOTICE": {
+      "bytes": 767,
+      "sha256": "66875c1cffdcf3fd49b2d5cf56cfbc5d6f761c3c78763608869d5b248ca6fea9"
+    },
+    "obstacleflight/README.md": {
+      "bytes": 2046,
+      "sha256": "9bd9c0bb918e3827c0d7b5b09e8beb8aae2e8949e5d19c11f2ec75b799088d2f"
+    },
+    "obstacleflight/assets/LICENSE.Arduboy2.txt": {
+      "bytes": 14561,
+      "sha256": "5b021be5c106fd555169f0c9ca9d7f7f930e3690d900c480d0de4b067130df71"
+    },
+    "obstacleflight/assets/LICENSE.obstacleflight.Unlicense": {
+      "bytes": 1210,
+      "sha256": "88d9b4eb60579c191ec391ca04c16130572d7eedc4a86daa58bf28c6e14c9bcd"
+    },
+    "obstacleflight/assets/LICENSE.tinyfont.BSD-3-Clause": {
+      "bytes": 1510,
+      "sha256": "1658fe417a2890929f2a9e10dbefa4be77670b8cbd2f32f11d43a327aad7ae22"
+    },
+    "obstacleflight/build.sh": {
+      "bytes": 404,
+      "sha256": "67a148e504706f9c8d66c11c6c92dd2a4b38a9d8cd9990a4c82fd9965e59cfe1"
+    },
+    "obstacleflight/cmake.patch": {
+      "bytes": 2004,
+      "sha256": "2169860ca4303217c66f8ea81880519a9b8256106778be08e33559509b09c76f"
+    },
+    "obstacleflight/export-contract.json": {
+      "bytes": 9094,
+      "sha256": "9c5ae7f4f52cd0f35bdd24095083566225d4e7d76838ce67daebd68626fdd91b"
+    },
+    "obstacleflight/foundation-reference.json": {
+      "bytes": 517,
+      "sha256": "ad0f27c73186b5d318233b00039955ee0fb28ffd6b888d4df390443efce74e41"
+    },
+    "obstacleflight/frontend.cpp": {
+      "bytes": 9398,
+      "sha256": "8e492170689e5f0c325caade047e3af311a66af0bbbc840c0dcb497f3f6acd90"
+    },
+    "obstacleflight/frontend.patch": {
+      "bytes": 3281,
+      "sha256": "404bb3c0177dc1358d6f2f2628f6674b07d675a218b231ba5f82b4d10ac0006e"
+    },
+    "obstacleflight/game-state-schema.json": {
+      "bytes": 1570,
+      "sha256": "c010e87ee8b5bee83e3850801509ae8989e6cc0fbde3b171e4bacd7366b57039"
+    },
+    "obstacleflight/game.cmake": {
+      "bytes": 1323,
+      "sha256": "ab13630fa9c200227496a916d77ef3e4ea3ea016dea4c98818ed1217dc9a41b4"
+    },
+    "obstacleflight/game.cpp": {
+      "bytes": 3415,
+      "sha256": "533d0f4bf4bb6faadea3563c94c7fab973ab0c9d8cf767631e337cd4fd6ccb44"
+    },
+    "obstacleflight/module-audit.py": {
+      "bytes": 2507,
+      "sha256": "831299aeee66989160b8e1b467596232899360d238e72f39fef64911de06655c"
+    },
+    "obstacleflight/native/current-proof.json": {
+      "bytes": 553,
+      "sha256": "fc28b9d7efedd7f8b81da82d0e7f1320f268fb67e32c7283bce0936b82970414"
+    },
+    "obstacleflight/native-check.cpp": {
+      "bytes": 4816,
+      "sha256": "e092e66701667a8d688f25cd73318f73e89acbdfa2f09940e28ae1af87c1b3d8"
+    },
+    "obstacleflight/native-check.py": {
+      "bytes": 4795,
+      "sha256": "9257cc09a7e962c224834411275a1c7f146c030b8376937969002b2780f1118c"
+    },
+    "obstacleflight/native-oracle.cpp": {
+      "bytes": 831,
+      "sha256": "012fcd4e9b694bdbbffcd52259ca36e17efcef0d46b0dada58d9386d7dabd002"
+    },
+    "obstacleflight/obstacleflight-upstream-lock.json": {
+      "bytes": 1207,
+      "sha256": "cffc8894f1eecb29849dd754a5ff02ec95754ed2372e0965218b5725b3d5fbaa"
+    },
+    "obstacleflight/package.json": {
+      "bytes": 858,
+      "sha256": "51270f6aaebe9e43c3f3d5f4083cc69d102c5b5d8d9b4e6a963e0a4f89e57acf"
+    },
+    "obstacleflight/platform.patch": {
+      "bytes": 1622,
+      "sha256": "99e3c7ace00b3c472921199c402e214d5e7e6155e8fd1e744373716f2bb8e31f"
+    },
+    "obstacleflight/run.ps1": {
+      "bytes": 1211,
+      "sha256": "0e8981953dd965e692cb15af30727b8b68d3e90a7b997c17a9d2ac885f96662e"
+    },
+    "obstacleflight/run.sh": {
+      "bytes": 451,
+      "sha256": "bc445d541a38416ca444b70a29ae4954b9979b483bfc300b71ac4e4f920daade"
+    },
+    "obstacleflight/source-freeze.json": {
+      "bytes": 18288,
+      "sha256": "bc0896d6a91aae09e420f27695121120728e5be0297e2b498cb51b760125eb0f"
+    },
+    "obstacleflight/tinyfont-upstream-lock.json": {
+      "bytes": 5733,
+      "sha256": "c849c7c589007c9151278c1d9cc849b9ab3634e2a45141c4989d553cafa2f0b7"
+    },
+    "obstacleflight/trace-capacity.py": {
+      "bytes": 4149,
+      "sha256": "be2a8605ca3cc76707a75f919a738f74055936610adb9d4d7640096e00087a4b"
+    },
+    "obstacleflight/trace-fixtures.py": {
+      "bytes": 2451,
+      "sha256": "771588b13c395dcc8944bcb478877ed190a41f325f58b96bf4650ad190f6340a"
+    },
+    "obstacleflight/trace_oracle.py": {
+      "bytes": 11377,
+      "sha256": "e507063af1b6ab6c4aa5ffad97a102601df32c4e9881e8dd19a47909631ca537"
+    },
+    "obstacleflight/vendor/original/obstacleflight/LICENSE": {
+      "bytes": 1210,
+      "sha256": "88d9b4eb60579c191ec391ca04c16130572d7eedc4a86daa58bf28c6e14c9bcd"
+    },
+    "obstacleflight/vendor/original/obstacleflight/ObstacleFlight.ino": {
+      "bytes": 11624,
+      "sha256": "3cf22b53388ed429556d5475af020292f4383a68099d70d2d406a18338ffd409"
+    },
+    "obstacleflight/vendor/original/tinyfont/.gitignore": {
+      "bytes": 71,
+      "sha256": "c851f92e1a7d1fd2d397b636e40b00933ac6c2c07eff32868c392b75dac945eb"
+    },
+    "obstacleflight/vendor/original/tinyfont/.travis.yml": {
+      "bytes": 1501,
+      "sha256": "5512c5cbaf2e172169bebdd394fbe9e18df2cba27e7793cf32d99dfd6d9266ae"
+    },
+    "obstacleflight/vendor/original/tinyfont/LICENSE": {
+      "bytes": 1510,
+      "sha256": "1658fe417a2890929f2a9e10dbefa4be77670b8cbd2f32f11d43a327aad7ae22"
+    },
+    "obstacleflight/vendor/original/tinyfont/README.md": {
+      "bytes": 2443,
+      "sha256": "6d008c723fcbfe8cb032ae77ad82e53d19fad20a2870aa9fb233b79937cf4f1f"
+    },
+    "obstacleflight/vendor/original/tinyfont/bitmaps/4x4font.psd": {
+      "bytes": 194420,
+      "sha256": "bbcfc0fa372aafa91186dad8f9e7b6dfdc1594f0e9bd915a41b32e8c57f4fb47"
+    },
+    "obstacleflight/vendor/original/tinyfont/bitmaps/tinyfont-preview.png": {
+      "bytes": 3712,
+      "sha256": "235b48ec4117dac8c7dbb3fe84f6f041a82adae94112b3cf2b101f530739eb2a"
+    },
+    "obstacleflight/vendor/original/tinyfont/bitmaps/tinyfont_8x8.png": {
+      "bytes": 690,
+      "sha256": "e702937d7662a547e547e9b969b0ab54167da818a63886ab1571035f3947bad2"
+    },
+    "obstacleflight/vendor/original/tinyfont/examples/TinyfontSample/TinyfontSample.ino": {
+      "bytes": 1084,
+      "sha256": "b9d763aa24985bef141fb1dbb291dba601e0756fc5740f44d104417c2f0155c4"
+    },
+    "obstacleflight/vendor/original/tinyfont/keywords.txt": {
+      "bytes": 168,
+      "sha256": "d02edefe85b8f213db282c2199e3529800fc3b5a52468dabb105acfe4f5f14ae"
+    },
+    "obstacleflight/vendor/original/tinyfont/library.json": {
+      "bytes": 620,
+      "sha256": "96ca5ae99c36ab53224e52f0070b0d7e19bb9a2d6b2a45533e7bfd36b5c475c0"
+    },
+    "obstacleflight/vendor/original/tinyfont/library.properties": {
+      "bytes": 373,
+      "sha256": "c9196a99de3bcf0da010fcdfefe32af6c73cb1f067b66464ae8f74de644583c0"
+    },
+    "obstacleflight/vendor/original/tinyfont/src/Tinyfont.cpp": {
+      "bytes": 2526,
+      "sha256": "90262dcf58d2b87affa1878886d01835a33cdd082810db80d46cf64ecb8c500f"
+    },
+    "obstacleflight/vendor/original/tinyfont/src/Tinyfont.h": {
+      "bytes": 3408,
+      "sha256": "7250ffe377dec26d7597ec13e0f5ea9e0bc4d3fcfd8bfc8ec4391692bf627226"
+    },
+    "obstacleflight/vendor/original/tinyfont/src/TinyfontSprite.c": {
+      "bytes": 13214,
+      "sha256": "f8230a600b3d41402b711709bc4e91d32618b9642586ce5975a4a4847b9d0792"
+    },
+    "obstacleflight/vendor/platform/ObstacleFlight.ino": {
+      "bytes": 11640,
+      "sha256": "a1423b766ab56997bd8fcb512404fb8cc71e362160d8427c3f473f9a7b79b498"
+    },
+    "obstacleflight/vendor/platform/tinyfont/Tinyfont.cpp": {
+      "bytes": 2526,
+      "sha256": "90262dcf58d2b87affa1878886d01835a33cdd082810db80d46cf64ecb8c500f"
+    },
+    "obstacleflight/vendor/platform/tinyfont/Tinyfont.h": {
+      "bytes": 3480,
+      "sha256": "2990fd237be5dbf40861968ee641914a669d75f46d974b170aa7f4a5b6c0a148"
+    },
+    "obstacleflight/vendor/platform/tinyfont/TinyfontSprite.c": {
+      "bytes": 13240,
+      "sha256": "76a13021e4ae4d8a84c6d7be11a9026cb1c64ee1e4bc7156181e3d2f6915cb70"
+    },
+    "obstacleflight/verify-source.py": {
+      "bytes": 3530,
+      "sha256": "9b0c11a320af5554cfdf119098887f9cf33f318b1be8ae89ae9fd2a1ae7d766a"
+    },
+    "obstacleflight/verify.py": {
+      "bytes": 15782,
+      "sha256": "21f7ffe4fea8b4d92f06ab742925c4dbb653187adc969239812a77a211cd5c3b"
+    },
+    "obstacleflight/verify.sh": {
+      "bytes": 181,
+      "sha256": "7ecfdb11e9ccfab46eeaa9022f4cf044f6fe710526e907fad06ad3a9389e301b"
+    }
+  },
+  "self_excluded": true,
+  "preliminary_freeze_retained": "research/obstacleflight-pre-owned-basis-1791618246604316894",
+  "metadata_only_change": "actual compiled owner CMake/frontend replaces incorrect inherited activecommon metadata; all compiledgame/provider/frontend/CMake/object bytes unchanged",
+  "active_cmake_path": "pxa-workspace/local/ports/obstacleflight/game.cmake",
+  "active_cmake_sha256": "ab13630fa9c200227496a916d77ef3e4ea3ea016dea4c98818ed1217dc9a41b4",
+  "active_frontend_path": "pxa-workspace/local/ports/obstacleflight/frontend.cpp",
+  "active_frontend_sha256": "8e492170689e5f0c325caade047e3af311a66af0bbbc840c0dcb497f3f6acd90",
+  "foundation_basis": {
+    "foundation_lock_sha256": "5d4cc5f108246ed69e99bfc4b67a0215b217297e04591256593cb0f3d235b724",
+    "final_receipt": {
+      "path": "logs/research/arduboy-batch-20261010/FINAL.json",
+      "bytes": 15407,
+      "sha256": "12a67ff09e6d74e3afd6cd365a39d7c5e72db6907f42c477b57bffe538e837a8"
+    },
+    "active_common_dir": "arduboy-batch-20261010",
+    "active_cmake_sha256": "96296e8bf2d59ccb516cb23a57ad2346b6b4f11d2f39f8877c852afb6a3dfa4d",
+    "active_frontend_sha256": "81c5e59f8c6c0fdaad5ca4ee292ab4fd8e757f15cd62ef870a36d347b8fbcef5"
+  }
+}

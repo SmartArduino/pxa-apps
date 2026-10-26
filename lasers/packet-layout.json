@@ -1,0 +1,63 @@
+{
+  "format": "lasers-full-typed-LE-state-1",
+  "game_id": 15,
+  "core_bytes": 3136,
+  "game_bytes": 638,
+  "total_bytes": 3774,
+  "segments": [
+    {
+      "offset": 0,
+      "bytes": 3,
+      "description": "schema,gameid,mode"
+    },
+    {
+      "offset": 3,
+      "bytes": 5,
+      "description": "MyArduboy textcolor,textbg,last/current buttons,playScorePriority"
+    },
+    {
+      "offset": 8,
+      "bytes": 9,
+      "description": "AVR15bit rand state,calls,ownerfault"
+    },
+    {
+      "offset": 17,
+      "bytes": 72,
+      "description": "original Playtune1.0.4 register/ISR canonical audio state; separate owner audio layout"
+    },
+    {
+      "offset": 89,
+      "bytes": 2,
+      "description": "logo counter and signalOn"
+    },
+    {
+      "offset": 91,
+      "bytes": 4,
+      "description": "warning pointer offset,x,y"
+    },
+    {
+      "offset": 95,
+      "bytes": 34,
+      "description": "tenhiscore,playFrames/count,recorddirty,lastscore,invalid,recordstate,eepAddr,isBlink"
+    },
+    {
+      "offset": 129,
+      "bytes": 16,
+      "description": "all menu dimensions/count/pos and ALL5 callback/label IDs including inactive"
+    },
+    {
+      "offset": 145,
+      "bytes": 25,
+      "description": "title state and ALL8 line x,vx including inactive"
+    },
+    {
+      "offset": 170,
+      "bytes": 468,
+      "description": "game state,ALL12laser10byte fields,ALL64spark5byte fields,score,gameFrames,power/playerxy/lasercount/wait; all13 other byte globals inclsound ID"
+    }
+  ],
+  "raw_host_padding": false,
+  "raw_pointers": false,
+  "inactive_arrays_included": true,
+  "state_restore_interface": false
+}

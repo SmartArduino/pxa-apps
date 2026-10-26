@@ -66,6 +66,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "cnc_cooperate.h"
 #include "msgbox.h"
 #include "keyframe.h"
 #include "language.h"
@@ -1356,6 +1357,7 @@ void Color_Cycle(void)
  *=============================================================================================*/
 void Call_Back(void)
 {
+    Cnc_Cooperate();
     /*
     **	Music and speech maintenance
     */

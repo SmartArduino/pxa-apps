@@ -1,0 +1,17 @@
+{
+  "url": "https://github.com/cxong/cdogs-sdl",
+  "commit": "c70d1feaf9d89cf80e23265b256d9a364848e6ea",
+  "changes": [
+    "PXA offline platform; UDP/network menus disabled",
+    "Application-private saves/configuration",
+    "Generated headers emitted to the build directory",
+    "Unused authoring-only .blend/.xcf/.kra/.psd files excluded from runtime media",
+    "Optional old non-commercial MAME dependency replaced with Nuked OPL3, LGPL-2.1-or-later",
+    "Stream all PNGs through one RGBA decoder",
+    "Free decoded PNG/font surfaces after copying; create base sprite textures lazily",
+    "Reserve a checked 1 MiB game stack for large upstream event unions",
+    "Reduce default logging and use 320x240 single-scale software video",
+    "Stable sound descriptors with a 2 MiB idle-voice LRU PCM cache; one active music decoder",
+    "Texture cache keyed by owned Pic pixel allocations, preserving upstream Pic-by-value rendering"
+  ]
+}

@@ -1,0 +1,264 @@
+{
+  "debian_source": "https://deb.debian.org/debian/pool/main/m/meritous/meritous_1.5.orig.tar.gz",
+  "copyright_url": "https://sources.debian.org/src/meritous/1.5-2/debian/copyright",
+  "checksums_match_official_dsc": {
+    "meritous_1.5.orig.tar.gz": "ed513a9210fbd0c88de5ca6b899af06d776e5da2e5ae6d97a7a09d68a76b49d7",
+    "meritous_1.5-2.debian.tar.xz": "f35f0ddfe1619947a39fb1287b73b5d842de8c6e77b52ebc243963c2a6402668"
+  },
+  "carried_assets": [
+    {
+      "name": "dat/d/bossroom.loc",
+      "sha256": "b4404fa206dde2ef11493ed4948a7ad876eb323bd1e1e17402888bc6490a92fd",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/d/centre.loc",
+      "sha256": "943718a6ff2b284589944174f01a19d3bdbcc73f3909d636b297ca5e64d0f963",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/d/cstream.loc",
+      "sha256": "a0655296c50cfbe5f6eb9086c4958599bb50d01de99b053ef8180732c8b9fb44",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/d/fbossroom.loc",
+      "sha256": "1fc2faf62b866b1aa0399b08ad9ebf063a04ef187708a60dd759500c3a39ad9b",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/d/font.dat",
+      "sha256": "e7857d4e0e75edafbed50928f0f7d59fbaee80e9ae03345d037619a93a28fe07",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/d/helpfile.txt",
+      "sha256": "13bbe02c13986546156d6466c1d9b8b3eab4ea403e7a1d96983e080dd961a464",
+      "exact_match_debian_source": false,
+      "difference": "Original credits list omitted music credits in Debian and added GPL notices/Android-port credits; game help and font/locations are unchanged."
+    },
+    {
+      "name": "dat/d/icon_bitmask.dat",
+      "sha256": "2c0d2dddbf2a792288ec70b86c2ce495973de67b41fd225c572b9e043a89d6b8",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/d/weapon.loc",
+      "sha256": "cabb8d4579373bcf7546ca991fcf10de75b52d2af69acf7ee5c6972532cd789b",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/agate.png",
+      "sha256": "781c24fe6200dbf002821542e302cc15159dc05501bab1abb6f1353e7d401c93",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/artifacts.png",
+      "sha256": "2aaa89e4b0bcee98b35d16676094caa39d57a252853e1a0654642aa23fc9e568",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/asceai.png",
+      "sha256": "de964b8063ffe452517e8afb0f819615b53181274b3be9e809dbfb6edcadcb50",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/automap.png",
+      "sha256": "1832b0e53a3ef66d698af6366dfa14787e2bfd4b680874de47b4cee161bb639d",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/boss1.png",
+      "sha256": "e3456b80849b2665d66132192ca14f3264267dc2265955f7cc14d6aea91835c5",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/boss2.png",
+      "sha256": "e477b3ae726747b48a78a9d3562613242dad80f4793382865d77a4ddb7279418",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/boss3.png",
+      "sha256": "9a64c96288c85c4379a9881efdd806d86508ce1dbe04f4c1cc4ff41f73a3ed77",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/boss4.png",
+      "sha256": "03563adbbeb0e8563379ecd95cce8ff02c77726e952b15ecfdb934640f97a4c1",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/boss_icon.png",
+      "sha256": "4e71875dafc51c2163efc09dbfc9402dc1e9b7cc6c7048589d91bf477da5cc75",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/circuits_1.png",
+      "sha256": "d21b6ad0ac8de0d4f57dbeb3b285fb3e4ddb686f65be489c7706714db3820fc9",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/fin.png",
+      "sha256": "65f906c71778b7d7c2060508767982adb914cb9dcc3ae41a5e57688415380f7d",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/gem.png",
+      "sha256": "69e1817681c8f141b8119b1f3a7839f482cf670d1e70ab431e00ca918f8d8174",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/glitter.png",
+      "sha256": "835590a95b4ef7018ddee91845d1bea56bd28d87262bfc2745d77f2d427ae66e",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/hidden_monster.png",
+      "sha256": "47e3a5055e72e91da2a0c6e7f3913382374b1cdb6b21fe6371a3c402713e78c3",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/icon.png",
+      "sha256": "ae6bc56146a2903463ed46590bf3f2e13e4edc3aedf98fcd4573a11ecb98c698",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/inrange.png",
+      "sha256": "b67c4155bb0e659271187cfae18317e17844ed86c53fb26dface98e6b6eb3350",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/linetest.png",
+      "sha256": "7b4f0a193093094b9bf59ef811edbe718dd0ea19325b8344f8fead9c79c059c8",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/meter.png",
+      "sha256": "aeb5e8f536f5bfa165e41d3cbf21102ae74f39e98325de97849b0625dd7a82de",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/mons1.png",
+      "sha256": "9c048c93eed8915ac6de70be338d1cc228a95bcab692ca06462f231cc3baacaa",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/mons10.png",
+      "sha256": "e51e4b5b6e037b863e9220054f74f55650f171dc0a27b3b9eed984f8a7bf604f",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/mons2.png",
+      "sha256": "946953aa6fc01d408884019da14b249b9d028ccb9d0d4dd160aea8b1eadf2a54",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/mons3.png",
+      "sha256": "5c749a579c8890c91bf46f153e3255d5bd87fabc2cf1b05e41429564431f84f6",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/mons4.png",
+      "sha256": "b9457fd7b6e655aaeb90ef259fd3523349090767842a6775dcb50af198ecb057",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/mons5.png",
+      "sha256": "e84cfb528f8b73dd0c72195c221d88b6ac7f125b018757709ae0d3dceeb071ab",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/mons6.png",
+      "sha256": "7669008e328535322d46a0851d0946c43b5f795c0945a4e6b4c12151a1afeef4",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/mons7.png",
+      "sha256": "4389cd428b9d23105814c18fcf9e9fd41b0c3ebb39fdb7f0410abb9d00672403",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/mons8.png",
+      "sha256": "98360d85f54c1e4eb8f678cbedbc1983b3209ec1e36b33211669953b624f1b62",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/mons9.png",
+      "sha256": "d3905a0b4658ab7e1eae84e83f1a2803acd1f905a9b1d6a08f36f9a26cb29b60",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/overview.png",
+      "sha256": "d487b6b60ae55cf226f64e1be95e2c7d7ce1d2daab71cd596a923bd8d8786c0a",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/player.png",
+      "sha256": "29ea8a73722883e979ed0c9393f7defebff865afb64a9e9260b8a3b530834f34",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/reticle.png",
+      "sha256": "d67a1098c2f0357a9f5bacc19bd33ab5904c6f56885972ff23694804b31d36b0",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/star1.png",
+      "sha256": "7294c067dedfc0e9b44e4fa6197d4c84cd14c41cd3650d60e33d92e0f8c29e75",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/star2.png",
+      "sha256": "5cbefee5ee637a0cb1e64e47dd0897df1fa2847aad50d09b87dbd55fe0dac760",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/star3.png",
+      "sha256": "4386235c133f1a3b4bc970ae411424b1f05fef0928822d2600f691169cc52c06",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/stream.png",
+      "sha256": "d2e58582cd330d069fbd197481970999d5538248df3ff0cb5a14ff2431209461",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/teleflash.png",
+      "sha256": "b3f8fd54b2bab4175837989f580498607e292bc1c034c43c92ddf0dd2e3c1c79",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/theend.png",
+      "sha256": "366f4420caac530343c2d2b85fcd472f8291fe41d2c181e94898b1a43438a8a7",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/tileset.png",
+      "sha256": "6b4a5358f83bed799bfd1bbe82181be1ffee4ebb822403dbbde45c0e5b2d2531",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/title.png",
+      "sha256": "bea0954bd320b744700b7acd3c6c2b69397e2058356f58bb416d982dfe4cb955",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/true_end.png",
+      "sha256": "3be0600d5f4412da7f4c0175a05e8ea0044c34db6817ee2779675ad9896591a2",
+      "exact_match_debian_source": true
+    },
+    {
+      "name": "dat/i/wuss_ending.png",
+      "sha256": "f879fade7dc88c7ea7bb730d3f7e0ea0f0eb071e4a334719403b128d583e84c0",
+      "exact_match_debian_source": true
+    }
+  ],
+  "music_and_sound_and_dlls_carried": false,
+  "license": "GPL-3.0-or-later",
+  "audit_passed": true,
+  "required_total": 49,
+  "required_exact_matches": 48,
+  "allowed_nonidentical_files": [
+    "dat/d/helpfile.txt"
+  ]
+}

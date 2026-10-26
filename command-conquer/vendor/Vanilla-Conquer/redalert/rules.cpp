@@ -49,6 +49,7 @@
  * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 #include "function.h"
+#include "cnc_cooperate.h"
 #include "vortex.h"
 
 /***********************************************************************************************
@@ -956,34 +957,42 @@ bool RulesClass::Objects(CCINIClass& ini)
     **	Fetch the game object values from the rules file.
     */
     for (int index = 0; index < Warheads.Count(); index++) {
+        Cnc_Cooperate();
         Warheads.Ptr(index)->Read_INI(ini);
     }
 
     for (int proj = 0; proj < BulletTypes.Count(); proj++) {
+        Cnc_Cooperate();
         BulletTypes.Ptr(proj)->Read_INI(ini);
     }
 
     for (int windex = 0; windex < Weapons.Count(); windex++) {
+        Cnc_Cooperate();
         Weapons.Ptr(windex)->Read_INI(ini);
     }
 
     for (int uindex = 0; uindex < UnitTypes.Count(); uindex++) {
+        Cnc_Cooperate();
         UnitTypes.Ptr(uindex)->Read_INI(ini);
     }
 
     for (int iindex = 0; iindex < InfantryTypes.Count(); iindex++) {
+        Cnc_Cooperate();
         InfantryTypes.Ptr(iindex)->Read_INI(ini);
     }
 
     for (int vindex = 0; vindex < VesselTypes.Count(); vindex++) {
+        Cnc_Cooperate();
         VesselTypes.Ptr(vindex)->Read_INI(ini);
     }
 
     for (int aindex = 0; aindex < AircraftTypes.Count(); aindex++) {
+        Cnc_Cooperate();
         AircraftTypes.Ptr(aindex)->Read_INI(ini);
     }
 
     for (int bindex = 0; bindex < BuildingTypes.Count(); bindex++) {
+        Cnc_Cooperate();
         BuildingTypes.Ptr(bindex)->Read_INI(ini);
     }
 
@@ -991,6 +1000,7 @@ bool RulesClass::Objects(CCINIClass& ini)
     **	Fetch the house attribute override values.
     */
     for (HousesType house = HOUSE_FIRST; house < HOUSE_COUNT; house++) {
+        Cnc_Cooperate();
         HouseTypeClass::As_Reference(house).Read_INI(ini);
     }
 
@@ -998,11 +1008,11 @@ bool RulesClass::Objects(CCINIClass& ini)
     **	Fetch the mission control values.
     */
     for (MissionType mission = MISSION_FIRST; mission < MISSION_COUNT; mission++) {
+        Cnc_Cooperate();
         MissionControlClass* miss = &MissionControl[mission];
         miss->Mission = mission;
         miss->Read_INI(ini);
     }
-
     return (true);
 }
 

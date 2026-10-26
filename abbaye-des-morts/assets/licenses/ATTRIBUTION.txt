@@ -1,0 +1,10 @@
+L’Abbaye des Morts
+Original game and graphics: Locomalito (2010), https://www.locomalito.com/abbaye_des_morts.php
+Music and effects: Gryzor87.
+SDL2 port contributors: see vendor/ReadMe.md, vendor/ChangeLog.md and original source headers.
+
+Graphics and sounds: Creative Commons Attribution 3.0 Unported, as stated by the upstream project.
+License: https://creativecommons.org/licenses/by/3.0/
+Upstream: https://github.com/nevat/abbayedesmorts-gpl
+PXA preserves the original graphics/sound files; resource paths are normalised to lowercase.
+Source code and PXA guest bridge: GNU GPL version 3 or later; see GPL-3.0.txt.

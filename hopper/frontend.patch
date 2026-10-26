@@ -1,0 +1,30 @@
+--- a/arduboy-batch-20261010/frontend.cpp
++++ b/hopper/frontend.cpp
+@@ -15,6 +15,14 @@
+ static void ui_text(int x,int y,int scale,const char *s,uint8_t color){const uint8_t*font=arduboy_pxa_font();for(;*s;++s,x+=6*scale)for(int col=0;col<5;col++){uint8_t bits=font[(uint8_t)*s*5+col];for(int row=0;row<8;row++)if(bits&(1u<<row))ui_rect(x+col*scale,y+row*scale,scale,scale,color);}}
+ static void ui_button(int x,int y,int w,int h,const char*label,int active){ui_rect(x,y,w,h,active?3:2);ui_text(x+(w-(int)strlen(label)*12)/2,y+(h-16)/2,2,label,1);}
+ static uint8_t touch_mask(int x,int y){
++#if ARDU_GAME_ID == 8
++ if(y>=276&&y<304){
++  if(x>=16&&x<104)return UP_BUTTON|LEFT_BUTTON;
++  if(x>=108&&x<196)return UP_BUTTON|RIGHT_BUTTON;
++  if(x>=200&&x<288)return DOWN_BUTTON|LEFT_BUTTON;
++  if(x>=292&&x<380)return DOWN_BUTTON|RIGHT_BUTTON;
++ }
++#endif
+ #if ARDU_GAME_ID == 1
+  if(x>=184&&x<380&&y>=276&&y<304)return UP_BUTTON|DOWN_BUTTON;
+ #endif
+@@ -49,6 +57,12 @@
+ #if ARDU_GAME_ID == 1
+  ui_button(184,276,196,28,"UP+DOWN",arduboy_pxa_state.pointer==(UP_BUTTON|DOWN_BUTTON));
+ #endif
++#if ARDU_GAME_ID == 8
++ ui_button(16,276,88,28,"UL",arduboy_pxa_state.pointer==(UP_BUTTON|LEFT_BUTTON));
++ ui_button(108,276,88,28,"UR",arduboy_pxa_state.pointer==(UP_BUTTON|RIGHT_BUTTON));
++ ui_button(200,276,88,28,"DL",arduboy_pxa_state.pointer==(DOWN_BUTTON|LEFT_BUTTON));
++ ui_button(292,276,88,28,"DR",arduboy_pxa_state.pointer==(DOWN_BUTTON|RIGHT_BUTTON));
++#endif
+  if(fe.paused){ui_rect(70,70,260,176,2);ui_text(152,82,2,"PAUSED",1);ui_button(108,120,184,34,"CONTINUE",0);ui_button(108,174,184,34,"NEW GAME",0);}
+  if(arduboy_pxa_state.fault){ui_rect(70,70,260,176,4);ui_text(86,120,2,"SOFTWARE STOP",1);}
+  fe.dirty=0;if(fe.fb.ready&&pxfb_present(&fe.fb)<0){pxa_log_write(4,"Arduboy raster failed");__builtin_trap();}

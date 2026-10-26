@@ -1,0 +1,16 @@
+{
+  "LICENSE.rxi-vec.MIT": {
+    "url": "https://raw.githubusercontent.com/rxi/vec/master/LICENSE",
+    "sha256": "891cd42e27d077ecf2cff3ffa0c6aff5ff53b143b0e27b89fb4a16ff9a1a0151",
+    "bytes": 1060,
+    "layout": "Standard MIT line wrapping; original rxi copyright and all permission/warranty terms retained",
+    "verified_source": "Official raw license read through web tool; direct local HTTPS timed out"
+  },
+  "LICENSE.rxi-map.MIT": {
+    "url": "https://raw.githubusercontent.com/rxi/map/master/LICENSE",
+    "sha256": "891cd42e27d077ecf2cff3ffa0c6aff5ff53b143b0e27b89fb4a16ff9a1a0151",
+    "bytes": 1060,
+    "layout": "Standard MIT line wrapping; original rxi copyright and all permission/warranty terms retained",
+    "verified_source": "Official raw license read through web tool; direct local HTTPS timed out"
+  }
+}

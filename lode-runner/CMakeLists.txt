@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.20)
+project(pxa_classic_loderunner LANGUAGES C CXX)
+set(ARDU_GAME_ID 12)
+set(GAME_EXTRA_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/vendor/platform/src/utils/Arduboy2Ext.cpp")
+set(GAME_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}")
+include(${CMAKE_CURRENT_LIST_DIR}/../common/retro-games/arduboy-pxa/game.cmake)

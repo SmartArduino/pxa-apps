@@ -16,6 +16,27 @@ static int row_equal(const uint16_t *a,const uint16_t *b,unsigned pixels){
     while(pixels>=2){if(*x++!=*y++)return 0;pixels-=2;}
     return !pixels || *(const uint16_t *)x==*(const uint16_t *)y;
 }
+static void scale_row(const emu_video_renderer_t *r,uint16_t *dst,const uint16_t *src){
+    unsigned x=0;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    /* A 3:4 enlargement maps abcdef to aabcddef. Transfer six source pixels
+     * as three aligned words and write four words, avoiding eight lookup
+     * table reads and individual halfword stores. The tail and unaligned
+     * rows retain the general nearest-neighbor path. No extra frame copy. */
+    if(r->view_width*3u==r->source_width*4u && !(((uintptr_t)src|(uintptr_t)dst)&3u)){
+        const emu_video_word_t *in=(const emu_video_word_t *)((uintptr_t)src&~(uintptr_t)3);
+        emu_video_word_t *out=(emu_video_word_t *)((uintptr_t)dst&~(uintptr_t)3);
+        for(;x+8<=r->view_width;x+=8,in+=3,out+=4){
+            uint32_t ab=in[0],cd=in[1],ef=in[2];
+            out[0]=(ab&0xffffu)*0x10001u;
+            out[1]=(ab>>16)|(cd<<16);
+            out[2]=(cd>>16)*0x10001u;
+            out[3]=ef;
+        }
+    }
+#endif
+    for(;x<r->view_width;++x)dst[x]=src[r->sx[x]];
+}
 void emu_video_set_fit(emu_video_renderer_t *r,emu_display_rect_t a,unsigned fit){
     r->cache_valid=0;r->fit=!!fit;
     if(!r->width || !r->height || r->width>EMU_DISPLAY_MAX_WIDTH || r->height>EMU_DISPLAY_MAX_HEIGHT){r->view_width=r->view_height=0;return;}
@@ -60,7 +81,7 @@ unsigned emu_video_render_cached(emu_video_renderer_t *r,uint16_t *out,const uin
         if(changed){dirty[r->view_y+y]=1;pixels+=r->view_width;
             if(last && (int)sy==old)memcpy(dst,last,r->view_width*2u);
             else if(r->view_width==r->source_width)memcpy(dst,line,r->view_width*2u);
-            else for(unsigned x=0;x<r->view_width;++x)dst[x]=line[r->sx[x]];
+            else scale_row(r,dst,line);
         }
         old=sy;last=dst;
     }

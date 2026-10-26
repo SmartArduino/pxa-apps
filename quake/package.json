@@ -13,7 +13,7 @@
     1
   ],
   "id": "pxa-quake",
-  "version": "0.6.9",
+  "version": "0.6.19",
   "name": "Quake · LibreQuake",
   "description": "Quake engine with automatically installed LibreQuake free first-level media and app-private saves",
   "build": {
@@ -58,7 +58,7 @@
           "name": "game-render",
           "min_version": [
             1,
-            2
+            5
           ],
           "features": [
             "borrowed-indexed-blit"
@@ -85,7 +85,7 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 210,
+  "release_sequence": 220,
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"

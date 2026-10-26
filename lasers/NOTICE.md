@@ -1,0 +1,1 @@
+Lasers / obono/ArduboyWorks MIT, fixed d4b1f041789dcd1d71907654e4025d613b4ab420. Original rapid-flicker warning retained and requires B acceptance. Full original array/font/note material included. Original ArduboyPlaytune1.0.4 adapted software16MHz register/ISR state; physical speaker and LED output omitted. Session RAM EEPROM1024, no durable save or hardware proof.

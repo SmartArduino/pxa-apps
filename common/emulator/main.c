@@ -22,7 +22,7 @@
 #include "../rom/pxa_rom_source.h"
 #include "pxa_permission.h"
 #include "pxa_surface.h"
-#include "pxa_game_render_spans.h"
+#include "pxa_game_render_compute.h"
 #include "pxa_ui.h"
 #include "menu_focus.h"
 #include "pxa_window.h"
@@ -86,6 +86,7 @@ static pxa_rom_file_t rom_file;
 static unsigned rom_paged;
 static uint32_t rom_stream_crc;
 static uint32_t saved_crc, pending_save_crc;
+static unsigned save_baseline_valid;
 static uint16_t pad[2], touches[16];
 static uint16_t controller_previous[2];
 static uint8_t controller_connected[2],menu_chord[2];
@@ -532,7 +533,7 @@ static void start_save(void) {
     save_data = copy;
     if(!emu_core_save_export(save_data,size)){save_failed=1;redraw=1;return;}
     uint32_t crc=emu_port_crc32(0,save_data,size);
-    if(crc==saved_crc)return;
+    if(save_baseline_valid && crc==saved_crc)return;
     save_size = size;
     save_used = 0;
     pending_save_crc = crc;
@@ -552,13 +553,16 @@ static void start_save(void) {
  * when no save exists yet. Pausing it must not create an unchanged save.
  * Do not use this after loading a snapshot: that progress still needs saving. */
 static void remember_save_baseline(void) {
+    save_baseline_valid = 0;
     size_t size = emu_core_save_size();
     if (!size) return;
     uint8_t *copy = realloc(save_data, size);
     if (!copy) return; /* Keep the existing retry-on-save behavior. */
     save_data = copy;
-    if (emu_core_save_export(save_data, size))
+    if (emu_core_save_export(save_data, size)) {
         saved_crc = emu_port_crc32(0, save_data, size);
+        save_baseline_valid = 1;
+    }
 }
 
 static void game_ready(void) {
@@ -594,7 +598,7 @@ static void finish_rom(void) {
     if (error) { fail(error); return; }
     snprintf(save_path, sizeof(save_path), EMU_SAVE_TAG "-%08x.sav", emu_core_checksum());
     snprintf(save_tmp, sizeof(save_tmp), "%s.tmp", save_path);
-    saved_crc = 0;
+    saved_crc = 0; save_baseline_valid = 0;
     if(!emu_core_save_size()){game_ready();return;}
     reading_save = 1;
     int r = pxa_fs_request_open(T_SAVE_READ, save_path, strlen(save_path), PXA_FS_OPEN_READ);
@@ -1329,7 +1333,7 @@ int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
             int32_t status;
             save_replace_pending = 0;
             if (pxa_fs_parse_status(&e, T_SAVE_REPLACE, PXA_FS_REPLACE, &status) && !status) {
-                saved_crc = pending_save_crc;
+                saved_crc = pending_save_crc; save_baseline_valid = 1;
                 redraw = 1;
                 emu_port_log("EMU SRAM SAVED bytes=%u crc=%08x", (unsigned) save_size, saved_crc);
             } else { save_failed = 1; redraw = 1; emu_port_log("EMU SRAM atomic replace failed"); }

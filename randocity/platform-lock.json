@@ -1,0 +1,158 @@
+{
+  "format": "pxa-owner-platform-closure-1",
+  "modified_date": "2026-10-10",
+  "files": [
+    {
+      "path": "vendor/platform/ArduboyTones.cpp",
+      "bytes": 3045,
+      "sha256": "5cfed1aad5ca7d80cf7cf26c4ad670bdc5a84b28d65cee9819e6a8b123ff237c"
+    },
+    {
+      "path": "vendor/platform/ArduboyTones.h",
+      "bytes": 1254,
+      "sha256": "04d19b7ddcef59d991fc94a14909212eeeb2b2e801db470858c458b64abc6504"
+    },
+    {
+      "path": "vendor/platform/ArduboyTonesPitches.h",
+      "bytes": 8480,
+      "sha256": "4ff936a8ab90dd34c117e04d423ddd9b0a1d654ef476f782a9c8b52c79cfd622"
+    },
+    {
+      "path": "vendor/platform/FatFont.cpp",
+      "bytes": 3926,
+      "sha256": "a25e5835ca62f1fbee5143a74bb1bb520c79227401fcb0526a1088600e36caa0"
+    },
+    {
+      "path": "vendor/platform/FatFont.h",
+      "bytes": 493,
+      "sha256": "be9ab1142fe350ccbd56f27f7d060a18f927ada98c2d61942bdefd81180bac1c"
+    },
+    {
+      "path": "vendor/platform/lfsr.cpp",
+      "bytes": 2137,
+      "sha256": "fb949d0f6d794ad66ad8ec6989ba172e80f95baf5d20da80973cb4c312066c79"
+    },
+    {
+      "path": "vendor/platform/lfsr.h",
+      "bytes": 579,
+      "sha256": "11776701a49e922282fc197cf78a77afa450f1fced7f62bc5725dc7d1904e767"
+    },
+    {
+      "path": "vendor/platform/Randocity.ino",
+      "bytes": 24325,
+      "sha256": "baf12f67775726d340404fcb25de3dd21d27f4a4d88866f63a792f4e3f23c396"
+    },
+    {
+      "path": "vendor/platform/Records.cpp",
+      "bytes": 1197,
+      "sha256": "d746a8c34344a388633642956bee0ad59b6e0c869ef767b3fd484a90ae4f7313"
+    },
+    {
+      "path": "vendor/platform/Records.h",
+      "bytes": 413,
+      "sha256": "9ae23f80f381b87fbe2eeae8cbda892a280ad8fb16c041fd74824a73887e4f67"
+    },
+    {
+      "path": "vendor/platform/SavedSprites.h",
+      "bytes": 18721,
+      "sha256": "82c8dc7b2f1f844d0cbb44b1737b8b7858c9556f8e49374adc1b4ec3b1f1074d"
+    },
+    {
+      "path": "vendor/platform/Timer.cpp",
+      "bytes": 765,
+      "sha256": "07cb158e95c5127839852e61cf48c04853ede42987f196e26a52099e712d33d0"
+    },
+    {
+      "path": "vendor/platform/Timer.h",
+      "bytes": 445,
+      "sha256": "3085d76c1e7d0a0a83f0a989930bf2b1f33290dad0c1224dbdf8a09010b8e777"
+    },
+    {
+      "path": "vendor/platform/World.cpp",
+      "bytes": 10943,
+      "sha256": "07cb62d54f91de7440880191ec72e7afcb2f6ca2886d1219e9c02dfd79512fa5"
+    },
+    {
+      "path": "vendor/platform/World.h",
+      "bytes": 1415,
+      "sha256": "4f13652e153a208f8fb67300596cd2fe32179b0e1fb3d6eb195420c8ef5bb63b"
+    }
+  ],
+  "patch": {
+    "path": "platform.patch",
+    "bytes": 24550,
+    "sha256": "7442f72f984fc3bc722805adeb1c1718532e3f52e8f1267d6c2043cbade54f9d"
+  },
+  "sections": [
+    {
+      "old_header": "vendor/original/ArduboyTones/src/ArduboyTones.cpp",
+      "new_header": "vendor/platform/ArduboyTones.cpp",
+      "original": "vendor/original/ArduboyTones/src/ArduboyTones.cpp",
+      "modified": "vendor/platform/ArduboyTones.cpp"
+    },
+    {
+      "old_header": "vendor/original/ArduboyTones/src/ArduboyTones.h",
+      "new_header": "vendor/platform/ArduboyTones.h",
+      "original": "vendor/original/ArduboyTones/src/ArduboyTones.h",
+      "modified": "vendor/platform/ArduboyTones.h"
+    },
+    {
+      "old_header": "vendor/original/Randocity.ino",
+      "new_header": "vendor/platform/Randocity.ino",
+      "original": "vendor/original/Randocity.ino",
+      "modified": "vendor/platform/Randocity.ino"
+    },
+    {
+      "old_header": "vendor/original/World.cpp",
+      "new_header": "vendor/platform/World.cpp",
+      "original": "vendor/original/World.cpp",
+      "modified": "vendor/platform/World.cpp"
+    }
+  ],
+  "unchanged_platform_copies": [
+    {
+      "original": "vendor/original/ArduboyTones/src/ArduboyTonesPitches.h",
+      "platform": "vendor/platform/ArduboyTonesPitches.h"
+    },
+    {
+      "original": "vendor/original/FatFont.cpp",
+      "platform": "vendor/platform/FatFont.cpp"
+    },
+    {
+      "original": "vendor/original/FatFont.h",
+      "platform": "vendor/platform/FatFont.h"
+    },
+    {
+      "original": "vendor/original/lfsr.cpp",
+      "platform": "vendor/platform/lfsr.cpp"
+    },
+    {
+      "original": "vendor/original/lfsr.h",
+      "platform": "vendor/platform/lfsr.h"
+    },
+    {
+      "original": "vendor/original/Records.cpp",
+      "platform": "vendor/platform/Records.cpp"
+    },
+    {
+      "original": "vendor/original/Records.h",
+      "platform": "vendor/platform/Records.h"
+    },
+    {
+      "original": "vendor/original/SavedSprites.h",
+      "platform": "vendor/platform/SavedSprites.h"
+    },
+    {
+      "original": "vendor/original/Timer.cpp",
+      "platform": "vendor/platform/Timer.cpp"
+    },
+    {
+      "original": "vendor/original/Timer.h",
+      "platform": "vendor/platform/Timer.h"
+    },
+    {
+      "original": "vendor/original/World.h",
+      "platform": "vendor/platform/World.h"
+    }
+  ]
+}

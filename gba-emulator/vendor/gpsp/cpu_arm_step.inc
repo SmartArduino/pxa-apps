@@ -443,7 +443,9 @@
 
                    case 2:
                       /* LDRSB rd, [rn], +imm */
-                      arm_access_memory(load, no_op, half_imm, s8, yes, + offset);
+                      if (!arm_fuse_direct_sample(opcode, pc_address_block, cycles_remaining,
+                                                   n_flag, z_flag, c_flag, v_flag))
+                        arm_access_memory(load, no_op, half_imm, s8, yes, + offset);
                       break;
 
                    case 3:

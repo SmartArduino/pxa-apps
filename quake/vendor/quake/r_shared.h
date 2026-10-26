@@ -437,7 +437,7 @@ extern void SetUpForLineScan(fixed8_t startvertu, fixed8_t startvertv,
 
 extern int  r_skymade;
 extern void R_MakeSky (void);
-extern void R_InitFlashSky(miptex_t *mt, char *modelName);
+extern void R_InitFlashSky(miptex_t *mt, const byte *pixels);
 //extern int  ubasestep, errorterm, erroradjustup, erroradjustdown;
 
 // flags in finalvert_t.flags

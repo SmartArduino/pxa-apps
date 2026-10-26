@@ -6,6 +6,9 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#ifndef PORT_CNC_MEDIA_CACHE_SLOTS
+#define PORT_CNC_MEDIA_CACHE_SLOTS 2
+#endif
 static unsigned opens,closes,reads,fail_next,mutation;
 static uint64_t now=1,cookies[4];
 static const uint64_t base=UINT64_C(0x100000000);
@@ -44,6 +47,7 @@ void port_sleep(unsigned ms){(void)ms;assert(!"Unexpected sleep");}
 extern FILE *__wrap_fopen(const char *,const char *);
 extern int __wrap_fgetc(FILE *),__wrap_fclose(FILE *),__wrap_fseek(FILE *,long,int);
 extern void port_filesystem_tick(uint64_t);
+extern void port_filesystem_loading_cache(int);
 int main(void) {
     FILE *a=__wrap_fopen("/data/file1.mix","rb");assert(a);
     assert(__wrap_fgetc(a)==1 && reads==1);assert(!__wrap_fclose(a));
@@ -63,9 +67,24 @@ int main(void) {
     assert(closes==2 && __wrap_fgetc(a)==2 && reads==4);assert(!__wrap_fclose(a));
     a=__wrap_fopen("/data/file2.mix","rb");assert(a);assert(!__wrap_fclose(a));
     a=__wrap_fopen("/data/file3.mix","rb");assert(a);assert(!__wrap_fclose(a));
-    assert(closes==3);now+=500000;port_filesystem_tick(now);assert(closes==5);
+    assert(closes==2+(PORT_CNC_MEDIA_CACHE_SLOTS<3));
+    now+=500000;port_filesystem_tick(now);assert(closes==5);
     a=__wrap_fopen("/data/file1.mix","rb");assert(a);fail_next=1;
     assert(__wrap_fgetc(a)==EOF);assert(!__wrap_fclose(a) && closes==6);
     a=__wrap_fopen("/data/file1.aud","rb");assert(a);assert(!__wrap_fclose(a) && closes==7);
+    unsigned before_opens=opens,before_closes=closes;
+    port_filesystem_loading_cache(1);
+    a=__wrap_fopen("/data/file1.mix","rb");assert(a);assert(!__wrap_fclose(a));
+    now+=2000000;port_filesystem_tick(now);
+    assert(closes==before_closes);
+    a=__wrap_fopen("/data/file1.mix","rb");assert(a);assert(!__wrap_fclose(a));
+    assert(opens==before_opens+1);
+    port_filesystem_loading_cache(0);
+    assert(closes==before_closes+1);
+    a=__wrap_fopen("/data/file1.mix","rb");assert(a);assert(!__wrap_fclose(a));
+    assert(opens==before_opens+2);
+    now+=500000;port_filesystem_tick(now);
+    assert(closes==before_closes+2);
     puts("PASS: MIX handles, zero-position reopen, cookies, page reuse, expiry, private mutation, eviction and I/O errors");
+    puts("PASS: startup reuses archives across long gaps; first frame retires startup handles and restores gameplay expiry");
 }

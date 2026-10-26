@@ -44,11 +44,25 @@ int main(int argc,char **argv) {
         u32 expected=digest();reset(address,value,op);execute_arm_vram(10000);
         assert(digest()==expected);
     }
-    /* Unaligned data reads retain ARM rotation semantics. */
-    for(unsigned lane=0;lane<4;++lane) {
-        reset(0x02000000+lane,0,0xe5910000); /* LDR r0,[r1] */
+    /* Shared scalar read helpers must retain signed extension, word rotation,
+     * bus mirrors and the current-instruction PC convention for I/O. */
+    const u32 reads[]={0xe5d10000,0xe1d100b0,0xe5910000,0xe1d100d0,0xe1d100f0};
+    const u32 read_addresses[]={0,0x02000000,0x02fffffc,0x03000000,0x03fffffc,
+        0x04000000,0x04000100,0x040003fc,0x050003fc,0x06018020,0x070003fc,0x10000000};
+    for(unsigned a=0;a<sizeof(read_addresses)/sizeof(*read_addresses);++a)
+    for(unsigned lane=0;lane<4;++lane)
+    for(unsigned size=0;size<5;++size) {
+        reset(read_addresses[a]+lane,0,reads[size]);
         u32 data=0x89abcdef;memcpy(ewram,&data,4);
-        u32 expected=read_memory32(reg[1]);execute_arm_vram(10000);assert(reg[0]==expected);
+        bool io=(reg[1]>>24)==4 && io_read_requires_handler(reg[1]);
+        if(!io)reg[REG_PC]+=4;
+        u32 expected=size==0?read_memory8(reg[1]):size==1?(u16)read_memory16(reg[1]):
+            size==2?read_memory32(reg[1]):size==3?(u32)(s32)(s8)read_memory8(reg[1]):
+            (u32)(s32)(s16)read_memory16_signed(reg[1]);
+        if(!io)reg[REG_PC]-=4;
+        execute_arm_vram(10000);
+        if(reg[0]!=expected)fprintf(stderr,"read=%u address=%08x got=%08x expected=%08x\n",size,read_addresses[a]+lane,reg[0],expected);
+        assert(reg[0]==expected);
     }
     /* A block load outside the 28-bit bus must not index the page table. */
     reset(0x10000000,0,0xe8910001); /* LDMIA r1,{r0} */

@@ -1,0 +1,14 @@
+{
+  "name": "DejaVu Sans Mono",
+  "source_path": "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+  "source_sha256": "c805f9436dbc268644c1d9584f01a601a653e028e08fd74b9b949f6cf8304d88",
+  "source_copyright_path": "/usr/share/doc/fonts-dejavu-core/copyright",
+  "copyright_sha256": "63d3ba759d12804c5b31a9d5940d855c1820d1f5999e6b0872eb1c7ff045fbc9",
+  "generated_path": "font.h",
+  "generated_sha256": "e06989657068e9021f65fbe00c6ddc0ebd486031f795cab9b1584b3cd32e4f6c",
+  "license_path": "FONT-LICENSE.txt",
+  "generator": "generate-font.py, 8x12 bitmap, Pillow 12.3.0, FreeType 2.14.3 (Pillow wheel)",
+  "system_freetype_version": "2.13.2",
+  "system_freetype_package_version": "2.13.2+dfsg-1ubuntu0.2",
+  "system_pkg_config_freetype2_version": "26.1.20"
+}

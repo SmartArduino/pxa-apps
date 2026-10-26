@@ -263,7 +263,7 @@ static const u8 gba_header_logo[156] = {
 #define calculate_v_flag_add(dest, src_a, src_b)                              \
   v_flag = ((~((src_a) ^ (src_b)) & ((src_a) ^ (dest))) >> 31)
 
-#define calculate_reg_sh()                                                    \
+#define calculate_reg_sh_inline()                                                    \
   u32 reg_sh = 0;                                                             \
   switch((opcode >> 4) & 0x07)                                                \
   {                                                                           \
@@ -352,7 +352,7 @@ static const u8 gba_header_logo[156] = {
     }                                                                         \
   }                                                                           \
 
-#define calculate_reg_sh_flags()                                              \
+#define calculate_reg_sh_flags_inline()                                              \
   u32 reg_sh = 0;                                                             \
   switch((opcode >> 4) & 0x07)                                                \
   {                                                                           \
@@ -504,6 +504,36 @@ static const u8 gba_header_logo[156] = {
       break;                                                                  \
     }                                                                         \
   }                                                                           \
+
+/* Keep the common immediate LSL inline, but share the other shifters.
+ * Replicating their carry and register-shift edge cases for every ARM ALU
+ * operation substantially exceeds the embedded instruction cache. Returning
+ * value/carry together avoids borrowing the interpreter's flag locals. */
+static __attribute__((noinline)) u32 arm_shift_operand(u32 opcode,u32 c_flag)
+{
+  u32 rm=opcode&15;
+  calculate_reg_sh_inline();
+  return reg_sh;
+}
+static __attribute__((noinline)) u64 arm_shift_operand_flags(u32 opcode,u32 c_flag)
+{
+  u32 rm=opcode&15;
+  calculate_reg_sh_flags_inline();
+  return reg_sh|((u64)c_flag<<32);
+}
+#define calculate_reg_sh() \
+  u32 reg_sh = !(opcode&0x70) ? reg[rm]<<((opcode>>7)&31) : \
+      arm_shift_operand(opcode,c_flag)
+#define calculate_reg_sh_flags() \
+  u32 reg_sh; \
+  if(!(opcode&0x70)) { \
+    u32 shift=(opcode>>7)&31,source=reg[rm]; \
+    reg_sh=source<<shift; \
+    if(shift)c_flag=(source>>(32-shift))&1; \
+  } else { \
+    u64 shifted=arm_shift_operand_flags(opcode,c_flag); \
+    reg_sh=(u32)shifted;c_flag=(u32)(shifted>>32); \
+  }
 
 #define calculate_reg_offset()                                                \
   u32 reg_offset = 0;                                                         \
@@ -865,8 +895,15 @@ const u32 spsr_masks[4] = { 0x00000000, 0x000000EF, 0xF0000000, 0xF00000EF };
 
 #include "cpu_idle.h"
 #include "cpu_fusion.h"
-#define idle_poll(branch, thumb) idle_poll_backedge(idle, branch, thumb, \
-  (n_flag << 3) | (z_flag << 2) | (c_flag << 1) | v_flag, cycles_remaining)
+/* Reject ordinary branches before packing flags and borrowing stack locals
+ * for the out-of-line polling analysis. */
+#define idle_poll(edge_pc, thumb) do { \
+  u32 target=reg[REG_PC]; \
+  if(cycles_remaining>0 && target<(edge_pc) && (edge_pc)-target<=((thumb)?16u:32u)) \
+    idle_poll_backedge(idle, edge_pc, thumb, \
+      (n_flag << 3) | (z_flag << 2) | (c_flag << 1) | v_flag, cycles_remaining); \
+  else if(idle.branch==(edge_pc))idle.branch=~0u; \
+} while(0)
 
 /* Plain memory has no I/O side effects. Keep palette/OAM/GPIO/EEPROM and
  * byte VRAM stores on the existing handlers. A native JIT still needs its
@@ -1556,10 +1593,12 @@ u16 io_registers[512];
  * in separate functions avoids an irreducible control-flow graph in Wasm.
  * NZCV stays in local variables between instructions. Publish it before PSR
  * accesses, memory writes, cheats, hardware updates and every slice exit;
- * publishing on every ALU/branch instruction adds needless guest stores. */
+ * publishing on every ALU/branch instruction adds needless guest stores.
+ * The cycle budget is local too; only slice exits publish it to the caller. */
 #define thumb_loop mode_changed
-static bool execute_arm_slice(s32 &cycles_remaining, bool vram_only, u32 &result)
+static bool execute_arm_slice(s32 &next_cycles, bool vram_only, u32 &result)
 {
+  s32 cycles_remaining = next_cycles;
   u32 opcode, condition;
   u32 n_flag, z_flag, c_flag, v_flag;
   u32 pc_region = reg[REG_PC] >> 15, new_pc_region;
@@ -1576,6 +1615,7 @@ arm_loop:
     if (vram_only && (reg[REG_PC] >> 24) != 0x06) {
       collapse_flags();
       result = cycles_remaining > 0 ? (u32)cycles_remaining : update_gba(cycles_remaining);
+      next_cycles = cycles_remaining;
       return true;
     }
     if (reg[REG_PC] == cheat_master_hook) { collapse_flags(); fusion_write_barrier(); process_cheats(); }
@@ -1583,11 +1623,13 @@ arm_loop:
   } while (cycles_remaining > 0);
   collapse_flags();
   result = update_gba(cycles_remaining);
-  if (completed_frame(result)) return true;
+  if (completed_frame(result)) { next_cycles = cycles_remaining; return true; }
   cycles_remaining = cycles_to_run(result);
+  next_cycles = cycles_remaining;
   return false;
 mode_changed:
   collapse_flags();
+  next_cycles = cycles_remaining;
   return false;
 }
 #undef thumb_loop
@@ -1595,8 +1637,9 @@ mode_changed:
 /* Crossing ARM/Thumb mode exits this slice. Keeping the two dispatch loops
  * in separate functions avoids an irreducible control-flow graph in Wasm. */
 #define arm_loop mode_changed
-static bool execute_thumb_slice(s32 &cycles_remaining, bool vram_only, u32 &result)
+static bool execute_thumb_slice(s32 &next_cycles, bool vram_only, u32 &result)
 {
+  s32 cycles_remaining = next_cycles;
   u32 opcode, condition;
   u32 n_flag, z_flag, c_flag, v_flag;
   u32 pc_region = reg[REG_PC] >> 15, new_pc_region;
@@ -1613,6 +1656,7 @@ thumb_loop:
     if (vram_only && (reg[REG_PC] >> 24) != 0x06) {
       collapse_flags();
       result = cycles_remaining > 0 ? (u32)cycles_remaining : update_gba(cycles_remaining);
+      next_cycles = cycles_remaining;
       return true;
     }
     if (reg[REG_PC] == cheat_master_hook) { collapse_flags(); fusion_write_barrier(); process_cheats(); }
@@ -1620,11 +1664,13 @@ thumb_loop:
   } while (cycles_remaining > 0);
   collapse_flags();
   result = update_gba(cycles_remaining);
-  if (completed_frame(result)) return true;
+  if (completed_frame(result)) { next_cycles = cycles_remaining; return true; }
   cycles_remaining = cycles_to_run(result);
+  next_cycles = cycles_remaining;
   return false;
 mode_changed:
   collapse_flags();
+  next_cycles = cycles_remaining;
   return false;
 }
 #undef arm_loop

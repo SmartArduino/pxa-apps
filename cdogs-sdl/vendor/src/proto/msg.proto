@@ -1,0 +1,367 @@
+syntax = "proto3";
+
+// Message returned to client when scanning a game server's listen port
+message NServerInfo {
+	int32 ProtocolVersion = 1;
+	uint32 ENetPort = 2;
+	string Hostname = 3;
+	int32 GameMode = 4;
+	string CampaignName = 5;
+	int32 MissionNumber = 6;
+	int32 NumPlayers = 7;
+	int32 MaxPlayers = 8;
+}
+
+message NClientId {
+	uint32 Id = 1;
+	// This client's players will use UID from this number
+	uint32 FirstPlayerUID = 2;
+}
+
+message NCampaignDef {
+	string Path = 1;
+	int32 GameMode = 2;
+	uint32 Mission = 3;
+}
+
+message NColor {
+	int32 RGBA = 1;
+}
+
+message NCharColors {
+	NColor Skin = 1;
+	NColor Arms = 2;
+	NColor Body = 3;
+	NColor Legs = 4;
+	NColor Hair = 5;
+	NColor Feet = 6;
+	NColor Facehair = 7;
+	NColor Hat = 8;
+	NColor Glasses = 9;
+}
+
+message NPlayerStats {
+	int32 Score = 1;
+	uint32 Kills = 2;
+	uint32 Suicides = 3;
+	uint32 Friendlies = 4;
+	uint32 TimeTicks = 5;
+}
+
+message NWeaponUsage {
+	string Weapon = 1;
+	uint32 Shots = 2;
+	uint32 Hits = 3;
+}
+
+message NPlayerData {
+	string Name = 1;
+	string CharacterClass = 2;
+	string Hair = 3;
+	string Facehair = 4;
+	string Hat = 5;
+	string Glasses = 6;
+	NCharColors Colors = 7;
+	repeated string Weapons = 8;
+	uint32 Lives = 9;
+	NPlayerStats Stats = 10;
+	NPlayerStats Totals = 11;
+	uint32 MaxHealth = 12;
+	uint32 LastMission = 13;
+	uint32 UID = 14;
+	repeated NAmmo Ammo = 15;
+	uint32 HP = 16;
+	uint32 ExcessHealth = 17;
+	repeated NWeaponUsage WeaponUsages = 18;
+}
+
+message NPlayerRemove {
+	uint32 UID = 1;
+}
+
+message NConfig {
+	string Name = 1;
+	string Value = 2;
+}
+
+message NTileSet {
+	NVec2i Pos = 1;
+	string ClassName = 2;
+	string DoorClassName = 3;
+	string DoorClass2Name = 4;
+	int32 RunLength = 5;
+}
+
+message NThingDamage {
+	uint32 UID = 1;
+	int32 Kind = 2;
+	int32 SourceActorUID = 3;
+	int32 Power = 4;
+	NVec2 Vel = 5;
+    float Mass = 6;
+	uint32 Flags = 7;
+	int32 Special = 8;
+	int32 SpecialTicks = 9;
+	string SourceWeaponClassName = 10;
+}
+
+message NMapObjectAdd {
+	uint32 UID = 1;
+	string MapObjectClass = 2;
+	NVec2 Pos = 3;
+	uint32 ThingFlags = 4;
+	int32 Health = 5;
+	NColor Mask = 6;
+}
+
+message NMapObjectRemove {
+	uint32 UID = 1;
+	int32 ActorUID = 2;
+	uint32 Flags = 3;
+}
+
+message NScore {
+	uint32 PlayerUID = 1;
+	int32 Score = 2;
+}
+
+message NSound {
+	string Sound = 1;
+	NVec2 Pos = 2;
+	uint32 Distance = 3;
+}
+
+message NVec2i {
+	int32 x = 1;
+	int32 y = 2;
+}
+
+message NVec2 {
+	float x = 1;
+	float y = 2;
+}
+
+message NGameBegin {
+	int32 MissionTime = 1;
+}
+
+message NActorAdd {
+	uint32 UID = 1;
+	int32 PilotUID = 2;
+	int32 VehicleUID = 3;
+	uint32 CharId = 4;
+	int32 Direction = 5;
+	int32 Health = 6;
+	int32 PlayerUID = 7;
+	uint32 ThingFlags = 8;
+	NVec2 Pos = 9;
+	repeated NAmmo Ammo = 10;
+}
+
+message NActorMove {
+	uint32 UID = 1;
+	NVec2 Pos = 2;
+	NVec2 MoveVel = 3;
+}
+
+message NActorState {
+	uint32 UID = 1;
+	int32 State = 2;
+}
+
+message NActorDir {
+	uint32 UID = 1;
+	int32 Dir = 2;
+}
+
+message NActorSlide {
+	uint32 UID = 1;
+	NVec2 Vel = 2;
+}
+
+message NActorImpulse {
+	uint32 UID = 1;
+	NVec2 Vel = 2;
+	NVec2 Pos = 3;
+}
+
+message NActorSwitchGun {
+	uint32 UID = 1;
+	uint32 GunIdx = 2;
+}
+
+message NActorPickupAll {
+	uint32 UID = 1;
+	bool PickupAll = 2;
+}
+
+message NActorReplaceGun {
+	uint32 UID = 1;
+	// Index of gun in actor to replace
+	uint32 GunIdx = 2;
+	string Gun = 3;
+}
+
+message NActorHeal {
+	uint32 UID = 1;
+	int32 PlayerUID = 2;
+	int32 Amount = 3;
+	bool IsRandomSpawned = 4;
+	bool ExceedMax = 5;
+}
+
+message NAmmo {
+	uint32 Id = 1;
+	uint32 Amount = 2;
+}
+
+message NActorAddAmmo {
+	uint32 UID = 1;
+	int32 PlayerUID = 2;
+	NAmmo Ammo = 3;
+	bool IsRandomSpawned = 4;
+}
+
+message NActorUseAmmo {
+	uint32 UID = 1;
+	int32 PlayerUID = 2;
+	NAmmo Ammo = 3;
+}
+
+message NActorDie {
+	int32 UID = 1;
+}
+
+message NPlayerAddLives {
+	int32 UID = 1;
+	uint32 Lives = 2;
+}
+
+message NActorMelee {
+	uint32 UID = 1;
+	string BulletClass = 2;
+	int32 HitType = 3;
+	int32 TargetKind = 4;
+	uint32 TargetUID = 5;
+}
+
+message NActorPilot {
+	uint32 UID = 1;
+	int32 VehicleUID = 2;
+	bool On = 3;
+}
+
+message NActorBark {
+	uint32 UID = 1;
+	string Sound = 2;
+}
+
+message NAddPickup {
+	uint32 UID = 1;
+	string PickupClass = 2;
+	bool IsRandomSpawned = 3;
+	int32 SpawnerUID = 4;
+	uint32 ThingFlags = 5;
+	NVec2 Pos = 6;
+}
+
+message NRemovePickup {
+	uint32 UID = 1;
+	int32 SpawnerUID = 2;
+}
+
+message NBulletBounce {
+	uint32 UID = 1;
+	int32 HitType = 2;
+	bool Spark = 3;
+	NVec2 BouncePos = 4;
+	NVec2 Pos = 5;
+	NVec2 Vel = 6;
+	bool HitSound = 7;
+	bool WallMark = 8;
+}
+
+message NRemoveBullet {
+	uint32 UID = 1;
+}
+
+message NGunReload {
+	int32 PlayerUID = 1;
+	string Gun = 2;
+	NVec2 Pos = 3;
+	int32 Direction = 4;
+}
+
+message NGunFire {
+	int32 ActorUID = 1;
+	string Gun = 2;
+	NVec2 MuzzlePos = 3;
+	int32 Z = 4;
+	float Angle = 5;
+	bool Sound = 6;
+	uint32 Flags = 7;
+	// Whether the shot was from a real player-gun, or a derived gun e.g. explode
+	bool IsGun = 8;
+}
+
+message NGunState {
+	uint32 ActorUID = 1;
+	int32 Barrel = 2;
+	int32 State = 3;
+}
+
+message NAddBullet {
+	uint32 UID = 1;
+	string BulletClass = 2;
+	NVec2 MuzzlePos = 3;
+	int32 MuzzleHeight = 4;
+	float Angle = 5;
+	int32 Elevation = 6;
+	uint32 Flags = 7;
+	int32 ActorUID = 8;
+	string Gun = 9;
+}
+
+message NTrigger {
+	uint32 ID = 1;
+	NVec2i Tile = 2;
+}
+
+message NExploreTiles {
+	// RLE explore tiles
+	message Run {
+		NVec2i Tile = 1;
+		int32 Run = 2;
+	}
+	repeated Run Runs = 1;
+}
+
+message NRescueCharacter {
+	uint32 UID = 1;
+}
+
+message NObjectiveUpdate {
+	uint32 ObjectiveId = 1;
+	int32 Count = 2;
+}
+
+message NAddKeys {
+	uint32 KeyFlags = 1;
+	NVec2 Pos = 2;
+}
+
+message NDoorToggle {
+	bool IsOpen = 1;
+	NVec2i Pos = 2;
+}
+
+message NMissionComplete {
+	bool ShowMsg = 1;
+}
+
+message NMissionEnd {
+	int32 Delay = 1;
+	bool IsQuit = 2;
+	string Msg = 3;
+	uint32 Mission = 4;
+}

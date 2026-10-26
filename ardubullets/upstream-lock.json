@@ -1,0 +1,116 @@
+{
+  "repository": "https://github.com/obono/ArduboyWorks",
+  "commit": "d4b1f041789dcd1d71907654e4025d613b4ab420",
+  "game_dir": "ardubullets",
+  "license": "MIT",
+  "original_files": [
+    {
+      "path": "vendor/original/MyArduboy2.cpp",
+      "source_path": "ardubullets/MyArduboy2.cpp",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/ardubullets/MyArduboy2.cpp",
+      "bytes": 6522,
+      "sha256": "528e7719a823448de230ab0c23d7519b0b8083804fdbd6787a8f895883e28da7"
+    },
+    {
+      "path": "vendor/original/MyArduboy2.h",
+      "source_path": "ardubullets/MyArduboy2.h",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/ardubullets/MyArduboy2.h",
+      "bytes": 1658,
+      "sha256": "47fa3f5762694b932056d3758cfee7d58f308a0cb6ac36a8596756a5af7fa207"
+    },
+    {
+      "path": "vendor/original/MyArduboyPlaytune.cpp",
+      "source_path": "ardubullets/MyArduboyPlaytune.cpp",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/ardubullets/MyArduboyPlaytune.cpp",
+      "bytes": 13883,
+      "sha256": "2deb67b1dbc3bcb09a26b907c423f6561a498d10ef941df92909b27e8c724653"
+    },
+    {
+      "path": "vendor/original/ardubullets.ino",
+      "source_path": "ardubullets/ardubullets.ino",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/ardubullets/ardubullets.ino",
+      "bytes": 1959,
+      "sha256": "6dc48bd4757e85479605ef21291f6a2c7d3347a7102ad042f41dca37952f53f6"
+    },
+    {
+      "path": "vendor/original/common.cpp",
+      "source_path": "ardubullets/common.cpp",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/ardubullets/common.cpp",
+      "bytes": 6755,
+      "sha256": "d1b1885677c38374268832d8a8d1a422b6cfeb0680b01420faf5eb0574056267"
+    },
+    {
+      "path": "vendor/original/common.h",
+      "source_path": "ardubullets/common.h",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/ardubullets/common.h",
+      "bytes": 2803,
+      "sha256": "a2ce4af2be792304eba43aaf75b1463e852ef7029aa25d746a8c195caef50a94"
+    },
+    {
+      "path": "vendor/original/data.h",
+      "source_path": "ardubullets/data.h",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/ardubullets/data.h",
+      "bytes": 6808,
+      "sha256": "8fec4c2f23bc11e359fd9dd83da53af22f805dbf293793fdede5b48e55dbd134"
+    },
+    {
+      "path": "vendor/original/game.cpp",
+      "source_path": "ardubullets/game.cpp",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/ardubullets/game.cpp",
+      "bytes": 24765,
+      "sha256": "aebabc12d4c82254428b51397fbe09c297bdcf8090cf248f1608786e5db25ec1"
+    },
+    {
+      "path": "vendor/original/info.json",
+      "source_path": "ardubullets/info.json",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/ardubullets/info.json",
+      "bytes": 259,
+      "sha256": "b2dd0f81584c2f984fbd5d557f667b8aa7af3076cacc88065f31da9cd50e8a4d"
+    },
+    {
+      "path": "vendor/original/logo.cpp",
+      "source_path": "ardubullets/logo.cpp",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/ardubullets/logo.cpp",
+      "bytes": 3372,
+      "sha256": "18e4e21663f1d9282c461cca8d97a44d58aa592a3e16e924637b4c09ed9cefae"
+    },
+    {
+      "path": "vendor/original/menu.cpp",
+      "source_path": "ardubullets/menu.cpp",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/ardubullets/menu.cpp",
+      "bytes": 3771,
+      "sha256": "02f80de8633002dff984f0bc83b047d6508688d64030a331e4b956c732e80215"
+    },
+    {
+      "path": "vendor/original/title.cpp",
+      "source_path": "ardubullets/title.cpp",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/ardubullets/title.cpp",
+      "bytes": 14369,
+      "sha256": "4408f12db8cd3e91a2e6e17cd75ff34054e8929b8e446082620df3275f7f4066"
+    },
+    {
+      "path": "vendor/original/LICENSE",
+      "source_path": "LICENSE",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/LICENSE",
+      "bytes": 1077,
+      "sha256": "62a5db2ff173434f94d055a9432f5655267e92f4db92a042b832884e8a48f6bb"
+    },
+    {
+      "path": "vendor/original/README.md",
+      "bytes": 5519,
+      "sha256": "1d6aaaa5f548b120938c25547a7f371309bd1d544542e4631cfb804726442a51",
+      "source_path": "README.md",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/README.md"
+    },
+    {
+      "path": "vendor/original-avr/ardubullets_v0.11.hex",
+      "bytes": 68258,
+      "sha256": "fcbfe5f15f22688d61540907328b8d16e2ba74ddbc5d312fbf9522621fc90a5e",
+      "source_path": "_hexs/ardubullets_v0.11.hex",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/_hexs/ardubullets_v0.11.hex",
+      "git_blob_sha1": "461dcf848507fd3e03fe7e0745c0793949cac5d9",
+      "role": "official AVR verification reference; never executed or included in PXA payload"
+    }
+  ],
+  "download": "official GitHub API contents decoded base64; source URLs pinned raw"
+}

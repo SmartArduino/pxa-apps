@@ -1,0 +1,55 @@
+{
+  "core_bytes": 3136,
+  "game_bytes": 1041,
+  "total_bytes": 4177,
+  "game_id": 16,
+  "fields": [
+    {
+      "name": "schema/game_id/mode",
+      "offset": 0,
+      "bytes": 3
+    },
+    {
+      "name": "MyArduboy button/text/priority",
+      "offset": 3,
+      "bytes": 5
+    },
+    {
+      "name": "owner AVR15bit rand/state/fault",
+      "offset": 8,
+      "bytes": 9
+    },
+    {
+      "name": "full originalPlaytune registers/interpreter/timers/observer",
+      "offset": 17,
+      "bytes": 72
+    },
+    {
+      "name": "logo counter/signalOn",
+      "offset": 89,
+      "bytes": 2
+    },
+    {
+      "name": "title allmenu/record EEPROM fields",
+      "offset": 91,
+      "bytes": 35
+    },
+    {
+      "name": "game state/draw/frames/counter/timer/score/cat/box count/index",
+      "offset": 126,
+      "bytes": 19
+    },
+    {
+      "name": "128 BOX all inactive x int16,y int16,vx int8,vy int8",
+      "offset": 145,
+      "bytes": 768
+    },
+    {
+      "name": "64 SNOW all inactive x int8,y int8",
+      "offset": 913,
+      "bytes": 128
+    }
+  ],
+  "raw_host_padding_or_pointers": false,
+  "state_loader": false
+}

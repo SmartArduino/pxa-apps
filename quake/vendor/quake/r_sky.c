@@ -159,77 +159,22 @@ void R_MakeSky (void)
 	r_skymade = 1;
 }
 #else
-typedef struct
+#include "sky_cache.h"
+static pxa_quake_sky_cache_t sky_cache;
+
+void R_InitFlashSky(miptex_t *mt, const byte *pixels)
 {
-    uint8_t modelName[MAX_QPATH];
-    uint8_t skyNum;
-} __attribute__((packed)) sky_table_t;
-uint8_t *r_skyFlashSource;
-void R_InitFlashSky(miptex_t *mt, char *modelName)
-{
-    (void) mt;
-#if USE_EXT_MEMORY
-    unsigned int size = 0;
-    sky_table_t *pskyTable;
-    // load sky table, to understand which file is containing the sky based on model name
-    pskyTable = (sky_table_t*) COM_LoadFileFromExtMem("skylist.dat", &size);
-    if (!pskyTable || !size)
-    {
-        while (1)
-        {
-            FIXME("CAN'T LOAD SKYTABLE");
-        }
-    }
-    int numberOfEntries = size / sizeof(sky_table_t);
-    int skytablesize = (numberOfEntries * sizeof(sky_table_t) + 3) & ~3;
-    sky_table_t *skyTable = Z_Calloc(skytablesize, 1, PU_STATIC, NULL);
-    extMemGetDataFromAddress(skyTable, pskyTable, skytablesize);
-    // find the sky number
-    int skyNumber = -1;
-    for (int i = 0; i < numberOfEntries; i++)
-    {
-#if DEBUG_SKY
-        printf("Checking Model name %s against %s in skytable %i\r\n", modelName, skyTable[i].modelName, i);
-#endif
-        if (!strcmp(modelName, (char*) skyTable[i].modelName))
-        {
-#if DEBUG_SKY
-            printf("Found sky number: %i\r\n", skyTable[i].skyNum);
-#endif
-            skyNumber = skyTable[i].skyNum;
-            break;
-        }
-    }
-    if (skyNumber != -1)
-    {
-        char filename[10];
-        snprintf(filename, sizeof(filename), "sky%02x", skyNumber);
-        r_skyFlashSource = COM_LoadFileFromExtMem(filename, &size);
-#if DEBUG_SKY
-        if (size != 128 * 128 * 128 + 1) // +1 is because we add a null terminator
-        {
-            printf("Error, sky anim size is %d\r\n", size);
-            FIXME("");
-        }
-#endif
-        r_skysource = r_skyFlashSource;
-    }
-#else
-        #error flash sky works only with external memory!
-    #endif
-    Z_Free(skyTable);
+    if (mt->width != 256 || mt->height != 128)
+        Sys_Error("Sky texture must be 256x128");
+    extMemGetDataFromAddress(sky_cache.layers, pixels, sizeof(sky_cache.layers));
+    sky_cache.phase = -1;
+    r_skysource = Pxa_QuakeSkyFrame(&sky_cache, 0);
 }
+
 void R_MakeSky(void)
 {
-    int xshift;
-    xshift = skytime * skyspeed;
-    r_skysource = &r_skyFlashSource[128 * 128 * (xshift % 128)];
-    /*  for (int i = 0 ; i < 128; i++)
-     {
-     if (!(i % 16))
-     printf("\r\n");
-     printf("%02x",r_skysource[i]);
-     }*/
+    unsigned phase = (unsigned)(skytime * skyspeed);
+    r_skysource = Pxa_QuakeSkyFrame(&sky_cache, phase);
 }
 
 #endif

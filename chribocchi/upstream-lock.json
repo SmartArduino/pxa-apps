@@ -1,0 +1,166 @@
+{
+  "repository": "https://github.com/obono/ArduboyWorks",
+  "commit": "d4b1f041789dcd1d71907654e4025d613b4ab420",
+  "game_dir": "chribocchi",
+  "license": "MIT",
+  "original_files": [
+    {
+      "path": "vendor/original/LICENSE",
+      "bytes": 1077,
+      "sha256": "62a5db2ff173434f94d055a9432f5655267e92f4db92a042b832884e8a48f6bb",
+      "source_url": "https://github.com/obono/ArduboyWorks/blob/d4b1f041789dcd1d71907654e4025d613b4ab420/LICENSE",
+      "source_path": "LICENSE",
+      "git_blob": "3657729a686db9f9184055fb51b78417672e3849"
+    },
+    {
+      "path": "vendor/original/README.md",
+      "bytes": 5519,
+      "sha256": "1d6aaaa5f548b120938c25547a7f371309bd1d544542e4631cfb804726442a51",
+      "source_url": "https://github.com/obono/ArduboyWorks/blob/d4b1f041789dcd1d71907654e4025d613b4ab420/README.md",
+      "source_path": "README.md",
+      "git_blob": "2c73b182cfa17e4b7a432fa647d3e9bd8b4f74fa"
+    },
+    {
+      "path": "vendor/original/MyArduboy.cpp",
+      "bytes": 7822,
+      "sha256": "e690c36dfe1159a098193c776dad6c49dfd335554a0babf407c70caf5dd12700",
+      "source_url": "https://github.com/obono/ArduboyWorks/blob/d4b1f041789dcd1d71907654e4025d613b4ab420/chribocchi/MyArduboy.cpp",
+      "source_path": "chribocchi/MyArduboy.cpp",
+      "git_blob": "cabaaf655558bec3f38bcc459358970efea878a8"
+    },
+    {
+      "path": "vendor/original/MyArduboy.h",
+      "bytes": 2046,
+      "sha256": "9eab61d5f9c1bb3ca672985b1958df797d16115c2b3766da52c63924e7b4dc7b",
+      "source_url": "https://github.com/obono/ArduboyWorks/blob/d4b1f041789dcd1d71907654e4025d613b4ab420/chribocchi/MyArduboy.h",
+      "source_path": "chribocchi/MyArduboy.h",
+      "git_blob": "076a3aba4a275017f9c3cc96333f9ba089e4799a"
+    },
+    {
+      "path": "vendor/original/chribocchi.ino",
+      "bytes": 2153,
+      "sha256": "d1e259a26c609a1309dc3fe902fb119ef725f9a23da1a2de1132991124c9f19d",
+      "source_url": "https://github.com/obono/ArduboyWorks/blob/d4b1f041789dcd1d71907654e4025d613b4ab420/chribocchi/chribocchi.ino",
+      "source_path": "chribocchi/chribocchi.ino",
+      "git_blob": "118f1d1bde1366dad1974a93952e13838135bca6"
+    },
+    {
+      "path": "vendor/original/common.h",
+      "bytes": 983,
+      "sha256": "c52815343330274b1cf24202b279640930b38b69fffc41b34aa7a50b829d424f",
+      "source_url": "https://github.com/obono/ArduboyWorks/blob/d4b1f041789dcd1d71907654e4025d613b4ab420/chribocchi/common.h",
+      "source_path": "chribocchi/common.h",
+      "git_blob": "e77507324b6b4dcfb4019ec8779741b0fd5dae22"
+    },
+    {
+      "path": "vendor/original/game.cpp",
+      "bytes": 22433,
+      "sha256": "459a7d0f5569edced538de742c567945b9f170304eedcb7b00dae58084420943",
+      "source_url": "https://github.com/obono/ArduboyWorks/blob/d4b1f041789dcd1d71907654e4025d613b4ab420/chribocchi/game.cpp",
+      "source_path": "chribocchi/game.cpp",
+      "git_blob": "0da2d7f01a67df187a01c86e0726d743979fd5b3"
+    },
+    {
+      "path": "vendor/original/info.json",
+      "bytes": 280,
+      "sha256": "89e7ecd6e8158d19ccb8a85d6b5ad713c4290af366ce7ec843bee261e6fa2e82",
+      "source_url": "https://github.com/obono/ArduboyWorks/blob/d4b1f041789dcd1d71907654e4025d613b4ab420/chribocchi/info.json",
+      "source_path": "chribocchi/info.json",
+      "git_blob": "3400067d539056314dc5daf067fdbcc65d4781c1"
+    },
+    {
+      "path": "vendor/original/logo.cpp",
+      "bytes": 3385,
+      "sha256": "ff4643eb6aa8c45fa76fe79ea7dec62bbed8c462d408669b6fabeb193a906b1f",
+      "source_url": "https://github.com/obono/ArduboyWorks/blob/d4b1f041789dcd1d71907654e4025d613b4ab420/chribocchi/logo.cpp",
+      "source_path": "chribocchi/logo.cpp",
+      "git_blob": "92f78a38bbef0d3cdd95be03a61ab7e00157b047"
+    },
+    {
+      "path": "vendor/original/title.cpp",
+      "bytes": 14081,
+      "sha256": "c5b5ee6edd231b0ee61518367aade7484f6161a4ae35c0bb471bb4074f525661",
+      "source_url": "https://github.com/obono/ArduboyWorks/blob/d4b1f041789dcd1d71907654e4025d613b4ab420/chribocchi/title.cpp",
+      "source_path": "chribocchi/title.cpp",
+      "git_blob": "c5d684402a03138beb0b08b91c21422ad65c825b"
+    }
+  ],
+  "playtune": {
+    "repository": "Ar-zz-duboy/ArduboyPlaytune",
+    "commit": "493d3c960a87d1b4716eb85fb297706230c8e937",
+    "license": "MIT",
+    "original_files": [
+      {
+        "path": "vendor/original-playtune/.gitignore",
+        "bytes": 9,
+        "sha256": "50bc34ff061f831c939464a679bc8b8d6a52029d4d2026f665dda35e1cc5f8bd",
+        "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/.gitignore",
+        "source_path": ".gitignore"
+      },
+      {
+        "path": "vendor/original-playtune/LICENSE.txt",
+        "bytes": 1181,
+        "sha256": "e3bf8d42d3b83c2ef031e4ea247b57cd133702caeb5b8a0a91c6d54e59d5a246",
+        "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/LICENSE.txt",
+        "source_path": "LICENSE.txt"
+      },
+      {
+        "path": "vendor/original-playtune/README.md",
+        "bytes": 6314,
+        "sha256": "9530086fe98c9141ff7928f3a180bf0c96875e4cb511cca51c3895c1d594e0da",
+        "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/README.md",
+        "source_path": "README.md"
+      },
+      {
+        "path": "vendor/original-playtune/extras/Doxyfile",
+        "bytes": 11599,
+        "sha256": "98f701e76fa431912f21e0ea1b746d37dabb7bfeb70ae2b996836b2ae67d3a6b",
+        "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/extras/Doxyfile",
+        "source_path": "extras/Doxyfile"
+      },
+      {
+        "path": "vendor/original-playtune/extras/docs/FILE_DESCRIPTIONS.md",
+        "bytes": 1096,
+        "sha256": "e23d8c0bc7e8753088b3b19619d2a8b3a4b1a78321293f5c402b946b5db67586",
+        "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/extras/docs/FILE_DESCRIPTIONS.md",
+        "source_path": "extras/docs/FILE_DESCRIPTIONS.md"
+      },
+      {
+        "path": "vendor/original-playtune/keywords.txt",
+        "bytes": 519,
+        "sha256": "77128e42db531b758decb6b8c645299a9b397cf50e8b4bbff834ab8b3d08d247",
+        "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/keywords.txt",
+        "source_path": "keywords.txt"
+      },
+      {
+        "path": "vendor/original-playtune/library.json",
+        "bytes": 423,
+        "sha256": "8cc151d8c71439ebd25bb939be24678f3effbceb86840b3686604d40f444ebbd",
+        "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/library.json",
+        "source_path": "library.json"
+      },
+      {
+        "path": "vendor/original-playtune/library.properties",
+        "bytes": 498,
+        "sha256": "34f846a33b3a0c4d0297b97b0382f00eb613024f975592bb5c68f23307b64b41",
+        "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/library.properties",
+        "source_path": "library.properties"
+      },
+      {
+        "path": "vendor/original-playtune/src/ArduboyPlaytune.cpp",
+        "bytes": 13124,
+        "sha256": "a00d916ba7999999e1a0ef2635631100086debf4a5b2d839d072902cf56eee41",
+        "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/src/ArduboyPlaytune.cpp",
+        "source_path": "src/ArduboyPlaytune.cpp"
+      },
+      {
+        "path": "vendor/original-playtune/src/ArduboyPlaytune.h",
+        "bytes": 6701,
+        "sha256": "8248731a184b13df6e64772493682e197958a3f615cdb5f796fdafb3f57dda0f",
+        "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/src/ArduboyPlaytune.h",
+        "source_path": "src/ArduboyPlaytune.h"
+      }
+    ]
+  },
+  "new_common": "arduboy-batch-20261010"
+}

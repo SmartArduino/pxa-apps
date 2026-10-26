@@ -1,0 +1,35 @@
+--- a/arduboy-batch-20261010/frontend.cpp
++++ b/ardubullets/frontend.cpp
+@@ -15,6 +15,9 @@
+ static void ui_text(int x,int y,int scale,const char *s,uint8_t color){const uint8_t*font=arduboy_pxa_font();for(;*s;++s,x+=6*scale)for(int col=0;col<5;col++){uint8_t bits=font[(uint8_t)*s*5+col];for(int row=0;row<8;row++)if(bits&(1u<<row))ui_rect(x+col*scale,y+row*scale,scale,scale,color);}}
+ static void ui_button(int x,int y,int w,int h,const char*label,int active){ui_rect(x,y,w,h,active?3:2);ui_text(x+(w-(int)strlen(label)*12)/2,y+(h-16)/2,2,label,1);}
+ static uint8_t touch_mask(int x,int y){
++#if ARDU_GAME_ID == 11
++ if(y>=276&&y<304){if(x>=16&&x<104)return B_BUTTON|UP_BUTTON;if(x>=112&&x<200)return B_BUTTON|DOWN_BUTTON;if(x>=208&&x<296)return B_BUTTON|LEFT_BUTTON;if(x>=304&&x<392)return B_BUTTON|RIGHT_BUTTON;}
++#endif
+ #if ARDU_GAME_ID == 1
+  if(x>=184&&x<380&&y>=276&&y<304)return UP_BUTTON|DOWN_BUTTON;
+ #endif
+@@ -32,9 +35,9 @@
+  if(game_bytes>ARDU_GAME_MAX_BYTES||arduboy_pxa_pack(wire,3136)!=3136||arduboy_game_pack(wire+3136,ARDU_GAME_MAX_BYTES)!=game_bytes){arduboy_pxa_state.fault=5;pxa_log_write(4,"Arduboy canonical state invalid");__builtin_trap();}
+  const size_t count=3136+game_bytes;pxlog_t log;pxlog_init(&log);pxlog_text(&log,"ARDU STATE action=");pxlog_text(&log,action);
+  pxlog_field(&log,"game",ARDU_GAME_ID);pxlog_field(&log,"seq",fe.seq);pxlog_field(&log,"gen",fe.generation);pxlog_field(&log,"clock",arduboy_pxa_state.clock_ms);pxlog_field(&log,"steps",arduboy_pxa_state.steps);
+- pxlog_field(&log,"frame",Arduboy2Base::frameCount);pxlog_field(&log,"period",wire[46]);pxlog_field(&log,"bytes",count);pxlog_field(&log,"core_bytes",3136);pxlog_field(&log,"game_bytes",game_bytes);
+- pxlog_field(&log,"paused",fe.paused);pxlog_field(&log,"fault",arduboy_pxa_state.fault);pxlog_field(&log,"ctors",arduboy_pxa_state.constructors);pxlog_field(&log,"dropped",arduboy_pxa_state.dropped_steps);
+- pxlog_field(&log,"draw_step",arduboy_pxa_state.display_step);pxlog_field(&log,"display_count",arduboy_pxa_state.display_count);pxlog_field(&log,"seed",arduboy_pxa_state.seed);pxlog_field(&log,"rng",arduboy_pxa_state.rng);pxlog_field(&log,"elapsed",fe.elapsed);pxlog_text(&log," phase=post");pxlog_send(&log);
++ pxlog_field(&log,"frame",Arduboy2Base::frameCount);pxlog_field(&log,"period",wire[46]);pxlog_field(&log,"bytes",count);pxlog_field(&log,"core_bytes",3136);pxlog_field(&log,"game_bytes",game_bytes);pxlog_field(&log,"paused",fe.paused);pxlog_text(&log," phase=header");pxlog_send(&log);
++ pxlog_init(&log);pxlog_text(&log,"ARDU STATE2");pxlog_field(&log,"game",ARDU_GAME_ID);pxlog_field(&log,"seq",fe.seq);pxlog_field(&log,"gen",fe.generation);pxlog_field(&log,"clock",arduboy_pxa_state.clock_ms);
++ pxlog_field(&log,"fault",arduboy_pxa_state.fault);pxlog_field(&log,"ctors",arduboy_pxa_state.constructors);pxlog_field(&log,"dropped",arduboy_pxa_state.dropped_steps);pxlog_field(&log,"draw_step",arduboy_pxa_state.display_step);pxlog_field(&log,"display_count",arduboy_pxa_state.display_count);pxlog_field(&log,"seed",arduboy_pxa_state.seed);pxlog_field(&log,"rng",arduboy_pxa_state.rng);pxlog_field(&log,"elapsed",fe.elapsed);pxlog_text(&log," phase=post");pxlog_send(&log);
+  pxlog_init(&log);pxlog_text(&log,"ARDU HASH");pxlog_field(&log,"clock",arduboy_pxa_state.clock_ms);pxlog_field(&log,"memory",arduboy_pxa_hash(wire,count));pxlog_field(&log,"pixels",arduboy_pxa_hash(arduboy_pxa_state.display,1024));pxlog_field(&log,"eeprom",arduboy_pxa_hash(arduboy_pxa_state.eeprom,1024));pxlog_send(&log);
+  pxlog_init(&log);pxlog_text(&log,"ARDU BTN");pxlog_field(&log,"clock",arduboy_pxa_state.clock_ms);pxlog_field(&log,"pointer",arduboy_pxa_state.pointer);pxlog_field(&log,"controller",arduboy_pxa_state.controller);pxlog_field(&log,"pending_pointer",arduboy_pxa_state.pending_pointer);pxlog_field(&log,"pending_controller",arduboy_pxa_state.pending_controller);pxlog_field(&log,"applied",arduboy_pxa_state.applied);pxlog_field(&log,"sampled",arduboy_pxa_state.sampled);pxlog_send(&log);
+  for(size_t i=0;i<count;i+=32)hexlog(arduboy_pxa_state.clock_ms,(unsigned)(i/32),wire+i,(unsigned)(count-i<32?count-i:32));
+@@ -46,6 +49,9 @@
+  ui_button(58,316,42,30,"^",arduboy_pxa_state.pointer&UP_BUTTON);ui_button(58,376,42,30,"v",arduboy_pxa_state.pointer&DOWN_BUTTON);
+  ui_button(16,346,42,30,"<",arduboy_pxa_state.pointer&LEFT_BUTTON);ui_button(100,346,42,30,">",arduboy_pxa_state.pointer&RIGHT_BUTTON);
+  ui_button(184,340,92,64,"A",arduboy_pxa_state.pointer&A_BUTTON);ui_button(286,340,94,64,"B",arduboy_pxa_state.pointer&B_BUTTON);
++#if ARDU_GAME_ID == 11
++ ui_button(16,276,88,28,"B+UP",arduboy_pxa_state.pointer==(B_BUTTON|UP_BUTTON));ui_button(112,276,88,28,"B+DOWN",arduboy_pxa_state.pointer==(B_BUTTON|DOWN_BUTTON));ui_button(208,276,88,28,"B+LEFT",arduboy_pxa_state.pointer==(B_BUTTON|LEFT_BUTTON));ui_button(304,276,88,28,"B+RIGHT",arduboy_pxa_state.pointer==(B_BUTTON|RIGHT_BUTTON));
++#endif
+ #if ARDU_GAME_ID == 1
+  ui_button(184,276,196,28,"UP+DOWN",arduboy_pxa_state.pointer==(UP_BUTTON|DOWN_BUTTON));
+ #endif

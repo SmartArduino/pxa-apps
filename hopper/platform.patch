@@ -1,0 +1,387 @@
+--- vendor/original/common.h
++++ vendor/platform/common.h
+@@ -14,7 +14,7 @@
+ /*  Typedefs  */
+ 
+ typedef unsigned char   uchar;
+-typedef unsigned int    uint;
++typedef uint16_t        obono_uint;
+ 
+ /*  Global Functions  */
+ 
+--- vendor/original/game.cpp
++++ vendor/platform/game.cpp
+@@ -182,16 +182,16 @@
+     0x90, 51, 0, 200, 0x80, 0, 50,
+     0x90, 50, 0, 220, 0x80, 0, 60,
+     0x90, 49, 0, 240, 0x80, 0, 70,
+-    0x90, 48, 0, 260, 0x80, 0xF0
++    0x90, 48, 0, static_cast<uint8_t>(260), 0x80, 0xF0
+ };
+ 
+ static uint8_t  state;
+ static bool     toDraw;
+ static uint32_t gameFrames;
+-static int      counter;
++static int16_t  counter;
+ static int8_t   ignoreCnt;
+-static uint     score;
+-static uint     level;
++static obono_uint score;
++static obono_uint level;
+ static bool     isHiscore;
+ static int16_t  playerX, playerY;
+ static int8_t   playerJump, playerTorque;
+@@ -311,7 +311,7 @@
+         arduboy.playScore2(soundStart, 0);
+     } else {
+         level++;
+-        arduboy.tunes.stopScore();
++        arduboy.stopScore2();
+     }
+     dprint("Init Level ");
+     dprintln(level);
+@@ -343,7 +343,7 @@
+     playerY += vy * vr;
+ 
+     if (vx != 0 || vy != 0) {
+-        uint8_t targetRotate = (uint8_t) (atan2(vy, vx) * 128.0 / PI);
++        uint8_t targetRotate = (uint8_t) (int16_t) (atan2(vy, vx) * 128.0 / PI);
+         int8_t diffRotate = targetRotate - playerRotate;
+         if (abs(playerTorque) >= 2) {
+             if (abs(diffRotate) < 3) playerTorque -= sign(playerTorque);
+@@ -355,7 +355,7 @@
+ 
+ static void springPlayer(FLOOR *pFloor, int diff)
+ {
+-    score = max(score, level * FLOORS_LEVEL + pFloor->pos);
++    score = max(score, (obono_uint)(level * FLOORS_LEVEL + pFloor->pos));
+     playerTorque = (random(2) * 2 - 1) * mid(1, diff / 512 - 2, 8);
+     pFloorBlur = pFloor;
+     if (pFloor->type == FLRTYPE_GOAL) {
+@@ -416,7 +416,10 @@
+         uint8_t pos = pFloor->pos + 1;
+         uint8_t type = (pos == FLOORS_LEVEL) ? FLRTYPE_GOAL : flrTypes[random(flrTypesNum)];
+         floorIdxLast = nextFloorIdx(floorIdxLast);
+-        addFloor(type, pos, rand() * 2, rand() * 2, z - (512 + level * 32));
++        /* Original argument order is unspecified. Select right-before-left. */
++        const int16_t nextY = (int16_t)(uint16_t)((uint32_t)rand() * 2u);
++        const int16_t nextX = (int16_t)(uint16_t)((uint32_t)rand() * 2u);
++        addFloor(type, pos, nextX, nextY, z - (512 + level * 32));
+         dprint("floorIdxLast=");
+         dprintln(floorIdxLast);
+     }
+@@ -457,8 +460,8 @@
+ {
+     for (int i = 0; i < CHIPS; i++) {
+         CHIP *pChip = &chipAry[i];
+-        pChip->x = rand() * 2;
+-        pChip->y = rand() * 2;
++        pChip->x = (int16_t)(uint16_t)((uint32_t)rand() * 2u);
++        pChip->y = (int16_t)(uint16_t)((uint32_t)rand() * 2u);
+     }
+     chipBaseZ = 0;
+ }
+@@ -547,7 +550,9 @@
+             arduboy.drawBitmap(30, 12, imgClear, 68, 12, WHITE);
+             arduboy.printEx(22, 46, F("TRY NEXT LEVEL"));
+         } else if (state == STATE_OVER) {
+-            arduboy.drawBitmap(random(25, 28), random(11, 14), imgOver, 76, 12, WHITE);
++            const int16_t overY = random(11, 14);
++            const int16_t overX = random(25, 28);
++            arduboy.drawBitmap(overX, overY, imgOver, 76, 12, WHITE);
+             if (isHiscore && counter % 8 < 4) {
+                 arduboy.printEx(31, 46, F("NEW RECORD!"));
+             }
+@@ -590,8 +595,64 @@
+     for (uchar *p = arduboy.getBuffer() + x + (y / 8) * WIDTH; h > 0; h -= 8, p += WIDTH - w) {
+         if (h < 8) d &= 0xFF >> (8 - h);
+         for (uint8_t i = w; i > 0; i--, p++) {
+-            *p = *p & ~d | pgm_read_byte(ptn + (int) p % 4) & d;
++            *p = *p & ~d | pgm_read_byte(ptn + (size_t) (p - arduboy.getBuffer()) % 4) & d;
+         }
+         d = 0xFF;
+     }
+ }
++
++/* PXA: all original mutable statics encoded fieldwise. */
++void obono_reset_game(){
++ state=0;
++ toDraw=0;
++ gameFrames=0;
++ counter=0;
++ ignoreCnt=0;
++ score=0;
++ level=0;
++ isHiscore=0;
++ playerX=0;
++ playerY=0;
++ playerJump=0;
++ playerTorque=0;
++ playerRotate=0;
++ memset(floorAry,0,sizeof(floorAry));
++ floorIdxFirst=0;
++ floorIdxLast=0;
++ memset(flrTypes,0,sizeof(flrTypes));
++ flrTypesNum=0;
++ pFloorBlur=NULL;
++ memset(chipAry,0,sizeof(chipAry));
++ chipBaseZ=0;
++ isBlink=0;
++}
++void obono_pack_game(ObonoWriter&w){
++ w.u8(state);
++ w.u8(toDraw);
++ w.u32(gameFrames);
++ w.u16(counter);
++ w.u8(ignoreCnt);
++ w.u16(score);
++ w.u16(level);
++ w.u8(isHiscore);
++ w.u16(playerX);
++ w.u16(playerY);
++ w.u8(playerJump);
++ w.u8(playerTorque);
++ w.u8(playerRotate);
++ for(auto&v:floorAry){w.u8(v.type);w.u8(v.pos);w.u16(v.x);w.u16(v.y);w.u16(v.z);w.u16(v.vx);w.u16(v.vy);w.u8(v.size);w.u8(v.sizeBack);}
++ w.u8(floorIdxFirst);
++ w.u8(floorIdxLast);
++ for(auto v:flrTypes)w.u8(v);
++ w.u8(flrTypesNum);
++ w.u8(pFloorBlur?(uint8_t)(pFloorBlur-floorAry):255);
++ for(auto&v:chipAry){w.u16(v.x);w.u16(v.y);}
++ w.u16(chipBaseZ);
++ w.u8(isBlink);
++}
++void obono_register_game(){
++ obono_audio_register(1,soundStart,sizeof(soundStart));
++ obono_audio_register(2,soundJump,sizeof(soundJump));
++ obono_audio_register(3,soundClear,sizeof(soundClear));
++ obono_audio_register(4,soundOver,sizeof(soundOver));
++}
+--- vendor/original/logo.cpp
++++ vendor/platform/logo.cpp
+@@ -51,7 +51,8 @@
+ bool updateLogo(void)
+ {
+     counter--;
+-    signalOn = (SIGNAL_PTN >> (counter - 15) / 3) & 1;
++    const int signalShift = (counter - 15) / 3;
++    signalOn = signalShift >= 0 && signalShift < 32 && ((SIGNAL_PTN >> signalShift) & 1U);
+     arduboy.setRGBled(0, 0, signalOn * 127);
+     bool ret = (counter == 0);
+     if (ret) {
+@@ -71,3 +72,13 @@
+     arduboy.drawBitmap(68, 44, imgSoft, 32, 8, WHITE);
+     arduboy.printEx(16, 58, F(APP_CODE " VER " APP_VERSION));
+ }
++
++/* PXA: all original mutable statics encoded fieldwise. */
++void obono_reset_logo(){
++ counter=0;
++ signalOn=0;
++}
++void obono_pack_logo(ObonoWriter&w){
++ w.u8(counter);
++ w.u8(signalOn);
++}
+--- vendor/original/MyArduboy.cpp
++++ vendor/platform/MyArduboy.cpp
+@@ -1,4 +1,6 @@
+ #include "MyArduboy.h"
++#include <new>
++#include <type_traits>
+ 
+ PROGMEM static const uint32_t imgFont[] = {
+     0x00000000, 0x00017000, 0x000C00C0, 0x0A7CA7CA, 0x0855F542, 0x19484253, 0x1251F55E, 0x00003000,
+@@ -17,16 +19,24 @@
+ 
+ MyArduboy::MyArduboy(void)
+ {
+-    pTunes = new ArduboyPlaytune(myAudio.enabled);
++    alignas(ArduboyPlaytune) static uint8_t pxaPlaytuneStorage[sizeof(ArduboyPlaytune)];
++    static_assert(std::is_trivially_destructible<ArduboyPlaytune>::value,
++                  "fixed Playtune storage needs no destructor lifecycle");
++    pTunes = new (pxaPlaytuneStorage) ArduboyPlaytune(myAudio.enabled);
+     pTunes->initChannel(PIN_SPEAKER_1);
+ }
+ 
++void MyArduboy::pxaEnsureConstructed(void)
++{
++    // A folded provider marker can precede the remaining owner dynamic ctor.
++    // The existing packed channel count is zero only before our original ctor.
++    if (obono_audio_channel_count() == 0) new (this) MyArduboy();
++}
++
+ void MyArduboy::beginNoLogo(void)
+ {
+     boot();
+-    blank();
+-    flashlight();
+-    systemButtons();
++    clear(); // hardware startup utilities omitted
+     myAudio.begin();
+ }
+ 
+@@ -321,3 +331,6 @@
+ {
+     pTunes->stopScore();
+ }
++
++void MyArduboy::pxaReset(){textcolor=WHITE;textbg=BLACK;lastButtonState=currentButtonState=playScorePriority=0;}
++void MyArduboy::pxaPack(ObonoWriter&w)const{w.u8(textcolor);w.u8(textbg);w.u8(lastButtonState);w.u8(currentButtonState);w.u8(playScorePriority);}
+--- vendor/original/MyArduboy.h
++++ vendor/platform/MyArduboy.h
+@@ -1,4 +1,5 @@
+ #pragma once
++#include "owner_compat.h"
+ 
+ //#define USE_ARDUBOY2_LIB
+ 
+@@ -29,6 +30,7 @@
+ public:
+ #ifdef USE_ARDUBOY2_LIB
+     MyArduboy(void);
++    void    pxaEnsureConstructed(void);
+ #endif
+     void    beginNoLogo(void);
+     bool    nextFrame(void);
+@@ -49,6 +51,7 @@
+     void    saveAudioOnOff(void);
+     void    playScore2(const byte *score, uint8_t priority);
+     void    stopScore2(void);
++    void    pxaReset();void pxaPack(ObonoWriter&)const;
+ 
+ private:
+     void    myDrawChar(int16_t x, int16_t y, unsigned char c, uint8_t color, uint8_t bg, uint8_t size);
+--- vendor/original/title.cpp
++++ vendor/platform/title.cpp
+@@ -1,4 +1,5 @@
+ #include "common.h"
++#include "owner_ascii_format.h"
+ 
+ /*  Defines  */
+ 
+@@ -399,7 +400,7 @@
+ 
+     /*  "Hopper" letters  */
+     for (int i = 0, x = 22; i < 6; i++) {
+-        uint8_t *pImg = pgm_read_word(&(letterInfos[i].pImg));
++        const uint8_t *pImg = letterInfos[i].pImg;
+         uint8_t w = pgm_read_byte(&(letterInfos[i].width));
+         arduboy.drawBitmap(x, letterY[i] / 4 + (i > 0) * 5, pImg, w, 16, WHITE);
+         x += w + 1;
+@@ -437,7 +438,7 @@
+     arduboy.printEx(16, 54, F("PLAY TIME  "));
+     arduboy.print(playFrames / 3600); // minutes
+     char buf[6];
+-    sprintf(buf, "'%02d\"", playFrames / 60 % 60); // seconds
++    obono_format_seconds(buf, sizeof(buf), playFrames); // original seconds
+     arduboy.print(buf);
+ }
+ 
+@@ -464,13 +465,13 @@
+ uint8_t eepRead8(void)
+ {
+     eeprom_busy_wait();
+-    return eeprom_read_byte((const uint8_t *) eepAddr++);
++    return eeprom_read_byte((const uint8_t *)(uintptr_t)eepAddr++);
+ }
+ 
+ uint16_t eepRead16(void)
+ {
+     eeprom_busy_wait();
+-    uint16_t ret = eeprom_read_word((const uint16_t *)eepAddr);
++    uint16_t ret = eeprom_read_word((const uint16_t *)(uintptr_t)eepAddr);
+     eepAddr += 2;
+     return ret;
+ }
+@@ -478,7 +479,7 @@
+ uint32_t eepRead32(void)
+ {
+     eeprom_busy_wait();
+-    uint32_t ret = eeprom_read_dword((const uint32_t *) eepAddr);
++    uint32_t ret = eeprom_read_dword((const uint32_t *)(uintptr_t)eepAddr);
+     eepAddr += 4;
+     return ret;
+ }
+@@ -486,34 +487,74 @@
+ void eepReadBlock(void *p, size_t n)
+ {
+     eeprom_busy_wait();
+-    eeprom_read_block(p, (const void *) eepAddr, n);
++    eeprom_read_block(p, (const void *)(uintptr_t)eepAddr, n);
+     eepAddr += n;
+ }
+ 
+ void eepWrite8(uint8_t val)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_byte((uint8_t *) eepAddr, val);
++    eeprom_write_byte((uint8_t *)(uintptr_t)eepAddr, val);
+     eepAddr++;
+ }
+ 
+ void eepWrite16(uint16_t val)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_word((uint16_t *)eepAddr, val);
++    eeprom_write_word((uint16_t *)(uintptr_t)eepAddr, val);
+     eepAddr += 2;
+ }
+ 
+ void eepWrite32(uint32_t val)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_dword((uint32_t *)eepAddr, val);
++    eeprom_write_dword((uint32_t *)(uintptr_t)eepAddr, val);
+     eepAddr += 4;
+ }
+ 
+ void eepWriteBlock(const void *p, size_t n)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_block(p, (void *) eepAddr, n);
++    eeprom_write_block(p, (void *)(uintptr_t)eepAddr, n);
+     eepAddr += n;
+ }
++
++/* PXA: all original mutable statics encoded fieldwise. */
++void obono_reset_title(){
++ state=0;
++ toDraw=0;
++ sound=0;
++ menuPos=0;
++ manX=0;
++ manVy=0;
++ manType=0;
++ memset(letterY,0,sizeof(letterY));
++ memset(letterVy,0,sizeof(letterVy));
++ lastScore=0;
++ recordState=0;
++ eepAddr=0;
++ memset(hiScore,0,sizeof(hiScore));
++ playCount=0;
++ playFrames=0;
++}
++void obono_pack_title(ObonoWriter&w){
++ w.u8(state);
++ w.u8(toDraw);
++ w.u8(sound);
++ w.u8(menuPos);
++ w.u8(manX);
++ w.u8(manVy);
++ w.u8(manType);
++ for(auto v:letterY)w.u8(v);
++ for(auto v:letterVy)w.u8(v);
++ w.u16(lastScore);
++ w.u8(recordState);
++ w.u16(eepAddr);
++ for(auto v:hiScore)w.u16(v);
++ w.u16(playCount);
++ w.u32(playFrames);
++}
++void obono_register_title(){
++ obono_audio_register(16,sound1,sizeof(sound1));
++ obono_audio_register(17,sound2,sizeof(sound2));
++}

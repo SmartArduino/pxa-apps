@@ -1,0 +1,175 @@
+{
+  "repository": "https://github.com/SuperSolik/arduboy-games",
+  "commit": "523b23abb239f0e520a01073acc92cb24fb262b4",
+  "files": [
+    {
+      "path": "LICENSE",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/LICENSE",
+      "bytes": 1083,
+      "sha256": "e069e319ef508d508580a088541d5dba1aef2143076aab6824b9ee617948851b"
+    },
+    {
+      "path": "README.md",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/README.md",
+      "bytes": 3770,
+      "sha256": "59a17251a1e4e40e1c9ac07ff9ac8b4fc1ea22f55bc0250912bfbad09bbc0c5b"
+    },
+    {
+      "path": "ardu_dash/ardu_dash.ino",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/ardu_dash.ino",
+      "bytes": 121,
+      "sha256": "4ef1c08efc083a96937fe6e0a72b1de25d7705d85b5c1446ab77311d3612a37c"
+    },
+    {
+      "path": "ardu_dash/assets/maps/lvl1.json",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/assets/maps/lvl1.json",
+      "bytes": 1259,
+      "sha256": "e1556bf983beee826d36e471f0829024d12d6d18bdd5b8c2847ad2f074ab680b"
+    },
+    {
+      "path": "ardu_dash/assets/maps/lvl2.json",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/assets/maps/lvl2.json",
+      "bytes": 1270,
+      "sha256": "8d6ae5a50be75812add205c097869711feaca6d77cb68a5dfac8db00911cb3ac"
+    },
+    {
+      "path": "ardu_dash/assets/maps/lvl3.json",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/assets/maps/lvl3.json",
+      "bytes": 1270,
+      "sha256": "cb425575eb9b7f751e1cd2825d6996038efcc14d5d9027466664251f8dc09149"
+    },
+    {
+      "path": "ardu_dash/assets/maps/lvl4.json",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/assets/maps/lvl4.json",
+      "bytes": 1269,
+      "sha256": "1144cbe0214d4049e8a70b8fa263288a26824df2945e01e757368398ab930993"
+    },
+    {
+      "path": "ardu_dash/assets/maps/lvl5.json",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/assets/maps/lvl5.json",
+      "bytes": 1269,
+      "sha256": "4ba64a6ec214716802d568bf23cb75c9d013978ea8af1b1b1e80a969094afe33"
+    },
+    {
+      "path": "ardu_dash/assets/maps/lvl6.json",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/assets/maps/lvl6.json",
+      "bytes": 1270,
+      "sha256": "bd1ba001e9574240ef0389dc1c3f897c2468b5987762a94baa4e10a817b871b9"
+    },
+    {
+      "path": "ardu_dash/assets/maps/lvl7.json",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/assets/maps/lvl7.json",
+      "bytes": 1270,
+      "sha256": "b7ba3295293fab1947f2aaf592a6c42177c443161801b346b3f7972955844478"
+    },
+    {
+      "path": "ardu_dash/assets/maps/lvl8.json",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/assets/maps/lvl8.json",
+      "bytes": 1269,
+      "sha256": "c20e1228648f34c63a42fc53d9f93a00a9b6816648a3d9426b038ab444f96418"
+    },
+    {
+      "path": "ardu_dash/assets/maps/lvl9.json",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/assets/maps/lvl9.json",
+      "bytes": 1270,
+      "sha256": "e2b10af0c46142d17aa1f5d49d3643f6f2ffe6e2bbf50eb6b9a11557742c1c00"
+    },
+    {
+      "path": "ardu_dash/assets/sprites/ardu_dash_game_77x32_logo.png",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/assets/sprites/ardu_dash_game_77x32_logo.png",
+      "bytes": 428,
+      "sha256": "94d58dce0296565a1c6ae39d338f1ea11323eaa368e5ccf5dcb260743dd59f0a"
+    },
+    {
+      "path": "ardu_dash/assets/sprites/press_a_to_play_new_58x8.png",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/assets/sprites/press_a_to_play_new_58x8.png",
+      "bytes": 213,
+      "sha256": "305c87ae087430701de7424a3fc7971ba0cf79fb072e8dde11db92b2ecaa8cbb"
+    },
+    {
+      "path": "ardu_dash/assets/sprites/sidescroller_obstacles.png",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/assets/sprites/sidescroller_obstacles.png",
+      "bytes": 349,
+      "sha256": "4325ecc69ab73dc72f26e47724c89b845c764a5234b56e6f260287ac1a5dc053"
+    },
+    {
+      "path": "ardu_dash/assets/sprites/sidescroller_player.png",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/assets/sprites/sidescroller_player.png",
+      "bytes": 426,
+      "sha256": "1ddb5098743b10d7e731352e5ff78c020eaa07138711ba14ca88682676b1369c"
+    },
+    {
+      "path": "ardu_dash/assets/sprites/sidescroller_player_death.png",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/assets/sprites/sidescroller_player_death.png",
+      "bytes": 264,
+      "sha256": "74ae7cf0b15757ee45726dc7d6294ab3927133d094149cf7967b6af173d80ed7"
+    },
+    {
+      "path": "ardu_dash/bitmaps.h",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/bitmaps.h",
+      "bytes": 5218,
+      "sha256": "6c9b82a56f473240ffebe1e891283e1df914f0bbcd5551a47baf0a171d0bfc66"
+    },
+    {
+      "path": "ardu_dash/debug_helper.h",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/debug_helper.h",
+      "bytes": 127,
+      "sha256": "ba745ccefdbae1bc940c203919f2825e8aadbf77fdbd5bafafb9c852817bdec1"
+    },
+    {
+      "path": "ardu_dash/game.h",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/game.h",
+      "bytes": 8997,
+      "sha256": "2f2a1a099c9df6b162bf1cbed393a483d7594f488e427b4c9698cd6c2106bdd1"
+    },
+    {
+      "path": "ardu_dash/game_global_constants.h",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/game_global_constants.h",
+      "bytes": 49,
+      "sha256": "677420401e5c1cdead65098c23bfdec875df50d6b12593ff03e3cb9705de943e"
+    },
+    {
+      "path": "ardu_dash/map_segments.h",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/map_segments.h",
+      "bytes": 3279,
+      "sha256": "5c15e891f90bfbfe5a87fab4dce575085b0064ea392ed3f63eeb0cabee86dc78"
+    },
+    {
+      "path": "ardu_dash/map_utils.h",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/map_utils.h",
+      "bytes": 3830,
+      "sha256": "9ba2974224a0239356b44c53949a31ec1267bd263e0d0c4192ed63f71dd6dcd4"
+    },
+    {
+      "path": "ardu_dash/obstacles.h",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/obstacles.h",
+      "bytes": 6067,
+      "sha256": "4cea5a6b733378f04f599aab9e8ec6f80d39e5a35fbdb9f3b1529c77effbbca1"
+    },
+    {
+      "path": "ardu_dash/player.h",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/player.h",
+      "bytes": 2358,
+      "sha256": "78ec3258b8fd68df51c93462cb066bf337f5c30d136a510192d64ac53023bd21"
+    },
+    {
+      "path": "ardu_dash/rects_collision.h",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/rects_collision.h",
+      "bytes": 1390,
+      "sha256": "402c626b7c66518a03c723291e61e48d8012a6d0b80be236a990f9a335399b4d"
+    },
+    {
+      "path": "ardu_dash/utils/parse_tiled_maps.py",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/utils/parse_tiled_maps.py",
+      "bytes": 5106,
+      "sha256": "b383bb1ec0900468bf4ca50799b1459dd59ca899a6f9f466ec9475dc5ffa0673"
+    },
+    {
+      "path": "ardu_dash/utils/rebuild_maps.sh",
+      "source_url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/ardu_dash/utils/rebuild_maps.sh",
+      "bytes": 111,
+      "sha256": "e86b8680ec524b59622e3b1814a573fe934397a09e11ca5300cb68f9d541a073"
+    }
+  ],
+  "omitted_precompiled_upstream": "ardu_dash/binaries/ardu_dash.hex: historical board firmware not used or executed; source and all original art/maps/generation utilities included"
+}

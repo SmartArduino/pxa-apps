@@ -13,8 +13,18 @@ SD 卡。程序、资源和私有存档均由系统管理，不需要用户选�
 
 保留已在设备验证的原生配置：Core 2.1 主循环、Audio 0.10 原采样率 PCM、
 GameRender 1.2 索引图像转换；128 KiB 引擎栈、16 KiB 回调栈，
-不分配 Asyncify 续体；192 页虚拟 Flash 资源缓存、4 页 NVM 只读缓存及分页 NVM，最大线性内存 5 MiB。Clock 优先请求 8ms，不支持时回退 16ms；
+不分配 Asyncify 续体；192 页虚拟 Flash 资源缓存、4 页 NVM 只读缓存及分页 NVM，最大线性内存 5.5 MiB。Clock 优先请求 8ms，不支持时回退 16ms；
 32ms 为计算期间的协作预算。原有显示、音频和手柄映射继续使用公共移植层。
+
+临时预览、图块指针表以及死亡后重试用的内部检查点使用 224 KiB 会话内存，
+随关卡初始化生成，退出后释放。这样可减少进入关卡和死亡后重试时的 SD 写入。
+用户存档槽与设置继续使用原来的私有 NVM 地址、文件格式和 NOR 擦写规则。
+范围跨界、标记地址、擦除、重启保留及持久化隔离的 ASan/UBSan 检查：
+
+```sh
+python3 local/pxa-apps/duke3d/tests/run_transient.py \
+  --output local/artifacts/duke-transient/$(date +%Y%m%d-%H%M%S)
+```
 
 构建：
 

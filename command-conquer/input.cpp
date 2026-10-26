@@ -69,6 +69,11 @@ extern "C" void port_game_scroll(int x, int y) {
 class Keyboard : public WWKeyboardClass {
 public:
   void Fill_Buffer_From_System() override {
+    // Take fresh pointer/controller state before the engine tests its queue.
+    // Throttle empty nonblocking polls in the legacy busy-wait menus.
+    static uint64_t last_poll;
+    uint64_t now=port_time_us();
+    if(now-last_poll>=8000u) {port_poll_input();last_poll=port_time_us();}
     // Legacy Get() waits by polling. Give PXA a chance to deliver the next key.
     static unsigned idle_polls;
     if(head==tail){

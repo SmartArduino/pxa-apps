@@ -6,7 +6,7 @@ PXA 的开源应用与共享资源仓库，包括商城、天气、小说阅读�
 
 ABI、IPC 和资源生命周期回归夹具位于 `pxa-system/simulator/desktop/tests/apps/`，通过该仓库的 `tools/package/test_core2_smoke.sh`、`test_core2_ipc_smoke.sh` 和 `test_resource_app.sh` 运行。纯诊断应用、渲染基准和实验游戏原型已移出本仓库；历史验收报告与截图保留。
 
-所有持续维护的应用使用 **C++26、Core 2.0**。应用名称与包 ID 不再带实现语言后缀：使用 [`jump-jump-3d`](jump-jump-3d/README.md)、[`pixel-dungeon`](pixel-dungeon/README.md) 和 `voxel-craft`。旧 C 算法仅在 `common/cpp/tests/reference/c` 中作为性能、像素与玩法对照，不再提供生产应用清单。
+应用通过 **Core 2.x** 接入；自研 C++ 应用使用 C++26，游戏移植保留上游 C/C++ 实现。应用名称与包 ID 不带实现语言后缀：使用 [`jump-jump-3d`](jump-jump-3d/README.md)、[`pixel-dungeon`](pixel-dungeon/README.md) 和 `voxel-craft`。这些自研应用的旧 C 算法仅在 `common/cpp/tests/reference/c` 中作为性能、像素与玩法对照，不再提供生产应用清单。
 
 [名称与旧存档说明](docs/app-names.zh-CN.md) · [迁移及真机报告](docs/core2-cpp-migration-20261011.zh-CN.md)
 
@@ -94,6 +94,14 @@ python3 tools/test-app-matrix.py --output local/app-matrix --target all --sdk-ex
 六款较新的游戏使用 [Pocket Play](common/pocket-play/README.md)，2048、国际象棋与推箱子使用 [Pocket Game](common/pocket-game/README.md)；复制或开发时保留对应运行时与 [Pocket UI](common/pocket-ui/README.md)。十款游戏均不播放背景音乐，保留操作与事件音效。Lantern Grove、Harbor Cafe 和 Tiny Elements 可在各自帮助页开关音效并保存声音偏好。
 
 [Anarch](anarch/README.md) 使用独立的 160×120 逻辑画布，同样等比适配屏幕和触摸坐标；菜单右上角或控制器 X 切换中英文，帮助按钮或 Y 打开说明。Game Boy 等模拟器中的游戏语言由 ROM 决定。各应用说明包含完整操作、许可证、构建和可复用测试入口。
+
+## 归档游戏移植
+
+[68 款独立游戏](common/retro-games/README.md)使用 SDK 2.1，统一等比显示、触摸坐标和生命周期，复用解谜、Arduboy 与 SAF 源码；每款保留独立包 ID 和原授权。清单见 [games.json](common/retro-games/games.json)。已在本仓库提供的 Anarch、2048、国际象棋及 Arcade 中的扫雷、俄罗斯方块、打砖块不重复导入。
+
+## SDL 游戏移植
+
+[死亡修道院](abbaye-des-morts/README.md)、[C-Dogs SDL](cdogs-sdl/README.md)、[Project: Starfighter](starfighter/README.md) 和 [Neverputt](neverputt/README.md) 各自提供独立应用、图标与架构分包，保留上游代码和素材许可。共享 [SDL guest 运行层](common/sdl-games/README.md) 接入手柄、触摸、音频和资源按需读取；SDL、混音器及软件 GL 均在应用中运行。C-Dogs 当前线性内存预算为 28 MiB，需另外预留 Host 内存；模拟器验证不代表真机帧率。
 
 ## 游戏机模拟器
 

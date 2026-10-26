@@ -1,0 +1,1 @@
+Guess Dots 原始图像与字节数组：Copyright (c) 2023 Sergei Petrov (SuperSolik)，MIT，完整许可见 LICENSE.MIT。原始 PNG 与图像数组保存在 vendor/original。Arduboy2 字体与绘图代码的完整 BSD 及其他原始声明见 LICENSE.Arduboy2.txt；PXA 适配代码完整 MIT 许可见 LICENSE.PXA-glue.MIT。

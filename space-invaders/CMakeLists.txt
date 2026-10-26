@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.20)
+project(pxa_classic_invaders C CXX)
+set(ARDU_GAME_ID 11)
+include("${CMAKE_CURRENT_SOURCE_DIR}/../common/retro-games/arduboy-pxa/game.cmake")
+target_compile_features(pxa_main PRIVATE cxx_std_20)

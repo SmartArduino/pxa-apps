@@ -1,0 +1,9 @@
+{
+  "url": "https://github.com/pr-starfighter/starfighter",
+  "commit": "315d0456723e19a153dbc5ef37d5cfb27b4cb36c",
+  "changes": [
+    "WASI private configuration directory",
+    "Original bitmap font build (NOFONT) at 640x480, scaled to PXA surface",
+    "RGB565 world and converted sprites; matching streaming texture format; destination-format rectangle colors"
+  ]
+}

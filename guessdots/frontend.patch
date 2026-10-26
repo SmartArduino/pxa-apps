@@ -1,0 +1,20 @@
+--- a/arduboy-batch-20261010/frontend.cpp
++++ b/guessdots/frontend.cpp
+@@ -15,7 +15,7 @@
+ static void ui_text(int x,int y,int scale,const char *s,uint8_t color){const uint8_t*font=arduboy_pxa_font();for(;*s;++s,x+=6*scale)for(int col=0;col<5;col++){uint8_t bits=font[(uint8_t)*s*5+col];for(int row=0;row<8;row++)if(bits&(1u<<row))ui_rect(x+col*scale,y+row*scale,scale,scale,color);}}
+ static void ui_button(int x,int y,int w,int h,const char*label,int active){ui_rect(x,y,w,h,active?3:2);ui_text(x+(w-(int)strlen(label)*12)/2,y+(h-16)/2,2,label,1);}
+ static uint8_t touch_mask(int x,int y){
+-#if ARDU_GAME_ID == 1
++#if ARDU_GAME_ID == 1 || ARDU_GAME_ID == 3
+  if(x>=184&&x<380&&y>=276&&y<304)return UP_BUTTON|DOWN_BUTTON;
+ #endif
+  if(x>=58&&x<100&&y>=316&&y<346)return UP_BUTTON;
+@@ -46,7 +46,7 @@
+  ui_button(58,316,42,30,"^",arduboy_pxa_state.pointer&UP_BUTTON);ui_button(58,376,42,30,"v",arduboy_pxa_state.pointer&DOWN_BUTTON);
+  ui_button(16,346,42,30,"<",arduboy_pxa_state.pointer&LEFT_BUTTON);ui_button(100,346,42,30,">",arduboy_pxa_state.pointer&RIGHT_BUTTON);
+  ui_button(184,340,92,64,"A",arduboy_pxa_state.pointer&A_BUTTON);ui_button(286,340,94,64,"B",arduboy_pxa_state.pointer&B_BUTTON);
+-#if ARDU_GAME_ID == 1
++#if ARDU_GAME_ID == 1 || ARDU_GAME_ID == 3
+  ui_button(184,276,196,28,"UP+DOWN",arduboy_pxa_state.pointer==(UP_BUTTON|DOWN_BUTTON));
+ #endif
+  if(fe.paused){ui_rect(70,70,260,176,2);ui_text(152,82,2,"PAUSED",1);ui_button(108,120,184,34,"CONTINUE",0);ui_button(108,174,184,34,"NEW GAME",0);}

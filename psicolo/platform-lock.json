@@ -1,0 +1,140 @@
+{
+  "modified_date": "2026-10-10",
+  "files": {
+    "vendor/platform/MyArduboy.cpp": {
+      "bytes": 8444,
+      "sha256": "3827737f62fdeb96798c2b97db870d3eac16b0cd2a9e9dd5b1ee1f51cc5464f4"
+    },
+    "vendor/platform/MyArduboy.h": {
+      "bytes": 2153,
+      "sha256": "340980c4eef946026f818b8e0546a9e27c9b1733e0cc852d4336920f5c98d36e"
+    },
+    "vendor/platform/common.cpp": {
+      "bytes": 8939,
+      "sha256": "502fe27d8468f0dd3ab464041e414ad95fd6b351a5b4a91c15800de47c17e950"
+    },
+    "vendor/platform/common.h": {
+      "bytes": 2824,
+      "sha256": "e4ff3e9c4058355311eb0d1fcfcbbe805926302b3a37638a2947ea0260472bc0"
+    },
+    "vendor/platform/game.cpp": {
+      "bytes": 32690,
+      "sha256": "1aca2540efd36abd15445ff7a99de155ed4dece4d3e2a64476fa71db07f700b2"
+    },
+    "vendor/platform/image.h": {
+      "bytes": 21054,
+      "sha256": "895203f72ffcf59cf7958cf48e1e382bd6c7f1c22af753d31af19637a61637e1"
+    },
+    "vendor/platform/logo.cpp": {
+      "bytes": 3594,
+      "sha256": "5e2aae390cf86675ab13c3239c21c1303b4b8b0a6a8643e41367804684572aa2"
+    },
+    "vendor/platform/menu.cpp": {
+      "bytes": 3658,
+      "sha256": "6a4e82a1025fa07e9466676523663cfc651b947b89d28e3115c6cf10e363b995"
+    },
+    "vendor/platform/psicolo.ino": {
+      "bytes": 2420,
+      "sha256": "d3455a6bee08258b861f8f0b1786adfe6f028a219a5c3cfb23473d44f26b996c"
+    },
+    "vendor/platform/title.cpp": {
+      "bytes": 6835,
+      "sha256": "63d9db247c69721eaa7239c0cc1e33fa0ef660da7fcdaf33983b8e504f4b0bff"
+    },
+    "owner/ArduboyPlaytune.h": {
+      "bytes": 360,
+      "sha256": "e0129b82dc2f6cdadfc674bf645bd3d402704e0da302c916ec42960e0b76dbbc"
+    },
+    "owner/owner_ascii_format.h": {
+      "bytes": 766,
+      "sha256": "ee764d425a00c8615e17fa60e8ddabf672d7aff5b4fb18747a363b459a75ba07"
+    },
+    "owner/owner_compat.cpp": {
+      "bytes": 5873,
+      "sha256": "09171a22d4256c2235613ef669799a53c4aafe52a51a782fc016d91c45d7aca7"
+    },
+    "owner/owner_compat.h": {
+      "bytes": 1729,
+      "sha256": "143f109fa3f8c86492b3bf550a0f1e10db6b7e179bf7b89be5a59a7a156f8db6"
+    },
+    "game.cpp": {
+      "bytes": 869,
+      "sha256": "b0a1dd4206c2ab0da5216e1f4d905777513965c8e6ee5e51d34001460cebcbba"
+    },
+    "CMakeLists.txt": {
+      "bytes": 909,
+      "sha256": "cfdefac75e398413ee686863a8ff5e69df3f40fd38cd399fbfb01cf95f251bca"
+    },
+    "game.cmake": {
+      "bytes": 1313,
+      "sha256": "5f790be69d1bbe0370cef14660820a13801d11eea708635a08429a136eb268fa"
+    },
+    "frontend.cpp": {
+      "bytes": 9923,
+      "sha256": "ceacd6386ebd8eebe8367a452f958056b0c0c1b1f8aca5efe89d3531c1105baa"
+    }
+  },
+  "patch_sha256": "a3174f29e54354b18aba9001f62d99e7245aa7f54c5b7928e738d8e8d70e12cf",
+  "sections": [
+    {
+      "old_header": "vendor/original/MyArduboy.cpp",
+      "new_header": "vendor/platform/MyArduboy.cpp",
+      "original": "vendor/original/MyArduboy.cpp",
+      "modified": "vendor/platform/MyArduboy.cpp"
+    },
+    {
+      "old_header": "vendor/original/MyArduboy.h",
+      "new_header": "vendor/platform/MyArduboy.h",
+      "original": "vendor/original/MyArduboy.h",
+      "modified": "vendor/platform/MyArduboy.h"
+    },
+    {
+      "old_header": "vendor/original/common.cpp",
+      "new_header": "vendor/platform/common.cpp",
+      "original": "vendor/original/common.cpp",
+      "modified": "vendor/platform/common.cpp"
+    },
+    {
+      "old_header": "vendor/original/game.cpp",
+      "new_header": "vendor/platform/game.cpp",
+      "original": "vendor/original/game.cpp",
+      "modified": "vendor/platform/game.cpp"
+    },
+    {
+      "old_header": "vendor/original/image.h",
+      "new_header": "vendor/platform/image.h",
+      "original": "vendor/original/image.h",
+      "modified": "vendor/platform/image.h"
+    },
+    {
+      "old_header": "vendor/original/logo.cpp",
+      "new_header": "vendor/platform/logo.cpp",
+      "original": "vendor/original/logo.cpp",
+      "modified": "vendor/platform/logo.cpp"
+    },
+    {
+      "old_header": "vendor/original/menu.cpp",
+      "new_header": "vendor/platform/menu.cpp",
+      "original": "vendor/original/menu.cpp",
+      "modified": "vendor/platform/menu.cpp"
+    },
+    {
+      "old_header": "vendor/original/psicolo.ino",
+      "new_header": "vendor/platform/psicolo.ino",
+      "original": "vendor/original/psicolo.ino",
+      "modified": "vendor/platform/psicolo.ino"
+    },
+    {
+      "old_header": "vendor/original/title.cpp",
+      "new_header": "vendor/platform/title.cpp",
+      "original": "vendor/original/title.cpp",
+      "modified": "vendor/platform/title.cpp"
+    }
+  ],
+  "unchanged_copies": [
+    {
+      "original": "vendor/original/common.h",
+      "platform": "vendor/platform/common.h"
+    }
+  ]
+}

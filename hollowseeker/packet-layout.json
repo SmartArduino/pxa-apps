@@ -1,0 +1,89 @@
+{
+  "game_wire_bytes_design": 429,
+  "core_bytes": 3136,
+  "game_id": 7,
+  "mode": 2,
+  "myarduboy": {
+    "textcolor": 3,
+    "textbg": 4,
+    "lastButton": 5,
+    "currentButton": 6,
+    "priority": 7
+  },
+  "owner": {
+    "rand_state": 8,
+    "rand_calls": 12,
+    "fault": 16,
+    "audio_channels": 17,
+    "song_id": 18,
+    "note0": 19,
+    "note1": 20,
+    "audio_fault": 21,
+    "score_cursor": 22,
+    "wait_until": 24,
+    "starts": 28,
+    "stops": 32,
+    "score_playing": 36,
+    "audio_enabled": 37
+  },
+  "logo": {
+    "counter": 38,
+    "signalOn": 39
+  },
+  "title": {
+    "state": 40,
+    "toDraw": 41,
+    "sound": 42,
+    "menuPos": 43,
+    "lastScore": 44,
+    "recordState": 46,
+    "eepAddr": 47,
+    "hiScore": 49,
+    "playCount": 69,
+    "playFrames": 71,
+    "eyesWait": 75,
+    "lightColor": 76,
+    "lightBlink": 77,
+    "lightWait": 78
+  },
+  "game": {
+    "isStart": 79,
+    "isOver": 80,
+    "score": 81,
+    "scoreTop": 83,
+    "isHiscore": 84,
+    "counter": 85,
+    "caveOffset": 87,
+    "cavePhase": 88,
+    "caveHollowCnt": 90,
+    "caveLoopCnt": 91,
+    "caveMaxGap": 93,
+    "caveGap": 94,
+    "caveBaseTop": 96,
+    "caveBaseBottom": 98,
+    "caveColumn": 100,
+    "playerX": 136,
+    "playerColumn": 137,
+    "playerMove": 138,
+    "playerDir": 139,
+    "playerJump": 140,
+    "debris": 141
+  },
+  "arrays": {
+    "hiScore": {
+      "count": 10,
+      "typed_element_bytes": 2
+    },
+    "caveColumn": {
+      "count": 18,
+      "typed_element_bytes": 2
+    },
+    "debris": {
+      "count": 144,
+      "typed_element_bytes": 2
+    }
+  },
+  "endian": "little",
+  "pointers_or_padding": false,
+  "pack_sizes_authoritative": "arduboy_game_pack(NULL,0), not design assumption"
+}

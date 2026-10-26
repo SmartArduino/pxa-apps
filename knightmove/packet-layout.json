@@ -1,0 +1,56 @@
+{
+  "header": [
+    0,
+    3
+  ],
+  "my_arduboy": [
+    3,
+    5
+  ],
+  "owner_rng": [
+    8,
+    9
+  ],
+  "original_playtune_full": [
+    17,
+    72
+  ],
+  "logo": [
+    89,
+    2
+  ],
+  "common_AVR26_record": [
+    91,
+    39
+  ],
+  "menu_all6slots": [
+    130,
+    135
+  ],
+  "title": [
+    265,
+    2
+  ],
+  "game_all32floor_slots": [
+    267,
+    93
+  ],
+  "game_bytes": 360,
+  "core_bytes": 3136,
+  "total_bytes": 3496,
+  "audio_offsets": {
+    "num_chans": 0,
+    "playing": 11,
+    "frequency2": 12,
+    "wait_toggles": 15,
+    "score_start_id": 25,
+    "score_start_offset": 26,
+    "score_cursor_owner_id": 28,
+    "score_cursor_offset": 29,
+    "fault": 55,
+    "clock": 56,
+    "interrupts": 60,
+    "starts": 64,
+    "stops": 68
+  }
+}

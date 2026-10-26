@@ -1,0 +1,129 @@
+{
+  "repository": "https://github.com/MLXXXp/Arduboy2",
+  "commit": "bc460a2cff1a3e116880991aa2f88bae4b2e3160",
+  "version": "6.0.0",
+  "original": {
+    "src/Arduboy2.cpp": {
+      "bytes": 33307,
+      "sha256": "e83b20f5f089ebde978178e2e37b37efbfba0d258a88393d762ebb1bcaa6d70e"
+    },
+    "src/Arduboy2.h": {
+      "bytes": 79292,
+      "sha256": "f8c470df74268bfa1db2fde6e67aa6a3fe5f0abcd92413be2f3ba9a2df993c7d"
+    },
+    "src/Arduboy2Audio.cpp": {
+      "bytes": 1044,
+      "sha256": "a320a69b7a15de047085e5c52bca3442ae4cdb8d81f90febbaf8ec9c201566b1"
+    },
+    "src/Arduboy2Audio.h": {
+      "bytes": 4554,
+      "sha256": "3a6224603c2d8bd898a44aee0fed5850294d341d383ce87d430809b80c5069f6"
+    },
+    "src/Arduboy2Beep.cpp": {
+      "bytes": 2715,
+      "sha256": "077a7f96afaebe69674d176f5c2d958a4cc4d30a12b214cc0b726cf02ab438ef"
+    },
+    "src/Arduboy2Beep.h": {
+      "bytes": 11980,
+      "sha256": "00d8a85a3784ae3ee371be254931ed7e7c83652c5fd87299b56456f02c1a6b29"
+    },
+    "src/Arduboy2Core.cpp": {
+      "bytes": 17550,
+      "sha256": "37faac4ced4286c7d9dcf29a84ebd5941ae3a4956f7b1c978229b314f7567477"
+    },
+    "src/Arduboy2Core.h": {
+      "bytes": 31882,
+      "sha256": "5f3ab812de9a6b94316baead97a52590a7adf7930ffbae0d9c8816c71f7a5364"
+    },
+    "src/Arduboy2Data.cpp": {
+      "bytes": 11999,
+      "sha256": "67187e521bcaaa23a62250bf4a17b4e93b168c8cdf5280bf9217973743082674"
+    },
+    "src/Sprites.cpp": {
+      "bytes": 11606,
+      "sha256": "cb0b210e5cc5e7d231e0dc8443fdd297b20d625b599372546b9b8b42736ecc93"
+    },
+    "src/Sprites.h": {
+      "bytes": 9974,
+      "sha256": "f1b8da9e11c988dce85fcd6edc91924ad485bf0a50af3eaab816164d8e74820b"
+    },
+    "src/SpritesB.cpp": {
+      "bytes": 5007,
+      "sha256": "20e681e3945cd3ce187a749d484b3b3e864928786a9f134179128b44ee24343c"
+    },
+    "src/SpritesB.h": {
+      "bytes": 4183,
+      "sha256": "b83d82a2d8c5b767b6159cac4ab780acde5e73a2bd1f10bc2697834695e96d74"
+    },
+    "src/SpritesCommon.h": {
+      "bytes": 338,
+      "sha256": "38392fd1198147d9ff83f8985200a7811a17d3e07f19c542328677b9f6e0096d"
+    },
+    "LICENSE.txt": {
+      "bytes": 14561,
+      "sha256": "5b021be5c106fd555169f0c9ca9d7f7f930e3690d900c480d0de4b067130df71"
+    },
+    "library.properties": {
+      "bytes": 783,
+      "sha256": "57ffaef719979764054963016a1331ec4bc6e6a7e2811e4d31a585358c5e98d0"
+    }
+  },
+  "platform": {
+    "Arduboy2.cpp": {
+      "bytes": 29934,
+      "sha256": "94528661a91f6f0ed510f1e872bc0c7d7cbb4c3f591c9a2dc2d901693c56dfe3"
+    },
+    "Arduboy2.h": {
+      "bytes": 79292,
+      "sha256": "f8c470df74268bfa1db2fde6e67aa6a3fe5f0abcd92413be2f3ba9a2df993c7d"
+    },
+    "Arduboy2Audio.cpp": {
+      "bytes": 798,
+      "sha256": "6952c22a1bfef3f8535c380985e0109c6860fd9bf301296c27feaca0365cc54f"
+    },
+    "Arduboy2Audio.h": {
+      "bytes": 4554,
+      "sha256": "3a6224603c2d8bd898a44aee0fed5850294d341d383ce87d430809b80c5069f6"
+    },
+    "Arduboy2Beep.cpp": {
+      "bytes": 2771,
+      "sha256": "366e763ce1921f5fe632e0fbf3dd170a9d74415b4a935b7c40400fb702572a22"
+    },
+    "Arduboy2Beep.h": {
+      "bytes": 11980,
+      "sha256": "00d8a85a3784ae3ee371be254931ed7e7c83652c5fd87299b56456f02c1a6b29"
+    },
+    "Arduboy2Core.cpp": {
+      "bytes": 17550,
+      "sha256": "37faac4ced4286c7d9dcf29a84ebd5941ae3a4956f7b1c978229b314f7567477"
+    },
+    "Arduboy2Core.h": {
+      "bytes": 31836,
+      "sha256": "acb14f3a2f779193ca817af53b079aab005fec9dd95b28230fffe2f016ca0a0d"
+    },
+    "Arduboy2Data.cpp": {
+      "bytes": 12035,
+      "sha256": "bc0ae52530e6e11ffc6cccd462fe74abb6a2e0d8737234aaf17a3424383301ee"
+    },
+    "Sprites.cpp": {
+      "bytes": 8524,
+      "sha256": "c9c431871cfa269f4ba6097f83eb211ad71e5f2e1cf8ed7fc95603ef759319bf"
+    },
+    "Sprites.h": {
+      "bytes": 9974,
+      "sha256": "f1b8da9e11c988dce85fcd6edc91924ad485bf0a50af3eaab816164d8e74820b"
+    },
+    "SpritesB.cpp": {
+      "bytes": 5007,
+      "sha256": "20e681e3945cd3ce187a749d484b3b3e864928786a9f134179128b44ee24343c"
+    },
+    "SpritesB.h": {
+      "bytes": 4183,
+      "sha256": "b83d82a2d8c5b767b6159cac4ab780acde5e73a2bd1f10bc2697834695e96d74"
+    },
+    "SpritesCommon.h": {
+      "bytes": 338,
+      "sha256": "38392fd1198147d9ff83f8985200a7811a17d3e07f19c542328677b9f6e0096d"
+    }
+  }
+}

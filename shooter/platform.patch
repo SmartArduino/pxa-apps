@@ -1,0 +1,43 @@
+--- vendor/original/shooter/shooter.ino
++++ vendor/platform/shooter.ino
+@@ -95,7 +95,7 @@
+ // Add a new pothole randomly offscreen, after that we will move it towards the left
+ void summonPothole() {
+   for (uint8_t potholeNum = 0; potholeNum < potholes; potholeNum++) {
+-    if (!(pothole[potholeNum].isOnScreen) && (arduboy.everyXFrames(random(480)))) {
++    if (!(pothole[potholeNum].isOnScreen) && (shooterEveryXFrames(random(480)))) {
+             pothole[potholeNum].x = 128;
+             pothole[potholeNum].y = random(14, 48);
+             pothole[potholeNum].isOnScreen = true;
+@@ -455,7 +455,7 @@
+ // If there is no enemy, summon new ones at random intervals
+ void summonEnemy() {
+     for (uint8_t enemyNum = 0; enemyNum < enemies; enemyNum++) {
+-        if (!(enemy[enemyNum].isOnScreen) && (arduboy.everyXFrames(random(240)))) {
++        if (!(enemy[enemyNum].isOnScreen) && (shooterEveryXFrames(random(240)))) {
+             enemy[enemyNum].x = random(90, 119);
+             enemy[enemyNum].y = random(11, 51);
+             enemy[enemyNum].isOnScreen = true;
+--- vendor/original/tinyfont/src/Tinyfont.h
++++ vendor/platform/tinyfont/Tinyfont.h
+@@ -18,6 +18,8 @@
+  * \t makes a 9 px long jump in print().
+  */
+ class Tinyfont : public Print {
++  // PXA read-only state observer; original drawing and layout are unchanged.
++  friend struct TinyfontPxaState;
+   public:
+     Tinyfont(uint8_t *screenBuffer, int16_t width, int16_t height);   //!< Needs to be initialized with a screenBuffer where the height is a multiple of 8.
+     virtual size_t write(uint8_t); // used by the Arduino Print class
+--- vendor/original/tinyfont/src/TinyfontSprite.c
++++ vendor/platform/tinyfont/TinyfontSprite.c
+@@ -2,8 +2,7 @@
+ #ifndef TINYFONT_SPRITE_H
+ #define TINYFONT_SPRITE_H
+ 
+-#include <avr/io.h>
+-#include <avr/pgmspace.h>
++#include <Arduino.h> // PXA supplies portable PROGMEM/pgm_read_byte; glyph data unchanged.
+ 
+ const unsigned char PROGMEM TINYFONT_SPRITE[] =
+ {

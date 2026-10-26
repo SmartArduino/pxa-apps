@@ -1,0 +1,358 @@
+{
+  "format": "pxa-arduboy-batch-module-export-contract-1",
+  "game": "randocity",
+  "repository": "https://github.com/pmwasson/Randocity",
+  "commit": "42e9b7e0fe0e17ee231f43577b222288306be238",
+  "game_license": "MIT",
+  "modified_date": "2026-10-10",
+  "common_directory": "arduboy-batch-20261010",
+  "original_frame_period_ms": 33,
+  "typed_game_bytes": 120,
+  "source_locks": [
+    {
+      "path": "upstream-lock.json",
+      "bytes": 6755,
+      "sha256": "4d16001afbc814ba49e2ea733cae4b3657add199533156cf503744c80c2e298b"
+    },
+    {
+      "path": "tones-upstream-lock.json",
+      "bytes": 1894,
+      "sha256": "25104d3091a4010df22a0eb93dd5ab6eff29f64085b9bd7c931bf57ce0cee4a6"
+    },
+    {
+      "path": "platform-lock.json",
+      "bytes": 4887,
+      "sha256": "7e5a9cff988ec9cb7599f39099b251d3ce260c3355d31e99023ab511dbd97dce"
+    }
+  ],
+  "original_files": [
+    {
+      "path": "vendor/original/FatFont.cpp",
+      "bytes": 3926,
+      "sha256": "a25e5835ca62f1fbee5143a74bb1bb520c79227401fcb0526a1088600e36caa0",
+      "url": "https://raw.githubusercontent.com/pmwasson/Randocity/42e9b7e0fe0e17ee231f43577b222288306be238/FatFont.cpp"
+    },
+    {
+      "path": "vendor/original/FatFont.h",
+      "bytes": 493,
+      "sha256": "be9ab1142fe350ccbd56f27f7d060a18f927ada98c2d61942bdefd81180bac1c",
+      "url": "https://raw.githubusercontent.com/pmwasson/Randocity/42e9b7e0fe0e17ee231f43577b222288306be238/FatFont.h"
+    },
+    {
+      "path": "vendor/original/LICENSE",
+      "bytes": 1065,
+      "sha256": "635446f5f3b91980faf0867642000aa11584e8c3a905c2f281f9dd6341647d4f",
+      "url": "https://raw.githubusercontent.com/pmwasson/Randocity/42e9b7e0fe0e17ee231f43577b222288306be238/LICENSE"
+    },
+    {
+      "path": "vendor/original/README.md",
+      "bytes": 2295,
+      "sha256": "ebb5c20093d5747f90a52be0289f3baef140ee4d277581d57a07336ffe0dae3a",
+      "url": "https://raw.githubusercontent.com/pmwasson/Randocity/42e9b7e0fe0e17ee231f43577b222288306be238/README.md"
+    },
+    {
+      "path": "vendor/original/Randocity.ino",
+      "bytes": 24265,
+      "sha256": "0963785ad55a754c313ed0962131893c93e0b040cb4ed71f475fc7fe1194f9fe",
+      "url": "https://raw.githubusercontent.com/pmwasson/Randocity/42e9b7e0fe0e17ee231f43577b222288306be238/Randocity.ino"
+    },
+    {
+      "path": "vendor/original/Randocity/LICENSE.txt",
+      "bytes": 1065,
+      "sha256": "635446f5f3b91980faf0867642000aa11584e8c3a905c2f281f9dd6341647d4f",
+      "url": "https://raw.githubusercontent.com/pmwasson/Randocity/42e9b7e0fe0e17ee231f43577b222288306be238/Randocity/LICENSE.txt"
+    },
+    {
+      "path": "vendor/original/Randocity/banner.png",
+      "bytes": 61819,
+      "sha256": "8f88c421d96e69aba704eae6761798d579c060f80d814e4bb91ba17537c6e817",
+      "url": "https://raw.githubusercontent.com/pmwasson/Randocity/42e9b7e0fe0e17ee231f43577b222288306be238/Randocity/banner.png"
+    },
+    {
+      "path": "vendor/original/Randocity/info.json",
+      "bytes": 1488,
+      "sha256": "08bb4a637f7062b205c3acc3a22a730b87c558190daa981fb36af9e4ef7cab73",
+      "url": "https://raw.githubusercontent.com/pmwasson/Randocity/42e9b7e0fe0e17ee231f43577b222288306be238/Randocity/info.json"
+    },
+    {
+      "path": "vendor/original/Randocity/screenshot-crazy-courier.png",
+      "bytes": 1721,
+      "sha256": "ee5f94923e893b2191a5213bafd3d20524c4a361e5adaa299b24d5a2a9f6a33d",
+      "url": "https://raw.githubusercontent.com/pmwasson/Randocity/42e9b7e0fe0e17ee231f43577b222288306be238/Randocity/screenshot-crazy-courier.png"
+    },
+    {
+      "path": "vendor/original/Randocity/screenshot-edge-race.png",
+      "bytes": 1584,
+      "sha256": "2e8e1a68c11f0812747c61c06319f4f15d3a1a6f16c947f2a198fedfb2f0eb0c",
+      "url": "https://raw.githubusercontent.com/pmwasson/Randocity/42e9b7e0fe0e17ee231f43577b222288306be238/Randocity/screenshot-edge-race.png"
+    },
+    {
+      "path": "vendor/original/Randocity/screenshot-free-play.png",
+      "bytes": 1720,
+      "sha256": "8489c7bdd7981b912391afaaab17ddae3382eac1e7a7c5f0e0eab38741e893eb",
+      "url": "https://raw.githubusercontent.com/pmwasson/Randocity/42e9b7e0fe0e17ee231f43577b222288306be238/Randocity/screenshot-free-play.png"
+    },
+    {
+      "path": "vendor/original/Randocity/screenshot-menu.png",
+      "bytes": 1138,
+      "sha256": "5eefb02e1d8f73dfac328b6e78ee1b1d9787907eeb0dc9d33d3cd9c3545e6118",
+      "url": "https://raw.githubusercontent.com/pmwasson/Randocity/42e9b7e0fe0e17ee231f43577b222288306be238/Randocity/screenshot-menu.png"
+    },
+    {
+      "path": "vendor/original/Randocity/screenshot-title.png",
+      "bytes": 2014,
+      "sha256": "2260a2ab28a1beb5737a27a330471326cfa1ce06cac3a419bf031047f759db95",
+      "url": "https://raw.githubusercontent.com/pmwasson/Randocity/42e9b7e0fe0e17ee231f43577b222288306be238/Randocity/screenshot-title.png"
+    },
+    {
+      "path": "vendor/original/Records.cpp",
+      "bytes": 1197,
+      "sha256": "d746a8c34344a388633642956bee0ad59b6e0c869ef767b3fd484a90ae4f7313",
+      "url": "https://raw.githubusercontent.com/pmwasson/Randocity/42e9b7e0fe0e17ee231f43577b222288306be238/Records.cpp"
+    },
+    {
+      "path": "vendor/original/Records.h",
+      "bytes": 413,
+      "sha256": "9ae23f80f381b87fbe2eeae8cbda892a280ad8fb16c041fd74824a73887e4f67",
+      "url": "https://raw.githubusercontent.com/pmwasson/Randocity/42e9b7e0fe0e17ee231f43577b222288306be238/Records.h"
+    },
+    {
+      "path": "vendor/original/SavedSprites.h",
+      "bytes": 18721,
+      "sha256": "82c8dc7b2f1f844d0cbb44b1737b8b7858c9556f8e49374adc1b4ec3b1f1074d",
+      "url": "https://raw.githubusercontent.com/pmwasson/Randocity/42e9b7e0fe0e17ee231f43577b222288306be238/SavedSprites.h"
+    },
+    {
+      "path": "vendor/original/Timer.cpp",
+      "bytes": 765,
+      "sha256": "07cb158e95c5127839852e61cf48c04853ede42987f196e26a52099e712d33d0",
+      "url": "https://raw.githubusercontent.com/pmwasson/Randocity/42e9b7e0fe0e17ee231f43577b222288306be238/Timer.cpp"
+    },
+    {
+      "path": "vendor/original/Timer.h",
+      "bytes": 445,
+      "sha256": "3085d76c1e7d0a0a83f0a989930bf2b1f33290dad0c1224dbdf8a09010b8e777",
+      "url": "https://raw.githubusercontent.com/pmwasson/Randocity/42e9b7e0fe0e17ee231f43577b222288306be238/Timer.h"
+    },
+    {
+      "path": "vendor/original/World.cpp",
+      "bytes": 10939,
+      "sha256": "fe21ecd7ad8e07912657f172cdb14844deab07f53e635606b0d752cd6c00e397",
+      "url": "https://raw.githubusercontent.com/pmwasson/Randocity/42e9b7e0fe0e17ee231f43577b222288306be238/World.cpp"
+    },
+    {
+      "path": "vendor/original/World.h",
+      "bytes": 1415,
+      "sha256": "4f13652e153a208f8fb67300596cd2fe32179b0e1fb3d6eb195420c8ef5bb63b",
+      "url": "https://raw.githubusercontent.com/pmwasson/Randocity/42e9b7e0fe0e17ee231f43577b222288306be238/World.h"
+    },
+    {
+      "path": "vendor/original/lfsr.cpp",
+      "bytes": 2137,
+      "sha256": "fb949d0f6d794ad66ad8ec6989ba172e80f95baf5d20da80973cb4c312066c79",
+      "url": "https://raw.githubusercontent.com/pmwasson/Randocity/42e9b7e0fe0e17ee231f43577b222288306be238/lfsr.cpp"
+    },
+    {
+      "path": "vendor/original/lfsr.h",
+      "bytes": 579,
+      "sha256": "11776701a49e922282fc197cf78a77afa450f1fced7f62bc5725dc7d1904e767",
+      "url": "https://raw.githubusercontent.com/pmwasson/Randocity/42e9b7e0fe0e17ee231f43577b222288306be238/lfsr.h"
+    },
+    {
+      "path": "vendor/original/ArduboyTones/LICENSE.txt",
+      "bytes": 1055,
+      "sha256": "714dc29aa62987d0f93ab2f929518aaa08d510923e8fb33c9f3534de640c1f05",
+      "url": "https://raw.githubusercontent.com/MLXXXp/ArduboyTones/972fe8117002da47073b6c1835117d654a03e16f/LICENSE.txt"
+    },
+    {
+      "path": "vendor/original/ArduboyTones/README.md",
+      "bytes": 11897,
+      "sha256": "bbcb81bca35aefd1dc451103cc1fe3fcb733734385ceef949444e67ba8b23190",
+      "url": "https://raw.githubusercontent.com/MLXXXp/ArduboyTones/972fe8117002da47073b6c1835117d654a03e16f/README.md"
+    },
+    {
+      "path": "vendor/original/ArduboyTones/library.properties",
+      "bytes": 518,
+      "sha256": "0599fe7c85c4e7b98392347ec7ad9493a93a0edf1e9118e9fb900c85b5557d92",
+      "url": "https://raw.githubusercontent.com/MLXXXp/ArduboyTones/972fe8117002da47073b6c1835117d654a03e16f/library.properties"
+    },
+    {
+      "path": "vendor/original/ArduboyTones/src/ArduboyTones.h",
+      "bytes": 9509,
+      "sha256": "27bea88b5386525eb78b9a563943b6d0ddab6e7b6bcb764f1719bb9207ac5ca1",
+      "url": "https://raw.githubusercontent.com/MLXXXp/ArduboyTones/972fe8117002da47073b6c1835117d654a03e16f/src/ArduboyTones.h"
+    },
+    {
+      "path": "vendor/original/ArduboyTones/src/ArduboyTones.cpp",
+      "bytes": 8291,
+      "sha256": "8b7c93227628c009bcfa6d91fb1f917bc0539a6973157a321da8b797b0140cf0",
+      "url": "https://raw.githubusercontent.com/MLXXXp/ArduboyTones/972fe8117002da47073b6c1835117d654a03e16f/src/ArduboyTones.cpp"
+    },
+    {
+      "path": "vendor/original/ArduboyTones/src/ArduboyTonesPitches.h",
+      "bytes": 8480,
+      "sha256": "4ff936a8ab90dd34c117e04d423ddd9b0a1d654ef476f782a9c8b52c79cfd622",
+      "url": "https://raw.githubusercontent.com/MLXXXp/ArduboyTones/972fe8117002da47073b6c1835117d654a03e16f/src/ArduboyTonesPitches.h"
+    }
+  ],
+  "platform_patches": [
+    {
+      "path": "platform.patch",
+      "sections": [
+        {
+          "old_header": "vendor/original/ArduboyTones/src/ArduboyTones.cpp",
+          "new_header": "vendor/platform/ArduboyTones.cpp",
+          "original": "vendor/original/ArduboyTones/src/ArduboyTones.cpp",
+          "modified": "vendor/platform/ArduboyTones.cpp"
+        },
+        {
+          "old_header": "vendor/original/ArduboyTones/src/ArduboyTones.h",
+          "new_header": "vendor/platform/ArduboyTones.h",
+          "original": "vendor/original/ArduboyTones/src/ArduboyTones.h",
+          "modified": "vendor/platform/ArduboyTones.h"
+        },
+        {
+          "old_header": "vendor/original/Randocity.ino",
+          "new_header": "vendor/platform/Randocity.ino",
+          "original": "vendor/original/Randocity.ino",
+          "modified": "vendor/platform/Randocity.ino"
+        },
+        {
+          "old_header": "vendor/original/World.cpp",
+          "new_header": "vendor/platform/World.cpp",
+          "original": "vendor/original/World.cpp",
+          "modified": "vendor/platform/World.cpp"
+        }
+      ]
+    }
+  ],
+  "unchanged_platform_copies": [
+    {
+      "original": "vendor/original/ArduboyTones/src/ArduboyTonesPitches.h",
+      "platform": "vendor/platform/ArduboyTonesPitches.h"
+    },
+    {
+      "original": "vendor/original/FatFont.cpp",
+      "platform": "vendor/platform/FatFont.cpp"
+    },
+    {
+      "original": "vendor/original/FatFont.h",
+      "platform": "vendor/platform/FatFont.h"
+    },
+    {
+      "original": "vendor/original/lfsr.cpp",
+      "platform": "vendor/platform/lfsr.cpp"
+    },
+    {
+      "original": "vendor/original/lfsr.h",
+      "platform": "vendor/platform/lfsr.h"
+    },
+    {
+      "original": "vendor/original/Records.cpp",
+      "platform": "vendor/platform/Records.cpp"
+    },
+    {
+      "original": "vendor/original/Records.h",
+      "platform": "vendor/platform/Records.h"
+    },
+    {
+      "original": "vendor/original/SavedSprites.h",
+      "platform": "vendor/platform/SavedSprites.h"
+    },
+    {
+      "original": "vendor/original/Timer.cpp",
+      "platform": "vendor/platform/Timer.cpp"
+    },
+    {
+      "original": "vendor/original/Timer.h",
+      "platform": "vendor/platform/Timer.h"
+    },
+    {
+      "original": "vendor/original/World.h",
+      "platform": "vendor/platform/World.h"
+    }
+  ],
+  "license_files": [
+    "LICENSE.MIT",
+    "NOTICE.md",
+    "assets/LICENSE.MIT",
+    "assets/LICENSE.ArduboyTones.MIT",
+    "assets/LICENSE.Arduboy2.txt",
+    "assets/LICENSE.PXA-glue.MIT",
+    "assets/NOTICE.md"
+  ],
+  "dependencies": [
+    {
+      "repository": "https://github.com/MLXXXp/ArduboyTones",
+      "commit": "972fe8117002da47073b6c1835117d654a03e16f",
+      "license": "MIT"
+    }
+  ],
+  "addon_compiled_sources": [
+    "frontend.cpp",
+    "vendor/platform/FatFont.cpp",
+    "vendor/platform/lfsr.cpp",
+    "vendor/platform/World.cpp",
+    "vendor/platform/Timer.cpp",
+    "vendor/platform/Records.cpp",
+    "vendor/platform/ArduboyTones.cpp"
+  ],
+  "compiled_frontend_override": {
+    "path": "frontend.cpp",
+    "bytes": 9595,
+    "sha256": "581607cf08969711597465b4bc41f06181621453c028d096e97d2589ab44d42d",
+    "foundation_path": "arduboy-batch-20261010/frontend.cpp",
+    "foundation_sha256": "81c5e59f8c6c0fdaad5ca4ee292ab4fd8e757f15cd62ef870a36d347b8fbcef5",
+    "patch": "frontend.patch",
+    "old_header": "a/arduboy-batch-20261010/frontend.cpp",
+    "new_header": "b/randocity/frontend.cpp"
+  },
+  "diagnostic_state_log": {
+    "format": "bounded-state-header-state2-1",
+    "first_fields": [
+      "game",
+      "seq",
+      "gen",
+      "clock",
+      "steps",
+      "frame",
+      "period",
+      "bytes",
+      "core_bytes",
+      "game_bytes",
+      "paused"
+    ],
+    "first_phase": "header",
+    "second_fields": [
+      "game",
+      "seq",
+      "gen",
+      "clock",
+      "fault",
+      "ctors",
+      "dropped",
+      "draw_step",
+      "display_count",
+      "seed",
+      "rng",
+      "elapsed"
+    ],
+    "second_phase": "post",
+    "conservative_payload_bytes": [
+      246,
+      246
+    ],
+    "official_sdk_message_limit": 256,
+    "frozen_logger_payload_limit": 255,
+    "binding": [
+      "component",
+      "game",
+      "seq",
+      "gen",
+      "clock"
+    ],
+    "legacy_complete_state_post_compatible": true,
+    "source_approval_path": "logs/audits/randocity-bounded-state-proposal-review.json",
+    "source_approval_sha256": "d9ef563338d10c5a500a70f6a19d818f5b6f616484d03124c6f4726f081cd5ed"
+  }
+}

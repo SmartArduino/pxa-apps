@@ -36,7 +36,7 @@ static uint32_t random_u32(void) {
     rng ^= rng >> 17;
     return rng ^= rng << 5;
 }
-static uint32_t lights[192 * 192];
+static uint32_t lights[520 * 520];
 static uint8_t pixels[128 * 128], map[65536];
 static uint64_t ticks(void) {
     struct timespec t;
@@ -50,8 +50,8 @@ int main(int argc, char **argv) {
         map[i] = random_u32();
     for (unsigned i = 0; i < sizeof(lights) / sizeof(lights[0]); i++)
         lights[i] = (random_u32() & 4095) | ((random_u32() & 4095) << 16);
-    sdd.blocklights = lights + 64 * 192 + 64;
-    sdd.r_lightwidth = 192;
+    sdd.blocklights = lights + 260 * 520 + 260;
+    sdd.r_lightwidth = 520;
     sdd.r_source = pixels;
     sdd.colormap = map;
     unsigned cases = 0;
@@ -76,6 +76,12 @@ int main(int argc, char **argv) {
                 s -= 96 * 65536;
                 t -= 96 * 65536;
             }
+            /* Signed Q10.6 wraps from +511 to -512, in either direction.
+             * A repeated-texel hit must not survive a row or wrap boundary. */
+            if ((j % 16) == 0) { s = 511 * 65536 + 49152; ds = 16384; dt = 0; }
+            if ((j % 16) == 1) { s = -512 * 65536 + 16384; ds = -16384; dt = 0; }
+            if ((j % 16) == 2) { t = 511 * 65536 + 49152; dt = 16384; ds = 0; }
+            if ((j % 16) == 3) { t = -512 * 65536 + 16384; dt = -16384; ds = 0; }
             uint8_t a[64], b[64];
             memset(a, 0xa5, sizeof(a));
             memset(b, 0xa5, sizeof(b));
@@ -95,7 +101,7 @@ int main(int argc, char **argv) {
         }
     }
     printf("PASS: %u exact pixel comparisons, 8 kernels, fractional/negative steps, fullbright, "
-           "row/cell boundaries and output guards\n",
+           "row/cell/signed-wrap boundaries and output guards\n",
            cases);
     if (argc > 1) {
         volatile uint32_t checksum = 0;

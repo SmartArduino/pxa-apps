@@ -1,0 +1,125 @@
+{
+  "game": "guessdots",
+  "game_id": 3,
+  "bytes": 494,
+  "core_bytes": 3136,
+  "endianness": "little",
+  "no_object_padding_or_pointers": true,
+  "fields": [
+    {
+      "field": "fps",
+      "offset": 0,
+      "bytes": 1
+    },
+    {
+      "field": "lm_idx",
+      "offset": 1,
+      "bytes": 1
+    },
+    {
+      "field": "generated_pattern",
+      "offset": 2,
+      "bytes": 4
+    },
+    {
+      "field": "solution",
+      "offset": 6,
+      "bytes": 4
+    },
+    {
+      "field": "player_pos",
+      "offset": 10,
+      "bytes": 2
+    },
+    {
+      "field": "offset_x",
+      "offset": 12,
+      "bytes": 2
+    },
+    {
+      "field": "offset_y",
+      "offset": 14,
+      "bytes": 2
+    },
+    {
+      "field": "new_offset_x",
+      "offset": 16,
+      "bytes": 2
+    },
+    {
+      "field": "new_offset_y",
+      "offset": 18,
+      "bytes": 2
+    },
+    {
+      "field": "chosen_difficulty",
+      "offset": 20,
+      "bytes": 1
+    },
+    {
+      "field": "adjust_offsets",
+      "offset": 21,
+      "bytes": 1
+    },
+    {
+      "field": "force_offsets",
+      "offset": 22,
+      "bytes": 1
+    },
+    {
+      "field": "level_start",
+      "offset": 23,
+      "bytes": 1
+    },
+    {
+      "field": "score",
+      "offset": 24,
+      "bytes": 2
+    },
+    {
+      "field": "score_saved",
+      "offset": 26,
+      "bytes": 1
+    },
+    {
+      "field": "game_state",
+      "offset": 27,
+      "bytes": 1
+    },
+    {
+      "field": "process_title_flash",
+      "offset": 28,
+      "bytes": 1
+    },
+    {
+      "field": "all_metadata_three_by155",
+      "offset": 29,
+      "bytes": 465
+    }
+  ],
+  "metadata": {
+    "all_three_original_mutable_grids_included": true,
+    "offset": 29,
+    "count": 3,
+    "bytes_each": 155,
+    "format": [
+      "use_offsets:u8",
+      "tile_size:u8",
+      "dots_cnt:u8",
+      "numbers_cnt:u8",
+      "level_limit:u32",
+      "score_value:u8",
+      "dots25xI8x2",
+      "numbers16xI8x2",
+      "clue_masks16xu32"
+    ]
+  },
+  "original_states": {
+    "INIT": 0,
+    "TITLE_SCREEN": 1,
+    "DIFF_CHOICE": 2,
+    "LEVEL_INIT": 3,
+    "LEVEL_PLAY": 4,
+    "LEVEL_COMPLETED": 5
+  }
+}

@@ -56,9 +56,15 @@ python3 local/pxa-apps/common/recrof/tools/import_data.py red-alert /path/to/Red
 ASCII 小写，包括私有设置和存档的写入，避免为每个归档成员重复扫描目录。
 替换 SD 游戏资源后应重新打开游戏。
 
-C&C 还复用最多两个空闲的只读 MIX 归档句柄，重开时恢复零游标并保留请求
-cookie。空闲500ms后由Clock关闭；私有命名空间变化会使旧的覆盖层判断失效，
-读取报错的句柄不复用。这样不必为每个归档成员重新执行打开/关闭协议。
+C&C/RA 复用最多八个空闲的只读 MIX 归档句柄，重开时恢复零游标并保留请求
+cookie。启动阶段最多保留五分钟，首个游戏画面出现时关闭这批空闲句柄；正常
+游戏阶段仍在空闲 500ms 后由 Clock 关闭。私有命名空间变化会使旧的覆盖层判断
+失效，读取报错的句柄不复用。这样可减少初始化反复打开同一批资源包的等待，
+同时限制 Host 句柄占用，及时识别私有文件覆盖。
+
+红警通过 GameRender 1.2 转换、缩放原始索引画面和鼠标光标；C&C 的 320 像素
+AOT 路径保留 Guest 软件转换。红警读取新任务时重新显示阶段提示和等待计时，
+同一阶段复用上述有界归档缓存，首个引擎画面出现后恢复正常寿命。
 
 Quake 必须使用上游 PXA MCU 格式 3 转换器生成的 PAK；普通 PC PAK 不能直接使用。转换器源码位于 `quake/tools/MCUPackConverter`，在有 `pak0.pak` 的目录运行转换器会生成 `pak0conv.pak`。目前只接入 `pak0.pak`，未验证完整注册版的其他 PAK。转换器可在 Linux 下编译：
 
@@ -77,6 +83,12 @@ python3 local/pxa-apps/duke3d/tools/PythonCVT/mcugrpcvt.py DUKE3D.GRP DUKE3DCONV
 Quake II 使用标准 `baseq2/pak0.pak`。C&C 可导入 DOS 试玩版的 DEMO.MIX、DEMOL.MIX、SOUNDS.MIX、SPEECH.MIX，或完整零售版资源；DOS/试玩版自动使用低分辨率。Windows Gold 需要自己的 CCLOCAL.MIX 等完整配套资源。Red Alert 使用 REDALERT.MIX 和战役 MAIN.MIX，或完整的展开资源；默认采用 Windows 素材模式并缩放输出。不要把 Windows 的 CCLOCAL.MIX 直接重命名成 DOS 的 LOCAL.MIX。仅有 OpenRA 的最小联机资源集不能作为完整单人战役的验收依据。
 
 ## 操作
+
+UI 指针事件使用 dp，Surface 画面使用像素。运行时保留启动环境及环境变化中的
+`density_q16`，先把触摸坐标换算为像素，再处理画面缩放和留黑边；安全区也在
+同一像素空间计算。修改触屏布局时须同时检查低于和高于 160 DPI 的屏幕。
+画面外的留黑边不接收新的触摸按压；已有拖动仍可在画面外松开，避免按钮卡住。
+画面比窗口大时，触摸坐标按居中的裁切位置换算。
 
 射击游戏：左半屏拖动控制前后移动和横移；右半屏拖动转向及俯仰；按钮 MENU 打开菜单，WPN 切武器，USE 使用，JMP 跳跃，FIRE 射击。菜单内用左侧上下拖动选择，FIRE 确认。手柄方向键移动，X/B/Y/A 分别抬头/低头/左转/右转，R 射击、L 跳跃，START 菜单、SELECT 使用。菜单里 A 确认、B 返回。
 
@@ -160,8 +172,9 @@ vendor提取参考算法，检查20万组跨度并运行ASan/UBSan。桌面热�
 - 可选 `audio.playback` 权限；Quake、Duke3D 提交原采样率 PCM，其他回调构建仍使用 16 kHz 单声道；拒绝权限仍可游戏。Duke 已在真机开启音乐和音效并核对设置，持续输出与欠载情况仍需分别量化。
 - 标准 stdio/POSIX 调用桥接到私有 FS 与只读 SD 媒体根，虚拟 Flash 使用文件保存 NOR 数据。
 - 不使用 ESP32 的 GPIO、SDMMC、DMA、FreeRTOS 或 Flash 直映射驱动。
-- 当前正式清单的线性内存上限：Quake 3.5 MiB、Quake II 10.1875 MiB、Duke3D 5 MiB、C&C 7 MiB、RA 9.1875 MiB；另需 Host、代码、显示和音频内存。实际装载资格与速度需要真机验证，不能据此承诺在 8 MiB PSRAM 设备上均可运行。
+- 当前正式清单的线性内存上限：Quake 3.5 MiB、Quake II 10.1875 MiB、Duke3D 5.5 MiB、C&C 6.75 MiB、RA 9.1875 MiB；另需 Host、代码、显示和音频内存。实际装载资格与速度需要真机验证，不能据此承诺在 8 MiB PSRAM 设备上均可运行。
 - Red Alert 在该 16 MiB 设备使用便携 WASM；AOT 代码还需要连续的可执行内存，应用切换后的碎片会导致分配失败，不能只按总剩余内存判断。
+- Red Alert 的规则解析、地图初始化和维护回调按协作预算让出执行，保持原来的处理顺序，同时允许系统处理输入与加载反馈。
 - Quake/Duke3D 的虚拟 NOR 保存区使用 4 个 8 KiB 页的只读缓存；修改、重新打开和批量保存会保持缓存与已提交页一致，不改变磁盘格式。Duke3D 的资源页缓存为 192 页（1.5 MiB），减少场景内反复读取相同资源。
 - WAMR 无 Wasm 异常处理，原引擎 setjmp/longjmp 错误恢复改为显示错误并等待重新打开应用。正常主循环不依赖 longjmp。
 - `duke3d-sd` 已在 16 MiB PSRAM 的 GameKit / ESP32-S31 上自动读取固定 SD 资源并进入屋顶关卡，完成短时 FPS 与内存测量；其他游戏、音频连续性及长期稳定性仍待真机验收，见 `VALIDATION.md`。
@@ -197,6 +210,13 @@ C&C 和 Red Alert 的掌机配置跳过启动片头；战役影片和游戏内�
 最多保留64个路径、最长五分钟，首个真实游戏帧清空加载缓存；游戏内过期时间为一秒。路径先统一
 大小写与冗余分隔符，私有命名空间发生修改时立即失效。媒体 I/O 错误、权限拒绝和
 存储不可用不计入该缓存。两个 RTS 端口均短暂复用只读 MIX 句柄及其读缓存。
+加载期间还会完整枚举私有 `data` 根目录，用有界索引跳过确认不存在的平级资源查询。
+私有文件仍优先于 SD；新建、删除或重命名使索引失效。子目录、目录枚举失败、超出
+容量或超过五分钟均回到正常查找；游戏运行阶段不使用该目录快照。
+RTS 读取引擎按键队列前也会收取待处理输入，空闲时最多每 8 ms 查询一次事件端口。
+Red Alert 用 64 项借用引用缓存减少已解压精灵索引的重复哈希查找。它引用原索引中的
+值，重新哈希后仍然有效；删除剧场索引项前必须清空这些引用。更改索引生命周期时，
+运行 `command-conquer/tests/shape_slot_test.cpp` 检查重新哈希、覆盖、冲突和清空。
 
 RTS 启动通过 `port_loading_stage` 显示当前阶段、动态等待条和已用时间；阶段切换后
 更新，真实游戏帧接管显示后停止，错误界面独立显示。等待条不表示完成百分比。
@@ -262,93 +282,23 @@ PXADB_BAUD=2000000 python3 local/pxa-apps/common/recrof/tools/migrate_sd.py quak
 游戏优先协商 Clock 0.3 的 8000us，设备不支持或配置失败时回退合法的 16ms。
 后台取消、回到前台恢复；周期表示调度请求，不能据此直接推断游戏帧率。
 
-## GameRender 1.0 原生 span 试验
+## GameRender 显示转换
 
-Quake 可通过 CMake `PXA_QUAKE_HOST_SPANS=ON` 试用同步的原生 INDEX8
-光照 span；默认关闭，首版真机关卡测得性能回退，尚未达到 20fps 目标。
-该路径只借用本次调用的 Guest 内存，不额外复制纹理、帧缓冲或深度缓冲。
-失败时在原表面状态仍有效时回放原渲染器；显示仍沿用 GuestMapped Surface。
+世界渲染、投影、深度和光照留在应用内。Host 在一次调用中完成
+INDEX8 颜色转换、缩放和光标合成，同步返回后即可复用缓冲。
 
-`PXA_QUAKE_STATIC_GLOBALS` 直接使用固定状态对象地址，真机关卡达到约 6.9fps，现默认启用。SDK 默认编译器
-没有被替换；测试包通过私有构建配置选择已做边界检查的对齐编译器。
-
-真实上游内核的像素差分检查（需要工作区中的新 SDK）：
+`PXA_RECROF_HOST_BLIT` 控制原生颜色转换；`PXA_RECROF_BULK_READ_COPY`
+控制大块文件读取复制；`PXA_RECROF_PACKED_GAME_CODEC` 使用经过布局断言的
+WASM 编码。这些开关的性能须在实际关卡测量。
 
 ```sh
-python3 local/pxa-apps/common/recrof/tests/run_quake_host_spans.py
-```
-
-测试直接提取当前 vendor 的 lit-span 宏，覆盖 20 万组、40 万条 span、
-八种内核、负坐标与重叠写入。它验证新内核，不替代完整场景的性能或画质验收。
-
-Quake II SD 0.1.13 的线性内存上限调整为 163 页（10.1875MiB），
-与 GameKit 16MiB PSRAM 的已验证装载配置一致；引擎 arena 仍为 7.5MiB。
-Quake 另做过渲染相关文件的单精度常量试验；中位数仍为 6.9fps，未纳入公开构建配置。
-
-
-GameRender投影试验：`PXA_QUAKE_PROJECTED_SPANS` 默认关闭。直接运行
-`python3 common/recrof/tests/run_quake_projected_spans.py` 可将Host投影、
-光照和深度输出与当前vendor函数对比（需主工程deps/pxa-system）。
-GameKit实际出生点私有候选中位3.9fps，低于6.9fps默认基线；不依据合成吞吐
-启用该选项。公开构建继续使用Guest原路径，最低15fps及期望20fps仍待后续优化。
-
-
-## GameRender 1.2 跨材质批次
-
-`PXA_QUAKE_FRAME_SPANS` 使用已有Surface后缓冲保存命令与材质快照，
-世界绘制完成后同步执行，再覆盖为RGB565显示帧。Host不新增纹理、帧或深度堆缓冲。
-`PXA_RECROF_HOST_BLIT` 可单独将INDEX8颜色转换及透明光标交给Host；保持原缩放规则。
-两项都是默认关闭的实验选项，需要GameRender 1.2。不能把原生计算测试的吞吐当成游戏FPS。
-
-`PXA_QUAKE_FRAME_BULK_COPY` 仅作用于整帧批次的大块资源快照，使用WASM `memory.copy`；
-没有给整个引擎开启bulk-memory编译开关。可关闭此选项复现普通memmove候选。
-上游原函数继续保留，原生批次拒绝时按捕获状态整体回退。
-
-```sh
-python3 local/pxa-apps/common/recrof/tests/run_quake_frame_adapter.py
-PXA_QUAKE_TEST_BULK_COPY=0 python3 local/pxa-apps/common/recrof/tests/run_quake_frame_adapter.py
 python3 local/pxa-apps/common/recrof/tests/run_host_indexed_blit.py
-```
-
-第一项在WASM中使用当前上游Rows函数验证来源复用后的回退，第二项覆盖非bulk配置，
-第三项使用原`port_blit`作参考。主工程的`tools/game-perf/profiles`保留独立比较配置。
-
-`PXA_RECROF_BULK_READ_COPY` 仅给至少128字节的文件及虚拟flash读取使用WASM
-`memory.copy`；小型元数据保留普通复制。`PXA_RECROF_PACKED_GAME_CODEC` 启用SDK
-的可选WASM布局编码：固定记录的大小与所有字段偏移必须在编译期逐项匹配wire布局，
-然后整块编码；其他平台继续使用逐字段编码。两项默认关闭，按游戏实测决定启用。
-没有增加缓存或扩大线性内存，也没有为整个引擎启用bulk-memory。
-
-```sh
 python3 local/pxa-apps/common/recrof/tests/run_read_copy.py
-PXA_QUAKE_TEST_PACKED_CODEC=1 python3 local/pxa-apps/common/recrof/tests/run_quake_frame_adapter.py
 ```
 
-
-2026-10-20 GameKit 同固件 START 出生点 60 秒比较：默认 Guest 路径中位 6.9fps、
-平均 7.017fps；批次、原生输出、批量读取及编码组合中位 6.9fps、平均 6.817fps。
-组合较早期 5.9fps 候选收回部分开销，仍未证明优于默认路径，故新选项继续默认关闭。
-最低 15fps 和期望 20fps 均未达到。公开 Quake/SD 源码为 0.4.5（seq125），
-本轮上机的是私有比较包，不把公开源码版本视为已验收的二进制发布。
-
-
-## 同一 AOT 的私有渲染诊断
-
-`PXA_QUAKE_RENDER_PROBE` 默认关闭，仅在整帧批次、原生输出和帧统计同时启用时可用。
-它在显示提交完成后读取 `/data/pxa-render-probe-mode` 单字节文件：
-低两位：0 为 Guest 路径，1 仅原生输出，2 仅原生世界批次，3 两项启用。
-另有位 4 启用光照网格缓存，位 8 对命中重跑原引擎并严格比对实际采样数据；
-文件使用单个十六进制字符，例如 `5` 是 Guest 世界加缓存，`d` 是其验证模式。
-模式切换不发生在借用命令执行期间；非法或未完成写入保持原模式。
-1/16 的引擎帧分别采样表面准备、梯度、跨度、光照读取/混合和光照打包时间，
-以定位开销；诊断包的计时开销不能冒充发布配置的性能。
-SD 包可使用现有只读 App-media 回退，从固定 `PXA/media/<AppKey>` 读取该文件。
-PXADB 保持禁止写应用私有目录；测试只替换自己创建的 SD 探针文件。
-
-```sh
-PXA_QUAKE_TEST_RENDER_PROBE=1 PXA_QUAKE_TEST_PACKED_CODEC=1 \
-  python3 local/pxa-apps/common/recrof/tests/run_quake_frame_adapter.py
-```
+私有 `PXA_QUAKE_RENDER_PROBE` 可通过应用媒体中的单字节模式文件选择
+原生颜色转换（位 1）和光照缓存（位 4）。
+位 8 对缓存命中重跑引擎以验证数据；诊断计时不能代替发布配置的测量。
 
 Duke 原生输出候选在原有输入状态记录中附带 Host 批次、拒绝和执行计数，
 用于核实加速路径实际执行。默认构建未因此增加新的日志条目。

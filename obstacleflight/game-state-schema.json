@@ -1,0 +1,90 @@
+{
+  "game": "obstacleflight",
+  "game_id": 9,
+  "bytes": 101,
+  "core_bytes": 3136,
+  "total_bytes": 3237,
+  "chunks": 102,
+  "endianness": "little",
+  "float": "IEEE754 binary32 explicit bits",
+  "no_object_padding_or_pointers": true,
+  "fields": [
+    {
+      "field": "screen:u8",
+      "offset": 0,
+      "bytes": 1
+    },
+    {
+      "field": "shipX:13i16",
+      "offset": 1,
+      "bytes": 26
+    },
+    {
+      "field": "shipY:13i16",
+      "offset": 27,
+      "bytes": 26
+    },
+    {
+      "field": "obstacleDepth:f32",
+      "offset": 53,
+      "bytes": 4
+    },
+    {
+      "field": "obstacleType:u8",
+      "offset": 57,
+      "bytes": 1
+    },
+    {
+      "field": "roto:i16",
+      "offset": 58,
+      "bytes": 2
+    },
+    {
+      "field": "pitch:i16",
+      "offset": 60,
+      "bytes": 2
+    },
+    {
+      "field": "xo:u8",
+      "offset": 62,
+      "bytes": 1
+    },
+    {
+      "field": "yo:u8",
+      "offset": 63,
+      "bytes": 1
+    },
+    {
+      "field": "leftDepth:5f32",
+      "offset": 64,
+      "bytes": 20
+    },
+    {
+      "field": "lives:u8",
+      "offset": 84,
+      "bytes": 1
+    },
+    {
+      "field": "score:u8",
+      "offset": 85,
+      "bytes": 1
+    },
+    {
+      "field": "temp:u8",
+      "offset": 86,
+      "bytes": 1
+    },
+    {
+      "field": "Tinyfont:value fields",
+      "offset": 87,
+      "bytes": 14
+    }
+  ],
+  "original_states": {
+    "PLAYING": 0,
+    "GAMEOVER": 1,
+    "TITLE": 2
+  },
+  "Tinyfont_fixed_buffer": "same original sBuffer pointer, separately packed in3136 core",
+  "persistent_save": false
+}

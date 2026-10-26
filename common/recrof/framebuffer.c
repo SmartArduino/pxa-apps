@@ -19,6 +19,12 @@ void port_blit(uint16_t *dest, int dw, int dh, const uint8_t *pixels,
   for (int y = 0; y < dh; ++y) {
     const uint8_t *row = pixels + (size_t)source_y[y] * pitch;
     uint16_t *out = dest + (size_t)y * dw;
+    /* 320x200 engines repeat 40 rows on a 320x240 panel. Reuse their
+     * resolved RGB565 row; the cursor is composed after the whole image. */
+    if(y && source_y[y]==source_y[y-1]) {
+      memcpy(out,out-dw,(size_t)dw*sizeof(*out));
+      continue;
+    }
     if (dw == 320 && sw == 320) {
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
       if (!((uintptr_t)out & 3u)) {
@@ -30,7 +36,13 @@ void port_blit(uint16_t *dest, int dw, int dh, const uint8_t *pixels,
       } else
 #endif
       for (int x = 0; x < dw; ++x) out[x] = palette[row[x]];
-    } else
+    }
+#ifndef PORT_CNC_GATHER_BLIT
+    else if(dw==320 && sw==640) {
+      for(int x=0;x<320;++x)out[x]=palette[row[x*2]];
+    }
+#endif
+    else
       for (int x = 0; x < dw; ++x) out[x] = palette[row[source_x[x]]];
   }
   if (!cursor || !cursor->pixels || cursor->width <= 0 || cursor->height <= 0)
@@ -76,10 +88,24 @@ typedef struct {int x,y,w,h; const char *label; int key;} Control;
 #else
 #define RTS_CONFIRM
 #endif
+#ifdef PORT_SDL_CONTROLLER
+#define CONTROL_DEFAULTS \
+  {38,136,28,30,"^",224}, {38,200,28,30,"v",225}, \
+  {6,168,30,30,"<",226}, {68,168,30,30,">",227}, \
+  {270,166,42,38,"A",228}, {224,192,42,38,"B",229}, \
+  {224,142,42,38,"X",232}, {270,116,42,38,"Y",233}, \
+  {134,208,52,24,"START",230}, {134,178,52,24,"SEL",231}, \
+  {6,6,36,24,"L",234}, {278,6,36,24,"R",235}
+#define CONTROL_BEGIN 0
+#define CONTROL_END (sizeof(controls)/sizeof(controls[0]))
+#else
 #define CONTROL_DEFAULTS \
   {0,0,38,23,"MENU",27}, {280,0,40,24,"WPN",'q'}, \
   {276,116,44,26,"USE",'e'}, {276,148,44,28,"JMP",' '}, \
   {268,192,52,48,"FIRE",200}, {280,0,40,24,"RMB",202} RTS_CONFIRM
+#define CONTROL_BEGIN (rts?5:0)
+#define CONTROL_END (rts?sizeof(controls)/sizeof(controls[0]):5)
+#endif
 static const Control control_defaults[] = {CONTROL_DEFAULTS};
 static Control controls[] = {CONTROL_DEFAULTS};
 static int controls_visible = 1;
@@ -109,7 +135,7 @@ int port_controls_set_visible(int visible) {
 int port_controls_visible(void) { return controls_visible; }
 int port_control_key_at(int x,int y,int rts) {
   if (!controls_visible) return 0;
-  for(unsigned i=rts?5:0;i<(rts?sizeof(controls)/sizeof(controls[0]):5);++i) {
+  for(unsigned i=CONTROL_BEGIN;i<CONTROL_END;++i) {
     const Control *b=&controls[i];
     if(x>=b->x && x<b->x+b->w && y>=b->y && y<b->y+b->h)return b->key;
   }
@@ -117,7 +143,7 @@ int port_control_key_at(int x,int y,int rts) {
 }
 void port_draw_controls(uint16_t *dest, int w, int h, int rts) {
   if (!controls_visible) return;
-  for (unsigned i = rts ? 5 : 0; i < (rts ? sizeof(controls)/sizeof(controls[0]) : 5); ++i) {
+  for (unsigned i = CONTROL_BEGIN; i < CONTROL_END; ++i) {
     int bx=controls[i].x, by=controls[i].y, bw=controls[i].w, bh=controls[i].h;
     if (w==320 && h==240) {
       for(int y=by;y<by+bh;++y) {

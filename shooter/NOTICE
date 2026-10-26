@@ -1,0 +1,10 @@
+Shooter upstream: https://github.com/shantheone/shooter
+Commit cb40c26f9906809908b2a9bbda46ecee20ae25c6. MIT, Copyright2021 Sandor Kovacs.
+All original source bitmap/game assets retained, including their editable inputs. Upstream build.sh is archival source and is not used or executed.
+Tinyfont upstream: https://github.com/BotiKis/Arduboy-TinyFont (official oldyinkou URLredirects here).
+Commit c7ab15955ebcbb7f1a714ed8ad545c141137f83b. BSD-3-Clause, Copyright2017 Botond Kis.
+Original Tinyfont4x4 glyph data, renderer and layout preserved. Only read-only diagnostic friendship added to its class declaration; TinyfontSprite.c AVR include directives replaced with portable Arduino.h, leaving every glyph byte unchanged.
+Arduboy2 6.0.0 uses the new independent batch foundation, preserving original mixedBSD/MIT notices and AdafruitBSD font notices in LICENSE.Arduboy2.txt and foundation NOTICE.
+Modified2026-10-10: two game-local random everyXFrames call sites use a uint8_t zero guard. The RNG call/narrowing and all nonzero conditions remain exactly as upstream. Both original divisor0 and sample256-narrowed0 UBSan failures and exhaustive nonzero equivalence proof are retained under native/safety-proof.
+The adapter supplies explicit cold original globals on NEW/RESTART, original setup()/loop(), padding-free read-only state, original128x64 graphics and ordinary touch input. It has no gameplay fixtures in the Guest.
+Audio is silent; original BeepPin1 frame-duration state still runs. EEPROM is per-Guest RAM only. Hardware has not been tested.

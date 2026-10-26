@@ -1,0 +1,82 @@
+{
+  "modified_date": "2026-10-10",
+  "files": {
+    "vendor/platform/ardubullets.ino": {
+      "bytes": 1836,
+      "sha256": "7eb0d7462c3e452f1cf94ad10ec4ba39b1d81b393c2ddd82ed8be8d4f6ac7abb"
+    },
+    "vendor/platform/common.cpp": {
+      "bytes": 7374,
+      "sha256": "522bdbff8e4e684a72582f2b49ce46c20732c4d18161a8d8ffedae50e2a0129c"
+    },
+    "vendor/platform/common.h": {
+      "bytes": 2892,
+      "sha256": "cdf363b0c8b9eb9bec0c7a0a867123a80732542036cb2c8a125ace8577864d3f"
+    },
+    "vendor/platform/data.h": {
+      "bytes": 6808,
+      "sha256": "8fec4c2f23bc11e359fd9dd83da53af22f805dbf293793fdede5b48e55dbd134"
+    },
+    "vendor/platform/game.cpp": {
+      "bytes": 27392,
+      "sha256": "356c3a02ef62867abba487c175ccf4562235fe5dc661437717370925a8bd9b6b"
+    },
+    "vendor/platform/info.json": {
+      "bytes": 259,
+      "sha256": "b2dd0f81584c2f984fbd5d557f667b8aa7af3076cacc88065f31da9cd50e8a4d"
+    },
+    "vendor/platform/logo.cpp": {
+      "bytes": 3426,
+      "sha256": "06657c70b73246f384f4a600b5de058d1f459f94d15feed148635b766501ebbb"
+    },
+    "vendor/platform/menu.cpp": {
+      "bytes": 4568,
+      "sha256": "abeaaecb6bfebe71d799d5d88251ca668ad0fe4254138437064a12c1ae96f627"
+    },
+    "vendor/platform/MyArduboy2.cpp": {
+      "bytes": 6682,
+      "sha256": "40cccc43d114c60f373f2f98f7d69ddbfdd108140ebd14c3f3585d206398af63"
+    },
+    "vendor/platform/MyArduboy2.h": {
+      "bytes": 1737,
+      "sha256": "0ac710e8f9893c08b7e7132895acc7fdd3d6580d1f72b40368a6cd688e300fa0"
+    },
+    "vendor/platform/MyArduboyPlaytune.cpp": {
+      "bytes": 14726,
+      "sha256": "22a34fabed99264145cc09d45fa2f39e2f6e4f93bb65390fe346c3b42d924a24"
+    },
+    "vendor/platform/title.cpp": {
+      "bytes": 14720,
+      "sha256": "91edd066eaac283b7a9b76ac3a77708f6996fed35834d66a27b400a1914db115"
+    },
+    "owner/owner_compat.cpp": {
+      "bytes": 3683,
+      "sha256": "029b5880435ee061f63351ef9b41bf5abae5c8710848330bb2bef1571bb7c591"
+    },
+    "owner/owner_compat.h": {
+      "bytes": 1772,
+      "sha256": "3a0a515d0262076b80be6a45c0b9c8eac60559419f7ada539bd06bb951d222a2"
+    },
+    "game.cpp": {
+      "bytes": 819,
+      "sha256": "350cce9c42470a3ea8518d83909703a2d80c2dc619806ccde4f50bc5fc47e25e"
+    },
+    "CMakeLists.txt": {
+      "bytes": 1588,
+      "sha256": "e5f0835afc84d6f272609dcc5c7c4e4e8b0aa9dd7ca520d74545510081a82275"
+    },
+    "frontend.cpp": {
+      "bytes": 9992,
+      "sha256": "ac4a40191b01a11e5cff0eee7ea1ee3dd8dbdfd1a8856b5d899cb179cccd7062"
+    },
+    "frontend.patch": {
+      "bytes": 5049,
+      "sha256": "4cbdc4e8731f0d1929288c1ade169d1d44782cfe946a55ff11831d7d86aa8e5a"
+    },
+    "cmake.patch": {
+      "bytes": 2800,
+      "sha256": "63f18a9f710ca0aae764316df501c9d4aa9a654c69cd39897e383780b8a6da87"
+    }
+  },
+  "patch_sha256": "748140e9d3efbf2924d1ad4985d76bd419c87bb5f6341d5bcad3943ab974e814"
+}

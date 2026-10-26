@@ -1,0 +1,549 @@
+{
+  "project": "Whatajong",
+  "repository": "https://github.com/masylum/whatajong",
+  "commit": "45fe3da7a7d1e87a66ae41b72ee74cc4e0a920d5",
+  "upstream_root": "../../../../upstream/whatajong",
+  "license": "MIT",
+  "upstream_source_files": {
+    "LICENSE": {
+      "sha256": "0f1618a69cba05fc6e7292617c5742e76ab5ceca24f92f39d8765fc422f15695",
+      "bytes": 1093
+    },
+    "README.md": {
+      "sha256": "68725f427b5e12cbf24edbdb93233eed2aa532cf22b5706f7827a717412676b0",
+      "bytes": 294
+    },
+    "package.json": {
+      "sha256": "ee0b62b01dc1f8d8db8a73c3681a018e9ab614bc841f6f794ab1a3eaaa6abee1",
+      "bytes": 2685
+    },
+    "pnpm-lock.yaml": {
+      "sha256": "c632e87bf9ff1085eea3cd5d8f4f21e8220e51fe24098183466bdc9d90fe9ca1",
+      "bytes": 271183
+    },
+    "src/renderer/assets/assets.ts": {
+      "sha256": "6ea7deaba2bcc56f0bb58c7aba7321ebd7e97408bc60aff4cdcc8c0f5d54c5b9",
+      "bytes": 847
+    },
+    "src/renderer/components/audio.tsx": {
+      "sha256": "fe3c2723c2082e95d5970efd04103bb4e0f9875a88924b011c58ae60704f7360",
+      "bytes": 2212
+    },
+    "src/renderer/components/background.css.ts": {
+      "sha256": "2513385be8e377f81067a15fa6c2d74f7353988a4d732ab0d3a7e4456d7d979e",
+      "bytes": 1973
+    },
+    "src/renderer/components/background.tsx": {
+      "sha256": "15802038773206456337b3a85d83c4c87b4116605bb55c2c3db1a4c3bac56313",
+      "bytes": 972
+    },
+    "src/renderer/components/button.css.ts": {
+      "sha256": "f16e0cf5f7c3b46c6693d8073fc812cc4db665e7b5e951dad619b8d60365574c",
+      "bytes": 3326
+    },
+    "src/renderer/components/button.tsx": {
+      "sha256": "1038bcc489867cbc83c2548d560a58d3c2a4924b8b741b6520d05535dec31c9f",
+      "bytes": 1488
+    },
+    "src/renderer/components/dialog.css.ts": {
+      "sha256": "ca29bca886af993b2f64698b7cd491f507d65226f470915fd2e70cdf335ecaa4",
+      "bytes": 2189
+    },
+    "src/renderer/components/dialog.tsx": {
+      "sha256": "982589e54173b99660b1715161e92b03b9764fecaecc0a2a5001028260cf6098",
+      "bytes": 938
+    },
+    "src/renderer/components/game/basicTile.css.ts": {
+      "sha256": "cceafab73a1e18fefcd9b9786ad336b2ad6455f4fd6a56dcb4aeff5dd6177e72",
+      "bytes": 369
+    },
+    "src/renderer/components/game/basicTile.tsx": {
+      "sha256": "1f1445da3246a5c277868f96d8a678553e76fd62c2f9539f3fd39f1f7a60bb75",
+      "bytes": 2481
+    },
+    "src/renderer/components/game/defs.tsx": {
+      "sha256": "5ec527e29430c9bab194cd789cf25d38b8dc0f847d61071c344bb49e2b1a9975",
+      "bytes": 2014
+    },
+    "src/renderer/components/game/dustParticles.css.ts": {
+      "sha256": "bdd02527b5bb74db771f03a19781f93fec0c5fd2890a102a9f0c1955598cfab4",
+      "bytes": 4102
+    },
+    "src/renderer/components/game/dustParticles.tsx": {
+      "sha256": "646de02cfc0b7560c4320dd0cd4ff2881e71faf655b7b091e15eba210dc8903a",
+      "bytes": 4251
+    },
+    "src/renderer/components/game/powerups.css.ts": {
+      "sha256": "e239a1e9b61cdff6e8c6c35bea1ec0a60f15bc1cedd08769af00868155c790a9",
+      "bytes": 4820
+    },
+    "src/renderer/components/game/powerups.tsx": {
+      "sha256": "cab2467034ae511561c4967f2660a0713648fb048ec5f013881e461d53eed255",
+      "bytes": 2211
+    },
+    "src/renderer/components/game/tileBody.tsx": {
+      "sha256": "6005209e64cab684dd79f84e177e59a611555c5cb8af5bf23f42dc468cdcdf7f",
+      "bytes": 1563
+    },
+    "src/renderer/components/game/tileComponent.css.ts": {
+      "sha256": "3c0f8afb8ab3b696e967fd747d11e9ada0a339c35114aad9dfcb70bfda30d0d5",
+      "bytes": 8800
+    },
+    "src/renderer/components/game/tileComponent.tsx": {
+      "sha256": "ab51db1d80fabe322f215f304307f5bccf61976a2acfd1a947ea24d95dc1cf77",
+      "bytes": 6764
+    },
+    "src/renderer/components/game/tileDetails.tsx": {
+      "sha256": "575d374a0efcf16cb33f1988b1be4486c7ca3945d2bcf07ee52957f27f8ad419",
+      "bytes": 1017
+    },
+    "src/renderer/components/game/tileImage.tsx": {
+      "sha256": "e51d4516701d3aa876bdc5b0c7dc582d23b44b68c58dc1fa81ab63e772d66499",
+      "bytes": 1515
+    },
+    "src/renderer/components/game/tileShades.css.ts": {
+      "sha256": "315fcdfde1d56652efaf7b19ce1bf38c67a1fb8c9f18926b249403f1f3bca3ba",
+      "bytes": 108
+    },
+    "src/renderer/components/game/tileShades.tsx": {
+      "sha256": "a8ee4efa8dbe36e136c6f6eba293e8fbde6ca66b28b77b30207170d2ac05b04b",
+      "bytes": 4534
+    },
+    "src/renderer/components/game/tileSide.tsx": {
+      "sha256": "8559595efee521830d68b0a0e0625370ca49a30dfce7face2526b008d39caaa6",
+      "bytes": 517
+    },
+    "src/renderer/components/icon.tsx": {
+      "sha256": "1ed65c686f40957a93d33863e29fb6262983fd6c7d4d3ee1d5a7e0c0bca71d14",
+      "bytes": 8370
+    },
+    "src/renderer/components/layout.css.ts": {
+      "sha256": "f61b4f6faa7c273aa779594cf2a37db82faefcba5298ac0d9de9cee6929b5e55",
+      "bytes": 951
+    },
+    "src/renderer/components/layout.tsx": {
+      "sha256": "ff49333e14b4b1ed8ee3531c540a425c587122d2c0f51544f89057d82017190e",
+      "bytes": 2167
+    },
+    "src/renderer/components/menu.tsx": {
+      "sha256": "1dc4539d639a8605a0564fc75e9a86bcfaf7173813a58273faa6d1a41dd035d0",
+      "bytes": 1702
+    },
+    "src/renderer/components/text.css.ts": {
+      "sha256": "9d9c5c97f03714b40e5dae32ef92c4a09a5299ddf5e6d0409262b92526e4008f",
+      "bytes": 933
+    },
+    "src/renderer/components/text.tsx": {
+      "sha256": "81492f9da98649b0a4049f6e4662e70b081d6199cbec32e997c1aa48c9028c55",
+      "bytes": 999
+    },
+    "src/renderer/i18n/en.ts": {
+      "sha256": "18143b8966b7291b7f6b801aa37a876be1d5247ed4827b08256208aa78f4825f",
+      "bytes": 8521
+    },
+    "src/renderer/i18n/es.ts": {
+      "sha256": "1967c2fe81017c1d95d37f500e5f4f23edc05bd1311e94cb2a3075194ac4f033",
+      "bytes": 9424
+    },
+    "src/renderer/i18n/useTranslation.ts": {
+      "sha256": "1486265d21d435551a58db6aa9165100273379a31edd8c597d8b208828a200ee",
+      "bytes": 684
+    },
+    "src/renderer/index.tsx": {
+      "sha256": "1499fb2e857c20191632734d0ee19ed8b069c13201ed5cc19c37ca4865b1efe6",
+      "bytes": 1185
+    },
+    "src/renderer/lib/createChangeEffect.ts": {
+      "sha256": "becefacb76164c4817ca8c98a873674f82470185368283b1eb0b85447e7d329f",
+      "bytes": 199
+    },
+    "src/renderer/lib/game.test.ts": {
+      "sha256": "03c270d3e75af8d65c21220ba93fe4c3509a311133c4714fb7dce1d2f17a9d35",
+      "bytes": 27303
+    },
+    "src/renderer/lib/game.ts": {
+      "sha256": "7ef7cdeda962cf97a51413c84f82f8a429eeba9ae2bc68b130bdb5af9cdf7a55",
+      "bytes": 26638
+    },
+    "src/renderer/lib/in-memoriam.test.ts": {
+      "sha256": "228b6bffeb342be747c9699b27c3195112b781de38397e1bff3bc1092eef2dc6",
+      "bytes": 1811
+    },
+    "src/renderer/lib/in-memoriam.ts": {
+      "sha256": "bc255123f893ca10fce13b9c04caa41b69d0c583027c9eb21f3b87b9e27d904f",
+      "bytes": 3342
+    },
+    "src/renderer/lib/maps/responsive.ts": {
+      "sha256": "af2eb542b3997745c65b0dae4c6d642394d94177d800fc27e6937c3ccc94185d",
+      "bytes": 6623
+    },
+    "src/renderer/lib/observability.ts": {
+      "sha256": "9cb99bcf115c4e9153a483ca52fb2886016227727d4ebf468a97a7ceef00bd91",
+      "bytes": 707
+    },
+    "src/renderer/lib/rand.ts": {
+      "sha256": "81942c890e07ff26f27289652156fbe3133052abd8785eca2a1db246121930a4",
+      "bytes": 411
+    },
+    "src/renderer/lib/resolveDragons.test.ts": {
+      "sha256": "f49eb96ed799e01e54427f89db1714f26e82bb6733a73523f110f842ec19078c",
+      "bytes": 3032
+    },
+    "src/renderer/lib/resolveDragons.ts": {
+      "sha256": "3eae1b35819a1ec7f65608f43a28c7d50af28e0549584b1c9aaa4f266eccc28b",
+      "bytes": 912
+    },
+    "src/renderer/lib/resolveGems.test.ts": {
+      "sha256": "cced4155702ba6f244d876d6fce29cd5a96b2e43f72410a3a57b782a6c590eb3",
+      "bytes": 1096
+    },
+    "src/renderer/lib/resolveGems.ts": {
+      "sha256": "31d890a640773876245e52766906ec3741f678c12cafe05e941ab47de4c412e3",
+      "bytes": 565
+    },
+    "src/renderer/lib/resolveJokers.ts": {
+      "sha256": "b35889306821f52dcd4a048a27d12617b60e2104fdb1aa20cd6145af706b108d",
+      "bytes": 3804
+    },
+    "src/renderer/lib/resolveMutations.test.ts": {
+      "sha256": "31674740e71d47c077ccda6602f4d073d3046c2fb124e9a46673ada456524fd5",
+      "bytes": 2833
+    },
+    "src/renderer/lib/resolveMutations.ts": {
+      "sha256": "0e7b2c4843dc751aa7dc1c38ee2f99983c3e3250d10eba2f9df7144fc104a971",
+      "bytes": 1620
+    },
+    "src/renderer/lib/resolvePhoenixes.test.ts": {
+      "sha256": "96772ac26054f939443f184b15e73a636a3c9ef0b00e937102e52e3f7c6e532b",
+      "bytes": 2806
+    },
+    "src/renderer/lib/resolvePhoenixes.ts": {
+      "sha256": "351d0b25b26bc3351f69e8a2af7126e5195f4840fec5db6bf37b02c8668c3bfe",
+      "bytes": 1524
+    },
+    "src/renderer/lib/resolveWinds.ts": {
+      "sha256": "66601b7b633796f3e02be3432757324de6af9d754f7a1cbdce9f77c3eecee3bf",
+      "bytes": 1754
+    },
+    "src/renderer/lib/setMethods.ts": {
+      "sha256": "480bda92891c12cc3cd69415ecf289ec516f2558d065bb2eb2a21ba110d8d72c",
+      "bytes": 226
+    },
+    "src/renderer/lib/setupTiles.ts": {
+      "sha256": "9fda30d28fb1a9dbb39ffe5aa3fae47a520b6567c75a11fa858b3047d345bbfc",
+      "bytes": 3017
+    },
+    "src/renderer/lib/test/utils.ts": {
+      "sha256": "b850a6aa124910b6bb038aec73206d5e9a1c5af854d4d0bba665d5f882d368f0",
+      "bytes": 452
+    },
+    "src/renderer/lib/throttle.ts": {
+      "sha256": "0dadd22ae81f4d0dfa4e3070e1e39d2ec7d2cca855602a5f01d20b4090fb72a7",
+      "bytes": 235
+    },
+    "src/renderer/lib/useOffsetValues.ts": {
+      "sha256": "4139a975025e3b7e3df0138569f670c832a0d4551b0095845f9ca33f85013ae5",
+      "bytes": 748
+    },
+    "src/renderer/routes/help.css.ts": {
+      "sha256": "ec22a9fb06f325f6a3c26ee6bd4675b22f6205590137e933c365c388827430f5",
+      "bytes": 5118
+    },
+    "src/renderer/routes/help.tsx": {
+      "sha256": "1c89eb74457099d11851e5cd80103c7b5573407b61ed38a24728e39c7571921b",
+      "bytes": 8681
+    },
+    "src/renderer/routes/home.css.ts": {
+      "sha256": "94f14a0bb2d87e9afcb71baa212068a7dacae75cb245a21a54d707f76279c436",
+      "bytes": 3989
+    },
+    "src/renderer/routes/home.tsx": {
+      "sha256": "bbc845098b7693d85c48d3542c7111de2c5b9d5ceb9f4b8e142e14b3953fb76e",
+      "bytes": 6705
+    },
+    "src/renderer/routes/new.css.ts": {
+      "sha256": "4de324fed306a336819fbec4def3770b27f9b6bc83ef6695b674f4bfa46f7001",
+      "bytes": 3821
+    },
+    "src/renderer/routes/new.tsx": {
+      "sha256": "017b740a2505441f4a454da5d9fe2195387d330bd9ba84b0ef423ccf7f6b3843",
+      "bytes": 3762
+    },
+    "src/renderer/routes/run.tsx": {
+      "sha256": "7c394454c1a8f39135e21ed43cf85eae45b4f1290c9c64f8982367fc2b3e4b4a",
+      "bytes": 1128
+    },
+    "src/renderer/routes/run/runEnd.css.ts": {
+      "sha256": "945072ccb0bb7d2c477ac48caa749f9a3a339bc3fcc5abbe179af996a44cc4a5",
+      "bytes": 4605
+    },
+    "src/renderer/routes/run/runEnd.tsx": {
+      "sha256": "5cc35ce8da0deae32d6cf2fb162957d2ae3b545a8b8a3e29f19a94c8b250ebf3",
+      "bytes": 2015
+    },
+    "src/renderer/routes/run/runGame.css.ts": {
+      "sha256": "e8eb50454d3244220e2cf82773cb168b334d40a395524eb0fe3f895fc16a3e43",
+      "bytes": 11915
+    },
+    "src/renderer/routes/run/runGame.tsx": {
+      "sha256": "1b35af5a7fc326ed5f8fbb3cce8e3eaeaeb4033a247027bdb712444cc7f251c6",
+      "bytes": 19189
+    },
+    "src/renderer/routes/run/runGameOver.css.ts": {
+      "sha256": "b2dda820f047c82cf8e541d0136b4e8f1ab4a47caa6d701562c24460959b8d53",
+      "bytes": 6271
+    },
+    "src/renderer/routes/run/runGameOver.tsx": {
+      "sha256": "af2b25eec3e10540c3ec41fe37af6dae13c390a56d45e1b088b7db3eab4ba9cc",
+      "bytes": 8603
+    },
+    "src/renderer/routes/run/runIntro.css.ts": {
+      "sha256": "8b3701237b7458916699b87ce62cb6d7188456a688a815b008292ca12daac98f",
+      "bytes": 3244
+    },
+    "src/renderer/routes/run/runIntro.tsx": {
+      "sha256": "f7a38e0309a91054c66dcf4ebd3582fdf97f3ed11d02253ac139adfbe7c1f9cb",
+      "bytes": 2052
+    },
+    "src/renderer/routes/run/runReward.css.ts": {
+      "sha256": "1ba18c7678e001e4c4046c8a365332570857ba78bb5da0b68a15437295adecba",
+      "bytes": 6920
+    },
+    "src/renderer/routes/run/runReward.tsx": {
+      "sha256": "5dacd3e11845880a975f1b78515ae10f65558888635176b97e2c1bf30b6a9dd0",
+      "bytes": 16748
+    },
+    "src/renderer/routes/run/runShop.css.ts": {
+      "sha256": "eb386c53541fb6d693d7646222158bf4922386ed21234c8e848d00deb93ef60d",
+      "bytes": 12887
+    },
+    "src/renderer/routes/run/runShop.tsx": {
+      "sha256": "d998cbc6c84fb0ed4498b1ee4dbcb55fa1fe7ad1f71c6eb46a8b9b43ca2a3eb6",
+      "bytes": 20286
+    },
+    "src/renderer/routes/settings.css.ts": {
+      "sha256": "40768754c41dcde9fd5554a1cbdb259c5cb2576d41f9b61f21743d83c764f939",
+      "bytes": 5091
+    },
+    "src/renderer/routes/settings.tsx": {
+      "sha256": "38b538beebb2572c8e67a01ede84334256561507b50ae9967b0acd773dceda12",
+      "bytes": 3884
+    },
+    "src/renderer/state/animationState.tsx": {
+      "sha256": "c12098eeb7a5ff3db6cdade47e6f739262a018f20cac5aaa06eb65e2cbe3dc50",
+      "bytes": 1306
+    },
+    "src/renderer/state/constants.ts": {
+      "sha256": "877fb6f017738edd60aaacaf92f78091c4cc1dfc3f8241c7463a3669ee1379da",
+      "bytes": 2385
+    },
+    "src/renderer/state/deckState.tsx": {
+      "sha256": "9b8cd7c760f328feadeb2150f2286979706970409a6b0d6c85864b5c34993b9a",
+      "bytes": 1370
+    },
+    "src/renderer/state/gameState.tsx": {
+      "sha256": "49bacbe54970bea92cdeddb51ff11ed6490c1ea28b1d863d15cad7c1ee34687c",
+      "bytes": 1672
+    },
+    "src/renderer/state/globalState.tsx": {
+      "sha256": "00b7d9d4e25fe0c3e78eb4ffc5e4b145efb824e101b2724ca6cc828768f36540",
+      "bytes": 1234
+    },
+    "src/renderer/state/persistantMutable.ts": {
+      "sha256": "382dda43009a40f21c06bae59ced942869e764a28176b38519983ab1c0a526b5",
+      "bytes": 686
+    },
+    "src/renderer/state/persistentDatabase.ts": {
+      "sha256": "d2fcdf3a79e2642b4aaeb817471d0edba3b77357c02a5548f9df8d2c0a63437a",
+      "bytes": 558
+    },
+    "src/renderer/state/runState.test.ts": {
+      "sha256": "c0964fea542c9c812b624c9122b4987f1a21943a20f593ab851bcd6a90b1d2a4",
+      "bytes": 3391
+    },
+    "src/renderer/state/runState.tsx": {
+      "sha256": "b4019f0d28309e1a0f0cbc346ac0c0217e850c83dc2c462312a308dfe937aa11",
+      "bytes": 11449
+    },
+    "src/renderer/state/tileState.tsx": {
+      "sha256": "579d396a5744359cee35df918eb917c86a8c478f70b28b28f9aed06127c8abf3",
+      "bytes": 1461
+    },
+    "src/renderer/styles/animations.css.ts": {
+      "sha256": "d7ae2aa31b1b5c5e5851cf168057385384871c6445389707a372ea1954547d60",
+      "bytes": 1869
+    },
+    "src/renderer/styles/breakpoints.ts": {
+      "sha256": "f55733af20ad814bbc75b25eea4d2b452718ec702227ac9cce05b79303d8cac1",
+      "bytes": 993
+    },
+    "src/renderer/styles/colors.ts": {
+      "sha256": "c95f596323f3fa2a5f269af7fc7a458dc1c500c80291ed7ce6eb7887e9677def",
+      "bytes": 3451
+    },
+    "src/renderer/styles/fontFamily.css.ts": {
+      "sha256": "114bada421bf0041e0754a4d8500e5f0238cb88e5977c7f2781368f1787be0c5",
+      "bytes": 243
+    },
+    "src/renderer/styles/fontSize.ts": {
+      "sha256": "9acc96836279513a6445f4a76fb69f9a2da465dbfe7f276ed86879e3123719a6",
+      "bytes": 1040
+    },
+    "src/renderer/vite-env.d.ts": {
+      "sha256": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
+      "bytes": 38
+    },
+    "tsconfig.web.json": {
+      "sha256": "70097f1eaafe42456d685492dc7328acad292a9ef0e4ae1bdd445ee8f4c4acd5",
+      "bytes": 692
+    }
+  },
+  "quickjs": {
+    "url": "https://bellard.org/quickjs/quickjs-2026-06-04.tar.xz",
+    "archive_sha256": "b376e839b322978313d929fd20663b11ba58b75df5a46c126dd19ea2fa70ad2a",
+    "license": "MIT",
+    "files": {
+      "test262_errors.txt": {
+        "sha256": "cf0b47e5c0ab2206380a903efb55f26abc4f928099d7331b8b61a8c8d1955275",
+        "bytes": 9274
+      },
+      "test262o_errors.txt": {
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      "test262.conf": {
+        "sha256": "79c64748ff1182baf5433d0a8378e3666738a785d02faf71f0d459ed42ae897b",
+        "bytes": 7838
+      },
+      "test262o.conf": {
+        "sha256": "794fdd959445844c302030419221a822b23875a976f898100901cc87bb382f20",
+        "bytes": 21866
+      },
+      "run-test262.c": {
+        "sha256": "58f37e301f36b2b630a247d59105fc373953340c691667b28822cd703d8f203e",
+        "bytes": 76325
+      },
+      "unicode_gen_def.h": {
+        "sha256": "0c30cfd5dd29d7708f6e0045cb2e3ed92207697bb2b5eece39f336db007a055f",
+        "bytes": 7784
+      },
+      "unicode_gen.c": {
+        "sha256": "a86452d73a5dca52a1561cc7cb40ded704fcc2cba1f74676cc7102b428396ca8",
+        "bytes": 105279
+      },
+      "dtoa.h": {
+        "sha256": "462070f7678a894b9f3612422f280f4dce412eb360a5cc585a513f407fc23114",
+        "bytes": 3306
+      },
+      "dtoa.c": {
+        "sha256": "af5abd68fa9806d1a19bdd5f2daef00d5fd0990ae56311382dfed4700343f074",
+        "bytes": 44875
+      },
+      "libunicode-table.h": {
+        "sha256": "cf782bc7a07549e976f606bd3cb8555858482b279574554dcb8d46412986006c",
+        "bytes": 252492
+      },
+      "libunicode.h": {
+        "sha256": "ce310152bc80d7415dcb657e23abd9a40bf83e393c0d05d325dae384bb01d259",
+        "bytes": 5979
+      },
+      "libunicode.c": {
+        "sha256": "26203ae888c0582e7d0e2113f13db0c9b39dc7b0b3836d68fa308c54f7a0898c",
+        "bytes": 63617
+      },
+      "libregexp-opcode.h": {
+        "sha256": "2a98d646089f3a72f25480116297c5fdb5b28fd9f815447273951f4ade4a115e",
+        "bytes": 2887
+      },
+      "libregexp.h": {
+        "sha256": "f5c5ef1899f224dcc718422a22c789ef9d8b5b837b622818fcfaf681ae793446",
+        "bytes": 2737
+      },
+      "libregexp.c": {
+        "sha256": "fdfcf86167029ab2c39c35730d4ae6875b7bbeb9406a0fcc886de4e9b1f5e2ac",
+        "bytes": 113209
+      },
+      "list.h": {
+        "sha256": "181c6b25d9d0e4853315d36a6e6fab3b2c3554271693d898a439384ba0f67c2b",
+        "bytes": 3089
+      },
+      "cutils.h": {
+        "sha256": "d2da6d06a75b9e6c116c82b7a41df6bcc170c8b1779f374fa953ecf688eda647",
+        "bytes": 11162
+      },
+      "cutils.c": {
+        "sha256": "b73a403a59da30726257ddbdf5e399298941c1def997782ee0d4d33f796a80a2",
+        "bytes": 17798
+      },
+      "quickjs-opcode.h": {
+        "sha256": "a9c60a8c9366820733d9d2acbb805f48b2e9e2778df526e6bcb845fdb6b47834",
+        "bytes": 15801
+      },
+      "quickjs-libc.h": {
+        "sha256": "cfb4a6ab9533461a8abf8083f7d9f9a84d6bb26c92a7dd718984a7a1ddd754eb",
+        "bytes": 2919
+      },
+      "quickjs-libc.c": {
+        "sha256": "8c6c42619ab4edf1548b051c73bb2bee670003415b1de30d2910d71917859bce",
+        "bytes": 125243
+      },
+      "quickjs-atom.h": {
+        "sha256": "342194359417664e652f54e7d682ee2ef91dd982e91f74decbde992a2c848236",
+        "bytes": 8295
+      },
+      "quickjs.h": {
+        "sha256": "2165f47772af9faee1798999a599fa9de850d1bf0259502dade1c25d4a588316",
+        "bytes": 47259
+      },
+      "quickjs.c": {
+        "sha256": "a00762d2eee42316cecbc9c15efc4549b715ec500461845cd91b2a6c38190d08",
+        "bytes": 2020354
+      },
+      "repl.js": {
+        "sha256": "7be3d5a70a6538ec9f44eff06f57572c75ce1e323e3f236d1d535ac26fbde60d",
+        "bytes": 39164
+      },
+      "qjsc.c": {
+        "sha256": "e3e44bef9930982232d8c7dba71df7bd370b0a00ef1738fa9ab39b477e23bb0c",
+        "bytes": 26078
+      },
+      "qjs.c": {
+        "sha256": "dc855952aaf58e9db1d091225d28439b1f832412e156a1968a9504935cd4e448",
+        "bytes": 16972
+      },
+      "unicode_download.sh": {
+        "sha256": "ffb1de8742fdaab95a9f23de4817f0de54f82445f2d6d16b3f01aff164e8836c",
+        "bytes": 665
+      },
+      "release.sh": {
+        "sha256": "3c39a5f3df17ca7e756498fc35678165bfa0751ebf81fbc0e09df460e0c71e93",
+        "bytes": 3838
+      },
+      "LICENSE": {
+        "sha256": "598fd7fc928e4350abce36e337ba5a1346923c5c692f5be92c3d8e29ddd7c18d",
+        "bytes": 1130
+      },
+      "readme.txt": {
+        "sha256": "085333753fa9c9773e04c1b78e30c561a8a259d312e6e056af48232004d380c6",
+        "bytes": 66
+      },
+      "Changelog": {
+        "sha256": "2879b03d7bd907a762c23aa95135bb8a5f3912693363a7f5be237f1d9fbab2f3",
+        "bytes": 6231
+      },
+      "TODO": {
+        "sha256": "34081fdc58695575e2bfe18bbf0747fe42731e7b657a601833996e9f8ff7e895",
+        "bytes": 2897
+      },
+      "VERSION": {
+        "sha256": "234057c4079458cba9862d4bbb6f8a059ac2e4a194947673da0ad38ca16a37fd",
+        "bytes": 11
+      },
+      "Makefile": {
+        "sha256": "9a3a4e4021203322a957b15aa181c951949a02a01e06dafbf2296cbefb06aa2b",
+        "bytes": 15213
+      }
+    }
+  },
+  "assets": "Original TS maps and card definitions. External images/fonts/audio omitted; PXA text frontend."
+}

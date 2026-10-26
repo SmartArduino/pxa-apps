@@ -1,0 +1,81 @@
+--- vendor/original/night-raid.ino
++++ vendor/platform/night-raid.ino
+@@ -70,19 +70,19 @@
+ Arduboy2 arduboy;
+ byte gameState = MENU;
+ byte menuIndex = 0;
+-int highscore = 0;
++int16_t highscore = 0;
+ bool targets[8] = {1,1,1,1,1,1,1,1};
+-int targetRubble[8] = {0,0,0,0,0,0,0,0};
+-int targetRubbleSecondLayer[8] = {0,0,0,0,0,0,0,0};
++int16_t targetRubble[8] = {0,0,0,0,0,0,0,0};
++int16_t targetRubbleSecondLayer[8] = {0,0,0,0,0,0,0,0};
+ byte flashIndex[2] = {255, 255};
+ byte flashCounter[2] = {0,0};
+ byte targetXCoords[8] = {8, 24, 40, 56, 72, 88, 104, 120};
+ Plane plane;
+ Missile incomingMissiles[MAX_MISSILES];
+-int score = 0;
+-int nextDifficultyUpdateScore = 10;
+-int nextLivesUpdateScore = 100;
+-int nextPlaneUpdateScore = 25;
++int16_t score = 0;
++int16_t nextDifficultyUpdateScore = 10;
++int16_t nextLivesUpdateScore = 100;
++int16_t nextPlaneUpdateScore = 25;
+ bool aFired = true;
+ bool bFired = true;
+ bool pendingLoss = false;
+@@ -103,9 +103,9 @@
+   byte eepromValid = 0;
+   EEPROM.get(400, eepromValid);
+   if (eepromValid != 111){
+-    EEPROM.put(400, 111);
+-    EEPROM.put(420, 0);
+-    EEPROM.put(421, 0);
++    EEPROM.put(400, int16_t(111));
++    EEPROM.put(420, int16_t(0));
++    EEPROM.put(421, int16_t(0));
+   } else {
+     EEPROM.get(420, highscore);
+   }
+@@ -310,7 +310,7 @@
+ }
+ 
+ void initNullMissile(byte index){
+-  Missile nullMissile;
++  Missile nullMissile{};
+   nullMissile.valid = false;
+   incomingMissiles[index] = nullMissile;
+ }
+@@ -456,9 +456,9 @@
+   arduboy.setCursor(0,0);
+   arduboy.setTextSize(1);
+   if (gameState == MENU){
+-    arduboy.print(String(highscore));
++    arduboy.print((int)highscore);
+   } else {
+-    arduboy.print(String(score));
++    arduboy.print((int)score);
+   }
+ 
+   if ((targets[1] || targets[6])){ //  && gameState == PLAYING
+@@ -598,7 +598,7 @@
+   } else {
+     startX = 103;
+   }
+-  Missile playerMissile;
++  Missile playerMissile{};
+   playerMissile.startX = startX;
+   playerMissile.startY = 58;
+   playerMissile.stopX = cursorX;
+@@ -651,7 +651,7 @@
+ }
+ 
+ void clearHighscore(){
+-  EEPROM.put(420, 0);
++  EEPROM.put(420, int16_t(0));
+   highscore = 0;
+ }
+ 

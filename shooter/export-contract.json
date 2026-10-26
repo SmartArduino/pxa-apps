@@ -1,0 +1,360 @@
+{
+  "format": "pxa-arduboy-batch-module-export-contract-1",
+  "game": "shooter",
+  "repository": "https://github.com/shantheone/shooter",
+  "commit": "cb40c26f9906809908b2a9bbda46ecee20ae25c6",
+  "game_license": "MIT",
+  "modified_date": "2026-10-10",
+  "common_directory": "arduboy-batch-20261010",
+  "original_frame_period_ms": 16,
+  "typed_game_bytes": 127,
+  "source_locks": [
+    {
+      "path": "source-lock.json",
+      "bytes": 10222,
+      "sha256": "36b6e4a883318f47cf414785d282750dee25ae73833a902ce4b023b56db4f2fe"
+    },
+    {
+      "path": "shooter-upstream-lock.json",
+      "bytes": 11568,
+      "sha256": "b01b1d478058938d6179face101f497b19c34a722d78059999643ac0438b7462"
+    },
+    {
+      "path": "tinyfont-upstream-lock.json",
+      "bytes": 5733,
+      "sha256": "c849c7c589007c9151278c1d9cc849b9ab3634e2a45141c4989d553cafa2f0b7"
+    }
+  ],
+  "original_files": [
+    {
+      "path": "vendor/original/shooter/.gitignore",
+      "bytes": 26,
+      "sha256": "0d88babc98a5f2db5ef9822a19bbf777af100db246feba6f2169a451da7ab3ff",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/.gitignore"
+    },
+    {
+      "path": "vendor/original/shooter/LICENSE",
+      "bytes": 1069,
+      "sha256": "8dab74f239dad36e9b4d28f8910bae7ae9037c644db3d164fc3fcb1a561f0683",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/LICENSE"
+    },
+    {
+      "path": "vendor/original/shooter/README.md",
+      "bytes": 173,
+      "sha256": "e56321bd712c1cb01c745d376d91d7bfe0f476f39c1ba00f4952ff48ba115c25",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/README.md"
+    },
+    {
+      "path": "vendor/original/shooter/assets/credits_screen.gif",
+      "bytes": 388,
+      "sha256": "1d43560ff045bf0c06ed68da4cabdeee647f7fecdc7f5e6f690cbc09fae3ced0",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/assets/credits_screen.gif"
+    },
+    {
+      "path": "vendor/original/shooter/assets/credits_screen.piko",
+      "bytes": 10456,
+      "sha256": "b3e405b4ba672ddc430063a6a20e84c1fec55d98eb4a39a9b75dcc4342bbdc82",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/assets/credits_screen.piko"
+    },
+    {
+      "path": "vendor/original/shooter/assets/game_over_screen.gif",
+      "bytes": 575,
+      "sha256": "6e748db12cbcb72ac0437ceb1c00cfbb6bbcfda6c53d94636657b67de27d285d",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/assets/game_over_screen.gif"
+    },
+    {
+      "path": "vendor/original/shooter/assets/game_over_screen.piko",
+      "bytes": 11520,
+      "sha256": "8eca1c340f9313eaeeb4136454e0197dec05c7dfb4143cca8cf1ad154b8c6ba5",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/assets/game_over_screen.piko"
+    },
+    {
+      "path": "vendor/original/shooter/assets/intro_screen.png",
+      "bytes": 1884,
+      "sha256": "3abee89d744b217921813683bb1e26dd8ba8d5e1d8b301021ca3c62a280021dc",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/assets/intro_screen.png"
+    },
+    {
+      "path": "vendor/original/shooter/assets/menu_sound_off.gif",
+      "bytes": 166,
+      "sha256": "7951fdfdf981ec6eea78b82f5cf48f24989a327f530c6772b636a8ac9ed0dcdb",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/assets/menu_sound_off.gif"
+    },
+    {
+      "path": "vendor/original/shooter/assets/menu_sound_off.piko",
+      "bytes": 9518,
+      "sha256": "5f76f69c01d25af5006dbec7556958b4e96219da5aebe92a587ed204f8fe811c",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/assets/menu_sound_off.piko"
+    },
+    {
+      "path": "vendor/original/shooter/assets/menu_sound_on.gif",
+      "bytes": 167,
+      "sha256": "32cefe70ca9334a2b8a05f585ed869403f0a28a3a5ef795c98c1c3d727066a9f",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/assets/menu_sound_on.gif"
+    },
+    {
+      "path": "vendor/original/shooter/assets/menu_sound_on.piko",
+      "bytes": 9501,
+      "sha256": "aad26faef02329870545b429f3ab20506fe0eff04527d1faa3979f2f95c65953",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/assets/menu_sound_on.piko"
+    },
+    {
+      "path": "vendor/original/shooter/assets/pause_screen.gif",
+      "bytes": 381,
+      "sha256": "820b2a9478c89a20da0afa0accb35cdf48c02f74a3a1ea7b004c07e8604b6f50",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/assets/pause_screen.gif"
+    },
+    {
+      "path": "vendor/original/shooter/assets/pause_screen.piko",
+      "bytes": 10649,
+      "sha256": "99f62782ac07620067a1c586c458016d35ce37b1d229bbaf43e87ab581a1d0c1",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/assets/pause_screen.piko"
+    },
+    {
+      "path": "vendor/original/shooter/assets/tank_up_frame1.gif",
+      "bytes": 93,
+      "sha256": "336316b472dc8af0cbe47c2dc88168956248574aea49da6e8a4cba396e6013e9",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/assets/tank_up_frame1.gif"
+    },
+    {
+      "path": "vendor/original/shooter/assets/tank_up_frame1.piko",
+      "bytes": 8797,
+      "sha256": "7e1114f35ac1cbd087d7c33b57bb0519a1ca84fc1154a51bc92c1eb400d41dcc",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/assets/tank_up_frame1.piko"
+    },
+    {
+      "path": "vendor/original/shooter/assets/tank_up_frame2.gif",
+      "bytes": 93,
+      "sha256": "75401ae21c2fe9043c3d29b672c03485343d357c7fecd2f27a4d8e3de474cd1d",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/assets/tank_up_frame2.gif"
+    },
+    {
+      "path": "vendor/original/shooter/assets/tank_up_frame2.piko",
+      "bytes": 8797,
+      "sha256": "d7098b1a1bf5bf0601692b83915c96093b071e819cbc949d8afd78aa4536e5f5",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/assets/tank_up_frame2.piko"
+    },
+    {
+      "path": "vendor/original/shooter/assets/ufo_ver2_1.gif",
+      "bytes": 62,
+      "sha256": "1301b8f0114e2529e83a7ea9252313d5eae27ef3cb228a77f14875fc8700073f",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/assets/ufo_ver2_1.gif"
+    },
+    {
+      "path": "vendor/original/shooter/assets/ufo_ver2_1.piko",
+      "bytes": 8898,
+      "sha256": "51f37bfbe2d0e24ac84bc6de83c74601aa00e68cd5b286ae6ec2a6c3b255a6ac",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/assets/ufo_ver2_1.piko"
+    },
+    {
+      "path": "vendor/original/shooter/assets/ufo_ver2_2.gif",
+      "bytes": 62,
+      "sha256": "5415d8135062be4ee8c78f4908ab503372ee8230887367ee33c2860dc7573410",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/assets/ufo_ver2_2.gif"
+    },
+    {
+      "path": "vendor/original/shooter/assets/ufo_ver2_2.piko",
+      "bytes": 15878,
+      "sha256": "6b1806c7dfe7529a91f37da8a0c437a6272de32cdfdf7d2edc0629ce3321b61c",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/assets/ufo_ver2_2.piko"
+    },
+    {
+      "path": "vendor/original/shooter/assets/ufo_ver2_3.gif",
+      "bytes": 62,
+      "sha256": "694d21521d6a055b805be7a182419e603be7f4e1e66cb1131b110e95ef3be5d0",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/assets/ufo_ver2_3.gif"
+    },
+    {
+      "path": "vendor/original/shooter/assets/ufo_ver2_3.piko",
+      "bytes": 12109,
+      "sha256": "bdc5a326cc1f964b45fb93c2fdb73e3d240f3c88c1966ae4be6a483b3c34e17d",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/assets/ufo_ver2_3.piko"
+    },
+    {
+      "path": "vendor/original/shooter/bitmaps.h",
+      "bytes": 30205,
+      "sha256": "922444d8b20ac368731f82f51728e274763e1510c981c11d14485e0e3e2febb3",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/bitmaps.h"
+    },
+    {
+      "path": "vendor/original/shooter/build.sh",
+      "bytes": 154,
+      "sha256": "8ddd2215a51917d88c958ff49e79d0ee5f14fc6fb563e1e7f19aa36aac0a8f09",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/build.sh"
+    },
+    {
+      "path": "vendor/original/shooter/screenshots/gameplay.png",
+      "bytes": 4937,
+      "sha256": "53c453b14a1e2618faff70202f6fd06ecee50577a4a77bb2c0c38ec4950d5357",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/screenshots/gameplay.png"
+    },
+    {
+      "path": "vendor/original/shooter/screenshots/menu.png",
+      "bytes": 6270,
+      "sha256": "10b1b9326df2deb99b1382cdde9a5c7624723acfe26f811ae40437f73cff97c1",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/screenshots/menu.png"
+    },
+    {
+      "path": "vendor/original/shooter/shooter.ino",
+      "bytes": 21756,
+      "sha256": "2d8dc80a1e8edf98a3a91d0d7b04236f86027ea0621ee4941a112f826d1ece10",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/shooter.ino"
+    },
+    {
+      "path": "vendor/original/shooter/sketch.yaml",
+      "bytes": 35,
+      "sha256": "57e2f4f9746cb159b358b5c75d3b98bd756aa208637c05ce506fe30692b26678",
+      "url": "https://raw.githubusercontent.com/shantheone/shooter/cb40c26f9906809908b2a9bbda46ecee20ae25c6/sketch.yaml"
+    },
+    {
+      "path": "vendor/original/tinyfont/.gitignore",
+      "bytes": 71,
+      "sha256": "c851f92e1a7d1fd2d397b636e40b00933ac6c2c07eff32868c392b75dac945eb",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/.gitignore"
+    },
+    {
+      "path": "vendor/original/tinyfont/.travis.yml",
+      "bytes": 1501,
+      "sha256": "5512c5cbaf2e172169bebdd394fbe9e18df2cba27e7793cf32d99dfd6d9266ae",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/.travis.yml"
+    },
+    {
+      "path": "vendor/original/tinyfont/LICENSE",
+      "bytes": 1510,
+      "sha256": "1658fe417a2890929f2a9e10dbefa4be77670b8cbd2f32f11d43a327aad7ae22",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/LICENSE"
+    },
+    {
+      "path": "vendor/original/tinyfont/README.md",
+      "bytes": 2443,
+      "sha256": "6d008c723fcbfe8cb032ae77ad82e53d19fad20a2870aa9fb233b79937cf4f1f",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/README.md"
+    },
+    {
+      "path": "vendor/original/tinyfont/bitmaps/4x4font.psd",
+      "bytes": 194420,
+      "sha256": "bbcfc0fa372aafa91186dad8f9e7b6dfdc1594f0e9bd915a41b32e8c57f4fb47",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/bitmaps/4x4font.psd"
+    },
+    {
+      "path": "vendor/original/tinyfont/bitmaps/tinyfont-preview.png",
+      "bytes": 3712,
+      "sha256": "235b48ec4117dac8c7dbb3fe84f6f041a82adae94112b3cf2b101f530739eb2a",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/bitmaps/tinyfont-preview.png"
+    },
+    {
+      "path": "vendor/original/tinyfont/bitmaps/tinyfont_8x8.png",
+      "bytes": 690,
+      "sha256": "e702937d7662a547e547e9b969b0ab54167da818a63886ab1571035f3947bad2",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/bitmaps/tinyfont_8x8.png"
+    },
+    {
+      "path": "vendor/original/tinyfont/examples/TinyfontSample/TinyfontSample.ino",
+      "bytes": 1084,
+      "sha256": "b9d763aa24985bef141fb1dbb291dba601e0756fc5740f44d104417c2f0155c4",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/examples/TinyfontSample/TinyfontSample.ino"
+    },
+    {
+      "path": "vendor/original/tinyfont/keywords.txt",
+      "bytes": 168,
+      "sha256": "d02edefe85b8f213db282c2199e3529800fc3b5a52468dabb105acfe4f5f14ae",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/keywords.txt"
+    },
+    {
+      "path": "vendor/original/tinyfont/library.json",
+      "bytes": 620,
+      "sha256": "96ca5ae99c36ab53224e52f0070b0d7e19bb9a2d6b2a45533e7bfd36b5c475c0",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/library.json"
+    },
+    {
+      "path": "vendor/original/tinyfont/library.properties",
+      "bytes": 373,
+      "sha256": "c9196a99de3bcf0da010fcdfefe32af6c73cb1f067b66464ae8f74de644583c0",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/library.properties"
+    },
+    {
+      "path": "vendor/original/tinyfont/src/Tinyfont.cpp",
+      "bytes": 2526,
+      "sha256": "90262dcf58d2b87affa1878886d01835a33cdd082810db80d46cf64ecb8c500f",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/src/Tinyfont.cpp"
+    },
+    {
+      "path": "vendor/original/tinyfont/src/Tinyfont.h",
+      "bytes": 3408,
+      "sha256": "7250ffe377dec26d7597ec13e0f5ea9e0bc4d3fcfd8bfc8ec4391692bf627226",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/src/Tinyfont.h"
+    },
+    {
+      "path": "vendor/original/tinyfont/src/TinyfontSprite.c",
+      "bytes": 13214,
+      "sha256": "f8230a600b3d41402b711709bc4e91d32618b9642586ce5975a4a4847b9d0792",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/src/TinyfontSprite.c"
+    }
+  ],
+  "platform_patches": [
+    {
+      "path": "platform.patch",
+      "sections": [
+        {
+          "old_header": "vendor/original/shooter/shooter.ino",
+          "new_header": "vendor/platform/shooter.ino",
+          "original": "vendor/original/shooter/shooter.ino",
+          "modified": "vendor/platform/shooter.ino"
+        },
+        {
+          "old_header": "vendor/original/tinyfont/src/Tinyfont.h",
+          "new_header": "vendor/platform/tinyfont/Tinyfont.h",
+          "original": "vendor/original/tinyfont/src/Tinyfont.h",
+          "modified": "vendor/platform/tinyfont/Tinyfont.h"
+        },
+        {
+          "old_header": "vendor/original/tinyfont/src/TinyfontSprite.c",
+          "new_header": "vendor/platform/tinyfont/TinyfontSprite.c",
+          "original": "vendor/original/tinyfont/src/TinyfontSprite.c",
+          "modified": "vendor/platform/tinyfont/TinyfontSprite.c"
+        }
+      ]
+    }
+  ],
+  "unchanged_platform_copies": [
+    {
+      "original": "vendor/original/shooter/bitmaps.h",
+      "platform": "vendor/platform/bitmaps.h"
+    },
+    {
+      "original": "vendor/original/tinyfont/src/Tinyfont.cpp",
+      "platform": "vendor/platform/tinyfont/Tinyfont.cpp"
+    }
+  ],
+  "license_files": [
+    "vendor/original/shooter/LICENSE",
+    "vendor/original/tinyfont/LICENSE",
+    "assets/LICENSE.shooter.MIT",
+    "assets/LICENSE.tinyfont.BSD-3-Clause",
+    "assets/LICENSE.Arduboy2.txt"
+  ],
+  "dependencies": [
+    {
+      "repository": "https://github.com/BotiKis/Arduboy-TinyFont",
+      "commit": "c7ab15955ebcbb7f1a714ed8ad545c141137f83b",
+      "license": "BSD-3-Clause"
+    }
+  ],
+  "addon_compiled_sources": [
+    "vendor/platform/tinyfont/Tinyfont.cpp"
+  ],
+  "owner_constructor_fix": {
+    "path": "game.cpp",
+    "original_object": "tinyfont",
+    "original_arguments": [
+      "arduboy.sBuffer",
+      "Arduboy2::width()",
+      "Arduboy2::height()"
+    ],
+    "operation": "same-type placement construction instead of temporary copy assignment",
+    "trivial_destructor_static_assert": true,
+    "new_mutable_guards": false,
+    "typed_layout_changed": false,
+    "common_sources_changed": false
+  }
+}

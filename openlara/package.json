@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-openlara",
-  "version": "0.7.0",
+  "version": "0.7.9",
   "name": "OpenLara",
   "description": "OpenLara with automatically installed original PC demo media and app-private saves",
   "build": {
     "system": "cmake",
     "source_dir": ".",
     "linear_memory": {
-      "maximum_bytes": 11534336,
+      "maximum_bytes": 9437184,
       "pinned": true
     }
   },
@@ -60,7 +60,7 @@
       "artifact": "aot"
     }
   ],
-  "release_sequence": 201,
+  "release_sequence": 210,
   "permissions": [
     {
       "name": "audio.playback",

@@ -1,0 +1,9 @@
+# Independent Arduboy PXA common
+
+Original Arduboy2 6.0.0: https://github.com/MLXXXp/Arduboy2/tree/bc460a2cff1a3e116880991aa2f88bae4b2e3160 . The complete original LICENSE.txt and 16 pinned raw inputs are in vendor/original; 14 platform files and the exact platform diff are supplied. The library is BSD-3-Clause, and the retained Adafruit GFX Print/font portions have BSD-2-Clause notices. LICENSE.txt also describes separately licensed examples; it does not make the entire library LGPL or MIT. Game-specific license notices remain in each game module. ArduBreakout is LGPL-2.1-or-later; Dash is MIT.
+
+New compatibility, scheduler, frontend and tools are MIT (LICENSE.MIT). The mathematical Park-Miller random sequence and Arduino range behavior are independently implemented with explicit AVR-width arithmetic. Reference algorithms: official avr-libc libc/stdlib/random.c and ArduinoCore-avr cores/arduino/WMath.cpp. No AVR core, hardware drivers or Arduino source file is compiled. Original software drawing, font bytes, button helpers and nextFrame implementation are retained. Portable pixel/sprite code substitutes AVR assembly as recorded in arduboy-platform.patch. GPIO/boot utilities and audio hardware are omitted; original software beep duration counters remain.
+
+EEPROM is a 1024-byte per-Guest RAM cache erased to FF on cold boot. It is preserved through NEW/RESTART/MENU/CONTINUE and is lost when the Guest closes. It is not a disk save. This is a desktop-simulator port; hardware and firmware have not been verified.
+
+ArduBreakout redistribution carries complete source, patch, and actual build objects/link commands in relink-inputs. Private signing keys are excluded. Modified executables require rebuilding and signing with the user's own publisher key. The existing SDK and original game licenses continue to apply.

@@ -1,0 +1,1364 @@
+//
+// Copyright(C) 1984-2000 David L. Clark
+// Copyright(C) 2001-2005 Simon Howard
+//
+// You can redistribute and/or modify this program under the terms of the
+// GNU General Public License version 2 as published by the Free Software
+// Foundation, or any later version. This program is distributed WITHOUT
+// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+// FITNESS FOR A PARTICULAR PURPOSE.
+//
+//
+//        swinit   -      SW initialization
+//
+
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+
+#include "hiscore.h"
+#include "pcsound.h"
+#include "timer.h"
+#include "video.h"
+
+#include "sw.h"
+#include "swasynio.h"
+#include "swcollsn.h"
+#include "swconf.h"
+#include "swgames.h"
+#include "swgrpha.h"
+#include "swinit.h"
+#include "swmain.h"
+#include "swmove.h"
+#include "swobject.h"
+#include "swsound.h"
+#include "swsplat.h"
+#include "swsymbol.h"
+#include "swtitle.h"
+
+static const original_ob_t *orig_planes[MAX_PLANES];
+static int num_orig_planes;
+GRNDTYPE *ground;
+
+static bool have_savescore = false;
+static score_t savescore; /* save players score on restart */
+int starting_level = 0;
+
+static const char *helptxt =
+    "\n" PACKAGE_STRING "\n"
+    "Copyright (C) 1984, 1985, 1987 BMB Compuscience\n"
+    "Copyright (C) 1984-2000 David L. Clark\n"
+    "Copyright (C) 2001-2024 Simon Howard, Jesse Smith\n"
+    "Licensed under the GNU GPL v2.\n"
+    "\n"
+    "Usage:  sopwith [options]\n"
+    "The options are:\n"
+    "        -n : novice single player\n"
+    "        -s : single player\n"
+    "        -c : single player against computer\n"
+    "       -g# : start at level #\n"
+    "\n"
+    "        -e : turn off big explosions\n"
+    "        -f : fullscreen\n"
+    " -m <file> : load new mission from file\n"
+    "        -q : begin game with sound off\n"
+    "\n"
+#ifdef TCPIP
+    "Networking: \n"
+    " -j <host> : connect to a listening host\n"
+    "        -l : listen for connection\n"
+    " -p <port> : use alternative TCP port\n"
+#endif
+    ;
+
+static void initobjs(void)
+{
+	topobj.ob_xnext = topobj.ob_next = &botobj;
+	botobj.ob_xprev = botobj.ob_prev = &topobj;
+	topobj.ob_x = -32767;
+	botobj.ob_x = 32767;
+
+	objbot = objtop = deltop = delbot = NULL;
+	objfree = NULL;
+}
+
+void initgrnd(void)
+{
+	free(ground);
+	ground = checked_calloc(currgame->gm_max_x, sizeof(GRNDTYPE));
+	memcpy(ground, currgame->gm_ground,
+	       sizeof(GRNDTYPE) * currgame->gm_max_x);
+}
+
+static void initseed(void)
+{
+	srand(clock());
+	explseed = rand() % 65536;
+}
+
+void initdisp(bool reset)
+{
+	swclearsplats();
+	if (!reset) {
+		swtitlf();
+	}
+}
+
+//
+// object creation
+//
+
+static void initscore(score_t *score)
+{
+	memset(score, 0, sizeof(score_t));
+
+	if (have_savescore) {
+		*score = savescore;
+		have_savescore = false;
+	}
+}
+
+static void initflightscore(flight_score_t *score)
+{
+	memset(score, 0, sizeof(flight_score_t));
+}
+
+#define SERVICE_KILLSCORE    5
+#define COMPETENCE_KILLSCORE 25
+#define VALOUR_PRELIMIT      175
+#define VALOUR_LIMIT         250
+
+static bool HaveMedal(int *medals, int medals_nr, int medal_id)
+{
+	int i;
+
+	for (i = 0; i < medals_nr; i++) {
+		if (medals[i] == medal_id) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static void GiveMedal(OBJECTS *ob, int medal_id)
+{
+	score_t *sc = &ob->ob_score;
+	if (!HaveMedal(sc->medals, sc->medals_nr, medal_id)) {
+		assert(sc->medals_nr < 3);
+		sc->medals[sc->medals_nr++] = medal_id;
+	}
+}
+
+static void GiveRibbon(OBJECTS *ob, int ribbon_id)
+{
+	score_t *sc = &ob->ob_score;
+	if (!HaveMedal(sc->ribbons, sc->ribbons_nr, ribbon_id)) {
+		assert(sc->ribbons_nr < 6);
+		sc->ribbons[sc->ribbons_nr++] = ribbon_id;
+	}
+}
+
+static void GetAwards(OBJECTS *ob)
+{
+	flight_score_t *fsc = &ob->ob_flightscore;
+	score_t *sc = &ob->ob_score;
+
+	// We only award purple heart if wounded in combat (=hit by bullet),
+	// not from a bird strike or flying into an ox.
+	if (fsc->combatwound) {
+		GiveMedal(ob, MEDAL_PURPLEHEART);
+	}
+
+	// We count up the number of planes shot down, but they only count if
+	// the player returns to base successfully.
+	sc->planekills += fsc->planekills;
+	// printf("planes %d %d\n", sc->planekills, fsc->planekills);
+	if (sc->planekills >= 5) {
+		GiveRibbon(ob, RIBBON_ACE);
+	}
+	if (sc->planekills >= 25) {
+		GiveRibbon(ob, RIBBON_TOPACE);
+	}
+
+	// We count the number of landings during which we did a decent amount
+	// of damage to the enemy.
+	if (fsc->killscore >= SERVICE_KILLSCORE) {
+		sc->landings++;
+	}
+	// printf("kills %d landings %d\n", fsc->killscore, sc->landings);
+	if (sc->landings >= 3) {
+		GiveRibbon(ob, RIBBON_SERVICE);
+	}
+
+	// If a huge number of damage is done, we give a medal (first time) or
+	// ribbon (second time)
+	if (fsc->killscore >= COMPETENCE_KILLSCORE) {
+		if (!HaveMedal(sc->medals, sc->medals_nr, MEDAL_COMPETENCE)) {
+			GiveMedal(ob, MEDAL_COMPETENCE);
+		} else {
+			GiveRibbon(ob, RIBBON_COMPETENCE2);
+		}
+	}
+
+	// We count up valour, but again - only if the player returned to base
+	// successfully
+	sc->valour += fsc->valour;
+	// printf("valour %d %d\n", sc->valour, fsc->valour);
+	if (sc->valour >= VALOUR_PRELIMIT) {
+		GiveRibbon(ob, RIBBON_PREVALOUR);
+	}
+	if (sc->valour >= VALOUR_LIMIT) {
+		GiveMedal(ob, MEDAL_VALOUR);
+	}
+}
+
+static void GetEndLevel(OBJECTS *ob)
+{
+	GetAwards(ob);
+
+	if (ob->ob_crashcnt == 0) {
+		GiveRibbon(ob, RIBBON_PERFECT);
+	}
+}
+
+// plane
+
+OBJECTS *initpln(OBJECTS *obp, const original_ob_t *orig_ob)
+{
+	OBJECTS *ob;
+	int x, height, minx, maxx;
+
+	if (!obp) {
+		assert(num_planes < MAX_PLANES);
+		ob = allocobj();
+		ob->ob_original_ob = orig_ob;
+		planes[num_planes] = ob;
+		++num_planes;
+	} else {
+		ob = obp;
+	}
+
+	if (obp && ob->ob_state != CRASHED && !ob->ob_athome) {
+		/* Just returned home */
+		GetAwards(ob);
+	}
+
+	initflightscore(&ob->ob_flightscore);
+
+	ob->ob_type = PLANE;
+
+	ob->ob_x = ob->ob_original_ob->x;
+	minx = ob->ob_x;
+	maxx = ob->ob_x + 20;
+	height = 0;
+	for (x = minx; x <= maxx; ++x) {
+		height = imax(height, ground[x]);
+	}
+	ob->ob_y = height + 13;
+	ob->ob_orig_y = ob->ob_y;
+
+	ob->ob_lx = ob->ob_ly = ob->ob_speed = ob->ob_flaps = ob->ob_accel =
+	    ob->ob_hitcount = ob->ob_bdelay = ob->ob_mdelay = ob->ob_bsdelay =
+	        0;
+	setdxdy(ob, 0, 0);
+	ob->ob_orient = ob->ob_original_ob->orient;
+	ob->ob_angle = (ob->ob_orient) ? (ANGLES / 2) : 0;
+	ob->ob_target = ob->ob_missiletarget = NULL;
+	ob->ob_firing = ob->ob_mfiring = NULL;
+	ob->ob_bombing = ob->ob_bfiring = ob->ob_home = false;
+	ob->ob_symbol = &symbol_plane[0].sym[ob->ob_orient ? 4 : 0];
+	ob->ob_athome = true;
+	ob->ob_onmap = true;
+	ob->ob_flightscore.combatwound = false;
+
+	if (!obp || ob->ob_state == CRASHED) {
+		/* New plane */
+		ob->ob_rounds = MAXROUNDS;
+		ob->ob_bombs = MAXBOMBS;
+		ob->ob_missiles = MAXMISSILES;
+		ob->ob_bursts = MAXBURSTS;
+		ob->ob_life = MAXFUEL;
+	}
+	if (!obp) {
+		initscore(&ob->ob_score);
+		ob->ob_endsts = PLAYING;
+		ob->ob_target = NULL;
+		insertx(ob, &topobj);
+	} else {
+		insertx(ob, deletex(ob));
+	}
+
+	ob->ob_state = FLYING;
+	ob->ob_goingsun = false;
+
+	return ob;
+}
+
+// player
+
+void initplyr(OBJECTS *obp, const original_ob_t *orig_ob)
+{
+	OBJECTS *ob;
+
+	ob = initpln(obp, orig_ob);
+	if (!obp) {
+		ob->ob_movef = moveplyr;
+		ob->ob_faction = ob->ob_original_ob->faction;
+		ob->ob_clr = ob->ob_faction;
+		endcount = 0;
+
+		ob->ob_plrnum = num_players;
+		++num_players;
+
+		/* todo: save pointers to all player planes
+		 * and turn consoleplayer into a macro */
+		if (ob->ob_plrnum == player) {
+			consoleplayer = ob;
+		}
+	}
+}
+
+// computer opponent
+
+void initcomp(OBJECTS *obp, const original_ob_t *orig_ob)
+{
+	OBJECTS *ob;
+
+	ob = initpln(obp, orig_ob);
+	if (!obp) {
+		ob->ob_movef = movecomp;
+		// TODO: Allow multiple computer-controlled planes belonging
+		// to different factions.
+		ob->ob_faction = FACTION_PLAYER2;
+		ob->ob_clr = ob->ob_faction;
+	}
+	if (playmode == PLAYMODE_SINGLE || playmode == PLAYMODE_NOVICE) {
+		ob->ob_state = FINISHED;
+		ob->ob_onmap = false;
+		deletex(ob);
+	}
+}
+
+static int isrange(int x, int y, int ax, int ay)
+{
+	int dx, dy, t;
+
+	dy = abs(y - ay);
+	dy += dy >> 1;
+	dx = abs(x - ax);
+
+	if (dx > 100 || dy > 100) {
+		return -1;
+	}
+
+	if (dx < dy) {
+		t = dx;
+		dx = dy;
+		dy = t;
+	}
+
+	return (7 * dx + 4 * dy) / 8;
+}
+
+// When targets fire at the player, it is sometimes possible that the bullet's
+// first position is inside the target that fired it. This usually doesn't
+// happen because there is space at the top of the target symbols, but in the
+// DOS Network/Author's Edition versions, hangars can actually blow themselves
+// up by shooting their own flag. When spawning a bullet we therefore perform a
+// check to make sure this isn't going to happen. If we detect a collision, we
+// adjust the bullet spawn position very slightly to avoid it.
+static void AdjustBullet(OBJECTS *bullet, OBJECTS *src)
+{
+	OBJECTS next_bullet, next_src;
+	int x, y;
+
+	copyobj(&next_src, src);
+	movexy(&next_src, &x, &y);
+
+	// We keep adjusting until we don't detect a collision.
+	for (;;) {
+		// Where will the bullet be on the next frame?
+		copyobj(&next_bullet, bullet);
+		movexy(&next_bullet, &x, &y);
+
+		if (!CollisionTest(&next_bullet, &next_src)) {
+			return;
+		}
+
+		if (bullet->ob_dx < 0) {
+			bullet->ob_x -= 2;
+		} else {
+			bullet->ob_x += 2;
+		}
+
+		if (bullet->ob_dy < 0) {
+			bullet->ob_y -= 2;
+		} else {
+			bullet->ob_y += 2;
+		}
+	}
+}
+
+// bullet
+void initshot(OBJECTS *obo, OBJECTS *targ)
+{
+	OBJECTS *ob;
+	int nangle, nspeed, dx, dy, r, bspeed, x, y;
+
+	if (!targ && !compplane && !obo->ob_rounds) {
+		return;
+	}
+
+	ob = allocobj();
+
+	if (!ob) {
+		return;
+	}
+
+	if (playmode != PLAYMODE_NOVICE) {
+		--obo->ob_rounds;
+	}
+
+	bspeed = BULSPEED + gamenum;
+
+	if (targ) {
+		x = targ->ob_x + (targ->ob_dx << 2);
+		y = targ->ob_y + (targ->ob_dy << 2);
+		dx = x - obo->ob_x;
+		dy = y - obo->ob_y;
+
+		r = isrange(x, y, obo->ob_x, obo->ob_y);
+		if (r < 1) {
+			deallobj(ob);
+			return;
+		}
+		ob->ob_dx = (dx * bspeed) / r;
+		ob->ob_dy = (dy * bspeed) / r;
+		ob->ob_ldx = ob->ob_ldy = 0;
+	} else {
+		nspeed = obo->ob_speed + bspeed;
+		nangle = obo->ob_angle;
+		setdxdy(ob, nspeed * COS(nangle), nspeed * SIN(nangle));
+	}
+
+	ob->ob_type = SHOT;
+	ob->ob_x = obo->ob_x + obo->ob_symbol->w / 2;
+	ob->ob_y = obo->ob_y - obo->ob_symbol->h / 2;
+	ob->ob_lx = obo->ob_lx;
+	ob->ob_ly = obo->ob_ly;
+
+	ob->ob_life = BULLIFE;
+	ob->ob_owner = obo;
+	ob->ob_clr = obo->ob_clr;
+	ob->ob_symbol = &symbol_pixel;
+	ob->ob_soundf = NULL;
+	ob->ob_movef = moveshot;
+	ob->ob_speed = 0;
+
+	// For observation balloons, we adjust the position very slightly,
+	// so that the bullets appear to be being fired from the basket.
+	if (obo->ob_type == BALLOON) {
+		ob->ob_y -= 4;
+	}
+
+	AdjustBullet(ob, obo);
+
+	insertx(ob, obo);
+}
+
+// bomb
+void initbomb(OBJECTS *obo)
+{
+	OBJECTS *ob;
+	int angle;
+
+	if ((!compplane && !obo->ob_bombs) || obo->ob_bdelay) {
+		return;
+	}
+
+	ob = allocobj();
+	if (!ob) {
+		return;
+	}
+
+	if (playmode != PLAYMODE_NOVICE) {
+		--obo->ob_bombs;
+	}
+
+	obo->ob_bdelay = 10;
+
+	ob->ob_type = BOMB;
+	ob->ob_state = FALLING;
+	ob->ob_dx = obo->ob_dx;
+	ob->ob_dy = obo->ob_dy;
+	ob->ob_onmap = true;
+
+	if (obo->ob_orient) {
+		angle = (obo->ob_angle + (ANGLES / 4)) % ANGLES;
+	} else {
+		angle = (obo->ob_angle + (3 * ANGLES / 4)) % ANGLES;
+	}
+
+	ob->ob_x = obo->ob_x + ((COS(angle) * 10) >> 8) + 4;
+	ob->ob_y = obo->ob_y + ((SIN(angle) * 10) >> 8) - 4;
+	ob->ob_lx = ob->ob_ly = ob->ob_ldx = ob->ob_ldy = 0;
+
+	ob->ob_life = BOMBLIFE;
+	ob->ob_owner = obo;
+	ob->ob_clr = obo->ob_clr;
+	ob->ob_symbol = &symbol_bomb[0].sym[0];
+	ob->ob_movef = movebomb;
+
+	insertx(ob, obo);
+}
+
+// missile
+void initmiss(OBJECTS *obo)
+{
+	OBJECTS *ob;
+	int angle, nspeed;
+
+	if (obo->ob_mdelay || !obo->ob_missiles || !conf_missiles) {
+		return;
+	}
+
+	ob = allocobj();
+	if (!ob) {
+		return;
+	}
+
+	if (playmode != PLAYMODE_NOVICE) {
+		--obo->ob_missiles;
+	}
+
+	obo->ob_mdelay = 5;
+
+	ob->ob_type = MISSILE;
+	ob->ob_state = FLYING;
+
+	angle = ob->ob_angle = obo->ob_angle;
+	ob->ob_x = obo->ob_x + (COS(angle) >> 4) + 4;
+	ob->ob_y = obo->ob_y + (SIN(angle) >> 4) - 4;
+	ob->ob_lx = ob->ob_ly = 0;
+	ob->ob_speed = nspeed = gmaxspeed + (gmaxspeed >> 1);
+	setdxdy(ob, nspeed * COS(angle), nspeed * SIN(angle));
+
+	ob->ob_life = MISSLIFE;
+	ob->ob_owner = obo;
+	ob->ob_clr = obo->ob_clr;
+	ob->ob_symbol = &symbol_missile[0].sym[0];
+	ob->ob_soundf = NULL;
+	ob->ob_movef = movemiss;
+	ob->ob_missiletarget = obo->ob_mfiring;
+	ob->ob_orient = ob->ob_accel = ob->ob_flaps = 0;
+	ob->ob_onmap = true;
+
+	insertx(ob, obo);
+}
+
+// starburst
+void initburst(OBJECTS *obo)
+{
+	OBJECTS *ob;
+	int angle;
+
+	if (obo->ob_bsdelay || !obo->ob_bursts || !conf_missiles) {
+		return;
+	}
+
+	ob = allocobj();
+	if (!ob) {
+		return;
+	}
+
+	ob->ob_bsdelay = 5;
+
+	if (playmode != PLAYMODE_NOVICE) {
+		--obo->ob_bursts;
+	}
+
+	ob->ob_type = STARBURST;
+	ob->ob_state = FALLING;
+
+	if (obo->ob_orient) {
+		angle = (obo->ob_angle + (3 * ANGLES / 8)) % ANGLES;
+	} else {
+		angle = (obo->ob_angle + (5 * ANGLES / 8)) % ANGLES;
+	}
+
+	setdxdy(ob, gminspeed * COS(angle), gminspeed * SIN(angle));
+	ob->ob_dx += obo->ob_dx;
+	ob->ob_dy += obo->ob_dy;
+
+	ob->ob_x = obo->ob_x + ((COS(angle) * 10) >> 10) + 4;
+	ob->ob_y = obo->ob_y + ((SIN(angle) * 10) >> 10) - 4;
+	ob->ob_lx = ob->ob_ly = 0;
+
+	ob->ob_life = BURSTLIFE;
+	ob->ob_owner = obo;
+	ob->ob_clr = obo->ob_clr;
+	ob->ob_symbol = &symbol_burst[0].sym[0];
+	ob->ob_soundf = NULL;
+	ob->ob_movef = moveburst;
+
+	insertx(ob, obo);
+}
+
+static void AddPlayerTarget(OBJECTS *ob, const original_ob_t *orig_ob)
+{
+	// TODO: For the time being, player 3 is just interpreted as a
+	// special player number that either maps to player 1 or 2
+	// depending on the game mode; other players are just synonyms
+	// for players 1 and 2.
+	// This may change in the future if we support multiplayer with
+	// more than two players.
+	switch (orig_ob->faction) {
+	case NUM_FACTIONS:
+	case FACTION_NONE:
+		ob->ob_faction = FACTION_NONE;
+		break;
+	case FACTION_PLAYER1:
+	case FACTION_PLAYER5:
+	case FACTION_PLAYER7:
+		ob->ob_faction = FACTION_PLAYER1;
+		break;
+	case FACTION_PLAYER2:
+	case FACTION_PLAYER4:
+	case FACTION_PLAYER6:
+	case FACTION_PLAYER8:
+		ob->ob_faction = FACTION_PLAYER2;
+		break;
+	case FACTION_PLAYER3:
+		if (playmode == PLAYMODE_ASYNCH) {
+			ob->ob_faction = FACTION_PLAYER1;
+		} else {
+			ob->ob_faction = FACTION_PLAYER2;
+		}
+		break;
+	}
+	++numtarg[ob->ob_faction];
+}
+
+static int Flatten(int minx, int maxx, int headroom)
+{
+	int x, aveh;
+	int minh = 999, maxh = 0;
+
+	for (x = minx; x <= maxx; ++x) {
+		minh = imin(minh, ground[x]);
+		maxh = imax(maxh, ground[x]);
+	}
+
+	aveh = (minh + maxh) / 2;
+	aveh = clamp_max(aveh, MAX_Y - headroom - 1);
+
+	for (x = minx; x <= maxx; ++x) {
+		ground[x] = aveh;
+	}
+
+	return aveh;
+}
+
+// building/target
+static OBJECTS *inittarget(const original_ob_t *orig_ob)
+{
+	OBJECTS *ob;
+
+	ob = allocobj();
+
+	// Initial symbol:
+	ob->ob_symbol = &symbol_targets[orig_ob->orient].sym[0];
+
+	ob->ob_x = orig_ob->x;
+	ob->ob_y = Flatten(ob->ob_x, ob->ob_x + ob->ob_symbol->w - 1,
+	                   ob->ob_symbol->h) +
+	           ob->ob_symbol->h;
+
+	ob->ob_dx = ob->ob_dy = ob->ob_lx = ob->ob_ly = ob->ob_ldx =
+	    ob->ob_ldy = ob->ob_angle = ob->ob_hitcount = 0;
+	ob->ob_type = TARGET;
+	ob->ob_state = STANDING;
+	ob->ob_orient = orig_ob->orient;
+	AddPlayerTarget(ob, orig_ob);
+	ob->ob_clr = ob->ob_faction;
+	ob->ob_movef = movetarg;
+	ob->ob_onmap = true;
+
+	return ob;
+}
+
+// powerup item:
+static OBJECTS *initpowerup(const original_ob_t *orig_ob)
+{
+	OBJECTS *ob;
+
+	ob = allocobj();
+
+	// Initial symbol:
+	ob->ob_symbol = &symbol_powerups[orig_ob->orient].sym[0];
+
+	ob->ob_x = orig_ob->x;
+	ob->ob_y = Flatten(ob->ob_x, ob->ob_x + ob->ob_symbol->w - 1,
+	                   ob->ob_symbol->h) +
+	           ob->ob_symbol->h;
+
+	ob->ob_dx = ob->ob_dy = ob->ob_lx = ob->ob_ly = ob->ob_ldx =
+	    ob->ob_ldy = ob->ob_angle = ob->ob_hitcount = 0;
+	ob->ob_type = POWERUP;
+	ob->ob_state = STANDING;
+	ob->ob_orient = orig_ob->orient;
+	ob->ob_clr = FACTION_PLAYER1;
+	ob->ob_movef = movepowerup;
+	ob->ob_onmap = false;
+
+	return ob;
+}
+
+// Number of explosion fragments is calculated based on the number of pixels
+// in the "destroyed target" sprite:
+static int TargetExplosionSize(int target_type)
+{
+	symset_t *ss = &symbol_target_hit[target_type];
+	sopsym_t *s = &ss->sym[0];
+	int i, num_pixels;
+
+	for (i = 0, num_pixels = 0; i < s->w * s->h; i++) {
+		if (s->data[i] != 0) {
+			++num_pixels;
+		}
+	}
+
+	return clamp_range(10, num_pixels, 64);
+}
+
+// The original Sopwith sprites were all 16x16. Since we now support larger
+// sprites, we apply an adjustment so that entire targets appear to be
+// exploding. This is no-op when the symbol is 16x16 like the original.
+static void ApplySpriteSizeOffset(OBJECTS *ob, OBJECTS *obo, int angle)
+{
+	int rangex = clamp_min(obo->ob_symbol->w, 16) - 16,
+	    rangey = clamp_min(obo->ob_symbol->h, 16) - 16;
+	ob->ob_x += COS(angle) * rangex / (256 * 2);
+	ob->ob_y += SIN(angle) * rangey / (256 * 2);
+	ob->ob_y -= rangey;
+}
+
+// Returns true if the given object makes a big explosion (ie. fuel tanks)
+static bool IsExplosive(OBJECTS *ob)
+{
+	switch (ob->ob_type) {
+	case TARGET:
+		return ob->ob_orient == TARGET_OIL_TANK ||
+		       ob->ob_orient == TARGET_TANKER_TRUCK ||
+		       ob->ob_orient == TARGET_CUSTOM5 ||
+		       ob->ob_orient == TARGET_CUSTOM_PASSIVE5;
+	case POWERUP:
+		return ob->ob_orient == POWERUP_FUEL ||
+		       ob->ob_orient == POWERUP_FUEL_BIG;
+	default:
+		return false;
+	}
+}
+
+// explosion
+void initexpl(OBJECTS *obo, int small)
+{
+	OBJECTS *ob;
+	int i, ic, speed;
+	// int life;
+	int obox, oboy, obodx, obody, oboclr;
+	obtype_t obotype;
+	bool mansym;
+	int orient;
+
+	obox = obo->ob_x + (obo->ob_symbol->w / 2);
+	oboy = obo->ob_y + (obo->ob_symbol->h / 2);
+	obodx = obo->ob_dx >> 2;
+	obody = obo->ob_dy >> 2;
+	oboclr = obo->ob_clr;
+
+	obotype = obo->ob_type;
+
+	if (IsExplosive(obo)) {
+		ic = 1;
+		// sdh: Oil tank explosions were changed in Sopwith "Network
+		// Edition" to be much less intense; we make this change
+		// optional. I believe +4 here is correct, because the amj
+		// decompile says something like "speed = level + 8" and
+		// gminspeed = level + MIN_SPEED = level + 4.
+		if (conf_big_explosions) {
+			speed = gminspeed + 4;
+		} else {
+			speed = gminspeed;
+		}
+	} else {
+		speed = gminspeed >> ((explseed & 7) != 7);
+		if (small) {
+			ic = 6;
+		} else if (obotype == TARGET) {
+			// For targets we calculate the number of fragments
+			// based on the number of pixels in the destroyed-
+			// target sprite. For the original Sopwith destroyed-
+			// building sprite, this evaluates to 2, which is
+			// the original behavior.
+			ic = 110 / TargetExplosionSize(obo->ob_orient);
+		} else {
+			ic = 2;
+		}
+	}
+	mansym = obotype == PLANE &&
+	         (obo->ob_state == FLYING || obo->ob_state == WOUNDED);
+
+	for (i = 1; i <= 15; i += ic) {
+		ob = allocobj();
+		if (!ob) {
+			return;
+		}
+
+		ob->ob_type = EXPLOSION;
+
+		setdxdy(ob, COS(i) * speed, SIN(i) * speed);
+		ob->ob_dx += obodx;
+		ob->ob_dy += obody;
+
+		ob->ob_x = obox + ob->ob_dx;
+		ob->ob_y = oboy + ob->ob_dy;
+		ApplySpriteSizeOffset(ob, obo, i);
+
+		explseed *= ob->ob_x * ob->ob_y;
+		explseed += 7491;
+		if (!explseed) {
+			explseed = 74917777;
+		}
+
+		ob->ob_life = EXPLLIFE;
+		orient = ob->ob_orient = (explseed & 0x01C0) >> 6;
+		if (mansym && (!orient || orient == 7)) {
+			orient = ob->ob_orient = 0;
+			mansym = false;
+			ob->ob_dx = obodx;
+			ob->ob_dy = -gminspeed;
+		}
+
+		ob->ob_lx = ob->ob_ly = ob->ob_hitcount = ob->ob_speed = 0;
+		ob->ob_owner = obo;
+		ob->ob_clr = oboclr;
+		ob->ob_symbol = &symbol_debris[0].sym[0];
+		ob->ob_movef = moveexpl;
+
+		if (orient) {
+			initsound(ob, S_EXPLOSION);
+		}
+
+		insertx(ob, obo);
+	}
+}
+
+// smoke from falling plane
+void initsmok(OBJECTS *obo)
+{
+	OBJECTS *ob;
+
+	ob = allocobj();
+	if (!ob) {
+		return;
+	}
+
+	ob->ob_type = SMOKE;
+
+	ob->ob_x = obo->ob_x + 8;
+	ob->ob_y = obo->ob_y - 8;
+	ob->ob_dx = obo->ob_dx;
+	ob->ob_dy = obo->ob_dy;
+	ob->ob_lx = ob->ob_ly = ob->ob_ldx = ob->ob_ldy = 0;
+	ob->ob_life = SMOKELIFE;
+	ob->ob_owner = obo;
+	ob->ob_soundf = NULL;
+	ob->ob_movef = movesmok;
+	ob->ob_clr = obo->ob_clr;
+}
+
+// birds
+static OBJECTS *initflock(const original_ob_t *orig_ob)
+{
+	OBJECTS *ob;
+	int j;
+
+	if (playmode == PLAYMODE_NOVICE || !conf_animals) {
+		return NULL;
+	}
+
+	ob = allocobj();
+	if (!ob) {
+		return NULL;
+	}
+
+	ob->ob_type = FLOCK;
+	ob->ob_state = FLYING;
+	ob->ob_x = orig_ob->x;
+	ob->ob_y = MAX_Y - 1;
+	ob->ob_dx = ob->ob_x < (currgame->gm_max_x / 2) ? 2 : -2;
+	ob->ob_dy = ob->ob_lx = ob->ob_ly = ob->ob_ldx = ob->ob_ldy = 0;
+	ob->ob_orient = 0;
+	ob->ob_life = FLOCKLIFE;
+	ob->ob_faction = FACTION_NONE;
+	ob->ob_symbol = &symbol_flock[0].sym[0];
+	ob->ob_soundf = NULL;
+	ob->ob_movef = moveflck;
+	ob->ob_clr = 1;
+	ob->ob_onmap = true;
+
+	for (j = 0; j < NUM_STRAY_BIRDS; ++j) {
+		initbird(ob, 1);
+	}
+
+	return ob;
+}
+
+// single bird
+void initbird(OBJECTS *obo, int i)
+{
+	OBJECTS *ob;
+	static const int ibx[] = {8, 3, 0, 6, 7, 14, 10, 12};
+	static const int iby[] = {16, 1, 8, 3, 12, 10, 7, 14};
+	static const int ibdx[] = {-2, 2, -3, 3, -1, 1, 0, 0};
+	static const int ibdy[] = {-1, -2, -1, -2, -1, -2, -1, -2};
+
+	ob = allocobj();
+	if (!ob) {
+		return;
+	}
+
+	ob->ob_type = BIRD;
+
+	ob->ob_x = obo->ob_x + ibx[i];
+	ob->ob_y = obo->ob_y - iby[i];
+	ob->ob_dx = ibdx[i];
+	ob->ob_dy = ibdy[i];
+	ob->ob_orient = ob->ob_lx = ob->ob_ly = ob->ob_ldx = ob->ob_ldy = 0;
+	ob->ob_life = BIRDLIFE;
+	ob->ob_faction = obo->ob_faction;
+	ob->ob_symbol = &symbol_bird[0].sym[0];
+	ob->ob_soundf = NULL;
+	ob->ob_movef = movebird;
+	ob->ob_clr = obo->ob_clr;
+	insertx(ob, &topobj);
+}
+
+static OBJECTS *initballoon(const original_ob_t *orig_ob)
+{
+	OBJECTS *ob;
+
+	ob = allocobj();
+	if (!ob) {
+		return NULL;
+	}
+
+	ob->ob_type = BALLOON;
+	ob->ob_state = FLYING;
+	ob->ob_life = 1;
+	ob->ob_x = orig_ob->x;
+	ob->ob_y = MAX_Y - 16 + SIN(orig_ob->x) / 32;
+	ob->ob_dx = 0;
+	ob->ob_dy = 0;
+	ob->ob_orient = 0;
+	ob->ob_symbol = &symbol_balloon[0].sym[0];
+	ob->ob_soundf = NULL;
+	ob->ob_movef = moveballoon;
+	ob->ob_faction = orig_ob->faction;
+	ob->ob_clr = ob->ob_faction;
+	ob->ob_onmap = true;
+	AddPlayerTarget(ob, orig_ob);
+
+	return ob;
+}
+
+// oxen
+static OBJECTS *initox(const original_ob_t *orig_ob)
+{
+	OBJECTS *ob;
+
+	if (playmode == PLAYMODE_NOVICE || !conf_animals) {
+		return NULL;
+	}
+
+	ob = allocobj();
+	if (!ob) {
+		return NULL;
+	}
+
+	ob->ob_type = OX;
+	ob->ob_state = STANDING;
+	ob->ob_x = orig_ob->x;
+	ob->ob_y = ground[ob->ob_x] + 16;
+	ob->ob_orient = ob->ob_lx = ob->ob_ly = ob->ob_ldx = ob->ob_ldy =
+	    ob->ob_dx = ob->ob_dy = 0;
+	ob->ob_faction = FACTION_NONE;
+	ob->ob_symbol = &symbol_ox[0].sym[orig_ob->transform];
+	ob->ob_soundf = NULL;
+	ob->ob_movef = moveox;
+	ob->ob_clr = 1;
+	return ob;
+}
+
+static void inittargets(void)
+{
+	OBJECTS *ob;
+	const original_ob_t *orig_ob;
+	int i;
+
+	memset(numtarg, 0, sizeof(numtarg));
+
+	for (i = 0; i < currgame->gm_num_objects; i++) {
+		orig_ob = &currgame->gm_objects[i];
+		switch (orig_ob->type) {
+		case TARGET:
+			ob = inittarget(orig_ob);
+			break;
+		case OX:
+			ob = initox(orig_ob);
+			break;
+		case FLOCK:
+			ob = initflock(orig_ob);
+			break;
+		case BALLOON:
+			ob = initballoon(orig_ob);
+			break;
+		case POWERUP:
+			ob = initpowerup(orig_ob);
+			break;
+		default:
+			continue;
+		}
+
+		if (ob != NULL) {
+			ob->ob_original_ob = orig_ob;
+			insertx(ob, &topobj);
+		}
+	}
+}
+
+static void initgdep(void)
+{
+	gmaxspeed = MAX_SPEED + gamenum;
+	gminspeed = MIN_SPEED + gamenum;
+
+	targrnge = 150;
+	if (gamenum < 6) {
+		targrnge -= 15 * (6 - gamenum);
+	}
+	targrnge *= targrnge;
+}
+
+OBJECTS *PlaneForFaction(faction_t f)
+{
+	int i;
+
+	for (i = 0; i < num_planes; i++) {
+		if (planes[i]->ob_faction == f) {
+			return planes[i];
+			;
+		}
+	}
+
+	return NULL;
+}
+
+void swinitlevel(void)
+{
+	original_ob_t *player1_ob, *player2_ob;
+	int i;
+
+	if (have_custom_level) {
+		currgame = &custom_level;
+	} else {
+		currgame = &original_level;
+	}
+
+	Vid_ShowTouchGameControls();
+
+	// clear out any waiting keys. this stops, eg. 's' on the
+	// menu from toggling sound once the game starts
+	Vid_GetGameKeys();
+
+	if (playmode == PLAYMODE_ASYNCH) {
+		init1asy();
+	}
+
+	swclearsplats();
+
+	initsndt();
+	initgrnd();
+	initobjs();
+
+	num_players = 0;
+	num_planes = 0;
+	num_orig_planes = 0;
+	memset(planes, 0, sizeof(planes));
+	memset(orig_planes, 0, sizeof(orig_planes));
+
+	player1_ob = NULL;
+	player2_ob = NULL;
+	for (i = 0; i < currgame->gm_num_objects; i++) {
+		original_ob_t *plane = &currgame->gm_objects[i];
+		if (plane->type != PLANE) {
+			continue;
+		}
+		if (playmode == PLAYMODE_ASYNCH &&
+		    plane->faction > FACTION_PLAYER2) {
+			continue;
+		}
+		if (plane->faction > FACTION_PLAYER4) {
+			// Player 5-8 planes currently unused
+			continue;
+		}
+		orig_planes[num_orig_planes] = plane;
+		++num_orig_planes;
+		if (player1_ob == NULL && plane->faction == FACTION_PLAYER1) {
+			player1_ob = plane;
+		}
+		if (player2_ob == NULL && plane->faction == FACTION_PLAYER2) {
+			player2_ob = plane;
+		}
+	}
+	assert(player1_ob != NULL);
+
+	if (keydelay == -1) {
+		keydelay = 1;
+	}
+
+	initplyr(NULL, player1_ob);
+
+	if (playmode == PLAYMODE_ASYNCH) {
+		maxcrash = MAXCRASH * 2;
+		assert(player2_ob != NULL);
+		initplyr(NULL, player2_ob);
+	} else {
+		maxcrash = MAXCRASH;
+		player2_ob = NULL;
+	}
+
+	// single player. we spawn as many enemy planes as we have
+	// defined within the map.
+	// TODO: We should have a way to define the number of enemy
+	// planes in levels.
+	for (i = 0; i < num_orig_planes; i++) {
+		if (orig_planes[i] != player1_ob &&
+		    orig_planes[i] != player2_ob) {
+			initcomp(NULL, orig_planes[i]);
+		}
+	}
+
+	inittargets();
+
+	initdisp(false);
+	initgdep();
+
+	// sdh 16/11/2001: this needs to be reset with each new game
+	// to keep netgames in sync if we have already played
+
+	countmove = 0;
+	successful_flight = false;
+
+	for (i = 0; i < num_players; ++i) {
+		latest_player_time[i] = 0;
+	}
+}
+
+void swrestart(void)
+{
+	OBJECTS *ob = planes[player];
+	int inc;
+	int time;
+
+	if (consoleplayer->ob_endsts == WINNER) {
+		inc = 0;
+
+		GetEndLevel(ob);
+
+		// Count down the remaining lives; the player gets awarded
+		// extra points for each life.
+		while (ob->ob_crashcnt < maxcrash) {
+			++ob->ob_crashcnt;
+			inc += 25;
+			ob->ob_score.score += inc;
+
+			swdisp();
+			Vid_Update();
+
+			time = Timer_GetMS();
+			while (Timer_GetMS() < time + 200)
+				;
+		}
+		++gamenum;
+		savescore = ob->ob_score;
+		have_savescore = true;
+	} else {
+		NewHighScore(&ob->ob_score);
+
+		// gamenum = 0;
+		// allow variable start level -- Jesse
+		gamenum = starting_level;
+		have_savescore = false;
+
+		// sh 28/10/2001: go back to the title screen
+		playmode = PLAYMODE_UNSET;
+	}
+
+	// The main loop code in swmain.c will detect this and return
+	// to the title screen.
+	restart_flag = true;
+}
+
+// init game
+
+void swinit(int argc, char *argv[])
+{
+	bool n = false;
+	bool s = false;
+	bool c = false;
+	bool a = false;
+	bool k = false;
+	int modeset = 0, keyset;
+	int i;
+
+	soundflg = 0;
+	// DEBIAN FOLKS: please don't disable the configuration file.
+	// The code has changed significantly, that patch should no
+	// longer be necessary.
+	swloadconf();
+
+	// We must generate symbols early, so that custom map files
+	// can replace symbols:
+	GenerateSymbols();
+
+	for (i = 1; i < argc; ++i) {
+		if (!strcasecmp(argv[i], "-v") ||
+		    !strcasecmp(argv[i], "--version")) {
+			puts(PACKAGE_STRING);
+			exit(0);
+		} else if (!strcasecmp(argv[i], "-n")) {
+			n = true;
+		} else if (!strcasecmp(argv[i], "-s")) {
+			s = true;
+		} else if (!strcasecmp(argv[i], "-c")) {
+			c = true;
+		} else if (!strcasecmp(argv[i], "-f")) {
+			vid_fullscreen = 1;
+		} else if (!strncasecmp(argv[i], "-g", 2)) {
+			sscanf(&(argv[i][2]), "%d", &starting_level);
+			gamenum = starting_level;
+		} else if (!strcasecmp(argv[i], "-q")) {
+			soundflg = true;
+		} else if (!strcmp(argv[i], "-m") && (i + 1) < argc) {
+			LoadCustomLevel(argv[i + 1]);
+			++i;
+		} else
+#ifdef TCPIP
+		    if (!strcasecmp(argv[i], "-l")) {
+			a = true;
+			asynmode = ASYN_LISTEN;
+		} else if (!strcasecmp(argv[i], "-j")) {
+			if (i + 1 >= argc) {
+				ErrorExit("insufficient arguments to -j");
+			}
+			a = true;
+			asynmode = ASYN_CONNECT;
+			++i;
+			asynhost = argv[i];
+		} else if (!strcmp(argv[i], "-p")) {
+			if (i + 1 >= argc) {
+				ErrorExit("insufficient arguments to -p");
+			}
+			++i;
+			asynport = atoi(argv[i]);
+		} else
+#endif
+		{
+			puts(helptxt);
+			exit(0);
+		}
+	}
+
+	modeset = n | s | c | a;
+	keyset = k;
+
+	soundflg = !soundflg;
+	if (modeset && keyset) {
+		titleflg = true;
+	}
+
+	initseed();
+
+	Timer_Init();
+	Vid_Init();
+	Vid_SetVideoPalette(conf_video_palette);
+	InitHighScores();
+
+	// Don't init speaker if started with -q (quiet)
+	if (soundflg) {
+		Speaker_Init();
+	}
+
+	initsndt();
+
+	// set playmode if we can, from command line options
+	playmode = n ? PLAYMODE_NOVICE
+	         : s ? PLAYMODE_SINGLE
+	         : c ? PLAYMODE_COMPUTER
+	         : a ? PLAYMODE_ASYNCH
+	             : PLAYMODE_UNSET;
+}
+
+//
+// 2003-02-14: Code was checked into version control; no further entries
+// will be added to this log.
+//
+// sdh 14/2/2003: change license header to GPL
+// sdh 27/06/2002: move symbols to new sopsym_t format,
+//                 remove references to symwdt, symhgt
+// sdh 27/03/2002: move old drawing functions to new ones (pntsym, pntcol)
+// sdh 26/03/2002: change CGA_ to Vid_
+// sdh 16/11/2001: TCPIP #define to disable TCP/IP support
+// sdh 16/11/2001: fix out of sync error
+// sdh 29/10/2001: load game options from config file
+// sdh 28/10/2001: extra game options
+// sdh 28/10/2001: game init restructured: swinitlevel now initialises the
+//                 level, getmode is called from main
+// sdh 26/10/2001: merge guages into a single function
+// sdh 24/10/2001: fix auxdisp buffer
+// sdh 23/10/2001: fixed arguments help list and rewrote argument checking
+//                 to support new network features
+// sdh 21/10/2001: use new obtype_t and obstate_t
+// sdh 21/10/2001: rearranged headers, added cvs tags
+// sdh 21/10/2001: reformatted with indent, adjusted some code by hand
+//                 to be more readable
+// sdh 19/10/2001: removed all extern definitions, these are now in headers
+//                 shuffled some functions around to shut up compiler
+// sdh 18/10/2001: converted all functions in this file to ANSI-style
+// 		   arguments from k&r
+//
+// 2000-10-29      Copyright update.
+//                 Comment out multiplayer selection on startup.
+// 99-01-24        1999 copyright.
+//                 Disable network support.
+// 96-12-26        New network version.
+//                 Remove keyboard prompts. Speed up game a bit.
+// 87-04-09        Fix to initial missile path.
+//                 Delay between starbursts
+// 87-04-06        Computer plane avoiding oxen.
+// 87-04-05        Less x-movement in explosions
+// 87-04-04        Missile and starburst support
+// 87-03-31        Less x-movement in explosions
+// 87-03-31        Missiles
+// 87-03-30        Novice player.
+// 87-03-12        Wounded airplanes.
+// 87-03-11        Smaller fuel tank explosions.
+// 87-03-09        Microsoft compiler.
+// 87-01-09        BMB standard help text.
+//                 Multiple serial ports.
+// 85-10-31        Atari
+// 84-02-02        Development
+//

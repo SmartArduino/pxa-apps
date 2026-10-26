@@ -1,0 +1,131 @@
+--- original/saf.h
++++ platform/saf.h
+@@ -647,7 +647,9 @@
+ 
+ #endif // SAF_PLATFORM_SDL2 || SAF_PLATFORM_SDL2_TINY
+ 
+-#ifdef SAF_PLATFORM_NULL
++#if defined(SAF_PLATFORM_PXA)
++#include "../../backend.h"
++#elif defined(SAF_PLATFORM_NULL)
+ /* Null frontend, has no I/O implemented and runs at highest reachable FPS
+   instead of SAF_FPS. This can be useful for testing, e.g. if you want to see
+   the compiled size or performance of just the game without any frontend.
+--- original/minigames.ino
++++ platform/minigames.ino
+@@ -145,8 +145,20 @@
+   int16_t square = ((((uint16_t) SAF_random()) << 8) | SAF_random()) %
+     (SNAKE_BOARD_W * SNAKE_BOARD_H);
+ 
++  /* PXA safety: a legitimately full board has no food square. */
++  unsigned searched = 0;
+   while (getMemoryHalfByte(square) != SNAKE_SQUARE_EMPTY)
++  {
++    if (++searched >= SNAKE_BOARD_W * SNAKE_BOARD_H)
++    {
++      SNAKE_FOOD_SQUARE = -1;
++      SNAKE_GAME_STATE = 1;
++      if (SNAKE_SCORE >= getHiScore(SNAKE_SAVE_SLOT))
++      { saveHiScore(SNAKE_SAVE_SLOT,SNAKE_SCORE); SNAKE_GAME_STATE = 2; }
++      return;
++    }
+     square = ((square != 0) ? square : (SNAKE_BOARD_W * SNAKE_BOARD_H)) - 1;
++  }
+ 
+   SNAKE_FOOD_SQUARE = square;
+ }
+@@ -197,7 +209,10 @@
+     SAF_COLOR_WHITE,1);
+ 
+   int16_t square = SNAKE_TAIL_SQUARE;
++  if (square < 0 || square >= SNAKE_BOARD_W * SNAKE_BOARD_H)
++  { saf_platform_fault(3); return; }
+   uint8_t val = getMemoryHalfByte(square);
++  unsigned drawn = 0;
+ 
+ #if SAF_PLATFORM_COLOR_COUNT > 2
+   uint8_t pattern = 1; // pattern of next and prev square, for coloring
+@@ -205,6 +220,8 @@
+ 
+   while (1) // draw from tail to head
+   {
++    if (++drawn > SNAKE_BOARD_W * SNAKE_BOARD_H)
++    { saf_platform_fault(3); return; }
+     uint8_t combinedPattern = 0;
+ 
+ #if SAF_PLATFORM_COLOR_COUNT > 2
+@@ -237,6 +254,8 @@
+       break;
+ 
+     square = snakeNextSquare(square);
++    if (square < 0 || square >= SNAKE_BOARD_W * SNAKE_BOARD_H)
++    { saf_platform_fault(3); return; }
+ 
+ #if SAF_PLATFORM_COLOR_COUNT > 2
+     val = getMemoryHalfByte(square);
+@@ -965,10 +984,12 @@
+ uint8_t blocksFallStep(void)
+ {
+   uint8_t canFall = 1;
++  uint8_t activeFound = 0; /* PXA safety: empty board cannot fall forever. */
+ 
+   for (uint8_t i = 0; i < BLOCKS_BOARD_SQUARES; ++i)
+     if (memory[i] & 0x80)
+     {
++      activeFound = 1;
+       if (i / BLOCKS_BOARD_W == BLOCKS_BOARD_H - 1)
+       {
+         canFall = 0;
+@@ -981,6 +1002,8 @@
+         break;
+       }
+     }
++
++  if (!activeFound) return 0;
+ 
+   if (canFall)
+   {
+@@ -1520,6 +1543,9 @@
+ 
+ void runnerAddObstacle(uint8_t type)
+ {
++  /* PXA safety: reserve the next sentinel; never wrap the uint8 index. */
++  uint16_t end = saf_platform_runner_end(memory);
++  if (end >= 254) { saf_platform_fault(2); return; }
+   uint8_t i = 0;
+ 
+   while (memory[i] != RUNNER_OBSTACLE_NONE)
+@@ -1611,6 +1637,9 @@
+ 
+ void runnerRemoveObstacle(uint8_t index)
+ {
++  uint16_t end = saf_platform_runner_end(memory);
++  if (end > 254 || (index & 1) || index > end)
++  { saf_platform_fault(2); return; }
+   while (memory[index] != RUNNER_OBSTACLE_NONE)
+   {
+     memory[index] = memory[index + 2];
+@@ -1621,6 +1650,7 @@
+ 
+ void runnerResolveCollisions(void)
+ {
++  if (saf_platform_runner_end(memory) > 254) return;
+   uint8_t i = 0;
+ 
+   uint8_t playerFrom = runnerPlayerHeight(),
+@@ -1689,6 +1719,7 @@
+ 
+ void runnerDraw(void)
+ {
++  if (saf_platform_runner_end(memory) > 254) return;
+   SAF_drawRect(0,0,SAF_SCREEN_WIDTH,RUNNER_GROUND_POS,SAF_COLOR_WHITE,1);
+ 
+   uint8_t groundPos = RUNNER_POSITION % 32;
+@@ -1792,6 +1823,7 @@
+ 
+ void runnerScroll(void)
+ {
++  if (saf_platform_runner_end(memory) > 254) return;
+   RUNNER_POSITION += 1;
+ 
+   uint8_t i = 0;

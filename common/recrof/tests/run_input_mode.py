@@ -10,6 +10,7 @@ import subprocess
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--project-root", type=Path, required=True)
 parser.add_argument("--output", type=Path, required=True)
+parser.add_argument("--density-q16", type=int, default=65536)
 args = parser.parse_args()
 project = args.project_root.resolve()
 out = args.output.resolve()
@@ -50,7 +51,8 @@ for native in (False, True):
         pointers = [[.6, 0, x, y], [1.2, 0, x, y], [1.3, 2, x, y],
                     [2.5, 0, x, y], [2.6, 1, x-10, y], [2.7, 2, x-10, y],
                     [3.0, 0, x, y], [3.4, 0, x, y], [4.0, 2, x, y]]
-        env.update(PXA_TEST_MAIN_LOOP=str(int(native)), PXA_TEST_REQUIRE_TICK_START="1",
+        env.update(PXA_TEST_DENSITY_Q16=str(args.density_q16),
+                   PXA_TEST_MAIN_LOOP=str(int(native)), PXA_TEST_REQUIRE_TICK_START="1",
                    PXA_TEST_BACKGROUND="1", PXA_TEST_POINTERS=json.dumps(pointers),
                    PXA_TEST_CAPTURE_TIMES=json.dumps(captures))
         # Keep RTS A/B clicks; FPS uses shoulder fire/jump while A/B look.

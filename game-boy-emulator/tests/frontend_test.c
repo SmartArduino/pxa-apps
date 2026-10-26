@@ -126,8 +126,27 @@ static void padded_surface(const char *path) {
 #include "../../common/emulator/tests/theme_contract.h"
 
 #include "../../common/emulator/tests/library_contract.h"
+static void test_save_baseline(const char *path) {
+    FILE *f=fopen(path,"rb");assert(f);fseek(f,0,SEEK_END);long bytes=ftell(f);rewind(f);
+    uint8_t *rom=malloc(bytes);assert(rom && fread(rom,1,bytes,f)==(size_t)bytes);fclose(f);
+    assert(!gb_core_load(rom,bytes));reset();rom_loaded=1;
+    strcpy(save_path,"test.sav");strcpy(save_tmp,"test.sav.tmp");
+    size_t size=gb_core_save_size();assert(size);
+    remember_save_baseline();assert(save_baseline_valid && save_data);
+    uint32_t baseline=saved_crc;
+    start_save();assert(!save_pending);
+    /* A failed baseline capture cannot suppress a later retry, even if a
+     * stale CRC happens to equal the current image. */
+    save_baseline_valid=0;start_save();assert(save_pending);save_pending=0;
+    remember_save_baseline();
+    uint8_t *changed=malloc(size);assert(changed && gb_core_save_export(changed,size));
+    changed[size/2]^=0x5a;assert(gb_core_save_import(changed,size));free(changed);
+    start_save();assert(save_pending && pending_save_crc!=baseline && saved_crc==baseline);
+    save_pending=0;start_save();assert(save_pending && saved_crc==baseline);
+    free(save_data);save_data=NULL;gb_core_close();free(rom);reset();
+}
 int main(int argc,char **argv) {
-    assert(argc==2);
+    assert(argc==2);test_save_baseline(argv[1]);
     width=320;height=240;input_density_q16=65536;
     pxa_ui_environment_t env={0};menu_environment(&env);
     pxa_i18n_init(&i18n,&pxa_app_i18n_bundle);

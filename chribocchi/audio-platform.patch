@@ -1,0 +1,141 @@
+--- vendor/original-playtune/src/ArduboyPlaytune.cpp
++++ owner/ArduboyPlaytune.cpp
+@@ -60,7 +60,8 @@
+ */
+ 
+ #include "ArduboyPlaytune.h"
+-#include <avr/power.h>
++#include "audio_registers.h"
++#include "owner_compat.h"
+ 
+ static const byte tune_pin_to_timer[] = { 3, 1 };
+ static volatile byte *_tunes_timer1_pin_port;
+@@ -71,9 +72,9 @@
+ static byte _tune_pins[AVAILABLE_TIMERS];
+ static byte _tune_num_chans = 0;
+ static volatile boolean tune_playing = false; // is the score still playing?
+-static volatile unsigned wait_timer_frequency2;       /* its current frequency */
++static volatile uint16_t wait_timer_frequency2;       /* its current frequency */
+ static volatile boolean wait_timer_playing = false;   /* is it currently playing a note? */
+-static volatile unsigned long wait_toggle_count;      /* countdown score waits */
++static volatile uint32_t wait_toggle_count;      /* countdown score waits */
+ static volatile boolean all_muted = false; // indicates all sound is muted
+ static volatile boolean tone_playing = false;
+ static volatile boolean tone_mutes_score = false;
+@@ -97,7 +98,7 @@
+ 69,73,78,82,87,92,98,104,110,117,123,131,139,147,156,165,175,185,196,208,220,
+ 233,247
+ };
+-const unsigned int _midi_word_note_frequencies[80] PROGMEM = {
++const uint16_t _midi_word_note_frequencies[80] PROGMEM = {
+ 262,277,294,311,330,349,370,392,415,440,466,494,523,554,587,622,659,
+ 698,740,784,831,880,932,988,1047,1109,1175,1245,1319,1397,1480,1568,1661,1760,
+ 1865,1976,2093,2217,2349,2489,2637,2794,2960,3136,3322,3520,3729,3951,4186,
+@@ -106,6 +107,9 @@
+ 22351,23680,25088
+ };
+ 
++struct OwnerSong{const byte*data;size_t size;};static OwnerSong ownerSongs[32];
++static uint8_t audioFault=0;static uint32_t audioClock=0,audioInterrupts=0,audioStarts=0,audioStops=0;
++static uint8_t owner_audio_read(const volatile byte*p){uintptr_t a=(uintptr_t)p;for(auto&s:ownerSongs)if(s.data&&a>=(uintptr_t)s.data&&a<(uintptr_t)s.data+s.size)return *p;audioFault=1;return 0xf0;}
+ ArduboyPlaytune::ArduboyPlaytune(boolean (*outEn)())
+ {
+   outputEnabled = outEn;
+@@ -163,8 +167,8 @@
+ {
+   byte timer_num;
+   byte prescalar_bits;
+-  unsigned int frequency2; /* frequency times 2 */
+-  unsigned long ocr;
++  uint16_t frequency2; /* frequency times 2 */
++  uint32_t ocr;
+ 
+   // we can't play on a channel that does not exist
+   if (chan >= _tune_num_chans) {
+@@ -239,7 +243,7 @@
+ 
+ void ArduboyPlaytune::playScore(const byte *score)
+ {
+-  score_start = score;
++  ++audioStarts;score_start = score;
+   score_cursor = score_start;
+   step();  /* execute initial commands */
+   tune_playing = true;  /* release the interrupt routine */
+@@ -247,6 +251,7 @@
+ 
+ void ArduboyPlaytune::stopScore()
+ {
++  ++audioStops;
+   for (uint8_t i = 0; i < _tune_num_chans; i++)
+     stopNote(i);
+   tune_playing = false;
+@@ -267,10 +272,10 @@
+ void ArduboyPlaytune::step()
+ {
+   byte command, opcode, chan;
+-  unsigned duration;
++  uint16_t duration;
+ 
+   while (1) {
+-    command = pgm_read_byte(score_cursor++);
++    command = owner_audio_read(score_cursor++);
+     opcode = command & 0xf0;
+     chan = command & 0x0f;
+     if (opcode == TUNE_OP_STOPNOTE) { /* stop note */
+@@ -278,11 +283,11 @@
+     }
+     else if (opcode == TUNE_OP_PLAYNOTE) { /* play note */
+       all_muted = !outputEnabled();
+-      playNote(chan, pgm_read_byte(score_cursor++));
++      playNote(chan, owner_audio_read(score_cursor++));
+     }
+     else if (opcode < 0x80) { /* wait count in msec. */
+-      duration = ((unsigned)command << 8) | (pgm_read_byte(score_cursor++));
+-      wait_toggle_count = ((unsigned long) wait_timer_frequency2 * duration + 500) / 1000;
++      duration = ((uint16_t)command << 8) | (owner_audio_read(score_cursor++));
++      wait_toggle_count = ((uint32_t) wait_timer_frequency2 * duration + 500) / 1000;
+       if (wait_toggle_count == 0) wait_toggle_count = 1;
+       break;
+     }
+@@ -316,7 +321,7 @@
+   tune_playing = tone_playing = tone_only = mute_score = false;
+ }
+ 
+-void ArduboyPlaytune::tone(unsigned int frequency, unsigned long duration)
++void ArduboyPlaytune::tone(uint16_t frequency, uint32_t duration)
+ {
+   // don't output the tone if sound is muted or
+   // the tone channel isn't initialised
+@@ -401,3 +406,12 @@
+   }
+ }
+ 
++
++void obono_audio_register(uint8_t id,const uint8_t*p,size_t n){if(id>=32){audioFault=2;return;}ownerSongs[id]={p,n};}
++uint8_t obono_audio_channel_count(){return _tune_num_chans;}
++static uint8_t owner_id(const byte*p){if(!p)return 255;for(uint8_t i=0;i<32;i++)if(ownerSongs[i].data==p)return i;return 254;}
++static uint16_t owner_off(const byte*p,uint8_t id){if(!p)return 0;if(id<32){uintptr_t a=(uintptr_t)p,b=(uintptr_t)ownerSongs[id].data;if(a>=b&&a<=b+ownerSongs[id].size)return (uint16_t)(a-b);}return 65535;}
++void obono_audio_reset(){_tune_num_chans=0;memset(_tune_pins,0,sizeof(_tune_pins));_tunes_timer1_pin_port=_tunes_timer3_pin_port=nullptr;_tunes_timer1_pin_mask=_tunes_timer3_pin_mask=0;timer1_toggle_count=0;tune_playing=wait_timer_playing=all_muted=tone_playing=tone_mutes_score=tone_only=mute_score=false;wait_timer_frequency2=0;wait_toggle_count=0;outputEnabled=nullptr;score_start=score_cursor=nullptr;memset(ownerSongs,0,sizeof(ownerSongs));audioFault=0;audioClock=millis();audioInterrupts=audioStarts=audioStops=0;TCCR1A=TCCR1B=TCCR3A=TCCR3B=TIMSK1=TIMSK3=0;OCR1A=OCR3A=0;TCNT1=TCNT3=0;silentPin=silentMode=0;}
++static void advance_timer(uint32_t cycles,bool first){auto&counter=first?TCNT1:TCNT3;auto&ocr=first?OCR1A:OCR3A;auto&mask=first?TIMSK1:TIMSK3;auto&control=first?TCCR1B:TCCR3B;while(cycles){uint32_t prescale=(control&7)==1?1:(control&7)==3?64:0;if(!prescale||!(mask&2))return;uint32_t limit=(uint32_t)ocr+1;uint32_t until=((limit>counter.value?limit-counter.value:1)*prescale)-counter.fraction;uint32_t used=cycles<until?cycles:until;counter.fraction+=used;counter.value=(uint16_t)(counter.value+counter.fraction/prescale);counter.fraction%=prescale;cycles-=used;if(used==until){counter.value=0;counter.fraction=0;++audioInterrupts;if(first)TIMER1_COMPA_vect();else TIMER3_COMPA_vect();}}}
++void obono_audio_advance(uint32_t now){uint32_t delta=now-audioClock;audioClock=now;if(delta>64){audioFault=4;return;}for(uint32_t i=0;i<delta;i++){advance_timer(16000,true);advance_timer(16000,false);}}
++void obono_audio_pack(ObonoWriter&w){w.u8(_tune_num_chans);for(auto v:_tune_pins)w.u8(v);w.u8(_tunes_timer1_pin_port?1:0);w.u8(_tunes_timer3_pin_port?1:0);w.u8(_tunes_timer1_pin_mask);w.u8(_tunes_timer3_pin_mask);w.u32(timer1_toggle_count);w.u8(tune_playing);w.u16(wait_timer_frequency2);w.u8(wait_timer_playing);w.u32(wait_toggle_count);w.u8(all_muted);w.u8(tone_playing);w.u8(tone_mutes_score);w.u8(tone_only);w.u8(mute_score);w.u8(outputEnabled?1:0);uint8_t id=owner_id((const byte*)score_start);w.u8(id);w.u16(owner_off((const byte*)score_start,id));w.u8(id);w.u16(owner_off((const byte*)score_cursor,id));w.u8(TCCR1A);w.u8(TCCR1B);w.u8(TCCR3A);w.u8(TCCR3B);w.u8(TIMSK1);w.u8(TIMSK3);w.u16(OCR1A);w.u16(OCR3A);w.u16(TCNT1.value);w.u16(TCNT3.value);w.u32(TCNT1.fraction);w.u32(TCNT3.fraction);w.u8(silentPin);w.u8(silentMode);w.u8(audioFault);w.u32(audioClock);w.u32(audioInterrupts);w.u32(audioStarts);w.u32(audioStops);}
+--- vendor/original-playtune/src/ArduboyPlaytune.h
++++ owner/ArduboyPlaytune.h
+@@ -48,7 +48,7 @@
+ #define ARDUBOY_PLAYTUNE_H
+ 
+ #include <Arduino.h>
+-#include <avr/pgmspace.h>
++
+ 
+ #define AVAILABLE_TIMERS  2
+ 
+@@ -167,7 +167,7 @@
+    * first channel continue to play unless `toneMutesScore(true)` has been
+    * called.
+    */
+-  void tone(unsigned int frequency, unsigned long duration);
++  void tone(uint16_t frequency, uint32_t duration);
+ 
+   /** \brief
+    * Set a mode to specify whether playing a tone mutes the first score

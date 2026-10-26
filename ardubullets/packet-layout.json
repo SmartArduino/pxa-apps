@@ -1,0 +1,75 @@
+{
+  "format": "ardubullets-full-original-state-1",
+  "bytes": 615,
+  "core_bytes": 3136,
+  "total_bytes": 3751,
+  "source": "game.cpp packet plus obono_pack_* fieldwise exact littleendian",
+  "regions": [
+    {
+      "offset": 0,
+      "bytes": 3,
+      "fields": "version1 ID11 mode"
+    },
+    {
+      "offset": 3,
+      "bytes": 2,
+      "fields": "MyArduboy last/currentButtonState"
+    },
+    {
+      "offset": 5,
+      "bytes": 9,
+      "fields": "independent rand_state/rand_calls/owner_fault"
+    },
+    {
+      "offset": 14,
+      "bytes": 64,
+      "fields": "audio numChans/priority/duty/count/frequency/flags/scoreID+offset/pitch/repeat/virtualtimers/fault/clock/interrupts/starts/stops"
+    },
+    {
+      "offset": 78,
+      "bytes": 19,
+      "fields": "original10byte record+counter+padXYZ+invalid/dirty+recordState+eepAddr"
+    },
+    {
+      "offset": 97,
+      "bytes": 21,
+      "fields": "all menu coordinates/flags/count/position/invalid and6 exact function+label symbolicIDs"
+    },
+    {
+      "offset": 118,
+      "bytes": 7,
+      "fields": "all title state/gameSeedTmp/gameSeedX/settingchange"
+    },
+    {
+      "offset": 125,
+      "bytes": 17,
+      "fields": "all game scalars/counters/LED/defeat/menu+original static shot/bullet cursorindices"
+    },
+    {
+      "offset": 142,
+      "bytes": 36,
+      "fields": "18shots x,y"
+    },
+    {
+      "offset": 178,
+      "bytes": 320,
+      "fields": "64bullets 5bytes each originalspd/rad bitfield littleendian,bx,by,deg"
+    },
+    {
+      "offset": 498,
+      "bytes": 39,
+      "fields": "3groups each13individual originalbitfieldvalues"
+    },
+    {
+      "offset": 537,
+      "bytes": 75,
+      "fields": "15enemies each5individual originalbitfieldvalues"
+    },
+    {
+      "offset": 612,
+      "bytes": 3,
+      "fields": "explosion x,y,a"
+    }
+  ],
+  "pointers": "exact callback and immutable string symbolicIDs; active cursors carry original arrayindices and registeredscore offsets; no raw host pointer/padding"
+}

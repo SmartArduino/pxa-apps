@@ -1,0 +1,24 @@
+--- vendor/original/ardu_dash/player.h
++++ vendor/platform/player.h
+@@ -67,7 +67,7 @@
+   void update(bool do_update = true) {
+     if (!do_update) return;
+     
+-    if (this->is_jumping && jump_idx <= PLAYER_JUMP_LENGTH) {
++    if (this->is_jumping && jump_idx < PLAYER_JUMP_LENGTH) {
+       this->y += PLAYER_JUMP_Y[jump_idx++];
+       animation_idx = (animation_idx + 1) % JUMP_ANIM_LEN;
+     } else {
+--- vendor/original/ardu_dash/game.h
++++ vendor/platform/game.h
+@@ -109,6 +109,10 @@
+       }
+ 
+       this->arduboy.delayShort(250);
++#ifdef ARDUDASH_EVENT_DRIVEN
++      ardudash_mark_death_continuation();
++      return;
++#endif
+       this->reset();
+       return;
+     }

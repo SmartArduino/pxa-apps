@@ -1,0 +1,34 @@
+{
+  "format": "pxa-guessdots-platform-source-lock-1",
+  "repository": "https://github.com/SuperSolik/arduboy-games",
+  "commit": "523b23abb239f0e520a01073acc92cb24fb262b4",
+  "modified_date": "2026-10-10",
+  "patch": "platform.patch",
+  "platform_files": [
+    {
+      "path": "vendor/platform/bitmaps.h",
+      "bytes": 1720,
+      "sha256": "ab95e79f5aa5b274004af56245b973d9f93d1e64fe93fb3c9c9d645211efc04f"
+    },
+    {
+      "path": "vendor/platform/content.h",
+      "bytes": 6767,
+      "sha256": "87280597844b350999202dee2834da8e0799b260199250593335c5f3aa2f7970"
+    },
+    {
+      "path": "vendor/platform/game.h",
+      "bytes": 10809,
+      "sha256": "b0220826a444c1cd262f85fc64b3dbb03817864d5100a594f8006984b8763fbd"
+    },
+    {
+      "path": "vendor/platform/point.h",
+      "bytes": 137,
+      "sha256": "df0e1120ff50dc6e7481d6d147b48cd88778be6364892c5633baf171e58ea527"
+    }
+  ],
+  "modifications": [
+    "process-lifetime title flash observer",
+    "UP-before-DOWN difficulty else-if safety fix"
+  ],
+  "source_rule_random_upper_bound": "exclusive, unchanged"
+}

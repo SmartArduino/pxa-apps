@@ -6,7 +6,7 @@
 #define PXA_GPSP_CPU_FUSION_H
 
 #ifdef PXA_GBA_IDLE_TEST
-extern "C" { bool gba_cpu_fusion_enabled = true; uint64_t gba_cpu_fusion_hits[3]; }
+extern "C" { bool gba_cpu_fusion_enabled = true; uint64_t gba_cpu_fusion_hits[6]; }
 #define FUSION_HIT(i) (++gba_cpu_fusion_hits[i])
 #else
 #define FUSION_HIT(i) ((void)0)
@@ -133,6 +133,109 @@ again:
 #endif
 }
 
+/* Direct signed-sample stereo mixing. Decode the exact nine instructions,
+ * then run complete iterations within the current hardware event slice. */
+static bool arm_fuse_direct_sample(u32 opcode, u8 *page, s32 &remaining,
+                                   u32 &n, u32 &z, u32 &c, u32 &v)
+{
+#if defined(PXA_GBA_PROFILE) || defined(TRACE_INSTRUCTIONS)
+  return false;
+#else
+#ifdef PXA_GBA_IDLE_TEST
+  if (!gba_cpu_fusion_enabled) return false;
+#endif
+  if (opcode!=0xe0d300d1) return false;
+  u32 pc=reg[REG_PC],off=pc&0x7fff;
+  if (pc>=0x10000000 || off>0x8000-36 ||
+      (cheat_master_hook>=pc && cheat_master_hook<pc+36) ||
+      (idle_loop_target_pc>=pc && idle_loop_target_pc<pc+36)) return false;
+  unsigned fetch=ws_cyc_seq[pc>>24][1];
+  if (fusion_code_cache.pc!=pc &&
+      (cpu_readmap32(page,off+4)!=0xe001009a ||
+       cpu_readmap32(page,off+8)!=0xe3c118ff ||
+       cpu_readmap32(page,off+12)!=0xe0816466 ||
+       cpu_readmap32(page,off+16)!=0xe001009b ||
+       cpu_readmap32(page,off+20)!=0xe3c118ff ||
+       cpu_readmap32(page,off+24)!=0xe0817467 ||
+       cpu_readmap32(page,off+28)!=0xe2955101 ||
+       cpu_readmap32(page,off+32)!=0x3afffff6)) return false;
+  if ((pc>>24)==3) {fusion_code_cache.pc=pc;fusion_code_cache.words=9;}
+  bool mixed=false;
+  for (;;) {
+    u8 *sample;
+    if (!fusion_byte_pointer(reg[3],&sample)) break;
+    u32 old=reg[5],next=old+0x40000000u;
+    unsigned cost=9*fetch+ws_cyc_nseq[reg[3]>>24][0];
+    if (next>=old) cost+=ws_cyc_nseq[pc>>24][1];
+    if (remaining<(s32)cost) break;
+    FUSION_HIT(3);
+    reg[0]=(u32)(s32)(s8)*sample;reg[3]++;
+    u32 left=(reg[10]*reg[0])&~0x00ff0000u;
+    reg[1]=(reg[11]*reg[0])&~0x00ff0000u;
+    reg[6]=left+((reg[6]>>8)|(reg[6]<<24));
+    reg[7]=reg[1]+((reg[7]>>8)|(reg[7]<<24));
+    reg[5]=next;n=next>>31;z=next==0;c=next<old;
+    v=((~(old^0x40000000u))&(old^next))>>31;
+    reg[REG_PC]=c?pc+36:pc;
+    remaining-=cost;mixed=true;
+    if (c) break;
+  }
+  if (mixed) remaining+=fetch; /* Dispatch charges the last fetch. */
+  return mixed;
+#endif
+}
+
+/* Exact halfword CpuSet loop. Retain scalar bus order (including overlap),
+ * palette/OAM effects and the final partial iteration at hardware events.
+ * The out-of-line body leaves ordinary CMP dispatch small. */
+static __attribute__((noinline)) u32 arm_fuse_half_copy(u8 *page, s32 remaining)
+{
+  s32 initial=remaining;
+  u32 pc=reg[REG_PC],off=pc&0x7fff;
+  if (pc>=0x10000000 || off>0x8000-28 ||
+      (cheat_master_hook>=pc && cheat_master_hook<pc+28) ||
+      (idle_loop_target_pc>=pc && idle_loop_target_pc<pc+28) ||
+      cpu_readmap32(page,off+4)!=0x91d2c0b0 ||
+      cpu_readmap32(page,off+8)!=0x859fc0a0 ||
+      cpu_readmap32(page,off+12)!=0xe181c0b2 ||
+      cpu_readmap32(page,off+16)!=0xe2822002 ||
+      cpu_readmap32(page,off+20)!=0xe1520003 ||
+      cpu_readmap32(page,off+24)!=0x1afffff8) return 0;
+  unsigned cr=pc>>24,fetch=ws_cyc_seq[cr][1];
+  bool copied=false;
+  for (;;) {
+    u32 src=reg[2],dst=reg[1]+src,next=src+2;
+    unsigned sr=src>>24,dr=dst>>24;
+    if (((src|dst)&1) || src>reg[4] ||
+        !(sr==2 || sr==3 || sr==6 || (sr>=8 && sr<=12)) ||
+        !(dr==2 || dr==3 || dr==5 || dr==6 || dr==7)) break;
+    u8 *source=memory_map_read[src>>15];
+    if (!source) break;
+    bool repeat=next!=reg[3];
+    unsigned cost=7*fetch+ws_cyc_nseq[sr][0]+ws_cyc_nseq[dr][0];
+    if (repeat) cost+=ws_cyc_nseq[cr][1];
+    if (remaining<(s32)cost) break;
+    u8 *target;
+    if (dr==2) target=ewram+(dst&0x3ffff);
+    else if (dr==3) target=iwram+0x8000+(dst&0x7fff);
+    else if (dr==5) target=(u8*)palette_ram+(dst&0x3ff);
+    else if (dr==7) target=(u8*)oam_ram+(dst&0x3ff);
+    else {u32 at=dst&0x1ffff;if(at>=0x18000)at-=0x8000;target=vram+at;}
+    uintptr_t out=(uintptr_t)target,code=(uintptr_t)(page+off);
+    if (out>=code && out<code+28) break;
+    fusion_write_barrier();FUSION_HIT(5);
+    u32 value=cpu_readmap16(source,src&0x7fff);
+    address16(target,0)=eswap16(value);
+    if (dr==7) reg[OAM_UPDATED]=1;
+    if (dr==5) address16(palette_ram_converted,dst&0x3ff)=convert_palette(value);
+    reg[12]=value;reg[2]=next;
+    reg[REG_PC]=repeat?pc:pc+28;
+    remaining-=cost;copied=true;
+    if (!repeat) break;
+  }
+  return copied ? (u32)(initial-remaining-fetch) : 0;
+}
+
 /* Checked word-copy iterations, including palette conversion and OAM dirty
  * tracking. Only complete iterations fit before the next hardware event. */
 static bool arm_fuse_copy(u32 opcode, u8 *page, s32 &remaining,
@@ -144,7 +247,16 @@ static bool arm_fuse_copy(u32 opcode, u8 *page, s32 &remaining,
 #ifdef PXA_GBA_IDLE_TEST
   if (!gba_cpu_fusion_enabled) return false;
 #endif
-  if (opcode != 0xe153000c) return false;
+  if (opcode==0xe1520004) {
+    u32 used=arm_fuse_half_copy(page,remaining);
+    if (!used) return false;
+    remaining-=used;
+    u32 next=reg[2],diff=next-reg[3];
+    n=diff>>31;z=diff==0;c=next>=reg[3];v=((next^reg[3])&(next^diff))>>31;
+    return true;
+  }
+  const bool counted=opcode==0xe152000c;
+  if (opcode != 0xe153000c && !counted) return false;
   u32 pc=reg[REG_PC],off=pc&0x7fff;
   if (pc>=0x10000000 || off >= 0x8000-28 ||
       (cheat_master_hook>=pc && cheat_master_hook<pc+28) ||
@@ -152,7 +264,9 @@ static bool arm_fuse_copy(u32 opcode, u8 *page, s32 &remaining,
   unsigned cr=pc>>24,fetch=ws_cyc_seq[cr][1];
   bool copied=false;
   for (;;) {
-    u32 src=reg[3],dst=reg[1]+src,next=src+4;
+    u32 src=reg[counted?2:3],dst=reg[1]+src,next=src+4;
+    u32 count=reg[3]-1;
+    bool repeat=counted?count!=0:next!=reg[0];
     unsigned sr=src>>24,dr=dst>>24;
     if (((src|dst)&3) || src>reg[12] ||
         !(sr==2 || sr==3 || sr==6 || (sr>=8 && sr<=12)) ||
@@ -160,15 +274,15 @@ static bool arm_fuse_copy(u32 opcode, u8 *page, s32 &remaining,
     u8 *source=memory_map_read[src>>15];
     if (!source) break;
     unsigned cost=7*fetch+ws_cyc_nseq[sr][1]+ws_cyc_nseq[dr][1];
-    if (next!=reg[0]) cost+=ws_cyc_nseq[cr][1];
+    if (repeat) cost+=ws_cyc_nseq[cr][1];
     if (remaining<(s32)cost) break;
     /* No accepted write can alter these instructions, even through a mirror.
      * Rechecking once per call suffices across its consecutive iterations. */
-    if (!copied && (cpu_readmap32(page,off+4)!=0x95932000 ||
-        cpu_readmap32(page,off+8)!=0x859f201c ||
-        cpu_readmap32(page,off+12)!=0xe7812003 ||
-        cpu_readmap32(page,off+16)!=0xe2833004 ||
-        cpu_readmap32(page,off+20)!=0xe1530000 ||
+    if (!copied && (cpu_readmap32(page,off+4)!=(counted?0x95920000u:0x95932000u) ||
+        cpu_readmap32(page,off+8)!=(counted?0x859f0060u:0x859f201cu) ||
+        cpu_readmap32(page,off+12)!=(counted?0xe2533001u:0xe7812003u) ||
+        cpu_readmap32(page,off+16)!=(counted?0xe7810002u:0xe2833004u) ||
+        cpu_readmap32(page,off+20)!=(counted?0xe2822004u:0xe1530000u) ||
         cpu_readmap32(page,off+24)!=0x1afffff8)) break;
     u8 *target;
     if (dr==2) target=ewram+(dst&0x3ffff);
@@ -178,7 +292,7 @@ static bool arm_fuse_copy(u32 opcode, u8 *page, s32 &remaining,
     else {u32 at=dst&0x1ffff;if(at>=0x18000)at-=0x8000;target=vram+at;}
     uintptr_t out=(uintptr_t)target, code=(uintptr_t)(page+off);
     if (out>=code && out<code+28) break;
-    fusion_write_barrier();FUSION_HIT(2);
+    fusion_write_barrier();FUSION_HIT(counted?4:2);
     u32 value=cpu_readmap32(source,src&0x7fff);
     address32(target,0)=eswap32(value);
     if (dr==7) reg[OAM_UPDATED]=1;
@@ -187,13 +301,19 @@ static bool arm_fuse_copy(u32 opcode, u8 *page, s32 &remaining,
       address16(palette_ram_converted,dst&0x3ff)=convert_palette(low);
       address16(palette_ram_converted,(dst&0x3ff)+2)=convert_palette(high);
     }
-    reg[2]=value;reg[3]=next;
-    u32 diff=next-reg[0];
-    n=diff>>31;z=diff==0;c=next>=reg[0];
-    v=((next^reg[0])&(next^diff))>>31;
-    reg[REG_PC]=next==reg[0]?pc+28:pc;
+    if (counted) {
+      u32 old=reg[3];reg[0]=value;reg[2]=next;reg[3]=count;
+      n=count>>31;z=count==0;c=old>=1;
+      v=((old^1u)&(old^count))>>31;
+    } else {
+      reg[2]=value;reg[3]=next;
+      u32 diff=next-reg[0];
+      n=diff>>31;z=diff==0;c=next>=reg[0];
+      v=((next^reg[0])&(next^diff))>>31;
+    }
+    reg[REG_PC]=repeat?pc:pc+28;
     remaining-=cost;copied=true;
-    if (next==reg[0]) break;
+    if (!repeat) break;
   }
   if (copied) remaining+=fetch; /* Dispatch epilogue charges the last fetch. */
   return copied;

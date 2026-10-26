@@ -1,0 +1,9 @@
+{
+  "name": "DejaVu Sans Mono",
+  "source_sha256": "c805f9436dbc268644c1d9584f01a601a653e028e08fd74b9b949f6cf8304d88",
+  "copyright_sha256": "63d3ba759d12804c5b31a9d5940d855c1820d1f5999e6b0872eb1c7ff045fbc9",
+  "pillow": "12.3.0",
+  "freetype": "2.14.3",
+  "glyphs": "ASCII 32..126 at integer font sizes 6..32, original baseline metrics",
+  "generated_sha256": "62dc5eeff694729de95a221f75204bf04a805456a47c4b2d65ff221d846333e1"
+}

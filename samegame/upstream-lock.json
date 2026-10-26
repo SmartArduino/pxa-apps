@@ -1,0 +1,13 @@
+{
+  "repository": "https://git.tartarus.org/simon/puzzles.git",
+  "commit": "616da16f25da428ccda805536209095bd062676e",
+  "version": "20260923.616da16",
+  "archive_url": "https://www.chiark.greenend.org.uk/~sgtatham/puzzles/puzzles-20260923.616da16.tar.gz",
+  "archive_sha256": "cc419c8060b4e22be398aa03e30651fbce146eee510645c303fb6f5f1b77b78e",
+  "shared_source_lock": "../common/retro-games/puzzles/upstream-lock.json",
+  "engine_source": "../common/retro-games/puzzles/vendor/samegame.c",
+  "engine_sha256": "11dfbc0f2c08fc10abd3c572e4a0f1326722d3fd281e2f7aaf7df5544da57e36",
+  "license": "MIT",
+  "resources": "Original generated geometry, no external game assets",
+  "font": "DejaVu Sans Mono; see FONT-LICENSE.txt and ../common/retro-games/puzzles/font-lock.json"
+}

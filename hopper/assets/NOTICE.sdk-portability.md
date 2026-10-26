@@ -1,0 +1,23 @@
+# 2026-10-10 preventive Hopper portability corrections
+
+These changes are inferred from actual Hollow Seeker failures in the same pinned OBONO family. Hopper has not run an SDK build or Guest at this boundary. Hollow's failed SDK WASM/WAT reverse call graph connects WASI clock/stdio imports to generic sprintf and heap operator-new failure reporting. Its first corrected cold Guest then differs from native only at packed channel count (0 versus 1) and effective callback (0 versus 1); actual initialized memory sets the shared constructor marker to 1 before the remaining owner dynamic constructor runs. Exact witness paths and hashes, identical raw MyArduboy source hashes, and the entire prior Hopper source are retained in the linked preventive-portability receipt.
+
+Hopper has one scalar sprintf: the original elapsed seconds string uses uint32_t playFrames / 60 % 60. A seconds-only bounded ASCII helper preserves its apostrophe, two decimal digits, quotation mark and terminating NUL; no score-format call is changed because Hopper has none. Native comparisons use defined int promotion for the attainable 0..59 seconds values, all 60 attainable remainders, a complete 3600-frame cycle, uint32_t endpoints and sampled cycles. They do not claim enumeration of all 2^32 frames or equivalence of incompatible AVR varargs types.
+
+Hopper and Hollow original MyArduboy.cpp, MyArduboy.h and the owner Playtune facade are byte-identical. At the same original MyArduboy constructor point, aligned static storage replaces heap allocation, retaining ArduboyPlaytune(myAudio.enabled) followed by initChannel(PIN_SPEAKER_1). The facade has no instance data and is trivially destructible; pTunes is used only for method calls, is neither exposed nor compared, and no storage address is packed.
+
+Before original owner reset/setup, pxaEnsureConstructed uses the existing packed channel count: only zero placement-constructs the original MyArduboy. A native image with the global constructor already run has one and skips it; NEW preserves that count and skips reconstruction. No new mutable guard or packed field is added. Actual Hopper cold Guest fallback behavior still awaits the serial SDK/Guest gate.
+
+Raw originals, licenses, frozen common, frontend controls, typed 518-byte layout and original game rules are unchanged. Prior passed native source/evidence is preserved; current native O2/ASan ordinary game, cold/NEW, sound-boundary, isolation and formatter checks are rerun because production source changed.
+
+Receipt: `logs/games/hopper/preventive-portability-20261010T032537036560Z/before.json`.
+
+## Actual first Hopper death-frame correction
+
+The first official Hopper SDK build passed with fourteen actual objects. Its first real headless Guest matched 896 complete native packets from one observed-seed cold bootstrap, then differed at the first real death frame: 119 drawing-buffer bytes and the same 119 displayed-buffer bytes, with no difference in core metadata, EEPROM or all 518 typed game bytes. The signed package, source, objects, native library, raw log, journals and screenshots remain in `logs/games/hopper/attempt-headless-20261010T034601778244Z`.
+
+The original death branch passes random(25,28) and random(11,14) directly as drawBitmap x/y arguments. Original C++ argument evaluation order is unspecified. At the actual preceding RNG state1986722770, native GCC evaluates right-before-left (x26,y13); host Clang and the actual first WASM draw operands evaluate x first (x27,y12), both ending with RNG1759786384. All262 changed display pixels are explained by the two bitmap positions. Read-only exact original-expression compilation, actual WASM operand trace and raw pixel mapping are preserved in its death-order-witness directory.
+
+The owned platform branch now declares overY=random(11,14), then overX=random(25,28), and calls the original drawBitmap once with those coordinates. This chooses the observed native reference's right-before-left order, retaining both calls, their arguments, RNG updates and the same original drawing point. It does not claim an executed AVR compiler or hardware order. All seven original code/header/ino files were audited: the only other peer RNG argument pair is the already declared floor-coordinate pair; the title's randomSeed(rand()^micros()) has one inner RNG draw sequenced before its outer seed call.
+
+Production source changed, so full ordinary-input native O2 and ASan/UBSan checks are rerun, along with exact old/new 3654-byte native saved-input replay through the demonstrated death frame. Prior source/native evidence and the failed Guest are retained. Corrected SDK and fresh H/D acceptance remain pending until the next serial gate.

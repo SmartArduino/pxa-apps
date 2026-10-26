@@ -13,4 +13,20 @@ static inline int32_t pxa_game_canvas_to_surface_coordinate(int32_t value,
     if (scaled < INT32_MIN) return INT32_MIN;
     return (int32_t)scaled;
 }
+
+/* Match the centered integer-scaled Surface, then map its pixels to the
+ * game's 320x240 controls. Outside presses must not activate edge buttons;
+ * clamped coordinates still let an existing drag release outside the view. */
+static inline int pxa_game_pointer_coordinates(int32_t x,int32_t y,uint32_t density,
+    uint32_t display_w,uint32_t display_h,uint32_t surface_w,uint32_t surface_h,
+    unsigned scale,int *logical_x,int *logical_y) {
+    if(!scale || !surface_w || !surface_h) {*logical_x=*logical_y=0;return 0;}
+    int64_t w=(int64_t)surface_w*scale,h=(int64_t)surface_h*scale;
+    int64_t px=pxa_game_canvas_to_surface_coordinate(x,density)-((int64_t)display_w-w)/2;
+    int64_t py=pxa_game_canvas_to_surface_coordinate(y,density)-((int64_t)display_h-h)/2;
+    int inside=px>=0 && py>=0 && px<w && py<h;
+    *logical_x=px<0?0:px>=w?319:(int)(px*320/w);
+    *logical_y=py<0?0:py>=h?239:(int)(py*240/h);
+    return inside;
+}
 #endif

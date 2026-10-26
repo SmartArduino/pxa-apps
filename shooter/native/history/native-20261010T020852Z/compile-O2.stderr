@@ -1,0 +1,5 @@
+In file included from /mnt/c/Users/myemb/Documents/Codex/2026-10-07/task/pxa-dev/pxa-workspace/local/ports/shooter/vendor/platform/tinyfont/Tinyfont.cpp:2:
+/mnt/c/Users/myemb/Documents/Codex/2026-10-07/task/pxa-dev/pxa-workspace/local/ports/shooter/vendor/platform/tinyfont/TinyfontSprite.c:5:10: fatal error: avr/io.h: No such file or directory
+    5 | #include <avr/io.h>
+      |          ^~~~~~~~~~
+compilation terminated.

@@ -1,0 +1,132 @@
+{
+  "format": "pxa-owner-wire-layout-1",
+  "game": "toyokumono",
+  "game_id": 12,
+  "typed_game_bytes": 772,
+  "core_bytes": 3136,
+  "total_bytes": 3908,
+  "fields": [
+    {
+      "name": "header",
+      "offset": 0,
+      "bytes": 3
+    },
+    {
+      "name": "MyArduboy2.originalButtons",
+      "offset": 3,
+      "bytes": 2
+    },
+    {
+      "name": "AVRindependentRand+ownerFault",
+      "offset": 5,
+      "bytes": 9
+    },
+    {
+      "name": "common.RECORD_T.AVRLE26",
+      "offset": 14,
+      "bytes": 26
+    },
+    {
+      "name": "common.dots32",
+      "offset": 40,
+      "bytes": 192
+    },
+    {
+      "name": "common.lastScore",
+      "offset": 232,
+      "bytes": 2
+    },
+    {
+      "name": "common.counter+dotIndex",
+      "offset": 234,
+      "bytes": 2
+    },
+    {
+      "name": "common.padXYZ",
+      "offset": 236,
+      "bytes": 3
+    },
+    {
+      "name": "common.flags4",
+      "offset": 239,
+      "bytes": 4
+    },
+    {
+      "name": "common.recordState+eepAddr",
+      "offset": 243,
+      "bytes": 3
+    },
+    {
+      "name": "menu.geometry+count+position+flags",
+      "offset": 246,
+      "bytes": 9
+    },
+    {
+      "name": "menu.callbacksAndLabels6",
+      "offset": 255,
+      "bytes": 30
+    },
+    {
+      "name": "title.state+frames+dotsIndex",
+      "offset": 285,
+      "bytes": 4
+    },
+    {
+      "name": "game.state",
+      "offset": 289,
+      "bytes": 1
+    },
+    {
+      "name": "game.clouds16",
+      "offset": 290,
+      "bytes": 64
+    },
+    {
+      "name": "game.grounds16",
+      "offset": 354,
+      "bytes": 128
+    },
+    {
+      "name": "game.flowers32",
+      "offset": 482,
+      "bytes": 192
+    },
+    {
+      "name": "game.ledNibblesAsFields4",
+      "offset": 674,
+      "bytes": 4
+    },
+    {
+      "name": "game.playerXYVXY+windKeep",
+      "offset": 678,
+      "bytes": 10
+    },
+    {
+      "name": "game.score+elements+frames+overFrames",
+      "offset": 688,
+      "bytes": 8
+    },
+    {
+      "name": "game.windAndScoreY5",
+      "offset": 696,
+      "bytes": 5
+    },
+    {
+      "name": "game.endureAndIndexes5",
+      "offset": 701,
+      "bytes": 5
+    },
+    {
+      "name": "game.fast+hiscore",
+      "offset": 706,
+      "bytes": 2
+    },
+    {
+      "name": "audio.originalAVRregistersAndVirtualTimers",
+      "offset": 708,
+      "bytes": 64
+    }
+  ],
+  "little_endian": true,
+  "state_load_interface": false
+}

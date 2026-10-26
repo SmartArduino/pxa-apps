@@ -1,0 +1,17 @@
+{
+  "upstream": "523b23abb239f0e520a01073acc92cb24fb262b4",
+  "changes": [
+    {
+      "path": "player.h",
+      "original_sha256": "78ec3258b8fd68df51c93462cb066bf337f5c30d136a510192d64ac53023bd21",
+      "platform_sha256": "c1b4d56c331716da96d253cc95c74703e445f66345ced1413d082b8d79678706"
+    },
+    {
+      "path": "game.h",
+      "original_sha256": "2f2a1a099c9df6b162bf1cbed393a483d7594f488e427b4c9698cd6c2106bdd1",
+      "platform_sha256": "6c76a6d67898225028c2779f728fc46aa7e4ab508bc6160524b1a5016de19bc9"
+    }
+  ],
+  "patch_sha256": "f04d55580b26540deb72b4c94072d8341c119ed88b1f71187a7919016a556b3a",
+  "scope": "Only upper jump index bound and event continuation after the original sole delayShort250; original scoring/reset functions unchanged"
+}

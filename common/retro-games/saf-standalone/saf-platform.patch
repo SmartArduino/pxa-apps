@@ -1,0 +1,13 @@
+--- vendor/original/saf.h
++++ vendor/platform/saf.h
+@@ -647,7 +647,9 @@
+ 
+ #endif // SAF_PLATFORM_SDL2 || SAF_PLATFORM_SDL2_TINY
+ 
+-#ifdef SAF_PLATFORM_NULL
++#if defined(SAF_PLATFORM_PXA)
++#include "../../backend.h"
++#elif defined(SAF_PLATFORM_NULL)
+ /* Null frontend, has no I/O implemented and runs at highest reachable FPS
+   instead of SAF_FPS. This can be useful for testing, e.g. if you want to see
+   the compiled size or performance of just the game without any frontend.

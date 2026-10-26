@@ -1,0 +1,28 @@
+--- arduboy-batch-20261010/frontend.cpp
++++ psicolo/frontend.cpp
+@@ -15,6 +15,7 @@
+ static void ui_text(int x,int y,int scale,const char *s,uint8_t color){const uint8_t*font=arduboy_pxa_font();for(;*s;++s,x+=6*scale)for(int col=0;col<5;col++){uint8_t bits=font[(uint8_t)*s*5+col];for(int row=0;row<8;row++)if(bits&(1u<<row))ui_rect(x+col*scale,y+row*scale,scale,scale,color);}}
+ static void ui_button(int x,int y,int w,int h,const char*label,int active){ui_rect(x,y,w,h,active?3:2);ui_text(x+(w-(int)strlen(label)*12)/2,y+(h-16)/2,2,label,1);}
+ static uint8_t touch_mask(int x,int y){
++ if(y>=268&&y<304){if(x>=16&&x<104)return B_BUTTON|UP_BUTTON;if(x>=110&&x<198)return B_BUTTON|DOWN_BUTTON;if(x>=204&&x<292)return B_BUTTON|LEFT_BUTTON;if(x>=298&&x<386)return B_BUTTON|RIGHT_BUTTON;}
+ #if ARDU_GAME_ID == 1
+  if(x>=184&&x<380&&y>=276&&y<304)return UP_BUTTON|DOWN_BUTTON;
+ #endif
+@@ -33,7 +34,8 @@
+  const size_t count=3136+game_bytes;pxlog_t log;pxlog_init(&log);pxlog_text(&log,"ARDU STATE action=");pxlog_text(&log,action);
+  pxlog_field(&log,"game",ARDU_GAME_ID);pxlog_field(&log,"seq",fe.seq);pxlog_field(&log,"gen",fe.generation);pxlog_field(&log,"clock",arduboy_pxa_state.clock_ms);pxlog_field(&log,"steps",arduboy_pxa_state.steps);
+  pxlog_field(&log,"frame",Arduboy2Base::frameCount);pxlog_field(&log,"period",wire[46]);pxlog_field(&log,"bytes",count);pxlog_field(&log,"core_bytes",3136);pxlog_field(&log,"game_bytes",game_bytes);
+- pxlog_field(&log,"paused",fe.paused);pxlog_field(&log,"fault",arduboy_pxa_state.fault);pxlog_field(&log,"ctors",arduboy_pxa_state.constructors);pxlog_field(&log,"dropped",arduboy_pxa_state.dropped_steps);
++ pxlog_field(&log,"paused",fe.paused);pxlog_text(&log," phase=header");pxlog_send(&log);
++ pxlog_init(&log);pxlog_text(&log,"ARDU STATE2");pxlog_field(&log,"game",ARDU_GAME_ID);pxlog_field(&log,"seq",fe.seq);pxlog_field(&log,"gen",fe.generation);pxlog_field(&log,"clock",arduboy_pxa_state.clock_ms);pxlog_field(&log,"fault",arduboy_pxa_state.fault);pxlog_field(&log,"ctors",arduboy_pxa_state.constructors);pxlog_field(&log,"dropped",arduboy_pxa_state.dropped_steps);
+  pxlog_field(&log,"draw_step",arduboy_pxa_state.display_step);pxlog_field(&log,"display_count",arduboy_pxa_state.display_count);pxlog_field(&log,"seed",arduboy_pxa_state.seed);pxlog_field(&log,"rng",arduboy_pxa_state.rng);pxlog_field(&log,"elapsed",fe.elapsed);pxlog_text(&log," phase=post");pxlog_send(&log);
+  pxlog_init(&log);pxlog_text(&log,"ARDU HASH");pxlog_field(&log,"clock",arduboy_pxa_state.clock_ms);pxlog_field(&log,"memory",arduboy_pxa_hash(wire,count));pxlog_field(&log,"pixels",arduboy_pxa_hash(arduboy_pxa_state.display,1024));pxlog_field(&log,"eeprom",arduboy_pxa_hash(arduboy_pxa_state.eeprom,1024));pxlog_send(&log);
+  pxlog_init(&log);pxlog_text(&log,"ARDU BTN");pxlog_field(&log,"clock",arduboy_pxa_state.clock_ms);pxlog_field(&log,"pointer",arduboy_pxa_state.pointer);pxlog_field(&log,"controller",arduboy_pxa_state.controller);pxlog_field(&log,"pending_pointer",arduboy_pxa_state.pending_pointer);pxlog_field(&log,"pending_controller",arduboy_pxa_state.pending_controller);pxlog_field(&log,"applied",arduboy_pxa_state.applied);pxlog_field(&log,"sampled",arduboy_pxa_state.sampled);pxlog_send(&log);
+@@ -49,6 +51,7 @@
+ #if ARDU_GAME_ID == 1
+  ui_button(184,276,196,28,"UP+DOWN",arduboy_pxa_state.pointer==(UP_BUTTON|DOWN_BUTTON));
+ #endif
++ ui_button(16,268,88,36,"B+^",arduboy_pxa_state.pointer==(B_BUTTON|UP_BUTTON));ui_button(110,268,88,36,"B+v",arduboy_pxa_state.pointer==(B_BUTTON|DOWN_BUTTON));ui_button(204,268,88,36,"B+<",arduboy_pxa_state.pointer==(B_BUTTON|LEFT_BUTTON));ui_button(298,268,88,36,"B+>",arduboy_pxa_state.pointer==(B_BUTTON|RIGHT_BUTTON));
+  if(fe.paused){ui_rect(70,70,260,176,2);ui_text(152,82,2,"PAUSED",1);ui_button(108,120,184,34,"CONTINUE",0);ui_button(108,174,184,34,"NEW GAME",0);}
+  if(arduboy_pxa_state.fault){ui_rect(70,70,260,176,4);ui_text(86,120,2,"SOFTWARE STOP",1);}
+  fe.dirty=0;if(fe.fb.ready&&pxfb_present(&fe.fb)<0){pxa_log_write(4,"Arduboy raster failed");__builtin_trap();}

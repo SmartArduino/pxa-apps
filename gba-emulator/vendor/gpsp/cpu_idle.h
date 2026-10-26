@@ -76,6 +76,33 @@ static bool idle_loop_safe(u32 first, u32 last, bool thumb)
   return reads && !(written & bases);
 }
 
+/* LDRH rd,[rb,#imm]; CMP rd,#imm; a taken back edge is idempotent after
+ * one iteration when rb != rd and the read has no side effects. Prove this
+ * directly instead of executing two more iterations and comparing 15 regs.
+ * Revalidate each hardware-event slice; no address or code cache survives. */
+static unsigned idle_thumb_poll_period(u32 first,u32 last,u32 flags)
+{
+  if(last-first!=4 || first>=0x10000000 || (first>>15)!=(last>>15) ||
+      (cheat_master_hook>=first && cheat_master_hook<=last) ||
+      (idle_loop_target_pc>=first && idle_loop_target_pc<=last)) return 0;
+  u8 *page=memory_map_read[first>>15];
+  if(!page)return 0;
+  u32 load=cpu_readmap16(page,first&0x7fff),cmp=cpu_readmap16(page,(first+2)&0x7fff);
+  unsigned rd=load&7,rb=(load>>3)&7;
+  if((load&0xf800)!=0x8800 || (cmp&0xff00)!=(0x2800|(rd<<8)) || rd==rb)return 0;
+  u32 address=reg[rb]+((load>>6)&31)*2;
+  if(!idle_read_safe(address,2))return 0;
+  /* A hardware event may have interrupted the preceding load/CMP. Confirm
+   * the current read value and all flags, including an IRQ return or a jump
+   * into the loop body, before treating this back edge as a fixed point. */
+  page=memory_map_read[address>>15];
+  if(!page || reg[rd]!=cpu_readmap16(page,address&0x7fff))return 0;
+  u32 value=reg[rd],imm=cmp&255,diff=value-imm;
+  u32 expected=((diff>>31)<<3)|((diff==0)<<2)|((value>=imm)<<1);
+  if(flags!=expected)return 0;
+  return 3*ws_cyc_seq[first>>24][0]+ws_cyc_nseq[address>>24][0]+ws_cyc_nseq[first>>24][0];
+}
+
 static void idle_poll_backedge(cpu_idle_state &state, u32 branch, bool thumb,
                                u32 flags, s32 &remaining)
 {
@@ -90,6 +117,12 @@ static void idle_poll_backedge(cpu_idle_state &state, u32 branch, bool thumb,
   }
   if (state.branch != branch || state.target != target) {
     state.branch = branch; state.target = target;
+    unsigned period=thumb?idle_thumb_poll_period(target,branch,flags):0;
+    if(period){
+      if(remaining>(s32)period)remaining-=((remaining-1)/(s32)period)*(s32)period;
+      state.eligible=-1;
+      return;
+    }
     state.eligible = idle_loop_safe(target, branch, thumb) ? 1 : -1;
     state.attempts = 0;
   }

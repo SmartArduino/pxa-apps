@@ -1,0 +1,1062 @@
+--- vendor/original/common.cpp
++++ vendor/platform/common.cpp
+@@ -21,7 +21,7 @@
+ 
+ /*  Global Variables  */
+ 
+-MyArduboy2  arduboy;
++MyArduboy2  ab;
+ RECORD_T    record;
+ uint8_t     counter;
+ int8_t      padX, padY, padRepeatCount;
+@@ -31,15 +31,15 @@
+ 
+ static uint16_t calcCheckSum();
+ 
+-static void     eepSeek(int addr);
+-static uint8_t  eepRead8(void);
+-static uint16_t eepRead16(void);
+-static uint32_t eepRead32(void);
+-static void     eepReadBlock(void *p, size_t n);
+-static void     eepWrite8(uint8_t val);
+-static void     eepWrite16(uint16_t val);
+-static void     eepWrite32(uint32_t val);
+-static void     eepWriteBlock(const void *p, size_t n);
++void     eepSeek(int addr);
++uint8_t  eepRead8(void);
++uint16_t eepRead16(void);
++uint32_t eepRead32(void);
++void     eepReadBlock(void *p, size_t n);
++void     eepWrite8(uint8_t val);
++void     eepWrite16(uint16_t val);
++void     eepWrite32(uint32_t val);
++void     eepWriteBlock(const void *p, size_t n);
+ 
+ /*  Local Variables  */
+ 
+@@ -121,7 +121,7 @@
+         recordState = RECORD_INITIAL;
+         isRecordDirty = true;
+     }
+-    setSound(arduboy.isAudioEnabled()); // Load Sound ON/OFF
++    setSound(ab.isAudioEnabled()); // Load Sound ON/OFF
+ }
+ 
+ void writeRecord(void)
+@@ -135,7 +135,7 @@
+     }
+     eepWriteBlock(&record, sizeof(record));
+     eepWrite16(calcCheckSum());
+-    arduboy.audio.saveOnOff(); // Save Sound ON/OFF
++    ab.audio.saveOnOff(); // Save Sound ON/OFF
+     recordState = RECORD_STORED;
+     isRecordDirty = false;
+     dprintln(F("Write record to EEPROM"));
+@@ -144,9 +144,9 @@
+ static uint16_t calcCheckSum()
+ {
+     uint16_t checkSum = (EEPROM_SIGNATURE & 0xFFFF) + (EEPROM_SIGNATURE >> 16) * 3;
+-    uint16_t *p = (uint16_t *) &record;
++    const uint8_t *p = (const uint8_t *) &record;
+     for (int i = 0; i < sizeof(record) / 2; i++) {
+-        checkSum += *p++ * (i * 2 + 5);
++        checkSum += (uint16_t)(p[i*2] | ((uint16_t)p[i*2+1]<<8)) * (i * 2 + 5);
+     }
+     return checkSum;
+ }
+@@ -164,15 +164,15 @@
+ void handleDPad(void)
+ {
+     padX = padY = 0;
+-    if (arduboy.buttonPressed(LEFT_BUTTON | RIGHT_BUTTON | UP_BUTTON | DOWN_BUTTON)) {
++    if (ab.buttonPressed(LEFT_BUTTON | RIGHT_BUTTON | UP_BUTTON | DOWN_BUTTON)) {
+         if (++padRepeatCount >= (PAD_REPEAT_DELAY + PAD_REPEAT_INTERVAL)) {
+             padRepeatCount = PAD_REPEAT_DELAY;
+         }
+         if (padRepeatCount == 1 || padRepeatCount == PAD_REPEAT_DELAY) {
+-            if (arduboy.buttonPressed(LEFT_BUTTON))  padX--;
+-            if (arduboy.buttonPressed(RIGHT_BUTTON)) padX++;
+-            if (arduboy.buttonPressed(UP_BUTTON))    padY--;
+-            if (arduboy.buttonPressed(DOWN_BUTTON))  padY++;
++            if (ab.buttonPressed(LEFT_BUTTON))  padX--;
++            if (ab.buttonPressed(RIGHT_BUTTON)) padX++;
++            if (ab.buttonPressed(UP_BUTTON))    padY--;
++            if (ab.buttonPressed(DOWN_BUTTON))  padY++;
+         }
+     } else {
+         padRepeatCount = 0;
+@@ -184,30 +184,30 @@
+     uint16_t h = frames / (FPS * 3600UL);
+     uint8_t m = frames / (FPS * 60) % 60;
+     uint8_t s = frames / FPS % 60;
+-    arduboy.setCursor(x, y);
++    ab.setCursor(x, y);
+     if (h == 0 && m == 0) {
+-        if (s < 10) arduboy.print('0');
+-        arduboy.print(s);
+-        arduboy.print('.');
+-        arduboy.print(frames / (FPS / 10) % 10);
++        if (s < 10) ab.print('0');
++        ab.print(s);
++        ab.print('.');
++        ab.print(frames / (FPS / 10) % 10);
+     } else {
+         if (h > 0) {
+-            arduboy.print(h);
+-            arduboy.print(':');
+-            if (m < 10) arduboy.print('0');
+-        }
+-        arduboy.print(m);
+-        arduboy.print(':');
+-        if (s < 10) arduboy.print('0');
+-        arduboy.print(s);
++            ab.print(h);
++            ab.print(':');
++            if (m < 10) ab.print('0');
++        }
++        ab.print(m);
++        ab.print(':');
++        if (s < 10) ab.print('0');
++        ab.print(s);
+     }
+ }
+ 
+ void drawBitmapWithMask(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t w, uint8_t h)
+ {
+     uint16_t size = w * ((h + 7) >> 3);
+-    arduboy.drawBitmap(x, y, bitmap, w, h, BLACK);
+-    arduboy.drawBitmap(x, y, bitmap + size, w, h);
++    ab.drawBitmap(x, y, bitmap, w, h, BLACK);
++    ab.drawBitmap(x, y, bitmap + size, w, h);
+ }
+ 
+ void drawBitmapBordered(int16_t x, int16_t y, const uint8_t *bitmap, uint8_t w, uint8_t h)
+@@ -220,14 +220,14 @@
+             dx = (i * 2 + 1) % 3 - 1;
+             dy = (i * 2 + 1) / 3 - 1;
+         }
+-        arduboy.drawBitmap(x + dx, y + dy, bitmap, w, h, (i == 4)); 
++        ab.drawBitmap(x + dx, y + dy, bitmap, w, h, (i == 4)); 
+     }
+ }
+ 
+ SIMPLE_OP_T handleSimpleMode(void)
+ {
+     SIMPLE_OP_T op = SIMPLE_OP_NONE;
+-    if (arduboy.buttonPressed(DOWN_BUTTON)) {
++    if (ab.buttonPressed(DOWN_BUTTON)) {
+         if (counter < FPS + IMG_INST_H) {
+             counter++;
+             isInvalidInst = (counter > FPS);
+@@ -237,15 +237,15 @@
+         counter = 0;
+     }
+     if (counter > FPS) {
+-        if (arduboy.buttonDown(A_BUTTON)) {
+-            setSound(!arduboy.isAudioEnabled());
++        if (ab.buttonDown(A_BUTTON)) {
++            setSound(!ab.isAudioEnabled());
+             playSoundClick();
+             isInvalidInst = true;
+             op = SIMPLE_OP_SOUND;
+         } 
+-        if (arduboy.buttonDown(B_BUTTON)) op = SIMPLE_OP_SETTINGS;
+-    } else {
+-        if (arduboy.buttonDown(A_BUTTON | B_BUTTON)) op = SIMPLE_OP_START;
++        if (ab.buttonDown(B_BUTTON)) op = SIMPLE_OP_SETTINGS;
++    } else {
++        if (ab.buttonDown(A_BUTTON | B_BUTTON)) op = SIMPLE_OP_START;
+     }
+     return op;
+ }
+@@ -253,11 +253,11 @@
+ void drawSimpleModeInstruction(void)
+ {
+     if (!isInvalid && isInvalidInst) {
+-        arduboy.fillRect(0, HEIGHT - IMG_INST_H, WIDTH, IMG_INST_H, BLACK);
++        ab.fillRect(0, HEIGHT - IMG_INST_H, WIDTH, IMG_INST_H, BLACK);
+     }
+     if (isInvalid || isInvalidInst) {
+         if (counter <= FPS) {
+-            arduboy.printEx(27, 58, F("PRESS   OR "));
++            ab.printEx(27, 58, F("PRESS   OR "));
+             for (int i = 0; i < 2; i++) {
+                 int16_t x = 59 + i * 27;
+                 drawBitmapWithMask(x, 48, imgInstIcon[i][0], IMG_INSTICON_W, IMG_INST_H);
+@@ -269,7 +269,7 @@
+                 drawBitmapWithMask(x, y, imgInstIcon[i][0], IMG_INSTICON_W, IMG_INST_H);
+             }
+             drawBitmapWithMask(44, y, imgSpeaker[0], IMG_SPEAKER_W, IMG_INST_H);
+-            drawBitmapWithMask(54, y, imgSoundOnOff[arduboy.audio.enabled()][0],
++            drawBitmapWithMask(54, y, imgSoundOnOff[ab.audio.enabled()][0],
+                     IMG_SOUNDONOFF_W, IMG_INST_H);
+         }
+     }
+@@ -282,19 +282,19 @@
+ 
+ void setSound(bool on)
+ {
+-    arduboy.setAudioEnabled(on);
++    ab.setAudioEnabled(on);
+     dprint(F("audioEnabled="));
+     dprintln(on);
+ }
+ 
+ void playSoundTick(void)
+ {
+-    arduboy.playTone(440, 10);
++    ab.playTone(440, 10);
+ }
+ 
+ void playSoundClick(void)
+ {
+-    arduboy.playTone(587, 20);
++    ab.playTone(587, 20);
+ }
+ 
+ /*---------------------------------------------------------------------------*/
+@@ -309,13 +309,13 @@
+ uint8_t eepRead8(void)
+ {
+     eeprom_busy_wait();
+-    return eeprom_read_byte((const uint8_t *) eepAddr++);
++    return eeprom_read_byte((const uint8_t *)(uintptr_t)eepAddr++);
+ }
+ 
+ uint16_t eepRead16(void)
+ {
+     eeprom_busy_wait();
+-    uint16_t ret = eeprom_read_word((const uint16_t *)eepAddr);
++    uint16_t ret = eeprom_read_word((const uint16_t *)(uintptr_t)eepAddr);
+     eepAddr += 2;
+     return ret;
+ }
+@@ -323,7 +323,7 @@
+ uint32_t eepRead32(void)
+ {
+     eeprom_busy_wait();
+-    uint32_t ret = eeprom_read_dword((const uint32_t *) eepAddr);
++    uint32_t ret = eeprom_read_dword((const uint32_t *)(uintptr_t)eepAddr);
+     eepAddr += 4;
+     return ret;
+ }
+@@ -331,34 +331,38 @@
+ void eepReadBlock(void *p, size_t n)
+ {
+     eeprom_busy_wait();
+-    eeprom_read_block(p, (const void *) eepAddr, n);
++    eeprom_read_block(p, (const void *)(uintptr_t)eepAddr, n);
+     eepAddr += n;
+ }
+ 
+ void eepWrite8(uint8_t val)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_byte((uint8_t *) eepAddr, val);
++    eeprom_write_byte((uint8_t *)(uintptr_t)eepAddr, val);
+     eepAddr++;
+ }
+ 
+ void eepWrite16(uint16_t val)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_word((uint16_t *)eepAddr, val);
++    eeprom_write_word((uint16_t *)(uintptr_t)eepAddr, val);
+     eepAddr += 2;
+ }
+ 
+ void eepWrite32(uint32_t val)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_dword((uint32_t *)eepAddr, val);
++    eeprom_write_dword((uint32_t *)(uintptr_t)eepAddr, val);
+     eepAddr += 4;
+ }
+ 
+ void eepWriteBlock(const void *p, size_t n)
+ {
+     eeprom_busy_wait();
+-    eeprom_write_block(p, (void *) eepAddr, n);
++    eeprom_write_block(p, (void *)(uintptr_t)eepAddr, n);
+     eepAddr += n;
+ }
++
++static_assert(sizeof(RECORD_T)==10,"original AVR record is exactly ten bytes");
++void eva_reset_common(){memset(&record,0,sizeof(record));counter=0;padX=padY=padRepeatCount=0;isInvalid=isRecordDirty=isInvalidInst=false;recordState=RECORD_NOT_READ;eepAddr=0;}
++void eva_pack_common(ObonoWriter&w){w.u8(record.speed);w.u8(record.acceleration);w.u8(record.density);w.u8(record.thickness);w.u8(record.simpleMode);w.u8(record.dummy);w.u16(record.hiscore);w.u32(record.playFrames);w.u16(record.playCount);w.u8(counter);w.u8(padX);w.u8(padY);w.u8(padRepeatCount);w.u8(isInvalid);w.u8(isRecordDirty);w.u8(recordState);w.u16(eepAddr);w.u8(isInvalidInst);}
+--- vendor/original/common.h
++++ vendor/platform/common.h
+@@ -36,7 +36,7 @@
+     uint16_t    hiscore;
+     uint32_t    playFrames;
+     uint16_t    playCount;
+-} RECORD_T; // sizeof(RECORD_T) is 10 bytes
++} __attribute__((packed)) RECORD_T; // sizeof(RECORD_T) is 10 bytes
+ 
+ /*  Global Functions (Common)  */
+ 
+@@ -98,7 +98,7 @@
+ 
+ /*  Global Variables  */
+ 
+-extern MyArduboy2   arduboy;
++extern MyArduboy2   ab;
+ extern RECORD_T     record;
+ extern uint8_t      counter;
+ extern int8_t       padX, padY, padRepeatCount;
+--- vendor/original/evasion.ino
++++ vendor/platform/evasion.ino
+@@ -2,9 +2,9 @@
+ 
+ /*  Defines  */
+ 
+-#define callInitFunc(idx)   ((void (*)(void)) pgm_read_word((uint16_t) &moduleTable[idx]))()
+-#define callUpdateFunc(idx) ((MODE_T (*)(void)) pgm_read_word((uint16_t) &moduleTable[idx] + 2))()
+-#define callDrawFunc(idx)   ((void (*)(void)) pgm_read_word((uint16_t) &moduleTable[idx] + 4))()
++#define callInitFunc(idx) moduleTable[idx].initFunc()
++#define callUpdateFunc(idx) moduleTable[idx].updateFunc()
++#define callDrawFunc(idx) moduleTable[idx].drawFunc()
+ 
+ /*  Typedefs  */
+ 
+@@ -59,11 +59,11 @@
+ #ifdef DEBUG
+     Serial.begin(115200);
+ #endif
+-    arduboy.beginNoLogo();
+-    arduboy.setFrameRate(FPS);
+-    //arduboy.setTextColors(WHITE, WHITE);
++    ab.beginNoLogo();
++    ab.setFrameRate(FPS);
++    //ab.setTextColors(WHITE, WHITE);
+     dprintln(F("Start " APP_TITLE " Version " APP_VERSION));
+-    arduboy.initAudio(1);
++    ab.initAudio(1);
+     readRecord();
+     mode = (record.simpleMode) ? MODE_TITLE : MODE_LOGO;
+     callInitFunc(mode);
+@@ -74,13 +74,13 @@
+ #ifdef DEBUG
+     dbgCheckSerialRecv();
+ #endif
+-    if (!(arduboy.nextFrame())) return;
++    if (!(ab.nextFrame())) return;
+     MODE_T nextMode = callUpdateFunc(mode);
+     callDrawFunc(mode);
+ #ifdef DEBUG
+     dbgRecvChar = '\0';
+ #endif
+-    arduboy.display();
++    ab.display();
+     if (mode != nextMode) {
+         mode = nextMode;
+         dprint(F("mode="));
+--- vendor/original/game.cpp
++++ vendor/platform/game.cpp
+@@ -105,7 +105,7 @@
+ void initGame(void)
+ {
+     dprintln(F("Initalize game"));
+-    arduboy.playScore(soundStart, SND_PRIO_START);
++    ab.playScore(soundStart, SND_PRIO_START);
+     initObjects();
+     score = 0;
+     counter = 0;
+@@ -122,7 +122,7 @@
+ void drawGame(void)
+ {
+     if (state == STATE_LEAVE) return;
+-    if (isInvalid && state != STATE_MENU) arduboy.clear();
++    if (isInvalid && state != STATE_MENU) ab.clear();
+     callDrawerFunc(state);
+     isInvalid = false;
+ }
+@@ -137,7 +137,7 @@
+         record.playCount++;
+         isRecordDirty = true;
+         state = STATE_PLAYING;
+-    } else if (!record.simpleMode && arduboy.buttonDown(A_BUTTON)) {
++    } else if (!record.simpleMode && ab.buttonDown(A_BUTTON)) {
+         playSoundClick();
+         clearMenuItems();
+         addMenuItem(F("CONTINUE"), onContinue);
+@@ -154,7 +154,7 @@
+     record.playFrames++;
+     isRecordDirty = true;
+     if (score <= SCORE_MAX) {
+-        if ((++score & 7) == 0) arduboy.playTone(384, 8, SND_PRIO_STEP, 5);
++        if ((++score & 7) == 0) ab.playTone(384, 8, SND_PRIO_STEP, 5);
+     }
+     if (record.acceleration > 0 && score % accelInt == 0) {
+         pillarsSpeed++;
+@@ -162,10 +162,10 @@
+         dprintln(pillarsSpeed);
+     }
+     playerVx = 0;
+-    if (arduboy.buttonPressed(LEFT_BUTTON))  playerVx--;
+-    if (arduboy.buttonPressed(RIGHT_BUTTON)) playerVx++;
++    if (ab.buttonPressed(LEFT_BUTTON))  playerVx--;
++    if (ab.buttonPressed(RIGHT_BUTTON)) playerVx++;
+     if (updateObjects(playerVx, pillarsSpeed)) {
+-        arduboy.playScore(soundOver, SND_PRIO_OVER);
++        ab.playScore(soundOver, SND_PRIO_OVER);
+         isHiscore = (record.hiscore < score);
+         if (isHiscore) record.hiscore = score;
+         writeRecord();
+@@ -173,7 +173,7 @@
+         counter = 0;
+         state = STATE_DEATH;
+         dprintln(F("Game over!!"));
+-    } else if (!record.simpleMode && arduboy.buttonDown(A_BUTTON)) {
++    } else if (!record.simpleMode && ab.buttonDown(A_BUTTON)) {
+         playSoundClick();
+         clearMenuItems();
+         addMenuItem(F("CONTINUE"), onContinue);
+@@ -207,7 +207,7 @@
+         if (op == SIMPLE_OP_START) initGame();
+         if (op == SIMPLE_OP_SETTINGS) state = STATE_LEAVE;
+     } else {
+-        if (arduboy.buttonDown(A_BUTTON)) {
++        if (ab.buttonDown(A_BUTTON)) {
+             playSoundClick();
+             clearMenuItems();
+             addMenuItem(F("RETRY GAME"), onRetry);
+@@ -215,7 +215,7 @@
+             setMenuCoords(19, 26, 89, 11, true, true);
+             setMenuItemPos(0);
+             state = STATE_MENU;
+-        } else if (arduboy.buttonDown(B_BUTTON)) {
++        } else if (ab.buttonDown(B_BUTTON)) {
+             initGame();
+         }
+     }
+@@ -347,7 +347,7 @@
+ 
+ static void drawStart(void)
+ {
+-    arduboy.drawBitmap((WIDTH - IMG_READY_W) / 2, 16, imgReady, IMG_READY_W, IMG_READY_H); 
++    ab.drawBitmap((WIDTH - IMG_READY_W) / 2, 16, imgReady, IMG_READY_W, IMG_READY_H); 
+     int16_t y = (counter * counter >> 5) - IMG_PLAYER_H;
+     if (y > PLAYER_DY) y = PLAYER_DY;
+     drawPlayer(PLAYER_DX, y, (y == PLAYER_DY));
+@@ -379,10 +379,10 @@
+     drawPillars();
+     drawScore();
+     if (isHiscore) {
+-        arduboy.printEx(0, 14, "NEW RECORD!");
++        ab.printEx(0, 14, "NEW RECORD!");
+     } else {
+-        arduboy.printEx(0, 14, "HI:");
+-        arduboy.print(record.hiscore / 6);
++        ab.printEx(0, 14, "HI:");
++        ab.print(record.hiscore / 6);
+     }
+     drawBitmapBordered((WIDTH - IMG_GAMEOVER_W) / 2, 16, imgGameOver,
+             IMG_GAMEOVER_W, IMG_GAMEOVER_H); 
+@@ -421,7 +421,7 @@
+         int8_t s = (HEIGHT * CAM_F) / (CAM_F + ((i + dotsBaseZ) & (DOTS_NUM - 1))); // % DOTS_NUM
+         int16_t x = WIDTH / 2 + ((int8_t)(p->rect.x + dotsBaseX) * s >> 6);
+         int16_t y = HEIGHT / 2 + (p->rect.y * s >> 6);
+-        if (y < 24 || x < 48 || x >= 80) arduboy.drawPixel(x, y);
++        if (y < 24 || x < 48 || x >= 80) ab.drawPixel(x, y);
+     }
+ }
+ 
+@@ -430,11 +430,11 @@
+     DOT_T *p = dots;
+     for (int i = 0; i < DOTS_NUM; i++, p++) {
+         if (p->polar.v == 0) continue;
+-        double deg = i * PI / (double)DOTS_NUM;
+-        double vx = cos(deg), vy = -sin(deg);
+-        double r1 = p->polar.r / 4.0, r2 = (p->polar.r - p->polar.v - 1) / 4.0;
++        float deg = i * PI / (float)DOTS_NUM;
++        float vx = cosf(deg), vy = -sinf(deg);
++        float r1 = p->polar.r / 4.0f, r2 = (p->polar.r - p->polar.v - 1) / 4.0f;
+         int16_t x = WIDTH / 2 + shakeX, y = HEIGHT - IMG_PLAYER_H / 2 + shakeY;
+-        arduboy.drawLine(x + vx * r1, y + vy * r1, x + vx * r2, y + vy * r2);
++        ab.drawLine(x + vx * r1, y + vy * r1, x + vx * r2, y + vy * r2);
+     }
+ }
+ 
+@@ -474,11 +474,17 @@
+     const uint8_t *pDitherPattern = ditherPatterns + (dither << 1);
+     y -= yOdd;
+     h += yOdd;
+-    for (uint8_t *p = arduboy.getBuffer() + x + (y / 8) * WIDTH; h > 0; h -= 8, p += WIDTH - w) {
++    for (uint8_t *p = ab.getBuffer() + x + (y / 8) * WIDTH; h > 0; h -= 8, p += WIDTH - w) {
+         if (h < 8) d &= 0xFF >> (8 - h);
+         for (uint8_t i = w; i > 0; i--) {
+-            *p++ |= pgm_read_byte(pDitherPattern + ((uint16_t)p & 1)) & d;
++            uint8_t *pixel=p++;
++            *pixel |= pgm_read_byte(pDitherPattern + ((uintptr_t)pixel & 1)) & d;
+         }
+         d = 0xFF;
+     }
+ }
++
++void eva_reset_game(){state=STATE_INIT;memset(pillars,0,sizeof(pillars));memset(dots,0,sizeof(dots));score=accelInt=0;pillarsTopIdx=pillarsSpeed=pillarsZOdd=dotsBaseX=dotsBaseZ=0;playerVx=nextDistance=shakeX=shakeY=0;isHiscore=false;}
++void eva_pack_game(ObonoWriter&w){w.u8(state);for(auto&p:pillars){w.u8(p.x);w.u8(p.z);w.u8(p.w);}for(auto&p:dots){w.u8(p.rect.x);w.u8(p.rect.y);}w.u16(score);w.u16(accelInt);w.u8(pillarsTopIdx);w.u8(pillarsSpeed);w.u8(pillarsZOdd);w.u8(dotsBaseX);w.u8(dotsBaseZ);w.u8(playerVx);w.u8(nextDistance);w.u8(shakeX);w.u8(shakeY);w.u8(isHiscore);}
++uint8_t eva_game_func_id(void(*f)()){if(f==onContinue)return 20;if(f==onConfirmRetry)return 21;if(f==onRetry)return 22;if(f==onConfirmQuit)return 23;if(f==onQuit)return 24;return 255;}
++void eva_register_game(){obono_audio_register(1,soundStart,sizeof(soundStart));obono_audio_register(2,soundOver,sizeof(soundOver));}
+--- vendor/original/logo.cpp
++++ vendor/platform/logo.cpp
+@@ -53,15 +53,16 @@
+ 
+ void drawLogo(void)
+ {
+-    bool isSignalOn = (SIGNAL_PTN >> (counter - FPS / 4) / (FPS / 20)) & 1;
+-    arduboy.setRGBled(0, 0, isSignalOn * 127);
+-    arduboy.clear();
++    int shift=(counter-FPS/4)/(FPS/20);
++    bool isSignalOn=(shift>=0&&shift<32)?((SIGNAL_PTN>>shift)&1):false;
++    ab.setRGBled(0, 0, isSignalOn * 127);
++    ab.clear();
+     int shake = (COUNTER_MAX - counter) / (44 * FPS / 60);
+     for (int i = 0; i < 3; i++) {
+         int y = 12 + (i == shake) * isSignalOn;
+-        arduboy.drawBitmap(28 + i * 24, y, imgOBN[i], 24, 32, WHITE);
++        ab.drawBitmap(28 + i * 24, y, imgOBN[i], 24, 32, WHITE);
+     }
+-    arduboy.drawBitmap(68, 44, imgSoft, 32, 8, WHITE);
+-    arduboy.printEx(16, 58, F(APP_CODE " VER " APP_VERSION));
+-    arduboy.printEx(7, 0, F("FOR 5TH #ARDUBOYJAM"));
++    ab.drawBitmap(68, 44, imgSoft, 32, 8, WHITE);
++    ab.printEx(16, 58, F(APP_CODE " VER " APP_VERSION));
++    ab.printEx(7, 0, F("FOR 5TH #ARDUBOYJAM"));
+ }
+--- vendor/original/menu.cpp
++++ vendor/platform/menu.cpp
+@@ -94,26 +94,26 @@
+ 
+ void handleMenu(void)
+ {
+-    if (arduboy.buttonDown(UP_BUTTON) && menuItemPos > 0) {
++    if (ab.buttonDown(UP_BUTTON) && menuItemPos > 0) {
+         while (!(menuItemAry[--menuItemPos].func)) { ; }
+         playSoundTick();
+         isInvalidMenu = true;
+         dprint(F("menuItemPos="));
+         dprintln(menuItemPos);
+     }
+-    if (arduboy.buttonDown(DOWN_BUTTON) && menuItemPos < menuItemCount - 1) {
++    if (ab.buttonDown(DOWN_BUTTON) && menuItemPos < menuItemCount - 1) {
+         while (!(menuItemAry[++menuItemPos].func)) { ; }
+         playSoundTick();
+         isInvalidMenu = true;
+         dprint(F("menuItemPos="));
+         dprintln(menuItemPos);
+     }
+-    if (isControlSound && arduboy.buttonDown(A_BUTTON)) {
+-        setSound(!arduboy.isAudioEnabled());
++    if (isControlSound && ab.buttonDown(A_BUTTON)) {
++        setSound(!ab.isAudioEnabled());
+         playSoundClick();
+         isInvalidMenu = true;
+     }
+-    if (arduboy.buttonDown(B_BUTTON)) {
++    if (ab.buttonDown(B_BUTTON)) {
+         menuItemAry[menuItemPos].func();
+     }
+ }
+@@ -121,16 +121,16 @@
+ void drawMenuItems(bool isForced)
+ {
+     if (!isInvalidMenu && !isForced) return;
+-    arduboy.fillRect(menuX - 1, menuY - 1, menuW + 2, menuH + 2, BLACK);
++    ab.fillRect(menuX - 1, menuY - 1, menuW + 2, menuH + 2, BLACK);
+     if (isFramed) {
+-        arduboy.drawRect(menuX - 2, menuY - 2, menuW + 4, menuH + 4, WHITE);
++        ab.drawRect(menuX - 2, menuY - 2, menuW + 4, menuH + 4, WHITE);
+     }
+     ITEM_T *pItem = menuItemAry;
+     int8_t y = menuY;
+     for (int i = 0; i < menuItemCount; i++, pItem++) {
+         if (pItem->label != NULL) {
+-            arduboy.printEx(menuX + 12 - (i == menuItemPos) * 4, y, pItem->label);
+-            if (i == menuItemPos) arduboy.fillRect(menuX, y, 5, 5, WHITE);
++            ab.printEx(menuX + 12 - (i == menuItemPos) * 4, y, pItem->label);
++            if (i == menuItemPos) ab.fillRect(menuX, y, 5, 5, WHITE);
+             y += 6;
+         } else {
+             y += 2;
+@@ -142,7 +142,10 @@
+ 
+ void drawSoundEnabled(void)
+ {
+-    uint8_t *p = arduboy.getBuffer();
++    uint8_t *p = ab.getBuffer();
+     memcpy_P(p + WIDTH * 8 - IMG_SOUND_W - IMG_SOUNDM_W, imgSound, IMG_SOUND_W);
+-    memcpy_P(p + WIDTH * 8 - IMG_SOUNDM_W, imgSoundOffOn[arduboy.audio.enabled()], IMG_SOUNDM_W);
++    memcpy_P(p + WIDTH * 8 - IMG_SOUNDM_W, imgSoundOffOn[ab.audio.enabled()], IMG_SOUNDM_W);
+ }
++
++void eva_reset_menu(){menuX=menuY=menuW=menuH=menuItemCount=menuItemPos=0;memset(menuItemAry,0,sizeof(menuItemAry));isFramed=isControlSound=isInvalidMenu=false;}
++void eva_pack_menu(ObonoWriter&w){w.u8(menuX);w.u8(menuY);w.u8(menuW);w.u8(menuH);w.u8(menuItemCount);w.u8(menuItemPos);w.u8(isFramed);w.u8(isControlSound);w.u8(isInvalidMenu);for(auto&p:menuItemAry){w.u8(eva_func_id(p.func));const char*s=(const char*)p.label;uint32_t h=0;if(s){h=2166136261u;while(*s)h=(h^(uint8_t)*s++)*16777619u;}w.u32(h);}}
+--- vendor/original/MyArduboy2.cpp
++++ vendor/platform/MyArduboy2.cpp
+@@ -215,3 +215,6 @@
+         *p++ |= d;
+     }
+ }
++
++void MyArduboy2::pxaResetButtons(){lastButtonState=currentButtonState=0;}
++void MyArduboy2::pxaPack(ObonoWriter&w)const{w.u8(lastButtonState);w.u8(currentButtonState);}
+--- vendor/original/MyArduboy2.h
++++ vendor/platform/MyArduboy2.h
+@@ -1,6 +1,7 @@
+ #pragma once
+ 
+ #include <Arduboy2.h>
++#include "owner_compat.h"
+ #if ARDUBOY_LIB_VER < 50201
+ #error Unexpected version of Arduboy Library
+ #endif // It may work even if you use other version. So comment out the above line.
+@@ -31,6 +32,8 @@
+     void    playScore(const byte *score, uint8_t priority = 0, int8_t pitch = 0);
+     void    stopScore(void);
+ 
++    void pxaResetButtons();
++    void pxaPack(ObonoWriter&) const;
+ private:
+     void    drawChar(int16_t x, int16_t y, unsigned char c, uint8_t color, uint8_t bg, uint8_t size);
+     void    fillBeltBlack(uint8_t *p, uint8_t d, uint8_t w);
+--- vendor/original/MyArduboyPlaytune.cpp
++++ vendor/platform/MyArduboyPlaytune.cpp
+@@ -29,59 +29,27 @@
+  */
+ 
+ #include "MyArduboy2.h"
+-#include <avr/power.h>
+-
+-/*  Defines  */
+-
+-#define AVAILABLE_CHANNELS  2
+-
+-#define TUNE_OP_PLAYNOTE    0x90 // play a note, note is next byte
+-#define TUNE_OP_STOPNOTE    0x80 // stop a note
+-#define TUNE_OP_MARK        0xD0 // set mark to repeat
+-#define TUNE_OP_REPEAT      0xE0 // repeat the score from the marked point
+-#define TUNE_OP_STOP        0xF0 // stop playing
+-
+-#define FREQUENCY_MAX   (0xFFFF / DUTY_CYCLE_MAX)
+-#define FREQUENCY_IDLE  500
+-#define DUTY_CYCLE_MIN  2
+-#define DUTY_CYCLE_MAX  5
+-#define NOTE_MAX        127
+-#define NOTE_MIDDLE     sizeof(midiByteNoteFrequencies)
+-
+-/*  Local Functions  */
+-
+-static void stepScore(void);
+-static void playNote(uint8_t chan, uint8_t note, uint8_t dutyCycle);
+-static void stopNote(uint8_t chan);
+-static void setupTimer(uint8_t timer, uint16_t frequency, uint8_t dutyCycle);
+-
+-/*  Local Functions (macros)  */
+-
+-#define getTimerNum(chan)   ((chan == 0) ? 3 : 1)
+-
+-#define setHighTimerPin(t)  (*timer ## t ## PinPort |= timer ## t ## PinMask)
+-#define setLowTimerPin(t)   (*timer ## t ## PinPort &= ~(timer ## t ## PinMask))
+-#define toggleTimerPin(t)   (*timer ## t ## PinPort ^= timer ## t ## PinMask)
+-
+-#define initTimer(t, port, mask) do { \
+-            TCCR ## t ## A = 0; \
+-            TCCR ## t ## B = _BV(WGM ## t ## 2) | _BV(CS ## t ## 0); \
+-            timer ## t ## PinPort = (port); \
+-            timer ## t ## PinMask = (mask); \
+-        } while (false)
+-
+-#define startTimer(t, ocr, prescalarBits) do { \
+-            TCCR ## t ## B = (TCCR ## t ## B & 0b11111000) | (prescalarBits); \
+-            OCR ## t ## A = (ocr); \
+-            TCNT ## t = 0; /*LJS*/ \
+-            bitSet(TIMSK ## t, OCIE ## t ## A); \
+-        } while (false)
+-
+-#define stopTimer(t) do { \
+-            bitClear(TIMSK ## t, OCIE ## t ## A); \
+-            setLowTimerPin(t); \
+-        } while (false)
+-
++#define AVAILABLE_CHANNELS 2
++#define TUNE_OP_PLAYNOTE 0x90
++#define TUNE_OP_STOPNOTE 0x80
++#define TUNE_OP_MARK 0xD0
++#define TUNE_OP_REPEAT 0xE0
++#define TUNE_OP_STOP 0xF0
++#define FREQUENCY_MAX (0xFFFF/DUTY_CYCLE_MAX)
++#define FREQUENCY_IDLE 500
++#define DUTY_CYCLE_MIN 2
++#define DUTY_CYCLE_MAX 5
++#define NOTE_MAX 127
++#define NOTE_MIDDLE sizeof(midiByteNoteFrequencies)
++#define F_CPU 16000000UL
++#define getTimerNum(chan) ((chan==0)?3:1)
++#define setLowTimerPin(t) ((void)0)
++#define toggleTimerPin(t) ((void)0)
++static void stepScore();static void playNote(uint8_t,uint8_t,uint8_t);static void stopNote(uint8_t);static void setupTimer(uint8_t,uint16_t,uint8_t);
++struct OwnerTimer{uint32_t period,remaining;bool active;};static OwnerTimer timers[2];
++static void owner_stop_timer(uint8_t t){timers[t==3?0:1].active=false;}
++#define stopTimer(t) owner_stop_timer(t)
++struct OwnerSong{const byte*data;size_t size;};static OwnerSong songs[32];static uint8_t audioFault=0;static uint32_t audioClock=0,audioInterrupts=0,audioStarts=0,audioStops=0;
+ /*  Local Variables  */
+ 
+ static uint8_t numChans = 0;
+@@ -93,9 +61,9 @@
+ static volatile byte timer3PinMask;
+ 
+ static volatile uint8_t timer1DutyCycle;
+-static volatile unsigned long timer1ToggleCount;
++static volatile uint32_t timer1ToggleCount;
+ static volatile uint8_t timer3DutyCycle;
+-static volatile unsigned long timer3ToggleCount;
++static volatile uint32_t timer3ToggleCount;
+ static volatile uint16_t timer3Frequency;
+ 
+ static volatile bool isAllMuted = false;         // indicates all sound is muted
+@@ -138,55 +106,8 @@
+ /*                            Initialize & Finalize                          */
+ /*---------------------------------------------------------------------------*/
+ 
+-void MyArduboy2::initAudio(uint8_t chans)
+-{
+-    outputEnabled = audio.enabled;
+-    if (chans == 0 || chans > AVAILABLE_CHANNELS) return;
+-    if (numChans > 0) closeAudio();
+-    numChans = chans;
+-    for (uint8_t chan = 0; chan < chans; chan++) {
+-        byte pin;
+-#ifdef PIN_SPEAKER_2
+-        pin = (chan == 0) ? PIN_SPEAKER_1 : PIN_SPEAKER_2;
+-#else
+-        pin = PIN_SPEAKER_1;
+-#endif
+-        byte pinPort = digitalPinToPort(pin);
+-        byte pinMask = digitalPinToBitMask(pin);
+-        volatile byte *outReg = portOutputRegister(pinPort);
+-
+-        *portModeRegister(pinPort) |= pinMask; // set pin to output mode
+-
+-        switch (getTimerNum(chan)) {
+-        case 1:
+-            initTimer(1, outReg, pinMask);
+-            break;
+-        case 3:
+-            power_timer3_enable();
+-            initTimer(3, outReg, pinMask);
+-            stopNote(0); // start timer 3
+-            break;
+-        }
+-    }
+-}
+-
+-void MyArduboy2::closeAudio(void)
+-{
+-    for (uint8_t chan = 0; chan < numChans; chan++) {
+-        switch (getTimerNum(chan)) {
+-        case 1:
+-            stopTimer(1);
+-            TCCR1B = _BV(CS10) | _BV(CS11);
+-            break;
+-        case 3:
+-            stopTimer(3);
+-            power_timer3_disable();
+-            break;
+-        }
+-    }
+-    numChans = 0;
+-    isScorePlaying = isTonePlaying = isMuteScore = false;
+-}
++void MyArduboy2::initAudio(uint8_t chans){outputEnabled=audio.enabled;if(chans==0||chans>AVAILABLE_CHANNELS)return;if(numChans>0)closeAudio();numChans=chans;stopNote(0);}
++void MyArduboy2::closeAudio(){for(uint8_t chan=0;chan<numChans;chan++)owner_stop_timer(getTimerNum(chan));numChans=0;isScorePlaying=isTonePlaying=isMuteScore=false;}
+ 
+ /*---------------------------------------------------------------------------*/
+ /*                             Control parameters                            */
+@@ -217,7 +138,7 @@
+ /*---------------------------------------------------------------------------*/
+ 
+ void MyArduboy2::playTone(uint16_t frequency, uint16_t duration,
+-        uint8_t priority = 0xFF, uint8_t dutyCycle = DUTY_CYCLE_MIN)
++        uint8_t priority, uint8_t dutyCycle)
+ {
+     if (numChans == 0) return;
+     if (numChans == 1 && isScorePlaying) {
+@@ -228,7 +149,7 @@
+     isAllMuted = !outputEnabled();
+     frequency = min(frequency, FREQUENCY_MAX);
+     dutyCycle = constrain(dutyCycle, DUTY_CYCLE_MIN, DUTY_CYCLE_MAX);
+-    unsigned long toggle_count = ((unsigned long)duration * frequency * dutyCycle + 500) / 1000;
++    uint32_t toggle_count = ((uint32_t)duration * frequency * dutyCycle + 500) / 1000;
+     if (toggle_count == 0) toggle_count = 1;
+ 
+     uint8_t chan = numChans - 1;
+@@ -247,7 +168,7 @@
+     setupTimer(getTimerNum(chan), frequency, dutyCycle);
+ }
+ 
+-void MyArduboy2::playScore(const byte *score, uint8_t priority = 0, int8_t pitch = 0)
++void MyArduboy2::playScore(const byte *score, uint8_t priority, int8_t pitch)
+ {
+     if (isScorePlaying) {
+         if (priority > audioPriority) return;
+@@ -256,6 +177,7 @@
+         isMuteScore = (priority > audioPriority);
+     }
+     audioPriority = priority;
++    ++audioStarts;
+     scoreStart = score;
+     scoreCursor = scoreStart;
+     scorePitchDefault = scorePitch = pitch;
+@@ -266,6 +188,7 @@
+ 
+ void MyArduboy2::stopScore(void)
+ {
++    ++audioStops;
+     for (uint8_t chan = 0; chan < numChans; chan++) {
+         stopNote(chan);
+     }
+@@ -282,10 +205,11 @@
+ If CMD < 0x80, then the other 7 bits and the next byte are a
+ 15-bit big-endian number of msec to wait
+ */
++static uint8_t owner_score_read(){uintptr_t p=(uintptr_t)scoreCursor;for(uint8_t i=0;i<32;i++)if(songs[i].data&&p>=(uintptr_t)songs[i].data&&p<(uintptr_t)songs[i].data+songs[i].size)return *scoreCursor++;audioFault=1;isScorePlaying=false;return 0xf0;}
+ static void stepScore(void)
+ {
+     while (true) {
+-        byte command = pgm_read_byte(scoreCursor++);
++        byte command = owner_score_read();
+         uint8_t opcode = command & 0xF0;
+         uint8_t opvalue = command & 0x0F;
+         uint8_t chan = opvalue & 0x03;
+@@ -294,10 +218,10 @@
+         } else if (opcode == TUNE_OP_PLAYNOTE) { // play note
+             uint8_t dutyCycle = ((opvalue & 0x0C) >> 2) + 2;
+             isAllMuted = !outputEnabled();
+-            playNote(chan, pgm_read_byte(scoreCursor++) + scorePitch, dutyCycle);
++            playNote(chan, owner_score_read() + scorePitch, dutyCycle);
+         } else if (opcode < 0x80) { // wait count in msec.
+-            uint16_t duration = (uint16_t)command << 8 | pgm_read_byte(scoreCursor++);
+-            timer3ToggleCount = ((unsigned long)duration * timer3Frequency + 500) / 1000;
++            uint16_t duration = (uint16_t)command << 8 | owner_score_read();
++            timer3ToggleCount = ((uint32_t)duration * timer3Frequency + 500) / 1000;
+             if (timer3ToggleCount == 0) timer3ToggleCount = 1;
+             break;
+         } else if (opcode == TUNE_OP_MARK) { // set mark to repeat
+@@ -345,35 +269,17 @@
+     }
+ }
+ 
+-static void setupTimer(uint8_t timerNum, uint16_t frequency, uint8_t dutyCycle)
+-{
+-    frequency *= dutyCycle;
+-    unsigned long ocr = F_CPU / frequency - 1;
+-    byte prescalarBits = 0b001;
+-    if (ocr > 0xFFFF) {
+-        ocr = F_CPU / 64 / frequency - 1;
+-        prescalarBits = 0b011;
+-    }
+-
+-    // Set the OCR for the given timer, then turn on the interrupts
+-    switch (timerNum) {
+-    case 1:
+-        timer1DutyCycle = dutyCycle;
+-        startTimer(1, ocr, prescalarBits);
+-        break;
+-    case 3:
+-        timer3DutyCycle = dutyCycle;
+-        timer3Frequency = frequency;
+-        startTimer(3, ocr, prescalarBits);
+-        break;
+-    }
++static void setupTimer(uint8_t timerNum,uint16_t frequency,uint8_t dutyCycle){
++ frequency=(uint16_t)(frequency*dutyCycle);if(!frequency){audioFault=2;return;}uint32_t ocr=F_CPU/frequency-1;uint32_t prescale=1;if(ocr>65535){ocr=F_CPU/64/frequency-1;prescale=64;}
++ OwnerTimer&t=timers[timerNum==3?0:1];t.period=(ocr+1)*prescale;t.remaining=t.period;t.active=true;
++ if(timerNum==1)timer1DutyCycle=dutyCycle;else{timer3DutyCycle=dutyCycle;timer3Frequency=frequency;}
+ }
+ 
+ /*---------------------------------------------------------------------------*/
+ /*                        Interrupt service routines                         */
+ /*---------------------------------------------------------------------------*/
+ 
+-ISR(TIMER1_COMPA_vect) // TIMER 1
++static void owner_timer1_interrupt() // TIMER 1
+ {
+     if (isTonePlaying) {
+         if (timer1ToggleCount > 0) {
+@@ -388,7 +294,7 @@
+     }
+ }
+ 
+-ISR(TIMER3_COMPA_vect) // TIMER 3
++static void owner_timer3_interrupt() // TIMER 3
+ {
+     // Timer 3 is the one assigned first, so we keep it running always
+     // and use it to time score waits, whether or not it is playing a note.
+@@ -399,3 +305,13 @@
+         (isScorePlaying) ? stepScore() : stopNote(0);
+     }
+ }
++
++void obono_audio_register(uint8_t id,const uint8_t*p,size_t n){if(id>=32){audioFault=3;return;}songs[id]={p,n};}
++void obono_audio_advance(uint32_t now){while(audioClock!=now){++audioClock;uint32_t cycles=16000;for(unsigned guard=0;cycles&&guard<1024;guard++){uint32_t dt=cycles;for(auto&t:timers)if(t.active&&t.remaining<dt)dt=t.remaining;if(!dt){audioFault=4;break;}for(auto&t:timers)if(t.active)t.remaining-=dt;cycles-=dt;for(uint8_t i=0;i<2;i++)if(timers[i].active&&!timers[i].remaining){timers[i].remaining=timers[i].period;++audioInterrupts;if(i==0)owner_timer3_interrupt();else owner_timer1_interrupt();}}}}
++void obono_audio_reset(){numChans=audioPriority=timer1DutyCycle=timer3DutyCycle=0;timer1ToggleCount=timer3ToggleCount=timer3Frequency=0;isAllMuted=isMuteScore=isScorePlaying=isWaitTimerPlaying=isTonePlaying=false;outputEnabled=nullptr;scoreStart=scoreCursor=nullptr;scorePitchDefault=scorePitch=0;scoreRepeat=0;memset(timers,0,sizeof(timers));memset(songs,0,sizeof(songs));audioFault=0;audioClock=millis();audioInterrupts=audioStarts=audioStops=0;}
++static uint8_t owner_song_id(const byte*p){if(!p)return 255;for(uint8_t i=0;i<32;i++)if(songs[i].data==p)return i;uintptr_t a=(uintptr_t)p;for(uint8_t i=0;i<32;i++)if(songs[i].data&&a>(uintptr_t)songs[i].data&&a<=(uintptr_t)songs[i].data+songs[i].size)return i;return 254;}
++// Cursor and MARK pointers belong to the same original playScore array.
++// Prefer that array even when its one-past pointer equals the next score start.
++static uint8_t owner_cursor_song_id(const byte*p,uint8_t id){if(!p)return 255;if(id<32){uintptr_t a=(uintptr_t)p,b=(uintptr_t)songs[id].data;if(a>=b&&a<=b+songs[id].size)return id;}return 254;}
++static uint16_t owner_song_offset(const byte*p,uint8_t id){return id<32?(uint16_t)((uintptr_t)p-(uintptr_t)songs[id].data):0;}
++void obono_audio_pack(ObonoWriter&w){w.u8(numChans);w.u8(audioPriority);w.u8(timer1DutyCycle);w.u8(timer3DutyCycle);w.u32(timer1ToggleCount);w.u32(timer3ToggleCount);w.u16(timer3Frequency);w.u8(isAllMuted);w.u8(isMuteScore);w.u8(isScorePlaying);w.u8(isWaitTimerPlaying);w.u8(isTonePlaying);w.u8(outputEnabled?1:0);uint8_t a=owner_song_id((const byte*)scoreStart),b=owner_cursor_song_id((const byte*)scoreCursor,a);w.u8(a);w.u16(owner_song_offset((const byte*)scoreStart,a));w.u8(b);w.u16(owner_song_offset((const byte*)scoreCursor,b));w.u8(scorePitchDefault);w.u8(scorePitch);w.u8(scoreRepeat);for(auto&t:timers){w.u32(t.period);w.u32(t.remaining);w.u8(t.active);}w.u8(audioFault);w.u32(audioClock);w.u32(audioInterrupts);w.u32(audioStarts);w.u32(audioStops);}
+--- vendor/original/title.cpp
++++ vendor/platform/title.cpp
+@@ -54,13 +54,13 @@
+ static void drawNotice(void);
+ 
+ static void drawGuy(int16_t x);
+-static void drawText(const char *p, int lines);
++static void drawText(const char *p, int16_t y);
+ 
+ /*  Local Functions (macros)  */
+ 
+ #define callHandlerFunc(n)  ((void (*)(void)) pgm_read_ptr(handlerFuncTable + n))()
+ #define callDrawerFunc(n)   ((void (*)(void)) pgm_read_ptr(drawerFuncTable + n))()
+-#define getGameSettings()   (*((uint16_t *)&record) & 0xFFF) // trick!
++#define getGameSettings()   ((record.speed | (record.acceleration<<4) | (record.density<<6) | (record.thickness<<9)) & 0xFFF) // trick!
+ 
+ /*  Local Variables  */
+ 
+@@ -169,7 +169,7 @@
+ void drawTitle(void)
+ {
+     if (state == STATE_STARTED) return;
+-    if (isInvalid) arduboy.clear();
++    if (isInvalid) ab.clear();
+     callDrawerFunc(state);
+     isInvalid = false;
+ }
+@@ -210,18 +210,18 @@
+             }
+             isSettingChenged = true;
+         }
+-    } else if (pos == 4 && arduboy.buttonDown(LEFT_BUTTON | RIGHT_BUTTON)) {
++    } else if (pos == 4 && ab.buttonDown(LEFT_BUTTON | RIGHT_BUTTON)) {
+         onMenuSimpleMode();
+     }
+     handleMenu();
+-    if (arduboy.buttonDown(UP_BUTTON | DOWN_BUTTON)) isSettingChenged = true;
++    if (ab.buttonDown(UP_BUTTON | DOWN_BUTTON)) isSettingChenged = true;
+ }
+ 
+ static void handleNotice(void)
+ {
+-    if (arduboy.buttonDown(A_BUTTON)) {
++    if (ab.buttonDown(A_BUTTON)) {
+         onTop();
+-    } else if (arduboy.buttonDown(B_BUTTON)) {
++    } else if (ab.buttonDown(B_BUTTON)) {
+         record.simpleMode = false;
+         onSettings();
+     }
+@@ -229,7 +229,7 @@
+ 
+ static void handleAnyButton(void)
+ {
+-    if (arduboy.buttonDown(A_BUTTON | B_BUTTON)) {
++    if (ab.buttonDown(A_BUTTON | B_BUTTON)) {
+         playSoundClick();
+         state = STATE_TOP;
+         isInvalid = true;
+@@ -364,11 +364,11 @@
+         drawGuy(0);
+         drawBitmapBordered(WIDTH - IMG_TITLE_W, 16, imgTitle, IMG_TITLE_W, IMG_TITLE_H);
+         if (record.hiscore > 0) {
+-            arduboy.printEx(0, 50, F("HI:"));
+-            arduboy.print(record.hiscore / 6);
++            ab.printEx(0, 50, F("HI:"));
++            ab.print(record.hiscore / 6);
+         }
+ #ifdef DEBUG
+-        arduboy.printEx(98, 40, F("DEBUG"));
++        ab.printEx(98, 40, F("DEBUG"));
+ #endif
+     }
+     (record.simpleMode) ? drawSimpleModeInstruction() : drawMenuItems(isInvalid);
+@@ -377,11 +377,11 @@
+ static void drawSettings(void)
+ {
+     if (isInvalid) {
+-        arduboy.printEx(34, 0, F("[SETTINGS]"));
+-        arduboy.drawFastHLine(0, 44, 128, WHITE);
+-        arduboy.printEx(10, 48, F("PLAY COUNT "));
+-        arduboy.print(record.playCount);
+-        arduboy.printEx(10, 54, F("PLAY TIME"));
++        ab.printEx(34, 0, F("[SETTINGS]"));
++        ab.drawFastHLine(0, 44, 128, WHITE);
++        ab.printEx(10, 48, F("PLAY COUNT "));
++        ab.print(record.playCount);
++        ab.printEx(10, 54, F("PLAY TIME"));
+         drawTime(76, 54, record.playFrames);
+     }
+     drawMenuItems(isInvalid);
+@@ -391,20 +391,20 @@
+             const char *p;
+             switch (i) {
+             case 0:
+-                arduboy.printEx(dx, dy, record.speed);
++                ab.printEx(dx, dy, record.speed);
+                 break;
+             case 1:
+                 p = accelText + record.acceleration * 5;
+-                arduboy.printEx(dx, dy, (const __FlashStringHelper *)p);
++                ab.printEx(dx, dy, (const __FlashStringHelper *)p);
+                 break;
+             case 2:
+-                arduboy.printEx(dx, dy, record.density);
++                ab.printEx(dx, dy, record.density);
+                 break;
+             case 3:
+-                arduboy.printEx(dx, dy, record.thickness);
++                ab.printEx(dx, dy, record.thickness);
+                 break;
+             case 4:
+-                arduboy.printEx(dx, dy, record.simpleMode ? F("ON ") : F("OFF"));
++                ab.printEx(dx, dy, record.simpleMode ? F("ON ") : F("OFF"));
+                 break;
+             }
+         }
+@@ -420,10 +420,10 @@
+ static void drawNotice(void)
+ {
+     if (isInvalid) {
+-        arduboy.drawRect(2, 7, 123, 49, WHITE);
++        ab.drawRect(2, 7, 123, 49, WHITE);
+         drawText(noticeText, 11);
+         for (int i = 0; i < 2; i++) {
+-            arduboy.drawBitmap(21 + i * 36, 46, imgButton[i], IMG_BUTTON_W, IMG_BUTTON_H);
++            ab.drawBitmap(21 + i * 36, 46, imgButton[i], IMG_BUTTON_W, IMG_BUTTON_H);
+         }
+     }
+ }
+@@ -435,7 +435,7 @@
+     GUYPART_T guyPart;
+     for (int i = 0; i < 4; i++) {
+         memcpy_P(&guyPart, guyPartTable + i, sizeof(GUYPART_T));
+-        arduboy.drawBitmap(x + guyPart.offsetX, IMG_GUYPART_H * i, guyPart.bitmap,
++        ab.drawBitmap(x + guyPart.offsetX, IMG_GUYPART_H * i, guyPart.bitmap,
+                 guyPart.width, IMG_GUYPART_H);
+     }
+ }
+@@ -444,8 +444,12 @@
+ {
+     while (pgm_read_byte(p) != '\e') {
+         uint8_t len = strnlen_P(p, 21);
+-        arduboy.printEx(64 - len * 3, y, (const __FlashStringHelper *) p);
++        ab.printEx(64 - len * 3, y, (const __FlashStringHelper *) p);
+         p += len + 1;
+         y += (len == 0) ? 2 : 6;
+     }
+ }
++
++void eva_reset_title(){state=STATE_INIT;lastSettings=0;lastSimpleMode=isSettingChenged=false;}
++void eva_pack_title(ObonoWriter&w){w.u8(state);w.u16(lastSettings);w.u8(lastSimpleMode);w.u8(isSettingChenged);}
++uint8_t eva_title_func_id(void(*f)()){if(!f)return 0;if(f==onTop)return 1;if(f==onStart)return 2;if(f==onSettings)return 3;if(f==onCredit)return 4;if(f==onMenuSpeed)return 5;if(f==onMenuAccel)return 6;if(f==onMenuDensity)return 7;if(f==onMenuThickness)return 8;if(f==onMenuSimpleMode)return 9;return 255;}

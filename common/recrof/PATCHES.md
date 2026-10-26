@@ -10,6 +10,7 @@
 | 应用 | vendor 内改动 | 目的 |
 | --- | --- | --- |
 | Quake | `quake/host_cmd.c` | 声明重启函数的正确 void 签名，避免 Wasm 间接调用签名不一致 |
+| Quake | `quake/d_surf.c`、`d_edge.c`、`d_sky.c`、`r_sky.c`、`model.c`、`r_shared.h` | 天空使用应用内独立合成缓存；预取跳过天空，并在所有平台重新加载不匹配的纹理。合成实现位于 `port/sky_cache.h` |
 | Quake II | `game/g_turret.c` | 使 infantry_die 的声明和调用与实际五参数定义一致 |
 | Quake II | `other/q_arena.c` | 将引擎 arena 调整到 8 MiB，移除宿主不支持的返回地址诊断 |
 | Quake II | `other/q_hunk.c`、`qcommon/common.c` | 移除仅用于日志的 `__builtin_return_address` |
@@ -57,20 +58,6 @@ Quake II 0.1.9 SD / 0.1.2 普通变体在已有五秒统计周期内报告真实
 菜单目的地及引擎方向键状态。仅 `ca_active && !cl.attractloop` 时输出，防止
 把开场演示误计为可操作关卡；使用引擎 `K_UPARROW/K_DOWNARROW` 命名常量。
 实现仍位于 PXA 平台层，没有新增 vendor 差异。
-
-GameRender 1.0 试验：Quake `d_scan.c` 增加有条件的批量调用，具体适配在
-`port/host_spans.h`，原来的 lit-span 函数保持为差分基准与拒绝时回退路径。
-`global_data.h` / `d_polyse.c` 增加固定全局状态直接寻址选项，真机验证后默认启用；
-上游同步继续通过三方合并维护这些小差异。Quake II 的构建精度设置与上游
-`-fsingle-precision-constant` 一致，WASI Clang 使用经 IR 检查的前端选项，
-显式 double 运算继续保留。原生 span 功能测试不等于游戏 FPS。
-
-GameRender 1.1 投影扫描行试验：`d_scan.c` 只增加两个表面入口的条件钩子，
-平台封装位于 `port/host_projected_spans.h`。批次包含原始扫描行和投影系数，
-Host 执行同样的 32 像素细分、光照和可选深度写入；整批预检失败时回退原函数。
-`PXA_QUAKE_PROJECTED_SPANS` 在完成真机对比前保持关闭。
-`tests/run_quake_projected_spans.py` 直接提取当前 vendor 的透视和深度函数，
-上游同步后运行它及原 lit-span 差分测试，避免单独维护一份参考实现。
 
 Audio 0.11 试验：Quake `snd_mix.c` 只在采样加载与音量量化之后增加条件钩子；
 平台实现位于 `port.c` / `port/host_audio_mix.h`。Host 同步累加 S8 到原 S32

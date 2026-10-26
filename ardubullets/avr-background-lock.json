@@ -1,0 +1,39 @@
+{
+  "format": "ardubullets-official-avr-background-basis-1",
+  "repository": "https://github.com/obono/ArduboyWorks",
+  "commit": "d4b1f041789dcd1d71907654e4025d613b4ab420",
+  "APP_VERSION": "0.11",
+  "source_path": "_hexs/ardubullets_v0.11.hex",
+  "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/_hexs/ardubullets_v0.11.hex",
+  "git_blob_sha1": "461dcf848507fd3e03fe7e0745c0793949cac5d9",
+  "HEX": {
+    "path": "vendor/original-avr/ardubullets_v0.11.hex",
+    "bytes": 68258,
+    "sha256": "fcbfe5f15f22688d61540907328b8d16e2ba74ddbc5d312fbf9522621fc90a5e"
+  },
+  "scope": "Unmodified official shipped AVR HEX retained as verification input; not executed, flashed, or compiled into the PXA game. Only the 96B original game-code texture is compiled.",
+  "firmware_binary_bytes": 24262,
+  "firmware_binary_sha256": "5802d043690fa3b12208f14f0137e73aa253756309f8be225b9ea99cf71e4cb4",
+  "drawBackground_entry_byte_address": 11046,
+  "function_pointer_word_address": 5523,
+  "texture_start_byte_address": 5523,
+  "texture_bytes": 96,
+  "texture_sha256": "000b5500a81feba1667332a65e7a60f7715de5496187074e5922fc10d8775f3c",
+  "compiled_symbol": "avrBackgroundTexture",
+  "read_offsets": [
+    0,
+    94
+  ],
+  "game_texture_license": "MIT, OBONO; original game.cpp and project LICENSE retained",
+  "official_baseline_choice": "Same pinned version0.11 official shipped artifact; function-pointer-to-flash texture depends on original AVR link addresses.",
+  "approval": {
+    "path": "logs/audits/batch65-ardubullets-official-avr-star-root-source-approval.json",
+    "bytes": 2710,
+    "sha256": "7e07804f6057ff8c9c97236b5a63cca07e6896f8b857e24103d5777f1d62b429"
+  },
+  "proposal": {
+    "path": "logs/games/ardubullets/avr-star-basis/proposal/proposal.json",
+    "bytes": 15218,
+    "sha256": "2c79831a0b30c130cd89c996fa4cde6a09b2b7ebd5aac803101bb09f09ea9ec4"
+  }
+}

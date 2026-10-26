@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-duke3d",
-  "version": "0.3.5",
+  "version": "0.3.8",
   "name": "Duke Nukem 3D",
   "description": "Duke Nukem 3D with automatically installed original shareware data, native VOC and multi-track MIDI",
   "build": {
     "system": "cmake",
     "source_dir": ".",
     "linear_memory": {
-      "maximum_bytes": 5242880,
+      "maximum_bytes": 5767168,
       "pinned": true
     }
   },
@@ -85,7 +85,7 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 206,
+  "release_sequence": 209,
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"

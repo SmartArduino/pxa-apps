@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-command-conquer",
-  "version": "0.2.7",
+  "version": "0.2.12",
   "name": "Command & Conquer",
   "description": "Community game port with automatically installed demo assets, without original music",
   "build": {
     "system": "cmake",
     "source_dir": ".",
     "linear_memory": {
-      "maximum_bytes": 7340032,
+      "maximum_bytes": 7077888,
       "pinned": true
     }
   },
@@ -75,7 +75,7 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 207,
+  "release_sequence": 212,
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"

@@ -485,7 +485,9 @@ static DRAWSURF_SEC void findAndStartNextPreloadTexture(int currentSurfIndex, in
         // get next surface data, so we will find a new texture.
         surf_t *s = &_g->surfaces[surfIdx[currentSurfIndex]];
         //
-        if (getSurfFlags(s) & (SURF_DRAWBACKGROUND))
+        // Sky uses its own composited pixels, never the raw BSP texture.
+        // Prefetch through consecutive sky faces to the next regular texture.
+        if (getSurfFlags(s) & (SURF_DRAWBACKGROUND | SURF_DRAWSKY))
             continue;
         msurface_t *pface = (msurface_t*) s->data;
         // texture animation must be accounted for.
@@ -753,14 +755,13 @@ DRAWSURF_SEC void lightedSurfacePreTextureLoaderHandler(byte *lastTexture, byte 
                         // for sure it's still loading
                     }
                 }
-#if WIN32
                 else
                 {
-                    // something was wrong
+                    // Animation or a changed surface order can invalidate a
+                    // prediction. Reload on every target, including devices.
                     surf_t *s = &_g->surfaces[surfIdx[currentSurfIndex]];
                     msurface_t *pface = (msurface_t*) s->data;
                     tcbPrintf("tcbNt: %x nt %x f: %x", otherTcb->extMemAddress, newTexture, getSurfFlags(s));
-                    FIXME("SOMETHING WAS WRONG");
 
                     int size;
                     mtexinfo_t *ti;
@@ -774,6 +775,7 @@ DRAWSURF_SEC void lightedSurfacePreTextureLoaderHandler(byte *lastTexture, byte 
                     //
                     otherTcb->textureSize = size;
                     otherTcb->bytesRead = 0;
+                    otherTcb->bytesBeingRead = 0;
                     otherTcb->state = TEXTURE_BUFFER_STATE_LOADING;
                     otherTcb->extMemAddress = newTexture;
                     // load
@@ -781,8 +783,6 @@ DRAWSURF_SEC void lightedSurfacePreTextureLoaderHandler(byte *lastTexture, byte 
                     extMemStartAsynchDataRead((uint32_t) otherTcb->extMemAddress + otherTcb->bytesRead, dest, otherTcb->bytesBeingRead);
                     otherTcb->state = TEXTURE_BUFFER_STATE_LOADING;
                 }
-#endif
-                // this should not happen, but in case, if the pointer was not ok, then switch to not loaded case.
             }
                 // change index
                 currentTcbIndex = 1 - currentTcbIndex;
@@ -917,6 +917,7 @@ DRAWSURF_SEC void textureLoaderHandler(byte *lastTexture, byte *newTexture, int 
                     otherTcb->extMemAddress = newTexture;
                     //
                     otherTcb->bytesRead = 0;
+                    otherTcb->bytesBeingRead = 0;
                     otherTcb->textureSize = size;
                     finishLoadingTexture(otherTcb);
                 }

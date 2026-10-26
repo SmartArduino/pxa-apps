@@ -30,18 +30,17 @@
 #ifndef PXA_GAME_RENDER_BLIT
 #define PXA_GAME_RENDER_BLIT 0
 #endif
-#ifndef PXA_GAME_RENDER_FRAME_SPANS
-#define PXA_GAME_RENDER_FRAME_SPANS 0
+#ifdef PORT_SOFTWARE_FRAME_BLIT
+#undef PXA_GAME_RENDER_BLIT
+#define PXA_GAME_RENDER_BLIT 0
 #endif
-#ifndef PXA_GAME_RENDER_PROJECTED_SPANS
-#define PXA_GAME_RENDER_PROJECTED_SPANS 0
-#endif
-#if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS || PXA_GAME_RENDER_FRAME_SPANS || PXA_GAME_RENDER_BLIT
-#include "pxa_game_render_spans.h"
+#if PXA_GAME_RENDER_BLIT
+#include "pxa_game_render_compute.h"
 uint64_t port_game_render_context;
 #endif
 #include "pxa_ui.h"
 #include "pxa_window.h"
+#include "../pxa_canvas_pixels.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -107,6 +106,7 @@ static uint16_t surface_w = 320, surface_h = 240;
 static uint8_t pending_buffer = 255;
 static uint64_t pending_frame;
 static int display_w = 320, display_h = 240, mouse_x = 160, mouse_y = 120;
+static uint32_t display_density = 65536;
 static uint32_t shape_insets[4],bar_insets[4];
 static uint64_t window_revision;
 static int keys[256];
@@ -136,6 +136,12 @@ static unsigned audio_rate = 16000, audio_channels = 1;
 static int16_t audio_packet[960 * 2];
 static unsigned audio_fill, audio_epoch;
 static int audio_failed;
+#ifdef PORT_PCM_FALLBACK
+static int audio_fallback;
+static uint64_t fallback_phase;
+static unsigned fallback_fill, fallback_source_rate;
+static int16_t fallback_samples[960];
+#endif
 #endif
 static uint64_t audio_permission, audio_pending;
 static int audio_decision_pending;
@@ -147,6 +153,8 @@ static port_controller_t controller;
 #endif
 static uint64_t perf_since, perf_draw_us;
 static uint64_t perf_yield_at, perf_wait_us;
+static uint64_t perf_audio_wait_us;
+static uint32_t perf_audio_blocks;
 static uint32_t perf_yields;
 static uint32_t perf_frames, perf_skipped;
 #ifdef PORT_RTS
@@ -419,6 +427,12 @@ void port_loading_stage(const char *stage) {
   (void)stage;
 #endif
 }
+void port_loading_restart(const char *stage) {
+#ifdef PORT_RTS
+  loading_began=0;
+#endif
+  port_loading_stage(stage);
+}
 void port_error(const char *message) {
 #ifdef PORT_RTS
   loading_active=0;
@@ -498,7 +512,9 @@ void port_frame_cursor(const uint8_t *p, int w, int h, int pitch,
              perf_frames,(unsigned long long)(end-perf_since),
              (unsigned long long)perf_draw_us,perf_skipped,
              (unsigned)__builtin_wasm_memory_size(0)*65536u);
-    port_log("PXA SCHED yields=%u wait_us=%llu",perf_yields,(unsigned long long)perf_wait_us);
+    port_log("PXA SCHED yields=%u wait_us=%llu audio_wait_us=%llu audio_blocks=%u",
+      perf_yields,(unsigned long long)perf_wait_us,
+      (unsigned long long)perf_audio_wait_us,perf_audio_blocks);
     uint8_t *low=__stack_low,*engine=low,*callback=low+PORT_ENGINE_STACK_BYTES;
     while(engine<low+PORT_ENGINE_STACK_BYTES && *engine==0xa5)++engine;
     while((uintptr_t)callback<callback_stack_floor && *callback==0xa5)++callback;
@@ -507,6 +523,7 @@ void port_frame_cursor(const uint8_t *p, int w, int h, int pitch,
     port_game_stats();
     perf_since=end; perf_frames=perf_skipped=0; perf_draw_us=0;
     perf_wait_us=0;perf_yields=0;
+    perf_audio_wait_us=0;perf_audio_blocks=0;
   }
   port_game_audio();
 #ifndef PORT_PACED_BY_MAIN
@@ -516,7 +533,55 @@ void port_frame_cursor(const uint8_t *p, int w, int h, int pitch,
 void port_frame(const uint8_t *p, int w, int h, int pitch) {
   port_frame_cursor(p,w,h,pitch,NULL);
 }
+void port_frame_rgb565(const uint16_t *pixels, int w, int h, int pitch) {
+  if (!pixels || w <= 0 || h <= 0 || pitch < w * 2) return;
+  int index = acquire();
+  if (index < 0) return;
+  uint16_t *dest = output(index);
+  if (w == surface_w && h == surface_h && pitch == w * 2) {
+    port_copy_read(dest, pixels, (size_t)w * h * 2);
+  } else {
+    /* Small displays retain the same source map across frames. Avoid one
+     * software integer division per output pixel on the AOT targets. */
+    static uint32_t xmap[320],ymap[240];
+    static int old_w,old_h,old_sw,old_sh;
+    const int cached=surface_w<=320 && surface_h<=240;
+    if(cached && (old_w!=w || old_h!=h || old_sw!=surface_w || old_sh!=surface_h)) {
+      for(int x=0;x<surface_w;++x)xmap[x]=(uint64_t)x*w/surface_w;
+      for(int y=0;y<surface_h;++y)ymap[y]=(uint64_t)y*h/surface_h;
+      old_w=w;old_h=h;old_sw=surface_w;old_sh=surface_h;
+    }
+    for (int y = 0; y < surface_h; ++y) {
+      const uint16_t *row = (const uint16_t *)((const uint8_t *)pixels +
+          (size_t)(cached?ymap[y]:(uint64_t)y*h/surface_h) * pitch);
+      for (int x = 0; x < surface_w; ++x)
+        dest[y * surface_w + x] = row[cached?xmap[x]:(uint64_t)x*w/surface_w];
+    }
+  }
+  port_draw_controls(dest, surface_w, surface_h, 0);
+  present(index);
+}
 #if PORT_NATIVE_PCM
+#ifdef PORT_PCM_FALLBACK
+static int open_fallback_pcm(void) {
+  uint8_t request[96];uint32_t bytes;
+  if(!pxa_audio_build_open(request,sizeof(request),1,audio_permission,&bytes))return 0;
+  const pxa_event_t *event=port_rpc_packet(request,bytes);
+  pxa_audio_open_result_t opened={0};
+  if(!event || !pxa_audio_parse_open(event,event->token,&opened) || opened.status || opened.channels!=1)return 0;
+  const pxa_audio_graph_t graph={.gain_db_q8=-1536};
+  if(!pxa_audio_build_graph(request,sizeof(request),1,opened.handle,&graph,&bytes)){pxa_close_handle(opened.handle);return 0;}
+  event=port_rpc_packet(request,bytes);
+  int32_t status;
+  if(!event || !pxa_audio_parse_status(event,event->token,PXA_AUDIO_COMMIT_GRAPH,&status) || status) {
+    pxa_close_handle(opened.handle);return 0;
+  }
+  audio=opened.handle;audio_rate=opened.sample_rate;audio_channels=opened.channels;
+  audio_fill=fallback_fill=0;fallback_phase=0;audio_fallback=1;
+  port_log("PXA PCM fallback=%uHz/1ch S16LE",audio_rate);
+  return 1;
+}
+#endif
 static int open_native_pcm(unsigned rate, unsigned channels) {
   uint8_t request[16] = {0};
   pxa_store_u64(request, audio_permission); pxa_store_u32(request+8, rate);
@@ -552,6 +617,27 @@ void port_pcm(const int16_t *p, unsigned frames, unsigned rate,
 #if PORT_NATIVE_PCM
   if (!p || !frames || rate < 8000 || rate > 48000 || channels < 1 || channels > 2 ||
       !audio_permission || audio_failed) return;
+#ifdef PORT_PCM_FALLBACK
+  if(!audio && !open_native_pcm(rate,channels) && !open_fallback_pcm()) {audio_failed=1;return;}
+  if(audio_fallback && (rate!=audio_rate || channels!=audio_channels)) {
+    if(fallback_source_rate!=rate) {fallback_phase=0;fallback_source_rate=rate;}
+    const unsigned epoch=audio_epoch;
+    for(unsigned i=0;i<frames;++i) {
+      int sample=p[i*channels];
+      if(channels==2)sample=(sample+p[i*2+1])/2;
+      fallback_phase+=audio_rate;
+      while(fallback_phase>=rate) {
+        fallback_phase-=rate;fallback_samples[fallback_fill++]=(int16_t)sample;
+        if(fallback_fill==audio_rate/50) {
+          unsigned count=fallback_fill;fallback_fill=0;
+          port_pcm(fallback_samples,count,audio_rate,1);
+          if(epoch!=audio_epoch)return;
+        }
+      }
+    }
+    return;
+  }
+#endif
   if (audio && (audio_rate != rate || audio_channels != channels)) {
     pxa_close_handle(audio); audio = 0; audio_fill = 0;
   }
@@ -570,7 +656,10 @@ void port_pcm(const int16_t *p, unsigned frames, unsigned rate,
         port_log("PXA PCM write failed: %d", status);
         pxa_close_handle(audio); audio = 0; audio_failed = 1; audio_fill = 0; return;
       }
+      const uint64_t wait_begin = port_time_us();
       port_sleep(1);
+      perf_audio_wait_us += port_time_us() - wait_begin;
+      ++perf_audio_blocks;
       if (epoch != audio_epoch) return; /* Lifecycle flush discarded the old packet. */
     }
     audio_fill = 0;
@@ -608,6 +697,10 @@ static void update_keys(void) {
     setkey(k, touch_keys[k] || pad_keys[k]);
 }
 static void release_touch(void) {
+#ifdef PORT_SDL_CONTROLLER
+  for (unsigned i=0; i<8; ++i) if (touches[i].active && touches[i].role == 4)
+    port_game_pointer(touches[i].cx,touches[i].cy,PXA_POINTER_CANCEL,0,touches[i].id);
+#endif
   memset(touches, 0, sizeof(touches));
   memset(touch_keys, 0, sizeof(touch_keys));
   port_game_reset_motion();
@@ -652,6 +745,16 @@ static void controller_tick(void) {
 #endif
 static void input_pointer(const pxa_ui_pointer_data_t *p) {
   if (background) return;
+  int scale=pxa_surface_fit_scale(surface_w,surface_h,display_w,display_h);
+  if(scale<1)scale=1;
+  int x,y;
+  int inside=pxa_game_pointer_coordinates(p->x,p->y,display_density,
+      display_w,display_h,surface_w,surface_h,(unsigned)scale,&x,&y);
+#ifdef PORT_SDL_CONTROLLER
+  x = x * 320 / surface_w;
+  y = y * 240 / surface_h;
+#endif
+  if(p->phase==PXA_POINTER_DOWN && !inside)return;
   if (p->phase == PXA_POINTER_DOWN && !port_controls_visible()) {
     port_controls_set_visible(1);
     port_log("PXA CONTROLS source=touch visible=1");
@@ -664,21 +767,6 @@ static void input_pointer(const pxa_ui_pointer_data_t *p) {
     if (touches[i].active && touches[i].id == p->pointer_id)
       t = &touches[i];
   if (!t && p->phase != PXA_POINTER_DOWN) return;
-  int scale = pxa_surface_fit_scale(surface_w, surface_h, display_w, display_h);
-  if (scale < 1)
-    scale = 1;
-  int x = (p->x - (display_w - surface_w * scale) / 2) * 320 /
-          (surface_w * scale),
-      y = (p->y - (display_h - surface_h * scale) / 2) * 240 /
-          (surface_h * scale);
-  if (x < 0)
-    x = 0;
-  if (x > 319)
-    x = 319;
-  if (y < 0)
-    y = 0;
-  if (y > 239)
-    y = 239;
   mouse_x = x;
   mouse_y = y;
   if (p->phase == PXA_POINTER_DOWN) {
@@ -698,13 +786,23 @@ static void input_pointer(const pxa_ui_pointer_data_t *p) {
     if(!t->key)t->key = (p->buttons & 2) ? 202 : 200;
 #else
     t->key = port_control_key_at(x,y,0);
+#ifdef PORT_SDL_CONTROLLER
+    t->role = t->key ? 3 : 4;
+#else
     t->role = t->key ? 3 : x < 160 ? 1 : 2;
+#endif
 #endif
   }
   if (!t)
     return;
   t->cx = x;
   t->cy = y;
+#ifdef PORT_SDL_CONTROLLER
+  if (t->role == 3 && p->phase == PXA_POINTER_MOVE)
+    t->key = port_control_key_at(x,y,0);
+  if (t->role == 4)
+    port_game_pointer(x,y,p->phase,p->buttons,p->pointer_id);
+#endif
   if ((p->phase == PXA_POINTER_MOVE || p->phase == PXA_POINTER_UP) && t->role == 2) {
     port_game_motion(x - t->x, y - t->y);
     t->x = x;
@@ -754,6 +852,7 @@ static void update_control_layout(void) {
       left>0?(left*320+width-1)/width:0);
 }
 static void controls_environment(const pxa_ui_environment_t *env) {
+  display_density=env->density_q16?env->density_q16:65536;
   memcpy(shape_insets,env->safe_insets,sizeof(shape_insets));
   update_control_layout();
 }
@@ -806,7 +905,7 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     }
   }
   controls_environment(&env);
-#if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS || PXA_GAME_RENDER_FRAME_SPANS || PXA_GAME_RENDER_BLIT
+#if PXA_GAME_RENDER_BLIT
   int raster_status = pxa_game_render_create_raster(30, 256);
   if (raster_status) return raster_status;
 #endif
@@ -828,6 +927,13 @@ static int32_t handle_event(const uint8_t *bytes, uint32_t n) {
   pxa_event_t e;
   if (!pxa_parse_event(bytes, n, &e))
     return PXA_EVENT_UNHANDLED;
+#ifdef PORT_SDL_CONTROLLER
+  if(port_game_finished()) {
+    /* SDL may already have destroyed its virtual controller and windows. */
+    return e.service==PXA_WINDOW_SERVICE && e.opcode==PXA_WINDOW_BACK_REQUESTED
+        ? PXA_EVENT_UNHANDLED : PXA_EVENT_HANDLED;
+  }
+#endif
 #if PORT_NATIVE_MAIN_LOOP
   if (e.service == PXA_CORE_SERVICE && e.opcode == PXA_CORE_OPEN_EVENT_PORT && e.token == 31) {
     pxa_event_port_result_t result;
@@ -838,7 +944,7 @@ static int32_t handle_event(const uint8_t *bytes, uint32_t n) {
     return PXA_EVENT_HANDLED;
   }
 #endif
-#if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS || PXA_GAME_RENDER_FRAME_SPANS || PXA_GAME_RENDER_BLIT
+#if PXA_GAME_RENDER_BLIT
   if (e.service == PXA_GAME_RENDER_SERVICE &&
       e.opcode == PXA_GAME_RENDER_CREATE_RASTER_CONTEXT && e.token == 30) {
     pxa_game_render_raster_result_t result;
@@ -846,10 +952,7 @@ static int32_t handle_event(const uint8_t *bytes, uint32_t n) {
     if (result.status) return result.status;
     port_game_render_context = result.handle;
     port_log("PXA GameRender compute ready max=%u packet_capacity=%u",
-        result.max_spans, PXA_GAME_RENDER_FRAME_SPANS ? (unsigned)(surface_w * surface_h * 2) :
-        PXA_GAME_RENDER_BLIT ? PXA_GAME_RENDER_BLIT_BYTES : PXA_GAME_RENDER_PROJECTED_SPANS ?
-        PXA_GAME_RENDER_PROJECTED_PREFIX_BYTES + 256 * PXA_GAME_RENDER_ROW_BYTES :
-        PXA_GAME_RENDER_SPANS_HEADER_BYTES + 256 * PXA_GAME_RENDER_SPAN_BYTES);
+        result.max_commands, PXA_GAME_RENDER_BLIT_BYTES);
     return PXA_EVENT_HANDLED;
   }
 #endif
@@ -886,6 +989,9 @@ static int32_t handle_event(const uint8_t *bytes, uint32_t n) {
     background = life == PXA_SYSTEM_LIFECYCLE_BACKGROUND;
 #if PORT_NATIVE_PCM
     audio_fill = 0; ++audio_epoch;
+#ifdef PORT_PCM_FALLBACK
+    fallback_fill=0;fallback_phase=0;
+#endif
 #endif
     release_input();
     if (audio)
@@ -1056,7 +1162,11 @@ int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t n) {
 void pxa_app_stop(uint32_t reason) {
   (void)reason;
   finished = 1;
+#ifdef PORT_SDL_CONTROLLER
+  if(!port_game_finished())release_input();
+#else
   release_input();
+#endif
   /* Core imports are forbidden here. The Host has already revoked Clock,
    * Surface, audio and filesystem handles before entering this callback. */
 }

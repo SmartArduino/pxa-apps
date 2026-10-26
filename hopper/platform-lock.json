@@ -1,0 +1,63 @@
+{
+  "format": "pxa-hopper-platform-source-lock-1",
+  "modified_date": "2026-10-10",
+  "platform_files": [
+    {
+      "path": "vendor/platform/common.h",
+      "bytes": 980,
+      "sha256": "13e1fc9baab6b99e3cdb7685a0ffa026984cf148b1a687e96e197bacd4a342dd"
+    },
+    {
+      "path": "vendor/platform/game.cpp",
+      "bytes": 21844,
+      "sha256": "301667457890b68b048b5e773e0015d566addf11006be32bb612b3aca7c6fba0"
+    },
+    {
+      "path": "vendor/platform/hopper.ino",
+      "bytes": 2156,
+      "sha256": "3b42d703df89437c1ce29031a390aef2d9b83b162f743387c554cdac85cdbe47"
+    },
+    {
+      "path": "vendor/platform/logo.cpp",
+      "bytes": 3600,
+      "sha256": "29df06ea706d14f5280b29a1898a214163acccee9fd264b09a340194da1062b0"
+    },
+    {
+      "path": "vendor/platform/MyArduboy.cpp",
+      "bytes": 8650,
+      "sha256": "46c040073ab858bc2b0ee0d6caaba889b4d3cec295100720e733cd70b29d24dc"
+    },
+    {
+      "path": "vendor/platform/MyArduboy.h",
+      "bytes": 2168,
+      "sha256": "61447fa528a488e459955ff06103c6e26f0445fa33cc8c690f3352905d7c8747"
+    },
+    {
+      "path": "vendor/platform/title.cpp",
+      "bytes": 16558,
+      "sha256": "4e1cae0bfee44bef92ea513b8f485ad551e3bcbdb115d0f048783367b611b985"
+    }
+  ],
+  "owner_compat_files": [
+    {
+      "path": "owner/ArduboyPlaytune.h",
+      "bytes": 360,
+      "sha256": "e0129b82dc2f6cdadfc674bf645bd3d402704e0da302c916ec42960e0b76dbbc"
+    },
+    {
+      "path": "owner/owner_ascii_format.h",
+      "bytes": 394,
+      "sha256": "c8858707a1c66bfc58a1e6bfc811e44d24d9f763cab590e7877e679df8eafcee"
+    },
+    {
+      "path": "owner/owner_compat.cpp",
+      "bytes": 5834,
+      "sha256": "3a06d8ead25e11c7c43873cf6b818ed9d2e6ab64f010a613c82b3c2b493dc7f7"
+    },
+    {
+      "path": "owner/owner_compat.h",
+      "bytes": 1441,
+      "sha256": "75553d8d7893b8533f3e305acd9542d0a1eec3991a347cabdc2b15532cd590db"
+    }
+  ]
+}

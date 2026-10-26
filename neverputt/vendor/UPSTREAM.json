@@ -1,0 +1,12 @@
+{
+  "url": "https://github.com/Neverball/neverball",
+  "tag": "neverball-1.6.0",
+  "commit": "16945b8abe77fdaf0d3b6728f7cd25819bb0a707",
+  "changes": [
+    "PXA native event port and persistent private filesystem",
+    "PortableGL RGB565 software renderer with fixed-function game adapter",
+    "SDL_mixer streaming audio; stb image/font loaders",
+    "Shadows, mirror reflections, HMD and GLSL effects disabled",
+    "160x120 3D viewport with in-place RGB565 resolve; 320x240 UI/HUD preserved"
+  ]
+}

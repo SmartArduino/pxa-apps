@@ -1,0 +1,7 @@
+{
+	"title": "Knight Move",
+	"description": "An action puzzle game using a knight piece of the chess.",
+	"genre": "Action-Puzzle",
+	"url": "https://community.arduboy.com/t/knight-move-a-puzzle-platform-game-using-knight/8587",
+	"dependence": "Arduboy Library 1.1.1"
+}

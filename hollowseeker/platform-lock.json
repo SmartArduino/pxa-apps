@@ -1,0 +1,94 @@
+{
+  "modified_date": "2026-10-10",
+  "files": {
+    "vendor/platform/common.h": {
+      "bytes": 745,
+      "sha256": "19404bd117a661d8a73250a567d0b27f038e52abf00a3eaa30229942ffe03cd4"
+    },
+    "vendor/platform/game.cpp": {
+      "bytes": 15834,
+      "sha256": "4ca8c647fd8100d813f1901ea99d7f088414c0ff3cc371f5bb093ac3c6c77f99"
+    },
+    "vendor/platform/hollow.ino": {
+      "bytes": 1091,
+      "sha256": "f3f620126d9ab081eebbb2d4f75c1c605bf02fc0be23a0fff9c343f98b69b9b5"
+    },
+    "vendor/platform/logo.cpp": {
+      "bytes": 3218,
+      "sha256": "1e7e43229d1486882f907b46ed5efc1df6491f17e2505be1e043f7759e968da9"
+    },
+    "vendor/platform/MyArduboy.cpp": {
+      "bytes": 8703,
+      "sha256": "6fc278850da59f671b5fbed2a77b112f2946758090d0bdaf540b6a533c32b8cc"
+    },
+    "vendor/platform/MyArduboy.h": {
+      "bytes": 2164,
+      "sha256": "da51060db7c9325b85f44bbce08740258c4326bcc5ac8705953b5613078dbf4b"
+    },
+    "vendor/platform/title.cpp": {
+      "bytes": 15936,
+      "sha256": "ae5e2142c19f9c08ee786c43f830459922208a6072f3db4eca1b06277e233ff2"
+    },
+    "owner/owner_ascii_format.h": {
+      "bytes": 766,
+      "sha256": "ee764d425a00c8615e17fa60e8ddabf672d7aff5b4fb18747a363b459a75ba07"
+    },
+    "game.cpp": {
+      "bytes": 805,
+      "sha256": "f668f64ad2db11dfafb1b1c06d747452f3ac0dd31c1023e54a83c51238e0d6d0"
+    },
+    "owner/owner_compat.cpp": {
+      "bytes": 5873,
+      "sha256": "09171a22d4256c2235613ef669799a53c4aafe52a51a782fc016d91c45d7aca7"
+    },
+    "owner/owner_compat.h": {
+      "bytes": 1441,
+      "sha256": "9f845508ea9fa3073b03fcfb49abace17e8afc98cc54da6759473c0edde694de"
+    }
+  },
+  "patch_sha256": "b9cf6e76a59c8ae3eb4f380027008114fe3b036e8881fe78e0bd5fb1745b11fc",
+  "sections": [
+    {
+      "old_header": "vendor/original/common.h",
+      "new_header": "vendor/platform/common.h",
+      "original": "vendor/original/common.h",
+      "modified": "vendor/platform/common.h"
+    },
+    {
+      "old_header": "vendor/original/game.cpp",
+      "new_header": "vendor/platform/game.cpp",
+      "original": "vendor/original/game.cpp",
+      "modified": "vendor/platform/game.cpp"
+    },
+    {
+      "old_header": "vendor/original/logo.cpp",
+      "new_header": "vendor/platform/logo.cpp",
+      "original": "vendor/original/logo.cpp",
+      "modified": "vendor/platform/logo.cpp"
+    },
+    {
+      "old_header": "vendor/original/MyArduboy.cpp",
+      "new_header": "vendor/platform/MyArduboy.cpp",
+      "original": "vendor/original/MyArduboy.cpp",
+      "modified": "vendor/platform/MyArduboy.cpp"
+    },
+    {
+      "old_header": "vendor/original/MyArduboy.h",
+      "new_header": "vendor/platform/MyArduboy.h",
+      "original": "vendor/original/MyArduboy.h",
+      "modified": "vendor/platform/MyArduboy.h"
+    },
+    {
+      "old_header": "vendor/original/title.cpp",
+      "new_header": "vendor/platform/title.cpp",
+      "original": "vendor/original/title.cpp",
+      "modified": "vendor/platform/title.cpp"
+    }
+  ],
+  "unchanged_copies": [
+    {
+      "original": "vendor/original/hollow.ino",
+      "platform": "vendor/platform/hollow.ino"
+    }
+  ]
+}

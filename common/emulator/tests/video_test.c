@@ -7,6 +7,35 @@
 #include <string.h>
 static const unsigned screens[][2]={{200,160},{296,240},{320,240},{240,320},{480,480},{800,480}};
 static const unsigned sources[][4]={{159,143,10,9},{257,225,4,3},{160,144,10,9},{240,160,3,2},{256,192,4,3},{256,224,4,3},{320,240,4,3},{512,478,4,3}};
+static void enlargement_test(void){
+ /* Include packed rows, a four-pixel tail, odd pitches, shifted pointers,
+  * and both cached buffers. Compare every output byte including padding. */
+ const unsigned sizes[]={9,15,60,240};
+ for(unsigned k=0;k<sizeof(sizes)/sizeof(*sizes);++k){
+  unsigned sw=sizes[k],sh=7,w=sw*4/3,h=12;
+  if(sw>EMU_MAX_SOURCE_WIDTH || sh>EMU_MAX_SOURCE_HEIGHT)continue;
+  for(unsigned odd=0;odd<2;++odd)for(unsigned shift=0;shift<2;++shift){
+   unsigned ss=sw+odd,stride=w+odd;size_t count=stride*h+8;
+   uint16_t *data=calloc(ss*sh+8,2),*out=calloc(count,2),*ref=calloc(count,2);
+   assert(data&&out&&ref);uint16_t *src=data+shift,*dst=out+shift;
+   for(unsigned i=0;i<ss*sh;++i)src[i]=(uint16_t)(i*109+73);
+   emu_core_info.width=sw;emu_core_info.height=sh;emu_core_info.stride=ss;
+   emu_core_info.aspect_num=w;emu_core_info.aspect_den=h;
+   emu_video_renderer_t r;emu_video_init(&r,w,h,(emu_display_rect_t){0,0,w,h});
+   emu_video_set_stride(&r,stride);uint8_t dirty[EMU_DISPLAY_MAX_HEIGHT];
+   assert(r.view_width==w && r.view_height==h);
+   for(unsigned frame=0;frame<6;++frame){
+    if(frame==4)src[sw-1]^=0x5c73;
+    unsigned pixels=emu_video_render_cached(&r,dst,src,frame&1,frame<2,dirty);
+    if(frame==2 || frame==3)assert(!pixels);
+    for(unsigned y=0;y<h;++y)for(unsigned x=0;x<w;++x)
+     ref[shift+y*stride+x]=src[(y*sh/h)*ss+x*sw/w];
+    assert(!memcmp(out,ref,count*2));
+   }
+   emu_video_deinit(&r);free(data);free(out);free(ref);
+  }
+ }
+}
 int main(void){
  emu_core_defaults();
  uint16_t *source=malloc(523u*512u*2u);assert(source);
@@ -46,5 +75,5 @@ int main(void){
   }
   emu_video_deinit(&r);emu_video_deinit(&r);free(c);free(out[0]);free(out[1]);free(reference);
  }
- free(source);puts("PASS: dynamic geometry, hires, aspect fit, two buffers, controls, strides and six screen sizes");
+ free(source);enlargement_test();puts("PASS: dynamic geometry, hires, aspect fit, two buffers, controls, strides and six screen sizes");
 }

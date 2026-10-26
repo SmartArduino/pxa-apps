@@ -1,0 +1,357 @@
+{
+  "format": "pxa-arduboy-batch-module-export-contract-1",
+  "game": "lasers",
+  "game_id": 15,
+  "repository": "https://github.com/obono/ArduboyWorks",
+  "commit": "d4b1f041789dcd1d71907654e4025d613b4ab420",
+  "game_license": "MIT",
+  "modified_date": "2026-10-10",
+  "common_directory": "arduboy-batch-20261010",
+  "original_frame_period_ms": 16,
+  "typed_game_bytes": 638,
+  "core_bytes": 3136,
+  "total_bytes": 3774,
+  "source_locks": [
+    {
+      "path": "upstream-lock.json",
+      "bytes": 8437,
+      "sha256": "ef187a2e05a1f83aa0724d8bb9345e7c3ecbd525f490cadb2a4b9cab5027aa6c"
+    },
+    {
+      "path": "platform-lock.json",
+      "bytes": 2758,
+      "sha256": "ef63cdf7b4ea5ef5d2a4fed568c4f19751fb24c86b4de01465c407152b19f8df"
+    },
+    {
+      "path": "avr-semantics.json",
+      "bytes": 2381,
+      "sha256": "4d034e19324da19852fb0464bcb5b6f959d3a8a1aafce6f0b170c6efba83344b"
+    }
+  ],
+  "original_files": [
+    {
+      "path": "vendor/original/LICENSE",
+      "bytes": 1077,
+      "sha256": "62a5db2ff173434f94d055a9432f5655267e92f4db92a042b832884e8a48f6bb",
+      "source_path": "LICENSE",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/LICENSE"
+    },
+    {
+      "path": "vendor/original/MyArduboy.cpp",
+      "bytes": 7822,
+      "sha256": "e690c36dfe1159a098193c776dad6c49dfd335554a0babf407c70caf5dd12700",
+      "source_path": "lasers/MyArduboy.cpp",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/lasers/MyArduboy.cpp"
+    },
+    {
+      "path": "vendor/original/MyArduboy.h",
+      "bytes": 2046,
+      "sha256": "f69a8e20ab40a58f42e775b86ff06b0e6cb00427948e0bf9fd657637b6e56a7a",
+      "source_path": "lasers/MyArduboy.h",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/lasers/MyArduboy.h"
+    },
+    {
+      "path": "vendor/original/common.cpp",
+      "bytes": 6926,
+      "sha256": "29c1259eb5bf19a3cc2654b1f97c8cf73dc75bd814ede61e1de6fb309413ec92",
+      "source_path": "lasers/common.cpp",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/lasers/common.cpp"
+    },
+    {
+      "path": "vendor/original/common.h",
+      "bytes": 2557,
+      "sha256": "cab196242eedc0e094406d871f87f38443d45c6d127b3e3819dab8bb74603e11",
+      "source_path": "lasers/common.h",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/lasers/common.h"
+    },
+    {
+      "path": "vendor/original/data.h",
+      "bytes": 6405,
+      "sha256": "59653bf595aa070887405f2ac45e413a40e2ce5c3a01c1cadb76d166cff1e4d2",
+      "source_path": "lasers/data.h",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/lasers/data.h"
+    },
+    {
+      "path": "vendor/original/game.cpp",
+      "bytes": 13875,
+      "sha256": "59524cb9c94ef1a8e215d9248b0c732aa0013e375641d4c032dffd95f5432459",
+      "source_path": "lasers/game.cpp",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/lasers/game.cpp"
+    },
+    {
+      "path": "vendor/original/info.json",
+      "bytes": 253,
+      "sha256": "fcc0514d0113d2922495e0e58267e0121dd53dbe1a3692a748ba84a3d8f00fc6",
+      "source_path": "lasers/info.json",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/lasers/info.json"
+    },
+    {
+      "path": "vendor/original/lasers.ino",
+      "bytes": 2591,
+      "sha256": "de776138ea7ba7a289751089df6b6c3245c01703c9e7d216fcbc64bdbefe7dec",
+      "source_path": "lasers/lasers.ino",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/lasers/lasers.ino"
+    },
+    {
+      "path": "vendor/original/logo.cpp",
+      "bytes": 3442,
+      "sha256": "28bf79d1cefc0971a1c9e4467385f4e9a3ed681a09c764fa1ba753cdd5d75c48",
+      "source_path": "lasers/logo.cpp",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/lasers/logo.cpp"
+    },
+    {
+      "path": "vendor/original/menu.cpp",
+      "bytes": 2558,
+      "sha256": "28259a5be757e68c15a8fecbe9a8690e3428f607a81860000721f71a2ef249f0",
+      "source_path": "lasers/menu.cpp",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/lasers/menu.cpp"
+    },
+    {
+      "path": "vendor/original/title.cpp",
+      "bytes": 7400,
+      "sha256": "53f47c31d47b783d7dea3cec2b6d4f54389bc99ac4a7e425174f6e3dcc31ef59",
+      "source_path": "lasers/title.cpp",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/lasers/title.cpp"
+    },
+    {
+      "path": "vendor/original/warn.cpp",
+      "bytes": 1595,
+      "sha256": "272d0bd317f1b0672812fdacf54c2b024492ff424071c7bcb15672fd0e53ad83",
+      "source_path": "lasers/warn.cpp",
+      "source_url": "https://raw.githubusercontent.com/obono/ArduboyWorks/d4b1f041789dcd1d71907654e4025d613b4ab420/lasers/warn.cpp"
+    },
+    {
+      "path": "vendor/original-playtune/.gitignore",
+      "bytes": 9,
+      "sha256": "50bc34ff061f831c939464a679bc8b8d6a52029d4d2026f665dda35e1cc5f8bd",
+      "source_path": ".gitignore",
+      "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/.gitignore"
+    },
+    {
+      "path": "vendor/original-playtune/LICENSE.txt",
+      "bytes": 1181,
+      "sha256": "e3bf8d42d3b83c2ef031e4ea247b57cd133702caeb5b8a0a91c6d54e59d5a246",
+      "source_path": "LICENSE.txt",
+      "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/LICENSE.txt"
+    },
+    {
+      "path": "vendor/original-playtune/README.md",
+      "bytes": 6314,
+      "sha256": "9530086fe98c9141ff7928f3a180bf0c96875e4cb511cca51c3895c1d594e0da",
+      "source_path": "README.md",
+      "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/README.md"
+    },
+    {
+      "path": "vendor/original-playtune/extras/Doxyfile",
+      "bytes": 11599,
+      "sha256": "98f701e76fa431912f21e0ea1b746d37dabb7bfeb70ae2b996836b2ae67d3a6b",
+      "source_path": "extras/Doxyfile",
+      "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/extras/Doxyfile"
+    },
+    {
+      "path": "vendor/original-playtune/extras/docs/FILE_DESCRIPTIONS.md",
+      "bytes": 1096,
+      "sha256": "e23d8c0bc7e8753088b3b19619d2a8b3a4b1a78321293f5c402b946b5db67586",
+      "source_path": "extras/docs/FILE_DESCRIPTIONS.md",
+      "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/extras/docs/FILE_DESCRIPTIONS.md"
+    },
+    {
+      "path": "vendor/original-playtune/keywords.txt",
+      "bytes": 519,
+      "sha256": "77128e42db531b758decb6b8c645299a9b397cf50e8b4bbff834ab8b3d08d247",
+      "source_path": "keywords.txt",
+      "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/keywords.txt"
+    },
+    {
+      "path": "vendor/original-playtune/library.json",
+      "bytes": 423,
+      "sha256": "8cc151d8c71439ebd25bb939be24678f3effbceb86840b3686604d40f444ebbd",
+      "source_path": "library.json",
+      "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/library.json"
+    },
+    {
+      "path": "vendor/original-playtune/library.properties",
+      "bytes": 498,
+      "sha256": "34f846a33b3a0c4d0297b97b0382f00eb613024f975592bb5c68f23307b64b41",
+      "source_path": "library.properties",
+      "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/library.properties"
+    },
+    {
+      "path": "vendor/original-playtune/src/ArduboyPlaytune.cpp",
+      "bytes": 13124,
+      "sha256": "a00d916ba7999999e1a0ef2635631100086debf4a5b2d839d072902cf56eee41",
+      "source_path": "src/ArduboyPlaytune.cpp",
+      "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/src/ArduboyPlaytune.cpp"
+    },
+    {
+      "path": "vendor/original-playtune/src/ArduboyPlaytune.h",
+      "bytes": 6701,
+      "sha256": "8248731a184b13df6e64772493682e197958a3f615cdb5f796fdafb3f57dda0f",
+      "source_path": "src/ArduboyPlaytune.h",
+      "source_url": "https://raw.githubusercontent.com/Ar-zz-duboy/ArduboyPlaytune/493d3c960a87d1b4716eb85fb297706230c8e937/src/ArduboyPlaytune.h"
+    },
+    {
+      "path": "vendor/original-avr-libc/rand.c",
+      "bytes": 2990,
+      "sha256": "315d6df64304b7289a58ead3ed10ac58d987006e05a1c163073eec2d850af7b1",
+      "source_path": "libc/stdlib/rand.c",
+      "source_url": "https://raw.githubusercontent.com/avrdudes/avr-libc/8c0baff524181d8a8a57889b352d2d326a1a08bb/libc/stdlib/rand.c"
+    }
+  ],
+  "platform_patches": [
+    {
+      "path": "platform.patch",
+      "sections": [
+        {
+          "old_header": "vendor/original-playtune/src/ArduboyPlaytune.cpp",
+          "new_header": "vendor/platform/ArduboyPlaytune.cpp",
+          "original": "vendor/original-playtune/src/ArduboyPlaytune.cpp",
+          "modified": "vendor/platform/ArduboyPlaytune.cpp"
+        },
+        {
+          "old_header": "vendor/original-playtune/src/ArduboyPlaytune.h",
+          "new_header": "vendor/platform/ArduboyPlaytune.h",
+          "original": "vendor/original-playtune/src/ArduboyPlaytune.h",
+          "modified": "vendor/platform/ArduboyPlaytune.h"
+        },
+        {
+          "old_header": "vendor/original/MyArduboy.cpp",
+          "new_header": "vendor/platform/MyArduboy.cpp",
+          "original": "vendor/original/MyArduboy.cpp",
+          "modified": "vendor/platform/MyArduboy.cpp"
+        },
+        {
+          "old_header": "vendor/original/MyArduboy.h",
+          "new_header": "vendor/platform/MyArduboy.h",
+          "original": "vendor/original/MyArduboy.h",
+          "modified": "vendor/platform/MyArduboy.h"
+        },
+        {
+          "old_header": "vendor/original/common.cpp",
+          "new_header": "vendor/platform/common.cpp",
+          "original": "vendor/original/common.cpp",
+          "modified": "vendor/platform/common.cpp"
+        },
+        {
+          "old_header": "vendor/original/common.h",
+          "new_header": "vendor/platform/common.h",
+          "original": "vendor/original/common.h",
+          "modified": "vendor/platform/common.h"
+        },
+        {
+          "old_header": "vendor/original/data.h",
+          "new_header": "vendor/platform/data.h",
+          "original": "vendor/original/data.h",
+          "modified": "vendor/platform/data.h"
+        },
+        {
+          "old_header": "vendor/original/game.cpp",
+          "new_header": "vendor/platform/game.cpp",
+          "original": "vendor/original/game.cpp",
+          "modified": "vendor/platform/game.cpp"
+        },
+        {
+          "old_header": "vendor/original/lasers.ino",
+          "new_header": "vendor/platform/lasers.ino",
+          "original": "vendor/original/lasers.ino",
+          "modified": "vendor/platform/lasers.ino"
+        },
+        {
+          "old_header": "vendor/original/logo.cpp",
+          "new_header": "vendor/platform/logo.cpp",
+          "original": "vendor/original/logo.cpp",
+          "modified": "vendor/platform/logo.cpp"
+        },
+        {
+          "old_header": "vendor/original/menu.cpp",
+          "new_header": "vendor/platform/menu.cpp",
+          "original": "vendor/original/menu.cpp",
+          "modified": "vendor/platform/menu.cpp"
+        },
+        {
+          "old_header": "vendor/original/title.cpp",
+          "new_header": "vendor/platform/title.cpp",
+          "original": "vendor/original/title.cpp",
+          "modified": "vendor/platform/title.cpp"
+        },
+        {
+          "old_header": "vendor/original/warn.cpp",
+          "new_header": "vendor/platform/warn.cpp",
+          "original": "vendor/original/warn.cpp",
+          "modified": "vendor/platform/warn.cpp"
+        }
+      ]
+    }
+  ],
+  "unchanged_platform_copies": [],
+  "license_files": [
+    "LICENSE.AVR-rand.BSD-3-Clause",
+    "LICENSE.MIT",
+    "LICENSE.Playtune.MIT",
+    "NOTICE.md",
+    "assets/LICENSE.AVR-rand.BSD-3-Clause",
+    "assets/LICENSE.Arduboy2.txt",
+    "assets/LICENSE.MIT",
+    "assets/LICENSE.PXA-glue.MIT",
+    "assets/LICENSE.Playtune.MIT",
+    "assets/NOTICE.md",
+    "vendor/original/LICENSE",
+    "vendor/original-playtune/LICENSE.txt"
+  ],
+  "dependencies": [
+    {
+      "repository": "Ar-zz-duboy/ArduboyPlaytune",
+      "commit": "493d3c960a87d1b4716eb85fb297706230c8e937",
+      "license": "MIT"
+    },
+    {
+      "repository": "avrdudes/avr-libc",
+      "commit": "8c0baff524181d8a8a57889b352d2d326a1a08bb",
+      "license": "BSD-3-Clause"
+    }
+  ],
+  "addon_compiled_sources": [
+    "owner/owner_compat.cpp",
+    "vendor/platform/ArduboyPlaytune.cpp",
+    "vendor/platform/MyArduboy.cpp",
+    "vendor/platform/common.cpp",
+    "vendor/platform/menu.cpp",
+    "vendor/platform/game.cpp",
+    "vendor/platform/title.cpp",
+    "vendor/platform/logo.cpp",
+    "vendor/platform/warn.cpp"
+  ],
+  "compiled_frontend_override": {
+    "path": "frontend.cpp",
+    "bytes": 9398,
+    "sha256": "8e492170689e5f0c325caade047e3af311a66af0bbbc840c0dcb497f3f6acd90",
+    "foundation_path": "arduboy-batch-20261010/frontend.cpp",
+    "foundation_bytes": 9140,
+    "foundation_sha256": "81c5e59f8c6c0fdaad5ca4ee292ab4fd8e757f15cd62ef870a36d347b8fbcef5",
+    "patch": "frontend.patch",
+    "patch_bytes": 3285,
+    "patch_sha256": "deded06bbf7cc774c828bc24aca0d2f0bd72961efde0d1c40180499cc16d2d8e",
+    "old_header": "arduboy-batch-20261010/frontend.cpp",
+    "new_header": "lasers/frontend.cpp"
+  },
+  "compiled_cmake_override": {
+    "path": "game.cmake",
+    "bytes": 1239,
+    "sha256": "17b18f23fb638a445f861e4d5fd96ff26a23104a94ffedcacd7800ea91776de7",
+    "foundation_path": "arduboy-batch-20261010/game.cmake",
+    "foundation_bytes": 1764,
+    "foundation_sha256": "96296e8bf2d59ccb516cb23a57ad2346b6b4f11d2f39f8877c852afb6a3dfa4d",
+    "patch": "cmake.patch",
+    "patch_bytes": 2132,
+    "patch_sha256": "4f4d968b38722bd4ae1c3ea9ed4a7c8fb10470b0c9abedb206d7a959008ef7e3",
+    "old_header": "arduboy-batch-20261010/game.cmake",
+    "new_header": "lasers/game.cmake",
+    "compiled_game_id": 15,
+    "compile_definitions": [
+      "ARDU_GAME_ID=15",
+      "ARDUBOY_CORE",
+      "USE_ARDUBOY2_LIB"
+    ],
+    "c_linear_stack_bytes": 131072
+  }
+}

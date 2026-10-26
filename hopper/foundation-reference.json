@@ -1,0 +1,14 @@
+{
+  "format": "pxa-arduboy-new-batch-foundation-reference-1",
+  "common_directory": "arduboy-batch-20261010",
+  "foundation_lock": {
+    "path": "../arduboy-batch-20261010/foundation-lock.json",
+    "bytes": 8199,
+    "sha256": "5d4cc5f108246ed69e99bfc4b67a0215b217297e04591256593cb0f3d235b724"
+  },
+  "final_receipt": {
+    "path": "../../../../logs/research/arduboy-batch-20261010/FINAL.json",
+    "bytes": 15407,
+    "sha256": "12a67ff09e6d74e3afd6cd365a39d7c5e72db6907f42c477b57bffe538e837a8"
+  }
+}

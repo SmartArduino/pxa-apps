@@ -1,0 +1,21 @@
+--- original/utd.ino
++++ platform/utd.ino
+@@ -599,7 +599,7 @@
+   if (UTD_updateCounter % 8 != center % 8)
+     return;
+ 
+-  uint8_t x = center % 8;
++  uint8_t x = center % UTD_MAP_WIDTH;
+ 
+   uint8_t
+     t = center >= UTD_MAP_WIDTH,
+@@ -914,6 +914,9 @@
+   if (levelTo >= UTD_CREEPS)
+     levelTo = UTD_CREEPS - 1;
+ 
++  if (levelTo < levelFrom)
++    levelTo = levelFrom; // bounded range after original narrowing/clamps
++
+   return levelFrom + (index % (levelTo - levelFrom + 1));
+ }
+ 

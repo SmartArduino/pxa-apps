@@ -13,15 +13,15 @@
     1
   ],
   "id": "pxa-gba",
-  "version": "0.1.25",
-  "release_sequence": 26,
+  "version": "0.1.43",
+  "release_sequence": 44,
   "name": "GBA Emulator",
   "description": "gpSP Game Boy Advance emulator with bounded ROM paging, audio and save states",
   "build": {
     "system": "cmake",
     "source_dir": ".",
     "linear_memory": {
-      "maximum_bytes": 8388608,
+      "maximum_bytes": 7340032,
       "pinned": true
     }
   },

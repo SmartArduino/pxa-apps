@@ -1,0 +1,40 @@
+{
+  "repository": "https://github.com/ESPboy-edu/ESPboy_SAF",
+  "commit": "ac59afbc9a906a022f1161828e9c9a32c9b3814a",
+  "original_sha256": {
+    "saf.h": "39c3b7b2dad2e33b718976ec3cdf26425c799cb79066a788ff6c27ecb867ea65",
+    "minigames.ino": "b591dd3623ac47e5e8b030866e274419a76fa1b67e12795827a4a53c1d00e516",
+    "LICENSE": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499",
+    "README.md": "0432a1792d838148cb0dffa9a87b1bd9c10402451d7a9c75d1d6aae57c27ce7e"
+  },
+  "platform": {
+    "saf.h": {
+      "bytes": 122186,
+      "sha256": "e6a91bbf2a8f283b2e2a72ce68bbc437fa4dbaf67464d649b8b296df23bdf139"
+    },
+    "minigames.ino": {
+      "bytes": 48110,
+      "sha256": "9491915fa316aa5ca3dcad899560f0a777387e6de1055e641f3120cc2c6380fe"
+    }
+  },
+  "patch_sha256": "2f99fde074161fb87aff472e47cbfe752e62e80c8b058a42c6fb0c697d73623f",
+  "changes": [
+    "SAF PXA frontend dispatch only",
+    "SNEK bounded food scan, no-food terminal with original high-score states",
+    "SNEK invalid/cyclic drawing-chain guard",
+    "BLOQ no-active-cell cannot fall",
+    "RUNR bounded sentinel preconditions and reserve next sentinel"
+  ],
+  "profile": {
+    "silent": true,
+    "session_save_bytes": 32,
+    "disk_persistence": false,
+    "fps": 25,
+    "tick_ms": 40
+  },
+  "game": "bloq",
+  "engine_source": "../common/retro-games/saf/vendor/original/minigames.ino",
+  "active_source": "../common/retro-games/saf/vendor/platform/minigames.ino",
+  "frontend": "../common/retro-games/saf/frontend.c",
+  "scope": "single original game entry; original B18 menu request pauses the wrapper, CONTINUE restores selected step without init"
+}

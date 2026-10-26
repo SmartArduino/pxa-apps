@@ -1,0 +1,53 @@
+{
+  "files": {
+    "vendor/platform/MyArduboy2.cpp": {
+      "bytes": 6712,
+      "sha256": "b86a3d2fe559e17615060a15f69deffd7317274ce4e8ae7435a39b41b542959f"
+    },
+    "vendor/platform/MyArduboy2.h": {
+      "bytes": 1750,
+      "sha256": "936f3bfe679b3e205de2cce05c9bde9c48065d892c7bfcd1ca311389db0ffbb6"
+    },
+    "vendor/platform/MyArduboyPlaytune.cpp": {
+      "bytes": 14726,
+      "sha256": "22a34fabed99264145cc09d45fa2f39e2f6e4f93bb65390fe346c3b42d924a24"
+    },
+    "vendor/platform/common.cpp": {
+      "bytes": 7295,
+      "sha256": "fba69cc3a8b1cc3f9805b185277cfb5281f32eff0a644eef59b8f3f389a2db0b"
+    },
+    "vendor/platform/common.h": {
+      "bytes": 2844,
+      "sha256": "0a9c27f6339e5991cb264a0ad8c7b6eca36550cc3dc70b1591a87c4c9b2af455"
+    },
+    "vendor/platform/data.h": {
+      "bytes": 7217,
+      "sha256": "6feadfdbe46ce293ca9214b850bd1aae042779532fde5a82978f328ec34978ab"
+    },
+    "vendor/platform/game.cpp": {
+      "bytes": 25934,
+      "sha256": "82144f1136564bb5fb3cf3334e3ff44d4cf8b318455d19b1e1a18320c1124087"
+    },
+    "vendor/platform/info.json": {
+      "bytes": 307,
+      "sha256": "96d40eacbce855672d7c2108f3acdda37dc1db67d9c0a9316219aeb036ba518c"
+    },
+    "vendor/platform/logo.cpp": {
+      "bytes": 3365,
+      "sha256": "ae38feeb2f449341ba0869e4ec63a6ce0855c71d0cf1cbbee75defdeb7e22be0"
+    },
+    "vendor/platform/menu.cpp": {
+      "bytes": 3796,
+      "sha256": "1b08dc74b6371fed947ef7049a86e237a5ff266278a9e8b52be73ab7c9b3f65a"
+    },
+    "vendor/platform/title.cpp": {
+      "bytes": 12295,
+      "sha256": "540a69c4bfcc7ed64c1016920dcf5ace4dbb8988ad49cbc7dbea991e45745b79"
+    },
+    "vendor/platform/toyokumono.ino": {
+      "bytes": 1154,
+      "sha256": "b2263b10a5be50d6633bc6fa24754fe61ed8f5ee7ea70f9cf42a80d7176e01b0"
+    }
+  },
+  "patch_sha256": "6877a91568d6b06c2946397adb5999d3b21896ff39013f344c3ecd007a916d10"
+}

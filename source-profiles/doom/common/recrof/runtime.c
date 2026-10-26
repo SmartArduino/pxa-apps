@@ -30,14 +30,8 @@
 #ifndef PXA_GAME_RENDER_BLIT
 #define PXA_GAME_RENDER_BLIT 0
 #endif
-#ifndef PXA_GAME_RENDER_FRAME_SPANS
-#define PXA_GAME_RENDER_FRAME_SPANS 0
-#endif
-#ifndef PXA_GAME_RENDER_PROJECTED_SPANS
-#define PXA_GAME_RENDER_PROJECTED_SPANS 0
-#endif
-#if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS || PXA_GAME_RENDER_FRAME_SPANS || PXA_GAME_RENDER_BLIT
-#include "pxa_game_render_spans.h"
+#if PXA_GAME_RENDER_BLIT
+#include "pxa_game_render_compute.h"
 uint64_t port_game_render_context;
 #endif
 #include "pxa_ui.h"
@@ -801,7 +795,7 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     }
   }
   controls_environment(&env);
-#if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS || PXA_GAME_RENDER_FRAME_SPANS || PXA_GAME_RENDER_BLIT
+#if PXA_GAME_RENDER_BLIT
   int raster_status = pxa_game_render_create_raster(30, 256);
   if (raster_status) return raster_status;
 #endif
@@ -833,7 +827,7 @@ static int32_t handle_event(const uint8_t *bytes, uint32_t n) {
     return PXA_EVENT_HANDLED;
   }
 #endif
-#if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS || PXA_GAME_RENDER_FRAME_SPANS || PXA_GAME_RENDER_BLIT
+#if PXA_GAME_RENDER_BLIT
   if (e.service == PXA_GAME_RENDER_SERVICE &&
       e.opcode == PXA_GAME_RENDER_CREATE_RASTER_CONTEXT && e.token == 30) {
     pxa_game_render_raster_result_t result;
@@ -841,10 +835,7 @@ static int32_t handle_event(const uint8_t *bytes, uint32_t n) {
     if (result.status) return result.status;
     port_game_render_context = result.handle;
     port_log("PXA GameRender compute ready max=%u packet_capacity=%u",
-        result.max_spans, PXA_GAME_RENDER_FRAME_SPANS ? (unsigned)(surface_w * surface_h * 2) :
-        PXA_GAME_RENDER_BLIT ? PXA_GAME_RENDER_BLIT_BYTES : PXA_GAME_RENDER_PROJECTED_SPANS ?
-        PXA_GAME_RENDER_PROJECTED_PREFIX_BYTES + 256 * PXA_GAME_RENDER_ROW_BYTES :
-        PXA_GAME_RENDER_SPANS_HEADER_BYTES + 256 * PXA_GAME_RENDER_SPAN_BYTES);
+        result.max_commands, PXA_GAME_RENDER_BLIT_BYTES);
     return PXA_EVENT_HANDLED;
   }
 #endif

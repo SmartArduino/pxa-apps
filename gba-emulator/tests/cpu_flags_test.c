@@ -20,6 +20,47 @@ static void prepare(u32 a,u32 b,bool thumb) {
     reg[REG_PC]=0x06000000;reg[REG_CPSR]=thumb?0x3f:0x1f;
     write_ioreg(REG_IE,0);write_ioreg(REG_IF,0);write_ioreg(REG_IME,0);
 }
+static u32 reference_shift(u32 value,unsigned kind,unsigned amount,bool by_register,u32 *carry) {
+    if(by_register){amount&=255;if(!amount)return value;}
+    else if(!amount){
+        if(!kind)return value;
+        if(kind==3){u32 old=*carry;*carry=value&1;return (value>>1)|(old<<31);}
+        amount=32;
+    }
+    switch(kind){
+        case 0:*carry=amount<=32?(value>>(32-amount))&1:0;return amount<32?value<<amount:0;
+        case 1:*carry=amount<=32?(value>>(amount-1))&1:0;return amount<32?value>>amount:0;
+        case 2:
+            *carry=amount<32?(value>>(amount-1))&1:value>>31;
+            return amount<32?(u32)((s32)value>>amount):value&0x80000000u?UINT32_MAX:0;
+        default:
+            amount&=31;
+            if(amount)value=(value>>amount)|(value<<(32-amount));
+            *carry=value>>31;return value;
+    }
+}
+static void shifter_test(void) {
+    const u32 values[]={0,1,UINT32_MAX,0x7fffffff,0x80000000,0xdeadbeef};
+    const unsigned shifts[]={0,1,7,31,32,33,255,256};
+    for(unsigned kind=0;kind<4;++kind)for(unsigned by_register=0;by_register<2;++by_register)
+    for(unsigned shift_index=0;shift_index<sizeof(shifts)/sizeof(*shifts);++shift_index)
+    for(unsigned input=0;input<sizeof(values)/sizeof(*values)+2;++input)
+    for(unsigned carry=0;carry<2;++carry)for(unsigned set_flags=0;set_flags<2;++set_flags){
+        unsigned amount=shifts[shift_index];if(!by_register && amount>31)continue;
+        prepare(input<6?values[input]:0,amount,false);
+        u32 flags=0x9000001fu|(carry<<29);reg[REG_CPSR]=flags;
+        unsigned rm=input==6?15:0,rs=input==7?15:1;
+        u32 operand=rm==15?0x06000008u+4*by_register:reg[0];
+        u32 expected_c=carry;
+        u32 expected=reference_shift(operand,kind,by_register&&rs==15?8:amount,by_register,&expected_c);
+        if(set_flags)flags=(expected&0x80000000u)|(!expected?0x40000000u:0)|(expected_c<<29)|0x1000001fu;
+        word(0,0xe1a02000u|(set_flags<<20)|(kind<<5)|rm|
+             (by_register?(rs<<8)|0x10:amount<<7)); /* MOV(S) r2, shifted operand */
+        word(4,0xe10f5000);word(8,0xe12fff1c);
+        execute_arm_vram(10000);
+        assert(reg[2]==expected && reg[5]==flags && reg[REG_CPSR]==flags);
+    }
+}
 int main(int argc,char **argv) {
     assert(argc==2);FILE *f=fopen(argv[1],"rb");assert(f);
     u8 *rom=malloc(32768);assert(rom&&fread(rom,1,32768,f)==32768);fclose(f);
@@ -66,6 +107,6 @@ int main(int argc,char **argv) {
         execute_arm_vram(10000);
         assert(reg[REG_PC]==0x18&&REG_SPSR(MODE_IRQ)==(flags|0x1f));
     }
-    emu_core_close();free(rom);
+    shifter_test();emu_core_close();free(rom);
     puts("PASS: NZCV, PSR control writes, ARM/Thumb changes, scalar/block stores, SWI and IRQ");
 }

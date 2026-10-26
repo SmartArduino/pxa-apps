@@ -52,6 +52,15 @@ namespace GAPI {
     ColorSW swPaletteColor[256];
     ColorSW swPaletteWater[256];
     ColorSW swPaletteGray[256];
+#if defined(_OS_PXA) && OL_SHADED_PALETTE_CACHE
+    alignas(16) uint16 swShadedColor[32 * 256], swShadedWater[32 * 256];
+    void refreshShadedPalettes() {
+        for(unsigned i=0;i<32*256;++i) {
+            swShadedColor[i]=swPaletteColor[swLightmapShade[i]];
+            swShadedWater[i]=swPaletteWater[swLightmapShade[i]];
+        }
+    }
+#endif
     uint8   swGradient[256];
     Tile8   *curTile;
 
@@ -897,9 +906,15 @@ namespace GAPI {
         }
 
 #if defined(_OS_PXA) && OL_OPTIMIZED && !defined(DITHER_FILTER)
+        const uint16 *shaded=nullptr;
+#if OL_SHADED_PALETTE_CACHE
+        if(swLightmap==swLightmapShade)
+            shaded=swPalette==swPaletteColor ? swShadedColor
+                  : swPalette==swPaletteWater ? swShadedWater : nullptr;
+#endif
         const OlRasterState raster = {swColor, swDepth, curTile->index, swLightmap, swPalette,
             Core::width, swClipRect.x, swClipRect.y, swClipRect.z, swClipRect.w,
-            swDepthTest, swDepthWrite};
+            swDepthTest, swDepthWrite,shaded};
         ol_classic_draw(raster, swVertices.items, swIndices.items,
             swQuads.items, swQuads.length, swTriangles.items, swTriangles.length);
 #else
@@ -935,6 +950,9 @@ namespace GAPI {
 
         swLightmap = swLightmapShade;
         swPalette  = swPaletteColor;
+#if defined(_OS_PXA) && OL_SHADED_PALETTE_CACHE
+        refreshShadedPalettes();
+#endif
     }
 
     void setPalette(ColorSW *palette) {

@@ -17,6 +17,8 @@ int32_t pxa_io(uint64_t h,uint32_t op,uint8_t *data,uint32_t n) {
     (void)h;(void)op;(void)data;++io_calls;return io_result==INT32_MAX?(int32_t)n:io_result;
 }
 static void reset(void) {
+    memset(&audio_preferences,0,sizeof(audio_preferences));
+    save_pending=writing_save=save_replace_pending=save_failed=0;
     audio=audio_pending=permission=0;audio_requested=audio_failed=0;
     menu_focus=slot_focus=0;menu_repeat_buttons=0;menu_repeat_at=0;menu_repeat_mode=MENU;
     memset(controller_raw_previous,0,sizeof(controller_raw_previous));
@@ -215,7 +217,26 @@ static void test_system_menu(void) {
     width=296;height=240;input_density_q16=65536;memset(&env,0,sizeof(env));menu_environment(&env);
     puts("PASS: system text wire format, density applied once, native font size and one-time menu teardown");
 }
+static void test_save_baseline(void) {
+    uint8_t *rom=calloc(1,16+16384);assert(rom);
+    memcpy(rom,"NES\032",4);rom[4]=1;rom[6]=2;
+    rom[16+0x3ffd]=0x80;
+    assert(!nes_core_load(rom,16+16384));reset();rom_loaded=1;
+    save_pending=writing_save=save_replace_pending=0;
+    strcpy(save_path,"test.sav");strcpy(save_tmp,"test.sav.tmp");
+    remember_save_baseline();assert(save_baseline_valid);
+    uint32_t baseline=saved_crc;
+    start_save();assert(!save_pending);
+    save_baseline_valid=0;start_save();assert(save_pending);save_pending=0;
+    remember_save_baseline();
+    size_t size;uint8_t *ram=nes_core_sram(&size);assert(ram && size);
+    ram[size/2]^=0x5a;
+    start_save();assert(save_pending && pending_save_crc!=baseline && saved_crc==baseline);
+    save_pending=0;start_save();assert(save_pending && saved_crc==baseline);
+    save_pending=0;free(save_data);save_data=NULL;nes_core_close();free(rom);reset();
+}
 int main(void) {
+    test_save_baseline();
     /* Native canvas keeps existing menu/button physical tap targets. */
     unsigned cw=800,ch=480;assert(nes_display_canvas(&cw,&ch)==1 && cw==800 && ch==480);
     cw=296;ch=240;assert(nes_display_canvas(&cw,&ch)==1 && cw==296 && ch==240);

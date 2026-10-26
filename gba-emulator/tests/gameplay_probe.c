@@ -10,7 +10,7 @@
 #include <time.h>
 /* Freeze the cartridge RTC epoch for byte-exact cross-process traces. */
 time_t time(time_t *out) { time_t value=1700000000; if(out)*out=value; return value; }
-extern uint64_t gba_cpu_fusion_hits[3];
+extern uint64_t gba_cpu_fusion_hits[6];
 static int read_file(void *ctx,uint64_t offset,void *out,size_t size) {
     FILE *f=ctx;return fseeko(f,(off_t)offset,SEEK_SET)||fread(out,1,size,f)!=size?-1:0;
 }
@@ -44,6 +44,6 @@ int main(int argc,char **argv) {
     assert(!emu_state_save(state,state_size));FILE *out=output(argv[5],"state");assert(fwrite(state,1,state_size,out)==state_size);fclose(out);
     out=output(argv[5],"ppm");fprintf(out,"P6\n240 160\n255\n");const uint16_t *p=emu_core_video();
     for(unsigned i=0;i<240*160;++i){uint16_t c=p[i];uint8_t rgb[3]={(c>>11)*255/31,((c>>5)&63)*255/63,(c&31)*255/31};fwrite(rgb,1,3,out);}fclose(out);
-    fprintf(stderr,"fusion head=%llu tail=%llu copy=%llu\n",(unsigned long long)gba_cpu_fusion_hits[0],(unsigned long long)gba_cpu_fusion_hits[1],(unsigned long long)gba_cpu_fusion_hits[2]);
+    fprintf(stderr,"fusion head=%llu tail=%llu copy=%llu direct=%llu counted_copy=%llu half_copy=%llu\n",(unsigned long long)gba_cpu_fusion_hits[0],(unsigned long long)gba_cpu_fusion_hits[1],(unsigned long long)gba_cpu_fusion_hits[2],(unsigned long long)gba_cpu_fusion_hits[3],(unsigned long long)gba_cpu_fusion_hits[4],(unsigned long long)gba_cpu_fusion_hits[5]);
     free(state);emu_core_close();fclose(rom);fclose(input);return 0;
 }

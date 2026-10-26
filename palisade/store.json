@@ -1,0 +1,9 @@
+{
+  "name": "围栏分区 · Palisade",
+  "kind": "game",
+  "category": "puzzle",
+  "summary": "按数字边界提示，将棋盘划分成大小相同的连通区域。",
+  "description": "按数字边界提示，将棋盘划分成大小相同的连通区域。\n\n采用 Simon Tatham Portable Puzzle Collection 原版规则引擎及相应许可。\n\n操作：触摸棋盘与屏幕按钮；手柄 A 新局，B 或 Start 继续，方向键与 A/B 操作，X 撤回，Select 重做。数字键盘类通过 L/R 选键、Y 输入。\n\n当前范围：当前进度只在本次运行中保留，退出应用后不提供自动恢复。\n\n画面保持原比例适配屏幕，允许黑边。按设备架构分别提供 ESP32-S3、ESP32-S31 与 Linux x86_64 AOT 独立安装包，只下载对应架构，需 PXA SDK 2.1 / Core 2 兼容系统。界面主要沿用原版英文。商城截图来自真实 PXA 产品模拟器，已关闭性能浮层、手势条与三按键导航；截图不代表设备实测帧率。\n\n对应版本完整源码（含共享运行层、上游源码、构建脚本与许可）：https://pxa.doit.am/downloads/app-sources/20261026/pxa-retro-games-0.2.1-20261026-183348.tar.gz",
+  "language": "en",
+  "changelog": "按设备架构拆分 AOT 安装包，ESP32-S3、ESP32-S31 与桌面 x86_64 各自下载；保留图标、游戏执行代码和现有功能。"
+}

@@ -1,0 +1,18 @@
+#include "backend.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <vector>
+static unsigned checks;
+static void check(bool p,const char*s){if(!p){fprintf(stderr,"FAIL %s\n",s);exit(1);}++checks;}
+static std::vector<uint8_t>game(){size_t n=arduboy_game_pack(nullptr,0);std::vector<uint8_t>b(n);check(arduboy_game_pack(b.data(),b.size())==n,"pack complete");return b;}
+static void advance(unsigned ms){while(ms){unsigned n=ms>16?16:ms;arduboy_pxa_advance(n);ms-=n;}}
+static void tap(uint8_t mask){arduboy_pxa_controller(mask);advance(48);arduboy_pxa_controller(0);advance(48);}
+static unsigned word(const std::vector<uint8_t>&b,unsigned n){return b[n]|(unsigned(b[n+1])<<8);}
+int main(){arduboy_pxa_boot(17);auto b=game();printf("wire bytes=%zu mode=%u counter=%u\n",b.size(),b[2],b[88]);check(b.size()==615,"all original typed globals 615 bytes");check(b[2]==0&&b[88]==120,"originalLogo120");check(!arduboy_pxa_state.fault&&arduboy_pxa_state.constructors==1,"core cold ctor");check(b[13]==0&&b[61]==0,"owner/audio faults0");check(arduboy_pxa_state.eeprom[1008]==255,"freshFF EEPROM");uint8_t too[1]={77};check(!arduboy_game_pack(too,1)&&too[0]==77,"bounded serialization");
+advance(1930);b=game();check(b[2]==1&&b[118]==1,"original title top");check(b[14]==1,"original initAudio onechannel");check(word(b,86)==0,"original record count0");
+tap(16);b=game();check(b[104]==1,"title menuDOWN settings");tap(4);b=game();check(b[118]==2,"original settings");unsigned rank=(b[81]>>0)&15;tap(64);b=game();check((b[81]&15)!=rank,"real RIGHT changes rank");tap(32);tap(16);tap(16);tap(16);tap(16);tap(4);b=game();check(b[118]==1,"settings exit viaB");
+tap(16);tap(4);b=game();check(b[118]==3,"original credit");tap(4);b=game();check(b[118]==1,"credit return");
+tap(128);tap(128);tap(4);b=game();check(b[2]==2&&b[125]==0,"original B newbattle/start");check(b[130]==64&&b[131]==128,"original player initialposition");advance(1050);arduboy_pxa_controller(64);advance(160);arduboy_pxa_controller(0);advance(48);b=game();check(b[130]>64,"heldRIGHT moves player");arduboy_pxa_controller(4);advance(160);b=game();check(b[133]==8,"heldB slows and shoots");bool shot=false;for(unsigned i=142;i<178;i+=2)shot|=b[i]<128;check(shot,"original live shot array");arduboy_pxa_controller(0);advance(800);b=game();check(b[125]==1,"original120frame start completes");check(word(b,86)==1,"playCount persisted");check(arduboy_pxa_state.eeprom[1008]=='O'&&arduboy_pxa_state.eeprom[1011]==19,"original OBN19 record signature");
+unsigned elapsed=0;while(elapsed<65000){advance(16);elapsed+=16;b=game();if(b[125]==2)break;}check(b[125]==2&&b[138],"natural bullet collision defeat");check(word(b,126)>0,"original survivedframe record");advance(1100);tap(4);b=game();check(b[2]==2&&b[125]==0&&!b[138],"original B retry");
+tap(8);b=game();check(b[139]&&b[103]>0,"original A game menu");tap(4);b=game();check(!b[139],"original B continue");auto saved=std::vector<uint8_t>(arduboy_pxa_state.eeprom,arduboy_pxa_state.eeprom+1024);unsigned oldclock=arduboy_pxa_state.clock_ms;arduboy_pxa_new();b=game();check(b[2]==0&&b[88]==120&&b[140]==0&&b[141]==0,"NEW resets globals and original shot/bullet cursors");check(oldclock==arduboy_pxa_state.clock_ms,"NEW preserves clock");check(saved==std::vector<uint8_t>(arduboy_pxa_state.eeprom,arduboy_pxa_state.eeprom+1024),"NEW preservesEE");advance(1930);b=game();check(word(b,86)>=1&&b[2]==1,"NEW reloads original record");check(!b[13]&&!b[61]&&!arduboy_pxa_state.fault,"final faults0");
+printf("{\"passed\":true,\"checks\":%u,\"game_wire_bytes\":615,\"ordinary_input_only\":true,\"natural_game_over_ms\":%u,\"original_survival_frames\":%u,\"hardware_tested\":false}\n",checks,elapsed,word(b,126));}

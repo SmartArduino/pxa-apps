@@ -1,0 +1,443 @@
+{
+  "format": "pxa-retro-games-1",
+  "sdk": [
+    2,
+    1
+  ],
+  "games": [
+    {
+      "directory": "ardubullets",
+      "id": "pxa-ardubullets",
+      "name": "ARDUBULLETs",
+      "family": "arduboy"
+    },
+    {
+      "directory": "ardudash",
+      "id": "pxa-ardudash",
+      "name": "ArduDash",
+      "family": "arduboy"
+    },
+    {
+      "directory": "blackbox",
+      "id": "pxa-blackbox",
+      "name": "Black Box",
+      "family": "puzzles"
+    },
+    {
+      "directory": "blockout",
+      "id": "pxa-blockout",
+      "name": "BlockOut II",
+      "family": "independent"
+    },
+    {
+      "directory": "bloq",
+      "id": "pxa-bloq",
+      "name": "BLOQ (SAF)",
+      "family": "saf"
+    },
+    {
+      "directory": "bridges",
+      "id": "pxa-bridges",
+      "name": "Bridges",
+      "family": "puzzles"
+    },
+    {
+      "directory": "brogue",
+      "id": "pxa-brogue-ce",
+      "name": "Brogue CE",
+      "family": "independent"
+    },
+    {
+      "directory": "chribocchi",
+      "id": "pxa-chribocchi",
+      "name": "Chri-Bocchi Cat",
+      "family": "arduboy"
+    },
+    {
+      "directory": "cube",
+      "id": "pxa-cube",
+      "name": "Cube",
+      "family": "puzzles"
+    },
+    {
+      "directory": "dominosa",
+      "id": "pxa-dominosa",
+      "name": "Dominosa",
+      "family": "puzzles"
+    },
+    {
+      "directory": "evasion",
+      "id": "pxa-evasion",
+      "name": "Evasion",
+      "family": "arduboy"
+    },
+    {
+      "directory": "fifteen",
+      "id": "pxa-fifteen",
+      "name": "Fifteen",
+      "family": "puzzles"
+    },
+    {
+      "directory": "filling",
+      "id": "pxa-filling",
+      "name": "Filling",
+      "family": "puzzles"
+    },
+    {
+      "directory": "flip",
+      "id": "pxa-flip",
+      "name": "Flip",
+      "family": "puzzles"
+    },
+    {
+      "directory": "flood",
+      "id": "pxa-flood",
+      "name": "Flood",
+      "family": "puzzles"
+    },
+    {
+      "directory": "galaxies",
+      "id": "pxa-galaxies",
+      "name": "Galaxies",
+      "family": "puzzles"
+    },
+    {
+      "directory": "guess",
+      "id": "pxa-guess",
+      "name": "Guess",
+      "family": "puzzles"
+    },
+    {
+      "directory": "guessdots",
+      "id": "pxa-guessdots",
+      "name": "Guess Dots",
+      "family": "arduboy"
+    },
+    {
+      "directory": "hollowseeker",
+      "id": "pxa-hollowseeker",
+      "name": "Hollow Seeker",
+      "family": "arduboy"
+    },
+    {
+      "directory": "hopper",
+      "id": "pxa-hopper",
+      "name": "Hopper",
+      "family": "arduboy"
+    },
+    {
+      "directory": "inertia",
+      "id": "pxa-inertia",
+      "name": "Inertia",
+      "family": "puzzles"
+    },
+    {
+      "directory": "keen",
+      "id": "pxa-keen",
+      "name": "Keen",
+      "family": "puzzles"
+    },
+    {
+      "directory": "knightmove",
+      "id": "pxa-knightmove",
+      "name": "Knight Move",
+      "family": "arduboy"
+    },
+    {
+      "directory": "lasers",
+      "id": "pxa-lasers",
+      "name": "Lasers",
+      "family": "arduboy"
+    },
+    {
+      "directory": "lightup",
+      "id": "pxa-lightup",
+      "name": "Light Up",
+      "family": "puzzles"
+    },
+    {
+      "directory": "loopy",
+      "id": "pxa-loopy",
+      "name": "Loopy",
+      "family": "puzzles"
+    },
+    {
+      "directory": "magnets",
+      "id": "pxa-magnets",
+      "name": "Magnets",
+      "family": "puzzles"
+    },
+    {
+      "directory": "map",
+      "id": "pxa-map",
+      "name": "Map",
+      "family": "puzzles"
+    },
+    {
+      "directory": "meritous",
+      "id": "pxa-meritous",
+      "name": "Meritous",
+      "family": "independent"
+    },
+    {
+      "directory": "microtd",
+      "id": "pxa-microtd",
+      "name": "microTD (uTD): SAF edition",
+      "family": "saf"
+    },
+    {
+      "directory": "mosaic",
+      "id": "pxa-mosaic",
+      "name": "Mosaic",
+      "family": "puzzles"
+    },
+    {
+      "directory": "net",
+      "id": "pxa-net",
+      "name": "Net",
+      "family": "puzzles"
+    },
+    {
+      "directory": "netslide",
+      "id": "pxa-netslide",
+      "name": "Netslide",
+      "family": "puzzles"
+    },
+    {
+      "directory": "nightraid",
+      "id": "pxa-nightraid",
+      "name": "NightRaid",
+      "family": "arduboy"
+    },
+    {
+      "directory": "obstacleflight",
+      "id": "pxa-obstacleflight",
+      "name": "ObstacleFlight",
+      "family": "arduboy"
+    },
+    {
+      "directory": "opengolf",
+      "id": "pxa-opengolf",
+      "name": "Open Golf",
+      "family": "independent"
+    },
+    {
+      "directory": "palisade",
+      "id": "pxa-palisade",
+      "name": "Palisade",
+      "family": "puzzles"
+    },
+    {
+      "directory": "pattern",
+      "id": "pxa-pattern",
+      "name": "Pattern",
+      "family": "puzzles"
+    },
+    {
+      "directory": "pearl",
+      "id": "pxa-pearl",
+      "name": "Pearl",
+      "family": "puzzles"
+    },
+    {
+      "directory": "pegs",
+      "id": "pxa-pegs",
+      "name": "Pegs",
+      "family": "puzzles"
+    },
+    {
+      "directory": "psicolo",
+      "id": "pxa-psicolo",
+      "name": "Psi Colo",
+      "family": "arduboy"
+    },
+    {
+      "directory": "randocity",
+      "id": "pxa-randocity",
+      "name": "Rando City",
+      "family": "arduboy"
+    },
+    {
+      "directory": "range",
+      "id": "pxa-range",
+      "name": "Range",
+      "family": "puzzles"
+    },
+    {
+      "directory": "rect",
+      "id": "pxa-rect",
+      "name": "Rectangles",
+      "family": "puzzles"
+    },
+    {
+      "directory": "runr",
+      "id": "pxa-runr",
+      "name": "RUNR (SAF)",
+      "family": "saf"
+    },
+    {
+      "directory": "samegame",
+      "id": "pxa-samegame",
+      "name": "Same Game",
+      "family": "puzzles"
+    },
+    {
+      "directory": "shooter",
+      "id": "pxa-shooter",
+      "name": "Shooter",
+      "family": "arduboy"
+    },
+    {
+      "directory": "signpost",
+      "id": "pxa-signpost",
+      "name": "Signpost",
+      "family": "puzzles"
+    },
+    {
+      "directory": "singles",
+      "id": "pxa-singles",
+      "name": "Singles",
+      "family": "puzzles"
+    },
+    {
+      "directory": "sixteen",
+      "id": "pxa-sixteen",
+      "name": "Sixteen",
+      "family": "puzzles"
+    },
+    {
+      "directory": "slant",
+      "id": "pxa-slant",
+      "name": "Slant",
+      "family": "puzzles"
+    },
+    {
+      "directory": "snek",
+      "id": "pxa-snek",
+      "name": "SNEK (SAF)",
+      "family": "saf"
+    },
+    {
+      "directory": "solo",
+      "id": "pxa-solo",
+      "name": "Solo",
+      "family": "puzzles"
+    },
+    {
+      "directory": "sopwith",
+      "id": "pxa-sopwith",
+      "name": "Sopwith",
+      "family": "independent"
+    },
+    {
+      "directory": "tents",
+      "id": "pxa-tents",
+      "name": "Tents",
+      "family": "puzzles"
+    },
+    {
+      "directory": "towers",
+      "id": "pxa-towers",
+      "name": "Towers",
+      "family": "puzzles"
+    },
+    {
+      "directory": "toyokumono",
+      "id": "pxa-toyokumono",
+      "name": "Toyokumono",
+      "family": "arduboy"
+    },
+    {
+      "directory": "tracks",
+      "id": "pxa-tracks",
+      "name": "Tracks",
+      "family": "puzzles"
+    },
+    {
+      "directory": "twiddle",
+      "id": "pxa-twiddle",
+      "name": "Twiddle",
+      "family": "puzzles"
+    },
+    {
+      "directory": "undead",
+      "id": "pxa-undead",
+      "name": "Undead",
+      "family": "puzzles"
+    },
+    {
+      "directory": "unequal",
+      "id": "pxa-unequal",
+      "name": "Unequal",
+      "family": "puzzles"
+    },
+    {
+      "directory": "unruly",
+      "id": "pxa-unruly",
+      "name": "Unruly",
+      "family": "puzzles"
+    },
+    {
+      "directory": "untangle",
+      "id": "pxa-untangle",
+      "name": "Untangle",
+      "family": "puzzles"
+    },
+    {
+      "directory": "whatajong",
+      "id": "pxa-whatajong",
+      "name": "Whatajong",
+      "family": "independent"
+    },
+    {
+      "directory": "lode-runner",
+      "id": "pxa-classic-loderunner",
+      "name": "Lode Runner",
+      "family": "arduboy"
+    },
+    {
+      "directory": "pacman-arduman",
+      "id": "pxa-classic-pacman",
+      "name": "Pac-Man / Ardu-man",
+      "family": "arduboy"
+    },
+    {
+      "directory": "pong",
+      "id": "pxa-classic-pong",
+      "name": "经典乒乓球",
+      "family": "arduboy"
+    },
+    {
+      "directory": "space-invaders",
+      "id": "pxa-classic-invaders",
+      "name": "经典太空侵略者",
+      "family": "arduboy"
+    }
+  ],
+  "existing_games": [
+    {
+      "source": "2048",
+      "existing": "game-2048"
+    },
+    {
+      "source": "anarch",
+      "existing": "anarch"
+    },
+    {
+      "source": "chess",
+      "existing": "pocket-chess"
+    },
+    {
+      "source": "mines",
+      "existing": "arcade/minesweeper"
+    },
+    {
+      "source": "tetris-petris",
+      "existing": "arcade/tetris"
+    },
+    {
+      "source": "ardubreakout",
+      "existing": "arcade/brick_breaker"
+    }
+  ]
+}

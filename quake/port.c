@@ -8,7 +8,7 @@
 #include "keyboard.h"
 #include "quakedef.h"
 #include "lightmap_cache.h"
-#include "pxa_game_render_spans.h"
+#include "pxa_game_render_compute.h"
 #if PXA_QUAKE_HOST_AUDIO_MIX
 #include "pxa_audio.h"
 #include "host_audio_mix.h"
@@ -36,7 +36,7 @@ int Pxa_QuakeMixS8(void *paintbuffer, const void *source,
   return 1;
 }
 #endif
-#if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS || PXA_GAME_RENDER_FRAME_SPANS || PXA_GAME_RENDER_BLIT
+#if PXA_GAME_RENDER_BLIT
 extern uint64_t port_game_render_context;
 #endif
 static port_pointer_motion_t pointer_motion;
@@ -53,8 +53,9 @@ static void probe_poll_mode(void) {
   int value = fgetc(f), end = fgetc(f);
   fclose(f);
   if (end == EOF) {
-    if (value >= '0' && value <= '9') port_render_probe_mode = (unsigned)(value - '0');
-    else if (value >= 'a' && value <= 'f') port_render_probe_mode = (unsigned)(value - 'a' + 10);
+    unsigned mode = value >= '0' && value <= '9' ? (unsigned)(value - '0') :
+        value >= 'a' && value <= 'f' ? (unsigned)(value - 'a' + 10) : 16u;
+    if (!(mode & ~13u)) port_render_probe_mode = mode;
   }
 }
 #endif
@@ -97,9 +98,9 @@ void port_game_stats(void) {
   Pxa_QuakeLightStats();
   vflash_stats_t io; vflash_stats(&io, 1);
   uint8_t stats[64] = {0};
-#if PXA_GAME_RENDER_SPANS || PXA_GAME_RENDER_PROJECTED_SPANS || PXA_GAME_RENDER_FRAME_SPANS || PXA_GAME_RENDER_BLIT
+#if PXA_GAME_RENDER_BLIT
   if (port_game_render_context)
-    pxa_io(port_game_render_context, PXA_GAME_RENDER_IO_SPAN_TELEMETRY, stats, sizeof(stats));
+    pxa_io(port_game_render_context, PXA_GAME_RENDER_IO_COMPUTE_TELEMETRY, stats, sizeof(stats));
 #endif
 #ifdef PXA_FRAME_PROFILE
   int ready = _g->cls.state == ca_connected && _g->cls.signon == SIGNONS &&

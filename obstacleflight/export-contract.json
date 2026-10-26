@@ -1,0 +1,215 @@
+{
+  "format": "pxa-arduboy-batch-module-export-contract-1",
+  "game": "obstacleflight",
+  "repository": "https://github.com/Gitonym/ObstacleFlight",
+  "commit": "04668518ccad76aae1563b69c0ac8132a064c976",
+  "game_license": "Unlicense",
+  "modified_date": "2026-10-10",
+  "common_directory": "arduboy-batch-20261010",
+  "original_frame_period_ms": 16,
+  "typed_game_bytes": 101,
+  "source_locks": [
+    {
+      "path": "obstacleflight-upstream-lock.json",
+      "bytes": 1207,
+      "sha256": "cffc8894f1eecb29849dd754a5ff02ec95754ed2372e0965218b5725b3d5fbaa"
+    },
+    {
+      "path": "tinyfont-upstream-lock.json",
+      "bytes": 5733,
+      "sha256": "c849c7c589007c9151278c1d9cc849b9ab3634e2a45141c4989d553cafa2f0b7"
+    }
+  ],
+  "original_files": [
+    {
+      "path": "vendor/original/obstacleflight/LICENSE",
+      "bytes": 1210,
+      "sha256": "88d9b4eb60579c191ec391ca04c16130572d7eedc4a86daa58bf28c6e14c9bcd",
+      "url": "https://raw.githubusercontent.com/Gitonym/ObstacleFlight/04668518ccad76aae1563b69c0ac8132a064c976/LICENSE"
+    },
+    {
+      "path": "vendor/original/obstacleflight/ObstacleFlight.ino",
+      "bytes": 11624,
+      "sha256": "3cf22b53388ed429556d5475af020292f4383a68099d70d2d406a18338ffd409",
+      "url": "https://raw.githubusercontent.com/Gitonym/ObstacleFlight/04668518ccad76aae1563b69c0ac8132a064c976/ObstacleFlight.ino"
+    },
+    {
+      "path": "vendor/original/tinyfont/.gitignore",
+      "bytes": 71,
+      "sha256": "c851f92e1a7d1fd2d397b636e40b00933ac6c2c07eff32868c392b75dac945eb",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/.gitignore"
+    },
+    {
+      "path": "vendor/original/tinyfont/.travis.yml",
+      "bytes": 1501,
+      "sha256": "5512c5cbaf2e172169bebdd394fbe9e18df2cba27e7793cf32d99dfd6d9266ae",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/.travis.yml"
+    },
+    {
+      "path": "vendor/original/tinyfont/LICENSE",
+      "bytes": 1510,
+      "sha256": "1658fe417a2890929f2a9e10dbefa4be77670b8cbd2f32f11d43a327aad7ae22",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/LICENSE"
+    },
+    {
+      "path": "vendor/original/tinyfont/README.md",
+      "bytes": 2443,
+      "sha256": "6d008c723fcbfe8cb032ae77ad82e53d19fad20a2870aa9fb233b79937cf4f1f",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/README.md"
+    },
+    {
+      "path": "vendor/original/tinyfont/bitmaps/4x4font.psd",
+      "bytes": 194420,
+      "sha256": "bbcfc0fa372aafa91186dad8f9e7b6dfdc1594f0e9bd915a41b32e8c57f4fb47",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/bitmaps/4x4font.psd"
+    },
+    {
+      "path": "vendor/original/tinyfont/bitmaps/tinyfont-preview.png",
+      "bytes": 3712,
+      "sha256": "235b48ec4117dac8c7dbb3fe84f6f041a82adae94112b3cf2b101f530739eb2a",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/bitmaps/tinyfont-preview.png"
+    },
+    {
+      "path": "vendor/original/tinyfont/bitmaps/tinyfont_8x8.png",
+      "bytes": 690,
+      "sha256": "e702937d7662a547e547e9b969b0ab54167da818a63886ab1571035f3947bad2",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/bitmaps/tinyfont_8x8.png"
+    },
+    {
+      "path": "vendor/original/tinyfont/examples/TinyfontSample/TinyfontSample.ino",
+      "bytes": 1084,
+      "sha256": "b9d763aa24985bef141fb1dbb291dba601e0756fc5740f44d104417c2f0155c4",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/examples/TinyfontSample/TinyfontSample.ino"
+    },
+    {
+      "path": "vendor/original/tinyfont/keywords.txt",
+      "bytes": 168,
+      "sha256": "d02edefe85b8f213db282c2199e3529800fc3b5a52468dabb105acfe4f5f14ae",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/keywords.txt"
+    },
+    {
+      "path": "vendor/original/tinyfont/library.json",
+      "bytes": 620,
+      "sha256": "96ca5ae99c36ab53224e52f0070b0d7e19bb9a2d6b2a45533e7bfd36b5c475c0",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/library.json"
+    },
+    {
+      "path": "vendor/original/tinyfont/library.properties",
+      "bytes": 373,
+      "sha256": "c9196a99de3bcf0da010fcdfefe32af6c73cb1f067b66464ae8f74de644583c0",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/library.properties"
+    },
+    {
+      "path": "vendor/original/tinyfont/src/Tinyfont.cpp",
+      "bytes": 2526,
+      "sha256": "90262dcf58d2b87affa1878886d01835a33cdd082810db80d46cf64ecb8c500f",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/src/Tinyfont.cpp"
+    },
+    {
+      "path": "vendor/original/tinyfont/src/Tinyfont.h",
+      "bytes": 3408,
+      "sha256": "7250ffe377dec26d7597ec13e0f5ea9e0bc4d3fcfd8bfc8ec4391692bf627226",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/src/Tinyfont.h"
+    },
+    {
+      "path": "vendor/original/tinyfont/src/TinyfontSprite.c",
+      "bytes": 13214,
+      "sha256": "f8230a600b3d41402b711709bc4e91d32618b9642586ce5975a4a4847b9d0792",
+      "url": "https://raw.githubusercontent.com/yinkou/Arduboy-TinyFont/c7ab15955ebcbb7f1a714ed8ad545c141137f83b/src/TinyfontSprite.c"
+    }
+  ],
+  "platform_patches": [
+    {
+      "path": "platform.patch",
+      "sections": [
+        {
+          "old_header": "vendor/original/obstacleflight/ObstacleFlight.ino",
+          "new_header": "vendor/platform/ObstacleFlight.ino",
+          "original": "vendor/original/obstacleflight/ObstacleFlight.ino",
+          "modified": "vendor/platform/ObstacleFlight.ino"
+        },
+        {
+          "old_header": "vendor/original/tinyfont/src/Tinyfont.h",
+          "new_header": "vendor/platform/tinyfont/Tinyfont.h",
+          "original": "vendor/original/tinyfont/src/Tinyfont.h",
+          "modified": "vendor/platform/tinyfont/Tinyfont.h"
+        },
+        {
+          "old_header": "vendor/original/tinyfont/src/TinyfontSprite.c",
+          "new_header": "vendor/platform/tinyfont/TinyfontSprite.c",
+          "original": "vendor/original/tinyfont/src/TinyfontSprite.c",
+          "modified": "vendor/platform/tinyfont/TinyfontSprite.c"
+        }
+      ]
+    }
+  ],
+  "unchanged_platform_copies": [
+    {
+      "original": "vendor/original/tinyfont/src/Tinyfont.cpp",
+      "platform": "vendor/platform/tinyfont/Tinyfont.cpp"
+    }
+  ],
+  "license_files": [
+    "NOTICE",
+    "assets/LICENSE.obstacleflight.Unlicense",
+    "assets/LICENSE.tinyfont.BSD-3-Clause",
+    "assets/LICENSE.Arduboy2.txt"
+  ],
+  "dependencies": [
+    {
+      "repository": "https://github.com/yinkou/Arduboy-TinyFont",
+      "commit": "c7ab15955ebcbb7f1a714ed8ad545c141137f83b",
+      "license": "BSD-3-Clause"
+    }
+  ],
+  "addon_compiled_sources": [
+    "vendor/platform/tinyfont/Tinyfont.cpp"
+  ],
+  "owned_cmake": {
+    "path": "game.cmake",
+    "frozen_basis": "../arduboy-batch-20261010/game.cmake",
+    "patch": "cmake.patch"
+  },
+  "precompiled_upstream_avr_omitted": [
+    "ObstacleFlight.ino.leonardo.hex",
+    "obstacleflight.hex"
+  ],
+  "owned_frontend": {
+    "path": "frontend.cpp",
+    "frozen_basis": "../arduboy-batch-20261010/frontend.cpp",
+    "patch": "frontend.patch",
+    "change": "Only trace STATE split into bound STATE/STATE2; all original field expressions/order retained; samegame/seq/gen/clock duplicated; no gameplay/input/timing/UI changes"
+  },
+  "compiled_cmake_override": {
+    "source": "game.cmake",
+    "bytes": 1323,
+    "sha256": "ab13630fa9c200227496a916d77ef3e4ea3ea016dea4c98818ed1217dc9a41b4",
+    "foundation_source": "../arduboy-batch-20261010/game.cmake",
+    "foundation_bytes": 1764,
+    "foundation_sha256": "96296e8bf2d59ccb516cb23a57ad2346b6b4f11d2f39f8877c852afb6a3dfa4d",
+    "patch": "cmake.patch",
+    "patch_bytes": 2004,
+    "patch_sha256": "2169860ca4303217c66f8ea81880519a9b8256106778be08e33559509b09c76f",
+    "reason": "OwnedID9, frozencommon providers and identicallinkoptions",
+    "path": "game.cmake",
+    "foundation_path": "game.cmake",
+    "old_header": "../arduboy-batch-20261010/game.cmake",
+    "new_header": "game.cmake"
+  },
+  "compiled_frontend_override": {
+    "source": "frontend.cpp",
+    "bytes": 9398,
+    "sha256": "8e492170689e5f0c325caade047e3af311a66af0bbbc840c0dcb497f3f6acd90",
+    "foundation_source": "../arduboy-batch-20261010/frontend.cpp",
+    "foundation_bytes": 9140,
+    "foundation_sha256": "81c5e59f8c6c0fdaad5ca4ee292ab4fd8e757f15cd62ef870a36d347b8fbcef5",
+    "patch": "frontend.patch",
+    "patch_bytes": 3281,
+    "patch_sha256": "404bb3c0177dc1358d6f2f2628f6674b07d675a218b231ba5f82b4d10ac0006e",
+    "reason": "Only bound STATE/STATE2 diagnostic split; all gameplay/input/clock/render source identical to frozencommon; root exactsplit approval",
+    "path": "frontend.cpp",
+    "foundation_path": "frontend.cpp",
+    "old_header": "../arduboy-batch-20261010/frontend.cpp",
+    "new_header": "frontend.cpp"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "path": "game.cmake",
+  "bytes": 1324,
+  "sha256": "927172c8114fcc7bb19886cfcac8b02b7f8177d0e1ede0f4d0a9b50fbe871409",
+  "foundation_path": "arduboy-batch-20261010/game.cmake",
+  "foundation_sha256": "96296e8bf2d59ccb516cb23a57ad2346b6b4f11d2f39f8877c852afb6a3dfa4d",
+  "patch": "cmake.patch",
+  "old_header": "arduboy-batch-20261010/game.cmake",
+  "new_header": "toyokumono/game.cmake",
+  "compiled_game_id": 12,
+  "frozen_provider_sources": true,
+  "owned_frontend": "frontend.cpp",
+  "reason": "Original common accepts six previous game IDs only. Local exact provider/link options, explicit new ID12, approved bounded-state frontend. No shared common modifications."
+}

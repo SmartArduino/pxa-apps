@@ -1,0 +1,397 @@
+{
+  "purpose": "Preserved original Pattern 0.1.0 default15x15 before custom5x5 0.2.0",
+  "history_directory": ".pattern-v02-history-20261008T110030Z-823c8277",
+  "headless_passed": true,
+  "headless_checks": 26,
+  "desktop_verified": false,
+  "artifact": {
+    "path": "pxa-workspace/local/app-output/pai-touch/pxa-pattern.pxa",
+    "bytes": 555265,
+    "sha256": "3a7c5fd83943fe1a6e3ff3ffda5e6e31fceba5a33b7930c8b9663bc7369c11da",
+    "manifest_sha256": "5ab633dc1885ef4a0b35f82455abe3ee511d850baec8d3c731039fa2263ad1df",
+    "files": [
+      {
+        "path": "artifacts/main.linux-x86_64.aot",
+        "sha256": "83c9cc83d12ab4d5c7a859980e0c5a5961492e1e75d79d9829f55d205bd24fa7",
+        "size": 551120
+      },
+      {
+        "path": "artifacts/main.wasm",
+        "sha256": "b791c905c6f338632f852b17ebd006b62812585e6076b4746a7b00153a2c106e",
+        "size": 596624
+      },
+      {
+        "path": "assets/FONT-LICENSE.txt",
+        "sha256": "63d3ba759d12804c5b31a9d5940d855c1820d1f5999e6b0872eb1c7ff045fbc9",
+        "size": 3859
+      },
+      {
+        "path": "assets/LICENCE.upstream",
+        "sha256": "eb18a1d915cb923b2da9fb1e79bcdf677b17ebfaada9ce5d5252e384266029c6",
+        "size": 1350
+      },
+      {
+        "path": "assets/LICENSE.MIT",
+        "sha256": "b9210a8d898085595665c26a904e60b1a2111cae8c30ecb24409d9ff84b4d795",
+        "size": 1078
+      },
+      {
+        "path": "assets/resources.pxi",
+        "sha256": "be25b39feef656c25a880063ad2ad268ed12167abbac72b534eda43b4db3854e",
+        "size": 156
+      }
+    ],
+    "unchanged_during_verification": true
+  },
+  "files": [
+    {
+      "path": "expanded/artifacts/main.linux-x86_64.aot",
+      "bytes": 551120,
+      "sha256": "83c9cc83d12ab4d5c7a859980e0c5a5961492e1e75d79d9829f55d205bd24fa7",
+      "source": "pxa-dev\\pxa-workspace\\local\\app-output\\pai-touch\\pxa-pattern\\artifacts\\main.linux-x86_64.aot"
+    },
+    {
+      "path": "expanded/artifacts/main.wasm",
+      "bytes": 596624,
+      "sha256": "b791c905c6f338632f852b17ebd006b62812585e6076b4746a7b00153a2c106e",
+      "source": "pxa-dev\\pxa-workspace\\local\\app-output\\pai-touch\\pxa-pattern\\artifacts\\main.wasm"
+    },
+    {
+      "path": "expanded/assets/FONT-LICENSE.txt",
+      "bytes": 3859,
+      "sha256": "63d3ba759d12804c5b31a9d5940d855c1820d1f5999e6b0872eb1c7ff045fbc9",
+      "source": "pxa-dev\\pxa-workspace\\local\\app-output\\pai-touch\\pxa-pattern\\assets\\FONT-LICENSE.txt"
+    },
+    {
+      "path": "expanded/assets/LICENCE.upstream",
+      "bytes": 1350,
+      "sha256": "eb18a1d915cb923b2da9fb1e79bcdf677b17ebfaada9ce5d5252e384266029c6",
+      "source": "pxa-dev\\pxa-workspace\\local\\app-output\\pai-touch\\pxa-pattern\\assets\\LICENCE.upstream"
+    },
+    {
+      "path": "expanded/assets/LICENSE.MIT",
+      "bytes": 1078,
+      "sha256": "b9210a8d898085595665c26a904e60b1a2111cae8c30ecb24409d9ff84b4d795",
+      "source": "pxa-dev\\pxa-workspace\\local\\app-output\\pai-touch\\pxa-pattern\\assets\\LICENSE.MIT"
+    },
+    {
+      "path": "expanded/assets/resources.pxi",
+      "bytes": 156,
+      "sha256": "be25b39feef656c25a880063ad2ad268ed12167abbac72b534eda43b4db3854e",
+      "source": "pxa-dev\\pxa-workspace\\local\\app-output\\pai-touch\\pxa-pattern\\assets\\resources.pxi"
+    },
+    {
+      "path": "expanded/manifest.pxm",
+      "bytes": 1152,
+      "sha256": "5ab633dc1885ef4a0b35f82455abe3ee511d850baec8d3c731039fa2263ad1df",
+      "source": "pxa-dev\\pxa-workspace\\local\\app-output\\pai-touch\\pxa-pattern\\manifest.pxm"
+    },
+    {
+      "path": "expanded/signature.pxs",
+      "bytes": 108,
+      "sha256": "e6cba86085f77bceaf226ec5c3ad1c5d6fc61dec8892b818f04dabb5d5092d17",
+      "source": "pxa-dev\\pxa-workspace\\local\\app-output\\pai-touch\\pxa-pattern\\signature.pxs"
+    },
+    {
+      "path": "logs/build.log",
+      "bytes": 4162,
+      "sha256": "5c78047b78ad45f73648799f6377f9f78fb3c21dafd4dfbaf3918bb07ef94236",
+      "source": "pxa-dev\\logs\\games\\pattern\\build.log"
+    },
+    {
+      "path": "logs/headless/after-input-1.png",
+      "bytes": 4416,
+      "sha256": "c1dafeec1d9e4dc2933e1213364c0ea93117213c3a96d24c01f83c94faa98f54",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\after-input-1.png"
+    },
+    {
+      "path": "logs/headless/after-input-2.png",
+      "bytes": 4315,
+      "sha256": "d66a6e3618dba21cd9e53c918d78bd0508f7778993eddb1a60f490f5abd7f20c",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\after-input-2.png"
+    },
+    {
+      "path": "logs/headless/continued-1.png",
+      "bytes": 4406,
+      "sha256": "1d6a3fcfd0924f3faee1c4e0e2e0d7ea098081feb64bf59de7ec681c31b6caac",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\continued-1.png"
+    },
+    {
+      "path": "logs/headless/continued-2.png",
+      "bytes": 4301,
+      "sha256": "4cd5b4d8bed4e77cd5d80e646a655502d538ced163ba7b357607f90415a3862a",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\continued-2.png"
+    },
+    {
+      "path": "logs/headless/menu-1.png",
+      "bytes": 3599,
+      "sha256": "3158f88d442444f710465fa1388fe5cef8c54c27e8458bec17c30a3d3e4fe74d",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\menu-1.png"
+    },
+    {
+      "path": "logs/headless/menu-2.png",
+      "bytes": 3599,
+      "sha256": "3158f88d442444f710465fa1388fe5cef8c54c27e8458bec17c30a3d3e4fe74d",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\menu-2.png"
+    },
+    {
+      "path": "logs/headless/native-comparison.json",
+      "bytes": 21978,
+      "sha256": "cfc8990c4da0a324fef575671b1de29731f09cf4ac4bbbc401f4744d38b74cde",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\native-comparison.json"
+    },
+    {
+      "path": "logs/headless/new-1.png",
+      "bytes": 3998,
+      "sha256": "cbf7d3d6694807693d62276ac1a01b93afadea5ed87072451a806b5ea14bc15a",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\new-1.png"
+    },
+    {
+      "path": "logs/headless/new-2.png",
+      "bytes": 4268,
+      "sha256": "2d6eab82873ba8290d844adbd854b2e4a305acccb0a08fcc9ef433ae39f060d6",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\new-2.png"
+    },
+    {
+      "path": "logs/headless/new-move-1.png",
+      "bytes": 4015,
+      "sha256": "01205e5a58aab3ba44e98cd3a67b6a80346143e449a7cc4f0fd321261ceed4f3",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\new-move-1.png"
+    },
+    {
+      "path": "logs/headless/new-move-2.png",
+      "bytes": 4281,
+      "sha256": "be8c6ecbc6d367088372b064678a70d692c829934e4e2fb1243aebf24d8acb9a",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\new-move-2.png"
+    },
+    {
+      "path": "logs/headless/opening-1.png",
+      "bytes": 4397,
+      "sha256": "4aa08d13908b7fe0f01db83ee997e33d4a0c2e3bf618e666a6333a9dcc0da603",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\opening-1.png"
+    },
+    {
+      "path": "logs/headless/opening-2.png",
+      "bytes": 4295,
+      "sha256": "61e6e1e1faf99fa21c62c5f59dd9e30466611a2da5f41eebaeb2b72533a79d59",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\opening-2.png"
+    },
+    {
+      "path": "logs/headless/redo-1.png",
+      "bytes": 4416,
+      "sha256": "c1dafeec1d9e4dc2933e1213364c0ea93117213c3a96d24c01f83c94faa98f54",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\redo-1.png"
+    },
+    {
+      "path": "logs/headless/redo-2.png",
+      "bytes": 4315,
+      "sha256": "d66a6e3618dba21cd9e53c918d78bd0508f7778993eddb1a60f490f5abd7f20c",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\redo-2.png"
+    },
+    {
+      "path": "logs/headless/restart-1.png",
+      "bytes": 4406,
+      "sha256": "1d6a3fcfd0924f3faee1c4e0e2e0d7ea098081feb64bf59de7ec681c31b6caac",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\restart-1.png"
+    },
+    {
+      "path": "logs/headless/restart-2.png",
+      "bytes": 4301,
+      "sha256": "4cd5b4d8bed4e77cd5d80e646a655502d538ced163ba7b357607f90415a3862a",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\restart-2.png"
+    },
+    {
+      "path": "logs/headless/returned-menu-1.png",
+      "bytes": 3779,
+      "sha256": "693ac57ce60b9f77d9c7d5b68b7f1a57167418a85736588dd8b43ab517d8c57c",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\returned-menu-1.png"
+    },
+    {
+      "path": "logs/headless/returned-menu-2.png",
+      "bytes": 3779,
+      "sha256": "693ac57ce60b9f77d9c7d5b68b7f1a57167418a85736588dd8b43ab517d8c57c",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\returned-menu-2.png"
+    },
+    {
+      "path": "logs/headless/right-input-1.png",
+      "bytes": 4068,
+      "sha256": "74504bb3297e1a7e74b7534c297224894d21b7948ada19858c174f490e57b329",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\right-input-1.png"
+    },
+    {
+      "path": "logs/headless/right-input-2.png",
+      "bytes": 4333,
+      "sha256": "8df75be708938978d231ed2326e92a16a6c51f2fc80541a7dd463ec18099ec0e",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\right-input-2.png"
+    },
+    {
+      "path": "logs/headless/session-1.log",
+      "bytes": 7959,
+      "sha256": "36df26957ba321569b87101be42d0b88dcc6a27c552cafbb7d2c6bb79f285ac5",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\session-1.log"
+    },
+    {
+      "path": "logs/headless/session-2.log",
+      "bytes": 7707,
+      "sha256": "1be057f55151c651345d5ecf8a7014dd4bf2e86587c2b691a9bf7dd701b1aa56",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\session-2.log"
+    },
+    {
+      "path": "logs/headless/undo-1.png",
+      "bytes": 4399,
+      "sha256": "fb2167ddd988aa5f9778e40b7c19cce2d7e6b39ca2fdf87e509cb73b40c0ee90",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\undo-1.png"
+    },
+    {
+      "path": "logs/headless/undo-2.png",
+      "bytes": 4297,
+      "sha256": "912b4db5ff1f1c478239a5bef434e147930def4e0fc48fb87657af9237ff69ec",
+      "source": "pxa-dev\\logs\\games\\pattern\\headless\\undo-2.png"
+    },
+    {
+      "path": "logs/native-test/native-oracle",
+      "bytes": 38888,
+      "sha256": "2d5fd7cfc7b973043b3863fae78bc37c8eb99201633da287b790fd4ab7f29c2e",
+      "source": "pxa-dev\\logs\\games\\pattern\\native-test\\native-oracle"
+    },
+    {
+      "path": "logs/native-test/test.log",
+      "bytes": 108,
+      "sha256": "c2394140cc7a527162971ef8ef3b3de3b5600a5bfeec7407e6a558bd611558ae",
+      "source": "pxa-dev\\logs\\games\\pattern\\native-test\\test.log"
+    },
+    {
+      "path": "logs/verification-headless.json",
+      "bytes": 71742,
+      "sha256": "4c2106ed06846c87ec5513c3e5794e4c4e75df1c499e268af349ed1650d2fc87",
+      "source": "pxa-dev\\logs\\games\\pattern\\verification-headless.json"
+    },
+    {
+      "path": "logs/verification.json",
+      "bytes": 71742,
+      "sha256": "4c2106ed06846c87ec5513c3e5794e4c4e75df1c499e268af349ed1650d2fc87",
+      "source": "pxa-dev\\logs\\games\\pattern\\verification.json"
+    },
+    {
+      "path": "logs/wasm-audit.json",
+      "bytes": 1430,
+      "sha256": "6efe640f150df0bf5dec2e7cc3c774d4a5447fe541921a580e009002bbc57236",
+      "source": "pxa-dev\\logs\\games\\pattern\\wasm-audit.json"
+    },
+    {
+      "path": "port/CMakeLists.txt",
+      "bytes": 151,
+      "sha256": "ea121239f26647608395ae88029190a97dfe999f189f354cd57628d94fe329e6",
+      "source": "pxa-dev\\pxa-workspace\\local\\ports\\pattern\\CMakeLists.txt"
+    },
+    {
+      "path": "port/FONT-LICENSE.txt",
+      "bytes": 3859,
+      "sha256": "63d3ba759d12804c5b31a9d5940d855c1820d1f5999e6b0872eb1c7ff045fbc9",
+      "source": "pxa-dev\\pxa-workspace\\local\\ports\\pattern\\FONT-LICENSE.txt"
+    },
+    {
+      "path": "port/LICENCE.upstream",
+      "bytes": 1350,
+      "sha256": "eb18a1d915cb923b2da9fb1e79bcdf677b17ebfaada9ce5d5252e384266029c6",
+      "source": "pxa-dev\\pxa-workspace\\local\\ports\\pattern\\LICENCE.upstream"
+    },
+    {
+      "path": "port/LICENSE.MIT",
+      "bytes": 1078,
+      "sha256": "b9210a8d898085595665c26a904e60b1a2111cae8c30ecb24409d9ff84b4d795",
+      "source": "pxa-dev\\pxa-workspace\\local\\ports\\pattern\\LICENSE.MIT"
+    },
+    {
+      "path": "port/assets/FONT-LICENSE.txt",
+      "bytes": 3859,
+      "sha256": "63d3ba759d12804c5b31a9d5940d855c1820d1f5999e6b0872eb1c7ff045fbc9",
+      "source": "pxa-dev\\pxa-workspace\\local\\ports\\pattern\\assets\\FONT-LICENSE.txt"
+    },
+    {
+      "path": "port/assets/LICENCE.upstream",
+      "bytes": 1350,
+      "sha256": "eb18a1d915cb923b2da9fb1e79bcdf677b17ebfaada9ce5d5252e384266029c6",
+      "source": "pxa-dev\\pxa-workspace\\local\\ports\\pattern\\assets\\LICENCE.upstream"
+    },
+    {
+      "path": "port/assets/LICENSE.MIT",
+      "bytes": 1078,
+      "sha256": "b9210a8d898085595665c26a904e60b1a2111cae8c30ecb24409d9ff84b4d795",
+      "source": "pxa-dev\\pxa-workspace\\local\\ports\\pattern\\assets\\LICENSE.MIT"
+    },
+    {
+      "path": "port/audit-wasm.py",
+      "bytes": 2380,
+      "sha256": "d94151e9995ea2da1bfba37d7ebf73f87c112aaf71e630cb68d83a07a7a8fd1b",
+      "source": "pxa-dev\\pxa-workspace\\local\\ports\\pattern\\audit-wasm.py"
+    },
+    {
+      "path": "port/build.sh",
+      "bytes": 673,
+      "sha256": "c50aa911ebdd9de44f52f37bc622ac000852fa4b0faeeb2a97f4c2874ca71586",
+      "source": "pxa-dev\\pxa-workspace\\local\\ports\\pattern\\build.sh"
+    },
+    {
+      "path": "port/native-oracle.c",
+      "bytes": 6062,
+      "sha256": "78c5b9c61a2c4b061f7e929bfddb5127859e3ccde2bafea27dbd8fd2d4aaac9a",
+      "source": "pxa-dev\\pxa-workspace\\local\\ports\\pattern\\native-oracle.c"
+    },
+    {
+      "path": "port/package.json",
+      "bytes": 932,
+      "sha256": "5740d47fa1e4c5bc33b4168780e943ce9b27a953fe3fda9470bdec933c5f9a5a",
+      "source": "pxa-dev\\pxa-workspace\\local\\ports\\pattern\\package.json"
+    },
+    {
+      "path": "port/run.ps1",
+      "bytes": 554,
+      "sha256": "ba8c0c3156f08fb23baa15526b4e8fa810cd659d442fac72b77b8466fb182107",
+      "source": "pxa-dev\\pxa-workspace\\local\\ports\\pattern\\run.ps1"
+    },
+    {
+      "path": "port/run.sh",
+      "bytes": 138,
+      "sha256": "8105d6c6aead6a73e0002a9a79c13c15f10584728b96910fd707fdf5652ee19d",
+      "source": "pxa-dev\\pxa-workspace\\local\\ports\\pattern\\run.sh"
+    },
+    {
+      "path": "port/upstream-lock.json",
+      "bytes": 727,
+      "sha256": "bc283626b30e2f559124d99637ccb0b5f6fd9e5b7487d2cebbe2f69f8c5befb9",
+      "source": "pxa-dev\\pxa-workspace\\local\\ports\\pattern\\upstream-lock.json"
+    },
+    {
+      "path": "port/verify.py",
+      "bytes": 10753,
+      "sha256": "a98f1fd55d9a31dc38f92bac5abd2a17db9459ef194b68ba1ddfd0a105fea06a",
+      "source": "pxa-dev\\pxa-workspace\\local\\ports\\pattern\\verify.py"
+    },
+    {
+      "path": "port/verify.sh",
+      "bytes": 127,
+      "sha256": "35cce625fa798b6c8580b45be42f4b43cfda65a7f9500e8ef3d7b5f290348e91",
+      "source": "pxa-dev\\pxa-workspace\\local\\ports\\pattern\\verify.sh"
+    },
+    {
+      "path": "pxa-pattern.pxa",
+      "bytes": 555265,
+      "sha256": "3a7c5fd83943fe1a6e3ff3ffda5e6e31fceba5a33b7930c8b9663bc7369c11da",
+      "source": "pxa-dev\\pxa-workspace\\local\\app-output\\pai-touch\\pxa-pattern.pxa"
+    },
+    {
+      "path": "pxa-pattern.pxa.provenance.json",
+      "bytes": 2121,
+      "sha256": "eea60b2e83de4123769a84b6b2f97f28ea00ec599f7e357302b8dfe1fed7f655",
+      "source": "pxa-dev\\pxa-workspace\\local\\app-output\\pai-touch\\pxa-pattern.pxa.provenance.json"
+    }
+  ],
+  "foundation": {
+    "frontend.c": "3a6c2db486ff4b41a35879ebda5b579a28eed59db52dea304e2247c3884a6298",
+    "compat.c": "7dd4f19607d72333e8a11dbafb60400b8fab2052c3401e0fa7c583e635bf5d2f",
+    "puzzle.cmake": "31d3ac3e67564629d5d351a1e6635ce912334f730a8a301ca2a81edfe4f7194b",
+    "font.h": "62dc5eeff694729de95a221f75204bf04a805456a47c4b2d65ff221d846333e1",
+    "upstream-lock.json": "7e662a0e5049812baf0e089f0d168380badd29729b199952c088bc2b6465ed51"
+  }
+}

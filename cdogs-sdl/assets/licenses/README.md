@@ -1,0 +1,3 @@
+C-Dogs SDL keeps upstream source and per-campaign attribution/license files. The game and shared guest bridge are distributed under GPL-3.0-or-later; see COPYING and GPL-3.0.txt. Free runtime assets retain their own licenses in the packaged data archive.
+
+PXA replaces the unused non-commercial MAME OPL dependency with Nuked OPL3 (LGPL-2.1-or-later) inside this independent application only; see Nuked-OPL3-LICENSE and vendor/nuked-opl3. SDL2/SDL2_mixer are zlib; stb is MIT/public domain. ENet packet code is MIT, nanopb is zlib; original embedded dependency notices are preserved in vendor/src. No firmware or Host component links these dependencies.

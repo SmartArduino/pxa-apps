@@ -1,0 +1,196 @@
+{
+  "game": "nightraid",
+  "game_id": 4,
+  "bytes": 394,
+  "core_bytes": 3136,
+  "total_bytes": 3530,
+  "chunks": 111,
+  "endianness": "little",
+  "float": "IEEE754 binary32 explicit bits",
+  "no_object_padding_or_pointers": true,
+  "fields": [
+    {
+      "field": "gameState",
+      "offset": 0,
+      "bytes": 1
+    },
+    {
+      "field": "menuIndex",
+      "offset": 1,
+      "bytes": 1
+    },
+    {
+      "field": "highscore:i16",
+      "offset": 2,
+      "bytes": 2
+    },
+    {
+      "field": "targets:8bool",
+      "offset": 4,
+      "bytes": 8
+    },
+    {
+      "field": "targetRubble:8i16",
+      "offset": 12,
+      "bytes": 16
+    },
+    {
+      "field": "targetRubbleSecondLayer:8i16",
+      "offset": 28,
+      "bytes": 16
+    },
+    {
+      "field": "flashIndex:2u8",
+      "offset": 44,
+      "bytes": 2
+    },
+    {
+      "field": "flashCounter:2u8",
+      "offset": 46,
+      "bytes": 2
+    },
+    {
+      "field": "targetXCoords:8u8",
+      "offset": 48,
+      "bytes": 8
+    },
+    {
+      "field": "plane",
+      "offset": 56,
+      "bytes": 10
+    },
+    {
+      "field": "incomingMissiles:14",
+      "offset": 66,
+      "bytes": 308
+    },
+    {
+      "field": "score:i16",
+      "offset": 374,
+      "bytes": 2
+    },
+    {
+      "field": "nextDifficultyUpdateScore:i16",
+      "offset": 376,
+      "bytes": 2
+    },
+    {
+      "field": "nextLivesUpdateScore:i16",
+      "offset": 378,
+      "bytes": 2
+    },
+    {
+      "field": "nextPlaneUpdateScore:i16",
+      "offset": 380,
+      "bytes": 2
+    },
+    {
+      "field": "aFired",
+      "offset": 382,
+      "bytes": 1
+    },
+    {
+      "field": "bFired",
+      "offset": 383,
+      "bytes": 1
+    },
+    {
+      "field": "pendingLoss",
+      "offset": 384,
+      "bytes": 1
+    },
+    {
+      "field": "lossCounter",
+      "offset": 385,
+      "bytes": 1
+    },
+    {
+      "field": "cursorX",
+      "offset": 386,
+      "bytes": 1
+    },
+    {
+      "field": "cursorY",
+      "offset": 387,
+      "bytes": 1
+    },
+    {
+      "field": "transitionLock",
+      "offset": 388,
+      "bytes": 1
+    },
+    {
+      "field": "missileSpawnFrameDelay",
+      "offset": 389,
+      "bytes": 1
+    },
+    {
+      "field": "pauseLock",
+      "offset": 390,
+      "bytes": 1
+    },
+    {
+      "field": "rightButtonMenuLock",
+      "offset": 391,
+      "bytes": 1
+    },
+    {
+      "field": "leftButtonMenuLock",
+      "offset": 392,
+      "bytes": 1
+    },
+    {
+      "field": "lcd_inverted",
+      "offset": 393,
+      "bytes": 1
+    }
+  ],
+  "missile_record": {
+    "offset": 66,
+    "count": 14,
+    "bytes_each": 22,
+    "fields": [
+      "startX:u8",
+      "startY:u8",
+      "target:u8",
+      "stopX:u8",
+      "stopY:u8",
+      "currentY:f32",
+      "currentX:f32",
+      "speedY:f32",
+      "incoming:bool8",
+      "valid:bool8",
+      "explosionFrame:u8",
+      "explosionRadius:u8",
+      "scored:bool8"
+    ]
+  },
+  "plane_record": {
+    "offset": 56,
+    "bytes": 10,
+    "fields": [
+      "startY:u8",
+      "dir:bool8",
+      "currentX:f32",
+      "explosionFrame:u8",
+      "explosionRadius:u8",
+      "valid:bool8",
+      "scored:bool8"
+    ]
+  },
+  "original_states": {
+    "MENU": 0,
+    "PLAYING": 1,
+    "GAMEOVER": 2,
+    "PAUSED": 3
+  },
+  "eeprom": {
+    "marker": 400,
+    "marker_width": 2,
+    "value": 111,
+    "highscore": 420,
+    "width": 2,
+    "signed": true,
+    "original_overlapping_zero_write": 421
+  }
+}

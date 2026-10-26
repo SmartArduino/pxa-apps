@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.20)
+project(pxa_obstacleflight LANGUAGES C CXX)
+set(ARDU_GAME obstacleflight)
+set(ARDU_OWNER_EXTRA_SOURCES "${CMAKE_CURRENT_LIST_DIR}/vendor/platform/tinyfont/Tinyfont.cpp")
+set(ARDU_OWNER_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/vendor/platform/tinyfont")
+include(${CMAKE_CURRENT_LIST_DIR}/game.cmake)

@@ -113,6 +113,14 @@ char** KeyFrameSlots[MAX_SLOTS];
 */
 #include <unordered_map>
 static std::unordered_map<void const*, uint32_t> ShapeSlots; // magic << 16 | slot
+#ifdef CNC_GAME_RA
+#include "pxa_shape_slots.h"
+static PxaShapeSlotCache ShapeSlotCache;
+void Pxa_Shape_Slot_Stats(unsigned &hits,unsigned &misses) {
+    hits=ShapeSlotCache.hits;misses=ShapeSlotCache.misses;
+    ShapeSlotCache.hits=ShapeSlotCache.misses=0;
+}
+#endif
 #endif
 int TotalSlotsUsed = 0;
 int TheaterSlotsUsed = THEATER_SLOT_START;
@@ -154,6 +162,9 @@ void Reset_Theater_Shapes(void)
     }
 
 #ifdef ESP_PLATFORM_CNC
+#ifdef CNC_GAME_RA
+    ShapeSlotCache.invalidate();
+#endif
     for (auto it = ShapeSlots.begin(); it != ShapeSlots.end();) {
         if ((it->second & 0xFFFF) >= THEATER_SLOT_START) {
             it = ShapeSlots.erase(it);
@@ -330,7 +341,11 @@ uintptr_t Build_Frame(void const* dataptr, unsigned short framenumber, void* buf
         ** for these animation frames
         */
 #ifdef ESP_PLATFORM_CNC
+#ifdef CNC_GAME_RA
+        uint32_t& shape_slot = ShapeSlotCache.get(ShapeSlots,dataptr);
+#else
         uint32_t& shape_slot = ShapeSlots[dataptr];
+#endif
         keyfr.x = shape_slot >> 16;
         keyfr.y = shape_slot & 0xFFFF;
 #endif

@@ -313,6 +313,12 @@ bool ScenarioClass::Set_Global_To(int global, bool value)
  *=============================================================================================*/
 bool Start_Scenario(char* name, bool briefing)
 {
+#ifdef ESP_PLATFORM_CNC
+    // Mission setup performs SD work without presenting the original UI.
+    // Keep the loading feedback and bounded archive reuse alive until its frame.
+    extern void Pxa_Load_Mission();
+    Pxa_Load_Mission();
+#endif
     if (Session.Type != GAME_NORMAL) {
         briefing = false;
     }
@@ -2033,7 +2039,14 @@ bool Read_Scenario_INI(char* fname, bool)
 
     ScenarioInit++;
 
+#ifdef ESP_PLATFORM_CNC
+    extern void Pxa_Load_Phase(const char *);
+    Pxa_Load_Phase("Clearing battlefield");
+#endif
     Clear_Scenario();
+#ifdef ESP_PLATFORM_CNC
+    Pxa_Load_Phase("Reading mission data");
+#endif
 #ifdef OBSOLETE
     /*
     ** If we are not dealing with scenario 1, or a multi player scenario
@@ -2211,6 +2224,9 @@ bool Read_Scenario_INI(char* fname, bool)
     BuildingTypeClass::As_Reference(STRUCT_LARVA2).Level = -1;
 #endif
 
+#ifdef ESP_PLATFORM_CNC
+    Pxa_Load_Phase("Applying game rules");
+#endif
     Rule.General(RuleINI);
     Rule.Recharge(RuleINI);
     Rule.AI(RuleINI);
@@ -2247,6 +2263,9 @@ bool Read_Scenario_INI(char* fname, bool)
     **	Override any rules values specified in this
     **	particular scenario file.
     */
+#ifdef ESP_PLATFORM_CNC
+    Pxa_Load_Phase("Applying mission rules");
+#endif
     Rule.General(ini);
     Rule.Recharge(ini);
     Rule.AI(ini);
@@ -2313,6 +2332,9 @@ bool Read_Scenario_INI(char* fname, bool)
     **	Read in the specific information for each of the house types.  This creates
     **	the houses of different types.
     */
+#ifdef ESP_PLATFORM_CNC
+    Pxa_Load_Phase("Creating mission units");
+#endif
     HouseClass::Read_INI(ini);
     Call_Back();
 
@@ -2369,6 +2391,9 @@ bool Read_Scenario_INI(char* fname, bool)
     **	Read in the map control values. This includes dimensions
     **	as well as theater information.
     */
+#ifdef ESP_PLATFORM_CNC
+    Pxa_Load_Phase("Loading battlefield artwork");
+#endif
     Map.Read_INI(ini);
     Call_Back();
 
@@ -2438,6 +2463,9 @@ bool Read_Scenario_INI(char* fname, bool)
     **	Perform a final overpass of the map. This handles smoothing of certain
     **	types of terrain (tiberium).
     */
+#ifdef ESP_PLATFORM_CNC
+    Pxa_Load_Phase("Preparing battlefield");
+#endif
     Map.Overpass();
     Call_Back();
 

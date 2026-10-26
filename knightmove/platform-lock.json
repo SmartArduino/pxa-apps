@@ -1,0 +1,89 @@
+{
+  "modified_date": "2026-10-10",
+  "files": {
+    "vendor/platform/common.cpp": {
+      "bytes": 8750,
+      "sha256": "b872cd09ad31471e8713d888e285cfc23bd3088f5975d3ef5f206d45653fed70"
+    },
+    "vendor/platform/common.h": {
+      "bytes": 2710,
+      "sha256": "3f96f0e34570d8798c4814057bb050ac768f3cac67d4e1b3037b22a4c2ccbc42"
+    },
+    "vendor/platform/data.h": {
+      "bytes": 18681,
+      "sha256": "1ae87f4136707cd1e0ae3793e1e7e7049a45cae2b12cc871444f6f7799db3450"
+    },
+    "vendor/platform/game.cpp": {
+      "bytes": 22877,
+      "sha256": "98064ca0ae5899eb885b05a15e9f1cd956b5fd121a9bfcf4321cf92a3e190038"
+    },
+    "vendor/platform/info.json": {
+      "bytes": 267,
+      "sha256": "6fb667efa5e9ff33ca9e7050a39c3706186a8e5457d1434010f7a5f557429c79"
+    },
+    "vendor/platform/knightmove.ino": {
+      "bytes": 2007,
+      "sha256": "c1c6d5709c639f3db6047712d06f740a266d5845a95f7b739f37704da478b384"
+    },
+    "vendor/platform/logo.cpp": {
+      "bytes": 3623,
+      "sha256": "9b19e927885983b1de8a483c81cf8e1229c4f34c5a0dc8259991f48c7f1e9a12"
+    },
+    "vendor/platform/menu.cpp": {
+      "bytes": 4116,
+      "sha256": "6b6357bdb9f2d08e6e0bba7030a82845f9ca159cb123499dc076c1c785cb49e7"
+    },
+    "vendor/platform/MyArduboy.cpp": {
+      "bytes": 8403,
+      "sha256": "5f1812992cb82ca98c223d043040a6b9b924c757cd3d374a129fead6da63cbd2"
+    },
+    "vendor/platform/MyArduboy.h": {
+      "bytes": 2153,
+      "sha256": "3c95efd6ea9329b76598546cb26951def63aa0dc89d2aef46b8399ba558185fa"
+    },
+    "vendor/platform/title.cpp": {
+      "bytes": 8799,
+      "sha256": "6f4a9e82c55241cff0b2d4b4f82b868cee2a24d9fca9d80bb45266e6248a4297"
+    },
+    "owner/ArduboyPlaytune.cpp": {
+      "bytes": 16494,
+      "sha256": "ab23849df3436e912d9eaae5f5814f9e3898402e6bada5621ab205c0c0e57397"
+    },
+    "owner/ArduboyPlaytune.h": {
+      "bytes": 6667,
+      "sha256": "eb1e135d7dc9dbd380a84a7f8bc07f913ade84a8763ff49be20abdddb6325743"
+    },
+    "owner/audio_registers.h": {
+      "bytes": 814,
+      "sha256": "2ad57aa279e7a37c0cc854b2ce21e907d11ddfccbef3c5dd1092358aeaf7bfec"
+    },
+    "owner/owner_compat.cpp": {
+      "bytes": 3529,
+      "sha256": "c0a6ebc39be3d70a98601925cc09ab34505d57a1e4c73214e841a4b340c5dd10"
+    },
+    "owner/owner_compat.h": {
+      "bytes": 1813,
+      "sha256": "9f3563e1e655fc706ebb7764bb185b59bdd3ebaf7199e17f4e3fd93c68c33cb2"
+    },
+    "game.cpp": {
+      "bytes": 885,
+      "sha256": "a2aec952e13bb6709ce9c239d9685456e990650da6616892383dd51b9ba4ba7c"
+    },
+    "frontend.cpp": {
+      "bytes": 9398,
+      "sha256": "8e492170689e5f0c325caade047e3af311a66af0bbbc840c0dcb497f3f6acd90"
+    },
+    "game.cmake": {
+      "bytes": 1239,
+      "sha256": "d9233270f239cf2fbe2a6237784318afea805ac112a05c3002095d164dccaa33"
+    },
+    "CMakeLists.txt": {
+      "bytes": 608,
+      "sha256": "0a5a6f535318ab735c9974a43c6071e266f2e5711c9033ce2e9e7c8168ca9e1c"
+    },
+    "package.json": {
+      "bytes": 885,
+      "sha256": "99d1fb757616e3f47875133860a90497fe48f0d3a00e6bcac0ba1713d792c578"
+    }
+  }
+}

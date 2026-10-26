@@ -1,0 +1,72 @@
+{
+  "repository": "https://github.com/SuperSolik/arduboy-games",
+  "downloaded_at_utc": "2026-10-10T01:53:58.241457+00:00",
+  "files": [
+    {
+      "path": "LICENSE",
+      "url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/LICENSE",
+      "bytes": 1083,
+      "sha256": "e069e319ef508d508580a088541d5dba1aef2143076aab6824b9ee617948851b"
+    },
+    {
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/README.md",
+      "bytes": 3770,
+      "sha256": "59a17251a1e4e40e1c9ac07ff9ac8b4fc1ea22f55bc0250912bfbad09bbc0c5b"
+    },
+    {
+      "path": "guess_dots/assets/guess_dots_game_logo_58x32.png",
+      "url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/guess_dots/assets/guess_dots_game_logo_58x32.png",
+      "bytes": 370,
+      "sha256": "031c9d9ffac0b58e489e6f8262c7e1bbdad8b8c901df36e93dff2760b5c662ff"
+    },
+    {
+      "path": "guess_dots/assets/press_a_to_play_new_58x8.png",
+      "url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/guess_dots/assets/press_a_to_play_new_58x8.png",
+      "bytes": 213,
+      "sha256": "305c87ae087430701de7424a3fc7971ba0cf79fb072e8dde11db92b2ecaa8cbb"
+    },
+    {
+      "path": "guess_dots/bitmaps.h",
+      "url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/guess_dots/bitmaps.h",
+      "bytes": 1720,
+      "sha256": "ab95e79f5aa5b274004af56245b973d9f93d1e64fe93fb3c9c9d645211efc04f"
+    },
+    {
+      "path": "guess_dots/content.h",
+      "url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/guess_dots/content.h",
+      "bytes": 6767,
+      "sha256": "87280597844b350999202dee2834da8e0799b260199250593335c5f3aa2f7970"
+    },
+    {
+      "path": "guess_dots/game.h",
+      "url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/guess_dots/game.h",
+      "bytes": 10793,
+      "sha256": "732a296647cf70272693eecfb773a2022c2cd0ec5f8033e1ee8aec03caccdae9"
+    },
+    {
+      "path": "guess_dots/guess_dots.ino",
+      "url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/guess_dots/guess_dots.ino",
+      "bytes": 95,
+      "sha256": "6cb8a94680c8e84bc2b305a88975134ff8d362a522106f584e2f25ba6a201749"
+    },
+    {
+      "path": "guess_dots/point.h",
+      "url": "https://raw.githubusercontent.com/SuperSolik/arduboy-games/523b23abb239f0e520a01073acc92cb24fb262b4/guess_dots/point.h",
+      "bytes": 137,
+      "sha256": "df0e1120ff50dc6e7481d6d147b48cd88778be6364892c5633baf171e58ea527"
+    }
+  ],
+  "executed_upstream_code": false,
+  "commit": "523b23abb239f0e520a01073acc92cb24fb262b4",
+  "default_branch": "master",
+  "tree_truncated": false,
+  "github_license": {
+    "key": "mit",
+    "name": "MIT License",
+    "spdx_id": "MIT",
+    "url": "https://api.github.com/licenses/mit",
+    "node_id": "MDc6TGljZW5zZTEz"
+  },
+  "status": "downloaded"
+}

@@ -1,0 +1,27 @@
+{
+  "package": "@esbuild/linux-x64",
+  "version": "0.25.11",
+  "url": "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.25.11.tgz",
+  "integrity": "sha512-HSFAT4+WYjIhrHxKBwGmOOSpphjYkcswF449j6EjsjbinTZbp8PJtjsVK1XFJStdzXdy/jaddAep2FGY+wyFAQ==",
+  "archive_sha256": "e9e893cfe6a327b97b8d749a2d477d7379ef87eb576b88e03e91b7d07ec935e0",
+  "source": "https://github.com/evanw/esbuild/tree/v0.25.11",
+  "license": "MIT",
+  "executable_sha256": "ea457716999e8128d82684c15cc88f106d58ad7e73a54f99955c83074e72f979",
+  "files": {
+    "bin/esbuild": "ea457716999e8128d82684c15cc88f106d58ad7e73a54f99955c83074e72f979",
+    "package.json": "04dfb5696fa0129b547b201063c279048eb1c4bc219cb972a1a48614350d201a",
+    "README.md": "3b0ebdffe92e5b77c948c4ac0bf4bc4a38803b15405d0425b517705221c27a2f"
+  },
+  "supplemental_license": {
+    "path": "tools/esbuild-0.25.11/LICENSE.md",
+    "tool_destination": "LICENSE.md",
+    "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681",
+    "bytes": 1069,
+    "source_url": "https://raw.githubusercontent.com/evanw/esbuild/v0.25.11/LICENSE.md",
+    "immutable_source_url": "https://raw.githubusercontent.com/evanw/esbuild/6b7c4f2dcbcaa1238bca0f7a4a1d95918296c82e/LICENSE.md",
+    "source_commit": "6b7c4f2dcbcaa1238bca0f7a4a1d95918296c82e",
+    "tag": "v0.25.11",
+    "tag_api_url": "https://api.github.com/repos/evanw/esbuild/git/ref/tags/v0.25.11",
+    "reason": "The official linux-x64 npm tarball contains binary, package.json and README.md; full MIT notice is supplied from the matching esbuild source tag."
+  }
+}

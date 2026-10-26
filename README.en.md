@@ -13,7 +13,8 @@ ABI, IPC and resource lifecycle fixtures live under
 game prototypes have been removed from this repository; historical validation
 reports and screenshots are retained.
 
-All maintained applications now build as **C++26** against **Core 2.0**.
+Applications use **Core 2.x**. In-house C++ applications build as **C++26**;
+ported games retain their upstream C/C++ implementations.
 The production C versions of Jump Jump, Pixel Dungeon and Voxel Craft have
 been retired; use [`jump-jump-3d`](jump-jump-3d/README.md),
 [`pixel-dungeon`](pixel-dungeon/README.md) and `voxel-craft`.
@@ -131,6 +132,18 @@ AOT artifacts. `PXA_BUILD_CACHE_DIR` enables incremental builds;
 apps. Compiler caching adds no Guest or Host memory. Capacity definitions and
 SDK/compiler inputs participate in compiler cache keys; do not reuse archives
 built with different layout definitions by hand.
+
+## Archived game ports
+
+[68 independent games](common/retro-games/README.md) use SDK 2.1 with shared
+aspect-fit rendering, input mapping and lifecycle handling. Puzzle, Arduboy and
+SAF sources are shared; each game retains its own package ID and license.
+See the [catalogue](common/retro-games/games.json). Existing Anarch, 2048,
+Pocket Chess and Arcade's Minesweeper, Tetris and Brick Breaker are reused.
+
+## SDL game ports
+
+[L'Abbaye des Morts](abbaye-des-morts/README.md), [C-Dogs SDL](cdogs-sdl/README.md), [Project: Starfighter](starfighter/README.md) and [Neverputt](neverputt/README.md) are independent apps with icons and separate architecture packages. Their upstream code and asset licenses are preserved. A shared [SDL guest runtime](common/sdl-games/README.md) provides controller, touch, audio and bounded asset reads; SDL, the mixer and software GL run inside the app. C-Dogs currently has a 28 MiB linear memory budget, with additional Host memory required. Simulator validation does not establish hardware frame rates.
 
 ## Console emulators
 

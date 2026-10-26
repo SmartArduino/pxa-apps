@@ -19,9 +19,12 @@ base=['cc','-std=gnu11','-g','-O1','-Wall','-Wextra','-Werror','-Wno-attributes'
 rts=['-DPORT_RTS=1','-DPORT_EXTERNAL_GAME_DATA=1','-DPORT_CNC_CANONICAL_PATHS=1']
 for name,units,flags in [
     ('loading',['tests/loading_test.c','framebuffer.c','font8x8.c'],[]),
+    ('pointer-coordinates',['tests/pointer_coordinates_test.c','framebuffer.c','font8x8.c'],[]),
     ('missing-paths',['tests/missing_paths_test.c','filesystem.c'],rts),
     ('missing-paths-loading',['tests/missing_paths_test.c','filesystem.c'],rts+['-DPORT_MISSING_PATHS_CAPACITY=64']),
+    ('private-index',['tests/private_index_test.c','filesystem.c'],rts+['-DPORT_CNC_PRIVATE_INDEX=1']),
     ('media-handles',['tests/media_handles_test.c','filesystem.c'],rts+['-DPORT_CNC_MEDIA_HANDLES=1']),
+    ('media-handles-startup',['tests/media_handles_test.c','filesystem.c'],rts+['-DPORT_CNC_MEDIA_HANDLES=1','-DPORT_CNC_MEDIA_CACHE_SLOTS=8']),
     ('external-read-cache',['tests/external_read_cache_test.c','filesystem.c'],rts)]:
     subprocess.run(base+flags+[str(source/u) for u in units]+['-Wl,--gc-sections','-o',str(out/name)],check=True)
     subprocess.run([str(out/name)]+([str(out/'loading.ppm')] if name=='loading' else []),check=True)

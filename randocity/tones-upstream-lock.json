@@ -1,0 +1,43 @@
+{
+  "repository": "https://github.com/MLXXXp/ArduboyTones",
+  "commit": "972fe8117002da47073b6c1835117d654a03e16f",
+  "files": [
+    {
+      "path": "LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/MLXXXp/ArduboyTones/972fe8117002da47073b6c1835117d654a03e16f/LICENSE.txt",
+      "bytes": 1055,
+      "sha256": "714dc29aa62987d0f93ab2f929518aaa08d510923e8fb33c9f3534de640c1f05"
+    },
+    {
+      "path": "README.md",
+      "url": "https://raw.githubusercontent.com/MLXXXp/ArduboyTones/972fe8117002da47073b6c1835117d654a03e16f/README.md",
+      "bytes": 11897,
+      "sha256": "bbcb81bca35aefd1dc451103cc1fe3fcb733734385ceef949444e67ba8b23190"
+    },
+    {
+      "path": "library.properties",
+      "url": "https://raw.githubusercontent.com/MLXXXp/ArduboyTones/972fe8117002da47073b6c1835117d654a03e16f/library.properties",
+      "bytes": 518,
+      "sha256": "0599fe7c85c4e7b98392347ec7ad9493a93a0edf1e9118e9fb900c85b5557d92"
+    },
+    {
+      "path": "src/ArduboyTones.h",
+      "url": "https://raw.githubusercontent.com/MLXXXp/ArduboyTones/972fe8117002da47073b6c1835117d654a03e16f/src/ArduboyTones.h",
+      "bytes": 9509,
+      "sha256": "27bea88b5386525eb78b9a563943b6d0ddab6e7b6bcb764f1719bb9207ac5ca1"
+    },
+    {
+      "path": "src/ArduboyTones.cpp",
+      "url": "https://raw.githubusercontent.com/MLXXXp/ArduboyTones/972fe8117002da47073b6c1835117d654a03e16f/src/ArduboyTones.cpp",
+      "bytes": 8291,
+      "sha256": "8b7c93227628c009bcfa6d91fb1f917bc0539a6973157a321da8b797b0140cf0"
+    },
+    {
+      "path": "src/ArduboyTonesPitches.h",
+      "url": "https://raw.githubusercontent.com/MLXXXp/ArduboyTones/972fe8117002da47073b6c1835117d654a03e16f/src/ArduboyTonesPitches.h",
+      "bytes": 8480,
+      "sha256": "4ff936a8ab90dd34c117e04d423ddd9b0a1d654ef476f782a9c8b52c79cfd622"
+    }
+  ],
+  "executed_upstream_code": false
+}

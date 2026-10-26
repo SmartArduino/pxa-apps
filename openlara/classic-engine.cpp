@@ -164,6 +164,9 @@ static void brightness() {
         GAPI::swPaletteColor[i]=brighten(GAPI::swPaletteColor[i]);
         GAPI::swPaletteWater[i]=brighten(GAPI::swPaletteWater[i]);
     }
+#if OL_SHADED_PALETTE_CACHE
+    GAPI::refreshShadedPalettes();
+#endif
 }
 bool ol_allocate_level(unsigned n) {
     if(!n || n>OL_LEVEL_CAPACITY)return false;
@@ -203,10 +206,16 @@ void olClassicTitleBackground(unsigned alpha) {
     // Render-target clearing is deferred until state validation. Finish it
     // before writing the direct RGB565 background, as normal draw calls do.
     Core::validateRenderState();
-    for(unsigned y=0;y<240;++y)for(unsigned x=0;x<320;++x) {
-        uint16_t c=pxa_load_u16(ol_title_palette_data+2*ol_title_data[(y*ol_title_height/240)*ol_title_width+x*ol_title_width/320]);
+    uint16_t colors[256];
+    for(unsigned i=0;i<256;++i) {
+        uint16_t c=pxa_load_u16(ol_title_palette_data+2*i);
         unsigned r=((c>>11)*alpha+127)/255,g=(((c>>5)&63)*alpha+127)/255,b=((c&31)*alpha+127)/255;
-        pixels[y*320+x]=uint16_t((r<<11)|(g<<5)|b);
+        colors[i]=uint16_t((r<<11)|(g<<5)|b);
+    }
+    unsigned source_x[320];
+    for(unsigned x=0;x<320;++x)source_x[x]=x*ol_title_width/320;
+    for(unsigned y=0;y<240;++y)for(unsigned x=0;x<320;++x) {
+        pixels[y*320+x]=colors[ol_title_data[(y*ol_title_height/240)*ol_title_width+source_x[x]]];
     }
 }
 static void text_begin() {UI::begin(4.0f/3.0f);Game::level->atlasGlyphs->bind(sDiffuse);}

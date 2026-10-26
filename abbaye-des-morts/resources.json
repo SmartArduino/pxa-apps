@@ -1,0 +1,9 @@
+{
+  "assets": [
+    {
+      "kind": "archive",
+      "source": "media",
+      "path": "assets/data.tar"
+    }
+  ]
+}

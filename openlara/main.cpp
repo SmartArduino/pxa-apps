@@ -5,6 +5,7 @@
 #include "pxa_surface.h"
 #include "pxa_ui.h"
 #include "pxa_window.h"
+#include "../common/pxa_canvas_pixels.h"
 #include "engine.h"
 #if OL_CLASSIC
 #include "classic-raster.h"
@@ -27,6 +28,7 @@ alignas(PXA_SURFACE_BUFFER_ALIGNMENT) static uint16_t buffers[2][320*240];
 static uint64_t surface, media_root, file, frame_id;
 static uint32_t loaded, total, pad_keys, touch_keys,pressed_keys;
 static uint32_t display_w=320, display_h=240;
+static uint32_t display_density=65536;
 static int level_id=0, load_state, pending_buffer=-1, load_kind;
 static uint8_t *load_dest;
 static uint32_t load_capacity;
@@ -35,6 +37,7 @@ static bool root_ready,boot_started,menu,help,settings,levels,data_help,scanning
 static uint32_t base_levels_mask;
 static unsigned menu_selection;
 static uint32_t controller_last,controller_suppressed;
+static int active_touch=-1;
 static uint64_t message_until;
 static const char *notification="";
 static const char *last_store_message="";
@@ -94,7 +97,7 @@ static void open_data(const char *name,uint8_t *dest,uint32_t capacity) {
 }
 static void open_level(int id) {
     if(id<0 || unsigned(id)>=OL_LEVEL_COUNT) {error("Unknown OpenLara level");return;}
-    level_id=id;load_kind=2;menu=help=settings=levels=data_help=false;pad_keys=touch_keys=pressed_keys=0;pending_input_us=0;audio_flush();
+    level_id=id;load_kind=2;menu=help=settings=levels=data_help=false;active_touch=-1;pad_keys=touch_keys=pressed_keys=0;pending_input_us=0;audio_flush();
 #if OL_CLASSIC
     open_data(catalog_level_path(id),ol_level_data,OL_LEVEL_CAPACITY);
 #else
@@ -105,7 +108,7 @@ static void open_level(int id) {
 static void scan_original_data() {
     ready=false;scanning=true;load_state=0;menu=help=settings=levels=data_help=false;
     loading_clock();
-    pad_keys=touch_keys=pressed_keys=0;pending_input_us=0;audio_flush();status("Scanning original DATA folder...");
+    active_touch=-1;pad_keys=touch_keys=pressed_keys=0;pending_input_us=0;audio_flush();status("Scanning original DATA folder...");
     catalog_start(media_root,base_levels_mask);
     if(!catalog_busy()) {scanning=false;ol_set_levels_mask(catalog_mask());open_level(0);}
 }
@@ -228,13 +231,21 @@ static void tick(uint64_t now) {
     if (background || !surface || load_state<0) return;
     music_stream_tick();
     if (load_state==2) {
-        uint32_t count=total-loaded; if (count>8192) count=8192;
-        int32_t n=pxa_fs_read(file,load_dest+loaded,count);
-        if (n==PXA_STATUS_WOULD_BLOCK) return;
-        if (n<=0 || uint32_t(n)>count) { error("OpenLara SD read failed or truncated"); return; }
-        loaded+=uint32_t(n);
-        if (loaded==total) { pxa_close_handle(file); file=0; data_done(); }
-        return; // Each SD read returns to Host: no long blocking startup callback.
+        // Reuse the allocated level buffer. A fast SD card can complete several
+        // small reads before yielding, without a timer gap after every 8 KiB.
+        // Both limits matter: short reads cannot create an unbounded callback,
+        // and a slow card returns control after the current read completes.
+        const uint64_t begin=time_us();
+        for(unsigned reads=0;reads<8;++reads) {
+            uint32_t count=total-loaded; if (count>8192) count=8192;
+            int32_t n=pxa_fs_read(file,load_dest+loaded,count);
+            if (n==PXA_STATUS_WOULD_BLOCK) return;
+            if (n<=0 || uint32_t(n)>count) { error("OpenLara SD read failed or truncated"); return; }
+            loaded+=uint32_t(n);
+            if (loaded==total) { pxa_close_handle(file); file=0; data_done();return; }
+            if(time_us()-begin>=8000u)break;
+        }
+        return;
     }
     if (!ready) return;
     // A tick already superseded by a rendered frame must not start more work
@@ -347,22 +358,33 @@ static void tick(uint64_t now) {
     next_frame_clock(begin);
 }
 static void pointer(const pxa_ui_pointer_data_t &p) {
-    if(scanning)return;
-    note_input(p.timestamp_us);
+    if(scanning || background)return;
     uint32_t previous_touch=touch_keys;
     // A fixed D-pad and action buttons also allow PXADB pointer validation.
     int scale=pxa_surface_fit_scale(320,240,display_w,display_h);
     if(scale<1)scale=1;
-    int x=(int(p.x)-(int(display_w)-320*scale)/2)/scale;
-    int y=(int(p.y)-(int(display_h)-240*scale)/2)/scale;
+    int x,y;
+    bool inside=pxa_game_pointer_coordinates(p.x,p.y,display_density,
+        display_w,display_h,320,240,unsigned(scale),&x,&y);
     if (p.phase==PXA_POINTER_UP || p.phase==PXA_POINTER_CANCEL) {
-        touch_keys=0;if(p.phase==PXA_POINTER_CANCEL)pressed_keys=0;return;
+        if(active_touch==p.pointer_id) {
+            note_input(p.timestamp_us);
+            active_touch=-1;touch_keys=0;
+            if(p.phase==PXA_POINTER_CANCEL)pressed_keys=0;
+        }
+        return;
     }
-    if(help) {if(p.phase==PXA_POINTER_DOWN)help=false;touch_keys=0;return;}
+    if(p.phase==PXA_POINTER_DOWN) {
+        if(!inside || active_touch>=0)return;
+        active_touch=p.pointer_id;
+    } else if(active_touch!=p.pointer_id)return;
+    if(!inside) {touch_keys=0;return;}
+    note_input(p.timestamp_us);
+    if(help) {if(p.phase==PXA_POINTER_DOWN)help=false;active_touch=-1;touch_keys=0;return;}
 #if OL_CLASSIC
     if(data_help) {
         if(p.phase==PXA_POINTER_DOWN) {if(y>=155 && y<195)scan_original_data();else {data_help=false;menu=true;menu_selection=10;}}
-        touch_keys=0;return;
+        active_touch=-1;touch_keys=0;return;
     }
 #endif
     if(menu) {
@@ -371,9 +393,9 @@ static void pointer(const pxa_ui_pointer_data_t &p) {
             else if(levels && y>=210)menu_selection=(menu_selection+8)%OL_PLAYABLE_COUNT;
             else if(!levels && y>=(settings?40:35) && y<(settings?(OL_CLASSIC?215:190):(OL_CLASSIC?235:215)))choose_menu(unsigned(y-(settings?40:35))/(settings?25:18));
         }
-        touch_keys=0;return;
+        active_touch=-1;touch_keys=0;return;
     }
-    if(p.phase==PXA_POINTER_DOWN && x>=140 && x<=220 && y>200) {menu=true;settings=false;menu_selection=0;touch_keys=pressed_keys=0;return;}
+    if(p.phase==PXA_POINTER_DOWN && x>=140 && x<=220 && y>200) {menu=true;settings=false;menu_selection=0;active_touch=-1;touch_keys=pressed_keys=0;return;}
     if (x<140) {
         touch_keys=0;
         if (x<40) touch_keys|=1u<<3; else if (x>95) touch_keys|=1u<<1;
@@ -387,7 +409,7 @@ static void pointer(const pxa_ui_pointer_data_t &p) {
 extern "C" int32_t pxa_app_start(const uint8_t *config,uint32_t length) {
     pxa_clock_limits(CLOCK_LIMITS_TOKEN);
     pxa_ui_environment_t env;
-    if (pxa_ui_parse_start_environment(config,length,&env)) {display_w=env.width;display_h=env.height;}
+    if (pxa_ui_parse_start_environment(config,length,&env)) {display_w=env.width;display_h=env.height;display_density=env.density_q16;}
     pxa_window_fullscreen();
     pxa_ui_transaction_t tx{};
     if (!pxa_ui_transaction_begin(&tx,1,PXA_UI_TRANSACTION_REPLACE_SURFACE,packet,sizeof(packet)) ||
@@ -426,7 +448,7 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *bytes,uint32_t length) {
     uint8_t life;
     if (pxa_lifecycle_parse(&e,&life)) {
         background=life==PXA_SYSTEM_LIFECYCLE_BACKGROUND;
-        pad_keys=touch_keys=pressed_keys=controller_last=controller_suppressed=0;pending_input_us=0;previous_us=time_us();
+        active_touch=-1;pad_keys=touch_keys=pressed_keys=controller_last=controller_suppressed=0;pending_input_us=0;previous_us=time_us();
 #if OL_CLASSIC
         ol_set_time(previous_us);ol_idle_time();
 #endif
@@ -492,7 +514,7 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *bytes,uint32_t length) {
         uint32_t hits=buttons&~controller_last;controller_last=buttons;
         if(scanning) {pad_keys=touch_keys=0;return PXA_EVENT_HANDLED;}
         if(load_state<0 && (hits&PXA_CONTROLLER_SELECT)) {open_level(0);return PXA_EVENT_HANDLED;}
-        if(hits&PXA_CONTROLLER_SELECT) {menu=!menu;help=settings=levels=data_help=false;menu_selection=0;pad_keys=touch_keys=pressed_keys=0;controller_suppressed|=PXA_CONTROLLER_SELECT;}
+        if(hits&PXA_CONTROLLER_SELECT) {menu=!menu;help=settings=levels=data_help=false;menu_selection=0;active_touch=-1;pad_keys=touch_keys=pressed_keys=0;controller_suppressed|=PXA_CONTROLLER_SELECT;}
 #if OL_CLASSIC
         if(data_help) {
             controller_suppressed|=buttons&(PXA_CONTROLLER_A|PXA_CONTROLLER_B);
@@ -530,13 +552,13 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *bytes,uint32_t length) {
     if (e.service==PXA_WINDOW_SERVICE && e.opcode==PXA_WINDOW_BACK_REQUESTED) {
         // A back request is an impulse; do not leave a controller key held.
         if(load_state<0)open_level(0);
-        else if(ready) {menu=!menu;help=settings=levels=data_help=false;menu_selection=0;pad_keys=touch_keys=pressed_keys=0;}
+        else if(ready) {menu=!menu;help=settings=levels=data_help=false;menu_selection=0;active_touch=-1;pad_keys=touch_keys=pressed_keys=0;}
         return PXA_EVENT_HANDLED;
     }
     if(e.service==PXA_UI_SERVICE && e.opcode==PXA_UI_ENVIRONMENT_CHANGED) {
         pxa_ui_environment_t env;
-        if(pxa_ui_parse_environment_event(&e,&env)) {display_w=env.width;display_h=env.height;}
-        pad_keys=touch_keys=pressed_keys=controller_last=controller_suppressed=0;return PXA_EVENT_HANDLED;
+        if(pxa_ui_parse_environment_event(&e,&env)) {display_w=env.width;display_h=env.height;display_density=env.density_q16;}
+        active_touch=-1;pad_keys=touch_keys=pressed_keys=controller_last=controller_suppressed=0;return PXA_EVENT_HANDLED;
     }
 #if OL_OPTIMIZED
     pxa_surface_released_t released;

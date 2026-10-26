@@ -14,9 +14,11 @@ static void half(unsigned off,u16 v){memcpy(vram+off,&v,2);}
 int main(int argc,char **argv) {
     assert(argc==2);FILE *f=fopen(argv[1],"rb");assert(f);u8 *rom=malloc(32768);assert(rom&&fread(rom,1,32768,f)==32768);fclose(f);
     u8 *states[2]={NULL,NULL};size_t size=0;
+    const unsigned budgets[]={1,2,3,4,5,7,11,31,960};
     for(unsigned thumb=0;thumb<2;++thumb)
     for(unsigned kind=0;kind<4;++kind)
-    for(unsigned threshold=1;threshold<5;++threshold) {
+    for(unsigned threshold=1;threshold<5;++threshold)
+    for(unsigned edge=0;edge<sizeof(budgets)/sizeof(*budgets);++edge) {
         u32 result[2];
         for(unsigned enabled=0;enabled<2;++enabled) {
             gba_cpu_idle_enabled=enabled;
@@ -33,9 +35,13 @@ int main(int argc,char **argv) {
                 word(0,0xe1d100b0);word(4,0xe3500000|threshold);word(8,0x3afffffc);
                 word(12,0xe5820000);word(16,0xe12fff13);
             }
+            execute_cycles=budgets[edge];
             result[enabled]=execute_arm_vram(execute_cycles);
             assert(!emu_state_save(states[enabled],size));emu_core_close();
         }
+        if(result[0]!=result[1] || memcmp(states[0],states[1],size))
+            fprintf(stderr,"poll mismatch thumb=%u kind=%u threshold=%u budget=%u results=%08x/%08x\n",
+                    thumb,kind,threshold,budgets[edge],result[0],result[1]);
         assert(result[0]==result[1]);assert(!memcmp(states[0],states[1],size));
     }
     gba_cpu_idle_enabled=true;free(states[0]);free(states[1]);free(rom);

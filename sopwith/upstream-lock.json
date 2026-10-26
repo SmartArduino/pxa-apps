@@ -1,0 +1,214 @@
+{
+  "project": "SDL Sopwith",
+  "upstream": "https://github.com/fragglet/sdl-sopwith",
+  "commit": "c4e034109e28a5bd1727645fe77b27430219e8b5",
+  "upstream_version": "2.9.0",
+  "branch_at_fetch": "trunk",
+  "primary_license": "GPL-2.0-or-later",
+  "code_and_embedded_sprites": "GPL-2.0-or-later",
+  "font_h": "LGPL-2.1-or-later",
+  "yocton_c_and_h": "ISC",
+  "original_core_files_modified": false,
+  "vendor_files": [
+    {
+      "path": "vendor/font.h",
+      "sha256": "ceee00fe9a2b9996da26b56d7a80a416ed8d39ef7390a7ead20ef59dc51dec38"
+    },
+    {
+      "path": "vendor/hiscore.c",
+      "sha256": "92f6ac9a1b2651eb441622a2720f5c55020eb0f6bfbca3a8fbb02c5a3d50911d"
+    },
+    {
+      "path": "vendor/hiscore.h",
+      "sha256": "c9247a677b9e88c597084ed143c187f05a91533399eb3f2d932f26ce43efb140"
+    },
+    {
+      "path": "vendor/pcsound.h",
+      "sha256": "5892c09a72ef9883f084d7db63826f258b2b03ef35013f01ef6b661cfeb13123"
+    },
+    {
+      "path": "vendor/std.h",
+      "sha256": "61d35e4d31393d98583f64524b2f861e6ebbc3448fb3a3543df5c0287a41575e"
+    },
+    {
+      "path": "vendor/sw.h",
+      "sha256": "20f50276bb1351eb00667d3a94491d1261a6b49cc76e6af07ab1da19e22bb8b0"
+    },
+    {
+      "path": "vendor/swasynio.c",
+      "sha256": "d6f94cb6894a0154d9501b596e775ef34ed448eb127f508725b1d02cb198c1d6"
+    },
+    {
+      "path": "vendor/swasynio.h",
+      "sha256": "e34235d203d861f5bf3face74e67063c4b8c24aaed59dc714bfd3438f8ef970c"
+    },
+    {
+      "path": "vendor/swauto.c",
+      "sha256": "eb7ea71a4c8b6a1b32ca4c974396f97711ee7db298aed0358758c55f85babc10"
+    },
+    {
+      "path": "vendor/swauto.h",
+      "sha256": "51e67f3ba7ca4ea2cea05852fa94b41b545b6f67030799b1b670f30bb4185618"
+    },
+    {
+      "path": "vendor/swcollsn.c",
+      "sha256": "914d2a53c10c89527806d4844dcdbb56f7b2629a3ed8830675597f0f090f27a0"
+    },
+    {
+      "path": "vendor/swcollsn.h",
+      "sha256": "73450bd98db742812d39f0b510fad611418a216e3ba3826676d82e1d5f794a17"
+    },
+    {
+      "path": "vendor/swconf.c",
+      "sha256": "33d68113030cc339c349037f551d32a4cd3fe4aefd7bf450db2eb420b66930f7"
+    },
+    {
+      "path": "vendor/swconf.h",
+      "sha256": "7f9659b7163b549fbb6a48bab734660fb5de324b9c18fe1281dee3c76af296a3"
+    },
+    {
+      "path": "vendor/swend.c",
+      "sha256": "8534f6e9c5819c39848af16c4a22b89a0417217fa1976b03b984decd22a89f8a"
+    },
+    {
+      "path": "vendor/swend.h",
+      "sha256": "9c2ff1760e07c15f1b5c46c520c498586b9566428d3dd808c15d5ed2d9dc8de5"
+    },
+    {
+      "path": "vendor/swgames.c",
+      "sha256": "0b4c19d3ea69ecf14287403ebd4c32aeb1122a457ee1bd94ca252bd88f7a9b1e"
+    },
+    {
+      "path": "vendor/swgames.h",
+      "sha256": "72c95d950d56dcfd55a6808687aed6f06e9200efcf27a7d2b8784dde2de33c14"
+    },
+    {
+      "path": "vendor/swgrpha.c",
+      "sha256": "bdef050dc589821feef1aabd8199a7057a4dd61f4a5f2e94d15e6a72e89243f3"
+    },
+    {
+      "path": "vendor/swgrpha.h",
+      "sha256": "de54bab6656e9d59a87e547b34da20331ca92601fde03509bacaaec5e218c493"
+    },
+    {
+      "path": "vendor/swinit.c",
+      "sha256": "28cf387ae9de34010b5650b56473c102e20e098484948e475fd9acca923eed43"
+    },
+    {
+      "path": "vendor/swinit.h",
+      "sha256": "f67ec9a1e2fe6d02007c9fede89d76726d537c243cde97d33db4e2acec13ea3f"
+    },
+    {
+      "path": "vendor/swmain.c",
+      "sha256": "7720385472ce8e04e265b464a3132d451210ac0c07c4219d3bda3f59a65f2a1d"
+    },
+    {
+      "path": "vendor/swmain.h",
+      "sha256": "0df4ced0d2167105ab604effb7b5d671934afc24ce482e89b365331cf7af5165"
+    },
+    {
+      "path": "vendor/swmenu.c",
+      "sha256": "f811ea1b34b789a01fdc09b6b504f6568965383afcc20a26bc98b09a5ca6de61"
+    },
+    {
+      "path": "vendor/swmenu.h",
+      "sha256": "40b50de0b6286bec7c28c27a0c3dfd34da6ef05efa3f3a6e3673e5a45832361f"
+    },
+    {
+      "path": "vendor/swmove.c",
+      "sha256": "6d06b64f309df13e3af6d524ce67634a6c675bcada443d48ede00c652868a7e8"
+    },
+    {
+      "path": "vendor/swmove.h",
+      "sha256": "3829375b8ae94507387d37a2e4e29faa716445588bcc5f2789553257bb0603cb"
+    },
+    {
+      "path": "vendor/swobject.c",
+      "sha256": "7bad4a362beb98c63b94ec51f05bd746f885038ca829e0795f7aa75918c8f120"
+    },
+    {
+      "path": "vendor/swobject.h",
+      "sha256": "731b0f6b621f7e24003b761fe59dfba7573477a712c772c2aabe964d4396bdee"
+    },
+    {
+      "path": "vendor/swsound.c",
+      "sha256": "f1e2215ff2baba564f8ff1662a271f53d3cea8e7ceb23494e8355ebb0fc919a4"
+    },
+    {
+      "path": "vendor/swsound.h",
+      "sha256": "a6a633de19b61eba9644fa12879d80ac2e8ec9ff324114a6ba6d7fb07d4dc3bc"
+    },
+    {
+      "path": "vendor/swsplat.c",
+      "sha256": "b48eed1fae4ad2028b86c5e405248b79cd4996796ebaea353e4b2e90cde0b410"
+    },
+    {
+      "path": "vendor/swsplat.h",
+      "sha256": "650a4629db483f38a6ef0375a7a37bb34a976b4618dbce14a5da396bca01c11c"
+    },
+    {
+      "path": "vendor/swstbar.c",
+      "sha256": "93ac428c69b727195ee74c19697a5770c95147cce83c43b3e648b5b126f4bce4"
+    },
+    {
+      "path": "vendor/swstbar.h",
+      "sha256": "9f9bad9329a2f63ddc05b98cc4d1cf7a23b8264d2227f3d568d4751bfe33f74a"
+    },
+    {
+      "path": "vendor/swsymbol.c",
+      "sha256": "530d200df924766b0715f708e83e2a690de21d7c1d42b1068cc85e81ed0c2270"
+    },
+    {
+      "path": "vendor/swsymbol.h",
+      "sha256": "cfc3e3e35c903df0d70652d08b4056bcc5f227559388c42a19baff89fcfc67a2"
+    },
+    {
+      "path": "vendor/swtext.c",
+      "sha256": "6fb23967cec01e5c584e7347bea118e207297545c3d01fc90c80dcfad438226b"
+    },
+    {
+      "path": "vendor/swtext.h",
+      "sha256": "60a9da7f8a3bcf8a9d6406907872ed11dbd609be22d2b57210029484345859e9"
+    },
+    {
+      "path": "vendor/swtitle.c",
+      "sha256": "831bee6d2a3cc789b58b7ea6aca7ac314d3a29b79ae01a149b6015581374d0f6"
+    },
+    {
+      "path": "vendor/swtitle.h",
+      "sha256": "528fd12c2889235c081f0baa387e767bf031f0e0bf907353f8c4b29f5b60f4e8"
+    },
+    {
+      "path": "vendor/tcpcomm.c",
+      "sha256": "26d5fac8765980335aa8f609c71238759a8d41a7c0ee70d0cd3c909fec1eb717"
+    },
+    {
+      "path": "vendor/tcpcomm.h",
+      "sha256": "2a6c1ea262a5a61c8b74ac14b0c8622eff2872aaf0b0f334f080410936f3f00c"
+    },
+    {
+      "path": "vendor/timer.h",
+      "sha256": "08de980bb1dea8ce828befa466f47a2f468d3005dfecb2848979de52fa488781"
+    },
+    {
+      "path": "vendor/touch_area.c",
+      "sha256": "62841919beb5ca14ca64fad5582a9c07c415a9184133bd924091bd3112f10c81"
+    },
+    {
+      "path": "vendor/video.c",
+      "sha256": "95d7f54e385fb4ffe3d2818cb161007175ae151f073cd89ae4d625de216bad1d"
+    },
+    {
+      "path": "vendor/video.h",
+      "sha256": "b910f5de5db39e679555edc808cca3e057ca2696f28d547d4bf1efb13ca27c6f"
+    },
+    {
+      "path": "vendor/yocton.c",
+      "sha256": "86a70a86a2be89f7089486b4cb5a68a83b3c519133ba79b868751d28eebfed66"
+    },
+    {
+      "path": "vendor/yocton.h",
+      "sha256": "bd95dbe40840000e4552144fb50688c78a06739f24a68c65a0b7aca7f21a7fa9"
+    }
+  ]
+}

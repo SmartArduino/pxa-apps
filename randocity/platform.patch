@@ -1,0 +1,722 @@
+--- vendor/original/ArduboyTones/src/ArduboyTones.cpp
++++ vendor/platform/ArduboyTones.cpp
+@@ -1,287 +1,58 @@
+-/**
+- * @file ArduboyTones.cpp
+- * \brief An Arduino library for playing tones and tone sequences, 
+- * intended for the Arduboy game system.
++/* SPDX-License-Identifier: MIT.
++ * Copyright (c) 2017 Scott Allen. Software adaptation of pinned Timer3
++ * duration/sequence logic; original MIT notice supplied with full source.
++ * Timer clocks at F_CPU/8, retains TCNT3 phase when OCR3A is replaced,
++ * uses the original floor(dur*frequency/512), and advances a sequence on
++ * the extra interrupt after toggle count reaches zero. Output is silent.
+  */
+-
+-/*****************************************************************************
+-  ArduboyTones
+-
+-An Arduino library to play tones and tone sequences.
+-
+-Specifically written for use by the Arduboy miniature game system
+-https://www.arduboy.com/
+-but could work with other Arduino AVR boards that have 16 bit timer 3
+-available, by changing the port and bit definintions for the pin(s)
+-if necessary.
+-
+-Copyright (c) 2017 Scott Allen
+-
+-Permission is hereby granted, free of charge, to any person obtaining a copy
+-of this software and associated documentation files (the "Software"), to deal
+-in the Software without restriction, including without limitation the rights
+-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+-copies of the Software, and to permit persons to whom the Software is
+-furnished to do so, subject to the following conditions:
+-
+-The above copyright notice and this permission notice shall be included in
+-all copies or substantial portions of the Software.
+-
+-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+-THE SOFTWARE.
+-*****************************************************************************/
+-
+ #include "ArduboyTones.h"
+-
+-// pointer to a function that indicates if sound is enabled
+-static bool (*outputEnabled)();
+-
+-static volatile long durationToggleCount = 0;
+-static volatile bool tonesPlaying = false;
+-static volatile bool toneSilent;
+-#ifdef TONES_VOLUME_CONTROL
+-static volatile bool toneHighVol;
+-static volatile bool forceHighVol = false;
+-static volatile bool forceNormVol = false;
+-#endif
+-
+-static volatile uint16_t *tonesStart;
+-static volatile uint16_t *tonesIndex;
+-static volatile uint16_t toneSequence[MAX_TONES * 2 + 1];
+-static volatile bool inProgmem;
+-
+-
+-ArduboyTones::ArduboyTones(boolean (*outEn)())
+-{
+-  outputEnabled = outEn;
+-
+-  toneSequence[MAX_TONES * 2] = TONES_END;
+-
+-  bitClear(TONE_PIN_PORT, TONE_PIN); // set the pin low
+-  bitSet(TONE_PIN_DDR, TONE_PIN); // set the pin to output mode
+-#ifdef TONES_2_SPEAKER_PINS
+-  bitClear(TONE_PIN2_PORT, TONE_PIN2); // set pin 2 low
+-  bitSet(TONE_PIN2_DDR, TONE_PIN2); // set pin 2 to output mode
+-#endif
++#include "backend.h"
++RandocityToneState randocity_tone_state{};
++static bool(*output_enabled)();
++ArduboyTones::ArduboyTones(bool(*outEn)()) {
++  output_enabled=outEn;randocity_tone_state.sequence[6]=TONES_END;
+ }
+-
+-void ArduboyTones::tone(uint16_t freq, uint16_t dur)
+-{
+-  bitWrite(TIMSK3, OCIE3A, 0); // disable the output compare match interrupt
+-  inProgmem = false;
+-  tonesStart = tonesIndex = toneSequence; // set to start of sequence array
+-  toneSequence[0] = freq;
+-  toneSequence[1] = dur;
+-  toneSequence[2] = TONES_END; // set end marker
+-  nextTone(); // start playing
++void ArduboyTones::nextTone() {
++  auto &s=randocity_tone_state;
++  uint16_t frequency=s.sequence[s.index++];
++  if(frequency==TONES_END){s.interrupt_enabled=false;s.running=false;s.playing=false;return;}
++  s.playing=true;
++  if(frequency==TONES_REPEAT){s.index=0;frequency=s.sequence[s.index++];}
++  s.high_volume=((frequency&TONE_HIGH_VOLUME)||s.force_high)&&!s.force_normal;
++  frequency&=~TONE_HIGH_VOLUME;
++  s.silent=frequency==0;
++  if(!frequency)frequency=250;
++  s.compare=(uint16_t)(F_CPU/8/frequency/2-1);
++  if(!output_enabled())s.silent=true;
++  const uint16_t duration=s.sequence[s.index++];
++  s.toggle_count=duration?(int32_t)(((int32_t)duration*frequency)>>9):-1;
++  s.running=true;s.interrupt_enabled=true;
+ }
+-
+-void ArduboyTones::tone(uint16_t freq1, uint16_t dur1,
+-                        uint16_t freq2, uint16_t dur2)
+-{
+-  bitWrite(TIMSK3, OCIE3A, 0); // disable the output compare match interrupt
+-  inProgmem = false;
+-  tonesStart = tonesIndex = toneSequence; // set to start of sequence array
+-  toneSequence[0] = freq1;
+-  toneSequence[1] = dur1;
+-  toneSequence[2] = freq2;
+-  toneSequence[3] = dur2;
+-  toneSequence[4] = TONES_END; // set end marker
+-  nextTone(); // start playing
+-}
+-
+-void ArduboyTones::tone(uint16_t freq1, uint16_t dur1,
+-                        uint16_t freq2, uint16_t dur2,
+-                        uint16_t freq3, uint16_t dur3)
+-{
+-  bitWrite(TIMSK3, OCIE3A, 0); // disable the output compare match interrupt
+-  inProgmem = false;
+-  tonesStart = tonesIndex = toneSequence; // set to start of sequence array
+-  toneSequence[0] = freq1;
+-  toneSequence[1] = dur1;
+-  toneSequence[2] = freq2;
+-  toneSequence[3] = dur2;
+-  toneSequence[4] = freq3;
+-  toneSequence[5] = dur3;
+-  // end marker was set in the constructor and will never change
+-  nextTone(); // start playing
+-}
+-
+-void ArduboyTones::tones(const uint16_t *tones)
+-{
+-  bitWrite(TIMSK3, OCIE3A, 0); // disable the output compare match interrupt
+-  inProgmem = true;
+-  tonesStart = tonesIndex = (uint16_t *)tones; // set to start of sequence array
+-  nextTone(); // start playing
+-}
+-
+-void ArduboyTones::tonesInRAM(uint16_t *tones)
+-{
+-  bitWrite(TIMSK3, OCIE3A, 0); // disable the output compare match interrupt
+-  inProgmem = false;
+-  tonesStart = tonesIndex = tones; // set to start of sequence array
+-  nextTone(); // start playing
+-}
+-
+-void ArduboyTones::noTone()
+-{
+-  bitWrite(TIMSK3, OCIE3A, 0); // disable the output compare match interrupt
+-  TCCR3B = 0; // stop the counter
+-  bitClear(TONE_PIN_PORT, TONE_PIN); // set the pin low
+-#ifdef TONES_VOLUME_CONTROL
+-  bitClear(TONE_PIN2_PORT, TONE_PIN2); // set pin 2 low
+-#endif
+-  tonesPlaying = false;
+-}
+-
+-void ArduboyTones::volumeMode(uint8_t mode)
+-{
+-#ifdef TONES_VOLUME_CONTROL
+-  forceNormVol = false; // assume volume is tone controlled
+-  forceHighVol = false;
+-
+-  if (mode == VOLUME_ALWAYS_NORMAL) {
+-    forceNormVol = true;
+-  }
+-  else if (mode == VOLUME_ALWAYS_HIGH) {
+-    forceHighVol = true;
+-  }
+-#endif
+-}
+-
+-bool ArduboyTones::playing()
+-{
+-  return tonesPlaying;
+-}
+-
+-void ArduboyTones::nextTone()
+-{
+-  uint16_t freq;
+-  uint16_t dur;
+-  long toggleCount;
+-  uint32_t ocrValue;
+-#ifdef TONES_ADJUST_PRESCALER
+-  uint8_t tccrxbValue;
+-#endif
+-
+-  freq = getNext(); // get tone frequency
+-
+-  if (freq == TONES_END) { // if freq is actually an "end of sequence" marker
+-    noTone(); // stop playing
+-    return;
+-  }
+-
+-  tonesPlaying = true;
+-
+-  if (freq == TONES_REPEAT) { // if frequency is actually a "repeat" marker
+-    tonesIndex = tonesStart; // reset to start of sequence
+-    freq = getNext();
+-  }
+-
+-#ifdef TONES_VOLUME_CONTROL
+-  if (((freq & TONE_HIGH_VOLUME) || forceHighVol) && !forceNormVol) {
+-    toneHighVol = true;
+-  }
+-  else {
+-    toneHighVol = false;
+-  }
+-#endif
+-
+-  freq &= ~TONE_HIGH_VOLUME; // strip volume indicator from frequency
+-
+-#ifdef TONES_ADJUST_PRESCALER
+-  if (freq >= MIN_NO_PRESCALE_FREQ) {
+-    tccrxbValue = _BV(WGM32) | _BV(CS30); // CTC mode, no prescaling
+-    ocrValue = F_CPU / freq / 2 - 1;
+-    toneSilent = false;
+-  }
+-  else {
+-    tccrxbValue = _BV(WGM32) | _BV(CS31); // CTC mode, prescaler /8
+-#endif
+-    if (freq == 0) { // if tone is silent
+-      ocrValue = F_CPU / 8 / SILENT_FREQ / 2 - 1; // dummy tone for silence
+-      freq = SILENT_FREQ;
+-      toneSilent = true;
+-      bitClear(TONE_PIN_PORT, TONE_PIN); // set the pin low
+-    }
+-    else {
+-      ocrValue = F_CPU / 8 / freq / 2 - 1;
+-      toneSilent = false;
+-    }
+-#ifdef TONES_ADJUST_PRESCALER
+-  }
+-#endif
+-
+-  if (!outputEnabled()) { // if sound has been muted
+-    toneSilent = true;
+-  }
+-
+-#ifdef TONES_VOLUME_CONTROL
+-  if (toneHighVol && !toneSilent) {
+-    // set pin 2 to the compliment of pin 1
+-    if (bitRead(TONE_PIN_PORT, TONE_PIN)) {
+-      bitClear(TONE_PIN2_PORT, TONE_PIN2);
+-    }
+-    else {
+-      bitSet(TONE_PIN2_PORT, TONE_PIN2);
++void ArduboyTones::update() {
++  auto &s=randocity_tone_state;uint32_t now=arduboy_pxa_millis();
++  uint64_t ticks=(uint64_t)(uint32_t)(now-s.last_ms)*2000u;s.last_ms=now;
++  while(s.running&&ticks) {
++    uint32_t until=s.counter<=s.compare?(uint32_t)s.compare-s.counter+1u:65536u-s.counter+s.compare+1u;
++    if(ticks<until){s.counter=(uint16_t)(s.counter+ticks);break;}
++    ticks-=until;s.counter=0;
++    if(s.interrupt_enabled) {
++      if(s.toggle_count!=0){if(s.toggle_count>0)--s.toggle_count;}
++      else nextTone();
+     }
+   }
+-  else {
+-    bitClear(TONE_PIN2_PORT, TONE_PIN2); // set pin 2 low for normal volume
+-  }
+-#endif
+-
+-  dur = getNext(); // get tone duration
+-  if (dur != 0) {
+-    // A right shift is used to divide by 512 for efficency.
+-    // For durations in milliseconds it should actually be a divide by 500,
+-    // so durations will by shorter by 2.34% of what is specified.
+-    toggleCount = ((long)dur * freq) >> 9;
+-  }
+-  else {
+-    toggleCount = -1; // indicate infinite duration
+-  }
+-
+-  TCCR3A = 0;
+-#ifdef TONES_ADJUST_PRESCALER
+-  TCCR3B = tccrxbValue;
+-#else
+-  TCCR3B = _BV(WGM32) | _BV(CS31); // CTC mode, prescaler /8
+-#endif
+-  OCR3A = ocrValue;
+-  durationToggleCount = toggleCount;
+-  bitWrite(TIMSK3, OCIE3A, 1); // enable the output compare match interrupt
+ }
+-
+-uint16_t ArduboyTones::getNext()
+-{
+-  if (inProgmem) {
+-    return pgm_read_word(tonesIndex++);
+-  }
+-  return *tonesIndex++;
++void ArduboyTones::tone(uint16_t f,uint16_t d) {
++  update();auto&s=randocity_tone_state;s.interrupt_enabled=false;s.in_progmem=false;s.index=0;
++  s.sequence[0]=f;s.sequence[1]=d;s.sequence[2]=TONES_END;nextTone();
+ }
+-
+-ISR(TIMER3_COMPA_vect)
+-{
+-  if (durationToggleCount != 0) {
+-    if (!toneSilent) {
+-      *(&TONE_PIN_PORT) ^= TONE_PIN_MASK; // toggle the pin
+-#ifdef TONES_VOLUME_CONTROL
+-      if (toneHighVol) {
+-        *(&TONE_PIN2_PORT) ^= TONE_PIN2_MASK; // toggle pin 2
+-      }
+-#endif
+-    }
+-    if (durationToggleCount > 0) {
+-      durationToggleCount--;
+-    }
+-  }
+-  else {
+-    ArduboyTones::nextTone();
+-  }
++void ArduboyTones::tone(uint16_t f1,uint16_t d1,uint16_t f2,uint16_t d2) {
++  update();auto&s=randocity_tone_state;s.interrupt_enabled=false;s.in_progmem=false;s.index=0;
++  s.sequence[0]=f1;s.sequence[1]=d1;s.sequence[2]=f2;s.sequence[3]=d2;s.sequence[4]=TONES_END;nextTone();
+ }
++void ArduboyTones::tone(uint16_t f1,uint16_t d1,uint16_t f2,uint16_t d2,uint16_t f3,uint16_t d3) {
++  update();auto&s=randocity_tone_state;s.interrupt_enabled=false;s.in_progmem=false;s.index=0;
++  s.sequence[0]=f1;s.sequence[1]=d1;s.sequence[2]=f2;s.sequence[3]=d2;s.sequence[4]=f3;s.sequence[5]=d3;nextTone();
++}
++void ArduboyTones::noTone(){update();auto&s=randocity_tone_state;s.interrupt_enabled=false;s.running=false;s.playing=false;}
++bool ArduboyTones::playing(){update();return randocity_tone_state.playing;}
++void ArduboyTones::volumeMode(uint8_t mode){auto&s=randocity_tone_state;s.force_normal=mode==VOLUME_ALWAYS_NORMAL;s.force_high=mode==VOLUME_ALWAYS_HIGH;}
+--- vendor/original/ArduboyTones/src/ArduboyTones.h
++++ vendor/platform/ArduboyTones.h
+@@ -1,298 +1,38 @@
+-/**
+- * @file ArduboyTones.h
+- * \brief An Arduino library for playing tones and tone sequences, 
+- * intended for the Arduboy game system.
++/* SPDX-License-Identifier: MIT.
++ * Copyright (c) 2017 Scott Allen. Modified 2026-10-10: silent software
++ * Timer3 boundary for the pinned Randocity calls. Full original MIT notice
++ * in ../original/ArduboyTones/LICENSE.txt and assets/LICENSE.ArduboyTones.MIT.
++ * No GPIO, hardware interrupt, sound output or new Host function.
+  */
+-
+-/*****************************************************************************
+-  ArduboyTones
+-
+-An Arduino library to play tones and tone sequences.
+-
+-Specifically written for use by the Arduboy miniature game system
+-https://www.arduboy.com/
+-but could work with other Arduino AVR boards that have 16 bit timer 3
+-available, by changing the port and bit definintions for the pin(s)
+-if necessary.
+-
+-Copyright (c) 2017 Scott Allen
+-
+-Permission is hereby granted, free of charge, to any person obtaining a copy
+-of this software and associated documentation files (the "Software"), to deal
+-in the Software without restriction, including without limitation the rights
+-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+-copies of the Software, and to permit persons to whom the Software is
+-furnished to do so, subject to the following conditions:
+-
+-The above copyright notice and this permission notice shall be included in
+-all copies or substantial portions of the Software.
+-
+-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+-THE SOFTWARE.
+-*****************************************************************************/
+-
+-#ifndef ARDUBOY_TONES_H
+-#define ARDUBOY_TONES_H
+-
++#pragma once
+ #include <Arduino.h>
+-
+-// ************************************************************
+-// ***** Values to use as function parameters in sketches *****
+-// ************************************************************
+-
+-/** \brief
+- * Frequency value for sequence termination. (No duration follows)
+- */
++#include "ArduboyTonesPitches.h"
+ #define TONES_END 0x8000
+-
+-/** \brief
+- * Frequency value for sequence repeat. (No duration follows)
+- */
+ #define TONES_REPEAT 0x8001
+-
+-
+-/** \brief
+- * Add this to the frequency to play a tone at high volume
+- */
+ #define TONE_HIGH_VOLUME 0x8000
+-
+-
+-/** \brief
+- * `volumeMode()` parameter. Use the volume encoded in each tone's frequency
+- */
+ #define VOLUME_IN_TONE 0
+-
+-/** \brief
+- * `volumeMode()` parameter. Play all tones at normal volume, ignoring
+- * what's encoded in the frequencies
+- */
+ #define VOLUME_ALWAYS_NORMAL 1
+-
+-/** \brief
+- * `volumeMode()` parameter. Play all tones at high volume, ignoring
+- * what's encoded in the frequencies
+- */
+ #define VOLUME_ALWAYS_HIGH 2
+-
+-// ************************************************************
+-
+-
+-#ifndef AB_DEVKIT
+-  // ***** SPEAKER ON TWO PINS *****
+-  // Indicates that each of the speaker leads is attached to a pin, the way
+-  // the Arduboy is wired. Allows tones of a higher volume to be produced.
+-  // If commented out only one speaker pin will be used. The other speaker
+-  // lead should be attached to ground.
+-  #define TONES_2_SPEAKER_PINS
+-  // *******************************
+-
+-  // ***** VOLUME HIGH/NORMAL SUPPORT *****
+-  // With the speaker placed across two pins, higher volume is produced by
+-  // toggling the second pin to the opposite state of the first pin.
+-  // Normal volume is produced by leaving the second pin low.
+-  // Comment this out for only normal volume support, which will slightly
+-  // reduce the code size.
+-  #define TONES_VOLUME_CONTROL
+-  // **************************************
+-
+-  #ifdef TONES_VOLUME_CONTROL
+-    // Must be defined for volume control, so force it if necessary.
+-    #define TONES_2_SPEAKER_PINS
+-  #endif
+-#endif
+-
+-// ***** CONTROL THE TIMER CLOCK PRESCALER ****
+-// Uncommenting this will switch the timer clock to use no prescaler,
+-// instead of a divide by 8 prescaler, if the frequency is high enough to
+-// allow it. This will result in higher frequencies being more accurate at
+-// the expense of requiring more code. If left commented out, a divide by 8
+-// prescaler will be used for all frequencies.
+-//#define TONES_ADJUST_PRESCALER
+-// ********************************************
+-
+-// This must match the maximum number of tones that can be specified in
+-// the tone() function.
+-#define MAX_TONES 3
+-
+-#ifndef AB_DEVKIT
+-  // Arduboy speaker pin 1 = Arduino pin 5 = ATmega32u4 PC6
+-  #define TONE_PIN_PORT PORTC
+-  #define TONE_PIN_DDR DDRC
+-  #define TONE_PIN PORTC6
+-  #define TONE_PIN_MASK _BV(TONE_PIN)
+-  // Arduboy speaker pin 2 = Arduino pin 13 = ATmega32u4 PC7
+-  #define TONE_PIN2_PORT PORTC
+-  #define TONE_PIN2_DDR DDRC
+-  #define TONE_PIN2 PORTC7
+-  #define TONE_PIN2_MASK _BV(TONE_PIN2)
+-#else
+-  // DevKit speaker pin 1 = Arduino pin A2 = ATmega32u4 PF5
+-  #define TONE_PIN_PORT PORTF
+-  #define TONE_PIN_DDR DDRF
+-  #define TONE_PIN PORTF5
+-  #define TONE_PIN_MASK _BV(TONE_PIN)
+-#endif
+-
+-// The minimum frequency that can be produced without a clock prescaler.
+-#define MIN_NO_PRESCALE_FREQ ((uint16_t)(((F_CPU / 2L) + (1L << 16) - 1L) / (1L << 16)))
+-
+-// Dummy frequency used to for silent tones (rests).
+-#define SILENT_FREQ 250
+-
+-
+-/** \brief
+- * The ArduboyTones class for generating tones by specifying
+- * frequency/duration pairs.
+- */
+-class ArduboyTones
+-{
+- public:
+-  /** \brief
+-   * The ArduboyTones class constructor.
+-   *
+-   * \param outEn A function which returns a boolean value of `true` if sound
+-   * should be played or `false` if sound should be muted. This function will
+-   * be called from the timer interrupt service routine, at the start of each
+-   * tone, so it should be as fast as possible.
+-   */
+-  ArduboyTones(bool (*outEn)());
+-
+-  /** \brief
+-   * Play a single tone.
+-   *
+-   * \param freq The frequency of the tone, in hertz.
+-   * \param dur The duration to play the tone for, in 1024ths of a
+-   * second (very close to milliseconds). A duration of 0, or if not provided,
+-   * means play forever, or until `noTone()` is called or a new tone or
+-   * sequence is started.
+-   */
+-  static void tone(uint16_t freq, uint16_t dur = 0);
+-
+-  /** \brief
+-   * Play two tones in sequence.
+-   *
+-   * \param freq1,freq2 The frequency of the tone in hertz.
+-   * \param dur1,dur2 The duration to play the tone for, in 1024ths of a
+-   * second (very close to milliseconds).
+-   */
+-  static void tone(uint16_t freq1, uint16_t dur1,
+-                   uint16_t freq2, uint16_t dur2);
+-
+-  /** \brief
+-   * Play three tones in sequence.
+-   *
+-   * \param freq1,freq2,freq3 The frequency of the tone, in hertz.
+-   * \param dur1,dur2,dur3 The duration to play the tone for, in 1024ths of a
+-   * second (very close to milliseconds).
+-   */
+-  static void tone(uint16_t freq1, uint16_t dur1,
+-                   uint16_t freq2, uint16_t dur2,
+-                   uint16_t freq3, uint16_t dur3);
+-
+-  /** \brief
+-   * Play a tone sequence from frequency/duration pairs in a PROGMEM array.
+-   *
+-   * \param tones A pointer to an array of frequency/duration pairs.
+-   * The array must be placed in code space using `PROGMEM`.
+-   *
+-   * \details 
+-   * \parblock
+-   * See the `tone()` function for details on the frequency and duration values.
+-   * A frequency of 0 for any tone means silence (a musical rest).
+-   *
+-   * The last element of the array must be `TONES_END` or `TONES_REPEAT`.
+-   *
+-   * Example:
+-   *
+-   * \code
+-   * const uint16_t sound1[] PROGMEM = {
+-   *   220,1000, 0,250, 440,500, 880,2000,
+-   *   TONES_END
+-   * };
+-   * \endcode
+-   *
+-   * \endparblock
+-   */
+-  static void tones(const uint16_t *tones);
+-
+-  /** \brief
+-   * Play a tone sequence from frequency/duration pairs in an array in RAM.
+-   *
+-   * \param tones A pointer to an array of frequency/duration pairs.
+-   * The array must be located in RAM.
+-   *
+-   * \see tones()
+-   *
+-   * \details 
+-   * \parblock
+-   * See the `tone()` function for details on the frequency and duration values.
+-   * A frequency of 0 for any tone means silence (a musical rest).
+-   *
+-   * The last element of the array must be `TONES_END` or `TONES_REPEAT`.
+-   *
+-   * Example:
+-   *
+-   * \code
+-   * uint16_t sound2[] = {
+-   *   220,1000, 0,250, 440,500, 880,2000,
+-   *   TONES_END
+-   * };
+-   * \endcode
+-   *
+-   * \endparblock
+-   *
+-   * \note Using `tones()`, with the data in PROGMEM, is normally a better
+-   * choice. The only reason to use tonesInRAM() would be if dynamically
+-   * altering the contents of the array is required.
+-   */
+-  static void tonesInRAM(uint16_t *tones);
+-
+-  /** \brief
+-   * Stop playing the tone or sequence.
+-   *
+-   * \details
+-   * If a tone or sequence is playing, it will stop. If nothing
+-   * is playing, this function will do nothing.
+-   */
++struct RandocityToneState {
++  uint32_t last_ms;
++  uint16_t sequence[7];
++  uint8_t index;
++  int32_t toggle_count;
++  bool playing,silent,high_volume,force_normal,force_high,in_progmem;
++  uint16_t counter,compare;
++  bool running,interrupt_enabled;
++};
++extern RandocityToneState randocity_tone_state;
++class ArduboyTones {
++public:
++  explicit ArduboyTones(bool(*outEn)());
++  static void tone(uint16_t,uint16_t=0);
++  static void tone(uint16_t,uint16_t,uint16_t,uint16_t);
++  static void tone(uint16_t,uint16_t,uint16_t,uint16_t,uint16_t,uint16_t);
+   static void noTone();
+-
+-  /** \brief
+-   * Set the volume to always normal, always high, or tone controlled.
+-   *
+-   * \param mode
+-   * \parblock
+-   * One of the following values should be used:
+-   *
+-   * - `VOLUME_IN_TONE` The volume of each tone will be specified in the tone
+-   *    itself.
+-   * - `VOLUME_ALWAYS_NORMAL` All tones will play at the normal volume level.
+-   * - `VOLUME_ALWAYS_HIGH` All tones will play at the high volume level.
+-   *
+-   * \endparblock
+-   */
+-  static void volumeMode(uint8_t mode);
+-
+-  /** \brief
+-   * Check if a tone or tone sequence is playing.
+-   *
+-   * \return boolean `true` if playing (even if sound is muted).
+-   */
+   static bool playing();
+-
++  static void volumeMode(uint8_t);
++  static void update();
+ private:
+-  // Get the next value in the sequence
+-  static uint16_t getNext();
+-
+-public:
+-  // Called from ISR so must be public. Should not be called by a program.
+   static void nextTone();
+ };
+-
+-#include "ArduboyTonesPitches.h"
+-
+-#endif
+--- vendor/original/Randocity.ino
++++ vendor/platform/Randocity.ino
+@@ -70,9 +70,9 @@
+ void setup() {
+   arduboy.begin();
+   arduboy.setFrameRate(30);
+-  Serial.begin(9600);
+-
+-  EEPROM.get(eepromStart,records);
++  // Serial.begin(9600); // hardware-only debug port omitted
++
++  records_load_avr(eepromStart,records);
+   records.validate();
+   
+   generateWorld();
+@@ -865,13 +865,13 @@
+     if (savedMode == gameEdgeRace) {      
+       newRecord = records.setER(world.seed,gameTimer.timerMinutes,gameTimer.timerSeconds);
+       if (newRecord) {
+-        EEPROM.put(eepromStart,records);
++        records_save_avr(eepromStart,records);
+       }
+     }
+     else {
+       newRecord = records.setCC(world.seed,playerScore);
+       if (newRecord) {
+-        EEPROM.put(eepromStart,records);
++        records_save_avr(eepromStart,records);
+       }
+     }
+   }
+@@ -893,8 +893,8 @@
+ }
+ 
+ void randomizeCourier() {
+-  courierX = ((playerX >> 11) + random(-5,5)) << 11; 
+-  courierY = ((playerY >> 11) + random(-5,5)) << 11;
++  courierX = ((playerX >> 11) + random(-5,5)) * 2048l;
++  courierY = ((playerY >> 11) + random(-5,5)) * 2048l;
+   // pick a safe direction
+   if ((world.segmentsAt(courierX>>2,courierY>>2)&0b10010001) != 0) {
+     // North 
+--- vendor/original/World.cpp
++++ vendor/platform/World.cpp
+@@ -292,11 +292,11 @@
+   uint16_t sp = (sy/8)*WIDTH + sx;
+   uint8_t offsetY = sy % 8;
+   uint8_t mask1 = 0xff << offsetY;
+-  uint8_t mask2 = 0xff << (offsetY-ty);
+   for (uint8_t x=sx; x < min(sx+8-tx,mx); x++) {
+     uint8_t tileData = pgm_read_byte(sprites + tileOffset) >> ty;
+     arduboy.sBuffer[sp] = (arduboy.sBuffer[sp] & ~mask1) | ((tileData << offsetY) & mask1);
+     if ((offsetY + 8 - ty > 8) && (sy+8 < my)) {
++      uint8_t mask2 = 0xff << (offsetY-ty);
+       arduboy.sBuffer[sp+WIDTH] = (arduboy.sBuffer[sp+WIDTH] & mask2) | ((tileData >> (8-offsetY)) & ~mask2);      
+     }
+     sp++;

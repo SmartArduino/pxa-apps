@@ -49,7 +49,7 @@ extern int r_fullbright;
         '-I'+str(out), '-I'+str(port), str(here/'quake_lightmap_cache_test.c'),
         str(port/'lightmap_cache.c'), '-o', str(out/'test.wasm')], check=True)
     (out/'run.cjs').write_text("const {WASI}=require('node:wasi');const fs=require('node:fs');\n"
-        "const wasi=new WASI({version:'preview1',args:[],env:{},preopens:{}});\n"
-        "WebAssembly.instantiate(fs.readFileSync(process.argv[2]),{wasi_snapshot_preview1:wasi.wasiImport})"
-        ".then(({instance})=>wasi.start(instance));\n")
+        "const wasi=new WASI({version:'preview1',args:['test'],env:{},preopens:{},returnOnExit:true});\n"
+        "process.exitCode=wasi.start(new WebAssembly.Instance(new WebAssembly.Module(fs.readFileSync(process.argv[2])),"
+        "{wasi_snapshot_preview1:wasi.wasiImport}));\n")
     subprocess.run(['node',str(out/'run.cjs'),str(out/'test.wasm')],check=True)

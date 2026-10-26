@@ -1,0 +1,90 @@
+{
+  "game": "lasers",
+  "files": [
+    {
+      "path": "vendor/platform/ArduboyPlaytune.cpp",
+      "bytes": 16494,
+      "sha256": "ab23849df3436e912d9eaae5f5814f9e3898402e6bada5621ab205c0c0e57397"
+    },
+    {
+      "path": "vendor/platform/ArduboyPlaytune.h",
+      "bytes": 6667,
+      "sha256": "eb1e135d7dc9dbd380a84a7f8bc07f913ade84a8763ff49be20abdddb6325743"
+    },
+    {
+      "path": "vendor/platform/MyArduboy.cpp",
+      "bytes": 8366,
+      "sha256": "1a6faadf70a553471801743cddff367d8f8de5b00de863a659d2759aa346faa0"
+    },
+    {
+      "path": "vendor/platform/MyArduboy.h",
+      "bytes": 2153,
+      "sha256": "ca3745076d573e0e1dfdedc97a37c9804d6ef81e4acb7237b621d3ed99c220c3"
+    },
+    {
+      "path": "vendor/platform/common.cpp",
+      "bytes": 7313,
+      "sha256": "465e768eae8e0564c91e5d08ee91a84a7b3181130580fbf5b81268197af56b6b"
+    },
+    {
+      "path": "vendor/platform/common.h",
+      "bytes": 2581,
+      "sha256": "6d13856c2cd64d4d6ddd0c3413bdd09a0dbe68f413702d4c7f3c414381ea59b0"
+    },
+    {
+      "path": "vendor/platform/data.h",
+      "bytes": 6424,
+      "sha256": "bb2cb3d372342abe0f4092a4ac00f23d13c9c61677630753476598227439bb19"
+    },
+    {
+      "path": "vendor/platform/game.cpp",
+      "bytes": 15517,
+      "sha256": "91a0db777368542f1ddc8871e70c1ed60e6a3bfadfcfdc70b899db8bdfefc062"
+    },
+    {
+      "path": "vendor/platform/lasers.ino",
+      "bytes": 2472,
+      "sha256": "77040a788b045dfc3251887755c32a06c1e9ae5cee8bfc81f2086fac381da1fe"
+    },
+    {
+      "path": "vendor/platform/logo.cpp",
+      "bytes": 3597,
+      "sha256": "c44f238eed438f86b7f5ba1c8495fb5ff4b90c0c941be40dd847f8845dc93091"
+    },
+    {
+      "path": "vendor/platform/menu.cpp",
+      "bytes": 3124,
+      "sha256": "1122a8b8d4c323267d2723626f31922a7e9c995875b8cb294e9369d51c9aa26b"
+    },
+    {
+      "path": "vendor/platform/title.cpp",
+      "bytes": 7725,
+      "sha256": "2001f3adecb544a4c31d88029b6ccec9153bab42f156446a13b157716fba1424"
+    },
+    {
+      "path": "vendor/platform/warn.cpp",
+      "bytes": 1743,
+      "sha256": "099358a7795d5342c79a6cc99fe6d7277c5ff3b959eebd0d4e5ad2b65252b086"
+    },
+    {
+      "path": "owner/audio_registers.h",
+      "bytes": 814,
+      "sha256": "2ad57aa279e7a37c0cc854b2ce21e907d11ddfccbef3c5dd1092358aeaf7bfec"
+    },
+    {
+      "path": "owner/owner_compat.cpp",
+      "bytes": 3746,
+      "sha256": "ad617945d0faba960ecf19619f3b569a538a54ef852323921387c0bfba22ebd3"
+    },
+    {
+      "path": "owner/owner_compat.h",
+      "bytes": 1915,
+      "sha256": "6724123444ce622896584545c89cbeb8cd4f9ddefb863f26190d022422ba65c7"
+    }
+  ],
+  "patch": {
+    "path": "platform.patch",
+    "bytes": 22331,
+    "sha256": "d69cc2116c83f774d0a5e838458958bdfae9bd646c2720cc571000646df00571"
+  }
+}

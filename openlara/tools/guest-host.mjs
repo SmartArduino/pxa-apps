@@ -21,6 +21,7 @@ export async function runGuest(wasm,assets,files=new Map(),options={}) {
     const mediaOpens=[],events=[],handles=new Map(),assetCache=new Map(),logs=[],pcmHash=crypto.createHash('sha256'),frameHash=crypto.createHash('sha256');
     let clockPeriod=0;const clockEvents=[];
     let lastFrame,blockedMediaReads=0;
+    const mediaReads={};let eventMediaReads=0,maxEventMediaReads=0,eventSequence=0,loadedLevels=0;
     let submitted=0,accepted=0,queued=0,audioTime=now,nonzero=0,blocks=0,denied=false;
     const memory=(ptr,n)=>Buffer.from(instance.exports.memory.buffer,ptr,n);
     const status=(s,n=4)=>{const b=Buffer.alloc(n);b.writeInt32LE(s);return b;};
@@ -46,7 +47,7 @@ export async function runGuest(wasm,assets,files=new Map(),options={}) {
             else if(op===1) {
                 const a=records(p),name=a.get(1).toString(),flags=a.get(3).readUInt32LE();
                 if(flags&2) {files.set(name,Buffer.alloc(0));}
-                if(!files.has(name))r=status(-6);
+                if(!files.has(name))r=status(-5);
                 else {const handle=0x200000000n+nextHandle++;handles.set(handle,{name,pos:0,write:!!(flags&2)});r=status(0,12);r.writeBigUInt64LE(handle,4);}
             } else if(op===9 && options.mediaRoot) {
                 r=status(0,16);r.writeBigUInt64LE(0x500000001n,4);r.writeUInt32LE(3,12);
@@ -55,7 +56,7 @@ export async function runGuest(wasm,assets,files=new Map(),options={}) {
                 assert(!name.includes('..') && !path.isAbsolute(name));
                 mediaOpens.push(name);
                 const file=path.join(options.mediaRoot,name);
-                if(!fs.existsSync(file))r=status(-6);
+                if(!fs.existsSync(file))r=status(-5);
                 else {const data=fs.readFileSync(file),handle=0x200000000n+nextHandle++;handles.set(handle,{name,pos:0,media:data});r=status(0,32);r.writeBigUInt64LE(handle,4);r[12]=1;r.writeBigUInt64LE(BigInt(data.length),24);}
             } else if(op===6 && handles.has(p.readBigUInt64LE())) {
                 const f=handles.get(p.readBigUInt64LE()),offset=Number(p.readBigInt64LE(8));
@@ -71,7 +72,7 @@ export async function runGuest(wasm,assets,files=new Map(),options={}) {
             const n=p.readUInt16LE(),name=p.subarray(12,12+n).toString();
             assert(name.startsWith('assets/game/'));
             const file=path.join(assets,name.slice(7));
-            if(!fs.existsSync(file))r=status(-6);
+            if(!fs.existsSync(file))r=status(-5);
             else {
                 if(!assetCache.has(file))assetCache.set(file,fs.readFileSync(file));
                 const data=assetCache.get(file),offset=p.readUInt32LE(4);
@@ -100,7 +101,23 @@ export async function runGuest(wasm,assets,files=new Map(),options={}) {
             pcmHash.update(p);for(let i=0;i<len;i+=2)if(p.readInt16LE(i))++nonzero;return len;
         } else if(handles.has(h)) {
             const f=handles.get(h);
-            if(op===1) {if(f.media && options.mediaWouldBlock && f.pos>0 && ((f.reads=(f.reads??0)+1)%7===0)) {++blockedMediaReads;return -7;}const data=f.media??files.get(f.name),n=Math.min(len,data.length-f.pos,f.media?(f.name==='tracks.ad4'?(options.musicChunk??options.ioChunk??0xffffffff):(options.ioChunk??0xffffffff)):0xffffffff);data.copy(p,0,f.pos,f.pos+n);f.pos+=n;return n;}
+            if(op===1) {
+                if(f.media) {
+                    ++eventMediaReads;
+                    const stats=mediaReads[f.name]??={calls:0,bytes:0,batches:0,first_us:Number(now)};++stats.calls;
+                    stats.last_us=Number(now);if(stats.last_event!==eventSequence){++stats.batches;stats.last_event=eventSequence;}
+                    if(options.mediaWouldBlock && f.pos>0 && ((f.reads=(f.reads??0)+1)%7===0)) {++blockedMediaReads;return -7;}
+                    now+=BigInt(options.mediaReadCostUs??0);
+                    if(options.truncateMedia===f.name && f.pos>=65536)return 0;
+                }
+                const data=f.media??files.get(f.name),n=Math.min(len,data.length-f.pos,f.media?(f.name==='tracks.ad4'?(options.musicChunk??options.ioChunk??0xffffffff):(options.ioChunk??0xffffffff)):0xffffffff);
+                data.copy(p,0,f.pos,f.pos+n);f.pos+=n;if(f.media)mediaReads[f.name].bytes+=n;
+                // Rendering comparisons start each level at the same virtual
+                // clock despite different I/O callback counts. No read is skipped.
+                if(f.media && options.alignLevelTime && /\.(phd|pkd)$/.test(f.name) && f.pos===data.length)
+                    now=BigInt(++loadedLevels)*600000000n;
+                return n;
+            }
             if(op===2) {const n=Math.min(len,options.partialWrite?111:len);files.set(f.name,Buffer.concat([files.get(f.name),p.subarray(0,n)]));f.pos+=n;return n;}
         }
         throw Error('unknown I/O '+h+' '+op);
@@ -111,7 +128,9 @@ export async function runGuest(wasm,assets,files=new Map(),options={}) {
     const needed=eventPtr+8192-instance.exports.memory.buffer.byteLength;if(needed>0)instance.exports.memory.grow(Math.ceil(needed/65536));
     function event({service,op,token=0n,payload}) {
         const b=Buffer.alloc(20+payload.length);b.writeUInt16LE(service);b.writeUInt16LE(op,2);b.writeBigUInt64LE(token,4);b.writeUInt32LE(payload.length,12);payload.copy(b,20);memory(eventPtr,b.length).set(b);
+        eventMediaReads=0;++eventSequence;
         assert(instance.exports.pxa_app_on_event(eventPtr,b.length)>=0);
+        maxEventMediaReads=Math.max(maxEventMediaReads,eventMediaReads);
     }
     function drain() {let n=0;while(events.length) {assert(++n<5000);event(events.shift());}}
     function tick(n=1,stepUs=33334) {while(n--) {now+=BigInt(stepUs);if(clockPeriod)event({service:4,op:0x8001,payload:u64(now)});drain();}}
@@ -121,16 +140,17 @@ export async function runGuest(wasm,assets,files=new Map(),options={}) {
     function focus(foreground) {event({service:17,op:0x8005,payload:Buffer.from([foreground?1:0])});drain();}
     function press(mask) {buttons(mask);tick();buttons(0);tick();}
     function menu(selection) {
-        press(128);for(let i=0;i<selection;++i)press(2);press(16);tick(100);
+        press(128);for(let i=0;i<selection;++i)press(2);press(16);
         // SD loading cooperates after each bounded read; await actual completion,
         // independent of the old package asset callback's chunk size.
         const loading=()=>[...handles.values()].some(f=>f.media && /\.(phd|pkd)$/.test(f.name) && f.pos<f.media.length);
+        if(!options.stopAtReady || !loading())tick(100);
         for(let n=0;n<20000 && loading();++n)tick();
         assert(!loading(),'level read did not complete');
     }
-    assert.equal(instance.exports.pxa_app_start(0,0),0);drain();tick(10);
+    assert.equal(instance.exports.pxa_app_start(0,0),0);drain();if(!options.stopAtReady)tick(10);
     for(let i=0;i<4000 && !logs.some(s=>s.includes('ready level=0'));++i)tick();
     if(!options.allowLoadFailure)assert(logs.some(s=>s.includes('ready level=0')),'title failed to load: '+logs.join('\n'));
     function waitFor(text,limit=10000) {for(let n=0;n<limit;++n) {if(logs.some(s=>s.includes(text)))return;tick();}assert.fail('timed out: '+text);}
-    return {tick,release,buttons,pointer,focus,press,menu,waitFor,logs,mediaOpens,clockEvents,frame:()=>Buffer.from(lastFrame),stop:()=>instance.exports.pxa_app_stop(0),info:()=>({blockedMediaReads,frames,submitted,accepted,nonzero,blocks,denied,frame_sha256:frameHash.copy().digest('hex'),pcm_sha256:pcmHash.copy().digest('hex'),linear_bytes:instance.exports.memory.buffer.byteLength,clock_period_us:clockPeriod})};
+    return {tick,release,buttons,pointer,focus,press,menu,waitFor,logs,mediaOpens,clockEvents,frame:()=>Buffer.from(lastFrame),stop:()=>instance.exports.pxa_app_stop(0),info:()=>({mediaReads:structuredClone(mediaReads),maxEventMediaReads,now_us:Number(now),blockedMediaReads,frames,submitted,accepted,nonzero,blocks,denied,frame_sha256:frameHash.copy().digest('hex'),pcm_sha256:pcmHash.copy().digest('hex'),linear_bytes:instance.exports.memory.buffer.byteLength,clock_period_us:clockPeriod})};
 }

@@ -1,0 +1,1 @@
+NightRaid original inline plane/turret bitmap arrays: Copyright (c) 2018 Evan Barger, MIT. The arrays remain byte-exact in vendor/original/night-raid.ino; no external assets. Arduboy2 font and drawing source notices: LICENSE.Arduboy2.txt. PXA glue: LICENSE.PXA-glue.MIT.
