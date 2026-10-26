@@ -84,6 +84,7 @@ int main() {
     const std::string token = "pxad_" + std::string(43,'b');
     complete(account,200,"{\"device_code\":\""+secret+"\",\"user_code\":\"ABCD-EFGH\",\"interval\":5,\"expires_in\":600}",0);
     assert(account.phase == store::AccountPhase::waiting && account.clock_period() == 1000);
+    assert(closed == 1); // A fully drained response releases its stream.
     unsigned before = requests;
     account.tick(4999); assert(requests == before);
     account.tick(5000); assert(requests == before+1 && url.ends_with("/token") && auth.empty());
@@ -93,9 +94,12 @@ int main() {
     assert(account.authenticated() && account.clock_period() == 0 && saved == token);
     store_app_t item{}; strcpy(item.app_id,"pxa-nes");memset(item.lineage_root_key_id,'a',64);item.lineage_root_key_id[64]=0;
     account.target(&item,10000); assert(auth == "Bearer "+token && method == PXA_NET_GET);
+    const unsigned closed_before_like = closed;
     block_once=true;
     complete(account,200,"{\"count\":7,\"liked\":false}",10000);
+    assert(closed == closed_before_like); // WOULD_BLOCK retains the stream.
     assert(account.clock_period()==50);account.tick(10050);
+    assert(closed == closed_before_like + 1);
     assert(account.like_ready && account.like_count==7 && !account.liked && account.clock_period()==0);
     account.toggle_like(10050);assert(method==PXA_NET_PUT);
     assert(!account.liked); // Only a confirmed response changes state.
