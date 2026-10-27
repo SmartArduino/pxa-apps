@@ -37,7 +37,13 @@
         "ui",
         "log",
         "permission",
-        "audio",
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            10
+          ]
+        },
         {
           "name": "clock",
           "min_version": [

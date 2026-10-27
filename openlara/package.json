@@ -45,7 +45,13 @@
             "scoped-roots"
           ]
         },
-        "audio",
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            10
+          ]
+        },
         "permission"
       ],
       "cmake_target": "pxa_main",
