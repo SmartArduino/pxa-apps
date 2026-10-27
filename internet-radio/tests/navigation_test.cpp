@@ -41,8 +41,7 @@ int main() {
   assert(pxa_app_on_event(event, n) == PXA_EVENT_UNHANDLED);
   click(BackView);
   assert(back_requests == 1);
-  click(VolumeUp);
-  assert(!storage_writes && volume_hint_until > now_ms());
+  assert(!storage_writes);
   std::puts("radio: nested back, search results/query/scroll retention, custom "
             "form return, root close and system-only volume passed");
 }

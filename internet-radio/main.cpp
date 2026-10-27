@@ -23,9 +23,8 @@ constexpr uint64_t NetPermission = 1, AudioPermission = 2, LoadFavorite = 4,
 constexpr uint32_t Chinese = 10, Popular = 11, Favorites = 12, Custom = 13,
                    SearchToggle = 14, SearchInput = 20, Search = 21,
                    Reload = 22, PrevPage = 23, NextPage = 24;
-constexpr uint32_t Play = 50, Star = 51, VolumeDown = 52, VolumeUp = 53,
-                   Previous = 54, Next = 55, CustomName = 60, CustomUrl = 61,
-                   CustomPlay = 62;
+constexpr uint32_t Play = 50, Star = 51, Previous = 54, Next = 55,
+                   CustomName = 60, CustomUrl = 61, CustomPlay = 62;
 constexpr uint32_t StationBase = 100;
 constexpr const char *Servers[] = {"de1.api.radio-browser.info"};
 uint8_t packet[3072], head[4096], directory_data[65536], raw[4096],
@@ -42,7 +41,6 @@ bool search_open = false, audio_ready = false, buffering = true,
 bool directory_loading = false, favorite_busy = false, favorite_remove = false;
 unsigned count = 0, view = 0, page = 0, server = 0, storage_slot = 0;
 int save_slot = -1;
-uint64_t volume_hint_until = 0;
 unsigned custom_return_view = 0;
 char draft[97]{}, query[97]{}, custom_name[128]{}, custom_url[513]{},
     directory_url[513]{}, stream_url[513]{};
@@ -638,7 +636,7 @@ void render() {
   if (player_view) {
     scene.back(m + 6, 19, Ink);
     scene.hit(BackView, 0, 3, 40, 33);
-    scene.text(40, 12, w - 80, "正在收听", Muted, 0, 1);
+    scene.text(40, 12, w - 80, "电波", Muted, 0, 1);
     scene.heart(w - m - 7, 19, have_current && favorite_index(current) >= 0,
                 Accent);
     scene.hit(Star, w - 42, 3, 40, 32);
@@ -651,8 +649,9 @@ void render() {
     scene.text(cx - 29, cy - 5, 58, want_play ? "ON AIR" : "RADIO", 0xffffff, 0,
                1);
     scene.text(m, cy + r + 11, w - 2 * m,
-               have_current ? current.name : "听见世界的声音", Ink, 1, 1);
-    scene.text(m, cy + r + 34, w - 2 * m, play_status, Muted, 0, 1);
+               have_current ? current.name : "网络收音机", Ink, 1, 1);
+    if (!audio_ready || buffering || retry_at || !want_play)
+      scene.text(m, cy + r + 34, w - 2 * m, play_status, Muted, 0, 1);
     int y = h - 37;
     scene.skip_icon(cx - 67, y, -1, Ink);
     scene.hit(Previous, cx - 89, y - 20, 44, 40);
@@ -661,12 +660,7 @@ void render() {
     scene.hit(Play, cx - 28, y - 27, 56, 54);
     scene.skip_icon(cx + 67, y, 1, Ink);
     scene.hit(Next, cx + 45, y - 20, 44, 40);
-    scene.icon("volume", w - 23, h - 21, Muted);
-    scene.hit(VolumeUp, w - 48, h - 44, 48, 44);
-    if (now_ms() < volume_hint_until) {
-      scene.rect(cx - 115, y - 68, 230, 32, Card, 8);
-      scene.text(cx - 109, y - 60, 218, "系统音量 · MENU＋L / R", Ink, 0, 1);
-    }
+
   } else if (search_open || view == 3) {
     scene.back(m + 5, 20, Ink);
     scene.hit(BackView, 0, 3, 40, 34);
@@ -677,11 +671,9 @@ void render() {
       scene.text(m, 103, w - 2 * m, "HTTP / HTTPS MP3 直播地址", Muted);
     int y = view == 3 ? 158 : 105;
     scene.pill(view == 3 ? CustomPlay : Search, m, y, w - 2 * m,
-               view == 3 ? "连接并播放 · A" : "搜索电台 · A", true, Accent, Ink,
-               Line);
+               view == 3 ? "播放" : "搜索", true, Accent, Ink, Line);
     scene.text(m, y + 40, w - 2 * m,
-               view == 3 ? "播放后可收藏，留住喜欢的声音。"
-                         : "中文与全球电台，由 Radio Browser 提供。",
+               view == 3 ? "" : "中文与全球电台，由 Radio Browser 提供。",
                Muted);
   } else {
     scene.text(m, 11, w - 2 * m, "电波", Ink, 2);
@@ -738,8 +730,7 @@ void render() {
       scene.text(m, top + 10, w - 2 * m,
                  view == 2 ? "把喜欢的声音收进这里" : "暂时没有找到电台", Ink,
                  1, 1);
-      scene.text(m, top + 37, w - 2 * m,
-                 view == 2 ? "播放时点击爱心，或按 X 收藏。" : directory_status,
+      scene.text(m, top + 37, w - 2 * m, view == 2 ? "" : directory_status,
                  Muted, 0, 1);
     }
     if (scroll.maximum > 0)
@@ -748,9 +739,9 @@ void render() {
     scene.circle(m + 13, h - 23, 12, 0x272f2d);
     scene.circle(m + 13, h - 23, 5, Accent);
     scene.text(m + 34, h - 38, w - 2 * m - 78,
-               have_current ? current.name : "听见世界的声音", Ink, 0);
+               have_current ? current.name : "网络收音机", Ink, 0);
     scene.text(m + 34, h - 21, w - 2 * m - 78,
-               have_current ? play_status : "选择电台，开启今日声景", Muted, 0);
+               have_current ? play_status : "尚未播放", Muted, 0);
     scene.hit(PlayerView, m, h - 46, w - 2 * m - 40, 45);
     scene.circle(w - m - 14, h - 24, 16, Accent);
     scene.play_icon(w - m - 14, h - 24, want_play, 0xffffff);
@@ -892,10 +883,7 @@ void click(uint32_t node) {
     next_station(node == Previous ? -1 : 1);
   else if (node == Star)
     favorite_toggle();
-  else if (node == VolumeDown || node == VolumeUp) {
-    volume_hint_until = now_ms() + 3500;
-    dirty = true;
-  } else if (node == CustomPlay) {
+  else if (node == CustomPlay) {
     if (!radio::valid_url(custom_url) || !custom_name[0])
       status(play_status, sizeof(play_status),
              "请填写名称和有效的 http(s) 直播地址");
@@ -1126,10 +1114,6 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
       favorite_toggle();
     if (pressed & PXA_CONTROLLER_SELECT)
       click(Favorites);
-    if (pressed & PXA_CONTROLLER_L)
-      click(VolumeDown);
-    if (pressed & PXA_CONTROLLER_R)
-      click(VolumeUp);
     unsigned n = list_count();
     if (n) {
       if (!player_view && !search_open && directory_paged && view < 2 &&
@@ -1161,10 +1145,6 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
       dirty = true;
     }
 
-    if (volume_hint_until && now_ms() >= volume_hint_until) {
-      volume_hint_until = 0;
-      dirty = true;
-    }
     if (audio_frames && now_ms() - stats_at >= 5000) {
       char line[220];
       std::snprintf(line, sizeof(line),
@@ -1178,7 +1158,13 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
     }
   }
   if (dirty && !background &&
-      (!audio_ready || now_ms() - ui_at >= 100 || !scene.initialized)) {
+      (!audio_ready ||
+       now_ms() - ui_at >= ((!player_view && !search_open && view < 3 &&
+                             (scroll.dragging || scroll.easing ||
+                              std::abs(scroll.velocity) > .015f))
+                                ? 50u
+                                : 100u) ||
+       !scene.initialized)) {
     playback_pump();
     render();
     playback_pump();

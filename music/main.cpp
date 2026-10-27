@@ -63,20 +63,21 @@ media::SmoothList scroll;
 bool touch_list = false;
 int mode = 0, save_slot = -1;
 unsigned player_return_view = 0, search_return_view = 0;
-uint64_t volume_hint_until = 0;
+uint64_t rendered_second = UINT64_MAX;
+int rendered_lyric = -2;
 bool saving = false, removing = false;
 int width = 320, height = 240;
 uint32_t last_buttons = 0;
 uint64_t ui_at = 0, render_ms = 0, render_count = 0, decode_ms = 0,
          decode_count = 0;
 char catalog_status[160] = "搜索你喜欢的声音。";
-char query[97]{}, draft[97]{},
-    message[160] = "为今天，选一首歌。",
-    lyric_status[128] = "播放一首歌，歌词会随音乐亮起。";
+char query[97]{}, draft[97]{}, message[160] = "尚未播放",
+                               lyric_status[128] = "暂无歌词";
 uint64_t stream = 0, play_token = 0, audio = 0, audio_token = 0,
          commit_token = 0, query_token = 0;
 unsigned rate = 0, channels = 0, pcm_frames = 0, pcm_offset = 0;
 size_t compressed_size = 0, compressed_head = 0;
+bool audio_queue_full = false;
 bool want_play = false, paused = false, audio_ready = false, buffering = true,
      eof = false, exhausted = false, advance = false;
 uint64_t stream_started = 0;
@@ -234,6 +235,7 @@ void reset_audio() {
   compressed_size = compressed_head = 0;
   play_headers = false;
   audio_ready = false;
+  audio_queue_full = false;
   buffering = true;
   eof = exhausted = false;
   decoder.reset();
@@ -382,10 +384,7 @@ void save_favorite() {
     saving = true;
   dirty = true;
 }
-void set_volume(int) {
-  volume_hint_until = now() + 3500;
-  dirty = true;
-}
+
 void cancel_job() {
   cancel(job_token);
   close(job_handle);
@@ -442,6 +441,15 @@ void fetch_lyrics() {
 void choose(const Track &t, bool keep_queue) {
   if (view < 3 && !keep_queue)
     player_return_view = view;
+  // Reopening the current session must retain the queue, stream, cover,
+  // decoder and paused/buffering/seek state. Automatic repeat still restarts.
+  if (!keep_queue && have_current && want_play && current.id == t.id) {
+    if (view == 3)
+      scene.invalidate();
+    view = 4;
+    dirty = true;
+    return;
+  }
   if (!keep_queue) {
     queue_count = list_count();
     queue_count = std::min(queue_count, 16u);
@@ -475,9 +483,11 @@ void choose(const Track &t, bool keep_queue) {
                 "url?ids=%%5B%llu%%5D&br=128000",
                 (unsigned long long)t.id);
   start_job(Resolve, url);
-  if (!keep_queue)
+  if (!keep_queue) {
+    if (view == 3)
+      scene.invalidate();
     view = 4;
-  scene.invalidate();
+  }
   status("正在获取播放地址…");
 }
 void next(int direction, bool automatic) {
@@ -962,8 +972,11 @@ void pump_player() {
       if (paused || !audio_ready)
         return;
       int n = pcm_packet.write(audio);
-      if (n == PXA_STATUS_WOULD_BLOCK)
+      if (n == PXA_STATUS_WOULD_BLOCK) {
+        audio_queue_full = true;
         return;
+      }
+      audio_queue_full = false;
       if (n < 0) {
         fail("音频输出异常。");
         return;
@@ -1077,9 +1090,9 @@ void pump_player() {
 constexpr unsigned Home = 1000, SearchOpen = 1001, FavoritesOpen = 1002,
                    Submit = 1003, Back = 1004, ShowPlayer = 1005,
                    ShowLyrics = 1006, Play = 1007, Previous = 1008, Next = 1009,
-                   Star = 1010, Order = 1011, VolDown = 1012, VolUp = 1013,
-                   ScrollUp = 1014, ScrollDown = 1015, FollowLyrics = 1016,
-                   Seek = 1017, RefreshDiscovery = 1018, TrackBase = 1100;
+                   Star = 1010, Order = 1011, ScrollUp = 1014,
+                   ScrollDown = 1015, FollowLyrics = 1016, Seek = 1017,
+                   RefreshDiscovery = 1018, TrackBase = 1100;
 constexpr uint32_t Bg = 0x101620, Panel = 0x1b2533, Ink = 0xf5f1ea,
                    Muted = 0x91a2b6, Dim = 0x556a80, Accent = 0xd5b7fa,
                    Peach = 0xefad80;
@@ -1107,16 +1120,37 @@ void time_text(uint64_t ms, char *out, size_t cap) {
 }
 void progress(int y) {
   int m = 16, w = width;
-  scene.rect(m, y, w - 2 * m, 3, 0x354252, 1);
+  scene.rect(m, y - 2, w - 2 * m, 4, 0x354252, 2);
   int fill =
       current.duration
           ? std::min<uint64_t>(w - 2 * m, display_position() * (w - 2 * m) /
                                               current.duration)
           : 0;
   if (fill > 0)
-    scene.rect(m, y, fill, 3, Accent, 1);
+    scene.rect(m, y - 2, fill, 4, Accent, 2);
   char left[24], right[24];
-  scene.circle(m + fill, y + 1, scrub || hold_seeking ? 5 : 3, Accent);
+  const int radius = scrub || hold_seeking ? 6 : 4;
+  // Center the visible native-pixel bounds. Independent DP rounding of the
+  // track top and handle diameter can otherwise shift their centers by a pixel.
+  const auto pixels = [&](int dp) {
+    return int(int64_t(dp) * scene.density / 65536);
+  };
+  const int track_center2 = 2 * pixels(y - 2) + std::max(1, pixels(4)) - 1;
+  int handle_top = y - radius, diameter = radius * 2, best = INT32_MAX;
+  for (int size = radius * 2 - 1; size <= radius * 2 + 2; ++size)
+    for (int top = y - radius - 2; top <= y - radius + 2; ++top) {
+      int error = std::abs(2 * pixels(top) + std::max(1, pixels(size)) - 1 -
+                           track_center2);
+      int score = error * 100 + std::abs(size - radius * 2) * 4 +
+                  std::abs(top - (y - radius));
+      if (score < best) {
+        best = score;
+        handle_top = top;
+        diameter = size;
+      }
+    }
+  scene.rect(m + fill - diameter / 2, handle_top, diameter, diameter, Accent,
+             diameter / 2);
   scene.hit(Seek, m - 6, y - 10, w - 2 * m + 12, 33);
   time_text(display_position(), left, sizeof(left));
   time_text(current.duration, right, sizeof(right));
@@ -1137,13 +1171,6 @@ void controls(int y) {
                          : "repeat-one",
              24, y, Muted);
   scene.hit(Order, 0, y - 20, 48, 40);
-  scene.icon("volume", width - 24, y, Muted);
-  scene.hit(VolUp, width - 48, y - 23, 48, 45);
-  if (now() < volume_hint_until) {
-    scene.rect(width / 2 - 115, y - 68, 230, 32, Panel, 8);
-    scene.text(width / 2 - 109, y - 60, 218, "系统音量 · MENU＋L / R", Ink, 0,
-               1);
-  }
 }
 void text_box(int x, int y, int w, int h, uint32_t c, uint8_t role,
               uint8_t align, uint8_t vertical, const char *text,
@@ -1187,19 +1214,18 @@ void render() {
     if (at >= 0 && lyrics.count)
       lyrics.get(at, line, sizeof(line));
     else
-      std::snprintf(line, sizeof(line), "%s",
-                    lyrics.count ? "让音乐慢慢开始…" : lyric_status);
-    if (compact)
-      scene.text(tx, y + 52, tw, message, Muted);
-    else {
+      std::snprintf(line, sizeof(line), "%s", lyrics.count ? "" : lyric_status);
+    const bool show_status =
+        !audio_ready || buffering || seek_pending || retry_at || !want_play;
+    if (compact) {
+      if (show_status)
+        scene.text(tx, y + 52, tw, message, Muted);
+    } else {
       int ly = y + 73;
       text_box(tx, ly, tw, std::max(17, h - 91 - ly), pxa_canvas_rgba(Accent),
                PXA_CANVAS_FONT_CAPTION, 0, 0, line, std::strlen(line));
-      scene.text(m, h - 92, w - 2 * m,
-                 audio_ready && !paused && !seek_pending
-                     ? "拖动进度 · 长按左右快进退"
-                     : message,
-                 Muted, 0, 1);
+      if (show_status)
+        scene.text(m, h - 92, w - 2 * m, message, Muted, 0, 1);
     }
     scene.hit(ShowLyrics, tx, y, tw, h - 94 - y);
     progress(h - 72);
@@ -1244,10 +1270,8 @@ void render() {
                                         : PXA_CANVAS_FONT_CAPTION,
                  1, 0, line, std::strlen(line));
       }
-      if (lyric_shift)
-        scene.text(m, 46, w - 2 * m, "轻点歌词，回到当前播放位置", Peach, 0, 1);
     } else {
-      scene.text(m, cy - 8, w - 2 * m, "让旋律，成为此刻的风景。", Ink, 1, 1);
+      scene.text(m, cy - 8, w - 2 * m, "暂无歌词", Ink, 1, 1);
       scene.text(m, cy + 22, w - 2 * m, lyric_status, Muted, 0, 1);
     }
     scene.hit(FollowLyrics, m, 49, w - 2 * m, h - 125);
@@ -1258,8 +1282,7 @@ void render() {
     scene.hit(Back, 0, 0, 40, 42);
     scene.text(44, 13, w - 60, "寻找下一首喜欢", Ink, 1);
     scene.text(m, 48, w - 2 * m, "歌曲 / 歌手", Muted);
-    scene.pill(Submit, m, 111, w - 2 * m, "搜索音乐 · A", true, 0x8c6db3, Ink,
-               Panel);
+    scene.pill(Submit, m, 111, w - 2 * m, "搜索", true, 0x8c6db3, Ink, Panel);
     scene.text(m, 151, w - 2 * m, "公开曲库，部分歌曲可能需要平台会员。",
                Muted);
   } else {
@@ -1319,14 +1342,14 @@ void render() {
     pxa_canvas_clip_pop(&scene.frame);
     if (!n) {
       scene.text(m, top + 12, w - 2 * m,
-                 view == 2   ? "把喜欢，留在身边。"
+                 view == 2   ? "暂无收藏"
                  : view == 0 ? discovery_status
                              : catalog_status,
                  Ink, 1, 1);
       scene.text(m, top + 39, w - 2 * m,
-                 view == 2   ? "播放时点击爱心，或按 X 收藏。"
-                 : view == 0 ? "网易云推荐新歌 · 点击右上角刷新"
-                             : "换个关键词，试试新的发现。",
+                 view == 2   ? ""
+                 : view == 0 ? "网易云推荐新歌"
+                             : "",
                  Muted, 0, 1);
     }
     if (scroll.maximum > 0)
@@ -1339,12 +1362,15 @@ void render() {
       scene.circle(m + 15, h - 24, 5, Accent);
     }
     scene.text(m + 42, h - 39, w - 2 * m - 77,
-               have_current ? current.name : "总有一首，为你而来。", Ink);
+               have_current ? current.name : "尚未播放", Ink);
     scene.text(m + 42, h - 22, w - 2 * m - 77,
-               have_current ? message
-               : view == 0  ? (discovery_cached ? "上次推荐 · 联网后可刷新"
-                                                : "网易云 · 推荐新歌")
-                            : "发现今日好音乐",
+               have_current
+                   ? (audio_ready && !buffering && !retry_at && !seek_pending
+                          ? current.artist
+                          : message)
+               : view == 0 ? (discovery_cached ? "上次推荐 · 联网后可刷新"
+                                               : "网易云 · 推荐新歌")
+                           : "发现今日好音乐",
                Muted);
     scene.hit(ShowPlayer, m, h - 45, w - 2 * m - 40, 44);
     scene.circle(w - m - 14, h - 24, 16, Accent);
@@ -1359,8 +1385,11 @@ void render() {
   ui_at = now();
   render_ms += ui_at - render_begin;
   ++render_count;
+  rendered_second = display_position() / 1000;
+  rendered_lyric = lyrics.current(display_position());
 }
 bool navigate_back() {
+  const unsigned previous_view = view;
   if (view == 5)
     view = 4;
   else if (view == 4)
@@ -1377,7 +1406,10 @@ bool navigate_back() {
   hold_seeking = scrub = false;
   touch_list = false;
   scroll.dragging = false;
-  scene.invalidate();
+  // Only the search form owns native input nodes. Canvas-only pages reuse
+  // their surface, preserving pointer ownership and avoiding a full rebuild.
+  if (previous_view == 3 || view == 3)
+    scene.invalidate();
   dirty = true;
   return true;
 }
@@ -1398,8 +1430,6 @@ void click(unsigned id) {
     save_favorite();
   else if (id == Previous || id == Next)
     next(id == Previous ? -1 : 1);
-  else if (id == VolDown || id == VolUp)
-    set_volume(id == VolDown ? -10 : 10);
   else if (id == Order) {
     mode = (mode + 1) % 3;
     const char *label = mode == 0   ? "顺序播放"
@@ -1433,15 +1463,17 @@ void click(unsigned id) {
       if (view < 3) {
         player_return_view = view;
       }
+      if (view == 3)
+        scene.invalidate();
       view = 4;
-      scene.invalidate();
       dirty = true;
     } else if (const Track *t = list(0))
       choose(*t);
   } else if (id == ShowLyrics) {
+    if (view == 3)
+      scene.invalidate();
     view = 5;
     lyric_shift = 0;
-    scene.invalidate();
     dirty = true;
     if (!lyrics.count && job == None && have_current)
       fetch_lyrics();
@@ -1749,8 +1781,9 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
     if (pressed & PXA_CONTROLLER_Y && have_current) {
       if (view < 3)
         player_return_view = view;
+      if (view == 3)
+        scene.invalidate();
       view = view == 5 ? 4 : 5;
-      scene.invalidate();
       dirty = true;
       if (view == 5 && !lyrics.count && job == None)
         fetch_lyrics();
@@ -1759,10 +1792,6 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
       click(FavoritesOpen);
     if (pressed & PXA_CONTROLLER_LEFT && view == 0)
       click(RefreshDiscovery);
-    if (pressed & PXA_CONTROLLER_L)
-      set_volume(-10);
-    if (pressed & PXA_CONTROLLER_R)
-      set_volume(10);
     if (view >= 4) {
       if (pressed & (PXA_CONTROLLER_LEFT | PXA_CONTROLLER_RIGHT)) {
         hold_direction = pressed & PXA_CONTROLLER_LEFT ? -1 : 1;
@@ -1825,11 +1854,14 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
       advance = false;
       next(1, true);
     }
-    if (want_play && !paused && now() - ui_at >= 200)
-      dirty = true;
-    if (volume_hint_until && now() >= volume_hint_until) {
-      volume_hint_until = 0;
-      dirty = true;
+    if (want_play && !paused) {
+      if (view < 3 && now() - ui_at >= 200)
+        dirty = true;
+      else if (view >= 4 &&
+               (rendered_second != display_position() / 1000 ||
+                rendered_lyric != lyrics.current(display_position()) ||
+                (view == 4 && !cover && audio_ready && now() - ui_at >= 200)))
+        dirty = true;
     }
     if (audio_ready && now() - stats_at >= 5000) {
       char line[256];
@@ -1853,10 +1885,21 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
     }
   }
   if (dirty && !background &&
-      (!audio_ready || now() - ui_at >= 100 || !scene.initialized)) {
+      (!audio_ready ||
+       now() - ui_at >= ((scrub || hold_seeking ||
+                          (view < 3 && (scroll.dragging || scroll.easing ||
+                                        std::abs(scroll.velocity) > .015f)))
+                             ? (paused ? 33u : 100u)
+                             : 100u) ||
+       !scene.initialized)) {
     pump_player();
-    render();
-    pump_player();
+    // Repaint only after refilling the bounded PCM queue. Under decode load,
+    // retain dirty and let the next event replenish audio before drawing.
+    if (!audio_ready || !want_play || paused || buffering || retry_at ||
+        !scene.initialized || audio_queue_full) {
+      render();
+      pump_player();
+    }
   }
   flush_discovery_cache();
   return PXA_EVENT_HANDLED;
