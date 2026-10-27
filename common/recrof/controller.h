@@ -5,7 +5,13 @@
 extern "C" {
 #endif
 
-enum { PORT_PAD_LEFT_CLICK = 201, PORT_PAD_RIGHT_CLICK = 203 };
+enum {
+  PORT_PAD_LEFT_CLICK = 201,
+  PORT_PAD_WEAPON_MODIFIER = 202,
+  PORT_PAD_RIGHT_CLICK = 203,
+  PORT_PAD_NEXT_WEAPON = 204,
+  PORT_PAD_PREVIOUS_WEAPON = 205
+};
 typedef struct {
   uint32_t buttons, blocked;
   uint64_t tick_us;

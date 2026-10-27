@@ -49,6 +49,8 @@ static unsigned surface_stride;
 static int pending_buffer=-1;
 static unsigned clear_frames=3;
 static char sd_media_path[256];
+static unsigned import_pending;
+static char import_message[112];
 static unsigned menu_focus,menu_repeat_mode,menu_repeat_controller;
 static uint32_t menu_repeat_buttons;
 static uint64_t menu_repeat_at;
@@ -317,8 +319,14 @@ static __attribute__((noinline, cold)) void paint_menu(uint16_t *out) {
             scroll_bar(out, page, visible, count, 64, visible * 22 - 2);
         }
         rect(out, 24, h - 45, w - 48, 1, UI_EDGE);
-        button(out, 24, h - 39, (w - 56) / 2, UI_REFRESH, menu_focus==1 ? UI_ACCENT : UI_CARD);
-        button(out, 32 + (w - 56) / 2, h - 39, (w - 56) / 2, UI_EXIT, menu_focus==2 ? UI_ACCENT : UI_CARD);
+        unsigned action_width=(w-56)/3;
+        button(out,24,h-39,action_width,UI_REFRESH,menu_focus==MENU_FOCUS_REFRESH?UI_ACCENT:UI_CARD);
+        button(out,28+action_width,h-39,action_width,UI_IMPORT,menu_focus==MENU_FOCUS_IMPORT?UI_ACCENT:UI_CARD);
+        button(out,32+2*action_width,h-39,action_width,UI_EXIT,menu_focus==MENU_FOCUS_EXIT?UI_ACCENT:UI_CARD);
+        if(import_message[0]) {
+            if(menu_commands)menu_label(24,h-15,w-48,14,import_message,UI_MUTED,0);
+            else text(out,24,h-14,import_message,UI_MUTED,(w-48)/8);
+        }
     } else if (mode == STATES) {
         paint_slots(out);
     } else if (mode == PAUSED) {
@@ -518,6 +526,9 @@ static void open_library(void) {
     redraw = 1;
     library_scan_source(0);
 }
+
+#define ROM_IMPORT_EXTENSIONS EMU_EXTENSIONS
+#include "rom_import.h"
 
 static void start_save(void) {
     if (!rom_loaded || save_pending || writing_save || save_replace_pending) return;
@@ -979,7 +990,7 @@ static void pointer(const pxa_ui_pointer_data_t *p) {
         }
         return;
     }
-    if (mode != MENU || scan_pending) return;
+    if (mode != MENU || scan_pending || import_pending) return;
     if (y >= 34 && y < 57 && x >= 24 && x < (int) menu_width() - 24) {
         unsigned tabs = !!source_count[0] + !!source_count[1];
         if (!tabs) return;
@@ -996,8 +1007,8 @@ static void pointer(const pxa_ui_pointer_data_t *p) {
         return;
     }
     if (y >= (int) menu_height() - 39 && y < (int) menu_height() - 16 && x >= 24 && x < (int) menu_width() - 24) {
-        if (x < (int) menu_width() / 2) open_library();
-        else request_exit();
+        unsigned action=(x-24)/((menu_width()-48)/3);
+        if(action==0)open_library();else if(action==1)import_roms();else request_exit();
     }
 }
 
@@ -1215,6 +1226,7 @@ int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
         return PXA_EVENT_HANDLED;
     }
     if (e.service == PXA_FS_SERVICE) {
+        if(e.token==T_ROM_IMPORT) {import_completed(&e);return PXA_EVENT_HANDLED;}
         if(e.token==T_MEDIA_PATH) {
             if(pxa_fs_parse_app_media_path(&e,T_MEDIA_PATH,sd_media_path,sizeof(sd_media_path))) {
                 emu_port_log("EMU SD media=%s",sd_media_path);redraw=1;

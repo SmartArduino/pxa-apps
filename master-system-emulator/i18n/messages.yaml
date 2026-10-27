@@ -82,7 +82,7 @@ messages:
     context: SMS ui flash menu label
     max_bytes: 112
   ui.sd:
-    source: "SD"
+    source: "Media"
     context: SMS ui sd menu label
     max_bytes: 112
   ui.prev:
@@ -160,7 +160,7 @@ messages:
     context: SMS library actions
     max_bytes: 112
   ui.sd.path:
-    source: "SD card folder:"
+    source: "App media folder:"
     context: SMS library actions
     max_bytes: 112
   ui.scale.native:
@@ -204,3 +204,31 @@ messages:
     source: "Confirm again to delete selected state"
     context: Snapshot deletion confirmation
     max_bytes: 112
+  ui.import:
+    source: "Import ROM"
+    context: System ROM import in the game library
+    max_bytes: 112
+  ui.import.purpose:
+    source: "Choose game ROMs to copy into this app’s media folder"
+    context: System ROM import in the game library
+    max_bytes: 112
+  ui.importing:
+    source: "Importing ROMs…"
+    context: System ROM import in the game library
+    max_bytes: 112
+  ui.import.failed:
+    source: "Import failed. Check storage."
+    context: System ROM import in the game library
+    max_bytes: 112
+  ui.import.cancelled:
+    source: "Import cancelled"
+    context: System ROM import in the game library
+    max_bytes: 112
+  ui.import.result:
+    source: "Imported {count}, failed {failed}, skipped {skipped}"
+    context: System ROM import in the game library
+    max_bytes: 112
+    placeholders:
+      count: u32
+      failed: u32
+      skipped: u32

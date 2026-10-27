@@ -145,6 +145,7 @@ static void test_save_baseline(const char *path) {
     save_pending=0;start_save();assert(save_pending && saved_crc==baseline);
     free(save_data);save_data=NULL;gb_core_close();free(rom);reset();
 }
+#include "../../common/emulator/tests/import_contract.h"
 int main(int argc,char **argv) {
     assert(argc==2);test_save_baseline(argv[1]);
     width=320;height=240;input_density_q16=65536;
@@ -153,7 +154,8 @@ int main(int argc,char **argv) {
 
     reset();controller(PXA_CONTROLLER_DOWN,1);
     assert(controls.controller_hidden && menu_focus==1);
-    controller(0,1);controller(PXA_CONTROLLER_RIGHT,1);assert(menu_focus==2);
+    controller(0,1);controller(PXA_CONTROLLER_RIGHT,1);assert(menu_focus==MENU_FOCUS_IMPORT);
+    controller(0,1);controller(PXA_CONTROLLER_RIGHT,1);assert(menu_focus==MENU_FOCUS_EXIT);
     controller(0,1);controller(PXA_CONTROLLER_A,1);assert(exit_requested==1);
     assert(!pad[0]);exit_tick();assert(exit_requested==2);
     controller(0,0);assert(!controls.controller_hidden);
@@ -214,4 +216,5 @@ int main(int argc,char **argv) {
     touch_controls();
     padded_surface(argv[1]);
     puts("PASS: controller focus/repeat/hide/restore, exit-save gate, options, audio retry/bounded draining and SD path");
-}
+test_import_contract();
+    }

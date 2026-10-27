@@ -20,7 +20,7 @@ tools/app.sh build quake --board doit-gamekit --source-root local/pxa-apps --tar
 
 Quake、Duke3D、C&C 和 Red Alert 默认使用 Core 2.1 主循环；其他游戏的回调构建使用 Asyncify。所有正式入口要求 FS 0.3 `app-media-root`，通过 Host 绑定固定资源目录；固定映射缓冲要求宿主正确实现 pinned linear memory 原地增长。
 
-## 精确 PCM 音频候选
+## 原采样率 PCM 音频
 
 `PXA_RECROF_NATIVE_PCM=ON` 与 `PXA_RECROF_MAIN_LOOP=ON` 配合使用，签名清单需声明
 Audio `[0, 10]` 和 Core 2.1 主循环执行模型。Quake、Duke3D 和 DOOM 正式包默认开启，其他游戏继续使用各自已验证的配置。
@@ -91,6 +91,9 @@ UI 指针事件使用 dp，Surface 画面使用像素。运行时保留启动环
 画面比窗口大时，触摸坐标按居中的裁切位置换算。
 
 射击游戏：左半屏拖动控制前后移动和横移；右半屏拖动转向及俯仰；按钮 MENU 打开菜单，WPN 切武器，USE 使用，JMP 跳跃，FIRE 射击。菜单内用左侧上下拖动选择，FIRE 确认。手柄方向键移动，X/B/Y/A 分别抬头/低头/左转/右转，R 射击、L 跳跃，START 菜单、SELECT 使用。菜单里 A 确认、B 返回。
+
+Duke3D 的 SELECT 单按在松开时使用；按住 SELECT 后按 R/L 切换下一把/上一把武器，
+每次按下只切换一次。先松开 SELECT 时，肩键也要松开后才恢复普通开火或跳跃。
 
 策略游戏：触摸映射鼠标左键，带右键标志的指针映射右键；右上角 OK 确认任务/简报，RMB 按钮在上一个游戏光标位置执行右键，便于触屏取消选择。策略游戏的原有阻塞键盘等待会主动让出执行权，以便接收后续 PXA 输入事件。当前没有联机功能。
 

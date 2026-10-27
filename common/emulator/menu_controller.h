@@ -1,8 +1,10 @@
 /* GPL-2.0-or-later. Cold menu navigation; gameplay keeps its direct pad path. */
 static __attribute__((noinline,cold)) void menu_controller_action(uint32_t pressed) {
     if(mode==MENU) {
+        if(import_pending)return;
         if(pressed&PXA_CONTROLLER_B){request_exit();return;}
         if(scan_pending)return;
+        if(pressed&PXA_CONTROLLER_X){import_roms();return;}
         if(pressed&PXA_CONTROLLER_Y){open_library();return;}
         if(!count && menu_focus==MENU_FOCUS_LIST)menu_focus=MENU_FOCUS_REFRESH;
         const unsigned has_tabs=source_count[0] || source_count[1];
@@ -17,9 +19,11 @@ static __attribute__((noinline,cold)) void menu_controller_action(uint32_t press
             else if(selected+1<count)++selected;
             else menu_focus=MENU_FOCUS_REFRESH;
         } else if(pressed&(PXA_CONTROLLER_LEFT|PXA_CONTROLLER_RIGHT|PXA_CONTROLLER_L|PXA_CONTROLLER_R)) {
-            if(menu_focus==MENU_FOCUS_REFRESH || menu_focus==MENU_FOCUS_EXIT) {
+            if(menu_focus==MENU_FOCUS_REFRESH || menu_focus==MENU_FOCUS_IMPORT || menu_focus==MENU_FOCUS_EXIT) {
                 if(pressed&(PXA_CONTROLLER_LEFT|PXA_CONTROLLER_RIGHT))
-                    menu_focus=(pressed&PXA_CONTROLLER_RIGHT)?MENU_FOCUS_EXIT:MENU_FOCUS_REFRESH;
+                    menu_focus=(pressed&PXA_CONTROLLER_RIGHT)?
+                        (menu_focus==MENU_FOCUS_REFRESH?MENU_FOCUS_IMPORT:MENU_FOCUS_EXIT):
+                        (menu_focus==MENU_FOCUS_EXIT?MENU_FOCUS_IMPORT:MENU_FOCUS_REFRESH);
             }
             if(menu_focus==MENU_FOCUS_LIST || menu_focus==MENU_FOCUS_SOURCE ||
                (pressed&(PXA_CONTROLLER_L|PXA_CONTROLLER_R))) {
@@ -31,6 +35,7 @@ static __attribute__((noinline,cold)) void menu_controller_action(uint32_t press
             }
         } else if(pressed&(PXA_CONTROLLER_A|PXA_CONTROLLER_START)) {
             if(menu_focus==MENU_FOCUS_REFRESH)open_library();
+            else if(menu_focus==MENU_FOCUS_IMPORT)import_roms();
             else if(menu_focus==MENU_FOCUS_EXIT)request_exit();
             else if(menu_focus==MENU_FOCUS_SOURCE)menu_focus=count?MENU_FOCUS_LIST:MENU_FOCUS_REFRESH;
             else if(count)select_rom(selected);

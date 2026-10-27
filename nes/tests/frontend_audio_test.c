@@ -110,12 +110,15 @@ static void press(uint32_t buttons) {controller(buttons,0);controller(0,0);}
 static void test_controller_menus(void) {
     reset();mode=MENU;count=2;selected=1;page=0;scan_pending=0;
     press(PXA_CONTROLLER_DOWN);assert(menu_focus==1 && selected==1);
-    press(PXA_CONTROLLER_RIGHT);assert(menu_focus==2);
-    press(PXA_CONTROLLER_LEFT);assert(menu_focus==1);
+    press(PXA_CONTROLLER_RIGHT);assert(menu_focus==MENU_FOCUS_IMPORT);
+    press(PXA_CONTROLLER_RIGHT);assert(menu_focus==MENU_FOCUS_EXIT);
+    press(PXA_CONTROLLER_LEFT);assert(menu_focus==MENU_FOCUS_IMPORT);
+    press(PXA_CONTROLLER_LEFT);assert(menu_focus==MENU_FOCUS_REFRESH);
     press(PXA_CONTROLLER_UP);assert(!menu_focus && selected==1);
     press(PXA_CONTROLLER_DOWN);press(PXA_CONTROLLER_A);assert(scan_pending && mode==MENU);
     reset();mode=MENU;count=0;scan_pending=0;
-    press(PXA_CONTROLLER_RIGHT);assert(menu_focus==2);
+    press(PXA_CONTROLLER_RIGHT);assert(menu_focus==MENU_FOCUS_IMPORT);
+    press(PXA_CONTROLLER_RIGHT);assert(menu_focus==MENU_FOCUS_EXIT);
     press(PXA_CONTROLLER_A);assert(exit_requested==1);
     reset();mode=MENU;count=0;scan_pending=0;
     press(PXA_CONTROLLER_A);assert(scan_pending); /* Empty library can refresh. */
@@ -235,6 +238,7 @@ static void test_save_baseline(void) {
     save_pending=0;start_save();assert(save_pending && saved_crc==baseline);
     save_pending=0;free(save_data);save_data=NULL;nes_core_close();free(rom);reset();
 }
+#include "../../common/emulator/tests/import_contract.h"
 int main(void) {
     test_save_baseline();
     /* Native canvas keeps existing menu/button physical tap targets. */
@@ -303,4 +307,5 @@ int main(void) {
     reset();enable();io_result=INT32_MAX;enqueue_audio(samples,16);
     assert(io_calls==1 && !audio_fifo.count && !audio_dropped);
     puts("PASS: sound touch, duplicate click, enable/disable/re-enable, denied retry, synchronous/asynchronous errors, format, backpressure, pre-overflow retry, PCM failure, revocation and late permission cleanup");
-}
+test_import_contract();
+    }

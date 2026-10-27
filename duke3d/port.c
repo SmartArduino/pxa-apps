@@ -17,6 +17,10 @@ static uint8_t scq[256], downq[256];
 static unsigned kh, kt;
 static uint8_t keys_this_update[256];
 static bool menu = true;
+static bool weapon_select_held, weapon_select_used;
+static uint8_t pending_action_taps;
+static const uint8_t action_tap_codes[] = {sc_Space, sc_P, sc_O};
+static void finish_action_sample(void);
 static bool audio_ready;
 static float mx, my;
 static port_pointer_motion_t pointer_motion;
@@ -72,6 +76,10 @@ void getAnalogInput(int32_t *a, int32_t *b, int32_t *c, int32_t *d) {
   *d = touch_y + pad_y * 3;
   mx -= touch_x;
   my -= touch_y;
+  /* ACTION() reads the keyboard after CONTROL_GetInput returns. Releasing
+   * through the queue now keeps taps down for that simulation step, even
+   * when rendering polls the keyboard many times between game updates. */
+  finish_action_sample();
 }
 void inputSetMenuMode(bool m) {
   if (m != menu) port_game_reset_motion();
@@ -85,6 +93,19 @@ void inputPostKeyEvent(uint8_t sc, bool down) {
     scq[kh] = sc;
     downq[kh] = down;
     kh = next;
+  }
+}
+static void post_action_tap(uint8_t sc) {
+  for (unsigned i = 0; i < sizeof(action_tap_codes); ++i)
+    if (action_tap_codes[i] == sc) pending_action_taps |= 1u << i;
+  inputPostKeyEvent(sc, true);
+}
+static void finish_action_sample(void) {
+  for (unsigned i = 0; i < sizeof(action_tap_codes); ++i) {
+    if ((pending_action_taps & (1u << i)) && KB_KeyPressed(action_tap_codes[i])) {
+      inputPostKeyEvent(action_tap_codes[i], false);
+      pending_action_taps &= ~(1u << i);
+    }
   }
 }
 void inputBeginKeyUpdate(void) {
@@ -105,6 +126,27 @@ bool inputGetKeyEvent(uint8_t *sc, bool *down) {
 }
 void port_game_key(int key, int down) {
   static uint8_t pressed[256];
+  if (key == PORT_PAD_WEAPON_MODIFIER) {
+    if (down) {
+      weapon_select_held = true;
+      weapon_select_used = false;
+    } else {
+      if (weapon_select_held && !weapon_select_used && !menu) {
+        post_action_tap(sc_Space);
+      }
+      weapon_select_held = weapon_select_used = false;
+    }
+    return;
+  }
+  if (key == PORT_PAD_NEXT_WEAPON || key == PORT_PAD_PREVIOUS_WEAPON) {
+    if (down && !menu) {
+      weapon_select_used = true;
+      const int sc = port_duke_scancode(key, false);
+      /* One change per press, retained until an actual simulation step. */
+      post_action_tap(sc);
+    }
+    return;
+  }
   if (!down && key >= 0 && key < 256) {
     if (pressed[key])
       inputPostKeyEvent(pressed[key], false);
@@ -120,6 +162,10 @@ void port_game_motion(int x, int y) {
   if (!menu) port_pointer_push(&pointer_motion, x, y);
 }
 void port_game_reset_motion(void) {
+  weapon_select_held = weapon_select_used = false;
+  for (unsigned i = 0; i < sizeof(action_tap_codes); ++i)
+    if (pending_action_taps & (1u << i)) inputPostKeyEvent(action_tap_codes[i], false);
+  pending_action_taps = 0;
   port_pointer_reset(&pointer_motion);
   mx = my = 0;
 }

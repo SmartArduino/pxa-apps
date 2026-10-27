@@ -62,6 +62,8 @@ static char **rom_names[2], **names;
 static unsigned name_capacity[2], scan_errors;
 static unsigned source_count[2],preferred_source;
 static char message[112];
+static unsigned import_pending;
+static char import_message[112];
 static char media_display_path[256]="/PXA/media/";
 static char save_path[40], save_tmp[48];
 static uint8_t *rom_data, *save_data;
@@ -266,8 +268,14 @@ static __attribute__((noinline,cold)) void paint_menu(uint16_t *out) {
             path_lines(out,134,media_display_path);
         } else scroll_bar(out,page,visible,count,64,visible*22-2);
         rect(out,24,h-45,w-48,1,UI_EDGE);
-        button(out,24,h-39,(w-56)/2,UI_REFRESH,menu_focus==1?UI_ACCENT:UI_CARD);
-        button(out,32+(w-56)/2,h-39,(w-56)/2,UI_EXIT,menu_focus==2?UI_ACCENT:UI_CARD);
+        unsigned action_width=(w-56)/3;
+        button(out,24,h-39,action_width,UI_REFRESH,menu_focus==MENU_FOCUS_REFRESH?UI_ACCENT:UI_CARD);
+        button(out,28+action_width,h-39,action_width,UI_IMPORT,menu_focus==MENU_FOCUS_IMPORT?UI_ACCENT:UI_CARD);
+        button(out,32+2*action_width,h-39,action_width,UI_EXIT,menu_focus==MENU_FOCUS_EXIT?UI_ACCENT:UI_CARD);
+        if(import_message[0]) {
+            if(menu_commands)menu_label(24,h-15,w-48,14,import_message,UI_MUTED,0);
+            else text(out,24,h-14,import_message,UI_MUTED,(w-48)/8);
+        }
     } else if(mode==PAUSED) {
         const char *status=save_failed?UI_SAVE_ERROR:
             (save_pending||writing_save||save_replace_pending?UI_SAVING:UI_PAUSED);
@@ -360,6 +368,9 @@ static void open_library(void) {
     preferred_source=source>1?0:source;source_count[0]=source_count[1]=0;count=page=selected=0;menu_focus=0;scan_pending=1;mode=MENU;redraw=1;
     library_scan_source(0);
 }
+#define ROM_IMPORT_EXTENSIONS "nes"
+#include "../common/emulator/rom_import.h"
+
 static void start_save(void) {
     if(!rom_loaded || save_pending || writing_save || save_replace_pending)return;
     size_t size;uint8_t *ram=nes_core_sram(&size);if(!ram || !size)return;
@@ -655,7 +666,7 @@ static void pointer(const pxa_ui_pointer_data_t *p) {
         }
         return;
     }
-    if(mode!=MENU || scan_pending)return;
+    if(mode!=MENU || scan_pending || import_pending)return;
     if(y>=34 && y<57 && x>=24 && x<(int)menu_width()-24) {
         unsigned tabs=!!source_count[0]+!!source_count[1];if(!tabs)return;
         unsigned tab=(menu_width()-48-4*(tabs-1))/tabs,slot=(x-24)/(tab+4);
@@ -663,7 +674,8 @@ static void pointer(const pxa_ui_pointer_data_t *p) {
         if(!source_count[chosen])return;menu_focus=0;source=chosen;count=source_count[source];names=rom_names[source];page=selected=0;redraw=1;return;
     }
     if(y>=(int)height-39 && y<(int)height-16 && x>=24 && x<(int)menu_width()-24) {
-        if(x<(int)menu_width()/2)open_library();else request_exit();
+        unsigned action=(x-24)/((menu_width()-48)/3);
+        if(action==0)open_library();else if(action==1)import_roms();else request_exit();
     }
 }
 #include "menu_controller.h"
@@ -791,6 +803,7 @@ int32_t pxa_app_on_event(const uint8_t *data,uint32_t size) {
         return PXA_EVENT_HANDLED;
     }
     if(e.service==PXA_FS_SERVICE) {
+        if(e.token==T_ROM_IMPORT) {import_completed(&e);return PXA_EVENT_HANDLED;}
         if(e.token==T_MEDIA_PATH) {
             if(pxa_fs_parse_app_media_path(&e,T_MEDIA_PATH,media_display_path,sizeof(media_display_path))) {
                 nes_port_log("NES SD media=%s",media_display_path);

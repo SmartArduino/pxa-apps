@@ -1,0 +1,94 @@
+{
+  "format": "pxa-package-source-0.2",
+  "id": "pxa-internet-radio",
+  "version": "0.4.0",
+  "release_sequence": 10,
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "name": "网络收音机",
+  "localizations": {
+    "en": {
+      "name": "Internet Radio"
+    }
+  },
+  "description": "通过 Radio Browser 搜索和收听 MP3 网络电台，支持中文电台、热门电台、收藏、自定义直播地址和音量调节。",
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  },
+  "icon": "assets/icon.png",
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 2097152,
+      "pinned": false
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "services": [
+        {
+          "name": "ui",
+          "features": [
+            "canvas",
+            "dynamic-text",
+            "sized-text"
+          ]
+        },
+        "window",
+        "clock",
+        "storage",
+        "permission",
+        "log",
+        {
+          "name": "net",
+          "min_version": [
+            0,
+            5
+          ]
+        },
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            10
+          ]
+        }
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "scope": "media",
+      "required": false
+    },
+    {
+      "name": "net.client",
+      "scope": "web",
+      "required": false
+    }
+  ]
+}

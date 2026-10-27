@@ -1,0 +1,101 @@
+{
+  "format": "pxa-package-source-0.2",
+  "id": "pxa-music",
+  "version": "0.4.0",
+  "release_sequence": 8,
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "name": "声屿音乐",
+  "localizations": {
+    "en": {
+      "name": "Sonora Music"
+    }
+  },
+  "description": "真实推荐新歌发现列表、在线搜索、专辑封面、同步歌词、可拖动进度、播放队列与收藏。",
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  },
+  "icon": "assets/icon.png",
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 2097152,
+      "pinned": false
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "services": [
+        {
+          "name": "ui",
+          "features": [
+            "canvas",
+            "dynamic-text",
+            "sized-text"
+          ]
+        },
+        "window",
+        "clock",
+        "storage",
+        "permission",
+        "log",
+        {
+          "name": "net",
+          "min_version": [
+            0,
+            5
+          ]
+        },
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            10
+          ]
+        },
+        {
+          "name": "assets",
+          "min_version": [
+            2,
+            2
+          ]
+        }
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "scope": "media",
+      "required": false
+    },
+    {
+      "name": "net.client",
+      "scope": "web",
+      "required": false
+    }
+  ]
+}

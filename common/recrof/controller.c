@@ -19,9 +19,22 @@ static void map_keys(const port_controller_t *pad, int rts, uint8_t keys[256]) {
       if (b & PXA_CONTROLLER_A) keys[13] = 1;
       if (b & PXA_CONTROLLER_B) keys[27] = 1;
     } else {
+#ifdef PORT_DUKE_CONTROLLER
+      /* Keep weapon chords out of fire/jump. The adapter recognizes a lone
+       * SELECT release as use, so starting a chord cannot also open a door. */
+      if (b & PXA_CONTROLLER_SELECT) {
+        keys[PORT_PAD_WEAPON_MODIFIER] = 1;
+        if (b & PXA_CONTROLLER_R) keys[PORT_PAD_NEXT_WEAPON] = 1;
+        else if (b & PXA_CONTROLLER_L) keys[PORT_PAD_PREVIOUS_WEAPON] = 1;
+      } else {
+        if (b & PXA_CONTROLLER_R) keys[200] = 1;
+        if (b & PXA_CONTROLLER_L) keys[' '] = 1;
+      }
+#else
       if (b & PXA_CONTROLLER_R) keys[200] = 1;
       if (b & PXA_CONTROLLER_L) keys[' '] = 1;
       if (b & PXA_CONTROLLER_SELECT) keys['e'] = 1;
+#endif
 #ifdef PORT_DOOM_CONTROLLER
       /* Classic DOOM has neither jump nor vertical look. L uses doors;
        * reserve the remaining face buttons for weapons and automap. */
@@ -57,6 +70,12 @@ int port_controller_state(port_controller_t *pad, unsigned controller,
       PXA_CONTROLLER_UP | PXA_CONTROLLER_DOWN | PXA_CONTROLLER_R :
       PXA_CONTROLLER_A | PXA_CONTROLLER_B | PXA_CONTROLLER_X | PXA_CONTROLLER_Y;
   const uint32_t motion_changed = (buttons ^ pad->buttons) & motion_buttons;
+#ifdef PORT_DUKE_CONTROLLER
+  /* Releasing SELECT before its shoulder must not start shooting/jumping.
+   * Require that shoulder to be released before it becomes a normal action. */
+  if ((pad->buttons & PXA_CONTROLLER_SELECT) && !(buttons & PXA_CONTROLLER_SELECT))
+    pad->blocked |= buttons & (PXA_CONTROLLER_L | PXA_CONTROLLER_R);
+#endif
   pad->menu = !!menu;
   pad->initialized = 1;
   pad->buttons = buttons;

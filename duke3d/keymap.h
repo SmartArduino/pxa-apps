@@ -1,6 +1,7 @@
 /* PXA keys -> Duke's internal keyboard codes, including extended arrows.
  * KB_KeyEvent's ESP path consumes these directly, without PC E0 translation. */
 #pragma once
+#include "../common/recrof/controller.h"
 #include "vendor/Game/src/keyboard.h"
 static inline int port_duke_scancode(int key, int menu) {
   switch (key) {
@@ -15,6 +16,8 @@ static inline int port_duke_scancode(int key, int menu) {
   case ' ': return menu ? sc_Enter : sc_X;
   case 'e': return sc_Space;
   case 'q': return sc_P;
+  case PORT_PAD_NEXT_WEAPON: return sc_P;
+  case PORT_PAD_PREVIOUS_WEAPON: return sc_O;
   case 200: return menu ? sc_Enter : sc_LeftControl;
   default: return sc_None;
   }

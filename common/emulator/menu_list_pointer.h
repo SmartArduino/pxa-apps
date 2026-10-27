@@ -1,8 +1,8 @@
-/* GPL-2.0-or-later. Cold list pointer input, shared by all seven frontends. */
+/* GPL-2.0-or-later. Cold list pointer input, shared by all eight frontends. */
 static unsigned drag_active,drag_moved,drag_mode,drag_id;
 static int drag_y;static uint64_t drag_top;
 static __attribute__((noinline,cold)) void list_pointer(const pxa_ui_pointer_data_t *p,int x,int y) {
-    if((mode==MENU && scan_pending) || (mode==STATES && slot_phase))return;
+    if((mode==MENU && (scan_pending || import_pending)) || (mode==STATES && slot_phase))return;
     unsigned top=mode==PAUSED?PAUSE_TOP:64,pitch=mode==PAUSED?PAUSE_PITCH:22;
     unsigned rows=mode==PAUSED?pause_rows():(menu_height()-(mode==STATES?114:108))/22;
     if(p->phase==PXA_POINTER_DOWN) {

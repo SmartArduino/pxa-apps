@@ -1,4 +1,4 @@
-/* GPL-2.0-or-later. Actual frontend events, shared across all seven apps.
+/* GPL-2.0-or-later. Actual frontend events, shared across all eight apps.
  * Adapters provide menu_test_reset() and menu_test_controller(player,bits,connected). */
 static void menu_test_press(unsigned player,uint32_t buttons) {
     menu_test_controller(player,buttons,1);menu_test_controller(player,0,1);
@@ -13,6 +13,7 @@ static void test_menu_contract(void) {
     menu_test_press(1,PXA_CONTROLLER_A);assert(mode==MENU && menu_focus==MENU_FOCUS_LIST);
     menu_test_press(1,PXA_CONTROLLER_DOWN);assert(selected==1 && menu_focus==MENU_FOCUS_LIST);
     menu_test_press(1,PXA_CONTROLLER_DOWN);assert(menu_focus==MENU_FOCUS_REFRESH);
+    menu_test_press(1,PXA_CONTROLLER_RIGHT);assert(menu_focus==MENU_FOCUS_IMPORT);
     menu_test_press(1,PXA_CONTROLLER_RIGHT);assert(menu_focus==MENU_FOCUS_EXIT);
     menu_test_press(1,PXA_CONTROLLER_DOWN);assert(menu_focus==MENU_FOCUS_SOURCE);
     menu_test_press(1,PXA_CONTROLLER_LEFT);assert(source==0 && count==9 && selected==0);
@@ -36,7 +37,9 @@ static void test_menu_contract(void) {
     source_count[0]=0;source_count[1]=2;source=1;count=2;selected=0;menu_focus=MENU_FOCUS_SOURCE;
     menu_test_press(1,PXA_CONTROLLER_LEFT);assert(source==1 && count==2);
     source_count[0]=source_count[1]=count=0;selected=page=menu_focus=0;
+    menu_test_press(1,PXA_CONTROLLER_RIGHT);assert(menu_focus==MENU_FOCUS_IMPORT);
     menu_test_press(1,PXA_CONTROLLER_RIGHT);assert(menu_focus==MENU_FOCUS_EXIT);
+    menu_test_press(1,PXA_CONTROLLER_LEFT);assert(menu_focus==MENU_FOCUS_IMPORT);
     menu_test_press(1,PXA_CONTROLLER_LEFT);assert(menu_focus==MENU_FOCUS_REFRESH);
     menu_test_press(1,PXA_CONTROLLER_A);assert(scan_pending);
     // Pause uses the same confirm key and scrolls all choices into view.

@@ -1107,6 +1107,7 @@ static int32_t handle_event(const uint8_t *bytes, uint32_t n) {
       } else if (!c.connected && port_controls_set_visible(1)) {
         port_log("PXA CONTROLS source=disconnect visible=1");
       }
+      if (!c.connected) port_game_reset_motion();
       const int changed = port_controller_state(&controller, c.controller,
           c.connected, buttons, port_game_in_menu(), CONTROLLER_RTS, pad_keys);
       if (released_touch || changed) update_keys();

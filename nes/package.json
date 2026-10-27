@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-nes",
-  "version": "0.1.46",
-  "release_sequence": 52,
+  "version": "0.1.47",
+  "release_sequence": 53,
   "name": "NES Emulator",
   "description": "NES emulator with SD/flash ROM library, audio, controllers and independent frame skipping",
   "build": {

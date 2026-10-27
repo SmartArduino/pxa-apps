@@ -8,6 +8,8 @@ static int pointer_x = 160, pointer_y = 120, video_x, video_y;
 extern "C" int port_mouse_x() { return pointer_x; }
 extern "C" int port_mouse_y() { return pointer_y; }
 extern "C" void port_sleep(unsigned) {}
+extern "C" uint64_t port_time_us() { static uint64_t now; return now += 8000; }
+extern "C" void port_poll_input() {}
 extern "C" int port_control_key_at(int x, int y, int) {
   return x > 280 && y < 60 ? 202 : 0;
 }
