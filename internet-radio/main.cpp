@@ -563,7 +563,10 @@ void playback_pump() {
       }
       return;
     }
-    if (now_ms() - began >= 12 && work)
+    // One 48 kHz stereo frame can take > 12 ms on GameKit. Allow
+    // several frames to replenish the bounded Host queue before yielding;
+    // WOULD_BLOCK above still ends the pump as soon as that queue is full.
+    if (now_ms() - began >= 64 && work)
       return;
     mp3dec_frame_info_t info{};
     int n = decoder.decode(compressed + compressed_head, int(compressed_size),

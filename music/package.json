@@ -1,8 +1,8 @@
 {
   "format": "pxa-package-source-0.2",
   "id": "pxa-music",
-  "version": "0.4.0",
-  "release_sequence": 8,
+  "version": "0.4.1",
+  "release_sequence": 9,
   "min_sdk": [
     2,
     1
