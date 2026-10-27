@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-microtd",
-  "version": "0.2.1",
-  "release_sequence": 3,
+  "version": "0.2.2",
+  "release_sequence": 4,
   "name": "microTD (uTD): SAF edition",
   "description": "Original standalone SAF game; original controls/rules; silent. 32-byte session scores, no disk persistence; two transparent safety fixes.",
   "build": {

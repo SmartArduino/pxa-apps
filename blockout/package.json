@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-blockout",
-  "version": "0.2.1",
-  "release_sequence": 3,
+  "version": "0.2.2",
+  "release_sequence": 4,
   "name": "BlockOut II",
   "description": "Original BlockOut II 2.5 logic with CPU graphics and touch controls",
   "build": {

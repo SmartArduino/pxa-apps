@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-pattern",
-  "version": "0.2.1",
-  "release_sequence": 4,
+  "version": "0.2.2",
+  "release_sequence": 5,
   "name": "Pattern",
   "description": "Original Simon Tatham Pattern, validated custom 5x5 size with 24px touch cells",
   "build": {

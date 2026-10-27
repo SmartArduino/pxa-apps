@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-whatajong",
-  "version": "0.2.1",
-  "release_sequence": 3,
+  "version": "0.2.2",
+  "release_sequence": 4,
   "name": "Whatajong",
   "description": "Original Whatajong rules and maps with a PXA text frontend",
   "build": {

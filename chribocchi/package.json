@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-chribocchi",
-  "version": "0.2.1",
-  "release_sequence": 3,
+  "version": "0.2.2",
+  "release_sequence": 4,
   "name": "Chri-Bocchi Cat",
   "description": "Original MIT OBONO two minute bouncing gift cat game at original 60 FPS.",
   "build": {

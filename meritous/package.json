@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-meritous",
-  "version": "0.2.1",
-  "release_sequence": 3,
+  "version": "0.2.2",
+  "release_sequence": 4,
   "name": "Meritous",
   "description": "Original Meritous dungeon crawler with a PXA touch frontend",
   "build": {

@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-lightup",
-  "version": "0.2.1",
-  "release_sequence": 3,
+  "version": "0.2.2",
+  "release_sequence": 4,
   "name": "Light Up",
   "description": "Original Simon Tatham Light Up with a shared PXA touch frontend",
   "build": {
