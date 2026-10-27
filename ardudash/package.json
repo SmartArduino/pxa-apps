@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-ardudash",
-  "version": "0.2.1",
-  "release_sequence": 3,
+  "version": "0.2.2",
+  "release_sequence": 4,
   "name": "ArduDash",
   "description": "Original MIT ArduDash endless sidescroller with authentic Arduboy2 graphics and ordinary touch input.",
   "build": {

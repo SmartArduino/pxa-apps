@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-flip",
-  "version": "0.2.1",
-  "release_sequence": 3,
+  "version": "0.2.2",
+  "release_sequence": 4,
   "name": "Flip",
   "description": "Original Simon Tatham Flip with a shared PXA touch frontend",
   "build": {

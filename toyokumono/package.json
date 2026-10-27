@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-toyokumono",
-  "version": "0.2.1",
-  "release_sequence": 3,
+  "version": "0.2.2",
+  "release_sequence": 4,
   "name": "Toyokumono",
   "description": "Original MIT Toyokumono cloud gardening game with original graphics and controls.",
   "build": {

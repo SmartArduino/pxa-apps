@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-classic-invaders",
-  "version": "0.2.1",
-  "release_sequence": 3,
+  "version": "0.2.2",
+  "release_sequence": 4,
   "name": "经典太空侵略者",
   "description": "Original Arduboy classic game, native PXA S3 touch port",
   "build": {

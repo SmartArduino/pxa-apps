@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-abbaye-des-morts",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "name": "死亡修道院",
   "description": "L’Abbaye des Morts：Locomalito 的哥特冒险平台游戏，原版关卡、音乐和手柄操作。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 1,
+  "release_sequence": 2,
   "build": {
     "system": "cmake",
     "source_dir": ".",

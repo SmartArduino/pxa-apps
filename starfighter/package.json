@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-starfighter",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "name": "Project: Starfighter",
   "description": "开源太空横向射击与剧情冒险，保留原作关卡、音乐和手柄操作。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 1,
+  "release_sequence": 2,
   "build": {
     "system": "cmake",
     "source_dir": ".",

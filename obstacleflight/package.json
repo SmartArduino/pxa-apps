@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-obstacleflight",
-  "version": "0.2.1",
-  "release_sequence": 3,
+  "version": "0.2.2",
+  "release_sequence": 4,
   "name": "ObstacleFlight",
   "description": "Original Unlicense vector obstacle flight on PXA with original Tinyfont graphics and directional controls.",
   "build": {

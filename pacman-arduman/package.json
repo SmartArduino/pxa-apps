@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-classic-pacman",
-  "version": "0.2.1",
-  "release_sequence": 3,
+  "version": "0.2.2",
+  "release_sequence": 4,
   "name": "Pac-Man / Ardu-man",
   "description": "Seth A. Robinson's original MIT Ardu-man maze, ghost AI, pellets and power pills, with cooperative PXA timing.",
   "build": {

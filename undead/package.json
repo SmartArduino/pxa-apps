@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-undead",
-  "version": "0.2.1",
-  "release_sequence": 3,
+  "version": "0.2.2",
+  "release_sequence": 4,
   "name": "Undead",
   "description": "Original Simon Tatham Undead with an independent PXA original-key touch frontend",
   "build": {

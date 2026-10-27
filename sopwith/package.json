@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-sopwith",
-  "version": "0.2.1",
-  "release_sequence": 3,
+  "version": "0.2.2",
+  "release_sequence": 4,
   "name": "Sopwith",
   "description": "Original Sopwith core with a PXA touch frontend",
   "build": {

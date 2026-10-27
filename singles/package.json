@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-singles",
-  "version": "0.2.1",
-  "release_sequence": 3,
+  "version": "0.2.2",
+  "release_sequence": 4,
   "name": "Singles",
   "description": "Original Simon Tatham Singles with a shared PXA touch frontend",
   "build": {

@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-lasers",
-  "version": "0.2.1",
-  "release_sequence": 3,
+  "version": "0.2.2",
+  "release_sequence": 4,
   "name": "Lasers",
   "description": "Original MIT Lasers black-white laser absorption and evasion game; original rapid flicker warning retained.",
   "build": {

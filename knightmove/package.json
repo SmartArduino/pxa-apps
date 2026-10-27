@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-knightmove",
-  "version": "0.2.1",
-  "release_sequence": 3,
+  "version": "0.2.2",
+  "release_sequence": 4,
   "name": "Knight Move",
   "description": "Original MIT OBONO chess knight survival board, 60FPS with legal jumps and collapsing floors.",
   "build": {

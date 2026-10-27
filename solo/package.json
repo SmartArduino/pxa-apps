@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-solo",
-  "version": "0.2.1",
-  "release_sequence": 3,
+  "version": "0.2.2",
+  "release_sequence": 4,
   "name": "Solo",
   "description": "Original Simon Tatham Solo with an independent PXA original-key touch frontend",
   "build": {

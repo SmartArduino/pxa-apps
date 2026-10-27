@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-nightraid",
-  "version": "0.2.1",
-  "release_sequence": 3,
+  "version": "0.2.2",
+  "release_sequence": 4,
   "name": "NightRaid",
   "description": "Original MIT NightRaid missile-defense game with original Arduboy2 sprites, cities, missiles and 60 FPS rules.",
   "build": {
