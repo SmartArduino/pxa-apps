@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "cards": [
+    {
+      "level": 2,
+      "question": "速度的基本计算公式是什么？",
+      "answer": "路程 ÷ 时间",
+      "explanation": "平均速度等于总路程除以总时间。"
+    },
+    {
+      "level": 2,
+      "question": "电阻的国际单位是什么？",
+      "answer": "欧姆",
+      "explanation": "电阻单位符号为Ω。"
+    },
+    {
+      "level": 2,
+      "question": "化学符号O代表什么元素？",
+      "answer": "氧",
+      "explanation": "O是氧元素符号；氧气常写为O₂。"
+    },
+    {
+      "level": 2,
+      "question": "中性原子的质子数等于什么？",
+      "answer": "电子数",
+      "explanation": "质子带正电，电子带负电，数量相等时电中性。"
+    }
+  ]
+}

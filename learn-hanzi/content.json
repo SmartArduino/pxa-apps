@@ -1,0 +1,341 @@
+{
+  "version": 1,
+  "cards": [
+    {
+      "question": "“人们”中的“人”读什么？",
+      "answer": "rén",
+      "explanation": "正确读音：人（rén）\n词语：人们\n读音与词语有关，多音字要结合语境。",
+      "lookup": "人",
+      "level": 0
+    },
+    {
+      "question": "“人口”中的“口”读什么？",
+      "answer": "kǒu",
+      "explanation": "正确读音：口（kǒu）\n词语：人口\n读音与词语有关，多音字要结合语境。",
+      "lookup": "口",
+      "level": 0
+    },
+    {
+      "question": "“日出”中的“日”读什么？",
+      "answer": "rì",
+      "explanation": "正确读音：日（rì）\n词语：日出\n读音与词语有关，多音字要结合语境。",
+      "lookup": "日",
+      "level": 0
+    },
+    {
+      "question": "“月亮”中的“月”读什么？",
+      "answer": "yuè",
+      "explanation": "正确读音：月（yuè）\n词语：月亮\n读音与词语有关，多音字要结合语境。",
+      "lookup": "月",
+      "level": 0
+    },
+    {
+      "question": "“高山”中的“山”读什么？",
+      "answer": "shān",
+      "explanation": "正确读音：山（shān）\n词语：高山\n读音与词语有关，多音字要结合语境。",
+      "lookup": "山",
+      "level": 0
+    },
+    {
+      "question": "“河水”中的“水”读什么？",
+      "answer": "shuǐ",
+      "explanation": "正确读音：水（shuǐ）\n词语：河水\n读音与词语有关，多音字要结合语境。",
+      "lookup": "水",
+      "level": 0
+    },
+    {
+      "question": "“火花”中的“火”读什么？",
+      "answer": "huǒ",
+      "explanation": "正确读音：火（huǒ）\n词语：火花\n读音与词语有关，多音字要结合语境。",
+      "lookup": "火",
+      "level": 0
+    },
+    {
+      "question": "“木头”中的“木”读什么？",
+      "answer": "mù",
+      "explanation": "正确读音：木（mù）\n词语：木头\n读音与词语有关，多音字要结合语境。",
+      "lookup": "木",
+      "level": 0
+    },
+    {
+      "question": "“大小”中的“大”读什么？",
+      "answer": "dà",
+      "explanation": "正确读音：大（dà）\n词语：大小\n读音与词语有关，多音字要结合语境。",
+      "lookup": "大",
+      "level": 0
+    },
+    {
+      "question": "“小手”中的“小”读什么？",
+      "answer": "xiǎo",
+      "explanation": "正确读音：小（xiǎo）\n词语：小手\n读音与词语有关，多音字要结合语境。",
+      "lookup": "小",
+      "level": 0
+    },
+    {
+      "question": "“上下”中的“上”读什么？",
+      "answer": "shàng",
+      "explanation": "正确读音：上（shàng）\n词语：上下\n读音与词语有关，多音字要结合语境。",
+      "lookup": "上",
+      "level": 0
+    },
+    {
+      "question": "“山下”中的“下”读什么？",
+      "answer": "xià",
+      "explanation": "正确读音：下（xià）\n词语：山下\n读音与词语有关，多音字要结合语境。",
+      "lookup": "下",
+      "level": 0
+    },
+    {
+      "question": "“学习”中的“学”读什么？",
+      "answer": "xué",
+      "explanation": "正确读音：学（xué）\n词语：学习\n读音与词语有关，多音字要结合语境。",
+      "lookup": "学",
+      "level": 1
+    },
+    {
+      "question": "“学校”中的“校”读什么？",
+      "answer": "xiào",
+      "explanation": "正确读音：校（xiào）\n词语：学校\n读音与词语有关，多音字要结合语境。",
+      "lookup": "校",
+      "level": 1
+    },
+    {
+      "question": "“朋友”中的“朋”读什么？",
+      "answer": "péng",
+      "explanation": "正确读音：朋（péng）\n词语：朋友\n读音与词语有关，多音字要结合语境。",
+      "lookup": "朋",
+      "level": 1
+    },
+    {
+      "question": "“友好”中的“友”读什么？",
+      "answer": "yǒu",
+      "explanation": "正确读音：友（yǒu）\n词语：友好\n读音与词语有关，多音字要结合语境。",
+      "lookup": "友",
+      "level": 1
+    },
+    {
+      "question": "“春天”中的“春”读什么？",
+      "answer": "chūn",
+      "explanation": "正确读音：春（chūn）\n词语：春天\n读音与词语有关，多音字要结合语境。",
+      "lookup": "春",
+      "level": 1
+    },
+    {
+      "question": "“夏天”中的“夏”读什么？",
+      "answer": "xià",
+      "explanation": "正确读音：夏（xià）\n词语：夏天\n读音与词语有关，多音字要结合语境。",
+      "lookup": "夏",
+      "level": 1
+    },
+    {
+      "question": "“秋天”中的“秋”读什么？",
+      "answer": "qiū",
+      "explanation": "正确读音：秋（qiū）\n词语：秋天\n读音与词语有关，多音字要结合语境。",
+      "lookup": "秋",
+      "level": 1
+    },
+    {
+      "question": "“冬天”中的“冬”读什么？",
+      "answer": "dōng",
+      "explanation": "正确读音：冬（dōng）\n词语：冬天\n读音与词语有关，多音字要结合语境。",
+      "lookup": "冬",
+      "level": 1
+    },
+    {
+      "question": "“读书”中的“读”读什么？",
+      "answer": "dú",
+      "explanation": "正确读音：读（dú）\n词语：读书\n读音与词语有关，多音字要结合语境。",
+      "lookup": "读",
+      "level": 1
+    },
+    {
+      "question": "“写字”中的“写”读什么？",
+      "answer": "xiě",
+      "explanation": "正确读音：写（xiě）\n词语：写字\n读音与词语有关，多音字要结合语境。",
+      "lookup": "写",
+      "level": 1
+    },
+    {
+      "question": "“家人”中的“家”读什么？",
+      "answer": "jiā",
+      "explanation": "正确读音：家（jiā）\n词语：家人\n读音与词语有关，多音字要结合语境。",
+      "lookup": "家",
+      "level": 1
+    },
+    {
+      "question": "“祖国”中的“国”读什么？",
+      "answer": "guó",
+      "explanation": "正确读音：国（guó）\n词语：祖国\n读音与词语有关，多音字要结合语境。",
+      "lookup": "国",
+      "level": 1
+    },
+    {
+      "question": "“行走”中的“行”读什么？",
+      "answer": "xíng",
+      "explanation": "正确读音：行（xíng）\n词语：行走\n读音与词语有关，多音字要结合语境。",
+      "lookup": "行",
+      "level": 2
+    },
+    {
+      "question": "“银行”中的“行”读什么？",
+      "answer": "háng",
+      "explanation": "正确读音：行（háng）\n词语：银行\n读音与词语有关，多音字要结合语境。",
+      "lookup": "行",
+      "level": 2
+    },
+    {
+      "question": "“长短”中的“长”读什么？",
+      "answer": "cháng",
+      "explanation": "正确读音：长（cháng）\n词语：长短\n读音与词语有关，多音字要结合语境。",
+      "lookup": "长",
+      "level": 2
+    },
+    {
+      "question": "“成长”中的“长”读什么？",
+      "answer": "zhǎng",
+      "explanation": "正确读音：长（zhǎng）\n词语：成长\n读音与词语有关，多音字要结合语境。",
+      "lookup": "长",
+      "level": 2
+    },
+    {
+      "question": "“重量”中的“重”读什么？",
+      "answer": "zhòng",
+      "explanation": "正确读音：重（zhòng）\n词语：重量\n读音与词语有关，多音字要结合语境。",
+      "lookup": "重",
+      "level": 2
+    },
+    {
+      "question": "“重复”中的“重”读什么？",
+      "answer": "chóng",
+      "explanation": "正确读音：重（chóng）\n词语：重复\n读音与词语有关，多音字要结合语境。",
+      "lookup": "重",
+      "level": 2
+    },
+    {
+      "question": "“快乐”中的“乐”读什么？",
+      "answer": "lè",
+      "explanation": "正确读音：乐（lè）\n词语：快乐\n读音与词语有关，多音字要结合语境。",
+      "lookup": "乐",
+      "level": 2
+    },
+    {
+      "question": "“音乐”中的“乐”读什么？",
+      "answer": "yuè",
+      "explanation": "正确读音：乐（yuè）\n词语：音乐\n读音与词语有关，多音字要结合语境。",
+      "lookup": "乐",
+      "level": 2
+    },
+    {
+      "question": "“收藏”中的“藏”读什么？",
+      "answer": "cáng",
+      "explanation": "正确读音：藏（cáng）\n词语：收藏\n读音与词语有关，多音字要结合语境。",
+      "lookup": "藏",
+      "level": 2
+    },
+    {
+      "question": "“西藏”中的“藏”读什么？",
+      "answer": "zàng",
+      "explanation": "正确读音：藏（zàng）\n词语：西藏\n读音与词语有关，多音字要结合语境。",
+      "lookup": "藏",
+      "level": 2
+    },
+    {
+      "question": "“着陆”中的“着”读什么？",
+      "answer": "zhuó",
+      "explanation": "正确读音：着（zhuó）\n词语：着陆\n读音与词语有关，多音字要结合语境。",
+      "lookup": "着",
+      "level": 2
+    },
+    {
+      "question": "“着急”中的“着”读什么？",
+      "answer": "zháo",
+      "explanation": "正确读音：着（zháo）\n词语：着急\n读音与词语有关，多音字要结合语境。",
+      "lookup": "着",
+      "level": 2
+    },
+    {
+      "question": "“斟酌”中的“酌”读什么？",
+      "answer": "zhuó",
+      "explanation": "正确读音：酌（zhuó）\n词语：斟酌\n读音与词语有关，多音字要结合语境。",
+      "lookup": "酌",
+      "level": 3
+    },
+    {
+      "question": "“缜密”中的“缜”读什么？",
+      "answer": "zhěn",
+      "explanation": "正确读音：缜（zhěn）\n词语：缜密\n读音与词语有关，多音字要结合语境。",
+      "lookup": "缜",
+      "level": 3
+    },
+    {
+      "question": "“赡养”中的“赡”读什么？",
+      "answer": "shàn",
+      "explanation": "正确读音：赡（shàn）\n词语：赡养\n读音与词语有关，多音字要结合语境。",
+      "lookup": "赡",
+      "level": 3
+    },
+    {
+      "question": "“契约”中的“契”读什么？",
+      "answer": "qì",
+      "explanation": "正确读音：契（qì）\n词语：契约\n读音与词语有关，多音字要结合语境。",
+      "lookup": "契",
+      "level": 3
+    },
+    {
+      "question": "“隽永”中的“隽”读什么？",
+      "answer": "juàn",
+      "explanation": "正确读音：隽（juàn）\n词语：隽永\n读音与词语有关，多音字要结合语境。",
+      "lookup": "隽",
+      "level": 3
+    },
+    {
+      "question": "“踌躇”中的“踌”读什么？",
+      "answer": "chóu",
+      "explanation": "正确读音：踌（chóu）\n词语：踌躇\n读音与词语有关，多音字要结合语境。",
+      "lookup": "踌",
+      "level": 3
+    },
+    {
+      "question": "“踌躇”中的“躇”读什么？",
+      "answer": "chú",
+      "explanation": "正确读音：躇（chú）\n词语：踌躇\n读音与词语有关，多音字要结合语境。",
+      "lookup": "躇",
+      "level": 3
+    },
+    {
+      "question": "“拜谒”中的“谒”读什么？",
+      "answer": "yè",
+      "explanation": "正确读音：谒（yè）\n词语：拜谒\n读音与词语有关，多音字要结合语境。",
+      "lookup": "谒",
+      "level": 3
+    },
+    {
+      "question": "“镌刻”中的“镌”读什么？",
+      "answer": "juān",
+      "explanation": "正确读音：镌（juān）\n词语：镌刻\n读音与词语有关，多音字要结合语境。",
+      "lookup": "镌",
+      "level": 3
+    },
+    {
+      "question": "“觊觎”中的“觊”读什么？",
+      "answer": "jì",
+      "explanation": "正确读音：觊（jì）\n词语：觊觎\n读音与词语有关，多音字要结合语境。",
+      "lookup": "觊",
+      "level": 3
+    },
+    {
+      "question": "“觊觎”中的“觎”读什么？",
+      "answer": "yú",
+      "explanation": "正确读音：觎（yú）\n词语：觊觎\n读音与词语有关，多音字要结合语境。",
+      "lookup": "觎",
+      "level": 3
+    },
+    {
+      "question": "“翌日”中的“翌”读什么？",
+      "answer": "yì",
+      "explanation": "正确读音：翌（yì）\n词语：翌日\n读音与词语有关，多音字要结合语境。",
+      "lookup": "翌",
+      "level": 3
+    }
+  ]
+}

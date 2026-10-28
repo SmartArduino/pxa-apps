@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.20)
+project(pxa_learn_words_teen LANGUAGES C CXX)
+set(STUDY_KIND 2)
+set(STUDY_AGE 2)
+include(../common/study/StudyApp.cmake)

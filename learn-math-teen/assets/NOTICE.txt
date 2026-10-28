@@ -1,0 +1,6 @@
+PXA Study Apps — original source and teaching notes: MIT.
+Classical poetry texts: public domain.
+Online data is separate from application code. Preserve per-response sources and licenses.
+Hanzi Writer Data: © 1999 Arphic Technology Co., Ltd.; Arphic Public License.
+See https://github.com/chanind/hanzi-writer-data/blob/master/ARPHICPL.TXT
+Dictionary data: see displayed Wiktionary source and returned license.

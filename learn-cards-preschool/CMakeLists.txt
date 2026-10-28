@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.20)
+project(pxa_learn_cards_preschool LANGUAGES C CXX)
+set(STUDY_KIND 4)
+set(STUDY_AGE 0)
+include(../common/study/StudyApp.cmake)

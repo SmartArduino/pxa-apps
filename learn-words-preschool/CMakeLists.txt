@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.20)
+project(pxa_learn_words_preschool LANGUAGES C CXX)
+set(STUDY_KIND 2)
+set(STUDY_AGE 0)
+include(../common/study/StudyApp.cmake)

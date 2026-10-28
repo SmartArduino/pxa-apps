@@ -1,0 +1,677 @@
+{
+  "version": 1,
+  "cards": [
+    {
+      "question": "apple",
+      "answer": "苹果",
+      "explanation": "An apple is a fruit. 苹果是一种水果。",
+      "lookup": "apple",
+      "level": 0
+    },
+    {
+      "question": "cat",
+      "answer": "猫",
+      "explanation": "cat：猫。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "cat",
+      "level": 0
+    },
+    {
+      "question": "dog",
+      "answer": "狗",
+      "explanation": "dog：狗。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "dog",
+      "level": 0
+    },
+    {
+      "question": "sun",
+      "answer": "太阳",
+      "explanation": "sun：太阳。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "sun",
+      "level": 0
+    },
+    {
+      "question": "moon",
+      "answer": "月亮",
+      "explanation": "moon：月亮。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "moon",
+      "level": 0
+    },
+    {
+      "question": "water",
+      "answer": "水",
+      "explanation": "water：水。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "water",
+      "level": 0
+    },
+    {
+      "question": "book",
+      "answer": "书",
+      "explanation": "book：书。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "book",
+      "level": 0
+    },
+    {
+      "question": "school",
+      "answer": "学校",
+      "explanation": "school：学校。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "school",
+      "level": 0
+    },
+    {
+      "question": "red",
+      "answer": "红色",
+      "explanation": "red：红色。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "red",
+      "level": 0
+    },
+    {
+      "question": "blue",
+      "answer": "蓝色",
+      "explanation": "blue：蓝色。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "blue",
+      "level": 0
+    },
+    {
+      "question": "green",
+      "answer": "绿色",
+      "explanation": "green：绿色。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "green",
+      "level": 0
+    },
+    {
+      "question": "yellow",
+      "answer": "黄色",
+      "explanation": "yellow：黄色。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "yellow",
+      "level": 0
+    },
+    {
+      "question": "one",
+      "answer": "一",
+      "explanation": "one：一。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "one",
+      "level": 0
+    },
+    {
+      "question": "two",
+      "answer": "二",
+      "explanation": "two：二。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "two",
+      "level": 0
+    },
+    {
+      "question": "three",
+      "answer": "三",
+      "explanation": "three：三。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "three",
+      "level": 0
+    },
+    {
+      "question": "mother",
+      "answer": "母亲",
+      "explanation": "mother：母亲。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "mother",
+      "level": 0
+    },
+    {
+      "question": "father",
+      "answer": "父亲",
+      "explanation": "father：父亲。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "father",
+      "level": 0
+    },
+    {
+      "question": "friend",
+      "answer": "朋友",
+      "explanation": "friend：朋友。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "friend",
+      "level": 0
+    },
+    {
+      "question": "happy",
+      "answer": "高兴的",
+      "explanation": "happy：高兴的。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "happy",
+      "level": 0
+    },
+    {
+      "question": "big",
+      "answer": "大的",
+      "explanation": "big：大的。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "big",
+      "level": 0
+    },
+    {
+      "question": "small",
+      "answer": "小的",
+      "explanation": "small：小的。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "small",
+      "level": 0
+    },
+    {
+      "question": "day",
+      "answer": "白天",
+      "explanation": "day：白天。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "day",
+      "level": 0
+    },
+    {
+      "question": "night",
+      "answer": "夜晚",
+      "explanation": "night：夜晚。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "night",
+      "level": 0
+    },
+    {
+      "question": "tree",
+      "answer": "树",
+      "explanation": "tree：树。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "tree",
+      "level": 0
+    },
+    {
+      "question": "library",
+      "answer": "图书馆",
+      "explanation": "I read books in the library. 我在图书馆读书。",
+      "lookup": "library",
+      "level": 1
+    },
+    {
+      "question": "breakfast",
+      "answer": "早餐",
+      "explanation": "breakfast：早餐。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "breakfast",
+      "level": 1
+    },
+    {
+      "question": "vegetable",
+      "answer": "蔬菜",
+      "explanation": "vegetable：蔬菜。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "vegetable",
+      "level": 1
+    },
+    {
+      "question": "animal",
+      "answer": "动物",
+      "explanation": "animal：动物。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "animal",
+      "level": 1
+    },
+    {
+      "question": "weather",
+      "answer": "天气",
+      "explanation": "weather：天气。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "weather",
+      "level": 1
+    },
+    {
+      "question": "season",
+      "answer": "季节",
+      "explanation": "season：季节。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "season",
+      "level": 1
+    },
+    {
+      "question": "spring",
+      "answer": "春天",
+      "explanation": "spring：春天。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "spring",
+      "level": 1
+    },
+    {
+      "question": "summer",
+      "answer": "夏天",
+      "explanation": "summer：夏天。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "summer",
+      "level": 1
+    },
+    {
+      "question": "autumn",
+      "answer": "秋天",
+      "explanation": "autumn：秋天。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "autumn",
+      "level": 1
+    },
+    {
+      "question": "winter",
+      "answer": "冬天",
+      "explanation": "winter：冬天。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "winter",
+      "level": 1
+    },
+    {
+      "question": "question",
+      "answer": "问题",
+      "explanation": "question：问题。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "question",
+      "level": 1
+    },
+    {
+      "question": "answer",
+      "answer": "答案",
+      "explanation": "answer：答案。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "answer",
+      "level": 1
+    },
+    {
+      "question": "beautiful",
+      "answer": "美丽的",
+      "explanation": "beautiful：美丽的。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "beautiful",
+      "level": 1
+    },
+    {
+      "question": "healthy",
+      "answer": "健康的",
+      "explanation": "healthy：健康的。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "healthy",
+      "level": 1
+    },
+    {
+      "question": "exercise",
+      "answer": "锻炼",
+      "explanation": "exercise：锻炼。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "exercise",
+      "level": 1
+    },
+    {
+      "question": "travel",
+      "answer": "旅行",
+      "explanation": "travel：旅行。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "travel",
+      "level": 1
+    },
+    {
+      "question": "country",
+      "answer": "国家",
+      "explanation": "country：国家。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "country",
+      "level": 1
+    },
+    {
+      "question": "language",
+      "answer": "语言",
+      "explanation": "language：语言。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "language",
+      "level": 1
+    },
+    {
+      "question": "learn",
+      "answer": "学习",
+      "explanation": "learn：学习。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "learn",
+      "level": 1
+    },
+    {
+      "question": "remember",
+      "answer": "记得",
+      "explanation": "remember：记得。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "remember",
+      "level": 1
+    },
+    {
+      "question": "forget",
+      "answer": "忘记",
+      "explanation": "forget：忘记。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "forget",
+      "level": 1
+    },
+    {
+      "question": "early",
+      "answer": "早的",
+      "explanation": "early：早的。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "early",
+      "level": 1
+    },
+    {
+      "question": "careful",
+      "answer": "仔细的",
+      "explanation": "careful：仔细的。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "careful",
+      "level": 1
+    },
+    {
+      "question": "together",
+      "answer": "一起",
+      "explanation": "together：一起。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "together",
+      "level": 1
+    },
+    {
+      "question": "compare",
+      "answer": "比较",
+      "explanation": "compare：比较。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "compare",
+      "level": 2
+    },
+    {
+      "question": "improve",
+      "answer": "改善",
+      "explanation": "improve：改善。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "improve",
+      "level": 2
+    },
+    {
+      "question": "explain",
+      "answer": "解释",
+      "explanation": "explain：解释。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "explain",
+      "level": 2
+    },
+    {
+      "question": "discover",
+      "answer": "发现",
+      "explanation": "discover：发现。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "discover",
+      "level": 2
+    },
+    {
+      "question": "environment",
+      "answer": "环境",
+      "explanation": "environment：环境。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "environment",
+      "level": 2
+    },
+    {
+      "question": "energy",
+      "answer": "能量",
+      "explanation": "energy：能量。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "energy",
+      "level": 2
+    },
+    {
+      "question": "population",
+      "answer": "人口",
+      "explanation": "population：人口。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "population",
+      "level": 2
+    },
+    {
+      "question": "culture",
+      "answer": "文化",
+      "explanation": "culture：文化。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "culture",
+      "level": 2
+    },
+    {
+      "question": "communicate",
+      "answer": "交流",
+      "explanation": "communicate：交流。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "communicate",
+      "level": 2
+    },
+    {
+      "question": "necessary",
+      "answer": "必要的",
+      "explanation": "necessary：必要的。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "necessary",
+      "level": 2
+    },
+    {
+      "question": "responsible",
+      "answer": "负责任的",
+      "explanation": "responsible：负责任的。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "responsible",
+      "level": 2
+    },
+    {
+      "question": "independent",
+      "answer": "独立的",
+      "explanation": "independent：独立的。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "independent",
+      "level": 2
+    },
+    {
+      "question": "experience",
+      "answer": "经验",
+      "explanation": "experience：经验。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "experience",
+      "level": 2
+    },
+    {
+      "question": "knowledge",
+      "answer": "知识",
+      "explanation": "knowledge：知识。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "knowledge",
+      "level": 2
+    },
+    {
+      "question": "opinion",
+      "answer": "观点",
+      "explanation": "opinion：观点。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "opinion",
+      "level": 2
+    },
+    {
+      "question": "advantage",
+      "answer": "优点",
+      "explanation": "advantage：优点。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "advantage",
+      "level": 2
+    },
+    {
+      "question": "challenge",
+      "answer": "挑战",
+      "explanation": "challenge：挑战。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "challenge",
+      "level": 2
+    },
+    {
+      "question": "confidence",
+      "answer": "信心",
+      "explanation": "confidence：信心。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "confidence",
+      "level": 2
+    },
+    {
+      "question": "opportunity",
+      "answer": "机会",
+      "explanation": "opportunity：机会。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "opportunity",
+      "level": 2
+    },
+    {
+      "question": "solution",
+      "answer": "解决方案",
+      "explanation": "solution：解决方案。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "solution",
+      "level": 2
+    },
+    {
+      "question": "evidence",
+      "answer": "证据",
+      "explanation": "Explain your answer with evidence. 用证据解释答案。",
+      "lookup": "evidence",
+      "level": 2
+    },
+    {
+      "question": "achieve",
+      "answer": "实现",
+      "explanation": "achieve：实现。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "achieve",
+      "level": 2
+    },
+    {
+      "question": "purpose",
+      "answer": "目的",
+      "explanation": "purpose：目的。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "purpose",
+      "level": 2
+    },
+    {
+      "question": "protect",
+      "answer": "保护",
+      "explanation": "protect：保护。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "protect",
+      "level": 2
+    },
+    {
+      "question": "budget",
+      "answer": "预算",
+      "explanation": "Make a budget before shopping. 购物前制定预算。",
+      "lookup": "budget",
+      "level": 3
+    },
+    {
+      "question": "invoice",
+      "answer": "发票",
+      "explanation": "invoice：发票。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "invoice",
+      "level": 3
+    },
+    {
+      "question": "appointment",
+      "answer": "预约",
+      "explanation": "appointment：预约。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "appointment",
+      "level": 3
+    },
+    {
+      "question": "colleague",
+      "answer": "同事",
+      "explanation": "colleague：同事。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "colleague",
+      "level": 3
+    },
+    {
+      "question": "negotiate",
+      "answer": "协商",
+      "explanation": "negotiate：协商。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "negotiate",
+      "level": 3
+    },
+    {
+      "question": "deadline",
+      "answer": "截止日期",
+      "explanation": "deadline：截止日期。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "deadline",
+      "level": 3
+    },
+    {
+      "question": "efficient",
+      "answer": "高效的",
+      "explanation": "efficient：高效的。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "efficient",
+      "level": 3
+    },
+    {
+      "question": "reliable",
+      "answer": "可靠的",
+      "explanation": "reliable：可靠的。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "reliable",
+      "level": 3
+    },
+    {
+      "question": "sustainable",
+      "answer": "可持续的",
+      "explanation": "sustainable：可持续的。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "sustainable",
+      "level": 3
+    },
+    {
+      "question": "priority",
+      "answer": "优先事项",
+      "explanation": "priority：优先事项。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "priority",
+      "level": 3
+    },
+    {
+      "question": "investment",
+      "answer": "投资",
+      "explanation": "investment：投资。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "investment",
+      "level": 3
+    },
+    {
+      "question": "interest",
+      "answer": "利息",
+      "explanation": "interest：利息。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "interest",
+      "level": 3
+    },
+    {
+      "question": "insurance",
+      "answer": "保险",
+      "explanation": "insurance：保险。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "insurance",
+      "level": 3
+    },
+    {
+      "question": "expense",
+      "answer": "支出",
+      "explanation": "expense：支出。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "expense",
+      "level": 3
+    },
+    {
+      "question": "revenue",
+      "answer": "收入",
+      "explanation": "revenue：收入。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "revenue",
+      "level": 3
+    },
+    {
+      "question": "strategy",
+      "answer": "策略",
+      "explanation": "strategy：策略。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "strategy",
+      "level": 3
+    },
+    {
+      "question": "evaluate",
+      "answer": "评估",
+      "explanation": "evaluate：评估。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "evaluate",
+      "level": 3
+    },
+    {
+      "question": "maintain",
+      "answer": "维护",
+      "explanation": "maintain：维护。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "maintain",
+      "level": 3
+    },
+    {
+      "question": "perspective",
+      "answer": "视角",
+      "explanation": "perspective：视角。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "perspective",
+      "level": 3
+    },
+    {
+      "question": "accurate",
+      "answer": "准确的",
+      "explanation": "accurate：准确的。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "accurate",
+      "level": 3
+    },
+    {
+      "question": "flexible",
+      "answer": "灵活的",
+      "explanation": "flexible：灵活的。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "flexible",
+      "level": 3
+    },
+    {
+      "question": "ambiguous",
+      "answer": "有歧义的",
+      "explanation": "ambiguous：有歧义的。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "ambiguous",
+      "level": 3
+    },
+    {
+      "question": "consistent",
+      "answer": "一致的",
+      "explanation": "consistent：一致的。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "consistent",
+      "level": 3
+    },
+    {
+      "question": "resilient",
+      "answer": "有韧性的",
+      "explanation": "resilient：有韧性的。翻卡后先回忆，再选择“记住”或“再学”。",
+      "lookup": "resilient",
+      "level": 3
+    }
+  ]
+}

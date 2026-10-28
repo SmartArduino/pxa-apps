@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "cards": [
+    {
+      "level": 0,
+      "question": "一天有多少小时？",
+      "answer": "24 小时",
+      "explanation": "一天通常按24小时计算。"
+    },
+    {
+      "level": 0,
+      "question": "一年有几个月？",
+      "answer": "12 个月",
+      "explanation": "一年分为12个月。"
+    },
+    {
+      "level": 0,
+      "question": "一周有几天？",
+      "answer": "7 天",
+      "explanation": "一周包括星期一到星期日。"
+    },
+    {
+      "level": 0,
+      "question": "红灯亮时，行人应该怎样？",
+      "answer": "停下等待",
+      "explanation": "过路口遵守交通信号，确认安全后再通行。"
+    },
+    {
+      "level": 1,
+      "question": "地球的天然卫星叫什么？",
+      "answer": "月球",
+      "explanation": "月球围绕地球运行。"
+    },
+    {
+      "level": 1,
+      "question": "植物光合作用通常释放什么气体？",
+      "answer": "氧气",
+      "explanation": "在光照下，植物利用二氧化碳和水合成有机物，并释放氧气。"
+    },
+    {
+      "level": 1,
+      "question": "水在标准大气压下的沸点是多少？",
+      "answer": "100 摄氏度",
+      "explanation": "沸点会随气压变化，高海拔地区通常低于100摄氏度。"
+    },
+    {
+      "level": 1,
+      "question": "指南针的N极通常指向哪里？",
+      "answer": "地理北方附近",
+      "explanation": "磁北与地理北并不完全重合。"
+    },
+    {
+      "level": 2,
+      "question": "速度的基本计算公式是什么？",
+      "answer": "路程 ÷ 时间",
+      "explanation": "平均速度等于总路程除以总时间。"
+    },
+    {
+      "level": 2,
+      "question": "电阻的国际单位是什么？",
+      "answer": "欧姆",
+      "explanation": "电阻单位符号为Ω。"
+    },
+    {
+      "level": 2,
+      "question": "化学符号O代表什么元素？",
+      "answer": "氧",
+      "explanation": "O是氧元素符号；氧气常写为O₂。"
+    },
+    {
+      "level": 2,
+      "question": "中性原子的质子数等于什么？",
+      "answer": "电子数",
+      "explanation": "质子带正电，电子带负电，数量相等时电中性。"
+    },
+    {
+      "level": 3,
+      "question": "复利与单利的关键区别是什么？",
+      "answer": "利息是否继续计息",
+      "explanation": "复利会让前期产生的利息参与后续计息。"
+    },
+    {
+      "level": 3,
+      "question": "相关关系能直接证明因果关系吗？",
+      "answer": "不能",
+      "explanation": "相关可能来自共同原因、偶然性或反向因果。"
+    },
+    {
+      "level": 3,
+      "question": "强密码在不同网站应该怎样使用？",
+      "answer": "每个网站使用不同密码",
+      "explanation": "避免一个账户泄露后影响其他账户。"
+    },
+    {
+      "level": 3,
+      "question": "数据中最常出现的数值叫什么？",
+      "answer": "众数",
+      "explanation": "一组数据可能有多个众数，也可能没有唯一众数。"
+    }
+  ]
+}

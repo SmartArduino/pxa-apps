@@ -1,0 +1,341 @@
+{
+  "version": 1,
+  "cards": [
+    {
+      "question": "一天有多少小时？",
+      "answer": "24 小时",
+      "explanation": "一天通常按24小时计算。",
+      "lookup": "",
+      "level": 0
+    },
+    {
+      "question": "一年有几个月？",
+      "answer": "12 个月",
+      "explanation": "一年分为12个月。",
+      "lookup": "",
+      "level": 0
+    },
+    {
+      "question": "一周有几天？",
+      "answer": "7 天",
+      "explanation": "一周包括星期一到星期日。",
+      "lookup": "",
+      "level": 0
+    },
+    {
+      "question": "红灯亮时，行人应该怎样？",
+      "answer": "停下等待",
+      "explanation": "过路口遵守交通信号，确认安全后再通行。",
+      "lookup": "",
+      "level": 0
+    },
+    {
+      "question": "鱼主要用什么器官呼吸？",
+      "answer": "鳃",
+      "explanation": "多数鱼用鳃从水中获取氧气。",
+      "lookup": "",
+      "level": 0
+    },
+    {
+      "question": "植物通常用什么部位吸收土壤中的水？",
+      "answer": "根",
+      "explanation": "根能吸收水和无机盐。",
+      "lookup": "",
+      "level": 0
+    },
+    {
+      "question": "太阳通常从哪个方向升起？",
+      "answer": "东方",
+      "explanation": "我们用太阳升起的一侧辨认东方。",
+      "lookup": "",
+      "level": 0
+    },
+    {
+      "question": "把垃圾放入对应类别的垃圾桶叫什么？",
+      "answer": "垃圾分类",
+      "explanation": "按照当地要求分类投放垃圾。",
+      "lookup": "",
+      "level": 0
+    },
+    {
+      "question": "三角形有几条边？",
+      "answer": "3 条",
+      "explanation": "三条线段围成三角形。",
+      "lookup": "",
+      "level": 0
+    },
+    {
+      "question": "人主要用什么器官看东西？",
+      "answer": "眼睛",
+      "explanation": "眼睛接收光，视觉还需要大脑参与。",
+      "lookup": "",
+      "level": 0
+    },
+    {
+      "question": "冰融化后通常变成什么？",
+      "answer": "水",
+      "explanation": "这是从固态到液态的变化。",
+      "lookup": "",
+      "level": 0
+    },
+    {
+      "question": "彩虹通常有几种代表颜色？",
+      "answer": "7 种",
+      "explanation": "常说红橙黄绿青蓝紫，实际颜色连续变化。",
+      "lookup": "",
+      "level": 0
+    },
+    {
+      "question": "地球的天然卫星叫什么？",
+      "answer": "月球",
+      "explanation": "月球围绕地球运行。",
+      "lookup": "",
+      "level": 1
+    },
+    {
+      "question": "植物光合作用通常释放什么气体？",
+      "answer": "氧气",
+      "explanation": "在光照下，植物利用二氧化碳和水合成有机物，并释放氧气。",
+      "lookup": "",
+      "level": 1
+    },
+    {
+      "question": "水在标准大气压下的沸点是多少？",
+      "answer": "100 摄氏度",
+      "explanation": "沸点会随气压变化，高海拔地区通常低于100摄氏度。",
+      "lookup": "",
+      "level": 1
+    },
+    {
+      "question": "指南针的N极通常指向哪里？",
+      "answer": "地理北方附近",
+      "explanation": "磁北与地理北并不完全重合。",
+      "lookup": "",
+      "level": 1
+    },
+    {
+      "question": "中国的首都是什么城市？",
+      "answer": "北京",
+      "explanation": "北京是中华人民共和国的首都。",
+      "lookup": "",
+      "level": 1
+    },
+    {
+      "question": "一千米等于多少米？",
+      "answer": "1000 米",
+      "explanation": "长度单位：1千米=1000米。",
+      "lookup": "",
+      "level": 1
+    },
+    {
+      "question": "一千克等于多少克？",
+      "answer": "1000 克",
+      "explanation": "质量单位：1千克=1000克。",
+      "lookup": "",
+      "level": 1
+    },
+    {
+      "question": "《西游记》传统上署名的作者是谁？",
+      "answer": "吴承恩",
+      "explanation": "《西游记》是中国古典长篇小说。",
+      "lookup": "",
+      "level": 1
+    },
+    {
+      "question": "地球自转带来的主要现象是什么？",
+      "answer": "昼夜交替",
+      "explanation": "同一地点随地球自转轮流朝向或背向太阳。",
+      "lookup": "",
+      "level": 1
+    },
+    {
+      "question": "人体骨骼的主要作用之一是什么？",
+      "answer": "支撑身体",
+      "explanation": "骨骼还参与保护器官和运动。",
+      "lookup": "",
+      "level": 1
+    },
+    {
+      "question": "蒸发通常发生在液体的哪里？",
+      "answer": "表面",
+      "explanation": "蒸发可以在不同温度下进行。",
+      "lookup": "",
+      "level": 1
+    },
+    {
+      "question": "平年二月有多少天？",
+      "answer": "28 天",
+      "explanation": "闰年的二月有29天。",
+      "lookup": "",
+      "level": 1
+    },
+    {
+      "question": "速度的基本计算公式是什么？",
+      "answer": "路程 ÷ 时间",
+      "explanation": "平均速度等于总路程除以总时间。",
+      "lookup": "",
+      "level": 2
+    },
+    {
+      "question": "电阻的国际单位是什么？",
+      "answer": "欧姆",
+      "explanation": "电阻单位符号为Ω。",
+      "lookup": "",
+      "level": 2
+    },
+    {
+      "question": "化学符号O代表什么元素？",
+      "answer": "氧",
+      "explanation": "O是氧元素符号；氧气常写为O₂。",
+      "lookup": "",
+      "level": 2
+    },
+    {
+      "question": "中性原子的质子数等于什么？",
+      "answer": "电子数",
+      "explanation": "质子带正电，电子带负电，数量相等时电中性。",
+      "lookup": "",
+      "level": 2
+    },
+    {
+      "question": "直角三角形两直角边为3和4，斜边为？",
+      "answer": "5",
+      "explanation": "勾股定理：3²+4²=5²。",
+      "lookup": "",
+      "level": 2
+    },
+    {
+      "question": "太阳系中体积最大的行星是？",
+      "answer": "木星",
+      "explanation": "木星是太阳系最大的行星。",
+      "lookup": "",
+      "level": 2
+    },
+    {
+      "question": "产生四季更替的重要原因是什么？",
+      "answer": "地轴倾斜与地球公转",
+      "explanation": "不同季节同一纬度接收的太阳辐射不同。",
+      "lookup": "",
+      "level": 2
+    },
+    {
+      "question": "DNA中文通常叫什么？",
+      "answer": "脱氧核糖核酸",
+      "explanation": "DNA是多数生物储存遗传信息的物质。",
+      "lookup": "",
+      "level": 2
+    },
+    {
+      "question": "声音能在真空中传播吗？",
+      "answer": "不能",
+      "explanation": "声音传播需要介质。",
+      "lookup": "",
+      "level": 2
+    },
+    {
+      "question": "文艺复兴最早兴起于欧洲哪个地区？",
+      "answer": "意大利",
+      "explanation": "意大利城市的经济与文化为文艺复兴提供了条件。",
+      "lookup": "",
+      "level": 2
+    },
+    {
+      "question": "方程2x+3=11的解是什么？",
+      "answer": "x = 4",
+      "explanation": "两边减3得到2x=8，再除以2。",
+      "lookup": "",
+      "level": 2
+    },
+    {
+      "question": "概率为0.25，用百分数表示为多少？",
+      "answer": "25%",
+      "explanation": "0.25乘以100%等于25%。",
+      "lookup": "",
+      "level": 2
+    },
+    {
+      "question": "复利与单利的关键区别是什么？",
+      "answer": "利息是否继续计息",
+      "explanation": "复利会让前期产生的利息参与后续计息。",
+      "lookup": "",
+      "level": 3
+    },
+    {
+      "question": "相关关系能直接证明因果关系吗？",
+      "answer": "不能",
+      "explanation": "相关可能来自共同原因、偶然性或反向因果。",
+      "lookup": "",
+      "level": 3
+    },
+    {
+      "question": "强密码在不同网站应该怎样使用？",
+      "answer": "每个网站使用不同密码",
+      "explanation": "避免一个账户泄露后影响其他账户。",
+      "lookup": "",
+      "level": 3
+    },
+    {
+      "question": "数据中最常出现的数值叫什么？",
+      "answer": "众数",
+      "explanation": "一组数据可能有多个众数，也可能没有唯一众数。",
+      "lookup": "",
+      "level": 3
+    },
+    {
+      "question": "中位数主要用于描述什么？",
+      "answer": "排序后居中的位置",
+      "explanation": "中位数通常比平均数更不易受极端值影响。",
+      "lookup": "",
+      "level": 3
+    },
+    {
+      "question": "HTTPS中用于保护传输的常用协议是？",
+      "answer": "TLS",
+      "explanation": "TLS为传输提供加密和身份认证机制。",
+      "lookup": "",
+      "level": 3
+    },
+    {
+      "question": "机会成本指什么？",
+      "answer": "放弃的最佳替代方案价值",
+      "explanation": "做出选择时，机会成本也是需要考虑的成本。",
+      "lookup": "",
+      "level": 3
+    },
+    {
+      "question": "名义金额扣除通胀影响后称为？",
+      "answer": "实际金额",
+      "explanation": "比较不同时期的购买力要考虑物价变化。",
+      "lookup": "",
+      "level": 3
+    },
+    {
+      "question": "一度电对应多少能量？",
+      "answer": "1 千瓦时",
+      "explanation": "1千瓦的电器工作1小时消耗1千瓦时电能。",
+      "lookup": "",
+      "level": 3
+    },
+    {
+      "question": "计算百分比变化时，应以什么为分母？",
+      "answer": "原来的数值",
+      "explanation": "变化率=(新值-原值)/原值，原值为0时需另行处理。",
+      "lookup": "",
+      "level": 3
+    },
+    {
+      "question": "抽样调查应优先避免什么问题？",
+      "answer": "样本选择偏差",
+      "explanation": "样本应尽可能代表需要研究的总体。",
+      "lookup": "",
+      "level": 3
+    },
+    {
+      "question": "把复杂任务拆成可检查的小步骤有什么作用？",
+      "answer": "便于执行和反馈",
+      "explanation": "小步骤更容易明确完成条件并及时纠正方向。",
+      "lookup": "",
+      "level": 3
+    }
+  ]
+}

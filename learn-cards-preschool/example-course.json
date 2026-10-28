@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "cards": [
+    {
+      "level": 0,
+      "question": "一天有多少小时？",
+      "answer": "24 小时",
+      "explanation": "一天通常按24小时计算。"
+    },
+    {
+      "level": 0,
+      "question": "一年有几个月？",
+      "answer": "12 个月",
+      "explanation": "一年分为12个月。"
+    },
+    {
+      "level": 0,
+      "question": "一周有几天？",
+      "answer": "7 天",
+      "explanation": "一周包括星期一到星期日。"
+    },
+    {
+      "level": 0,
+      "question": "红灯亮时，行人应该怎样？",
+      "answer": "停下等待",
+      "explanation": "过路口遵守交通信号，确认安全后再通行。"
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "format": "pxa-package-source-0.2",
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "id": "pxa-learn-hanzi-adult",
+  "version": "0.1.0",
+  "release_sequence": 1,
+  "name": "汉字练习册·成人",
+  "description": "成人独立版。全屏轻量学习，原生触摸与按键操作，短回合练习、学习记录和错题复习。只内置本年龄段12张卡片，在线内容按需获取，不依赖SD卡。",
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  },
+  "icon": "assets/icon.png",
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 1048576,
+      "pinned": false
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "artifact": "aot",
+      "services": [
+        "ui",
+        "clock",
+        "storage",
+        "log",
+        "window",
+        "fs",
+        "permission",
+        {
+          "name": "net",
+          "min_version": [
+            0,
+            5
+          ]
+        }
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "net.client",
+      "required": false,
+      "scope": "https://cdn.jsdelivr.net"
+    }
+  ]
+}

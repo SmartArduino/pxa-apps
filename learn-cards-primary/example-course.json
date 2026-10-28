@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "cards": [
+    {
+      "level": 1,
+      "question": "地球的天然卫星叫什么？",
+      "answer": "月球",
+      "explanation": "月球围绕地球运行。"
+    },
+    {
+      "level": 1,
+      "question": "植物光合作用通常释放什么气体？",
+      "answer": "氧气",
+      "explanation": "在光照下，植物利用二氧化碳和水合成有机物，并释放氧气。"
+    },
+    {
+      "level": 1,
+      "question": "水在标准大气压下的沸点是多少？",
+      "answer": "100 摄氏度",
+      "explanation": "沸点会随气压变化，高海拔地区通常低于100摄氏度。"
+    },
+    {
+      "level": 1,
+      "question": "指南针的N极通常指向哪里？",
+      "answer": "地理北方附近",
+      "explanation": "磁北与地理北并不完全重合。"
+    }
+  ]
+}

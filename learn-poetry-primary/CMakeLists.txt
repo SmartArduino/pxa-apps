@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.20)
+project(pxa_learn_poetry_primary LANGUAGES C CXX)
+set(STUDY_KIND 1)
+set(STUDY_AGE 1)
+include(../common/study/StudyApp.cmake)

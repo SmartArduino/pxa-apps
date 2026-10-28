@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.20)
+project(pxa_learn_hanzi_preschool LANGUAGES C CXX)
+set(STUDY_KIND 3)
+set(STUDY_AGE 0)
+include(../common/study/StudyApp.cmake)

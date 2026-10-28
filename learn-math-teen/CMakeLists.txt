@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.20)
+project(pxa_learn_math_teen LANGUAGES C CXX)
+set(STUDY_KIND 0)
+set(STUDY_AGE 2)
+include(../common/study/StudyApp.cmake)

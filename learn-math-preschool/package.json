@@ -1,0 +1,57 @@
+{
+  "format": "pxa-package-source-0.2",
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "id": "pxa-learn-math-preschool",
+  "version": "0.1.0",
+  "release_sequence": 1,
+  "name": "口算闯关·亲子启蒙",
+  "description": "亲子启蒙独立版。全屏轻量学习，原生触摸与按键操作，短回合练习、学习记录和错题复习。对应年龄题目本地生成，无需网络或SD卡。",
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  },
+  "icon": "assets/icon.png",
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 1048576,
+      "pinned": false
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "artifact": "aot",
+      "services": [
+        "ui",
+        "clock",
+        "storage",
+        "log",
+        "window"
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": []
+}
