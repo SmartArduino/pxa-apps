@@ -106,7 +106,7 @@ for kind,base in enumerate(slugs):
         origins={1:['https://v1.jinrishici.com'],2:['https://api.dictionaryapi.dev'],3:['https://cdn.jsdelivr.net'],4:['web']}.get(kind,[])
         services=['ui','clock','storage','log','window']+(['fs','permission',{'name':'net','min_version':[0,5]}] if kind else [])
         pkg={'format':'pxa-package-source-0.2','min_sdk':[2,1],'target_sdk':[2,1],'compile_sdk':[2,1],
-             'id':'pxa-'+slug,'version':'0.1.0','release_sequence':1,'name':names[kind]+'·'+age_names[age],
+             'id':'pxa-'+slug,'version':'0.1.1','release_sequence':2,'name':names[kind]+'·'+age_names[age],
              'description':f'{age_names[age]}独立版。全屏轻量学习，原生触摸与按键操作，短回合练习、学习记录和错题复习。'+('对应年龄题目本地生成，无需网络或SD卡。' if not kind else f'只内置本年龄段{len(selected)}张卡片，在线内容按需获取，不依赖SD卡。'),
              'publisher':{'handle':'lucinhu','display_name':'lucinhu'},'icon':'assets/icon.png',
              'build':{'system':'cmake','source_dir':'.','linear_memory':{'maximum_bytes':1048576,'pinned':False}},

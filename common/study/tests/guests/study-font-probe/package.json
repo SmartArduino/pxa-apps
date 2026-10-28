@@ -1,0 +1,15 @@
+{
+  "format": "pxa-package-source-0.2",
+  "min_sdk": [2, 1],
+  "target_sdk": [2, 1],
+  "compile_sdk": [2, 1],
+  "id": "pxa-study-font-probe",
+  "version": "0.1.0",
+  "release_sequence": 1,
+  "name": "学习字形检查",
+  "description": "开发用字库验证夹具，不发布商城。",
+  "publisher": {"handle": "lucinhu", "display_name": "lucinhu"},
+  "build": {"system": "cmake", "source_dir": ".", "linear_memory": {"maximum_bytes": 262144, "pinned": false}},
+  "components": [{"id": "main", "kind": "ui", "cmake_target": "pxa_main", "artifact": "aot", "services": ["ui", "window"], "wasi": {"version": "preview1", "libc": "wasi-libc", "features": ["monotonic-clock", "wall-clock"]}}],
+  "permissions": []
+}

@@ -6,6 +6,8 @@
 #include "reader.hpp"
 #include "content.inc"
 #include <chrono>
+#include <memory>
+#include <new>
 
 using namespace pxa;
 using namespace pxa::ui;
@@ -79,6 +81,21 @@ template<class Child> struct Illustration : ViewModifiers {
     }
 };
 auto picture(CanvasRef& ref,int width,int height) {return Illustration(Canvas(ref,width,height));}
+// Keep the declarative tree and its callbacks at one stable address. Passing
+// the whole tree through Page's value constructor otherwise exceeds the 64KiB
+// WASM startup stack on the larger subjects. The allocation lives with Page.
+template<class Factory> struct OwnedView : ViewModifiers {
+    using Child=std::remove_cvref_t<std::invoke_result_t<Factory&>>;
+    static constexpr Capacity capacity=capacity_of<Child>;
+    Factory factory;
+    std::unique_ptr<Child> child;
+    explicit OwnedView(Factory value):factory(std::move(value)) {}
+    template<class Page> [[gnu::noinline]] bool render(Page& page,uint32_t parent) {
+        if(child)return page.fail(Error::bad_state);
+        child.reset(new(std::nothrow) Child(factory()));
+        return child?child->render(page,parent):page.fail(Error::resource_limit);
+    }
+};
 struct StudyApp {
     Environment<> environment;
     Context* ctx=nullptr;
@@ -89,13 +106,14 @@ struct StudyApp {
     unsigned position=0, score=0, card_index=0;
     uint32_t math_seed=0;
     uint16_t day=0;
-    bool reviewing=false, loading=true, save_running=false, revealed=false, custom=false, finished=false;
+    bool reviewing=false, loading=true, save_running=false, revealed=false, custom=false;
     bool from_cache=false;
     unsigned active_page=0, reader_from=0, reader_index=0;
     std::string full_detail;
     std::vector<std::string> reader_pages;
     unsigned revision=0, saved_revision=0;
-    State<bool> ready{false}, home{true}, quiz{false}, result{false}, cards{false}, settings{false}, reading{false};
+    State<bool> ready{false}, home{true}, quiz{false}, result{false}, cards{false}, settings{false}, reading{false}, completed{false};
+    State<bool> card_front{true}, card_back{false};
     State<bool> busy{false}, can_online{true};
     State<bool> has_strokes{false}, has_notice{false}, reader_prev{false}, reader_next{false};
     State<std::string> back_label{"退出"}, reading_text{""}, reading_counter{""};
@@ -104,6 +122,7 @@ struct StudyApp {
     State<std::string> subtitle{descriptions[K]}, summary{"加载学习记录…"};
     State<std::string> prompt{""}, detail{""}, counter{""}, feedback{""}, status{""};
     State<std::string> a{""},b{""},c{""},d{""}, reveal_label{"展开答案"};
+    State<std::string> continue_label{"继续"}, round_score{""}, round_message{""};
     State<std::string> online_label{K==1?"每日诗句":K==2?"查小词典":"看看笔顺"};
     State<std::string> url{""}, course_note{""};
     std::array<std::byte,study::save_size> load_bytes{};
@@ -112,18 +131,19 @@ struct StudyApp {
     std::vector<study::Stroke> strokes;
     unsigned stroke_step=0;
     CanvasRef stroke_canvas;
-    CanvasRef hero_canvas,quantity_canvas;
+    CanvasRef hero_canvas,quantity_canvas,achievement_canvas;
     CanvasCommands<2800> illustration;
     CanvasCommands<4000> drawing;
 
     void set_status(std::string value) {status.set(std::move(value));has_notice.set(!status.get().empty());}
     void page(unsigned n) {
         set_status("");
-        active_page=n;home.set(n==0);quiz.set(n==1);result.set(n==2);cards.set(n==3);settings.set(n==4);reading.set(n==5);
+        active_page=n;home.set(n==0);quiz.set(n==1);result.set(n==2);cards.set(n==3);settings.set(n==4);reading.set(n==5);completed.set(n==6);
         back_label.set(n==0?"退出":"返回");
         if(n!=3&&n!=5){strokes.clear();has_strokes.set(false);}
         if(n==0)refresh_summary();
         if(n==0)draw_hero();
+        if(n==6)draw_achievement();
     }
     void set_detail(std::string value) {full_detail=std::move(value);detail.set(full_detail);}
     void reader_update() {
@@ -219,6 +239,7 @@ struct StudyApp {
         (void)context.window().fullscreen(WindowBarMode::hidden,WindowBarMode::hidden);
         draw_strokes();
         draw_hero();
+        if(completed.get())draw_achievement();
     }
     void on_error(Context&,Error) {busy.set(false);set_status("操作失败，请检查网络或内部存储后重试。");}
     BackAction on_back() {if(home.get())return BackAction::close;page(reading.get()?reader_from:0);return BackAction::stay;}
@@ -236,12 +257,12 @@ struct StudyApp {
     }
     void next_question() {
         if(position>=session.size()) {
-            finished=true;
-            prompt.set("本轮完成");
-            set_detail("答对 "+std::to_string(score)+" / "+std::to_string(session.size())+" 题\n本轮已记录。错题可以在首页继续复习。");
-            feedback.set("每次一点点，今天也有进步。");counter.set("练习小结");page(2);return;
+            round_score.set(std::to_string(score)+" / "+std::to_string(session.size())+" 题");
+            round_message.set(AGE==3?"本轮已记录，可回到首页复习错题。":
+                score==session.size()?"全部点亮啦！带着好奇心，再出发。":
+                score*2>=session.size()?"认真思考，就在进步。再试试错题吧！":"完成一轮就是进步！看看讲解，再试一次。");
+            page(6);return;
         }
-        finished=false;
         if constexpr(K==0) {
             math_seed=reviewing?progress.math_mistakes[progress.level][session[position]]:progress.seed;
             uint32_t seed=math_seed;current=study::math_question(AGE,seed);
@@ -273,6 +294,7 @@ struct StudyApp {
         feedback.set(AGE<3?(correct?"叮！收获一颗小星星":"差一点点，一起看看吧"):(correct?"回答正确":"核对一下解题思路"));
         set_detail("正确答案："+current.item.answer+"\n\n"+current.item.explanation);
         ++position;session_progress.set(int(position*100/session.size()));persist();page(2);
+        continue_label.set(position==session.size()?(AGE<3?"看看收获":"查看小结"):(AGE<3?"继续探险":"继续"));
     }
     std::vector<unsigned> level_cards() const {
         std::vector<unsigned> ids;for(unsigned i=0;i<bank.size();++i)if(bank[i].level==progress.level)ids.push_back(i);return ids;
@@ -287,7 +309,7 @@ struct StudyApp {
         card_index%=ids.size();current.item=bank[ids[card_index]];
         prompt.set(current.item.question);set_detail("先想一想，再展开答案。");
         counter.set("卡片 "+std::to_string(card_index+1)+" / "+std::to_string(ids.size()));
-        revealed=false;reveal_label.set("展开答案");strokes.clear();has_strokes.set(false);
+        revealed=false;card_front.set(true);card_back.set(false);reveal_label.set("展开答案");strokes.clear();has_strokes.set(false);
         progress.bookmark[progress.level]=card_index;page(3);draw_strokes();
     }
     void browse(int delta) {
@@ -296,6 +318,7 @@ struct StudyApp {
     }
     void reveal() {
         revealed=!revealed;
+        card_front.set(!revealed);card_back.set(revealed);
         set_detail(revealed?current.item.answer+"\n\n"+current.item.explanation:"先想一想，再展开答案。");
         reveal_label.set(revealed?"遮住答案":"展开答案");
     }
@@ -359,6 +382,26 @@ struct StudyApp {
             for(int i=0;i<second;++i)illustration.rect(168+(i%5)*20,6+(i/5)*22,15,15,0xe6a447ff,7);
             (void)quantity_canvas.present(illustration);
         }
+    }
+    void draw_achievement() {
+        if(!achievement_canvas.mounted())return;
+        illustration.reset();illustration.rect(0,0,280,64,papers[K]);
+        if constexpr(AGE==3) {
+            illustration.rect(100,5,80,54,white,12).rect(109,13,62,38,tints[K],7);
+            illustration.line(120,31,135,43,accents[K],5).line(135,43,160,21,accents[K],5);
+        } else {
+            const unsigned lit=score==session.size()?3:score*2>=session.size()?2:1;
+            for(unsigned i=0;i<3;++i) {
+                const int x=50+int(i)*90;
+                const auto petal=i<lit?0xf2c55cff:tints[K];
+                const auto stem=i<lit?accents[K]:0xb5c7bdff;
+                illustration.line(x,44,x,61,stem,3).rect(x-16,51,16,8,stem,4);
+                illustration.rect(x-22,17,20,20,petal,10).rect(x+2,17,20,20,petal,10);
+                illustration.rect(x-10,5,20,20,petal,10).rect(x-10,29,20,20,petal,10);
+                illustration.rect(x-8,19,16,16,white,8);
+            }
+        }
+        (void)achievement_canvas.present(illustration);
     }
     Task<void> write_file(std::string_view path,std::string_view bytes) {
         auto file=co_await ctx->fs().open("download.tmp",OpenMode::write|OpenMode::create|OpenMode::truncate);
@@ -490,7 +533,7 @@ struct StudyApp {
     auto progress_card() {
         return Column(text(stars,Font::title,accents[K]),
             text(summary,Font::caption,muted)
-        ).fill().gap(4_dp).padding(10_dp).background(white).radius(14_dp);
+        ).fill().gap(3_dp).padding(8_dp).background(white).radius(14_dp);
     }
     auto home_panel() {
         if constexpr(K==0) {
@@ -498,14 +541,14 @@ struct StudyApp {
                 Row(button(AGE<3?"开始小挑战":"开始练习",[this]{start(false);},true).enabled(ready).grow().height(45_dp),
                     button(AGE<3?"再试错题":"错题复习",[this]{start(true);}).enabled(ready).grow().height(45_dp)).fill().gap(8_dp),
                 button(AGE<3?"给小向导的说明":"使用说明",[this]{page(4);}).height(32_dp).fill()
-            ).visible(home).fill().gap(6_dp);
+            ).visible(home).fill().gap(4_dp);
         } else {
             return Column(welcome(),progress_card(),
                 Row(button(AGE<3?"开始小挑战":"开始练习",[this]{start(false);},true).enabled(ready).grow().height(45_dp),
                     button(AGE<3?"翻开知识卡":"翻卡学习",[this]{open_cards();}).enabled(ready).grow().height(45_dp)).fill().gap(8_dp),
                 Row(button(AGE<3?"再试一次":"错题 / 到期",[this]{start(true);}).enabled(ready).grow().height(33_dp),
                     button(AGE<3?"我的小背包":"设置与资源",[this]{refresh_summary();page(4);}).grow().height(33_dp)).fill().gap(8_dp)
-            ).visible(home).fill().gap(6_dp);
+            ).visible(home).fill().gap(4_dp);
         }
     }
     auto answers() {
@@ -534,21 +577,47 @@ struct StudyApp {
         return Column(
             text(counter,Font::caption,muted),
             text(feedback,Font::title,accents[K]),
-            Column(text(prompt,Font::body).fill(),text(detail,Font::label).fill()).fill().gap(8_dp).padding(12_dp).background(white).radius(14_dp),
-            button("分页阅读讲解",[this]{read_detail();}).height(36_dp).fill(),
-            button(AGE<3?"继续探险  >":"继续",[this]{if(finished)page(0);else next_question();},true).height(43_dp).fill()
+            Column(text(prompt,Font::body).fill(),text(detail,Font::label).fill()).fill().gap(8_dp).padding(12_dp).background(white).radius(14_dp)
         ).visible(result).fill().gap(10_dp);
     }
+    auto result_actions() {
+        return Row(button("分页讲解",[this]{read_detail();}).grow().height(43_dp),
+            button(continue_label,[this]{next_question();},true).grow().height(43_dp)
+        ).visible(result).fill().gap(8_dp);
+    }
+    auto completion_panel() {
+        return Column(text(AGE<3?"本轮收获":"练习完成",Font::headline,accents[K]).text_align(TextAlign::center).fill(),
+            picture(achievement_canvas,280,64),
+            text("本轮答对",Font::caption,muted).text_align(TextAlign::center).fill(),
+            text(round_score,Font::headline,accents[K]).text_align(TextAlign::center).fill(),
+            text(round_message,Font::body,muted).text_align(TextAlign::center).fill()
+        ).visible(completed).fill().gap(3_dp).align(Align::center);
+    }
+    auto completion_actions() {
+        return Row(button("返回首页",[this]{page(0);}).grow().height(42_dp),
+            button(AGE<3?"再来一轮":"再练一轮",[this]{start(false);},true).grow().height(42_dp)
+        ).visible(completed).fill().gap(8_dp);
+    }
+    auto card_toolbar() {
+        return Row(text(counter,Font::caption,accents[K]).grow(),
+            button("遮住答案",[this]{reveal();}).visible(card_back).height(30_dp).width(96_dp),
+            button("详读",[this]{read_detail();}).height(30_dp).width(58_dp)
+        ).visible(cards).fill().gap(6_dp);
+    }
     auto card_panel() {
-        return Column(text(counter,Font::caption,accents[K]),
-            Column(text(prompt,K==2?Font::display:Font::headline).fill(),text(detail,Font::label).fill()).fill().padding(12_dp).gap(8_dp).background(white).radius(14_dp),
-            button("分页阅读",[this]{read_detail();}).height(32_dp).fill(),
-            Row(button(reveal_label,[this]{reveal();},true).height(36_dp).grow(),
-                button(online_label,[this]{online();}).visible(K>=1&&K<=3).enabled(can_online).height(36_dp).grow()).fill().gap(8_dp),
+        return Column(
+            Column(text(prompt,K==2?Font::display:Font::headline).visible(card_front).fill(),
+                text(detail,Font::title).fill()).fill().padding(12_dp).gap(8_dp).background(white).radius(14_dp),
             picture(stroke_canvas,160,160).visible(has_strokes),
-            button("再看下一笔",[this]{advance_stroke();}).visible(has_strokes).height(34_dp).fill(),
+            button("再看下一笔",[this]{advance_stroke();}).visible(has_strokes).height(34_dp).fill()
+        ).visible(cards).fill().gap(9_dp);
+    }
+    auto card_actions() {
+        return Column(
+            Row(button(reveal_label,[this]{reveal();},true).height(36_dp).grow(),
+                button(online_label,[this]{online();}).visible(K>=1&&K<=3).enabled(can_online).height(36_dp).grow()).visible(card_front).fill().gap(8_dp),
             Row(button(AGE<3?"还想再学":"再学",[this]{rate(false);}).grow().height(36_dp),
-                button(AGE<3?"我记住啦":"记住",[this]{rate(true);}).grow().height(36_dp)).fill().gap(8_dp),
+                button(AGE<3?"我记住啦":"记住",[this]{rate(true);}).grow().height(36_dp)).visible(card_back).fill().gap(8_dp),
             Row(button("< 上一张",[this]{browse(-1);}).grow().height(32_dp),
                 button("下一张 >",[this]{browse(1);}).grow().height(32_dp)).fill().gap(8_dp)
         ).visible(cards).fill().gap(9_dp);
@@ -583,12 +652,14 @@ struct StudyApp {
             ).fill().gap(8_dp)
         ).visible(reading).fill().gap(10_dp);
     }
-    auto view() {
+    [[gnu::noinline]] auto view_tree() {
         if constexpr(K==0) {
             return SafeArea(environment.display(),Column(header(),
                 VScroll(home_panel()).visible(home).grow().fill(),
                 VScroll(quiz_panel()).visible(quiz).grow().fill(),
                 VScroll(result_panel()).visible(result).grow().fill(),
+                result_actions(),
+                VScroll(completion_panel()).visible(completed).grow().fill(),completion_actions(),
                 VScroll(math_help()).visible(settings).grow().fill(),
                 VScroll(reader_panel()).visible(reading).grow().fill(),
                 text(status,Font::caption,muted).visible(has_notice)
@@ -598,13 +669,16 @@ struct StudyApp {
                 VScroll(home_panel()).visible(home).grow().fill(),
                 VScroll(quiz_panel()).visible(quiz).grow().fill(),
                 VScroll(result_panel()).visible(result).grow().fill(),
-                VScroll(card_panel()).visible(cards).grow().fill(),
+                result_actions(),
+                VScroll(completion_panel()).visible(completed).grow().fill(),completion_actions(),
+                card_toolbar(),VScroll(card_panel()).visible(cards).grow().fill(),card_actions(),
                 VScroll(resources()).visible(settings).grow().fill(),
                 VScroll(reader_panel()).visible(reading).grow().fill(),
                 text(status,Font::caption,muted).visible(has_notice)
             ).fill().fill_height().gap(7_dp)).background(papers[K]).padding(11_dp);
         }
     }
+    auto view() {return OwnedView([this]{return view_tree();});}
 
 };
 }
