@@ -1,8 +1,8 @@
 {
   "format": "pxa-package-source-0.2",
   "id": "pxa-internet-radio",
-  "version": "0.4.4",
-  "release_sequence": 13,
+  "version": "0.4.5",
+  "release_sequence": 14,
   "min_sdk": [
     2,
     1

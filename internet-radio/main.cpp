@@ -29,8 +29,9 @@ constexpr uint32_t StationBase = 100;
 constexpr const char *Servers[] = {"de1.api.radio-browser.info"};
 uint8_t packet[3072], head[4096], directory_data[65536], raw[4096],
     compressed[65536], favorite_data[1024];
-uint32_t generation = 0, width = 320, height = 240, shape = 0;
-uint16_t inset[4]{};
+uint32_t generation = 0;
+int width = 320, height = 240;
+constexpr uint64_t WindowSnapshot = UINT64_C(0x4d45444941000001);
 Station stations[radio::CatalogCapacity], favorites[radio::FavoriteCount],
     current, pending_favorite;
 bool occupied[radio::FavoriteCount]{},
@@ -630,8 +631,9 @@ void click(uint32_t node);
 void render() {
   dirty = false;
   bool compact = height < 210;
-  int w = width, h = height, m = compact ? 12 : 16;
+  int w = width, h = height, m = scene.margin(compact ? 12 : 16);
   scene.begin(w, h, Paper);
+  if (w <= 0 || h <= 0) { scene.present(); return; }
   scene.rect(0, 0, w, 3, Accent);
   if (player_view) {
     scene.back(m + 6, 19, Ink);
@@ -640,7 +642,9 @@ void render() {
     scene.heart(w - m - 7, 19, have_current && favorite_index(current) >= 0,
                 Accent);
     scene.hit(Star, w - 42, 3, 40, 32);
-    int r = std::max(20, std::min((h - 146) / 2, w / 5)), cx = w / 2,
+    // Leave separate lines for the station title and buffering/error status
+    // above the playback controls, including compact high-density screens.
+    int r = std::max(10, std::min((h - 164) / 2, w / 5)), cx = w / 2,
         cy = 40 + r;
     scene.disc(cx, cy, r, Accent, Paper);
     if (want_play && audio_ready)
@@ -665,11 +669,17 @@ void render() {
     scene.back(m + 5, 20, Ink);
     scene.hit(BackView, 0, 3, 40, 34);
     scene.text(42, 12, w - 70, view == 3 ? "添加电台" : "寻找一个声音", Ink, 1);
-    scene.text(m, 42, w - 2 * m, view == 3 ? "电台名称" : "电台名称 / 关键词",
-               Muted);
-    if (view == 3)
-      scene.text(m, 103, w - 2 * m, "HTTP / HTTPS MP3 直播地址", Muted);
-    int y = view == 3 ? 158 : 105;
+    const bool short_form = view == 3 && h < 200;
+    if (short_form) {
+      scene.text(m, 50, 36, "名称", Muted);
+      scene.text(m, 90, 36, "地址", Muted);
+    } else {
+      scene.text(m, 42, w - 2 * m, view == 3 ? "电台名称" : "电台名称 / 关键词",
+                 Muted);
+      if (view == 3)
+        scene.text(m, 103, w - 2 * m, "HTTP / HTTPS MP3 直播地址", Muted);
+    }
+    int y = view == 3 ? (short_form ? std::max(120, h - 31) : 158) : 105;
     scene.pill(view == 3 ? CustomPlay : Search, m, y, w - 2 * m,
                view == 3 ? "播放" : "搜索", true, Accent, Ink, Line);
     scene.text(m, y + 40, w - 2 * m,
@@ -693,7 +703,7 @@ void render() {
     scroll.layout(top, bottom, row, n);
     if (controller_mode)
       scroll.ensure(focus_index);
-    pxa_canvas_clip_push(&scene.frame, m, top, w - 2 * m, bottom - top);
+    scene.clip(m, top, w - 2 * m, std::max(0, bottom - top));
     for (unsigned i = scroll.first(); i < n && scroll.y(i) < bottom; ++i) {
       const Station &st = *list_station(i);
       int y = scroll.y(i);
@@ -721,7 +731,7 @@ void render() {
       scene.hit(StationBase + i * 4, m, std::max(top, y), w - 2 * m,
                 std::min(bottom, y + row) - std::max(top, y));
     }
-    pxa_canvas_clip_pop(&scene.frame);
+    scene.unclip();
     char total[32];
     std::snprintf(total, sizeof(total), "R A D I O · %u", n);
     scene.text(m + 48, 16, w - 2 * m - 115,
@@ -753,24 +763,27 @@ void render() {
   generation = scene.ui_generation;
   if (fresh && !player_view && (search_open || view == 3)) {
     if (view == 3) {
-      scene.input(CustomName, m, 61, w - 2 * m, custom_name, 127, Card, Ink);
-      scene.input(CustomUrl, m, 120, w - 2 * m, custom_url, 512, Card, Ink);
+      const bool short_form = h < 200;
+      const int x = m + (short_form ? 38 : 0), field_width = w - m - x;
+      scene.input(CustomName, x, short_form ? 42 : 61, field_width, custom_name,
+                   127, Card, Ink);
+      scene.input(CustomUrl, x, short_form ? 82 : 120, field_width, custom_url,
+                   512, Card, Ink);
     } else
       scene.input(SearchInput, m, 61, w - 2 * m, draft, 96, Card, Ink);
     generation = scene.ui_generation;
   }
   ui_at = now_ms();
 }
-void environment(const pxa_ui_environment_t &e) {
-  const uint32_t density = e.density_q16 ? e.density_q16 : 65536;
-  scene.density = density;
-  width = (uint64_t(e.width) * 65536 + density - 1) / density;
-  height = (uint64_t(e.height) * 65536 + density - 1) / density;
-  shape = e.display_shape;
-  for (unsigned i = 0; i < 4; ++i)
-    inset[i] =
-        std::min<uint64_t>(64, uint64_t(e.safe_insets[i]) * 65536 / density);
+void layout_changed() {
+  width = scene.viewport.content.w;
+  height = scene.viewport.content.h;
+  touch_list = scroll.dragging = false;
+  touch_action = 0;
   dirty = true;
+}
+void environment(const pxa_ui_environment_t &e) {
+  if (scene.environment(e)) layout_changed();
 }
 bool navigate_back() {
   if (player_view)
@@ -902,9 +915,10 @@ extern "C" int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     environment(e);
   pxa_window_config_t window{};
   window.edge_to_edge = 1;
-  window.status_bar_mode = 2;
-  window.navigation_bar_mode = 2;
+  window.status_bar_mode = 1;
+  window.navigation_bar_mode = 1;
   pxa_window_configure(&window);
+  pxa_window_request_snapshot(WindowSnapshot);
   decoder.reset();
   pxa_clock_set_period(PXA_CLOCK_MIN_PERIOD_MS);
   load_favorite();
@@ -920,6 +934,11 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
     return PXA_EVENT_UNHANDLED;
   if (pxa_window_is_back_requested(&e) && !navigate_back())
     return PXA_EVENT_UNHANDLED;
+  pxa_window_snapshot_t window{};
+  if ((pxa_window_parse_metrics_changed(&e, &window) ||
+       pxa_window_parse_snapshot(&e, WindowSnapshot, &window)) &&
+      scene.window(window))
+    layout_changed();
   if (e.service == PXA_PERMISSION_SERVICE &&
       e.opcode == PXA_PERMISSION_ACQUIRE) {
     pxa_permission_acquire_result_t r{};
@@ -1048,13 +1067,16 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
   pxa_ui_pointer_data_t pointer{};
   if (pxa_ui_parse_pointer(&e, &pointer) && pointer.node == 2 &&
       pointer.generation == scene.ui_generation) {
-    int x = pointer.x, y = pointer.y;
+    int x = pointer.x - scene.viewport.content.x,
+        y = pointer.y - scene.viewport.content.y;
     if (pointer.phase == PXA_POINTER_DOWN) {
       touch_x = x;
       touch_y = y;
       touch_action = scene.find(x, y);
       touch_list =
-          !player_view && !search_open && view < 3 && scroll.down(y, now_ms());
+          !player_view && !search_open && view < 3 &&
+          x >= scene.viewport.touch_left && x < width &&
+          scroll.down(y, now_ms());
       if (touch_list)
         controller_mode = false;
     } else if (pointer.phase == PXA_POINTER_MOVE && touch_list) {

@@ -41,6 +41,7 @@ void log(const char *s) { pxa_log_write(PXA_LOG_LEVEL_INFO, s); }
 uint8_t packet[4096], head[4096], json_data[131072], compressed[65536],
     storage_data[1024];
 uint64_t serial = 1000, net_permission = 0, audio_permission = 0;
+constexpr uint64_t WindowSnapshot = UINT64_C(0x4d45444941000001);
 media::Canvas scene;
 media::Decoder decoder;
 media::PcmPacket pcm_packet;
@@ -1111,7 +1112,8 @@ void artwork(int x, int y, int size, uint64_t, bool actual = false) {
   char path[80];
   std::snprintf(path, sizeof(path), "assets/ui/cover-placeholder-%u.png",
                 source);
-  pxa_canvas_image(&scene.frame, x, y, size, size, 255, 2, path,
+  pxa_canvas_image(&scene.frame, x + scene.viewport.content.x,
+                   y + scene.viewport.content.y, size, size, 255, 2, path,
                    std::strlen(path));
 }
 void time_text(uint64_t ms, char *out, size_t cap) {
@@ -1119,7 +1121,7 @@ void time_text(uint64_t ms, char *out, size_t cap) {
   std::snprintf(out, cap, "%u:%02u", sec / 60, sec % 60);
 }
 void progress(int y) {
-  int m = 16, w = width;
+  int m = scene.margin(16), w = width;
   scene.rect(m, y - 2, w - 2 * m, 4, 0x354252, 2);
   int fill =
       current.duration
@@ -1135,11 +1137,12 @@ void progress(int y) {
   const auto pixels = [&](int dp) {
     return int(int64_t(dp) * scene.density / 65536);
   };
-  const int track_center2 = 2 * pixels(y - 2) + std::max(1, pixels(4)) - 1;
+  const int origin = scene.viewport.content.y;
+  const int track_center2 = 2 * pixels(y - 2 + origin) + std::max(1, pixels(4)) - 1;
   int handle_top = y - radius, diameter = radius * 2, best = INT32_MAX;
   for (int size = radius * 2 - 1; size <= radius * 2 + 2; ++size)
     for (int top = y - radius - 2; top <= y - radius + 2; ++top) {
-      int error = std::abs(2 * pixels(top) + std::max(1, pixels(size)) - 1 -
+      int error = std::abs(2 * pixels(top + origin) + std::max(1, pixels(size)) - 1 -
                            track_center2);
       int score = error * 100 + std::abs(size - radius * 2) * 4 +
                   std::abs(top - (y - radius));
@@ -1159,35 +1162,38 @@ void progress(int y) {
 }
 void controls(int y) {
   int cx = width / 2;
-  scene.skip_icon(cx - 60, y, -1, Ink);
-  scene.hit(Previous, cx - 82, y - 20, 44, 40);
+  const int step = std::clamp((width - 96) / 2, 42, 60);
+  scene.skip_icon(cx - step, y, -1, Ink);
+  scene.hit(Previous, cx - step - 20, y - 20, 40, 40);
   scene.circle(cx, y, 21, Accent);
   scene.play_icon(cx, y, want_play && !paused, 0x222139);
   scene.hit(Play, cx - 27, y - 26, 54, 52);
-  scene.skip_icon(cx + 60, y, 1, Ink);
-  scene.hit(Next, cx + 38, y - 20, 44, 40);
+  scene.skip_icon(cx + step, y, 1, Ink);
+  scene.hit(Next, cx + step - 20, y - 20, 40, 40);
   scene.icon(mode == 0   ? "order"
              : mode == 1 ? "repeat"
                          : "repeat-one",
-             24, y, Muted);
-  scene.hit(Order, 0, y - 20, 48, 40);
+             width < 250 ? 14 : 24, y, Muted, width < 250 ? 18 : 24);
+  scene.hit(Order, 0, y - 20, width < 250 ? 28 : 48, 40);
 }
 void text_box(int x, int y, int w, int h, uint32_t c, uint8_t role,
               uint8_t align, uint8_t vertical, const char *text,
               size_t length) {
   if (w <= 0 || h <= 0)
     return;
-  pxa_canvas_clip_push(&scene.frame, x, y, w, h);
-  pxa_canvas_text_box_role(&scene.frame, x, y, w, h, c, role, align, vertical,
+  scene.clip(x, y, w, h);
+  pxa_canvas_text_box_role(&scene.frame, x + scene.viewport.content.x,
+                           y + scene.viewport.content.y, w, h, c, role, align, vertical,
                            text, length);
-  pxa_canvas_clip_pop(&scene.frame);
+  scene.unclip();
 }
 void render() {
   const auto render_begin = now();
   dirty = false;
-  int w = width, h = height, m = w < 280 ? 12 : 16;
+  int w = width, h = height, m = scene.margin(w < 280 ? 12 : 16);
   bool compact = h < 210;
   scene.begin(w, h, Bg);
+  if (w <= 0 || h <= 0) { scene.present(); return; }
   if (view == 4) {
     scene.back(20, 21, Ink);
     scene.hit(Back, 0, 0, 40, 40);
@@ -1199,16 +1205,18 @@ void render() {
     scene.heart(w - 22, action_center + 3,
                 have_current && favorite(current) >= 0, Accent);
     scene.hit(Star, w - 44, 0, 44, action_height);
-    int size = std::min(w / 3, h - 123), x = m, y = compact ? 47 : 52;
-    size = std::max(48, size);
+    int x = m, y = h < 180 ? 42 : compact ? 47 : 52;
+    int info_height = std::max(16, h - 84 - y);
+    int size = std::max(24, std::min(w / 3, info_height));
     artwork(x, y, size, current.id, true);
     if (!cover && want_play && !paused && audio_ready)
       scene.orbit(x + size / 2, y + size / 2, size / 2 - 3, now(), Accent);
     int tx = x + size + 16, tw = w - tx - m;
-    text_box(tx, y + 1, tw, compact ? 32 : 46, pxa_canvas_rgba(Ink),
+    int title_height = compact ? std::min(32, std::max(16, info_height - 17)) : 46;
+    text_box(tx, y + 1, tw, title_height, pxa_canvas_rgba(Ink),
              compact ? PXA_CANVAS_FONT_BODY : PXA_CANVAS_FONT_TITLE, 0, 0,
              current.name, std::strlen(current.name));
-    scene.text(tx, y + (compact ? 35 : 48), tw, current.artist, Muted);
+    scene.text(tx, y + title_height + 3, tw, current.artist, Muted);
     char line[512];
     int at = lyrics.current(display_position());
     if (at >= 0 && lyrics.count)
@@ -1218,7 +1226,7 @@ void render() {
     const bool show_status =
         !audio_ready || buffering || seek_pending || retry_at || !want_play;
     if (compact) {
-      if (show_status)
+      if (show_status && info_height >= 68)
         scene.text(tx, y + 52, tw, message, Muted);
     } else {
       int ly = y + 73;
@@ -1250,12 +1258,12 @@ void render() {
         int i = at + delta;
         if (i < 0 || i >= int(lyrics.count))
           continue;
-        int y = compact ? (delta < 0    ? 52
-                           : delta == 0 ? 69
-                                        : 101)
-                        : (delta < 0    ? 101 + delta * 24
-                           : delta == 0 ? 101
-                                        : 141 + (delta - 1) * 24);
+        const int current_height = compact ? 30 : 36;
+        const int other_height = compact ? 14 : 17;
+        const int active_y = 54 + std::max(0, (h - 130 - current_height) / 2);
+        int y = delta < 0 ? active_y + delta * (other_height + 7)
+                : delta == 0 ? active_y
+                : active_y + current_height + 7 + (delta - 1) * (other_height + 7);
         int hh = delta == 0 ? (compact ? 30 : 36) : (compact ? 14 : 17);
         if (compact && (delta < -1 || delta > 1))
           continue;
@@ -1314,7 +1322,7 @@ void render() {
     int top = 77, bottom = h - 47, row = compact ? 42 : 48;
     unsigned n = list_count();
     scroll.layout(top, bottom, row, n);
-    pxa_canvas_clip_push(&scene.frame, m, top, w - 2 * m, bottom - top);
+    scene.clip(m, top, w - 2 * m, std::max(0, bottom - top));
     for (unsigned i = scroll.first(); i < n && scroll.y(i) < bottom; ++i) {
       const Track &t = *list(i);
       int y = scroll.y(i);
@@ -1339,7 +1347,7 @@ void render() {
       scene.hit(TrackBase + i, m, std::max(top, y), w - 2 * m,
                 std::min(bottom, y + row) - std::max(top, y));
     }
-    pxa_canvas_clip_pop(&scene.frame);
+    scene.unclip();
     if (!n) {
       scene.text(m, top + 12, w - 2 * m,
                  view == 2   ? "暂无收藏"
@@ -1489,12 +1497,17 @@ void click(unsigned id) {
     dirty = true;
   }
 }
-void environment(const pxa_ui_environment_t &e) {
-  uint32_t d = e.density_q16 ? e.density_q16 : 65536;
-  scene.density = d;
-  width = (uint64_t(e.width) * 65536 + d - 1) / d;
-  height = (uint64_t(e.height) * 65536 + d - 1) / d;
+void layout_changed() {
+  width = scene.viewport.content.w;
+  height = scene.viewport.content.h;
+  touch_list = scroll.dragging = false;
+  touch_action = 0;
+  scrub = hold_seeking = false;
+  hold_direction = 0;
   dirty = true;
+}
+void environment(const pxa_ui_environment_t &e) {
+  if (scene.environment(e)) layout_changed();
 }
 } // namespace
 extern "C" int32_t pxa_app_start(const uint8_t *data, uint32_t size) {
@@ -1503,9 +1516,10 @@ extern "C" int32_t pxa_app_start(const uint8_t *data, uint32_t size) {
     environment(e);
   pxa_window_config_t w{};
   w.edge_to_edge = 1;
-  w.status_bar_mode = 2;
-  w.navigation_bar_mode = 2;
+  w.status_bar_mode = 1;
+  w.navigation_bar_mode = 1;
   pxa_window_configure(&w);
+  pxa_window_request_snapshot(WindowSnapshot);
   decoder.reset();
   request_discovery();
   pxa_storage_request_get(7, "discovery.latest", 16);
@@ -1520,6 +1534,11 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
     return PXA_EVENT_UNHANDLED;
   if (pxa_window_is_back_requested(&e) && !navigate_back())
     return PXA_EVENT_UNHANDLED;
+  pxa_window_snapshot_t window{};
+  if ((pxa_window_parse_metrics_changed(&e, &window) ||
+       pxa_window_parse_snapshot(&e, WindowSnapshot, &window)) &&
+      scene.window(window))
+    layout_changed();
   if (e.service == PXA_PERMISSION_SERVICE &&
       e.opcode == PXA_PERMISSION_ACQUIRE) {
     pxa_permission_acquire_result_t r{};
@@ -1711,10 +1730,13 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
   pxa_ui_pointer_data_t p{};
   if (pxa_ui_parse_pointer(&e, &p) && p.node == 2 &&
       p.generation == scene.ui_generation) {
-    int x = p.x, y = p.y;
+    int x = p.x - scene.viewport.content.x,
+        y = p.y - scene.viewport.content.y;
     auto scrub_at = [&]() {
-      preview_position = uint64_t(std::clamp(x - 16, 0, width - 32)) *
-                         current.duration / std::max(1, width - 32);
+      const int margin = scene.margin(16);
+      const int length = std::max(1, width - 2 * margin);
+      preview_position = uint64_t(std::clamp(x - margin, 0, length)) *
+                         current.duration / length;
       dirty = true;
     };
     if (p.phase == PXA_POINTER_DOWN) {
@@ -1724,7 +1746,8 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
       scrub = touch_action == Seek && want_play && current.duration;
       if (scrub)
         scrub_at();
-      touch_list = view < 3 && scroll.down(y, now());
+      touch_list = view < 3 && x >= scene.viewport.touch_left && x < width &&
+                   scroll.down(y, now());
     } else if (p.phase == PXA_POINTER_MOVE) {
       if (scrub)
         scrub_at();

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 #include "pxa_canvas.h"
+#include "viewport.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -19,51 +20,95 @@ struct Canvas {
   Hit hits[64]{};
   unsigned count = 0;
   int w = 320, h = 240;
+  Viewport viewport;
+  bool content_clip = false;
   uint32_t density = 65536, background = 0;
   int pixel() const { return int((65536u + density - 1) / density); }
   bool input_mode = false;
   void invalidate() { initialized = 0; }
+  int margin(int preferred) const {
+    return std::max(preferred, viewport.touch_left);
+  }
+  bool environment(const pxa_ui_environment_t &e) {
+    const auto previous_density = density;
+    viewport.display = e;
+    density = viewport.density();
+    const bool changed = viewport.update() || previous_density != density;
+    if (changed) invalidate();
+    return changed;
+  }
+  bool window(const pxa_window_snapshot_t &snapshot) {
+    if (viewport.window.revision > snapshot.revision) return false;
+    viewport.window = snapshot;
+    const bool changed = viewport.update();
+    if (changed) invalidate();
+    return changed;
+  }
   void begin(int width, int height, uint32_t bg) {
-    w = std::max(160, width);
-    h = std::max(120, height);
+    w = width;
+    h = height;
     count = 0;
     background = bg;
     pxa_canvas_begin(&frame, data, sizeof(data));
     int bleed = pixel();
-    rect(-bleed, -bleed, w + 2 * bleed, h + 2 * bleed, bg);
+    pxa_canvas_rect(&frame, -bleed, -bleed, viewport.width + 2 * bleed,
+                    viewport.height + 2 * bleed, bg, 0);
+    content_clip = w > 0 && h > 0;
+    if (content_clip) clip(0, 0, w, h);
   }
+  void clip(int x, int y, int width, int height) {
+    // The wire format requires nonempty clips. An off-surface pixel is an
+    // empty intersection with the enclosing content clip on tiny displays.
+    if (width <= 0 || height <= 0) {
+      x = viewport.width;
+      y = viewport.height;
+      width = height = 1;
+    }
+    pxa_canvas_clip_push(&frame, x + viewport.content.x,
+                         y + viewport.content.y, width, height);
+  }
+  void unclip() { pxa_canvas_clip_pop(&frame); }
   void rect(int x, int y, int width, int height, uint32_t c, int radius = 0) {
     if (width > 0 && height > 0)
-      pxa_canvas_rect(&frame, x, y, width, height, c, radius);
+      pxa_canvas_rect(&frame, x + viewport.content.x, y + viewport.content.y,
+                      width, height, c, radius);
   }
   void line(int x, int y, int x2, int y2, uint32_t c, int thickness = 1) {
-    pxa_canvas_line(&frame, x, y, x2, y2, c, std::max(pixel(), thickness));
+    pxa_canvas_line(&frame, x + viewport.content.x, y + viewport.content.y,
+                    x2 + viewport.content.x, y2 + viewport.content.y, c,
+                    std::max(pixel(), thickness));
   }
   void circle(int x, int y, int r, uint32_t c) {
-    pxa_canvas_circle(&frame, x, y, r, c);
+    pxa_canvas_circle(&frame, x + viewport.content.x, y + viewport.content.y, r, c);
   }
   void arc(int x, int y, int r, int from, int to, uint32_t c,
            int thickness = 1) {
-    pxa_canvas_arc(&frame, x, y, r, from, to, pxa_canvas_rgba(c),
+    pxa_canvas_arc(&frame, x + viewport.content.x, y + viewport.content.y,
+                   r, from, to, pxa_canvas_rgba(c),
                    std::max(pixel(), thickness));
   }
   void text(int x, int y, int width, const char *value, uint32_t c,
             uint8_t role = 0, uint8_t align = 0) {
     if (width > 0) {
       int height = role == 2 ? 27 : role == 1 ? 21 : 16;
-      pxa_canvas_clip_push(&frame, x, y, width, height);
-      pxa_canvas_text_role(&frame, x, y, width, pxa_canvas_rgba(c), role, align,
+      clip(x, y, width, height);
+      pxa_canvas_text_role(&frame, x + viewport.content.x,
+                           y + viewport.content.y, width, pxa_canvas_rgba(c), role, align,
                            value, std::strlen(value));
-      pxa_canvas_clip_pop(&frame);
+      unclip();
     }
   }
   void image(int x, int y, int width, int height, uint64_t handle) {
     if (handle)
-      pxa_canvas_image_handle(&frame, x, y, width, height, 255, 2, handle);
+      pxa_canvas_image_handle(&frame, x + viewport.content.x,
+                              y + viewport.content.y, width, height, 255, 2, handle);
   }
   void hit(unsigned id, int x, int y, int width, int height) {
-    if (count < std::size(hits))
-      hits[count++] = {x, y, width, height, id};
+    const int right = std::min(w, x + width), bottom = std::min(h, y + height);
+    x = std::max(viewport.touch_left, x);
+    y = std::max(0, y);
+    if (count < std::size(hits) && right > x && bottom > y)
+      hits[count++] = {x, y, right - x, bottom - y, id};
   }
   unsigned find(int x, int y) const {
     for (unsigned i = count; i--;)
@@ -87,7 +132,8 @@ struct Canvas {
     char path[96];
     std::snprintf(path, sizeof(path), "assets/ui/%s-%06x-%u.png", name,
                   unsigned(color & 0xffffff), source);
-    pxa_canvas_image(&frame, x - size / 2, y - size / 2, size, size, 255, 2,
+    pxa_canvas_image(&frame, x - size / 2 + viewport.content.x,
+                     y - size / 2 + viewport.content.y, size, size, 255, 2,
                      path, std::strlen(path));
   }
   void play_icon(int x, int y, bool playing, uint32_t c, int scale = 1) {
@@ -159,6 +205,10 @@ struct Canvas {
     return true;
   }
   bool present() {
+    if (content_clip) {
+      unclip();
+      content_clip = false;
+    }
     if (!initialized && !initialize_surface())
       return false;
     uint8_t frame_initialized = 1;
@@ -170,6 +220,10 @@ struct Canvas {
   bool input(unsigned id, int x, int y, int width, const char *value,
              unsigned max = 96, uint32_t bg = 0x1b2533,
              uint32_t fg = 0xf5f1ea) {
+    const int right = std::min(w, x + width);
+    x = std::max(x, viewport.touch_left);
+    width = right - x;
+    if (width <= 0 || y < 0 || y + 32 > h) return false;
     pxa_ui_transaction_t tx{};
     uint32_t next = ++generation;
     bool ok =
@@ -178,8 +232,10 @@ struct Canvas {
         pxa_ui_create_typed(&tx, id, 1, 0, PXA_UI_NODE_CONTROL,
                             PXA_UI_CONTROL_TEXT_INPUT) &&
         pxa_ui_set_u8(&tx, id, PXA_UI_PROPERTY_POSITION, 1) &&
-        pxa_ui_set_length(&tx, id, PXA_UI_PROPERTY_X, PXA_UI_LENGTH_PX, x) &&
-        pxa_ui_set_length(&tx, id, PXA_UI_PROPERTY_Y, PXA_UI_LENGTH_PX, y) &&
+        pxa_ui_set_length(&tx, id, PXA_UI_PROPERTY_X, PXA_UI_LENGTH_PX,
+                          x + viewport.content.x) &&
+        pxa_ui_set_length(&tx, id, PXA_UI_PROPERTY_Y, PXA_UI_LENGTH_PX,
+                          y + viewport.content.y) &&
         pxa_ui_set_length(&tx, id, PXA_UI_PROPERTY_WIDTH, PXA_UI_LENGTH_PX,
                           width) &&
         pxa_ui_set_length(&tx, id, PXA_UI_PROPERTY_HEIGHT, PXA_UI_LENGTH_PX,
