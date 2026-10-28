@@ -97,6 +97,10 @@ struct App {
     std::uint32_t early_field_edits = 0;
     browser::Layout page;
     browser::History history;
+    enum class Navigation : std::uint8_t { visit, history, reload };
+    Navigation load_navigation = Navigation::visit;
+    bool document_ready = false;
+    std::size_t document_history_first = 0, document_history_last = 0;
     std::vector<std::string> bookmarks;
     std::string url = "about:home", status;
     std::uint64_t status_until = 0;
@@ -171,7 +175,8 @@ struct App {
         image_fit,
         image_more,
         volume_keys, history_list, history_open, history_clear, directory, site_open,
-        image_setting, gif_setting, script_setting, clear_sessions, memory_settings, memory_choice
+        image_setting, gif_setting, script_setting, clear_sessions, memory_settings, memory_choice,
+        clear_address
     };
     Action pressed_action = Action::address;
     int pressed_index = -1;
@@ -222,10 +227,11 @@ struct App {
     }
     void sync_editor() {
         auto density = std::max(1u, metrics.density_q16);
+        const int controls = dp(edit_field < 0 ? 62 : 32);
         editor_box.set(
             TextInputBox{{int(std::int64_t(address.x) * 65536 / density),
                           int(std::int64_t(address.y) * 65536 / density),
-                          std::max(1, int(std::int64_t(address.width - dp(32)) * 65536 / density)),
+                          std::max(1, int(std::int64_t(address.width - controls) * 65536 / density)),
                           std::max(1, int(std::int64_t(address.height) * 65536 / density))},
                          editing,
                          Font::body,
@@ -318,11 +324,14 @@ struct App {
         ++profile.layouts;
 #endif
     }
-    void home(bool record = true, int position = 0) {
+    void home(Navigation navigation = Navigation::visit, int position = 0) {
+        if (navigation != Navigation::history)
+            history.position(scroll);
         press.reset();
         js.reset();
         stop();
         clear_images();
+        document_ready = false;
         url = "about:home";
         document.clear("https://pxa.doit.am/");
         early_field_edits=0;
@@ -330,7 +339,7 @@ struct App {
         set_status("PXA 浏览器 · 轻量网页阅读");
         layout_dirty = true;
         menu = false;
-        if (record)
+        if (navigation == Navigation::visit)
             history.visit(url);
     }
     void anchor(bool reading_start = false) {
@@ -366,13 +375,14 @@ struct App {
                     }
             }
     }
-    void navigate(std::string target, bool record = true, std::string body = {}, bool post = false,
+    void navigate(std::string target, Navigation navigation = Navigation::visit,
+                  std::string body = {}, bool post = false,
                   int position = 0) {
         press.reset();
         if (editing)
             finish_edit(false);
         if (target == "about:home") {
-            home(record, position);
+            home(navigation, position);
             return;
         }
         auto normalized = browser::resolve(document.base, target, true);
@@ -381,13 +391,33 @@ struct App {
             dirty = true;
             return;
         }
-        if (!busy && browser::transport_url(*normalized) == browser::transport_url(url) &&
-            normalized->find('#') != normalized->npos) {
+        // New navigations all leave through this entry point, including URL
+        // editing, forms and scripts. History has already selected its target;
+        // saving here while restoring would overwrite that target's position.
+        if (navigation != Navigation::history)
             history.position(scroll);
+        const bool same_history_document = navigation == Navigation::history &&
+            history.current() >= document_history_first && history.current() <= document_history_last;
+        if (document_ready && !post && navigation != Navigation::reload &&
+            browser::transport_url(*normalized) == browser::transport_url(url) &&
+            (same_history_document || (navigation == Navigation::visit &&
+                                      normalized->find('#') != normalized->npos))) {
             url = std::move(*normalized);
-            if (record)
+            if (navigation == Navigation::visit) {
+                // When appending to bounded history evicts the first entry,
+                // keep the current document's reusable range aligned.
+                const auto previous_index = history.current();
+                const bool distinct_url = history.entries()[previous_index].url != url;
                 history.visit(url);
-            anchor();
+                if (distinct_url && history.current() == previous_index && document_history_first)
+                    --document_history_first;
+                if (distinct_url) document_history_last = history.current();
+                anchor();
+            } else {
+                scroll = std::clamp(position, 0, std::max(0, page.height - content.height));
+            }
+            menu = false;
+            image_view = {};
             dirty = true;
             return;
         }
@@ -396,14 +426,16 @@ struct App {
         js.reset();
         stop();
         clear_images();
+        document_ready = false;
         menu = false;
         url = std::move(*normalized);
         scroll = 0;
         restore_scroll = position;
+        load_navigation = navigation;
         document.clear(url);
         early_field_edits=0;
         layout_dirty = true;
-        if (record)
+        if (navigation == Navigation::visit)
             history.visit(post ? std::string(browser::transport_url(url)) : url);
         busy = true;
         set_status("正在连接…");
@@ -645,7 +677,10 @@ struct App {
             layout_dirty = true;
             scroll = restore_scroll;
             rebuild();
-            anchor(restore_scroll == 0);
+            if (load_navigation == Navigation::visit)
+                anchor(true);
+            document_ready = true;
+            document_history_first = document_history_last = history.current();
             busy = false;
             set_status((document.truncated || page.truncated ? "内容已截断 · "
                       : document.links_limited              ? "部分链接已省略 · "
@@ -832,7 +867,7 @@ struct App {
             const auto stats=js->page.stats();
             log("BROWSER JS INITIALIZED total_us="+std::to_string(stats.initialization_us)+" max_step_us="+std::to_string(stats.max_initialization_step_us));
         }
-        if (auto next=js->page.take_navigation()) { navigate(std::move(next->url),true,std::move(next->body),next->post); return; }
+        if (auto next=js->page.take_navigation()) { navigate(std::move(next->url),Navigation::visit,std::move(next->body),next->post); return; }
         // Coalesce DOM paints; timer/network callbacks never force a layout
         // for each mutation, and dragging always has priority over this work.
         // Keep the current document's image indices valid until its download
@@ -1786,6 +1821,9 @@ struct App {
         }
     }
     void render(bool body_only) {
+#ifdef PXA_BROWSER_TRACE
+        log("BROWSER SCROLL y=" + std::to_string(scroll));
+#endif
         draw.reset();
         hit_count = 0;
         bool dense = false;
@@ -1802,9 +1840,19 @@ struct App {
                 url == "about:home" ? "搜索或输入网址…" : std::string_view(url), 0x365675ff,
                 std::min(font, dp(13)), 0, true);
             hit(address, Action::address);
-        } else
+        } else {
+            if (edit_field < 0) {
+                const PixelRect clear{address.x + address.width - dp(60), address.y,
+                                      dp(30), address.height};
+                const int x = clear.x + clear.width / 2, y = clear.y + clear.height / 2;
+                const int r = dp(5), stroke = std::max(1, dp(2));
+                line(x-r, y-r, x+r, y+r, 0x365675ff, stroke);
+                line(x-r, y+r, x+r, y-r, 0x365675ff, stroke);
+                hit(clear, Action::clear_address);
+            }
             button({address.x + address.width - dp(30), address.y, dp(30), address.height}, "完成",
                    Action::address);
+        }
         if (image_view.active()) {
             if (const auto *image = cached_image(image_view.index)) {
                 const auto info = image->descriptor();
@@ -2057,23 +2105,28 @@ struct App {
             else
                 edit();
             break;
+        case Action::clear_address:
+            if (editing && edit_field < 0) {
+                input.set("");
+                focus_pending = true;
+            }
+            break;
         case Action::back:
         case Action::forward: {
             history.position(scroll);
             auto entry = history.move(a == Action::back ? -1 : 1);
             if (entry)
-                navigate(entry->url, false, {}, false, entry->scroll);
+                navigate(entry->url, Navigation::history, {}, false, entry->scroll);
             break;
         }
         case Action::home:
-            history.position(scroll);
             home();
             break;
         case Action::reload:
             if (busy)
                 stop();
             else
-                navigate(url, false);
+                navigate(url, Navigation::reload, {}, false, scroll);
             break;
         case Action::menu:
             if (editing)
@@ -2099,15 +2152,17 @@ struct App {
         case Action::history_open:
             history.position(scroll);
             if (i >= 0) if (auto entry = history.select(std::size_t(i)))
-                navigate(entry->url, false, {}, false, entry->scroll);
+                navigate(entry->url, Navigation::history, {}, false, entry->scroll);
             break;
         case Action::history_clear:
-            history.clear(url, scroll); menu_scroll = 0; set_status("浏览历史已清空"); break;
+            history.clear(url, scroll);
+            document_history_first = document_history_last = 0;
+            menu_scroll = 0; set_status("浏览历史已清空"); break;
         case Action::directory:
             menu = true; menu_page = MenuPage::directory; menu_scroll = 0; break;
         case Action::site_open:
             if (i >= 0 && std::size_t(i) < browser::sites.size()) {
-                history.position(scroll); navigate(std::string(browser::sites[i].url));
+                navigate(std::string(browser::sites[i].url));
             }
             break;
         case Action::script_setting:
@@ -2161,7 +2216,6 @@ struct App {
                 }
                 auto target = browser::wml_target(document, document.links[i].target);
                 if (target) {
-                    history.position(scroll);
                     navigate(std::move(*target));
                 } else set_status("此链接需要暂不支持的 WML 操作");
             }
@@ -2189,7 +2243,6 @@ struct App {
         case Action::bookmark_open:
             if (i >= 0 && std::size_t(i) < bookmarks.size()) {
                 auto target = bookmarks[i];
-                history.position(scroll);
                 navigate(std::move(target));
             }
             break;
@@ -2218,7 +2271,7 @@ struct App {
                 if (field.type == browser::FieldType::submit) {
                     auto request = browser::submit(document, field.form, i);
                     if (request)
-                        navigate(std::move(request->url), true, std::move(request->body),
+                        navigate(std::move(request->url), Navigation::visit, std::move(request->body),
                                  request->post);
                     else {
                         set_status("该表单暂不支持");

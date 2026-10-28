@@ -29,8 +29,17 @@ area is wider than its visible thumb, without allocating a backing bitmap.
 More also offers volume-key paging, off by default: Volume + scrolls up and
 Volume − scrolls down; holding a key repeats. The preference survives restarts.
 Text editing and background operation return volume keys to the system.
-Address, content, and toolbar use their own centered safe horizontal bands,
+Address and toolbar use centered safe horizontal bands. Reading content uses
+each side's actual safe margin, without mirroring a one-sided gesture strip,
 allowing rounded and circular screens to use more of their middle area.
+
+URL editing, form submission, and script navigation preserve the previous
+reading position. Back and Forward restore that position, including zero,
+without jumping to the URL fragment again. History within the same complete
+document restores directly without another network request; Refresh still
+requests the page and preserves the reading position.
+The clear icon beside Done empties the URL editor. Canceling editing preserves
+the original page and reading position.
 See the [layout and volume-key validation report](docs/layout-volume-20261015.zh-CN.md)
 for device screenshots, actual display FPS, memory windows, and test commands.
 

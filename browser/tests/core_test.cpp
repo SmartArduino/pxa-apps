@@ -161,7 +161,7 @@ int main() {
         display.corners = {58, 58, 58, 58};
         display.safe = {10, 8, 10, 8};
         auto boxes = viewport(display, {26, 0, 0, 20});
-        assert(boxes.content.width == 236 && boxes.content.height == 138);
+        assert(boxes.content.x == 30 && boxes.content.width == 252 && boxes.content.height == 138);
         assert(boxes.address.y == 10 && boxes.toolbar.y == 186);
         // Every corner of every band remains within the real panel outline.
         // Include asymmetric corners, fractional DPI, circles and letterboxing.
@@ -175,7 +175,6 @@ int main() {
                     boxes = viewport(display, {16, 0, 0, 20});
                     for (auto box : {boxes.address, boxes.content, boxes.toolbar, boxes.status}) {
                         assert(box.width >= 0 && box.height >= 0);
-                        if (box.width) assert(box.x == int(w) - box.x - box.width);
                         assert(box.x >= 16 && box.x + box.width <= int(w) - 10);
                         assert(box.y >= 8 && box.y + box.height <= int(h) - 20);
                         for (int x : {box.x, box.x + box.width})
@@ -195,6 +194,14 @@ int main() {
                                 }
                             }
                     }
+                    for (auto box : {boxes.address, boxes.toolbar})
+                        if (box.width) assert(box.x == int(w) - box.x - box.width);
+                    auto occupied_display = display;
+                    occupied_display.safe.left = std::max(16u, display.safe.left);
+                    occupied_display.safe.bottom = std::max(20u, display.safe.bottom);
+                    const auto safe_content = horizontal_band(occupied_display, boxes.content.y, boxes.content.height);
+                    const int padding = std::max(1, int(std::int64_t(4) * density / 65536));
+                    assert(boxes.content.width == std::max(0, safe_content.width - 2 * padding));
                     assert(boxes.address.y + boxes.address.height <= boxes.content.y);
                     assert(boxes.content.y + boxes.content.height <= boxes.toolbar.y);
                     assert(boxes.status.y >= boxes.content.y);

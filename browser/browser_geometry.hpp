@@ -60,13 +60,15 @@ inline Viewport viewport(DisplayMetrics display, pxa::Insets occupied) {
     const int bottom = std::max(top, height - std::max(pole, int(std::min(display.safe.bottom,
                                                                         unsigned(height)))) - dp(2));
     const int row = std::min(dp(32), std::max(16, (bottom - top) / 5));
-    auto inset = [&](PixelRect band, int padding) {
-        // A one-sided system gesture strip must not push controls off-center.
-        // Each row stays centered using the larger of its two safe margins.
-        const int width = int(std::min(display.width, 65535u));
-        const int margin = std::max(band.x, width - band.x - band.width);
-        band.x = margin;
-        band.width = std::max(0, width - 2 * margin);
+    auto inset = [&](PixelRect band, int padding, bool centered = true) {
+        // Keep the control rows centered. Reading content can use the actual
+        // safe width without mirroring a one-sided gesture strip on the right.
+        if (centered) {
+            const int width = int(std::min(display.width, 65535u));
+            const int margin = std::max(band.x, width - band.x - band.width);
+            band.x = margin;
+            band.width = std::max(0, width - 2 * margin);
+        }
         const int amount = std::min(padding, band.width / 2);
         band.x += amount;
         band.width -= 2 * amount;
@@ -76,13 +78,13 @@ inline Viewport viewport(DisplayMetrics display, pxa::Insets occupied) {
     auto toolbar = inset(horizontal_band(display, std::max(top, bottom - row), row), dp(2));
     const int begin = address.y + address.height + dp(3);
     auto content = inset(horizontal_band(display, begin,
-        std::max(0, toolbar.y - dp(3) - begin)), dp(4));
+        std::max(0, toolbar.y - dp(3) - begin)), dp(4), false);
     // Use spare space below the controls only when it is inside both the
     // physical panel outline and the system's safe/gesture margins. Smaller
     // panels use a transient overlay, without reserving a permanent text row.
     const int status_height = dp(14);
     const int status_y = toolbar.y + toolbar.height + dp(2);
-    auto status = inset(horizontal_band(display, status_y, status_height), dp(4));
+    auto status = inset(horizontal_band(display, status_y, status_height), dp(4), false);
     if (status.height != status_height || status.width < dp(96))
         status = {content.x, content.y + std::max(0, content.height - status_height),
                   content.width, std::min(content.height, status_height)};

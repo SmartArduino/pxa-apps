@@ -2,9 +2,24 @@
 """Deterministic browser pages. Bind LAN for device tests; no external service."""
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit, parse_qs
+from collections import Counter
+from threading import Lock
 import argparse, html, json, time
 ROOT='''<html lang="zh-CN"><head><meta charset="utf-8"><title>浏览器验证</title><style>hidden</style></head><body><h1>你好，PXA！</h1><p><a href="/next">下一页 · 链接</a></p><p><a href="/form">表单 · 中文输入</a></p><p><a href="/redirect">重定向</a> <a href="/slow">慢页面 / 停止</a></p><p><a href="/large">大页面</a> <a href="/missing">404 页面</a></p><p><a href="/plain">纯文本</a> <a href="/gzip">压缩类型提示</a></p><p>左右安全区和 DPI 自适应。 &amp; &lt; &gt; &#x4e2d;&#25991;</p><img src="/ignored.png" alt="蓝色海岸"><script>document.write('SCRIPT SHOULD NEVER APPEAR')</script></body></html>'''
 FORM='''<title>表单</title><h1>中文表单</h1><form method="post" action="/echo"><input name="q" value="中文 abc" placeholder="关键词"><input type="checkbox" name="ok" checked><input type="hidden" name="token" value="a&amp;b"><input type="submit" name="go" value="send" placeholder="提交"></form><p><a href="/">返回测试首页</a></p>'''
+NAVIGATION_REQUESTS=Counter()
+NAVIGATION_LOCK=Lock()
+
+def navigation_page(reading=False):
+    def paragraphs(label):
+        return ''.join(f'<p>{label} {index:02d}: Keep this reading position after navigation.</p>'
+                       for index in range(12))
+    first='mw-content-text' if reading else 'one'
+    return ('<title>Navigation positions</title><h1>Navigation positions</h1>'
+            + paragraphs('Introduction') + f'<h2 id="{first}">First section</h2>'
+            + paragraphs('First section') + '<h2 id="two">Second section</h2>'
+            + paragraphs('Second section'))
+
 class Handler(BaseHTTPRequestHandler):
     protocol_version='HTTP/1.1'
     def log_message(self, fmt, *args):
@@ -18,7 +33,20 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path=urlsplit(self.path).path
         try:
-            if path=='/session/login':
+            if path=='/navigation/counts':
+                run=parse_qs(urlsplit(self.path).query).get('run',[''])[0]
+                with NAVIGATION_LOCK:
+                    counts={route:count for (token,route),count in NAVIGATION_REQUESTS.items()
+                            if token==run}
+                self.respond(json.dumps(counts),mime='application/json')
+            elif path in ('/navigation/main','/navigation/reading','/navigation/other'):
+                run=parse_qs(urlsplit(self.path).query).get('run',[''])[0]
+                with NAVIGATION_LOCK:
+                    NAVIGATION_REQUESTS[run,path]+=1
+                self.respond('<title>Other page</title><h1>Other page</h1>'
+                             if path=='/navigation/other' else
+                             navigation_page(reading=path=='/navigation/reading'))
+            elif path=='/session/login':
                 prefilled='prefilled=1' in self.path
                 user='tester' if prefilled else ''
                 password='a&amp;b=+pw' if prefilled else ''
