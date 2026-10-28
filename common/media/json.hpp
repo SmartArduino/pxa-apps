@@ -76,6 +76,8 @@ struct Reader {
         else
           return false;
       } else if (c >= 128) {
+        if (c > 0xf4)
+          return false;
         unsigned n = c >= 0xf0 ? 3 : c >= 0xe0 ? 2 : c >= 0xc2 ? 1 : 99;
         if (n == 99 || n > size_t(end - p))
           return false;

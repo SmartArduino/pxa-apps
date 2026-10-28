@@ -191,6 +191,19 @@ inline bool complete_json(std::string_view data) {
     const auto* p=reinterpret_cast<const uint8_t*>(data.data());
     media::json::Reader r{p,p+data.size()};if(!r.skip())return false;r.ws();return r.p==r.end;
 }
+inline bool course_text(media::json::Value value, size_t limit, std::string& out, bool required) {
+    if(!value)return !required;
+    std::vector<char> buffer(limit+1);bool truncated=false;
+    if(!value.string(buffer.data(),buffer.size(),&truncated)||truncated)return false;
+    out=buffer.data();
+    if(required) {
+        const auto first=out.find_first_not_of(" \t\r\n");
+        if(first==out.npos)return false;
+        const auto last=out.find_last_not_of(" \t\r\n");
+        out=out.substr(first,last-first+1);
+    }
+    return true;
+}
 // A small, explicit course format: validate completely before replacing content.
 inline bool parse_course(std::string_view data, std::vector<Item>& out) {
     if(data.size()>8192 || !complete_json(data))return false;
@@ -200,11 +213,14 @@ inline bool parse_course(std::string_view data, std::vector<Item>& out) {
     while(rows.next(row)) {
         if(next.size()>=24)return false;
         auto level=row.get("level").number(99);
-        Item item{string(row.get("question"),180),string(row.get("answer"),120),
-                  string(row.get("explanation"),480),"",uint8_t(level),0};
-        if(level>3 || item.question.empty() || item.answer.empty())return false;
+        Item item;
+        if(level>3 || !course_text(row.get("question"),180,item.question,true) ||
+           !course_text(row.get("answer"),120,item.answer,true) ||
+           !course_text(row.get("explanation"),480,item.explanation,false))return false;
+        item.level=uint8_t(level);
         item.id=identity(item);
-        for(const auto& old:next)if(old.id==item.id)return false;
+        for(const auto& old:next)if(old.id==item.id ||
+            (old.level==item.level&&old.question==item.question))return false;
         next.push_back(std::move(item));
     }
     if(next.size()<4)return false;

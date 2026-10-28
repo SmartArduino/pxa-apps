@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-learn-poetry-preschool",
-  "version": "0.1.1",
-  "release_sequence": 2,
+  "version": "0.1.2",
+  "release_sequence": 3,
   "name": "诗词小馆·亲子启蒙",
   "description": "亲子启蒙独立版。全屏轻量学习，原生触摸与按键操作，短回合练习、学习记录和错题复习。只内置本年龄段6张卡片，在线内容按需获取，不依赖SD卡。",
   "publisher": {
@@ -41,7 +41,13 @@
         "clock",
         "storage",
         "log",
-        "window",
+        {
+          "name": "window",
+          "min_version": [
+            0,
+            3
+          ]
+        },
         "fs",
         "permission",
         {

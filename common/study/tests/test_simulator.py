@@ -5,6 +5,7 @@ import argparse
 import json
 import os
 from pathlib import Path
+import shutil
 import socket
 import struct
 import subprocess
@@ -77,7 +78,9 @@ class Simulator:
         time.sleep(.3)
 
     def screenshot(self, name):
-        (self.output / (self.stem + "-" + name + ".png")).write_bytes(self.command("SCREENSHOT"))
+        path = self.output / (self.stem + "-" + name + ".png")
+        path.write_bytes(self.command("SCREENSHOT"))
+        return path
 
     def stats(self):
         # The Host uses alternating generation-numbered KV snapshots. Observe
@@ -93,27 +96,75 @@ class Simulator:
         return max(snapshots)[1] if snapshots else (0, 0)
 
 
+def online_flow(workspace, packages, output, width, height, ocr):
+    # Seed an ordinary private cache file. This exercises the real app's async
+    # FS, JSON, UI and persistence without depending on a public API being up.
+    with Simulator(workspace, packages, output, "learn-words-preschool", width, height, "online") as sim:
+        private = next((sim.state / "private-files").iterdir())
+        address = "https://api.dictionaryapi.dev/api/v2/entries/en/apple"
+        hashed = 2166136261
+        for byte in address.encode():
+            hashed = ((hashed ^ byte) * 16777619) & 0xffffffff
+        payload = [{"phonetic":"/ˈæp.əl/", "meanings":[{"definitions":[{"definition":"Cached entry."}]}],
+                    "license":{"name":"CC BY-SA"}}]
+        cache = private / f"cache-{hashed % 8}.bin"
+        cache.write_text(address + "\n" + json.dumps(payload))
+        original, modified = cache.read_bytes(), cache.stat().st_mtime_ns
+        sim.tap(width * .75, 180)
+        sim.tap(width * .75, height - 54)
+        time.sleep(.5)
+        sim.screenshot("cached-front")
+        # A one-line cache notice sits below the card actions.
+        sim.tap(width / 4, height - 72)
+        sim.screenshot("answer-with-online")
+        assert sim.stats() == (0, 0)
+        sim.tap(width - 35, 53)
+        reader = []
+        for index in range(3):
+            path = sim.screenshot(f"combined-reader-{index + 1}")
+            if ocr:
+                result = subprocess.run(["tesseract", str(path), "stdout", "-l", "chi_sim+eng", "--psm", "6"],
+                                        capture_output=True, text=True, check=True)
+                path.with_suffix(".txt").write_text(result.stdout)
+                reader.append(result.stdout)
+            sim.tap(width * .75, height - 29)
+        if ocr:
+            combined = "".join("".join(reader).split()).casefold()
+            # The original apple card includes this English example. Match
+            # clear Latin text: tiny CJK/IPA glyphs are unreliable OCR targets.
+            assert "fruit" in combined and "cachedentry" in combined and "wiktionary" in combined, combined
+        sim.tap(width - 30, 25)  # Return to the same revealed card.
+        sim.tap(width * .75, height - 54)
+        time.sleep(.3)
+        assert sim.stats() == (1, 1), sim.stats()
+        sim.screenshot("rated-next-card")
+        assert cache.read_bytes() == original and cache.stat().st_mtime_ns == modified
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--workspace", type=Path, required=True)
     parser.add_argument("--package-root", type=Path)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--mode", choices=("smoke", "flow", "all"), default="all")
+    parser.add_argument("--mode", choices=("smoke", "flow", "online", "all"), default="all")
+    parser.add_argument("--ocr", action="store_true", help="Verify combined online/answer text using Tesseract chi_sim+eng")
     args = parser.parse_args()
+    if args.ocr and not shutil.which("tesseract"):
+        parser.error("--ocr requires Tesseract with chi_sim and eng language data")
     workspace = args.workspace.resolve()
     packages = (args.package_root or workspace / "local/app-output/doit-gamekit-1").resolve()
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     rows = []
     for width, height in ((320, 240), (240, 284)):
-        if args.mode != "flow":
+        if args.mode in ("all", "smoke"):
             for age in ("preschool", "primary", "teen", "adult"):
                 for subject in ("math", "poetry", "words", "hanzi", "cards"):
                     app = f"learn-{subject}-{age}"
                     with Simulator(workspace, packages, output, app, width, height, "smoke") as sim:
                         sim.screenshot("home")
                     rows.append(dict(app=app, viewport=[width, height], flow="startup", result="passed"))
-        if args.mode != "smoke":
+        if args.mode in ("all", "flow"):
             with Simulator(workspace, packages, output, "learn-math-preschool", width, height, "flow") as sim:
                 sim.tap(width / 4, 180)
                 for index in range(10):
@@ -143,6 +194,9 @@ def main():
                 sim.screenshot("next-card")
                 assert sim.stats() == (1, 1), (width, height, sim.stats())
             rows.append(dict(app="learn-hanzi-preschool", viewport=[width, height], flow="reveal/hide/rate/save", result="passed"))
+        if args.mode in ("all", "online"):
+            online_flow(workspace, packages, output, width, height, args.ocr)
+            rows.append(dict(app="learn-words-preschool", viewport=[width, height], flow="cache/reveal/combined-reader/rate", result="passed"))
         print(json.dumps(dict(viewport=[width, height], passed=len(rows))), flush=True)
     (output / "results.json").write_text(json.dumps(rows, ensure_ascii=False, indent=2) + "\n")
     print(f"Study simulator: {len(rows)} real runtime checks passed", flush=True)

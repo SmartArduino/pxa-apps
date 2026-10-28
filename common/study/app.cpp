@@ -83,7 +83,8 @@ template<class Child> struct Illustration : ViewModifiers {
 auto picture(CanvasRef& ref,int width,int height) {return Illustration(Canvas(ref,width,height));}
 // Keep the declarative tree and its callbacks at one stable address. Passing
 // the whole tree through Page's value constructor otherwise exceeds the 64KiB
-// WASM startup stack on the larger subjects. The allocation lives with Page.
+// WASM startup stack on the larger subjects. Large panels use their own owner
+// too, bounding the temporary construction stack. Allocations live with Page.
 template<class Factory> struct OwnedView : ViewModifiers {
     using Child=std::remove_cvref_t<std::invoke_result_t<Factory&>>;
     static constexpr Capacity capacity=capacity_of<Child>;
@@ -115,12 +116,13 @@ struct StudyApp {
     State<bool> ready{false}, home{true}, quiz{false}, result{false}, cards{false}, settings{false}, reading{false}, completed{false};
     State<bool> card_front{true}, card_back{false};
     State<bool> busy{false}, can_online{true};
-    State<bool> has_strokes{false}, has_notice{false}, reader_prev{false}, reader_next{false};
+    State<bool> has_strokes{false}, has_online_detail{false}, has_notice{false}, reader_prev{false}, reader_next{false};
     State<std::string> back_label{"退出"}, reading_text{""}, reading_counter{""};
     State<int> session_progress{0};
     State<std::string> stars{""};
     State<std::string> subtitle{descriptions[K]}, summary{"加载学习记录…"};
     State<std::string> prompt{""}, detail{""}, counter{""}, feedback{""}, status{""};
+    State<std::string> online_detail{""};
     State<std::string> a{""},b{""},c{""},d{""}, reveal_label{"展开答案"};
     State<std::string> continue_label{"继续"}, round_score{""}, round_message{""};
     State<std::string> online_label{K==1?"每日诗句":K==2?"查小词典":"看看笔顺"};
@@ -136,6 +138,10 @@ struct StudyApp {
     CanvasCommands<4000> drawing;
 
     void set_status(std::string value) {status.set(std::move(value));has_notice.set(!status.get().empty());}
+    void set_busy(bool value) {busy.set(value);can_online.set(!value);}
+    void set_online_detail(std::string value) {
+        online_detail.set(std::move(value));has_online_detail.set(!online_detail.get().empty());
+    }
     void page(unsigned n) {
         set_status("");
         active_page=n;home.set(n==0);quiz.set(n==1);result.set(n==2);cards.set(n==3);settings.set(n==4);reading.set(n==5);completed.set(n==6);
@@ -160,7 +166,8 @@ struct StudyApp {
         reader_pages=study::reading_pages(value,width>48?(width-48)/10:12,height>160?(height-160)/26:3);
         reader_update();page(5);
     }
-    void read_detail() {open_reader(prompt.get()+"\n\n"+full_detail);}
+    void read_detail() {open_reader(prompt.get()+"\n\n"+full_detail+
+        (cards.get()&&!online_detail.get().empty()?"\n\n在线补充\n"+online_detail.get():""));}
     void read_help() {
         open_reader(std::string(titles[K])+" · "+age_names[AGE]+"\n\n"+
             "三键操作：上、下逐项选择，确认执行。页面右上角可返回；首页右上角可退出应用。触摸设备也可直接点击。\n\n"
@@ -241,7 +248,7 @@ struct StudyApp {
         draw_hero();
         if(completed.get())draw_achievement();
     }
-    void on_error(Context&,Error) {busy.set(false);set_status("操作失败，请检查网络或内部存储后重试。");}
+    void on_error(Context&,Error) {set_busy(false);set_status("操作失败，请检查网络或内部存储后重试。");}
     BackAction on_back() {if(home.get())return BackAction::close;page(reading.get()?reader_from:0);return BackAction::stay;}
     void go_back() {if(home.get())(void)ctx->window().request_back();else page(reading.get()?reader_from:0);}
     void start(bool review) {
@@ -310,6 +317,7 @@ struct StudyApp {
         prompt.set(current.item.question);set_detail("先想一想，再展开答案。");
         counter.set("卡片 "+std::to_string(card_index+1)+" / "+std::to_string(ids.size()));
         revealed=false;card_front.set(true);card_back.set(false);reveal_label.set("展开答案");strokes.clear();has_strokes.set(false);
+        set_online_detail("");
         progress.bookmark[progress.level]=card_index;page(3);draw_strokes();
     }
     void browse(int delta) {
@@ -447,8 +455,8 @@ struct StudyApp {
         co_return std::unexpected(live.error());
     }
     void online() {
-        if(loading||busy.get())return;busy.set(true);set_status("读取缓存或获取在线内容…");
-        if(!ctx->tasks().start(load_online())) {busy.set(false);set_status("网络任务未启动。");}
+        if(loading||busy.get())return;set_busy(true);set_status("读取缓存或获取在线内容…");
+        if(!ctx->tasks().start(load_online())) {set_busy(false);set_status("网络任务未启动。");}
     }
     Task<void> load_online() {
         // Snapshot the selected card. Navigating during a request cannot apply
@@ -459,9 +467,9 @@ struct StudyApp {
         if constexpr(K==2) {origin="https://api.dictionaryapi.dev";address=origin+"/api/v2/entries/en/"+encoded;}
         if constexpr(K==3) {origin="https://cdn.jsdelivr.net";address=origin+"/npm/hanzi-writer-data@2.0.1/"+encoded+".json";}
         if constexpr(K==4) {address=url.get();origin="web";
-            if(!study::valid_feed_url(address)){busy.set(false);set_status("请输入完整的 HTTPS 课程地址。");co_return Result<void>{};}}
+            if(!study::valid_feed_url(address)){set_busy(false);set_status("请输入完整的 HTTPS 课程地址。");co_return Result<void>{};}}
         auto data=co_await fetch(address,origin,K==1||K==4);
-        if(!data) {busy.set(false);set_status(K==4?"下载失败，请检查课程地址和网络。原课程已保留。":"在线资源暂时不可用，稍后再试。离线内容仍可学习。");co_return Result<void>{};}
+        if(!data) {set_busy(false);set_status(K==4?"下载失败，请检查课程地址和网络。原课程已保留。":"在线资源暂时不可用，稍后再试。离线内容仍可学习。");co_return Result<void>{};}
         bool valid=study::complete_json(*data);std::string message;
         std::vector<study::Stroke> parsed_strokes;
         std::vector<study::Item> imported;
@@ -483,10 +491,10 @@ struct StudyApp {
         }
         if constexpr(K==3)valid=study::parse_strokes(*data,parsed_strokes);
         if constexpr(K==4)valid=study::parse_course(*data,imported)&&std::all_of(imported.begin(),imported.end(),[](const auto& card){return card.level==AGE;});
-        if(!valid) {busy.set(false);set_status("响应不是支持的内容格式，未替换已有内容。");co_return Result<void>{};}
+        if(!valid) {set_busy(false);set_status("响应不是支持的内容格式，未替换已有内容。");co_return Result<void>{};}
         if constexpr(K==4) {
             auto saved=co_await write_file("course.json",*data);
-            if(!saved) {busy.set(false);set_status("课程保存失败，已保留原课程。");co_return Result<void>{};}
+            if(!saved) {set_busy(false);set_status("课程保存失败，已保留原课程。");co_return Result<void>{};}
             bank=std::move(imported);custom=true;refresh_summary();
             set_status("课程已下载到内部存储，无需 SD 卡。");
         } else {
@@ -495,28 +503,28 @@ struct StudyApp {
             const bool same=cards.get()&&current.item.id==item.id;
             if(same) {
                 if constexpr(K==3) {strokes=std::move(parsed_strokes);stroke_step=1;has_strokes.set(true);draw_strokes();
-                    set_detail("笔顺中线示意 · 点击“下一笔”逐步查看\n数据：Hanzi Writer Data / Make Me A Hanzi\n© 1999 Arphic Technology · Arphic Public License");}
-                else set_detail(message);
+                    set_online_detail("笔顺中线示意 · 点击“下一笔”逐步查看\n数据：Hanzi Writer Data / Make Me A Hanzi\n© 1999 Arphic Technology · Arphic Public License");}
+                else set_online_detail(message);
             }
             set_status(from_cache?"已读内部缓存 · 无需联网":saved?"内容已缓存 · 最多8项":"已获取内容，但缓存写入失败。");
         }
-        busy.set(false);co_return Result<void>{};
+        set_busy(false);co_return Result<void>{};
     }
     void clear_cache() {
-        if(loading||busy.get())return;busy.set(true);
-        if(!ctx->tasks().start(clear_files()))busy.set(false);
+        if(loading||busy.get())return;set_busy(true);
+        if(!ctx->tasks().start(clear_files()))set_busy(false);
     }
     Task<void> clear_files() {
         for(unsigned i=0;i<8;++i)(void)co_await ctx->fs().remove("cache-"+std::to_string(i)+".bin");
         (void)co_await ctx->fs().remove("download.tmp");
-        busy.set(false);set_status("缓存已清理，学习记录已保留。");co_return Result<void>{};
+        set_busy(false);set_status("缓存已清理，学习记录已保留。");co_return Result<void>{};
     }
     Task<void> restore() {
-        busy.set(true);
+        set_busy(true);
         auto removed=co_await ctx->fs().remove("course.json");
         if(removed||removed.error()==Error::not_found) {bank=builtins();custom=false;refresh_summary();set_status("已恢复内置课程。");}
         else set_status("恢复失败，请检查内部存储。");
-        busy.set(false);co_return Result<void>{};
+        set_busy(false);co_return Result<void>{};
     }
     auto header() {
         return Row(text(titles[K],Font::title).grow(),
@@ -608,6 +616,8 @@ struct StudyApp {
         return Column(
             Column(text(prompt,K==2?Font::display:Font::headline).visible(card_front).fill(),
                 text(detail,Font::title).fill()).fill().padding(12_dp).gap(8_dp).background(white).radius(14_dp),
+            Column(text("在线补充",Font::caption,accents[K]),text(online_detail,Font::body).fill())
+                .visible(has_online_detail).fill().padding(10_dp).gap(6_dp).background(tints[K]).radius(12_dp),
             picture(stroke_canvas,160,160).visible(has_strokes),
             button("再看下一笔",[this]{advance_stroke();}).visible(has_strokes).height(34_dp).fill()
         ).visible(cards).fill().gap(9_dp);
@@ -655,25 +665,25 @@ struct StudyApp {
     [[gnu::noinline]] auto view_tree() {
         if constexpr(K==0) {
             return SafeArea(environment.display(),Column(header(),
-                VScroll(home_panel()).visible(home).grow().fill(),
-                VScroll(quiz_panel()).visible(quiz).grow().fill(),
-                VScroll(result_panel()).visible(result).grow().fill(),
+                VScroll(OwnedView([this]{return home_panel();})).visible(home).grow().fill(),
+                VScroll(OwnedView([this]{return quiz_panel();})).visible(quiz).grow().fill(),
+                VScroll(OwnedView([this]{return result_panel();})).visible(result).grow().fill(),
                 result_actions(),
-                VScroll(completion_panel()).visible(completed).grow().fill(),completion_actions(),
-                VScroll(math_help()).visible(settings).grow().fill(),
-                VScroll(reader_panel()).visible(reading).grow().fill(),
+                VScroll(OwnedView([this]{return completion_panel();})).visible(completed).grow().fill(),completion_actions(),
+                VScroll(OwnedView([this]{return math_help();})).visible(settings).grow().fill(),
+                VScroll(OwnedView([this]{return reader_panel();})).visible(reading).grow().fill(),
                 text(status,Font::caption,muted).visible(has_notice)
             ).fill().fill_height().gap(7_dp)).background(papers[K]).padding(11_dp);
         } else {
             return SafeArea(environment.display(),Column(header(),
-                VScroll(home_panel()).visible(home).grow().fill(),
-                VScroll(quiz_panel()).visible(quiz).grow().fill(),
-                VScroll(result_panel()).visible(result).grow().fill(),
+                VScroll(OwnedView([this]{return home_panel();})).visible(home).grow().fill(),
+                VScroll(OwnedView([this]{return quiz_panel();})).visible(quiz).grow().fill(),
+                VScroll(OwnedView([this]{return result_panel();})).visible(result).grow().fill(),
                 result_actions(),
-                VScroll(completion_panel()).visible(completed).grow().fill(),completion_actions(),
-                card_toolbar(),VScroll(card_panel()).visible(cards).grow().fill(),card_actions(),
-                VScroll(resources()).visible(settings).grow().fill(),
-                VScroll(reader_panel()).visible(reading).grow().fill(),
+                VScroll(OwnedView([this]{return completion_panel();})).visible(completed).grow().fill(),completion_actions(),
+                card_toolbar(),VScroll(OwnedView([this]{return card_panel();})).visible(cards).grow().fill(),card_actions(),
+                VScroll(OwnedView([this]{return resources();})).visible(settings).grow().fill(),
+                VScroll(OwnedView([this]{return reader_panel();})).visible(reading).grow().fill(),
                 text(status,Font::caption,muted).visible(has_notice)
             ).fill().fill_height().gap(7_dp)).background(papers[K]).padding(11_dp);
         }

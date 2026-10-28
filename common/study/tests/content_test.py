@@ -15,6 +15,8 @@ for subject, count in zip(subjects, counts):
         folder = root / ("learn-" + subject + "-" + age)
         manifest = json.loads((folder / "package.json").read_text())
         assert manifest["id"] == "pxa-" + folder.name
+        services = manifest["components"][0]["services"]
+        assert {"name":"window", "min_version":[0,3]} in services
         content = (folder / "content.inc").read_text()
         expected = [row for row in source if row["level"] == level]
         assert len(expected) == count
