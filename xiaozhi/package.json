@@ -1,0 +1,109 @@
+{
+  "format": "pxa-package-source-0.2",
+  "id": "pxa-xiaozhi",
+  "version": "0.3.0",
+  "release_sequence": 5,
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "name": "小智 AI",
+  "localizations": {
+    "en": {
+      "name": "Xiaozhi AI"
+    }
+  },
+  "description": "像素风 AI 女孩，支持表情、语音对话和字幕。默认连接小智官方服务，长按进入设置。",
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 2097152,
+      "pinned": false
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "services": [
+        {
+          "name": "ui",
+          "features": [
+            "canvas",
+            "dynamic-text",
+            "password-input",
+            "sized-text",
+            "text-input-control"
+          ]
+        },
+        {
+          "name": "window",
+          "min_version": [
+            0,
+            4
+          ]
+        },
+        "clock",
+        "storage",
+        "permission",
+        "log",
+        {
+          "name": "net",
+          "min_version": [
+            0,
+            6
+          ]
+        },
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            15
+          ]
+        },
+        "assets"
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "random",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.capture",
+      "scope": "microphone",
+      "required": false
+    },
+    {
+      "name": "audio.playback",
+      "scope": "media",
+      "required": false
+    },
+    {
+      "name": "net.client",
+      "scope": "web",
+      "required": false
+    },
+    {
+      "name": "net.socket",
+      "scope": "outbound",
+      "required": false
+    }
+  ]
+}

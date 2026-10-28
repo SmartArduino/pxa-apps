@@ -1,0 +1,13 @@
+Use case: stylized-concept. Asset type: eight FULL CHARACTER transparent pixel-art sprites with body language.
+Reference image 1 is the character identity, pixel style and expressive body gestures. Reference image 2 is the transparent sprite layout guide. Create ONE precise 4-column by 2-row sprite atlas, eight equal portrait tiles each with 4:5 aspect ratio, overall atlas 8:5.
+Keep the same young adult girl: dark lavender bob and bangs, mint star hair clip, warm brown eyes, cream high-neck sweater, lavender cuffs. Waist-up, facing viewer, same character scale in every tile, lower waist cropped at bottom, head has a little transparent top margin. Entire background genuinely transparent. Render clean crisp pixel art, no smooth shading or antialiasing, clean dark outlines, fully opaque character interiors, no white fringe, no stray red/white pixels or silhouette debris. No room, desk, shadow, text, borders or labels.
+Preserve BODY LANGUAGE: do NOT restrict expressions to a face patch. Allow small natural head tilts, shoulder movement, hand and arm gestures. Tiles left-to-right, top-to-bottom:
+1 neutral listening, relaxed shoulders, hands gently together at waist, soft closed smile.
+2 speaking pleasantly, small open mouth, one hand making a small open-palm conversational gesture near chest.
+3 happy delighted smile, one hand lifted in a small friendly wave, shoulders slightly lively.
+4 sympathetic sad expression, slight head tilt, hands drawn softly together.
+5 thinking, eyes glance upward, one hand gently touching chin, thoughtful posture.
+6 surprised, wide eyes and small O mouth, shoulders slightly raised and hands slightly lifted.
+7 mildly annoyed/determined eyebrows, lightly folded arms or one hand at elbow, not aggressive.
+8 peaceful blink, eyes closed, relaxed neutral-like posture and hands together, so it can serve as an idle blink frame.
+All eight must include the complete waist-up character and all intended hands inside their tile. Keep identity and clothes consistent; gestures small and tasteful. No extra limbs, duplicate hands or cropped waving fingers. This atlas is used as whole transparent character frames composited over independent room backgrounds.
