@@ -14,7 +14,7 @@ import time
 
 
 class Simulator:
-    def __init__(self, workspace, packages, output, app, width, height, scenario):
+    def __init__(self, workspace, packages, output, app, width, height, scenario, executable=None):
         self.output = output
         self.stem = f"{app}-{width}x{height}-{scenario}"
         states = output / "state"
@@ -25,14 +25,15 @@ class Simulator:
         env = dict(os.environ, SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy")
         env.pop("PXA_SIM_NAV_MODE", None)  # Exercise the compiled default.
         command = [
-            str(workspace / "build/simulator/doit-gamekit-1/pxsys_product_simulator"),
+            str(executable or workspace / "build/simulator/doit-gamekit-1/pxsys_product_simulator"),
             "--package", str(packages / ("pxa-" + app)),
             "--publisher-key", str(workspace / "deps/pxa-system/apps/pxa/.dev-signing/publisher-public.der"),
             "--state-root", str(self.state), "--pxadb-control-socket", self.socket,
             "--width", str(width), "--height", str(height), "--density-dpi", "125",
             "--locale", "zh-CN",
         ]
-        self.log = (output / (self.stem + ".log")).open("w")
+        self.log_path = output / (self.stem + ".log")
+        self.log = self.log_path.open("w")
         self.process = subprocess.Popen(command, stdout=self.log, stderr=subprocess.STDOUT, env=env)
 
     def __enter__(self):
@@ -171,7 +172,7 @@ def main():
                     sim.tap(width / 4, 162)
                     if index == 0:
                         sim.screenshot("feedback")
-                    sim.tap(width * .75, height - 25)
+                    sim.tap(width / 4, height - 25)
                 sim.screenshot("completion")
                 answered, correct = sim.stats()
                 assert answered == 10 and 0 <= correct <= 10, (width, height, answered, correct)

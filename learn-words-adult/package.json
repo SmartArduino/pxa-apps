@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-learn-words-adult",
-  "version": "0.1.2",
-  "release_sequence": 3,
+  "version": "0.1.4",
+  "release_sequence": 7,
   "name": "单词记忆卡·成人",
   "description": "成人独立版。全屏轻量学习，原生触摸与按键操作，短回合练习、学习记录和错题复习。只内置本年龄段24张卡片，在线内容按需获取，不依赖SD卡。",
   "publisher": {

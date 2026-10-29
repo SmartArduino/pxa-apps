@@ -3,7 +3,11 @@
 五个主题按亲子启蒙、小学、中学、成人拆成20款独立应用；每个包只编译本年龄内容。
 共用全屏原生声明式UI，儿童版使用小芽插画、柔和配色与星星反馈，成人版采用简洁书本图案。
 所有按钮均为原生可聚焦控件。支持触摸，以及Host提供的上、下、确认三键顺序导航；
-两列选项按控件顺序逐项选择，无需左右键。页头可返回，首页页头可退出应用。
+两列选项按控件顺序逐项选择，无需左右键。首页默认选择开始练习；每道新题默认选择
+第一个答案，答题反馈默认选择继续。翻卡默认选择展开答案，展开后先选择再学，避免误记为掌握。
+页头可返回，首页页头可退出应用；从第一个操作按上键即可循环到页头。
+每页单独拥有返回控件，正文操作在控件树中先于固定页头，避免返回控件在切页时保留焦点。
+加载记录期间暂不接受操作，准备完成后从正文首个操作开始。
 长讲解及使用说明提供按页阅读，上一页、下一页都可用确认键操作。
 答题反馈的讲解与继续按钮固定在底部；翻卡时先回忆、展开后再选择记住或再学，
 操作区始终可见，长内容在上方独立滚动。练习结束有独立小结页，儿童版用花朵展示
@@ -96,3 +100,22 @@ python3 local/pxa-apps/common/study/tests/test_simulator.py \
 `tests/guests/study-font-probe`是实机字形检查夹具，可单独构建后核对拼音与IPA；不加入商城发布，检查结束后卸载。
 所有源码和原创解释采用MIT；古诗文正文为公版作品。在线内容和应用代码分别许可，
 词条显示返回的来源与许可，笔顺数据适用随应用保留的Arphic Public License。
+
+## 三键回归
+
+`tests/test_three_key_simulator.py` 只发送上、下、确认，使用独立存储检查20个包的完整
+练习、持久化、讲解翻页、翻卡、再练和页头返回。`tests/build_three_key_simulator.py`
+从现有桌面模拟器构建独立测试程序，接入指定 Gen4 源码中的真实 `Mz79Navigation`，
+脚本使用 Pillow 检查固定页头，不修改系统源码或正式模拟器；先构建最新的 `pxsys_product_simulator`，保证其库和头文件匹配。
+例如在项目工作区运行（`output` 应指向忽略的本地产物目录）：
+
+```sh
+python3 local/pxa-apps/common/study/tests/build_three_key_simulator.py \
+  --workspace "$PWD" --gen4 /path/to/mz79-firmware --output "$output/navigation-simulator"
+python3 local/pxa-apps/common/study/tests/test_three_key_simulator.py \
+  --workspace "$PWD" --package-root /path/to/built-packages \
+  --simulator "$output/navigation-simulator/pxsys_product_simulator" --output "$output/three-key"
+```
+
+可用 `--width 320 --height 240` 检查横屏，用 `--apps learn-math-preschool` 限定应用。
+截图保留焦点框用于检查选中控件，不作为商城图片。

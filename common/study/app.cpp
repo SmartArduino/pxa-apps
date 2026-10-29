@@ -68,6 +68,17 @@ template<class Child> struct VerticalScroll : ViewModifiers {
     }
 };
 template<class Child> auto VScroll(Child child) {return VerticalScroll<Child>(std::move(child));}
+// Declare the page's actions before its fixed header. Hosts collect controls
+// in tree order, so a disappearing answer/continue button hands focus to the
+// next page's first action. Each page owns its Back button: a shared persistent
+// Back control would otherwise retain focus across every transition.
+template<class Body,class Header> auto PageFrame(Body body,Header header,int inset=41) {
+    // Reserve the header outside the scroll viewport; scrolling padding on
+    // the scroll view itself would let long choices paint behind the header.
+    return Column(Column(std::move(body).fill().fill_height())
+            .padding(Padding{0_dp,Dp{inset},0_dp,0_dp}).fill().fill_height(),
+        std::move(header).frame({0,0,0,inset-7}).fill()).fill().fill_height();
+}
 // Illustrations are decorative. Keep them out of the Host's key focus order
 // and let touch drags reach the containing scroll view.
 template<class Child> struct Illustration : ViewModifiers {
@@ -589,8 +600,8 @@ struct StudyApp {
         ).visible(result).fill().gap(10_dp);
     }
     auto result_actions() {
-        return Row(button("分页讲解",[this]{read_detail();}).grow().height(43_dp),
-            button(continue_label,[this]{next_question();},true).grow().height(43_dp)
+        return Row(button(continue_label,[this]{next_question();},true).grow().height(43_dp),
+            button("分页讲解",[this]{read_detail();}).grow().height(43_dp)
         ).visible(result).fill().gap(8_dp);
     }
     auto completion_panel() {
@@ -662,30 +673,29 @@ struct StudyApp {
             ).fill().gap(8_dp)
         ).visible(reading).fill().gap(10_dp);
     }
+    template<class Body> auto framed(Body body) {return PageFrame(std::move(body),header());}
     [[gnu::noinline]] auto view_tree() {
         if constexpr(K==0) {
-            return SafeArea(environment.display(),Column(header(),
-                VScroll(OwnedView([this]{return home_panel();})).visible(home).grow().fill(),
-                VScroll(OwnedView([this]{return quiz_panel();})).visible(quiz).grow().fill(),
-                VScroll(OwnedView([this]{return result_panel();})).visible(result).grow().fill(),
-                result_actions(),
-                VScroll(OwnedView([this]{return completion_panel();})).visible(completed).grow().fill(),completion_actions(),
-                VScroll(OwnedView([this]{return math_help();})).visible(settings).grow().fill(),
-                VScroll(OwnedView([this]{return reader_panel();})).visible(reading).grow().fill(),
+            return SafeArea(environment.display(),Column(
+                OwnedView([this]{return framed(VScroll(home_panel()));}).visible(home).grow(),
+                OwnedView([this]{return framed(VScroll(quiz_panel()));}).visible(quiz).grow(),
+                OwnedView([this]{return framed(Column(VScroll(result_panel()).grow().fill(),result_actions()).gap(7_dp));}).visible(result).grow(),
+                OwnedView([this]{return framed(Column(VScroll(completion_panel()).grow().fill(),completion_actions()).gap(7_dp));}).visible(completed).grow(),
+                OwnedView([this]{return framed(VScroll(math_help()));}).visible(settings).grow(),
+                OwnedView([this]{return framed(VScroll(reader_panel()));}).visible(reading).grow(),
                 text(status,Font::caption,muted).visible(has_notice)
-            ).fill().fill_height().gap(7_dp)).background(papers[K]).padding(11_dp);
+            ).fill().fill_height().gap(7_dp)).background(papers[K]).padding(11_dp).enabled(ready);
         } else {
-            return SafeArea(environment.display(),Column(header(),
-                VScroll(OwnedView([this]{return home_panel();})).visible(home).grow().fill(),
-                VScroll(OwnedView([this]{return quiz_panel();})).visible(quiz).grow().fill(),
-                VScroll(OwnedView([this]{return result_panel();})).visible(result).grow().fill(),
-                result_actions(),
-                VScroll(OwnedView([this]{return completion_panel();})).visible(completed).grow().fill(),completion_actions(),
-                card_toolbar(),VScroll(OwnedView([this]{return card_panel();})).visible(cards).grow().fill(),card_actions(),
-                VScroll(OwnedView([this]{return resources();})).visible(settings).grow().fill(),
-                VScroll(OwnedView([this]{return reader_panel();})).visible(reading).grow().fill(),
+            return SafeArea(environment.display(),Column(
+                OwnedView([this]{return framed(VScroll(home_panel()));}).visible(home).grow(),
+                OwnedView([this]{return framed(VScroll(quiz_panel()));}).visible(quiz).grow(),
+                OwnedView([this]{return framed(Column(VScroll(result_panel()).grow().fill(),result_actions()).gap(7_dp));}).visible(result).grow(),
+                OwnedView([this]{return framed(Column(VScroll(completion_panel()).grow().fill(),completion_actions()).gap(7_dp));}).visible(completed).grow(),
+                OwnedView([this]{return PageFrame(Column(VScroll(card_panel()).grow().fill(),card_actions()).gap(7_dp),Column(header(),card_toolbar()).gap(7_dp),78);}).visible(cards).grow(),
+                OwnedView([this]{return framed(VScroll(resources()));}).visible(settings).grow(),
+                OwnedView([this]{return framed(VScroll(reader_panel()));}).visible(reading).grow(),
                 text(status,Font::caption,muted).visible(has_notice)
-            ).fill().fill_height().gap(7_dp)).background(papers[K]).padding(11_dp);
+            ).fill().fill_height().gap(7_dp)).background(papers[K]).padding(11_dp).enabled(ready);
         }
     }
     auto view() {return OwnedView([this]{return view_tree();});}
