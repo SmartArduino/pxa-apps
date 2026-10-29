@@ -39,7 +39,7 @@ struct AudioPlayer {
   unsigned pcm_count = 0, pcm_offset = 0, rate = 0, channels = 0;
   bool active = false, paused = false, eof = false, opening = false,
        draining = false, querying = false;
-  uint64_t generation = 0, sent = 0, drain_at = 0, last_ui = 0;
+  uint64_t generation = 0, sent = 0, drain_at = 0;
   uint64_t decoded_frames = 0;
   unsigned clip_start = 0, clip_end = 0;
   std::string status = "准备好，就听一听";
@@ -83,7 +83,9 @@ struct AudioPlayer {
     stop();
     ctx = &context;
     cache.defer_persist();
-    cache.changed = [this] { notify(); };
+    // A synchronous UI commit can stall PCM production on small boards.
+    // Publish cache changes before output starts or after it finishes.
+    cache.changed = [this] { if (!active || !sent) notify(); };
     cache.select(context, std::move(url),end_ms);
     source_offset = 0;
     active = true;
@@ -184,10 +186,6 @@ struct AudioPlayer {
     if (!active)
       return;
     const auto now = now_ms();
-    if (now - last_ui >= 500) {
-      last_ui = now;
-      notify();
-    }
     if (cache.error) {
       finish("音频加载中断，请检查网络后重试");
       return;

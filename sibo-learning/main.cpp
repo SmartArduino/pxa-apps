@@ -695,7 +695,6 @@ struct App {
   }
   void audio_changed() {
     audio_status.set(player.status +
-                     (player.active ? " · " + player.position() : "") +
                      (player.cache.label.empty() ? "" : " · " + player.cache.label));
     audio_active.set(player.active);
     pause_label.set(player.paused ? "继续听" : "暂停");
