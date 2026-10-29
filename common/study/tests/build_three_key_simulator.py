@@ -10,10 +10,12 @@ p=argparse.ArgumentParser(description=__doc__)
 p.add_argument('--workspace',type=Path,required=True)
 p.add_argument('--gen4',type=Path,required=True)
 p.add_argument('--output',type=Path,required=True)
+p.add_argument('--simulator-build',type=Path,help='Configured simulator build directory (default: doit-gamekit-1)')
+p.add_argument('--legacy-audio',action='store_true',help='Exercise a public Host audio backend without arbitrary-rate PCM')
 p.add_argument('--private-quota-bytes',type=int,help='Override the test Host private-file quota (e.g. 65536 for Gen4)')
 a=p.parse_args()
 r=a.workspace.resolve();out=a.output.resolve();out.mkdir(parents=True,exist_ok=True)
-build=r/'build/simulator/doit-gamekit-1';src=r/'deps/pxa-system/simulator/desktop'
+build=a.simulator_build.resolve() if a.simulator_build else r/'build/simulator/doit-gamekit-1';src=r/'deps/pxa-system/simulator/desktop'
 flags={}
 for line in (build/'CMakeFiles/pxsys_product_simulator.dir/flags.make').read_text().splitlines():
     if line.startswith(('C_DEFINES =','C_INCLUDES =','C_FLAGS =')):
@@ -25,6 +27,10 @@ if a.private_quota_bytes is not None:
     import re
     text,n=re.subn(r'posix_fs_config\.quota_bytes\s*=\s*[^;]+;',f'posix_fs_config.quota_bytes = {a.private_quota_bytes}u;',text)
     assert n==1,'Simulator private-file quota declaration changed'
+if a.legacy_audio:
+    old='audio_backend.open_pcm = audio_open_pcm;'
+    assert text.count(old)==1
+    text=text.replace(old,'audio_backend.open_pcm = NULL;')
 needle='uint32_t delay = lv_timer_handler();'
 assert text.count(needle)==1,'Simulator loop changed; review test hook'
 (out/'runner.c').write_text('void study_navigation_poll(void);\n'+text.replace(needle,'study_navigation_poll();\n        '+needle))

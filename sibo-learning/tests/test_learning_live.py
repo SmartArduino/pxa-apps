@@ -44,6 +44,6 @@ def main():
         f.choose(sim,'科学发现馆');wait(sim,lambda:sim.focus().startswith('空气没有约定'))
         f.choose(sim,'背景虚化');wait(sim,lambda:sim.focus()=='一张照片里的距离')
         sim.key('ENTER');sim.expect('开始阅读');f.choose(sim,'看看插图')
-        wait(sim,lambda:sim.focus()=='回到书页',35);sim.screenshot('science-image')
+        wait(sim,lambda:sim.focus()=='放大',35);sim.screenshot('science-image')
     print('Live vocabulary catalogs, first/last word audio clips and science chapters/images passed',flush=True)
 if __name__=='__main__':main()

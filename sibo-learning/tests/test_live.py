@@ -46,7 +46,7 @@ def main():
         time.sleep(2);flows.focus(sim,'暂停');sim.screenshot('streaming')
         sim.key('ENTER');sim.expect('继续听');sim.screenshot('paused')
         time.sleep(1);sim.key('ENTER');sim.expect('暂停');time.sleep(1)
-        flows.choose(sim,'看看插图');wait(sim,lambda:sim.focus()=='回到书页',25);sim.screenshot('illustration')
+        flows.choose(sim,'看看插图');wait(sim,lambda:sim.focus()=='放大',25);sim.screenshot('illustration')
         flows.returned(sim)
         if a.wait_completion:
             wait(sim,lambda:'sibo audio: 这一段听完啦' in sim.log_path.read_text(),150)

@@ -19,16 +19,27 @@ struct Label {
 inline bool visibility(Transaction<> &tx, uint32_t n, const bool &v) {
   return tx.u8(n, protocol::visible, v);
 }
+inline bool pixel_height(Transaction<> &tx, uint32_t n, const int32_t &value) {
+  return tx.logical_px(n, protocol::height, value);
+}
+inline bool pixel_width(Transaction<> &tx, uint32_t n, const int32_t &value) {
+  return tx.logical_px(n, protocol::width, value);
+}
+inline bool interactivity(Transaction<> &tx, uint32_t n, const bool &value) {
+  return tx.u8(n, protocol::enabled, value);
+}
 
 // Keep the native controls and their callback addresses stable. Tree order is
 // also the three-key focus order; every page places its header after its body.
 template <class Page> struct Painter {
   Page &page;
   Transaction<> &tx;
-  std::array<std::function<void()>, 144> &callbacks;
+  std::array<std::function<void()>, 192> &callbacks;
   unsigned callback_count = 0;
   bool ok = true;
-  Painter(Page &p, std::array<std::function<void()>, 144> &c)
+  bool roomy = false;
+  unsigned header_size = 34;
+  Painter(Page &p, std::array<std::function<void()>, 192> &c)
       : page(p), tx(p.transaction()), callbacks(c) {}
   void fill(uint32_t n, bool height = false) {
     ok &= tx.fill(n, protocol::width);
@@ -53,6 +64,10 @@ template <class Page> struct Painter {
   void visible(uint32_t n, State<bool> &state) {
     ok &= visibility(tx, n, state.get()) &&
           page.template bind<bool, visibility>(state, n);
+  }
+  void enabled(uint32_t n, State<bool> &state) {
+    ok &= interactivity(tx, n, state.get()) &&
+          page.template bind<bool, interactivity>(state, n);
   }
   uint32_t text(uint32_t parent, std::string_view value, Font font = Font::body,
                 uint32_t color = ink) {
@@ -80,6 +95,8 @@ template <class Page> struct Painter {
           tx.dp(n, protocol::border_width, 0) &&
           tx.u8(n, protocol::justify, 1) && tx.dp(n, protocol::gap, 3);
     padding(n, 10, 9, 10, 9);
+    if (roomy)
+      ok &= tx.template logical_px<protocol::min_height>(n, 56);
     if (callback_count == callbacks.size()) {
       ok = false;
       return n;
@@ -119,7 +136,7 @@ template <class Page> struct Painter {
   uint32_t body(uint32_t frame) {
     auto n = box(frame);
     fill(n, true);
-    padding(n, 0, 41, 0, 0);
+    padding(n, 0, int(header_size + 7), 0, 0);
     return n;
   }
   template <class Text>
@@ -128,25 +145,27 @@ template <class Page> struct Painter {
     auto n = box(parent, true, 6);
     ok &= tx.u8(n, protocol::position, 1) && tx.logical_px(n, protocol::x, 0) &&
           tx.logical_px(n, protocol::y, 0) &&
-          tx.logical_px(n, protocol::height, 34) &&
+          tx.logical_px(n, protocol::height, int(header_size)) &&
           tx.rgba(n, protocol::background, paper) &&
           tx.u8(n, protocol::align, 1);
     auto t = text(n, title, Font::body, green);
     ok &= tx.u16(t, protocol::grow, 1);
     auto label = exit ? std::string_view("退出") : std::string_view("返回");
     auto b = button(n, label, std::move(back));
-    ok &= tx.logical_px(b, protocol::width, 54) &&
-          tx.logical_px(b, protocol::height, 34);
+    ok &= tx.logical_px(b, protocol::width, roomy ? 68 : 54) &&
+          tx.template logical_px<protocol::min_height>(b, int(header_size)) &&
+          tx.logical_px(b, protocol::height, int(header_size));
     padding(b, 3, 2, 3, 2);
   }
-  void canvas(uint32_t parent, CanvasRef &ref, int width, int height,
-              State<bool> *show = nullptr) {
+  uint32_t canvas(uint32_t parent, CanvasRef &ref, int width, int height,
+                  State<bool> *show = nullptr) {
     auto n = page.create(parent, protocol::canvas);
     ok &= tx.logical_px(n, protocol::width, width) &&
           tx.logical_px(n, protocol::height, height) &&
           tx.u64(n, protocol::event_mask, 0) && page.attach_canvas(ref, n);
     if (show)
       visible(n, *show);
+    return n;
   }
 };
 } // namespace sibo

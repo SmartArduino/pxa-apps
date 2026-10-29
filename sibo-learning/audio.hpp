@@ -3,6 +3,7 @@
 #include "../common/media/decoder.hpp"
 #include "../common/media/pcm_packet.hpp"
 #include "model.hpp"
+#include "pcm_convert.hpp"
 #include <cstring>
 #include <ctime>
 #include <functional>
@@ -26,6 +27,9 @@ struct AudioPlayer {
   std::optional<pxa::AudioSession> session;
   media::Decoder decoder;
   media::PcmPacket packet;
+  PcmConvert converter;
+  bool legacy_pcm = false;
+  unsigned output_rate = 0;
   std::array<uint8_t, 32768> compressed{};
   size_t head = 0, size = 0;
   unsigned pcm_count = 0, pcm_offset = 0, rate = 0, channels = 0;
@@ -80,6 +84,8 @@ struct AudioPlayer {
     clip_start = start_ms;
     clip_end = end_ms;
     rate = channels = 0;
+    legacy_pcm = false;
+    output_rate = 0;
     decoder.reset();
     packet.reset();
     status = "正在连接朗读…";
@@ -152,12 +158,39 @@ struct AudioPlayer {
         co_await ctx->audio().open_pcm(*permission, rate, uint8_t(channels));
     if (tag != generation)
       co_return Result<void>{};
-    if (!value) {
+    if (!value && value.error() == Error::unsupported) {
+      // Older boards expose the standard mono session but have no native
+      // arbitrary-rate PCM device. Negotiate that public session instead.
+      auto fallback = co_await ctx->audio().open(*permission);
+      if (tag != generation)
+        co_return Result<void>{};
+      if (fallback) {
+        session.emplace(std::move(*fallback));
+        legacy_pcm = true;
+      }
+    } else if (value) {
+      session.emplace(std::move(*value));
+    }
+    if (tag != generation)
+      co_return Result<void>{};
+    if (!session) {
       finish("设备暂不能输出这段声音");
       co_return Result<void>{};
     }
     audio_permission.emplace(std::move(*permission));
-    session.emplace(std::move(*value));
+    output_rate = session->format().sample_rate;
+    if (legacy_pcm) {
+      if (session->format().channels != 1 || output_rate < 8000 ||
+          output_rate > 48000) {
+        finish("设备的朗读输出格式暂不支持");
+        co_return Result<void>{};
+      }
+      converter.configure(rate, output_rate, channels);
+      packet.configure(output_rate, 1);
+      (void)ctx->log().write(LogLevel::info, "sibo PCM fallback " +
+                                                 std::to_string(output_rate) +
+                                                 "Hz mono");
+    }
     auto gain = co_await session->graph(-3 * 256);
     (void)gain;
     if (tag != generation)
@@ -241,6 +274,9 @@ struct AudioPlayer {
       return;
     auto begin = now_ms();
     for (unsigned work = 0; work < 12 && now_ms() - begin < 5; ++work) {
+      if (legacy_pcm && eof && !size && pcm_offset == pcm_count &&
+          !converter.pending)
+        converter.finish(packet);
       if (packet.full() ||
           (eof && !size && pcm_offset == pcm_count && packet.frames)) {
         if (!session)
@@ -258,18 +294,22 @@ struct AudioPlayer {
           return;
         }
         if (!sent && ctx)
-          (void)ctx->log().write(pxa::LogLevel::info,
-                                 "sibo PCM started " + std::to_string(rate) +
-                                     "Hz " + std::to_string(channels) + "ch");
+          (void)ctx->log().write(
+              pxa::LogLevel::info,
+              "sibo PCM started " + std::to_string(output_rate) + "Hz " +
+                  std::to_string(legacy_pcm ? 1 : channels) + "ch");
         sent += packet.frames;
         packet.frames = 0;
         continue;
       }
-      if (pcm_offset < pcm_count) {
+      if (pcm_offset < pcm_count || (legacy_pcm && converter.pending)) {
         if (!session)
           return;
-        pcm_offset += packet.append(decoder.pcm + pcm_offset * channels,
-                                    pcm_count - pcm_offset);
+        pcm_offset +=
+            legacy_pcm ? converter.append(decoder.pcm + pcm_offset * channels,
+                                          pcm_count - pcm_offset, packet)
+                       : packet.append(decoder.pcm + pcm_offset * channels,
+                                       pcm_count - pcm_offset);
         continue;
       }
       if (!size) {
@@ -336,7 +376,7 @@ struct AudioPlayer {
     }
   }
   std::string position() const {
-    const auto sec = rate ? sent / rate : 0;
+    const auto sec = output_rate ? sent / output_rate : 0;
     char out[32];
     std::snprintf(out, sizeof(out), "%02u:%02u", unsigned(sec / 60),
                   unsigned(sec % 60));

@@ -8,7 +8,8 @@
 - 英语单词岛接入中考、高考、大学四/六级、考研、托福、雅思、GRE、学术英语共9个词包，按单元读取；词卡先隐藏词义，确认翻卡后直接进入下一词，并支持单词片段发音及词义选择题。
 - 同步小课堂按语文、数学、英语、科学与年级上下册选课，读取知识点、例题与解析。选择/判断题自动判分；填空、排序、计算等开放题先思考再核对答案并自评，适合无键盘设备。当前教材以文字学习为主，不提供其 Opus/M4A 音频。
 - 科学发现馆按主题和章节阅读 vistep 图文，逐章查看原有插图与来源。
-- 全屏原生界面，支持触摸及“↑、↓、确认”。进入内容后默认选择阅读，进入新题后默认选择第一项答案。
+- 全屏原生界面，按物理屏幕尺寸、显示缩放与横竖比例调整布局。小屏单列；大竖屏多列卡片；大横屏侧栏与功能区并排。目录每页数量、阅读字号、行宽及插图区随可用空间调整。首页使用柔和卡片配色，实际按键焦点以边框表示。支持触摸及“↑、↓、确认”。进入内容后默认选择阅读，进入新题后默认选择第一项答案。
+- 图片支持全图至8倍缩放。触屏可以拖动、双击放大或恢复全图；三按键设备默认选择“放大”，通过“缩小”“全图”和方向按钮查看各处。横屏全图模式同时显示正文，放大后使用整个插图区。静态图片优先按原始细节解码，上限为2048像素单边、1048576像素，内存不足时降至262144或65536像素；旧 Host 自动使用旧上限。全部沿用 Host 内存配额，放大、拖动复用同一张位图。
 - 保存正文阅读位置、阅读篇数、答题记录与最多 12 篇收藏。单篇收藏正文最多 8 KiB，新增收藏的序列化数据合计最多 20 KiB，个人快照最多 28 KiB，以适配 64 KiB 应用存储；达到上限会提示移除收藏，不自动删除个人记录。
 
 在线内容来自原四博学习宝的 `https://wtoy.doit.am` 和同步教材 `https://pindou.doit.am/study/` 服务。应用不会开启设备 WiFi；用户先在系统中联网，并授权网络及音频播放。75 首古诗原文不触发网络，拼音、讲解、朗读、插图由用户主动请求。每日和随机诗词优先获取新内容，网络失败时尝试上次缓存。
@@ -28,7 +29,7 @@ tools/app.sh build sibo-learning --board doit-gamekit-1 --target esp32s3 --aot-o
 
 需要模拟器包时将 `--target` 改为 `simulator`，或用 `esp32s3,simulator` 构建双架构开发包。发布到设备时使用 ESP32-S3 单架构包以节省存储。
 
-要求 PXA Core 2.1、Window 0.3、FS 0.2、Net 0.5、Audio 0.10、Assets 2.2。音频使用应用内 minimp3 解码及 Host PCM 输出，不依赖 Host Music 解码器。
+要求 PXA Core 2.1、Window 0.3、FS 0.2、Net 0.5、Audio 0.10、Assets 2.2。音频使用应用内 minimp3 解码及 Host PCM 输出，不依赖 Host Music 解码器。Host 未接任意采样率 PCM 时，仅在返回“不支持”后协商标准单声道会话，应用流式混音、重采样；保持原始时长和单词片段边界，不下载音频文件。
 
 模型测试不需要设备或网络，可选传入本地保存的公开 API 样本：
 
@@ -40,6 +41,8 @@ python3 local/pxa-apps/sibo-learning/tests/test_model.py \
 `tests/test_simulator.py` 使用 `common/study/tests/build_three_key_simulator.py` 构建的实际 Gen4 导航桥接模拟器，仅以 ↑↓确认验证核心流程。通过 `--workspace`、`--package-root`、`--executable` 和 `--output` 指定路径。测试状态、日志和截图全部保存在指定的本地产物目录。
 
 `tests/test_learn.py` 验证英语、教材和科学数据模型，可用 `--fixtures` 读取本地 API 样本。`tests/test_extensions.py` 验证词卡、题型、自评和重启恢复；构建专用导航模拟器时使用 `--private-quota-bytes 65536`，可覆盖 Gen4 的空间不足与重试保存流程。
+
+`tests/test_touch.py` 使用真实指针点击验证多尺寸卡片、目录和答题命中，以及正文行宽。`tests/test_large_picture.py` 显式验证大屏公开插图。`tests/test_picture.py` 用 Sanitizer 验证缩放几何、边界与定位；`tests/test_zoom.py` 使用公开插图和原始截图，验证实际缩放、拖动、双击、按键移动和全图恢复。`tests/test_pcm.py` 用 Sanitizer 和独立积分参考验证采样率转换、声道及帧边界；`tests/test_legacy_audio.py` 配合 `--legacy-audio` 专用模拟器验证旧音频输出。
 
 `tests/test_learning_live.py` 显式运行时验证现有词包、单元首尾单词的音频片段和科学插图。
 

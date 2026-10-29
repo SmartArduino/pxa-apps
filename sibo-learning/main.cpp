@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 #include "audio.hpp"
+#include "layout.hpp"
 #include "model.hpp"
+#include "picture_view.hpp"
 #include "ui.hpp"
 #include <memory>
 
@@ -58,13 +60,13 @@ struct Slot {
   State<bool> shown{false};
 };
 struct ListPanel {
-  std::array<Slot, 6> slots;
+  std::array<Slot, 24> slots;
   State<std::string> title{""}, counter{""};
   State<bool> previous{false}, next{false}, categories{false};
 };
 struct App;
 struct AppView : ViewModifiers {
-  static constexpr Capacity capacity{800, 448, 144, 0, 3};
+  static constexpr Capacity capacity{1100, 640, 192, 0, 3};
   App *app;
   explicit AppView(App *a) : app(a) {}
   template <class Page> bool render(Page &page, uint32_t parent);
@@ -76,9 +78,11 @@ struct App {
   TaskScope network, images, saving;
   AudioPlayer player;
   std::array<Flag, size_t(Screen::count)> screens;
-  std::array<std::function<void()>, 144> callbacks;
+  std::array<std::function<void()>, 192> callbacks;
+  Layout layout;
   State<bool> ready{false}, resume_visible{false}, is_poem{false},
-      has_quiz{false}, has_image{false}, has_audio{false}, audio_active{false};
+      has_quiz{false}, has_image{false}, has_audio{false}, audio_active{false},
+      notice_visible{false};
   State<std::string> subtitle{"把好奇心，装进小书包"}, summary{""},
       resume_title{""};
   State<std::string> item_title{""}, item_detail{""}, preview{""},
@@ -99,6 +103,21 @@ struct App {
       card_meaning{""};
   State<std::string> loading_text{"正在打开书包…"}, picture_caption{""},
       about_summary{""};
+  State<int32_t> picture_height{150};
+  State<int32_t> picture_width{218}, picture_description_width{218};
+  State<bool> picture_description_visible{false}, picture_pan_vertical{false},
+      picture_pan_horizontal{false};
+  State<std::string> picture_description{""}, picture_plus{"放大"},
+      picture_minus{"最小"};
+  PictureView picture_view;
+  std::function<void(const CanvasPointer &)> picture_pointer_handler;
+  bool picture_drag = false, picture_moved = false;
+  uint8_t picture_pointer_id = 0;
+  int picture_last_x = 0, picture_last_y = 0, picture_down_x = 0,
+      picture_down_y = 0;
+  uint64_t picture_last_tap = 0;
+  int picture_tap_x = 0, picture_tap_y = 0;
+  State<int32_t> reader_button_width{218};
   std::array<ListPanel, 2> panels;
   CanvasRef hero_canvas, cover_canvas;
   CanvasCommands<2400> drawing;
@@ -139,7 +158,10 @@ struct App {
     for (unsigned i = 0; i < screens.size(); ++i)
       screens[i].value.set(i == unsigned(value));
   }
-  void message(std::string value) { notice.set(std::move(value)); }
+  void message(std::string value) {
+    notice_visible.set(!value.empty());
+    notice.set(std::move(value));
+  }
   void cancel() {
     ++generation;
     network.cancel();
@@ -160,7 +182,10 @@ struct App {
     item_title.set(selected.title);
     item_detail.set(selected.detail);
     is_poem.set(selected.kind == Kind::poem);
-    auto first = study::reading_pages(selected.body, 28, 3);
+    auto first = study::reading_pages(
+        selected.body,
+        layout.roomy ? (layout.content_width - 20) / layout.reader_unit : 28,
+        3);
     preview.set(first.front());
     favorite_label.set(
         std::any_of(favorites.begin(), favorites.end(),
@@ -182,7 +207,7 @@ struct App {
   void open_entry(Entry entry) {
     player.stop();
     images.cancel();
-    cover.reset();
+    clear_picture();
     if (entry.kind == Kind::subject) {
       begin(Job::school_catalog, entry.id);
       return;
@@ -320,14 +345,16 @@ struct App {
     list_panel ^= 1;
     auto &view = panels[list_panel];
     auto &list = lists.back();
-    const auto total = std::max<size_t>(1, (list.rows.size() + 5) / 6);
+    const auto capacity = layout.page_size;
+    const auto total =
+        std::max<size_t>(1, (list.rows.size() + capacity - 1) / capacity);
     list.page = std::min<unsigned>(list.page, unsigned(total - 1));
     view.title.set(list.title);
     view.counter.set(std::to_string(list.page + 1) + " / " +
                      std::to_string(total) + " 页 · " +
                      std::to_string(list.rows.size()) + " 项");
-    for (unsigned i = 0; i < 6; ++i) {
-      auto index = list.page * 6 + i;
+    for (unsigned i = 0; i < capacity; ++i) {
+      auto index = list.page * capacity + i;
       bool valid = index < list.rows.size();
       auto &slot = view.slots[i];
       slot.shown.set(valid);
@@ -345,14 +372,14 @@ struct App {
     auto &l = lists.back();
     if (delta < 0 && l.page)
       --l.page;
-    else if (delta > 0 && (l.page + 1) * 6 < l.rows.size())
+    else if (delta > 0 && (l.page + 1) * layout.page_size < l.rows.size())
       ++l.page;
     paint_list();
   }
   void list_pick(unsigned index) {
     if (lists.empty())
       return;
-    index += lists.back().page * 6;
+    index += lists.back().page * layout.page_size;
     if (index < lists.back().rows.size())
       open_entry(lists.back().rows[index]);
   }
@@ -395,8 +422,9 @@ struct App {
     if (screen == Screen::pinyin || screen == Screen::quiz ||
         screen == Screen::feedback || screen == Screen::selfcheck ||
         screen == Screen::picture) {
+      picture_drag = false;
       images.cancel();
-      cover.reset();
+      clear_picture();
       show(item_screen);
       return;
     }
@@ -427,14 +455,20 @@ struct App {
     reader_counter.set(std::to_string(reader_index + 1) + " / " +
                        std::to_string(pages.size()) + " 页");
     reader_previous.set(reader_index > 0);
+    reader_button_width.set(int32_t(
+        reader_index ? (layout.content_width - 8) / 2 : layout.content_width));
     reader_next.set(reader_index + 1 < pages.size() ? "下一页" : "读完啦");
   }
   void read(std::string body, std::string title, Screen from = Screen::detail,
             unsigned index = 0) {
     reader_from = from;
     reader_title.set(std::move(title));
-    pages = study::reading_pages(body, width() > 48 ? (width() - 48) / 10 : 12,
-                                 height() > 166 ? (height() - 166) / 26 : 3);
+    pages = study::reading_pages(body,
+                                 layout.roomy   ? (layout.content_width - 20) /
+                                                      layout.reader_unit
+                                 : width() > 48 ? (width() - 48) / 10
+                                                : 12,
+                                 layout.reader_rows);
     reader_index = std::min<unsigned>(index, unsigned(pages.size() - 1));
     reader_update();
     show(Screen::reader);
@@ -1141,8 +1175,8 @@ struct App {
     if (!hero_canvas.mounted())
       return;
     drawing.reset();
-    const int x = int(canvas_width) / 2;
-    drawing.rect(0, 0, canvas_width, 72, 0xf6e5bfff, 18)
+    const int x = int(layout.hero_width) / 2;
+    drawing.rect(0, 0, layout.hero_width, 72, 0xf6e5bfff, 18)
         .rect(x - 51, 18, 48, 42, white, 5)
         .rect(x + 3, 18, 48, 42, 0xe0f1e5ff, 5)
         .line(x, 20, x, 61, green, 3)
@@ -1152,7 +1186,7 @@ struct App {
         .line(x + 14, 40, x + 34, 40, 0x75b49bff, 3)
         .rect(x - 8, 5, 16, 16, 0xf3ba49ff, 8)
         .rect(15, 18, 5, 5, green, 2)
-        .rect(canvas_width - 24, 48, 5, 5, 0xd98b65ff, 2);
+        .rect(layout.hero_width - 24, 48, 5, 5, 0xd98b65ff, 2);
     (void)hero_canvas.present(drawing);
   }
   void picture() {
@@ -1169,6 +1203,125 @@ struct App {
       message("插图暂时无法打开。");
     }
   }
+  int picture_view_width(int level) {
+    if (!layout.sidebar || level || !cover)
+      return int(layout.content_width);
+    const auto &d = cover->descriptor();
+    auto fit = int(uint64_t(layout.cover_height) * d.width /
+                   std::max<unsigned>(1, d.height));
+    return std::clamp(fit, int(layout.content_width / 4),
+                      int(layout.content_width * 3 / 5));
+  }
+  void clear_picture() {
+    picture_drag = false;
+    picture_last_tap = 0;
+    // The hidden Canvas also owns its last image. Drop that display lease
+    // before decoding another original under the same bounded Host quota.
+    if (cover && cover_canvas.mounted()) {
+      drawing.reset();
+      (void)cover_canvas.present(drawing);
+    }
+    cover.reset();
+  }
+  void draw_picture() {
+    if (!cover || !cover_canvas.mounted())
+      return;
+    const auto r = picture_view.rectangle();
+    picture_width.set(picture_view.width);
+    picture_height.set(picture_view.height);
+    picture_description_width.set(
+        std::max(1, int(layout.content_width) - picture_view.width - 12));
+    picture_description_visible.set(layout.sidebar && picture_view.level == 0);
+    picture_pan_vertical.set(r.height > picture_view.height);
+    picture_pan_horizontal.set(r.width > picture_view.width);
+    picture_plus.set(picture_view.level + 1 == int(PictureView::scales.size())
+                         ? "最大"
+                         : "放大");
+    picture_minus.set(picture_view.level ? "缩小" : "最小");
+    drawing.reset();
+    drawing.rect(0, 0, picture_view.width, picture_view.height, 0xf1efe6ff, 10)
+        .image({r.x, r.y, r.width, r.height}, *cover, ImageFit::contain)
+        .rect(6, 6, 56, 27, paper, 7)
+        .text(12, 9, 44, green,
+              std::to_string(PictureView::scales[picture_view.level]) + "×", 0);
+    (void)cover_canvas.present(drawing);
+  }
+  void zoom_picture(int delta, int x = -1, int y = -1) {
+    if (!cover)
+      return;
+    auto next = std::clamp(picture_view.level + delta, 0,
+                           int(PictureView::scales.size() - 1));
+    if (next == picture_view.level)
+      return;
+    picture_view.zoom(next, picture_view_width(next), int(layout.cover_height),
+                      x, y);
+    picture_last_tap = 0;
+    draw_picture();
+  }
+  void reset_picture() {
+    if (!cover)
+      return;
+    picture_view.zoom(0, picture_view_width(0), int(layout.cover_height));
+    picture_last_tap = 0;
+    draw_picture();
+  }
+  void pan_picture(int x, int y) {
+    if (!cover || !picture_view.level)
+      return;
+    picture_view.move(-x * std::max(24, picture_view.width / 4),
+                      -y * std::max(24, picture_view.height / 4));
+    draw_picture();
+  }
+  void picture_pointer(const CanvasPointer &event) {
+    if (screen != Screen::picture || !cover)
+      return;
+    if (event.action() == PointerPhase::down) {
+      if (picture_drag)
+        return;
+      picture_drag = true;
+      picture_moved = false;
+      picture_pointer_id = event.pointer_id;
+      picture_last_x = picture_down_x = event.x;
+      picture_last_y = picture_down_y = event.y;
+      return;
+    }
+    if (!picture_drag || event.pointer_id != picture_pointer_id)
+      return;
+    if (event.action() == PointerPhase::move) {
+      const int x = event.x - picture_last_x, y = event.y - picture_last_y;
+      if (std::abs(event.x - picture_down_x) +
+              std::abs(event.y - picture_down_y) >
+          6)
+        picture_moved = true;
+      picture_last_x = event.x;
+      picture_last_y = event.y;
+      if (picture_moved && picture_view.level) {
+        picture_view.move(x, y);
+        draw_picture();
+      }
+      return;
+    }
+    picture_drag = false;
+    auto time = event.timestamp_us ? event.timestamp_us : now_ms() * 1000;
+    if (event.action() == PointerPhase::up && !picture_moved) {
+      if (picture_last_tap && time >= picture_last_tap &&
+          time - picture_last_tap < 400000 &&
+          std::abs(event.x - picture_tap_x) +
+                  std::abs(event.y - picture_tap_y) <
+              24) {
+        if (picture_view.level)
+          reset_picture();
+        else
+          zoom_picture(1, event.x, event.y);
+        picture_last_tap = 0;
+      } else {
+        picture_last_tap = time;
+        picture_tap_x = event.x;
+        picture_tap_y = event.y;
+      }
+    } else
+      picture_last_tap = 0;
+  }
   Task<void> load_picture(std::string url, uint64_t tag) {
     if (!trusted(url)) {
       failed(tag);
@@ -1180,42 +1333,69 @@ struct App {
       co_return Result<void>{};
     }
     static constexpr std::array<std::string_view, 1> wanted{"content-type"};
-    auto request =
-        co_await ctx->http().open({.url = url,
-                                   .wanted_headers = wanted,
-                                   .options = {.buffer_bytes = 4096,
-                                               .header_bytes = 512,
-                                               .max_body_bytes = 128 * 1024,
-                                               .timeout_ms = 20000}},
-                                  *grant);
-    if (!request) {
+    // Retain only the successfully decoded image. Every attempt keeps the same
+    // charged Host allocator and reopens the source after a rejected request.
+    constexpr uint32_t budgets[] = {1048576u, 262144u, 65536u};
+    clear_picture();
+    for (auto pixels : budgets) {
+      if (tag != generation)
+        co_return Result<void>{};
+      auto request = co_await ctx->http().open(
+          {.url = url,
+           .wanted_headers = wanted,
+           .options = {.buffer_bytes = 4096, .header_bytes = 512,
+                       .max_body_bytes = 128 * 1024, .timeout_ms = 20000}},
+          *grant);
+      if (tag != generation)
+        co_return Result<void>{};
+      if (!request) {
+        failed(tag);
+        co_return Result<void>{};
+      }
+      auto response = co_await std::move(*request).response();
+      if (tag != generation)
+        co_return Result<void>{};
+      if (!response || response->status_code != 200) {
+        failed(tag);
+        co_return Result<void>{};
+      }
+      auto decoded = co_await ctx->assets().decode_image(
+          std::move(response->body),
+          {.max_width = uint16_t(pixels > 65536 ? 2048 : 1024),
+           .max_height = uint16_t(pixels > 65536 ? 2048 : 1024),
+           .max_pixels = pixels,
+           .max_encoded_bytes = 128 * 1024,
+           .formats = ImageFormats::jpeg | ImageFormats::png});
+      if (tag != generation)
+        co_return Result<void>{};
+      if (decoded) {
+        cover.emplace(std::move(*decoded));
+        break;
+      }
+      auto error = decoded.error();
+      if (error != Error::invalid_argument && error != Error::unsupported &&
+          error != Error::resource_limit && error != Error::quota_exceeded &&
+          error != Error::limit_exceeded)
+        break;
+    }
+    if (!cover) {
       failed(tag);
       co_return Result<void>{};
     }
-    auto response = co_await std::move(*request).response();
-    if (!response || response->status_code != 200) {
-      failed(tag);
-      co_return Result<void>{};
-    }
-    auto decoded = co_await ctx->assets().decode_image(
-        std::move(response->body),
-        {.max_width = uint16_t(canvas_width),
-         .max_height = 150,
-         .max_pixels = 32768,
-         .max_encoded_bytes = 128 * 1024,
-         .formats = ImageFormats::jpeg | ImageFormats::png});
-    if (tag != generation)
-      co_return Result<void>{};
-    if (!decoded) {
-      failed(tag);
-      co_return Result<void>{};
-    }
-    cover.emplace(std::move(*decoded));
+    const auto &info = cover->descriptor();
+    (void)ctx->log().write(LogLevel::info, "sibo image " +
+        std::to_string(info.source_width) + "x" + std::to_string(info.source_height) +
+        " -> " + std::to_string(info.width) + "x" + std::to_string(info.height));
+    picture_view.initialize(info.width, info.height, picture_view_width(0),
+                            int(layout.cover_height));
+    picture_drag = false;
+    picture_last_tap = 0;
+    auto excerpt = study::reading_pages(selected.body, 48, 12);
+    picture_description.set(excerpt.front() +
+                            (excerpt.size() > 1 ? "\n…" : ""));
     picture_caption.set(selected.title);
     show(Screen::picture);
-    drawing.reset();
-    drawing.image({0, 0, int(canvas_width), 150}, *cover, ImageFit::contain);
-    (void)cover_canvas.present(drawing);
+    draw_picture();
     co_return Result<void>{};
   }
   Result<void> on_start(Context &context, std::span<const std::byte> config) {
@@ -1223,11 +1403,16 @@ struct App {
     auto result = environment.initialize(config);
     if (!result)
       return result;
-    canvas_width = std::clamp(width() > 22 ? width() - 22 : 120, 120u, 280u);
-    pinyin_columns =
-        std::clamp((width() > 36 ? width() - 36 : 120) / 45, 3u, 6u);
-    pinyin_rows =
-        std::clamp((height() > 150 ? height() - 150 : 58) / 58, 1u, 3u);
+    auto display = environment.display().get();
+    layout = Layout(width(), height(), display.width, display.height);
+    canvas_width = layout.cover_width;
+    picture_width.set(int(layout.content_width));
+    picture_height.set(int(layout.cover_height));
+    picture_pointer_handler = [this](const CanvasPointer &event) {
+      picture_pointer(event);
+    };
+    pinyin_columns = layout.pinyin_columns;
+    pinyin_rows = layout.pinyin_rows;
     player.changed = [this] { audio_changed(); };
     (void)ctx->window().fullscreen(WindowBarMode::hidden,
                                    WindowBarMode::hidden);
@@ -1264,7 +1449,6 @@ struct App {
   auto view() {
     return SafeArea(environment.display(), AppView(this))
         .background(paper)
-        .padding(11_dp)
         .enabled(ready);
   }
 };
@@ -1272,43 +1456,116 @@ struct App {
 template <class Page> bool AppView::render(Page &page, uint32_t parent) {
   auto &a = *app;
   Painter p(page, a.callbacks);
+  p.roomy = a.layout.roomy;
+  p.header_size = a.layout.header;
   auto root = p.box(parent);
   p.fill(root, true);
+  p.padding(root, a.layout.margin, a.layout.margin, a.layout.margin,
+            a.layout.margin);
   auto stage = [&](Screen s) {
     return p.frame(root, a.screens[unsigned(s)].value);
   };
   auto header = [&](uint32_t f, auto &title) {
     p.header(f, title, [&a] { a.back(); });
   };
-  auto notice = [&](uint32_t b) { p.text(b, a.notice, Font::caption, muted); };
+  auto notice = [&](uint32_t b) {
+    auto n = p.text(b, a.notice, Font::caption, muted);
+    p.visible(n, a.notice_visible);
+  };
   {
     auto f = stage(Screen::home), b = p.scroll(p.body(f));
-    p.canvas(b, a.hero_canvas, a.canvas_width, 72);
-    p.text(b, a.subtitle, Font::title, green);
-    p.text(b, a.summary, Font::caption, muted);
-    auto resume = p.button(b, a.resume_title, [&a] { a.resume(); }, true);
-    p.visible(resume, a.resume_visible);
-    p.button(
-        b, "诗词小天地",
-        [&a] {
-          a.show(Screen::poetry);
-          a.message("");
-        },
-        true);
-    p.button(b, "故事小书架", [&a] { a.begin(Job::stories); });
-    p.button(b, "读出声来", [&a] {
-      a.show(Screen::recite);
-      a.message("");
-    });
-    p.button(b, "英语单词岛", [&a] { a.begin(Job::vocab_catalog); });
-    p.button(b, "同步小课堂", [&a] { a.subjects(); });
-    p.button(b, "科学发现馆", [&a] { a.begin(Job::science_catalog); });
-    p.button(b, "我的收藏",
-             [&a] { a.root_list("我的收藏", a.favorites, Screen::home); });
-    p.button(b, "小书包与说明", [&a] {
-      a.refresh_summary();
-      a.show(Screen::about);
-    });
+    // Callbacks must outlive this render call; capture the App directly.
+    auto action = [&a](unsigned index) {
+      switch (index) {
+      case 0:
+        a.show(Screen::poetry);
+        a.message("");
+        break;
+      case 1:
+        a.begin(Job::stories);
+        break;
+      case 2:
+        a.show(Screen::recite);
+        a.message("");
+        break;
+      case 3:
+        a.begin(Job::vocab_catalog);
+        break;
+      case 4:
+        a.subjects();
+        break;
+      case 5:
+        a.begin(Job::science_catalog);
+        break;
+      case 6:
+        a.root_list("我的收藏", a.favorites, Screen::home);
+        break;
+      case 7:
+        a.refresh_summary();
+        a.show(Screen::about);
+        break;
+      }
+    };
+    uint32_t tiles = b;
+    if (a.layout.roomy) {
+      auto shell = p.box(b, a.layout.sidebar, 12);
+      auto intro = p.box(shell, !a.layout.sidebar, 10);
+      p.ok &= p.tx.logical_px(intro, protocol::width,
+                              a.layout.sidebar ? a.layout.sidebar_width
+                                               : a.layout.content_width);
+      p.canvas(intro, a.hero_canvas, a.layout.hero_width, 72);
+      auto description = a.layout.sidebar ? intro : p.box(intro);
+      if (!a.layout.sidebar)
+        p.ok &=
+            p.tx.logical_px(description, protocol::width,
+                            a.layout.content_width - a.layout.hero_width - 10);
+      p.text(description, a.subtitle, Font::title, green);
+      p.text(description, a.summary, Font::body, muted);
+      auto resume =
+          p.button(description, a.resume_title, [&a] { a.resume(); });
+      p.visible(resume, a.resume_visible);
+      tiles = p.box(shell);
+      p.ok &= p.tx.logical_px(tiles, protocol::width, a.layout.home_width);
+    } else {
+      p.canvas(b, a.hero_canvas, a.layout.hero_width, 72);
+      p.text(b, a.subtitle, Font::title, green);
+      p.text(b, a.summary, Font::caption, muted);
+      auto resume = p.button(b, a.resume_title, [&a] { a.resume(); });
+      p.visible(resume, a.resume_visible);
+    }
+    constexpr const char *labels[] = {"诗词小天地", "故事小书架",  "读出声来",
+                                      "英语单词岛", "同步小课堂",  "科学发现馆",
+                                      "我的收藏",   "小书包与说明"};
+    constexpr const char *captions[] = {
+        "75首课本古诗",   "寓言与童话",     "蒙学与小学听题", "翻词卡 · 听发音",
+        "按学科年级选课", "一步一步看原理", "留住喜欢的内容", "学习记录与设置"};
+    constexpr uint32_t colors[] = {0xd7eee7ff, 0xffedcaff, 0xe0f1e5ff,
+                                   0xe3efffff, 0xeee7ffff, 0xffe8ddff,
+                                   0xe8f2dfff, 0xefede5ff};
+    uint32_t row = tiles;
+    const auto columns = a.layout.home_columns;
+    const auto tile_width = (a.layout.home_width - (columns - 1) * 8) / columns;
+    for (unsigned i = 0; i < 8; ++i) {
+      if (a.layout.roomy) {
+        if (i % columns == 0)
+          row = p.box(tiles, true, 8);
+        auto tile = p.button_root(row, [action, i] { action(i); });
+        p.ok &= p.tx.logical_px(tile, protocol::width, tile_width) &&
+                p.tx.logical_px(tile, protocol::height,
+                                a.layout.home_tile_height) &&
+                p.tx.rgba(tile, protocol::background, colors[i]);
+        p.text(tile, labels[i],
+               tile_width < 140             ? Font::body
+               : a.layout.reader_unit >= 12 ? Font::display
+                                            : Font::title,
+               ink);
+        p.text(tile, captions[i],
+               tile_width >= 200 ? Font::body : Font::caption, muted);
+      } else {
+        auto label = std::string_view(labels[i]);
+        p.button(tiles, label, [action, i] { action(i); });
+      }
+    }
     notice(b);
     auto title = std::string_view("四博学习宝");
     p.header(
@@ -1348,16 +1605,38 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     auto f = stage(panel ? Screen::list1 : Screen::list0),
          b = p.scroll(p.body(f));
     p.text(b, v.counter, Font::caption, muted);
-    for (unsigned i = 0; i < 6; ++i) {
-      auto n = p.button_root(b, [&a, i] { a.list_pick(i); }, i == 0);
-      p.text(n, v.slots[i].title, Font::title, i == 0 ? white : ink);
-      p.text(n, v.slots[i].detail, Font::caption, i == 0 ? white : muted);
+    uint32_t row = b;
+    const auto columns = a.layout.list_columns;
+    for (unsigned i = 0; i < a.layout.page_size; ++i) {
+      if (columns > 1 && i % columns == 0)
+        row = p.box(b, true, 8);
+      auto n = p.button_root(row, [&a, i] { a.list_pick(i); });
+      if (columns > 1)
+        p.ok &= p.tx.logical_px(n, protocol::width,
+                                (a.layout.content_width - (columns - 1) * 8) /
+                                    columns) &&
+                p.tx.template logical_px<protocol::min_height>(n, 72);
+      p.text(n, v.slots[i].title,
+             a.layout.roomy && a.layout.physical_width >= 420 ? Font::headline
+                                                              : Font::title,
+             ink);
+      p.text(n, v.slots[i].detail,
+             a.layout.roomy && a.layout.physical_width >= 420 ? Font::body
+                                                              : Font::caption,
+             muted);
       p.visible(n, v.slots[i].shown);
     }
-    auto next = p.button(b, "下一页", [&a] { a.list_turn(1); });
+    auto navigation = columns > 1 ? p.box(b, true, 8) : b;
+    auto next = p.button(navigation, "下一页", [&a] { a.list_turn(1); });
     p.visible(next, v.next);
-    auto prev = p.button(b, "上一页", [&a] { a.list_turn(-1); });
+    auto prev = p.button(navigation, "上一页", [&a] { a.list_turn(-1); });
     p.visible(prev, v.previous);
+    if (columns > 1) {
+      p.ok &= p.tx.logical_px(next, protocol::width,
+                              (a.layout.content_width - 8) / 2) &&
+              p.tx.logical_px(prev, protocol::width,
+                              (a.layout.content_width - 8) / 2);
+    }
     auto categories = p.button(b, "换个故事分类", [&a] { a.categories(); });
     p.visible(categories, v.categories);
     notice(b);
@@ -1371,15 +1650,34 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     p.padding(card, 12, 14, 12, 14);
     p.ok &= p.tx.rgba(card, protocol::background, mint) &&
             p.tx.dp(card, protocol::radius, 16);
-    p.text(card, a.item_title, Font::display, green);
-    p.text(card, a.item_detail, Font::title, muted);
+    if (a.layout.roomy)
+      p.ok &= p.tx.template logical_px<protocol::min_height>(
+                  card, std::min(280u, a.layout.height / 3)) &&
+              p.tx.u8(card, protocol::justify, 1);
+    auto word = p.text(card, a.item_title, Font::display, green);
+    auto phonetic = p.text(card, a.item_detail, Font::title, muted);
+    if (a.layout.roomy)
+      p.ok &= p.tx.u8(word, protocol::text_align, 1) &&
+              p.tx.u8(phonetic, protocol::text_align, 1);
     auto meaning = p.text(card, a.card_meaning, Font::body, ink);
     p.visible(meaning, a.card_revealed);
-    p.button(b, a.card_action, [&a] { a.flip_card(); }, true);
-    p.button(b, "听这个单词", [&a] { a.listen(); });
+    auto actions = a.layout.roomy ? p.box(b, true, 8) : b;
+    auto flip = p.button(actions, a.card_action, [&a] { a.flip_card(); }, true);
+    auto listen = p.button(actions, "听这个单词", [&a] { a.listen(); });
+    if (a.layout.roomy)
+      p.ok &= p.tx.logical_px(flip, protocol::width,
+                              (a.layout.content_width - 8) / 2) &&
+              p.tx.logical_px(listen, protocol::width,
+                              (a.layout.content_width - 8) / 2);
     p.text(b, a.audio_status, Font::caption, muted);
-    p.button(b, "单词小挑战", [&a] { a.quiz(); });
-    auto previous = p.button(b, "上一个单词", [&a] { a.word_turn(-1); });
+    auto other = a.layout.roomy ? p.box(b, true, 8) : b;
+    auto quiz = p.button(other, "单词小挑战", [&a] { a.quiz(); });
+    auto previous = p.button(other, "上一个单词", [&a] { a.word_turn(-1); });
+    if (a.layout.roomy)
+      p.ok &= p.tx.logical_px(quiz, protocol::width,
+                              (a.layout.content_width - 8) / 2) &&
+              p.tx.logical_px(previous, protocol::width,
+                              (a.layout.content_width - 8) / 2);
     p.visible(previous, a.card_previous);
     notice(b);
     auto title = std::string_view("英语词卡");
@@ -1415,11 +1713,16 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
   {
     auto f = stage(Screen::reader), wrap = p.body(f), b = p.scroll(wrap);
     p.text(b, a.reader_counter, Font::caption, green);
-    auto text = p.text(b, a.reader_text, Font::title);
+    notice(b);
+    auto text =
+        p.text(b, a.reader_text,
+               a.layout.reader_unit >= 12 ? Font::display : Font::title);
     p.padding(text, 8, 5, 8, 5);
     auto row = p.box(wrap, true);
     auto next = p.button(row, a.reader_next, [&a] { a.next_page(); }, true);
-    p.ok &= p.tx.u16(next, protocol::grow, 1);
+    p.ok &=
+        pixel_width(p.tx, next, a.reader_button_width.get()) &&
+        page.template bind<int32_t, pixel_width>(a.reader_button_width, next);
     auto prev = p.button(row, "上一页", [&a] {
       if (a.reader_index) {
         --a.reader_index;
@@ -1429,7 +1732,8 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
       }
     });
     p.visible(prev, a.reader_previous);
-    p.ok &= p.tx.u16(prev, protocol::grow, 1);
+    p.ok &= p.tx.logical_px(prev, protocol::width,
+                            (a.layout.content_width - 8) / 2);
     header(f, a.reader_title);
   }
   {
@@ -1440,7 +1744,7 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
       for (unsigned col = 0; col < a.pinyin_columns; ++col) {
         unsigned i = row * a.pinyin_columns + col;
         auto cell = p.box(r, false, 3);
-        p.ok &= p.tx.logical_px(cell, protocol::width, 44);
+        p.ok &= p.tx.logical_px(cell, protocol::width, a.layout.pinyin_cell);
         auto py = p.text(cell, a.py[i].value, Font::body, green),
              han = p.text(cell, a.han[i].value, Font::title);
         p.ok &= p.tx.u8(py, protocol::text_align, 1) &&
@@ -1471,8 +1775,14 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     auto f = stage(Screen::quiz), b = p.scroll(p.body(f));
     p.text(b, a.question_counter, Font::caption, green);
     p.text(b, a.question_text, Font::title);
+    uint32_t row = b;
     for (unsigned i = 0; i < 4; ++i) {
-      auto n = p.button(b, a.answers[i].value, [&a, i] { a.answer(i); });
+      if (a.layout.sidebar && i % 2 == 0)
+        row = p.box(b, true, 8);
+      auto n = p.button(row, a.answers[i].value, [&a, i] { a.answer(i); });
+      if (a.layout.sidebar)
+        p.ok &= p.tx.logical_px(n, protocol::width,
+                                (a.layout.content_width - 8) / 2);
       p.visible(n, a.answer_visible[i].value);
     }
     auto title = std::string_view("来个小挑战");
@@ -1516,12 +1826,82 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     header(f, title);
   }
   {
-    auto f = stage(Screen::picture), b = p.scroll(p.body(f));
-    p.text(b, a.picture_caption, Font::title, green);
-    p.canvas(b, a.cover_canvas, a.canvas_width, 150);
-    p.button(b, "回到书页", [&a] { a.back(); }, true);
-    auto title = std::string_view("诗和故事里的画");
-    header(f, title);
+    auto f = stage(Screen::picture), b = p.body(f);
+    auto viewport = p.box(b, true, 12);
+    // A gesture viewport is a scroll container with native scrolling disabled:
+    // the app owns panning, while keypad navigation visits the toolbar buttons.
+    auto gesture = page.create(viewport, 3); // PXA_UI_NODE_SCROLL
+    p.ok &= p.tx.logical_px(gesture, protocol::width, a.picture_width.get()) &&
+            p.tx.logical_px(gesture, protocol::height, a.picture_height.get()) &&
+            p.tx.u8(gesture, protocol::scroll_axis, 0) &&
+            p.tx.u8(gesture, protocol::scrollbar, 0);
+    auto picture_canvas = p.canvas(gesture, a.cover_canvas, a.picture_width.get(),
+                                   a.picture_height.get());
+    p.ok &= page.template bind<int32_t, pixel_width>(a.picture_width,
+                                                     gesture) &&
+            page.template bind<int32_t, pixel_height>(a.picture_height,
+                                                      gesture) &&
+            page.template bind<int32_t, pixel_width>(a.picture_width,
+                                                     picture_canvas) &&
+            p.tx.u64(gesture, protocol::event_mask,
+                     protocol::event_mask_pointer) &&
+            page.on_pointer(gesture, a.picture_pointer_handler);
+    auto description = p.box(viewport);
+    p.ok &=
+        pixel_width(p.tx, description, a.picture_description_width.get()) &&
+        page.template bind<int32_t, pixel_width>(a.picture_description_width,
+                                                 description) &&
+        p.tx.logical_px(description, protocol::height, a.layout.cover_height);
+    p.visible(description, a.picture_description_visible);
+    p.text(description, "边看边读", Font::title, green);
+    auto text = p.scroll(description);
+    p.text(text, a.picture_description, Font::title);
+    auto tool = [&](uint32_t row, auto &label, std::function<void()> fn,
+                    unsigned columns) {
+      auto n = p.button_root(row, std::move(fn));
+      p.padding(n, 4, 4, 4, 4);
+      p.ok &= p.tx.logical_px(n, protocol::width,
+                              (a.layout.content_width - (columns - 1) * 8) /
+                                  columns) &&
+              p.tx.logical_px(n, protocol::height,
+                              a.layout.picture_toolbar_height) &&
+              p.tx.template logical_px<protocol::min_height>(
+                  n, a.layout.picture_toolbar_height);
+      auto t = p.text(n, label,
+                      a.layout.roomy                         ? Font::title
+                      : a.layout.picture_toolbar_height < 32 ? Font::caption
+                                                             : Font::body,
+                      ink);
+      p.ok &= p.tx.u8(t, protocol::text_align, 1);
+      return n;
+    };
+    auto zoom = p.box(b, true, 8);
+    tool(zoom, a.picture_plus, [&a] { a.zoom_picture(1); }, 3);
+    tool(zoom, a.picture_minus, [&a] { a.zoom_picture(-1); }, 3);
+    auto reset = std::string_view("全图");
+    tool(zoom, reset, [&a] { a.reset_picture(); }, 3);
+    auto pan = p.box(b, true, 8);
+    constexpr const char *directions[] = {"↑", "↓", "←", "→"};
+    for (unsigned i = 0; i < 4; ++i) {
+      auto label = std::string_view(directions[i]);
+      auto n = tool(
+          pan, label,
+          [&a, i] {
+            a.pan_picture(i == 2   ? -1
+                          : i == 3 ? 1
+                                   : 0,
+                          i == 0   ? -1
+                          : i == 1 ? 1
+                                   : 0);
+          },
+          4);
+      p.enabled(n, i < 2 ? a.picture_pan_vertical : a.picture_pan_horizontal);
+    }
+    auto title = std::string_view("图片查看");
+    if (a.layout.roomy)
+      header(f, a.picture_caption);
+    else
+      header(f, title);
   }
   {
     auto f = stage(Screen::about), b = p.scroll(p.body(f));
