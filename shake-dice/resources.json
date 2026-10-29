@@ -1,0 +1,11 @@
+{
+  "assets": [
+    {
+      "path": "assets/font-0.pxr",
+      "kind": "index8",
+      "source": "resources/font-0.index8",
+      "width": 252,
+      "height": 192
+    }
+  ]
+}
