@@ -1,0 +1,85 @@
+{
+  "format": "pxa-package-source-0.2",
+  "id": "pxa-gravity-play",
+  "version": "0.1.3",
+  "release_sequence": 5,
+  "name": "重力游乐场",
+  "description": "摇摇骰子与星光弹珠迷宫。六轴体感、三按键与触屏，离线畅玩，无需SD卡。",
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  },
+  "icon": "assets/icon.png",
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 1048576,
+      "pinned": false
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "artifact": "aot",
+      "services": [
+        "ui",
+        {
+          "name": "window",
+          "min_version": [
+            0,
+            3
+          ]
+        },
+        "clock",
+        "storage",
+        "game-render",
+        {
+          "name": "assets",
+          "min_version": [
+            2,
+            2
+          ]
+        },
+        "sensor",
+        "permission",
+        "log"
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "random",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "sensor.read",
+      "scope": "motion.acceleration",
+      "required": false
+    },
+    {
+      "name": "sensor.read",
+      "scope": "motion.angular-velocity",
+      "required": false
+    }
+  ]
+}

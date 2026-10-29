@@ -1,0 +1,38 @@
+PXA Sans SC Regular (SIL Open Font License 1.1)
+
+Device profile: zh-Hans,en plus study phonetics and poetry characters (2026-10-29).
+Covers all 8,105 characters in the 2013 Table of General Standard Chinese
+Characters (including 196 supplementary-plane Han characters), printable
+English ASCII, Pinyin tone letters, common English IPA, rare poetry characters 罍、殽、晞、曈、浥、焜, and the existing
+system punctuation, symbols and icon mappings.
+Unselected traditional-only, Japanese, Korean and other writing systems are
+not included. Shared simplified/traditional characters remain present.
+
+Based on the previously bundled Noto Sans SC subset. Selected existing
+outlines and metrics are preserved; additional mainland sans-serif glyphs
+come from Noto Sans CJK SC Regular 2.004, TTC face 2. The derivative's internal
+family is PXA Sans SC. Its legacy filename is kept for existing firmware paths.
+This is not a complete Unicode font. Unknown characters have an outlined
+.notdef glyph. No additional runtime font face or fallback chain is required.
+
+Noto Sans CJK copyright: 2014-2021 Adobe (http://www.adobe.com/).
+Noto is a trademark of Google Inc. Distribute this NOTICE and OFL.txt with
+this font. Latin phonetic outlines also use Noto Sans Regular 2.015:
+Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic).
+Its SIL Open Font License 1.1 is preserved in OFL-Latin.txt. Both licenses
+and this NOTICE must accompany the derivative. Build-time fontTools is
+not needed on the device.
+
+Build tool: tools/fonts/build_common_font.py --traditional none
+ --corpus tools/fonts/study-phonetics.txt --corpus tools/fonts/study-hanzi.txt
+ --fallback-source NotoSans-Regular.ttf
+Base SHA-256: dd91ad9ecc986d5907cae0d7d90941321e4e3b812a02d777714024c6b5324ac0
+Source TTC SHA-256: b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a
+Latin TTF SHA-256: 478c558ea716033cd60c03438f628dfa75694dcf6b5f6d505a2f05fd2b4f3823
+Output SHA-256: ad9ace369f9ed2a2c440e1001c18686197e37bbd680ae5ff7e4214a1dc9f9b0d
+Output bytes: 2,788,052. Character mappings: 9,975.
+
+Optional language profiles and additional application corpora can be built
+instead; see tools/fonts/README.md. Traditional profiles may use three rare
+OFL Unifont outlines, whose separate license and provenance are under
+ tools/fonts/fallback/. The simplified default does not use that supplement.
