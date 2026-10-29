@@ -32,6 +32,8 @@ struct AudioPlayer {
   bool active = false, paused = false, eof = false, opening = false,
        draining = false, querying = false;
   uint64_t generation = 0, sent = 0, drain_at = 0, last_ui = 0;
+  uint64_t decoded_frames = 0;
+  unsigned clip_start = 0, clip_end = 0;
   std::string status = "准备好，就听一听";
   std::function<void()> changed;
   void notify() {
@@ -67,12 +69,16 @@ struct AudioPlayer {
       (void)ctx->log().write(pxa::LogLevel::info, "sibo audio: " + status);
     notify();
   }
-  void start(pxa::Context &context, std::string url) {
+  void start(pxa::Context &context, std::string url, unsigned start_ms = 0,
+             unsigned end_ms = 0) {
     stop();
     ctx = &context;
     active = true;
     eof = false;
     sent = 0;
+    decoded_frames = 0;
+    clip_start = start_ms;
+    clip_end = end_ms;
     rate = channels = 0;
     decoder.reset();
     packet.reset();
@@ -306,7 +312,18 @@ struct AudioPlayer {
         return;
       }
       pcm_count = unsigned(n);
-      pcm_offset = 0;
+      const auto first = uint64_t(clip_start) * unsigned(info.hz) / 1000;
+      const auto last = uint64_t(clip_end) * unsigned(info.hz) / 1000;
+      pcm_offset = first > decoded_frames
+                       ? unsigned(std::min<uint64_t>(n, first - decoded_frames))
+                       : 0;
+      if (clip_end && last < decoded_frames + unsigned(n)) {
+        pcm_count = last > decoded_frames ? unsigned(last - decoded_frames) : 0;
+        pcm_offset = std::min(pcm_offset, pcm_count);
+        eof = true;
+        size = 0;
+      }
+      decoded_frames += unsigned(n);
       if (!rate) {
         rate = unsigned(info.hz);
         channels = unsigned(info.channels);

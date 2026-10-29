@@ -19,8 +19,11 @@ enum class Screen {
   pinyin,
   quiz,
   feedback,
+  selfcheck,
   loading,
   picture,
+  card0,
+  card1,
   about,
   count
 };
@@ -35,7 +38,14 @@ enum class Job {
   search,
   pinyin,
   lesson,
-  read
+  read,
+  vocab_catalog,
+  vocab_unit,
+  school_catalog,
+  school_outline,
+  school_item,
+  science_catalog,
+  science_item
 };
 struct ListContext {
   std::string title;
@@ -54,7 +64,7 @@ struct ListPanel {
 };
 struct App;
 struct AppView : ViewModifiers {
-  static constexpr Capacity capacity{640, 384, 128, 0, 3};
+  static constexpr Capacity capacity{800, 448, 144, 0, 3};
   App *app;
   explicit AppView(App *a) : app(a) {}
   template <class Page> bool render(Page &page, uint32_t parent);
@@ -66,9 +76,9 @@ struct App {
   TaskScope network, images, saving;
   AudioPlayer player;
   std::array<Flag, size_t(Screen::count)> screens;
-  std::array<std::function<void()>, 128> callbacks;
+  std::array<std::function<void()>, 144> callbacks;
   State<bool> ready{false}, resume_visible{false}, is_poem{false},
-      has_quiz{false}, has_image{false}, audio_active{false};
+      has_quiz{false}, has_image{false}, has_audio{false}, audio_active{false};
   State<std::string> subtitle{"把好奇心，装进小书包"}, summary{""},
       resume_title{""};
   State<std::string> item_title{""}, item_detail{""}, preview{""},
@@ -84,6 +94,9 @@ struct App {
       feedback_next{"下一题"};
   std::array<Label, 4> answers;
   std::array<Flag, 4> answer_visible;
+  State<bool> self_rating{false}, card_revealed{false}, card_previous{false};
+  State<std::string> card_counter{""}, card_action{"翻开词义"},
+      card_meaning{""};
   State<std::string> loading_text{"正在打开书包…"}, picture_caption{""},
       about_summary{""};
   std::array<ListPanel, 2> panels;
@@ -92,9 +105,10 @@ struct App {
   std::optional<Asset> cover;
   Screen screen = Screen::home, loading_from = Screen::home,
          detail_from = Screen::home, reader_from = Screen::detail,
-         list_base = Screen::home;
+         list_base = Screen::home, item_screen = Screen::detail;
   std::vector<ListContext> lists;
   std::vector<Entry> story_items, course_assets, favorites;
+  std::vector<Entry> word_bank;
   std::vector<Category> story_categories;
   Entry selected, bookmark;
   std::vector<std::string> pages;
@@ -102,6 +116,7 @@ struct App {
   std::vector<Question> questions;
   unsigned list_panel = 0, reader_index = 0, pinyin_index = 0,
            question_index = 0, round_score = 0, bookmark_page = 0;
+  unsigned word_index = 0, card_panel = 0;
   std::array<uint32_t, 4> cache_ages{};
   uint32_t cache_clock = 0;
   unsigned read_count = 0, answered_count = 0, correct_count = 0, revision = 0,
@@ -154,11 +169,13 @@ struct App {
             : "收藏起来");
     has_quiz.set(selected.kind == Kind::poem || !selected.questions.empty());
     has_image.set(selected.course || !selected.image.empty());
+    has_audio.set(selected.kind == Kind::poem || !selected.audio.empty());
     message("");
   }
   void opened(Entry entry, Screen from) {
     selected = std::move(entry);
     detail_from = from;
+    item_screen = Screen::detail;
     detail_update();
     show(Screen::detail);
   }
@@ -166,6 +183,35 @@ struct App {
     player.stop();
     images.cancel();
     cover.reset();
+    if (entry.kind == Kind::subject) {
+      begin(Job::school_catalog, entry.id);
+      return;
+    }
+    if (entry.kind == Kind::vocab_pack) {
+      push_list(entry.title + " · 选单元", vocab_units(entry));
+      return;
+    }
+    if (entry.kind == Kind::vocab_unit || entry.kind == Kind::textbook ||
+        entry.kind == Kind::science_book ||
+        (entry.kind == Kind::school_lesson && entry.body.empty())) {
+      auto kind = entry.kind;
+      selected = std::move(entry);
+      begin(kind == Kind::vocab_unit     ? Job::vocab_unit
+            : kind == Kind::textbook     ? Job::school_outline
+            : kind == Kind::science_book ? Job::science_item
+                                         : Job::school_item);
+      return;
+    }
+    if (entry.kind == Kind::word) {
+      selected = std::move(entry);
+      detail_from = screen;
+      word_index = unsigned(
+          std::find_if(word_bank.begin(), word_bank.end(),
+                       [&](const auto &e) { return same(e, selected); }) -
+          word_bank.begin());
+      open_card();
+      return;
+    }
     if (entry.kind == Kind::category) {
       if (!lists.empty())
         lists.pop_back();
@@ -197,6 +243,63 @@ struct App {
       return;
     }
     opened(std::move(entry), screen);
+  }
+  void subjects() {
+    std::vector<Entry> rows;
+    for (auto [id, title] : {std::pair{"chinese", "语文"},
+                             {"math", "数学"},
+                             {"english", "英语"},
+                             {"science", "科学"}}) {
+      Entry e;
+      e.kind = Kind::subject;
+      e.id = id;
+      e.title = title;
+      e.detail = "按年级、上下册选课";
+      rows.push_back(std::move(e));
+    }
+    root_list("同步小课堂", std::move(rows), Screen::home);
+  }
+  void open_card() {
+    item_title.set(selected.title);
+    item_detail.set(selected.detail);
+    card_revealed.set(false);
+    card_meaning.set(selected.body);
+    card_action.set("翻开词义");
+    bool in_unit =
+        word_index < word_bank.size() && same(word_bank[word_index], selected);
+    card_counter.set(in_unit ? "单词 " + std::to_string(word_index + 1) +
+                                   " / " + std::to_string(word_bank.size())
+                             : "收藏的单词");
+    card_previous.set(in_unit && word_index > 0);
+    card_panel ^= 1;
+    item_screen = card_panel ? Screen::card1 : Screen::card0;
+    show(item_screen);
+    message("");
+  }
+  void word_turn(int delta) {
+    player.stop();
+    if (word_index >= word_bank.size()) {
+      message("这个单词已经看完啦，可以返回挑选其他内容。");
+      return;
+    }
+    if (delta < 0 && word_index)
+      --word_index;
+    else if (delta > 0 && word_index + 1 < word_bank.size())
+      ++word_index;
+    else {
+      paint_list();
+      return;
+    }
+    selected = word_bank[word_index];
+    open_card();
+  }
+  void flip_card() {
+    if (card_revealed.get())
+      word_turn(1);
+    else {
+      card_revealed.set(true);
+      card_action.set("下一个单词");
+    }
   }
   void push_list(std::string title, std::vector<Entry> entries,
                  bool stories = false) {
@@ -290,13 +393,15 @@ struct App {
       return;
     }
     if (screen == Screen::pinyin || screen == Screen::quiz ||
-        screen == Screen::feedback || screen == Screen::picture) {
+        screen == Screen::feedback || screen == Screen::selfcheck ||
+        screen == Screen::picture) {
       images.cancel();
       cover.reset();
-      show(Screen::detail);
+      show(item_screen);
       return;
     }
-    if (screen == Screen::detail) {
+    if (screen == Screen::detail || screen == Screen::card0 ||
+        screen == Screen::card1) {
       cancel();
       player.stop();
       if (detail_from == Screen::list0 || detail_from == Screen::list1)
@@ -335,8 +440,15 @@ struct App {
     show(Screen::reader);
   }
   void remember() {
+    auto previous = std::move(bookmark);
+    auto previous_page = bookmark_page;
     bookmark = selected;
     bookmark_page = reader_index;
+    if (personal_snapshot().size() > 28 * 1024) {
+      bookmark = std::move(previous);
+      bookmark_page = previous_page;
+      message("这篇较长，阅读位置暂未保存。可以移除一些收藏后再试。");
+    }
     refresh_summary();
     save();
   }
@@ -378,11 +490,16 @@ struct App {
       size_t favorite_bytes = serialize(selected).size();
       for (const auto &e : favorites)
         favorite_bytes += serialize(e).size();
-      if (selected.body.size() > 8192 || favorite_bytes > 96 * 1024) {
+      if (selected.body.size() > 8192 || favorite_bytes > 20 * 1024) {
         message("这篇较长，可以用“继续读”保留阅读位置。");
         return;
       }
       favorites.push_back(selected);
+      if (personal_snapshot().size() > 28 * 1024) {
+        favorites.pop_back();
+        message("小书包快满啦，先移除一篇收藏再试。");
+        return;
+      }
     }
     detail_update();
     refresh_summary();
@@ -440,7 +557,8 @@ struct App {
     show(Screen::quiz);
   }
   void quiz() {
-    questions = make_quiz(selected);
+    questions = selected.kind == Kind::word ? vocab_quiz(word_bank, word_index)
+                                            : make_quiz(selected);
     if (questions.empty()) {
       message("这篇暂时没有小挑战，先读一读吧。");
       return;
@@ -452,7 +570,17 @@ struct App {
     if (screen != Screen::quiz || index >= questions[question_index].count)
       return;
     auto &q = questions[question_index];
-    bool correct = index == q.answer;
+    if (q.self_check) {
+      feedback_text.set("对照一下自己的答案\n\n答案：" + q.solution +
+                        (q.explanation.empty() ? "" : "\n\n" + q.explanation));
+      self_rating.set(true);
+      show(Screen::selfcheck);
+      return;
+    }
+    record_answer(index == q.answer);
+  }
+  void record_answer(bool correct) {
+    auto &q = questions[question_index];
     ++answered_count;
     if (correct) {
       ++correct_count;
@@ -460,11 +588,12 @@ struct App {
     }
     feedback_text.set(
         std::string(correct ? "答对啦！\n\n" : "再想一想，也在进步。\n\n") +
-        "答案：" + q.options[q.answer] +
+        "答案：" + (q.self_check ? q.solution : q.options[q.answer]) +
         (q.explanation.empty() ? "" : "\n\n" + q.explanation));
     feedback_next.set(question_index + 1 < questions.size() ? "下一题"
                                                             : "看看收获");
     save();
+    self_rating.set(false);
     show(Screen::feedback);
   }
   void next_question() {
@@ -477,7 +606,7 @@ struct App {
                std::to_string(questions.size()) +
                " 题。\n\n带着今天的小发现，再读一遍《" + selected.title +
                "》吧！",
-           "收获小星星");
+           "收获小星星", item_screen);
     }
   }
   void audio_changed() {
@@ -488,7 +617,8 @@ struct App {
   }
   void listen() {
     if (!selected.audio.empty())
-      player.start(*ctx, selected.audio);
+      player.start(*ctx, selected.audio, selected.audio_start,
+                   selected.audio_end);
     else if (selected.kind == Kind::poem)
       begin(Job::read);
     else
@@ -542,14 +672,58 @@ struct App {
     while (!remaining.empty()) {
       auto n = file->write(
           remaining.first(std::min<size_t>(4096, remaining.size())));
-      if (!n || !*n)
+      if (!n || !*n) {
+        (void)file->close();
+        (void)co_await ctx->fs().remove(temp);
         co_return std::unexpected(Error::io_error);
+      }
       remaining = remaining.subspan(*n);
     }
     auto closed = file->close();
-    if (!closed)
+    if (!closed) {
+      (void)co_await ctx->fs().remove(temp);
       co_return closed;
-    co_return co_await ctx->fs().replace(temp, path);
+    }
+    auto replaced = co_await ctx->fs().replace(temp, path);
+    if (!replaced)
+      (void)co_await ctx->fs().remove(temp);
+    co_return replaced;
+  }
+  size_t cache_budget() const {
+    const auto records =
+        std::min<size_t>(28 * 1024, personal_snapshot().size());
+    return std::min<size_t>(62 * 1024, 64 * 1024 - 2 * records - 1024);
+  }
+  Task<void> trim_cache(size_t incoming = 0, int replacing = -1) {
+    // Gen4 grants 64 KiB of private files. Caches are disposable and must
+    // leave room for both sides of an atomic personal-record replacement.
+    std::array<size_t, 4> sizes{};
+    size_t total = incoming;
+    for (unsigned i = 0; i < 4; ++i) {
+      if (int(i) == replacing)
+        continue;
+      auto file =
+          co_await read_file("cache-" + std::to_string(i) + ".bin", 100 * 1024);
+      if (file) {
+        sizes[i] = file->size();
+        total += sizes[i];
+      }
+    }
+    const auto budget = cache_budget();
+    while (total > budget) {
+      int oldest = -1;
+      for (unsigned i = 0; i < 4; ++i)
+        if (sizes[i] && (oldest < 0 || cache_ages[i] < cache_ages[oldest]))
+          oldest = int(i);
+      if (oldest < 0)
+        break;
+      (void)co_await ctx->fs().remove("cache-" + std::to_string(oldest) +
+                                      ".bin");
+      total -= sizes[oldest];
+      sizes[oldest] = 0;
+      cache_ages[oldest] = 0;
+    }
+    co_return Result<void>{};
   }
   Task<std::string> download(std::string address, std::string body) {
     auto permission = co_await ctx->permissions().acquire("net.client", "web");
@@ -635,13 +809,17 @@ struct App {
       co_return std::unexpected(bytes.error());
     }
     from_cache = false;
-    if (bytes->size() + key.size() + 1 <= 96 * 1024) {
+    if (!save_running && bytes->size() + key.size() + 1 <= cache_budget()) {
       unsigned slot = found >= 0 ? unsigned(found)
                       : empty >= 0
                           ? unsigned(empty)
                           : unsigned(std::min_element(cache_ages.begin(),
                                                       cache_ages.end()) -
                                      cache_ages.begin());
+      // Cache files are disposable; release the old slot before staging its
+      // replacement so an update never temporarily doubles its disk usage.
+      (void)co_await ctx->fs().remove("cache-" + std::to_string(slot) + ".bin");
+      (void)co_await trim_cache(bytes->size() + key.size() + 1, int(slot));
       auto saved = co_await write_file("cache-" + std::to_string(slot) + ".bin",
                                        key + "\n" + *bytes, "cache.tmp");
       if (saved) {
@@ -672,7 +850,16 @@ struct App {
   }
   Task<void> load(Job job, std::string query, uint64_t tag) {
     std::string address, body;
-    if (job == Job::stories)
+    if (job == Job::vocab_catalog)
+      address = std::string(vocab_base) + "/catalog.json";
+    else if (job == Job::school_catalog)
+      address = std::string(school_base) + "/index.json";
+    else if (job == Job::science_catalog)
+      address = std::string(science_base) + "/catalog.json";
+    else if (job == Job::vocab_unit || job == Job::school_outline ||
+             job == Job::school_item || job == Job::science_item)
+      address = selected.path;
+    else if (job == Job::stories)
       address = std::string(bases[0]) + "/catalog.json";
     else if (job == Job::mengxue || job == Job::mathear)
       address = std::string(bases[1]) + "/catalog.json";
@@ -743,7 +930,37 @@ struct App {
       failed(tag);
       co_return Result<void>{};
     }
-    if (job == Job::stories) {
+    if (job == Job::vocab_catalog || job == Job::school_catalog ||
+        job == Job::science_catalog) {
+      auto rows = job == Job::vocab_catalog    ? vocab_packs(*bytes)
+                  : job == Job::school_catalog ? school_books(*bytes, query)
+                                               : science_books(*bytes);
+      if (rows.empty())
+        failed(tag);
+      else if (job == Job::school_catalog)
+        push_list("同步教材", std::move(rows));
+      else
+        root_list(job == Job::vocab_catalog ? "英语单词岛" : "科学发现馆",
+                  std::move(rows), Screen::home);
+    } else if (job == Job::vocab_unit || job == Job::school_outline ||
+               job == Job::science_item) {
+      auto rows = job == Job::vocab_unit ? vocab_words(*bytes)
+                  : job == Job::school_outline
+                      ? school_lessons(*bytes, selected)
+                      : science_pages(*bytes, selected);
+      if (rows.empty())
+        failed(tag);
+      else {
+        if (job == Job::vocab_unit)
+          word_bank = rows;
+        push_list(selected.title, std::move(rows));
+      }
+    } else if (job == Job::school_item) {
+      if (!school_content(*bytes, selected))
+        failed(tag);
+      else
+        opened(std::move(selected), loading_from);
+    } else if (job == Job::stories) {
       story_items = parse_catalog(*bytes, Kind::story, &story_categories);
       if (story_items.empty())
         failed(tag);
@@ -807,26 +1024,40 @@ struct App {
     }
     co_return Result<void>{};
   }
+  std::string personal_snapshot() const {
+    std::string bytes =
+        "{\"read\":" + std::to_string(read_count) +
+        ",\"answered\":" + std::to_string(answered_count) +
+        ",\"correct\":" + std::to_string(correct_count) +
+        ",\"page\":" + std::to_string(bookmark_page) + ",\"bookmark\":" +
+        (bookmark.title.empty() ? "null" : serialize(bookmark)) +
+        ",\"favorites\":[";
+    bool first = true;
+    for (auto &item : favorites) {
+      if (!first)
+        bytes += ",";
+      first = false;
+      bytes += serialize(item);
+    }
+    bytes += "]}";
+    return bytes;
+  }
   Task<void> save_loop() {
     while (saved_revision != revision) {
       auto rev = revision;
-      std::string bytes =
-          "{\"read\":" + std::to_string(read_count) +
-          ",\"answered\":" + std::to_string(answered_count) +
-          ",\"correct\":" + std::to_string(correct_count) +
-          ",\"page\":" + std::to_string(bookmark_page) + ",\"bookmark\":" +
-          (bookmark.title.empty() ? "null" : serialize(bookmark)) +
-          ",\"favorites\":[";
-      bool first = true;
-      for (auto &item : favorites) {
-        if (!first)
-          bytes += ",";
-        first = false;
-        bytes += serialize(item);
+      auto bytes = personal_snapshot();
+      auto saved = co_await write_file("personal.json", bytes, "personal.tmp");
+      if (!saved) {
+        // A failed cache write must never starve user records. Retry once
+        // after releasing only disposable online files.
+        for (unsigned i = 0; i < 4; ++i)
+          (void)co_await ctx->fs().remove("cache-" + std::to_string(i) +
+                                          ".bin");
+        (void)co_await ctx->fs().remove("cache.tmp");
+        cache_ages.fill(0);
+        saved = co_await write_file("personal.json", std::move(bytes),
+                                    "personal.tmp");
       }
-      bytes += "]}";
-      auto saved = co_await write_file("personal.json", std::move(bytes),
-                                       "personal.tmp");
       if (!saved) {
         message("存储空间不足，刚才的记录还未保存。后续操作时会再试。");
         save_running = false;
@@ -861,6 +1092,8 @@ struct App {
     co_return Result<void>{};
   }
   Task<void> initialize() {
+    for (const auto *temp : {"personal.tmp", "cache.tmp", "cache-order.tmp"})
+      (void)co_await ctx->fs().remove(temp);
     auto bytes = co_await read_file("personal.json", 256 * 1024);
     if (bytes && study::complete_json(*bytes)) {
       auto root = study::json(*bytes);
@@ -897,6 +1130,7 @@ struct App {
       }
       cache_clock = *std::max_element(cache_ages.begin(), cache_ages.end());
     }
+    (void)co_await trim_cache();
     refresh_summary();
     show(Screen::home);
     ready.set(true);
@@ -1066,6 +1300,9 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
       a.show(Screen::recite);
       a.message("");
     });
+    p.button(b, "英语单词岛", [&a] { a.begin(Job::vocab_catalog); });
+    p.button(b, "同步小课堂", [&a] { a.subjects(); });
+    p.button(b, "科学发现馆", [&a] { a.begin(Job::science_catalog); });
     p.button(b, "我的收藏",
              [&a] { a.root_list("我的收藏", a.favorites, Screen::home); });
     p.button(b, "小书包与说明", [&a] {
@@ -1126,14 +1363,38 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     notice(b);
     header(f, v.title);
   }
+  for (unsigned panel = 0; panel < 2; ++panel) {
+    auto f = stage(panel ? Screen::card1 : Screen::card0),
+         b = p.scroll(p.body(f));
+    p.text(b, a.card_counter, Font::caption, muted);
+    auto card = p.box(b);
+    p.padding(card, 12, 14, 12, 14);
+    p.ok &= p.tx.rgba(card, protocol::background, mint) &&
+            p.tx.dp(card, protocol::radius, 16);
+    p.text(card, a.item_title, Font::display, green);
+    p.text(card, a.item_detail, Font::title, muted);
+    auto meaning = p.text(card, a.card_meaning, Font::body, ink);
+    p.visible(meaning, a.card_revealed);
+    p.button(b, a.card_action, [&a] { a.flip_card(); }, true);
+    p.button(b, "听这个单词", [&a] { a.listen(); });
+    p.text(b, a.audio_status, Font::caption, muted);
+    p.button(b, "单词小挑战", [&a] { a.quiz(); });
+    auto previous = p.button(b, "上一个单词", [&a] { a.word_turn(-1); });
+    p.visible(previous, a.card_previous);
+    notice(b);
+    auto title = std::string_view("英语词卡");
+    header(f, title);
+  }
   {
     auto f = stage(Screen::detail), b = p.scroll(p.body(f));
     p.text(b, a.item_title, Font::headline, green);
     p.text(b, a.item_detail, Font::caption, muted);
     p.text(b, a.preview, Font::body);
     p.button(b, "开始阅读", [&a] { a.read_selected(); }, true);
-    p.button(b, "听一听朗读", [&a] { a.listen(); });
-    p.text(b, a.audio_status, Font::caption, muted);
+    auto listen = p.button(b, "听一听朗读", [&a] { a.listen(); });
+    p.visible(listen, a.has_audio);
+    auto audio_status = p.text(b, a.audio_status, Font::caption, muted);
+    p.visible(audio_status, a.has_audio);
     auto pause = p.button(b, a.pause_label, [&a] { a.player.pause_resume(); });
     p.visible(pause, a.audio_active);
     auto stop = p.button(b, "停止朗读", [&a] { a.player.stop(); });
@@ -1218,6 +1479,26 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     header(f, title);
   }
   {
+    auto f = stage(Screen::selfcheck), wrap = p.body(f), b = p.scroll(wrap);
+    p.text(b, a.feedback_text, Font::title);
+    p.button(
+        wrap, "我答对了",
+        [&a] {
+          if (a.self_rating.get())
+            a.record_answer(true);
+        },
+        true);
+    p.button(wrap, "还要再练练", [&a] {
+      if (a.self_rating.get())
+        a.record_answer(false);
+    });
+    p.button(wrap, "分页看讲解", [&a] {
+      a.read(a.feedback_text.get(), "慢慢想一想", Screen::selfcheck);
+    });
+    auto title = std::string_view("对照答案");
+    header(f, title);
+  }
+  {
     auto f = stage(Screen::feedback), wrap = p.body(f), b = p.scroll(wrap);
     p.text(b, a.feedback_text, Font::title);
     p.button(wrap, a.feedback_next, [&a] { a.next_question(); }, true);
@@ -1250,12 +1531,17 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
         b, "阅读使用说明",
         [&a] {
           a.read("欢迎来到四博学习宝！\n\n诗词、儿童故事、蒙学诵读、小学听题，"
-                 "都在这个小书包里。\n\n上下键选择，确认键打开。每页右上角都可"
+                 "英语词卡、同步教材和科学发现，都在这个小书包里。\n\n上下键选"
+                 "择，确认键打开。每页右上角都可"
                  "以返回，也支持触摸。\n\n75首课本古诗原文离线可读。故事、拼音"
                  "、讲解、插图和朗读需联网，应用不会自动开启设备WiFi。\n\n最近"
-                 "读取的4份内容各缓存至多96KB，收藏最多12篇。内部存储即可使用，"
+                 "内容按需联网读取，缓存按个人记录体积自动缩减，合计至多62KB；"
+                 "空间不足时优先保存个人记录。收藏最多12篇。内部存储即可使用，"
                  "不依赖SD卡。音频直接播放，不保存音频文件。\n\n阅读时可翻页，"
-                 "首页“继续读”会保留上次正文与阅读位置。\n\n在线诗词和故事由内"
+                 "首页“继续读”会保留上次正文与阅读位置。\n\n英语词卡先想词义，"
+                 "再按确认翻开答案。单词小挑战有自动判分。同步教材的选择、判断"
+                 "题可直接作答，开放题先思考再对照答案、自评。教材暂以文字学习"
+                 "为主。\n\n在线诗词和故事由内"
                  "容服务提供，家长可以先陪孩子挑选适合的内容。",
                  "使用说明", Screen::about);
         },
@@ -1263,7 +1549,9 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     p.button(b, "来源与许可", [&a] {
       a.read("四博学习宝 PXA "
              "版\n\n学习内容与接口参考原四博学习宝。公开服务：wtoy.doit."
-             "am。\n\n原项目、chinese-poetry 数据和本应用代码遵循 MIT，minimp3 "
+             "am，同步教材：pindou.doit.am/study/"
+             "。\n\n原项目、chinese-poetry、ECDICT、vistep "
+             "数据和本应用代码遵循 MIT，minimp3 "
              "遵循 "
              "CC0。完整声明随安装包保留。\n\n音频、故事和配图按需访问原服务，未"
              "打包进安装包；可用性取决于服务。\n\n独立教材账号服务不包含在本应"

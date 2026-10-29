@@ -66,7 +66,7 @@ def main():
         heads=[f.read_text().split('\n',1)[0] for f in files]
         assert any('/recite/catalog.json?' in h for h in heads)
         assert any('/recite/items/mengxue-shenglvqimeng.json?' in h for h in heads)
-        assert len(files)<=4 and all(f.stat().st_size<=96*1024 for f in files)
+        assert len(files)<=4 and all(f.stat().st_size<=62*1024 for f in files) and sum(f.stat().st_size for f in files)<=62*1024
         prior={f.name:(f.read_bytes(),f.stat().st_mtime_ns) for f in files}
         flows.returned(sim);flows.returned(sim);flows.returned(sim)
         flows.restart(sim);flows.choose(sim,'读出声来');sim.key('ENTER');sim.expect('声律启蒙');sim.key('ENTER');sim.expect('上卷')

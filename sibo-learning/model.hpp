@@ -21,7 +21,15 @@ enum class Kind {
   category,
   dynasty,
   verse_type,
-  favorite
+  favorite,
+  vocab_pack,
+  vocab_unit,
+  word,
+  subject,
+  textbook,
+  school_lesson,
+  science_book,
+  science_page
 };
 struct Cell {
   std::string han, py;
@@ -30,6 +38,8 @@ struct Question {
   std::string text, explanation;
   std::array<std::string, 4> options;
   unsigned answer = 0, count = 4;
+  bool self_check = false;
+  std::string solution;
 };
 struct Entry {
   Kind kind = Kind::story;
@@ -39,6 +49,7 @@ struct Entry {
   std::vector<Cell> pinyin;
   std::vector<Question> questions;
   bool course = false;
+  unsigned audio_start = 0, audio_end = 0, units = 0;
 };
 struct Category {
   std::string id, name;
@@ -65,4 +76,19 @@ std::vector<Question> make_quiz(const Entry &poem);
 std::string compact(std::string_view json);
 std::string serialize(const Entry &value);
 bool deserialize(std::string_view bytes, Entry &value);
+inline constexpr const char *vocab_base = "https://wtoy.doit.am/oss/vocab";
+inline constexpr const char *science_base = "https://wtoy.doit.am/oss/vistep";
+inline constexpr const char *school_base = "https://pindou.doit.am/study/data";
+std::vector<Entry> vocab_packs(std::string_view bytes);
+std::vector<Entry> vocab_units(const Entry &pack);
+std::vector<Entry> vocab_words(std::string_view bytes);
+std::vector<Question> vocab_quiz(const std::vector<Entry> &words,
+                                 unsigned start);
+std::vector<Entry> school_books(std::string_view bytes,
+                                std::string_view subject);
+std::vector<Entry> school_lessons(std::string_view bytes, const Entry &book);
+bool school_content(std::string_view bytes, Entry &lesson);
+std::vector<Entry> science_books(std::string_view bytes);
+std::vector<Entry> science_pages(std::string_view bytes, const Entry &book);
+std::string plain_math(std::string text);
 } // namespace sibo

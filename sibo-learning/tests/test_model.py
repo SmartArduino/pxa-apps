@@ -10,5 +10,5 @@ p.add_argument('--fixtures',type=Path)
 a=p.parse_args();a.output.mkdir(parents=True,exist_ok=True)
 app=Path(__file__).resolve().parents[1]
 exe=a.output/'model-test'
-subprocess.run(['c++','-std=c++20','-g','-O1','-fsanitize=address,undefined','-fno-omit-frame-pointer',str(app/'model.cpp'),str(app/'tests/model_test.cpp'),'-o',str(exe)],check=True)
+subprocess.run(['c++','-std=c++20','-g','-O1','-fsanitize=address,undefined','-fno-omit-frame-pointer',str(app/'model.cpp'),str(app/'learn.cpp'),str(app/'tests/model_test.cpp'),'-o',str(exe)],check=True)
 subprocess.run([str(exe)]+([str(a.fixtures.resolve())] if a.fixtures else []),check=True)

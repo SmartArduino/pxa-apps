@@ -25,10 +25,10 @@ inline bool visibility(Transaction<> &tx, uint32_t n, const bool &v) {
 template <class Page> struct Painter {
   Page &page;
   Transaction<> &tx;
-  std::array<std::function<void()>, 128> &callbacks;
+  std::array<std::function<void()>, 144> &callbacks;
   unsigned callback_count = 0;
   bool ok = true;
-  Painter(Page &p, std::array<std::function<void()>, 128> &c)
+  Painter(Page &p, std::array<std::function<void()>, 144> &c)
       : page(p), tx(p.transaction()), callbacks(c) {}
   void fill(uint32_t n, bool height = false) {
     ok &= tx.fill(n, protocol::width);

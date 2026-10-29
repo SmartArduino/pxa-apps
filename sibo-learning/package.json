@@ -13,10 +13,10 @@
     1
   ],
   "id": "pxa-sibo-learning",
-  "version": "0.1.0",
-  "release_sequence": 1,
+  "version": "0.2.0",
+  "release_sequence": 2,
   "name": "四博学习宝",
-  "description": "诗词、儿童故事、蒙学诵读与小学听题。全屏三按键，75首古诗原文离线可读，故事和朗读按需联网，少量缓存保存在内部存储，无需SD卡。",
+  "description": "诗词、故事、蒙学、小学听题，新增英语词卡、同步教材与科学图文。全屏三按键，75首古诗原文离线可读，其余内容按需联网，无需SD卡。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"

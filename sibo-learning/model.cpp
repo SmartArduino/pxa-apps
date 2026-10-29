@@ -47,9 +47,10 @@ std::string quote(std::string_view value) {
 }
 bool trusted(std::string_view url) {
   const std::string prefix = std::string(origin) + "/";
-  if (!url.starts_with(prefix) || url.size() > 1024 ||
-      url.find('\\') != url.npos || url.find("..") != url.npos ||
-      url.find('#') != url.npos)
+  if ((!url.starts_with(prefix) &&
+       !url.starts_with("https://pindou.doit.am/study/")) ||
+      url.size() > 1024 || url.find('\\') != url.npos ||
+      url.find("..") != url.npos || url.find('#') != url.npos)
     return false;
   for (unsigned char c : url)
     if (c <= 32 || c == 127)
@@ -441,7 +442,9 @@ std::string serialize(const Entry &e) {
     if (!first)
       questions += ",";
     first = false;
-    questions += "{\"text\":" + quote(q.text) +
+    questions += "{\"self\":" + std::string(q.self_check ? "true" : "false") +
+                 ",\"solution\":" + quote(q.solution) +
+                 ",\"text\":" + quote(q.text) +
                  ",\"explanation\":" + quote(q.explanation) +
                  ",\"answer\":" + std::to_string(q.answer) + ",\"options\":[";
     for (unsigned i = 0; i < q.count; ++i) {
@@ -459,6 +462,8 @@ std::string serialize(const Entry &e) {
          ",\"author\":" + quote(e.author) + ",\"dynasty\":" + quote(e.dynasty) +
          ",\"type\":" + quote(e.type) + ",\"body\":" + quote(e.body) +
          ",\"questions\":" + questions +
+         ",\"audioStart\":" + std::to_string(e.audio_start) +
+         ",\"audioEnd\":" + std::to_string(e.audio_end) +
          ",\"course\":" + (e.course ? "true" : "false") + "}";
 }
 bool deserialize(std::string_view bytes, Entry &e) {
@@ -467,7 +472,9 @@ bool deserialize(std::string_view bytes, Entry &e) {
     return false;
   Entry v;
   auto k = root.get("kind").number(100);
-  if (k > 3)
+  if (k > unsigned(Kind::science_page) ||
+      (k > 3 && k != unsigned(Kind::word) &&
+       k != unsigned(Kind::school_lesson) && k != unsigned(Kind::science_page)))
     return false;
   v.kind = Kind(k);
   v.id = str(root.get("id"), 80);
@@ -481,6 +488,12 @@ bool deserialize(std::string_view bytes, Entry &e) {
   v.type = str(root.get("type"), 60);
   v.body = str(root.get("body"));
   v.course = root.get("course").boolean();
+  v.audio_start =
+      unsigned(std::min<uint64_t>(root.get("audioStart").number(), 300000));
+  v.audio_end =
+      unsigned(std::min<uint64_t>(root.get("audioEnd").number(), 300000));
+  if (v.audio_end && v.audio_start >= v.audio_end)
+    return false;
   if (v.id.empty() || v.title.empty() ||
       (!v.path.empty() && !trusted(v.path)) ||
       (!v.audio.empty() && !trusted(v.audio)) ||
@@ -498,17 +511,21 @@ bool deserialize(std::string_view bytes, Entry &e) {
   }
   media::json::Array qs(root.get("questions"));
   Value q;
-  while (qs.next(q) && v.questions.size() < 8) {
+  while (qs.next(q) && v.questions.size() < 40) {
     Question item;
-    item.text = str(q.get("text"), 600);
-    item.explanation = str(q.get("explanation"), 1200);
+    item.text = str(q.get("text"), 2400);
+    item.explanation = str(q.get("explanation"), 2400);
+    item.self_check = q.get("self").boolean();
+    item.solution = str(q.get("solution"), 1600);
     item.answer = unsigned(q.get("answer").number(99));
     media::json::Array opts(q.get("options"));
     Value opt;
     item.count = 0;
     while (opts.next(opt) && item.count < 4)
-      item.options[item.count++] = str(opt, 400);
-    if (item.count >= 2 && item.answer < item.count && !item.text.empty())
+      item.options[item.count++] = str(opt, 1600);
+    if ((item.count >= 2 ||
+         (item.count == 1 && item.self_check && !item.solution.empty())) &&
+        item.answer < item.count && !item.text.empty())
       v.questions.push_back(std::move(item));
   }
   e = std::move(v);
