@@ -12,6 +12,7 @@
 #include <optional>
 #include <opus.h>
 #include <pxa/app.hpp>
+#include <pxa-ext/voice_trigger.hpp>
 #include <pxa/ui_environment.hpp>
 #include <pxa/ui_gesture.hpp>
 #include <pxa/ui_layout.hpp>
@@ -19,6 +20,7 @@
 using namespace pxa;
 using namespace pxa::ui;
 using namespace pxa::ui::literals;
+namespace vt = pxa::ext::voice_trigger;
 namespace {
 std::uint64_t now_ms() {
   timespec t{};
@@ -34,7 +36,17 @@ struct App {
   State<std::string> record_label{"开始录音"};
   State<bool> busy{true};
   State<bool> settings_open{false}, official_server{true}, advanced{false},
-      auto_listen{true}, voice_enabled{true}, keep_awake{true};
+      auto_listen{true}, voice_enabled{true}, keep_awake{true}, wake_enabled{false};
+  std::optional<vt::Client> wake_client;
+  vt::Capabilities wake_capabilities;
+  std::array<vt::Profile, 1> wake_profiles{};
+  std::array<vt::Keyword, PXA_VT_MAX_KEYWORDS> wake_keywords{};
+  vt::Subscription wake_subscription;
+  Permission wake_permission;
+  bool wake_supported = false, wake_absent = false, wake_pending = false,
+       wake_denied = false;
+  std::uint64_t next_wake_probe = 0;
+  std::string wake_note{"正在检查设备能力"}, wake_hint;
   std::string official_url, official_token, last_saved_config;
   bool settings_saving = false;
   std::optional<bool> awake_request;
@@ -54,7 +66,7 @@ struct App {
   struct SettingsSnapshot {
     std::string url, token, endpoint, device, client, activation_code,
         activation_message;
-    bool official, voice, listen, awake, met;
+    bool official, voice, listen, awake, wake, met;
     unsigned scene;
   };
   std::optional<SettingsSnapshot> settings_snapshot;
@@ -64,7 +76,7 @@ struct App {
   unsigned capture_frame_ms = 20;
   bool resume_after_format = false;
   unsigned capture_retries = 0;
-  bool conversation_preparing = false;
+  bool conversation_preparing = false, interrupting = false;
   bool user_paused = false;
   static constexpr std::string_view idle_message = "我在这里，轻触和我聊聊\n长按打开设置";
   xiaozhi::ResponseWait response_wait;
@@ -190,6 +202,7 @@ struct App {
     cJSON_AddNumberToObject(root.get(), "scene_mode", scene_mode);
     cJSON_AddNumberToObject(root.get(), "config_version", 2);
     cJSON_AddBoolToObject(root.get(), "keep_awake", keep_awake.get());
+    cJSON_AddBoolToObject(root.get(), "wake_enabled", wake_enabled.get());
     cJSON_AddBoolToObject(root.get(), "official", official_server.get());
     cJSON_AddBoolToObject(root.get(), "auto_listen", auto_listen.get());
     cJSON_AddBoolToObject(root.get(), "voice_enabled", voice_enabled.get());
@@ -241,6 +254,9 @@ struct App {
         auto awake = cJSON_GetObjectItemCaseSensitive(root.get(), "keep_awake");
         if (cJSON_IsBool(awake))
           keep_awake.set(cJSON_IsTrue(awake));
+        auto wake = cJSON_GetObjectItemCaseSensitive(root.get(), "wake_enabled");
+        if (cJSON_IsBool(wake))
+          wake_enabled.set(cJSON_IsTrue(wake));
         // Older versions persisted official credentials in the custom fields.
         // Binding depends on the device identity, which remains unchanged.
         auto version = cJSON_GetObjectItemCaseSensitive(root.get(), "config_version");
@@ -585,7 +601,7 @@ struct App {
     status.set("小智已准备好");
     co_return Result<void>{};
   }
-  Task<void> abort() {
+  Task<void> abort(bool wake_word = false) {
     if (!ready)
       co_return Result<void>{};
     stop_recording();
@@ -601,7 +617,7 @@ struct App {
     }
     if (!pending_text.empty())
       pending_text.clear();
-    queue(xiaozhi::command(session, "abort"));
+    queue(xiaozhi::abort_command(session, wake_word));
     waiting = false;
     response_wait.reset();
     emotion = 0;
@@ -905,9 +921,12 @@ struct App {
       status.set(std::string(idle_message));
     co_return Result<void>{};
   }
-  Task<void> interrupt_and_listen() {
+  Task<void> interrupt_and_listen(bool wake_word = false) {
+    if (interrupting) co_return Result<void>{};
+    struct Guard { App &app; ~Guard() { app.interrupting = false; } } guard{*this};
+    interrupting = true;
     const bool cancelled_wait = waiting;
-    auto stopped = co_await abort();
+    auto stopped = co_await abort(wake_word);
     if (!stopped)
       co_return std::unexpected(stopped.error());
     if (cancelled_wait) {
@@ -951,7 +970,7 @@ struct App {
       }
       return;
     }
-    if (busy.get() || prepare_audio || conversation_preparing)
+    if (busy.get() || prepare_audio || conversation_preparing || interrupting)
       return;
     tap_debounce_until = now_ms() + 400;
     capture_retries = 0;
@@ -963,14 +982,110 @@ struct App {
     else
       launch(record());
   }
+  void stop_wake() {
+    wake_subscription.reset();
+    wake_hint.clear();
+    next_wake_probe = 0;
+  }
+  void wake_failure(Error error) {
+    stop_wake();
+    wake_denied = error == Error::denied;
+    next_wake_probe = wake_denied ? UINT64_MAX : now_ms() + 5000;
+    wake_note = wake_denied ? "未获授权，重新开启可申请" : "设备暂不可用，稍后自动重试";
+    char diagnostic[64];
+    std::snprintf(diagnostic, sizeof(diagnostic), "Xiaozhi optional wake service: %d", int(error));
+    (void)context->log().write(LogLevel::warning, diagnostic);
+  }
+  Task<void> probe_wake() {
+    struct Guard { App &app; ~Guard() { app.wake_pending = false; } } guard{*this};
+    if (!wake_client) {
+      auto opened = co_await vt::open(*context);
+      if (!opened) {
+        if (opened.error() == Error::unsupported) {
+          wake_absent = true;
+          wake_note = "此设备未提供语音唤醒";
+        } else wake_failure(opened.error());
+        co_return Result<void>{};
+      }
+      wake_client = *opened;
+    }
+    auto caps = co_await wake_client->capabilities();
+    if (!caps) { wake_failure(caps.error()); co_return Result<void>{}; }
+    wake_capabilities = *caps;
+    wake_supported = true;
+    if (!caps->ready) {
+      wake_note = "设备正在准备唤醒词";
+      co_return Result<void>{};
+    }
+    auto profiles = co_await wake_client->list_profiles(wake_profiles);
+    if (!profiles || *profiles != 1 || wake_profiles[0].key.view() != vt::default_scope) {
+      wake_failure(profiles ? Error::protocol_error : profiles.error());
+      co_return Result<void>{};
+    }
+    auto words = co_await wake_client->list_keywords(wake_profiles[0], wake_keywords);
+    if (!words || !*words) {
+      wake_failure(words ? Error::protocol_error : words.error());
+      co_return Result<void>{};
+    }
+    wake_note = "唤醒词：" + std::string(wake_keywords[0].label.view());
+    if (!caps->playback_detection()) wake_note += " · 播放中待验证";
+    if (!wake_enabled.get() || wake_denied) {
+      next_wake_probe = UINT64_MAX;
+      if (wake_denied) wake_note = "未获授权，重新开启可申请";
+      co_return Result<void>{};
+    }
+    if (settings_open.get() || !context->foreground()) co_return Result<void>{};
+    if (!wake_permission) {
+      auto permission = co_await context->permissions().acquire(vt::permission_name, vt::default_scope);
+      if (!permission) { wake_failure(permission.error()); co_return Result<void>{}; }
+      wake_permission = std::move(*permission);
+    }
+    auto subscription = co_await wake_client->subscribe(wake_profiles[0], wake_permission);
+    if (!subscription) { wake_failure(subscription.error()); co_return Result<void>{}; }
+    wake_subscription = std::move(*subscription);
+    wake_hint = wake_keywords[0].label.view().size() <= 24
+        ? "也可以说「" + std::string(wake_keywords[0].label.view()) + "」 · 长按设置"
+        : "语音唤醒已开启 · 长按设置";
+    (void)context->log().write(LogLevel::info, "Xiaozhi voice trigger subscribed");
+    co_return Result<void>{};
+  }
+  void activate_from_voice() {
+    if (!wake_enabled.get() || !wake_subscription || settings_open.get() || !context->foreground())
+      return;
+    if (connectivity == Connectivity::offline) {
+      status.set("未连接网络\n请先在系统设置中连接 Wi-Fi");
+      next_network_check = 0;
+      return;
+    }
+    if (!activation_code.empty()) {
+      status.set("请先完成小智设备验证\n绑定后轻触继续");
+      return;
+    }
+    if (listening || interrupting) return; // Wake never toggles to idle.
+    user_paused = false;
+    manual_retry = false;
+    capture_retries = 0;
+    capture_retry_after = 0;
+    if (!ready || busy.get() || prepare_audio || conversation_preparing) {
+      resume_after_format = capture_supported;
+      retry_after = 0;
+      next_network_check = 0;
+      return;
+    }
+    heard.set("");
+    subtitle.set("");
+    if (speaking || waiting) launch(interrupt_and_listen(true));
+    else want_listen = capture_supported;
+  }
   void enter_settings() {
     if (settings_open.get())
       return;
     settings_snapshot.emplace(SettingsSnapshot{
         url.get(), token.get(), endpoint.get(), device.get(), client.get(),
         activation_code, activation_message, official_server.get(),
-        voice_enabled.get(), auto_listen.get(), keep_awake.get(), met_before, scene_mode});
+        voice_enabled.get(), auto_listen.get(), keep_awake.get(), wake_enabled.get(), met_before, scene_mode});
     context->foreground_tasks().cancel();
+    stop_wake();
     network_pending = false;
     network_lost = false;
     disconnect();
@@ -1003,6 +1118,7 @@ struct App {
       voice_enabled.set(original.voice);
       auto_listen.set(original.listen);
       keep_awake.set(original.awake);
+      wake_enabled.set(original.wake);
       scene_mode = original.scene;
       met_before = original.met;
       sync_labels();
@@ -1018,6 +1134,8 @@ struct App {
     }
     settings_snapshot.reset();
     settings_open.set(false);
+    if (!wake_enabled.get()) wake_permission.reset();
+    next_wake_probe = 0;
     tap_debounce_until = now_ms() + 350;
     press.reset();
     companion.previous_hash = 0;
@@ -1184,6 +1302,13 @@ struct App {
     case A::listen:
       auto_listen.set(!auto_listen.get());
       break;
+    case A::wake:
+      if (wake_supported) {
+        wake_enabled.set(!wake_enabled.get());
+        wake_denied = false;
+        next_wake_probe = 0;
+      }
+      break;
     case A::auto_scene:
       scene_mode = scene_mode ? 0 : automatic_scene + 1;
       break;
@@ -1229,9 +1354,9 @@ struct App {
                      {settings_page, scene_mode, official_server.get(),
                       voice_enabled.get(), auto_listen.get(),
                       editing != EditField::none, editing == EditField::text,
-                      keep_awake.get(), settings_saving,
+                      keep_awake.get(), settings_saving, wake_supported, wake_enabled.get(),
                       url.get(), token.get(), endpoint.get(), device.get(),
-                      client.get(), settings_notice, edit_title(), edit_error});
+                      client.get(), settings_notice, edit_title(), edit_error, wake_note});
     if (editing != EditField::none)
       sync_editor_box();
     if (focus_pending && editor.mounted()) {
@@ -1312,6 +1437,13 @@ struct App {
   }
   void tick() {
     const auto now = now_ms();
+    if (profile_loaded && !settings_open.get() && context->foreground() &&
+        !wake_absent && !wake_pending && !wake_subscription && now >= next_wake_probe) {
+      wake_pending = true;
+      next_wake_probe = now + 5000;
+      auto started = context->foreground_tasks().start(probe_wake());
+      if (!started) { wake_pending = false; next_wake_probe = now + 5000; }
+    }
     const bool stay_awake = keep_awake.get() && !settings_open.get() && ready &&
                             (listening || waiting || speaking);
     if (!awake_request || *awake_request != stay_awake) {
@@ -1375,7 +1507,7 @@ struct App {
       if (draft.get().empty())
         send_draft = false;
     }
-    if (ready && !busy.get() && want_listen && !speaking && !listening &&
+    if (ready && !busy.get() && !interrupting && want_listen && !speaking && !listening &&
         pending_text.empty() && now >= capture_retry_after) {
       want_listen = false;
       launch(record());
@@ -1394,7 +1526,8 @@ struct App {
                    subtitle.get(), speaking, ready, listening, waiting, now,
                    room, activation_code, activation_message, !voice_enabled.get(),
                    user_paused || (ready && !busy.get() && !listening && !waiting &&
-                       !speaking && !prepare_audio && subtitle.get().empty()));
+                       !speaking && !prepare_audio && subtitle.get().empty()),
+                   wake_subscription && connectivity != Connectivity::offline ? wake_hint : std::string_view{});
     companion.update(*context, shown_emotion,
                      scene_mode ? scene_mode - 1 : automatic_scene, speaking,
                      now, room == xiaozhi::RoomMode::present);
@@ -1427,7 +1560,28 @@ struct App {
     auto updated = environment.update(event);
     if (!updated)
       return updated;
+    if (event.service == vt::service_id && event.opcode == PXA_VT_EVENT) {
+      auto notification = wake_subscription.notification(event);
+      if (notification) {
+        if (notification->failure) wake_failure(*notification->failure);
+        else {
+          bool known = false;
+          for (unsigned i = 0; i < wake_profiles[0].keyword_count; ++i)
+            known |= wake_keywords[i].id == notification->trigger.keyword_id;
+          if (known) activate_from_voice();
+          else wake_failure(Error::protocol_error);
+        }
+      } else if (notification.error() != Error::not_found)
+        wake_failure(notification.error());
+      return true;
+    }
     if (event.service == 11 && event.opcode == 0x8001) {
+      auto revoked = decode_permission_revoked(event);
+      if (revoked && revoked->name == vt::permission_name) {
+        wake_permission.reset();
+        wake_failure(Error::denied);
+        return true;
+      }
       context->foreground_tasks().cancel();
       disconnect();
       network_permission = Permission{};
@@ -1440,6 +1594,7 @@ struct App {
     return true;
   }
   void on_background(Context &) {
+    stop_wake();
     awake_request.reset();
     if (editing != EditField::none)
       finish_edit(false);
@@ -1452,6 +1607,7 @@ struct App {
     companion.previous_hash = 0;
   }
   void on_foreground(Context &) {
+    next_wake_probe = 0;
     awake_request.reset();
     next_time_check = 0;
     press.reset();
@@ -1463,7 +1619,7 @@ struct App {
     if (user_paused)
       status.set(std::string(idle_message));
   }
-  void on_stop(StopReason) { disconnect(); }
+  void on_stop(StopReason) { stop_wake(); disconnect(); }
   struct ScenePointer {
     App *app = nullptr;
     void operator()(const CanvasPointer &p) const { app->pointer(p); }

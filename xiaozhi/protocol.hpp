@@ -82,4 +82,11 @@ inline std::string command(std::string_view session, const char *type,
     cJSON_AddStringToObject(root.get(), "text", content);
   return encode(root.get());
 }
+inline std::string abort_command(std::string_view session, bool wake_word = false) {
+  auto root = parse(command(session, "abort"));
+  if (!root) return {};
+  if (wake_word)
+    cJSON_AddStringToObject(root.get(), "reason", "wake_word_detected");
+  return encode(root.get());
+}
 } // namespace xiaozhi

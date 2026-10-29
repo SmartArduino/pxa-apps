@@ -145,7 +145,7 @@ struct Companion {
             bool ready, bool listening, bool waiting, std::uint64_t now,
             RoomMode room, std::string_view code,
             std::string_view activation_message, bool text_reply = false,
-            bool idle = false) {
+            bool idle = false, std::string_view wake_hint = {}) {
     if (!canvas.mounted())
       return;
     int w = int(metrics.width), h = int(metrics.height);
@@ -164,6 +164,7 @@ struct Companion {
     mix(tts);
     mix(code);
     mix(activation_message);
+    mix(wake_hint);
     hash ^= std::uint64_t(room) << 48 | std::uint64_t(text_reply) << 56 |
             std::uint64_t(idle) << 57;
     hash ^= std::uint64_t(w) << 32 | std::uint64_t(h) << 16 | base << 8 |
@@ -225,7 +226,8 @@ struct Companion {
           .text_sized({margin + 10, y + 7, w - margin * 2 - 20, 23},
                       0xfff4e2ff, "我在这里，轻触和我聊聊", font, 1)
           .text_sized({margin + 10, y + 32, w - margin * 2 - 20, 15},
-                      0xd5c8deff, "长按打开设置", std::max(10, font - 3), 1);
+                      0xd5c8deff, wake_hint.empty() ? "长按打开设置" : wake_hint,
+                      std::max(10, font - 3), 1);
       auto shown = canvas.present(commands);
       if (shown)
         previous_hash = hash;

@@ -13,6 +13,7 @@ enum class SettingAction {
   custom,
   voice,
   listen,
+  wake,
   auto_scene,
   awake,
   scene,
@@ -34,9 +35,10 @@ struct SettingHit {
 struct SettingsData {
   unsigned page = 0, scene = 0;
   bool official = true, voice = true, listen = true, editing = false,
-       sending = false, awake = true, saving = false;
+       sending = false, awake = true, saving = false,
+       wake_supported = false, wake = false;
   std::string_view url, token, endpoint, device, client, notice, edit_title,
-      edit_error;
+      edit_error, wake_note;
 };
 struct SettingsUi {
   static constexpr std::uint32_t ink = 0x594760ff, muted = 0x95818fff,
@@ -133,7 +135,7 @@ struct SettingsUi {
       return;
     std::uint64_t hash = 1469598103934665603ull;
     for (auto s : {d.url, d.token, d.endpoint, d.device, d.client, d.notice,
-                   d.edit_title, d.edit_error})
+                   d.edit_title, d.edit_error, d.wake_note})
       for (unsigned char c : s)
         hash = (hash ^ c) * 1099511628211ull;
     hash ^= std::uint64_t(d.page) | std::uint64_t(d.scene) << 4 |
@@ -143,6 +145,7 @@ struct SettingsUi {
             std::uint64_t(m.width) << 24 | std::uint64_t(m.height) << 40;
     hash ^= background ? background->handle() : 0;
     hash ^= std::uint64_t(d.awake) << 60 | std::uint64_t(d.saving) << 61;
+    hash ^= std::uint64_t(d.wake_supported) << 58 | std::uint64_t(d.wake) << 59;
     if (hash == previous_hash)
       return;
     scale = std::min(m.width / 320.f, m.height / 240.f);
@@ -192,9 +195,16 @@ struct SettingsUi {
             SettingAction::edit_token);
       }
     } else if (d.page == 1) {
-      toggle(98, "语音回复", "让她读出回答", d.voice, SettingAction::voice);
-      toggle(145, "自动聆听", "回复结束后，继续听你说", d.listen,
-             SettingAction::listen);
+      toggle(96, "语音回复", "让她读出回答", d.voice, SettingAction::voice, true);
+      toggle(132, "自动聆听", "回复结束后，继续听你说", d.listen,
+             SettingAction::listen, true);
+      if (d.wake_supported)
+        toggle(168, "语音唤醒", brief(d.wake_note), d.wake, SettingAction::wake, true);
+      else {
+        rect(16, 168, 288, 30, cream, 3);
+        text(26, 169, 220, 17, "语音唤醒", 13, muted);
+        text(26, 186, 262, 12, brief(d.wake_note), 9, muted);
+      }
     } else if (d.page == 2) {
       toggle(96, "对话时保持亮屏", "聆听、思考与回复时不自动锁屏", d.awake,
              SettingAction::awake, true);

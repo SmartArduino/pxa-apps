@@ -17,6 +17,12 @@ int main() {
   auto parsed = xiaozhi::parse(message);
   assert(parsed && xiaozhi::text(parsed.get(), "text") == "你好\"\n\\小智");
   assert(xiaozhi::command("bad\"id", "abort").empty());
+  auto wake_abort = xiaozhi::parse(xiaozhi::abort_command("session-1", true));
+  assert(wake_abort && xiaozhi::text(wake_abort.get(), "type") == "abort" &&
+         xiaozhi::text(wake_abort.get(), "reason") == "wake_word_detected");
+  auto touch_abort = xiaozhi::parse(xiaozhi::abort_command("session-1"));
+  assert(touch_abort && xiaozhi::text(touch_abort.get(), "reason").empty());
+  assert(xiaozhi::abort_command("bad\"id", true).empty());
   assert(!xiaozhi::parse("{}garbage") && !xiaozhi::parse("{\"text\":") &&
          !xiaozhi::parse("[]"));
   assert(!xiaozhi::safe_header("token\r\nInjected: value", 100));

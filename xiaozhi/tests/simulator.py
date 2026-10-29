@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Xiaozhi fixture for the real PXA simulator (no public AI service required)."""
 import argparse,base64,ctypes,hashlib,json,math,os,pathlib,socket,socketserver,struct,subprocess,threading,time,zlib,tempfile,shutil
-p=argparse.ArgumentParser();p.add_argument('--simulator',required=True);p.add_argument('--package',required=True);p.add_argument('--publisher-key',required=True);p.add_argument('--artifacts',required=True);p.add_argument('--interactive',action='store_true');p.add_argument('--ime-package');p.add_argument('--offline',action='store_true');p.add_argument('--discovery',action='store_true');p.add_argument('--activation',action='store_true');p.add_argument('--emotions',action='store_true');p.add_argument('--drop',action='store_true');p.add_argument('--scenario',choices=['normal','http-error','no-websocket','activation-flow','malformed','handshake-stall','reconnect','settings-cancel','audio-tail','network-flap','large-headers','profile-separation','save-clicks','muted','capture-warmup','text-audio','early-audio','empty-utterance','response-timeout','cancel-wait','idle-toggle'],default='normal');p.add_argument('--scene',choices=['auto','morning','day','evening','night'],default='auto');args=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('--simulator',required=True);p.add_argument('--package',required=True);p.add_argument('--publisher-key',required=True);p.add_argument('--artifacts',required=True);p.add_argument('--interactive',action='store_true');p.add_argument('--ime-package');p.add_argument('--offline',action='store_true');p.add_argument('--discovery',action='store_true');p.add_argument('--activation',action='store_true');p.add_argument('--emotions',action='store_true');p.add_argument('--drop',action='store_true');p.add_argument('--scenario',choices=['normal','http-error','no-websocket','activation-flow','malformed','handshake-stall','reconnect','settings-cancel','audio-tail','network-flap','large-headers','profile-separation','save-clicks','muted','capture-warmup','text-audio','early-audio','empty-utterance','response-timeout','cancel-wait','idle-toggle','voice-trigger','voice-wait'],default='normal');p.add_argument('--scene',choices=['auto','morning','day','evening','night'],default='auto');args=p.parse_args()
 if args.scenario=='large-headers': args.discovery=True
 root=pathlib.Path(args.artifacts).resolve();root.mkdir(parents=True,exist_ok=True);(root/'finish').unlink(missing_ok=True)
 state=root/'state';state.mkdir(exist_ok=True)
@@ -87,7 +87,7 @@ class Handler(socketserver.BaseRequestHandler):
                     if args.drop or (args.scenario in ('reconnect','profile-separation') and sum(isinstance(v,dict) and v.get('type')=='hello' for v in seen)==1):
                         time.sleep(2);seen.append('connection.dropped');return
                 elif value['type']=='fixture-vad' or (value['type']=='listen' and value['state'] in ('detect','stop')):
-                    if args.scenario in ('empty-utterance','response-timeout','cancel-wait'):
+                    if args.scenario in ('empty-utterance','response-timeout','cancel-wait','voice-wait'):
                         send_json(conn,{'type':'stt','text':' ' if args.scenario=='empty-utterance' else '请想一想'})
                         seen.append('no-answer');continue
                     send_json(conn,{'type':'stt','text':value.get('text','你好，小智')});send_json(conn,{'type':'llm','emotion':'happy'});send_json(conn,{'type':'tts','state':'start'})
@@ -111,6 +111,7 @@ profile={'url':f'ws://127.0.0.1:{server.server_address[1]}/xiaozhi','token':'fix
 profile.update(config_version=2,keep_awake=True)
 if args.scenario=='profile-separation':profile.update(official=True,url='ws://custom.invalid/preserved',token='custom-private-token')
 if args.scenario=='muted':profile['voice_enabled']=False
+if args.scenario in ('voice-trigger','voice-wait'):profile['wake_enabled']=True
 config=json.dumps(profile).encode()
 body=struct.pack('<H',1)+bytes([10])+b'connection'+struct.pack('<H',len(config))+config
 (private/'.pxa-kv-b').unlink(missing_ok=True)
@@ -122,6 +123,7 @@ if args.scenario=='network-flap':
     (root/'network-state').write_text('0');env['PXA_SIM_NETWORK_STATE_FILE']=str(root/'network-state')
 if args.scenario=='capture-warmup':env['PXA_SIM_CAPTURE_START_DELAY_MS']='1200'
 if args.scenario=='muted':env['XIAOZHI_EXPECT_MUTED']='1'
+if args.scenario in ('voice-trigger','voice-wait'):env['PXA_VT_FIXTURE_FILE']=str(root/'voice-command')
 if args.ime_package: env['PXA_IME_PACKAGE']=str(pathlib.Path(args.ime_package).resolve())
 proc=subprocess.Popen([args.simulator,'--package',args.package,'--publisher-key',args.publisher_key,'--state-root',str(state),'--locale','zh-CN','--width','320','--height','240','--pxadb-control-socket',str(control)],env=env,stdout=log,stderr=subprocess.STDOUT)
 def command(value):
@@ -228,6 +230,60 @@ try:
             wait_for(lambda:sum(isinstance(v,dict) and v.get('type')=='hello' for v in seen)>=2)
             wait_for(lambda:seen.count('microphone')>stopped);shot('online-restored.png')
             print('PASS: offline -> online -> capture stops on link loss -> automatic recovery',flush=True)
+        elif args.scenario in ('voice-trigger','voice-wait'):
+            wait_for(lambda:'microphone' in seen)
+            wait_for(lambda:'VT_PROBE_SUBSCRIBED' in (root/'simulator.log').read_text())
+            def voice(action,value):
+                global_serial[0]+=1
+                temporary=root/'voice-command.tmp'
+                temporary.write_text(f'{global_serial[0]} {action} {value}\n')
+                temporary.replace(root/'voice-command')
+                wait_for(lambda:f'VT_PROBE_COMMAND serial={global_serial[0]} ' in (root/'simulator.log').read_text())
+            global_serial=[0]
+            def starts():return sum(isinstance(v,dict) and v.get('type')=='listen' and v.get('state')=='start' for v in seen)
+            def hellos():return sum(isinstance(v,dict) and v.get('type')=='hello' for v in seen)
+            first=starts();microphones=seen.count('microphone')
+            voice('trigger',1);time.sleep(.3)
+            assert starts()==first and seen.count('microphone')>microphones, 'Wake toggled listening off'
+            command('TAP 160 180');time.sleep(.5)
+            old_hellos=hellos();microphones=seen.count('microphone')
+            voice('trigger',2)
+            wait_for(lambda:hellos()>old_hellos and seen.count('microphone')>microphones)
+            shot('wake-from-idle.png')
+            recognition_requested.set()
+            wait_for(lambda:'vad' in seen)
+            if args.scenario=='voice-wait':
+                wait_for(lambda:'no-answer' in seen)
+                old_hellos=hellos();microphones=seen.count('microphone')
+                voice('trigger',3)
+                wait_for(lambda:hellos()>old_hellos and seen.count('microphone')>microphones)
+                shot('wake-from-thinking.png')
+                print('PASS: wake keeps listening, wakes idle, and cancels thinking into a fresh listening session',flush=True)
+            else:
+                time.sleep(.25);shot('before-wake-interrupt.png')
+                first=starts();voice('trigger',3)
+                wait_for(lambda:any(isinstance(v,dict) and v.get('type')=='abort' and v.get('reason')=='wake_word_detected' for v in seen))
+                wait_for(lambda:starts()>first)
+                shot('wake-from-speaking.png')
+                first=starts();voice('trigger',3);time.sleep(.3)
+                assert starts()==first, 'Duplicate detector event started another conversation'
+                command('POINTER DOWN 160 120');time.sleep(.85);command('POINTER UP 160 120');time.sleep(.2)
+                command('TAP 160 72');time.sleep(.15);shot('wake-settings.png')
+                old_hellos=hellos();voice('trigger',4);time.sleep(.3)
+                assert hellos()==old_hellos, 'Wake escaped settings'
+                command('KEY_DOWN X');time.sleep(.08);command('KEY_UP X')
+                wait_for(lambda:(root/'simulator.log').read_text().count('VT_PROBE_SUBSCRIBED')>=2)
+                wait_for(lambda:hellos()>old_hellos)
+                voice('focus',0);old_hellos=hellos();voice('trigger',5);time.sleep(.3)
+                assert hellos()==old_hellos, 'Background App reacted to wake'
+                voice('focus',1)
+                wait_for(lambda:(root/'simulator.log').read_text().count('VT_PROBE_SUBSCRIBED')>=3)
+                wait_for(lambda:hellos()>old_hellos)
+                microphones=seen.count('microphone');old_hellos=hellos()
+                voice('revoke',0);time.sleep(.5)
+                assert seen.count('microphone')>microphones and hellos()==old_hellos, 'Wake revocation broke the ongoing conversation'
+                assert 'Xiaozhi optional wake service: -4' in (root/'simulator.log').read_text()
+                print('PASS: wake state transitions, playback abort reason, duplicates, settings, background and permission revocation',flush=True)
         elif args.scenario=='idle-toggle':
             wait_for(lambda:'microphone' in seen)
             command('TAP 160 180');time.sleep(.6)

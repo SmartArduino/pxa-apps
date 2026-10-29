@@ -1,8 +1,8 @@
 {
   "format": "pxa-package-source-0.2",
   "id": "pxa-xiaozhi",
-  "version": "0.3.5",
-  "release_sequence": 10,
+  "version": "0.4.1",
+  "release_sequence": 12,
   "min_sdk": [
     2,
     1
@@ -109,6 +109,11 @@
     {
       "name": "net.socket",
       "scope": "outbound",
+      "required": false
+    },
+    {
+      "name": "org.doit.voice-trigger",
+      "scope": "system.default",
       "required": false
     }
   ],
