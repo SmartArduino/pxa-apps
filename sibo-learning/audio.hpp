@@ -3,6 +3,7 @@
 #include "../common/media/decoder.hpp"
 #include "../common/media/pcm_packet.hpp"
 #include "model.hpp"
+#include "audio_cache.hpp"
 #include "pcm_convert.hpp"
 #include <cstring>
 #include <ctime>
@@ -16,14 +17,17 @@ inline uint64_t now_ms() {
   return uint64_t(t.tv_sec) * 1000 + t.tv_nsec / 1000000;
 }
 // Decode bounded MP3 frames in the Guest; the Host only needs its PCM sink.
-// No Music decoder, filesystem audio download, or SD card is required.
+// Bounded encoded caching is independent of playback; no SD card is required.
 struct AudioPlayer {
   pxa::Context *ctx = nullptr;
   pxa::TaskScope scope;
-  // Permission handles own their authority: closing one also closes the
-  // network/audio resources issued under it. Keep both for the whole stream.
-  std::optional<pxa::Permission> net_permission, audio_permission;
-  std::optional<pxa::HttpExchange> stream;
+  // Permission handles own their authority. The cache owns network grants;
+  // keep this playback grant for the complete output session.
+  std::optional<pxa::Permission> audio_permission;
+  AudioCache cache;
+  size_t source_offset = 0;
+  std::function<bool()> cache_save_allowed = [] { return true; };
+  bool timer_enabled = false;
   std::optional<pxa::AudioSession> session;
   media::Decoder decoder;
   media::PcmPacket packet;
@@ -40,34 +44,35 @@ struct AudioPlayer {
   unsigned clip_start = 0, clip_end = 0;
   std::string status = "准备好，就听一听";
   std::function<void()> changed;
+  ~AudioPlayer() { scope.cancel(); }
   void notify() {
     if (changed)
       changed();
   }
   void tick_period(bool value) {
-    if (ctx)
+    if (ctx && timer_enabled != value) {
+      timer_enabled = value;
       (void)ctx->clock().set_period(value ? 20 : 0);
+    }
   }
   void stop() {
     ++generation;
     scope.cancel();
-    stream.reset();
     session.reset();
-    net_permission.reset();
     audio_permission.reset();
     active = paused = opening = draining = querying = false;
     head = size = pcm_count = pcm_offset = 0;
-    tick_period(false);
+    if (cache.streaming) cache.cancel_pending();
+    tick_period(cache.busy());
     status = "已停止";
     notify();
   }
   void finish(std::string text) {
-    stream.reset();
     session.reset();
-    net_permission.reset();
     audio_permission.reset();
     active = paused = opening = draining = querying = false;
-    tick_period(false);
+    if (cache.streaming) cache.cancel_pending();
+    tick_period(cache.busy());
     status = std::move(text);
     if (ctx)
       (void)ctx->log().write(pxa::LogLevel::info, "sibo audio: " + status);
@@ -77,6 +82,10 @@ struct AudioPlayer {
              unsigned end_ms = 0) {
     stop();
     ctx = &context;
+    cache.defer_persist();
+    cache.changed = [this] { notify(); };
+    cache.select(context, std::move(url),end_ms);
+    source_offset = 0;
     active = true;
     eof = false;
     sent = 0;
@@ -90,11 +99,10 @@ struct AudioPlayer {
     packet.reset();
     status = "正在连接朗读…";
     tick_period(true);
-    auto tag = generation;
-    auto launched = scope.start(open(std::move(url), tag));
-    if (!launched)
-      finish("无法启动朗读，请重试");
     notify();
+  }
+  void suspend() {
+    stop(); cache.cancel_pending(); tick_period(false);
   }
   void pause_resume() {
     if (!active)
@@ -102,47 +110,6 @@ struct AudioPlayer {
     paused = !paused;
     status = paused ? "暂停了，想听时再继续" : "继续听故事吧";
     notify();
-  }
-  pxa::Task<void> open(std::string url, uint64_t tag) {
-    using namespace pxa;
-    if (!trusted(url)) {
-      finish("朗读地址无效");
-      co_return Result<void>{};
-    }
-    auto permission = co_await ctx->permissions().acquire("net.client", "web");
-    if (tag != generation)
-      co_return Result<void>{};
-    if (!permission) {
-      finish("需要联网授权才能听朗读");
-      co_return Result<void>{};
-    }
-    static constexpr std::array<std::string_view, 1> wanted{"content-type"};
-    auto request = co_await ctx->http().open(
-        {.url = url,
-         .wanted_headers = wanted,
-         .options = {.buffer_bytes = 8192,
-                     .header_bytes = 512,
-                     .max_body_bytes = 64 * 1024 * 1024,
-                     .timeout_ms = 3600000}},
-        *permission);
-    if (tag != generation)
-      co_return Result<void>{};
-    if (!request) {
-      finish("朗读连接失败，请检查网络");
-      co_return Result<void>{};
-    }
-    auto response = co_await std::move(*request).response();
-    if (tag != generation)
-      co_return Result<void>{};
-    if (!response || response->status_code != 200) {
-      finish("这段朗读暂时不能播放");
-      co_return Result<void>{};
-    }
-    net_permission.emplace(std::move(*permission));
-    stream.emplace(std::move(response->body));
-    status = "正在准备声音…";
-    notify();
-    co_return Result<void>{};
   }
   pxa::Task<void> open_output(uint64_t tag) {
     using namespace pxa;
@@ -212,6 +179,8 @@ struct AudioPlayer {
   }
   void tick() {
     scope.reap();
+    cache.tick(!active && cache_save_allowed());
+    tick_period(active || cache.busy());
     if (!active)
       return;
     const auto now = now_ms();
@@ -219,7 +188,11 @@ struct AudioPlayer {
       last_ui = now;
       notify();
     }
-    if (paused || opening || !stream)
+    if (cache.error) {
+      finish("音频加载中断，请检查网络后重试");
+      return;
+    }
+    if (paused || opening)
       return;
     if (draining) {
       if (now - drain_at > 4000) {
@@ -239,7 +212,6 @@ struct AudioPlayer {
         head = 0;
       }
       for (unsigned i = 0; i < 4 && size < 24576; ++i) {
-        auto source = stream->readable();
         auto available =
             std::min<size_t>(4096, compressed.size() - head - size);
         if (!available)
@@ -247,7 +219,7 @@ struct AudioPlayer {
         auto bytes = std::span<std::byte>(
             reinterpret_cast<std::byte *>(compressed.data() + head + size),
             available);
-        auto read = source.transport->io(source.handle, 1, bytes);
+        auto read = cache.read(source_offset, bytes);
         if (!read) {
           if (read.error() != pxa::Error::would_block) {
             if (ctx)
@@ -267,6 +239,7 @@ struct AudioPlayer {
           eof = true;
           break;
         }
+        source_offset += *read;
         size += *read;
       }
     }
@@ -315,6 +288,7 @@ struct AudioPlayer {
       if (!size) {
         if (eof) {
           if (!sent) {
+            if(!rate)cache.reject();
             finish("未识别到 MP3 朗读");
             return;
           }
@@ -358,6 +332,7 @@ struct AudioPlayer {
                        ? unsigned(std::min<uint64_t>(n, first - decoded_frames))
                        : 0;
       if (clip_end && last < decoded_frames + unsigned(n)) {
+        cache.note_clip(clip_end,source_offset-size);
         pcm_count = last > decoded_frames ? unsigned(last - decoded_frames) : 0;
         pcm_offset = std::min(pcm_offset, pcm_count);
         eof = true;

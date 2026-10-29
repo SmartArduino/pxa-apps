@@ -37,6 +37,12 @@ def main():
         sim.key('ENTER');sim.key('ENTER');sim.key('ENTER');f.choose(sim,'听一听朗读')
         wait(sim,'sibo PCM fallback 16000Hz mono',2,35);wait(sim,'sibo PCM started 16000Hz 1ch',2,15)
         time.sleep(1);f.choose(sim,'暂停');sim.expect('继续听');sim.screenshot('stereo-paused');sim.key('ENTER');f.choose(sim,'停止朗读')
+        wait(sim,'sibo audio cache complete bytes=623133',1,25)
+        downloads=sim.log_path.read_text().count('sibo audio cache network')
+        f.choose(sim,'听一听朗读');wait(sim,'sibo audio cache hit memory',1,10)
+        wait(sim,'sibo PCM started 16000Hz 1ch',3,15)
+        assert sim.log_path.read_text().count('sibo audio cache network')==downloads
+        f.choose(sim,'停止朗读')
         assert 'sibo HTTP body error=' not in sim.log_path.read_text()
     print('Legacy public audio negotiation, 24 kHz mono/44.1 kHz stereo conversion, clipping, pause and stop passed',flush=True)
 if __name__=='__main__':main()

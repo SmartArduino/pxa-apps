@@ -4,6 +4,7 @@
 import argparse
 import importlib.util
 import json
+import struct
 from pathlib import Path
 import sys
 import time
@@ -63,8 +64,9 @@ def exercise(sim):
     snapshot=f.personal(sim)
     (private/'cache.tmp').write_bytes(b'x'*45000)
     (private/'personal.tmp').write_bytes(b'x'*4000)
+    (private/'sibo-audio.tmp').write_bytes(b'x'*7000)
     f.restart(sim);sim.expect('继续读')
-    assert not (private/'cache.tmp').exists() and not (private/'personal.tmp').exists()
+    assert not (private/'cache.tmp').exists() and not (private/'personal.tmp').exists() and not (private/'sibo-audio.tmp').exists()
     assert f.personal(sim)==snapshot
     assert sum(p.stat().st_size for p in private.glob('cache-*.bin'))<=62*1024
     sim.screenshot('records-after-restart')
@@ -79,12 +81,22 @@ def exercise(sim):
         (f.ORIGIN+'/old-cache.json',{'unused':'x'*29000})]
     for i,(url,value) in enumerate(fixtures):
         (private/f'cache-{i}.bin').write_text(url+'?\n'+json.dumps(value,ensure_ascii=False,separators=(',',':')))
+    # A valid small audio prefix from an earlier run must participate in the
+    # same private quota even before the first listen in this process.
+    def fnv(data):
+        h=2166136261
+        for byte in data:h=((h^byte)*16777619)&0xffffffff
+        return h
+    key=(VOCAB+'/packs/zk/001.mp3').encode();payload=b'\xff'*12000
+    header=struct.pack('<8sIIHHII',b'SIBOAUD1',len(payload),1000,len(key),1,fnv(payload),3)
+    (private/'.sibo-audio-0.bin').write_bytes(header+struct.pack('<I',fnv(header+key))+key+payload)
     f.restart(sim);sim.expect('继续读')
     assert len(list(private.glob('cache-*.bin')))==4
     f.choose(sim,'同步小课堂');f.choose(sim,'数学');sim.key('ENTER');sim.expect('长篇小课堂')
     sim.key('ENTER');sim.expect('开始阅读');sim.key('ENTER')
     until(lambda:f.personal(sim)['bookmark']['id']=='g1up-long')
     assert not list(private.glob('cache-*.bin')),'Quota retry did not release the competing caches'
+    assert not list(private.glob('.sibo-audio-*.bin')),'Audio cache displaced the learning record'
     f.returned(sim)
     before=f.personal(sim)['answered'];f.choose(sim,'来个小挑战');sim.key('ENTER')
     until(lambda:f.personal(sim)['answered']==before+1)

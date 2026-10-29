@@ -3,6 +3,7 @@
 #include "layout.hpp"
 #include "model.hpp"
 #include "picture_view.hpp"
+#include "text_pages.hpp"
 #include "ui.hpp"
 #include <memory>
 
@@ -82,12 +83,12 @@ struct App {
   Layout layout;
   State<bool> ready{false}, resume_visible{false}, is_poem{false},
       has_quiz{false}, has_image{false}, has_audio{false}, audio_active{false},
-      notice_visible{false};
+      notice_visible{false}, long_question{false}, full_word{false};
   State<std::string> subtitle{"把好奇心，装进小书包"}, summary{""},
       resume_title{""};
   State<std::string> item_title{""}, item_detail{""}, preview{""},
       favorite_label{"收藏起来"}, audio_status{""}, pause_label{"暂停"},
-      notice{""};
+      notice{""}, reader_notice{""};
   State<std::string> reader_text{""}, reader_counter{""}, reader_next{"下一页"},
       reader_title{"一起读一读"};
   State<bool> reader_previous{false}, pinyin_previous{false},
@@ -95,7 +96,7 @@ struct App {
   State<std::string> pinyin_counter{""};
   std::array<Label, 32> han, py;
   State<std::string> question_text{""}, question_counter{""}, feedback_text{""},
-      feedback_next{"下一题"};
+      feedback_next{"下一题"}, feedback_preview{""};
   std::array<Label, 4> answers;
   std::array<Flag, 4> answer_visible;
   State<bool> self_rating{false}, card_revealed{false}, card_previous{false};
@@ -136,6 +137,7 @@ struct App {
   unsigned list_panel = 0, reader_index = 0, pinyin_index = 0,
            question_index = 0, round_score = 0, bookmark_page = 0;
   unsigned word_index = 0, card_panel = 0;
+  std::optional<size_t> bookmark_offset;
   std::array<uint32_t, 4> cache_ages{};
   uint32_t cache_clock = 0;
   unsigned read_count = 0, answered_count = 0, correct_count = 0, revision = 0,
@@ -160,6 +162,8 @@ struct App {
   }
   void message(std::string value) {
     notice_visible.set(!value.empty());
+    auto note=text_pages(value,std::max(2u,(layout.content_width>20?layout.content_width-20:24)/6),1).front();
+    reader_notice.set(note+(note.size()<value.size()?"…":""));
     notice.set(std::move(value));
   }
   void cancel() {
@@ -288,7 +292,8 @@ struct App {
     item_title.set(selected.title);
     item_detail.set(selected.detail);
     card_revealed.set(false);
-    card_meaning.set(selected.body);
+    card_meaning.set(excerpt(selected.body));
+    full_word.set(false);
     card_action.set("翻开词义");
     bool in_unit =
         word_index < word_bank.size() && same(word_bank[word_index], selected);
@@ -323,6 +328,7 @@ struct App {
       word_turn(1);
     else {
       card_revealed.set(true);
+      full_word.set(true);
       card_action.set("下一个单词");
     }
   }
@@ -459,16 +465,35 @@ struct App {
         reader_index ? (layout.content_width - 8) / 2 : layout.content_width));
     reader_next.set(reader_index + 1 < pages.size() ? "下一页" : "读完啦");
   }
+  unsigned reader_columns() const {
+    return std::max(2u, (layout.content_width > 16 ? layout.content_width-16 : 20) / layout.reader_unit);
+  }
+  unsigned reader_rows() const {
+    const unsigned toolbar=layout.roomy?56:38;
+    const unsigned reserved=2*layout.margin+layout.header+7+toolbar+20+16+10+24;
+    const unsigned available=layout.height>reserved?layout.height-reserved:30;
+    return std::clamp(available/(layout.reader_unit==14?42:30),1u,64u);
+  }
+  std::string excerpt(std::string_view text) const {
+    auto p=text_pages(text,reader_columns(),std::min(3u,reader_rows()));
+    return p.front()+(p.size()>1?"…":"");
+  }
+  void feedback(std::string text) {
+    feedback_preview.set(excerpt(text));feedback_text.set(std::move(text));
+  }
+  void read_question() {
+    auto &q=questions[question_index];
+    auto text=q.text;
+    for(unsigned i=0;i<q.count;++i)
+      text+="\n\n"+std::string(1,char('A'+i))+". "+q.options[i];
+    read(std::move(text),"完整题目",Screen::quiz);
+  }
   void read(std::string body, std::string title, Screen from = Screen::detail,
             unsigned index = 0) {
     reader_from = from;
     reader_title.set(std::move(title));
-    pages = study::reading_pages(body,
-                                 layout.roomy   ? (layout.content_width - 20) /
-                                                      layout.reader_unit
-                                 : width() > 48 ? (width() - 48) / 10
-                                                : 12,
-                                 layout.reader_rows);
+    message("");
+    pages = text_pages(body, reader_columns(), reader_rows());
     reader_index = std::min<unsigned>(index, unsigned(pages.size() - 1));
     reader_update();
     show(Screen::reader);
@@ -476,11 +501,15 @@ struct App {
   void remember() {
     auto previous = std::move(bookmark);
     auto previous_page = bookmark_page;
+    auto previous_offset=bookmark_offset;
     bookmark = selected;
     bookmark_page = reader_index;
+    bookmark_offset=0;
+    for(unsigned i=0;i<reader_index;++i)*bookmark_offset+=pages[i].size();
     if (personal_snapshot().size() > 28 * 1024) {
       bookmark = std::move(previous);
       bookmark_page = previous_page;
+      bookmark_offset=previous_offset;
       message("这篇较长，阅读位置暂未保存。可以移除一些收藏后再试。");
     }
     refresh_summary();
@@ -508,8 +537,21 @@ struct App {
   }
   void resume() {
     player.stop();
+    size_t offset=bookmark_offset.value_or(0);
+    if(!bookmark_offset) {
+      auto old=study::reading_pages(bookmark.body,
+          layout.roomy?(layout.content_width-20)/layout.reader_unit:
+          width()>48?(width()-48)/10:12,layout.reader_rows);
+      for(size_t i=0;i<std::min<size_t>(bookmark_page,old.size());++i)offset+=old[i].size();
+    }
     opened(bookmark, Screen::home);
-    read_selected(bookmark_page);
+    read(selected.body,selected.title,Screen::detail);
+    size_t at=0;
+    for(unsigned i=0;i<pages.size();++i) {
+      if(at>offset)break;
+      reader_index=i;at+=pages[i].size();
+    }
+    reader_update();remember();
   }
   void toggle_favorite() {
     auto it = std::find_if(favorites.begin(), favorites.end(),
@@ -581,11 +623,14 @@ struct App {
   }
   void quiz_update() {
     auto &q = questions[question_index];
-    question_text.set(q.text);
+    question_text.set(excerpt(q.text));
+    bool lengthy=excerpt(q.text)!=q.text;
+    for(unsigned i=0;i<q.count;++i)lengthy|=excerpt(q.options[i])!=q.options[i];
+    long_question.set(lengthy);
     question_counter.set("小挑战 " + std::to_string(question_index + 1) +
                          " / " + std::to_string(questions.size()));
     for (unsigned i = 0; i < 4; ++i) {
-      answers[i].value.set(q.options[i]);
+      answers[i].value.set(excerpt(q.options[i]));
       answer_visible[i].value.set(i < q.count);
     }
     show(Screen::quiz);
@@ -605,7 +650,7 @@ struct App {
       return;
     auto &q = questions[question_index];
     if (q.self_check) {
-      feedback_text.set("对照一下自己的答案\n\n答案：" + q.solution +
+      feedback("对照一下自己的答案\n\n答案：" + q.solution +
                         (q.explanation.empty() ? "" : "\n\n" + q.explanation));
       self_rating.set(true);
       show(Screen::selfcheck);
@@ -620,7 +665,7 @@ struct App {
       ++correct_count;
       ++round_score;
     }
-    feedback_text.set(
+    feedback(
         std::string(correct ? "答对啦！\n\n" : "再想一想，也在进步。\n\n") +
         "答案：" + (q.self_check ? q.solution : q.options[q.answer]) +
         (q.explanation.empty() ? "" : "\n\n" + q.explanation));
@@ -645,7 +690,8 @@ struct App {
   }
   void audio_changed() {
     audio_status.set(player.status +
-                     (player.active ? " · " + player.position() : ""));
+                     (player.active ? " · " + player.position() : "") +
+                     (player.cache.label.empty() ? "" : " · " + player.cache.label));
     audio_active.set(player.active);
     pause_label.set(player.paused ? "继续听" : "暂停");
   }
@@ -732,7 +778,7 @@ struct App {
     // Gen4 grants 64 KiB of private files. Caches are disposable and must
     // leave room for both sides of an atomic personal-record replacement.
     std::array<size_t, 4> sizes{};
-    size_t total = incoming;
+    size_t total = incoming + player.cache.disk_bytes();
     for (unsigned i = 0; i < 4; ++i) {
       if (int(i) == replacing)
         continue;
@@ -1063,7 +1109,8 @@ struct App {
         "{\"read\":" + std::to_string(read_count) +
         ",\"answered\":" + std::to_string(answered_count) +
         ",\"correct\":" + std::to_string(correct_count) +
-        ",\"page\":" + std::to_string(bookmark_page) + ",\"bookmark\":" +
+        ",\"page\":" + std::to_string(bookmark_page) +
+        (bookmark_offset ? ",\"offset\":"+std::to_string(*bookmark_offset) : "") + ",\"bookmark\":" +
         (bookmark.title.empty() ? "null" : serialize(bookmark)) +
         ",\"favorites\":[";
     bool first = true;
@@ -1077,6 +1124,8 @@ struct App {
     return bytes;
   }
   Task<void> save_loop() {
+    player.cache.defer_persist();
+    (void)co_await ctx->fs().remove("sibo-audio.tmp");
     while (saved_revision != revision) {
       auto rev = revision;
       auto bytes = personal_snapshot();
@@ -1089,6 +1138,7 @@ struct App {
                                           ".bin");
         (void)co_await ctx->fs().remove("cache.tmp");
         cache_ages.fill(0);
+        (void)co_await player.cache.evict_disk();
         saved = co_await write_file("personal.json", std::move(bytes),
                                     "personal.tmp");
       }
@@ -1114,6 +1164,9 @@ struct App {
     }
   }
   Task<void> clear_cache() {
+    player.suspend();
+    player.cache.ctx=ctx;
+    (void)co_await player.cache.clear();
     for (unsigned i = 0; i < 4; ++i)
       (void)co_await ctx->fs().remove("cache-" + std::to_string(i) + ".bin");
     (void)co_await ctx->fs().remove("cache.tmp");
@@ -1122,11 +1175,11 @@ struct App {
     cache_ages.fill(0);
     cache_clock = 0;
     course_assets.clear();
-    message("在线缓存清理好了，收藏与阅读位置都保留着。");
+    message("音频与在线缓存清理好了，收藏与阅读位置都保留着。");
     co_return Result<void>{};
   }
   Task<void> initialize() {
-    for (const auto *temp : {"personal.tmp", "cache.tmp", "cache-order.tmp"})
+    for (const auto *temp : {"personal.tmp", "cache.tmp", "cache-order.tmp", "sibo-audio.tmp"})
       (void)co_await ctx->fs().remove(temp);
     auto bytes = co_await read_file("personal.json", 256 * 1024);
     if (bytes && study::complete_json(*bytes)) {
@@ -1137,6 +1190,8 @@ struct App {
       correct_count =
           std::min<uint64_t>(root.get("correct").number(), answered_count);
       bookmark_page = std::min<uint64_t>(root.get("page").number(), 4096);
+      auto saved_offset=root.get("offset");
+      if(saved_offset)bookmark_offset=std::min<uint64_t>(saved_offset.number(),body_limit);
       auto value = root.get("bookmark");
       if (value)
         deserialize(
@@ -1164,6 +1219,8 @@ struct App {
       }
       cache_clock = *std::max_element(cache_ages.begin(), cache_ages.end());
     }
+    (void)co_await player.cache.inspect();
+    (void)co_await player.cache.trim_disk();
     (void)co_await trim_cache();
     refresh_summary();
     show(Screen::home);
@@ -1400,6 +1457,7 @@ struct App {
   }
   Result<void> on_start(Context &context, std::span<const std::byte> config) {
     ctx = &context;
+    player.cache.ctx = &context;
     auto result = environment.initialize(config);
     if (!result)
       return result;
@@ -1414,6 +1472,9 @@ struct App {
     pinyin_columns = layout.pinyin_columns;
     pinyin_rows = layout.pinyin_rows;
     player.changed = [this] { audio_changed(); };
+    player.cache.disk_budget=[this] { return cache_budget(); };
+    player.cache.reserve_disk=[this](size_t bytes) { return trim_cache(bytes); };
+    player.cache_save_allowed=[this] { return !save_running; };
     (void)ctx->window().fullscreen(WindowBarMode::hidden,
                                    WindowBarMode::hidden);
     return ctx->tasks().start(initialize());
@@ -1440,7 +1501,7 @@ struct App {
     return BackAction::stay;
   }
   void on_background(Context &) {
-    player.stop();
+    player.suspend();
     if (screen == Screen::loading)
       back();
     else
@@ -1679,6 +1740,11 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
               p.tx.logical_px(previous, protocol::width,
                               (a.layout.content_width - 8) / 2);
     p.visible(previous, a.card_previous);
+    auto full=p.button(b,"完整词卡",[&a] {
+      a.read(a.selected.title+"\n"+a.selected.detail+"\n\n"+a.selected.body,
+             "完整词卡",a.item_screen);
+    });
+    p.visible(full,a.full_word);
     notice(b);
     auto title = std::string_view("英语词卡");
     header(f, title);
@@ -1713,7 +1779,8 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
   {
     auto f = stage(Screen::reader), wrap = p.body(f), b = p.scroll(wrap);
     p.text(b, a.reader_counter, Font::caption, green);
-    notice(b);
+    auto note=p.text(b,a.reader_notice,Font::caption,muted);
+    p.visible(note,a.notice_visible);
     auto text =
         p.text(b, a.reader_text,
                a.layout.reader_unit >= 12 ? Font::display : Font::title);
@@ -1785,12 +1852,14 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
                                 (a.layout.content_width - 8) / 2);
       p.visible(n, a.answer_visible[i].value);
     }
+    auto full=p.button(b,"完整题目",[&a] { a.read_question(); });
+    p.visible(full,a.long_question);
     auto title = std::string_view("来个小挑战");
     header(f, title);
   }
   {
     auto f = stage(Screen::selfcheck), wrap = p.body(f), b = p.scroll(wrap);
-    p.text(b, a.feedback_text, Font::title);
+    p.text(b, a.feedback_preview, Font::title);
     p.button(
         wrap, "我答对了",
         [&a] {
@@ -1810,7 +1879,7 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
   }
   {
     auto f = stage(Screen::feedback), wrap = p.body(f), b = p.scroll(wrap);
-    p.text(b, a.feedback_text, Font::title);
+    p.text(b, a.feedback_preview, Font::title);
     p.button(wrap, a.feedback_next, [&a] { a.next_question(); }, true);
     p.button(wrap, "分页看讲解", [&a] {
       a.read(a.feedback_text.get(), "慢慢想一想", Screen::feedback);
@@ -1917,7 +1986,7 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
                  "、讲解、插图和朗读需联网，应用不会自动开启设备WiFi。\n\n最近"
                  "内容按需联网读取，缓存按个人记录体积自动缩减，合计至多62KB；"
                  "空间不足时优先保存个人记录。收藏最多12篇。内部存储即可使用，"
-                 "不依赖SD卡。音频直接播放，不保存音频文件。\n\n阅读时可翻页，"
+                 "不依赖SD卡。常用音频会自动缓存，容量不足时淘汰旧缓存；小书包里可以清理。\n\n长文本进入分页阅读后，上下键选择上一页或下一页，确认翻页。长题目和词卡也有完整阅读入口。\n\n阅读时可翻页，"
                  "首页“继续读”会保留上次正文与阅读位置。\n\n英语词卡先想词义，"
                  "再按确认翻开答案。单词小挑战有自动判分。同步教材的选择、判断"
                  "题可直接作答，开放题先思考再对照答案、自评。教材暂以文字学习"
