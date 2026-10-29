@@ -7,7 +7,7 @@ struct Controls {
  struct Item {Rect area;int id=0;bool enabled=true,grid=false;uint16_t color=mint;std::array<char,96> text{};};
  std::array<Item,24> items{};unsigned count=0;int focus=-1,pressed=-1,down_x=0,down_y=0;
  void begin(){count=0;}
- void add(Rect area,int id,std::string_view text,uint16_t color=mint,bool enabled=true,bool grid=false){if(count==items.size())return;auto &i=items[count++];i={};i.area=area;i.id=id;i.enabled=enabled;i.grid=grid;i.color=color;auto n=std::min(text.size(),i.text.size()-1);std::memcpy(i.text.data(),text.data(),n);}
+ [[gnu::noinline]] void add(Rect area,int id,std::string_view text,uint16_t color=mint,bool enabled=true,bool grid=false){if(count==items.size())return;auto &i=items[count++];i={};i.area=area;i.id=id;i.enabled=enabled;i.grid=grid;i.color=color;auto n=std::min(text.size(),i.text.size()-1);std::memcpy(i.text.data(),text.data(),n);}
  int hit(int x,int y,bool enabled_only=true)const{for(unsigned i=0;i<count;++i)if(items[i].area.contains(x,y)&&(!enabled_only||items[i].enabled))return items[i].id;return -1;}
  bool enabled(int id)const{for(unsigned i=0;i<count;++i)if(items[i].id==id)return items[i].enabled;return false;}
  void normalize(){if(enabled(focus))return;focus=-1;for(unsigned i=0;i<count;++i)if(items[i].enabled){focus=items[i].id;break;}}

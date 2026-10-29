@@ -20,7 +20,7 @@ struct Motion {
   void calibrate(){sum={};variance={};calibration_start=0;calibration_count=0;calibrating=true;calibrated=false;hits=0;}
   bool acceleration(std::array<int32_t,3> value,uint64_t now) {
     std::array<float,3> next;float magnitude=0,jerk=0;
-    for(unsigned i=0;i<3;++i){next[i]=value[i]/9806650.f;magnitude+=next[i]*next[i];jerk+=std::pow(next[i]-raw[i],2);}
+    for(unsigned i=0;i<3;++i){next[i]=value[i]/9806650.f;magnitude+=next[i]*next[i];float delta=next[i]-raw[i];jerk+=delta*delta;}
     // Gen4's mounted IMU axes are rotated relative to the portrait screen.
     Vec reading{-next[1],next[0]};filtered=samples?Vec{filtered.x*.65f+reading.x*.35f,filtered.y*.65f+reading.y*.35f}:reading;
     bool shake=false;

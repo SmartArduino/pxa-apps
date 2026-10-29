@@ -40,7 +40,8 @@ namespace motion {
    pxa::game::RenderOptions options;options.width=w;options.height=h;options.buffers=2;options.direct_scanout=true;options.max_draw_bytes=buffer.capacity();
    auto created=co_await ctx->game().create(options);if(!created)co_return std::unexpected(created.error());renderer.emplace(std::move(*created));
    if(auto sent=palette();!sent)co_return sent;
-   for(unsigned i=0;i<font_pages;++i){char path[64];std::snprintf(path,sizeof path,"assets/font-%u.pxr",i);auto a=co_await ctx->assets().load(pxa::AssetKind::texture,path);
+   if constexpr(requires(Derived& app){app.upload_fonts();}){if(auto loaded_fonts=game().upload_fonts();!loaded_fonts)co_return loaded_fonts;}
+   else for(unsigned i=0;i<font_pages;++i){char path[64];std::snprintf(path,sizeof path,"assets/font-%u.pxr",i);auto a=co_await ctx->assets().load(pxa::AssetKind::texture,path);
      if(!a)co_return std::unexpected(a.error());fonts[i].emplace(std::move(*a));if(auto bound=renderer->bind_asset(*fonts[i],{uint8_t(i)});!bound)co_return bound;}
    ready=true;game().started();last_tick=0;(void)ctx->clock().set_period(33);log(game().ready_message());render();co_return pxa::Result<void>{};
  }
@@ -93,7 +94,7 @@ namespace motion {
    connecting=false;sensor_status=acceleration?"体感已连接":"体感暂不可用，可用按键";dirty=true;
    log(rotation?"Motion connected acc=1 gyro=1":acceleration?"Motion connected acc=1 gyro=0":"Motion unavailable");co_return pxa::Result<void>{};
  }
- void render(){if(!ready||!renderer||!ctx->foreground())return;pxa::game::Frame frame(*renderer,buffer.bytes());frame.clear({paper});
+ void render(){if(!ready||!renderer||!ctx->foreground())return;pxa::game::Frame frame(*renderer,buffer.bytes());if constexpr(requires(Derived& d){d.background_color();})frame.clear({game().background_color()});else frame.clear({paper});
    Paint p{frame,renderer->supports(pxa::game::RenderCapability::sprite_texel_alpha),w,h};controls.begin();game().draw(p);controls.paint(p);
    if constexpr(requires(Derived& d,Paint& p){d.overlay(p);})game().overlay(p);
    auto sent=frame.submit();dirty=!sent;

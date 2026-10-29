@@ -1,0 +1,127 @@
+{
+  "format": "pxa-package-source-0.2",
+  "id": "pxa-fortune-sticks",
+  "version": "0.1.2",
+  "release_sequence": 3,
+  "name": "好运签",
+  "description": "摇晃签筒、点击或确认抽签，24支原创签文、主题选择、签文解读和收藏。离线可玩，适配三按键与触屏。",
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  },
+  "icon": "assets/icon.png",
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 1048576,
+      "pinned": false
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "artifact": "aot",
+      "services": [
+        {
+          "name": "ui",
+          "min_version": [
+            0,
+            9
+          ]
+        },
+        {
+          "name": "window",
+          "min_version": [
+            0,
+            3
+          ]
+        },
+        {
+          "name": "clock",
+          "min_version": [
+            0,
+            3
+          ]
+        },
+        {
+          "name": "storage",
+          "min_version": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "game-render",
+          "min_version": [
+            1,
+            5
+          ]
+        },
+        {
+          "name": "assets",
+          "min_version": [
+            2,
+            2
+          ]
+        },
+        {
+          "name": "sensor",
+          "min_version": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "permission",
+          "min_version": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "log",
+          "min_version": [
+            0,
+            1
+          ]
+        }
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "random",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "sensor.read",
+      "scope": "motion.acceleration",
+      "required": false
+    },
+    {
+      "name": "sensor.read",
+      "scope": "motion.angular-velocity",
+      "required": false
+    }
+  ]
+}

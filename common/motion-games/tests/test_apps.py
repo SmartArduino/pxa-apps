@@ -24,7 +24,8 @@ class AppSim(Simulator):
    self.key('DOWN')
   raise AssertionError((label,self.focus()))
  def wait_log(self,label,count=1):
-  for _ in range(120):
+  # Instrumented simulator clocks can advance below real time under CPU load.
+  for _ in range(400):
    if self.log_path.read_text().count(label)>=count:return
    assert self.process.poll() is None
    time.sleep(.05)
