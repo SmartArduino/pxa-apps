@@ -60,10 +60,14 @@ struct Slot {
   State<std::string> title{""}, detail{""};
   State<bool> shown{false};
 };
+struct PinyinCell {
+  std::string han, py, punctuation;
+};
 struct ListPanel {
   std::array<Slot, 24> slots;
   State<std::string> title{""}, counter{""};
-  State<bool> previous{false}, next{false}, categories{false};
+  State<bool> previous{false}, next{false}, categories{false}, empty{false};
+  State<std::string> empty_title{""}, empty_tip{""};
 };
 struct App;
 struct AppView : ViewModifiers {
@@ -87,14 +91,14 @@ struct App {
   State<std::string> subtitle{"把好奇心，装进小书包"}, summary{""},
       resume_title{""};
   State<std::string> item_title{""}, item_detail{""}, preview{""},
-      favorite_label{"收藏起来"}, audio_status{""}, pause_label{"暂停"},
+      favorite_label{"收藏起来"}, audio_status{""}, pause_label{"暂停"}, pause_short{"暂停"},
       notice{""}, reader_notice{""};
   State<std::string> reader_text{""}, reader_counter{""}, reader_next{"下一页"},
-      reader_title{"一起读一读"};
-  State<bool> reader_previous{false}, pinyin_previous{false},
-      pinyin_next_visible{false};
-  State<std::string> pinyin_counter{""};
-  std::array<Label, 32> han, py;
+      reader_title{"一起读一读"}, reader_heading{"一起读一读"};
+  State<bool> reader_previous{false}, pinyin_previous{false};
+  State<std::string> pinyin_counter{""}, pinyin_next{"下一页"};
+  std::array<Label, 64> han, py, punctuation;
+  State<int32_t> listen_button_width{218};
   State<std::string> question_text{""}, question_counter{""}, feedback_text{""},
       feedback_next{"下一题"}, feedback_preview{""};
   std::array<Label, 4> answers;
@@ -132,7 +136,7 @@ struct App {
   std::vector<Category> story_categories;
   Entry selected, bookmark;
   std::vector<std::string> pages;
-  std::vector<std::vector<Cell>> pinyin_pages;
+  std::vector<std::vector<PinyinCell>> pinyin_pages;
   std::vector<Question> questions;
   unsigned list_panel = 0, reader_index = 0, pinyin_index = 0,
            question_index = 0, round_score = 0, bookmark_page = 0;
@@ -186,11 +190,10 @@ struct App {
     item_title.set(selected.title);
     item_detail.set(selected.detail);
     is_poem.set(selected.kind == Kind::poem);
-    auto first = study::reading_pages(
-        selected.body,
-        layout.roomy ? (layout.content_width - 20) / layout.reader_unit : 28,
-        3);
-    preview.set(first.front());
+    auto first = text_pages(selected.body,
+        std::max(2u, (layout.detail_summary_width - 32) / 8),
+        layout.roomy ? 4 : layout.height < 250 ? 1 : 2);
+    preview.set(first.front() + (first.size() > 1 ? "…" : ""));
     favorite_label.set(
         std::any_of(favorites.begin(), favorites.end(),
                     [&](const auto &e) { return same(e, selected); })
@@ -200,6 +203,8 @@ struct App {
     has_image.set(selected.course || !selected.image.empty());
     has_audio.set(selected.kind == Kind::poem || !selected.audio.empty());
     has_follow.set(!selected.follow.empty());
+    listen_button_width.set(int(layout.detail_grid && !selected.follow.empty()
+        ? (layout.detail_actions_width - 8) / 2 : layout.detail_actions_width));
     if (!player.active)
       audio_status.set("常用音频会自动缓存");
     message("");
@@ -298,6 +303,7 @@ struct App {
     card_meaning.set(excerpt(selected.body));
     full_word.set(false);
     card_action.set("翻开词义");
+    audio_status.set("点一下，听听它怎么读");
     bool in_unit =
         word_index < word_bank.size() && same(word_bank[word_index], selected);
     card_counter.set(in_unit ? "单词 " + std::to_string(word_index + 1) +
@@ -327,12 +333,17 @@ struct App {
     open_card();
   }
   void flip_card() {
-    if (card_revealed.get())
-      word_turn(1);
+    const bool in_unit = word_index < word_bank.size() && same(word_bank[word_index], selected);
+    if (card_revealed.get()) {
+      if (in_unit)
+        word_turn(1);
+      else
+        back();
+    }
     else {
       card_revealed.set(true);
       full_word.set(true);
-      card_action.set("下一个单词");
+      card_action.set(!in_unit ? "返回列表" : word_index + 1 < word_bank.size() ? "下一个单词" : "返回单词表");
     }
   }
   void push_list(std::string title, std::vector<Entry> entries,
@@ -359,6 +370,11 @@ struct App {
         std::max<size_t>(1, (list.rows.size() + capacity - 1) / capacity);
     list.page = std::min<unsigned>(list.page, unsigned(total - 1));
     view.title.set(list.title);
+    view.empty.set(list.rows.empty());
+    view.empty_title.set(list.title == "我的收藏" ? "小书包还空着" : "暂时没有内容");
+    view.empty_tip.set(list.title == "我的收藏"
+        ? "打开喜欢的内容，点“收藏起来”。"
+        : "返回后换个主题看看吧。");
     view.counter.set(std::to_string(list.page + 1) + " / " +
                      std::to_string(total) + " 页 · " +
                      std::to_string(list.rows.size()) + " 项");
@@ -467,6 +483,14 @@ struct App {
     reader_button_width.set(int32_t(
         reader_index ? (layout.content_width - 8) / 2 : layout.content_width));
     reader_next.set(reader_index + 1 < pages.size() ? "下一页" : "读完啦");
+    update_reader_heading();
+  }
+  void update_reader_heading() {
+    const unsigned reserved = (layout.roomy ? 68 : 54) + 6 +
+        (player.active ? (layout.roomy ? 74 : 54) : 0);
+    auto width = layout.content_width > reserved ? layout.content_width - reserved : 32;
+    auto parts = text_pages(reader_title.get(), width > 16 ? std::max(2u, (width - 16) / 8) : 2, 1);
+    reader_heading.set(parts.front() + (parts.size() > 1 ? "…" : ""));
   }
   unsigned reader_columns() const {
     return std::max(2u, (layout.content_width > 16 ? layout.content_width-16 : 20) / layout.reader_unit);
@@ -585,15 +609,16 @@ struct App {
     save();
   }
   void pinyin_update() {
-    for (unsigned i = 0; i < 32; ++i) {
+    for (unsigned i = 0; i < han.size(); ++i) {
       bool valid = i < pinyin_pages[pinyin_index].size();
       han[i].value.set(valid ? pinyin_pages[pinyin_index][i].han : "");
       py[i].value.set(valid ? pinyin_pages[pinyin_index][i].py : "");
+      punctuation[i].value.set(valid ? pinyin_pages[pinyin_index][i].punctuation : "");
     }
     pinyin_counter.set("拼音 " + std::to_string(pinyin_index + 1) + " / " +
                        std::to_string(pinyin_pages.size()));
     pinyin_previous.set(pinyin_index > 0);
-    pinyin_next_visible.set(pinyin_index + 1 < pinyin_pages.size());
+    pinyin_next.set(pinyin_index + 1 < pinyin_pages.size() ? "下一页" : "读完啦");
   }
   void open_pinyin() {
     if (selected.pinyin.empty())
@@ -603,14 +628,26 @@ struct App {
       return;
     }
     pinyin_pages.clear();
-    std::vector<Cell> current;
+    std::vector<PinyinCell> current;
     const auto capacity = pinyin_columns * pinyin_rows;
+    bool previous_character = false;
     for (const auto &cell : selected.pinyin) {
       if (cell.han == "\n") {
         while (current.size() % pinyin_columns)
-          current.push_back({"", ""});
-      } else
-        current.push_back(cell);
+          current.push_back({"", "", {}});
+        previous_character = false;
+      } else {
+        auto *previous = !current.empty() ? &current.back()
+            : !pinyin_pages.empty() ? &pinyin_pages.back().back() : nullptr;
+        const bool closing = cell.py.empty() && !cell.han.empty() && cell.han.size() <= 3 &&
+            std::string_view("，。！？；：、,.!?;:）】》”’").find(cell.han) != std::string_view::npos;
+        if (previous_character && previous && previous->punctuation.empty() && closing) {
+          previous->punctuation = cell.han;
+          continue;
+        }
+        current.push_back({cell.han, cell.py, {}});
+        previous_character = true;
+      }
       if (current.size() >= capacity) {
         pinyin_pages.push_back(std::move(current));
         current.clear();
@@ -698,6 +735,8 @@ struct App {
                      (player.cache.label.empty() ? "" : " · " + player.cache.label));
     audio_active.set(player.active);
     pause_label.set(player.paused ? "继续听" : "暂停");
+    pause_short.set(player.paused ? "继续" : "暂停");
+    update_reader_heading();
   }
   void listen() {
     if (!selected.audio.empty())
@@ -973,8 +1012,11 @@ struct App {
             co_return Result<void>{};
           if (data && enrich(*data, selected)) {
             selected.audio = asset->audio;
-            selected.follow = asset->follow;
+            if (!asset->follow.empty())
+              selected.follow = asset->follow;
             has_follow.set(!selected.follow.empty());
+            listen_button_width.set(int(layout.detail_grid && !selected.follow.empty()
+                ? (layout.detail_actions_width - 8) / 2 : layout.detail_actions_width));
             selected.image = std::string(api) + "/api/poem/course_cover/" +
                              selected.id + ".jpg";
             if (job == Job::read) {
@@ -1239,17 +1281,15 @@ struct App {
       return;
     drawing.reset();
     const int x = int(layout.hero_width) / 2;
-    drawing.rect(0, 0, layout.hero_width, 72, 0xf6e5bfff, 18)
-        .rect(x - 51, 18, 48, 42, white, 5)
-        .rect(x + 3, 18, 48, 42, 0xe0f1e5ff, 5)
-        .line(x, 20, x, 61, green, 3)
-        .line(x - 40, 30, x - 14, 30, 0xe3b85cff, 3)
-        .line(x - 40, 39, x - 20, 39, 0xe3b85cff, 3)
-        .line(x + 14, 31, x + 39, 31, 0x75b49bff, 3)
-        .line(x + 14, 40, x + 34, 40, 0x75b49bff, 3)
-        .rect(x - 8, 5, 16, 16, 0xf3ba49ff, 8)
-        .rect(15, 18, 5, 5, green, 2)
-        .rect(layout.hero_width - 24, 48, 5, 5, 0xd98b65ff, 2);
+    const int h = int(layout.hero_height), y = h / 2, w = std::min(48, h - 12);
+    drawing.rect(0, 0, layout.hero_width, h, 0xf6e5bfff, 14)
+        .rect(x - w - 2, y - h / 4, w, h / 2, white, 4)
+        .rect(x + 2, y - h / 4, w, h / 2, mint, 4)
+        .line(x, y - h / 4, x, y + h / 4, green, 2)
+        .line(x - w + 6, y - 2, x - 8, y - 2, 0xe3b85cff, 2)
+        .line(x + 8, y - 2, x + w - 6, y - 2, 0x75b49bff, 2)
+        .rect(15, y - 2, 4, 4, green, 2)
+        .rect(layout.hero_width - 24, y + 4, 4, 4, 0xd98b65ff, 2);
     (void)hero_canvas.present(drawing);
   }
   void picture() {
@@ -1580,7 +1620,7 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
       p.ok &= p.tx.logical_px(intro, protocol::width,
                               a.layout.sidebar ? a.layout.sidebar_width
                                                : a.layout.content_width);
-      p.canvas(intro, a.hero_canvas, a.layout.hero_width, 72);
+      p.canvas(intro, a.hero_canvas, a.layout.hero_width, a.layout.hero_height);
       auto description = a.layout.sidebar ? intro : p.box(intro);
       if (!a.layout.sidebar)
         p.ok &=
@@ -1594,8 +1634,9 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
       tiles = p.box(shell);
       p.ok &= p.tx.logical_px(tiles, protocol::width, a.layout.home_width);
     } else {
-      p.canvas(b, a.hero_canvas, a.layout.hero_width, 72);
-      p.text(b, a.subtitle, Font::title, green);
+      p.canvas(b, a.hero_canvas, a.layout.hero_width, a.layout.hero_height);
+      if (a.layout.height >= 250)
+        p.text(b, a.subtitle, Font::body, green);
       p.text(b, a.summary, Font::caption, muted);
       auto resume = p.button(b, a.resume_title, [&a] { a.resume(); });
       p.visible(resume, a.resume_visible);
@@ -1609,6 +1650,7 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     constexpr uint32_t colors[] = {0xd7eee7ff, 0xffedcaff, 0xe0f1e5ff,
                                    0xe3efffff, 0xeee7ffff, 0xffe8ddff,
                                    0xe8f2dfff, 0xefede5ff};
+    constexpr const char *symbols[] = {"诗", "书", "读", "词", "课", "探", "藏", "包"};
     uint32_t row = tiles;
     const auto columns = a.layout.home_columns;
     const auto tile_width = (a.layout.home_width - (columns - 1) * 8) / columns;
@@ -1616,21 +1658,35 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
       if (a.layout.roomy) {
         if (i % columns == 0)
           row = p.box(tiles, true, 8);
-        auto tile = p.button_root(row, [action, i] { action(i); });
+      }
+      {
+        auto tile = p.button_root(a.layout.roomy ? row : tiles,
+                                  [action, i] { action(i); });
+        p.padding(tile, 12, a.layout.roomy ? 14 : 8, 52,
+                  a.layout.roomy ? 14 : 8);
         p.ok &= p.tx.logical_px(tile, protocol::width, tile_width) &&
-                p.tx.logical_px(tile, protocol::height,
-                                a.layout.home_tile_height) &&
                 p.tx.rgba(tile, protocol::background, colors[i]);
+        if (a.layout.roomy)
+          p.ok &= p.tx.logical_px(tile, protocol::height, a.layout.home_tile_height);
         p.text(tile, labels[i],
-               tile_width < 140             ? Font::body
-               : a.layout.reader_unit >= 12 ? Font::display
-                                            : Font::title,
+               !a.layout.roomy || tile_width < 190 ? Font::title
+               : tile_width < 230 ? Font::headline : Font::display,
                ink);
         p.text(tile, captions[i],
-               tile_width >= 200 ? Font::body : Font::caption, muted);
-      } else {
-        auto label = std::string_view(labels[i]);
-        p.button(tiles, label, [action, i] { action(i); });
+               a.layout.roomy && tile_width >= 200 ? Font::body : Font::caption, muted);
+        // Decorative labels follow the title in tree order, preserving the
+        // title used by native three-key navigation and accessibility probes.
+        auto badge = p.box(tile, false, 0);
+        p.ok &= p.tx.u8(badge, protocol::position, 1) &&
+                p.tx.logical_px(badge, protocol::x, int(tile_width) - 64) &&
+                p.tx.logical_px(badge, protocol::y, 0) &&
+                p.tx.logical_px(badge, protocol::width, 34) &&
+                p.tx.logical_px(badge, protocol::height, 34) &&
+                p.tx.rgba(badge, protocol::background, 0xffffffb8) &&
+                p.tx.dp(badge, protocol::radius, 10) &&
+                p.tx.u8(badge, protocol::justify, 1);
+        auto symbol = p.text(badge, symbols[i], Font::title, green);
+        p.ok &= p.tx.u8(symbol, protocol::text_align, 1);
       }
     }
     notice(b);
@@ -1672,6 +1728,13 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     auto f = stage(panel ? Screen::list1 : Screen::list0),
          b = p.scroll(p.body(f));
     p.text(b, v.counter, Font::caption, muted);
+    auto empty = p.box(b);
+    p.padding(empty, 14, 18, 14, 18);
+    p.ok &= p.tx.rgba(empty, protocol::background, 0xffedcaff) &&
+            p.tx.dp(empty, protocol::radius, 16);
+    p.text(empty, v.empty_title, Font::title, green);
+    p.text(empty, v.empty_tip, Font::body, ink);
+    p.visible(empty, v.empty);
     uint32_t row = b;
     const auto columns = a.layout.list_columns;
     for (unsigned i = 0; i < a.layout.page_size; ++i) {
@@ -1757,33 +1820,54 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
   }
   {
     auto f = stage(Screen::detail), b = p.scroll(p.body(f));
-    p.text(b, a.item_title, Font::headline, green);
-    p.text(b, a.item_detail, Font::caption, muted);
-    p.text(b, a.preview, Font::body);
-    p.button(b, "开始阅读", [&a] { a.read_selected(); }, true);
-    auto listen = p.button(b, "听一听朗读", [&a] { a.listen(); });
+    auto shell = p.box(b, a.layout.detail_columns, a.layout.roomy ? 16 : 8);
+    auto summary = p.box(shell, false, a.layout.roomy ? 8 : 5);
+    p.padding(summary, a.layout.roomy ? 14 : 10, a.layout.roomy ? 14 : 8,
+              a.layout.roomy ? 14 : 10, a.layout.roomy ? 14 : 8);
+    p.ok &= p.tx.logical_px(summary, protocol::width, a.layout.detail_summary_width) &&
+            p.tx.rgba(summary, protocol::background, 0xffedcaff) &&
+            p.tx.dp(summary, protocol::radius, 16);
+    p.text(summary, a.item_title, a.layout.roomy ? Font::display : Font::headline, green);
+    p.text(summary, a.item_detail, Font::caption, muted);
+    p.text(summary, a.preview, Font::body);
+    auto actions = p.box(shell);
+    p.ok &= p.tx.logical_px(actions, protocol::width, a.layout.detail_actions_width);
+    p.button(actions, "开始阅读", [&a] { a.read_selected(); }, true);
+    auto listen_row = a.layout.detail_grid ? p.box(actions, true) : actions;
+    auto listen = p.button(listen_row, "听一听朗读", [&a] { a.listen(); });
     p.visible(listen, a.has_audio);
-    auto follow = p.button(b, "跟着读一读", [&a] {
+    if (a.layout.detail_grid)
+      p.ok &= pixel_width(p.tx, listen, a.listen_button_width.get()) &&
+              page.template bind<int32_t, pixel_width>(a.listen_button_width, listen);
+    auto follow = p.button(listen_row, "跟着读一读", [&a] {
       if (!a.selected.follow.empty())
         a.player.start(*a.ctx, a.selected.follow);
     });
     p.visible(follow, a.has_follow);
-    auto audio_status = p.text(b, a.audio_status, Font::caption, muted);
+    if (a.layout.detail_grid)
+      p.ok &= p.tx.logical_px(follow, protocol::width, (a.layout.detail_actions_width - 8) / 2);
+    auto audio_status = p.text(actions, a.audio_status, Font::caption, muted);
     p.visible(audio_status, a.has_audio);
-    auto pause = p.button(b, a.pause_label, [&a] { a.player.pause_resume(); });
+    auto playback = a.layout.detail_grid ? p.box(actions, true) : actions;
+    auto pause = p.button(playback, a.pause_label, [&a] { a.player.pause_resume(); });
     p.visible(pause, a.audio_active);
-    auto stop = p.button(b, "停止朗读", [&a] { a.player.stop(); });
+    auto stop = p.button(playback, "停止朗读", [&a] { a.player.stop(); });
     p.visible(stop, a.audio_active);
-    auto py = p.button(b, "拼音伴读", [&a] { a.open_pinyin(); });
+    auto tools = a.layout.detail_grid ? p.box(actions, true) : actions;
+    auto py = p.button(tools, "拼音伴读", [&a] { a.open_pinyin(); });
     p.visible(py, a.is_poem);
-    auto lesson = p.button(b, "诗意小课堂", [&a] { a.lesson(); });
+    auto lesson = p.button(tools, "诗意小课堂", [&a] { a.lesson(); });
     p.visible(lesson, a.is_poem);
-    auto quiz = p.button(b, "来个小挑战", [&a] { a.quiz(); });
+    auto extras = a.layout.detail_grid ? p.box(actions, true) : actions;
+    auto quiz = p.button(extras, "来个小挑战", [&a] { a.quiz(); });
     p.visible(quiz, a.has_quiz);
-    auto pic = p.button(b, "看看插图", [&a] { a.picture(); });
+    auto pic = p.button(extras, "看看插图", [&a] { a.picture(); });
     p.visible(pic, a.has_image);
-    p.button(b, a.favorite_label, [&a] { a.toggle_favorite(); });
-    notice(b);
+    if (a.layout.detail_grid)
+      for (auto button : {pause, stop, py, lesson, quiz, pic})
+        p.ok &= p.tx.logical_px(button, protocol::width, (a.layout.detail_actions_width - 8) / 2);
+    p.button(actions, a.favorite_label, [&a] { a.toggle_favorite(); });
+    notice(actions);
     auto title = std::string_view("发现一本好书");
     header(f, title);
   }
@@ -1813,7 +1897,8 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     p.visible(prev, a.reader_previous);
     p.ok &= p.tx.logical_px(prev, protocol::width,
                             (a.layout.content_width - 8) / 2);
-    header(f, a.reader_title);
+    p.header(f, a.reader_heading, [&a] { a.back(); }, false,
+             &a.audio_active, &a.pause_short, [&a] { a.player.pause_resume(); });
   }
   {
     auto f = stage(Screen::pinyin), wrap = p.body(f), b = p.box(wrap);
@@ -1828,26 +1913,37 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
         auto cell = p.box(r, false, 3);
         p.ok &= p.tx.logical_px(cell, protocol::width, a.layout.pinyin_cell);
         const bool compact = a.layout.pinyin_row < 64;
-        auto py = p.text(cell, a.py[i].value, Font::body, green),
-             han = p.text(cell, a.han[i].value,
-                          compact ? Font::body : Font::title);
+        auto py = p.text(cell, a.py[i].value,
+                          a.layout.roomy ? Font::title : Font::body, green);
+        auto line = p.box(cell, false, 0);
+        p.ok &= p.tx.logical_px(line, protocol::height, a.layout.roomy ? 42 : compact ? 28 : 32);
+        auto han = p.text(line, a.han[i].value,
+                          a.layout.roomy ? Font::display : compact ? Font::body : Font::title);
         p.ok &= p.tx.u8(py, protocol::text_align, 1) &&
                 p.tx.u8(han, protocol::text_align, 1) &&
-                p.tx.logical_px(py, protocol::height, 26) &&
-                p.tx.logical_px(han, protocol::height, compact ? 28 : 32);
+                p.tx.logical_px(py, protocol::height, a.layout.roomy ? 32 : 26) &&
+                p.tx.logical_px(han, protocol::height, a.layout.roomy ? 42 : compact ? 28 : 32);
+        auto mark = p.text(line, a.punctuation[i].value,
+                            a.layout.roomy ? Font::title : Font::body, muted);
+        const unsigned glyph = a.layout.roomy ? 28 : compact ? 16 : 20;
+        p.ok &= p.tx.u8(mark, protocol::position, 1) &&
+                p.tx.logical_px(mark, protocol::x, (a.layout.pinyin_cell + glyph) / 2) &&
+                p.tx.logical_px(mark, protocol::y, a.layout.roomy ? 8 : compact ? 0 : 4) &&
+                p.tx.logical_px(mark, protocol::width, a.layout.roomy ? 26 : 20) &&
+                p.tx.logical_px(mark, protocol::height, a.layout.roomy ? 32 : 26);
       }
     }
     auto controls = p.box(wrap, true, 8);
     auto next = p.button(
-        controls, "下一页",
+        controls, a.pinyin_next,
         [&a] {
           if (a.pinyin_index + 1 < a.pinyin_pages.size()) {
             ++a.pinyin_index;
             a.pinyin_update();
-          }
+          } else
+            a.back();
         },
         true);
-    p.enabled(next, a.pinyin_next_visible);
     auto prev = p.button(controls, "上一页", [&a] {
       if (a.pinyin_index) {
         --a.pinyin_index;
@@ -1862,7 +1958,8 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
               p.tx.logical_px(control, protocol::height, a.layout.pinyin_toolbar);
     }
     auto title = std::string_view("拼音伴读");
-    header(f, title);
+    p.header(f, title, [&a] { a.back(); }, false,
+             &a.audio_active, &a.pause_short, [&a] { a.player.pause_resume(); });
   }
   {
     auto f = stage(Screen::quiz), b = p.scroll(p.body(f));

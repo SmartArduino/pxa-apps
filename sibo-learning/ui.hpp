@@ -141,7 +141,9 @@ template <class Page> struct Painter {
   }
   template <class Text>
   void header(uint32_t parent, Text &title, std::function<void()> back,
-              bool exit = false) {
+              bool exit = false, State<bool> *playing = nullptr,
+              State<std::string> *pause_text = nullptr,
+              std::function<void()> pause = {}) {
     auto n = box(parent, true, 6);
     ok &= tx.u8(n, protocol::position, 1) && tx.logical_px(n, protocol::x, 0) &&
           tx.logical_px(n, protocol::y, 0) &&
@@ -150,6 +152,14 @@ template <class Page> struct Painter {
           tx.u8(n, protocol::align, 1);
     auto t = text(n, title, Font::body, green);
     ok &= tx.u16(t, protocol::grow, 1);
+    if (playing && pause_text) {
+      auto action = button(n, *pause_text, std::move(pause));
+      visible(action, *playing);
+      ok &= tx.logical_px(action, protocol::width, roomy ? 68 : 48) &&
+            tx.logical_px(action, protocol::height, int(header_size)) &&
+            tx.template logical_px<protocol::min_height>(action, int(header_size));
+      padding(action, 3, 2, 3, 2);
+    }
     auto label = exit ? std::string_view("退出") : std::string_view("返回");
     auto b = button(n, label, std::move(back));
     ok &= tx.logical_px(b, protocol::width, roomy ? 68 : 54) &&

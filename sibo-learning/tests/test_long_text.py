@@ -26,8 +26,8 @@ def exercise(sim,w,h):
  f.seed(sim,f.ORIGIN+'/oss/vocab/catalog.json',{'packs':[{'id':'zk','name':'中考','count':1,'unitCount':1}]})
  f.choose(sim,'英语单词岛');sim.key('ENTER')
  f.seed(sim,f.ORIGIN+'/oss/vocab/packs/zk/001.json',{'words':[{'id':'read','word':'read','phonetic':'ri:d','translation':'词义起点。'+('阅读可以帮助我们认识更大的世界。'*15)+'词义终点星星。'}]})
- sim.key('ENTER');sim.key('ENTER');sim.expect('翻开词义');sim.key('ENTER');sim.expect('下一个单词')
- f.choose(sim,'完整词卡');read_all(sim,'word');sim.expect('下一个单词')
+ sim.key('ENTER');sim.key('ENTER');sim.expect('翻开词义');sim.key('ENTER');sim.expect('返回单词表')
+ f.choose(sim,'完整词卡');read_all(sim,'word');sim.expect('返回单词表')
  assert f.personal(sim)['answered']==1
  print(f'{w}x{h}: complete question/choices ({pages} pages), feedback and word meaning accessible with three keys; answer and next-word focus preserved',flush=True)
 def main():

@@ -11,6 +11,8 @@ struct Layout {
   unsigned list_columns = 1, page_size = 6, home_columns = 1;
   unsigned sidebar_width = 0, home_width = 218, home_tile_height = 64;
   unsigned hero_width = 218, cover_width = 218, cover_height = 150;
+  unsigned hero_height = 48, detail_summary_width = 218, detail_actions_width = 218;
+  bool detail_columns = false, detail_grid = false;
   unsigned picture_toolbar_height = 36;
   unsigned pinyin_columns = 4, pinyin_rows = 2, pinyin_cell = 66;
   unsigned pinyin_toolbar = 38;
@@ -43,6 +45,11 @@ struct Layout {
     hero_width = sidebar ? sidebar_width
                  : roomy ? 112
                          : std::clamp(content_width, 120u, 280u);
+    hero_height = roomy ? 72 : h < 250 ? 28 : 44;
+    detail_columns = sidebar;
+    detail_summary_width = detail_columns ? content_width * 42 / 100 : content_width;
+    detail_actions_width = detail_columns ? content_width - detail_summary_width - 16 : content_width;
+    detail_grid = roomy && detail_actions_width >= 300;
     cover_width = roomy ? std::min(content_width, 960u)
                         : std::clamp(content_width, 120u, 280u);
     picture_toolbar_height = roomy ? 56 : h < 250 ? 28 : 36;
@@ -51,15 +58,15 @@ struct Layout {
     cover_height = h > reserved ? std::max(48u, h - reserved) : 48;
     // Leave room for six-letter syllables (e.g. zhuāng) without wrapping.
     // Both navigation actions share one fixed-height row on every page.
-    pinyin_columns = std::clamp((content_width + 4) / 70, 2u, 8u);
+    pinyin_columns = std::clamp((content_width + 4) / (roomy ? 100 : 70), 2u, 8u);
     pinyin_cell = (content_width - (pinyin_columns - 1) * 4) / pinyin_columns;
     pinyin_toolbar = roomy ? 56 : 38;
-    pinyin_row = h < 230 ? 58 : 64;
+    pinyin_row = roomy ? 88 : h < 230 ? 58 : 64;
     const auto pinyin_reserved =
         2 * margin + header + 7 + 22 + 8 + pinyin_toolbar + 8;
     const auto pinyin_available = h > pinyin_reserved ? h - pinyin_reserved : 0;
     pinyin_rows = std::clamp((pinyin_available + 8) / (pinyin_row + 8), 1u,
-                             32 / pinyin_columns);
+                             (roomy ? 64 : 32) / pinyin_columns);
     reader_unit = std::min(physical_width, physical_height) >= 420 ? 14 : 10;
     reader_line = reader_unit == 14 ? 42 : roomy ? 30 : 26;
     reader_rows =

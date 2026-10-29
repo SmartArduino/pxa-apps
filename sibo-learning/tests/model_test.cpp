@@ -29,6 +29,14 @@ int main(int argc, char **argv) {
     assert(restored.follow == poem.follow && load_course_pinyin(restored));
   }
   assert(offline_count == 22);
+  auto legacy = serialize(poems.front());
+  const auto follow_at = legacy.find(",\"follow\":");
+  const auto after_follow = legacy.find(",\"image\":", follow_at);
+  assert(follow_at != legacy.npos && after_follow != legacy.npos);
+  legacy.erase(follow_at, after_follow - follow_at);
+  Entry old_favorite;
+  assert(deserialize(legacy, old_favorite));
+  assert(old_favorite.follow == poems.front().follow);
   auto changed = poems.front();
   changed.lines.front() += "改";
   assert(!load_course_pinyin(changed) && changed.pinyin.empty());

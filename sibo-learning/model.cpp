@@ -551,6 +551,10 @@ bool deserialize(std::string_view bytes, Entry &e) {
         break;
       start = end + 1;
     }
+    // Old bookmarks and favorites predate follow-along audio. Only hydrate
+    // the known course recording when both identity and original text match.
+    if (v.follow.empty() && offline_poem(v))
+      v.follow = asset(bases[3], "poems/" + v.id + "/follow.mp3");
   }
   media::json::Array qs(root.get("questions"));
   Value q;

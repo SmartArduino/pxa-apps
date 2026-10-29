@@ -85,7 +85,7 @@ def exercise(sim):
     seed(sim,ORIGIN+'/oss/shici/index.json',index)
     seed(sim,ORIGIN+'/oss/shici/poems/p001/meta.json',meta)
     choose(sim,'拼音伴读');sim.expect('下一页');sim.screenshot('pinyin')
-    sim.key('ENTER');sim.expect('下一页','上一页');returned(sim);sim.expect('开始阅读')
+    sim.key('ENTER');sim.expect('下一页','上一页','读完啦');returned(sim);sim.expect('开始阅读')
     choose(sim,'诗意小课堂');sim.expect('下一页','读完啦');sim.screenshot('lesson');returned(sim)
     choose(sim,'收藏起来');assert len(personal(sim)['favorites'])==1
     returned(sim);returned(sim);returned(sim);sim.expect('继续读')

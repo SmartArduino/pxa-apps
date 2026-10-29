@@ -36,7 +36,7 @@ def check_page(sim):
     page, total = map(int, re.findall(r'\d+', counter))
     content = []
     for text, values in current:
-        if text in ('返回', '拼音伴读', '上一页', '下一页') or text == counter:
+        if text in ('返回', '拼音伴读', '上一页', '下一页', '读完啦') or text == counter:
             continue
         x1, y1, x2, y2, cx1, cy1, cx2, cy2, tw, th = values
         assert (x1, y1, x2, y2) == (cx1, cy1, cx2, cy2), (counter, text, 'clipped', values)
@@ -58,7 +58,7 @@ def exercise(sim):
     f.seed(sim, f.ORIGIN + '/oss/shici/index.json', [{'id':'p004','meta':'poems/p004/meta.json'}])
     f.seed(sim, f.ORIGIN + '/oss/shici/poems/p004/meta.json', {'pinyin':rows})
     f.choose(sim, '诗词小天地'); sim.key('ENTER'); f.choose(sim, '咏鹅')
-    f.choose(sim, '拼音伴读'); sim.expect('下一页')
+    f.choose(sim, '拼音伴读'); sim.expect('下一页','读完啦')
     actual = []
     for _ in range(100):
         page, total, content = check_page(sim)
@@ -68,11 +68,13 @@ def exercise(sim):
         sim.expect('下一页'); sim.key('ENTER')
     else: raise AssertionError('Pagination did not finish')
     assert actual == expected, ('Missing/reordered pinyin or characters', actual, expected)
-    sim.expect('上一页')
+    sim.expect('读完啦')
+    if total > 1:
+        f.focus(sim, '上一页')
     for expected_page in range(total - 1, 0, -1):
         sim.key('ENTER'); page, _, _ = check_page(sim)
         assert page == expected_page
-    sim.expect('下一页')
+    sim.expect('下一页' if total > 1 else '读完啦')
     f.returned(sim); sim.expect('开始阅读')
     print(f'{sim.stem}: {total} pages complete, no clipping, long syllables fit, forward/backward keys passed', flush=True)
 
