@@ -4,89 +4,73 @@
       "kind": "image",
       "source": "art/rooms/morning.png",
       "path": "assets/companion/room-morning.pxr",
-      "encoding": "rgb565"
+      "encoding": "png-rgb565"
     },
     {
       "kind": "image",
       "source": "art/rooms/day.png",
       "path": "assets/companion/room-day.pxr",
-      "encoding": "rgb565"
+      "encoding": "png-rgb565"
     },
     {
       "kind": "image",
       "source": "art/rooms/evening.png",
       "path": "assets/companion/room-evening.pxr",
-      "encoding": "rgb565"
+      "encoding": "png-rgb565"
     },
     {
       "kind": "image",
       "source": "art/rooms/night.png",
       "path": "assets/companion/room-night.pxr",
-      "encoding": "rgb565"
+      "encoding": "png-rgb565"
     },
     {
       "kind": "image",
-      "source": "art/characters/neutral.bgra",
-      "path": "assets/companion/frames/neutral.pxr",
-      "encoding": "bgra8888-premultiplied",
-      "width": 176,
-      "height": 220
+      "source": "art/characters/neutral.png",
+      "path": "assets/companion/frames/neutral.png",
+      "encoding": "png"
     },
     {
       "kind": "image",
-      "source": "art/characters/speaking.bgra",
-      "path": "assets/companion/frames/speaking.pxr",
-      "encoding": "bgra8888-premultiplied",
-      "width": 176,
-      "height": 220
+      "source": "art/characters/speaking.png",
+      "path": "assets/companion/frames/speaking.png",
+      "encoding": "png"
     },
     {
       "kind": "image",
-      "source": "art/characters/happy.bgra",
-      "path": "assets/companion/frames/happy.pxr",
-      "encoding": "bgra8888-premultiplied",
-      "width": 176,
-      "height": 220
+      "source": "art/characters/happy.png",
+      "path": "assets/companion/frames/happy.png",
+      "encoding": "png"
     },
     {
       "kind": "image",
-      "source": "art/characters/sad.bgra",
-      "path": "assets/companion/frames/sad.pxr",
-      "encoding": "bgra8888-premultiplied",
-      "width": 176,
-      "height": 220
+      "source": "art/characters/sad.png",
+      "path": "assets/companion/frames/sad.png",
+      "encoding": "png"
     },
     {
       "kind": "image",
-      "source": "art/characters/thinking.bgra",
-      "path": "assets/companion/frames/thinking.pxr",
-      "encoding": "bgra8888-premultiplied",
-      "width": 176,
-      "height": 220
+      "source": "art/characters/thinking.png",
+      "path": "assets/companion/frames/thinking.png",
+      "encoding": "png"
     },
     {
       "kind": "image",
-      "source": "art/characters/surprised.bgra",
-      "path": "assets/companion/frames/surprised.pxr",
-      "encoding": "bgra8888-premultiplied",
-      "width": 176,
-      "height": 220
+      "source": "art/characters/surprised.png",
+      "path": "assets/companion/frames/surprised.png",
+      "encoding": "png"
     },
     {
       "kind": "image",
-      "source": "art/characters/angry.bgra",
-      "path": "assets/companion/frames/angry.pxr",
-      "encoding": "bgra8888-premultiplied",
-      "width": 176,
-      "height": 220
+      "source": "art/characters/angry.png",
+      "path": "assets/companion/frames/angry.png",
+      "encoding": "png"
     },
     {
       "kind": "image",
-      "source": "art/characters/blink.bgra",
-      "path": "assets/companion/frames/blink.pxr",
-      "encoding": "bgra8888-premultiplied",
-      "width": 176,
-      "height": 220
+      "source": "art/characters/blink.png",
+      "path": "assets/companion/frames/blink.png",
+      "encoding": "png"
     }
   ]
 }

@@ -3,9 +3,26 @@
  * when automatic listening reopens the microphone. No timing approximation.
  */
 #undef NDEBUG
+#define _XOPEN_SOURCE 700
+#define _POSIX_C_SOURCE 200809L
+#include "pxa/audio_mixer.h"
+static pxa_status_t probe_pcm_write(pxa_audio_mixer_voice_t *, const uint8_t *, size_t);
+#define pxa_audio_mixer_write probe_pcm_write
 #define PXSYS_PRODUCT_RUNNER_LIBRARY 1
 #include PXA_PRODUCT_RUNNER
+#undef pxa_audio_mixer_write
 #include <assert.h>
+static uint64_t pcm_hash = UINT64_C(14695981039346656037);
+static uint64_t pcm_samples;
+static pxa_status_t probe_pcm_write(pxa_audio_mixer_voice_t *voice, const uint8_t *pcm, size_t bytes) {
+  pxa_status_t status = pxa_audio_mixer_write(voice, pcm, bytes);
+  if (!status) {
+    for (size_t i=0; i<bytes; ++i)
+      pcm_hash=(pcm_hash^pcm[i])*UINT64_C(1099511628211);
+    pcm_samples += bytes/2;
+  }
+  return status;
+}
 static struct {
   product_host_t *host;
   int checked;
@@ -37,9 +54,10 @@ static void pump_probe(void *context) {
     if (!state.submitted_samples)
       continue;
     fprintf(stderr,
-            "XIAOZHI_AUDIO_HANDOFF submitted=%llu accepted=%llu queued=%u\n",
+            "XIAOZHI_AUDIO_HANDOFF submitted=%llu accepted=%llu queued=%u pcm_samples=%llu pcm_hash=%016llx\n",
             (unsigned long long)state.submitted_samples,
-            (unsigned long long)state.accepted_samples, state.queued_samples);
+            (unsigned long long)state.accepted_samples, state.queued_samples,
+            (unsigned long long)pcm_samples, (unsigned long long)pcm_hash);
     assert(state.submitted_samples == state.accepted_samples &&
            "Automatic listening flushed the unplayed TTS tail");
     assert(!state.queued_samples);

@@ -277,6 +277,15 @@ struct App {
       if (!saved)
         co_return std::unexpected(saved.error());
     }
+    // Select the configured/time-based room before the first image load.
+    // Loading daytime first needlessly decoded a second room at night.
+    auto clock = co_await refresh_scene_time();
+    if (!clock)
+      co_return std::unexpected(clock.error());
+    next_time_check = now_ms() + 60000;
+    auto art = co_await companion.load(*context, scene_mode ? scene_mode - 1 : automatic_scene);
+    if (!art)
+      co_return std::unexpected(art.error());
     busy.set(false);
     profile_loaded = true;
     sync_labels();
@@ -335,7 +344,7 @@ struct App {
     auto application =
         cJSON_AddObjectToObject(information.get(), "application");
     cJSON_AddStringToObject(application, "name", "pxa-xiaozhi");
-    cJSON_AddStringToObject(application, "version", "0.3.3");
+    cJSON_AddStringToObject(application, "version", "0.3.5");
     auto board = cJSON_AddObjectToObject(information.get(), "board");
     cJSON_AddStringToObject(board, "type", "generic");
     cJSON_AddStringToObject(board, "name", "pxa");
@@ -1411,9 +1420,6 @@ struct App {
     auto clock = ctx.clock().set_period(20);
     if (!clock)
       return clock;
-    auto art = ctx.tasks().start(companion.load(ctx));
-    if (!art)
-      return art;
     return ctx.tasks().start(load());
   }
   void on_frame(Context &, game::FrameTick) { tick(); }

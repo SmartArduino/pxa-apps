@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Import generated atlases as whole alpha sprites and independent room scenes.
 
-Import uses atlas slicing, nearest-neighbor scaling, palette encoding and pixel
+Import uses atlas slicing, nearest-neighbor scaling, lossless PNG encoding and pixel
 format conversion. Alpha is retained; no face replacement, drawing, retouching
 or precompositing is performed.
 """
 import json
+import argparse
+import subprocess
 from pathlib import Path
 from PIL import Image
 
@@ -54,6 +56,9 @@ def aligned_character(atlas, index):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--oxipng', type=Path, help='optional host-only lossless PNG optimizer')
+    args = parser.parse_args()
     people = ROOT / 'art/characters'
     rooms = ROOT / 'art/rooms'
     people.mkdir(parents=True, exist_ok=True)
@@ -62,30 +67,29 @@ def main():
         assert atlas.mode == 'RGBA' and atlas.getchannel('A').getextrema()[0] == 0
         for i, name in enumerate(FRAMES):
             image = aligned_character(atlas, i).resize((176, 220), Image.Resampling.NEAREST)
-            # The complete body stays in every frame. A 256-color palette
-            # encodes the pixel art compactly; its alpha remains transparent.
-            indexed = image.quantize(colors=256, method=Image.Quantize.FASTOCTREE,
-                                     dither=Image.Dither.NONE)
-            indexed.save(people / f'{name}.png', optimize=True)
-            # PXR encoding 8 matches the renderer's premultiplied BGRA format.
-            # This conversion also removes meaningless RGB in alpha-zero pixels.
-            rgba = indexed.convert('RGBA').tobytes()
-            bgra = bytearray(len(rgba))
-            for at in range(0, len(rgba), 4):
-                r, g, b, a = rgba[at:at+4]
-                bgra[at:at+4] = bytes(((b*a+127)//255, (g*a+127)//255,
-                                     (r*a+127)//255, a))
-            (people / f'{name}.bgra').write_bytes(bgra)
+            # PNG compression is lossless. Preserve every source color and
+            # alpha value: global 256-color quantization bands the skin tones.
+            output = people / f'{name}.png'
+            image.save(output, optimize=True)
+            if args.oxipng:
+                # Do not enable alpha optimization: even hidden RGB values
+                # remain identical to the source artwork.
+                subprocess.run([str(args.oxipng.resolve()), '-o', 'max', '--fast',
+                                '-z', '--timeout', '15', '--strip', 'safe', str(output)], check=True)
+                with Image.open(output) as compressed:
+                    if compressed.convert('RGBA').tobytes() != image.tobytes():
+                        raise ValueError(f'Optimizer changed pixels: {output}')
     with Image.open(ROOT / 'art/room-atlas.png') as atlas:
         for i, name in enumerate(SCENES):
             image = tile(atlas, i, 2, 2).resize((320, 240), Image.Resampling.NEAREST)
             image.convert('RGB').save(rooms / f'{name}.png', optimize=True)
     assets = [{'kind': 'image', 'source': f'art/rooms/{name}.png',
-               'path': f'assets/companion/room-{name}.pxr', 'encoding': 'rgb565'}
+               'path': f'assets/companion/room-{name}.pxr', 'encoding': 'png-rgb565'}
               for name in SCENES]
-    assets += [{'kind': 'image', 'source': f'art/characters/{name}.bgra',
-                'path': f'assets/companion/frames/{name}.pxr',
-                'encoding': 'bgra8888-premultiplied', 'width': 176, 'height': 220}
+    # PNG poses stay compressed on the device; Assets 2.4 decodes and caches
+    # native premultiplied pixels. Backgrounds store PNG-compressed RGB565 pixels.
+    assets += [{'kind': 'image', 'source': f'art/characters/{name}.png',
+                'path': f'assets/companion/frames/{name}.png', 'encoding': 'png'}
                for name in FRAMES]
     (ROOT / 'resources.json').write_text(json.dumps({'assets': assets}, indent=2) + '\n')
 

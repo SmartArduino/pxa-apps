@@ -4,7 +4,7 @@
 `12ba34b0d5db3f6811f80c2de2dd292ddc29ef1b` 的 WebSocket v1 路径移植。
 会话、像素人物、配置、字幕及 Opus 解码运行在应用包内；系统提供通用 TCP/TLS
 Socket、麦克风采集和 PCM 播放。需要包含 **Window 0.4、Net 0.6、Audio 0.15** 的 PXA
-系统及对应 C++ SDK，并支持 UI `text-input-control` 和系统输入法，旧固件需先更新。
+系统及对应 C++ SDK，并支持 Assets 2.5、UI `text-input-control` 和系统输入法，旧固件需先更新。
 
 ## 使用
 
@@ -39,7 +39,8 @@ Socket、麦克风采集和 PCM 播放。需要包含 **Window 0.4、Net 0.6、A
 17:00–19:59 傍晚，其余时段为夜晚，每分钟检查一次。使用 Host Clock 的时区偏移
 （含夏令时），系统时间尚未同步时先显示白天；设置中可固定某个时段。
 场景切换只替换背景，心情切换只替换人物；显示时合成，不保存组合图片。
-人物使用带透明度的预乘 BGRA 图像，背景为 RGB565；按需加载，一次只替换一层，适配默认
+人物在包内保存为真彩 RGBA PNG，由 Host 在资源后台线程解码为带透明度的预乘 BGRA 并缓存；
+背景以 PNG 压缩 RGB565 像素，Host 直接解码为 RGB565，显示像素和常驻内存与原始 PXR 相同。按需加载，一次只替换一层，适配默认
 512 KiB 图片缓存。
 
 录音目前接入 pai-touch 的 JL701（16 kHz、单声道、60 ms Opus）和桌面 SDL
@@ -76,12 +77,15 @@ tools/dev.sh device xiaozhi --source-root local/pxa-apps --port /dev/ttyACM0
 `tools/prepare_art.py` 按姿态之间的透明间隔切分人物图集，避免混入相邻人物的手肘，
 然后在统一的 400×500 画布上对齐头部和底部基线，按同一比例缩放，避免姿态切换时
 人物大小突变。更换图集时需重新核对切分边界和锚点。人物输出为
-`art/characters/` 下的 176×220 透明图，使用 256 色调色板、无抖动，随后转换为
-预乘 BGRA；房间输出到 `art/rooms/`。`resources.json` 将整个人物帧编译为带
-透明度的 PXR，将四张房间编译为 320×240 RGB565 PXR。
+`art/characters/` 下的 176×220 透明图，保留原始 RGBA 色彩和透明度，不再压为 256 色调色板；房间输出到 `art/rooms/`。`resources.json` 原样打包八张带透明度的 PNG，
+将四张房间编译为 320×240 PNG 压缩 RGB565 PXR（通用 Assets 2.5）。人物 PNG 加载、请求合并、缓存命中、
+回收和取消均走通用 Assets 服务，不需要应用内图片解码器。
 修改图集后先运行脚本，再重新构建应用。
 `python3 tests/art_import_test.py` 检查八种姿态是否混入独立的下半身残片，
-并检查等比缩放、锚点一致性、完整人物保留，以及预乘 BGRA 的尺寸和透明度约束。
+并检查等比缩放、锚点一致性、完整人物保留，以及真彩 RGBA PNG 的尺寸和透明度。
+
+`Xiaozhi image` 调试日志记录图片加载完成时间、状态和驻留字节数，便于区分首次解码与
+缓存复用；不记录对话或连接凭据。PNG 解码后与此前 PXR 使用相同的预乘及取整规则。
 
 待机时人物保持放松表情、轻微呼吸和眨眼，清空旧字幕，显示“我在这里，轻触和我聊聊”
 及较小的“长按打开设置”。用户主动进入待机后关闭采集和对话连接，不会自动重连；
@@ -136,3 +140,5 @@ PXA 系统侧没有引入小智专用 Host 服务；WebSocket 和小智协议均
 `idle-toggle` 覆盖聆听/待机切换及设置返回后的暂停保持；`text-audio`、`early-audio`
 覆盖文字回复与提前到达的音频，`empty-utterance`、`response-timeout`、`cancel-wait`
 覆盖空识别、回复超时和取消等待。语音夹具由服务端模拟 VAD 完成，点击屏幕只切换待机或打断。
+
+导入时可用 `python3 tools/prepare_art.py --oxipng /path/to/oxipng` 进一步无损压缩人物 PNG；工具只在开发机运行，导入后会逐字节验证 RGBA 像素。编译对应用和完整 Opus 解码器使用 `-Os`，保留原有音频功能。

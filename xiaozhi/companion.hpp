@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdio>
+#include <ctime>
 #include <optional>
 #include <pxa/app.hpp>
 #include <pxa/ui_display.hpp>
@@ -42,14 +44,28 @@ struct Companion {
   static constexpr std::string_view scenes[] = {"morning", "day", "evening",
                                                 "night"};
   pxa::Task<pxa::Asset> image(pxa::Context &context, std::string path) {
-    co_return co_await context.assets().load(pxa::AssetKind::image,
-                                             "assets/companion/" + path);
+    timespec started{}, ended{};
+    clock_gettime(CLOCK_MONOTONIC, &started);
+    auto result = co_await context.assets().load(pxa::AssetKind::image,
+                                                 "assets/companion/" + path);
+    clock_gettime(CLOCK_MONOTONIC, &ended);
+    const auto elapsed = (ended.tv_sec-started.tv_sec)*1000000LL +
+                         (ended.tv_nsec-started.tv_nsec)/1000;
+    char diagnostic[192];
+    std::snprintf(diagnostic, sizeof(diagnostic),
+                  "Xiaozhi image: path=%s us=%lld status=%d resident=%u",
+                  path.c_str(), elapsed, result ? 0 : int(result.error()),
+                  result ? result->descriptor().resident_bytes : 0);
+    (void)context.log().write(pxa::LogLevel::info, diagnostic);
+    co_return std::move(result);
   }
-  pxa::Task<void> load(pxa::Context &context) {
-    auto room = co_await image(context, "room-day.pxr");
+  pxa::Task<void> load(pxa::Context &context, unsigned scene) {
+    scene = std::min(scene, 3u);
+    auto room = co_await image(context, "room-" + std::string(scenes[scene]) + ".pxr");
     if (!room)
       co_return std::unexpected(room.error());
     background.emplace(std::move(*room));
+    loaded_scene = scene;
     previous_hash = 0;
     loading = false;
     co_return pxa::Result<void>{};
@@ -70,7 +86,7 @@ struct Companion {
       loaded_scene = scene;
     } else if (!character || next != loaded_frame) {
       auto girl = co_await image(
-          context, "frames/" + std::string(frames[next]) + ".pxr");
+          context, "frames/" + std::string(frames[next]) + ".png");
       if (!girl) {
         loading = false;
         co_return std::unexpected(girl.error());

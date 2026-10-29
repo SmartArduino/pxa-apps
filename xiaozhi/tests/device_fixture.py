@@ -30,6 +30,7 @@ def main():
     parser.add_argument('--token-file', required=True, type=Path)
     parser.add_argument('--artifacts', required=True, type=Path)
     parser.add_argument('--frame-samples', type=int, default=320)
+    parser.add_argument('--emotions', action='store_true', help='cycle whole-body poses during playback')
     args = parser.parse_args()
     args.artifacts.mkdir(parents=True, exist_ok=True)
     token = args.token_file.read_text().strip()
@@ -90,6 +91,11 @@ def main():
                     for index in range(100 if number == 1 else 300):
                         if cancelled.is_set():
                             return
+                        if args.emotions and index % 25 == 0:
+                            mood = ('neutral', 'happy', 'sad', 'thinking', 'surprised',
+                                    'angry', 'sleepy', 'neutral')[(index // 25) % 8]
+                            message({'type': 'llm', 'emotion': mood})
+                            event('emotion', mood=mood, number=number)
                         pcm = (ctypes.c_int16 * 320)(*[int(3000 * math.sin(2 * math.pi * 440 * (index * 320 + i) / 16000)) for i in range(320)])
                         output = (ctypes.c_ubyte * 1275)()
                         count = lib.opus_encode(encoder, pcm, 320, output, 1275)

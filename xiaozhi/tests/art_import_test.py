@@ -81,14 +81,19 @@ class CharacterImportTest(unittest.TestCase):
                     if count >= 8:
                         self.assertLess(bottom, image.height // 2)
 
-    def test_premultiplied_assets(self):
+    def test_lossless_png_assets(self):
+        importer = self.importer()
         for name in FRAMES:
             with self.subTest(pose=name), Image.open(ROOT / f'art/characters/{name}.png') as png:
-                data = (ROOT / f'art/characters/{name}.bgra').read_bytes()
-                self.assertEqual(len(data), png.width * png.height * 4)
-                for at in range(0, len(data), 4):
-                    b, g, r, alpha = data[at:at + 4]
-                    self.assertLessEqual(max(b, g, r), alpha)
+                self.assertEqual(png.format, 'PNG')
+                self.assertEqual(png.mode, 'RGBA')
+                self.assertEqual(png.size, (176, 220))
+                self.assertEqual(png.getchannel('A').getextrema()[0], 0)
+                with Image.open(ROOT / 'art/girl-gestures-atlas.png') as atlas:
+                    expected = importer.aligned_character(atlas, FRAMES.index(name)).resize(
+                        (176, 220), Image.Resampling.NEAREST)
+                    self.assertEqual(png.tobytes(), expected.tobytes(),
+                                     'Import changed source colors or alpha')
 
 
 if __name__ == '__main__':

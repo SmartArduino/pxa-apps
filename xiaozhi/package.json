@@ -1,8 +1,8 @@
 {
   "format": "pxa-package-source-0.2",
   "id": "pxa-xiaozhi",
-  "version": "0.3.3",
-  "release_sequence": 8,
+  "version": "0.3.5",
+  "release_sequence": 10,
   "min_sdk": [
     2,
     1
@@ -71,7 +71,13 @@
             15
           ]
         },
-        "assets"
+        {
+          "name": "assets",
+          "min_version": [
+            2,
+            5
+          ]
+        }
       ],
       "wasi": {
         "version": "preview1",
