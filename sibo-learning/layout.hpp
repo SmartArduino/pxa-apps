@@ -12,7 +12,9 @@ struct Layout {
   unsigned sidebar_width = 0, home_width = 218, home_tile_height = 64;
   unsigned hero_width = 218, cover_width = 218, cover_height = 150;
   unsigned picture_toolbar_height = 36;
-  unsigned pinyin_columns = 4, pinyin_rows = 2, pinyin_cell = 44;
+  unsigned pinyin_columns = 4, pinyin_rows = 2, pinyin_cell = 66;
+  unsigned pinyin_toolbar = 38;
+  unsigned pinyin_row = 64;
   unsigned reader_unit = 10, reader_line = 26, reader_rows = 4;
   Layout() = default;
   Layout(unsigned w, unsigned h, unsigned pixels_w = 0, unsigned pixels_h = 0)
@@ -47,12 +49,17 @@ struct Layout {
     const auto reserved =
         header + 7 + 2 * margin + 2 * picture_toolbar_height + 16;
     cover_height = h > reserved ? std::max(48u, h - reserved) : 48;
-    pinyin_columns =
-        std::clamp((w > 36 ? w - 36 : 120) / 45, 3u, roomy ? 8u : 6u);
-    pinyin_rows = std::clamp((h > 150 ? h - 150 : 58) / 58, 1u,
-                             roomy ? 32 / pinyin_columns : 3u);
-    pinyin_cell =
-        roomy ? (content_width - (pinyin_columns - 1)) / pinyin_columns : 44;
+    // Leave room for six-letter syllables (e.g. zhuāng) without wrapping.
+    // Both navigation actions share one fixed-height row on every page.
+    pinyin_columns = std::clamp((content_width + 4) / 70, 2u, 8u);
+    pinyin_cell = (content_width - (pinyin_columns - 1) * 4) / pinyin_columns;
+    pinyin_toolbar = roomy ? 56 : 38;
+    pinyin_row = h < 230 ? 58 : 64;
+    const auto pinyin_reserved =
+        2 * margin + header + 7 + 22 + 8 + pinyin_toolbar + 8;
+    const auto pinyin_available = h > pinyin_reserved ? h - pinyin_reserved : 0;
+    pinyin_rows = std::clamp((pinyin_available + 8) / (pinyin_row + 8), 1u,
+                             32 / pinyin_columns);
     reader_unit = std::min(physical_width, physical_height) >= 420 ? 14 : 10;
     reader_line = reader_unit == 14 ? 42 : roomy ? 30 : 26;
     reader_rows =

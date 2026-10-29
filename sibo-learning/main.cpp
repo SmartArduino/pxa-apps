@@ -1804,22 +1804,30 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     header(f, a.reader_title);
   }
   {
-    auto f = stage(Screen::pinyin), wrap = p.body(f), b = p.scroll(wrap);
-    p.text(b, a.pinyin_counter, Font::caption, green);
+    auto f = stage(Screen::pinyin), wrap = p.body(f), b = p.box(wrap);
+    p.ok &= p.tx.u16(b, protocol::grow, 1);
+    auto counter = p.text(b, a.pinyin_counter, Font::caption, green);
+    p.ok &= p.tx.logical_px(counter, protocol::height, 22);
     for (unsigned row = 0; row < a.pinyin_rows; ++row) {
-      auto r = p.box(b, true, 1);
+      auto r = p.box(b, true, 4);
+      p.ok &= p.tx.logical_px(r, protocol::height, a.layout.pinyin_row);
       for (unsigned col = 0; col < a.pinyin_columns; ++col) {
         unsigned i = row * a.pinyin_columns + col;
         auto cell = p.box(r, false, 3);
         p.ok &= p.tx.logical_px(cell, protocol::width, a.layout.pinyin_cell);
+        const bool compact = a.layout.pinyin_row < 64;
         auto py = p.text(cell, a.py[i].value, Font::body, green),
-             han = p.text(cell, a.han[i].value, Font::title);
+             han = p.text(cell, a.han[i].value,
+                          compact ? Font::body : Font::title);
         p.ok &= p.tx.u8(py, protocol::text_align, 1) &&
-                p.tx.u8(han, protocol::text_align, 1);
+                p.tx.u8(han, protocol::text_align, 1) &&
+                p.tx.logical_px(py, protocol::height, 26) &&
+                p.tx.logical_px(han, protocol::height, compact ? 28 : 32);
       }
     }
+    auto controls = p.box(wrap, true, 8);
     auto next = p.button(
-        wrap, "下一页",
+        controls, "下一页",
         [&a] {
           if (a.pinyin_index + 1 < a.pinyin_pages.size()) {
             ++a.pinyin_index;
@@ -1827,14 +1835,20 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
           }
         },
         true);
-    p.visible(next, a.pinyin_next_visible);
-    auto prev = p.button(wrap, "上一页", [&a] {
+    p.enabled(next, a.pinyin_next_visible);
+    auto prev = p.button(controls, "上一页", [&a] {
       if (a.pinyin_index) {
         --a.pinyin_index;
         a.pinyin_update();
       }
     });
-    p.visible(prev, a.pinyin_previous);
+    p.enabled(prev, a.pinyin_previous);
+    for (auto control : {next, prev}) {
+      p.padding(control, 4, 2, 4, 2);
+      p.ok &= p.tx.logical_px(control, protocol::width,
+                              (a.layout.content_width - 8) / 2) &&
+              p.tx.logical_px(control, protocol::height, a.layout.pinyin_toolbar);
+    }
     auto title = std::string_view("拼音伴读");
     header(f, title);
   }
