@@ -141,6 +141,41 @@ bool parse_poem(Value root, Entry &result) {
   return true;
 }
 #include "course.inc"
+#include "course_pinyin.inc"
+static const OfflinePinyin *offline_poem(const Entry &entry) {
+  if (!entry.course)
+    return nullptr;
+  const auto hash = study::hash(joined(entry.lines));
+  for (const auto &row : kOfflinePinyin)
+    if (entry.id == row.id && hash == row.body_hash)
+      return &row;
+  return nullptr;
+}
+bool load_course_pinyin(Entry &entry) {
+  const auto *row = offline_poem(entry);
+  if (!row)
+    return false;
+  std::string_view tokens(row->tokens);
+  std::vector<Cell> cells;
+  for (const auto &line : entry.lines) {
+    for (size_t at = 0; at < line.size();) {
+      const auto lead = static_cast<unsigned char>(line[at]);
+      const size_t count = lead < 128 ? 1 : lead < 224 ? 2 : lead < 240 ? 3 : 4;
+      if (at + count > line.size() || tokens.empty())
+        return false;
+      auto end = tokens.find(' ');
+      auto token = tokens.substr(0, end);
+      cells.push_back({line.substr(at, count), token == "-" ? "" : std::string(token)});
+      tokens = end == tokens.npos ? std::string_view{} : tokens.substr(end + 1);
+      at += count;
+    }
+    cells.push_back({"\n", ""});
+  }
+  if (!tokens.empty())
+    return false;
+  entry.pinyin = std::move(cells);
+  return true;
+}
 std::vector<Entry> course() {
   std::vector<Entry> result;
   media::json::Array list(json(kPoetryCourseJson));
@@ -149,6 +184,10 @@ std::vector<Entry> course() {
     Entry e;
     if (parse_poem(row, e)) {
       e.course = true;
+      if (offline_poem(e)) {
+        e.audio = asset(bases[3], "poems/" + e.id + "/listen.mp3");
+        e.follow = asset(bases[3], "poems/" + e.id + "/follow.mp3");
+      }
       result.push_back(std::move(e));
     }
   }
@@ -214,6 +253,7 @@ std::vector<Entry> parse_poems(std::string_view bytes, bool assets) {
       e.title = str(v.get("title"), 180);
       e.path = asset(bases[3], str(v.get("meta"), 256));
       e.audio = asset(bases[3], str(v.get("listen"), 256));
+      e.follow = asset(bases[3], str(v.get("follow"), 256));
       e.image = asset(bases[3], str(v.get("cover"), 256));
       if (e.id.empty() || e.path.empty())
         continue;
@@ -458,7 +498,8 @@ std::string serialize(const Entry &e) {
   return "{\"kind\":" + std::to_string(unsigned(e.kind)) +
          ",\"id\":" + quote(e.id) + ",\"title\":" + quote(e.title) +
          ",\"detail\":" + quote(e.detail) + ",\"path\":" + quote(e.path) +
-         ",\"audio\":" + quote(e.audio) + ",\"image\":" + quote(e.image) +
+         ",\"audio\":" + quote(e.audio) + ",\"follow\":" + quote(e.follow) +
+         ",\"image\":" + quote(e.image) +
          ",\"author\":" + quote(e.author) + ",\"dynasty\":" + quote(e.dynasty) +
          ",\"type\":" + quote(e.type) + ",\"body\":" + quote(e.body) +
          ",\"questions\":" + questions +
@@ -482,6 +523,7 @@ bool deserialize(std::string_view bytes, Entry &e) {
   v.detail = str(root.get("detail"), 200);
   v.path = str(root.get("path"), 512);
   v.audio = str(root.get("audio"), 512);
+  v.follow = str(root.get("follow"), 512);
   v.image = str(root.get("image"), 512);
   v.author = str(root.get("author"), 120);
   v.dynasty = str(root.get("dynasty"), 48);
@@ -497,6 +539,7 @@ bool deserialize(std::string_view bytes, Entry &e) {
   if (v.id.empty() || v.title.empty() ||
       (!v.path.empty() && !trusted(v.path)) ||
       (!v.audio.empty() && !trusted(v.audio)) ||
+      (!v.follow.empty() && !trusted(v.follow)) ||
       (!v.image.empty() && !trusted(v.image)))
     return false;
   if (v.kind == Kind::poem) {

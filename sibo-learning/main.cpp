@@ -82,7 +82,7 @@ struct App {
   std::array<std::function<void()>, 192> callbacks;
   Layout layout;
   State<bool> ready{false}, resume_visible{false}, is_poem{false},
-      has_quiz{false}, has_image{false}, has_audio{false}, audio_active{false},
+      has_quiz{false}, has_image{false}, has_audio{false}, has_follow{false}, audio_active{false},
       notice_visible{false}, long_question{false}, full_word{false};
   State<std::string> subtitle{"把好奇心，装进小书包"}, summary{""},
       resume_title{""};
@@ -199,6 +199,9 @@ struct App {
     has_quiz.set(selected.kind == Kind::poem || !selected.questions.empty());
     has_image.set(selected.course || !selected.image.empty());
     has_audio.set(selected.kind == Kind::poem || !selected.audio.empty());
+    has_follow.set(!selected.follow.empty());
+    if (!player.active)
+      audio_status.set("常用音频会自动缓存");
     message("");
   }
   void opened(Entry entry, Screen from) {
@@ -593,6 +596,8 @@ struct App {
     pinyin_next_visible.set(pinyin_index + 1 < pinyin_pages.size());
   }
   void open_pinyin() {
+    if (selected.pinyin.empty())
+      (void)load_course_pinyin(selected);
     if (selected.pinyin.empty()) {
       begin(Job::pinyin);
       return;
@@ -969,6 +974,8 @@ struct App {
             co_return Result<void>{};
           if (data && enrich(*data, selected)) {
             selected.audio = asset->audio;
+            selected.follow = asset->follow;
+            has_follow.set(!selected.follow.empty());
             selected.image = std::string(api) + "/api/poem/course_cover/" +
                              selected.id + ".jpg";
             if (job == Job::read) {
@@ -1757,6 +1764,11 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     p.button(b, "开始阅读", [&a] { a.read_selected(); }, true);
     auto listen = p.button(b, "听一听朗读", [&a] { a.listen(); });
     p.visible(listen, a.has_audio);
+    auto follow = p.button(b, "跟着读一读", [&a] {
+      if (!a.selected.follow.empty())
+        a.player.start(*a.ctx, a.selected.follow);
+    });
+    p.visible(follow, a.has_follow);
     auto audio_status = p.text(b, a.audio_status, Font::caption, muted);
     p.visible(audio_status, a.has_audio);
     auto pause = p.button(b, a.pause_label, [&a] { a.player.pause_resume(); });
@@ -1794,7 +1806,8 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
       if (a.reader_index) {
         --a.reader_index;
         a.reader_update();
-        if (a.reader_title.get() == a.selected.title)
+        if (a.reader_from == Screen::detail &&
+            a.reader_title.get() == a.selected.title)
           a.remember();
       }
     });
@@ -1996,8 +2009,8 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
           a.read("欢迎来到四博学习宝！\n\n诗词、儿童故事、蒙学诵读、小学听题，"
                  "英语词卡、同步教材和科学发现，都在这个小书包里。\n\n上下键选"
                  "择，确认键打开。每页右上角都可"
-                 "以返回，也支持触摸。\n\n75首课本古诗原文离线可读。故事、拼音"
-                 "、讲解、插图和朗读需联网，应用不会自动开启设备WiFi。\n\n最近"
+                 "以返回，也支持触摸。\n\n75首课本古诗原文离线可读。"
+                 "内置22首课本古诗的拼音可离线使用；其他拼音、讲解、插图和朗读需联网，应用不会自动开启设备WiFi。已有跟读音频的古诗可以跟着读一读。\n\n最近"
                  "内容按需联网读取，缓存按个人记录体积自动缩减，合计至多62KB；"
                  "空间不足时优先保存个人记录。收藏最多12篇。内部存储即可使用，"
                  "不依赖SD卡。常用音频会自动缓存，容量不足时淘汰旧缓存；小书包里可以清理。\n\n长文本进入分页阅读后，上下键选择上一页或下一页，确认翻页。长题目和词卡也有完整阅读入口。\n\n阅读时可翻页，"

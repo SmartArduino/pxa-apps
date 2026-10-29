@@ -43,7 +43,7 @@ struct Question {
 };
 struct Entry {
   Kind kind = Kind::story;
-  std::string id, title, detail, path, audio, image, category, author, dynasty,
+  std::string id, title, detail, path, audio, follow, image, category, author, dynasty,
       type, body, meta;
   std::vector<std::string> lines;
   std::vector<Cell> pinyin;
@@ -65,6 +65,7 @@ std::string joined(const std::vector<std::string> &lines,
                    std::string_view separator = "\n");
 bool parse_poem(Value root, Entry &result);
 std::vector<Entry> course();
+bool load_course_pinyin(Entry &entry);
 std::vector<Entry> parse_catalog(std::string_view bytes, Kind kind,
                                  std::vector<Category> *categories = nullptr);
 std::vector<Entry> parse_poems(std::string_view bytes, bool assets = false);

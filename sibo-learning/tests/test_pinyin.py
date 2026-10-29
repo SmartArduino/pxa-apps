@@ -54,9 +54,10 @@ def exercise(sim):
     rows = [{'items': [{'char': char, 'pinyin': mapping.get(char, '')} for char in line]} for line in lines]
     expected = [value for row in rows for cell in row['items']
                 for value in (cell['pinyin'], cell['char']) if value]
-    f.seed(sim, f.ORIGIN + '/oss/shici/index.json', [{'id':'p001','meta':'poems/p001/meta.json'}])
-    f.seed(sim, f.ORIGIN + '/oss/shici/poems/p001/meta.json', {'pinyin':rows})
-    f.choose(sim, '诗词小天地'); sim.key('ENTER'); sim.key('ENTER')
+    # p004 has no built-in annotations, so this covers the online-cache path.
+    f.seed(sim, f.ORIGIN + '/oss/shici/index.json', [{'id':'p004','meta':'poems/p004/meta.json'}])
+    f.seed(sim, f.ORIGIN + '/oss/shici/poems/p004/meta.json', {'pinyin':rows})
+    f.choose(sim, '诗词小天地'); sim.key('ENTER'); f.choose(sim, '咏鹅')
     f.choose(sim, '拼音伴读'); sim.expect('下一页')
     actual = []
     for _ in range(100):

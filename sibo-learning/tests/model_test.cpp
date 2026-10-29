@@ -14,6 +14,28 @@ int main(int argc, char **argv) {
   auto poems = course();
   assert(poems.size() == 75);
   assert(poems.front().title == "江南");
+  unsigned offline_count = 0;
+  for (auto poem : poems) {
+    if (!load_course_pinyin(poem))
+      continue;
+    ++offline_count;
+    std::string text;
+    for (const auto &cell : poem.pinyin)
+      text += cell.han;
+    assert(text == poem.body + "\n");
+    assert(!poem.audio.empty() && !poem.follow.empty());
+    Entry restored;
+    assert(deserialize(serialize(poem), restored));
+    assert(restored.follow == poem.follow && load_course_pinyin(restored));
+  }
+  assert(offline_count == 22);
+  auto changed = poems.front();
+  changed.lines.front() += "改";
+  assert(!load_course_pinyin(changed) && changed.pinyin.empty());
+  auto untrusted_follow = poems.front();
+  untrusted_follow.follow = "https://evil.test/track.mp3";
+  Entry invalid;
+  assert(!deserialize(serialize(untrusted_follow), invalid));
   for (const auto &poem : poems) {
     assert(poem.kind == Kind::poem && !poem.body.empty() && poem.course);
     Entry restored;
