@@ -1,0 +1,7 @@
+四博学习宝 PXA 客户端
+
+内容模型与接口契约参考 paixueji_nertc_demo_new 的学习宝实现（MIT，见 LICENSE-source.txt）。
+75首古诗原文来自该实现使用的 chinese-poetry，保留 MIT 声明（LICENSE-poetry.txt）。
+故事、诵读、音频及配图按需访问四博学习宝已发布接口，不随安装包打包或重新授权。
+MP3 解码复用 minimp3，许可随包保留（LICENSE-minimp3.txt）。
+应用图标及 PXA 界面代码：MIT。
