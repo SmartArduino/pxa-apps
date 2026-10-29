@@ -1,0 +1,11 @@
+{
+  "tool": "OpenAI image_gen (built-in)",
+  "created": "2026-10-29",
+  "artwork": "cover.png",
+  "prompt": "Use case: ads-marketing.\nAsset type: polished landscape app-store cover illustration, 16:9 aspect ratio, approximately 1536x864, opaque background.\nPrimary request: Create the official promotional cover for a delightful Chinese children's learning app named “四博学习宝”.\nVisual identity: warm cream paper, soft mint green, pale apricot, a little golden yellow, matching a calm and playful children's book app. An open cream book with a golden bookmark is the central recognizable symbol.\nSubject and scene: a beautiful open storybook unfolds into a small magical world of learning. Rounded paper-cut layers suggest lotus leaves and a tiny poetry pavilion, a friendly pencil, a few colorful alphabet blocks, a small globe and gentle star shapes. Keep these motifs elegant and cohesive, with the book remaining the clear main subject. Joyful and curious, suitable for young children while still refined enough for older students.\nStyle: premium contemporary children's picture-book illustration, tactile softly shaded paper shapes, subtle depth, warm natural light, crisp details and clear silhouettes. Charming and carefully composed, not noisy or cluttered.\nComposition: wide thumbnail-friendly cover, generous safe margins. Large readable Chinese app title in the left third, with the open-book learning world centered across the middle and right. Spacious cream background with mint and warm pastel accents. A balanced original marketing illustration, no app screenshot.\nText (verbatim): “四博学习宝”.\nTypeset those exact five Chinese characters beautifully with rounded, friendly, highly legible lettering. Do not add a subtitle, tagline, badge, rating, price, watermark or extra Chinese text. Small A B C letters on the alphabet blocks are allowed.\nConstraints: reflect reading, English vocabulary and science learning. No claims of AI tutors or automatic speech scoring. No devices, fake app UI, menus, system bars, navigation bars or debug overlays. No selection borders. No unrelated mascots or other brand logos.",
+  "sha256": "07beb2781531acd5e6f44d2214ce63009f353878319ddb767e5757f110ac453d",
+  "dimensions": [
+    1672,
+    941
+  ]
+}
