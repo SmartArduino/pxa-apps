@@ -128,7 +128,8 @@ struct Companion {
             std::string_view stt, std::string_view tts, bool speaking,
             bool ready, bool listening, bool waiting, std::uint64_t now,
             RoomMode room, std::string_view code,
-            std::string_view activation_message, bool text_reply = false) {
+            std::string_view activation_message, bool text_reply = false,
+            bool idle = false) {
     if (!canvas.mounted())
       return;
     int w = int(metrics.width), h = int(metrics.height);
@@ -147,7 +148,8 @@ struct Companion {
     mix(tts);
     mix(code);
     mix(activation_message);
-    hash ^= std::uint64_t(room) << 48 | std::uint64_t(text_reply) << 56;
+    hash ^= std::uint64_t(room) << 48 | std::uint64_t(text_reply) << 56 |
+            std::uint64_t(idle) << 57;
     hash ^= std::uint64_t(w) << 32 | std::uint64_t(h) << 16 | base << 8 |
             breathe << 3 | ready << 2 | listening << 1;
     hash ^= background ? background->handle() : 0;
@@ -201,9 +203,21 @@ struct Companion {
         previous_hash = hash;
       return;
     }
+    if (idle) {
+      const int y = h - margin - 53;
+      commands.rect(margin, y, w - margin * 2, 53, 0x2d203ca8, 2)
+          .text_sized({margin + 10, y + 7, w - margin * 2 - 20, 23},
+                      0xfff4e2ff, "我在这里，轻触和我聊聊", font, 1)
+          .text_sized({margin + 10, y + 32, w - margin * 2 - 20, 15},
+                      0xd5c8deff, "长按打开设置", std::max(10, font - 3), 1);
+      auto shown = canvas.present(commands);
+      if (shown)
+        previous_hash = hash;
+      return;
+    }
     caption(stt, w, h, margin, font - 1, true);
     std::string_view bottom = tts;
-    if (!ready || waiting || (listening && (!text_reply || tts.empty())))
+    if (!ready || waiting || tts.empty() || (listening && !text_reply))
       bottom = status;
     if (!ready && bottom.empty())
       bottom = "正在连接小智…";

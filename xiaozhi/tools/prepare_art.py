@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Import generated atlases as whole alpha sprites and independent room scenes.
 
-Import uses grid slicing, nearest-neighbor scaling, palette encoding and pixel
+Import uses atlas slicing, nearest-neighbor scaling, palette encoding and pixel
 format conversion. Alpha is retained; no face replacement, drawing, retouching
 or precompositing is performed.
 """
@@ -12,6 +12,16 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 FRAMES = ('neutral', 'speaking', 'happy', 'sad', 'thinking', 'surprised', 'angry', 'blink')
 SCENES = ('morning', 'day', 'evening', 'night')
+# The generated atlas is not a uniform grid: sleeves extend across its nominal
+# quarter-width boundaries. Slice at the transparent gutters between poses so
+# each sprite retains its complete arms without importing a neighbour's elbow.
+CHARACTER_ATLAS_SIZE = (1587, 991)
+CHARACTER_X_EDGES = (0, 420, 813, 1202, 1587)
+CHARACTER_Y_EDGES = (0, 501, 991)
+# All poses share one source-pixel scale and head anchor. Resizing each gutter
+# crop separately stretches wider gestures and makes the face change size.
+CHARACTER_CANVAS = (400, 500)
+CHARACTER_HEAD_CENTERS = (219, 616, 1008, 1395, 209, 616, 1008, 1395)
 
 
 def tile(atlas, index, columns, rows):
@@ -23,6 +33,26 @@ def tile(atlas, index, columns, rows):
                        round((y + 1) * atlas.height / rows)))
 
 
+def character_tile(atlas, index):
+    if atlas.size != CHARACTER_ATLAS_SIZE:
+        raise ValueError('Review character gutters after replacing the atlas')
+    x, y = index % 4, index // 4
+    return atlas.crop((CHARACTER_X_EDGES[x], CHARACTER_Y_EDGES[y],
+                       CHARACTER_X_EDGES[x + 1], CHARACTER_Y_EDGES[y + 1]))
+
+
+def aligned_character(atlas, index):
+    pose = character_tile(atlas, index)
+    column = index % 4
+    head_x = CHARACTER_HEAD_CENTERS[index] - CHARACTER_X_EDGES[column]
+    canvas = Image.new('RGBA', CHARACTER_CANVAS)
+    # The common 400x500 canvas maps to 176x220 with the same 0.44 scale on
+    # both axes. Align the head horizontally and the seated-body baseline.
+    canvas.paste(pose, (CHARACTER_CANVAS[0] // 2 - head_x,
+                        CHARACTER_CANVAS[1] - pose.height))
+    return canvas
+
+
 def main():
     people = ROOT / 'art/characters'
     rooms = ROOT / 'art/rooms'
@@ -31,7 +61,7 @@ def main():
     with Image.open(ROOT / 'art/girl-gestures-atlas.png') as atlas:
         assert atlas.mode == 'RGBA' and atlas.getchannel('A').getextrema()[0] == 0
         for i, name in enumerate(FRAMES):
-            image = tile(atlas, i, 4, 2).resize((176, 220), Image.Resampling.NEAREST)
+            image = aligned_character(atlas, i).resize((176, 220), Image.Resampling.NEAREST)
             # The complete body stays in every frame. A 256-color palette
             # encodes the pixel art compactly; its alpha remains transparent.
             indexed = image.quantize(colors=256, method=Image.Quantize.FASTOCTREE,

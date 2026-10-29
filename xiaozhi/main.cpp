@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "companion.hpp"
 #include "protocol.hpp"
+#include "response_wait.hpp"
 #include "scene_clock.hpp"
 #include "settings_ui.hpp"
 #include <algorithm>
@@ -63,6 +64,10 @@ struct App {
   unsigned capture_frame_ms = 20;
   bool resume_after_format = false;
   unsigned capture_retries = 0;
+  bool conversation_preparing = false;
+  bool user_paused = false;
+  static constexpr std::string_view idle_message = "我在这里，轻触和我聊聊\n长按打开设置";
+  xiaozhi::ResponseWait response_wait;
   std::uint64_t capture_retry_after = 0;
   bool met_before = false;
   std::string activation_code, activation_message;
@@ -89,9 +94,10 @@ struct App {
   std::array<std::byte, 1276> mic_packet{};
   std::array<opus_int16, 1920> pcm{};
   std::size_t pcm_count = 0, pcm_offset = 0, mic_size = 0;
+  unsigned reply_packets = 0, reply_samples = 0, reply_submitted = 0;
+  int reply_peak = 0;
   std::uint64_t opened_at = 0, last_received = 0;
   std::uint64_t connect_deadline = 0;
-  bool stop_requested = false;
   bool hello_sent = false, ready = false, listening = false, speaking = false,
        accept_audio = false;
   void launch(Task<void> task) {
@@ -105,7 +111,6 @@ struct App {
     (void)microphone.close();
     listening = false;
     mic_size = 0;
-    stop_requested = false;
     record_label.set("开始录音");
   }
   void disconnect() {
@@ -115,7 +120,9 @@ struct App {
     drain_deadline = 0;
     want_listen = false;
     waiting = false;
+    response_wait.reset();
     prepare_audio = false;
+    conversation_preparing = false;
     stop_recording();
     (void)socket.close();
     playback.reset();
@@ -138,6 +145,30 @@ struct App {
     if (met_before)
       message += "\n我在这里等你，轻触重连";
     status.set(std::move(message));
+  }
+  void recover_response(std::string_view message) {
+    context->foreground_tasks().cancel();
+    network_pending = false;
+    disconnect();
+    busy.set(false);
+    manual_retry = !auto_listen.get();
+    retry_after = now_ms() + 1800;
+    status.set(std::string(message) + (auto_listen.get()
+        ? "\n稍后继续聆听，轻触可重试" : "\n轻触重新开始"));
+  }
+  void pause_conversation() {
+    context->foreground_tasks().cancel();
+    network_pending = false;
+    disconnect();
+    busy.set(false);
+    user_paused = true;
+    manual_retry = true;
+    resume_after_format = false;
+    heard.set("");
+    subtitle.set("");
+    emotion = 0;
+    status.set(std::string(idle_message));
+    companion.previous_hash = 0;
   }
   void on_error(Context &ctx, Error error) {
     char diagnostic[64];
@@ -304,7 +335,7 @@ struct App {
     auto application =
         cJSON_AddObjectToObject(information.get(), "application");
     cJSON_AddStringToObject(application, "name", "pxa-xiaozhi");
-    cJSON_AddStringToObject(application, "version", "0.3.0");
+    cJSON_AddStringToObject(application, "version", "0.3.3");
     auto board = cJSON_AddObjectToObject(information.get(), "board");
     cJSON_AddStringToObject(board, "type", "generic");
     cJSON_AddStringToObject(board, "name", "pxa");
@@ -438,17 +469,8 @@ struct App {
       co_return Result<void>{};
     }
     if (listening) {
-      (void)microphone.close();
-      listening = false;
-      stop_requested = true;
-      record_label.set("开始录音");
-      waiting = true;
-      emotion = 4;
-      status.set("小智正在想…");
       co_return Result<void>{};
     }
-    if (stop_requested)
-      co_return Result<void>{};
     if (speaking) {
       status.set("请先打断当前回复");
       co_return Result<void>{};
@@ -516,7 +538,7 @@ struct App {
     co_return Result<void>{};
   }
   void send_text() {
-    if (!ready || busy.get() || listening || stop_requested || speaking ||
+    if (!ready || busy.get() || listening || speaking ||
         draft.get().empty())
       return;
     if (queue(xiaozhi::command(session, "listen", "detect",
@@ -524,6 +546,7 @@ struct App {
       heard.set(draft.get());
       draft.set("");
       waiting = true;
+      response_wait.think(now_ms());
       emotion = 4;
       status.set("小智正在想…");
     }
@@ -532,14 +555,15 @@ struct App {
     if (playback || !voice_enabled.get())
       co_return Result<void>{};
     busy.set(true);
-    auto grant =
-        co_await context->permissions().acquire("audio.playback", "media");
-    if (!grant) {
-      busy.set(false);
-      status.set("未开启语音播放，仍可查看文字回复");
-      co_return Result<void>{};
+    if (!play_permission) {
+      auto grant =
+          co_await context->permissions().acquire("audio.playback", "media");
+      if (!grant) {
+        (void)context->log().write(LogLevel::warning, "Xiaozhi playback permission unavailable");
+        co_return std::unexpected(grant.error());
+      }
+      play_permission = std::move(*grant);
     }
-    play_permission = std::move(*grant);
     auto opened = co_await context->audio().open_pcm(play_permission, 16000, 1);
     if (!opened)
       co_return std::unexpected(opened.error());
@@ -548,6 +572,7 @@ struct App {
     if (!graph)
       co_return std::unexpected(graph.error());
     busy.set(false);
+    (void)context->log().write(LogLevel::info, "Xiaozhi playback ready");
     status.set("小智已准备好");
     co_return Result<void>{};
   }
@@ -569,6 +594,7 @@ struct App {
       pending_text.clear();
     queue(xiaozhi::command(session, "abort"));
     waiting = false;
+    response_wait.reset();
     emotion = 0;
     status.set("我在听…");
     co_return Result<void>{};
@@ -624,13 +650,26 @@ struct App {
     if (!id.empty() && id != session)
       return;
     if (type == "stt") {
-      heard.set(std::string(xiaozhi::text(root.get(), "text")));
+      const auto text = xiaozhi::text(root.get(), "text");
+      if (text.find_first_not_of(" \t\r\n") == std::string_view::npos) {
+        recover_response("没有听清刚才的话");
+        return;
+      }
+      stop_recording();
+      heard.set(std::string(text));
       subtitle.set("");
+      waiting = true;
+      response_wait.think(now_ms());
+      emotion = 4;
+      status.set("小智正在想…\n轻触可重新说");
     } else if (type == "tts") {
       auto state = xiaozhi::text(root.get(), "state");
       if (state == "start") {
         stop_recording();
+        reply_packets = reply_samples = reply_submitted = 0;
+        reply_peak = 0;
         waiting = false;
+        response_wait.reset();
         speaking = true;
         tts_finished = false;
         drain_deadline = 0;
@@ -642,6 +681,8 @@ struct App {
       } else if (state == "sentence_start")
         subtitle.set(std::string(xiaozhi::text(root.get(), "text")));
       else if (state == "stop") {
+        if (!speaking)
+          return;
         accept_audio = false;
         tts_finished = true;
         drain_deadline = now_ms() + 5000;
@@ -657,9 +698,17 @@ struct App {
       fail("服务端返回错误，请检查连接配置");
   }
   void finish_reply() {
+    char diagnostic[160];
+    std::snprintf(diagnostic, sizeof(diagnostic),
+                  "Xiaozhi audio: playback=%u packets=%u decoded=%u submitted=%u peak=%d",
+                  unsigned(bool(playback)), reply_packets, reply_samples,
+                  reply_submitted, reply_peak);
+    (void)context->log().write(LogLevel::info, diagnostic);
     tts_finished = false;
     drain_deadline = 0;
     speaking = false;
+    waiting = false;
+    response_wait.reset();
     status.set("轻触开始说话");
     want_listen = auto_listen.get() && capture_supported;
   }
@@ -675,6 +724,9 @@ struct App {
   }
   void pump() {
     if (!socket)
+      return;
+    // Do not consume and discard an early reply while its PCM session opens.
+    if (ready && prepare_audio)
       return;
     if ((!ready && now_ms() - opened_at > 20000) ||
         (ready && now_ms() - last_received > 120000)) {
@@ -721,10 +773,6 @@ struct App {
         return;
       }
     }
-    if (stop_requested && !mic_size && pending_text.empty()) {
-      pending_text = xiaozhi::command(session, "listen", "stop");
-      stop_requested = false;
-    }
     // Drain pending PCM before consuming the next compressed packet.
     for (unsigned work = 0; work < 8 && socket; work++) {
       if (pcm_offset < pcm_count && playback) {
@@ -737,6 +785,7 @@ struct App {
           return;
         }
         pcm_offset += *n / 2;
+        reply_submitted += unsigned(*n / 2);
         if (pcm_offset < pcm_count)
           continue;
       }
@@ -764,7 +813,13 @@ struct App {
           return;
         }
         pcm_count = std::size_t(decoded);
+        ++reply_packets;
+        reply_samples += unsigned(decoded);
+        for (std::size_t i = 0; i < pcm_count; ++i)
+          reply_peak = std::max(reply_peak, std::abs(int(pcm[i])));
       }
+      if (prepare_audio)
+        return;
     }
   }
   Task<void> refresh_scene_time() {
@@ -815,7 +870,7 @@ struct App {
     if (connectivity == Connectivity::offline) {
       network_lost =
           previous != Connectivity::offline || bool(socket) || busy.get();
-    } else if (previous == Connectivity::offline) {
+    } else if (previous == Connectivity::offline && !user_paused) {
       retry_after = 0;
       manual_retry = false;
       status.set("网络已连接，正在连接小智…");
@@ -823,6 +878,12 @@ struct App {
     co_return Result<void>{};
   }
   Task<void> prepare_conversation() {
+    struct Guard {
+      App &app;
+      ~Guard() { app.conversation_preparing = false; app.busy.set(false); }
+    } guard{*this};
+    (void)context->log().write(LogLevel::info, voice_enabled.get()
+        ? "Xiaozhi preparing voice playback" : "Xiaozhi preparing text-only conversation");
     if (voice_enabled.get()) {
       auto sound = co_await enable_playback();
       if (!sound)
@@ -830,13 +891,27 @@ struct App {
     }
     want_listen = (auto_listen.get() || resume_after_format) && capture_supported && !send_draft;
     resume_after_format = false;
+    prepare_audio = false;
+    if (!want_listen && !send_draft)
+      status.set(std::string(idle_message));
     co_return Result<void>{};
   }
   Task<void> interrupt_and_listen() {
+    const bool cancelled_wait = waiting;
     auto stopped = co_await abort();
     if (!stopped)
       co_return std::unexpected(stopped.error());
-    want_listen = capture_supported;
+    if (cancelled_wait) {
+      // A fresh connection prevents an old untagged reply from reviving a
+      // cancelled turn; the protocol has no per-utterance response ID.
+      disconnect();
+      resume_after_format = true;
+      manual_retry = false;
+      retry_after = 0;
+      status.set("正在重新准备聆听…");
+    } else {
+      want_listen = capture_supported;
+    }
     co_return Result<void>{};
   }
   void interact() {
@@ -844,6 +919,16 @@ struct App {
       return;
     if (settings_open.get())
       return;
+    if (user_paused) {
+      tap_debounce_until = now_ms() + 400;
+      user_paused = false;
+      manual_retry = false;
+      resume_after_format = capture_supported;
+      retry_after = 0;
+      next_network_check = 0;
+      status.set("我来听你说…");
+      return;
+    }
     if (connectivity == Connectivity::offline) {
       next_network_check = 0;
       return;
@@ -851,16 +936,20 @@ struct App {
     if (!ready) {
       if (!busy.get()) {
         manual_retry = false;
+        resume_after_format = capture_supported;
         retry_after = 0;
         next_network_check = 0;
       }
       return;
     }
-    if (busy.get())
+    if (busy.get() || prepare_audio || conversation_preparing)
       return;
+    tap_debounce_until = now_ms() + 400;
     capture_retries = 0;
     capture_retry_after = 0;
-    if (speaking || waiting)
+    if (listening)
+      pause_conversation();
+    else if (speaking || waiting)
       launch(interrupt_and_listen());
     else
       launch(record());
@@ -926,6 +1015,8 @@ struct App {
     manual_retry = false;
     retry_after = 0;
     next_network_check = 0;
+    if (user_paused)
+      status.set(std::string(idle_message));
   }
   Task<void> apply_settings(bool send_after_save = false) {
     if (settings_saving || !settings_open.get())
@@ -944,8 +1035,10 @@ struct App {
       co_return Result<void>{};
     }
     capture_supported = true;
-    if (send_after_save && !draft.get().empty())
+    if (send_after_save && !draft.get().empty()) {
       send_draft = true;
+      user_paused = false;
+    }
     leave_settings(true);
     co_return Result<void>{};
   }
@@ -1226,6 +1319,9 @@ struct App {
       draw_settings();
       return;
     }
+    if (waiting && response_wait.expired(now)) {
+      recover_response("这次回复等得有点久");
+    }
     if (network_lost) {
       network_lost = false;
       context->foreground_tasks().cancel();
@@ -1246,7 +1342,7 @@ struct App {
       next_network_check = now + 2000;
       launch(check_network());
     }
-    if (profile_loaded && !busy.get() && !network_pending && !socket &&
+    if (profile_loaded && !user_paused && !busy.get() && !network_pending && !socket &&
         connectivity != Connectivity::offline && !manual_retry &&
         now >= retry_after)
       launch(bootstrap());
@@ -1259,8 +1355,9 @@ struct App {
         launch(check_audio_drain());
       }
     }
-    if (ready && !busy.get() && prepare_audio) {
-      prepare_audio = false;
+    if (ready && !busy.get() && prepare_audio && !conversation_preparing) {
+      conversation_preparing = true;
+      busy.set(true);
       launch(prepare_conversation());
     }
     if (ready && !busy.get() && send_draft && !prepare_audio && !speaking) {
@@ -1270,7 +1367,7 @@ struct App {
         send_draft = false;
     }
     if (ready && !busy.get() && want_listen && !speaking && !listening &&
-        !stop_requested && pending_text.empty() && now >= capture_retry_after) {
+        pending_text.empty() && now >= capture_retry_after) {
       want_listen = false;
       launch(record());
     }
@@ -1282,10 +1379,13 @@ struct App {
       room = xiaozhi::RoomMode::activation;
     else if (met_before)
       room = xiaozhi::RoomMode::present;
-    const auto shown_emotion = !ready && met_before ? 3 : waiting ? 4 : emotion;
+    const auto shown_emotion = user_paused ? 0 : !ready && met_before ? 3
+        : waiting && response_wait.phase() == xiaozhi::ResponseWait::Phase::thinking ? 4 : emotion;
     companion.draw(environment.display().get(), status.get(), heard.get(),
                    subtitle.get(), speaking, ready, listening, waiting, now,
-                   room, activation_code, activation_message, !voice_enabled.get());
+                   room, activation_code, activation_message, !voice_enabled.get(),
+                   user_paused || (ready && !busy.get() && !listening && !waiting &&
+                       !speaking && !prepare_audio && subtitle.get().empty()));
     companion.update(*context, shown_emotion,
                      scene_mode ? scene_mode - 1 : automatic_scene, speaking,
                      now, room == xiaozhi::RoomMode::present);
@@ -1354,6 +1454,8 @@ struct App {
     next_network_check = 0;
     retry_after = 0;
     companion.previous_hash = 0;
+    if (user_paused)
+      status.set(std::string(idle_message));
   }
   void on_stop(StopReason) { disconnect(); }
   struct ScenePointer {

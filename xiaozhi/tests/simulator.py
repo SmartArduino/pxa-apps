@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Xiaozhi fixture for the real PXA simulator (no public AI service required)."""
 import argparse,base64,ctypes,hashlib,json,math,os,pathlib,socket,socketserver,struct,subprocess,threading,time,zlib,tempfile,shutil
-p=argparse.ArgumentParser();p.add_argument('--simulator',required=True);p.add_argument('--package',required=True);p.add_argument('--publisher-key',required=True);p.add_argument('--artifacts',required=True);p.add_argument('--interactive',action='store_true');p.add_argument('--ime-package');p.add_argument('--offline',action='store_true');p.add_argument('--discovery',action='store_true');p.add_argument('--activation',action='store_true');p.add_argument('--emotions',action='store_true');p.add_argument('--drop',action='store_true');p.add_argument('--scenario',choices=['normal','http-error','no-websocket','activation-flow','malformed','handshake-stall','reconnect','settings-cancel','audio-tail','network-flap','large-headers','profile-separation','save-clicks','muted','capture-warmup'],default='normal');p.add_argument('--scene',choices=['auto','morning','day','evening','night'],default='auto');args=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('--simulator',required=True);p.add_argument('--package',required=True);p.add_argument('--publisher-key',required=True);p.add_argument('--artifacts',required=True);p.add_argument('--interactive',action='store_true');p.add_argument('--ime-package');p.add_argument('--offline',action='store_true');p.add_argument('--discovery',action='store_true');p.add_argument('--activation',action='store_true');p.add_argument('--emotions',action='store_true');p.add_argument('--drop',action='store_true');p.add_argument('--scenario',choices=['normal','http-error','no-websocket','activation-flow','malformed','handshake-stall','reconnect','settings-cancel','audio-tail','network-flap','large-headers','profile-separation','save-clicks','muted','capture-warmup','text-audio','early-audio','empty-utterance','response-timeout','cancel-wait','idle-toggle'],default='normal');p.add_argument('--scene',choices=['auto','morning','day','evening','night'],default='auto');args=p.parse_args()
 if args.scenario=='large-headers': args.discovery=True
 root=pathlib.Path(args.artifacts).resolve();root.mkdir(parents=True,exist_ok=True);(root/'finish').unlink(missing_ok=True)
 state=root/'state';state.mkdir(exist_ok=True)
 short=pathlib.Path(tempfile.mkdtemp(prefix='pxa-xiaozhi-'));(short/'artifacts').symlink_to(root,target_is_directory=True);control=short/'artifacts/control.sock'
-seen=[];errors=[];discoveries=0
+seen=[];errors=[];discoveries=0;recognition_requested=threading.Event()
 def opus_audio():
     lib=ctypes.CDLL('libopus.so.0');lib.opus_encoder_create.restype=ctypes.c_void_p
     lib.opus_encoder_create.argtypes=[ctypes.c_int,ctypes.c_int,ctypes.c_int,ctypes.POINTER(ctypes.c_int)]
@@ -69,15 +69,27 @@ class Handler(socketserver.BaseRequestHandler):
                 if n==126:n=struct.unpack('!H',exact(conn,2))[0]
                 if n==127:n=struct.unpack('!Q',exact(conn,8))[0]
                 mask=exact(conn,4);data=exact(conn,n);data=bytes(v^mask[i%4] for i,v in enumerate(data));opcode=first&15
-                if opcode==2:seen.append('microphone');continue
-                if opcode in (8,10):continue
-                value=json.loads(data);seen.append(value)
+                if opcode==2:
+                    seen.append('microphone')
+                    if not recognition_requested.is_set():continue
+                    recognition_requested.clear();seen.append('vad');value={'type':'fixture-vad'}
+                else:
+                    if opcode in (8,10):continue
+                    value=json.loads(data);seen.append(value)
                 if value['type']=='hello':
                     assert value['audio_params']['format']=='opus' and value['audio_params']['frame_duration']==20
                     send_json(conn,{'type':'hello','transport':'websocket','session_id':'fixture-1','audio_params':{'format':'opus','sample_rate':24000,'channels':1,'frame_duration':20}})
+                    if args.scenario=='early-audio':
+                        send_json(conn,{'type':'stt','text':'early reply'})
+                        send_json(conn,{'type':'tts','state':'start'})
+                        for packet in opus_audio():frame(conn,2,packet)
+                        send_json(conn,{'type':'tts','state':'stop'});seen.append('tts.done')
                     if args.drop or (args.scenario in ('reconnect','profile-separation') and sum(isinstance(v,dict) and v.get('type')=='hello' for v in seen)==1):
                         time.sleep(2);seen.append('connection.dropped');return
-                elif value['type']=='listen' and value['state'] in ('detect','stop'):
+                elif value['type']=='fixture-vad' or (value['type']=='listen' and value['state'] in ('detect','stop')):
+                    if args.scenario in ('empty-utterance','response-timeout','cancel-wait'):
+                        send_json(conn,{'type':'stt','text':' ' if args.scenario=='empty-utterance' else '请想一想'})
+                        seen.append('no-answer');continue
                     send_json(conn,{'type':'stt','text':value.get('text','你好，小智')});send_json(conn,{'type':'llm','emotion':'happy'});send_json(conn,{'type':'tts','state':'start'})
                     text=json.dumps({'type':'tts','state':'sentence_start','text':'你好，我是运行在 PXA 上的小智。'},ensure_ascii=False).encode()
                     # Split inside a UTF-8 code point and interleave a ping.
@@ -134,7 +146,7 @@ try:
         while not (root/'finish').exists() and proc.poll() is None:time.sleep(.1)
     else:
         def wait_for(predicate):
-            deadline=time.monotonic()+30
+            deadline=time.monotonic()+(45 if args.scenario=='response-timeout' else 30)
             while not predicate():
                 assert proc.poll() is None
                 if time.monotonic()>deadline:raise TimeoutError(str([v for v in seen if v!='microphone']))
@@ -172,12 +184,12 @@ try:
         elif args.scenario=='capture-warmup':
             wait_for(lambda:'microphone' in seen)
             assert 'PXA_CAPTURE_WARMUP' in (root/'simulator.log').read_text()
-            command('TAP 160 180');wait_for(lambda:'tts.done' in seen)
+            recognition_requested.set();wait_for(lambda:'tts.done' in seen)
             wait_for(lambda:sum(isinstance(v,dict) and v.get('state')=='start' for v in seen)>=2)
             shot('capture-recovered.png')
             print('PASS: delayed microphone retries, recovers and keeps automatic listening',flush=True)
         elif args.scenario=='muted':
-            wait_for(lambda:'microphone' in seen);command('TAP 160 180')
+            wait_for(lambda:'microphone' in seen);recognition_requested.set()
             wait_for(lambda:'tts.done' in seen)
             wait_for(lambda:sum(isinstance(v,dict) and v.get('state')=='start' for v in seen)>=2)
             time.sleep(.2);shot('muted-answer.png')
@@ -216,8 +228,60 @@ try:
             wait_for(lambda:sum(isinstance(v,dict) and v.get('type')=='hello' for v in seen)>=2)
             wait_for(lambda:seen.count('microphone')>stopped);shot('online-restored.png')
             print('PASS: offline -> online -> capture stops on link loss -> automatic recovery',flush=True)
+        elif args.scenario=='idle-toggle':
+            wait_for(lambda:'microphone' in seen)
+            command('TAP 160 180');time.sleep(.6)
+            stopped=seen.count('microphone');connections=sum(isinstance(v,dict) and v.get('type')=='hello' for v in seen)
+            shot('idle.png');time.sleep(1)
+            assert seen.count('microphone')==stopped, 'Idle still uploads microphone audio'
+            assert sum(isinstance(v,dict) and v.get('type')=='hello' for v in seen)==connections, 'Idle automatically reconnected'
+            assert not any(isinstance(v,dict) and v.get('state')=='stop' for v in seen), 'Idle submitted an utterance'
+            command('TAP 160 180')
+            wait_for(lambda:sum(isinstance(v,dict) and v.get('type')=='hello' for v in seen)>connections)
+            wait_for(lambda:seen.count('microphone')>stopped);shot('listening-again.png')
+            time.sleep(.45) # A distinct controller action, outside tap debounce.
+            command('KEY_DOWN Z');time.sleep(.08);command('KEY_UP Z');time.sleep(.5)
+            stopped=seen.count('microphone');shot('idle-controller.png')
+            command('POINTER DOWN 160 120');time.sleep(.85);command('POINTER UP 160 120');time.sleep(.15)
+            command('KEY_DOWN X');time.sleep(.08);command('KEY_UP X');time.sleep(.5)
+            assert seen.count('microphone')==stopped, 'Returning from settings resumed a paused conversation'
+            shot('idle-after-settings.png')
+            print('PASS: listening tap -> quiet idle -> tap resumes; controller and settings preserve pause',flush=True)
+        elif args.scenario in ('empty-utterance','response-timeout','cancel-wait'):
+            wait_for(lambda:'microphone' in seen)
+            recognition_requested.set();wait_for(lambda:'no-answer' in seen)
+            time.sleep(.15);shot('waiting-for-recognition.png')
+            if args.scenario=='cancel-wait':
+                time.sleep(.45);command('TAP 160 180')
+            wait_for(lambda:sum(isinstance(v,dict) and v.get('type')=='hello' for v in seen)>=2)
+            wait_for(lambda:sum(isinstance(v,dict) and v.get('state')=='start' for v in seen)>=2)
+            time.sleep(.15);shot('listening-recovered.png')
+            assert 'tts.done' not in seen
+            print('PASS: no false thinking or indefinite wait; recover/cancel starts a fresh listening turn',flush=True)
+        elif args.scenario=='early-audio':
+            wait_for(lambda:'tts.done' in seen)
+            wait_for(lambda:'Xiaozhi audio:' in (root/'simulator.log').read_text())
+            import re
+            audio=re.search(r'Xiaozhi audio: playback=(\d+) packets=(\d+) decoded=(\d+) submitted=(\d+) peak=(\d+)',(root/'simulator.log').read_text())
+            assert audio and tuple(map(int,audio.groups()[:4]))==(1,90,28800,28800),audio.group(0) if audio else 'missing audio summary'
+            assert int(audio.group(5))>0
+            print('PASS: early reply is buffered until the playback session is ready',flush=True)
+        elif args.scenario=='text-audio':
+            wait_for(lambda:'microphone' in seen)
+            command('POINTER DOWN 160 120');time.sleep(.85);command('POINTER UP 160 120');time.sleep(.15)
+            command('TAP 160 68');time.sleep(.1);command('TAP 275 28');time.sleep(.2)
+            command('TEXT hi');time.sleep(.1);command('TAP 275 30')
+            wait_for(lambda:any(isinstance(v,dict) and v.get('state')=='detect' and v.get('text')=='hi' for v in seen))
+            wait_for(lambda:'tts.done' in seen)
+            wait_for(lambda:'Xiaozhi audio:' in (root/'simulator.log').read_text())
+            import re
+            audio=re.search(r'Xiaozhi audio: playback=(\d+) packets=(\d+) decoded=(\d+) submitted=(\d+) peak=(\d+)',(root/'simulator.log').read_text())
+            assert audio and tuple(map(int,audio.groups()[:4]))==(1,90,28800,28800),audio.group(0) if audio else 'missing audio summary'
+            assert int(audio.group(5))>0
+            shot('text-answer.png')
+            print('PASS: settings text reply waits for playback initialization and renders all audio',flush=True)
         elif args.scenario=='audio-tail':
-            wait_for(lambda:'microphone' in seen);command('TAP 160 180')
+            wait_for(lambda:'microphone' in seen);recognition_requested.set()
             wait_for(lambda:sum(isinstance(v,dict) and v.get('state')=='start' for v in seen)>=2)
             time.sleep(.1);shot('audio-tail-complete.png')
             assert 'XIAOZHI_AUDIO_HANDOFF' in (root/'simulator.log').read_text(), 'audio-tail requires the Host audio probe'
@@ -250,8 +314,8 @@ try:
             assert any(isinstance(v,dict) and v.get('state')=='start' and v.get('mode')=='auto' for v in seen)
             if args.discovery: assert 'discovery' in seen
             shot('listening.png')
-            command('TAP 160 180')
-            wait_for(lambda:any(isinstance(v,dict) and v.get('state')=='stop' for v in seen))
+            recognition_requested.set()
+            wait_for(lambda:'vad' in seen)
             time.sleep(.3);shot('conversation.png')
             if args.emotions:
                 for mood in ['happy', 'sad', 'thinking', 'surprised', 'angry', 'sleepy']:
@@ -259,15 +323,13 @@ try:
                     time.sleep(.18);shot('emotion-'+mood+'.png')
                 wait_for(lambda:'tts.done' in seen)
                 wait_for(lambda:sum(isinstance(v,dict) and v.get('state')=='start' for v in seen)>=2)
-                command('TAP 160 180')
-                wait_for(lambda:sum(isinstance(v,dict) and v.get('state')=='stop' for v in seen)>=2)
+                recognition_requested.set()
+                wait_for(lambda:seen.count('vad')>=2)
                 time.sleep(.2)
             # Tap while the response is playing: abort and resume listening.
             command('TAP 160 180')
             wait_for(lambda:any(isinstance(v,dict) and v.get('type')=='abort' for v in seen))
             wait_for(lambda:'tts.done' in seen)
-            command('KEY_DOWN Z');time.sleep(.08);command('KEY_UP Z')
-            time.sleep(.2)
             command('POINTER DOWN 160 120');time.sleep(.85)
             shot('settings.png');command('POINTER UP 160 120')
             time.sleep(.15)

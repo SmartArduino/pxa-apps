@@ -12,8 +12,9 @@ Socket、麦克风采集和 PCM 播放。需要包含 **Window 0.4、Net 0.6、A
 2. 首次启动默认使用小智官方配置服务 `https://api.tenclass.net/xiaozhi/ota/`，
    自动获取 WebSocket 地址及 Token。如返回激活码，按屏幕提示绑定设备，再轻触重试。
    首次启动会生成并保存独立 Device-Id 和 Client-Id；需要硬件证明的激活方式暂不支持。
-3. 授予联网、播放和麦克风权限后自动聆听。说完后由服务器结束识别；轻触人物也可
-   停止本轮采集并提交。回复时轻触或短按 A / Start 可打断，然后继续聆听。
+3. 授予联网、播放和麦克风权限后自动聆听。说完后由服务器结束识别；聆听时轻触人物会
+   结束聆听并回到待机，不会强行提交识别。待机时轻触或短按 A / Start 开始聊天；
+   思考或回复时轻触可打断，然后重新聆听。
 4. 长按画面或 A / Start 约 700 ms 进入设置；Select 也可直接打开。
    设置分为“连接、对话、画面”三个页签；可切换官方 / 自定义服务器、填写地址及
    Token，关闭自动聆听或语音回复，并选择场景。字段点开后使用系统输入法编辑，
@@ -72,11 +73,25 @@ tools/dev.sh device xiaozhi --source-root local/pxa-apps --port /dev/ttyACM0
 `art/girl-gestures-atlas.png` 是内置图像生成工具生成的八种整个人物姿态，
 `art/room-atlas.png` 是独立的四时段背景。最终提示词分别保存在
 `art/whole-body-prompt.txt`、`art/layered-room-prompt.txt`。
-`tools/prepare_art.py` 只切分图集并最近邻缩放：人物输出为
+`tools/prepare_art.py` 按姿态之间的透明间隔切分人物图集，避免混入相邻人物的手肘，
+然后在统一的 400×500 画布上对齐头部和底部基线，按同一比例缩放，避免姿态切换时
+人物大小突变。更换图集时需重新核对切分边界和锚点。人物输出为
 `art/characters/` 下的 176×220 透明图，使用 256 色调色板、无抖动，随后转换为
 预乘 BGRA；房间输出到 `art/rooms/`。`resources.json` 将整个人物帧编译为带
 透明度的 PXR，将四张房间编译为 320×240 RGB565 PXR。
 修改图集后先运行脚本，再重新构建应用。
+`python3 tests/art_import_test.py` 检查八种姿态是否混入独立的下半身残片，
+并检查等比缩放、锚点一致性、完整人物保留，以及预乘 BGRA 的尺寸和透明度约束。
+
+待机时人物保持放松表情、轻微呼吸和眨眼，清空旧字幕，显示“我在这里，轻触和我聊聊”
+及较小的“长按打开设置”。用户主动进入待机后关闭采集和对话连接，不会自动重连；
+进出设置或切换前后台保留本次暂停意图。有效识别结果到达后才显示思考，超过三十秒
+没有回复会提示并恢复；取消等待会建立新会话，避免旧回复混入。
+
+播放会话准备完成后才开始对话，不丢弃初始化期间提前到达的音频。
+每轮语音回复结束时，应用输出 `Xiaozhi audio` 诊断日志，包含收到的音频包数、
+解码及提交的 PCM 样本数和解码峰值，用于区分无音频、解码静音与输出链路问题。
+日志不包含对话文字、录音内容或连接凭据。
 
 `tests/simulator.py` 使用真实 PXA 模拟器和本地 WebSocket 协议夹具；
 `--offline` 检查联网提示，`--scene morning|day|evening|night` 固定预览场景，
@@ -113,3 +128,11 @@ PXA 系统侧没有引入小智专用 Host 服务；WebSocket 和小智协议均
 回归场景还包括 `profile-separation`（官方凭据与自定义配置隔离、重连不写设置）、
 `save-clicks`（连续点保存）、`muted`（配合 Host 探针验证无播放会话且保留字幕）和
 `capture-warmup`（采集源延迟就绪）。字幕的空行与省略行为由 `tests/captions_test.cpp` 覆盖。
+
+`art/icon-source.png` 是基于内置女孩生成的图标原图；`assets/icon.png` 是安装包使用的
+128×128 像素图标，提示词见 `art/icon-prompt.txt`。图标沿用紫发、星形发夹和奶油色毛衣，
+使用简洁对话气泡，便于小尺寸识别。
+
+`idle-toggle` 覆盖聆听/待机切换及设置返回后的暂停保持；`text-audio`、`early-audio`
+覆盖文字回复与提前到达的音频，`empty-utterance`、`response-timeout`、`cancel-wait`
+覆盖空识别、回复超时和取消等待。语音夹具由服务端模拟 VAD 完成，点击屏幕只切换待机或打断。
