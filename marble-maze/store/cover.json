@@ -1,0 +1,7 @@
+{
+  "tool": "OpenAI image_gen (built-in)",
+  "created": "2026-10-30",
+  "artwork": "cover.png",
+  "prompt": "Use case: ads-marketing.\nAsset type: final landscape app-store cover, 16:9, 1536x864. Original premium friendly game illustration. Bold readable exact app title in left third, hero scene center and right, generous margins, clear at thumbnail size. Restrained polished soft 3D illustration, crisp details and purposeful lighting. Only the exact title text; no slogan, buttons, rating, devices, screenshots, interface, branding or watermarks. Opaque background. Depict the real simple offline game faithfully, without implying multiplayer, gambling or additional features.\n\nText (verbatim): \"弹珠迷宫\". Excellent balanced Chinese display lettering with clear high contrast.\nScene: A glossy mint-teal marble balancing inside a clearly visible compact rectangular wooden maze board with soft cream floor and low sage-green walls, a readable winding path, three small golden collectible stars along that path, a modest golden goal opening. The marble is a polished teal sphere with crisp reflection. Isometric three-quarter angle, fresh mint background, warm pale wood, calm sage-green walls, playful tactile toy-like illustration. A single maze board, no floating islands, no complicated traps or features not in the game.",
+  "sha256": "b673e755f78eb05348542b80c6f95c03600fc2e632e0632c1c3b500806a2d6bc"
+}

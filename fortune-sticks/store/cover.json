@@ -1,0 +1,7 @@
+{
+  "tool": "OpenAI image_gen (built-in)",
+  "created": "2026-10-30",
+  "artwork": "cover.png",
+  "prompt": "Use case: ads-marketing.\nAsset type: final landscape app-store cover, 16:9, 1536x864. Original premium friendly game illustration. Bold readable exact app title in left third, hero scene center and right, generous margins, clear at thumbnail size. Restrained polished soft 3D illustration, crisp details and purposeful lighting. Only the exact title text; no slogan, buttons, rating, devices, screenshots, interface, branding or watermarks. Opaque background. Depict the real simple offline game faithfully, without implying multiplayer, gambling or additional features.\n\nText (verbatim): \"好运签\". Excellent balanced Chinese display lettering with clear high contrast.\nScene: A clearly traditional rounded wooden Chinese fortune-stick cylinder, dark elliptical opening, slender cream bamboo fortune sticks with tiny incised red markings fanning gently from its mouth, a red circular seal with the character 签, green-brass bands and a red cord tassel. One bamboo slip lifted slightly. Warm cream paper backdrop, subtle circular paper motifs, rich natural walnut wood, vermilion accents, soft sage green, tiny warm golden glints. Beautiful tranquil joyful daily encouragement. The cylinder must unmistakably be a wooden fortune-stick tube: no carton, no food, no french fries, no yellow chunky sticks.",
+  "sha256": "481dfa92c33f89d5a50578ed73090c099eef8b06ac1af4f328e4868d391c1d5c"
+}

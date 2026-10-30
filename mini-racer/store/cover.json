@@ -1,0 +1,7 @@
+{
+  "tool": "OpenAI image_gen (built-in)",
+  "created": "2026-10-30",
+  "artwork": "cover.png",
+  "prompt": "Use case: ads-marketing.\nAsset type: final landscape app-store cover, 16:9, 1536x864. Original premium friendly game illustration. Bold readable exact app title in left third, hero scene center and right, generous margins, clear at thumbnail size. Restrained polished soft 3D illustration, crisp details and purposeful lighting. Only the exact title text; no slogan, buttons, rating, devices, screenshots, interface, branding or watermarks. Opaque background. Depict the real simple offline game faithfully, without implying multiplayer, gambling or additional features.\n\nText (verbatim): \"3D小赛车\". Excellent balanced Chinese display lettering with clear high contrast.\nScene: A playful low-poly coral-red compact sports car with twin white racing stripes, charcoal wheels, silver rims, small blue-tinted cabin and sculpted body, on a sweeping coastal asphalt road with white lane markings and red-white curbs. Bright teal ocean, sandy coast, a few stylized palms, gentle green hills and warm sunlight. Three-quarter view car is the focus, dynamic but friendly and inviting, coherent toy-like low-poly scene faithful to a small simple 3D driving game.",
+  "sha256": "de875fdcb495f6fb333e992e92054fed6b1e1d4a4271c7d4879397afd5d21968"
+}
