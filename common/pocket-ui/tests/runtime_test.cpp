@@ -93,19 +93,28 @@ void test_preferences() {
     }
 }
 void test_surface_and_backpressure() {
+    pointer_density = 65536;
     mapped=true; surface=0; frame_id=0; display_w=296; display_h=240;
     surface_inflight=false; background=false; dirty=true; prepared=staged=false; paused=false;
     assert(request_surface()==0 && surface_inflight && !surface_ready);
+#ifdef PXA_POCKET_FILL
+    assert(viewport.width==296 && viewport.height==240 && WIDTH==288 && HEIGHT==234);
+#else
     assert(viewport.width==296 && viewport.height==230);
+#endif
     // Environment changes while CREATE is outstanding. Its completion must
     // finish CONFIGURE, then close and recreate before any old frame is drawn.
     display_w=480; display_h=320;
     assert(reply_create()==PXA_EVENT_HANDLED && registrations==1);
     assert(reply_configure()==PXA_EVENT_HANDLED && surface_inflight && !surface_ready && closes==1);
+#ifdef PXA_POCKET_FILL
+    assert(viewport.width==480 && viewport.height==320 && WIDTH==336 && HEIGHT==224);
+#else
     assert(viewport.width==411 && viewport.height==320);
+#endif
     assert(reply_create()==PXA_EVENT_HANDLED);
     assert(reply_configure()==PXA_EVENT_HANDLED && surface_ready && !surface_inflight);
-    assert(frame_bytes==411u*320u*2u);
+    assert(frame_bytes==viewport.pixels()*2);
     draw_count=acquire_count=0; present_blocks=1;
     pocket::redraw(); present();
     assert(prepared && draw_count==1 && acquire_count==1 && frame_id==0);
@@ -144,6 +153,39 @@ void test_surface_and_backpressure() {
     bool was_english=pocket::english(); menu_activate();
     assert(paused && pocket::english()!=was_english);
 }
+void test_dense_pointer() {
+    running=true; background=false; exit_requested=false; surface_ready=true;
+    // Real 480x480 panel: a control at (341,87) arrives as (178,45) at 305 DPI.
+    viewport={0,0,480,480,1};
+#ifdef PXA_POCKET_FILL
+    content_viewport={16,32,448,416,1};
+    WIDTH=288; HEIGHT=224;
+#endif
+    for (uint32_t density : {65536u,98304u,124928u,131072u}) {
+        pointer_density=density; pointer_active=false; paused=false;
+        pxa_ui_pointer_data_t p{}; p.pointer_id=7; p.phase=PXA_POINTER_DOWN;
+        p.x=int(341ll*65536/density); p.y=int(287ll*65536/density);
+        pointer_count=0; pointer(p);
+        assert(pointer_active && pointer_count==1 && pointer_phase==pocket::Phase::DOWN);
+#ifdef PXA_POCKET_FILL
+        assert(pointer_x>=207 && pointer_x<=209 && pointer_y>=136 && pointer_y<=138);
+#else
+        assert(pointer_x>=203 && pointer_x<=204 && pointer_y>=133 && pointer_y<=134);
+#endif
+        p.phase=PXA_POINTER_UP; pointer(p);
+        assert(!pointer_active && pointer_count==2 && pointer_phase==pocket::Phase::UP);
+        // A drag outside remains captured; cancellation cannot become a tap.
+        p.phase=PXA_POINTER_DOWN; pointer(p);
+        p.phase=PXA_POINTER_MOVE; p.x=-10; p.y=-10; pointer(p);
+        assert(pointer_active && pointer_x<0 && pointer_y<0);
+        p.phase=PXA_POINTER_CANCEL; pointer(p);
+        assert(!pointer_active && pointer_phase==pocket::Phase::CANCEL);
+    }
+    assert(pocket_ui::pointer_pixel(INT32_MAX,131072)==INT32_MAX);
+    assert(pocket_ui::pointer_pixel(INT32_MIN,131072)==INT32_MIN);
+    assert(pocket_ui::pointer_pixel(-7,0)==-7);
+    pointer_density=65536;
+}
 }
 extern "C" int32_t pxa_call(uint32_t route,uint64_t token,const uint8_t *data,uint32_t length) {
     uint16_t service=uint16_t(route), opcode=uint16_t(route>>16);
@@ -172,4 +214,4 @@ void pointer(pocket::Phase phase,int x,int y){++pointer_count;pointer_x=x;pointe
 void draw(){++draw_count;pocket::clear(painted);}
 size_t serialize(uint8_t*,size_t){return 0;} void load(const uint8_t*,size_t){}
 }
-int main(){test_preferences();test_surface_and_backpressure();puts("Pocket runtime: async preferences / retry / resize / mapped+copied backpressure / pointer capture / fourth menu row passed");}
+int main(){test_preferences();test_surface_and_backpressure();test_dense_pointer();puts("Pocket runtime: async preferences / retry / resize / mapped+copied backpressure / pointer capture / dense touch / fourth menu row passed");}

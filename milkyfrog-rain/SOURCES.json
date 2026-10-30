@@ -1,0 +1,253 @@
+{
+  "sources": [
+    {
+      "path": "art/frog.png",
+      "url": "https://naiwa-milk-rain.pages.dev/assets/frog.png",
+      "sha256": "093216713a1cb9b2cbc475081196c5c458860ca4700a6d2ed919c04e49731b35"
+    },
+    {
+      "path": "art/angry.png",
+      "url": "https://naiwa-milk-rain.pages.dev/assets/angry.png",
+      "sha256": "ec23f0f84457b7bb573cbeeb1f96876ceed1770e1bf0f224aaa7aa06cb9d096a"
+    },
+    {
+      "path": "art/heart.png",
+      "url": "https://naiwa-milk-rain.pages.dev/assets/heart.png",
+      "sha256": "30d05971e018e0705ff1ee94e1cab405d1f7f5ab33a7638b56ff7ce4df8044d8"
+    },
+    {
+      "path": "art/face.png",
+      "url": "https://naiwa-milk-rain.pages.dev/assets/face.png",
+      "sha256": "3ea204734e5cb246ff04cecb1e911177fdb00cd921544be2b58b1a6f850c7f6b"
+    },
+    {
+      "path": "art/coin.png",
+      "url": "https://naiwa-milk-rain.pages.dev/assets/coin.png",
+      "sha256": "8440a9dd73c57a3b60a0284b9b3d51e305e25a2dc966fe26d614e4cec5f0ae67"
+    },
+    {
+      "path": "art/wing.png",
+      "url": "https://naiwa-milk-rain.pages.dev/assets/wing.png",
+      "sha256": "a1deba9b21b35dd88c6ee1c3c86a71cc78dffb80f81ba553abbf661c8398869a"
+    },
+    {
+      "path": "art/laugh.png",
+      "url": "https://naiwa-milk-rain.pages.dev/assets/laugh.png",
+      "sha256": "b98ef485df4945ea5b2b8b7579ba1aed8879e60e53a04bf7f4c06b82c105fcb3"
+    },
+    {
+      "path": "art/laugh.mp3",
+      "url": "https://naiwa-milk-rain.pages.dev/assets/laugh.mp3",
+      "sha256": "1f676bf150b98767a206c18175819bc9a7df3c2fcaf06b15649a7dbfdc0d19ee"
+    },
+    {
+      "path": "art/ding.mp3",
+      "url": "https://naiwa-milk-rain.pages.dev/assets/ding.mp3",
+      "sha256": "be05524db615d756538c787d2210ff76f075db5941e512379dc6fdde5910dd08"
+    },
+    {
+      "path": "art/stage1.mp3",
+      "url": "https://naiwa-milk-rain.pages.dev/assets/stage1.mp3",
+      "sha256": "91e660f6a351ac47a33ed1d1be37772b9400a5671ccc181334bfd29f302bd23b"
+    },
+    {
+      "path": "art/andy.mp3",
+      "url": "https://naiwa-milk-rain.pages.dev/assets/andy.mp3",
+      "sha256": "2c49cad33ba5b665bbc8df9ccdcab088220903e57ee4810388dbb39f11d0db75"
+    }
+  ],
+  "transformations": [
+    "Images: crop transparent padding; Lanczos 32/64/128 px and up to 56,000 pixel RGBA variants; original animation frames packed into bounded 320x104 atlases; small RGB565 fallbacks.",
+    "Audio: original recordings downmixed to signed 16-bit 16 kHz mono.",
+    "Pitch variants rendered offline; miner compensates tempo to retain duration."
+  ],
+  "rights": "Third-party images/recordings retain their original rights; meme status is not a license. See THIRD-PARTY.txt.",
+  "generated": [
+    {
+      "path": "heroes.hpp",
+      "sha256": "92767f95bb263d2c172c739d36cce25083a1a0cfcbd605565a6ac83c1240d042"
+    },
+    {
+      "path": "sprites.hpp",
+      "sha256": "9c3d51b6a6f5843bb873754a72e03d5bea80dbf6934613ca6ad88e1da1aba908"
+    },
+    {
+      "path": "assets/andy.s16",
+      "sha256": "952e6c474a906959302e12cd969ee746ec22bb578c50406257eae695e7ed7f63"
+    },
+    {
+      "path": "assets/ding.s16",
+      "sha256": "79b29fe942b833b2d0e9cda7864b56c5ebc77e4c72d92203efb54f1115621ceb"
+    },
+    {
+      "path": "assets/laugh.s16",
+      "sha256": "020b966b6bff27666c5aba856b297108e3767341a682d6e91121160ebc757524"
+    },
+    {
+      "path": "assets/bgm.ogg",
+      "sha256": "41ebe70ee1480f5d9e61a7ac8eae97c7a8e9818dc1d773a44c131b395de0f584"
+    },
+    {
+      "path": "assets/images/angry-128.png",
+      "sha256": "fdffc4c8113313839cf58c6729359a01c9f442b8a21619562838b0ce7001a31e"
+    },
+    {
+      "path": "assets/images/angry-32.png",
+      "sha256": "95c5e7a2ac5f1eaefb0b6a765db57305b4891df0eb3863869bad80c061e15ef9"
+    },
+    {
+      "path": "assets/images/angry-512.png",
+      "sha256": "1ff6825b8980d2c3eeaa293ec7c157f00c964920e9364fe8fcd04441c2500ba2"
+    },
+    {
+      "path": "assets/images/angry-64.png",
+      "sha256": "0b7a125615b11af39df67600e622cd6b866ff3e98d368e344515adcb138db58d"
+    },
+    {
+      "path": "assets/images/coin-128.png",
+      "sha256": "5d2584f1dab543cd7b18a3e2ae0d7e9d397c019bbaba54d832d26c3a559bc76f"
+    },
+    {
+      "path": "assets/images/coin-32.png",
+      "sha256": "581acefb982c8718224a645e24d48530daef1d683856cf51ba4e6a228f73222b"
+    },
+    {
+      "path": "assets/images/coin-512.png",
+      "sha256": "98f982497e9745fd3ab2f691cbb82b828cbacdf1d9b35f7d921438748d93fb51"
+    },
+    {
+      "path": "assets/images/coin-64.png",
+      "sha256": "6d00e4c50caba6c151223b9564efe0c45e52bf95f03c7ab5d46b54465c49988c"
+    },
+    {
+      "path": "assets/images/face-128.png",
+      "sha256": "dd6d9f89726bb4386fc1c1dcf472ed010a764e8e92cff61035d5e82b4a4453a8"
+    },
+    {
+      "path": "assets/images/face-32.png",
+      "sha256": "896678de4944fb555ab49a44281699732102eb3833f33865520717c76579d4c5"
+    },
+    {
+      "path": "assets/images/face-512.png",
+      "sha256": "146e4d383666407145973ef179cb0fb18289dbad2efbb685b5189f4455ca1238"
+    },
+    {
+      "path": "assets/images/face-64.png",
+      "sha256": "79c751392c6ba884af15c72f5d3c3668bf78844bddbad9080465e702f58ba8cb"
+    },
+    {
+      "path": "assets/images/frog-128.png",
+      "sha256": "a916f0141cebced6eb68437e8649d29007a88e6bd95d9b53ad2e24baadab0cd0"
+    },
+    {
+      "path": "assets/images/frog-32.png",
+      "sha256": "202cf64b29295a56fd6e0e75df214726406f90bca4223c45d62ceb6658191f11"
+    },
+    {
+      "path": "assets/images/frog-512.png",
+      "sha256": "367419a4fd244b3fd8fc7888b0afa5643166501a41d9707b1011e9e25ae58b5a"
+    },
+    {
+      "path": "assets/images/frog-64.png",
+      "sha256": "f0bb9f64d63a05e75b95510059279a4440c1488e004572fc7a15af54d4e1fa02"
+    },
+    {
+      "path": "assets/images/heart-128.png",
+      "sha256": "87a8b0ad5c70c8a61741491f3b3f6bad93a96b8762865534f226133151669a08"
+    },
+    {
+      "path": "assets/images/heart-32.png",
+      "sha256": "5e9df07fd2434937315988f241ab76afed4ef22f71cd5118612b0e46bf47ff31"
+    },
+    {
+      "path": "assets/images/heart-512.png",
+      "sha256": "13b8232060aca0607d893b874bb5ef100d7f421131a56732083c0e0f2d33d244"
+    },
+    {
+      "path": "assets/images/heart-64.png",
+      "sha256": "6b1f2c62a357b2722cc249cc698f8c863b5163916d274501d7fc47e927ed12a1"
+    },
+    {
+      "path": "assets/images/hero_frog-128.png",
+      "sha256": "a916f0141cebced6eb68437e8649d29007a88e6bd95d9b53ad2e24baadab0cd0"
+    },
+    {
+      "path": "assets/images/hero_frog-32.png",
+      "sha256": "202cf64b29295a56fd6e0e75df214726406f90bca4223c45d62ceb6658191f11"
+    },
+    {
+      "path": "assets/images/hero_frog-512.png",
+      "sha256": "367419a4fd244b3fd8fc7888b0afa5643166501a41d9707b1011e9e25ae58b5a"
+    },
+    {
+      "path": "assets/images/hero_frog-64.png",
+      "sha256": "f0bb9f64d63a05e75b95510059279a4440c1488e004572fc7a15af54d4e1fa02"
+    },
+    {
+      "path": "assets/images/hero_heart-128.png",
+      "sha256": "87a8b0ad5c70c8a61741491f3b3f6bad93a96b8762865534f226133151669a08"
+    },
+    {
+      "path": "assets/images/hero_heart-32.png",
+      "sha256": "5e9df07fd2434937315988f241ab76afed4ef22f71cd5118612b0e46bf47ff31"
+    },
+    {
+      "path": "assets/images/hero_heart-512.png",
+      "sha256": "13b8232060aca0607d893b874bb5ef100d7f421131a56732083c0e0f2d33d244"
+    },
+    {
+      "path": "assets/images/hero_heart-64.png",
+      "sha256": "6b1f2c62a357b2722cc249cc698f8c863b5163916d274501d7fc47e927ed12a1"
+    },
+    {
+      "path": "assets/images/laugh-atlas-0.png",
+      "sha256": "bbae5f7fff8b9262b7f28cf2fa837e0b2a1a7082acf5510a3ee57ab092e10b3e"
+    },
+    {
+      "path": "assets/images/laugh-atlas-1.png",
+      "sha256": "ad4aa8da7294105cc4411f1988d670e6292ea6d57030c54d51d04fe7eb1c947c"
+    },
+    {
+      "path": "assets/images/laugh-atlas-2.png",
+      "sha256": "204ae337c4dc2d9586e5beab13db6815503ca29db2736882c2105ccd1ab39752"
+    },
+    {
+      "path": "assets/images/laugh-atlas-3.png",
+      "sha256": "e45ba637f7560bbfa4c39f2a8e240c94660f6b428f9ab5e46aa5c35b0b406e41"
+    },
+    {
+      "path": "assets/images/laugh-atlas-4.png",
+      "sha256": "f073e520db4e3bc8f2b82dccc248fa552d681d38ea93d63616b2ccd2107f0b1c"
+    },
+    {
+      "path": "assets/images/wing-128.png",
+      "sha256": "6921f1a79711dfc9bd7d5815b24071ab679029ef1a581a2a304aa1f3e6cbde50"
+    },
+    {
+      "path": "assets/images/wing-32.png",
+      "sha256": "4255fb25717269a81804b9cbb40a606c31c291e54defb7621db2d75449247884"
+    },
+    {
+      "path": "assets/images/wing-512.png",
+      "sha256": "db9a4c55d1b03ab7fcbf6e82e0418c64be4b8037c16b73c034c3f4df4c2d3724"
+    },
+    {
+      "path": "assets/images/wing-64.png",
+      "sha256": "a11660fc09f5af0d09eeec734e1ca89e17be1e51ee4112365c8390f6fb445878"
+    },
+    {
+      "path": "assets/icon.png",
+      "sha256": "ff09c070d2738edd5f10bc5a65ab771760cf3f9a5eead2da007f11ae7f842ebc"
+    }
+  ],
+  "icon_artwork": {
+    "tool": "OpenAI image_gen (built-in)",
+    "intent": "Square launcher portrait composed from the original Milky Frog reference, preserving natural proportions.",
+    "reference": "art/frog.png",
+    "artwork": "art/icon-rain-square.png",
+    "created": "2026-10-29",
+    "prompt": "Use case: compositing / identity-preserve. Asset type: square launcher app icon for the existing PXA game 奶蛙的奶块雨 (Milky Frog Rain).\nInput image 1 is the original Milky Frog character and exact identity reference. Recompose this original yellow meme character into a polished, simple SQUARE app icon, preserving the character's normal anatomy, original head-to-body proportions, distinctive green eyes, small mouth, smooth yellow body and pale cream belly, and its slightly awkward lovable 3D meme look. Do not horizontally stretch, squeeze, flatten or make the character shorter and wider. Do not redesign its face. Use a centered three-quarter upper-body portrait, showing the whole head with generous top padding, shoulders, arms and rounded belly, naturally cropping the lower legs below the bottom of the square rather than fitting the entire tall figure. The head and upper torso should occupy most of the icon so the green eyes are readable at 64x64. Match the game's existing warm cream, honey yellow and subdued sage colors. Clean opaque warm cream background with a subtle pale sage circular backdrop; include just two small soft pale-yellow falling milk cubes behind the shoulder areas to suggest the rain-catching game. Keep foreground and background clearly separated; original character is the unmistakable focus. Soft clean lighting, crisp character edges, no muddy blur. No text, no letters, no logos, no UI, no thick border, no device mockup, no extra characters. Deliver one square icon image with opaque background; the launcher will apply its own rounded mask.",
+    "sha256": "11dcb65b465170c046b5d0a9f03a5149102cbb2766a707361f1d482f2c04cafb"
+  },
+  "icon_export": "Fit artwork proportionally inside a 96x96 RGBA square using Lanczos; center with padding; never stretch to a different aspect ratio."
+}

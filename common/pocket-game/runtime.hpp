@@ -5,7 +5,13 @@
 #include "../pocket-ui/i18n.hpp"
 
 namespace pocket {
+#ifdef PXA_POCKET_RESPONSIVE
+inline int WIDTH = 288, HEIGHT = 224;
+constexpr unsigned LOGICAL_CAPACITY = 480 * 320;
+#else
 constexpr int WIDTH = 288, HEIGHT = 224;
+constexpr unsigned LOGICAL_CAPACITY = WIDTH * HEIGHT;
+#endif
 // Leave room for the storage key and wire headers in a 4096-byte control message.
 constexpr size_t SAVE_CAPACITY = 3900;
 enum class Key : uint8_t { UP, RIGHT, DOWN, LEFT, A, B, X, Y, L, R, START, SELECT };
@@ -25,6 +31,7 @@ void line(int x0, int y0, int x1, int y1, uint16_t color);
 void text(int x, int y, const char *value, uint16_t color = INK, int scale = 1);
 int text_width(const char *value, int scale = 1);
 void redraw();
+bool portrait_display();
 // Coalesces writes; serialize is called later by the runtime, not here.
 void save();
 uint32_t random();

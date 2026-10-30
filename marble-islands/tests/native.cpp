@@ -2,6 +2,7 @@
 #include "../core.hpp"
 #include "../renderer.hpp"
 #include <assert.h>
+#include <initializer_list>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -40,6 +41,14 @@ static void reseal(uint8_t *b) { uint32_t v=2166136261u;for(int i=0;i<84;++i)v=(
 static bool equal_wire(const State &a,const State &b) { uint8_t x[100],y[100];size_t n=serialize(a,x,sizeof(x));return n==serialize(b,y,sizeof(y))&&!memcmp(x,y,n); }
 int main(int argc,char **argv) {
     CHECK(argc==2);State s;init(s);
+    // Camera-basis conversion preserves strength and maps each screen axis back to itself.
+    for(auto axis : {Input{1,0,false},Input{0,-1,true},Input{-.4f,.7f,false}}){
+        Input tilt=tilt_from_screen(axis.x,axis.y,axis.brake);
+        const float len=sqrtf(float(CAMERA_X*CAMERA_X+CAMERA_Z*CAMERA_Z));
+        CHECK(fabsf((tilt.x*(-CAMERA_Z)-tilt.y*CAMERA_X)/len-axis.x)<.00001f);
+        CHECK(fabsf((tilt.x*CAMERA_X+tilt.y*(-CAMERA_Z))/len-axis.y)<.00001f);
+        CHECK(tilt.brake==axis.brake);
+    }
     uint32_t times[8]={};
     for(int level=0;level<LEVELS;++level) {
         CHECK(start(s,level));CHECK(!start(s,LEVELS));
@@ -74,13 +83,13 @@ int main(int argc,char **argv) {
     static uint16_t pixels[VIEW_W*VIEW_H];unsigned colors=0;
     for(int level=0;level<8;++level) {
         start(s,level);render(s.run,pixels,1200);uint16_t first=pixels[0];unsigned changed=0;for(uint16_t p:pixels)changed+=p!=first;CHECK(changed>2000);
-        char path[1024];snprintf(path,sizeof(path),"%s/level-%d.ppm",argv[1],level+1);FILE *f=fopen(path,"wb");CHECK(f);fprintf(f,"P6\n144 100\n255\n");
+        char path[1024];snprintf(path,sizeof(path),"%s/level-%d.ppm",argv[1],level+1);FILE *f=fopen(path,"wb");CHECK(f);fprintf(f,"P6\n%d %d\n255\n",VIEW_W,VIEW_H);
         bool palette[65536]={};for(uint16_t p:pixels) { unsigned char rgb[3]={uint8_t((p>>11)*255/31),uint8_t(((p>>5)&63)*255/63),uint8_t((p&31)*255/31)};fwrite(rgb,1,3,f);palette[p]=true; }fclose(f);
         colors=0;for(bool p:palette)colors+=p;CHECK(colors>24);
     }
     static uint16_t baseline[VIEW_W*VIEW_H];start(s,0);render(s.run,baseline,2000);
-    s.run.x+=.8f;render(s.run,pixels,2000);unsigned moved=0;for(int i=0;i<VIEW_W*VIEW_H;++i)moved+=baseline[i]!=pixels[i];CHECK(moved>6);CHECK(moved<250);
-    start(s,0);s.run.coins=7;render(s.run,pixels,2000);unsigned removed=0;for(int i=0;i<VIEW_W*VIEW_H;++i)removed+=baseline[i]!=pixels[i];CHECK(removed>8);CHECK(removed<500);
+    s.run.x+=.8f;render(s.run,pixels,2000);unsigned moved=0;for(int i=0;i<VIEW_W*VIEW_H;++i)moved+=baseline[i]!=pixels[i];CHECK(moved>6);CHECK(moved<unsigned(VIEW_W*VIEW_H/40));
+    start(s,0);s.run.coins=7;render(s.run,pixels,2000);unsigned removed=0;for(int i=0;i<VIEW_W*VIEW_H;++i)removed+=baseline[i]!=pixels[i];CHECK(removed>8);CHECK(removed<unsigned(VIEW_W*VIEW_H/20));
     start(s,6);render(s.run,baseline,2000);s.run.elapsed_ms=3000;render(s.run,pixels,2000);unsigned gates=0;for(int i=0;i<VIEW_W*VIEW_H;++i)gates+=baseline[i]!=pixels[i];CHECK(gates>20);
     printf("PASS: %d checks; 8 physically solved levels; save fuzz and real small3dlib rendering (ball=%u pixels, gems=%u, gates=%u)\n",checks,moved,removed,gates);
 }

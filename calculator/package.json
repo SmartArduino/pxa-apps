@@ -1,0 +1,59 @@
+{
+  "format": "pxa-package-source-0.2",
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "id": "pxa-calculator",
+  "version": "1.0.1",
+  "name": "多功能计算器",
+  "description": "基础与科学计算、记忆和历史记录、八类单位换算及比例折扣等日常计算，支持自适应满屏与Gen4三键。",
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  },
+  "release_sequence": 2,
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 2097152,
+      "pinned": true
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "execution_model": "main-loop",
+      "artifact": "aot",
+      "services": [
+        "surface",
+        "clock",
+        "window",
+        "ui",
+        "log",
+        "storage"
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [],
+  "icon": "assets/icon.png"
+}

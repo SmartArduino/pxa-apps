@@ -1,6 +1,6 @@
 # Tiny Elements
 
-Tiny Elements 1.1.1, release sequence 3 (`pxa-tiny-elements`) is an original CC0 particle sandbox for
+Tiny Elements (`pxa-tiny-elements`) is an original CC0 particle sandbox for
 the PXA touch handheld. Its 72×48 world contains ten materials: empty/eraser,
 sand, water, stone, wood, fire, steam, plant, seed and lava. The world uses 4 bits
 per cell in storage. Sand falls through water, liquids flow, fire burns organic

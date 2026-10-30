@@ -1,0 +1,10 @@
+{
+  "source": "cover.svg",
+  "tool": "CairoSVG",
+  "license": "CC0-1.0",
+  "dimensions": [
+    1600,
+    900
+  ],
+  "sha256": "5f1e8ddc957be18d996486a4c3e8bc67129a944810dac3c45c8be6eacb48af96"
+}

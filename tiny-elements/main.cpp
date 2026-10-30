@@ -11,6 +11,7 @@ State state;
 pocket_music::Effects effects;
 bool captured,valid_point,stroke_changed,last_a;
 int last_x,last_y;
+unsigned help_page;
 uint32_t paint_clock,save_clock,reaction_clock;
 constexpr uint16_t BG=pocket::rgb(16,28,42),PANEL=pocket::rgb(28,46,59),INK=pocket::rgb(240,242,216),MINT=pocket::rgb(127,232,189),GOLD=pocket::rgb(255,211,112),FAINT=pocket::rgb(125,153,163);
 constexpr uint8_t colors[MATERIALS][3]={{23,40,51},{234,186,98},{63,158,216},{115,135,145},{163,111,68},{255,132,69},{176,217,225},{86,191,117},{191,157,91},{242,87,58}};
@@ -48,7 +49,10 @@ void pixel_world(){
 }
 void help(){pocket::rect(22,22,256,189,BG);pocket::outline(22,22,256,189,MINT);center(26,tr("TINY ELEMENTS","微型元素"),MINT,2);
     const char *lines[]={tr("HOLD / DRAG TO PAINT A WORLD","按住或拖动，画出粒子世界"),tr("SAND FALLS. WATER FLOWS.","沙会下落，水会流动"),tr("SEED + WATER GROWS PLANTS","种子遇水会长成植物"),tr("FIRE BURNS WOOD AND PLANTS","火能烧掉木头和植物"),tr("WATER + LAVA = STONE + STEAM","水遇熔岩，生成石头和蒸汽"),tr("STEAM COOLS BACK INTO WATER","蒸汽冷却后又会变成水"),tr("TASKS START PAUSED: BUILD FIRST","挑战先暂停，布置好再开始"),tr("RIGHT: PAUSE SIZE ERASE TASKS","右侧：暂停、笔刷、擦除、挑战"),tr("BOTTOM: MATERIALS / NEXT PAGE","底部选材料，右下角翻页"),tr("D-PAD CURSOR / HOLD A TO PAINT","方向键移动，按住A绘制"),tr("L/R MATERIAL   B ERASE","L/R切换材料，B擦除"),tr("X PAUSE  Y SIZE  SELECT TASKS","X暂停，Y笔刷，SELECT挑战"),tr("START MENU / Y SOUND HERE","START菜单；此页Y切换声音")};
-    for(int i=0;i<13;++i)label(30,51+10*i,lines[i],i<6?INK:FAINT);
+    // The CJK glyphs are taller than the Latin bitmap font. Split the guide
+    // into two pages so every line keeps its full baseline spacing.
+    for(unsigned row=0;row<7;++row){const unsigned i=help_page*7+row;if(i<13)label(30,51+16*int(row),lines[i],i<6?INK:FAINT);}
+    button(40,164,225,18,help_page?tr("< PREVIOUS   2/2","< 上一页   2/2"):tr("1/2   NEXT >","1/2   下一页 >"));
     button(40,187,110,18,tr("A CREATE","A 开始创作"),true);
     button(155,187,110,18,state.muted?tr("SOUND OFF","声音 关"):tr("SOUND ON","声音 开"),!state.muted);
 }
@@ -61,7 +65,7 @@ const char *app_id(){return "pxa-tiny-elements";}
 void init(){elements::init(state);release();save_clock=reaction_clock=0;effects.reset(!state.muted);pocket::log("Elements: ready 72x48 20Hz");pocket::redraw();}
 void reset(){ask(2,state.scene);}
 void key(Key key){
-    if(state.ui==HELP){if(key==Key::Y)toggle_sound();else if(key==Key::A||key==Key::B){state.ui=WORLD;cue(Cue::Confirm);changed();}return;}
+    if(state.ui==HELP){if(key==Key::Y)toggle_sound();else if(key==Key::LEFT||key==Key::L||key==Key::RIGHT||key==Key::R){help_page^=1;pocket::redraw();}else if(key==Key::A||key==Key::B){state.ui=WORLD;cue(Cue::Confirm);changed();}return;}
     if(state.ui==CONFIRM){if(key==Key::LEFT)state.confirm_yes=1;else if(key==Key::RIGHT)state.confirm_yes=0;else if(key==Key::B){confirm(false);return;}else if(key==Key::A){confirm(state.confirm_yes!=0);return;}changed();return;}
     if(state.ui==TASKS){if(key==Key::B){state.ui=WORLD;changed();}else if(key==Key::A)ask(2,state.selected);else{state.selected=uint8_t(clamp(int(state.selected)+(key==Key::UP?-1:key==Key::DOWN?1:0),0,4));cue(Cue::Select);changed();}return;}
     if(key==Key::SELECT){tasks();return;}if(key==Key::X){tool(0);return;}if(key==Key::Y){tool(1);return;}if(key==Key::B){tool(2);return;}if(key==Key::L){cycle_material(-1);return;}if(key==Key::R){cycle_material(1);return;}
@@ -72,7 +76,7 @@ void pointer(Phase phase,int x,int y){
     if(phase==Phase::CANCEL||phase==Phase::UP){save_stroke();return;}
     if(phase==Phase::MOVE){if(captured){if(in_grid(x,y))stamp((x-30)/3,(y-40)/3,true);else valid_point=false;}return;}
     save_stroke();
-    if(state.ui==HELP){if(y>=182&&y<211){if(x>=150)toggle_sound();else{state.ui=WORLD;cue(Cue::Confirm);changed();}}return;}
+    if(state.ui==HELP){if(x>=40&&x<265&&y>=164&&y<182){help_page^=1;pocket::redraw();}else if(y>=187&&y<211){if(x>=150)toggle_sound();else{state.ui=WORLD;cue(Cue::Confirm);changed();}}return;}
     if(state.ui==CONFIRM){if(y>=164&&y<196){if(x>=36&&x<134)confirm(true);else if(x>=154&&x<252)confirm(false);}return;}
     if(state.ui==TASKS){if(x>=30&&x<268&&y>=43&&y<188){const unsigned n=unsigned((y-43)/29);if(n<5){state.selected=uint8_t(n);ask(2,n);}}else if(y>=190){state.ui=WORLD;changed();}return;}
     if(in_grid(x,y)){captured=true;stamp((x-30)/3,(y-40)/3,false);return;}
@@ -95,8 +99,8 @@ void tick(uint32_t elapsed){
     if(state.badges!=badges){cue(Cue::Goal);pocket::log("Elements: challenge badge earned");changed();}
 }
 void draw(){
-    pocket::clear(BG);label(30,20,tr("TINY ELEMENTS","微型元素"),MINT);char text[96];snprintf(text,sizeof(text),"%s %s",state.paused?tr("PAUSED","暂停"):tr("LIVE","运行"),material_name(state.material));label(155,20,text,GOLD);
-    if(state.scene){snprintf(text,sizeof(text),"%s %u/%u%s",state.scene==1?tr("JAR","水罐"):state.scene==2?tr("PLANTS","植物"):state.scene==3?tr("SAFE STEPS","守护步数"):tr("COOLED","已冷却"),progress(state),goal(state.scene),(state.badges&(1u<<(state.scene-1)))?" *":"");label(30,30,text,INK);}else label(30,30,tr(objective(0),"自由探索：绘制、流动、燃烧、生长"),FAINT);
+    pocket::clear(BG);label(30,8,tr("TINY ELEMENTS","微型元素"),MINT);char text[96];snprintf(text,sizeof(text),"%s %s",state.paused?tr("PAUSED","暂停"):tr("LIVE","运行"),material_name(state.material));label(155,8,text,GOLD);
+    if(state.scene){snprintf(text,sizeof(text),"%s %u/%u%s",state.scene==1?tr("JAR","水罐"):state.scene==2?tr("PLANTS","植物"):state.scene==3?tr("SAFE STEPS","守护步数"):tr("COOLED","已冷却"),progress(state),goal(state.scene),(state.badges&(1u<<(state.scene-1)))?" *":"");label(30,24,text,INK);}else label(30,24,tr(objective(0),"自由探索：绘制、流动、燃烧、生长"),FAINT);
     pocket::outline(28,38,220,148,FAINT);pixel_world();
     const char *tools[]={"II",nullptr,tr("ER","擦"),tr("TSK","任务"),"?",tr("CLR","清空")};
     for(int i=0;i<6;++i){char size[8];snprintf(size,sizeof(size),"S%u",state.brush+1);button(252,40+24*i,30,22,i==0?(state.paused?">":"II"):i==1?size:tools[i],i==0&&state.paused);}

@@ -3,7 +3,7 @@
 """Real signed-product simulator inputs and independently decoded durable KV.
 
 No storage writes, save injection or game debug commands. Touch coordinates are
-288x224 logical canvas coordinates; the shared simulator transport adds (16,8).
+288x224 logical canvas coordinates; the shared transport projects the actual viewport.
 Use --output under local/artifacts and --oracle built from tests/resume.cpp.
 """
 import argparse
@@ -81,8 +81,12 @@ class Session:
     def check(self,ok,name,**data):require(ok,name);self.report['checks'].append(dict(name=name,**data))
     def pause(self):
         if not self.menu:
-            before=self.b.logs().count('Pocket: saved');self.b.tap(276,10,.1);self.menu=True
-            self.b.wait(lambda:self.b.logs().count('Pocket: saved')>before,'durable pause save')
+            before=self.b.logs().count('Pocket: menu opened');self.b.tap(276,10,.1);self.menu=True
+            self.b.wait(lambda:self.b.logs().count('Pocket: menu opened')>before,'pause menu')
+            # A committed older bank can be acknowledged while a newer
+            # snapshot is still queued. Read only after that queue drains.
+            self.b.wait(lambda:self.b.logs().rfind('Pocket: save queue drained')>
+                        self.b.logs().rfind('Pocket: menu opened'),'latest durable pause save')
     def resume(self):
         if self.menu:self.b.tap(140,85,.08);self.menu=False
     def read(self,label,flush=True):
@@ -132,7 +136,16 @@ def exercise(args,report):
         b.tap(267,171,.03);before,_=s.read('clear-confirm');s.check(before['ui']==3,'clear_requires_confirmation');s.resume();b.tap(200,180,.03)
         s.check(s.read('clear-cancel')[0]['counts']==before['counts'],'cancel_clear_preserves_world');s.resume()
         b.tap(267,171,.03);b.tap(80,180,.03);b.tap(94,199,.03);s.brush(0)
-        s.stroke(2,2,69,25);a,_=s.read('interpolation');s.check(a['counts']['SAND']==68,'MOVE_interpolates_every_grid_column',sand=a['counts']['SAND']);s.resume();s.start()
+        s.stroke(2,2,69,25);a,_=s.read('interpolation')
+        painted=[(i%72,i//72) for i,value in enumerate(a['cells']) if value==1]
+        # Actual pointer sampling can split a drag into adjacent subsegments;
+        # integer rounding can paint both neighboring cells in one column.
+        # Check full coverage and bounds rather than assuming
+        # exactly one generated point per column from a synthetic single MOVE.
+        s.check({x for x,y in painted}==set(range(2,70)) and
+                all(2<=y<=25 for x,y in painted) and 68<=len(painted)<=136,
+                'MOVE_interpolates_every_grid_column',sand=a['counts']['SAND'])
+        s.resume();s.start()
         initial=a['counts']['SAND'];s.stroke(36,4,36,4,hold=1.2);a,_=s.read('held-touch');s.check(a['counts']['SAND']>initial+8,'held_touch_continuously_adds_falling_particles',sand=a['counts']['SAND']);s.resume()
         b.pointer('DOWN',139,53);time.sleep(.25);b.pointer('UP',-8,0);s.pause();a,_=s.read('outside-up');s.resume();time.sleep(.8);a2,_=s.read('after-outside-up');s.check(a['counts']['SAND']==a2['counts']['SAND'],'outside_UP_releases_brush');s.resume()
         b.pointer('DOWN',139,53);time.sleep(.25);b.pointer('CANCEL',-8,0);s.pause();a,_=s.read('cancel');s.resume();time.sleep(.8);a2,_=s.read('after-cancel');s.check(a['counts']['SAND']==a2['counts']['SAND'],'CANCEL_releases_brush');s.resume()

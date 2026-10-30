@@ -1,0 +1,131 @@
+{
+  "format": "pxa-package-source-0.2",
+  "id": "pxa-store-lite",
+  "version": "0.1.0",
+  "release_sequence": 1,
+  "name": "轻量应用商城",
+  "description": "面向三按键小屏设备的轻量应用商城。支持应用与游戏分类、搜索、热门排序、详情与截图、签名下载安装、更新检查、已安装应用、下载管理及短码登录和点赞。安装与卸载由系统确认，遵守设备防沉迷限制。",
+  "icon": "assets/icon.png",
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  },
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 1048576,
+      "pinned": false
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "services": [
+        {
+          "name": "device",
+          "min_version": [
+            0,
+            2
+          ]
+        },
+        {
+          "name": "net",
+          "min_version": [
+            0,
+            5
+          ]
+        },
+        {
+          "name": "permission",
+          "min_version": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "window",
+          "min_version": [
+            0,
+            3
+          ]
+        },
+        {
+          "name": "ui",
+          "features": [
+            "dynamic-text"
+          ],
+          "min_version": [
+            0,
+            9
+          ]
+        },
+        {
+          "name": "clock",
+          "min_version": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "log",
+          "min_version": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "store-installer",
+          "min_version": [
+            0,
+            7
+          ]
+        },
+        {
+          "name": "assets",
+          "min_version": [
+            2,
+            2
+          ]
+        },
+        {
+          "name": "storage",
+          "min_version": [
+            0,
+            1
+          ]
+        }
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      },
+      "artifact": "aot"
+    }
+  ],
+  "permissions": [
+    {
+      "name": "net.client",
+      "scope": "https://app.doit.am",
+      "required": false
+    }
+  ]
+}

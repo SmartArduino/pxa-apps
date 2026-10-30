@@ -25,6 +25,7 @@ Price price(const State &s, unsigned upgrade);
 bool buy(State &s, unsigned upgrade);
 bool collect(State &s);
 bool achieved(const State &s, unsigned goal);
+uint16_t goal_progress(const State &s,unsigned goal); // 0..1000, display only
 bool claim(State &s, unsigned goal);
 const char *goal_title(unsigned goal);
 const char *goal_detail(unsigned goal);

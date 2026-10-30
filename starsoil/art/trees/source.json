@@ -1,0 +1,19 @@
+{
+  "tool": "image_gen.imagegen built-in",
+  "source": "oak-canopy-v1.png",
+  "sha256": "3d316527c8772573c2355a1b569c824fb3930e099575c45c97a8fe43bc091065",
+  "transparent_background": true,
+  "prompt": "Use case: stylized-concept. Production game sprite asset, NOT a mockup or scene. Draw exactly ONE original deciduous oak treetop canopy with visible organically forked branches and a short central trunk stub, isolated on a genuinely transparent background. A beautiful hand crafted 2D side-view 16-bit pixel sprite for a Terraria-inspired sandbox, entirely original. Main goal: a natural tree shape with asymmetry, several overlapping rounded lobes of varying size, gaps BETWEEN the outer lobes, an irregular scalloped silhouette, hanging leafy tips. Broad intentional pixel clusters and subtle warm dappled light from upper left. Leaf masses shaded from deep desaturated forest teal below through natural olive green to a few warm yellow-green highlights at top; not neon. Small leaf marks should follow the shape of the masses, with no repeated tiled pattern, no checkerboard. Visible warm brown trunk and tapering Y-shaped branches actually connect all leaf masses. Canopy fills about the upper 82 percent of the sprite; a narrow vertical trunk stub continues down the exact horizontal center to the bottom edge and is about 7 percent of total sprite width. Trunk stub has muted copper-brown bark, shaded left/right, no thick black outline. The canopy overall is wider than tall, with overall asset aspect ratio roughly 7:6 including stub. Pixel art should read at native 112x96 game resolution, use a precise square pixel grid enlarged without smoothing for the output. Clean transparent surrounding pixels, no ground, no roots, no pot, no sky, no background, no other trees, no characters, no text, no borders, no labels, no glow, no blur, no antialiasing, no realistic painting. Professional game asset that is ready to use.",
+  "compiler": "tools/build_trees.py",
+  "runtime": "trees.hpp",
+  "native_size": [
+    112,
+    96
+  ],
+  "palettes": [
+    "temperate",
+    "snow",
+    "jungle"
+  ],
+  "project_art_license": "MIT"
+}

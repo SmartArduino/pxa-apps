@@ -1,0 +1,9 @@
+{
+  "kind": "illustrated-cover",
+  "generator": "built-in image_gen",
+  "width": 1448,
+  "height": 1086,
+  "sha256": "ae528cd145495d2fe1ea0c73f7a12a50dab80eb686d4c41c0395e7c6d6e9ac4f",
+  "runtime_screenshot": false,
+  "prompt": "Use case: illustration-story. Asset type: original illustrated app-store cover for the PXA App Store, not a runtime screenshot. Create a polished editorial 3D/paper hybrid illustration on a 1280 by 960 pixel landscape canvas, exact 4:3 composition. A small friendly generic handheld device is the central hub, with a few floating rounded cards representing games (colored puzzle blocks), music (a note), weather (sun/cloud), and useful tools (a small calculator). Match an open-source embedded-device creative platform, using deep forest green, soft sage, warm ivory and a restrained yellow accent. Tactile matte materials, gentle natural shadows, clear composition recognizable as a small marketplace cover. Keep important subjects comfortably inside the canvas, full artwork extends to all edges. No lettering, no numbers, no logos, no watermark, no fake UI chrome, no photograph of an actual device. Deliver one complete cover image only, exactly 1280x960, opaque background."
+}

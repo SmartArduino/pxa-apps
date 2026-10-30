@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <initializer_list>
 namespace test_runtime {extern bool drawing;extern unsigned saves,tones,silences;extern uint64_t monotonic,wall;extern uint32_t foreground;}
 unsigned checks=0;
 #define CHECK(x) do{++checks;if(!(x)){fprintf(stderr,"check failed line %u: %s\n",__LINE__,#x);assert(x);}}while(0)
@@ -39,6 +40,12 @@ int main(){
         if(g==6){if(s.level[0]<4)buy(s,0);else buy(s,1);}if(g==7){if(s.level[2]<3)buy(s,2);else if(s.level[3]<2)buy(s,3);}
     }
     CHECK(s.goals==255);CHECK(seconds>=180&&seconds<=480);CHECK(first_two_seconds>0&&first_two_seconds<=30);printf("festival reachable seconds=%u first_two_seconds=%u\n",seconds,first_two_seconds);
+    // Every visible goal reaches 100% exactly when its real rule is met.
+    for(unsigned level=0;level<=5;++level)for(unsigned collected:{0u,9u,10u,59u,60u,1799u,1800u,UINT32_MAX}){
+        State progress;for(auto &v:progress.level)v=uint8_t(level);progress.collected=collected;
+        for(unsigned goal=0;goal<8;++goal){CHECK(goal_progress(progress,goal)<=1000);CHECK((goal_progress(progress,goal)==1000)==achieved(progress,goal));}
+        CHECK(goal_progress(progress,8)==0);
+    }
     // Fixed field serialization; every single-bit mutation is rejected atomically.
     uint8_t raw[128];CHECK(encode(s,raw,sizeof raw)==128);CHECK(!encode(s,raw,127));State restored;CHECK(decode(restored,raw,128));CHECK(restored.goals==s.goals);
     for(unsigned bit=0;bit<1024;++bit){uint8_t bad[128];memcpy(bad,raw,128);bad[bit/8]^=uint8_t(1u<<(bit%8));State target=before;CHECK(!decode(target,bad,128));CHECK(target.resources[0]==before.resources[0]);}
@@ -80,6 +87,13 @@ int main(){
         tap(220,26);State backed=snapshot();CHECK(backed.view==0&&backed.collected==retained.collected&&backed.goals==entered.goals);
         CHECK(memcmp(backed.level,entered.level,4)==0&&memcmp(backed.resources,entered.resources,12)==0);
     }
+    // The visible central firefly shares the basket reward and cooldown.
+    game::init();taps=snapshot().taps;
+    game::pointer(pocket::Phase::DOWN,72,102);game::pointer(pocket::Phase::CANCEL,72,102);game::pointer(pocket::Phase::UP,72,102);CHECK(snapshot().taps==taps);
+    tap(72,102);CHECK(snapshot().taps==taps+1);tap(45,183);CHECK(snapshot().taps==taps+1);
+    for(unsigned i=0;i<7;++i)advance(100);
+    tap(45,183);CHECK(snapshot().taps==taps+2);
+    tap(60,26);CHECK(snapshot().view==2);tap(220,26);CHECK(snapshot().view==0);
     // An old v1 sound-off save still silences action cues.
     fresh(s);s.sound=0;CHECK(encode(s,raw,128)==128);game::init();game::load(raw,128);
     unsigned quiet=test_runtime::tones;advance(100);tap(45,183);CHECK(test_runtime::tones==quiet&&snapshot().sound==0);

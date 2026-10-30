@@ -1,0 +1,5 @@
+Spirit Level / pxa-spirit-level
+Original interface, vector icon, measurement/filtering, state management and tests:
+CC0-1.0, authored for this project. No external artwork, fonts or recordings.
+The application links the original CC0 pocket-play, pocket-studio and pocket-imu
+helpers. Host system fonts and SDK components retain their respective licenses.

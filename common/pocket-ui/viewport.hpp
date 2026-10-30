@@ -3,7 +3,28 @@
 #include <stdint.h>
 
 namespace pocket_ui {
+// UI pointer events use dp; Surface positions and dimensions use pixels.
+inline int32_t pointer_pixel(int32_t coordinate, uint32_t density_q16) {
+    const int64_t scaled = int64_t(coordinate) * (density_q16 ? density_q16 : 65536) / 65536;
+    return scaled > INT32_MAX ? INT32_MAX : scaled < INT32_MIN ? INT32_MIN : int32_t(scaled);
+}
+struct CanvasSpan { int origin, length; };
+// Cover a nonnegative physical span with integer-dp Canvas geometry. The Host
+// floors positions and lengths independently, so rounding each to nearest dp
+// can leave a one-pixel hole in a letterbox matte at fractional densities.
+inline CanvasSpan cover_pixel_span(int origin, int length, uint32_t density_q16) {
+    if (origin < 0 || length <= 0) return {0, 0};
+    const uint64_t density = density_q16 ? density_q16 : 65536;
+    const uint64_t logical_origin = ((uint64_t(origin) + 1) * 65536 - 1) / density;
+    const uint64_t pixel_origin = logical_origin * density / 65536;
+    const uint64_t needed = uint64_t(origin) + length - pixel_origin;
+    return {int(logical_origin), int((needed * 65536 + density - 1) / density)};
+}
+#ifdef PXA_POCKET_RESPONSIVE
+constexpr int MAX_SURFACE_WIDTH = 480, MAX_SURFACE_HEIGHT = 480;
+#else
 constexpr int MAX_SURFACE_WIDTH = 480, MAX_SURFACE_HEIGHT = 320;
+#endif
 constexpr unsigned MAX_SURFACE_PIXELS = MAX_SURFACE_WIDTH * MAX_SURFACE_HEIGHT;
 inline int floor_ratio(int64_t numerator, int denominator) {
     return int(numerator < 0 ? -1 - ((-numerator - 1) / denominator) : numerator / denominator);
@@ -52,6 +73,26 @@ inline Viewport fit_viewport(int display_w, int display_h, int logical_w = 288, 
         if (v.width <= display_w/scale && v.height <= display_h/scale) v.host_scale = scale;
     v.x = (display_w-v.physical_width())/2;
     v.y = (display_h-v.physical_height())/2;
+    return v;
+}
+// Edge-to-edge surface. The layout reflows to this aspect instead of fitting
+// a fixed game rectangle. The Host still uses its exact integer scale rule.
+inline Viewport fill_viewport(int display_w, int display_h) {
+    display_w = display_w > 0 ? display_w : 1;
+    display_h = display_h > 0 ? display_h : 1;
+    Viewport v;
+    int divisor = 1;
+    while (divisor < 4 && (display_w / divisor > MAX_SURFACE_WIDTH ||
+                           display_h / divisor > MAX_SURFACE_HEIGHT)) divisor *= 2;
+    v.width = display_w / divisor > 0 ? display_w / divisor : 1;
+    v.height = display_h / divisor > 0 ? display_h / divisor : 1;
+    if (v.width > MAX_SURFACE_WIDTH || v.height > MAX_SURFACE_HEIGHT)
+        fit_size(MAX_SURFACE_WIDTH, MAX_SURFACE_HEIGHT, display_w, display_h, v.width, v.height);
+    v.host_scale = 1;
+    for (int scale = 2; scale <= 4; scale *= 2)
+        if (v.width <= display_w / scale && v.height <= display_h / scale) v.host_scale = scale;
+    v.x = (display_w - v.physical_width()) / 2;
+    v.y = (display_h - v.physical_height()) / 2;
     return v;
 }
 inline void resample(const uint16_t *source, int source_w, int source_h, uint16_t *destination, int w, int h) {

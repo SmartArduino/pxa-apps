@@ -1,0 +1,9 @@
+{
+  "tool": "OpenAI image_gen (built-in)",
+  "intent": "Square launcher portrait composed from the original Milky Frog reference, preserving natural proportions.",
+  "reference": "art/frog.png",
+  "artwork": "art/icon-rain-square.png",
+  "created": "2026-10-29",
+  "prompt": "Use case: compositing / identity-preserve. Asset type: square launcher app icon for the existing PXA game 奶蛙的奶块雨 (Milky Frog Rain).\nInput image 1 is the original Milky Frog character and exact identity reference. Recompose this original yellow meme character into a polished, simple SQUARE app icon, preserving the character's normal anatomy, original head-to-body proportions, distinctive green eyes, small mouth, smooth yellow body and pale cream belly, and its slightly awkward lovable 3D meme look. Do not horizontally stretch, squeeze, flatten or make the character shorter and wider. Do not redesign its face. Use a centered three-quarter upper-body portrait, showing the whole head with generous top padding, shoulders, arms and rounded belly, naturally cropping the lower legs below the bottom of the square rather than fitting the entire tall figure. The head and upper torso should occupy most of the icon so the green eyes are readable at 64x64. Match the game's existing warm cream, honey yellow and subdued sage colors. Clean opaque warm cream background with a subtle pale sage circular backdrop; include just two small soft pale-yellow falling milk cubes behind the shoulder areas to suggest the rain-catching game. Keep foreground and background clearly separated; original character is the unmistakable focus. Soft clean lighting, crisp character edges, no muddy blur. No text, no letters, no logos, no UI, no thick border, no device mockup, no extra characters. Deliver one square icon image with opaque background; the launcher will apply its own rounded mask.",
+  "sha256": "11dcb65b465170c046b5d0a9f03a5149102cbb2766a707361f1d482f2c04cafb"
+}

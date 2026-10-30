@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-pocket-sokoban",
-  "version": "1.1.2",
+  "version": "1.4.1",
   "name": "Pocket Sokoban",
   "description": "MIT NibbleSokoban核心移植，Apache-2.0生成关卡，支持触屏、撤销和自动续关。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 4,
+  "release_sequence": 9,
   "build": {
     "system": "cmake",
     "source_dir": ".",

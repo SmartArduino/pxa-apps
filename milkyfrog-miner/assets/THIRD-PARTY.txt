@@ -1,0 +1,6 @@
+Original character images and sound recordings retain their respective owners’ rights.
+This PXA adaptation does not claim that meme status makes third-party assets public domain.
+Sources and offline transformations: ../SOURCES.json in the source distribution.
+Game directory: https://milkyfrog.com/games
+Original game: https://github.com/66970010-boop/frog-miner (MIT).
+Copyright (c) 2026 66970010-boop and junjunya2020.

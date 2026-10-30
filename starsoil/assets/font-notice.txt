@@ -1,0 +1,6 @@
+Starsoil UI 12 is an embedded subset of ZLabs Pixel 12px M CN.
+Copyright (c) 2023-2026 Astro_2539 (https://github.com/Astro-2539).
+Source: https://github.com/Astro-2539/ZLabs-Pixel-12px
+Commit: c4d5b7f7d95f04abcb330d012e4b38becb2de99b
+Licensed under SIL Open Font License 1.1. See font-license.txt.
+Reserved Font Names remain with their original owner.

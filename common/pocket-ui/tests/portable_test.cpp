@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <vector>
+#include <utility>
 
 static void test_viewports() {
     struct Case { int dw, dh, w, h, x, y; };
@@ -46,6 +47,21 @@ static void test_viewports() {
             assert(v.x>=0 && v.y>=0 && v.x+v.physical_width()<=dw && v.y+v.physical_height()<=dh);
             assert(v.pixels()<=pocket_ui::MAX_SURFACE_PIXELS);
         }
+}
+static void test_fill() {
+    for (auto size : {std::pair<int,int>{240,284},{240,320},{480,320},{320,480},
+                      {240,240},{296,240},{800,480},{1280,720},{1920,1080}}) {
+        auto v=pocket_ui::fill_viewport(size.first,size.second);
+        assert(v.x==0 && v.y==0 && v.physical_width()==size.first && v.physical_height()==size.second);
+        assert(v.width<=pocket_ui::MAX_SURFACE_WIDTH && v.height<=pocket_ui::MAX_SURFACE_HEIGHT);
+        assert(v.host_scale==int(pxa_surface_fit_scale(v.width,v.height,size.first,size.second)));
+        const int logical_w=288,logical_h=int(int64_t(288)*size.second/size.first);
+        for(int y=0;y<size.second;++y)for(int x=0;x<size.first;++x){
+            assert(v.contains(x,y));
+            assert(v.map_x(x,logical_w)==int(int64_t(x/v.host_scale)*logical_w/v.width));
+            assert(v.map_y(y,logical_h)==int(int64_t(y/v.host_scale)*logical_h/v.height));
+        }
+    }
 }
 static void test_utf8() {
     using namespace pocket_ui;
@@ -99,6 +115,16 @@ static void test_locale() {
     set_english(false);
 }
 int main() {
-    test_viewports(); test_utf8(); test_locale();
+    for (uint32_t density : {65536u, 98304u, 124928u, 131072u, 196608u}) {
+        for (int origin = 0; origin < 480; ++origin) for (int length = 1; length <= 480 - origin; ++length) {
+            auto cover = pocket_ui::cover_pixel_span(origin, length, density);
+            // Match the Host's independent floor conversions, rather than
+            // converting an endpoint using the same helper under test.
+            const int first = int(int64_t(cover.origin) * density / 65536);
+            const int count = int(int64_t(cover.length) * density / 65536);
+            assert(first <= origin && first + count >= origin + length);
+        }
+    }
+    test_viewports(); test_fill(); test_utf8(); test_locale();
     puts("Pocket UI: viewport / inverse touch / resampling / UTF-8 / glyphs / locale passed");
 }

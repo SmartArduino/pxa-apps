@@ -1,28 +1,73 @@
 {
   "format": "pxa-package-source-0.2",
-  "min_sdk": [2, 1],
-  "target_sdk": [2, 1],
-  "compile_sdk": [2, 1],
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
   "id": "pxa-crisp-arcade",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "name": "Crisp Arcade",
   "description": "Four original MIT arcade games by ABA Games: CAST N, GRAPPLING H, REFLECTOR, and COLOR ROLL. Touch or hold A, chase four high scores.",
-  "publisher": {"handle": "lucinhu", "display_name": "lucinhu"},
-  "release_sequence": 3,
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  },
+  "release_sequence": 4,
   "build": {
     "system": "cmake",
     "source_dir": ".",
-    "linear_memory": {"maximum_bytes": 1048576, "pinned": true}
+    "linear_memory": {
+      "maximum_bytes": 1048576,
+      "pinned": true
+    }
   },
-  "components": [{
-    "id": "main",
-    "kind": "ui",
-    "cmake_target": "pxa_main",
-    "execution_model": "main-loop",
-    "artifact": "aot",
-    "services": ["surface", "clock", "window", "ui", "log", "storage", "permission", {"name": "audio", "min_version": [0, 10]}],
-    "wasi": {"version": "preview1", "libc": "wasi-libc", "features": ["monotonic-clock", "wall-clock"]}
-  }],
-  "permissions": [{"name": "audio.playback", "required": false, "scope": "media"}],
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "execution_model": "main-loop",
+      "artifact": "aot",
+      "services": [
+        "surface",
+        "clock",
+        "window",
+        "ui",
+        "log",
+        "storage",
+        "permission",
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            10
+          ]
+        }
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "required": false,
+      "scope": "media"
+    }
+  ],
   "icon": "assets/icon.png"
 }

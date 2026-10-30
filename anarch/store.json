@@ -1,0 +1,17 @@
+{
+  "name": "Anarch · 自由冒险",
+  "summary": "完整十关 CC0 第一人称动作游戏，支持中文、触屏、手柄和音效。",
+  "description": "包含 drummyfish 的原版十个关卡、美术、文字与六种音效。方向键移动和转向，A 开火，X 跳跃，Y 换武器，L/R 侧移；B 配合方向键调整视角，START 打开菜单。支持关卡进度与设置保存，无背景音乐。原版与移植采用 CC0-1.0，无需额外游戏数据。\n\n支持中文与 English、触屏和控制器，需要支持 Core 2.1 的 PXA 系统。可选音频权限被拒绝时仍可静音游玩。截图来自实际 PXA 产品模拟器，不能据此推断真机帧率。\n\n对应版本源码：https://github.com/SmartArduino/pxa-apps/archive/refs/tags/apps-2026-10-30-pxa-0.6.0.tar.gz\n\n封面为生图工具生成的宣传插画，截图来自实际 PXA 模拟器运行。",
+  "kind": "game",
+  "category": "action",
+  "tags": [
+    "第一人称",
+    "动作",
+    "CC0",
+    "触摸",
+    "手柄"
+  ],
+  "icon": "assets/icon.png",
+  "cover": "store/cover.png",
+  "changelog": "更新当前 PXA SDK 构建，修复共享界面的高密度触控坐标与画面适配。"
+}

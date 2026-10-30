@@ -7,6 +7,7 @@ using namespace motion;
 enum class Screen {home,play,pause,levels,settings,result};
 enum Action {play_action=1,levels_action,settings_action,home_action,resume_action,calibrate_action,control_action,hints_action,restart_action,sensitivity_action,rotation_action,flip_action,exit_action,sound_action,next_action,previous_action,next_level_action,level_base=100};
 struct App:Runtime<App> {
+ static constexpr uint32_t frame_period_ms=16,sensor_period_ms=20;
  Sounds sounds;
  Profile profile;Maze board;Screen screen=Screen::home;
  bool saving=false,save_pending=false,dragging=false,was_active=false;Vec touch{};int origin_x=0,origin_y=0;

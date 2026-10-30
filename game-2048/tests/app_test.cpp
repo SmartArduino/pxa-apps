@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 #include "../../common/pocket-game/runtime.hpp"
+#include "../advisor.hpp"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -98,19 +99,32 @@ int main() {
     game::key(Key::X); snapshot(other); assert(get32(other+8)==0 && !other[5]);
     assert(redraws>0);
     fixture(start); start[20]=17; seal(start); game::load(start,64); game::draw();
-    assert(lines==2);
+    assert(visible("2^17"));
+    // A new-game request must preserve a live board until explicitly confirmed.
+    fixture(start);game::load(start,64);game::key(Key::LEFT);snapshot(moved);
+    game::key(Key::X);snapshot(other);assert(!memcmp(moved,other,64));
+    for(bool en:{false,true}){pocket::set_english(en);game::draw();assert(visible(en?"START A NEW GAME?":"开始新一局？"));}
+    pocket::set_english(false);
+    game::key(Key::UP);snapshot(other);assert(!memcmp(moved,other,64));
+    game::pointer(Phase::DOWN,190,155);game::pointer(Phase::CANCEL,190,155);game::pointer(Phase::UP,190,155);
+    snapshot(other);assert(!memcmp(moved,other,64));
+    game::pointer(Phase::DOWN,190,155);game::pointer(Phase::UP,10,10);snapshot(other);assert(!memcmp(moved,other,64));
+    game::key(Key::B);snapshot(other);assert(!memcmp(moved,other,64));
+    game::key(Key::X);game::pointer(Phase::DOWN,190,155);game::pointer(Phase::UP,190,155);snapshot(other);
+    assert(get32(other+16)==0&&get32(other+8)==0&&!other[5]&&get32(other+12)==get32(moved+12));
+    fixture(start);game::load(start,64);game::key(Key::LEFT);game::reset();game::key(Key::A);snapshot(other);assert(get32(other+16)==0);
     // Both locales must fit every HUD branch without changing saved state.
     for (bool en : {false, true}) {
         pocket::set_english(en);
         fixture(start); game::load(start,64); snapshot(restored); game::draw();
-        assert(visible(en ? "SCORE" : "得分") && visible(en ? "MERGE TILES" : "合并方块"));
-        assert(visible(en ? "B UNDO" : "B 撤销") && visible(en ? "X NEW" : "X 新局"));
+        assert(visible(en ? "SCORE" : "得分") && visible(en ? "SMALL STEPS" : "慢慢来，再试一步"));
+        assert(visible(en ? "Undo · B" : "撤销 · B") && visible(en ? "New game · X" : "新一局 · X"));
         snapshot(other); assert(!memcmp(restored,other,64));
-        start[20]=11; seal(start); game::load(start,64); game::draw(); assert(visible("2048!"));
+        start[20]=11; seal(start); game::load(start,64); game::draw(); assert(visible(en ? "2048 REACHED!" : "达成2048！"));
         for (int x=0;x<4;++x) for (int y=0;y<4;++y) start[20+4*x+y]=uint8_t(1+(x+y)%2);
         for (int i=0;i<2;++i) {
             start[5]=uint8_t(i); memcpy(start+44,start+20,16); seal(start); game::load(start,64); game::draw();
-            assert(visible(en ? "GAME OVER" : "游戏结束"));
+            assert(visible(en ? "NO MORE MOVES" : "暂时无路可走"));
             assert(visible(i ? (en ? "UNDO OR NEW" : "撤销或新局") : (en ? "TRY AGAIN" : "再试一次")));
         }
         put32(start+8,UINT32_MAX); put32(start+12,UINT32_MAX); seal(start); game::load(start,64); game::draw();
@@ -120,5 +134,22 @@ int main() {
     for (int i=0;i<100;++i) game::tick(20);
     snapshot(other); assert(!memcmp(restored,other,64));
     assert(pocket::tone_calls == before_tones);
+    // Advice is legal and read-only, including the RNG and undo state.
+    fixture(start);game::load(start,64);snapshot(restored);
+    const uint32_t rng_before=random_state;const unsigned saves_before=saves;
+    game::key(Key::A);game::draw();snapshot(other);
+    assert(!memcmp(restored,other,64)&&rng_before==random_state&&saves_before==saves);
+    assert(visible("建议向上")||visible("建议向右")||visible("建议向下")||visible("建议向左"));
+    game::tick(3100);game::draw();assert(visible("慢慢来，再试一步"));
+    uint32_t seed=17;
+    for(unsigned k=0;k<1000;++k){
+        uint8_t board[4][4],before[4][4];for(auto &column:board)for(auto &v:column){seed=seed*1664525u+1013904223u;v=uint8_t(seed>>28);}
+        memcpy(before,board,16);int direction=advisor2048::suggest(board);assert(!memcmp(board,before,16));
+        if(direction>=0)assert(direction<4&&advisor2048::move(board,unsigned(direction)));
+        else assert(gameEnded(board));
+    }
+    uint8_t stuck[4][4];for(int x=0;x<4;++x)for(int y=0;y<4;++y)stuck[x][y]=uint8_t(1+(x+y)%2);
+    assert(advisor2048::suggest(stuck)==-1);
+    puts("2048 advice: legal suggestions on 1000 boards, no legal move, no save/RNG/undo mutation passed");
     puts("2048 app: save/load, corruption, undo, score, swipe, cancel, no-op move, reset and bilingual HUD bounds/overlap/save invariance passed");
 }

@@ -1,0 +1,11 @@
+{
+  "tool": "OpenAI image_gen (built-in)",
+  "created": "2026-10-29",
+  "artwork": "cover.png",
+  "reference_images": [
+    "https://app.doit.am/media/apps/127/574?width=256&format=png",
+    "https://app.doit.am/media/apps/127/575?width=296&format=jpeg"
+  ],
+  "prompt": "Use case: ads-marketing.\nAsset type: premium landscape app-store cover illustration, 16:9 aspect ratio, approximately 1536x864.\nApp title (exact text): \"网络收音机\".\nReference role: the provided existing app icon and/or actual app screen establishes the app's subject, palette and visual identity. Use it for thematic guidance; create a NEW promotional cover illustration. Do not reproduce a screenshot or the app interface.\nScene and style: A handsome compact retro internet radio with a terracotta-orange body, deep sage speaker grille, cream tuning knob and slim antenna, matching the provided app icon. A few graceful broadcast rings suggest listening to stations around the world, warm ivory background, soft sunlight, tasteful tactile 3D product illustration. No real manufacturer logos or station names.\nComposition: single clear landscape composition with title placed prominently in the left third and a bold, beautiful hero scene across the center and right. Keep all essential content within generous safe margins; readable and attractive at thumbnail sizes. Carefully typeset \"网络收音机\" exactly, using a polished bold Chinese display treatment appropriate to the app, excellent contrast and balanced spacing.\nText: only \"网络收音机\". Small numeric puzzle-tile labels are allowed when the scene specifically calls for them. No subtitles, slogans, badges, watermarks or other words.\nConstraints: accurate to the app's actual advertised purpose, original appealing artwork, crisp edges and purposeful lighting. No fake UI, menus, system bars, navigation indicators, debug overlays, screenshots, device framing around an app screenshot, store ratings, payment claims or additional logos. Do not imply extra app features. Opaque background.",
+  "sha256": "a7f5210435ff1a7499a19c03a39b450e423e02d2ac377a1a2eadb061e4d834aa"
+}

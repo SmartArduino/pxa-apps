@@ -1,0 +1,9 @@
+{
+  "kind": "illustrated-cover",
+  "generator": "built-in image_gen",
+  "width": 1448,
+  "height": 1086,
+  "sha256": "8b7efa394c5228e53a02c574942d5acbbd2e9f984e0793d5feec6762deb490fc",
+  "runtime_screenshot": false,
+  "prompt": "Use case: illustration-story. Asset type: original illustrated cover for a lightweight PXA app marketplace for small embedded devices, not a runtime screenshot. Create a crisp charming editorial illustration on an exact 1280 by 960 pixel landscape canvas, 4:3 composition. Feature one small compact handheld device with three simple tactile buttons and three airy rounded application cards lifting neatly into a small green shopping basket, conveying a lightweight, fast, accessible app store. One game card uses colored puzzle blocks, one music card has a musical note, one tool card has a simple gear. Warm ivory background, soft sage and forest green shapes, a subtle golden accent, tactile matte paper/soft 3D finish, restrained detail and generous visual breathing room. Full artwork to the edges; all objects well inside margins. No lettering, no numbers, no logos, no watermark, no fake runtime screenshot or UI chrome. Deliver one complete opaque image, exactly 1280x960."
+}

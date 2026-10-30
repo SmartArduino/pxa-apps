@@ -36,7 +36,9 @@ python3 local/pxa-apps/common/pocket-ui/generate_font.py --check --sync-assets
 
 ## 显示与偏好
 
-[viewport.hpp](viewport.hpp) 的 `fit_viewport`、`resample` 和 `Viewport::map_x/map_y` 共用最近邻取整规则。输入先逆 Host 的整数倍，再逆 guest 采样，避免大屏 2/4 倍重复像素造成触摸偏差。逻辑画布始终为 288×224，surface 的宽高同时不超过 480×320。实际尺寸如下，原点向下取整居中：
+`cover_pixel_span` 将非负的实际像素范围转换为完整覆盖它的 Canvas 整数 dp 范围。Host 对位置和长度分别向下取整；遮边背景使用这一转换，避免分数 DPI 下留下透明缝隙，必要时覆盖边界相邻像素。
+
+[viewport.hpp](viewport.hpp) 的 `fit_viewport`、`resample` 和 `Viewport::map_x/map_y` 共用最近邻取整规则。UI 指针事件先按环境的 `density_q16` 从 dp 转为屏幕像素，再逆 Host 的整数倍和 guest 采样；启动和环境更新都会刷新输入密度，避免高 DPI 屏幕及大屏 2/4 倍重复像素造成触摸偏差。逻辑画布始终为 288×224，surface 的宽高同时不超过 480×320。实际尺寸如下，原点向下取整居中：
 
 | 屏幕 | 物理原点 | 最终物理尺寸 |
 | --- | --- | --- |

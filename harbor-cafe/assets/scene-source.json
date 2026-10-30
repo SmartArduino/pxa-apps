@@ -1,0 +1,10 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "date": "2026-10-29",
+  "prompt": "Use case: stylized-concept. Asset type: finished game background, landscape aspect 2.4:1. Beautiful cozy pixel art seaside coffee shop interior at golden morning. Slightly elevated straight on 2D orthographic camera. On LEFT third a detailed small espresso counter with copper coffee machine and wooden shelves with cups and jars, EMPTY behind counter so animated barista can be overlaid. On RIGHT two thirds a huge open wood framed window onto brilliant turquoise sea, distant green headland, small white sailing boat and lighthouse. On bottom right three EMPTY small cafe tables in a row, no cups, no people, room for game customers. Warm honey wooden floorboards, cream plaster walls, leafy plants, brass hanging lamps. Premium indie game pixel art, crisp silhouettes and lovingly detailed textures, warm welcoming atmosphere. NO TEXT, NO SIGNS, NO LETTERING, NO UI, NO BORDERS. Fill whole scene.",
+  "production_size": [
+    576,
+    222
+  ],
+  "encoding": "RGB565 palette, 256 colors; regenerate ../scene.inc with common/pocket-studio/prepare_scene.py"
+}

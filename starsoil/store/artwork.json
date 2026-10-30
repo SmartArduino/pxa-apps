@@ -1,0 +1,24 @@
+{
+  "tool": "OpenAI image_gen (built-in)",
+  "created": "2026-10-30",
+  "assets": [
+    {
+      "file": "cover.png",
+      "prompt": "Use case: ads-marketing.\nAsset type: premium landscape PXA game store cover, 16:9, 1536x864.\nPrimary request: original polished pixel art promotional key art for a 2D sandbox adventure named 星壤物语. The real game includes mining and building, six surface/underground biomes, copper/iron/crystal gear visibly worn, NPCs, crafting and a crystal guardian. Use a consistent crafted 16-bit pixel art style, warm lantern amber, deep midnight teal, mint crystals and earthy copper.\nComposition: landscape illustration with an elegant bold Chinese pixel display title 星壤物语 in the left third, large and exactly legible, restrained warm ivory with a subtle copper shadow. To the right, a charming compact pixel explorer with swept chestnut hair, light copper armor, a teal cape, two clearly separated legs and one hand grasping a pickaxe at its handle stands on a grass-topped dirt ledge. A modest cozy timber cottage, pine forest and small snowy ridge in the distance. A visible underground cutaway occupies the lower third, with copper ore, luminous turquoise crystals and a small treasure chest; a tiny teal slime in the cave. Sunset sky over distant hills. Refined dense pixel clusters, crisp deliberate silhouettes and beautiful lighting. Realistic to a small original pixel sandbox, no fantasy castles or flying islands.\nText (verbatim): 星壤物语. This is the only text. No slogan, badges or ratings.\nConstraints: original characters and scenery, no copied Terraria assets or logos. No UI, menus, screen borders, mock screenshot, device frame, navigation, watermark. Opaque background. Keep all important details within safe margins. Cover art, not gameplay screenshot.",
+      "sha256": "3741cdf30b50e2394fa9c92e46ce049dab671bdcb107eccef4831131b6f6c801",
+      "dimensions": [
+        1672,
+        941
+      ]
+    },
+    {
+      "file": "icon.png",
+      "prompt": "Use case: stylized-concept.\nAsset type: original premium square pixel-art launcher icon for a 2D sandbox game Starsoil, 1024x1024 opaque.\nPrimary request: a memorable and simple app icon that reads instantly at 48 pixels: one luminous mint turquoise crystal cluster emerging from a compact grass-topped brown earth cube, with a single copper pickaxe leaning diagonally against the cube, its whole warm wooden handle and copper head visible. These few connected elements form one clear centered emblem. A tiny golden sparkle only. Deep midnight teal background with a restrained soft cyan glow behind the crystal. Intentional chunky pixel clusters with a crisp 16-bit pixel-art finish, jewel-like highlights, warm copper and earthy brown, fresh green grass. Refined, charming, dimensional pixel lighting, high silhouette clarity and spacious margins. Fill most of the square with the emblem while keeping every edge clear.\nConstraints: exactly one standalone icon, no text, letters, numbers, UI, screenshot, landscape collage, character, multiple icons, border or watermark. Flat opaque square background, do not draw rounded app icon corner masks. Original artwork, no commercial game logos.",
+      "sha256": "0486cab8382096404bc6a841a34baa0f4b3ad15921c7602a83cbc6f90d1db09d",
+      "dimensions": [
+        1254,
+        1254
+      ]
+    }
+  ]
+}

@@ -789,6 +789,7 @@ static void toast_failure(pxa_i18n_message_id_t title, int32_t status) {
         else if (status == PXA_STATUS_UNSUPPORTED) reason = PXA_MSG_STATUS_INSTALL_UNSUPPORTED;
         else if (status == PXA_STATUS_QUOTA_EXCEEDED) reason = PXA_MSG_STATUS_STORAGE_FULL;
         else if (status == PXA_STATUS_INVALID_ARGUMENT) reason = PXA_MSG_STATUS_PROTOCOL;
+        else if (status == PXA_STATUS_IO_ERROR) reason = PXA_MSG_STATUS_TRANSFER_FAILED;
     }
     copy_text(text, sizeof(text), message(title));
     size = string_length(text);
@@ -2339,6 +2340,8 @@ static int render_account(void) {
         pxa_ui_set_u16(&tx, NODE_ACCOUNT_BODY, PXA_UI_PROPERTY_GROW, 1) &&
         pxa_ui_set_u8(&tx, NODE_ACCOUNT_BODY, PXA_UI_PROPERTY_LAYOUT, PXA_UI_LAYOUT_COLUMN) &&
         pxa_ui_set_u8(&tx, NODE_ACCOUNT_BODY, PXA_UI_PROPERTY_SCROLL_AXIS, 2) &&
+        /* Subscribing also enables native hit testing on text/background. */
+        pxa_ui_set_event_mask(&tx, NODE_ACCOUNT_BODY, PXA_UI_EVENT_MASK_SCROLL) &&
         pxa_ui_set_padding(&tx, NODE_ACCOUNT_BODY, 16, 14, 16, 14) &&
         pxa_ui_set_dp(&tx, NODE_ACCOUNT_BODY, PXA_UI_PROPERTY_GAP, 12) &&
         account_text(&tx, NODE_ACCOUNT_TEXT, NODE_ACCOUNT_BODY, message(status));

@@ -349,6 +349,10 @@ messages:
     source: Processing package; confirm installation in the system dialog
     context: Host package installation request is pending
     max_bytes: 96
+  status.transfer_failed:
+    source: Connection or file transfer failed
+    context: Host installer or downloader reported an I/O failure
+    max_bytes: 96
   status.install_success:
     source: Installed successfully
     context: Host installer committed the package

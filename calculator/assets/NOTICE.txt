@@ -1,0 +1,3 @@
+Calculator source, interface, original icon and tests: CC0-1.0.
+No external runtime libraries, network data, embedded fonts or audio.
+Shared PXA SDK, Host fonts and build tools retain their own licenses.

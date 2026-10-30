@@ -1,0 +1,78 @@
+{
+  "format": "pxa-package-source-0.2",
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "id": "pxa-spirit-level",
+  "version": "1.1.10",
+  "name": "水平仪",
+  "description": "双轴气泡与边尺水平仪，支持绝对/相对测量、读数锁定、角度/坡度、水平面标定及加速度计与陀螺仪融合。",
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  },
+  "release_sequence": 12,
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 2097152,
+      "pinned": true
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "execution_model": "main-loop",
+      "artifact": "aot",
+      "services": [
+        "surface",
+        "clock",
+        "window",
+        "ui",
+        "log",
+        "storage",
+        "permission",
+        {
+          "name": "sensor",
+          "min_version": [
+            0,
+            1
+          ]
+        }
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "sensor.read",
+      "scope": "motion.acceleration",
+      "required": false
+    },
+    {
+      "name": "sensor.read",
+      "scope": "motion.angular-velocity",
+      "required": false
+    }
+  ],
+  "icon": "assets/icon.png"
+}

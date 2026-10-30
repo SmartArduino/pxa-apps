@@ -1,0 +1,10 @@
+{
+  "source": "../assets/icon.svg",
+  "tool": "CairoSVG",
+  "license": "CC0-1.0",
+  "dimensions": [
+    512,
+    512
+  ],
+  "sha256": "8d91cc890aedb7b0984b4fd5eb9c6b7688221639272db2ea82d38fb44e405e18"
+}

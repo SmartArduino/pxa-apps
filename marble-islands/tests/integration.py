@@ -39,8 +39,8 @@ RUN = ('level', 'phase', 'elapsed_ms', 'coins', 'fall_ms', 'x', 'y', 'vx', 'vy')
 
 
 def decode(raw):
-    """Independently decode the actual 88-byte little-endian game wire format."""
-    require(len(raw) == 88 and raw[:5] == b'MISL\x01', 'Invalid Marble save header/version/size')
+    """Independently decode legacy core state and the optional motion extension."""
+    require(len(raw) in (88,104) and raw[:5] == b'MISL\x01', 'Invalid Marble save header/version/size')
     checksum = 2166136261
     for byte in raw[:84]:
         checksum = ((checksum ^ byte) * 16777619) & 0xffffffff
@@ -53,6 +53,12 @@ def decode(raw):
     elapsed, coins, fall = struct.unpack_from('<IHH', raw, 48)
     require(elapsed <= 3600000 and fall <= 1000 and coins < (1 << (3, 2, 3, 3, 3, 4, 4, 4)[level]), 'Invalid run fields')
     result = dict(zip(('x', 'y', 'vx', 'vy'), (v/65536 for v in struct.unpack_from('<4i', raw, 56))))
+    if len(raw)==104:
+        outer=2166136261
+        for byte in raw[:100]:outer=((outer^byte)*16777619)&0xffffffff
+        require(raw[88:93]==b'MCTL\x01' and raw[93]<=1 and raw[94]<3 and raw[95]<4 and raw[96]<=1 and raw[97:100]==bytes(3), 'Invalid motion preferences')
+        require(outer==struct.unpack_from('<I',raw,100)[0], 'Bad motion preferences checksum')
+        result.update(motion_enabled=bool(raw[93]),sensitivity=raw[94],rotation=raw[95],mirror=bool(raw[96]))
     result.update(unlocked=unlocked, level=level, phase=phase, medals=medals, best_ms=best,
                   elapsed_ms=elapsed, coins=coins, fall_ms=fall)
     return result

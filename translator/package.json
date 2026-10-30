@@ -1,0 +1,105 @@
+{
+  "format": "pxa-package-source-0.2",
+  "id": "pxa-translator",
+  "version": "0.2.1",
+  "release_sequence": 3,
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "name": "随译翻译",
+  "description": "文字翻译、在线语音识别与译文朗读，支持语言切换、兼容语音接口配置和会话记录。",
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  },
+  "icon": "assets/icon.png",
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 2097152,
+      "pinned": false
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "services": [
+        {
+          "name": "ui",
+          "min_version": [
+            0,
+            6
+          ],
+          "features": [
+            "canvas",
+            "dynamic-text",
+            "password-input",
+            "sized-text"
+          ]
+        },
+        {
+          "name": "window",
+          "min_version": [
+            0,
+            4
+          ]
+        },
+        "clock",
+        "storage",
+        "permission",
+        "log",
+        {
+          "name": "net",
+          "min_version": [
+            0,
+            5
+          ]
+        },
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            10
+          ]
+        }
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.capture",
+      "scope": "microphone",
+      "required": false
+    },
+    {
+      "name": "audio.playback",
+      "scope": "media",
+      "required": false
+    },
+    {
+      "name": "net.client",
+      "scope": "web",
+      "required": false
+    }
+  ]
+}

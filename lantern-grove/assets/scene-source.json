@@ -1,0 +1,10 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "date": "2026-10-29",
+  "prompt": "Use case: stylized-concept. Asset type: finished background for a tiny 2D game, landscape aspect 2.4:1. Create a beautiful cozy pixel art enchanted woodland clearing at dusk, warm little cottage on the RIGHT third, teal tiled roof, amber glowing windows, little path towards bottom center, layered pine trees and ferns, luminous fireflies, shallow creek crossing bottom left with small wooden bridge. Crisp readable large silhouettes, restrained teal green and warm amber palette, richly shaded pixel art like a premium indie game. Camera slightly elevated straight on 2D orthographic scene. No people. NO TEXT NO LETTERING NO LOGO NO UI NO border. Left third includes a large tree, middle third small stone well, right third cottage, foreground unobstructed so moving game sprites can be overlaid. Entire image an actual environment, no title.",
+  "production_size": [
+    576,
+    222
+  ],
+  "encoding": "RGB565 palette, 256 colors; regenerate ../scene.inc with common/pocket-studio/prepare_scene.py"
+}

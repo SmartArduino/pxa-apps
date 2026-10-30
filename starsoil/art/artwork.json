@@ -1,0 +1,105 @@
+{
+  "gameplay": {
+    "authoring": "Original pixel grids in tools/draw_art.py",
+    "license": "MIT",
+    "tile_size": [
+      16,
+      16
+    ],
+    "tile_types": 38,
+    "cardinal_masks": 16,
+    "diagonal_corners": "Concave joins fill the empty quadrant from the diagonal solid material; never cut solid foreground pixels",
+    "human_frame_size": [
+      20,
+      32
+    ],
+    "human_walk_frames": 8,
+    "human_layers": 20,
+    "human_stances": [
+      "free walk",
+      "carry",
+      "bow aim",
+      "tool use"
+    ],
+    "human_joints": 16,
+    "creature_frame_size": [
+      24,
+      24
+    ],
+    "creature_animation_frames": 6,
+    "creature_types": 5,
+    "item_icons": 81,
+    "helmet_variants": 3,
+    "character_authoring": "tools/characters.py",
+    "hand_attachment": "Authored opaque grip per item, two bow hands, shared pose/frame joints mirrored and scaled with the actor",
+    "compositor": "actor_renderer.hpp; shared by game and tests/actor_test.cpp",
+    "visual_authoring": "tools/visuals.py",
+    "background_authoring": "background.hpp",
+    "visual_revision": "0.7.0",
+    "human_proportions": "Compact reference-led design: voluminous thirteen-pixel head, large profile eye, short collar, ten-pixel coat torso and eight-pixel legs",
+    "tree_connections": "Eight trunk fork/root variants; foliage connects to logs; clustered background crowns share continuous stems",
+    "outside_corners": "Connected exposed-edge curves; opaque shared edges, 2px timber corners and 5px soil/stone corners",
+    "armor_variants": 3,
+    "clothing_variants": 3,
+    "foliage_variants": [
+      "temperate",
+      "snow",
+      "jungle"
+    ],
+    "creature_designs": [
+      "dewdrop slime",
+      "dusk bat",
+      "mossling",
+      "gem crawler",
+      "starheart warden"
+    ],
+    "foliage_connectivity": "Connected corner squares are opaque in temperate, snow and jungle foliage",
+    "natural_trees": {
+      "source": "trees/oak-canopy-v1.png",
+      "provenance": "trees/source.json",
+      "tool": "image_gen.imagegen built-in",
+      "compiler": "tools/build_trees.py",
+      "native_size": [
+        112,
+        96
+      ],
+      "rendering": "Trunk-anchored complete branching crown; mining mask per leaf cell; tapered trunk and root flares"
+    },
+    "human_design_reference": "characters/design-reference-v1.png",
+    "human_reference_provenance": "characters/source.json",
+    "limb_layering": "All limbs are authored facing +X. Rear arm and rear leg are behind the trunk/camera limbs. Camera-side main hand operates tools and draws the bowstring; support hand holds the bow handle. One whole-actor mirror on a turn.",
+    "limb_tone": "Camera-facing arm uses full skin/sleeve tone; rear skin, glove and cloth/armor cuffs use 232/255 brightness.",
+    "leg_chain": "Shared per-frame hip/knee/ankle/foot anchors drive pants, greaves and boots",
+    "arm_bones": {
+      "camera_upper_forearm": [
+        4.25,
+        4.25
+      ],
+      "rear_upper_forearm": [
+        3.5,
+        3.8
+      ],
+      "solver": "Generation-time two-bone pixel-grid solver; runtime uses the authored sprites and anchors"
+    },
+    "human_static_frames": {
+      "stand": 8,
+      "jump": 9
+    },
+    "human_frame_count": 10,
+    "animation_clocks": "Travel-distance Q8 gait phase and separate start-to-finish tool action clock. Static inventory/wardrobe/dialogue previews use the stand frame.",
+    "sprite_storage": "Deduplicated indexed sprite rows; pose-independent clothes and armor reuse locomotion frames"
+  },
+  "cover": {
+    "source": "cover.png",
+    "tool": "image_gen.imagegen built-in",
+    "prompt": "Use case: stylized-concept\nAsset type: original pixel-art sandbox game cover / square launcher artwork for Starsoil\nPrimary request: an original 2D side-view pixel sandbox adventure reminiscent of the detailed 16-bit aesthetic of Terraria, with entirely new characters and world. A tiny copper-armored explorer with a teal scarf holds a glowing pickaxe on a grassy cliff; a lantern-lit timber cottage and friendly gardener on the surface; cutaway underground layers show copper veins, blue crystals, roots, a treasure chest and a small turquoise slime. Lush forest on one side, ochre desert and snow-capped pines in the distance, twilight mountain silhouettes and stars. Crisp intentional pixels, limited jewel-tone palette, warm amber lamps against cool teal and indigo, visually readable at small size. Hand-crafted game art, no 3D, no photographic textures, no text, no letters, no logos, no watermark. Square composition."
+  },
+  "font": {
+    "family": "Starsoil UI 12",
+    "derived_from": "ZLabs Pixel 12px M CN",
+    "license": "OFL-1.1",
+    "license_file": "FONT-LICENSE.txt",
+    "source_manifest": "font-source.json",
+    "authoring": "tools/build_font.py"
+  }
+}

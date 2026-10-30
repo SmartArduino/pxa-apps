@@ -1,0 +1,10 @@
+{
+  "source": "../assets/icon.svg",
+  "tool": "CairoSVG",
+  "dimensions": [
+    512,
+    512
+  ],
+  "sha256": "40a6f2aa09c9d317a2d873cd1647a69484a6ef74a5ca911ff1f0e9215f1a64d2",
+  "note": "Original editable vector icon rendered directly at store resolution."
+}

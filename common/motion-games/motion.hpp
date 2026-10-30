@@ -21,8 +21,9 @@ struct Motion {
   bool acceleration(std::array<int32_t,3> value,uint64_t now) {
     std::array<float,3> next;float magnitude=0,jerk=0;
     for(unsigned i=0;i<3;++i){next[i]=value[i]/9806650.f;magnitude+=next[i]*next[i];float delta=next[i]-raw[i];jerk+=delta*delta;}
-    // Gen4's mounted IMU axes are rotated relative to the portrait screen.
-    Vec reading{-next[1],next[0]};filtered=samples?Vec{filtered.x*.65f+reading.x*.35f,filtered.y*.65f+reading.y*.35f}:reading;
+    // Host axes: X=top, Y=left, Z=screen-out. A rolling ball accelerates
+    // downhill: device Y -> raster right, device X -> raster down.
+    Vec reading{next[1],next[0]};filtered=samples?Vec{filtered.x*.65f+reading.x*.35f,filtered.y*.65f+reading.y*.35f}:reading;
     bool shake=false;
     if(last&&now>last&&now-last<300000&&jerk>.24f&&magnitude>1.3f&&now>previous_hit+100000){
       hits=(now-previous_hit<650000)?hits+1:1;previous_hit=now;

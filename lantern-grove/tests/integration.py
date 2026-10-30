@@ -68,7 +68,7 @@ class Session:
             time.sleep(.1)
         raise TimeoutError(label)
     def pause(self):
-        if not self.paused:self.b.tap(276,10,settle=.3);self.paused=True
+        if not self.paused:self.b.tap(252,10,settle=.3);self.paused=True
     def resume(self):
         if self.paused:self.b.tap(140,85,settle=.3);self.paused=False
     def flush(self,label):

@@ -1,0 +1,888 @@
+{
+  "sources": [
+    {
+      "path": "art/frog-small.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-small.webp",
+      "sha256": "313f8019a3fb46c54b8ee2b052e7f2549e01d74c6e71da2d7a8b7502da286d80"
+    },
+    {
+      "path": "art/frog-big.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-big.webp",
+      "sha256": "f0cc136ed4f18d7c625c1f9756995fb43b1fb709c0027c2f95cf950e144e416a"
+    },
+    {
+      "path": "art/diamond-small.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/diamond-small.webp",
+      "sha256": "2ce93138eec0b4ec3562a9b8179fc85918787b147e72a76e543b20069abd3612"
+    },
+    {
+      "path": "art/ice-1.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/ice-1.webp",
+      "sha256": "f918bae6c60a832c470b548451d19f1ab29083d8e84a4286ad304de3f5308e91"
+    },
+    {
+      "path": "art/ice-2.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/ice-2.webp",
+      "sha256": "dd6e19c93320dd2c5b8bccb8366fc62ef22ad314019664748a8b686089d9d1e9"
+    },
+    {
+      "path": "art/ice-3.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/ice-3.webp",
+      "sha256": "539103efda292a300f4b45911074dbb46dda53b579e83a609cab1c35546bdc97"
+    },
+    {
+      "path": "art/dandan-head.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/dandan-head.webp",
+      "sha256": "fe8dd403aa5b97599e1e824a89c13062c81ee87d42e7205ca65e2bccdd87059e"
+    },
+    {
+      "path": "art/od-boss.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/od-boss.webp",
+      "sha256": "207ec78ee399773abc3d437fe5ad818ca8be2e6755235b3fe2bed319c8083e80"
+    },
+    {
+      "path": "art/od-angry.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/od-angry.webp",
+      "sha256": "251fcaad207c9e30c699577cccd57eeef963b775c04e6c384ebc6f1fee77c539"
+    },
+    {
+      "path": "art/laugh-sheet2.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/laugh-sheet2.webp",
+      "sha256": "9a6227fcdd8e6aa2dedc0f95059106db2b3f747b5999d21ce7b4841b64c9f57f"
+    },
+    {
+      "path": "art/frog-rare-1.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-1.webp",
+      "sha256": "fe37ff9ae6df5b2a6d580ad26e8e2b2feac1fc94007b74c6bde45ebb93f100bd"
+    },
+    {
+      "path": "art/frog-rare-2.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-2.webp",
+      "sha256": "a09ff4271dde02a985d32ec5f5a812ea357b31769be774be673775ec0b69a190"
+    },
+    {
+      "path": "art/frog-rare-3.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-3.webp",
+      "sha256": "95e5e9d753ea55034a2d559d3c283e5fcd0cd205a47dd2d6a0cba35f191e65e2"
+    },
+    {
+      "path": "art/frog-rare-4.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-4.webp",
+      "sha256": "6d62ae7c8a4afa959c14e6a476d9712809cc339df420fecbd6c2b8dfb79011ab"
+    },
+    {
+      "path": "art/frog-rare-5.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-5.webp",
+      "sha256": "eb50543c9bb25a7b7369b57c525314df2f7dd9a63dccdcbdc7f16b5d69350a1a"
+    },
+    {
+      "path": "art/frog-rare-6.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-6.webp",
+      "sha256": "d39d4bb2064ba04e8bdbf3e67db6f3ae3053e9712953ec9416c1f86dbddfafc8"
+    },
+    {
+      "path": "art/frog-rare-7.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-7.webp",
+      "sha256": "7035a3e4a2e7c7f8193d5a6ed2233e1528c41aa48b1e83cddf14d9c27898a93f"
+    },
+    {
+      "path": "art/frog-rare-8.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-8.webp",
+      "sha256": "6305edca24e2f3792c798b6c28fc85c28177083f1bcdb83f53e954917e8eb581"
+    },
+    {
+      "path": "art/frog-rare-9.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-9.webp",
+      "sha256": "a29331e3e1ba205dd0a119ab62f4698930ecae5247a5d7a4cd7ce6eeba455a3d"
+    },
+    {
+      "path": "art/frog-rare-10.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-10.webp",
+      "sha256": "fe327c187bafcf39aad45636a29a520262033a407944922ec6ee626633edc813"
+    },
+    {
+      "path": "art/frog-rare-11.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-11.webp",
+      "sha256": "d240331e4b9f8dadba0844d42ec2b01ebacf96f312bd91ffa27b09b9e78f0c89"
+    },
+    {
+      "path": "art/frog-rare-12.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-12.webp",
+      "sha256": "7a96a3926f8db59647900c2f204d0d19c83ea7c2ec8557c1fca87e1d3d34b819"
+    },
+    {
+      "path": "art/frog-rare-13.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-13.webp",
+      "sha256": "d675daee4f5e32ec470b7881ef7499d7c128be3917facd88f67fdde3021cd4f4"
+    },
+    {
+      "path": "art/frog-rare-14.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-14.webp",
+      "sha256": "0b956ba006636bb4409d33ad491bf90969026d401ed88730371ca4ab8296a70b"
+    },
+    {
+      "path": "art/frog-rare-15.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-15.webp",
+      "sha256": "801d38ee24234d6bbf38b507ac192c03e1781d483ab889a10ed0206c8dd7d9d0"
+    },
+    {
+      "path": "art/frog-rare-16.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-16.webp",
+      "sha256": "023ab8f3905c32253b8b3f3379b74babde8f719131ab4975e203f03a003ff04e"
+    },
+    {
+      "path": "art/frog-rare-17.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-17.webp",
+      "sha256": "03de3fec7673779443ce17238bb3971588a99a9418571ab469a0f8f8b76e44ef"
+    },
+    {
+      "path": "art/frog-rare-18.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-18.webp",
+      "sha256": "1573565f6761a01334785eeb7615cdb22abcbeb10528160bebd09a175ce76dc9"
+    },
+    {
+      "path": "art/frog-rare-19.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-19.webp",
+      "sha256": "4ff5a21d660198e581f2ad264688b199a6c87a92e13ca7bacbf3b720167bd2f6"
+    },
+    {
+      "path": "art/frog-rare-20.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-20.webp",
+      "sha256": "a6a1c2ddb3321c6181f3dea8fd9845a566593547da0d91ed7f6d90ad2de44799"
+    },
+    {
+      "path": "art/frog-rare-21.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-21.webp",
+      "sha256": "ac15b2a42b71543661315a689d7a0479de38d57ea18da5ee2393c665d101a15d"
+    },
+    {
+      "path": "art/frog-rare-22.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-22.webp",
+      "sha256": "bbf5ec406538610a94a0bd821dab5f64dfd14744914079fe9fd3645bfbd43315"
+    },
+    {
+      "path": "art/frog-rare-23.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-23.webp",
+      "sha256": "8c4ee1a7fca2f55dcc9f61d965f82da56219bb8664f083f8ccb40f08640795ca"
+    },
+    {
+      "path": "art/frog-rare-24.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-24.webp",
+      "sha256": "b6cc534cd464a26fc82d56d449d51945d833d2497844c5cb774d0cfc8396d881"
+    },
+    {
+      "path": "art/frog-rare-25.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-25.webp",
+      "sha256": "03787e4aba711f25596f5574a3255d25071088c031c9a2d7091e1a0624695e7e"
+    },
+    {
+      "path": "art/frog-rare-26.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-26.webp",
+      "sha256": "3ec72bd6140f27d7636febf388d42e7419523b93c5fd0c9ba0c05a1ec0fb1202"
+    },
+    {
+      "path": "art/frog-rare-27.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-27.webp",
+      "sha256": "b79476566e8943e51f310c3b77c2010b5b342fe23c1f76b982bb6e1d27d577dd"
+    },
+    {
+      "path": "art/frog-rare-28.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-28.webp",
+      "sha256": "15b122af775960b5e5d333c01eddf86ce52a4c752c653a368a60855eabfa6da4"
+    },
+    {
+      "path": "art/frog-rare-29.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-29.webp",
+      "sha256": "715f3e0ae91571c01f6ac4c7e74023b295422a3704fef5659b77d3ab43c5e214"
+    },
+    {
+      "path": "art/frog-rare-30.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-30.webp",
+      "sha256": "2c6556c9cb060419b61bbfd84d9cd8d2b8654caef89ccacb1cf15d2441c11fc5"
+    },
+    {
+      "path": "art/frog-rare-31.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-31.webp",
+      "sha256": "3bd4826e8856547d793bd659b1f53ddcc0b2d2728b155465366281f2819a172a"
+    },
+    {
+      "path": "art/frog-rare-32.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-32.webp",
+      "sha256": "5d0b464765325848b04b32a031dda127e80ad8cc30df0ed2592cf960e62f0322"
+    },
+    {
+      "path": "art/frog-rare-33.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-33.webp",
+      "sha256": "9b101af11c8c0ce0239fcbee290b2ad37cf583f39537510c24f35aaa2856cc20"
+    },
+    {
+      "path": "art/frog-rare-34.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-34.webp",
+      "sha256": "d2c091a93f00a49183713d4b4da025bc99af7b67d8a2f012c1cde5431099e4b7"
+    },
+    {
+      "path": "art/frog-rare-35.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-35.webp",
+      "sha256": "f0ac0285511815d0cc2b7314cd1530ae5e5f7eb1849d5fd40c3a00831a26a9db"
+    },
+    {
+      "path": "art/frog-rare-36.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-36.webp",
+      "sha256": "3432042ea0c61b75cd97d11cb587a283edb6b6edab668d6c16427c2da34481c7"
+    },
+    {
+      "path": "art/frog-rare-37.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-37.webp",
+      "sha256": "9e0c21277d5fa56bfaef42b0463e4dbd646d502c95e021b3ab4788ea32ef8ef7"
+    },
+    {
+      "path": "art/frog-rare-38.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-38.webp",
+      "sha256": "78d268f2a58942d0784e88f6ce0fdea7d4bc26bc479be70f9b42472b82de2114"
+    },
+    {
+      "path": "art/frog-rare-39.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-39.webp",
+      "sha256": "7ff2c3894ec31a2b6886e10cdf803753af0ed9cf436d7018240578f10a172fda"
+    },
+    {
+      "path": "art/frog-rare-40.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-40.webp",
+      "sha256": "52db737c42f5c25e6fb96cc7f1763a548f86dfaa62a5301deed1054c875de0b1"
+    },
+    {
+      "path": "art/frog-rare-41.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-41.webp",
+      "sha256": "6dfe6e8f2e65dda03b36fdefdff5726367edc50af2a7b280694fed4b8f4f1a13"
+    },
+    {
+      "path": "art/frog-rare-42.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-42.webp",
+      "sha256": "5b969758e3293016e354bf79ced4946f31923c0225762577921d84d66a93657f"
+    },
+    {
+      "path": "art/frog-rare-43.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-43.webp",
+      "sha256": "b2ea22331fb600df16127d32cc4418bdcfc5a93b58a3fbbbd6e57533af3cbb34"
+    },
+    {
+      "path": "art/frog-rare-44.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-44.webp",
+      "sha256": "9b55205f191b3e632dd15ba6d5c61271ce345a6fc992c0fcbbe7e1f37b76186a"
+    },
+    {
+      "path": "art/frog-rare-45.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-45.webp",
+      "sha256": "232a267b56921aa893cddded7baf545587e5c168b573fa919d8599f046c2c93d"
+    },
+    {
+      "path": "art/frog-rare-46.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-46.webp",
+      "sha256": "513cd08213f13939ca9a5e315751bab289162e5cae193313546c0f3dda607a11"
+    },
+    {
+      "path": "art/frog-rare-47.webp",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/frog-rare-47.webp",
+      "sha256": "00b247aafaa87cf1990c6f28031190d8bf3ea9b20f5ce07fe1369e056456a095"
+    },
+    {
+      "path": "art/laugh-1.mp3",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/laugh-1.mp3",
+      "sha256": "ff135c55707a59d79c3fc6d81344b142c92101f194c866419c7630d2e59f2990"
+    },
+    {
+      "path": "art/laugh-2.mp3",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/laugh-2.mp3",
+      "sha256": "9184385fe10611938b78f6951bbf5efd1023a7b524d9fe2af82c235357711b6f"
+    },
+    {
+      "path": "art/laugh-3.mp3",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/laugh-3.mp3",
+      "sha256": "4d23e1009f20f34b1290cf069a2356ad240036ac46252f32848aafc89d2719d2"
+    },
+    {
+      "path": "art/laugh-4.mp3",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/laugh-4.mp3",
+      "sha256": "c6ba46d3b9f5ec29f73dcecc2d45935e50a2a4de545dfb6d36bde16b61e8bec4"
+    },
+    {
+      "path": "art/ice-1.mp3",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/ice-1.mp3",
+      "sha256": "86b1bf8d31a1a269c38e7c26a7d0939c19cb05929103075fdc3fa1594890c9c2"
+    },
+    {
+      "path": "art/ice-2.mp3",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/ice-2.mp3",
+      "sha256": "4f42cb4da9e051a7d164b18e60068fc0b0c8da4a9f9cf2f6d4cdac3f09c169ab"
+    },
+    {
+      "path": "art/ice-3.mp3",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/ice-3.mp3",
+      "sha256": "42279a9eb937ec7d080367c2b3230ebd930c3abf380025fa9af106577860cb65"
+    },
+    {
+      "path": "art/bgm.mp3",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/bgm.mp3",
+      "sha256": "acb60886d8aa9db7bf7390b45077355fa843ac9b399534d3963fbecd22b26976"
+    },
+    {
+      "path": "art/andy-1.mp3",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/special/andy-1.mp3",
+      "sha256": "487551f10ff1f38417e4508a378e3a964878719bc159d73b7c44ef2bd133f207"
+    },
+    {
+      "path": "art/laugh-audio.mp3",
+      "url": "https://66970010-boop.github.io/frog-miner/assets/laugh-audio.mp3",
+      "sha256": "88a84b074e79ebc907b906e9e21b4f0fe1603693f58656fde3ddf85911745f39"
+    }
+  ],
+  "transformations": [
+    "Images: crop transparent padding; Lanczos 32/64/128 px and up to 56,000 pixel RGBA variants; original animation frames packed into bounded 320x104 atlases; small RGB565 fallbacks.",
+    "Audio: original recordings downmixed to signed 16-bit 16 kHz mono.",
+    "Pitch variants rendered offline; miner compensates tempo to retain duration."
+  ],
+  "rights": "Third-party images/recordings retain their original rights; meme status is not a license. See THIRD-PARTY.txt.",
+  "generated": [
+    {
+      "path": "heroes.hpp",
+      "sha256": "85ec8459ee7e5f5819581676883ca077dc8b6f47878ebd59b1779a4eda9b66d7"
+    },
+    {
+      "path": "sprites.hpp",
+      "sha256": "f76fcac9ac8ba1ca0628cb7a2c1cc56c4d4c13ee980cc1da3a74439d87c18e44"
+    },
+    {
+      "path": "assets/andy.s16",
+      "sha256": "714a7652fc5215c93ca351eb35a0f65258a4a43f3b1318cabfaf22e0ffe58ca6"
+    },
+    {
+      "path": "assets/ice-1.s16",
+      "sha256": "8792a28136ab90b6e38fa3fb45d68ad08dde493119ac387eff02c6331cea3449"
+    },
+    {
+      "path": "assets/ice-2.s16",
+      "sha256": "9fd8de175a4e98af9ffb77cf46fbdde7cbc453317af342e297375b318fcbce11"
+    },
+    {
+      "path": "assets/ice-3.s16",
+      "sha256": "3fd9ff45f3a67b549bd91e5430aad2dbe7ead4f56e8ff05cc03fb5dcc0041deb"
+    },
+    {
+      "path": "assets/laugh-1-high.s16",
+      "sha256": "fbfff96aff38c72e141973f5d92bf1ec49cccb1bb77eed781f21cace8bbc4b2b"
+    },
+    {
+      "path": "assets/laugh-1-low.s16",
+      "sha256": "0ee2bcd16ef5c38da04138597687dcf14aa7a5da57d365a9e33f0a7e8f160296"
+    },
+    {
+      "path": "assets/laugh-1-normal.s16",
+      "sha256": "3345f8ab861d064aa619de58188ff861abe7ec6c9a0605b0a61202854abe3b56"
+    },
+    {
+      "path": "assets/laugh-2-high.s16",
+      "sha256": "7a4385ea04d11deb7739147387d1eb081ddb2f59443416ddbc8a2de0e87faeb5"
+    },
+    {
+      "path": "assets/laugh-2-low.s16",
+      "sha256": "39e34af14e8abfedc04da697e6f912abfbbf8804f0c9908b36dcf6a09780a6c4"
+    },
+    {
+      "path": "assets/laugh-2-normal.s16",
+      "sha256": "44d17e05626479e0df87041274510ef080794f4aa5c037b90da118c09f9fa9c0"
+    },
+    {
+      "path": "assets/laugh-3-high.s16",
+      "sha256": "a6fc3cf9625bb67ad0b6f6d1806185feba234423796a014391ce75aa7818dea3"
+    },
+    {
+      "path": "assets/laugh-3-low.s16",
+      "sha256": "91a7e41df2d1acfad61a7fd61b4f494e81630d9c5b1a8bad2aa2bc42abffef90"
+    },
+    {
+      "path": "assets/laugh-3-normal.s16",
+      "sha256": "918b41eaf67428ced07b3f0a8ae3b1585ea2546833bd4bcd13e8a0538cb173d1"
+    },
+    {
+      "path": "assets/laugh-4-high.s16",
+      "sha256": "8159154499b412c3fd77caf51f7bdfe6545aa553c27303011ed62d140c4477d0"
+    },
+    {
+      "path": "assets/laugh-4-low.s16",
+      "sha256": "f32719c29c4eba913be8afe376a5b4f6a3f269e06913e1b5eef97bd9bbe76b54"
+    },
+    {
+      "path": "assets/laugh-4-normal.s16",
+      "sha256": "94a34bc70058e82a63f33a22a36cec141902055d238bb3d58b1fc489e8a37e10"
+    },
+    {
+      "path": "assets/lose.s16",
+      "sha256": "472bef019d820ee98859c3e43ec78259675db61e44719d2e1040a9f314bf8c5b"
+    },
+    {
+      "path": "assets/bgm.ogg",
+      "sha256": "ceea4ef2eff2c9ee61ab35bf3a6f6b90385c0700f83c372c671a2fad241abcbe"
+    },
+    {
+      "path": "assets/images/dandan_head-128.png",
+      "sha256": "8e1b2a48cf33ab52cba04a38873014617ae954d781924e2365738e0a55c9838f"
+    },
+    {
+      "path": "assets/images/dandan_head-32.png",
+      "sha256": "8dfff99e77641e10fd013cbf4721ab134907d2a25aec4cf2fe38d5b17c4b1d8b"
+    },
+    {
+      "path": "assets/images/dandan_head-512.png",
+      "sha256": "8e1b2a48cf33ab52cba04a38873014617ae954d781924e2365738e0a55c9838f"
+    },
+    {
+      "path": "assets/images/dandan_head-64.png",
+      "sha256": "772d12fee8dac24da1509156ac7d021e20a962ddf8232c68ff79baf6db8bc8ea"
+    },
+    {
+      "path": "assets/images/diamond_small-128.png",
+      "sha256": "c21b956a4fb6f2da2b95788ab5fc0bec74aae01a0765385fd61d37efce8c55a4"
+    },
+    {
+      "path": "assets/images/diamond_small-32.png",
+      "sha256": "c21b956a4fb6f2da2b95788ab5fc0bec74aae01a0765385fd61d37efce8c55a4"
+    },
+    {
+      "path": "assets/images/diamond_small-512.png",
+      "sha256": "c21b956a4fb6f2da2b95788ab5fc0bec74aae01a0765385fd61d37efce8c55a4"
+    },
+    {
+      "path": "assets/images/diamond_small-64.png",
+      "sha256": "c21b956a4fb6f2da2b95788ab5fc0bec74aae01a0765385fd61d37efce8c55a4"
+    },
+    {
+      "path": "assets/images/frog_big-128.png",
+      "sha256": "b2124c419c6c101345a8150907e1a2ee1d5ac1c6c03c3f6a03fc1c2cbc4b63ce"
+    },
+    {
+      "path": "assets/images/frog_big-32.png",
+      "sha256": "fc74fb4a8e8dccc9a45ddc8780455baf8e724e7837be1df99ba0e00f94527277"
+    },
+    {
+      "path": "assets/images/frog_big-512.png",
+      "sha256": "eb7139869030377ffde46bed76a5ff9958d5ac13221259983219c0f26ac26111"
+    },
+    {
+      "path": "assets/images/frog_big-64.png",
+      "sha256": "b33b569469472a6b55160b50eab379dadbceb6305f9ae9ef7275479e6d7bbb1e"
+    },
+    {
+      "path": "assets/images/frog_small-128.png",
+      "sha256": "d51d4ed92b5e908db7669ee3f4d60ef6db25482448830dd8250de0edf0921b42"
+    },
+    {
+      "path": "assets/images/frog_small-32.png",
+      "sha256": "507c97855af6cdbf28add31d5345e0cc517ee89e6f346c80ce9c9f543822fa8f"
+    },
+    {
+      "path": "assets/images/frog_small-512.png",
+      "sha256": "d51d4ed92b5e908db7669ee3f4d60ef6db25482448830dd8250de0edf0921b42"
+    },
+    {
+      "path": "assets/images/frog_small-64.png",
+      "sha256": "787ffe1bf27fd63ed44656ec0afcf25377cda7c9163ad538e7dade8348c6238c"
+    },
+    {
+      "path": "assets/images/hero_angry-128.png",
+      "sha256": "c14d4ebdb71b12940f88f43038648b619960d27a26ac19eb6085169ad1a09caf"
+    },
+    {
+      "path": "assets/images/hero_angry-32.png",
+      "sha256": "137a57a9e3d521b3819a25a8d1c0663ec0a0d5b2b1310437e283e73d3562fc8a"
+    },
+    {
+      "path": "assets/images/hero_angry-512.png",
+      "sha256": "71e40a3fb9e93940621cd8cbc5fbd2a4621c43edcd5ecc822495c10c85e573c9"
+    },
+    {
+      "path": "assets/images/hero_angry-64.png",
+      "sha256": "eae827f35f4492e6c5c8c44f8fdbf543e1399f8f8a01b0615aeab05ff86cd8a2"
+    },
+    {
+      "path": "assets/images/hero_frog-128.png",
+      "sha256": "b2124c419c6c101345a8150907e1a2ee1d5ac1c6c03c3f6a03fc1c2cbc4b63ce"
+    },
+    {
+      "path": "assets/images/hero_frog-32.png",
+      "sha256": "fc74fb4a8e8dccc9a45ddc8780455baf8e724e7837be1df99ba0e00f94527277"
+    },
+    {
+      "path": "assets/images/hero_frog-512.png",
+      "sha256": "eb7139869030377ffde46bed76a5ff9958d5ac13221259983219c0f26ac26111"
+    },
+    {
+      "path": "assets/images/hero_frog-64.png",
+      "sha256": "b33b569469472a6b55160b50eab379dadbceb6305f9ae9ef7275479e6d7bbb1e"
+    },
+    {
+      "path": "assets/images/ice_1-128.png",
+      "sha256": "3a8c437586b206802abd5c4e3c67a5f47bd9b61c55c5778245551c737d247dd0"
+    },
+    {
+      "path": "assets/images/ice_1-32.png",
+      "sha256": "375ef0a2682947f3768a88d449a7726e809747de6f4555137a53db3fe127316f"
+    },
+    {
+      "path": "assets/images/ice_1-512.png",
+      "sha256": "8297994ba1241fa13a714b66a180bc1a98795c3b8892894f1a761fe892a6028b"
+    },
+    {
+      "path": "assets/images/ice_1-64.png",
+      "sha256": "a0f3424b9e5760fa6d777fb8bf1d129407680570e202d22ccf0163887d17a048"
+    },
+    {
+      "path": "assets/images/ice_2-128.png",
+      "sha256": "09f126ebb21f09ebc1f6997e81373824f490c678aca93fc502233b18e92a5e90"
+    },
+    {
+      "path": "assets/images/ice_2-32.png",
+      "sha256": "27aa7276e98a33b07bdeee14e20eadd55f4368dc1cb18488d7c947530243d366"
+    },
+    {
+      "path": "assets/images/ice_2-512.png",
+      "sha256": "c23ed6e585746cbbd53cdc909cff783362a90bc8e89bcd2f20dbdfbd744bcb93"
+    },
+    {
+      "path": "assets/images/ice_2-64.png",
+      "sha256": "a439bdd7bc3e363327f381fd80c717aa1b1625251b85eba19e81ad09e8bbccb6"
+    },
+    {
+      "path": "assets/images/ice_3-128.png",
+      "sha256": "51c391f310e816957f76eaaabb64f6a223926cfe3551bb3a8c648f6baa5b2a6e"
+    },
+    {
+      "path": "assets/images/ice_3-32.png",
+      "sha256": "9d9478ce318bd498617d31fd528e9948bf27319f1fc6574f73737e8e877e1279"
+    },
+    {
+      "path": "assets/images/ice_3-512.png",
+      "sha256": "f0a72230eb6d8ae2cddb35fa69aa55ad864724668b3e91baeee06cd4083eff22"
+    },
+    {
+      "path": "assets/images/ice_3-64.png",
+      "sha256": "0e8c44e660eefb0eff83e4cee02cf84861dcefaeb06f2601a0a11cd8b67057cb"
+    },
+    {
+      "path": "assets/images/laugh-atlas-0.png",
+      "sha256": "3a3134ab9f121c7b48c2d274ae9d2d05fb06078578746c7975662353c706a56b"
+    },
+    {
+      "path": "assets/images/laugh-atlas-1.png",
+      "sha256": "4fc40c8812d2d57eee15e4967e716fec0df924e63b5e9355900a3f0246efb2b0"
+    },
+    {
+      "path": "assets/images/laugh-atlas-2.png",
+      "sha256": "1121d42730415d14a40aa8291a7e834e7b0c37561af430a4c972bfa62799dc53"
+    },
+    {
+      "path": "assets/images/laugh-atlas-3.png",
+      "sha256": "29652b53261e1fc4ce1f0d602906fa6a9cf07e361ba583560abae1925673019a"
+    },
+    {
+      "path": "assets/images/laugh-atlas-4.png",
+      "sha256": "7b0b5f7844924f0fce096fa2f510ebbf8f5acc0bd4b19d62414c8e3349f383d8"
+    },
+    {
+      "path": "assets/images/od_angry-128.png",
+      "sha256": "c14d4ebdb71b12940f88f43038648b619960d27a26ac19eb6085169ad1a09caf"
+    },
+    {
+      "path": "assets/images/od_angry-32.png",
+      "sha256": "137a57a9e3d521b3819a25a8d1c0663ec0a0d5b2b1310437e283e73d3562fc8a"
+    },
+    {
+      "path": "assets/images/od_angry-512.png",
+      "sha256": "71e40a3fb9e93940621cd8cbc5fbd2a4621c43edcd5ecc822495c10c85e573c9"
+    },
+    {
+      "path": "assets/images/od_angry-64.png",
+      "sha256": "eae827f35f4492e6c5c8c44f8fdbf543e1399f8f8a01b0615aeab05ff86cd8a2"
+    },
+    {
+      "path": "assets/images/od_boss-128.png",
+      "sha256": "3afb887ca874e804e6d23847dcf94585f9090b23f2bb66ca2a2ca47433f68b9b"
+    },
+    {
+      "path": "assets/images/od_boss-32.png",
+      "sha256": "92b00816638c70cde121b08f52683fe81866fdcdb504003f284b5f6a10aa75d1"
+    },
+    {
+      "path": "assets/images/od_boss-512.png",
+      "sha256": "f8f3a3b040850b12a96c3838576c5905c1e80e811048394267a17b883e6444ff"
+    },
+    {
+      "path": "assets/images/od_boss-64.png",
+      "sha256": "c54a0dd36c51c27210233ee9a55a38d26c03e2188401205894ce2e1234965f2f"
+    },
+    {
+      "path": "assets/images/rare-32-0.png",
+      "sha256": "572aa5d769fa013fb4d0300b02e531111dc2b95b8a98d6e7e9f7bf8d65fdb48f"
+    },
+    {
+      "path": "assets/images/rare-32-1.png",
+      "sha256": "498cd7d64ab3c1b1594ee5a0f4f0983f87fd0d98fc6a5a132c10bea80d8a06a3"
+    },
+    {
+      "path": "assets/images/rare-32-2.png",
+      "sha256": "79fc5e6ffcaf0d870df27a0ffbb88a30a9b5f717b259929f7a97705e252252d6"
+    },
+    {
+      "path": "assets/images/rare-32-3.png",
+      "sha256": "57e973bf0774b660aa84c0843d40430a1190396461830542effd93f5ad4b92c1"
+    },
+    {
+      "path": "assets/images/rare-32-4.png",
+      "sha256": "0e4b1f0973bea6e5f2ced05ce5865d931b42bba56b07736547af66ee07032b00"
+    },
+    {
+      "path": "assets/images/rare-32-5.png",
+      "sha256": "61c4ccfe0d56533503bda69961e162d7c587ce73650239388e1970c77a5a6f68"
+    },
+    {
+      "path": "assets/images/rare-64-0.png",
+      "sha256": "ae7e96b895e1a125e810a107bd5bb6e527d8abcbbc3190917279f3d30773b030"
+    },
+    {
+      "path": "assets/images/rare-64-1.png",
+      "sha256": "b1df5fad57c8305ac5fadeb66ff6a4b2ec30c7fa563f47e337d14781b3a6ca22"
+    },
+    {
+      "path": "assets/images/rare-64-10.png",
+      "sha256": "6bf98e0e5267e3796321f03dcf9059bff6e31fae6cd502d9b5f9ee7fba19f12c"
+    },
+    {
+      "path": "assets/images/rare-64-11.png",
+      "sha256": "af1e771cfb3361bb59e67e083881874d19c1b3df35f02da3b3ba003bc73c6340"
+    },
+    {
+      "path": "assets/images/rare-64-2.png",
+      "sha256": "e6ae283db2741b16f87a69a16f20ab43e9f2b9cd79e3f8d0e4ee486db27ebeb3"
+    },
+    {
+      "path": "assets/images/rare-64-3.png",
+      "sha256": "dce8d7653c1b6883db63f167f9680b8b305948eee8138f0788d93d6e39b93854"
+    },
+    {
+      "path": "assets/images/rare-64-4.png",
+      "sha256": "3b57185bb6cdb6ce95aa5752802369c7c0fb1e87b6ccc84ccde27269eee7f09e"
+    },
+    {
+      "path": "assets/images/rare-64-5.png",
+      "sha256": "e095ff8a00816233b34ef3298412b8b0343232f96b1264b053d4d641661e5145"
+    },
+    {
+      "path": "assets/images/rare-64-6.png",
+      "sha256": "09e10fc0af69875696c98c9a3dbd64e6d25350103140b80cc6632ef17be31f06"
+    },
+    {
+      "path": "assets/images/rare-64-7.png",
+      "sha256": "a339102a07654d9430a8de917f26e372d16de411e0be8349012d7e9911d943b0"
+    },
+    {
+      "path": "assets/images/rare-64-8.png",
+      "sha256": "2bc33242cbd96a60255c328927bcbc645d010187e6520674dc95b956b10c613d"
+    },
+    {
+      "path": "assets/images/rare-64-9.png",
+      "sha256": "8f573b5eb9a2be741e9e2caf45e03152a29bd6c3fecd02a5d8d5162a9fe26388"
+    },
+    {
+      "path": "assets/images/rare_1-128.png",
+      "sha256": "b3372db631d65f58a6c8b4b8d10e9180fd745a3169cb5f614ca69f1ddbba7a39"
+    },
+    {
+      "path": "assets/images/rare_10-128.png",
+      "sha256": "917c3bfd04ab26c3c2da3fb29c260c73e2309de7b99ccf946e93390447ff1e19"
+    },
+    {
+      "path": "assets/images/rare_11-128.png",
+      "sha256": "2fdec007a555a404a89460143eb7f4c45402699fb7518a0962d01c84f9065f87"
+    },
+    {
+      "path": "assets/images/rare_12-128.png",
+      "sha256": "36e41025036611d5dce2e320db5a3f5fef434287a57d17e80e0164ae0592a40f"
+    },
+    {
+      "path": "assets/images/rare_13-128.png",
+      "sha256": "bcbefcbb594038faa995567210b66eff2cea170454d9383a62e7e6d9e12292e9"
+    },
+    {
+      "path": "assets/images/rare_14-128.png",
+      "sha256": "e8ff5056e66b4710138c5a5e5a21914581b505370359248fa17cd9a0e1d02857"
+    },
+    {
+      "path": "assets/images/rare_15-128.png",
+      "sha256": "f1e38b8ea7e53e2830379e5d92d9bbe04e9463d57ce792d5f5a3106217b82ee1"
+    },
+    {
+      "path": "assets/images/rare_16-128.png",
+      "sha256": "00abcafeae460180b48d015534af5d435cb40f703307b1e3936b2bcdcec86a2a"
+    },
+    {
+      "path": "assets/images/rare_17-128.png",
+      "sha256": "d555285eb2cd4c934dad4459d612e03881f4167fd7444853fa5d2dabedce1160"
+    },
+    {
+      "path": "assets/images/rare_18-128.png",
+      "sha256": "4670926bd890b810b703adad516ae91caa937ddf1c0dc4cc03ac1ad8229a8a20"
+    },
+    {
+      "path": "assets/images/rare_19-128.png",
+      "sha256": "560c79bd44b3054d28e394d15df352cf4369fe5d9b7c5c597c9948a1e840952d"
+    },
+    {
+      "path": "assets/images/rare_2-128.png",
+      "sha256": "be4df1d418bda55c39c6095925beec508f440842ac0aff928298b3ac625cc63d"
+    },
+    {
+      "path": "assets/images/rare_20-128.png",
+      "sha256": "6347d48af6a5a5d2e235de77e86bc227d4168ccca41fdb02deb9a968dc8d4c84"
+    },
+    {
+      "path": "assets/images/rare_21-128.png",
+      "sha256": "b0cfe13ee0e5ad6215da3c470e91433a0fe5130225b2ab098c39e399c64a988b"
+    },
+    {
+      "path": "assets/images/rare_22-128.png",
+      "sha256": "90cb80fcb9b4a053469c349271eed39209132bb31a79f2ec9d32d89c4b024a91"
+    },
+    {
+      "path": "assets/images/rare_23-128.png",
+      "sha256": "62c7f93860acdda521337eb36ad521d8da6dc9e5c86fcb1314754ae4ccad34b8"
+    },
+    {
+      "path": "assets/images/rare_24-128.png",
+      "sha256": "8f87f74eaae96163893e2cef0d02a21de4a108bba33cbac24d75b7c67e3aee64"
+    },
+    {
+      "path": "assets/images/rare_25-128.png",
+      "sha256": "7b87a02175ee8eed4d0e99fce3462cc37d949cd314f42138c38fa329c32ef124"
+    },
+    {
+      "path": "assets/images/rare_26-128.png",
+      "sha256": "3c48c8b1d23ff7962118dc5294c4a72239956a5b4d53af403551aa0754302dba"
+    },
+    {
+      "path": "assets/images/rare_27-128.png",
+      "sha256": "9ce077c3924623e15942acf9fac9adf8d7a1fc1188dde8a92bffbaf3e5236fba"
+    },
+    {
+      "path": "assets/images/rare_28-128.png",
+      "sha256": "9cdf739f6b6a3381cf9896be09895ef2a7a9d30fcd05acbcf65600e7e7ed9029"
+    },
+    {
+      "path": "assets/images/rare_29-128.png",
+      "sha256": "605bfaf57d0239aed0dcc23ef50d314ef85344d374ae7bea8a72a664fde39550"
+    },
+    {
+      "path": "assets/images/rare_3-128.png",
+      "sha256": "237bb2cd093ff1948118665964177ab85370e02b79c4a530e778efbb0a80599c"
+    },
+    {
+      "path": "assets/images/rare_30-128.png",
+      "sha256": "fadacfb30da73bd09fe7fa86a7d2f3f6453d0bd598e843c42b397607b1d984bc"
+    },
+    {
+      "path": "assets/images/rare_31-128.png",
+      "sha256": "b6ff7c447f0f427a55f4c2873384837588c6e61bdb3df27b23c02d20a6040fc8"
+    },
+    {
+      "path": "assets/images/rare_32-128.png",
+      "sha256": "96b94c979d24930648dd3482bdb6b2b0b2d0c71095ba870bfda428f288772681"
+    },
+    {
+      "path": "assets/images/rare_33-128.png",
+      "sha256": "750fa081dcf429ac347efeab8a5f9df52388e209a45cfa95858755b2d5dcf0b8"
+    },
+    {
+      "path": "assets/images/rare_34-128.png",
+      "sha256": "56483c1da9f20b4c882751f92e4cffcf76d73ff393ab487e90da03cc6f2411a5"
+    },
+    {
+      "path": "assets/images/rare_35-128.png",
+      "sha256": "1fa895fd3032f2b3d3a1b045e1679604a52fb8b033376423ce5a845ad737f4e8"
+    },
+    {
+      "path": "assets/images/rare_36-128.png",
+      "sha256": "267dae015241c77d770709480db7c6520914eed110574a48af92f7620168e3c7"
+    },
+    {
+      "path": "assets/images/rare_37-128.png",
+      "sha256": "8a5d7a334c5d4367b81865cd1817238c851839174a7e3dac8ca225783dbdd8c7"
+    },
+    {
+      "path": "assets/images/rare_38-128.png",
+      "sha256": "cea3cc5176af99dc8a3457a581997238eb9dfcf531197a75a55ef2dd7d3292f1"
+    },
+    {
+      "path": "assets/images/rare_39-128.png",
+      "sha256": "441d5372f9871e8bc0e79b8068b86a74fc4cd9c242b064efad6d8cb7c704f448"
+    },
+    {
+      "path": "assets/images/rare_4-128.png",
+      "sha256": "7d5739317da3003bfada2f56d63e265949be83135202c26d31f17a815bff848c"
+    },
+    {
+      "path": "assets/images/rare_40-128.png",
+      "sha256": "ec2ae15655a86b39dd300ad5ac11b9729eb5b68bab675503e89dff63b60fab78"
+    },
+    {
+      "path": "assets/images/rare_41-128.png",
+      "sha256": "ed51646b38676dfd105c8ddcd101d319f7a5266c28f1550b61286611768f089a"
+    },
+    {
+      "path": "assets/images/rare_42-128.png",
+      "sha256": "3a9b9260ff121a11dcb1b49f14f3b2dc569cdea18797b273faf5c4e9787e3702"
+    },
+    {
+      "path": "assets/images/rare_43-128.png",
+      "sha256": "9ccf19ed8e9f66a9b23bbda38fc0b4fda6b0943db37c3d2ba2f3673d74f07d8f"
+    },
+    {
+      "path": "assets/images/rare_44-128.png",
+      "sha256": "569ecfb6b5d184c49d7c92abec36eaf7f7b3ecc2188df467f3ca34ef017b3705"
+    },
+    {
+      "path": "assets/images/rare_45-128.png",
+      "sha256": "0d8f83083686f5f855491687b94cc2f28bffc1cd732b53d7d6deb26bcdf9f4b7"
+    },
+    {
+      "path": "assets/images/rare_46-128.png",
+      "sha256": "aa32a28bafe553a831241fecd2573ec3f80e746cfa2ac78cd6c2b6fa999b35ec"
+    },
+    {
+      "path": "assets/images/rare_47-128.png",
+      "sha256": "813336494c45e76912a0c331fed543646e66058d21f1c2cd540dc216dbd51c49"
+    },
+    {
+      "path": "assets/images/rare_5-128.png",
+      "sha256": "30f1604b3f05d7cf935894a80cf44c89179d81afd6ae112dece732f3b60af893"
+    },
+    {
+      "path": "assets/images/rare_6-128.png",
+      "sha256": "4df285872a9093869ead6657d3b99f775f7e8ee01ab30f6265ac9b282048fbdc"
+    },
+    {
+      "path": "assets/images/rare_7-128.png",
+      "sha256": "3ef150bf5d407d87bff5da9db41f9b0cfd1056fc42dc38ba45e4f573bcb22111"
+    },
+    {
+      "path": "assets/images/rare_8-128.png",
+      "sha256": "77a183515dec92e84d1524fe3911f07ee46278607e84e384915dcb6cfa41337f"
+    },
+    {
+      "path": "assets/images/rare_9-128.png",
+      "sha256": "77eb887e1e458cb4e43148ad27c465a91d0a11d7b04c6127dc04a940f1478042"
+    },
+    {
+      "path": "assets/icon.png",
+      "sha256": "84a8605aa9d093de1fb373120c95e01e5995d86b4d8dbe3a6cb7140949fc7a06"
+    }
+  ],
+  "icon_export": "Fit artwork proportionally inside a 96x96 RGBA square using Lanczos; center with padding; never stretch to a different aspect ratio."
+}

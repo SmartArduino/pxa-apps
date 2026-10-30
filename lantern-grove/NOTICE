@@ -4,3 +4,7 @@ synthesized tone patterns and tests are dedicated under CC0-1.0; see LICENSE.
 No downloaded assets, sampled audio, external fonts or generated art packs.
 The separately maintained common/pocket-play runtime and original 5x7 font
 are also CC0-1.0 and remain unmodified by this application.
+
+Scene artwork: generated for this application with the built-in ImageGen tool.
+Production source and complete prompt are retained in assets/scene.png and
+assets/scene-source.json. Dynamic gameplay elements are rendered separately.

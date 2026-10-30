@@ -15,13 +15,24 @@
 #include "pxa_system.h"
 #include "pxa_ui.h"
 #include "pxa_window.h"
+#ifdef PXA_POCKET_STUDIO
+#include <algorithm>
+#include "pxa_canvas.h"
+#include "../pocket-studio/studio.hpp"
+#endif
+#ifdef PXA_POCKET_SYSTEM_TEXT
+#include <algorithm>
+#include "pxa_canvas.h"
+#endif
 
 namespace {
 using namespace pocket;
-constexpr unsigned LOGICAL_PIXELS = WIDTH * HEIGHT;
+constexpr unsigned LOGICAL_PIXELS = LOGICAL_CAPACITY;
 enum : uint64_t { PORT = 1, CREATE, CONFIGURE, LOAD, SAVE, PREFERENCES_LOAD, PREFERENCES_SAVE };
 alignas(64) uint16_t frames[2 * pocket_ui::MAX_SURFACE_PIXELS];
+#ifndef PXA_POCKET_STUDIO
 uint16_t logical_frame[LOGICAL_PIXELS];
+#endif
 uint16_t *canvas;
 uint8_t packet[PXA_MAX_CONTROL_BYTES], events[PXA_MAX_CONTROL_BYTES], loaded[SAVE_CAPACITY], pending_save[SAVE_CAPACITY];
 char save_key[80];
@@ -30,6 +41,7 @@ uint64_t port, surface, frame_id, epoch, paused_us, pause_at, save_due, save_ret
 uint64_t repeats[4];
 uint32_t buttons, pointer_id, rng = 0x6d2b79f5;
 int display_w = 320, display_h = 240;
+uint32_t pointer_density = 65536;
 int last_x, last_y, menu_row;
 bool running, finished, background = true, fresh_tick, surface_ready, load_ready;
 bool mapped = true, staged, prepared, dirty = true, save_dirty, save_pending, pointer_active, pointer_consumed, paused;
@@ -43,12 +55,29 @@ uint64_t now_us() {
     return uint64_t(t.tv_sec) * 1000000 + t.tv_nsec / 1000;
 }
 #include "../pocket-ui/preferences.inc"
+#ifdef PXA_POCKET_STUDIO
+uint32_t studio_safe[4],studio_corners[4];
+bool studio_geometry(const pxa_ui_environment_t &env){
+    bool changed=memcmp(studio_safe,env.safe_insets,sizeof(studio_safe))||memcmp(studio_corners,env.corner_radii,sizeof(studio_corners));
+    memcpy(studio_safe,env.safe_insets,sizeof(studio_safe));memcpy(studio_corners,env.corner_radii,sizeof(studio_corners));return changed;
+}
+#endif
 #include "../pocket-ui/surface.inc"
+#ifdef PXA_POCKET_STUDIO
+#include "../pocket-studio/runtime.inc"
+#endif
+#ifdef PXA_POCKET_SYSTEM_TEXT
+#include "../milky-frog/system_text.inc"
+#endif
 uint64_t foreground_us() {
     return epoch ? (background ? pause_at : now_us()) - epoch - paused_us : 0;
 }
 // The proven Pocket Play backend uses this runtime's foreground/lifecycle state.
+#ifdef PXA_POCKET_MEDIA
+#include "../milky-frog/audio.inc"
+#else
 #include "../pocket-play/audio.inc"
+#endif
 void cancel_input() {
     clear_sound();
     buttons = 0;
@@ -122,31 +151,59 @@ void controller(const pxa_ui_controller_data_t &c) {
 }
 void pointer(const pxa_ui_pointer_data_t &p) {
     if (background || !running || exit_requested) return;
+    const int px = pocket_ui::pointer_pixel(p.x, pointer_density);
+    const int py = pocket_ui::pointer_pixel(p.y, pointer_density);
     if (p.phase == PXA_POINTER_DOWN && !pointer_active) {
-        if (!surface_ready || !viewport.contains(p.x, p.y)) return;
+        if (!surface_ready || !viewport.contains(px, py)) return;
         pointer_id = p.pointer_id; pointer_active = true; pointer_consumed = false;
     }
     if (!pointer_active || p.pointer_id != pointer_id) return;
-    last_x = viewport.map_x(p.x); last_y = viewport.map_y(p.y);
+    last_x = viewport.map_x(px,WIDTH); last_y = viewport.map_y(py,HEIGHT);
     Phase phase;
     if (p.phase == PXA_POINTER_DOWN) phase = Phase::DOWN;
     else if (p.phase == PXA_POINTER_MOVE) phase = Phase::MOVE;
     else if (p.phase == PXA_POINTER_UP) phase = Phase::UP;
     else phase = Phase::CANCEL;
-    if (phase == Phase::DOWN && last_x >= WIDTH-24 && last_y < 20) {
+#ifdef PXA_POCKET_RESPONSIVE
+    if (phase == Phase::DOWN && milky::menu_button().contains(last_x,last_y)) {
+#else
+    if (phase == Phase::DOWN && last_x >=
+#ifdef PXA_POCKET_STUDIO
+        240 && last_x < 264 && last_y < 26
+#else
+        WIDTH-24 && last_y < 20
+#endif
+    ) {
+#endif
         pointer_consumed = true; toggle_pause();
     } else if (paused) {
         pointer_consumed = true;
+#ifdef PXA_POCKET_RESPONSIVE
+        if(phase==Phase::DOWN)for(unsigned row=0;row<4;++row)if(milky::pause_row(row).contains(last_x,last_y)){
+            menu_row=int(row);menu_activate();break;
+        }
+#else
         if (phase == Phase::DOWN && last_x >= 56 && last_x < 232 && last_y >= 72 && last_y < 192) {
             menu_row = (last_y - 72) / 30; menu_activate();
         }
+#endif
     } else if (!pointer_consumed) game::pointer(phase, last_x, last_y);
     if (phase == Phase::UP || phase == Phase::CANCEL) pointer_active = false;
     pocket::redraw();
 }
 void draw_menu() {
+#ifdef PXA_POCKET_STUDIO
+    studio_menu(paused,menu_row,exit_requested);
+#else
+#ifdef PXA_POCKET_RESPONSIVE
+    milky::menu_draw(paused,menu_row,exit_requested);
+#else
     pocket::rect(WIDTH-24, 0, 24, 20, PANEL);
+#ifdef PXA_POCKET_SYSTEM_TEXT
+    system_text_add(WIDTH-24,-2,24,"=",ACCENT,2,1);
+#else
     pocket::text(WIDTH-19, 5, "=", ACCENT, 2);
+#endif
     if (!paused) return;
     pocket::rect(48, 32, 192, 180, BG); pocket::outline(48, 32, 192, 180, ACCENT);
     pocket::text(100, 43, tr("PAUSED", "已暂停"), INK, 2);
@@ -158,7 +215,11 @@ void draw_menu() {
         pocket::text(68, y+10, labels[i], i == menu_row ? BG : INK);
     }
     pocket::text(68, 198, exit_requested ? tr("SAVING...", "保存中...") : tr("A SELECT  B RESUME", "A 选择  B 返回"), MUTED);
+#endif
+
+#endif
 }
+
 void present() {
     if (!surface_ready || !dirty || background) return;
     if (!prepared) {
@@ -168,8 +229,18 @@ void present() {
             if (status == PXA_STATUS_WOULD_BLOCK) return;
             if (status != 4 || prepared_index > 1) __builtin_trap();
         }
-        canvas = logical_frame; game::draw(); draw_menu(); canvas = nullptr;
+#ifdef PXA_POCKET_STUDIO
+        canvas=frames+prepared_index*viewport.pixels();studio_begin();
+#else
+        canvas = logical_frame;
+#endif
+#ifdef PXA_POCKET_SYSTEM_TEXT
+        system_text_begin();
+#endif
+        game::draw(); draw_menu(); canvas = nullptr;
+#ifndef PXA_POCKET_STUDIO
         pocket_ui::resample(logical_frame, WIDTH, HEIGHT, frames + prepared_index*viewport.pixels(), viewport.width, viewport.height);
+#endif
         prepared = true; prepared_revision = revision;
     }
     // Retain an acquired/mapped or copied/staged frame across backpressure.
@@ -192,10 +263,19 @@ void present() {
         staged = false;
     }
     ++frame_id; prepared = false; dirty = revision != prepared_revision;
+#ifdef PXA_POCKET_STUDIO
+    if(!studio_present())pocket::redraw();
+#endif
+#ifdef PXA_POCKET_SYSTEM_TEXT
+    if(!system_text_present())pocket::redraw();
+#endif
 }
 int32_t handle_event(const uint8_t *bytes, uint32_t length) {
     pxa_event_t e;
     if (!pxa_parse_event(bytes, length, &e)) return PXA_STATUS_INTERNAL;
+#ifdef PXA_POCKET_SYSTEM_TEXT
+    if(native_images_event(e))return PXA_EVENT_HANDLED;
+#endif
     int32_t audio_status = handle_sound(e);
     if (audio_status != PXA_EVENT_UNHANDLED) return audio_status;
     int32_t preferences_status = handle_preferences(e);
@@ -251,7 +331,25 @@ int32_t handle_event(const uint8_t *bytes, uint32_t length) {
     }
     pxa_ui_environment_t env;
     if (pxa_ui_parse_environment_event(&e, &env)) {
-        if (!env.width || !env.height || (uint32_t(display_w) == env.width && uint32_t(display_h) == env.height)) return PXA_EVENT_HANDLED;
+        pointer_density = env.density_q16 ? env.density_q16 : 65536;
+#ifdef PXA_POCKET_STUDIO
+        bool geometry_changed=studio_geometry(env);
+        studio_density=env.density_q16?env.density_q16:65536;studio_hash=0;
+#endif
+#ifdef PXA_POCKET_RESPONSIVE
+        cancel_input();
+        milky::configure_screen(env.width,env.height,env.density_q16,env.safe_insets,env.display_shape,env.corner_radii);
+        pocket::redraw();
+#endif
+#ifdef PXA_POCKET_SYSTEM_TEXT
+        system_text_density=env.density_q16?env.density_q16:65536;
+        system_text_hash=0;
+#endif
+        if (!env.width || !env.height || (uint32_t(display_w) == env.width && uint32_t(display_h) == env.height
+#ifdef PXA_POCKET_STUDIO
+            && !geometry_changed
+#endif
+        )) return PXA_EVENT_HANDLED;
         display_w = env.width; display_h = env.height;
         cancel_input(); pocket::redraw();
         surface_ready = false;
@@ -280,7 +378,7 @@ void run() {
     game::init();
     if (loaded_size) { game::load(loaded, loaded_size); pxa_log_write(2, "Pocket: load completed"); }
     char message[160];
-    snprintf(message, sizeof(message), "Pocket: ready app=%s canvas=288x224 origin=%d,%d scale=%d", game::app_id(), viewport.x, viewport.y, viewport.host_scale);
+    snprintf(message, sizeof(message), "Pocket: ready app=%s canvas=%dx%d origin=%d,%d scale=%d", game::app_id(), WIDTH,HEIGHT,viewport.x, viewport.y, viewport.host_scale);
     pxa_log_write(2, message);
     while (!finished) {
         // Notifications must never form a backlog in front of input.
@@ -310,15 +408,27 @@ void run() {
 
 }
 
+
+#ifdef PXA_POCKET_STUDIO
+#include "../pocket-studio/drawing.inc"
+#endif
 namespace pocket {
+bool portrait_display() { return display_h > display_w; }
 void rect(int x, int y, int w, int h, uint16_t color) {
+#ifdef PXA_POCKET_STUDIO
+    studio_rect(x,y,w,h,color);return;
+#else
     if (!canvas || w <= 0 || h <= 0) return;
+#ifdef PXA_POCKET_SYSTEM_TEXT
+    system_text_occlude(x,y,w,h);
+#endif
     int x1 = x+w, y1 = y+h;
     if (x < 0) x = 0;
     if (y < 0) y = 0;
     if (x1 > WIDTH) x1 = WIDTH;
     if (y1 > HEIGHT) y1 = HEIGHT;
     for (int row = y; row < y1; ++row) for (int col = x; col < x1; ++col) canvas[row*WIDTH+col] = color;
+#endif
 }
 void clear(uint16_t color) { rect(0, 0, WIDTH, HEIGHT, color); }
 void outline(int x, int y, int w, int h, uint16_t color) {
@@ -337,7 +447,15 @@ void line(int x0, int y0, int x1, int y1, uint16_t color) {
 }
 int text_width(const char *s, int scale) { return pocket_ui::text_width(s, scale); }
 void text(int x, int y, const char *s, uint16_t color, int scale) {
+#ifdef PXA_POCKET_SYSTEM_TEXT
+    system_text_add(x,y,WIDTH-x,s,color,scale,0);
+#else
+#ifdef PXA_POCKET_STUDIO
+    studio_add(x,y,std::min(WIDTH-x,pocket_ui::text_width(s,scale)+3),s,color,scale,0);
+#else
     pocket_ui::draw_text(x, y, s, scale, [color](int px, int py) { rect(px, py, 1, 1, color); });
+#endif
+#endif
 }
 void tone(float frequency, float duration_seconds, float when_seconds) {
     add_tone(frequency, duration_seconds, when_seconds);
@@ -352,6 +470,18 @@ void log(const char *message) { pxa_log_write(2, message); }
 extern "C" int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     pxa_ui_environment_t env{};
     if (pxa_ui_parse_start_environment(config, length, &env)) { display_w=env.width; display_h=env.height; }
+    pointer_density = env.density_q16 ? env.density_q16 : 65536;
+#ifdef PXA_POCKET_RESPONSIVE
+    milky::configure_screen(display_w,display_h,env.density_q16,env.safe_insets,env.display_shape,env.corner_radii);
+#endif
+#ifdef PXA_POCKET_SYSTEM_TEXT
+    system_text_density=env.density_q16?env.density_q16:65536;
+#endif
+
+#ifdef PXA_POCKET_STUDIO
+    studio_geometry(env);
+    studio_density=env.density_q16?env.density_q16:65536;
+#endif
     pocket::set_english(false);
     snprintf(save_key, sizeof(save_key), "%s.save.v1", game::app_id());
     snprintf(preferences_key, sizeof(preferences_key), "%s.prefs.v1", game::app_id());
@@ -360,6 +490,13 @@ extern "C" int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
         !pxa_ui_create(&tx, 1, 0, 0, PXA_UI_NODE_ROOT) ||
         !pxa_ui_set_rgba(&tx, 1, PXA_UI_PROPERTY_BACKGROUND, 0) ||
         !pxa_ui_set_event_mask(&tx, 1, PXA_UI_EVENT_MASK_CONTROLLER_STATE | PXA_UI_EVENT_MASK_POINTER) ||
+#ifdef PXA_POCKET_SYSTEM_TEXT
+        !system_text_create(&tx) ||
+#endif
+
+#ifdef PXA_POCKET_STUDIO
+        !studio_create(&tx) ||
+#endif
         !pxa_ui_transaction_commit(&tx)) return PXA_STATUS_INTERNAL;
     int32_t status = pxa_window_fullscreen();
     if (status) return status;

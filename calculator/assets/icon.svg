@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<title>Calculator — original CC0 icon</title><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#234455"/><stop offset="1" stop-color="#091923"/></linearGradient></defs>
+<rect width="128" height="128" rx="28" fill="url(#bg)"/><rect x="23" y="12" width="82" height="106" rx="15" fill="#36515e"/><rect x="25" y="14" width="78" height="102" rx="13" fill="#122b37"/>
+<rect x="32" y="23" width="64" height="28" rx="6" fill="#8ee4bf"/><path d="M65 32h23m-23 9h23" stroke="#174335" stroke-width="4" stroke-linecap="round"/>
+<g fill="#3c5a69"><rect x="32" y="61" width="16" height="13" rx="4"/><rect x="56" y="61" width="16" height="13" rx="4"/><rect x="32" y="81" width="16" height="13" rx="4"/><rect x="56" y="81" width="16" height="13" rx="4"/><rect x="32" y="101" width="40" height="7" rx="3"/></g>
+<rect x="80" y="61" width="16" height="47" rx="5" fill="#e7bc78"/><path d="M84 83h8m-4-4v8" stroke="#43382d" stroke-width="2" stroke-linecap="round"/></svg>

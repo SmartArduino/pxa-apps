@@ -1,0 +1,20 @@
+{
+  "tool": "built-in image_gen.imagegen",
+  "date": "2026-10-29",
+  "prompt": "Use case: stylized-concept. Asset type: TRANSPARENT GAME SPRITE ATLAS for a cozy detailed pixel art seaside coffee shop. Generate ONE sprite sheet, exactly 4 columns by 2 rows of equal SQUARE cells, landscape 2:1 aspect ratio, no borders, no text, no UI. Transparent background. Each character centered in its own cell, same scale, full body, generous clear padding between sprites. Four characters left to right: (1) friendly barista with cream apron, white shirt, dark trousers, warm tan skin, small dark brown hair, NO tall chef hat, holding a tiny ceramic coffee cup; (2) young woman with auburn bob, teal cardigan and cream skirt; (3) elderly man with darker skin, gray hair and soft ochre sweater, navy trousers; (4) young traveler with olive skin, dark curly hair and coral jacket. Top row: all four relaxed standing facing slightly front left, clearly visible kind face and two eyes. Bottom row: same four identical characters in second subtle idle pose, slight head tilt, breathing and arms shifted; barista pours the cup. Perspective: elevated front three quarter view of a 2D cafe management game. Lovingly shaded premium indie pixel art, natural human proportions chibi about 3 heads tall, readable dark warm outlines, layered fabric shading, subtle warm golden sunlight from upper right. Match richly detailed pixel painted cafe backgrounds. Crisp discrete pixel clusters, not vector and not smooth 3D. Every sprite entirely isolated on transparency without shadows extending outside its cell. NO floor NO scenery NO objects except barista cup. No written characters anywhere.",
+  "transparent_background": true,
+  "production_cell": [
+    64,
+    80
+  ],
+  "grid": [
+    4,
+    2
+  ],
+  "pivot": "bottom-center, y=76",
+  "production_size": [
+    256,
+    160
+  ],
+  "encoding": "RGB565 indexed; palette index 0 transparent; regenerate with common/pocket-studio/prepare_sprites.py"
+}

@@ -12,7 +12,11 @@ static uint16_t blend(unsigned back,unsigned front,unsigned alpha) {
     return r|g|b;
 }
 int main(void) {
-    const unsigned sizes[][2]={{200,160},{296,240},{320,240},{240,320},{480,480},{800,480}};
+    const unsigned sizes[][2]={{160,160},{176,176},{200,160},{296,240},{320,240},{240,320},{480,480},{800,480}};
+    unsigned canvas_w=176,canvas_h=176;
+    assert(gb_display_canvas(&canvas_w,&canvas_h)==1 && canvas_w==176 && canvas_h==176);
+    canvas_w=159;assert(!gb_display_canvas(&canvas_w,&canvas_h));
+    canvas_w=801;assert(!gb_display_canvas(&canvas_w,&canvas_h));
     gb_controls_t *c=malloc(sizeof(*c));assert(c);
     for(unsigned n=0;n<sizeof(sizes)/sizeof(*sizes);++n) {
         unsigned w=sizes[n][0],h=sizes[n][1],stride=w+7;

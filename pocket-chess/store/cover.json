@@ -1,0 +1,9 @@
+{
+  "kind": "illustrated-cover",
+  "generator": "built-in image_gen",
+  "width": 1448,
+  "height": 1086,
+  "sha256": "4133debf79287e4abf7fa424c5b65d42d56691386abee66f7643751b75440b23",
+  "runtime_screenshot": false,
+  "prompt": "Use case: illustration-story. Create original promotional cover artwork for Pocket Chess. Use the attached icon as the palette and style reference: ivory chess pieces against a dark forest-teal checkerboard. Landscape 4:3 composition intended 1280x960, opaque. An elegant compact chessboard in isometric perspective with a clear ivory king, knight and pawn, a few opposing deep-teal pieces, tactile subtly chamfered block forms and a calm thoughtful composition. Minimal premium pixel-inspired low-poly illustration, clean silhouettes, gentle soft shadows, forest green, sage and warm ivory. Board squares alternate coherently and pieces sit on squares, no impossible extra appendages. Readable at thumbnail size, comfortable safe margins. No text, numbers, coordinates, logo, watermark, UI, move arrows, fake screenshot or device frame. One complete original cover."
+}

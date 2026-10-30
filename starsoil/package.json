@@ -1,0 +1,74 @@
+{
+  "format": "pxa-package-source-0.2",
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "id": "pxa-starsoil",
+  "version": "0.9.1",
+  "release_sequence": 16,
+  "name": "星壤物语 Starsoil",
+  "description": "原创2D像素沙盒：探索森林、草甸、沙漠、雪原、雨林与晶洞，采矿建造、合成装备、拜访NPC、挑战星核守卫。衣服、护甲和披风随角色动画分层显示。",
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  },
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 3145728,
+      "pinned": true
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "execution_model": "main-loop",
+      "artifact": "aot",
+      "services": [
+        "surface",
+        "clock",
+        "window",
+        "ui",
+        "log",
+        "storage",
+        "fs",
+        "permission",
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            10
+          ]
+        }
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "required": false,
+      "scope": "media"
+    }
+  ],
+  "icon": "assets/icon-v2.png"
+}

@@ -1,0 +1,9 @@
+{
+  "source": "../assets/icon.py",
+  "tool": "Nearest-neighbor export of original code-generated pixel icon",
+  "dimensions": [
+    512,
+    512
+  ],
+  "sha256": "02871bd545261728b3084350afe342ef7f7e8bd82f471263c772a5b6d92f54f6"
+}

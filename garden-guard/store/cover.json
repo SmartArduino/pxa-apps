@@ -1,0 +1,10 @@
+{
+  "tool": "OpenAI image_gen (built-in)",
+  "created": "2026-10-29",
+  "artwork": "cover.png",
+  "reference_images": [
+    "https://app.doit.am/media/apps/8/410?width=480&format=jpeg"
+  ],
+  "prompt": "Use case: ads-marketing.\nAsset type: premium landscape app-store cover illustration, 16:9 aspect ratio, approximately 1536x864.\nApp title (exact text): \"花园保卫战\".\nReference role: the provided existing app icon and/or actual app screen establishes the app's subject, palette and visual identity. Use it for thematic guidance; create a NEW promotional cover illustration. Do not reproduce a screenshot or the app interface.\nScene and style: A charming grid of lush garden plots at sunset, with a cheerful original sunflower, round-leaf green pea-shooter-like plant inspired by the small reference icons, a sturdy seedling and a few comically simple shadowy garden pests beyond a fence. Rich forest green, bright leaf green and warm sunflower yellow. Playful polished garden-defense promotional illustration, no gore, no franchise logos, no invented interface.\nComposition: single clear landscape composition with title placed prominently in the left third and a bold, beautiful hero scene across the center and right. Keep all essential content within generous safe margins; readable and attractive at thumbnail sizes. Carefully typeset \"花园保卫战\" exactly, using a polished bold Chinese display treatment appropriate to the app, excellent contrast and balanced spacing.\nText: only \"花园保卫战\". Small numeric puzzle-tile labels are allowed when the scene specifically calls for them. No subtitles, slogans, badges, watermarks or other words.\nConstraints: accurate to the app's actual advertised purpose, original appealing artwork, crisp edges and purposeful lighting. No fake UI, menus, system bars, navigation indicators, debug overlays, screenshots, device framing around an app screenshot, store ratings, payment claims or additional logos. Do not imply extra app features. Opaque background.",
+  "sha256": "1746a01df8fdff72f1843993890455d94b7648ef7fa412b2316bda30ee335205"
+}

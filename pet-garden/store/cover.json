@@ -1,0 +1,9 @@
+{
+  "kind": "illustrated-cover",
+  "generator": "built-in image_gen",
+  "width": 1448,
+  "height": 1086,
+  "sha256": "9e5b632813be885c2c0a3e36099d5eac108f72411585a9a63f36f2007c57e1fa",
+  "runtime_screenshot": false,
+  "prompt": "Use case: illustration-story. Create original promotional cover artwork for Pet Garden, a gentle pixel-pet game. Use the attached icon as the character and palette reference: Pip is a tiny mint-green plant bunny with upright pink-lined ears, dark square eyes, a small coral nose and a leafy sprout on its head. Landscape exact 4:3 composition intended 1280x960, opaque. Show Pip happily tending a cozy berry garden beside a warm little room, with berry bushes, a watering can, soft flowers and a small basket. Preserve the character's friendly recognizable shape, a refined pixel-art / illustrated paper-diorama style, warm sunlight, sage green, pastel sky-blue and soft cream. A few floating blossom petals imply growth and care. Clear focal subject and generous framing. No words, lettering, numbers, UI, menus, task bars, fake screenshots, device frame, logo or watermark. One full-bleed cover, not a runtime screenshot."
+}

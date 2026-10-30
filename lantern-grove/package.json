@@ -1,13 +1,73 @@
 {
   "format": "pxa-package-source-0.2",
-  "min_sdk": [2, 1], "target_sdk": [2, 1], "compile_sdk": [2, 1],
-  "id": "pxa-lantern-grove", "version": "1.1.1", "name": "Lantern Grove",
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "id": "pxa-lantern-grove",
+  "version": "1.4.1",
+  "name": "Lantern Grove",
   "description": "原创CC0发光树林：自动积累流光、露水和种子，收集萤火、升级树冠、水井、灯笼与小屋，完成八段林间日记。",
-  "publisher": {"handle": "lucinhu", "display_name": "lucinhu"}, "release_sequence": 3,
-  "build": {"system": "cmake", "source_dir": ".", "linear_memory": {"maximum_bytes": 1048576, "pinned": true}},
-  "components": [{"id": "main", "kind": "ui", "cmake_target": "pxa_main", "execution_model": "main-loop", "artifact": "aot",
-    "services": ["surface", "clock", "window", "ui", "log", "storage", "permission", {"name": "audio", "min_version": [0, 10]}],
-    "wasi": {"version": "preview1", "libc": "wasi-libc", "features": ["monotonic-clock", "wall-clock"]}}],
-  "permissions": [{"name": "audio.playback", "required": false, "scope": "media"}],
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  },
+  "release_sequence": 8,
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 1048576,
+      "pinned": true
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "execution_model": "main-loop",
+      "artifact": "aot",
+      "services": [
+        "surface",
+        "clock",
+        "window",
+        "ui",
+        "log",
+        "storage",
+        "permission",
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            10
+          ]
+        }
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "required": false,
+      "scope": "media"
+    }
+  ],
   "icon": "assets/icon.png"
 }

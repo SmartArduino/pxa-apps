@@ -5,7 +5,11 @@
 #include "../pocket-ui/i18n.hpp"
 
 namespace pocket {
+#if defined(PXA_POCKET_UTILITY) || defined(PXA_POCKET_FILL)
+inline int WIDTH = 288, HEIGHT = 224;
+#else
 constexpr int WIDTH = 288, HEIGHT = 224;
+#endif
 // PXA SDK 2.1's maximum single storage value; keep wire headers separate.
 constexpr size_t SAVE_CAPACITY = 2048;
 enum class Key : uint8_t { UP, RIGHT, DOWN, LEFT, A, B, X, Y, L, R, START, SELECT };
@@ -33,6 +37,8 @@ void log(const char *message);
 // Continuous controller state; false while paused/backgrounded. Touch is delivered
 // via pointer(), so games can combine their captured gesture with held(A).
 bool held(Key key);
+bool portrait_display();
+void open_menu();
 // Draw-only access. framebuffer() is nullptr outside game::draw().
 void pixel(int x, int y, uint16_t color);
 uint16_t *framebuffer();
@@ -54,6 +60,12 @@ void key(pocket::Key key);
 // Captured first pointer, coordinates relative to the actual canvas. Outside
 // releases/cancels still arrive, with coordinates allowed outside the canvas.
 void pointer(pocket::Phase phase, int x, int y);
+#ifdef PXA_POCKET_CALCULATOR
+// Keep calculator and its shared menu in the same input mode. Connections and
+// idle controller reports do not enable the navigation focus.
+bool navigation_visible();
+void set_navigation(bool visible);
+#endif
 // Elapsed foreground milliseconds, capped at 100. Use bounded work per call.
 void tick(uint32_t elapsed_ms);
 void draw();

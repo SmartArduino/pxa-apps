@@ -1,6 +1,6 @@
 /* Production Store AOT + Host/Storage/LVGL. Only HTTP is synthetic; no real
  * website account or secret is used. Exercises simultaneous catalog/account
- * requests, short-code login, restored credentials and shared likes. */
+ * requests, short-code login, touch scrolling, restored credentials and shared likes. */
 #define _POSIX_C_SOURCE 200809L
 #undef NDEBUG
 #define PXSYS_PRODUCT_RUNNER_LIBRARY 1
@@ -74,6 +74,49 @@ static void check_button(probe_t *p,const char *text){
     lv_obj_t *obj=label(p->host->content_parent,text);assert(obj);obj=lv_obj_get_parent(obj);
     assert(lv_obj_is_clickable(obj) && lv_obj_is_click_focusable(obj));
 }
+static lv_point_t pointer_position;
+static bool pointer_down;
+static void read_pointer(lv_indev_t *indev,lv_indev_data_t *data){
+    (void)indev;data->point=pointer_position;
+    data->state=pointer_down?LV_INDEV_STATE_PRESSED:LV_INDEV_STATE_RELEASED;
+}
+static void swipe_account(probe_t *p,lv_obj_t *body,bool up){
+    lv_area_t area;lv_obj_get_coords(body,&area);
+    const int32_t start=up?area.y2-12:area.y1+12;
+    const int32_t end=up?area.y1+12:area.y2-12;
+    lv_indev_t *input=lv_indev_create();assert(input);
+    lv_indev_set_type(input,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(input,read_pointer);
+    pointer_position=(lv_point_t){(area.x1+area.x2)/2,start};pointer_down=true;
+    lv_indev_read(input);
+    for(unsigned i=1;i<=12;++i){
+        SDL_Delay(12);pointer_position.y=start+(end-start)*(int)i/12;lv_indev_read(input);
+    }
+    pointer_down=false;lv_indev_read(input);lv_indev_delete(input);
+    for(unsigned i=0;i<20;++i){SDL_Delay(10);(void)lv_timer_handler();}
+    dispatch_component_events(p->host);lv_obj_update_layout(p->host->content_parent);
+}
+static void check_account_scroll(probe_t *p){
+    lv_obj_t *code=label(p->host->content_parent,"ABCD-EFGH");assert(code);
+    lv_obj_t *body=lv_obj_get_parent(code);
+    lv_obj_t *cancel_text=label(p->host->content_parent,"取消");assert(cancel_text);
+    lv_obj_t *cancel=lv_obj_get_parent(cancel_text);
+    /* Start at the top even if focus navigation initially revealed Cancel.
+     * Feed real LVGL pointer samples: synthetic scroll/action events bypass
+     * hit testing and missed the unresponsive account text/background. */
+    lv_obj_scroll_to_y(body,0,LV_ANIM_OFF);lv_obj_update_layout(body);capture(p,"code-top");
+    const int32_t overflow=lv_obj_get_scroll_bottom(body);
+    if(overflow<=0)return;
+    swipe_account(p,body,true);
+    fprintf(stderr,"Account pointer swipe: overflow=%d, offset=%d\n",overflow,(int)lv_obj_get_scroll_y(body));
+    assert(lv_obj_get_scroll_y(body)>0);
+    for(unsigned i=0;i<8 && lv_obj_get_scroll_bottom(body)>0;++i)swipe_account(p,body,true);
+    lv_area_t viewport,button;lv_obj_get_coords(body,&viewport);lv_obj_get_coords(cancel,&button);
+    assert(button.y1>=viewport.y1 && button.y2<=viewport.y2);capture(p,"code-bottom");
+    const int32_t bottom=lv_obj_get_scroll_y(body);
+    swipe_account(p,body,false);assert(lv_obj_get_scroll_y(body)<bottom);
+    for(unsigned i=0;i<8 && lv_obj_get_scroll_y(body)>0;++i)swipe_account(p,body,false);
+    assert(lv_obj_get_scroll_y(body)<=0);capture(p,"code-return-top");
+}
 static void pump(void *ctx){
     probe_t *p=ctx;product_host_t *h=p->host;if(p->done||!h||!h->active_component)return;
     const uint64_t now=now_us(NULL);assert(now-p->began<UINT64_C(30000000));
@@ -87,7 +130,7 @@ static void pump(void *ctx){
         if(p->restore){assert(label(h->content_parent,"登录"));assert(!label(h->content_parent,"测试用户"));p->done=true;h->exit_requested=1;return;}
         if(!label(h->content_parent,"ABCD-EFGH"))return;
         assert(!label(h->content_parent,DEVICE) && !label(h->content_parent,TOKEN));
-        check_button(p,"取消");capture(p,"code");
+        check_button(p,"取消");capture(p,"code");check_account_scroll(p);
     }else if(p->step==3){
         if(!label(h->content_parent,"测试用户"))return;assert(polls==1);check_button(p,"退出登录");capture(p,"signed-in");click(p,63);click(p,200);
     }else if(p->step==4){if(!label(h->content_parent,"点赞  ·  0"))return;capture(p,"before-like");click(p,1813);}
@@ -103,9 +146,11 @@ int main(int argc,char **argv){
     if(getenv("STORE_PROBE_WIDTH"))options.width=atoi(getenv("STORE_PROBE_WIDTH"));
     if(getenv("STORE_PROBE_HEIGHT"))options.height=atoi(getenv("STORE_PROBE_HEIGHT"));
     if(getenv("STORE_PROBE_DPI"))options.density_dpi=atoi(getenv("STORE_PROBE_DPI"));
+    if(getenv("STORE_PROBE_SHAPE"))options.display_shape=atoi(getenv("STORE_PROBE_SHAPE"));
+    if(getenv("STORE_PROBE_RADIUS"))options.corner_radius=atoi(getenv("STORE_PROBE_RADIUS"));
     probe_t p={0};p.directory=argv[3];p.began=now_us(NULL);p.restore=getenv("STORE_PROBE_RESTORE")!=NULL;
     assert(!run_product_simulator(&options,NULL,NULL,pump,&p,NULL,&p,bind_probe,NULL,NULL,NULL));
     assert(p.done && !p.host && !exchanges);
-    printf("Store account AOT/Host: login, likes, focus controls, storage restore=%u, peak HTTP=%u passed\n",p.restore,peak);
+    printf("Store account AOT/Host: login, touch scrolling, likes, focus controls, storage restore=%u, peak HTTP=%u passed\n",p.restore,peak);
     return 0;
 }

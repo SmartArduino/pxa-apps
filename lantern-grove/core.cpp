@@ -77,6 +77,19 @@ bool achieved(const State &s,unsigned g) {
     default:return false;
     }
 }
+uint16_t goal_progress(const State &s,unsigned g){
+    auto ratio=[](uint32_t value,uint32_t target){return value>=target?1000u:unsigned(value*1000u/target);};
+    unsigned progress=0;
+    switch(g){
+    case 0:progress=ratio(s.collected,10);break;case 1:progress=ratio(s.level[0],2);break;
+    case 2:progress=ratio(s.level[1],1);break;case 3:progress=ratio(s.collected,60);break;
+    case 4:progress=ratio(s.level[2],1);break;case 5:progress=ratio(s.level[3],1);break;
+    case 6:{unsigned a=ratio(s.level[0],4),b=ratio(s.level[1],2);progress=a<b?a:b;break;}
+    case 7:{unsigned a=ratio(s.level[2],3),b=ratio(s.level[3],2),c=ratio(s.collected,1800);progress=a<b?a:b;if(c<progress)progress=c;break;}
+    default:break;
+    }
+    return uint16_t(progress);
+}
 bool claim(State &s,unsigned g) {
     if(g>=8||s.goals!=uint8_t((1u<<g)-1)||!achieved(s,g)) return false;
     s.goals|=uint8_t(1u<<g);

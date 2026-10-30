@@ -3,8 +3,10 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#if !defined(PXA_POCKET_SYSTEM_TEXT) && !defined(PXA_POCKET_STUDIO)
 #include "glyphs.hpp"
 #include "ascii.hpp"
+#endif
 
 namespace pocket {
 enum class Locale : uint8_t { ZH = 0, EN = 1 };
@@ -37,6 +39,7 @@ inline uint32_t next_utf8(const char *&s) {
     s += length; return cp;
 }
 // Ten rows, with the left pixel in bit 9. The generated table is sorted.
+#if !defined(PXA_POCKET_SYSTEM_TEXT) && !defined(PXA_POCKET_STUDIO)
 inline const uint16_t *glyph(uint32_t cp) {
     size_t first = 0, last = sizeof(cjk_glyphs) / sizeof(cjk_glyphs[0]);
     while (first < last) {
@@ -47,6 +50,7 @@ inline const uint16_t *glyph(uint32_t cp) {
     return first < sizeof(cjk_glyphs)/sizeof(cjk_glyphs[0]) && cjk_glyphs[first].codepoint == cp
         ? cjk_glyphs[first].rows : nullptr;
 }
+#endif
 inline int advance(uint32_t cp) { return cp < 0x80 ? 6 : 10; }
 inline int text_width(const char *s, int scale = 1) {
     if (!s || scale < 1 || scale > 4) return 0;
@@ -59,6 +63,7 @@ inline int text_width(const char *s, int scale = 1) {
     return current > width ? current : width;
 }
 // Pixel callback receives only x/y; callers capture their native color/context.
+#if !defined(PXA_POCKET_SYSTEM_TEXT) && !defined(PXA_POCKET_STUDIO)
 template<class Pixel>
 inline void draw_text(int x, int y, const char *s, int scale, Pixel plot) {
     if (!s || scale < 1 || scale > 4) return;
@@ -80,4 +85,5 @@ inline void draw_text(int x, int y, const char *s, int scale, Pixel plot) {
         x += advance(cp)*scale;
     }
 }
+#endif
 }

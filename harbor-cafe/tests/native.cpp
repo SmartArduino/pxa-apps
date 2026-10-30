@@ -75,7 +75,15 @@ int main(int argc,char **argv) {
  game::pointer(Phase::DOWN,143,179);game::pointer(Phase::UP,-30,260);same(current(),before);tap(143,179);CHECK(current().customers[0].stage==2);game::key(Key::A);CHECK(current().cook_recipe==0);CHECK(current().stock[0]==7);roundtrip(current());live(2400);game::key(Key::A);CHECK(current().total_served==1&&current().coins==40);CHECK(test_runtime::tones>=3);
  game::key(Key::X);CHECK(current().view==cafe::View::SUPPLY);tap(140,68);CHECK(current().stock[0]==11&&current().coins==32);game::key(Key::B);game::key(Key::Y);CHECK(current().view==cafe::View::UPGRADES);game::key(Key::A);CHECK(current().level[0]==1&&current().coins==12);game::key(Key::B);
  before=current();game::reset();auto after=current();CHECK(after.coins==before.coins&&after.level[0]==1&&after.stock[0]==before.stock[0]&&after.day_ms==0);
- wrong.ready_recipe=1;restore(wrong);tap(63,135);CHECK(current().ready_recipe==cafe::NONE&&current().cogs==3);
+ wrong.ready_recipe=1;restore(wrong);before=current();tap(63,135);same(current(),before);tap(112,132);CHECK(current().ready_recipe==cafe::NONE&&current().cogs==3);
+ // Smart tray chooses the most urgent accepted match; brewing taps never discard.
+ State tray;tray.ready_recipe=0;tray.table=2;tray.customers[0]={2,0,0,15000};tray.customers[1]={2,0,1,5000};tray.customers[2]={1,1,2,10000};restore(tray);
+ game::pointer(Phase::DOWN,63,120);game::pointer(Phase::CANCEL,63,120);game::pointer(Phase::UP,63,120);same(current(),tray);
+ State expected=tray;expected.table=1;CHECK(cafe::act(expected)==Event::SOLD);expected.table=2;
+ tap(63,120);after=current();same(after,expected);CHECK(after.total_served==1&&after.ready_recipe==cafe::NONE&&after.customers[1].stage==0&&after.customers[0].stage==2);
+ CHECK(after.table==2); // Next most urgent guest is automatically selected.
+ tray.ready_recipe=cafe::NONE;tray.cook_recipe=0;tray.cook_ms=1000;restore(tray);tap(63,120);same(current(),tray);
+
  // Old v1 sound-off saves remain silent through idle ticks and failed actions.
  State muted;cafe::fresh(muted);muted.sound=0;game::init();restore(muted);
  unsigned quiet=test_runtime::tones;live(100);game::key(Key::A);CHECK(current().sound==0&&test_runtime::tones==quiet);

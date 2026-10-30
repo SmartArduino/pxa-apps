@@ -92,6 +92,7 @@ translations:
   status.install_success: 安装成功
   status.download_failed: 下载失败，请检查网络或票据
   status.install_failed: 安装失败，请重试
+  status.transfer_failed: 连接或文件传输失败，请重试
   status.install_denied: 系统拒绝了安装服务请求
   status.install_busy: 另一个应用操作尚未完成，请稍后重试
   status.install_resources: 系统可用内存不足，请稍后重试

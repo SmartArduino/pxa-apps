@@ -29,6 +29,8 @@ namespace motion {
  std::string last_focus;
  std::string sensor_status="正在连接体感";
  Derived& game(){return static_cast<Derived&>(*this);}
+ static constexpr uint32_t frame_period(){if constexpr(requires{Derived::frame_period_ms;})return Derived::frame_period_ms;else return 33;}
+ static constexpr uint32_t sensor_period(){if constexpr(requires{Derived::sensor_period_ms;})return Derived::sensor_period_ms;else return 50;}
  void log(std::string_view s){(void)ctx->log().write(pxa::LogLevel::info,s);}
  pxa::Result<void> on_start(pxa::Context& c,std::span<const std::byte> config){ctx=&c;if(auto d=pxa::ui::decode_start_display(config))display=*d;
    uint32_t seed=0;if(getentropy(&seed,sizeof seed)||!seed)seed=0x9e3779b9;random.state=seed;
@@ -52,7 +54,7 @@ namespace motion {
    else for(unsigned i=0;i<font_pages;++i){char path[64];std::snprintf(path,sizeof path,"assets/font-%u.pxr",i);auto a=co_await ctx->assets().load(pxa::AssetKind::texture,path);
      if(!a)co_return std::unexpected(a.error());fonts[i].emplace(std::move(*a));if(auto bound=renderer->bind_asset(*fonts[i],{uint8_t(i)});!bound)co_return bound;}
 #endif
-   ready=true;game().started();last_tick=0;(void)ctx->clock().set_period(33);log(game().ready_message());render();co_return pxa::Result<void>{};
+   ready=true;game().started();last_tick=0;(void)ctx->clock().set_period(frame_period());log(game().ready_message());render();co_return pxa::Result<void>{};
  }
  pxa::Task<void> preauthorize(){
    std::array<pxa::SensorDescriptor,8> list{};auto count=co_await ctx->sensors().list(list);
@@ -75,7 +77,7 @@ namespace motion {
  struct ApprovalClock {
    Runtime& owner;
    explicit ApprovalClock(Runtime& value):owner(value){(void)owner.ctx->clock().set_period(0);}
-   ~ApprovalClock(){owner.last_tick=0;owner.dirty=true;if(owner.ready&&owner.ctx->foreground())(void)owner.ctx->clock().set_period(33);}
+   ~ApprovalClock(){owner.last_tick=0;owner.dirty=true;if(owner.ready&&owner.ctx->foreground())(void)owner.ctx->clock().set_period(frame_period());}
  };
  pxa::Task<void> connect_sensors(uint64_t epoch){
    std::array<pxa::SensorDescriptor,8> list{};auto count=co_await ctx->sensors().list(list);
@@ -96,9 +98,9 @@ namespace motion {
    if(want_gyro&&gi>=0&&!rotation_denied){auto gp=co_await ctx->permissions().acquire("sensor.read","motion.angular-velocity");
      if(epoch!=connection_epoch||!ctx->foreground())co_return pxa::Result<void>{};if(gp)gyro_permission=std::move(*gp);else rotation_denied=true;}
    }
-   auto &ad=list[ai];auto as=co_await ctx->sensors().subscribe(ad,std::clamp(50u,ad.min_period_ms,ad.max_period_ms),acc_permission);
+   auto &ad=list[ai];auto as=co_await ctx->sensors().subscribe(ad,std::clamp(sensor_period(),ad.min_period_ms,ad.max_period_ms),acc_permission);
    if(epoch!=connection_epoch||!ctx->foreground())co_return pxa::Result<void>{};if(as)acceleration=std::move(*as);
-   if(gyro_permission&&gi>=0){auto &gd=list[gi];auto gs=co_await ctx->sensors().subscribe(gd,std::clamp(50u,gd.min_period_ms,gd.max_period_ms),gyro_permission);
+   if(gyro_permission&&gi>=0){auto &gd=list[gi];auto gs=co_await ctx->sensors().subscribe(gd,std::clamp(sensor_period(),gd.min_period_ms,gd.max_period_ms),gyro_permission);
      if(epoch!=connection_epoch||!ctx->foreground())co_return pxa::Result<void>{};if(gs)rotation=std::move(*gs);}
    connecting=false;sensor_status=acceleration?"体感已连接":"体感暂不可用，可用按键";dirty=true;
    log(rotation?"Motion connected acc=1 gyro=1":acceleration?"Motion connected acc=1 gyro=0":"Motion unavailable");co_return pxa::Result<void>{};
@@ -144,6 +146,6 @@ namespace motion {
    return true;
  }
  void on_background(pxa::Context&){backgrounded=true;if constexpr(requires(Derived& app){app.sounds;})game().sounds.suspend();close_motion();controller.reset();wait_release=true;repeat_at=0;pointer_down=false;controls.pressed=-1;last_tick=0;game().background();(void)ctx->clock().set_period(0);dirty=true;}
- void on_foreground(pxa::Context&){last_tick=0;wait_release=backgrounded;dirty=true;if constexpr(requires(Derived& app){app.sounds;})game().sounds.resume();(void)ctx->window().fullscreen(pxa::WindowBarMode::hidden,pxa::WindowBarMode::hidden);if(ready){game().foreground();if(want_motion)connect();}(void)ctx->clock().set_period(33);}
+ void on_foreground(pxa::Context&){last_tick=0;wait_release=backgrounded;dirty=true;if constexpr(requires(Derived& app){app.sounds;})game().sounds.resume();(void)ctx->window().fullscreen(pxa::WindowBarMode::hidden,pxa::WindowBarMode::hidden);if(ready){game().foreground();if(want_motion)connect();}(void)ctx->clock().set_period(frame_period());}
 };
 }

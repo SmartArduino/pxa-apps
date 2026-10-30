@@ -18,4 +18,6 @@ tools/app.sh build marble-maze --board doit-gamekit-1 --target esp32s3 --aot-onl
 
 模拟器使用 `--target simulator`。资源生成与测试见 [共用支持代码](../common/motion-games/README.md)。体感只请求加速度读取权限，音效另外请求可选的声音播放权限；倾斜控制使用重力方向，避免积分角速度的累计漂移。代码、原创图标与 PXA SDK 使用 MIT；字形的 SIL OFL 声明完整保存在 `assets/NOTICE.txt`。
 
+游戏请求16毫秒的绘图节拍和20毫秒的传感器订阅周期，订阅周期遵守设备声明的范围。物理模拟仍按实际经过时间推进，绘图频率不改变弹珠速度；实际显示帧率取决于设备的绘制与显示管线。
+
 文字使用设备系统字体。拾星、碰壁和过关采用简短的原创合成音效；设置及暂停页右上角可开关音效，偏好单独保存，后台停止声音。

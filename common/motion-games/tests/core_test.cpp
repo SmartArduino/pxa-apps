@@ -33,8 +33,18 @@ void dice_test(){Random rng;dice::Model d;assert(!d.valid&&d.selected==2);
  std::array<unsigned,6> bins{};for(unsigned i=0;i<60000;++i)++bins[rng.below(6)];for(auto b:bins)assert(b>9000&&b<11000);
 }
 void motion_test(){motion::Motion m;m.calibrate();uint64_t now=1000000;for(unsigned i=0;i<30;++i){now+=50000;assert(!m.acceleration({0,0,9806650},now));}assert(m.calibrated&&!m.calibrating&&m.fresh(now));assert(!m.fresh(now+500000));
- for(unsigned i=0;i<30;++i){now+=50000;assert(!m.acceleration({0,-2451662,9498000},now));}assert(m.tilt().x>.4f);m.flip_x=true;assert(m.tilt().x<-.4f);m.flip_x=false;m.rotation=1;assert(m.tilt().y>.4f);
+ for(unsigned i=0;i<30;++i){now+=50000;assert(!m.acceleration({0,2451662,9498000},now));}assert(m.tilt().x>.4f);m.flip_x=true;assert(m.tilt().x<-.4f);m.flip_x=false;m.rotation=1;assert(m.tilt().y>.4f);
  m.suspend();now+=2000000;assert(!m.acceleration({0,0,9806650},now));assert(!m.acceleration({20000000,0,9806650},now+=150000));assert(m.acceleration({-20000000,0,9806650},now+=150000));assert(!m.acceleration({20000000,0,9806650},now+=150000));
  marble::Profile p;auto data=p.encode();marble::Profile q;assert(q.decode(data));data[24]^=std::byte{1};assert(!q.decode(data));
 }
-int main(){dice_test();motion_test();for(unsigned seed=1;seed<=500;++seed){maze_test(seed,false,false);maze_test(seed,true,false);maze_test(seed,false,true);}std::puts("PASS: dice count/history/codec/distribution; 1500 tiered mazes, 90 physics solves, 3M collision steps; exact resume, calibration, mirror, stale samples and shake debounce");}
+void downhill_test(){
+ // Canonical Host-frame fixtures: lift right, left, top, bottom. The ball
+ // moves to the opposite edge in raster coordinates, without board checks.
+ const int32_t pose[][3]={{0,-4903325,8492805},{0,4903325,8492805},
+                         {4903325,0,8492805},{-4903325,0,8492805}};
+ const motion::Vec expected[]={{-1,0},{1,0},{0,1},{0,-1}};
+ for(unsigned i=0;i<4;++i){motion::Motion input;input.acceleration({pose[i][0],pose[i][1],pose[i][2]},1000000);
+  const auto tilt=input.tilt();assert(tilt.x*expected[i].x+tilt.y*expected[i].y>.9f);
+  assert(expected[i].x?std::abs(tilt.y)<.001f:std::abs(tilt.x)<.001f);}
+}
+int main(){dice_test();motion_test();downhill_test();for(unsigned seed=1;seed<=500;++seed){maze_test(seed,false,false);maze_test(seed,true,false);maze_test(seed,false,true);}std::puts("PASS: four downhill directions; dice count/history/codec/distribution; 1500 tiered mazes, 90 physics solves, 3M collision steps; exact resume, calibration, mirror, stale samples and shake debounce");}

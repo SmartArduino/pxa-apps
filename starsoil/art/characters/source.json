@@ -1,0 +1,21 @@
+{
+  "tool": "image_gen.imagegen built-in",
+  "source": "design-reference-v1.png",
+  "purpose": "Three original compact character designs; design A guides the indexed head and travel coat, design C guides rounded armor",
+  "style_reference": "https://steamcommunity.com/sharedfiles/filedetails/?id=2503588944",
+  "reference_usage": "Visual study only; no Terraria sprites are packaged or traced into the game. Indexed HEAD in tools/characters.py is traced from the generated original design A.",
+  "prompt": "Use case: stylized-concept. Create a professional pixel-character DESIGN REFERENCE SHEET for an original 2D side-view sandbox adventure, inspired by the compact, charming proportions of Terraria. The attached sprite is STYLE AND PROPORTION REFERENCE ONLY; invent new faces, hair, clothes and colors rather than copying that character. Exactly three distinct original full-body right-facing playable adventurer designs, arranged side-by-side with generous transparent space, all on the same baseline. A: young explorer with fluffy tousled chestnut hair, expressive dark amber eye, muted teal-blue short travel jacket, small cream collar, dark slate trousers and warm leather ankle boots; B: forest ranger with layered dark brown hair, sage tunic, a short moss-green scarf and leather straps; C: copper-armored adventurer with a small open-face copper helmet, rounded shoulder armor, warm riveted cuirass and dark trousers. All three use the SAME compact body proportions and are human, friendly and appealing. Anatomy: large full rounded head with voluminous irregular hair, roughly 12-13 logical pixels tall; compact torso roughly 10 logical pixels tall; short substantial articulated legs roughly 8 logical pixels tall; NO visible tall neck, the collar and shoulders tuck naturally just under the jaw. Shoulders and two arms clearly attached, both legs visible, small hands at hip level, easy-to-read silhouette. Slight three-quarter SIDE view facing right as in Terraria, with one large readable 2-pixel-tall eye and a small natural nose and cheek, no long pointy nose, no long chin. Pixel-native artwork: each character should look authored on approximately a 20 by 32 logical pixel grid and enlarged uniformly with sharp nearest-neighbor squares, 12-18 intentional colors, no smoothing, no blur, no painted rendering, no detailed illustration disguised as pixel art. Soft selective outlines, rounded pixel clusters, attractive controlled shading, clean coherent pixel shapes. No weapons or held items hiding the body. No long dangling accessories. No ground, no props, no scenery, no UI, no labels, no text, no watermark. Genuinely transparent background. The design must remain attractive when reduced to a tiny actual game sprite.",
+  "authoring": "tools/characters.py",
+  "compositor": "actor_renderer.hpp",
+  "native_size": [
+    20,
+    32
+  ],
+  "walk_frames": 8,
+  "stances": 4,
+  "license": "MIT",
+  "sha256": "2ea44c682de926683251e507f27f10b507b11e43d950f208c22655940e34a5eb",
+  "runtime_layers": 20,
+  "runtime_joints": 16,
+  "locomotion": "Eight gait frames, one stand frame and one jump frame; arm action phase is separate"
+}

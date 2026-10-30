@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<title>多功能计算器 — 原创商城封面</title>
+<desc>深蓝色背景、薄荷绿读数与金色运算键的计算器插画。科学函数、单位换算和历史记忆，支持触屏与Gen4三键。</desc>
+<defs>
+  <linearGradient id="background" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#152e3b"/><stop offset="1" stop-color="#08151e"/></linearGradient>
+  <radialGradient id="glow"><stop stop-color="#427868" stop-opacity=".24"/><stop offset="1" stop-color="#427868" stop-opacity="0"/></radialGradient>
+  <linearGradient id="body" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#35515e"/><stop offset="1" stop-color="#172e3b"/></linearGradient>
+  <linearGradient id="display" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b6f0d4"/><stop offset="1" stop-color="#7bdcbb"/></linearGradient>
+  <linearGradient id="mint" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#9ce8ca"/><stop offset="1" stop-color="#6ccdaf"/></linearGradient>
+  <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse"><path d="M60 0H0V60" fill="none" stroke="#7bcdb6" stroke-opacity=".05"/></pattern>
+</defs>
+<rect width="1600" height="900" fill="url(#background)"/>
+<rect width="1600" height="900" fill="url(#grid)"/>
+<ellipse cx="1235" cy="425" rx="650" ry="600" fill="url(#glow)"/>
+<g fill="none" stroke="#a5dbca" stroke-opacity=".08"><circle cx="1200" cy="440" r="340"/><circle cx="1200" cy="440" r="420"/></g>
+<g font-family="Noto Sans CJK SC, sans-serif">
+  <rect x="102" y="88" width="8" height="32" rx="4" fill="#91e4c2"/>
+  <text x="130" y="113" font-size="22" letter-spacing="5" fill="#9db7bc">PXA / TOOLS</text>
+  <text x="98" y="281" font-size="78" font-weight="700" fill="#edf5ee">多功能</text>
+  <text x="98" y="392" font-size="98" font-weight="700" fill="#a1e7c8">计算器</text>
+  <text x="104" y="467" font-size="29" fill="#b0c5c8">从随手一算，到科学计算。</text>
+  <path d="M105 512h440" stroke="#46616b"/>
+  <g font-size="24" fill="#d6e4df">
+    <circle cx="112" cy="559" r="4" fill="#e8c183"/><text x="130" y="568">科学函数</text>
+    <circle cx="304" cy="559" r="4" fill="#e8c183"/><text x="322" y="568">单位换算</text>
+    <circle cx="496" cy="559" r="4" fill="#e8c183"/><text x="514" y="568">历史记忆</text>
+  </g>
+  <rect x="104" y="622" width="306" height="53" rx="26" fill="#22463f" stroke="#497b67"/>
+  <text x="257" y="657" text-anchor="middle" font-size="23" fill="#b5ecd2">触屏 · Gen4 三按键</text>
+  <text x="105" y="792" font-size="22" letter-spacing="2" fill="#8ca9b2">横屏 / 竖屏 · 随屏自适应</text>
+</g>
+<g transform="rotate(8 1170 445)">
+  <rect x="962" y="154" width="444" height="643" rx="45" fill="#020b10" opacity=".5"/>
+  <rect x="940" y="120" width="444" height="643" rx="45" fill="url(#body)" stroke="#5a7883" stroke-width="2"/>
+  <rect x="950" y="130" width="424" height="620" rx="36" fill="#18313e"/>
+  <rect x="970" y="153" width="384" height="174" rx="21" fill="#0a1b24"/>
+  <rect x="974" y="157" width="376" height="165" rx="18" fill="url(#display)"/>
+  <g font-family="Noto Sans CJK SC, sans-serif" fill="#1e4a40">
+    <text x="997" y="190" font-size="17" letter-spacing="3">DEG</text>
+    <text x="1322" y="211" text-anchor="end" font-size="24">2 + 3 × 4</text>
+    <text x="1324" y="291" text-anchor="end" font-size="76" font-weight="500">14</text>
+  </g>
+  <g fill="#35515e" stroke="#52707a">
+    <rect x="974" y="354" width="81" height="56" rx="11"/><rect x="1073" y="354" width="81" height="56" rx="11"/>
+    <rect x="1172" y="354" width="81" height="56" rx="11"/><rect x="1271" y="354" width="79" height="56" rx="11"/>
+    <rect x="974" y="427" width="81" height="56" rx="11"/><rect x="1073" y="427" width="81" height="56" rx="11"/>
+    <rect x="1172" y="427" width="81" height="56" rx="11"/><rect x="1271" y="427" width="79" height="56" rx="11"/>
+    <rect x="974" y="500" width="81" height="56" rx="11"/><rect x="1073" y="500" width="81" height="56" rx="11"/>
+    <rect x="1172" y="500" width="81" height="56" rx="11"/>
+    <rect x="974" y="573" width="81" height="56" rx="11"/><rect x="1073" y="573" width="81" height="56" rx="11"/>
+    <rect x="1172" y="573" width="81" height="56" rx="11"/>
+    <rect x="974" y="646" width="180" height="56" rx="11"/><rect x="1172" y="646" width="81" height="56" rx="11"/>
+  </g>
+  <rect x="1271" y="500" width="79" height="129" rx="13" fill="#e8c183"/>
+  <rect x="1271" y="646" width="79" height="56" rx="11" fill="url(#mint)"/>
+  <g font-family="Noto Sans CJK SC, sans-serif" font-size="30" fill="#e3eeea" text-anchor="middle">
+    <text x="1014" y="393" font-size="20">AC</text><text x="1113" y="393" font-size="20">DEL</text><text x="1212" y="393">%</text><text x="1310" y="393">÷</text>
+    <text x="1014" y="467">7</text><text x="1113" y="467">8</text><text x="1212" y="467">9</text><text x="1310" y="467">×</text>
+    <text x="1014" y="540">4</text><text x="1113" y="540">5</text><text x="1212" y="540">6</text>
+    <text x="1014" y="613">1</text><text x="1113" y="613">2</text><text x="1212" y="613">3</text>
+    <text x="1064" y="686">0</text><text x="1212" y="686">.</text>
+    <text x="1310" y="579" font-size="40" fill="#53422c">+</text><text x="1310" y="686" font-size="34" fill="#1b493d">=</text>
+  </g>
+  <path d="M1085 727h154" stroke="#43606d" stroke-width="4" stroke-linecap="round"/>
+</g>
+<g fill="#b8e7d4"><circle cx="926" cy="277" r="5"/><circle cx="1437" cy="632" r="4"/></g>
+<g stroke="#d9ba81" stroke-width="2" stroke-linecap="round"><path d="M1435 218h18m-9-9v18"/><path d="M887 662h14m-7-7v14"/></g>
+</svg>

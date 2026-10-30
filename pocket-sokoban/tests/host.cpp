@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: CC0-1.0
 #include "../core.hpp"
+#include "../navigation.hpp"
 #include "../../common/pocket-game/runtime.hpp"
 #include "solutions.hpp"
 #include <assert.h>
@@ -98,6 +99,22 @@ void movement() {
     assert(!move(s, static_cast<Direction>(255)));
     puts("PASS single crate / double crate / wall / all boundaries / goal / walking+push rewind");
 }
+void navigation() {
+    State s=corridor(),original=s;uint8_t path[CELLS];
+    assert(walk_path(s,31,path,CELLS)==3);
+    for(unsigned i=0;i<3;++i)assert(move(s,Direction(path[i])));
+    assert(s.player==31&&s.pushes==0&&!memcmp(s.upper,original.upper,CELLS));
+    assert(walk_path(original,31,path,2)==-1&&walk_path(original,31,nullptr,CELLS)==-1);
+    assert(walk_path(original,35,path,CELLS)==-1&&walk_path(original,37,path,CELLS)==-1);
+    assert(walk_path(original,100,path,CELLS)==-1&&walk_path(original,0,path,CELLS)==-1);
+    assert(walk_path(original,original.player,nullptr,0)==0);
+    s={};s.player=0;assert(walk_path(s,99,path,CELLS)==18);
+    for(int i=0;i<18;++i)assert(move(s,Direction(path[i])));
+    assert(s.player==99);
+    s={};s.upper[0]=1;assert(cornered_crate(s));s.lower[0]=GOAL;assert(!cornered_crate(s));
+    s={};s.upper[55]=1;s.lower[54]=s.lower[45]=WALL;assert(cornered_crate(s));s.lower[45]=FLOOR;assert(!cornered_crate(s));
+    puts("PASS walking BFS: shortest path, no pushes, blocked targets, limits, open boundaries and static corner warning");
+}
 void solutions() {
     static_assert(sizeof(SOLUTIONS) / sizeof(SOLUTIONS[0]) == LEVEL_COUNT);
     State s{}; init(s);
@@ -194,6 +211,20 @@ State game_state() {
     uint8_t bytes[4096]; const size_t size = game::serialize(bytes, sizeof(bytes));
     State s{}; assert(deserialize(s, bytes, size)); return s;
 }
+void auto_walk() {
+    game::init();State initial=game_state();uint8_t route[CELLS];int target=-1,count=0;
+    for(unsigned i=0;i<CELLS;++i){int n=walk_path(initial,i,route,CELLS);if(n>=3){target=int(i);count=n;break;}}
+    assert(target>=0);const int x=4+(target%10)*18+8,y=40+(target/10)*18+8;
+    auto plan=[&](){game::pointer(pocket::Phase::DOWN,x,y);game::pointer(pocket::Phase::UP,x,y);};
+    plan();assert(game_state().steps==0);for(int i=0;i<count;++i)game::tick(100);
+    assert(game_state().player==target&&game_state().steps==unsigned(count)&&game_state().pushes==0);
+    game::key(pocket::Key::B);assert(game_state().steps==unsigned(count-1));
+    game::reset();plan();game::tick(100);game::key(pocket::Key::B);game::tick(2000);assert(same_board(game_state(),initial));
+    plan();game::pointer(pocket::Phase::DOWN,x,y);game::pointer(pocket::Phase::CANCEL,x,y);game::tick(2000);assert(game_state().steps==0);
+    plan();game::key(pocket::Key::SELECT);game::tick(1000);assert(game_state().steps==0);game::key(pocket::Key::B);
+    plan();uint8_t raw[4096];size_t n=game::serialize(raw,sizeof(raw));game::load(raw,n);game::tick(1000);assert(game_state().steps==0);
+    puts("PASS tap walking, incremental history, undo, new-touch/CANCEL, selector and load cancel queued movement");
+}
 void inputs() {
     game::init(); State initial = game_state();
     const unsigned old_tones = pocket::tone_calls;
@@ -232,6 +263,24 @@ void inputs() {
     puts("PASS game input hooks: tap / swipe / cancellation / undo / retry / next / unlocked selection");
 }
 }
+void level_picker(){
+    using pocket::Key;using pocket::Phase;
+    game::init();game::key(Key::RIGHT);uint8_t before[4096],after[4096];size_t n=game::serialize(before,sizeof(before));
+    game::key(Key::SELECT);
+    for(bool en:{false,true}){pocket::set_english(en);game::draw();assert(visible(en?"CHOOSE A LEVEL":"选择关卡"));}
+    pocket::set_english(false);assert(game::serialize(after,sizeof(after))==n&&!memcmp(before,after,n));
+    game::key(Key::A);assert(game_state().steps==1); // choosing the current level resumes it.
+    game::key(Key::SELECT);game::key(Key::RIGHT);game::key(Key::A);assert(game_state().level==0&&game_state().steps==1);
+    game::pointer(Phase::DOWN,32,55);game::pointer(Phase::CANCEL,32,55);game::pointer(Phase::UP,32,55);
+    game::key(Key::B);assert(game_state().steps==1);
+    game::key(Key::RIGHT);assert(sokoban::won(game_state()));game::key(Key::A);assert(game_state().level==1);
+    game::pointer(Phase::DOWN,180,12);game::pointer(Phase::UP,180,12);
+    game::pointer(Phase::DOWN,32,55);game::pointer(Phase::UP,32,55);assert(game_state().level==0&&game_state().completed==1);
+    game::key(Key::SELECT);game::pointer(Phase::DOWN,78,55);game::pointer(Phase::UP,78,55);assert(game_state().level==1);
+    game::key(Key::SELECT);game::pointer(Phase::DOWN,32,55);game::pointer(Phase::UP,500,400);assert(game_state().level==1);game::key(Key::B);
+    puts("PASS level selector: bilingual grid, locked refusal, current-level resume, completed progress, touch/controller and cancellation");
+}
+
 void bilingual() {
     using namespace sokoban;
     auto draw = [](const char *en, const char *zh) {
@@ -244,24 +293,24 @@ void bilingual() {
         }
         pocket::set_english(false);
     };
-    game::init(); draw("PUSH TO GOALS", "推箱到目标");
+    game::init(); draw("FIND YOUR WAY", "让木箱回家");
     for (int i=0;i<4;++i) game::key(pocket::Key::UP);
-    draw("BLOCKED", "走不通");
-    game::tick(400); draw("PUSH TO GOALS", "推箱到目标");
+    draw("TRY ANOTHER WAY", "换个方向试试");
+    game::tick(400); draw("FIND YOUR WAY", "让木箱回家");
     game::key(pocket::Key::X);
-    game::key(pocket::Key::RIGHT); game::key(pocket::Key::RIGHT); draw("A NEXT", "A 下关");
+    game::key(pocket::Key::RIGHT); game::key(pocket::Key::RIGHT); draw("Next level · A", "下一关 · A");
     State last{}; init(last); last.unlocked=LEVEL_COUNT-1; last.completed=(uint64_t(1) << (LEVEL_COUNT-1))-1;
     reset_level(last, LEVEL_COUNT-1);
     for (const char *p=SOLUTIONS[LEVEL_COUNT-1]; *p; ++p) assert(move(last,direction(*p)));
     assert(won(last));
     uint8_t bytes[4096]; size_t n=serialize(last,bytes,sizeof(bytes)); assert(n); game::load(bytes,n);
-    draw("A REPLAY", "A 重玩");
+    draw("Play again · A", "重新挑战 · A");
     last.steps=last.pushes=MAX_MOVES; n=serialize(last,bytes,sizeof(bytes)); assert(n); game::load(bytes,n);
     draw("PUSH", "推箱");
     puts("PASS bilingual active/blocked/solved/final-level/max-counter HUD bounds, no text overlap and save invariance");
 }
 int main() {
-    movement(); solutions(); persistence(); circular_history(); inputs(); bilingual();
+    movement(); navigation(); solutions(); persistence(); circular_history(); inputs(); auto_walk(); level_picker(); bilingual();
     uint8_t before[4096],after[4096]; const size_t n=game::serialize(before,sizeof(before));
     unsigned before_tones=pocket::tone_calls;
     for (int i=0;i<100;++i) game::tick(20);

@@ -95,6 +95,18 @@ python3 tools/test-app-matrix.py --output local/app-matrix --target all --sdk-ex
 
 [Anarch](anarch/README.md) 使用独立的 160×120 逻辑画布，同样等比适配屏幕和触摸坐标；菜单右上角或控制器 X 切换中英文，帮助按钮或 Y 打开说明。Game Boy 等模拟器中的游戏语言由 ROM 决定。各应用说明包含完整操作、许可证、构建和可复用测试入口。
 
+## 水平仪工具
+
+[水平仪 / Spirit Level](spirit-level/README.md) 提供双轴气泡、边尺水平/垂直测量、锁定、相对归零、已知水平面标定与中英文设置。支持加速度计和可选陀螺仪融合，采用绝对重力基准；无有效传感器时显示等待状态。构建入口为 `tools/app.sh build spirit-level --source-root local/pxa-apps`。
+
+## 计算器工具
+
+[多功能计算器](calculator/README.md) 支持基础与科学计算、DEG/RAD、8条历史、记忆值、八类单位换算，以及比例、折扣、变化幅度和平均分摊。横竖屏按实际比例满屏排布，支持触屏、手柄和Gen4三键。
+
+## 奶蛙小游戏
+
+[奶蛙2048超级版](milkyfrog-2048/README.md)、[奶蛙的奶块雨](milkyfrog-rain/README.md) 和 [奶蛙工厂](milkyfrog-miner/README.md) 为三个独立应用，支持触屏和手柄、原版录音、独立声音开关与存档。文字由 PXA 系统字体绘制。工厂首版提供矿工模式与 47 种稀有图鉴；素材来源、转换与测试入口见[共用层](common/milky-frog/README.md)。
+
 ## 归档游戏移植
 
 [68 款独立游戏](common/retro-games/README.md)使用 SDK 2.1，统一等比显示、触摸坐标和生命周期，复用解谜、Arduboy 与 SAF 源码；每款保留独立包 ID 和原授权。清单见 [games.json](common/retro-games/games.json)。已在本仓库提供的 Anarch、2048、国际象棋及 Arcade 中的扫雷、俄罗斯方块、打砖块不重复导入。

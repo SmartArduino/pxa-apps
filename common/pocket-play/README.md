@@ -80,3 +80,13 @@ python3 local/pxa-apps/common/pocket-play/tests/run-sfx-pcm.py \
 Python 集成测试需要 Pillow；串口设备测试还需要同一 Python 环境中的 pyserial。设备测试先查询 `INPUT CAPABILITIES`：`controller_mask=0` 的触屏板只验证触屏，手柄行为由支持控制器的模拟器验证。首次运行可能显示独立的音频播放授权弹窗；脚本确认本应用的权限请求并截图后允许播放，再等待音频就绪，避免把弹窗拦截误判为游戏输入故障。关闭或拒绝音频权限时仍可静音游玩。
 
 设备空间紧张时，可按 `common/pocket-game/README.md` 中的安装方式单独构建 ESP32-S3 并安装签名展开目录。这样不会携带另外两个目标，也无需同时保留压缩包与解包副本。设备安装和测试应串行进行，避免多个进程争用串口。
+
+启用 `PXA_POCKET_STUDIO=1` 的游戏使用 [Pocket Studio](../pocket-studio/README.md) 的原生图形和系统字体覆盖层；逻辑坐标与存档接口保持一致，圆角屏按安全区内缩。
+
+组件可按需定义 `PXA_POCKET_SERVICES=1`，并实现 `service-hooks.hpp` 的事件与轮询回调，接入独立的异步服务。运行时传入包含暂停、后台和退出状态的前台标记及单调时间；实现应及时释放资源，并关闭取消后才完成的资源句柄。未启用宏的应用没有额外回调。
+
+工具应用可定义 `PXA_POCKET_UTILITY=1` 使用测量菜单文案，定义 `PXA_POCKET_SILENT=1` 不请求音频权限或打开音频。对应 `game::reset()` 应实现菜单里的恢复绝对基准语义，不清除仪器标定。
+
+回调应用可用 `pocket::portrait_display()` 判断物理显示方向，并用 `pocket::open_menu()` 将共享菜单作为普通可聚焦按钮提供给三键设备。Gen4的实体上/下/确认对应 `Key::UP`、`Key::DOWN`、`Key::A`；确认按下只派发一次，方向键支持运行时连按。启用 `PXA_POCKET_UTILITY` 时 `WIDTH/HEIGHT` 为布局时确定的值：竖屏宽240、高度按比例限定在260..360，横屏288×224；应用绘制与命中测试须共同使用这两个值。
+
+`PXA_POCKET_FILL` 启用满屏Surface与动态逻辑画布，通常与 `PXA_POCKET_STUDIO`、`PXA_POCKET_RESPONSIVE` 一起使用。逻辑尺寸按实际安全内容区域比例计算，应用须使用 `WIDTH/HEIGHT` 排布绘制和命中区域。Surface始终覆盖完整输出，背景延伸到安全边缘，控件按同一内容区域变换；PXA整数缩放仍受预分配输出缓冲上限约束。`pocket::portrait_display()` 依据物理显示方向。该宏为应用单独启用，不改变其他应用的固定比例布局。

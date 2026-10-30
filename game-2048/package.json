@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-game-2048",
-  "version": "1.1.2",
+  "version": "1.4.1",
   "name": "2048",
   "description": "MIT 2048.c 移植：滑动与方向键操作，支持撤销、最高分和自动续局。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 4,
+  "release_sequence": 9,
   "build": {
     "system": "cmake",
     "source_dir": ".",

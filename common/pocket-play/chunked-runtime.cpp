@@ -115,6 +115,7 @@ uint32_t buttons, blocked_buttons, pointer_id, rng = 0x6d2b79f5;
 uint64_t perf_at, perf_render_us;
 uint32_t perf_frames;
 int display_w = 320, display_h = 240;
+uint32_t pointer_density = 65536;
 int last_x, last_y, menu_row;
 bool running, finished, background = true, fresh_tick, surface_ready, load_ready;
 bool mapped = true, staged, prepared, dirty = true, save_dirty, save_pending, pointer_active, pointer_consumed, paused;
@@ -230,12 +231,14 @@ void controller(const pxa_ui_controller_data_t &c) {
 }
 void pointer(const pxa_ui_pointer_data_t &p) {
     if (background || !running || exit_requested) return;
+    const int px = pocket_ui::pointer_pixel(p.x, pointer_density);
+    const int py = pocket_ui::pointer_pixel(p.y, pointer_density);
     if (p.phase == PXA_POINTER_DOWN && !pointer_active) {
-        if (!surface_ready || !viewport.contains(p.x, p.y)) return;
+        if (!surface_ready || !viewport.contains(px, py)) return;
         pointer_id = p.pointer_id; pointer_active = true; pointer_consumed = false;
     }
     if (!pointer_active || p.pointer_id != pointer_id) return;
-    last_x = viewport.map_x(p.x); last_y = viewport.map_y(p.y);
+    last_x = viewport.map_x(px); last_y = viewport.map_y(py);
     Phase phase;
     if (p.phase == PXA_POINTER_DOWN) phase = Phase::DOWN;
     else if (p.phase == PXA_POINTER_MOVE) phase = Phase::MOVE;
@@ -375,6 +378,8 @@ int32_t handle_event(const uint8_t *bytes, uint32_t length) {
         }
         // The next chunk/head never waits for another game mutation or tick.
         send_save(background || exit_requested);
+        if (!chunk_writer.active && !save_pending && !save_dirty)
+            pxa_log_write(2, "Pocket: save queue drained");
         service_preferences();
         return PXA_EVENT_HANDLED;
     }
@@ -390,6 +395,7 @@ int32_t handle_event(const uint8_t *bytes, uint32_t length) {
     }
     pxa_ui_environment_t env;
     if (pxa_ui_parse_environment_event(&e, &env)) {
+        pointer_density = env.density_q16 ? env.density_q16 : 65536;
         if (!env.width || !env.height || (uint32_t(display_w) == env.width && uint32_t(display_h) == env.height)) return PXA_EVENT_HANDLED;
         display_w = env.width; display_h = env.height;
         cancel_input(); pocket::redraw();
@@ -509,6 +515,7 @@ void log(const char *message) { pxa_log_write(2, message); }
 extern "C" int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     pxa_ui_environment_t env{};
     if (pxa_ui_parse_start_environment(config, length, &env)) { display_w=env.width; display_h=env.height; }
+    pointer_density = env.density_q16 ? env.density_q16 : 65536;
     pocket::set_english(false);
     snprintf(save_key, sizeof(save_key), "%s.save.v1", game::app_id());
     snprintf(preferences_key, sizeof(preferences_key), "%s.prefs.v1", game::app_id());

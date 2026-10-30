@@ -77,7 +77,17 @@ class Simulator:
         try:
             self.wait(lambda: self.sock.exists(), "control socket")
             self.wait(lambda: "Pocket: ready app=" in self.logs(), "Pocket startup")
-            require("canvas=288x224 origin=16,8 scale=1" in self.logs(), "Unexpected canvas geometry")
+            # Use the actual runtime viewport: current Hosts may fit the
+            # 288x224 game canvas to a larger physical Surface. Inputs below
+            # stay in game coordinates and are projected into that viewport.
+            geometry = re.search(r"viewport canvas=(\d+)x(\d+) origin=(-?\d+),(-?\d+) size=(\d+)x(\d+) display=(\d+)x(\d+)", self.logs())
+            require(geometry is not None, "Missing actual canvas geometry")
+            self.canvas_w, self.canvas_h, self.origin_x, self.origin_y, self.viewport_w, self.viewport_h, dw, dh = map(int, geometry.groups())
+            self.display_w, self.display_h = dw, dh
+            require((self.canvas_w, self.canvas_h, dw, dh) == (288, 224, 320, 240), "Unexpected canvas/display geometry")
+            require(self.viewport_w > 0 and self.viewport_h > 0 and self.origin_x >= 0 and self.origin_y >= 0 and
+                    self.origin_x + self.viewport_w <= dw and self.origin_y + self.viewport_h <= dh,
+                    "Viewport outside the display")
             time.sleep(.45)
             return self
         except BaseException:
@@ -91,7 +101,15 @@ class Simulator:
         self.keys.remove(key)
         time.sleep(settle)
     def pointer(self, phase, x, y):
-        command(self.sock, f"TOUCH {phase} 1 {x+16} {y+8}")
+        # Runtime mapping floors physical pixels back to logical coordinates.
+        # Choose the first physical pixel inside the requested logical cell.
+        px = self.origin_x + (x * self.viewport_w + self.canvas_w - 1) // self.canvas_w
+        py = self.origin_y + (y * self.viewport_h + self.canvas_h - 1) // self.canvas_h
+        # Physical touch reports remain inside the display even when a finger
+        # leaves the application canvas; use its nearest edge for UP/CANCEL.
+        px = min(max(px, 0), self.display_w - 1)
+        py = min(max(py, 0), self.display_h - 1)
+        command(self.sock, f"TOUCH {phase} 1 {px} {py}")
     def tap(self, x, y, settle=.4):
         self.pointer("DOWN", x, y)
         time.sleep(.07)
@@ -136,7 +154,12 @@ class Simulator:
 def exercise(args, temp, report):
     board = {"2048": (20, 46, 200, 226), "chess": (24, 32, 216, 224), "sokoban": (20, 48, 200, 228)}[args.game]
     def cropped(sim, name):
-        return sim.shot(name).crop(board)
+        x0, y0, x1, y1 = board
+        box = (sim.origin_x + x0 * sim.viewport_w // sim.canvas_w,
+               sim.origin_y + y0 * sim.viewport_h // sim.canvas_h,
+               sim.origin_x + (x1 * sim.viewport_w + sim.canvas_w - 1) // sim.canvas_w,
+               sim.origin_y + (y1 * sim.viewport_h + sim.canvas_h - 1) // sim.canvas_h)
+        return sim.shot(name).crop(box)
     with Simulator(args, temp / "state", temp / "one.sock", "game", report) as sim:
         require("Pocket: load completed" not in sim.logs(), "Fresh storage loaded old game")
         first = cropped(sim, "initial")
@@ -188,7 +211,7 @@ def exercise(args, temp, report):
             time.sleep(.4)
             require(difference(before, cropped(sim, "cancelled-gesture")) == 0, "Cancelled pointer stream leaked after resume")
             report["checks"].append("cancelled_pointer_stays_cancelled")
-        sim.tap(276, 10)
+        sim.tap(276 if args.game == "chess" else 252, 10)
         paused = cropped(sim, "paused")
         require(difference(before, paused) > .1, "Touch menu did not open")
         sim.tap(140, 85)
@@ -196,7 +219,7 @@ def exercise(args, temp, report):
         report["checks"].append("touch_pause_continue")
         sim.wait(lambda: "Pocket: saved" in sim.logs(), "save acknowledgment")
         saved = cropped(sim, "saved")
-        sim.tap(276, 10)
+        sim.tap(276 if args.game == "chess" else 252, 10)
         # EXIT closes on DOWN, so the control socket may be gone before UP.
         sim.pointer("DOWN", 140, 145)
         sim.wait(lambda: sim.proc.poll() is not None, "menu EXIT")

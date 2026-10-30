@@ -68,3 +68,5 @@ python3 local/pxa-apps/common/pocket-game/tests/device.py \
 ```
 
 推箱子通关测试从第一教学关开始，需要尚未游玩的测试存档。设备测试不卸载或删除其他应用；运行生成的日志、截图和 JSON 必须输出到被 Git 忽略的 `local/artifacts/`。底层规则和损坏存档测试位于各游戏的 `tests/` 中。
+
+启用 `PXA_POCKET_STUDIO=1` 的游戏使用 [Pocket Studio](../pocket-studio/README.md) 的原生图形和系统字体覆盖层；逻辑坐标与存档接口保持一致，圆角屏按安全区内缩。

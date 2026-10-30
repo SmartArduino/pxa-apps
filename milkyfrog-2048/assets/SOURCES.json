@@ -1,0 +1,353 @@
+{
+  "sources": [
+    {
+      "path": "art/tile-2.webp",
+      "url": "https://game.0z.hk/game/2048/assets/tiles/tile-2.webp",
+      "sha256": "0fa1b7e92cbc8cfaba8c22f1e6827c4dbad69a48295cb93fb94101e453961bc7"
+    },
+    {
+      "path": "art/tile-4.webp",
+      "url": "https://game.0z.hk/game/2048/assets/tiles/tile-4.webp",
+      "sha256": "f0c7589890458c0b65f97add8eb22a76725cc6f3b50554cf06f341a1d9ff4bbd"
+    },
+    {
+      "path": "art/tile-8.webp",
+      "url": "https://game.0z.hk/game/2048/assets/tiles/tile-8.webp",
+      "sha256": "eefb4b377e211c4e54226ed6f06a24c928a3d369ba14b43f1e88ed30a042a566"
+    },
+    {
+      "path": "art/tile-16.webp",
+      "url": "https://game.0z.hk/game/2048/assets/tiles/tile-16.webp",
+      "sha256": "37a35eefbd904350797ac1049de72bb9d8e2533a3741d38d12c236304ece112e"
+    },
+    {
+      "path": "art/tile-32.webp",
+      "url": "https://game.0z.hk/game/2048/assets/tiles/tile-32.webp",
+      "sha256": "be1f5869cc90b808658f21f0fd93655d03d5b361a2e7a6d06a89a997ea3b5ed3"
+    },
+    {
+      "path": "art/tile-64.webp",
+      "url": "https://game.0z.hk/game/2048/assets/tiles/tile-64.webp",
+      "sha256": "b4b1af2f0be2c41b4889c21339f990cf5bb9a22e7f27ab01e2c81130e918c61c"
+    },
+    {
+      "path": "art/tile-128.webp",
+      "url": "https://game.0z.hk/game/2048/assets/tiles/tile-128.webp",
+      "sha256": "24da37098a6b4512a56b8f6f396338241ea433184535c0a1960d87e3ed94c5f6"
+    },
+    {
+      "path": "art/tile-256.webp",
+      "url": "https://game.0z.hk/game/2048/assets/tiles/tile-256.webp",
+      "sha256": "b5d0ccea0a942d87383de576bf522bdc06112f3ce4597b686019d272268a12e5"
+    },
+    {
+      "path": "art/tile-512.webp",
+      "url": "https://game.0z.hk/game/2048/assets/tiles/tile-512.webp",
+      "sha256": "c75fe5d430fb156c6f3eb004d157b14cb7a713a7c4523fbb2d4a3016ac47e382"
+    },
+    {
+      "path": "art/tile-1024.webp",
+      "url": "https://game.0z.hk/game/2048/assets/tiles/tile-1024.webp",
+      "sha256": "93d2c48c88e25a771d8dc079af4bf3e5296508cb0f6776ef0517442858a1cbb2"
+    },
+    {
+      "path": "art/tile-2048.webp",
+      "url": "https://game.0z.hk/game/2048/assets/tiles/tile-2048.webp",
+      "sha256": "35628ce8939fa3370be2159e70720eb97198b92d6ebe4dfa88b7d1ee87581492"
+    },
+    {
+      "path": "art/tile-4096.webp",
+      "url": "https://game.0z.hk/game/2048/assets/tiles/tile-4096.webp",
+      "sha256": "efe5ffa44784a7eced2ba91d72ed9de0c97e7536441bc896406a54dcebc3759c"
+    },
+    {
+      "path": "art/laugh-1.mp3",
+      "url": "https://game.0z.hk/game/2048/assets/laugh-1.mp3",
+      "sha256": "ff135c55707a59d79c3fc6d81344b142c92101f194c866419c7630d2e59f2990"
+    },
+    {
+      "path": "art/laugh-2.mp3",
+      "url": "https://game.0z.hk/game/2048/assets/laugh-2.mp3",
+      "sha256": "9184385fe10611938b78f6951bbf5efd1023a7b524d9fe2af82c235357711b6f"
+    },
+    {
+      "path": "art/laugh-3.mp3",
+      "url": "https://game.0z.hk/game/2048/assets/laugh-3.mp3",
+      "sha256": "4d23e1009f20f34b1290cf069a2356ad240036ac46252f32848aafc89d2719d2"
+    },
+    {
+      "path": "art/laugh-4.mp3",
+      "url": "https://game.0z.hk/game/2048/assets/laugh-4.mp3",
+      "sha256": "c6ba46d3b9f5ec29f73dcecc2d45935e50a2a4de545dfb6d36bde16b61e8bec4"
+    },
+    {
+      "path": "art/ice-1.mp3",
+      "url": "https://game.0z.hk/game/2048/assets/ice-1.mp3",
+      "sha256": "86b1bf8d31a1a269c38e7c26a7d0939c19cb05929103075fdc3fa1594890c9c2"
+    },
+    {
+      "path": "art/ice-2.mp3",
+      "url": "https://game.0z.hk/game/2048/assets/ice-2.mp3",
+      "sha256": "4f42cb4da9e051a7d164b18e60068fc0b0c8da4a9f9cf2f6d4cdac3f09c169ab"
+    },
+    {
+      "path": "art/ice-3.mp3",
+      "url": "https://game.0z.hk/game/2048/assets/ice-3.mp3",
+      "sha256": "42279a9eb937ec7d080367c2b3230ebd930c3abf380025fa9af106577860cb65"
+    },
+    {
+      "path": "art/andy-1.mp3",
+      "url": "https://game.0z.hk/game/2048/assets/andy-1.mp3",
+      "sha256": "487551f10ff1f38417e4508a378e3a964878719bc159d73b7c44ef2bd133f207"
+    },
+    {
+      "path": "art/bgm.mp3",
+      "url": "https://game.0z.hk/game/2048/assets/bgm.mp3",
+      "sha256": "acb60886d8aa9db7bf7390b45077355fa843ac9b399534d3963fbecd22b26976"
+    }
+  ],
+  "transformations": [
+    "Images: crop transparent padding; Lanczos 32/64/128 px and up to 56,000 pixel RGBA variants; original animation frames packed into bounded 320x104 atlases; small RGB565 fallbacks.",
+    "Audio: original recordings downmixed to signed 16-bit 16 kHz mono.",
+    "Pitch variants rendered offline; miner compensates tempo to retain duration."
+  ],
+  "rights": "Third-party images/recordings retain their original rights; meme status is not a license. See THIRD-PARTY.txt.",
+  "generated": [
+    {
+      "path": "sprites.hpp",
+      "sha256": "81ee0866434a51908ebeb9c844c15525e398dfbf0a757c8b149b8d601b7e7045"
+    },
+    {
+      "path": "assets/andy.s16",
+      "sha256": "714a7652fc5215c93ca351eb35a0f65258a4a43f3b1318cabfaf22e0ffe58ca6"
+    },
+    {
+      "path": "assets/ice-1.s16",
+      "sha256": "8792a28136ab90b6e38fa3fb45d68ad08dde493119ac387eff02c6331cea3449"
+    },
+    {
+      "path": "assets/ice-2.s16",
+      "sha256": "9fd8de175a4e98af9ffb77cf46fbdde7cbc453317af342e297375b318fcbce11"
+    },
+    {
+      "path": "assets/ice-3.s16",
+      "sha256": "3fd9ff45f3a67b549bd91e5430aad2dbe7ead4f56e8ff05cc03fb5dcc0041deb"
+    },
+    {
+      "path": "assets/laugh-1.s16",
+      "sha256": "987978b52ae2fe7101e70253bd4b869d509d86c75b99b26b1e0354c0cccd3fc4"
+    },
+    {
+      "path": "assets/laugh-2.s16",
+      "sha256": "23af5fc5b6fb5ba57e0edb06dafdb7e1417602af6f7bbebe873ba67db5416ccb"
+    },
+    {
+      "path": "assets/laugh-3.s16",
+      "sha256": "c3808ed46153068f5c2a977bf2820d8d7de8f47cf1b24c787fda8d5afd969a52"
+    },
+    {
+      "path": "assets/laugh-4.s16",
+      "sha256": "df9ccb9cd74a14cc4689b474f765a9296af6dd122ed1e7125af9131851163c56"
+    },
+    {
+      "path": "assets/lose.s16",
+      "sha256": "df3ae37d47d3e494798a468a5ea0d23e780113b1c7d552766050a483de0cac1f"
+    },
+    {
+      "path": "assets/bgm.ogg",
+      "sha256": "f9d49985586f2a0aeb84e4b15259d9cabf1a7f2c15032b763f3bb214a3266341"
+    },
+    {
+      "path": "assets/images/tile_1-128.png",
+      "sha256": "ccb5bfb27cb4246f74a56cf24179ad3f57bd09427c4b9abeafaf70c323686823"
+    },
+    {
+      "path": "assets/images/tile_1-32.png",
+      "sha256": "ed97b6f550fb548d1f947fecaf9b6421cd2b405b9af120e7bcc27f2c1ded882d"
+    },
+    {
+      "path": "assets/images/tile_1-512.png",
+      "sha256": "ccb5bfb27cb4246f74a56cf24179ad3f57bd09427c4b9abeafaf70c323686823"
+    },
+    {
+      "path": "assets/images/tile_1-64.png",
+      "sha256": "dd59861a01397ffef6f4843dda0428f2ea8206856f47fce5c076807c57e33738"
+    },
+    {
+      "path": "assets/images/tile_10-128.png",
+      "sha256": "8ffb35d10cb487740ca94d5e5b92c82909219f9b8055fe5ee229de2b511ef128"
+    },
+    {
+      "path": "assets/images/tile_10-32.png",
+      "sha256": "341748175b38abb55c40fd3e60a8abaf0d4a704520f7e6f70f828b3248770862"
+    },
+    {
+      "path": "assets/images/tile_10-512.png",
+      "sha256": "2409a05fa1db1746f397e905a9c27e2959267ba2421c03b9eec86135dced9767"
+    },
+    {
+      "path": "assets/images/tile_10-64.png",
+      "sha256": "8e17d3063c59b0265219a72b05f8b2179db6e5da2c4f21d6d59844ac9da09aa4"
+    },
+    {
+      "path": "assets/images/tile_11-128.png",
+      "sha256": "067e9b6d2a6da7d600641ea589e33d31e0da769edd2718ca6c00afe7383810ef"
+    },
+    {
+      "path": "assets/images/tile_11-32.png",
+      "sha256": "cb53de92572f541a07690c2afdcd00aa8277fade4465f93196c834216b35e74c"
+    },
+    {
+      "path": "assets/images/tile_11-512.png",
+      "sha256": "02a7b572ae008c0ad070dc3bdb2abe31b238dccce2594c90856d88671a961a0d"
+    },
+    {
+      "path": "assets/images/tile_11-64.png",
+      "sha256": "12d48b8b9ea87ca90787c6027545995fc3f24c4c6729cc6d0cc471f3137a4f0b"
+    },
+    {
+      "path": "assets/images/tile_12-128.png",
+      "sha256": "cdd7bc8e55a4260ea239a680b682b79e5535a159a2436020e7f1cb0cd9995103"
+    },
+    {
+      "path": "assets/images/tile_12-32.png",
+      "sha256": "fdf3d7efacfd4cd966a71614347130275c3978573a9c4087ce39d6b16ddfee9a"
+    },
+    {
+      "path": "assets/images/tile_12-512.png",
+      "sha256": "cdd7bc8e55a4260ea239a680b682b79e5535a159a2436020e7f1cb0cd9995103"
+    },
+    {
+      "path": "assets/images/tile_12-64.png",
+      "sha256": "addc7322605c8a9994ba12fe68bbedf92b92f57e85bfba213296bbb43988ac30"
+    },
+    {
+      "path": "assets/images/tile_2-128.png",
+      "sha256": "3a32253874d6b9e6e65d3794be21d735896cb66c4f460a4244d43b7b01e1d0c2"
+    },
+    {
+      "path": "assets/images/tile_2-32.png",
+      "sha256": "32094fe47557ec9198aa88da63ebcd86c6bc18d823c65cbcc218e01af72e4f30"
+    },
+    {
+      "path": "assets/images/tile_2-512.png",
+      "sha256": "148de9413c24a8371d21b7d861ce49ac0f5b2c1611bbc6d0b94f5f16faf8d8f3"
+    },
+    {
+      "path": "assets/images/tile_2-64.png",
+      "sha256": "14586365443ac489b152ca5b776b3130e932403afd7fdeb78326061f9ddb563d"
+    },
+    {
+      "path": "assets/images/tile_3-128.png",
+      "sha256": "958d4b04aa62ccdba72fbbd689db1f86244e2ce1054d8b2d8a2d60c0a87cfc10"
+    },
+    {
+      "path": "assets/images/tile_3-32.png",
+      "sha256": "77c01233f41a6ee0655c7554bd4021a1728bfd4319d7c22bbd90506835f2459f"
+    },
+    {
+      "path": "assets/images/tile_3-512.png",
+      "sha256": "958d4b04aa62ccdba72fbbd689db1f86244e2ce1054d8b2d8a2d60c0a87cfc10"
+    },
+    {
+      "path": "assets/images/tile_3-64.png",
+      "sha256": "20ada948b11c3f4a51be0bd42811866752313c8d9895d086f1ae421a9a7cb104"
+    },
+    {
+      "path": "assets/images/tile_4-128.png",
+      "sha256": "8ad00ab58ff839d73f5e56840c96bc29ccd4ee120d7335e38140dd7aad9df13e"
+    },
+    {
+      "path": "assets/images/tile_4-32.png",
+      "sha256": "02d8cf6b10f294eaa45eb9f6345254987511da1d58a91c2c54a8d59e190bf232"
+    },
+    {
+      "path": "assets/images/tile_4-512.png",
+      "sha256": "fdc23a9bb7c660df708e010a55f1aacfbf22dbfd770a9135f6a10683201b0e59"
+    },
+    {
+      "path": "assets/images/tile_4-64.png",
+      "sha256": "4940b2adaa98db17e579252ff84835153c54b0b151d443f40ccb060366a778b0"
+    },
+    {
+      "path": "assets/images/tile_5-128.png",
+      "sha256": "64fa1943b0a9b4f97a723c7cb4a3b5b98e705ad8cf8dc981e2fe038223f3341e"
+    },
+    {
+      "path": "assets/images/tile_5-32.png",
+      "sha256": "a76218d8a97ac192d76ddcdca2033b224934c6d528f3905bd400bc2c7f78a28c"
+    },
+    {
+      "path": "assets/images/tile_5-512.png",
+      "sha256": "c4b89839a8a9a891c7a2e3a829e8cba4a5b0c542351034bbbe125a2199bb981f"
+    },
+    {
+      "path": "assets/images/tile_5-64.png",
+      "sha256": "76284c3a64f8384ce4281ab340b94fca23c88a60b59459dbe623195f78b03938"
+    },
+    {
+      "path": "assets/images/tile_6-128.png",
+      "sha256": "1fef7c9e563a2b9a4ac274510ca1726b170046b18b756702a337e5589d74d579"
+    },
+    {
+      "path": "assets/images/tile_6-32.png",
+      "sha256": "73411b4bcd88d49411519c2e869a2d4eff9a1a3d8b8a58b451a4011bc7bdc7a3"
+    },
+    {
+      "path": "assets/images/tile_6-512.png",
+      "sha256": "2abd494274b4c1451293c950f5ad778a310fcc463b64f8927e473a6002420730"
+    },
+    {
+      "path": "assets/images/tile_6-64.png",
+      "sha256": "315dd78402c3400bb5209043ef9db820c1bb5e5dcb26c16514809bf726e3f733"
+    },
+    {
+      "path": "assets/images/tile_7-128.png",
+      "sha256": "8049ada9aa12fc231b971bf03435293a0b9e085c3440af72f2c75a4ac801368a"
+    },
+    {
+      "path": "assets/images/tile_7-32.png",
+      "sha256": "e9d1c7face90d98c75e3eb9e589145b0e31e4d97bff50e8d14abba1be7fd396d"
+    },
+    {
+      "path": "assets/images/tile_7-512.png",
+      "sha256": "d0852ccc00e1029c1de2a93e91528338cd473330615e65b7cb588e24143c9576"
+    },
+    {
+      "path": "assets/images/tile_7-64.png",
+      "sha256": "f86d25e6ea6136fae5c8185cba00f25f21bebe04d420cf9c45b54cba4694b83e"
+    },
+    {
+      "path": "assets/images/tile_8-128.png",
+      "sha256": "907ca099d21ef697358883e49838c7ae7f996fd1c150b6a55f6d3bb35631442a"
+    },
+    {
+      "path": "assets/images/tile_8-32.png",
+      "sha256": "bcf9a3cf97a04e28b864758bbc540a81b2db43bdc976255ee9930777dc6c56a8"
+    },
+    {
+      "path": "assets/images/tile_8-512.png",
+      "sha256": "cd598d938664c692c1a365bb987632a3ec33a64b08db8f60d64c63b9378016a6"
+    },
+    {
+      "path": "assets/images/tile_8-64.png",
+      "sha256": "7b4ddf68d15951184641d3db1344e0152f18583430c19b9969952a4e21419b8e"
+    },
+    {
+      "path": "assets/images/tile_9-128.png",
+      "sha256": "f141229c238f2533a7fc258ff606377118ee1e4e465755cd186ac7cf19ed075e"
+    },
+    {
+      "path": "assets/images/tile_9-32.png",
+      "sha256": "0f33618787bcbbf044a85de8b468df4fd137fc22c9ac889fdaa2f6815d0b4678"
+    },
+    {
+      "path": "assets/images/tile_9-512.png",
+      "sha256": "0bfba731a531185f76ac22b565f8a0243a51c417ded13b27d24da3b28beb597f"
+    },
+    {
+      "path": "assets/images/tile_9-64.png",
+      "sha256": "8007a3e477445bc281732def0a3ba38aabade0d55fe480e6318917182235ed5b"
+    }
+  ]
+}

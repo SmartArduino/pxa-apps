@@ -1,0 +1,15 @@
+{
+  "family": "Starsoil UI 12",
+  "upstream_family": "ZLabs Pixel 12px M CN",
+  "source_url": "https://github.com/Astro-2539/ZLabs-Pixel-12px",
+  "commit": "c4d5b7f7d95f04abcb330d012e4b38becb2de99b",
+  "source_file": "fonts/ZLabsPixel_12px_M_CN.kbitx",
+  "sha256": "94df0996411155ff007afc363939391fcc6e3d325d70406ea4826864a29a11a5",
+  "license": "OFL-1.1",
+  "license_file": "FONT-LICENSE.txt",
+  "native_height": 12,
+  "cjk_advance": 12,
+  "latin_advance": 6,
+  "glyph_count": 572,
+  "conversion": "Exact original bitmap pixels; subset only"
+}

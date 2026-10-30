@@ -115,7 +115,7 @@ class Session:
         self.wait(lambda s:s["view"]==0,"workshop back")
         self.snap(f"day{after['day']}-{self.mode}-upgrade-{line}-{lv+1}")
     def pause(self):
-        if not self.paused:self.tap(276,10);self.paused=True
+        if not self.paused:self.tap(252,10);self.paused=True
         time.sleep(.3)
     def resume(self):
         if self.paused:self.tap(140,85);self.paused=False

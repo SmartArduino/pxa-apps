@@ -32,7 +32,7 @@ static inline gb_display_rect_t gb_display_safe_rect(unsigned w,unsigned h,
 /* Match the physical panel so the Host can copy without scaling/interpolation.
  * The game renderer paints at most 256x240; static bars stay in each buffer. */
 static inline unsigned gb_display_canvas(unsigned *width,unsigned *height) {
-    if(*width<200 || *height<160 || *width>GB_DISPLAY_MAX_WIDTH ||
+    if(*width<160 || *height<160 || *width>GB_DISPLAY_MAX_WIDTH ||
        *height>GB_DISPLAY_MAX_HEIGHT)return 0;
     return 1;
 }

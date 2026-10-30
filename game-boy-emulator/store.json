@@ -1,0 +1,17 @@
+{
+  "name": "GB/GBC 模拟器",
+  "summary": "Game Boy / Game Boy Color 模拟器，提供游戏库、触屏与手柄操作和游戏进度管理。 随安装附带免费自制游戏 2048-gb。",
+  "description": "Game Boy / Game Boy Color 模拟器，提供游戏库、触屏与手柄操作和游戏进度管理。\n\n支持在应用游戏库中选择可用存储来源，ROM 路径以系统显示为准。游戏进度保存在应用私有空间。请自行导入有权使用的 ROM；不附带商业 ROM。兼容性和运行速度需按具体设备及游戏判断。\n\n安装会同时下载并安装 2048-gb 免费自制游戏资源，附带作者许可与源码。来源：https://github.com/Sanqui/2048-gb。不包含任天堂官方或商业 ROM；其他游戏仍可自行导入。\n\n对应版本源码（含移植改动、构建脚本和原许可）：https://github.com/SmartArduino/pxa-apps/archive/refs/tags/apps-2026-10-30-pxa-0.6.0.tar.gz",
+  "kind": "app",
+  "category": "tools",
+  "tags": [
+    "复古掌机",
+    "GB/GBC",
+    "手柄操作",
+    "游戏存档",
+    "自带自制游戏"
+  ],
+  "icon": "assets/icon.png",
+  "cover": "store/cover.png",
+  "changelog": "支持 160 像素宽起的屏幕画布，保持原生分辨率、触控布局与当前 PXA 兼容性。"
+}
