@@ -2,6 +2,22 @@
   "tool": "OpenAI image_gen (built-in)",
   "created": "2026-10-30",
   "artwork": "cover.png",
-  "prompt": "Use case: ads-marketing.\nAsset type: final landscape app-store cover, 16:9, 1536x864. Original premium friendly game illustration. Bold readable exact app title in left third, hero scene center and right, generous margins, clear at thumbnail size. Restrained polished soft 3D illustration, crisp details and purposeful lighting. Only the exact title text; no slogan, buttons, rating, devices, screenshots, interface, branding or watermarks. Opaque background. Depict the real simple offline game faithfully, without implying multiplayer, gambling or additional features.\n\nText (verbatim): \"弹珠迷宫\". Excellent balanced Chinese display lettering with clear high contrast.\nScene: A glossy mint-teal marble balancing inside a clearly visible compact rectangular wooden maze board with soft cream floor and low sage-green walls, a readable winding path, three small golden collectible stars along that path, a modest golden goal opening. The marble is a polished teal sphere with crisp reflection. Isometric three-quarter angle, fresh mint background, warm pale wood, calm sage-green walls, playful tactile toy-like illustration. A single maze board, no floating islands, no complicated traps or features not in the game.",
-  "sha256": "b673e755f78eb05348542b80c6f95c03600fc2e632e0632c1c3b500806a2d6bc"
+  "prompt": "Edit the supplied existing promotional cover for the PXA application 弹珠迷宫. Recompose it as an exact 4:3 landscape cover, approximately 1448 by 1086 pixels. Keep its original illustrated subject, character designs, main objects, color palette, rendering style and mood. Extend and outpaint the scene above and below as needed; arrange the subjects and title naturally within the 4:3 composition, keeping every important object fully visible. Do not stretch the original wide composition. Preserve the exact readable title text “弹珠迷宫”, using the same lettering style as the reference; retain relevant existing numerals and symbols. Do not invent additional labels, logos or text. Maintain polished coherent advertising artwork, with readable visual hierarchy and breathing room at the edges. It is promotional illustration, never a simulated application screenshot: no interface chrome, navigation bars, performance overlays, watermarks, borders, or contact sheets. Output one finished opaque 4:3 image.",
+  "sha256": "bdefe741fbf5f655c5069ad1f45f288bdf65ba889efc7aec4a167d6fc120ac45",
+  "edit_history": [
+    {
+      "generator": "built-in image_gen",
+      "operation": "reference-image aspect-ratio reflow",
+      "prompt": "Edit the supplied existing promotional cover for the PXA application 弹珠迷宫. Recompose it as an exact 4:3 landscape cover, approximately 1448 by 1086 pixels. Keep its original illustrated subject, character designs, main objects, color palette, rendering style and mood. Extend and outpaint the scene above and below as needed; arrange the subjects and title naturally within the 4:3 composition, keeping every important object fully visible. Do not stretch the original wide composition. Preserve the exact readable title text “弹珠迷宫”, using the same lettering style as the reference; retain relevant existing numerals and symbols. Do not invent additional labels, logos or text. Maintain polished coherent advertising artwork, with readable visual hierarchy and breathing room at the edges. It is promotional illustration, never a simulated application screenshot: no interface chrome, navigation bars, performance overlays, watermarks, borders, or contact sheets. Output one finished opaque 4:3 image.",
+      "input_sha256": "b673e755f78eb05348542b80c6f95c03600fc2e632e0632c1c3b500806a2d6bc",
+      "input_source": "https://github.com/SmartArduino/pxa-apps/blob/a05319fe4d6cc3072aaf7d996a2e8667881f6d75/marble-maze/store/cover.png"
+    }
+  ],
+  "generator": "built-in image_gen",
+  "dimensions": [
+    1448,
+    1086
+  ],
+  "runtime_screenshot": false,
+  "aspect_ratio": "4:3"
 }

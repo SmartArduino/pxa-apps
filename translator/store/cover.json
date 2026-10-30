@@ -3,6 +3,22 @@
   "created": "2026-10-30",
   "artwork": "cover.png",
   "reference_images": [],
-  "prompt": "Use case: ads-marketing.\nAsset type: premium landscape PXA app-store promotional cover, 16:9, approximately 1536x864, opaque background.\nApp title exact text: \"随译翻译\".\nPrimary request: create original polished cover art for a compact multilingual text and voice translation app. Its actual identity uses warm off-white, deep ink teal #203b38 and mint green #178577. The theme is clear communication between languages.\nSubject: two beautifully crafted floating conversation tiles, one displaying the single Chinese character \"文\", the other the single Latin letter \"A\", connected by a pair of elegant curved exchange arrows. A small tasteful microphone and soft audio waveform suggest voice input and spoken translations. These are sculptural promotional symbols, not app interface controls.\nStyle: refined editorial 3D illustration, softly rounded ceramic and frosted glass forms, crisp edges, restrained depth, subtle mint gradients, gentle shadows, excellent light and visual hierarchy.\nComposition: bold title on the left with generous safe margins, hero language tiles and audio motif in the center-right; calm negative space, readable at thumbnail sizes. Match the understated mint/cream palette of the app.\nText: only \"随译翻译\", \"文\", and \"A\". Render the Chinese title exactly and prominently, with balanced clear typography.\nConstraints: no screenshots, fake UI, menus, ratings, badges, system bars, navigation indicators, device mockups, watermarks or third-party brand logos. No claims of free voice service, offline operation, camera translation or extra features. No additional words.",
-  "sha256": "99bae53e6d01f3a90fb5d30c7d97c8040b2d4f5aedf13561fde717fe4cc48e3c"
+  "prompt": "Edit the supplied existing promotional cover for the PXA application 随译翻译. Recompose it as an exact 4:3 landscape cover, approximately 1448 by 1086 pixels. Keep its original illustrated subject, character designs, main objects, color palette, rendering style and mood. Extend and outpaint the scene above and below as needed; arrange the subjects and title naturally within the 4:3 composition, keeping every important object fully visible. Do not stretch the original wide composition. Preserve the exact readable title text “随译翻译”, using the same lettering style as the reference; retain relevant existing numerals and symbols. Do not invent additional labels, logos or text. Maintain polished coherent advertising artwork, with readable visual hierarchy and breathing room at the edges. It is promotional illustration, never a simulated application screenshot: no interface chrome, navigation bars, performance overlays, watermarks, borders, or contact sheets. Output one finished opaque 4:3 image.",
+  "sha256": "6a6bfd5d344d5c9617a7f5e3b4d3a2a7f414f7f070a97428fd9beffdd3e8a5f0",
+  "edit_history": [
+    {
+      "generator": "built-in image_gen",
+      "operation": "reference-image aspect-ratio reflow",
+      "prompt": "Edit the supplied existing promotional cover for the PXA application 随译翻译. Recompose it as an exact 4:3 landscape cover, approximately 1448 by 1086 pixels. Keep its original illustrated subject, character designs, main objects, color palette, rendering style and mood. Extend and outpaint the scene above and below as needed; arrange the subjects and title naturally within the 4:3 composition, keeping every important object fully visible. Do not stretch the original wide composition. Preserve the exact readable title text “随译翻译”, using the same lettering style as the reference; retain relevant existing numerals and symbols. Do not invent additional labels, logos or text. Maintain polished coherent advertising artwork, with readable visual hierarchy and breathing room at the edges. It is promotional illustration, never a simulated application screenshot: no interface chrome, navigation bars, performance overlays, watermarks, borders, or contact sheets. Output one finished opaque 4:3 image.",
+      "input_sha256": "99bae53e6d01f3a90fb5d30c7d97c8040b2d4f5aedf13561fde717fe4cc48e3c",
+      "input_source": "https://github.com/SmartArduino/pxa-apps/blob/a05319fe4d6cc3072aaf7d996a2e8667881f6d75/translator/store/cover.png"
+    }
+  ],
+  "generator": "built-in image_gen",
+  "dimensions": [
+    1448,
+    1086
+  ],
+  "runtime_screenshot": false,
+  "aspect_ratio": "4:3"
 }

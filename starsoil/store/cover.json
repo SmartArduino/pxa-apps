@@ -1,0 +1,20 @@
+{
+  "edit_history": [
+    {
+      "generator": "built-in image_gen",
+      "operation": "reference-image aspect-ratio reflow",
+      "prompt": "Edit the supplied existing promotional cover for the PXA application 星壤物语. Recompose it as an exact 4:3 landscape cover, approximately 1448 by 1086 pixels. Keep its original illustrated subject, character designs, main objects, color palette, rendering style and mood. Extend and outpaint the scene above and below as needed; arrange the subjects and title naturally within the 4:3 composition, keeping every important object fully visible. Do not stretch the original wide composition. Preserve the exact readable title text “星壤物语”, using the same lettering style as the reference; retain relevant existing numerals and symbols. Do not invent additional labels, logos or text. Maintain polished coherent advertising artwork, with readable visual hierarchy and breathing room at the edges. It is promotional illustration, never a simulated application screenshot: no interface chrome, navigation bars, performance overlays, watermarks, borders, or contact sheets. Output one finished opaque 4:3 image.",
+      "input_sha256": "3741cdf30b50e2394fa9c92e46ce049dab671bdcb107eccef4831131b6f6c801",
+      "input_source": "https://github.com/SmartArduino/pxa-apps/blob/a05319fe4d6cc3072aaf7d996a2e8667881f6d75/starsoil/store/cover.png"
+    }
+  ],
+  "generator": "built-in image_gen",
+  "prompt": "Edit the supplied existing promotional cover for the PXA application 星壤物语. Recompose it as an exact 4:3 landscape cover, approximately 1448 by 1086 pixels. Keep its original illustrated subject, character designs, main objects, color palette, rendering style and mood. Extend and outpaint the scene above and below as needed; arrange the subjects and title naturally within the 4:3 composition, keeping every important object fully visible. Do not stretch the original wide composition. Preserve the exact readable title text “星壤物语”, using the same lettering style as the reference; retain relevant existing numerals and symbols. Do not invent additional labels, logos or text. Maintain polished coherent advertising artwork, with readable visual hierarchy and breathing room at the edges. It is promotional illustration, never a simulated application screenshot: no interface chrome, navigation bars, performance overlays, watermarks, borders, or contact sheets. Output one finished opaque 4:3 image.",
+  "dimensions": [
+    1448,
+    1086
+  ],
+  "sha256": "bc2720fc7470e4633874fec76f0c53df82d1504242df44dee0653bd7d90ce7b6",
+  "runtime_screenshot": false,
+  "aspect_ratio": "4:3"
+}

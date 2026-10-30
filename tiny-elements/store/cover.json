@@ -1,9 +1,12 @@
 {
   "kind": "illustrated-cover",
   "generator": "built-in image_gen",
-  "width": 1448,
-  "height": 1086,
   "sha256": "50ef380219d90c885c0ec3c755f1daa5323b0663764d89d4ccb989c068c7abd4",
   "runtime_screenshot": false,
-  "prompt": "Use case: illustration-story. Create an original promotional illustration for Tiny Elements, a pocket particle-sandbox game, using the attached icon as the palette reference: dark blue/teal surroundings, mint framing, ochre sand, blue water, gray stone and green plants. Landscape 4:3 composition intended 1280x960, opaque full artwork. Show a charming small cross-section particle world: a cascade of golden sand settling beside a clear blue pool, trees growing from seeds on stepped stone, a tiny orange lava stream cooling into stone with delicate pale steam at the far side. Clear cellular / voxel pixel-inspired material blocks, original playful natural simulation, subtle depth and clean geometry. Crisp attractive editorial composition, materials visually distinct, lively but uncluttered, subjects inside safe margins. No writing, letters, numbers, toolbars, selection cursors, fake game screenshot, UI chrome, device frame, logos or watermark. One complete cover illustration."
+  "prompt": "Use case: illustration-story. Create an original promotional illustration for Tiny Elements, a pocket particle-sandbox game, using the attached icon as the palette reference: dark blue/teal surroundings, mint framing, ochre sand, blue water, gray stone and green plants. Landscape 4:3 composition intended 1280x960, opaque full artwork. Show a charming small cross-section particle world: a cascade of golden sand settling beside a clear blue pool, trees growing from seeds on stepped stone, a tiny orange lava stream cooling into stone with delicate pale steam at the far side. Clear cellular / voxel pixel-inspired material blocks, original playful natural simulation, subtle depth and clean geometry. Crisp attractive editorial composition, materials visually distinct, lively but uncluttered, subjects inside safe margins. No writing, letters, numbers, toolbars, selection cursors, fake game screenshot, UI chrome, device frame, logos or watermark. One complete cover illustration.",
+  "dimensions": [
+    1448,
+    1086
+  ],
+  "aspect_ratio": "4:3"
 }

@@ -5,6 +5,22 @@
   "reference_images": [
     "https://app.doit.am/media/apps/45/374?width=320&format=jpeg"
   ],
-  "prompt": "Use case: ads-marketing.\nAsset type: premium landscape app-store cover illustration, 16:9 aspect ratio, approximately 1536x864.\nApp title (exact text): \"2048\".\nReference role: the provided existing app icon and/or actual app screen establishes the app's subject, palette and visual identity. Use it for thematic guidance; create a NEW promotional cover illustration. Do not reproduce a screenshot or the app interface.\nScene and style: A beautifully composed rounded 4-by-4 number-tile board, a few cream, pale orange and gold tiles with 2, 4, 8, 16 and a prominent glowing 2048 tile, suggesting the merging of equal numbers. Refined tactile 3D geometry against deep midnight blue inspired by the app, subtle cyan accents and warm gold illumination. Pure number puzzle, no mascots, no casino imagery, no invented buttons.\nComposition: single clear landscape composition with title placed prominently in the left third and a bold, beautiful hero scene across the center and right. Keep all essential content within generous safe margins; readable and attractive at thumbnail sizes. Carefully typeset \"2048\" exactly, using a polished bold Chinese display treatment appropriate to the app, excellent contrast and balanced spacing.\nText: only \"2048\". Small numeric puzzle-tile labels are allowed when the scene specifically calls for them. No subtitles, slogans, badges, watermarks or other words.\nConstraints: accurate to the app's actual advertised purpose, original appealing artwork, crisp edges and purposeful lighting. No fake UI, menus, system bars, navigation indicators, debug overlays, screenshots, device framing around an app screenshot, store ratings, payment claims or additional logos. Do not imply extra app features. Opaque background.",
-  "sha256": "d255440d66772167b0508797606383f357386bf6ddd241ee282c006ee5861136"
+  "prompt": "Edit the supplied existing promotional cover for the PXA application 2048. Recompose it as an exact 4:3 landscape cover, approximately 1448 by 1086 pixels. Keep its original illustrated subject, character designs, main objects, color palette, rendering style and mood. Extend and outpaint the scene above and below as needed; arrange the subjects and title naturally within the 4:3 composition, keeping every important object fully visible. Do not stretch the original wide composition. Preserve the exact readable title text “2048”, using the same lettering style as the reference; retain relevant existing numerals and symbols. Do not invent additional labels, logos or text. Maintain polished coherent advertising artwork, with readable visual hierarchy and breathing room at the edges. It is promotional illustration, never a simulated application screenshot: no interface chrome, navigation bars, performance overlays, watermarks, borders, or contact sheets. Output one finished opaque 4:3 image.",
+  "sha256": "6681e6d64c18972873b2270bd3e133dae16ff09e1e6e8d907ccb04d3ac4b2f24",
+  "edit_history": [
+    {
+      "generator": "built-in image_gen",
+      "operation": "reference-image aspect-ratio reflow",
+      "prompt": "Edit the supplied existing promotional cover for the PXA application 2048. Recompose it as an exact 4:3 landscape cover, approximately 1448 by 1086 pixels. Keep its original illustrated subject, character designs, main objects, color palette, rendering style and mood. Extend and outpaint the scene above and below as needed; arrange the subjects and title naturally within the 4:3 composition, keeping every important object fully visible. Do not stretch the original wide composition. Preserve the exact readable title text “2048”, using the same lettering style as the reference; retain relevant existing numerals and symbols. Do not invent additional labels, logos or text. Maintain polished coherent advertising artwork, with readable visual hierarchy and breathing room at the edges. It is promotional illustration, never a simulated application screenshot: no interface chrome, navigation bars, performance overlays, watermarks, borders, or contact sheets. Output one finished opaque 4:3 image.",
+      "input_sha256": "d255440d66772167b0508797606383f357386bf6ddd241ee282c006ee5861136",
+      "input_source": "https://github.com/SmartArduino/pxa-apps/blob/a05319fe4d6cc3072aaf7d996a2e8667881f6d75/game-2048/store/cover.png"
+    }
+  ],
+  "generator": "built-in image_gen",
+  "dimensions": [
+    1448,
+    1086
+  ],
+  "runtime_screenshot": false,
+  "aspect_ratio": "4:3"
 }

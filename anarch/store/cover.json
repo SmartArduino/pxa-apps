@@ -1,9 +1,12 @@
 {
   "kind": "illustrated-cover",
   "generator": "built-in image_gen",
-  "width": 1448,
-  "height": 1086,
   "sha256": "173d86d8a3c9ffb5838a0f1e765192e2b2e735fa1d51775ae65cd2252444a6bd",
   "runtime_screenshot": false,
-  "prompt": "Use case: illustration-story. Create an original illustrated cover for the CC0 first-person action game Anarch. Landscape 4:3 composition, intended 1280x960; full opaque artwork. A stylized low-poly pixel-art science-fiction maze with copper stone corridors, rust-red architectural accents, teal pools of light and a few small abstract robotic creatures in the distance. Convey exploration and fast arcade action, strong depth and readable silhouettes, restrained retro palette inspired by early software-rendered games, refined editorial composition with no actual game UI. No gore, no blood, no lettering or numbers, no watermark, no menus, no health bars, no crosshair, no device frame. This is promotional original artwork, never a screenshot. Important subjects comfortably within margins. One complete cover."
+  "prompt": "Use case: illustration-story. Create an original illustrated cover for the CC0 first-person action game Anarch. Landscape 4:3 composition, intended 1280x960; full opaque artwork. A stylized low-poly pixel-art science-fiction maze with copper stone corridors, rust-red architectural accents, teal pools of light and a few small abstract robotic creatures in the distance. Convey exploration and fast arcade action, strong depth and readable silhouettes, restrained retro palette inspired by early software-rendered games, refined editorial composition with no actual game UI. No gore, no blood, no lettering or numbers, no watermark, no menus, no health bars, no crosshair, no device frame. This is promotional original artwork, never a screenshot. Important subjects comfortably within margins. One complete cover.",
+  "dimensions": [
+    1448,
+    1086
+  ],
+  "aspect_ratio": "4:3"
 }

@@ -2,7 +2,23 @@
   "tool": "OpenAI image_gen (built-in)",
   "created": "2026-10-30",
   "artwork": "cover.png",
-  "prompt": "Use case: ads-marketing. Asset type: premium landscape PXA app-store cover illustration, wide 16:9 composition, approximately 1672 x 941 pixels. App title, exact Chinese text: “水平仪”. Create a polished original cover for a real dual-axis spirit level app. The actual visual identity is a dark midnight-teal precision instrument with etched circular graduations, a luminous mint-green bubble precisely in a central crosshair, a horizontal glass vial and subtle brushed metal trim. Design a refined three-dimensional instrument-inspired illustration, not a screenshot: one large beautiful circular bubble level in the right half, with a short horizontal bubble vial beneath it, sitting on a subtle dark architectural plane. Deep teal and black-green palette, restrained mint glow, soft directional studio light, crisp etched ticks, elegant materials, calm premium engineering aesthetic, plenty of negative space. Typeset only the large exact title “水平仪” in the left third in clear beautiful ivory Chinese lettering. Generous safe margins. Do not add extra text, slogans, calibration numbers, accuracy claims, brand logos, phone/device frames, fake app interfaces, buttons, navigation bars, performance overlays, ratings, badges or watermarks. Opaque full-bleed background. Accurate to a simple gravity-based level tool, no laser, GPS, maps or extra measurement features.",
-  "sha256": "50af80cf1ce4591d69d6cd08804485ecaad468a70cca6e1697c03f7db04b6acc",
-  "prompt_summary": "Use case: ads-marketing. Premium landscape PXA app-store cover, 16:9. Exact Chinese title: 水平仪. Dark midnight-teal precision instrument, etched circular graduations, luminous mint bubble centered in crosshair, horizontal glass vial, brushed metal trim. Refined three-dimensional instrument-inspired illustration on an architectural plane. Large ivory Chinese title in left third, generous safe margins. Opaque background. No fake app UI, extra text, accuracy claims, device frames, system bars, badges or watermarks."
+  "prompt": "Edit the supplied existing promotional cover for the PXA application 水平仪. Recompose it as an exact 4:3 landscape cover, approximately 1448 by 1086 pixels. Keep its original illustrated subject, character designs, main objects, color palette, rendering style and mood. Extend and outpaint the scene above and below as needed; arrange the subjects and title naturally within the 4:3 composition, keeping every important object fully visible. Do not stretch the original wide composition. Preserve the exact readable title text “水平仪”, using the same lettering style as the reference; retain relevant existing numerals and symbols. Do not invent additional labels, logos or text. Maintain polished coherent advertising artwork, with readable visual hierarchy and breathing room at the edges. It is promotional illustration, never a simulated application screenshot: no interface chrome, navigation bars, performance overlays, watermarks, borders, or contact sheets. Output one finished opaque 4:3 image.",
+  "sha256": "dc33a07c411c6796e889a0e53af684c68ec0d27080d56f19493a802bd3186553",
+  "prompt_summary": "Use case: ads-marketing. Premium landscape PXA app-store cover, 16:9. Exact Chinese title: 水平仪. Dark midnight-teal precision instrument, etched circular graduations, luminous mint bubble centered in crosshair, horizontal glass vial, brushed metal trim. Refined three-dimensional instrument-inspired illustration on an architectural plane. Large ivory Chinese title in left third, generous safe margins. Opaque background. No fake app UI, extra text, accuracy claims, device frames, system bars, badges or watermarks.",
+  "edit_history": [
+    {
+      "generator": "built-in image_gen",
+      "operation": "reference-image aspect-ratio reflow",
+      "prompt": "Edit the supplied existing promotional cover for the PXA application 水平仪. Recompose it as an exact 4:3 landscape cover, approximately 1448 by 1086 pixels. Keep its original illustrated subject, character designs, main objects, color palette, rendering style and mood. Extend and outpaint the scene above and below as needed; arrange the subjects and title naturally within the 4:3 composition, keeping every important object fully visible. Do not stretch the original wide composition. Preserve the exact readable title text “水平仪”, using the same lettering style as the reference; retain relevant existing numerals and symbols. Do not invent additional labels, logos or text. Maintain polished coherent advertising artwork, with readable visual hierarchy and breathing room at the edges. It is promotional illustration, never a simulated application screenshot: no interface chrome, navigation bars, performance overlays, watermarks, borders, or contact sheets. Output one finished opaque 4:3 image.",
+      "input_sha256": "50af80cf1ce4591d69d6cd08804485ecaad468a70cca6e1697c03f7db04b6acc",
+      "input_source": "https://github.com/SmartArduino/pxa-apps/blob/a05319fe4d6cc3072aaf7d996a2e8667881f6d75/spirit-level/store/cover.png"
+    }
+  ],
+  "generator": "built-in image_gen",
+  "dimensions": [
+    1448,
+    1086
+  ],
+  "runtime_screenshot": false,
+  "aspect_ratio": "4:3"
 }

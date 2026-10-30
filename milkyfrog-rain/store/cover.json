@@ -2,7 +2,23 @@
   "tool": "OpenAI image_gen (built-in)",
   "created": "2026-10-29",
   "reference": "../art/frog.png",
-  "prompt": "Use case: ads-marketing.\nAsset type: landscape app-store game cover, 16:9, preferably 1536x864. This is promotional illustration, not a screenshot.\nReference image: original yellow Milky Frog character identity, preserve its distinct face, eyes, body shape and awkward lovable 3D meme quality.\nPrimary request: Create a polished cover for the existing PXA game titled \"奶块雨\".\nScene: The original yellow Milky Frog meme character joyfully reaching to catch a shower of small cream milk cubes, with a few golden coins and pale sage motion trails. Communicate catching falling milk blocks. Character in natural proportions, readable green eyes, pale belly, comically calm expression.\nVisual series: creamy ivory background, honey yellow hero elements, muted sage green details, warm brown shadows; crisp high-resolution clay-like 3D cutout illustration with subtle grain, soft studio light, rounded shapes, restrained playful depth. Main objects fully composed within generous safe margins, strong silhouette and clear reading at small card sizes.\nComposition: coherent single landscape cover. Large game title in the left third, clear breathing room, illustration mainly across center and right. Strong simple hierarchy, never crowded. Typography bold, rounded and beautifully typeset with exactly this Chinese title: \"奶块雨\".\nText (verbatim): \"奶块雨\". No other words, subtitles, slogans, badges, developer marks, tiny lettering, UI controls, device mockups, borders or watermarks. No invented game modes or interface. Preserve normal anatomy and aspect ratio of the character. Opaque background.",
+  "prompt": "Edit the supplied existing promotional cover for the PXA application 奶块雨. Recompose it as an exact 4:3 landscape cover, approximately 1448 by 1086 pixels. Keep its original illustrated subject, character designs, main objects, color palette, rendering style and mood. Extend and outpaint the scene above and below as needed; arrange the subjects and title naturally within the 4:3 composition, keeping every important object fully visible. Do not stretch the original wide composition. Preserve the exact readable title text “奶块雨”, using the same lettering style as the reference; retain relevant existing numerals and symbols. Do not invent additional labels, logos or text. Maintain polished coherent advertising artwork, with readable visual hierarchy and breathing room at the edges. It is promotional illustration, never a simulated application screenshot: no interface chrome, navigation bars, performance overlays, watermarks, borders, or contact sheets. Output one finished opaque 4:3 image.",
   "artwork": "cover.png",
-  "sha256": "30d7687fb6bb1876ef4cec379a98024708c547c781a65eee9197370f093a94ec"
+  "sha256": "a612b91912e4022f6034a467ddf70c3780f47c2bd89d052cd321749f1dfe302a",
+  "edit_history": [
+    {
+      "generator": "built-in image_gen",
+      "operation": "reference-image aspect-ratio reflow",
+      "prompt": "Edit the supplied existing promotional cover for the PXA application 奶块雨. Recompose it as an exact 4:3 landscape cover, approximately 1448 by 1086 pixels. Keep its original illustrated subject, character designs, main objects, color palette, rendering style and mood. Extend and outpaint the scene above and below as needed; arrange the subjects and title naturally within the 4:3 composition, keeping every important object fully visible. Do not stretch the original wide composition. Preserve the exact readable title text “奶块雨”, using the same lettering style as the reference; retain relevant existing numerals and symbols. Do not invent additional labels, logos or text. Maintain polished coherent advertising artwork, with readable visual hierarchy and breathing room at the edges. It is promotional illustration, never a simulated application screenshot: no interface chrome, navigation bars, performance overlays, watermarks, borders, or contact sheets. Output one finished opaque 4:3 image.",
+      "input_sha256": "30d7687fb6bb1876ef4cec379a98024708c547c781a65eee9197370f093a94ec",
+      "input_source": "https://github.com/SmartArduino/pxa-apps/blob/a05319fe4d6cc3072aaf7d996a2e8667881f6d75/milkyfrog-rain/store/cover.png"
+    }
+  ],
+  "generator": "built-in image_gen",
+  "dimensions": [
+    1448,
+    1086
+  ],
+  "runtime_screenshot": false,
+  "aspect_ratio": "4:3"
 }

@@ -1,10 +1,15 @@
 {
   "source": "cover.svg",
-  "tool": "CairoSVG",
+  "tool": "rsvg-convert",
   "license": "CC0-1.0",
   "dimensions": [
     1600,
-    900
+    1200
   ],
-  "sha256": "5f1e8ddc957be18d996486a4c3e8bc67129a944810dac3c45c8be6eacb48af96"
+  "sha256": "cd2ecda6a2d27f18b0c0950224304ada0b78189ec9d02cfee038753a18249b81",
+  "runtime_screenshot": false,
+  "operation": "4:3 reflow of the existing vector artwork",
+  "input_sha256": "5f1e8ddc957be18d996486a4c3e8bc67129a944810dac3c45c8be6eacb48af96",
+  "input_source": "https://github.com/SmartArduino/pxa-apps/blob/a05319fe4d6cc3072aaf7d996a2e8667881f6d75/calculator/store/cover.svg",
+  "aspect_ratio": "4:3"
 }

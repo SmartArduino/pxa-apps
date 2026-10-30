@@ -2,6 +2,22 @@
   "tool": "OpenAI image_gen (built-in)",
   "created": "2026-10-30",
   "artwork": "cover.png",
-  "prompt": "Use case: ads-marketing.\nAsset type: final landscape app-store cover, 16:9, 1536x864. Original premium friendly game illustration. Bold readable exact app title in left third, hero scene center and right, generous margins, clear at thumbnail size. Restrained polished soft 3D illustration, crisp details and purposeful lighting. Only the exact title text; no slogan, buttons, rating, devices, screenshots, interface, branding or watermarks. Opaque background. Depict the real simple offline game faithfully, without implying multiplayer, gambling or additional features.\n\nText (verbatim): \"好运签\". Excellent balanced Chinese display lettering with clear high contrast.\nScene: A clearly traditional rounded wooden Chinese fortune-stick cylinder, dark elliptical opening, slender cream bamboo fortune sticks with tiny incised red markings fanning gently from its mouth, a red circular seal with the character 签, green-brass bands and a red cord tassel. One bamboo slip lifted slightly. Warm cream paper backdrop, subtle circular paper motifs, rich natural walnut wood, vermilion accents, soft sage green, tiny warm golden glints. Beautiful tranquil joyful daily encouragement. The cylinder must unmistakably be a wooden fortune-stick tube: no carton, no food, no french fries, no yellow chunky sticks.",
-  "sha256": "481dfa92c33f89d5a50578ed73090c099eef8b06ac1af4f328e4868d391c1d5c"
+  "prompt": "Edit the supplied existing promotional cover for the PXA application 好运签. Recompose it as an exact 4:3 landscape cover, approximately 1448 by 1086 pixels. Keep its original illustrated subject, character designs, main objects, color palette, rendering style and mood. Extend and outpaint the scene above and below as needed; arrange the subjects and title naturally within the 4:3 composition, keeping every important object fully visible. Do not stretch the original wide composition. Preserve the exact readable title text “好运签”, using the same lettering style as the reference; retain relevant existing numerals and symbols. Do not invent additional labels, logos or text. Maintain polished coherent advertising artwork, with readable visual hierarchy and breathing room at the edges. It is promotional illustration, never a simulated application screenshot: no interface chrome, navigation bars, performance overlays, watermarks, borders, or contact sheets. Output one finished opaque 4:3 image.",
+  "sha256": "f28ecc0c717af04e7c1b533ccbcc8a0b0ce1ff690c41791be78b51a9408282f5",
+  "edit_history": [
+    {
+      "generator": "built-in image_gen",
+      "operation": "reference-image aspect-ratio reflow",
+      "prompt": "Edit the supplied existing promotional cover for the PXA application 好运签. Recompose it as an exact 4:3 landscape cover, approximately 1448 by 1086 pixels. Keep its original illustrated subject, character designs, main objects, color palette, rendering style and mood. Extend and outpaint the scene above and below as needed; arrange the subjects and title naturally within the 4:3 composition, keeping every important object fully visible. Do not stretch the original wide composition. Preserve the exact readable title text “好运签”, using the same lettering style as the reference; retain relevant existing numerals and symbols. Do not invent additional labels, logos or text. Maintain polished coherent advertising artwork, with readable visual hierarchy and breathing room at the edges. It is promotional illustration, never a simulated application screenshot: no interface chrome, navigation bars, performance overlays, watermarks, borders, or contact sheets. Output one finished opaque 4:3 image.",
+      "input_sha256": "481dfa92c33f89d5a50578ed73090c099eef8b06ac1af4f328e4868d391c1d5c",
+      "input_source": "https://github.com/SmartArduino/pxa-apps/blob/a05319fe4d6cc3072aaf7d996a2e8667881f6d75/fortune-sticks/store/cover.png"
+    }
+  ],
+  "generator": "built-in image_gen",
+  "dimensions": [
+    1448,
+    1086
+  ],
+  "runtime_screenshot": false,
+  "aspect_ratio": "4:3"
 }
