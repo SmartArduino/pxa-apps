@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: MIT
 #include "model.hpp"
 #include "../common/motion-games/runtime.hpp"
+#include "../common/motion-games/sound.hpp"
 namespace marble {
 using namespace motion;
 enum class Screen {home,play,pause,levels,settings,result};
-enum Action {play_action=1,levels_action,settings_action,home_action,resume_action,calibrate_action,control_action,hints_action,restart_action,sensitivity_action,rotation_action,flip_action,exit_action,next_action,previous_action,next_level_action,level_base=100};
+enum Action {play_action=1,levels_action,settings_action,home_action,resume_action,calibrate_action,control_action,hints_action,restart_action,sensitivity_action,rotation_action,flip_action,exit_action,sound_action,next_action,previous_action,next_level_action,level_base=100};
 struct App:Runtime<App> {
+ Sounds sounds;
  Profile profile;Maze board;Screen screen=Screen::home;
  bool saving=false,save_pending=false,dragging=false,was_active=false;Vec touch{};int origin_x=0,origin_y=0;
- float heading=0,celebrate=0,autosave=0;unsigned level_page=0;
+ float heading=0,celebrate=0,autosave=0,impact_cooldown=0;unsigned level_page=0;
  std::array<Rect,12> tiles{};std::array<bool,12> tile_visible{};
  static const char* id(){return "pxa-marble-maze";}static const char* ready_message(){return "Marble ready";}
  pxa::Task<void> load(){std::array<std::byte,Profile::size> data{};auto n=co_await ctx->storage().get("marble-v1",data);if(n&&*n==data.size())profile.decode(data);co_return pxa::Result<void>{};}
@@ -20,15 +22,16 @@ struct App:Runtime<App> {
  pxa::Task<void> persist(){while(save_pending){save_pending=false;auto data=profile.encode();auto result=co_await ctx->storage().set("marble-v1",data);if(!result){log("Marble save failed");break;}}saving=false;co_return pxa::Result<void>{};}
  void snapshot(){if(screen==Screen::play||screen==Screen::pause)profile.snapshot(board);save();}
  void show_home(){snapshot();request_motion(false);screen=Screen::home;controls.focus=play_action;dragging=false;touch={};prepare();dirty=true;}
+ void start_motion(bool force=false){motion.rotation=profile.rotation;motion.flip_x=profile.flip;
+   if(profile.control==0){if(force||!motion.calibrated){motion.calibrate();log("Marble calibration begin");}else log("Marble calibration reused");request_motion(true);}else request_motion(false);}
  void begin(bool restore=true){request_motion(false);generate(profile.selected);if(restore)profile.restore(board);
    screen=Screen::play;controls.focus=resume_action;heading=0;autosave=0;was_active=false;celebrate=0;dragging=false;touch={};
-   motion.rotation=profile.rotation;motion.flip_x=profile.flip;
-   if(profile.control==0){motion.calibrate();request_motion(true);}dirty=true;
+   start_motion();dirty=true;
    char text[100];std::snprintf(text,sizeof text,"Marble start level=%u restored=%u size=%dx%d",profile.selected+1,unsigned(restore&&profile.run),board.w,board.h);log(text);}
- void pause(){if(screen!=Screen::play)return;profile.snapshot(board);save();request_motion(false);board.velocity={};touch={};dragging=false;screen=Screen::pause;controls.focus=resume_action;dirty=true;}
- void resume(bool recalibrate=true){screen=Screen::play;board.velocity={};was_active=false;last_tick=0;controls.focus=resume_action;
-   if(profile.control==0){if(recalibrate)motion.calibrate();request_motion(true);}else request_motion(false);dirty=true;}
- void activate(int action){
+ void pause(){if(screen!=Screen::play)return;sounds.stop();profile.snapshot(board);save();request_motion(false);board.velocity={};touch={};dragging=false;screen=Screen::pause;controls.focus=resume_action;dirty=true;}
+ void resume(bool recalibrate=false){screen=Screen::play;board.velocity={};was_active=false;last_tick=0;controls.focus=resume_action;
+   start_motion(recalibrate);dirty=true;}
+ void activate(int action){if(action!=sound_action)sounds.play(Cue::click);
    if(action>=level_base&&action<level_base+12){unsigned level=unsigned(action-level_base);if(level>profile.unlocked)return;
      if(level!=profile.selected)profile.run=false;profile.selected=level;save();begin(true);return;}
    switch(action){
@@ -37,14 +40,15 @@ struct App:Runtime<App> {
    case levels_action:request_motion(false);screen=Screen::levels;level_page=profile.selected/per_page();controls.focus=level_base+int(profile.selected);dirty=true;break;
    case settings_action:screen=Screen::settings;controls.focus=home_action;request_motion(false);dirty=true;break;
    case resume_action:if(screen==Screen::play)pause();else resume();break;
-   case calibrate_action:profile.control=0;save();resume();break;
+   case calibrate_action:profile.control=0;save();resume(true);break;
    case control_action:profile.control=(profile.control+1)%3;save();if(screen==Screen::pause)resume();else dirty=true;break;
    case hints_action:profile.hints=!profile.hints;save();if(screen==Screen::pause)resume();else dirty=true;break;
    case restart_action:profile.selected=board.level;profile.run=false;save();begin(false);break;
    case sensitivity_action:profile.sensitivity=(profile.sensitivity+1)%3;save();dirty=true;break;
    case rotation_action:profile.rotation=(profile.rotation+1)%4;motion.rotation=profile.rotation;save();dirty=true;break;
    case flip_action:profile.flip=!profile.flip;motion.flip_x=profile.flip;save();dirty=true;break;
-   case exit_action:request_exit();break;
+   case sound_action:sounds.toggle();dirty=true;break;
+    case exit_action:request_exit();break;
    case next_action:level_page=(level_page+1)%((12+per_page()-1)/per_page());controls.focus=level_base+int(level_page*per_page());dirty=true;break;
    case previous_action:if(level_page){--level_page;controls.focus=level_base+int(level_page*per_page());dirty=true;}break;
    case next_level_action:if(board.level<11){profile.selected=board.level+1;profile.run=false;save();begin(false);}else activate(levels_action);break;
@@ -69,16 +73,17 @@ struct App:Runtime<App> {
  Rect board_area()const{int top=h<220?44:57,bottom=h-(h<220?22:29);return {10,top,w-20,std::max(35,bottom-top)};}
  Rect home_area()const{int top=h<220?43:65,bottom=h-(h<220?57:77);return {16,top,w-32,std::max(30,bottom-top)};}
  int cell_size(Rect area)const{return std::max(3,std::min((area.w-8)/board.w,(area.h-8)/board.h));}
- void tick(float dt){if(celebrate>0){celebrate=std::max(0.f,celebrate-dt);dirty=true;}if(screen!=Screen::play)return;
+ void tick(float dt){impact_cooldown=std::max(0.f,impact_cooldown-dt);if(celebrate>0){celebrate=std::max(0.f,celebrate-dt);dirty=true;}if(screen!=Screen::play)return;
    Vec tilt{};bool active=false;if(dragging){tilt=touch;active=true;}else if(profile.control==1){tilt={std::cos(heading)*.40f,std::sin(heading)*.40f};active=true;}
    else if(profile.control==0&&motion.calibrated&&motion.fresh(now)){tilt=motion.tilt();active=true;}
    dirty|=active!=was_active;was_active=active;if(!active)return;
    unsigned seconds=unsigned(board.elapsed),stars=board.collected;int cell=cell_size(board_area()),px=int(board.ball.x*cell),py=int(board.ball.y*cell);
-   board.tick(dt,tilt,profile.sensitivity==0?.65f:profile.sensitivity==1?1.f:1.4f);autosave+=dt;
+   auto previous_velocity=board.velocity;board.tick(dt,tilt,profile.sensitivity==0?.65f:profile.sensitivity==1?1.f:1.4f);autosave+=dt;
    dirty|=seconds!=unsigned(board.elapsed)||stars!=board.collected||px!=int(board.ball.x*cell)||py!=int(board.ball.y*cell);
-   if(stars!=board.collected){celebrate=.45f;profile.snapshot(board);save();log("Marble star collected");}
+   if(!impact_cooldown&&((std::abs(previous_velocity.x)>.6f&&board.velocity.x==0)||(std::abs(previous_velocity.y)>.6f&&board.velocity.y==0))){sounds.play(Cue::impact);impact_cooldown=.3f;}
+   if(stars!=board.collected){sounds.play(Cue::star,unsigned(std::popcount(board.collected)));celebrate=.45f;profile.snapshot(board);save();log("Marble star collected");}
    if(autosave>=15){autosave=0;profile.snapshot(board);save();}
-   if(board.won){unsigned level=board.level;profile.finish(board);save();screen=Screen::result;controls.focus=next_level_action;request_motion(false);celebrate=.8f;dirty=true;char s[100];std::snprintf(s,sizeof s,"Marble won level=%u ms=%u",level+1,unsigned(board.elapsed*1000));log(s);}
+   if(board.won){sounds.play(Cue::win);unsigned level=board.level;profile.finish(board);save();screen=Screen::result;controls.focus=next_level_action;request_motion(false);celebrate=.8f;dirty=true;char s[100];std::snprintf(s,sizeof s,"Marble won level=%u ms=%u",level+1,unsigned(board.elapsed*1000));log(s);}
  }
  void background(){if(screen==Screen::play)pause();else if(screen==Screen::pause)snapshot();dragging=false;touch={};}
  void foreground(){if(screen==Screen::play){screen=Screen::pause;controls.focus=resume_action;}request_motion(false);}
@@ -119,7 +124,7 @@ struct App:Runtime<App> {
        std::snprintf(text,sizeof text,"%02u",level+1);controls.add(r,level_base+int(level),text,profile.completed&(1u<<level)?mint:pink,level<=profile.unlocked,true);}
      if(capacity<12)add_toolbar({{next_action,level_page?"上一组":"下一组"},{home_action,"返回"}});else add_toolbar({{home_action,"返回首页"}});
    }else if(screen==Screen::settings||screen==Screen::pause){
-     bool paused=screen==Screen::pause;p.label({12,3,w-24,header},paused?"弹珠歇一会儿":"冒险设置",ink,0,small?12:16);
+     bool paused=screen==Screen::pause;p.label({12,3,w-88,header},paused?"弹珠歇一会儿":"冒险设置",ink,0,small?12:16);
      const char* control_names[]={"体感倾斜","按键转向","触屏拖动"};const char* speed_names[]={"轻柔","标准","灵敏"};
      int ids_pause[]={resume_action,calibrate_action,control_action,hints_action,restart_action,home_action};int ids_settings[]={home_action,control_action,sensitivity_action,rotation_action,flip_action,exit_action};
      int top=small?31:43,step=(h-top-9)/6;
@@ -130,6 +135,7 @@ struct App:Runtime<App> {
        case sensitivity_action:std::snprintf(text,sizeof text,"灵敏度：%s",speed_names[profile.sensitivity]);break;case rotation_action:std::snprintf(text,sizeof text,"方向旋转：%u度",profile.rotation*90);break;
        case flip_action:std::snprintf(text,sizeof text,"左右镜像：%s",profile.flip?"开启":"关闭");break;default:std::snprintf(text,sizeof text,"退出游戏");break;}
        controls.add({12,top+i*step,w-24,step-5},action,text,i==0?pink:i%2?mint:lilac);}
+     controls.add({w-66,5,54,small?20:26},sound_action,sounds.label(true),mint);
    }else if(screen==Screen::result){
      p.label({10,3,w-20,header},board.level==11?"十二关，全点亮啦！":"星星收集成功！",teal,1,small?12:16);
      int sy=h<200?35:small?47:65;for(int i=0;i<3;++i)p.star(w/2+(i-1)*(small?27:38),sy,small?10:15,gold);

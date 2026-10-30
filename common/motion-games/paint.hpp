@@ -5,6 +5,9 @@
 #include <cmath>
 #include <string_view>
 #include <font.hpp>
+#ifdef MOTION_SYSTEM_FONT
+#include "system_text.hpp"
+#endif
 namespace motion {
 constexpr uint16_t rgb(unsigned r,unsigned g,unsigned b){return ((r&248)<<8)|((g&252)<<3)|(b>>3);}
 constexpr uint16_t paper=rgb(255,249,237),ink=rgb(42,60,67),muted=rgb(111,128,130),teal=rgb(42,147,130),mint=rgb(220,243,229),pink=rgb(255,225,218),coral=rgb(230,111,99),lilac=rgb(236,228,253),purple=rgb(129,103,180),gold=rgb(249,191,69),white=rgb(255,255,255),disabled=rgb(233,232,221);
@@ -13,6 +16,9 @@ struct Point {float x=0,y=0;};
 // Keep repeated drawing helpers out of each screen's generated native code.
 struct Paint {
  pxa::game::Frame& frame;bool alpha;int width,height;
+#ifdef MOTION_SYSTEM_FONT
+ SystemText* system_text=nullptr;
+#endif
  int base_font()const{return std::min(width,height)<200?12:16;}
  [[gnu::noinline]] void quad(std::array<Point,4> a,uint16_t c){std::array<int16_t,8> out;for(unsigned i=0;i<4;++i){out[2*i]=int16_t(std::lround(a[i].x*16));out[2*i+1]=int16_t(std::lround(a[i].y*16));}
    // An edge-on pip can collapse after Q4 quantization. Omit that invisible
@@ -28,12 +34,17 @@ struct Paint {
  static unsigned glyph(uint32_t cp){auto i=std::lower_bound(font_codes.begin(),font_codes.end(),cp);if(i==font_codes.end()||*i!=cp)i=std::lower_bound(font_codes.begin(),font_codes.end(),uint32_t('?'));return unsigned(i-font_codes.begin());}
  static int text_width(std::string_view s,int px=16){int n=0;while(!s.empty())n+=font_advance[glyph(next(s))];return (n*px+8)/16;}
  static int text_height(int px){return (int(font_cell_h)*px+15)/16;}
+#ifdef MOTION_SYSTEM_FONT
+ [[gnu::noinline]] void text(int x,int y,std::string_view s,uint16_t c=ink,int align=0,int px=0){if(!px)px=base_font();int natural=text_width(s,px);if(align)x-=natural/(align==1?2:1);if(system_text)system_text->text(x,y,std::max(1,natural+2),text_height(px),s,c,0,px);}
+ [[gnu::noinline]] void label(Rect r,std::string_view s,uint16_t c=ink,int align=1,int px=0){if(!px)px=base_font();px=std::min(px,std::max(8,r.h*16/int(font_cell_h)));int natural=text_width(s,px);if(natural>r.w&&natural)px=std::max(8,px*r.w/natural);if(system_text)system_text->text(r.x,r.y,r.w,r.h,s,c,align,px);}
+#else
  [[gnu::noinline]] void text(int x,int y,std::string_view s,uint16_t c=ink,int align=0,int px=0){if(!px)px=base_font();if(align)x-=text_width(s,px)/(align==1?2:1);int origin=x,advance=0;
   while(!s.empty()){unsigned i=glyph(next(s)),page=i/font_per_page,cell=i%font_per_page;int xx=origin+(advance*px+8)/16;
    pxa::game::Sprite g{int16_t(xx),int16_t(y),uint16_t((font_cell_w*px+8)/16),uint16_t((font_cell_h*px+8)/16),uint16_t(cell%font_columns*font_cell_w),uint16_t(cell/font_columns*font_cell_h),font_cell_w,font_cell_h};
    frame.sprites({uint8_t(page)},{&g,1},{.transparent_index0=true,.solid_color=true,.texel_alpha=alpha,.color={c}});advance+=font_advance[i];}}
  [[gnu::noinline]] void label(Rect r,std::string_view s,uint16_t c=ink,int align=1,int px=0){if(!px)px=base_font();px=std::min(px,std::max(8,r.h*16/int(font_cell_h)));int natural=text_width(s,px);if(natural>r.w&&natural)px=std::max(8,px*r.w/natural);
    text(align==1?r.x+r.w/2:align==2?r.x+r.w:r.x,r.y+(r.h-text_height(px))/2,s,c,align,px);}
+#endif
  void star(int x,int y,int r,uint16_t c){for(int i=0;i<10;++i){float a=-1.570796f+i*.6283185f,b=a+.6283185f,ra=(i&1)?r*.45f:r,rb=(i&1)?r:r*.45f;quad({Point{float(x),float(y)},Point{x+std::cos(a)*ra,y+std::sin(a)*ra},Point{x+std::cos(b)*rb,y+std::sin(b)*rb},Point{float(x),float(y)}},c);}}
  void marble(int x,int y,int r){circle(x+1,y+3,r,rgb(181,185,158));circle(x,y,r,teal);circle(x-1,y-2,std::max(2,r-2),rgb(79,190,173));circle(x-r/3,y-r/3,std::max(1,r/3),white);}
 };

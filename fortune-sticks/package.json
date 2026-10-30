@@ -1,8 +1,8 @@
 {
   "format": "pxa-package-source-0.2",
   "id": "pxa-fortune-sticks",
-  "version": "0.1.2",
-  "release_sequence": 3,
+  "version": "0.2.0",
+  "release_sequence": 4,
   "name": "好运签",
   "description": "摇晃签筒、点击或确认抽签，24支原创签文、主题选择、签文解读和收藏。离线可玩，适配三按键与触屏。",
   "publisher": {
@@ -99,6 +99,13 @@
             0,
             1
           ]
+        },
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            9
+          ]
         }
       ],
       "wasi": {
@@ -113,6 +120,11 @@
     }
   ],
   "permissions": [
+    {
+      "name": "audio.playback",
+      "scope": "media",
+      "required": false
+    },
     {
       "name": "sensor.read",
       "scope": "motion.acceleration",

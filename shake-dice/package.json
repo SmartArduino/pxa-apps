@@ -1,8 +1,8 @@
 {
   "format": "pxa-package-source-0.2",
   "id": "pxa-shake-dice",
-  "version": "0.1.4",
-  "release_sequence": 5,
+  "version": "0.1.5",
+  "release_sequence": 6,
   "name": "摇摇骰子",
   "description": "独立体感骰子游戏。1到6颗立体骰子、摇动或按键掷点、历史记录，支持三按键与触屏，离线可玩。",
   "publisher": {
@@ -99,6 +99,13 @@
             0,
             1
           ]
+        },
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            9
+          ]
         }
       ],
       "wasi": {
@@ -113,6 +120,11 @@
     }
   ],
   "permissions": [
+    {
+      "name": "audio.playback",
+      "scope": "media",
+      "required": false
+    },
     {
       "name": "sensor.read",
       "scope": "motion.acceleration",

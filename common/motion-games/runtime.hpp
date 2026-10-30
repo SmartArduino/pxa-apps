@@ -15,6 +15,10 @@ namespace motion {
  template<class Derived> struct Runtime {
  pxa::Context* ctx=nullptr;pxa::ui::DisplayMetrics display;
  std::optional<pxa::game::Renderer> renderer;std::array<std::optional<pxa::Asset>,font_pages> fonts;
+ #ifdef MOTION_SYSTEM_FONT
+ SystemText system_text;
+ auto view(){return SystemText::View{system_text};}
+ #endif
  pxa::game::DrawBuffer<24576> buffer;Controls controls;Random random;Motion motion;
  pxa::SensorSubscription acceleration,rotation;pxa::Permission acc_permission,gyro_permission;
  pxa::input::Controller controller;
@@ -32,6 +36,7 @@ namespace motion {
  pxa::Result<void> palette(){std::array<uint16_t,256> data{};data.fill(white);return pxa::game::Upload(*renderer,buffer.bytes()).palette(data);}
  pxa::Task<void> initialize(){
    auto loaded=co_await game().load();if(!loaded)log("Motion profile unavailable; using defaults");
+   if constexpr(requires(Derived& app){app.sounds;}){auto sound=co_await game().sounds.open(*ctx);if(!sound)log("Motion sound unavailable");}
    scale=std::min(display.width,display.height)>=400&&!(display.width%2)&&!(display.height%2)?2:1;w=int(display.width/scale);h=int(display.height/scale);
    // On older direct-scanout Hosts, showing the first permission modal over
    // an existing Surface can leave presentation/input suspended. Acquire the
@@ -39,10 +44,14 @@ namespace motion {
    if(game().initial_motion()){auto granted=co_await preauthorize();if(!granted)log("Motion preauthorization unavailable");}
    pxa::game::RenderOptions options;options.width=w;options.height=h;options.buffers=2;options.direct_scanout=true;options.max_draw_bytes=buffer.capacity();
    auto created=co_await ctx->game().create(options);if(!created)co_return std::unexpected(created.error());renderer.emplace(std::move(*created));
+#ifdef MOTION_SYSTEM_FONT
+   if(!system_text.create(ctx->transport(),display,scale))co_return std::unexpected(pxa::Error::protocol_error);
+#else
    if(auto sent=palette();!sent)co_return sent;
    if constexpr(requires(Derived& app){app.upload_fonts();}){if(auto loaded_fonts=game().upload_fonts();!loaded_fonts)co_return loaded_fonts;}
    else for(unsigned i=0;i<font_pages;++i){char path[64];std::snprintf(path,sizeof path,"assets/font-%u.pxr",i);auto a=co_await ctx->assets().load(pxa::AssetKind::texture,path);
      if(!a)co_return std::unexpected(a.error());fonts[i].emplace(std::move(*a));if(auto bound=renderer->bind_asset(*fonts[i],{uint8_t(i)});!bound)co_return bound;}
+#endif
    ready=true;game().started();last_tick=0;(void)ctx->clock().set_period(33);log(game().ready_message());render();co_return pxa::Result<void>{};
  }
  pxa::Task<void> preauthorize(){
@@ -95,9 +104,16 @@ namespace motion {
    log(rotation?"Motion connected acc=1 gyro=1":acceleration?"Motion connected acc=1 gyro=0":"Motion unavailable");co_return pxa::Result<void>{};
  }
  void render(){if(!ready||!renderer||!ctx->foreground())return;pxa::game::Frame frame(*renderer,buffer.bytes());if constexpr(requires(Derived& d){d.background_color();})frame.clear({game().background_color()});else frame.clear({paper});
-   Paint p{frame,renderer->supports(pxa::game::RenderCapability::sprite_texel_alpha),w,h};controls.begin();game().draw(p);controls.paint(p);
+   Paint p{frame,renderer->supports(pxa::game::RenderCapability::sprite_texel_alpha),w,h};
+#ifdef MOTION_SYSTEM_FONT
+   system_text.begin();p.system_text=&system_text;
+#endif
+   controls.begin();game().draw(p);controls.paint(p);
    if constexpr(requires(Derived& d,Paint& p){d.overlay(p);})game().overlay(p);
    auto sent=frame.submit();dirty=!sent;
+#ifdef MOTION_SYSTEM_FONT
+   if(sent&&!system_text.present()){dirty=true;log("Motion system text present deferred");}
+#endif
    if(sent){std::string_view label;for(unsigned i=0;i<controls.count;++i)if(controls.items[i].id==controls.focus)label=controls.items[i].text.data();
      if(label!=last_focus){last_focus=label;log("Motion focus "+last_focus);}}if(!sent&&sent.error()!=pxa::Error::would_block){char s[100];std::snprintf(s,sizeof s,"Motion frame rejected error=%d bytes=%u",int(sent.error()),unsigned(frame.bytes_used()));log(s);}}
  void on_controller(pxa::Context&,const pxa::input::ControllerState& value){if(!ready||!controller.update(value))return;
@@ -112,9 +128,10 @@ namespace motion {
    if(!pointer_down||pointer_owner!=p.pointer_id)return;
    game().pointer(p.action(),pxa::ui::canvas_to_surface_coordinate(p.x,display)/scale,pxa::ui::canvas_to_surface_coordinate(p.y,display)/scale);
    if(p.ended())pointer_down=false;}
- void request_exit(){exit_requested=true;if(!ctx->window().request_back())exit_requested=false;}
+ void request_exit(){if constexpr(requires(Derived& app){app.sounds;})game().sounds.stop();exit_requested=true;if(!ctx->window().request_back())exit_requested=false;}
  pxa::BackAction on_back(){if(exit_requested){log("Motion exiting");return pxa::BackAction::close;}return game().back();}
  pxa::Result<bool> on_event(pxa::Context&,const pxa::Event& event){
+   if constexpr(requires(Derived& app){app.sounds;})game().sounds.event(event);
    if(event.is<pxa::SensorSample>()){if(!ctx->foreground())return true;
      if(auto v=acceleration.sample(event)){if(v->timestamp_us<=motion.last)return true;bool restored=!motion.fresh(v->timestamp_us),before=motion.calibrating;
        bool shaken=motion.acceleration(v->values,v->timestamp_us);game().motion_changed(shaken,restored||before!=motion.calibrating);}
@@ -126,7 +143,7 @@ namespace motion {
    if(now-last_report>=5000000&&renderer){last_report=now;if(auto t=renderer->telemetry()){char text[240];std::snprintf(text,sizeof text,"Motion perf app=%s frames=%llu visible=%llu raster_us=%u rejected=%u samples=%u gyro=%u",game().id(),(unsigned long long)t->submitted_frames,(unsigned long long)t->visible_frames,t->last_host_raster_us,t->rejected_lists,motion.samples,gyro_samples);log(text);}}
    return true;
  }
- void on_background(pxa::Context&){backgrounded=true;close_motion();controller.reset();wait_release=true;repeat_at=0;pointer_down=false;controls.pressed=-1;last_tick=0;game().background();(void)ctx->clock().set_period(0);dirty=true;}
- void on_foreground(pxa::Context&){last_tick=0;wait_release=backgrounded;dirty=true;(void)ctx->window().fullscreen(pxa::WindowBarMode::hidden,pxa::WindowBarMode::hidden);if(ready){game().foreground();if(want_motion)connect();}(void)ctx->clock().set_period(33);}
+ void on_background(pxa::Context&){backgrounded=true;if constexpr(requires(Derived& app){app.sounds;})game().sounds.suspend();close_motion();controller.reset();wait_release=true;repeat_at=0;pointer_down=false;controls.pressed=-1;last_tick=0;game().background();(void)ctx->clock().set_period(0);dirty=true;}
+ void on_foreground(pxa::Context&){last_tick=0;wait_release=backgrounded;dirty=true;if constexpr(requires(Derived& app){app.sounds;})game().sounds.resume();(void)ctx->window().fullscreen(pxa::WindowBarMode::hidden,pxa::WindowBarMode::hidden);if(ready){game().foreground();if(want_motion)connect();}(void)ctx->clock().set_period(33);}
 };
 }

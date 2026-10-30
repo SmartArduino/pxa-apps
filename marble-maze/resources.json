@@ -1,18 +1,3 @@
 {
-  "assets": [
-    {
-      "path": "assets/font-0.pxr",
-      "kind": "index8",
-      "source": "resources/font-0.index8",
-      "width": 252,
-      "height": 240
-    },
-    {
-      "path": "assets/font-1.pxr",
-      "kind": "index8",
-      "source": "resources/font-1.index8",
-      "width": 252,
-      "height": 48
-    }
-  ]
+  "assets": []
 }

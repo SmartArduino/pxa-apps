@@ -2,13 +2,15 @@
 #include "model.hpp"
 #include "cube.hpp"
 #include "../common/motion-games/runtime.hpp"
+#include "../common/motion-games/sound.hpp"
 namespace dice {
 using namespace motion;
 enum class Screen {play,menu,history};
-enum Action {roll_action=1,count_action,menu_action,resume_action,history_action,shake_action,exit_action,next_action,previous_action};
+enum Action {roll_action=1,count_action,menu_action,resume_action,history_action,shake_action,exit_action,next_action,previous_action,sound_action};
 struct App:Runtime<App> {
+ Sounds sounds;
  Model model;Screen screen=Screen::play;unsigned history_page=0;
- bool saving=false,save_pending=false;float remaining=0,duration=1.2f,sparkle=0;
+ bool saving=false,save_pending=false;float remaining=0,duration=1.2f,sparkle=0,sound_at=0;unsigned shake_sound=0;
  static const char* id(){return "pxa-shake-dice";}static const char* ready_message(){return "Dice ready";}
  pxa::Task<void> load(){std::array<std::byte,Model::profile_size> data{};auto n=co_await ctx->storage().get("dice-v1",data);if(n&&*n==data.size())model.decode(data);co_return pxa::Result<void>{};}
  bool initial_motion()const{return model.shake;}bool initial_gyro()const{return true;}
@@ -16,17 +18,18 @@ struct App:Runtime<App> {
  void save(){save_pending=true;if(!saving){saving=true;if(!ctx->tasks().start(persist()))saving=false;}}
  pxa::Task<void> persist(){while(save_pending){save_pending=false;auto data=model.encode();auto result=co_await ctx->storage().set("dice-v1",data);if(!result){log("Dice save failed");break;}}saving=false;co_return pxa::Result<void>{};}
  void show(Screen s){request_motion(s==Screen::play&&model.shake,true);screen=s;controls.focus=s==Screen::play?roll_action:s==Screen::menu?resume_action:next_action;dirty=true;}
- void begin(){if(screen!=Screen::play||!model.begin(random))return;duration=1.15f+.045f*model.selected;remaining=duration;sparkle=0;dirty=true;
+ void begin(){if(screen!=Screen::play||!model.begin(random))return;duration=1.15f+.045f*model.selected;remaining=duration;sparkle=0;sound_at=.13f;shake_sound=0;sounds.play(Cue::dice);dirty=true;
    char line[96];std::snprintf(line,sizeof line,"Dice begin n=%u count=%u",model.total_rolls+1,model.rolling.count);log(line);}
- void settle(){if(!model.settle())return;remaining=0;sparkle=.55f;dirty=true;save();char line[100];std::snprintf(line,sizeof line,"Dice complete n=%u count=%u total=%u history=%u",model.total_rolls,model.result().count,model.result().total(),model.history_size);log(line);}
- void activate(int action){switch(action){
+ void settle(){if(!model.settle())return;sounds.play(Cue::settle);remaining=0;sparkle=.55f;dirty=true;save();char line[100];std::snprintf(line,sizeof line,"Dice complete n=%u count=%u total=%u history=%u",model.total_rolls,model.result().count,model.result().total(),model.history_size);log(line);}
+ void activate(int action){if(action!=sound_action)sounds.play(Cue::click);switch(action){
   case roll_action:begin();break;
   case count_action:if(!model.pending){model.count(model.selected%6+1);save();dirty=true;}break;
   case menu_action:if(!model.pending)show(Screen::menu);break;
   case resume_action:show(Screen::play);request_motion(model.shake,true);break;
   case history_action:history_page=0;show(Screen::history);break;
   case shake_action:model.shake=!model.shake;request_motion(screen==Screen::play&&model.shake,true);save();dirty=true;break;
-  case exit_action:request_exit();break;
+  case sound_action:sounds.toggle();dirty=true;break;
+    case exit_action:request_exit();break;
   case next_action:if((history_page+1)*history_capacity()<model.history_size){++history_page;dirty=true;}break;
   case previous_action:if(history_page){--history_page;dirty=true;}break;
  }}
@@ -36,7 +39,7 @@ struct App:Runtime<App> {
     else if(phase==pxa::input::PointerPhase::up&&screen==Screen::play&&tray().contains(x,y)&&std::abs(x-controls.down_x)<12&&std::abs(y-controls.down_y)<12)begin();}}
  pxa::BackAction back(){if(screen==Screen::play){if(model.pending)settle();show(Screen::menu);}else if(screen==Screen::history)show(Screen::menu);else return pxa::BackAction::close;return pxa::BackAction::stay;}
  void motion_changed(bool shake,bool restored){if(shake&&model.shake)begin();if(restored)dirty=true;}
- void tick(float dt){if(remaining>0){remaining=std::max(0.f,remaining-dt);dirty=true;if(!remaining)settle();}if(sparkle>0){sparkle=std::max(0.f,sparkle-dt);dirty=true;}}
+ void tick(float dt){if(remaining>0){sound_at-=dt;if(sound_at<=0){sounds.play(Cue::dice,++shake_sound);sound_at=.13f+shake_sound*.022f;}remaining=std::max(0.f,remaining-dt);dirty=true;if(!remaining)settle();}if(sparkle>0){sparkle=std::max(0.f,sparkle-dt);dirty=true;}}
  void background(){if(model.pending)settle();}
  void foreground(){request_motion(screen==Screen::play&&model.shake,true);}
  Rect tray()const{int top=h<220?49:65,bottom=h-(h<220?42:50);return {10,top,w-20,std::max(35,bottom-top)};}
@@ -63,8 +66,8 @@ struct App:Runtime<App> {
    controls.add({22+2*width,y,width,height},menu_action,"更多",mint,!model.pending);
   }else if(screen==Screen::menu){
    p.label({12,heading+4,w-24,24},"一摇一份小惊喜",muted);
-   const char* labels[]={"继续摇一摇","查看历史记录",model.shake?"摇动：已开启":"摇动：已关闭","退出游戏"};int ids[]={resume_action,history_action,shake_action,exit_action};
-   int top=small?48:65,step=(h-top-12)/4;for(int i=0;i<4;++i)controls.add({12,top+i*step,w-24,step-6},ids[i],labels[i],i==0?pink:i==2?lilac:mint);
+   const char* labels[]={"继续摇一摇","查看历史记录",model.shake?"摇动：已开启":"摇动：已关闭",sounds.label(),"退出游戏"};int ids[]={resume_action,history_action,shake_action,sound_action,exit_action};
+   int top=small?48:65,step=(h-top-12)/5;for(int i=0;i<5;++i)controls.add({12,top+i*step,w-24,step-6},ids[i],labels[i],i==0?pink:i==2?lilac:mint);
   }else {
    std::snprintf(text,sizeof text,"最近 %u 次 · 共 %u 次",model.history_size,model.total_rolls);p.label({12,heading,w-24,24},text,muted);
    unsigned capacity=history_capacity(),begin=history_page*capacity;int top=small?49:62,step=(h-top-48)/int(capacity);

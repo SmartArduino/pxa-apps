@@ -1,8 +1,8 @@
 {
   "format": "pxa-package-source-0.2",
   "id": "pxa-mini-racer",
-  "version": "0.1.3",
-  "release_sequence": 4,
+  "version": "0.2.0",
+  "release_sequence": 5,
   "name": "3D小赛车",
   "description": "带弯道和坡道的立体公路赛车，三条赛道、对手超车、加速带和最好成绩，支持体感、三按键与触屏。",
   "publisher": {
@@ -99,6 +99,13 @@
             0,
             1
           ]
+        },
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            9
+          ]
         }
       ],
       "wasi": {
@@ -113,6 +120,11 @@
     }
   ],
   "permissions": [
+    {
+      "name": "audio.playback",
+      "scope": "media",
+      "required": false
+    },
     {
       "name": "sensor.read",
       "scope": "motion.acceleration",

@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: MIT
 #include "model.hpp"
 #include "../common/motion-games/runtime.hpp"
-#include "../common/motion-games/embedded_font.hpp"
+#include "../common/motion-games/sound.hpp"
 #include <bit>
+#include "artwork.hpp"
 namespace fortune {
 using namespace motion;
 enum class Screen {draw,result,menu,history,favorites};
-enum Action {draw_action=1,theme_action,menu_action,resume_action,history_action,favorites_action,shake_action,exit_action,page_action,favorite_action,back_action,next_action,previous_action,entry_base=100};
+enum Action {draw_action=1,theme_action,menu_action,resume_action,history_action,favorites_action,shake_action,exit_action,page_action,favorite_action,back_action,next_action,previous_action,sound_action,entry_base=100};
 constexpr uint16_t vermilion=rgb(180,65,58),ochre=rgb(171,121,57),blush=rgb(251,230,215);
 struct App:Runtime<App> {
+ Sounds sounds;
  Profile profile;Screen screen=Screen::draw,origin=Screen::draw;unsigned shown=0,pending_sign=0,page=0,browse_page=0;
- bool drawing=false,saving=false,save_pending=false;float remaining=0,sparkle=0;
+ bool drawing=false,saving=false,save_pending=false;float remaining=0,sparkle=0,sound_at=0;unsigned shake_sound=0;
  static const char* id(){return "pxa-fortune-sticks";}static const char* ready_message(){return "Fortune ready";}
- pxa::Result<void> upload_fonts(){return motion::upload_embedded_fonts(*this);}
  pxa::Task<void> load(){std::array<std::byte,Profile::size> data{};auto n=co_await ctx->storage().get("fortune-v1",data);if(n&&*n==data.size())profile.decode(data);co_return pxa::Result<void>{};}
  bool initial_motion()const{return profile.shake;}bool initial_gyro()const{return true;}
  void started(){shown=profile.latest();screen=profile.history_size?Screen::result:Screen::draw;controls.focus=draw_action;request_motion(profile.shake,true);}
@@ -21,14 +22,14 @@ struct App:Runtime<App> {
  bool can_shake()const{return screen==Screen::draw||screen==Screen::result;}
  void show(Screen next){screen=next;controls.focus=next==Screen::menu?resume_action:next==Screen::history||next==Screen::favorites?entry_base:draw_action;
    request_motion(can_shake()&&profile.shake,true);dirty=true;}
- void begin(){if(drawing||!can_shake())return;pending_sign=profile.choose(random);drawing=true;remaining=1.8f;screen=Screen::draw;controls.focus=draw_action;sparkle=0;dirty=true;log("Fortune draw begin");}
- void settle(){if(!drawing)return;drawing=false;remaining=0;shown=pending_sign;profile.record(shown);page=0;origin=Screen::draw;screen=Screen::result;controls.focus=draw_action;sparkle=.7f;save();dirty=true;
+ void begin(){if(drawing||!can_shake())return;pending_sign=profile.choose(random);drawing=true;remaining=1.8f;sound_at=.19f;shake_sound=0;sounds.play(Cue::bamboo);screen=Screen::draw;controls.focus=draw_action;sparkle=0;dirty=true;log("Fortune draw begin");}
+ void settle(){if(!drawing)return;sounds.play(Cue::settle);drawing=false;remaining=0;shown=pending_sign;profile.record(shown);page=0;origin=Screen::draw;screen=Screen::result;controls.focus=draw_action;sparkle=.7f;save();dirty=true;
    char text[100];std::snprintf(text,sizeof text,"Fortune complete n=%u sign=%u theme=%u",profile.total,shown+1,signs[shown].theme);log(text);}
  unsigned capacity()const{return h<220?2:3;}
  unsigned entries(std::array<unsigned,24>& list)const{unsigned count=0;if(screen==Screen::history){for(unsigned i=0;i<profile.history_size;++i)list[count++]=profile.history[i];}
    else for(unsigned i=0;i<24;++i)if(profile.favorite(i))list[count++]=i;return count;}
  void browse(Screen next){browse_page=0;show(next);}
- void activate(int action){if(drawing)return;
+ void activate(int action){if(action!=sound_action)sounds.play(Cue::click);if(drawing)return;
    if(action>=entry_base&&action<entry_base+24){std::array<unsigned,24> list{};unsigned count=entries(list),index=browse_page*capacity()+unsigned(action-entry_base);if(index<count){shown=list[index];origin=screen;page=0;show(Screen::result);}return;}
    switch(action){
     case draw_action:origin=Screen::draw;show(Screen::draw);begin();break;
@@ -38,11 +39,12 @@ struct App:Runtime<App> {
     case history_action:browse(Screen::history);break;
     case favorites_action:browse(Screen::favorites);break;
     case shake_action:profile.shake=!profile.shake;save();dirty=true;break;
-    case page_action:page=(page+1)%3;dirty=true;break;
-    case favorite_action:profile.toggle(shown);save();dirty=true;break;
+    case page_action:sounds.play(Cue::paper);page=(page+1)%3;dirty=true;break;
+    case favorite_action:profile.toggle(shown);sounds.play(Cue::favorite);save();dirty=true;break;
     case back_action:if(back()==pxa::BackAction::close)request_exit();break;
     case next_action:{std::array<unsigned,24> list{};if((browse_page+1)*capacity()<entries(list))++browse_page;dirty=true;break;}
     case previous_action:if(browse_page)--browse_page;dirty=true;break;
+    case sound_action:sounds.toggle();dirty=true;break;
     case exit_action:request_exit();break;
    }
  }
@@ -56,7 +58,7 @@ struct App:Runtime<App> {
    if(screen==Screen::result){Screen next=origin;if(next!=Screen::history&&next!=Screen::favorites)next=Screen::draw;show(next);if(next==Screen::history||next==Screen::favorites){std::array<unsigned,24> list{};auto n=entries(list);browse_page=std::min(browse_page,n?(n-1)/capacity():0u);}return pxa::BackAction::stay;}
    if(screen==Screen::draw){show(Screen::menu);return pxa::BackAction::stay;}if(screen==Screen::menu)return pxa::BackAction::close;show(Screen::menu);return pxa::BackAction::stay;}
  void motion_changed(bool shaken,bool status){if(shaken&&profile.shake)begin();dirty|=status;}
- void tick(float dt){if(drawing){remaining=std::max(0.f,remaining-dt);dirty=true;if(!remaining)settle();}if(sparkle>0){sparkle=std::max(0.f,sparkle-dt);dirty=true;}}
+ void tick(float dt){if(drawing){sound_at-=dt;if(sound_at<=0){sounds.play(Cue::bamboo,++shake_sound);sound_at=.18f+shake_sound*.025f;}remaining=std::max(0.f,remaining-dt);dirty=true;if(!remaining)settle();}if(sparkle>0){sparkle=std::max(0.f,sparkle-dt);dirty=true;}}
  void background(){if(drawing)settle();}
  void foreground(){request_motion(can_shake()&&profile.shake,true);}
  void toolbar(std::initializer_list<std::pair<int,std::string_view>> actions,bool enabled=true){int height=h<220?27:33,y=h-height-8,width=(w-20-6*(int(actions.size())-1))/int(actions.size()),x=10;
@@ -67,23 +69,13 @@ struct App:Runtime<App> {
     while(!rest.empty()){auto old=rest.size();auto code=Paint::next(rest);int advance=(font_advance[Paint::glyph(code)]*px+8)/16;if(bytes&&width+advance>r.w)break;width+=advance;bytes+=old-rest.size();}
     if(!bytes)break;p.text(r.x,y,text.substr(0,bytes),color,0,px);text.remove_prefix(bytes);y+=line_h;}if(!text.empty())log("Fortune text overflow");}
  int fitted_text(std::string_view text,int width,int height,int preferred)const{for(int px=preferred;px>=8;--px){int lines=1,used=0;auto rest=text;while(!rest.empty()){auto code=Paint::next(rest);int advance=(font_advance[Paint::glyph(code)]*px+8)/16;if(used&&used+advance>width){++lines;used=0;}used+=advance;}if(lines*(Paint::text_height(px)+3)<=height+3)return px;}return 8;}
- void cup(Paint& p,Rect a){int cx=a.x+a.w/2,base=a.y+a.h-6,ch=std::min(128,std::max(32,a.h*55/100)),cw=std::min(104,std::max(50,ch*4/5));float progress=drawing?1-remaining/1.8f:0;
-   float angle=drawing?std::sin(progress*36)*(1-progress)*(.12f+gyro_energy*.035f):0;float sn=std::sin(angle),cs=std::cos(angle);
-   auto point=[&](float x,float y){return Point{cx+x*cs-y*sn,base+x*sn+y*cs};};auto box=[&](float x,float y,float width,float height,uint16_t color){p.quad({point(x,y),point(x+width,y),point(x+width,y+height),point(x,y+height)},color);};
-   p.ellipse(cx,base+3,cw/2+8,4,rgb(225,208,178));box(-cw/2.f,-ch,float(cw),float(ch),vermilion);
-   int stick_h=std::min(ch*8/10,std::max(12,a.h-ch-8));for(int i=0;i<13;++i){float xx=-cw*.42f+i*cw*.066f,extra=(i*7%11)*.4f;float lift=drawing&&i==6?std::max(0.f,(progress-.55f)/.45f)*stick_h:0;
-     box(xx,-ch-stick_h+extra-lift,4,stick_h+ch*.35f,rgb(225+unsigned(i%3)*9,183+unsigned(i%2)*12,112));box(xx,-ch-stick_h+extra-lift,4,4,coral);}
-   box(-cw/2.f,-ch*.77f,float(cw),ch*.77f,vermilion);for(int i=0;i<5;++i)box(-cw/2.f+i*cw/5.f,-ch*.77f,cw/5.f,ch*.77f,rgb(170+unsigned(i)*7,58+unsigned(i)*5,52+unsigned(i)*3));
-   box(-cw/2.f,-ch*.77f,float(cw),3,gold);box(-cw/2.f,-5,float(cw),3,gold);
-   if(!drawing){int badge_h=std::min(32,ch*3/5);p.round({cx-17,base-ch*2/3,34,badge_h},rgb(249,223,161),4);p.label({cx-17,base-ch*2/3,34,badge_h},"好运",vermilion,1,ch<55?12:16);}
-   if(drawing){for(int i=0;i<4;++i){float t=progress*5+i;int x=cx+int(std::sin(t)*cw*.8f),y=a.y+8+int((i+1)*a.h/6.f);p.star(x,y,3,i&1?gold:coral);}}
- }
+ void cup(Paint& p,Rect a){draw_sign_cup(p,a,drawing,drawing?1-remaining/1.8f:0,gyro_energy);}
  void draw(Paint& p){bool small=h<220;int heading=small?25:32;char text[128];
    if(screen==Screen::draw){p.label({12,3,w-24,heading},"好运签",vermilion,0,small?12:16);p.label({w-70,4,58,heading},!profile.shake?"点击求签":acceleration?"轻摇签筒":"按键求签",ochre,2,10);
      p.label({12,heading-1,w-24,small?20:25},drawing?"好运正在路上…":"摇出一份今天的小惊喜",muted,1,small?10:13);cup(p,illustration());
      toolbar({{draw_action,"求一签"},{theme_action,theme_names[profile.theme]},{menu_action,"更多"}},!drawing);
    }else if(screen==Screen::result){auto &sign=signs[shown];std::snprintf(text,sizeof text,"第 %02u 签 · %s",shown+1,page==1?"签意":page==2?"小行动":theme_names[sign.theme]);p.label({12,3,w-69,heading},text,ochre,0,small?10:13);
-     Rect card{10,heading+3,w-20,h-heading-(small?46:53)};p.round(card,blush,10);int title_y=card.y+(small?2:9);p.label({card.x+8,title_y,card.w-16,small?25:34},sign.title,vermilion,1,small?16:20);
+     Rect card{10,heading+3,w-20,h-heading-(small?46:53)};p.round({card.x,card.y+2,card.w,card.h},rgb(229,208,179),10);p.round(card,blush,10);p.line({float(card.x+12),float(card.y+3)},{float(card.x+32),float(card.y+3)},1,rgb(223,177,108));p.line({float(card.x+card.w-32),float(card.y+3)},{float(card.x+card.w-12),float(card.y+3)},1,rgb(223,177,108));int title_y=card.y+(small?2:9);p.label({card.x+8,title_y,card.w-16,small?25:34},sign.title,vermilion,1,small?16:20);
      int top=title_y+(small?26:41),bottom=card.y+card.h-6;if(!page&&h>=360){
        int available=bottom-top,verse_h=50,meaning_h=(available-verse_h-24)*3/5,action_top=top+verse_h+meaning_h+24;
        p.label({card.x+8,top,card.w-16,25},sign.verse_a,ink,1,16);p.label({card.x+8,top+25,card.w-16,25},sign.verse_b,ink,1,16);
@@ -94,9 +86,9 @@ struct App:Runtime<App> {
      }else{auto content=page==1?sign.meaning:sign.action;int px=fitted_text(content,card.w-20,bottom-top,small?11:h>=360?32:16);paragraph(p,{card.x+10,top,card.w-20,bottom-top},content,page==1?ink:teal,px);}
      toolbar({{draw_action,"再求一签"},{page_action,page==0?"解签":page==1?"小行动":"看签文"},{favorite_action,profile.favorite(shown)?"已收藏":"收藏"}});controls.add({w-53,5,43,small?21:26},back_action,"返回",mint);
      if(sparkle>0)for(int i=0;i<5;++i)p.star(15+(w-30)*i/4,heading+3,2+int(sparkle*3),gold);
-   }else if(screen==Screen::menu){p.label({12,3,w-24,heading},"签筒小天地",vermilion,0,small?12:16);int top=small?31:46,step=(h-top-9)/5;
-     const char* labels[]={"回到签筒","最近求过的签","我的收藏",profile.shake?"摇动：已开启":"摇动：已关闭","退出游戏"};int ids[]={resume_action,history_action,favorites_action,shake_action,exit_action};
-     for(int i=0;i<5;++i)controls.add({12,top+i*step,w-24,step-5},ids[i],labels[i],i==0?pink:i%2?mint:lilac);
+   }else if(screen==Screen::menu){p.label({12,3,w-24,heading},"签筒小天地",vermilion,0,small?12:16);int top=small?31:46,step=(h-top-9)/6;
+     const char* labels[]={"回到签筒","最近求过的签","我的收藏",profile.shake?"摇动：已开启":"摇动：已关闭",sounds.label(),"退出游戏"};int ids[]={resume_action,history_action,favorites_action,shake_action,sound_action,exit_action};
+     for(int i=0;i<6;++i)controls.add({12,top+i*step,w-24,step-5},ids[i],labels[i],i==0?pink:i%2?mint:lilac);
    }else{bool history=screen==Screen::history;p.label({12,3,w-24,heading},history?"最近求过的签":"我的收藏",vermilion,0,small?12:16);std::array<unsigned,24> list{};unsigned count=entries(list),cap=capacity();
      browse_page=std::min(browse_page,count?(count-1)/cap:0u);std::snprintf(text,sizeof text,"共 %u 支 · %u / %u 页",count,browse_page+1,std::max(1u,(count+cap-1)/cap));p.label({12,heading-2,w-24,23},text,muted,0,small?10:12);
      int top=small?49:65,step=(h-top-46)/int(cap);if(!count)paragraph(p,{18,top+8,w-36,h-top-60},"喜欢的签，可以收藏在这里。",ochre,small?11:14);
