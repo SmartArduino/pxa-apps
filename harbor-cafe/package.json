@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-harbor-cafe",
-  "version": "1.4.1",
+  "version": "1.4.1+pxa07",
   "name": "Harbor Cafe",
   "description": "原创海边像素咖啡馆：接单、现制咖啡、桌边服务、原料进货与三系可见升级，在海浪和船鸟间经营多日小店。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 8,
+  "release_sequence": 9,
   "build": {
     "system": "cmake",
     "source_dir": ".",

@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-milkyfrog-2048",
-  "version": "0.1.7",
+  "version": "0.1.7+pxa07",
   "name": "奶蛙2048超级版",
   "description": "滑动合成奶蛙，收集十二种造型，保留原版笑声、撤销和自动续局。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 8,
+  "release_sequence": 9,
   "build": {
     "system": "cmake",
     "source_dir": ".",

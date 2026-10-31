@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-weread",
-  "version": "0.1.1",
-  "release_sequence": 2,
+  "version": "0.1.1+pxa07",
+  "release_sequence": 3,
   "name": "微信读书",
   "description": "PXA 原生微信读书客户端，独立扫码登录、书架与专注阅读。非腾讯官方客户端。",
   "build": {

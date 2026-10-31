@@ -14,7 +14,7 @@
   ],
   "id": "pxa-gba",
   "version": "0.1.44",
-  "release_sequence": 45,
+  "release_sequence": 46,
   "name": "GBA Emulator",
   "description": "gpSP Game Boy Advance emulator with bounded ROM paging, audio and save states",
   "build": {

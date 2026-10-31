@@ -1,8 +1,8 @@
 {
   "format": "pxa-package-source-0.2",
   "id": "pxa-translator",
-  "version": "0.2.1",
-  "release_sequence": 3,
+  "version": "0.2.1+pxa07",
+  "release_sequence": 4,
   "min_sdk": [
     2,
     1

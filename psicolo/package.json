@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-psicolo",
-  "version": "0.2.2",
-  "release_sequence": 4,
+  "version": "0.2.2+pxa07",
+  "release_sequence": 5,
   "name": "Psi Colo",
   "description": "Original MIT OBONO dice matching puzzle, endless and time limited play at original 40 FPS.",
   "build": {

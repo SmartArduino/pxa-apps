@@ -14,7 +14,7 @@
   ],
   "id": "pxa-mega-drive",
   "version": "0.1.14",
-  "release_sequence": 17,
+  "release_sequence": 18,
   "name": "Mega Drive Emulator",
   "description": "Mega Drive Emulator for PXA with SD/flash library, audio and touch/gamepad controls",
   "build": {

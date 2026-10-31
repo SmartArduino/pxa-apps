@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-game-boy",
-  "version": "0.1.62",
-  "release_sequence": 63,
+  "version": "0.1.62+pxa07",
+  "release_sequence": 64,
   "name": "GB/GBC Emulator",
   "description": "Game Boy and Game Boy Color emulator with SD/flash ROM library, audio and touch or gamepad controls",
   "build": {
@@ -96,6 +96,6 @@
     "display_name": "lucinhu"
   },
   "resources": {
-    "manifest_sha256": "9ca8fccd3b5e8a2c4c1329be6f0da1586e4106c3994aa84fbb49feb24e2ee198"
+    "manifest_sha256": "85288038e0d3b5009b048528df736528dcd784d7dd8d424715b5fa1313a1f4aa"
   }
 }

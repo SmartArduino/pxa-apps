@@ -66,7 +66,7 @@
       "artifact": "aot"
     }
   ],
-  "release_sequence": 212,
+  "release_sequence": 213,
   "permissions": [
     {
       "name": "audio.playback",
@@ -80,6 +80,6 @@
   },
   "icon": "assets/icon.png",
   "resources": {
-    "manifest_sha256": "cf3156035bfeff66130d2bd4b1488a53061ef31c2955348d70a7d0c9e489953b"
+    "manifest_sha256": "7cda661a32ac90f9a83e82f3d9a13a76b290e9a0538c0270bdb823cb3ffdce1f"
   }
 }

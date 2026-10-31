@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-guessdots",
-  "version": "0.2.2",
-  "release_sequence": 4,
+  "version": "0.2.2+pxa07",
+  "release_sequence": 5,
   "name": "Guess Dots",
   "description": "Original MIT Dot Arduboy Edition clue-count puzzle with complete source, original bitmaps and event-driven touch input.",
   "build": {

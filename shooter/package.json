@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-shooter",
-  "version": "0.2.2",
-  "release_sequence": 4,
+  "version": "0.2.2+pxa07",
+  "release_sequence": 5,
   "name": "Shooter",
   "description": "Original MIT tank and UFO shooting game with original Tinyfont BSD graphics, menu and pause on PXA touch controls.",
   "build": {

@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-crisp-arcade",
-  "version": "1.1.2",
+  "version": "1.1.2+pxa07",
   "name": "Crisp Arcade",
   "description": "Four original MIT arcade games by ABA Games: CAST N, GRAPPLING H, REFLECTOR, and COLOR ROLL. Touch or hold A, chase four high scores.",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 4,
+  "release_sequence": 5,
   "build": {
     "system": "cmake",
     "source_dir": ".",

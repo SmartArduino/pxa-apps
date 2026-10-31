@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-calculator",
-  "version": "1.0.1",
+  "version": "1.0.1+pxa07",
   "name": "多功能计算器",
   "description": "基础与科学计算、记忆和历史记录、八类单位换算及比例折扣等日常计算，支持自适应满屏与Gen4三键。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 2,
+  "release_sequence": 3,
   "build": {
     "system": "cmake",
     "source_dir": ".",

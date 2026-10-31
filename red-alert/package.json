@@ -13,7 +13,7 @@
     1
   ],
   "id": "pxa-red-alert",
-  "version": "0.2.18",
+  "version": "0.2.18+pxa07",
   "name": "Red Alert",
   "description": "Community game port with automatically installed demo assets, without original music",
   "build": {
@@ -85,13 +85,13 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 218,
+  "release_sequence": 219,
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
   "icon": "assets/icon.png",
   "resources": {
-    "manifest_sha256": "f42673950753ef21b4ceba9d7532a4c70c34b6be84fcd62a80dec5749b166343"
+    "manifest_sha256": "69700c67272f725cee74f314054960f545f033a705fb87a4e8bd3723424591a2"
   }
 }

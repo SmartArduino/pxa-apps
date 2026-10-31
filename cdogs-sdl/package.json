@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-cdogs-sdl",
-  "version": "0.1.1",
+  "version": "0.1.1+pxa07",
   "name": "C-Dogs SDL",
   "description": "开源俯视角动作射击游戏，离线战役、手柄操作与原版音乐。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 2,
+  "release_sequence": 3,
   "build": {
     "system": "cmake",
     "source_dir": ".",

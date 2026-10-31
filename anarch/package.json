@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-anarch",
-  "version": "0.2.3",
+  "version": "0.2.3+pxa07",
   "name": "Anarch",
   "description": "Complete CC0 first-person action game with original levels, sound effects, controller and touch input",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 5,
+  "release_sequence": 6,
   "build": {
     "system": "cmake",
     "source_dir": ".",

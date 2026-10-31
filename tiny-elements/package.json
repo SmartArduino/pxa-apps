@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-tiny-elements",
-  "version": "1.1.2",
+  "version": "1.1.2+pxa07",
   "name": "Tiny Elements",
   "description": "An original pocket particle garden: pour sand, grow forests, build firebreaks and cool lava. Ten materials, five worlds, touch painting and controller tools.",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 4,
+  "release_sequence": 5,
   "build": {
     "system": "cmake",
     "source_dir": ".",

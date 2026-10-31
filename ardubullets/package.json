@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-ardubullets",
-  "version": "0.2.2",
-  "release_sequence": 4,
+  "version": "0.2.2+pxa07",
+  "release_sequence": 5,
   "name": "ARDUBULLETs",
   "description": "Original MIT ARDUBULLETs bullet-hell survival with authentic patterns, shots, settings and records.",
   "build": {

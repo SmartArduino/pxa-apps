@@ -1,8 +1,8 @@
 {
   "format": "pxa-package-source-0.2",
   "id": "pxa-xiaozhi",
-  "version": "0.4.1",
-  "release_sequence": 13,
+  "version": "0.4.1+pxa07",
+  "release_sequence": 14,
   "min_sdk": [
     2,
     1

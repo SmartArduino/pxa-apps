@@ -14,7 +14,7 @@
   ],
   "id": "pxa-snes",
   "version": "0.1.15",
-  "release_sequence": 17,
+  "release_sequence": 18,
   "name": "SNES Emulator",
   "description": "SNES Emulator for PXA with SD/flash library, audio and touch/gamepad controls",
   "build": {

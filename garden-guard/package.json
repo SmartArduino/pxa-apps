@@ -13,8 +13,8 @@
     0
   ],
   "id": "pxa-garden-guard",
-  "version": "0.2.6",
-  "release_sequence": 7,
+  "version": "0.2.6+pxa07",
+  "release_sequence": 8,
   "name": "Garden Guard",
   "description": "在昼夜花园中布置植物抵御敌人，包含 12 个关卡与 13 种植物。选择植物、管理资源并保护花园。",
   "icon": "assets/icon.png",

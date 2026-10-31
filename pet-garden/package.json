@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-pet-garden",
-  "version": "1.1.3",
+  "version": "1.1.3+pxa07",
   "name": "Pet Garden",
   "description": "原创像素伙伴与温暖花园：照料、三系成长、装饰、接莓果与节奏开花，支持触摸、手柄和自动存档。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 5,
+  "release_sequence": 6,
   "build": {
     "system": "cmake",
     "source_dir": ".",

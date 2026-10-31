@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-randocity",
-  "version": "0.2.2",
-  "release_sequence": 4,
+  "version": "0.2.2+pxa07",
+  "release_sequence": 5,
   "name": "Rando City",
   "description": "Original MIT procedural motorcycle city: free play, edge race and crazy courier with complete source.",
   "build": {

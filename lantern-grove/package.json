@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-lantern-grove",
-  "version": "1.4.1",
+  "version": "1.4.1+pxa07",
   "name": "Lantern Grove",
   "description": "原创CC0发光树林：自动积累流光、露水和种子，收集萤火、升级树冠、水井、灯笼与小屋，完成八段林间日记。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 8,
+  "release_sequence": 9,
   "build": {
     "system": "cmake",
     "source_dir": ".",

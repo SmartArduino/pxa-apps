@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-spirit-level",
-  "version": "1.1.10",
+  "version": "1.1.10+pxa07",
   "name": "水平仪",
   "description": "双轴气泡与边尺水平仪，支持绝对/相对测量、读数锁定、角度/坡度、水平面标定及加速度计与陀螺仪融合。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 12,
+  "release_sequence": 13,
   "build": {
     "system": "cmake",
     "source_dir": ".",

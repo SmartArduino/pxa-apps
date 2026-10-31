@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-dominosa",
-  "version": "0.2.2",
-  "release_sequence": 4,
+  "version": "0.2.2+pxa07",
+  "release_sequence": 5,
   "name": "Dominosa",
   "description": "Original Simon Tatham Dominosa with a shared PXA touch frontend",
   "build": {

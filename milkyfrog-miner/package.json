@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-milkyfrog-miner",
-  "version": "0.1.7",
+  "version": "0.1.7+pxa07",
   "name": "奶蛙工厂",
   "description": "点击放钩收集奶蛙，三种难度、47种稀有图鉴及原版变调笑声。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 8,
+  "release_sequence": 9,
   "build": {
     "system": "cmake",
     "source_dir": ".",

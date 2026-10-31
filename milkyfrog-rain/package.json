@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-milkyfrog-rain",
-  "version": "0.1.7",
+  "version": "0.1.7+pxa07",
   "name": "奶蛙的奶块雨",
   "description": "左右移动接奶块，五连击触发大笑清屏，保留原版笑声与音效。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 8,
+  "release_sequence": 9,
   "build": {
     "system": "cmake",
     "source_dir": ".",

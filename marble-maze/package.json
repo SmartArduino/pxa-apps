@@ -1,8 +1,8 @@
 {
   "format": "pxa-package-source-0.2",
   "id": "pxa-marble-maze",
-  "version": "0.1.7",
-  "release_sequence": 8,
+  "version": "0.1.7+pxa07",
+  "release_sequence": 9,
   "name": "弹珠迷宫",
   "description": "独立体感弹珠游戏。12关渐进迷宫、三颗星星、选关与最佳用时、路线提示和断点恢复，支持三按键与触屏。",
   "publisher": {

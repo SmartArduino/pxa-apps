@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-marble-islands",
-  "version": "1.7.1",
+  "version": "1.7.1+pxa07",
   "name": "Marble Islands",
   "description": "软件3D滚珠群岛，支持陀螺仪融合体感、触屏与手柄，含姿态校准、灵敏度与方向设置。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 12,
+  "release_sequence": 13,
   "build": {
     "system": "cmake",
     "source_dir": ".",

@@ -14,7 +14,7 @@
   ],
   "id": "pxa-nes",
   "version": "0.1.47",
-  "release_sequence": 53,
+  "release_sequence": 54,
   "name": "NES Emulator",
   "description": "NES emulator with SD/flash ROM library, audio, controllers and independent frame skipping",
   "build": {
@@ -105,6 +105,6 @@
     "display_name": "lucinhu"
   },
   "resources": {
-    "manifest_sha256": "8fd4d67221cc6196439b8366a6e682f3159124e0f23d27ade11b2e189cddb8d1"
+    "manifest_sha256": "2ef2d9ed1dcfe4ae74298e8d58b48b6521c116930ffd52ce090b8bf1db0b7f56"
   }
 }

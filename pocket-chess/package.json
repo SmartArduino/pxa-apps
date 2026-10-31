@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-pocket-chess",
-  "version": "1.1.3",
+  "version": "1.1.3+pxa07",
   "name": "Pocket Chess",
   "description": "CC0 国际象棋：白方对轻量 AI、双人模式、合法走法提示、触屏与手柄、自动存档。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 5,
+  "release_sequence": 6,
   "build": {
     "system": "cmake",
     "source_dir": ".",
