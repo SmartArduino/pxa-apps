@@ -256,6 +256,21 @@ struct App {
     show(Screen::catalog);
     run(load_catalog());
   }
+  bool parse_catalog(std::string_view body) {
+    // Parsing is synchronous: keep the large temporary models off the bounded
+    // coroutine-frame pool, including when a request is repeated in a loop.
+    store_catalog_t result{};
+    store_taxonomy_t types{};
+    if (!store_json_parse_catalog(
+            reinterpret_cast<const uint8_t *>(body.data()), body.size(),
+            &result, &types))
+      return false;
+    catalog = result;
+    // Later pages omit the shared taxonomy; keep the first-page filters.
+    if (types.kind_count || types.category_count)
+      taxonomy = types;
+    return true;
+  }
   Task<void> load_catalog() {
     loading(catalog.count ? Screen::catalog : Screen::home);
     if (!profile[0]) {
@@ -265,36 +280,42 @@ struct App {
       co_return Result<void>{};
     }
     message("正在加载…");
-    char url[512];
-    if (!store_client_build_catalog_url(url, sizeof url, profile, "",
-                                        cursors[page_index],
-                                        query.get().c_str(), kind.c_str(),
-                                        category.c_str(), sort.c_str(), 6)) {
-      message("筛选条件过长，请简化搜索");
-      show(Screen::catalog);
-      done();
-      co_return Result<void>{};
+    auto cursor = cursors[page_index];
+    // Compatibility filtering can leave a page empty with a valid next cursor.
+    // Bound automatic continuation so a low-memory/older Host reaches usable
+    // entries without an unbounded request chain or extra response buffers.
+    for (unsigned skipped = 0; ; ++skipped) {
+      char url[512];
+      if (!store_client_build_catalog_url(url, sizeof url, profile, "", cursor,
+                                          query.get().c_str(), kind.c_str(),
+                                          category.c_str(), sort.c_str(), 6)) {
+        message("筛选条件过长，请简化搜索");
+        show(Screen::catalog);
+        done();
+        co_return Result<void>{};
+      }
+      auto body = co_await fetch(url);
+      if (!body || !parse_catalog(*body)) {
+        message("加载失败，检查网络后重试");
+        show(Screen::catalog);
+        done();
+        co_return Result<void>{};
+      }
+      if (!catalog.count && catalog.has_more && catalog.next_cursor != cursor && skipped < 4) {
+        cursor = catalog.next_cursor;
+        continue;
+      }
+      cursors[page_index] = cursor;
+      break;
     }
-    auto body = co_await fetch(url);
-    store_catalog_t result{};
-    store_taxonomy_t types{};
-    if (!body || !store_json_parse_catalog(
-                     reinterpret_cast<const uint8_t *>(body->data()),
-                     body->size(), &result, &types)) {
-      message("加载失败，检查网络后重试");
-      show(Screen::catalog);
-      done();
-      co_return Result<void>{};
-    }
-    catalog = result;
-    taxonomy = types;
     sync_rows();
     catalog_title.set(query.get().empty() ? (kind == "game"  ? "游戏"
                                              : kind == "app" ? "应用"
                                                              : "热门榜")
                                           : "搜索结果");
     message(catalog.count ? "第 " + std::to_string(page_index + 1) + " 页"
-                          : "暂时没有匹配的应用");
+                          : catalog.has_more ? "当前页无兼容项，可继续下一页"
+                                             : "暂时没有匹配的应用");
     show(Screen::catalog);
     log("Lite catalog loaded n=" + std::to_string(catalog.count));
     done();

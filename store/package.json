@@ -13,7 +13,7 @@
     0
   ],
   "id": "pxa-store",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "name": "App Store",
   "description": "边加载边浏览应用与游戏，查看图标、截图和兼容性，下载、安装并检查更新。支持已安装应用与下载管理；签名验证和安装由系统完成，需要联网及 Host 商店安装服务。 支持网页短码登录及同步点赞。",
   "icon": "assets/icon.png",
@@ -68,7 +68,7 @@
       "scope": "https://app.doit.am"
     }
   ],
-  "release_sequence": 32,
+  "release_sequence": 33,
   "build": {
     "system": "cmake",
     "source_dir": "."
