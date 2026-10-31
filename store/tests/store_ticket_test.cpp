@@ -80,6 +80,12 @@ int main(void) {
     assert(!app.requires_resources && !app.resource_size_known && app.resource_size == 0);
     assert(store_client_profile_for_device(url, sizeof(url), "esp32-s31", "riscv32", "wamr", 3, 3));
     assert(strcmp(url, "esp32-s31-pxa-0.5.0-r2") == 0);
+    assert(store_client_profile_for_device(url, sizeof(url), "esp32-s31", "riscv32", "wamr", 3,
+        PXA_STORE_CAP_RESOURCE_INSTALL | PXA_STORE_CAP_VOLUME_PLACEMENT | PXA_STORE_CAP_INDEXED_CONTAINER));
+    assert(strcmp(url, "esp32-s31-pxa-0.7.0") == 0);
+    assert(store_client_profile_for_device(url, sizeof(url), "esp32-s3", "xtensa", "wamr", 3,
+        PXA_STORE_CAP_INDEXED_CONTAINER));
+    assert(strcmp(url, "esp32-s3-pxa-0.4.0-r3") == 0);
     assert(store_client_profile_for_device(url, sizeof(url), "esp32-s31", "riscv32", "wamr", 3, 1));
     assert(strcmp(url, "esp32-s31-pxa-0.4.0-r3") == 0);
     assert(store_client_build_download_url(url, sizeof(url), ticket));

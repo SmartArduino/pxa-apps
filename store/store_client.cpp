@@ -53,11 +53,13 @@ int store_client_profile_for_device(char *output, size_t capacity,
         !same_text(engine, "wamr"))
         return 0;
     output[0] = '\0';
+    const uint32_t native = PXA_STORE_CAP_RESOURCE_INSTALL | PXA_STORE_CAP_VOLUME_PLACEMENT;
+    const char *suffix = STORE_PROFILE_SUFFIX;
+    if ((installer_features & native) == native)
+        suffix = (installer_features & PXA_STORE_CAP_INDEXED_CONTAINER)
+            ? "-pxa-0.7.0" : "-pxa-0.5.0-r2";
     return append_text(output, capacity, &offset, target) &&
-           append_text(output, capacity, &offset,
-             (installer_features & (PXA_STORE_CAP_RESOURCE_INSTALL | PXA_STORE_CAP_VOLUME_PLACEMENT)) ==
-             (PXA_STORE_CAP_RESOURCE_INSTALL | PXA_STORE_CAP_VOLUME_PLACEMENT)
-             ? "-pxa-0.5.0-r2" : STORE_PROFILE_SUFFIX);
+           append_text(output, capacity, &offset, suffix);
 }
 
 static int append_text(char *output, size_t capacity, size_t *offset,
