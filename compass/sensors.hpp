@@ -79,7 +79,7 @@ template <class Device> class Service {
     } else
       next(Idle);
     d.gyro = false;
-    d.tilt.suspend();
+    d.suspend();
     engaged = false;
     clock(false);
     pump_closes();
@@ -90,18 +90,22 @@ template <class Device> class Service {
     d.status = status;
   }
   void connected() {
-    if (!gyro_stream) {
+    if (!d.system_heading && !gyro_stream) {
       fail(gyro_denied ? Status::Denied : Status::NoGravity);
       return;
     }
     next(Idle);
     d.status = Status::Streaming;
     d.gyro = gyro_stream != 0;
-    d.tilt.suspend();
+    d.suspend();
     char text[96];
-    snprintf(text, sizeof(text), "%s connected magnetic=1 gravity=%u",
-             log_prefix, d.gyro ? 1u : 0u);
+    snprintf(text, sizeof(text), "%s connected magnetic=%u gravity=%u heading=%u",
+             log_prefix, d.system_heading ? 0u : 1u, d.gyro ? 1u : 0u, d.system_heading ? 1u : 0u);
     pxa_log_write(2, text);
+  }
+  const char *scope() const {
+    return d.system_heading ? "orientation.heading"
+                            : (d.channel ? "magnetic-field.1" : "magnetic-field.0");
   }
   void submit() {
     if (stage == Idle || sent)
@@ -116,7 +120,7 @@ template <class Device> class Service {
       uint32_t n = 0;
       const char *scope =
           stage == AccPermission
-              ? (d.channel ? "magnetic-field.1" : "magnetic-field.0")
+              ? this->scope()
               : "motion.acceleration";
       if (pxa_permission_build(packet, sizeof(packet), PXA_PERMISSION_ACQUIRE,
                                token, "sensor.read", 11,
@@ -180,7 +184,7 @@ public:
       }
       engaged = true;
       acc_id = gyro_id = 0;
-      d.tilt.suspend();
+      d.suspend();
       d.status = Status::Connecting;
       next(List);
     }
@@ -200,11 +204,11 @@ public:
     if (pxa_permission_parse_revoked(&event, &revoked) &&
         text(revoked.name, revoked.name_size, "sensor.read")) {
       if (text(revoked.scope, revoked.scope_size,
-               (d.channel ? "magnetic-field.1" : "magnetic-field.0")) ||
+               scope()) ||
           !revoked.scope_size) {
         denied = true;
         fail(Status::Denied);
-      } else if (text(revoked.scope, revoked.scope_size,
+      } else if (!d.system_heading && text(revoked.scope, revoked.scope_size,
                       "motion.acceleration")) {
         gyro_denied = true;
         denied = true;
@@ -216,9 +220,15 @@ public:
         event.opcode == PXA_SENSOR_SAMPLE) {
       pxa_sensor_sample_t sample;
       if (!foreground || !d.wanted ||
-          !pxa_sensor_parse_sample(&event, &sample) || sample.dimensions != 3 ||
+          !pxa_sensor_parse_sample(&event, &sample) ||
           sample.timestamp_us > now + 100000)
         return true;
+      if (d.system_heading) {
+        if (sample.handle == acc_stream && sample.dimensions == 1)
+          d.heading_sample(sample.values[0], sample.timestamp_us);
+        return true;
+      }
+      if (sample.dimensions != 3) return true;
       bool was = d.tilt.calibrated;
       if (sample.handle == acc_stream)
         d.tilt.acceleration(sample.values, sample.timestamp_us, now);
@@ -257,18 +267,25 @@ public:
       size_t offset = 0;
       pxa_sensor_descriptor_t descriptor;
       unsigned count = 0;
+      uint16_t heading_id = 0; uint32_t heading_period = 50;
+      d.system_heading = false;
       while (offset < list.size && count++ < PXA_SENSOR_MAX_DESCRIPTORS) {
         if (!pxa_sensor_descriptor_next(&list, &offset, &descriptor)) {
           fail(Status::Error);
           return true;
         }
-        if (descriptor.dimensions != 3 || descriptor.min_period_ms > 100)
+        if (descriptor.min_period_ms > 100)
           continue;
         uint32_t period = descriptor.min_period_ms > requested_period
                               ? descriptor.min_period_ms
                           : descriptor.max_period_ms < requested_period
                               ? descriptor.max_period_ms
                               : requested_period;
+        if (descriptor.dimensions == 1 && descriptor.unit == PXA_SENSOR_UNIT_MICRO_DEGREES &&
+            text(descriptor.semantic, descriptor.semantic_size, "orientation.heading")) {
+          heading_id = descriptor.id; heading_period = period;
+        }
+        if (descriptor.dimensions != 3) continue;
         if (text(descriptor.semantic, descriptor.semantic_size,
                  (d.channel ? "magnetic-field.1" : "magnetic-field.0")) &&
             descriptor.unit == PXA_SENSOR_UNIT_NANO_TESLA) {
@@ -287,11 +304,16 @@ public:
         fail(Status::Error);
         return true;
       }
+      if ((!acc_id || !gyro_id) && heading_id) {
+        d.system_heading = true;
+        d.capture.collecting = false;
+        acc_id = heading_id; acc_period = heading_period; gyro_id = 0;
+      }
       if (!acc_id) {
         fail(Status::Unavailable);
         return true;
       }
-      if (!gyro_id) {
+      if (!gyro_id && !d.system_heading) {
         fail(Status::NoGravity);
         return true;
       }

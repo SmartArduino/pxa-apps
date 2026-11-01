@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-compass",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": "北辰指南针",
   "description": "带倾斜补偿、磁场状态和引导校准的随身指南针。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 1,
+  "release_sequence": 2,
   "build": {
     "system": "cmake",
     "source_dir": ".",
@@ -76,6 +76,11 @@
     {
       "name": "sensor.read",
       "scope": "motion.acceleration",
+      "required": false
+    },
+    {
+      "name": "sensor.read",
+      "scope": "orientation.heading",
       "required": false
     }
   ],

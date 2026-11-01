@@ -225,7 +225,9 @@ struct Model {
   Status status = Status::Unavailable;
   uint64_t now = 0;
   uint32_t retry = 0;
-  bool wanted = true, gyro = false, held = false;
+  bool wanted = true, gyro = false, held = false, system_heading = false;
+  uint64_t heading_stamp = 0;
+  float absolute_heading = 0;
   unsigned channel = 0;
   Calibration saved[2]{};
   Capture capture;
@@ -234,7 +236,28 @@ struct Model {
   Quality quality = Quality::Waiting;
   uint64_t last_compute = 0;
   int declination = 0;
+  void suspend() { tilt.suspend(); heading_stamp = 0; last_compute = 0; }
+  void heading_sample(int32_t value, uint64_t stamp) {
+    if (value < 0 || value >= 360000000 || stamp <= heading_stamp || stamp > now)
+      return;
+    absolute_heading = value / 1000000.f;
+    heading_stamp = stamp;
+  }
+  void compute(float target, uint64_t stamp) {
+    quality = Quality::Good;
+    if (last_compute != stamp) {
+      float dt = last_compute && stamp > last_compute
+                     ? std::min(.5f, (stamp - last_compute) / 1000000.f) : 1;
+      heading = has_heading ? wrap(heading + delta(target, heading) *
+                                  (-std::expm1(-dt / .24f))) : target;
+      last_compute = stamp;
+    }
+    has_heading = true;
+  }
   bool fresh() const {
+    if (system_heading)
+      return status == Status::Streaming && heading_stamp && now >= heading_stamp &&
+             now - heading_stamp < 1500000;
     return status == Status::Streaming && tilt.received &&
            now >= tilt.received && now - tilt.received < 1500000 &&
            tilt.gyro_time && now >= tilt.gyro_time &&
@@ -252,6 +275,11 @@ struct Model {
     if (!fresh()) {
       quality = Quality::Waiting;
       has_heading = false;
+      return;
+    }
+    if (system_heading) {
+      strength = 0;
+      compute(wrap(absolute_heading + declination), heading_stamp);
       return;
     }
     auto &c = saved[channel];
@@ -298,17 +326,7 @@ struct Model {
       return;
     }
     float target = wrap(std::atan2(y, x) * DEG + declination);
-    quality = Quality::Good;
-    if (last_compute != tilt.stamp) {
-      float dt = last_compute && tilt.stamp > last_compute
-                     ? std::min(.5f, (tilt.stamp - last_compute) / 1000000.f)
-                     : 1;
-      heading = has_heading ? wrap(heading + delta(target, heading) *
-                                                 (-std::expm1(-dt / .24f)))
-                            : target;
-      last_compute = tilt.stamp;
-    }
-    has_heading = true;
+    compute(target, tilt.stamp);
   }
   bool toggle_hold() {
     if (held) {
@@ -326,11 +344,11 @@ struct Model {
     held = false;
     has_heading = false;
     capture.collecting = false;
-    tilt.suspend();
+    suspend();
     ++retry;
   }
   bool apply() {
-    if (!valid_cal(capture.candidate))
+    if (system_heading || !valid_cal(capture.candidate))
       return false;
     saved[channel] = capture.candidate;
     capture.collecting = false;

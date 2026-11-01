@@ -5,6 +5,7 @@
 #include <deque>
 #include <set>
 #include <vector>
+#include <string>
 struct Call {
   uint16_t service, opcode;
   uint64_t token;
@@ -48,12 +49,12 @@ static void record(Bytes &b, unsigned tag, const Bytes &value) {
                                 value.size(), &n));
   b.insert(b.end(), raw, raw + n);
 }
-static void descriptor(Bytes &b, unsigned id, const char *name, unsigned unit) {
+static void descriptor(Bytes &b, unsigned id, const char *name, unsigned unit, unsigned dims=3) {
   Bytes d;
   record(d, 1, integer(id, 2));
   record(d, 2, Bytes(name, name + strlen(name)));
   record(d, 3, integer(unit, 2));
-  record(d, 4, integer(3, 1));
+  record(d, 4, integer(dims, 1));
   record(d, 5, integer(100, 4));
   record(d, 6, integer(1000, 4));
   record(b, 1, d);
@@ -76,7 +77,7 @@ struct Fixture {
     pxa_event_t e{c.service, c.opcode, c.token, b.data(), uint32_t(b.size())};
     assert(s.event(e, fg, now += 1000));
   }
-  void list(bool magnetic = true, bool gravity = true) {
+  void list(bool magnetic = true, bool gravity = true, bool heading = false) {
     update();
     assert(calls.front().opcode == PXA_SENSOR_LIST);
     Bytes b(4);
@@ -85,6 +86,7 @@ struct Fixture {
     if (gravity)
       descriptor(b, 1, "motion.acceleration",
                  PXA_SENSOR_UNIT_MICRO_METERS_PER_SECOND_SQUARED);
+    if (heading) descriptor(b, 8, "orientation.heading", PXA_SENSOR_UNIT_MICRO_DEGREES, 1);
     reply(b);
   }
   void grant(uint64_t h) {
@@ -179,6 +181,24 @@ int main() {
     assert(f.d.status == compass::Status::Error);
     f.update();
     assert(cancels == 1);
+  }
+  {
+    Fixture f; f.list(false,false,true); assert(f.d.system_heading);
+    f.update(); auto &c=calls.front();
+    const std::string scope(c.payload.begin(),c.payload.end()); assert(scope.find("orientation.heading")!=std::string::npos);
+    f.grant(0x100000001); f.grant(0x200000001);
+    assert(f.d.status==compass::Status::Streaming && !f.d.gyro);
+    Bytes b; record(b,4,integer(0x200000001,8));record(b,2,integer(f.now,8));record(b,3,integer(1,2));record(b,4,integer(42000000,4));
+    pxa_event_t e{PXA_SENSOR_SERVICE,PXA_SENSOR_SAMPLE,0,b.data(),uint32_t(b.size())};
+    f.s.event(e,true,f.now);f.d.update();assert(f.d.has_heading && f.d.heading==42);
+    f.update(false);assert(f.d.heading_stamp==0 && closed.size()==2);
+  }
+  {
+    Fixture f;f.list(true,true,true);assert(!f.d.system_heading); // Raw field has priority.
+  }
+  {
+    Fixture f;f.list(false,false,true); f.update();f.reply(integer(PXA_STATUS_DENIED,4));
+    assert(f.d.status==compass::Status::Denied);f.update();assert(calls.empty());
   }
   puts("Compass service: discovery, missing channels, permission "
        "denial/retry/revocation, cancellation/late completion, close "

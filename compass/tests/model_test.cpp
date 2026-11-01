@@ -159,6 +159,19 @@ int main() {
   assert(decode(restored, bytes, sizeof(bytes)));
   assert(restored.channel == 1 && restored.declination == -12 &&
          restored.saved[1].rotation == 17 && !restored.held);
+  Model system; system.system_heading=true; system.status=Status::Streaming; system.now=1000000;
+  system.heading_sample(359000000,system.now); system.update();
+  assert(system.has_heading && system.quality==Quality::Good && system.strength==0);
+  for(int i=0;i<30;++i){system.now+=100000;system.heading_sample(1000000,system.now);system.update();}
+  assert(std::abs(delta(system.heading,1))<.01);
+  system.heading_sample(360000000,system.now+1); system.heading_sample(200000000,system.now-1);
+  assert(system.absolute_heading==1);
+  assert(system.toggle_hold()); system.now+=2000000; system.update(); assert(system.quality==Quality::Held);
+  system.toggle_hold(); system.update(); assert(!system.has_heading);
+  system.suspend(); assert(system.heading_stamp==0);
+  system.saved[0]=d.saved[0]; system.saved[1]=d.saved[1]; system.channel=d.channel;system.declination=d.declination;
+  uint8_t original[SAVE_SIZE], compat[SAVE_SIZE]; encode(d,original,sizeof(original));encode(system,compat,sizeof(compat));
+  assert(!memcmp(original,compat,sizeof(compat))); // Switching source preserves raw calibrations byte-for-byte.
   puts("Compass: all 24 mounting rotations, spherical calibration, stationary "
        "rejection, cardinal headings, wraparound, hold, stale data, "
        "interference, vertical pose and persistent-state corruption passed");

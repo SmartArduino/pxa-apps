@@ -46,7 +46,7 @@ int main() {
       pocket::set_english(en);
       game::init();
       draw();
-      assert(test_runtime::visible(en ? "NO MAGNETOMETER" : "未检测到磁力计"));
+      assert(test_runtime::visible(en ? "NO HEADING SENSOR" : "未检测到方位传感器"));
       unsigned retry = device.retry;
       tap(pocket::WIDTH / 6, pocket::HEIGHT - 22);
       assert(device.retry > retry);
@@ -112,6 +112,16 @@ int main() {
       assert(device.capture.collecting);
       game::key(pocket::Key::B);
       assert(!device.capture.collecting);
+      game::init(); device.status=Status::Streaming; device.system_heading=true;
+      device.now=1000000; device.heading_sample(42000000,device.now); game::tick(100); draw();
+      assert(device.has_heading && test_runtime::visible(en ? "SYSTEM HEADING" : "实时 · 系统方位"));
+      tap(pocket::WIDTH/2,pocket::HEIGHT-22); draw();
+      assert(!device.capture.collecting);
+      game::key(pocket::Key::B); tap(pocket::WIDTH*5/6,pocket::HEIGHT-22); draw();
+      unsigned channel=device.channel; tap(pocket::WIDTH/2,62); assert(device.channel==channel);
+      tap(pocket::WIDTH/2,std::min(146,pocket::HEIGHT-104)+12); draw();
+      device.now+=2000000; game::key(pocket::Key::B); game::tick(100); draw();
+      assert(!device.has_heading);
       device.status = Status::Denied;
       draw();
       device.status = Status::NoGravity;

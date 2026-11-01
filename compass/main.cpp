@@ -38,7 +38,7 @@ const char *state() {
   if (device.status == compass::Status::Permission)
     return tr("ALLOW SENSOR ACCESS", "请允许传感器访问");
   if (device.status == compass::Status::Unavailable)
-    return tr("NO MAGNETOMETER", "未检测到磁力计");
+    return tr("NO HEADING SENSOR", "未检测到方位传感器");
   if (device.status == compass::Status::NoGravity)
     return tr("NO ACCELEROMETER", "未检测到加速度计");
   if (device.status == compass::Status::Error)
@@ -55,9 +55,11 @@ const char *state() {
   case Quality::Interference:
     return tr("MAGNETIC INTERFERENCE", "磁场异常 · 远离金属");
   case Quality::Good:
-    return tr("TILT COMPENSATED", "实时 · 倾斜补偿");
+    return device.system_heading ? tr("SYSTEM HEADING", "实时 · 系统方位")
+                                 : tr("TILT COMPENSATED", "实时 · 倾斜补偿");
   default:
-    return tr("WAITING FOR SENSORS", "等待传感器读数");
+    return device.system_heading ? tr("LOWER / WAIT FOR HEADING", "放平设备 · 等待系统方位")
+                                 : tr("WAITING FOR SENSORS", "等待传感器读数");
   }
 }
 void header(const char *s) {
@@ -152,7 +154,9 @@ void measure() {
         : device.quality == Quality::Interference ? RED
                                                   : DIM);
   if (wide) {
-    std::snprintf(b, sizeof(b), "%.1f uT", device.strength);
+    if (device.system_heading)
+      std::snprintf(b, sizeof(b), "%s", tr("SYSTEM HEADING", "系统方位"));
+    else std::snprintf(b, sizeof(b), "%.1f uT", device.strength);
     label(x, HEIGHT - 82, w, b, DIM);
   }
   int bw = (WIDTH - 40) / 3, by = HEIGHT - 34;
@@ -161,7 +165,7 @@ void measure() {
          : !device.fresh() ? tr("Retry", "重试")
                            : tr("Hold", "锁定"),
          device.held);
-  button(1, 20 + bw, by, bw, 25, tr("Calibrate", "校准"));
+  button(1, 20 + bw, by, bw, 25, device.system_heading ? tr("Guide", "说明") : tr("Calibrate", "校准"));
   button(2, 30 + bw * 2, by, bw, 25, tr("Settings", "设置"));
 }
 void calibration() {
@@ -216,7 +220,7 @@ void settings() {
   char b[64];
   std::snprintf(b, sizeof(b), "%s %u", tr("Magnetometer", "磁力计"),
                 device.channel + 1);
-  button(5, 14, 48, w, 28, b);
+  button(5, 14, 48, w, 28, device.system_heading ? tr("System heading / retry", "系统方位 / 重新连接") : b);
   std::snprintf(b, sizeof(b), "%s %+d", tr("Declination", "磁偏角"),
                 device.declination);
   label(48, 89, WIDTH - 96, b, GOLD);
@@ -227,7 +231,7 @@ void settings() {
           tr("East + / west -  ·  default 0", "东偏为正 / 西偏为负 · 默认 0"),
           DIM);
   int y = std::min(146, HEIGHT - 104);
-  button(8, 14, y, w, 25, tr("Clear calibration", "清除当前校准"));
+  button(8, 14, y, w, 25, device.system_heading ? tr("System calibration", "系统负责校准") : tr("Clear calibration", "清除当前校准"));
   button(9, 14, y + 32, w, 25, tr("How to use", "使用说明"));
   button(10, 14, HEIGHT - 37, w, 27, tr("Back", "返回"));
 }
@@ -235,11 +239,12 @@ void guide() {
   header(tr("FIELD NOTES", "使用说明"));
   const char *lines[] = {
       tr("Travel direction: top edge.", "以屏幕上沿作为前进方向。"),
-      tr("Slowly turn all six faces.",
-         "缓慢转动六个面，采样合格后保存。"),
+      device.system_heading ? tr("Calibration handled by the OS.", "系统负责校准，无需六面采样。") :
+      tr("Slowly turn all six faces.", "缓慢转动六个面，采样合格后保存。"),
       tr("Magnetic north differs from true.",
          "默认指向磁北，并非地理真北。"),
       tr("Set declination only if known.", "已知当地磁偏角时，可手动修正。"),
+      device.system_heading ? tr("No raw field strength available.", "此模式不提供原始磁场强度。") :
       tr("Move away from magnets and steel.", "远离磁铁、钢铁及通电大电流线。"),
       tr("Too steep? Lower the top edge.", "倾角过大时，请降低设备上沿。"),
       tr("No sensor: no simulated heading.",
@@ -266,6 +271,7 @@ void act(int id) {
       device.toggle_hold();
     redraw();
   } else if (id == 1) {
+    if (device.system_heading) { navigate(Guide); return; }
     device.capture = {};
     device.held = false;
     navigate(Calibrate);
@@ -275,6 +281,7 @@ void act(int id) {
     device.capture.collecting = false;
     navigate(Measure);
   } else if (id == 4) {
+    if (device.system_heading) { navigate(Guide); return; }
     if (compass::valid_cal(device.capture.candidate)) {
       if (device.apply()) {
         save();
@@ -288,6 +295,7 @@ void act(int id) {
       log("Compass: calibration started");
     }
   } else if (id == 5) {
+    if (device.system_heading) { ++device.retry; redraw(); return; }
     device.select(1 - device.channel);
     save();
   } else if (id == 6 || id == 7) {
@@ -298,7 +306,7 @@ void act(int id) {
     device.last_compute = 0;
     save();
   } else if (id == 8)
-    navigate(Clear);
+    navigate(device.system_heading ? Guide : Clear);
   else if (id == 9)
     navigate(Guide);
   else if (id == 10)
@@ -306,6 +314,7 @@ void act(int id) {
   else if (id == 11)
     navigate(Settings);
   else if (id == 12) {
+    if (device.system_heading) { navigate(Guide); return; }
     device.saved[device.channel] = {};
     device.held = false;
     device.has_heading = false;
@@ -428,13 +437,13 @@ void tick(uint32_t ms) {
     std::snprintf(b, sizeof(b),
                   "Compass: state=%u quality=%u heading=%.1f field=%.1f "
                   "raw=%.2f,%.2f,%.2f gravity=%.3f,%.3f,%.3f calibrated=%u "
-                  "samples=%u faces=%u",
+                  "samples=%u faces=%u system=%u",
                   unsigned(device.status), unsigned(device.quality),
                   device.heading, device.strength, device.tilt.raw.x,
                   device.tilt.raw.y, device.tilt.raw.z, device.tilt.gravity.x,
                   device.tilt.gravity.y, device.tilt.gravity.z,
                   device.saved[device.channel].valid, device.capture.count,
-                  device.capture.faces);
+                  device.capture.faces, device.system_heading ? 1u : 0u);
     log(b);
   }
 }
