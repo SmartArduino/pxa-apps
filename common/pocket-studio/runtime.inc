@@ -7,6 +7,7 @@ struct StudioText {
     unsigned align;
     bool visible;
     int minimum_font;
+    int box_height;
     char value[128];
 };
 StudioText studio_texts[112];
@@ -42,7 +43,7 @@ void studio_occlude(int x, int y, int w, int h) {
         return;
     for (unsigned i = 0; i < studio_count; ++i) {
         auto &t = studio_texts[i];
-        if (x < t.x + t.w && x + w > t.x && y < t.y + 10 * t.scale && y + h > t.y)
+        if (x < t.x + t.w && x + w > t.x && y < t.y + (t.box_height ? t.box_height : 10 * t.scale) && y + h > t.y)
             t.visible = false;
     }
 }
@@ -62,8 +63,14 @@ void studio_add(int x, int y, int w, const char *s, uint16_t c, int scale, unsig
     if (!s || !*s || w <= 0 || scale < 1 || scale > 4 || strlen(s) >= 128 || studio_count >= 112)
         return;
     auto &t = studio_texts[studio_count++];
-    t = {x, y, w, scale, c, align, true, minimum_font, {}};
+    t = {x, y, w, scale, c, align, true, minimum_font, 0, {}};
     memcpy(t.value, s, strlen(s) + 1);
+}
+void studio_add_box(int x, int y, int w, int h, const char *s, uint16_t c) {
+    if (h <= 0) return;
+    unsigned before = studio_count;
+    studio_add(x, y, w, s, c, 1, 1, 10);
+    if (studio_count > before) studio_texts[before].box_height = h;
 }
 bool studio_create(pxa_ui_transaction_t *tx) {
     return pxa_ui_create(tx, 2, 1, 0, PXA_UI_NODE_CANVAS) &&
@@ -112,6 +119,17 @@ bool studio_present() {
         uint32_t rgba = (((c >> 11) & 31) * 255 / 31 << 24) | (((c >> 5) & 63) * 255 / 63 << 16) |
                         ((c & 31) * 255 / 31 << 8) | 255;
         unsigned n = unsigned(strlen(t.value));
+        if (t.box_height) {
+            const int h = (studio_y(t.y + t.box_height) - studio_y(t.y)) * viewport.host_scale;
+            // Use a Host theme role: TEXT_BOX measures its real font line height.
+            const uint8_t role = font < 14 ? PXA_CANVAS_FONT_CAPTION :
+                                 font < 19 ? PXA_CANVAS_FONT_BODY : PXA_CANVAS_FONT_TITLE;
+            if (!pxa_canvas_text_box_role(&f, studio_logical(x), studio_logical(y),
+                    studio_logical(w), studio_logical(h), rgba, role,
+                    PXA_CANVAS_ALIGN_CENTER, PXA_CANVAS_TEXT_ALIGN_MIDDLE, t.value, n))
+                return false;
+            continue;
+        }
         // Sized-text (UI 0.6) font size is in physical pixels; positions use dp.
         if (!pxa_canvas_clip_push(&f, studio_logical(x), studio_logical(y - 2), studio_logical(w),
                                   studio_logical(font + 6)) ||

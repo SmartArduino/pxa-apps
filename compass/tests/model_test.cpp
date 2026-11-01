@@ -89,8 +89,10 @@ int main() {
     Vec g = qrot({0, 0, 9.80665}, x, y, z, w),
         m = qrot({24, 0, -38}, x, y, z, w),
         forward = qrot({1, 0, 0}, -x, -y, -z, w);
-    if (std::hypot(forward.x, forward.y) < .27f)
-      continue;
+    const float elevation = std::abs(unit(g).x);
+    if (elevation > .707f && elevation < .941f) continue;
+    if (elevation >= .941f) forward = qrot({0, 0, -1}, -x, -y, -z, w);
+    if (std::hypot(forward.x, forward.y) < .27f) continue;
     d.now += 100000;
     int32_t magnetic[3] = {int32_t(m.x * 1000), int32_t(m.y * 1000),
                            int32_t(m.z * 1000)},
@@ -129,7 +131,21 @@ int main() {
   sample(0);
   d.tilt.gravity = {9.80665, 0, 0};
   d.update();
-  assert(d.quality == Quality::Vertical);
+  assert(d.quality == Quality::Good); // Upright now uses the back, not a vanishing top edge.
+  // Physically rotate both field and gravity. Raising the top through 90 degrees
+  // without turning the device must retain the same north-referenced bearing.
+  for (int h : {0,42,90,180,270,359}) {
+    for (int pitch=0;pitch<=110;++pitch) {
+      const float a=pitch/DEG/2;
+      Vec g=qrot({0,0,9.80665},0,std::sin(a),0,std::cos(a));
+      Vec m=qrot({24*std::cos(h/DEG),24*std::sin(h/DEG),-38},0,std::sin(a),0,std::cos(a));
+      int32_t mv[3]={int32_t(m.x*1000),int32_t(m.y*1000),int32_t(m.z*1000)};
+      int32_t gv[3]={int32_t(g.x*1e6),int32_t(g.y*1e6),int32_t(g.z*1e6)};
+      d.now+=100000;d.has_heading=false;
+      d.tilt.acceleration(mv,d.now,d.now);d.tilt.gyroscope(gv,d.now);d.update();
+      assert(d.quality==Quality::Good && std::abs(delta(d.heading,h))<.02f);
+    }
+  }
   d.capture.begin();
   sample(0);
   unsigned captured = d.capture.count;

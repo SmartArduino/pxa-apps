@@ -45,6 +45,18 @@ inline Vec rotate(Vec v, unsigned id) {
   int x = s & 1 ? -1 : 1, y = s & 2 ? -1 : 1, z = x * y * parity[k];
   return {v[p[k][0]] * x, v[p[k][1]] * y, v[p[k][2]] * z};
 }
+// Above 45 degrees of top-edge elevation, ease the reference toward the
+// back of the display. At 70 degrees it is fully rear-facing, so 90 degrees
+// has no top-edge projection singularity and crossing it cannot flip north.
+inline float forward_blend(float top_up) {
+  float t = std::clamp((std::abs(top_up) - .70710678f) / (.93969262f - .70710678f), 0.f, 1.f);
+  return t * t * (3 - 2 * t);
+}
+inline Vec forward_reference(Vec up) {
+  float w = forward_blend(up.x);
+  Vec v{1 - w, 0, -w};
+  return v - up * dot(v, up);
+}
 struct Calibration {
   Vec bias{};
   float radius = 0, residual = 0;
@@ -311,7 +323,7 @@ struct Model {
       has_heading = false;
       return;
     }
-    Vec g = unit(tilt.gravity), top = Vec{1, 0, 0} - g * g.x;
+    Vec g = unit(tilt.gravity), top = forward_reference(g);
     if (norm(top) < .26f) {
       quality = Quality::Vertical;
       has_heading = false;

@@ -12,7 +12,7 @@ constexpr auto BG = rgb(8, 17, 25), PANEL = rgb(17, 30, 40),
                DIM = rgb(131, 151, 160), GOLD = rgb(222, 184, 120),
                RED = rgb(242, 104, 95), GREEN = rgb(125, 212, 178);
 enum Page { Measure, Calibrate, Settings, Guide, Clear };
-Page page = Measure;
+Page page = Measure, guide_return = Measure;
 int pressed = -1, focus = 0;
 bool keyboard = false;
 uint32_t paint = 0, diagnostic = 0, elapsed = 0;
@@ -30,7 +30,7 @@ void button(int id, int x, int y, int w, int h, const char *s,
                 pressed == id ? EDGE
                 : active      ? rgb(39, 65, 68)
                               : PANEL);
-  label(x + 3, y + (h - 12) / 2, w - 6, s, active ? GOLD : INK);
+  studio::label_box(x + 3, y, w - 6, h, s, active ? GOLD : INK);
 }
 const char *state() {
   if (device.status == compass::Status::Denied)
@@ -51,14 +51,14 @@ const char *state() {
   case Quality::Moving:
     return tr("KEEP STILL", "请放稳设备");
   case Quality::Vertical:
-    return tr("LOWER THE TOP EDGE", "请降低设备倾角");
+    return tr("ADJUST THE DEVICE", "请稍微调整握持姿态");
   case Quality::Interference:
     return tr("MAGNETIC INTERFERENCE", "磁场异常 · 远离金属");
   case Quality::Good:
     return device.system_heading ? tr("SYSTEM HEADING", "实时 · 系统方位")
                                  : tr("TILT COMPENSATED", "实时 · 倾斜补偿");
   default:
-    return device.system_heading ? tr("LOWER / WAIT FOR HEADING", "放平设备 · 等待系统方位")
+    return device.system_heading ? tr("WAITING FOR HEADING", "等待系统方位")
                                  : tr("WAITING FOR SENSORS", "等待传感器读数");
   }
 }
@@ -238,7 +238,7 @@ void settings() {
 void guide() {
   header(tr("FIELD NOTES", "使用说明"));
   const char *lines[] = {
-      tr("Travel direction: top edge.", "以屏幕上沿作为前进方向。"),
+      tr("Flat: top. Upright: back faces out.", "平放看上沿，竖握看机背朝向。"),
       device.system_heading ? tr("Calibration handled by the OS.", "系统负责校准，无需六面采样。") :
       tr("Slowly turn all six faces.", "缓慢转动六个面，采样合格后保存。"),
       tr("Magnetic north differs from true.",
@@ -246,7 +246,7 @@ void guide() {
       tr("Set declination only if known.", "已知当地磁偏角时，可手动修正。"),
       device.system_heading ? tr("No raw field strength available.", "此模式不提供原始磁场强度。") :
       tr("Move away from magnets and steel.", "远离磁铁、钢铁及通电大电流线。"),
-      tr("Too steep? Lower the top edge.", "倾角过大时，请降低设备上沿。"),
+      tr("Raise smoothly; keep away from metal.", "平放与竖握平滑过渡，远离金属。"),
       tr("No sensor: no simulated heading.",
          "无传感器或信号中断时，不显示方位。")};
   for (int i = 0; i < 7; ++i)
@@ -254,6 +254,7 @@ void guide() {
   button(10, 14, HEIGHT - 37, WIDTH - 28, 27, tr("Back", "返回"));
 }
 void navigate(Page next) {
+  if (next == Guide && page != Guide) guide_return = page;
   page = next;
   pressed = -1;
   focus = next == Measure     ? 0
@@ -310,7 +311,7 @@ void act(int id) {
   else if (id == 9)
     navigate(Guide);
   else if (id == 10)
-    navigate(page == Guide ? Settings : Measure);
+    navigate(page == Guide ? guide_return : Measure);
   else if (id == 11)
     navigate(Settings);
   else if (id == 12) {

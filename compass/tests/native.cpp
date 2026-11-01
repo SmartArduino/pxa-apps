@@ -8,6 +8,7 @@ namespace test_runtime {
 void begin();
 void finish();
 bool visible(const char *);
+bool centered(const char *,int,int,int,int);
 } // namespace test_runtime
 using namespace compass;
 static void draw() {
@@ -47,6 +48,10 @@ int main() {
       game::init();
       draw();
       assert(test_runtime::visible(en ? "NO HEADING SENSOR" : "未检测到方位传感器"));
+      int bw=(pocket::WIDTH-40)/3;
+      assert(test_runtime::centered(en?"Retry":"重试",10,pocket::HEIGHT-34,bw,25));
+      assert(test_runtime::centered(en?"Calibrate":"校准",20+bw,pocket::HEIGHT-34,bw,25));
+      assert(test_runtime::centered(en?"Settings":"设置",30+2*bw,pocket::HEIGHT-34,bw,25));
       unsigned retry = device.retry;
       tap(pocket::WIDTH / 6, pocket::HEIGHT - 22);
       assert(device.retry > retry);

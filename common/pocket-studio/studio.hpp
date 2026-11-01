@@ -48,6 +48,8 @@ void disc(int x, int y, int r, uint16_t color);
 void picture(int x, int y, int w, int h, const Image &image, int darkness = 0);
 void label(int x, int y, int w, const char *text, uint16_t color, int scale = 1,
            unsigned align = 1);
+// Native Host font metrics center the label inside the whole control.
+void label_box(int x, int y, int w, int h, const char *text, uint16_t color);
 void picture_region(int x, int y, int w, int h, const Image &image, int sx, int sy, int sw, int sh,
                     int darkness = 0, bool cutout = false);
 void raster(int x, int y, int w, int h, const uint16_t *pixels, int source_w, int source_h);
@@ -80,6 +82,11 @@ inline void label(int x, int y, int w, const char *s, uint16_t c, int scale = 1,
         --scale;
     pocket::text(x + (align ? (w - pocket::text_width(s, scale)) / (align == 1 ? 2 : 1) : 0), y, s,
                  c, scale);
+}
+inline void label_box(int x, int y, int w, int h, const char *s, uint16_t c) {
+    int ink_height = 7;
+    for (const char *p = s; *p;) if (pocket_ui::next_utf8(p) >= 128) ink_height = 10;
+    label(x, y + (h - ink_height) / 2, w, s, c);
 }
 inline void picture_region(int x, int y, int w, int h, const Image &im, int sx, int sy, int sw,
                            int sh, int dark = 0, bool cutout = false) {
@@ -119,7 +126,7 @@ inline void card(int x, int y, int w, int h, uint16_t fill, uint16_t edge, int r
 inline void button(int x, int y, int w, int h, const char *v, uint16_t fill, uint16_t ink,
                    bool selected = false) {
     card(x, y, w, h, fill, selected ? mix(fill, 0xffff, 120) : mix(fill, 0xffff, 32), 5);
-    label(x + 3, y + (h - 10) / 2, w - 6, v, ink);
+    label_box(x + 3, y, w - 6, h, v, ink);
 }
 inline void sparkle(int x, int y, uint16_t c) {
     pocket::line(x - 2, y, x + 2, y, c);

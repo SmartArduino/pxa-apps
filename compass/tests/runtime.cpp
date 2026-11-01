@@ -29,6 +29,11 @@ void finish() {
   assert(guarded[0] == 0x5aa5 &&
          guarded[pocket::WIDTH * pocket::HEIGHT + 1] == 0x5aa5);
 }
+bool centered(const char *s, int x, int y, int w, int h) {
+  for (const auto &l:labels) if(l.value==s)
+    return std::abs(2*l.x+l.w-(2*x+w))<=1 && std::abs(2*l.y+l.h-(2*y+h))<=1;
+  return false;
+}
 bool visible(const char *s) {
   for (auto &l : labels)
     if (l.value == s)
