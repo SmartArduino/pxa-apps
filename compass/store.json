@@ -1,0 +1,23 @@
+{
+  "name": "北辰指南针",
+  "kind": "app",
+  "category": "tools",
+  "summary": "深色表盘与红色北针，支持倾斜补偿、六面引导校准、读数锁定和双磁力计独立设置。",
+  "description": "以屏幕上沿作为前进方向，用清晰的大字方位与旋转表盘辨认磁北。界面适配方屏、横屏和竖屏，支持中文、English、触屏以及上下确认三键操作。\n\n首次使用需要缓慢转动六个面，采样合格后明确保存；取消保留原校准。支持读数锁定、磁场状态、手动磁偏角修正，以及两颗磁力计分别校准。设置会跨重启保存，不需要网络或定位。\n\n需要三轴磁力计和加速度计公共服务。ESP-Mosaico 提供两颗 BMM150；其他设备需具备对应传感器。无传感器、未授权或信号中断时不会显示虚构方向；浏览器在线体验可查看界面和说明。\n\n默认指向磁北，并非地理真北。整度显示不代表精度承诺，实际表现取决于安装、校准和周围磁场。请远离磁铁和钢铁；校准为硬铁偏置和安装轴向校准，不是完整软铁标定。\n\n需要 PXA SDK 2.1 兼容宿主。商城按平台提供 ESP32-S3、ESP32-S31、Linux x86_64 和可移植 Wasm 包。截图来自真实 PXA 模拟器，读数场景使用明确的传感器测试向量。",
+  "changelog": "1.0.0：首次发布，提供倾斜补偿、引导校准、双磁力计设置、磁偏角修正、锁定和信号异常状态。",
+  "language": "zh-CN",
+  "cover": "store/cover.png",
+  "icon": "store/icon.png",
+  "tags": [
+    "指南针",
+    "磁力计",
+    "传感器",
+    "测量",
+    "工具"
+  ],
+  "screenshots": [
+    "compass/store/screenshots/heading.png",
+    "compass/store/screenshots/calibration.png",
+    "compass/store/screenshots/settings.png"
+  ]
+}
