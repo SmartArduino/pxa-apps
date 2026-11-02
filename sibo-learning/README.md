@@ -2,6 +2,10 @@
 
 独立 PXA 应用，包 ID `pxa-sibo-learning`。诗词、儿童故事、蒙学诵读、小学听题、英语词卡、同步教材与科学图文放在同一个安装包中。
 
+首页在启动时单独创建，其他学习页按首次访问加载，随后保留各页控件和状态。
+切换页面不重复注册事件回调，也不清空阅读记录、收藏或音频缓存。
+启动恢复个人信息和音频缓存元信息，不预读所有正文缓存；发布缓存前仍检查空间预算并按需淘汰。
+
 - 75 首课本古诗原文离线阅读；在线每日诗词、随机诗词、按诗人查找、拼音伴读、诗意讲解及小挑战。
 - 拼音伴读按屏幕可用高度分页，底部上一页、下一页并排固定显示；带声调拼音与汉字对齐，长音节保留足够宽度，三按键无需额外滚动正文。22 首已有服务注音的课本古诗内置离线拼音，按需载入当前一首，正文校验匹配后才使用；其余诗词首次注音需联网，最近获取的数据可复用缓存。当前专门注音入口用于诗词，未向全部故事或蒙学自动注音。
 - 已有音频的 22 首课本古诗提供「跟着读一读」，接入原服务的跟读版本，与普通朗读分别缓存。没有跟读资源的内容不显示该入口，不额外请求音频合成。
@@ -29,13 +33,13 @@
 在 `pxa-projects` 根目录构建 ESP32-S3 安装包：
 
 ```sh
-tools/app.sh build sibo-learning --board doit-gamekit-1 --target esp32s3 --aot-only \
+PXA_CONTAINER_CODEC=store tools/app.sh build sibo-learning --board doit-gamekit-1 --target esp32s3 --aot-only \
   --source-root "$PWD/local/pxa-apps" --output "$PWD/local/app-output/sibo-esp32s3"
 ```
 
 需要模拟器包时将 `--target` 改为 `simulator`，或用 `esp32s3,simulator` 构建双架构开发包。发布到设备时使用 ESP32-S3 单架构包以节省存储。
 
-要求 PXA Core 2.1、Window 0.3、FS 0.2、Net 0.5、Audio 0.10、Assets 2.2。音频使用应用内 minimp3 解码及 Host PCM 输出，不依赖 Host Music 解码器。Host 未接任意采样率 PCM 时，仅在返回“不支持”后协商标准单声道会话，应用流式混音、重采样；保持原始时长和单词片段边界。
+要求 PXA Core 2.1、UI 0.9、Window 0.3、FS 0.2、Net 0.5、Audio 0.10、Assets 2.2。UI 最低版本明确固定为 0.9，构建工具更新时不自动要求新的字体接口。音频使用应用内 minimp3 解码及 Host PCM 输出，不依赖 Host Music 解码器。Host 未接任意采样率 PCM 时，仅在返回“不支持”后协商标准单声道会话，应用流式混音、重采样；保持原始时长和单词片段边界。
 
 模型测试不需要设备或网络，可选传入本地保存的公开 API 样本：
 
@@ -49,6 +53,9 @@ python3 local/pxa-apps/sibo-learning/tests/test_model.py \
 `tests/test_pinyin.py` 使用相同路径参数，逐页核对拼音与汉字的完整性、实际 LVGL 文本边界和字体测量，覆盖长音节及三按键前后翻页。导航桥接器仅在设置 `STUDY_TRACE_LAYOUT` 时输出布局证据；该测试会自动设置。
 
 `tests/test_experience.py` 验证小屏和大屏的默认操作可见性、空收藏提示、最后词卡的返回及焦点；`test_offline_follow.py` 同时覆盖阅读和拼音页的暂停、继续。
+
+`tests/test_startup.py` 通过导航模拟器的 `STUDY_TRACE_TREE` 检查包含隐藏控件的真实 LVGL 树，
+验证启动时未创建其他学习页、首次进入才创建、重复返回不增加控件，以及各页回调仍然有效。
 
 `tests/test_offline_follow.py` 验证内置拼音不触发网络或持久缓存，再显式访问已有跟读 MP3，验证播放时打开拼音、自然结束与重复播放命中运行缓存；`--offline-only` 跳过音频联网。
 

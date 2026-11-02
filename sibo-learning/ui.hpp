@@ -31,15 +31,15 @@ inline bool interactivity(Transaction<> &tx, uint32_t n, const bool &value) {
 
 // Keep the native controls and their callback addresses stable. Tree order is
 // also the three-key focus order; every page places its header after its body.
-template <class Page> struct Painter {
+template <class Page, size_t MaxCallbacks = 192> struct Painter {
   Page &page;
   Transaction<> &tx;
-  std::array<std::function<void()>, 192> &callbacks;
+  std::array<std::function<void()>, MaxCallbacks> &callbacks;
   unsigned callback_count = 0;
   bool ok = true;
   bool roomy = false;
   unsigned header_size = 34;
-  Painter(Page &p, std::array<std::function<void()>, 192> &c)
+  Painter(Page &p, std::array<std::function<void()>, MaxCallbacks> &c)
       : page(p), tx(p.transaction()), callbacks(c) {}
   void fill(uint32_t n, bool height = false) {
     ok &= tx.fill(n, protocol::width);

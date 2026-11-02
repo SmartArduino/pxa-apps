@@ -40,6 +40,6 @@ command=shlex.split((build/'CMakeFiles/pxsys_product_simulator.dir/link.txt').re
 command=[x for x in command if not x.startswith('-Wl,--dependency-file=')]
 index=command.index('-o');command[index+1]=str(out/'pxsys_product_simulator')
 command=[str(out/'runner.o') if x.endswith('pxsys_product_simulator.dir/product_runner.c.o') else x for x in command]
-command.extend([str(out/'navigation.o'),'-lstdc++'])
+command.extend([str(out/'navigation.o'),'-lstdc++','-Wl,--wrap=read'])
 subprocess.run(command,cwd=build,check=True)
 print(out/'pxsys_product_simulator')

@@ -70,8 +70,30 @@ struct ListPanel {
   State<std::string> empty_title{""}, empty_tip{""};
 };
 struct App;
+struct ScreenView : ViewModifiers {
+  static constexpr Capacity capacity{400, 280, 48, 0, 1};
+  App *app;
+  Screen kind;
+  // Each retained page owns the callback addresses registered with its nodes.
+  std::array<std::function<void()>, 48> callbacks;
+  ScreenView(App *a, Screen s) : app(a), kind(s) {}
+  template <class Page> bool render(Page &page, uint32_t parent);
+};
+struct ScreenFactory {
+  App *app;
+  Screen kind;
+  ScreenView operator()() const { return ScreenView(app, kind); }
+};
+struct EmptyScreen : ViewModifiers {
+  static constexpr Capacity capacity{};
+  template <class Page> bool render(Page &, uint32_t) { return true; }
+};
+struct EmptyFactory {
+  EmptyScreen operator()() const { return {}; }
+};
+using LazyScreen = WhenView<ScreenFactory, EmptyFactory>;
 struct AppView : ViewModifiers {
-  static constexpr Capacity capacity{1100, 640, 192, 0, 3};
+  static constexpr Capacity capacity{1200, 32, 0, size_t(Screen::count), 0};
   App *app;
   explicit AppView(App *a) : app(a) {}
   template <class Page> bool render(Page &page, uint32_t parent);
@@ -83,7 +105,7 @@ struct App {
   TaskScope network, images, saving;
   AudioPlayer player;
   std::array<Flag, size_t(Screen::count)> screens;
-  std::array<std::function<void()>, 192> callbacks;
+  std::array<Flag, size_t(Screen::count)> visited;
   Layout layout;
   State<bool> ready{false}, resume_visible{false}, is_poem{false},
       has_quiz{false}, has_image{false}, has_audio{false}, has_follow{false}, audio_active{false},
@@ -150,6 +172,8 @@ struct App {
   unsigned canvas_width = 200, pinyin_columns = 4, pinyin_rows = 2;
   uint64_t generation = 0;
   std::array<std::byte, 2048> network_chunk{};
+  // Destroy fragments before the States and CanvasRefs they subscribe to.
+  std::array<std::unique_ptr<LazyScreen>, size_t(Screen::count)> screen_views;
 
   unsigned width() {
     auto d = environment.display().get();
@@ -161,6 +185,7 @@ struct App {
   }
   void show(Screen value) {
     screen = value;
+    visited[unsigned(value)].value.set(true);
     for (unsigned i = 0; i < screens.size(); ++i)
       screens[i].value.set(i == unsigned(value));
   }
@@ -1269,7 +1294,8 @@ struct App {
     }
     (void)co_await player.cache.inspect();
     (void)co_await player.cache.trim_disk();
-    (void)co_await trim_cache();
+    // Text caches were budgeted before publication. Do not read every cached
+    // response to show Home; fetch()/reserve_disk still trim before writes.
     refresh_summary();
     show(Screen::home);
     ready.set(true);
@@ -1498,6 +1524,15 @@ struct App {
                             (excerpt.size() > 1 ? "\n…" : ""));
     picture_caption.set(selected.title);
     show(Screen::picture);
+    // First entry mounts the picture page during the next UI flush. Yield
+    // once before presenting to its CanvasRef, without changing audio timing.
+    auto mounted = co_await ctx->clock().yield();
+    if (tag != generation || screen != Screen::picture)
+      co_return Result<void>{};
+    if (!mounted || !cover_canvas.mounted()) {
+      failed(tag);
+      co_return Result<void>{};
+    }
     draw_picture();
     co_return Result<void>{};
   }
@@ -1523,6 +1558,10 @@ struct App {
     player.cache_save_allowed=[this] { return !save_running; };
     (void)ctx->window().fullscreen(WindowBarMode::hidden,
                                    WindowBarMode::hidden);
+    for (unsigned i = 0; i < screen_views.size(); ++i)
+      screen_views[i] = std::make_unique<LazyScreen>(
+          visited[i].value, ScreenFactory{this, Screen(i)}, EmptyFactory{});
+    show(Screen::home);
     return ctx->tasks().start(initialize());
   }
   Result<bool> on_event(Context &, const Event &event) {
@@ -1539,6 +1578,8 @@ struct App {
     (void)context.window().fullscreen(WindowBarMode::hidden,
                                       WindowBarMode::hidden);
     draw_hero();
+    if (screen == Screen::picture)
+      draw_picture();
   }
   BackAction on_back() {
     if (screen == Screen::home)
@@ -1562,7 +1603,31 @@ struct App {
 
 template <class Page> bool AppView::render(Page &page, uint32_t parent) {
   auto &a = *app;
-  Painter p(page, a.callbacks);
+  auto &tx = page.transaction();
+  auto root = page.create(parent, protocol::box);
+  bool ok = root && tx.u8(root, protocol::layout, protocol::column) &&
+            tx.fill(root, protocol::width) && tx.fill(root, protocol::height);
+  for (unsigned i = 0; ok && i < a.screen_views.size(); ++i) {
+    auto holder = page.create(root, protocol::box);
+    ok = holder && tx.u8(holder, protocol::layout, protocol::column) &&
+         tx.fill(holder, protocol::width) && tx.fill(holder, protocol::height) &&
+         visibility(tx, holder, a.screens[i].value.get()) &&
+         page.template bind<bool, visibility>(a.screens[i].value, holder);
+    if (ok)
+      ok = page.decorate(*a.screen_views[i], holder,
+                         [](auto &owner, uint32_t anchor) {
+        return owner.transaction().fill(anchor, protocol::width) &&
+               owner.transaction().fill(anchor, protocol::height);
+      });
+  }
+  return ok && tx.valid();
+}
+
+template <class Page> bool ScreenView::render(Page &page, uint32_t parent) {
+  auto &a = *app;
+  Painter p(page, callbacks);
+  p.ok &= p.tx.fill(parent, protocol::width) &&
+          p.tx.fill(parent, protocol::height);
   p.roomy = a.layout.roomy;
   p.header_size = a.layout.header;
   auto root = p.box(parent);
@@ -1579,7 +1644,7 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     auto n = p.text(b, a.notice, Font::caption, muted);
     p.visible(n, a.notice_visible);
   };
-  {
+  if (kind == Screen::home) {
     auto f = stage(Screen::home), b = p.scroll(p.body(f));
     // Callbacks must outlive this render call; capture the App directly.
     auto action = [&a](unsigned index) {
@@ -1699,7 +1764,7 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
         },
         true);
   }
-  {
+  if (kind == Screen::poetry) {
     auto f = stage(Screen::poetry), b = p.scroll(p.body(f));
     p.text(b, "把一首诗，读成一幅画", Font::title, green);
     p.text(b, "75 首课本古诗，原文离线可读。", Font::body, muted);
@@ -1713,7 +1778,7 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     auto title = std::string_view("诗词小天地");
     header(f, title);
   }
-  {
+  if (kind == Screen::recite) {
     auto f = stage(Screen::recite), b = p.scroll(p.body(f));
     p.text(b, "耳朵听，脑袋想", Font::title, green);
     p.text(b, "跟着声音慢慢读，听完再想一想。", Font::body, muted);
@@ -1724,6 +1789,7 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     header(f, title);
   }
   for (unsigned panel = 0; panel < 2; ++panel) {
+    if (kind != (panel ? Screen::list1 : Screen::list0)) continue;
     auto &v = a.panels[panel];
     auto f = stage(panel ? Screen::list1 : Screen::list0),
          b = p.scroll(p.body(f));
@@ -1773,6 +1839,7 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     header(f, v.title);
   }
   for (unsigned panel = 0; panel < 2; ++panel) {
+    if (kind != (panel ? Screen::card1 : Screen::card0)) continue;
     auto f = stage(panel ? Screen::card1 : Screen::card0),
          b = p.scroll(p.body(f));
     p.text(b, a.card_counter, Font::caption, muted);
@@ -1818,7 +1885,7 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     auto title = std::string_view("英语词卡");
     header(f, title);
   }
-  {
+  if (kind == Screen::detail) {
     auto f = stage(Screen::detail), b = p.scroll(p.body(f));
     auto shell = p.box(b, a.layout.detail_columns, a.layout.roomy ? 16 : 8);
     auto summary = p.box(shell, false, a.layout.roomy ? 8 : 5);
@@ -1871,7 +1938,7 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     auto title = std::string_view("发现一本好书");
     header(f, title);
   }
-  {
+  if (kind == Screen::reader) {
     auto f = stage(Screen::reader), wrap = p.body(f), b = p.scroll(wrap);
     p.text(b, a.reader_counter, Font::caption, green);
     auto note=p.text(b,a.reader_notice,Font::caption,muted);
@@ -1900,7 +1967,7 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     p.header(f, a.reader_heading, [&a] { a.back(); }, false,
              &a.audio_active, &a.pause_short, [&a] { a.player.pause_resume(); });
   }
-  {
+  if (kind == Screen::pinyin) {
     auto f = stage(Screen::pinyin), wrap = p.body(f), b = p.box(wrap);
     p.ok &= p.tx.u16(b, protocol::grow, 1);
     auto counter = p.text(b, a.pinyin_counter, Font::caption, green);
@@ -1961,7 +2028,7 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     p.header(f, title, [&a] { a.back(); }, false,
              &a.audio_active, &a.pause_short, [&a] { a.player.pause_resume(); });
   }
-  {
+  if (kind == Screen::quiz) {
     auto f = stage(Screen::quiz), b = p.scroll(p.body(f));
     p.text(b, a.question_counter, Font::caption, green);
     p.text(b, a.question_text, Font::title);
@@ -1980,7 +2047,7 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     auto title = std::string_view("来个小挑战");
     header(f, title);
   }
-  {
+  if (kind == Screen::selfcheck) {
     auto f = stage(Screen::selfcheck), wrap = p.body(f), b = p.scroll(wrap);
     p.text(b, a.feedback_preview, Font::title);
     p.button(
@@ -2000,7 +2067,7 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     auto title = std::string_view("对照答案");
     header(f, title);
   }
-  {
+  if (kind == Screen::feedback) {
     auto f = stage(Screen::feedback), wrap = p.body(f), b = p.scroll(wrap);
     p.text(b, a.feedback_preview, Font::title);
     p.button(wrap, a.feedback_next, [&a] { a.next_question(); }, true);
@@ -2010,14 +2077,14 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     auto title = std::string_view("收获小星星");
     header(f, title);
   }
-  {
+  if (kind == Screen::loading) {
     auto f = stage(Screen::loading), b = p.scroll(p.body(f));
     p.text(b, "小书页，翻呀翻", Font::headline, green);
     p.text(b, a.loading_text);
     auto title = std::string_view("四博学习宝");
     header(f, title);
   }
-  {
+  if (kind == Screen::picture) {
     auto f = stage(Screen::picture), b = p.body(f);
     auto viewport = p.box(b, true, 12);
     // A gesture viewport is a scroll container with native scrolling disabled:
@@ -2095,7 +2162,7 @@ template <class Page> bool AppView::render(Page &page, uint32_t parent) {
     else
       header(f, title);
   }
-  {
+  if (kind == Screen::about) {
     auto f = stage(Screen::about), b = p.scroll(p.body(f));
     p.text(b, "我的小书包", Font::headline, green);
     p.text(b, a.about_summary);

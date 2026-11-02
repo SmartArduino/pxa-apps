@@ -6,7 +6,30 @@
 #include <array>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <string>
+#include <unistd.h>
+
+extern "C" ssize_t __real_read(int, void*, size_t);
+extern "C" ssize_t __wrap_read(int fd, void* buffer, size_t size) {
+    const auto result=__real_read(fd,buffer,size);
+    static const bool trace=std::getenv("STUDY_TRACE_CACHE_IO")!=nullptr;
+    if(trace && result>0) {
+        char descriptor[64],path[4096];
+        std::snprintf(descriptor,sizeof descriptor,"/proc/self/fd/%d",fd);
+        const auto length=readlink(descriptor,path,sizeof(path)-1);
+        if(length>0) {
+            path[length]=0;
+            const auto* name=std::strrchr(path,'/');name=name?name+1:path;
+            if(std::strlen(name)==11 && !std::strncmp(name,"cache-",6) &&
+               name[6]>='0' && name[6]<='3' && !std::strcmp(name+7,".bin")) {
+                std::fprintf(stderr,"STUDY_CACHE_READ %s %zd\n",name,result);
+                std::fflush(stderr);
+            }
+        }
+    }
+    return result;
+}
 
 namespace {
 Mz79Navigation navigation;
@@ -68,6 +91,23 @@ void layout_trace(lv_obj_t* object, std::string& output) {
     for(unsigned i=0;i<lv_obj_get_child_count(object);++i)
         layout_trace(lv_obj_get_child(object,i),output);
 }
+// Include hidden widgets: visibility alone cannot detect eagerly built pages.
+void tree_trace(lv_obj_t* object, std::string& output, unsigned& count) {
+    ++count;
+    if(lv_obj_check_type(object,&lv_label_class)) {
+        const auto* text=(const unsigned char*)lv_label_get_text(object);
+        if(*text) {
+            output+="STUDY_TREE_LABEL ";
+            for(;*text;++text) {
+                constexpr char hex[]="0123456789abcdef";
+                output+=hex[*text>>4];output+=hex[*text&15];
+            }
+            output+='\n';
+        }
+    }
+    for(unsigned i=0;i<lv_obj_get_child_count(object);++i)
+        tree_trace(lv_obj_get_child(object,i),output,count);
+}
 }
 extern "C" void study_navigation_poll() {
     if(!initialized) {
@@ -93,6 +133,16 @@ extern "C" void study_navigation_poll() {
         std::fflush(stderr);previous=focused;previous_label=std::move(value);
     }
     static const bool trace=std::getenv("STUDY_TRACE_LAYOUT")!=nullptr;
+    static const bool trace_tree=std::getenv("STUDY_TRACE_TREE")!=nullptr;
+    static std::string previous_tree;
+    if(trace_tree) {
+        unsigned count=0;std::string current;tree_trace(root,current,count);
+        current="STUDY_TREE_NODES "+std::to_string(count)+'\n'+current;
+        if(current!=previous_tree) {
+            std::fprintf(stderr,"STUDY_TREE_BEGIN\n%sSTUDY_TREE_END\n",current.c_str());
+            std::fflush(stderr);previous_tree=std::move(current);
+        }
+    }
     static std::string previous_layout;
     if(trace) {
         std::string current;layout_trace(root,current);
