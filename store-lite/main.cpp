@@ -64,6 +64,8 @@ struct App {
   std::array<Row, 8> download_rows;
   std::array<Row, 20> category_rows;
   State<bool> has_ticket{false}, has_pictures{false};
+  State<bool> operation_error_visible{false};
+  State<std::string> operation_error{""};
   State<bool> ready{false}, idle{true}, primary_enabled{false},
       uninstall_visible{false}, previous{false}, next_page{false},
       meta_visible{false}, image_visible{false};
@@ -372,6 +374,7 @@ struct App {
     run(load_detail());
   }
   Task<void> load_detail() {
+    operation_error_visible.set(false);
     loading(detail_from);
     char url[512];
     if (!store_client_build_identity_url(url, sizeof url, profile,
@@ -427,6 +430,7 @@ struct App {
                           current->app_id.view() != "pxa-store-lite");
   }
   Task<void> install(bool only_download = false) {
+    operation_error_visible.set(false);
     loading(Screen::detail);
     message(only_download ? "正在准备下载…" : "等待系统确认安装…");
     if (selected.publisher_binding[0]) {
@@ -464,13 +468,43 @@ struct App {
     StorePackage package{selected.app_id, selected.download_ticket_url,
                          selected.sha256, selected.size};
     bool ok;
+    Error failure = Error::internal;
     if (only_download) {
       auto result = co_await ctx->store_installer().download(package);
       ok = bool(result);
+      if (!result) failure = result.error();
     } else {
       auto result = co_await ctx->store_installer().install_identity(
           selected_identity, package);
       ok = bool(result);
+      if (!result) failure = result.error();
+    }
+    if (!ok) {
+      log("Lite install failed: app=" + std::string(selected.app_id) +
+          " download_only=" + std::to_string(only_download) +
+          " error=" + std::to_string(int(failure)));
+      const char *reason = "系统未能完成操作，请重试或更新系统。";
+      switch (failure) {
+      case Error::resource_limit:
+        reason = "系统运行内存不足，请重启设备后重试。"; break;
+      case Error::quota_exceeded:
+        reason = "安装位置空间不足，请更换位置或清理存储。"; break;
+      case Error::unsupported:
+        reason = "系统暂不支持此安装方式，请更新系统后重试。"; break;
+      case Error::cancelled:
+        reason = "已取消本次操作。"; break;
+      case Error::denied:
+        reason = "本次操作未获允许，请检查安装确认和家长设置。"; break;
+      case Error::busy:
+        reason = "系统正在处理其他任务，请稍后重试。"; break;
+      case Error::timed_out:
+        reason = "连接超时，请检查网络后重试。"; break;
+      case Error::io_error:
+        reason = "下载或安装失败，请检查网络与存储设备后重试。"; break;
+      default: break;
+      }
+      operation_error.set(reason);
+      operation_error_visible.set(true);
     }
     message(ok ? (only_download ? "下载完成，可在下载管理中安装" : "安装完成")
                : "操作未完成，可能已取消、存储不足或网络中断");
@@ -1023,6 +1057,8 @@ template <class Page> bool View::render(Page &page, uint32_t parent) {
     p.text(b, a.detail_title, Font::headline);
     auto n = button(b, a.primary, [&a] { a.primary_action(); }, true);
     p.enabled(n, a.primary_enabled);
+    auto error = p.text(b, a.operation_error, Font::caption, 0xa43b2cff);
+    p.visible(error, a.operation_error_visible);
     p.text(b, a.detail_text);
     p.text(b, a.notice, Font::caption);
     n = button(b, "仅下载", [&a] {

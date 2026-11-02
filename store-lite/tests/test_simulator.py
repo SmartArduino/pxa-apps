@@ -11,7 +11,11 @@ def main():
     ap=argparse.ArgumentParser(description=__doc__)
     for name in ('workspace','package-root','simulator','output'):ap.add_argument('--'+name,type=Path,required=True)
     ap.add_argument('--width',type=int,default=240);ap.add_argument('--height',type=int,default=284)
-    ap.add_argument('--full',action='store_true');a=ap.parse_args()
+    ap.add_argument('--full',action='store_true')
+    ap.add_argument('--install-error',action='store_true')
+    ap.add_argument('--install-error-only',action='store_true')
+    a=ap.parse_args()
+    if a.install_error_only:a.install_error=True
     for key in ('PXA_SIMULATOR_PERF','STUDY_TRACE_LAYOUT'):os.environ.pop(key,None)
     sys.path.insert(0,str(a.workspace/'local/pxa-apps/common/study/tests'))
     from test_three_key_simulator import ThreeKey
@@ -39,6 +43,31 @@ def main():
         load('应用');s.screenshot('catalog')
         before=count('Lite page 3');s.key('ENTER');wait(lambda:count('Lite page 3')>before+0 and '取消本次操作'!=s.focus())
         wait(lambda:s.focus() in ('安装','更新','打开'));time.sleep(.6);s.screenshot('detail')
+        if a.install_error:
+            assert s.focus()=='安装'
+            s.key('ENTER')
+            wait(lambda:'Lite install failed:' in s.log_path.read_text())
+            wait(lambda:s.focus()=='安装')
+            from PIL import Image
+            def check_error_visible(name):
+                path=s.screenshot(name)
+                with Image.open(path) as capture:
+                    image=capture.convert('RGB')
+                    red=sum(r>100 and g<120 and b<120 and r>g+35
+                            for y in range(40,min(205,image.height))
+                            for x in range(8,image.width-8)
+                            for r,g,b in [image.getpixel((x,y))])
+                    assert red>40,('error not visible near Install',red)
+            check_error_visible('install-error')
+            time.sleep(3)
+            check_error_visible('install-error-retained')
+            s.key('ENTER')
+            wait(lambda:count('Lite install failed:')>=2)
+            wait(lambda:s.focus()=='安装')
+            if a.install_error_only:
+                print(json.dumps({'result':'passed','install_failure_visible':True,
+                                  'retained_after_seconds':3,'retry':True}),flush=True)
+                return
         choose('权限与兼容信息');s.screenshot('permissions')
         if a.full:
             before=count('Lite image ready');choose('查看截图');s.screenshot('picture-pending')
