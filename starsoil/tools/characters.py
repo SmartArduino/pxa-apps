@@ -7,13 +7,13 @@ from PIL import Image, ImageDraw
 from functools import lru_cache
 from math import hypot
 
-WIDTH, HEIGHT, FRAMES, POSES, PARTS = 20,32,10,4,20
+WIDTH, HEIGHT, FRAMES, POSES, PARTS = 20,32,12,4,20
 WALK,CARRY,BOW_AIM,TOOL_USE=range(POSES)
-WALK_FRAMES,STAND,JUMP=8,8,9
-STRIDE=(3,2,0,-2,-3,-2,0,2,0,0)
-BOB=(0,1,0,1,0,1,0,1,0,0)
-NEAR_LIFT=(0,0,0,0,0,1,2,1,0,2)
-FAR_LIFT=(0,1,2,1,0,0,0,0,0,2)
+WALK_FRAMES,STAND,JUMP,APEX,FALL=8,8,9,10,11
+STRIDE=(3,2,0,-2,-3,-2,0,2,0,0,0,0)
+BOB=(0,1,0,1,0,1,0,1,0,0,0,0)
+NEAR_LIFT=(0,0,0,0,0,1,2,1,0,3,2,0)
+FAR_LIFT=(0,1,2,1,0,0,0,0,0,1,3,1)
 # 0 transparent; 1 outline; 2/3/c skin; 4/5/f hair; e eye white.
 # Traced from the first generated reference, not from Terraria game assets.
 HEAD=(
@@ -37,8 +37,8 @@ assert all(len(row)==WIDTH for row in HEAD)
 # All bones use the SAME forward flexion direction in a right-facing view.
 # Camera-facing right hand is always the item hand; rear left hand supports it.
 ARM_LENGTHS={'camera':(4.25,4.25),'rear':(3.5,3.8)}
-CAMERA_FEET=(14,12,10,8,6,8,10,12,8,9)
-REAR_FEET=(6,8,10,12,14,12,10,8,12,12)
+CAMERA_FEET=(14,12,10,8,6,8,10,12,8,14,12,8)
+REAR_FEET=(6,8,10,12,14,12,10,8,12,7,8,12)
 CAMERA_SWING=((5,20),(6,21),(9,22),(11,22),(12,21),(11,22),(9,22),(6,21))
 REAR_SWING=((15,21),(14,21),(13,21),(10,21),(10,20),(10,21),(13,21),(14,21))
 TOOL_HAND=((12,20),(11,13),(12,7),(14,9),(15,14),(14,18),(12,21),(11,21))
@@ -58,7 +58,7 @@ def arm_elbow(shoulder,hand,lengths,bend=1):
  return best[2],best[1]
 
 
-@lru_cache(maxsize=40)
+@lru_cache(maxsize=POSES*FRAMES)
 def rig(frame,pose=WALK):
  f=frame%FRAMES
  # Tool frames describe only the arm action. Runtime adds locomotion bob.
@@ -68,10 +68,14 @@ def rig(frame,pose=WALK):
  if f<WALK_FRAMES:
   hand,off=CAMERA_SWING[f],REAR_SWING[f]
  elif f==JUMP:
-  hand,off=(10,20),(15,19)
+  hand,off=(6,18),(15,19)
+ elif f==APEX:
+  hand,off=(9,19),(16,18)
+ elif f==FALL:
+  hand,off=(12,21),(15,20)
  else:
   hand,off=(9,22),(15,21)
- if pose==CARRY:hand=(12,20 if f==JUMP else 21)
+ if pose==CARRY:hand=(12,18 if f==JUMP else 19 if f==APEX else 21)
  elif pose==BOW_AIM:
   # Dominant/camera hand pulls the string; rear hand supports the bow grip.
   hand,off=(11,17),(18,17)
@@ -94,7 +98,7 @@ def leg_joints(lane):
  hip,foot,lift=lane
  # Knees flex forward (+X), even while the foot moves backward in stance.
  knee=int((hip+foot)/2+.8*(lift+1)+.5)
- return ((hip,23),(knee,26-lift//2),(foot,28-lift),(foot,30-lift))
+ return ((hip,23),(knee,min(26-lift//2,27-lift)),(foot,28-lift),(foot,30-lift))
 
 
 def leg(d,lane,part,far=False):
@@ -200,7 +204,7 @@ def human(frame,part,pose=WALK):
  elif part in (4,6):
   leg(d,r['near'],part)
  elif part==5:
-  wave=(0,1,2,2,1,0,-1,-1,0,0)[frame]
+  wave=(0,1,2,2,1,0,-1,-1,0,2,3,1)[frame]
   d.polygon([(6,14+b),(8,16+b),(6,21),(5,26),(3,28),(0,27+wave),(1,21),(2,17+b)],fill=1)
   d.polygon([(5,16+b),(6,17+b),(4,22),(4,26),(1,26+wave),(2,21)],fill=2)
   d.line((4,17+b,3,22,2,25),fill=3);d.line((1,26+wave,3,27),fill=6)

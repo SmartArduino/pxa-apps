@@ -62,4 +62,27 @@ void draw(int x, int y, const char *value, int scale, Plot plot) {
     x += g ? g->advance * scale : 12 * scale;
   }
 }
+// Emit horizontal ink runs in native glyph coordinates. The original point
+// renderer remains the reference used by font/layout regression tests.
+template <class Plot>
+void spans(int x, int y, const char *value, Plot plot) {
+  if (!value) return;
+  const int left = x;
+  while (*value) {
+    uint32_t cp = pocket_ui::next_utf8(value);
+    if (cp == '\n') { x = left; y += 13; continue; }
+    const auto *g = glyph(cp);
+    for (int yy = 0; yy < 12; ++yy) {
+      uint32_t bits = g ? g->rows[yy]
+          : cp == ' ' ? 0 : yy == 1 || yy == 10 ? 0xfff : 0x802;
+      while (bits) {
+        int start = __builtin_clz(bits) - 20, end = start + 1;
+        while (end < 12 && (bits & (1u << (11 - end)))) ++end;
+        plot(x + start, y + yy, end - start, 1);
+        bits &= (1u << (12 - end)) - 1;
+      }
+    }
+    x += g ? g->advance : 12;
+  }
+}
 } // namespace starsoil_text

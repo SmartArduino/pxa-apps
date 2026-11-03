@@ -40,6 +40,11 @@ int request_surface() {
   }
   surface_display_w = display_w;
   surface_display_h = display_h;
+#ifndef PXA_POCKET_STUDIO
+  if (!starsoil_buffers::fits(viewport.pixels(), unsigned(WIDTH * HEIGHT)))
+    return PXA_STATUS_RESOURCE_LIMIT;
+  logical_frame = frames + 2 * viewport.pixels();
+#endif
   frame_bytes = viewport.pixels() * 2;
   frame_id = 0;
   pxa_surface_desc_t desc{uint16_t(viewport.width), uint16_t(viewport.height),

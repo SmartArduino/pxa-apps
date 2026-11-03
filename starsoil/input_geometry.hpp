@@ -2,6 +2,9 @@
 #pragma once
 #include <cstdint>
 namespace starsoil {
+inline bool pause_button_hit(int x, int y, int width) {
+  return x >= width - 40 && x < width - 16 && y >= 14 && y < 32;
+}
 // UI pointer payloads are density-independent canvas units; Surface viewports
 // use display pixels. Convert exactly once, before viewport mapping/hit tests.
 inline int display_coordinate(int32_t value, uint32_t density_q16) {

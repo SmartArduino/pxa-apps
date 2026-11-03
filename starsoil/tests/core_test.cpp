@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 #include "../core.hpp"
 #include "../input_geometry.hpp"
+#include "../save_checksum.hpp"
 #include <cassert>
 #include <cmath>
 #include <cstdio>
@@ -105,7 +106,36 @@ static void crafting() {
     for (auto a : p.in)
       assert(a.item < ItemCount);
   }
-  puts("PASS recipe costs, required stations and all catalogue definitions");
+  // Batch building stops at the last complete recipe and retains every item
+  // when the station or destination capacity is missing.
+  for (auto &slot : s.bag) slot = {};
+  add(s, Wood, 7);
+  int crafted_before = s.crafted;
+  assert(craft_batch(s, recipe_for(Boards), 5) == 5);
+  assert(count(s, Wood) == 2 && count(s, Boards) == 20);
+  assert(s.crafted == crafted_before + 5);
+  assert(craft_batch(s, recipe_for(Boards), 5) == 2);
+  assert(count(s, Wood) == 0 && count(s, Boards) == 28);
+  assert(craft_batch(s, recipe_for(Boards), 5) == 0);
+  assert(craft_batch(s, -1, 5) == 0 && craft_batch(s, RecipeCount, 5) == 0);
+  assert(craft_batch(s, 0, 0) == 0 && craft_batch(s, 0, -1) == 0);
+  for (auto &slot : s.bag) slot = {Rock, 999};
+  s.bag[0] = {Wood, 6};
+  Slot original[BagSlots];
+  std::copy(std::begin(s.bag), std::end(s.bag), original);
+  crafted_before = s.crafted;
+  assert(craft_batch(s, recipe_for(Boards), 5) == 0);
+  assert(std::memcmp(s.bag, original, sizeof(original)) == 0 && s.crafted == crafted_before);
+  // Consuming the last ingredient can free the very slot the output needs.
+  s.bag[0].count = 1;
+  assert(craft_batch(s, recipe_for(Boards), 5) == 1);
+  assert(count(s, Boards) == 4 && count(s, Wood) == 0);
+  new_game(s, 33); clear_room();
+  add(s, IronBar, 20); add(s, Wood, 20);
+  std::copy(std::begin(s.bag), std::end(s.bag), original);
+  assert(craft_batch(s, recipe_for(IronPick), 5) == 0);
+  assert(std::memcmp(s.bag, original, sizeof(original)) == 0);
+  puts("PASS recipe costs, stations, safe partial batches, full bags and catalogue definitions");
 }
 static void movement_and_mining() {
   new_game(s, 77);
@@ -300,7 +330,7 @@ static void persistence() {
 }
 static void variable_worlds() {
   std::vector<uint8_t> wire(SaveBytes);
-  for (auto size : {WorldSize::Small, WorldSize::Medium, WorldSize::Large}) {
+  for (auto size : {WorldSize::Small, WorldSize::Medium, WorldSize::Large, WorldSize::Huge}) {
     auto d = dimensions(size);
     for (uint32_t seed : {0u, 1234567u, 0xffffffffu}) {
       new_game(s, seed, size);
@@ -325,6 +355,13 @@ static void variable_worlds() {
       set_tile(s, s.width - 3, s.height - 3, Brick);
       size_t n = encode(s, wire.data(), wire.size());
       assert(n == save_size(s.width, s.height));
+      std::vector<uint8_t> streamed(n);
+      assert(encode(s, streamed.data(), streamed.size(), false) == n);
+      uint32_t hash = starsoil_save::InitialHash;
+      for (size_t at = 0; at < n - 4; at += 4096)
+        hash = starsoil_save::checksum(hash, streamed.data() + at, std::min(size_t(4096), n - 4 - at));
+      for (unsigned i = 0; i < 4; ++i) streamed[n - 4 + i] = uint8_t(hash >> (i * 8));
+      assert(std::equal(streamed.begin(), streamed.end(), wire.begin()));
       SaveInfo info;
       assert(inspect_save(wire.data(), n, info));
       assert(info.width == d.width && info.height == d.height && info.seed == seed);
@@ -335,9 +372,18 @@ static void variable_worlds() {
       wire[n / 2] ^= 1;
       auto old_seed = t.seed;
       assert(!decode(t, wire.data(), n) && t.seed == old_seed);
+      if (size == WorldSize::Huge && seed == 0) {
+        wire[n / 2] ^= 1;
+        wire[228 + s.width] = 255; // Invalid tile, with a valid checksum.
+        uint32_t hash = starsoil_save::checksum(starsoil_save::InitialHash, wire.data(), n - 4);
+        for (unsigned i = 0; i < 4; ++i) wire[n - 4 + i] = uint8_t(hash >> (i * 8));
+        std::vector<uint8_t> original(reinterpret_cast<uint8_t *>(&t), reinterpret_cast<uint8_t *>(&t) + sizeof(t));
+        assert(!decode(t, wire.data(), n));
+        assert(std::memcmp(original.data(), &t, sizeof(t)) == 0);
+      }
     }
   }
-  puts("PASS small/medium/large worlds: actual dimensions, all biomes and liquids, numeric seed extremes, reproducible terrain, bounded edges and independent variable-length saves");
+  puts("PASS all four world sizes: dimensions, biomes, seed extremes, deterministic terrain, streamed save equivalence and rejection before active-state mutation");
 }
 int main() {
   for (uint32_t density : {51200u, 65536u, 124928u})

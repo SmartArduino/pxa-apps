@@ -19,7 +19,7 @@ print(f'PASS {len(rows)} original font glyphs, Latin case, descenders and 12px C
 characters=runpy.run_path(str(ROOT/'tools/characters.py'))
 human,helmet,rig=characters['human'],characters['helmet'],characters['rig']
 F,P=characters['FRAMES'],characters['POSES']
-assert (characters['WIDTH'],characters['HEIGHT'],F,P,characters['PARTS'])==(20,32,10,4,20)
+assert (characters['WIDTH'],characters['HEIGHT'],F,P,characters['PARTS'])==(20,32,12,4,20)
 for pose in range(P):
   composites=set()
   for frame in range(F):
@@ -61,7 +61,8 @@ for f in range(8):
 assert rig(0,0)['near'][1]>rig(0,0)['far'][1]
 assert rig(4,0)['near'][1]<rig(4,0)['far'][1]
 assert rig(8,0)['near'][2]==rig(8,0)['far'][2]==0
-assert rig(9,0)['near'][2]==rig(9,0)['far'][2]==2
+assert rig(9,0)['near'][2]==3 and rig(9,0)['far'][2]==1
+assert len({human(f,16).tobytes()+human(f,17).tobytes() for f in (8,9,10,11)})==4
 for f in range(8):
  r=rig(f,2)
  assert r['support_hand'][0]-r['main_hand'][0]==7

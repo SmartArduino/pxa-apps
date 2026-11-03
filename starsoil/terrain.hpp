@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 #include "art.hpp"
+#include "color_math.hpp"
 #include "items.hpp"
 #include <cstdint>
 namespace starsoil_terrain {
@@ -32,9 +33,7 @@ constexpr uint8_t fill_corners(uint8_t sides, uint8_t diagonals) {
                  ((sides & 6) == 6 && (diagonals & 8) ? 8 : 0));
 }
 inline uint16_t dim(uint16_t c, int light) {
-  return uint16_t(((((c >> 11) & 31) * light / 255) << 11) |
-                  ((((c >> 5) & 63) * light / 255) << 5) |
-                  ((c & 31) * light / 255));
+  return starsoil_color::dim(c, unsigned(light));
 }
 template <class Plot>
 void draw(int x, int y, const uint16_t *data, int light, Plot plot) {

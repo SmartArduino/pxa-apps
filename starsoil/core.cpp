@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: MIT
 #include "core.hpp"
+#include "save_checksum.hpp"
+#include "aim_geometry.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <iterator>
+#include <utility>
 namespace starsoil {
 namespace {
 void notice(State &s, const char *message) {
@@ -20,6 +23,19 @@ void put(State &s, int x, int y, int t) {
   if (inside(s, x, y))
     s.tiles[index(x, y)] = uint8_t(t);
 }
+int accept(Slot *bag, int n, int item, int amount) {
+  if (item <= None || item >= ItemCount || amount <= 0) return 0;
+  const int requested = amount;
+  for (int empty = 0; empty < 2; ++empty)
+    for (int i = 0; i < n && amount; ++i)
+      if (empty ? !bag[i].item : bag[i].item == item) {
+        int step = std::min(amount, 999 - int(bag[i].count));
+        bag[i].item = uint8_t(item);
+        bag[i].count += step;
+        amount -= step;
+      }
+  return requested - amount;
+}
 bool pack(Slot *bag, int n, int item, int amount) {
   if (item <= None || item >= ItemCount || amount < 0)
     return false;
@@ -29,14 +45,7 @@ bool pack(Slot *bag, int n, int item, int amount) {
       capacity += 999 - bag[i].count;
   if (capacity < amount)
     return false;
-  for (int empty = 0; empty < 2; ++empty)
-    for (int i = 0; i < n && amount; ++i)
-      if (empty ? !bag[i].item : bag[i].item == item) {
-        int step = std::min(amount, 999 - int(bag[i].count));
-        bag[i].item = uint8_t(item);
-        bag[i].count += step;
-        amount -= step;
-      }
+  accept(bag, n, item, amount);
   return true;
 }
 void scatter(State &s, float x, float y, int item, int amount) {
@@ -53,8 +62,9 @@ void scatter(State &s, float x, float y, int item, int amount) {
     }
 }
 void give(State &s, float x, float y, int item, int amount) {
-  if (!add(s, item, amount))
-    scatter(s, x, y, item, amount);
+  int received = accept(s.bag, BagSlots, item, amount);
+  if (received) s.dirty = true;
+  if (received < amount) scatter(s, x, y, item, amount - received);
 }
 bool body_clear(const State &s, float x, float y, float w = 10, float h = 24) {
   for (int ty = ix(y - h); ty <= ix(y - .01f); ++ty)
@@ -63,17 +73,129 @@ bool body_clear(const State &s, float x, float y, float w = 10, float h = 24) {
         return false;
   return true;
 }
+bool actor_overlap(const Actor &a, int x, int y, int w = 10, int h = 24) {
+  return x * 16 < a.x + w / 2 && (x + 1) * 16 > a.x - w / 2 &&
+         y * 16 < a.y && (y + 1) * 16 > a.y - h;
+}
+int mob_width(int type) { return type == 5 ? 30 : type == 2 ? 24 : type == 1 ? 14 : 10; }
+int mob_height(int type) { return type == 5 ? 32 : type == 1 ? 12 : 24; }
 bool occupied(const State &s, int x, int y) {
-  auto overlaps = [&](const Actor &a) {
-    return x * 16 < a.x + 5 && (x + 1) * 16 > a.x - 5 && y * 16 < a.y &&
-           (y + 1) * 16 > a.y - 24;
-  };
-  if (overlaps(s.player))
-    return true;
+  if (actor_overlap(s.player, x, y)) return true;
   for (const auto &n : s.npcs)
-    if (overlaps(n))
+    if (actor_overlap(n, x, y)) return true;
+  for (const auto &m : s.mobs)
+    if (m.hp > 0 && actor_overlap(m, x, y, mob_width(m.type), mob_height(m.type)))
       return true;
   return false;
+}
+struct DoorParts { int top, bottom; bool open; };
+bool door_parts(const State &s, int x, int y, DoorParts &parts) {
+  const int t = tile(s, x, y);
+  if (!door(t)) return false;
+  bool open = t == OpenDoor || t == OpenDoorTop;
+  int bottom = y + (t == DoorTop || t == OpenDoorTop ? 1 : 0);
+  int base = open ? OpenDoor : Door, head = open ? OpenDoorTop : DoorTop;
+  if (tile(s, x, bottom) != base) return false;
+  // An old single-cell door in a space too short to extend remains usable.
+  parts = {tile(s, x, bottom - 1) == head ? bottom - 1 : bottom, bottom, open};
+  return true;
+}
+bool toggle_door(State &s, int x, int y, bool open) {
+  DoorParts d;
+  if (!door_parts(s, x, y, d) || d.open == open) return false;
+  if (!open)
+    for (int yy = d.top; yy <= d.bottom; ++yy)
+      if (occupied(s, x, yy)) return false;
+  if (d.top != d.bottom) set_tile(s, x, d.top, open ? OpenDoorTop : DoorTop);
+  set_tile(s, x, d.bottom, open ? OpenDoor : Door);
+  return true;
+}
+#include "smart_cursor.inc"
+// A small bounded flood catches enclosed foreground-built rooms even before
+// backing walls are filled. Large rooms use their player-built backing walls.
+// Natural cave walls never count as player shelter. Work occurs only at spawn.
+bool enclosed_building(const State &s, int x, int y) {
+  constexpr int Radius = 64, Side = 129, Limit = 512;
+  uint8_t seen[(Side * Side + 7) / 8]{};
+  uint16_t queue[Limit];
+  int head = 0, tail = 1;
+  queue[0] = Radius * Side + Radius;
+  seen[queue[0] / 8] |= uint8_t(1u << (queue[0] % 8));
+  bool built = false;
+  while (head < tail) {
+    int at = queue[head++], cx = at % Side, cy = at / Side;
+    for (int dir = 0; dir < 4; ++dir) {
+      int nx = cx + (dir == 0 ? -1 : dir == 1 ? 1 : 0);
+      int ny = cy + (dir == 2 ? -1 : dir == 3 ? 1 : 0);
+      if (nx < 0 || nx >= Side || ny < 0 || ny >= Side) return false;
+      int t = tile(s, x + nx - Radius, y + ny - Radius);
+      if (solid(t)) {
+        built |= t == Plank || t == Brick || closed_door(t);
+        continue;
+      }
+      int next = ny * Side + nx;
+      auto &mark = seen[next / 8];
+      uint8_t bit = uint8_t(1u << (next % 8));
+      if (mark & bit) continue;
+      if (tail == Limit) return false;
+      mark |= bit; queue[tail++] = uint16_t(next);
+    }
+  }
+  return built;
+}
+void flying_physics(const State &s, Actor &a, float dt) {
+  // Sweep both axes in <=3px steps. Flying ignores gravity, not solid terrain.
+  for (int axis = 0; axis < 2; ++axis) {
+    float delta = (axis ? a.vy : a.vx) * dt;
+    int steps = std::max(1, int(std::ceil(std::fabs(delta) / 3)));
+    for (int i = 0; i < steps; ++i) {
+      float nx = a.x + (axis ? 0 : delta / steps);
+      float ny = a.y + (axis ? delta / steps : 0);
+      if (!body_clear(s, nx, ny, 24, 24)) {
+        (axis ? a.vy : a.vx) = 0;
+        break;
+      }
+      a.x = nx; a.y = ny;
+    }
+  }
+  a.y = std::clamp(a.y, 24.0f, float((s.height - 1) * 16));
+}
+void normalize_doors(State &s) {
+  // Preserve all old tile IDs. Upgrade only empty space beside legacy doors;
+  // user-built blocks and the save format are retained.
+  for (int y = s.height - 2; y > 0; --y)
+    for (int x = 1; x < s.width - 1; ++x) {
+      int t = tile(s, x, y);
+      bool old_open = t == Air && s.walls[index(x, y)] == Door;
+      if (t != Door && !old_open) continue;
+      if (!old_open && tile(s, x, y - 1) == DoorTop) continue;
+      int top = y, bottom = y;
+      bool old_pair = !old_open && tile(s, x, y - 1) == Door && tile(s, x, y - 2) != DoorTop;
+      if ((solid(tile(s, x, y + 1)) || tile(s, x, y + 1) == Platform) &&
+          (tile(s, x, y - 1) == Air || old_pair)) top = y - 1;
+      else if (inside(s, x, y + 1) && tile(s, x, y + 1) == Air) bottom = y + 1;
+      if (!old_open && ((top < y && occupied(s, x, top)) ||
+                        (bottom > y && occupied(s, x, bottom)))) continue;
+      // Two old one-cell doors become one modern door. Return the extra item;
+      // if both inventory and loot storage are full, preserve the old pair.
+      if (old_pair && top == y - 1) {
+        bool refunded = add(s, Doors, 1);
+        for (auto &drop : s.drops) {
+          if (refunded) break;
+          if (drop.item == Doors && drop.count < 999) { ++drop.count; refunded = true; }
+          else if (!drop.item) { drop = {x * 16 + 8.0f, y * 16.0f, 0, Doors, 1}; refunded = true; }
+        }
+        if (!refunded) continue;
+      }
+      if (old_open) {
+        if (top != bottom) set_tile(s, x, top, OpenDoorTop);
+        set_tile(s, x, bottom, OpenDoor);
+        for (int yy = top; yy <= bottom; ++yy)
+          if (s.walls[index(x, yy)] == Door) s.walls[index(x, yy)] = Plank;
+      } else if (top != bottom) {
+        set_tile(s, x, top, DoorTop); set_tile(s, x, bottom, Door);
+      }
+    }
 }
 void physics(const State &s, Actor &a, float dt, float w = 10, float h = 24,
              bool drop = false) {
@@ -166,10 +288,23 @@ void kill(State &s, Actor &m) {
   }
   m.hp = 0;
 }
+void melee(State &s, int damage, int reach) {
+  const auto &p = s.player;
+  int facing = p.face ? 1 : -1;
+  for (auto &m : s.mobs)
+    if (m.hp > 0 && std::fabs(m.x - p.x) < (m.type == 5 ? reach + 19 : reach) &&
+        std::fabs(m.y - p.y) < 40 && (m.x - p.x) * facing > -12) {
+      m.hp -= damage;
+      m.vx = facing * 110;
+      m.vy = -80;
+      m.timer = 180;
+      if (m.hp <= 0)
+        kill(s, m);
+    }
+}
 void attack(State &s, int id) {
   const auto &def = items[id];
   auto &p = s.player;
-  int facing = p.face ? 1 : -1;
   if (def.kind == Bow || def.kind == Wand) {
     if (def.kind == Bow && count(s, Arrows) == 0) {
       notice(s, "没有箭了，可在工作台制作。");
@@ -181,15 +316,12 @@ void attack(State &s, int id) {
     }
     for (auto &b : s.shots)
       if (!b.life) {
-        float dx = s.target_x * 16 + 8 - p.x,
-              dy = s.target_y * 16 + 8 - (p.y - 14),
-              len = std::sqrt(dx * dx + dy * dy);
-        if (len < 1) {
-          dx = float(facing);
-          dy = 0;
-          len = 1;
-        }
-        b = {p.x,  p.y - 14, dx / len * 220,           dy / len * 220,
+        auto from=def.kind==Bow?starsoil_aim::origin(p.x,p.y,starsoil_aim::bob(p.grounded,p.vx,p.anim)):
+                               starsoil_aim::Vector{p.x,p.y-14};
+        auto aim=starsoil_aim::unit(s.target_x*16+8-from.x,s.target_y*16+8-from.y,p.face);
+        if(def.kind==Wand && std::hypot(s.target_x*16+8-from.x,s.target_y*16+8-from.y)<1)
+          aim={p.face?1.f:-1.f,0};
+        b = {from.x, from.y, aim.x * 220, aim.y * 220,
              1800, def.stat, uint8_t(def.kind == Wand)};
         if (def.kind == Bow)
           remove(s, Arrows, 1);
@@ -202,16 +334,7 @@ void attack(State &s, int id) {
     return;
   }
   s.cooldown = 270;
-  for (auto &m : s.mobs)
-    if (m.hp > 0 && std::fabs(m.x - p.x) < (m.type == 5 ? 66 : 47) &&
-        std::fabs(m.y - p.y) < 40 && (m.x - p.x) * facing > -12) {
-      m.hp -= def.kind == Sword ? def.stat : 3;
-      m.vx = facing * 110;
-      m.vy = -80;
-      m.timer = 180;
-      if (m.hp <= 0)
-        kill(s, m);
-    }
+  melee(s, def.stat, 47);
 }
 void tree(State &s, int x, int y) {
   int base = y;
@@ -245,6 +368,13 @@ void use(State &s, const Input &input, uint32_t ms) {
       attack(s, item);
     return;
   }
+  if ((def.kind == Pick || def.kind == Axe) && !s.tool_cooldown) {
+    // Swing in empty air too. Mining tiers/range only govern the block action.
+    // Tools hit less hard than a sword and recover with their 480 ms animation.
+    melee(s, 2 + 2 * def.tier + (def.kind == Axe ? 1 : 0), 40);
+    s.tool_cooldown = 480;
+  }
+  if(s.smart_cursor && !s.target_ready) { s.mining=0;return; }
   if (dx * dx + dy * dy > 96 * 96 || !inside(s, x, y)) {
     s.mining = 0;
     return;
@@ -264,13 +394,8 @@ void use(State &s, const Input &input, uint32_t ms) {
       s.mining = 0;
       return;
     }
-    int tier =
-        t == GoldOre ? 2
-        : (t == CrystalOre || t == RubyOre || t == Obsidian || t == Deepstone)
-            ? 3
-            : 1;
-    if (def.kind == Axe && t != Log && t != Leaves && t != Cactus &&
-        t != Vine && t != Sapling) {
+    int tier = mining_tier(t);
+    if (def.kind == Axe && !chop_target(t)) {
       s.mining = 0;
       return;
     }
@@ -287,14 +412,17 @@ void use(State &s, const Input &input, uint32_t ms) {
       s.mine_y = y;
     }
     s.mining += uint16_t(ms * def.stat * (def.kind == Axe ? 3 : 1));
-    int hardness = t == Log                                    ? 700
-                   : t == Stone || t == Deepstone || is_ore(t) ? 500
-                   : t == Obsidian                             ? 1000
-                                                               : 220;
+    int hardness = mining_work(t);
     if (s.mining >= hardness) {
       if (t == Log)
         tree(s, x, y);
-      else {
+      else if (door(t)) {
+        DoorParts d;
+        if (door_parts(s, x, y, d)) {
+          for (int yy = d.top; yy <= d.bottom; ++yy) set_tile(s, x, yy, Air);
+          give(s, x * 16 + 8, y * 16 + 8, Doors, 1);
+        } else { set_tile(s, x, y, Air); give(s, x * 16 + 8, y * 16, Doors, 1); }
+      } else {
         set_tile(s, x, y, Air);
         give(s, x * 16 + 8, y * 16 + 8, tile_drop(t), 1);
         if (t == Leaves && rng(s) % 3 == 0)
@@ -310,22 +438,19 @@ void use(State &s, const Input &input, uint32_t ms) {
   if (s.cooldown)
     return;
   if (def.kind == Block || def.kind == Furniture) {
-    if (t && t != Flower && t != Herb && t != Mushroom && t != Vine)
-      return;
-    if ((solid(def.tile) || def.tile == Door) &&
-        !(def.tile == Plank && input.down) && occupied(s, x, y))
-      return;
-    bool support = tile(s, x - 1, y) || tile(s, x + 1, y) ||
-                   tile(s, x, y - 1) || tile(s, x, y + 1) ||
-                   s.walls[index(x, y)];
-    if (!support) {
-      notice(s, "靠近地面或已有方块放置。");
-      s.cooldown = 400;
+    auto place=placement(s,input,x,y);
+    if(!place.ok()) {
+      if(place.failure==PlaceFailure::DoorSpace) {
+        notice(s,"木门需要两格空间和地面支撑。");s.cooldown=400;
+      } else if(place.failure==PlaceFailure::Support) {
+        notice(s,"靠近地面或已有方块放置。");s.cooldown=400;
+      }
       return;
     }
-    if (def.tile == Sapling) {
-      if (tile(s, x, y + 1) != Grass && tile(s, x, y + 1) != Dirt)
-        return;
+    if (def.tile == Door) {
+      int bottom=place.bottom;
+      set_tile(s, x, bottom - 1, DoorTop); set_tile(s, x, bottom, Door);
+      remove(s, item, 1); s.cooldown = 180; return;
     }
     if (def.tile == Plank && input.down) {
       s.walls[index(x, y)] = Plank;
@@ -333,6 +458,7 @@ void use(State &s, const Input &input, uint32_t ms) {
     } else
       set_tile(s, x, y, def.tile);
     remove(s, item, 1);
+    s.last_place_x=x;s.last_place_y=y;s.last_place_item=uint8_t(item);
     s.cooldown = 180;
     s.dirty = true;
     return;
@@ -354,8 +480,8 @@ void shelter(State &s) {
       if (x == 41 || x == 53 || y == 26)
         put(s, x, y, Plank);
     }
-  put(s, 53, 29, Door);
-  put(s, 53, 30, Air);
+  put(s, 53, 29, DoorTop);
+  put(s, 53, 30, Door);
   put(s, 44, 30, Bench);
   put(s, 46, 29, Torch);
   put(s, 49, 30, Bed);
@@ -572,6 +698,7 @@ void new_game(State &s, uint32_t seed, WorldSize size) {
   s.mana = 60;
   s.day = 1;
   s.mine_x = s.mine_y = -1;
+  s.target_ready=true;s.last_place_x=s.last_place_y=-1;
   generate(s, seed);
   s.home_x = 48;
   s.home_y = 31;
@@ -643,6 +770,22 @@ bool equip(State &s, int slot) {
   notice(s, "装备已穿戴，外观与属性已更新。");
   return true;
 }
+bool move_stack(State &s, int from, int to) {
+  constexpr int Slots = BagSlots + 12;
+  if (from < 0 || from >= Slots || to < 0 || to >= Slots || from == to)
+    return false;
+  auto slot = [&](int i) -> Slot & { return i < BagSlots ? s.bag[i] : s.chest[i - BagSlots]; };
+  Slot &a = slot(from), &b = slot(to);
+  if (!a.item || !a.count) return false;
+  if (a.item == b.item) {
+    int amount = std::min(int(a.count), 999 - int(b.count));
+    if (!amount) return false;
+    b.count += amount; a.count -= amount;
+    if (!a.count) a.item = 0;
+  } else std::swap(a, b);
+  s.dirty = true;
+  return true;
+}
 bool unequip(State &s, int pos) {
   if (pos < 0 || pos >= EquipSlots || !s.equip[pos] || !add(s, s.equip[pos], 1))
     return false;
@@ -653,23 +796,78 @@ bool unequip(State &s, int pos) {
 bool store(State &s, int pos) {
   if (pos < 0 || pos >= BagSlots || !s.bag[pos].item)
     return false;
-  if (!pack(s.chest, 12, s.bag[pos].item, s.bag[pos].count))
-    return false;
-  s.bag[pos] = {};
+  int moved = accept(s.chest, 12, s.bag[pos].item, s.bag[pos].count);
+  if (!moved) return false;
+  s.bag[pos].count -= moved;
+  if (!s.bag[pos].count) s.bag[pos] = {};
   s.dirty = true;
   return true;
 }
 bool withdraw(State &s, int pos) {
-  if (pos < 0 || pos >= 12 || !s.chest[pos].item ||
-      !add(s, s.chest[pos].item, s.chest[pos].count))
-    return false;
-  s.chest[pos] = {};
+  if (pos < 0 || pos >= 12 || !s.chest[pos].item) return false;
+  int moved = accept(s.bag, BagSlots, s.chest[pos].item, s.chest[pos].count);
+  if (!moved) return false;
+  s.chest[pos].count -= moved;
+  if (!s.chest[pos].count) s.chest[pos] = {};
+  s.dirty = true;
   return true;
+}
+bool sort_inventory(State &s, bool chest) {
+  Slot *slots = chest ? s.chest : s.bag;
+  const int n = chest ? 12 : BagSlots;
+  Slot original[BagSlots], sorted[BagSlots]{};
+  std::copy_n(slots, n, original);
+  auto movable = [&](int i) { return chest || (i >= HotSlots && i != s.selected); };
+  for (int i = 0; i < n; ++i)
+    if (movable(i) && slots[i].item) accept(sorted, n, slots[i].item, slots[i].count);
+  // Tool / weapon / equipment / consumable / building / material groups.
+  auto rank = [](int id) {
+    if (!id) return 100;
+    Kind k = items[id].kind;
+    return k == Pick || k == Axe ? 0 : k >= Sword && k <= Wand ? 1
+         : equip_slot(k) >= 0 ? 2 : k == Food || k == Potion ? 3
+         : k == Block || k == Furniture ? 4 : 5;
+  };
+  std::sort(sorted, sorted + n, [&](Slot a, Slot b) {
+    int ra = rank(a.item), rb = rank(b.item);
+    return ra != rb ? ra < rb : a.item != b.item ? a.item < b.item : a.count > b.count;
+  });
+  int next = 0;
+  bool changed = false;
+  for (int i = 0; i < n; ++i) if (movable(i)) {
+    slots[i] = sorted[next++];
+    changed |= slots[i].item != original[i].item || slots[i].count != original[i].count;
+  }
+  if (changed) s.dirty = true;
+  return changed;
+}
+int quick_stack(State &s) {
+  if (!nearby_storage(s)) return 0;
+  bool matching[ItemCount]{};
+  for (auto a : s.chest) if (a.item) matching[a.item] = true;
+  int moved = 0;
+  for (int i = HotSlots; i < BagSlots; ++i)
+    if (i != s.selected && s.bag[i].item && matching[s.bag[i].item]) {
+      int before = s.bag[i].count;
+      store(s, i);
+      moved += before - s.bag[i].count;
+    }
+  return moved;
+}
+int take_all(State &s) {
+  if (!nearby_storage(s)) return 0;
+  int moved = 0;
+  for (int i = 0; i < 12; ++i) {
+    int before = s.chest[i].count;
+    withdraw(s, i);
+    moved += before - s.chest[i].count;
+  }
+  return moved;
 }
 bool nearby_storage(const State &s) {
   int px = ix(s.player.x), py = ix(s.player.y - 12);
-  for (int y = py - 2; y <= py + 2; ++y)
-    for (int x = px - 3; x <= px + 3; ++x)
+  for (int y = py - 4; y <= py + 4; ++y)
+    for (int x = px - 5; x <= px + 5; ++x)
       if (tile(s, x, y) == StorageChest)
         return true;
   return false;
@@ -699,15 +897,15 @@ int station(const State &s) {
       return i;
   return Hand;
 }
-bool can_craft(const State &s, int r) {
+CraftStatus craft_status(const State &s, int r) {
   if (r < 0 || r >= RecipeCount)
-    return false;
+    return CraftStatus::Invalid;
   const auto &p = recipes[r];
   if (!near_station(s, p.station))
-    return false;
+    return CraftStatus::Station;
   for (auto a : p.in)
     if (a.item && count(s, a.item) < a.count)
-      return false;
+      return CraftStatus::Ingredients;
   Slot copy[BagSlots];
   std::copy(std::begin(s.bag), std::end(s.bag), copy);
   for (auto a : p.in)
@@ -722,8 +920,9 @@ bool can_craft(const State &s, int r) {
             slot.item = 0;
         }
     }
-  return pack(copy, BagSlots, p.out, p.count);
+  return pack(copy, BagSlots, p.out, p.count) ? CraftStatus::Ready : CraftStatus::Space;
 }
+bool can_craft(const State &s, int r) { return craft_status(s, r) == CraftStatus::Ready; }
 bool craft(State &s, int r) {
   if (!can_craft(s, r))
     return false;
@@ -735,19 +934,51 @@ bool craft(State &s, int r) {
   notice(s, "合成成功。");
   return true;
 }
+int craft_batch(State &s, int r, int limit) {
+  int completed = 0;
+  const int requested = std::clamp(limit, 0, 99);
+  while (completed < requested && craft(s, r)) ++completed;
+  return completed;
+}
 void respawn(State &s) {
-  s.player.x = s.home_x * 16.0f;
-  s.player.y = s.home_y * 16.0f;
-  s.player.vx = s.player.vy = 0;
-  for (int n = 0; n < s.height && !body_clear(s, s.player.x, s.player.y); ++n)
-    s.player.y -= 16;
-  if (!body_clear(s, s.player.x, s.player.y)) {
-    s.player.x = 48 * 16;
-    s.player.y = 26 * 16;
+  auto safe = [&](int x, int y) {
+    if (x < 2 || x > s.width - 3 || y < 2 || y >= s.height - 1 ||
+        !body_clear(s, x * 16.0f, y * 16.0f)) return false;
+    for (int yy = y - 2; yy <= y; ++yy)
+      for (int xx = x - 1; xx <= x; ++xx)
+        if (tile(s, xx, yy) == Lava) return false;
+    return true;
+  };
+  int x = s.home_x, y = s.home_y;
+  bool found = safe(x, y);
+  // Changed terrain must not send the player into a wall, lava, or negative Y.
+  // Search nearby supported spaces without editing any part of their home.
+  for (int radius = 1; radius <= 12 && !found; ++radius)
+    for (int dy = -radius; dy <= radius && !found; ++dy)
+      for (int dx = -radius; dx <= radius; ++dx) {
+        if (std::max(std::abs(dx), std::abs(dy)) != radius) continue;
+        int nx = s.home_x + dx, ny = s.home_y + dy;
+        if (safe(nx, ny) && (solid(tile(s, nx - 1, ny)) || solid(tile(s, nx, ny)) ||
+                             tile(s, nx - 1, ny) == Platform || tile(s, nx, ny) == Platform)) {
+          x = nx; y = ny; found = true; break;
+        }
+      }
+  if (!found) {
+    x = 48; y = 31;
+    for (int yy = 31; yy >= 2; --yy) if (safe(x, yy)) { y = yy; found = true; break; }
   }
+  if (found) { s.player.x = x * 16.0f; s.player.y = y * 16.0f; }
+  s.player.vx = s.player.vy = 0;
   s.hp = 100;
   s.mana = 60;
   s.invulnerable = 2500;
+  s.spawn_timer = 0;
+  s.jump_buffer = s.ground_grace = 0;
+  s.jump_down = false;
+  s.jumps = 0;
+  s.player.grounded = false;
+  s.mining = 0;
+  s.mine_x = s.mine_y = -1;
   s.dirty = true;
 }
 bool activate(State &s, int slot) {
@@ -756,6 +987,13 @@ bool activate(State &s, int slot) {
   int id = s.bag[slot].item;
   if (equip_slot(items[id].kind) >= 0)
     return equip(s, slot);
+  const auto kind = items[id].kind;
+  if (kind == Pick || kind == Axe || kind == Sword || kind == Bow ||
+      kind == Wand || kind == Block || kind == Furniture) {
+    s.selected = uint8_t(slot);
+    s.dirty = true;
+    return true;
+  }
   if (items[id].kind == Food) {
     if (s.hp == 100)
       return false;
@@ -788,74 +1026,76 @@ int nearby_npc(const State &s) {
   }
   return best;
 }
-bool interact(State &s) {
-  int px = ix(s.player.x), py = ix(s.player.y - 12);
-  // Prefer the aimed furniture; nearby objects are a fallback for controllers.
-  for (int pass = 0; pass < 2; ++pass)
-    for (int dy = -2; dy <= 2; ++dy)
-      for (int dx = -3; dx <= 3; ++dx) {
-        int x = pass ? px + dx : s.target_x, y = pass ? py + dy : s.target_y;
-        if (!inside(s, x, y) || std::abs(x - px) > 5 || std::abs(y - py) > 4)
-          continue;
-        uint8_t t = tile(s, x, y);
-        if (t == Chest) {
-          const int loot[] = {CopperBar,  IronBar,    GoldBar,  Crystal,
-                              Ruby,       Silk,       StarDust, HealPotion,
-                              CloudBoots, IronHelmet, RedTunic, GlowCharm};
-          uint32_t n = hash(s.seed + uint32_t(y * s.width + x));
-          give(s, x * 16 + 8, y * 16, loot[n % 12],
-               n % 12 >= 8 ? 1 : 3 + n % 4);
-          give(s, x * 16 + 8, y * 16, Torches, 6);
-          set_tile(s, x, y, Air);
-          give(s, x * 16 + 8, y * 16, TreasureChest, 1);
-          notice(s, "打开宝箱，获得了远行者留下的宝物。");
-          return true;
-        }
-        if (t == Bed) {
-          s.home_x = x;
-          s.home_y = y + 1;
-          s.dirty = true;
-          notice(s, "已设置出生点，回城药水将带你回到这里。");
-          return true;
-        }
-        if (t == Door) {
-          set_tile(s, x, y, Air);
-          s.walls[index(x, y)] = Door;
-          notice(s, "木门已打开。");
-          return true;
-        }
-        if (t == Air && s.walls[index(x, y)] == Door && !occupied(s, x, y) &&
-            body_clear(s, x * 16 + 8, (y + 1) * 16)) {
-          set_tile(s, x, y, Door);
-          s.walls[index(x, y)] = Plank;
-          notice(s, "木门已关闭。");
-          return true;
-        }
-        if (t == Portal) {
-          if (s.boss_defeated) {
-            notice(s, "星核已重新点亮，世界属于你的下一次冒险。");
-            return true;
-          }
-          for (auto &m : s.mobs)
-            if (m.type == 5 && m.hp > 0) {
-              notice(s, "守卫已经苏醒！");
-              return true;
-            }
-          if (count(s, StarCore) == 0) {
-            notice(s, "在祭坛合成星核，再互动唤醒守卫。");
-            return true;
-          }
-          for (auto &m : s.mobs)
-            if (m.hp <= 0) {
-              remove(s, StarCore, 1);
-              m = {s.player.x + 64, s.player.y - 30, 0, -80, 280, 5, 0};
-              notice(s, "星核守卫苏醒了！");
-              return true;
-            }
-        }
-        if (!pass)
-          break;
+bool interaction_range(const State &s, int x, int y) {
+  return inside(s, x, y) && std::abs(x - ix(s.player.x)) <= 5 &&
+         std::abs(y - ix(s.player.y - 12)) <= 4;
+}
+bool interact_at(State &s, int x, int y) {
+  if (!interaction_range(s, x, y)) return false;
+  uint8_t t = tile(s, x, y);
+  if (t == Chest) {
+    const int loot[] = {CopperBar,  IronBar,    GoldBar,  Crystal,
+                        Ruby,       Silk,       StarDust, HealPotion,
+                        CloudBoots, IronHelmet, RedTunic, GlowCharm};
+    uint32_t n = hash(s.seed + uint32_t(y * s.width + x));
+    give(s, x * 16 + 8, y * 16, loot[n % 12],
+         n % 12 >= 8 ? 1 : 3 + n % 4);
+    give(s, x * 16 + 8, y * 16, Torches, 6);
+    set_tile(s, x, y, Air);
+    give(s, x * 16 + 8, y * 16, TreasureChest, 1);
+    notice(s, "打开宝箱，获得了远行者留下的宝物。");
+    return true;
+  }
+  if (t == Bed) {
+    s.home_x = x;
+    // A bed on the lowest editable row must not create an invalid save header.
+    s.home_y = std::min(y + 1, int(s.height) - 2);
+    s.dirty = true;
+    notice(s, "已设置出生点，回城药水将带你回到这里。");
+    return true;
+  }
+  if (door(t)) {
+    bool open = closed_door(t);
+    if (toggle_door(s, x, y, open)) {
+      notice(s, open ? "木门已打开。" : "木门已关闭。");
+      return true;
+    }
+    notice(s, "门口有人或怪物，无法关门。");
+    return false;
+  }
+  if (t == Portal) {
+    if (s.boss_defeated) {
+      notice(s, "星核已重新点亮，世界属于你的下一次冒险。");
+      return true;
+    }
+    for (auto &m : s.mobs)
+      if (m.type == 5 && m.hp > 0) {
+        notice(s, "守卫已经苏醒！");
+        return true;
       }
+    if (count(s, StarCore) == 0) {
+      notice(s, "在祭坛合成星核，再互动唤醒守卫。");
+      return true;
+    }
+    for (auto &m : s.mobs)
+      if (m.hp <= 0) {
+        remove(s, StarCore, 1);
+        m = {s.player.x + 64, s.player.y - 30, 0, -80, 280, 5, 0};
+        notice(s, "星核守卫苏醒了！");
+        return true;
+      }
+  }
+  return false;
+}
+bool interact(State &s) {
+  if (interaction_range(s, s.target_x, s.target_y)) {
+    if (interact_at(s, s.target_x, s.target_y)) return true;
+    if (door(tile(s, s.target_x, s.target_y))) return false;
+  }
+  int px = ix(s.player.x), py = ix(s.player.y - 12);
+  for (int dy = -2; dy <= 2; ++dy)
+    for (int dx = -3; dx <= 3; ++dx)
+      if (interact_at(s, px + dx, py + dy)) return true;
   return nearby_npc(s) >= 0;
 }
 bool trade(State &s, int npc) {
@@ -912,10 +1152,29 @@ bool trade(State &s, int npc) {
   notice(s, "交易完成。");
   return true;
 }
+bool can_spawn_enemy(const State &s, int x, int y, int type) {
+  if (type < 1 || type > 4 || !inside(s, x, y) || y * 16 < mob_height(type)) return false;
+  const int w = mob_width(type), h = mob_height(type);
+  const float px = x * 16 + 8.0f, py = y * 16.0f;
+  if (!body_clear(s, px, py, float(w), float(h))) return false;
+  for (int yy = ix(py - h); yy <= ix(py - .01f); ++yy)
+    for (int xx = ix(px - w / 2); xx <= ix(px + w / 2 - .01f); ++xx) {
+      int wall = s.walls[index(xx, yy)];
+      if (wall == Plank || wall == Glass || wall == Door) return false;
+    }
+  return !enclosed_building(s, x, ix(py - 1));
+}
+SpawnRules spawn_rules(const State &s) {
+  int x = std::clamp(ix(s.player.x), 0, s.width - 1);
+  if (ix(s.player.y) > int(s.heights[x]) + 8) return {10000, 4};
+  if (s.clock < 25000 || s.clock > 240000) return {9000, 3};
+  return {12000, 2};
+}
 void tick(State &s, const Input &in, uint32_t ms) {
   ms = std::min(ms, 40u);
   float dt = ms * .001f;
   auto &p = s.player;
+  const uint32_t previous_played = s.played;
   s.played += ms;
   s.clock += ms;
   if (s.clock >= 360000) {
@@ -923,6 +1182,7 @@ void tick(State &s, const Input &in, uint32_t ms) {
     ++s.day;
   }
   s.cooldown = ms >= s.cooldown ? 0 : s.cooldown - ms;
+  s.tool_cooldown = ms >= s.tool_cooldown ? 0 : s.tool_cooldown - ms;
   s.invulnerable = ms >= s.invulnerable ? 0 : s.invulnerable - ms;
   int speed = s.equip[5] ? 100 : 76;
   p.vx = float(in.move * speed);
@@ -930,12 +1190,20 @@ void tick(State &s, const Input &in, uint32_t ms) {
     p.face = in.move > 0;
   if (p.grounded)
     s.jumps = 0;
-  if (in.jump && !s.jump_down &&
-      (p.grounded || (s.equip[5] == CloudBoots && s.jumps < 2))) {
-    p.vy = -215;
+  s.ground_grace = p.grounded ? 100 : ms >= s.ground_grace ? 0 : s.ground_grace - ms;
+  s.jump_buffer = ms >= s.jump_buffer ? 0 : s.jump_buffer - ms;
+  if (in.jump && !s.jump_down) s.jump_buffer = 120;
+  if (s.jump_buffer &&
+      (p.grounded || s.ground_grace || (s.equip[5] == CloudBoots && s.jumps < 2))) {
+    p.vy = -320;
     p.grounded = false;
     ++s.jumps;
+    s.ground_grace = s.jump_buffer = 0;
+    // An early short tap is still short when its buffered jump takes off.
+    if (!in.jump) p.vy = -240;
   }
+  // A short press still clears roughly three tiles; holding reaches five.
+  if (!in.jump && s.jump_down && p.vy < -240) p.vy = -240;
   s.jump_down = in.jump;
   float previous_x = p.x, previous_y = p.y;
   physics(s, p, dt, 10, 24, in.down);
@@ -955,6 +1223,15 @@ void tick(State &s, const Input &in, uint32_t ms) {
     if (!in.aim_y && !tile(s, s.target_x, s.target_y) &&
         solid(tile(s, s.target_x, s.target_y - 1)))
       --s.target_y;
+  }
+  s.smart_cursor=in.smart_cursor && in.target_x<0 && smart_kind(s.bag[s.selected].item);
+  if(!in.use || !s.smart_cursor || s.last_place_item!=s.bag[s.selected].item ||
+     std::abs(s.last_place_x-ix(p.x))>6 || std::abs(s.last_place_y-ix(p.y))>1 ||
+     (s.last_place_x-ix(p.x))*(p.face?1:-1)<-1)s.last_place_item=0;
+  s.target_ready=!s.smart_cursor || choose_smart_target(s,in);
+  if(items[s.bag[s.selected].item].kind==Bow && in.target_x>=0) {
+    float dx=s.target_x*16+8-(p.x-.5f);
+    if(std::fabs(dx)>2)p.face=dx>0;
   }
   if (in.use)
     use(s, in, ms);
@@ -983,10 +1260,9 @@ void tick(State &s, const Input &in, uint32_t ms) {
       float dx = p.x - d.x, dy = p.y - 10 - d.y;
       float reach = s.equip[7] == Magnet ? 100 : 28;
       if (dx * dx + dy * dy < reach * reach) {
-        if (add(s, d.item, d.count)) {
-          d.item = 0;
-          continue;
-        }
+        int received = accept(s.bag, BagSlots, d.item, d.count);
+        if (received) { d.count -= received; s.dirty = true; }
+        if (!d.count) { d = {}; continue; }
         d.x += dx * dt * 2;
       }
       d.vy = std::min(d.vy + 300 * dt, 100.0f);
@@ -1021,9 +1297,18 @@ void tick(State &s, const Input &in, uint32_t ms) {
       if (m.type == 2) {
         m.vx = dx > 0 ? 38 : -38;
         m.vy = (p.y - 16 - m.y) * .9f + std::sin(m.anim * .009f) * 22;
-        m.x += m.vx * dt;
-        m.y += m.vy * dt;
+        m.vy = std::clamp(m.vy, -90.0f, 90.0f);
+        flying_physics(s, m, dt);
       } else {
+        // Only the humanoid night enemy can operate a door. Slimes, bats and
+        // crystal crawlers remain blocked until the player opens it.
+        if (m.type == 3 && m.grounded && m.timer > 900) {
+          int door_x = ix(m.x + (dx > 0 ? 9 : -9)), door_y = ix(m.y - 12);
+          if (closed_door(tile(s, door_x, door_y)) && toggle_door(s, door_x, door_y, true)) {
+            m.timer = 0; m.vx = dx > 0 ? 32 : -32;
+            notice(s, "苔木精推开了木门。");
+          }
+        }
         if (m.grounded && m.timer > (m.type == 5 ? 440 : 900)) {
           m.vy = m.type == 5 ? -240 : -145;
           m.vx = (dx > 0 ? 1 : -1) * (m.type == 5 ? 85 : 32);
@@ -1068,28 +1353,36 @@ void tick(State &s, const Input &in, uint32_t ms) {
         b.vy += 110 * dt;
     }
   s.spawn_timer += ms;
-  if (s.spawn_timer >= 3300) {
+  const auto spawn = spawn_rules(s);
+  if (s.spawn_timer >= spawn.interval) {
     s.spawn_timer = 0;
     int active = 0;
-    for (auto m : s.mobs)
-      if (m.hp > 0)
-        ++active;
-    if (active < 8)
+    bool boss = false;
+    for (auto m : s.mobs) if (m.hp > 0) {
+      if (m.type == 5) boss = true;
+      else ++active;
+    }
+    if (!boss && active < spawn.limit)
       for (auto &m : s.mobs)
         if (m.hp <= 0) {
-          int x = std::clamp(ix(p.x) +
-                                 (rng(s) % 2 ? 1 : -1) * (10 + int(rng(s) % 7)),
-                             3, s.width - 4),
-              y = ix(p.y);
+          int distance = 18 + int(rng(s) % 11), side = rng(s) % 2 ? 1 : -1;
+          int x = ix(p.x) + side * distance;
+          if (x < 3 || x > s.width - 4) x = ix(p.x) - side * distance;
+          if (x < 3 || x > s.width - 4) break;
+          int y = ix(p.y);
           if (y < int(s.heights[x]) + 5)
             y = s.heights[x] - 1;
           for (int n = 0; n < 8 && solid(tile(s, x, y)); ++n)
             --y;
           int type = ix(p.y) > 70       ? 4
-                     : s.clock > 240000 ? 3
+                     : (s.clock > 240000 || s.clock < 25000) ? 3
                      : rng(s) % 4 == 0  ? 2
                                         : 1;
-          if (body_clear(s, x * 16 + 8, y * 16, 14, 24))
+          bool crowded = false;
+          for (const auto &other : s.mobs)
+            if (other.hp > 0 && std::fabs(other.x - (x * 16 + 8)) < 96 &&
+                std::fabs(other.y - y * 16) < 64) crowded = true;
+          if (!crowded && can_spawn_enemy(s, x, y, type))
             m = {float(x * 16 + 8),
                  float(y * 16),
                  0,
@@ -1102,34 +1395,29 @@ void tick(State &s, const Input &in, uint32_t ms) {
           break;
         }
   }
-  // Slow, bounded regrowth. No full-world scan in the frame loop.
-  if ((s.played / 40) % 50 == 0) {
-    int x = 3 + int(rng(s) % (s.width - 6)), y = s.heights[x] - 1;
-    if (tile(s, x, y) == Sapling) {
-      bool room = true;
-      for (int h = 1; h < 6; ++h)
-        if (tile(s, x, y - h))
-          room = false;
-      if (room) {
-        for (int h = 0; h < 5; ++h)
-          put(s, x, y - h, Log);
+  // Keep the same four columns/second growth budget, spread across ticks.
+  if (previous_played / 250 != s.played / 250) {
+      int x = 3 + int((s.played / 250 - 1) % (s.width - 6));
+      for (int y = 8; y < s.height - 2; ++y) if (tile(s, x, y) == Sapling) {
+        int ground = tile(s, x, y + 1);
+        if (ground != Grass && ground != Dirt) continue;
+        bool room = true;
+        for (int h = 1; h <= 7; ++h) if (tile(s, x, y - h)) room = false;
         for (int yy = -2; yy <= 1; ++yy)
           for (int xx = -2; xx <= 2; ++xx)
-            if (!tile(s, x + xx, y - 5 + yy))
-              put(s, x + xx, y - 5 + yy, Leaves);
+            if (tile(s, x + xx, y - 5 + yy)) room = false;
+        if (!room) continue;
+        for (int h = 0; h < 5; ++h) put(s, x, y - h, Log);
+        for (int yy = -2; yy <= 1; ++yy)
+          for (int xx = -2; xx <= 2; ++xx)
+            if (!tile(s, x + xx, y - 5 + yy)) put(s, x + xx, y - 5 + yy, Leaves);
         s.dirty = true;
       }
     }
-  }
 }
 namespace {
 uint32_t checksum(const uint8_t *p, size_t n) {
-  uint32_t h = 2166136261u;
-  for (size_t i = 0; i < n; ++i) {
-    h ^= p[i];
-    h *= 16777619u;
-  }
-  return h;
+  return starsoil_save::checksum(starsoil_save::InitialHash, p, n);
 }
 struct Writer {
   uint8_t *p;
@@ -1178,7 +1466,7 @@ struct Reader {
   }
 };
 } // namespace
-size_t encode(const State &s, uint8_t *out, size_t capacity) {
+size_t encode(const State &s, uint8_t *out, size_t capacity, bool seal) {
   if (!out || !valid_dimensions(s.width, s.height) ||
       capacity < save_size(s.width, s.height))
     return 0;
@@ -1229,7 +1517,7 @@ size_t encode(const State &s, uint8_t *out, size_t capacity) {
   }
   if (!w.ok || capacity - w.at < 4)
     return 0;
-  uint32_t h = checksum(out, w.at);
+  uint32_t h = seal ? checksum(out, w.at) : 0;
   w.u(h);
   return w.at;
 }
@@ -1260,11 +1548,11 @@ bool decode(State &s, const uint8_t *data, size_t size) {
   if (!inspect_save(data, size, info)) return false;
   Reader r{data, size - 4};
   r.at = 10;
-  static State v;
-  std::memset(&v, 0, sizeof(v));
+  StateData v{};
   v.width = info.width;
   v.height = info.height;
   v.mine_x = v.mine_y = -1;
+  v.target_ready=true;v.last_place_x=v.last_place_y=-1;
   v.seed = r.u();
   v.random = r.u();
   v.clock = r.u();
@@ -1299,21 +1587,22 @@ bool decode(State &s, const uint8_t *data, size_t size) {
     if (v.equip[i] >= ItemCount ||
         (v.equip[i] && equip_slot(items[v.equip[i]].kind) != i))
       return false;
-  r.bytes(v.heights, v.width);
-  for (int y = 0; y < v.height; ++y)
-    r.bytes(v.tiles + y * WorldW, v.width);
-  for (int y = 0; y < v.height; ++y)
-    r.bytes(v.walls + y * WorldW, v.width);
+  const uint8_t *heights = data + r.at;
+  const uint8_t *tiles = heights + v.width;
+  const uint8_t *walls = tiles + size_t(v.width) * v.height;
+  r.at += size_t(v.width) + size_t(v.width) * v.height * 2;
   for (int x = 0; x < v.width; ++x)
-    if (v.heights[x] < 10 || v.heights[x] > 60)
+    if (heights[x] < 10 || heights[x] > 60)
       return false;
-  for (auto t : v.tiles)
+  for (size_t i = 0; i < size_t(v.width) * v.height; ++i) {
+    auto t = tiles[i];
     if (t >= TileCount)
       return false;
-  for (auto t : v.walls)
+    t = walls[i];
     if (t != 0 && t != Stone && t != Deepstone && t != Plank && t != Glass &&
         t != Door)
       return false;
+  }
   for (auto &d : v.drops) {
     d.item = r.u(1);
     d.count = r.u(2);
@@ -1324,10 +1613,10 @@ bool decode(State &s, const uint8_t *data, size_t size) {
       return false;
   }
   if (!r.ok || r.at != size - 4 || v.clock >= 360000 || !v.day || v.hp > 100 ||
-      v.mana > 60 || v.selected >= HotSlots || v.boss_defeated > 1 ||
+      v.mana > 60 || v.selected >= BagSlots || v.boss_defeated > 1 ||
       !v.random || v.player.x < 16 || v.player.x >= (v.width - 1) * 16 ||
       v.player.y < 24 || v.player.y >= (v.height - 1) * 16 ||
-      !inside(v, v.home_x, v.home_y))
+      v.home_x < 0 || v.home_x >= v.width || v.home_y < 0 || v.home_y >= v.height)
     return false;
   for (int i = 0; i < 4; ++i)
     v.npcs[i] = {float((58 + i * 4) * 16),
@@ -1339,7 +1628,16 @@ bool decode(State &s, const uint8_t *data, size_t size) {
                  uint8_t(i % 2)};
   v.player.face = 1;
   v.invulnerable = 1000;
-  s = v;
+  // All input has been checked before modifying the active world. Keeping
+  // only metadata in scratch avoids allocating a second maximum-sized map.
+  std::memset(&s, 0, sizeof(s));
+  static_cast<StateData &>(s) = v;
+  std::memcpy(s.heights, heights, v.width);
+  for (int y = 0; y < v.height; ++y) {
+    std::memcpy(s.tiles + y * WorldW, tiles + y * v.width, v.width);
+    std::memcpy(s.walls + y * WorldW, walls + y * v.width, v.width);
+  }
+  normalize_doors(s);
   notice(s, "世界已载入，欢迎回家。");
   return true;
 }

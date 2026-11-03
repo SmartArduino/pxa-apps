@@ -3,4 +3,7 @@ project(pxa_starsoil LANGUAGES C CXX)
 include("${CMAKE_CURRENT_LIST_DIR}/../common/cpp/Application.cmake")
 pxa_add_callback_component(pxa_main COMPONENT_ID main SOURCES main.cpp core.cpp runtime.cpp)
 target_compile_definitions(pxa_main PRIVATE PXA_POCKET_RESPONSIVE=1)
+# Collapse the scene/pixel wrappers across translation units before AOT.
+target_compile_options(pxa_main PRIVATE -flto)
+target_link_options(pxa_main PRIVATE -flto)
 target_link_options(pxa_main PRIVATE -Wl,-z,stack-size=65536)

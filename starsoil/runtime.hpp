@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: CC0-1.0
 #pragma once
+#include "core.hpp"
 #include "../common/pocket-ui/i18n.hpp"
 #include <stddef.h>
 #include <stdint.h>
@@ -9,7 +10,7 @@ constexpr int BASE_WIDTH = 288, BASE_HEIGHT = 224;
 // Preserve square artwork pixels while extending the canvas to the display.
 extern int WIDTH, HEIGHT;
 // Largest supported world save, stored through the package-private FS service.
-constexpr size_t SAVE_CAPACITY = 160000;
+constexpr size_t SAVE_CAPACITY = starsoil::SaveBytes;
 constexpr int WorldSlots = 8;
 struct WorldInfo {
   bool occupied = false, valid = false;
@@ -49,6 +50,7 @@ constexpr uint16_t WARN = rgb(251, 191, 36), BAD = rgb(248, 113, 113);
 // Drawing is clipped to the canvas. Call these only from game::draw().
 void clear(uint16_t color = BG);
 void rect(int x, int y, int w, int h, uint16_t color);
+void blend_rect(int x, int y, int w, int h, uint16_t color, unsigned alpha);
 void outline(int x, int y, int w, int h, uint16_t color);
 void line(int x0, int y0, int x1, int y1, uint16_t color);
 void text(int x, int y, const char *value, uint16_t color = INK, int scale = 1);
@@ -57,6 +59,11 @@ int text_height(int scale = 1);
 int text_line_height();
 // Finish the scene resample, then paint UI and native fonts on output pixels.
 void begin_ui(bool preserve_scene = false);
+// Keep controls inside display cutouts while the world remains full bleed.
+void begin_controls();
+bool has_display_cutouts();
+bool blit_pixels(int x, int y, const uint16_t *pixels, int w, int h,
+                bool flip, int light, int clip_top, int clip_bottom);
 void redraw();
 // Coalesces writes; serialize is called later by the runtime, not here.
 void save();
@@ -90,14 +97,19 @@ void reset();
 // Press edges and repeated arrows are delivered individually, never flattened
 // into final state. START is reserved for the common pause menu.
 void key(pocket::Key key);
-// Captured first pointer, coordinates relative to the actual canvas. Outside
-// releases/cancels still arrive, with coordinates allowed outside the canvas.
-void pointer(pocket::Phase phase, int x, int y);
+// Each contact retains its ID and coordinate space until release/cancel.
+// Outside releases still arrive; lifecycle/resize cancellation covers all IDs.
+bool uses_ui_pointer(int x, int y);
+void pointer(pocket::Phase phase, int x, int y, uint32_t id = 0);
+void cancel_input(); // Also clears pending tap edges when no contacts remain.
+bool smart_cursor_enabled();
+void set_smart_cursor(bool enabled);
 // Elapsed foreground milliseconds, capped at 100. Use bounded work per call.
 void tick(uint32_t elapsed_ms);
 void draw();
 // Return 0 to omit saving. Validate size/version/ranges before changing state.
-size_t serialize(uint8_t *data, size_t capacity);
+size_t serialize(uint8_t *data, size_t capacity, bool seal = true);
+void describe_world(pocket::WorldInfo &info);
 bool load(const uint8_t *data, size_t size);
 bool inspect_world(const uint8_t *data, size_t size, pocket::WorldInfo &info);
 void create_world(uint32_t seed, uint8_t size);

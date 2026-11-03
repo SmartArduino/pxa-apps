@@ -191,6 +191,21 @@ void landmarks(const Canvas &c, const Outfit &outfit, int frame, bool face,
     require(art::icons[held][grip[1] * 16 + grip[0]] != 0,
             "item grip source pixel is transparent");
     require(c.main_grip, "held item's opaque handle does not reach the palm");
+    auto kind = items[held].kind;
+    if (kind < Pick || kind > Wand) {
+      int left=c.width, right=-1, top=c.height, bottom=-1;
+      for (int y=0;y<c.height;++y) for(int x=0;x<c.width;++x)
+        if (c.at({x,y}).tag==Tag::Weapon) {
+          left=std::min(left,x);right=std::max(right,x);
+          top=std::min(top,y);bottom=std::max(bottom,y);
+        }
+      require(right-left<8*scale && bottom-top<8*scale,
+              "noncombat held item exceeds palm-sized bounds");
+      Point eye=world(a,{12,10+joint(a,Neck).y-13});
+      for(int y=0;y<scale;++y)for(int x=0;x<scale;++x)
+        require(c.at({eye.x+x,eye.y+y}).tag!=Tag::Weapon,
+                "noncombat held item obscures the eye");
+    }
     const auto &hand = c.at(world(a, joint(a, starsoil_actor::Hand)));
     require(hand.tag == Tag::Grip && hand.index == 0,
             "gripping fingers are obscured");

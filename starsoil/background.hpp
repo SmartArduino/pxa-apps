@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 #include "core.hpp"
+#include "color_math.hpp"
 #include <algorithm>
 #include <cstdint>
+#include <cstdlib>
 namespace starsoil_scene {
 constexpr uint16_t c(uint32_t v) {
   return uint16_t(((v >> 8) & 0xf800) | ((v >> 5) & 0x07e0) | ((v >> 3) & 31));
 }
 inline uint16_t blend(uint16_t a, uint16_t b, int k) {
-  return uint16_t(
-      (((((a >> 11) & 31) * (255 - k) + ((b >> 11) & 31) * k) / 255) << 11) |
-      (((((a >> 5) & 63) * (255 - k) + ((b >> 5) & 63) * k) / 255) << 5) |
-      (((a & 31) * (255 - k) + (b & 31) * k) / 255));
+  return starsoil_color::mix(a, b, unsigned(k));
 }
 inline uint32_t hash(uint32_t x) {
   x ^= x >> 16;
@@ -56,19 +55,42 @@ void broadleaf(int x, int ground, int h, uint16_t trunk, uint16_t foliage,
 template <class Rect, class Line, class Pixel>
 void draw(int w, int bottom, int camera_x, int camera_y, int surface_y,
           int depth, int biome, uint32_t clock, uint32_t animation, Rect rect,
-          Line line, Pixel pixel) {
+          Line line, Pixel pixel, int first_y = 25) {
   using namespace starsoil;
   const bool night = clock < 25000 || clock > 240000;
   auto box = [&](int x, int y, int ww, int hh, uint16_t color) {
     int end = std::min(bottom, y + hh);
-    y = std::max(25, y);
+    y = std::max(first_y, y);
     if (end > y)
       rect(x, y, ww, end - y, color);
   };
   auto dot = [&](int x, int y, uint16_t color) {
-    if (y >= 25 && y < bottom)
+    if (y >= first_y && y < bottom)
       pixel(x, y, color);
   };
+  // Horizontal spans keep framebuffer writes contiguous. Tall one-pixel
+  // columns otherwise revisit a different PSRAM cache line for every pixel.
+  auto columns = [&](uint16_t color, const int *edge, bool below) {
+    int low = bottom, high = first_y;
+    for (int x = 0; x < w; ++x) { low = std::min(low, edge[x]); high = std::max(high, edge[x]); }
+    low = std::clamp(low, first_y, bottom);
+    high = std::clamp(high, first_y, bottom);
+    // Empty/full rows do not need a per-pixel coverage test. Keep horizontal
+    // writes contiguous while scanning only the narrow irregular boundary.
+    if (below) box(0, high, w, bottom - high, color);
+    else box(0, first_y, w, low - first_y, color);
+    for (int y = low; y < high; ++y) {
+      auto covered = [&](int x) { return below ? y >= edge[x] : y < edge[x]; };
+      int x = 0;
+      while (x < w) {
+        while (x < w && !covered(x)) ++x;
+        int start = x;
+        while (x < w && covered(x)) ++x;
+        if (x > start) box(start, y, x - start, 1, color);
+      }
+    }
+  };
+  int tops[480], floors[480];
   auto diamond = [&](int x, int y, int half, int h, uint16_t fill,
                      uint16_t shine) {
     for (int yy = 0; yy < h; ++yy) {
@@ -79,26 +101,29 @@ void draw(int w, int bottom, int camera_x, int camera_y, int surface_y,
     line(x, y + 2, x, y + h / 2, shine);
   };
   if (depth >= 4) {
+    // Crystal hues emerge over eight world tiles, independent of the actor.
+    int crystal = std::clamp((camera_y + (first_y + bottom) / 2 - 64 * 16) * 255 / (8 * 16), 0, 255);
     const uint16_t top = c(0x141d30),
-                   low = biome == CrystalDepths ? c(0x284452) : c(0x303646);
-    for (int y = 25; y < bottom; ++y)
+                   low = blend(c(0x303646), c(0x284452), crystal);
+    for (int y = first_y; y < bottom; ++y)
       box(0, y, w, 1,
-          blend(top, low, (y - 25) * 255 / std::max(1, bottom - 25)));
-    for (int layer = 0; layer < 2; ++layer)
+          blend(top, low, (y - first_y) * 255 / std::max(1, bottom - first_y)));
+    for (int layer = 0; layer < 2; ++layer) {
       for (int x = 0; x < w; ++x) {
         int world = x + camera_x / (layer ? 3 : 6);
-        int ceiling = 34 + ridge(world, layer ? 53 : 79, 31 + layer * 9) / 2;
-        int floor = bottom - 8 - ridge(world, layer ? 47 : 81, 117 + layer * 3);
-        box(x, 25, 1, ceiling - 25, c(layer ? 0x182536 : 0x1c2b3c));
-        box(x, floor, 1, bottom - floor, c(layer ? 0x182735 : 0x223543));
+        tops[x] = 34 + ridge(world, layer ? 53 : 79, 31 + layer * 9) / 2;
+        floors[x] = bottom - 8 - ridge(world, layer ? 47 : 81, 117 + layer * 3);
       }
+      columns(c(layer ? 0x182536 : 0x1c2b3c), tops, false);
+      columns(c(layer ? 0x182735 : 0x223543), floors, true);
+    }
     int scroll = camera_x / 4;
     for (int i = floor_div(scroll, 57) - 1; i < floor_div(scroll + w, 57) + 2;
          ++i) {
       uint32_t n = hash(i + 722);
       int x = i * 57 - scroll, y = bottom - 25 - int(n % 48),
           h = 12 + int(n % 17);
-      if (biome == CrystalDepths || n % 3 == 0) {
+      if (n % 3 == 0) {
         diamond(x, y, 4, h, c(0x38636a), c(0x79b1a4));
         diamond(x + 7, y + 7, 2, 13, c(0x2c4e5c), c(0x527d88));
         if ((animation / 180 + n) % 17 < 3)
@@ -121,8 +146,8 @@ void draw(int w, int bottom, int camera_x, int camera_y, int surface_y,
     top = blend(top, c(0x917e9e), 105);
     low = blend(low, c(0xf0b68b), 145);
   }
-  for (int y = 25; y < bottom; ++y)
-    box(0, y, w, 1, blend(top, low, (y - 25) * 255 / std::max(1, bottom - 25)));
+  for (int y = first_y; y < bottom; ++y)
+    box(0, y, w, 1, blend(top, low, (y - first_y) * 255 / std::max(1, bottom - first_y)));
   if (night)
     for (int i = 0; i < 32; ++i) {
       uint32_t n = hash(i + 92);
@@ -178,7 +203,12 @@ void draw(int w, int bottom, int camera_x, int camera_y, int surface_y,
       int world = x + camera_x / (12 - layer * 3),
           r = ridge(world, layer ? 61 : 93, layer * 51 + 11);
       int h = horizon - 43 + layer * 18 - r * (biome == Desert ? 1 : 2) / 2;
-      box(x, h, 1, bottom - h, fill);
+      tops[x] = h;
+      floors[x] = r;
+    }
+    columns(fill, tops, true);
+    for (int x = 0; x < w; ++x) {
+      int h = tops[x], r = floors[x];
       if (layer == 0 && biome == Tundra)
         box(x, h, 1, 3 + (r % 5), night ? c(0xa1b9c4) : c(0xeaf0e1));
       else if (layer == 0 && x % 11 < 3)
@@ -229,5 +259,61 @@ void draw(int w, int bottom, int camera_x, int camera_y, int surface_y,
         dot(x, y, c(0xc2d7a2));
     }
   (void)camera_y;
+}
+// Average a wide terrain span and interpolate in pixels. A one-tile cliff
+// under the player must not teleport the distant mountains or tree line.
+inline int surface_level(const starsoil::State &s, int world_x) {
+  int tile_x = floor_div(world_x, 16), fraction = world_x - tile_x * 16;
+  int sum = 0;
+  for (int dx = -16; dx <= 16; ++dx)
+    sum += s.heights[std::clamp(tile_x + dx, 0, s.width - 1)];
+  int next = sum - s.heights[std::clamp(tile_x - 16, 0, s.width - 1)] +
+             s.heights[std::clamp(tile_x + 17, 0, s.width - 1)];
+  return (sum * (16 - fraction) + next * fraction) / 33;
+}
+inline int cave_opacity(int world_y, int surface) {
+  return std::clamp((world_y - surface - 32) * 255 / 96, 0, 255);
+}
+template <class Rect, class Line, class Pixel, class Read>
+void draw_world(const starsoil::State &s, int w, int bottom, int camera_x,
+                int camera_y, uint32_t animation, Rect rect, Line line,
+                Pixel pixel, Read read, int first_y = 25) {
+  int ground = surface_level(s, camera_x + w / 2);
+  int base = bottom - 47;
+  int horizon = base + floor_div(ground - camera_y - base, 6);
+  // Surface scenery is chosen by longitude, never the player's jump height.
+  int biome = starsoil::biome_at((camera_x + w / 2) / 16, 0, s.width);
+  if (cave_opacity(camera_y + first_y, ground) < 255)
+    draw(w, bottom, camera_x, camera_y, horizon, 0, biome, s.clock,
+         animation, rect, line, pixel, first_y);
+  auto dot = [&](int x, int y, uint16_t color) {
+    if (unsigned(x) >= unsigned(w) || y < first_y || y >= bottom) return;
+    int alpha = cave_opacity(camera_y + y, ground);
+    if (alpha) pixel(x, y, alpha == 255 ? color : blend(read(x, y), color, alpha));
+  };
+  auto box = [&](int x, int y, int ww, int hh, uint16_t color) {
+    int end_x = std::min(w, x + ww), end_y = std::min(bottom, y + hh);
+    x = std::max(0, x);
+    for (int row = std::max(first_y, y); row < end_y; ++row) {
+      int alpha = cave_opacity(camera_y + row, ground);
+      if (alpha == 255) rect(x, row, std::max(0, end_x - x), 1, color);
+      else if (alpha) for (int col = x; col < end_x; ++col)
+        pixel(col, row, blend(read(col, row), color, alpha));
+    }
+  };
+  auto stroke = [&](int x, int y, int ex, int ey, uint16_t color) {
+    int dx = std::abs(ex - x), sx = x < ex ? 1 : -1;
+    int dy = -std::abs(ey - y), sy = y < ey ? 1 : -1, error = dx + dy;
+    for (;;) {
+      dot(x, y, color);
+      if (x == ex && y == ey) break;
+      int e = error * 2;
+      if (e >= dy) { error += dy; x += sx; }
+      if (e <= dx) { error += dx; y += sy; }
+    }
+  };
+  if (cave_opacity(camera_y + bottom - 1, ground))
+    draw(w, bottom, camera_x, camera_y, horizon, 8, biome, s.clock,
+         animation, box, stroke, dot, std::max(first_y, ground + 32 - camera_y));
 }
 } // namespace starsoil_scene

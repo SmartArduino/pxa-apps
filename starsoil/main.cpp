@@ -2,10 +2,14 @@
 #include "actor_renderer.hpp"
 #include "art.hpp"
 #include "background.hpp"
+#include "color_math.hpp"
 #include "core.hpp"
+#include "door_art.hpp"
 #include "effects.hpp"
 #include "font.hpp"
 #include "runtime.hpp"
+#include "pointer_capture.hpp"
+#include "scene_lighting.hpp"
 #include "terrain.hpp"
 #include "text.hpp"
 #include "trees.hpp"
@@ -24,10 +28,19 @@ constexpr uint16_t Ink = rgb(225, 226, 204), Muted = rgb(143, 163, 162),
                    Red = rgb(203, 117, 119);
 State s;
 Effects effects;
+starsoil_scene::Lighting lighting;
+starsoil_tree::CrownCache tree_crowns;
 int draw_x = 0, draw_y = 0;
 int width() { return pocket::WIDTH; }
 int height() { return pocket::HEIGHT; }
-int scene_bottom() { return height() - 43; }
+constexpr int FooterInset = 26;
+int scene_bottom() { return height() - 30 - FooterInset; }
+int scene_top() { return pocket::has_display_cutouts() ? 0 : 25; }
+int render_bottom() { return height(); }
+int gear_row_height() { return height() < 280 ? 14 : 20; }
+int bag_row_height() { return height() < 280 ? 18 : 24; }
+int recipes_per_page() { return height() < 280 ? 3 : 4; }
+int storage_row_height() { return height() < 280 ? 18 : 25; }
 int content_x() { return (width() - 288) / 2; }
 int content_y() { return (height() - 224) / 2; }
 void content_origin() {
@@ -36,11 +49,11 @@ void content_origin() {
 }
 void footer_origin() {
   draw_x = content_x();
-  draw_y = height() - 224;
+  draw_y = height() - 224 - FooterInset;
 }
 enum View { Title, World, Bag, Crafting, Gear, Map, Guide, Dialogue, Storage,
             CreateWorld, SeedEditor, DeleteWorld };
-constexpr int RecipesPerPage = 4, RecipeRowHeight = 32;
+constexpr int RecipeRowHeight = 32;
 View view = Title;
 uint32_t animation = 0, autosave = 0, event_at = 0, last_event = 0, paint = 0;
 int cx = 0, cy = 0, selected = 0, recipe = 0, recipe_page = 0, guide_page = 0,
@@ -48,9 +61,30 @@ int cx = 0, cy = 0, selected = 0, recipe = 0, recipe_page = 0, guide_page = 0,
 int touch = -1, aim_x = -1, aim_y = -1;
 bool touch_down = false, jump_edge = false, gesture_jump = false,
      use_blocked = false;
+starsoil_touch::Captures touches;
+int stick_x = 62, stick_y = 0, stick_dx = 0, stick_dy = 0;
+starsoil_touch::Layout touch_layout() { return {width(), height()}; }
 bool save_error = false;
 bool preview_face = true;
 bool session_active = false;
+bool smart_mode = true;
+struct InventoryTouch {
+  int source = -1, x = 0, y = 0, start_x = 0, start_y = 0;
+  uint16_t elapsed = 0;
+  bool dragging = false, cancelled = false;
+} inventory_touch;
+struct SceneTouch {
+  static constexpr uint16_t HoldMs = 300;
+  int start_x = 0, start_y = 0, world_x = 0, world_y = 0;
+  uint16_t elapsed = 0;
+  bool deferred = false, tap = false;
+  bool ready() const { return !deferred || elapsed >= HoldMs; }
+} scene_touch;
+int last_bag_tap = -1;
+int recipe_list[RecipeCount]{}, visible_recipes = RecipeCount;
+bool craft_ready_only = false;
+uint32_t last_bag_tap_at = 0;
+int inventory_slot_at(int x, int y);
 starsoil_actor::ActionClock tool_animation;
 char message[128]{};
 const char *tr(const char *en, const char *cn) { return pocket::tr(en, cn); }
@@ -63,16 +97,10 @@ uint16_t color(uint32_t c) { return rgb(c >> 16, (c >> 8) & 255, c & 255); }
 uint16_t dim(uint16_t c, int light) {
   if (light >= 255)
     return c;
-  return uint16_t(((((c >> 11) & 31) * light / 255) << 11) |
-                  ((((c >> 5) & 63) * light / 255) << 5) |
-                  ((c & 31) * light / 255));
+  return starsoil_color::dim(c, unsigned(light));
 }
 uint16_t mix(uint16_t a, uint16_t b, int k) {
-  unsigned ar = (a >> 11) & 31, ag = (a >> 5) & 63, ab = a & 31,
-           br = (b >> 11) & 31, bg = (b >> 5) & 63, bb = b & 31;
-  return uint16_t(((ar * (255 - k) + br * k) / 255) << 11 |
-                  ((ag * (255 - k) + bg * k) / 255) << 5 |
-                  (ab * (255 - k) + bb * k) / 255);
+  return starsoil_color::mix(a, b, unsigned(k));
 }
 void rect(int x, int y, int w, int h, uint16_t c) {
   pocket::rect(x + draw_x, y + draw_y, w, h, c);
@@ -154,14 +182,18 @@ void wrap(int x, int y, int width, const char *txt, uint16_t c = Muted,
 }
 void sprite(int x, int y, const uint16_t *data, int w, int h, bool flip = false,
             int light = 255, int scale = 1, bool clip = false) {
+  if (scale == 1 && pocket::blit_pixels(x + draw_x, y + draw_y, data, w, h,
+       flip, light, clip ? scene_top() : 0, clip ? render_bottom() : height())) return;
   for (int yy = 0; yy < h; ++yy) {
     int py = y + yy * scale;
-    if (clip && (py < 25 || py >= scene_bottom()))
+    if (clip && (py < scene_top() || py >= render_bottom()))
       continue;
     for (int xx = 0; xx < w; ++xx) {
       uint16_t c = data[yy * w + (flip ? w - 1 - xx : xx)];
-      if (c)
-        rect(x + xx * scale, py, scale, scale, dim(c, light));
+      if (c) {
+        if (scale == 1) pixel(x + xx, py, dim(c, light));
+        else rect(x + xx * scale, py, scale, scale, dim(c, light));
+      }
     }
   }
 }
@@ -185,58 +217,79 @@ void notify(const char *en, const char *cn) {
   std::snprintf(message, sizeof(message), "%s", tr(en, cn));
   event_at = animation + 4200;
 }
+void refresh_recipes() {
+  visible_recipes = 0;
+  int position = -1;
+  for (int i = 0; i < RecipeCount; ++i)
+    if (!craft_ready_only || can_craft(s, i)) {
+      if (i == recipe) position = visible_recipes;
+      recipe_list[visible_recipes++] = i;
+    }
+  if (position < 0 && visible_recipes) {
+    position = 0;
+    recipe = recipe_list[0];
+  }
+  if (!visible_recipes) recipe = -1;
+  recipe_page = position < 0 ? 0 : position / recipes_per_page();
+}
+int recipe_position() {
+  for (int i = 0; i < visible_recipes; ++i) if (recipe_list[i] == recipe) return i;
+  return 0;
+}
+void toggle_craft_filter() {
+  craft_ready_only = !craft_ready_only;
+  refresh_recipes();
+  event_at = 0;
+}
 void set_view(View v) {
+  inventory_touch = {};
+  scene_touch = {};
+  last_bag_tap = -1;
   view = v;
   touch = -1;
   touch_down = false;
+  touches.block();
+  stick_dx = stick_dy = 0;
   gesture_jump = false;
+  jump_edge = false;
   aim_x = aim_y = -1;
   s.mining = 0;
   selected = v == Gear ? 0 : s.selected;
+  if (v == Crafting) refresh_recipes();
   use_blocked = pocket::held(Key::B);
   sound(430);
   pocket::redraw();
 }
 int light_at(int x, int y) {
-  int surface = s.heights[std::clamp(x, 0, s.width - 1)];
-  bool night = s.clock > 240000 || s.clock < 25000;
-  int light =
-      y <= surface ? night ? 112 : 255 : std::max(28, 190 - (y - surface) * 23);
-  int px = int(s.player.x / 16), py = int(s.player.y / 16);
-  int player_light = s.equip[7] == GlowCharm                       ? 8
-                     : items[s.bag[s.selected].item].tile == Torch ? 7
-                                                                   : 4;
-  light = std::max(light, 230 - (std::abs(x - px) + std::abs(y - py)) * 255 /
-                                    player_light);
-  for (int yy = std::max(0, y - 5); yy <= std::min(s.height - 1, y + 5); ++yy)
-    for (int xx = std::max(0, x - 5); xx <= std::min(s.width - 1, x + 5); ++xx)
-      if (s.tiles[yy * WorldW + xx] == Torch ||
-          s.tiles[yy * WorldW + xx] == Portal ||
-          s.tiles[yy * WorldW + xx] == Lava)
-        light =
-            std::max(light, 255 - (std::abs(x - xx) + std::abs(y - yy)) * 38);
-  return std::clamp(light, 28, 255);
+  return lighting.at(s, x, y);
 }
 void human(int x, int feet, int frame, bool face, const uint8_t *equipment,
            int held, int light = 255, int scale = 1, int skin = 0,
-           bool using_item = false, int action_frame = -1) {
+           bool using_item = false, int action_frame = -1, const State *aiming = nullptr) {
   starsoil_actor::Appearance a{x,         feet,         frame, scale,
                                light,     skin,         face,  using_item,
                                equipment, uint8_t(held)};
   a.action_frame = action_frame;
+  if(aiming && items[held].kind==Bow) {
+    const auto &p=aiming->player;
+    auto d=starsoil_aim::direction(p.x,p.y,aiming->target_x*16+8,aiming->target_y*16+8,p.face,
+                                 starsoil_aim::bob(p.grounded,p.vx,p.anim));
+    a.aimed=true;a.aim_x=d.x;a.aim_y=d.y;
+    a.bow_loaded=count(*aiming,Arrows)>0 && aiming->cooldown<280;
+    a.bow_draw=a.bow_loaded?std::clamp((380-int(aiming->cooldown))*256/300,0,256):0;
+  }
   starsoil_actor::draw(a, [](int px, int py, uint16_t c, starsoil_actor::Tag,
                              uint8_t) { pixel(px, py, c); });
 }
 
 void sky() {
-  int tx = std::clamp(int(s.player.x / 16), 0, s.width - 1);
-  int depth = std::max(0, int(s.player.y / 16) - int(s.heights[tx]));
-  starsoil_scene::draw(
-      width(), scene_bottom(), cx, cy, int(s.heights[tx]) * 16 - cy, depth,
-      biome_at(tx, int(s.player.y / 16), s.width), s.clock, animation,
+  const auto *canvas = pocket::framebuffer();
+  starsoil_scene::draw_world(
+      s, width(), render_bottom(), cx, cy, animation,
       [](int x, int y, int w, int h, uint16_t c) { rect(x, y, w, h, c); },
       [](int x, int y, int xx, int yy, uint16_t c) { line(x, y, xx, yy, c); },
-      [](int x, int y, uint16_t c) { pixel(x, y, c); });
+      [](int x, int y, uint16_t c) { pixel(x, y, c); },
+      [canvas](int x, int y) { return canvas[y * width() + x]; }, scene_top());
 }
 bool connects(int t, int n) {
   return t == n ||
@@ -246,9 +299,15 @@ void scene() {
   cx = std::clamp(int(s.player.x) - width() / 2, 0, s.width * 16 - width());
   cy = std::clamp(int(s.player.y) - (scene_bottom() - 47), -114,
                   s.height * 16 - scene_bottom() + 1);
+  const int left = cx / 16, right = std::min(s.width - 1, (cx + width() - 1) / 16);
+  const int top = std::max(0, (cy + scene_top()) / 16),
+            bottom = std::min(s.height - 1, (cy + render_bottom() - 1) / 16);
+  lighting.prepare(s, left, top, right - left + 1, bottom - top + 1);
+  tree_crowns.prepare(left, top, right - left + 1, bottom - top + 1,
+                     [](int x, int y) { return tile(s, x, y); });
   sky();
-  for (int y = std::max(0, (cy + 25) / 16);
-       y <= std::min(s.height - 1, (cy + scene_bottom() - 1) / 16); ++y)
+  for (int y = std::max(0, (cy + scene_top()) / 16);
+       y <= std::min(s.height - 1, (cy + render_bottom() - 1) / 16); ++y)
     for (int x = cx / 16; x <= std::min(s.width - 1, (cx + width() - 1) / 16);
          ++x) {
       int sx = x * 16 - cx, sy = y * 16 - cy, t = tile(s, x, y),
@@ -260,10 +319,10 @@ void scene() {
                            : wall == Glass               ? 0x7ca7ae
                            : y > 70                      ? 0x33334a
                                                          : 0x4b464d);
-        rect(sx, std::max(sy, 25), 16,
-             std::min(sy + 16, scene_bottom()) - std::max(sy, 25),
+        rect(sx, std::max(sy, scene_top()), 16,
+             std::min(sy + 16, render_bottom()) - std::max(sy, scene_top()),
              dim(c, light));
-        if (sy >= 25 && sy < scene_bottom() - 4) {
+        if (sy >= scene_top() && sy < render_bottom() - 4) {
           if (wall == Glass) {
             line(sx, sy, sx + 15, sy, dim(color(0xc5ded3), light));
             line(sx + 1, sy + 2, sx + 5, sy + 2, dim(color(0xb4d8cd), light));
@@ -276,12 +335,14 @@ void scene() {
         }
       }
       auto tree_sample = [](int xx, int yy) { return tile(s, xx, yy); };
+      auto crown = t == Air || t == Log || t == Leaves
+                       ? tree_crowns.find(x, y, tree_sample) : starsoil_tree::Crown{};
       bool natural_tree = starsoil_tree::draw_natural(
           x, y, sx, sy, biome_at(x, y, s.width), light, tree_sample,
           [](int xx, int yy, uint16_t c) {
-            if (yy >= 25 && yy < scene_bottom())
+            if (yy >= scene_top() && yy < render_bottom())
               pixel(xx, yy, c);
-          });
+          }, &crown);
       if (t) {
         int mask = (connects(t, tile(s, x, y - 1)) ? 1 : 0) |
                    (connects(t, tile(s, x + 1, y)) ? 2 : 0) |
@@ -289,18 +350,24 @@ void scene() {
                    (connects(t, tile(s, x - 1, y)) ? 8 : 0);
         int region = biome_at(x, y, s.width);
         auto sample = [](int xx, int yy) { return tile(s, xx, yy); };
+        if (door(t)) {
+          starsoil_door::draw(t, sx, sy, light, [](int xx, int yy, uint16_t c) {
+            if (yy >= scene_top() && yy < render_bottom()) pixel(xx, yy, c);
+          });
+        } else {
         const uint16_t *tile_art =
             starsoil_tree::art_for(t, x, y, region, sample);
         if (!tile_art)
           tile_art = art::tiles[t * 16 + mask];
-        auto plot = [](int xx, int yy, uint16_t c) {
-          if (yy >= 25 && yy < scene_bottom())
-            pixel(xx, yy, c);
-        };
-        if (!natural_tree &&
-            !starsoil_terrain::draw_terrain(x, y, sx, sy, light, sample, plot))
+        if (!natural_tree) {
+          if (starsoil_terrain::terrain(t)) {
+            auto neighbors = starsoil_terrain::neighbors(x, y, sample);
+            tile_art = art::tiles[t * 16 + neighbors.sides];
+          }
           sprite(sx, sy, tile_art, 16, 16, false, light, 1, true);
-        if (is_ore(t) && sy >= 52 && sy < scene_bottom() - 16 &&
+        }
+        }
+        if (is_ore(t) && sy >= 52 && sy < render_bottom() - 16 &&
             (animation / 90 + hash(x + y * 384)) % 41 < 2) {
           int gx = sx + 3 + int(hash(x * 17 + y) % 10),
               gy = sy + 3 + int(hash(x + y * 31) % 10);
@@ -312,10 +379,10 @@ void scene() {
         }
         if (t == Torch) {
           int a = (animation / 130 + x) % 3;
-          if (sy > 29 && sy < scene_bottom() - 10)
+          if (sy > 29 && sy < render_bottom() - 10)
             pixel(sx + 6 + a, sy + 2 - a, Ink);
         }
-        if ((t == Water || t == Lava) && sy >= 25 && sy < scene_bottom() - 2) {
+        if ((t == Water || t == Lava) && sy >= scene_top() && sy < render_bottom() - 2) {
           int offset = int(animation / 130 + x) % 8;
           line(sx + offset, sy + 2, sx + offset + 3, sy + 2, dim(Ink, light));
         }
@@ -331,13 +398,13 @@ void scene() {
       starsoil_terrain::draw_fillet(
           x, y, sx, sy, light, [](int xx, int yy) { return tile(s, xx, yy); },
           [](int xx, int yy, uint16_t c) {
-            if (yy >= 25 && yy < scene_bottom())
+            if (yy >= scene_top() && yy < render_bottom())
               pixel(xx, yy, c);
           });
     }
   for (auto n : s.npcs) {
     int x = int(n.x) - cx, y = int(n.y) - cy;
-    if (x < -20 || x > width() + 20 || y < 25 || y > scene_bottom() - 3)
+    if (x < -20 || x > width() + 20 || y < scene_top() || y > render_bottom() - 3)
       continue;
     uint8_t eq[8]{};
     eq[0] = n.type == 3 ? StrawHat : n.type == 2 ? IronHelmet : 0;
@@ -345,14 +412,14 @@ void scene() {
     eq[4] = n.type == 0 ? TealCape : 0;
     human(x, y,
           starsoil_actor::locomotion_frame(n.grounded, std::fabs(n.vx) > 1,
-                                           n.anim / 512),
+                                           n.anim / 512, n.vy),
           n.face, eq, n.type == 2 ? IronAxe : 0,
           light_at(int(n.x / 16), int(n.y / 16)), 1, n.type == 2 ? 2 : 1);
   }
   for (auto m : s.mobs)
     if (m.hp > 0) {
       int x = int(m.x) - cx, y = int(m.y) - cy;
-      if (x < -48 || x > width() + 42 || y < 25 || y > scene_bottom())
+      if (x < -48 || x > width() + 42 || y < scene_top() || y > render_bottom())
         continue;
       int sc = m.type == 5 ? 2 : 1;
       sprite(x - 12 * sc, y - 24 * sc,
@@ -362,38 +429,51 @@ void scene() {
   for (auto d : s.drops)
     if (d.item) {
       int x = int(d.x) - cx, y = int(d.y) - cy;
-      if (y > 25 && y < scene_bottom() - 12)
+      if (y > scene_top() && y < render_bottom() - 12)
         icon(x - 8, y - 8, d.item, light_at(int(d.x / 16), int(d.y / 16)));
     }
   for (auto b : s.shots)
     if (b.life) {
       int x = int(b.x) - cx, y = int(b.y) - cy;
-      if (y > 25 && y < scene_bottom() - 4) {
-        rect(x - 1, y - 1, 3, 3, b.magic ? Teal : GoldInk);
-        line(x, y, x - int(b.vx * .03f), y - int(b.vy * .03f), Ink);
+      if (y > scene_top() && y < render_bottom() - 4) {
+        if(b.magic) {
+          rect(x-1,y-1,3,3,Teal);
+          line(x,y,x-int(b.vx*.03f),y-int(b.vy*.03f),Ink);
+        } else {
+          auto d=starsoil_aim::unit(b.vx,b.vy);
+          auto at=[&](float along,float across) {return starsoil_actor::Point{
+              x+int(std::lround(along*d.x-across*d.y)),y+int(std::lround(along*d.y+across*d.x))};};
+          auto tail=at(-9,0),left=at(-3,-2),right=at(-3,2);
+          line(x,y,tail.x,tail.y,color(0xd6c9a5));
+          line(x,y,left.x,left.y,color(0xb6c6ca));line(x,y,right.x,right.y,color(0xb6c6ca));
+          auto f=at(-7,-2),g=at(-7,2),tip=at(-5,0);
+          line(tail.x,tail.y,f.x,f.y,GoldInk);line(tail.x,tail.y,g.x,g.y,GoldInk);
+          line(f.x,f.y,tip.x,tip.y,GoldInk);line(g.x,g.y,tip.x,tip.y,GoldInk);
+        }
       }
     }
   if (!s.invulnerable || s.invulnerable / 100 % 2)
     human(int(s.player.x) - cx, int(s.player.y) - cy,
           starsoil_actor::locomotion_frame(s.player.grounded,
                                            std::fabs(s.player.vx) > 1,
-                                           s.player.anim / 512),
+                                           s.player.anim / 512, s.player.vy),
           s.player.face, s.equip, s.bag[s.selected].item,
           light_at(int(s.player.x / 16), int(s.player.y / 16)), 1, 0,
-          tool_animation.active, tool_animation.frame());
+          tool_animation.active, tool_animation.frame(), &s);
   for (const auto &p : effects.particles)
     if (p.life) {
       int x = int(p.x) - cx, y = int(p.y) - cy;
-      if (y >= 52 && y < scene_bottom() - 1)
+      if (y >= 52 && y < render_bottom() - 1)
         rect(x, y, p.life > 300 ? 2 : 1, 1,
              dim(color(p.color), std::min(255, int(p.life) * 2)));
     }
   int tx = s.target_x * 16 - cx, ty = s.target_y * 16 - cy;
-  if (ty >= 25 && ty < scene_bottom() - 15) {
-    outline(tx, ty, 16, 16, dim(GoldInk, 180));
-    pixel(tx + 2, ty + 2, GoldInk);
+  if (ty >= 25 && ty < render_bottom() - 15) {
+    uint16_t cursor=s.smart_cursor?(s.target_ready?Teal:Muted):GoldInk;
+    outline(tx, ty, 16, 16, dim(cursor,s.smart_cursor && !s.target_ready?90:180));
+    pixel(tx + 2, ty + 2,cursor);
     if (s.mining)
-      rect(tx, ty + 15, std::min(16, int(s.mining) * 16 / 500), 2, Ink);
+      rect(tx, ty + 15, std::min(16, int(s.mining) * 16 / mining_work(tile(s,s.target_x,s.target_y))), 2, Ink);
   }
 }
 void scene_labels() {
@@ -428,6 +508,45 @@ void scene_labels() {
       }
     }
 }
+void disc(starsoil_touch::Point p,int radius,bool active) {
+  int span=radius;
+  for(int dy=0;dy<=radius;++dy) {
+    while(span*span+dy*dy>radius*radius)--span;
+    for(int sign : {-1,1}) {
+      if(!dy && sign==1)continue;
+      int y=p.y+dy*sign;
+      pocket::blend_rect(p.x-span,y,span*2+1,1,Dark,active?215:150);
+      pixel(p.x-span,y,active?GoldInk:Muted);
+      pixel(p.x+span,y,active?GoldInk:Muted);
+    }
+  }
+}
+void floating_controls() {
+  auto layout=touch_layout();
+  auto stick=touches.owns(17)?starsoil_touch::Point{stick_x,stick_y}:layout.stick();
+  disc(stick,29,touches.owns(17));
+  line(stick.x-21,stick.y,stick.x-17,stick.y,Muted);
+  line(stick.x+17,stick.y,stick.x+21,stick.y,Muted);
+  line(stick.x,stick.y+17,stick.x,stick.y+21,Muted);
+  line(stick.x,stick.y-21,stick.x,stick.y-17,Muted);
+  auto knob=starsoil_touch::Point{stick.x+stick_dx,stick.y+stick_dy};
+  disc(knob,12,touches.owns(17));
+  line(knob.x-3,knob.y,knob.x+3,knob.y,Teal);
+  auto use=layout.use(),jump=layout.jump(),talk=layout.talk();
+  disc(use,23,touches.owns(15)||touches.owns(16));
+  icon(use.x-8,use.y-15,s.bag[s.selected].item);
+  center(use.x-21,use.y+4,42,hint("USE","使用","B","B"),Ink);
+  disc(jump,20,touches.owns(14));
+  line(jump.x-6,jump.y-1,jump.x,jump.y-7,Ink);
+  line(jump.x,jump.y-7,jump.x+6,jump.y-1,Ink);
+  line(jump.x,jump.y-7,jump.x,jump.y+2,Ink);
+  center(jump.x-19,jump.y+3,38,hint("JUMP","跳跃","A","A"),Ink);
+  disc(talk,16,touches.owns(13));
+  outline(talk.x-7,talk.y-6,14,10,Teal);
+  line(talk.x-4,talk.y+4,talk.x-4,talk.y+8,Teal);
+  line(talk.x-4,talk.y+8,talk.x,talk.y+4,Teal);
+  pixel(talk.x-3,talk.y-1,Ink);pixel(talk.x,talk.y-1,Ink);pixel(talk.x+3,talk.y-1,Ink);
+}
 void hud() {
   rect(0, 0, width(), 31, Dark);
   rect(0, 30, width(), 1, rgb(67, 88, 90));
@@ -445,17 +564,26 @@ void hud() {
         biome_name(biome_at(int(s.player.x / 16), int(s.player.y / 16), s.width),
                    !pocket::english()),
         Muted);
-  center(width() - 88, 1, 64, tr("BAG", "背包"), Ink);
-  center(width() - 88, 16, 64, tr("CRAFT", "合成"), Teal);
-  label(width() - 19, 3, "II", GoldInk);
+  // Keep touch targets below the system's top notification-gesture strip.
+  center(width() - 116, 16, 36, tr("BAG", "背包"), Ink);
+  center(width() - 80, 16, 40, tr("CRAFT", "合成"), Teal);
   for (int i = 0; i < HotSlots; ++i) {
-    int x = 4 + i * 24;
+    int x = 20 + i * 24;
     rect(x, 34, 22, 23, i == s.selected ? rgb(71, 89, 80) : Dark);
     outline(x, 34, 22, 23, i == s.selected ? GoldInk : rgb(76, 86, 87));
     icon(x + 3, 36, s.bag[i].item);
     if (s.bag[i].count > 1) {
       std::snprintf(b, sizeof(b), "%u", s.bag[i].count);
       label(x + 2, 42, b, Ink);
+    }
+  }
+  if (s.selected >= HotSlots) {
+    panel(216, 34, 22, 23, rgb(43, 72, 69));
+    outline(216, 34, 22, 23, Teal);
+    icon(219, 36, s.bag[s.selected].item);
+    if (s.bag[s.selected].count > 1) {
+      std::snprintf(b, sizeof(b), "%u", s.bag[s.selected].count);
+      label(218, 42, b, Ink);
     }
   }
   int depth = std::max(
@@ -488,29 +616,16 @@ void hud() {
   }
   rect(width() - 37, 93, 26, 2, rgb(56, 75, 79));
   rect(width() - 37, 93, progress * 26 / total, 2, Teal);
-  rect(0, scene_bottom(), width(), 43, Dark);
-  line(0, scene_bottom(), width() - 1, scene_bottom(), rgb(83, 105, 102));
-  button(3 * width() / 288, height() - 26, 31 * width() / 288, "<",
-         touch == 10);
-  button(38 * width() / 288, height() - 26, 31 * width() / 288, ">",
-         touch == 11);
-  button(73 * width() / 288, height() - 26, 33 * width() / 288,
-         tr("DOWN", "下"), touch == 12);
-  button(110 * width() / 288, height() - 26, 42 * width() / 288,
-         tr("TALK", "互动"), touch == 13);
-  button(156 * width() / 288, height() - 26, 52 * width() / 288,
-         tr("JUMP", "跳跃"), touch == 14);
-  button(212 * width() / 288, height() - 26, 72 * width() / 288,
-         tr("USE", "使用"), touch == 15);
+  floating_controls();
 }
 void heading(const char *txt) {
   pocket::begin_ui();
   draw_x = draw_y = 0;
   pocket::clear(Dark);
-  rect(0, 0, width(), 25, Panel);
-  label(8, 6, txt, GoldInk);
-  label(width() - 32, 6, "<", Ink);
-  line(0, 24, width() - 1, 24, rgb(91, 113, 108));
+  rect(0, 0, width(), 28, Panel);
+  label(8, 12, txt, GoldInk);
+  label(width() - 52, 14, "<", Ink);
+  line(0, 27, width() - 1, 27, rgb(91, 113, 108));
   content_origin();
 }
 void tabs(View current) {
@@ -532,70 +647,94 @@ void bag_draw() {
   heading(tr("SATCHEL & SUPPLIES", "旅人背包"));
   tabs(Bag);
   for (int i = 0; i < BagSlots; ++i) {
-    int x = 6 + i % 8 * 25, y = 50 + i / 8 * 24;
-    rect(x, y, 23, 22, i == selected ? rgb(66, 90, 82) : Panel);
-    outline(x, y, 23, 22, i == selected ? GoldInk : rgb(64, 78, 84));
-    icon(x + 3, y + 1, s.bag[i].item);
+    int x = 6 + i % 8 * 25, y = 50 + i / 8 * bag_row_height();
+    rect(x, y, 23, bag_row_height() - 1, i == selected ? rgb(66, 90, 82) : Panel);
+    outline(x, y, 23, bag_row_height() - 1, i == selected ? GoldInk : rgb(64, 78, 84));
+    if (inventory_touch.dragging && inventory_slot_at(inventory_touch.x, inventory_touch.y) == i)
+      outline(x, y, 23, bag_row_height() - 1, Teal);
+    if (i == s.selected) rect(x + 1, y + 1, 2, 3, Teal);
+    icon(x + 3, y + 1, s.bag[i].item,
+         inventory_touch.dragging && inventory_touch.source == i ? 100 : 255);
     if (s.bag[i].count > 1) {
       char b[12];
       std::snprintf(b, sizeof(b), "%u", s.bag[i].count);
-      label(x + 1, y + 21 - pocket::text_height(), b);
+      label(x + 1, y + bag_row_height() - 2 - pocket::text_height(), b);
     }
   }
-  human(238, 126, art::StandFrame, preview_face, s.equip,
+  human(238, height() < 280 ? 118 : 126, art::StandFrame, preview_face, s.equip,
         s.bag[s.selected].item, 255, 2);
-  center(210, 135, 75, tr("EQUIPPED", "实装预览"), Teal);
+  center(210, height() < 280 ? 127 : 135, 75, tr("EQUIPPED", "实装预览"), Teal);
   char b[40];
   std::snprintf(b, sizeof(b), tr("DEF %d", "防御 %d"), defense(s));
-  center(210, 151, 75, b, Muted);
+  center(210, height() < 280 ? 143 : 151, 75, b, Muted);
   int id = s.bag[selected].item;
   footer_origin();
-  label(7, 170, tr(items[id].en, items[id].zh), GoldInk);
+  label(7, 174, tr(items[id].en, items[id].zh), GoldInk);
   if (equip_slot(items[id].kind) >= 0)
-    label(7, 187, hint("TAP AGAIN: EQUIP", "再次点击：穿戴到身上",
+    label(7, 187, hint("DOUBLE TAP: EQUIP; HOLD TO MOVE", "双击穿戴；长按拖动",
                        "A / TAP AGAIN: EQUIP", "A或再次点击：穿戴到身上"), Muted);
   else
-    label(7, 187, hint("TAP AN ITEM, THEN USE", "点击物品后使用或放入快捷栏",
+    label(7, 187, hint("TAP TO HOLD; LONG PRESS TO MOVE", "点选即可手持；长按拖动整理",
                        "A USE   Y TO HOTBAR", "A使用  Y放入当前快捷栏"), Muted);
   button(6, 204, 128, tr("USE / EQUIP", "使用 / 穿戴"), true);
-  button(143, 204, 139, tr("TO HOTBAR", "放到当前快捷栏"));
+  button(143, 204, 139, hint("SORT BAG", "整理背包", "SELECT SORT", "SELECT整理"));
 }
 void storage_draw() {
   heading(tr("TRAVELLER'S STORAGE", "远行者储物箱"));
   label(7, 30,
-        tr("TAP BAG TO STORE; CHEST TO TAKE", "点左侧物品存入，点右侧物品取出"),
+        tr("TAP TO STORE / TAKE; HOLD TO MOVE", "点按存取；长按拖动整理"),
         Teal);
   for (int i = 0; i < BagSlots; ++i) {
-    int x = 6 + i % 8 * 24, y = 50 + i / 8 * 25;
-    panel(x, y, 22, 23);
+    int x = 6 + i % 8 * 24, y = 50 + i / 8 * storage_row_height();
+    panel(x, y, 22, storage_row_height() - 2);
     if (selected == i)
-      outline(x, y, 22, 23, GoldInk);
-    icon(x + 3, y + 2, s.bag[i].item);
+      outline(x, y, 22, storage_row_height() - 2, GoldInk);
+    if (inventory_touch.dragging && inventory_slot_at(inventory_touch.x, inventory_touch.y) == i)
+      outline(x, y, 22, storage_row_height() - 2, Teal);
+    icon(x + 3, y + 2, s.bag[i].item,
+         inventory_touch.dragging && inventory_touch.source == i ? 100 : 255);
     if (s.bag[i].count > 1) {
       char b[8];
       std::snprintf(b, sizeof(b), "%u", s.bag[i].count);
-      label(x + 1, y + 21 - pocket::text_height(), b);
+      label(x + 1, y + storage_row_height() - 4 - pocket::text_height(), b);
     }
   }
   for (int i = 0; i < 12; ++i) {
-    int x = 216 + i % 2 * 33, y = 50 + i / 2 * 25;
-    panel(x, y, 29, 23, rgb(74, 69, 54));
+    int x = 216 + i % 2 * 33, y = 50 + i / 2 * storage_row_height();
+    panel(x, y, 29, storage_row_height() - 2, rgb(74, 69, 54));
     if (selected == i + BagSlots)
-      outline(x, y, 29, 23, GoldInk);
-    icon(x + 6, y + 1, s.chest[i].item);
+      outline(x, y, 29, storage_row_height() - 2, GoldInk);
+    if (inventory_touch.dragging && inventory_slot_at(inventory_touch.x, inventory_touch.y) == i + BagSlots)
+      outline(x, y, 29, storage_row_height() - 2, Teal);
+    icon(x + 6, y + 1, s.chest[i].item,
+         inventory_touch.dragging && inventory_touch.source == i + BagSlots ? 100 : 255);
     if (s.chest[i].count > 1) {
       char b[8];
       std::snprintf(b, sizeof(b), "%u", s.chest[i].count);
-      label(x + 1, y + 21 - pocket::text_height(), b);
+      label(x + 1, y + storage_row_height() - 4 - pocket::text_height(), b);
     }
   }
-  wrap(7, 174, 196,
-       tr("Twelve shared slots.\nMove chests; items stay.",
-          "储物箱共享十二格物资。\n移动箱子不会丢失物品。"),
-       Muted, 2);
-  label(8, 209, hint("TAP TO STORE / TAKE", "点击物品：存入或取出",
-                     "PAD SELECT  A STORE  B BACK", "方向键选择 A存入 B返回"),
-        GoldInk);
+  footer_origin();
+  label(7, 174, tr("Keeps hotbar + held item", "保留快捷栏与手持物"), Muted);
+  button(6, 199, 88, hint("QUICK STACK", "快捷收纳", "Y STACK", "Y收纳"));
+  button(100, 199, 88, hint("TAKE ALL", "全部取出", "SELECT TAKE", "SELECT取出"));
+  button(194, 199, 88, hint("SORT CHEST", "整理箱子", "R SORT", "R整理"));
+}
+void inventory_drag_draw() {
+  const auto &drag = inventory_touch;
+  if (!drag.dragging || (view != Bag && view != Storage)) return;
+  const auto &slot = drag.source < BagSlots ? s.bag[drag.source] : s.chest[drag.source - BagSlots];
+  if (!slot.item) return;
+  draw_x = draw_y = 0;
+  int x = std::clamp(drag.x - 11, 2, width() - 25);
+  int y = std::clamp(drag.y - 31, 45, height() - 27);
+  panel(x, y, 23, 25, rgb(45, 67, 67));
+  outline(x, y, 23, 25, GoldInk);
+  icon(x + 3, y + 1, slot.item);
+  if (slot.count > 1) {
+    char count[8]; std::snprintf(count, sizeof(count), "%u", slot.count);
+    label(x + 1, y + 24 - pocket::text_height(), count, Ink);
+  }
 }
 const char *station_name(int id) {
   const char *en[] = {"HAND", "WORKBENCH", "FURNACE", "ANVIL", "STAR ALTAR"},
@@ -603,14 +742,22 @@ const char *station_name(int id) {
   return tr(en[id], cn[id]);
 }
 void crafting_draw() {
-  heading(tr("THE CRAFTING JOURNAL", "合成手册"));
+  heading(tr("CRAFTING", "合成手册"));
   tabs(Crafting);
-  int first = recipe_page * RecipesPerPage;
+  draw_x = draw_y = 0;
+  char filter[48];
+  std::snprintf(filter, sizeof(filter), craft_ready_only ? hint("READY %d", "可制作 %d", "SELECT READY %d", "SELECT可做 %d") : hint("ALL %d", "全部 %d", "SELECT ALL %d", "SELECT全部 %d"), visible_recipes);
+  rect(width() - 162, 12, 98, 15, craft_ready_only ? rgb(64, 90, 82) : Dark);
+  outline(width() - 162, 12, 98, 15, craft_ready_only ? Teal : Muted);
+  center(width() - 162, 13, 98, filter, craft_ready_only ? Teal : Muted);
+  content_origin();
+  int first = recipe_page * recipes_per_page();
   char b[96];
-  for (int row = 0; row < RecipesPerPage; ++row) {
-    int r = first + row;
-    if (r >= RecipeCount)
+  for (int row = 0; row < recipes_per_page(); ++row) {
+    int position = first + row;
+    if (position >= visible_recipes)
       break;
+    int r = recipe_list[position];
     int y = 49 + row * RecipeRowHeight;
     const auto &p = recipes[r];
     bool ready = can_craft(s, r);
@@ -631,29 +778,34 @@ void crafting_draw() {
         at += 74;
       }
   }
+  if (!visible_recipes)
+    wrap(16, 75, 256, tr("No recipes are ready here. Switch to ALL to see ingredients and required stations.",
+                           "当前没有可制作的配方。切换到全部，查看材料和所需设施。"), Muted, 3);
   footer_origin();
-  const auto &p = recipes[recipe];
   int x = 7;
-  for (auto a : p.in)
+  if (recipe >= 0) for (auto a : recipes[recipe].in)
     if (a.item) {
       label(x, 178, tr(items[a.item].en, items[a.item].zh), Muted);
       x += 90;
     }
   button(6, 199, 43, "<");
-  std::snprintf(b, sizeof(b), "%d/%d", recipe_page + 1,
-                (RecipeCount + RecipesPerPage - 1) / RecipesPerPage);
+  std::snprintf(b, sizeof(b), "%d/%d", visible_recipes ? recipe_page + 1 : 0,
+                (visible_recipes + recipes_per_page() - 1) / recipes_per_page());
   center(50, 204, 60, b, Muted);
-  button(111, 199, 123, hint("CRAFT", "合成", "CRAFT   A", "合成   A"),
+  button(111, 199, 76, hint("CRAFT", "合成", "CRAFT   A", "合成   A"),
+         can_craft(s, recipe));
+  button(193, 199, 41, hint("x5", "x5", "Y x5", "Y x5"),
          can_craft(s, recipe));
   button(239, 199, 43, ">");
 }
 void gear_draw() {
   heading(tr("DRESS FOR THE JOURNEY", "旅人的衣橱"));
   tabs(Gear);
-  panel(8, 49, 113, 126, rgb(29, 47, 57));
-  line(18, 173, 112, 173, rgb(66, 85, 88));
-  human(62, 173, art::StandFrame, preview_face, s.equip, s.bag[s.selected].item,
-        255, 4);
+  int preview_floor = height() < 280 ? 145 : 173;
+  panel(8, 49, 113, preview_floor - 47, rgb(29, 47, 57));
+  line(18, preview_floor, 112, preview_floor, rgb(66, 85, 88));
+  human(62, preview_floor, art::StandFrame, preview_face, s.equip, s.bag[s.selected].item,
+        255, height() < 280 ? 3 : 4);
   const char *en[] = {"HELM", "CHEST", "LEGS", "CLOTHES",
                       "CAPE", "BOOTS", "-",    "CHARM"},
              *cn[] = {"头盔", "胸甲", "护腿", "衣服",
@@ -661,8 +813,8 @@ void gear_draw() {
   for (int i = 0; i < 8; ++i) {
     if (i == 6)
       continue;
-    int y = 49 + (i < 6 ? i : i - 1) * 20;
-    rect(129, y, 151, 17, selected == i ? rgb(59, 81, 77) : Panel);
+    int y = 49 + (i < 6 ? i : i - 1) * gear_row_height();
+    rect(129, y, 151, gear_row_height() - 1, selected == i ? rgb(59, 81, 77) : Panel);
     label(133, y + 1, tr(en[i], cn[i]), Muted);
     icon(175, y, s.equip[i]);
     label(194, y + 1,
@@ -719,15 +871,15 @@ void guide_draw() {
   const char *en[][8] = {
       {"01  YOUR FIRST EVENING", "Arrows move. A jumps. B uses items.",
        "X bag. Y craft. L/R select hotbar.",
-       "UP/DOWN aim. Touch a tile to aim.",
+       "UP/DOWN aim; diagonals dig slopes.",
        "Hold B: mine, chop, attack or place.",
-       "SELECT / TALK: furniture and NPCs.",
-       "Bag: tap twice or A to equip clothes.",
+       "Menu toggles the smart cursor.",
+       "Bag: tap to hold; twice to use/equip.",
        "START pauses. Autosave every 8 sec."},
       {"02  FROM WOOD TO CRYSTAL", "Wood + stone: workbench and furnace.",
        "Ore + coal: ingots. Anvil: gear.",
        "Copper pick: gold; iron: crystal.",
-       "Recipes list costs and stations.",
+       "SELECT filters ready recipes.",
        "Gather flowers, fungi, vines, acorns.",
        "Plant acorns in grass or dirt.",
        "DOWN + place planks: build walls."},
@@ -739,43 +891,43 @@ void guide_draw() {
        "SELECT / TALK: open hidden chests.",
        "Craft star heart at altar; summon!",
        "Warden drops: ember cape, star heart."},
-      {"04  SURVIVE & BUILD", "TALK: doors. Jump through platforms.",
-       "Hold DOWN to drop through platforms.",
+      {"04  SURVIVE & BUILD", "Tap doors: open/close. Hold to mine.",
+       "Built backing walls stop indoor spawns.",
+       "Mosslings can open wooden doors.",
        "Beds set home. Recall potions return.",
-       "Water slows falls. Lava hurts.",
-       "Bows need arrows. Wands use mana.",
-       "Cloud boots: 2 jumps. Glow: light.",
+       "DOWN: platforms. Water slows falls.",
+       "Hold jump: higher. Cloud boots: 2 jumps.",
        "Death sends you home, items kept."}};
   const char *cn[][8] = {
       {"一 · 初来星壤", "方向键移动，A跳跃，B使用。",
-       "X背包，Y合成，L/R切换手持。", "上下键瞄准，触屏可点选目标。",
-       "长按B采集、战斗，或放置方块。", "SELECT或互动：家具与NPC。",
-       "背包双击穿戴，外观实时变化。", "START暂停；每八秒自动保存。"},
+       "X背包，Y合成，L/R切换手持。", "上下调方向，斜向移动可挖斜坡。",
+       "长按B采集、战斗，或放置方块。", "智能选块接续采集，菜单可切换。",
+       "背包点选手持，双击使用或穿戴。", "START暂停；每八秒自动保存。"},
       {"二 · 从木材到晶体", "砍树挖石，建工作台与熔炉。",
        "矿石加煤炼锭，铁砧锻造装备。", "铜镐挖金矿，铁镐挖晶体。",
-       "配方显示材料和所需设施。", "采集花草、蘑菇、藤蔓、橡子。",
+       "合成页可筛选当前能制作的配方。", "采集花草、蘑菇、藤蔓、橡子。",
        "橡子种在草地或泥土，随后长树。", "按住下键放木板，可搭背景墙。"},
       {"三 · 来客与古老流光", "向导：挖二十块，再合成十次。",
        "商人：一金锭换八份丝绸。", "铁匠：九铜矿换两铁锭。",
        "园丁：三野花换两生命药水。", "互动打开地下宝箱，寻找宝物。",
        "祭坛合成星核，再互动召唤守卫。", "击败守卫，获得星核和披风。"},
-      {"四 · 生存与家园", "互动开关门；平台可从下方跳上。",
-       "按住下键，可落到平台下方。", "与床互动设家，回城药水返回。",
+      {"四 · 生存与家园", "木门占两格，互动打开或关闭。",
+       "人工背景墙可防止室内刷怪。", "苔木精会开门，其余普通怪不会。",
        "水减缓下落；熔岩会造成伤害。", "弓消耗箭；星杖使用可恢复的魔力。",
        "云靴二段跳；辉光项链照亮周围。", "死亡回家，背包物品会保留。"}};
   const char *touch_en[] = {
       "01  YOUR FIRST EVENING",
-      "Hold arrows to move. Tap JUMP.",
+      "Left stick: move; push up to jump.",
       "Open BAG / CRAFT at the top right.",
       "Tap to aim. Drag to change target.",
-      "Hold USE: mine, chop, fight, place.",
-      "Tap TALK: furniture and nearby NPCs.",
+      "Hold USE to mine, fight or build.",
+      "Tap furniture; hold tools to remove.",
       "Bag: tap twice to equip clothes.",
       "Menu pauses. Autosave every 8 sec."};
   const char *touch_cn[] = {
-      "一 · 初来星壤", "按住方向按钮移动，点击跳跃。",
+      "一 · 初来星壤", "左摇杆移动，上推或点跳跃起跳。",
       "右上角打开背包或合成手册。", "触屏点选目标，拖动切换目标。",
-      "长按使用采集、战斗或放置。", "点击互动：家具与附近的NPC。",
+      "长按使用采集、战斗或放置。", "手持镐斧也可轻点互动，长按破坏。",
       "背包双击穿戴，外观实时变化。", "菜单暂停；每八秒自动保存。"};
   if (guide_page < 4) {
     for (int i = 0; i < 8; ++i) {
@@ -848,32 +1000,136 @@ void dialogue_draw() {
                            "B RETURN TO THE WORLD", "B返回世界"));
 }
 void swap_hotbar() {
+  last_bag_tap = -1;
   if (selected < 0 || selected >= BagSlots)
     return;
-  std::swap(s.bag[selected], s.bag[s.selected]);
+  int target = s.selected < HotSlots ? s.selected : 0;
+  std::swap(s.bag[selected], s.bag[target]);
   s.dirty = true;
   sound(530);
   pocket::save();
 }
 void bag_activate() {
+  last_bag_tap = -1;
+  auto kind = items[s.bag[selected].item].kind;
   if (activate(s, selected)) {
     sound(640);
     pocket::save();
+    if (kind == Pick || kind == Axe || kind == Sword || kind == Bow ||
+        kind == Wand || kind == Block || kind == Furniture)
+      set_view(World);
   } else
-    notify("Select a tool or move it to the hotbar.",
-           "工具和方块请先放到快捷栏使用。");
+    notify("This item cannot be used right now.", "这个物品暂时无法使用。");
 }
-void do_craft() {
-  if (craft(s, recipe)) {
+void select_bag_item(int slot) {
+  selected = slot;
+  if (slot < 0 || slot >= BagSlots || s.selected == slot) return;
+  s.selected = uint8_t(slot);
+  s.dirty = true;
+  pocket::save();
+}
+void inventory_action(int action) {
+  last_bag_tap = -1;
+  bool changed = false;
+  int moved = 0;
+  if (action == 81) {
+    changed = sort_inventory(s);
+    notify("Bag sorted. Hotbar and held stack kept.", "背包已整理，快捷栏和手持物保留原位。");
+  } else if (action == 86 || action == 87) {
+    moved = action == 86 ? quick_stack(s) : take_all(s);
+    changed = moved > 0;
+    if (changed) {
+      std::snprintf(message, sizeof(message), action == 86 ? tr("STORED %d ITEMS", "已收纳 %d 件物品") : tr("TOOK %d ITEMS", "已取出 %d 件物品"), moved);
+      event_at = animation + 3000;
+    } else
+      notify(action == 86 ? "No matches / chest full." : "Bag full / chest empty.",
+             action == 86 ? "无可收纳物品，或箱子已满。" : "背包已满，或箱子已空。");
+  } else if (action == 88) {
+    changed = sort_inventory(s, true);
+    notify("Chest sorted.", "储物箱已整理。");
+  }
+  if (changed) { sound(600); pocket::save(); }
+  pocket::redraw();
+}
+void do_craft(int batches = 1) {
+  int completed = craft_batch(s, recipe, batches);
+  if (completed) {
+    const auto &p = recipes[recipe];
+    std::snprintf(message, sizeof(message), "+%u %s", unsigned(completed * p.count),
+                  tr(items[p.out].en, items[p.out].zh));
+    event_at = animation + 3000;
+    last_event = s.event_serial;
     sound(720);
     pocket::save();
+    refresh_recipes();
   } else {
-    notify("Missing ingredients, station, or bag space.",
-           "请检查材料、所需设施和背包空间。");
+    auto reason = craft_status(s, recipe);
+    if (reason == CraftStatus::Station) {
+      std::snprintf(message, sizeof(message), tr("NEED: %s", "需要靠近：%s"), station_name(recipes[recipe].station));
+      event_at = animation + 4200;
+    } else if (reason == CraftStatus::Ingredients) {
+      for (auto a : recipes[recipe].in) if (a.item && count(s, a.item) < a.count) {
+        std::snprintf(message, sizeof(message), tr("NEED %d MORE %s", "还缺 %d 份%s"), a.count - count(s, a.item), tr(items[a.item].en, items[a.item].zh));
+        event_at = animation + 4200;
+        break;
+      }
+    } else if (reason == CraftStatus::Space)
+      notify("Free some bag space for the result.", "背包空间不足，请先腾出成品位置。");
+    else notify("Switch to ALL to find more recipes.", "切换到全部，查看材料与所需设施。");
     sound(180);
   }
 }
+bool interactive_furniture(int t) {
+  return door(t) || t == Chest || t == StorageChest || t == Bed ||
+         t == Bench || t == Furnace || t == Anvil || t == Portal;
+}
+bool target_interaction(int world_x, int world_y) {
+  int x = world_x / 16, y = world_y / 16;
+  int t = tile(s, x, y);
+  if (interactive_furniture(t)) {
+    if (!interaction_range(s, x, y)) {
+      notify("Move closer to interact.", "靠近后再点击互动。");
+      return true;
+    }
+    s.target_x = x; s.target_y = y;
+    if (t == StorageChest) { set_view(Storage); selected = 0; }
+    else if (t == Bench || t == Furnace || t == Anvil) {
+      int facility = t == Bench ? Table : t == Furnace ? Kiln : Forge;
+      craft_ready_only = false;
+      set_view(Crafting);
+      for (int i = 0; i < RecipeCount; ++i)
+        if (recipes[i].station == facility) { recipe = i; break; }
+      recipe_page = recipe / recipes_per_page();
+    } else if (interact_at(s, x, y)) pocket::save();
+    return true;
+  }
+  for (int i = 0; i < 4; ++i) {
+    const auto &person = s.npcs[i];
+    if (person.hp <= 0 || std::fabs(world_x - person.x) > 12 ||
+        world_y < person.y - 32 || world_y > person.y + 2) continue;
+    if (!interaction_range(s, int(person.x / 16), int((person.y - 12) / 16)))
+      notify("Move closer to talk.", "靠近后再点击交谈。");
+    else { npc = i; set_view(Dialogue); }
+    return true;
+  }
+  return false;
+}
 void do_interact() {
+  if (interactive_furniture(tile(s, s.target_x, s.target_y)) &&
+      interaction_range(s, s.target_x, s.target_y)) {
+    target_interaction(s.target_x * 16 + 8, s.target_y * 16 + 8);
+    return;
+  }
+  // A nearby NPC behind the player must not steal the door interaction.
+  int px = int(s.player.x / 16), py = int((s.player.y - 12) / 16);
+  for (int dx = 0; dx <= 3; ++dx)
+    for (int dy = -1; dy <= 1; ++dy) {
+      int x = px + (s.player.face ? dx : -dx), y = py + dy;
+      if (!door(tile(s, x, y))) continue;
+      s.target_x = x; s.target_y = y;
+      if (interact(s)) pocket::save();
+      return;
+    }
   if (nearby_storage(s)) {
     set_view(Storage);
     selected = 0;
@@ -894,45 +1150,59 @@ int hit(int x, int y) {
   if (home_view()) return home_hit(x, y);
   if (view != World) {
     const int physical_y = y;
-    if (y < 25 && x > width() - 48)
+    if (view == Crafting && y >= 14 && y < 28 && x >= width() - 162 && x < width() - 64)
+      return 94;
+    if (y >= 14 && y < 28 && x > width() - 64 && x < width() - 40)
       return 99;
     if (view >= Bag && view <= Guide && y >= 28 && y < 44)
       return 100 + std::clamp((x - 5) * 5 / (width() - 8), 0, 4);
     x -= content_x();
     y -= content_y();
-    if ((view == Bag && y + content_y() >= height() - 50) ||
-        (view == Crafting && y + content_y() >= height() - 50) ||
-        (view == Gear && y + content_y() >= height() - 26) ||
-        (view == Guide && y + content_y() >= height() - 26))
-      y += content_y() - (height() - 224);
+    if (view == Storage && physical_y >= height() - 25 - FooterInset && physical_y < height() - 5 - FooterInset) {
+      if (x >= 6 && x < 94) return 86;
+      if (x >= 100 && x < 188) return 87;
+      if (x >= 194 && x < 282) return 88;
+      return -1;
+    }
+    if ((view == Bag && y + content_y() >= height() - 50 - FooterInset) ||
+        (view == Crafting && y + content_y() >= height() - 50 - FooterInset) ||
+        (view == Gear && y + content_y() >= height() - 26 - FooterInset) ||
+        (view == Guide && y + content_y() >= height() - 26 - FooterInset))
+      y += content_y() - (height() - 224 - FooterInset);
     if (view == Bag) {
       if (x >= 210 && y >= 50 && y < 170)
         return 84;
-      if (x >= 6 && x < 206 && y >= 50 && y < 170)
-        return (y - 50) / 24 * 8 + (x - 6) / 25;
-      if (y >= 204 && physical_y >= height() - 20)
+      if (x >= 6 && x < 206 && y >= 50 && y < 50 + 5 * bag_row_height())
+        return (y - 50) / bag_row_height() * 8 + (x - 6) / 25;
+      if (y >= 204 && physical_y >= height() - 20 - FooterInset)
         return x < 140 ? 80 : 81;
     }
     if (view == Crafting) {
-      if (y >= 49 && y < 49 + RecipesPerPage * RecipeRowHeight)
-        return 120 + recipe_page * RecipesPerPage + (y - 49) / RecipeRowHeight;
-      if (y >= 199 && physical_y >= height() - 25)
-        return x < 55 ? 90 : x > 235 ? 91 : 92;
+      if (x >= 6 && x < 282 && y >= 49 && y < 49 + recipes_per_page() * RecipeRowHeight) {
+        int position = recipe_page * recipes_per_page() + (y - 49) / RecipeRowHeight;
+        return position < visible_recipes ? 120 + recipe_list[position] : -1;
+      }
+      if (y >= 199 && y < 219 && physical_y >= height() - 25 - FooterInset) {
+        if (x >= 6 && x < 49) return 90;
+        if (x >= 239 && x < 282) return 91;
+        if (x >= 111 && x < 187) return 92;
+        if (x >= 193 && x < 234) return 93;
+      }
     }
-    if (view == Gear && x >= 129 && y >= 49 && y < 189) {
-      int row = (y - 49) / 20;
+    if (view == Gear && x >= 129 && y >= 49 && y < 49 + 7 * gear_row_height()) {
+      int row = (y - 49) / gear_row_height();
       return 140 + (row < 6 ? row : 7);
     }
-    if (view == Gear && y >= 203 && physical_y >= height() - 21)
+    if (view == Gear && y >= 203 && physical_y >= height() - 21 - FooterInset)
       return 82;
-    if (view == Gear && x < 126 && y >= 49 && y < 175)
+    if (view == Gear && x < 126 && y >= 49 && y < (height() < 280 ? 147 : 175))
       return 84;
-    if (view == Guide && y >= 200 && physical_y >= height() - 24)
+    if (view == Guide && y >= 200 && physical_y >= height() - 24 - FooterInset)
       return x < 80 ? 90 : x > 210 ? 91 : -1;
-    if (view == Storage && x >= 6 && x < 198 && y >= 50 && y < 175)
-      return 160 + (y - 50) / 25 * 8 + (x - 6) / 24;
-    if (view == Storage && x >= 216 && x < 282 && y >= 50 && y < 200)
-      return 200 + (y - 50) / 25 * 2 + (x - 216) / 33;
+    if (view == Storage && x >= 6 && x < 198 && y >= 50 && y < 50 + 5 * storage_row_height())
+      return 160 + (y - 50) / storage_row_height() * 8 + (x - 6) / 24;
+    if (view == Storage && x >= 216 && x < 282 && y >= 50 && y < 50 + 6 * storage_row_height())
+      return 200 + (y - 50) / storage_row_height() * 2 + (x - 216) / 33;
     if (view == Dialogue && y >= 173 && y < 193)
       return 83;
     if (view == Dialogue && y >= 200)
@@ -940,20 +1210,23 @@ int hit(int x, int y) {
     return -1;
   }
   if (y < 31)
-    return x >= width() - 88 && x < width() - 24 ? (y < 15 ? 20 : 21) : -1;
-  if (y >= 34 && y < 57 && x < 196)
-    return 30 + std::clamp((x - 4) / 24, 0, 7);
+    return y >= 14 && x >= width() - 116 && x < width() - 40
+               ? (x < width() - 80 ? 20 : 21) : -1;
+  if (y >= 34 && y < 57 && x >= 20 && x < 212)
+    return 30 + std::clamp((x - 20) / 24, 0, 7);
+  if (s.selected >= HotSlots && y >= 34 && y < 57 && x >= 216 && x < 238)
+    return 20;
   if (x >= width() - 90 && y >= 62 && y < 99)
     return -1;
-  if (y >= height() - 28)
-    return x * 288 / width() < 35    ? 10
-           : x * 288 / width() < 70  ? 11
-           : x * 288 / width() < 108 ? 12
-           : x * 288 / width() < 154 ? 13
-           : x * 288 / width() < 210 ? 14
-                                     : 15;
-  if (y >= 57 && y < scene_bottom())
-    return 16;
+  int control = touch_layout().hit(x,y);
+  if (control >= 0) return control;
+  if (y >= 57 && y < height()) return 16;
+  return -1;
+}
+int inventory_slot_at(int x, int y) {
+  int id = hit(x, y);
+  if (view == Bag && id >= 0 && id < BagSlots) return id;
+  if (view == Storage && id >= 160 && id < 212) return id - 160;
   return -1;
 }
 void click(int id) {
@@ -978,13 +1251,15 @@ void click(int id) {
   }
   if (view == Bag) {
     if (id >= 0 && id < 40) {
-      if (selected == id)
-        bag_activate();
-      selected = id;
+      bool twice = last_bag_tap == id && animation - last_bag_tap_at <= 360;
+      last_bag_tap = twice ? -1 : id;
+      last_bag_tap_at = animation;
+      select_bag_item(id);
+      if (twice) bag_activate();
     } else if (id == 80)
       bag_activate();
     else if (id == 81)
-      swap_hotbar();
+      inventory_action(81);
   } else if (view == Crafting) {
     if (id >= 120 && id < 120 + RecipeCount) {
       int next = id - 120;
@@ -992,11 +1267,16 @@ void click(int id) {
         do_craft();
       recipe = next;
     } else if (id == 90 || id == 91) {
-      int pages = (RecipeCount + RecipesPerPage - 1) / RecipesPerPage;
+      int pages = (visible_recipes + recipes_per_page() - 1) / recipes_per_page();
+      if (!pages) return;
       recipe_page = (recipe_page + (id == 90 ? pages - 1 : 1)) % pages;
-      recipe = recipe_page * RecipesPerPage;
+      recipe = recipe_list[recipe_page * recipes_per_page()];
     } else if (id == 92)
       do_craft();
+    else if (id == 93)
+      do_craft(5);
+    else if (id == 94)
+      toggle_craft_filter();
   } else if (view == Gear) {
     if (id >= 140 && id < 148) {
       selected = id - 140;
@@ -1010,6 +1290,8 @@ void click(int id) {
     trade(s, npc);
     pocket::save();
     sound(580);
+  } else if (view == Storage && id >= 86 && id <= 88) {
+    inventory_action(id);
   } else if (view == Storage && id >= 160 && id < 212) {
     bool ok = id < 200 ? store(s, id - 160) : withdraw(s, id - 200);
     if (ok) {
@@ -1038,6 +1320,12 @@ void init() {
   session_active = false;
   save_error = false;
   view = Title;
+  touches.clear();
+  scene_touch = {};
+  stick_dx = stick_dy = 0;
+  craft_ready_only = false;
+  recipe = 0;
+  refresh_recipes();
   animation = autosave = 0;
   tool_animation = {};
   last_event = event_at = 0;
@@ -1079,14 +1367,23 @@ bool inspect_world(const uint8_t *data, size_t size, pocket::WorldInfo &info) {
   return true;
 }
 void key(Key k) {
+  if (inventory_touch.source >= 0) {
+    inventory_touch = {};
+    touch = -1; touch_down = false;
+  }
+  last_bag_tap = -1;
   if (home_view()) { home_key(k); return; }
   if (k == Key::X) {
     set_view(view == Bag ? World : Bag);
     return;
   }
   if (k == Key::Y) {
-    if (view == Bag)
+    if (view == Crafting)
+      do_craft(5);
+    else if (view == Bag)
       swap_hotbar();
+    else if (view == Storage)
+      inventory_action(86);
     else
       set_view(view == Crafting ? World : Crafting);
     return;
@@ -1098,20 +1395,27 @@ void key(Key k) {
   if (k == Key::SELECT) {
     if (view == World)
       do_interact();
+    else if (view == Bag)
+      inventory_action(81);
+    else if (view == Storage)
+      inventory_action(87);
+    else if (view == Crafting)
+      toggle_craft_filter();
     else
       set_view(Guide);
     return;
   }
   if (view == World) {
     if (k == Key::L)
-      s.selected = (s.selected + 7) % 8;
+      s.selected = s.selected < HotSlots ? (s.selected + 7) % 8 : 7;
     if (k == Key::R)
-      s.selected = (s.selected + 1) % 8;
+      s.selected = s.selected < HotSlots ? (s.selected + 1) % 8 : 0;
     if (k == Key::A)
       jump_edge = true;
     return;
   }
   if (k == Key::L || k == Key::R) {
+    if (view == Storage && k == Key::R) { inventory_action(88); return; }
     if (view >= Bag && view <= Guide)
       set_view(View(Bag + (int(view) - Bag + (k == Key::R ? 1 : 4)) % 5));
     return;
@@ -1125,19 +1429,18 @@ void key(Key k) {
       selected = (selected + 32) % 40;
     if (k == Key::DOWN)
       selected = (selected + 8) % 40;
+    if (k == Key::LEFT || k == Key::RIGHT || k == Key::UP || k == Key::DOWN)
+      select_bag_item(selected);
     if (k == Key::A)
       bag_activate();
   }
   if (view == Crafting) {
-    if (k == Key::UP)
-      recipe = (recipe + RecipeCount - 1) % RecipeCount;
-    if (k == Key::DOWN)
-      recipe = (recipe + 1) % RecipeCount;
-    if (k == Key::LEFT)
-      recipe = (recipe + RecipeCount - RecipesPerPage) % RecipeCount;
-    if (k == Key::RIGHT)
-      recipe = (recipe + RecipesPerPage) % RecipeCount;
-    recipe_page = recipe / RecipesPerPage;
+    if (visible_recipes) {
+      int step = k == Key::UP ? -1 : k == Key::DOWN ? 1 : k == Key::LEFT ? -recipes_per_page() : k == Key::RIGHT ? recipes_per_page() : 0;
+      int position = (recipe_position() + step + visible_recipes * 4) % visible_recipes;
+      recipe = recipe_list[position];
+      recipe_page = position / recipes_per_page();
+    }
     if (k == Key::A)
       do_craft();
   }
@@ -1180,76 +1483,180 @@ void key(Key k) {
   }
   pocket::redraw();
 }
-void pointer(Phase phase, int x, int y) {
+bool uses_ui_pointer(int x, int y) { return view != World || hit(x, y) != 16; }
+void cancel_input() {
+  touches.clear();
+  inventory_touch = {};
+  scene_touch = {};
+  touch=-1;touch_down=false;last_bag_tap=-1;
+  jump_edge=gesture_jump=false;stick_dx=stick_dy=0;
+  aim_x=aim_y=-1;use_blocked=true;
+}
+bool smart_cursor_enabled() { return smart_mode; }
+void set_smart_cursor(bool enabled) {
+  if(smart_mode==enabled)return;
+  smart_mode=enabled;s.mining=0;s.smart_cursor=false;s.target_ready=true;
+  cancel_input();pocket::redraw();
+}
+void menu_pointer(Phase phase, int x, int y) {
   if (phase == Phase::CANCEL) {
+
+    inventory_touch = {};
+    last_bag_tap = -1;
     touch = -1;
     touch_down = false;
-    aim_x = aim_y = -1;
     return;
   }
   if (phase == Phase::DOWN) {
+
+    inventory_touch = {};
     gesture_jump = false;
     touch = hit(x, y);
     touch_down = true;
-    if (touch == 14)
-      jump_edge = true;
-    if (view == World && touch == 16) {
-      aim_x = (x + cx) / 16;
-      aim_y = (y + cy) / 16;
+    int slot = inventory_slot_at(x, y);
+    if (slot >= 0 && (slot < BagSlots ? s.bag[slot].item : s.chest[slot - BagSlots].item)) {
+      inventory_touch.source = slot;
+      inventory_touch.start_x = inventory_touch.x = x;
+      inventory_touch.start_y = inventory_touch.y = y;
     }
     return;
   }
   if (phase == Phase::MOVE) {
-    if (view == World && touch == 16) {
-      aim_x = (x + cx) / 16;
-      aim_y = (y + cy) / 16;
-    }
-    if (view == World && (touch == 10 || touch == 11)) {
-      if (y < scene_bottom() - 4 && !gesture_jump) {
-        jump_edge = true;
-        gesture_jump = true;
-      }
-      if (y >= height() - 31)
-        gesture_jump = false;
+    if (inventory_touch.source >= 0) {
+      auto &drag = inventory_touch;
+      drag.x = x; drag.y = y;
+      if (!drag.dragging && (std::abs(x - drag.start_x) > 8 || std::abs(y - drag.start_y) > 8))
+        drag.cancelled = true;
     }
     return;
   }
   if (phase == Phase::UP) {
+
     int was = touch;
     touch_down = false;
     touch = -1;
-    if (was == hit(x, y) && was != 10 && was != 11 && was != 12 && was != 14 &&
-        was != 15 && was != 16)
+    if (inventory_touch.source >= 0) {
+      auto drag = inventory_touch;
+      inventory_touch = {};
+      if (drag.dragging) {
+        last_bag_tap = -1;
+        int target = inventory_slot_at(x, y);
+        if (move_stack(s, drag.source, target)) {
+          selected = target;
+          pocket::save(); sound(530);
+        }
+      } else if (!drag.cancelled && was == hit(x, y)) click(was);
+      else last_bag_tap = -1;
+      pocket::redraw();
+      return;
+    }
+    bool world_control = view == World &&
+        (was == 10 || was == 11 || was == 12 || was == 14 || was == 15 || was == 16);
+    if (was == hit(x, y) && !world_control)
       click(was);
-    aim_x = aim_y = -1;
   }
+}
+void pointer(Phase phase, int x, int y, uint32_t id) {
+  auto *p=touches.find(id);
+  if (phase == Phase::CANCEL && p && (p->role == 14 || p->role == 17)) jump_edge = false;
+  if(phase==Phase::DOWN) {
+    p=touches.begin(id);
+    if(!p)return;
+    int role=view==World?hit(x,y):1;
+    if(role!=13 && role!=14 && role!=15 && role!=16 && role!=17)role=1;
+    // One owner per control, and one inventory/menu drag at a time.
+    if(touches.owns(role)) { p->consumed=true; return; }
+    p->role=role;p->x=x;p->y=y;
+    if(role==1)menu_pointer(phase,x,y);
+    else if(role==17) {
+      stick_x=std::clamp(x,49,std::min(100,width()/3));
+      stick_y=std::clamp(y,std::max(122,height()-116),height()-55);
+      stick_dx=stick_dy=0;
+      gesture_jump=false;
+    } else if(role==14)jump_edge=true;
+    else if(role==15)scene_touch.tap=false;
+    else if(role==13)do_interact();
+    else if(role==16) {
+      aim_x=(x+cx)/16;aim_y=(y+cy)/16;
+      auto kind=items[s.bag[s.selected].item].kind;
+      scene_touch={x,y,x+cx,y+cy,0,kind==Pick || kind==Axe,
+                   !touches.owns(15) && !(pocket::held(Key::B) && !use_blocked)};
+      if(!scene_touch.deferred && target_interaction(x+cx,y+cy))
+        p->role=0; // This gesture is an interaction, never an attack.
+    }
+  } else {
+    if(!p)return;
+    p->x=x;p->y=y;
+    if(p->role==1)menu_pointer(phase,x,y);
+    else if(phase==Phase::MOVE && p->role==17) {
+      int dx=x-stick_x,dy=y-stick_y;
+      float length=std::sqrt(float(dx)*dx+float(dy)*dy);
+      float scale=length>24?24/length:1;
+      stick_dx=int(dx*scale);stick_dy=int(dy*scale);
+      if(stick_dy < -14 && !gesture_jump) { jump_edge=true; gesture_jump=true; }
+      if(stick_dy >= -10)gesture_jump=false;
+    } else if(phase==Phase::MOVE && p->role==16) {
+      aim_x=(x+cx)/16;aim_y=(y+cy)/16;
+      if(std::abs(x-scene_touch.start_x)>8 || std::abs(y-scene_touch.start_y)>8)
+        scene_touch.tap=false;
+    }
+    if(phase==Phase::UP || phase==Phase::CANCEL) {
+      if(p->role==16) {
+        // Tools wait for a deliberate hold. A short release only interacts
+        // with the original target; dragging/cancellation never clicks it.
+        auto gesture=scene_touch;
+        scene_touch={};
+        if(phase==Phase::UP && gesture.deferred && !gesture.ready() && gesture.tap &&
+           hit(x,y)==16 && std::abs(x-gesture.start_x)<=8 && std::abs(y-gesture.start_y)<=8)
+          target_interaction(gesture.world_x,gesture.world_y);
+      }
+      if(p->role==17)stick_dx=stick_dy=0;
+      if(p->role==16 || p->role==0) {
+        // A blocked secondary finger cannot reset another finger's target.
+        if(!touches.owns(16) || p->role==16)aim_x=aim_y=-1;
+      }
+      *p={};
+    }
+  }
+  pocket::redraw();
 }
 void tick(uint32_t ms) {
   ms = std::min(ms, 100u);
   animation += ms;
   paint += ms;
+  if (touch_down && inventory_touch.source >= 0 && !inventory_touch.cancelled &&
+      !inventory_touch.dragging) {
+    inventory_touch.elapsed += uint16_t(ms);
+    if (inventory_touch.elapsed >= 300) {
+      inventory_touch.dragging = true;
+      selected = inventory_touch.source;
+      last_bag_tap = -1;
+      sound(470);
+    }
+  }
   if (view == World) {
     Input input;
     input.move =
         (pocket::held(Key::RIGHT) ? 1 : 0) - (pocket::held(Key::LEFT) ? 1 : 0);
-    if (touch_down && touch == 10)
-      input.move = -1;
-    if (touch_down && touch == 11)
-      input.move = 1;
-    input.down = pocket::held(Key::DOWN) || (touch_down && touch == 12);
-    input.jump =
-        pocket::held(Key::A) || (touch_down && touch == 14) || jump_edge;
-    if (!pocket::held(Key::B))
-      use_blocked = false;
-    input.use = (pocket::held(Key::B) && !use_blocked) ||
-                (touch_down && (touch == 15 || touch == 16));
-    input.aim_y = pocket::held(Key::UP) ? -1 : input.down ? 1 : 0;
+    if (touches.owns(17)) input.move = stick_dx > 7 ? 1 : stick_dx < -7 ? -1 : 0;
+    input.down = pocket::held(Key::DOWN) || (touches.owns(17) && stick_dy > 14);
+    input.jump = pocket::held(Key::A) || touches.owns(14) || jump_edge ||
+                 (touches.owns(17) && stick_dy < -14);
+    if (!pocket::held(Key::B)) use_blocked = false;
+    const bool explicit_use = (pocket::held(Key::B) && !use_blocked) || touches.owns(15);
+    const bool scene_held = touches.owns(16);
+    if(explicit_use && scene_held)scene_touch.tap=false;
+    input.aim_y = pocket::held(Key::UP) || (touches.owns(17) && stick_dy < -14) ? -1 : input.down ? 1 : 0;
     input.target_x = aim_x;
     input.target_y = aim_y;
+    input.smart_cursor = smart_mode;
     uint32_t remaining = ms;
     while (remaining) {
       uint32_t step = std::min(remaining, 20u);
+      input.use = explicit_use || (scene_held && scene_touch.ready());
       starsoil::tick(s, input, step);
+      if(scene_held && scene_touch.deferred)
+        scene_touch.elapsed=uint16_t(std::min<uint32_t>(SceneTouch::HoldMs,scene_touch.elapsed+step));
       remaining -= step;
     }
     tool_animation.step(input.use, s.bag[s.selected].item, ms);
@@ -1271,7 +1678,7 @@ void tick(uint32_t ms) {
     event_at = animation + 4500;
   }
   if (paint >= 40) {
-    paint = 0;
+    paint %= 40;
     pocket::redraw();
   }
 }
@@ -1283,17 +1690,18 @@ void draw() {
     scene();
     pocket::begin_ui(true);
     scene_labels();
+    pocket::begin_controls();
     hud();
-    label(
-        6, scene_bottom(),
-        tr(items[s.bag[s.selected].item].en, items[s.bag[s.selected].item].zh),
-        GoldInk);
+    bool boss_active=false;
+    for(const auto &m:s.mobs)if(m.hp>0 && m.type==5)boss_active=true;
+    if(!boss_active) center(20, 59, width() - 116,
+           tr(items[s.bag[s.selected].item].en, items[s.bag[s.selected].item].zh), GoldInk);
     if (animation < event_at) {
       const int rows =
           std::strchr(message, '\n') || text_width(message) > 268 ? 2 : 1;
-      const int height = rows * pocket::text_line_height() + 6,
-                top = scene_bottom() - 2 - height;
-      panel(5, top, width() - 10, height);
+      const int toast_height = rows * pocket::text_line_height() + 6,
+                top = std::max(62, height() - 147 - toast_height);
+      panel(5, top, width() - 10, toast_height);
       wrap(10, top + 3, width() - 20, message, Ink, rows);
     }
   } else if (view == Bag)
@@ -1318,9 +1726,15 @@ void draw() {
             : view == Bag      ? 187
             : view == Dialogue ? 157
                                : 180;
-    rect(0, y, 288, pocket::text_height(), Dark);
-    wrap(6, y, 276, message, GoldInk, 1);
+    if (view == Storage) {
+      rect(0, 174, 198, pocket::text_height(), Dark);
+      center(6, 174, 190, message, GoldInk);
+    } else {
+      rect(0, y, 288, pocket::text_height(), Dark);
+      wrap(6, y, 276, message, GoldInk, 1);
+    }
   }
+  inventory_drag_draw();
   draw_x = draw_y = 0;
   if (save_error || pocket::save_status() < 0) {
     rect(0, 0, width() - 24, pocket::text_height() + 2, Dark);
@@ -1328,8 +1742,11 @@ void draw() {
           Red);
   }
 }
-size_t serialize(uint8_t *data, size_t capacity) {
-  return !session_active || save_error ? 0 : encode(s, data, capacity);
+size_t serialize(uint8_t *data, size_t capacity, bool seal) {
+  return !session_active || save_error ? 0 : encode(s, data, capacity, seal);
+}
+void describe_world(pocket::WorldInfo &info) {
+  info = {true, session_active && !save_error, s.width, s.height, s.seed, s.day, s.played};
 }
 bool load(const uint8_t *data, size_t size) {
   if (!decode(s, data, size)) {

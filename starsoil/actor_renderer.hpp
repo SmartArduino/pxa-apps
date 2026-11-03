@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 #include "art.hpp"
+#include "color_math.hpp"
+#include "indexed_sprite.hpp"
 #include "items.hpp"
+#include "aim_geometry.hpp"
 #include <algorithm>
+#include <cstdlib>
 #include <cstdint>
 
 // The game and native anatomy checks use this exact compositor.
@@ -63,6 +67,10 @@ struct Appearance {
   const uint8_t *equipment = nullptr;
   uint8_t held = 0;
   int action_frame = -1;
+  bool aimed = false;
+  float aim_x = 1, aim_y = 0;
+  int bow_draw = 256;
+  bool bow_loaded = true;
 };
 constexpr uint16_t rgb(unsigned r, unsigned g, unsigned b) {
   return uint16_t(((r & 248) << 8) | ((g & 252) << 3) | (b >> 3));
@@ -72,14 +80,10 @@ constexpr uint16_t color(uint32_t c) {
 }
 inline uint16_t dim(uint16_t c, int v) {
   v = std::clamp(v, 0, 255);
-  return uint16_t(((((c >> 11) & 31) * v / 255) << 11) |
-                  ((((c >> 5) & 63) * v / 255) << 5) | ((c & 31) * v / 255));
+  return starsoil_color::dim(c, unsigned(v));
 }
 inline uint16_t mix(uint16_t a, uint16_t b, int k) {
-  return uint16_t(
-      (((((a >> 11) & 31) * (255 - k) + ((b >> 11) & 31) * k) / 255) << 11) |
-      (((((a >> 5) & 63) * (255 - k) + ((b >> 5) & 63) * k) / 255) << 5) |
-      (((a & 31) * (255 - k) + (b & 31) * k) / 255));
+  return starsoil_color::mix(a, b, unsigned(k));
 }
 inline Pose pose(uint8_t item, bool active) {
   auto kind = starsoil::items[item].kind;
@@ -147,6 +151,16 @@ inline int arm_bob(const Appearance &a) {
                                                : 0;
 }
 inline Point joint(const Appearance &a, Joint j) {
+  if(a.aimed && (j==Hand || j==Offhand || j==Elbow || j==FarElbow) &&
+     pose(a.held,a.using_item)==BowAim) {
+    auto b=starsoil_aim::bow(a.face?a.aim_x:-a.aim_x,a.aim_y,
+                            art::body_bob[0][body_frame(a)],a.bow_draw);
+    auto point=[](starsoil_aim::Vector v) { return Point{int(std::lround(v.x)),int(std::lround(v.y))}; };
+    if(j==Hand)return point(b.string);
+    if(j==Offhand)return point(b.support);
+    if(j==Elbow)return point(b.camera_elbow);
+    if(j==FarElbow)return point(b.rear_elbow);
+  }
   bool limb = int(j) <= int(FarElbow) && j != Neck;
   Point v = limb ? joint(pose(a.held, a.using_item), action_frame(a), j)
                  : joint(Walk, body_frame(a), j);
@@ -154,8 +168,8 @@ inline Point joint(const Appearance &a, Joint j) {
     v.y += arm_bob(a);
   return v;
 }
-inline int locomotion_frame(bool grounded, bool moving, uint32_t phase) {
-  return !grounded ? art::JumpFrame
+inline int locomotion_frame(bool grounded, bool moving, uint32_t phase, float vy=-100) {
+  return !grounded ? (vy < -65 ? art::JumpFrame : vy > 65 ? art::FallFrame : art::ApexFrame)
          : moving  ? int(phase % art::WalkFrames)
                    : art::StandFrame;
 }
@@ -212,13 +226,14 @@ template <class Plot> void draw(const Appearance &a, Plot plot) {
       for (int sx = 0; sx < a.scale; ++sx)
         plot(v.x + sx, v.y + sy, dim(c, a.light), tag, index);
   };
-  auto indexed = [&](const uint8_t *data, const uint16_t *palette, Tag tag,
+  auto indexed = [&](IndexedImage sprite, const uint16_t *palette, Tag tag,
                      int dy = 0) {
-    for (int y = 0; y < art::HumanHeight; ++y)
-      for (int x = 0; x < art::HumanWidth; ++x) {
-        uint8_t v = data[y * art::HumanWidth + x];
-        if (tag == Tag::Body && eq[0] && y < joint(a, Neck).y) {
-          int bob = joint(a, Neck).y - 13;
+    const int neck_y = joint(a, Neck).y, bob = neck_y - 13;
+    for (int i = 0; i < sprite.count; ++i) {
+        uint16_t command = sprite.pixels[i];
+        int x = command & 31, y = (command >> 5) & 31;
+        uint8_t v = uint8_t(command >> 10);
+        if (tag == Tag::Body && eq[0] && y < neck_y) {
           if (eq[0] == StrawHat) {
             if (y < 6 + bob)
               continue;
@@ -229,19 +244,52 @@ template <class Plot> void draw(const Appearance &a, Plot plot) {
               continue;
           }
         }
-        if (v)
-          dot({x, y + dy}, palette[v], tag, v);
+        dot({x, y + dy}, palette[v], tag, v);
       }
   };
+  auto stroke=[&](Point from,Point to,uint16_t c,Tag tag,int width=1,uint8_t index=0) {
+    int dx=std::abs(to.x-from.x),sx=from.x<to.x?1:-1;
+    int dy=-std::abs(to.y-from.y),sy=from.y<to.y?1:-1,error=dx+dy;
+    for(;;) {
+      for(int y=-(width/2);y<width-width/2;++y)
+        for(int x=-(width/2);x<width-width/2;++x)dot({from.x+x,from.y+y},c,tag,index);
+      if(from.x==to.x && from.y==to.y)break;
+      int e=2*error;if(e>=dy){error+=dy;from.x+=sx;}if(e<=dx){error+=dx;from.y+=sy;}
+    }
+  };
+  const bool aiming=p==BowAim && a.aimed;
+  auto aimed_arm=[&](bool rear,bool fore_only=false) {
+    Point sh=joint(a,rear?FarShoulder:Shoulder),el=joint(a,rear?FarElbow:Elbow),
+          hand=joint(a,rear?Offhand:Hand);
+    const auto *skin=rear?rear_base:base;
+    const Tag arm=rear?Tag::RearArm:Tag::Arm,sleeve=rear?Tag::RearSleeve:Tag::Sleeve;
+    const int width=rear?3:4;
+    if(!fore_only)stroke(sh,el,skin[1],arm,width,1);
+    stroke(el,hand,skin[1],arm,width,1);
+    stroke(el,hand,skin[2],arm,2,2);
+    stroke({el.x-1,el.y},{hand.x-1,hand.y},skin[12],arm,1,12);
+    stroke({el.x+1,el.y},{hand.x+1,hand.y},skin[3],arm,1,3);
+    if(!fore_only) {
+      auto cloth=color(eq[1]?items[eq[1]].color:shirt);
+      int tone=rear?RearArmTone:255;
+      stroke(sh,el,dim(color(0x2a252a),tone),sleeve,width);
+      stroke(sh,el,dim(cloth,tone),sleeve,2);
+      stroke({sh.x-1,sh.y},{el.x-1,el.y},dim(mix(cloth,ink,105),tone),sleeve);
+      stroke({sh.x+1,sh.y},{el.x+1,el.y},dim(cloth,135*tone/255),sleeve);
+      stroke({el.x-1,el.y},{el.x+1,el.y},dim(mix(cloth,ink,45),tone),sleeve);
+    }
+    // Fingers cover the cuff and keep both hands attached at every angle.
+    for(int y=-1;y<=1;++y)for(int x=-1;x<=1;++x)dot({hand.x+x,hand.y+y},skin[2],arm,2);
+  };
   auto data = [&](int part) {
-    return art::humans[art::human_rows[part][frame]];
+    return image<art::humans>(art::human_rows[part][frame]);
   };
   auto arm_data = [&](int part) {
-    return art::humans[art::human_rows[int(p) * art::HumanParts + part]
-                                      [arm_frame]];
+    return image<art::humans>(art::human_rows[int(p) * art::HumanParts + part]
+                                           [arm_frame]);
   };
   auto garment = [&](int part, uint32_t tint, Tag tag, int helmet = 0,
-                     const uint8_t *source = nullptr, int tone = 255,
+                     IndexedImage source = {}, int tone = 255,
                      int dy = 0) {
     uint16_t c = color(tint);
     uint16_t palette[] = {0,
@@ -257,22 +305,25 @@ template <class Plot> void draw(const Appearance &a, Plot plot) {
                           color(0xb47c4b)};
     for (auto &v : palette)
       v = dim(v, tone);
-    indexed(source   ? source
-            : helmet ? art::helmets[(helmet - 1) * art::HumanFrames + frame]
+    indexed(source.pixels ? source
+            : helmet ? image<art::helmets>((helmet - 1) * art::HumanFrames + frame)
                      : data(part),
             palette, tag, dy);
   };
   if (eq[4])
     garment(5, items[eq[4]].color, Tag::Cape);
-  indexed(arm_data(13), rear_base, Tag::RearArm, arm_dy);
-  garment(eq[1] ? 15 : 14, eq[1] ? items[eq[1]].color : shirt, Tag::RearSleeve,
+  if(aiming)aimed_arm(true);
+  else {
+    indexed(arm_data(13), rear_base, Tag::RearArm, arm_dy);
+    garment(eq[1] ? 15 : 14, eq[1] ? items[eq[1]].color : shirt, Tag::RearSleeve,
           0, arm_data(eq[1] ? 15 : 14), RearArmTone, arm_dy);
+  }
   // Assemble each leg with its own worn items before the camera leg covers it.
   indexed(data(17), rear_base, Tag::RearLeg);
   if (eq[2])
-    garment(18, items[eq[2]].color, Tag::RearGreaves, 0, nullptr, RearArmTone);
+    garment(18, items[eq[2]].color, Tag::RearGreaves, 0, {}, RearArmTone);
   if (eq[5])
-    garment(19, items[eq[5]].color, Tag::RearBoots, 0, nullptr, RearArmTone);
+    garment(19, items[eq[5]].color, Tag::RearBoots, 0, {}, RearArmTone);
   indexed(data(16), base, Tag::CameraLeg);
   if (eq[2])
     garment(4, items[eq[2]].color, Tag::Greaves);
@@ -281,14 +332,14 @@ template <class Plot> void draw(const Appearance &a, Plot plot) {
   indexed(data(0), base, Tag::Body);
   if (eq[3])
     garment(1, shirt, Tag::Clothing, 0,
-            art::outfits[((eq[3] == SageRobe   ? 2
+            image<art::outfits>(((eq[3] == SageRobe   ? 2
                            : eq[3] == RedTunic ? 1
                                                : 0)) *
                              art::HumanFrames +
-                         frame]);
+                         frame));
   if (eq[1])
     garment(3, items[eq[1]].color, Tag::Armour, 0,
-            art::mail[(items[eq[1]].tier - 1) * art::HumanFrames + frame]);
+            image<art::mail>((items[eq[1]].tier - 1) * art::HumanFrames + frame));
   // The exposed neck joins jaw and collar after clothing is composited.
   indexed(data(9), base, Tag::Neck);
   if (eq[0])
@@ -306,9 +357,17 @@ template <class Plot> void draw(const Appearance &a, Plot plot) {
     dot({at.x, at.y + 1}, mix(c, ink, 100), Tag::Accessory);
   }
   // The camera-facing item arm is always in front of the trunk.
-  indexed(arm_data(10), base, Tag::Arm, arm_dy);
-  garment(eq[1] ? 12 : 11, eq[1] ? items[eq[1]].color : shirt, Tag::Sleeve, 0,
+  if(aiming) {
+    // The support upper arm stays behind the torso; its forearm crosses in
+    // front to reach the bow, particularly while aiming straight down.
+    aimed_arm(true,true);
+    aimed_arm(false);
+  }
+  else {
+    indexed(arm_data(10), base, Tag::Arm, arm_dy);
+    garment(eq[1] ? 12 : 11, eq[1] ? items[eq[1]].color : shirt, Tag::Sleeve, 0,
           arm_data(eq[1] ? 12 : 11), 255, arm_dy);
+  }
   if (a.held) {
     const auto h = joint(a, p == BowAim ? Offhand : Hand);
     const auto *grip = art::item_grips[a.held];
@@ -317,7 +376,44 @@ template <class Plot> void draw(const Appearance &a, Plot plot) {
     auto rotate = [&](int v) {
       return v >= 0 ? (v + 128) / 256 : -((-v + 128) / 256);
     };
-    for (int y = 0; y < 16; ++y)
+    const auto kind = items[a.held].kind;
+    const bool compact = kind < Pick || kind > Wand;
+    if(aiming) {
+      auto d=starsoil_aim::unit(a.face?a.aim_x:-a.aim_x,a.aim_y);
+      auto at=[&](float x,float y) {return Point{h.x+int(std::lround(x*d.x-y*d.y)),
+                                               h.y+int(std::lround(x*d.y+y*d.x))};};
+      const Point limb[]={at(-6,-7),at(-3,-6),at(0,-2),at(0,1),at(-3,5),at(-6,6)};
+      for(int pass=0;pass<2;++pass)for(int i=1;i<6;++i)
+        stroke(limb[i-1],limb[i],pass?color(items[a.held].color):base[1],Tag::Weapon,pass?2:3);
+      Point string=joint(a,Hand);
+      stroke(limb[0],string,color(0xded7ad),Tag::Weapon);
+      stroke(string,limb[5],color(0xded7ad),Tag::Weapon);
+      if(a.bow_loaded) {
+        stroke(string,at(7,0),color(0xd6c9a5),Tag::Weapon);
+        stroke(at(7,0),at(4,-2),color(0xb6c6ca),Tag::Weapon);
+        stroke(at(7,0),at(4,2),color(0xb6c6ca),Tag::Weapon);
+      }
+    } else if (compact) {
+      // Materials and building previews are palm-sized. A full terrain icon
+      // anchored like a sword can cover the face or an entire forearm.
+      // Reduce opaque 2x2 cells without adding interpolated colors.
+      uint16_t small[64]{};
+      for (int y = 0; y < 16; ++y)
+        for (int x = 0; x < 16; ++x) {
+          uint16_t c = art::icons[a.held][y * 16 + x];
+          auto &out = small[y / 2 * 8 + x / 2];
+          if (c && !out) out = c;
+        }
+      int gx = 4, gy = 4, closest = 100;
+      for (int y = 0; y < 8; ++y)
+        for (int x = 0; x < 8; ++x)
+          if (small[y * 8 + x] && std::abs(x - 4) + std::abs(y - 4) < closest) {
+            gx = x; gy = y; closest = std::abs(x - 4) + std::abs(y - 4);
+          }
+      for (int y = 0; y < 8; ++y)
+        for (int x = 0; x < 8; ++x)
+          if (small[y * 8 + x]) dot({h.x + x - gx, h.y + y - gy}, small[y * 8 + x], Tag::Weapon);
+    } else for (int y = 0; y < 16; ++y)
       for (int x = 0; x < 16; ++x) {
         uint16_t c = art::icons[a.held][y * 16 + x];
         if (c) {
@@ -330,7 +426,7 @@ template <class Plot> void draw(const Appearance &a, Plot plot) {
           dot({h.x + dx, h.y + dy}, c, Tag::Weapon);
         }
       }
-    if (p == BowAim) {
+    if (p == BowAim && !aiming) {
       // A nocked arrow extends beyond the bow, with the string hand behind it.
       Point off = joint(a, Hand);
       for (int x = off.x; x < h.x + 7; ++x)

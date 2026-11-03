@@ -36,11 +36,14 @@ bool parse_seed(const char *text, uint32_t &value) {
   return true;
 }
 void menu_background() {
-  for (int y = 0; y < height(); ++y)
+  int columns[480];
+  for (int x = 0; x < width(); ++x) columns[x] = x * 144 / width();
+  for (int y = 0; y < height(); ++y) {
+    const auto *row = art::cover[0] + (y * 144 / height()) * 144;
+    int light = 150 - y * 55 / height();
     for (int x = 0; x < width(); ++x)
-      pixel(x, y,
-            dim(art::cover[0][(y * 144 / height()) * 144 + x * 144 / width()],
-                150 - y * 55 / height()));
+      pixel(x, y, dim(row[columns[x]], light));
+  }
   // Quiet drifting lights keep the menu connected to the game's night sky.
   for (int i = 0; i < 16; ++i) {
     int x =
@@ -50,6 +53,7 @@ void menu_background() {
           dim(i % 3 ? Teal : GoldInk, 110 + (animation / 35 + i * 11) % 110));
   }
   pocket::begin_ui(true);
+  pocket::begin_controls();
   content_origin();
 }
 void draw_title() {
@@ -121,12 +125,12 @@ void create_world_draw() {
   panel(18, 32, 252, 184);
   center(18, 42, 252, tr("CREATE A WORLD", "创建新世界"), GoldInk);
   label(28, 70, tr("WORLD SIZE", "世界大小"), Muted);
-  const char *en[] = {"SMALL", "MEDIUM", "LARGE"};
-  const char *cn[] = {"小型", "中型", "大型"};
-  for (int i = 0; i < 3; ++i) {
-    button(28 + i * 80, 91, 72, tr(en[i], cn[i]), int(new_world_size) == i);
+  const char *en[] = {"SMALL", "MEDIUM", "LARGE", "HUGE"};
+  const char *cn[] = {"小型", "中型", "大型", "超大"};
+  for (int i = 0; i < 4; ++i) {
+    button(28 + i * 60, 91, 56, tr(en[i], cn[i]), int(new_world_size) == i);
     if (pocket::using_controller() && create_focus == i)
-      outline(28 + i * 80, 91, 72, 20, GoldInk);
+      outline(28 + i * 60, 91, 56, 20, GoldInk);
   }
   auto bounds = dimensions(new_world_size);
   char b[40];
@@ -134,9 +138,9 @@ void create_world_draw() {
   center(28, 117, 232, b, Muted);
   label(28, 143, tr("SEED", "种子"), GoldInk);
   button(88, 138, 172, *world_seed ? world_seed : tr("RANDOM", "随机"),
-         create_focus == 3);
-  button(28, 184, 108, tr("BACK", "返回"), create_focus == 4);
-  button(144, 184, 116, tr("CREATE", "创建"), create_focus == 5);
+         create_focus == 4);
+  button(28, 184, 108, tr("BACK", "返回"), create_focus == 5);
+  button(144, 184, 116, tr("CREATE", "创建"), create_focus == 6);
 }
 void seed_editor_draw() {
   menu_background();
@@ -224,8 +228,8 @@ int home_hit(int x, int y) {
       if (x >= 134 && x < 270) return 302;
     }
   } else if (view == CreateWorld) {
-    if (y >= 91 && y < 112 && x >= 28 && x < 260)
-      return 340 + std::min(2, (x - 28) / 80);
+    if (y >= 91 && y < 112 && x >= 28 && x < 264)
+      return 340 + std::min(3, (x - 28) / 60);
     if (y >= 138 && y < 160 && x >= 88 && x < 260)
       return 345;
     if (y >= 184 && y < 204) {
@@ -275,7 +279,7 @@ void home_click(int id) {
     world_selected = listed_world(world_page * 2 + id - 330);
     delete_confirm = false;
     set_view(DeleteWorld);
-  } else if (id >= 340 && id <= 342)
+  } else if (id >= 340 && id <= 343)
     new_world_size = WorldSize(id - 340);
   else if (id == 345) {
     std::strcpy(seed_draft, world_seed);
@@ -346,17 +350,17 @@ void home_key(Key k) {
     if (k == Key::B)
       home_click(346);
     if (k == Key::LEFT)
-      create_focus = (create_focus + 5) % 6;
+      create_focus = (create_focus + 6) % 7;
     if (k == Key::RIGHT)
-      create_focus = (create_focus + 1) % 6;
+      create_focus = (create_focus + 1) % 7;
     if (k == Key::UP)
-      create_focus = std::max(0, create_focus - 3);
+      create_focus = std::max(0, create_focus - 4);
     if (k == Key::DOWN)
-      create_focus = std::min(5, create_focus + 3);
+      create_focus = std::min(6, create_focus + 4);
     if (k == Key::A)
-      home_click(create_focus < 3    ? 340 + create_focus
-                 : create_focus == 3 ? 345
-                 : create_focus == 4 ? 346
+      home_click(create_focus < 4    ? 340 + create_focus
+                 : create_focus == 4 ? 345
+                 : create_focus == 5 ? 346
                                      : 347);
   } else if (view == SeedEditor) {
     if (k == Key::B)

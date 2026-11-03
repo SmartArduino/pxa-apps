@@ -3,6 +3,13 @@
 #include "../common/pocket-ui/preferences.hpp"
 #include "../common/pocket-ui/viewport.hpp"
 #include "input_geometry.hpp"
+#include "pointer_capture.hpp"
+#include "settings.hpp"
+#include "save_checksum.hpp"
+#include "save_codec.hpp"
+#include "render_buffers.hpp"
+#include "scene_blit.hpp"
+#include "scene_resample.hpp"
 #include "pxa.h"
 #include "pxa_audio.h"
 #include "pxa_clock.h"
@@ -29,7 +36,6 @@
 
 namespace {
 using namespace pocket;
-constexpr unsigned LOGICAL_PIXELS = 480 * 480;
 // File-backed saves have a separate bounded buffer from 2 KiB preferences.
 enum : uint64_t {
   PORT = 1,
@@ -41,22 +47,29 @@ enum : uint64_t {
   PREFERENCES_SAVE,
   SAVE_COMMIT, WORLD_OPEN, WORLD_REMOVE, WORLD_REMOVE_TEMP
 };
+#ifdef PXA_POCKET_STUDIO
 alignas(64) uint16_t frames[2 * pocket_ui::MAX_SURFACE_PIXELS];
-#ifndef PXA_POCKET_STUDIO
-uint16_t logical_frame[LOGICAL_PIXELS];
+#else
+alignas(64) uint16_t frames[starsoil_buffers::Pixels];
+uint16_t *logical_frame;
 #endif
 uint16_t *canvas;
 starsoil_ui::Canvas ui;
 bool ui_active;
 uint8_t packet[PXA_MAX_CONTROL_BYTES], events[PXA_MAX_CONTROL_BYTES],
-    loaded[SAVE_CAPACITY], pending_save[SAVE_CAPACITY];
+    world_buffer[starsoil_save::buffer_capacity(SAVE_CAPACITY)];
+// Loading and immutable saving never overlap; world transitions wait for
+// commit before reading another file into this shared buffer.
+auto &loaded = world_buffer;
+auto &pending_save = world_buffer;
 char save_key[80];
 size_t loaded_size;
 uint64_t port, surface, frame_id, epoch, paused_us, pause_at, save_due,
     save_retry, last_tick;
 uint64_t repeats[4];
-uint32_t buttons, blocked_buttons, pointer_id, rng = 0x6d2b79f5;
-uint64_t perf_at, perf_render_us;
+uint32_t buttons, blocked_buttons, rng = 0x6d2b79f5;
+uint64_t perf_at, perf_render_us, perf_last_frame;
+uint32_t perf_max_gap_us;
 uint32_t perf_frames;
 int display_w = 320, display_h = 240;
 uint32_t input_density = 65536, display_safe[4]{}, display_corners[4]{};
@@ -69,11 +82,12 @@ bool update_geometry(const pxa_ui_environment_t &env) {
   input_density = env.density_q16 ? env.density_q16 : 65536;
   return changed;
 }
-int last_x, last_y, menu_row;
+int menu_row;
+starsoil_touch::Captures pointers;
 bool running, finished, background = true, fresh_tick, surface_ready,
                         load_ready;
 bool mapped = true, staged, prepared, dirty = true, save_dirty, save_pending,
-     pointer_active, pointer_consumed, paused;
+     paused;
 uint8_t prepared_index;
 uint64_t revision = 1, prepared_revision, exit_deadline;
 bool exit_requested;
@@ -91,7 +105,7 @@ uint64_t now_us() {
   clock_gettime(CLOCK_MONOTONIC, &t);
   return uint64_t(t.tv_sec) * 1000000 + t.tv_nsec / 1000;
 }
-#include "../common/pocket-ui/preferences.inc"
+#include "preferences.inc"
 #ifdef PXA_POCKET_STUDIO
 uint32_t studio_safe[4], studio_corners[4];
 bool studio_geometry(const pxa_ui_environment_t &env) {
@@ -118,9 +132,10 @@ void cancel_input() {
   buttons = 0;
   clear_sound();
   memset(repeats, 0, sizeof(repeats));
-  if (pointer_active && !pointer_consumed && running)
-    game::pointer(Phase::CANCEL, last_x, last_y);
-  pointer_active = false;
+  for (auto &p : pointers.slots)
+    if (p.active && !p.consumed && running) game::pointer(Phase::CANCEL, p.x, p.y, p.id);
+  pointers.clear();
+  if (running) game::cancel_input();
 }
 #include "world_storage.inc"
 
@@ -130,7 +145,7 @@ void request_exit() {
   exit_requested = true;
   if (!opening_world && !removing_world)
     world_operation = WorldOperation::None;
-  exit_deadline = now_us() + 2000000;
+  exit_deadline = now_us() + 10000000;
   cancel_input();
   paused = true;
   pocket::redraw();
@@ -141,10 +156,10 @@ void toggle_pause() {
   paused = !paused;
   menu_row = 0;
   pocket::redraw();
-  if (pointer_active && !pointer_consumed)
-    game::pointer(Phase::CANCEL, last_x, last_y);
-  if (pointer_active)
-    pointer_consumed = true;
+  for (auto &p : pointers.slots)
+    if (p.active && !p.consumed) game::pointer(Phase::CANCEL, p.x, p.y, p.id);
+  for (auto &p : pointers.slots) if (p.active) p.consumed = true;
+  game::cancel_input();
   memset(repeats, 0, sizeof(repeats));
   blocked_buttons |= buttons;
   buttons = 0;
@@ -156,11 +171,12 @@ void toggle_pause() {
   }
 }
 void menu_activate() {
-  if (menu_row == 3) {
+  if (menu_row == 4) {
     toggle_language();
     return;
   }
-  if (menu_row == 2) {
+  if(menu_row==2) { toggle_smart_cursor();return; }
+  if (menu_row == 3) {
     request_exit();
   } else {
     if (menu_row == 1) {
@@ -184,9 +200,9 @@ void dispatch_key(Key key) {
   }
   if (paused) {
     if (key == Key::UP)
-      menu_row = (menu_row + 3) % 4;
+      menu_row = (menu_row + 4) % 5;
     else if (key == Key::DOWN)
-      menu_row = (menu_row + 1) % 4;
+      menu_row = (menu_row + 1) % 5;
     else if (key == Key::A)
       menu_activate();
     else if (key == Key::B) {
@@ -234,23 +250,42 @@ void controller(const pxa_ui_controller_data_t &c) {
     if ((edges & key_masks[i]) && !(blocked_buttons & key_masks[i]))
       dispatch_key(Key(i));
 }
+bool needs_safe_ui() {
+  return std::max({display_safe[0], display_safe[1], display_safe[2], display_safe[3]}) > 16;
+}
+void configure_safe_ui(starsoil_ui::Canvas &target) {
+  if (!needs_safe_ui()) return;
+  int scale = std::max(1, viewport.host_scale);
+  target.origin_x = (int(display_safe[0]) + 16 + scale - 1) / scale;
+  target.origin_y = (int(display_safe[1]) + 14 + scale - 1) / scale;
+  int right = (int(display_safe[2]) + 16 + scale - 1) / scale;
+  int bottom = (int(display_safe[3]) + scale - 1) / scale;
+  target.region_width = std::max(1, target.width - target.origin_x - right);
+  target.region_height = std::max(1, target.height - target.origin_y - bottom);
+}
 void pointer(const pxa_ui_pointer_data_t &p) {
   if (background || !running || exit_requested)
     return;
   const int display_x = starsoil::display_coordinate(p.x, input_density);
   const int display_y = starsoil::display_coordinate(p.y, input_density);
-  if (p.phase == PXA_POINTER_DOWN && !pointer_active) {
-    if (!surface_ready || !viewport.contains(display_x, display_y))
-      return;
+  starsoil_touch::Capture *contact = pointers.find(p.pointer_id);
+  if (p.phase == PXA_POINTER_DOWN) {
+    if (!surface_ready || !viewport.contains(display_x, display_y)) return;
     set_controller_input(false);
-    pointer_id = p.pointer_id;
-    pointer_active = true;
-    pointer_consumed = false;
+    contact = pointers.begin(p.pointer_id);
   }
-  if (!pointer_active || p.pointer_id != pointer_id)
-    return;
-  last_x = viewport.map_x(display_x, WIDTH);
-  last_y = viewport.map_y(display_y, HEIGHT);
+  if (!contact) return;
+  starsoil_ui::Canvas controls{nullptr, viewport.width, viewport.height, WIDTH, HEIGHT};
+  configure_safe_ui(controls);
+  int ux = pocket_ui::floor_ratio(int64_t(display_x - viewport.x - controls.origin_x * viewport.host_scale) * WIDTH,
+      controls.draw_width() * viewport.host_scale);
+  int uy = pocket_ui::floor_ratio(int64_t(display_y - viewport.y - controls.origin_y * viewport.host_scale) * HEIGHT,
+      controls.draw_height() * viewport.host_scale);
+  if (p.phase == PXA_POINTER_DOWN)
+    contact->ui_space = paused || game::uses_ui_pointer(ux, uy);
+  contact->x = contact->ui_space ? ux : viewport.map_x(display_x, WIDTH);
+  contact->y = contact->ui_space ? uy : viewport.map_y(display_y, HEIGHT);
+  const int last_x = contact->x, last_y = contact->y;
   Phase phase;
   if (p.phase == PXA_POINTER_DOWN)
     phase = Phase::DOWN;
@@ -261,38 +296,36 @@ void pointer(const pxa_ui_pointer_data_t &p) {
   else
     phase = Phase::CANCEL;
   if (phase == Phase::DOWN &&
-      last_x >=
 #ifdef PXA_POCKET_STUDIO
-          240 &&
+      last_x >= 240 &&
       last_x < 264 && last_y < 26
 #else
-          WIDTH - 24 &&
-      last_y < 20
+      starsoil::pause_button_hit(last_x, last_y, WIDTH)
 #endif
   ) {
-    pointer_consumed = true;
+    contact->consumed = true;
     toggle_pause();
   } else if (paused) {
-    pointer_consumed = true;
+    contact->consumed = true;
     int mx = (WIDTH - 288) / 2, my = (HEIGHT - 224) / 2;
     if (phase == Phase::DOWN && last_x >= 56 + mx && last_x < 232 + mx &&
         last_y >= 72 + my && last_y < 192 + my) {
-      menu_row = (last_y - 72 - my) / 30;
+      menu_row = (last_y - 72 - my) / 24;
       menu_activate();
     }
-  } else if (!pointer_consumed)
-    game::pointer(phase, last_x, last_y);
+  } else if (!contact->consumed)
+    game::pointer(phase, last_x, last_y, p.pointer_id);
   if (phase == Phase::UP || phase == Phase::CANCEL)
-    pointer_active = false;
+    *contact = {};
   pocket::redraw();
 }
 void draw_menu() {
 #ifdef PXA_POCKET_STUDIO
   studio_menu(paused, menu_row, exit_requested);
 #else
-  pocket::rect(WIDTH - 24, 0, 24, 20, PANEL);
-  for (int y : {5, 9, 13})
-    pocket::rect(WIDTH - 18, y, 12, 2, ACCENT);
+  pocket::rect(WIDTH - 40, 14, 24, 18, PANEL);
+  for (int y : {17, 21, 25})
+    pocket::rect(WIDTH - 34, y, 12, 2, ACCENT);
   if (!paused)
     return;
   int mx = (WIDTH - 288) / 2, my = (HEIGHT - 224) / 2;
@@ -301,12 +334,13 @@ void draw_menu() {
   pocket::text((WIDTH - pocket::text_width(tr("PAUSED", "已暂停"), 2)) / 2,
                43 + my, tr("PAUSED", "已暂停"), INK, 2);
   const char *labels[] = {tr("CONTINUE", "继续"), tr("SAVE & WORLDS", "保存并返回首页"),
+                          game::smart_cursor_enabled()?tr("SMART CURSOR: ON","智能选块：开"):tr("SMART CURSOR: OFF","智能选块：关"),
                           tr("EXIT", "退出"),
                           tr("LANGUAGE: ENGLISH", "语言：中文")};
-  for (int i = 0; i < 4; ++i) {
-    int y = 72 + my + i * 30;
-    pocket::rect(56 + mx, y, 176, 28, i == menu_row ? ACCENT : PANEL);
-    pocket::text(68 + mx, y + (28 - pocket::text_height()) / 2,
+  for (int i = 0; i < 5; ++i) {
+    int y = 72 + my + i * 24;
+    pocket::rect(56 + mx, y, 176, 22, i == menu_row ? ACCENT : PANEL);
+    pocket::text(68 + mx, y + (22 - pocket::text_height()) / 2,
                  labels[i], i == menu_row ? BG : INK);
   }
   if (exit_requested || controller_input)
@@ -344,7 +378,7 @@ void present() {
     canvas = nullptr;
 #ifndef PXA_POCKET_STUDIO
     if (!ui_active)
-      pocket_ui::resample(logical_frame, WIDTH, HEIGHT, ui.pixels,
+      starsoil_scene::resample(logical_frame, WIDTH, HEIGHT, ui.pixels,
                           viewport.width, viewport.height);
 #endif
     perf_render_us += now_us() - began;
@@ -382,6 +416,10 @@ void present() {
   }
   ++frame_id;
   ++perf_frames;
+  const uint64_t queued_at = now_us();
+  if (!paused && perf_last_frame)
+    perf_max_gap_us = std::max(perf_max_gap_us, uint32_t(queued_at - perf_last_frame));
+  perf_last_frame = paused ? 0 : queued_at;
   prepared = false;
   dirty = revision != prepared_revision;
 #ifdef PXA_POCKET_STUDIO
@@ -531,7 +569,9 @@ void run() {
       break;
     }
     if (background) {
-      wait_event(exit_requested ? 20000 : 1000000);
+      perf_last_frame = 0;
+      service_save(true);
+      wait_event(save_pending ? 2000 : exit_requested ? 20000 : 1000000);
       continue;
     }
     uint64_t now = now_us();
@@ -548,20 +588,24 @@ void run() {
     }
     service_sound();
     present();
+    service_save(paused || background || exit_requested || worlds_busy());
     uint64_t after = now_us();
     if (after - perf_at >= 10000000) {
-      char perf[144];
+      char perf[240];
       snprintf(perf, sizeof(perf),
-               "Pocket: perf frames=%u period_ms=%u mean_draw_us=%u",
+               "Pocket: perf frames=%u period_ms=%u mean_draw_us=%u max_gap_us=%u save_step_us=%u snapshot_us=%u save_blocks=%u",
                perf_frames, uint32_t((after - perf_at) / 1000),
-               perf_frames ? uint32_t(perf_render_us / perf_frames) : 0);
+               perf_frames ? uint32_t(perf_render_us / perf_frames) : 0,
+               perf_max_gap_us, save_step_max_us, save_snapshot_max_us, save_blocks);
       pxa_log_write(2, perf);
       perf_at = after;
       perf_frames = 0;
       perf_render_us = 0;
+      perf_max_gap_us = save_step_max_us = save_snapshot_max_us = save_blocks = 0;
     }
     if (!finished)
-      wait_event(after < last_tick + 20000 ? last_tick + 20000 - after : 0);
+      wait_event(save_pending && (paused || exit_requested || worlds_busy()) ? 2000 :
+          after < last_tick + 20000 ? last_tick + 20000 - after : 0);
   }
 }
 
@@ -600,7 +644,7 @@ bool delete_world(int slot) {
   return true;
 }
 bool create_world(uint32_t seed, uint8_t size) {
-  if (worlds_busy() || size > 2) return false;
+  if (worlds_busy() || size > uint8_t(starsoil::WorldSize::Huge)) return false;
   int slot = 0;
   while (slot < WorldSlots && world_catalog[slot].occupied) ++slot;
   if (slot == WorldSlots) { worlds_error = 3; redraw(); return false; }
@@ -616,10 +660,29 @@ bool create_world(uint32_t seed, uint8_t size) {
 void begin_ui(bool preserve_scene) {
 #ifndef PXA_POCKET_STUDIO
   if (ui_active || !canvas) return;
-  if (preserve_scene)
-    pocket_ui::resample(logical_frame, WIDTH, HEIGHT, ui.pixels,
+  if (preserve_scene || needs_safe_ui())
+    starsoil_scene::resample(logical_frame, WIDTH, HEIGHT, ui.pixels,
                         ui.width, ui.height);
   ui_active = true;
+  if (!preserve_scene) configure_safe_ui(ui);
+#endif
+}
+bool has_display_cutouts() { return needs_safe_ui(); }
+bool blit_pixels(int x, int y, const uint16_t *pixels, int w, int h,
+                bool flip, int light, int clip_top, int clip_bottom) {
+#ifdef PXA_POCKET_STUDIO
+  return false;
+#else
+  if (!canvas) return false;
+  if (ui_active) return ui.sprite(x, y, pixels, w, h, flip, light, clip_top, clip_bottom);
+  starsoil_scene::blit(canvas, WIDTH, HEIGHT, x, y, pixels, w, h,
+                        flip, light, clip_top, clip_bottom);
+  return true;
+#endif
+}
+void begin_controls() {
+#ifndef PXA_POCKET_STUDIO
+  configure_safe_ui(ui);
 #endif
 }
 void rect(int x, int y, int w, int h, uint16_t color) {
@@ -646,6 +709,10 @@ void rect(int x, int y, int w, int h, uint16_t color) {
     for (int col = x; col < x1; ++col)
       canvas[row * WIDTH + col] = color;
 #endif
+}
+void blend_rect(int x, int y, int w, int h, uint16_t color, unsigned alpha) {
+  if (ui_active) ui.blend_rect(x,y,w,h,color,alpha);
+  else rect(x,y,w,h,color);
 }
 void clear(uint16_t color) { rect(0, 0, WIDTH, HEIGHT, color); }
 void outline(int x, int y, int w, int h, uint16_t color) {
@@ -784,6 +851,6 @@ extern "C" void pxa_app_stop(uint32_t reason) {
   (void)reason;
   finished = true;
   buttons = 0;
-  pointer_active = false;
+  pointers.clear();
   // Host resources have already been revoked: do not call imports or hooks.
 }

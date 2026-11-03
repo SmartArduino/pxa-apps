@@ -9,6 +9,12 @@ uint32_t requested_seed;
 uint8_t requested_size;
 bool opening_world, removing_world;
 size_t pending_size;
+bool saving_packed;
+size_t saving_at, saving_hash_at;
+uint64_t saving_handle, saving_next_step;
+uint32_t saving_hash = starsoil_save::InitialHash;
+uint32_t save_step_max_us, save_snapshot_max_us, save_blocks;
+pocket::WorldInfo saving_info;
 int persist_status;
 char saving_path[48], saving_temp[48];
 
@@ -47,7 +53,7 @@ bool read_world_file(const pxa_fs_open_result_t &r) {
     ok = false;
   if (pxa_fs_close(r.handle))
     ok = false;
-  return ok;
+  return ok && starsoil_save::unpack(loaded, loaded_size, sizeof(loaded), SAVE_CAPACITY);
 }
 void scan_next_world() {
   while (scan_world < pocket::WorldSlots) {
@@ -64,6 +70,11 @@ void scan_next_world() {
   load_ready = true;
 }
 void save_failed() {
+  if (saving_handle) {
+    uint64_t handle = saving_handle;
+    saving_handle = 0;
+    (void)pxa_fs_close(handle);
+  }
   save_pending = false;
   save_dirty = true;
   save_retry = now_us() + 2000000;
@@ -85,13 +96,20 @@ void send_save(bool force = false) {
   if (!running || !save_dirty || save_pending || now < save_retry ||
       (!force && now < save_due))
     return;
-  pending_size = game::serialize(pending_save, sizeof(pending_save));
+  uint64_t began = now_us();
+  pending_size = game::serialize(pending_save, sizeof(pending_save), false);
+  if (pending_size && pending_size <= SAVE_CAPACITY)
+    pending_size = starsoil_save::pack(pending_save, pending_size, sizeof(pending_save));
+  saving_packed = starsoil_save::packed(pending_save, pending_size);
+  save_snapshot_max_us = std::max(save_snapshot_max_us, uint32_t(now_us() - began));
   if (!pending_size) {
     save_dirty = false;
     return;
   }
   if (pending_size > sizeof(pending_save))
     __builtin_trap();
+  if (pending_size < 4) { save_failed(); return; }
+  game::describe_world(saving_info);
   world_path(active_world, saving_path);
   world_path(active_world, saving_temp, true);
   if (pxa_fs_request_open(SAVE, saving_temp, uint32_t(strlen(saving_temp)),
@@ -104,6 +122,37 @@ void send_save(bool force = false) {
   save_dirty = false;
   save_due = 0;
   persist_status = 1;
+}
+void service_save(bool urgent = false) {
+  if (!saving_handle || (!urgent && now_us() < saving_next_step)) return;
+  uint64_t began = now_us();
+  if (saving_at < pending_size) {
+    size_t want = std::min(pending_size - saving_at, size_t(4096));
+    size_t hashed_end = std::min(saving_at + want, pending_size - 4);
+    if (!saving_packed && hashed_end > saving_hash_at) {
+      saving_hash = starsoil_save::checksum(saving_hash, pending_save + saving_hash_at,
+                                            hashed_end - saving_hash_at);
+      saving_hash_at = hashed_end;
+    }
+    if (!saving_packed && saving_at + want > pending_size - 4)
+      for (unsigned i = 0; i < 4; ++i)
+        pending_save[pending_size - 4 + i] = uint8_t(saving_hash >> (8 * i));
+    int32_t n = pxa_fs_write(saving_handle, pending_save + saving_at, uint32_t(want));
+    ++save_blocks;
+    if (n <= 0 || size_t(n) > want) save_failed();
+    else saving_at += size_t(n);
+  } else {
+    // Close/flush is a separate step; never append it to the last data write.
+    uint64_t handle = saving_handle;
+    saving_handle = 0;
+    bool ok = pxa_fs_close(handle) == 0;
+    uint32_t n = 0;
+    if (!ok || !pxa_fs_build_replace(packet, sizeof(packet), SAVE_COMMIT, saving_temp,
+          strlen(saving_temp), saving_path, strlen(saving_path), &n) ||
+        pxa_control_packet(packet, n)) save_failed();
+  }
+  save_step_max_us = std::max(save_step_max_us, uint32_t(now_us() - began));
+  saving_next_step = began + 20000;
 }
 void finish_world_delete() {
   world_catalog[requested_world] = {};
@@ -145,9 +194,7 @@ void service_worlds() {
     buttons = 0;
     memset(repeats, 0, sizeof(repeats));
     world_catalog[active_world].occupied = true;
-    size_t created_size = game::serialize(loaded, sizeof(loaded));
-    world_catalog[active_world].valid =
-        game::inspect_world(loaded, created_size, world_catalog[active_world]);
+    game::describe_world(world_catalog[active_world]);
     world_operation = WorldOperation::None;
     pocket::save();
     send_save(true);
@@ -216,27 +263,10 @@ int32_t handle_world_storage(const pxa_event_t &e) {
       save_failed();
       return PXA_EVENT_HANDLED;
     }
-    size_t at = 0;
-    bool ok = true;
-    while (at < pending_size) {
-      int32_t n =
-          pxa_fs_write(r.handle, pending_save + at,
-                       uint32_t(std::min(pending_size - at, size_t(2048))));
-      if (n <= 0) {
-        ok = false;
-        break;
-      }
-      at += uint32_t(n);
-    }
-    if (pxa_fs_close(r.handle))
-      ok = false;
-    uint32_t n = 0;
-    if (!ok ||
-        !pxa_fs_build_replace(packet, sizeof(packet), SAVE_COMMIT, saving_temp,
-                              strlen(saving_temp), saving_path,
-                              strlen(saving_path), &n) ||
-        pxa_control_packet(packet, n))
-      save_failed();
+    saving_handle = r.handle;
+    saving_at = saving_hash_at = 0;
+    saving_hash = starsoil_save::InitialHash;
+    saving_next_step = 0;
     return PXA_EVENT_HANDLED;
   }
   if (e.token == SAVE_COMMIT) {
@@ -248,9 +278,7 @@ int32_t handle_world_storage(const pxa_event_t &e) {
     else {
       save_pending = false;
       persist_status = 2;
-      auto &info = world_catalog[active_world];
-      info.occupied = true;
-      info.valid = game::inspect_world(pending_save, pending_size, info);
+      world_catalog[active_world] = saving_info;
       pxa_log_write(2, "Starsoil: world committed");
       pocket::redraw();
     }

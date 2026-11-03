@@ -41,6 +41,9 @@ enum Tile : uint8_t {
   Bed,
   Portal,
   StorageChest,
+  DoorTop,
+  OpenDoor,
+  OpenDoorTop,
   TileCount
 };
 enum Kind : uint8_t {
@@ -296,10 +299,17 @@ inline constexpr Recipe recipes[] = {
     {StarGate, 1, Forge, {{ObsidianBlock, 12}, {Crystal, 8}, {GoldBar, 3}}},
     {StarCore, 1, Altar, {{StarDust, 12}, {Crystal, 6}, {Ruby, 3}}}};
 inline constexpr int RecipeCount = sizeof(recipes) / sizeof(recipes[0]);
+inline bool door(uint8_t t) {
+  return t == Door || t == DoorTop || t == OpenDoor || t == OpenDoorTop;
+}
+inline bool closed_door(uint8_t t) { return t == Door || t == DoorTop; }
 inline bool solid(uint8_t t) {
-  return t && t != Leaves && t != Log && t != Platform && t < Water;
+  return closed_door(t) || (t && t != Leaves && t != Log && t != Platform && t < Water);
 }
 inline bool is_ore(uint8_t t) { return t >= CopperOre && t <= RubyOre; }
+inline int mining_work(uint8_t t) {
+  return t==Log?700:t==Obsidian?1000:(t==Stone || t==Deepstone || is_ore(t))?500:220;
+}
 inline int equip_slot(Kind k) {
   return k == Charm ? 7 : k >= Head && k <= Boots ? int(k) - int(Head) : -1;
 }
@@ -312,7 +322,7 @@ inline uint8_t tile_drop(uint8_t t) {
       WaterBucket, LavaBucket, Platforms,     Doors,         Torches,
       Workbench,   Smelter,    IronAnvil,     TreasureChest, Wildflower,
       RedMushroom, Daybloom,   CactusItem,    Vines,         Acorn,
-      HomeBed,     StarGate,   TreasureChest};
+      HomeBed,     StarGate,   TreasureChest, Doors, Doors, Doors};
   return t < TileCount ? drop[t] : 0;
 }
 } // namespace starsoil
