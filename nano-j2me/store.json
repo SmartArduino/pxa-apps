@@ -1,7 +1,7 @@
 {
   "name": "nano J2ME",
   "summary": "J2ME 模拟器：打开 JAR、调整游戏分辨率，支持悬浮手机键盘和手柄按键映射。",
-  "description": "在 PXA 设备上运行自备的 J2ME MIDlet（.jar）。游戏库可通过系统文件选择器导入 JAR，界面适配不同分辨率，游戏画面保持纵横比。\n\n支持 240×320 等预设和自定义游戏分辨率；悬浮方向键、软键和可展开数字键盘，支持多点触摸；手柄按键可单独映射，也可一键使用手机数字键位。游戏设置与 Java 内存大小按 JAR 独立保存，RMS 存档保存在应用私有空间。游戏内与菜单复用 PXA 系统字体。\n\nJava 堆可选 1–3 MiB，单个 JAR 最大 2 MiB。保留上游 2D/3D 支持，实际兼容性及速度取决于游戏与设备；部分游戏可能白屏、加载慢或内存不足。ESP32-S31 实测 3D 场景速度偏低。当前不支持游戏联网。应用不附带商业游戏，请自行导入有权使用的 JAR。\n\n需要 PXA Core 2.1 与支持 UI 0.10 字形接口的 Host。图标与安卓 nano_j2me 相同。\n\n本版对应源码与构建说明：https://github.com/SmartArduino/pxa-apps/tree/nano-j2me-v0.3.1/nano-j2me 。上游 nano_j2me 保持为未修改的 Git 子模块；获取源码时请递归初始化子模块。",
+  "description": "在 PXA 设备上运行自备的 J2ME MIDlet（.jar）。游戏库可通过系统文件选择器导入 JAR，界面适配不同分辨率，游戏画面保持纵横比。\n\n支持 240×320 等预设和自定义游戏分辨率；悬浮方向键、软键和可展开数字键盘，支持多点触摸；手柄按键可单独映射，也可一键使用手机数字键位。游戏设置与 Java 内存大小按 JAR 独立保存，RMS 存档保存在应用私有空间。游戏内与菜单复用 PXA 系统字体。\n\nJava 堆可选 1–3 MiB，单个 JAR 最大 2 MiB。保留上游 2D/3D 支持，实际兼容性及速度取决于游戏与设备；部分游戏可能白屏、加载慢或内存不足。ESP32-S31 实测 3D 场景速度偏低。当前不支持游戏联网。应用不附带商业游戏，请自行导入有权使用的 JAR。\n\n需要 PXA Core 2.1 与支持 UI 0.10 字形接口的 Host。应用固定预留 6 MiB 线性内存，原生代码另需约 3–3.5 MiB，建议设备配备至少 16 MiB PSRAM；8 MiB PSRAM 设备不适合此版本。ESP32-S31 与桌面已经测试，ESP32-S3 目标仅完成交叉构建。图标与安卓 nano_j2me 相同。\n\n本版对应源码与构建说明：https://github.com/SmartArduino/pxa-apps/tree/nano-j2me-v0.3.1/nano-j2me 。上游 nano_j2me 保持为未修改的 Git 子模块；获取源码时请递归初始化子模块。",
   "kind": "app",
   "category": "tools",
   "tags": [
