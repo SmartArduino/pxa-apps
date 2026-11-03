@@ -1,0 +1,76 @@
+{
+  "format": "pxa-package-source-0.2",
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "id": "pxa-jinyong",
+  "version": "0.2.0+pxa07",
+  "release_sequence": 2,
+  "name": "Jin Yong S60 Core",
+  "description": "Original jinyong-legend C/Lua5.1 engine with PXA software SDL host, streamed resources and atomic private files. Personal local study; silent profile.",
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 5242880,
+      "pinned": true
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "services": [
+        "assets",
+        "clock",
+        {
+          "name": "fs",
+          "min_version": [
+            0,
+            5
+          ]
+        },
+        {
+          "name": "game-render",
+          "min_version": [
+            1,
+            3
+          ]
+        },
+        "log",
+        {
+          "name": "ui",
+          "min_version": [
+            0,
+            9
+          ]
+        },
+        "window"
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      },
+      "artifact": "aot",
+      "execution_model": "main-loop"
+    }
+  ],
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  }
+}

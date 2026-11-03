@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/ZhanruiLiang/jinyong-legend",
+  "commit": "89962d7fc2837c143e176c306d83b4e38dab6e77",
+  "source_layout": {
+    "engine": "Prepared application engine sources, including the supplied portability adaptations.",
+    "vendor": "Unmodified source and license references supplied with the private development archive."
+  }
+}

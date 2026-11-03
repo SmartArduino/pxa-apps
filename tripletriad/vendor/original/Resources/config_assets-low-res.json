@@ -1,0 +1,42 @@
+
+{
+  // Low resolution game resource paths for TTcards
+  // See config.hpp: SCALE_FACTOR == 1
+  "root" :
+  {
+    "BOARD_BACKGROUND" : "images/board.png",
+    "GAMEOVER_BACKGROUND" : "images/game-over_background.png",
+
+    "TRIAD_SPINNER_ATLAS": "images/triad.json",
+    "TRIAD_SPINNER": "images/triad.png",
+
+    "CARD_FONTFACE" : "fonts/VIII_cards.png",
+
+    // TODO: Generate low resolution images for these two fonts!
+    "SCORE_FONTFACE" : "fonts/scale2x/scoreboard.fnt",
+    "GAMEOVER_FONTFACE" : "fonts/scale2x/gameover.fnt",
+
+    "CARD_FACES_ATLAS" : "images/faces.json",
+    "CARD_FACES" : "images/faces.png",
+
+    "CARD_ELEMENTS_ATLAS" : "images/elements.json",
+    "CARD_ELEMENTS" : "images/elements.png",
+
+    "INTERFACE_CURSOR_ATLAS" : "images/cursors.json",
+    "INTERFACE_CURSOR" : "images/cursors.png",
+
+    "GUI_TITLE_FONT" : "fonts/Delicious-Bold.otf",
+    "GUI_TEXT_FONT" : "fonts/OpenSans-Regular.ttf",
+
+    "GUI_CARDS_MENU": "gui/dataview.rml",
+
+    "GUI_DEBUG": "gui/debug.rml",
+    "GUI_MBOX": "gui/messagebox.rml",
+
+    "GUI_PAUSE": "gui/pause.rml",
+    "GUI_QBOX": "gui/questionbox.rml",
+
+    "GUI_GAMEOVER_RULES_INFO": "gui/rules_info.rml",
+    "GUI_GAMEOVER_CARD_INFO": "gui/card_info.rml"
+  }
+}

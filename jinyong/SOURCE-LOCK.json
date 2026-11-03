@@ -1,0 +1,611 @@
+{
+  "format": "pxa-jinyong-source-lock-1",
+  "upstream": {
+    "repository": "https://github.com/ZhanruiLiang/jinyong-legend",
+    "commit": "89962d7fc2837c143e176c306d83b4e38dab6e77",
+    "upstream_readme_version": "0.66",
+    "identity": "Selected original S60 engine, not a confirmed identity of the screenshot project"
+  },
+  "accepted_build": {
+    "path": "work/jinyong/signed-build-1793528384456908383/result.json",
+    "bytes": 43132,
+    "sha256": "00ed4b832ab159d460d553810a0568573db703223f61ec1a68154645b3c0203d"
+  },
+  "accepted_build_source_inputs": {
+    "common/pxa_framebuffer.h": {
+      "path": "common/pxa_framebuffer.h",
+      "bytes": 9006,
+      "sha256": "2a96a44ad2e91dfd210ec347d5941d78b36c8bb6f01a27aa30bd120f1a4d3658"
+    },
+    "common/pxa_port_log.h": {
+      "path": "common/pxa_port_log.h",
+      "bytes": 1196,
+      "sha256": "f71f1a7ab33e43b6bd808a7b502e425b2347284394a96e72715a7cb4491bf6bf"
+    },
+    "ports/jinyong/CMakeLists.txt": {
+      "path": "ports/jinyong/CMakeLists.txt",
+      "bytes": 3917,
+      "sha256": "23f5aa7199d54be13e28d14571fd56c19a4dd10f07b58dc3ba8218a92f3897b4"
+    },
+    "ports/jinyong/assets-simulator/jinyong.bundle": {
+      "path": "ports/jinyong/assets-simulator/jinyong.bundle",
+      "bytes": 54975709,
+      "sha256": "adb7971b6d2314d181b67b2d16b4eb41838b53ab61dc6504220ce198e8aabe0f"
+    },
+    "ports/jinyong/assets-simulator/resources.pxi": {
+      "path": "ports/jinyong/assets-simulator/resources.pxi",
+      "bytes": 64,
+      "sha256": "3558c37994d0de336f000e42c78cd1a230a39a83498942ad18039f57af427c40"
+    },
+    "ports/jinyong/base_aliases.c": {
+      "path": "ports/jinyong/base_aliases.c",
+      "bytes": 523,
+      "sha256": "b0f22f2d9f1c2a0736a47c32ac0295d506f3cc66b90925a84a948a2a136c7677"
+    },
+    "ports/jinyong/compat/jy_png.c": {
+      "path": "ports/jinyong/compat/jy_png.c",
+      "bytes": 3206,
+      "sha256": "24827ec3ebe4ccb81a2ba729f8a3ed78aac62527df42a45bfc66a781415ad2c4"
+    },
+    "ports/jinyong/compat/jy_rwops.c": {
+      "path": "ports/jinyong/compat/jy_rwops.c",
+      "bytes": 5800,
+      "sha256": "8f4da01b9c4f744198218bed1c1de6392ea90a7222ce87515b544530a4d916ce"
+    },
+    "ports/jinyong/compat/jy_sdl.h": {
+      "path": "ports/jinyong/compat/jy_sdl.h",
+      "bytes": 728,
+      "sha256": "a600503ae767899b2ee7f5707d52cf101c6fb66c0a49d9b9cd2ada65403f603d"
+    },
+    "ports/jinyong/compat/jy_sdl_host.c": {
+      "path": "ports/jinyong/compat/jy_sdl_host.c",
+      "bytes": 10309,
+      "sha256": "3b4d9a129a7e8a34f11b5b6ea08a5e8238a2a3ee671b13e4ea46b4de6a602b61"
+    },
+    "ports/jinyong/compat/jy_surface.c": {
+      "path": "ports/jinyong/compat/jy_surface.c",
+      "bytes": 16257,
+      "sha256": "e4e760c71a334bf4650f01123f5ecb591ff8b18487851f0d32352592237d06ea"
+    },
+    "ports/jinyong/coroutine_bridge.S": {
+      "path": "ports/jinyong/coroutine_bridge.S",
+      "bytes": 654,
+      "sha256": "c92eb13b802b3ae476157de24771421f4e323fc46a22cbd01e7bc875e5657e70"
+    },
+    "ports/jinyong/fatal.c": {
+      "path": "ports/jinyong/fatal.c",
+      "bytes": 1253,
+      "sha256": "6e480548516666c974f79c4dda5ce22e71ed44c3266965284ea153d093ceea29"
+    },
+    "ports/jinyong/frontend.c": {
+      "path": "ports/jinyong/frontend.c",
+      "bytes": 14440,
+      "sha256": "06203aa361d19930770ae945c330c399c9de82a2296a7d67f7858fc87c97858d"
+    },
+    "ports/jinyong/fs/jy_asset_index.h": {
+      "path": "ports/jinyong/fs/jy_asset_index.h",
+      "bytes": 706,
+      "sha256": "e7aafb25850b93f0b430a240ee62a3f588104a956734976830e45d4c57e98ee0"
+    },
+    "ports/jinyong/fs/jy_fs.c": {
+      "path": "ports/jinyong/fs/jy_fs.c",
+      "bytes": 15737,
+      "sha256": "e71ee353c12bc089b4721c9bd23f374f0027d20900266ab536ae43d9183f704a"
+    },
+    "ports/jinyong/fs/jy_fs.h": {
+      "path": "ports/jinyong/fs/jy_fs.h",
+      "bytes": 3181,
+      "sha256": "802328933075e69cbcb20c1a04502d360e0d8b87ba22f63bc920a76fc05c5e62"
+    },
+    "ports/jinyong/fs/jy_fs_redirect.h": {
+      "path": "ports/jinyong/fs/jy_fs_redirect.h",
+      "bytes": 1766,
+      "sha256": "4106ccbefcba60669af684b3045c68e00f1373c01b26de5b467fd3fdcd682883"
+    },
+    "ports/jinyong/fs/native_fixture.c": {
+      "path": "ports/jinyong/fs/native_fixture.c",
+      "bytes": 13638,
+      "sha256": "cc31774c2e3b89d83568ba98980870e2c17434bdb8c8222aee4b9a2c98d8ae9e"
+    },
+    "ports/jinyong/fs/redirect_fixture.c": {
+      "path": "ports/jinyong/fs/redirect_fixture.c",
+      "bytes": 841,
+      "sha256": "f8bb0843ad4ac387ba54d54a28c7e49313e995d3c4318cca03714fd8860662a3"
+    },
+    "ports/jinyong/game.cmake": {
+      "path": "ports/jinyong/game.cmake",
+      "bytes": 972,
+      "sha256": "2875a1462baf3fcd385f31a9518bd28fea4ca5f78e18e627047613ede92864ab"
+    },
+    "ports/jinyong/guest_wasi.c": {
+      "path": "ports/jinyong/guest_wasi.c",
+      "bytes": 2564,
+      "sha256": "00d59fdd7be3e3c653fde817565cf63e72d1fe5218564f1499706d7466bf2a19"
+    },
+    "ports/jinyong/guest_wasi.h": {
+      "path": "ports/jinyong/guest_wasi.h",
+      "bytes": 732,
+      "sha256": "8e703f8e64012cfc12e58680b2ff7ee95bf453f76dcf5d9ca23230574d5148f2"
+    },
+    "ports/jinyong/noaudio_device.c": {
+      "path": "ports/jinyong/noaudio_device.c",
+      "bytes": 1881,
+      "sha256": "038aa07aad56d25b5f8e30629d4628e95fcecd0a49575a178d6a2be90e4f8155"
+    },
+    "ports/jinyong/package.json": {
+      "path": "ports/jinyong/package.json",
+      "bytes": 822,
+      "sha256": "fd3fd2fc893b4863f53f07b39bf01bc9d763564f5777f2f8296f308b6473c7b9"
+    },
+    "ports/jinyong/port_hooks.h": {
+      "path": "ports/jinyong/port_hooks.h",
+      "bytes": 605,
+      "sha256": "7612653f72faa653db718de0aabf406024032ab0416018b343cf600ce38f0d24"
+    },
+    "ports/jinyong/protected_bridge.c": {
+      "path": "ports/jinyong/protected_bridge.c",
+      "bytes": 6817,
+      "sha256": "7ef618a9b9699b7953cb2308f8d933cebec1334dedcbd078fcf0ed7e1ce1d895"
+    },
+    "ports/jinyong/protected_bridge.h": {
+      "path": "ports/jinyong/protected_bridge.h",
+      "bytes": 758,
+      "sha256": "34834d0ccce64d911a40d04d44dc4d26a157690a9e6a82149b26975f917090bf"
+    },
+    "ports/jinyong/pxa_fs_backend.c": {
+      "path": "ports/jinyong/pxa_fs_backend.c",
+      "bytes": 33304,
+      "sha256": "6ce14722766e69ce913f7c688824eeaacabe416150371e4470d963f1dccaa97d"
+    },
+    "ports/jinyong/pxa_fs_backend.h": {
+      "path": "ports/jinyong/pxa_fs_backend.h",
+      "bytes": 1150,
+      "sha256": "2f0686acf14fec564da74222dc2e7d8febeef8e6e579025d54e082872f907773"
+    },
+    "ports/jinyong/unsupported_process.c": {
+      "path": "ports/jinyong/unsupported_process.c",
+      "bytes": 369,
+      "sha256": "3b342d1416a861303f8d329c206b2fd34b9b76f890b7420e5d1d1ff133844137"
+    },
+    "work/jinyong/assets-bundle/jy_asset_index.c": {
+      "path": "work/jinyong/assets-bundle/jy_asset_index.c",
+      "bytes": 117825,
+      "sha256": "13c9f5d199cbc4e88e0c43794eb942ecc01815d76c9437b16c547dace2dda356"
+    },
+    "work/jinyong/engine-prepared/src/charset.c": {
+      "path": "work/jinyong/engine-prepared/src/charset.c",
+      "bytes": 8158,
+      "sha256": "4b421a76e4332651dcb2d0ea097e5f00caea937d97f4a76b1fe3ce9c560bb6a3"
+    },
+    "work/jinyong/engine-prepared/src/config.h": {
+      "path": "work/jinyong/engine-prepared/src/config.h",
+      "bytes": 1147,
+      "sha256": "4a89afa998f4d9d660412f0bdb05abfca03b9c32f2e577d9b03d2bd3a5d6b0e0"
+    },
+    "work/jinyong/engine-prepared/src/jymain.c": {
+      "path": "work/jinyong/engine-prepared/src/jymain.c",
+      "bytes": 8422,
+      "sha256": "4edfce1a93d7a5e4412dc94ccb54620cc10eba16dea63c5cbc2982c9f86c1908"
+    },
+    "work/jinyong/engine-prepared/src/jymain.h": {
+      "path": "work/jinyong/engine-prepared/src/jymain.h",
+      "bytes": 6192,
+      "sha256": "cd2ed19ef827a46324191d24e6fce91dc81d5581d0a41562679d3acf260bfd98"
+    },
+    "work/jinyong/engine-prepared/src/list.h": {
+      "path": "work/jinyong/engine-prepared/src/list.h",
+      "bytes": 6743,
+      "sha256": "fa8747b47933778a86104e65a8dc9d2b608326069ce3782fd2e82eb57595e269"
+    },
+    "work/jinyong/engine-prepared/src/luafun.c": {
+      "path": "work/jinyong/engine-prepared/src/luafun.c",
+      "bytes": 12654,
+      "sha256": "264a932c390e6b91e8bf4e59bd7d91bab6c426087301b61eab6fa33e653f2c3c"
+    },
+    "work/jinyong/engine-prepared/src/luafun.h": {
+      "path": "work/jinyong/engine-prepared/src/luafun.h",
+      "bytes": 2486,
+      "sha256": "f980a3c356f29d1a90e61f054ffcb992f0981dbf397f28600f78b59572459776"
+    },
+    "work/jinyong/engine-prepared/src/mainmap.c": {
+      "path": "work/jinyong/engine-prepared/src/mainmap.c",
+      "bytes": 27127,
+      "sha256": "5eb2fc699d1b281f2c955d5a221282918cc31e5bab9cb80ec9a1fc7e39079c69"
+    },
+    "work/jinyong/engine-prepared/src/piccache.c": {
+      "path": "work/jinyong/engine-prepared/src/piccache.c",
+      "bytes": 11822,
+      "sha256": "2fadd9bc298d25b94a26f8f65a6daba7e43eaa4f122f13094229e17e013090ec"
+    },
+    "work/jinyong/engine-prepared/src/sdlfun.c": {
+      "path": "work/jinyong/engine-prepared/src/sdlfun.c",
+      "bytes": 21949,
+      "sha256": "82056e110818f0e30dda2982f01a15b2d7bcc9112d74c6ae553413efc8aa9c22"
+    },
+    "work/jinyong/lua-prepared/lapi.c": {
+      "path": "work/jinyong/lua-prepared/lapi.c",
+      "bytes": 22708,
+      "sha256": "6aa0d9fdd88b13fe46568ad6722ecf44164fb84476cfdf6480cf05b5704935f8"
+    },
+    "work/jinyong/lua-prepared/lapi.h": {
+      "path": "work/jinyong/lua-prepared/lapi.h",
+      "bytes": 262,
+      "sha256": "4aea4c1b975d43184f4f1fd1a42c79cf11d74d2801315740cec07fe9abebb56d"
+    },
+    "work/jinyong/lua-prepared/lauxlib.c": {
+      "path": "work/jinyong/lua-prepared/lauxlib.c",
+      "bytes": 17417,
+      "sha256": "b564650bf4aca2757b9966311d32c8d5fea8803f6f33d72a856448d3b5d6d992"
+    },
+    "work/jinyong/lua-prepared/lauxlib.h": {
+      "path": "work/jinyong/lua-prepared/lauxlib.h",
+      "bytes": 5777,
+      "sha256": "c741f9c1587f29fd08a79acbe0c46884768a47f89bee4147669f774c5cf50fc0"
+    },
+    "work/jinyong/lua-prepared/lbaselib.c": {
+      "path": "work/jinyong/lua-prepared/lbaselib.c",
+      "bytes": 17045,
+      "sha256": "b14c49fae6fa4690662185bf842cb05d87756585d2f5bdd8495251fde83ef331"
+    },
+    "work/jinyong/lua-prepared/lcode.c": {
+      "path": "work/jinyong/lua-prepared/lcode.c",
+      "bytes": 21170,
+      "sha256": "027030bbef34115588bd4a64cf4c8c18236a56936835475a154277478767bac5"
+    },
+    "work/jinyong/lua-prepared/lcode.h": {
+      "path": "work/jinyong/lua-prepared/lcode.h",
+      "bytes": 2750,
+      "sha256": "97d5a37f3b1b19eda1ef39607b3358aa0f7e917568ccd27ed0f14bc6a70d4b17"
+    },
+    "work/jinyong/lua-prepared/ldblib.c": {
+      "path": "work/jinyong/lua-prepared/ldblib.c",
+      "bytes": 10092,
+      "sha256": "eb8b056711f037e764f746d989f4e40621d8f9ff45add3336790c389849ed0ab"
+    },
+    "work/jinyong/lua-prepared/ldebug.c": {
+      "path": "work/jinyong/lua-prepared/ldebug.c",
+      "bytes": 16840,
+      "sha256": "afa5840195befaec55177273c8168748026b38df3243767fc740cc7ced0c4c8f"
+    },
+    "work/jinyong/lua-prepared/ldebug.h": {
+      "path": "work/jinyong/lua-prepared/ldebug.h",
+      "bytes": 1061,
+      "sha256": "d036f0dbb996bdecd48d505746f72c31b82fb2fc38f111b780568338d4ed9e9c"
+    },
+    "work/jinyong/lua-prepared/ldo.c": {
+      "path": "work/jinyong/lua-prepared/ldo.c",
+      "bytes": 14926,
+      "sha256": "524b7e83dc9914c6f7fc7caf53942f657d8bdb493ba38ae7dbab5c1f97a712d1"
+    },
+    "work/jinyong/lua-prepared/ldo.h": {
+      "path": "work/jinyong/lua-prepared/ldo.h",
+      "bytes": 1897,
+      "sha256": "591ad9a90098d3fbf06839da3de752d2c2585cbf5801dde4cdaffe12b23a182e"
+    },
+    "work/jinyong/lua-prepared/ldump.c": {
+      "path": "work/jinyong/lua-prepared/ldump.c",
+      "bytes": 3114,
+      "sha256": "30d83d766351bb053b3d20793a6bcd2ef0210e8fad76a7032abbe574bafa0ca3"
+    },
+    "work/jinyong/lua-prepared/lfunc.c": {
+      "path": "work/jinyong/lua-prepared/lfunc.c",
+      "bytes": 4618,
+      "sha256": "525681d79098958530e5c937f7cbe94a4dafa679746ffdb16258f82b7ece29ce"
+    },
+    "work/jinyong/lua-prepared/lfunc.h": {
+      "path": "work/jinyong/lua-prepared/lfunc.h",
+      "bytes": 1125,
+      "sha256": "3cea0071ffda94eac378adb5f1ecb467ef2ffafff4315459e4ccdf05b5119da4"
+    },
+    "work/jinyong/lua-prepared/lgc.c": {
+      "path": "work/jinyong/lua-prepared/lgc.c",
+      "bytes": 20053,
+      "sha256": "35be212ad0e4d89336f50f11cd0e991c04fe59b023ec03a626bf3f98e69fd1dc"
+    },
+    "work/jinyong/lua-prepared/lgc.h": {
+      "path": "work/jinyong/lua-prepared/lgc.h",
+      "bytes": 3159,
+      "sha256": "fbab2b989515377729d4c029dd58b3b6242877a88a7c4cfa703ea0deeb069a1e"
+    },
+    "work/jinyong/lua-prepared/linit.c": {
+      "path": "work/jinyong/lua-prepared/linit.c",
+      "bytes": 765,
+      "sha256": "c0c97c45862f6c978620a9682cd2201f0fc29c2afbcab824ba20d26cc1745e56"
+    },
+    "work/jinyong/lua-prepared/liolib.c": {
+      "path": "work/jinyong/lua-prepared/liolib.c",
+      "bytes": 13466,
+      "sha256": "a40f1d2c4aed9835885264cc6caf81c3bd2d5db93af3d313cc0478db37d93169"
+    },
+    "work/jinyong/lua-prepared/llex.c": {
+      "path": "work/jinyong/lua-prepared/llex.c",
+      "bytes": 12501,
+      "sha256": "f1ade23f957e69f164ff28e133b201dff5d81726c390b060110b60907831e79b"
+    },
+    "work/jinyong/lua-prepared/llex.h": {
+      "path": "work/jinyong/lua-prepared/llex.h",
+      "bytes": 2177,
+      "sha256": "0f3715d22b025727ef11debd641600a123b81718d195cd8445ac6378814458e6"
+    },
+    "work/jinyong/lua-prepared/llimits.h": {
+      "path": "work/jinyong/lua-prepared/llimits.h",
+      "bytes": 2349,
+      "sha256": "1910669296681d9d2814ca46c325063724bb634c0428dae4e5ff59be54e0b758"
+    },
+    "work/jinyong/lua-prepared/lmathlib.c": {
+      "path": "work/jinyong/lua-prepared/lmathlib.c",
+      "bytes": 5831,
+      "sha256": "e2933a56332d567cdd69f0fe514d638a8f82da6878754ff259e77cf2157263c3"
+    },
+    "work/jinyong/lua-prepared/lmem.c": {
+      "path": "work/jinyong/lua-prepared/lmem.c",
+      "bytes": 2172,
+      "sha256": "e63c50cb1c75356bd4123c9ca05f77bd0cd99e05c099cf6d1bf472086761e9c5"
+    },
+    "work/jinyong/lua-prepared/lmem.h": {
+      "path": "work/jinyong/lua-prepared/lmem.h",
+      "bytes": 1494,
+      "sha256": "abd1258418486c69bf5a93ceea3a1b9f8af2c7497a4fa6c27b442ffec2c5bbb1"
+    },
+    "work/jinyong/lua-prepared/loadlib.c": {
+      "path": "work/jinyong/lua-prepared/loadlib.c",
+      "bytes": 19216,
+      "sha256": "b01bc465bb2e280fb45d24aea98d5ddd9dfd0999f44422e1151aafa1d7f5385c"
+    },
+    "work/jinyong/lua-prepared/lobject.c": {
+      "path": "work/jinyong/lua-prepared/lobject.c",
+      "bytes": 5498,
+      "sha256": "d704915c79c721556cc5850d741ed3bef1611221356f0e3a2f0ee5cfd5fd3632"
+    },
+    "work/jinyong/lua-prepared/lobject.h": {
+      "path": "work/jinyong/lua-prepared/lobject.h",
+      "bytes": 8502,
+      "sha256": "274c18373fbbad71bfebd534cae4b2d2e49934abf6672f44735edc6646fb6a8b"
+    },
+    "work/jinyong/lua-prepared/lopcodes.c": {
+      "path": "work/jinyong/lua-prepared/lopcodes.c",
+      "bytes": 2884,
+      "sha256": "63cd74edc75970092a8ce078c4ab970efa1ee18de960d00eb826d49fe98d8a76"
+    },
+    "work/jinyong/lua-prepared/lopcodes.h": {
+      "path": "work/jinyong/lua-prepared/lopcodes.h",
+      "bytes": 8086,
+      "sha256": "a15fe349da7c1e73b563e8c3249fe7d535eccc844cb30ec80b4e335b0699279b"
+    },
+    "work/jinyong/lua-prepared/loslib.c": {
+      "path": "work/jinyong/lua-prepared/loslib.c",
+      "bytes": 6098,
+      "sha256": "a540ddeb6981656fec59450d380f4787f7540e957127de248659a5077187dbb1"
+    },
+    "work/jinyong/lua-prepared/lparser.c": {
+      "path": "work/jinyong/lua-prepared/lparser.c",
+      "bytes": 36696,
+      "sha256": "3590f24bab5763af673182e40d33194a7de6f5eabe5432c02a548d44225d2b63"
+    },
+    "work/jinyong/lua-prepared/lparser.h": {
+      "path": "work/jinyong/lua-prepared/lparser.h",
+      "bytes": 2261,
+      "sha256": "84512d6540b83ab599cd8de5a1c8c4deaf71ff353f8e4fbc2e4ca135ba4e9ef0"
+    },
+    "work/jinyong/lua-prepared/lstate.c": {
+      "path": "work/jinyong/lua-prepared/lstate.c",
+      "bytes": 5674,
+      "sha256": "c36d6b9354aaa30b5323b4984f3172783f69e0deb3186c2ef6f16a8281c59c29"
+    },
+    "work/jinyong/lua-prepared/lstate.h": {
+      "path": "work/jinyong/lua-prepared/lstate.h",
+      "bytes": 5011,
+      "sha256": "dc64ea7ec74d7c1efaeaf6a9e2257f0b7856a5c988747948af2e76cf079d20fe"
+    },
+    "work/jinyong/lua-prepared/lstring.c": {
+      "path": "work/jinyong/lua-prepared/lstring.c",
+      "bytes": 3110,
+      "sha256": "aa7e934c435d870b9d937ac2fb03dbfa15d367012d46e7e995a2ad8d440f2f6d"
+    },
+    "work/jinyong/lua-prepared/lstring.h": {
+      "path": "work/jinyong/lua-prepared/lstring.h",
+      "bytes": 814,
+      "sha256": "c0e8af4eb33e3357be79f906e7e1191ba53a3a790d36ca15b50471d3a339e1f0"
+    },
+    "work/jinyong/lua-prepared/lstrlib.c": {
+      "path": "work/jinyong/lua-prepared/lstrlib.c",
+      "bytes": 23561,
+      "sha256": "e8048c79ae34be0fd29aa8db1a341cd600f5e09b9133b5810910e07b855a32d5"
+    },
+    "work/jinyong/lua-prepared/ltable.c": {
+      "path": "work/jinyong/lua-prepared/ltable.c",
+      "bytes": 16263,
+      "sha256": "3a853ce89bf5e834ec53f2a0dd2386eb8b84accbe5fdc18dabd7515b819f0f7c"
+    },
+    "work/jinyong/lua-prepared/ltable.h": {
+      "path": "work/jinyong/lua-prepared/ltable.h",
+      "bytes": 1184,
+      "sha256": "219e6ac2bf43aaa93093c6bcd571c012660325e6b87ea3d6c1b40679a0acfd64"
+    },
+    "work/jinyong/lua-prepared/ltablib.c": {
+      "path": "work/jinyong/lua-prepared/ltablib.c",
+      "bytes": 7343,
+      "sha256": "e934dc4b2fc117a501c717302a00147f7b44eea978ef87a58a3e40e9bfe45d20"
+    },
+    "work/jinyong/lua-prepared/ltm.c": {
+      "path": "work/jinyong/lua-prepared/ltm.c",
+      "bytes": 1650,
+      "sha256": "9759ae5d1aa3b11e1c7faa6c0f65e05c7126417f7f8f3f989d82fc170b07f891"
+    },
+    "work/jinyong/lua-prepared/ltm.h": {
+      "path": "work/jinyong/lua-prepared/ltm.h",
+      "bytes": 1018,
+      "sha256": "54f4c2fa76b8ed8d48163e31807a19999f5d65b009ae862cb757e0773f2aa485"
+    },
+    "work/jinyong/lua-prepared/lua.c": {
+      "path": "work/jinyong/lua-prepared/lua.c",
+      "bytes": 10163,
+      "sha256": "eb9ad1894926f0f807934ae52147cf9767ede0fbd01e9a1044dc4847caa9b73d"
+    },
+    "work/jinyong/lua-prepared/lua.h": {
+      "path": "work/jinyong/lua-prepared/lua.h",
+      "bytes": 11688,
+      "sha256": "470551c185f058360f8d0f9e5c54a29a3950f78af6a93f3fe9e4039a380c7b87"
+    },
+    "work/jinyong/lua-prepared/luac.c": {
+      "path": "work/jinyong/lua-prepared/luac.c",
+      "bytes": 4661,
+      "sha256": "b22ad97edb37c2a4b117ef81489bfc6eee15d58d4476ea149abbef7aabf8773d"
+    },
+    "work/jinyong/lua-prepared/luaconf.h": {
+      "path": "work/jinyong/lua-prepared/luaconf.h",
+      "bytes": 22849,
+      "sha256": "02bb8068ddc5dfee42bf9cb5a78f89b8199bf185b5f8b2f169ca739bfc26a16d"
+    },
+    "work/jinyong/lua-prepared/lualib.h": {
+      "path": "work/jinyong/lua-prepared/lualib.h",
+      "bytes": 1026,
+      "sha256": "13f880e9dd997a0f7fd0b17ccd949c98f33e95bd120f084de66084e888217413"
+    },
+    "work/jinyong/lua-prepared/lundump.c": {
+      "path": "work/jinyong/lua-prepared/lundump.c",
+      "bytes": 4629,
+      "sha256": "55ccb55abde44e94e6c4d0bafc94f5870d2674d1944e9a81f6537d9ac92e8ebc"
+    },
+    "work/jinyong/lua-prepared/lundump.h": {
+      "path": "work/jinyong/lua-prepared/lundump.h",
+      "bytes": 890,
+      "sha256": "9f3a2924d1585620993a70eea6cf3def34acb8322b2d9c3629bcdacc037edc64"
+    },
+    "work/jinyong/lua-prepared/lvm.c": {
+      "path": "work/jinyong/lua-prepared/lvm.c",
+      "bytes": 23242,
+      "sha256": "b560aad0a1b8bfc4e4b732b2393e8f8ecc68b6c772e6d25763d6ef71c38ab709"
+    },
+    "work/jinyong/lua-prepared/lvm.h": {
+      "path": "work/jinyong/lua-prepared/lvm.h",
+      "bytes": 1159,
+      "sha256": "db4b79dc7f4e7656078aa527350fbf14b2fde5d136ccf1cb4f3dc397def5fb67"
+    },
+    "work/jinyong/lua-prepared/lzio.c": {
+      "path": "work/jinyong/lua-prepared/lzio.c",
+      "bytes": 1628,
+      "sha256": "892bc24d898c19cbedceba419c68f910b99321c0b462be2c2c00b9d763563173"
+    },
+    "work/jinyong/lua-prepared/lzio.h": {
+      "path": "work/jinyong/lua-prepared/lzio.h",
+      "bytes": 1556,
+      "sha256": "0ec77d0179bf29c1ccab97028fed761944d5c21c02808e10cd7b5883b58b2ca6"
+    },
+    "work/jinyong/lua-prepared/print.c": {
+      "path": "work/jinyong/lua-prepared/print.c",
+      "bytes": 4944,
+      "sha256": "3c3b1c1dd17896e428b9742614c90ec10776ced65813eb648f02dee649892f2f"
+    }
+  },
+  "build_source_unchanged_during_build": true,
+  "current_primary_frontend_matches_accepted_build": {
+    "path": "ports/jinyong/frontend.c",
+    "bytes": 14440,
+    "sha256": "06203aa361d19930770ae945c330c399c9de82a2296a7d67f7858fc87c97858d"
+  },
+  "final_artifacts": {
+    "container": {
+      "path": "output/pxa-jinyong.pxa",
+      "bytes": 27748989,
+      "sha256": "57f365c5e9b609e58db995bac6a46ad86015ffff4746fcf4c7cedc9302cfc256"
+    },
+    "wasm": {
+      "path": "output/pxa-jinyong/artifacts/main.wasm",
+      "bytes": 5525640,
+      "sha256": "437ae988fa466fdea41735b29b0b1075d77c6050d52b63d261cac54c13ee69c8"
+    },
+    "aot": {
+      "path": "output/pxa-jinyong/artifacts/main.linux-x86_64.aot",
+      "bytes": 4704052,
+      "sha256": "dd076b44c19f0d4167297d7edc2b05416c0f4cb6acdc7c2be41ac9a228bc9d25"
+    },
+    "public_key": {
+      "path": "public-signing/publisher-public.der",
+      "bytes": 91,
+      "sha256": "6f3d74f8c5e3f325b7df500c41aed1ecac610b88363fbcc9097a5cba66144ed0"
+    }
+  },
+  "original_engine_source": {
+    "path": "research/jinyong-port/original-source.json",
+    "bytes": 3033,
+    "sha256": "16a1057de47935029c2bb333280987d4d9d951ee5be8d3d964e162e6e22868ae"
+  },
+  "prepared_engine": {
+    "path": "work/jinyong/engine-prepared/prepared-engine.json",
+    "bytes": 10846,
+    "sha256": "3b0766078aba9b7bad45d1c5ddbc36440522aeddb7bef6967e807dcd9b4f72dc"
+  },
+  "Lua5_1_5_origin": {
+    "path": "research/jinyong-port/lua-source.json",
+    "bytes": 441,
+    "sha256": "1d997ecbf63e2ac55b870de57cd8c2795b549c21e82b8dbc1bc0236f7072e635"
+  },
+  "engine_patch": {
+    "path": "ports/jinyong/engine-port.patch",
+    "bytes": 8714,
+    "sha256": "08f61971ff7908efe3bed5ffc3bc6a1a96de152e916e09dd603517a2b7f46781"
+  },
+  "Lua_patch": {
+    "path": "ports/jinyong/lua-protected.patch",
+    "bytes": 1604,
+    "sha256": "23a8d4c101d61322271449d04f9f9f6520f37ac6c785ce254d33c737461e0d24"
+  },
+  "font_source_and_library_receipt": {
+    "path": "ports/jinyong/deps/font/COOPERATIVE-RESULT.json",
+    "bytes": 54640,
+    "sha256": "83c4cbf356bedbebe16d806ad9647d23db1704832a3772a56f45cdad74eca842"
+  },
+  "zlib1_3_1_origin": {
+    "path": "ports/jinyong/deps/zlib/SOURCE.json",
+    "bytes": 4900,
+    "sha256": "f6c46484a6f0c6667a8768d78d804ca2a34d8d1969b01c12f0371eb1b7ac522f"
+  },
+  "SDL_and_PNG_origins": {
+    "path": "ports/jinyong/compat/header-provenance.json",
+    "bytes": 9121,
+    "sha256": "c53e9467aa1c6023986190cb3bdcf596c3a6bfad51d1d37e0b22a5fe4e7145eb"
+  },
+  "asset_catalog": {
+    "path": "work/jinyong/assets-bundle/bundle-manifest.json",
+    "bytes": 495195,
+    "sha256": "c663834fffc4b0a7201cfc8038b4002e8e5b65d3c98b07059f372c401270df13"
+  },
+  "asset_roundtrip": {
+    "path": "work/jinyong/assets-bundle/roundtrip-check.json",
+    "bytes": 188,
+    "sha256": "8e69b646fc1069044539e37e21f06cbb317714fea6448ec91045b32a5cabd0e8"
+  },
+  "tool_versions": {
+    "path": "research/env-baseline/actual-tool-versions.json",
+    "bytes": 1758,
+    "sha256": "57f0216a868f30b93b488eacc6b947d885c52a746ac8d7e6609d27c8943b8f40"
+  },
+  "tools": "Existing read-only SDK34/Clang23.1.0-wasi-sdk, WAMRC2.4.3, Binaryen108; GCC13.3/CMake3.28.3/Ninja1.11.1/Python3.12.3 for native/reference work. No global toolchain or Host upgrade.",
+  "metadata_scope": "SOURCE-LOCK/GUEST-VERIFIED/final README are documentation added after the accepted build; runtime C/headers/assembly/config/assets are unchanged. The accepted SDK source_end capture is authoritative.",
+  "licenses": "Preserve original author notice and Linux-origin list.h; Lua MIT; FreeType FTL/GPL2 choice; SDL_ttf/zlib/stb/header notices separately. No extension of code licenses to original data/font/music.",
+  "private_key_policy": "Never pack/upload private-signing or old keys. Public verification DER may be included.",
+  "guest_verification": {
+    "path": "research/jinyong-port/GUEST-VERIFIED.json",
+    "bytes": 25797,
+    "sha256": "1c34b1766d3b0f2c9282b40fc7a2e07e1d6e5ba9f7b113ba3fb09be823317573"
+  },
+  "rebuild_commands_from_round_root": [
+    "python3 -B ports/jinyong/build-unsigned.py",
+    "bash build.sh jinyong"
+  ],
+  "asset_extraction_command": "python3 -B ports/jinyong/fs/prepare-bundle.py --extract-dir work/jinyong/my-original-assets",
+  "historical_all_input_capture": "See accepted_build report for the complete build-time snapshot including then-current documentation.",
+  "final_documentation": [
+    {
+      "path": "ports/jinyong/README.zh-CN.md",
+      "bytes": 7709,
+      "sha256": "633855b96d77d4432a6d0d9723abf8b0d44f7de8effb1fff576f1b66d9fe0801"
+    },
+    {
+      "path": "ports/jinyong/LICENSE.adapter.MIT",
+      "bytes": 1404,
+      "sha256": "ed11e3bbe42615aaa87b39d3db34fbc22534ac34537a842cda3b92de9ce9bf8f"
+    }
+  ]
+}

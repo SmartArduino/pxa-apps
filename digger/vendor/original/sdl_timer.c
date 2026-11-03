@@ -1,0 +1,128 @@
+#include <math.h>
+#include <stdlib.h>
+#if defined(DIGGER_DEBUG)
+#include <stdio.h>
+#endif
+
+#include <SDL.h>
+
+#if defined(__EMSCRIPTEN__)
+#include <emscripten.h>
+
+#define SDL_Delay(x) emscripten_sleep(x)
+#endif
+
+#include "def.h"
+#include "digger_math.h"
+#include "hardware.h"
+#include "game.h"
+#ifdef _SDL
+#include "sdl_vid.h"
+#endif
+#if defined(DIGGER_DEBUG)
+#include "digger_log.h"
+#endif
+
+static struct PFD phase_detector;
+static struct recfilter *loop_error;
+
+#if defined(DIGGER_DEBUG)
+static bool
+gethrt_debug_enabled(void)
+{
+    static int cached = -1;
+
+    if (cached == -1) {
+        cached = (getenv("DIGGER_GETHRT_DEBUG") != NULL) ? 1 : 0;
+    }
+    return (cached != 0);
+}
+#endif
+
+void inittimer(void)
+{
+    double tfreq;
+
+    tfreq = 1000000.0 / dgstate.ftime;
+    loop_error = recfilter_init(tfreq, 0.1);
+    PFD_init(&phase_detector, 0.0);
+#if defined(DIGGER_DEBUG)
+    digger_log_printf("inittimer: ftime = %u\n", dgstate.ftime);
+#endif
+}
+
+void
+gethrt(bool minsleep, int mult)
+{
+    uint32_t add_delay;
+    double eval, clk_rl, tfreq, add_delay_d, filterval, remote_lead_rl;
+
+    if (dgstate.ftime <= 1) {
+        doscreenupdate(false);
+        if (minsleep)
+            SDL_Delay(10);
+        return;
+    }
+    tfreq = mult * 1000000.0 / dgstate.ftime;
+    clk_rl = (double)SDL_GetTicks() * tfreq / 1000.0;
+    remote_lead_rl = (double)dgstate.netsim_remote_lead_ms * tfreq / 1000.0;
+    clk_rl += remote_lead_rl;
+    eval = PFD_get_error(&phase_detector, clk_rl);
+    if (eval != 0) {
+        filterval = recfilter_apply(loop_error, sigmoid(eval));
+    } else {
+        filterval = recfilter_getlast(loop_error);
+    }
+    add_delay_d = (freqoff_to_period(tfreq, 1.0, filterval) * 1000.0);
+    add_delay = round(add_delay_d);
+#if defined(DIGGER_DEBUG)
+    if (gethrt_debug_enabled()) {
+        digger_log_printf("gethrt: minsleep=%d mult=%d lead_ms=%d lead_rl=%f clk_rl=%f add_delay=%d eval=%f filterval=%f\n",
+          minsleep ? 1 : 0, mult, dgstate.netsim_remote_lead_ms, remote_lead_rl,
+          clk_rl, add_delay, eval, filterval);
+    }
+#endif
+
+    doscreenupdate(false);
+    SDL_Delay(add_delay);
+    return;
+}
+
+int32_t getkips(void)
+{
+	return(1);
+}
+
+void s0soundoff(void)
+{
+}
+
+void s0setspkrt2(void)
+{
+}
+
+void s0settimer0(uint16_t t0v)
+{
+  (void)t0v;
+}
+
+void s0settimer2(uint16_t t0v, bool mode)
+{
+  (void)t0v;
+  (void)mode;
+}
+
+void s0timer0(uint16_t t0v)
+{
+  (void)t0v;
+}
+
+void s0timer2(uint16_t t0v, bool mode)
+{
+  (void)t0v;
+  (void)mode;
+}
+
+void s0soundkillglob(void)
+{
+}

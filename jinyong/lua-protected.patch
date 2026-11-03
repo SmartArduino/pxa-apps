@@ -1,0 +1,62 @@
+--- a/src/luaconf.h
++++ b/src/luaconf.h
+@@ -603,7 +603,15 @@
+ ** compiling as C++ code, with _longjmp/_setjmp when asked to use them,
+ ** and with longjmp/setjmp otherwise.
+ */
+-#if defined(__cplusplus)
++#if defined(JY_COOPERATIVE_LUA)
++#include "protected_bridge.h"
++#define LUAI_THROW(L,c) jy_protected_throw((c),(c)->status)
++#define LUAI_TRY(L,c,a) do { \
++  if (jy_protected_checkpoint((c), &(c)->status) == 0) { a } \
++  jy_protected_release((c)); \
++} while (0)
++#define luai_jmpbuf int
++#elif defined(__cplusplus)
+ /* C++ exceptions */
+ #define LUAI_THROW(L,c)	throw(c)
+ #define LUAI_TRY(L,c,a)	try { a } catch(...) \
+--- a/src/ldo.c
++++ b/src/ldo.c
+@@ -5,7 +5,9 @@
+ */
+ 
+ 
++#ifndef JY_COOPERATIVE_LUA
+ #include <setjmp.h>
++#endif
+ #include <stdlib.h>
+ #include <string.h>
+ 
+--- a/src/luaconf.h
++++ b/src/luaconf.h
+@@ -651,7 +651,13 @@
+ */
+ #if defined(loslib_c) || defined(luaall_c)
+ 
+-#if defined(LUA_USE_MKSTEMP)
++#if defined(JY_COOPERATIVE_LUA) && defined(JY_PXA_FILESYSTEM)
++#define LUA_TMPNAMBUFSIZE L_tmpnam
++#define lua_tmpnam(b,e) { (e) = (tmpnam(b) == NULL); }
++#elif defined(JY_COOPERATIVE_LUA)
++#define LUA_TMPNAMBUFSIZE 64
++#define lua_tmpnam(b,e) { (void)(b); (e) = 1; }
++#elif defined(LUA_USE_MKSTEMP)
+ #include <unistd.h>
+ #define LUA_TMPNAMBUFSIZE	32
+ #define lua_tmpnam(b,e)	{ \
+--- a/src/loslib.c
++++ b/src/loslib.c
+@@ -72,7 +72,11 @@
+ 
+ 
+ static int os_clock (lua_State *L) {
++#ifdef JY_COOPERATIVE_LUA
++  return luaL_error(L, "process CPU clock is unavailable on PXA");
++#else
+   lua_pushnumber(L, ((lua_Number)clock())/(lua_Number)CLOCKS_PER_SEC);
++#endif
+   return 1;
+ }
+ 

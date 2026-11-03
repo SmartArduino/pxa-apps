@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/i8degrees/ttcards",
+  "commit": "17d6fb144abb8de970bea31944184bb4e1f02e5c",
+  "source_layout": {
+    "engine": "Prepared application engine sources, including the supplied portability adaptations.",
+    "vendor": "Unmodified source and license references supplied with the private development archive."
+  }
+}

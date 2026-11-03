@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/ondadev/opr",
+  "commit": "b15c58874c659ea7b4e38522c021dccbeaf00f30",
+  "source_layout": {
+    "engine": "Prepared application engine sources, including the supplied portability adaptations.",
+    "vendor": "Unmodified source and license references supplied with the private development archive."
+  }
+}

@@ -1,0 +1,184 @@
+﻿#include "ZipFile.h"
+#include "filefunc.h"
+#include "zip.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
+ZipFile::ZipFile()
+{
+}
+
+ZipFile::~ZipFile()
+{
+    if (zip_)
+    {
+        zip_close(zip_);
+    }
+}
+
+void ZipFile::openRead(const std::string& zip_filename)
+{
+    if (zip_)
+    {
+        zip_close(zip_);
+    }
+    zip_ = zip_open(u8name(zip_filename).c_str(), ZIP_RDONLY, NULL);
+}
+
+void ZipFile::openWrite(const std::string& zip_filename)
+{
+    if (zip_)
+    {
+        zip_close(zip_);
+    }
+    zip_ = zip_open(u8name(zip_filename).c_str(), ZIP_CREATE, NULL);
+}
+
+void ZipFile::create(const std::string& zip_filename)
+{
+    if (zip_)
+    {
+        zip_close(zip_);
+    }
+    zip_ = zip_open(u8name(zip_filename).c_str(), ZIP_CREATE | ZIP_TRUNCATE, NULL);
+}
+
+void ZipFile::setPassword(const std::string& password) const
+{
+    if (zip_)
+    {
+        zip_set_default_password(zip_, password.c_str());
+    }
+}
+
+std::string ZipFile::readFile(const std::string& filename) const
+{
+    std::string content;
+    zip_file_t* zip_file;
+    struct zip_stat zs;
+    if (zip_)
+    {
+        std::lock_guard<std::mutex> lock(*mutex_);
+        zip_file = zip_fopen(zip_, filename.c_str(), ZIP_FL_UNCHANGED);
+        if (zip_file != NULL)
+        {
+            zip_stat_init(&zs);
+            zip_stat(zip_, filename.c_str(), ZIP_FL_UNCHANGED, &zs);
+            content.resize(zs.size);
+            zip_fread(zip_file, content.data(), zs.size);
+            zip_fclose(zip_file);
+        }
+    }
+    return content;
+}
+
+void ZipFile::readFileToBuffer(const std::string& filename, std::vector<char>& content) const
+{
+    content.clear();
+    zip_file_t* zip_file;
+    struct zip_stat zs;
+    if (zip_)
+    {
+        std::lock_guard<std::mutex> lock(*mutex_);
+        zip_file = zip_fopen(zip_, filename.c_str(), ZIP_FL_UNCHANGED);
+        if (zip_file != NULL)
+        {
+            zip_stat_init(&zs);
+            zip_stat(zip_, filename.c_str(), ZIP_FL_UNCHANGED, &zs);
+            content.resize(zs.size);
+            zip_fread(zip_file, content.data(), zs.size);
+            zip_fclose(zip_file);
+        }
+    }
+}
+
+void ZipFile::addData(const std::string& filename, const char* p, int size)
+{
+    if (zip_)
+    {
+        std::lock_guard<std::mutex> lock(*mutex_);
+        buffer_.push_back(std::string(p, size));
+        zip_source_t* source = zip_source_buffer(zip_, buffer_.back().data(), size, 0);
+        if (source)
+        {
+            if (zip_file_add(zip_, filename.c_str(), source, ZIP_FL_OVERWRITE) < 0)
+            {
+                zip_source_free(source);
+            }
+        }
+    }
+}
+
+void ZipFile::addFile(const std::string& filename, const std::string& filename_ondisk)
+{
+    if (zip_)
+    {
+        std::lock_guard<std::mutex> lock(*mutex_);
+
+        buffer_.push_back(filefunc::readFileToString(filename_ondisk));
+        zip_source_t* source = zip_source_buffer(zip_, buffer_.back().data(), buffer_.back().size(), 0);
+        if (source)
+        {
+            if (zip_file_add(zip_, filename.c_str(), source, ZIP_FL_OVERWRITE) < 0)
+            {
+                zip_source_free(source);
+            }
+        }
+    }
+}
+
+void ZipFile::removeFile(const std::string& filename)
+{
+    if (zip_)
+    {
+        std::lock_guard<std::mutex> lock(*mutex_);
+        auto index = zip_name_locate(zip_, filename.c_str(), ZIP_FL_UNCHANGED);
+        if (index >= 0)
+        {
+            zip_delete(zip_, index);
+        }
+    }
+}
+
+std::vector<std::string> ZipFile::getFileNames() const
+{
+    std::vector<std::string> files;
+    if (zip_)
+    {
+        int i, n = zip_get_num_entries(zip_, ZIP_FL_UNCHANGED);
+        for (i = 0; i < n; ++i)
+        {
+            const char* name = zip_get_name(zip_, i, ZIP_FL_UNCHANGED | ZIP_FL_ENC_RAW);
+            files.push_back(name);
+        }
+    }
+    return files;
+}
+
+namespace
+{
+#ifdef _WIN32
+std::string CvtStringToUTF8(const std::string& localstr)
+{
+    int wlen = MultiByteToWideChar(CP_ACP, 0, localstr.c_str(), -1, nullptr, 0);
+    std::vector<wchar_t> wstr(wlen);
+    MultiByteToWideChar(CP_ACP, 0, localstr.c_str(), -1, wstr.data(), wlen);
+    int utf8len = WideCharToMultiByte(CP_UTF8, 0, wstr.data(), -1, nullptr, 0, nullptr, nullptr);
+    std::vector<char> utf8str(utf8len);
+    WideCharToMultiByte(CP_UTF8, 0, wstr.data(), -1, utf8str.data(), utf8len, nullptr, nullptr);
+    std::string result(utf8str.data());
+    return result;
+}
+#endif
+}    //namespace
+
+std::string ZipFile::u8name(const std::string& filename)
+{
+#ifdef _WIN32
+    return CvtStringToUTF8(filename);
+#else
+    return filename;
+#endif
+}

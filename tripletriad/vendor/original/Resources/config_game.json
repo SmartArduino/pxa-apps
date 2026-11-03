@@ -1,0 +1,107 @@
+
+{
+  // Default configuration values for TTcards
+  "root" :
+  {
+    // nearest, linear or best
+    // nearest improves the card face rendering, at the cost of the text (font)
+    // rendering
+    "RENDER_SCALE_QUALITY": "nearest",
+
+    // Target frame rate; this is the maximum frame rate of the game, and will
+    // effect smoothness of things like input responsiveness and animation
+    // fluidity.
+
+    // Custom frame rate value; this should normally not need to be used
+    // unless we have trouble detecting the display's native refresh rate.
+    //
+    // A value of zero (0) will disable the frame rate governor, effectively
+    // running at whatever the CPU and GPU is capable of. This is generally
+    // undesirable for battery-powered environments, i.e.: notebooks and mobile
+    // phones.
+    "MAX_FRAME_RATE": 30,
+
+    // The frame rate to idle at when the game is not active, i.e.: game window
+    // is minimized.
+    "MIN_FRAME_RATE": 5,
+
+    // Sync to the the display's native frame rate -- determined by the
+    // vertical refresh rate.
+    //
+    // NOTE: This will always override a custom FRAME_RATE configuration value!
+    "ENABLE_VSYNC": true,
+
+    // The video display to use in placing the game window.
+    //
+    // The video display defaults to zero (0) when this value is not set.
+    //
+    // NOTE: The order of the video display(s) is platform specific.
+    // "VIDEO_DISPLAY_INDEX": 0,
+
+    // Whether to start the game window full-screen or as a window.
+    "WINDOW_FULLSCREEN": false,
+
+    "REGION_RULESET": [ "Open", "Elemental", "Same" ],
+
+    // Toggle whether when you lose a game, you lose a card from your deck.
+    "PLAYER_LOSE_CARDS" : true,
+    "OPPONENT_LOSE_CARDS" : true,
+
+    // ...Animations...
+
+    // NOTE: Interval && duration units are always specified in seconds unless
+    // noted otherwise!
+    "TRIAD_START_FRAME": 22,
+    "CURSOR_BLINK_INTERVAL": 0.100,
+    "TRIAD_FRAME_INTERVAL": 0.100,
+    "GAMEOVER_TEXT_FADE_DURATION": 1.0,
+
+    "FLIP_CARD_FLASH_DURATION": 0.100,
+
+    "TEXT_ACTION_TIMING_CURVE": "quad_ease_in_out",
+
+    "GAME_OVER_FADE_OUT_DURATION": 2.0,
+
+    // How long to wait before animating the CPU player's hand
+    "CPU_HAND_DELAY_SECONDS": 1.0,
+
+    // Minimum time before CPU player executes a move
+    //
+    // NOTE: This value is used only in non-debug builds
+    "CPU_MOVE_DELAY_SECONDS": 4.0,
+
+    // How long to wait before the 'lost card' animation starts
+    "GAMEOVER_LOST_CARD_DELAY": 1.5,
+
+    // Toggle showing the opponent's hand in CardsMenuState
+    // TODO: Rename to GAME_CHEATS
+    "DEBUG_GAME": true,
+
+    "AUDIO_SFX": true,
+    "AUDIO_TRACKS": false,
+    "AUDIO_VOLUME": 50.0,
+
+    "CARD_FLIP" : "audio/card_flip.wav",
+    "CARD_PLACE" : "audio/card_place.wav",
+    "CURSOR_CANCEL" : "audio/cursor_cancel.wav",
+    "CURSOR_MOVE" : "audio/cursor_move.wav",
+    "CURSOR_WRONG" : "audio/cursor_wrong.wav",
+    "SFX_LOAD_GAME" : "audio/load_game.wav",
+    "SFX_SAVE_GAME" : "audio/save_game.wav",
+    "MUSIC_THEME_TRACK" : "audio/ShuffleOrBoogie.ogg",
+    "MUSIC_WIN_TRACK" : "audio/TheWinner.ogg",
+
+    "APP_ICON" : "icon.png",
+
+    "SAVE_GAME_DIR" : "SavedGames",
+    "CARDS_DB_FILENAME" : "cards.json",
+
+    "SAVE_GAME_DECK_DIR" : "Decks",
+    "PLAYER_DECK_FILENAME" : "player.json",
+    "OPPONENT_DECK_FILENAME" : "opponent.json",
+    "SAVE_GAME_FILENAME" : "game.json",
+
+    // TODO: Rename directory name?
+    "EXTRA_CARD_TEXTURE_DIR" : "Cards"
+  }
+}

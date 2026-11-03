@@ -1,0 +1,62 @@
+{
+  "format": "pxa-package-source-0.2",
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "id": "pxa-opr",
+  "version": "0.2.0+pxa07",
+  "release_sequence": 2,
+  "name": "Open Dungeon",
+  "description": "Full original OPR procedural roguelite rules with a new asset-free PXA frontend; three classes, five floors, combat, loot and final boss. Seeded host RNG; no persistent saves or sound.",
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 2097152,
+      "pinned": false
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "services": [
+        "clock",
+        {
+          "name": "game-render",
+          "min_version": [
+            1,
+            3
+          ]
+        },
+        "log",
+        {
+          "name": "ui",
+          "min_version": [0, 9]
+        },
+        "window"
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": []
+      },
+      "artifact": "aot",
+      "execution_model": "main-loop"
+    }
+  ],
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  }
+}

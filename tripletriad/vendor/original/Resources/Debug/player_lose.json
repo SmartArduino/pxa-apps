@@ -1,0 +1,134 @@
+
+{
+  "board" :
+  [
+    {
+      "element" : 0,
+      "id" : 8,
+      "level" : 1,
+      "name" : "Blood Soul",
+      "num" : 3,
+      "owner" : 1,
+      "player_id" : 2,
+      "ranks" : [ 2, 7, 6, 6 ],
+      "type" : 1
+    },
+
+    {
+      "element" : 1,
+      "id" : 7,
+      "level" : 1,
+      "name" : "Fastitocalon-F",
+      "num" : 2,
+      "owner" : 1,
+      "player_id" : 2,
+      "ranks" : [ 3, 5, 2, 1 ],
+      "type" : 1
+    },
+
+    {
+      "element" : 0,
+      "id" : 1,
+      "level" : 1,
+      "name" : "Fungar",
+      "num" : 1,
+      "owner" : 1,
+      "player_id" : 2,
+      "ranks" : [ 5, 1, 1, 3 ],
+      "type" : 1
+    },
+
+    {
+      "element" : 0,
+      "id" : 6,
+      "level" : 1,
+      "name" : "Gesper",
+      "num" : 2,
+      "owner" : 1,
+      "player_id" : 1,
+      "ranks" : [ 5, 6, 5, 3 ],
+      "type" : 1
+    },
+
+    {
+      "element" : 0,
+      "id" : 31,
+      "level" : 3,
+      "name" : "Tonberry",
+      "num" : 1,
+      "owner" : 1,
+      "player_id" : 2,
+      "ranks" : [ 3, 6, 4, 4 ],
+      "type" : 1
+    },
+
+    {
+      "element" : 0,
+      "id" : 3,
+      "level" : 1,
+      "name" : "Red Bat",
+      "num" : 4,
+      "owner" : 2,
+      "player_id" : 2,
+      "ranks" : [ 5, 3, 5, 7 ],
+      "type" : 1
+    },
+
+    {
+      "element" : 0,
+      "id" : 2,
+      "level" : 1,
+      "name" : "Bite Bug",
+      "num" : 1,
+      "owner" : 1,
+      "player_id" : 2,
+      "ranks" : [ 1, 3, 3, 5 ],
+      "type" : 1
+    },
+
+    {
+      "element" : 0,
+      "id" : -1,
+      "level" : 0,
+      "name" : "INVALID",
+      "num" : 0,
+      "owner" : 0,
+      "player_id" : 0,
+      "ranks" : [ 0, 0, 0, 0 ],
+      "type" : 0
+    },
+
+    {
+      "element" : 6,
+      "id" : 10,
+      "level" : 1,
+      "name" : "Cockatrice",
+      "num" : 2,
+      "owner" : 2,
+      "player_id" : 2,
+      "ranks" : [ 6, 6, 2, 7 ],
+      "type" : 1
+    }
+  ],
+
+  "player" :
+  {
+    "hand" : []
+  },
+
+  "opponent" :
+  {
+    "hand" :
+    [
+      {
+        "element" : 6,
+        "id" : 5,
+        "level" : 1,
+        "name" : "Gayla",
+        "num" : 1,
+        "ranks" : [ 2, 1, 4, 4 ],
+        "type" : 1
+      }
+    ]
+  }
+}

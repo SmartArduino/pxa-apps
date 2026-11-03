@@ -1,0 +1,1070 @@
+/* Digger Remastered
+   Copyright (c) Andrew Jenner 1998-2004 */
+
+#include <stdatomic.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "def.h"
+#include "digger_types.h"
+#include "sprite.h"
+#include "input.h"
+#include "hardware.h"
+#include "digger.h"
+#include "digger_obj.h"
+#include "draw_api.h"
+#include "drawing.h"
+#include "main.h"
+#include "sound.h"
+#include "monster.h"
+#include "scores.h"
+#include "bags.h"
+#include "bullet_obj.h"
+#include "game.h"
+#include "edrf.h"
+#include "netsim.h"
+#include "netsim_game.h"
+#include "state_hash.h"
+#include "record.h"
+
+static struct digger
+{
+  int16_t h,v,rx,ry,mdir,bagtime,rechargetime,
+        deathstage,deathbag,deathani,deathtime,emocttime,emn,msc,lives,ivt;
+  bool notfiring,firepressed,dead,levdone,invin;
+  uint16_t deathmusicdone;
+  int16_t dirgetime;
+  struct digger_obj dob;
+  struct bullet_obj bob;
+} digdat[DIGGERS];
+
+/* Running through the rest of a death that can't be seen nor heard */
+static bool deathffwd=false;
+
+/*
+ * Game ticks (of the default speed) the dirge plays for, until its final
+ * rest: 513 sound interrupts at 72.8 Hz, or 7.05s, see musicupdate().
+ */
+#define DIRGE_TICKS 89
+
+enum digger_death_stage {
+  DGR_DEATH_BAG = 1,
+  DGR_DEATH_ANIM = 2,
+  DGR_DEATH_MONSTER = 3,
+  DGR_DEATH_TOMBSTONE = 4,
+  DGR_DEATH_ARC = 5,
+  DGR_DEATH_DONE = 6
+};
+
+static int16_t startbonustimeleft=0,bonustimeleft;
+
+static int16_t emmask=0;
+
+static int8_t emfield[MSIZE];
+
+bool bonusvisible=false,bonusmode=false,digvisible;
+
+static void updatedigger(struct digger_draw_api *, int n);
+static void updatefire(struct digger_draw_api *, int n);
+static void diggerdie(struct digger_draw_api *, int n);
+static void initbonusmode(struct digger_draw_api *);
+static void endbonusmode(struct digger_draw_api *);
+static bool getfirepflag(int n);
+static void drawdig(int n);
+
+void initdigger(void)
+{
+  int dig;
+  int16_t dir, x, y;
+
+  startbonustimeleft=0;
+  bonustimeleft=0;
+  for (dig=dgstate.curplayer;dig<dgstate.diggers+dgstate.curplayer;dig++) {
+    if (digdat[dig].lives==0) {
+      digdat[dig].dead=true;
+      digdat[dig].invin=false;
+      digdat[dig].ivt=0;
+      digdat[dig].deathstage=DGR_DEATH_DONE;
+      soundackcancel(digdat[dig].deathmusicdone);
+      digdat[dig].deathmusicdone=0;
+      digdat[dig].dirgetime=0;
+      digdat[dig].dob.alive=false;
+      digdat[dig].bagtime=0;
+      digdat[dig].notfiring=true;
+      digdat[dig].firepressed=false;
+      digdat[dig].rechargetime=0;
+      digdat[dig].emocttime=0;
+      digdat[dig].bob.expsn=0;
+      erasespr(FIRSTDIGGER + dig - dgstate.curplayer);
+      erasespr(FIRSTFIREBALL + dig - dgstate.curplayer);
+      continue;
+    }
+    digdat[dig].v=9;
+    digdat[dig].mdir=4;
+    digdat[dig].h=(dgstate.diggers==1) ? 7 : (8-dig*2);
+    x = digdat[dig].h * 20 + 12;
+    dir = (dig == 0) ? DIR_RIGHT : DIR_LEFT;
+    digdat[dig].rx=0;
+    digdat[dig].ry=0;
+    digdat[dig].bagtime=0;
+    digdat[dig].dead=false; /* alive !=> !dead but dead => !alive */
+    digdat[dig].invin=false;
+    digdat[dig].ivt=0;
+    digdat[dig].deathstage=DGR_DEATH_BAG;
+    soundackcancel(digdat[dig].deathmusicdone);
+    digdat[dig].deathmusicdone=0;
+    digdat[dig].dirgetime=0;
+    deathffwd=false;
+    y = digdat[dig].v * 18 + 18;
+    digger_obj_init(&digdat[dig].dob, dig - dgstate.curplayer, dir, x, y);
+    CALL_METHOD(&digdat[dig].dob, put);
+    digdat[dig].notfiring=true;
+    digdat[dig].emocttime=0;
+    memset(&digdat[dig].bob, '\0', sizeof(digdat[dig].bob));
+    digdat[dig].firepressed=false;
+    digdat[dig].rechargetime=0;
+    digdat[dig].emn=0;
+    digdat[dig].msc=1;
+  }
+  digvisible=true;
+  bonusvisible=bonusmode=false;
+}
+
+#if defined(INTDRF) || 1
+static uint32_t frame;
+#endif
+/* A game going on, for its frame (see getframe()) to mean anything: one
+   the title screen goes on counting otherwise */
+static atomic_bool framesrunning;
+static bool syncframe(bool local_freeze, bool local_pause,
+  bool use_pause_latch, bool *remote_freezep, bool *remote_pausep);
+static bool digger_deathmusic_pending(int n);
+static void dirgehold(int n);
+
+uint32_t
+getframe(void)
+{
+
+  return (frame);
+}
+
+/* The frames counted from 0 again: a game's from its start (running),
+   or none as one is over */
+void
+resetframe(bool running)
+{
+
+  frame = 0;
+  atomic_store_explicit(&framesrunning, running, memory_order_relaxed);
+}
+
+bool
+gamerunning(void)
+{
+
+  return (atomic_load_explicit(&framesrunning, memory_order_relaxed));
+}
+
+void
+digger_debug_hash_append(struct state_hash *shp)
+{
+  int i;
+
+  STATE_HASH_VAR(shp, startbonustimeleft);
+  STATE_HASH_VAR(shp, bonustimeleft);
+  STATE_HASH_VAR(shp, emmask);
+  STATE_HASH_VAR(shp, bonusvisible);
+  STATE_HASH_VAR(shp, bonusmode);
+  STATE_HASH_VAR(shp, digvisible);
+  STATE_HASH_ARR(shp, emfield, MSIZE);
+  for (i = 0; i < DIGGERS; i++) {
+    STATE_HASH_VAR(shp, digdat[i].h);
+    STATE_HASH_VAR(shp, digdat[i].v);
+    STATE_HASH_VAR(shp, digdat[i].rx);
+    STATE_HASH_VAR(shp, digdat[i].ry);
+    STATE_HASH_VAR(shp, digdat[i].mdir);
+    STATE_HASH_VAR(shp, digdat[i].bagtime);
+    STATE_HASH_VAR(shp, digdat[i].rechargetime);
+    STATE_HASH_VAR(shp, digdat[i].deathstage);
+    STATE_HASH_VAR(shp, digdat[i].deathbag);
+    STATE_HASH_VAR(shp, digdat[i].deathani);
+    STATE_HASH_VAR(shp, digdat[i].deathtime);
+    STATE_HASH_VAR(shp, digdat[i].emocttime);
+    STATE_HASH_VAR(shp, digdat[i].emn);
+    STATE_HASH_VAR(shp, digdat[i].msc);
+    STATE_HASH_VAR(shp, digdat[i].lives);
+    STATE_HASH_VAR(shp, digdat[i].ivt);
+    STATE_HASH_VAR(shp, digdat[i].notfiring);
+    STATE_HASH_VAR(shp, digdat[i].firepressed);
+    STATE_HASH_VAR(shp, digdat[i].dead);
+    STATE_HASH_VAR(shp, digdat[i].levdone);
+    STATE_HASH_VAR(shp, digdat[i].invin);
+    STATE_HASH_VAR(shp, digdat[i].dob.x);
+    STATE_HASH_VAR(shp, digdat[i].dob.y);
+    STATE_HASH_VAR(shp, digdat[i].dob.dir);
+    STATE_HASH_VAR(shp, digdat[i].dob.alive);
+    STATE_HASH_VAR(shp, digdat[i].bob.x);
+    STATE_HASH_VAR(shp, digdat[i].bob.y);
+    STATE_HASH_VAR(shp, digdat[i].bob.dir);
+    STATE_HASH_VAR(shp, digdat[i].bob.expsn);
+  }
+}
+
+void newframe(void)
+{
+
+  (void)syncframe(false, false, true, NULL, NULL);
+}
+
+static bool
+digger_deathmusic_pending(int n)
+{
+
+  if (digdat[n].deathmusicdone == 0)
+    return (false);
+  if (playing) {
+    /* Playback doesn't wait for the dirge to finish */
+    soundackcancel(digdat[n].deathmusicdone);
+    digdat[n].deathmusicdone = 0;
+    return (false);
+  }
+  if (soundackready(digdat[n].deathmusicdone)) {
+    digdat[n].deathmusicdone = 0;
+    return (false);
+  }
+  return (true);
+}
+
+/*
+ * The game has waited for the dirge as many ticks as it takes to play, but
+ * it may still be heard (the sound lags, or the game runs faster than the
+ * default speed): let it finish, with the game held still, so that how
+ * long it takes doesn't change the game.
+ */
+static void
+dirgehold(int n)
+{
+
+  while (digger_deathmusic_pending(n) && !escape) {
+    gethrt(false, 1);
+    checkkeyb();
+  }
+}
+
+static bool
+syncframe(bool local_freeze, bool local_pause, bool use_pause_latch,
+  bool *remote_freezep,
+  bool *remote_pausep)
+{
+  bool localquit;
+
+  if (!local_freeze) {
+    if (!deathffwd)
+      gethrt(false, 1);
+  } else {
+    gethrt(false, 3);
+  }
+  checkkeyb();
+  if (edrf_quitting() && !netsim_draining())
+    escape=true; /* End of the recording */
+  /* Quitting a NetSim game: tell the peer with this frame, so that both
+     leave the game on it */
+  localquit=escape && !netsim_draining() && dgstate.netsim &&
+    netsim_session_active();
+  if (localquit)
+    escape=false;
+
+#if defined(INTDRF) || 1
+  frame++;
+#endif
+  input_advance_fire_state();
+  return (netsim_game_frame(frame, local_freeze, local_pause,
+    use_pause_latch, localquit, remote_freezep, remote_pausep));
+}
+
+bool
+pauseframe(bool local_pause, bool *remote_pausep)
+{
+
+  return (syncframe(true, local_pause, false, NULL, remote_pausep));
+}
+
+bool
+freezeframe(bool local_freeze, bool *remote_freezep)
+{
+
+  return (syncframe(local_freeze, false, false, remote_freezep, NULL));
+}
+
+void
+redrawdelay(void)
+{
+  bool remote_freeze;
+
+  if (escape)
+    return;
+  if (dgstate.netsim && netsim_session_active()) {
+    (void)freezeframe(true, &remote_freeze);
+    return;
+  }
+  gethrt(false, 3);
+}
+
+void drawdig(int n)
+{
+  CALL_METHOD(&digdat[n].dob, animate);
+  if (digdat[n].invin) {
+    digdat[n].ivt--;
+    if (digdat[n].ivt==0)
+      digdat[n].invin=false;
+    else
+      if (digdat[n].ivt%10<5)
+        erasespr(FIRSTDIGGER+n-dgstate.curplayer);
+  }
+}
+
+void
+dodigger(struct digger_draw_api *ddap)
+{
+  int n;
+  int16_t tdir;
+
+  if (escape || dgstate.timeout)
+    return;
+  if (dgstate.gauntlet) {
+    drawlives(ddap);
+    /* The clock counts game ticks, of the default speed's length, however
+       fast the game runs: a recording plays back the same way at any */
+    if (dgstate.cgtime<DEFAULT_FTIME)
+      dgstate.timeout=true;
+    dgstate.cgtime-=DEFAULT_FTIME;
+  }
+  for (n=dgstate.curplayer;n<dgstate.diggers+dgstate.curplayer;n++) {
+    readdirect(n-dgstate.curplayer);
+    if (digdat[n].bob.expsn!=0)
+      drawexplosion(n);
+    else
+      updatefire(ddap, n);
+    if (digvisible) {
+      if (digdat[n].dob.alive)
+        if (digdat[n].bagtime!=0) {
+          tdir = digdat[n].dob.dir;
+          digdat[n].dob.dir = digdat[n].mdir;
+          drawdig(n);
+          digdat[n].dob.dir = tdir;
+          incpenalty();
+          digdat[n].bagtime--;
+        }
+        else
+          updatedigger(ddap, n);
+      else
+        diggerdie(ddap, n);
+    }
+    if (digdat[n].emocttime>0)
+      digdat[n].emocttime--;
+  }
+  if (bonusmode && isalive()) {
+    if (bonustimeleft!=0) {
+      bonustimeleft--;
+      if (startbonustimeleft!=0 || bonustimeleft<20) {
+        startbonustimeleft--;
+        if (bonustimeleft&1) {
+          ddap->ginten(0);
+          soundbonus();
+        }
+        else {
+          ddap->ginten(1);
+          soundbonus();
+        }
+        if (startbonustimeleft==0) {
+          music(MUSIC_BONUS, 1.0);
+          soundbonusoff();
+          ddap->ginten(1);
+        }
+      }
+    }
+    else {
+      endbonusmode(ddap);
+      soundbonusoff();
+      music(MUSIC_MAIN, 1.0);
+    }
+  }
+  if (bonusmode && !isalive()) {
+    endbonusmode(ddap);
+    soundbonusoff();
+    music(MUSIC_MAIN, 1.0);
+  }
+}
+
+static void
+updatefire(struct digger_draw_api *ddap, int n)
+{
+  int16_t pix=0, fx, fy;
+  int clfirst[TYPES],clcoll[SPRITES],i;
+  bool clflag;
+  if (digdat[n].notfiring) {
+    if (digdat[n].rechargetime!=0) {
+      digdat[n].rechargetime--;
+      if (digdat[n].rechargetime == 0) {
+        CALL_METHOD(&digdat[n].dob, recharge);
+      }
+    } else {
+      if (getfirepflag(n-dgstate.curplayer)) {
+        if (digdat[n].dob.alive) {
+          CALL_METHOD(&digdat[n].dob, discharge);
+          digdat[n].rechargetime=levof10()*3+60;
+          digdat[n].notfiring=false;
+          switch (digdat[n].dob.dir) {
+            case DIR_RIGHT:
+              fx = digdat[n].dob.x + 8;
+              fy = digdat[n].dob.y + 4;
+              break;
+            case DIR_UP:
+              fx = digdat[n].dob.x + 4;
+              fy = digdat[n].dob.y;
+              break;
+            case DIR_LEFT:
+              fx = digdat[n].dob.x;
+              fy = digdat[n].dob.y + 4;
+              break;
+            case DIR_DOWN:
+              fx = digdat[n].dob.x + 4;
+              fy = digdat[n].dob.y + 8;
+              break;
+            default:
+              abort();
+          }
+          bullet_obj_init(&digdat[n].bob, n - dgstate.curplayer, digdat[n].dob.dir, fx, fy);
+          CALL_METHOD(&digdat[n].bob, put);
+        }
+      }
+    }
+  }
+  else {
+    switch (digdat[n].bob.dir) {
+      case DIR_RIGHT:
+        digdat[n].bob.x+=8;
+        pix=ddap->ggetpix(digdat[n].bob.x,digdat[n].bob.y+4)|
+            ddap->ggetpix(digdat[n].bob.x+4,digdat[n].bob.y+4);
+        break;
+      case DIR_UP:
+        digdat[n].bob.y-=7;
+        pix=0;
+        for (i=0;i<7;i++)
+          pix|=ddap->ggetpix(digdat[n].bob.x+4,digdat[n].bob.y+i);
+        pix&=0xc0;
+        break;
+      case DIR_LEFT:
+        digdat[n].bob.x-=8;
+        pix=ddap->ggetpix(digdat[n].bob.x,digdat[n].bob.y+4)|
+            ddap->ggetpix(digdat[n].bob.x+4,digdat[n].bob.y+4);
+        break;
+      case DIR_DOWN:
+        digdat[n].bob.y+=7;
+        pix=0;
+        for (i=0;i<7;i++)
+          pix|=ddap->ggetpix(digdat[n].bob.x,digdat[n].bob.y+i);
+        pix&=0x3;
+        break;       
+    }
+    CALL_METHOD(&digdat[n].bob, animate);
+    for (i=0;i<TYPES;i++)
+      clfirst[i]=first[i];
+    for (i=0;i<SPRITES;i++)
+      clcoll[i]=coll[i];
+    incpenalty();
+    i=clfirst[2];
+    while (i!=-1) {
+      killmon(i-FIRSTMONSTER);
+      scorekill(ddap, n);
+      CALL_METHOD(&digdat[n].bob, explode);
+      i=clcoll[i];
+    }
+    i=clfirst[4];
+    while (i!=-1) {
+      if (i-FIRSTDIGGER+dgstate.curplayer!=n && !digdat[i-FIRSTDIGGER+dgstate.curplayer].invin
+          && digdat[i-FIRSTDIGGER+dgstate.curplayer].dob.alive) {
+        killdigger(i-FIRSTDIGGER+dgstate.curplayer,3,0);
+        CALL_METHOD(&digdat[n].bob, explode);
+      }
+      i=clcoll[i];
+    }
+    if (clfirst[0]!=-1 || clfirst[1]!=-1 || clfirst[2]!=-1 || clfirst[3]!=-1 ||
+        clfirst[4]!=-1)
+      clflag=true;
+    else
+      clflag=false;
+    if (clfirst[0]!=-1 || clfirst[1]!=-1 || clfirst[3]!=-1) {
+      CALL_METHOD(&digdat[n].bob, explode);
+      i=clfirst[3];
+      while (i!=-1) {
+        if (digdat[i-FIRSTFIREBALL+dgstate.curplayer].bob.expsn==0) {
+          CALL_METHOD(&digdat[i-FIRSTFIREBALL+dgstate.curplayer].bob, explode);
+        }
+        i=clcoll[i];
+      }
+    }
+    switch (digdat[n].bob.dir) {
+      case DIR_RIGHT:
+        if (digdat[n].bob.x>296) {
+          CALL_METHOD(&digdat[n].bob, explode);
+        } else {
+          if (pix!=0 && !clflag) {
+            digdat[n].bob.x-=8;
+            CALL_METHOD(&digdat[n].bob, animate);
+            CALL_METHOD(&digdat[n].bob, explode);
+          }
+        }
+        break;
+      case DIR_UP:
+        if (digdat[n].bob.y<15) {
+          CALL_METHOD(&digdat[n].bob, explode);
+        } else {
+          if (pix!=0 && !clflag) {
+            digdat[n].bob.y+=7;
+            CALL_METHOD(&digdat[n].bob, animate);
+            CALL_METHOD(&digdat[n].bob, explode);
+          }
+        }
+        break;
+      case DIR_LEFT:
+        if (digdat[n].bob.x<16) {
+          CALL_METHOD(&digdat[n].bob, explode);
+        } else {
+          if (pix!=0 && !clflag) {
+            digdat[n].bob.x+=8;
+            CALL_METHOD(&digdat[n].bob, animate);
+            CALL_METHOD(&digdat[n].bob, explode);
+          }
+        }
+        break;
+      case DIR_DOWN:
+        if (digdat[n].bob.y>183) {
+          CALL_METHOD(&digdat[n].bob, explode);
+        } else {
+          if (pix!=0 && !clflag) {
+            digdat[n].bob.y-=7;
+            CALL_METHOD(&digdat[n].bob, animate);
+            CALL_METHOD(&digdat[n].bob, explode);
+          }
+        }
+    }
+  }
+}
+
+void erasediggers(void)
+{
+  int i;
+  for (i=0;i<dgstate.diggers;i++)
+    erasespr(FIRSTDIGGER+i);
+  digvisible=false;
+}
+
+void drawexplosion(int n)
+{
+
+  if (digdat[n].bob.expsn < 4) {
+    CALL_METHOD(&digdat[n].bob, animate);
+    incpenalty();
+  } else {
+    killfire(n);
+  }
+}
+
+void killfire(int n)
+{
+  if (!digdat[n].notfiring) {
+    digdat[n].notfiring=true;
+    CALL_METHOD(&digdat[n].bob, remove);
+  }
+}
+
+static void
+updatedigger(struct digger_draw_api *ddap, int n)
+{
+  int16_t dir,ddir,diggerox,diggeroy,nmon;
+  bool push=true,bagf;
+  int clfirst[TYPES],clcoll[SPRITES],i;
+  dir=getdirect(n-dgstate.curplayer);
+  if (dir==DIR_RIGHT || dir==DIR_UP || dir==DIR_LEFT || dir==DIR_DOWN)
+    ddir=dir;
+  else
+    ddir=DIR_NONE;
+  if (digdat[n].rx==0 && (ddir==DIR_UP || ddir==DIR_DOWN))
+    digdat[n].dob.dir=digdat[n].mdir=ddir;
+  if (digdat[n].ry==0 && (ddir==DIR_RIGHT || ddir==DIR_LEFT))
+    digdat[n].dob.dir=digdat[n].mdir=ddir;
+  if (dir==DIR_NONE)
+    digdat[n].mdir=DIR_NONE;
+  else
+    digdat[n].mdir=digdat[n].dob.dir;
+  if ((digdat[n].dob.x==292 && digdat[n].mdir==DIR_RIGHT) ||
+      (digdat[n].dob.x==12 && digdat[n].mdir==DIR_LEFT) ||
+      (digdat[n].dob.y==180 && digdat[n].mdir==DIR_DOWN) ||
+      (digdat[n].dob.y==18 && digdat[n].mdir==DIR_UP))
+    digdat[n].mdir=DIR_NONE;
+  diggerox=digdat[n].dob.x;
+  diggeroy=digdat[n].dob.y;
+  if (digdat[n].mdir!=DIR_NONE)
+    eatfield(diggerox,diggeroy,digdat[n].mdir);
+  switch (digdat[n].mdir) {
+    case DIR_RIGHT:
+      drawrightblob(digdat[n].dob.x,digdat[n].dob.y);
+      digdat[n].dob.x+=4;
+      break;
+    case DIR_UP:
+      drawtopblob(digdat[n].dob.x,digdat[n].dob.y);
+      digdat[n].dob.y-=3;
+      break;
+    case DIR_LEFT:
+      drawleftblob(digdat[n].dob.x,digdat[n].dob.y);
+      digdat[n].dob.x-=4;
+      break;
+    case DIR_DOWN:
+      drawbottomblob(digdat[n].dob.x,digdat[n].dob.y);
+      digdat[n].dob.y+=3;
+      break;
+  }
+  if (hitemerald((digdat[n].dob.x-12)/20,(digdat[n].dob.y-18)/18,
+                 (digdat[n].dob.x-12)%20,(digdat[n].dob.y-18)%18,
+                 digdat[n].mdir)) {
+    if (digdat[n].emocttime==0)
+      digdat[n].emn=0;
+    scoreemerald(ddap, n);
+    soundem();
+    soundemerald(digdat[n].emn);
+
+    digdat[n].emn++;
+    if (digdat[n].emn==8) {
+      digdat[n].emn=0;
+      scoreoctave(ddap, n);
+    }
+    digdat[n].emocttime=9;
+  }
+  drawdig(n);
+  for (i=0;i<TYPES;i++)
+    clfirst[i]=first[i];
+  for (i=0;i<SPRITES;i++)
+    clcoll[i]=coll[i];
+  incpenalty();
+
+  i=clfirst[1];
+  bagf=false;
+  while (i!=-1) {
+    int bagno;
+
+    bagno = i - FIRSTBAG;
+    if (bagexist(bagno)) {
+      /* Grace-mode diggers ignore being struck by falling bags. */
+      if (!(digdat[n].invin && getbagdir(bagno) == DIR_DOWN)) {
+        bagf=true;
+        break;
+      }
+    }
+    i=clcoll[i];
+  }
+
+  if (bagf) {
+    if (digdat[n].mdir==DIR_RIGHT || digdat[n].mdir==DIR_LEFT) {
+      push=pushbags(ddap, digdat[n].mdir,clfirst,clcoll);
+      digdat[n].bagtime++;
+    }
+    else
+      if (!pushudbags(ddap, clfirst,clcoll))
+        push=false;
+    if (!push) { /* Strange, push not completely defined */
+      digdat[n].dob.x=diggerox;
+      digdat[n].dob.y=diggeroy;
+      digdat[n].dob.dir = digdat[n].mdir;
+      drawdig(n);
+      incpenalty();
+      digdat[n].dob.dir=reversedir(digdat[n].mdir);
+    }
+  }
+  if (clfirst[2]!=-1 && bonusmode && digdat[n].dob.alive)
+    for (nmon=killmonsters(clfirst,clcoll);nmon!=0;nmon--) {
+      soundeatm();
+      sceatm(ddap, n);
+    }
+  if (clfirst[0]!=-1) {
+    scorebonus(ddap, n);
+    initbonusmode(ddap);
+  }
+  digdat[n].h=(digdat[n].dob.x-12)/20;
+  digdat[n].rx=(digdat[n].dob.x-12)%20;
+  digdat[n].v=(digdat[n].dob.y-18)/18;
+  digdat[n].ry=(digdat[n].dob.y-18)%18;
+}
+
+void sceatm(struct digger_draw_api *ddap, int n)
+{
+  scoreeatm(ddap, n,digdat[n].msc);
+  digdat[n].msc<<=1;
+}
+
+static int16_t deatharc[7]={3,5,6,6,5,3,0};
+
+static void
+diggerdie(struct digger_draw_api *ddap, int n)
+{
+  int clfirst[TYPES],clcoll[SPRITES],i;
+  bool alldead;
+  if (digdat[n].dirgetime!=0)
+    digdat[n].dirgetime--;
+  switch (digdat[n].deathstage) {
+    case DGR_DEATH_BAG:
+      if (bagy(digdat[n].deathbag)+6>digdat[n].dob.y)
+        digdat[n].dob.y=bagy(digdat[n].deathbag)+6;
+      drawdigger(n-dgstate.curplayer,15,digdat[n].dob.x,digdat[n].dob.y,false);
+      incpenalty();
+      if (getbagdir(digdat[n].deathbag)+1==0) {
+        soundddie();
+        digdat[n].deathtime=5;
+        digdat[n].deathstage=DGR_DEATH_ANIM;
+        digdat[n].deathani=0;
+        digdat[n].dob.y-=6;
+      }
+      break;
+    case DGR_DEATH_ANIM:
+      if (digdat[n].deathtime!=0) {
+        digdat[n].deathtime--;
+        break;
+      }
+      if (digdat[n].deathani==0) {
+        /* The dirge plays with the music off too, and the game waits for
+           it to end as many ticks either way */
+        digdat[n].dirgetime=DIRGE_TICKS;
+        if (dgstate.diggers == 1)
+          digdat[n].deathmusicdone = musicwithack(MUSIC_DIRGE, 1.0);
+        else {
+          music(MUSIC_DIRGE, 0.7);
+          digdat[n].deathmusicdone = 0;
+        }
+      }
+      drawdigger(n-dgstate.curplayer,14-digdat[n].deathani,digdat[n].dob.x,digdat[n].dob.y,
+                 false);
+      for (i=0;i<TYPES;i++)
+        clfirst[i]=first[i];
+      for (i=0;i<SPRITES;i++)
+        clcoll[i]=coll[i];
+      incpenalty();
+      if (digdat[n].deathani==0 && clfirst[2]!=-1)
+        killmonsters(clfirst,clcoll);
+      if (digdat[n].deathani<4) {
+        digdat[n].deathani++;
+        digdat[n].deathtime=2;
+      }
+      else {
+        digdat[n].deathstage=DGR_DEATH_TOMBSTONE;
+        /* Same with the music off: only how long it takes differs, see
+           DGR_DEATH_TOMBSTONE */
+        digdat[n].deathtime=60;
+      }
+      break;
+    case DGR_DEATH_MONSTER:
+      digdat[n].deathstage=DGR_DEATH_ARC;
+      digdat[n].deathani=0;
+      digdat[n].deathtime=0;
+      break;
+    case DGR_DEATH_ARC:
+      if (digdat[n].deathani>=0 && digdat[n].deathani<=6) {
+        drawdigger(n-dgstate.curplayer,15,digdat[n].dob.x,
+                   digdat[n].dob.y-deatharc[digdat[n].deathani],false);
+        if (digdat[n].deathani==6 && !isalive())
+          musicoff();
+        incpenalty();
+        digdat[n].deathani++;
+        if (digdat[n].deathani==1)
+          soundddie();
+        if (digdat[n].deathani==7) {
+          digdat[n].deathtime=5;
+          digdat[n].deathani=0;
+          digdat[n].deathstage=DGR_DEATH_ANIM;
+        }
+      }
+      break;
+    case DGR_DEATH_TOMBSTONE:
+      /* The round ends with the death, and everything gets drawn anew:
+         once there's no dirge to be heard and the short (music off) grave
+         time is over, the rest of the death takes the same game ticks, but
+         no time. */
+      deathffwd=dgstate.diggers==1 && digdat[n].deathtime<=50 &&
+        !digger_deathmusic_pending(n);
+      if (digdat[n].deathtime!=0)
+        digdat[n].deathtime--;
+      else {
+        if (dgstate.diggers == 1) {
+          if (digdat[n].dirgetime!=0)
+            break;
+          dirgehold(n);
+        }
+        deathffwd=false;
+        digdat[n].deathmusicdone=0;
+        digdat[n].dead=true;
+        alldead=true;
+        for (i=0;i<dgstate.diggers;i++)
+          if (!digdat[i].dead) {
+            alldead=false;
+            break;
+          }
+        if (alldead)
+          setdead(true);
+        else
+          if (isalive() && digdat[n].lives>0) {
+            if (!dgstate.gauntlet)
+              digdat[n].lives--;
+            drawlives(ddap);
+            if (digdat[n].lives>0) {
+              digdat[n].v=9;
+              digdat[n].mdir=4;
+              digdat[n].h=(dgstate.diggers==1) ? 7 : (8-n*2);
+              digdat[n].dob.x=digdat[n].h*20+12;
+              digdat[n].dob.dir=(n==0) ? DIR_RIGHT : DIR_LEFT;
+              digdat[n].rx=0;
+              digdat[n].ry=0;
+              digdat[n].bagtime=0;
+              digdat[n].dob.alive=true;
+              digdat[n].dead=false;
+              digdat[n].invin=true;
+              digdat[n].ivt=50;
+              digdat[n].deathstage=DGR_DEATH_BAG;
+              digdat[n].dob.y=digdat[n].v*18+18;
+              erasespr(n+FIRSTDIGGER-dgstate.curplayer);
+              CALL_METHOD(&digdat[n].dob, put);
+              digdat[n].notfiring=true;
+              digdat[n].emocttime=0;
+              digdat[n].firepressed=false;
+              digdat[n].bob.expsn=0;
+              digdat[n].rechargetime=0;
+              digdat[n].emn=0;
+              digdat[n].msc=1;
+            }
+            clearfire(n);
+            if (bonusmode)
+              music(MUSIC_BONUS, 1.0);
+            else
+              music(MUSIC_MAIN, 1.0);
+          } else {
+            erasespr(n+FIRSTDIGGER-dgstate.curplayer);
+            digdat[n].deathstage=DGR_DEATH_DONE;
+            clearfire(n);
+          }
+      }
+      break;
+    case DGR_DEATH_DONE:
+      break;
+  }
+}
+
+void createbonus(void)
+{
+  bonusvisible=true;
+  drawbonus(292,18);
+}
+
+static void
+initbonusmode(struct digger_draw_api *ddap)
+{
+  int i;
+  bonusmode=true;
+  erasebonus(ddap);
+  ddap->ginten(1);
+  bonustimeleft=250-levof10()*20;
+  startbonustimeleft=20;
+  for (i=0;i<dgstate.diggers;i++)
+    digdat[i].msc=1;
+}
+
+static void
+endbonusmode(struct digger_draw_api *ddap)
+{
+  bonusmode=false;
+  ddap->ginten(0);
+}
+
+void
+erasebonus(struct digger_draw_api *ddap)
+{
+  if (bonusvisible) {
+    bonusvisible=false;
+    erasespr(FIRSTBONUS);
+  }
+  ddap->ginten(0);
+}
+
+int16_t reversedir(int16_t dir)
+{
+  switch (dir) {
+    case DIR_RIGHT: return DIR_LEFT;
+    case DIR_LEFT: return DIR_RIGHT;
+    case DIR_UP: return DIR_DOWN;
+    case DIR_DOWN: return DIR_UP;
+  }
+  return dir;
+}
+
+bool checkdiggerunderbag(int16_t h,int16_t v)
+{
+  int n;
+  for (n=dgstate.curplayer;n<dgstate.diggers+dgstate.curplayer;n++)
+    if (digdat[n].dob.alive && !digdat[n].invin)
+      if (digdat[n].mdir==DIR_UP || digdat[n].mdir==DIR_DOWN)
+        if ((digdat[n].dob.x-12)/20==h)
+          if ((digdat[n].dob.y-18)/18==v || (digdat[n].dob.y-18)/18+1==v)
+            return true;
+  return false;
+}
+
+void killdigger(int n,int16_t stage,int16_t bag)
+{
+  if (digdat[n].invin)
+    return;
+  if (digdat[n].deathstage < DGR_DEATH_ANIM ||
+      digdat[n].deathstage > DGR_DEATH_TOMBSTONE) {
+    digdat[n].dob.alive=false;
+    digdat[n].deathstage=stage;
+    digdat[n].deathbag=bag;
+  }
+}
+
+void makeemfield(void)
+{
+  int16_t x,y;
+  emmask=1<<dgstate.curplayer;
+  for (x=0;x<MWIDTH;x++)
+    for (y=0;y<MHEIGHT;y++)
+      if (getlevch(x,y,levplan())=='C')
+        emfield[y*MWIDTH+x]|=emmask;
+      else
+        emfield[y*MWIDTH+x]&=~emmask;
+}
+
+void drawemeralds(void)
+{
+  int16_t x,y;
+  emmask=1<<dgstate.curplayer;
+  for (x=0;x<MWIDTH;x++)
+    for (y=0;y<MHEIGHT;y++)
+      if (emfield[y*MWIDTH+x]&emmask) {
+        drawemerald(x*20+12,y*18+21);
+        redrawdelay();
+      }
+}
+
+static const int16_t embox[8]={8,12,12,9,16,12,6,9};
+
+bool hitemerald(int16_t x,int16_t y,int16_t rx,int16_t ry,int16_t dir)
+{
+  bool hit=false;
+  int16_t r;
+  if (dir!=DIR_RIGHT && dir!=DIR_UP && dir!=DIR_LEFT && dir!=DIR_DOWN)
+    return hit;
+  if (dir==DIR_RIGHT && rx!=0)
+    x++;
+  if (dir==DIR_DOWN && ry!=0)
+    y++;
+  if (dir==DIR_RIGHT || dir==DIR_LEFT)
+    r=rx;
+  else
+    r=ry;
+  if (emfield[y*MWIDTH+x]&emmask) {
+    if (r==embox[dir]) {
+      drawemerald(x*20+12,y*18+21);
+      incpenalty();
+    }
+    if (r==embox[dir+1]) {
+      eraseemerald(x*20+12,y*18+21);
+      incpenalty();
+      hit=true;
+      emfield[y*MWIDTH+x]&=~emmask;
+    }
+  }
+  return hit;
+}
+
+int16_t countem(void)
+{
+  int16_t x,y,n=0;
+  for (x=0;x<MWIDTH;x++)
+    for (y=0;y<MHEIGHT;y++)
+      if (emfield[y*MWIDTH+x]&emmask)
+        n++;
+  return n;
+}
+
+void killemerald(int16_t x,int16_t y)
+{
+  if (emfield[(y+1)*MWIDTH+x]&emmask) {
+    emfield[(y+1)*MWIDTH+x]&=~emmask;
+    eraseemerald(x*20+12,(y+1)*18+21);
+  }
+}
+
+static bool
+getfirepflag(int n)
+{
+  return (input_get_fire_active(n));
+}
+
+int diggerx(int n)
+{
+  return digdat[n].dob.x;
+}
+
+int diggery(int n)
+{
+  return digdat[n].dob.y;
+}
+
+bool digalive(int n)
+{
+  return digdat[n].dob.alive;
+}
+
+bool
+diginvincible(int n)
+{
+
+  return digdat[n].invin;
+}
+
+void digresettime(int n)
+{
+  digdat[n].bagtime=0;
+}
+
+bool isalive(void)
+{
+  int i;
+  for (i=dgstate.curplayer;i<dgstate.diggers+dgstate.curplayer;i++)
+    if (digdat[i].dob.alive)
+      return true;
+  return false;
+}
+
+int getlives(int pl)
+{
+  return digdat[pl].lives;
+}
+
+void addlife(int pl)
+{
+  digdat[pl].lives++;
+  sound1up();
+  musicrefresh();
+}
+
+void initlives(void)
+{
+  int i;
+
+  memset(digdat, '\0', sizeof(digdat));
+  for (i=0;i<dgstate.diggers+dgstate.nplayers-1 && i<DIGGERS;i++)
+    digdat[i].lives=3;
+}
+
+void declife(int pl)
+{
+  if (!dgstate.gauntlet)
+    digdat[pl].lives--;
+}

@@ -1,0 +1,232 @@
+{
+  "format": "jinyong-sdl1-headers-png-1",
+  "sdl_headers": [
+    {
+      "path": "SDL/begin_code.h",
+      "bytes": 4071,
+      "sha256": "b2eaf8726d3701ba013d862f79bb1bad29dfbb09b83a66d7b29f390f5871d8a3",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/begin_code.h"
+    },
+    {
+      "path": "SDL/close_code.h",
+      "bytes": 1571,
+      "sha256": "ca596a3567204c454958ffe34720f4d4d788bbe516d0999088a94b0110fb4fcb",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/close_code.h"
+    },
+    {
+      "path": "SDL/SDL.h",
+      "bytes": 2142,
+      "sha256": "3c6f56458f3f2e591542aef6ad129e73745d14c28bfdc2f08d5d4f049d678dfc",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL.h"
+    },
+    {
+      "path": "SDL/SDL_active.h",
+      "bytes": 1422,
+      "sha256": "72fc664f6627ae76e711df945c483e157ac85b6a6f9229e353a7e30511a92449",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_active.h"
+    },
+    {
+      "path": "SDL/SDL_audio.h",
+      "bytes": 3743,
+      "sha256": "472f9b8d50f33b008a5ee6fdbee754e7d09db2695f2176f6d10b45ed59301e93",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_audio.h"
+    },
+    {
+      "path": "SDL/SDL_byteorder.h",
+      "bytes": 1212,
+      "sha256": "bf6f6f34f9a1c5deca411aea4a061575b36f6900d7bf2cfeb698931ca267a559",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_byteorder.h"
+    },
+    {
+      "path": "SDL/SDL_cdrom.h",
+      "bytes": 2807,
+      "sha256": "2c396497eda0ec1b73fd5d3976effbc302d7bcdc6dfcb4ed2c27644cc38bb607",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_cdrom.h"
+    },
+    {
+      "path": "SDL/SDL_config.h",
+      "bytes": 5493,
+      "sha256": "b3bbc1922a2024030c7ead941f89f5f2b64a5e901c3d2531161926e1f5a8faf7",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_config.h"
+    },
+    {
+      "path": "SDL/SDL_copying.h",
+      "bytes": 1280,
+      "sha256": "dedca9e58f58c2b61ef421c53f2ce73dc523f2fba2a3bcee68d94d2feaebf584",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_copying.h"
+    },
+    {
+      "path": "SDL/SDL_cpuinfo.h",
+      "bytes": 1682,
+      "sha256": "ae0d266aa2b805b5be65b7190f93e5342268fa95d3e9433d3d0e40d7ebfd45ea",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_cpuinfo.h"
+    },
+    {
+      "path": "SDL/SDL_endian.h",
+      "bytes": 8036,
+      "sha256": "6db585f137f8e71a2bcfc43ff7d1068835ffd1795667b5db606a96242c3a672d",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_endian.h"
+    },
+    {
+      "path": "SDL/SDL_error.h",
+      "bytes": 1734,
+      "sha256": "b77ee9ce541f46e4c9d682af9c2124aa5f98a667359417de40535e1337c018f8",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_error.h"
+    },
+    {
+      "path": "SDL/SDL_events.h",
+      "bytes": 6230,
+      "sha256": "8a497d0087fb86dff8f069a30a4c2955cdbcb17338119ce582e4e63cdf6ded80",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_events.h"
+    },
+    {
+      "path": "SDL/SDL_getenv.h",
+      "bytes": 1239,
+      "sha256": "3da02ababb8bd60c06ca50a81a6a6fc2136b3d5a51c05cadf71bcf769774e358",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_getenv.h"
+    },
+    {
+      "path": "SDL/SDL_image.h",
+      "bytes": 5513,
+      "sha256": "c8fa78b3a6704034eb84d74c44c136a01595660876b1322fc04630e42c58909f",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_image.h"
+    },
+    {
+      "path": "SDL/SDL_joystick.h",
+      "bytes": 2761,
+      "sha256": "bd2ae0bca418724989219074c39d3066e97d8a0d256ece62f822047cc9a79fb9",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_joystick.h"
+    },
+    {
+      "path": "SDL/SDL_keyboard.h",
+      "bytes": 1981,
+      "sha256": "7a0cf169dbf436ae440a63007703e6d4be5f04942cc3291d17fc5aad869e5a6e",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_keyboard.h"
+    },
+    {
+      "path": "SDL/SDL_keysym.h",
+      "bytes": 6989,
+      "sha256": "81b64841ff7658c748d0d2513b73e14f581d5736053015b49af8c761c287ed47",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_keysym.h"
+    },
+    {
+      "path": "SDL/SDL_loadso.h",
+      "bytes": 1488,
+      "sha256": "6b36fba62be0a0142c3f44c0a4290f51186db97c80adbdcfbf3ac64bc2bd194b",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_loadso.h"
+    },
+    {
+      "path": "SDL/SDL_main.h",
+      "bytes": 1598,
+      "sha256": "542e3daf037f9ffb8217bd2488328400312d2e1a04c15a34e74aa43468eac4e5",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_main.h"
+    },
+    {
+      "path": "SDL/SDL_mixer.h",
+      "bytes": 27739,
+      "sha256": "fc897657935471a4ab1b808655e7f4176d6f76ad290cc8bafc99d1d770a5bb21",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_mixer.h"
+    },
+    {
+      "path": "SDL/SDL_mouse.h",
+      "bytes": 2555,
+      "sha256": "01287a1066a0e2b116798dae7c71201de64a27686c12bd25cc1b79dbbdc83e5d",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_mouse.h"
+    },
+    {
+      "path": "SDL/SDL_mutex.h",
+      "bytes": 2655,
+      "sha256": "256aeb2a2318cc70fb70271ade31449e3c5026021ef26937cd631f1dd904f812",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_mutex.h"
+    },
+    {
+      "path": "SDL/SDL_name.h",
+      "bytes": 1292,
+      "sha256": "a3b137cce7f8d375b6a9ce5911adfc58d69aba0290d269a7d97842c06a54d2cd",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_name.h"
+    },
+    {
+      "path": "SDL/SDL_platform.h",
+      "bytes": 5481,
+      "sha256": "7d89c6a3c89923e1546eab12f120a4de3741ba2bebd7bb28e84031fd810f21ae",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_platform.h"
+    },
+    {
+      "path": "SDL/SDL_quit.h",
+      "bytes": 1323,
+      "sha256": "a11b93ae256bf5176a9d405d562e1dd414cbff5a8843769a9c09104c0cad6436",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_quit.h"
+    },
+    {
+      "path": "SDL/SDL_rwops.h",
+      "bytes": 3820,
+      "sha256": "d8984b7058448c247b79f97479f1465c2fb2656ebafd438802924fa7cec64e66",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_rwops.h"
+    },
+    {
+      "path": "SDL/SDL_stdinc.h",
+      "bytes": 11774,
+      "sha256": "5ae03b31eea869809596418dca41dc5fc6598c1260324b1e6431fca553e7bc99",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_stdinc.h"
+    },
+    {
+      "path": "SDL/SDL_syswm.h",
+      "bytes": 3330,
+      "sha256": "0eac09e64f231086c6465ef467ef2b7664ccf29eabef50664d1d52568b5a85b2",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_syswm.h"
+    },
+    {
+      "path": "SDL/SDL_thread.h",
+      "bytes": 2573,
+      "sha256": "e44281667d8080ff8f7393f16d8360a1b59ca7f95559b450d222353b0e113113",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_thread.h"
+    },
+    {
+      "path": "SDL/SDL_timer.h",
+      "bytes": 1880,
+      "sha256": "0a28309bdff5a73bcaf437b104a63ccd9ac8140f9bbc08620482f8d0a8e0d87f",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_timer.h"
+    },
+    {
+      "path": "SDL/SDL_types.h",
+      "bytes": 1239,
+      "sha256": "3da02ababb8bd60c06ca50a81a6a6fc2136b3d5a51c05cadf71bcf769774e358",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_types.h"
+    },
+    {
+      "path": "SDL/SDL_version.h",
+      "bytes": 1944,
+      "sha256": "216caa833765dc08d8f7a269e0270e9d165888c53ec4e9419812fa503041e6af",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_version.h"
+    },
+    {
+      "path": "SDL/SDL_video.h",
+      "bytes": 10087,
+      "sha256": "a92133f0a0168a01332c54e283da1f47dfc8a597c30322ff73786dc51b76453c",
+      "origin": "ports/jinyong/deps/native/usr/include/SDL/SDL_video.h"
+    }
+  ],
+  "sdl_header_origin": "Existing authorized deps/native SDL1 sdl12-compat canonical headers, copyright notices retained. SDL_ttf.h belongs to the independent font helper.",
+  "stb_commit": "003501f6d7a8668ce8b6d875e34dd97ad0d5d5b5",
+  "stb": [
+    {
+      "url": "https://api.github.com/repos/nothings/stb/commits/master",
+      "path": "third_party/stb/head.json",
+      "bytes": 5238,
+      "sha256": "985bec2b918702ceff296100f617fa4cac778dd0f0ce1c52504b99c7070211da"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/nothings/stb/003501f6d7a8668ce8b6d875e34dd97ad0d5d5b5/stb_image.h",
+      "path": "third_party/stb/stb_image.h",
+      "bytes": 283010,
+      "sha256": "594c2fe35d49488b4382dbfaec8f98366defca819d916ac95becf3e75f4200b3"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/nothings/stb/003501f6d7a8668ce8b6d875e34dd97ad0d5d5b5/LICENSE",
+      "path": "third_party/stb/LICENSE",
+      "bytes": 2510,
+      "sha256": "bebfe904b14301657e4e5d655c811d51fd31b97c455b9cc2d8600d6bac6cff63"
+    }
+  ],
+  "stb_configuration": "STBI_ONLY_PNG/STBI_NO_STDIO/STBI_NO_HDR/STBI_NO_LINEAR/STBI_NO_SIMD; no image dependencies or source programs executed during retrieval."
+}

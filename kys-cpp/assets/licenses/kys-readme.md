@@ -1,0 +1,118 @@
+# kys-cpp
+
+金庸群侠传复刻版，为区别于其他语言的复刻版，添加后缀cpp。
+
+除了经典的回合制战斗外，还包含半即时战斗（含进度条），以及两种完全即时战斗模式。即模仿黑帝斯和只狼的战斗系统。可以通过游戏中的设置选项来切换。
+
+github：https://github.com/scarsty/kys-cpp
+
+码云（不定期同步）：https://gitee.com/scarsty/kys-cpp
+
+资源文件：<http://pan.baidu.com/s/1sl2X9wD>
+
+目前的开发分支为“纸片”，即试图营造一个真3D效果，但因素材限制，只能以纸片形式展示。大致类似“纸片马力欧”和“饥荒”的效果。
+
+## 如何编译
+
+Windows下建议先安装vcpkg，并在vcpkg目录中执行：
+```bat
+.\vcpkg install sdl3 sdl3-ttf sdl3-mixer[fluidsynth,mpg123] sdl3-image[png,webp] sqlite3 libiconv asio picosha2 yaml-cpp glaze
+```
+建议执行：
+```bat
+.\vcpkg.exe integrate install
+```
+获取子模块：
+
+```shell
+git submodule sync --recursive
+git submodule update --init --recursive
+# 可选
+git submodule update --remote --rebase --recursive
+```
+之后使用 Visual Studio （需安装“使用 C++ 的桌面开发”组件）打开 `kys.sln`，编译 `x64` 配置即可。当前工程使用 v145 工具集，Visual Studio 2026 已验证；如需要 x86 版请自行修改工程。
+
+macOS下可使用Homebrew安装依赖：
+```shell
+brew install cmake sdl3 sdl3_image sdl3_ttf sdl3_mixer sqlite yaml-cpp glaze
+```
+
+同样建议先获取子模块：
+
+```shell
+git submodule sync --recursive
+git submodule update --init --recursive
+```
+
+之后执行：
+
+```shell
+mkdir -p src/build
+cmake -S src -B src/build
+cmake --build src/build -j8
+```
+
+编译产物为 `src/build/kys`。
+
+运行时需要提供资源目录，作为命令行参数。例如：
+
+```shell
+./src/build/kys kys-cpp-4in1/game
+```
+
+若提示找不到字体或资源，一般是资源根目录多套了一层；请确认传入的是具体游戏目录，而不是其上一级打包目录。
+
+上面的方法不含播放视频功能。如需要此功能，例如播放开场动画，则需先编译smallpot的动态库，比较复杂，请与作者联系。
+
+Linux下编译参考doc目录中的文档。需注意没有联机对战部分。
+
+对依赖的详细解释见doc目录中的“依赖库.md”。
+
+简繁转换的词汇表取自OpenCC，但因为这个库的依赖太复杂，没有直接使用，而是自编了一个SimpleCC代替。
+
+## 授权
+
+以下文本，若中文和英文存在冲突，则以中文为准。
+
+```
+以 BSD 3-Clause License 授权发布，但是包含两个附加条款：
+一般情况下，可以自由使用代码，也可自由用于商业。
+但若将其用于金庸武侠题材的游戏，则严禁任何形式的牟利行为。
+
+The source codes are distributed under BSD 3-Clause License license, with two additional clauses.
+Full right of the codes is granted.
+If the codes are used in Jin Yong's novels related games, the game is strictly prohibited for profit.
+```
+
+## 运行截图
+
+2x高清素材图使用深度学习模型放大，增加了一点伪光照。
+
+<img src='pic/1.png' />
+
+<img src='pic/2.png' />
+
+<img src='pic/3.png' />
+
+<img src='pic/4.png' />
+
+## 字体
+
+不同的字体可能需要细微调整Font类中的y轴的位置。
+
+## 剧情脚本
+
+剧情脚本使用作者自己编写的类 C 风格脚本 Cifa（<https://github.com/scarsty/cifa>）执行。
+
+## 其他
+
+Special thanks to ReSharper C++ for its support to the open source community.
+
+<img src='https://resources.jetbrains.com/storage/products/company/brand/logos/ReSharperCPP_icon.svg'>
+
+Special thanks to GitHub Copilot.
+
+Special thanks to WangZi, NiBa, HuaKaiYeLuo, XiaoWu, LiuYunFeiYue, ZhenZhengDeQiangQiang, SanDaShan, YangYubiao SB250 and SB750.
+
+纪念金庸先生对武侠文化的贡献。
+

@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/sobomax/digger",
+  "commit": "638125eecc2a36629b886f58d7b75253894cf3d3",
+  "source_layout": {
+    "engine": "Prepared application engine sources, including the supplied portability adaptations.",
+    "vendor": "Unmodified source and license references supplied with the private development archive."
+  }
+}

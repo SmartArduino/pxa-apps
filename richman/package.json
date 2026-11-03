@@ -1,0 +1,57 @@
+{
+  "build": {
+    "linear_memory": {
+      "maximum_bytes": 4194304,
+      "pinned": false
+    },
+    "system": "cmake",
+    "source_dir": "."
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "services": [
+        "clock",
+        "log",
+        {
+          "name": "ui",
+          "min_version": [0, 9]
+        },
+        "window"
+      ],
+      "wasi": {
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ],
+        "libc": "wasi-libc",
+        "version": "preview1"
+      },
+      "cmake_target": "pxa_main",
+      "artifact": "aot",
+      "execution_model": "main-loop"
+    }
+  ],
+  "format": "pxa-package-source-0.2",
+  "id": "pxa-richman",
+  "name": "richman",
+  "release_sequence": 2,
+  "version": "0.2.0+pxa07",
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  }
+}

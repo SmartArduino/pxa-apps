@@ -1,0 +1,112 @@
+﻿#pragma once
+#include <cstdio>
+#include <map>
+#include <string>
+
+#ifdef _WIN32
+#define NOMINMAX
+#include <windows.h>
+#undef NOMINMAX
+#else
+#endif
+
+enum ConsoleColor
+{
+    CONSOLE_COLOR_NONE = -1,
+    CONSOLE_COLOR_RED = 4,
+    CONSOLE_COLOR_LIGHT_RED = 12,
+    CONSOLE_COLOR_GREEN = 2,
+    CONSOLE_COLOR_LIGHT_GREEN = 10,
+    CONSOLE_COLOR_BLUE = 1,
+    CONSOLE_COLOR_LIGHT_BLUE = 9,
+    CONSOLE_COLOR_WHITE = 7,
+    CONSOLE_COLOR_BLACK = 0,
+};
+
+class ConsoleControl
+{
+private:
+    ConsoleControl()
+    {
+        if (color_map_.empty())
+        {
+            color_map_ = {
+                { CONSOLE_COLOR_NONE, "\033[0m" },
+                { CONSOLE_COLOR_RED, "\033[0;31m" },
+                { CONSOLE_COLOR_LIGHT_RED, "\033[1;31m" },
+                { CONSOLE_COLOR_GREEN, "\033[0;32m" },
+                { CONSOLE_COLOR_LIGHT_GREEN, "\033[1;32m" },
+                { CONSOLE_COLOR_BLUE, "\033[0;34m" },
+                { CONSOLE_COLOR_LIGHT_BLUE, "\033[1;34m" },
+                { CONSOLE_COLOR_WHITE, "\033[1;37m" },
+                { CONSOLE_COLOR_BLACK, "\033[0;30m" },
+            };
+#ifdef _WIN32
+            CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
+            GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbiInfo);
+            old_color_ = csbiInfo.wAttributes;
+#endif
+        }
+    }
+
+    unsigned short old_color_;
+    std::map<int, std::string> color_map_;
+
+    static ConsoleControl* getInstance()
+    {
+        static ConsoleControl console_control;
+        return &console_control;
+    }
+
+private:
+    ConsoleControl(ConsoleControl&) = delete;
+    ConsoleControl& operator=(ConsoleControl&) = delete;
+
+public:
+    static void setColor(ConsoleColor c)
+    {
+        setColor(static_cast<int>(c));
+    }
+    static void setColor(int c)
+    {
+        auto cc = getInstance();
+#ifdef _MSC_VER
+        if (c != CONSOLE_COLOR_NONE)
+        {
+            SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), c);
+        }
+        else
+        {
+            SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), cc->old_color_);
+        }
+#else
+        fprintf(stderr, "%s", cc->color_map_[c].c_str());
+#endif
+    }
+    static void resetColor()
+    {
+        setColor(CONSOLE_COLOR_NONE);
+    }
+    static void moveUp(int l = 1)
+    {
+#ifdef _MSC_VER
+        CONSOLE_SCREEN_BUFFER_INFO info;
+        GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &info);
+        info.dwCursorPosition.Y -= l;
+        SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), info.dwCursorPosition);
+#else
+        if (l > 0)
+        {
+            fprintf(stderr, "\e[%dA", l);
+        }
+        else if (l < 0)
+        {
+            for (int i = 0; i < -l; i++) { fprintf(stderr, "\n"); }
+        }
+#endif
+    }
+    static void moveDown(int l = 1)
+    {
+        moveUp(-l);
+    }
+};

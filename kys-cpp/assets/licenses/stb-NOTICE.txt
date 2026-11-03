@@ -1,0 +1,3 @@
+stb_image and stb_truetype by Sean Barrett and contributors.
+Dual licensed under the MIT License or public domain; the public domain option is selected.
+Sources and full license alternatives: ../common/sdl-games/vendor/stb/ in pxa-apps.

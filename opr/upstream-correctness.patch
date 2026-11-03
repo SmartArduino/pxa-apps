@@ -1,0 +1,50 @@
+--- a/src/opr_combat.c
++++ b/src/opr_combat.c
+@@ -49,6 +49,7 @@
+ 
+     // Enemy dies
+     if (e->hp <= 0) {
++        int wasBoss = (e->type == OPR_BOSS);
+         g->player.xp += e->xp;
+ 
+         // Remove entity
+@@ -62,7 +63,7 @@
+         opr_check_levelup(g);
+ 
+         // Boss victory
+-        if (e->type == OPR_BOSS)
++        if (wasBoss)
+             opr_trigger_victory(g);
+ 
+         return;
+--- a/src/opr_floor.c
++++ b/src/opr_floor.c
+@@ -75,7 +75,7 @@
+ //
+ static int random_floor(OPR_GameState *g, Room *rooms, int roomCount, int *outX, int *outY) {
+     for (int attempt = 0; attempt < 50; attempt++) {
+-        int ri = 1 + rnd(roomCount - 1);
++        int ri = roomCount > 1 ? 1 + rnd(roomCount - 1) : 0;
+         Room *rm = &rooms[ri];
+ 
+         int x = rm->x + rnd(rm->w);
+@@ -85,7 +85,7 @@
+             continue;
+ 
+         // Check entity collision
+-        int occ = 0;
++        int occ = (x == g->player.x && y == g->player.y);
+         for (int i = 0; i < g->entityCount; i++) {
+             if (g->entities[i].x == x && g->entities[i].y == y) {
+                 occ = 1;
+@@ -183,8 +183,8 @@
+     // --- End room (stairs or boss) ---
+     //
+     Room *end = &rooms[roomCount - 1];
+-    int sx = end->x + end->w / 2;
+-    int sy = end->y + end->h / 2;
++    int sx = end->x + (roomCount > 1 ? end->w / 2 : 0);
++    int sy = end->y + (roomCount > 1 ? end->h / 2 : 0);
+ 
+     if (f >= 5) {
+         // Boss

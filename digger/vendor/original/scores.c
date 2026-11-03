@@ -1,0 +1,529 @@
+/* Digger Remastered
+   Copyright (c) Andrew Jenner 1998-2004 */
+
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include "def.h"
+#include "scores.h"
+#include "main.h"
+#include "draw_api.h"
+#include "drawing.h"
+#include "hardware.h"
+#include "sound.h"
+#include "sprite.h"
+#include "input.h"
+#include "digger.h"
+#include "record.h"
+#include "game.h"
+#include "netsim.h"
+#include "netsim_game.h"
+#include "edrf_feed.h"
+#if defined(__EMSCRIPTEN__)
+#include "ems_store.h"
+#endif
+
+static struct scdat
+{
+  int32_t score, nextbs, tscore;
+} scdat[DIGGERS];
+
+static char highbuf[10];
+
+static int32_t scorehigh[12]={0,0,0,0,0,0,0,0,0,0,0,0};
+
+char scoreinit[11][4];
+
+int32_t scoret=0;
+
+static char hsbuf[36];
+
+static char scorebuf[512];
+
+uint16_t bonusscore=20000;
+
+static void readscores(void);
+static void writescores(void);
+static void savescores(void);
+static void getinitials(struct digger_draw_api *);
+static void flashywait(struct digger_draw_api *, int16_t n);
+static int16_t getinitial(struct digger_draw_api *, int16_t x,int16_t y);
+static void shufflehigh(void);
+static void writenum(struct digger_draw_api *, int32_t n,int16_t x,int16_t y,int16_t w,int16_t c);
+static void numtostring(char *p,int32_t n);
+
+#if defined FREEBSD && defined _VGL
+
+#define SFNAME "/var/games/digger/digger.sco"
+
+#elif defined UNIX && !defined _VGL && !defined(__EMSCRIPTEN__)
+
+static char *
+digger_scorename(void)
+{
+  static char path[PATH_MAX];
+  const char *home = getenv("HOME");
+
+  snprintf(path, sizeof(path), "%s/.digger.sco", home != NULL ? home : ".");
+  return path;
+}
+#define SFNAME digger_scorename()
+
+#else
+
+#define SFNAME "DIGGER.SCO"
+
+#endif
+
+#ifdef INTDRF
+int32_t getscore0(void)
+{
+  return scdat[0].score;
+}
+#endif
+
+int32_t gettscore(int n)
+{
+  return scdat[n].tscore + scdat[n].score;
+}
+
+static void
+readscores(void)
+{
+  FILE *in;
+
+  scorebuf[0]=0;
+  if (!dgstate.levfflag) {
+#if defined(__EMSCRIPTEN__)
+    static bool restored = false;
+
+    if (!restored) {
+      ems_store_restore(SFNAME);
+      restored = true;
+    }
+#endif
+    in = fopen(SFNAME, "rb");
+    if (in == NULL)
+        return;
+  } else {
+    in = fopen(dgstate.levfname, "rb");
+    if (in == NULL)
+        return;
+    if (fseek(in, 1202, 0) < 0)
+        goto out;
+  }
+  if (fread(scorebuf, 512, 1, in) <= 0) {
+    scorebuf[0]=0;
+  }
+out:
+  fclose(in);
+}
+
+static void
+writescores(void)
+{
+  FILE *out;
+  if (!dgstate.levfflag) {
+    if ((out=fopen(SFNAME,"wb"))!=NULL) {
+      fwrite(scorebuf,512,1,out);
+      fclose(out);
+#if defined(__EMSCRIPTEN__)
+      ems_store_save(SFNAME);
+#endif
+    }
+  }
+  else
+    if ((out=fopen(dgstate.levfname,"r+b"))!=NULL) {
+      if (fseek(out,1202,0) == 0)
+          fwrite(scorebuf,512,1,out);
+      fclose(out);
+    }
+}
+
+void initscores(struct digger_draw_api *ddap)
+{
+  int i;
+  for (i=0;i<dgstate.diggers;i++)
+    addscore(ddap, i,0);
+}
+
+void loadscores(void)
+{
+  int16_t p=0,i,x;
+  readscores();
+  if (dgstate.gauntlet)
+    p=111;
+  if (dgstate.diggers==2)
+    p+=222;
+  if (scorebuf[p++]!='s')
+    for (i=0;i<11;i++) {
+      scorehigh[i+1]=0;
+      strcpy(scoreinit[i],"...");
+    }
+  else
+    for (i=1;i<11;i++) {
+      for (x=0;x<3;x++)
+        scoreinit[i][x]=scorebuf[p++];
+      p+=2;
+      for (x=0;x<6;x++)
+        highbuf[x]=scorebuf[p++];
+      scorehigh[i+1]=atol(highbuf);
+    }
+}
+
+void zeroscores(void)
+{
+  scdat[0].score = scdat[1].score = 0;
+  scdat[0].tscore = scdat[1].tscore = 0;
+  scdat[0].nextbs = scdat[1].nextbs = bonusscore;
+  scoret = 0;
+}
+
+void writecurscore(struct digger_draw_api *ddap, int col)
+{
+  if (dgstate.curplayer==0)
+    writenum(ddap, scdat[0].score,0,0,6,col);
+  else
+    if (scdat[1].score<100000l)
+      writenum(ddap, scdat[1].score,236,0,6,col);
+    else
+      writenum(ddap, scdat[1].score,248,0,6,col);
+}
+
+void drawscores(struct digger_draw_api *ddap)
+{
+  writenum(ddap, scdat[0].score,0,0,6,3);
+  if (dgstate.nplayers==2 || dgstate.diggers==2) {
+    if (scdat[1].score<100000l)
+      writenum(ddap, scdat[1].score,236,0,6,3);
+    else
+      writenum(ddap, scdat[1].score,248,0,6,3);
+  }
+}
+
+void addscore(struct digger_draw_api *ddap, int n,int16_t score)
+{
+  scdat[n].score+=score;
+  if (scdat[n].score>999999l) {
+    scdat[n].tscore += scdat[n].score;
+    scdat[n].score=0;
+  }
+  if (n==0)
+    writenum(ddap, scdat[n].score,0,0,6,1);
+  else
+    if (scdat[n].score<100000l)
+      writenum(ddap, scdat[n].score,236,0,6,1);
+    else
+      writenum(ddap, scdat[n].score,248,0,6,1);
+  if (scdat[n].score>=scdat[n].nextbs+n) { /* +n to reproduce original bug */
+    if (getlives(n)<5 || dgstate.unlimlives) {
+      if (dgstate.gauntlet)
+        dgstate.cgtime+=17897715l; /* 15 second time bonus instead of the life */
+      else
+        addlife(n);
+      drawlives(ddap);
+    }
+    scdat[n].nextbs+=bonusscore;
+  }
+  incpenalty();
+  incpenalty();
+  incpenalty();
+}
+
+void endofgame(struct digger_draw_api *ddap)
+{
+  int16_t i;
+  int16_t start, end;
+  int16_t local_player = 0;
+  bool initflag=false;
+  for (i=0;i<dgstate.diggers;i++)
+    addscore(ddap, i,0);
+  /* No high scores for playbacks, NetSim replays of recordings included,
+     nor for one taken over */
+  if (playing || edrf_feeding || !drfvalid || playtaken)
+    return;
+  if (dgstate.netsim)
+    local_player = netsim_local_player();
+  if (dgstate.netsim && netsim_session_active() && !netsim_peer_exited()) {
+    /* Let the peer get our last frames before leaving */
+    netsim_drain_frames();
+    netsim_end_game_session(true);
+  }
+  if (dgstate.gauntlet) {
+    cleartopline();
+    outtext(ddap, "TIME UP",120,0,3);
+    for (i=0;i<50 && !escape;i++)
+      newframe();
+    erasetext(ddap, 7, 120,0,3);
+  }
+  if (dgstate.netsim) {
+    start = local_player;
+    end = start + 1;
+  } else {
+    start = dgstate.curplayer;
+    end = dgstate.curplayer + dgstate.diggers;
+  }
+  for (i=start;i<end;i++) {
+    scoret=scdat[i].score;
+    if (scoret>scorehigh[11]) {
+      ddap->gclear();
+      drawscores(ddap);
+      strcpy(dgstate.pldispbuf,"PLAYER ");
+      if (i==0)
+        strcat(dgstate.pldispbuf,"1");
+      else
+        strcat(dgstate.pldispbuf,"2");
+      outtext(ddap, dgstate.pldispbuf,108,0,2);
+      outtext(ddap, " NEW HIGH SCORE ",64,40,2);
+      getinitials(ddap);
+      shufflehigh();
+      savescores();
+      initflag=true;
+    }
+  }
+  if (!initflag && !dgstate.gauntlet) {
+    cleartopline();
+    outtext(ddap, "GAME OVER",104,0,3);
+    for (i=0;i<50 && !escape;i++)
+      newframe();
+    erasetext(ddap, 9, 104,0,3);
+  }
+}
+
+void showtable(struct digger_draw_api *ddap)
+{
+  int16_t i,col;
+
+  erasetext(ddap, 11, 16, 25, 3);
+  for (i=0;i<10;i++)
+    erasetext(ddap, 11, 16, 44 + 13 * i, 3);
+  if (dgstate.netsim) {
+    size_t count;
+    size_t selected;
+    size_t window_start;
+
+    outtext(ddap, "FRIENDS",16,25,3);
+    count = netsim_friend_count();
+    selected = netsim_friend_selected();
+    if (count > 10 && selected >= 10)
+      window_start = selected - 9;
+    else
+      window_start = 0;
+    for (i=0;i<10;i++) {
+      unsigned int games_played;
+      unsigned int display_games;
+      char friend_name[64];
+      size_t index;
+
+      index = window_start + (size_t)i;
+      if (index >= count)
+        continue;
+      if (!netsim_friend_get(index, friend_name, sizeof(friend_name),
+            &games_played))
+        continue;
+      display_games = games_played > 99 ? 99 : games_played;
+      snprintf(hsbuf, sizeof(hsbuf), "%-8.8s %2u", friend_name, display_games);
+      outtext(ddap, hsbuf, 16, 44 + 13 * i, index == selected ? 2 : 1);
+    }
+    return;
+  }
+  outtext(ddap, "HIGH SCORES",16,25,3);
+  col=2;
+  for (i=1;i<11;i++) {
+    strcpy(hsbuf,"");
+    strcat(hsbuf,scoreinit[i]);
+    strcat(hsbuf,"  ");
+    numtostring(highbuf,scorehigh[i+1]);
+    strcat(hsbuf,highbuf);
+    outtext(ddap, hsbuf,16,31+13*i,col);
+    col=1;
+  }
+}
+
+static void
+savescores(void)
+{
+  int16_t i,p=0,j;
+  if (dgstate.gauntlet)
+    p=111;
+  if (dgstate.diggers==2)
+    p+=222;
+  strcpy(scorebuf+p,"s");
+  for (i=1;i<11;i++) {
+    strcpy(hsbuf,"");
+    strcat(hsbuf,scoreinit[i]);
+    strcat(hsbuf,"  ");
+    numtostring(highbuf,scorehigh[i+1]);
+    strcat(hsbuf,highbuf);
+    for (j=0;j<11;j++)
+      scorebuf[p+j+i*11-10]=hsbuf[j];
+  }
+  writescores();
+}
+
+void getinitials(struct digger_draw_api *ddap)
+{
+  int16_t k,i;
+  newframe();
+  outtext(ddap, "ENTER YOUR",100,70,3);
+  outtext(ddap, " INITIALS",100,90,3);
+  outtext(ddap, "_ _ _",128,130,3);
+  strcpy(scoreinit[0],"...");
+  killsound();
+  for (i=0;i<3;i++) {
+    k=0;
+    while (k==0) {
+      k=getinitial(ddap, i*24+128,130);
+      if (k==8 || k==127) {
+        if (i>0)
+          i--;
+        k=0;
+      }
+    }
+    if (k!=0) {
+      ddap->gwrite(i*24+128,130,k,3);
+      scoreinit[0][i]=k;
+    }
+  }
+  for (i=0;i<20;i++)
+    flashywait(ddap, 15);
+  setupsound();
+  ddap->gclear();
+  ddap->gpal(0);
+  ddap->ginten(0);
+  recputinit(scoreinit[0]);
+}
+
+void flashywait(struct digger_draw_api *ddap, int16_t n)
+{
+  int16_t i,gt,cx,p=0;
+  int8_t gap=19;
+
+  gethrt(true, 1);
+  for (i=0;i<(n<<1);i++)
+    for (cx=0;cx<volume;cx++) {
+      ddap->gpal(p=1-p);
+      ddap->gflush_sync();
+      for (gt=0;gt<gap;gt++);
+    }
+}
+
+int16_t getinitial(struct digger_draw_api *ddap, int16_t x,int16_t y)
+{
+  int16_t i;
+  ddap->gwrite(x,y,'_',3);
+  do {
+    for (i=0;i<40;i++) {
+      if (kbhit()) {
+        int16_t key = getkey(false);
+	if (!isalnum(key))
+	  continue;
+        return key;
+      }
+      flashywait(ddap, 15);
+    }
+    for (i=0;i<40;i++) {
+      if (kbhit()) {
+        ddap->gwrite(x,y,'_',3);
+        return getkey(false);
+      }
+      flashywait(ddap, 15);
+    }
+  } while (1);
+}
+
+static void
+shufflehigh(void)
+{
+  int16_t i,j;
+  for (j=10;j>1;j--)
+    if (scoret<scorehigh[j])
+      break;
+  for (i=10;i>j;i--) {
+    scorehigh[i+1]=scorehigh[i];
+    strcpy(scoreinit[i],scoreinit[i-1]);
+  }
+  scorehigh[j+1]=scoret;
+  strcpy(scoreinit[j],scoreinit[0]);
+}
+
+void scorekill(struct digger_draw_api *ddap, int n)
+{
+  addscore(ddap, n,250);
+}
+
+/* A monster killed by a bag: half for each Digger, or all of it for one
+   if the other is out of lives (still added to, as adding counts towards
+   the penalty) */
+void scorekill2(struct digger_draw_api *ddap)
+{
+  int16_t s0=125,s1=125;
+
+  if (getlives(0)==0) {
+    s0=0;
+    s1=getlives(1)>0 ? 250 : 0;
+  }
+  else if (getlives(1)==0) {
+    s0=250;
+    s1=0;
+  }
+  addscore(ddap, 0,s0);
+  addscore(ddap, 1,s1);
+}
+
+void scoreemerald(struct digger_draw_api *ddap, int n)
+{
+  addscore(ddap, n,25);
+}
+
+void scoreoctave(struct digger_draw_api *ddap, int n)
+{
+  addscore(ddap, n,250);
+}
+
+void scoregold(struct digger_draw_api *ddap, int n)
+{
+  addscore(ddap, n,500);
+}
+
+void scorebonus(struct digger_draw_api *ddap, int n)
+{
+  addscore(ddap, n,1000);
+}
+
+void scoreeatm(struct digger_draw_api *ddap, int n,int msc)
+{
+  addscore(ddap, n,msc*200);
+}
+
+static void
+writenum(struct digger_draw_api *ddap, int32_t n,int16_t x,int16_t y,int16_t w,int16_t c)
+{
+  int16_t d,xp=(w-1)*12+x;
+  while (w>0) {
+    d=(int16_t)(n%10);
+    if (w>1 || d>0)
+      ddap->gwrite(xp,y,d+'0',c);
+    n/=10;
+    w--;
+    xp-=12;
+  }
+}
+
+static void
+numtostring(char *p,int32_t n)
+{
+  int x;
+  for (x=0;x<6;x++) {
+    p[5-x]=(int8_t)(n%10l)+'0';
+    n/=10l;
+    if (n==0l) {
+      x++;
+      break;
+    }
+  }
+  for (;x<6;x++)
+    p[5-x]=' ';
+  p[6]=0;
+}
