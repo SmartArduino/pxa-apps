@@ -22,6 +22,7 @@ int studio_x(int x) { return studio_dx(x); }
 int studio_y(int y) { return studio_dy(y); }
 void studio_occlude(int, int, int, int) {}
 void studio_add(int, int, int, const char *, uint16_t, int, unsigned, int) {}
+void studio_add_box(int, int, int, int, const char *, uint16_t) {}
 void reset(uint16_t value = 0) {
     std::fill(std::begin(guarded), std::end(guarded), uint16_t(0x5aa5));
     std::fill(canvas, canvas + viewport.pixels(), value);

@@ -77,6 +77,9 @@ void label(int x, int y, int w, const char *s, uint16_t c, int scale, unsigned a
         --scale;
     studio_add(x, y, w, s, c, scale, align, 10);
 }
+void label_box(int x, int y, int w, int h, const char *s, uint16_t c) {
+    studio_add_box(x, y, w, h, s, c);
+}
 void round(int x, int y, int w, int h, int radius, uint16_t c) {
     if (!canvas || w <= 0 || h <= 0)
         return;
