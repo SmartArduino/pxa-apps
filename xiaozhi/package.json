@@ -1,8 +1,8 @@
 {
   "format": "pxa-package-source-0.2",
   "id": "pxa-xiaozhi",
-  "version": "0.4.2+pxa07",
-  "release_sequence": 15,
+  "version": "0.4.5+pxa07",
+  "release_sequence": 18,
   "min_sdk": [
     2,
     1
@@ -21,7 +21,7 @@
       "name": "Xiaozhi AI"
     }
   },
-  "description": "像素风 AI 女孩，支持表情、语音对话和字幕。默认连接小智官方服务，长按进入设置。",
+  "description": "像素风 AI 女孩，支持表情、语音对话和字幕。默认连接小智官方服务，↑ 或长按画面进入设置。",
   "build": {
     "system": "cmake",
     "source_dir": ".",

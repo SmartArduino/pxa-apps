@@ -125,20 +125,21 @@ struct Companion {
     return wrap_caption(text, width, font, max_lines);
   }
   void caption(std::string_view text, int width, int height, int margin,
-               int font, bool top) {
+               int font, bool top, std::uint32_t density) {
     if (text.empty())
       return;
-    auto wrapped = lines(text, width - 2 * margin - 20, font, top ? 2 : 3);
+    const auto layout = caption_metrics(font, density);
+    auto wrapped = lines(text, width - 2 * margin - 20, layout.advance, top ? 2 : 3);
     unsigned count = caption_line_count(wrapped);
     if (!count)
       return;
-    int box_height = int(count) * (font + 5) + 16;
+    int box_height = int(count - 1) * layout.line_step + layout.line_height + 16;
     int y = top ? margin : height - margin - box_height;
     commands.rect(margin + 2, y + 2, width - 2 * margin, box_height, 0x100d1c60)
         .rect(margin, y, width - 2 * margin, box_height, 0x171322c8, 2);
     for (unsigned i = 0; i < count; i++)
-      commands.text_sized({margin + 10, y + 7 + int(i) * (font + 5),
-                           width - 2 * margin - 20, font + 6},
+      commands.text_sized({margin + 10, y + 8 + int(i) * layout.line_step,
+                           width - 2 * margin - 20, layout.line_height},
                           top ? 0xe0d9f0ff : 0xfff4e2ff, wrapped[i], font, 0);
   }
   void draw(const pxa::ui::DisplayMetrics &metrics, std::string_view status,
@@ -146,7 +147,7 @@ struct Companion {
             bool ready, bool listening, bool waiting, std::uint64_t now,
             RoomMode room, std::string_view code,
             std::string_view activation_message, bool text_reply = false,
-            bool idle = false, std::string_view wake_hint = {}) {
+            bool idle = false, std::string_view wake_hint = {}, bool button_hints = false) {
     if (!canvas.mounted())
       return;
     int w = int(canvas_extent(metrics.width, metrics.density_q16)),
@@ -168,7 +169,7 @@ struct Companion {
     mix(activation_message);
     mix(wake_hint);
     hash ^= std::uint64_t(room) << 48 | std::uint64_t(text_reply) << 56 |
-            std::uint64_t(idle) << 57;
+            std::uint64_t(idle) << 57 | std::uint64_t(button_hints) << 58;
     hash ^= std::uint64_t(w) << 32 | std::uint64_t(h) << 16 | base << 8 |
             breathe << 3 | ready << 2 | listening << 1;
     hash ^= background ? background->handle() : 0;
@@ -209,13 +210,14 @@ struct Companion {
           commands.text_sized({left + 12, top + 86 + int(i) * 18, cw - 24, 19},
                               0x765c69ff, notes[i], 13, 1);
         commands.text_sized({left + 8, top + 126, cw - 16, 20}, 0x765c69ff,
-                            "绑定后轻触继续 · 长按设置", 12, 1);
+                            button_hints ? "确认继续 · 按 ↑ 打开设置"
+                                         : "绑定后轻触继续 · 长按设置", 12, 1);
       } else {
         auto message = room == RoomMode::offline
                            ? "房间准备好了\n请先在系统设置中连接 "
                              "Wi-Fi\n连好网络后，会自动继续"
                            : "等一位新朋友\n" + std::string(status);
-        caption(message, w, h, margin, font, false);
+        caption(message, w, h, margin, font, false, metrics.density_q16);
       }
       auto shown = canvas.present(commands);
       if (shown)
@@ -223,25 +225,35 @@ struct Companion {
       return;
     }
     if (idle) {
-      const int y = h - margin - 53;
-      commands.rect(margin, y, w - margin * 2, 53, 0x2d203ca8, 2)
-          .text_sized({margin + 10, y + 7, w - margin * 2 - 20, 23},
-                      0xfff4e2ff, "我在这里，轻触和我聊聊", font, 1)
-          .text_sized({margin + 10, y + 32, w - margin * 2 - 20, 15},
-                      0xd5c8deff, wake_hint.empty() ? "长按打开设置" : wake_hint,
-                      std::max(10, font - 3), 1);
+      const int hint_font = std::max(10, font - 3);
+      const auto title = caption_metrics(font, metrics.density_q16);
+      const auto hint_line = caption_metrics(hint_font, metrics.density_q16);
+      const int box_height = title.line_step + hint_line.line_height + 16 +
+          (wake_hint.empty() ? 0 : hint_line.line_step);
+      const int y = h - margin - box_height;
+      const std::string_view hint = button_hints ? "按 ↑ 打开设置" : "长按画面打开设置";
+      commands.rect(margin, y, w - margin * 2, box_height, 0x2d203ca8, 2)
+          .text_sized({margin + 10, y + 8, w - margin * 2 - 20, title.line_height},
+                      0xfff4e2ff, button_hints ? "我在这里，按确认和我聊聊"
+                                              : "我在这里，轻触和我聊聊", font, 1)
+          .text_sized({margin + 10, y + 8 + title.line_step, w - margin * 2 - 20, hint_line.line_height},
+                      0xd5c8deff, hint, hint_font, 1);
+      if (!wake_hint.empty())
+        commands.text_sized({margin + 10, y + 8 + title.line_step + hint_line.line_step,
+                             w - margin * 2 - 20, hint_line.line_height},
+                            0xd5c8deff, wake_hint, hint_font, 1);
       auto shown = canvas.present(commands);
       if (shown)
         previous_hash = hash;
       return;
     }
-    caption(stt, w, h, margin, font - 1, true);
+    caption(stt, w, h, margin, font - 1, true, metrics.density_q16);
     std::string_view bottom = tts;
     if (!ready || waiting || tts.empty() || (listening && !text_reply))
       bottom = status;
     if (!ready && bottom.empty())
       bottom = "正在连接小智…";
-    caption(bottom, w, h, margin, font, false);
+    caption(bottom, w, h, margin, font, false, metrics.density_q16);
     auto shown = canvas.present(commands);
     if (shown)
       previous_hash = hash;

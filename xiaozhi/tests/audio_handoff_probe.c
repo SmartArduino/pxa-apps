@@ -7,13 +7,21 @@
 #define _POSIX_C_SOURCE 200809L
 #include "pxa/audio_mixer.h"
 static pxa_status_t probe_pcm_write(pxa_audio_mixer_voice_t *, const uint8_t *, size_t);
+static void probe_mixer_flush(pxa_audio_mixer_voice_t *);
 #define pxa_audio_mixer_write probe_pcm_write
+#define pxa_audio_mixer_flush probe_mixer_flush
 #define PXSYS_PRODUCT_RUNNER_LIBRARY 1
 #include PXA_PRODUCT_RUNNER
 #undef pxa_audio_mixer_write
+#undef pxa_audio_mixer_flush
 #include <assert.h>
 static uint64_t pcm_hash = UINT64_C(14695981039346656037);
 static uint64_t pcm_samples;
+static unsigned explicit_flushes;
+static void probe_mixer_flush(pxa_audio_mixer_voice_t *voice) {
+  ++explicit_flushes;
+  pxa_audio_mixer_flush(voice);
+}
 static pxa_status_t probe_pcm_write(pxa_audio_mixer_voice_t *voice, const uint8_t *pcm, size_t bytes) {
   pxa_status_t status = pxa_audio_mixer_write(voice, pcm, bytes);
   if (!status) {
@@ -47,6 +55,7 @@ static void pump_probe(void *context) {
     return;
   }
   SDL_LockAudioDevice(host->audio_device);
+  assert(!explicit_flushes && "Natural reply completion must drain, not flush, physical audio");
   for (unsigned i = 0; i < PXA_AUDIO_MIXER_VOICES; ++i) {
     if (!host->audio_sessions[i])
       continue;

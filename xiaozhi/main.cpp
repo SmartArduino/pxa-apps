@@ -72,6 +72,7 @@ struct App {
   std::optional<SettingsSnapshot> settings_snapshot;
   pxa::ui::PressGesture press;
   pxa::input::Controller controller;
+  bool button_hints = false;
   unsigned emotion = 0, scene_mode = 0, automatic_scene = 1;
   unsigned capture_frame_ms = 20;
   bool resume_after_format = false;
@@ -111,7 +112,7 @@ struct App {
   std::uint64_t opened_at = 0, last_received = 0;
   std::uint64_t connect_deadline = 0;
   bool hello_sent = false, ready = false, listening = false, speaking = false,
-       accept_audio = false;
+       accept_audio = false, discard_cancelled_reply = false;
   void launch(Task<void> task) {
     auto result = context->foreground_tasks().start(std::move(task));
     if (!result)
@@ -148,6 +149,7 @@ struct App {
     hello_sent = false;
     speaking = false;
     accept_audio = false;
+    discard_cancelled_reply = false;
     pcm_count = pcm_offset = 0;
   }
   void fail(std::string message) {
@@ -510,12 +512,9 @@ struct App {
         co_return std::unexpected(grant.error());
       mic_permission = std::move(*grant);
     }
-    if (playback) {
-      auto flushed = co_await playback->flush();
-      if (!flushed)
-        co_return std::unexpected(flushed.error());
-      pcm_count = pcm_offset = 0;
-    }
+    // A completed reply may still have frames in the physical device queue.
+    // Let capture.open retry until those drain; only abort() discards them.
+    pcm_count = pcm_offset = 0;
     auto opened = co_await context->capture().open(mic_permission);
     if (!opened) {
       busy.set(false);
@@ -609,6 +608,7 @@ struct App {
     drain_deadline = 0;
     speaking = false;
     accept_audio = false;
+    discard_cancelled_reply = true;
     pcm_count = pcm_offset = 0;
     if (playback) {
       auto flushed = co_await playback->flush();
@@ -682,12 +682,16 @@ struct App {
       }
       stop_recording();
       heard.set(std::string(text));
+      discard_cancelled_reply = false;
       subtitle.set("");
       waiting = true;
       response_wait.think(now_ms());
       emotion = 4;
       status.set("小智正在想…\n轻触可重新说");
     } else if (type == "tts") {
+      // Binary audio has no utterance ID. Late control frames from the
+      // cancelled reply must not reopen playback or stop the new microphone.
+      if (discard_cancelled_reply) return;
       auto state = xiaozhi::text(root.get(), "state");
       if (state == "start") {
         stop_recording();
@@ -703,7 +707,7 @@ struct App {
         if (decoder)
           opus_decoder_ctl(decoder, OPUS_RESET_STATE);
         status.set("小智正在回复…");
-      } else if (state == "sentence_start")
+      } else if (state == "sentence_start" && speaking)
         subtitle.set(std::string(xiaozhi::text(root.get(), "text")));
       else if (state == "stop") {
         if (!speaking)
@@ -716,7 +720,8 @@ struct App {
           finish_reply();
       }
     } else if (type == "llm") {
-      emotion = xiaozhi::emotion_frame(xiaozhi::text(root.get(), "emotion"));
+      if (!discard_cancelled_reply)
+        emotion = xiaozhi::emotion_frame(xiaozhi::text(root.get(), "emotion"));
     } else if (type == "goodbye")
       fail("服务端已结束会话，点击重新连接");
     else if (type == "error")
@@ -1028,7 +1033,6 @@ struct App {
       co_return Result<void>{};
     }
     wake_note = "唤醒词：" + std::string(wake_keywords[0].label.view());
-    if (!caps->playback_detection()) wake_note += " · 播放中待验证";
     if (!wake_enabled.get() || wake_denied) {
       next_wake_probe = UINT64_MAX;
       if (wake_denied) wake_note = "未获授权，重新开启可申请";
@@ -1044,8 +1048,8 @@ struct App {
     if (!subscription) { wake_failure(subscription.error()); co_return Result<void>{}; }
     wake_subscription = std::move(*subscription);
     wake_hint = wake_keywords[0].label.view().size() <= 24
-        ? "也可以说「" + std::string(wake_keywords[0].label.view()) + "」 · 长按设置"
-        : "语音唤醒已开启 · 长按设置";
+        ? "也可以说「" + std::string(wake_keywords[0].label.view()) + "」"
+        : "语音唤醒已开启";
     (void)context->log().write(LogLevel::info, "Xiaozhi voice trigger subscribed");
     co_return Result<void>{};
   }
@@ -1273,9 +1277,12 @@ struct App {
     case A::tab:
       settings_page = hit.value;
       settings_ui.keyboard_focus = false;
+      settings_ui.pending_keyboard_focus = button_hints;
       break;
     case A::details:
       settings_page = 3;
+      settings_ui.keyboard_focus = false;
+      settings_ui.pending_keyboard_focus = button_hints;
       break;
     case A::official:
       if (!official_server.get()) {
@@ -1363,6 +1370,8 @@ struct App {
                      false, now_ms(), false);
   }
   void pointer(const CanvasPointer &event) {
+    if (event.action() == input::PointerPhase::down)
+      button_hints = false;
     auto timed = event;
     timed.timestamp_us = now_ms() * 1000;
     auto result = press.update(timed, {std::chrono::milliseconds(700), 12});
@@ -1379,6 +1388,8 @@ struct App {
   void on_controller(Context &, const input::ControllerState &event) {
     if (!controller.update(event))
       return;
+    if (event.buttons)
+      button_hints = true;
     if (settings_open.get()) {
       if (controller.pressed(input::controller_b)) {
         if (editing != EditField::none)
@@ -1416,7 +1427,9 @@ struct App {
         interact();
       button_began = 0;
     }
-    if (controller.pressed(input::controller_select)) {
+    // Gen4 reserves long confirm for the system floating menu. Up remains
+    // available on every three-key device, including offline/activation pages.
+    if (controller.pressed(input::controller_select | input::controller_up)) {
       enter_settings();
       settings_ui.pending_keyboard_focus = true;
     }
@@ -1525,7 +1538,8 @@ struct App {
                    room, activation_code, activation_message, !voice_enabled.get(),
                    user_paused || (ready && !busy.get() && !listening && !waiting &&
                        !speaking && !prepare_audio && subtitle.get().empty()),
-                   wake_subscription && connectivity != Connectivity::offline ? wake_hint : std::string_view{});
+                   wake_subscription && connectivity != Connectivity::offline ? wake_hint : std::string_view{},
+                   button_hints);
     companion.update(*context, shown_emotion,
                      scene_mode ? scene_mode - 1 : automatic_scene, speaking,
                      now, room == xiaozhi::RoomMode::present);

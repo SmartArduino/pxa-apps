@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Xiaozhi fixture for the real PXA simulator (no public AI service required)."""
 import argparse,base64,ctypes,hashlib,json,math,os,pathlib,socket,socketserver,struct,subprocess,threading,time,zlib,tempfile,shutil
-p=argparse.ArgumentParser();p.add_argument('--simulator',required=True);p.add_argument('--package',required=True);p.add_argument('--publisher-key',required=True);p.add_argument('--artifacts',required=True);p.add_argument('--interactive',action='store_true');p.add_argument('--ime-package');p.add_argument('--offline',action='store_true');p.add_argument('--discovery',action='store_true');p.add_argument('--activation',action='store_true');p.add_argument('--emotions',action='store_true');p.add_argument('--drop',action='store_true');p.add_argument('--scenario',choices=['normal','http-error','no-websocket','activation-flow','malformed','handshake-stall','reconnect','settings-cancel','audio-tail','network-flap','large-headers','profile-separation','save-clicks','muted','capture-warmup','text-audio','early-audio','empty-utterance','response-timeout','cancel-wait','idle-toggle','voice-trigger','voice-wait'],default='normal');p.add_argument('--scene',choices=['auto','morning','day','evening','night'],default='auto');args=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('--simulator',required=True);p.add_argument('--package',required=True);p.add_argument('--publisher-key',required=True);p.add_argument('--artifacts',required=True);p.add_argument('--interactive',action='store_true');p.add_argument('--ime-package');p.add_argument('--offline',action='store_true');p.add_argument('--discovery',action='store_true');p.add_argument('--activation',action='store_true');p.add_argument('--emotions',action='store_true');p.add_argument('--drop',action='store_true');p.add_argument('--scenario',choices=['normal','http-error','no-websocket','activation-flow','malformed','handshake-stall','reconnect','settings-cancel','audio-tail','network-flap','large-headers','profile-separation','save-clicks','muted','capture-warmup','text-audio','early-audio','empty-utterance','response-timeout','cancel-wait','idle-toggle','voice-trigger','voice-wait','late-tts'],default='normal');p.add_argument('--scene',choices=['auto','morning','day','evening','night'],default='auto');p.add_argument('--width',type=int,default=320);p.add_argument('--height',type=int,default=240);p.add_argument('--density-dpi',type=int,default=160);args=p.parse_args()
 if args.scenario=='large-headers': args.discovery=True
 root=pathlib.Path(args.artifacts).resolve();root.mkdir(parents=True,exist_ok=True);(root/'finish').unlink(missing_ok=True)
 state=root/'state';state.mkdir(exist_ok=True)
@@ -86,6 +86,13 @@ class Handler(socketserver.BaseRequestHandler):
                         send_json(conn,{'type':'tts','state':'stop'});seen.append('tts.done')
                     if args.drop or (args.scenario in ('reconnect','profile-separation') and sum(isinstance(v,dict) and v.get('type')=='hello' for v in seen)==1):
                         time.sleep(2);seen.append('connection.dropped');return
+                elif value['type']=='abort' and args.scenario=='late-tts':
+                    send_json(conn,{'type':'tts','state':'start'})
+                    send_json(conn,{'type':'tts','state':'sentence_start','text':'取消后的旧回复不应再播放'})
+                    for index,packet in enumerate(opus_audio()):
+                        if index==8:break
+                        frame(conn,2,packet)
+                    send_json(conn,{'type':'tts','state':'stop'});seen.append('late-tts.sent')
                 elif value['type']=='fixture-vad' or (value['type']=='listen' and value['state'] in ('detect','stop')):
                     if args.scenario in ('empty-utterance','response-timeout','cancel-wait','voice-wait'):
                         send_json(conn,{'type':'stt','text':' ' if args.scenario=='empty-utterance' else '请想一想'})
@@ -105,7 +112,13 @@ class Handler(socketserver.BaseRequestHandler):
         except Exception as exc:errors.append(repr(exc))
 class Server(socketserver.ThreadingTCPServer):daemon_threads=True;allow_reuse_address=True
 server=Server(('127.0.0.1',0),Handler);threading.Thread(target=server.serve_forever,daemon=True).start()
-publisher=hashlib.sha256(pathlib.Path(args.publisher_key).read_bytes()).hexdigest()
+from cryptography.hazmat.primitives import serialization
+public_bytes=pathlib.Path(args.publisher_key).read_bytes()
+try:public_key=serialization.load_pem_public_key(public_bytes)
+except ValueError:public_key=serialization.load_der_public_key(public_bytes)
+public_der=public_key.public_bytes(serialization.Encoding.DER,serialization.PublicFormat.SubjectPublicKeyInfo)
+publisher=hashlib.sha256(public_der).hexdigest()
+normalized_key=root/'publisher.der';normalized_key.write_bytes(public_der)
 private=state/'app-data'/f'{publisher}-pxa-xiaozhi';private.mkdir(parents=True,exist_ok=True)
 profile={'url':f'ws://127.0.0.1:{server.server_address[1]}/xiaozhi','token':'fixture-token','device':'02:00:00:00:00:01','client':'00112233-4455-4677-8899-aabbccddeeff','endpoint':f'http://127.0.0.1:{server.server_address[1]}/ota','official':args.discovery or args.activation or args.scenario in ['http-error','no-websocket','activation-flow','malformed','large-headers'],'auto_listen':True,'voice_enabled':True,'scene_mode':['auto','morning','day','evening','night'].index(args.scene)}
 profile.update(config_version=2,keep_awake=True)
@@ -125,7 +138,7 @@ if args.scenario=='capture-warmup':env['PXA_SIM_CAPTURE_START_DELAY_MS']='1200'
 if args.scenario=='muted':env['XIAOZHI_EXPECT_MUTED']='1'
 if args.scenario in ('voice-trigger','voice-wait'):env['PXA_VT_FIXTURE_FILE']=str(root/'voice-command')
 if args.ime_package: env['PXA_IME_PACKAGE']=str(pathlib.Path(args.ime_package).resolve())
-proc=subprocess.Popen([args.simulator,'--package',args.package,'--publisher-key',args.publisher_key,'--state-root',str(state),'--locale','zh-CN','--width','320','--height','240','--pxadb-control-socket',str(control)],env=env,stdout=log,stderr=subprocess.STDOUT)
+proc=subprocess.Popen([args.simulator,'--package',args.package,'--publisher-key',str(normalized_key),'--state-root',str(state),'--locale','zh-CN','--width',str(args.width),'--height',str(args.height)]+(['--density-dpi',str(args.density_dpi)] if args.density_dpi!=160 else [])+['--pxadb-control-socket',str(control)],env=env,stdout=log,stderr=subprocess.STDOUT)
 def command(value):
     with socket.socket(socket.AF_UNIX) as s:
         s.settimeout(5);s.connect(str(control));s.sendall(value.encode()+b'\n');data=s.recv(4096)
@@ -172,9 +185,9 @@ try:
         elif args.scenario=='save-clicks':
             wait_for(lambda:'microphone' in seen)
             command('POINTER DOWN 160 120');time.sleep(.85);command('POINTER UP 160 120')
-            command('TAP 256 68');time.sleep(.1);command('TAP 270 182');time.sleep(.1)
+            command('TAP 256 50');time.sleep(.1);command('TAP 270 193');time.sleep(.1)
             sequence,_=saved_profile()
-            command('TAP 160 212');time.sleep(.08);command('TAP 160 212')
+            command('TAP 160 222');time.sleep(.08);command('TAP 160 222')
             wait_for(lambda:sum(isinstance(v,dict) and v.get('type')=='hello' for v in seen)>=2)
             wait_for(lambda:sum(isinstance(v,dict) and v.get('state')=='start' for v in seen)>=2)
             time.sleep(.5)
@@ -230,6 +243,19 @@ try:
             wait_for(lambda:sum(isinstance(v,dict) and v.get('type')=='hello' for v in seen)>=2)
             wait_for(lambda:seen.count('microphone')>stopped);shot('online-restored.png')
             print('PASS: offline -> online -> capture stops on link loss -> automatic recovery',flush=True)
+        elif args.scenario=='late-tts':
+            wait_for(lambda:'microphone' in seen)
+            recognition_requested.set();wait_for(lambda:'vad' in seen)
+            time.sleep(.3);command('TAP 160 180')
+            wait_for(lambda:'late-tts.sent' in seen)
+            time.sleep(.5);before=seen.count('microphone');time.sleep(.4)
+            assert seen.count('microphone')>before, 'Cancelled TTS reopened playback and stopped fresh capture'
+            shot('late-tts-ignored.png')
+            recognition_requested.set();wait_for(lambda:seen.count('vad')>=2)
+            wait_for(lambda:seen.count('tts.done')>=2)
+            wait_for(lambda:'Xiaozhi audio: playback=1 packets=90 ' in (root/'simulator.log').read_text())
+            time.sleep(.2);shot('fresh-reply.png')
+            print('PASS: delayed cancelled TTS/audio ignored; microphone continues and fresh reply plays',flush=True)
         elif args.scenario in ('voice-trigger','voice-wait'):
             wait_for(lambda:'microphone' in seen)
             wait_for(lambda:'VT_PROBE_SUBSCRIBED' in (root/'simulator.log').read_text())
@@ -268,7 +294,7 @@ try:
                 first=starts();voice('trigger',3);time.sleep(.3)
                 assert starts()==first, 'Duplicate detector event started another conversation'
                 command('POINTER DOWN 160 120');time.sleep(.85);command('POINTER UP 160 120');time.sleep(.2)
-                command('TAP 160 72');time.sleep(.15);shot('wake-settings.png')
+                command('TAP 160 50');time.sleep(.15);shot('wake-settings.png')
                 old_hellos=hellos();voice('trigger',4);time.sleep(.3)
                 assert hellos()==old_hellos, 'Wake escaped settings'
                 command('KEY_DOWN X');time.sleep(.08);command('KEY_UP X')
@@ -298,11 +324,12 @@ try:
             time.sleep(.45) # A distinct controller action, outside tap debounce.
             command('KEY_DOWN Z');time.sleep(.08);command('KEY_UP Z');time.sleep(.5)
             stopped=seen.count('microphone');shot('idle-controller.png')
-            command('POINTER DOWN 160 120');time.sleep(.85);command('POINTER UP 160 120');time.sleep(.15)
+            command('KEY_DOWN UP');time.sleep(.08);command('KEY_UP UP');time.sleep(.2)
+            shot('settings-three-key.png')
             command('KEY_DOWN X');time.sleep(.08);command('KEY_UP X');time.sleep(.5)
             assert seen.count('microphone')==stopped, 'Returning from settings resumed a paused conversation'
             shot('idle-after-settings.png')
-            print('PASS: listening tap -> quiet idle -> tap resumes; controller and settings preserve pause',flush=True)
+            print('PASS: listening tap -> quiet idle -> tap resumes; Up opens settings and Back preserves pause',flush=True)
         elif args.scenario in ('empty-utterance','response-timeout','cancel-wait'):
             wait_for(lambda:'microphone' in seen)
             recognition_requested.set();wait_for(lambda:'no-answer' in seen)
@@ -325,8 +352,8 @@ try:
         elif args.scenario=='text-audio':
             wait_for(lambda:'microphone' in seen)
             command('POINTER DOWN 160 120');time.sleep(.85);command('POINTER UP 160 120');time.sleep(.15)
-            command('TAP 160 68');time.sleep(.1);command('TAP 275 28');time.sleep(.2)
-            command('TEXT hi');time.sleep(.1);command('TAP 275 30')
+            command('TAP 160 50');time.sleep(.1);command('TAP 297 17');time.sleep(.2)
+            command('TEXT hi');time.sleep(.1);command('TAP 291 22')
             wait_for(lambda:any(isinstance(v,dict) and v.get('state')=='detect' and v.get('text')=='hi' for v in seen))
             wait_for(lambda:'tts.done' in seen)
             wait_for(lambda:'Xiaozhi audio:' in (root/'simulator.log').read_text())
@@ -345,7 +372,7 @@ try:
         elif args.scenario=='settings-cancel':
             wait_for(lambda:'microphone' in seen)
             command('POINTER DOWN 160 120');time.sleep(.85);command('POINTER UP 160 120');time.sleep(.1)
-            command('TAP 256 68');time.sleep(.1);command('TAP 270 182');time.sleep(.1)
+            command('TAP 256 50');time.sleep(.1);command('TAP 270 193');time.sleep(.1)
             command('KEY_DOWN X');time.sleep(.1);command('KEY_UP X')
             wait_for(lambda:sum(isinstance(v,dict) and v.get('type')=='hello' for v in seen)>=2)
             private_snapshots=list(private.glob('.pxa-kv-*'))
@@ -389,29 +416,29 @@ try:
             command('POINTER DOWN 160 120');time.sleep(.85)
             shot('settings.png');command('POINTER UP 160 120')
             time.sleep(.15)
-            command('TAP 160 68');time.sleep(.12);shot('settings-dialogue.png')
-            command('TAP 256 68');time.sleep(.12);shot('settings-scene.png')
-            command('TAP 270 182');time.sleep(.15);shot('settings-scene-night.png')
-            command('TAP 64 68');time.sleep(.1)
-            command('TAP 275 28');time.sleep(.1);shot('settings-details.png')
-            command('TAP 30 28');time.sleep(.1)
+            command('TAP 160 50');time.sleep(.12);shot('settings-dialogue.png')
+            command('TAP 256 50');time.sleep(.12);shot('settings-scene.png')
+            command('TAP 270 193');time.sleep(.15);shot('settings-scene-night.png')
+            command('TAP 64 50');time.sleep(.1)
+            command('TAP 297 17');time.sleep(.1);shot('settings-details.png')
+            command('TAP 17 17');time.sleep(.1)
             if not args.discovery:
-                command('TAP 180 150');time.sleep(.2);shot('settings-editor-url.png')
-                command('TAP 275 30');time.sleep(.1)
+                command('TAP 180 128');time.sleep(.2);shot('settings-editor-url.png')
+                command('TAP 291 22');time.sleep(.1)
                 command('TAP 180 178');time.sleep(.2);shot('settings-editor-token.png')
-                command('TAP 30 28');time.sleep(.1)
+                command('TAP 17 17');time.sleep(.1)
             before=sum(isinstance(v,dict) and v.get('type')=='hello' for v in seen)
             command('KEY_DOWN X');time.sleep(.1);command('KEY_UP X')
             wait_for(lambda:sum(isinstance(v,dict) and v.get('type')=='hello' for v in seen)>before)
             command('KEY_DOWN Z');time.sleep(.85);shot('settings-button.png');command('KEY_UP Z')
-            command('TAP 256 68');time.sleep(.1);command('TAP 270 182');time.sleep(.1)
+            command('TAP 256 50');time.sleep(.1);command('TAP 270 193');time.sleep(.1)
             before_save=sum(isinstance(v,dict) and v.get('type')=='hello' for v in seen)
-            command('TAP 160 212')
+            command('TAP 160 222')
             wait_for(lambda:sum(isinstance(v,dict) and v.get('type')=='hello' for v in seen)>before_save)
             command('POINTER DOWN 160 120');time.sleep(.85);command('POINTER UP 160 120');time.sleep(.1)
-            command('TAP 160 68');time.sleep(.1);command('TAP 275 28');time.sleep(.2)
+            command('TAP 160 50');time.sleep(.1);command('TAP 297 17');time.sleep(.2)
             command('TEXT 你好，小智');time.sleep(.1);shot('settings-editor-text.png')
-            command('TAP 275 30')
+            command('TAP 291 22')
             wait_for(lambda:any(isinstance(v,dict) and v.get('state')=='detect' and v.get('text')=='你好，小智' for v in seen))
             print('PASS: auto connection/listening, STT/emotion/TTS, Unicode fragmentation/ping, Opus, touch abort, controller and long-press settings',flush=True)
     shot('final.png')
