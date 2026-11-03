@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 #pragma once
+#include "canvas_metrics.hpp"
 #include "companion.hpp"
 #include <array>
 #include <string_view>
@@ -48,6 +49,7 @@ struct SettingsUi {
   std::array<SettingHit, 24> hits{};
   unsigned count = 0, focus = 0, content_start = 0;
   bool keyboard_focus = false;
+  bool pending_keyboard_focus = false;
   std::uint64_t previous_hash = 0;
   float scale = 1, ox = 0, oy = 0;
   pxa::ui::CanvasRegion box(int x, int y, int w, int h) const {
@@ -128,11 +130,14 @@ struct SettingsUi {
     return count && keyboard_focus ? hits[focus % count] : SettingHit{};
   }
   pxa::ui::CanvasRegion editor_bounds() const { return box(20, 65, 280, 37); }
-  void draw(pxa::ui::CanvasRef &canvas, const pxa::ui::DisplayMetrics &m,
+  void draw(pxa::ui::CanvasRef &canvas, const pxa::ui::DisplayMetrics &surface,
             const std::optional<pxa::Asset> &background,
             const SettingsData &d) {
     if (!canvas.mounted())
       return;
+    auto m = surface;
+    m.width = canvas_extent(surface.width, surface.density_q16);
+    m.height = canvas_extent(surface.height, surface.density_q16);
     std::uint64_t hash = 1469598103934665603ull;
     for (auto s : {d.url, d.token, d.endpoint, d.device, d.client, d.notice,
                    d.edit_title, d.edit_error, d.wake_note})
@@ -243,6 +248,11 @@ struct SettingsUi {
       text(21, 110, 278, 17,
            d.edit_error.empty() ? "编辑完成后，点右上角确认" : d.edit_error, 11,
            d.edit_error.empty() ? muted : 0xa15662ff);
+    }
+    if (pending_keyboard_focus && count) {
+      focus = std::min(content_start, count - 1);
+      keyboard_focus = true;
+      pending_keyboard_focus = false;
     }
     if (keyboard_focus && count) {
       auto r = hits[focus % count].box;

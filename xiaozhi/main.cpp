@@ -1209,11 +1209,7 @@ struct App {
   }
   void sync_editor_box() {
     auto r = settings_ui.editor_bounds();
-    const auto d = std::max(1u, environment.display().get().density_q16);
-    editor_box.set({{int(std::int64_t(r.x) * 65536 / d),
-                     int(std::int64_t(r.y) * 65536 / d),
-                     int(std::int64_t(r.width) * 65536 / d),
-                     int(std::int64_t(r.height) * 65536 / d)},
+    editor_box.set({{r.x, r.y, r.width, r.height},
                     editing != EditField::none,
                     Font::body,
                     xiaozhi::SettingsUi::ink});
@@ -1372,10 +1368,8 @@ struct App {
     auto result = press.update(timed, {std::chrono::milliseconds(700), 12});
     if (settings_open.get()) {
       if (result == PressResult::tap) {
-        const auto &m = environment.display().get();
         setting_action(
-            settings_ui.hit(canvas_to_surface_coordinate(event.x, m),
-                            canvas_to_surface_coordinate(event.y, m)));
+            settings_ui.hit(event.x, event.y));
       }
     } else if (result == PressResult::tap)
       interact();
@@ -1422,8 +1416,10 @@ struct App {
         interact();
       button_began = 0;
     }
-    if (controller.pressed(input::controller_select))
+    if (controller.pressed(input::controller_select)) {
       enter_settings();
+      settings_ui.pending_keyboard_focus = true;
+    }
   }
   BackAction on_back() {
     if (settings_open.get()) {
@@ -1454,7 +1450,9 @@ struct App {
         (press.advance(now * 1000, {std::chrono::milliseconds(700), 12}) ||
          (button_began && !button_long_fired && now - button_began >= 700))) {
       button_long_fired = true;
+      const bool from_controller = button_began != 0;
       enter_settings();
+      settings_ui.pending_keyboard_focus = from_controller;
     }
     if (settings_open.get()) {
       draw_settings();

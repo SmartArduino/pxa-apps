@@ -124,11 +124,11 @@ def main():
                 event('connected')
                 while True:
                     first, second = exact(conn, 2)
-                    assert first & 128 and second & 128
+                    assert first & 128 and second & 128, f"invalid client frame header: {first:02x} {second:02x}"
                     size = second & 127
                     if size == 126:
                         size = struct.unpack('!H', exact(conn, 2))[0]
-                    assert size <= 4096 and size != 127
+                    assert size <= 4096 and size != 127, f"invalid client frame length: {size}"
                     mask = exact(conn, 4)
                     data = bytes(v ^ mask[i % 4] for i, v in enumerate(exact(conn, size)))
                     opcode = first & 15
@@ -142,7 +142,7 @@ def main():
                                   opus_frames=lib.opus_packet_get_nb_frames(data, len(data)),
                                   samples_per_frame=lib.opus_packet_get_samples_per_frame(data, 16000))
                         assert count == args.frame_samples, f'capture frame has {count} samples'
-                        assert declared_frame_ms == count // 16, 'hello duration differs from captured packet'
+                        assert declared_frame_ms == count // 16, f'hello duration {declared_frame_ms} differs from captured packet {count // 16}'
                         packets += 1
                         segment += 1
                         samples += count

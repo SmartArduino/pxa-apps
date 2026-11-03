@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 #pragma once
+#include "canvas_metrics.hpp"
 #include "captions.hpp"
 #include <algorithm>
 #include <array>
@@ -148,7 +149,8 @@ struct Companion {
             bool idle = false, std::string_view wake_hint = {}) {
     if (!canvas.mounted())
       return;
-    int w = int(metrics.width), h = int(metrics.height);
+    int w = int(canvas_extent(metrics.width, metrics.density_q16)),
+        h = int(canvas_extent(metrics.height, metrics.density_q16));
     if (w <= 0 || h <= 0)
       return;
     unsigned base = loaded_frame;
