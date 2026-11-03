@@ -15,3 +15,6 @@ SIL OFL 1.1; see Liberation-Mono-OFL.txt for the original copyright and terms.
 
 PXA system font files are provided by the Host and are not copied into this
 application package. The upstream CJK bitmap tables and TTF parser are disabled.
+
+Launcher icon: copied unchanged from nano_j2me Android
+res/mipmap-xxxhdpi/ic_launcher.png at the pinned upstream commit (MIT).
