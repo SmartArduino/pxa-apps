@@ -1,0 +1,17 @@
+nano_j2me: Copyright (c) 2026 lucinhu, MIT; see nano_j2me-MIT.txt.
+PXA application adapter and common/recrof bridge: GPL-3.0-or-later;
+see PXA-adapter-GPL-3.0.txt. These are Guest application code.
+
+The upstream font registry still contains its small legacy Latin bitmap
+tables, even though this port supplies PXA system glyphs as every MIDP face.
+upstream/src/gfx/nj_font_data.h identifies these as generated from:
+LiberationMono-Regular.ttf SHA-256
+47ed5b5fcfe6b3c9228937b05de9c769f5fa55b777d539af0f65172f0a24c90b
+LiberationMono-Bold.ttf SHA-256
+1d8d631105d4cb6c562a0d90f591d6393007d71350c089aec81c37dc8da293ed
+These font files and their license were verified against the installed
+ttf-liberation distribution with those exact hashes. The font data retains
+SIL OFL 1.1; see Liberation-Mono-OFL.txt for the original copyright and terms.
+
+PXA system font files are provided by the Host and are not copied into this
+application package. The upstream CJK bitmap tables and TTF parser are disabled.

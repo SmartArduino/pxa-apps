@@ -1,0 +1,27 @@
+{
+  "format": "pxa-package-source-0.2",
+  "min_sdk": [2, 1],
+  "target_sdk": [2, 1],
+  "compile_sdk": [2, 1],
+  "id": "pxa-nano-j2me",
+  "version": "0.3.0",
+  "release_sequence": 4,
+  "name": "nano J2ME",
+  "description": "J2ME MIDlet runner with adaptive layout, JAR file picker, floating keypad and configurable gamepad controls",
+  "publisher": {"handle": "lucinhu", "display_name": "lucinhu"},
+  "build": {
+    "system": "cmake", "source_dir": ".",
+    "linear_memory": {"maximum_bytes": 6291456, "pinned": true}
+  },
+  "components": [{
+    "id": "main", "kind": "ui", "cmake_target": "pxa_main",
+    "execution_model": "main-loop", "artifact": "aot",
+    "services": ["surface", "window", {"name": "ui", "min_version": [0, 10], "features": ["font-glyph", "sized-text"]}, "log", "permission", "assets",
+      {"name": "clock", "min_version": [0, 2]},
+      {"name": "audio", "min_version": [0, 10]},
+      {"name": "fs", "min_version": [0, 3], "features": ["app-media-root", "read-at", "scoped-roots"]}],
+    "wasi": {"version": "preview1", "libc": "wasi-libc",
+      "features": ["monotonic-clock", "random", "wall-clock"]}
+  }],
+  "permissions": [{"name": "audio.playback", "required": false, "scope": "media"}]
+}

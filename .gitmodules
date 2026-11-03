@@ -1,0 +1,3 @@
+[submodule "nano-j2me/upstream"]
+	path = nano-j2me/upstream
+	url = https://github.com/lucinhu/nano_j2me.git

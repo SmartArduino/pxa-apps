@@ -43,6 +43,7 @@ uint64_t port_game_render_context;
 #include "../pxa_canvas_pixels.h"
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -100,8 +101,14 @@ static int suspended, rewinding, finished, background, started, engine_running;
 static uint64_t wake_at, surface, audio, frame_id;
 static uint64_t last_cooperative_us;
 static uint16_t palette[256];
+#ifdef PORT_CUSTOM_FRONTEND
+static uint16_t *surface_buffers;
+static int custom_surface_visible=1;
+static unsigned display_shape,display_radii[4];
+#else
 static uint16_t surface_buffers[2][320 * 240]
     __attribute__((aligned(PXA_SURFACE_BUFFER_ALIGNMENT)));
+#endif
 static uint16_t surface_w = 320, surface_h = 240;
 static uint8_t pending_buffer = 255;
 static uint64_t pending_frame;
@@ -339,6 +346,7 @@ void port_sleep(unsigned ms) {
   wake_at = port_time_us() + (uint64_t)ms * 1000;
   port_yield();
 }
+void port_wake(void) { wake_at=0; }
 const pxa_event_t *port_rpc(uint16_t service, uint16_t opcode,
                             const void *payload, uint32_t n) {
   /* C++ global file objects resolve optional paths during reactor
@@ -414,6 +422,23 @@ static void present(int index) {
   if (r == PXA_STATUS_WOULD_BLOCK) pending_buffer = index;
   else if (r != 16) port_log("PXA present failed: %d",r);
 }
+#ifdef PORT_CUSTOM_FRONTEND
+uint16_t *port_video_begin(unsigned *index) {
+  if(!index)return NULL;
+  int acquired=acquire();if(acquired<0)return NULL;
+  *index=(unsigned)acquired;return output(acquired);
+}
+void port_video_end(unsigned index) { if(index<2)present((int)index); }
+int port_video_visible(int visible) {
+  visible=!!visible;if(visible==custom_surface_visible)return 1;
+  uint8_t request[64];uint32_t size;
+  if(!surface || !pxa_surface_build_configure_layer(request,sizeof(request),1,surface,
+      0,0,surface_w,surface_h,0,!!visible,&size))return 0;
+  const pxa_event_t *event=port_rpc_packet(request,size);
+  int ok=event && event->payload_size>=4 && (int32_t)pxa_load_u32(event->payload)==0;
+  if(ok)custom_surface_visible=visible;return ok;
+}
+#endif
 #ifdef PORT_RTS
 static void paint_loading(uint64_t now) {
   if(!loading_active || background || !surface || reserved_compute_buffer>=0 ||
@@ -697,7 +722,7 @@ void port_pcm(const int16_t *p, unsigned frames, unsigned rate,
   }
 #endif
 }
-static void setkey(int key, int down) {
+static void set_game_key(int key, int down) {
   if (key < 0 || key >= 256 || keys[key] == down)
     return;
   keys[key] = down;
@@ -705,7 +730,7 @@ static void setkey(int key, int down) {
 }
 static void update_keys(void) {
   for (int k = 0; k < 256; k++)
-    setkey(k, touch_keys[k] || pad_keys[k]);
+    set_game_key(k, touch_keys[k] || pad_keys[k]);
 }
 static void release_touch(void) {
 #ifdef PORT_SDL_CONTROLLER
@@ -758,13 +783,22 @@ static void input_pointer(const pxa_ui_pointer_data_t *p) {
   if (background) return;
   int scale=pxa_surface_fit_scale(surface_w,surface_h,display_w,display_h);
   if(scale<1)scale=1;
+#ifdef PORT_CUSTOM_FRONTEND
+  int64_t px=pxa_game_canvas_to_surface_coordinate(p->x,display_density)-
+      ((int64_t)display_w-surface_w*scale)/2;
+  int64_t py=pxa_game_canvas_to_surface_coordinate(p->y,display_density)-
+      ((int64_t)display_h-surface_h*scale)/2;
+  if(p->phase==PXA_POINTER_DOWN && (px<0 || py<0 || px>=(int64_t)surface_w*scale || py>=(int64_t)surface_h*scale))return;
+  int x=px<0?0:px>=(int64_t)surface_w*scale?surface_w-1:(int)(px/scale);
+  int y=py<0?0:py>=(int64_t)surface_h*scale?surface_h-1:(int)(py/scale);
+  port_game_pointer(x,y,p->phase,p->buttons,p->pointer_id);
+  return;
+#else
   int x,y;
   int inside=pxa_game_pointer_coordinates(p->x,p->y,display_density,
       display_w,display_h,surface_w,surface_h,(unsigned)scale,&x,&y);
-#ifdef PORT_SDL_CONTROLLER
-  x = x * 320 / surface_w;
-  y = y * 240 / surface_h;
-#endif
+  /* The helper already returns the 320x240 control grid, including when the
+   * physical Surface is smaller. A second scale shifts taps on 296px panels. */
   if(p->phase==PXA_POINTER_DOWN && !inside)return;
   if (p->phase == PXA_POINTER_DOWN && !port_controls_visible()) {
     port_controls_set_visible(1);
@@ -843,6 +877,7 @@ static void input_pointer(const pxa_ui_pointer_data_t *p) {
       }
     }
   update_keys();
+#endif
 }
 static void update_control_layout(void) {
   int scale=pxa_surface_fit_scale(surface_w,surface_h,display_w,display_h);
@@ -857,14 +892,34 @@ static void update_control_layout(void) {
   int right=insets[1]-(display_w-x-width);
   int bottom=insets[2]-(display_h-y-height);
   int left=insets[3]-x;
+#ifdef PORT_CUSTOM_FRONTEND
+  port_video_environment_t info={.width=surface_w,.height=surface_h,
+      .display_width=display_w,.display_height=display_h,.scale=(unsigned)scale,
+      .density_q16=display_density,.shape=display_shape};
+  const int safe[4]={top,right,bottom,left};
+  for(unsigned i=0;i<4;++i) {
+    info.insets[i]=safe[i]>0?(unsigned)(safe[i]+scale-1)/scale:0;
+    info.radii[i]=(display_radii[i]+(unsigned)scale-1)/(unsigned)scale;
+  }
+  port_game_video_environment(&info);
+#else
   port_controls_safe_area(top>0?(top*240+height-1)/height:0,
       right>0?(right*320+width-1)/width:0,
       bottom>0?(bottom*240+height-1)/height:0,
       left>0?(left*320+width-1)/width:0);
+#endif
 }
 static void controls_environment(const pxa_ui_environment_t *env) {
   display_density=env->density_q16?env->density_q16:65536;
+#ifdef PORT_CUSTOM_FRONTEND
+  display_shape=env->display_shape;
+  for(unsigned i=0;i<4;++i) {
+    shape_insets[i]=((uint64_t)env->safe_insets[i]*display_density+65535)>>16;
+    display_radii[i]=((uint64_t)env->corner_radii[i]*display_density+65535)>>16;
+  }
+#else
   memcpy(shape_insets,env->safe_insets,sizeof(shape_insets));
+#endif
   update_control_layout();
 }
 static void controls_window(const pxa_window_snapshot_t *snapshot) {
@@ -906,6 +961,19 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
                                  PXA_UI_EVENT_MASK_CONTROLLER_STATE) ||
       !pxa_ui_transaction_commit(&tx))
     return PXA_STATUS_INTERNAL;
+#ifdef PORT_CUSTOM_FRONTEND
+  int cw,ch;
+  if(!port_game_canvas_size(display_w,display_h,&cw,&ch) || cw<48 || ch<48 ||
+      cw>1024 || ch>1024 || (cw&7) || (ch&1) || ((uint64_t)cw*ch*2)%PXA_SURFACE_BUFFER_ALIGNMENT || (uint64_t)cw*ch>153600u)
+    return PXA_STATUS_INVALID_ARGUMENT;
+  surface_w=(uint16_t)cw;surface_h=(uint16_t)ch;
+  size_t bytes=(size_t)cw*ch*4;
+  surface_buffers=aligned_alloc(PXA_SURFACE_BUFFER_ALIGNMENT,
+      (bytes+PXA_SURFACE_BUFFER_ALIGNMENT-1)&~(size_t)(PXA_SURFACE_BUFFER_ALIGNMENT-1));
+  if(!surface_buffers)return PXA_STATUS_RESOURCE_LIMIT;
+  memset(surface_buffers,0,bytes);
+  port_log("PXA adaptive canvas=%ux%u display=%dx%d",surface_w,surface_h,display_w,display_h);
+#else
   if (display_w < 320 || display_h < 240) {
     if (display_w * 3 <= display_h * 4) {
       surface_w = display_w;
@@ -915,6 +983,7 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
       surface_w = display_h * 4 / 3;
     }
   }
+#endif
   controls_environment(&env);
 #if PXA_GAME_RENDER_BLIT
   int raster_status = pxa_game_render_create_raster(30, 256);
@@ -1090,6 +1159,10 @@ static int32_t handle_event(const uint8_t *bytes, uint32_t n) {
   }
   pxa_ui_controller_data_t c;
   if (pxa_ui_parse_controller(&e, &c)) {
+#ifdef PORT_CUSTOM_FRONTEND
+    if((!background || !c.connected) && c.controller<2)
+      port_game_controller(c.controller,c.connected,c.buttons&PXA_CONTROLLER_BUTTON_MASK);
+#else
     if (!background && c.controller == 0) {
       const uint32_t buttons = c.connected ? c.buttons & PXA_CONTROLLER_BUTTON_MASK : 0;
       /* Full-state refreshes and releases are not a new input method.
@@ -1116,6 +1189,7 @@ static int32_t handle_event(const uint8_t *bytes, uint32_t n) {
                  (unsigned)buttons);
       }
     }
+#endif
     return PXA_EVENT_HANDLED;
   }
   if (e.service == PXA_WINDOW_SERVICE &&

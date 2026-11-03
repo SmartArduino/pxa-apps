@@ -52,6 +52,23 @@ void port_yield(void);
 /* Read pending input immediately before the engine consumes its key queue. */
 void port_poll_input(void);
 void port_sleep(unsigned ms);
+/* Wake an event-port sleep after frontend input without adding a frame timer. */
+void port_wake(void);
+#ifdef PORT_CUSTOM_FRONTEND
+typedef struct {
+  unsigned width,height,display_width,display_height,scale;
+  uint32_t density_q16;
+  unsigned shape,insets[4],radii[4];
+} port_video_environment_t;
+int port_game_canvas_size(int display_width,int display_height,int *width,int *height);
+void port_game_video_environment(const port_video_environment_t *environment);
+void port_game_controller(unsigned index,int connected,uint32_t buttons);
+/* The acquired RGB565 buffer is already registered with Surface. No extra
+ * full-frame copy or alpha Surface is required for a floating keypad. */
+uint16_t *port_video_begin(unsigned *index);
+void port_video_end(unsigned index);
+int port_video_visible(int visible);
+#endif
 uint64_t port_time_us(void);
 int port_cooperate_due(uint64_t now, uint32_t budget_us);
 void port_palette(const uint8_t *rgb, int sixbit);
