@@ -64,8 +64,7 @@ struct App {
     State<std::string> status{"正在读取录音…"}, timer{"00:00:00"};
     State<std::string> primary{"开始录音"}, pause_label{"暂停录音"};
     State<std::string> play_label{"播放录音"}, library_label{"我的录音"};
-    State<bool> ready{false}, idle{false}, can_pause{false};
-    State<bool> can_play{true};
+    State<bool> idle{false}, can_pause{false};
     State<bool> operation_error{false};
     std::vector<Entry> entries;
     Entry selected;
@@ -92,8 +91,6 @@ struct App {
         const bool recording = mode == Mode::recording || mode == Mode::paused;
         idle.set(mode == Mode::idle && !busy);
         can_pause.set(recording);
-        ready.set(mode == Mode::idle || recording);
-        can_play.set(mode == Mode::idle || mode == Mode::playing);
         primary.set(recording ? "停止并保存" : mode == Mode::preparing ? "正在准备…" :
                     mode == Mode::saving ? "正在保存…" : "开始录音");
         pause_label.set(want_pause ? "继续录音" : "暂停录音");
@@ -606,8 +603,9 @@ template<class Page> bool View::render(Page& page, uint32_t parent) {
             auto state = p.text(body, a.status, Font::caption, theme::muted);
             p.visible(state, a.operation_error);
         }
-        auto action = p.button(body, a.primary, [&a] { a.toggle_recording(); }, true);
-        p.enabled(action, a.ready);
+        // Keep pending actions in the native three-key focus group. Their
+        // handlers guard mode/busy while the button shows its progress label.
+        p.button(body, a.primary, [&a] { a.toggle_recording(); }, true);
         auto pause = p.button(body, a.pause_label, [&a] { a.toggle_pause(); });
         p.visible(pause, a.can_pause);
         auto library = p.button(body, a.library_label, [&a] { a.status.set(""); a.show(Screen::library); });
@@ -625,16 +623,23 @@ template<class Page> bool View::render(Page& page, uint32_t parent) {
         for (size_t i = a.library_page * 6; i < std::min(a.entries.size(), (a.library_page + 1) * 6); ++i) {
             const auto& entry = a.entries[i];
             auto label = std::string("录音 ") + entry.name.substr(4, 6) + "\n" + size_label(entry.bytes);
-            auto row = p.button(body, label, [&a, i] { a.run(a.select_entry(i)); });
-            p.enabled(row, a.idle);
+            p.button(body, label, [&a, i] { a.run(a.select_entry(i)); });
         }
         if (a.entries.size() > 6) {
             auto label = std::to_string(a.library_page + 1) + " / " + std::to_string((a.entries.size() + 5) / 6);
             p.text(body, label, Font::caption, theme::muted);
             if ((a.library_page + 1) * 6 < a.entries.size())
-                p.button(body, "下一页", [&a] { ++a.library_page; a.show(Screen::library); });
+                p.button(body, "下一页", [&a] {
+                    if (a.busy) return;
+                    ++a.library_page;
+                    a.show(Screen::library);
+                });
             if (a.library_page)
-                p.button(body, "上一页", [&a] { --a.library_page; a.show(Screen::library); });
+                p.button(body, "上一页", [&a] {
+                    if (a.busy) return;
+                    --a.library_page;
+                    a.show(Screen::library);
+                });
         }
         auto title = std::string_view("我的录音");
         p.header(frame, title, [&a] { a.back(); });
@@ -643,8 +648,7 @@ template<class Page> bool View::render(Page& page, uint32_t parent) {
         p.text(body, name, Font::headline);
         p.text(body, a.timer, Font::title, theme::green);
         p.text(body, a.status, Font::caption, theme::muted);
-        auto play = p.button(body, a.play_label, [&a] { a.toggle_playback(); }, true);
-        p.enabled(play, a.can_play);
+        p.button(body, a.play_label, [&a] { a.toggle_playback(); }, true);
         auto erase = p.button(body, "删除录音", [&a] { a.show(Screen::confirm); });
         p.enabled(erase, a.idle);
         auto title = std::string_view("录音详情");
@@ -655,10 +659,8 @@ template<class Page> bool View::render(Page& page, uint32_t parent) {
         p.text(body, name, Font::title, theme::green);
         p.text(body, "删除后无法恢复。", Font::caption, theme::muted);
         p.text(body, a.status, Font::caption, theme::muted);
-        auto cancel = p.button(body, "保留录音", [&a] { a.back(); }, true);
-        p.enabled(cancel, a.idle);
-        auto erase = p.button(body, "确认删除", [&a] { a.run(a.erase()); });
-        p.enabled(erase, a.idle);
+        p.button(body, "保留录音", [&a] { a.back(); }, true);
+        p.button(body, "确认删除", [&a] { a.run(a.erase()); });
         auto title = std::string_view("删除确认");
         p.header(frame, title, [&a] { a.back(); });
     }

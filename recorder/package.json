@@ -1,8 +1,8 @@
 {
   "format": "pxa-package-source-0.2",
   "id": "pxa-recorder",
-  "version": "0.1.0",
-  "release_sequence": 1,
+  "version": "0.1.1",
+  "release_sequence": 2,
   "name": "轻录音",
   "description": "简洁的本地录音机，支持暂停续录、Opus 文件保存、录音回放和确认删除，适配触摸与三按键设备。",
   "icon": "assets/icon.png",

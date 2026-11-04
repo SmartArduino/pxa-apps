@@ -13,6 +13,8 @@ p.add_argument('--output',type=Path,required=True)
 p.add_argument('--simulator-build',type=Path,help='Configured simulator build directory (default: doit-gamekit-1)')
 p.add_argument('--legacy-audio',action='store_true',help='Exercise a public Host audio backend without arbitrary-rate PCM')
 p.add_argument('--private-quota-bytes',type=int,help='Override the test Host private-file quota (e.g. 65536 for Gen4)')
+p.add_argument('--event-rounds',type=int,choices=(1,64),default=64,
+               help='Limit event completions per UI turn to expose pending-operation focus changes')
 a=p.parse_args()
 r=a.workspace.resolve();out=a.output.resolve();out.mkdir(parents=True,exist_ok=True)
 build=a.simulator_build.resolve() if a.simulator_build else r/'build/simulator/doit-gamekit-1';src=r/'deps/pxa-system/simulator/desktop'
@@ -22,6 +24,10 @@ for line in (build/'CMakeFiles/pxsys_product_simulator.dir/flags.make').read_tex
         key,value=line.split('=',1);flags[key.strip()]=shlex.split(value)
 common=flags['C_DEFINES']+flags['C_INCLUDES']
 text=(src/'product_runner.c').read_text()
+if a.event_rounds != 64:
+    loop='for (unsigned round = 0; round < 64; ++round)'
+    assert text.count(loop)==1,'Simulator event dispatcher changed; review test hook'
+    text=text.replace(loop,f'for (unsigned round = 0; round < {a.event_rounds}; ++round)')
 if a.private_quota_bytes is not None:
     assert a.private_quota_bytes > 0
     import re
