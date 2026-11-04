@@ -20,7 +20,7 @@
     "services": [
       {"name": "ui", "features": ["canvas", "dynamic-text"], "min_version": [0, 9]},
       {"name": "audio", "min_version": [0, 15]},
-      "window", "clock", "permission", "fs", "log"
+      "window", "clock", "permission", {"name": "fs", "min_version": [0, 1]}, "log"
     ],
     "wasi": {"version": "preview1", "libc": "wasi-libc", "features": ["monotonic-clock", "random", "wall-clock"]}
   }],
