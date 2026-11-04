@@ -1,0 +1,12 @@
+{
+  "kind": "illustrated-cover",
+  "generator": "built-in image_gen",
+  "runtime_screenshot": false,
+  "aspect_ratio": "4:3",
+  "dimensions": [
+    1448,
+    1086
+  ],
+  "prompt": "Use case: ads-marketing. Asset type: a new original illustrated app-store cover for the PXA app 轻录音, an offline audio recorder for small embedded devices. Make a finished opaque 4:3 landscape image, ideally 1280x960. Visual identity uses warm ivory (#fff8ea), forest green (#20866b), pale mint and a tiny warm amber recording light, matching a simple microphone app icon. Subject: one beautifully designed compact green microphone/voice recorder with an ivory microphone capsule, a small amber recording indicator, and a restrained flowing sound-wave ribbon leading into two neatly stacked cream recording-file cards. A quiet, light, efficient everyday utility. Crisp sophisticated editorial illustration, soft matte tactile 2.5D forms, subtle shadows, generous breathing room, restrained details, balanced full-bleed composition with safe margins. Include the exact Chinese title “轻录音” in large elegant, clearly readable dark-green type, and the exact small subtitle “录音 · 回放 · 管理”. All artwork and lettering should feel cohesive. This is promotional illustration. Avoid simulated application screenshots, fake app UI panels, status bars, navigation controls, performance overlays, people, extra lettering, brand logos, watermarks, frames or contact sheets. Deliver one complete 4:3 cover.",
+  "sha256": "9d7a5ad27170851764cdf7a9d12a8e3a4e480acc777b78a3181bcd83924d0cb7"
+}
