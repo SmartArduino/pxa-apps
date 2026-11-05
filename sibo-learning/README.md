@@ -28,16 +28,30 @@
 
 原生版本中需要独立设备账号授权的教材音频服务不包含在本应用中。小程序的微信登录、家庭账号和蓝牙配网等平台功能未移植。在线内容、音频和配图的可用性取决于原服务；没有自动创建新插画的请求。
 
+## 离线数学动手玩
+
+首页的“数学动手玩”支持触摸与上下、确认三键，全部本地出题，无需下载题库或申请网络权限。
+
+- **4×4 数独**：每行、每列与每个 2×2 宫使用 1–4。题目保留唯一解；选中可填格，再选择数字，重复冲突标红。可清除、提示和确认换题，提示完成与独立完成分别统计。
+- **24 点挑战**：使用四张 1–9 的数字卡。依次选择①②，再做加减乘除；减法和除法按选择顺序，可交换、撤销和本题重来。运算使用精确分数，支持 `3、3、8、8` 这类需要中间分数的题目。提示只给当前可行的一步；重来和撤销保留本题提示/完成标记，防止重复累计。
+- **分数实验室**：用等宽整体的分数条比较两边涂色，五题一轮，提交后显示通分解释，“再看解析”支持返回或重启后反复查看且不改变得分。同题只计分一次，完成后可开始新一轮。
+
+三项练习自动续存到现有 `personal.json` 的独立 `thinking` 字段（版本化、长度上限 512 字节），保留诗词阅读位置、收藏和原答题统计。缺少或损坏的数学字段仅重置数学进度。新游戏需要确认覆盖，清理在线缓存不会清除数学进度。
+
+功能对照参考微信小程序的“数学动手玩”玩法说明，PXA 模型与界面独立实现，不依赖或复制该小程序的 GPL/AGPL 代码、账号与服务器模块。本版仅提供适合设备的 4×4 数独与上述练习，不包含微信端 6×6 数独和完整分数编辑器。
+
 ## 构建与运行
 
 在 `pxa-projects` 根目录构建 ESP32-S3 安装包：
 
 ```sh
-PXA_CONTAINER_CODEC=store tools/app.sh build sibo-learning --board doit-gamekit-1 --target esp32s3 --aot-only \
+tools/app.sh build sibo-learning --board doit-gamekit-1 --target esp32s3 --aot-only \
   --source-root "$PWD/local/pxa-apps" --output "$PWD/local/app-output/sibo-esp32s3"
 ```
 
 需要模拟器包时将 `--target` 改为 `simulator`，或用 `esp32s3,simulator` 构建双架构开发包。发布到设备时使用 ESP32-S3 单架构包以节省存储。
+
+默认使用 Container 0.2、DEFLATE 和 4 KiB 解压块。应用及其独立 C++ SDK 副本启用链接时优化，精简未使用代码；MP3 解码器继续使用速度优化。安装包压缩减少下载量，代码精简同时减少安装后的程序体积。WASI 的 `random` 声明供链接后的 libc 栈保护初始化使用，保留其随机保护值。
 
 要求 PXA Core 2.1、UI 0.9、Window 0.3、FS 0.2、Net 0.5、Audio 0.10、Assets 2.2。UI 最低版本明确固定为 0.9，构建工具更新时不自动要求新的字体接口。音频使用应用内 minimp3 解码及 Host PCM 输出，不依赖 Host Music 解码器。Host 未接任意采样率 PCM 时，仅在返回“不支持”后协商标准单声道会话，应用流式混音、重采样；保持原始时长和单词片段边界。
 
@@ -71,6 +85,8 @@ python3 local/pxa-apps/sibo-learning/tests/test_model.py \
 
 ## 来源与许可
 
-内容模型与服务契约参考 `paixueji_nertc_demo_new` 中的学习宝实现；75 首古诗原文沿用其 chinese-poetry 数据。原项目与数据、ECDICT、vistep 的 MIT 声明，以及 minimp3 的 CC0 声明保存在 `assets/` 并随包分发。本应用界面、图标和代码使用 MIT。在线故事、音频及图片按需访问原服务，不随安装包分发或重新授权。
+内容模型与服务契约参考 `paixueji_nertc_demo_new` 中的学习宝实现；75 首古诗原文沿用其 chinese-poetry 数据。原项目早期 MIT 版本与数据、ECDICT、vistep 的 MIT 声明，以及 minimp3 的 CC0 声明保存在 `assets/` 并随包分发。本应用界面、图标和代码使用 MIT。在线故事、音频及图片按需访问原服务，不随安装包分发或重新授权。
 
 `tests/test_audio_cache.py` 使用现有公开 MP3 验证重复播放、发音片段持久缓存、重启恢复、截断/校验失败重取及清理时保留个人记录。`tests/test_long_text.py` 验证长题干、选项、解析和词义的三按键完整阅读，`tests/test_text_pages.py` 用 Sanitizer 验证单行分页、大屏多行及 UTF-8 字节完整性。
+
+`tests/test_thinking.py` 使用独立数独/24点求解器和精确分数对照验证题目、判分及有界存档。`tests/test_thinking_simulator.py` 在真实产品模拟器中验证三键与触摸操作、提示/撤销、五题分数练习、退出续练和原学习记录保留。

@@ -36,7 +36,7 @@ def exercise(sim):
     initial, labels = tree(sim)
     # These labels occur on different learning pages, including hidden ones
     # in the old eager tree. A screenshot of the home page cannot catch this.
-    for dormant in ('课本古诗 · 75 首', '耳朵听，脑袋想', '对照答案', '收获小星星'):
+    for dormant in ('课本古诗 · 75 首', '耳朵听，脑袋想', '对照答案', '收获小星星', '4×4 数独', '清除这一格'):
         assert dormant not in labels, ('eager page created at startup', dormant)
     sim.screenshot('lazy-home')
     flow.choose(sim, '诗词小天地')
@@ -57,6 +57,14 @@ def exercise(sim):
     about_nodes, labels = tree(sim)
     assert about_nodes > poetry_nodes and '我的小书包' in labels
     flow.returned(sim)
+    flow.choose(sim, '数学动手玩'); sim.expect('4×4 数独')
+    sim.key('ENTER')
+    math_nodes, labels = tree(sim)
+    assert math_nodes > about_nodes and '清除这一格' in labels
+    for _ in range(3):
+        flow.returned(sim); flow.choose(sim, '4×4 数独')
+        assert tree(sim)[0] == math_nodes, 'Math revisit duplicated its widgets'
+    flow.returned(sim); flow.returned(sim)
     # Earlier pages must keep their callback addresses after later pages mount.
     flow.choose(sim, '诗词小天地')
     sim.key('ENTER'); sim.expect('江南')
@@ -86,6 +94,7 @@ def exercise(sim):
     assert not reads, ('Home preloaded cached response bodies', reads)
     return {'initial_nodes': initial,
             'after_poetry_nodes': poetry_nodes, 'after_about_nodes': about_nodes,
+            'after_math_nodes': math_nodes, 'math_retained_revisits': 3,
             'retained_revisits': 4, 'startup_text_cache_read_bytes': 0,
             'unused_cache_files_preserved': 4, 'passed': True}
 

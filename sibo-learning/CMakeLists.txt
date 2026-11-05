@@ -3,7 +3,11 @@ project(pxa_sibo_learning LANGUAGES C CXX)
 set(PXA_COROUTINE_SLOT_BYTES 4096)
 list(APPEND CMAKE_MODULE_PATH "${PXA_CMAKE_MODULE_DIR}")
 include(PxaGuest)
-pxa_add_app(pxa_main COMPONENT_ID main SOURCES main.cpp model.cpp learn.cpp ../common/media/decoder.cpp)
-target_compile_options(pxa_main PRIVATE -Oz)
+pxa_add_app(pxa_main COMPONENT_ID main SOURCES main.cpp model.cpp learn.cpp thinking.cpp ../common/media/decoder.cpp)
+target_compile_options(pxa_main PRIVATE -Oz -flto)
+# Optimize this App's SDK copy together with its UI/content code so unused
+# helpers and duplicate template instantiations can be removed at link time.
+target_compile_options(pxa_guest_cpp PRIVATE -flto)
+target_link_options(pxa_main PRIVATE -flto)
 set_source_files_properties(../common/media/decoder.cpp PROPERTIES COMPILE_OPTIONS "-O3")
 target_link_options(pxa_main PRIVATE -Wl,-z,stack-size=65536)
