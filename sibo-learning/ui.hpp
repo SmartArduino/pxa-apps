@@ -29,6 +29,9 @@ inline bool interactivity(Transaction<> &tx, uint32_t n, const bool &value) {
   return tx.u8(n, protocol::enabled, value);
 }
 
+inline bool math_background(Transaction<> &tx,uint32_t n,const uint32_t &color) {return tx.rgba(n,protocol::background,color);}
+inline bool math_fraction_color(Transaction<> &tx,uint32_t n,const bool &filled) {return tx.rgba(n,protocol::background,filled?green:mint);}
+
 // Keep the native controls and their callback addresses stable. Tree order is
 // also the three-key focus order; every page places its header after its body.
 template <class Page, size_t MaxCallbacks = 192> struct Painter {

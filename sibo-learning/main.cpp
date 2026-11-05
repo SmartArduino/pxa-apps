@@ -5,6 +5,7 @@
 #include "picture_view.hpp"
 #include "text_pages.hpp"
 #include "ui.hpp"
+#include "thinking.hpp"
 #include <memory>
 
 using namespace pxa;
@@ -28,6 +29,11 @@ enum class Screen {
   card0,
   card1,
   about,
+  thinking,
+  sudoku,
+  twentyfour,
+  fractions,
+  math_reset,
   count
 };
 enum class Job {
@@ -172,6 +178,8 @@ struct App {
   unsigned canvas_width = 200, pinyin_columns = 4, pinyin_rows = 2;
   uint64_t generation = 0;
   std::array<std::byte, 2048> network_chunk{};
+  #include "thinking_app.inc"
+
   // Destroy fragments before the States and CanvasRefs they subscribe to.
   std::array<std::unique_ptr<LazyScreen>, size_t(Screen::count)> screen_views;
 
@@ -457,6 +465,8 @@ struct App {
     root_list("找一位诗人", std::move(rows), Screen::poetry);
   }
   void back() {
+    if (screen==Screen::math_reset) {math_open(math_reset_target);return;}
+    if (screen==Screen::sudoku || screen==Screen::twentyfour || screen==Screen::fractions) {math_open(Screen::thinking);return;}
     if (screen == Screen::loading) {
       cancel();
       if (loading_from == Screen::list0 || loading_from == Screen::list1)
@@ -1193,7 +1203,7 @@ struct App {
       first = false;
       bytes += serialize(item);
     }
-    bytes += "]}";
+    bytes += "],\"thinking\":"+quote(math.encode())+"}";
     return bytes;
   }
   Task<void> save_loop() {
@@ -1257,6 +1267,7 @@ struct App {
     auto bytes = co_await read_file("personal.json", 256 * 1024);
     if (bytes && study::complete_json(*bytes)) {
       auto root = study::json(*bytes);
+      (void)math.decode(str(root.get("thinking"),512));
       read_count = std::min<uint64_t>(root.get("read").number(), 1000000);
       answered_count =
           std::min<uint64_t>(root.get("answered").number(), 1000000);
@@ -1672,6 +1683,9 @@ template <class Page> bool ScreenView::render(Page &page, uint32_t parent) {
       case 6:
         a.root_list("我的收藏", a.favorites, Screen::home);
         break;
+      case 8:
+        a.math_open(Screen::thinking);
+        break;
       case 7:
         a.refresh_summary();
         a.show(Screen::about);
@@ -1708,18 +1722,18 @@ template <class Page> bool ScreenView::render(Page &page, uint32_t parent) {
     }
     constexpr const char *labels[] = {"诗词小天地", "故事小书架",  "读出声来",
                                       "英语单词岛", "同步小课堂",  "科学发现馆",
-                                      "我的收藏",   "小书包与说明"};
+                                      "我的收藏",   "小书包与说明", "数学动手玩"};
     constexpr const char *captions[] = {
         "75首课本古诗",   "寓言与童话",     "蒙学与小学听题", "翻词卡 · 听发音",
-        "按学科年级选课", "一步一步看原理", "留住喜欢的内容", "学习记录与设置"};
+        "按学科年级选课", "一步一步看原理", "留住喜欢的内容", "学习记录与设置", "数独 · 24点 · 分数"};
     constexpr uint32_t colors[] = {0xd7eee7ff, 0xffedcaff, 0xe0f1e5ff,
                                    0xe3efffff, 0xeee7ffff, 0xffe8ddff,
-                                   0xe8f2dfff, 0xefede5ff};
-    constexpr const char *symbols[] = {"诗", "书", "读", "词", "课", "探", "藏", "包"};
+                                   0xe8f2dfff, 0xefede5ff, 0xe1ebffff};
+    constexpr const char *symbols[] = {"诗", "书", "读", "词", "课", "探", "藏", "包", "数"};
     uint32_t row = tiles;
     const auto columns = a.layout.home_columns;
     const auto tile_width = (a.layout.home_width - (columns - 1) * 8) / columns;
-    for (unsigned i = 0; i < 8; ++i) {
+    for (unsigned i = 0; i < 9; ++i) {
       if (a.layout.roomy) {
         if (i % columns == 0)
           row = p.box(tiles, true, 8);
@@ -1764,6 +1778,7 @@ template <class Page> bool ScreenView::render(Page &page, uint32_t parent) {
         },
         true);
   }
+  #include "thinking_view.inc"
   if (kind == Screen::poetry) {
     auto f = stage(Screen::poetry), b = p.scroll(p.body(f));
     p.text(b, "把一首诗，读成一幅画", Font::title, green);
@@ -2189,7 +2204,7 @@ template <class Page> bool ScreenView::render(Page &page, uint32_t parent) {
       a.read("四博学习宝 PXA "
              "版\n\n学习内容与接口参考原四博学习宝。公开服务：wtoy.doit."
              "am，同步教材：pindou.doit.am/study/"
-             "。\n\n原项目、chinese-poetry、ECDICT、vistep "
+             "。\n\n原项目的早期MIT内容、chinese-poetry、ECDICT、vistep "
              "数据和本应用代码遵循 MIT，minimp3 "
              "遵循 "
              "CC0。完整声明随安装包保留。\n\n音频、故事和配图按需访问原服务，未"
@@ -2205,6 +2220,7 @@ template <class Page> bool ScreenView::render(Page &page, uint32_t parent) {
     auto title = std::string_view("小书包与说明");
     header(f, title);
   }
+  if(!p.ok || !p.tx.valid()) (void)a.ctx->log().write(LogLevel::error,"sibo page "+std::to_string(unsigned(kind))+" build error "+std::to_string(int(p.tx.error())));
   return p.ok && p.tx.valid();
 }
 } // namespace sibo

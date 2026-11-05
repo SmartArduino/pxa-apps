@@ -35,7 +35,7 @@ struct Layout {
     sidebar_width = sidebar ? std::clamp(content_width / 3, 180u, 280u) : 0;
     home_width = sidebar ? content_width - sidebar_width - 12 : content_width;
     home_columns = roomy ? (sidebar && home_width >= 650 ? 3 : 2) : 1;
-    const unsigned home_rows = (8 + home_columns - 1) / home_columns;
+    const unsigned home_rows = (9 + home_columns - 1) / home_columns;
     auto available =
         h > header + 2 * margin + 7 ? h - header - 2 * margin - 7 : 200;
     if (!sidebar)

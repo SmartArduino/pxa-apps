@@ -24,21 +24,38 @@ def seed(sim,address,value,body=''):
 def focus(sim,label):
     for _ in range(35):
         if sim.focus().startswith(label):return
+        previous=sim.log_path.read_text().count('STUDY_FOCUS ')
         sim.key('DOWN')
+        deadline=time.monotonic()+3
+        while sim.log_path.read_text().count('STUDY_FOCUS ')==previous and time.monotonic()<deadline:
+            assert sim.process.poll() is None,'Simulator exited while moving focus'
+            time.sleep(.025)
     raise AssertionError((label,sim.focus()))
 
 def choose(sim,label):
     focus(sim,label);sim.key('ENTER')
 
-def returned(sim):choose(sim,'返回')
+def returned(sim):
+    choose(sim,'返回')
+    # KEY acknowledges queued input, not the guest's completed UI transaction.
+    # Do not reuse the outgoing page's Back focus for the next navigation step.
+    deadline=time.monotonic()+3
+    while sim.focus().startswith('返回') and time.monotonic()<deadline:
+        assert sim.process.poll() is None,'Simulator exited while returning'
+        time.sleep(.025)
+    assert not sim.focus().startswith('返回'),'Return did not leave the outgoing control'
 
-def personal(sim):
+def personal(sim,predicate=None):
     private=next((sim.state/'private-files').iterdir())
     path=private/'personal.json'
-    for _ in range(40):
-        if path.exists():return json.loads(path.read_text())
+    deadline=time.monotonic()+3
+    latest=None
+    while time.monotonic()<deadline:
+        if path.exists():
+            latest=json.loads(path.read_text())
+            if predicate is None or predicate(latest):return latest
         time.sleep(.025)
-    raise AssertionError('personal snapshot was not saved')
+    raise AssertionError(('personal snapshot did not reach the expected state',latest))
 
 def restart(sim):
     command=[part.decode() for part in Path(f'/proc/{sim.process.pid}/cmdline').read_bytes().split(b'\0') if part]
@@ -79,7 +96,7 @@ def exercise(sim):
     returned(sim);sim.expect('开始阅读')
     choose(sim,'来个小挑战');assert sim.focus()!='返回';sim.screenshot('quiz')
     sim.key('ENTER');sim.expect('下一题','看看收获');sim.screenshot('feedback')
-    assert personal(sim)['answered']==1
+    assert personal(sim,lambda p:p['answered']==1)['answered']==1
     sim.key('ENTER');assert sim.focus() not in ('返回','下一题')
     returned(sim);sim.expect('开始阅读')
     seed(sim,ORIGIN+'/oss/shici/index.json',index)
@@ -87,16 +104,16 @@ def exercise(sim):
     choose(sim,'拼音伴读');sim.expect('下一页');sim.screenshot('pinyin')
     sim.key('ENTER');sim.expect('下一页','上一页','读完啦');returned(sim);sim.expect('开始阅读')
     choose(sim,'诗意小课堂');sim.expect('下一页','读完啦');sim.screenshot('lesson');returned(sim)
-    choose(sim,'收藏起来');assert len(personal(sim)['favorites'])==1
+    choose(sim,'收藏起来');assert len(personal(sim,lambda p:len(p['favorites'])==1)['favorites'])==1
     returned(sim);returned(sim);returned(sim);sim.expect('继续读')
     seed(sim,ORIGIN+'/oss/stories/catalog.json',stories)
     choose(sim,'故事小书架');sim.expect('龟兔赛跑');sim.screenshot('stories')
     seed(sim,ORIGIN+'/oss/stories/items/story-0001.json',story)
     sim.key('ENTER');sim.expect('开始阅读');sim.key('ENTER');sim.expect('下一页')
-    first=personal(sim);assert first['bookmark']['id']=='story-0001'
-    sim.key('ENTER');assert personal(sim)['page']==1;sim.screenshot('story-page2')
+    first=personal(sim,lambda p:p['bookmark']['id']=='story-0001');assert first['bookmark']['id']=='story-0001'
+    sim.key('ENTER');assert personal(sim,lambda p:p['page']==1)['page']==1;sim.screenshot('story-page2')
     returned(sim);choose(sim,'来个小挑战');sim.expect('兔子');sim.key('DOWN');sim.expect('乌龟');sim.key('ENTER');sim.expect('看看收获')
-    assert personal(sim)['correct']>=1
+    assert personal(sim,lambda p:p['correct']>=1)['correct']>=1
     returned(sim);returned(sim);choose(sim,'换个故事分类');sim.expect('全部故事');choose(sim,'寓言故事');sim.expect('龟兔赛跑')
     returned(sim);sim.expect('继续读')
     seed(sim,ORIGIN+'/oss/recite/catalog.json',recite)
