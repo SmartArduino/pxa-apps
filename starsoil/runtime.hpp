@@ -64,6 +64,8 @@ void begin_controls();
 bool has_display_cutouts();
 bool blit_pixels(int x, int y, const uint16_t *pixels, int w, int h,
                 bool flip, int light, int clip_top, int clip_bottom);
+bool blit_indexed_pixels(int x, int y, const uint8_t *pixels, int w, int h,
+                         const uint16_t *palette, bool flip, int clip_top, int clip_bottom);
 void redraw();
 // Coalesces writes; serialize is called later by the runtime, not here.
 void save();
@@ -81,6 +83,10 @@ bool using_controller();
 // Draw-only access. framebuffer() is nullptr outside game::draw().
 void pixel(int x, int y, uint16_t color);
 uint16_t *framebuffer();
+void begin_scene_batch();
+void end_scene_batch();
+void scene_rect(int x, int y, int w, int h, uint16_t color);
+void scene_line(int x0, int y0, int x1, int y1, uint16_t color);
 // Optional, quiet synthesized tones. when_seconds is absolute foreground time
 // (millis()/1000); zero means now. At most 16 queued tones, duration <= 4
 // seconds.
@@ -100,6 +106,7 @@ void key(pocket::Key key);
 // Each contact retains its ID and coordinate space until release/cancel.
 // Outside releases still arrive; lifecycle/resize cancellation covers all IDs.
 bool uses_ui_pointer(int x, int y);
+bool input_active(); // Live touch/key activity, used to coalesce autosaves.
 void pointer(pocket::Phase phase, int x, int y, uint32_t id = 0);
 void cancel_input(); // Also clears pending tap edges when no contacts remain.
 bool smart_cursor_enabled();

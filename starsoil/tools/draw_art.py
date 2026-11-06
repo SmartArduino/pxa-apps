@@ -181,10 +181,20 @@ def main():
         if pixels not in human_ids:
             human_ids[pixels]=len(unique_humans);unique_humans.append(list(im.getdata()))
         human_rows.append(human_ids[pixels])
-    cs=[creature(t,f) for t in range(5) for f in range(6)]
+    cs=[creature(t,f) for t in range(9) for f in range(6)]
+    creature_palettes=[]
+    creature_pixels=[]
+    for kind in range(9):
+        frames=[rgb565(im) for im in cs[kind*6:kind*6+6]]
+        palette=[0]+sorted({c for pixels in frames for c in pixels if c})
+        if len(palette)>16:
+            raise ValueError(f'Creature {kind} exceeds its 16-color palette')
+        indices={color:index for index,color in enumerate(palette)}
+        creature_palettes.append(palette+[0]*(16-len(palette)))
+        creature_pixels.extend([[indices[c] for c in pixels] for pixels in frames])
     defs=re.findall(r'\{\s*"([^"]*)"\s*,\s*"[^"]*"\s*,\s*(\w+)\s*,\s*(\w+)\s*,\s*\d+\s*,\s*\d+\s*,\s*0x([0-9a-f]+)\s*\}',(ROOT/'items.hpp').read_text())
-    if len(defs) != 80:
-        raise ValueError(f'Expected 80 nonempty item definitions, got {len(defs)}')
+    if len(defs) != 85:
+        raise ValueError(f'Expected 85 nonempty item definitions, got {len(defs)}')
     # Item zero has a decimal color literal; account for it explicitly.
     tile_names=['Air','Dirt','Grass','Stone','Sand','Snow','Ice','Log','Leaves','Plank','Brick','CopperOre','IronOre','GoldOre','CoalOre','CrystalOre','RubyOre','Obsidian','Deepstone','Moss','Water','Lava','Platform','Door','Torch','Bench','Furnace','Anvil','Chest','Flower','Mushroom','Herb','Cactus','Vine','Sapling','Bed','Portal','StorageChest']
     icons=[canvas()[0]]+[icon(k,c,tile_names.index(t) if t in tile_names else 0,name) for name,k,t,c in defs]
@@ -213,17 +223,19 @@ def main():
         grip_points=[(8,10)]
         offhand_points=[(-1,-1)]
         for i,(name,kind,t,col) in enumerate(defs,1):
-            candidate=(5,11) if kind in ('Pick','Axe','Wand') else (4,12) if kind=='Sword' else (14,8) if kind=='Bow' else (8,12) if kind in ('Potion','Food') else (8,10)
+            candidate=(5,11) if kind in ('Pick','Axe','Hammer','Wand') else (4,12) if kind=='Sword' else (14,8) if kind=='Bow' else (8,12) if kind in ('Potion','Food') else (8,10)
             opaque=[(x,y) for y in range(16) for x in range(16) if icons[i].getpixel((x,y))[3]]
             if not icons[i].getpixel(candidate)[3]:
-                if kind in ('Pick','Axe','Sword','Bow','Wand'):
+                if kind in ('Pick','Axe','Hammer','Sword','Bow','Wand'):
                     raise ValueError(f'{name}: weapon grip is outside the sprite')
                 candidate=min(opaque,key=lambda point:abs(point[0]-candidate[0])+abs(point[1]-candidate[1]))
             grip_points.append(candidate)
             offhand_points.append((7,8) if kind=='Bow' else (-1,-1))
         array(out,'item_grips',grip_points,2,'int8_t')
         array(out,'item_offhands',offhand_points,2,'int8_t')
-        array(out,'creatures',[rgb565(im) for im in cs],576)
+        out.write('inline constexpr int CreatureCount=9, CreatureFrames=6, CreaturePaletteSize=16;\n')
+        array(out,'creature_palettes',creature_palettes,16)
+        array(out,'creature_pixels',creature_pixels,576,'uint8_t')
         array(out,'icons',[rgb565(im) for im in icons],256)
         array(out,'cover',[rgb565(cover)],144*144)
         out.write('}\n')
@@ -237,7 +249,7 @@ def main():
         colors=palette if (i//characters.FRAMES)%characters.PARTS in (0,9,10,13,16,17) else garment_palette
         colored=Image.new('RGBA',im.size);colored.putdata([colors[v] for v in im.getdata()]);atlas.paste(colored,((i%characters.FRAMES)*characters.WIDTH,(i//characters.FRAMES)*characters.HEIGHT))
     atlas.save(ROOT/'art/character-layers.png')
-    atlas=Image.new('RGBA',(6*24,5*24))
+    atlas=Image.new('RGBA',(6*24,9*24))
     for i,im in enumerate(cs):atlas.paste(im,((i%6)*24,(i//6)*24))
     atlas.save(ROOT/'art/creatures.png')
     atlas=Image.new('RGBA',(16*16,math.ceil(len(icons)/16)*16))

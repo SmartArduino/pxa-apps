@@ -55,7 +55,7 @@ void broadleaf(int x, int ground, int h, uint16_t trunk, uint16_t foliage,
 template <class Rect, class Line, class Pixel>
 void draw(int w, int bottom, int camera_x, int camera_y, int surface_y,
           int depth, int biome, uint32_t clock, uint32_t animation, Rect rect,
-          Line line, Pixel pixel, int first_y = 25) {
+          Line line, Pixel pixel, int first_y = 25, bool cave_sparkles = true) {
   using namespace starsoil;
   const bool night = clock < 25000 || clock > 240000;
   auto box = [&](int x, int y, int ww, int hh, uint16_t color) {
@@ -126,7 +126,7 @@ void draw(int w, int bottom, int camera_x, int camera_y, int surface_y,
       if (n % 3 == 0) {
         diamond(x, y, 4, h, c(0x38636a), c(0x79b1a4));
         diamond(x + 7, y + 7, 2, 13, c(0x2c4e5c), c(0x527d88));
-        if ((animation / 180 + n) % 17 < 3)
+        if (cave_sparkles && (animation / 180 + n) % 17 < 3)
           dot(x, y + 3, c(0xb2e3c0));
       } else {
         for (int yy = 0; yy < 22; ++yy)
@@ -277,7 +277,7 @@ inline int cave_opacity(int world_y, int surface) {
 template <class Rect, class Line, class Pixel, class Read>
 void draw_world(const starsoil::State &s, int w, int bottom, int camera_x,
                 int camera_y, uint32_t animation, Rect rect, Line line,
-                Pixel pixel, Read read, int first_y = 25) {
+                Pixel pixel, Read read, int first_y = 25, bool cave_sparkles = true) {
   int ground = surface_level(s, camera_x + w / 2);
   int base = bottom - 47;
   int horizon = base + floor_div(ground - camera_y - base, 6);
@@ -297,8 +297,18 @@ void draw_world(const starsoil::State &s, int w, int bottom, int camera_x,
     for (int row = std::max(first_y, y); row < end_y; ++row) {
       int alpha = cave_opacity(camera_y + row, ground);
       if (alpha == 255) rect(x, row, std::max(0, end_x - x), 1, color);
-      else if (alpha) for (int col = x; col < end_x; ++col)
-        pixel(col, row, blend(read(col, row), color, alpha));
+      else if (alpha) {
+        // A distant layer contains long spans of equal pixels. Blend each
+        // distinct run once, retaining the exact RGB565 floor rounding.
+        int col = x;
+        while (col < end_x) {
+          const uint16_t old = read(col, row);
+          int end = col + 1;
+          while (end < end_x && read(end, row) == old) ++end;
+          rect(col, row, end - col, 1, blend(old, color, alpha));
+          col = end;
+        }
+      }
     }
   };
   auto stroke = [&](int x, int y, int ex, int ey, uint16_t color) {
@@ -314,6 +324,28 @@ void draw_world(const starsoil::State &s, int w, int bottom, int camera_x,
   };
   if (cave_opacity(camera_y + bottom - 1, ground))
     draw(w, bottom, camera_x, camera_y, horizon, 8, biome, s.clock,
-         animation, box, stroke, dot, std::max(first_y, ground + 32 - camera_y));
+         animation, box, stroke, dot, std::max(first_y, ground + 32 - camera_y), cave_sparkles);
+}
+
+// Sparkles lie inside separate crystal clusters (57 pixels apart). They can
+// be applied after the static cave geometry, retaining the original blend
+// against the already painted crystal at surface/cave transitions.
+template <class Pixel, class Read>
+void draw_cave_sparkles(int width, int bottom, int camera_x, int camera_y,
+                       int ground, uint32_t animation, Pixel pixel, Read read,
+                       int first_y = 25) {
+  if (!cave_opacity(camera_y + bottom - 1, ground)) return;
+  const int scroll = camera_x / 4;
+  for (int index = floor_div(scroll, 57) - 1;
+       index < floor_div(scroll + width, 57) + 2; ++index) {
+    const uint32_t value = hash(index + 722);
+    if (value % 3 || (animation / 180 + value) % 17 >= 3) continue;
+    const int x = index * 57 - scroll;
+    const int y = bottom - 22 - int(value % 48);
+    if (x < 0 || x >= width || y < first_y || y >= bottom) continue;
+    const int alpha = cave_opacity(camera_y + y, ground);
+    if (alpha)
+      pixel(x, y, alpha == 255 ? c(0xb2e3c0) : blend(read(x, y), c(0xb2e3c0), alpha));
+  }
 }
 } // namespace starsoil_scene

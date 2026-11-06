@@ -77,8 +77,8 @@ bool actor_overlap(const Actor &a, int x, int y, int w = 10, int h = 24) {
   return x * 16 < a.x + w / 2 && (x + 1) * 16 > a.x - w / 2 &&
          y * 16 < a.y && (y + 1) * 16 > a.y - h;
 }
-int mob_width(int type) { return type == 5 ? 30 : type == 2 ? 24 : type == 1 ? 14 : 10; }
-int mob_height(int type) { return type == 5 ? 32 : type == 1 ? 12 : 24; }
+int mob_width(int type) { return type > NoEnemy && type < EnemyCount ? enemies[type].width : 10; }
+int mob_height(int type) { return type > NoEnemy && type < EnemyCount ? enemies[type].height : 24; }
 bool occupied(const State &s, int x, int y) {
   if (actor_overlap(s.player, x, y)) return true;
   for (const auto &n : s.npcs)
@@ -109,6 +109,12 @@ bool toggle_door(State &s, int x, int y, bool open) {
   if (d.top != d.bottom) set_tile(s, x, d.top, open ? OpenDoorTop : DoorTop);
   set_tile(s, x, d.bottom, open ? OpenDoor : Door);
   return true;
+}
+bool wall_return_room(const State &s,int drop,bool consuming_held=false) {
+  if(!drop || (consuming_held && s.bag[s.selected].count==1))return true;
+  for(const auto &a:s.bag)if(!a.item || (a.item==drop && a.count<999))return true;
+  for(const auto &d:s.drops)if(!d.item || (d.item==drop && d.count<999))return true;
+  return false;
 }
 #include "smart_cursor.inc"
 // A small bounded flood catches enclosed foreground-built rooms even before
@@ -144,6 +150,7 @@ bool enclosed_building(const State &s, int x, int y) {
   return built;
 }
 void flying_physics(const State &s, Actor &a, float dt) {
+  const int width = mob_width(a.type), height = mob_height(a.type);
   // Sweep both axes in <=3px steps. Flying ignores gravity, not solid terrain.
   for (int axis = 0; axis < 2; ++axis) {
     float delta = (axis ? a.vy : a.vx) * dt;
@@ -151,14 +158,15 @@ void flying_physics(const State &s, Actor &a, float dt) {
     for (int i = 0; i < steps; ++i) {
       float nx = a.x + (axis ? 0 : delta / steps);
       float ny = a.y + (axis ? delta / steps : 0);
-      if (!body_clear(s, nx, ny, 24, 24)) {
+      if (!body_clear(s, nx, ny, float(width), float(height))) {
         (axis ? a.vy : a.vx) = 0;
         break;
       }
       a.x = nx; a.y = ny;
     }
   }
-  a.y = std::clamp(a.y, 24.0f, float((s.height - 1) * 16));
+  a.x = std::clamp(a.x, float(width), float((s.width - 1) * 16 - width));
+  a.y = std::clamp(a.y, float(height), float((s.height - 1) * 16));
 }
 void normalize_doors(State &s) {
   // Preserve all old tile IDs. Upgrade only empty space beside legacy doors;
@@ -269,17 +277,17 @@ void hurt(State &s, int damage) {
   }
   s.dirty = true;
 }
+#include "enemy_ai.inc"
 void kill(State &s, Actor &m) {
   ++s.kills;
   s.dirty = true;
   int type = m.type;
-  give(s, m.x, m.y,
-       type == 1   ? Gel
-       : type == 2 ? Silk
-       : type == 3 ? StarDust
-       : type == 4 ? Crystal
-                   : StarDust,
+  give(s, m.x, m.y, enemies[type].drop,
        type == 5 ? 15 : 1 + rng(s) % 3);
+  if (type == FrostSlime) give(s, m.x, m.y, IceBlock, 1);
+  if (type == DuneBeetle) give(s, m.x, m.y, Copper, 1);
+  if (type == LanternMoth) give(s, m.x, m.y, StarDust, 1);
+  if (type == ThornHornet) give(s, m.x, m.y, Gel, 1);
   if (type == 5) {
     s.boss_defeated = 1;
     give(s, m.x, m.y, EmberCape, 1);
@@ -368,7 +376,7 @@ void use(State &s, const Input &input, uint32_t ms) {
       attack(s, item);
     return;
   }
-  if ((def.kind == Pick || def.kind == Axe) && !s.tool_cooldown) {
+  if (tool(def.kind) && !s.tool_cooldown) {
     // Swing in empty air too. Mining tiers/range only govern the block action.
     // Tools hit less hard than a sword and recover with their 480 ms animation.
     melee(s, 2 + 2 * def.tier + (def.kind == Axe ? 1 : 0), 40);
@@ -386,6 +394,20 @@ void use(State &s, const Input &input, uint32_t ms) {
       set_tile(s, x, y, Air);
       s.cooldown = 400;
       notice(s, "已用玻璃瓶装取液体，可再次放置。");
+    }
+    return;
+  }
+  if (def.kind == Hammer) {
+    const int wall=s.walls[index(x,y)], drop=wall_drop(uint8_t(wall));
+    if(!removable_wall(uint8_t(wall)) || solid(t) || !target_visible(s,x,y)) { s.mining=0;return; }
+    if(s.mine_x!=x || s.mine_y!=y) { s.mining=0;s.mine_x=x;s.mine_y=y; }
+    s.mining+=uint16_t(ms*def.stat);
+    if(s.mining>=300) {
+      // Preserve the wall if both inventory and bounded ground loot are full.
+      if(!wall_return_room(s,drop)) { notice(s,"背包和地面物品已满，先腾出空间。");s.mining=0;return; }
+      s.walls[index(x,y)]=Air;s.dirty=true;
+      if(drop)give(s,x*16+8,y*16+8,drop,1);
+      ++s.mined;s.mining=0;s.cooldown=80;
     }
     return;
   }
@@ -437,13 +459,15 @@ void use(State &s, const Input &input, uint32_t ms) {
   s.mining = 0;
   if (s.cooldown)
     return;
-  if (def.kind == Block || def.kind == Furniture) {
+  if (building(def.kind)) {
     auto place=placement(s,input,x,y);
     if(!place.ok()) {
       if(place.failure==PlaceFailure::DoorSpace) {
         notice(s,"木门需要两格空间和地面支撑。");s.cooldown=400;
       } else if(place.failure==PlaceFailure::Support) {
         notice(s,"靠近地面或已有方块放置。");s.cooldown=400;
+      } else if(place.failure==PlaceFailure::Space) {
+        notice(s,"先腾出空间，再回收旧墙。");s.cooldown=400;
       }
       return;
     }
@@ -452,12 +476,22 @@ void use(State &s, const Input &input, uint32_t ms) {
       set_tile(s, x, bottom - 1, DoorTop); set_tile(s, x, bottom, Door);
       remove(s, item, 1); s.cooldown = 180; return;
     }
-    if (def.tile == Plank && input.down) {
-      s.walls[index(x, y)] = Plank;
-      s.dirty = true;
-    } else
+    if (def.kind == Wall || (def.tile == Plank && input.down)) {
+      const int recovered=wall_drop(s.walls[index(x,y)]);
+      // Spend the held panel first, freeing its slot for the recovered wall.
+      auto &held=s.bag[s.selected];if(!--held.count)held={};
+      s.walls[index(x,y)]=def.tile;
+      if(recovered) {
+        bool last=!held.count;give(s,x*16+8,y*16+8,recovered,1);
+        // A refund may occupy the now-empty held slot. Do not immediately
+        // replace the newly built wall back during the same continuous press.
+        if(last)s.placement_release=true;
+      }
+      s.dirty=true;
+    } else {
       set_tile(s, x, y, def.tile);
-    remove(s, item, 1);
+      remove(s,item,1);
+    }
     s.last_place_x=x;s.last_place_y=y;s.last_place_item=uint8_t(item);
     s.cooldown = 180;
     s.dirty = true;
@@ -539,6 +573,10 @@ bool set_tile(State &s, int x, int y, uint8_t value) {
   s.tiles[index(x, y)] = value;
   s.dirty = true;
   return true;
+}
+Placement placement_preview(const State &s,const Input &input,int x,int y) {
+  if(input.smart_cursor && s.smart_cursor && !s.target_ready)return {PlaceFailure::Blocked,y};
+  return placement(s,input,x,y);
 }
 Biome biome_at(int x, int y, int width) {
   x = int(int64_t(x) * DefaultWorldW / width);
@@ -824,9 +862,9 @@ bool sort_inventory(State &s, bool chest) {
   auto rank = [](int id) {
     if (!id) return 100;
     Kind k = items[id].kind;
-    return k == Pick || k == Axe ? 0 : k >= Sword && k <= Wand ? 1
+    return tool(k) ? 0 : k >= Sword && k <= Wand ? 1
          : equip_slot(k) >= 0 ? 2 : k == Food || k == Potion ? 3
-         : k == Block || k == Furniture ? 4 : 5;
+         : building(k) ? 4 : 5;
   };
   std::sort(sorted, sorted + n, [&](Slot a, Slot b) {
     int ra = rank(a.item), rb = rank(b.item);
@@ -973,6 +1011,7 @@ void respawn(State &s) {
   s.mana = 60;
   s.invulnerable = 2500;
   s.spawn_timer = 0;
+  for (auto &shot : s.hostile_shots) shot = {};
   s.jump_buffer = s.ground_grace = 0;
   s.jump_down = false;
   s.jumps = 0;
@@ -988,8 +1027,8 @@ bool activate(State &s, int slot) {
   if (equip_slot(items[id].kind) >= 0)
     return equip(s, slot);
   const auto kind = items[id].kind;
-  if (kind == Pick || kind == Axe || kind == Sword || kind == Bow ||
-      kind == Wand || kind == Block || kind == Furniture) {
+  if (tool(kind) || kind == Sword || kind == Bow ||
+      kind == Wand || building(kind)) {
     s.selected = uint8_t(slot);
     s.dirty = true;
     return true;
@@ -1080,7 +1119,7 @@ bool interact_at(State &s, int x, int y) {
     for (auto &m : s.mobs)
       if (m.hp <= 0) {
         remove(s, StarCore, 1);
-        m = {s.player.x + 64, s.player.y - 30, 0, -80, 280, 5, 0};
+        m = {s.player.x + 64, s.player.y - 30, 0, -80, int16_t(enemies[Warden].health), Warden, 0};
         notice(s, "星核守卫苏醒了！");
         return true;
       }
@@ -1153,16 +1192,32 @@ bool trade(State &s, int npc) {
   return true;
 }
 bool can_spawn_enemy(const State &s, int x, int y, int type) {
-  if (type < 1 || type > 4 || !inside(s, x, y) || y * 16 < mob_height(type)) return false;
+  if (type <= NoEnemy || type >= EnemyCount || type == Warden ||
+      !inside(s, x, y) || y * 16 < mob_height(type)) return false;
   const int w = mob_width(type), h = mob_height(type);
   const float px = x * 16 + 8.0f, py = y * 16.0f;
   if (!body_clear(s, px, py, float(w), float(h))) return false;
   for (int yy = ix(py - h); yy <= ix(py - .01f); ++yy)
     for (int xx = ix(px - w / 2); xx <= ix(px + w / 2 - .01f); ++xx) {
       int wall = s.walls[index(xx, yy)];
-      if (wall == Plank || wall == Glass || wall == Door) return false;
+      if (built_wall(uint8_t(wall))) return false;
     }
   return !enclosed_building(s, x, ix(py - 1));
+}
+EnemyType enemy_for_environment(const State &s, int x, int y, uint32_t roll) {
+  const int depth = y - s.heights[std::clamp(x, 0, s.width - 1)];
+  const Biome biome = biome_at(x, 0, s.width);
+  if (depth > 8) {
+    if (biome == Jungle && roll % 3 == 0) return ThornHornet;
+    return depth > 24 && roll % 3 != 0 ? GemCrawler : DuskBat;
+  }
+  if (s.clock < 25000 || s.clock > 240000)
+    return roll % 3 == 0 ? LanternMoth : Mossling;
+  if (roll % 4 == 0) return DewSlime;
+  if (biome == Tundra) return FrostSlime;
+  if (biome == Desert) return DuneBeetle;
+  if (biome == Jungle) return ThornHornet;
+  return DewSlime;
 }
 SpawnRules spawn_rules(const State &s) {
   int x = std::clamp(ix(s.player.x), 0, s.width - 1);
@@ -1233,7 +1288,8 @@ void tick(State &s, const Input &in, uint32_t ms) {
     float dx=s.target_x*16+8-(p.x-.5f);
     if(std::fabs(dx)>2)p.face=dx>0;
   }
-  if (in.use)
+  if(!in.use)s.placement_release=false;
+  if (in.use && !s.placement_release)
     use(s, in, ms);
   else
     s.mining = 0;
@@ -1284,48 +1340,7 @@ void tick(State &s, const Input &in, uint32_t ms) {
     physics(s, n, dt);
     n.anim += uint16_t(std::fabs(n.x - old_npc_x) * 256);
   }
-  for (auto &m : s.mobs)
-    if (m.hp > 0) {
-      m.timer += ms;
-      m.anim += ms;
-      float dx = p.x - m.x;
-      m.face = dx > 0;
-      if (std::fabs(dx) > 600 && m.type != 5) {
-        m.hp = 0;
-        continue;
-      }
-      if (m.type == 2) {
-        m.vx = dx > 0 ? 38 : -38;
-        m.vy = (p.y - 16 - m.y) * .9f + std::sin(m.anim * .009f) * 22;
-        m.vy = std::clamp(m.vy, -90.0f, 90.0f);
-        flying_physics(s, m, dt);
-      } else {
-        // Only the humanoid night enemy can operate a door. Slimes, bats and
-        // crystal crawlers remain blocked until the player opens it.
-        if (m.type == 3 && m.grounded && m.timer > 900) {
-          int door_x = ix(m.x + (dx > 0 ? 9 : -9)), door_y = ix(m.y - 12);
-          if (closed_door(tile(s, door_x, door_y)) && toggle_door(s, door_x, door_y, true)) {
-            m.timer = 0; m.vx = dx > 0 ? 32 : -32;
-            notice(s, "苔木精推开了木门。");
-          }
-        }
-        if (m.grounded && m.timer > (m.type == 5 ? 440 : 900)) {
-          m.vy = m.type == 5 ? -240 : -145;
-          m.vx = (dx > 0 ? 1 : -1) * (m.type == 5 ? 85 : 32);
-          m.timer = 0;
-        }
-        physics(s, m, dt,
-                m.type == 5   ? 30
-                : m.type == 1 ? 14
-                              : 10,
-                m.type == 5   ? 32
-                : m.type == 1 ? 12
-                              : 24);
-      }
-      if (std::fabs(dx) < (m.type == 5 ? 25 : 15) &&
-          std::fabs(m.y - p.y) < (m.type == 5 ? 38 : 24))
-        hurt(s, m.type == 5 ? 22 : m.type == 3 ? 14 : 8);
-    }
+  update_enemies(s, ms, dt);
   for (auto &b : s.shots)
     if (b.life) {
       b.life = ms >= b.life ? 0 : b.life - ms;
@@ -1374,10 +1389,8 @@ void tick(State &s, const Input &in, uint32_t ms) {
             y = s.heights[x] - 1;
           for (int n = 0; n < 8 && solid(tile(s, x, y)); ++n)
             --y;
-          int type = ix(p.y) > 70       ? 4
-                     : (s.clock > 240000 || s.clock < 25000) ? 3
-                     : rng(s) % 4 == 0  ? 2
-                                        : 1;
+          const auto type = enemy_for_environment(s, x, y, rng(s));
+          if (flying_enemy(type)) y -= 1 + int(rng(s) % 3);
           bool crowded = false;
           for (const auto &other : s.mobs)
             if (other.hp > 0 && std::fabs(other.x - (x * 16 + 8)) < 96 &&
@@ -1387,9 +1400,7 @@ void tick(State &s, const Input &in, uint32_t ms) {
                  float(y * 16),
                  0,
                  0,
-                 int16_t(type == 4   ? 55
-                         : type == 3 ? 40
-                                     : 24),
+                 int16_t(enemies[type].health),
                  uint8_t(type),
                  0};
           break;
@@ -1599,8 +1610,7 @@ bool decode(State &s, const uint8_t *data, size_t size) {
     if (t >= TileCount)
       return false;
     t = walls[i];
-    if (t != 0 && t != Stone && t != Deepstone && t != Plank && t != Glass &&
-        t != Door)
+    if (t != Air && !removable_wall(t))
       return false;
   }
   for (auto &d : v.drops) {

@@ -16,6 +16,16 @@ static void roundtrip(std::vector<uint8_t> source, bool expect_packed = false) {
   size_t size = pack(buffer.data(), source.size(), capacity);
   if (expect_packed) assert(packed(buffer.data(), size));
   std::vector<uint8_t> encoded(buffer.begin(), buffer.begin() + size);
+  for(size_t budget : {size_t(1),size_t(127),size_t(4096),size_t(65536)}) {
+    std::vector<uint8_t> stepped(capacity+32,0xa5);
+    std::copy(source.begin(),source.end(),stepped.begin());
+    IncrementalPack work;work.begin(stepped.data(),source.size(),capacity);
+    assert(!work.step(0));size_t steps=0;
+    while(!work.step(budget))assert(++steps<=source.size()*4+4);
+    assert(work.result()==encoded.size());
+    assert(std::equal(encoded.begin(),encoded.end(),stepped.begin()));
+    for(size_t k=capacity;k<stepped.size();++k)assert(stepped[k]==0xa5);
+  }
   assert(unpack(buffer.data(), size, capacity, source.size()));
   assert(size == source.size() && std::equal(source.begin(), source.end(), buffer.begin()));
   for (size_t i = capacity; i < buffer.size(); ++i) assert(buffer[i] == 0xa5);
@@ -62,5 +72,5 @@ int main() {
     printf("world %ux%u: %zu -> %zu bytes\n",state.width,state.height,size,compressed);
     roundtrip(raw, true);
   }
-  puts("PASS compressed/legacy round trips, bounded overlap, short/invalid streams and four real world sizes");
+  puts("PASS incremental bytes match one-shot at four work budgets; compressed/legacy round trips, bounded overlap, short/invalid streams and four real world sizes");
 }

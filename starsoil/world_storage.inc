@@ -9,11 +9,19 @@ uint32_t requested_seed;
 uint8_t requested_size;
 bool opening_world, removing_world;
 size_t pending_size;
-bool saving_packed;
+bool saving_packed, saving_packing;
+starsoil_save::IncrementalPack save_packer;
+uint64_t save_pack_frame = UINT64_MAX;
+bool saving_commit_ready;
+bool saving_async_supported = true, saving_async_waiting;
+uint64_t saving_session;
+size_t saving_chunk;
+uint64_t save_last_active, save_defer_began;
 size_t saving_at, saving_hash_at;
 uint64_t saving_handle, saving_next_step;
 uint32_t saving_hash = starsoil_save::InitialHash;
 uint32_t save_step_max_us, save_snapshot_max_us, save_blocks;
+uint32_t save_open_max_us, save_write_max_us, save_close_max_us, save_commit_max_us;
 pocket::WorldInfo saving_info;
 int persist_status;
 char saving_path[48], saving_temp[48];
@@ -69,7 +77,23 @@ void scan_next_world() {
   loaded_size = 0;
   load_ready = true;
 }
+void abort_async_save() {
+  if(saving_session) {
+    uint32_t n=0;
+    if(pxa_fs_build_atomic_operation(packet,sizeof(packet),PXA_FS_ATOMIC_ABORT,
+        SAVE_ATOMIC_ABORT,saving_session,nullptr,0,&n))(void)pxa_control_packet(packet,n);
+    saving_session=0;
+  }
+  saving_async_waiting=false;
+}
+int32_t open_save_file() {
+  return pxa_fs_request_open(SAVE,saving_temp,strlen(saving_temp),
+      PXA_FS_OPEN_WRITE|PXA_FS_OPEN_CREATE|PXA_FS_OPEN_TRUNCATE);
+}
 void save_failed() {
+  saving_packing = false;
+  abort_async_save();
+  saving_commit_ready = false;
   if (saving_handle) {
     uint64_t handle = saving_handle;
     saving_handle = 0;
@@ -81,26 +105,62 @@ void save_failed() {
   persist_status = -1;
   pxa_log_write(3, "Starsoil: save failed; committed world retained, retrying");
 }
+bool begin_snapshot_write() {
+  uint64_t open_began = now_us();
+  int32_t status=PXA_STATUS_UNSUPPORTED;
+  if(saving_async_supported) {
+    uint32_t n=0;
+    if(pxa_fs_build_atomic_begin(packet,sizeof(packet),SAVE_ATOMIC_BEGIN,
+        saving_temp,strlen(saving_temp),saving_path,strlen(saving_path),pending_size,&n))
+      status=pxa_control_packet(packet,n);
+    else status=PXA_STATUS_INTERNAL;
+    if(status==PXA_STATUS_UNSUPPORTED)saving_async_supported=false;
+    else if(!status)saving_async_waiting=true;
+  }
+  if(!saving_async_supported)status=open_save_file();
+  save_open_max_us = std::max(save_open_max_us, uint32_t(now_us() - open_began));
+  if (status) {
+    save_failed();
+    return false;
+  }
+  return true;
+}
 void send_save(bool force = false) {
   uint64_t now = now_us();
+  if (running && game::input_active()) save_last_active = now;
+  if (!save_dirty) save_defer_began = 0;
+  else if (!save_defer_began) save_defer_began = now;
   // The old world was already committed before these IO phases began. Pause
   // and lifecycle save requests must not restart a write during open/remove.
   if (opening_world || removing_world) {
     save_dirty = false;
+    save_defer_began = 0;
     return;
   }
   if (active_world < 0) {
     save_dirty = false;
+    save_defer_began = 0;
     return;
   }
   if (!running || !save_dirty || save_pending || now < save_retry ||
       (!force && now < save_due))
     return;
+  // An 8-second automatic checkpoint may wait for a short quiet moment.
+  // Continuous input is bounded to another 22 seconds; lifecycle/world
+  // barriers bypass this gate and always flush the latest state.
+  if (!force && now - save_defer_began < 22000000 &&
+      now - save_last_active < 600000) return;
   uint64_t began = now_us();
   pending_size = game::serialize(pending_save, sizeof(pending_save), false);
-  if (pending_size && pending_size <= SAVE_CAPACITY)
-    pending_size = starsoil_save::pack(pending_save, pending_size, sizeof(pending_save));
-  saving_packed = starsoil_save::packed(pending_save, pending_size);
+  saving_packing = false;
+  if (pending_size && pending_size <= SAVE_CAPACITY) {
+    if (pending_size > 65536) {
+      save_packer.begin(pending_save, pending_size, sizeof(pending_save));
+      saving_packing = !save_packer.ready();
+      save_pack_frame = UINT64_MAX;
+    } else pending_size = starsoil_save::pack(pending_save, pending_size, sizeof(pending_save));
+  }
+  saving_packed = !saving_packing && starsoil_save::packed(pending_save, pending_size);
   save_snapshot_max_us = std::max(save_snapshot_max_us, uint32_t(now_us() - began));
   if (!pending_size) {
     save_dirty = false;
@@ -112,21 +172,52 @@ void send_save(bool force = false) {
   game::describe_world(saving_info);
   world_path(active_world, saving_path);
   world_path(active_world, saving_temp, true);
-  if (pxa_fs_request_open(SAVE, saving_temp, uint32_t(strlen(saving_temp)),
-                          PXA_FS_OPEN_WRITE | PXA_FS_OPEN_CREATE |
-                              PXA_FS_OPEN_TRUNCATE)) {
-    save_failed();
-    return;
-  }
+  if (!saving_packing && !begin_snapshot_write()) return;
   save_pending = true;
   save_dirty = false;
+  save_defer_began = 0;
   save_due = 0;
   persist_status = 1;
 }
 void service_save(bool urgent = false) {
-  if (!saving_handle || (!urgent && now_us() < saving_next_step)) return;
+  if(saving_packing) {
+    if(!urgent && save_pack_frame==frame_id)return;
+    save_pack_frame=frame_id;
+    uint64_t began=now_us();
+    if(save_packer.step(65536)) {
+      saving_packing=false;pending_size=save_packer.result();
+      saving_packed=starsoil_save::packed(pending_save,pending_size);
+      (void)begin_snapshot_write();
+    }
+    save_step_max_us=std::max(save_step_max_us,uint32_t(now_us()-began));
+    return;
+  }
+
+  if(saving_session) {
+    if(saving_async_waiting || (!urgent && now_us()<saving_next_step))return;
+    uint64_t began=now_us();uint32_t n=0;
+    bool writing=saving_at<pending_size;
+    saving_chunk=writing?std::min(pending_size-saving_at,size_t(PXA_FS_ATOMIC_MAX_CHUNK)):0;
+    size_t hashed_end=std::min(saving_at+saving_chunk,pending_size-4);
+    if(writing && !saving_packed && hashed_end>saving_hash_at) {
+      saving_hash=starsoil_save::checksum(saving_hash,pending_save+saving_hash_at,hashed_end-saving_hash_at);
+      saving_hash_at=hashed_end;
+    }
+    if(writing && !saving_packed && saving_at+saving_chunk>pending_size-4)
+      for(unsigned i=0;i<4;++i)pending_save[pending_size-4+i]=uint8_t(saving_hash>>(8*i));
+    if(!pxa_fs_build_atomic_operation(packet,sizeof(packet),
+        writing?PXA_FS_ATOMIC_WRITE:PXA_FS_ATOMIC_COMMIT,
+        writing?SAVE_ATOMIC_WRITE:SAVE_ATOMIC_COMMIT,saving_session,
+        writing?pending_save+saving_at:nullptr,saving_chunk,&n) || pxa_control_packet(packet,n))save_failed();
+    else saving_async_waiting=true;
+    save_step_max_us=std::max(save_step_max_us,uint32_t(now_us()-began));
+    saving_next_step=began+20000;
+    return;
+  }
+
+  if ((!saving_handle && !saving_commit_ready) || (!urgent && now_us() < saving_next_step)) return;
   uint64_t began = now_us();
-  if (saving_at < pending_size) {
+  if (saving_handle && saving_at < pending_size) {
     size_t want = std::min(pending_size - saving_at, size_t(4096));
     size_t hashed_end = std::min(saving_at + want, pending_size - 4);
     if (!saving_packed && hashed_end > saving_hash_at) {
@@ -138,18 +229,25 @@ void service_save(bool urgent = false) {
       for (unsigned i = 0; i < 4; ++i)
         pending_save[pending_size - 4 + i] = uint8_t(saving_hash >> (8 * i));
     int32_t n = pxa_fs_write(saving_handle, pending_save + saving_at, uint32_t(want));
+    save_write_max_us = std::max(save_write_max_us, uint32_t(now_us() - began));
     ++save_blocks;
     if (n <= 0 || size_t(n) > want) save_failed();
     else saving_at += size_t(n);
-  } else {
-    // Close/flush is a separate step; never append it to the last data write.
+  } else if (saving_handle) {
+    // Data write, close/flush, and atomic replace each get their own frame.
     uint64_t handle = saving_handle;
     saving_handle = 0;
     bool ok = pxa_fs_close(handle) == 0;
+    save_close_max_us = std::max(save_close_max_us, uint32_t(now_us() - began));
+    if (ok) saving_commit_ready = true;
+    else save_failed();
+  } else {
+    saving_commit_ready = false;
     uint32_t n = 0;
-    if (!ok || !pxa_fs_build_replace(packet, sizeof(packet), SAVE_COMMIT, saving_temp,
+    if (!pxa_fs_build_replace(packet, sizeof(packet), SAVE_COMMIT, saving_temp,
           strlen(saving_temp), saving_path, strlen(saving_path), &n) ||
         pxa_control_packet(packet, n)) save_failed();
+    save_commit_max_us = std::max(save_commit_max_us, uint32_t(now_us() - began));
   }
   save_step_max_us = std::max(save_step_max_us, uint32_t(now_us() - began));
   saving_next_step = began + 20000;
@@ -247,11 +345,39 @@ int32_t handle_world_storage(const pxa_event_t &e) {
       game::inspect_world(loaded, loaded_size, world_catalog[active_world]);
       persist_status = 0;
       save_dirty = false;
+      save_defer_began = 0;
       world_operation = WorldOperation::None;
       blocked_buttons |= buttons;
       buttons = 0;
       memset(repeats, 0, sizeof(repeats));
       pocket::redraw();
+    }
+    return PXA_EVENT_HANDLED;
+  }
+  if(e.token==SAVE_ATOMIC_ABORT)return PXA_EVENT_HANDLED;
+  if(e.token==SAVE_ATOMIC_BEGIN || e.token==SAVE_ATOMIC_WRITE || e.token==SAVE_ATOMIC_COMMIT) {
+    uint16_t opcode=e.token==SAVE_ATOMIC_BEGIN?PXA_FS_ATOMIC_BEGIN:
+        e.token==SAVE_ATOMIC_WRITE?PXA_FS_ATOMIC_WRITE:PXA_FS_ATOMIC_COMMIT;
+    pxa_fs_atomic_result_t r;
+    if(!pxa_fs_parse_atomic(&e,e.token,opcode,&r))return PXA_STATUS_INTERNAL;
+    saving_async_waiting=false;
+    if(e.token==SAVE_ATOMIC_BEGIN && r.status==PXA_STATUS_UNSUPPORTED) {
+      saving_async_supported=false;
+      if(open_save_file())save_failed();
+      return PXA_EVENT_HANDLED;
+    }
+    if(r.status){save_failed();return PXA_EVENT_HANDLED;}
+    if(e.token==SAVE_ATOMIC_BEGIN) {
+      saving_session=r.session;saving_at=saving_hash_at=0;
+      saving_hash=starsoil_save::InitialHash;saving_next_step=0;
+      pxa_log_write(2,"Starsoil: async save started");
+    } else if(e.token==SAVE_ATOMIC_WRITE) {
+      if(r.written!=saving_chunk){save_failed();return PXA_EVENT_HANDLED;}
+      saving_at+=r.written;++save_blocks;
+    } else {
+      saving_session=0;save_pending=false;persist_status=2;
+      world_catalog[active_world]=saving_info;
+      pxa_log_write(2,"Starsoil: world committed (async)");pocket::redraw();
     }
     return PXA_EVENT_HANDLED;
   }
@@ -264,6 +390,7 @@ int32_t handle_world_storage(const pxa_event_t &e) {
       return PXA_EVENT_HANDLED;
     }
     saving_handle = r.handle;
+    saving_commit_ready = false;
     saving_at = saving_hash_at = 0;
     saving_hash = starsoil_save::InitialHash;
     saving_next_step = 0;

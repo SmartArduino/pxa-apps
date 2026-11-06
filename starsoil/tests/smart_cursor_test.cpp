@@ -37,18 +37,46 @@ int main() {
   set_tile(s,101,58,Air);hold(input(true),550);
   assert(tile(s,101,59)==Air && tile(s,102,59)==Air && tile(s,103,59)==Air && s.mined==3);
   reset();set_tile(s,101,59,CrystalOre);set_tile(s,102,59,Stone);step(input());
-  assert(!s.target_ready); // Cannot reach the stone through an unmineable wall.
+  assert(s.target_ready && s.target_x==102 && s.target_y==59);
+  hold(input(true),700);
+  assert(tile(s,102,59)==Air && tile(s,101,59)==CrystalOre && s.mined==1);
   set_tile(s,101,58,Stone);step(input());assert(s.target_ready && tile(s,s.target_x,s.target_y)==Stone);
   reset();s.player.face=0;set_tile(s,99,58,Stone);step(input());assert(s.target_x==99 && s.target_y==58);
   // Explicit targets and fixed mode retain the original cursor rules.
   reset();set_tile(s,101,58,Stone);auto manual=input();manual.target_x=105;manual.target_y=59;
   step(manual);assert(!s.smart_cursor && s.target_x==105 && s.target_y==59);
   manual.target_x=-1;manual.smart_cursor=false;step(manual);assert(s.target_x==102 && s.target_y==59);
-  puts("PASS stable work, automatic continuation, tool tier filtering, occlusion, left-facing and exact/manual overrides");
+  puts("PASS stable work, automatic continuation, tool tier filtering, range-based mining through foreground, left-facing and exact/manual overrides");
+  // Explicit touch, fixed cursor and smart cursor share the mining action's
+  // range and tier limits, including a fully obstructed target.
+  for (int mode = 0; mode < 3; ++mode) {
+    reset();
+    for (int row = 54; row <= 59; ++row) set_tile(s,101,row,CrystalOre);
+    set_tile(s,102,59,Stone);
+    s.walls[59*WorldW+102]=Plank;
+    auto through = input(true);
+    if (mode == 0) { through.target_x=102; through.target_y=59; }
+    if (mode == 1) through.smart_cursor=false;
+    hold(through,700);
+    assert(tile(s,102,59)==Air && s.walls[59*WorldW+102]==Plank && s.mined==1);
+    for (int row = 54; row <= 59; ++row) assert(tile(s,101,row)==CrystalOre);
+  }
+  reset();set_tile(s,102,59,CrystalOre);auto weak=input(true);
+  weak.target_x=102;weak.target_y=59;hold(weak,1200);
+  assert(tile(s,102,59)==CrystalOre && !s.mined);
+  reset();set_tile(s,107,59,Stone);auto distant=input(true);
+  distant.target_x=107;distant.target_y=59;hold(distant,1200);
+  assert(tile(s,107,59)==Stone && !s.mined);
+  hold(input(true),700);assert(!s.target_ready && !s.mined);
+  puts("PASS touch/fixed/smart mining across a solid barrier; foreground/backing separation, insufficient power and out-of-range targets");
   reset(WoodAxe);set_tile(s,101,58,Leaves);set_tile(s,102,59,Log);set_tile(s,102,58,Log);set_tile(s,102,57,Leaves);
   step(input());assert(tile(s,s.target_x,s.target_y)==Log);hold(input(true),500);
   assert(tile(s,102,59)==Air && tile(s,102,58)==Air && count(s,Wood)>=2);
   reset(WoodAxe);set_tile(s,100,59,Log);step(input());assert(s.target_x==100 && s.target_y==59);
+  reset(WoodAxe);set_tile(s,101,59,Stone);set_tile(s,101,58,Stone);
+  set_tile(s,102,59,Log);set_tile(s,102,58,Log);
+  hold(input(true),500);
+  assert(tile(s,101,59)==Stone && tile(s,101,58)==Stone && tile(s,102,59)==Air);
   puts("PASS axes prefer trunks, chop complete trees and find a walk-through trunk at the player");
   reset(Boards);set_tile(s,102,59,Stone);step(input());
   assert(s.target_ready && tile(s,s.target_x,s.target_y)==Air);

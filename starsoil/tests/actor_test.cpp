@@ -192,7 +192,7 @@ void landmarks(const Canvas &c, const Outfit &outfit, int frame, bool face,
             "item grip source pixel is transparent");
     require(c.main_grip, "held item's opaque handle does not reach the palm");
     auto kind = items[held].kind;
-    if (kind < Pick || kind > Wand) {
+    if (!tool(kind) && (kind < Pick || kind > Wand)) {
       int left=c.width, right=-1, top=c.height, bottom=-1;
       for (int y=0;y<c.height;++y) for(int x=0;x<c.width;++x)
         if (c.at({x,y}).tag==Tag::Weapon) {

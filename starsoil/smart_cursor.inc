@@ -1,28 +1,40 @@
 // SPDX-License-Identifier: MIT
 // Included in core.cpp after the actor/door collision helpers.
-enum class PlaceFailure { None, Blocked, Support, DoorSpace };
-struct Placement { PlaceFailure failure; int bottom; bool ok() const { return failure==PlaceFailure::None; } };
 bool replaceable(int t) { return t==Air || t==Flower || t==Herb || t==Mushroom || t==Vine; }
 Placement placement(const State &s,const Input &in,int x,int y) {
+  if(s.selected>=BagSlots || !s.bag[s.selected].count || s.bag[s.selected].item>=ItemCount)
+    return {PlaceFailure::Blocked,y};
   const auto &def=items[s.bag[s.selected].item];
   auto fail=[&](PlaceFailure reason) { return Placement{reason,y}; };
   float dx=x*16+8-s.player.x,dy=y*16+8-(s.player.y-12);
-  if(!inside(s,x,y) || dx*dx+dy*dy>96*96 || (def.kind!=Block && def.kind!=Furniture))
-    return fail(PlaceFailure::Blocked);
+  if(!inside(s,x,y) || dx*dx+dy*dy>96*96)return fail(PlaceFailure::Range);
+  if(!building(def.kind))return fail(PlaceFailure::Blocked);
+  const bool wall=def.kind==Wall || (def.tile==Plank && in.down);
+  if(wall) {
+    int old=s.walls[index(x,y)];
+    if(old==def.tile)return fail(PlaceFailure::Duplicate);
+    if(built_wall(uint8_t(old))) {
+      if(def.kind!=Wall)return fail(PlaceFailure::Blocked);
+      if(!wall_return_room(s,wall_drop(uint8_t(old)),true))return fail(PlaceFailure::Space);
+    }
+    bool supported=tile(s,x,y)!=Air;
+    for(auto d : {std::pair{-1,0},std::pair{1,0},std::pair{0,-1},std::pair{0,1}})
+      supported |= tile(s,x+d.first,y+d.second)!=Air ||
+                   s.walls[index(x+d.first,y+d.second)]!=Air;
+    return supported?Placement{PlaceFailure::None,y}:fail(PlaceFailure::Support);
+  }
   if(def.tile==Door) {
     int bottom=y;
     if(!solid(tile(s,x,bottom+1)) && tile(s,x,bottom+1)!=Platform)++bottom;
     for(int yy=bottom-1;yy<=bottom;++yy)
       if(!inside(s,x,yy) || !replaceable(tile(s,x,yy)) || occupied(s,x,yy))
-        return fail(PlaceFailure::DoorSpace);
+        return {PlaceFailure::DoorSpace,bottom};
     if(!solid(tile(s,x,bottom+1)) && tile(s,x,bottom+1)!=Platform)
-      return fail(PlaceFailure::DoorSpace);
+      return {PlaceFailure::DoorSpace,bottom};
     return {PlaceFailure::None,bottom};
   }
   if(!replaceable(tile(s,x,y)))return fail(PlaceFailure::Blocked);
-  bool wall=def.tile==Plank && in.down;
-  if(wall && s.walls[index(x,y)]==Plank)return fail(PlaceFailure::Blocked);
-  if(solid(def.tile) && !wall && occupied(s,x,y))return fail(PlaceFailure::Blocked);
+  if(solid(def.tile) && occupied(s,x,y))return fail(PlaceFailure::Blocked);
   if(!(tile(s,x-1,y) || tile(s,x+1,y) || tile(s,x,y-1) || tile(s,x,y+1) || s.walls[index(x,y)]))
     return fail(PlaceFailure::Support);
   if(def.tile==Sapling && tile(s,x,y+1)!=Grass && tile(s,x,y+1)!=Dirt)
@@ -62,14 +74,17 @@ bool target_visible(const State &s,int x,int y) {
 }
 bool smart_kind(int item) {
   auto k=items[item].kind;
-  return k==Pick || k==Axe || k==Block || k==Furniture || item==Glass;
+  return tool(k) || building(k) || item==Glass;
 }
 bool choose_smart_target(State &s,const Input &in) {
   const int item=s.bag[s.selected].item;
   const auto &def=items[item];
-  const bool building=def.kind==Block || def.kind==Furniture;
-  const bool wall=building && def.tile==Plank && in.down;
-  int ay=wall?0:(in.aim_y>0?1:in.aim_y<0?-1:0);
+  // Pick/axe actions use the same range and tool checks as an exact target.
+  // Intervening foreground blocks do not invalidate a mining target.
+  const bool mining = def.kind == Pick || def.kind == Axe;
+  const bool building=starsoil::building(def.kind);
+  const bool wall=def.kind==Wall || (building && def.tile==Plank && in.down);
+  int ay=(def.kind!=Wall && wall)?0:(in.aim_y>0?1:in.aim_y<0?-1:0);
   int ax=in.aim_x?(in.aim_x>0?1:-1):ay?(in.move>0?1:in.move<0?-1:0):(s.player.face?1:-1);
   if(!ax && !ay)ax=s.player.face?1:-1;
   const int fallback_x=s.target_x,fallback_y=s.target_y;
@@ -85,9 +100,10 @@ bool choose_smart_target(State &s,const Input &in) {
     if(rx*rx+ry*ry>96*96)return 1000000;
     float along=rx*ax+ry*ay,across=std::fabs(rx*ay-ry*ax);
     if(along< -2 || across>along*1.3f+14 || (ay<0 && ry>=-4) || (ay>0 && ry<=4))return 1000000;
-    if(!building && item!=Glass && !ay && y>=ix(s.player.y))return 1000000;
+    if(!building && def.kind!=Hammer && item!=Glass && !ay && y>=ix(s.player.y))return 1000000;
     int t=tile(s,x,y);
     if(building) {
+      if(wall && (solid(t) || built_wall(s.walls[index(x,y)])))return 1000000;
       if((row_chain || bridge) && y!=(row_chain?s.last_place_y:foot_y))return 1000000;
       if(!placement(s,in,x,y).ok() || (!wall && occupied(s,x,y)))return 1000000;
       // DOWN on planks selects backing-wall mode rather than the floor.
@@ -95,7 +111,12 @@ bool choose_smart_target(State &s,const Input &in) {
       int anchor_x=row_chain?s.last_place_x+ax:fallback_x;
       return (x-anchor_x)*(x-anchor_x)*40+(y-anchor_y)*(y-anchor_y)*40+int(along*.5f+across*2);
     }
-    if(item==Glass) { if(t!=Water && t!=Lava)return 1000000; }
+    if(def.kind==Hammer) {
+      if(!removable_wall(s.walls[index(x,y)]))return 1000000;
+      // Clear foreground must be mined with a pick, never hammer through it.
+      if(solid(t))return 1000000;
+    }
+    else if(item==Glass) { if(t!=Water && t!=Lava)return 1000000; }
     else {
       if(!t || t==Water || t==Lava || def.tier<mining_tier(t) || (def.kind==Axe && !chop_target(t)))return 1000000;
     }
@@ -109,15 +130,16 @@ bool choose_smart_target(State &s,const Input &in) {
     if(!ax && rx*(s.player.face?1:-1)<-4)result+=8;
     return result;
   };
-  // Keep work on one reachable block until it breaks or the direction changes.
-  if(in.use && s.mining && score(s.mine_x,s.mine_y)<1000000 && target_visible(s,s.mine_x,s.mine_y)) {
+  // Keep work on one eligible block until it breaks or the direction changes.
+  if(in.use && s.mining && score(s.mine_x,s.mine_y)<1000000 &&
+     (mining || target_visible(s,s.mine_x,s.mine_y))) {
     s.target_x=s.mine_x;s.target_y=s.mine_y;return true;
   }
   int best=1000000,best_x=fallback_x,best_y=fallback_y;
   int px=ix(s.player.x),py=ix(s.player.y-12);
   for(int y=py-6;y<=py+6;++y)for(int x=px-6;x<=px+6;++x) {
     int value=score(x,y);
-    if(value<best && target_visible(s,x,y)) { best=value;best_x=x;best_y=y; }
+    if(value<best && (mining || target_visible(s,x,y))) { best=value;best_x=x;best_y=y; }
   }
   s.target_x=best_x;s.target_y=best_y;
   return best<1000000;

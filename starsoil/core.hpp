@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 #include "items.hpp"
+#include "enemies.hpp"
 #include <cstddef>
 namespace starsoil {
 // Fixed allocation/stride; each world's actual bounds are stored in State.
@@ -67,6 +68,7 @@ struct StateData {
   Actor player{}, mobs[MaxMobs]{}, npcs[4]{};
   Drop drops[MaxDrops]{};
   Shot shots[16]{};
+  Shot hostile_shots[8]{};
   uint32_t seed = 0, random = 0, clock = 0, day = 1, played = 0, kills = 0,
            mined = 0, crafted = 0, quests = 0;
   uint16_t hp = 100, mana = 60, invulnerable = 0, cooldown = 0, regen = 0,
@@ -79,7 +81,7 @@ struct StateData {
           mine_y = -1;
   uint16_t mining = 0;
   uint8_t selected = 0, jumps = 0, boss_defeated = 0;
-  bool jump_down = false, dirty = false;
+  bool jump_down = false, dirty = false, placement_release = false;
   // Selection feedback is transient; the world save layout is unchanged.
   bool smart_cursor = false, target_ready = true;
   int16_t last_place_x = -1, last_place_y = -1;
@@ -131,10 +133,18 @@ bool interact(State &s);
 // Exact target interaction: never falls back to another nearby piece of furniture.
 bool interaction_range(const State &s, int x, int y);
 bool interact_at(State &s, int x, int y);
+enum class PlaceFailure { None, Blocked, Support, DoorSpace, Duplicate, Space, Range };
+struct Placement {
+  PlaceFailure failure; int bottom;
+  bool ok() const { return failure==PlaceFailure::None; }
+};
+// Read-only result shared by placement and the scene's ghost preview.
+Placement placement_preview(const State &s,const Input &input,int x,int y);
 struct SpawnRules { uint16_t interval; uint8_t limit; };
 SpawnRules spawn_rules(const State &s);
 // Enemy feet are at (x * 16 + 8, y * 16). Checks the entire body and shelter.
 bool can_spawn_enemy(const State &s, int x, int y, int type);
+EnemyType enemy_for_environment(const State &s, int x, int y, uint32_t roll);
 bool trade(State &s, int npc);
 void respawn(State &s);
 size_t encode(const State &s, uint8_t *out, size_t capacity, bool seal = true);

@@ -65,6 +65,11 @@ struct Effects {
     mined = s.mined;
     hp = s.hp;
     target = tile(s, s.target_x, s.target_y);
+    if(items[s.bag[s.selected].item].kind==Hammer && s.target_x>=0 && s.target_y>=0 &&
+       s.target_x<s.width && s.target_y<s.height) {
+      auto wall=s.walls[s.target_y*WorldW+s.target_x];
+      target=wall==Glass?Ice:wall; // Glass is a wall ID, not a foreground tile ID.
+    }
     initialized = true;
   }
   void step(const State &s, uint32_t ms, bool active) {

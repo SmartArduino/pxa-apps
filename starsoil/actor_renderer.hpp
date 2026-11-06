@@ -88,7 +88,7 @@ inline uint16_t mix(uint16_t a, uint16_t b, int k) {
 inline Pose pose(uint8_t item, bool active) {
   auto kind = starsoil::items[item].kind;
   return kind == starsoil::Bow ? BowAim
-         : active && (kind == starsoil::Pick || kind == starsoil::Axe ||
+         : active && (starsoil::tool(kind) ||
                       kind == starsoil::Sword || kind == starsoil::Wand)
              ? ToolUse
          : item ? Carry
@@ -377,7 +377,7 @@ template <class Plot> void draw(const Appearance &a, Plot plot) {
       return v >= 0 ? (v + 128) / 256 : -((-v + 128) / 256);
     };
     const auto kind = items[a.held].kind;
-    const bool compact = kind < Pick || kind > Wand;
+    const bool compact = !tool(kind) && (kind < Pick || kind > Wand);
     if(aiming) {
       auto d=starsoil_aim::unit(a.face?a.aim_x:-a.aim_x,a.aim_y);
       auto at=[&](float x,float y) {return Point{h.x+int(std::lround(x*d.x-y*d.y)),

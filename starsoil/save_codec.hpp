@@ -25,16 +25,21 @@ inline size_t run_length(const uint8_t *p, size_t size, size_t at) {
   while (end < size && end - at < 130 && p[end] == p[at]) ++end;
   return end - at;
 }
+inline size_t token_length(const uint8_t *p, size_t size, size_t at, bool &run) {
+  size_t count = run_length(p, size, at);
+  run = count >= 3;
+  if (!run) {
+    count = 1;
+    while (count < 128 && at + count < size &&
+           run_length(p, size, at + count) < 3) ++count;
+  }
+  return count;
+}
 template <typename Emit>
 inline void tokens(const uint8_t *p, size_t size, Emit emit) {
   for (size_t at = 0; at < size;) {
-    size_t count = run_length(p, size, at);
-    bool run = count >= 3;
-    if (!run) {
-      count = 1;
-      while (count < 128 && at + count < size &&
-             run_length(p, size, at + count) < 3) ++count;
-    }
+    bool run;
+    size_t count = token_length(p, size, at, run);
     emit(at, count, run);
     at += count;
   }
@@ -61,6 +66,64 @@ inline size_t pack(uint8_t *p, size_t size, size_t capacity) {
   std::memcpy(p, "SSZ1", 4); store32(p + 4, uint32_t(size));
   return out;
 }
+// Same SSZ1 bytes as pack(), with bounded work and no second map buffer.
+// The snapshot remains immutable to the game; moving the input backwards is
+// itself split so large memmoves do not monopolize a frame.
+class IncrementalPack {
+  enum Phase { Seal, Analyze, Shift, Emit, Ready } phase_ = Ready;
+  uint8_t *p_ = nullptr;
+  size_t size_ = 0, capacity_ = 0, at_ = 0, bytes_ = 8, overlap_ = 8, out_ = 8, result_ = 0;
+  uint32_t hash_ = InitialHash;
+public:
+  void begin(uint8_t *p, size_t size, size_t capacity) {
+    p_ = p; size_ = result_ = size; capacity_ = capacity; at_ = 0;
+    bytes_ = overlap_ = out_ = 8; hash_ = InitialHash;
+    phase_ = size >= 128 && size <= capacity && !std::memcmp(p, "SSR1", 4) ? Seal : Ready;
+  }
+  bool ready() const { return phase_ == Ready; }
+  size_t result() const { return result_; }
+  bool step(size_t budget) {
+    if (ready() || !budget) return ready();
+    if (phase_ == Seal) {
+      size_t n = std::min(budget, size_ - 4 - at_);
+      hash_ = checksum(hash_, p_ + at_, n); at_ += n;
+      if (at_ == size_ - 4) {
+        store32(p_ + size_ - 4, hash_); at_ = 0; phase_ = Analyze;
+      }
+    } else if (phase_ == Analyze) {
+      size_t began = at_;
+      while (at_ < size_ && at_ - began < budget) {
+        bool run; size_t n = token_length(p_, size_, at_, run);
+        bytes_ += run ? 2 : n + 1;
+        if (bytes_ > at_ + n) overlap_ = std::max(overlap_, bytes_ - at_ - n);
+        at_ += n;
+      }
+      if (at_ == size_) {
+        if (bytes_ + 64 >= size_ || overlap_ > capacity_ - size_) phase_ = Ready;
+        else { phase_ = Shift; at_ = size_; }
+      }
+    } else if (phase_ == Shift) {
+      size_t n = std::min(budget, at_); at_ -= n;
+      std::memmove(p_ + overlap_ + at_, p_ + at_, n);
+      if (!at_) phase_ = Emit;
+    } else {
+      size_t began = at_;
+      while (at_ < size_ && at_ - began < budget) {
+        bool run; size_t n = token_length(p_ + overlap_, size_, at_, run);
+        uint8_t value = p_[overlap_ + at_];
+        p_[out_++] = run ? uint8_t(128 + n - 3) : uint8_t(n - 1);
+        if (run) p_[out_++] = value;
+        else { std::memmove(p_ + out_, p_ + overlap_ + at_, n); out_ += n; }
+        at_ += n;
+      }
+      if (at_ == size_) {
+        std::memcpy(p_, "SSZ1", 4); store32(p_ + 4, uint32_t(size_));
+        result_ = out_; phase_ = Ready;
+      }
+    }
+    return ready();
+  }
+};
 inline bool unpack(uint8_t *p, size_t &size, size_t capacity, size_t raw_limit) {
   if (!packed(p, size)) return true; // Legacy SSR1 is validated by the world codec.
   if (size < 8) return false;

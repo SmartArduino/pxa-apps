@@ -2,8 +2,11 @@
 #include "actor_renderer.hpp"
 #include "art.hpp"
 #include "background.hpp"
+#include "background_cache.hpp"
 #include "color_math.hpp"
 #include "core.hpp"
+#include "craft_filter.hpp"
+#include "wall_art.hpp"
 #include "door_art.hpp"
 #include "effects.hpp"
 #include "font.hpp"
@@ -30,6 +33,9 @@ State s;
 Effects effects;
 starsoil_scene::Lighting lighting;
 starsoil_tree::CrownCache tree_crowns;
+#ifndef PXA_POCKET_STUDIO
+starsoil_scene::BackgroundCache background_cache;
+#endif
 int draw_x = 0, draw_y = 0;
 int width() { return pocket::WIDTH; }
 int height() { return pocket::HEIGHT; }
@@ -54,6 +60,9 @@ void footer_origin() {
 enum View { Title, World, Bag, Crafting, Gear, Map, Guide, Dialogue, Storage,
             CreateWorld, SeedEditor, DeleteWorld };
 constexpr int RecipeRowHeight = 32;
+constexpr int BestiaryPageSize = 4;
+constexpr int GuidePages = 4 + (EnemyCount - 1 + BestiaryPageSize - 1) / BestiaryPageSize;
+static_assert(art::CreatureCount == EnemyCount - 1);
 View view = Title;
 uint32_t animation = 0, autosave = 0, event_at = 0, last_event = 0, paint = 0;
 int cx = 0, cy = 0, selected = 0, recipe = 0, recipe_page = 0, guide_page = 0,
@@ -82,7 +91,8 @@ struct SceneTouch {
 } scene_touch;
 int last_bag_tap = -1;
 int recipe_list[RecipeCount]{}, visible_recipes = RecipeCount;
-bool craft_ready_only = false;
+bool craft_ready_only = false, craft_group_focus = false;
+CraftGroup craft_category = CraftGroup::All;
 uint32_t last_bag_tap_at = 0;
 int inventory_slot_at(int x, int y);
 starsoil_actor::ActionClock tool_animation;
@@ -197,6 +207,25 @@ void sprite(int x, int y, const uint16_t *data, int w, int h, bool flip = false,
     }
   }
 }
+void creature(int x, int y, int type, int frame, bool flip = false,
+              int light = 255, int scale = 1, bool clip = false) {
+  if (type <= NoEnemy || type >= EnemyCount) return;
+  uint16_t palette[art::CreaturePaletteSize]{};
+  for (int i = 1; i < art::CreaturePaletteSize; ++i)
+    palette[i] = light == 255 ? art::creature_palettes[type-1][i]
+                              : dim(art::creature_palettes[type-1][i], light);
+  const auto *pixels = art::creature_pixels[(type-1)*art::CreatureFrames + frame%art::CreatureFrames];
+  if (scale == 1 && pocket::blit_indexed_pixels(x + draw_x, y + draw_y, pixels, 24, 24,
+       palette, flip, clip ? scene_top() : 0, clip ? render_bottom() : height())) return;
+  for (int yy = 0; yy < 24; ++yy) {
+    const int py = y + yy * scale;
+    if (clip && (py < scene_top() || py >= render_bottom())) continue;
+    for (int xx = 0; xx < 24; ++xx) {
+      const uint8_t index = pixels[yy*24 + (flip ? 23-xx : xx)];
+      if (index) rect(x + xx*scale, py, scale, scale, palette[index]);
+    }
+  }
+}
 void icon(int x, int y, int id, int light = 255) {
   if (id > 0 && id < ItemCount)
     sprite(x, y, art::icons[id], 16, 16, false, light);
@@ -221,7 +250,7 @@ void refresh_recipes() {
   visible_recipes = 0;
   int position = -1;
   for (int i = 0; i < RecipeCount; ++i)
-    if (!craft_ready_only || can_craft(s, i)) {
+    if (craft_matches(i,craft_category) && (!craft_ready_only || can_craft(s,i))) {
       if (i == recipe) position = visible_recipes;
       recipe_list[visible_recipes++] = i;
     }
@@ -235,6 +264,9 @@ void refresh_recipes() {
 int recipe_position() {
   for (int i = 0; i < visible_recipes; ++i) if (recipe_list[i] == recipe) return i;
   return 0;
+}
+void set_craft_group(CraftGroup group) {
+  craft_category=group;refresh_recipes();event_at=0;
 }
 void toggle_craft_filter() {
   craft_ready_only = !craft_ready_only;
@@ -255,7 +287,7 @@ void set_view(View v) {
   aim_x = aim_y = -1;
   s.mining = 0;
   selected = v == Gear ? 0 : s.selected;
-  if (v == Crafting) refresh_recipes();
+  if (v == Crafting) { craft_group_focus=false;refresh_recipes(); }
   use_blocked = pocket::held(Key::B);
   sound(430);
   pocket::redraw();
@@ -283,13 +315,71 @@ void human(int x, int feet, int frame, bool face, const uint8_t *equipment,
 }
 
 void sky() {
-  const auto *canvas = pocket::framebuffer();
-  starsoil_scene::draw_world(
-      s, width(), render_bottom(), cx, cy, animation,
-      [](int x, int y, int w, int h, uint16_t c) { rect(x, y, w, h, c); },
-      [](int x, int y, int xx, int yy, uint16_t c) { line(x, y, xx, yy, c); },
+  auto *canvas = pocket::framebuffer();
+#ifndef PXA_POCKET_STUDIO
+  const auto key = starsoil_scene::BackgroundKey::make(
+      s, width(), render_bottom(), cx, cy, animation, scene_top());
+  auto sparkles = [&] {
+    starsoil_scene::draw_cave_sparkles(width(), render_bottom(), cx, cy,
+      key.ground_y(), animation,
       [](int x, int y, uint16_t c) { pixel(x, y, c); },
       [canvas](int x, int y) { return canvas[y * width() + x]; }, scene_top());
+  };
+  if (background_cache.restore(key, canvas)) { sparkles(); return; }
+#endif
+  bool reading = false;
+  pocket::begin_scene_batch();
+  starsoil_scene::draw_world(
+      s, width(), render_bottom(), cx, cy, animation,
+      [](int x, int y, int w, int h, uint16_t c) { pocket::scene_rect(x+draw_x,y+draw_y,w,h,c); },
+      [](int x, int y, int xx, int yy, uint16_t c) { pocket::scene_line(x+draw_x,y+draw_y,xx+draw_x,yy+draw_y,c); },
+      [](int x, int y, uint16_t c) { pocket::scene_rect(x+draw_x,y+draw_y,1,1,c); },
+      [canvas,&reading](int x, int y) {
+        // Read/modify runs in the cave transition stay local after one barrier.
+        if (!reading) { pocket::end_scene_batch(); reading = true; }
+        return canvas[y * width() + x];
+      }, scene_top(),
+#ifdef PXA_POCKET_STUDIO
+      true
+#else
+      false
+#endif
+      );
+  pocket::end_scene_batch();
+#ifndef PXA_POCKET_STUDIO
+  background_cache.store(key, canvas);
+  sparkles();
+#endif
+}
+Input preview_input() {
+  Input input;input.smart_cursor=s.smart_cursor;input.down=pocket::held(Key::DOWN) || (touches.owns(17) && stick_dy>14);
+  return input;
+}
+void placement_ghost(const Placement &plan,bool wall,int tx,int ty) {
+  const auto &def=items[s.bag[s.selected].item];
+  auto blend=[](int x,int y,int w,int h,uint16_t c) {
+    int top=std::max(y,scene_top()),bottom=std::min(y+h,render_bottom());
+    if(top<bottom)pocket::blend_rect(x,top,w,bottom-top,c,90);
+  };
+  if(!plan.ok())return;
+  if(wall) {
+    starsoil_wall::draw(def.tile,15,s.target_x,s.target_y,tx,ty,255,blend);
+    return;
+  }
+  if(def.tile==Door) {
+    for(int y=0;y<32;++y)for(int x=0;x<16;++x) {
+      auto c=starsoil_door::pixel(false,x,y);if(c)blend(tx+x,ty+y,1,1,c);
+    }
+    return;
+  }
+  if(def.tile>=38)return;
+  const auto *image=art::tiles[def.tile*16];
+  // Group equal horizontal pixels to keep the single ghost inexpensive.
+  for(int y=0;y<16;++y)for(int x=0;x<16;) {
+    int end=x+1;auto c=image[y*16+x];
+    while(end<16 && image[y*16+end]==c)++end;
+    if(c)blend(tx+x,ty+y,end-x,1,c);x=end;
+  }
 }
 bool connects(int t, int n) {
   return t == n ||
@@ -312,27 +402,14 @@ void scene() {
          ++x) {
       int sx = x * 16 - cx, sy = y * 16 - cy, t = tile(s, x, y),
           light = light_at(x, y);
-      if (s.walls[y * WorldW + x] == Plank || s.walls[y * WorldW + x] == Door ||
-          s.walls[y * WorldW + x] == Glass) {
-        int wall = s.walls[y * WorldW + x];
-        uint16_t c = color(wall == Plank || wall == Door ? 0x675345
-                           : wall == Glass               ? 0x7ca7ae
-                           : y > 70                      ? 0x33334a
-                                                         : 0x4b464d);
-        rect(sx, std::max(sy, scene_top()), 16,
-             std::min(sy + 16, render_bottom()) - std::max(sy, scene_top()),
-             dim(c, light));
-        if (sy >= scene_top() && sy < render_bottom() - 4) {
-          if (wall == Glass) {
-            line(sx, sy, sx + 15, sy, dim(color(0xc5ded3), light));
-            line(sx + 1, sy + 2, sx + 5, sy + 2, dim(color(0xb4d8cd), light));
-          } else {
-            line(sx, sy + 15, sx + 15, sy + 15, dim(color(0x493e3d), light));
-            line(sx + 7, sy, sx + 7, sy + 14, dim(color(0x51433e), light));
-            line(sx + 2, sy + 3, sx + 2, sy + 11, dim(color(0x8c6d51), light));
-            pixel(sx + 5, sy + 6, dim(color(0x9b7d5e), light));
-          }
-        }
+      int wall=s.walls[y*WorldW+x];
+      if(built_wall(uint8_t(wall))) {
+        auto same=[&](int xx,int yy) {return xx>=0 && yy>=0 && xx<s.width && yy<s.height && s.walls[yy*WorldW+xx]==wall;};
+        int mask=(same(x,y-1)?1:0)|(same(x+1,y)?2:0)|(same(x,y+1)?4:0)|(same(x-1,y)?8:0);
+        starsoil_wall::draw(wall,mask,x,y,sx,sy,light,[](int xx,int yy,int w,int h,uint16_t c) {
+          int top=std::max(yy,scene_top()),bottom=std::min(yy+h,render_bottom());
+          if(top<bottom)rect(xx,top,w,bottom-top,c);
+        });
       }
       auto tree_sample = [](int xx, int yy) { return tile(s, xx, yy); };
       auto crown = t == Air || t == Log || t == Leaves
@@ -422,9 +499,22 @@ void scene() {
       if (x < -48 || x > width() + 42 || y < scene_top() || y > render_bottom())
         continue;
       int sc = m.type == 5 ? 2 : 1;
-      sprite(x - 12 * sc, y - 24 * sc,
-             art::creatures[(m.type - 1) * 6 + (m.anim / 120) % 6], 24, 24,
-             !m.face, light_at(int(m.x / 16), int(m.y / 16)), sc, true);
+      creature(x - 12 * sc, y - 24 * sc, m.type, m.anim / 120,
+               !m.face, light_at(int(m.x / 16), int(m.y / 16)), sc, true);
+      int charge = m.type == DuneBeetle ? int(m.timer) - 1000
+                   : m.type == LanternMoth ? int(m.timer) - 1300
+                   : m.type == ThornHornet ? int(m.timer) - 1500 : -1;
+      const int windup = m.type == DuneBeetle ? 250 : 300;
+      if (charge >= 0 && charge < windup && y - 27 >= scene_top())
+        rect(x - 6, y - 27, 1 + charge * 11 / windup, 2, GoldInk);
+    }
+  for (const auto &shot : s.hostile_shots)
+    if (shot.life) {
+      const int x = int(shot.x) - cx, y = int(shot.y) - cy;
+      if (x >= 4 && x < width() - 4 && y >= scene_top() + 4 && y < render_bottom() - 4) {
+        line(x - int(shot.vx * .035f), y - int(shot.vy * .035f), x, y, GoldInk);
+        rect(x - 1, y - 1, 2, 2, Teal);
+      }
     }
   for (auto d : s.drops)
     if (d.item) {
@@ -468,15 +558,46 @@ void scene() {
              dim(color(p.color), std::min(255, int(p.life) * 2)));
     }
   int tx = s.target_x * 16 - cx, ty = s.target_y * 16 - cy;
-  if (ty >= 25 && ty < render_bottom() - 15) {
-    uint16_t cursor=s.smart_cursor?(s.target_ready?Teal:Muted):GoldInk;
-    outline(tx, ty, 16, 16, dim(cursor,s.smart_cursor && !s.target_ready?90:180));
+  const auto &held=items[s.bag[s.selected].item];
+  bool build=building(held.kind);int cursor_height=16;
+  Placement plan{PlaceFailure::Blocked,s.target_y};
+  if(build) {
+    auto input=preview_input();plan=placement_preview(s,input,s.target_x,s.target_y);
+    bool wall=held.kind==Wall || (held.tile==Plank && input.down);
+    if(held.tile==Door && !wall) {ty=(plan.bottom-1)*16-cy;cursor_height=32;}
+    placement_ghost(plan,wall,tx,ty);
+  }
+  if (ty >= scene_top() && ty < render_bottom()-1) {
+    uint16_t cursor=build?(plan.ok()?Teal:Red):s.smart_cursor?(s.target_ready?Teal:Muted):GoldInk;
+    outline(tx, ty, 16, std::min(cursor_height,render_bottom()-ty), dim(cursor,s.smart_cursor && !s.target_ready?90:180));
     pixel(tx + 2, ty + 2,cursor);
     if (s.mining)
-      rect(tx, ty + 15, std::min(16, int(s.mining) * 16 / mining_work(tile(s,s.target_x,s.target_y))), 2, Ink);
+      rect(tx, ty + 15, std::min(16, int(s.mining) * 16 / (items[s.bag[s.selected].item].kind==Hammer?300:mining_work(tile(s,s.target_x,s.target_y)))), 2, Ink);
   }
 }
 void scene_labels() {
+  const auto &held=items[s.bag[s.selected].item];
+  if(building(held.kind)) {
+    auto plan=placement_preview(s,preview_input(),s.target_x,s.target_y);
+    const char *en="PLACE",*cn="可放置";
+    switch(plan.failure) {
+      case PlaceFailure::None: {
+        if(held.kind==Wall && built_wall(s.walls[s.target_y*WorldW+s.target_x])) {en="REPLACE WALL";cn="替换墙壁";}
+        break;
+      }
+      case PlaceFailure::Duplicate:en="ALREADY BUILT";cn="已有相同墙";break;
+      case PlaceFailure::Support:en="NEEDS SUPPORT";cn="需要支撑";break;
+      case PlaceFailure::DoorSpace:en="2-CELL DOOR";cn="门需两格";break;
+      case PlaceFailure::Space:en="NO REFUND SPACE";cn="回收空间不足";break;
+      case PlaceFailure::Range:en="OUT OF REACH";cn="超出距离";break;
+      default:en="BLOCKED";cn="无法放置";break;
+    }
+    int y=s.target_y*16-cy-15;
+    if(y>70 && y<render_bottom()-16) {
+      const char *text=tr(en,cn);int x=std::clamp(s.target_x*16-cx+8-text_width(text)/2,4,std::max(4,width()-text_width(text)-4));
+      rect(x-2,y-1,text_width(text)+4,14,Dark);label(x,y,text,plan.ok()?Teal:Red);
+    }
+  }
   for (const auto &n : s.npcs) {
     int x = int(n.x) - cx, y = int(n.y) - cy;
     if (nearby_npc(s) == n.type && x >= 0 && x < width() && y > 84 &&
@@ -522,6 +643,7 @@ void disc(starsoil_touch::Point p,int radius,bool active) {
   }
 }
 void floating_controls() {
+  if (pocket::using_controller()) return;
   auto layout=touch_layout();
   auto stick=touches.owns(17)?starsoil_touch::Point{stick_x,stick_y}:layout.stick();
   disc(stick,29,touches.owns(17));
@@ -673,6 +795,10 @@ void bag_draw() {
   if (equip_slot(items[id].kind) >= 0)
     label(7, 187, hint("DOUBLE TAP: EQUIP; HOLD TO MOVE", "双击穿戴；长按拖动",
                        "A / TAP AGAIN: EQUIP", "A或再次点击：穿戴到身上"), Muted);
+  else if(items[id].kind==Wall)
+    label(7,187,tr("PLACE / REPLACE; HAMMER TO REMOVE", "放置或替换墙壁；锤子拆除"),Muted);
+  else if(items[id].kind==Hammer)
+    label(7,187,tr("HOLD: BACKING. TAP: INTERACT", "长按敲背景墙；轻点互动"),Muted);
   else
     label(7, 187, hint("TAP TO HOLD; LONG PRESS TO MOVE", "点选即可手持；长按拖动整理",
                        "A USE   Y TO HOTBAR", "A使用  Y放入当前快捷栏"), Muted);
@@ -782,12 +908,14 @@ void crafting_draw() {
     wrap(16, 75, 256, tr("No recipes are ready here. Switch to ALL to see ingredients and required stations.",
                            "当前没有可制作的配方。切换到全部，查看材料和所需设施。"), Muted, 3);
   footer_origin();
-  int x = 7;
-  if (recipe >= 0) for (auto a : recipes[recipe].in)
-    if (a.item) {
-      label(x, 178, tr(items[a.item].en, items[a.item].zh), Muted);
-      x += 90;
-    }
+  const char *en[]={"ALL","BUILD","TOOLS","GEAR","SUPPLY"};
+  const char *cn[]={"全部","建造","工具","装备","补给"};
+  for(int group=0;group<int(CraftGroup::Count);++group) {
+    int x=6+group*56;bool active=int(craft_category)==group;
+    rect(x,174,52,17,active?rgb(63,92,85):Panel);
+    outline(x,174,52,17,active?(craft_group_focus?GoldInk:Teal):rgb(64,78,84));
+    center(x,176,52,tr(en[group],cn[group]),active?GoldInk:Muted);
+  }
   button(6, 199, 43, "<");
   std::snprintf(b, sizeof(b), "%d/%d", visible_recipes ? recipe_page + 1 : 0,
                 (visible_recipes + recipes_per_page() - 1) / recipes_per_page());
@@ -879,10 +1007,10 @@ void guide_draw() {
       {"02  FROM WOOD TO CRYSTAL", "Wood + stone: workbench and furnace.",
        "Ore + coal: ingots. Anvil: gear.",
        "Copper pick: gold; iron: crystal.",
-       "SELECT filters ready recipes.",
+       "UP at list top: recipe categories.",
        "Gather flowers, fungi, vines, acorns.",
        "Plant acorns in grass or dirt.",
-       "DOWN + place planks: build walls."},
+       "Craft walls; hammers remove backing."},
       {"03  PEOPLE & ANCIENT LIGHT",
        "Guide: mine 20 blocks, craft 10.",
        "Merchant: 1 gold ingot > 8 silk.",
@@ -905,8 +1033,8 @@ void guide_draw() {
        "背包点选手持，双击使用或穿戴。", "START暂停；每八秒自动保存。"},
       {"二 · 从木材到晶体", "砍树挖石，建工作台与熔炉。",
        "矿石加煤炼锭，铁砧锻造装备。", "铜镐挖金矿，铁镐挖晶体。",
-       "合成页可筛选当前能制作的配方。", "采集花草、蘑菇、藤蔓、橡子。",
-       "橡子种在草地或泥土，随后长树。", "按住下键放木板，可搭背景墙。"},
+       "配方顶部按上，可切换分类。", "采集花草、蘑菇、藤蔓、橡子。",
+       "橡子种在草地或泥土，随后长树。", "合成背景墙，用锤子拆除回收。"},
       {"三 · 来客与古老流光", "向导：挖二十块，再合成十次。",
        "商人：一金锭换八份丝绸。", "铁匠：九铜矿换两铁锭。",
        "园丁：三野花换两生命药水。", "互动打开地下宝箱，寻找宝物。",
@@ -927,7 +1055,7 @@ void guide_draw() {
   const char *touch_cn[] = {
       "一 · 初来星壤", "左摇杆移动，上推或点跳跃起跳。",
       "右上角打开背包或合成手册。", "触屏点选目标，拖动切换目标。",
-      "长按使用采集、战斗或放置。", "手持镐斧也可轻点互动，长按破坏。",
+      "长按使用采集、战斗或放置。", "工具轻点互动，长按采集或拆墙。",
       "背包双击穿戴，外观实时变化。", "菜单暂停；每八秒自动保存。"};
   if (guide_page < 4) {
     for (int i = 0; i < 8; ++i) {
@@ -941,22 +1069,21 @@ void guide_draw() {
       wrap(8, 49 + i * 18, 270, line, i ? Muted : GoldInk, 1);
     }
   } else {
-    const char *names[] = {tr("DEWDROP SLIME", "叶露史莱姆"),
-                           tr("DUSK BAT", "暮翼蝠"), tr("MOSSLING", "苔木精"),
-                           tr("GEM CRAWLER", "晶背爬兽"),
-                           tr("WARDEN", "星核守卫")};
-    for (int i = 0; i < 5; ++i) {
-      int x = 6 + (i % 3) * 93, y = 49 + (i / 3) * 68;
-      panel(x, y, 89, 63, rgb(29, 46, 57));
-      sprite(x + 21, y + 1, art::creatures[i * 6 + (animation / 120) % 6], 24,
-             24, false, 255, 2);
-      center(x, y + 49, 89, names[i], i == 4 ? GoldInk : Teal);
+    const int first = 1 + (guide_page - 4) * BestiaryPageSize;
+    for (int i = 0; i < BestiaryPageSize && first + i < EnemyCount; ++i) {
+      const int type = first + i, x = 6 + (i % 2) * 140, y = 44 + (i / 2) * 64;
+      const auto &def = enemies[type];
+      panel(x, y, 134, 59, rgb(29, 46, 57));
+      center(x, y + 4, 134, tr(def.en, def.zh), type == Warden ? GoldInk : Teal);
+      creature(x + 4, y + 26, type, animation / 120);
+      label(x + 33, y + 23, tr(def.habitat_en, def.habitat_zh), Muted);
+      label(x + 33, y + 39, tr(def.behavior_en, def.behavior_zh), Ink);
     }
   }
   footer_origin();
   button(7, 200, 58, "<");
   char b[8];
-  std::snprintf(b, sizeof(b), "%d / 5", guide_page + 1);
+  std::snprintf(b, sizeof(b), "%d / %d", guide_page + 1, GuidePages);
   center(72, 204, 144, b, GoldInk);
   button(224, 200, 58, ">");
 }
@@ -1015,8 +1142,8 @@ void bag_activate() {
   if (activate(s, selected)) {
     sound(640);
     pocket::save();
-    if (kind == Pick || kind == Axe || kind == Sword || kind == Bow ||
-        kind == Wand || kind == Block || kind == Furniture)
+    if (tool(kind) || kind == Sword || kind == Bow ||
+        kind == Wand || building(kind))
       set_view(World);
   } else
     notify("This item cannot be used right now.", "这个物品暂时无法使用。");
@@ -1095,11 +1222,11 @@ bool target_interaction(int world_x, int world_y) {
     if (t == StorageChest) { set_view(Storage); selected = 0; }
     else if (t == Bench || t == Furnace || t == Anvil) {
       int facility = t == Bench ? Table : t == Furnace ? Kiln : Forge;
-      craft_ready_only = false;
+      craft_ready_only = false;craft_category=CraftGroup::All;
       set_view(Crafting);
       for (int i = 0; i < RecipeCount; ++i)
         if (recipes[i].station == facility) { recipe = i; break; }
-      recipe_page = recipe / recipes_per_page();
+      refresh_recipes();
     } else if (interact_at(s, x, y)) pocket::save();
     return true;
   }
@@ -1178,6 +1305,10 @@ int hit(int x, int y) {
         return x < 140 ? 80 : 81;
     }
     if (view == Crafting) {
+      if(y>=174 && y<191 && x>=6 && x<282) {
+        int group=(x-6)/56;
+        return group<int(CraftGroup::Count) && (x-6)%56<52 ? 220+group : -1;
+      }
       if (x >= 6 && x < 282 && y >= 49 && y < 49 + recipes_per_page() * RecipeRowHeight) {
         int position = recipe_page * recipes_per_page() + (y - 49) / RecipeRowHeight;
         return position < visible_recipes ? 120 + recipe_list[position] : -1;
@@ -1277,6 +1408,9 @@ void click(int id) {
       do_craft(5);
     else if (id == 94)
       toggle_craft_filter();
+    else if(id>=220 && id<220+int(CraftGroup::Count)) {
+      craft_group_focus=false;set_craft_group(CraftGroup(id-220));
+    }
   } else if (view == Gear) {
     if (id >= 140 && id < 148) {
       selected = id - 140;
@@ -1285,7 +1419,7 @@ void click(int id) {
     } else if (id == 82 && unequip(s, selected))
       pocket::save();
   } else if (view == Guide && (id == 90 || id == 91))
-    guide_page = (guide_page + (id == 90 ? 4 : 1)) % 5;
+    guide_page = (guide_page + (id == 90 ? GuidePages - 1 : 1)) % GuidePages;
   else if (view == Dialogue && id == 83) {
     trade(s, npc);
     pocket::save();
@@ -1323,7 +1457,7 @@ void init() {
   touches.clear();
   scene_touch = {};
   stick_dx = stick_dy = 0;
-  craft_ready_only = false;
+  craft_ready_only = false;craft_group_focus=false;craft_category=CraftGroup::All;
   recipe = 0;
   refresh_recipes();
   animation = autosave = 0;
@@ -1435,6 +1569,13 @@ void key(Key k) {
       bag_activate();
   }
   if (view == Crafting) {
+    if(craft_group_focus) {
+      int step=k==Key::LEFT?-1:k==Key::RIGHT?1:0;
+      if(step)set_craft_group(CraftGroup((int(craft_category)+step+int(CraftGroup::Count))%int(CraftGroup::Count)));
+      if(k==Key::DOWN || k==Key::A)craft_group_focus=false;
+      return;
+    }
+    if(k==Key::UP && (!visible_recipes || recipe_position()==0)) {craft_group_focus=true;return;}
     if (visible_recipes) {
       int step = k == Key::UP ? -1 : k == Key::DOWN ? 1 : k == Key::LEFT ? -recipes_per_page() : k == Key::RIGHT ? recipes_per_page() : 0;
       int position = (recipe_position() + step + visible_recipes * 4) % visible_recipes;
@@ -1456,9 +1597,9 @@ void key(Key k) {
   }
   if (view == Guide) {
     if (k == Key::LEFT)
-      guide_page = (guide_page + 4) % 5;
+      guide_page = (guide_page + GuidePages - 1) % GuidePages;
     if (k == Key::RIGHT)
-      guide_page = (guide_page + 1) % 5;
+      guide_page = (guide_page + 1) % GuidePages;
   }
   if (view == Dialogue && k == Key::A) {
     trade(s, npc);
@@ -1484,6 +1625,11 @@ void key(Key k) {
   pocket::redraw();
 }
 bool uses_ui_pointer(int x, int y) { return view != World || hit(x, y) != 16; }
+bool input_active() {
+  for (const auto &p : touches.slots) if (p.active) return true;
+  for (unsigned i = 0; i < 12; ++i) if (pocket::held(Key(i))) return true;
+  return false;
+}
 void cancel_input() {
   touches.clear();
   inventory_touch = {};
@@ -1579,7 +1725,8 @@ void pointer(Phase phase, int x, int y, uint32_t id) {
     else if(role==16) {
       aim_x=(x+cx)/16;aim_y=(y+cy)/16;
       auto kind=items[s.bag[s.selected].item].kind;
-      scene_touch={x,y,x+cx,y+cy,0,kind==Pick || kind==Axe,
+      scene_touch={x,y,x+cx,y+cy,0,tool(kind) ||
+                   (kind==Wall && interactive_furniture(tile(s,aim_x,aim_y))),
                    !touches.owns(15) && !(pocket::held(Key::B) && !use_blocked)};
       if(!scene_touch.deferred && target_interaction(x+cx,y+cy))
         p->role=0; // This gesture is an interaction, never an attack.

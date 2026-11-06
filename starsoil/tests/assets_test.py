@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Check native font pixels and the shared walking/equipment rig."""
 from pathlib import Path
+import ast
+import re
 import runpy
 from PIL import Image, ImageDraw
 from math import hypot
@@ -74,10 +76,19 @@ for frame in range(F):
 import sys
 sys.path.insert(0,str(ROOT/'tools'))
 import draw_art
-for kind in range(5):
+header=(ROOT/'art.hpp').read_text()
+def generated_rows(name):
+  data=re.search(r'\b'+name+r'\[\d+\]\[\d+\]=\{(.*?)\};',header,re.S)[1]
+  return ast.literal_eval('['+data.replace('{','[').replace('}',']')+']')
+palettes=generated_rows('creature_palettes')
+indices=generated_rows('creature_pixels')
+for kind in range(9):
   frames=[draw_art.creature(kind,f) for f in range(6)]
   assert all(im.size==(24,24) and im.getbbox() for im in frames)
   assert len({im.tobytes() for im in frames})>=4
+  assert len({c for im in frames for c in draw_art.rgb565(im)})<=16
+  for frame,im in enumerate(frames):
+    assert [palettes[kind][i] for i in indices[kind*6+frame]]==draw_art.rgb565(im)
 # Connected sides remain opaque, exposed corners round off, and interiors stay solid.
 for t in (1,2,3,4,5,6,9,10,11,12,13,14,15,16,17,18,19):
   for mask in range(16):
@@ -89,7 +100,7 @@ for t in (1,2,3,4,5,6,9,10,11,12,13,14,15,16,17,18,19):
     if mask&8:assert all(im.getpixel((0,y))[3]==255 for y in range(16))
 assert draw_art.tile(8,15).getpixel((0,8))[3]==255
 assert draw_art.tile(8,15).getpixel((15,8))[3]==255
-print('PASS distinct copper/iron/crystal armor and three clothing designs; five animated creature identities and connected terrain')
+print('PASS distinct armor and clothing, nine animated creature identities with bounded palettes and connected terrain')
 
 # Full foliage interiors must cover the vertices, not merely edge midpoints.
 for snow in (True,False):

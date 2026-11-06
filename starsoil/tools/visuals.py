@@ -176,6 +176,15 @@ def tile(t,mask,fallback):
 def icon(kind,col,t,name,tile_fn):
     im,d=canvas();low=name.lower();c='#'+col
     if kind in ('Block','Furniture') and t and name not in ('Water flask','Lava flask'):return tile_fn(t,0)
+    if kind=='Wall':
+        d.rectangle((1,2,14,14),fill=INK);d.rectangle((2,3,13,13),fill=shade(col,-35))
+        d.line((2,3,13,3),fill=shade(col,25));d.line((2,8,13,8),fill=INK)
+        if 'glass' in low:
+            d.line((7,3,7,13),fill=shade(col,20));d.line((3,5,5,5),fill=CREAM)
+        else:
+            d.line((5,4,5,7),fill=INK);d.line((10,9,10,13),fill=INK)
+            if 'wood' in low:d.line((8,5,11,5),fill=shade(col,5))
+        return im
     if name in ('Wildflower','Daybloom'):return tile_fn(29 if name=='Wildflower' else 31,0)
     if name=='Arrows':
         d.line((3,13,12,3),fill='#bdad85',width=2);d.polygon([(12,1),(14,1),(14,4),(11,4)],fill='#d2e1df')
@@ -185,7 +194,7 @@ def icon(kind,col,t,name,tile_fn):
         d.polygon([(3,7),(5,5),(10,5),(13,8),(7,9)],fill=shade(col,42))
         d.polygon([(2,9),(7,10),(13,9),(12,12),(3,12)],fill=c)
         d.line((8,10,12,10),fill=shade(col,-36));d.point((4,6),fill=CREAM);return im
-    if kind in ('Pick','Axe','Wand','Sword'):
+    if kind in ('Pick','Axe','Hammer','Wand','Sword'):
         # Grip coordinates stay authored and opaque in every material variant.
         if kind=='Sword':
             d.line((3,13,6,10),fill=INK,width=4);d.line((3,13,6,10),fill='#b77f54',width=2)
@@ -212,6 +221,10 @@ def icon(kind,col,t,name,tile_fn):
                     d.line((4,3,7,1,11,1,14,4,14,6),fill=INK,width=3)
                     d.line((5,3,7,2,11,2,13,4,14,5),fill=c,width=2)
                     d.line((7,1,10,1),fill=shade(col,47));d.point((13,4),fill=shade(col,-27))
+            elif kind=='Hammer':
+                d.polygon([(5,1),(8,0),(15,4),(15,7),(12,9),(5,5)],fill=INK)
+                d.polygon([(6,2),(8,1),(14,5),(12,7),(6,4)],fill=c)
+                d.line((7,1,13,4),fill=shade(col,48));d.line((12,7,14,5),fill=shade(col,-25))
             elif kind=='Axe':
                 d.polygon([(8,1),(12,0),(15,2),(15,6),(12,9),(9,7),(9,4),(7,3)],fill=INK)
                 d.polygon([(10,2),(13,1),(14,3),(14,6),(12,7),(10,6)],fill=c)
@@ -353,7 +366,7 @@ def creature(kind,frame):
             d.polygon([(x-2,y+2),(x,y-5),(x+3,y),(x+2,y+5)],fill='#8bbdcf')
             d.line((x,y-3,x,y+2),fill='#dcf8e4')
         d.rectangle((18,15,22,19),fill='#536c85');d.point((21,16),fill='#f6cfa2')
-    else:
+    elif kind==4:
         # Armoured stone guardian, floating crystal core, articulated limbs.
         for x,sign in ((3,-1),(19,1)):
             sway=(0,1,2,1,0,-1)[frame]*sign
@@ -368,6 +381,66 @@ def creature(kind,frame):
         d.polygon([(7,7+b),(7,3+b),(10,1+b),(15,2+b),(18,5+b),(16,9+b),(9,9+b)],fill=INK)
         d.line((9,4+b,15,4+b),fill='#9bbeb4');d.line((9,6+b,15,6+b),fill='#d9efbb')
         d.point((12,7+b),fill='#273f50');d.line((10,2+b,11,b),fill='#7fdbbc');d.point((14,1+b),fill=GOLD)
+    elif kind==5:
+        top = 10 + (0,1,2,1,0,-1)[frame]
+        d.polygon([(2,21),(3,top+3),(6,top),(10,top-4),(13,top),
+                   (17,top-2),(20,top+4),(21,22),(4,22)], fill=INK)
+        d.polygon([(4,20),(5,top+3),(9,top+1),(11,top-2),(13,top+3),
+                   (17,top+1),(19,top+5),(19,21),(6,21)], fill='#83b9cc')
+        d.polygon([(5,top+4),(11,top+1),(12,top+6),(6,top+7)], fill='#d9eee7')
+        d.polygon([(12,top+6),(17,top+3),(18,20),(13,21)], fill='#5188ac')
+        for x in (10,16):
+            d.rectangle((x,top+6,x+1,top+8), fill=INK)
+            d.point((x,top+6), fill='#fff1c8')
+        d.line((6+frame,20,8+frame,20), fill='#bce9ed')
+    elif kind==6:
+        step = (-2,-1,1,2,1,-1)[frame]
+        for x in (5,10,15):
+            d.line((x,17,x-2+step,22), fill=INK, width=2)
+            d.line((x,16,x+3-step,20), fill='#8a6045')
+        d.polygon([(2,17),(3,11+b),(7,8+b),(14,9+b),(18,13),
+                   (18,19),(7,21),(3,20)], fill=INK)
+        d.polygon([(4,16),(5,12+b),(8,10+b),(13,11+b),(16,14),
+                   (15,18),(8,19)], fill='#bf8750')
+        d.line((6,12+b,12,11+b), fill='#efcd7e', width=2)
+        d.line((9,11+b,10,18), fill='#81563e')
+        d.polygon([(16,14),(20,12),(23,14),(21,19),(17,19)], fill='#80503a')
+        d.point((21,14), fill='#f6e8ae')
+        d.line((21,17,23,19), fill=INK)
+        d.line((21,12,23,10+b), fill='#efcd7e')
+    elif kind==7:
+        flap = (0,2,4,5,3,1)[frame]
+        for side in (-1,1):
+            wing = [(12,11),(12+side*9,3+flap),(12+side*11,8+flap),
+                    (12+side*7,15+flap),(12+side*2,17)]
+            d.polygon(wing, fill=INK)
+            d.polygon([(12,12),(12+side*8,5+flap),(12+side*9,9+flap),
+                       (12+side*5,14+flap)], fill='#93809c')
+            d.line((12+side*6,8+flap,12+side*4,12+flap), fill='#efca8e', width=2)
+        d.ellipse((9,10,15,21), fill=INK)
+        d.ellipse((10,12,14,20), fill='#d3a354')
+        d.rectangle((11,15,13,18), fill='#fff1bb')
+        d.ellipse((10,6+b,15,12+b), fill='#71566e')
+        d.point((14,8+b), fill='#f9e5b0')
+        d.line((11,7+b,8,3+b), fill=INK)
+        d.line((14,7+b,17,4+b), fill=INK)
+    elif kind==8:
+        flap = (0,2,4,5,3,1)[frame]
+        d.polygon([(10,12),(3,3+flap),(2,7+flap),(7,14)], fill=INK)
+        d.polygon([(11,11),(15,2+flap),(20,4+flap),(16,12)], fill='#b7d5b2')
+        d.line((12,10,17,5+flap), fill='#e4e8cc')
+        d.polygon([(3,15),(5,10),(11,9),(17,12),(19,16),(14,19),
+                   (7,19),(3,17),(0,18)], fill=INK)
+        d.polygon([(5,14),(7,11),(11,11),(16,13),(16,16),(12,17),(6,17)], fill='#7fa661')
+        for x in (7,11):
+            d.line((x,12,x+1,17), fill='#354e48', width=2)
+        d.ellipse((16,11+b,22,17+b), fill='#c1b66b')
+        d.point((21,13+b), fill='#f6efc8')
+        d.line((20,12+b,22,8+b), fill=INK)
+        d.line((9,18,7+frame%3,22), fill=INK)
+        d.line((14,18,16-frame%3,21), fill=INK)
+    else:
+        raise ValueError(f'Unknown creature {kind}')
     return im
 
 

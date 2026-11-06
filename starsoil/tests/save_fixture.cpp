@@ -41,6 +41,19 @@ int main(int argc, char **argv) {
   };
   if (std::strcmp(argv[1], "performance-huge") == 0 ||
       std::strcmp(argv[1], "performance-medium") == 0) return save();
+  if (std::strcmp(argv[1], "walls") == 0) {
+    std::fill_n(s.tiles,Cells,uint8_t(Air));std::fill_n(s.walls,Cells,uint8_t(Air));
+    std::fill_n(s.heights,WorldW,uint8_t(60));
+    for(int x=1;x<s.width-1;++x)set_tile(s,x,60,Stone);
+    for(auto &slot:s.bag)slot={};
+    s.bag[0]={WoodWalls,12};s.bag[1]={BrickWalls,12};s.bag[2]={GlassWalls,12};
+    s.bag[3]={WoodHammer,1};s.bag[4]={IronHammer,1};s.bag[5]={WoodPick,1};
+    s.bag[6]={Doors,2};s.bag[7]={Torches,12};s.bag[8]={Boards,1};
+    set_tile(s,98,59,Bench);set_tile(s,103,59,StorageChest);
+    set_tile(s,99,58,DoorTop);set_tile(s,99,59,Door);
+    s.player.x=100*16+8;s.player.y=60*16;s.clock=100000;s.selected=0;
+    return save();
+  }
   if (std::strcmp(argv[1], "polish") == 0) {
     for (auto &slot : s.bag) slot = {};
     s.bag[0]={WoodPick,1};s.bag[1]={WoodAxe,1};s.bag[2]={WoodSword,1};
@@ -52,8 +65,10 @@ int main(int argc, char **argv) {
     set_tile(s,50,30,StorageChest);
     return save();
   }
-  if (std::strcmp(argv[1], "smart-cursor") == 0 || std::strcmp(argv[1], "smart-bridge") == 0) {
+  if (std::strcmp(argv[1], "smart-cursor") == 0 || std::strcmp(argv[1], "smart-bridge") == 0 ||
+      std::strcmp(argv[1], "through-wall") == 0) {
     bool bridge=std::strcmp(argv[1],"smart-bridge")==0;
+    bool through_wall=std::strcmp(argv[1],"through-wall")==0;
     std::fill(std::begin(s.tiles),std::end(s.tiles),uint8_t(Air));
     std::fill(std::begin(s.walls),std::end(s.walls),uint8_t(0));
     std::fill(std::begin(s.heights),std::end(s.heights),uint8_t(60));
@@ -63,7 +78,12 @@ int main(int argc, char **argv) {
     }
     for(auto &slot:s.bag)slot={};
     s.bag[0]={uint8_t(bridge?Boards:IronPick),uint16_t(bridge?12:1)};
-    if(!bridge)for(int x=101;x<=103;++x)set_tile(s,x,57,Stone);
+    if(through_wall) {
+      s.bag[0]={WoodPick,1};
+      for(int y=54;y<=59;++y)set_tile(s,101,y,CrystalOre);
+      set_tile(s,102,59,Stone);
+      s.walls[59*WorldW+102]=Plank;
+    } else if(!bridge)for(int x=101;x<=103;++x)set_tile(s,x,57,Stone);
     s.player.x=100*16+8;s.player.y=60*16;s.clock=100000;s.selected=0;
     return save();
   }

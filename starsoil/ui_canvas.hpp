@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 #include "color_math.hpp"
+#include "pixel_fill.hpp"
 #include "text.hpp"
 #include <algorithm>
 #include <cstdint>
@@ -56,8 +57,7 @@ struct Canvas {
               bottom = std::min(origin_y + draw_height(), py + h);
     if (right <= left || bottom <= top)
       return;
-    for (int yy = top; yy < bottom; ++yy)
-      std::fill(pixels + yy * width + left, pixels + yy * width + right, c);
+    starsoil_pixels::rectangle(pixels, width, left, top, right, bottom, c);
   }
   void rect(int lx, int ly, int w, int h, uint16_t c) const {
     if (w > 0 && h > 0)

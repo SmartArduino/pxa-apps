@@ -4,6 +4,26 @@
 #include <algorithm>
 #include <cstdint>
 namespace starsoil_scene {
+// Palette colors are lit once per draw. Index zero alone means transparency,
+// including when an opaque source color becomes black in low light.
+inline void blit_indexed(uint16_t *dst, int width, int height, int x, int y,
+                         const uint8_t *src, int sw, int sh, const uint16_t *palette,
+                         bool flip, int clip_top, int clip_bottom) {
+  const int left = std::max(0, -x), right = std::min(sw, width - x);
+  const int top = std::max({0, -y, clip_top - y});
+  const int bottom = std::min({sh, height - y, clip_bottom - y});
+  if (left >= right || top >= bottom) return;
+  const int first = flip ? sw - 1 - left : left, step = flip ? -1 : 1;
+  for (int yy = top; yy < bottom; ++yy) {
+    auto *row = dst + (y + yy) * width + x + left;
+    const auto *source = src + yy * sw;
+    int at = first;
+    for (int xx = left; xx < right; ++xx, at += step) {
+      const uint8_t index = source[at];
+      if (index) row[xx - left] = palette[index];
+    }
+  }
+}
 // Clip once per sprite, then write complete rows without a call per pixel.
 inline void blit(uint16_t *dst, int width, int height, int x, int y,
                  const uint16_t *src, int sw, int sh, bool flip, int light,

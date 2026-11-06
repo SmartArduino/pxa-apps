@@ -38,10 +38,14 @@ parser.add_argument('--appearance-only',action='store_true',help='Focused natura
 parser.add_argument('--fixtures',nargs='+',help='Limit a focused run to named save fixtures')
 parser.add_argument('--motion-only',action='store_true',help='Record walking and planted tool swings; verify idle preview remains still')
 parser.add_argument('--aim-jump-only',action='store_true',help='Focused directional bow/grip/recoil captures, airborne poses, ammunition and restart at one profile')
-parser.add_argument('--smart-cursor-only',action='store_true',help='Gamepad automatic mining, precise touch override, fixed/smart menu persistence, language and bridge placement')
+parser.add_argument('--smart-cursor-only',action='store_true',help='Gamepad automatic mining, precise touch override, mining through foreground, fixed/smart menu persistence, language and bridge placement')
+parser.add_argument('--bestiary-only',action='store_true',help='All seven guide pages, nine animated creatures, touch/controller wraparound and both languages')
 parser.add_argument('--worlds-only',action='store_true',help='World catalogue, legacy saves, seed keypad, all sizes, switching and deletion at one display profile')
 parser.add_argument('--legacy-fixture-tool',type=Path,help='Optional original v0.8 fixture binary for backwards compatibility QA')
 parser.add_argument('--input-hints-only',action='store_true',help='Check touch/controller hint transitions in both languages at one display profile')
+parser.add_argument('--building-only',action='store_true',help='Wall replacement/refunds behind furniture, placement ghosts and recipe category touch/controller navigation at one profile')
+parser.add_argument('--walls-only',action='store_true',help='Craft/place three backing materials, tap furniture with a hammer, demolish/recover backing and restart at one profile')
+parser.add_argument('--adaptive-controls-only',action='store_true',help='Hide floating controls for buttons, preserve the mode through pause/release, and restore on touch')
 args=parser.parse_args()
 out=args.output.resolve()
 if '/local/artifacts/' not in str(out):raise SystemExit('QA output must be in local/artifacts/')
@@ -154,6 +158,117 @@ def enter_world():
     time.sleep(.7)
 
 try:
+    if args.building_only:
+        assert args.fixture_tool
+        start(0);enter_world();key('ENTER');time.sleep(.6);path,_=saved();stop()
+        subprocess.run([str(args.fixture_tool.resolve()),'walls',str(path)],check=True)
+        initial=read_save(path);wood,brick,glass=initial[64],initial[67],initial[70]
+        def total(data,item):return sum(struct.unpack_from('<H',data,65+i*3)[0]for i in range(40)if data[64+i*3]==item)
+        def wall_at(data,x,y):return data[612+384*112+y*384+x]
+        def pause_data():
+            key('ENTER');time.sleep(.6);return saved()[1]
+        def point(x,y,hold=.08):
+            px,py=display_point(x,y,'fixed');command(f'TOUCH DOWN 0 {px} {py}');time.sleep(hold)
+            command(f'TOUCH UP 0 {px} {py}');time.sleep(.25)
+        start(270);enter_world();time.sleep(1)
+        point(192,177);capture('wall-tap-opens-storage');tap(236,22,'header')
+        point(192,177,.85);capture('wall-behind-chest')
+        data=pause_data();assert wall_at(data,103,59)==9 and total(data,wood)==11
+        key('ENTER');tap(79,45,'fixed');point(192,177,.85);capture('glass-replaced-behind-chest')
+        data=pause_data();assert wall_at(data,103,59)==40 and total(data,glass)==11 and total(data,wood)==12
+        key('ENTER');point(192,177,.85)
+        data=pause_data();assert total(data,glass)==11 and total(data,wood)==12,'Duplicate replacement spent materials'
+        key('ENTER');tap(175,45,'fixed');time.sleep(.3);capture('door-two-cell-preview')
+        tap(230,22,'header')
+        for group,(x,name) in enumerate([(31,'all'),(87,'building'),(143,'tools'),(199,'gear'),(255,'supplies')]):
+            tap(x,180,'footer');capture('recipes-'+name)
+        # Tools category starts at its first recipe: UP focuses the category row.
+        tap(143,180,'footer');key('UP');key('RIGHT');capture('controller-gear-category')
+        key('DOWN');tap(178,21,'fixed');capture('ready-gear-empty')
+        key('UP');key('RIGHT');key('DOWN');capture('empty-category-navigation')
+        tap(31,180,'footer');tap(178,21,'fixed');capture('all-recipes-restored')
+        data=pause_data();assert wall_at(data,103,59)==40 and total(data,glass)==11 and total(data,wood)==12
+        assert data[612+59*384+103]==37,'Replacement removed foreground furniture'
+        before=path.read_bytes();stop();start(271);assert path.read_bytes()==before
+        enter_world();time.sleep(.5);capture('building-restored');data=pause_data()
+        assert wall_at(data,103,59)==40 and data[612+59*384+103]==37
+        logs=''.join(p.read_text(errors='replace')for p in out.glob('simulator-*.log'))
+        assert 'save failed'not in logs.lower() and 'Guest exception'not in logs
+        print('PASS real PXA: furniture tap/hold, wall replacement and exact refunds, duplicates, door preview, recipe categories touch/controller/empty-ready navigation, save/restart; one412x412 profile')
+        raise SystemExit(0)
+    if args.walls_only:
+        assert args.fixture_tool
+        start(0);enter_world();key('ENTER');time.sleep(.6);path,_=saved();stop()
+        subprocess.run([str(args.fixture_tool.resolve()),'walls',str(path)],check=True)
+        def total(data,item):return sum(struct.unpack_from('<H',data,65+i*3)[0] for i in range(40) if data[64+i*3]==item)
+        initial=read_save(path);wood,brick,glass=initial[64],initial[67],initial[70]
+        def tile_at(data,x,y):return data[612+y*384+x]
+        def wall_at(data,x,y):return data[612+384*112+y*384+x]
+        def pause_data():
+            key('ENTER');time.sleep(.6);return saved()[1]
+        def point(x,y,hold=.08):
+            px,py=display_point(x,y,'fixed')
+            command(f'TOUCH DOWN 0 {px} {py}');time.sleep(hold)
+            command(f'TOUCH UP 0 {px} {py}');time.sleep(.25)
+        start(260);enter_world();time.sleep(1)
+        tap(230,22,'header');tap(178,21,'fixed');capture('wall-recipes')
+        tap(144,209,'footer');data=pause_data()
+        assert total(data,wood)==16 and total(data,9)==0, 'Wall recipe did not exchange one plank for four walls'
+        key('ENTER');tap(236,22,'header');point(192,161)
+        tap(55,45,'fixed');point(176,161)
+        tap(79,45,'fixed');point(208,161);capture('three-wall-materials')
+        data=pause_data();assert [wall_at(data,x,58)for x in (102,103,104)]==[10,9,40]
+        assert total(data,wood)==15 and total(data,brick)==11 and total(data,glass)==11
+        key('ENTER');tap(103,45,'fixed');point(192,161,.08)
+        data=pause_data();assert wall_at(data,103,58)==9, 'Short hammer tap destroyed backing'
+        key('ENTER');point(192,161,.9);capture('wood-hammer-swing')
+        data=pause_data();assert wall_at(data,103,58)==0 and total(data,wood)==16
+        key('ENTER');tap(127,45,'fixed');point(176,161,.8)
+        data=pause_data();assert wall_at(data,102,58)==0 and total(data,brick)==12
+        key('ENTER');tap(151,45,'fixed');point(208,161,.8)
+        data=pause_data();assert wall_at(data,104,58)==40, 'Pickaxe removed a backing wall'
+        key('ENTER');tap(127,45,'fixed');point(208,161,.8)
+        data=pause_data();assert wall_at(data,104,58)==0 and total(data,glass)==12
+        key('ENTER');point(128,177,.08)
+        data=pause_data();assert tile_at(data,99,59)==39 and tile_at(data,99,58)==40, 'Hammer short-tap did not open both door halves'
+        key('ENTER');point(128,177,.08)
+        data=pause_data();assert tile_at(data,99,59)==23 and tile_at(data,99,58)==38
+        assert tile_at(data,103,59)==37, 'Hammer removed foreground furniture'
+        key('ENTER');tap(31,45,'fixed');point(192,161);capture('wall-rebuilt')
+        data=pause_data();assert wall_at(data,103,58)==9;before=path.read_bytes();stop()
+        start(261);assert path.read_bytes()==before;enter_world();time.sleep(.5);capture('walls-restored')
+        data=pause_data();assert wall_at(data,103,58)==9 and tile_at(data,103,59)==37
+        logs=''.join(p.read_text(errors='replace')for p in out.glob('simulator-*.log'))
+        assert 'save failed'not in logs.lower() and 'Guest exception'not in logs
+        print('PASS real PXA: wall recipe, three backing materials, independent hammer/pick targets, short-tap door operation, exact recovery and save/restart; one412x412 profile')
+        raise SystemExit(0)
+    if args.adaptive_controls_only:
+        start(0);enter_world();time.sleep(.8)
+        tap(100,9,'fixed');capture('touch-controls')
+        def last_mode():
+            lines=(out/'simulator-0.log').read_text().splitlines()
+            modes=[line for line in lines if 'Pocket: input ' in line]
+            return ('controller' if 'Pocket: input controller' in modes[-1] else 'touch') if modes else 'touch'
+        key('RIGHT',.06);capture('buttons-released')
+        assert last_mode()=='controller'
+        time.sleep(.3);assert last_mode()=='controller'
+        key('ENTER');capture('buttons-paused');assert last_mode()=='controller'
+        time.sleep(.6)
+        path,data=saved()
+        key('ENTER');capture('buttons-resumed');assert last_mode()=='controller'
+        tap(100,9,'fixed');capture('touch-restored');assert last_mode()=='touch'
+        offset=len((out/'simulator-0.log').read_text())
+        command('KEY_DOWN RIGHT');time.sleep(10)
+        assert 'Starsoil: world committed'not in (out/'simulator-0.log').read_text()[offset:], 'Autosave interrupted continuous input'
+        command('KEY_UP RIGHT');time.sleep(1.5)
+        assert 'Starsoil: world committed'in (out/'simulator-0.log').read_text()[offset:], 'Idle autosave did not flush after release'
+        key('ENTER');time.sleep(.8);before=path.read_bytes();stop()
+        start(1);assert path.read_bytes()==before
+        enter_world();time.sleep(.4);capture('reloaded-touch-controls');stop()
+        logs=''.join(p.read_text(errors='replace')for p in out.glob('simulator-*.log'))
+        assert 'save failed'not in logs and 'Guest exception'not in logs
+        print('PASS real runtime button/touch mode, release and pause persistence, touch restoration and save/restart')
+        raise SystemExit(0)
     if args.performance_only:
         import re
         start(0);enter_world();key('ENTER');time.sleep(.8)
@@ -483,7 +598,7 @@ try:
         capture('finished-catalogue');stop()
         logs=''.join(p.read_text(errors='replace')for p in out.glob('simulator-*.log'))
         assert 'Guest exception'not in logs and 'save failed'not in logs.lower()
-        print('PASS real PXA world menu: legacy v1 preserved and loaded; numeric keypad and overflow rejection; actual small/medium/large saves; identical seed terrain; four-world pagination; switch/restart; cancel and confirm active-world deletion; no resurrection; corrupt save isolation and explicit deletion; one 480px profile')
+        print(f'PASS real PXA world menu: legacy v1 preserved and loaded; numeric keypad and overflow rejection; actual small/medium/large saves; identical seed terrain; four-world pagination; switch/restart; cancel and confirm active-world deletion; no resurrection; corrupt save isolation and explicit deletion; one {args.width}x{args.height} profile')
         raise SystemExit(0)
     if args.input_hints_only:
         from PIL import Image
@@ -554,6 +669,29 @@ try:
         assert 'Guest exception' not in logs and 'save failed' not in logs.lower()
         print('PASS real PXA: exact 2x2 native Chinese font pixels; input hints hidden by default and after restart, controller press shows, release retains, touch hides; Chinese/English menus and guide; one display profile')
         raise SystemExit(0)
+    if args.bestiary_only:
+        from PIL import Image,ImageChops
+        start(0);enter_world()
+        tap(195,22,'header');tap(257,35,'tab')
+        key('RIGHT');key('LEFT');capture('guide-first')
+        for page in range(1,7):
+            key('RIGHT');capture(f'guide-cn-{page}')
+        key('RIGHT');capture('guide-wrapped')
+        assert not ImageChops.difference(Image.open(out/'guide-first.png'),Image.open(out/'guide-wrapped.png')).getbbox()
+        key('LEFT');capture('bestiary-last-controller')
+        tap(36,210,'footer');capture('bestiary-previous-touch')
+        tap(250,210,'footer');capture('bestiary-last-touch')
+        key('ENTER')
+        for _ in range(4):key('DOWN')
+        key('Z');key('ENTER');time.sleep(.5)
+        capture('guide-en-6')
+        for page in (5,4):
+            key('LEFT');capture(f'guide-en-{page}')
+        key('X');key('ENTER');time.sleep(.6);saved()
+        logs=''.join(p.read_text(errors='replace') for p in out.glob('simulator-*.log'))
+        assert 'save failed' not in logs.lower() and 'Guest exception' not in logs
+        print('PASS real PXA bestiary: seven guide pages, nine animated creatures, controller wraparound, touch paging, both languages and save')
+        raise SystemExit(0)
     if args.smart_cursor_only:
         assert args.fixture_tool
         def tile_at(data,x,y):return data[612+y*384+x]
@@ -596,10 +734,27 @@ try:
         stop();checkpoint=path.read_bytes();start(244);assert path.read_bytes()==checkpoint
         enter_world();capture('bridge-restored');data=pause_data()
         assert all(tile_at(data,x,60)==9 for x in range(101,106)) and struct.unpack_from('<H',data,65)[0]==7
+        stop()
+        for number,mode in enumerate(('touch','controller'),245):
+            subprocess.run([str(args.fixture_tool.resolve()),'through-wall',str(path)],check=True)
+            initial=read_save(path)
+            start(number);enter_world();time.sleep(4.6)
+            if mode=='touch':
+                px,py=display_point(176,177,'fixed')
+                command(f'TOUCH DOWN 0 {px} {py}');time.sleep(1.3)
+                command(f'TOUCH UP 0 {px} {py}')
+            else:
+                command('KEY_DOWN X');time.sleep(1.3);command('KEY_UP X')
+            capture('through-wall-'+mode)
+            data=pause_data()
+            assert mined(data)==1 and tile_at(data,102,59)==0,mode+' cannot mine through foreground'
+            assert all(tile_at(data,101,y)==tile_at(initial,101,y) for y in range(54,60)), 'Weak pick damaged crystal barrier'
+            assert data[612+384*112+59*384+102]==9, 'Pick removed background wall'
+            stop()
         logs=''.join(p.read_text(errors='replace') for p in out.glob('simulator-*.log'))
         assert 'smart cursor off' in logs and 'smart cursor on' in logs
         assert 'save failed' not in logs.lower() and 'Guest exception' not in logs
-        print('PASS real PXA gamepad: elevated targets and continuous mining; protected standing floor; exact touch; fixed/smart and language preferences survive restart; five-cell bridge with exact material use; save/restart; one display profile')
+        print('PASS real PXA gamepad: elevated targets and continuous mining; protected standing floor; exact touch; fixed/smart and language preferences survive restart; five-cell bridge with exact material use; touch and controller mining through a solid barrier with background retained; save/restart; one display profile')
         raise SystemExit(0)
     if args.aim_jump_only:
         assert args.fixture_tool

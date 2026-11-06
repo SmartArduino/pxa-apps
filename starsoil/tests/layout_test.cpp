@@ -80,9 +80,18 @@ int text_height(int scale) { return screen_mode ? ui.text_height(scale) : 12 * s
 int text_line_height() { return screen_mode ? ui.line_height() : 14; }
 void begin_ui(bool) {}
 void begin_controls() {}
+void begin_scene_batch() {}
+void end_scene_batch() {}
+void scene_rect(int x, int y, int w, int h, uint16_t color) {
+  rect(x, y, w, h, color);
+}
+void scene_line(int x, int y, int end_x, int end_y, uint16_t color) {
+  line(x, y, end_x, end_y, color);
+}
 static bool cutout_mode;
 bool has_display_cutouts() { return cutout_mode; }
 bool blit_pixels(int,int,const uint16_t *,int,int,bool,int,int,int) { return false; }
+bool blit_indexed_pixels(int,int,const uint8_t *,int,int,const uint16_t *,bool,int,int) { return false; }
 void redraw() {}
 void save() {}
 int save_status() { return 0; }
@@ -90,7 +99,8 @@ uint32_t random() { return 1234567; }
 uint32_t millis() { return 0; }
 void log(const char *) {}
 bool held(Key) { return false; }
-bool using_controller() { return false; }
+static bool controller_mode;
+bool using_controller() { return controller_mode; }
 static WorldInfo worlds[WorldSlots];
 const WorldInfo &world_info(int slot) {
   static WorldInfo empty;
@@ -404,7 +414,59 @@ static void polish_ui_checks() {
   game::draw();
   puts("PASS actual UI: protected bag sort, bulk storage buttons/controller, ready-only filter mapped to real recipes, last-recipe depletion, empty navigation and precise crafting hints");
 }
+static void building_ui_checks() {
+  using pocket::Phase;using pocket::Key;
+  pocket::WIDTH=pocket::HEIGHT=288;pocket::buffer.resize(288*288);pocket::painted.resize(288*288);
+  new_game(s,1234567,WorldSize::Small);session_active=true;
+  std::fill_n(s.tiles,Cells,uint8_t(Air));std::fill_n(s.walls,Cells,uint8_t(Air));
+  for(int x=1;x<s.width-1;++x)set_tile(s,x,60,Stone);
+  for(auto &n:s.npcs)n={};for(auto &m:s.mobs)m={};for(auto &a:s.bag)a={};
+  s.player={1608,960,0,0,100,0,1};s.invulnerable=60000;s.clock=100000;
+  s.bag[0]={GlassWalls,12};s.selected=0;set_tile(s,98,59,Bench);set_tile(s,102,59,StorageChest);
+  auto tap=[](int x,int y) {game::pointer(Phase::DOWN,x,y);game::pointer(Phase::UP,x,y);};
+  auto point=[](int x,int y) {return std::pair{x*16+8-cx,y*16+8-cy};};
+  set_view(World);game::draw();auto [x,y]=point(102,59);
+  tap(x,y);assert(view==Storage && !s.walls[59*WorldW+102] && count(s,GlassWalls)==12);
+  set_view(World);game::draw();game::pointer(Phase::DOWN,x,y);
+  for(int i=0;i<30;++i)game::tick(20);
+  game::pointer(Phase::UP,x,y);
+  assert(view==World && s.walls[59*WorldW+102]==Glass && tile(s,102,59)==StorageChest && count(s,GlassWalls)==11);
+  game::draw();tap(x,y);assert(view==Storage && count(s,GlassWalls)==11);
+  set_view(Crafting);craft_category=CraftGroup::All;craft_ready_only=false;refresh_recipes();
+  int classified[5]{};
+  for(int r=0;r<RecipeCount;++r)++classified[int(craft_group(recipes[r].out))];
+  int total=0;for(int g=1;g<5;++g) {assert(classified[g]>0);total+=classified[g];}assert(total==RecipeCount);
+  for(int g=0;g<5;++g) {
+    int px=6+g*56+20,py=180+height()-224-FooterInset;
+    assert(hit(px,py)==220+g && hit(6+g*56+53,py)==-1);
+    tap(px,py);assert(int(craft_category)==g && visible_recipes>0);
+    for(int i=0;i<visible_recipes;++i)assert(craft_matches(recipe_list[i],CraftGroup(g)));
+    game::draw();
+  }
+  set_craft_group(CraftGroup::Tools);assert(recipe_position()==0);
+  game::key(Key::UP);assert(craft_group_focus);
+  game::key(Key::RIGHT);assert(craft_category==CraftGroup::Gear);
+  game::key(Key::DOWN);assert(!craft_group_focus && recipe_position()==0);
+  set_craft_group(CraftGroup::Tools);craft_ready_only=true;refresh_recipes();
+  assert(!visible_recipes && recipe==-1);game::key(Key::UP);assert(craft_group_focus);
+  game::key(Key::LEFT);assert(craft_category==CraftGroup::Building);game::key(Key::DOWN);
+  for(int i=0;i<visible_recipes;++i)assert(can_craft(s,recipe_list[i]) && craft_matches(recipe_list[i],CraftGroup::Building));
+  set_craft_group(CraftGroup::Gear);
+  assert(target_interaction(98*16+8,59*16+8) && view==Crafting);
+  assert(craft_category==CraftGroup::All && !craft_ready_only && recipes[recipe].station==Table);
+  assert(recipe_page==recipe_position()/recipes_per_page());
+  // A ready plan paints a translucent complete footprint without world edits.
+  s.bag[0]={Doors,2};s.selected=0;auto plan=placement_preview(s,{},103,59);assert(plan.ok());
+  pocket::clear(0);placement_ghost(plan,false,160,90);
+  bool top=false,bottom=false;
+  for(int yy=90;yy<122;++yy)for(int xx=160;xx<176;++xx)if(pocket::buffer[yy*288+xx]) {if(yy<106)top=true;else bottom=true;}
+  assert(top && bottom && tile(s,103,59)==Air);
+  auto rejected=Placement{PlaceFailure::Blocked,59};pocket::clear(0);placement_ghost(rejected,false,160,90);
+  assert(std::none_of(pocket::buffer.begin(),pocket::buffer.end(),[](uint16_t c){return c!=0;}));
+  puts("PASS actual build UI: wall short-tap furniture/hold-to-back, recipe category partition/hits/gaps, ready intersection, empty navigation, controller focus, station reset and read-only two-cell door ghost");
+}
 int main(int argc, char **argv) {
+  if(argc==2 && std::strcmp(argv[1],"--building")==0) {building_ui_checks();return 0;}
   game::init();
   if (argc == 2 && std::strcmp(argv[1], "--smart") == 0) { smart_ui_checks(); return 0; }
   if (argc == 2 && std::strcmp(argv[1], "--touch") == 0) { inventory_checks(); multitouch_checks(); return 0; }
@@ -488,6 +550,12 @@ int main(int argc, char **argv) {
     };
     for (bool en : {false, true}) {
       pocket::set_english(en);
+      for (int type=1;type<EnemyCount;++type) {
+        const auto &def=enemies[type];
+        assert(text_width(tr(def.en,def.zh))<=134);
+        assert(text_width(tr(def.habitat_en,def.habitat_zh))<=101);
+        assert(text_width(tr(def.behavior_en,def.behavior_zh))<=101);
+      }
       guide_page = npc = 0;
       std::string lang = en ? "en-" : "cn-";
       for (auto v : {Title, World, Bag, Crafting, Gear, Map, Guide, Dialogue, Storage,
@@ -496,13 +564,13 @@ int main(int argc, char **argv) {
         dump(lang + std::to_string(int(v)));
       }
       view = Guide;
-      for (guide_page = 0; guide_page < 5; ++guide_page)
+      for (guide_page = 0; guide_page < GuidePages; ++guide_page)
         dump(lang + "guide-" + std::to_string(guide_page));
       view = Dialogue;
       for (npc = 0; npc < 4; ++npc)
         dump(lang + "npc-" + std::to_string(npc));
     }
-    puts("PASS native 480px UI: all game/world-menu views, five guide pages and four NPCs in both languages; text stays inside the display");
+    puts("PASS native 480px UI: all game/world-menu views, all guide pages and four NPCs in both languages, bestiary text inside its cards");
     return 0;
   }
   {
@@ -570,11 +638,15 @@ int main(int argc, char **argv) {
       assert(hit(-1, 0) == -1 && hit(w, 0) == -1 && hit(0, h) == -1);
     }
     view = Guide;
-    for (int page = 0; page < 5; ++page) {
+    for (int page = 0; page < GuidePages; ++page) {
       guide_page = page;
       game::draw();
     }
     guide_page = 0;
+    game::key(Key::LEFT);assert(guide_page==GuidePages-1);
+    game::key(Key::RIGHT);assert(guide_page==0);
+    click(90);assert(guide_page==GuidePages-1);
+    click(91);assert(guide_page==0);
     int ox = (w - 288) / 2, oy = (h - 224) / 2;
     view = Title;
     assert(hit(144 + ox, 208 + oy) == 302);
@@ -667,6 +739,17 @@ int main(int argc, char **argv) {
     assert(std::find(pocket::painted.begin(), pocket::painted.end(), 0) == pocket::painted.end());
     pocket::cutout_mode = false;
     puts("PASS cutout displays repaint the complete world behind the safe control panel");
+  }
+
+  {
+    pocket::controller_mode = true;
+    auto before = pocket::buffer;
+    floating_controls();
+    assert(pocket::buffer == before);
+    pocket::controller_mode = false;
+    floating_controls();
+    assert(pocket::buffer != before);
+    puts("PASS physical/controller mode omits floating controls and touch mode restores them");
   }
 
 }

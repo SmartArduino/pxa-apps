@@ -63,7 +63,9 @@ enum Kind : uint8_t {
   Cape,
   Boots,
   Charm,
-  Furniture
+  Furniture,
+  Hammer,
+  Wall
 };
 enum Item : uint8_t {
   None,
@@ -147,6 +149,11 @@ enum Item : uint8_t {
   CloudBoots,
   GlowCharm,
   Magnet,
+  WoodWalls,
+  BrickWalls,
+  GlassWalls,
+  WoodHammer,
+  IronHammer,
   ItemCount
 };
 struct ItemDef {
@@ -236,7 +243,12 @@ inline constexpr ItemDef items[ItemCount] = {
     {"Swift boots", "疾行靴", Boots, 0, 1, 0, 0x9f704d},
     {"Cloud boots", "云靴", Boots, 0, 2, 0, 0xd8e3dc},
     {"Glow pendant", "辉光项链", Charm, 0, 1, 0, 0xeacf89},
-    {"Magnet charm", "磁石护符", Charm, 0, 2, 0, 0xa6b0bc}};
+    {"Magnet charm", "磁石护符", Charm, 0, 2, 0, 0xa6b0bc},
+    {"Wood wall", "木墙", Wall, Plank, 0, 0, 0x9c7655},
+    {"Brick wall", "石砖墙", Wall, Brick, 0, 0, 0x858d9a},
+    {"Glass wall", "玻璃墙", Wall, Glass, 0, 0, 0x8dbdcb},
+    {"Wood hammer", "木锤", Hammer, 0, 1, 1, 0xc59b69},
+    {"Iron hammer", "铁锤", Hammer, 0, 3, 3, 0xb8c9d0}};
 struct Ingredient {
   uint8_t item, count;
 };
@@ -297,8 +309,23 @@ inline constexpr Recipe recipes[] = {
     {CrystalMail, 1, Forge, {{Crystal, 12}, {GoldBar, 5}, {0, 0}}},
     {CrystalGreaves, 1, Forge, {{Crystal, 10}, {GoldBar, 4}, {0, 0}}},
     {StarGate, 1, Forge, {{ObsidianBlock, 12}, {Crystal, 8}, {GoldBar, 3}}},
-    {StarCore, 1, Altar, {{StarDust, 12}, {Crystal, 6}, {Ruby, 3}}}};
+    {StarCore, 1, Altar, {{StarDust, 12}, {Crystal, 6}, {Ruby, 3}}},
+    {WoodWalls, 4, Table, {{Boards, 1}, {0, 0}, {0, 0}}},
+    {BrickWalls, 4, Table, {{Bricks, 1}, {0, 0}, {0, 0}}},
+    {GlassWalls, 4, Table, {{Glass, 1}, {0, 0}, {0, 0}}},
+    {WoodHammer, 1, Table, {{Wood, 8}, {0, 0}, {0, 0}}},
+    {IronHammer, 1, Forge, {{IronBar, 6}, {Wood, 3}, {0, 0}}},
+    {Boards, 1, Table, {{WoodWalls, 4}, {0, 0}, {0, 0}}},
+    {Bricks, 1, Table, {{BrickWalls, 4}, {0, 0}, {0, 0}}},
+    {Glass, 1, Table, {{GlassWalls, 4}, {0, 0}, {0, 0}}}};
 inline constexpr int RecipeCount = sizeof(recipes) / sizeof(recipes[0]);
+inline bool built_wall(uint8_t t) { return t == Plank || t == Brick || t == Glass || t == Door; }
+inline bool removable_wall(uint8_t t) { return built_wall(t) || t == Stone || t == Deepstone; }
+inline uint8_t wall_drop(uint8_t t) {
+  return t == Plank || t == Door ? WoodWalls : t == Brick ? BrickWalls : t == Glass ? GlassWalls : None;
+}
+inline bool tool(Kind k) { return k == Pick || k == Axe || k == Hammer; }
+inline bool building(Kind k) { return k == Block || k == Furniture || k == Wall; }
 inline bool door(uint8_t t) {
   return t == Door || t == DoorTop || t == OpenDoor || t == OpenDoorTop;
 }

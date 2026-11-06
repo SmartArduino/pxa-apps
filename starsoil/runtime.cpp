@@ -10,6 +10,8 @@
 #include "render_buffers.hpp"
 #include "scene_blit.hpp"
 #include "scene_resample.hpp"
+#include "native_raster.hpp"
+#include "pixel_fill.hpp"
 #include "pxa.h"
 #include "pxa_audio.h"
 #include "pxa_clock.h"
@@ -24,6 +26,7 @@
 #include "text.hpp"
 #include "ui_canvas.hpp"
 #include <algorithm>
+#include <cstdlib>
 #include <cstring>
 #include <stdio.h>
 #include <string.h>
@@ -45,7 +48,9 @@ enum : uint64_t {
   SAVE,
   PREFERENCES_LOAD,
   PREFERENCES_SAVE,
-  SAVE_COMMIT, WORLD_OPEN, WORLD_REMOVE, WORLD_REMOVE_TEMP
+  SAVE_COMMIT, WORLD_OPEN, WORLD_REMOVE, WORLD_REMOVE_TEMP,
+  SAVE_ATOMIC_BEGIN, SAVE_ATOMIC_WRITE, SAVE_ATOMIC_COMMIT, SAVE_ATOMIC_ABORT,
+  CREATE_RASTER
 };
 #ifdef PXA_POCKET_STUDIO
 alignas(64) uint16_t frames[2 * pocket_ui::MAX_SURFACE_PIXELS];
@@ -54,6 +59,7 @@ alignas(64) uint16_t frames[starsoil_buffers::Pixels];
 uint16_t *logical_frame;
 #endif
 uint16_t *canvas;
+starsoil_scene::NativeRaster native_raster;
 starsoil_ui::Canvas ui;
 bool ui_active;
 uint8_t packet[PXA_MAX_CONTROL_BYTES], events[PXA_MAX_CONTROL_BYTES],
@@ -96,6 +102,7 @@ bool controller_input;
 void set_controller_input(bool active) {
   if (controller_input != active) {
     controller_input = active;
+    if (running) pxa_log_write(2, active ? "Pocket: input controller" : "Pocket: input touch");
     pocket::redraw();
   }
 }
@@ -127,7 +134,8 @@ uint64_t foreground_us() {
 // Optional audio is isolated from the game and storage state machines.
 #include "../common/pocket-play/audio.inc"
 void cancel_input() {
-  set_controller_input(false);
+  // Cancelling held buttons (pause, focus, resize) doesn't change the last
+  // input device. Only a touch press or controller disconnect restores touch UI.
   blocked_buttons |= buttons;
   buttons = 0;
   clear_sound();
@@ -145,7 +153,7 @@ void request_exit() {
   exit_requested = true;
   if (!opening_world && !removing_world)
     world_operation = WorldOperation::None;
-  exit_deadline = now_us() + 10000000;
+  exit_deadline = now_us() + 60000000;
   cancel_input();
   paused = true;
   pocket::redraw();
@@ -233,8 +241,10 @@ void controller(const pxa_ui_controller_data_t &c) {
   next &= ~blocked_buttons;
   uint32_t edges = next & ~buttons;
   buttons = next;
-  if (edges)
+  if (edges) {
+    save_last_active = now_us();
     set_controller_input(true);
+  }
   uint64_t now = now_us();
   for (unsigned i = 0; i < 4; ++i) {
     if (edges & key_masks[i])
@@ -275,6 +285,8 @@ void pointer(const pxa_ui_pointer_data_t &p) {
     contact = pointers.begin(p.pointer_id);
   }
   if (!contact) return;
+  if (p.phase == PXA_POINTER_DOWN || p.phase == PXA_POINTER_MOVE)
+    save_last_active = now_us();
   starsoil_ui::Canvas controls{nullptr, viewport.width, viewport.height, WIDTH, HEIGHT};
   configure_safe_ui(controls);
   int ux = pocket_ui::floor_ratio(int64_t(display_x - viewport.x - controls.origin_x * viewport.host_scale) * WIDTH,
@@ -378,7 +390,7 @@ void present() {
     canvas = nullptr;
 #ifndef PXA_POCKET_STUDIO
     if (!ui_active)
-      starsoil_scene::resample(logical_frame, WIDTH, HEIGHT, ui.pixels,
+      native_raster.resample(logical_frame, WIDTH, HEIGHT, ui.pixels,
                           viewport.width, viewport.height);
 #endif
     perf_render_us += now_us() - began;
@@ -431,6 +443,11 @@ int32_t handle_event(const uint8_t *bytes, uint32_t length) {
   pxa_event_t e;
   if (!pxa_parse_event(bytes, length, &e))
     return PXA_STATUS_INTERNAL;
+  pxa_game_render_raster_result_t raster_result{};
+  if (pxa_game_render_parse_raster(&e, CREATE_RASTER, &raster_result)) {
+    native_raster.created(raster_result);
+    return PXA_EVENT_HANDLED;
+  }
   int32_t preferences_status = handle_preferences(e);
   if (preferences_status != PXA_EVENT_UNHANDLED)
     return preferences_status;
@@ -591,17 +608,19 @@ void run() {
     service_save(paused || background || exit_requested || worlds_busy());
     uint64_t after = now_us();
     if (after - perf_at >= 10000000) {
-      char perf[240];
+      char perf[384];
       snprintf(perf, sizeof(perf),
-               "Pocket: perf frames=%u period_ms=%u mean_draw_us=%u max_gap_us=%u save_step_us=%u snapshot_us=%u save_blocks=%u",
+               "Pocket: perf frames=%u period_ms=%u mean_draw_us=%u max_gap_us=%u save_step_us=%u snapshot_us=%u save_blocks=%u open_us=%u write_us=%u close_us=%u commit_us=%u",
                perf_frames, uint32_t((after - perf_at) / 1000),
                perf_frames ? uint32_t(perf_render_us / perf_frames) : 0,
-               perf_max_gap_us, save_step_max_us, save_snapshot_max_us, save_blocks);
+               perf_max_gap_us, save_step_max_us, save_snapshot_max_us, save_blocks,
+               save_open_max_us, save_write_max_us, save_close_max_us, save_commit_max_us);
       pxa_log_write(2, perf);
       perf_at = after;
       perf_frames = 0;
       perf_render_us = 0;
       perf_max_gap_us = save_step_max_us = save_snapshot_max_us = save_blocks = 0;
+      save_open_max_us = save_write_max_us = save_close_max_us = save_commit_max_us = 0;
     }
     if (!finished)
       wait_event(save_pending && (paused || exit_requested || worlds_busy()) ? 2000 :
@@ -661,7 +680,7 @@ void begin_ui(bool preserve_scene) {
 #ifndef PXA_POCKET_STUDIO
   if (ui_active || !canvas) return;
   if (preserve_scene || needs_safe_ui())
-    starsoil_scene::resample(logical_frame, WIDTH, HEIGHT, ui.pixels,
+    native_raster.resample(logical_frame, WIDTH, HEIGHT, ui.pixels,
                         ui.width, ui.height);
   ui_active = true;
   if (!preserve_scene) configure_safe_ui(ui);
@@ -677,6 +696,17 @@ bool blit_pixels(int x, int y, const uint16_t *pixels, int w, int h,
   if (ui_active) return ui.sprite(x, y, pixels, w, h, flip, light, clip_top, clip_bottom);
   starsoil_scene::blit(canvas, WIDTH, HEIGHT, x, y, pixels, w, h,
                         flip, light, clip_top, clip_bottom);
+  return true;
+#endif
+}
+bool blit_indexed_pixels(int x, int y, const uint8_t *pixels, int w, int h,
+                         const uint16_t *palette, bool flip, int clip_top, int clip_bottom) {
+#ifdef PXA_POCKET_STUDIO
+  return false;
+#else
+  if (!canvas || ui_active) return false;
+  starsoil_scene::blit_indexed(canvas, WIDTH, HEIGHT, x, y, pixels, w, h,
+                               palette, flip, clip_top, clip_bottom);
   return true;
 #endif
 }
@@ -705,9 +735,7 @@ void rect(int x, int y, int w, int h, uint16_t color) {
     x1 = WIDTH;
   if (y1 > HEIGHT)
     y1 = HEIGHT;
-  for (int row = y; row < y1; ++row)
-    for (int col = x; col < x1; ++col)
-      canvas[row * WIDTH + col] = color;
+  starsoil_pixels::rectangle(canvas, WIDTH, x, y, x1, y1, color);
 #endif
 }
 void blend_rect(int x, int y, int w, int h, uint16_t color, unsigned alpha) {
@@ -722,6 +750,8 @@ void outline(int x, int y, int w, int h, uint16_t color) {
   rect(x + w - 1, y, 1, h, color);
 }
 void line(int x0, int y0, int x1, int y1, uint16_t color) {
+  if (y0 == y1) { rect(std::min(x0,x1), y0, std::abs(x1-x0)+1, 1, color); return; }
+  if (x0 == x1) { rect(x0, std::min(y0,y1), 1, std::abs(y1-y0)+1, color); return; }
   int dx = x1 > x0 ? x1 - x0 : x0 - x1, sx = x0 < x1 ? 1 : -1;
   int dy = y1 > y0 ? y0 - y1 : y1 - y0, sy = y0 < y1 ? 1 : -1, error = dx + dy;
   for (;;) {
@@ -759,6 +789,29 @@ bool held(Key key) {
 }
 bool using_controller() { return controller_input; }
 uint16_t *framebuffer() { return canvas; }
+void begin_scene_batch() {
+#ifndef PXA_POCKET_STUDIO
+  if (!ui_active) native_raster.begin(canvas, WIDTH, HEIGHT);
+#endif
+}
+void end_scene_batch() { native_raster.end(); }
+void scene_rect(int x, int y, int w, int h, uint16_t color) {
+  if (native_raster.batching() && native_raster.fill(x, y, w, h, color)) return;
+  rect(x, y, w, h, color);
+}
+void scene_line(int x0, int y0, int x1, int y1, uint16_t color) {
+  if (!native_raster.batching()) { line(x0,y0,x1,y1,color); return; }
+  if (y0 == y1) { scene_rect(std::min(x0,x1),y0,std::abs(x1-x0)+1,1,color); return; }
+  if (x0 == x1) { scene_rect(x0,std::min(y0,y1),1,std::abs(y1-y0)+1,color); return; }
+  int dx=std::abs(x1-x0),sx=x0<x1?1:-1,dy=-std::abs(y1-y0),sy=y0<y1?1:-1,error=dx+dy;
+  for (;;) {
+    scene_rect(x0,y0,1,1,color);
+    if(x0==x1 && y0==y1) break;
+    int twice=2*error;
+    if(twice>=dy){error+=dy;x0+=sx;}
+    if(twice<=dx){error+=dx;y0+=sy;}
+  }
+}
 void pixel(int x, int y, uint16_t color) {
 #ifdef PXA_POCKET_STUDIO
   rect(x, y, 1, 1, color);
@@ -833,6 +886,8 @@ extern "C" int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     return status;
   scan_next_world();
   request_sound();
+  // Optional optimization: both creation and unsupported I/O can fall back.
+  (void)pxa_game_render_create_raster(CREATE_RASTER, 256);
   service_preferences();
   return pxa_clock_set_period(20);
 }
