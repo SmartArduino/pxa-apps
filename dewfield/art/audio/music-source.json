@@ -1,0 +1,18 @@
+{
+  "model": "ACE-Step 1.5 Turbo",
+  "prompt": "Instrumental cozy pastoral farming game background music, 96 bpm, C major, a gentle original eight-bar melody, soft celesta music box, nylon string acoustic guitar arpeggios, warm soft flute, quiet bass, very light brushed percussion, peaceful countryside morning, warm and hopeful, simple clear arrangement, seamless loop, no vocals, no lyrics, no speech, no harsh drums, no distortion.",
+  "seed": 20261106,
+  "steps": 8,
+  "duration_requested": 20.0,
+  "purpose": "Original loop music for Dewfield",
+  "source_sha256": "5ddd65aba39d9226233e6c4700614a8d0b78ee143db7aef252da7ea5a02c18b3",
+  "source_sample_rate": 48000,
+  "source_channels": 2,
+  "output_sample_rate": 22050,
+  "loop_seconds": 17.5,
+  "crossfade_seconds": 2.5,
+  "source_rms": 0.0345453618975981,
+  "source_peak": 0.56561279296875,
+  "vae_sha256": "6de92e3a862acd287e08b024ac90f0783a8635451b728721a33ff03565bcb2bb",
+  "processing": "Equal-power tail/head overlap; peak normalized to 20000/32768; mono Vorbis; decoded and streamed by existing PXA Audio service"
+}

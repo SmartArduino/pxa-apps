@@ -1,0 +1,87 @@
+{
+  "format": "pxa-package-source-0.2",
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "id": "pxa-dewfield",
+  "version": "0.8.1",
+  "name": "晴露农场 Dewfield",
+  "description": "暖色像素种田游戏：开垦、浇水、收获、钓鱼与村民委托。",
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  },
+  "release_sequence": 15,
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 3145728,
+      "pinned": true
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "execution_model": "main-loop",
+      "artifact": "aot",
+      "services": [
+        "surface",
+        "clock",
+        "window",
+        {
+          "name": "ui",
+          "min_version": [
+            0,
+            9
+          ]
+        },
+        "log",
+        "storage",
+        {
+          "name": "game-render",
+          "min_version": [
+            1,
+            0
+          ]
+        },
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            7
+          ]
+        },
+        "permission"
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "random",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "required": false,
+      "scope": "media"
+    }
+  ],
+  "icon": "assets/icon.png"
+}

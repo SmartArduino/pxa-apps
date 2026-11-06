@@ -1,0 +1,11 @@
+{
+  "tool": "built-in imagegen",
+  "source": "title-source.png",
+  "sha256": "c448aa5d676c652c3afe029e716f2820cad9bd3d672b92121ab9f3fa10b30c39",
+  "runtime_size": [
+    240,
+    160
+  ],
+  "conversion": "RGB565, nearest-neighbor, no runtime decoding",
+  "prompt": "Use case: game-asset. Asset type: original pixel art title-screen illustration for a handheld farming game called Dewfield. Create a landscape 3:2 composition. Warm nostalgic 16-bit SNES top-down rural farming aesthetic inspired by the gentle countryside mood of Stardew Valley, but all buildings, characters and layout are original. A tiny amber timber cottage with a terracotta roof to upper left, golden winding footpath, lush layered oak trees, neat vegetable beds with radishes and pumpkins, a blue pond at lower right with wooden dock, white chickens, distant blue-green mountains under a pale mint morning sky. Crisp deliberately placed chunky square pixels, rich warm ochre earth, sage and olive foliage, light cream highlights, detailed organic leaf clusters and beautiful rustic architecture. Quiet pastoral inviting mood. Leave the top center sky open for a title that will be drawn by game code. No text, no logo, no watermark, no UI, no border. This is real in-game title artwork, not a mockup or screenshot."
+}

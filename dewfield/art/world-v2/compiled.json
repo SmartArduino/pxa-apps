@@ -1,0 +1,2790 @@
+{
+  "compiler": "tools/build_sprites.py",
+  "encoding": "RGB565 contiguous opaque spans; thresholded source alpha; nearest-grid sampling; title-matched amber/cream lighting and olive foliage; 24/32/40-color median-cut palette",
+  "walk_frames": 8,
+  "character_scaling": "28px standing height, same uniform scale across all 20 authored views and poses, head centre / boot baseline registration",
+  "gait": "neutral-art limb binding; eight distance-driven phases; both arms exactly opposite their matching legs; independent planted/swinging feet",
+  "sprites": {
+    "oak": {
+      "width": 54,
+      "height": 64,
+      "opaque_pixels": 1862,
+      "spans": 131,
+      "colors": 24,
+      "ground_anchor": [
+        27,
+        64
+      ],
+      "contact_spans": 30
+    },
+    "oak_summer": {
+      "width": 54,
+      "height": 64,
+      "opaque_pixels": 1862,
+      "spans": 131,
+      "colors": 23,
+      "ground_anchor": [
+        27,
+        64
+      ],
+      "contact_spans": 30
+    },
+    "oak_fall": {
+      "width": 54,
+      "height": 64,
+      "opaque_pixels": 1862,
+      "spans": 131,
+      "colors": 24,
+      "ground_anchor": [
+        27,
+        64
+      ],
+      "contact_spans": 30
+    },
+    "oak_winter": {
+      "width": 54,
+      "height": 64,
+      "opaque_pixels": 1862,
+      "spans": 131,
+      "colors": 22,
+      "ground_anchor": [
+        27,
+        64
+      ],
+      "contact_spans": 30
+    },
+    "cottage": {
+      "width": 96,
+      "height": 88,
+      "opaque_pixels": 6306,
+      "spans": 101,
+      "colors": 40,
+      "ground_anchor": [
+        48,
+        88
+      ],
+      "contact_spans": 21
+    },
+    "south": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 336,
+      "spans": 29,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 8
+    },
+    "south0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 340,
+      "spans": 30,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "south1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 319,
+      "spans": 29,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "south2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 327,
+      "spans": 30,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "south3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 323,
+      "spans": 29,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "east": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 275,
+      "spans": 28,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 5
+    },
+    "east0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 319,
+      "spans": 32,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "east1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 289,
+      "spans": 27,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "east2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 318,
+      "spans": 30,
+      "colors": 30,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "east3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 282,
+      "spans": 28,
+      "colors": 30,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "north": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 347,
+      "spans": 29,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 8
+    },
+    "north0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 340,
+      "spans": 29,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "north1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 322,
+      "spans": 28,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "north2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 333,
+      "spans": 29,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "north3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 319,
+      "spans": 27,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "west": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 278,
+      "spans": 27,
+      "colors": 30,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 5
+    },
+    "west0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 312,
+      "spans": 32,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "west1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 299,
+      "spans": 29,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "west2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 324,
+      "spans": 33,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 5
+    },
+    "west3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 313,
+      "spans": 30,
+      "colors": 30,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "east_opposite": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 347,
+      "spans": 34,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "north_opposite": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 340,
+      "spans": 32,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "west_opposite": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 340,
+      "spans": 35,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 336,
+      "spans": 29,
+      "colors": 30,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 8
+    },
+    "villager_0_0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 287,
+      "spans": 29,
+      "colors": 32,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 5
+    },
+    "villager_0_0_walk0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 287,
+      "spans": 29,
+      "colors": 32,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 5
+    },
+    "villager_0_0_walk1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 282,
+      "spans": 29,
+      "colors": 32,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 5
+    },
+    "villager_0_0_walk2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 287,
+      "spans": 29,
+      "colors": 32,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 5
+    },
+    "villager_0_0_walk3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 282,
+      "spans": 29,
+      "colors": 32,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 5
+    },
+    "villager_0_1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 234,
+      "spans": 29,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_0_1_walk0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 234,
+      "spans": 29,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_0_1_walk1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 230,
+      "spans": 29,
+      "colors": 30,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_0_1_walk2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 234,
+      "spans": 29,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_0_1_walk3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 230,
+      "spans": 29,
+      "colors": 28,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_0_2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 286,
+      "spans": 31,
+      "colors": 27,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 10
+    },
+    "villager_0_2_walk0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 286,
+      "spans": 31,
+      "colors": 27,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 10
+    },
+    "villager_0_2_walk1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 281,
+      "spans": 30,
+      "colors": 28,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_0_2_walk2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 286,
+      "spans": 31,
+      "colors": 27,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 10
+    },
+    "villager_0_2_walk3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 281,
+      "spans": 31,
+      "colors": 26,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_0_3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 235,
+      "spans": 29,
+      "colors": 28,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_0_3_walk0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 235,
+      "spans": 29,
+      "colors": 28,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_0_3_walk1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 229,
+      "spans": 29,
+      "colors": 28,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_0_3_walk2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 235,
+      "spans": 29,
+      "colors": 28,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_0_3_walk3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 233,
+      "spans": 29,
+      "colors": 28,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_1_0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 265,
+      "spans": 33,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 9
+    },
+    "villager_1_0_walk0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 265,
+      "spans": 33,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 9
+    },
+    "villager_1_0_walk1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 260,
+      "spans": 33,
+      "colors": 27,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_1_0_walk2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 265,
+      "spans": 33,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 9
+    },
+    "villager_1_0_walk3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 261,
+      "spans": 32,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_1_1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 203,
+      "spans": 30,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_1_1_walk0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 203,
+      "spans": 30,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_1_1_walk1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 200,
+      "spans": 30,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_1_1_walk2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 203,
+      "spans": 30,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_1_1_walk3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 201,
+      "spans": 30,
+      "colors": 28,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_1_2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 261,
+      "spans": 33,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 9
+    },
+    "villager_1_2_walk0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 261,
+      "spans": 33,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 9
+    },
+    "villager_1_2_walk1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 256,
+      "spans": 33,
+      "colors": 30,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_1_2_walk2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 261,
+      "spans": 33,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 9
+    },
+    "villager_1_2_walk3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 257,
+      "spans": 32,
+      "colors": 28,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_1_3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 216,
+      "spans": 31,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_1_3_walk0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 216,
+      "spans": 31,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_1_3_walk1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 213,
+      "spans": 31,
+      "colors": 28,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_1_3_walk2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 216,
+      "spans": 31,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_1_3_walk3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 214,
+      "spans": 31,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_2_0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 268,
+      "spans": 33,
+      "colors": 32,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 9
+    },
+    "villager_2_0_walk0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 268,
+      "spans": 33,
+      "colors": 32,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 9
+    },
+    "villager_2_0_walk1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 264,
+      "spans": 33,
+      "colors": 32,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_2_0_walk2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 268,
+      "spans": 33,
+      "colors": 32,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 9
+    },
+    "villager_2_0_walk3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 265,
+      "spans": 32,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_2_1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 191,
+      "spans": 28,
+      "colors": 32,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_2_1_walk0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 191,
+      "spans": 28,
+      "colors": 32,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_2_1_walk1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 188,
+      "spans": 28,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_2_1_walk2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 191,
+      "spans": 28,
+      "colors": 32,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_2_1_walk3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 189,
+      "spans": 28,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_2_2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 257,
+      "spans": 33,
+      "colors": 30,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 9
+    },
+    "villager_2_2_walk0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 257,
+      "spans": 33,
+      "colors": 30,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 9
+    },
+    "villager_2_2_walk1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 253,
+      "spans": 33,
+      "colors": 30,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_2_2_walk2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 257,
+      "spans": 33,
+      "colors": 30,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 9
+    },
+    "villager_2_2_walk3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 254,
+      "spans": 32,
+      "colors": 30,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_2_3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 205,
+      "spans": 28,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_2_3_walk0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 205,
+      "spans": 28,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_2_3_walk1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 201,
+      "spans": 28,
+      "colors": 32,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_2_3_walk2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 205,
+      "spans": 28,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_2_3_walk3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 203,
+      "spans": 28,
+      "colors": 30,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_3_0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 248,
+      "spans": 28,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 10
+    },
+    "villager_3_0_walk0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 248,
+      "spans": 28,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 10
+    },
+    "villager_3_0_walk1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 242,
+      "spans": 28,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_3_0_walk2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 248,
+      "spans": 28,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 10
+    },
+    "villager_3_0_walk3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 243,
+      "spans": 27,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_3_1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 228,
+      "spans": 26,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_3_1_walk0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 228,
+      "spans": 26,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_3_1_walk1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 223,
+      "spans": 26,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_3_1_walk2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 228,
+      "spans": 26,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_3_1_walk3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 224,
+      "spans": 26,
+      "colors": 32,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_3_2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 244,
+      "spans": 28,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 10
+    },
+    "villager_3_2_walk0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 244,
+      "spans": 28,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 10
+    },
+    "villager_3_2_walk1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 238,
+      "spans": 28,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_3_2_walk2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 244,
+      "spans": 28,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 10
+    },
+    "villager_3_2_walk3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 239,
+      "spans": 27,
+      "colors": 30,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_3_3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 228,
+      "spans": 26,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_3_3_walk0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 228,
+      "spans": 26,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_3_3_walk1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 222,
+      "spans": 26,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_3_3_walk2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 228,
+      "spans": 26,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager_3_3_walk3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 224,
+      "spans": 26,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "hoe": {
+      "width": 20,
+      "height": 20,
+      "opaque_pixels": 93,
+      "spans": 20,
+      "colors": 21,
+      "ground_anchor": [
+        0,
+        0
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_0": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 49,
+      "spans": 15,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_1": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 54,
+      "spans": 14,
+      "colors": 23,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_2": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 49,
+      "spans": 17,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_3": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 54,
+      "spans": 20,
+      "colors": 23,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_4": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 49,
+      "spans": 15,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_5": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 54,
+      "spans": 14,
+      "colors": 23,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_6": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 49,
+      "spans": 17,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_7": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 54,
+      "spans": 20,
+      "colors": 23,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "axe": {
+      "width": 19,
+      "height": 21,
+      "opaque_pixels": 130,
+      "spans": 26,
+      "colors": 21,
+      "ground_anchor": [
+        0,
+        0
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_0": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 72,
+      "spans": 20,
+      "colors": 23,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_1": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 74,
+      "spans": 17,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_2": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 72,
+      "spans": 14,
+      "colors": 23,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_3": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 74,
+      "spans": 22,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_4": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 72,
+      "spans": 20,
+      "colors": 23,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_5": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 74,
+      "spans": 17,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_6": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 72,
+      "spans": 14,
+      "colors": 23,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_7": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 74,
+      "spans": 22,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_0": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 72,
+      "spans": 20,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_1": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 74,
+      "spans": 17,
+      "colors": 23,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_2": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 72,
+      "spans": 14,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_3": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 74,
+      "spans": 22,
+      "colors": 23,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_4": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 72,
+      "spans": 20,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_5": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 74,
+      "spans": 17,
+      "colors": 23,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_6": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 72,
+      "spans": 14,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_7": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 74,
+      "spans": 22,
+      "colors": 23,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_0": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 72,
+      "spans": 20,
+      "colors": 21,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_1": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 74,
+      "spans": 17,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_2": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 72,
+      "spans": 14,
+      "colors": 21,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_3": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 74,
+      "spans": 22,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_4": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 72,
+      "spans": 20,
+      "colors": 21,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_5": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 74,
+      "spans": 17,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_6": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 72,
+      "spans": 14,
+      "colors": 21,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_7": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 74,
+      "spans": 22,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "pick": {
+      "width": 22,
+      "height": 21,
+      "opaque_pixels": 145,
+      "spans": 27,
+      "colors": 23,
+      "ground_anchor": [
+        0,
+        0
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_0": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 78,
+      "spans": 20,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_1": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 80,
+      "spans": 22,
+      "colors": 21,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_2": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 78,
+      "spans": 23,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_3": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 80,
+      "spans": 25,
+      "colors": 21,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_4": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 78,
+      "spans": 20,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_5": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 80,
+      "spans": 22,
+      "colors": 21,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_6": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 78,
+      "spans": 23,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_7": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 80,
+      "spans": 25,
+      "colors": 21,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_0": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 78,
+      "spans": 20,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_1": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 80,
+      "spans": 22,
+      "colors": 21,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_2": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 78,
+      "spans": 23,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_3": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 80,
+      "spans": 25,
+      "colors": 21,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_4": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 78,
+      "spans": 20,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_5": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 80,
+      "spans": 22,
+      "colors": 21,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_6": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 78,
+      "spans": 23,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_7": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 80,
+      "spans": 25,
+      "colors": 21,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_0": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 78,
+      "spans": 20,
+      "colors": 21,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_1": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 80,
+      "spans": 22,
+      "colors": 23,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_2": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 78,
+      "spans": 23,
+      "colors": 21,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_3": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 80,
+      "spans": 25,
+      "colors": 23,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_4": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 78,
+      "spans": 20,
+      "colors": 21,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_5": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 80,
+      "spans": 22,
+      "colors": 23,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_6": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 78,
+      "spans": 23,
+      "colors": 21,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_7": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 80,
+      "spans": 25,
+      "colors": 23,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "can": {
+      "width": 23,
+      "height": 21,
+      "opaque_pixels": 278,
+      "spans": 37,
+      "colors": 24,
+      "ground_anchor": [
+        0,
+        0
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_0": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 154,
+      "spans": 28,
+      "colors": 24,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_1": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 155,
+      "spans": 28,
+      "colors": 24,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_2": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 154,
+      "spans": 23,
+      "colors": 24,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_3": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 155,
+      "spans": 30,
+      "colors": 24,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_4": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 154,
+      "spans": 28,
+      "colors": 24,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_5": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 155,
+      "spans": 28,
+      "colors": 24,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_6": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 154,
+      "spans": 23,
+      "colors": 24,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_7": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 155,
+      "spans": 30,
+      "colors": 24,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "seeds": {
+      "width": 16,
+      "height": 20,
+      "opaque_pixels": 261,
+      "spans": 20,
+      "colors": 23,
+      "ground_anchor": [
+        0,
+        0
+      ],
+      "contact_spans": 0
+    },
+    "seed_handbag": {
+      "width": 9,
+      "height": 12,
+      "opaque_pixels": 82,
+      "spans": 12,
+      "colors": 21,
+      "ground_anchor": [
+        0,
+        0
+      ],
+      "contact_spans": 0
+    },
+    "rod": {
+      "width": 21,
+      "height": 25,
+      "opaque_pixels": 115,
+      "spans": 45,
+      "colors": 24,
+      "ground_anchor": [
+        0,
+        0
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_0": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 62,
+      "spans": 30,
+      "colors": 23,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_1": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 67,
+      "spans": 25,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_2": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 62,
+      "spans": 20,
+      "colors": 23,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_3": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 67,
+      "spans": 30,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_4": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 62,
+      "spans": 30,
+      "colors": 23,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_5": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 67,
+      "spans": 25,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_6": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 62,
+      "spans": 20,
+      "colors": 23,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_7": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 67,
+      "spans": 30,
+      "colors": 22,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "basket": {
+      "width": 22,
+      "height": 19,
+      "opaque_pixels": 291,
+      "spans": 24,
+      "colors": 24,
+      "ground_anchor": [
+        0,
+        0
+      ],
+      "contact_spans": 0
+    },
+    "chest": {
+      "width": 24,
+      "height": 21,
+      "opaque_pixels": 382,
+      "spans": 22,
+      "colors": 24,
+      "ground_anchor": [
+        12,
+        21
+      ],
+      "contact_spans": 26
+    },
+    "rocks": {
+      "width": 23,
+      "height": 18,
+      "opaque_pixels": 291,
+      "spans": 19,
+      "colors": 23,
+      "ground_anchor": [
+        11,
+        18
+      ],
+      "contact_spans": 16
+    },
+    "grass": {
+      "width": 18,
+      "height": 20,
+      "opaque_pixels": 196,
+      "spans": 47,
+      "colors": 24,
+      "ground_anchor": [
+        9,
+        20
+      ],
+      "contact_spans": 24
+    },
+    "well": {
+      "width": 32,
+      "height": 33,
+      "opaque_pixels": 780,
+      "spans": 48,
+      "colors": 23,
+      "ground_anchor": [
+        16,
+        33
+      ],
+      "contact_spans": 16
+    },
+    "board": {
+      "width": 27,
+      "height": 30,
+      "opaque_pixels": 558,
+      "spans": 37,
+      "colors": 24,
+      "ground_anchor": [
+        13,
+        30
+      ],
+      "contact_spans": 8
+    },
+    "logs": {
+      "width": 20,
+      "height": 17,
+      "opaque_pixels": 224,
+      "spans": 18,
+      "colors": 23,
+      "ground_anchor": [
+        0,
+        0
+      ],
+      "contact_spans": 0
+    },
+    "stones": {
+      "width": 20,
+      "height": 16,
+      "opaque_pixels": 210,
+      "spans": 16,
+      "colors": 24,
+      "ground_anchor": [
+        0,
+        0
+      ],
+      "contact_spans": 0
+    },
+    "sprinkler": {
+      "width": 16,
+      "height": 18,
+      "opaque_pixels": 102,
+      "spans": 24,
+      "colors": 22,
+      "ground_anchor": [
+        8,
+        18
+      ],
+      "contact_spans": 8
+    },
+    "fish": {
+      "width": 22,
+      "height": 15,
+      "opaque_pixels": 179,
+      "spans": 23,
+      "colors": 24,
+      "ground_anchor": [
+        0,
+        0
+      ],
+      "contact_spans": 0
+    },
+    "birch": {
+      "width": 40,
+      "height": 64,
+      "opaque_pixels": 1130,
+      "spans": 215,
+      "colors": 23,
+      "ground_anchor": [
+        20,
+        64
+      ],
+      "contact_spans": 32
+    },
+    "birch_summer": {
+      "width": 40,
+      "height": 64,
+      "opaque_pixels": 1130,
+      "spans": 215,
+      "colors": 24,
+      "ground_anchor": [
+        20,
+        64
+      ],
+      "contact_spans": 32
+    },
+    "birch_fall": {
+      "width": 40,
+      "height": 64,
+      "opaque_pixels": 1130,
+      "spans": 215,
+      "colors": 24,
+      "ground_anchor": [
+        20,
+        64
+      ],
+      "contact_spans": 32
+    },
+    "birch_winter": {
+      "width": 40,
+      "height": 64,
+      "opaque_pixels": 1130,
+      "spans": 215,
+      "colors": 24,
+      "ground_anchor": [
+        20,
+        64
+      ],
+      "contact_spans": 32
+    },
+    "pine": {
+      "width": 44,
+      "height": 64,
+      "opaque_pixels": 1321,
+      "spans": 99,
+      "colors": 24,
+      "ground_anchor": [
+        22,
+        64
+      ],
+      "contact_spans": 33
+    },
+    "orchard": {
+      "width": 54,
+      "height": 60,
+      "opaque_pixels": 1724,
+      "spans": 107,
+      "colors": 24,
+      "ground_anchor": [
+        27,
+        60
+      ],
+      "contact_spans": 25
+    },
+    "orchard_summer": {
+      "width": 54,
+      "height": 60,
+      "opaque_pixels": 1724,
+      "spans": 107,
+      "colors": 24,
+      "ground_anchor": [
+        27,
+        60
+      ],
+      "contact_spans": 25
+    },
+    "orchard_fall": {
+      "width": 54,
+      "height": 60,
+      "opaque_pixels": 1724,
+      "spans": 107,
+      "colors": 24,
+      "ground_anchor": [
+        27,
+        60
+      ],
+      "contact_spans": 25
+    },
+    "orchard_winter": {
+      "width": 54,
+      "height": 60,
+      "opaque_pixels": 1724,
+      "spans": 107,
+      "colors": 24,
+      "ground_anchor": [
+        27,
+        60
+      ],
+      "contact_spans": 25
+    },
+    "rock_granite": {
+      "width": 24,
+      "height": 18,
+      "opaque_pixels": 345,
+      "spans": 18,
+      "colors": 24,
+      "ground_anchor": [
+        12,
+        18
+      ],
+      "contact_spans": 10
+    },
+    "rock_slate": {
+      "width": 23,
+      "height": 22,
+      "opaque_pixels": 338,
+      "spans": 22,
+      "colors": 23,
+      "ground_anchor": [
+        11,
+        22
+      ],
+      "contact_spans": 6
+    },
+    "rock_weathered": {
+      "width": 24,
+      "height": 17,
+      "opaque_pixels": 289,
+      "spans": 19,
+      "colors": 24,
+      "ground_anchor": [
+        12,
+        17
+      ],
+      "contact_spans": 20
+    },
+    "clover": {
+      "width": 20,
+      "height": 12,
+      "opaque_pixels": 155,
+      "spans": 20,
+      "colors": 24,
+      "ground_anchor": [
+        10,
+        12
+      ],
+      "contact_spans": 12
+    },
+    "daisies": {
+      "width": 20,
+      "height": 22,
+      "opaque_pixels": 202,
+      "spans": 56,
+      "colors": 23,
+      "ground_anchor": [
+        10,
+        22
+      ],
+      "contact_spans": 17
+    },
+    "herbs": {
+      "width": 20,
+      "height": 20,
+      "opaque_pixels": 194,
+      "spans": 48,
+      "colors": 22,
+      "ground_anchor": [
+        10,
+        20
+      ],
+      "contact_spans": 24
+    },
+    "oak_young": {
+      "width": 32,
+      "height": 38,
+      "opaque_pixels": 659,
+      "spans": 60,
+      "colors": 24,
+      "ground_anchor": [
+        16,
+        38
+      ],
+      "contact_spans": 14
+    },
+    "oak_summer_young": {
+      "width": 32,
+      "height": 38,
+      "opaque_pixels": 659,
+      "spans": 60,
+      "colors": 23,
+      "ground_anchor": [
+        16,
+        38
+      ],
+      "contact_spans": 14
+    },
+    "oak_fall_young": {
+      "width": 32,
+      "height": 38,
+      "opaque_pixels": 659,
+      "spans": 60,
+      "colors": 22,
+      "ground_anchor": [
+        16,
+        38
+      ],
+      "contact_spans": 14
+    },
+    "oak_winter_young": {
+      "width": 32,
+      "height": 38,
+      "opaque_pixels": 659,
+      "spans": 60,
+      "colors": 21,
+      "ground_anchor": [
+        16,
+        38
+      ],
+      "contact_spans": 14
+    },
+    "birch_young": {
+      "width": 24,
+      "height": 38,
+      "opaque_pixels": 405,
+      "spans": 100,
+      "colors": 23,
+      "ground_anchor": [
+        12,
+        38
+      ],
+      "contact_spans": 16
+    },
+    "birch_summer_young": {
+      "width": 24,
+      "height": 38,
+      "opaque_pixels": 405,
+      "spans": 100,
+      "colors": 24,
+      "ground_anchor": [
+        12,
+        38
+      ],
+      "contact_spans": 16
+    },
+    "birch_fall_young": {
+      "width": 24,
+      "height": 38,
+      "opaque_pixels": 405,
+      "spans": 100,
+      "colors": 24,
+      "ground_anchor": [
+        12,
+        38
+      ],
+      "contact_spans": 16
+    },
+    "birch_winter_young": {
+      "width": 24,
+      "height": 38,
+      "opaque_pixels": 405,
+      "spans": 100,
+      "colors": 24,
+      "ground_anchor": [
+        12,
+        38
+      ],
+      "contact_spans": 16
+    },
+    "pine_young": {
+      "width": 26,
+      "height": 38,
+      "opaque_pixels": 469,
+      "spans": 46,
+      "colors": 22,
+      "ground_anchor": [
+        13,
+        38
+      ],
+      "contact_spans": 26
+    },
+    "orchard_young": {
+      "width": 32,
+      "height": 36,
+      "opaque_pixels": 611,
+      "spans": 55,
+      "colors": 23,
+      "ground_anchor": [
+        16,
+        36
+      ],
+      "contact_spans": 15
+    },
+    "orchard_summer_young": {
+      "width": 32,
+      "height": 36,
+      "opaque_pixels": 611,
+      "spans": 55,
+      "colors": 24,
+      "ground_anchor": [
+        16,
+        36
+      ],
+      "contact_spans": 15
+    },
+    "orchard_fall_young": {
+      "width": 32,
+      "height": 36,
+      "opaque_pixels": 611,
+      "spans": 55,
+      "colors": 24,
+      "ground_anchor": [
+        16,
+        36
+      ],
+      "contact_spans": 15
+    },
+    "orchard_winter_young": {
+      "width": 32,
+      "height": 36,
+      "opaque_pixels": 611,
+      "spans": 55,
+      "colors": 24,
+      "ground_anchor": [
+        16,
+        36
+      ],
+      "contact_spans": 15
+    },
+    "tree_seed0": {
+      "width": 12,
+      "height": 14,
+      "opaque_pixels": 48,
+      "spans": 13,
+      "colors": 6,
+      "ground_anchor": [
+        6,
+        14
+      ],
+      "contact_spans": 4
+    },
+    "tree_seed1": {
+      "width": 12,
+      "height": 14,
+      "opaque_pixels": 48,
+      "spans": 13,
+      "colors": 6,
+      "ground_anchor": [
+        6,
+        14
+      ],
+      "contact_spans": 4
+    },
+    "tree_seed2": {
+      "width": 12,
+      "height": 14,
+      "opaque_pixels": 55,
+      "spans": 12,
+      "colors": 3,
+      "ground_anchor": [
+        6,
+        14
+      ],
+      "contact_spans": 12
+    },
+    "tree_seed3": {
+      "width": 12,
+      "height": 14,
+      "opaque_pixels": 48,
+      "spans": 13,
+      "colors": 6,
+      "ground_anchor": [
+        6,
+        14
+      ],
+      "contact_spans": 4
+    },
+    "tree_stump": {
+      "width": 12,
+      "height": 8,
+      "opaque_pixels": 58,
+      "spans": 7,
+      "colors": 5,
+      "ground_anchor": [
+        6,
+        8
+      ],
+      "contact_spans": 4
+    }
+  },
+  "sources": {
+    "oak.png": "9b193d36f85a7b8ddf11d38dee813bb6e44c41548f22c2786bb268455a014a34",
+    "cottage.png": "e3451bb66816608186979ebbd45cb0dae77e3add9fef3f65c07a36a7ff56a313",
+    "props.png": "546d12ed0af9775fac600fe1a0a3c45b52d82d7d1442807d67ef9428029aef44",
+    "farmer-gba-v5.png": "8f7ecd0ca3060b3c64c27ff1299dc652d3ee32996c81d9afcc19e74dbc93673f",
+    "farmer-opposite-contact-v5.png": "2aafdc862f7ae306f6faed00d1036b5af1509841e4c8b437a7815b491c161c5f",
+    "scenery-v1.png": "ecb6d05078946f0178f9b6260e02c681945f783f5052ae6a023681ca31dc1b9d",
+    "villagers-v1.png": "873d195f9e3c513f732302782627de25087cc1188c98c4291a193379ce3eda8b"
+  }
+}
