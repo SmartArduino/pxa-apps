@@ -1,0 +1,21 @@
+cmake_minimum_required(VERSION 3.20)
+project(pxa_camera LANGUAGES C CXX)
+list(APPEND CMAKE_MODULE_PATH "${PXA_CMAKE_MODULE_DIR}")
+set(PXA_COROUTINE_SLOT_BYTES 2048)
+include(PxaGuest)
+include("${CMAKE_CURRENT_LIST_DIR}/../../../extensions/peripherals/sdk/Peripherals.cmake")
+# Reuse the fixed-point BSD Opus decoder already used by the recorder.
+set(OPUS_BUILD_PROGRAMS OFF CACHE BOOL "" FORCE)
+set(OPUS_BUILD_TESTING OFF CACHE BOOL "" FORCE)
+set(OPUS_DISABLE_INTRINSICS ON CACHE BOOL "" FORCE)
+set(OPUS_FIXED_POINT ON CACHE BOOL "" FORCE)
+set(OPUS_ENABLE_FLOAT_API OFF CACHE BOOL "" FORCE)
+set(OPUS_INSTALL_PKG_CONFIG_MODULE OFF CACHE BOOL "" FORCE)
+set(OPUS_INSTALL_CMAKE_CONFIG_MODULE OFF CACHE BOOL "" FORCE)
+add_subdirectory(../xiaozhi/vendor/opus opus EXCLUDE_FROM_ALL)
+pxa_add_app(pxa_main COMPONENT_ID main SOURCES main.cpp)
+target_link_libraries(pxa_main PRIVATE pxa::peripherals opus)
+
+target_link_options(pxa_main PRIVATE -Wl,--strip-all)
+
+target_link_options(pxa_main PRIVATE -Wl,-z,stack-size=65536)

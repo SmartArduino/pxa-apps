@@ -1,0 +1,76 @@
+{
+  "format": "pxa-package-source-0.2",
+  "id": "pxa-camera",
+  "version": "0.3.2",
+  "release_sequence": 8,
+  "name": "相机",
+  "description": "自动取景、画质切换、拍照录像与照片视频相册。",
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 2097152,
+      "pinned": true
+    }
+  },
+  "permissions": [
+    {
+      "name": "audio.capture",
+      "scope": "microphone",
+      "required": false
+    },
+    {
+      "name": "audio.playback",
+      "scope": "media",
+      "required": false
+    },
+    {
+      "name": "org.doit.peripherals",
+      "scope": "camera.jpeg",
+      "required": false
+    }
+  ],
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "services": [
+        "ui",
+        "permission",
+        "clock",
+        "fs",
+        "log",
+        "window",
+        "assets",
+        "audio"
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "random",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "icon": "assets/icon.png",
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  }
+}
