@@ -272,7 +272,7 @@ struct CameraApp {
     }
     void close_microphone() {
         (void)microphone.close();
-        
+
     }
     pxa::Task<void> capture_sound() {
         struct Guard { bool& active; ~Guard() { active=false; } } guard{audio_running};
