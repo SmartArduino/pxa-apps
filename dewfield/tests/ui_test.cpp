@@ -3,6 +3,7 @@
 #include "../main.cpp"
 #include "../resample.hpp"
 #include "../text.hpp"
+#include "../hud_compositor.hpp"
 #include <cassert>
 #include <vector>
 namespace {
@@ -11,9 +12,14 @@ bool controller_mode;
 bool held_keys[4]{};
 int shade_calls, saves, redraw_calls;
 std::vector<const sprites::Sprite *> ui_sprites;
+dewfield_hud::Backdrop hud_backdrop;
 } // namespace
 namespace pocket {
 void begin_ui() {}
+void begin_hud(int x,int y,int w,int h,int opacity) {
+  hud_backdrop.begin(pixels+16,WIDTH,HEIGHT,x,y,x+w,y+h,opacity);
+}
+void end_hud() { hud_backdrop.end(pixels+16,WIDTH); }
 void scene_surface(bool) {}
 void switch_language() { set_english(!english()); }
 void music_enabled(bool) {}

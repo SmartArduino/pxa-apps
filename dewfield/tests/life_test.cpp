@@ -58,7 +58,7 @@ int main() {
   // New stacks, all 12 forage flags, active food and request claims survive.
   stand(s,Region::Orchard,16,12);s.gathered[0]=12;s.meals[0]=3;s.forage=0xa55;
   assert(equip_item(s,22));auto active=s.active_slot;
-  assert(encode(s,bytes,sizeof(bytes))==SaveBytes&&bytes[4]==6);
+  assert(encode(s,bytes,sizeof(bytes))==SaveBytes&&bytes[4]==7);
   assert(decode(restored,bytes,sizeof(bytes)));
   assert(restored.gathered[0]==12&&restored.meals[0]==3&&restored.forage==0xa55&&
          restored.active_slot==active&&restored.slots[active]==22&&restored.orders_done==4);

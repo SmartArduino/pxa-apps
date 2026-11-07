@@ -59,6 +59,9 @@ int main() {
   overlap(Kind::Board, 168, 140, 140);
   overlap(Kind::Television,168,140,140);overlap(Kind::Calendar,168,140,140);
   overlap(Kind::Counter,64,160,160);overlap(Kind::WorldNpc,168,140,140);
+  overlap(Kind::Cabinet,168,140,140);overlap(Kind::Fireplace,168,140,140);
+  overlap(Kind::Chair,168,140,140);overlap(Kind::Shelf,168,140,140);
+  overlap(Kind::Signpost,168,140,140);
   overlap(Kind::House, 64, 48, 109);
   overlap(Kind::Fence, 160, 128, 143);
   overlap(Kind::Rock, 168, 220, 220);
@@ -73,7 +76,7 @@ int main() {
   Queue all;
   all.build(s, v, {0, 0, 512, 384});
   assert(all.count < Queue::Capacity && all.count > 250);
-  bool found[unsigned(Kind::Counter)+1]{};
+  bool found[unsigned(Kind::Signpost)+1]{};
   for (unsigned i = 0; i < all.count; ++i) {
     found[int(all.entries[i].kind)] = true;
     if (i)

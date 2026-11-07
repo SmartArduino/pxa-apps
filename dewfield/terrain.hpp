@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 #include "art.hpp"
-#include "core.hpp"
+#include "world.hpp"
 #include <algorithm>
 #include <cstdint>
 namespace terrain {
@@ -83,10 +83,13 @@ struct Map {
     for (int y = 0; y < farm::MapH; ++y)
       for (int x = 0; x < farm::MapW; ++x) {
         auto g = farm::ground(s, x, y);
+        bool clearing=!s.region && (farm::plot_index(x,y)>=0 ||
+          (x==9&&y>=10&&y<=15) || (x==20&&y>=9&&y<=14) ||
+          (y==8&&x>=12&&x<=17) || (y==17&&x>=11&&x<=18));
         Kind k =
             g == farm::Ground::Water      ? Pond
-            : !s.region && farm::plot_index(x, y) >= 0 ? Dirt
-            : (s.region ? g==farm::Ground::Path : (y == 7 || x == 9 || x == 20 || (y == 18 && x >= 9 && x <= 24)))
+            : clearing ? Dirt
+            : farm::road_tile(s.region,x,y)
                 ? Path
                 : Grass;
         kinds[y * farm::MapW + x] = k;
@@ -193,9 +196,16 @@ struct Map {
       if (h % 4 != 0 && std::abs(dx) <= 2 && std::abs(dy) <= 1 &&
           !(std::abs(dx) == 2 && dy == -1))
         c = grass_color(season, (h & 16) ? 1 : 2);
-      // Broken grass lips are grouped in short runs along actual boundaries.
-      if (earth(x, y + 1) || earth(x + 1, y))
-        c = grass_color(season, art::hash(x / 3, y / 3) % 4 ? 2 : 1);
+      // Broken three-pixel turf/loam clusters soften the boundary without
+      // a continuous dark outline or interpolated/blurred tile edges.
+      for(int d=1;d<=3;++d) {
+        if(earth(x-d,y)||earth(x+d,y)||earth(x,y-d)||earth(x,y+d)) {
+          auto fringe=art::hash(x/3,y/2);
+          if(d==1 || (d==2&&fringe%3==0) || (d==3&&fringe%7==0))
+            c=mix(grass,farm_palette::Dirt,d==1?3:2);
+          break;
+        }
+      }
       if (material(x + 1, y) == Pond || material(x - 1, y) == Pond ||
           material(x, y + 1) == Pond || material(x, y - 1) == Pond)
         c = grass_color(season, 1);
@@ -221,16 +231,14 @@ struct Map {
     int edge = distance(x, y, false, 2);
     uint32_t fringe = art::hash(x / 3, y / 2);
     if (edge == 0) {
-      if (fringe % 5 == 0)
-        return grass_color(season, 1);
-      return !earth(x, y + 1) ? art::rgb(130, 93, 51) : art::rgb(153, 111, 61);
+      return mix(earth_color(x,y,Kind(k)),grass,fringe%3==0?4:3);
     }
-    if (edge == 1 && fringe % 11 == 0)
-      return grass_color(season, 2);
+    if (edge == 1 && fringe % 3 == 0)
+      return mix(earth_color(x,y,Kind(k)),grass,2);
     // Join path and soil using small, solid-colour clusters instead of
     // feathering intermediate colours into an airbrushed seam.
     Kind surface = Kind(k);
-    for (int distance = 1; distance <= 2; ++distance) {
+    for (int distance = 1; distance <= 4; ++distance) {
       bool other = false;
       for (int dir = 0; dir < 4; ++dir) {
         int xx = x + (dir == 1   ? distance
@@ -243,8 +251,9 @@ struct Map {
         other |= neighbor != k && (neighbor == Dirt || neighbor == Path);
       }
       if (other) {
-        if (art::hash(x / 2, y / 2) % 4 < unsigned(3 - distance))
+        if (art::hash(x / 3, y / 2) % 5 < unsigned(5 - distance))
           surface = k == Dirt ? Path : Dirt;
+        if(distance<=2)return mix(earth_color(x,y,Kind(k)),earth_color(x,y,surface),4);
         break;
       }
     }
@@ -343,7 +352,18 @@ inline void plots(art::Raster &r, const farm::State &s) {
           bool edge = (xx == 0 && !(n & W)) || (xx == 15 && !(n & E)) ||
                       (yy == 0 && !(n & N)) || (yy == 15 && !(n & S));
           if (edge)
-            c = tone == 2 ? colors.lip : tone == 0 ? colors.edge : c;
+            c = tone == 2 ? colors.lip : c;
+          int margin=4;
+          if(!(n&W))margin=std::min(margin,xx);
+          if(!(n&E))margin=std::min(margin,15-xx);
+          if(!(n&N))margin=std::min(margin,yy);
+          if(!(n&S))margin=std::min(margin,15-yy);
+          int bx=x+xx-r.ox,by=y+yy-r.oy;
+          if(margin<4 && bx>=0 && by>=0 && bx<r.w && by<r.h) {
+            int amount=margin==0?5:margin==1?3:margin==2?2:1;
+            if(soil::hash((x+xx)/3,(y+yy)/2)%5==0)amount=std::min(6,amount+1);
+            c=mix(c,r.p[by*r.w+bx],amount);
+          }
           // A shallow planting pocket and irregular front crumbs bind the
           // plant to this exact ground point. They are part of the ground pass.
           int rx = xx - soil::RootX, ry = yy - soil::RootY;

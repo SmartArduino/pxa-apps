@@ -22,6 +22,8 @@ Ground ground(const State &s, int x, int y) {
     return world_ground(s, x, y);
   if (x < 1 || y < 1 || x >= MapW - 1 || y >= MapH - 1)
     return Ground::Wall;
+  if(y==1&&(x%2)&&!exit_clearance(s.region,x,y))return Ground::Wall;
+  if(y==21&&(x==24||x==26||x==28))return Ground::Wall;
   if ((x >= 4 && x <= 8 && y >= 3 && y <= 6))
     return Ground::Wall;
   if (x >= 24 && x <= 29 && y >= 14 && y <= 20 &&
@@ -34,7 +36,7 @@ Ground ground(const State &s, int x, int y) {
   int o = obstacle_index(x, y);
   if (o >= 0 && !s.cleared[o] && (Obstacles[o].kind != 0 || s.tree_age[o] >= 2))
     return Ground(int(Ground::Tree) + Obstacles[o].kind);
-  if (y == 7 || x == 9 || x == 20 || (y == 18 && x >= 9 && x <= 24))
+  if (road_tile(s.region,x,y))
     return Ground::Path;
   return Ground::Grass;
 }
@@ -107,7 +109,7 @@ void sync_inventory(State &s) {
         present[item] = true;
     }
   }
-  if(s.active_slot<HotbarSize && !s.slots[s.active_slot]) { s.active_slot=255;s.tool=uint8_t(Tool::Hand); }
+  if(s.active_slot<InventorySize && !s.slots[s.active_slot]) { s.active_slot=255;s.tool=uint8_t(Tool::Hand); }
   for (int item = 1; item <= ItemCount; ++item)
     if (!present[item] && item_count(s, item))
       for (auto &slot : s.slots)
@@ -122,7 +124,7 @@ bool select_slot(State &s, int slot) {
     s.tool = uint8_t(Tool::Hand);
     return true;
   }
-  if (slot < 0 || slot >= HotbarSize)
+  if (slot < 0 || slot >= InventorySize)
     return false;
   s.active_slot = uint8_t(slot);
   int item = s.slots[slot];
@@ -138,6 +140,8 @@ bool swap_slots(State &s, int from, int to) {
       from == to)
     return false;
   std::swap(s.slots[from], s.slots[to]);
+  if(s.active_slot==from)s.active_slot=uint8_t(to);
+  else if(s.active_slot==to)s.active_slot=uint8_t(from);
   select_slot(s, s.active_slot == 255 ? -1 : s.active_slot);
   return true;
 }
@@ -147,12 +151,7 @@ bool equip_item(State &s, int item) {
   sync_inventory(s);
   for (int i = 0; i < InventorySize; ++i)
     if (s.slots[i] == item) {
-      int slot = i < HotbarSize               ? i
-                 : s.active_slot < HotbarSize ? s.active_slot
-                                              : 0;
-      if (i >= HotbarSize)
-        std::swap(s.slots[i], s.slots[slot]);
-      return select_slot(s, slot);
+      return select_slot(s, i);
     }
   return false;
 }
@@ -329,7 +328,7 @@ Result act(State &s, int x, int y) {
   return Result::None;
 }
 uint32_t ship(State &s) {
-  int item=s.active_slot<HotbarSize?s.slots[s.active_slot]:0,price=item_price(item);
+  int item=s.active_slot<InventorySize?s.slots[s.active_slot]:0,price=item_price(item);
   if(s.region || !near(s,8,9) || !price || !item_count(s,item) || s.shipping>999999u-unsigned(price))return 0;
   if(!change_item(s,item,-1))return 0;
   s.shipping+=price;s.last_shipped=item;sync_inventory(s);
@@ -496,7 +495,7 @@ size_t encode(const State &original, uint8_t *out, size_t cap) {
     }
   };
   put(0x31465744, 4);
-  put(6, 2);
+  put(7, 2);
   put(s.day, 2);
   put(s.minute, 2);
   put(s.energy, 1);
@@ -576,7 +575,7 @@ bool decode(State &s, const uint8_t *in, size_t n) {
   if (get(4) != 0x31465744)
     return false;
   uint32_t version = get(2);
-  if (version < 1 || version > 6)
+  if (version < 1 || version > 7)
     return false;
   if ((version >= 3 && n != SaveBytes) || (version < 3 && n != 512))
     return false;
@@ -657,7 +656,7 @@ bool decode(State &s, const uint8_t *in, size_t n) {
       if (item_count(t, item) && !present[item])
         return false;
     t.active_slot = get(1);
-    if (t.active_slot >= HotbarSize && t.active_slot != 255)
+    if (t.active_slot >= (version>=7?InventorySize:HotbarSize) && t.active_slot != 255)
       return false;
     for (int i = 0; i < 24; ++i) {
       t.tree_age[i] = get(1);

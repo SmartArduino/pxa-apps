@@ -38,8 +38,11 @@ Page page = Page::Farm;
 bool title_screen = true, save_locked = false, base_dirty = true,
      moving = false, route = false, route_action = false;
 bool walking = false;
+bool repeat_use = false;
 uint32_t walk_distance = 0;
 int camx, camy, dir = 2, stepx, stepy, targetx, targety, selected_row = 0;
+int route_portal = -1;
+bool approaching_portal = false;
 uint32_t clock_acc = 0, move_acc = 0, anim_acc = 0, animation = 0, swing = 0,
          toast_ms = 0, fish_ms = 0, fish_bite = 0, morning_gold = 0;
 char toast[96]{}, letter[512]{};
@@ -57,12 +60,14 @@ int hit_obstacle = -1, action_tool = 0;
 uint32_t hit_ms = 0, deposit_ms=0;
 int deposited_item=0;
 int held_item() {
-  return state.active_slot < HotbarSize ? state.slots[state.active_slot] : 0;
+  return state.active_slot < InventorySize ? state.slots[state.active_slot] : 0;
 }
 
 constexpr int WorldPixelsW = MapW * Tile, WorldPixelsH = MapH * Tile;
 alignas(4) uint16_t base[WorldPixelsW * WorldPixelsH];
+alignas(4) uint16_t unlit_base[WorldPixelsW * WorldPixelsH];
 terrain::Map terrain_map;
+int cached_geometry=-1;
 uint16_t light_palette[65536];
 int cached_light=-1;
 farm_scene::Queue world_objects;
@@ -235,17 +240,30 @@ void draw_plots(bool restore) {
   if (restore)
     for (int y = PlotY * Tile; y < (PlotY + PlotH) * Tile; ++y)
       for (int x = PlotX * Tile; x < (PlotX + PlotW) * Tile; ++x)
-        base[y * WorldPixelsW + x] = terrain_map.pixel(x, y, season());
-  art::Raster r{base, WorldPixelsW, WorldPixelsH};
+        unlit_base[y * WorldPixelsW + x] = terrain_map.pixel(x, y, season());
+  art::Raster r{unlit_base, WorldPixelsW, WorldPixelsH};
   terrain::plots(r, state);
   for (int i = 0; i < PlotCount; ++i)
     cached_plots[i] = plot_visual(state.plots[i]);
+  if(restore)for(int y=PlotY*Tile;y<(PlotY+PlotH)*Tile;++y)
+    for(int x=PlotX*Tile;x<(PlotX+PlotW)*Tile;++x) {
+      unsigned at=y*WorldPixelsW+x;auto c=unlit_base[at];
+      base[at]=cached_light>0?light_palette[c]:c;
+    }
+}
+void tint_base() {
+  if(cached_light>0)for(unsigned i=0;i<WorldPixelsW*WorldPixelsH;++i)
+    base[i]=light_palette[unlit_base[i]];
+  else std::memcpy(base,unlit_base,sizeof(base));
 }
 void draw_base() {
-  art::Raster r{base, WorldPixelsW, WorldPixelsH};
+  art::Raster r{unlit_base, WorldPixelsW, WorldPixelsH};
   int se = season();
-  terrain_map.build(state);
-  terrain_map.draw(r, se);
+  if(!indoors(state.region)) {
+    int geometry=state.region+(state.story>=3?256:0);
+    if(geometry!=cached_geometry){terrain_map.build(state);cached_geometry=geometry;}
+    terrain_map.draw(r,se);
+  }
   if (!state.region) {
     // Landing, reeds and stones along the pond.
     r.rect(23 * 16, 17 * 16, 28, 3 * 16, Border);
@@ -255,31 +273,13 @@ void draw_base() {
     }
     draw_plots(false);
   } else if (indoors(state.region)) {
-    r.rect(0, 0, 512, 384, art::rgb(65, 63, 47));
-    r.rect(7 * 16 - 6, 5 * 16 - 25, 18 * 16 + 12, 16 * 16 + 29, Border);
-    r.rect(7 * 16, 5 * 16 - 20, 18 * 16, 20, art::rgb(187, 137, 77));
-    for (int y = 5 * 16; y < 21 * 16; ++y)
-      for (int x = 7 * 16; x < 25 * 16; ++x) {
-        bool seam = y % 12 == 0 || (x + (y / 12 % 2) * 30) % 60 == 0;
-        r.rect(x, y, 1, 1,
-               seam ? art::rgb(156, 106, 59)
-                    : art::rgb(198 + (y % 3) * 2, 147 + (x % 3), 82));
-      }
-    r.rect(15 * 16, 5 * 16 - 17, 35, 16, Border);
-    r.rect(15 * 16 + 2, 5 * 16 - 15, 31, 12, art::Water);
-    r.rect(16 * 16, 5 * 16 - 15, 2, 12, art::Cream);
-    r.rect(20 * 16, 7 * 16, 3 * 16, 4 * 16, art::rgb(117, 91, 59));
-    for (int y = 7 * 16 + 4; y < 11 * 16; y += 18) {
-      r.rect(20 * 16 + 3, y, 42, 2, art::Gold);
-      r.rect(20 * 16 + 8, y - 6, 7, 6, art::Cream);
-    }
-    r.rect(15 * 16, 17 * 16, 3 * 16, 2 * 16, art::rgb(131, 151, 106));
-    r.outline(15 * 16 + 2, 17 * 16 + 2, 3 * 16 - 4, 2 * 16 - 4, art::Gold);
+    r.rect(0,0,512,384,art::rgb(65,63,47));
+    art::world_room(r,state.region==unsigned(Region::SeedShop),state.region==unsigned(Region::Lodge));
   } else {
     if (state.region == uint8_t(Region::Forest)) {
-      for (int tx : {3, 4, 11, 12})
+      for (int tx : {3, 4, 5})
         for (int yy = 12 * 16; yy < 13 * 16; ++yy) {
-          if (tx < 5 && state.story < 3 && yy % 8 > 2)
+          if (state.story < 3 && yy % 8 > 2)
             continue;
           r.rect(tx * 16, yy, 16, 1,
                  yy % 5 == 0 ? Border : art::rgb(183, 135, 72));
@@ -298,18 +298,16 @@ void draw_base() {
     }
   }
   for (const auto &portal : Portals)
-    if (unsigned(portal.from) == state.region) {
-      int x = portal.x * 16 + 8, y = portal.y * 16 + 8;
-      r.rect(x - 6, y - 4, 12, 8, Border);
-      r.rect(x - 5, y - 3, 10, 6, art::Gold);
-      int dx = portal.spawn_x > 16 ? -1 : 1;
-      if (portal.to == Region::Home)
-        dx = 0;
-      r.line(x - 3 * dx, y, x + 3 * dx, y, art::Ink);
-      r.line(x + 3 * dx, y, x + dx, y - 2, art::Ink);
-      r.line(x + 3 * dx, y, x + dx, y + 2, art::Ink);
+    if (unsigned(portal.from)==state.region) {
+      int x=portal.x*16+8,y=portal.y*16+8;
+      if(indoors(state.region)) art::world_rug(r,x-14,y-4,28,11);
+      else if(indoors(uint8_t(portal.to))) {
+        r.rect(x-10,y-2,21,5,art::rgb(135,124,91));
+        r.rect(x-9,y-2,19,1,art::rgb(204,181,133));
+        r.rect(x-7,y,6,1,art::rgb(164,146,105));
+      }
     }
-  if(cached_light>0)for(auto &c:base)c=light_palette[c];
+  tint_base();
   base_dirty = false;
 }
 void camera() {
@@ -321,18 +319,21 @@ void camera() {
 void scene() {
   auto tone=ambient_light(state);
   int light=tone.key();
+  bool relight=light!=cached_light;
   if(light!=cached_light) {
-    cached_light=light;base_dirty=true;
+    cached_light=light;
     if(light)for(unsigned c=0;c<65536;++c)light_palette[c]=apply_light(c,tone);
   }
-  if(light && !state.region && plots_changed())base_dirty=true;
   if (base_dirty)
     draw_base();
-  else if (!state.region && plots_changed())
-    draw_plots(true);
+  else {
+    if(!state.region && plots_changed())draw_plots(true);
+    if(relight)tint_base();
+  }
   camera();
   auto *p = framebuffer();
-  copy_background(base, WorldPixelsW, WorldPixelsH, camx, camy, cached_light>0?light_palette[art::Sky]:art::Sky);
+  auto outside=indoors(state.region)?art::rgb(65,63,47):art::Sky;
+  copy_background(base, WorldPixelsW, WorldPixelsH, camx, camy, cached_light>0?light_palette[outside]:outside);
   art::Raster r{p, WIDTH, HEIGHT, camx, camy};
   r.tint=cached_light>0?light_palette:nullptr;
   profile(DrawStage::Ground);
@@ -405,18 +406,23 @@ void stop_motion() {
   moving = false;
   walking = false;
   move_acc = 0;
+  route_portal = -1;
+  approaching_portal = false;
   state.px = state.px / 16 * 16 + 8;
   state.py = state.py / 16 * 16 + 8;
   stick = false;
   held_direction = -1;
   action_hold = false;
+  repeat_use = false;
 }
 void open_page(Page p) {
   stop_motion();
   page = p;
   selected_row = p==Page::Calendar?season_day(state.day)-1:0;
-  if (p == Page::Bag)
-    bag_selection = state.active_slot < HotbarSize ? state.active_slot : 0;
+  if (p == Page::Bag) {
+    bag_selection = state.active_slot < InventorySize ? state.active_slot : 0;
+    selected_row=-1;
+  }
   redraw();
 }
 void feedback(Result result) {
@@ -580,6 +586,12 @@ void begin_route(int x, int y, bool use) {
   route_action = use;
   targetx = x;
   targety = y;
+  route_portal=-1;approaching_portal=false;
+  if(const auto*p=portal_at(state,x,y)) {
+    route_portal=int(p-Portals);approaching_portal=true;
+    auto front=portal_approach(*p);targetx=front.x;targety=front.y;
+    route_action=false;
+  }
   redraw();
 }
 void facing_action() {
@@ -619,9 +631,14 @@ void navigate(int d) {
   if(swing)return;
   journey_region = following_npc = -1;
   route = false;
+  route_portal=-1;approaching_portal=false;
   if (moving)
     return;
   dir = d;
+  if(const auto*p=portal_at(state,state.px/16,state.py/16);
+     p && d==portal_heading(*p)) {
+    action(p->x,p->y);return;
+  }
   int x = state.px / 16 + (d == 1) - (d == 3),
       y = state.py / 16 + (d == 2) - (d == 0);
   if (walkable(state, x, y)) {
@@ -761,6 +778,13 @@ void setting_action(int index) {
   if (index == 4)
     switch_language();
   changed();
+}
+void cycle_seeds() {
+  for(int next=1;next<=4;++next) {
+    int seed=(state.selected+next)%4;
+    if(state.seeds[seed]){equip_item(state,8+seed);changed();return;}
+  }
+  select_slot(state,-1);changed();
 }
 void tool_upgrade_action() {
   int item = state.slots[bag_selection];
@@ -908,11 +932,23 @@ Notice notice() {
   n.box = {x, y, w, h};
   return n;
 }
+int hud_opacity(farm_ui::Rect box,int normal=8) {
+  int height=held_item()>=8?54:33;
+  farm_scene::Rect actor{int(state.px)-camx-12,int(state.py)-camy-height,24,height+3};
+  return actor.intersects({box.x,box.y,box.w,box.h})?std::min(normal,3):normal;
+}
+struct HudLayer {
+  explicit HudLayer(farm_ui::Rect box,int normal=8) {
+    begin_hud(box.x-4,box.y-4,box.w+8,box.h+9,hud_opacity(box,normal));
+  }
+  ~HudLayer(){end_hud();}
+};
 void notification() {
   auto n = notice();
   if (!n.count)
     return;
   auto r = n.box;
+  HudLayer layer(r);
   panel(r.x, r.y, r.w, r.h);
   rect(r.x + 5, r.y + 5, 2, n.count * 13 - 1, Sage);
   for (int i = 0; i < n.count; ++i)
@@ -921,6 +957,8 @@ void notification() {
 void hud() {
   auto ui = layout();
   auto calendar = ui.calendar();
+  {
+  HudLayer layer(calendar);
   panel(calendar.x, calendar.y, calendar.w, calendar.h);
   char b[96];
   std::snprintf(b, sizeof(b), "%s %u",
@@ -934,15 +972,22 @@ void hud() {
   std::snprintf(b, sizeof(b), "%u G", state.gold);
   text(24, 23, b, Text);
   weather_icon(91, 22);
+  }
+  char b[96];
   const farm_ui::Icon icons[] = {farm_ui::Icon::Backpack,
                                  farm_ui::Icon::Journal, farm_ui::Icon::Pause};
-  for (int i = 0; i < 3; ++i)
+  for (int i = 0; i < 3; ++i) {
+    HudLayer layer(ui.header_button(i));
     icon_button(ui.header_button(i), icons[i]);
+  }
   if (state.region) {
+    HudLayer layer({6,41,112,18});
     panel(6, 41, 112, 18);
     fit_text(12, 44, region_name(Region(state.region), english()), 100, Sage);
   }
   auto vitals = ui.vitals();
+  {
+  HudLayer layer(vitals);
   panel(vitals.x, vitals.y, vitals.w, vitals.h);
   for (int row = 0; row < 2; ++row) {
     int y = vitals.y + 4 + row * 12, x = vitals.x + 6;
@@ -966,18 +1011,24 @@ void hud() {
     text(vitals.x + vitals.w - 7 - text_width(b), y - 1, b,
          row ? farm_palette::Water : Sage);
   }
+  }
   auto belt = ui.belt();
+  {
+  HudLayer layer(belt);
   panel(belt.x, belt.y, belt.w, belt.h);
   for (int i = 0; i < HotbarSize; ++i)
     inventory_cell(ui.tool(i), i, false);
+  }
   if (!toast_ms && !route) {
     auto label = ui.caption(caption_width());
+    HudLayer layer(label);
     panel(label.x, label.y, label.w, label.h);
     item_label(b, sizeof(b), held_item());
     center_text(label.center_x(), label.y + 2, b, Sage);
   }
   if (!using_controller() && state.show_joystick) {
     auto joystick = ui.joystick();
+    HudLayer layer(joystick,6);
     int cx = joystick.center_x(), cy = joystick.center_y(),
         px = stick ? 20 : 18, py = 0, error = 1 - px;
     while (px >= py) {
@@ -1009,8 +1060,10 @@ void hud() {
       line(cx, cy - 4, cx, cy + 4, Paper);
     }
   }
-  if (!using_controller() && state.show_action)
+  if (!using_controller() && state.show_action) {
+    HudLayer layer(ui.action(),5);
     icon_button(ui.action(), farm_ui::Icon::Use);
+  }
   notification();
 }
 void modal() {
@@ -1334,7 +1387,7 @@ void dialogue_action(int choice) {
     } else
       std::snprintf(letter, sizeof(letter), "%s",
                     tr("Hold a gift; one gift per friend each day.",
-                       "先在物品栏拿起礼物。每位村民每天可收一份。"));
+                       "先在背包拿起礼物。每位村民每天可收一份。"));
   } else {
     page = Page::Farm;
   }
@@ -1581,10 +1634,20 @@ void key(Key k) {
     } else if (page == Page::Bag) {
       if (k == Key::SELECT)
         tool_upgrade_action();
-      if (k == Key::LEFT || k == Key::UP)
-        selected_row = 0;
-      if (k == Key::RIGHT || k == Key::DOWN)
-        selected_row = 1;
+      if(k==Key::Y){open_page(Page::Guide);return;}
+      if(selected_row<0) {
+        if(k==Key::LEFT&&bag_selection%7) --bag_selection;
+        if(k==Key::RIGHT&&bag_selection%7<6) ++bag_selection;
+        if(k==Key::UP&&bag_selection>=7) bag_selection-=7;
+        if(k==Key::DOWN) {
+          if(bag_selection<21)bag_selection+=7;
+          else selected_row=bag_selection%7>=3?1:0;
+        }
+      } else {
+        if(k==Key::LEFT)selected_row=0;
+        if(k==Key::RIGHT)selected_row=1;
+        if(k==Key::UP){bag_selection=21+bag_selection%7;selected_row=-1;}
+      }
     } else {
       if (k == Key::UP)
         selected_row = std::max(0, selected_row - 1);
@@ -1617,8 +1680,10 @@ void key(Key k) {
         sleep_now();
       else if (page == Page::Settings)
         setting_action(selected_row);
-      else if (page == Page::Bag)
-        bag_action(selected_row);
+      else if (page == Page::Bag) {
+        if(selected_row>=0)bag_action(selected_row);
+        else {select_slot(state,state.active_slot==bag_selection?-1:bag_selection);changed();}
+      }
       else
         page = Page::Farm;
     }
@@ -1629,8 +1694,10 @@ void key(Key k) {
     navigate(int(k));
     return;
   }
-  if (k == Key::A || k == Key::B)
+  if (k == Key::A || k == Key::B) {
+    repeat_use=held_item()<12;
     facing_action();
+  }
   else if (k == Key::X)
     open_page(Page::Bag);
   else if (k == Key::Y)
@@ -1644,9 +1711,7 @@ void key(Key k) {
                 (int(state.active_slot < 7 ? state.active_slot : 6) + 1) % 7);
     changed();
   } else if (k == Key::SELECT) {
-    state.selected = (state.selected + 1) % 4;
-    equip_item(state, 2);
-    changed();
+    cycle_seeds();
   }
 }
 void pointer(Phase phase, int x, int y) {
@@ -1697,6 +1762,7 @@ void pointer(Phase phase, int x, int y) {
         sticky = y;
         route = false;
       } else if (state.show_action && ui.action().contains(x, y)) {
+        repeat_use=held_item()<12;
         action_hold = action_touch = true;
         facing_action();
       }
@@ -1726,6 +1792,7 @@ void pointer(Phase phase, int x, int y) {
     return;
   touch_down = false;
   if (action_touch) {
+    repeat_use=false;
     action_hold = action_touch = false;
     return;
   }
@@ -1743,7 +1810,7 @@ void pointer(Phase phase, int x, int y) {
     } else if (page == Page::Farm && layout().tool(source).contains(x, y)) {
       select_slot(state, state.active_slot == source ? -1 : source);
       changed();
-    } else if (page == Page::Bag && source < HotbarSize &&
+    } else if (page == Page::Bag && source < InventorySize &&
                layout().bag_slot(source).contains(x, y)) {
       select_slot(state, state.active_slot == source ? -1 : source);
       changed();
@@ -1795,10 +1862,7 @@ void pointer(Phase phase, int x, int y) {
     return;
   }
   if (!toast_ms && !route && ui.caption(caption_width()).contains(x, y)) {
-    if (held_item() == 2) {
-      state.selected = (state.selected + 1) % 4;
-      changed();
-    }
+    if (held_item() >= 8 && held_item() <= 11)cycle_seeds();
     return;
   }
   if (state.show_action && ui.action().contains(x, y)) {
@@ -1854,7 +1918,8 @@ void tick(uint32_t elapsed) {
     if(unsigned(p.region)==state.region && p.walking && p.x>=camx-24 && p.x<camx+WIDTH+24 && p.y>=camy-32 && p.y<camy+HEIGHT+32) {redraw();break;}
   }
   if(state.overwork>=10) { stop_motion();sleep_now(true);msg("体力透支，醒来时已回到家中","Overworked. You woke up at home");return; }
-  if ((action_hold || held(Key::A)) && !swing)
+  if(!action_hold && !held(Key::A))repeat_use=false;
+  if ((action_hold || held(Key::A)) && repeat_use && !swing)
     facing_action();
   clock_acc += elapsed;
   if (clock_acc >= 500) {
@@ -1894,10 +1959,15 @@ void tick(uint32_t elapsed) {
     navigate(d);
   if (route && !moving && following_npc >= 0) {
     auto p = npc_pose(state, following_npc);
-    if (unsigned(p.region) != state.region)
-      go_to(p.region, p.x / 16, p.y / 16, true);
+    if (unsigned(p.region) != state.region) {
+      // Preserve the approach/threshold stages while tracking someone in
+      // another region. Replanning on every tick would restart the doorway.
+      if(journey_region!=int(p.region))go_to(p.region,p.x/16,p.y/16,true);
+      else {journey_x=p.x/16;journey_y=p.y/16;}
+    }
     else {
       journey_region = -1;
+      route_portal=-1;approaching_portal=false;route_action=true;
       targetx = p.x / 16;
       targety = p.y / 16;
     }
@@ -1906,6 +1976,11 @@ void tick(uint32_t elapsed) {
     int tx = state.px / 16, ty = state.py / 16;
     if ((route_action && near(state, targetx, targety)) ||
         (!route_action && tx == targetx && ty == targety)) {
+      if(route_portal>=0 && approaching_portal) {
+        const auto &p=Portals[route_portal];
+        approaching_portal=false;targetx=p.x;targety=p.y;
+        dir=portal_heading(p);redraw();return;
+      }
       if (route_action && swing) {
         redraw();
         return;
@@ -1951,7 +2026,8 @@ void tick(uint32_t elapsed) {
     walking = traveled > 0;
     if (state.px == stepx && state.py == stepy) {
       moving = false;
-      if (portal_at(state, state.px / 16, state.py / 16)) {
+      if (const auto *p=portal_at(state,state.px/16,state.py/16);
+          p && crossed_portal(*p,before_x,before_y,state.px,state.py,dir)) {
         action(state.px / 16, state.py / 16);
         return;
       }

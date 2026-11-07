@@ -25,28 +25,60 @@ const Portal *portal_at(const State &s, int x, int y) {
       return &p;
   return nullptr;
 }
+bool road_tile(uint8_t region,int x,int y) {
+  switch(Region(region)) {
+  case Region::Farm:
+    return (y==7 && x>=6) || (x==6 && y>=7 && y<=18) ||
+      (x==22 && y>=7 && y<=12) || (x==21 && y>=12 && y<=18) ||
+      (y==12 && x>=21&&x<=22) || (y==18 && x<=21) ||
+      (y==19 && x>=4 && x<=7) || (y==17 && x>=21 && x<=23);
+  case Region::Town:
+    return (y==12 && x<=24) || (x==15 && y>=7) ||
+      (y==7 && x>=7 && x<=24) || ((x==7||x==24)&&y>=7&&y<=12) ||
+      (x>=12&&x<=18&&y>=9&&y<=15);
+  case Region::Forest:
+    return y==12 || (x==15&&y<=12) || (x==22&&y>=12) ||
+      (y==20&&x>=15&&x<=22);
+  case Region::Lake:
+    return (y==12&&x>=21) || (x==24&&y>=9&&y<=17);
+  case Region::Orchard:
+    return (x==16&&y<=19) || ((y==9||y==19)&&x>=8&&x<=22) ||
+      ((x==8||x==22)&&y>=9&&y<=19);
+  default:return false;
+  }
+}
+bool exit_clearance(uint8_t region,int x,int y) {
+  for(const auto&p:Portals)
+    if(unsigned(p.from)==region && !indoors(uint8_t(p.to)) &&
+       std::abs(x-p.x)<=2 && std::abs(y-p.y)<=2)return true;
+  return false;
+}
 Ground world_ground(const State &s, int x, int y) {
   Region r = Region(s.region);
   if (indoors(s.region)) {
     if(r==Region::SeedShop) {
-      if(x<7||x>24||y<5||y>20 || (y==10&&x>=11&&x<=21) || (y==7&&x>=8&&x<=23))return Ground::Wall;
+      if(x<7||x>24||y<5||y>20 || (y==10&&x>=11&&x<=21) || (y>=6&&y<=7&&x>=8&&x<=23))return Ground::Wall;
       return Ground::Path;
     }
     if(r==Region::Lodge) {
-      if(x<7||x>24||y<5||y>20 || (y==8&&(x<13||x>18)))return Ground::Wall;
+      if(x<7||x>24||y<5||y>20 ||
+         (y>=6&&y<=8&&((x>=8&&x<=10)||(x>=12&&x<=14)||(x>=18&&x<=20)||x>=22)) ||
+         (y>=5&&y<=6&&x>=15&&x<=17))return Ground::Wall;
       return Ground::Path;
     }
     if (x < 7 || x > 24 || y < 5 || y > 20)
       return Ground::Wall;
     if ((x==15&&y==7)||(x==13&&y==5)||
         (x >= 9 && x <= 11 && y >= 7 && y <= 9) ||
-        (x >= 20 && x <= 22 && y >= 7 && y <= 10) ||
-        (x >= 18 && x <= 20 && y >= 14 && y <= 15))
+        (x >= 20 && x <= 22 && y >= 5 && y <= 10) ||
+        (x >= 18 && x <= 20 && y >= 14 && y <= 15) ||
+        (x>=7&&x<=9&&y>=5&&y<=6) || ((x==17||x==21)&&y==16))
       return Ground::Wall;
     return Ground::Path;
   }
   if (x < 1 || y < 1 || x >= MapW - 1 || y >= MapH - 1)
     return Ground::Wall;
+  if(y==1&&(x%2)&&!exit_clearance(s.region,x,y))return Ground::Wall;
   if (r == Region::Town) {
     if ((s.story >= 5 && x >= 14 && x <= 16 && y == 14) ||
         ((x == 16 || x == 18) && y == 10) || (x==5&&y==7))
@@ -55,34 +87,57 @@ Ground world_ground(const State &s, int x, int y) {
       return Ground::Wall;
     if (y >= 17 && y <= 19 && x >= 3 && x <= 8)
       return Ground::Water;
-    if (y == 12 || x == 15 || y == 7 ||
-        (x >= 12 && x <= 18 && y >= 9 && y <= 15))
+    if (road_tile(s.region,x,y))
       return Ground::Path;
   } else if (r == Region::Forest) {
-    if (x >= 3 && x <= 4 && y >= 5 && y <= 20) {
+    int stream=y<6?4:y<11?5:y<15?4:y<19?3:4;
+    if (x>=stream-1 && x<=stream+1) {
       if (y == 12)
-        return s.story >= 3 ? Ground::Path : Ground::Wall;
+        return s.story >= 3 ? Ground::Path : Ground::Water;
       return Ground::Water;
     }
-    if (x == 15 || y == 12 || y == 3)
+    if (road_tile(s.region,x,y))
       return Ground::Path;
-    if (x >= 11 && x <= 12 && y >= 5 && y <= 20)
+    if (x>=10&&x<=12&&y>=6&&y<=9 && !(x==10&&y==6) && !(x==12&&y==9))
       return Ground::Water;
     if ((x % 6 == 0 && x != 12 && y % 5 == 0) || (x == 22 && y == 6))
       return Ground::Tree;
   } else if (r == Region::Lake) {
-    if (x >= 4 && x <= 20 && y >= 5 && y <= 19)
+    if(x>=21&&x<=23&&y>=11&&y<=12)return Ground::Path;
+    if(x>=24&&x<=26&&y>=7&&y<=8)return Ground::Wall;
+    int left=y<8?7:y<12?4:y<17?3:6;
+    int right=y<8?17:y<12?20:y<17?21:18;
+    if (x>=left && x<=right && y>=4 && y<=20)
       return Ground::Water;
-    if (y == 12 || x == 24)
+    if (road_tile(s.region,x,y))
       return Ground::Path;
   } else if (r == Region::Orchard) {
     if ((x == 6 || x == 12 || x == 20 || x == 26) && (y == 7 || y == 16))
       return Ground::Tree;
     if (x >= 23 && x <= 27 && y >= 10 && y <= 12) return Ground::Water;
-    if (x == 16 || y == 12 || y == 20 || (y == 9 && x >= 6 && x <= 26))
+    if (road_tile(s.region,x,y))
       return Ground::Path;
   }
   return Ground::Grass;
+}
+int portal_heading(const Portal &p) {
+  if (indoors(uint8_t(p.from))) return 2;
+  if (indoors(uint8_t(p.to))) return 0;
+  if (p.bridge || p.x <= 2) return 3;
+  if (p.x >= 29) return 1;
+  return p.y <= 2 ? 0 : 2;
+}
+Point portal_approach(const Portal &p) {
+  int d=portal_heading(p);
+  return {p.x-(d==1)+(d==3),p.y-(d==2)+(d==0)};
+}
+bool crossed_portal(const Portal &p,int fx,int fy,int tx,int ty,int heading) {
+  if(heading!=portal_heading(p))return false;
+  int x=p.x*Tile+8,y=p.y*Tile+8;
+  if(heading==0)return std::abs(tx-x)<=3 && fy>y && ty<=y;
+  if(heading==2)return std::abs(tx-x)<=3 && fy<y && ty>=y;
+  if(heading==1)return std::abs(ty-y)<=3 && fx<x && tx>=x;
+  return std::abs(ty-y)<=3 && fx>x && tx<=x;
 }
 bool travel(State &s, const Portal &p) {
   if (unsigned(p.from) != s.region || !near(s, p.x, p.y) ||

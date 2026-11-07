@@ -14,6 +14,31 @@ int main(int argc, char **argv) {
   std::memset(s.cleared, 1, sizeof(s.cleared));
   for (auto &p : s.plots)
     p = {};
+  if(!std::strncmp(argv[1],"redesign-",9)) {
+    const char *mode=argv[1]+9;s.story=3;s.visited=255;s.day=12;s.minute=600;s.energy=60;
+    s.px=14*16+8;s.py=14*16+8;
+    if(!std::strcmp(mode,"door")){s.px=5*16+8;s.py=7*16+8;}
+    if(!std::strcmp(mode,"route")){s.px=9*16+8;s.py=10*16+8;}
+    if(!std::strcmp(mode,"hud-left")){s.region=1;s.px=2*16+8;s.py=2*16+8;}
+    if(!std::strcmp(mode,"hud-right")){s.region=3;s.px=28*16+8;s.py=2*16+8;}
+    if(!std::strcmp(mode,"hud-belt")){s.px=14*16+8;s.py=22*16+8;}
+    if(!std::strcmp(mode,"home")){s.region=4;s.px=264;s.py=200;s.show_joystick=s.show_action=false;}
+    if(!std::strcmp(mode,"shop")){s.region=6;s.px=264;s.py=200;s.show_joystick=s.show_action=false;}
+    if(!std::strcmp(mode,"forest")){s.region=2;s.px=248;s.py=200;}
+    if(!std::strcmp(mode,"lake")){s.region=3;s.px=392;s.py=200;}
+    if(!std::strcmp(mode,"town")){s.region=1;s.px=248;s.py=200;}
+    if(!std::strcmp(mode,"soil"))for(int y=0;y<8;++y)for(int x=0;x<10;++x)
+      if(y%3!=2)s.plots[y*10+x]={1,uint8_t(x<5?1:2),uint8_t(x%4==0?0:x<5?2:3),uint8_t(x>=5)};
+    farm::select_slot(s,-1);
+    if(!std::strcmp(mode,"bag")) {
+      s.px=8*16+8;s.py=10*16+8;
+      s.produce[0]=3;farm::sync_inventory(s);
+      for(int i=0;i<farm::InventorySize;++i)if(s.slots[i]==12){std::swap(s.slots[i],s.slots[27]);break;}
+    }
+    uint8_t bytes[farm::SaveBytes];assert(farm::encode(s,bytes,sizeof(bytes))==sizeof(bytes));
+    FILE*f=std::fopen(argv[2],"wb");assert(f&&std::fwrite(bytes,1,sizeof(bytes),f)==sizeof(bytes));std::fclose(f);
+    f=std::fopen(argv[3],"w");assert(f);std::fclose(f);return 0;
+  }
   if (!std::strncmp(argv[1],"atmosphere-",11)) {
     s.minute=std::atoi(argv[1]+11);s.day=12;s.px=232;s.py=194;
     for(int y=0;y<4;++y)for(int x=0;x<10;++x)

@@ -24,7 +24,7 @@ enum class Kind : uint8_t {
   Bed,
   Table,
   Forage,
-  Stove, Television, Calendar, Counter
+  Stove, Television, Calendar, Counter, Cabinet, Fireplace, Chair, Shelf, Signpost
 };
 struct Rect {
   int x, y, w, h;
@@ -90,21 +90,27 @@ inline Placement placement(const Entry &e) {
   }
 }
 inline Rect bounds(const Entry &e) {
-  if(e.kind==Kind::Counter)return {e.x,e.y-24,176,26};
-  if(e.kind==Kind::Television||e.kind==Kind::Calendar)return {e.x-10,e.y-25,21,26};
+  if(e.kind==Kind::Counter)return {e.x-3,e.y-44,182,47};
+  if(e.kind==Kind::Television)return {e.x-16,e.y-38,33,40};
+  if(e.kind==Kind::Calendar)return {e.x-13,e.y-32,27,34};
+  if(e.kind==Kind::Cabinet)return {e.x-20,e.y-35,40,37};
+  if(e.kind==Kind::Fireplace)return {e.x-22,e.y-46,44,48};
+  if(e.kind==Kind::Chair)return {e.x-11,e.y-26,22,28};
+  if(e.kind==Kind::Shelf)return {e.x-130,e.y-37,260,40};
+  if(e.kind==Kind::Signpost)return {e.x-13,e.y-28,27,30};
   auto p = placement(e);
   if (p.sprite)
     return {p.x - p.sprite->anchor_x - 1, p.y - p.sprite->anchor_y,
             p.sprite->w + 2, p.sprite->h + 2};
   switch (e.kind) {
   case Kind::Bed:
-    return {e.x - 18, e.y - 36, 36, 38};
+    return {e.x - 20, e.y - 46, 40, 48};
   case Kind::Stove:
-    return {e.x - 20, e.y - 38, 41, 39};
+    return {e.x - 24, e.y - 50, 48, 52};
   case Kind::Forage:
     return {e.x - 8, e.y - 14, 17, 15};
   case Kind::Table:
-    return {e.x - 19, e.y - 21, 38, 23};
+    return {e.x - 22, e.y - 29, 44, 31};
   case Kind::Fence:
     return {e.x - 1, e.y, 53, 17};
   case Kind::Crop:
@@ -121,7 +127,7 @@ inline bool faded(const Entry &e, const farm::State &s) {
   if (e.kind != Kind::Tree || s.py >= e.depth)
     return false;
   auto p = placement(e);
-  int item = s.active_slot < farm::HotbarSize ? s.slots[s.active_slot] : 0;
+  int item = s.active_slot < farm::InventorySize ? s.slots[s.active_slot] : 0;
   bool carrying = item == 2 || item >= 8;
   int height = carrying ? 54 : 28;
   return Rect{int(s.px) - 10, int(s.py) - height, 20, height - 4}.intersects(
@@ -155,6 +161,15 @@ struct Queue {
       return a.depth != b.depth ? a.depth < b.depth : a.order < b.order;
     });
   }
+  void signs(const farm::State&s) {
+    if(farm::indoors(s.region))return;
+    for(unsigned i=0;i<sizeof(farm::Portals)/sizeof(*farm::Portals);++i) {
+      const auto&p=farm::Portals[i];
+      if(unsigned(p.from)!=s.region||farm::indoors(uint8_t(p.to)))continue;
+      int d=farm::portal_heading(p),x=p.x*16+8+(d%2?0:16),y=p.y*16+12+(d%2?16:0);
+      add(Kind::Signpost,x,y,y,i,true);
+    }
+  }
   void build(const farm::State &s, const View &v, Rect clip) {
     count = 0;
     next_order = 0;
@@ -168,18 +183,18 @@ struct Queue {
     for (int y : {8 * 16, 17 * 16 + 7})
       for (int x : {10 * 16, 16 * 16})
         add(Kind::Fence, x, y, y + 15);
-    for (int y : {14, 20})
+    for (int y : {14, 21})
       for (int x = 24; x < 30; x += 2) {
         add(Kind::Rock, x * 16, y * 16, y * 16);
         add(Kind::Grass, x * 16 + 10, y * 16 + 2, y * 16 + 2);
       }
     for (int x = 1; x < farm::MapW; x += 2) {
-      add(Kind::Tree, x * 16, 29, 29, x);
-      add(Kind::Tree, x * 16, farm::MapH * 16 - 2, farm::MapH * 16 - 2, x + 2);
+      if(!farm::exit_clearance(s.region,x,1))add(Kind::Tree, x * 16, 29, 29, x);
+      if(!farm::exit_clearance(s.region,x,22))add(Kind::Tree, x * 16, farm::MapH * 16 - 2, farm::MapH * 16 - 2, x + 2);
     }
     for (int y = 4; y < farm::MapH - 2; y += 3) {
-      add(Kind::Tree, 14, y * 16, y * 16, y);
-      add(Kind::Tree, farm::MapW * 16 - 8, y * 16, y * 16, y + 1);
+      if(!farm::exit_clearance(s.region,0,y))add(Kind::Tree, 14, y * 16, y * 16, y);
+      if(!farm::exit_clearance(s.region,31,y))add(Kind::Tree, farm::MapW * 16 - 8, y * 16, y * 16, y + 1);
     }
     add(Kind::House, 4 * 16, 3 * 16, 3 * 16 + 61, 0, true);
     // The farm has a home; the seed store lives in town.
@@ -214,6 +229,7 @@ struct Queue {
     add(Kind::Chicken, 11 * 16 + int((v.animation / 4) % 12), 19 * 16 + 8,
         19 * 16 + 8, 0);
     add(Kind::Chicken, 14 * 16, 19 * 16 + 12, 19 * 16 + 12, 1);
+    signs(s);
     add(Kind::Player, s.px, s.py, s.py);
     sort();
   }
@@ -222,25 +238,29 @@ struct Queue {
     if (farm::indoors(s.region)) {
       if(s.region==uint8_t(Region::SeedShop)) {
         add(Kind::Counter,11*16,10*16+15,10*16+15,0,true);
-        for(int x:{9,12,15,18,21})add(Kind::Grass,x*16+8,7*16+13,7*16+13);
+        add(Kind::Shelf,16*16+8,7*16+15,7*16+15);
       } else if(s.region==uint8_t(Region::Lodge)) {
-        for(int x:{9,13,19,23})add(Kind::Bed,x*16+8,8*16+15,8*16+15);
+        int id=0;for(int x:{9,13,19,23})add(Kind::Bed,x*16+8,8*16+15,8*16+15,id++);
+        add(Kind::Cabinet,16*16+8,6*16+15,6*16+15);
       } else {
       add(Kind::Bed, 10 * 16 + 8, 9 * 16 + 15, 9 * 16 + 15, 0, true);
       add(Kind::Table, 19 * 16 + 8, 15 * 16 + 15, 15 * 16 + 15);
       add(Kind::Stove, 21 * 16 + 8, 10 * 16 + 15, 10 * 16 + 15, 0, true);
       add(Kind::Television,15*16+8,7*16+15,7*16+15,0,true);
       add(Kind::Calendar,13*16+8,5*16+1,5*16+1,0,true);
+      add(Kind::Cabinet,21*16+8,7*16+15,7*16+15);
+      add(Kind::Fireplace,8*16+8,6*16+15,6*16+15);
+      for(int x:{17,21})add(Kind::Chair,x*16+8,16*16+15,16*16+15);
       }
     } else {
       for (int x = 1; x < 32; x += 2) {
-        add(Kind::Tree, x * 16, 29, 29);
-        add(Kind::Tree, x * 16, 382, 382);
+        if(!farm::exit_clearance(s.region,x,1))add(Kind::Tree, x * 16, 29, 29);
+        if(!farm::exit_clearance(s.region,x,22))add(Kind::Tree, x * 16, 382, 382);
       }
       for (int y = 4; y < 22; y += 3) {
         if (y != 12) {
-          add(Kind::Tree, 14, y * 16, y * 16);
-          add(Kind::Tree, 504, y * 16, y * 16);
+          if(!farm::exit_clearance(s.region,0,y))add(Kind::Tree, 14, y * 16, y * 16);
+          if(!farm::exit_clearance(s.region,31,y))add(Kind::Tree, 504, y * 16, y * 16);
         }
       }
       if (s.region == uint8_t(Region::Town)) {
@@ -262,9 +282,11 @@ struct Queue {
           for (int x = 6; x <= 24; x += 6)
             if (x != 12)
               add(Kind::Tree, x * 16 + 8, y * 16 + 13, y * 16 + 13);
-        for (int i = 0; i < 9; ++i)
-          add(Kind::Grass, (5 + i * 3) * 16 + 8, (i % 2 ? 17 : 8) * 16 + 12,
-              (i % 2 ? 17 : 8) * 16 + 12);
+        for (int i = 0; i < 9; ++i) {
+          int x=5+i*3,y=i%2?17:8;
+          if(farm::world_ground(s,x,y)!=farm::Ground::Water)
+            add(Kind::Grass,x*16+8,y*16+12,y*16+12);
+        }
       } else if (s.region == uint8_t(Region::Orchard)) {
         for (int y : {7, 16}) for (int x : {6, 12, 20, 26})
           add(Kind::Tree, x * 16 + 8, y * 16 + 13, y * 16 + 13, 255);
@@ -273,6 +295,7 @@ struct Queue {
         for (int x : {8, 21, 28})
           add(Kind::Grass, x * 16, 14 * 16, 14 * 16);
       } else if (s.region == uint8_t(Region::Lake)) {
+        add(Kind::Table,25*16+8,8*16+15,8*16+15);
         for (int y : {6, 18})
           for (int x : {22, 27}) {
             add(Kind::Tree, x * 16, y * 16, y * 16);
@@ -294,6 +317,7 @@ struct Queue {
         add(Kind::WorldNpc, p.x, p.y, p.y, id + p.dir * 4, true,
             p.frame);
     }
+    signs(s);
     add(Kind::Player, s.px, s.py, s.py);
     (void)v;
   }
@@ -305,6 +329,14 @@ struct Queue {
         art::gait::shadow(r,e.x,e.y,e.id/4,e.growth,&art::villager_rig(e.id%4,e.id/4));
         break;
       case Kind::Counter:art::shadow_strip(r,e.x,e.y,176,1);break;
+      case Kind::Shelf:art::shadow_strip(r,e.x-128,e.y,256,1);break;
+      case Kind::Cabinet:art::shadow_strip(r,e.x-17,e.y,34,1);break;
+      case Kind::Fireplace:art::shadow_strip(r,e.x-20,e.y,40,1);break;
+      case Kind::Chair:art::shadow_strip(r,e.x-8,e.y,16,1);break;
+      case Kind::Signpost:art::shadow_strip(r,e.x-2,e.y,5,1);break;
+      case Kind::Bed:art::shadow_strip(r,e.x-18,e.y,36,1);break;
+      case Kind::Table:
+        art::shadow_strip(r,e.x-16,e.y,7,1);art::shadow_strip(r,e.x+9,e.y,7,1);break;
       case Kind::Television: case Kind::Calendar:
         art::shadow_strip(r,e.x-8,e.y,17,1);break;
       case Kind::Player:
@@ -351,14 +383,17 @@ struct Queue {
         break;
       }
       case Kind::Counter:
-        r.rect(e.x,e.y-18,176,18,art::Ink);r.rect(e.x+2,e.y-16,172,14,farm_palette::Wood);
-        r.rect(e.x,e.y-20,176,5,art::Earth);r.rect(e.x+1,e.y-20,174,1,art::Gold);
-        for(int xx=12;xx<170;xx+=28) {r.rect(e.x+xx,e.y-12,1,9,farm_palette::WoodDark);art::sprite(r,sprites::seed_handbag,e.x+xx-3,e.y-30);}
+        art::world_counter(r,e.x,e.y);
         break;
+      case Kind::Cabinet:art::world_cabinet(r,e.x,e.y);break;
+      case Kind::Fireplace:art::world_fireplace(r,e.x,e.y,v.animation);break;
+      case Kind::Chair:art::world_chair(r,e.x,e.y);break;
+      case Kind::Shelf:art::world_shelf(r,e.x,e.y);break;
+      case Kind::Signpost:art::world_signpost(r,e.x,e.y,farm::portal_heading(farm::Portals[e.id]));break;
       case Kind::Television: case Kind::Calendar:
         art::world_appliance(r,e.x,e.y,e.kind==Kind::Television);break;
       case Kind::Bed:
-        art::world_bed(r, e.x, e.y);
+        art::world_bed(r, e.x, e.y,e.id);
         break;
       case Kind::Stove:
         art::world_stove(r,e.x,e.y);
@@ -389,7 +424,12 @@ struct Queue {
         art::house(r, e.x, e.y, e.id == 1, false);
         if(s.region==uint8_t(farm::Region::Town)&&
           !farm::building_open(s,e.id==1?farm::Region::SeedShop:farm::Region::Lodge)) {
-          r.rect(e.x+24,e.y+43,16,18,art::Earth);r.rect(e.x+25,e.y+44,14,16,farm_palette::Wood);r.rect(e.x+35,e.y+52,2,2,art::Gold);
+          r.line(e.x+36,e.y+44,e.x+40,e.y+49,art::Ink);
+          r.line(e.x+45,e.y+44,e.x+42,e.y+49,art::Ink);
+          r.rect(e.x+33,e.y+49,17,8,art::Ink);
+          r.rect(e.x+34,e.y+50,15,6,farm_palette::WoodDark);
+          r.rect(e.x+35,e.y+50,13,1,art::Gold);
+          r.rect(e.x+39,e.y+52,5,3,art::Cream);
         }
         break;
       case Kind::Fence:
@@ -441,6 +481,9 @@ struct Queue {
       if (!e.interactive)
         continue;
       auto p = placement(e);
+      if(e.kind==Kind::Signpost && bounds(e).intersects({x,y,1,1})) {
+        tx=farm::Portals[e.id].x;ty=farm::Portals[e.id].y;return true;
+      }
       if (e.kind == Kind::Bed && bounds(e).intersects({x, y, 1, 1})) {
         tx = 10;
         ty = 9;
@@ -455,6 +498,10 @@ struct Queue {
       if((e.kind==Kind::Television||e.kind==Kind::Calendar||e.kind==Kind::Table||e.kind==Kind::Counter)&&bounds(e).intersects({x,y,1,1})) {tx=e.kind==Kind::Counter?std::clamp(x/16,12,19):e.x/16;ty=e.y/16;return true;}
       if (!p.sprite)
         continue;
+      if(e.kind==Kind::House) {
+        int door=(s.region?(e.id==1?7:24):6)*16+8;
+        if(!Rect{door-11,e.y+28,23,40}.intersects({x,y,1,1}))continue;
+      }
       if (e.kind == Kind::Tree && faded(e, s) &&
           y < p.y - std::max(3, int(p.sprite->h) / 3))
         continue;

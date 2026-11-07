@@ -26,6 +26,7 @@ p.add_argument('--tools-only',action='store_true')
 p.add_argument('--life-only',action='store_true')
 p.add_argument('--living-only',action='store_true')
 p.add_argument('--atmosphere-only',action='store_true')
+p.add_argument('--redesign-only',action='store_true')
 p.add_argument('--npc-only',action='store_true')
 p.add_argument('--world-only',action='store_true')
 p.add_argument('--layers-only',action='store_true')
@@ -210,6 +211,40 @@ try:
     tap(cw//2,ch-38)
     if args.appearance_only or args.animation_only or args.action_only or args.cultivation_only:time.sleep(2.4)
     capture('02-farm')
+    if args.redesign_only:
+        assert args.fixture_tool
+        def persist():
+            key('ENTER');time.sleep(.25);value=saved();key('ENTER');return value
+        def fixture(label):
+            raw=out/(label+'.save')
+            subprocess.run([str(args.fixture_tool.resolve()),'redesign-'+label,str(raw),str(out/'fixture-unused')],check=True)
+            replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38);time.sleep(.25)
+        key('ENTER');time.sleep(.3);saved();stop()
+        fixture('door');key('RIGHT',.075);time.sleep(.25)
+        side=persist();assert side['region']==0 and side['px']//16==6 and side['py']//16==7,side
+        capture('door-sideways-no-entry');key('UP',.075);time.sleep(.25)
+        assert persist()['region']==4;capture('door-forward-entry');stop()
+        fixture('route');world_tap(6,7);time.sleep(2.5)
+        assert persist()['region']==4;capture('door-tap-approach');stop()
+        fixture('bag');before=persist();key('A')
+        mx,my=(cw-228)//2,(ch-210)//2
+        tap(mx+199,my+133);capture('bag-held-slot-27')
+        command(f'TOUCH DOWN 0 {(mx+199)*scale} {(my+133)*scale}')
+        time.sleep(.05);command(f'TOUCH MOVE 0 {(mx+25)*scale} {(my+105)*scale}')
+        time.sleep(.1);command(f'TOUCH UP 0 {(mx+25)*scale} {(my+105)*scale}');time.sleep(.2)
+        capture('bag-held-slot-14');key('BACK');capture('carrying-from-backpack')
+        carried=persist();assert carried['active']==14 and carried['slots'][14]==12
+        assert carried['slots'][:7]==before['slots'][:7]
+        key('Z',.12);eaten=persist();assert eaten['produce'][0]==2 and eaten['energy']==70,eaten
+        key('UP',.075);key('Z',.12);shipped=persist()
+        assert shipped['produce'][0]==1 and shipped['shipping']==16 and shipped['energy']==70,shipped
+        key('Z',.12);last=persist();assert last['produce'][0]==0 and last['shipping']==32 and last['active']==255,last
+        capture('single-item-shipping');stop()
+        for label in ['hud-left','hud-right','hud-belt','soil']:
+            fixture(label);capture(label);stop()
+        (out/'redesign-report.json').write_text(json.dumps({'door_sideways':'stayed on farm','forward_and_tap':'entered home','bag':'slot27 to slot14 without hotbar rearrangement','eat':'one item per press','ship':'one item per press, empty stack deselected','hud':['left','right','belt'],'tilled_ground':'dry and wet cropped patches'},indent=2)+'\n')
+        print('PASS: actual signed simulator directional and intentional doors, backpack carrying/drag/eating/shipping, HUD occlusion and organic tilled ground')
+        raise SystemExit(0)
     if args.atmosphere_only:
         assert args.fixture_tool
         key('ENTER');time.sleep(.3);saved();stop()

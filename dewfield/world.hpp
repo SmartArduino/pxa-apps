@@ -19,8 +19,8 @@ inline constexpr Portal Portals[] = {
     {Region::Forest, Region::Farm, 29, 12, 3, 18},
     {Region::Town, Region::Forest, 15, 21, 15, 3},
     {Region::Forest, Region::Town, 15, 2, 15, 20},
-    {Region::Forest, Region::Lake, 5, 12, 28, 12, true},
-    {Region::Lake, Region::Forest, 29, 12, 6, 12},
+    {Region::Forest, Region::Lake, 2, 12, 28, 12, true},
+    {Region::Lake, Region::Forest, 29, 12, 3, 12},
     {Region::Farm, Region::Home, 6, 7, 16, 18},
     {Region::Home, Region::Farm, 16, 20, 6, 8},
     {Region::Forest, Region::Orchard, 22, 21, 16, 3},
@@ -53,7 +53,13 @@ const char *region_name(Region region, bool en = false);
 const char *npc_name(int id, bool en = false);
 const char *npc_job(int id, bool en = false);
 Ground world_ground(const State &s, int x, int y);
+bool road_tile(uint8_t region,int x,int y);
+bool exit_clearance(uint8_t region,int x,int y);
 const Portal *portal_at(const State &s, int x, int y);
+int portal_heading(const Portal &portal);
+Point portal_approach(const Portal &portal);
+bool crossed_portal(const Portal &portal, int from_x, int from_y,
+                    int to_x, int to_y, int heading);
 bool travel(State &s, const Portal &portal);
 int next_portal(const State &s, Region destination);
 NpcPose npc_pose(const State &s, int id, int subminute_ms=0);

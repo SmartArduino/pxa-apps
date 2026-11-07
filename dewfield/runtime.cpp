@@ -15,6 +15,7 @@
 #include "resample.hpp"
 #include "native_raster.hpp"
 #include "ui_layout.hpp"
+#include "hud_compositor.hpp"
 #include "pacing.hpp"
 #include "text.hpp"
 #include <algorithm>
@@ -71,6 +72,7 @@ uint64_t stage_time[unsigned(DrawStage::Count)]{}, stage_at;
 uint64_t perf_submit_us, perf_acquire_us;
 uint32_t perf_blocked;
 dewfield_raster::NativeRaster native_raster;
+dewfield_hud::Backdrop hud_backdrop;
 uint64_t prepared_started;
 int display_w = 320, display_h = 240;
 uint32_t pointer_density = 65536;
@@ -813,6 +815,16 @@ void scene_surface(bool enabled) {
   low_resolution_scene = enabled;
   if (surface && !surface_inflight && request_surface() < 0)
     __builtin_trap();
+}
+void begin_hud(int x,int y,int w,int h,int opacity) {
+  native_raster.flush();
+  hud_backdrop.begin(canvas,viewport.width,viewport.height,
+    x*viewport.width/WIDTH,y*viewport.height/HEIGHT,
+    (x+w)*viewport.width/WIDTH,(y+h)*viewport.height/HEIGHT,opacity);
+}
+void end_hud() {
+  native_raster.flush();
+  hud_backdrop.end(canvas,viewport.width);
 }
 void sprite(int x, int y, const sprites::Sprite &s) {
   if (!canvas)

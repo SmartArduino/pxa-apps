@@ -71,9 +71,10 @@ int main() {
   // A locked bridge cannot teleport, consume materials or accidentally unlock.
   s.region = 2;
   s.story = 2;
-  stand(s, 6, 12);
-  auto p = portal_at(s, 5, 12);
+  const Portal *p=nullptr;
+  for(const auto&exit:Portals)if(exit.from==Region::Forest&&exit.to==Region::Lake)p=&exit;
   assert(p && p->bridge);
+  stand(s,p->x,p->y);
   auto before = s;
   assert(!travel(s, *p) && s.region == before.region && s.wood == before.wood);
   // Stations and short walks never land villagers in a wall or water.

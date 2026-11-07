@@ -6,6 +6,8 @@ static void arrive(farm::Region region, int x, int y, bool use = false) {
   go_to(region, x, y, use);
   for (int i = 0; i < 5000 && (moving || route); ++i)
     game::tick(33);
+  if(state.region!=unsigned(region)||moving||route)
+    std::fprintf(stderr,"Journey target=%u current=%u pos=%u,%u target=%d,%d minute=%u page=%u route=%d moving=%d portal=%d front=%d notice=%s\n",unsigned(region),state.region,state.px,state.py,targetx,targety,state.minute,unsigned(page),route,moving,route_portal,approaching_portal,toast);
   assert(state.region == unsigned(region) && !moving && !route);
 }
 int main() {

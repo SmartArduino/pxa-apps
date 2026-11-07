@@ -34,6 +34,8 @@ constexpr uint16_t ACCENT = rgb(56, 189, 248), GOOD = rgb(74, 222, 128);
 constexpr uint16_t WARN = rgb(251, 191, 36), BAD = rgb(248, 113, 113);
 // Drawing is clipped to the canvas. Call these only from game::draw().
 void begin_ui();
+void begin_hud(int x,int y,int width,int height,int opacity);
+void end_hud();
 // Keep title art at full resolution; game scenes use integer Host scaling.
 void scene_surface(bool enabled);
 void switch_language();

@@ -121,10 +121,14 @@ int main() {
         assert(a.earth(x * 16 + 15, y * 16 + yy));
       }
   // Different earth materials join without a grass line.
+  static Map joined_earth;
+  for(int y=9;y<17;++y)for(int x=9;x<20;++x)
+    joined_earth.kinds[y*farm::MapW+x]=x==9?Path:Dirt;
+  joined_earth.rasterize();
   for (int y = 9; y < 17; ++y)
     for (int yy = 4; yy < 12; ++yy) {
-      assert(a.material(159, y * 16 + yy) == Path);
-      assert(a.material(160, y * 16 + yy) == Dirt);
+      assert(joined_earth.material(159, y * 16 + yy) == Path);
+      assert(joined_earth.material(160, y * 16 + yy) == Dirt);
     }
   for (int y = 16; y < 20; ++y)
     for (int x = 25; x < 29; ++x)
