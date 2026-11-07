@@ -47,6 +47,7 @@ struct View {
   uint32_t hit_ms = 0;
   bool fishing = false;
   int subminute_ms=0;
+  art::tool_anim::Target tool_target{};
 };
 struct Placement {
   const sprites::Sprite *sprite = nullptr;
@@ -456,7 +457,7 @@ struct Queue {
         break;
       case Kind::Player:
         art::person(r, e.x, e.y, v.direction, v.frame, false, v.swing, v.tool,
-                    false, v.held_item, v.grade, v.seed, v.fishing);
+                    false, v.held_item, v.grade, v.seed, v.fishing,v.tool_target);
         break;
       }
       if ((e.kind == Kind::Tree || e.kind == Kind::Rock ||

@@ -28,6 +28,7 @@ p.add_argument('--living-only',action='store_true')
 p.add_argument('--atmosphere-only',action='store_true')
 p.add_argument('--redesign-only',action='store_true')
 p.add_argument('--discoveries-only',action='store_true')
+p.add_argument('--actors-only',action='store_true')
 p.add_argument('--npc-only',action='store_true')
 p.add_argument('--world-only',action='store_true')
 p.add_argument('--layers-only',action='store_true')
@@ -214,6 +215,27 @@ try:
     tap(cw//2,ch-38)
     if args.appearance_only or args.animation_only or args.action_only or args.cultivation_only:time.sleep(2.4)
     capture('02-farm')
+    if args.actors_only:
+        assert args.fixture_tool
+        key('ENTER');time.sleep(.3);saved();stop()
+        results=[]
+        for direction,name in enumerate(['north','east','south','west']):
+            raw=out/(name+'.save');subprocess.run([str(args.fixture_tool.resolve()),'actors-'+str(direction),str(raw),str(out/'unused')],check=True)
+            replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38);time.sleep(.25)
+            key(['UP','RIGHT','DOWN','LEFT'][direction],.025)
+            command('KEY_DOWN Z');time.sleep(.02);command('KEY_UP Z')
+            frames=[]
+            for frame in range(12):
+                capture('axe-'+name+'-'+str(frame));frames.append(Image.open(out/('axe-'+name+'-'+str(frame)+'.png')).convert('RGB'));time.sleep(.025)
+            key('ENTER');time.sleep(.3);actual=saved();assert actual['damage'][7]==2 and actual['energy']==78 and actual['wood']==0,actual
+            frames[0].save(out/('axe-'+name+'.gif'),save_all=True,append_images=frames[1:],duration=70,loop=0)
+            results.append(actual);stop()
+        raw=out/'villagers.save';subprocess.run([str(args.fixture_tool.resolve()),'actors-villagers',str(raw),str(out/'unused')],check=True)
+        replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38);time.sleep(.3);capture('four-villagers')
+        key('S');key('W');capture('villagers-journal')
+        (out/'actors-report.json').write_text(json.dumps(results,indent=2)+'\n')
+        print('PASS: real signed four-heading axe animation, contact damage/energy, independent villager appearance and people journal')
+        raise SystemExit(0)
     if args.discoveries_only:
         assert args.fixture_tool
         key('ENTER');time.sleep(.3);saved();stop()

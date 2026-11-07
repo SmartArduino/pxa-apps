@@ -9,6 +9,7 @@ from PIL import Image, ImageDraw
 import json
 import hashlib
 import colorsys
+import math
 
 ROOT=Path(__file__).resolve().parents[1]
 SOURCE=ROOT/'art/world-v2'
@@ -104,7 +105,9 @@ def contact_profile(im,name):
     return (ax,ay),spans
 
 def compile_rig(out,name,im,runs,colors,shape=None):
-    direction=name if not name.startswith("villager_") else ("south","east","north","west")[int(name[-1])]
+    npc=int(name.split('_')[1]) if name.startswith('villager_') else -1
+    direction=name if npc<0 else ('south','east','north','west')[int(name[-1])]
+    hip=26 if npc in (0,3) else 23
     # Bind the neutral standing artwork to four independent limbs. Parts
     # reference the original RGB565 pixel array; no PNGs or runtime masks.
     assert im.size==(24,32), (name,im.size)
@@ -113,19 +116,20 @@ def compile_rig(out,name,im,runs,colors,shape=None):
     for y,x,count,offset in runs:
         for i in range(count):
             xx=x+i;lookup[xx,y]=offset+i;r,g,b,a=pixels[xx,y]
-            denim=b>r*1.08 and b>g*.95
+            denim=b>r*1.08 and b>g*.95 if npc<0 else False
             if 16<=y<=22:
-                if denim:cloth.append(colors[offset+i])
-                elif g>r*.85 and g>b*1.2:shirt.append(colors[offset+i])
+                if denim or (npc>=0 and 10<=xx<=14):cloth.append(colors[offset+i])
+                elif g>r*.85 and g>b*1.2 or npc>=0:shirt.append(colors[offset+i])
             arm=None
             end=24 if side else 23
             if 16<=y<=end and not denim:
                 if side:
-                    if (direction=='east' and xx<=12) or (direction=='west' and xx>=12):arm=0
+                    if npc<0 and ((direction=='east' and xx<=12) or (direction=='west' and xx>=12)):arm=0
+                    elif npc>=0 and 16<=y<=23 and ((direction=='east' and xx<=12) or (direction=='west' and xx>=11)):arm=0
                 elif xx<=8:arm=0
                 elif xx>=15:arm=1
             if arm is not None:parts['arm'+str(arm)].add((xx,y))
-            elif y>=23:
+            elif y>=hip:
                 parts['leg0' if side or xx<12 else 'leg1'].add((xx,y))
             else:parts['body'].add((xx,y))
     if side:parts['arm1']=parts['arm0'];parts['leg1']=parts['leg0']
@@ -150,7 +154,7 @@ def compile_rig(out,name,im,runs,colors,shape=None):
     cloth_color=Counter(cloth).most_common(1)[0][0]
     shirt_color=Counter(shirt).most_common(1)[0][0]
     ends=[max(y for x,y in parts['arm'+str(i)]) for i in range(2)]
-    out.write(f'inline constexpr Rig {name}_rig={{&{name}_body,{{&{name}_arm0_bone,&{name}_arm1_bone}},{{&{name}_leg0_bone,&{name}_leg1_bone}},{{{ends[0]},{ends[1]}}},{cloth_color},{shirt_color},{str(side).lower()}}};\n')
+    out.write(f'inline constexpr Rig {name}_rig={{&{name}_body,{{&{name}_arm0_bone,&{name}_arm1_bone}},{{&{name}_leg0_bone,&{name}_leg1_bone}},{{{ends[0]},{ends[1]}}},{cloth_color},{shirt_color},{str(side).lower()},{hip}}};\n')
 
 def compile_sprite(out,name,im,shape=None):
     im=grade_sprite(im,name)
@@ -257,30 +261,33 @@ def main():
         pixels=Image.new('RGB',(len(samples),1));pixels.putdata(samples)
         CHARACTER_PALETTE=pixels.quantize(colors=32,method=Image.Quantize.MEDIANCUT,dither=Image.Dither.NONE)
         for name,im in actors.items():output[name]=compile_sprite(out,name,im)
-        villager=actors['south'].copy();px=villager.load()
-        for yy in range(14,32):
-            for xx in range(24):
-                r,g,b,a=px[xx,yy]
-                if b>r*1.08 and b>g*.95:px[xx,yy]=(min(255,int(b*1.2)),int(g*.75),int(b*.85),a)
         CHARACTER_PALETTE=None
-        output['villager']=compile_sprite(out,'villager',villager)
-        # Villagers share the farmer silhouette, direction registration and
-        # limb split. Offline dyes retain luminance, outlines and skin shading.
-        dyes=[(.78,1.08,.83),(1.05,.78,.58),(.72,.93,1.18),(1.02,.74,.90)]
+        # Independent identities, one four-view palette and the same gait phase.
+        sheet=Image.open(SOURCE/'villagers-v2.png').convert('RGBA')
         for row in range(4):
-            for col,direction in enumerate(('south','east','north','west')):
-                im=actors[direction].copy();px=im.load()
-                for yy in range(32):
-                    for xx in range(24):
-                        rr,gg,bb,aa=px[xx,yy]
-                        if aa<160:continue
-                        if 14<=yy<=26 and bb>rr*.95 and bb>gg*.8:
-                            lum=(rr+gg+bb)/3;d=dyes[row]
-                            px[xx,yy]=(int(min(255,lum*d[0])),int(min(255,lum*d[1])),int(min(255,lum*d[2])),aa)
-                        elif row==3 and yy<14 and rr>gg and rr<170:
-                            lum=int((rr+gg+bb)/3+45);px[xx,yy]=(lum,lum,min(255,lum+4),aa)
+            poses=[]
+            for col in range(4):
+                cell=sheet.crop((col*sheet.width//4,row*sheet.height//4,(col+1)*sheet.width//4,(row+1)*sheet.height//4))
+                bounds=cell.getchannel('A').point(lambda a:255 if a>=160 else 0).getbbox()
+                poses.append(cell.crop(bounds))
+            height=26 if row==3 else 28
+            scale=height/poses[0].height
+            samples=[]
+            registered=[]
+            for col,body in enumerate(poses):
+                w,h=round(body.width*scale),round(body.height*scale)
+                canvas=Image.new('RGBA',(24,32))
+                canvas.paste(body.resize((w,h),Image.Resampling.NEAREST),(12-w//2,30-h))
+                registered.append(canvas)
+                samples.extend(px[:3] for px in grade_sprite(canvas,f'villager_{row}_{col}',False).getdata() if px[3]>=160)
+            colors=Image.new('RGB',(len(samples),1));colors.putdata(samples)
+            CHARACTER_PALETTE=colors.quantize(colors=32,method=Image.Quantize.MEDIANCUT,dither=Image.Dither.NONE)
+            for col,im in enumerate(registered):
                 name=f'villager_{row}_{col}'
-                output[name]=compile_sprite(out,name,im,actors[direction])
+                output[name]=compile_sprite(out,name,im)
+        CHARACTER_PALETTE=None
+        out.write('inline constexpr const Sprite &villager=villager_3_0;\n')
+        output['villager']={**output['villager_3_0'],'alias':'villager_3_0'}
         atlas=Image.open(SOURCE/'props.png').convert('RGBA')
         props=[('hoe',(20,20)),('axe',(19,21)),('pick',(22,21)),('can',(23,21)),('seeds',(16,20)),('rod',(21,25)),('basket',(22,19)),('chest',(24,21)),('rocks',(23,18)),('grass',(18,20)),('well',(32,33)),('board',(27,30)),('logs',(20,17)),('stones',(20,16)),('sprinkler',(16,18)),('fish',(22,15))]
         for i,(name,size)in enumerate(props):
@@ -304,27 +311,50 @@ def main():
                         d.line((18,17,25,17),fill=shine);d.rectangle((21,20,23,23),fill=light)
                     else:
                         length=2 if name=='rod' else 7
-                        d.line((22,23,22,length),fill=ink,width=3)
-                        d.line((22,22,22,length+1),fill=wood,width=1)
+                        handle=(22,23,30,12) if name=='axe' else (22,23,22,length)
+                        d.line(handle,fill=ink,width=3)
+                        d.line(handle,fill=wood,width=1)
                         d.point((22,18),fill=light)
                         if name=='hoe':
                             d.polygon([(16,5),(28,5),(28,9),(25,10),(16,8)],fill=ink)
                             d.rectangle((17,6,27,8),fill=metal);d.line((17,6,27,6),fill=shine)
                         elif name=='axe':
-                            d.polygon([(21,4),(29,3),(32,7),(30,12),(22,10)],fill=ink)
-                            d.polygon([(23,5),(29,4),(31,7),(29,10),(23,9)],fill=metal)
-                            d.line((30,5,30,9),fill=shine)
+                            # The polished convex edge is EAST; the dark poll
+                            # remains on the shaft side. The grip is (22,22).
+                            d.polygon([(28,10),(33,9),(36,11),(37,14),(36,18),(32,19),(29,15)],fill=ink)
+                            d.polygon([(30,11),(33,10),(35,12),(36,14),(35,17),(32,17),(30,14)],fill=metal)
+                            d.line((35,12,36,14,35,17),fill=shine)
                         elif name=='pick':
-                            d.polygon([(13,10),(16,5),(23,4),(29,6),(32,10),(26,8),(19,8)],fill=ink)
-                            d.line((15,8,18,6,25,6,30,8),fill=metal,width=2)
-                            d.line((18,5,25,5),fill=shine)
+                            # One pointed working tooth leads NORTH. The
+                            # rounded bridge/back of the pick never hits first.
+                            d.polygon([(13,12),(15,8),(19,6),(22,2),(24,6),(28,8),(31,12),(25,10),(21,9),(17,10)],fill=ink)
+                            d.line((15,10,20,7,22,3,23,7,28,10),fill=metal,width=2)
+                            d.line((21,5,22,3,23,6),fill=shine)
                         else:
-                            d.line((22,2,24,1,25,12),fill=shine,width=1)
+                            d.line((22,2,24,1),fill=shine,width=1)
                             d.rectangle((20,16,24,19),fill=ink);d.rectangle((21,17,23,18),fill=metal)
-                    for angle in range(8):
-                        pose=canvas.rotate(-45*angle,resample=Image.Resampling.NEAREST,center=(22.5,22.5))
-                        key=f'held_{name}{grade}_{angle}'
-                        output[key]=compile_sprite(out,key,pose)
+                    tip=(36,14) if name=='axe' else (22,3) if name=='pick' else (22,6) if name=='hoe' else (22,7) if name=='can' else (24,1)
+                    second=(27,19) if name=='axe' else (22,17)
+                    face=(16,0) if name=='axe' else (0,-16)
+                    for mirror in (False,True):
+                        keys=[];geometry=[]
+                        for angle in range(16):
+                            a=(-angle if mirror else angle)*math.pi/8
+                            pose=canvas.rotate(-a*180/math.pi,resample=Image.Resampling.NEAREST,center=(22.5,22.5))
+                            if mirror:
+                                flipped=pose.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+                                pose=Image.new('RGBA',(44,44));pose.paste(flipped,(1,0))
+                            def point(px,py):
+                                dx,dy=px-22,py-22
+                                x=round(dx*math.cos(a)-dy*math.sin(a));y=round(dx*math.sin(a)+dy*math.cos(a))
+                                return (-x if mirror else x),y
+                            tx,ty=point(*tip);sx,sy=point(*second)
+                            fx,fy=point(22+face[0],22+face[1])
+                            key=f'held_{name}{grade}_{"mirror_" if mirror else ""}{angle}'
+                            output[key]=compile_sprite(out,key,pose);keys.append(key)
+                            geometry.append((tx,ty,sx,sy,fx,fy))
+                        label=f'held_{name}{grade}_{"mirrors" if mirror else "frames"}'
+                        out.write(f'inline constexpr HeldFrame {label}[]={{'+','.join('{&'+key+','+','.join(map(str,g))+'}' for key,g in zip(keys,geometry))+'};\n')
         scenery=Image.open(SOURCE/'scenery-v1.png').convert('RGBA')
         bands=[(0,525),(550,850),(875,1190)]
         assets=[('birch',(40,64)),('pine',(44,64)),('orchard',(54,60)),
@@ -374,7 +404,7 @@ def main():
         d.rectangle((4,2,7,3),fill=(131,85,42,255));d.line((3,4,3,6),fill=(158,104,52,255))
         output['tree_stump']=compile_sprite(out,'tree_stump',im)
         out.write('}\n')
-    provenance={"compiler":"tools/build_sprites.py","encoding":"RGB565 contiguous opaque spans; thresholded source alpha; nearest-grid sampling; title-matched amber/cream lighting and olive foliage; 24/32/40-color median-cut palette","walk_frames":8,"character_scaling":"28px standing height, same uniform scale across all 20 authored views and poses, head centre / boot baseline registration","gait":"neutral-art limb binding; eight distance-driven phases; both arms exactly opposite their matching legs; independent planted/swinging feet","sprites":output,"sources":{p.name:hashlib.sha256(p.read_bytes()).hexdigest()for p in SOURCE.glob('*.png')}}
+    provenance={"compiler":"tools/build_sprites.py","encoding":"RGB565 contiguous opaque spans; thresholded source alpha; nearest-grid sampling; title-matched amber/cream lighting and olive foliage; 24/32/40-color median-cut palette","walk_frames":8,"character_scaling":"28px standing height, same uniform scale across all 20 authored views and poses, head centre / boot baseline registration; four independent villagers with per-person palette and skirt-aware rigs","gait":"neutral-art limb binding; eight distance-driven phases; both arms exactly opposite their matching legs; independent planted/swinging feet","sprites":output,"sources":{p.name:hashlib.sha256(p.read_bytes()).hexdigest()for p in SOURCE.glob('*.png')}}
     (SOURCE/'compiled.json').write_text(json.dumps(provenance,indent=2)+'\n')
     print(json.dumps(output,indent=2))
 

@@ -226,8 +226,11 @@ NpcPose npc_pose(const State &s, int id, int subminute_ms) {
     r=Region::Lodge;x=10+id*3;y=12;
   }
   int phase=((s.minute+id*5)%32)*500+std::clamp(subminute_ms,0,499);
+  // At the gathering, leave room between the four assigned places. A full
+  // two-tile stroll could otherwise put two villagers on the same spot.
+  int stroll=s.story>=5&&r==Region::Town&&s.minute>=1020?12:32;
   bool forward=phase<1000,backward=phase>=8000&&phase<9000;
-  int offset=phase<1000?phase*32/1000:phase<8000?32:phase<9000?(9000-phase)*32/1000:0;
+  int offset=phase<1000?phase*stroll/1000:phase<8000?stroll:phase<9000?(9000-phase)*stroll/1000:0;
   State probe=s;probe.region=uint8_t(r);
   bool safe=true;
   for(int step=0;step<=2;++step) {
@@ -235,7 +238,7 @@ NpcPose npc_pose(const State &s, int id, int subminute_ms) {
   }
   bool moving=safe&&(forward||backward);
   if(!safe)offset=0;
-  int distance=forward?offset:32-offset;
+  int distance=forward?offset:stroll-offset;
   return {r,x*16+8+offset,y*16+12,moving?(forward?1:3):2,moving,moving?1+(distance/4)%8:0};
 }
 int npc_at(const State &s, int x, int y) {

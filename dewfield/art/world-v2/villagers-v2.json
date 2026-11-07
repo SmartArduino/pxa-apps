@@ -1,0 +1,10 @@
+{
+  "tool": "image_gen.imagegen built-in",
+  "asset": "villagers-v2.png",
+  "references": [
+    "farmer-gba-v5.png",
+    "villagers-v1.png"
+  ],
+  "layout": "four NPC rows Xiaohe, Alan, Cheng, Granny Lin; south/east/north/west columns",
+  "design": "Distinct braid/apron, carpenter shirt/belt/stubble, fisher cap/teal hair, gray bun/shawl/skirt. Same compact overhead pixel language and registered 28px bodies; shared distance-driven gait rig."
+}

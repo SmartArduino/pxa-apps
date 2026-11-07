@@ -15,6 +15,24 @@ int main(int argc, char **argv) {
   std::memset(s.cleared, 1, sizeof(s.cleared));
   for (auto &p : s.plots)
     p = {};
+  if(!std::strncmp(argv[1],"actors-",7)) {
+    const char *mode=argv[1]+7;s.story=5;s.visited=255;s.day=12;s.minute=1110;s.energy=80;
+    s.px=15*16+8;s.py=11*16+8;
+    if(!std::strcmp(mode,"villagers")) {
+      s.region=unsigned(farm::Region::Town);s.day=40;s.minute=1030;s.met=15;
+      for(auto &bond:s.bonds)bond=10;
+      s.show_joystick=s.show_action=false;farm::select_slot(s,-1);
+    }
+    else {
+      s.minute=600;int d=std::atoi(mode);assert(d>=0&&d<4);int dx=(d==1)-(d==3),dy=(d==2)-(d==0);
+      s.px=(19-dx)*16+8;s.py=(14-dy)*16+8;s.cleared[7]=0;s.tree_age[7]=5;s.tool_grade[4]=1;
+      farm::select_slot(s,4);
+    }
+    uint8_t bytes[farm::SaveBytes];assert(farm::encode(s,bytes,sizeof(bytes))==sizeof(bytes));
+    farm::State checked;assert(farm::decode(checked,bytes,sizeof(bytes)));
+    FILE*f=std::fopen(argv[2],"wb");assert(f&&std::fwrite(bytes,1,sizeof(bytes),f)==sizeof(bytes));std::fclose(f);
+    f=std::fopen(argv[3],"w");assert(f);std::fclose(f);return 0;
+  }
   if(!std::strncmp(argv[1],"discoveries-",12)) {
     const char *mode=argv[1]+12;s.day=12;s.minute=600;s.energy=80;s.harvested=10;
     s.px=23*16+8;s.py=15*16+8;

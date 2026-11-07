@@ -2,7 +2,7 @@
   "compiler": "tools/build_sprites.py",
   "encoding": "RGB565 contiguous opaque spans; thresholded source alpha; nearest-grid sampling; title-matched amber/cream lighting and olive foliage; 24/32/40-color median-cut palette",
   "walk_frames": 8,
-  "character_scaling": "28px standing height, same uniform scale across all 20 authored views and poses, head centre / boot baseline registration",
+  "character_scaling": "28px standing height, same uniform scale across all 20 authored views and poses, head centre / boot baseline registration; four independent villagers with per-person palette and skirt-aware rigs",
   "gait": "neutral-art limb binding; eight distance-driven phases; both arms exactly opposite their matching legs; independent planted/swinging feet",
   "sprites": {
     "oak": {
@@ -341,155 +341,131 @@
       ],
       "contact_spans": 7
     },
-    "villager": {
-      "width": 24,
-      "height": 32,
-      "opaque_pixels": 336,
-      "spans": 29,
-      "colors": 30,
-      "ground_anchor": [
-        12,
-        30
-      ],
-      "contact_spans": 8
-    },
     "villager_0_0": {
       "width": 24,
       "height": 32,
-      "opaque_pixels": 336,
-      "spans": 29,
-      "colors": 32,
+      "opaque_pixels": 314,
+      "spans": 31,
+      "colors": 29,
       "ground_anchor": [
         12,
         30
       ],
-      "contact_spans": 8
+      "contact_spans": 9
     },
     "villager_0_1": {
       "width": 24,
       "height": 32,
-      "opaque_pixels": 275,
+      "opaque_pixels": 280,
       "spans": 28,
-      "colors": 30,
+      "colors": 29,
       "ground_anchor": [
         12,
         30
       ],
-      "contact_spans": 5
+      "contact_spans": 6
     },
     "villager_0_2": {
       "width": 24,
       "height": 32,
-      "opaque_pixels": 347,
-      "spans": 29,
+      "opaque_pixels": 308,
+      "spans": 28,
       "colors": 29,
       "ground_anchor": [
         12,
         30
       ],
-      "contact_spans": 8
+      "contact_spans": 6
     },
     "villager_0_3": {
       "width": 24,
       "height": 32,
-      "opaque_pixels": 278,
-      "spans": 27,
-      "colors": 31,
+      "opaque_pixels": 272,
+      "spans": 28,
+      "colors": 29,
       "ground_anchor": [
         12,
         30
       ],
-      "contact_spans": 5
+      "contact_spans": 7
     },
     "villager_1_0": {
       "width": 24,
       "height": 32,
-      "opaque_pixels": 336,
-      "spans": 29,
-      "colors": 32,
+      "opaque_pixels": 304,
+      "spans": 33,
+      "colors": 29,
       "ground_anchor": [
         12,
         30
       ],
-      "contact_spans": 8
+      "contact_spans": 9
     },
     "villager_1_1": {
       "width": 24,
       "height": 32,
-      "opaque_pixels": 275,
-      "spans": 28,
-      "colors": 31,
+      "opaque_pixels": 247,
+      "spans": 29,
+      "colors": 27,
       "ground_anchor": [
         12,
         30
       ],
-      "contact_spans": 5
+      "contact_spans": 6
     },
     "villager_1_2": {
       "width": 24,
       "height": 32,
-      "opaque_pixels": 347,
-      "spans": 29,
+      "opaque_pixels": 313,
+      "spans": 33,
       "colors": 29,
       "ground_anchor": [
         12,
         30
       ],
-      "contact_spans": 8
+      "contact_spans": 9
     },
     "villager_1_3": {
       "width": 24,
       "height": 32,
-      "opaque_pixels": 278,
-      "spans": 27,
+      "opaque_pixels": 265,
+      "spans": 29,
       "colors": 29,
       "ground_anchor": [
         12,
         30
       ],
-      "contact_spans": 5
+      "contact_spans": 6
     },
     "villager_2_0": {
       "width": 24,
       "height": 32,
-      "opaque_pixels": 336,
-      "spans": 29,
+      "opaque_pixels": 304,
+      "spans": 32,
       "colors": 32,
       "ground_anchor": [
         12,
         30
       ],
-      "contact_spans": 8
+      "contact_spans": 9
     },
     "villager_2_1": {
       "width": 24,
       "height": 32,
-      "opaque_pixels": 275,
+      "opaque_pixels": 245,
       "spans": 28,
       "colors": 31,
       "ground_anchor": [
         12,
         30
       ],
-      "contact_spans": 5
+      "contact_spans": 6
     },
     "villager_2_2": {
       "width": 24,
       "height": 32,
-      "opaque_pixels": 347,
+      "opaque_pixels": 299,
       "spans": 29,
-      "colors": 29,
-      "ground_anchor": [
-        12,
-        30
-      ],
-      "contact_spans": 8
-    },
-    "villager_2_3": {
-      "width": 24,
-      "height": 32,
-      "opaque_pixels": 278,
-      "spans": 27,
       "colors": 30,
       "ground_anchor": [
         12,
@@ -497,53 +473,78 @@
       ],
       "contact_spans": 5
     },
-    "villager_3_0": {
+    "villager_2_3": {
       "width": 24,
       "height": 32,
-      "opaque_pixels": 336,
-      "spans": 29,
-      "colors": 32,
-      "ground_anchor": [
-        12,
-        30
-      ],
-      "contact_spans": 8
-    },
-    "villager_3_1": {
-      "width": 24,
-      "height": 32,
-      "opaque_pixels": 275,
+      "opaque_pixels": 241,
       "spans": 28,
-      "colors": 32,
-      "ground_anchor": [
-        12,
-        30
-      ],
-      "contact_spans": 5
-    },
-    "villager_3_2": {
-      "width": 24,
-      "height": 32,
-      "opaque_pixels": 347,
-      "spans": 29,
-      "colors": 32,
-      "ground_anchor": [
-        12,
-        30
-      ],
-      "contact_spans": 8
-    },
-    "villager_3_3": {
-      "width": 24,
-      "height": 32,
-      "opaque_pixels": 278,
-      "spans": 27,
       "colors": 31,
       "ground_anchor": [
         12,
         30
       ],
+      "contact_spans": 6
+    },
+    "villager_3_0": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 273,
+      "spans": 26,
+      "colors": 30,
+      "ground_anchor": [
+        12,
+        30
+      ],
       "contact_spans": 5
+    },
+    "villager_3_1": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 265,
+      "spans": 26,
+      "colors": 30,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 6
+    },
+    "villager_3_2": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 265,
+      "spans": 26,
+      "colors": 29,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 5
+    },
+    "villager_3_3": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 265,
+      "spans": 26,
+      "colors": 31,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 7
+    },
+    "villager": {
+      "width": 24,
+      "height": 32,
+      "opaque_pixels": 273,
+      "spans": 26,
+      "colors": 30,
+      "ground_anchor": [
+        12,
+        30
+      ],
+      "contact_spans": 5,
+      "alias": "villager_3_0"
     },
     "hoe": {
       "width": 20,
@@ -572,7 +573,7 @@
     "held_hoe0_1": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 109,
+      "opaque_pixels": 103,
       "spans": 22,
       "colors": 5,
       "ground_anchor": [
@@ -584,8 +585,8 @@
     "held_hoe0_2": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 103,
-      "spans": 13,
+      "opaque_pixels": 109,
+      "spans": 22,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -596,8 +597,8 @@
     "held_hoe0_3": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 109,
-      "spans": 22,
+      "opaque_pixels": 103,
+      "spans": 19,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -609,7 +610,7 @@
       "width": 44,
       "height": 44,
       "opaque_pixels": 103,
-      "spans": 20,
+      "spans": 13,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -618,6 +619,18 @@
       "contact_spans": 0
     },
     "held_hoe0_5": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 103,
+      "spans": 18,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_6": {
       "width": 44,
       "height": 44,
       "opaque_pixels": 109,
@@ -629,7 +642,67 @@
       ],
       "contact_spans": 0
     },
-    "held_hoe0_6": {
+    "held_hoe0_7": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 103,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_8": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 103,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_9": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 103,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_10": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 109,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_11": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 103,
+      "spans": 19,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_12": {
       "width": 44,
       "height": 44,
       "opaque_pixels": 103,
@@ -641,10 +714,226 @@
       ],
       "contact_spans": 0
     },
-    "held_hoe0_7": {
+    "held_hoe0_13": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 103,
+      "spans": 18,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_14": {
       "width": 44,
       "height": 44,
       "opaque_pixels": 109,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_15": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 103,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_mirror_0": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 103,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_mirror_1": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 103,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_mirror_2": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 109,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_mirror_3": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 103,
+      "spans": 18,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_mirror_4": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 103,
+      "spans": 13,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_mirror_5": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 103,
+      "spans": 19,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_mirror_6": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 109,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_mirror_7": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 103,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_mirror_8": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 103,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_mirror_9": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 103,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_mirror_10": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 109,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_mirror_11": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 103,
+      "spans": 18,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_mirror_12": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 103,
+      "spans": 13,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_mirror_13": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 103,
+      "spans": 19,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_mirror_14": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 109,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_hoe0_mirror_15": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 103,
       "spans": 22,
       "colors": 5,
       "ground_anchor": [
@@ -668,8 +957,8 @@
     "held_axe0_0": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 123,
-      "spans": 23,
+      "opaque_pixels": 115,
+      "spans": 20,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -680,8 +969,8 @@
     "held_axe0_1": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 137,
-      "spans": 23,
+      "opaque_pixels": 115,
+      "spans": 20,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -692,8 +981,8 @@
     "held_axe0_2": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 123,
-      "spans": 12,
+      "opaque_pixels": 115,
+      "spans": 17,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -704,8 +993,8 @@
     "held_axe0_3": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 137,
-      "spans": 23,
+      "opaque_pixels": 115,
+      "spans": 17,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -716,8 +1005,8 @@
     "held_axe0_4": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 123,
-      "spans": 23,
+      "opaque_pixels": 115,
+      "spans": 18,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -728,8 +1017,8 @@
     "held_axe0_5": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 137,
-      "spans": 23,
+      "opaque_pixels": 115,
+      "spans": 20,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -740,8 +1029,8 @@
     "held_axe0_6": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 123,
-      "spans": 12,
+      "opaque_pixels": 115,
+      "spans": 23,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -752,8 +1041,296 @@
     "held_axe0_7": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 137,
+      "opaque_pixels": 115,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_8": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_9": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_10": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 17,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_11": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 17,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_12": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 18,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_13": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_14": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
       "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_15": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_mirror_0": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_mirror_1": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_mirror_2": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_mirror_3": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_mirror_4": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 18,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_mirror_5": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 17,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_mirror_6": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 17,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_mirror_7": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_mirror_8": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_mirror_9": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_mirror_10": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_mirror_11": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_mirror_12": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 18,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_mirror_13": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 17,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_mirror_14": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 17,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe0_mirror_15": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -764,8 +1341,8 @@
     "held_axe1_0": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 123,
-      "spans": 23,
+      "opaque_pixels": 115,
+      "spans": 20,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -776,8 +1353,8 @@
     "held_axe1_1": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 137,
-      "spans": 23,
+      "opaque_pixels": 115,
+      "spans": 20,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -788,8 +1365,8 @@
     "held_axe1_2": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 123,
-      "spans": 12,
+      "opaque_pixels": 115,
+      "spans": 17,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -800,8 +1377,8 @@
     "held_axe1_3": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 137,
-      "spans": 23,
+      "opaque_pixels": 115,
+      "spans": 17,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -812,8 +1389,8 @@
     "held_axe1_4": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 123,
-      "spans": 23,
+      "opaque_pixels": 115,
+      "spans": 18,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -824,8 +1401,8 @@
     "held_axe1_5": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 137,
-      "spans": 23,
+      "opaque_pixels": 115,
+      "spans": 20,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -836,8 +1413,8 @@
     "held_axe1_6": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 123,
-      "spans": 12,
+      "opaque_pixels": 115,
+      "spans": 23,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -848,8 +1425,296 @@
     "held_axe1_7": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 137,
+      "opaque_pixels": 115,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_8": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_9": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_10": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 17,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_11": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 17,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_12": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 18,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_13": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_14": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
       "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_15": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_mirror_0": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_mirror_1": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_mirror_2": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_mirror_3": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_mirror_4": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 18,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_mirror_5": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 17,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_mirror_6": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 17,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_mirror_7": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_mirror_8": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_mirror_9": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_mirror_10": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_mirror_11": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_mirror_12": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 18,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_mirror_13": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 17,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_mirror_14": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 17,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe1_mirror_15": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -860,8 +1725,8 @@
     "held_axe2_0": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 123,
-      "spans": 23,
+      "opaque_pixels": 115,
+      "spans": 20,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -872,8 +1737,8 @@
     "held_axe2_1": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 137,
-      "spans": 23,
+      "opaque_pixels": 115,
+      "spans": 20,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -884,8 +1749,8 @@
     "held_axe2_2": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 123,
-      "spans": 12,
+      "opaque_pixels": 115,
+      "spans": 17,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -896,8 +1761,8 @@
     "held_axe2_3": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 137,
-      "spans": 23,
+      "opaque_pixels": 115,
+      "spans": 17,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -908,8 +1773,8 @@
     "held_axe2_4": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 123,
-      "spans": 23,
+      "opaque_pixels": 115,
+      "spans": 18,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -920,8 +1785,8 @@
     "held_axe2_5": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 137,
-      "spans": 23,
+      "opaque_pixels": 115,
+      "spans": 20,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -932,8 +1797,8 @@
     "held_axe2_6": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 123,
-      "spans": 12,
+      "opaque_pixels": 115,
+      "spans": 23,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -944,8 +1809,296 @@
     "held_axe2_7": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 137,
+      "opaque_pixels": 115,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_8": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_9": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_10": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 17,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_11": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 17,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_12": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 18,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_13": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_14": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
       "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_15": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_mirror_0": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_mirror_1": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_mirror_2": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_mirror_3": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_mirror_4": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 18,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_mirror_5": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 17,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_mirror_6": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 17,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_mirror_7": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_mirror_8": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_mirror_9": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 22,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_mirror_10": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_mirror_11": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_mirror_12": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 18,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_mirror_13": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 17,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_mirror_14": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 17,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_axe2_mirror_15": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 115,
+      "spans": 20,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -968,8 +2121,8 @@
     "held_pick0_0": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 113,
-      "spans": 24,
+      "opaque_pixels": 114,
+      "spans": 28,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -980,8 +2133,8 @@
     "held_pick0_1": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 120,
-      "spans": 27,
+      "opaque_pixels": 113,
+      "spans": 28,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -992,8 +2145,8 @@
     "held_pick0_2": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 113,
-      "spans": 20,
+      "opaque_pixels": 121,
+      "spans": 25,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1004,8 +2157,8 @@
     "held_pick0_3": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 120,
-      "spans": 28,
+      "opaque_pixels": 113,
+      "spans": 23,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1016,8 +2169,8 @@
     "held_pick0_4": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 113,
-      "spans": 24,
+      "opaque_pixels": 114,
+      "spans": 19,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1028,8 +2181,8 @@
     "held_pick0_5": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 120,
-      "spans": 27,
+      "opaque_pixels": 113,
+      "spans": 23,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1040,8 +2193,8 @@
     "held_pick0_6": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 113,
-      "spans": 20,
+      "opaque_pixels": 121,
+      "spans": 26,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1052,7 +2205,295 @@
     "held_pick0_7": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 120,
+      "opaque_pixels": 113,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_8": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 114,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_9": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_10": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 121,
+      "spans": 25,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_11": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_12": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 114,
+      "spans": 19,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_13": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_14": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 121,
+      "spans": 26,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_15": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_mirror_0": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 114,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_mirror_1": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_mirror_2": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 121,
+      "spans": 26,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_mirror_3": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_mirror_4": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 114,
+      "spans": 19,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_mirror_5": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_mirror_6": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 121,
+      "spans": 25,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_mirror_7": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_mirror_8": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 114,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_mirror_9": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_mirror_10": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 121,
+      "spans": 26,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_mirror_11": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_mirror_12": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 114,
+      "spans": 19,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_mirror_13": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_mirror_14": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 121,
+      "spans": 25,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick0_mirror_15": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
       "spans": 28,
       "colors": 5,
       "ground_anchor": [
@@ -1064,8 +2505,8 @@
     "held_pick1_0": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 113,
-      "spans": 24,
+      "opaque_pixels": 114,
+      "spans": 28,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1076,8 +2517,8 @@
     "held_pick1_1": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 120,
-      "spans": 27,
+      "opaque_pixels": 113,
+      "spans": 28,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1088,8 +2529,8 @@
     "held_pick1_2": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 113,
-      "spans": 20,
+      "opaque_pixels": 121,
+      "spans": 25,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1100,8 +2541,8 @@
     "held_pick1_3": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 120,
-      "spans": 28,
+      "opaque_pixels": 113,
+      "spans": 23,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1112,8 +2553,8 @@
     "held_pick1_4": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 113,
-      "spans": 24,
+      "opaque_pixels": 114,
+      "spans": 19,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1124,8 +2565,8 @@
     "held_pick1_5": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 120,
-      "spans": 27,
+      "opaque_pixels": 113,
+      "spans": 23,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1136,8 +2577,8 @@
     "held_pick1_6": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 113,
-      "spans": 20,
+      "opaque_pixels": 121,
+      "spans": 26,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1148,7 +2589,295 @@
     "held_pick1_7": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 120,
+      "opaque_pixels": 113,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_8": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 114,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_9": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_10": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 121,
+      "spans": 25,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_11": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_12": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 114,
+      "spans": 19,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_13": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_14": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 121,
+      "spans": 26,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_15": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_mirror_0": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 114,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_mirror_1": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_mirror_2": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 121,
+      "spans": 26,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_mirror_3": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_mirror_4": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 114,
+      "spans": 19,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_mirror_5": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_mirror_6": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 121,
+      "spans": 25,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_mirror_7": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_mirror_8": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 114,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_mirror_9": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_mirror_10": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 121,
+      "spans": 26,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_mirror_11": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_mirror_12": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 114,
+      "spans": 19,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_mirror_13": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_mirror_14": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 121,
+      "spans": 25,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick1_mirror_15": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
       "spans": 28,
       "colors": 5,
       "ground_anchor": [
@@ -1160,8 +2889,8 @@
     "held_pick2_0": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 113,
-      "spans": 24,
+      "opaque_pixels": 114,
+      "spans": 28,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1172,8 +2901,8 @@
     "held_pick2_1": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 120,
-      "spans": 27,
+      "opaque_pixels": 113,
+      "spans": 28,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1184,8 +2913,8 @@
     "held_pick2_2": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 113,
-      "spans": 20,
+      "opaque_pixels": 121,
+      "spans": 25,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1196,8 +2925,8 @@
     "held_pick2_3": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 120,
-      "spans": 28,
+      "opaque_pixels": 113,
+      "spans": 23,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1208,8 +2937,8 @@
     "held_pick2_4": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 113,
-      "spans": 24,
+      "opaque_pixels": 114,
+      "spans": 19,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1220,8 +2949,8 @@
     "held_pick2_5": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 120,
-      "spans": 27,
+      "opaque_pixels": 113,
+      "spans": 23,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1232,8 +2961,8 @@
     "held_pick2_6": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 113,
-      "spans": 20,
+      "opaque_pixels": 121,
+      "spans": 26,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1244,7 +2973,295 @@
     "held_pick2_7": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 120,
+      "opaque_pixels": 113,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_8": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 114,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_9": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_10": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 121,
+      "spans": 25,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_11": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_12": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 114,
+      "spans": 19,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_13": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_14": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 121,
+      "spans": 26,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_15": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_mirror_0": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 114,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_mirror_1": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_mirror_2": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 121,
+      "spans": 26,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_mirror_3": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_mirror_4": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 114,
+      "spans": 19,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_mirror_5": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_mirror_6": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 121,
+      "spans": 25,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_mirror_7": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_mirror_8": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 114,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_mirror_9": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 28,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_mirror_10": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 121,
+      "spans": 26,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_mirror_11": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_mirror_12": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 114,
+      "spans": 19,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_mirror_13": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
+      "spans": 23,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_mirror_14": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 121,
+      "spans": 25,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_pick2_mirror_15": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 113,
       "spans": 28,
       "colors": 5,
       "ground_anchor": [
@@ -1280,8 +3297,8 @@
     "held_can0_1": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 154,
-      "spans": 20,
+      "opaque_pixels": 160,
+      "spans": 21,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1292,8 +3309,8 @@
     "held_can0_2": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 160,
-      "spans": 15,
+      "opaque_pixels": 154,
+      "spans": 20,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1304,8 +3321,8 @@
     "held_can0_3": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 154,
-      "spans": 20,
+      "opaque_pixels": 160,
+      "spans": 21,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1317,7 +3334,7 @@
       "width": 44,
       "height": 44,
       "opaque_pixels": 160,
-      "spans": 18,
+      "spans": 15,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1326,6 +3343,18 @@
       "contact_spans": 0
     },
     "held_can0_5": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 160,
+      "spans": 21,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_6": {
       "width": 44,
       "height": 44,
       "opaque_pixels": 154,
@@ -1337,7 +3366,67 @@
       ],
       "contact_spans": 0
     },
-    "held_can0_6": {
+    "held_can0_7": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 160,
+      "spans": 21,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_8": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 160,
+      "spans": 18,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_9": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 160,
+      "spans": 21,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_10": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 154,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_11": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 160,
+      "spans": 21,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_12": {
       "width": 44,
       "height": 44,
       "opaque_pixels": 160,
@@ -1349,11 +3438,227 @@
       ],
       "contact_spans": 0
     },
-    "held_can0_7": {
+    "held_can0_13": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 160,
+      "spans": 21,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_14": {
       "width": 44,
       "height": 44,
       "opaque_pixels": 154,
       "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_15": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 160,
+      "spans": 21,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_mirror_0": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 160,
+      "spans": 18,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_mirror_1": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 160,
+      "spans": 21,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_mirror_2": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 154,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_mirror_3": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 160,
+      "spans": 21,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_mirror_4": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 160,
+      "spans": 15,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_mirror_5": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 160,
+      "spans": 21,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_mirror_6": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 154,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_mirror_7": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 160,
+      "spans": 21,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_mirror_8": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 160,
+      "spans": 18,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_mirror_9": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 160,
+      "spans": 21,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_mirror_10": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 154,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_mirror_11": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 160,
+      "spans": 21,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_mirror_12": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 160,
+      "spans": 15,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_mirror_13": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 160,
+      "spans": 21,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_mirror_14": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 154,
+      "spans": 20,
+      "colors": 5,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_can0_mirror_15": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 160,
+      "spans": 21,
       "colors": 5,
       "ground_anchor": [
         22,
@@ -1400,8 +3705,8 @@
     "held_rod0_0": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 87,
-      "spans": 29,
+      "opaque_pixels": 76,
+      "spans": 23,
       "colors": 4,
       "ground_anchor": [
         22,
@@ -1412,7 +3717,7 @@
     "held_rod0_1": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 94,
+      "opaque_pixels": 76,
       "spans": 22,
       "colors": 4,
       "ground_anchor": [
@@ -1425,7 +3730,7 @@
       "width": 44,
       "height": 44,
       "opaque_pixels": 87,
-      "spans": 7,
+      "spans": 18,
       "colors": 4,
       "ground_anchor": [
         22,
@@ -1436,8 +3741,8 @@
     "held_rod0_3": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 94,
-      "spans": 23,
+      "opaque_pixels": 76,
+      "spans": 13,
       "colors": 4,
       "ground_anchor": [
         22,
@@ -1448,8 +3753,8 @@
     "held_rod0_4": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 87,
-      "spans": 29,
+      "opaque_pixels": 76,
+      "spans": 6,
       "colors": 4,
       "ground_anchor": [
         22,
@@ -1460,8 +3765,8 @@
     "held_rod0_5": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 94,
-      "spans": 22,
+      "opaque_pixels": 76,
+      "spans": 13,
       "colors": 4,
       "ground_anchor": [
         22,
@@ -1473,7 +3778,7 @@
       "width": 44,
       "height": 44,
       "opaque_pixels": 87,
-      "spans": 7,
+      "spans": 19,
       "colors": 4,
       "ground_anchor": [
         22,
@@ -1484,8 +3789,296 @@
     "held_rod0_7": {
       "width": 44,
       "height": 44,
-      "opaque_pixels": 94,
+      "opaque_pixels": 76,
+      "spans": 22,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_8": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 76,
       "spans": 23,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_9": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 76,
+      "spans": 22,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_10": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 87,
+      "spans": 18,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_11": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 76,
+      "spans": 13,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_12": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 76,
+      "spans": 6,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_13": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 76,
+      "spans": 13,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_14": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 87,
+      "spans": 19,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_15": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 76,
+      "spans": 22,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_mirror_0": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 76,
+      "spans": 23,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_mirror_1": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 76,
+      "spans": 22,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_mirror_2": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 87,
+      "spans": 19,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_mirror_3": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 76,
+      "spans": 13,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_mirror_4": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 76,
+      "spans": 6,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_mirror_5": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 76,
+      "spans": 13,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_mirror_6": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 87,
+      "spans": 18,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_mirror_7": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 76,
+      "spans": 22,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_mirror_8": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 76,
+      "spans": 23,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_mirror_9": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 76,
+      "spans": 22,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_mirror_10": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 87,
+      "spans": 19,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_mirror_11": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 76,
+      "spans": 13,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_mirror_12": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 76,
+      "spans": 6,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_mirror_13": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 76,
+      "spans": 13,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_mirror_14": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 87,
+      "spans": 18,
+      "colors": 4,
+      "ground_anchor": [
+        22,
+        22
+      ],
+      "contact_spans": 0
+    },
+    "held_rod0_mirror_15": {
+      "width": 44,
+      "height": 44,
+      "opaque_pixels": 76,
+      "spans": 22,
       "colors": 4,
       "ground_anchor": [
         22,
@@ -2017,6 +4610,7 @@
     "farmer-gba-v5.png": "8f7ecd0ca3060b3c64c27ff1299dc652d3ee32996c81d9afcc19e74dbc93673f",
     "farmer-opposite-contact-v5.png": "2aafdc862f7ae306f6faed00d1036b5af1509841e4c8b437a7815b491c161c5f",
     "scenery-v1.png": "ecb6d05078946f0178f9b6260e02c681945f783f5052ae6a023681ca31dc1b9d",
-    "villagers-v1.png": "873d195f9e3c513f732302782627de25087cc1188c98c4291a193379ce3eda8b"
+    "villagers-v1.png": "873d195f9e3c513f732302782627de25087cc1188c98c4291a193379ce3eda8b",
+    "villagers-v2.png": "af28eb9a6e56a4fd0f654a6c7f9ad71e663295c7b3038bda8a8eed683e33cf74"
   }
 }

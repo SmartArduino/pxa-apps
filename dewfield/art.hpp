@@ -413,6 +413,7 @@ inline void crop(Raster &r, int x, int y, int type, int stage, bool ready,
 }
 inline const sprites::Sprite &person_sprite(int dir, int frame,
                                             bool npc = false) {
+  const sprites::Sprite *elder[]={&sprites::villager_3_2,&sprites::villager_3_1,&sprites::villager_3_0,&sprites::villager_3_3};
   const sprites::Sprite *standing[] = {&sprites::north, &sprites::east,
                                        &sprites::south, &sprites::west};
   const sprites::Sprite *walking[4][4] = {
@@ -420,7 +421,7 @@ inline const sprites::Sprite &person_sprite(int dir, int frame,
       {&sprites::east0, &sprites::east1, &sprites::east2, &sprites::east3},
       {&sprites::south0, &sprites::south1, &sprites::south2, &sprites::south3},
       {&sprites::west0, &sprites::west1, &sprites::west2, &sprites::west3}};
-  return *(npc     ? &sprites::villager
+  return *(npc     ? elder[dir&3]
            : frame ? walking[dir & 3][(frame - 1) & 3]
                    : standing[dir & 3]);
 }
@@ -428,7 +429,8 @@ inline const sprites::Sprite &person_sprite(int dir, int frame,
 #include "gait.hpp"
 inline void person_shadow(Raster &r, int x, int y, int dir, int frame,
                           bool npc = false) {
-  if (frame && !npc)
+  if(npc)gait::shadow(r,x,y,dir,frame,&villager_rig(3,dir));
+  else if (frame)
     gait::shadow(r, x, y, dir, frame);
   else
     contact_shadow(r, person_sprite(dir, 0, npc), x, y);
@@ -449,10 +451,10 @@ inline void carry_item(Raster&r,int x,int y,int item,int selected) {
 }
 inline void person(Raster &r, int x, int y, int dir, int frame,
                    bool npc = false, int swing = 0, int tool = 0,
-                   bool draw_shadow = true,int item = 0,int grade = 0,int selected = 0,bool fishing = false) {
+                   bool draw_shadow = true,int item = 0,int grade = 0,int selected = 0,bool fishing = false,tool_anim::Target target={}) {
   if(draw_shadow) person_shadow(r,x,y,dir,frame,npc);
   if(npc) {gait::draw(r,x,y,dir,frame,false,&villager_rig(3,dir));return;}
-  if(swing) tool_anim::use(r,x,y,dir,frame,tool,swing,grade,fishing);
+  if(swing) tool_anim::use(r,x,y,dir,frame,tool,swing,grade,fishing,target);
   else if(item==2 || item>=8) {
     gait::draw(r,x,y,dir,frame,true);
     carry_item(r,x,y,item,selected);

@@ -59,12 +59,12 @@ inline void row(Raster &r, const sprites::Bone &bone, int src_y, int x, int y,
 inline void leg(Raster &r, const sprites::Rig &s, const Pose &p, int dir,
                 int index, int x, int y) {
   Foot f = foot(dir, p, index);
-  int top = 23 + p.bob - (s.side ? index : 0);
+  int top = s.hip + p.bob - (s.side ? index : 0);
   int boot = f.sole - 2;
   for (int yy = top; yy <= f.sole; ++yy) {
     // Boots retain their original three pixel height; only trouser rows bend.
     int sy = yy >= boot ? 27 + yy - boot
-                        : 23 + (yy - top) * 4 / std::max(1, boot - top);
+                        : s.hip + (yy - top) * (27-s.hip) / std::max(1, boot - top);
     int dx = f.dx * (yy - top) / std::max(1, boot - top);
     if (yy >= boot)
       dx = f.dx;

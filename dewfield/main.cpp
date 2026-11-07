@@ -69,6 +69,12 @@ int held_direction = -1;
 int bag_selection = 0, drag_from = -1, drag_x = 0, drag_y = 0;
 bool drag_active = false, action_hold = false, action_touch = false;
 int hit_obstacle = -1, action_tool = 0;
+int action_direction=2,action_grade=0;
+art::tool_anim::Target action_target;
+struct PendingTool {int x=0,y=0;bool active=false;} pending_tool;
+bool committing_tool=false;
+void action(int,int);
+void cancel_tool() {pending_tool.active=false;swing=0;action_target.valid=false;}
 uint32_t hit_ms = 0, deposit_ms=0;
 int deposited_item=0;
 int held_item() {
@@ -359,19 +365,20 @@ void scene() {
           terrain_map.distance(x + k, y, true, 4) >= 4)
         r.rect(x + k, y, 1, 1, art::rgb(143, 196, 189));
   }
-  farm_scene::View view{dir,
+  farm_scene::View view{swing?action_direction:dir,
                         walking ? int((walk_distance / 4) % 8) + 1 : 0,
                         int(swing),
                         swing ? action_tool : int(state.tool),
                         season(),
                         animation,
                         swing ? 0 : held_item(),
-                        int(state.tool_grade[swing ? action_tool : state.tool]),
+                        swing?action_grade:int(state.tool_grade[state.tool]),
                         int(state.selected),
                         hit_obstacle,
                         hit_ms,
                         page == Page::Fishing};
   view.subminute_ms=clock_acc;
+  view.tool_target=action_target;
   profile(DrawStage::Water);
   world_objects.build(state, view, {camx, camy, WIDTH, HEIGHT});
   profile(DrawStage::Queue);
@@ -436,6 +443,7 @@ void stop_motion() {
   repeat_use = false;
 }
 void open_page(Page p) {
+  cancel_tool();
   stop_motion();
   page = p;
   selected_row = p==Page::Calendar?season_day(state.day)-1:0;
@@ -478,9 +486,10 @@ void feedback(Result result) {
     return;
   }
   case Result::Fish:
+    open_page(Page::Fishing);
     action_tool = 6;
     swing = art::tool_anim::duration(6);
-    open_page(Page::Fishing);
+    action_direction=dir;action_grade=0;
     fishing.begin(state);
     changed();
     return;
@@ -535,16 +544,36 @@ void feedback(Result result) {
   default:
     return;
   }
-  action_tool = result == Result::Harvested ? 3 : result==Result::Planted?1:state.tool;
-  swing = art::tool_anim::duration(action_tool, state.tool_grade[action_tool]);
+  if(result==Result::NoEnergy||result==Result::NoWater||result==Result::NoSeeds) {
+    action_hold=false;cancel_tool();changed();return;
+  }
+  action_tool = result == Result::Harvested||result==Result::Refilled ? 3 : result==Result::Planted?1:state.tool;
+  if(!committing_tool) {
+    swing = art::tool_anim::duration(action_tool, state.tool_grade[action_tool]);
+    action_direction=dir;action_grade=state.tool_grade[action_tool];
+    moving=walking=false;move_acc=0;
+  }
   if (result == Result::NoEnergy || result == Result::NoWater ||
       result == Result::NoSeeds)
     action_hold = false;
   changed();
 }
 void action(int x, int y) {
-  if (swing)
+  if (swing&&!committing_tool)
     return;
+  if(!committing_tool) {
+    auto tool=Tool(state.tool);
+    if(tool==Tool::Hoe||tool==Tool::Axe||tool==Tool::Pick||tool==Tool::Water) {
+      State preview=state;auto result=act(preview,x,y);
+      if(result==Result::Tilled||result==Result::Watered||result==Result::Struck||result==Result::Cleared) {
+        action_tool=state.tool;action_grade=state.tool_grade[state.tool];action_direction=dir;
+        action_target={x*16+8,y*16+8-art::tool_anim::surface_offset(action_tool),true};pending_tool={x,y,true};
+        swing=art::tool_anim::duration(action_tool,action_grade);
+        moving=walking=false;move_acc=0;redraw();return;
+      }
+    }
+    action_target={x*16+8,y*16+2,true};
+  }
   uint32_t oldq = state.quests;
   int npc = npc_at(state, x, y);
   int offered_item=held_item();
@@ -684,6 +713,7 @@ void navigate(int d) {
   redraw();
 }
 void sleep_now(bool forced = false) {
+  cancel_tool();
   for(auto &effect:gather_effects)effect.remaining=0;
   morning_gold = farm::sleep(state,forced);
   state.region = uint8_t(Region::Home);
@@ -1579,6 +1609,7 @@ void panel_tap(int px, int py) {
   if (!ui.modal().contains(px, py))
     return;
   if (ui.close().contains(px, py)) {
+    if(page==Page::Fishing)cancel_tool();
     page = page==Page::Collections?collection_parent:Page::Farm;
     return;
   }
@@ -1686,6 +1717,7 @@ bool input_active() { return moving || route || stick || touch_down; }
 bool back() {
   if (!title_screen && page != Page::Farm) {
     stop_motion();
+    cancel_tool();
     page = page==Page::Collections?collection_parent:Page::Farm;
     redraw();
     return true;
@@ -1742,7 +1774,7 @@ void key(Key k) {
     return;
   }
   if (page == Page::Fishing) {
-    if(k==Key::B) {page=Page::Farm;redraw();}
+    if(k==Key::B) {cancel_tool();page=Page::Farm;redraw();}
     else if(k==Key::X && fishing.phase==FishingSession::Phase::Caught)open_collections(2,fishing.species,Page::Fishing);
     else if (k == Key::A)
       facing_action();
@@ -1872,6 +1904,7 @@ void key(Key k) {
     repeat_use=held_item()<12;
     facing_action();
   }
+  else if(swing&&(k==Key::L||k==Key::R||k==Key::SELECT))return;
   else if (k == Key::X)
     open_page(Page::Bag);
   else if (k == Key::Y)
@@ -1911,6 +1944,7 @@ void pointer(Phase phase, int x, int y) {
       return;
     }
     auto ui = layout();
+    if(page==Page::Farm&&swing&&ui.belt().contains(x,y)) {touch_down=false;return;}
     if (page == Page::Bag) {
       for (int i = 0; i < InventorySize; ++i)
         if (ui.bag_slot(i).contains(x, y)) {
@@ -1923,7 +1957,7 @@ void pointer(Phase phase, int x, int y) {
         }
     }
     if (page == Page::Farm) {
-      for (int i = 0; i < HotbarSize; ++i)
+      for (int i = 0; !swing && i < HotbarSize; ++i)
         if (ui.tool(i).contains(x, y)) {
           drag_from = i;
           drag_x = x;
@@ -2075,6 +2109,10 @@ void tick(uint32_t elapsed) {
     return;
   if (swing) {
     swing = swing > elapsed ? swing - elapsed : 0;
+    if(pending_tool.active && swing<=unsigned(art::tool_anim::impact_remaining(action_tool,action_grade))) {
+      auto pending=pending_tool;pending_tool.active=false;
+      committing_tool=true;action(pending.x,pending.y);committing_tool=false;
+    }
     redraw();
   }
   if (page == Page::Fishing) {
@@ -2145,7 +2183,7 @@ void tick(uint32_t elapsed) {
       targety = p.y / 16;
     }
   }
-  if (route && !moving) {
+  if (route && !moving && !swing) {
     int tx = state.px / 16, ty = state.py / 16;
     if ((route_action && near(state, targetx, targety)) ||
         (!route_action && tx == targetx && ty == targety)) {

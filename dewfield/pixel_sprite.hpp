@@ -32,5 +32,10 @@ struct Rig {
   uint8_t arm_end[2];
   uint16_t cloth, shirt;
   bool side;
+  uint8_t hip = 23;
+};
+struct HeldFrame {
+  const Sprite *sprite;
+  int8_t tip_x, tip_y, second_x, second_y, face_x, face_y;
 };
 } // namespace sprites
