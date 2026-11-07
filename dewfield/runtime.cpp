@@ -14,6 +14,7 @@
 #include "pxa_window.h"
 #include "resample.hpp"
 #include "native_raster.hpp"
+#include "pacing.hpp"
 #include "text.hpp"
 #include <algorithm>
 #include <stdio.h>
@@ -698,7 +699,8 @@ void run() {
       perf_render_us = 0;
     }
     if (!finished)
-      wait_event(after < last_tick + 33333 ? last_tick + 33333 - after : 0);
+      wait_event(dewfield_pacing::wait_us(after,last_tick,last_present,
+                                         surface_ready && dirty));
   }
 }
 
@@ -749,6 +751,17 @@ void rect(int x, int y, int w, int h, uint16_t color) {
 #endif
 }
 void clear(uint16_t color) { rect(0, 0, WIDTH, HEIGHT, color); }
+void copy_background(const uint16_t *source, int sw, int sh, int x, int y,
+                     uint16_t outside) {
+  if (!canvas || !source || x < 0 || y < 0 || x >= sw || y >= sh) return;
+  int w = std::min(WIDTH, sw - x), h = std::min(HEIGHT, sh - y);
+  if (w < WIDTH) rect(w,0,WIDTH-w,h,outside);
+  if (h < HEIGHT) rect(0,h,WIDTH,HEIGHT-h,outside);
+  source += y * sw + x;
+  if (native_raster.copy(source, sw, w, h, canvas, WIDTH, HEIGHT)) return;
+  for (int row = 0; row < h; ++row)
+    std::memcpy(canvas + row * WIDTH, source + row * sw, size_t(w) * 2);
+}
 void outline(int x, int y, int w, int h, uint16_t color) {
   rect(x, y, w, 1, color);
   rect(x, y + h - 1, w, 1, color);

@@ -19,7 +19,9 @@ constexpr uint16_t Ink = farm_palette::Ink, Earth = rgb(177, 119, 63),
 struct Raster {
   uint16_t *p;
   int w, h, ox = 0, oy = 0;
+  const uint16_t *tint=nullptr;
   void rect(int x, int y, int ww, int hh, uint16_t c) {
+    if(tint)c=tint[c];
     x -= ox;
     y -= oy;
     int ex = std::clamp(x + ww, 0, w), ey = std::clamp(y + hh, 0, h);
@@ -101,7 +103,9 @@ inline void sprite(Raster &r, const sprites::Sprite &s, int x, int y,
       continue;
     const uint16_t *src = s.pixels + span.offset + left - xx;
     uint16_t *dst = r.p + yy * r.w + left;
-    if (alpha == 8)
+    if(r.tint) {
+      for(int j=0;j<right-left;++j) dst[j]=alpha==8?r.tint[src[j]]:blend(dst[j],r.tint[src[j]],alpha);
+    } else if (alpha == 8)
       std::copy_n(src, right - left, dst);
     else
       for (int j = 0; j < right - left; ++j)
@@ -164,8 +168,8 @@ inline void contact_patch(Raster &r, int x, int y, int width, int alpha = 2) {
   shadow_strip(r, left, y, width, alpha);
   shadow_strip(r, left, y + 1, width, 1);
 }
-inline const sprites::Sprite &tree_sprite(int x, int y, int season = 0, int stage = 2) {
-  int kind = farm::scenery_variant(x / 16, y / 16);
+inline const sprites::Sprite &tree_sprite(int x, int y, int season = 0, int stage = 2, int forced_kind = -1) {
+  int kind = forced_kind >= 0 ? forced_kind & 3 : farm::scenery_variant(x / 16, y / 16);
   const sprites::Sprite *seeds[] = {&sprites::tree_seed0,&sprites::tree_seed1,&sprites::tree_seed2,&sprites::tree_seed3};
   if(stage==3) return sprites::tree_stump;
   if(stage==0) return *seeds[kind];
@@ -190,8 +194,8 @@ inline const sprites::Sprite &grass_sprite(int x,int y) {
   return *all[farm::scenery_variant(x/16,y/16)];
 }
 inline void tree(Raster &r, int x, int y, int variant = 0, int season = 0,
-                 int alpha = 8, bool draw_shadow = true, int stage = 2) {
-  const auto &s=tree_sprite(x,y,season,stage);
+                 int alpha = 8, bool draw_shadow = true, int stage = 2, int forced_kind = -1) {
+  const auto &s=tree_sprite(x,y,season,stage,forced_kind);
   int trunk=std::max(3,int(s.h)/3);
   if(draw_shadow) contact_shadow(r,s,x,y);
   sprite(r,s,x-s.anchor_x,y-s.anchor_y,alpha,0,s.h-trunk);
@@ -441,13 +445,13 @@ inline void carry_item(Raster&r,int x,int y,int item,int selected) {
   else if(item>=16 && item<=18) {
     const sprites::Sprite *items[]={&sprites::fish,&sprites::logs,&sprites::stones};
     const auto &s=*items[item-16];sprite(r,s,x-s.w/2,y-30-s.h);
-  }
+  } else if (item >= 19 && item <= 28) food(r,x,y-31,item);
 }
 inline void person(Raster &r, int x, int y, int dir, int frame,
                    bool npc = false, int swing = 0, int tool = 0,
                    bool draw_shadow = true,int item = 0,int grade = 0,int selected = 0,bool fishing = false) {
   if(draw_shadow) person_shadow(r,x,y,dir,frame,npc);
-  if(npc) {const auto&s=person_sprite(dir,0,true);grounded(r,s,x,y);return;}
+  if(npc) {gait::draw(r,x,y,dir,frame,false,&villager_rig(3,dir));return;}
   if(swing) tool_anim::use(r,x,y,dir,frame,tool,swing,grade,fishing);
   else if(item==2 || item>=8) {
     gait::draw(r,x,y,dir,frame,true);

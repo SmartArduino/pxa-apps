@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 #include "core.hpp"
 #include "world.hpp"
+#include "living.hpp"
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
@@ -21,8 +22,7 @@ Ground ground(const State &s, int x, int y) {
     return world_ground(s, x, y);
   if (x < 1 || y < 1 || x >= MapW - 1 || y >= MapH - 1)
     return Ground::Wall;
-  if ((x >= 4 && x <= 8 && y >= 3 && y <= 6) ||
-      (x >= 23 && x <= 27 && y >= 3 && y <= 6))
+  if ((x >= 4 && x <= 8 && y >= 3 && y <= 6))
     return Ground::Wall;
   if (x >= 24 && x <= 29 && y >= 14 && y <= 20 &&
       !(x == 24 && (y == 14 || y == 20)) && !(x == 29 && (y == 14 || y == 20)))
@@ -71,14 +71,33 @@ int strikes_left(const State &s, int index, Tool tool) {
 }
 unsigned item_count(const State &s, int item) {
   if (item >= 1 && item <= 7)
-    return 1;
+    return item != 2;
   if (item >= 8 && item <= 11)
     return s.seeds[item - 8];
   if (item >= 12 && item <= 15)
     return s.produce[item - 12];
-  return item == 16 ? s.fish : item == 17 ? s.wood : item == 18 ? s.stone : 0;
+  return item == 16 ? s.fish : item == 17 ? s.wood : item == 18 ? s.stone
+      : item >= 19 && item <= 21 ? s.gathered[item - 19]
+      : item >= 22 && item <= 23 ? s.meals[item - 22]
+      : item >= 24 && item <= 28 ? s.seasonal[item - 24] : 0;
+}
+bool change_item(State &s, int item, int amount) {
+  uint16_t *stack = item >= 8 && item <= 11 ? &s.seeds[item - 8]
+      : item >= 12 && item <= 15 ? &s.produce[item - 12]
+      : item == 16 ? &s.fish : item == 17 ? &s.wood : item == 18 ? &s.stone
+      : item >= 19 && item <= 21 ? &s.gathered[item - 19]
+      : item >= 22 && item <= 23 ? &s.meals[item - 22]
+      : item >= 24 && item <= 28 ? &s.seasonal[item - 24] : nullptr;
+  if (!stack || amount < -int(*stack) || amount > 999 - int(*stack)) return false;
+  *stack = uint16_t(int(*stack) + amount);
+  return true;
 }
 void sync_inventory(State &s) {
+  for(int i=0;i<InventorySize;++i)if(s.slots[i]==2) {
+    int seed=s.seeds[s.selected]?8+s.selected:0;
+    for(int j=0;j<InventorySize;++j)if(j!=i&&s.slots[j]==seed&&seed)s.slots[j]=0;
+    s.slots[i]=seed;
+  }
   bool present[ItemCount + 1]{};
   for (auto &item : s.slots) {
     if (item >= 1 && item <= ItemCount) {
@@ -88,6 +107,7 @@ void sync_inventory(State &s) {
         present[item] = true;
     }
   }
+  if(s.active_slot<HotbarSize && !s.slots[s.active_slot]) { s.active_slot=255;s.tool=uint8_t(Tool::Hand); }
   for (int item = 1; item <= ItemCount; ++item)
     if (!present[item] && item_count(s, item))
       for (auto &slot : s.slots)
@@ -159,6 +179,7 @@ void fresh(State &s) {
   s = State{};
   for (int i = 0; i < 24; ++i)
     s.tree_age[i] = Obstacles[i].kind == 0 ? 5 : 0;
+  sync_inventory(s);
   // The farm starts with harvestable trees; distant woodland also has saplings.
   s.tree_age[16] = 0;
   s.tree_age[17] = 2;
@@ -166,8 +187,7 @@ void fresh(State &s) {
   for (int x = 0; x < 5; ++x)
     s.plots[3 * PlotW + x] = {1, 1, uint8_t(x < 2 ? 2 : 1), 0};
   for (int i = 0; i < 3; ++i)
-    s.plots[3 * PlotW + 5 + i] = {1, uint8_t(i + 2),
-                                  uint8_t(Crops[i + 1].days - 1), 0};
+    s.plots[3 * PlotW + 5 + i] = {1, 2, 2, 0};
 }
 uint32_t random(State &s) {
   s.rng ^= s.rng << 13;
@@ -179,31 +199,39 @@ Result act(State &s, int x, int y) {
   if (!near(s, x, y))
     return Result::Far;
   if (const auto *portal = portal_at(s, x, y))
-    return travel(s, *portal) ? Result::Travel : Result::Locked;
+    return !building_open(s,portal->to)?Result::Closed:
+      travel(s, *portal) ? Result::Travel : Result::Locked;
   if (npc_at(s, x, y) >= 0)
     return Result::Dialogue;
   if (s.region) {
     if (s.region == uint8_t(Region::Home) && x >= 9 && x <= 11 && y >= 7 &&
         y <= 9)
       return Result::Sleep;
-    if (s.region == uint8_t(Region::Town) && x == 7 && y == 7)
-      return Result::Shop;
+    if (s.region == uint8_t(Region::SeedShop) && x>=12 && x<=19 && y==10)
+      return shop_open(s)?Result::Shop:Result::Closed;
+    if (s.region == uint8_t(Region::Home) && x==15 && y==7) return Result::Forecast;
+    if (s.region == uint8_t(Region::Home) && x==13 && y==5 ||
+        s.region == uint8_t(Region::Town) && x==5 && y==7) return Result::Calendar;
+    if (s.region == uint8_t(Region::Town) && x == 16 && y == 10) {
+      s.water=s.capacity;return Result::Refilled;
+    }
+    if (s.region == uint8_t(Region::Town) && x == 18 && y == 10)
+      return Result::Orders;
+    if (s.region == uint8_t(Region::Home) && x == 21 && y == 10)
+      return Result::Kitchen;
     int forage = forage_at(s, x, y);
     if (forage >= 0)
       return collect_forage(s, forage) ? Result::Foraged : Result::Blocked;
     if (ground(s, x, y) == Ground::Water) {
       if (Tool(s.tool) == Tool::Rod)
-        return s.energy >= 4 ? Result::Fish : Result::NoEnergy;
+        return s.energy && spend_energy(s,4) ? Result::Fish : Result::NoEnergy;
       s.water = s.capacity;
       return Result::Refilled;
     }
     return Result::Blocked;
   }
-  if (x == 25 && y == 7)
-    return Result::Shop;
   if (x == 8 && y == 9) {
-    ship(s);
-    return Result::Ship;
+    return ship(s)?Result::Ship:Result::EmptyShipping;
   }
   if (x == 21 && y == 8) {
     quest(s);
@@ -211,7 +239,7 @@ Result act(State &s, int x, int y) {
   }
   if ((x == 7 && y == 8) || ground(s, x, y) == Ground::Water) {
     if (Tool(s.tool) == Tool::Rod && ground(s, x, y) == Ground::Water)
-      return s.energy >= 4 ? Result::Fish : Result::NoEnergy;
+      return s.energy && spend_energy(s,4) ? Result::Fish : Result::NoEnergy;
     s.water = s.capacity;
     return Result::Refilled;
   }
@@ -226,9 +254,8 @@ Result act(State &s, int x, int y) {
       return Result::Blocked;
     int grade = s.tool_grade[unsigned(t)];
     int energy = grade ? 2 : 3;
-    if (s.energy < energy)
+    if (!spend_energy(s, energy))
       return Result::NoEnergy;
-    s.energy -= energy;
     s.damage[o] += uint8_t(1 + grade);
     int hp = Obstacles[o].kind == 0 && tree_stage(s, o) < 2
                  ? (tree_stage(s, o) == 0 ? 1 : 3)
@@ -253,12 +280,9 @@ Result act(State &s, int x, int y) {
     return Result::Blocked;
   auto &p = s.plots[i];
   if (p.crop && p.growth >= Crops[p.crop - 1].days) {
-    if (s.energy < 1)
-      return Result::NoEnergy;
     int c = p.crop - 1;
     if (s.produce[c] >= 999)
       return Result::Blocked;
-    s.energy--;
     s.produce[c]++;
     s.harvested++;
     if (Crops[c].regrow)
@@ -274,21 +298,19 @@ Result act(State &s, int x, int y) {
   if (t == Tool::Hoe) {
     if (p.tilled)
       return Result::None;
-    if (s.energy < 2)
+    if (!spend_energy(s, 2))
       return Result::NoEnergy;
-    s.energy -= 2;
     p.tilled = 1;
     return Result::Tilled;
   }
   if (t == Tool::Seeds) {
     if (!p.tilled || p.crop)
       return Result::Blocked;
+    if (!crop_in_season(s.day,s.selected)) return Result::WrongSeason;
     if (!s.seeds[s.selected])
       return Result::NoSeeds;
-    if (s.energy < 1)
-      return Result::NoEnergy;
-    s.energy--;
     s.seeds[s.selected]--;
+    sync_inventory(s);
     p.crop = s.selected + 1;
     p.growth = 0;
     return Result::Planted;
@@ -298,9 +320,8 @@ Result act(State &s, int x, int y) {
       return Result::None;
     if (!s.water)
       return Result::NoWater;
-    if (s.energy < 1)
+    if (!spend_energy(s, 1))
       return Result::NoEnergy;
-    s.energy--;
     s.water--;
     p.wet = 1;
     return Result::Watered;
@@ -308,16 +329,21 @@ Result act(State &s, int x, int y) {
   return Result::None;
 }
 uint32_t ship(State &s) {
-  uint32_t total = s.fish * 24u;
-  for (int i = 0; i < 4; ++i) {
-    total += s.produce[i] * Crops[i].sell;
-    s.produce[i] = 0;
-  }
-  s.fish = 0;
-  s.shipping = std::min(999999u, s.shipping + total);
-  return total;
+  int item=s.active_slot<HotbarSize?s.slots[s.active_slot]:0,price=item_price(item);
+  if(s.region || !near(s,8,9) || !price || !item_count(s,item) || s.shipping>999999u-unsigned(price))return 0;
+  if(!change_item(s,item,-1))return 0;
+  s.shipping+=price;s.last_shipped=item;sync_inventory(s);
+  return price;
 }
-uint32_t sleep(State &s) {
+bool unship(State&s) {
+  int item=s.last_shipped,price=item_price(item);
+  if(s.region||!near(s,8,9)||!price||s.shipping<unsigned(price)||!change_item(s,item,1))return false;
+  s.shipping-=price;s.last_shipped=0;sync_inventory(s);return true;
+}
+uint32_t sleep(State &s, bool forced) {
+  int restoration=s.minute<=1440?100:std::max(50,100-(int(s.minute)-1440)*50/120);
+  if(forced||s.exhausted)restoration=std::min(restoration,50);
+  if(forced&&s.region!=unsigned(Region::Home))s.gold-=std::min(1000u,s.gold/10);
   uint32_t income = s.shipping;
   s.gold = std::min(999999u, s.gold + income);
   s.earned += income;
@@ -349,9 +375,12 @@ uint32_t sleep(State &s) {
   }
   s.day = s.day == 65535 ? 1 : s.day + 1;
   s.minute = 360;
-  s.energy = 100;
+  s.energy = restoration;
+  s.exhausted=false;s.overwork=0;s.last_shipped=0;
   s.water = s.capacity;
-  s.rain = s.day % 5 == 0 || s.day % 9 == 0;
+  s.weather=unsigned(weather_on(s.day));
+  s.rain=wet_weather(Weather(s.weather));
+  for(auto &p:s.plots) if(p.crop&&!crop_in_season(s.day,p.crop-1)) {p.crop=0;p.growth=0;}
   for (int i = 0; i < PlotCount; ++i) {
     if (s.rain)
       s.plots[i].wet = 1;
@@ -364,6 +393,8 @@ uint32_t sleep(State &s) {
     }
   }
   s.forage = 0;
+  s.order_day = s.day;
+  s.order_claimed = 0;
   if (s.day == 1) {
     std::memset(s.chat_day, 0, sizeof(s.chat_day));
     std::memset(s.gift_day, 0, sizeof(s.gift_day));
@@ -371,7 +402,7 @@ uint32_t sleep(State &s) {
   return income;
 }
 bool buy_seed(State &s, int kind, int count) {
-  if (kind < 0 || kind >= 4 || count < 1 || count > 99 ||
+  if (!crop_in_season(s.day,kind) || !shop_open(s) || s.region!=unsigned(Region::SeedShop) || kind < 0 || kind >= 4 || count < 1 || count > 99 ||
       s.seeds[kind] + count > 999 ||
       s.gold < uint32_t(Crops[kind].price * count))
     return false;
@@ -465,7 +496,7 @@ size_t encode(const State &original, uint8_t *out, size_t cap) {
     }
   };
   put(0x31465744, 4);
-  put(3, 2);
+  put(5, 2);
   put(s.day, 2);
   put(s.minute, 2);
   put(s.energy, 1);
@@ -519,6 +550,14 @@ size_t encode(const State &original, uint8_t *out, size_t cap) {
     put(v, 2);
   put(s.personal, 1);
   put(s.forage, 1);
+  put(s.forage >> 8, 1);
+  for (auto v : s.gathered) put(v, 2);
+  for (auto v : s.meals) put(v, 2);
+  put(s.order_day, 2);
+  put(s.order_claimed, 1);
+  put(s.orders_done, 2);
+  for(auto v:s.seasonal)put(v,2);
+  put(s.weather,1);put(s.overwork,1);put(s.exhausted,1);put(s.last_shipped,1);
   n = SaveBytes - 4;
   put(checksum(out, n), 4);
   return SaveBytes;
@@ -536,9 +575,9 @@ bool decode(State &s, const uint8_t *in, size_t n) {
   if (get(4) != 0x31465744)
     return false;
   uint32_t version = get(2);
-  if (version != 1 && version != 2 && version != 3)
+  if (version < 1 || version > 5)
     return false;
-  if ((version == 3 && n != SaveBytes) || (version < 3 && n != 512))
+  if ((version >= 3 && n != SaveBytes) || (version < 3 && n != 512))
     return false;
   at = n - 4;
   uint32_t sum = get(4);
@@ -564,6 +603,9 @@ bool decode(State &s, const uint8_t *in, size_t n) {
   t.earned = get(4);
   t.harvested = get(4);
   t.rng = get(4);
+  // New inventory quantities are serialized after the compatible v3 prefix,
+  // but slot validation below must see them before checking occupied stacks.
+  // Defer those quantity-dependent checks until the extension has been read.
   for (int i = 0; i < 4; ++i) {
     t.seeds[i] = get(2);
     t.produce[i] = get(2);
@@ -604,7 +646,8 @@ bool decode(State &s, const uint8_t *in, size_t n) {
     bool present[ItemCount + 1]{};
     for (auto &item : t.slots) {
       item = get(1);
-      if (item > ItemCount || (item && (present[item] || !item_count(t, item))))
+      if (item > ItemCount || (item && (present[item] ||
+          (item < 19 && !(version<5&&item==2) && !item_count(t, item)))))
         return false;
       if (item)
         present[item] = true;
@@ -635,7 +678,7 @@ bool decode(State &s, const uint8_t *in, size_t n) {
       t.tree_age[i] = Obstacles[i].kind == 0 && !t.cleared[i] ? 5 : 0;
     sync_inventory(t);
   }
-  if (version == 3) {
+  if (version >= 3) {
     t.region = get(1);
     t.story = get(1);
     t.met = get(1);
@@ -651,14 +694,46 @@ bool decode(State &s, const uint8_t *in, size_t n) {
       v = get(2);
     t.personal = get(1);
     t.forage = get(1);
-    if (t.region >= RegionCount || t.story > 5 || t.met > 15 ||
-        t.visited >= 32 || !(t.visited & 1) ||
-        !(t.visited & (1u << t.region)) || t.personal > 15 || t.forage >= 64)
+    if (t.region >= (version >= 5 ? RegionCount : version==4?6:5) || t.story > 5 || t.met > 15 ||
+        t.visited >= (1u << (version >= 5 ? RegionCount : version==4?6:5)) || !(t.visited & 1) ||
+        !(t.visited & (1u << t.region)) || t.personal > 15 ||
+        (version == 3 && t.forage >= 64))
       return false;
     if (t.region == uint8_t(Region::Lake) && t.story < 3)
       return false;
   }
-  if (!t.day || t.minute < 360 || t.minute >= 1320 || t.energy > 100 ||
+  if (version >= 4) {
+    t.forage |= get(1) << 8;
+    for (auto &v : t.gathered) { v = get(2); if (v > 999) return false; }
+    for (auto &v : t.meals) { v = get(2); if (v > 999) return false; }
+    t.order_day = get(2);
+    t.order_claimed = get(1);
+    t.orders_done = get(2);
+    if (t.forage >= (1u << (version>=5?sizeof(Foraging)/sizeof(*Foraging):12)) ||
+        t.order_claimed > 15 || (t.order_claimed && t.order_day != t.day)) return false;
+  }
+  if(version>=5) {
+    for(auto &v:t.seasonal) {v=get(2);if(v>999)return false;}
+    t.weather=get(1);t.overwork=get(1);auto exhausted=get(1);t.exhausted=exhausted;t.last_shipped=get(1);
+    if(t.weather>=unsigned(Weather::Count)||t.overwork>10||exhausted>1||
+      (t.last_shipped&&(!item_price(t.last_shipped)||t.shipping<unsigned(item_price(t.last_shipped)))))return false;
+  } else {
+    auto migrate=[](uint16_t day)->uint16_t {return day?uint16_t(std::min(65535,((int(day)-1)/7)*28+(day-1)%7+1)):0;};
+    t.day=migrate(t.day);t.order_day=migrate(t.order_day);
+    for(auto &d:t.chat_day)d=migrate(d);for(auto &d:t.gift_day)d=migrate(d);
+    t.weather=t.rain?unsigned(Weather::Rain):unsigned(Weather::Sun);
+    // Existing saves may stand on a tile now occupied by a wall appliance.
+    // Move only those new furniture collisions to the adjacent open tile.
+    if(t.region==unsigned(Region::Home)&&((t.px/16==15&&t.py/16==7)||(t.px/16==13&&t.py/16==5)))t.py+=16;
+    if(t.region==unsigned(Region::Town)&&t.px/16==5&&t.py/16==7)t.py+=16;
+    sync_inventory(t);select_slot(t,t.active_slot==255?-1:t.active_slot);
+  }
+  for (int item = 19; item <= ItemCount; ++item) {
+    int copies = 0;
+    for (auto slot : t.slots) copies += slot == item;
+    if (copies != int(item_count(t, item) != 0)) return false;
+  }
+  if (!t.day || t.minute < 360 || t.minute >= (version>=5?1560:1320) || t.energy > 100 ||
       (t.capacity != 30 && t.capacity != 60) || t.water > t.capacity ||
       t.selected >= 4 || t.tool >= uint8_t(Tool::Count) || t.quests > 3 ||
       t.friendship != t.quests || rain > 1 || t.gold > 999999 ||

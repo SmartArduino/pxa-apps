@@ -43,7 +43,7 @@ int main() {
   legacy(bytes, 1);
   assert(decode(loaded, bytes, 512) && loaded.tree_age[0] == 5);
   // Every portal has a safe arrival and every region is reachable after unlock.
-  s.story = 3;
+  s.story = 3;s.minute=600;
   for (auto &p : Portals) {
     s.region = uint8_t(p.from);
     stand(s, p.x, p.y);
@@ -138,6 +138,6 @@ int main() {
   assert(loaded.story == 5 && loaded.region == 2 && loaded.bonds[0] == 10 &&
          loaded.wood == 6 && loaded.met == 15);
   puts(
-      "PASS: five-region graph, safe spawn/paths, schedules, bridge gate, "
+      "PASS: eight-region graph, safe spawn/paths, schedules, bridge gate, "
       "daily friendship/gifts, all story chapters, forage and v1/v2 migration");
 }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 #include "art.hpp"
 #include "core.hpp"
+#include "living.hpp"
 #include "palette.hpp"
 #include "runtime.hpp"
 #include "scene.hpp"
@@ -29,7 +30,9 @@ enum class Page {
   World,
   People,
   Story,
-  Dialogue
+  Dialogue,
+  Orders,
+  Kitchen, Calendar, Forecast, Shipping
 };
 Page page = Page::Farm;
 bool title_screen = true, save_locked = false, base_dirty = true,
@@ -51,7 +54,8 @@ int held_direction = -1;
 int bag_selection = 0, drag_from = -1, drag_x = 0, drag_y = 0;
 bool drag_active = false, action_hold = false, action_touch = false;
 int hit_obstacle = -1, action_tool = 0;
-uint32_t hit_ms = 0;
+uint32_t hit_ms = 0, deposit_ms=0;
+int deposited_item=0;
 int held_item() {
   return state.active_slot < HotbarSize ? state.slots[state.active_slot] : 0;
 }
@@ -59,6 +63,8 @@ int held_item() {
 constexpr int WorldPixelsW = MapW * Tile, WorldPixelsH = MapH * Tile;
 alignas(4) uint16_t base[WorldPixelsW * WorldPixelsH];
 terrain::Map terrain_map;
+uint16_t light_palette[65536];
+int cached_light=-1;
 farm_scene::Queue world_objects;
 uint8_t cached_plots[PlotCount]{};
 uint8_t plot_visual(const Plot &p) {
@@ -91,7 +97,7 @@ const char *tool_en[] = {"Hoe", "Seeds", "Water", "Harvest",
                          "Axe", "Pick",  "Rod"};
 const char *seasons_cn[] = {"春", "夏", "秋", "冬"};
 const char *seasons_en[] = {"Spring", "Summer", "Fall", "Winter"};
-int season() { return ((state.day - 1) / 7) % 4; }
+int season() { return season_of(state.day); }
 void msg(const char *cn, const char *en) {
   std::snprintf(toast, sizeof(toast), "%s", tr(en, cn));
   toast_ms = 2200;
@@ -217,10 +223,11 @@ void title_overlay() {
        enter.y + 19, TitleBark);
   const char *caption =
       tr("A little farm. A slower life.", "种下希望，收获慢时光。");
+  int caption_y=layout().title_caption_y();
   for (int dx : {-1, 1})
-    center_text(WIDTH / 2 + dx, HEIGHT - 18, caption, TitleBark);
-  center_text(WIDTH / 2, HEIGHT - 17, caption, TitleBark);
-  center_text(WIDTH / 2, HEIGHT - 18, caption, TitleCream);
+    center_text(WIDTH / 2 + dx, caption_y, caption, TitleBark);
+  center_text(WIDTH / 2, caption_y+1, caption, TitleBark);
+  center_text(WIDTH / 2, caption_y, caption, TitleCream);
 }
 void draw_plots(bool restore) {
   // Restore only the farm's ground before baking changed soil/pockets into the
@@ -247,7 +254,7 @@ void draw_base() {
       r.rect(23 * 16 + 2, 17 * 16 + k * 6, 24, 1, art::Gold);
     }
     draw_plots(false);
-  } else if (state.region == uint8_t(Region::Home)) {
+  } else if (indoors(state.region)) {
     r.rect(0, 0, 512, 384, art::rgb(65, 63, 47));
     r.rect(7 * 16 - 6, 5 * 16 - 25, 18 * 16 + 12, 16 * 16 + 29, Border);
     r.rect(7 * 16, 5 * 16 - 20, 18 * 16, 20, art::rgb(187, 137, 77));
@@ -302,6 +309,7 @@ void draw_base() {
       r.line(x + 3 * dx, y, x + dx, y - 2, art::Ink);
       r.line(x + 3 * dx, y, x + dx, y + 2, art::Ink);
     }
+  if(cached_light>0)for(auto &c:base)c=light_palette[c];
   base_dirty = false;
 }
 void camera() {
@@ -311,25 +319,23 @@ void camera() {
                     std::max(0, WorldPixelsH - HEIGHT));
 }
 void scene() {
+  int light=daylight(state);
+  if(light!=cached_light) {
+    cached_light=light;base_dirty=true;
+    if(light)for(unsigned c=0;c<65536;++c)light_palette[c]=art::blend(c,art::rgb(29,38,65),light);
+  }
+  if(light && !state.region && plots_changed())base_dirty=true;
   if (base_dirty)
     draw_base();
   else if (!state.region && plots_changed())
     draw_plots(true);
   camera();
   auto *p = framebuffer();
-  for (int y = 0; y < HEIGHT; ++y) {
-    if (y + camy < WorldPixelsH) {
-      int n = std::min(WIDTH, WorldPixelsW - camx);
-      std::memcpy(p + y * WIDTH, base + (y + camy) * WorldPixelsW + camx,
-                  n * 2);
-      if (n < WIDTH)
-        std::fill(p + y * WIDTH + n, p + (y + 1) * WIDTH, art::Sky);
-    } else
-      std::fill(p + y * WIDTH, p + (y + 1) * WIDTH, art::Sky);
-  }
+  copy_background(base, WorldPixelsW, WorldPixelsH, camx, camy, cached_light>0?light_palette[art::Sky]:art::Sky);
   art::Raster r{p, WIDTH, HEIGHT, camx, camy};
+  r.tint=cached_light>0?light_palette:nullptr;
   profile(DrawStage::Ground);
-  for (int i = 0; i < (state.region == uint8_t(Region::Home) ? 0 : 35); ++i) {
+  for (int i = 0; i < (indoors(state.region) ? 0 : 35); ++i) {
     int x = (state.region == uint8_t(Region::Lake) ? 5 : 24) * 16 +
             int(art::hash(i, 3) % 88),
         y = 14 * 16 + int(art::hash(i, 7) % 110);
@@ -351,6 +357,7 @@ void scene() {
                         hit_obstacle,
                         hit_ms,
                         page == Page::Fishing};
+  view.subminute_ms=clock_acc;
   profile(DrawStage::Water);
   world_objects.build(state, view, {camx, camy, WIDTH, HEIGHT});
   profile(DrawStage::Queue);
@@ -372,15 +379,24 @@ void scene() {
       }
   }
   world_objects.objects(r, state, view);
+  if(deposit_ms) {
+    int t=360-deposit_ms,xx=(int(state.px)*(360-t)+(8*16+8)*t)/360;
+    int yy=((int(state.py)-36)*(360-t)+(9*16-6)*t)/360-t*(360-t)/5000;
+    art::carry_item(r,xx,yy+31,deposited_item,state.selected);
+  }
   profile(DrawStage::Bodies);
   // Rain uses a small fixed particle budget and no full-screen blend.
-  if (state.rain && state.region != uint8_t(Region::Home))
+  if (state.rain && !indoors(state.region))
     for (int i = 0; i < 22; ++i) {
       int x = (i * 71 + animation * 2) % WIDTH,
           y = (i * 43 + animation * 5) % HEIGHT;
       r.line(camx + x, camy + y, camx + x - 2, camy + y + 4,
              art::rgb(174, 203, 173));
     }
+  if(!indoors(state.region)&&state.weather==unsigned(Weather::Snow))
+    for(int i=0;i<24;++i)r.rect(camx+(i*71+animation)%WIDTH,camy+(i*43+animation*2)%HEIGHT,1+(i%3==0),1,art::Cream);
+  if(!indoors(state.region)&&state.weather==unsigned(Weather::Wind))
+    for(int i=0;i<10;++i)r.line(camx+(i*59+animation*4)%WIDTH,camy+(i*47+animation)%HEIGHT,camx+(i*59+animation*4)%WIDTH+2,camy+(i*47+animation)%HEIGHT-1,art::Leaf);
   profile(DrawStage::Effects);
 }
 void stop_motion() {
@@ -396,7 +412,7 @@ void stop_motion() {
 void open_page(Page p) {
   stop_motion();
   page = p;
-  selected_row = 0;
+  selected_row = p==Page::Calendar?season_day(state.day)-1:0;
   if (p == Page::Bag)
     bag_selection = state.active_slot < HotbarSize ? state.active_slot : 0;
   redraw();
@@ -484,7 +500,7 @@ void feedback(Result result) {
   default:
     return;
   }
-  action_tool = result == Result::Harvested ? 3 : state.tool;
+  action_tool = result == Result::Harvested ? 3 : result==Result::Planted?1:state.tool;
   swing = art::tool_anim::duration(action_tool, state.tool_grade[action_tool]);
   if (result == Result::NoEnergy || result == Result::NoWater ||
       result == Result::NoSeeds)
@@ -496,7 +512,9 @@ void action(int x, int y) {
     return;
   uint32_t oldq = state.quests;
   int npc = npc_at(state, x, y);
+  int offered_item=held_item();
   auto res = act(state, x, y);
+  if(res==Result::Ship){deposited_item=offered_item;deposit_ms=360;}
   if (res == Result::Travel) {
     stop_motion();
     swing = 0;
@@ -536,6 +554,15 @@ void action(int x, int y) {
     changed();
     return;
   }
+  if(res==Result::Calendar || res==Result::Forecast || res==Result::EmptyShipping) {
+    open_page(res==Result::Calendar?Page::Calendar:res==Result::Forecast?Page::Forecast:Page::Shipping);return;
+  }
+  if(res==Result::Closed) {msg("尚未营业：种子铺 09–17，周三休息；会馆 08–20","Closed: seeds 09-17, Wed off; lodge 08-20");return;}
+  if(res==Result::WrongSeason) {msg("这类种子不适合当前季节","These seeds need another season");return;}
+  if (res == Result::Orders || res == Result::Kitchen) {
+    open_page(res == Result::Orders ? Page::Orders : Page::Kitchen);
+    return;
+  }
   if (state.quests != oldq)
     msg("委托完成！奖励已到账", "Quest complete! Reward received");
   if (res == Result::Struck || res == Result::Cleared) {
@@ -560,12 +587,21 @@ void facing_action() {
     int delta = int(fish_ms) - int(fish_bite);
     if (delta >= 0 && delta <= 850) {
       state.fish = std::min(999, int(state.fish) + 1);
-      state.energy -= 4;
+
       msg("钓到了！鲜鱼可出货或交委托", "Caught a fish!");
     } else
       msg("鱼溜走了，下次等浮漂下沉", "Wait for the bobber to sink");
     page = Page::Farm;
     changed();
+    return;
+  }
+  int front_x=state.px/16+(dir==1)-(dir==3),front_y=state.py/16+(dir==2)-(dir==0);
+  if(!state.region&&front_x==8&&front_y==9) {action(front_x,front_y);return;}
+  if (food_energy(held_item())) {
+    if (eat(state, held_item())) {
+      msg("吃好了，体力恢复了", "A good meal. Energy restored");
+      changed();
+    } else msg("体力充足，留着稍后享用吧", "Energy is full. Save it for later");
     return;
   }
   if (held_item() >= 12) {
@@ -578,6 +614,7 @@ void facing_action() {
   action(x, y);
 }
 void navigate(int d) {
+  if(swing)return;
   journey_region = following_npc = -1;
   route = false;
   if (moving)
@@ -592,8 +629,8 @@ void navigate(int d) {
   }
   redraw();
 }
-void sleep_now() {
-  morning_gold = farm::sleep(state);
+void sleep_now(bool forced = false) {
+  morning_gold = farm::sleep(state,forced);
   state.region = uint8_t(Region::Home);
   state.px = 16 * 16 + 8;
   state.py = 17 * 16 + 8;
@@ -641,7 +678,8 @@ void item_label(char *b, size_t n, int item, bool quantity = true) {
                      : item <= 15 ? tr(Crops[item - 12].en, Crops[item - 12].cn)
                      : item == 16 ? tr("Fish", "鲜鱼")
                      : item == 17 ? tr("Wood", "木材")
-                                  : tr("Stone", "石料");
+                     : item == 18 ? tr("Stone", "石料")
+                                  : item>=24?seasonal_name(item,english()):tr(Foods[item - 19].en, Foods[item - 19].cn);
   unsigned count = seed >= 0 ? state.seeds[seed] : item_count(state, item);
   std::snprintf(b, n, "%s%s", name, seed >= 0 ? tr(" seeds", "种子") : "");
   if (quantity) {
@@ -666,12 +704,12 @@ void item_icon(int x, int y, int item) {
   } else if (item <= 15) {
     IconCanvas c;
     art::produce(c, x, y + 2, item - 12);
-  } else {
+  } else if (item <= 18) {
     const sprites::Sprite *resource[] = {&sprites::fish, &sprites::logs,
                                          &sprites::stones};
     auto &sprite = *resource[item - 16];
     pocket::sprite(x - sprite.w / 2, y - sprite.h / 2, sprite);
-  }
+  } else { IconCanvas c; art::food(c, x, y + 6, item); }
 }
 void inventory_cell(farm_ui::Rect cell, int slot, bool bag) {
   int item = state.slots[slot];
@@ -817,7 +855,12 @@ void coin(int x, int y) {
   rect(x + 2, y + 1, 2, 3, art::Cream);
 }
 void weather_icon(int x, int y) {
-  if (state.rain) {
+  if(state.weather==unsigned(Weather::Snow)) {
+    line(x+7,y,x+7,y+12,art::Water);line(x+1,y+6,x+13,y+6,art::Water);
+    line(x+3,y+2,x+11,y+10,art::Water);line(x+3,y+10,x+11,y+2,art::Water);
+  } else if(state.weather==unsigned(Weather::Wind)) {
+    for(int i=0;i<3;++i)line(x,y+i*4+2,x+12-i*2,y+i*4+2,Sage);
+  } else if (state.rain) {
     rounded_rect(x, y + 2, 14, 6, art::rgb(139, 165, 158));
     rounded_rect(x + 3, y, 8, 7, art::rgb(183, 199, 178));
     for (int i = 0; i < 3; ++i)
@@ -878,9 +921,9 @@ void hud() {
   char b[96];
   std::snprintf(b, sizeof(b), "%s %u",
                 english() ? seasons_en[season()] : seasons_cn[season()],
-                (state.day - 1) % 7 + 1);
+                season_day(state.day));
   text(12, 9, b, Text);
-  std::snprintf(b, sizeof(b), "%02u:%02u", state.minute / 60,
+  std::snprintf(b, sizeof(b), "%02u:%02u", (state.minute / 60) % 24,
                 state.minute % 60);
   text(110 - text_width(b), 9, b, Muted);
   coin(13, 26);
@@ -914,7 +957,7 @@ void hud() {
     rect(x + 11, y + 4, 31, 3, Soft);
     if (amount)
       rect(x + 11, y + 4, std::max(1, 31 * amount / maximum), 3,
-           row ? farm_palette::Water : farm_palette::Sage);
+           row ? farm_palette::Water : state.energy<20?art::rgb(181,83,53):farm_palette::Sage);
     std::snprintf(b, sizeof(b), "%u", amount);
     text(vitals.x + vitals.w - 7 - text_width(b), y - 1, b,
          row ? farm_palette::Water : Sage);
@@ -978,16 +1021,50 @@ void modal() {
       : page == Page::Story    ? tr("STORY JOURNAL", "故事手册")
       : page == Page::Dialogue ? npc_name(talking_npc, english())
       : page == Page::Settings ? tr("SETTINGS", "设置")
+      : page == Page::Orders   ? tr("VILLAGE REQUESTS", "晴露镇每日委托")
+      : page == Page::Calendar ? tr("SEASON CALENDAR", "晴露谷日历")
+      : page == Page::Forecast ? tr("WEATHER CHANNEL", "农舍天气频道")
+      : page == Page::Shipping ? tr("SHIPPING BIN", "出货箱")
+      : page == Page::Kitchen  ? tr("COTTAGE KITCHEN", "农舍小厨房")
       : page == Page::Guide    ? tr("FARM JOURNAL", "农场手册")
       : page == Page::Fishing  ? tr("A QUIET MOMENT", "池畔垂钓")
-      : page == Page::Letter   ? tr("A LETTER FROM LIN", "村民小林的委托")
+      : page == Page::Letter   ? tr("A LETTER FROM LIN", "林婆婆的来信")
       : page == Page::Sleep    ? tr("HOME, SWEET HOME", "回到温暖的小屋")
                                : tr("A NEW MORNING", "又是美好的一天");
+  char title[64];
+  if(page==Page::Calendar) {
+    std::snprintf(title,sizeof(title),english()?"%s / Year %u":"%s · 第%u年日历",english()?seasons_en[season()]:seasons_cn[season()],(state.day-1)/112+1);name=title;
+  }
   center_text(x + 114, y + 10, name);
   icon_button(layout().close(), farm_ui::Icon::Close);
   line(x + 12, y + 31, x + 215, y + 31, art::Earth);
   char b[96];
-  if (page == Page::Shop) {
+  if(page==Page::Calendar) {
+    const char *days[]={"M","T","W","T","F","S","S"};
+    for(int i=0;i<7;++i)center_text(x+27+i*29,y+40,days[i],Muted);
+    for(int day=1;day<=28;++day) {
+      int xx=x+14+(day-1)%7*29,yy=y+57+(day-1)/7*25;
+      rounded_rect(xx,yy,26,22,day==selected_row+1?Sage:Soft,3);
+      std::snprintf(b,sizeof(b),"%d",day);center_text(xx+13,yy+4,b,day==selected_row+1?Paper:Text);
+      constexpr int birthdays[]={7,12,19,25};
+      if(day==birthdays[season()])rect(xx+11,yy+18,4,2,art::Gold);
+    }
+    fit_text(x+12,y+161,calendar_event((state.day-1)/28*28+selected_row+1,english()),202,Sage);
+    fit_text(x+12,y+181,tr("28 days / season; dots: birthdays", "每季28天 · 金点标记生日"),202,Muted);
+  } else if(page==Page::Forecast) {
+    auto w=weather_on(state.day==65535?1:state.day+1);
+    IconCanvas rr;art::world_appliance(rr,x+114,y+83,true);
+    std::snprintf(b,sizeof(b),"%s%s",tr("Tomorrow: ","明天天气："),weather_name(w,english()));
+    center_text(x+114,y+101,b,Sage);
+    paragraph(x+14,y+126,wet_weather(w)?tr("Rain waters outdoor crops. Pack a meal for a forest walk.","雨水会浇湿露天农田。\n带上食物，去林间走走吧。"):
+      w==Weather::Snow?tr("Snow does not water crops. Winter roots grow in the woods.","积雪不会浇水。\n冬日林间可以找到冬根菜。"):
+      tr("Remember to water your crops. The forecast stays the same all day.","记得给作物浇水。\n明天醒来，天气就和预报一致。"),200,4,Muted);
+  } else if(page==Page::Shipping) {
+    paragraph(x+14,y+45,tr("Hold an item and put it in the bin. One item per tap; payment arrives next morning.","拿起要卖的物品，朝出货箱放入。每次放一份，次日结算；不会出售背包其他东西。"),200,4);
+    std::snprintf(b,sizeof(b),"%s %uG",tr("Pending:","待结算："),state.shipping);center_text(x+114,y+118,b,Sage);
+    if(state.last_shipped) {item_label(b,sizeof(b),state.last_shipped,false);fit_text(x+14,y+143,b,200);}
+    auto rr=layout().confirm();button(rr.x,rr.y,rr.w,rr.h,tr("Retrieve last item", "取回最后放入的物品"));
+  } else if (page == Page::Shop) {
     for (int i = 0; i < 4; ++i) {
       int yy = y + 39 + i * 27;
       rounded_rect(x + 11, yy - 1, 206, 26, Soft);
@@ -997,7 +1074,7 @@ void modal() {
                     tr("days", "天"));
       text(x + 37, yy + 12, b, Muted);
       auto r = layout().shop_buy(i);
-      button(r.x, r.y, r.w, r.h, tr("BUY", "购买"),
+      button(r.x, r.y, r.w, r.h, crop_in_season(state.day,i)?tr("BUY", "购买"):tr("OFF", "非当季"),
              using_controller() && selected_row == i);
     }
     std::snprintf(b, sizeof(b), "%s %uG", tr("Gold:", "余额："), state.gold);
@@ -1053,22 +1130,57 @@ void modal() {
     const char *labels[] = {
         tr("HOME", "小屋休息"),   tr("SEED SHOP", "购买种子"),
         tr("SHIPPING", "出货箱"), tr("WELL", "井边补水"),
-        tr("POND", "池塘钓鱼"),   tr("VILLAGER", "村民委托")};
-    for (int i = 0; i < 6; ++i)
+        tr("POND", "池塘钓鱼"),   tr("VILLAGER", "村民委托"),
+        tr("REQUESTS", "每日委托"), tr("KITCHEN", "厨房料理")};
+    for (int i = 0; i < 8; ++i)
       button(x + 12 + (i % 2) * 105, y + 40 + (i / 2) * 29, 100, 25, labels[i],
              selected_row == i);
     const char *tabs[] = {tr("MAP", "地图"), tr("PEOPLE", "村民"),
                           tr("STORY", "剧情")};
     for (int i = 0; i < 3; ++i)
-      button(x + 12 + i * 69, y + 137, 65, 26, tabs[i]);
-    paragraph(x + 12, y + 174, story_goal(state, english()), 202, 2, Muted);
+      button(x + 12 + i * 69, y + 162, 65, 24, tabs[i]);
+    fit_text(x + 12, y + 191, story_goal(state, english()), 202, Muted);
+  } else if (page == Page::Orders) {
+    for (int i=0;i<NpcCount;++i) {
+      auto order = daily_order(state,i); int yy=y+36+i*33;
+      rounded_rect(x+12,yy,202,31,Soft,4);
+      item_icon(x+25,yy+14,order.item);
+      text(x+40,yy+2,npc_name(i,english()));
+      std::snprintf(b,sizeof(b),"+%uG",order.reward);
+      text(x+102,yy+2,b,Sage);
+      char label[64];item_label(label,sizeof(label),order.item,false);
+      std::snprintf(b,sizeof(b),"%s %u/%u",label,item_count(state,order.item),order.count);
+      fit_text(x+40,yy+16,b,118,Muted);
+      button(x+163,yy+5,48,22,order.done?tr("DONE","已交"):tr("GIVE","交付"),
+             using_controller()&&selected_row==i);
+    }
+    bool here=state.region==unsigned(Region::Town)&&near(state,18,10);
+    button(x+12,y+170,202,23,here?tr("BACK TO JOURNAL","返回手册"):
+           tr("WALK TO NOTICEBOARD","前往镇上公告栏"),using_controller()&&selected_row==4);
+    fit_text(x+12,y+196,toast_ms?toast:tr("New requests every morning","每日刷新 · 交付获得金币和好感"),202,Muted);
+  } else if (page == Page::Kitchen) {
+    for(int i=0;i<2;++i) {
+      const auto&r=Recipes[i];int yy=y+39+i*59;
+      rounded_rect(x+12,yy,202,55,Soft,5);item_icon(x+26,yy+18,r.item);
+      item_label(b,sizeof(b),r.item,false);fit_text(x+43,yy+4,b,114);
+      std::snprintf(b,sizeof(b),"+%u %s",Foods[r.item-19].energy,tr("energy","体力"));
+      text(x+43,yy+19,b,Sage);
+      char first[40],second[40];item_label(first,sizeof(first),r.first,false);item_label(second,sizeof(second),r.second,false);
+      std::snprintf(b,sizeof(b),"%s %u/%u + %s %u/%u",first,item_count(state,r.first),r.first_count,second,item_count(state,r.second),r.second_count);
+      fit_text(x+20,yy+39,b,185,Muted);
+      button(x+163,yy+7,48,24,tr("COOK","制作"),using_controller()&&selected_row==i);
+    }
+    bool here=state.region==unsigned(Region::Home)&&near(state,21,10);
+    button(x+12,y+164,202,24,here?tr("BACK TO JOURNAL","返回手册"):
+           tr("WALK TO COTTAGE STOVE","前往农舍灶台"),using_controller()&&selected_row==2);
+    paragraph(x+12,y+192,toast_ms?toast:tr("Hold food and use it to eat","拿起食物，点操作按钮即可食用"),202,1,Muted);
   } else if (page == Page::World) {
     for (int i = 0; i < RegionCount; ++i) {
       auto r = layout().destination(i);
       button(r.x, r.y, r.w, r.h, region_name(Region(i), english()),
              selected_row == i);
     }
-    paragraph(x + 12, y + 140,
+    paragraph(x + 12, y + 162,
               tr("Choose a destination to walk there. The lake opens after "
                  "repairing the bridge.",
                  "选择目的地会沿路走过去。林间旧桥修好后，才能到达镜光湖。"),
@@ -1174,12 +1286,30 @@ void go_to(Region region, int x, int y, bool use) {
   begin_route(Portals[portal].x, Portals[portal].y, true);
 }
 void guide_route(int i) {
+  if (i == 6 || i == 7) { open_page(i == 6 ? Page::Orders : Page::Kitchen); return; }
+  if (i < 0 || i >= 6) return;
   following_npc = -1;
-  const int goals[][2] = {{10, 9}, {7, 7}, {8, 9}, {7, 8}, {24, 17}, {21, 8}};
+  const int goals[][2] = {{10, 9}, {15, 10}, {8, 9}, {7, 8}, {24, 17}, {21, 8}};
   if (i == 4)
     equip_item(state, 7);
-  Region r = i == 0 ? Region::Home : i == 1 ? Region::Town : Region::Farm;
+  Region r = i == 0 ? Region::Home : i == 1 ? Region::SeedShop : Region::Farm;
   go_to(r, goals[i][0], goals[i][1], true);
+}
+void order_action(int choice) {
+  bool here=state.region==unsigned(Region::Town)&&near(state,18,10);
+  if (!here) { go_to(Region::Town,18,10,true); return; }
+  if (choice == 4) { open_page(Page::Guide); return; }
+  if (deliver_order(state,choice)) msg("交付完成，金币和好感已增加", "Delivered! Gold and friendship gained");
+  else msg("物品不足，或这份委托今天已完成", "Need the items; each request is once a day");
+  changed();
+}
+void kitchen_action(int choice) {
+  bool here=state.region==unsigned(Region::Home)&&near(state,21,10);
+  if (!here) { go_to(Region::Home,21,10,true); return; }
+  if (choice == 2) { open_page(Page::Guide); return; }
+  if (cook(state,choice)) msg("料理完成！拿起食物可以恢复体力", "Cooked! Hold food and use it to eat");
+  else msg("材料不足，或料理已装满背包", "Need ingredients and space for the meal");
+  changed();
 }
 void dialogue_action(int choice) {
   if (talking_npc < 0 || talking_npc >= 4)
@@ -1237,6 +1367,11 @@ void shop_action(int index) {
   changed();
 }
 void panel_tap(int px, int py) {
+  auto m=layout().modal();
+  if(page==Page::Calendar && px>=m.x+14 && px<m.x+217 && py>=m.y+57 && py<m.y+157) {
+    selected_row=(py-m.y-57)/25*7+(px-m.x-14)/29;redraw();return;
+  }
+  if(page==Page::Shipping && layout().confirm().contains(px,py)) {if(unship(state))changed();return;}
   auto ui = layout();
   if (!ui.modal().contains(px, py))
     return;
@@ -1244,7 +1379,17 @@ void panel_tap(int px, int py) {
     page = Page::Farm;
     return;
   }
-  if (page == Page::Dialogue) {
+  if (page == Page::Orders) {
+    for(int i=0;i<4;++i) if(farm_ui::Rect{ui.modal().x+163,ui.modal().y+41+i*33,48,22}.contains(px,py)) {
+      order_action(i);return;
+    }
+    if(farm_ui::Rect{ui.modal().x+12,ui.modal().y+170,202,23}.contains(px,py)) order_action(4);
+  } else if (page == Page::Kitchen) {
+    for(int i=0;i<2;++i) if(farm_ui::Rect{ui.modal().x+163,ui.modal().y+46+i*59,48,24}.contains(px,py)) {
+      kitchen_action(i);return;
+    }
+    if(farm_ui::Rect{ui.modal().x+12,ui.modal().y+164,202,24}.contains(px,py)) kitchen_action(2);
+  } else if (page == Page::Dialogue) {
     for (int i = 0; i < 3; ++i)
       if (farm_ui::Rect{ui.modal().x + 12 + i * 69, ui.modal().y + 177, 65, 25}
               .contains(px, py)) {
@@ -1300,12 +1445,12 @@ void panel_tap(int px, int py) {
       }
   } else if (page == Page::Guide) {
     for (int i = 0; i < 3; ++i)
-      if (farm_ui::Rect{ui.modal().x + 12 + i * 69, ui.modal().y + 137, 65, 26}
+      if (farm_ui::Rect{ui.modal().x + 12 + i * 69, ui.modal().y + 162, 65, 24}
               .contains(px, py)) {
         open_page(i == 0 ? Page::World : i == 1 ? Page::People : Page::Story);
         return;
       }
-    for (int i = 0; i < 6; ++i)
+    for (int i = 0; i < 8; ++i)
       if (ui.destination(i).contains(px, py)) {
         guide_route(i);
         return;
@@ -1388,6 +1533,14 @@ void key(Key k) {
     return;
   }
   if (page != Page::Farm) {
+    if(page==Page::Forecast||page==Page::Calendar||page==Page::Shipping) {
+      if(page==Page::Calendar&&(k==Key::LEFT||k==Key::RIGHT||k==Key::UP||k==Key::DOWN)) {
+        selected_row=std::clamp(selected_row+(k==Key::LEFT?-1:k==Key::RIGHT?1:k==Key::UP?-7:7),0,27);redraw();return;
+      }
+      if(k==Key::A&&page==Page::Shipping) {if(unship(state))changed();}
+      else if(k==Key::A||k==Key::B)page=Page::Farm;
+      redraw();return;
+    }
     if (page == Page::Guide &&
         (k == Key::L || k == Key::R || k == Key::SELECT)) {
       open_page(k == Key::L   ? Page::World
@@ -1402,11 +1555,11 @@ void key(Key k) {
     if (page == Page::Guide || page == Page::World) {
       if (k == Key::UP && selected_row >= 2)
         selected_row -= 2;
-      if (k == Key::DOWN && selected_row < (page == Page::World ? 3 : 4))
+      if (k == Key::DOWN && selected_row + 2 < (page == Page::World ? RegionCount : 8))
         selected_row += 2;
       if (k == Key::LEFT && (selected_row % 2))
         --selected_row;
-      if (k == Key::RIGHT && !(selected_row % 2))
+      if (k == Key::RIGHT && !(selected_row % 2) && selected_row + 1 < (page == Page::World ? RegionCount : 8))
         ++selected_row;
     } else if (page == Page::People || page == Page::Dialogue) {
       int count = page == Page::People ? 4 : 3;
@@ -1414,6 +1567,10 @@ void key(Key k) {
         selected_row = (selected_row + count - 1) % count;
       if (k == Key::DOWN || k == Key::RIGHT)
         selected_row = (selected_row + 1) % count;
+    } else if (page == Page::Orders || page == Page::Kitchen) {
+      int count=page==Page::Orders?5:3;
+      if(k==Key::UP||k==Key::LEFT) selected_row=(selected_row+count-1)%count;
+      if(k==Key::DOWN||k==Key::RIGHT) selected_row=(selected_row+1)%count;
     } else if (page == Page::Settings) {
       if (k == Key::UP)
         selected_row = (selected_row + 3) % 4;
@@ -1444,7 +1601,9 @@ void key(Key k) {
         following_npc = selected_row;
         auto p = npc_pose(state, selected_row);
         go_to(p.region, p.x / 16, p.y / 16, true);
-      } else if (page == Page::Dialogue)
+      } else if (page == Page::Orders) order_action(selected_row);
+      else if (page == Page::Kitchen) kitchen_action(selected_row);
+      else if (page == Page::Dialogue)
         dialogue_action(selected_row);
       else if (page == Page::Story)
         open_page(Page::Guide);
@@ -1601,7 +1760,8 @@ void pointer(Phase phase, int x, int y) {
   if (title_screen) {
     title_screen = false;
     scene_surface(true);
-    msg("点地块自动操作，背包里有手册", "Tap tiles to farm. Journal in bag");
+    if(state.day==1&&state.minute<=365&&!state.harvested)msg("点地块自动操作，背包里有手册", "Tap tiles to farm. Journal in bag");
+    else toast_ms=0;
     redraw();
     return;
   }
@@ -1619,7 +1779,8 @@ void pointer(Phase phase, int x, int y) {
     open_page(Page::Guide);
     return;
   }
-  if (ui.calendar().contains(x, y) || ui.vitals().contains(x, y) ||
+  if(ui.calendar().contains(x,y)){open_page(Page::Calendar);return;}
+  if (ui.vitals().contains(x, y) ||
       ui.header_button(2).contains(x, y))
     return;
   if (ui.belt().contains(x, y))
@@ -1647,10 +1808,15 @@ void pointer(Phase phase, int x, int y) {
   scene_target(x + camx, y + camy, tx, ty);
   int pi = plot_index(tx, ty);
   bool interactive =
-      pi >= 0 || !walkable(state, tx, ty) || (ty == 7 && (tx == 6 || tx == 25));
+      (!state.region && pi >= 0) || !walkable(state, tx, ty) ||
+      portal_at(state,tx,ty) || npc_at(state,tx,ty)>=0 ||
+      forage_at(state,tx,ty)>=0 ||
+      (!state.region && ty==7 && tx==6) ||
+      (state.region==unsigned(Region::Town) && tx==5 && ty==7);
   begin_route(tx, ty, interactive);
 }
 void tick(uint32_t elapsed) {
+  if(deposit_ms) {deposit_ms=deposit_ms>elapsed?deposit_ms-elapsed:0;redraw();}
   if (hit_ms) {
     hit_ms = hit_ms > elapsed ? hit_ms - elapsed : 0;
     redraw();
@@ -1679,15 +1845,24 @@ void tick(uint32_t elapsed) {
   }
   if (page != Page::Farm)
     return;
+  // NPCs share the player's continuous movement clock. Refresh while a
+  // visible villager walks; keep the low idle rate when everyone is still.
+  for(int id=0;id<NpcCount;++id) {
+    auto p=npc_pose(state,id,clock_acc);
+    if(unsigned(p.region)==state.region && p.walking && p.x>=camx-24 && p.x<camx+WIDTH+24 && p.y>=camy-32 && p.y<camy+HEIGHT+32) {redraw();break;}
+  }
+  if(state.overwork>=10) { stop_motion();sleep_now(true);msg("体力透支，醒来时已回到家中","Overworked. You woke up at home");return; }
   if ((action_hold || held(Key::A)) && !swing)
     facing_action();
   clock_acc += elapsed;
   if (clock_acc >= 500) {
     clock_acc -= 500;
     ++state.minute;
-    if (state.minute >= 1320) {
+    if(state.minute==1440)msg("已经午夜，早点休息体力恢复更多","Midnight. Sleep soon to recover energy");
+    if(state.minute==1500)msg("凌晨一点，两点就会昏睡","1 AM. You will pass out at 2 AM");
+    if (state.minute >= 1560) {
       stop_motion();
-      sleep_now();
+      sleep_now(true);
       msg("夜深了，农夫也需要休息", "Time to rest");
       return;
     }
@@ -1713,7 +1888,7 @@ void tick(uint32_t elapsed) {
     if (std::abs(dx) > 5 || std::abs(dy) > 5)
       d = std::abs(dx) > std::abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0);
   }
-  if (d >= 0 && !moving)
+  if (d >= 0 && !moving && !swing)
     navigate(d);
   if (route && !moving && following_npc >= 0) {
     auto p = npc_pose(state, following_npc);
@@ -1754,8 +1929,8 @@ void tick(uint32_t elapsed) {
       }
     }
   }
-  if (moving) {
-    move_acc += elapsed * 64;
+  if (moving && !swing) {
+    move_acc += elapsed * (state.energy?64:32);
     int amount = move_acc / 1000;
     move_acc %= 1000;
     int before_x = state.px, before_y = state.py;

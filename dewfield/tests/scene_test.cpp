@@ -57,6 +57,8 @@ int main() {
   overlap(Kind::Chest, 136, 156, 156); // Both sides remain inside map row 9.
   overlap(Kind::Well, 120, 140, 140);
   overlap(Kind::Board, 168, 140, 140);
+  overlap(Kind::Television,168,140,140);overlap(Kind::Calendar,168,140,140);
+  overlap(Kind::Counter,64,160,160);overlap(Kind::WorldNpc,168,140,140);
   overlap(Kind::House, 64, 48, 109);
   overlap(Kind::Fence, 160, 128, 143);
   overlap(Kind::Rock, 168, 220, 220);
@@ -67,18 +69,18 @@ int main() {
   for (auto &p : s.plots)
     p = {1, 1, 2, 1};
   std::memset(s.sprinklers, 255, sizeof(s.sprinklers));
-  View v{};
+  View v{};s.minute=480;
   Queue all;
   all.build(s, v, {0, 0, 512, 384});
   assert(all.count < Queue::Capacity && all.count > 250);
-  bool found[13]{};
+  bool found[unsigned(Kind::Counter)+1]{};
   for (unsigned i = 0; i < all.count; ++i) {
     found[int(all.entries[i].kind)] = true;
     if (i)
       assert(all.entries[i - 1].depth <= all.entries[i].depth);
   }
-  for (bool present : found)
-    assert(present);
+  for(unsigned k=0;k<=unsigned(Kind::Player);++k)if(k!=unsigned(Kind::Villager))assert(found[k]);
+  assert(found[unsigned(Kind::WorldNpc)]);
   // Sorting is deterministic even when the caller's submission order changes.
   Queue q;
   q.build(s, v, {0, 0, W, H});

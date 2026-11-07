@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-#include "../core.hpp"
+#include "../living.hpp"
 #include <cassert>
 #include <cstdio>
 #include <cstring>
@@ -26,7 +26,7 @@ int main() {
   s.tool = uint8_t(Tool::Hand);
   assert(act(s, 10, 12) == Result::Harvested);
   assert(s.produce[0] == 1 && s.harvested == 1);
-  assert(ship(s) == 16);
+  stand(s,8,10);equip_item(s,12);assert(ship(s) == 16);
   assert(s.produce[0] == 0 && s.gold == 100 && s.shipping == 16);
   assert(sleep(s) == 16);
   assert(s.gold == 116 && s.shipping == 0 && s.day == 2);
@@ -42,17 +42,17 @@ int main() {
   assert(s.energy == energy && s.seeds[0] == seed);
   sleep(s);
   assert(s.plots[i].growth == 0);
-  s.tool = uint8_t(Tool::Water);
+  s.tool = uint8_t(Tool::Water);s.plots[i].wet=0;s.rain=false;
   assert(act(s, 13, 14) == Result::Watered);
   assert(s.water == 29);
   assert(act(s, 13, 14) == Result::None);
   assert(s.water == 29);
   sleep(s);
-  assert(s.plots[i].growth == 1 && !s.plots[i].wet);
+  assert(s.plots[i].growth == 1 && s.plots[i].wet==s.rain);
+  while(!wet_weather(weather_on(s.day+1)))sleep(s);
+  sleep(s);assert(s.rain);
   sleep(s);
-  assert(s.rain);
-  sleep(s);
-  assert(s.plots[i].growth == 2);
+  assert(s.plots[i].growth >= 2);
   // Rain and sprinklers establish moisture for the next day's growth.
   s.wood = 8;
   s.stone = 6;
@@ -73,19 +73,21 @@ int main() {
   assert(act(s, 10, 9) != Result::Cleared);
   assert(s.wood == 4);
   assert(act(s, 25, 7) == Result::Far);
-  s.energy = 0;
+  s.energy = 0;s.overwork=10;
   s.tool = uint8_t(Tool::Hoe);
   assert(act(s, 11, 10) == Result::NoEnergy);
   sleep(s);
   assert(s.energy == 100);
   // Price checks, upgrade idempotence, quest reward idempotence.
   s.gold = 200;
+  s.region=unsigned(Region::SeedShop);s.visited|=1u<<s.region;s.px=15*16+8;s.py=11*16+8;s.day=85-28;s.minute=600;
   assert(buy_seed(s, 3));
   assert(s.gold == 178);
   assert(!upgrade(s));
   s.gold = 180;
   assert(upgrade(s) && s.capacity == 60);
   assert(!upgrade(s));
+  s.region=0;
   s.harvested = 3;
   s.earned = 120;
   s.fish = 3;

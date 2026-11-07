@@ -50,32 +50,30 @@ struct Motion { int x,y,angle,lean_x,lean_y,progress; bool two_hands; };
 inline Motion motion(int dir,int tool,int remaining,int grade=0) {
   int dx=(dir==1)-(dir==3),dy=(dir==2)-(dir==0),side=dir==3?-1:1;
   int p=remaining?std::clamp((duration(tool,grade)-remaining)*256/duration(tool,grade),0,255):0;
-  Motion m{side*6,-16,0,0,0,p,false};
+  Motion m{side*6,-15,dir*2,0,0,p,false};
   if(!remaining) {
-    m.angle=tool==0?(dir==3?0:6):tool==4?(dir==3?4:2):tool==5?(dir==3?6:4):tool==6?(dir==3?6:0):0;
+    constexpr int idle[]={0,1,3,7};
+    m.angle=tool==2?dir*2:idle[dir&3];
+    m.x=dir==0?-4:side*6;m.y=tool==2?-17:dir==2?-11:-15;
     return m;
   }
-  int base=tool==0?3+dir*2:tool==5?1+dir*2:7+dir*2;
-  if(tool==0) {
+  int base=dir*2;
+  if(tool==0||tool==4||tool==5||tool==6) {
     m.two_hands=true;
-    if(p<80) {m.x=side*3;m.y=-25;m.angle=base-2;}
-    else if(p<160) {m.x=dx*7+side*2;m.y=-15+dy*2;m.angle=base-1;}
-    else {m.x=dx*(p<220?8:5)+side*2;m.y=-11+dy*4;m.angle=base;m.lean_x=dx;m.lean_y=dy;}
-  } else if(tool==4 || tool==5) {
-    m.two_hands=true;
-    if(p<100) {m.x=side*2;m.y=-29;m.angle=base-2;}
-    else if(p<160) {m.x=dx*5+side*3;m.y=-22;m.angle=base-1;}
-    else {m.x=dx*7+side*2;m.y=-12+dy*3;m.angle=base+(tool==4 && p>220);m.lean_x=dx;m.lean_y=dy;}
+    int phase=p<80?0:p<130?1:p<180?2:p<220?3:4;
+    constexpr int angles[]={-2,-1,0,0,1};
+    m.angle=base+angles[phase]*side;
+    if(phase==0) {m.x=side*3-dx*2;m.y=-26;}
+    else if(phase==1) {m.x=side*3+dx*3;m.y=-22;}
+    else {m.x=side*2+dx*7;m.y=dir==2?-3:dir==0?-14:-11;
+      m.lean_x=dx;m.lean_y=dy;}
+    if(tool==0&&phase>=2)m.angle=base;
+    if(tool==5&&phase==4)m.angle=base; // pick lifts straight out of the rock
+    if(tool==6) {m.y-=5;if(phase>=2)m.angle=base;}
+    if(phase==4) {constexpr int idle[]={0,1,3,7};m.x=dir==0?-4:side*6;m.y=dir==2?-11:-15;m.angle=idle[dir&3];m.lean_x=m.lean_y=0;}
   } else if(tool==2) {
-    m.x=dx*5+side*5;m.y=-12+dy*3;
-    m.angle=dir==3?4:dir==0?6:0;
-    if(p>70 && p<220) m.angle+=dir==3?-1:1;
-    m.lean_x=(p>70 && p<220)?dx:0;
-  } else if(tool==6) {
-    m.two_hands=true;
-    if(p<90) {m.x=-dx*3+side*3;m.y=-27;m.angle=base-3;}
-    else if(p<170) {m.x=dx*8+side*2;m.y=-20+dy*2;m.angle=base;}
-    else {m.x=dx*7+side*3;m.y=-15+dy*2;m.angle=base-1;}
+    m.x=side*4+dx*6;m.y=-11+dy*4;m.angle=base;
+    if(p>70&&p<220){m.lean_x=dx;m.lean_y=1;}
   } else {
     int reach=p<90?2:p<190?9:5;
     m.x=dx*reach+side*4;m.y=-13+dy*(reach/2);m.lean_x=p>90&&p<190?dx:0;
@@ -99,13 +97,13 @@ inline void body(Raster&r,int x,int y,int dir,int walk,const Motion&m) {
 }
 inline void use(Raster&r,int x,int y,int dir,int walk,int tool,int remaining,int grade,bool fishing=false) {
   Motion m=motion(dir,tool,remaining,grade);
-  if(fishing && tool==6 && !remaining) {m.x=((dir==1)-(dir==3))*7+(dir==3?-3:3);m.y=-15+((dir==2)-(dir==0))*2;m.angle=6+dir*2;}
+  if(fishing && tool==6 && !remaining) {m.x=((dir==1)-(dir==3))*7+(dir==3?-3:3);m.y=-15+((dir==2)-(dir==0))*2;m.angle=dir*2;}
   auto hands=[&] {
     if(m.two_hands) arm(r,x-5+m.lean_x,y-14+m.lean_y,x+m.x-1,y+m.y);
     arm(r,x+((dir==3)?-4:5)+m.lean_x,y-14+m.lean_y,x+m.x+1,y+m.y);
   };
   auto held=[&] {
-    if(tool==1) sprite(r,sprites::seed_handbag,x+(dir==3?3:-10),y-19);
+    if(tool==1) sprite(r,sprites::seed_handbag,x+m.x-4,y+m.y-2);
     else if(tool!=3) grounded(r,frame(tool,grade,m.angle),x+m.x,y+m.y);
   };
   if(dir==0) {hands();held();}
@@ -113,7 +111,7 @@ inline void use(Raster&r,int x,int y,int dir,int walk,int tool,int remaining,int
   if(dir!=0) {hands();held();}
   if(tool==6 && ((remaining && m.progress>110) || (fishing && !remaining))) {
     constexpr int cs[]={256,181,0,-181,-256,-181,0,181},sn[]={0,181,256,181,0,-181,-256,-181};
-    int a=m.angle&7,tx=(12*cs[a]+16*sn[a])/256,ty=(12*sn[a]-16*cs[a])/256;
+    int a=m.angle&7,tx=(20*sn[a])/256,ty=(-20*cs[a])/256;
     int dx=(dir==1)-(dir==3),dy=(dir==2)-(dir==0);
     r.line(x+m.x+tx,y+m.y+ty,x+dx*21,y+dy*21-2,farm_palette::Soft);
     r.rect(x+dx*21-1,y+dy*21-2,3,1,rgb(191,97,48));

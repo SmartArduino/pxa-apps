@@ -23,6 +23,9 @@ p.add_argument('--navigation-only',action='store_true')
 p.add_argument('--action-only',action='store_true')
 p.add_argument('--inventory-only',action='store_true')
 p.add_argument('--tools-only',action='store_true')
+p.add_argument('--life-only',action='store_true')
+p.add_argument('--living-only',action='store_true')
+p.add_argument('--npc-only',action='store_true')
 p.add_argument('--world-only',action='store_true')
 p.add_argument('--layers-only',action='store_true')
 p.add_argument('--cultivation-only',action='store_true')
@@ -126,8 +129,10 @@ def saved():
     result.update(seeds=list(struct.unpack_from('<8H',raw,42))[::2],produce=list(struct.unpack_from('<8H',raw,42))[1::2],plots=[list(raw[98+i*4:102+i*4])for i in range(80)])
     if raw[4] >= 2:
         result.update(slots=list(raw[449:477]),active=raw[477],settings=raw[502],damage=list(raw[425:449]))
-    if raw[4] == 3:
+    if raw[4] >= 3:
         result.update(region=raw[503],story=raw[504],met=raw[505],visited=raw[506],bonds=list(raw[507:511]))
+    if raw[4] >= 4:
+        result.update(gathered=list(struct.unpack_from('<3H',raw,530)),meals=list(struct.unpack_from('<2H',raw,536)),orders_done=struct.unpack_from('<H',raw,543)[0])
     return result
 
 def wait_for(predicate,label,seconds=12):
@@ -203,12 +208,88 @@ try:
     tap(cw//2,ch-38)
     if args.appearance_only or args.animation_only or args.action_only or args.cultivation_only:time.sleep(2.4)
     capture('02-farm')
+    if args.npc_only:
+        assert args.fixture_tool
+        key('ENTER');time.sleep(.4);saved();stop()
+        raw=out/'npc.save';unused=out/'npc.csv'
+        subprocess.run([str(args.fixture_tool.resolve()),'living-npc',str(raw),str(unused)],check=True)
+        replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38,settle=0)
+        images=[]
+        for frame in range(12):
+            capture('npc-walk-'+str(frame));images.append(Image.open(out/('npc-walk-'+str(frame)+'.png')).convert('RGB'));time.sleep(.005)
+        # On the wide viewport this rectangle contains the moving village
+        # elder, with no HUD, player or animated water in its bounds.
+        assert args.width==800 and args.height==480
+        crops=[im.crop((150*scale,30*scale,250*scale,86*scale)).tobytes()for im in images]
+        assert len(set(crops))>=8,'Villager walking did not refresh smoothly'
+        images[0].save(out/'villager-walk.gif',save_all=True,append_images=images[1:],duration=100,loop=0)
+        stop();print('PASS: actual villager displacement and shared gait animate in the real simulator');raise SystemExit(0)
+    if args.living_only:
+        assert args.fixture_tool
+        key('ENTER');time.sleep(.4);saved();stop()
+        for label in ('home','shop','town','lodge','orchard','shipping','night','snow'):
+            raw=out/(label+'.save');unused=out/(label+'.csv')
+            subprocess.run([str(args.fixture_tool.resolve()),'living-'+label,str(raw),str(unused)],check=True)
+            replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38);time.sleep(1)
+            capture('living-'+label)
+            if label=='home':
+                world_tap(15,7);wait_for_panel('TV forecast');capture('living-forecast');key('BACK')
+                world_tap(13,5);wait_for_panel('Calendar');capture('living-calendar');key('BACK')
+            elif label=='shop':
+                world_tap(15,10);wait_for_panel('Store counter');capture('living-store-counter');key('BACK')
+            elif label=='shipping':
+                before=saved();world_tap(8,9)
+                after=wait_for(lambda s:s['shipping']==16,'one held item shipped')
+                assert after['produce'][0]==before['produce'][0]-1 and after['produce'][2]==before['produce'][2] and after['fish']==before['fish']
+                capture('living-one-item-shipped')
+            key('ENTER');time.sleep(.3);value=saved();stop()
+            start();tap(cw//2,ch-38);key('ENTER');time.sleep(.3);again=saved()
+            assert again['day']==value['day'] and again['region']==value['region'] and again['produce']==value['produce']
+            stop()
+        (out/'living-report.json').write_text(json.dumps({'result':'passed','scenes':8,'shipping':'one held item only','restart':'persisted'},indent=2))
+        print('PASS: real signed simulator TV/calendar/store input, eight scenes, individual shipping and restarts')
+        raise SystemExit(0)
+    if args.life_only:
+        assert args.fixture_tool
+        key('ENTER');time.sleep(.4);saved();stop()
+        for label in ('orchard','kitchen','orders'):
+            raw=out/(label+'.save');unused=out/(label+'.csv')
+            subprocess.run([str(args.fixture_tool.resolve()),'life-'+label,str(raw),str(unused)],check=True)
+            replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38);time.sleep(1)
+            capture('life-'+label+'-area')
+            if label=='orchard':
+                world_tap(7,8)
+                report['forage']=wait_for(lambda s:s['gathered'][0]>=10,'orchard apples')
+                capture('life-orchard-collected')
+            elif label=='kitchen':
+                world_tap(21,10);wait_for_panel('kitchen');capture('life-kitchen-recipes')
+                tap((cw-228)//2+180,(ch-210)//2+58)
+                report['cooked']=wait_for(lambda s:s['meals'][0]==2,'cooked stew')
+                assert report['cooked']['gathered'][1]==4 and report['cooked']['produce'][1]==19
+                capture('life-kitchen-cooked')
+            else:
+                world_tap(18,10);wait_for_panel('requests');capture('life-daily-requests')
+                tap((cw-228)//2+180,(ch-210)//2+50)
+                report['delivered']=wait_for(lambda s:s['orders_done']==1,'request delivered')
+                assert report['delivered']['gold']>480 and report['delivered']['bonds'][0]==3
+                tap((cw-228)//2+180,(ch-210)//2+50)
+                time.sleep(.4);assert saved()['orders_done']==1
+                capture('life-request-complete')
+            stop();start();tap(cw//2,ch-38);time.sleep(.5)
+            key('ENTER');time.sleep(.3);value=saved()
+            if label=='orchard':assert value['gathered'][0]>=10
+            elif label=='kitchen':assert value['meals'][0]==2
+            else:assert value['orders_done']==1
+            stop()
+        (out/'life-report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+        print('PASS: real simulator orchard gathering, kitchen cooking, daily requests, duplicate guard and restart saves')
+        raise SystemExit(0)
     if args.world_only:
         assert args.fixture_tool
         def persist():
             key('ENTER');time.sleep(.3);value=saved();key('ENTER');return value
         def journal_tab(tab):
-            key('S');tap((cw-228)//2+44+tab*69,(ch-210)//2+150)
+            key('S');tap((cw-228)//2+44+tab*69,(ch-210)//2+174)
         def wait_region(region):
             return wait_for(lambda s:s['region']==region,'region '+str(region),30)
         time.sleep(2.4);persist()
@@ -273,10 +354,10 @@ try:
         tool_tap(0);assert persist()['active']==0
         key('A');capture('bag-before')
         mx,my=(cw-228)//2,(ch-210)//2
-        drag(mx+25,my+77,mx+25,my+49)
+        drag(mx+54,my+49,mx+25,my+49)
         capture('bag-seeds-equipped');key('BACK')
         after=persist()
-        assert after['slots'][0]==8 and after['slots'][7]==1 and after['seeds']==initial['seeds']
+        assert after['slots'][0]==8 and after['slots'][1]==1 and after['seeds']==initial['seeds']
         capture('carrying-seeds')
         x,y,w=tool_geometry(0);xx,yy,ww=tool_geometry(4)
         drag(x+w//2,y+15,xx+ww//2,yy+15)

@@ -78,6 +78,10 @@ void open_menu();
 // Draw-only access. framebuffer() is nullptr outside game::draw().
 void pixel(int x, int y, uint16_t color);
 uint16_t *framebuffer();
+// Copy a cropped, pitched world cache through the existing native RGB565
+// operation when available. The software fallback produces identical pixels.
+void copy_background(const uint16_t *source, int sw, int sh, int x, int y,
+                     uint16_t outside);
 // Optional, quiet synthesized tones. when_seconds is absolute foreground time
 // (millis()/1000); zero means now. At most 16 queued tones, duration <= 4
 // seconds.

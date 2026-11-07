@@ -6,7 +6,7 @@ namespace farm {
 constexpr int MapW = 32, MapH = 24, Tile = 16, PlotX = 10, PlotY = 9,
               PlotW = 10, PlotH = 8;
 constexpr int PlotCount = PlotW * PlotH, SaveBytes = 768;
-constexpr int InventorySize = 28, HotbarSize = 7, ItemCount = 18;
+constexpr int InventorySize = 28, HotbarSize = 7, ItemCount = 28;
 enum class Tool : uint8_t { Hoe, Seeds, Water, Hand, Axe, Pick, Rod, Count };
 enum class Ground : uint8_t { Grass, Path, Water, Wall, Tree, Rock, Weed };
 enum class Result : uint8_t {
@@ -33,7 +33,9 @@ enum class Result : uint8_t {
   Travel,
   Locked,
   Dialogue,
-  Foraged
+  Foraged,
+  Orders,
+  Kitchen, Calendar, Forecast, Closed, WrongSeason, EmptyShipping
 };
 struct Crop {
   const char *cn, *en;
@@ -61,7 +63,11 @@ struct State {
   bool show_joystick = true, show_action = true, music = true;
   bool rain = false;
   uint8_t region = 0, story = 0, met = 0, visited = 1, bonds[4]{}, personal = 0,
-          forage = 0;
+          order_claimed = 0;
+  uint16_t forage = 0, gathered[3]{}, meals[2]{}, order_day = 0, orders_done = 0;
+  uint16_t seasonal[5]{};
+  uint8_t weather = 0, overwork = 0, last_shipped = 0;
+  bool exhausted = false;
   uint16_t chat_day[4]{}, gift_day[4]{};
 };
 struct Obstacle {
@@ -82,6 +88,7 @@ int obstacle_hp(int obstacle);
 int tree_stage(const State &s, int obstacle);
 int strikes_left(const State &s, int obstacle, Tool tool);
 unsigned item_count(const State &s, int item);
+bool change_item(State &s, int item, int amount);
 void sync_inventory(State &s);
 bool select_slot(State &s, int slot);
 bool swap_slots(State &s, int from, int to);
@@ -96,11 +103,16 @@ bool walkable(const State &s, int x, int y);
 bool near(const State &s, int x, int y);
 void fresh(State &s);
 Result act(State &s, int x, int y);
-uint32_t sleep(State &s);
+uint32_t sleep(State &s, bool forced = false);
+constexpr int SeasonDays = 28;
+inline int season_of(uint16_t day) { return ((day - 1) / SeasonDays) % 4; }
+inline int season_day(uint16_t day) { return (day - 1) % SeasonDays + 1; }
+inline bool indoors(uint8_t region) { return region == 4 || region >= 6; }
 bool buy_seed(State &s, int kind, int count = 1);
 bool upgrade(State &s);
 bool craft_sprinkler(State &s, int plot);
 uint32_t ship(State &s);
+bool unship(State &s);
 uint32_t quest(State &s);
 uint32_t random(State &s);
 size_t encode(const State &s, uint8_t *out, size_t cap);

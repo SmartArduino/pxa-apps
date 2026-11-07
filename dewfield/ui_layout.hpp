@@ -20,7 +20,11 @@ struct Layout {
     return std::min(32, (width - left_margin() - right_margin() - 4) / 7);
   }
   Rect title_logo() const { return {(width - 174) / 2, 18, 174, 62}; }
-  Rect title_enter() const { return {(width - 164) / 2, height - 54, 164, 30}; }
+  int title_lift() const { return std::max(0,footer_margin()-24); }
+  Rect title_enter() const {
+    return {(width - 164) / 2, height - 54 - title_lift(), 164, 30};
+  }
+  int title_caption_y() const { return height - 18 - title_lift(); }
   Rect calendar() const { return {6, 5, 110, 34}; }
   Rect header_button(int index) const {
     return {width - 84 + index * 27, 5, 24, 25};

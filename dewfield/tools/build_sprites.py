@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compile original RGBA artwork to RGB565 horizontal spans, without runtime PNGs.
+"""Compile original RGBA characters and hand-authored tools to RGB565 horizontal spans, without runtime PNGs.
 
 The source alpha, authored silhouette and nearest-neighbor grid are preserved.
 Character animation uses individually authored directional contact/passing poses.
@@ -103,12 +103,13 @@ def contact_profile(im,name):
     assert spans,'grounded sprite has no base'
     return (ax,ay),spans
 
-def compile_rig(out,name,im,runs,colors):
+def compile_rig(out,name,im,runs,colors,shape=None):
+    direction=name if not name.startswith("villager_") else ("south","east","north","west")[int(name[-1])]
     # Bind the neutral standing artwork to four independent limbs. Parts
     # reference the original RGB565 pixel array; no PNGs or runtime masks.
     assert im.size==(24,32), (name,im.size)
-    side=name in ('east','west');parts={key:set() for key in ('body','arm0','arm1','leg0','leg1')}
-    pixels=im.load();lookup={};cloth=[];shirt=[]
+    side=direction in ('east','west');parts={key:set() for key in ('body','arm0','arm1','leg0','leg1')}
+    pixels=(shape or im).load();lookup={};cloth=[];shirt=[]
     for y,x,count,offset in runs:
         for i in range(count):
             xx=x+i;lookup[xx,y]=offset+i;r,g,b,a=pixels[xx,y]
@@ -120,7 +121,7 @@ def compile_rig(out,name,im,runs,colors):
             end=24 if side else 23
             if 16<=y<=end and not denim:
                 if side:
-                    if (name=='east' and xx<=12) or (name=='west' and xx>=12):arm=0
+                    if (direction=='east' and xx<=12) or (direction=='west' and xx>=12):arm=0
                 elif xx<=8:arm=0
                 elif xx>=15:arm=1
             if arm is not None:parts['arm'+str(arm)].add((xx,y))
@@ -151,7 +152,7 @@ def compile_rig(out,name,im,runs,colors):
     ends=[max(y for x,y in parts['arm'+str(i)]) for i in range(2)]
     out.write(f'inline constexpr Rig {name}_rig={{&{name}_body,{{&{name}_arm0_bone,&{name}_arm1_bone}},{{&{name}_leg0_bone,&{name}_leg1_bone}},{{{ends[0]},{ends[1]}}},{cloth_color},{shirt_color},{str(side).lower()}}};\n')
 
-def compile_sprite(out,name,im):
+def compile_sprite(out,name,im,shape=None):
     im=grade_sprite(im,name)
     w,h=im.size
     pixels=im.load();colors=[];runs=[]
@@ -165,7 +166,7 @@ def compile_sprite(out,name,im):
             runs.append((y,start,x-start,offset))
     out.write(f'inline constexpr uint16_t {name}_pixels[]={{'+','.join(map(str,colors))+'};\n')
     out.write(f'inline constexpr Span {name}_spans[]={{'+','.join('{'+','.join(map(str,r))+'}'for r in runs)+'};\n')
-    if name in ('south','east','north','west'):compile_rig(out,name,im,runs,colors)
+    if name in ('south','east','north','west') or name.startswith('villager_'):compile_rig(out,name,im,runs,colors,shape)
     anchor,contact=contact_profile(im,name)
     shadow='nullptr'
     if contact:
@@ -226,7 +227,7 @@ def main():
     output={}
     trees={}
     with (ROOT/'sprites.hpp').open('w')as out:
-        out.write('// Compiled from original imagegen art by tools/build_sprites.py.\n#pragma once\n#include "pixel_sprite.hpp"\nnamespace sprites {\n')
+        out.write('// Compiled original character art and authored tool pixels by tools/build_sprites.py.\n#pragma once\n#include "pixel_sprite.hpp"\nnamespace sprites {\n')
         for name,size in [('oak',(54,64)),('cottage',(96,88))]:
             im=native(Image.open(SOURCE/(name+'.png')),size)
             output[name]=compile_sprite(out,name,im)
@@ -263,28 +264,23 @@ def main():
                 if b>r*1.08 and b>g*.95:px[xx,yy]=(min(255,int(b*1.2)),int(g*.75),int(b*.85),a)
         CHARACTER_PALETTE=None
         output['villager']=compile_sprite(out,'villager',villager)
-        villagers=Image.open(SOURCE/'villagers-v1.png').convert('RGBA')
+        # Villagers share the farmer silhouette, direction registration and
+        # limb split. Offline dyes retain luminance, outlines and skin shading.
+        dyes=[(.78,1.08,.83),(1.05,.78,.58),(.72,.93,1.18),(1.02,.74,.90)]
         for row in range(4):
-            for col in range(4):
-                cell=villagers.crop((col*villagers.width//4,row*villagers.height//4,(col+1)*villagers.width//4,(row+1)*villagers.height//4))
-                alpha=cell.getchannel('A').point(lambda a:255 if a>=200 else 0)
-                bbox=alpha.getbbox();assert bbox
-                cut=cell.crop(bbox)
-                height=26 if row==3 else 28
-                width=round(cut.width*height/cut.height)
-                cut=cut.resize((width,height),Image.Resampling.NEAREST)
-                im=Image.new('RGBA',(24,32));im.alpha_composite(cut,((24-width)//2,30-height))
+            for col,direction in enumerate(('south','east','north','west')):
+                im=actors[direction].copy();px=im.load()
+                for yy in range(32):
+                    for xx in range(24):
+                        rr,gg,bb,aa=px[xx,yy]
+                        if aa<160:continue
+                        if 14<=yy<=26 and bb>rr*.95 and bb>gg*.8:
+                            lum=(rr+gg+bb)/3;d=dyes[row]
+                            px[xx,yy]=(int(min(255,lum*d[0])),int(min(255,lum*d[1])),int(min(255,lum*d[2])),aa)
+                        elif row==3 and yy<14 and rr>gg and rr<170:
+                            lum=int((rr+gg+bb)/3+45);px[xx,yy]=(lum,lum,min(255,lum+4),aa)
                 name=f'villager_{row}_{col}'
-                output[name]=compile_sprite(out,name,im)
-                for step in range(4):
-                    walking=im.copy();walking.paste((0,0,0,0),(0,24,24,32))
-                    # Alternate feet about the real boot baseline. The upper
-                    # body stays registered; no per-frame image processing.
-                    for half in range(2):
-                        leg=im.crop((half*12,24,(half+1)*12,30))
-                        lift=1 if (step+half*2)%4==1 else 0
-                        walking.alpha_composite(leg,(half*12,24-lift))
-                    output[name+'_walk'+str(step)]=compile_sprite(out,name+'_walk'+str(step),walking)
+                output[name]=compile_sprite(out,name,im,actors[direction])
         atlas=Image.open(SOURCE/'props.png').convert('RGBA')
         props=[('hoe',(20,20)),('axe',(19,21)),('pick',(22,21)),('can',(23,21)),('seeds',(16,20)),('rod',(21,25)),('basket',(22,19)),('chest',(24,21)),('rocks',(23,18)),('grass',(18,20)),('well',(32,33)),('board',(27,30)),('logs',(20,17)),('stones',(20,16)),('sprinkler',(16,18)),('fish',(22,15))]
         for i,(name,size)in enumerate(props):
@@ -294,25 +290,37 @@ def main():
             output[name]=compile_sprite(out,name,im)
             if name=='seeds':output['seed_handbag']=compile_sprite(out,'seed_handbag',im.resize((9,12),Image.Resampling.NEAREST))
             if name in ('hoe','axe','pick','can','rod'):
-                sizes={'hoe':(15,15),'axe':(14,16),'pick':(16,16),'can':(17,16),'rod':(16,19)}
-                grips={'hoe':(12,2),'axe':(2,13),'pick':(13,14),'can':(7,2),'rod':(2,16)}
-                tool=im.resize(sizes[name],Image.Resampling.NEAREST)
-                gx,gy=grips[name]
-                candidates=[(xx,yy) for yy in range(tool.height) for xx in range(tool.width) if tool.getpixel((xx,yy))[3]>=160 and (name=='can' or (tool.getpixel((xx,yy))[0]>tool.getpixel((xx,yy))[1]*1.08))]
-                assert candidates,name
-                grips[name]=min(candidates,key=lambda pt:(pt[0]-gx)**2+(pt[1]-gy)**2)
+                # All tools use the same real grip (22,22), with angle 0
+                # pointing north. Runtime never guesses an atlas-specific axis.
                 for grade in range(3 if name in ('axe','pick') else 1):
-                    variant=tool.copy();px=variant.load()
-                    if grade:
-                        for yy in range(variant.height):
-                            for xx in range(variant.width):
-                                r,g,b,a=px[xx,yy]
-                                if a>=160 and r<g*1.13 and r<b*1.15 and g<b*1.15 and b>r*.90:
-                                    lum=(r+g+b)//3
-                                    color=(min(255,int(lum*1.2+12)),int(lum*.76+12),int(lum*.42+10)) if grade==1 else (min(242,lum+18),min(249,lum+26),min(249,lum+29))
-                                    px[xx,yy]=(*color,a)
-                    canvas=Image.new('RGBA',(44,44));gx,gy=grips[name]
-                    canvas.paste(variant,(22-gx,22-gy))
+                    canvas=Image.new('RGBA',(44,44));d=ImageDraw.Draw(canvas)
+                    ink=(65,54,39,255);wood=(159,108,58,255);light=(216,170,103,255)
+                    metal=[(140,155,148,255),(181,121,72,255),(188,203,197,255)][grade]
+                    shine=(223,226,196,255)
+                    if name=='can':
+                        d.rectangle((17,14,27,24),fill=ink);d.rectangle((18,15,26,23),fill=(115,148,145,255))
+                        d.rectangle((20,11,24,16),fill=ink);d.rectangle((21,8,23,15),fill=metal)
+                        d.rectangle((19,7,25,9),fill=ink);d.rectangle((20,7,24,8),fill=shine)
+                        d.line((18,17,25,17),fill=shine);d.rectangle((21,20,23,23),fill=light)
+                    else:
+                        length=2 if name=='rod' else 7
+                        d.line((22,23,22,length),fill=ink,width=3)
+                        d.line((22,22,22,length+1),fill=wood,width=1)
+                        d.point((22,18),fill=light)
+                        if name=='hoe':
+                            d.polygon([(16,5),(28,5),(28,9),(25,10),(16,8)],fill=ink)
+                            d.rectangle((17,6,27,8),fill=metal);d.line((17,6,27,6),fill=shine)
+                        elif name=='axe':
+                            d.polygon([(21,4),(29,3),(32,7),(30,12),(22,10)],fill=ink)
+                            d.polygon([(23,5),(29,4),(31,7),(29,10),(23,9)],fill=metal)
+                            d.line((30,5,30,9),fill=shine)
+                        elif name=='pick':
+                            d.polygon([(13,10),(16,5),(23,4),(29,6),(32,10),(26,8),(19,8)],fill=ink)
+                            d.line((15,8,18,6,25,6,30,8),fill=metal,width=2)
+                            d.line((18,5,25,5),fill=shine)
+                        else:
+                            d.line((22,2,24,1,25,12),fill=shine,width=1)
+                            d.rectangle((20,16,24,19),fill=ink);d.rectangle((21,17,23,18),fill=metal)
                     for angle in range(8):
                         pose=canvas.rotate(-45*angle,resample=Image.Resampling.NEAREST,center=(22.5,22.5))
                         key=f'held_{name}{grade}_{angle}'

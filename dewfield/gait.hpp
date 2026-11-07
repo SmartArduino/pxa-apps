@@ -51,7 +51,8 @@ inline void row(Raster &r, const sprites::Bone &bone, int src_y, int x, int y,
     int right = std::min(r.w, x + span.x + span.count);
     for (int xx = left; xx < right; ++xx) {
       uint16_t color = s.pixels[span.offset + xx - x - span.x];
-      r.p[y * r.w + xx] = far ? blend(color, ShadowTint, 1) : color;
+      if(far)color=blend(color,ShadowTint,1);
+      r.p[y*r.w+xx]=r.tint?r.tint[color]:color;
     }
   }
 }
@@ -90,8 +91,8 @@ inline void arm(Raster &r, const sprites::Rig &s, const Pose &p, int dir,
     row(r, *s.arms[index], sy, x + offset + shift, y + yy, far);
   }
 }
-inline void draw(Raster &r, int x, int y, int dir, int frame, bool carrying = false) {
-  const auto &s = rig(dir);
+inline void draw(Raster &r, int x, int y, int dir, int frame, bool carrying = false, const sprites::Rig *custom = nullptr) {
+  const auto &s = custom ? *custom : rig(dir);
   Pose p = frame ? pose(frame, dir) : Pose{};
   x -= 12;
   y -= 30;
@@ -128,9 +129,9 @@ inline void draw(Raster &r, int x, int y, int dir, int frame, bool carrying = fa
     arm(r, s, p, dir, 1, x, y);
   }
 }
-inline void shadow(Raster &r, int x, int y, int dir, int frame) {
-  const auto &s = rig(dir);
-  Pose p = pose(frame, dir);
+inline void shadow(Raster &r, int x, int y, int dir, int frame, const sprites::Rig *custom = nullptr) {
+  const auto &s = custom ? *custom : rig(dir);
+  Pose p = frame ? pose(frame, dir) : Pose{};
   // Union both contact profiles before blending to avoid dark overlaps.
   uint8_t coverage[3][32]{};
   for (int i = 0; i < 2; ++i) {

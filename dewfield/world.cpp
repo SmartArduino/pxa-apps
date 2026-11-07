@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-#include "world.hpp"
+#include "living.hpp"
 #include <algorithm>
 #include <cstdlib>
 namespace farm {
 const char *region_name(Region r, bool en) {
-  const char *cn[] = {"晴露农场", "晴露镇", "林间小径", "镜光湖畔", "温暖农舍"};
+  const char *cn[] = {"晴露农场", "晴露镇", "林间小径", "镜光湖畔", "温暖农舍", "蜜风果园", "晴露种子铺", "村民会馆"};
   const char *eng[] = {"Dewfield Farm", "Dewfield Town", "Whisper Woods",
-                       "Mirror Lake", "Farm Cottage"};
+                       "Mirror Lake", "Farm Cottage", "Honey Orchard", "Seed Store", "Village Lodge"};
   return (en ? eng : cn)[unsigned(r) < RegionCount ? unsigned(r) : 0];
 }
 const char *npc_name(int id, bool en) {
@@ -27,10 +27,19 @@ const Portal *portal_at(const State &s, int x, int y) {
 }
 Ground world_ground(const State &s, int x, int y) {
   Region r = Region(s.region);
-  if (r == Region::Home) {
+  if (indoors(s.region)) {
+    if(r==Region::SeedShop) {
+      if(x<7||x>24||y<5||y>20 || (y==10&&x>=11&&x<=21) || (y==7&&x>=8&&x<=23))return Ground::Wall;
+      return Ground::Path;
+    }
+    if(r==Region::Lodge) {
+      if(x<7||x>24||y<5||y>20 || (y==8&&(x<13||x>18)))return Ground::Wall;
+      return Ground::Path;
+    }
     if (x < 7 || x > 24 || y < 5 || y > 20)
       return Ground::Wall;
-    if ((x >= 9 && x <= 11 && y >= 7 && y <= 9) ||
+    if ((x==15&&y==7)||(x==13&&y==5)||
+        (x >= 9 && x <= 11 && y >= 7 && y <= 9) ||
         (x >= 20 && x <= 22 && y >= 7 && y <= 10) ||
         (x >= 18 && x <= 20 && y >= 14 && y <= 15))
       return Ground::Wall;
@@ -39,7 +48,8 @@ Ground world_ground(const State &s, int x, int y) {
   if (x < 1 || y < 1 || x >= MapW - 1 || y >= MapH - 1)
     return Ground::Wall;
   if (r == Region::Town) {
-    if ((s.story >= 5 && x >= 14 && x <= 16 && y == 14) || (x == 16 && y == 10))
+    if ((s.story >= 5 && x >= 14 && x <= 16 && y == 14) ||
+        ((x == 16 || x == 18) && y == 10) || (x==5&&y==7))
       return Ground::Wall;
     if (((x >= 5 && x <= 9) || (x >= 22 && x <= 26)) && y >= 3 && y <= 6)
       return Ground::Wall;
@@ -65,12 +75,18 @@ Ground world_ground(const State &s, int x, int y) {
       return Ground::Water;
     if (y == 12 || x == 24)
       return Ground::Path;
+  } else if (r == Region::Orchard) {
+    if ((x == 6 || x == 12 || x == 20 || x == 26) && (y == 7 || y == 16))
+      return Ground::Tree;
+    if (x >= 23 && x <= 27 && y >= 10 && y <= 12) return Ground::Water;
+    if (x == 16 || y == 12 || y == 20 || (y == 9 && x >= 6 && x <= 26))
+      return Ground::Path;
   }
   return Ground::Grass;
 }
 bool travel(State &s, const Portal &p) {
   if (unsigned(p.from) != s.region || !near(s, p.x, p.y) ||
-      (p.bridge && s.story < 3))
+      (p.bridge && s.story < 3) || !building_open(s,p.to))
     return false;
   s.region = uint8_t(p.to);
   s.px = p.spawn_x * Tile + 8;
@@ -105,13 +121,15 @@ int next_portal(const State &s, Region destination) {
     at = parent[at];
   return edge[at];
 }
-NpcPose npc_pose(const State &s, int id) {
+NpcPose npc_pose(const State &s, int id, int subminute_ms) {
   // Fixed daily stations and short, collision-checked walks. No per-frame BFS.
   Region r = Region::Town;
   int x = 13, y = 10;
   if (id == 0) {
-    x = 10;
-    y = 7;
+    x = 14;
+    y = 9;
+    if(shop_open(s)) r=Region::SeedShop;
+    else {x=10;y=7;}
     if (s.minute >= 1020) {
       x = 17;
       y = 12;
@@ -143,27 +161,27 @@ NpcPose npc_pose(const State &s, int id) {
       y = 7;
     }
   }
+  if(id==3&&s.minute>=480&&s.minute<540&&!s.rain) {r=Region::Farm;x=22;y=7;}
   if (s.story >= 5 && s.minute >= 1020) {
     r = Region::Town;
     x = 12 + id * 2;
     y = 13;
   }
-  int phase = (s.minute + id * 5) % 32, offset = phase < 8    ? phase
-                                                 : phase < 16 ? 8
-                                                 : phase < 24 ? 24 - phase
-                                                              : 0;
-  // Adjacent straight steps stay on a safe walkway even when stations change.
-  State probe = s;
-  probe.region = uint8_t(r);
-  bool moving = (phase < 8 || phase >= 16 && phase < 24) &&
-                world_ground(probe, x + 1, y) != Ground::Wall &&
-                world_ground(probe, x + 1, y) != Ground::Water;
-  return {r,
-          x * 16 + 8 +
-              (moving                     ? offset
-               : phase >= 8 && phase < 16 ? 8
-                                          : 0),
-          y * 16 + 12, moving ? (phase < 8 ? 1 : 3) : 2, moving};
+  if(s.minute>=1200 || s.minute<480 || (s.rain && id!=0)) {
+    r=Region::Lodge;x=10+id*3;y=12;
+  }
+  int phase=((s.minute+id*5)%32)*500+std::clamp(subminute_ms,0,499);
+  bool forward=phase<1000,backward=phase>=8000&&phase<9000;
+  int offset=phase<1000?phase*32/1000:phase<8000?32:phase<9000?(9000-phase)*32/1000:0;
+  State probe=s;probe.region=uint8_t(r);
+  bool safe=true;
+  for(int step=0;step<=2;++step) {
+    auto g=ground(probe,x+step,y);if(g!=Ground::Path&&g!=Ground::Grass)safe=false;
+  }
+  bool moving=safe&&(forward||backward);
+  if(!safe)offset=0;
+  int distance=forward?offset:32-offset;
+  return {r,x*16+8+offset,y*16+12,moving?(forward?1:3):2,moving,moving?1+(distance/4)%8:0};
 }
 int npc_at(const State &s, int x, int y) {
   for (int id = 0; id < 4; ++id) {
@@ -185,27 +203,21 @@ bool chat(State &s, int id) {
   return true;
 }
 bool gift(State &s, int id, int item) {
-  if (id < 0 || id >= 4 || item < 8 || item > 18 || !item_count(s, item) ||
+  if (id < 0 || id >= 4 || item < 8 || item > ItemCount || !item_count(s, item) ||
       s.gift_day[id] == s.day)
     return false;
   int value = (id == 0 && item >= 12 && item <= 15) ||
                       (id == 1 && (item == 17 || item == 18)) ||
                       (id == 2 && item == 16) ||
-                      (id == 3 && item >= 12 && item <= 15)
+                      (id == 3 && (item >= 12 && item <= 15 || item >= 22)) ||
+                      (id == 0 && (item == 19 || item == 23))
                   ? 6
                   : 3;
-  if (item <= 11)
-    --s.seeds[item - 8];
-  else if (item <= 15)
-    --s.produce[item - 12];
-  else if (item == 16)
-    --s.fish;
-  else if (item == 17)
-    --s.wood;
-  else
-    --s.stone;
+  change_item(s, item, -1);
   s.gift_day[id] = s.day;
   s.met |= 1u << id;
+  constexpr int birthdays[]={7,12,19,25};
+  if(season_of(s.day)==id&&season_day(s.day)==birthdays[id])value*=2;
   s.bonds[id] = std::min(40, int(s.bonds[id]) + value);
   sync_inventory(s);
   select_slot(s, s.active_slot == 255 ? -1 : s.active_slot);
@@ -239,6 +251,17 @@ const char *npc_line(const State &s, int id, bool personal, bool en) {
                               "harvest. You brought hope back."};
   if (personal)
     return (en ? stories_en : stories)[id % 4];
+  if ((s.visited & (1u << unsigned(Region::Orchard))) && (s.day + id) % 3 == 0) {
+    const char *cn[] = {"蜜风果园的苹果，配上浆果就能熬成果酱。记得给自己也留一瓶。",
+        "林子南边那条路通往老果园。木牌重新立好了，别在树下迷路。",
+        "果园的小池子也能钓鱼。带上热汤，忙完了就在水边歇歇吧。",
+        "家里的灶台还好用吧？山菌和土豆煮一锅，干农活就有精神了。"};
+    const char *eng[] = {"Apples and berries make lovely jam. Keep a jar for yourself.",
+        "The south woodland path leads to the orchard. Follow the new sign.",
+        "Try fishing in the orchard pond. Bring a warm stew for the walk.",
+        "Mushrooms and a potato make a hearty stew at your cottage stove."};
+    return (en ? eng : cn)[id];
+  }
   if (s.story >= 5 && s.minute >= 1020) {
     const char *lines[] = {
         "我把那袋老种子种下去了。这盘小饼，第一份想留给你。谢谢你，让我又敢期待"
@@ -389,18 +412,22 @@ bool advance_story(State &s, int id) {
   sync_inventory(s);
   return true;
 }
+bool forage_available(const State &s, int id) {
+  return id >= 0 && unsigned(id) < sizeof(Foraging) / sizeof(*Foraging) &&
+      !(s.forage & (1u << id)) &&
+      (Foraging[id].seasons & (1u << season_of(s.day)));
+}
 int forage_at(const State &s, int x, int y) {
   for (unsigned i = 0; i < sizeof(Foraging) / sizeof(*Foraging); ++i) {
     auto &f = Foraging[i];
     if (unsigned(f.region) == s.region && f.x == x && f.y == y &&
-        !(s.forage & (1u << i)))
+        forage_available(s, i))
       return i;
   }
   return -1;
 }
 bool collect_forage(State &s, int id) {
-  if (id < 0 || unsigned(id) >= sizeof(Foraging) / sizeof(*Foraging) ||
-      s.forage & (1u << id))
+  if (!forage_available(s, id))
     return false;
   auto &f = Foraging[id];
   if (unsigned(f.region) != s.region || !near(s, f.x, f.y))
@@ -408,14 +435,8 @@ bool collect_forage(State &s, int id) {
   unsigned count = item_count(s, f.item);
   if (count >= 999)
     return false;
-  if (f.item == 17)
-    s.wood = std::min(999, int(s.wood) + 3);
-  else if (f.item == 18)
-    s.stone = std::min(999, int(s.stone) + 2);
-  else if (f.item == 16)
-    ++s.fish;
-  else
-    ++s.seeds[f.item - 8];
+  unsigned amount = f.item == 17 ? 3 : f.item == 18 || f.item >= 19 ? 2 : 1;
+  if (!change_item(s, f.item, std::min(amount, 999 - count))) return false;
   s.forage |= 1u << id;
   sync_inventory(s);
   return true;

@@ -2,7 +2,7 @@
 #pragma once
 #include "art.hpp"
 #include "core.hpp"
-#include "world.hpp"
+#include "living.hpp"
 #include <algorithm>
 #include <cstdint>
 namespace farm_scene {
@@ -23,7 +23,8 @@ enum class Kind : uint8_t {
   WorldNpc,
   Bed,
   Table,
-  Forage
+  Forage,
+  Stove, Television, Calendar, Counter
 };
 struct Rect {
   int x, y, w, h;
@@ -45,6 +46,7 @@ struct View {
   int held_item = 0, grade = 0, seed = 0, hit_id = -1;
   uint32_t hit_ms = 0;
   bool fishing = false;
+  int subminute_ms=0;
 };
 struct Placement {
   const sprites::Sprite *sprite = nullptr;
@@ -58,6 +60,7 @@ inline Placement placement(const Entry &e) {
     return {&art::villager_walking_sprite(e.id % 4, e.id / 4, e.growth), e.x,
             e.y};
   case Kind::Forage: {
+    if (farm::Foraging[e.id].item >= 19) return {};
     const sprites::Sprite *items[] = {&sprites::logs, &sprites::stones,
                                       &sprites::fish, &sprites::seeds};
     auto &f = farm::Foraging[e.id];
@@ -65,7 +68,7 @@ inline Placement placement(const Entry &e) {
     return {s, e.x - s->w / 2, e.y - s->h};
   }
   case Kind::Tree:
-    return {&art::tree_sprite(e.x, e.y, 0, e.growth), e.x, e.y};
+    return {&art::tree_sprite(e.x, e.y, 0, e.growth, e.id == 255 ? 3 : -1), e.x, e.y};
   case Kind::Rock:
     return {&art::rock_sprite(e.x, e.y), e.x, e.y};
   case Kind::Grass:
@@ -87,6 +90,8 @@ inline Placement placement(const Entry &e) {
   }
 }
 inline Rect bounds(const Entry &e) {
+  if(e.kind==Kind::Counter)return {e.x,e.y-24,176,26};
+  if(e.kind==Kind::Television||e.kind==Kind::Calendar)return {e.x-10,e.y-25,21,26};
   auto p = placement(e);
   if (p.sprite)
     return {p.x - p.sprite->anchor_x - 1, p.y - p.sprite->anchor_y,
@@ -94,6 +99,10 @@ inline Rect bounds(const Entry &e) {
   switch (e.kind) {
   case Kind::Bed:
     return {e.x - 18, e.y - 36, 36, 38};
+  case Kind::Stove:
+    return {e.x - 20, e.y - 38, 41, 39};
+  case Kind::Forage:
+    return {e.x - 8, e.y - 14, 17, 15};
   case Kind::Table:
     return {e.x - 19, e.y - 21, 38, 23};
   case Kind::Fence:
@@ -173,7 +182,8 @@ struct Queue {
       add(Kind::Tree, farm::MapW * 16 - 8, y * 16, y * 16, y + 1);
     }
     add(Kind::House, 4 * 16, 3 * 16, 3 * 16 + 61, 0, true);
-    add(Kind::House, 23 * 16, 3 * 16, 3 * 16 + 61, 1, true);
+    // The farm has a home; the seed store lives in town.
+    for(int x:{24,27})add(Kind::Grass,x*16+8,5*16+13,5*16+13);
     add(Kind::Well, 7 * 16 + 8, 8 * 16 + 12, 8 * 16 + 12, 0, true);
     add(Kind::Chest, 8 * 16 + 8, 9 * 16 + 12, 9 * 16 + 12, 0, true);
     add(Kind::Board, 21 * 16 + 8, 8 * 16 + 12, 8 * 16 + 12, 0, true);
@@ -198,7 +208,9 @@ struct Queue {
                         : Kind::Grass,
           x, y, y, i, !stump, o.kind == 0 ? farm::tree_stage(s, i) : 2);
     }
-    add(Kind::Villager, 22 * 16 + 5, 9 * 16 + 11, 9 * 16 + 11, 0, true);
+    for(int id=0;id<4;++id){auto p=farm::npc_pose(s,id,v.subminute_ms);if(p.region==farm::Region::Farm)
+      add(Kind::WorldNpc,p.x,p.y,p.y,id+p.dir*4,true,p.frame);
+    }
     add(Kind::Chicken, 11 * 16 + int((v.animation / 4) % 12), 19 * 16 + 8,
         19 * 16 + 8, 0);
     add(Kind::Chicken, 14 * 16, 19 * 16 + 12, 19 * 16 + 12, 1);
@@ -207,9 +219,19 @@ struct Queue {
   }
   void build_region(const farm::State &s, const View &v) {
     using farm::Region;
-    if (s.region == uint8_t(Region::Home)) {
+    if (farm::indoors(s.region)) {
+      if(s.region==uint8_t(Region::SeedShop)) {
+        add(Kind::Counter,11*16,10*16+15,10*16+15,0,true);
+        for(int x:{9,12,15,18,21})add(Kind::Grass,x*16+8,7*16+13,7*16+13);
+      } else if(s.region==uint8_t(Region::Lodge)) {
+        for(int x:{9,13,19,23})add(Kind::Bed,x*16+8,8*16+15,8*16+15);
+      } else {
       add(Kind::Bed, 10 * 16 + 8, 9 * 16 + 15, 9 * 16 + 15, 0, true);
       add(Kind::Table, 19 * 16 + 8, 15 * 16 + 15, 15 * 16 + 15);
+      add(Kind::Stove, 21 * 16 + 8, 10 * 16 + 15, 10 * 16 + 15, 0, true);
+      add(Kind::Television,15*16+8,7*16+15,7*16+15,0,true);
+      add(Kind::Calendar,13*16+8,5*16+1,5*16+1,0,true);
+      }
     } else {
       for (int x = 1; x < 32; x += 2) {
         add(Kind::Tree, x * 16, 29, 29);
@@ -226,7 +248,9 @@ struct Queue {
           add(Kind::Table, 15 * 16 + 8, 15 * 16, 15 * 16);
         add(Kind::House, 5 * 16, 3 * 16, 3 * 16 + 61, 1, true);
         add(Kind::House, 22 * 16, 3 * 16, 3 * 16 + 61, 2, true);
+        add(Kind::Calendar,5*16+8,7*16+15,7*16+15,0,true);
         add(Kind::Well, 16 * 16 + 8, 10 * 16 + 12, 10 * 16 + 12);
+        add(Kind::Board, 18 * 16 + 8, 10 * 16 + 12, 10 * 16 + 12, 0, true);
         for (int x : {11, 19}) {
           add(Kind::Grass, x * 16, 15 * 16, 15 * 16);
           add(Kind::Grass, x * 16, 9 * 16, 9 * 16);
@@ -241,6 +265,13 @@ struct Queue {
         for (int i = 0; i < 9; ++i)
           add(Kind::Grass, (5 + i * 3) * 16 + 8, (i % 2 ? 17 : 8) * 16 + 12,
               (i % 2 ? 17 : 8) * 16 + 12);
+      } else if (s.region == uint8_t(Region::Orchard)) {
+        for (int y : {7, 16}) for (int x : {6, 12, 20, 26})
+          add(Kind::Tree, x * 16 + 8, y * 16 + 13, y * 16 + 13, 255);
+        for (int x : {5, 11, 19, 25})
+          add(Kind::Fence, x * 16, 19 * 16, 19 * 16 + 15);
+        for (int x : {8, 21, 28})
+          add(Kind::Grass, x * 16, 14 * 16, 14 * 16);
       } else if (s.region == uint8_t(Region::Lake)) {
         for (int y : {6, 18})
           for (int x : {22, 27}) {
@@ -254,14 +285,14 @@ struct Queue {
     for (unsigned i = 0; i < sizeof(farm::Foraging) / sizeof(*farm::Foraging);
          ++i) {
       auto &f = farm::Foraging[i];
-      if (unsigned(f.region) == s.region && !(s.forage & (1u << i)))
+      if (unsigned(f.region) == s.region && farm::forage_available(s, i))
         add(Kind::Forage, f.x * 16 + 8, f.y * 16 + 13, f.y * 16 + 13, i, true);
     }
     for (int id = 0; id < 4; ++id) {
-      auto p = farm::npc_pose(s, id);
+      auto p = farm::npc_pose(s, id,v.subminute_ms);
       if (unsigned(p.region) == s.region)
         add(Kind::WorldNpc, p.x, p.y, p.y, id + p.dir * 4, true,
-            p.walking ? 1 + v.animation % 4 : 0);
+            p.frame);
     }
     add(Kind::Player, s.px, s.py, s.py);
     (void)v;
@@ -270,6 +301,12 @@ struct Queue {
     for (unsigned i = 0; i < count; ++i) {
       const auto &e = entries[i];
       switch (e.kind) {
+      case Kind::WorldNpc:
+        art::gait::shadow(r,e.x,e.y,e.id/4,e.growth,&art::villager_rig(e.id%4,e.id/4));
+        break;
+      case Kind::Counter:art::shadow_strip(r,e.x,e.y,176,1);break;
+      case Kind::Television: case Kind::Calendar:
+        art::shadow_strip(r,e.x-8,e.y,17,1);break;
       case Kind::Player:
         art::person_shadow(r, e.x, e.y, v.direction, v.frame);
         break;
@@ -288,6 +325,13 @@ struct Queue {
       case Kind::Fence:
         art::fence_shadow(r, e.x, e.y, 48);
         break;
+      case Kind::Stove:
+        art::shadow_strip(r,e.x-19,e.y,39,1);
+        break;
+      case Kind::Forage:
+        if (farm::Foraging[e.id].item >= 19) art::shadow_strip(r,e.x-5,e.y,11,1);
+        else {auto p=placement(e);art::contact_shadow(r,*p.sprite,p.x,p.y);}
+        break;
       default: {
         auto p = placement(e);
         if (p.sprite)
@@ -303,23 +347,34 @@ struct Queue {
       switch (e.kind) {
       case Kind::WorldNpc: {
         auto p = placement(e);
-        art::grounded(r, *p.sprite, p.x, p.y);
+        art::gait::draw(r,e.x,e.y,e.id/4,e.growth,false,&art::villager_rig(e.id%4,e.id/4));
         break;
       }
+      case Kind::Counter:
+        r.rect(e.x,e.y-18,176,18,art::Ink);r.rect(e.x+2,e.y-16,172,14,farm_palette::Wood);
+        r.rect(e.x,e.y-20,176,5,art::Earth);r.rect(e.x+1,e.y-20,174,1,art::Gold);
+        for(int xx=12;xx<170;xx+=28) {r.rect(e.x+xx,e.y-12,1,9,farm_palette::WoodDark);art::sprite(r,sprites::seed_handbag,e.x+xx-3,e.y-30);}
+        break;
+      case Kind::Television: case Kind::Calendar:
+        art::world_appliance(r,e.x,e.y,e.kind==Kind::Television);break;
       case Kind::Bed:
         art::world_bed(r, e.x, e.y);
+        break;
+      case Kind::Stove:
+        art::world_stove(r,e.x,e.y);
         break;
       case Kind::Table:
         art::world_table(r, e.x, e.y);
         break;
       case Kind::Forage: {
         auto p = placement(e);
-        art::sprite(r, *p.sprite, p.x, p.y);
+        if (p.sprite) art::sprite(r, *p.sprite, p.x, p.y);
+        else art::food(r,e.x,e.y,farm::Foraging[e.id].item);
         break;
       }
       case Kind::Tree:
         art::tree(r, e.x, e.y, e.id, v.season, faded(e, s) ? 4 : 8, false,
-                  e.growth);
+                  e.growth,e.id==255?3:-1);
         break;
       case Kind::Rock:
       case Kind::Grass:
@@ -332,6 +387,10 @@ struct Queue {
       }
       case Kind::House:
         art::house(r, e.x, e.y, e.id == 1, false);
+        if(s.region==uint8_t(farm::Region::Town)&&
+          !farm::building_open(s,e.id==1?farm::Region::SeedShop:farm::Region::Lodge)) {
+          r.rect(e.x+24,e.y+43,16,18,art::Earth);r.rect(e.x+25,e.y+44,14,16,farm_palette::Wood);r.rect(e.x+35,e.y+52,2,2,art::Gold);
+        }
         break;
       case Kind::Fence:
         art::fence(r, e.x, e.y, 48);
@@ -387,6 +446,13 @@ struct Queue {
         ty = 9;
         return true;
       }
+      if ((e.kind == Kind::Stove || (e.kind == Kind::Forage && !p.sprite)) &&
+          bounds(e).intersects({x,y,1,1})) {
+        tx = e.kind == Kind::Stove ? 21 : farm::Foraging[e.id].x;
+        ty = e.kind == Kind::Stove ? 10 : farm::Foraging[e.id].y;
+        return true;
+      }
+      if((e.kind==Kind::Television||e.kind==Kind::Calendar||e.kind==Kind::Table||e.kind==Kind::Counter)&&bounds(e).intersects({x,y,1,1})) {tx=e.kind==Kind::Counter?std::clamp(x/16,12,19):e.x/16;ty=e.y/16;return true;}
       if (!p.sprite)
         continue;
       if (e.kind == Kind::Tree && faded(e, s) &&
@@ -405,11 +471,11 @@ struct Queue {
         tx = s.region ? (e.id == 1 ? 7 : 24) : e.id ? 25 : 6;
         ty = 7;
       } else if (e.kind == Kind::Villager || e.kind == Kind::Board) {
-        tx = 21;
-        ty = 8;
+        tx = s.region == uint8_t(farm::Region::Town) ? 18 : 21;
+        ty = s.region == uint8_t(farm::Region::Town) ? 10 : 8;
       } else if (e.kind == Kind::Well) {
-        tx = 7;
-        ty = 8;
+        tx = s.region == uint8_t(farm::Region::Town) ? 16 : 7;
+        ty = s.region == uint8_t(farm::Region::Town) ? 10 : 8;
       } else if (e.kind == Kind::Chest) {
         tx = 8;
         ty = 9;

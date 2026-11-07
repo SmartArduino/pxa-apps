@@ -41,9 +41,9 @@ int main() {
        {std::pair<int, int>{240, 240}, {320, 240}, {240, 320}, {480, 320}}) {
     WIDTH = size.first;
     HEIGHT = size.second;
-    for (int region = 0; region < 5; ++region) {
+    for (int region = 0; region < farm::RegionCount; ++region) {
       state.region = region;
-      state.visited = 31;
+      state.visited = 255;
       state.px = region == 4 ? 264 : 392;
       state.py = 200;
       base_dirty = true;

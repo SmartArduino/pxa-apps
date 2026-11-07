@@ -23,6 +23,13 @@ void cover_background(const uint16_t *source, int width, int height) {
 bool using_controller() { return controller_mode; }
 NavigationInsets navigation_insets() { return {}; }
 uint16_t *framebuffer() { return pixels + 16; }
+void copy_background(const uint16_t *source, int sw, int sh, int x, int y,
+                     uint16_t outside) {
+  for (int row = 0; row < HEIGHT; ++row)
+    for (int col = 0; col < WIDTH; ++col)
+      framebuffer()[row * WIDTH + col] = row + y < sh && col + x < sw
+          ? source[(row + y) * sw + col + x] : outside;
+}
 void rect(int x, int y, int w, int h, uint16_t c) {
   art::Raster r{framebuffer(), WIDTH, HEIGHT};
   r.rect(x, y, w, h, c);
@@ -101,6 +108,10 @@ static void cached_cultivation() {
   assert(!plots_changed()); // Leaf growth never regenerates static soil.
 }
 int main() {
+  farm_ui::Layout round{412,412,134,0,42};
+  auto enter=round.title_enter();
+  assert(enter.y+enter.h<=round.height-round.navigation_bottom-4);
+  assert(round.title_caption_y()+12<round.height);
   game::init();
   cached_cultivation();
   game::init();
@@ -224,7 +235,7 @@ int main() {
   WIDTH = 240;
   HEIGHT = 240;
   pocket::set_english(false);
-  farm::fresh(state);
+  farm::fresh(state);state.region=unsigned(farm::Region::SeedShop);state.visited|=1u<<state.region;state.minute=600;
   page = Page::Shop;
   auto ui = layout();
   int gold = state.gold;
@@ -233,7 +244,7 @@ int main() {
   tap(ui.shop_buy(0).center_x(), ui.shop_buy(0).y + 24);
   assert(state.gold == unsigned(gold)); // Gap below the button.
   tap(ui.shop_buy(0).center_x(), ui.shop_buy(0).center_y());
-  assert(state.gold == unsigned(gold - 5));
+  assert(state.gold == unsigned(gold - 5));state.region=0;
   page = Page::Bag;
   tap(0, HEIGHT - 1);
   assert(page == Page::Bag);
@@ -259,7 +270,9 @@ int main() {
   assert(selected_row == 1);
   selected_row = 4;
   game::key(Key::DOWN);
-  assert(selected_row == 4);
+  assert(selected_row == 6);
+  game::key(Key::DOWN);
+  assert(selected_row == 6);
   page = Page::Shop;
   state.gold = 0;
   selected_row = 0;
@@ -355,8 +368,8 @@ int main() {
   drag(ui.tool(0), ui.tool(1), true);
   assert(std::equal(std::begin(stable.slots), std::end(stable.slots), state.slots));
   page = Page::Bag;
-  drag(ui.bag_slot(7), ui.bag_slot(0));
-  assert(state.slots[0] == 8 && state.slots[7] == 5);
+  drag(ui.bag_slot(1), ui.bag_slot(0));
+  assert(state.slots[0] == 8 && state.slots[1] == 5);
   assert(state.seeds[0] == stable.seeds[0]);
   stable = state;
   drag(ui.bag_slot(0), {0, 0, 1, 1});
@@ -373,7 +386,7 @@ int main() {
   assert(!action_hold && !action_touch);
   game::pointer(Phase::CANCEL, 0, 0);
   page = Page::Bag;
-  bag_selection = 7;
+  bag_selection = 1;
   state.gold = 100; state.wood = 8; state.stone = 6;
   tap(ui.bag_upgrade().center_x(), ui.bag_upgrade().center_y());
   assert(state.tool_grade[unsigned(farm::Tool::Axe)] == 1 && state.gold == 20);

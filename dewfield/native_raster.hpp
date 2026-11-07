@@ -43,6 +43,21 @@ class NativeRaster {
     return false;
   }
 public:
+  bool copy(const uint16_t *source, int pitch, int w, int h,
+            uint16_t *destination, int dw, int dh) {
+    if (!context || !source || !destination || w < 1 || h < 1) return false;
+    uint8_t packet[64];
+    header(packet, 1, destination, dw, dh);
+    pxa_game_render_rgb565_command_wire_t command{};
+    command.kind = PXA_GAME_RENDER_RGB565_BLIT; command.light = 255;
+    command.width = w; command.height = h;
+    command.source_offset = uint32_t(uintptr_t(source));
+    command.source_bytes = unsigned(((h - 1) * pitch + w) * 2);
+    command.source_width = w; command.source_height = h;
+    command.source_pitch = pitch * 2;
+    pxa_game_render_rgb565_command_encode(packet + 32, 32, &command);
+    return execute(packet, sizeof(packet));
+  }
   bool batching() const { return active; }
   void created(const pxa_game_render_raster_result_t &result) {
     if (!result.status) context = result.handle;

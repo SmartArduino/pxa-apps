@@ -7,6 +7,8 @@ static int32_t failure;
 static unsigned calls;
 static unsigned commands;
 static uint16_t *output;
+static const uint16_t *copy_source;
+static unsigned copy_available;
 static int width, height;
 extern "C" int32_t pxa_test_control(const uint8_t *, uint32_t) { return 0; }
 extern "C" int32_t pxa_io(uint64_t handle, uint32_t operation, uint8_t *packet, uint32_t bytes) {
@@ -20,6 +22,22 @@ extern "C" int32_t pxa_io(uint64_t handle, uint32_t operation, uint8_t *packet, 
   for (unsigned i = 0; i < header.count; ++i) {
     pxa_game_render_rgb565_command_wire_t c{};
     assert(pxa_game_render_rgb565_command_decode(packet + 32 + i * 32, 32, &c));
+    if (c.kind == PXA_GAME_RENDER_RGB565_BLIT) {
+      assert(copy_source && c.light == 255 && header.count == 1);
+      assert(c.source_offset == uint32_t(uintptr_t(copy_source)));
+      assert(c.source_bytes <= copy_available * sizeof(uint16_t));
+      assert(c.source_pitch >= c.source_width * sizeof(uint16_t));
+      assert(c.source_bytes >= (c.source_height - 1) * c.source_pitch +
+                                  c.source_width * sizeof(uint16_t));
+      for (int y = 0; y < c.height; ++y)
+        for (int x = 0; x < c.width; ++x) {
+          assert(x < width && y < height);
+          output[y * width + x] = copy_source[
+              (y * c.source_height / c.height) * (c.source_pitch / 2) +
+              x * c.source_width / c.width];
+        }
+      continue;
+    }
     assert(c.kind == 0 && c.light == 255);
     for (int y = c.y; y < c.y + c.height; ++y)
       for (int x = c.x; x < c.x + c.width; ++x) {
@@ -82,5 +100,25 @@ int main() {
         assert(actual[y*width+x] == source[(y*13/height)*17+x*17/width]);
     }
     assert(calls == (status==PXA_STATUS_UNSUPPORTED ? 1u : 2u));
+  }
+  // A cropped cache view has row padding and can end near its allocation's
+  // last pixel. Its wire range must fit, and copying must preserve the rest
+  // of the mapped canvas and both allocation guards.
+  std::vector<uint16_t> cache(11 * 7), guarded(width * height + 6, 0x55aa);
+  for (unsigned i = 0; i < cache.size(); ++i) cache[i] = uint16_t(i * 389);
+  copy_source = cache.data() + 25;
+  copy_available = unsigned(cache.size() - 25);
+  output = guarded.data() + 3;
+  for (int status : {0, PXA_STATUS_WOULD_BLOCK, PXA_STATUS_UNSUPPORTED}) {
+    std::fill(guarded.begin(), guarded.end(), 0x55aa);
+    dewfield_raster::NativeRaster copier; copier.created({0,77,256});
+    failure = status;
+    assert(copier.copy(copy_source, 11, 7, 5, output, width, height) == !status);
+    for (int y = 0; y < height; ++y)
+      for (int x = 0; x < width; ++x)
+        assert(output[y * width + x] ==
+            (!status && x < 7 && y < 5 ? copy_source[y * 11 + x] : 0x55aa));
+    for (int i = 0; i < 3; ++i)
+      assert(guarded[i] == 0x55aa && guarded[guarded.size()-1-i] == 0x55aa);
   }
 }

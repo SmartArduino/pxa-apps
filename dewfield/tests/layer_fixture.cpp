@@ -9,10 +9,38 @@ static uint16_t prop[512 * 384], person[512 * 384];
 int main(int argc, char **argv) {
   assert(argc == 4);
   farm::State s;
-  farm::fresh(s);
+  farm::fresh(s);s.minute=600;
   std::memset(s.cleared, 1, sizeof(s.cleared));
   for (auto &p : s.plots)
     p = {};
+  if(!std::strncmp(argv[1],"living-",7)) {
+    const char *mode=argv[1]+7;s.visited=255;s.story=3;s.day=29;s.minute=600;s.gold=480;s.energy=60;
+    s.region=!std::strcmp(mode,"home")?4:!std::strcmp(mode,"shop")?6:(!std::strcmp(mode,"town")||!std::strcmp(mode,"npc"))?1:!std::strcmp(mode,"lodge")?7:!std::strcmp(mode,"orchard")?5:0;
+    s.px=(s.region==4?15:s.region==6?15:s.region==1?15:s.region==7?16:s.region==5?12:8)*16+8;
+    s.py=(s.region==4?9:s.region==6?11:s.region==1?12:s.region==7?15:s.region==5?11:10)*16+8;
+    if(!std::strcmp(mode,"npc")){s.minute=561;s.px=15*16+8;s.py=15*16+8;}
+    if(!std::strcmp(mode,"night"))s.minute=1320;
+    if(!std::strcmp(mode,"snow")){s.day=85;s.weather=3;s.minute=900;}
+    for(auto &n:s.produce)n=4;for(auto &n:s.seasonal)n=3;s.fish=4;s.gathered[0]=8;
+    farm::sync_inventory(s);farm::equip_item(s,12);
+    uint8_t bytes[farm::SaveBytes];assert(farm::encode(s,bytes,sizeof(bytes))==sizeof(bytes));farm::State checked;assert(farm::decode(checked,bytes,sizeof(bytes)));
+    FILE*f=std::fopen(argv[2],"wb");assert(f&&std::fwrite(bytes,1,sizeof(bytes),f)==sizeof(bytes));std::fclose(f);
+    f=std::fopen(argv[3],"w");assert(f);std::fclose(f);return 0;
+  }
+  if (!std::strncmp(argv[1], "life-", 5)) {
+    s.region = !std::strcmp(argv[1],"life-orchard") ? 5 :
+               !std::strcmp(argv[1],"life-kitchen") ? 4 : 1;
+    s.day=29;s.story=3;s.visited=63;s.gold=480;s.energy=60;
+    s.px=(s.region==5?12:s.region==4?21:18)*16+8;
+    s.py=11*16+8;s.wood=s.stone=s.fish=20;
+    for(auto&v:s.produce)v=20;
+    s.gathered[0]=8;s.gathered[1]=6;s.gathered[2]=5;s.meals[0]=s.meals[1]=1;
+    farm::sync_inventory(s);farm::select_slot(s,3);
+    uint8_t bytes[farm::SaveBytes];assert(farm::encode(s,bytes,sizeof(bytes))==sizeof(bytes));
+    farm::State checked;assert(farm::decode(checked,bytes,sizeof(bytes)));
+    FILE*f=std::fopen(argv[2],"wb");assert(f&&std::fwrite(bytes,1,sizeof(bytes),f)==sizeof(bytes));std::fclose(f);
+    f=std::fopen(argv[3],"w");assert(f);std::fclose(f);return 0;
+  }
   if (!std::strncmp(argv[1], "world-", 6)) {
     s.region=!std::strcmp(argv[1],"world-forest")?2:!std::strcmp(argv[1],"world-lake")?3:!std::strcmp(argv[1],"world-home")?4:1;
     s.visited=31;s.story=s.region==2?2:s.region==3?3:0;s.met=15;
