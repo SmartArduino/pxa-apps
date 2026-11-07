@@ -36,7 +36,7 @@ int main() {
   assert(!std::memcmp(original.slots,state.slots,sizeof(state.slots)));
   assert(farm::swap_slots(state,slot,27) && held_item()==12 && state.active_slot==27);
   uint8_t bytes[farm::SaveBytes];farm::State restored;
-  assert(farm::encode(state,bytes,sizeof(bytes))==sizeof(bytes) && bytes[4]==7);
+  assert(farm::encode(state,bytes,sizeof(bytes))==sizeof(bytes) && bytes[4]==8);
   assert(farm::decode(restored,bytes,sizeof(bytes)) && restored.active_slot==27);
   open_page(Page::Bag);assert(bag_selection==27 && selected_row==-1);
   game::key(Key::LEFT);assert(bag_selection==26);game::key(Key::RIGHT);assert(bag_selection==27);
@@ -60,5 +60,5 @@ int main() {
     assert(framebuffer()[0]==dewfield_hud::Backdrop::blend(0xabcd,0xffff,opacity));
     for(int i=0;i<16;++i)assert(pixels[i]==0xabcd && pixels[16+WIDTH*HEIGHT+i]==0xabcd);
   }
-  puts("PASS: directional door thresholds, deliberate routed entry, full-backpack carrying/eating/shipping, selection-following drag, v7 saves, controller grid and bounded HUD transparency");
+  puts("PASS: directional door thresholds, deliberate routed entry, full-backpack carrying/eating/shipping, selection-following drag, v8 saves, controller grid and bounded HUD transparency");
 }

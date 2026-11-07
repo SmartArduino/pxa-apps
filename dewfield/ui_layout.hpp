@@ -90,5 +90,14 @@ struct Layout {
     auto r = modal();
     return {r.x + 24, r.y + top, 180, h};
   }
+  Rect journal_tab(int index) const {
+    auto r=modal();return {r.x+12+index*52,r.y+162,49,24};
+  }
+  Rect collection_tab(int index) const {
+    auto r=modal();return {r.x+12+index*52,r.y+37,49,23};
+  }
+  Rect collection_cell(int category,int index) const {
+    auto r=modal();return {r.x+12+(index%2)*105,r.y+65+(index/2)*(category==3?33:26),100,category==3?30:24};
+  }
 };
 } // namespace farm_ui

@@ -43,7 +43,7 @@ int main() {
   game::key(Key::DOWN);assert(selected_row==0);
   farm::State restored; uint8_t bytes[farm::SaveBytes];
   state.auto_run=false;assert(farm::encode(state,bytes,sizeof(bytes))==sizeof(bytes));
-  assert(bytes[4]==7 && farm::decode(restored,bytes,sizeof(bytes)) && !restored.auto_run);
+  assert(bytes[4]==8 && farm::decode(restored,bytes,sizeof(bytes)) && !restored.auto_run);
   bytes[559]=2;resign(bytes);assert(!farm::decode(restored,bytes,sizeof(bytes)));
   bytes[4]=5;resign(bytes);assert(farm::decode(restored,bytes,sizeof(bytes)) && restored.auto_run);
   for(auto size:{std::pair<int,int>{240,240},{296,240},{412,412},{240,427},{400,240}}) {

@@ -2,6 +2,8 @@
 #include "art.hpp"
 #include "core.hpp"
 #include "living.hpp"
+#include "collections.hpp"
+#include "fish_art.hpp"
 #include "palette.hpp"
 #include "runtime.hpp"
 #include "scene.hpp"
@@ -32,7 +34,7 @@ enum class Page {
   Story,
   Dialogue,
   Orders,
-  Kitchen, Calendar, Forecast, Shipping
+  Kitchen, Calendar, Forecast, Shipping, Collections
 };
 Page page = Page::Farm;
 bool title_screen = true, save_locked = false, base_dirty = true,
@@ -44,7 +46,17 @@ int camx, camy, dir = 2, stepx, stepy, targetx, targety, selected_row = 0;
 int route_portal = -1;
 bool approaching_portal = false;
 uint32_t clock_acc = 0, move_acc = 0, anim_acc = 0, animation = 0, swing = 0,
-         toast_ms = 0, fish_ms = 0, fish_bite = 0, morning_gold = 0;
+         toast_ms = 0, morning_gold = 0;
+FishingSession fishing;
+int collection_category=0;
+Page collection_parent=Page::Guide;
+struct GatherEffect {int x=0,y=0,item=0,count=0;uint32_t remaining=0;};
+GatherEffect gather_effects[4];
+unsigned next_effect=0;
+void item_icon(int,int,int);
+void gather_effect(int x,int y,int item,int count) {
+  gather_effects[next_effect++%4]={x*16+8,y*16+8,item,count,800};
+}
 char toast[96]{}, letter[512]{};
 int following_npc = -1;
 int talking_npc = -1, journey_region = -1, journey_x = 0, journey_y = 0;
@@ -399,6 +411,14 @@ void scene() {
     for(int i=0;i<24;++i)r.rect(camx+(i*71+animation)%WIDTH,camy+(i*43+animation*2)%HEIGHT,1+(i%3==0),1,art::Cream);
   if(!indoors(state.region)&&state.weather==unsigned(Weather::Wind))
     for(int i=0;i<10;++i)r.line(camx+(i*59+animation*4)%WIDTH,camy+(i*47+animation)%HEIGHT,camx+(i*59+animation*4)%WIDTH+2,camy+(i*47+animation)%HEIGHT-1,art::Leaf);
+  for(const auto &effect:gather_effects)if(effect.remaining) {
+    int x=effect.x-camx,y=effect.y-camy-24-int((800-effect.remaining)/45);
+    if(x>=12 && x<WIDTH-26 && y>=2 && y<HEIGHT-16) {
+      item_icon(x-5,y+6,effect.item);
+      char amount[16];std::snprintf(amount,sizeof(amount),"+%d",effect.count);
+      text(x+6,y,amount,farm_palette::Highlight);
+    }
+  }
   profile(DrawStage::Effects);
 }
 void stop_motion() {
@@ -419,11 +439,15 @@ void open_page(Page p) {
   stop_motion();
   page = p;
   selected_row = p==Page::Calendar?season_day(state.day)-1:0;
+  if(p==Page::Collections)collection_category=0;
   if (p == Page::Bag) {
     bag_selection = state.active_slot < InventorySize ? state.active_slot : 0;
     selected_row=-1;
   }
   redraw();
+}
+void open_collections(int category=0,int index=0,Page parent=Page::Guide) {
+  open_page(Page::Collections);collection_category=category;selected_row=index;collection_parent=parent;
 }
 void feedback(Result result) {
   switch (result) {
@@ -457,8 +481,11 @@ void feedback(Result result) {
     action_tool = 6;
     swing = art::tool_anim::duration(6);
     open_page(Page::Fishing);
-    fish_ms = 0;
-    fish_bite = 900 + random(state) % 1700;
+    fishing.begin(state);
+    changed();
+    return;
+  case Result::FullFish:
+    msg("鲜鱼已经装满，先出货或交付委托吧", "Fish stack full. Ship or deliver some first");
     return;
   case Result::Tilled:
     msg("松软的土地，准备播种", "Soil ready for seeds");
@@ -521,9 +548,17 @@ void action(int x, int y) {
   uint32_t oldq = state.quests;
   int npc = npc_at(state, x, y);
   int offered_item=held_item();
+  int crop=plot_index(x,y),forage=forage_at(state,x,y);
+  int gathered_item=crop>=0&&!state.region&&state.plots[crop].crop?11+state.plots[crop].crop:
+    forage>=0?Foraging[forage].item:0;
+  unsigned old_count=item_count(state,gathered_item);
+  bool was_known=discovered_item(state,gathered_item);
   auto res = act(state, x, y);
+  if(res==Result::Harvested || res==Result::Foraged)
+    gather_effect(x,y,gathered_item,int(item_count(state,gathered_item)-old_count));
   if(res==Result::Ship){deposited_item=offered_item;deposit_ms=360;}
   if (res == Result::Travel) {
+    for(auto &effect:gather_effects)effect.remaining=0;
     stop_motion();
     swing = 0;
     hit_ms = 0;
@@ -558,7 +593,7 @@ void action(int x, int y) {
     return;
   }
   if (res == Result::Foraged) {
-    msg("拾起了路边的物资，明天再来看看", "Supplies gathered. More tomorrow");
+    msg(was_known?"拾起了路边的物资，明天再来看看":"新发现已收进收藏册！",was_known?"Supplies gathered. More tomorrow":"New discovery in your collection!");
     changed();
     return;
   }
@@ -578,6 +613,7 @@ void action(int x, int y) {
     hit_ms = 500;
   }
   feedback(res);
+  if(res==Result::Harvested&&!was_known)msg("首次收获！收藏册已记录这种作物", "First harvest! Added to your collection");
 }
 void begin_route(int x, int y, bool use) {
   if (x < 0 || y < 0 || x >= MapW || y >= MapH)
@@ -598,15 +634,14 @@ void facing_action() {
   if (page != Page::Fishing && swing)
     return;
   if (page == Page::Fishing) {
-    int delta = int(fish_ms) - int(fish_bite);
-    if (delta >= 0 && delta <= 850) {
-      state.fish = std::min(999, int(state.fish) + 1);
-
-      msg("钓到了！鲜鱼可出货或交委托", "Caught a fish!");
-    } else
-      msg("鱼溜走了，下次等浮漂下沉", "Wait for the bobber to sink");
-    page = Page::Farm;
-    changed();
+    if(fishing.phase==FishingSession::Phase::Caught || fishing.phase==FishingSession::Phase::Escaped) {
+      if(state.energy && state.fish<999 && spend_energy(state,4)) {
+        fishing.begin(state);changed();
+      } else {page=Page::Farm;msg("先整理背包或吃点东西，再来钓鱼吧", "Ship your catch or eat before fishing again");}
+    } else {
+      bool caught=fishing.press(state);
+      if(caught)changed();else redraw();
+    }
     return;
   }
   int front_x=state.px/16+(dir==1)-(dir==3),front_y=state.py/16+(dir==2)-(dir==0);
@@ -649,6 +684,7 @@ void navigate(int d) {
   redraw();
 }
 void sleep_now(bool forced = false) {
+  for(auto &effect:gather_effects)effect.remaining=0;
   morning_gold = farm::sleep(state,forced);
   state.region = uint8_t(Region::Home);
   state.px = 16 * 16 + 8;
@@ -1066,6 +1102,120 @@ void hud() {
   }
   notification();
 }
+void collection_action() {
+  if(collection_category!=3)return;
+  if(claim_collection_reward(state,selected_row)) {
+    changed();msg("徽章奖励已领取，继续探索晴露谷吧！", "Badge reward claimed. Keep exploring!");
+  } else msg("完成目标后可以领取，已领过的不会重复发放", "Reach the goal to claim each badge once");
+}
+void draw_collections(int x,int y) {
+  const char *tabs[]={tr("Crops","农作"),tr("Forage","山野"),tr("Fish","鱼类"),tr("Badges","徽章")};
+  auto ui=layout();char b[128];IconCanvas canvas;
+  for(int i=0;i<4;++i) {auto r=ui.collection_tab(i);button(r.x,r.y,r.w,r.h,tabs[i],collection_category==i);}
+  int count=collection_category==3?MilestoneCount:collection_size(collection_category);
+  for(int i=0;i<count;++i) {
+    auto r=ui.collection_cell(collection_category,i);
+    rounded_rect(r.x,r.y,r.w,r.h,selected_row==i?farm_palette::Selected:Soft,4);
+    if(collection_category==3) {
+      auto m=milestone(state,i);bool claimed=state.collection_rewards&(1u<<i);
+      fit_text(r.x+5,r.y+2,english()?m.en:m.cn,82,claimed?Muted:Sage);
+      std::snprintf(b,sizeof(b),"%d/%d  %s%dG",std::min(m.goal,m.progress),m.goal,claimed?"":"+",m.reward);
+      fit_text(r.x+5,r.y+16,b,90,claimed?Muted:Text);
+      if(claimed) {line(r.x+87,r.y+8,r.x+90,r.y+11,Sage);line(r.x+90,r.y+11,r.x+95,r.y+5,Sage);}
+    } else {
+      bool known=collected(state,collection_category,i);
+      if(collection_category==2) {
+        art::fish_portrait(canvas,r.x+4,r.y+7,i,1,known);
+        std::snprintf(b,sizeof(b),"%s",english()?FishSpeciesList[i].en:FishSpeciesList[i].cn);
+      } else {
+        int item=collection_item(collection_category,i);
+        if(known)item_icon(r.x+12,r.y+12,item);else center_text(r.x+12,r.y+6,"?",Muted);
+        item_label(b,sizeof(b),item,false);
+      }
+      fit_text(r.x+24,r.y+6,b,72,known?Sage:Muted);
+    }
+  }
+  if(collection_category==3) {
+    auto m=milestone(state,selected_row);auto r=ui.confirm(173,25);
+    bool claimed=state.collection_rewards&(1u<<selected_row);
+    button(r.x,r.y,r.w,r.h,claimed?tr("CLAIMED","奖励已领取"):m.progress>=m.goal?tr("CLAIM REWARD","领取徽章奖励"):tr("KEEP EXPLORING","继续探索，完成目标"),!claimed&&m.progress>=m.goal);
+  } else {
+    if(collection_category==2) {
+      const auto &f=FishSpeciesList[selected_row];
+      char best[48],skill[48];int level=fishing_level(state),goal=level==0?8:level==1?25:level==2?60:0;
+      if(state.fish_records[selected_row])std::snprintf(best,sizeof(best),english()?"Best %ucm":"记录%u厘米",state.fish_records[selected_row]);
+      else std::snprintf(best,sizeof(best),"%s",tr("Not caught","尚未钓获"));
+      if(goal)std::snprintf(skill,sizeof(skill),english()?"Lv%d %u/%d":"钓技%d %u/%d",level+1,state.fish_caught,goal);
+      else std::snprintf(skill,sizeof(skill),"%s",tr("Lv4 / MAX","钓技4 · 满级"));
+      std::snprintf(b,sizeof(b),"%s · %s",best,skill);
+      fit_text(x+12,y+174,b,202,Sage);
+      fit_text(x+12,y+190,english()?f.hint_en:f.hint_cn,202,Muted);
+    } else {
+      int item=collection_item(collection_category,selected_row);
+      if(collection_category==0) {
+        if(item<=15)std::snprintf(b,sizeof(b),english()?"Grow %s; %u watered nights":"种下%s，浇水照料%u夜",english()?Crops[item-12].en:Crops[item-12].cn,Crops[item-12].days);
+        else std::snprintf(b,sizeof(b),"%s",tr("Cook at your cottage stove","在农舍灶台制作后即可收录"));
+      } else {
+        const Forage *source=nullptr;for(const auto &f:Foraging)if(f.item==item){source=&f;break;}
+        char available[64]{};size_t at=0;
+        for(int season=0;season<4;++season)if(source&&(source->seasons&(1u<<season)))
+          at+=std::snprintf(available+at,sizeof(available)-at,"%s%s",at?" ":"",english()?seasons_en[season]:seasons_cn[season]);
+        std::snprintf(b,sizeof(b),"%s\n%s",source?region_name(source->region,english()):"",available);
+      }
+      paragraph(x+12,y+174,b,202,2,Muted);
+    }
+  }
+}
+void draw_fishing(int x,int y) {
+  using Phase=FishingSession::Phase;
+  bool caught=fishing.phase==Phase::Caught,escaped=fishing.phase==Phase::Escaped;
+  IconCanvas canvas;char b[96];
+  if(caught) {
+    rounded_rect(x+20,y+38,188,51,Soft,6);
+    art::fish_portrait(canvas,x+88,y+46,fishing.species,3);
+    const auto &f=FishSpeciesList[fishing.species];
+    center_text(x+114,y+96,english()?f.en:f.cn,Sage);
+    std::snprintf(b,sizeof(b),english()?"%d cm   Fish +%d":"%d 厘米   鲜鱼 +%d",fishing.length,fishing.count);
+    center_text(x+114,y+114,b);
+    fit_text(x+18,y+134,fishing.discovered?tr("NEW DISCOVERY! Check your journal","新发现！已记入晴露收藏册"):fishing.record?tr("A new personal length record!","刷新了这种鱼的最大长度记录！"):tr("Fresh fish: ship, gift or deliver","鲜鱼可以出货、送礼或交付委托"),194,Sage);
+    if(fishing.perfect)center_text(x+114,y+151,fishing.count==2?tr("PERFECT! Double catch","完美收竿！双份渔获"):tr("PERFECT! Fish stack full","完美收竿！鲜鱼已经装满"),farm_palette::WoodDark);
+    icon_label_button({x+12,y+174,100,25},farm_ui::Icon::Journal,tr("COLLECTION","收藏册"));
+    icon_label_button({x+117,y+174,100,25},farm_ui::Icon::Rod,tr("CAST AGAIN","再钓一竿"));
+    return;
+  }
+  if(escaped) {
+    art::fish_portrait(canvas,x+90,y+50,std::max(0,fishing.species),3,false);
+    center_text(x+114,y+98,tr("The fish slipped away","鱼溜走了，下次还有机会"),Muted);
+    paragraph(x+20,y+123,tr("Reel on the bite, then stop the marker inside the green zone.","浮漂下沉时提竿，再让指针停在绿色区域。每条鱼有两次收线机会。"),188,3,Muted);
+    icon_label_button(layout().confirm(174,25),farm_ui::Icon::Rod,tr("TRY AGAIN","再试一次"));
+    return;
+  }
+  bool reeling=fishing.phase==Phase::Reeling,bite=fishing.phase==Phase::Bite;
+  rounded_rect(x+19,y+40,190,66,farm_palette::Water,5);
+  for(int i=0;i<7;++i)rect(x+30+i*24,y+72+(i%2)*6,12,1,art::rgb(149,197,175));
+  if(reeling)art::fish_portrait(canvas,x+90+fishing.cursor()/70,y+66,fishing.species,2);
+  else {
+    int bob=int(fishing.elapsed/250)%2;
+    line(x+75,y+43,x+116,y+78,Paper);
+    rect(x+113,y+(bite?91:77+bob),6,5,Border);
+    rect(x+114,y+(bite?91:77+bob),4,2,Paper);
+    rect(x+114,y+(bite?93:79+bob),4,2,farm_palette::Brass);
+    if(bite)center_text(x+142,y+50,"!",Paper,2);
+  }
+  if(reeling) {
+    int start=x+25,width=178;
+    rounded_rect(start-2,y+114,width+4,18,Border,3);
+    rect(start,y+117,width,12,Soft);
+    int lo=(fishing.center-fishing.radius)*width/1000,hi=(fishing.center+fishing.radius)*width/1000;
+    rect(start+lo,y+117,hi-lo,12,Sage);
+    rect(start+(fishing.center-55)*width/1000,y+117,110*width/1000,12,farm_palette::GrassLight);
+    int marker=start+fishing.cursor()*width/1000;
+    rect(marker-1,y+112,3,22,Paper);
+    std::snprintf(b,sizeof(b),english()?"Stop in green / %d tries":"停在绿区收线 · 剩%d次",fishing.attempts);
+    center_text(x+114,y+142,b,Sage);
+  } else center_text(x+114,y+126,bite?tr("BITE! Set the hook!","咬钩了！快提竿！"):tr("Wait for the float to dip...","等浮漂下沉，再提竿…"),bite?Sage:Muted);
+  icon_label_button(layout().confirm(174,25),farm_ui::Icon::Rod,reeling?tr("REEL IN","收线"):tr("SET HOOK","提竿"),bite||reeling);
+}
 void modal() {
   int x = panel_left(), y = panel_top();
   panel(x, y, 228, 210);
@@ -1082,6 +1232,7 @@ void modal() {
       : page == Page::Calendar ? tr("SEASON CALENDAR", "晴露谷日历")
       : page == Page::Forecast ? tr("WEATHER CHANNEL", "农舍天气频道")
       : page == Page::Shipping ? tr("SHIPPING BIN", "出货箱")
+      : page == Page::Collections ? tr("VALLEY COLLECTION", "晴露收藏册")
       : page == Page::Kitchen  ? tr("COTTAGE KITCHEN", "农舍小厨房")
       : page == Page::Guide    ? tr("FARM JOURNAL", "农场手册")
       : page == Page::Fishing  ? tr("A QUIET MOMENT", "池畔垂钓")
@@ -1092,11 +1243,15 @@ void modal() {
   if(page==Page::Calendar) {
     std::snprintf(title,sizeof(title),english()?"%s / Year %u":"%s · 第%u年日历",english()?seasons_en[season()]:seasons_cn[season()],(state.day-1)/112+1);name=title;
   }
+  if(page==Page::Collections) {
+    std::snprintf(title,sizeof(title),english()?"COLLECTION %d/%d":"晴露收藏册 %d/%d",discovered_total(state),CollectionTotal);name=title;
+  }
   center_text(x + 114, y + 10, name);
   icon_button(layout().close(), farm_ui::Icon::Close);
   line(x + 12, y + 31, x + 215, y + 31, art::Earth);
   char b[96];
-  if(page==Page::Calendar) {
+  if(page==Page::Collections)draw_collections(x,y);
+  else if(page==Page::Calendar) {
     const char *days[]={"M","T","W","T","F","S","S"};
     for(int i=0;i<7;++i)center_text(x+27+i*29,y+40,days[i],Muted);
     for(int day=1;day<=28;++day) {
@@ -1191,10 +1346,14 @@ void modal() {
       button(x + 12 + (i % 2) * 105, y + 40 + (i / 2) * 29, 100, 25, labels[i],
              selected_row == i);
     const char *tabs[] = {tr("MAP", "地图"), tr("PEOPLE", "村民"),
-                          tr("STORY", "剧情")};
-    for (int i = 0; i < 3; ++i)
-      button(x + 12 + i * 69, y + 162, 65, 24, tabs[i]);
-    fit_text(x + 12, y + 191, story_goal(state, english()), 202, Muted);
+                          tr("STORY", "剧情"),tr("FINDS","收藏")};
+    for (int i = 0; i < 4; ++i) {
+      auto r=layout().journal_tab(i);button(r.x,r.y,r.w,r.h,tabs[i]);
+    }
+    if(int ready=ready_collection_rewards(state)) {
+      std::snprintf(b,sizeof(b),english()?"%d badge rewards ready / Y: finds":"%d枚徽章可领奖 · 收藏册查看",ready);
+      fit_text(x+12,y+191,b,202,Sage);
+    } else fit_text(x + 12, y + 191, story_goal(state, english()), 202, Muted);
   } else if (page == Page::Orders) {
     for (int i=0;i<NpcCount;++i) {
       auto order = daily_order(state,i); int yy=y+36+i*33;
@@ -1306,18 +1465,7 @@ void modal() {
          Muted);
     button(x + 24, y + 171, 180, 27, tr("SEE YOU", "回头见"));
   } else if (page == Page::Fishing) {
-    bool bite = fish_ms >= fish_bite;
-    rect(x + 19, y + 44, 190, 68, art::Water);
-    for (int i = 0; i < 7; ++i)
-      rect(x + 30 + i * 24, y + 77 + (i % 2) * 6, 12, 1,
-           art::rgb(149, 197, 175));
-    line(x + 75, y + 45, x + 116, y + 84, Paper);
-    rect(x + 113, y + (bite ? 94 : 80), 5, 4, art::Gold);
-    center_text(x + 114, y + 121,
-                bite ? tr("BITE! REEL IN!", "咬钩了！快收竿！")
-                     : tr("Wait for the bobber...", "静静等浮漂下沉…"),
-                bite ? art::Green : Muted);
-    button(x + 24, y + 161, 180, 30, tr("REEL IN", "收竿"), bite);
+    draw_fishing(x,y);
   }
 }
 void scene_target(int wx, int wy, int &tx, int &ty) {
@@ -1431,10 +1579,24 @@ void panel_tap(int px, int py) {
   if (!ui.modal().contains(px, py))
     return;
   if (ui.close().contains(px, py)) {
-    page = Page::Farm;
+    page = page==Page::Collections?collection_parent:Page::Farm;
     return;
   }
-  if (page == Page::Orders) {
+  if(page==Page::Collections) {
+    for(int i=0;i<4;++i)if(ui.collection_tab(i).contains(px,py)) {
+      collection_category=i;selected_row=0;redraw();return;
+    }
+    int count=collection_category==3?MilestoneCount:collection_size(collection_category);
+    for(int i=0;i<count;++i)if(ui.collection_cell(collection_category,i).contains(px,py)) {
+      selected_row=i;redraw();return;
+    }
+    if(collection_category==3&&ui.confirm(173,25).contains(px,py))collection_action();
+  } else if(page==Page::Fishing) {
+    if(fishing.phase==FishingSession::Phase::Caught) {
+      if(farm_ui::Rect{m.x+12,m.y+174,100,25}.contains(px,py))open_collections(2,fishing.species,Page::Fishing);
+      else if(farm_ui::Rect{m.x+117,m.y+174,100,25}.contains(px,py))facing_action();
+    } else if(ui.confirm(174,25).contains(px,py))facing_action();
+  } else if (page == Page::Orders) {
     for(int i=0;i<4;++i) if(farm_ui::Rect{ui.modal().x+163,ui.modal().y+41+i*33,48,22}.contains(px,py)) {
       order_action(i);return;
     }
@@ -1499,10 +1661,9 @@ void panel_tap(int px, int py) {
         return;
       }
   } else if (page == Page::Guide) {
-    for (int i = 0; i < 3; ++i)
-      if (farm_ui::Rect{ui.modal().x + 12 + i * 69, ui.modal().y + 162, 65, 24}
-              .contains(px, py)) {
-        open_page(i == 0 ? Page::World : i == 1 ? Page::People : Page::Story);
+    for (int i = 0; i < 4; ++i)
+      if (ui.journal_tab(i).contains(px,py)) {
+        if(i==3)open_collections();else open_page(i == 0 ? Page::World : i == 1 ? Page::People : Page::Story);
         return;
       }
     for (int i = 0; i < 8; ++i)
@@ -1516,8 +1677,6 @@ void panel_tap(int px, int py) {
     page = Page::Farm;
   else if (page == Page::Letter && ui.confirm(171, 27).contains(px, py))
     page = Page::Farm;
-  else if (page == Page::Fishing && ui.confirm(161, 30).contains(px, py))
-    facing_action();
 }
 } // namespace
 namespace game {
@@ -1527,7 +1686,7 @@ bool input_active() { return moving || route || stick || touch_down; }
 bool back() {
   if (!title_screen && page != Page::Farm) {
     stop_motion();
-    page = Page::Farm;
+    page = page==Page::Collections?collection_parent:Page::Farm;
     redraw();
     return true;
   }
@@ -1583,11 +1742,26 @@ void key(Key k) {
     return;
   }
   if (page == Page::Fishing) {
-    if (k == Key::A || k == Key::B)
+    if(k==Key::B) {page=Page::Farm;redraw();}
+    else if(k==Key::X && fishing.phase==FishingSession::Phase::Caught)open_collections(2,fishing.species,Page::Fishing);
+    else if (k == Key::A)
       facing_action();
     return;
   }
+  if(page==Page::Collections) {
+    int count=collection_category==3?MilestoneCount:collection_size(collection_category);
+    if(k==Key::L||k==Key::R) {
+      collection_category=(collection_category+(k==Key::L?3:1))%4;selected_row=0;
+    } else if(k==Key::LEFT && selected_row%2)--selected_row;
+    else if(k==Key::RIGHT && selected_row%2==0 && selected_row+1<count)++selected_row;
+    else if(k==Key::UP && selected_row>=2)selected_row-=2;
+    else if(k==Key::DOWN && selected_row+2<count)selected_row+=2;
+    else if(k==Key::A)collection_action();
+    else if(k==Key::B)page=collection_parent;
+    redraw();return;
+  }
   if (page != Page::Farm) {
+    if(page==Page::Guide&&k==Key::Y){open_collections();return;}
     if(page==Page::Forecast||page==Page::Calendar||page==Page::Shipping) {
       if(page==Page::Calendar&&(k==Key::LEFT||k==Key::RIGHT||k==Key::UP||k==Key::DOWN)) {
         selected_row=std::clamp(selected_row+(k==Key::LEFT?-1:k==Key::RIGHT?1:k==Key::UP?-7:7),0,27);redraw();return;
@@ -1882,6 +2056,9 @@ void pointer(Phase phase, int x, int y) {
   begin_route(tx, ty, interactive);
 }
 void tick(uint32_t elapsed) {
+  for(auto &effect:gather_effects)if(effect.remaining) {
+    effect.remaining=effect.remaining>elapsed?effect.remaining-elapsed:0;redraw();
+  }
   if(deposit_ms) {deposit_ms=deposit_ms>elapsed?deposit_ms-elapsed:0;redraw();}
   if (hit_ms) {
     hit_ms = hit_ms > elapsed ? hit_ms - elapsed : 0;
@@ -1901,12 +2078,8 @@ void tick(uint32_t elapsed) {
     redraw();
   }
   if (page == Page::Fishing) {
-    fish_ms += elapsed;
-    if (fish_ms > fish_bite + 900) {
-      page = Page::Farm;
-      msg("鱼溜走了，再试一次吧", "The fish got away");
-    }
-    redraw();
+    auto phase=fishing.phase;fishing.tick(elapsed);
+    if(phase!=FishingSession::Phase::Caught&&phase!=FishingSession::Phase::Escaped)redraw();
     return;
   }
   if (page != Page::Farm)

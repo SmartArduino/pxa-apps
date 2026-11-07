@@ -41,7 +41,7 @@ struct Forage {
 };
 inline constexpr Forage Foraging[] = {
     {Region::Forest, 7, 7, 17},  {Region::Forest, 24, 17, 17},
-    {Region::Forest, 8, 18, 18}, {Region::Lake, 9, 10, 28, 6},
+    {Region::Forest, 8, 18, 18}, {Region::Lake, 23, 14, 28, 6},
     {Region::Lake, 24, 17, 18},  {Region::Town, 25, 17, 8},
     {Region::Orchard, 7, 8, 19, 6}, {Region::Orchard, 13, 17, 19, 6},
     {Region::Orchard, 23, 16, 20}, {Region::Forest, 25, 7, 20},

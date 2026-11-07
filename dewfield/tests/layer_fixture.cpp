@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Valid private saves plus independently composited opaque intersection pixels.
 #include "../scene.hpp"
+#include "../collections.hpp"
 #include <cassert>
 #include <cstdio>
 #include <cstring>
@@ -14,6 +15,26 @@ int main(int argc, char **argv) {
   std::memset(s.cleared, 1, sizeof(s.cleared));
   for (auto &p : s.plots)
     p = {};
+  if(!std::strncmp(argv[1],"discoveries-",12)) {
+    const char *mode=argv[1]+12;s.day=12;s.minute=600;s.energy=80;s.harvested=10;
+    s.px=23*16+8;s.py=15*16+8;
+    farm::change_item(s,12,3);farm::change_item(s,20,2);
+    farm::sync_inventory(s);farm::select_slot(s,6);
+    if(!std::strcmp(mode,"catalog")) {
+      s.story=3;s.visited=255;
+      for(int item:farm::GardenCollection)farm::change_item(s,item,1);
+      for(int item:farm::WildCollection)farm::change_item(s,item,1);
+      for(int i=0;i<farm::FishSpeciesCount;++i)s.fish_records[i]=farm::FishSpeciesList[i].max_cm;
+      s.fish_caught=25;s.perfect_catches=3;
+    }
+    uint8_t bytes[farm::SaveBytes];assert(farm::encode(s,bytes,sizeof(bytes))==sizeof(bytes));
+    farm::State checked;assert(farm::decode(checked,bytes,sizeof(bytes)));
+    FILE*f=std::fopen(argv[2],"wb");assert(f&&std::fwrite(bytes,1,sizeof(bytes),f)==sizeof(bytes));std::fclose(f);
+    farm::FishingSession session;session.begin(s);
+    f=std::fopen(argv[3],"w");assert(f);
+    std::fprintf(f,"{\"bite_at\":%u,\"center\":%d,\"cycle_ms\":%u,\"species\":%d}\n",session.bite_at,session.center,session.cycle_ms,session.species);
+    std::fclose(f);return 0;
+  }
   if(!std::strncmp(argv[1],"redesign-",9)) {
     const char *mode=argv[1]+9;s.story=3;s.visited=255;s.day=12;s.minute=600;s.energy=60;
     s.px=14*16+8;s.py=14*16+8;

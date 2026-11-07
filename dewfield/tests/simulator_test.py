@@ -27,6 +27,7 @@ p.add_argument('--life-only',action='store_true')
 p.add_argument('--living-only',action='store_true')
 p.add_argument('--atmosphere-only',action='store_true')
 p.add_argument('--redesign-only',action='store_true')
+p.add_argument('--discoveries-only',action='store_true')
 p.add_argument('--npc-only',action='store_true')
 p.add_argument('--world-only',action='store_true')
 p.add_argument('--layers-only',action='store_true')
@@ -136,6 +137,8 @@ def saved():
     if raw[4] >= 4:
         result.update(gathered=list(struct.unpack_from('<3H',raw,530)),meals=list(struct.unpack_from('<2H',raw,536)),orders_done=struct.unpack_from('<H',raw,543)[0])
     result['auto_run']=bool(raw[559]) if raw[4]>=6 else True
+    if raw[4]>=8:
+        result.update(discoveries=struct.unpack_from('<I',raw,560)[0],fish_records=list(raw[564:572]),fish_caught=struct.unpack_from('<H',raw,572)[0],perfect=struct.unpack_from('<H',raw,574)[0],collection_rewards=raw[576])
     return result
 
 def wait_for(predicate,label,seconds=12):
@@ -211,6 +214,49 @@ try:
     tap(cw//2,ch-38)
     if args.appearance_only or args.animation_only or args.action_only or args.cultivation_only:time.sleep(2.4)
     capture('02-farm')
+    if args.discoveries_only:
+        assert args.fixture_tool
+        key('ENTER');time.sleep(.3);saved();stop()
+        raw=out/'discoveries.save'
+        subprocess.run([str(args.fixture_tool.resolve()),'discoveries-fishing',str(raw),str(out/'fishing-setup.json')],check=True)
+        replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38);time.sleep(.25)
+        before=saved();key('RIGHT',.06);key('Z',.04)
+        mx,my=(cw-228)//2,(ch-210)//2
+        paper,sage,grass_light,brass=(palette_color(k) for k in ('Paper','Sage','GrassLight','Brass'))
+        def rgb565(im,x,y):
+            r,g,b=im.getpixel((int(x*scale),int(y*scale)));return ((r&248)<<8)|((g&252)<<3)|(b>>3)
+        end=time.monotonic()+5
+        while time.monotonic()<end:
+            command('SCREENSHOT AFTER_PRESENT','bite-poll.png');im=Image.open(out/'bite-poll.png').convert('RGB')
+            if rgb565(im,mx+115,my+94)==brass:break
+            time.sleep(.035)
+        else:raise AssertionError('No bite in real fishing modal')
+        key('Z',.035);capture('fishing-timing')
+        caught=None
+        for attempt in range(2):
+            end=time.monotonic()+4
+            while time.monotonic()<end:
+                command('SCREENSHOT AFTER_PRESENT','reel-poll.png');im=Image.open(out/'reel-poll.png').convert('RGB')
+                marker=[x for x in range(mx+25,mx+203) if rgb565(im,x,my+116)==paper]
+                green=[x for x in range(mx+25,mx+203) if rgb565(im,x,my+125) in (sage,grass_light)]
+                if marker and green and min(green)+12<sum(marker)/len(marker)<max(green)-12:
+                    key('Z',.035);break
+                time.sleep(.02)
+            else:raise AssertionError('Unable to observe a catchable green zone')
+            time.sleep(2.3) # Storage deliberately coalesces game saves for two seconds.
+            if saved()['fish']>before['fish']:caught=saved();break
+        assert caught and caught['fish_caught']==1 and any(caught['fish_records']),caught
+        assert caught['energy']==before['energy']-4
+        capture('fishing-catch');key('A');capture('fish-collection')
+        key('W');key('Z');reward=wait_for(lambda s:s.get('collection_rewards',0)&1,'badge save',4)
+        assert reward['gold']==before['gold']+80 and reward['collection_rewards']&1,reward
+        key('Z');time.sleep(.3);assert saved()['gold']==reward['gold']
+        capture('claimed-badge');key('X');key('X');key('ENTER');time.sleep(.3);stop()
+        start();tap(cw//2,ch-38);key('S');key('S');capture('crop-collection');key('W');capture('wild-collection')
+        restored=saved();assert restored['fish_records']==caught['fish_records'] and restored['collection_rewards']==reward['collection_rewards'] and restored['gold']==reward['gold']
+        (out/'discoveries-report.json').write_text(json.dumps({'caught':caught,'claimed':reward,'restarted':restored},ensure_ascii=False,indent=2)+'\n')
+        print('PASS: signed simulator bite, timing catch, fish catalog, one-time badge reward and durable v8 records across restart')
+        raise SystemExit(0)
     if args.redesign_only:
         assert args.fixture_tool
         def persist():
@@ -359,7 +405,7 @@ try:
         def persist():
             key('ENTER');time.sleep(.3);value=saved();key('ENTER');return value
         def journal_tab(tab):
-            key('S');tap((cw-228)//2+44+tab*69,(ch-210)//2+174)
+            key('S');tap((cw-228)//2+36+tab*52,(ch-210)//2+174)
         def wait_region(region):
             return wait_for(lambda s:s['region']==region,'region '+str(region),30)
         time.sleep(2.4);persist()

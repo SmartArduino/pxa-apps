@@ -2,6 +2,7 @@
 #include "core.hpp"
 #include "world.hpp"
 #include "living.hpp"
+#include "collections.hpp"
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
@@ -92,6 +93,7 @@ bool change_item(State &s, int item, int amount) {
       : item >= 24 && item <= 28 ? &s.seasonal[item - 24] : nullptr;
   if (!stack || amount < -int(*stack) || amount > 999 - int(*stack)) return false;
   *stack = uint16_t(int(*stack) + amount);
+  if(amount>0 && item>=12)s.discoveries|=1u<<(item-12);
   return true;
 }
 void sync_inventory(State &s) {
@@ -223,7 +225,7 @@ Result act(State &s, int x, int y) {
       return collect_forage(s, forage) ? Result::Foraged : Result::Blocked;
     if (ground(s, x, y) == Ground::Water) {
       if (Tool(s.tool) == Tool::Rod)
-        return s.energy && spend_energy(s,4) ? Result::Fish : Result::NoEnergy;
+        return s.fish>=999?Result::FullFish:s.energy && spend_energy(s,4) ? Result::Fish : Result::NoEnergy;
       s.water = s.capacity;
       return Result::Refilled;
     }
@@ -238,7 +240,7 @@ Result act(State &s, int x, int y) {
   }
   if ((x == 7 && y == 8) || ground(s, x, y) == Ground::Water) {
     if (Tool(s.tool) == Tool::Rod && ground(s, x, y) == Ground::Water)
-      return s.energy && spend_energy(s,4) ? Result::Fish : Result::NoEnergy;
+      return s.fish>=999?Result::FullFish:s.energy && spend_energy(s,4) ? Result::Fish : Result::NoEnergy;
     s.water = s.capacity;
     return Result::Refilled;
   }
@@ -282,7 +284,7 @@ Result act(State &s, int x, int y) {
     int c = p.crop - 1;
     if (s.produce[c] >= 999)
       return Result::Blocked;
-    s.produce[c]++;
+    change_item(s,12+c,1);
     s.harvested++;
     if (Crops[c].regrow)
       p.growth = Crops[c].days - Crops[c].regrow;
@@ -495,7 +497,7 @@ size_t encode(const State &original, uint8_t *out, size_t cap) {
     }
   };
   put(0x31465744, 4);
-  put(7, 2);
+  put(8, 2);
   put(s.day, 2);
   put(s.minute, 2);
   put(s.energy, 1);
@@ -558,6 +560,9 @@ size_t encode(const State &original, uint8_t *out, size_t cap) {
   for(auto v:s.seasonal)put(v,2);
   put(s.weather,1);put(s.overwork,1);put(s.exhausted,1);put(s.last_shipped,1);
   put(s.auto_run, 1);
+  put(s.discoveries,4);
+  for(auto length:s.fish_records)put(length,1);
+  put(s.fish_caught,2);put(s.perfect_catches,2);put(s.collection_rewards,1);
   n = SaveBytes - 4;
   put(checksum(out, n), 4);
   return SaveBytes;
@@ -575,7 +580,7 @@ bool decode(State &s, const uint8_t *in, size_t n) {
   if (get(4) != 0x31465744)
     return false;
   uint32_t version = get(2);
-  if (version < 1 || version > 7)
+  if (version < 1 || version > 8)
     return false;
   if ((version >= 3 && n != SaveBytes) || (version < 3 && n != 512))
     return false;
@@ -732,6 +737,27 @@ bool decode(State &s, const uint8_t *in, size_t n) {
     auto auto_run = get(1);
     if (auto_run > 1) return false;
     t.auto_run = auto_run;
+  }
+  if(version>=8) {
+    t.discoveries=get(4);
+    int species=0;
+    for(int i=0;i<FishSpeciesCount;++i) {
+      auto &length=t.fish_records[i];length=get(1);
+      const auto &f=FishSpeciesList[i];
+      if(length && (length<f.min_cm||length>f.max_cm))return false;
+      species+=length!=0;
+    }
+    t.fish_caught=get(2);t.perfect_catches=get(2);t.collection_rewards=get(1);
+    if(t.discoveries>=(1u<<17)||t.perfect_catches>t.fish_caught||
+       t.fish_caught<species||t.collection_rewards>=(1u<<MilestoneCount))return false;
+    for(int i=0;i<MilestoneCount;++i) {
+      auto m=milestone(t,i);
+      if((t.collection_rewards&(1u<<i)) && m.progress<m.goal)return false;
+    }
+  } else {
+    // Old saves can prove owned goods, but cannot prove a particular fish species.
+    for(int item=12;item<=ItemCount;++item)
+      if(item_count(t,item))t.discoveries|=1u<<(item-12);
   }
   for (int item = 19; item <= ItemCount; ++item) {
     int copies = 0;

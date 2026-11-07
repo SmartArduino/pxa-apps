@@ -35,7 +35,7 @@ enum class Result : uint8_t {
   Dialogue,
   Foraged,
   Orders,
-  Kitchen, Calendar, Forecast, Closed, WrongSeason, EmptyShipping
+  Kitchen, Calendar, Forecast, Closed, WrongSeason, EmptyShipping, FullFish
 };
 struct Crop {
   const char *cn, *en;
@@ -70,6 +70,9 @@ struct State {
   uint8_t weather = 0, overwork = 0, last_shipped = 0;
   bool exhausted = false;
   uint16_t chat_day[4]{}, gift_day[4]{};
+  uint32_t discoveries = 0;
+  uint8_t fish_records[8]{}, collection_rewards = 0;
+  uint16_t fish_caught = 0, perfect_catches = 0;
 };
 struct Obstacle {
   uint8_t x, y, kind;
