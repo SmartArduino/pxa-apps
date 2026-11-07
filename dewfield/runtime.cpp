@@ -665,7 +665,7 @@ void run() {
       uint32_t elapsed = uint32_t((now - last_tick) / 1000);
       last_tick = now;
       if (!paused)
-        game::tick(elapsed > 100 ? 100 : elapsed);
+        dewfield_pacing::advance(elapsed, [](uint32_t ms) { game::tick(ms); });
       for (unsigned i = 0; i < 4; ++i)
         if (repeats[i] && now >= repeats[i]) {
           repeats[i] = now + 110000;

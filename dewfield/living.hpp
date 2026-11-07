@@ -13,6 +13,13 @@ int food_energy(int item);
 int item_price(int item);
 const char *seasonal_name(int item, bool en=false);
 bool spend_energy(State &s, int amount);
-int daylight(const State &s); // 0=day, 5=night; bounded palette blend
+int movement_speed(const State &s); // World pixels per second; running is free.
+struct Lighting {
+  uint16_t color = 0;
+  uint8_t amount = 0; // 0..255, mixed against the original RGB565 palette.
+  int key() const { return amount ? (int(color) << 8) | amount : 0; }
+};
+Lighting ambient_light(const State &s);
+uint16_t apply_light(uint16_t color, Lighting light);
 const char *calendar_event(int day, bool en=false);
 }

@@ -496,7 +496,7 @@ size_t encode(const State &original, uint8_t *out, size_t cap) {
     }
   };
   put(0x31465744, 4);
-  put(5, 2);
+  put(6, 2);
   put(s.day, 2);
   put(s.minute, 2);
   put(s.energy, 1);
@@ -558,6 +558,7 @@ size_t encode(const State &original, uint8_t *out, size_t cap) {
   put(s.orders_done, 2);
   for(auto v:s.seasonal)put(v,2);
   put(s.weather,1);put(s.overwork,1);put(s.exhausted,1);put(s.last_shipped,1);
+  put(s.auto_run, 1);
   n = SaveBytes - 4;
   put(checksum(out, n), 4);
   return SaveBytes;
@@ -575,7 +576,7 @@ bool decode(State &s, const uint8_t *in, size_t n) {
   if (get(4) != 0x31465744)
     return false;
   uint32_t version = get(2);
-  if (version < 1 || version > 5)
+  if (version < 1 || version > 6)
     return false;
   if ((version >= 3 && n != SaveBytes) || (version < 3 && n != 512))
     return false;
@@ -727,6 +728,11 @@ bool decode(State &s, const uint8_t *in, size_t n) {
     if(t.region==unsigned(Region::Home)&&((t.px/16==15&&t.py/16==7)||(t.px/16==13&&t.py/16==5)))t.py+=16;
     if(t.region==unsigned(Region::Town)&&t.px/16==5&&t.py/16==7)t.py+=16;
     sync_inventory(t);select_slot(t,t.active_slot==255?-1:t.active_slot);
+  }
+  if (version >= 6) {
+    auto auto_run = get(1);
+    if (auto_run > 1) return false;
+    t.auto_run = auto_run;
   }
   for (int item = 19; item <= ItemCount; ++item) {
     int copies = 0;

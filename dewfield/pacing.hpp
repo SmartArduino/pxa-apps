@@ -4,6 +4,18 @@
 #include <algorithm>
 namespace dewfield_pacing {
 inline constexpr uint64_t PeriodUs = 33333;
+template<class Tick>
+inline void advance(uint32_t elapsed_ms, Tick tick) {
+  // Slow rendering must not turn 200 ms of real movement into a 100 ms step.
+  // Keep collision, tool and portal checks in small steps, with bounded
+  // catch-up after an exceptional stall or foreground transition.
+  uint32_t remaining = std::min(elapsed_ms, 500u);
+  while (remaining) {
+    uint32_t step = std::min(remaining, 33u);
+    tick(step);
+    remaining -= step;
+  }
+}
 inline uint64_t wait_us(uint64_t now, uint64_t tick_started,
                         uint64_t frame_started, bool frame_pending) {
   uint64_t deadline = tick_started + PeriodUs;

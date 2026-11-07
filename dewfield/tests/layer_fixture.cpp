@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>
 using namespace farm_scene;
 static uint16_t prop[512 * 384], person[512 * 384];
 int main(int argc, char **argv) {
@@ -13,6 +14,14 @@ int main(int argc, char **argv) {
   std::memset(s.cleared, 1, sizeof(s.cleared));
   for (auto &p : s.plots)
     p = {};
+  if (!std::strncmp(argv[1],"atmosphere-",11)) {
+    s.minute=std::atoi(argv[1]+11);s.day=12;s.px=232;s.py=194;
+    for(int y=0;y<4;++y)for(int x=0;x<10;++x)
+      if(y!=2)s.plots[y*10+x]={1,uint8_t(x<5?1:2),uint8_t(x<5?2:3),1};
+    uint8_t bytes[farm::SaveBytes];assert(farm::encode(s,bytes,sizeof(bytes))==sizeof(bytes));
+    FILE*f=std::fopen(argv[2],"wb");assert(f&&std::fwrite(bytes,1,sizeof(bytes),f)==sizeof(bytes));std::fclose(f);
+    f=std::fopen(argv[3],"w");assert(f);std::fclose(f);return 0;
+  }
   if(!std::strncmp(argv[1],"living-",7)) {
     const char *mode=argv[1]+7;s.visited=255;s.story=3;s.day=29;s.minute=600;s.gold=480;s.energy=60;
     s.region=!std::strcmp(mode,"home")?4:!std::strcmp(mode,"shop")?6:(!std::strcmp(mode,"town")||!std::strcmp(mode,"npc"))?1:!std::strcmp(mode,"lodge")?7:!std::strcmp(mode,"orchard")?5:0;

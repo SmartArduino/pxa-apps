@@ -61,6 +61,7 @@ struct State {
   uint8_t active_slot = 0;
   uint8_t tree_age[24]{};
   bool show_joystick = true, show_action = true, music = true;
+  bool auto_run = true;
   bool rain = false;
   uint8_t region = 0, story = 0, met = 0, visited = 1, bonds[4]{}, personal = 0,
           order_claimed = 0;

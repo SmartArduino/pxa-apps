@@ -50,10 +50,50 @@ bool spend_energy(State&s,int amount) {
   s.overwork=std::min(10,int(s.overwork)+amount-paid);
   return true;
 }
-int daylight(const State&s) {
-  if(indoors(s.region))return 0;
-  int level=s.minute<420?1:s.minute<1020?0:std::min(6,(int(s.minute)-1020)/60+1);
-  return std::min(5,level+(s.weather==unsigned(Weather::Storm)?1:0));
+int movement_speed(const State &s) {
+  return !s.energy ? 32 : s.auto_run ? 112 : 64;
+}
+Lighting ambient_light(const State &s) {
+  if (indoors(s.region)) return {};
+  struct Key { int minute, r, g, b, amount; };
+  constexpr int sunsets[] = {1080, 1140, 1050, 990};
+  int sunset = sunsets[season_of(s.day)];
+  const Key keys[] = {
+      {0, 22, 30, 59, 160}, {300, 39, 48, 81, 115},
+      {360, 209, 164, 131, 45}, {420, 236, 197, 143, 24},
+      {480, 240, 208, 164, 0}, {sunset-120, 240, 208, 164, 0},
+      {sunset-60, 240, 174, 112, 24}, {sunset, 218, 124, 88, 64},
+      {sunset+50, 100, 73, 120, 102},
+      {sunset+120, 28, 38, 73, 145}, {1440, 22, 30, 59, 160},
+      {1560, 22, 30, 59, 160}};
+  // One cached palette per ten game minutes (five real seconds). Daylight
+  // stays an identity palette; walking never recalculates the LUT.
+  int minute = std::clamp(int(s.minute), 0, 1560) / 10 * 10;
+  int i = 1;
+  while (i < 11 && minute > keys[i].minute) ++i;
+  const auto &a = keys[i-1], &b = keys[i];
+  int span = b.minute-a.minute, t = minute-a.minute;
+  auto mix = [&](int first, int last) { return first+(last-first)*t/span; };
+  int r = mix(a.r,b.r), g = mix(a.g,b.g), blue = mix(a.b,b.b);
+  int amount = mix(a.amount,b.amount);
+  int overcast = s.weather==unsigned(Weather::Storm) ? 64 :
+                 s.weather==unsigned(Weather::Rain) ? 32 :
+                 s.weather==unsigned(Weather::Snow) ? 16 : 0;
+  if (overcast) {
+    int retained = amount*(256-overcast)/256;
+    amount = retained+overcast;
+    r = (r*retained+94*overcast)/amount;
+    g = (g*retained+113*overcast)/amount;
+    blue = (blue*retained+139*overcast)/amount;
+  }
+  return {uint16_t(((r&248)<<8)|((g&252)<<3)|(blue>>3)),uint8_t(amount)};
+}
+uint16_t apply_light(uint16_t color, Lighting light) {
+  unsigned a=light.amount, keep=256-a;
+  unsigned r=(((color>>11)*keep+(light.color>>11)*a+128)>>8);
+  unsigned g=((((color>>5)&63)*keep+((light.color>>5)&63)*a+128)>>8);
+  unsigned b=(((color&31)*keep+(light.color&31)*a+128)>>8);
+  return uint16_t((r<<11)|(g<<5)|b);
 }
 const char *calendar_event(int date,bool en) {
   int day=season_day(date),season=season_of(date);

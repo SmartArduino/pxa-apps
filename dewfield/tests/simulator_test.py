@@ -25,6 +25,7 @@ p.add_argument('--inventory-only',action='store_true')
 p.add_argument('--tools-only',action='store_true')
 p.add_argument('--life-only',action='store_true')
 p.add_argument('--living-only',action='store_true')
+p.add_argument('--atmosphere-only',action='store_true')
 p.add_argument('--npc-only',action='store_true')
 p.add_argument('--world-only',action='store_true')
 p.add_argument('--layers-only',action='store_true')
@@ -133,6 +134,7 @@ def saved():
         result.update(region=raw[503],story=raw[504],met=raw[505],visited=raw[506],bonds=list(raw[507:511]))
     if raw[4] >= 4:
         result.update(gathered=list(struct.unpack_from('<3H',raw,530)),meals=list(struct.unpack_from('<2H',raw,536)),orders_done=struct.unpack_from('<H',raw,543)[0])
+    result['auto_run']=bool(raw[559]) if raw[4]>=6 else True
     return result
 
 def wait_for(predicate,label,seconds=12):
@@ -208,6 +210,39 @@ try:
     tap(cw//2,ch-38)
     if args.appearance_only or args.animation_only or args.action_only or args.cultivation_only:time.sleep(2.4)
     capture('02-farm')
+    if args.atmosphere_only:
+        assert args.fixture_tool
+        key('ENTER');time.sleep(.3);saved();stop()
+        samples=[]
+        for name,minute in [('dawn',360),('day',720),('afternoon',1020),('sunset',1080),('twilight',1130),('night',1260)]:
+            raw=out/(name+'.save')
+            subprocess.run([str(args.fixture_tool.resolve()),'atmosphere-'+str(minute),str(raw),str(out/'fixture-unused')],check=True)
+            replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38);time.sleep(.5);capture('time-'+name)
+            im=Image.open(out/('time-'+name+'.png')).convert('RGB')
+            samples.append(im.getpixel((8*scale,122*scale)))
+            key('ENTER');time.sleep(.2);stop()
+        assert len(set(samples))>=5,samples
+        assert sum(samples[-1])<sum(samples[1])*.8,samples
+        images=[Image.open(out/('time-'+n+'.png')).convert('RGB') for n in ['dawn','day','afternoon','sunset','twilight','night']]
+        images[0].save(out/'day-cycle.gif',save_all=True,append_images=images[1:],duration=950,loop=0)
+        # Compare the same real input for the default run and Settings' walk.
+        distances=[]
+        for run in [True,False]:
+            raw=out/'movement.save';subprocess.run([str(args.fixture_tool.resolve()),'atmosphere-720',str(raw),str(out/'fixture-unused')],check=True)
+            replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38)
+            if not run:
+                key('ENTER');tap(cw//2,(ch-180)//2+53+3*30)
+                mx,my=(cw-228)//2,(ch-210)//2
+                tap(mx+110,my+51+3*32);capture('auto-run-disabled');key('BACK')
+            key('ENTER');time.sleep(.2);before=saved();key('ENTER')
+            command('KEY_DOWN RIGHT');time.sleep(.8);command('KEY_UP RIGHT');time.sleep(.3)
+            key('ENTER');time.sleep(.2);after=saved();assert after['auto_run']==run
+            assert after['energy']==before['energy'];distances.append(after['px']-before['px']);stop()
+        assert distances[0]>distances[1]*1.4,(distances,samples)
+        start();tap(cw//2,ch-38);key('ENTER');time.sleep(.2);assert not saved()['auto_run'];stop()
+        (out/'atmosphere-report.json').write_text(json.dumps({'running_vs_walking_px':distances,'same_ground_rgb':samples,'toggle_persisted':True},indent=2)+'\n')
+        print('PASS: actual signed simulator six day phases, terrain tint, default running, touch toggle, faster travel without energy cost and restart persistence')
+        raise SystemExit(0)
     if args.npc_only:
         assert args.fixture_tool
         key('ENTER');time.sleep(.4);saved();stop()

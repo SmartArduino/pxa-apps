@@ -319,10 +319,11 @@ void camera() {
                     std::max(0, WorldPixelsH - HEIGHT));
 }
 void scene() {
-  int light=daylight(state);
+  auto tone=ambient_light(state);
+  int light=tone.key();
   if(light!=cached_light) {
     cached_light=light;base_dirty=true;
-    if(light)for(unsigned c=0;c<65536;++c)light_palette[c]=art::blend(c,art::rgb(29,38,65),light);
+    if(light)for(unsigned c=0;c<65536;++c)light_palette[c]=apply_light(c,tone);
   }
   if(light && !state.region && plots_changed())base_dirty=true;
   if (base_dirty)
@@ -403,6 +404,7 @@ void stop_motion() {
   route = false;
   moving = false;
   walking = false;
+  move_acc = 0;
   state.px = state.px / 16 * 16 + 8;
   state.py = state.py / 16 * 16 + 8;
   stick = false;
@@ -755,6 +757,8 @@ void setting_action(int index) {
     music_enabled(state.music);
   }
   if (index == 3)
+    state.auto_run = !state.auto_run;
+  if (index == 4)
     switch_language();
   changed();
 }
@@ -1112,20 +1116,18 @@ void modal() {
   } else if (page == Page::Settings) {
     const char *labels[] = {
         tr("Virtual joystick", "虚拟摇杆"), tr("Action button", "悬浮按钮"),
-        tr("Background music", "背景音乐"), tr("Language", "语言")};
-    bool on[] = {state.show_joystick, state.show_action, state.music};
-    for (int i = 0; i < 4; ++i) {
+        tr("Background music", "背景音乐"), tr("Auto run", "自动跑步"),
+        tr("Language", "语言")};
+    bool on[] = {state.show_joystick, state.show_action, state.music, state.auto_run};
+    for (int i = 0; i < 5; ++i) {
       auto r = layout().setting(i);
       button(r.x, r.y, r.w, r.h, "", using_controller() && selected_row == i);
       text(r.x + 9, r.y + 7, labels[i], Text);
-      const char *value = i == 3  ? tr("English", "中文")
+      const char *value = i == 4  ? tr("English", "中文")
                           : on[i] ? tr("ON", "开")
                                   : tr("OFF", "关");
       text(r.x + r.w - 9 - text_width(value), r.y + 7, value, Sage);
     }
-    fit_text(x + 12, y + 175,
-             tr("Tap an item twice for empty hands", "再点已选物品可恢复空手"),
-             202, Muted);
   } else if (page == Page::Guide) {
     const char *labels[] = {
         tr("HOME", "小屋休息"),   tr("SEED SHOP", "购买种子"),
@@ -1428,7 +1430,7 @@ void panel_tap(int px, int py) {
     if (ui.upgrade().contains(px, py))
       shop_action(4);
   } else if (page == Page::Settings) {
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < 5; ++i)
       if (ui.setting(i).contains(px, py)) {
         setting_action(i);
         return;
@@ -1573,9 +1575,9 @@ void key(Key k) {
       if(k==Key::DOWN||k==Key::RIGHT) selected_row=(selected_row+1)%count;
     } else if (page == Page::Settings) {
       if (k == Key::UP)
-        selected_row = (selected_row + 3) % 4;
+        selected_row = (selected_row + 4) % 5;
       if (k == Key::DOWN)
-        selected_row = (selected_row + 1) % 4;
+        selected_row = (selected_row + 1) % 5;
     } else if (page == Page::Bag) {
       if (k == Key::SELECT)
         tool_upgrade_action();
@@ -1930,7 +1932,7 @@ void tick(uint32_t elapsed) {
     }
   }
   if (moving && !swing) {
-    move_acc += elapsed * (state.energy?64:32);
+    move_acc += elapsed * movement_speed(state);
     int amount = move_acc / 1000;
     move_acc %= 1000;
     int before_x = state.px, before_y = state.py;
@@ -1942,6 +1944,10 @@ void tick(uint32_t elapsed) {
     int traveled =
         std::abs(int(state.px) - before_x) + std::abs(int(state.py) - before_y);
     walk_distance += traveled;
+    // Carry distance through a tile boundary instead of losing the final
+    // pixels every step, especially when frame delivery is uneven.
+    if ((route || d >= 0) && amount > traveled)
+      move_acc += unsigned(amount - traveled) * 1000;
     walking = traveled > 0;
     if (state.px == stepx && state.py == stepy) {
       moving = false;
