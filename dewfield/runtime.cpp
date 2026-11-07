@@ -14,6 +14,7 @@
 #include "pxa_window.h"
 #include "resample.hpp"
 #include "native_raster.hpp"
+#include "ui_layout.hpp"
 #include "pacing.hpp"
 #include "text.hpp"
 #include <algorithm>
@@ -46,6 +47,7 @@ enum : uint64_t {
   SOUND_PERMISSION, SOUND_OPEN, SOUND_GAIN
 };
 pxa_window_insets_t navigation_bars{};
+int navigation_width = 0, navigation_height = 0;
 alignas(64) uint16_t frames[2 * pocket_ui::MAX_SURFACE_PIXELS];
 #ifndef PXA_POCKET_STUDIO
 uint16_t logical_frame[LOGICAL_PIXELS];
@@ -565,6 +567,8 @@ int32_t handle_event(const uint8_t *bytes, uint32_t length) {
       pxa_window_parse_metrics_changed(&e, &window)) {
     if (!window.status) {
       navigation_bars = window.system_bar_insets;
+      navigation_width = int(window.logical_width);
+      navigation_height = int(window.logical_height);
       pocket::redraw();
     }
     return PXA_EVENT_HANDLED;
@@ -837,8 +841,11 @@ void sprite(int x, int y, const sprites::Sprite &s) {
 }
 bool using_controller() { return controller_input; }
 NavigationInsets navigation_insets() {
-  return {dp(int(navigation_bars.left)), dp(int(navigation_bars.right)),
-          dp(int(navigation_bars.bottom))};
+  const int width = navigation_width > 0 ? navigation_width : display_w;
+  const int height = navigation_height > 0 ? navigation_height : display_h;
+  return {farm_ui::canvas_inset(navigation_bars.left, width, WIDTH),
+          farm_ui::canvas_inset(navigation_bars.right, width, WIDTH),
+          farm_ui::canvas_inset(navigation_bars.bottom, height, HEIGHT)};
 }
 void shade() {
   if (!canvas)

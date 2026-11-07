@@ -1,7 +1,16 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 #include <algorithm>
+#include <cstdint>
 namespace farm_ui {
+// Window insets already use the window's coordinates; density must not be
+// applied again when mapping them onto the integer-scaled game canvas.
+inline int canvas_inset(uint32_t inset, int window_extent, int canvas_extent) {
+  if (window_extent <= 0 || canvas_extent <= 0) return 0;
+  const auto value = std::min<uint64_t>(inset, uint32_t(window_extent));
+  return int((value * uint32_t(canvas_extent) + uint32_t(window_extent) - 1) /
+             uint32_t(window_extent));
+}
 struct Rect {
   int x, y, w, h;
   bool contains(int px, int py) const {

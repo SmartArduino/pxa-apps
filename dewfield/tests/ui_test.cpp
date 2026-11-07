@@ -108,6 +108,18 @@ static void cached_cultivation() {
   assert(!plots_changed()); // Leaf growth never regenerates static soil.
 }
 int main() {
+  // Mosaico reports a 57-pixel strip on its 480-pixel panel. Scaling it by
+  // density a second time used to push the belt almost 120 pixels upward.
+  assert(farm_ui::canvas_inset(57, 480, 240) == 29);
+  farm_ui::Layout mosaico{240, 240, 0, 0,
+                        farm_ui::canvas_inset(57, 480, 240)};
+  auto belt = mosaico.belt();
+  assert(2 * (240 - belt.y - belt.h) == 66);
+  assert(farm_ui::canvas_inset(0, 480, 240) == 0);
+  assert(farm_ui::canvas_inset(36, 480, 240) == 18);
+  assert(farm_ui::canvas_inset(57, 480, 480) == 57);
+  assert(farm_ui::canvas_inset(18, 320, 240) == 14);
+  assert(farm_ui::canvas_inset(57, 0, 240) == 0);
   farm_ui::Layout round{412,412,134,0,42};
   auto enter=round.title_enter();
   assert(enter.y+enter.h<=round.height-round.navigation_bottom-4);
