@@ -16,7 +16,7 @@ int main(int argc,char **argv) {
  // Opening pauses game time, persists between scenes, and replay grants nothing.
  game::init();title_screen=true;page=Page::Farm;game::key(Key::A);assert(page==Page::Intro&&!title_screen);
  auto minute=state.minute;game::tick(200);assert(state.minute==minute);game::key(Key::A);assert(intro_scene==1&&state.intro==1);
- uint8_t save[farm::SaveBytes];game::serialize(save,sizeof(save));game::load(save,sizeof(save));assert(state.intro==1);
+ uint8_t save[farm::SaveBytes];auto saved_size=game::serialize(save,sizeof(save));game::load(save,saved_size);assert(state.intro==1);
  for(int i=1;i<IntroScenes;++i){game::tick(200);game::key(Key::A);}
  assert(page==Page::Farm&&state.intro==IntroScenes&&state.ranch&&animal_count(state)==2&&state.hay==20);
  start_intro(true);game::tick(200);game::key(Key::B);game::key(Key::A);
@@ -45,7 +45,7 @@ int main(int argc,char **argv) {
  game::pointer(Phase::MOVE,m.x+180,m.y+15);assert(bag_page==1&&drag_active);
  game::pointer(Phase::MOVE,second.center_x(),second.center_y());game::pointer(Phase::UP,second.center_x(),second.center_y());
  assert(state.slots[28]==1&&state.active_slot==41);select_slot(state,28);
- game::serialize(save,sizeof(save));game::load(save,sizeof(save));assert(state.active_slot==28&&state.slots[28]==1);
+ saved_size=game::serialize(save,sizeof(save));game::load(save,saved_size);assert(state.active_slot==28&&state.slots[28]==1);
  // Every new page and scene on portrait, square and landscape layouts, both languages.
  for(auto dims:{std::pair<int,int>{240,240},{400,240},{240,427}})for(bool en:{false,true}) {
   WIDTH=dims.first;HEIGHT=dims.second;pocket::set_english(en);

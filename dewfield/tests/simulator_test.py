@@ -115,6 +115,11 @@ def stop():
     if log:log.close()
     process=None
 
+def fnv(data):
+    h=2166136261
+    for v in data:h=((h^v)*16777619)&0xffffffff
+    return h
+
 def saved():
     values=[]
     for path in state.glob('**/.pxa-kv-*'):
@@ -130,6 +135,11 @@ def saved():
             if k=='dewfield.save.v1':values.append((gen,v))
     assert values,'No durable save'
     raw=max(values,key=lambda x:x[0])[1]
+    if len(raw)==960 and raw[:6]==b'DWF1\x0b\x00':
+        assert struct.unpack_from('<I',raw,956)[0]==fnv(raw[:956])
+        expanded=bytearray(1280);expanded[:98]=raw[:98];expanded[4]=10
+        for i,v in enumerate(raw[98:178]):expanded[98+i*4:102+i*4]=bytes([v&1,(v>>1)&7,(v>>4)&7,v>>7])
+        expanded[418:1109]=raw[178:869];struct.pack_into('<I',expanded,1276,fnv(expanded[:1276]));raw=bytes(expanded)
     assert raw[:4]==b'DWF1' and len(raw) in (512,768,1280)
     result={k:struct.unpack_from(fmt,raw,offset)[0] for k,fmt,offset in [('day','<H',6),('energy','<B',10),('water','<B',11),('px','<H',18),('py','<H',20),('gold','<I',22),('shipping','<I',26),('earned','<I',30),('harvested','<I',34),('fish','<H',58),('wood','<H',60),('stone','<H',62)]}
     result.update(seeds=list(struct.unpack_from('<8H',raw,42))[::2],produce=list(struct.unpack_from('<8H',raw,42))[1::2],plots=[list(raw[98+i*4:102+i*4])for i in range(80)])

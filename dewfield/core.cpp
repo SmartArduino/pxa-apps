@@ -602,12 +602,36 @@ size_t encode(const State &original, uint8_t *out, size_t cap) {
   put(s.mine_rewards,1);
   for(auto v:s.mine_cleared)put(v,4);for(auto v:s.mine_defeated)put(v,1);for(auto v:s.ore_damage)put(v,1);
   for(auto &m:s.mobs){for(auto v:{m.x,m.y,m.cooldown,m.windup,m.move_acc})put(v,2);put(m.hp,1);put(m.dir,1);}
-  if(n>SaveBytes-4)return 0;
+  if(n!=SaveDataBytes)return 0;
   n = SaveBytes - 4;
   put(checksum(out, n), 4);
   return SaveBytes;
 }
+// v11 packs each farm plot's four bounded fields into one byte. The remaining
+// v10 fields keep their order; unused tail bytes are omitted before padding.
+// This is fixed-cost packing, never content-dependent compression.
+size_t encode_storage(const State &s,uint8_t *out,size_t cap) {
+  if(cap<StorageSaveBytes)return 0;
+  uint8_t raw[SaveBytes];if(encode(s,raw,sizeof(raw))!=SaveBytes)return 0;
+  std::memset(out,0,StorageSaveBytes);std::memcpy(out,raw,98);out[4]=11;
+  for(int i=0;i<PlotCount;++i){auto &p=s.plots[i];out[98+i]=p.tilled|(p.crop<<1)|(p.growth<<4)|(p.wet<<7);}
+  std::memcpy(out+98+PlotCount,raw+418,SaveDataBytes-418);
+  uint32_t sum=checksum(out,StorageSaveBytes-4);
+  for(int i=0;i<4;++i)out[StorageSaveBytes-4+i]=sum>>(i*8);
+  return StorageSaveBytes;
+}
 bool decode(State &s, const uint8_t *in, size_t n) {
+  if(n==StorageSaveBytes) {
+    if(std::memcmp(in,"DWF1",4)||in[4]!=11||in[5])return false;
+    uint32_t sum=0;for(int i=0;i<4;++i)sum|=uint32_t(in[n-4+i])<<(i*8);
+    if(checksum(in,n-4)!=sum)return false;
+    uint8_t raw[SaveBytes]{};std::memcpy(raw,in,98);raw[4]=10;
+    for(int i=0;i<PlotCount;++i){auto v=in[98+i];raw[98+i*4]=v&1;raw[99+i*4]=(v>>1)&7;raw[100+i*4]=(v>>4)&7;raw[101+i*4]=v>>7;}
+    std::memcpy(raw+418,in+98+PlotCount,SaveDataBytes-418);
+    sum=checksum(raw,SaveBytes-4);for(int i=0;i<4;++i)raw[SaveBytes-4+i]=sum>>(i*8);
+    return decode(s,raw,sizeof(raw));
+  }
+
   if (n != SaveBytes && n != 768 && n != 512)
     return false;
   size_t at = 0;

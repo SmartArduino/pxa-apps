@@ -1807,7 +1807,7 @@ void reset() { /* Restart is deliberately not a save-deleting action. */ }
 size_t serialize(uint8_t *d, size_t n) {
   if (save_locked)
     return 0;
-  return encode(state, d, n);
+  return encode_storage(state, d, n);
 }
 void load(const uint8_t *d, size_t n) {
   if (!decode(state, d, n)) {

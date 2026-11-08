@@ -6,6 +6,8 @@ namespace farm {
 constexpr int MapW = 32, MapH = 24, Tile = 16, PlotX = 10, PlotY = 9,
               PlotW = 10, PlotH = 8;
 constexpr int PlotCount = PlotW * PlotH, SaveBytes = 1280;
+// Device firmware may cap individual Storage values below the SDK maximum.
+constexpr int StorageSaveBytes = 960, SaveDataBytes = 1109;
 inline int walk_frame(uint32_t distance) {return 1+int((distance/6)%8);}
 constexpr int InventorySize = 56, HotbarSize = 7, ItemCount = 45;
 enum class Tool : uint8_t { Hoe, Seeds, Water, Hand, Axe, Pick, Rod, Sword, Count };
@@ -150,6 +152,7 @@ bool unship(State &s);
 uint32_t quest(State &s);
 uint32_t random(State &s);
 size_t encode(const State &s, uint8_t *out, size_t cap);
+size_t encode_storage(const State &s, uint8_t *out, size_t cap);
 bool decode(State &s, const uint8_t *in, size_t n);
 // Bounded BFS; returns the first reachable step toward a tile or its neighbor.
 bool next_step(const State &s, int tx, int ty, int &nx, int &ny, bool adjacent);
