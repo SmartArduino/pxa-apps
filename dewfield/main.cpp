@@ -34,13 +34,13 @@ enum class Page {
   Story,
   Dialogue,
   Orders,
-  Kitchen, Calendar, Forecast, Shipping, Collections, Ranch, Animal, Supply, Incubate, Butcher, Intro
+  Kitchen, Calendar, Forecast, Shipping, Collections, Ranch, Animal, Supply, Incubate, Butcher, Intro, MineJournal, MineStairs, MineLift, MineChest
 };
 Page page = Page::Farm;
 bool title_screen = true, save_locked = false, base_dirty = true,
      moving = false, route = false, route_action = false;
 bool walking = false;
-bool repeat_use = false;
+bool repeat_use = false, mine_letter = false;
 uint32_t walk_distance = 0;
 int camx, camy, dir = 2, stepx, stepy, targetx, targety, selected_row = 0;
 int route_portal = -1;
@@ -67,6 +67,9 @@ void start_intro(bool replay=false);
 void draw_intro();
 void intro_next();
 void open_ranch();
+void mine_ui_draw(int,int);void mine_ui_tap(int,int);void mine_ui_key(Key);
+farm_ui::Rect mine_quick(int);
+bool mine_page_active(){return page==Page::MineJournal||page==Page::MineStairs||page==Page::MineLift||page==Page::MineChest;}
 void ranch_draw(int,int);
 void ranch_tap(int,int);
 void ranch_key(Key);
@@ -80,7 +83,7 @@ int held_direction = -1;
 int bag_page=0;
 int bag_selection = 0, drag_from = -1, drag_x = 0, drag_y = 0;
 bool drag_active = false, action_hold = false, action_touch = false;
-int hit_obstacle = -1, action_tool = 0;
+int hit_obstacle = -1, action_tool = 0,resource_x=0,resource_y=0,combat_target=-1;
 int action_direction=2,action_grade=0;
 art::tool_anim::Target action_target;
 struct PendingTool {int x=0,y=0;bool active=false;} pending_tool;
@@ -127,9 +130,9 @@ struct IconCanvas {
   }
 };
 const char *tool_cn[] = {"锄头", "种子", "水壶", "采收",
-                         "斧头", "镐子", "鱼竿"};
+                         "斧头", "镐子", "鱼竿", "短剑"};
 const char *tool_en[] = {"Hoe", "Seeds", "Water", "Harvest",
-                         "Axe", "Pick",  "Rod"};
+                         "Axe", "Pick",  "Rod", "Sword"};
 const char *seasons_cn[] = {"春", "夏", "秋", "冬"};
 const char *seasons_en[] = {"Spring", "Summer", "Fall", "Winter"};
 int season() { return season_of(state.day); }
@@ -289,7 +292,8 @@ void tint_base() {
 void draw_base() {
   art::Raster r{unlit_base, WorldPixelsW, WorldPixelsH};
   int se = season();
-  if(!indoors(state.region)) {
+  if(in_mine(state)) {art::mine_floor_art(r,state.mine_depth);}
+  else if(!indoors(state.region)) {
     int geometry=state.region+(state.story>=3?256:0);
     if(geometry!=cached_geometry){terrain_map.build(state);cached_geometry=geometry;}
     terrain_map.draw(r,se);
@@ -302,7 +306,7 @@ void draw_base() {
       r.rect(23 * 16 + 2, 17 * 16 + k * 6, 24, 1, art::Gold);
     }
     draw_plots(false);
-  } else if (indoors(state.region)) {
+  } else if (indoors(state.region)&&!in_mine(state)) {
     r.rect(0,0,512,384,art::rgb(65,63,47));
     art::world_room(r,state.region==unsigned(Region::SeedShop),state.region==unsigned(Region::Lodge));
   } else {
@@ -384,7 +388,7 @@ void scene() {
                         season(),
                         animation,
                         swing ? 0 : held_item(),
-                        swing?action_grade:int(state.tool_grade[state.tool]),
+                        swing?action_grade:tool_grade(state,state.tool),
                         int(state.selected),
                         hit_obstacle,
                         hit_ms,
@@ -441,7 +445,7 @@ void scene() {
   profile(DrawStage::Effects);
 }
 void stop_motion() {
-  butcher_pending=-1;
+  butcher_pending=-1;combat_target=-1;
   route = false;
   moving = false;
   walking = false;
@@ -456,6 +460,7 @@ void stop_motion() {
   repeat_use = false;
 }
 void open_page(Page p) {
+  mine_letter=p==Page::Letter&&in_mine(state);
   cancel_tool();
   stop_motion();
   page = p;
@@ -474,6 +479,13 @@ void open_collections(int category=0,int index=0,Page parent=Page::Guide) {
 }
 void feedback(Result result) {
   switch (result) {
+  case Result::Attacked:changed();return;
+  case Result::Cooldown:return;
+  case Result::NeedSword:msg("拿起短剑，或按SELECT切换","Equip the sword, or press SELECT");return;
+  case Result::MineStairs:open_page(Page::MineStairs);return;
+  case Result::MineLift:open_page(Page::MineLift);return;
+  case Result::MineChest:open_page(Page::MineChest);return;
+  case Result::MineForaged:repeat_use=false;action_hold=false;msg("拾起洞穴作物，拿起可恢复体力和生命","Cave forage collected. Food restores energy and health");changed();return;
   case Result::Ranch: open_ranch();return;
   case Result::Animal: {
     int i=animal_at(state,action_target.x/16,(action_target.y-2)/16);
@@ -530,14 +542,15 @@ void feedback(Result result) {
     break;
   case Result::Struck: {
     char cn[80], en[80];
-    int hits = strikes_left(state, hit_obstacle, Tool(state.tool));
+    int wi=wild_tree_at(state,resource_x,resource_y),oi=ore_at(state,resource_x,resource_y);
+    int hits=wi>=0?wild_hits(state,wi):oi>=0?ore_hits(state,oi):strikes_left(state,hit_obstacle,Tool(state.tool));
     std::snprintf(cn, sizeof(cn), "还需 %d 次，继续挥动工具", hits);
     std::snprintf(en, sizeof(en), "%d swings left", hits);
     msg(cn, en);
     break;
   }
   case Result::Cleared:
-    msg("收集材料，腾出新田地", "Materials collected");
+    if(in_mine(state))msg("矿石已收入背包","Ore collected into your bag");else if(state.region)msg("木材已收好，树桩会重新萌芽","Wood collected. The stump will sprout again");else msg("收集材料，腾出新田地", "Materials collected");
     break;
   case Result::NoSeeds:
     msg("种子用完了，去商店补货", "Buy more seeds at the shop");
@@ -552,7 +565,7 @@ void feedback(Result result) {
     msg("清水已装满", "Water refilled");
     break;
   case Result::NotReady:
-    msg("还在生长，浇水后睡一觉", "Still growing. Water and rest");
+    if(in_mine(state))msg("碎3处矿石或击败2只怪物，寻找梯子","Break 3 ore nodes or defeat 2 foes to find stairs");else msg("还在生长，浇水后睡一觉", "Still growing. Water and rest");
     break;
   case Result::Blocked:
     msg("树用斧头，石头用镐，杂草用锄头",
@@ -569,8 +582,8 @@ void feedback(Result result) {
   }
   action_tool = result == Result::Harvested||result==Result::Refilled ? 3 : result==Result::Planted?1:state.tool;
   if(!committing_tool) {
-    swing = art::tool_anim::duration(action_tool, state.tool_grade[action_tool]);
-    action_direction=dir;action_grade=state.tool_grade[action_tool];
+    swing = art::tool_anim::duration(action_tool, tool_grade(state,action_tool));
+    action_direction=dir;action_grade=tool_grade(state,action_tool);
     moving=walking=false;move_acc=0;
   }
   if (result == Result::NoEnergy || result == Result::NoWater ||
@@ -581,12 +594,14 @@ void feedback(Result result) {
 void action(int x, int y) {
   if (swing&&!committing_tool)
     return;
+  bool cave_interaction=in_mine(state)&&(cave_forage_at(state,x,y)>=0||(x==16&&y==2)||(x==25&&y==17&&mob_at(state,x,y)<0));
+  if(in_mine(state)&&Tool(state.tool)==Tool::Sword&&!cave_interaction){x=state.px/16+(dir==1)-(dir==3);y=state.py/16+(dir==2)-(dir==0);}
   if(!committing_tool) {
     auto tool=Tool(state.tool);
-    if(tool==Tool::Hoe||tool==Tool::Axe||tool==Tool::Pick||tool==Tool::Water) {
+    if(tool==Tool::Hoe||tool==Tool::Axe||tool==Tool::Pick||tool==Tool::Water||tool==Tool::Sword) {
       State preview=state;auto result=act(preview,x,y);
-      if(result==Result::Tilled||result==Result::Watered||result==Result::Struck||result==Result::Cleared) {
-        action_tool=state.tool;action_grade=state.tool_grade[state.tool];action_direction=dir;
+      if(result==Result::Tilled||result==Result::Watered||result==Result::Struck||result==Result::Cleared||result==Result::Attacked) {
+        action_tool=state.tool;action_grade=tool_grade(state,state.tool);action_direction=dir;
         action_target={x*16+8,y*16+8-art::tool_anim::surface_offset(action_tool),true};pending_tool={x,y,true};
         swing=art::tool_anim::duration(action_tool,action_grade);
         moving=walking=false;move_acc=0;redraw();return;
@@ -595,7 +610,8 @@ void action(int x, int y) {
     action_target={x*16+8,y*16+2,true};
   }
   if(!state.region&&animal_at(state,x,y)>=0){ranch_index=animal_at(state,x,y);bool confirm=butcher_pending==ranch_index;open_page(confirm?Page::Butcher:Page::Animal);return;}
-  uint32_t oldq = state.quests;
+  uint32_t oldq = state.quests;bool had_sword=state.sword_owned;
+  int cave_item=0;int cave=cave_forage_at(state,x,y);if(cave>=0)cave_item=cave_forage_item(state,cave);
   int npc = npc_at(state, x, y);
   int offered_item=held_item();
   int crop=plot_index(x,y),forage=forage_at(state,x,y);
@@ -606,6 +622,7 @@ void action(int x, int y) {
   auto res = act(state, x, y);
   if(res==Result::Harvested || res==Result::Foraged)
     gather_effect(x,y,gathered_item,int(item_count(state,gathered_item)-old_count));
+  if(res==Result::MineForaged)gather_effect(x,y,cave_item,1);
   if(res==Result::Ship){deposited_item=offered_item;deposit_ms=360;}
   if (res == Result::Travel) {
     for(auto &effect:gather_effects)effect.remaining=0;
@@ -623,6 +640,7 @@ void action(int x, int y) {
       journey_region = -1;
       go_to(Region(region), journey_x, journey_y, journey_use);
     }
+    if(in_mine(state)&&!had_sword){std::snprintf(letter,sizeof(letter),"%s",tr("Alan left you a short sword.\nSELECT swaps sword and pick.\n3 ore nodes or 2 foes: stairs.\nRed flash: dodge. Food heals.\nUse the upper lift to leave.","阿岚留下了一把短剑。\nSELECT切换镐和剑。\n碎3矿或胜2怪，就能找到梯子。\n红光提示攻击，食物可回血。\n上方升降梯可随时返回林间。"));open_page(Page::Letter);}
     return;
   }
   if (res == Result::Dialogue) {
@@ -659,7 +677,8 @@ void action(int x, int y) {
   if (state.quests != oldq)
     msg("委托完成！奖励已到账", "Quest complete! Reward received");
   if (res == Result::Struck || res == Result::Cleared) {
-    hit_obstacle = obstacle_index(x, y);
+    resource_x=x;resource_y=y;int wi=wild_tree_at(state,x,y),oi=ore_at(state,x,y);
+    hit_obstacle=wi>=0?32+wi:oi>=0?96+oi:obstacle_index(x,y);
     hit_ms = 500;
   }
   feedback(res);
@@ -668,7 +687,7 @@ void action(int x, int y) {
 void begin_route(int x, int y, bool use) {
   if (x < 0 || y < 0 || x >= MapW || y >= MapH)
     return;
-  route = true;
+  combat_target=-1;route = true;
   route_action = use;
   targetx = x;
   targety = y;
@@ -694,6 +713,12 @@ void facing_action() {
     }
     return;
   }
+  // Walkable pickups and ladders remain usable after stepping onto them.
+  if(in_mine(state)) {
+    int tx=state.px/16,ty=state.py/16;
+    bool stairs=tx==25&&ty==17&&(state.mine_depth<30?ladder_ready(state):!state.mobs[5].hp);
+    if(cave_forage_at(state,tx,ty)>=0||stairs){action(tx,ty);return;}
+  }
   int front_x=state.px/16+(dir==1)-(dir==3),front_y=state.py/16+(dir==2)-(dir==0);
   if(!state.region&&front_x==8&&front_y==9) {action(front_x,front_y);return;}
   if (food_energy(held_item())) {
@@ -703,7 +728,7 @@ void facing_action() {
     } else msg("体力充足，留着稍后享用吧", "Energy is full. Save it for later");
     return;
   }
-  if (held_item() >= 12) {
+  if (held_item() >= 12&&held_item()!=37) {
     msg("物品可出货，材料可用于制作",
         "Ship produce; use materials for crafting");
     return;
@@ -713,7 +738,7 @@ void facing_action() {
   action(x, y);
 }
 void navigate(int d) {
-  butcher_pending=-1;
+  butcher_pending=-1;combat_target=-1;
   if(swing)return;
   journey_region = following_npc = -1;
   route = false;
@@ -753,7 +778,7 @@ int panel_top() { return (HEIGHT - 210) / 2; }
 void tool_icon(int x, int y, int which, bool active) {
   const sprites::Sprite *icons[] = {
       &sprites::hoe, &sprites::seeds, &sprites::can, &sprites::basket,
-      &sprites::axe, &sprites::pick,  &sprites::rod};
+      &sprites::axe, &sprites::pick,  &sprites::rod,&sprites::mine_sword_icon};
   auto &s = *icons[which];
   pocket::sprite(x - s.w / 2, y - s.h / 2, s);
   if ((which == 4 || which == 5) && state.tool_grade[which]) {
@@ -778,6 +803,7 @@ void item_label(char *b, size_t n, int item, bool quantity = true) {
                   english() ? tool_en[t] : tool_cn[t]);
     return;
   }
+  if(item==37){std::snprintf(b,n,"%s",state.sword_grade==2?tr("Iron blade","铁刃短剑"):state.sword_grade?tr("Copper-hilt sword","铜柄短剑"):tr("Old short sword","旧短剑"));return;}
   int seed = item == 2                 ? state.selected
              : item >= 8 && item <= 11 ? item - 8
                                        : -1;
@@ -786,7 +812,7 @@ void item_label(char *b, size_t n, int item, bool quantity = true) {
                      : item == 16 ? tr("Fish", "鲜鱼")
                      : item == 17 ? tr("Wood", "木材")
                      : item == 18 ? tr("Stone", "石料")
-                                  : item>=29?animal_good(item,english()):item>=24?seasonal_name(item,english()):tr(Foods[item - 19].en, Foods[item - 19].cn);
+                                  : item>=38?mineral_name(item,english()):item>=29?animal_good(item,english()):item>=24?seasonal_name(item,english()):tr(Foods[item - 19].en, Foods[item - 19].cn);
   unsigned count = seed >= 0 ? state.seeds[seed] : item_count(state, item);
   std::snprintf(b, n, "%s%s", name, seed >= 0 ? tr(" seeds", "种子") : "");
   if (quantity) {
@@ -798,6 +824,7 @@ void item_label(char *b, size_t n, int item, bool quantity = true) {
 void item_icon(int x, int y, int item) {
   if (!item)
     return;
+  if(item==37){tool_icon(x,y,7,false);return;}
   if (item <= 7) {
     tool_icon(x, y, item - 1, false);
     return;
@@ -1021,7 +1048,7 @@ Notice notice() {
   return n;
 }
 int hud_opacity(farm_ui::Rect box,int normal=8) {
-  int height=held_item()>=8?54:33;
+  int height=carrying_item(held_item())?54:33;
   farm_scene::Rect actor{int(state.px)-camx-12,int(state.py)-camy-height,24,height+3};
   return actor.intersects({box.x,box.y,box.w,box.h})?std::min(normal,3):normal;
 }
@@ -1071,7 +1098,8 @@ void hud() {
   if (state.region) {
     HudLayer layer({6,41,112,18});
     panel(6, 41, 112, 18);
-    fit_text(12, 44, region_name(Region(state.region), english()), 100, Sage);
+    if(in_mine(state)){char label[96];std::snprintf(label,sizeof(label),english()?"%s %uF":"%s %u层",mine_theme(state.mine_depth,english()),state.mine_depth);fit_text(12,44,label,100,Sage);}
+    else fit_text(12, 44, region_name(Region(state.region), english()), 100, Sage);
   }
   auto vitals = ui.vitals();
   {
@@ -1083,23 +1111,25 @@ void hud() {
       rect(x, y + 3, 5, 3, Sage);
       rect(x + 2, y + 1, 4, 3, Sage);
       line(x, y + 7, x + 5, y + 1, art::Leaf);
-    } else {
+    } else if(in_mine(state)){rect(x,y+2,3,3,art::rgb(185,95,71));rect(x+4,y+2,3,3,art::rgb(185,95,71));rect(x+1,y+4,5,2,art::rgb(185,95,71));rect(x+2,y+6,3,1,art::rgb(185,95,71));}
+    else {
       rect(x + 2, y + 1, 2, 2, art::rgb(94, 150, 164));
       rect(x + 1, y + 3, 4, 4, art::rgb(94, 150, 164));
       rect(x + 2, y + 4, 1, 2, Paper);
     }
-    int amount = row ? state.water : state.energy,
-        maximum = row ? state.capacity : 100;
+    int amount = row ? (in_mine(state)?state.health:state.water) : state.energy,
+        maximum = row ? (in_mine(state)?100:state.capacity) : 100;
     rect(x + 10, y + 3, 33, 5, farm_palette::Frame);
     rect(x + 11, y + 4, 31, 3, Soft);
     if (amount)
       rect(x + 11, y + 4, std::max(1, 31 * amount / maximum), 3,
-           row ? farm_palette::Water : state.energy<20?art::rgb(181,83,53):farm_palette::Sage);
+           row ? (in_mine(state)?art::rgb(185,95,71):farm_palette::Water) : state.energy<20?art::rgb(181,83,53):farm_palette::Sage);
     std::snprintf(b, sizeof(b), "%u", amount);
     text(vitals.x + vitals.w - 7 - text_width(b), y - 1, b,
-         row ? farm_palette::Water : Sage);
+         row ? (in_mine(state)?art::rgb(185,95,71):farm_palette::Water) : Sage);
   }
   }
+  if(in_mine(state))for(int i=0;i<3;++i){HudLayer layer(mine_quick(i),6);auto q=mine_quick(i);if(i==2)icon_button(q,farm_ui::Icon::Journal);else button(q.x,q.y,q.w,q.h,"",state.tool==(i?7:5));if(i<2)tool_icon(mine_quick(i).center_x(),mine_quick(i).center_y(),i?7:5,false);}
   auto belt = ui.belt();
   {
   HudLayer layer(belt);
@@ -1156,6 +1186,7 @@ void hud() {
 }
 #include "ranch_ui.inc"
 #include "opening.inc"
+#include "mine_ui.inc"
 void collection_action() {
   if(collection_category!=3)return;
   if(claim_collection_reward(state,selected_row)) {
@@ -1290,10 +1321,11 @@ void modal() {
       : page == Page::Kitchen  ? tr("COTTAGE KITCHEN", "农舍小厨房")
       : page == Page::Guide    ? tr("FARM JOURNAL", "农场手册")
       : page == Page::Fishing  ? tr("A QUIET MOMENT", "池畔垂钓")
-      : page == Page::Letter   ? tr("A LETTER FROM LIN", "林婆婆的来信")
+      : page == Page::Letter   ? tr("VALLEY LETTER", "晴露谷来信")
       : page == Page::Sleep    ? tr("HOME, SWEET HOME", "回到温暖的小屋")
                                : tr("A NEW MORNING", "又是美好的一天");
   char title[64];
+  if(mine_page_active())name=page==Page::MineJournal?tr("ECHO MINE JOURNAL","回声矿洞手册"):page==Page::MineLift?tr("MINE LIFT","矿洞升降梯"):page==Page::MineStairs?tr("THE NEXT FLOOR","通往下一层"):tr("THE LAMP HEART","矿灯的晶心");
   if(ranch_page_active())name=page==Page::Ranch?tr("DEWFIELD RANCH","晴露牧场"):page==Page::Animal?tr("ANIMAL CARE","动物照料"):page==Page::Supply?tr("RANCH SUPPLIES","牧场补给"):page==Page::Butcher?tr("CONFIRM","确认取肉"):tr("INCUBATOR","温暖孵化箱");
   if(page==Page::Calendar) {
     std::snprintf(title,sizeof(title),english()?"%s / Year %u":"%s · 第%u年日历",english()?seasons_en[season()]:seasons_cn[season()],(state.day-1)/112+1);name=title;
@@ -1378,6 +1410,8 @@ void modal() {
     icon_label_button(layout().bag_action(1), farm_ui::Icon::Sprinkler,
                       tr("SPRINKLER", "造洒水器"),
                       using_controller() && selected_row == 1);
+  } else if(mine_page_active()) {
+    mine_ui_draw(x,y);
   } else if(ranch_page_active()) {
     ranch_draw(x,y);
   } else if (page == Page::Settings) {
@@ -1449,15 +1483,15 @@ void modal() {
     paragraph(x+12,y+192,toast_ms?toast:tr("Hold food and use it to eat","拿起食物，点操作按钮即可食用"),202,1,Muted);
   } else if (page == Page::World) {
     for (int i = 0; i < RegionCount; ++i) {
-      auto r = layout().destination(i);
+      auto r = layout().world_destination(i);
       button(r.x, r.y, r.w, r.h, region_name(Region(i), english()),
              selected_row == i);
     }
-    paragraph(x + 12, y + 162,
+    paragraph(x + 12, y + 169,
               tr("Choose a destination to walk there. The lake opens after "
                  "repairing the bridge.",
                  "选择目的地会沿路走过去。林间旧桥修好后，才能到达镜光湖。"),
-              202, 3, Muted);
+              202, 2, Muted);
   } else if (page == Page::People) {
     for (int i = 0; i < 4; ++i) {
       auto p = npc_pose(state, i);
@@ -1516,14 +1550,13 @@ void modal() {
         Muted);
     button(x + 24, y + 169, 180, 28, tr("GOOD MORNING", "开始新的一天"), true);
   } else if (page == Page::Letter) {
-    paragraph(x + 14, y + 48, letter, 200, 4, Text);
-    std::snprintf(b, sizeof(b), "%s %u / 3", tr("Friendship", "友好度"),
-                  state.friendship);
-    text(x + 14, y + 111, b, Muted);
-    text(x + 14, y + 137,
-         tr("Come back when you are ready.", "完成目标后，再来找我吧。"),
-         Muted);
-    button(x + 24, y + 171, 180, 27, tr("SEE YOU", "回头见"));
+    paragraph(x + 14, y + 48, letter, 200, mine_letter?8:4, Text);
+    if(!mine_letter) {
+      std::snprintf(b, sizeof(b), "%s %u / 3", tr("Friendship", "友好度"),state.friendship);
+      text(x + 14, y + 111, b, Muted);
+      text(x + 14, y + 137,tr("Come back when you are ready.", "完成目标后，再来找我吧。"),Muted);
+    }
+    button(x + 24, y + 171, 180, 27, mine_letter?tr("CONTINUE","继续冒险"):tr("SEE YOU", "回头见"));
   } else if (page == Page::Fishing) {
     draw_fishing(x,y);
   }
@@ -1649,6 +1682,7 @@ void panel_tap(int px, int py) {
   if(page==Page::Bag&&(farm_ui::Rect{m.x+12,m.y+7,20,20}.contains(px,py)||farm_ui::Rect{m.x+170,m.y+7,20,20}.contains(px,py))) {
     bag_page=1-bag_page;bag_selection=bag_page*28;selected_row=-1;redraw();return;
   }
+  if(mine_page_active()){mine_ui_tap(px,py);return;}
   if(ranch_page_active()){ranch_tap(px,py);return;}
   if(page==Page::Story&&farm_ui::Rect{m.x+126,m.y+177,90,25}.contains(px,py)){start_intro(true);return;}
   if(page==Page::Collections) {
@@ -1684,13 +1718,13 @@ void panel_tap(int px, int py) {
       }
   } else if (page == Page::World) {
     for (int i = 0; i < RegionCount; ++i)
-      if (ui.destination(i).contains(px, py)) {
+      if (ui.world_destination(i).contains(px, py)) {
         following_npc = -1;
         go_to(Region(i),
-              i == 4   ? 16
+              i == 4||i==8 ? 16
               : i == 3 ? 24
                        : 15,
-              i == 4 ? 17 : 12, false);
+              i==8?4:i == 4 ? 17 : 12, false);
         return;
       }
   } else if (page == Page::People) {
@@ -1814,8 +1848,10 @@ void key(Key k) {
   }
   if(page==Page::Intro){if(k==Key::B)intro_skip=!intro_skip;else if(k==Key::A)intro_next();redraw();return;}
   if(page==Page::Bag&&(k==Key::L||k==Key::R)){bag_page=1-bag_page;bag_selection=bag_page*28;selected_row=-1;redraw();return;}
+  if(mine_page_active()){mine_ui_key(k);redraw();return;}
   if(ranch_page_active()){ranch_key(k);redraw();return;}
   if(page==Page::Story&&k==Key::Y){start_intro(true);return;}
+  if(in_mine(state)&&page==Page::Farm&&k==Key::SELECT){equip_item(state,held_item()==37?6:37);changed();return;}
   if (page == Page::Fishing) {
     if(k==Key::B) {cancel_tool();page=Page::Farm;redraw();}
     else if(k==Key::X && fishing.phase==FishingSession::Phase::Caught)open_collections(2,fishing.species,Page::Fishing);
@@ -1895,7 +1931,7 @@ void key(Key k) {
       } else {
         if(k==Key::LEFT)selected_row=0;
         if(k==Key::RIGHT)selected_row=1;
-        if(k==Key::UP){bag_selection=std::min(InventorySize-1,bag_page*28+(bag_page?7:21)+bag_selection%7);selected_row=-1;}
+        if(k==Key::UP){bag_selection=std::min(InventorySize-1,bag_page*28+21+bag_selection%7);selected_row=-1;}
       }
     } else {
       if (k == Key::UP)
@@ -1907,10 +1943,10 @@ void key(Key k) {
       if (page == Page::World) {
         following_npc = -1;
         go_to(Region(selected_row),
-              selected_row == 4   ? 16
+              selected_row == 4||selected_row==8 ? 16
               : selected_row == 3 ? 24
                                   : 15,
-              selected_row == 4 ? 17 : 12, false);
+              selected_row==8?4:selected_row == 4 ? 17 : 12, false);
       } else if (page == Page::People) {
         following_npc = selected_row;
         auto p = npc_pose(state, selected_row);
@@ -1944,7 +1980,7 @@ void key(Key k) {
     return;
   }
   if (k == Key::A || k == Key::B) {
-    repeat_use=held_item()<12;
+    repeat_use=held_item()<12||held_item()==37;
     facing_action();
   }
   else if(swing&&(k==Key::L||k==Key::R||k==Key::SELECT))return;
@@ -2013,7 +2049,7 @@ void pointer(Phase phase, int x, int y) {
         sticky = y;
         route = false;
       } else if (state.show_action && ui.action().contains(x, y)) {
-        repeat_use=held_item()<12;
+        repeat_use=held_item()<12||held_item()==37;
         action_hold = action_touch = true;
         facing_action();
       }
@@ -2101,6 +2137,7 @@ void pointer(Phase phase, int x, int y) {
     return;
   }
   auto ui = layout();
+  if(in_mine(state))for(int i=0;i<3;++i)if(mine_quick(i).contains(x,y)){if(i==2)open_page(Page::MineJournal);else {equip_item(state,i?37:6);changed();}return;}
   if (ui.header_button(0).contains(x, y)) {
     open_page(Page::Bag);
     return;
@@ -2137,10 +2174,14 @@ void pointer(Phase phase, int x, int y) {
   bool interactive =
       (!state.region && pi >= 0) || !walkable(state, tx, ty) ||
       portal_at(state,tx,ty) || npc_at(state,tx,ty)>=0 ||
-      forage_at(state,tx,ty)>=0 ||
+      forage_at(state,tx,ty)>=0 || cave_forage_at(state,tx,ty)>=0 ||
+      (in_mine(state)&&tx==25&&ty==17) ||
       (!state.region && ty==7 && tx==6) ||
       (state.region==unsigned(Region::Town) && tx==5 && ty==7);
+  int mob=mob_at(state,tx,ty),ore=ore_at(state,tx,ty);
+  if(mob>=0)equip_item(state,37);else if(ore>=0)equip_item(state,6);
   begin_route(tx, ty, interactive);
+  if(mob>=0)combat_target=mob;
 }
 void tick(uint32_t elapsed) {
   for(auto &effect:gather_effects)if(effect.remaining) {
@@ -2176,6 +2217,11 @@ void tick(uint32_t elapsed) {
   }
   if (page != Page::Farm)
     return;
+  if(in_mine(state)) {
+    int old_health=state.health;bool nearby=false;for(auto &m:state.mobs)if(m.hp&&std::abs(int(m.x)-state.px)+std::abs(int(m.y)-state.py)<160)nearby=true;
+    if(mine_tick(state,elapsed)){cancel_tool();stop_motion();base_dirty=true;page=Page::Letter;mine_letter=true;std::snprintf(letter,sizeof(letter),"%s",tr("Alan found you in the mine and brought you home. You kept your belongings; rescue costs up to 500G. Rest, eat, and try again.","阿岚把你从矿洞带回了家。背包物品保留，救援最多花费500金币。先休息、吃点东西，再准备下一次探险吧。"));changed();return;}
+    if(nearby||state.invulnerable)redraw();if(old_health!=state.health)changed();
+  }
   // NPCs share the player's continuous movement clock. Refresh while a
   // visible villager walks; keep the low idle rate when everyone is still.
   for(int id=0;id<NpcCount;++id) {
@@ -2222,6 +2268,7 @@ void tick(uint32_t elapsed) {
   }
   if (d >= 0 && !moving && !swing)
     navigate(d);
+  if(route&&!moving&&in_mine(state)&&combat_target>=0){auto &m=state.mobs[combat_target];if(!m.hp){route=false;combat_target=-1;}else{targetx=m.x/16;targety=m.y/16;route_action=true;}}
   if (route && !moving && following_npc >= 0) {
     auto p = npc_pose(state, following_npc);
     if (unsigned(p.region) != state.region) {
@@ -2255,8 +2302,8 @@ void tick(uint32_t elapsed) {
       dir = std::abs(targetx - tx) > std::abs(targety - ty)
                 ? (targetx > tx ? 1 : 3)
                 : (targety > ty ? 2 : 0);
-      if (use)
-        action(targetx, targety);
+      if(combat_target>=0&&in_mine(state)){auto &m=state.mobs[combat_target];int dx=int(m.x)-state.px,dy=int(m.y)-state.py;dir=std::abs(dx)>std::abs(dy)?(dx>0?1:3):(dy>0?2:0);combat_target=-1;}
+      if (use)action(targetx, targety);
     } else {
       int nx, ny;
       if (next_step(state, targetx, targety, nx, ny, route_action)) {

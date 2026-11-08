@@ -86,6 +86,7 @@ struct Layout {
     auto r = modal();
     return {r.x + 12 + (index % 2) * 105, r.y + 40 + (index / 2) * 29, 100, 25};
   }
+  Rect world_destination(int index) const {auto r=modal();return {r.x+12+(index%2)*105,r.y+36+(index/2)*25,100,23};}
   Rect confirm(int top = 169, int h = 28) const {
     auto r = modal();
     return {r.x + 24, r.y + top, 180, h};

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-#include "../world.hpp"
+#include "../mines.hpp"
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
@@ -7,7 +7,7 @@ using namespace farm;
 int main() {
   State s;fresh(s);s.story=3;s.minute=600;
   for(const auto&p:Portals) {
-    s.region=uint8_t(p.from);auto a=portal_approach(p);
+    s.region=uint8_t(p.from);if(p.from==Region::Mine)enter_mine(s);auto a=portal_approach(p);
     assert(walkable(s,p.x,p.y) && walkable(s,a.x,a.y));
     int x=p.x*16+8,y=p.y*16+8,d=portal_heading(p);
     int fx=x-(d==1?16:d==3?-16:0),fy=y-(d==2?16:d==0?-16:0);
@@ -15,7 +15,7 @@ int main() {
     for(int wrong=0;wrong<4;++wrong)if(wrong!=d)assert(!crossed_portal(p,fx,fy,x,y,wrong));
     assert(!crossed_portal(p,fx,fy,(fx+x)/2,(fy+y)/2,d));
     for(const auto&q:Portals)if(q.from==p.to && q.to==p.from) {
-      State dest=s;dest.region=uint8_t(p.to);assert(walkable(dest,p.spawn_x,p.spawn_y));
+      State dest=s;dest.region=uint8_t(p.to);if(p.to==Region::Mine)enter_mine(dest);assert(walkable(dest,p.spawn_x,p.spawn_y));
     }
   }
   // Every road that actually reaches the drawing's edge has a corresponding

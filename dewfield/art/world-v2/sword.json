@@ -1,0 +1,14 @@
+{
+  "tool": "tools/build_mine_sword.py",
+  "license": "MIT",
+  "grip": [
+    22,
+    22
+  ],
+  "tip": [
+    22,
+    6
+  ],
+  "angles": 16,
+  "horizontal_mirrors": true
+}

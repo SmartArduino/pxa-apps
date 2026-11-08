@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 #include "living.hpp"
 #include "livestock.hpp"
+#include "mines.hpp"
 #include <algorithm>
 namespace farm {
 Weather weather_on(uint16_t day) {
@@ -29,11 +30,13 @@ bool crop_in_season(uint16_t day,int crop) {
 }
 int food_energy(int item) {
   constexpr int crops[]={10,12,14,0}, wild[]={14,18,20,22,0};
+  if(item==43||item==44)return item==43?20:28;
   if(item>=29&&item<=36){constexpr int energy[]={8,10,18,16,0,0,8,10};return energy[item-29];}
   return item>=12&&item<=15?crops[item-12]:item>=19&&item<=23?Foods[item-19].energy:
     item>=24&&item<=28?wild[item-24]:0;
 }
 int item_price(int item) {
+  if(item>=38&&item<=45){constexpr int price[]={12,18,32,55,100,30,45,10};return price[item-38];}
   if(item>=29&&item<=36){constexpr int prices[]={20,28,65,55,80,120,28,36};return prices[item-29];}
   constexpr int wild[]={18,25,30,35,28};
   return item>=8&&item<=11?std::max(1,int(Crops[item-8].price)/2):

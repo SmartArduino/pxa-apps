@@ -45,6 +45,7 @@ int main() {
     HEIGHT = size.second;
     for (int region = 0; region < farm::RegionCount; ++region) {
       state.region = region;
+      if(region==int(farm::Region::Mine))farm::enter_mine(state,1);
       state.visited = 255;
       state.px = region == 4 ? 264 : 392;
       state.py = 200;

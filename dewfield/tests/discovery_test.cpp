@@ -5,8 +5,8 @@
 #include <cstring>
 using namespace farm;
 static void checksum(uint8_t *bytes) {
-  uint32_t h=2166136261u;for(int i=0;i<SaveBytes-4;++i)h=(h^bytes[i])*16777619u;
-  for(int i=0;i<4;++i)bytes[SaveBytes-4+i]=h>>(i*8);
+  uint32_t h=2166136261u;for(int i=0;i<(bytes[4]>=10?farm::SaveBytes:768)-4;++i)h=(h^bytes[i])*16777619u;
+  for(int i=0;i<4;++i)bytes[(bytes[4]>=10?farm::SaveBytes:768)-4+i]=h>>(i*8);
 }
 int main() {
   State s;fresh(s);uint8_t seen=0;
@@ -50,18 +50,18 @@ int main() {
   for(int item:GardenCollection)assert(change_item(s,item,1));
   for(int item:WildCollection)assert(change_item(s,item,1));
   for(int i=0;i<8;++i)s.fish_records[i]=FishSpeciesList[i].min_cm;
-  s.fish_caught=8;s.harvested=10;s.visited=255;
+  s.fish_caught=8;s.harvested=10;s.visited=(1u<<RegionCount)-1;
   assert(discovered_total(s)==22&&ready_collection_rewards(s)==6);
   unsigned gold=s.gold;
   for(int i=0;i<MilestoneCount;++i) {auto m=milestone(s,i);assert(claim_collection_reward(s,i));gold+=m.reward;assert(s.gold==gold&&!claim_collection_reward(s,i));}
   assert(ready_collection_rewards(s)==0&&!claim_collection_reward(s,-1)&&!claim_collection_reward(s,6));
-  uint8_t bytes[SaveBytes];State restored;assert(encode(s,bytes,sizeof(bytes))==SaveBytes&&bytes[4]==9);
-  assert(decode(restored,bytes,sizeof(bytes))&&restored.discoveries==s.discoveries&&restored.collection_rewards==63&&restored.fish_caught==8);
+  uint8_t bytes[SaveBytes];State restored;assert(encode(s,bytes,sizeof(bytes))==SaveBytes&&bytes[4]==10);
+  assert(decode(restored,bytes,bytes[4]>=10?sizeof(bytes):768)&&restored.discoveries==s.discoveries&&restored.collection_rewards==63&&restored.fish_caught==8);
   assert(!std::memcmp(s.fish_records,restored.fish_records,8));
-  bytes[564]=1;checksum(bytes);assert(!decode(restored,bytes,sizeof(bytes))); // below this species' minimum length
-  encode(s,bytes,sizeof(bytes));bytes[574]=9;checksum(bytes);assert(!decode(restored,bytes,sizeof(bytes))); // more perfect catches than catches
+  bytes[564]=1;checksum(bytes);assert(!decode(restored,bytes,bytes[4]>=10?sizeof(bytes):768)); // below this species' minimum length
+  encode(s,bytes,sizeof(bytes));bytes[574]=9;checksum(bytes);assert(!decode(restored,bytes,bytes[4]>=10?sizeof(bytes):768)); // more perfect catches than catches
   encode(s,bytes,sizeof(bytes));bytes[4]=7;std::memset(bytes+560,0,SaveBytes-564);checksum(bytes);
-  assert(decode(restored,bytes,sizeof(bytes))&&discovered_item(restored,12)&&restored.fish_caught==0&&restored.collection_rewards==0);
+  assert(decode(restored,bytes,bytes[4]>=10?sizeof(bytes):768)&&discovered_item(restored,12)&&restored.fish_caught==0&&restored.collection_rewards==0);
   // Seasonal collectibles must have an approachable shore, never an unreachable water tile.
   fresh(s);s.story=3;s.visited=255;
   for(unsigned i=0;i<sizeof(Foraging)/sizeof(*Foraging);++i) {

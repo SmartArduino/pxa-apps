@@ -4,6 +4,17 @@
 // Small hand-authored foods share the scene palette and an exact ground edge.
 // y is the bottom baseline, so backpack, carried and forage drawings agree.
 template<class Canvas> inline void food(Canvas &r, int x, int y, int item) {
+  if(item>=38) {
+    if(item==43||item==44) {
+      r.rect(x-2,y-6,4,6,Ink);r.rect(x-1,y-5,2,4,Cream);
+      if(item==43){r.rect(x-6,y-10,12,5,Ink);r.rect(x-4,y-12,8,7,rgb(168,122,137));r.rect(x-5,y-9,10,2,rgb(194,151,156));r.rect(x-2,y-11,2,2,Cream);r.rect(x+3,y-8,2,1,Cream);}
+      else {r.rect(x-3,y-6,6,5,rgb(205,179,122));r.line(x,y-7,x-5,y-12,Leaf);r.line(x,y-7,x+5,y-13,Leaf);r.rect(x-5,y-13,4,2,rgb(179,206,133));r.rect(x+2,y-14,4,2,rgb(179,206,133));}
+    } else {
+      uint16_t c=item==38?rgb(83,91,83):item==39?rgb(192,118,66):item==40?rgb(137,173,173):item==41?Gold:item==42?rgb(176,143,193):rgb(124,158,106);
+      r.rect(x-5,y-7,10,7,Ink);r.rect(x-3,y-10,7,9,Ink);r.rect(x-4,y-6,8,5,c);r.rect(x-2,y-9,5,7,c);r.line(x-1,y-9,x-1,y-5,Cream);r.rect(x+2,y-3,2,2,Ink);
+    }
+    return;
+  }
   if(item>=29) {
     if(item==29||item==30||item==35||item==36) {
       r.rect(x-3,y-8,6,8,Ink);r.rect(x-4,y-6,8,5,Ink);

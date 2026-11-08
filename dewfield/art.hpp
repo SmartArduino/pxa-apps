@@ -5,6 +5,8 @@
 #include "soil.hpp"
 #include "sprites.hpp"
 #include "animal_sprites.hpp"
+#include "mine_sprites.hpp"
+#include "mines.hpp"
 #include "livestock.hpp"
 #include <algorithm>
 #include <cstdint>
@@ -430,6 +432,7 @@ inline const sprites::Sprite &person_sprite(int dir, int frame,
 #include "world_art.hpp"
 #include "gait.hpp"
 #include "livestock_art.hpp"
+#include "mine_art.hpp"
 inline void person_shadow(Raster &r, int x, int y, int dir, int frame,
                           bool npc = false) {
   if(npc)gait::shadow(r,x,y,dir,frame,&villager_rig(3,dir));
@@ -450,7 +453,7 @@ inline void carry_item(Raster&r,int x,int y,int item,int selected) {
   else if(item>=16 && item<=18) {
     const sprites::Sprite *items[]={&sprites::fish,&sprites::logs,&sprites::stones};
     const auto &s=*items[item-16];sprite(r,s,x-s.w/2,y-30-s.h);
-  } else if (item >= 19 && item <= 36) food(r,x,y-31,item);
+  } else if (item >= 19 && item <= 45) food(r,x,y-31,item);
 }
 inline void person(Raster &r, int x, int y, int dir, int frame,
                    bool npc = false, int swing = 0, int tool = 0,
@@ -458,6 +461,7 @@ inline void person(Raster &r, int x, int y, int dir, int frame,
   if(draw_shadow) person_shadow(r,x,y,dir,frame,npc);
   if(npc) {gait::draw(r,x,y,dir,frame,false,&villager_rig(3,dir));return;}
   if(swing) tool_anim::use(r,x,y,dir,frame,tool,swing,grade,fishing,target);
+  else if(item==37){tool_anim::use(r,x,y,dir,frame,7,0,grade,false);}
   else if(item==2 || item>=8) {
     gait::draw(r,x,y,dir,frame,true);
     carry_item(r,x,y,item,selected);

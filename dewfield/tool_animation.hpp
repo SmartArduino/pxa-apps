@@ -3,14 +3,15 @@
 // Included inside art. All rotations and mirror pixels are compiled offline.
 namespace tool_anim {
 inline int duration(int tool,int grade=0) {
-  constexpr int ms[]={560,420,640,360,560,540,680};
-  return ms[tool%7]-((tool==4||tool==5)?std::clamp(grade,0,2)*45:0);
+  constexpr int ms[]={560,420,640,360,560,540,680,380};
+  return ms[tool%8]-((tool==4||tool==5)?std::clamp(grade,0,2)*45:0);
 }
 inline constexpr int Impact=144;
-inline int surface_offset(int tool){return tool==4?14:tool==5?8:6;}
+inline int surface_offset(int tool){return tool==4?14:tool==5?8:tool==7?10:6;}
 inline int impact_remaining(int tool,int grade=0) {return duration(tool,grade)*(256-Impact)/256;}
 inline const sprites::HeldFrame &held_frame(int tool,int grade,int angle,bool mirror=false) {
   const sprites::HeldFrame *p=nullptr;
+  if(tool==7)return (mirror?sprites::sword_mirrors:sprites::sword_frames)[angle&15];
   if(tool==4) {
     const sprites::HeldFrame *normal[]={sprites::held_axe0_frames,sprites::held_axe1_frames,sprites::held_axe2_frames};
     const sprites::HeldFrame *flipped[]={sprites::held_axe0_mirrors,sprites::held_axe1_mirrors,sprites::held_axe2_mirrors};
@@ -34,10 +35,19 @@ inline Motion motion(int dir,int tool,int remaining,int grade=0,int target_x=0,i
   int total=duration(tool,grade),p=remaining?std::clamp((total-remaining)*256/total,0,255):0;
   constexpr int idle[]={15,2,6,14};
   constexpr int axe_idle[]={13,15,5,1};
-  int resting=tool==4?axe_idle[dir&3]:idle[dir&3];
+  constexpr int sword_idle[]={15,2,6,14};
+  int resting=tool==4?axe_idle[dir&3]:tool==7?sword_idle[dir&3]:idle[dir&3];
   Motion m{dir==0?-5:side*5,dir==2?-12:-14,resting,0,0,p,false,dir==3};
   if(!remaining)return m;
-  if(tool==0||tool==4||tool==5) {
+  if(tool==7) {
+    int strike=dir*4,arc=dir==3?-3:3;
+    const auto &head=held_frame(tool,grade,strike,m.mirrored);
+    int hx=(targeted?target_x:dx*16)-head.tip_x,hy=(targeted?target_y:dy*16-10)-head.tip_y;
+    if(p<100){int t=p*256/100;m.y=mix(m.y,-22,t);m.angle=turn(resting,strike-arc,t);}
+    else if(p<Impact){int t=(p-100)*256/(Impact-100);m.x=mix(m.x,hx,t);m.y=mix(-22,hy,t);m.angle=turn(strike-arc,strike,t);}
+    else if(p<190){int t=(p-Impact)*256/(190-Impact);m.x=hx;m.y=hy;m.angle=turn(strike,strike+arc,t);}
+    else {int t=(p-190)*256/66;m.x=mix(hx,m.x,t);m.y=mix(hy,m.y,t);m.angle=turn(strike+arc,resting,t);}
+  } else if(tool==0||tool==4||tool==5) {
     constexpr int axe_strike[]={12,0,4,0};
     m.two_hands=true;int strike=tool==4?axe_strike[dir&3]:dir*4;
     const auto &head=held_frame(tool,grade,strike,m.mirrored);
@@ -101,7 +111,11 @@ inline void use(Raster&r,int x,int y,int dir,int walk,int tool,int remaining,int
     r.line(x+m.x+pose.tip_x,y+m.y+pose.tip_y,x+dx*32,y+dy*32-2,farm_palette::Soft);
     r.rect(x+dx*32-1,y+dy*32-2,3,1,rgb(191,97,48));
   }
-  if(tool!=6&&remaining&&m.progress>=Impact&&m.progress<218) {
+  if(tool==7&&remaining&&m.progress>=Impact&&m.progress<190) {
+    int dx=(dir==1)-(dir==3),dy=(dir==2)-(dir==0),tx=target.valid?target.x:x+dx*16,ty=target.valid?target.y:y+dy*16-10;
+    for(int i=0;i<3;++i)r.line(tx-dy*(8-i*2),ty-dx*(8-i*2),tx+dy*(7-i),ty+dx*(7-i),i?Cream:Gold);
+  }
+  if(tool!=6&&tool!=7&&remaining&&m.progress>=Impact&&m.progress<218) {
     int dx=(dir==1)-(dir==3),dy=(dir==2)-(dir==0);
     int tx=target.valid?target.x:x+dx*16,ty=target.valid?target.y:y+dy*16-surface_offset(tool);
     if(tool==2)r.line(x+m.x+pose.tip_x,y+m.y+pose.tip_y,tx,ty,rgb(135,183,190));

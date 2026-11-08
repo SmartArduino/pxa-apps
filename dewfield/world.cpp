@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: MIT
 #include "living.hpp"
+#include "wilderness.hpp"
+#include "mines.hpp"
 #include <algorithm>
 #include <cstdlib>
 namespace farm {
 const char *region_name(Region r, bool en) {
-  const char *cn[] = {"晴露农场", "晴露镇", "林间小径", "镜光湖畔", "温暖农舍", "蜜风果园", "晴露种子铺", "村民会馆"};
+  const char *cn[] = {"晴露农场", "晴露镇", "林间小径", "镜光湖畔", "温暖农舍", "蜜风果园", "晴露种子铺", "村民会馆", "回声矿洞"};
   const char *eng[] = {"Dewfield Farm", "Dewfield Town", "Whisper Woods",
-                       "Mirror Lake", "Farm Cottage", "Honey Orchard", "Seed Store", "Village Lodge"};
+                       "Mirror Lake", "Farm Cottage", "Honey Orchard", "Seed Store", "Village Lodge", "Echo Mine"};
   return (en ? eng : cn)[unsigned(r) < RegionCount ? unsigned(r) : 0];
 }
 const char *npc_name(int id, bool en) {
@@ -37,7 +39,7 @@ bool road_tile(uint8_t region,int x,int y) {
       (y==7 && x>=7 && x<=24) || ((x==7||x==24)&&y>=7&&y<=12) ||
       (x>=12&&x<=18&&y>=9&&y<=15);
   case Region::Forest:
-    return y==12 || (x==15&&y<=12) || (x==22&&y>=12) ||
+    return (y==4&&x>=15&&x<=22)||(x==22&&y>=3&&y<=6)||y==12 || (x==15&&y<=12) || (x==22&&y>=12) ||
       (y==20&&x>=15&&x<=22);
   case Region::Lake:
     return (y==12&&x>=21) || (x==24&&y>=9&&y<=17);
@@ -55,6 +57,8 @@ bool exit_clearance(uint8_t region,int x,int y) {
 }
 Ground world_ground(const State &s, int x, int y) {
   Region r = Region(s.region);
+  if(r==Region::Mine)return mine_ground(s,x,y);
+  int wild=wild_tree_at(s,x,y);if(wild>=0&&wild_stage(s,wild)!=3&&s.wild_age[wild]>=2)return Ground::Tree;
   if (indoors(s.region)) {
     if(r==Region::SeedShop) {
       if(x<7||x>24||y<5||y>20 || (y==10&&x>=11&&x<=21) || (y>=6&&y<=7&&x>=8&&x<=23))return Ground::Wall;
@@ -90,6 +94,7 @@ Ground world_ground(const State &s, int x, int y) {
     if (road_tile(s.region,x,y))
       return Ground::Path;
   } else if (r == Region::Forest) {
+    if(x>=21&&x<=23&&y<=3&&!(x==22&&y==3))return Ground::Wall;
     int stream=y<6?4:y<11?5:y<15?4:y<19?3:4;
     if (x>=stream-1 && x<=stream+1) {
       if (y == 12)
@@ -100,8 +105,7 @@ Ground world_ground(const State &s, int x, int y) {
       return Ground::Path;
     if (x>=10&&x<=12&&y>=6&&y<=9 && !(x==10&&y==6) && !(x==12&&y==9))
       return Ground::Water;
-    if ((x % 6 == 0 && x != 12 && y % 5 == 0) || (x == 22 && y == 6))
-      return Ground::Tree;
+
   } else if (r == Region::Lake) {
     if(x>=21&&x<=23&&y>=11&&y<=12)return Ground::Path;
     if(x>=24&&x<=26&&y>=7&&y<=8)return Ground::Wall;
@@ -112,8 +116,7 @@ Ground world_ground(const State &s, int x, int y) {
     if (road_tile(s.region,x,y))
       return Ground::Path;
   } else if (r == Region::Orchard) {
-    if ((x == 6 || x == 12 || x == 20 || x == 26) && (y == 7 || y == 16))
-      return Ground::Tree;
+
     if (x >= 23 && x <= 27 && y >= 10 && y <= 12) return Ground::Water;
     if (road_tile(s.region,x,y))
       return Ground::Path;
@@ -121,6 +124,7 @@ Ground world_ground(const State &s, int x, int y) {
   return Ground::Grass;
 }
 int portal_heading(const Portal &p) {
+  if(p.from==Region::Mine)return 0;
   if (indoors(uint8_t(p.from))) return 2;
   if (indoors(uint8_t(p.to))) return 0;
   if (p.bridge || p.x <= 2) return 3;
@@ -143,10 +147,12 @@ bool travel(State &s, const Portal &p) {
   if (unsigned(p.from) != s.region || !near(s, p.x, p.y) ||
       (p.bridge && s.story < 3) || !building_open(s,p.to))
     return false;
+  if(p.to==Region::Mine)return enter_mine(s);
+  if(p.from==Region::Mine){leave_mine(s);return true;}
   s.region = uint8_t(p.to);
   s.px = p.spawn_x * Tile + 8;
   s.py = p.spawn_y * Tile + 8;
-  s.visited |= uint8_t(1u << s.region);
+  s.visited |= uint16_t(1u << s.region);
   return true;
 }
 int next_portal(const State &s, Region destination) {
@@ -473,7 +479,8 @@ bool advance_story(State &s, int id) {
 bool forage_available(const State &s, int id) {
   return id >= 0 && unsigned(id) < sizeof(Foraging) / sizeof(*Foraging) &&
       !(s.forage & (1u << id)) &&
-      (Foraging[id].seasons & (1u << season_of(s.day)));
+      (Foraging[id].seasons & (1u << season_of(s.day))) &&
+      (Foraging[id].region!=Region::Orchard||fruit_tree_ready(s,Foraging[id].x,Foraging[id].y));
 }
 int forage_at(const State &s, int x, int y) {
   for (unsigned i = 0; i < sizeof(Foraging) / sizeof(*Foraging); ++i) {

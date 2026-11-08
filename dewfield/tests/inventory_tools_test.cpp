@@ -39,7 +39,7 @@ int main() {
   assert(s.gold==before.gold&&s.wood==before.wood&&s.stone==before.stone&&s.fish==before.fish);
   assert(!std::memcmp(s.seeds,before.seeds,sizeof(s.seeds))&&!std::memcmp(s.produce,before.produce,sizeof(s.produce)));
   uint8_t bytes[SaveBytes];select_slot(s,-1);s.show_joystick=false;s.show_action=false;s.music=true;
-  assert(encode(s,bytes,sizeof(bytes))==SaveBytes && bytes[4]==9);
+  assert(encode(s,bytes,sizeof(bytes))==SaveBytes && bytes[4]==10);
   State restored;assert(decode(restored,bytes,SaveBytes));valid_inventory(restored);
   assert(restored.damage[0]==1&&restored.tool_grade[4]==2&&restored.active_slot==255&&!restored.show_action&&!restored.show_joystick&&restored.music);
   assert(!std::memcmp(s.slots,restored.slots,sizeof(s.slots)));

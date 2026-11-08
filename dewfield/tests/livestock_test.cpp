@@ -6,7 +6,7 @@
 #include <cstdio>
 using namespace farm;
 static void day(State&s){s.trough=24;livestock_night(s);++s.day;}
-static void checksum(uint8_t*b){uint32_t h=2166136261u;for(int i=0;i<SaveBytes-4;++i)h=(h^b[i])*16777619u;for(int i=0;i<4;++i)b[SaveBytes-4+i]=h>>(8*i);}
+static void checksum(uint8_t*b){uint32_t h=2166136261u;for(int i=0;i<(b[4]>=10?farm::SaveBytes:768)-4;++i)h=(h^b[i])*16777619u;for(int i=0;i<4;++i)b[(b[4]>=10?farm::SaveBytes:768)-4+i]=h>>(8*i);}
 int main() {
  State s;fresh(s);s.px=RanchX*16+8;s.py=(RanchY+1)*16+8;
  assert(!s.ranch&&s.intro==0);begin_ranch(s);assert(animal_count(s)==2&&s.hay==20);
@@ -47,17 +47,17 @@ int main() {
  s.animal_goods[2]=2;s.animal_goods[3]=2;s.animal_goods[4]=2;sync_inventory(s);
  assert(ranch_story(s,3)&&s.ranch_chapter==4&&!ranch_story(s,3));
  assert(s.animal_goods[2]==0&&s.animal_goods[3]==0&&s.animal_goods[4]==0);
- State t;uint8_t b[SaveBytes];assert(encode(s,b,sizeof(b))==SaveBytes&&b[4]==9&&decode(t,b,sizeof(b)));
+ State t;uint8_t b[SaveBytes];assert(encode(s,b,sizeof(b))==SaveBytes&&b[4]==10&&decode(t,b,b[4]>=10?sizeof(b):768));
  assert(t.born==s.born&&t.hatched==s.hatched&&t.ranch_chapter==4&&item_count(t,34)==4&&!t.breeding);
  uint8_t c[SaveBytes];encode(t,c,sizeof(c));assert(!std::memcmp(b,c,sizeof(b)));
  // A legacy farmer standing in the newly restored shed is safely moved to its front.
- t.px=RanchX*16+8;t.py=RanchY*16+8;assert(encode(t,b,sizeof(b))&&decode(t,b,sizeof(b)));
+ t.px=RanchX*16+8;t.py=RanchY*16+8;assert(encode(t,b,sizeof(b))&&decode(t,b,b[4]>=10?sizeof(b):768));
  assert(t.px/16==RanchX&&t.py/16==RanchY+1);
  // Real v8 prefix migration bypasses the opening without creating animals.
  fresh(s);encode(s,b,sizeof(b));b[4]=8;std::memset(b+577,0,SaveBytes-581);checksum(b);
- assert(decode(t,b,sizeof(b))&&t.intro==IntroScenes&&!t.ranch&&!animal_count(t));
+ assert(decode(t,b,b[4]>=10?sizeof(b):768)&&t.intro==IntroScenes&&!t.ranch&&!animal_count(t));
  // Range checks and reserved capacity are validated before state is replaced.
- fresh(s);begin_ranch(s);encode(s,b,sizeof(b));b[593]=6;checksum(b);assert(!decode(t,b,sizeof(b)));
+ fresh(s);begin_ranch(s);encode(s,b,sizeof(b));b[593]=6;checksum(b);assert(!decode(t,b,b[4]>=10?sizeof(b):768));
  // A full bag never removes an uncollected product or a pig.
  fresh(s);begin_ranch(s);s.px=RanchX*16+8;s.py=(RanchY+1)*16+8;
  for(int item=8;item<=28;++item)change_item(s,item,1);sync_inventory(s);
@@ -66,7 +66,7 @@ int main() {
  s.animal_goods[6]=999;sync_inventory(s);assert(!collect_animal(s,0)&&animal_product(s.animals[0])==35);
  for(int item=29;item<=36;++item)if(!item_count(s,item))assert(change_item(s,item,1));
  sync_inventory(s);assert(equip_item(s,36)&&s.active_slot>=28);
- assert(encode(s,b,sizeof(b))&&decode(t,b,sizeof(b))&&t.active_slot==s.active_slot);
+ assert(encode(s,b,sizeof(b))&&decode(t,b,b[4]>=10?sizeof(b):768)&&t.active_slot==s.active_slot);
  for(int species=1;species<=5;++species)for(int stage=0;stage<3;++stage) {
   Animal a{uint8_t(species),0,uint8_t(stage==0?0:stage==1?Breeds[species-1].young:Breeds[species-1].adult),50};assert(animal_stage(a)==stage);
  }

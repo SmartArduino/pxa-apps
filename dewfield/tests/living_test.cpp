@@ -5,7 +5,7 @@
 #include <cstdio>
 using namespace farm;
 void stand(State&s,Region r,int x,int y){s.region=unsigned(r);s.visited|=1u<<s.region;s.px=x*16+8;s.py=y*16+8;}
-void checksum(uint8_t*b){uint32_t h=2166136261u;for(int i=0;i<SaveBytes-4;++i)h=(h^b[i])*16777619u;for(int i=0;i<4;++i)b[SaveBytes-4+i]=h>>(i*8);}
+void checksum(uint8_t*b){uint32_t h=2166136261u;for(int i=0;i<(b[4]>=10?farm::SaveBytes:768)-4;++i)h=(h^b[i])*16777619u;for(int i=0;i<4;++i)b[(b[4]>=10?farm::SaveBytes:768)-4+i]=h>>(i*8);}
 int main(int argc,char**argv){
  State s,t;fresh(s);uint8_t b[SaveBytes];
  assert(s.slots[1]==8&&s.slots[7]==0&&!item_count(s,2));
@@ -15,7 +15,7 @@ int main(int argc,char**argv){
  assert(act(s,8,9)==Result::Ship&&s.produce[0]==2&&s.produce[2]==7&&s.fish==4&&s.shipping==16);
  assert(unship(s)&&s.produce[0]==3&&s.shipping==0&&!unship(s));
  select_slot(s,-1);assert(act(s,8,9)==Result::EmptyShipping&&s.produce[0]==3);
- equip_item(s,12);assert(ship(s)==16);assert(encode(s,b,sizeof(b))==SaveBytes&&decode(t,b,sizeof(b))&&t.last_shipped==12&&unship(t));
+ equip_item(s,12);assert(ship(s)==16);assert(encode(s,b,sizeof(b))==SaveBytes&&decode(t,b,b[4]>=10?sizeof(b):768)&&t.last_shipped==12&&unship(t));
  stand(s,Region::Farm,14,14);assert(!ship(s));s.energy=20;assert(eat(s,12)&&s.energy==30&&s.produce[0]==1);
  assert(!eat(s,15)&&!eat(s,17));s.produce[1]=1;assert(eat(s,13));
  s.shipping=0;s.last_shipped=0;s.energy=1;s.overwork=0;assert(spend_energy(s,3)&&s.energy==0&&s.overwork==2&&s.exhausted);
@@ -38,14 +38,14 @@ int main(int argc,char**argv){
  for(int time=360;time<1560;++time){fresh(s);s.minute=time;for(int id=0;id<4;++id){auto pose=npc_pose(s,id,250);State probe=s;probe.region=unsigned(pose.region);assert(walkable(probe,pose.x/16,pose.y/16));if(time>=1200)assert(pose.region==Region::Lodge);}}
  // v4 keeps its season/day, inventory order and relationship date stamps.
  fresh(s);s.day=18;s.chat_day[0]=18;s.order_day=18;s.order_claimed=1;s.gold=449;encode(s,b,sizeof(b));b[4]=4;checksum(b);
- assert(decode(t,b,sizeof(b))&&t.day==60&&season_of(t.day)==2&&season_day(t.day)==4&&t.chat_day[0]==60&&t.order_day==60&&t.gold==449);
+ assert(decode(t,b,b[4]>=10?sizeof(b):768)&&t.day==60&&season_of(t.day)==2&&season_day(t.day)==4&&t.chat_day[0]==60&&t.order_day==60&&t.gold==449);
  fresh(s);stand(s,Region::Home,15,7);encode(s,b,sizeof(b));b[4]=4;checksum(b);
- assert(decode(t,b,sizeof(b))&&t.py/16==8&&t.px==s.px);
- fresh(s);stand(s,Region::Lodge,16,18);s.seasonal[4]=3;s.weather=unsigned(Weather::Snow);s.energy=0;s.overwork=6;s.exhausted=true;sync_inventory(s);encode(s,b,sizeof(b));assert(decode(t,b,sizeof(b))&&t.region==s.region&&t.seasonal[4]==3&&t.overwork==6&&t.exhausted);
- b[555]=255;checksum(b);assert(!decode(t,b,sizeof(b)));
+ assert(decode(t,b,b[4]>=10?sizeof(b):768)&&t.py/16==8&&t.px==s.px);
+ fresh(s);stand(s,Region::Lodge,16,18);s.seasonal[4]=3;s.weather=unsigned(Weather::Snow);s.energy=0;s.overwork=6;s.exhausted=true;sync_inventory(s);encode(s,b,sizeof(b));assert(decode(t,b,b[4]>=10?sizeof(b):768)&&t.region==s.region&&t.seasonal[4]==3&&t.overwork==6&&t.exhausted);
+ b[555]=255;checksum(b);assert(!decode(t,b,b[4]>=10?sizeof(b):768));
  if(argc>1) {
   FILE*f=std::fopen(argv[1],"rb");assert(f);auto n=std::fread(b,1,sizeof(b),f);std::fclose(f);
-  assert(decode(t,b,n));auto migrated=t;uint8_t roundtrip[SaveBytes];encode(t,b,sizeof(b));assert(decode(t,b,sizeof(b)));encode(t,roundtrip,sizeof(roundtrip));assert(!std::memcmp(b,roundtrip,sizeof(b)));
+  assert(decode(t,b,n));auto migrated=t;uint8_t roundtrip[SaveBytes];encode(t,b,sizeof(b));assert(decode(t,b,b[4]>=10?sizeof(b):768));encode(t,roundtrip,sizeof(roundtrip));assert(!std::memcmp(b,roundtrip,sizeof(b)));
   assert(t.gold==migrated.gold&&!std::memcmp(t.plots,migrated.plots,sizeof(t.plots))&&!std::memcmp(t.seeds,migrated.seeds,sizeof(t.seeds)));
   std::printf("Real legacy save migrated: day=%u gold=%u region=%u\n",t.day,t.gold,t.region);
  }

@@ -3,6 +3,8 @@
 #include "art.hpp"
 #include "core.hpp"
 #include "living.hpp"
+#include "wilderness.hpp"
+#include "mines.hpp"
 #include <algorithm>
 #include <cstdint>
 namespace farm_scene {
@@ -24,7 +26,7 @@ enum class Kind : uint8_t {
   Bed,
   Table,
   Forage,
-  Stove, Television, Calendar, Counter, Cabinet, Fireplace, Chair, Shelf, Signpost, Animal, RanchShed
+  Stove, Television, Calendar, Counter, Cabinet, Fireplace, Chair, Shelf, Signpost, Animal, RanchShed, WildTree, MineEntrance, Ore, Monster, CaveCrop, MineLadder, MineTorch
 };
 struct Rect {
   int x, y, w, h;
@@ -68,6 +70,7 @@ inline Placement placement(const Entry &e) {
     auto *s = items[f.item == 17 ? 0 : f.item == 18 ? 1 : f.item == 16 ? 2 : 3];
     return {s, e.x - s->w / 2, e.y - s->h};
   }
+  case Kind::WildTree:return {&art::tree_sprite(e.x,e.y,0,e.growth,farm::WildTrees[e.id].variant),e.x,e.y};
   case Kind::Tree:
     return {&art::tree_sprite(e.x, e.y, 0, e.growth, e.id == 255 ? 3 : -1), e.x, e.y};
   case Kind::Rock:
@@ -91,6 +94,11 @@ inline Placement placement(const Entry &e) {
   }
 }
 inline Rect bounds(const Entry &e) {
+  if(e.kind==Kind::MineEntrance)return {e.x-27,e.y-46,55,51};
+  if(e.kind==Kind::Ore)return {e.x-14,e.y-24,28,26};
+  if(e.kind==Kind::Monster)return {e.x-17,e.y-30,35,32};
+  if(e.kind==Kind::CaveCrop)return {e.x-8,e.y-17,17,19};
+  if(e.kind==Kind::MineLadder||e.kind==Kind::MineTorch)return {e.x-12,e.y-24,25,27};
   if(e.kind==Kind::Animal)return {e.x-16,e.y-29,32,30};
   if(e.kind==Kind::RanchShed)return {e.x-27,e.y-45,55,50};
   if(e.kind==Kind::Counter)return {e.x-3,e.y-44,182,47};
@@ -127,11 +135,11 @@ inline Rect bounds(const Entry &e) {
   }
 }
 inline bool faded(const Entry &e, const farm::State &s) {
-  if (e.kind != Kind::Tree || s.py >= e.depth)
+  if ((e.kind != Kind::Tree&&e.kind!=Kind::WildTree) || s.py >= e.depth)
     return false;
   auto p = placement(e);
   int item = s.active_slot < farm::InventorySize ? s.slots[s.active_slot] : 0;
-  bool carrying = item == 2 || item >= 8;
+  bool carrying = farm::carrying_item(item);
   int height = carrying ? 54 : 28;
   return Rect{int(s.px) - 10, int(s.py) - height, 20, height - 4}.intersects(
       {p.x - p.sprite->anchor_x + 1, p.y - p.sprite->anchor_y + 1,
@@ -240,6 +248,15 @@ struct Queue {
   }
   void build_region(const farm::State &s, const View &v) {
     using farm::Region;
+    if(farm::in_mine(s)) {
+      for(int i=0;i<farm::MineRocks;++i){auto p=farm::ore_tile(i);if(!(s.mine_cleared[s.mine_depth-1]&(1u<<i)))add(Kind::Ore,p.x*16+8,p.y*16+13,p.y*16+13,i,true);}
+      for(int i=0;i<farm::MineMobs;++i)if(s.mobs[i].hp){auto &m=s.mobs[i];add(Kind::Monster,m.x,m.y,m.y,i,true);}
+      for(int i=0;i<4;++i){auto p=farm::cave_forage_tile(i);if(farm::cave_forage_at(s,p.x,p.y)>=0)add(Kind::CaveCrop,p.x*16+8,p.y*16+13,p.y*16+13,i,true);}
+      add(Kind::MineLadder,16*16+8,2*16+12,2*16+12,0,true);
+      add(Kind::MineLadder,25*16+8,17*16+12,17*16+12,1,true);
+      for(int y:{10,19})for(int x:{4,28})add(Kind::MineTorch,x*16+8,y*16+12,y*16+12);
+      add(Kind::Player,s.px,s.py,s.py);return;
+    }
     if (farm::indoors(s.region)) {
       if(s.region==uint8_t(Region::SeedShop)) {
         add(Kind::Counter,11*16,10*16+15,10*16+15,0,true);
@@ -283,18 +300,14 @@ struct Queue {
         for (int x : {10, 18})
           add(Kind::Fence, x * 16, 16 * 16, 16 * 16 + 15);
       } else if (s.region == uint8_t(Region::Forest)) {
-        for (int y = 5; y <= 20; y += 5)
-          for (int x = 6; x <= 24; x += 6)
-            if (x != 12)
-              add(Kind::Tree, x * 16 + 8, y * 16 + 13, y * 16 + 13);
+        add(Kind::MineEntrance,22*16+8,3*16+12,3*16+12,0,true);
         for (int i = 0; i < 9; ++i) {
           int x=5+i*3,y=i%2?17:8;
           if(farm::world_ground(s,x,y)!=farm::Ground::Water)
             add(Kind::Grass,x*16+8,y*16+12,y*16+12);
         }
       } else if (s.region == uint8_t(Region::Orchard)) {
-        for (int y : {7, 16}) for (int x : {6, 12, 20, 26})
-          add(Kind::Tree, x * 16 + 8, y * 16 + 13, y * 16 + 13, 255);
+
         for (int x : {5, 11, 19, 25})
           add(Kind::Fence, x * 16, 19 * 16, 19 * 16 + 15);
         for (int x : {8, 21, 28})
@@ -303,13 +316,14 @@ struct Queue {
         add(Kind::Table,25*16+8,8*16+15,8*16+15);
         for (int y : {6, 18})
           for (int x : {22, 27}) {
-            add(Kind::Tree, x * 16, y * 16, y * 16);
+
             add(Kind::Grass, x * 16 + 8, y * 16 + 12, y * 16 + 12);
           }
         for (int x : {6, 12, 18})
           add(Kind::Rock, x * 16, 21 * 16, 21 * 16);
       }
     }
+    for(int i=0;i<farm::WildTreeCount;++i){auto &t=farm::WildTrees[i];if(unsigned(t.region)==s.region)add(Kind::WildTree,t.x*16+8,t.y*16+13,t.y*16+13,i,farm::wild_stage(s,i)!=3,farm::wild_stage(s,i));}
     for (unsigned i = 0; i < sizeof(farm::Foraging) / sizeof(*farm::Foraging);
          ++i) {
       auto &f = farm::Foraging[i];
@@ -330,6 +344,12 @@ struct Queue {
     for (unsigned i = 0; i < count; ++i) {
       const auto &e = entries[i];
       switch (e.kind) {
+      case Kind::WildTree:{auto p=placement(e);art::contact_shadow(r,*p.sprite,p.x,p.y);break;}
+      case Kind::Ore:art::contact_shadow(r,art::rock_sprite(e.x,e.y),e.x,e.y);break;
+      case Kind::Monster:art::mine_monster_shadow(r,e.x,e.y,farm::mob_type(s,e.id));break;
+      case Kind::MineEntrance:art::shadow_strip(r,e.x-25,e.y,51,1);break;
+      case Kind::CaveCrop:art::shadow_strip(r,e.x-3,e.y,7,1);break;
+      case Kind::MineLadder:case Kind::MineTorch:break;
       case Kind::Animal:art::animal_shadow(r,e.x,e.y,s.animals[e.id],e.growth>=2?3:1,e.growth&1);break;
       case Kind::RanchShed:art::shadow_strip(r,e.x-22,e.y,44,1);break;
       case Kind::WorldNpc:
@@ -384,6 +404,14 @@ struct Queue {
     for (unsigned i = 0; i < count; ++i) {
       auto &e = entries[i];
       switch (e.kind) {
+      case Kind::WildTree:art::tree(r,e.x,e.y,128+e.id,v.season,faded(e,s)?4:8,false,e.growth,farm::WildTrees[e.id].variant);break;
+      case Kind::Ore:art::mine_ore(r,e.x,e.y,farm::ore_item(s,e.id));break;
+      case Kind::Monster:{auto &m=s.mobs[e.id];art::mine_monster(r,e.x,e.y,farm::mob_type(s,e.id),v.animation,m.dir,m.windup>0);
+        if(m.hp<farm::mob_max_hp(s,e.id)){r.rect(e.x-9,e.y-32,18,3,art::Ink);r.rect(e.x-8,e.y-31,std::max(1,16*m.hp/farm::mob_max_hp(s,e.id)),1,art::Gold);}break;}
+      case Kind::CaveCrop:art::food(r,e.x,e.y,farm::cave_forage_item(s,e.id));break;
+      case Kind::MineEntrance:art::mine_entrance(r,e.x,e.y);break;
+      case Kind::MineLadder:if(e.id&&s.mine_depth==30)art::grounded(r,sprites::chest,e.x,e.y);else art::mine_ladder(r,e.x,e.y,e.id,e.id?farm::ladder_ready(s):true);break;
+      case Kind::MineTorch:art::mine_torch(r,e.x,e.y,v.animation);break;
       case Kind::Animal:art::animal(r,e.x,e.y,s.animals[e.id],e.growth>=2?3:1,e.growth&1);break;
       case Kind::RanchShed:art::ranch_shed(r,e.x,e.y,s.trough);break;
       case Kind::WorldNpc: {
@@ -464,9 +492,14 @@ struct Queue {
         art::chicken(r, e.x, e.y, v.animation / 2 + e.id);
         break;
       case Kind::Player:
+        if(farm::in_mine(s)&&s.invulnerable&&(s.invulnerable/100)%2)break;
         art::person(r, e.x, e.y, v.direction, v.frame, false, v.swing, v.tool,
                     false, v.held_item, v.grade, v.seed, v.fishing,v.tool_target);
         break;
+      }
+      if(v.hit_ms&&(e.kind==Kind::WildTree||e.kind==Kind::Ore)&&v.hit_id==(e.kind==Kind::WildTree?32:96)+e.id) {
+        int hp=e.kind==Kind::WildTree?farm::wild_hp(s,e.id):farm::ore_hp(s,e.id),damage=e.kind==Kind::WildTree?s.wild_damage[e.id]:s.ore_damage[e.id];
+        if(damage&&hp){r.rect(e.x-7,e.y-24,14,3,art::Ink);r.rect(e.x-6,e.y-23,std::max(1,12*(hp-damage)/hp),1,art::Gold);}
       }
       if ((e.kind == Kind::Tree || e.kind == Kind::Rock ||
            e.kind == Kind::Grass) &&
@@ -490,6 +523,9 @@ struct Queue {
       if (!e.interactive)
         continue;
       auto p = placement(e);
+      if(e.kind==Kind::MineEntrance&&Rect{e.x-10,e.y-16,21,20}.intersects({x,y,1,1})){tx=22;ty=3;return true;}
+      if(e.kind==Kind::WildTree){auto p=placement(e);if(art::hit(*p.sprite,x-p.x+p.sprite->anchor_x,y-p.y+p.sprite->anchor_y)){tx=farm::WildTrees[e.id].x;ty=farm::WildTrees[e.id].y;return true;}continue;}
+      if((e.kind==Kind::Ore||e.kind==Kind::Monster||e.kind==Kind::CaveCrop||e.kind==Kind::MineLadder)&&bounds(e).intersects({x,y,1,1})){tx=e.x/16;ty=e.y/16;return true;}
       if((e.kind==Kind::Animal||e.kind==Kind::RanchShed)&&bounds(e).intersects({x,y,1,1})) {tx=e.x/16;ty=e.y/16;return true;}
       if(e.kind==Kind::Signpost && bounds(e).intersects({x,y,1,1})) {
         tx=farm::Portals[e.id].x;ty=farm::Portals[e.id].y;return true;

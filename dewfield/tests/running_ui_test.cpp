@@ -23,8 +23,8 @@ static int travel(bool run, int energy, int frame_ms, bool route_to_tile) {
 }
 static void resign(uint8_t *bytes) {
   uint32_t sum=2166136261u;
-  for(int i=0;i<farm::SaveBytes-4;++i)sum=(sum^bytes[i])*16777619u;
-  for(int i=0;i<4;++i)bytes[farm::SaveBytes-4+i]=sum>>(i*8);
+  for(int i=0;i<(bytes[4]>=10?farm::SaveBytes:768)-4;++i)sum=(sum^bytes[i])*16777619u;
+  for(int i=0;i<4;++i)bytes[(bytes[4]>=10?farm::SaveBytes:768)-4+i]=sum>>(i*8);
 }
 int main() {
   for(bool route_to_tile:{false,true}) for(int frame:{16,33,100,200}) {
@@ -43,9 +43,9 @@ int main() {
   game::key(Key::DOWN);assert(selected_row==0);
   farm::State restored; uint8_t bytes[farm::SaveBytes];
   state.auto_run=false;assert(farm::encode(state,bytes,sizeof(bytes))==sizeof(bytes));
-  assert(bytes[4]==9 && farm::decode(restored,bytes,sizeof(bytes)) && !restored.auto_run);
-  bytes[559]=2;resign(bytes);assert(!farm::decode(restored,bytes,sizeof(bytes)));
-  bytes[4]=5;resign(bytes);assert(farm::decode(restored,bytes,sizeof(bytes)) && restored.auto_run);
+  assert(bytes[4]==10 && farm::decode(restored,bytes,bytes[4]>=10?sizeof(bytes):768) && !restored.auto_run);
+  bytes[559]=2;resign(bytes);assert(!farm::decode(restored,bytes,bytes[4]>=10?sizeof(bytes):768));
+  bytes[4]=5;resign(bytes);assert(farm::decode(restored,bytes,bytes[4]>=10?sizeof(bytes):768) && restored.auto_run);
   for(auto size:{std::pair<int,int>{240,240},{296,240},{412,412},{240,427},{400,240}}) {
     WIDTH=size.first;HEIGHT=size.second;
     for(bool en:{false,true}) {

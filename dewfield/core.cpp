@@ -4,6 +4,8 @@
 #include "living.hpp"
 #include "collections.hpp"
 #include "livestock.hpp"
+#include "wilderness.hpp"
+#include "mines.hpp"
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
@@ -75,6 +77,7 @@ int strikes_left(const State &s, int index, Tool tool) {
   return (left + power - 1) / power;
 }
 unsigned item_count(const State &s, int item) {
+  if(item==37)return s.sword_owned;
   if (item >= 1 && item <= 7)
     return item != 2;
   if (item >= 8 && item <= 11)
@@ -85,7 +88,8 @@ unsigned item_count(const State &s, int item) {
       : item >= 19 && item <= 21 ? s.gathered[item - 19]
       : item >= 22 && item <= 23 ? s.meals[item - 22]
       : item >= 24 && item <= 28 ? s.seasonal[item - 24]
-      : item >= 29 && item <= 36 ? s.animal_goods[item-29] : 0;
+      : item >= 29 && item <= 36 ? s.animal_goods[item-29]
+      : item>=38&&item<=45?s.minerals[item-38]:0;
 }
 bool change_item(State &s, int item, int amount) {
   uint16_t *stack = item >= 8 && item <= 11 ? &s.seeds[item - 8]
@@ -94,7 +98,8 @@ bool change_item(State &s, int item, int amount) {
       : item >= 19 && item <= 21 ? &s.gathered[item - 19]
       : item >= 22 && item <= 23 ? &s.meals[item - 22]
       : item >= 24 && item <= 28 ? &s.seasonal[item - 24]
-      : item >= 29 && item <= 36 ? &s.animal_goods[item-29] : nullptr;
+      : item >= 29 && item <= 36 ? &s.animal_goods[item-29]
+      : item>=38&&item<=45?&s.minerals[item-38]:nullptr;
   if (!stack || amount < -int(*stack) || amount > 999 - int(*stack)) return false;
   if(amount>0 && !*stack) {
     int types=0;for(int i=1;i<=ItemCount;++i)types+=item_count(s,i)!=0;
@@ -138,7 +143,7 @@ bool select_slot(State &s, int slot) {
     return false;
   s.active_slot = uint8_t(slot);
   int item = s.slots[slot];
-  s.tool = item >= 1 && item <= 7 ? item - 1 : uint8_t(Tool::Hand);
+  s.tool = item==37?uint8_t(Tool::Sword):item >= 1 && item <= 7 ? item - 1 : uint8_t(Tool::Hand);
   if (item >= 8 && item <= 11) {
     s.tool = uint8_t(Tool::Seeds);
     s.selected = item - 8;
@@ -186,6 +191,7 @@ bool upgrade_tool(State &s, Tool tool) {
 }
 void fresh(State &s) {
   s = State{};
+  std::fill(s.wild_age,s.wild_age+WildTreeCount,uint8_t(5));
   for (int i = 0; i < 24; ++i)
     s.tree_age[i] = Obstacles[i].kind == 0 ? 5 : 0;
   sync_inventory(s);
@@ -207,6 +213,8 @@ uint32_t random(State &s) {
 Result act(State &s, int x, int y) {
   if (!near(s, x, y))
     return Result::Far;
+  if(in_mine(s))return mine_act(s,x,y);
+  int wild=wild_tree_at(s,x,y);if(wild>=0)return chop_wild(s,wild);
   if (const auto *portal = portal_at(s, x, y))
     return !building_open(s,portal->to)?Result::Closed:
       travel(s, *portal) ? Result::Travel : Result::Locked;
@@ -384,8 +392,10 @@ uint32_t sleep(State &s, bool forced) {
       ++p.growth;
     p.wet = 0;
   }
-  livestock_night(s);
+  livestock_night(s);wild_night(s);
   s.day = s.day == 65535 ? 1 : s.day + 1;
+  mine_new_day(s);
+  s.health=forced?60:100;
   s.minute = 360;
   s.energy = restoration;
   s.exhausted=false;s.overwork=0;s.last_shipped=0;
@@ -509,7 +519,7 @@ size_t encode(const State &original, uint8_t *out, size_t cap) {
     }
   };
   put(0x31465744, 4);
-  put(9, 2);
+  put(10, 2);
   put(s.day, 2);
   put(s.minute, 2);
   put(s.energy, 1);
@@ -582,14 +592,23 @@ size_t encode(const State &original, uint8_t *out, size_t cap) {
   for(auto &e:s.incubators){put(e.kind,1);put(e.days,1);}
   for(auto v:{s.hay,s.trough,s.hatched,s.born,s.animal_collected})put(v,2);
   put(s.intro,1);put(s.ranch,1);put(s.ranch_chapter,1);put(s.breeding,1);
-  for(int i=28;i<InventorySize;++i)put(s.slots[i],1);
+  for(int i=28;i<42;++i)put(s.slots[i],1);
+  for(int i=42;i<InventorySize;++i)put(s.slots[i],1);
+  for(auto v:s.wild_age)put(v,1);for(auto v:s.wild_damage)put(v,1);
+  for(auto v:s.minerals)put(v,2);
+  put(s.visited>>8,1);put(s.sword_owned,1);put(s.sword_grade,1);put(s.health,1);
+  put(s.mine_depth,1);put(s.mine_best,1);put(s.mine_loaded,1);put(s.mine_seed,4);
+  for(auto v:{s.mine_day,s.monsters_slain,s.ore_mined,s.cave_gathered,s.invulnerable,s.attack_cooldown})put(v,2);
+  put(s.mine_rewards,1);
+  for(auto v:s.mine_cleared)put(v,4);for(auto v:s.mine_defeated)put(v,1);for(auto v:s.ore_damage)put(v,1);
+  for(auto &m:s.mobs){for(auto v:{m.x,m.y,m.cooldown,m.windup,m.move_acc})put(v,2);put(m.hp,1);put(m.dir,1);}
   if(n>SaveBytes-4)return 0;
   n = SaveBytes - 4;
   put(checksum(out, n), 4);
   return SaveBytes;
 }
 bool decode(State &s, const uint8_t *in, size_t n) {
-  if (n != SaveBytes && n != 512)
+  if (n != SaveBytes && n != 768 && n != 512)
     return false;
   size_t at = 0;
   auto get = [&](int bytes) {
@@ -601,9 +620,9 @@ bool decode(State &s, const uint8_t *in, size_t n) {
   if (get(4) != 0x31465744)
     return false;
   uint32_t version = get(2);
-  if (version < 1 || version > 9)
+  if (version < 1 || version > 10)
     return false;
-  if ((version >= 3 && n != SaveBytes) || (version < 3 && n != 512))
+  if ((version==10&&n!=SaveBytes)||(version>=3&&version<=9&&n!=768)||(version<3&&n!=512))
     return false;
   at = n - 4;
   uint32_t sum = get(4);
@@ -682,7 +701,7 @@ bool decode(State &s, const uint8_t *in, size_t n) {
       if (version<9 && item_count(t, item) && !present[item])
         return false;
     t.active_slot = get(1);
-    if (t.active_slot >= (version>=9?InventorySize:version>=7?28:HotbarSize) && t.active_slot != 255)
+    if (t.active_slot >= (version>=10?InventorySize:version>=9?42:version>=7?28:HotbarSize) && t.active_slot != 255)
       return false;
     for (int i = 0; i < 24; ++i) {
       t.tree_age[i] = get(1);
@@ -720,9 +739,9 @@ bool decode(State &s, const uint8_t *in, size_t n) {
       v = get(2);
     t.personal = get(1);
     t.forage = get(1);
-    if (t.region >= (version >= 5 ? RegionCount : version==4?6:5) || t.story > 5 || t.met > 15 ||
-        t.visited >= (1u << (version >= 5 ? RegionCount : version==4?6:5)) || !(t.visited & 1) ||
-        !(t.visited & (1u << t.region)) || t.personal > 15 ||
+    if (t.region >= (version>=10?RegionCount:version>=5?8:version==4?6:5) || t.story > 5 || t.met > 15 ||
+        t.visited >= (1u << (version>=10?RegionCount:version>=5?8:version==4?6:5)) || !(t.visited & 1) ||
+        (version<10&&!(t.visited & (1u << t.region))) || t.personal > 15 ||
         (version == 3 && t.forage >= 64))
       return false;
     if (t.region == uint8_t(Region::Lake) && t.story < 3)
@@ -793,11 +812,40 @@ bool decode(State &s, const uint8_t *in, size_t n) {
     for(auto &e:t.incubators) {e.kind=get(1);e.days=get(1);if(e.kind>2||(!e.kind&&e.days)||(e.kind&&(!e.days||e.days>(e.kind==1?3:4))))return false;}
     t.hay=get(2);t.trough=get(2);t.hatched=get(2);t.born=get(2);t.animal_collected=get(2);
     t.intro=get(1);t.ranch=get(1);t.ranch_chapter=get(1);auto breeding=get(1);t.breeding=breeding;
-    for(int i=28;i<InventorySize;++i){t.slots[i]=get(1);if(t.slots[i]>ItemCount)return false;}
+    for(int i=28;i<42;++i){t.slots[i]=get(1);if(t.slots[i]>ItemCount)return false;}
     if(t.hay>999||t.trough>24||t.intro>IntroScenes||t.ranch>1||t.ranch_chapter>4||breeding>1||animal_reserved(t)>AnimalMax)return false;
     if(!t.ranch&&(animal_count(t)||t.ranch_chapter||t.hay||t.trough||t.hatched||t.born||t.animal_collected))return false;
     if(t.ranch_chapter<1)for(auto &e:t.incubators)if(e.kind)return false;
   } else t.intro=IntroScenes; // Existing players continue their farm immediately.
+  if(version>=10) {
+    for(int i=42;i<InventorySize;++i){t.slots[i]=get(1);if(t.slots[i]>ItemCount)return false;}
+    for(auto &v:t.wild_age){v=get(1);if(v>7)return false;}
+    for(int i=0;i<WildTreeCount;++i){t.wild_damage[i]=get(1);if((wild_stage(t,i)==3&&t.wild_damage[i])||(wild_stage(t,i)!=3&&t.wild_damage[i]>=wild_hp(t,i)))return false;}
+    for(auto &v:t.minerals){v=get(2);if(v>999)return false;}
+    t.visited|=get(1)<<8;auto sword=get(1);t.sword_owned=sword;t.sword_grade=get(1);t.health=get(1);
+    t.mine_depth=get(1);t.mine_best=get(1);t.mine_loaded=get(1);t.mine_seed=get(4);
+    t.mine_day=get(2);t.monsters_slain=get(2);t.ore_mined=get(2);t.cave_gathered=get(2);t.invulnerable=get(2);t.attack_cooldown=get(2);t.mine_rewards=get(1);
+    if(sword>1||t.sword_grade>2||(!sword&&t.sword_grade)||!t.health||t.health>100||t.mine_depth>MineFloors||t.mine_best>MineFloors||t.mine_depth>t.mine_best||t.mine_loaded>MineFloors||t.invulnerable>1200||t.attack_cooldown>220||t.mine_rewards>1)return false;
+    for(auto &v:t.mine_cleared){v=get(4);if(v&~0x2fffffffu)return false;}
+    for(auto &v:t.mine_defeated){v=get(1);if(v>=64)return false;}
+    for(int i=0;i<MineRocks;++i){auto &v=t.ore_damage[i];v=get(1);if(v>6)return false;if(in_mine(t)&&t.mine_depth&&(v>=ore_hp(t,i)||((t.mine_cleared[t.mine_depth-1]&(1u<<i))&&v)))return false;}
+    for(int i=0;i<MineMobs;++i){auto &m=t.mobs[i];m.x=get(2);m.y=get(2);m.cooldown=get(2);m.windup=get(2);m.move_acc=get(2);m.hp=get(1);m.dir=get(1);
+      if(m.x>=MapW*16||m.y>=MapH*16||m.cooldown>5000||m.windup>400||m.move_acc>=1000||m.hp>90||m.dir>3)return false;
+      if(in_mine(t)&&t.mine_depth&&(m.hp>mob_max_hp(t,i)||(bool(m.hp)==bool(t.mine_defeated[t.mine_depth-1]&(1u<<i)))||(m.hp&&!mine_walkable(t,m.x,m.y))))return false;
+    }
+    if(t.visited>=(1u<<RegionCount)||!(t.visited&(1u<<t.region)))return false;
+    if(in_mine(t)&&(!sword||!t.mine_depth||t.mine_loaded!=t.mine_depth))return false;
+    if(!in_mine(t)&&(t.mine_depth||t.mine_loaded))return false;
+  } else std::fill(t.wild_age,t.wild_age+WildTreeCount,uint8_t(5));
+  if(version<10&&t.region) {
+    int wi=wild_tree_at(t,t.px/16,t.py/16);
+    if(wi>=0&&!walkable(t,t.px/16,t.py/16)) {
+      bool found=false;int x=t.px/16,y=t.py/16;
+      for(int radius=1;radius<=4&&!found;++radius)for(int dy=-radius;dy<=radius&&!found;++dy)for(int dx=-radius;dx<=radius&&!found;++dx)
+       if(std::abs(dx)+std::abs(dy)==radius&&walkable(t,x+dx,y+dy)){t.px=(x+dx)*16+8;t.py=(y+dy)*16+8;found=true;}
+      if(!found)return false;
+    }
+  }
   for (int item = version>=9?1:19; item <= ItemCount; ++item) {
     int copies = 0;
     for (auto slot : t.slots) copies += slot == item;
@@ -808,7 +856,7 @@ bool decode(State &s, const uint8_t *in, size_t n) {
   }
   if (!t.day || t.minute < 360 || t.minute >= (version>=5?1560:1320) || t.energy > 100 ||
       (t.capacity != 30 && t.capacity != 60) || t.water > t.capacity ||
-      t.selected >= 4 || t.tool >= uint8_t(Tool::Count) || t.quests > 3 ||
+      t.selected >= 4 || t.tool >= (version>=10?uint8_t(Tool::Count):7) || (t.tool==7&&!t.sword_owned) || t.quests > 3 ||
       t.friendship != t.quests || rain > 1 || t.gold > 999999 ||
       t.shipping > 999999 || t.px >= MapW * Tile || t.py >= MapH * Tile ||
       !walkable(t, t.px / Tile, t.py / Tile))

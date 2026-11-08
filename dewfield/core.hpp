@@ -5,10 +5,10 @@
 namespace farm {
 constexpr int MapW = 32, MapH = 24, Tile = 16, PlotX = 10, PlotY = 9,
               PlotW = 10, PlotH = 8;
-constexpr int PlotCount = PlotW * PlotH, SaveBytes = 768;
+constexpr int PlotCount = PlotW * PlotH, SaveBytes = 1280;
 inline int walk_frame(uint32_t distance) {return 1+int((distance/6)%8);}
-constexpr int InventorySize = 42, HotbarSize = 7, ItemCount = 36;
-enum class Tool : uint8_t { Hoe, Seeds, Water, Hand, Axe, Pick, Rod, Count };
+constexpr int InventorySize = 56, HotbarSize = 7, ItemCount = 45;
+enum class Tool : uint8_t { Hoe, Seeds, Water, Hand, Axe, Pick, Rod, Sword, Count };
 enum class Ground : uint8_t { Grass, Path, Water, Wall, Tree, Rock, Weed };
 enum class Result : uint8_t {
   None,
@@ -36,7 +36,7 @@ enum class Result : uint8_t {
   Dialogue,
   Foraged,
   Orders,
-  Kitchen, Calendar, Forecast, Closed, WrongSeason, EmptyShipping, FullFish, Ranch, Animal
+  Kitchen, Calendar, Forecast, Closed, WrongSeason, EmptyShipping, FullFish, Ranch, Animal, Attacked, MineForaged, MineStairs, MineLift, MineChest, NeedSword, Cooldown
 };
 struct Crop {
   const char *cn, *en;
@@ -56,6 +56,11 @@ struct Animal {
   uint16_t pet_day=0, fed_day=0;
 };
 struct Incubator { uint8_t kind=0, days=0; };
+constexpr int WildTreeCount=25, MineFloors=30, MineRocks=24, MineMobs=6;
+struct MineMob {
+  uint16_t x=0,y=0,cooldown=0,windup=0,move_acc=0;
+  uint8_t hp=0,dir=2;
+};
 struct State {
   Plot plots[PlotCount]{};
   uint8_t cleared[24]{}, sprinklers[10]{};
@@ -71,7 +76,8 @@ struct State {
   bool show_joystick = true, show_action = true, music = true;
   bool auto_run = true;
   bool rain = false;
-  uint8_t region = 0, story = 0, met = 0, visited = 1, bonds[4]{}, personal = 0,
+  uint16_t visited=1;
+  uint8_t region = 0, story = 0, met = 0, bonds[4]{}, personal = 0,
           order_claimed = 0;
   uint16_t forage = 0, gathered[3]{}, meals[2]{}, order_day = 0, orders_done = 0;
   uint16_t seasonal[5]{};
@@ -86,6 +92,15 @@ struct State {
   uint16_t animal_goods[8]{}, hay=0, trough=0, hatched=0, born=0, animal_collected=0;
   uint8_t intro=0, ranch=0, ranch_chapter=0;
   bool breeding=true;
+  uint8_t wild_age[WildTreeCount]{},wild_damage[WildTreeCount]{};
+  uint16_t minerals[8]{};
+  uint32_t mine_cleared[MineFloors]{};
+  uint8_t mine_defeated[MineFloors]{},ore_damage[MineRocks]{};
+  MineMob mobs[MineMobs]{};
+  uint32_t mine_seed=0x63a5be19;
+  uint16_t mine_day=0,monsters_slain=0,ore_mined=0,cave_gathered=0,invulnerable=0,attack_cooldown=0;
+  uint8_t mine_depth=0,mine_best=0,mine_loaded=0,health=100,mine_rewards=0,sword_grade=0;
+  bool sword_owned=false;
 };
 struct Obstacle {
   uint8_t x, y, kind;
@@ -124,7 +139,9 @@ uint32_t sleep(State &s, bool forced = false);
 constexpr int SeasonDays = 28;
 inline int season_of(uint16_t day) { return ((day - 1) / SeasonDays) % 4; }
 inline int season_day(uint16_t day) { return (day - 1) % SeasonDays + 1; }
-inline bool indoors(uint8_t region) { return region == 4 || region >= 6; }
+inline bool indoors(uint8_t region) { return region == 4 || region == 6 || region == 7 || region == 8; }
+inline bool carrying_item(int item){return item==2||(item>=8&&item!=37);}
+inline int tool_grade(const State&s,int tool){return tool==7?s.sword_grade:s.tool_grade[tool<7?tool:3];}
 bool buy_seed(State &s, int kind, int count = 1);
 bool upgrade(State &s);
 bool craft_sprinkler(State &s, int plot);

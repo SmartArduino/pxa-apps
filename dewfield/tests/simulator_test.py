@@ -30,6 +30,7 @@ p.add_argument('--redesign-only',action='store_true')
 p.add_argument('--discoveries-only',action='store_true')
 p.add_argument('--actors-only',action='store_true')
 p.add_argument('--livestock-only',action='store_true')
+p.add_argument('--mines-only',action='store_true')
 p.add_argument('--npc-only',action='store_true')
 p.add_argument('--world-only',action='store_true')
 p.add_argument('--layers-only',action='store_true')
@@ -129,7 +130,7 @@ def saved():
             if k=='dewfield.save.v1':values.append((gen,v))
     assert values,'No durable save'
     raw=max(values,key=lambda x:x[0])[1]
-    assert raw[:4]==b'DWF1' and len(raw) in (512,768)
+    assert raw[:4]==b'DWF1' and len(raw) in (512,768,1280)
     result={k:struct.unpack_from(fmt,raw,offset)[0] for k,fmt,offset in [('day','<H',6),('energy','<B',10),('water','<B',11),('px','<H',18),('py','<H',20),('gold','<I',22),('shipping','<I',26),('earned','<I',30),('harvested','<I',34),('fish','<H',58),('wood','<H',60),('stone','<H',62)]}
     result.update(seeds=list(struct.unpack_from('<8H',raw,42))[::2],produce=list(struct.unpack_from('<8H',raw,42))[1::2],plots=[list(raw[98+i*4:102+i*4])for i in range(80)])
     if raw[4] >= 2:
@@ -145,6 +146,10 @@ def saved():
         result.update(goods=list(struct.unpack_from('<8H',raw,577)),animals=[list(raw[593+i*11:600+i*11])+list(struct.unpack_from('<2H',raw,600+i*11)) for i in range(12)],incubators=[list(raw[725+i*2:727+i*2]) for i in range(3)],hay=struct.unpack_from('<H',raw,731)[0],trough=struct.unpack_from('<H',raw,733)[0],hatched=struct.unpack_from('<H',raw,735)[0],born=struct.unpack_from('<H',raw,737)[0],intro=raw[741],ranch=raw[742],ranch_chapter=raw[743])
         result['slots']+=list(raw[745:759])
     else:result['intro']=5
+    if raw[4]>=10:
+        result['slots']+=list(raw[759:773])
+        result['visited']|=raw[839]<<8
+        result.update(wild_age=list(raw[773:798]),wild_damage=list(raw[798:823]),minerals=list(struct.unpack_from('<8H',raw,823)),sword=raw[840],sword_grade=raw[841],health=raw[842],depth=raw[843],best=raw[844],slain=struct.unpack_from('<H',raw,852)[0],ore_mined=struct.unpack_from('<H',raw,854)[0],cave_gathered=struct.unpack_from('<H',raw,856)[0],mine_rewards=raw[862],mine_cleared=list(struct.unpack_from('<30I',raw,863)),mine_defeated=list(raw[983:1013]))
     return result
 
 def wait_for(predicate,label,seconds=12):
@@ -276,6 +281,48 @@ try:
         key('X');key('Z');time.sleep(.2)
     if args.appearance_only or args.animation_only or args.action_only or args.cultivation_only:time.sleep(2.4)
     capture('02-farm')
+    if args.mines_only:
+        assert args.fixture_tool
+        key('ENTER');time.sleep(.3);saved();stop()
+        results={}
+        def fixture(label):
+            raw=out/(label+'.save')
+            subprocess.run([str(args.fixture_tool.resolve()),'mines-'+label,str(raw),str(out/'unused')],check=True)
+            replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38);time.sleep(.2)
+        def persist():
+            key('ENTER');time.sleep(.3);v=saved();key('X');return v
+        fixture('forest');key('RIGHT',.025);capture('forest-before')
+        key('Z',1.6);time.sleep(.3);v=persist()
+        assert v['wood']==4 and v['wild_age'][1]==6 and v['wild_damage'][1]==0,v
+        results['forest']=v;capture('forest-stump');stop()
+        start();tap(cw//2,ch-38);v=persist();assert v['wild_age'][1]==6 and v['wood']==4;stop()
+        fixture('entry');key('UP',.4);wait_for_panel('first mine letter');capture('mine-welcome');key('Z');time.sleep(.2);v=persist()
+        assert v['region']==8 and v['depth']==1 and v['sword'] and v['visited']&256,v
+        capture('mine-entry');stop()
+        fixture('ore');key('DOWN',.025);key('Z',1.1);time.sleep(.2);v=persist()
+        assert v['ore_mined']==1 and sum(v['minerals'][:5])==2 and v['mine_cleared'][0]&1,v
+        results['ore']=v;capture('ore-collected');stop()
+        fixture('forage');key('DOWN',.025);key('Z');time.sleep(.3);v=persist()
+        assert v['cave_gathered']==1 and v['minerals'][5]==1,v
+        results['forage']=v;capture('cave-forage');stop()
+        fixture('combat');key('DOWN',.025);capture('combat-before');key('Z');time.sleep(.5);v=persist()
+        assert v['slain']==1 and v['minerals'][7]==1 and v['mine_defeated'][0]==63,v
+        results['combat']=v;capture('combat-after');stop()
+        fixture('stairs');key('UP',.025);key('Z');wait_for_panel('stairs');capture('descent-confirm');key('Z');time.sleep(.2);v=persist()
+        assert v['depth']==2 and v['best']==2,v
+        results['stairs']=v;capture('floor-two');stop()
+        for label in ['iron','crystal','guardian']:
+            fixture(label);capture('biome-'+label);tap(77,76);wait_for_panel('mine journal');capture('journal-'+label);key('X')
+            if label=='guardian':
+                key('UP',.025);time.sleep(.3);key('Z',3.8);wait_for_panel('guardian chest');capture('guardian-defeated')
+                key('Z');time.sleep(.2);capture('guardian-reward');key('X');v=persist()
+                assert v['mine_rewards']==1 and v['gold']==1300 and v['minerals'][4]==4 and v['minerals'][6]==3,v
+            else:v=persist()
+            results[label]=v;stop()
+        start();tap(cw//2,ch-38);v=persist();assert v['depth']==30 and v['best']==30 and v['sword_grade']==1 and v['mine_rewards']==1;stop()
+        (out/'mines-report.json').write_text(json.dumps(results,ensure_ascii=False,indent=2)+'\n')
+        print('PASS: signed simulator wild chopping/restart, first mine entry, ore/forage, timed combat loot, confirmed descent, three biomes/journal and v10 restart')
+        raise SystemExit(0)
     if args.actors_only:
         assert args.fixture_tool
         key('ENTER');time.sleep(.3);saved();stop()

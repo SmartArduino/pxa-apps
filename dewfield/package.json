@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-dewfield",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "name": "晴露农场 Dewfield",
-  "description": "晴露谷的田园生活：可重看的原创开场故事，四季种田、五类动物的成长、产物、孵化与繁殖。",
+  "description": "四季种田、畜牧与冒险：可再生野外树林、三十层回声矿洞、采矿战斗和洞穴采集。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 22,
+  "release_sequence": 23,
   "build": {
     "system": "cmake",
     "source_dir": ".",

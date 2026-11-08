@@ -2,7 +2,7 @@
 #pragma once
 #include "core.hpp"
 namespace farm {
-enum class Region : uint8_t { Farm, Town, Forest, Lake, Home, Orchard, SeedShop, Lodge, Count };
+enum class Region : uint8_t { Farm, Town, Forest, Lake, Home, Orchard, SeedShop, Lodge, Mine, Count };
 constexpr int RegionCount = int(Region::Count), NpcCount = 4;
 struct Point {
   int x, y;
@@ -28,7 +28,9 @@ inline constexpr Portal Portals[] = {
     {Region::Town, Region::SeedShop, 7, 7, 16, 18},
     {Region::SeedShop, Region::Town, 16, 20, 7, 8},
     {Region::Town, Region::Lodge, 24, 7, 16, 18},
-    {Region::Lodge, Region::Town, 16, 20, 24, 8}};
+    {Region::Lodge, Region::Town, 16, 20, 24, 8},
+    {Region::Forest,Region::Mine,22,3,16,4},
+    {Region::Mine,Region::Forest,16,2,22,4}};
 struct NpcPose {
   Region region;
   int x, y, dir;

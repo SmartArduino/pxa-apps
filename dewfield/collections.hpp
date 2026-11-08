@@ -28,7 +28,7 @@ inline Milestone milestone(const State &s,int id) {
   case 1:{int n=0;for(int i=12;i<=15;++i)n+=discovered_item(s,i);return {"四季农人","Four crops",n,4,180};}
   case 2:return {"林间寻宝","Wild finds",collection_count(s,1),5,140};
   case 3:return {"溪畔钓手","Fish explorer",collection_count(s,2),4,180};
-  case 4:{int n=0;for(int i=0;i<RegionCount;++i)n+=bool(s.visited&(1u<<i));return {"走遍晴露","Valley explorer",n,RegionCount,220};}
+  case 4:{int n=0;for(int i=0;i<int(Region::Mine);++i)n+=bool(s.visited&(1u<<i));return {"走遍晴露","Valley explorer",n,int(Region::Mine),220};}
   default:return {"收藏大师","Valley collector",discovered_total(s),CollectionTotal,600};
   }
 }

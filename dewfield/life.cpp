@@ -52,9 +52,10 @@ bool cook(State &s, int recipe) {
   return true;
 }
 bool eat(State &s, int item) {
-  if (!food_energy(item) || s.energy >= 100 || !item_count(s, item)) return false;
+  if (!food_energy(item) || (s.energy >= 100&&s.health>=100) || !item_count(s, item)) return false;
   change_item(s, item, -1);
   s.energy = std::min(100, int(s.energy) + food_energy(item));
+  s.health=std::min(100,int(s.health)+food_energy(item)/2);
   if(s.energy>=20)s.overwork=0;
   sync_inventory(s);
   select_slot(s,s.active_slot==255?-1:s.active_slot);
