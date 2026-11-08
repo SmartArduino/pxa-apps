@@ -85,7 +85,7 @@ Ground world_ground(const State &s, int x, int y) {
   if(y==1&&(x%2)&&!exit_clearance(s.region,x,y))return Ground::Wall;
   if (r == Region::Town) {
     if ((s.story >= 5 && x >= 14 && x <= 16 && y == 14) ||
-        ((x == 16 || x == 18) && y == 10) || (x==5&&y==7))
+        ((x == 16 || x == 18) && y == 10) || (y==10&&x>=10&&x<=12) || (y==8&&(x==5||x==9)))
       return Ground::Wall;
     if (((x >= 5 && x <= 9) || (x >= 22 && x <= 26)) && y >= 3 && y <= 6)
       return Ground::Wall;
@@ -109,6 +109,7 @@ Ground world_ground(const State &s, int x, int y) {
   } else if (r == Region::Lake) {
     if(x>=21&&x<=23&&y>=11&&y<=12)return Ground::Path;
     if(x>=24&&x<=26&&y>=7&&y<=8)return Ground::Wall;
+    if(s.friend_chapter[1]>=2&&y==10&&x>=25&&x<=27)return Ground::Wall;
     int left=y<8?7:y<12?4:y<17?3:6;
     int right=y<8?17:y<12?20:y<17?21:18;
     if (x>=left && x<=right && y>=4 && y<=20)
@@ -186,71 +187,7 @@ int next_portal(const State &s, Region destination) {
     at = parent[at];
   return edge[at];
 }
-NpcPose npc_pose(const State &s, int id, int subminute_ms) {
-  // Fixed daily stations and short, collision-checked walks. No per-frame BFS.
-  Region r = Region::Town;
-  int x = 13, y = 10;
-  if (id == 0) {
-    x = 14;
-    y = 9;
-    if(shop_open(s)) r=Region::SeedShop;
-    else {x=10;y=7;}
-    if (s.minute >= 1020) {
-      x = 17;
-      y = 12;
-    }
-  }
-  if (id == 1) {
-    x = 21;
-    y = 7;
-    if (s.minute >= 660 && s.minute < 1020 && !s.rain) {
-      r = Region::Forest;
-      x = 17;
-      y = 12;
-    }
-  }
-  if (id == 2) {
-    x = 19;
-    y = 12;
-    if (!s.rain && s.minute < 1080) {
-      r = s.story >= 3 ? Region::Lake : Region::Forest;
-      x = r == Region::Lake ? 23 : 6;
-      y = 12;
-    }
-  }
-  if (id == 3) {
-    x = 14;
-    y = 12;
-    if (s.minute >= 960) {
-      x = 18;
-      y = 7;
-    }
-  }
-  if(id==3&&s.minute>=480&&s.minute<540&&!s.rain) {r=Region::Farm;x=22;y=7;}
-  if (s.story >= 5 && s.minute >= 1020) {
-    r = Region::Town;
-    x = 12 + id * 2;
-    y = 13;
-  }
-  if(s.minute>=1200 || s.minute<480 || (s.rain && id!=0)) {
-    r=Region::Lodge;x=10+id*3;y=12;
-  }
-  int phase=((s.minute+id*5)%32)*500+std::clamp(subminute_ms,0,499);
-  // At the gathering, leave room between the four assigned places. A full
-  // two-tile stroll could otherwise put two villagers on the same spot.
-  int stroll=s.story>=5&&r==Region::Town&&s.minute>=1020?12:32;
-  bool forward=phase<1000,backward=phase>=8000&&phase<9000;
-  int offset=phase<1000?phase*stroll/1000:phase<8000?stroll:phase<9000?(9000-phase)*stroll/1000:0;
-  State probe=s;probe.region=uint8_t(r);
-  bool safe=true;
-  for(int step=0;step<=2;++step) {
-    auto g=ground(probe,x+step,y);if(g!=Ground::Path&&g!=Ground::Grass)safe=false;
-  }
-  bool moving=safe&&(forward||backward);
-  if(!safe)offset=0;
-  int distance=forward?offset:stroll-offset;
-  return {r,x*16+8+offset,y*16+12,moving?(forward?1:3):2,moving,moving?walk_frame(distance):0};
-}
+#include "npc_routes.inc"
 int npc_at(const State &s, int x, int y) {
   for (int id = 0; id < 4; ++id) {
     auto p = npc_pose(s, id);
@@ -300,6 +237,7 @@ bool personal_event(State &s, int id) {
   }
   return false;
 }
+#include "friend_stories.inc"
 const char *npc_line(const State &s, int id, bool personal, bool en) {
   const char *stories[] = {"这袋老种子是母亲留下的。以前我怕种不好，总不敢打开"
                            "。看到你的农场，我想今年春天试试看。",
@@ -319,6 +257,11 @@ const char *npc_line(const State &s, int id, bool personal, bool en) {
                               "harvest. You brought hope back."};
   if (personal)
     return (en ? stories_en : stories)[id % 4];
+  if(season_day(s.day)==14&&s.minute>=1020&&s.minute<1200) {
+    const char *cn[]={"小禾：这是春天的种子交换会。把多余的种子留给邻居，也给自己带一份新的期待吧。", "阿岚：夏日的灯挂好了。澄说今晚有萤火，我特意留了湖边的座位。", "澄：秋日野餐的鱼汤好了！每个人带来的收获，都有不同的香气。", "林婆婆：冬天就围着炉火坐吧。我来讲旧山谷，你们来讲新一年的愿望。"};
+    const char *eng[]={"Our spring seed exchange! Leave seeds for a neighbor, and take a little hope home.","The summer lanterns are hung. Cheng saved us seats to watch the fireflies.","The harvest picnic soup is ready. Every neighbor brought a different taste.","Come sit by the winter fire. I'll tell old valley stories; you tell next year's wishes."};
+    return (en?eng:cn)[season_of(s.day)];
+  }
   if(s.ranch_chapter>=5&&(s.day+id)%3==1) {
     const char *cn[]={"小鸡在新屋檐下躲雨，连叫声都安心了。记得添些草料呀。", "铁箍我又检查了一遍。旧梁还能陪你们过许多个雨季。", "傍晚从林边回来，远远就能看见你的牧场。那就是家的方向。", "灯亮起来的时候，就收好工具回家吧。小家伙们也在等你。"};
     const char *eng[]={"The chicks sound content under their new roof. Remember their hay.","I checked the iron braces again. Those old beams have many rainy seasons left.","Coming back from the woods, your shed shows me the way home.","When the lamp comes on, put your tools away. The little ones are waiting too."};

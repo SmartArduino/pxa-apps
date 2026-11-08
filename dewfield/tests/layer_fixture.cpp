@@ -15,6 +15,22 @@ int main(int argc, char **argv) {
   std::memset(s.cleared, 1, sizeof(s.cleared));
   for (auto &p : s.plots)
     p = {};
+  if(!std::strncmp(argv[1],"village-",8)) {
+    const char *mode=argv[1]+8;s.story=5;s.minute=600;s.energy=50;s.gold=1200;s.show_joystick=s.show_action=false;
+    if(!std::strcmp(mode,"shipping")){s.px=8*16+8;s.py=10*16+8;s.produce[0]=13;s.produce[2]=7;farm::sync_inventory(s);farm::equip_item(s,12);}
+    else if(!std::strcmp(mode,"animals")) {farm::begin_ranch(s);for(auto &a:s.animals)a={};s.animals[0]={3,0,8,70};s.animals[1]={2,0,5,65};s.px=12*16+8;s.py=15*16+8;farm::equip_item(s,5);}
+    else if(!std::strcmp(mode,"cave")){farm::enter_mine(s);s.px=16*16+8;s.py=4*16+8;}
+    else {
+      s.region=unsigned(farm::Region::Town);s.visited|=1u<<s.region;
+      if(!std::strcmp(mode,"board")){s.px=18*16+8;s.py=11*16+8;}
+      else if(!std::strcmp(mode,"rain")){s.rain=true;s.weather=1;s.px=15*16+8;s.py=12*16+8;}
+      else if(!std::strcmp(mode,"route")){s.minute=480;s.px=13*16+8;s.py=11*16+8;}
+      else if(!std::strcmp(mode,"festival")){s.day=14;s.minute=1080;s.px=14*16+8;s.py=16*16+8;}
+      else {int id=!std::strcmp(mode,"gift")?1:0;auto pose=farm::npc_pose(s,id);s.region=unsigned(pose.region);s.visited|=1u<<s.region;s.px=pose.x;s.py=(pose.y/16+1)*16+8;farm::change_item(s,29,4);farm::sync_inventory(s);farm::equip_item(s,29);if(id==0){s.region=unsigned(farm::Region::Town);s.px=15*16+8;s.py=12*16+8;for(auto &b:s.bonds)b=30;}}
+    }
+    uint8_t raw[farm::SaveBytes];assert(farm::encode(s,raw,sizeof(raw)));farm::State checked;assert(farm::decode(checked,raw,sizeof(raw)));
+    FILE*f=std::fopen(argv[2],"wb");assert(f&&std::fwrite(raw,1,sizeof(raw),f)==sizeof(raw));std::fclose(f);f=std::fopen(argv[3],"w");assert(f);std::fclose(f);return 0;
+  }
   if(!std::strncmp(argv[1],"details-",8)) {
     const char *mode=argv[1]+8;farm::begin_ranch(s);s.story=5;s.gold=1200;s.trough=8;
     s.ranch_chapter=6;s.minute=!std::strcmp(mode,"night")?1140:600;

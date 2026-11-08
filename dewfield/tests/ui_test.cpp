@@ -23,6 +23,9 @@ void end_hud() { hud_backdrop.end(pixels+16,WIDTH); }
 void scene_surface(bool) {}
 void switch_language() { set_english(!english()); }
 void music_enabled(bool) {}
+void effects_enabled(bool) {}
+void sound(dewfield_audio::Sfx) {}
+void soundscape(int,int,int) {}
 void cover_background(const uint16_t *source, int width, int height) {
   dewfield_raster::cover(source, width, height, pixels + 16, WIDTH, HEIGHT);
 }

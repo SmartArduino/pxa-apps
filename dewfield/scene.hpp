@@ -26,7 +26,7 @@ enum class Kind : uint8_t {
   Bed,
   Table,
   Forage,
-  Stove, Television, Calendar, Counter, Cabinet, Fireplace, Chair, Shelf, Signpost, Animal, RanchShed, WildTree, MineEntrance, Ore, Monster, CaveCrop, MineLadder, MineTorch
+  Stove, Television, Calendar, Counter, Cabinet, Fireplace, Chair, Shelf, Signpost, Animal, RanchShed, WildTree, MineEntrance, Ore, Monster, CaveCrop, MineLadder, MineTorch, VillageBoard, Bench, Planter
 };
 struct Rect {
   int x, y, w, h;
@@ -103,6 +103,9 @@ inline Rect bounds(const Entry &e) {
   if(e.kind==Kind::RanchShed)return {e.x-32,e.y-50,65,51};
   if(e.kind==Kind::Counter)return {e.x-3,e.y-44,182,47};
   if(e.kind==Kind::Television)return {e.x-16,e.y-38,33,40};
+  if(e.kind==Kind::VillageBoard)return {e.x-29,e.y-45,59,46};
+  if(e.kind==Kind::Bench)return {e.x-19,e.y-25,39,26};
+  if(e.kind==Kind::Planter)return {e.x-14,e.y-22,29,23};
   if(e.kind==Kind::Calendar)return {e.x-13,e.y-32,27,34};
   if(e.kind==Kind::Cabinet)return {e.x-20,e.y-35,40,37};
   if(e.kind==Kind::Fireplace)return {e.x-22,e.y-46,44,48};
@@ -290,15 +293,18 @@ struct Queue {
           add(Kind::Table, 15 * 16 + 8, 15 * 16, 15 * 16);
         add(Kind::House, 5 * 16, 3 * 16, 3 * 16 + 61, 1, true);
         add(Kind::House, 22 * 16, 3 * 16, 3 * 16 + 61, 2, true);
-        add(Kind::Calendar,5*16+8,7*16+15,7*16+15,0,true);
+        for(int xx:{5,9})add(Kind::Planter,xx*16+8,8*16+12,8*16+12);
+        add(Kind::Bench,11*16+8,10*16+12,10*16+12);
         add(Kind::Well, 16 * 16 + 8, 10 * 16 + 12, 10 * 16 + 12);
-        add(Kind::Board, 18 * 16 + 8, 10 * 16 + 12, 10 * 16 + 12, 0, true);
+        add(Kind::VillageBoard,18*16+8,10*16+12,10*16+12,0,true);
         for (int x : {11, 19}) {
           add(Kind::Grass, x * 16, 15 * 16, 15 * 16);
           add(Kind::Grass, x * 16, 9 * 16, 9 * 16);
         }
         for (int x : {10, 18})
           add(Kind::Fence, x * 16, 16 * 16, 16 * 16 + 15);
+      } else if(s.region==uint8_t(Region::Lake)) {
+        if(s.friend_chapter[1]>=2)add(Kind::Bench,26*16+8,10*16+12,10*16+12);
       } else if (s.region == uint8_t(Region::Forest)) {
         add(Kind::MineEntrance,22*16+8,3*16+12,3*16+12,0,true);
         for (int i = 0; i < 9; ++i) {
@@ -350,6 +356,9 @@ struct Queue {
       case Kind::MineEntrance:art::shadow_strip(r,e.x-25,e.y,51,1);break;
       case Kind::CaveCrop:art::shadow_strip(r,e.x-3,e.y,7,1);break;
       case Kind::MineLadder:case Kind::MineTorch:break;
+      case Kind::VillageBoard:art::shadow_strip(r,e.x-18,e.y,3,2);art::shadow_strip(r,e.x+16,e.y,3,2);break;
+      case Kind::Bench:art::shadow_strip(r,e.x-15,e.y,3,2);art::shadow_strip(r,e.x+12,e.y,3,2);break;
+      case Kind::Planter:art::shadow_strip(r,e.x-12,e.y,25,1);break;
       case Kind::Animal:art::animal_shadow(r,e.x,e.y,s.animals[e.id],e.growth>=2?3:1,e.growth&1);break;
       case Kind::RanchShed:art::shadow_strip(r,e.x-22,e.y,46,1);break;
       case Kind::WorldNpc:
@@ -412,6 +421,9 @@ struct Queue {
       case Kind::MineEntrance:art::mine_entrance(r,e.x,e.y);break;
       case Kind::MineLadder:if(e.id&&s.mine_depth==30)art::grounded(r,sprites::chest,e.x,e.y);else art::mine_ladder(r,e.x,e.y,e.id,e.id?farm::ladder_ready(s):true);break;
       case Kind::MineTorch:art::mine_torch(r,e.x,e.y,v.animation);break;
+      case Kind::VillageBoard:art::village_board(r,e.x,e.y);break;
+      case Kind::Bench:art::village_bench(r,e.x,e.y);break;
+      case Kind::Planter:art::village_planter(r,e.x,e.y,v.season,s.friend_chapter[0]>=2);break;
       case Kind::Animal:art::animal(r,e.x,e.y,s.animals[e.id],e.growth>=2?3:1,e.growth&1);break;
       case Kind::RanchShed:art::ranch_shed(r,e.x,e.y,s.trough,s.ranch_chapter>=5,farm::ranch_lit(s));break;
       case Kind::WorldNpc: {
@@ -517,16 +529,23 @@ struct Queue {
       }
     }
   }
-  bool pick(int x, int y, const farm::State &s, int &tx, int &ty) const {
+  bool pick(int x, int y, const farm::State &s, int &tx, int &ty,int *animal_id=nullptr,int *npc_id=nullptr) const {
+    if(animal_id)*animal_id=-1;if(npc_id)*npc_id=-1;
     for (unsigned at = count; at > 0; --at) {
       auto &e = entries[at - 1];
       if (!e.interactive)
         continue;
       auto p = placement(e);
+      if(e.kind==Kind::VillageBoard&&bounds(e).intersects({x,y,1,1})){tx=18;ty=10;return true;}
       if(e.kind==Kind::MineEntrance&&Rect{e.x-10,e.y-16,21,20}.intersects({x,y,1,1})){tx=22;ty=3;return true;}
       if(e.kind==Kind::WildTree){auto p=placement(e);if(art::hit(*p.sprite,x-p.x+p.sprite->anchor_x,y-p.y+p.sprite->anchor_y)){tx=farm::WildTrees[e.id].x;ty=farm::WildTrees[e.id].y;return true;}continue;}
       if((e.kind==Kind::Ore||e.kind==Kind::Monster||e.kind==Kind::CaveCrop||e.kind==Kind::MineLadder)&&bounds(e).intersects({x,y,1,1})){tx=e.x/16;ty=e.y/16;return true;}
-      if((e.kind==Kind::Animal||e.kind==Kind::RanchShed)&&bounds(e).intersects({x,y,1,1})) {tx=e.x/16;ty=e.y/16;return true;}
+      if(e.kind==Kind::Animal) {
+        auto &sprite=art::animal_sprite(s.animals[e.id],e.growth>=2?3:1,e.growth&1);
+        if(art::hit(sprite,x-e.x+sprite.anchor_x,y-e.y+sprite.anchor_y)){tx=e.x/16;ty=e.y/16;if(animal_id)*animal_id=e.id;return true;}
+        continue;
+      }
+      if(e.kind==Kind::RanchShed&&bounds(e).intersects({x,y,1,1})){tx=e.x/16;ty=e.y/16;return true;}
       if(e.kind==Kind::Signpost && bounds(e).intersects({x,y,1,1})) {
         tx=farm::Portals[e.id].x;ty=farm::Portals[e.id].y;return true;
       }
@@ -555,6 +574,7 @@ struct Queue {
                     y - p.y + p.sprite->anchor_y))
         continue;
       if (e.kind == Kind::WorldNpc) {
+        if(npc_id)*npc_id=e.id%4;
         tx = e.x / 16;
         ty = e.y / 16;
       } else if (e.kind == Kind::Forage) {

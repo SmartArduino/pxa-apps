@@ -717,6 +717,9 @@ void run() {
 #endif
 namespace pocket {
 void switch_language() { toggle_language(); }
+void effects_enabled(bool enabled) {if(enabled&&!effects_wanted)sound_failed=false;effects_wanted=enabled;if(!enabled&&sound_ready&&effect_packets)for(int track=0;track<6;++track)pxa_audio_stop_effect(sound_session,track);}
+void sound(dewfield_audio::Sfx effect) {play_effect(effect);}
+void soundscape(int region,int weather,int minute) {wanted_music=region==8?3:(region==4||region==6||region==7)?2:minute>=1080?1:(weather==1||weather==2)?4:0;}
 void music_enabled(bool enabled) { if(enabled && !music_wanted) sound_failed=false; music_wanted=enabled; }
 void open_menu() {
   if (!paused && !exit_requested)

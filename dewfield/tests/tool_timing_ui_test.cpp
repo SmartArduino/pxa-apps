@@ -47,7 +47,8 @@ int main() {
   assert(plot.tilled);if(tool==2)assert(plot.wet&&state.water==29);
  }
  state.story=5;state.rain=false;
- for(int minute=1020;minute<1200;++minute)for(int fraction:{0,250,499}) {
+ // Allow the physical commute before checking the seated evening gathering.
+ for(int minute=1080;minute<1140;++minute)for(int fraction:{0,250,499}) {
   state.minute=minute;
   for(int a=0;a<4;++a)for(int b=a+1;b<4;++b) {
    auto first=farm::npc_pose(state,a,fraction),second=farm::npc_pose(state,b,fraction);

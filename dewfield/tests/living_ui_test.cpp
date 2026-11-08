@@ -20,10 +20,10 @@ int main(){
  where(farm::Region::SeedShop,15,11);action(15,10);assert(page==Page::Shop);
  state.minute=1020;page=Page::Farm;action(15,10);assert(page==Page::Farm);state.minute=600;
  where(farm::Region::Farm,8,10);state.produce[0]=2;state.produce[2]=4;state.energy=30;farm::equip_item(state,12);dir=0;
- facing_action();assert(state.produce[0]==1&&state.produce[2]==4&&state.energy==30&&deposit_ms);
+ facing_action();assert(page==Page::Shipping&&state.produce[0]==2);shipping_action(1);assert(state.produce[0]==1&&state.produce[2]==4&&state.energy==30&&deposit_ms);
  assert(deposited_item==12);swing=0;deposit_ms=0;farm::select_slot(state,-1);facing_action();assert(page==Page::Shipping);
- panel_tap(m.x+100,m.y+182);assert(state.produce[0]==2&&state.shipping==0);
- where(farm::Region::Farm,14,14);farm::equip_item(state,12);facing_action();assert(state.energy==40&&state.produce[0]==1);
+ panel_tap(shipping_button(2).center_x(),shipping_button(2).center_y());assert(state.produce[0]==2&&state.shipping==0);
+ where(farm::Region::Farm,14,14);farm::equip_item(state,12);facing_action();assert(page==Page::Eat&&state.energy==30);game::key(Key::A);assert(state.energy==40&&state.produce[0]==1);
  // Empty final seed cannot leave a phantom bag or reuse the selected slot.
  state.seeds[0]=1;farm::equip_item(state,8);where(farm::Region::Farm,13,15);state.plots[farm::plot_index(13,14)]={1,0,0,0};dir=0;action(13,14);
  assert(!state.seeds[0]&&held_item()==0&&state.active_slot==255&&action_tool==1);

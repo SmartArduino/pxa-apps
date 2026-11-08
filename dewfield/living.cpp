@@ -107,6 +107,7 @@ const char *calendar_event(int date,bool en) {
   if(day==12&&season==1)return en?"Alan's birthday":"阿岚的生日";
   if(day==19&&season==2)return en?"Cheng's birthday":"澄的生日";
   if(day==25&&season==3)return en?"Lin's birthday":"林婆婆的生日";
+  if(day==14){const char *cn[]={"种子交换会 · 17:00广场","萤火晚茶 · 17:00广场","丰收野餐 · 17:00广场","围炉夜话 · 17:00会馆"};const char *eng[]={"Seed exchange, 5 PM square","Firefly tea, 5 PM square","Harvest picnic, 5 PM square","Fireside stories, 5 PM lodge"};return (en?eng:cn)[season];}
   if(day==28)return en?"Season's last day":"本季最后一天";
   return en?"A quiet valley day":"晴露谷的日常";
 }

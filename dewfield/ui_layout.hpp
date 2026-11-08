@@ -82,7 +82,7 @@ struct Layout {
     auto r = modal(); return {r.x + 160, r.y + 151, 55, 20};
   }
   Rect setting(int index) const {
-    auto r = modal(); return {r.x + 12, r.y + 38 + index * 32, 202, 27};
+    auto r = modal(); return {r.x + 12, r.y + 37 + index * 27, 202, 24};
   }
   Rect destination(int index) const {
     auto r = modal();

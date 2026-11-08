@@ -1,0 +1,108 @@
+{
+  "license": "MIT",
+  "authorship": "Original Dewfield scores and procedural synthesis; no sampled recordings",
+  "generator": "tools/build_audio.py",
+  "loop": "Note tails wrap across the loop boundary",
+  "tracks": [
+    {
+      "asset": "dewfield-evening.ogg",
+      "seconds": 26.667,
+      "bpm": 72,
+      "original_midi_score": [
+        76,
+        72,
+        69,
+        0,
+        72,
+        67,
+        64,
+        0,
+        69,
+        72,
+        74,
+        72,
+        67,
+        64,
+        62,
+        0
+      ],
+      "sample_rate": 22050,
+      "channels": 1
+    },
+    {
+      "asset": "dewfield-interior.ogg",
+      "seconds": 22.857,
+      "bpm": 84,
+      "original_midi_score": [
+        72,
+        76,
+        79,
+        76,
+        74,
+        72,
+        69,
+        0,
+        65,
+        69,
+        72,
+        69,
+        67,
+        71,
+        74,
+        0
+      ],
+      "sample_rate": 22050,
+      "channels": 1
+    },
+    {
+      "asset": "dewfield-cave.ogg",
+      "seconds": 32.0,
+      "bpm": 60,
+      "original_midi_score": [
+        69,
+        0,
+        64,
+        0,
+        65,
+        0,
+        60,
+        0,
+        67,
+        0,
+        62,
+        0,
+        64,
+        0,
+        59,
+        0
+      ],
+      "sample_rate": 22050,
+      "channels": 1
+    },
+    {
+      "asset": "dewfield-rain.ogg",
+      "seconds": 25.263,
+      "bpm": 76,
+      "original_midi_score": [
+        77,
+        74,
+        69,
+        0,
+        72,
+        70,
+        65,
+        0,
+        76,
+        72,
+        67,
+        0,
+        69,
+        64,
+        62,
+        0
+      ],
+      "sample_rate": 22050,
+      "channels": 1
+    }
+  ]
+}

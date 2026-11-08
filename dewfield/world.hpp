@@ -72,6 +72,10 @@ int npc_at(const State &s, int tx, int ty);
 bool chat(State &s, int npc); // once/day friendship
 bool gift(State &s, int npc, int item);
 bool personal_event(State &s, int npc);
+bool friend_story_ready(const State&s,int npc);
+bool friend_story(State&s,int npc);
+const char *friend_story_line(int npc,int chapter,bool en=false);
+const char *npc_activity(const State&s,int npc,bool en=false);
 const char *npc_line(const State &s, int npc, bool personal, bool en = false);
 const char *story_title(const State &s, bool en = false);
 const char *story_goal(const State &s, bool en = false);

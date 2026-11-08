@@ -35,7 +35,7 @@ int main(int argc,char**argv){
   if(order.item>=12&&order.item<=15)assert(crop_in_season(day,order.item-12));
   if(order.item==19)assert(season_of(day)==1||season_of(day)==2);
  }}
- for(int time=360;time<1560;++time){fresh(s);s.minute=time;for(int id=0;id<4;++id){auto pose=npc_pose(s,id,250);State probe=s;probe.region=unsigned(pose.region);assert(walkable(probe,pose.x/16,pose.y/16));if(time>=1200)assert(pose.region==Region::Lodge);}}
+ for(int time=360;time<1560;++time){fresh(s);s.minute=time;for(int id=0;id<4;++id){auto pose=npc_pose(s,id,250);State probe=s;probe.region=unsigned(pose.region);assert(walkable(probe,pose.x/16,pose.y/16));if(time>=1320)assert(pose.region==Region::Lodge);}}
  // v4 keeps its season/day, inventory order and relationship date stamps.
  fresh(s);s.day=18;s.chat_day[0]=18;s.order_day=18;s.order_claimed=1;s.gold=449;encode(s,b,sizeof(b));b[4]=4;checksum(b);
  assert(decode(t,b,b[4]>=10?sizeof(b):768)&&t.day==60&&season_of(t.day)==2&&season_day(t.day)==4&&t.chat_day[0]==60&&t.order_day==60&&t.gold==449);

@@ -2,6 +2,7 @@
 #pragma once
 #include "../common/pocket-ui/i18n.hpp"
 #include "palette.hpp"
+#include "sound_design.hpp"
 #include "pixel_sprite.hpp"
 #include <stddef.h>
 #include <stdint.h>
@@ -40,6 +41,9 @@ void end_hud();
 void scene_surface(bool enabled);
 void switch_language();
 void music_enabled(bool enabled);
+void effects_enabled(bool enabled);
+void sound(dewfield_audio::Sfx effect);
+void soundscape(int region,int weather,int minute);
 // Draw directly to output pixels, preserving the source aspect ratio and
 // cropping centrally to fill the entire surface. Also enters UI mode.
 void cover_background(const uint16_t *pixels, int width, int height);

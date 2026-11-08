@@ -227,8 +227,7 @@ Result act(State &s, int x, int y) {
     if (s.region == uint8_t(Region::SeedShop) && x>=12 && x<=19 && y==10)
       return shop_open(s)?Result::Shop:Result::Closed;
     if (s.region == uint8_t(Region::Home) && x==15 && y==7) return Result::Forecast;
-    if (s.region == uint8_t(Region::Home) && x==13 && y==5 ||
-        s.region == uint8_t(Region::Town) && x==5 && y==7) return Result::Calendar;
+    if (s.region == uint8_t(Region::Home) && x==13 && y==5) return Result::Calendar;
     if (s.region == uint8_t(Region::Town) && x == 16 && y == 10) {
       s.water=s.capacity;return Result::Refilled;
     }
@@ -347,17 +346,18 @@ Result act(State &s, int x, int y) {
   }
   return Result::None;
 }
-uint32_t ship(State &s) {
-  int item=s.active_slot<InventorySize?s.slots[s.active_slot]:0,price=item_price(item);
-  if(s.region || !near(s,8,9) || !price || !item_count(s,item) || s.shipping>999999u-unsigned(price))return 0;
-  if(!change_item(s,item,-1))return 0;
-  s.shipping+=price;s.last_shipped=item;sync_inventory(s);
-  return price;
+uint32_t ship_items(State&s,int item,unsigned count) {
+  int price=item_price(item);
+  if(s.region||!near(s,8,9)||!price||!count||count>item_count(s,item)||count>(999999u-s.shipping)/unsigned(price))return 0;
+  if(!change_item(s,item,-int(count)))return 0;
+  s.shipping+=unsigned(price)*count;s.last_shipped=item;s.last_shipped_count=count;sync_inventory(s);
+  return unsigned(price)*count;
 }
+uint32_t ship(State&s) {return ship_items(s,s.active_slot<InventorySize?s.slots[s.active_slot]:0,1);}
 bool unship(State&s) {
-  int item=s.last_shipped,price=item_price(item);
-  if(s.region||!near(s,8,9)||!price||s.shipping<unsigned(price)||!change_item(s,item,1))return false;
-  s.shipping-=price;s.last_shipped=0;sync_inventory(s);return true;
+  int item=s.last_shipped,price=item_price(item);unsigned count=s.last_shipped_count;
+  if(s.region||!near(s,8,9)||!price||!count||s.shipping<unsigned(price)*count||!change_item(s,item,int(count)))return false;
+  s.shipping-=unsigned(price)*count;s.last_shipped=0;s.last_shipped_count=0;sync_inventory(s);return true;
 }
 uint32_t sleep(State &s, bool forced) {
   int restoration=s.minute<=1440?100:std::max(50,100-(int(s.minute)-1440)*50/120);
@@ -366,7 +366,7 @@ uint32_t sleep(State &s, bool forced) {
   uint32_t income = s.shipping;
   s.gold = std::min(999999u, s.gold + income);
   s.earned += income;
-  s.shipping = 0;
+  s.shipping = 0;s.last_shipped=0;s.last_shipped_count=0;
   for (int i = 0; i < 24; ++i) {
     if (Obstacles[i].kind != 0)
       continue;
@@ -602,6 +602,7 @@ size_t encode(const State &original, uint8_t *out, size_t cap) {
   put(s.mine_rewards,1);
   for(auto v:s.mine_cleared)put(v,4);for(auto v:s.mine_defeated)put(v,1);for(auto v:s.ore_damage)put(v,1);
   for(auto &m:s.mobs){for(auto v:{m.x,m.y,m.cooldown,m.windup,m.move_acc})put(v,2);put(m.hp,1);put(m.dir,1);}
+  put(s.last_shipped_count,2);put(!s.sound_effects,1);for(auto v:s.friend_chapter)put(v,1);put(1,1);
   if(n!=SaveDataBytes)return 0;
   n = SaveBytes - 4;
   put(checksum(out, n), 4);
@@ -653,7 +654,7 @@ bool decode(State &s, const uint8_t *in, size_t n) {
   if (checksum(in, n - 4) != sum)
     return false;
   at = 6;
-  State t;
+  State t;bool life_extension=false;
   t.day = get(2);
   t.minute = get(2);
   t.energy = get(1);
@@ -857,6 +858,14 @@ bool decode(State &s, const uint8_t *in, size_t n) {
       if(m.x>=MapW*16||m.y>=MapH*16||m.cooldown>5000||m.windup>400||m.move_acc>=1000||m.hp>90||m.dir>3)return false;
       if(in_mine(t)&&t.mine_depth&&(m.hp>mob_max_hp(t,i)||(bool(m.hp)==bool(t.mine_defeated[t.mine_depth-1]&(1u<<i)))||(m.hp&&!mine_walkable(t,m.x,m.y))))return false;
     }
+    auto shipped_count=get(2),effects_disabled=get(1);for(auto &v:t.friend_chapter)v=get(1);auto extended=get(1);
+    if(extended>1||effects_disabled>1||shipped_count>999)return false;
+    if(extended) {
+      life_extension=true;
+      t.last_shipped_count=shipped_count;t.sound_effects=!effects_disabled;
+      for(auto v:t.friend_chapter)if(v>2)return false;
+      if(bool(t.last_shipped)!=bool(t.last_shipped_count)||(t.last_shipped&&t.shipping<unsigned(item_price(t.last_shipped))*t.last_shipped_count))return false;
+    } else {t.last_shipped_count=t.last_shipped?1:0;t.sound_effects=true;std::fill(t.friend_chapter,t.friend_chapter+4,0);}
     if(t.visited>=(1u<<RegionCount)||!(t.visited&(1u<<t.region)))return false;
     if(in_mine(t)&&(!sword||!t.mine_depth||t.mine_loaded!=t.mine_depth))return false;
     if(!in_mine(t)&&(t.mine_depth||t.mine_loaded))return false;
@@ -870,6 +879,7 @@ bool decode(State &s, const uint8_t *in, size_t n) {
       if(!found)return false;
     }
   }
+  if(version<10)t.last_shipped_count=t.last_shipped?1:0;
   for (int item = version>=9?1:19; item <= ItemCount; ++item) {
     int copies = 0;
     for (auto slot : t.slots) copies += slot == item;
@@ -877,6 +887,12 @@ bool decode(State &s, const uint8_t *in, size_t n) {
   }
   if(!t.region&&t.px/16>=RanchX-1&&t.px/16<=RanchX+1&&t.py/16>=RanchY-2&&t.py/16<=RanchY) {
     t.px=RanchX*16+8;t.py=(RanchY+1)*16+8;
+  }
+  // Older farmers may have saved on the new town bench/flower-box footprint.
+  if(!life_extension&&t.region==unsigned(Region::Town)&&
+     (t.py/16==10&&t.px/16>=10&&t.px/16<=12||t.py/16==8&&(t.px/16==5||t.px/16==9))) {
+    int x=t.px/16,y=t.py/16;
+    for(auto d:{Point{0,-1},Point{1,0},Point{0,1},Point{-1,0}})if(walkable(t,x+d.x,y+d.y)){t.px=(x+d.x)*16+8;t.py=(y+d.y)*16+8;break;}
   }
   if (!t.day || t.minute < 360 || t.minute >= (version>=5?1560:1320) || t.energy > 100 ||
       (t.capacity != 30 && t.capacity != 60) || t.water > t.capacity ||

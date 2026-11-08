@@ -430,6 +430,7 @@ inline const sprites::Sprite &person_sprite(int dir, int frame,
                    : standing[dir & 3]);
 }
 #include "world_art.hpp"
+#include "village_art.hpp"
 #include "gait.hpp"
 #include "livestock_art.hpp"
 #include "mine_art.hpp"

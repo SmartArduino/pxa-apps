@@ -12,6 +12,7 @@ int main() {
   // Ingredient text and blank modal space are not action buttons.
   panel_tap(modal.x+70,modal.y+80);assert(state.meals[0]==1);
   state.energy=20;farm::equip_item(state,22);page=Page::Farm;facing_action();
+  assert(page==Page::Eat&&state.energy==20&&state.meals[0]==1);game::key(Key::A);
   assert(state.energy==65&&state.meals[0]==0);
   state.region=unsigned(farm::Region::Town);state.visited|=1u<<state.region;
   state.px=18*16+8;state.py=11*16+8;

@@ -40,6 +40,7 @@ int main() {
   assert(!state.auto_run);
   selected_row=3;game::key(Key::A);assert(state.auto_run);
   game::key(Key::DOWN);assert(selected_row==4);
+  game::key(Key::DOWN);assert(selected_row==5);
   game::key(Key::DOWN);assert(selected_row==0);
   farm::State restored; uint8_t bytes[farm::SaveBytes];
   state.auto_run=false;assert(farm::encode(state,bytes,sizeof(bytes))==sizeof(bytes));

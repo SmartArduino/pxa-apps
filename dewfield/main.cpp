@@ -34,7 +34,7 @@ enum class Page {
   Story,
   Dialogue,
   Orders,
-  Kitchen, Calendar, Forecast, Shipping, Collections, Ranch, Animal, Supply, Incubate, Butcher, Intro, MineJournal, MineStairs, MineLift, MineChest
+  Kitchen, Calendar, Forecast, Shipping, Collections, Ranch, Animal, Supply, Incubate, Butcher, Intro, MineJournal, MineStairs, MineLift, MineChest, Eat
 };
 Page page = Page::Farm;
 bool title_screen = true, save_locked = false, base_dirty = true,
@@ -58,7 +58,9 @@ void gather_effect(int x,int y,int item,int count) {
   gather_effects[next_effect++%4]={x*16+8,y*16+8,item,count,800};
 }
 char toast[96]{}, letter[512]{};
-int following_npc = -1;
+int following_npc = -1,following_animal=-1;
+int shipping_selection=0,shipping_page=0,food_item=0;
+void shipping_draw(int,int);void shipping_key(Key);void shipping_tap(int,int);void eat_action(bool);
 int talking_npc = -1, journey_region = -1, journey_x = 0, journey_y = 0;
 bool journey_use = false;
 void go_to(Region, int, int, bool);
@@ -464,7 +466,10 @@ void open_page(Page p) {
   mine_letter=p==Page::Letter&&in_mine(state);
   cancel_tool();
   stop_motion();
-  page = p;
+  page = p;following_animal=-1;
+  sound(dewfield_audio::Sfx::Menu);
+  if(p==Page::Animal&&ranch_index>=0&&ranch_index<AnimalMax&&state.animals[ranch_index].kind)sound(dewfield_audio::Sfx(unsigned(dewfield_audio::Sfx::Chicken)+state.animals[ranch_index].kind-1));
+  if(p==Page::Shipping){shipping_selection=state.active_slot<InventorySize?state.active_slot:0;shipping_page=shipping_selection/21;}
   selected_row = p==Page::Calendar?season_day(state.day)-1:0;
   if(p==Page::Collections)collection_category=0;
   if(p==Page::Ranch)ranch_page=std::min(ranch_page,std::max(0,(animal_count(state)-1)/3));
@@ -478,7 +483,21 @@ void open_page(Page p) {
 void open_collections(int category=0,int index=0,Page parent=Page::Guide) {
   open_page(Page::Collections);collection_category=category;selected_row=index;collection_parent=parent;
 }
+void talk_to(int npc) {
+  if(npc<0||npc>=NpcCount)return;
+  journey_region=following_npc=-1;open_page(Page::Dialogue);talking_npc=npc;
+  chat(state,npc);bool personal=personal_event(state,npc);
+  std::snprintf(letter,sizeof(letter),"%s",npc_line(state,npc,personal,english()));changed();
+}
 void feedback(Result result) {
+  using Effect=dewfield_audio::Sfx;
+  if(result==Result::Tilled)sound(Effect::Hoe);
+  else if(result==Result::Watered||result==Result::Refilled)sound(Effect::Water);
+  else if(result==Result::Planted)sound(Effect::Seed);
+  else if(result==Result::Harvested||result==Result::Foraged||result==Result::MineForaged)sound(Effect::Harvest);
+  else if(result==Result::Cleared||result==Result::Struck)sound(state.tool==unsigned(Tool::Axe)?Effect::Axe:Effect::Pick);
+  else if(result==Result::Attacked)sound(Effect::Sword);
+  else if(result==Result::Ship)sound(Effect::Ship);
   switch (result) {
   case Result::Attacked:changed();return;
   case Result::Cooldown:return;
@@ -489,7 +508,7 @@ void feedback(Result result) {
   case Result::MineForaged:repeat_use=false;action_hold=false;msg("拾起洞穴作物，拿起可恢复体力和生命","Cave forage collected. Food restores energy and health");changed();return;
   case Result::Ranch: open_ranch();return;
   case Result::Animal: {
-    int i=animal_at(state,action_target.x/16,(action_target.y-2)/16);
+    int i=following_animal>=0?following_animal:animal_at(state,targetx,targety);
     if(i>=0){ranch_index=i;open_page(Page::Animal);}return;
   }
   case Result::Sleep:
@@ -610,6 +629,7 @@ void action(int x, int y) {
     }
     action_target={x*16+8,y*16+2,true};
   }
+  if(!state.region&&x==8&&y==9){open_page(Page::Shipping);return;}
   if(!state.region&&animal_at(state,x,y)>=0){ranch_index=animal_at(state,x,y);bool confirm=butcher_pending==ranch_index;open_page(confirm?Page::Butcher:Page::Animal);return;}
   uint32_t oldq = state.quests;bool had_sword=state.sword_owned;
   int cave_item=0;int cave=cave_forage_at(state,x,y);if(cave>=0)cave_item=cave_forage_item(state,cave);
@@ -627,6 +647,7 @@ void action(int x, int y) {
   if(res==Result::MineForaged)gather_effect(x,y,cave_item,1);
   if(res==Result::Ship){deposited_item=offered_item;deposit_ms=360;}
   if (res == Result::Travel) {
+    sound(dewfield_audio::Sfx::Door);
     if(crossing)dir=arrival_heading(*crossing);
     for(auto &effect:gather_effects)effect.remaining=0;
     stop_motion();
@@ -647,14 +668,7 @@ void action(int x, int y) {
     return;
   }
   if (res == Result::Dialogue) {
-    journey_region = following_npc = -1;
-    open_page(Page::Dialogue);
-    talking_npc = npc;
-    chat(state, npc);
-    bool personal = personal_event(state, npc);
-    std::snprintf(letter, sizeof(letter), "%s",
-                  npc_line(state, npc, personal, english()));
-    changed();
+    talk_to(npc);
     return;
   }
   if (res == Result::Locked) {
@@ -725,11 +739,7 @@ void facing_action() {
   int front_x=state.px/16+(dir==1)-(dir==3),front_y=state.py/16+(dir==2)-(dir==0);
   if(!state.region&&front_x==8&&front_y==9) {action(front_x,front_y);return;}
   if (food_energy(held_item())) {
-    if (eat(state, held_item())) {
-      msg("吃好了，体力恢复了", "A good meal. Energy restored");
-      changed();
-    } else msg("体力充足，留着稍后享用吧", "Energy is full. Save it for later");
-    return;
+    food_item=held_item();open_page(Page::Eat);selected_row=1;return;
   }
   if (held_item() >= 12&&held_item()!=37) {
     msg("物品可出货，材料可用于制作",
@@ -740,7 +750,18 @@ void facing_action() {
       y = state.py / 16 + (dir == 2) - (dir == 0);
   action(x, y);
 }
+void interact_facing() {
+  if(swing)return;
+  int x=state.px/16+(dir==1)-(dir==3),y=state.py/16+(dir==2)-(dir==0);
+  int npc=npc_at(state,x,y);
+  if(npc<0)npc=npc_at(state,state.px/16,state.py/16);
+  if(npc>=0){auto p=npc_pose(state,npc,clock_acc);talk_to(npc);if(page==Page::Dialogue&&held_item()>=8)selected_row=1;return;}
+  if(!state.region){int id=animal_at(state,x,y);if(id<0)id=animal_at(state,state.px/16,state.py/16);if(id>=0){ranch_index=id;open_page(Page::Animal);return;}}
+  if(portal_at(state,x,y)||ground(state,x,y)==Ground::Wall||ground(state,x,y)==Ground::Water||forage_at(state,x,y)>=0||!state.region&&x==RanchX&&y==RanchY||in_mine(state))action(x,y);
+  else msg("B互动：对准村民、动物或建筑；A使用或食用","Face a person, animal or building: B interacts; A uses or eats");
+}
 void navigate(int d) {
+  following_animal=-1;
   butcher_pending=-1;combat_target=-1;
   if(swing)return;
   journey_region = following_npc = -1;
@@ -889,12 +910,13 @@ void setting_action(int index) {
     state.show_action = !state.show_action;
   if (index == 2) {
     state.music = !state.music;
-    music_enabled(state.music);
+    music_enabled(state.music);effects_enabled(state.sound_effects);
   }
   if (index == 3)
     state.auto_run = !state.auto_run;
   if (index == 4)
     switch_language();
+  if(index==5){state.sound_effects=!state.sound_effects;effects_enabled(state.sound_effects);}
   changed();
 }
 void cycle_seeds() {
@@ -1191,7 +1213,7 @@ void hud() {
   }
   if (!using_controller() && state.show_action) {
     HudLayer layer(ui.action(),5);
-    icon_button(ui.action(), farm_ui::Icon::Use);
+    icon_button(ui.action(),food_energy(held_item())?farm_ui::Icon::Eat:farm_ui::Icon::Use);
   }
   notification();
 }
@@ -1312,6 +1334,7 @@ void draw_fishing(int x,int y) {
   } else center_text(x+114,y+126,bite?tr("BITE! Set the hook!","咬钩了！快提竿！"):tr("Wait for the float to dip...","等浮漂下沉，再提竿…"),bite?Sage:Muted);
   icon_label_button(layout().confirm(174,25),farm_ui::Icon::Rod,reeling?tr("REEL IN","收线"):tr("SET HOOK","提竿"),bite||reeling);
 }
+#include "shipping_ui.inc"
 void modal() {
   int x = panel_left(), y = panel_top();
   panel(x, y, 228, 210);
@@ -1327,6 +1350,7 @@ void modal() {
       : page == Page::Orders   ? tr("VILLAGE REQUESTS", "晴露镇每日委托")
       : page == Page::Calendar ? tr("SEASON CALENDAR", "晴露谷日历")
       : page == Page::Forecast ? tr("WEATHER CHANNEL", "农舍天气频道")
+      : page == Page::Eat ? tr("EAT THIS ITEM?", "要吃这个吗？")
       : page == Page::Shipping ? tr("SHIPPING BIN", "出货箱")
       : page == Page::Collections ? tr("VALLEY COLLECTION", "晴露收藏册")
       : page == Page::Kitchen  ? tr("COTTAGE KITCHEN", "农舍小厨房")
@@ -1359,9 +1383,10 @@ void modal() {
       std::snprintf(b,sizeof(b),"%d",day);center_text(xx+13,yy+4,b,day==selected_row+1?Paper:Text);
       constexpr int birthdays[]={7,12,19,25};
       if(day==birthdays[season()])rect(xx+11,yy+18,4,2,art::Gold);
+      if(day==14)rect(xx+11,yy+18,4,2,Sage);
     }
     fit_text(x+12,y+161,calendar_event((state.day-1)/28*28+selected_row+1,english()),202,Sage);
-    fit_text(x+12,y+181,tr("28 days / season; dots: birthdays", "每季28天 · 金点标记生日"),202,Muted);
+    fit_text(x+12,y+181,tr("Gold: birthday; green: gathering", "金点生日 · 绿点聚会"),202,Muted);
   } else if(page==Page::Forecast) {
     auto w=weather_on(state.day==65535?1:state.day+1);
     IconCanvas rr;art::world_appliance(rr,x+114,y+83,true);
@@ -1371,10 +1396,13 @@ void modal() {
       w==Weather::Snow?tr("Snow does not water crops. Winter roots grow in the woods.","积雪不会浇水。\n冬日林间可以找到冬根菜。"):
       tr("Remember to water your crops. The forecast stays the same all day.","记得给作物浇水。\n明天醒来，天气就和预报一致。"),200,4,Muted);
   } else if(page==Page::Shipping) {
-    paragraph(x+14,y+45,tr("Hold an item and put it in the bin. One item per tap; payment arrives next morning.","拿起要卖的物品，朝出货箱放入。每次放一份，次日结算；不会出售背包其他东西。"),200,4);
-    std::snprintf(b,sizeof(b),"%s %uG",tr("Pending:","待结算："),state.shipping);center_text(x+114,y+118,b,Sage);
-    if(state.last_shipped) {item_label(b,sizeof(b),state.last_shipped,false);fit_text(x+14,y+143,b,200);}
-    auto rr=layout().confirm();button(rr.x,rr.y,rr.w,rr.h,tr("Retrieve last item", "取回最后放入的物品"));
+    shipping_draw(x,y);
+  } else if(page==Page::Eat) {
+    food_preview(x+114,y+82,food_item);item_label(b,sizeof(b),food_item,false);center_text(x+114,y+94,b,Sage);
+    std::snprintf(b,sizeof(b),english()?"Restore %d energy":"恢复%d体力",food_energy(food_item));center_text(x+114,y+116,b,Text);
+    fit_text(x+12,y+141,tr("A eat / B cancel; B talks","A吃下 · B取消；B对人互动"),202,Muted);
+    button(x+12,y+177,98,25,tr("CANCEL / B","取消 / B"),selected_row==0);
+    button(x+117,y+177,99,25,tr("EAT / A","吃掉 / A"),selected_row==1);
   } else if (page == Page::Shop) {
     for (int i = 0; i < 4; ++i) {
       int yy = y + 39 + i * 27;
@@ -1429,9 +1457,9 @@ void modal() {
     const char *labels[] = {
         tr("Virtual joystick", "虚拟摇杆"), tr("Action button", "悬浮按钮"),
         tr("Background music", "背景音乐"), tr("Auto run", "自动跑步"),
-        tr("Language", "语言")};
-    bool on[] = {state.show_joystick, state.show_action, state.music, state.auto_run};
-    for (int i = 0; i < 5; ++i) {
+        tr("Language", "语言"),tr("Sound effects","音效")};
+    bool on[] = {state.show_joystick, state.show_action, state.music, state.auto_run,false,state.sound_effects};
+    for (int i = 0; i < 6; ++i) {
       auto r = layout().setting(i);
       button(r.x, r.y, r.w, r.h, "", using_controller() && selected_row == i);
       text(r.x + 9, r.y + 7, labels[i], Text);
@@ -1457,7 +1485,7 @@ void modal() {
     if(int ready=ready_collection_rewards(state)) {
       std::snprintf(b,sizeof(b),english()?"%d badge rewards ready / Y: finds":"%d枚徽章可领奖 · 收藏册查看",ready);
       fit_text(x+12,y+191,b,202,Sage);
-    } else fit_text(x + 12, y + 191, story_goal(state, english()), 202, Muted);
+    } else fit_text(x+12,y+191,using_controller()?tr("A use/eat / B interact / X bag","A使用食用 · B互动 · X背包"):story_goal(state,english()),202,Muted);
   } else if (page == Page::Orders) {
     for (int i=0;i<NpcCount;++i) {
       auto order = daily_order(state,i); int yy=y+36+i*33;
@@ -1473,9 +1501,8 @@ void modal() {
              using_controller()&&selected_row==i);
     }
     bool here=state.region==unsigned(Region::Town)&&near(state,18,10);
-    button(x+12,y+170,202,23,here?tr("BACK TO JOURNAL","返回手册"):
-           tr("WALK TO NOTICEBOARD","前往镇上公告栏"),using_controller()&&selected_row==4);
-    fit_text(x+12,y+196,toast_ms?toast:tr("New requests every morning","每日刷新 · 交付获得金币和好感"),202,Muted);
+    button(x+12,y+173,98,25,tr("CALENDAR / Y","日历 / Y"),using_controller()&&selected_row==4);
+    button(x+117,y+173,99,25,here?tr("JOURNAL","返回手册"):tr("NOTICEBOARD","前往公告栏"),using_controller()&&selected_row==5);
   } else if (page == Page::Kitchen) {
     for(int i=0;i<2;++i) {
       const auto&r=Recipes[i];int yy=y+39+i*59;
@@ -1511,12 +1538,14 @@ void modal() {
       text(x + 18, yy + 3, npc_name(i, english()), Text);
       std::snprintf(b, sizeof(b), "%u/4", state.bonds[i] / 10);
       text(x + 200 - text_width(b), yy + 3, b, Sage);
-      fit_text(x + 18, yy + 16, region_name(p.region, english()), 160, Muted);
+      std::snprintf(b,sizeof(b),"%s · %s",region_name(p.region,english()),npc_activity(state,i,english()));
+      fit_text(x + 18, yy + 16,b,187, Muted);
     }
     fit_text(
         x + 12, y + 179,
         tr("Choose a friend to walk to them", "点村民名字，沿路前往他的位置"),
         202, Muted);
+    fit_text(x+12,y+194,tr("2/3 hearts unlock personal stories","2心倾听 · 3心与朋友续写故事"),202,Muted);
   } else if (page == Page::Story) {
     fit_text(x + 12, y + 40, story_title(state, english()), 202, Sage);
     paragraph(x + 12, y + 61, story_line(state, english()), 202, 6, Text);
@@ -1531,7 +1560,7 @@ void modal() {
                   state.bonds[talking_npc] / 10);
     text(x + 47, y + 55, b, Muted);
     paragraph(x + 14, y + 78, letter, 200, 6, Text);
-    const char *ranch_label=ranch_story_ready(state,talking_npc)?tr("DELIVER","交付心愿"):ranch_contact(state)==talking_npc?tr("RANCH","牧场心愿"):tr("STORY","聊近况");
+    const char *ranch_label=friend_story_ready(state,talking_npc)&&!ranch_story_ready(state,talking_npc)?tr("LISTEN","倾听心事"):ranch_story_ready(state,talking_npc)?tr("DELIVER","交付心愿"):ranch_contact(state)==talking_npc?tr("RANCH","牧场心愿"):tr("STORY","聊近况");
     const char *labels[] = {ranch_label, tr("GIFT", "送礼物"),
                             tr("BYE", "回头见")};
     for (int i = 0; i < 3; ++i)
@@ -1573,8 +1602,8 @@ void modal() {
     draw_fishing(x,y);
   }
 }
-void scene_target(int wx, int wy, int &tx, int &ty) {
-  world_objects.pick(wx, wy, state, tx, ty);
+int scene_target(int wx, int wy, int &tx, int &ty) {
+  int animal=-1;world_objects.pick(wx,wy,state,tx,ty,&animal,&following_npc);return animal;
 }
 void go_to(Region region, int x, int y, bool use) {
   page = Page::Farm;
@@ -1606,7 +1635,8 @@ void guide_route(int i) {
 void order_action(int choice) {
   bool here=state.region==unsigned(Region::Town)&&near(state,18,10);
   if (!here) { go_to(Region::Town,18,10,true); return; }
-  if (choice == 4) { open_page(Page::Guide); return; }
+  if(choice==4){open_page(Page::Calendar);return;}
+  if(choice==5){open_page(Page::Guide);return;}
   if (deliver_order(state,choice)) msg("交付完成，金币和好感已增加", "Delivered! Gold and friendship gained");
   else msg("物品不足，或这份委托今天已完成", "Need the items; each request is once a day");
   changed();
@@ -1625,6 +1655,9 @@ void dialogue_action(int choice) {
   if (choice == 0) {
     if(ranch_story(state,talking_npc)) {
       std::snprintf(letter,sizeof(letter),"%s",ranch_completion(state.ranch_chapter,english()));
+    } else if(friend_story(state,talking_npc)) {
+      base_dirty=true;sound(dewfield_audio::Sfx::Gift);
+      std::snprintf(letter,sizeof(letter),"%s",friend_story_line(talking_npc,state.friend_chapter[talking_npc],english()));
     } else if (advance_story(state, talking_npc)) {
       base_dirty = true;
       std::snprintf(letter, sizeof(letter), "%s",
@@ -1636,6 +1669,7 @@ void dialogue_action(int choice) {
                     story_line(state, english()), story_goal(state, english()));
   } else if (choice == 1) {
     if (gift(state, talking_npc, held_item())) {
+      sound(dewfield_audio::Sfx::Gift);
       bool personal = personal_event(state, talking_npc);
       std::snprintf(letter, sizeof(letter), "%s",
                     personal ? npc_line(state, talking_npc, true, english())
@@ -1684,7 +1718,7 @@ void panel_tap(int px, int py) {
   if(page==Page::Calendar && px>=m.x+14 && px<m.x+217 && py>=m.y+57 && py<m.y+157) {
     selected_row=(py-m.y-57)/25*7+(px-m.x-14)/29;redraw();return;
   }
-  if(page==Page::Shipping && layout().confirm().contains(px,py)) {if(unship(state))changed();return;}
+
   auto ui = layout();
   if (!ui.modal().contains(px, py))
     return;
@@ -1693,6 +1727,8 @@ void panel_tap(int px, int py) {
     page = page==Page::Collections?collection_parent:Page::Farm;
     return;
   }
+  if(page==Page::Shipping){shipping_tap(px,py);return;}
+  if(page==Page::Eat){if(farm_ui::Rect{m.x+12,m.y+177,98,25}.contains(px,py))eat_action(false);else if(farm_ui::Rect{m.x+117,m.y+177,99,25}.contains(px,py))eat_action(true);return;}
   if(page==Page::Bag&&(farm_ui::Rect{m.x+12,m.y+7,20,20}.contains(px,py)||farm_ui::Rect{m.x+170,m.y+7,20,20}.contains(px,py))) {
     bag_page=1-bag_page;bag_selection=bag_page*28;selected_row=-1;redraw();return;
   }
@@ -1717,7 +1753,8 @@ void panel_tap(int px, int py) {
     for(int i=0;i<4;++i) if(farm_ui::Rect{ui.modal().x+163,ui.modal().y+41+i*33,48,22}.contains(px,py)) {
       order_action(i);return;
     }
-    if(farm_ui::Rect{ui.modal().x+12,ui.modal().y+170,202,23}.contains(px,py)) order_action(4);
+    if(farm_ui::Rect{ui.modal().x+12,ui.modal().y+173,98,25}.contains(px,py))order_action(4);
+    if(farm_ui::Rect{ui.modal().x+117,ui.modal().y+173,99,25}.contains(px,py))order_action(5);
   } else if (page == Page::Kitchen) {
     for(int i=0;i<2;++i) if(farm_ui::Rect{ui.modal().x+163,ui.modal().y+46+i*59,48,24}.contains(px,py)) {
       kitchen_action(i);return;
@@ -1762,7 +1799,7 @@ void panel_tap(int px, int py) {
     if (ui.upgrade().contains(px, py))
       shop_action(4);
   } else if (page == Page::Settings) {
-    for (int i = 0; i < 5; ++i)
+    for (int i = 0; i < 6; ++i)
       if (ui.setting(i).contains(px, py)) {
         setting_action(i);
         return;
@@ -1814,7 +1851,7 @@ bool back() {
 void init() {
   fresh(state);
   scene_surface(false);
-  music_enabled(state.music);
+  music_enabled(state.music);effects_enabled(state.sound_effects);
 }
 void settings() { open_page(Page::Settings); }
 void reset() { /* Restart is deliberately not a save-deleting action. */ }
@@ -1828,7 +1865,7 @@ void load(const uint8_t *d, size_t n) {
     save_locked = true;
     msg("存档损坏，已保护原存档", "Save damaged. Original protected");
   }
-  music_enabled(state.music);
+  music_enabled(state.music);effects_enabled(state.sound_effects);
   base_dirty = true;
 }
 bool menu_hit(int x, int y) {
@@ -1853,13 +1890,16 @@ void draw_menu(bool paused, int row, bool exiting) {
 }
 void key(Key k) {
   if (title_screen) {
-    if (k == Key::A || k == Key::B) {
+    if(k==Key::B){interact_facing();redraw();return;}
+  if (k == Key::A) {
       title_screen = false;
       scene_surface(true);
       if(state.intro<IntroScenes)start_intro();else msg("欢迎！点开背包里的农场手册", "Welcome! Open the farm journal");
     }
     return;
   }
+  if(page==Page::Shipping){shipping_key(k);return;}
+  if(page==Page::Eat){if(k==Key::A)eat_action(selected_row==1);else if(k==Key::B)eat_action(false);else if(k==Key::LEFT||k==Key::RIGHT){selected_row=1-selected_row;redraw();}return;}
   if(page==Page::Intro){if(k==Key::B)intro_skip=!intro_skip;else if(k==Key::A)intro_next();redraw();return;}
   if(page==Page::Bag&&(k==Key::L||k==Key::R)){bag_page=1-bag_page;bag_selection=bag_page*28;selected_row=-1;redraw();return;}
   if(mine_page_active()){mine_ui_key(k);redraw();return;}
@@ -1886,8 +1926,9 @@ void key(Key k) {
     redraw();return;
   }
   if (page != Page::Farm) {
+    if(page==Page::Orders&&k==Key::Y){open_page(Page::Calendar);return;}
     if(page==Page::Guide&&k==Key::Y){open_collections();return;}
-    if(page==Page::Forecast||page==Page::Calendar||page==Page::Shipping) {
+    if(page==Page::Forecast||page==Page::Calendar) {
       if(page==Page::Calendar&&(k==Key::LEFT||k==Key::RIGHT||k==Key::UP||k==Key::DOWN)) {
         selected_row=std::clamp(selected_row+(k==Key::LEFT?-1:k==Key::RIGHT?1:k==Key::UP?-7:7),0,27);redraw();return;
       }
@@ -1925,14 +1966,14 @@ void key(Key k) {
       if (k == Key::DOWN || k == Key::RIGHT)
         selected_row = (selected_row + 1) % count;
     } else if (page == Page::Orders || page == Page::Kitchen) {
-      int count=page==Page::Orders?5:3;
+      int count=page==Page::Orders?6:3;
       if(k==Key::UP||k==Key::LEFT) selected_row=(selected_row+count-1)%count;
       if(k==Key::DOWN||k==Key::RIGHT) selected_row=(selected_row+1)%count;
     } else if (page == Page::Settings) {
       if (k == Key::UP)
-        selected_row = (selected_row + 4) % 5;
+        selected_row = (selected_row + 5) % 6;
       if (k == Key::DOWN)
-        selected_row = (selected_row + 1) % 5;
+        selected_row = (selected_row + 1) % 6;
     } else if (page == Page::Bag) {
       if (k == Key::SELECT)
         tool_upgrade_action();
@@ -1996,7 +2037,8 @@ void key(Key k) {
     navigate(int(k));
     return;
   }
-  if (k == Key::A || k == Key::B) {
+  if(k==Key::B){interact_facing();redraw();return;}
+  if (k == Key::A) {
     repeat_use=held_item()<12||held_item()==37;
     facing_action();
   }
@@ -2186,7 +2228,8 @@ void pointer(Phase phase, int x, int y) {
   }
   int tx = (x + camx) / 16, ty = (y + camy) / 16;
   journey_region = following_npc = -1;
-  scene_target(x + camx, y + camy, tx, ty);
+  following_animal=scene_target(x+camx,y+camy,tx,ty);
+  if(following_animal>=0||following_npc>=0){begin_route(tx,ty,true);return;}
   int pi = plot_index(tx, ty);
   bool interactive =
       (!state.region && pi >= 0) || !walkable(state, tx, ty) ||
@@ -2201,6 +2244,7 @@ void pointer(Phase phase, int x, int y) {
   if(mob>=0)combat_target=mob;
 }
 void tick(uint32_t elapsed) {
+  soundscape(title_screen?0:state.region,title_screen?0:state.weather,title_screen?600:state.minute);
   for(auto &effect:gather_effects)if(effect.remaining) {
     effect.remaining=effect.remaining>elapsed?effect.remaining-elapsed:0;redraw();
   }
@@ -2237,7 +2281,7 @@ void tick(uint32_t elapsed) {
   if(in_mine(state)) {
     int old_health=state.health;bool nearby=false;for(auto &m:state.mobs)if(m.hp&&std::abs(int(m.x)-state.px)+std::abs(int(m.y)-state.py)<160)nearby=true;
     if(mine_tick(state,elapsed)){cancel_tool();stop_motion();base_dirty=true;page=Page::Letter;mine_letter=true;std::snprintf(letter,sizeof(letter),"%s",tr("Alan found you in the mine and brought you home. You kept your belongings; rescue costs up to 500G. Rest, eat, and try again.","阿岚把你从矿洞带回了家。背包物品保留，救援最多花费500金币。先休息、吃点东西，再准备下一次探险吧。"));changed();return;}
-    if(nearby||state.invulnerable)redraw();if(old_health!=state.health)changed();
+    if(nearby||state.invulnerable)redraw();if(old_health!=state.health){sound(dewfield_audio::Sfx::Hurt);changed();}
   }
   // NPCs share the player's continuous movement clock. Refresh while a
   // visible villager walks; keep the low idle rate when everyone is still.
@@ -2249,6 +2293,13 @@ void tick(uint32_t elapsed) {
   if(!action_hold && !held(Key::A))repeat_use=false;
   if ((action_hold || held(Key::A)) && repeat_use && !swing)
     facing_action();
+  static uint32_t ambience_ms=0;ambience_ms+=elapsed;
+  if(ambience_ms>=9000){ambience_ms=0;
+    if(!state.region&&state.ranch&&state.px/16>=8&&state.px/16<=24&&state.py/16>=16){int kind=0;static unsigned voice=0;for(int n=0;n<AnimalMax;++n){auto &a=state.animals[voice++%AnimalMax];if(a.kind){kind=a.kind;break;}}if(kind)sound(dewfield_audio::Sfx(unsigned(dewfield_audio::Sfx::Chicken)+kind-1));}
+    else if(!indoors(state.region))sound(state.minute>=1080?dewfield_audio::Sfx::Crickets:dewfield_audio::Sfx::Birds);
+  }
+  static uint32_t rain_ms=0;rain_ms+=elapsed;
+  if(rain_ms>=1100){rain_ms=0;if(!indoors(state.region)&&state.rain)sound(dewfield_audio::Sfx::Rain);}
   clock_acc += elapsed;
   if (clock_acc >= 500) {
     clock_acc -= 500;
@@ -2295,10 +2346,18 @@ void tick(uint32_t elapsed) {
       else {journey_x=p.x/16;journey_y=p.y/16;}
     }
     else {
+      if(!moving&&near(state,p.x/16,p.y/16)){int id=following_npc;talk_to(id);return;}
       journey_region = -1;
       route_portal=-1;approaching_portal=false;route_action=true;
       targetx = p.x / 16;
       targety = p.y / 16;
+    }
+  }
+  if(following_animal>=0) {
+    int id=following_animal;
+    if(state.region||!state.animals[id].kind){following_animal=-1;route=false;}
+    else {auto p=animal_pose(state,id,clock_acc);targetx=p.x/16;targety=p.y/16;route_action=true;
+      if(!moving&&near(state,targetx,targety)){ranch_index=id;open_page(Page::Animal);return;}
     }
   }
   if (route && !moving && !swing) {
@@ -2366,6 +2425,8 @@ void tick(uint32_t elapsed) {
     }
     redraw();
   }
+  static unsigned sounded_step=0;
+  if(walking&&walk_distance/24!=sounded_step){sounded_step=walk_distance/24;sound(indoors(state.region)?dewfield_audio::Sfx::StepWood:ground(state,state.px/16,state.py/16)==Ground::Grass?dewfield_audio::Sfx::StepGrass:dewfield_audio::Sfx::StepDirt);}
   if (walking != was_walking)
     redraw();
 }

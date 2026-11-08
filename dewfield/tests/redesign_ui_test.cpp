@@ -42,10 +42,10 @@ int main() {
   game::key(Key::LEFT);assert(bag_selection==26);game::key(Key::RIGHT);assert(bag_selection==27);
   game::key(Key::A);assert(state.active_slot==255);
   game::key(Key::A);assert(state.active_slot==27 && held_item()==12);
-  state.energy=50;page=Page::Farm;facing_action();assert(state.energy==60 && state.produce[0]==1);
+  state.energy=50;page=Page::Farm;facing_action();assert(page==Page::Eat&&state.energy==50);game::key(Key::A);assert(state.energy==60 && state.produce[0]==1);
   action_hold=true;game::tick(100);action_hold=false;
   assert(state.energy==60 && state.produce[0]==1); // One food/shipment per press.
-  state.px=8*16+8;state.py=10*16+8;dir=0;swing=0;facing_action();
+  state.px=8*16+8;state.py=10*16+8;dir=0;swing=0;facing_action();assert(page==Page::Shipping);shipping_action(0);
   assert(state.produce[0]==0 && state.shipping==16 && state.active_slot==255);
   // The occlusion decision follows the character's body, not just its feet.
   state.px=48;state.py=40;camx=camy=0;farm::select_slot(state,-1);

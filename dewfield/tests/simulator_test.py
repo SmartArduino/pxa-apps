@@ -31,6 +31,7 @@ p.add_argument('--discoveries-only',action='store_true')
 p.add_argument('--actors-only',action='store_true')
 p.add_argument('--livestock-only',action='store_true')
 p.add_argument('--details-only',action='store_true')
+p.add_argument('--village-only',action='store_true')
 p.add_argument('--mines-only',action='store_true')
 p.add_argument('--geography-only',action='store_true')
 p.add_argument('--npc-only',action='store_true')
@@ -145,7 +146,7 @@ def saved():
         assert struct.unpack_from('<I',raw,956)[0]==fnv(raw[:956])
         expanded=bytearray(1280);expanded[:98]=raw[:98];expanded[4]=10
         for i,v in enumerate(raw[98:178]):expanded[98+i*4:102+i*4]=bytes([v&1,(v>>1)&7,(v>>4)&7,v>>7])
-        expanded[418:1109]=raw[178:869];struct.pack_into('<I',expanded,1276,fnv(expanded[:1276]));raw=bytes(expanded)
+        expanded[418:1117]=raw[178:877];struct.pack_into('<I',expanded,1276,fnv(expanded[:1276]));raw=bytes(expanded)
     assert raw[:4]==b'DWF1' and len(raw) in (512,768,1280)
     result={k:struct.unpack_from(fmt,raw,offset)[0] for k,fmt,offset in [('day','<H',6),('energy','<B',10),('water','<B',11),('px','<H',18),('py','<H',20),('gold','<I',22),('shipping','<I',26),('earned','<I',30),('harvested','<I',34),('fish','<H',58),('wood','<H',60),('stone','<H',62)]}
     result.update(seeds=list(struct.unpack_from('<8H',raw,42))[::2],produce=list(struct.unpack_from('<8H',raw,42))[1::2],plots=[list(raw[98+i*4:102+i*4])for i in range(80)])
@@ -165,6 +166,7 @@ def saved():
     if raw[4]>=10:
         result['slots']+=list(raw[759:773])
         result['visited']|=raw[839]<<8
+        result.update(last_shipped_count=struct.unpack_from('<H',raw,1109)[0] or bool(raw[558]),effects=not bool(raw[1111]),friend_chapter=list(raw[1112:1116]))
         result.update(wild_age=list(raw[773:798]),wild_damage=list(raw[798:823]),minerals=list(struct.unpack_from('<8H',raw,823)),sword=raw[840],sword_grade=raw[841],health=raw[842],depth=raw[843],best=raw[844],slain=struct.unpack_from('<H',raw,852)[0],ore_mined=struct.unpack_from('<H',raw,854)[0],cave_gathered=struct.unpack_from('<H',raw,856)[0],mine_rewards=raw[862],mine_cleared=list(struct.unpack_from('<30I',raw,863)),mine_defeated=list(raw[983:1013]))
     return result
 
@@ -250,6 +252,37 @@ try:
     try:needs_intro=saved().get('intro',5)<5
     except AssertionError:needs_intro=True
     tap(cw//2,ch-38)
+    if args.village_only:
+        assert args.fixture_tool
+        if needs_intro:
+            for _ in range(5):time.sleep(.25);key('Z')
+        key('ENTER');time.sleep(.3);saved();stop()
+        mx,my=(cw-228)//2,(ch-210)//2
+        def fixture(label):
+            raw=out/(label+'.save');subprocess.run([str(args.fixture_tool.resolve()),'village-'+label,str(raw),str(out/'unused')],check=True)
+            replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38);time.sleep(.5);capture('village-'+label)
+        fixture('shipping');key('UP',.025);key('X');wait_for_panel('shipping');capture('shipping-inventory')
+        key('Z');v=wait_for(lambda v:v['produce'][0]==0,'whole stack');assert v['shipping']==208 and v['produce'][2]==7 and v['last_shipped_count']==13
+        capture('stack-deposited');key('S');v=wait_for(lambda v:v['produce'][0]==13,'retrieve stack');assert v['shipping']==0
+        key('A');v=wait_for(lambda v:v['produce'][0]==12,'one item');assert v['shipping']==16;key('S');key('X')
+        slot=saved()['slots'].index(12);key('A');tap(mx+25+(slot%7)*29,my+49+(slot//7)*28);key('X')
+        key('DOWN',.025);key('Z');wait_for_panel('eat confirm');before=saved();capture('eat-confirm');key('X');assert saved()['produce'][0]==before['produce'][0]
+        key('Z');key('Z');v=wait_for(lambda v:v['produce'][0]==12,'eat after confirmation');assert v['energy']==60
+        key('ENTER');time.sleep(.4);stop();start();tap(cw//2,ch-38);key('ENTER');assert saved()['produce'][0]==12;stop()
+        fixture('animals');s=saved();camx=max(0,min(512-cw,s['px']-cw//2));camy=max(0,min(384-ch,s['py']-(ch-8)//2))
+        tap(10*16+11-camx,18*16+6-camy);wait_for_panel('clicked cow',20);capture('cow-care');assert saved()['energy']==50;key('X');stop()
+        fixture('gift');key('UP',.025);key('X');wait_for_panel('B interacts with villager');before=saved();assert before['goods'][0]==4;capture('gift-dialogue');key('Z')
+        v=wait_for(lambda v:v['goods'][0]==3,'give gift');assert v['energy']==50;capture('gift-given');key('X');stop()
+        fixture('social');key('S');tap(mx+88,my+174);tap(mx+90,my+51);wait_for_panel('find Xiaohe',25);key('Z');v=wait_for(lambda v:v['friend_chapter'][0]==1,'personal scene');capture('friendship-scene');key('X');stop()
+        fixture('board');key('UP',.025);key('X');wait_for_panel('noticeboard');capture('village-noticeboard');key('S');wait_for_panel('noticeboard calendar');capture('village-calendar');key('X');stop()
+        fixture('route');capture('commute-before');time.sleep(5);capture('commute-after');key('ENTER');time.sleep(.3);stop()
+        fixture('festival');capture('seasonal-gathering');key('ENTER');time.sleep(.3);stop()
+        fixture('rain');time.sleep(1);capture('rain-audio-scene');key('ENTER');time.sleep(.3);stop()
+        fixture('cave');time.sleep(1);capture('cave-audio-scene');key('ENTER');time.sleep(.3);stop()
+        logs=''.join(p.read_text(errors='replace') for p in out.glob('run-*.log'))
+        assert 'music decoder ready' in logs and 'music decoder failed' not in logs
+        (out/'summary.json').write_text(json.dumps({'stack_one_retrieve':True,'eat_gift_separate':True,'cow_click_care':True,'friendship_calendar_routes':True,'host_music_ready':True,'save_restart':True},indent=2)+'\n')
+        print('PASS: real signed village interactions, whole stacks/undo, eat/gift separation, cow panel, friendship, calendar, routes and Host music');raise SystemExit(0)
     if args.details_only:
         assert args.fixture_tool
         if needs_intro:

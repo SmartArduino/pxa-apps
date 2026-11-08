@@ -7,7 +7,7 @@ constexpr int MapW = 32, MapH = 24, Tile = 16, PlotX = 10, PlotY = 9,
               PlotW = 10, PlotH = 8;
 constexpr int PlotCount = PlotW * PlotH, SaveBytes = 1280;
 // Device firmware may cap individual Storage values below the SDK maximum.
-constexpr int StorageSaveBytes = 960, SaveDataBytes = 1109;
+constexpr int StorageSaveBytes = 960, SaveDataBytes = 1117;
 inline int walk_frame(uint32_t distance) {return 1+int((distance/6)%8);}
 constexpr int InventorySize = 56, HotbarSize = 7, ItemCount = 45;
 enum class Tool : uint8_t { Hoe, Seeds, Water, Hand, Axe, Pick, Rod, Sword, Count };
@@ -76,7 +76,9 @@ struct State {
   uint8_t active_slot = 0;
   uint8_t tree_age[24]{};
   bool show_joystick = true, show_action = true, music = true;
-  bool auto_run = true;
+  bool auto_run = true, sound_effects = true;
+  uint16_t last_shipped_count=0;
+  uint8_t friend_chapter[4]{};
   bool rain = false;
   uint16_t visited=1;
   uint8_t region = 0, story = 0, met = 0, bonds[4]{}, personal = 0,
@@ -148,6 +150,7 @@ bool buy_seed(State &s, int kind, int count = 1);
 bool upgrade(State &s);
 bool craft_sprinkler(State &s, int plot);
 uint32_t ship(State &s);
+uint32_t ship_items(State &s,int item,unsigned count);
 bool unship(State &s);
 uint32_t quest(State &s);
 uint32_t random(State &s);

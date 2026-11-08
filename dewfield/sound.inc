@@ -2,9 +2,11 @@
 // Existing PXA streamed-music path; decoding and buffering stay on the Host.
 uint64_t sound_permission, sound_session, music_instance;
 bool sound_pending, sound_ready, sound_failed, music_wanted = true;
-bool music_paused;
+bool music_paused,effects_wanted=true,effect_packets=true;
+int wanted_music=0,playing_music=-1;
+uint64_t last_effect_us[6]{};
 void request_sound() {
-  if (!music_wanted || sound_pending || sound_ready || sound_failed) return;
+  if (!(music_wanted||effects_wanted) || sound_pending || sound_ready || sound_failed) return;
   constexpr char name[]="audio.playback";
   constexpr uint8_t scope[]={'m','e','d','i','a'};
   uint32_t n;
@@ -14,6 +16,7 @@ void request_sound() {
        pxa_control_packet(packet,n)<0) {sound_pending=false;sound_failed=true;}
 }
 void clear_sound() {
+  if(sound_ready&&effect_packets)for(int track=0;track<6;++track)pxa_audio_stop_effect(sound_session,track);
   if(sound_ready && music_instance && !music_paused) {
     if(pxa_audio_control_music(sound_session,PXA_AUDIO_ASSET_PAUSE,0)>=0) music_paused=true;
   }
@@ -21,13 +24,16 @@ void clear_sound() {
 void service_sound() {
   request_sound();
   if(!sound_ready) return;
+  if(music_instance&&playing_music!=wanted_music){if(pxa_audio_control_music(sound_session,PXA_AUDIO_ASSET_STOP,0)>=0)music_instance=0;}
   bool audible=music_wanted && running && !background && !paused && !exit_requested;
   if(!music_wanted && music_instance) {
     if(pxa_audio_control_music(sound_session,PXA_AUDIO_ASSET_STOP,0)>=0) music_instance=0;
     return;
   }
   if(!music_instance && audible && !sound_failed) {
-    int status=pxa_audio_play_music(sound_session,"assets/dewfield-morning.ogg",1,-12*256,&music_instance);
+    const char *tracks[]={"assets/dewfield-morning.ogg","assets/dewfield-evening.ogg","assets/dewfield-interior.ogg","assets/dewfield-cave.ogg","assets/dewfield-rain.ogg"};
+    int status=pxa_audio_play_music(sound_session,tracks[wanted_music],1,-12*256,&music_instance);
+    if(status>=0)playing_music=wanted_music;
     if(status<0 && status!=PXA_STATUS_WOULD_BLOCK) {
       sound_failed=true;pxa_log_write(3,"Dewfield: music not available");
     }
@@ -73,3 +79,16 @@ int32_t handle_sound(const pxa_event_t &e) {
   return PXA_EVENT_UNHANDLED;
 }
 void add_tone(float, float, float) {}
+
+void play_effect(dewfield_audio::Sfx effect) {
+  if(!effects_wanted||!sound_ready||!running||background||paused||exit_requested)return;
+  auto index=unsigned(effect);if(index>=unsigned(dewfield_audio::Sfx::Count))return;
+  const auto &design=dewfield_audio::sounds[index];auto now=now_us();
+  uint64_t cooldown=design.track==1?125000:design.track==5?900000:30000;
+  if(now-last_effect_us[design.track]<cooldown)return;last_effect_us[design.track]=now;
+  pxa_audio_tone_t tones[4]{};
+  for(int i=0;i<design.count;++i){auto &a=design.tones[i];tones[i]={a.frequency,a.ms,int16_t(a.db*256),a.waveform,a.attack,a.release,a.delay};}
+  if(effect_packets){auto status=pxa_audio_play_effect(sound_session,tones,design.count,design.track);if(status>=0||status==PXA_STATUS_WOULD_BLOCK)return;effect_packets=false;}
+  // Older audio hosts still support bounded enveloped tones; no PCM fallback.
+  for(int i=0;i<design.count;++i){auto &a=tones[i];pxa_audio_play_tone(sound_session,a.waveform,a.frequency_hz,a.duration_ms,a.gain_db_q8,a.attack_ms,a.release_ms,a.delay_ms);}
+}
