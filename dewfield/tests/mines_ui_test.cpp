@@ -25,7 +25,7 @@ int main(int argc,char **argv) {
  for(int i=0;i<20&&!state.wild_damage[1];++i)game::tick(33);
  assert(state.wild_damage[1]==1&&state.energy==energy-3);cancel_tool();
  state.region=unsigned(Region::Forest);state.px=22*16+8;state.py=4*16+8;dir=0;page=Page::Farm;facing_action();
- assert(in_mine(state)&&state.sword_owned&&page==Page::Letter&&held_item()==37&&mine_letter);
+ assert(in_mine(state)&&state.sword_owned&&page==Page::Letter&&held_item()==37&&mine_letter&&dir==2);
  game::draw();if(argc>1)capture(std::string(argv[1])+"/mine-letter.ppm");
  auto mob=state.mobs[1];game::tick(1000);assert(state.mobs[1].x==mob.x&&state.mobs[1].y==mob.y);
  game::key(Key::B);game::key(Key::SELECT);assert(held_item()==6);game::key(Key::SELECT);assert(held_item()==37);
@@ -56,6 +56,25 @@ int main(int argc,char **argv) {
  tap(mine_quick(0).center_x(),mine_quick(0).center_y());assert(held_item()==6);
  tap(mine_quick(1).center_x(),mine_quick(1).center_y());assert(held_item()==37);
  tap(mine_quick(2).center_x(),mine_quick(2).center_y());assert(page==Page::MineJournal);
+ // A sword strike stays an attack if its target leaves a forage tile before impact.
+ fresh(state);enter_mine(state);page=Page::Farm;stop_motion();state.px=5*16+8;state.py=7*16+8;dir=2;state.sword_grade=2;
+ for(auto &m:state.mobs)m.hp=0;state.mine_defeated[0]=62;state.mobs[0]={uint16_t(5*16+8),uint16_t(8*16+8),1000,0,0,10,0};
+ action(5,8);assert(pending_tool.active&&state.cave_gathered==0);state.mobs[0].x+=40;
+ for(int i=0;i<30&&swing;++i)game::tick(16);
+ assert(state.cave_gathered==0&&cave_forage_at(state,5,8)==0&&state.mobs[0].hp==10);
+ // Quick supplies heal from the bag while preserving the equipped sword.
+ cancel_tool();stop_motion();state.energy=50;state.health=60;change_item(state,43,2);sync_inventory(state);equip_item(state,37);base_dirty=true;game::draw();
+ tap(mine_quick(4).center_x(),mine_quick(4).center_y());assert(state.energy==70&&state.health==70&&item_count(state,43)==1&&held_item()==37);
+ state.energy=state.health=100;tap(mine_quick(4).center_x(),mine_quick(4).center_y());assert(item_count(state,43)==1);
+ state.energy=50;state.health=60;change_item(state,12,1);sync_inventory(state);equip_item(state,12);
+ tap(mine_quick(4).center_x(),mine_quick(4).center_y());assert(!item_count(state,12)&&item_count(state,43)==1&&state.energy==60&&state.health==65);
+ // Switching quick tools cancels an uncommitted hit; no hidden attack follows.
+ equip_item(state,37);state.px=16*16+8;state.py=6*16+8;state.attack_cooldown=0;dir=2;facing_action();assert(pending_tool.active);
+ tap(mine_quick(0).center_x(),mine_quick(0).center_y());assert(!pending_tool.active&&!swing&&held_item()==6);
+ // The ladder shortcut refuses locked stairs, then routes to a real confirmation.
+ state.mine_cleared[0]=0;state.mine_defeated[0]=0;enter_mine(state);page=Page::Farm;tap(mine_quick(3).center_x(),mine_quick(3).center_y());assert(!route&&page==Page::Farm);
+ state.mine_cleared[0]|=7|MineLadder;state.px=25*16+8;state.py=18*16+8;stop_motion();tap(mine_quick(3).center_x(),mine_quick(3).center_y());
+ for(int i=0;i<30&&page==Page::Farm;++i)game::tick(16);assert(page==Page::MineStairs);
  for(auto dims:{std::pair<int,int>{240,240},{400,240},{240,427}})for(bool en:{false,true}) {
   WIDTH=dims.first;HEIGHT=dims.second;set_english(en);
   for(int floor:{1,11,21,30}) {

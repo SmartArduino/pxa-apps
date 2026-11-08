@@ -15,11 +15,22 @@ int main() {
   title_screen = false;
   WIDTH = HEIGHT = 240;
   state.story = 3;
+  state.px=15*16+8;state.py=18*16+8;
+  arrive(farm::Region::Forest,15,3);assert(dir==2);
+  arrive(farm::Region::Farm,15,20);assert(dir==0);
   arrive(farm::Region::Town, 15, 12);
   arrive(farm::Region::Forest, 15, 12);
   arrive(farm::Region::Lake, 24, 12);
   arrive(farm::Region::Home, 16, 17);
   assert(state.visited == 31);
+  open_page(Page::World);selected_row=0;
+  game::key(pocket::Key::RIGHT);assert(selected_row==1);
+  game::key(pocket::Key::DOWN);assert(selected_row==5);
+  game::key(pocket::Key::LEFT);assert(selected_row==2);
+  game::key(pocket::Key::LEFT);assert(selected_row==3);
+  game::key(pocket::Key::RIGHT);assert(selected_row==2);
+  game::key(pocket::Key::UP);assert(selected_row==0);
+  page=Page::Farm;
   // An NPC can be tracked across areas and talked to using the real controller.
   state.minute = 600;
   following_npc = 0;

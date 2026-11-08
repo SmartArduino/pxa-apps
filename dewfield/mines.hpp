@@ -6,6 +6,13 @@
 #include <cstdlib>
 namespace farm {
 inline bool in_mine(const State&s){return s.region==unsigned(Region::Mine);}
+inline int mine_food_item(const State&s) {
+ int selected=s.active_slot<InventorySize?s.slots[s.active_slot]:0;
+ if(food_energy(selected)&&item_count(s,selected))return selected;
+ for(int item:{43,44})if(item_count(s,item))return item;
+ for(int item=12;item<=ItemCount;++item)if(food_energy(item)&&item_count(s,item))return item;
+ return 0;
+}
 inline constexpr uint32_t MineLadder=1u<<29;
 inline uint32_t mine_hash(unsigned seed,unsigned x,unsigned y) {uint32_t h=seed^(x*374761393u)^(y*668265263u);h=(h^(h>>13))*1274126177u;return h^(h>>16);}
 inline const char *mineral_name(int item,bool en=false) {
@@ -113,7 +120,7 @@ inline Result mine_act(State&s,int x,int y) {
  if(x==16&&y==2)return Result::MineLift;
  if(x==25&&y==17&&!(Tool(s.tool)==Tool::Sword&&mob_at(s,x,y)>=0))return s.mine_depth==30?Result::MineChest:ladder_ready(s)?Result::MineStairs:Result::NotReady;
  int forage=cave_forage_at(s,x,y);
- if(forage>=0) {
+ if(forage>=0&&!(Tool(s.tool)==Tool::Sword&&mob_at(s,x,y)>=0)) {
   if(!change_item(s,cave_forage_item(s,forage),1))return Result::Blocked;
   s.mine_cleared[s.mine_depth-1]|=1u<<(24+forage);s.cave_gathered=std::min(65535,int(s.cave_gathered)+1);sync_inventory(s);return Result::MineForaged;
  }

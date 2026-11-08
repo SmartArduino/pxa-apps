@@ -32,19 +32,19 @@ bool road_tile(uint8_t region,int x,int y) {
   case Region::Farm:
     return (y==7 && x>=6) || (x==6 && y>=7 && y<=18) ||
       (x==22 && y>=7 && y<=12) || (x==21 && y>=12 && y<=18) ||
-      (y==12 && x>=21&&x<=22) || (y==18 && x<=21) ||
+      (y==12 && x>=21&&x<=22) || (y==18 && x>=6&&x<=21) || (x==15&&y>=18) ||
       (y==19 && x>=4 && x<=7) || (y==17 && x>=21 && x<=23);
   case Region::Town:
-    return (y==12 && x<=24) || (x==15 && y>=7) ||
-      (y==7 && x>=7 && x<=24) || ((x==7||x==24)&&y>=7&&y<=12) ||
+    return (y==12 && x>=7&&x<=24) || (x==15 && y>=7) ||
+      (y==7 && x>=1 && x<=24) || ((x==7||x==24)&&y>=7&&y<=12) ||
       (x>=12&&x<=18&&y>=9&&y<=15);
   case Region::Forest:
-    return (y==4&&x>=15&&x<=22)||(x==22&&y>=3&&y<=6)||y==12 || (x==15&&y<=12) || (x==22&&y>=12) ||
+    return (y==4&&x>=15&&x<=22)||(x==22&&y>=3&&y<=4)||y==12 || (x==15&&y<=20) || (x==22&&y>=12&&y<=20) ||
       (y==20&&x>=15&&x<=22);
   case Region::Lake:
     return (y==12&&x>=21) || (x==24&&y>=9&&y<=17);
   case Region::Orchard:
-    return (x==16&&y<=19) || ((y==9||y==19)&&x>=8&&x<=22) ||
+    return (x==15&&y<=19) || (y==12&&x<=15) || ((y==9||y==19)&&x>=8&&x<=22) ||
       ((x==8||x==22)&&y>=9&&y<=19);
   default:return false;
   }
@@ -127,9 +127,13 @@ int portal_heading(const Portal &p) {
   if(p.from==Region::Mine)return 0;
   if (indoors(uint8_t(p.from))) return 2;
   if (indoors(uint8_t(p.to))) return 0;
-  if (p.bridge || p.x <= 2) return 3;
+  if (p.x <= 2) return 3;
   if (p.x >= 29) return 1;
   return p.y <= 2 ? 0 : 2;
+}
+int arrival_heading(const Portal &p) {
+  for(const auto &back:Portals)if(back.from==p.to&&back.to==p.from)return (portal_heading(back)+2)%4;
+  return portal_heading(p);
 }
 Point portal_approach(const Portal &p) {
   int d=portal_heading(p);
@@ -317,11 +321,11 @@ const char *npc_line(const State &s, int id, bool personal, bool en) {
     return (en ? stories_en : stories)[id % 4];
   if ((s.visited & (1u << unsigned(Region::Orchard))) && (s.day + id) % 3 == 0) {
     const char *cn[] = {"蜜风果园的苹果，配上浆果就能熬成果酱。记得给自己也留一瓶。",
-        "林子南边那条路通往老果园。木牌重新立好了，别在树下迷路。",
+        "林子东边那条路通往老果园。木牌重新立好了，别在树下迷路。",
         "果园的小池子也能钓鱼。带上热汤，忙完了就在水边歇歇吧。",
         "家里的灶台还好用吧？山菌和土豆煮一锅，干农活就有精神了。"};
     const char *eng[] = {"Apples and berries make lovely jam. Keep a jar for yourself.",
-        "The south woodland path leads to the orchard. Follow the new sign.",
+        "The east woodland path leads to the orchard. Follow the new sign.",
         "Try fishing in the orchard pond. Bring a warm stew for the walk.",
         "Mushrooms and a potato make a hearty stew at your cottage stove."};
     return (en ? eng : cn)[id];

@@ -15,13 +15,23 @@ int main(int argc, char **argv) {
   std::memset(s.cleared, 1, sizeof(s.cleared));
   for (auto &p : s.plots)
     p = {};
+  if(!std::strncmp(argv[1],"geo-",4)) {
+    const char *mode=argv[1]+4;s.story=3;s.minute=600;s.show_joystick=s.show_action=false;
+    for(const auto &p:farm::Portals)if(!farm::indoors(unsigned(p.from))&&!farm::indoors(unsigned(p.to))) {
+      const char *area=p.from==farm::Region::Farm?"farm":p.from==farm::Region::Town?"town":p.from==farm::Region::Forest?"forest":p.from==farm::Region::Lake?"lake":"orchard";
+      const char *direction[]={"north","east","south","west"};char name[48];std::snprintf(name,sizeof(name),"%s-%s",area,direction[farm::portal_heading(p)]);
+      if(!std::strcmp(mode,name)){s.region=unsigned(p.from);s.visited|=1u<<s.region;auto at=farm::portal_approach(p);s.px=at.x*16+8;s.py=at.y*16+8;break;}
+    }
+    uint8_t raw[farm::SaveBytes];assert(farm::encode(s,raw,sizeof(raw)));farm::State checked;assert(farm::decode(checked,raw,sizeof(raw)));
+    FILE*f=std::fopen(argv[2],"wb");assert(f&&std::fwrite(raw,1,sizeof(raw),f)==sizeof(raw));std::fclose(f);f=std::fopen(argv[3],"w");assert(f);std::fclose(f);return 0;
+  }
   if(!std::strncmp(argv[1],"mines-",6)) {
     const char *mode=argv[1]+6;s.story=3;s.gold=500;s.energy=100;s.health=100;s.show_joystick=s.show_action=false;
     if(!std::strcmp(mode,"entry")){s.region=unsigned(farm::Region::Forest);s.visited|=1u<<s.region;s.px=22*16+8;s.py=4*16+8;farm::equip_item(s,6);}
     else if(!std::strcmp(mode,"forest")) {s.region=unsigned(farm::Region::Forest);s.visited|=1u<<s.region;s.px=17*16+8;s.py=5*16+8;s.tool_grade[4]=1;farm::equip_item(s,5);}
     else {
       farm::enter_mine(s,1);s.sword_grade=1;s.tool_grade[5]=1;
-      int floor=!std::strcmp(mode,"iron")?11:!std::strcmp(mode,"crystal")?21:!std::strcmp(mode,"guardian")?30:1;
+      int floor=!std::strcmp(mode,"gallery-iron")?11:!std::strcmp(mode,"gallery-guardian")?30:!std::strcmp(mode,"iron")?11:!std::strcmp(mode,"crystal")?21:!std::strcmp(mode,"guardian")?30:1;
       farm::load_mine_floor(s,floor);s.invulnerable=0;
       if(!std::strcmp(mode,"ore")) {s.px=5*16+8;s.py=5*16+8;farm::equip_item(s,6);for(int i=0;i<farm::MineMobs;++i){s.mobs[i].hp=0;s.mine_defeated[0]|=1u<<i;}}
       else if(!std::strcmp(mode,"forage")){s.px=5*16+8;s.py=7*16+8;farm::equip_item(s,4);for(int i=0;i<farm::MineMobs;++i){s.mobs[i].hp=0;s.mine_defeated[0]|=1u<<i;}}
@@ -29,6 +39,16 @@ int main(int argc, char **argv) {
       else if(!std::strcmp(mode,"stairs")){s.px=25*16+8;s.py=18*16+8;s.mine_cleared[0]|=7|farm::MineLadder;farm::equip_item(s,37);}
       else {s.px=16*16+8;s.py=10*16+8;farm::equip_item(s,37);}
       if(!std::strcmp(mode,"guardian")){s.px=25*16+8;s.py=18*16+8;}
+      if(!std::strcmp(mode,"gallery-iron")) {
+        for(auto &m:s.mobs)m.hp=0;s.mine_defeated[s.mine_depth-1]=63;s.monsters_slain=6;farm::check_ladder(s);
+      }
+      if(!std::strncmp(mode,"gallery-",8)) {
+        s.px=(!std::strcmp(mode,"gallery-guardian")?25:7)*16+8;s.py=19*16+8;
+        if(!std::strcmp(mode,"gallery-bag")) {
+          for(int item=12;item<=45;++item)if(item!=37)farm::change_item(s,item,4);
+          farm::sync_inventory(s);farm::equip_item(s,37);
+        }
+      }
     }
     uint8_t bytes[farm::SaveBytes];assert(farm::encode(s,bytes,sizeof(bytes))==sizeof(bytes));farm::State checked;assert(farm::decode(checked,bytes,sizeof(bytes)));
     FILE*f=std::fopen(argv[2],"wb");assert(f&&std::fwrite(bytes,1,sizeof(bytes),f)==sizeof(bytes));std::fclose(f);f=std::fopen(argv[3],"w");assert(f);std::fclose(f);return 0;
@@ -42,6 +62,11 @@ int main(int argc, char **argv) {
     s.animals[0].products=5;s.animals[2].products=1;s.animals[3].age=3;
     s.animals[4].products=1;s.animals[5].age=0;s.animals[6].products=3;s.animals[7].age=3;
     s.animals[8].pregnancy=1;s.incubators[0]={1,1};farm::select_slot(s,-1);
+    if(!std::strcmp(argv[1],"livestock-gallery")) {
+      for(auto &a:s.animals)a={};
+      for(int i=0;i<5;++i){s.animals[i]={uint8_t(i+1),0,farm::Breeds[i].adult,65};s.animals[i+6]={uint8_t(i+1),1,uint8_t(farm::Breeds[i].adult/2),50};}
+      s.px=15*16+8;s.py=16*16+8;
+    }
     if(!std::strcmp(argv[1],"livestock-slow")){s.auto_run=false;s.px=15*16+8;s.py=14*16+8;}
     if(!std::strcmp(argv[1],"livestock-night")){s.region=unsigned(farm::Region::Home);s.visited|=1u<<s.region;s.px=10*16+8;s.py=10*16+8;}
     uint8_t bytes[farm::SaveBytes];assert(farm::encode(s,bytes,sizeof(bytes))==sizeof(bytes));farm::State t;assert(farm::decode(t,bytes,sizeof(bytes)));

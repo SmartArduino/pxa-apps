@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 using namespace farm;
 int main() {
   State s;fresh(s);s.story=3;s.minute=600;
@@ -15,6 +16,14 @@ int main() {
     for(int wrong=0;wrong<4;++wrong)if(wrong!=d)assert(!crossed_portal(p,fx,fy,x,y,wrong));
     assert(!crossed_portal(p,fx,fy,(fx+x)/2,(fy+y)/2,d));
     for(const auto&q:Portals)if(q.from==p.to && q.to==p.from) {
+      if(!indoors(unsigned(p.from))&&!indoors(unsigned(p.to))) {
+        auto from=WorldMapPositions[unsigned(p.from)],to=WorldMapPositions[unsigned(p.to)];int dx=to.x-from.x,dy=to.y-from.y;
+        assert(std::abs(dx)+std::abs(dy)==1);
+        int heading=dx?dx>0?1:3:dy>0?2:0;
+        assert(portal_heading(p)==heading&&portal_heading(q)==(heading+2)%4&&arrival_heading(p)==heading);
+        assert(dx?p.y==q.y:p.x==q.x);
+        auto spawn=portal_approach(q);assert(p.spawn_x==spawn.x&&p.spawn_y==spawn.y);
+      }
       State dest=s;dest.region=uint8_t(p.to);if(p.to==Region::Mine)enter_mine(dest);assert(walkable(dest,p.spawn_x,p.spawn_y));
     }
   }
@@ -32,5 +41,7 @@ int main() {
       }
       assert(found);
     }
+  State dialogue;fresh(dialogue);dialogue.visited|=1u<<unsigned(Region::Orchard);dialogue.day=2;
+  assert(std::strstr(npc_line(dialogue,1,false),"东边")&&std::strstr(npc_line(dialogue,1,false,true),"east"));
   puts("PASS: every regional road has a destination, directional thresholds, reachable approach tiles, safe reciprocal spawns and the repaired forest bridge");
 }

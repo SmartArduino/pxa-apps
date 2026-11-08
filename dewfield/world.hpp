@@ -7,24 +7,26 @@ constexpr int RegionCount = int(Region::Count), NpcCount = 4;
 struct Point {
   int x, y;
 };
+// Fixed north-up geography. Indoor destinations share their parent area.
+inline constexpr Point WorldMapPositions[]={{0,0},{1,0},{0,1},{-1,1},{0,0},{1,1},{1,0},{1,0},{0,1}};
 struct Portal {
   Region from, to;
   int x, y, spawn_x, spawn_y;
   bool bridge = false;
 };
 inline constexpr Portal Portals[] = {
-    {Region::Farm, Region::Town, 29, 7, 2, 12},
-    {Region::Town, Region::Farm, 1, 12, 28, 7},
-    {Region::Farm, Region::Forest, 2, 18, 28, 12},
-    {Region::Forest, Region::Farm, 29, 12, 3, 18},
-    {Region::Town, Region::Forest, 15, 21, 15, 3},
-    {Region::Forest, Region::Town, 15, 2, 15, 20},
+    {Region::Farm, Region::Town, 29, 7, 2, 7},
+    {Region::Town, Region::Farm, 1, 7, 28, 7},
+    {Region::Farm, Region::Forest, 15, 21, 15, 3},
+    {Region::Forest, Region::Farm, 15, 2, 15, 20},
+    {Region::Town, Region::Orchard, 15, 21, 15, 3},
+    {Region::Orchard, Region::Town, 15, 2, 15, 20},
     {Region::Forest, Region::Lake, 2, 12, 28, 12, true},
     {Region::Lake, Region::Forest, 29, 12, 3, 12},
     {Region::Farm, Region::Home, 6, 7, 16, 18},
     {Region::Home, Region::Farm, 16, 20, 6, 8},
-    {Region::Forest, Region::Orchard, 22, 21, 16, 3},
-    {Region::Orchard, Region::Forest, 16, 2, 22, 20},
+    {Region::Forest, Region::Orchard, 29, 12, 3, 12},
+    {Region::Orchard, Region::Forest, 2, 12, 28, 12},
     {Region::Town, Region::SeedShop, 7, 7, 16, 18},
     {Region::SeedShop, Region::Town, 16, 20, 7, 8},
     {Region::Town, Region::Lodge, 24, 7, 16, 18},
@@ -59,6 +61,7 @@ bool road_tile(uint8_t region,int x,int y);
 bool exit_clearance(uint8_t region,int x,int y);
 const Portal *portal_at(const State &s, int x, int y);
 int portal_heading(const Portal &portal);
+int arrival_heading(const Portal &portal);
 Point portal_approach(const Portal &portal);
 bool crossed_portal(const Portal &portal, int from_x, int from_y,
                     int to_x, int to_y, int heading);

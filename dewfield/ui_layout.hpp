@@ -2,6 +2,8 @@
 #pragma once
 #include <algorithm>
 #include <cstdint>
+#include <cstdlib>
+#include "world.hpp"
 namespace farm_ui {
 // Window insets already use the window's coordinates; density must not be
 // applied again when mapping them onto the integer-scaled game canvas.
@@ -86,7 +88,20 @@ struct Layout {
     auto r = modal();
     return {r.x + 12 + (index % 2) * 105, r.y + 40 + (index / 2) * 29, 100, 25};
   }
-  Rect world_destination(int index) const {auto r=modal();return {r.x+12+(index%2)*105,r.y+36+(index/2)*25,100,23};}
+  Rect world_destination(int index) const {
+    auto r=modal();
+    if(!farm::indoors(index)){auto p=farm::WorldMapPositions[index];return {r.x+9+(p.x+1)*71,r.y+38+p.y*42,63,28};}
+    int slot=index==4?0:index==6?1:index==7?2:3;
+    return {r.x+12+(slot%2)*105,r.y+118+(slot/2)*26,100,22};
+  }
+  int world_neighbor(int index,int dx,int dy) const {
+    auto from=world_destination(index);int best=index,score=100000;
+    for(int i=0;i<farm::RegionCount;++i)if(i!=index) {
+      auto to=world_destination(i);int x=to.center_x()-from.center_x(),y=to.center_y()-from.center_y();
+      int forward=x*dx+y*dy,cross=std::abs(x*dy-y*dx);
+      if(forward>0&&forward+3*cross<score){best=i;score=forward+3*cross;}
+    }return best;
+  }
   Rect confirm(int top = 169, int h = 28) const {
     auto r = modal();
     return {r.x + 24, r.y + top, 180, h};

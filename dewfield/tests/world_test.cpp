@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-#include "../world.hpp"
+#include "../mines.hpp"
 #include <cassert>
 #include <cstdio>
 #include <cstring>
@@ -60,6 +60,7 @@ int main() {
   // Simulate walking from each arrival to every exit in its region.
   for (auto &arrival : Portals) {
     s.region = uint8_t(arrival.to);
+    if(arrival.to==Region::Mine)enter_mine(s);
     s.story = 3;
     stand(s, arrival.spawn_x, arrival.spawn_y);
     for (auto &exit : Portals)

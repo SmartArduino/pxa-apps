@@ -31,6 +31,7 @@ p.add_argument('--discoveries-only',action='store_true')
 p.add_argument('--actors-only',action='store_true')
 p.add_argument('--livestock-only',action='store_true')
 p.add_argument('--mines-only',action='store_true')
+p.add_argument('--geography-only',action='store_true')
 p.add_argument('--npc-only',action='store_true')
 p.add_argument('--world-only',action='store_true')
 p.add_argument('--layers-only',action='store_true')
@@ -191,6 +192,15 @@ def guide(i):
     y=(ch-210)//2+52+(i//2)*29
     tap(x,y)
 
+def map_tap(index):
+    # North-up outdoor geography, followed by labelled indoor destinations.
+    positions={0:(0,0),1:(1,0),2:(0,1),3:(-1,1),5:(1,1)}
+    mx,my=(cw-228)//2,(ch-210)//2
+    if index in positions:
+        x,y=positions[index];tap(mx+9+(x+1)*71+31,my+38+y*42+14)
+    else:
+        slot={4:0,6:1,7:2,8:3}[index];tap(mx+12+(slot%2)*105+50,my+118+(slot//2)*26+11)
+
 def world_tap(tx,ty):
     s=saved()
     camx=max(0,min(512-cw,s['px']-cw//2))
@@ -291,6 +301,20 @@ try:
         key('X');key('Z');time.sleep(.2)
     if args.appearance_only or args.animation_only or args.action_only or args.cultivation_only:time.sleep(2.4)
     capture('02-farm')
+    if args.geography_only:
+        assert args.fixture_tool
+        key('ENTER');time.sleep(.3);saved();stop();results=[]
+        crossings=[('farm-east','RIGHT',1,7),('town-west','LEFT',0,7),('farm-south','DOWN',2,15),('forest-north','UP',0,15),('town-south','DOWN',5,15),('orchard-north','UP',1,15),('forest-west','LEFT',3,12),('lake-east','RIGHT',2,12),('forest-east','RIGHT',5,12),('orchard-west','LEFT',2,12)]
+        for label,direction,region,aligned in crossings:
+            raw=out/(label+'.save');subprocess.run([str(args.fixture_tool.resolve()),'geo-'+label,str(raw),str(out/'unused')],check=True)
+            replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38);time.sleep(.2);capture(label+'-before')
+            key(direction,.4);time.sleep(.2);key('ENTER');time.sleep(.3);v=saved()
+            assert v['region']==region,v
+            assert (v['py']//16 if direction in ('LEFT','RIGHT') else v['px']//16)==aligned,v
+            results.append(dict(crossing=label,region=region,px=v['px'],py=v['py']));key('X');capture(label+'-after');stop()
+        start();tap(cw//2,ch-38);key('S');tap((cw-228)//2+36,(ch-210)//2+174);capture('north-up-map')
+        key('RIGHT');key('DOWN');key('Z');time.sleep(2);key('ENTER');time.sleep(.3);assert saved()['region']==5;stop()
+        (out/'geography-report.json').write_text(json.dumps(results,indent=2)+'\n');print('PASS: ten real directional crossings, aligned arrivals, spatial map/controller navigation and durable saves');raise SystemExit(0)
     if args.mines_only:
         assert args.fixture_tool
         key('ENTER');time.sleep(.3);saved();stop()
@@ -565,7 +589,7 @@ try:
                 tap((cw-228)//2+44,(ch-210)//2+190)
                 capture('bridge-repaired-dialogue');s=persist();assert s['story']==3 and s['wood']==0 and s['stone']==0,s
                 key('BACK');journal_tab(0)
-                tap((cw-228)//2+167,(ch-210)//2+81)
+                map_tap(3)
                 wait_region(3);time.sleep(.4);capture('walked-forest-to-lake')
             elif label=='town':
                 world_tap(14,12);time.sleep(.3);capture('granny-dialogue')

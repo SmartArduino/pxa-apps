@@ -69,6 +69,7 @@ void intro_next();
 void open_ranch();
 void mine_ui_draw(int,int);void mine_ui_tap(int,int);void mine_ui_key(Key);
 farm_ui::Rect mine_quick(int);
+void mine_quick_action(int);
 bool mine_page_active(){return page==Page::MineJournal||page==Page::MineStairs||page==Page::MineLift||page==Page::MineChest;}
 void ranch_draw(int,int);
 void ranch_tap(int,int);
@@ -594,7 +595,7 @@ void feedback(Result result) {
 void action(int x, int y) {
   if (swing&&!committing_tool)
     return;
-  bool cave_interaction=in_mine(state)&&(cave_forage_at(state,x,y)>=0||(x==16&&y==2)||(x==25&&y==17&&mob_at(state,x,y)<0));
+  bool cave_interaction=in_mine(state)&&((cave_forage_at(state,x,y)>=0&&mob_at(state,x,y)<0)||(x==16&&y==2)||(x==25&&y==17&&mob_at(state,x,y)<0));
   if(in_mine(state)&&Tool(state.tool)==Tool::Sword&&!cave_interaction){x=state.px/16+(dir==1)-(dir==3);y=state.py/16+(dir==2)-(dir==0);}
   if(!committing_tool) {
     auto tool=Tool(state.tool);
@@ -619,12 +620,14 @@ void action(int x, int y) {
     forage>=0?Foraging[forage].item:0;
   unsigned old_count=item_count(state,gathered_item);
   bool was_known=discovered_item(state,gathered_item);
-  auto res = act(state, x, y);
+  const Portal *crossing=portal_at(state,x,y);
+  auto res = in_mine(state)&&committing_tool&&action_tool==7?mine_strike(state,x,y):act(state, x, y);
   if(res==Result::Harvested || res==Result::Foraged)
     gather_effect(x,y,gathered_item,int(item_count(state,gathered_item)-old_count));
   if(res==Result::MineForaged)gather_effect(x,y,cave_item,1);
   if(res==Result::Ship){deposited_item=offered_item;deposit_ms=360;}
   if (res == Result::Travel) {
+    if(crossing)dir=arrival_heading(*crossing);
     for(auto &effect:gather_effects)effect.remaining=0;
     stop_motion();
     swing = 0;
@@ -1129,7 +1132,15 @@ void hud() {
          row ? (in_mine(state)?art::rgb(185,95,71):farm_palette::Water) : Sage);
   }
   }
-  if(in_mine(state))for(int i=0;i<3;++i){HudLayer layer(mine_quick(i),6);auto q=mine_quick(i);if(i==2)icon_button(q,farm_ui::Icon::Journal);else button(q.x,q.y,q.w,q.h,"",state.tool==(i?7:5));if(i<2)tool_icon(mine_quick(i).center_x(),mine_quick(i).center_y(),i?7:5,false);}
+  if(in_mine(state))for(int i=0;i<5;++i) {
+    auto q=mine_quick(i);HudLayer layer(q,6);
+    if(i==2)icon_button(q,farm_ui::Icon::Journal);
+    else {
+      button(q.x,q.y,q.w,q.h,"",i<2&&state.tool==(i?7:5));
+      if(i<2)tool_icon(q.center_x(),q.center_y(),i?7:5,false);
+      else {IconCanvas c;if(i==3)art::mine_ladder(c,q.center_x(),q.y+20,true,state.mine_depth==30?!state.mobs[5].hp:ladder_ready(state));else {int food=mine_food_item(state);art::food(c,q.center_x(),q.y+20,food?food:43);}}
+    }
+  }
   auto belt = ui.belt();
   {
   HudLayer layer(belt);
@@ -1482,16 +1493,16 @@ void modal() {
            tr("WALK TO COTTAGE STOVE","前往农舍灶台"),using_controller()&&selected_row==2);
     paragraph(x+12,y+192,toast_ms?toast:tr("Hold food and use it to eat","拿起食物，点操作按钮即可食用"),202,1,Muted);
   } else if (page == Page::World) {
-    for (int i = 0; i < RegionCount; ++i) {
-      auto r = layout().world_destination(i);
-      button(r.x, r.y, r.w, r.h, region_name(Region(i), english()),
-             selected_row == i);
+    auto map=layout();
+    for(const auto &p:Portals)if(!indoors(unsigned(p.from))&&!indoors(unsigned(p.to))&&unsigned(p.from)<unsigned(p.to)) {
+      auto a=map.world_destination(unsigned(p.from)),b=map.world_destination(unsigned(p.to));
+      line(a.center_x(),a.center_y(),b.center_x(),b.center_y(),Muted);
     }
-    paragraph(x + 12, y + 169,
-              tr("Choose a destination to walk there. The lake opens after "
-                 "repairing the bridge.",
-                 "选择目的地会沿路走过去。林间旧桥修好后，才能到达镜光湖。"),
-              202, 2, Muted);
+    text(x+16,y+46,tr("N","北"),Sage);line(x+43,y+61,x+43,y+43,Sage);line(x+43,y+43,x+39,y+48,Sage);line(x+43,y+43,x+47,y+48,Sage);
+    const char *cn[]={"晴露农场","晴露镇","林间小径","镜光湖畔","农场·农舍","蜜风果园","镇·种子铺","镇·会馆","林间·矿洞"};
+    const char *en[]={"Farm","Town","Woods","Lake","Cottage (farm)","Orchard","Seeds (town)","Lodge (town)","Mine (woods)"};
+    for(int i=0;i<RegionCount;++i){auto r=map.world_destination(i);button(r.x,r.y,r.w,r.h,english()?en[i]:cn[i],selected_row==i);}
+    paragraph(x+12,y+174,tr("North is up; indoor places belong to their labelled area.","上北下南，左西右东。室内入口位于标注区域。"),202,2,Muted);
   } else if (page == Page::People) {
     for (int i = 0; i < 4; ++i) {
       auto p = npc_pose(state, i);
@@ -1892,7 +1903,10 @@ void key(Key k) {
       page = Page::Farm;
       return;
     }
-    if (page == Page::Guide || page == Page::World) {
+    if(page==Page::World) {
+      int dx=(k==Key::RIGHT)-(k==Key::LEFT),dy=(k==Key::DOWN)-(k==Key::UP);
+      if(dx||dy)selected_row=layout().world_neighbor(selected_row,dx,dy);
+    } else if (page == Page::Guide) {
       if (k == Key::UP && selected_row >= 2)
         selected_row -= 2;
       if (k == Key::DOWN && selected_row + 2 < (page == Page::World ? RegionCount : 8))
@@ -2137,7 +2151,7 @@ void pointer(Phase phase, int x, int y) {
     return;
   }
   auto ui = layout();
-  if(in_mine(state))for(int i=0;i<3;++i)if(mine_quick(i).contains(x,y)){if(i==2)open_page(Page::MineJournal);else {equip_item(state,i?37:6);changed();}return;}
+  if(in_mine(state))for(int i=0;i<5;++i)if(mine_quick(i).contains(x,y)){mine_quick_action(i);return;}
   if (ui.header_button(0).contains(x, y)) {
     open_page(Page::Bag);
     return;
@@ -2299,9 +2313,10 @@ void tick(uint32_t elapsed) {
       }
       bool use = route_action;
       route = false;
-      dir = std::abs(targetx - tx) > std::abs(targety - ty)
-                ? (targetx > tx ? 1 : 3)
-                : (targety > ty ? 2 : 0);
+      if(targetx!=tx||targety!=ty)
+        dir = std::abs(targetx - tx) > std::abs(targety - ty)
+                  ? (targetx > tx ? 1 : 3)
+                  : (targety > ty ? 2 : 0);
       if(combat_target>=0&&in_mine(state)){auto &m=state.mobs[combat_target];int dx=int(m.x)-state.px,dy=int(m.y)-state.py;dir=std::abs(dx)>std::abs(dy)?(dx>0?1:3):(dy>0?2:0);combat_target=-1;}
       if (use)action(targetx, targety);
     } else {
