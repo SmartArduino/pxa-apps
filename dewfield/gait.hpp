@@ -18,7 +18,7 @@ inline Pose pose(int frame, int dir = 0) {
   int q = (p + 4) & 7;
   return {{{swing[p], lift[p]}, {swing[q], lift[q]}},
           {{swing[q], 0}, {swing[p], 0}},
-          p == 2 || p == 6 ? -1 : 0};
+          p == 1 || p == 2 || p == 5 || p == 6 ? -1 : 0};
 }
 inline const sprites::Rig &rig(int dir) {
   const sprites::Rig *rigs[] = {&sprites::north_rig, &sprites::east_rig,

@@ -55,7 +55,7 @@ int main() {
   unsigned gold=s.gold;
   for(int i=0;i<MilestoneCount;++i) {auto m=milestone(s,i);assert(claim_collection_reward(s,i));gold+=m.reward;assert(s.gold==gold&&!claim_collection_reward(s,i));}
   assert(ready_collection_rewards(s)==0&&!claim_collection_reward(s,-1)&&!claim_collection_reward(s,6));
-  uint8_t bytes[SaveBytes];State restored;assert(encode(s,bytes,sizeof(bytes))==SaveBytes&&bytes[4]==8);
+  uint8_t bytes[SaveBytes];State restored;assert(encode(s,bytes,sizeof(bytes))==SaveBytes&&bytes[4]==9);
   assert(decode(restored,bytes,sizeof(bytes))&&restored.discoveries==s.discoveries&&restored.collection_rewards==63&&restored.fish_caught==8);
   assert(!std::memcmp(s.fish_records,restored.fish_records,8));
   bytes[564]=1;checksum(bytes);assert(!decode(restored,bytes,sizeof(bytes))); // below this species' minimum length

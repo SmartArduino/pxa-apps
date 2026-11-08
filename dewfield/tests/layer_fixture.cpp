@@ -11,10 +11,24 @@ static uint16_t prop[512 * 384], person[512 * 384];
 int main(int argc, char **argv) {
   assert(argc == 4);
   farm::State s;
-  farm::fresh(s);s.minute=600;
+  farm::fresh(s);s.minute=600;s.intro=farm::IntroScenes;
   std::memset(s.cleared, 1, sizeof(s.cleared));
   for (auto &p : s.plots)
     p = {};
+  if(!std::strncmp(argv[1],"livestock-",10)) {
+    farm::begin_ranch(s);s.gold=2500;s.hay=30;s.trough=24;s.ranch_chapter=1;
+    s.px=farm::RanchX*16+8;s.py=(farm::RanchY+1)*16+8;s.show_joystick=s.show_action=false;
+    for(int i=0;i<10;++i) {
+      int kind=i/2+1;s.animals[i]={uint8_t(kind),uint8_t(i%2),farm::Breeds[kind-1].adult,65};
+    }
+    s.animals[0].products=5;s.animals[2].products=1;s.animals[3].age=3;
+    s.animals[4].products=1;s.animals[5].age=0;s.animals[6].products=3;s.animals[7].age=3;
+    s.animals[8].pregnancy=1;s.incubators[0]={1,1};farm::select_slot(s,-1);
+    if(!std::strcmp(argv[1],"livestock-slow")){s.auto_run=false;s.px=15*16+8;s.py=14*16+8;}
+    if(!std::strcmp(argv[1],"livestock-night")){s.region=unsigned(farm::Region::Home);s.visited|=1u<<s.region;s.px=10*16+8;s.py=10*16+8;}
+    uint8_t bytes[farm::SaveBytes];assert(farm::encode(s,bytes,sizeof(bytes))==sizeof(bytes));farm::State t;assert(farm::decode(t,bytes,sizeof(bytes)));
+    FILE*f=std::fopen(argv[2],"wb");assert(f&&std::fwrite(bytes,1,sizeof(bytes),f)==sizeof(bytes));std::fclose(f);f=std::fopen(argv[3],"w");assert(f);std::fclose(f);return 0;
+  }
   if(!std::strncmp(argv[1],"actors-",7)) {
     const char *mode=argv[1]+7;s.story=5;s.visited=255;s.day=12;s.minute=1110;s.energy=80;
     s.px=15*16+8;s.py=11*16+8;

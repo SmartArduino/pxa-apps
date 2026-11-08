@@ -49,7 +49,7 @@ def collect(source):
     document = ET.parse(source).getroot()
     ascent = int(document.find("prop[@id='emAscent']").get('value'))
     requested = set(range(32, 127))
-    for name in ('main.cpp', 'core.cpp', 'core.hpp', 'world.cpp', 'world.hpp', 'life.cpp', 'life.hpp', 'living.cpp', 'living.hpp', 'fishing.hpp', 'collections.hpp', 'runtime.cpp'):
+    for name in ('main.cpp', 'core.cpp', 'core.hpp', 'world.cpp', 'world.hpp', 'life.cpp', 'life.hpp', 'living.cpp', 'living.hpp', 'fishing.hpp', 'collections.hpp', 'runtime.cpp', 'livestock.hpp', 'ranch_ui.inc', 'opening.inc'):
         requested.update(ord(c) for c in (ROOT / name).read_text() if ord(c) >= 128)
     glyphs = {int(g.get('u')): g for g in document.findall('g') if g.get('u')}
     missing = requested - glyphs.keys()

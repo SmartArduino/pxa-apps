@@ -34,7 +34,7 @@ enum class Page {
   Story,
   Dialogue,
   Orders,
-  Kitchen, Calendar, Forecast, Shipping, Collections
+  Kitchen, Calendar, Forecast, Shipping, Collections, Ranch, Animal, Supply, Incubate, Butcher, Intro
 };
 Page page = Page::Farm;
 bool title_screen = true, save_locked = false, base_dirty = true,
@@ -63,9 +63,21 @@ int talking_npc = -1, journey_region = -1, journey_x = 0, journey_y = 0;
 bool journey_use = false;
 void go_to(Region, int, int, bool);
 void dialogue_action(int);
+void start_intro(bool replay=false);
+void draw_intro();
+void intro_next();
+void open_ranch();
+void ranch_draw(int,int);
+void ranch_tap(int,int);
+void ranch_key(Key);
+int ranch_index=0,ranch_page=0,supply_kind=1,butcher_pending=-1;
+bool supply_male=false,intro_replay=false,intro_skip=false;
+int intro_scene=0;uint32_t intro_elapsed=0;
+bool ranch_page_active() {return page==Page::Ranch||page==Page::Animal||page==Page::Supply||page==Page::Incubate||page==Page::Butcher;}
 int touchx, touchy, stickx, sticky;
 bool stick = false, touch_down = false;
 int held_direction = -1;
+int bag_page=0;
 int bag_selection = 0, drag_from = -1, drag_x = 0, drag_y = 0;
 bool drag_active = false, action_hold = false, action_touch = false;
 int hit_obstacle = -1, action_tool = 0;
@@ -366,7 +378,7 @@ void scene() {
         r.rect(x + k, y, 1, 1, art::rgb(143, 196, 189));
   }
   farm_scene::View view{swing?action_direction:dir,
-                        walking ? int((walk_distance / 4) % 8) + 1 : 0,
+                        walking ? walk_frame(walk_distance) : 0,
                         int(swing),
                         swing ? action_tool : int(state.tool),
                         season(),
@@ -429,6 +441,7 @@ void scene() {
   profile(DrawStage::Effects);
 }
 void stop_motion() {
+  butcher_pending=-1;
   route = false;
   moving = false;
   walking = false;
@@ -448,8 +461,10 @@ void open_page(Page p) {
   page = p;
   selected_row = p==Page::Calendar?season_day(state.day)-1:0;
   if(p==Page::Collections)collection_category=0;
+  if(p==Page::Ranch)ranch_page=std::min(ranch_page,std::max(0,(animal_count(state)-1)/3));
   if (p == Page::Bag) {
     bag_selection = state.active_slot < InventorySize ? state.active_slot : 0;
+    bag_page=bag_selection/28;
     selected_row=-1;
   }
   redraw();
@@ -459,6 +474,11 @@ void open_collections(int category=0,int index=0,Page parent=Page::Guide) {
 }
 void feedback(Result result) {
   switch (result) {
+  case Result::Ranch: open_ranch();return;
+  case Result::Animal: {
+    int i=animal_at(state,action_target.x/16,(action_target.y-2)/16);
+    if(i>=0){ranch_index=i;open_page(Page::Animal);}return;
+  }
   case Result::Sleep:
     open_page(Page::Sleep);
     return;
@@ -574,6 +594,7 @@ void action(int x, int y) {
     }
     action_target={x*16+8,y*16+2,true};
   }
+  if(!state.region&&animal_at(state,x,y)>=0){ranch_index=animal_at(state,x,y);bool confirm=butcher_pending==ranch_index;open_page(confirm?Page::Butcher:Page::Animal);return;}
   uint32_t oldq = state.quests;
   int npc = npc_at(state, x, y);
   int offered_item=held_item();
@@ -692,6 +713,7 @@ void facing_action() {
   action(x, y);
 }
 void navigate(int d) {
+  butcher_pending=-1;
   if(swing)return;
   journey_region = following_npc = -1;
   route = false;
@@ -764,7 +786,7 @@ void item_label(char *b, size_t n, int item, bool quantity = true) {
                      : item == 16 ? tr("Fish", "鲜鱼")
                      : item == 17 ? tr("Wood", "木材")
                      : item == 18 ? tr("Stone", "石料")
-                                  : item>=24?seasonal_name(item,english()):tr(Foods[item - 19].en, Foods[item - 19].cn);
+                                  : item>=29?animal_good(item,english()):item>=24?seasonal_name(item,english()):tr(Foods[item - 19].en, Foods[item - 19].cn);
   unsigned count = seed >= 0 ? state.seeds[seed] : item_count(state, item);
   std::snprintf(b, n, "%s%s", name, seed >= 0 ? tr(" seeds", "种子") : "");
   if (quantity) {
@@ -1132,6 +1154,8 @@ void hud() {
   }
   notification();
 }
+#include "ranch_ui.inc"
+#include "opening.inc"
 void collection_action() {
   if(collection_category!=3)return;
   if(claim_collection_reward(state,selected_row)) {
@@ -1270,9 +1294,11 @@ void modal() {
       : page == Page::Sleep    ? tr("HOME, SWEET HOME", "回到温暖的小屋")
                                : tr("A NEW MORNING", "又是美好的一天");
   char title[64];
+  if(ranch_page_active())name=page==Page::Ranch?tr("DEWFIELD RANCH","晴露牧场"):page==Page::Animal?tr("ANIMAL CARE","动物照料"):page==Page::Supply?tr("RANCH SUPPLIES","牧场补给"):page==Page::Butcher?tr("CONFIRM","确认取肉"):tr("INCUBATOR","温暖孵化箱");
   if(page==Page::Calendar) {
     std::snprintf(title,sizeof(title),english()?"%s / Year %u":"%s · 第%u年日历",english()?seasons_en[season()]:seasons_cn[season()],(state.day-1)/112+1);name=title;
   }
+  if(page==Page::Bag){std::snprintf(title,sizeof(title),english()?"BAG %d/2":"背包 %d/2",bag_page+1);name=title;}
   if(page==Page::Collections) {
     std::snprintf(title,sizeof(title),english()?"COLLECTION %d/%d":"晴露收藏册 %d/%d",discovered_total(state),CollectionTotal);name=title;
   }
@@ -1326,7 +1352,8 @@ void modal() {
            state.capacity < 60 ? tr("Bigger can  180G", "升级水壶 180G / 60 格")
                                : tr("Watering can upgraded", "水壶已升级"));
   } else if (page == Page::Bag) {
-    for (int i = 0; i < InventorySize; ++i)
+    button(x+12,y+7,20,20,"<");button(x+170,y+7,20,20,">");
+    for(int i=bag_page*28;i<std::min(InventorySize,bag_page*28+28);++i)
       inventory_cell(layout().bag_slot(i), i, true);
     int item = state.slots[bag_selection];
     if (item == 5 || item == 6) {
@@ -1351,6 +1378,8 @@ void modal() {
     icon_label_button(layout().bag_action(1), farm_ui::Icon::Sprinkler,
                       tr("SPRINKLER", "造洒水器"),
                       using_controller() && selected_row == 1);
+  } else if(ranch_page_active()) {
+    ranch_draw(x,y);
   } else if (page == Page::Settings) {
     const char *labels[] = {
         tr("Virtual joystick", "虚拟摇杆"), tr("Action button", "悬浮按钮"),
@@ -1370,7 +1399,7 @@ void modal() {
     const char *labels[] = {
         tr("HOME", "小屋休息"),   tr("SEED SHOP", "购买种子"),
         tr("SHIPPING", "出货箱"), tr("WELL", "井边补水"),
-        tr("POND", "池塘钓鱼"),   tr("VILLAGER", "村民委托"),
+        tr("POND", "池塘钓鱼"),   tr("RANCH", "牧场照料"),
         tr("REQUESTS", "每日委托"), tr("KITCHEN", "厨房料理")};
     for (int i = 0; i < 8; ++i)
       button(x + 12 + (i % 2) * 105, y + 40 + (i / 2) * 29, 100, 25, labels[i],
@@ -1447,7 +1476,8 @@ void modal() {
     fit_text(x + 12, y + 40, story_title(state, english()), 202, Sage);
     paragraph(x + 12, y + 61, story_line(state, english()), 202, 6, Text);
     paragraph(x + 12, y + 143, story_goal(state, english()), 202, 3, Muted);
-    button(x + 24, y + 177, 180, 25, tr("BACK", "返回手册"));
+    button(x+12,y+177,104,25,tr("JOURNAL","返回手册"));
+    button(x+126,y+177,90,25,tr("PROLOGUE / Y","重看序章"));
   } else if (page == Page::Dialogue) {
     const auto &portrait = art::villager_sprite(talking_npc, 2);
     pocket::sprite(x + 15, y + 35, portrait);
@@ -1522,7 +1552,7 @@ void guide_route(int i) {
   if (i == 6 || i == 7) { open_page(i == 6 ? Page::Orders : Page::Kitchen); return; }
   if (i < 0 || i >= 6) return;
   following_npc = -1;
-  const int goals[][2] = {{10, 9}, {15, 10}, {8, 9}, {7, 8}, {24, 17}, {21, 8}};
+  const int goals[][2] = {{10, 9}, {15, 10}, {8, 9}, {7, 8}, {24, 17}, {RanchX, RanchY}};
   if (i == 4)
     equip_item(state, 7);
   Region r = i == 0 ? Region::Home : i == 1 ? Region::SeedShop : Region::Farm;
@@ -1548,7 +1578,9 @@ void dialogue_action(int choice) {
   if (talking_npc < 0 || talking_npc >= 4)
     return;
   if (choice == 0) {
-    if (advance_story(state, talking_npc)) {
+    if(ranch_story(state,talking_npc)) {
+      std::snprintf(letter,sizeof(letter),"%s\n%s",ranch_completion(state.ranch_chapter,english()),ranch_goal(state,english()));
+    } else if (advance_story(state, talking_npc)) {
       base_dirty = true;
       std::snprintf(letter, sizeof(letter), "%s",
                     story_completion(state.story, english()));
@@ -1600,6 +1632,7 @@ void shop_action(int index) {
   changed();
 }
 void panel_tap(int px, int py) {
+
   auto m=layout().modal();
   if(page==Page::Calendar && px>=m.x+14 && px<m.x+217 && py>=m.y+57 && py<m.y+157) {
     selected_row=(py-m.y-57)/25*7+(px-m.x-14)/29;redraw();return;
@@ -1613,6 +1646,11 @@ void panel_tap(int px, int py) {
     page = page==Page::Collections?collection_parent:Page::Farm;
     return;
   }
+  if(page==Page::Bag&&(farm_ui::Rect{m.x+12,m.y+7,20,20}.contains(px,py)||farm_ui::Rect{m.x+170,m.y+7,20,20}.contains(px,py))) {
+    bag_page=1-bag_page;bag_selection=bag_page*28;selected_row=-1;redraw();return;
+  }
+  if(ranch_page_active()){ranch_tap(px,py);return;}
+  if(page==Page::Story&&farm_ui::Rect{m.x+126,m.y+177,90,25}.contains(px,py)){start_intro(true);return;}
   if(page==Page::Collections) {
     for(int i=0;i<4;++i)if(ui.collection_tab(i).contains(px,py)) {
       collection_category=i;selected_row=0;redraw();return;
@@ -1715,6 +1753,7 @@ const char *title() { return "晴露农场 Dewfield"; }
 const char *app_id() { return "dewfield"; }
 bool input_active() { return moving || route || stick || touch_down; }
 bool back() {
+  if(page==Page::Intro){intro_skip=!intro_skip;redraw();return true;}
   if (!title_screen && page != Page::Farm) {
     stop_motion();
     cancel_tool();
@@ -1769,10 +1808,14 @@ void key(Key k) {
     if (k == Key::A || k == Key::B) {
       title_screen = false;
       scene_surface(true);
-      msg("欢迎！点开背包里的农场手册", "Welcome! Open the farm journal");
+      if(state.intro<IntroScenes)start_intro();else msg("欢迎！点开背包里的农场手册", "Welcome! Open the farm journal");
     }
     return;
   }
+  if(page==Page::Intro){if(k==Key::B)intro_skip=!intro_skip;else if(k==Key::A)intro_next();redraw();return;}
+  if(page==Page::Bag&&(k==Key::L||k==Key::R)){bag_page=1-bag_page;bag_selection=bag_page*28;selected_row=-1;redraw();return;}
+  if(ranch_page_active()){ranch_key(k);redraw();return;}
+  if(page==Page::Story&&k==Key::Y){start_intro(true);return;}
   if (page == Page::Fishing) {
     if(k==Key::B) {cancel_tool();page=Page::Farm;redraw();}
     else if(k==Key::X && fishing.phase==FishingSession::Phase::Caught)open_collections(2,fishing.species,Page::Fishing);
@@ -1844,15 +1887,15 @@ void key(Key k) {
       if(selected_row<0) {
         if(k==Key::LEFT&&bag_selection%7) --bag_selection;
         if(k==Key::RIGHT&&bag_selection%7<6) ++bag_selection;
-        if(k==Key::UP&&bag_selection>=7) bag_selection-=7;
+        if(k==Key::UP&&bag_selection%28>=7) bag_selection-=7;
         if(k==Key::DOWN) {
-          if(bag_selection<21)bag_selection+=7;
+          if(bag_selection%28<21&&bag_selection+7<InventorySize)bag_selection+=7;
           else selected_row=bag_selection%7>=3?1:0;
         }
       } else {
         if(k==Key::LEFT)selected_row=0;
         if(k==Key::RIGHT)selected_row=1;
-        if(k==Key::UP){bag_selection=21+bag_selection%7;selected_row=-1;}
+        if(k==Key::UP){bag_selection=std::min(InventorySize-1,bag_page*28+(bag_page?7:21)+bag_selection%7);selected_row=-1;}
       }
     } else {
       if (k == Key::UP)
@@ -1946,7 +1989,7 @@ void pointer(Phase phase, int x, int y) {
     auto ui = layout();
     if(page==Page::Farm&&swing&&ui.belt().contains(x,y)) {touch_down=false;return;}
     if (page == Page::Bag) {
-      for (int i = 0; i < InventorySize; ++i)
+      for(int i=bag_page*28;i<std::min(InventorySize,bag_page*28+28);++i)
         if (ui.bag_slot(i).contains(x, y)) {
           bag_selection = i;
           drag_from = i;
@@ -1976,6 +2019,11 @@ void pointer(Phase phase, int x, int y) {
       }
     }
     return;
+  }
+  if(phase==Phase::MOVE&&page==Page::Bag&&drag_from>=0) {
+    auto m=layout().modal();
+    int requested=farm_ui::Rect{m.x+12,m.y+7,20,20}.contains(x,y)?0:farm_ui::Rect{m.x+170,m.y+7,20,20}.contains(x,y)?1:bag_page;
+    if(requested!=bag_page){bag_page=requested;drag_active=true;redraw();}
   }
   if (phase == Phase::MOVE) {
     if (drag_from >= 0) {
@@ -2009,7 +2057,7 @@ void pointer(Phase phase, int x, int y) {
     drag_from = -1;
     if (drag_active) {
       int destination = -1;
-      for (int i = 0; i < (page == Page::Bag ? InventorySize : HotbarSize); ++i)
+      for(int i=page==Page::Bag?bag_page*28:0;i<(page==Page::Bag?std::min(InventorySize,bag_page*28+28):HotbarSize);++i)
         if ((page == Page::Bag ? layout().bag_slot(i) : layout().tool(i))
                 .contains(x, y))
           destination = i;
@@ -2037,10 +2085,15 @@ void pointer(Phase phase, int x, int y) {
   if (title_screen) {
     title_screen = false;
     scene_surface(true);
-    if(state.day==1&&state.minute<=365&&!state.harvested)msg("点地块自动操作，背包里有手册", "Tap tiles to farm. Journal in bag");
+    if(state.intro<IntroScenes)start_intro();
+    else if(state.day==1&&state.minute<=365&&!state.harvested)msg("点地块自动操作，背包里有手册", "Tap tiles to farm. Journal in bag");
     else toast_ms=0;
     redraw();
     return;
+  }
+  if(page==Page::Intro) {
+    if(farm_ui::Rect{WIDTH-66,6,60,24}.contains(x,y))intro_skip=!intro_skip;
+    else if(y>=HEIGHT-42)intro_next();redraw();return;
   }
   if (page != Page::Farm) {
     panel_tap(x, y);
@@ -2107,6 +2160,7 @@ void tick(uint32_t elapsed) {
   }
   if (title_screen)
     return;
+  if(page==Page::Intro){intro_elapsed+=elapsed;redraw();return;}
   if (swing) {
     swing = swing > elapsed ? swing - elapsed : 0;
     if(pending_tool.active && swing<=unsigned(art::tool_anim::impact_remaining(action_tool,action_grade))) {
@@ -2234,7 +2288,8 @@ void tick(uint32_t elapsed) {
     // pixels every step, especially when frame delivery is uneven.
     if ((route || d >= 0) && amount > traveled)
       move_acc += unsigned(amount - traveled) * 1000;
-    walking = traveled > 0;
+    // A fractional-pixel tick is still walking; never flash the idle pose.
+    walking = traveled > 0 || (moving && amount == 0);
     if (state.px == stepx && state.py == stepy) {
       moving = false;
       if (const auto *p=portal_at(state,state.px/16,state.py/16);
@@ -2255,6 +2310,7 @@ void draw() {
     title_overlay();
     return;
   }
+  if(page==Page::Intro){draw_intro();return;}
   scene();
   if (page != Page::Farm)
     shade();

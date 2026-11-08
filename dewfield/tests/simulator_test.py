@@ -29,6 +29,7 @@ p.add_argument('--atmosphere-only',action='store_true')
 p.add_argument('--redesign-only',action='store_true')
 p.add_argument('--discoveries-only',action='store_true')
 p.add_argument('--actors-only',action='store_true')
+p.add_argument('--livestock-only',action='store_true')
 p.add_argument('--npc-only',action='store_true')
 p.add_argument('--world-only',action='store_true')
 p.add_argument('--layers-only',action='store_true')
@@ -140,6 +141,10 @@ def saved():
     result['auto_run']=bool(raw[559]) if raw[4]>=6 else True
     if raw[4]>=8:
         result.update(discoveries=struct.unpack_from('<I',raw,560)[0],fish_records=list(raw[564:572]),fish_caught=struct.unpack_from('<H',raw,572)[0],perfect=struct.unpack_from('<H',raw,574)[0],collection_rewards=raw[576])
+    if raw[4]>=9:
+        result.update(goods=list(struct.unpack_from('<8H',raw,577)),animals=[list(raw[593+i*11:600+i*11])+list(struct.unpack_from('<2H',raw,600+i*11)) for i in range(12)],incubators=[list(raw[725+i*2:727+i*2]) for i in range(3)],hay=struct.unpack_from('<H',raw,731)[0],trough=struct.unpack_from('<H',raw,733)[0],hatched=struct.unpack_from('<H',raw,735)[0],born=struct.unpack_from('<H',raw,737)[0],intro=raw[741],ranch=raw[742],ranch_chapter=raw[743])
+        result['slots']+=list(raw[745:759])
+    else:result['intro']=5
     return result
 
 def wait_for(predicate,label,seconds=12):
@@ -212,7 +217,63 @@ try:
             r,g,b=im.getpixel((x,y));actual=((r&248)<<8)|((g&252)<<3)|(b>>3)
             assert actual==colors[sy*sw+sx],('Title stretched or incorrectly cropped',x,y)
         stop();print('PASS: real simulator title uses uniform scale and centred crop');raise SystemExit(0)
+    try:needs_intro=saved().get('intro',5)<5
+    except AssertionError:needs_intro=True
     tap(cw//2,ch-38)
+    if args.livestock_only:
+        assert args.fixture_tool
+        if needs_intro:
+            for scene in range(5):
+                time.sleep(.25);capture('opening-'+str(scene));key('Z')
+            wait_for(lambda v:v['intro']==5 and v['ranch']==1,'opening completion')
+            assert sum(bool(a[0]) for a in saved()['animals'])==2
+        key('ENTER');time.sleep(.3);saved();stop()
+        raw=out/'livestock.save';subprocess.run([str(args.fixture_tool.resolve()),'livestock-farm',str(raw),str(out/'unused')],check=True)
+        replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38);time.sleep(.25)
+        key('UP',.025);key('Z');wait_for_panel('ranch');capture('ranch-ledger')
+        mx,my=(cw-228)//2,(ch-210)//2
+        tap(mx+44,my+195);capture('ranch-supply')
+        before=saved();tap(mx+100,my+138);after=saved();assert after['gold']==before['gold'] # all twelve stalls reserved
+        key('X');tap(mx+45,my+78);capture('animal-care')
+        tap(mx+100,my+138);wait_for_panel('walk to animal',15);time.sleep(.3)
+        tap(mx+100,my+138);wait_for(lambda v:v['goods'][6]==1,'collect fertile egg')
+        capture('egg-collected');key('X')
+        for _ in range(3):tap(mx+198,my+170)
+        tap(mx+65,my+78);tap(mx+100,my+190);wait_for_panel('walk before pork confirmation');capture('pork-confirmation')
+        tap(mx+60,my+188);assert sum(bool(a[0]) for a in saved()['animals'])==10
+        tap(mx+100,my+190);tap(mx+164,my+188)
+        wait_for(lambda v:v['goods'][5]==4 and sum(bool(a[0]) for a in v['animals'])==9,'confirmed adult pig')
+        tap(mx+44,my+195);wait_for_panel('return to ranch',15);tap(mx+44,my+195);before=saved();tap(mx+100,my+138)
+        wait_for(lambda v:v['gold']==before['gold']-80 and sum(bool(a[0]) for a in v['animals'])==10,'buy new chick')
+        key('X');key('X');key('A')
+        egg=saved()['slots'].index(35);sx=mx+25+egg%7*29;sy=my+49+egg//7*28
+        command(f'TOUCH DOWN 0 {sx*scale} {sy*scale}')
+        command(f'TOUCH MOVE 0 {(mx+180)*scale} {(my+15)*scale}');time.sleep(.1)
+        command(f'TOUCH MOVE 0 {(mx+25)*scale} {(my+49)*scale}');command(f'TOUCH UP 0 {(mx+25)*scale} {(my+49)*scale}');time.sleep(.2)
+        wait_for(lambda v:v['slots'][28]==35,'cross-page egg drag');capture('bag-second-page')
+        tap(mx+25,my+49);key('X');capture('holding-fertile-egg');capture('pasture')
+        key('ENTER');time.sleep(.3);stop()
+        start();tap(cw//2,ch-38);key('ENTER');time.sleep(.3);assert saved()['active']==28 and saved()['slots'][28]==35;stop()
+        subprocess.run([str(args.fixture_tool.resolve()),'livestock-night',str(raw),str(out/'unused')],check=True)
+        replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38);key('UP',.025);key('Z');wait_for_panel('sleep');capture('before-birth')
+        key('Z');after=wait_for(lambda v:v['hatched']==1 and v['born']==1 and v['day']==2,'hatching and live birth')
+        assert sum(bool(a[0]) for a in after['animals'])==12
+        assert after['animals'][10][2]==0 and after['animals'][11][2]==0
+        capture('new-morning');key('Z');key('ENTER');time.sleep(.3);durable=saved();stop()
+        start();tap(cw//2,ch-38);key('ENTER');time.sleep(.3);again=saved()
+        for k in ['animals','goods','incubators','hatched','born','ranch','ranch_chapter','hay','trough','slots']:assert durable[k]==again[k],k
+        capture('restart');stop()
+        subprocess.run([str(args.fixture_tool.resolve()),'livestock-slow',str(raw),str(out/'unused')],check=True)
+        replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38);time.sleep(.25)
+        frames=[];command('KEY_DOWN RIGHT')
+        for i in range(12):
+            capture('slow-walk-'+str(i));frames.append(Image.open(out/('slow-walk-'+str(i)+'.png')).convert('RGB'));time.sleep(.035)
+        command('KEY_UP RIGHT');frames[0].save(out/'slow-walk.gif',save_all=True,append_images=frames[1:],duration=95,loop=0)
+        key('ENTER');time.sleep(.25);stop();(out/'livestock-report.json').write_text(json.dumps(again,indent=2)+'\n')
+        print('PASS: signed simulator five opening scenes, care, reserved stalls, fertile egg collection, overnight hatching/live birth and v9 restart')
+        raise SystemExit(0)
+    if needs_intro:
+        key('X');key('Z');time.sleep(.2)
     if args.appearance_only or args.animation_only or args.action_only or args.cultivation_only:time.sleep(2.4)
     capture('02-farm')
     if args.actors_only:

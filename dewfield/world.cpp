@@ -239,7 +239,7 @@ NpcPose npc_pose(const State &s, int id, int subminute_ms) {
   bool moving=safe&&(forward||backward);
   if(!safe)offset=0;
   int distance=forward?offset:stroll-offset;
-  return {r,x*16+8+offset,y*16+12,moving?(forward?1:3):2,moving,moving?1+(distance/4)%8:0};
+  return {r,x*16+8+offset,y*16+12,moving?(forward?1:3):2,moving,moving?walk_frame(distance):0};
 }
 int npc_at(const State &s, int x, int y) {
   for (int id = 0; id < 4; ++id) {

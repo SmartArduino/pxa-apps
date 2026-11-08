@@ -24,7 +24,7 @@ enum class Kind : uint8_t {
   Bed,
   Table,
   Forage,
-  Stove, Television, Calendar, Counter, Cabinet, Fireplace, Chair, Shelf, Signpost
+  Stove, Television, Calendar, Counter, Cabinet, Fireplace, Chair, Shelf, Signpost, Animal, RanchShed
 };
 struct Rect {
   int x, y, w, h;
@@ -91,6 +91,8 @@ inline Placement placement(const Entry &e) {
   }
 }
 inline Rect bounds(const Entry &e) {
+  if(e.kind==Kind::Animal)return {e.x-16,e.y-29,32,30};
+  if(e.kind==Kind::RanchShed)return {e.x-27,e.y-45,55,50};
   if(e.kind==Kind::Counter)return {e.x-3,e.y-44,182,47};
   if(e.kind==Kind::Television)return {e.x-16,e.y-38,33,40};
   if(e.kind==Kind::Calendar)return {e.x-13,e.y-32,27,34};
@@ -227,9 +229,11 @@ struct Queue {
     for(int id=0;id<4;++id){auto p=farm::npc_pose(s,id,v.subminute_ms);if(p.region==farm::Region::Farm)
       add(Kind::WorldNpc,p.x,p.y,p.y,id+p.dir*4,true,p.frame);
     }
-    add(Kind::Chicken, 11 * 16 + int((v.animation / 4) % 12), 19 * 16 + 8,
-        19 * 16 + 8, 0);
-    add(Kind::Chicken, 14 * 16, 19 * 16 + 12, 19 * 16 + 12, 1);
+    add(Kind::RanchShed,farm::RanchX*16+8,farm::RanchY*16+12,farm::RanchY*16+12,0,true);
+    for(int id=0;id<farm::AnimalMax;++id)if(s.animals[id].kind) {
+      auto p=farm::animal_pose(s,id,v.subminute_ms);
+      add(Kind::Animal,p.x,p.y,p.y,id,true,(p.heading==3?2:0)+p.frame);
+    }
     signs(s);
     add(Kind::Player, s.px, s.py, s.py);
     sort();
@@ -326,6 +330,8 @@ struct Queue {
     for (unsigned i = 0; i < count; ++i) {
       const auto &e = entries[i];
       switch (e.kind) {
+      case Kind::Animal:art::animal_shadow(r,e.x,e.y,s.animals[e.id],e.growth>=2?3:1,e.growth&1);break;
+      case Kind::RanchShed:art::shadow_strip(r,e.x-22,e.y,44,1);break;
       case Kind::WorldNpc:
         art::gait::shadow(r,e.x,e.y,e.id/4,e.growth,&art::villager_rig(e.id%4,e.id/4));
         break;
@@ -378,6 +384,8 @@ struct Queue {
     for (unsigned i = 0; i < count; ++i) {
       auto &e = entries[i];
       switch (e.kind) {
+      case Kind::Animal:art::animal(r,e.x,e.y,s.animals[e.id],e.growth>=2?3:1,e.growth&1);break;
+      case Kind::RanchShed:art::ranch_shed(r,e.x,e.y,s.trough);break;
       case Kind::WorldNpc: {
         auto p = placement(e);
         art::gait::draw(r,e.x,e.y,e.id/4,e.growth,false,&art::villager_rig(e.id%4,e.id/4));
@@ -482,6 +490,7 @@ struct Queue {
       if (!e.interactive)
         continue;
       auto p = placement(e);
+      if((e.kind==Kind::Animal||e.kind==Kind::RanchShed)&&bounds(e).intersects({x,y,1,1})) {tx=e.x/16;ty=e.y/16;return true;}
       if(e.kind==Kind::Signpost && bounds(e).intersects({x,y,1,1})) {
         tx=farm::Portals[e.id].x;ty=farm::Portals[e.id].y;return true;
       }

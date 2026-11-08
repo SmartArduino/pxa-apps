@@ -3,6 +3,7 @@
 #include "world.hpp"
 #include "living.hpp"
 #include "collections.hpp"
+#include "livestock.hpp"
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
@@ -34,6 +35,7 @@ Ground ground(const State &s, int x, int y) {
     return Ground::Wall;
   if ((y == 8 || y == 17) && ((x >= 10 && x <= 13) || (x >= 16 && x <= 19)))
     return Ground::Wall;
+  if(x>=RanchX-1&&x<=RanchX+1&&y>=RanchY-2&&y<=RanchY)return Ground::Wall;
   int o = obstacle_index(x, y);
   if (o >= 0 && !s.cleared[o] && (Obstacles[o].kind != 0 || s.tree_age[o] >= 2))
     return Ground(int(Ground::Tree) + Obstacles[o].kind);
@@ -82,7 +84,8 @@ unsigned item_count(const State &s, int item) {
   return item == 16 ? s.fish : item == 17 ? s.wood : item == 18 ? s.stone
       : item >= 19 && item <= 21 ? s.gathered[item - 19]
       : item >= 22 && item <= 23 ? s.meals[item - 22]
-      : item >= 24 && item <= 28 ? s.seasonal[item - 24] : 0;
+      : item >= 24 && item <= 28 ? s.seasonal[item - 24]
+      : item >= 29 && item <= 36 ? s.animal_goods[item-29] : 0;
 }
 bool change_item(State &s, int item, int amount) {
   uint16_t *stack = item >= 8 && item <= 11 ? &s.seeds[item - 8]
@@ -90,10 +93,15 @@ bool change_item(State &s, int item, int amount) {
       : item == 16 ? &s.fish : item == 17 ? &s.wood : item == 18 ? &s.stone
       : item >= 19 && item <= 21 ? &s.gathered[item - 19]
       : item >= 22 && item <= 23 ? &s.meals[item - 22]
-      : item >= 24 && item <= 28 ? &s.seasonal[item - 24] : nullptr;
+      : item >= 24 && item <= 28 ? &s.seasonal[item - 24]
+      : item >= 29 && item <= 36 ? &s.animal_goods[item-29] : nullptr;
   if (!stack || amount < -int(*stack) || amount > 999 - int(*stack)) return false;
+  if(amount>0 && !*stack) {
+    int types=0;for(int i=1;i<=ItemCount;++i)types+=item_count(s,i)!=0;
+    if(types>=InventorySize)return false;
+  }
   *stack = uint16_t(int(*stack) + amount);
-  if(amount>0 && item>=12)s.discoveries|=1u<<(item-12);
+  if(amount>0 && item>=12 && item<=28)s.discoveries|=1u<<(item-12);
   return true;
 }
 void sync_inventory(State &s) {
@@ -231,6 +239,8 @@ Result act(State &s, int x, int y) {
     }
     return Result::Blocked;
   }
+  if(x==RanchX&&y==RanchY)return Result::Ranch;
+  if(animal_at(s,x,y)>=0)return Result::Animal;
   if (x == 8 && y == 9) {
     return ship(s)?Result::Ship:Result::EmptyShipping;
   }
@@ -284,7 +294,7 @@ Result act(State &s, int x, int y) {
     int c = p.crop - 1;
     if (s.produce[c] >= 999)
       return Result::Blocked;
-    change_item(s,12+c,1);
+    if(!change_item(s,12+c,1))return Result::Blocked;
     s.harvested++;
     if (Crops[c].regrow)
       p.growth = Crops[c].days - Crops[c].regrow;
@@ -374,6 +384,7 @@ uint32_t sleep(State &s, bool forced) {
       ++p.growth;
     p.wet = 0;
   }
+  livestock_night(s);
   s.day = s.day == 65535 ? 1 : s.day + 1;
   s.minute = 360;
   s.energy = restoration;
@@ -397,6 +408,7 @@ uint32_t sleep(State &s, bool forced) {
   s.order_day = s.day;
   s.order_claimed = 0;
   if (s.day == 1) {
+    for(auto &a:s.animals){a.pet_day=0;a.fed_day=0;}
     std::memset(s.chat_day, 0, sizeof(s.chat_day));
     std::memset(s.gift_day, 0, sizeof(s.gift_day));
   }
@@ -407,8 +419,8 @@ bool buy_seed(State &s, int kind, int count) {
       s.seeds[kind] + count > 999 ||
       s.gold < uint32_t(Crops[kind].price * count))
     return false;
+  if(!change_item(s,8+kind,count))return false;
   s.gold -= Crops[kind].price * count;
-  s.seeds[kind] += count;
   return true;
 }
 bool upgrade(State &s) {
@@ -497,7 +509,7 @@ size_t encode(const State &original, uint8_t *out, size_t cap) {
     }
   };
   put(0x31465744, 4);
-  put(8, 2);
+  put(9, 2);
   put(s.day, 2);
   put(s.minute, 2);
   put(s.energy, 1);
@@ -533,8 +545,7 @@ size_t encode(const State &original, uint8_t *out, size_t cap) {
     put(grade, 1);
   for (auto damage : s.damage)
     put(damage, 1);
-  for (auto item : s.slots)
-    put(item, 1);
+  for(int i=0;i<28;++i)put(s.slots[i],1);
   put(s.active_slot, 1);
   for (auto age : s.tree_age)
     put(age, 1);
@@ -563,6 +574,16 @@ size_t encode(const State &original, uint8_t *out, size_t cap) {
   put(s.discoveries,4);
   for(auto length:s.fish_records)put(length,1);
   put(s.fish_caught,2);put(s.perfect_catches,2);put(s.collection_rewards,1);
+  for(auto v:s.animal_goods)put(v,2);
+  for(auto &a:s.animals) {
+    for(auto v:{a.kind,a.male,a.age,a.heart,a.pregnancy,a.cooldown,a.products})put(v,1);
+    put(a.pet_day,2);put(a.fed_day,2);
+  }
+  for(auto &e:s.incubators){put(e.kind,1);put(e.days,1);}
+  for(auto v:{s.hay,s.trough,s.hatched,s.born,s.animal_collected})put(v,2);
+  put(s.intro,1);put(s.ranch,1);put(s.ranch_chapter,1);put(s.breeding,1);
+  for(int i=28;i<InventorySize;++i)put(s.slots[i],1);
+  if(n>SaveBytes-4)return 0;
   n = SaveBytes - 4;
   put(checksum(out, n), 4);
   return SaveBytes;
@@ -580,7 +601,7 @@ bool decode(State &s, const uint8_t *in, size_t n) {
   if (get(4) != 0x31465744)
     return false;
   uint32_t version = get(2);
-  if (version < 1 || version > 8)
+  if (version < 1 || version > 9)
     return false;
   if ((version >= 3 && n != SaveBytes) || (version < 3 && n != 512))
     return false;
@@ -649,8 +670,8 @@ bool decode(State &s, const uint8_t *in, size_t n) {
         return false;
     }
     bool present[ItemCount + 1]{};
-    for (auto &item : t.slots) {
-      item = get(1);
+    for(int slot=0;slot<28;++slot) {
+      auto &item=t.slots[slot];item = get(1);
       if (item > ItemCount || (item && (present[item] ||
           (item < 19 && !(version<5&&item==2) && !item_count(t, item)))))
         return false;
@@ -658,10 +679,10 @@ bool decode(State &s, const uint8_t *in, size_t n) {
         present[item] = true;
     }
     for (int item = 1; item <= ItemCount; ++item)
-      if (item_count(t, item) && !present[item])
+      if (version<9 && item_count(t, item) && !present[item])
         return false;
     t.active_slot = get(1);
-    if (t.active_slot >= (version>=7?InventorySize:HotbarSize) && t.active_slot != 255)
+    if (t.active_slot >= (version>=9?InventorySize:version>=7?28:HotbarSize) && t.active_slot != 255)
       return false;
     for (int i = 0; i < 24; ++i) {
       t.tree_age[i] = get(1);
@@ -756,13 +777,34 @@ bool decode(State &s, const uint8_t *in, size_t n) {
     }
   } else {
     // Old saves can prove owned goods, but cannot prove a particular fish species.
-    for(int item=12;item<=ItemCount;++item)
+    for(int item=12;item<=28;++item)
       if(item_count(t,item))t.discoveries|=1u<<(item-12);
   }
-  for (int item = 19; item <= ItemCount; ++item) {
+  if(version>=9) {
+    for(auto &v:t.animal_goods){v=get(2);if(v>999)return false;}
+    for(auto &a:t.animals) {
+      a.kind=get(1);a.male=get(1);a.age=get(1);a.heart=get(1);a.pregnancy=get(1);a.cooldown=get(1);a.products=get(1);a.pet_day=get(2);a.fed_day=get(2);
+      if(a.kind>5||a.male>1||a.age>250||a.heart>100||a.pregnancy>4||a.cooldown>4||a.products>7)return false;
+      if(!a.kind&&(a.age||a.pregnancy||a.products||a.pet_day||a.fed_day))return false;
+      if(a.kind&&(a.products||a.pregnancy)&&animal_stage(a)<2)return false;
+      if(a.pregnancy&&(a.kind<3||a.male||a.pregnancy>Breeds[a.kind-1].gestation))return false;
+      if(a.products && ((a.products&4)&&(!(a.products&1)||a.kind>2)||a.kind==5||((a.products&1)&&a.male)||((a.products&2)&&a.kind!=4)))return false;
+    }
+    for(auto &e:t.incubators) {e.kind=get(1);e.days=get(1);if(e.kind>2||(!e.kind&&e.days)||(e.kind&&(!e.days||e.days>(e.kind==1?3:4))))return false;}
+    t.hay=get(2);t.trough=get(2);t.hatched=get(2);t.born=get(2);t.animal_collected=get(2);
+    t.intro=get(1);t.ranch=get(1);t.ranch_chapter=get(1);auto breeding=get(1);t.breeding=breeding;
+    for(int i=28;i<InventorySize;++i){t.slots[i]=get(1);if(t.slots[i]>ItemCount)return false;}
+    if(t.hay>999||t.trough>24||t.intro>IntroScenes||t.ranch>1||t.ranch_chapter>4||breeding>1||animal_reserved(t)>AnimalMax)return false;
+    if(!t.ranch&&(animal_count(t)||t.ranch_chapter||t.hay||t.trough||t.hatched||t.born||t.animal_collected))return false;
+    if(t.ranch_chapter<1)for(auto &e:t.incubators)if(e.kind)return false;
+  } else t.intro=IntroScenes; // Existing players continue their farm immediately.
+  for (int item = version>=9?1:19; item <= ItemCount; ++item) {
     int copies = 0;
     for (auto slot : t.slots) copies += slot == item;
     if (copies != int(item_count(t, item) != 0)) return false;
+  }
+  if(!t.region&&t.px/16>=RanchX-1&&t.px/16<=RanchX+1&&t.py/16>=RanchY-2&&t.py/16<=RanchY) {
+    t.px=RanchX*16+8;t.py=(RanchY+1)*16+8;
   }
   if (!t.day || t.minute < 360 || t.minute >= (version>=5?1560:1320) || t.energy > 100 ||
       (t.capacity != 30 && t.capacity != 60) || t.water > t.capacity ||

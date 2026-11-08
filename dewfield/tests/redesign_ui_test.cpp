@@ -36,7 +36,7 @@ int main() {
   assert(!std::memcmp(original.slots,state.slots,sizeof(state.slots)));
   assert(farm::swap_slots(state,slot,27) && held_item()==12 && state.active_slot==27);
   uint8_t bytes[farm::SaveBytes];farm::State restored;
-  assert(farm::encode(state,bytes,sizeof(bytes))==sizeof(bytes) && bytes[4]==8);
+  assert(farm::encode(state,bytes,sizeof(bytes))==sizeof(bytes) && bytes[4]==9);
   assert(farm::decode(restored,bytes,sizeof(bytes)) && restored.active_slot==27);
   open_page(Page::Bag);assert(bag_selection==27 && selected_row==-1);
   game::key(Key::LEFT);assert(bag_selection==26);game::key(Key::RIGHT);assert(bag_selection==27);

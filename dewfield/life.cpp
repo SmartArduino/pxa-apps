@@ -44,9 +44,10 @@ bool cook(State &s, int recipe) {
   if (item_count(s, r.first) < r.first_count ||
       item_count(s, r.second) < r.second_count || item_count(s, r.item) >= 999)
     return false;
-  change_item(s, r.first, -int(r.first_count));
-  change_item(s, r.second, -int(r.second_count));
-  change_item(s, r.item, 1);
+  State prepared=s;
+  change_item(prepared,r.first,-int(r.first_count));change_item(prepared,r.second,-int(r.second_count));
+  if(!change_item(prepared,r.item,1))return false;
+  s=prepared;
   sync_inventory(s);
   return true;
 }

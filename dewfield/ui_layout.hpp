@@ -74,7 +74,7 @@ struct Layout {
   }
   Rect bag_slot(int index) const {
     auto r = modal();
-    return {r.x + 12 + (index % 7) * 29, r.y + 36 + (index / 7) * 28, 27, 27};
+    return {r.x + 12 + (index % 7) * 29, r.y + 36 + ((index % 28) / 7) * 28, 27, 27};
   }
   Rect bag_upgrade() const {
     auto r = modal(); return {r.x + 160, r.y + 151, 55, 20};

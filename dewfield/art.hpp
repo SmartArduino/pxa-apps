@@ -4,6 +4,8 @@
 #include "palette.hpp"
 #include "soil.hpp"
 #include "sprites.hpp"
+#include "animal_sprites.hpp"
+#include "livestock.hpp"
 #include <algorithm>
 #include <cstdint>
 #include <cstdlib>
@@ -427,6 +429,7 @@ inline const sprites::Sprite &person_sprite(int dir, int frame,
 }
 #include "world_art.hpp"
 #include "gait.hpp"
+#include "livestock_art.hpp"
 inline void person_shadow(Raster &r, int x, int y, int dir, int frame,
                           bool npc = false) {
   if(npc)gait::shadow(r,x,y,dir,frame,&villager_rig(3,dir));
@@ -447,7 +450,7 @@ inline void carry_item(Raster&r,int x,int y,int item,int selected) {
   else if(item>=16 && item<=18) {
     const sprites::Sprite *items[]={&sprites::fish,&sprites::logs,&sprites::stones};
     const auto &s=*items[item-16];sprite(r,s,x-s.w/2,y-30-s.h);
-  } else if (item >= 19 && item <= 28) food(r,x,y-31,item);
+  } else if (item >= 19 && item <= 36) food(r,x,y-31,item);
 }
 inline void person(Raster &r, int x, int y, int dir, int frame,
                    bool npc = false, int swing = 0, int tool = 0,

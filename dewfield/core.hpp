@@ -6,7 +6,8 @@ namespace farm {
 constexpr int MapW = 32, MapH = 24, Tile = 16, PlotX = 10, PlotY = 9,
               PlotW = 10, PlotH = 8;
 constexpr int PlotCount = PlotW * PlotH, SaveBytes = 768;
-constexpr int InventorySize = 28, HotbarSize = 7, ItemCount = 28;
+inline int walk_frame(uint32_t distance) {return 1+int((distance/6)%8);}
+constexpr int InventorySize = 42, HotbarSize = 7, ItemCount = 36;
 enum class Tool : uint8_t { Hoe, Seeds, Water, Hand, Axe, Pick, Rod, Count };
 enum class Ground : uint8_t { Grass, Path, Water, Wall, Tree, Rock, Weed };
 enum class Result : uint8_t {
@@ -35,7 +36,7 @@ enum class Result : uint8_t {
   Dialogue,
   Foraged,
   Orders,
-  Kitchen, Calendar, Forecast, Closed, WrongSeason, EmptyShipping, FullFish
+  Kitchen, Calendar, Forecast, Closed, WrongSeason, EmptyShipping, FullFish, Ranch, Animal
 };
 struct Crop {
   const char *cn, *en;
@@ -48,6 +49,13 @@ inline constexpr Crop Crops[] = {{"萝卜", "Radish", 2, 5, 16, 0},
 struct Plot {
   uint8_t tilled = 0, crop = 0, growth = 0, wet = 0;
 };
+constexpr int AnimalMax=12, IncubatorMax=3, IntroScenes=5;
+enum class Species : uint8_t { None, Chicken, Duck, Cow, Sheep, Pig };
+struct Animal {
+  uint8_t kind=0, male=0, age=0, heart=50, pregnancy=0, cooldown=0, products=0;
+  uint16_t pet_day=0, fed_day=0;
+};
+struct Incubator { uint8_t kind=0, days=0; };
 struct State {
   Plot plots[PlotCount]{};
   uint8_t cleared[24]{}, sprinklers[10]{};
@@ -73,6 +81,11 @@ struct State {
   uint32_t discoveries = 0;
   uint8_t fish_records[8]{}, collection_rewards = 0;
   uint16_t fish_caught = 0, perfect_catches = 0;
+  Animal animals[AnimalMax]{};
+  Incubator incubators[IncubatorMax]{};
+  uint16_t animal_goods[8]{}, hay=0, trough=0, hatched=0, born=0, animal_collected=0;
+  uint8_t intro=0, ranch=0, ranch_chapter=0;
+  bool breeding=true;
 };
 struct Obstacle {
   uint8_t x, y, kind;

@@ -68,7 +68,8 @@ int main() {
   overlap(Kind::Crop, 168, 204, 204, 30);
   overlap(Kind::Sprinkler, 168, 159, 159);
   farm::State s;
-  farm::fresh(s);
+  farm::fresh(s);farm::begin_ranch(s);
+  for(auto &a:s.animals)a={1,0,4,50};
   for (auto &p : s.plots)
     p = {1, 1, 2, 1};
   std::memset(s.sprinklers, 255, sizeof(s.sprinklers));
@@ -76,13 +77,14 @@ int main() {
   Queue all;
   all.build(s, v, {0, 0, 512, 384});
   assert(all.count < Queue::Capacity && all.count > 250);
-  bool found[unsigned(Kind::Signpost)+1]{};
+  bool found[unsigned(Kind::RanchShed)+1]{};
   for (unsigned i = 0; i < all.count; ++i) {
     found[int(all.entries[i].kind)] = true;
     if (i)
       assert(all.entries[i - 1].depth <= all.entries[i].depth);
   }
-  for(unsigned k=0;k<=unsigned(Kind::Player);++k)if(k!=unsigned(Kind::Villager))assert(found[k]);
+  for(unsigned k=0;k<=unsigned(Kind::Player);++k)if(k!=unsigned(Kind::Villager)&&k!=unsigned(Kind::Chicken))assert(found[k]);
+  assert(found[unsigned(Kind::Animal)]&&found[unsigned(Kind::RanchShed)]);
   assert(found[unsigned(Kind::WorldNpc)]);
   // Sorting is deterministic even when the caller's submission order changes.
   Queue q;

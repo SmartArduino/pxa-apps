@@ -1,0 +1,10 @@
+{
+  "tool": "tools/build_livestock.py",
+  "license": "MIT",
+  "layout": "chicken, duck, cow, sheep, pig; baby / juvenile / adult",
+  "native_size": [
+    32,
+    28
+  ],
+  "runtime": "RGB565 spans, two leg poses and true east/west mirrors"
+}

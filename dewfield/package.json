@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-dewfield",
-  "version": "0.13.1",
+  "version": "0.14.0",
   "name": "晴露农场 Dewfield",
-  "description": "四季农场生活：统一像素角色、工具动作、体力作息、镇上商店、电视天气与季节日历。",
+  "description": "晴露谷的田园生活：可重看的原创开场故事，四季种田、五类动物的成长、产物、孵化与繁殖。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 21,
+  "release_sequence": 22,
   "build": {
     "system": "cmake",
     "source_dir": ".",
