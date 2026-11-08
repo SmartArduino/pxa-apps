@@ -3,6 +3,8 @@ metadata:
   name: 应用商城
   description: 浏览 DOIT PXA 商城目录，查看设备兼容性、权限与安装要求
 translations:
+  install.format_aot: AOT 版（推荐）
+  install.format_wasm: WASM 版（可能较慢）
   action.filters: 排序
   action.retry: 重试
   media.loading: 正在加载截图…

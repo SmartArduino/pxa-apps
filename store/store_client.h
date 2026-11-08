@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "pxa.h"
+#include "store_model.h"
 
 /* The store origin is part of the signed net.client permission scope, so it
  * must stay byte-identical to the scope in package.json. Rebuild with
@@ -83,6 +84,9 @@ int store_client_build_app_url(char *output, size_t capacity,
 
 int store_client_build_identity_url(char *output,size_t capacity,const char *profile,
     const char *app_id,const char *lineage_root_key_id,const char *device_id);
+int store_client_build_variant_url(char *output, size_t capacity, const char *profile,
+    const char *app_id, const char *lineage_root_key_id, const char *device_id,
+    store_package_format_t format);
 
 int store_client_profile_for_device(char *output, size_t capacity,
                                     const char *target, const char *architecture,

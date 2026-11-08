@@ -7,6 +7,13 @@ download and installation. Icons load independently of catalog pages; applicatio
 details show a bounded screenshot gallery. Loaded cards stay usable while the
 next page or an image is downloading.
 
+Application details let users switch between compatible AOT and pure WASM packages
+of the same release. AOT remains the recommended default; WASM reduces download
+size but may run slower or use more runtime memory. Explicit format changes
+reinstall the selected package under the same signed identity and preserve private data.
+The format selector stays at the end of the detail content and includes the selected
+download size. After an explicit format change the primary action reads **Install**.
+
 The catalog marks installed apps and available updates. **Installed** lists
 device apps and provides **Check updates**, which queries each installed app's
 detail endpoint rather than relying on the currently loaded, filtered catalog
@@ -418,3 +425,5 @@ anchor in that order; a sort change resets pagination. Older clients omitting
 `sort` retain the device API's original ID order.
 
 安装时，详情页底部和下载页显示 Host 上报的已下载量、实际传输总量和百分比，区分程序与资源下载；传输完成后显示校验与安装状态。系统确认前不显示估算百分比。资源复用时，进度按 Host 的实际传输总量计算。进度事件仅局部更新文字和进度条，不重建页面或重新拉取资源。
+
+P4 and Windows x64 require the indexed native installer and use their first published Host snapshot, 0.9.0. Existing S3/S31/Linux hosts retain capability-based legacy discovery; upgraded device firmware can advertise its newer snapshot.
