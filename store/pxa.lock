@@ -5,7 +5,7 @@
   ],
   "schema": "pxa-lock-1",
   "sdk": {
-    "digest": "6f7e971ff1f1c65f5403b85bfdcce0b940d31d1493d15e927b7f0417780d5bb3",
+    "digest": "e6bb7e5e8fd900ca742371bf28711f63768b03184a70af6f584939fbc96e8697",
     "release": "0.9.0"
   },
   "toolchain": {
