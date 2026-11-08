@@ -395,10 +395,10 @@ static const store_metrics_t metrics_compact = {
     38, 0, 48, 10, 2, 30, 9, 26, 10, 5, 28, 5, 6, 8, 32, 10, 5, 42, 36, 32,
     25, 3, PXA_UI_FONT_ROLE_BODY};
 static const store_metrics_t metrics_regular = {
-    60, 18, 84, 16, 4, 32, 12, 32, 14, 8, 42, 10, 8, 8, 48, 16, 7, 48, 56,
+    60, 18, 96, 16, 4, 32, 12, 32, 14, 8, 42, 10, 8, 8, 48, 16, 7, 48, 56,
     42, 30, 4, PXA_UI_FONT_ROLE_TITLE};
 static const store_metrics_t metrics_large = {
-    74, 22, 104, 22, 8, 38, 16, 38, 18, 10, 52, 14, 10, 8, 60, 22, 8, 56,
+    74, 22, 120, 22, 8, 38, 16, 38, 18, 10, 52, 14, 10, 8, 60, 22, 8, 56,
     72, 50, 34, 5, PXA_UI_FONT_ROLE_HEADLINE};
 
 static uint16_t effective_inset(uint8_t edge);

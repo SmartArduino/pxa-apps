@@ -427,3 +427,5 @@ anchor in that order; a sort change resets pagination. Older clients omitting
 安装时，详情页底部和下载页显示 Host 上报的已下载量、实际传输总量和百分比，区分程序与资源下载；传输完成后显示校验与安装状态。系统确认前不显示估算百分比。资源复用时，进度按 Host 的实际传输总量计算。进度事件仅局部更新文字和进度条，不重建页面或重新拉取资源。
 
 P4 and Windows x64 require the indexed native installer and use their first published Host snapshot, 0.9.0. Existing S3/S31/Linux hosts retain capability-based legacy discovery; upgraded device firmware can advertise its newer snapshot.
+
+Regular and large catalog cards reserve room for all four text rows and gaps, so descriptions and download sizes remain visible.
