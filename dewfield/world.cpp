@@ -319,6 +319,11 @@ const char *npc_line(const State &s, int id, bool personal, bool en) {
                               "harvest. You brought hope back."};
   if (personal)
     return (en ? stories_en : stories)[id % 4];
+  if(s.ranch_chapter>=5&&(s.day+id)%3==1) {
+    const char *cn[]={"小鸡在新屋檐下躲雨，连叫声都安心了。记得添些草料呀。", "铁箍我又检查了一遍。旧梁还能陪你们过许多个雨季。", "傍晚从林边回来，远远就能看见你的牧场。那就是家的方向。", "灯亮起来的时候，就收好工具回家吧。小家伙们也在等你。"};
+    const char *eng[]={"The chicks sound content under their new roof. Remember their hay.","I checked the iron braces again. Those old beams have many rainy seasons left.","Coming back from the woods, your shed shows me the way home.","When the lamp comes on, put your tools away. The little ones are waiting too."};
+    if(id!=3||s.ranch_chapter>=6)return (en?eng:cn)[id];
+  }
   if ((s.visited & (1u << unsigned(Region::Orchard))) && (s.day + id) % 3 == 0) {
     const char *cn[] = {"蜜风果园的苹果，配上浆果就能熬成果酱。记得给自己也留一瓶。",
         "林子东边那条路通往老果园。木牌重新立好了，别在树下迷路。",

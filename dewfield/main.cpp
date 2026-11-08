@@ -990,8 +990,8 @@ void fit_text(int x, int y, const char *s, int width, uint16_t color = Text) {
 }
 void paragraph(int x, int y, const char *s, int width, int max_lines,
                uint16_t color = Text) {
-  char lines[5][128]{};
-  int n = wrapped(s, lines, std::min(max_lines, 5), width);
+  char lines[6][128]{};
+  int n = wrapped(s, lines, std::min(max_lines, 6), width);
   for (int i = 0; i < n; ++i)
     text(x, y + i * 15, lines[i], color);
 }
@@ -1531,7 +1531,8 @@ void modal() {
                   state.bonds[talking_npc] / 10);
     text(x + 47, y + 55, b, Muted);
     paragraph(x + 14, y + 78, letter, 200, 6, Text);
-    const char *labels[] = {tr("STORY", "聊近况"), tr("GIFT", "送礼物"),
+    const char *ranch_label=ranch_story_ready(state,talking_npc)?tr("DELIVER","交付心愿"):ranch_contact(state)==talking_npc?tr("RANCH","牧场心愿"):tr("STORY","聊近况");
+    const char *labels[] = {ranch_label, tr("GIFT", "送礼物"),
                             tr("BYE", "回头见")};
     for (int i = 0; i < 3; ++i)
       button(x + 12 + i * 69, y + 177, 65, 25, labels[i], selected_row == i);
@@ -1623,11 +1624,13 @@ void dialogue_action(int choice) {
     return;
   if (choice == 0) {
     if(ranch_story(state,talking_npc)) {
-      std::snprintf(letter,sizeof(letter),"%s\n%s",ranch_completion(state.ranch_chapter,english()),ranch_goal(state,english()));
+      std::snprintf(letter,sizeof(letter),"%s",ranch_completion(state.ranch_chapter,english()));
     } else if (advance_story(state, talking_npc)) {
       base_dirty = true;
       std::snprintf(letter, sizeof(letter), "%s",
                     story_completion(state.story, english()));
+    } else if(ranch_contact(state)==talking_npc) {
+      std::snprintf(letter,sizeof(letter),"%s",ranch_prompt(state,english()));
     } else
       std::snprintf(letter, sizeof(letter), "%s\n%s",
                     story_line(state, english()), story_goal(state, english()));

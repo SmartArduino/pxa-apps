@@ -30,6 +30,7 @@ p.add_argument('--redesign-only',action='store_true')
 p.add_argument('--discoveries-only',action='store_true')
 p.add_argument('--actors-only',action='store_true')
 p.add_argument('--livestock-only',action='store_true')
+p.add_argument('--details-only',action='store_true')
 p.add_argument('--mines-only',action='store_true')
 p.add_argument('--geography-only',action='store_true')
 p.add_argument('--npc-only',action='store_true')
@@ -88,11 +89,15 @@ def key(k,duration=.08):
     command('KEY_DOWN '+k);time.sleep(duration);command('KEY_UP '+k);time.sleep(.15)
 
 def capture(name):
-    command('SCREENSHOT AFTER_PRESENT',name+'.png')
-    im=Image.open(out/(name+'.png')).convert('RGB')
-    assert im.size==(args.width,args.height)
-    # Full rectangle, including corners; no mask, nav bar or empty matte.
-    assert all(im.getpixel(pt)!=(0,0,0) for pt in [(0,0),(0,args.height-1),(args.width-1,0),(args.width-1,args.height-1)])
+    # A resized Surface may attach before its first painted frame arrives.
+    for attempt in range(21):
+        command('SCREENSHOT AFTER_PRESENT',name+'.png')
+        im=Image.open(out/(name+'.png')).convert('RGB')
+        assert im.size==(args.width,args.height)
+        corners=[(0,0),(0,args.height-1),(args.width-1,0),(args.width-1,args.height-1)]
+        if all(im.getpixel(pt)!=(0,0,0) for pt in corners):return
+        time.sleep(.1)
+    raise AssertionError('No painted rectangular frame: '+name)
 
 def start():
     global process,log,run_id
@@ -245,6 +250,32 @@ try:
     try:needs_intro=saved().get('intro',5)<5
     except AssertionError:needs_intro=True
     tap(cw//2,ch-38)
+    if args.details_only:
+        assert args.fixture_tool
+        if needs_intro:
+            for _ in range(5):time.sleep(.25);key('Z')
+        key('ENTER');time.sleep(.3);saved();stop()
+        mx,my=(cw-228)//2,(ch-210)//2
+        for label in ['old','day','night','repair','lamp']:
+            raw=out/(label+'.save');subprocess.run([str(args.fixture_tool.resolve()),'details-'+label,str(raw),str(out/'unused')],check=True)
+            replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38);time.sleep(.25)
+            capture('shed-'+label)
+            if label in ['repair','lamp']:
+                key('S');tap(mx+88,my+174)
+                npc=1 if label=='repair' else 3;tap(mx+90,my+51+npc*33)
+                wait_for_panel('ranch story '+label,25);capture(label+'-offer')
+                before=saved();tap(mx+44,my+190);time.sleep(.3)
+                after=wait_for(lambda v:v['ranch_chapter']==before['ranch_chapter']+1,'delivery '+label)
+                assert after['gold']==before['gold']+(500 if label=='repair' else 600)
+                if label=='repair':assert after['wood']==0 and after['minerals'][2]==0
+                else:assert after['minerals'][4]==0 and after['goods'][4]==0 and after['goods'][2]==0
+                capture(label+'-completed');tap(mx+44,my+190);assert saved()['gold']==after['gold']
+                key('X');key('ENTER');time.sleep(.4);stop();start();tap(cw//2,ch-38);time.sleep(.3)
+                key('ENTER');assert saved()['ranch_chapter']==after['ranch_chapter'];capture(label+'-persisted')
+            else:key('ENTER');time.sleep(.3)
+            stop()
+        (out/'summary.json').write_text(json.dumps({'roof_day_night':True,'both_deliveries_and_restart':True,'save_bytes':960},indent=2)+'\n')
+        print('PASS: real signed shed scenes, both ranch deliveries and restart persistence');raise SystemExit(0)
     if args.livestock_only:
         assert args.fixture_tool
         if needs_intro:

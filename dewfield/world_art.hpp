@@ -200,6 +200,7 @@ inline void world_shelf(Raster&r,int x,int y) {
     r.rect(left+1,yy+11,254,3,farm_palette::Wood);r.rect(left+2,yy+11,252,1,Gold);
   }
   for(int xx=left+3;xx<left+256;xx+=62)r.rect(xx,y-35,3,32,farm_palette::Wood);
+  r.rect(left,y-3,256,3,Ink);r.rect(left+1,y-3,254,1,farm_palette::Wood);
 }
 inline void world_counter(Raster&r,int x,int y) {
   r.rect(x,y-23,176,23,Ink);r.rect(x+2,y-21,172,19,farm_palette::Wood);

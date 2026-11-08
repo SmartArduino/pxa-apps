@@ -27,10 +27,10 @@ inline void mine_entrance(Raster&r,int x,int y) {
  for(int yy=0;yy<42;++yy) {
   int side=yy<8?8-yy:0;r.rect(x-26+side,y-43+yy,53-side*2,2,yy%7<2?rgb(140,143,107):rgb(109,119,88));
  }
- r.rect(x-10,y-27,21,28,Ink);r.rect(x-8,y-28,17,2,Ink);r.rect(x-7,y-25,15,24,rgb(40,45,43));
- for(int xx:{-14,11}) {r.rect(x+xx,y-29,4,30,rgb(103,73,42));r.rect(x+xx+1,y-28,1,28,rgb(182,132,68));}
+ r.rect(x-10,y-27,21,27,Ink);r.rect(x-8,y-28,17,2,Ink);r.rect(x-7,y-25,15,24,rgb(40,45,43));
+ for(int xx:{-14,11}) {r.rect(x+xx,y-29,4,29,rgb(103,73,42));r.rect(x+xx+1,y-28,1,28,rgb(182,132,68));}
  r.rect(x-15,y-31,31,5,rgb(101,72,40));r.rect(x-14,y-30,29,1,Gold);
- r.rect(x-11,y,23,3,rgb(157,142,99));r.rect(x-10,y+1,21,1,Cream);
+ r.rect(x-11,y-2,23,2,rgb(157,142,99));r.rect(x-10,y-2,21,1,Cream);
  r.line(x-22,y-32,x-18,y-35,Leaf);r.line(x+19,y-18,x+24,y-22,Leaf);
 }
 inline void mine_ore(Raster&r,int x,int y,int item) {

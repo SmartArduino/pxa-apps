@@ -837,7 +837,7 @@ bool decode(State &s, const uint8_t *in, size_t n) {
     t.hay=get(2);t.trough=get(2);t.hatched=get(2);t.born=get(2);t.animal_collected=get(2);
     t.intro=get(1);t.ranch=get(1);t.ranch_chapter=get(1);auto breeding=get(1);t.breeding=breeding;
     for(int i=28;i<42;++i){t.slots[i]=get(1);if(t.slots[i]>ItemCount)return false;}
-    if(t.hay>999||t.trough>24||t.intro>IntroScenes||t.ranch>1||t.ranch_chapter>4||breeding>1||animal_reserved(t)>AnimalMax)return false;
+    if(t.hay>999||t.trough>24||t.intro>IntroScenes||t.ranch>1||t.ranch_chapter>(version>=10?RanchStoryChapters:4)||breeding>1||animal_reserved(t)>AnimalMax)return false;
     if(!t.ranch&&(animal_count(t)||t.ranch_chapter||t.hay||t.trough||t.hatched||t.born||t.animal_collected))return false;
     if(t.ranch_chapter<1)for(auto &e:t.incubators)if(e.kind)return false;
   } else t.intro=IntroScenes; // Existing players continue their farm immediately.

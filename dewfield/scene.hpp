@@ -100,7 +100,7 @@ inline Rect bounds(const Entry &e) {
   if(e.kind==Kind::CaveCrop)return {e.x-8,e.y-17,17,19};
   if(e.kind==Kind::MineLadder||e.kind==Kind::MineTorch)return {e.x-12,e.y-24,25,27};
   if(e.kind==Kind::Animal)return {e.x-16,e.y-29,32,30};
-  if(e.kind==Kind::RanchShed)return {e.x-27,e.y-45,55,50};
+  if(e.kind==Kind::RanchShed)return {e.x-32,e.y-50,65,51};
   if(e.kind==Kind::Counter)return {e.x-3,e.y-44,182,47};
   if(e.kind==Kind::Television)return {e.x-16,e.y-38,33,40};
   if(e.kind==Kind::Calendar)return {e.x-13,e.y-32,27,34};
@@ -351,7 +351,7 @@ struct Queue {
       case Kind::CaveCrop:art::shadow_strip(r,e.x-3,e.y,7,1);break;
       case Kind::MineLadder:case Kind::MineTorch:break;
       case Kind::Animal:art::animal_shadow(r,e.x,e.y,s.animals[e.id],e.growth>=2?3:1,e.growth&1);break;
-      case Kind::RanchShed:art::shadow_strip(r,e.x-22,e.y,44,1);break;
+      case Kind::RanchShed:art::shadow_strip(r,e.x-22,e.y,46,1);break;
       case Kind::WorldNpc:
         art::gait::shadow(r,e.x,e.y,e.id/4,e.growth,&art::villager_rig(e.id%4,e.id/4));
         break;
@@ -413,7 +413,7 @@ struct Queue {
       case Kind::MineLadder:if(e.id&&s.mine_depth==30)art::grounded(r,sprites::chest,e.x,e.y);else art::mine_ladder(r,e.x,e.y,e.id,e.id?farm::ladder_ready(s):true);break;
       case Kind::MineTorch:art::mine_torch(r,e.x,e.y,v.animation);break;
       case Kind::Animal:art::animal(r,e.x,e.y,s.animals[e.id],e.growth>=2?3:1,e.growth&1);break;
-      case Kind::RanchShed:art::ranch_shed(r,e.x,e.y,s.trough);break;
+      case Kind::RanchShed:art::ranch_shed(r,e.x,e.y,s.trough,s.ranch_chapter>=5,farm::ranch_lit(s));break;
       case Kind::WorldNpc: {
         auto p = placement(e);
         art::gait::draw(r,e.x,e.y,e.id/4,e.growth,false,&art::villager_rig(e.id%4,e.id/4));

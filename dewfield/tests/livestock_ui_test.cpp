@@ -46,6 +46,20 @@ int main(int argc,char **argv) {
  game::pointer(Phase::MOVE,second.center_x(),second.center_y());game::pointer(Phase::UP,second.center_x(),second.center_y());
  assert(state.slots[28]==1&&state.active_slot==41);select_slot(state,28);
  saved_size=game::serialize(save,sizeof(save));game::load(save,saved_size);assert(state.active_slot==28&&state.slots[28]==1);
+ // Story delivery uses the real dialogue action, and six rows remain visible.
+ fresh(state);begin_ranch(state);state.story=5;state.ranch_chapter=4;talking_npc=1;
+ page=Page::Dialogue;dialogue_action(0);assert(state.ranch_chapter==4&&std::strstr(letter,"6"));
+ assert(change_item(state,17,6)&&change_item(state,40,4));sync_inventory(state);
+ dialogue_action(0);assert(state.ranch_chapter==5&&std::strstr(letter,ranch_completion(5,english())));
+ talking_npc=3;assert(change_item(state,42,1)&&change_item(state,33,1)&&change_item(state,31,2));sync_inventory(state);
+ dialogue_action(0);assert(state.ranch_chapter==5);state.mine_rewards|=1;dialogue_action(0);assert(state.ranch_chapter==6);
+ for(bool en:{false,true})for(int chapter=1;chapter<=RanchStoryChapters;++chapter) {
+  const char*value=ranch_completion(chapter,en);char rows[12][128]{};assert(wrapped(value,rows,12,200)<=6);
+ }
+ // A sixth line really paints; the old paragraph helper silently stopped at five.
+ pocket::set_english(true);std::fill(pixels,pixels+WIDTH*HEIGHT+32,0x1ace);
+ paragraph(10,10,"A\nB\nC\nD\nE\nF",200,6,Text);
+ bool sixth=false;for(int y=85;y<97;++y)for(int x=10;x<20;++x)sixth|=framebuffer()[y*WIDTH+x]!=0x1ace;assert(sixth);
  // Every new page and scene on portrait, square and landscape layouts, both languages.
  for(auto dims:{std::pair<int,int>{240,240},{400,240},{240,427}})for(bool en:{false,true}) {
   WIDTH=dims.first;HEIGHT=dims.second;pocket::set_english(en);
@@ -53,6 +67,15 @@ int main(int argc,char **argv) {
    ranch_index=0;page=p;std::fill(pixels,pixels+WIDTH*HEIGHT+32,0x1ace);game::draw();
    for(int i=0;i<16;++i)assert(pixels[i]==0x1ace&&pixels[16+WIDTH*HEIGHT+i]==0x1ace);
    if(argc>1&&WIDTH==240&&HEIGHT==240&&!en)capture(std::string(argv[1])+"/page-"+std::to_string(int(p))+".ppm");
+  }
+  page=Page::Dialogue;talking_npc=3;
+  for(int chapter:{4,5,6}) {
+   state.ranch_chapter=chapter;
+   std::snprintf(letter,sizeof(letter),"%s",chapter==6?ranch_completion(chapter,en):ranch_prompt(state,en));
+   char rows[12][128]{};assert(wrapped(letter,rows,12,200)<=6);
+   std::fill(pixels,pixels+WIDTH*HEIGHT+32,0x1ace);game::draw();
+   for(int j=0;j<16;++j)assert(pixels[j]==0x1ace&&pixels[16+WIDTH*HEIGHT+j]==0x1ace);
+   if(argc>1&&WIDTH==240&&HEIGHT==240&&!en)capture(std::string(argv[1])+"/ranch-story-"+std::to_string(chapter)+".ppm");
   }
   page=Page::Intro;
   for(int i=0;i<IntroScenes;++i) {

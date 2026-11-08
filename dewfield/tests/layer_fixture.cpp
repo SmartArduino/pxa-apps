@@ -15,6 +15,23 @@ int main(int argc, char **argv) {
   std::memset(s.cleared, 1, sizeof(s.cleared));
   for (auto &p : s.plots)
     p = {};
+  if(!std::strncmp(argv[1],"details-",8)) {
+    const char *mode=argv[1]+8;farm::begin_ranch(s);s.story=5;s.gold=1200;s.trough=8;
+    s.ranch_chapter=6;s.minute=!std::strcmp(mode,"night")?1140:600;
+    s.px=farm::RanchX*16+8;s.py=(farm::RanchY+1)*16+8;
+    s.show_joystick=s.show_action=false;s.mine_rewards=1;
+    if(!std::strcmp(mode,"old"))s.ranch_chapter=4;
+    if(!std::strcmp(mode,"repair")||!std::strcmp(mode,"lamp")) {
+      int npc=!std::strcmp(mode,"repair")?1:3;
+      s.ranch_chapter=npc==1?4:5;s.minute=1050;s.region=unsigned(farm::Region::Town);s.visited|=1u<<s.region;
+      auto pose=farm::npc_pose(s,npc);assert(pose.region==farm::Region::Town);
+      s.px=(pose.x/16)*16+8;s.py=(pose.y/16+2)*16+8;
+      for(auto pair:{std::pair<int,int>{17,6},{40,4},{42,1},{33,1},{31,2}})assert(farm::change_item(s,pair.first,pair.second));
+      farm::sync_inventory(s);
+    }
+    uint8_t raw[farm::SaveBytes];assert(farm::encode(s,raw,sizeof(raw)));farm::State checked;assert(farm::decode(checked,raw,sizeof(raw)));
+    FILE*f=std::fopen(argv[2],"wb");assert(f&&std::fwrite(raw,1,sizeof(raw),f)==sizeof(raw));std::fclose(f);f=std::fopen(argv[3],"w");assert(f);std::fclose(f);return 0;
+  }
   if(!std::strncmp(argv[1],"geo-",4)) {
     const char *mode=argv[1]+4;s.story=3;s.minute=600;s.show_joystick=s.show_action=false;
     for(const auto &p:farm::Portals)if(!farm::indoors(unsigned(p.from))&&!farm::indoors(unsigned(p.to))) {
