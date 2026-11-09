@@ -33,11 +33,11 @@ def sensor_case(args,w,h,radius,report):
         before=pause(s);resume(s)
         # Isolate angular velocity: acceleration stays level, so only the
         # gyroscope's between-frame attitude prediction can cause this move.
-        motion(args.motion_file,(0,0,9806650,-1000000,0,0));time.sleep(.45)
+        motion(args.motion_file,(0,0,9806650,0,-1000000,0));time.sleep(.45)
         motion(args.motion_file,FLAT);command(s.sock,'KEY_DOWN Z');time.sleep(.2);command(s.sock,'KEY_UP Z')
         gyro=pause(s);check(pos(gyro)[0]>pos(before)[0]+.01,'gyroscope samples did not reach physics')
         before=gyro;resume(s)
-        motion(args.motion_file,(0,-3500000,9150000,0,0,0));time.sleep(.8)
+        motion(args.motion_file,(3500000,0,9150000,0,0,0));time.sleep(.8)
         motion(args.motion_file,FLAT);command(s.sock,'KEY_DOWN Z');time.sleep(.3);command(s.sock,'KEY_UP Z');s.shot('02-tilted')
         after=pause(s);check(pos(after)[0]>pos(before)[0]+.03,'accelerometer did not move ball toward screen right')
         resume(s);args.motion_file.unlink();time.sleep(.6);s.shot('03-signal-lost');stale=pause(s)

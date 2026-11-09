@@ -10,7 +10,7 @@ from simulator import Session,command,save_blob,check
 from three_keys import ThreeKeys
 APP='spirit-level'
 def pose(path,x=0,y=0):
-    sx,sy=math.sin(math.radians(x)),math.sin(math.radians(y));v=(sy,-sx,math.sqrt(max(0,1-sx*sx-sy*sy)))
+    sx,sy=math.sin(math.radians(x)),math.sin(math.radians(y));v=(sx,sy,math.sqrt(max(0,1-sx*sx-sy*sy)))
     temp=path.with_suffix('.tmp');temp.write_text(' '.join(map(str,[*(round(t*9806650) for t in v),0,0,0])));temp.replace(path)
 def wait_log(s,text,count=1):
     end=time.monotonic()+12
@@ -42,7 +42,7 @@ def sensor_case(a,w,h,radius,report):
         pose(a.motion_file,2);time.sleep(1.3);k.choose(3);s.shot('07-settings');k.choose(20);k.choose(21);k.choose(22);check(snapshot(s)[6:9]==bytes([1,2,1]),'three-key preferences failed')
         k.choose(23);s.shot('08-calibration');done=s.logs().count('Level: alignment captured');k.choose(30);wait_log(s,'Level: alignment captured',done+1);s.shot('09-calibration-ready');k.choose(31);check(snapshot(s)[10]==0,'cancel committed an alignment')
         k.choose(23);done=s.logs().count('Level: alignment captured');k.choose(30);wait_log(s,'Level: alignment captured',done+1);k.choose(30);saved=snapshot(s);check(saved[10]==1,'alignment was not saved')
-        raw=struct.unpack_from('<iii',saved,12);check(abs(raw[1]/1073741824+math.sin(math.radians(2)))<.001,'saved the wrong physical reference')
+        raw=struct.unpack_from('<iii',saved,12);check(abs(raw[0]/1073741824-math.sin(math.radians(2)))<.001,'saved the wrong physical reference')
         k.choose(25);time.sleep(.5);calibrated=s.shot('10-calibrated');center=bubble(s,calibrated);check(abs(center[0]-origin[0])<5 and abs(center[1]-origin[1])<5,'saved alignment did not level the reference plane')
         k.choose(3);k.choose(24);s.shot('11-guide-first');k.choose(52);s.shot('12-guide-second');k.choose(50);k.choose(25)
         # The shared menu is reached and operated without Start, Back or touch.

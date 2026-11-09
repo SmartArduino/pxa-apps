@@ -24,7 +24,7 @@ size_t encode(const Preferences &o, uint8_t *p, size_t n) {
     return 0;
   memset(p, 0, SAVE_BYTES);
   memcpy(p, "SPLV", 4);
-  p[4] = 1;
+  p[4] = 2;
   p[5] = o.mode;
   p[6] = o.unit;
   p[7] = o.tolerance;
@@ -38,7 +38,7 @@ size_t encode(const Preferences &o, uint8_t *p, size_t n) {
   return SAVE_BYTES;
 }
 bool decode(Preferences &o, const uint8_t *p, size_t n) {
-  if (!p || n != SAVE_BYTES || memcmp(p, "SPLV", 4) || p[4] != 1 || p[5] > 1 ||
+  if (!p || n != SAVE_BYTES || memcmp(p, "SPLV", 4) || p[4] != 2 || p[5] > 1 ||
       p[6] > 1 || p[7] > 3 || p[8] > 3 || p[9] > 1 || p[10] > 1 || p[11] ||
       get(p + 60) != hash(p, 60))
     return false;

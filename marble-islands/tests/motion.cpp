@@ -24,7 +24,7 @@ int main() {
   assert(!t.fresh(now + 400001));
   Vec v = t.input(o);
   assert(v.x == 0 && v.y == 0);
-  const int32_t right[] = {0, -3500000, 9150000};
+  const int32_t right[] = {3500000, 0, 9150000};
   for (int i = 0; i < 20; ++i) {
     now += 50000;
     t.acceleration(right, now, now);
@@ -66,7 +66,7 @@ int main() {
   // Moving or shaking during setup cannot establish a misleading neutral point.
   t.suspend();
   now += 2000000;
-  const int32_t left[] = {0, 3500000, 9150000};
+  const int32_t left[] = {-3500000, 0, 9150000};
   for (int i = 0; i < 100; ++i) {
     now += 50000;
     t.acceleration(i % 2 ? left : right, now, now);
@@ -76,7 +76,7 @@ int main() {
   // does not tilt the board, and an old sample cannot apply a second rotation.
   t.suspend();
   now = steady(t, now + 1000000);
-  const int32_t yaw[] = {0, 0, 2000000}, roll[] = {2000000, 0, 0};
+  const int32_t yaw[] = {0, 0, 2000000}, roll[] = {0, 2000000, 0};
   now += 50000;
   t.gyroscope(yaw, now);
   v = t.input(o);

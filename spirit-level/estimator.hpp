@@ -37,7 +37,8 @@ inline Vector align(Vector value, Vector reference) {
 inline Vector screen_vector(Vector raw, unsigned rotation) {
   // Project the Host's device frame to the meter; board mounting belongs in
   // the sensor provider, before both acceleration and angular velocity arrive.
-  Vector v = {-raw.y, raw.x, raw.z};
+  // Android device X/Y already point right/up in the native display.
+  Vector v = raw;
   for (unsigned i = 0; i < rotation % 4; ++i)
     v = {-v.y, v.x, v.z};
   return v;

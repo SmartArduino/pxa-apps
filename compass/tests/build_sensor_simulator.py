@@ -12,7 +12,7 @@ text=text[:start]+'''static pxa_status_t desktop_sensor_subscribe(void* context,
     (void)period;if(!context||!token||id<1||id>2)return PXA_STATUS_NOT_FOUND;*token=context;return PXA_STATUS_OK;
 }
 static pxa_status_t desktop_sensor_read(void* context,void* token,uint16_t id,int32_t values[PXA_SENSOR_MAX_DIMENSIONS]) {
-    (void)context;(void)token;int data[6]={24000,0,-38000,0,0,9806650};
+    (void)context;(void)token;int data[6]={0,24000,-38000,0,0,9806650};
     const char* path=getenv("COMPASS_TEST_SENSORS");FILE* file=path?fopen(path,"r"):NULL;
     if(!file)return PXA_STATUS_UNAVAILABLE;
     int n=fscanf(file,"%d %d %d %d %d %d",data,data+1,data+2,data+3,data+4,data+5);fclose(file);

@@ -47,8 +47,9 @@ struct Tilt {
     return a;
   }
   static Vec angles(const float *g) {
-    return {-atan2f(g[1], sqrtf(g[0] * g[0] + g[2] * g[2])),
-            atan2f(g[0], g[2])};
+    // Android device axes; the scene's horizontal control follows device X.
+    return {atan2f(g[0], sqrtf(g[1] * g[1] + g[2] * g[2])),
+            atan2f(g[1], g[2])};
   }
   void normalize() {
     float length = sqrtf(gravity[0] * gravity[0] + gravity[1] * gravity[1] +

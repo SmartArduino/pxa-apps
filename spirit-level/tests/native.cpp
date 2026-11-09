@@ -28,7 +28,7 @@ static bool near(float a, float b, float eps = .003f) {
 }
 static Vector pose(float x, float y = 0) {
   float sx = sinf(x / DEG), sy = sinf(y / DEG);
-  return {sy, -sx, sqrtf(fmaxf(0, 1 - sx * sx - sy * sy))};
+  return {sx, sy, sqrtf(fmaxf(0, 1 - sx * sx - sy * sy))};
 }
 static void feed(Model &m, Vector g, unsigned n = 30) {
   m.status = Status::Streaming;
@@ -69,18 +69,18 @@ int main() {
     }
     CHECK(near(value, -expm1f(-10.f), .000001f));
   }
-  // Exercise the unchanged Host-frame projection, with no board compensation.
+  // Android device axes project directly to right/up, with no board checks.
   for (unsigned axis = 0; axis < 2; ++axis) {
     Model axis_meter;
-    feed(axis_meter, axis == 0 ? Vector{0, -.5f, .8660254f}
-                              : Vector{.5f, 0, .8660254f});
+    feed(axis_meter, axis == 0 ? Vector{.5f, 0, .8660254f}
+                              : Vector{0, .5f, .8660254f});
     const auto r = axis_meter.read();
     CHECK(near(axis == 0 ? r.x : r.y, 30));
     CHECK(near(axis == 0 ? r.y : r.x, 0));
-    // Host -X tilts the displayed X; Host -Y tilts the displayed Y.
+    // Right-hand angular velocity: -Y increases measured X, +X increases Y.
     Model gyro_meter;
     feed(gyro_meter, {0, 0, 1});
-    int32_t rate[] = {axis == 0 ? -523599 : 0, axis == 1 ? -523599 : 0, 0};
+    int32_t rate[] = {axis == 1 ? 523599 : 0, axis == 0 ? -523599 : 0, 0};
     CHECK(gyro_meter.tilt.gyroscope(rate, gyro_meter.now + 1));
     gyro_meter.now += 50001;
     CHECK(gyro_meter.tilt.gyroscope(rate, gyro_meter.now));
@@ -89,7 +89,7 @@ int main() {
     CHECK(near(axis == 0 ? turning.y : turning.x, 0));
   }
   Model reverse_y;
-  feed(reverse_y, {-.5f, 0, .8660254f});
+  feed(reverse_y, {0, -.5f, .8660254f});
   CHECK(near(reverse_y.read().x, 0) && near(reverse_y.read().y, -30));
   for (float angle :
        {-89.9f, -80.f, -45.f, -10.f, -.1f, 0.f, .1f, 10.f, 45.f, 80.f, 89.9f}) {
@@ -173,6 +173,10 @@ int main() {
   CHECK(encode(p, good, 64) == 64 && encode(p, bad, 63) == 0);
   Preferences target;
   CHECK(decode(target, good, 64));
+  memcpy(bad, good, 64);
+  bad[4] = 1; // A valid old-frame alignment must not become a new-frame zero.
+  seal(bad);
+  CHECK(!decode(target, bad, 64));
   for (unsigned bit = 0; bit < 512; ++bit) {
     memcpy(bad, good, 64);
     bad[bit / 8] ^= uint8_t(1u << (bit % 8));

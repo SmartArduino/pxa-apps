@@ -32,7 +32,7 @@ def sensor_case(a,w,h,report):
         # A held confirm is one edge, not a stream of repeated brake toggles.
         on=s.logs().count('Marble: slow brake on');k.choose(7);k.key('CONFIRM',.65);check(s.logs().count('Marble: slow brake on')==on+1,'held confirm repeated brake');k.choose(7);s.shot('03-slow-brake')
         # Tilt still drives the actual physics while the brake remains latched.
-        before=pause(k);resume(k);motion(a.motion_file,(0,-3500000,9150000,0,0,0));time.sleep(.65);motion(a.motion_file);time.sleep(.25);moved=pause(k)
+        before=pause(k);resume(k);motion(a.motion_file,(3500000,0,9150000,0,0,0));time.sleep(.65);motion(a.motion_file);time.sleep(.25);moved=pause(k)
         check(position(moved)[0]>position(before)[0]+.025,'three-key mode lost IMU steering');resume(k)
         k.choose(3);s.shot('04-islands');first=snap(s)
         for card in range(11,18):k.choose(card);check(k.focus()[1]==2,'locked card started a run')
