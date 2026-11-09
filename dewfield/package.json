@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-dewfield",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "name": "晴露农场 Dewfield",
-  "description": "四季种田、畜牧与冒险：可再生野外树林、三十层回声矿洞、采矿战斗和洞穴采集。",
+  "description": "四季像素农场：精致动物与行走进食动画、整组出货、村民作息与故事、三十层矿洞冒险。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 28,
+  "release_sequence": 29,
   "build": {
     "system": "cmake",
     "source_dir": ".",

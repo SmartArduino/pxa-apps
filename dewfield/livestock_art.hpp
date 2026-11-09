@@ -1,22 +1,46 @@
 // SPDX-License-Identifier: MIT
 // Included inside art, using native RGB565 animal poses.
 #pragma once
-inline const sprites::Sprite &animal_sprite(const farm::Animal&a,int heading,int frame) {
-  return *animal_sprites::animals[std::clamp(int(a.kind)-1,0,4)][farm::animal_stage(a)][(heading==3?2:0)+(frame&1)];
+inline const animal_sprites::Frame &animal_sprite(const farm::Animal&a,int heading,int frame) {
+  return animal_sprites::frames[animal_sprites::animals[std::clamp(int(a.kind)-1,0,4)][farm::animal_stage(a)][heading==3][std::clamp(frame,0,animal_sprites::Poses-1)]];
+}
+inline bool animal_hit(const animal_sprites::Frame &f,int x,int y) {
+  if(unsigned(x)>=32||unsigned(y)>=28)return false;
+  const auto &row=animal_sprites::rows[f.rows[y]];
+  for(unsigned i=0;i<row.count;++i){const auto &run=animal_sprites::runs[row.start+i];if(x>=run.x&&x<run.x+run.count)return true;}
+  return false;
+}
+inline void animal_pixels(Raster&r,const animal_sprites::Frame &f,int x,int y) {
+  x-=16+r.ox;y-=27+r.oy;
+  if(x>=r.w||y>=r.h||x+32<=0||y+28<=0)return;
+  for(int yy=std::max(0,-y);yy<std::min(28,r.h-y);++yy){
+    const auto &row=animal_sprites::rows[f.rows[yy]];
+    for(unsigned i=0;i<row.count;++i){
+      const auto &run=animal_sprites::runs[row.start+i];
+      int left=std::max(0,x+run.x),right=std::min(r.w,x+run.x+run.count);
+      if(left>=right)continue;
+      const auto *src=animal_sprites::pixels+run.offset+left-x-run.x;auto *dst=r.p+(y+yy)*r.w+left;
+      if(r.tint)for(int n=0;n<right-left;++n)dst[n]=r.tint[src[n]];
+      else std::copy_n(src,right-left,dst);
+    }
+  }
+}
+// UI uses the identical bank, grouping equal colors into short solid spans.
+template<class Canvas>inline void animal_pixels(Canvas&r,const animal_sprites::Frame &f,int x,int y) {
+  for(int yy=0;yy<28;++yy){const auto &row=animal_sprites::rows[f.rows[yy]];
+    for(unsigned i=0;i<row.count;++i){const auto &run=animal_sprites::runs[row.start+i];const auto *src=animal_sprites::pixels+run.offset;
+      for(int at=0;at<run.count;){int end=at+1;while(end<run.count&&src[end]==src[at])++end;r.rect(x-16+run.x+at,y-27+yy,end-at,1,src[at]);at=end;}
+    }
+  }
 }
 inline void animal_shadow(Raster&r,int x,int y,const farm::Animal&a,int heading,int frame) {
   const auto &s=animal_sprite(a,heading,frame);
   // Read only the baked planted sole row; lifted feet never cast contact strips.
-  for(int i=0;i<s.count;++i) {
-    const auto &span=s.spans[i];
-    if(span.y==26)shadow_strip(r,x-s.anchor_x+span.x,y,span.count,2);
-  }
+  const auto &row=animal_sprites::rows[s.rows[26]];
+  for(unsigned i=0;i<row.count;++i){const auto &run=animal_sprites::runs[row.start+i];shadow_strip(r,x-16+run.x,y,run.count,2);}
 }
 inline void animal(Raster&r,int x,int y,const farm::Animal&a,int heading,int frame,bool badge=true) {
-  grounded(r,animal_sprite(a,heading,frame),x,y);
-  if(a.kind==1&&a.male&&farm::animal_stage(a)==2) {
-    int dx=heading==3?-1:1;r.rect(x+dx*5-1,y-17,3,2,rgb(166,76,48));
-  }
+  animal_pixels(r,animal_sprite(a,heading,frame),x,y);
   if(badge&&farm::animal_product(a)) {
     r.rect(x-3,y-32,6,3,Ink);r.rect(x-2,y-31,4,1,Gold);
     r.rect(x,y-29,1,2,Ink);

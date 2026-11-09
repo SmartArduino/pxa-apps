@@ -1,10 +1,23 @@
 {
   "tool": "tools/build_livestock.py",
   "license": "MIT",
-  "layout": "chicken, duck, cow, sheep, pig; baby / juvenile / adult",
+  "reference": "animals-concept-v2.png (AI concept; native pixels authored in Python)",
+  "layout": "rows: chicken/duck/cow/sheep/pig, each baby/juvenile/adult; columns: idle, walk 1-8, eat 1-6; runtime includes true west mirrors",
   "native_size": [
     32,
     28
   ],
-  "runtime": "RGB565 spans, two leg poses and true east/west mirrors"
+  "anchor": [
+    16,
+    27
+  ],
+  "poses": 15,
+  "runtime": "interned RGB565 opaque scanlines; no decoding, rotation, palette conversion or heap allocation",
+  "stats": {
+    "frames": 382,
+    "rows": 1990,
+    "runs": 2620,
+    "colors": 24668,
+    "bytes": 90068
+  }
 }

@@ -48,9 +48,7 @@ void supply_action(int choice) {
   else open_page(Page::Ranch);
 }
 void animal_portrait(int x,int y,const farm::Animal&a) {
-  const auto &s=art::animal_sprite(a,1,0);
-  pocket::sprite(x-s.anchor_x,y-s.anchor_y,s);
-  if(a.kind==1&&a.male&&animal_stage(a)==2)rect(x+4,y-17,3,2,art::rgb(166,76,48));
+  IconCanvas c;art::animal_pixels(c,art::animal_sprite(a,1,0),x,y);
 }
 void ranch_draw(int x,int y) {
   char b[128];

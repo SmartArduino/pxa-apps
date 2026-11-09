@@ -103,10 +103,19 @@ inline void livestock_night(State&s) {
 }
 struct AnimalPose {int x,y,heading,frame;};
 inline AnimalPose animal_pose(const State&s,int id,int ms=0) {
-  int phase=(int(s.minute)*500+ms+id*743)%10000;
-  int off=phase<2400?phase*6/2400:phase<5000?6:phase<7400?(7400-phase)*6/2400:0;
-  bool moving=phase<2400||(phase>=5000&&phase<7400);
-  return {(10+id%6*2)*16+8+off,(18*16+13)+(id/6)*25,phase<5000?1:3,moving?(phase/180)%2:0};
+  // Both directions travel the same 12-pixel stretch in 1.6 s. Feet advance
+  // with distance, rather than flapping during an almost stationary glide.
+  // All poses stay in their original pasture cell; care targeting is stable.
+  int phase=(int(s.minute)*500+ms+id*1279)%16000;
+  bool west=phase>=8000;int t=phase%8000,off=6,frame=0;
+  if(t<1600){off=-6+t*12/1600;frame=1+(t*8/1600);}
+  else if(t>=2600&&t<6600){
+    // Grazing/pecking is visual; daily feed/product accounting stays in night().
+    int eat=(t-2600)%2000;
+    constexpr int poses[]={9,10,11,12,13,12,13,14,10,9};
+    frame=poses[eat/200];
+  }
+  return {(10+id%6*2)*16+8+(west?-off:off),(18*16+13)+(id/6)*25,west?3:1,frame};
 }
 inline int animal_at(const State&s,int x,int y) {
   if(s.region)return -1;

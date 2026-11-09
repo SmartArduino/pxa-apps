@@ -99,7 +99,7 @@ inline Rect bounds(const Entry &e) {
   if(e.kind==Kind::Monster)return {e.x-17,e.y-30,35,32};
   if(e.kind==Kind::CaveCrop)return {e.x-8,e.y-17,17,19};
   if(e.kind==Kind::MineLadder||e.kind==Kind::MineTorch)return {e.x-12,e.y-24,25,27};
-  if(e.kind==Kind::Animal)return {e.x-16,e.y-29,32,30};
+  if(e.kind==Kind::Animal)return {e.x-16,e.y-32,32,33};
   if(e.kind==Kind::RanchShed)return {e.x-32,e.y-50,65,51};
   if(e.kind==Kind::Counter)return {e.x-3,e.y-44,182,47};
   if(e.kind==Kind::Television)return {e.x-16,e.y-38,33,40};
@@ -243,7 +243,7 @@ struct Queue {
     add(Kind::RanchShed,farm::RanchX*16+8,farm::RanchY*16+12,farm::RanchY*16+12,0,true);
     for(int id=0;id<farm::AnimalMax;++id)if(s.animals[id].kind) {
       auto p=farm::animal_pose(s,id,v.subminute_ms);
-      add(Kind::Animal,p.x,p.y,p.y,id,true,(p.heading==3?2:0)+p.frame);
+      add(Kind::Animal,p.x,p.y,p.y,id,true,(p.heading==3?128:0)+p.frame);
     }
     signs(s);
     add(Kind::Player, s.px, s.py, s.py);
@@ -359,7 +359,7 @@ struct Queue {
       case Kind::VillageBoard:art::shadow_strip(r,e.x-18,e.y,3,2);art::shadow_strip(r,e.x+16,e.y,3,2);break;
       case Kind::Bench:art::shadow_strip(r,e.x-15,e.y,3,2);art::shadow_strip(r,e.x+12,e.y,3,2);break;
       case Kind::Planter:art::shadow_strip(r,e.x-12,e.y,25,1);break;
-      case Kind::Animal:art::animal_shadow(r,e.x,e.y,s.animals[e.id],e.growth>=2?3:1,e.growth&1);break;
+      case Kind::Animal:art::animal_shadow(r,e.x,e.y,s.animals[e.id],e.growth&128?3:1,e.growth&127);break;
       case Kind::RanchShed:art::shadow_strip(r,e.x-22,e.y,46,1);break;
       case Kind::WorldNpc:
         art::gait::shadow(r,e.x,e.y,e.id/4,e.growth,&art::villager_rig(e.id%4,e.id/4));
@@ -424,7 +424,7 @@ struct Queue {
       case Kind::VillageBoard:art::village_board(r,e.x,e.y);break;
       case Kind::Bench:art::village_bench(r,e.x,e.y);break;
       case Kind::Planter:art::village_planter(r,e.x,e.y,v.season,s.friend_chapter[0]>=2);break;
-      case Kind::Animal:art::animal(r,e.x,e.y,s.animals[e.id],e.growth>=2?3:1,e.growth&1);break;
+      case Kind::Animal:art::animal(r,e.x,e.y,s.animals[e.id],e.growth&128?3:1,e.growth&127);break;
       case Kind::RanchShed:art::ranch_shed(r,e.x,e.y,s.trough,s.ranch_chapter>=5,farm::ranch_lit(s));break;
       case Kind::WorldNpc: {
         auto p = placement(e);
@@ -541,8 +541,8 @@ struct Queue {
       if(e.kind==Kind::WildTree){auto p=placement(e);if(art::hit(*p.sprite,x-p.x+p.sprite->anchor_x,y-p.y+p.sprite->anchor_y)){tx=farm::WildTrees[e.id].x;ty=farm::WildTrees[e.id].y;return true;}continue;}
       if((e.kind==Kind::Ore||e.kind==Kind::Monster||e.kind==Kind::CaveCrop||e.kind==Kind::MineLadder)&&bounds(e).intersects({x,y,1,1})){tx=e.x/16;ty=e.y/16;return true;}
       if(e.kind==Kind::Animal) {
-        auto &sprite=art::animal_sprite(s.animals[e.id],e.growth>=2?3:1,e.growth&1);
-        if(art::hit(sprite,x-e.x+sprite.anchor_x,y-e.y+sprite.anchor_y)){tx=e.x/16;ty=e.y/16;if(animal_id)*animal_id=e.id;return true;}
+        auto &sprite=art::animal_sprite(s.animals[e.id],e.growth&128?3:1,e.growth&127);
+        if(art::animal_hit(sprite,x-e.x+16,y-e.y+27)){tx=e.x/16;ty=e.y/16;if(animal_id)*animal_id=e.id;return true;}
         continue;
       }
       if(e.kind==Kind::RanchShed&&bounds(e).intersects({x,y,1,1})){tx=e.x/16;ty=e.y/16;return true;}
