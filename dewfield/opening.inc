@@ -23,7 +23,7 @@ void start_intro(bool replay) {
   intro_scene=replay?0:std::min(int(state.intro),IntroScenes-1);intro_elapsed=0;toast_ms=0;redraw();
 }
 void finish_intro() {
-  if(!intro_replay) {state.intro=IntroScenes;begin_ranch(state);base_dirty=true;changed();}
+  if(!intro_replay) {state.intro=IntroScenes;dewfield_actions::begin_ranch(state);base_dirty=true;changed();}
   open_page(intro_replay?Page::Story:Page::Farm);intro_replay=false;intro_skip=false;
   if(page==Page::Farm)msg("欢迎回家。手册里的牧场入口可找到食槽","Welcome home. The journal leads to your trough");
 }

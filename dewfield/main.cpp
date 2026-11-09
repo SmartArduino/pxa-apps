@@ -6,6 +6,8 @@
 #include "fish_art.hpp"
 #include "palette.hpp"
 #include "runtime.hpp"
+#include "multiplayer_actions.hpp"
+#include "multiplayer_wire.hpp"
 #include "scene.hpp"
 #include "terrain.hpp"
 #include "title_art.hpp"
@@ -34,8 +36,11 @@ enum class Page {
   Story,
   Dialogue,
   Orders,
-  Kitchen, Calendar, Forecast, Shipping, Collections, Ranch, Animal, Supply, Incubate, Butcher, Intro, MineJournal, MineStairs, MineLift, MineChest, Eat
+  Kitchen, Calendar, Forecast, Shipping, Collections, Ranch, Animal, Supply, Incubate, Butcher, Intro, MineJournal, MineStairs, MineLift, MineChest, Eat, Multiplayer
 };
+void open_multiplayer();
+void close_multiplayer();
+farm_ui::Rect multiplayer_title_button();
 Page page = Page::Farm;
 bool title_screen = true, save_locked = false, base_dirty = true,
      moving = false, route = false, route_action = false;
@@ -253,6 +258,9 @@ void title_overlay() {
   title_sprig(logo.x + 6, logo.y + logo.h - 5);
   title_sprig(logo.x + logo.w - 6, logo.y + 14, -1);
   bool pressed = touch_down && enter.contains(touchx, touchy);
+  auto together=multiplayer_title_button();
+  title_wood(together,true,touch_down&&together.contains(touchx,touchy));
+  center_text(WIDTH/2,together.y+8,tr("PLAY TOGETHER","一起种田"),TitleBark);
   title_wood(enter, true, pressed);
   int label_y = enter.y + 8 + int(pressed);
   center_text(WIDTH / 2 + 5, label_y, tr("ENTER THE FARM", "走进晴露谷"),
@@ -398,8 +406,18 @@ void scene() {
                         page == Page::Fishing};
   view.subminute_ms=clock_acc;
   view.tool_target=action_target;
+  farm_scene::RemoteFarmer peers[3];
+  unsigned peer_count=0;
+  auto &network=dewfield_net::room;
+  if(network.active())for(unsigned id=0;id<dewfield_net::MaxPlayers;++id){
+    auto p=network.interpolated(id);
+    if(id==network.my_id||!p.active||p.region!=state.region||p.depth!=state.mine_depth)continue;
+    peers[peer_count++]={int(p.x),int(p.y),int(p.dir),int(p.frame),int(p.swing),int(p.tool),int(p.item),int(p.grade),int(p.seed),int(id+1),{p.target_x,p.target_y,p.swing>0}};
+  }
+  view.farmers=peers;view.farmer_count=peer_count;
   profile(DrawStage::Water);
   world_objects.build(state, view, {camx, camy, WIDTH, HEIGHT});
+  world_objects.remote_farmers(view);
   profile(DrawStage::Queue);
   world_objects.shadows(r, state, view);
   profile(DrawStage::Shadows);
@@ -486,7 +504,7 @@ void open_collections(int category=0,int index=0,Page parent=Page::Guide) {
 void talk_to(int npc) {
   if(npc<0||npc>=NpcCount)return;
   journey_region=following_npc=-1;open_page(Page::Dialogue);talking_npc=npc;
-  chat(state,npc);bool personal=personal_event(state,npc);
+  dewfield_actions::chat(state,npc);bool personal=dewfield_actions::personal_event(state,npc);
   std::snprintf(letter,sizeof(letter),"%s",npc_line(state,npc,personal,english()));changed();
 }
 void feedback(Result result) {
@@ -542,7 +560,7 @@ void feedback(Result result) {
     action_tool = 6;
     swing = art::tool_anim::duration(6);
     action_direction=dir;action_grade=0;
-    fishing.begin(state);
+    if(dewfield_net::room.active()){dewfield_net::room.local(dewfield_net::Op::FishBegin);fishing=dewfield_net::room.farmers[dewfield_net::room.my_id].fishing;}else fishing.begin(state);
     changed();
     return;
   case Result::FullFish:
@@ -641,7 +659,7 @@ void action(int x, int y) {
   unsigned old_count=item_count(state,gathered_item);
   bool was_known=discovered_item(state,gathered_item);
   const Portal *crossing=portal_at(state,x,y);
-  auto res = in_mine(state)&&committing_tool&&action_tool==7?mine_strike(state,x,y):act(state, x, y);
+  auto res = in_mine(state)&&committing_tool&&action_tool==7?dewfield_actions::mine_strike(state,x,y):dewfield_actions::act(state, x, y);
   if(res==Result::Harvested || res==Result::Foraged)
     gather_effect(x,y,gathered_item,int(item_count(state,gathered_item)-old_count));
   if(res==Result::MineForaged)gather_effect(x,y,cave_item,1);
@@ -721,11 +739,12 @@ void facing_action() {
     return;
   if (page == Page::Fishing) {
     if(fishing.phase==FishingSession::Phase::Caught || fishing.phase==FishingSession::Phase::Escaped) {
-      if(state.energy && state.fish<999 && spend_energy(state,4)) {
-        fishing.begin(state);changed();
+      if(state.energy && state.fish<999 && dewfield_actions::spend_energy(state,4)) {
+        if(dewfield_net::room.active()){dewfield_net::room.local(dewfield_net::Op::FishBegin);fishing=dewfield_net::room.farmers[dewfield_net::room.my_id].fishing;}else fishing.begin(state);changed();
       } else {page=Page::Farm;msg("先整理背包或吃点东西，再来钓鱼吧", "Ship your catch or eat before fishing again");}
     } else {
-      bool caught=fishing.press(state);
+      bool caught;
+      if(dewfield_net::room.active()){dewfield_net::room.farmers[dewfield_net::room.my_id].fishing=fishing;caught=dewfield_net::room.local(dewfield_net::Op::FishPress,0,0,fishing.elapsed);fishing=dewfield_net::room.farmers[dewfield_net::room.my_id].fishing;}else caught=fishing.press(state);
       if(caught)changed();else redraw();
     }
     return;
@@ -784,6 +803,7 @@ void navigate(int d) {
   redraw();
 }
 void sleep_now(bool forced = false) {
+  if(dewfield_net::room.guest()){msg("请让主持设备回家休息，大家一起迎接明天","Ask the host to rest and start the next day");return;}
   cancel_tool();
   for(auto &effect:gather_effects)effect.remaining=0;
   morning_gold = farm::sleep(state,forced);
@@ -930,7 +950,7 @@ void tool_upgrade_action() {
   int item = state.slots[bag_selection];
   if (item != 5 && item != 6)
     return;
-  if (upgrade_tool(state, Tool(item - 1)))
+  if (dewfield_actions::upgrade_tool(state, Tool(item - 1)))
     msg("工具升级完成", "Tool upgraded");
   else
     msg("金币、木材或石料不足", "Need more gold, wood or stone");
@@ -1222,7 +1242,7 @@ void hud() {
 #include "mine_ui.inc"
 void collection_action() {
   if(collection_category!=3)return;
-  if(claim_collection_reward(state,selected_row)) {
+  if(dewfield_actions::claim_collection_reward(state,selected_row)) {
     changed();msg("徽章奖励已领取，继续探索晴露谷吧！", "Badge reward claimed. Keep exploring!");
   } else msg("完成目标后可以领取，已领过的不会重复发放", "Reach the goal to claim each badge once");
 }
@@ -1335,6 +1355,7 @@ void draw_fishing(int x,int y) {
   icon_label_button(layout().confirm(174,25),farm_ui::Icon::Rod,reeling?tr("REEL IN","收线"):tr("SET HOOK","提竿"),bite||reeling);
 }
 #include "shipping_ui.inc"
+#include "multiplayer_ui.inc"
 void modal() {
   int x = panel_left(), y = panel_top();
   panel(x, y, 228, 210);
@@ -1362,6 +1383,7 @@ void modal() {
   char title[64];
   if(mine_page_active())name=page==Page::MineJournal?tr("ECHO MINE JOURNAL","回声矿洞手册"):page==Page::MineLift?tr("MINE LIFT","矿洞升降梯"):page==Page::MineStairs?tr("THE NEXT FLOOR","通往下一层"):tr("THE LAMP HEART","矿灯的晶心");
   if(ranch_page_active())name=page==Page::Ranch?tr("DEWFIELD RANCH","晴露牧场"):page==Page::Animal?tr("ANIMAL CARE","动物照料"):page==Page::Supply?tr("RANCH SUPPLIES","牧场补给"):page==Page::Butcher?tr("CONFIRM","确认取肉"):tr("INCUBATOR","温暖孵化箱");
+  if(page==Page::Multiplayer)name=tr("PLAY TOGETHER","一起种田");
   if(page==Page::Calendar) {
     std::snprintf(title,sizeof(title),english()?"%s / Year %u":"%s · 第%u年日历",english()?seasons_en[season()]:seasons_cn[season()],(state.day-1)/112+1);name=title;
   }
@@ -1373,7 +1395,8 @@ void modal() {
   icon_button(layout().close(), farm_ui::Icon::Close);
   line(x + 12, y + 31, x + 215, y + 31, art::Earth);
   char b[96];
-  if(page==Page::Collections)draw_collections(x,y);
+  if(page==Page::Multiplayer)draw_multiplayer(x,y);
+  else if(page==Page::Collections)draw_collections(x,y);
   else if(page==Page::Calendar) {
     const char *days[]={"M","T","W","T","F","S","S"};
     for(int i=0;i<7;++i)center_text(x+27+i*29,y+40,days[i],Muted);
@@ -1469,6 +1492,7 @@ void modal() {
       text(r.x + r.w - 9 - text_width(value), r.y + 7, value, Sage);
     }
   } else if (page == Page::Guide) {
+    icon_button({x+12,y+7,20,20},farm_ui::Icon::Network);
     const char *labels[] = {
         tr("HOME", "小屋休息"),   tr("SEED SHOP", "购买种子"),
         tr("SHIPPING", "出货箱"), tr("WELL", "井边补水"),
@@ -1637,7 +1661,7 @@ void order_action(int choice) {
   if (!here) { go_to(Region::Town,18,10,true); return; }
   if(choice==4){open_page(Page::Calendar);return;}
   if(choice==5){open_page(Page::Guide);return;}
-  if (deliver_order(state,choice)) msg("交付完成，金币和好感已增加", "Delivered! Gold and friendship gained");
+  if (dewfield_actions::deliver_order(state,choice)) msg("交付完成，金币和好感已增加", "Delivered! Gold and friendship gained");
   else msg("物品不足，或这份委托今天已完成", "Need the items; each request is once a day");
   changed();
 }
@@ -1645,7 +1669,7 @@ void kitchen_action(int choice) {
   bool here=state.region==unsigned(Region::Home)&&near(state,21,10);
   if (!here) { go_to(Region::Home,21,10,true); return; }
   if (choice == 2) { open_page(Page::Guide); return; }
-  if (cook(state,choice)) msg("料理完成！拿起食物可以恢复体力", "Cooked! Hold food and use it to eat");
+  if (dewfield_actions::cook(state,choice)) msg("料理完成！拿起食物可以恢复体力", "Cooked! Hold food and use it to eat");
   else msg("材料不足，或料理已装满背包", "Need ingredients and space for the meal");
   changed();
 }
@@ -1653,12 +1677,12 @@ void dialogue_action(int choice) {
   if (talking_npc < 0 || talking_npc >= 4)
     return;
   if (choice == 0) {
-    if(ranch_story(state,talking_npc)) {
+    if(dewfield_actions::ranch_story(state,talking_npc)) {
       std::snprintf(letter,sizeof(letter),"%s",ranch_completion(state.ranch_chapter,english()));
-    } else if(friend_story(state,talking_npc)) {
+    } else if(dewfield_actions::friend_story(state,talking_npc)) {
       base_dirty=true;sound(dewfield_audio::Sfx::Gift);
       std::snprintf(letter,sizeof(letter),"%s",friend_story_line(talking_npc,state.friend_chapter[talking_npc],english()));
-    } else if (advance_story(state, talking_npc)) {
+    } else if (dewfield_actions::advance_story(state, talking_npc)) {
       base_dirty = true;
       std::snprintf(letter, sizeof(letter), "%s",
                     story_completion(state.story, english()));
@@ -1668,9 +1692,9 @@ void dialogue_action(int choice) {
       std::snprintf(letter, sizeof(letter), "%s\n%s",
                     story_line(state, english()), story_goal(state, english()));
   } else if (choice == 1) {
-    if (gift(state, talking_npc, held_item())) {
+    if (dewfield_actions::gift(state, talking_npc, held_item())) {
       sound(dewfield_audio::Sfx::Gift);
-      bool personal = personal_event(state, talking_npc);
+      bool personal = dewfield_actions::personal_event(state, talking_npc);
       std::snprintf(letter, sizeof(letter), "%s",
                     personal ? npc_line(state, talking_npc, true, english())
                              : tr("Thank you! I'll treasure this.",
@@ -1690,7 +1714,7 @@ void bag_action(int index) {
     return;
   }
   int i = state.region ? -1 : plot_index(state.px / 16, state.py / 16);
-  if (craft_sprinkler(state, i))
+  if (dewfield_actions::craft_sprinkler(state, i))
     msg("洒水器已放置，明早自动浇水", "Sprinkler placed. Active tomorrow");
   else
     msg("站在田里，需要 8 木材和 6 石头",
@@ -1700,12 +1724,12 @@ void bag_action(int index) {
 }
 void shop_action(int index) {
   if (index < 4) {
-    if (buy_seed(state, index))
+    if (dewfield_actions::buy_seed(state, index))
       msg("种子已放进背包", "Seeds added to backpack");
     else
       msg("金币不足", "Not enough gold");
   } else {
-    if (upgrade(state))
+    if (dewfield_actions::upgrade(state))
       msg("水壶升级完成", "Watering can upgraded");
     else
       msg("需要 180 金币", "You need 180 gold");
@@ -1713,6 +1737,8 @@ void shop_action(int index) {
   changed();
 }
 void panel_tap(int px, int py) {
+  if(page==Page::Multiplayer){multiplayer_tap(px,py);return;}
+  if(page==Page::Guide){auto m=layout().modal();if(farm_ui::Rect{m.x+12,m.y+7,20,20}.contains(px,py)){open_multiplayer();return;}}
 
   auto m=layout().modal();
   if(page==Page::Calendar && px>=m.x+14 && px<m.x+217 && py>=m.y+57 && py<m.y+157) {
@@ -1838,6 +1864,7 @@ const char *title() { return "晴露农场 Dewfield"; }
 const char *app_id() { return "dewfield"; }
 bool input_active() { return moving || route || stick || touch_down; }
 bool back() {
+  if(page==Page::Multiplayer){if(multiplayer_edit){multiplayer_edit=false;redraw();}else close_multiplayer();return true;}
   if(page==Page::Intro){intro_skip=!intro_skip;redraw();return true;}
   if (!title_screen && page != Page::Farm) {
     stop_motion();
@@ -1849,6 +1876,7 @@ bool back() {
   return false;
 }
 void init() {
+  dewfield_net::room.bind(state);
   fresh(state);
   scene_surface(false);
   music_enabled(state.music);effects_enabled(state.sound_effects);
@@ -1856,7 +1884,7 @@ void init() {
 void settings() { open_page(Page::Settings); }
 void reset() { /* Restart is deliberately not a save-deleting action. */ }
 size_t serialize(uint8_t *d, size_t n) {
-  if (save_locked)
+  if (save_locked || dewfield_net::room.guest())
     return 0;
   return encode_storage(state, d, n);
 }
@@ -1867,6 +1895,19 @@ void load(const uint8_t *d, size_t n) {
   }
   music_enabled(state.music);effects_enabled(state.sound_effects);
   base_dirty = true;
+}
+void network_update() {
+  using namespace dewfield_net;auto &r=room;
+  static Mode previous=Mode::Offline;static uint8_t region=0,depth=0,story=0;
+  if(r.mode==Mode::Guest&&previous!=Mode::Guest){title_screen=false;page=Page::Farm;scene_surface(true);}
+  if(r.teleported){cancel_tool();stop_motion();for(auto &effect:gather_effects)effect.remaining=0;hit_ms=deposit_ms=0;base_dirty=true;r.teleported=false;}
+  if(region!=state.region||depth!=state.mine_depth||story!=state.story){base_dirty=true;region=state.region;depth=state.mine_depth;story=state.story;}
+  if(r.changed){redraw();r.changed=false;}
+  if(r.durable_dirty&&r.mode==Mode::Hosting){save();r.durable_dirty=false;}
+  if(r.fish_changed){if(page==Page::Fishing)fishing=r.farmers[r.my_id].fishing;r.fish_changed=false;}
+  if(r.active())for(unsigned i=0;i<MaxPlayers;++i)if(i!=r.my_id&&r.farmers[i].pose.active&&r.farmers[i].pose.walking&&r.farmers[i].pose.region==state.region)redraw();
+  if(previous==Mode::Guest&&r.mode==Mode::Offline){page=Page::Farm;stop_motion();base_dirty=true;music_enabled(state.music);effects_enabled(state.sound_effects);save();msg("已离开联机，返回自己的农场","Left the room. Your farm is restored");}
+  previous=r.mode;
 }
 bool menu_hit(int x, int y) {
   return !title_screen && page == Page::Farm &&
@@ -1889,7 +1930,9 @@ void draw_menu(bool paused, int row, bool exiting) {
     center_text(WIDTH / 2, y + 162, tr("Saving...", "保存中…"));
 }
 void key(Key k) {
+  if(page==Page::Multiplayer){multiplayer_key(k);return;}
   if (title_screen) {
+    if(k==Key::Y){open_multiplayer();redraw();return;}
     if(k==Key::B){interact_facing();redraw();return;}
   if (k == Key::A) {
       title_screen = false;
@@ -1927,12 +1970,13 @@ void key(Key k) {
   }
   if (page != Page::Farm) {
     if(page==Page::Orders&&k==Key::Y){open_page(Page::Calendar);return;}
+    if(page==Page::Guide&&k==Key::X){open_multiplayer();return;}
     if(page==Page::Guide&&k==Key::Y){open_collections();return;}
     if(page==Page::Forecast||page==Page::Calendar) {
       if(page==Page::Calendar&&(k==Key::LEFT||k==Key::RIGHT||k==Key::UP||k==Key::DOWN)) {
         selected_row=std::clamp(selected_row+(k==Key::LEFT?-1:k==Key::RIGHT?1:k==Key::UP?-7:7),0,27);redraw();return;
       }
-      if(k==Key::A&&page==Page::Shipping) {if(unship(state))changed();}
+      if(k==Key::A&&page==Page::Shipping) {if(dewfield_actions::unship(state))changed();}
       else if(k==Key::A||k==Key::B)page=Page::Farm;
       redraw();return;
     }
@@ -2178,6 +2222,7 @@ void pointer(Phase phase, int x, int y) {
   if (std::abs(x - touchx) + std::abs(y - touchy) > 18)
     return;
   if (title_screen) {
+    if(multiplayer_title_button().contains(x,y)){open_multiplayer();redraw();return;}
     title_screen = false;
     scene_surface(true);
     if(state.intro<IntroScenes)start_intro();
@@ -2278,7 +2323,7 @@ void tick(uint32_t elapsed) {
   }
   if (page != Page::Farm)
     return;
-  if(in_mine(state)) {
+  if(in_mine(state)&&!dewfield_net::room.active()) {
     int old_health=state.health;bool nearby=false;for(auto &m:state.mobs)if(m.hp&&std::abs(int(m.x)-state.px)+std::abs(int(m.y)-state.py)<160)nearby=true;
     if(mine_tick(state,elapsed)){cancel_tool();stop_motion();base_dirty=true;page=Page::Letter;mine_letter=true;std::snprintf(letter,sizeof(letter),"%s",tr("Alan found you in the mine and brought you home. You kept your belongings; rescue costs up to 500G. Rest, eat, and try again.","阿岚把你从矿洞带回了家。背包物品保留，救援最多花费500金币。先休息、吃点东西，再准备下一次探险吧。"));changed();return;}
     if(nearby||state.invulnerable)redraw();if(old_health!=state.health){sound(dewfield_audio::Sfx::Hurt);changed();}
@@ -2303,7 +2348,7 @@ void tick(uint32_t elapsed) {
   clock_acc += elapsed;
   if (clock_acc >= 500) {
     clock_acc -= 500;
-    ++state.minute;
+    if(!dewfield_net::room.active())++state.minute;
     if(state.minute==1440)msg("已经午夜，早点休息体力恢复更多","Midnight. Sleep soon to recover energy");
     if(state.minute==1500)msg("凌晨一点，两点就会昏睡","1 AM. You will pass out at 2 AM");
     if (state.minute >= 1560) {
@@ -2431,13 +2476,18 @@ void tick(uint32_t elapsed) {
     redraw();
 }
 void draw() {
+  dewfield_net::Pose pose;pose.dir=uint8_t(swing?action_direction:dir);pose.frame=uint8_t(walking?walk_frame(walk_distance):0);
+  pose.walking=walking;pose.distance=uint16_t(walk_distance);pose.swing=uint16_t(swing);
+  pose.target_x=int16_t(std::clamp(action_target.x,0,511));pose.target_y=int16_t(std::clamp(action_target.y,0,383));
+  dewfield_net::room.update_visual(pose);
   if (title_screen) {
     cover_background(title_art::pixels, title_art::Width, title_art::Height);
     title_overlay();
     return;
   }
   if(page==Page::Intro){draw_intro();return;}
-  scene();
+  if(page==Page::Multiplayer&&multiplayer_from_title)cover_background(title_art::pixels,title_art::Width,title_art::Height);
+  else scene();
   if (page != Page::Farm)
     shade();
   begin_ui();

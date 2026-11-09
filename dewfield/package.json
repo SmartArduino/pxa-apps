@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-dewfield",
-  "version": "0.18.0",
+  "version": "0.20.1",
   "name": "晴露农场 Dewfield",
-  "description": "四季像素农场：精致动物与行走进食动画、整组出货、村民作息与故事、三十层矿洞冒险。",
+  "description": "四人合作像素农场：局域网创建与发现、IP端口直连、网页加入，四季种植、村民故事和矿洞冒险。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 29,
+  "release_sequence": 32,
   "build": {
     "system": "cmake",
     "source_dir": ".",
@@ -35,7 +35,7 @@
       "kind": "ui",
       "cmake_target": "pxa_main",
       "execution_model": "main-loop",
-      "artifact": "aot",
+      "artifact": "both",
       "services": [
         "surface",
         "clock",
@@ -63,7 +63,14 @@
             7
           ]
         },
-        "permission"
+        "permission",
+        {
+          "name": "net",
+          "min_version": [
+            0,
+            7
+          ]
+        }
       ],
       "wasi": {
         "version": "preview1",
@@ -81,6 +88,21 @@
       "name": "audio.playback",
       "required": false,
       "scope": "media"
+    },
+    {
+      "name": "net.discovery",
+      "scope": "local-network",
+      "required": false
+    },
+    {
+      "name": "net.listen",
+      "scope": "network",
+      "required": false
+    },
+    {
+      "name": "net.socket",
+      "scope": "outbound",
+      "required": false
     }
   ],
   "icon": "assets/icon.png"

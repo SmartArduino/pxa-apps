@@ -5,12 +5,12 @@ farm_ui::Rect shipping_button(int index) {auto m=layout().modal();return {m.x+12
 void shipping_action(int choice) {
   int item=state.slots[shipping_selection];
   if(choice==2) {
-    if(unship(state)){sound(dewfield_audio::Sfx::Confirm);changed();}
+    if(dewfield_actions::unship(state)){sound(dewfield_audio::Sfx::Confirm);changed();}
     else msg("无法取回：检查背包空位和物品堆叠","Cannot retrieve: check bag space and stack capacity");
     return;
   }
   unsigned count=choice==0?item_count(state,item):1;
-  if(ship_items(state,item,count)) {
+  if(dewfield_actions::ship_items(state,item,count)) {
     deposited_item=item;deposit_ms=360;sound(dewfield_audio::Sfx::Ship);changed();
   } else msg("选择可出售物品；待结算金额不能超上限","Choose a sellable stack; the pending total must fit");
 }
@@ -63,7 +63,7 @@ void food_preview(int x,int y,int item){
 void eat_action(bool confirm) {
   page=Page::Farm;
   if(confirm&&food_item==held_item()) {
-    if(eat(state,food_item)){sound(dewfield_audio::Sfx::Eat);changed();msg("吃好了，体力和生命恢复了","A good meal. Energy and health restored");}
+    if(dewfield_actions::eat(state,food_item)){sound(dewfield_audio::Sfx::Eat);changed();msg("吃好了，体力和生命恢复了","A good meal. Energy and health restored");}
     else msg("体力充足，留着稍后享用吧","You feel well. Save it for later");
   }
   food_item=0;redraw();

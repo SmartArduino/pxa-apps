@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: CC0-1.0
 #include "runtime.hpp"
+#include "multiplayer_transport.hpp"
 #include "../common/pocket-ui/preferences.hpp"
 #include "../common/pocket-ui/viewport.hpp"
 #include "pxa.h"
@@ -12,6 +13,7 @@
 #include "pxa_system.h"
 #include "pxa_ui.h"
 #include "pxa_window.h"
+#include "window_preferences.hpp"
 #include "resample.hpp"
 #include "native_raster.hpp"
 #include "ui_layout.hpp"
@@ -468,6 +470,7 @@ int32_t handle_event(const uint8_t *bytes, uint32_t length) {
   pxa_event_t e;
   if (!pxa_parse_event(bytes, length, &e))
     return PXA_STATUS_INTERNAL;
+  if(dewfield_transport::event(e))return PXA_EVENT_HANDLED;
   pxa_game_render_raster_result_t raster_result{};
   if (pxa_game_render_parse_raster(&e, CREATE_RASTER, &raster_result)) {
     native_raster.created(raster_result);
@@ -509,6 +512,8 @@ int32_t handle_event(const uint8_t *bytes, uint32_t length) {
     cancel_input();
     pocket::redraw();
     if (next && running) {
+      dewfield_transport::shutdown();
+      game::network_update();
       pocket::save();
       send_save(true);
     }
@@ -565,8 +570,7 @@ int32_t handle_event(const uint8_t *bytes, uint32_t length) {
     return PXA_EVENT_HANDLED;
   }
   pxa_window_snapshot_t window{};
-  if (pxa_window_parse_snapshot(&e, WINDOW_METRICS, &window) ||
-      pxa_window_parse_metrics_changed(&e, &window)) {
+  if (dewfield_window::snapshot(e, WINDOW_METRICS, window)) {
     if (!window.status) {
       navigation_bars = window.system_bar_insets;
       navigation_width = int(window.logical_width);
@@ -646,6 +650,8 @@ void run() {
 #ifdef PXA_POCKET_SERVICES
     game::service_update(!background && !paused && !exit_requested, now_us());
 #endif
+    dewfield_transport::update(uint32_t(now_us()/1000));
+    game::network_update();
     send_save(background || exit_requested);
     service_preferences();
     if (exit_requested && ((!save_dirty && !save_pending &&
@@ -654,6 +660,7 @@ void run() {
       if (save_dirty || save_pending || preferences_dirty ||
           preferences_pending)
         pxa_log_write(3, "Pocket: exit flush timed out");
+      dewfield_transport::shutdown();
       finished = true;
       pxa_window_request_back();
       break;
@@ -997,6 +1004,7 @@ extern "C" int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
   int32_t status = pxa_window_fullscreen();
   if (status)
     return status;
+  dewfield_window::prefer_landscape();
   if ((status = pxa_event_port_open(PORT)))
     return status;
   if ((status = request_surface()))
@@ -1010,6 +1018,7 @@ extern "C" int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     return status;
 // Music permission/session is opened lazily after loading saved settings.
   service_preferences();
+  dewfield_transport::init();
   return pxa_clock_set_period(33);
 }
 extern "C" int32_t pxa_app_on_event(const uint8_t *bytes, uint32_t length) {

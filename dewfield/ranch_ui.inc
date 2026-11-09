@@ -4,7 +4,7 @@ farm_ui::Rect ranch_row(int i) {auto m=layout().modal();return {m.x+12,m.y+66+i*
 farm_ui::Rect ranch_button(int i) {auto m=layout().modal();return {m.x+12,m.y+100+i*26,202,24};}
 void open_ranch() {
   if(!ranch_here(state)){go_to(Region::Farm,RanchX,RanchY,true);return;}
-  if(!state.ranch){begin_ranch(state);base_dirty=true;changed();msg("旧棚打开了！两只小鸡和20份草料等着你","Two young chickens and 20 hay welcome you");}
+  if(!state.ranch){dewfield_actions::begin_ranch(state);base_dirty=true;changed();msg("旧棚打开了！两只小鸡和20份草料等着你","Two young chickens and 20 hay welcome you");}
   ranch_page=0;open_page(Page::Ranch);
 }
 int ranch_slot(int row) {
@@ -26,10 +26,10 @@ void animal_action(int choice) {
   if(!state.region&&!near(state,p.x/16,p.y/16)){go_to(Region::Farm,p.x/16,p.y/16,true);return;}
   if(state.region){go_to(Region::Farm,p.x/16,p.y/16,true);return;}
   if(choice==0) {
-    if(pet_animal(state,ranch_index))msg("轻轻摸了摸，今天更亲近你了","A gentle pat brings you closer");
+    if(dewfield_actions::pet_animal(state,ranch_index))msg("轻轻摸了摸，今天更亲近你了","A gentle pat brings you closer");
     else msg("今天已经摸过啦","Already petted today");
   } else {
-    int item=collect_animal(state,ranch_index);
+    int item=dewfield_actions::collect_animal(state,ranch_index);
     if(item){gather_effect(p.x/16,p.y/16,item,1);msg("产物已放进背包，可拿起出货或食用","Collected into your bag for shipping or food");}
     else msg("尚未产出，或背包没有空位","No produce ready, or the bag is full");
   }
@@ -39,12 +39,12 @@ void ranch_action(int choice) {
   if(!ranch_here(state)){go_to(Region::Farm,RanchX,RanchY,true);return;}
   if(choice==0)open_page(Page::Supply);
   else if(choice==1)open_page(Page::Incubate);
-  else {if(!fill_trough(state))ranch_error();else msg("食槽已添好，两天的草料更安心","Trough filled for up to two nights");changed();}
+  else {if(!dewfield_actions::fill_trough(state))ranch_error();else msg("食槽已添好，两天的草料更安心","Trough filled for up to two nights");changed();}
 }
 void supply_action(int choice) {
   if(choice==0)supply_male=!supply_male;
-  else if(choice==1){if(!buy_animal(state,supply_kind,supply_male))ranch_error();else msg("新伙伴已到牧区，记得添草料","A new youngster arrived in the pasture");changed();}
-  else if(choice==2){if(!buy_hay(state))ranch_error();changed();}
+  else if(choice==1){if(!dewfield_actions::buy_animal(state,supply_kind,supply_male))ranch_error();else msg("新伙伴已到牧区，记得添草料","A new youngster arrived in the pasture");changed();}
+  else if(choice==2){if(!dewfield_actions::buy_hay(state))ranch_error();changed();}
   else open_page(Page::Ranch);
 }
 void animal_portrait(int x,int y,const farm::Animal&a) {
@@ -100,7 +100,7 @@ void ranch_draw(int x,int y) {
 }
 void butcher_action(bool confirm) {
   if(!confirm){open_page(Page::Animal);return;}
-  if(slaughter(state,ranch_index)){changed();open_page(Page::Ranch);msg("获得4份猪肉，可出货","Collected 4 pork for shipping");}
+  if(dewfield_actions::slaughter(state,ranch_index)){changed();open_page(Page::Ranch);msg("获得4份猪肉，可出货","Collected 4 pork for shipping");}
   else {ranch_error();open_page(Page::Animal);}
 }
 void ranch_key(Key k) {
@@ -116,7 +116,7 @@ void ranch_key(Key k) {
   else if(page==Page::Supply)supply_action(selected_row);
   else if(page==Page::Butcher)butcher_action(selected_row==1);
   else if(selected_row==2)open_page(Page::Ranch);
-  else {if(!incubate(state,selected_row+1))ranch_error();changed();}
+  else {if(!dewfield_actions::incubate(state,selected_row+1))ranch_error();changed();}
 }
 void ranch_tap(int px,int py) {
   auto m=layout().modal();int x=m.x,y=m.y;

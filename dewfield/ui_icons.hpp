@@ -2,7 +2,7 @@
 #pragma once
 #include "art.hpp"
 namespace farm_ui {
-enum class Icon { Backpack, Journal, Pause, Close, Back, Sprinkler, Use, Rod, Eat };
+enum class Icon { Backpack, Journal, Pause, Close, Back, Sprinkler, Use, Rod, Eat, Network };
 // Native 16px interface icons share the world's warm wood and sage palette.
 template <class Canvas> void icon(Canvas &r, int x, int y, Icon value) {
   constexpr auto ink = art::Ink, paper = farm_palette::Highlight,
@@ -12,6 +12,9 @@ template <class Canvas> void icon(Canvas &r, int x, int y, Icon value) {
     r.rect(x + xx, y + yy, w, h, c);
   };
   switch (value) {
+  case Icon::Network:
+    box(1,2,5,5,ink);box(2,3,3,3,paper);box(9,2,5,5,ink);box(10,3,3,3,paper);
+    box(0,8,7,7,ink);box(1,9,5,5,sage);box(8,8,7,7,ink);box(9,9,5,5,gold);break;
   case Icon::Eat:
     box(2,2,5,6,ink);box(3,3,3,4,gold);box(4,7,2,8,ink);box(4,8,1,6,paper);
     box(10,3,1,4,ink);box(12,3,1,4,ink);box(14,3,1,4,ink);box(10,6,5,2,ink);box(12,8,2,7,ink);box(12,8,1,6,gold);break;

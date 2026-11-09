@@ -12,7 +12,7 @@ void mine_quick_action(int choice) {
  }
  int food=mine_food_item(state),energy=state.energy,health=state.health;
  if(!food){msg("背包中没有可以食用的补给","No edible supplies in your bag");return;}
- if(!eat(state,food)){msg("体力与生命已满，先留着食物","Energy and health are full. Save your food");return;}
+ if(!dewfield_actions::eat(state,food)){msg("体力与生命已满，先留着食物","Energy and health are full. Save your food");return;}
  char name[64],cn[96],en[96];item_label(name,sizeof(name),food,false);
  std::snprintf(cn,sizeof(cn),"%s · 体力+%d 生命+%d",name,int(state.energy)-energy,int(state.health)-health);
  std::snprintf(en,sizeof(en),"%s: energy +%d, health +%d",name,int(state.energy)-energy,int(state.health)-health);
@@ -24,24 +24,24 @@ void refresh_mine_scene() {
 void mine_ui_action(int choice) {
  if(page==Page::MineLift) {
   constexpr int floors[]={0,1,5,10,15,20,25,30};int floor=floors[std::clamp(choice,0,7)];
-  if(!floor){leave_mine(state);refresh_mine_scene();return;}
-  if(enter_mine(state,floor)){refresh_mine_scene();return;}
+  if(!floor){dewfield_actions::leave_mine(state);refresh_mine_scene();return;}
+  if(dewfield_actions::enter_mine(state,floor)){refresh_mine_scene();return;}
   msg("先亲自到达这一层，才能使用升降梯","Visit this floor first to unlock its lift");return;
  }
  if(page==Page::MineStairs) {
   if(choice==1){page=Page::Farm;return;}
-  if(descend_mine(state)){refresh_mine_scene();msg("继续深入，留意攻击前的红光","Deeper still. Watch the red attack warning");}
+  if(dewfield_actions::descend_mine(state)){refresh_mine_scene();msg("继续深入，留意攻击前的红光","Deeper still. Watch the red attack warning");}
   return;
  }
  if(page==Page::MineChest) {
   if(choice==1){page=Page::Farm;return;}
-  if(mine_treasure(state)) {
+  if(dewfield_actions::mine_treasure(state)) {
    std::snprintf(letter,sizeof(letter),"%s",tr("You found the old lamp's crystal heart! 800G, 3 crystals and 3 glowroots. Alan's lost light can shine again.","你找到了旧矿灯的晶心！获得800金币、3块晶石和3份荧根菜。阿岚说，失去的光也能被重新点亮。"));open_page(Page::Letter);changed();
   } else msg(state.mine_rewards&1?"宝箱已经领过了":"先击败守灯石偶，并留出物品堆叠空间",state.mine_rewards&1?"This chest has been claimed":"Defeat the lamp guardian and leave stack space");
   return;
  }
  if(choice<2){equip_item(state,choice?37:6);changed();page=Page::Farm;return;}
- if(forge_sword(state)){msg("剑已强化，下一次命中会更有力","Sword strengthened. The next strike is stronger");changed();}
+ if(dewfield_actions::forge_sword(state)){msg("剑已强化，下一次命中会更有力","Sword strengthened. The next strike is stronger");changed();}
  else msg("需铜矿5或铁矿8、煤炭2，以及80或180金币","Need 5 copper or 8 iron, 2 coal, and 80 or 180G");
 }
 void mine_ui_draw(int x,int y) {

@@ -23,6 +23,7 @@ enum class Kind : uint8_t {
   Chicken,
   Player,
   WorldNpc,
+  RemotePlayer,
   Bed,
   Table,
   Forage,
@@ -42,6 +43,10 @@ struct Entry {
   bool interactive;
   uint8_t growth = 2;
 };
+struct RemoteFarmer {
+  int x=0,y=0,direction=2,frame=0,swing=0,tool=3,item=0,grade=0,seed=0,number=1;
+  art::tool_anim::Target target{};
+};
 struct View {
   int direction = 2, frame = 0, swing = 0, tool = 0, season = 0;
   uint32_t animation = 0;
@@ -50,6 +55,8 @@ struct View {
   bool fishing = false;
   int subminute_ms=0;
   art::tool_anim::Target tool_target{};
+  const RemoteFarmer *farmers=nullptr;
+  unsigned farmer_count=0;
 };
 struct Placement {
   const sprites::Sprite *sprite = nullptr;
@@ -131,6 +138,7 @@ inline Rect bounds(const Entry &e) {
     return {e.x - 11, e.y - 22, 24, 25};
   case Kind::Chicken:
     return {e.x - 4, e.y - 12, 13, 14};
+  case Kind::RemotePlayer:
   case Kind::Player:
     return {e.x - 30, e.y - 60, 64, 84};
   default:
@@ -149,7 +157,7 @@ inline bool faded(const Entry &e, const farm::State &s) {
        p.sprite->w - 2, p.sprite->h - std::max(3, int(p.sprite->h) / 3)});
 }
 struct Queue {
-  static constexpr unsigned Capacity = 288;
+  static constexpr unsigned Capacity = 292;
   Entry entries[Capacity]{};
   unsigned count = 0;
   Rect viewport{0, 0, farm::MapW * 16, farm::MapH * 16};
@@ -174,6 +182,17 @@ struct Queue {
     std::sort(entries, entries + count, [](const Entry &a, const Entry &b) {
       return a.depth != b.depth ? a.depth < b.depth : a.order < b.order;
     });
+  }
+  // Merge at most three remote farmers into the already sorted scene queue.
+  // Keep the normal map at one sort per frame.
+  void remote_farmers(const View&v){
+    for(unsigned i=0;i<v.farmer_count;++i){
+      unsigned previous=count;auto&p=v.farmers[i];add(Kind::RemotePlayer,p.x,p.y,p.y,int(i));
+      if(count==previous)continue;
+      auto entry=entries[count-1];unsigned at=count-1;
+      while(at&&entries[at-1].depth>entry.depth){entries[at]=entries[at-1];--at;}
+      entries[at]=entry;
+    }
   }
   void signs(const farm::State&s) {
     if(farm::indoors(s.region))return;
@@ -378,6 +397,9 @@ struct Queue {
       case Kind::Player:
         art::person_shadow(r, e.x, e.y, v.direction, v.frame);
         break;
+      case Kind::RemotePlayer: {
+        auto&p=v.farmers[e.id];art::person_shadow(r,e.x,e.y,p.direction,p.frame);break;
+      }
       case Kind::Chicken:
         art::chicken_shadow(r, e.x, e.y, v.animation / 2 + e.id);
         break;
@@ -508,6 +530,15 @@ struct Queue {
         art::person(r, e.x, e.y, v.direction, v.frame, false, v.swing, v.tool,
                     false, v.held_item, v.grade, v.seed, v.fishing,v.tool_target);
         break;
+      case Kind::RemotePlayer: {
+        auto&p=v.farmers[e.id];
+        art::person(r,e.x,e.y,p.direction,p.frame,false,p.swing,p.tool,
+                    false,p.item,p.grade,p.seed,false,p.target);
+        uint16_t colors[]={farm_palette::Brass,farm_palette::Sage,art::rgb(94,151,174),art::rgb(181,111,108)};
+        int top=e.y-(farm::carrying_item(p.item)?59:34);
+        r.rect(e.x-4,top,9,4,art::Ink);r.rect(e.x-3,top+1,7,2,colors[(p.number-1)&3]);
+        break;
+      }
       }
       if(v.hit_ms&&(e.kind==Kind::WildTree||e.kind==Kind::Ore)&&v.hit_id==(e.kind==Kind::WildTree?32:96)+e.id) {
         int hp=e.kind==Kind::WildTree?farm::wild_hp(s,e.id):farm::ore_hp(s,e.id),damage=e.kind==Kind::WildTree?s.wild_damage[e.id]:s.ore_damage[e.id];

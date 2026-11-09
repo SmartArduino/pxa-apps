@@ -119,6 +119,7 @@ void set_navigation(bool visible);
 #endif
 // Elapsed foreground milliseconds, capped at 100. Use bounded work per call.
 void tick(uint32_t elapsed_ms);
+void network_update();
 void draw();
 #ifdef PXA_POCKET_CUSTOM_MENU
 // App-defined menu button geometry, with shared pause, language and save/exit

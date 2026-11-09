@@ -63,6 +63,20 @@ UI 文字直接使用 ZLabs Pixel 12px 原始 KBitX 点阵，以横向笔画段�
 
 音乐由远程机器已有 ACE-Step 1.5 模型生成原创田园器乐，原始音频与完整生成参数保存在 `art/audio/`。构建音频采用单声道 22050Hz Ogg Vorbis，17.5 秒循环约 82KB，首尾等功率交叉淡化。`sound.inc` 通过已有 Audio 服务异步播放与循环，解码留在 Host；暂停、后台和关闭音乐会暂停或停止播放，权限或服务不可用时不影响游戏。
 
+启动时向 Host 请求横屏。支持 Window 0.5 方向偏好的 Host 会调整窗口与触摸坐标，方屏保持当前角度；旧 Host 沿用原来的方向。旋转后继续使用整数缩放与等比裁剪，退出应用后由 Host 恢复系统方向。
+
+## 合作农场（0.20）
+
+同一房间最多四人，一台桌面或 ESP 设备主持，其他三台设备加入。首页点击「一起种田」，或在农场手册点击联机图标；手柄在首页按 Y。主持设备选择端口并点击「创建农场」，页面会显示自己的 IPv4 地址和端口，默认端口为 `31889`。其他设备连接同一 Wi-Fi 后可点击「寻找附近农场」，或点击 IP、端口输入框，用数字键盘填写主持地址再加入。输入页面手柄 X 清空、方向键选数字、A 输入、Y 完成。非局域网也可直连能路由到的 IPv4 地址；防火墙、路由器需允许相应 TCP 端口。发现采用标准 mDNS/DNS-SD `_dewfield._tcp`，只负责找到地址，不承担游戏数据传输。自动发现依赖 Wi-Fi 网络和设备驱动允许 mDNS 组播，无法发现时仍可使用 IP 与端口直连。
+
+网页版本可以加入桌面和 ESP 主持的同一房间，使用原生 WebSocket，地址为 `ws://IP:端口/dewfield`。浏览器不能建立 TCP 监听或发送 mDNS，因此网页只提供 IP/端口加入。测试本地设备可在 HTTP 的 `localhost` 网页运行；HTTPS 网页需启用「加密连接」，并通过有受信证书的 WSS 代理转发到主持设备，不能直接连接固件的明文端口。还需遵守浏览器的本地网络访问许可。网页 Host 需支持 Net 0.8 的 native WebSocket 特性；桌面和 ESP 使用 Net 0.7 的 TCP 接口即可。
+
+地图、作物、树木、矿石、剧情、物资数量和金币由主持设备管理并共享；位置、体力、水量、生命、背包快捷排列与显示设置各自独立。不同玩家可以探索不同区域和矿层。工具操作先在本机表现，再由主持重放并确认；同时采收不会重复获得物品。每天时间由主持推进，打开界面也继续流逝；主动睡觉由主持决定，所有人一起进入次日。
+
+农场进度保存到主持设备原来的私有存档。访客进入前的单机进度保留在内存中，联机期间不会写入主持存档；离开或断线后恢复自己的农场，合作收获留在主持世界。联机时前台窗口保持亮屏，避免空闲锁屏中断房间；结束联机后恢复系统自动锁屏策略。切到后台会主动结束连接。结束联机、断线后可再次加入；暂不保存访客在房间中的个人站位。界面「结束联机」关闭主持房间，「离开房间」返回个人农场。
+
+`multiplayer_model.hpp` 定义有界姿态和操作，`multiplayer.hpp` 管理主机权威状态、独立玩家上下文、预测确认和矿层缓存，`multiplayer_transport.cpp` 使用现有 Net 权限与资源接口。TCP 和 WebSocket 共用一个监听端口，通过有界握手区分，网络事件始终非阻塞。位置最多每秒 10 次并插值显示，世界快照最多每秒 4 次；内容未变化时省略重复数据并保留心跳。连接、命令队列及收发缓冲固定大小，场景只将最多三名远端角色插入现有遮挡队列，Guest 线性内存仍固定 3 MiB。
+
 ## 构建与检查
 
 在 PXA workspace 根目录执行：
@@ -91,9 +105,11 @@ python3 tools/pxadb/pxadb.py package install \
 python3 tools/pxadb/pxadb.py package run pxa-dewfield --port "$dewfield_port"
 ```
 
+`tests/multiplayer_test.cpp` 覆盖四人房间、采收竞争、命令去重、损坏快照、协议边界和访客原进度恢复；`tests/multiplayer_ui_test.cpp` 验证真实工具延迟提交、输入键盘、网页控件、存档隔离及中英文多尺寸边界。`tests/multiplayer_simulator_test.py --runner <模拟器> --package <包目录> --publisher-key <公钥> --output <本地产物目录>` 启动四个真实签名实例，验证 mDNS 与 IP 直连、访客开垦播种浇水同步到主持的持久存档，以及主持断开后的访客恢复；输出目录必须是新的 `local/artifacts/` 子目录。
+
 `tests/life_test.cpp` 覆盖果园连通性、季节采集、料理与食用、交付幂等性和 v3 迁移；`tests/life_ui_test.cpp` 覆盖真实按钮、手柄导航与五类屏幕尺寸的中英文布局；`tests/pacing_test.cpp` 验证更新/绘制相位不同以及背压时的等待。`tests/simulator_test.py --life-only --fixture-tool <程序>` 在真实 PXA 模拟器验证采集、料理、委托及重启持久化，夹具只写独立模拟器存档。`tests/world_test.cpp` 验证区域连通性、安全出口、日程、旧存档迁移与主线材料和奖励；`tests/world_ui_test.cpp` 验证真实输入逻辑的跨区域导航、追踪村民、送礼与新增页面边界。`tests/simulator_test.py --world-only --fixture-tool <程序>` 在真实模拟器运行五张地图、修桥开放湖区及农舍过夜，夹具只写独立模拟器存档。`tests/inventory_tools_test.cpp` 检查工具耐久、升级代价、库存交换、空手、存档迁移、设置及树木生长；`tests/ui_test.cpp` 另检查实际拖动、取消、落空和隐藏控件不再接受对应操作。`tests/simulator_test.py --inventory-only` 验证真实签名应用中的背包/物品栏拖动、取消选择、设置及重启保存。`tests/cultivation_test.cpp` 检查碎土纹理不形成横贯条纹、跨格衔接、湿土凹角、四类作物的根部落点与整体连通性；`tests/ui_test.cpp` 同时检查耕地缓存的更新与直接绘制结果一致，收获后移除土窝，叶片生长不重绘土壤。`tests/simulator_test.py --cultivation-only --fixture-tool <程序>` 使用 `tests/layer_fixture.cpp` 在独立模拟器存档中展示干湿土与四类作物的生长阶段。`tests/shadow_test.cpp` 检查四向八阶段步态的四肢反相、半周期换脚、鞋底接触、各物体落地基线、双柱间留空、作物与鸡脚、阴影不重复混合及边界裁剪；`tests/scene_test.cpp` 覆盖同一地图行内的前后像素遮挡、所有前景类别、阴影顺序、树冠与树干分离及点击次序；`tests/ui_test.cpp` 覆盖中英文布局、圆角对称性与外轮廓约束、连续行走与停止、按钮范围、弹窗隔离和手柄操作。`tests/layer_fixture.cpp` 生成合法存档及独立前景交叠像素，用于 `tests/simulator_test.py --layers-only --fixture-tool <程序>` 在真实 PXA 模拟器逐像素复核房屋、宝箱、水井、村民、作物与洒水器的前后遮挡。`tests/terrain_test.cpp` 覆盖全部 256 种邻接旋转、内外圆角、异材质接缝、水岸、人物连通性和精灵裁剪；`tests/resample_test.cpp` 将多种尺寸的快速缩放与数学最近邻结果逐像素比较，并检查输出边界；`tests/core_test.cpp` 覆盖完整耕种结算、缺水与雨天、洒水器、工具、体力、委托、寻路和损坏存档保护，可配合 AddressSanitizer / UndefinedBehaviorSanitizer 原生编译。`tests/simulator_test.py` 驱动真实签名包验证触摸、种植、商店、出货、生长和重启，`--output` 必须位于工作区忽略的 `local/artifacts/<topic>/<YYYYMMDD-HHMMSS>/`。`--navigation-only` 检查真实系统返回不会连续退出且能关闭弹窗；`--title-only` 检查实际首页背景与原图等比居中裁剪的逐像素对应；`--animation-only` 保存真实模拟器四向行走及停止帧，生成用于观察节奏的 GIF；`--action-only` 验证真实开垦、播种和浇水状态变化，并保存对应动作帧。`--tools-only --fixture-tool <程序>` 验证铜斧、铜镐的真实命中和钓竿甩线动作，并生成动画预览。所有测试报告、日志及原始截图保留在该本地目录。模拟器提交帧率不代表实体 LCD 帧率。
 
-这是九区域、单存档的离线版本，包含一条完整的村庄主线和四段个人故事。当前仍未包含婚恋、联机或大型节日系统；广场聚会是主线结尾事件。
+这是九区域、单存档的种田游戏，包含一条完整的村庄主线、四段个人故事和最多四人的合作农场。当前仍未包含婚恋或大型节日系统；广场聚会是主线结尾事件。
 
 ## 角色、作息与日历
 
