@@ -25,7 +25,7 @@ int main(void) {
     }
     uint16_t source[160*144];
     for(unsigned i=0;i<160*144;++i)source[i]=(uint16_t)(i*109+0x9e37);
-    const unsigned sizes[][2]={{320,240},{296,240},{240,320},{400,240},{480,480},{800,480},{160,144},{151,130}};
+    const unsigned sizes[][2]={{320,240},{296,240},{240,320},{400,240},{480,480},{800,480},{160,144},{151,130},{480,854},{854,480}};
     for(unsigned n=0;n<sizeof(sizes)/sizeof(*sizes);++n)for(unsigned fit=0;fit<2;++fit) {
         unsigned w=sizes[n][0],h=sizes[n][1],stride=w+7;
         size_t bytes=(stride*h+32)*2;
@@ -43,5 +43,5 @@ int main(void) {
             assert(renderer.view_width==160 && renderer.view_height==144);
         free(actual);free(expected);
     }
-    puts("PASS: all 32768 colors, native/fit scaling, eight resolutions, padded stride and guards");
+    puts("PASS: all 32768 colors, native/fit scaling, ten resolutions, padded stride and guards");
 }

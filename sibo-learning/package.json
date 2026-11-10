@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-sibo-learning",
-  "version": "0.7.0",
-  "release_sequence": 14,
+  "version": "0.7.1",
+  "release_sequence": 15,
   "name": "四博学习宝",
   "description": "诗词、故事、英语词卡、同步教材、科学图文与离线数学动手玩：4×4数独、24点和分数练习。支持触摸、三按键及学习进度保存，无需SD卡。",
   "publisher": {

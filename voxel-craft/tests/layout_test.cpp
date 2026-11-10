@@ -5,7 +5,7 @@
 #include <cassert>
 #include <cstdio>
 int main(){
-    for(auto size: {std::pair{296u,240u},std::pair{480u,480u},std::pair{412u,412u},std::pair{240u,296u},std::pair{800u,480u},std::pair{128u,128u}})
+    for(auto size: {std::pair{296u,240u},std::pair{480u,480u},std::pair{480u,854u},std::pair{854u,480u},std::pair{412u,412u},std::pair{240u,296u},std::pair{800u,480u},std::pair{128u,128u}})
     for(unsigned density:{65536u,98304u,131072u}){
         pxa::ui::DisplayMetrics m;m.width=size.first;m.height=size.second;m.safe={8,10,8,10};m.shape=1;m.corners={58,58,58,58};m.density_q16=density;
         auto c=voxel::ControlLayout::make(m);

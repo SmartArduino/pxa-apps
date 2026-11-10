@@ -1,8 +1,9 @@
 /* GPL-2.0-or-later */
 #pragma once
 #include <stdint.h>
-#define GB_DISPLAY_MAX_WIDTH 800u
-#define GB_DISPLAY_MAX_HEIGHT 480u
+#define GB_DISPLAY_MAX_WIDTH 854u
+#define GB_DISPLAY_MAX_HEIGHT 854u
+#define GB_DISPLAY_MAX_PIXELS (854u * 480u)
 typedef struct {unsigned x,y,width,height;} gb_display_rect_t;
 
 /* Insets/radii are native pixels here. Conservatively inscribe a rectangle;
@@ -33,7 +34,8 @@ static inline gb_display_rect_t gb_display_safe_rect(unsigned w,unsigned h,
  * The game renderer paints at most 256x240; static bars stay in each buffer. */
 static inline unsigned gb_display_canvas(unsigned *width,unsigned *height) {
     if(*width<160 || *height<160 || *width>GB_DISPLAY_MAX_WIDTH ||
-       *height>GB_DISPLAY_MAX_HEIGHT)return 0;
+       *height>GB_DISPLAY_MAX_HEIGHT ||
+       (uint64_t)*width * *height>GB_DISPLAY_MAX_PIXELS)return 0;
     return 1;
 }
 static inline unsigned gb_display_ui_scale(unsigned width,unsigned height) {
