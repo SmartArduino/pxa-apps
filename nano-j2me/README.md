@@ -2,7 +2,7 @@
 
 独立的 PXA Core 2.1 应用，通过 `nj_port` 接入 nano_j2me。`upstream/` 是
 <https://github.com/lucinhu/nano_j2me.git> 的 Git submodule，固定提交
-`2ed35b84e5115b95d46a88b2118d49dd8c0a4529`；其中的源码保持原样。
+`fca2cd857a91d38e6cd26538871a92e00888ecb1`（0.5.6 后续兼容性修复）；其中的源码保持原样。
 PXA 适配、构建选择和测试全部放在外部。菜单使用原生 Canvas 系统文字，
 悬浮按键标签与 MIDP 游戏文字通过 UI 0.10 `font-glyph` 接口复用 PXA 系统字形；
 需要配套支持该接口的 Host/固件。
@@ -20,6 +20,8 @@ tools/app.sh build nano-j2me --source-root local/pxa-apps --target esp32s3,esp32
 ```
 
 沿用工作区的 WASI SDK、wamrc 和 `common/recrof` Binaryen 工具链。
+可移植字节码解释器单独使用上游公开的 `NJ_INTERP_OPT_LEVEL=3`，其余内核仍用
+`-Os` 控制代码体积；原生 JIT 和 computed-goto 分派保持关闭。
 如未安装 Binaryen，运行 `local/pxa-apps/common/recrof/tools/setup.sh`。
 应用源码属于 `local/pxa-apps` 仓库；父工作区忽略 `local/`。
 
