@@ -34,7 +34,14 @@ void port_game_audio(void) {}
 void port_game_reset_motion(void) {nano_frontend_cancel_input();}
 int port_game_in_menu(void) {return nano_frontend_in_menu();}
 int port_game_finished(void) {return nano_frontend_finished();}
-static nj_u4 millis(void *ud) {(void)ud;return (nj_u4)(port_time_us()/1000);}
+static nj_u4 millis(void *ud) {
+    (void)ud;
+    // The scheduler queries time even when all Java threads stay runnable.
+    // Busy MIDlets may neither sleep nor present; let the Host service events
+    // and the RTOS run idle tasks without re-entering the Java VM.
+    if(port_cooperate_due(port_time_us(),8000))port_sleep(1);
+    return (nj_u4)(port_time_us()/1000);
+}
 static int display_init(void *ud,int *w,int *h,int *stride,void **pixels) {
     (void)ud;return nano_frontend_display(w,h,stride,pixels);
 }
@@ -117,11 +124,11 @@ void port_game_main(void) {
                 .log=log_line,.now=now,.file_open=file_open,.file_read=file_read,.file_write=file_write,
                 .file_seek=file_seek,.file_close=file_close,.file_remove=file_remove,.file_exists=file_exists,
                 .pcm_open=pcm_open,.pcm_write=pcm_write,.pcm_close=pcm_close,.tone_play=tone_play,.tone_stop=tone_stop,
-                .width=config->width,.height=config->height,.fps_cap=30,.rms_dir=rms};
+                .width=config->width,.height=config->height,.fps_cap=config->fps_cap,.rms_dir=rms};
             nj_run_opts opts={.jar_data=data,.jar_size=size,.heap_bytes=(nj_size)config->heap_kib*1024,.stats=1,
                 .device=nj_device_find("nokia6230"),.primary_fonts=system_fonts(),.primary_count=6};
             frames=0;
-            port_log("J2ME launch %s bytes=%u resolution=%dx%d heap=%uKiB rms=%s",name,size,port.width,port.height,config->heap_kib,rms);
+            port_log("J2ME launch %s bytes=%u resolution=%dx%d heap=%uKiB cap=%u rms=%s",name,size,port.width,port.height,config->heap_kib,config->fps_cap,rms);
             borrowed_jar=data;
             int result=nj_run(&port,&opts);borrowed_jar=NULL;tone_stop(NULL);
             if(port_audio_session()) {uint8_t handle[8];pxa_store_u64(handle,port_audio_session());port_rpc(PXA_AUDIO_SERVICE,PXA_AUDIO_FLUSH,handle,8);}

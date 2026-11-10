@@ -79,16 +79,20 @@ static void inputs(void) {
 static int fail_replace(const char *a,const char *b){(void)a;(void)b;return -1;}
 static void settings(const char *root) {
     nano_settings original,decoded,edited;nano_settings_default(&original);edited=original;
-    edited.heap_kib=3072;edited.width=360;edited.height=640;edited.map[4]=NJ_KEY_5;edited.alpha=6;
+    edited.fps_cap=60;edited.heap_kib=3072;edited.width=360;edited.height=640;edited.map[4]=NJ_KEY_5;edited.alpha=6;
     static const uint8_t legacy[]={78,74,80,50,1,0,36,0,240,0,64,1,0,3,1,0,13,14,15,16,17,19,28,1,18,19,11,12,0,0,0,0,135,221,31,65};
-    assert(nano_settings_decode(&decoded,legacy,sizeof(legacy)) && decoded.heap_kib==2048);
+    assert(nano_settings_decode(&decoded,legacy,sizeof(legacy)) && decoded.heap_kib==2048 && decoded.fps_cap==30);
     assert(!memcmp(&decoded,&original,sizeof(original)));
+    static const uint8_t legacy2[]={78,74,80,50,2,0,36,0,240,0,64,1,0,3,1,0,13,14,15,16,17,19,28,1,18,19,11,12,0,12,0,0,196,35,219,74};
+    assert(nano_settings_decode(&decoded,legacy2,sizeof(legacy2)) && decoded.heap_kib==3072 && decoded.fps_cap==30);
     uint8_t bytes[NANO_SETTINGS_BYTES];assert(nano_settings_encode(&edited,bytes));
     assert(nano_settings_decode(&decoded,bytes,sizeof(bytes)) && !memcmp(&decoded,&edited,sizeof(edited)));
     bytes[16]^=1;assert(!nano_settings_decode(&decoded,bytes,sizeof(bytes)));
     assert(!nano_settings_decode(&decoded,bytes,sizeof(bytes)-1));
     edited.map[0]=255;assert(!nano_settings_encode(&edited,bytes));edited.map[0]=original.map[0];
     edited.heap_kib=3073;assert(!nano_settings_encode(&edited,bytes));edited.heap_kib=3072;
+    edited.fps_cap=45;assert(!nano_settings_encode(&edited,bytes));
+    edited.fps_cap=0;assert(!nano_settings_encode(&edited,bytes));edited.fps_cap=60;
     char path[1024];snprintf(path,sizeof(path),"%s/settings.njp",root);
     assert(nano_settings_save(&original,path,rename));assert(!nano_settings_save(&edited,path,fail_replace));
     assert(nano_settings_load(&decoded,path) && !memcmp(&decoded,&original,sizeof(original)));

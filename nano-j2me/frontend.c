@@ -15,7 +15,7 @@
 
 #define LIBRARY_CAP 128
 #define JAR_LIMIT (2u*1024u*1024u)
-enum { GAME,LIBRARY,PAUSED,SETTINGS,RESOLUTION,MAPPING,BINDING,MEMORY };
+enum { GAME,LIBRARY,PAUSED,SETTINGS,RESOLUTION,MAPPING,BINDING,MEMORY,FPS_LIMIT };
 enum { ACTION_NONE,ACTION_SCAN,ACTION_IMPORT };
 typedef struct {char name[256];uint32_t size;} library_entry;
 typedef struct {
@@ -37,7 +37,7 @@ static struct {
     uint16_t source_x[1024],source_y[1024];
     unsigned mode,focus,top,action,binding,repeat,repeat_pad,settings_revision,pending_mode;
     int dirty,layout_dirty,settings_dirty,running,exiting,launch,restart;
-    int memory_warning,capture,controller_hidden,pointer_owner,game_w,game_h,game_heap,rendering,building,busy;
+    int memory_warning,capture,controller_hidden,pointer_owner,game_w,game_h,game_heap,game_fps,rendering,building,busy;
     uint64_t media,hash,repeat_at,stats_at;
     uint16_t *game_pixels;
     char current_name[256],status[160];
@@ -56,12 +56,12 @@ static void menu_pad(uint32_t pressed);
 static void refresh_layout(void);
 static void release_touches(void);
 static unsigned list_count(void) {
-    switch(f.mode){case LIBRARY:return f.count;case PAUSED:return 5;case SETTINGS:return 7;
+    switch(f.mode){case LIBRARY:return f.count;case PAUSED:return 5;case SETTINGS:return 8;
         case RESOLUTION:return nano_resolution_count+2;case MAPPING:return NANO_PAD_BUTTONS;
-        case MEMORY:return nano_heap_count;case BINDING:return NJ_KEY_COUNT+1;default:return 0;}
+        case FPS_LIMIT:return 2;case MEMORY:return nano_heap_count;case BINDING:return NJ_KEY_COUNT+1;default:return 0;}
 }
 static unsigned footer_count(void) {
-    return f.mode==MEMORY?2:f.mode==LIBRARY?3:f.mode==RESOLUTION?3:f.mode==MAPPING?3:f.mode==SETTINGS?1:0;
+    return (f.mode==MEMORY || f.mode==FPS_LIMIT)?2:f.mode==LIBRARY?3:f.mode==RESOLUTION?3:f.mode==MAPPING?3:f.mode==SETTINGS?1:0;
 }
 static int row_height(void) {return nano_clamp(system_text_height()+14,24,40);}
 static int header_height(void) {return system_text_height()+18;}
@@ -223,7 +223,7 @@ static void back(void) {
         case GAME:change_mode(PAUSED);break;
         case PAUSED:change_mode(GAME);break;
         case SETTINGS:change_mode(f.running?PAUSED:LIBRARY);break;
-        case MEMORY:case RESOLUTION:case MAPPING:change_mode(SETTINGS);break;
+        case FPS_LIMIT:case MEMORY:case RESOLUTION:case MAPPING:change_mode(SETTINGS);break;
         case BINDING:change_mode(MAPPING);break;
         default:f.exiting=1;port_wake();break;
     }
@@ -262,6 +262,12 @@ static void select_item(unsigned item,int x) {
         else if(item==4)change_mode(MAPPING);
         else if(item==5){nano_settings defaults;nano_settings_default(&defaults);memcpy(f.settings.map,defaults.map,sizeof(defaults.map));edited();}
         else if(item==6)change_mode(MEMORY);
+        else if(item==7)change_mode(FPS_LIMIT);
+        else back();
+    } else if(f.mode==FPS_LIMIT) {
+        if(item<2){f.settings.fps_cap=item?60:30;edited();}
+        else if(item==2)back();
+        else if(f.running && f.settings.fps_cap!=f.game_fps){f.restart=1;f.input.quit=1;change_mode(GAME);}
         else back();
     } else if(f.mode==MEMORY) {
         if(item<nano_heap_count){f.settings.heap_kib=nano_heap_presets[item];edited();}
@@ -469,7 +475,7 @@ static void text(uint16_t *p,nano_rect r,const char *s,uint16_t color,int center
     system_text_tint(p,f.video.width,f.video.height,x,r.y+(r.h-system_text_height())/2,r.x+r.w-x-3,s,color);
 }
 static const char *title(void) {
-    return f.mode==MEMORY?"Java 内存":f.mode==LIBRARY?"nano J2ME":f.mode==PAUSED?"游戏菜单":f.mode==SETTINGS?"运行设置":
+    return f.mode==FPS_LIMIT?"帧率上限":f.mode==MEMORY?"Java 内存":f.mode==LIBRARY?"nano J2ME":f.mode==PAUSED?"游戏菜单":f.mode==SETTINGS?"运行设置":
         f.mode==RESOLUTION?"JAR 分辨率":f.mode==MAPPING?"手柄映射":"映射到";
 }
 static void row_label(unsigned row,char left[256],char right[128]) {
@@ -478,13 +484,16 @@ static void row_label(unsigned row,char left[256],char right[128]) {
     if(f.mode==PAUSED) {
         static const char *const names[]={"继续游戏","运行设置","打开其他 JAR","重新启动","返回游戏库"};strcpy(left,names[row]);
     } else if(f.mode==SETTINGS) {
-        static const char *const names[]={"运行分辨率","悬浮按键","按键透明度","按键大小","手柄按键映射","恢复默认映射","Java 内存"};strcpy(left,names[row]);
+        static const char *const names[]={"运行分辨率","悬浮按键","按键透明度","按键大小","手柄按键映射","恢复默认映射","Java 内存","帧率上限"};strcpy(left,names[row]);
         if(row==0)snprintf(right,128,"%ux%u%s",f.settings.width,f.settings.height,
             f.running && (f.settings.width!=f.game_w || f.settings.height!=f.game_h)?" *":"");
+        if(row==7)snprintf(right,128,"%u FPS%s",f.settings.fps_cap,f.running && f.settings.fps_cap!=f.game_fps?" *":"");
         if(row==6)snprintf(right,128,"%u KiB%s",f.settings.heap_kib,f.running && f.settings.heap_kib!=f.game_heap?" *":"");
         if(row==1)strcpy(right,(const char*[]){"自动","显示","隐藏"}[f.settings.touch_mode]);
         if(row==2)snprintf(right,128,"%u%%",f.settings.alpha*100/8);
         if(row==3)strcpy(right,(const char*[]){"小","标准","大"}[f.settings.button_size]);
+    } else if(f.mode==FPS_LIMIT) {
+        snprintf(left,256,"%u FPS",row?60:30);if(f.settings.fps_cap==(row?60:30))strcpy(right,"已选");
     } else if(f.mode==MEMORY) {
         snprintf(left,256,"%u KiB",nano_heap_presets[row]);if(f.settings.heap_kib==nano_heap_presets[row])strcpy(right,"已选");
     } else if(f.mode==RESOLUTION) {
@@ -495,7 +504,7 @@ static void row_label(unsigned row,char left[256],char right[128]) {
     else if(f.mode==BINDING){snprintf(left,256,"%s",nano_action_name(row));if(f.settings.map[f.binding]==row)strcpy(right,"已选");}
 }
 static const char *footer(unsigned i) {
-    if(f.mode==MEMORY)return i?(f.running?"应用重启":"应用"):"返回";
+    if(f.mode==MEMORY || f.mode==FPS_LIMIT)return i?(f.running?"应用重启":"应用"):"返回";
     if(f.mode==LIBRARY)return (const char*[]){"打开JAR","设置","退出"}[i];
     if(f.mode==RESOLUTION)return (const char*[]){"返回","240x320",f.running?"应用重启":"应用"}[i];
     if(f.mode==MAPPING)return i==2?"手机键位":i?"重置映射":f.capture?"等待按键":"识别按键";
@@ -513,6 +522,7 @@ static void draw_menu(uint16_t *p) {
         char detail[320];
         if(f.mode==PAUSED){if(f.memory_warning)snprintf(detail,sizeof(detail),"内存不足：可调整 Java 内存或运行分辨率");
             else snprintf(detail,sizeof(detail),"%s  %dx%d",f.current_name,f.game_w,f.game_h);}
+        else if(f.mode==FPS_LIMIT)snprintf(detail,sizeof(detail),"上限不保证实际帧率；运行中应用会重新启动游戏");
         else if(f.mode==MEMORY)snprintf(detail,sizeof(detail),"提高可用 Java 内存；大 JAR 或高分辨率需留出余量");
         else if(f.mode==RESOLUTION)snprintf(detail,sizeof(detail),"%s",f.running?"应用后重新启动当前 JAR":"选择预设，或用 +/- 调整尺寸");
         else if(f.mode==MAPPING)snprintf(detail,sizeof(detail),"%s",f.capture?"请按要映射的手柄键":"START + SELECT 可随时打开菜单");
@@ -661,7 +671,7 @@ void nano_frontend_profile(uint64_t hash,const char *name) {
 }
 const nano_settings *nano_frontend_settings(void) {return &f.settings;}
 int nano_frontend_begin_game(void) {
-    f.memory_warning=0;f.game_w=f.settings.width;f.game_h=f.settings.height;f.game_heap=f.settings.heap_kib;
+    f.memory_warning=0;f.game_w=f.settings.width;f.game_h=f.settings.height;f.game_heap=f.settings.heap_kib;f.game_fps=f.settings.fps_cap;
     f.game_pixels=calloc((size_t)f.game_w*f.game_h,sizeof(uint16_t));
     if(!f.game_pixels){snprintf(f.status,sizeof(f.status),"内存不足，请降低运行分辨率");return 0;}
     memset(&f.input,0,sizeof(f.input));memset(f.touches,0,sizeof(f.touches));f.pointer_owner=-1;

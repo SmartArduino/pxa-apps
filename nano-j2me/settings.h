@@ -8,7 +8,7 @@
 #define NANO_SETTINGS_BYTES 36
 #define NANO_GAME_PIXELS 307200u
 typedef struct {
-    uint16_t width,height,heap_kib;
+    uint16_t width,height,heap_kib,fps_cap;
     uint8_t touch_mode,alpha,button_size,numeric;
     uint8_t map[NANO_PAD_BUTTONS];
 } nano_settings;

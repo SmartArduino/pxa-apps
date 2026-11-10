@@ -22,6 +22,8 @@ tools/app.sh build nano-j2me --source-root local/pxa-apps --target esp32s3,esp32
 沿用工作区的 WASI SDK、wamrc 和 `common/recrof` Binaryen 工具链。
 可移植字节码解释器单独使用上游公开的 `NJ_INTERP_OPT_LEVEL=3`，其余内核仍用
 `-Os` 控制代码体积；原生 JIT 和 computed-goto 分派保持关闭。
+调度器查询单调时钟时，适配层每累计约 8 ms 主动让出一次执行，避免不休眠、
+不提交画面的 Java 密集计算长期阻塞 Host 事件处理；不改变 Java 时钟或关闭看门狗。
 如未安装 Binaryen，运行 `local/pxa-apps/common/recrof/tools/setup.sh`。
 应用源码属于 `local/pxa-apps` 仓库；父工作区忽略 `local/`。
 
@@ -46,6 +48,9 @@ MIDlet `.jar`，系统将其导入应用媒体目录；新导入的单个游戏�
   图片或场景加载时提示内存不足，可尝试增加至 2.5–3 MiB；大 JAR/高分辨率
   会占用同一线性内存预算，过大的 Java 堆也可能导致启动失败。运行中通过
   「应用重启」生效，原有配置按 2 MiB 兼容读取。
+- 「帧率上限」可为每个 JAR 选择 30 或 60 FPS；旧配置默认保持 30 FPS。
+  游戏内修改后通过「应用重启」生效，正常退出并保留 RMS。实际帧率仍受游戏
+  自身节拍、解释器、绘制与设备显示速度限制。
 - 「手柄按键映射」可逐项修改方向、A/B/X/Y、L/R、START/SELECT，或点
   「识别按键」后按实际手柄键。可映射数字、方向、软键、FIRE 等 MIDP 按键，
   也可取消映射。「手机键位」一键将方向映射为 2/8/4/6、确认映射为 5，
