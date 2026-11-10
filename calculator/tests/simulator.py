@@ -22,15 +22,15 @@ class Keys:
  def menu(self):self.choose(6)
  def close(self):self.menu();self.key('DOWN');self.key('DOWN');command(self.s.sock,'KEY_DOWN Z');self.s.proc.wait(timeout=5);check(self.s.proc.returncode==0,'clean exit')
 def snap(s):time.sleep(.26);return save_blob(s.state,'calculator')
-def answer(s):return struct.unpack_from('<d',snap(s),16)[0]
-def text(s):return snap(s)[32:129].split(b'\0')[0].decode()
+def answer(s):return struct.unpack_from('<d',snap(s),12)[0]
+def text(s):return snap(s)[28:124].split(b'\0')[0].decode()
 def case(a,w,h,r,report):
  with Session(a,'calculator',w,h,r) as s:
   k=Keys(s);full=re.findall(r'fullscreen origin=(\d+),(\d+) size=(\d+)x(\d+) display=(\d+)x(\d+)',s.logs());check(full and tuple(map(int,full[-1]))==(0,0,w,h,w,h),'not fullscreen');s.shot('01-home')
   for id in [113,115,114,107,108,119]:k.choose(id)
   check(answer(s)==14,'precedence through Gen4 keys');s.shot('02-result')
   k.choose(1);k.choose(200);k.choose(219);k.choose(106);k.choose(117);k.choose(119);check(abs(answer(s)-1)<1e-12,'sin(90), automatic closing parentheses');s.shot('03-scientific-result')
-  k.choose(1);k.choose(218);k.choose(200);check(snap(s)[6]==1,'memory store');s.shot('04-memory');k.choose(219)
+  k.choose(1);k.choose(218);k.choose(200);check(snap(s)[5]&2,'memory store');s.shot('04-memory');k.choose(219)
   k.choose(100);k.seek(104);k.key('CONFIRM',.65);check(text(s)=='7','held confirm repeated a digit');k.choose(100)
   # Touch center of the visible 7 key. No canvas-sized coordinate assumptions.
   port=s.ch>=s.cw;kw=max(164,s.cw*54//100);x=12 if port else s.cw-kw-2;y=133 if port else 32;pw=s.cw-19 if port else kw;ph=s.ch-146 if port else s.ch-45
@@ -39,7 +39,7 @@ def case(a,w,h,r,report):
   k.choose(100);k.choose(112);k.choose(103);k.choose(117);k.choose(119);s.shot('05-zero-error');check('Calc: calculation error' in s.logs() and text(s)=='1/0','division by zero lost editable expression')
   k.choose(3);k.choose(30);s.shot('06-converter');k.choose(301);k.choose(301);s.shot('07-temperature');k.choose(700);k.choose(713);k.choose(705);s.shot('08-converted');k.choose(715)
   k.choose(31);s.shot('09-percent');k.choose(401);s.shot('10-discount');k.choose(401);s.shot('11-change');k.choose(401);s.shot('12-split');k.choose(715);k.choose(32);s.shot('13-help');k.choose(552);s.shot('14-help-second');k.choose(9)
-  k.choose(2);s.shot('15-history');before=snap(s)[7];k.choose(522);s.shot('16-clear-confirm');k.key('CONFIRM');check(snap(s)[7]==before,'unsafe default erased history');k.choose(9)
+  k.choose(2);s.shot('15-history');before=snap(s)[6];k.choose(522);s.shot('16-clear-confirm');k.key('CONFIRM');check(snap(s)[6]==before,'unsafe default erased history');k.choose(9)
   k.menu();s.shot('17-menu');k.key('UP');k.key('CONFIRM');k.key('DOWN');k.key('CONFIRM');time.sleep(.2);s.shot('18-english');k.close();saved=save_blob(s.state,'calculator')
   check('Pocket: audio' not in s.logs(),'silent utility requested sound')
  with Session(a,'calculator',w,h,r) as s:

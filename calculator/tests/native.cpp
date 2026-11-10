@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: CC0-1.0
 #include "../../common/pocket-play/runtime.hpp"
 #include "../model.hpp"
+#include "fixtures/save_v1.hpp"
 #include <cassert>
 #include <cmath>
 #include <cstdio>
@@ -64,6 +65,23 @@ void install(const calc::Model &m) {
 }
 int main() {
   using namespace calc;
+  CHECK(SAVE_BYTES <= 960); // Minimum supported firmware KV value budget.
+  Model legacy;
+  CHECK(legacy.decode(calculator_save_v1, sizeof(calculator_save_v1)));
+  CHECK(legacy.count == 8 && legacy.memory == 42 && legacy.answer == 36 &&
+        !legacy.degrees && legacy.has_memory && legacy.practical_mode == 3);
+  CHECK(std::strlen(legacy.input) == 96 && legacy.input[95] == '9');
+  uint8_t migrated[SAVE_BYTES];
+  CHECK(legacy.encode(migrated, sizeof(migrated)) == sizeof(migrated));
+  Model compact;
+  CHECK(compact.decode(migrated, sizeof(migrated)));
+  CHECK(compact.count == 8 && compact.memory == 42 && compact.category == 7 &&
+        compact.from == 5 && compact.to == 2 && !std::strcmp(compact.input, legacy.input));
+  for (unsigned i = 0; i < 8; ++i) {
+    CHECK(std::strlen(compact.history[i].expression) == 96 &&
+          !std::strcmp(compact.history[i].expression, legacy.history[i].expression));
+    CHECK(compact.history[i].value == i + 1 && compact.history[i].degrees == bool(i & 1));
+  }
   value("2+3*4", 14);
   value("(2+3)*4", 20);
   value("2^3^2", 512);

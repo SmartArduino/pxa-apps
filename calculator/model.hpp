@@ -28,5 +28,8 @@ struct Model {
   size_t encode(uint8_t *out, size_t capacity) const;
   bool decode(const uint8_t *data, size_t size);
 };
-constexpr size_t SAVE_BYTES = 1008;
+// Shipping firmware caps each KV value at 960 bytes. Keep all eight
+// 96-character history entries by omitting redundant terminators/reserved bytes.
+constexpr size_t SAVE_BYTES = 960;
+constexpr size_t LEGACY_SAVE_BYTES = 1008;
 } // namespace calc

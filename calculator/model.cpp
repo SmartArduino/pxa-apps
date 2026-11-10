@@ -192,35 +192,59 @@ bool text(const uint8_t *p) {
 }
 } // namespace
 size_t Model::encode(uint8_t *p, size_t n) const {
-  if (!p || n < SAVE_BYTES)
+  if (!p || n < SAVE_BYTES || count > 8)
     return 0;
   std::memset(p, 0, SAVE_BYTES);
   std::memcpy(p, "CALC", 4);
-  p[4] = 1;
-  p[5] = degrees;
-  p[6] = has_memory;
-  p[7] = uint8_t(count);
-  p[8] = uint8_t(category);
-  p[9] = uint8_t(from);
-  p[10] = uint8_t(to);
-  p[11] = uint8_t(practical_mode);
-  p[12] = completed;
-  putdouble(p + 16, answer);
-  putdouble(p + 24, memory);
-  std::memcpy(p + 32, input, std::strlen(input));
+  p[4] = 2;
+  p[5] = uint8_t(degrees | (has_memory << 1) | (completed << 2));
+  p[6] = uint8_t(count);
+  p[7] = uint8_t(category);
+  p[8] = uint8_t(from);
+  p[9] = uint8_t(to);
+  p[10] = uint8_t(practical_mode);
+  putdouble(p + 12, answer);
+  putdouble(p + 20, memory);
+  std::memcpy(p + 28, input, std::strlen(input));
   for (unsigned i = 0; i < count; ++i) {
-    unsigned at = 132 + i * 105;
+    unsigned at = 124 + i * 104;
     std::memcpy(p + at, history[i].expression,
                 std::strlen(history[i].expression));
-    putdouble(p + at + 97, history[i].value);
+    putdouble(p + at + 96, history[i].value);
     if (history[i].degrees)
-      p[13] |= uint8_t(1u << i);
+      p[11] |= uint8_t(1u << i);
   }
-  put32(p + 1004, hash(p, 1004));
+  put32(p + SAVE_BYTES - 4, hash(p, SAVE_BYTES - 4));
   return SAVE_BYTES;
 }
 bool Model::decode(const uint8_t *p, size_t n) {
-  if (!p || n != SAVE_BYTES || std::memcmp(p, "CALC", 4) || p[4] != 1 ||
+  if (p && n == SAVE_BYTES && !std::memcmp(p, "CALC", 4) && p[4] == 2) {
+    if ((p[5] & ~7u) || get32(p + SAVE_BYTES - 4) != hash(p, SAVE_BYTES - 4))
+      return false;
+    // Normalize to the original format and share its semantic validation.
+    // Zero initialization restores terminators without truncating 96-byte text.
+    uint8_t legacy[LEGACY_SAVE_BYTES]{};
+    std::memcpy(legacy, "CALC", 4);
+    legacy[4] = 1;
+    legacy[5] = p[5] & 1;
+    legacy[6] = (p[5] >> 1) & 1;
+    legacy[7] = p[6];
+    legacy[8] = p[7];
+    legacy[9] = p[8];
+    legacy[10] = p[9];
+    legacy[11] = p[10];
+    legacy[12] = (p[5] >> 2) & 1;
+    legacy[13] = p[11];
+    std::memcpy(legacy + 16, p + 12, 16);
+    std::memcpy(legacy + 32, p + 28, 96);
+    for (unsigned i = 0; i < 8; ++i) {
+      std::memcpy(legacy + 132 + i * 105, p + 124 + i * 104, 96);
+      std::memcpy(legacy + 229 + i * 105, p + 220 + i * 104, 8);
+    }
+    put32(legacy + 1004, hash(legacy, 1004));
+    return decode(legacy, sizeof(legacy));
+  }
+  if (!p || n != LEGACY_SAVE_BYTES || std::memcmp(p, "CALC", 4) || p[4] != 1 ||
       p[5] > 1 || p[6] > 1 || p[7] > 8 || p[8] >= QUANTITIES ||
       p[9] >= quantity(p[8]).count || p[10] >= quantity(p[8]).count ||
       p[11] > 3 || p[12] > 1 || (p[7] < 8 && (p[13] >> p[7])) || p[14] ||
