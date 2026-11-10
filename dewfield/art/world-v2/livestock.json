@@ -15,9 +15,9 @@
   "runtime": "interned RGB565 opaque scanlines; no decoding, rotation, palette conversion or heap allocation",
   "stats": {
     "frames": 382,
-    "rows": 1990,
-    "runs": 2620,
-    "colors": 24668,
-    "bytes": 90068
+    "rows": 2010,
+    "runs": 2612,
+    "colors": 24982,
+    "bytes": 90744
   }
 }

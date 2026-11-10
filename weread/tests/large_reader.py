@@ -53,6 +53,7 @@ def main():
     p.add_argument('--cases', nargs='+', choices=('known', 'unknown', 'fragmented'), default=['known', 'unknown'])
     p.add_argument('--catalog', action='store_true')
     p.add_argument('--small', action='store_true', help='Same small workload for paired baseline memory measurements')
+    p.add_argument('--skip-memory', action='store_true', help='Runtime has no historical private memory-report hook; still verify rendering, requests and resource release')
     a = p.parse_args(); a.output.mkdir(parents=True, exist_ok=True)
     if a.small and a.catalog: p.error('--small does not have multiple catalog windows')
     book, payload = small_fixture() if a.small else fixture(); calls = []; case = 'known'; errors = []
@@ -74,6 +75,13 @@ def main():
                     self.reply({'succ': 1, 'data': 'data:image/png;base64,'+base64.b64encode(picture.getvalue()).decode()})
                 elif path.endswith('/shelfloadmore'):
                     self.reply({'books': [book], 'bookReaderUrls': [{'bId': '1', 'param': 'fixture-1'}], 'totalCount': 1, 'kkIdx': 1})
+                elif path.endswith('/catalogloadmore'):
+                    query=parse_qs(urlsplit(self.path).query);calls.append(case+'-catalog')
+                    assert query['bookId']==['1'] and 'wr_skey=fixture-only' in self.headers.get('Cookie','')
+                    first,last=int(query['rangeStart'][0]),int(query['rangeEnd'][0])
+                    start,end=(last,min(last+300,2538)) if query['type']==['2'] else (max(0,first-301),first-1)
+                    self.reply({'succ':1,'chapterInfos':[{'chapterUid':i,'chapterIdx':i,'title':f'Chapter {i:04d} '+'title '*8} for i in range(start+1,end+1)],
+                        'readerUrlParmas':[{'cUid':i,'param':f'fixture-{i}'} for i in range(start+1,end+1)]})
                 elif path.endswith('/reader'):
                     assert 'wr_skey=fixture-only' in self.headers.get('Cookie', '')
                     query = parse_qs(urlsplit(self.path).query)
@@ -104,28 +112,32 @@ def main():
                 try:
                     app.wait(lambda: 'WEREAD SHELF READY' in app.logs())
                     auth = next(state.rglob('session.json')); original = auth.read_bytes()
-                    before = app.wait_memory(lambda x: x.get('linear_current_bytes', 0)>0)
+                    before = None if a.skip_memory else app.wait_memory(lambda x: x.get('linear_current_bytes', 0)>0)
                     start = time.monotonic(); app.tap(120, 83)
                     app.wait(lambda: 'WEREAD READER READY' in app.logs() or 'WEREAD ERROR' in app.logs() or 'HYDRATION ERROR' in app.logs() or 'Guest exception:' in app.logs(), 60)
                     elapsed = time.monotonic()-start
                     assert 'WEREAD READER READY' in app.logs(), app.logs()[-2500:]
-                    memory = app.wait_memory(lambda x: x.get('linear_current_bytes', 0)>0)
+                    assert calls and calls[-1]==case,'App did not contact this test server; check WEREAD_FIXTURE_PORT'
+                    assert f'WEREAD READER PARSE bytes={len(payload)}' in app.logs(),'Unexpected response size'
+                    memory = None if a.skip_memory else app.wait_memory(lambda x: x.get('linear_current_bytes', 0)>0)
                     first = app.shot('first'); mark = len(calls); app.tap(260, 120); second = app.shot('second')
                     assert ImageChops.difference(Image.open(first).convert('RGB'), Image.open(second).convert('RGB')).getbbox()
                     assert len(calls) == mark, 'Local page turn performed a network request'
                     if a.catalog and case == a.cases[0]:
                         app.tap(148, 120); app.tap(76, 116)
                         app.shot('catalog-first')
-                        # Two rows per compact screen; the 151st page opens
-                        # the next 300-row window through the original reader URL.
-                        for _ in range(150): app.tap(148, 203)
+                        # The opening window is 64 rows, followed by full
+                        # windows. A backward window must end at row 64.
+                        for _ in range(32): app.tap(148, 203)
                         app.wait(lambda: 'WEREAD CATALOG READY' in app.logs(), 60)
-                        assert 'offset=300' in app.logs(), app.logs()[-1000:]
+                        if 'WEREAD CATALOG METADATA FALLBACK' in app.logs():assert 'chapter_end=364' in app.logs(),app.logs()[-1000:]
+                        else:assert 'offset=64' in app.logs(),app.logs()[-1000:]
                         app.shot('catalog-window-two')
                         count = app.logs().count('WEREAD CATALOG READY')
                         app.tap(60, 203)
                         app.wait(lambda: app.logs().count('WEREAD CATALOG READY') > count, 60)
                         assert 'offset=0' in app.logs()
+                        assert 'WEREAD CATALOG READY count=64 offset=0' in app.logs()
                         app.shot('catalog-window-one-restored')
                     assert auth.read_bytes() == original and not errors, errors
                     app.command('KEY HOME'); app.process.wait(timeout=10)

@@ -11,6 +11,14 @@ inline constexpr std::string_view gateway_origin="https://i.weread.qq.com";
 inline constexpr std::string_view key_path="/api/skills/apikeyGet?only_show=1";
 inline constexpr std::string_view gateway_path="/api/agent/gateway";
 inline constexpr std::string_view renewal_path="/web/login/renewal";
+inline constexpr std::string_view key_setup_notice="未获取到可用 Key，请先开启微信读书 Skill";
+inline constexpr std::string_view key_setup_guide=
+    "开启微信读书 Skill\n\n"
+    "请在手机或电脑打开官方页面：\n"
+    "weread.qq.com/r/weread-skills\n\n"
+    "登录与本机相同的微信读书账号，获取 API Key。\n\n"
+    "完成后返回本页，点右上角刷新，无需手动输入 Key。\n\n"
+    "若已开通，请刷新书架或重新登录后重试。书架和正文阅读仍可使用。";
 [[gnu::noinline]] inline bool renewal_confirmed(Json response){
     const auto error=response.get("errcode").raw();
     return response.valid()&&(response.get("succ").raw()=="1"||response.get("succ").raw()=="true")&&

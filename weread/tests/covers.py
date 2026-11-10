@@ -37,6 +37,9 @@ def main():
                     except (BrokenPipeError,ConnectionResetError):pass
                     return
                 if mode=='corrupt':self.data(b'not-an-image','image/jpeg')
+                elif mode=='truncated':
+                    self.send_response(200);self.send_header('Content-Length',str(len(cover)));self.end_headers()
+                    self.wfile.write(cover[:128]);self.wfile.flush();self.close_connection=True
                 else:self.data(cover,'image/jpeg')
             elif path.endswith('/getuid'):self.data({'uid':'fixture'})
             elif path.endswith('/qrcode'):self.data({'succ':1,'data':'data:image/png;base64,'+base64.b64encode(qr.getvalue()).decode()})
@@ -68,22 +71,68 @@ def main():
                     app.wait(lambda:app.logs().count('WEREAD IMAGE READY')>=2*rows)
                     assert len(requests)==2*rows
                     assert color_pixels(app.shot('next-covers'))>100
+                    app.tap(inset+button//2,h-inset-foot//2)
+                    app.wait(lambda:app.logs().count('WEREAD IMAGE READY')>=3*rows)
+                    assert len(requests)==2*rows,'Returning to a page downloaded its covers again'
+                    assert app.logs().count('WEREAD IMAGE MEMORY HIT')+app.logs().count('WEREAD IMAGE CACHE HIT')>=rows
+                    if label=='compact':assert app.logs().count('WEREAD IMAGE MEMORY HIT')>=rows
+                    assert color_pixels(app.shot('cached-covers'))>100
                     if label=='compact':
                         app.tap(213,36);app.tap(120,83);app.command('TEXT 测试');time.sleep(.2)
                         app.tap(*primary_button(app.shot('search-keyboard')))
                         app.wait(lambda:'WEREAD SEARCH READY' in app.logs() and any('/covers/99.jpg' in x for x in requests))
-                        app.wait(lambda:app.logs().count('WEREAD IMAGE READY')>=2*rows+1)
+                        app.wait(lambda:app.logs().count('WEREAD IMAGE READY')>=3*rows+1)
                         assert color_pixels(app.shot('search-cover'))>100
                     assert 'WEREAD ERROR' not in app.logs() and 'DRAW ERROR' not in app.logs()
                     if label=='compact':app.command('KEY BACK');time.sleep(.2)
                     head=min(round(44*dpi/160),safe_h//5)
                     app.tap(w-inset-head//2,inset+head//2)
-                    app.wait_memory(lambda memory:memory['image_current_bytes']==0)
+                    # Current production runtimes do not expose the historical
+                    # PXA_WEREAD_MEMORY_REPORT hook. Verify the visible result
+                    # here and use the Host resource counters at clean exit.
+                    assert color_pixels(app.shot('settings'))==0
                     app.command('KEY HOME');app.process.wait(timeout=10)
                     assert 'remaining_internal=0 remaining_external=0' in app.logs(), 'Host resources retained after exit'
-                    results.append({'layout':label,'visible_only':True,'page_change':True,'raw_query_preserved':True,'cookies_not_forwarded':True,'images_released_at_exit':True})
+                    results.append({'layout':label,'visible_only':True,'page_change':True,'return_without_network':True,'raw_query_preserved':True,'cookies_not_forwarded':True,'images_released_at_exit':True})
                 finally:app.close()
-            for mode in ('blocked','corrupt'):
+                count=len(requests)
+                app=Simulator(a,a.output/(label+'-restart'),state,w,h,dpi,corner,circular)
+                try:
+                    app.wait(lambda:app.logs().count('WEREAD IMAGE READY')>=rows)
+                    assert len(requests)==count,'Restart discarded the disk cache'
+                    assert app.logs().count('WEREAD IMAGE CACHE HIT')==rows
+                    assert color_pixels(app.shot('persistent-covers'))>100
+                    app.command('KEY HOME');app.process.wait(timeout=10)
+                    assert 'remaining_internal=0 remaining_external=0' in app.logs()
+                finally:app.close()
+                if label=='compact':
+                    # A matching URL with a damaged image must be fetched and
+                    # atomically repaired, instead of retaining a bad entry.
+                    cached=next(path for path in state.rglob('image-cache-v1-*')
+                        if path.read_bytes().split(b'\n',2)[1].startswith(f'http://127.0.0.1:{a.port}/covers/1.jpg'.encode()))
+                    prefix=cached.read_bytes().split(b'\n',2)
+                    cached.write_bytes(prefix[0]+b'\n'+prefix[1]+b'\ninvalid-image')
+                    app=Simulator(a,a.output/'corrupt-cache',state,w,h,dpi,corner,circular)
+                    try:
+                        app.wait(lambda:app.logs().count('WEREAD IMAGE READY')>=rows)
+                        assert len(requests)==count+1,'Damaged disk cache was not repaired once'
+                        assert color_pixels(app.shot('repaired'))>100
+                        app.command('KEY HOME');app.process.wait(timeout=10)
+                    finally:app.close()
+                    for path in state.rglob('image-cache-v1-*'):path.unlink()
+                    (cached.parent/'image-cache-v1.tmp').mkdir()
+                    before_fallback=len(requests)
+                    app=Simulator(a,a.output/'cache-write-failure',state,w,h,dpi,corner,circular)
+                    try:
+                        app.wait(lambda:app.logs().count('WEREAD IMAGE READY')>=rows)
+                        assert len(requests)==before_fallback+rows,'Unwritable cache caused a duplicate image download'
+                        assert 'WEREAD IMAGE ERROR' not in app.logs(),'Cache write failure prevented network display'
+                        assert color_pixels(app.shot('network-fallback'))>100
+                        app.command('KEY HOME');app.process.wait(timeout=10)
+                        assert 'remaining_internal=0 remaining_external=0' in app.logs()
+                        results.append({'damaged_cache_repaired':True,'cache_write_failure_network_fallback':True})
+                    finally:app.close()
+            for mode in ('blocked','corrupt','truncated'):
                 requests.clear();blocked.clear();release.clear();state=Path(temp)/mode;state.mkdir();app=Simulator(a,a.output/mode,state,296,240,160,58)
                 try:
                     if mode=='blocked':

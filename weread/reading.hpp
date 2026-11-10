@@ -29,7 +29,7 @@ struct Reading {
         if(requires_purchase)return "本章暂无阅读授权，可在官方客户端查看购买或限免资格";
         return "本章暂不可用，请稍后重试";
     }
-    bool parse(Json data) {
+    bool parse(Json data,bool include_catalog=true) {
         if(data.raw().empty() || data.raw().front()!='{')return false;
         Reading candidate;
         const auto [book,chapter,current,previous,next,token,section,sections,total,error,purchase,body_json]=data.select({
@@ -62,9 +62,9 @@ struct Reading {
             candidate.grant=ReadingGrant::preview;
         // Ownership hints never gate a chapter: memberships, limited free
         // events and paid chapter grants are decided by the official response.
-        auto body=body_json.string(196608);
+        auto body=body_json.string(393216);
         if(body)candidate.text=std::move(*body);
-        if(!candidate.catalog.initial(data))return false;
+        if(include_catalog&&!candidate.catalog.initial(data))return false;
         if(candidate.title.empty() && candidate.book_id.empty() && candidate.current.empty() && !candidate.unavailable)return false;
         *this=std::move(candidate);return true;
     }
@@ -75,12 +75,16 @@ struct Reading {
         return "?bc="+percent(p)+(direction<0?"&prev=1":"");
     }
 };
-inline std::string reader_text(std::string_view html,std::span<const std::byte> mapping={},std::vector<BookImage>* images=nullptr,bool* image_limit=nullptr) {
-    std::string out;out.reserve(html.size());
+inline std::string reader_text(std::string_view html,std::span<const std::byte> mapping={},std::vector<BookImage>* images=nullptr,bool* image_limit=nullptr,bool* text_limit=nullptr) {
+    constexpr std::size_t max_text_bytes=196608;
+    std::string out;out.reserve(std::min<std::size_t>(html.size(),65536));
     std::size_t image_bytes=0;
     if(images)images->clear();if(image_limit)*image_limit=false;
+    if(text_limit)*text_limit=false;
     bool spacing=false;auto newline=[&]{if(!out.empty()&&out.back()!='\n')out+='\n';spacing=false;};
-    for(std::size_t at=0;at<html.size();){
+    std::size_t at=0;
+    // Leave room for a trailing line break while consuming closing tags.
+    for(;at<html.size()&&out.size()<=max_text_bytes+4;){
         if(html[at]=='<'){
             html::Tag tag;auto next=at;
             if(!html::next(html,next,tag)||tag.begin!=at){
@@ -129,6 +133,11 @@ inline std::string reader_text(std::string_view html,std::span<const std::byte> 
         append_rune(out,code.value);
     }
     while(!out.empty()&&(out.back()=='\n'||out.back()==' '))out.pop_back();
+    if(at<html.size()||out.size()>max_text_bytes){
+        if(text_limit)*text_limit=true;
+        if(images)images->clear();
+        return {};
+    }
     return out;
 }
 } // namespace weread

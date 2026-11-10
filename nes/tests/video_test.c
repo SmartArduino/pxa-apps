@@ -9,7 +9,7 @@ static nes_controls_t controls;
 static uint8_t history[NES_VIDEO_HISTORY_BYTES] __attribute__((aligned(8)));
 static uint8_t video[240*272+5] __attribute__((aligned(8)));
 static unsigned source_offset;
-static uint16_t buffers[2][NES_DISPLAY_MAX_WIDTH*NES_DISPLAY_MAX_HEIGHT],reference[NES_DISPLAY_MAX_WIDTH*NES_DISPLAY_MAX_HEIGHT];
+static uint16_t buffers[2][NES_DISPLAY_MAX_PIXELS],reference[NES_DISPLAY_MAX_PIXELS];
 static unsigned resolve_calls;
 static nes_display_rect_t safe_region;
 static int resolve(uint16_t *out,unsigned pitch,unsigned w,unsigned h,const uint8_t *src,unsigned stride) {
@@ -45,7 +45,7 @@ static void check(unsigned width,unsigned height,unsigned frame,unsigned buffer,
     }
 }
 int main(void) {
-    const unsigned sizes[][2]={{296,240},{320,240},{200,160},{320,320},{400,240},{800,480}};
+    const unsigned sizes[][2]={{296,240},{320,240},{200,160},{320,320},{400,240},{800,480},{480,854},{854,480}};
     uint16_t colors[64];for(unsigned i=0;i<64;++i)colors[i]=rnd();
     for(unsigned alignment=0;alignment<3;++alignment) {
     source_offset=alignment==2?4:alignment;

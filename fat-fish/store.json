@@ -1,0 +1,19 @@
+{
+  "name": "大肥鱼",
+  "summary": "在像素小房间里陪伴大肥鱼，摸摸、喂食、玩耍与休息，还能接入电脑端语音聊天。",
+  "description": "蓝发鲸鱼娘大肥鱼住进了 PXA 小房间。轻轻摸摸她，喂点零食、一起玩耍，或让她安心睡一觉。\n\n提供晴日海景、月光卧室和海底观景室三套像素房间，收录 16 个透明动画动作。状态图标、可收起操作栏和对话气泡随分辨率与 DPI 调整，文字使用系统字体。支持触屏、手柄及中英文，自动保存养成进度和房间偏好。\n\n自动照顾默认开启，在房间前台根据饱食、精力与心情自行吃饭、睡觉、醒来和玩耍，可在设置关闭。聊天与语音互动期间会等待互动结束。\n\n聊天需另行运行电脑端 dsh-pet 与伴随服务，并在应用设置中填写自己的服务地址和令牌。语音识别与合成在电脑端运行，语言模型由用户自行配置。录音会发送至配置的伴随服务，对话文字会发送至用户选择的模型接口。安装包提供电子宠物功能，语音聊天需设备麦克风、扬声器及兼容的 Audio 0.10 服务。\n\n角色与原动画来自 PC2005-cloud/dsh-pet。溟月原型由上善无形创作，鲸鱼娘设计由 ZipZipPipe 创作。角色、动画及角色衍生图采用 CC BY-NC-SA 4.0，限非商业使用并须保留署名与相同许可。PXA 适配代码采用 MIT。原项目 https://github.com/PC2005-cloud/dsh-pet 。完整素材署名见应用内素材署名及包内 NOTICE。\n\n封面使用内置 imagegen 生成的宣传插画，功能截图来自真实 PXA 模拟器运行。\n\nFat Fish is a pixel-art companion with three cozy rooms, 16 animated actions, touch/controller support, automatic care and saved progress. Optional text and voice chat require your own computer-side dsh-pet companion service and model configuration. Speech recognition and synthesis run on the computer. Character artwork and derivatives are CC BY-NC-SA 4.0 for noncommercial use. PXA adaptation code is MIT.",
+  "kind": "game",
+  "category": "casual",
+  "language": "zh-CN",
+  "tags": [
+    "电子宠物",
+    "像素风",
+    "自动照顾",
+    "语音聊天",
+    "触屏",
+    "手柄"
+  ],
+  "icon": "store/icon.png",
+  "cover": "store/cover.png",
+  "changelog": "首次上架 PXA 版大肥鱼。提供三套像素房间、16 个透明动画动作、触摸互动、自动照顾和存档，以及可配置的 dsh-pet 文字与语音聊天。更新应用图标，优化动画预读与语音请求流程。\n\nFirst store release with three pixel rooms, 16 animations, automatic care, saved progress and optional dsh-pet text/voice chat."
+}

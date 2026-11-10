@@ -112,13 +112,16 @@ def main():
                 app = Simulator(args, args.output / (case + '-seed'), state,
                                 296, 240, 160, 58)
                 try:
-                    app.wait(lambda: 'WEREAD SHELF READY' in app.logs())
+                    app.wait(lambda: 'WEREAD SHELF CACHE SAVED' in app.logs())
                     app.command('KEY HOME')
                     app.process.wait(timeout=10)
                 finally:
                     app.close()
                 auth = next(state.rglob('session.json'))
                 original = auth.read_bytes()
+                # These cases exercise uncached error/retry paths. Cached
+                # offline startup has separate coverage in startup.py.
+                for snapshot in state.rglob('shelf-v1.json'):snapshot.unlink()
                 mode = case
                 reached.clear()
                 release.clear()

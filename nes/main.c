@@ -39,7 +39,7 @@ enum { T_SURFACE=1,T_LAYER,T_ROOT,T_DIR,T_ENTRY,T_ROM,T_SAVE_READ,
        T_SAVE_WRITE,T_SAVE_REPLACE,T_AUDIO_PERMISSION,T_AUDIO_OPEN,T_AUDIO_GAIN,
        T_LIMITS,T_CONFIGURE,T_WINDOW,T_MKDIR,T_ASSET,T_STATS,T_RASTER,T_MEDIA_PATH };
 enum { MENU, LOADING, PLAYING, PAUSED, ERROR_SCREEN, STATES };
-static uint16_t frames[2][NES_DISPLAY_MAX_WIDTH*NES_DISPLAY_MAX_HEIGHT] __attribute__((aligned(64)));
+static uint16_t frames[2][NES_DISPLAY_MAX_PIXELS] __attribute__((aligned(64)));
 static uint8_t video_history[NES_VIDEO_HISTORY_BYTES] __attribute__((aligned(8)));
 static uint16_t colors[256];
 static unsigned buffer_mode[2];

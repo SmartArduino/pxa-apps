@@ -6,7 +6,12 @@ add_compile_definitions(PXA_COROUTINE_SLOT_COUNT=8 PXA_COROUTINE_SLOT_BYTES=2048
 # units. This is local to this app; it adds no default SDK cache or runtime state.
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 include(PxaGuest)
-pxa_add_component(pxa_main CPP COMPONENT_ID main SOURCES main.cpp browser_script_client.cpp browser_script_common.cpp)
+pxa_add_component(pxa_main CPP COMPONENT_ID main SOURCES main.cpp browser_script_client.cpp browser_script_common.cpp zlib_memory.c
+    vendor/zlib/inflate.c vendor/zlib/inffast.c vendor/zlib/inftrees.c
+    vendor/zlib/adler32.c vendor/zlib/crc32.c)
+# Disable zlib's braided CRC tables: a single 1 KiB table is enough for
+# bounded network chunks, without larger per-architecture lookup tables.
+target_compile_definitions(pxa_main PRIVATE Z_SOLO Z_TESTW=0)
 pxa_add_component(pxa_script CPP COMPONENT_ID script SOURCES browser_script_service.cpp browser_script.cpp browser_script_common.cpp)
 target_compile_definitions(pxa_script PRIVATE PXA_SCRIPT_INTERPRETED=1)
 include(PxaCppDiagnostics)

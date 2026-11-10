@@ -1,6 +1,14 @@
 namespace: app.pxa-store
 default_locale: en-US
 messages:
+  install.format_aot:
+    source: "AOT (recommended)"
+    context: Toggle compatible installation format on app detail
+    max_bytes: 96
+  install.format_wasm:
+    source: "WASM (may be slower)"
+    context: Toggle compatible installation format on app detail
+    max_bytes: 128
   media.open:
     source: Open screenshot preview
     context: Accessible label on a screenshot thumbnail

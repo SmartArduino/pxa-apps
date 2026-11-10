@@ -28,6 +28,8 @@ set(NES_CORE ../common/rom/rom_cache.c core.c state_snapshot.c vendor/nofrendo/n
 if(NES_NATIVE_TEST)
     # Assertion-based regressions must also execute in Release test builds.
     add_compile_options(-UNDEBUG)
+    add_executable(nes_display_test tests/display_test.c)
+    add_test(NAME nes_display COMMAND nes_display_test)
     add_executable(nes_state_snapshot_test tests/state_snapshot_test.c ${NES_CORE})
     target_include_directories(nes_state_snapshot_test PRIVATE . vendor/nofrendo vendor/nofrendo/nes)
     target_compile_options(nes_state_snapshot_test PRIVATE -O3 -fno-strict-aliasing)

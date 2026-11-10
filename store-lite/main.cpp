@@ -14,11 +14,11 @@
 #include <pxa/events.hpp>
 #include <pxa/ui_environment.hpp>
 #include <pxa/ui_layout.hpp>
+#include <pxa/navigation.hpp>
 #include <pxa_store_installer.h>
 using namespace pxa;
 using namespace pxa::ui;
 namespace lite {
-using sibo::Flag;
 using sibo::Painter;
 enum class Screen {
   home,
@@ -30,7 +30,6 @@ enum class Screen {
   downloads,
   account,
   picture,
-  keyboard,
   loading,
   count
 };
@@ -40,10 +39,18 @@ struct Row {
 };
 struct App;
 struct View : ViewModifiers {
-  static constexpr Capacity capacity{800, 600, 192, 0, 0};
+  // Only one screen is mounted. A fragment owns its callbacks until its
+  // replacement commits, including when a native UI transaction fails.
+  static constexpr Capacity capacity{160, 96, 48, 0, 1};
   App *app;
+  std::array<std::function<void()>, 48> callbacks{};
   explicit View(App *a) : app(a) {};
   template <class Page> bool render(Page &, uint32_t);
+};
+struct Route {
+  App *app;
+  explicit Route(App *a) : app(a) {}
+  auto view();
 };
 inline bool image_binding(Transaction<> &tx, uint32_t node,
                           const uint64_t &handle) {
@@ -55,22 +62,25 @@ struct App {
   TaskScope jobs, images;
   Permission permission;
   store::Account account;
-  std::array<Flag, size_t(Screen::count)> frames;
-  std::array<std::function<void()>, 192> callbacks;
+  // Keep the bounded native-page slots in App storage, not in large
+  // temporary view values on the Wasm auxiliary stack.
+  Navigator<1, 8192, 32> navigation_;
+  TextInputRef search_input;
   std::array<Row, 10> letter_rows;
   State<bool> groups_shown{true}, letters_shown{false};
-  std::array<Row, 6> catalog_rows;
+  std::array<Row, STORE_MAX_APPS> catalog_rows;
   std::array<Row, 12> installed_rows;
   std::array<Row, 8> download_rows;
   std::array<Row, 20> category_rows;
   State<bool> has_ticket{false}, has_pictures{false};
   State<bool> operation_error_visible{false};
   State<std::string> operation_error{""};
+  State<bool> notice_visible{false};
   State<bool> ready{false}, idle{true}, primary_enabled{false},
       uninstall_visible{false}, previous{false}, next_page{false},
       meta_visible{false}, image_visible{false};
   State<uint64_t> image_handle{0};
-  State<std::string> notice{"欢迎来到轻量应用商城"}, catalog_title{"应用"},
+  State<std::string> notice{""}, catalog_title{"应用"},
       detail_title{"应用详情"}, detail_text{""}, detail_meta{""},
       primary{"安装"}, like_label{"点赞"}, account_text{"未登录"},
       login_label{"网页登录"}, query{""}, picture_title{"应用截图"};
@@ -87,6 +97,9 @@ struct App {
   unsigned page_index = 0;
   char profile[40]{};
   std::string kind = "app", category, sort = "updated", selected_identity;
+  store_package_format_t preferred_format = STORE_FORMAT_AUTO;
+  State<bool> formats_visible{false}, wasm_selected{false};
+  State<std::string> format_label{""};
   Screen screen = Screen::home, detail_from = Screen::catalog,
          search_from = Screen::home, loading_from = Screen::home;
   bool busy = false, stopping = false, initialized = false,
@@ -103,17 +116,11 @@ struct App {
   void log(std::string_view text) {
     (void)ctx->log().write(LogLevel::info, text);
   }
-  void show(Screen s) {
-    for (unsigned i = 0; i < frames.size(); ++i)
-      frames[i].value.set(i == unsigned(s));
-    screen = s;
-    if (s != Screen::picture) {
-      image_visible.set(false);
-      images.cancel();
-    }
-    log("Lite page " + std::to_string(unsigned(s)));
+  void show(Screen s);
+  void message(std::string text) {
+    notice_visible.set(!text.empty());
+    notice.set(std::move(text));
   }
-  void message(std::string text) { notice.set(std::move(text)); }
   template <class Task> void run(Task task) {
     if (busy)
       return;
@@ -178,13 +185,15 @@ struct App {
         download_rows[i].title.set(std::string(downloads[i].app_id.view()));
     }
   }
-  Task<void> refresh_library() {
+  Task<void> refresh_library(bool include_downloads = false) {
     auto list = co_await ctx->store_installer().installed(installed);
     if (list)
       installed_count = *list;
-    auto files = co_await ctx->store_installer().downloads(downloads);
-    if (files)
-      download_count = *files;
+    if (include_downloads) {
+      auto files = co_await ctx->store_installer().downloads(downloads);
+      if (files)
+        download_count = *files;
+    }
     sync_rows();
     co_return Result<void>{};
   }
@@ -200,7 +209,7 @@ struct App {
           runtime->formats, installer_features);
     co_await refresh_library();
     initialized = true;
-    message(profile[0] ? "应用、游戏和更新，一处轻松管理"
+    message(profile[0] ? ""
                        : "当前设备暂不支持在线商城");
     ready.set(true);
     show(Screen::home);
@@ -216,11 +225,11 @@ struct App {
       permission = std::move(*p);
       account.network(permission.handle(), now);
     }
-    std::array<std::byte, 1024> packet{};
-    std::array<std::byte, 1024> chunk{};
-    auto response = co_await ctx->net().request(
-        {.url = address, .max_response_bytes = 65536, .timeout_ms = 20000},
-        permission, packet);
+    // Reuse the streaming transport used by screenshots. Readiness events
+    // suspend this task instead of polling the body on clock ticks.
+    auto response = co_await ctx->http().get(
+        address, permission, {.buffer_bytes = 4096, .header_bytes = 1024,
+                             .max_body_bytes = 65536, .timeout_ms = 20000});
     if (!response) {
       log("Lite network error " + std::to_string(int(response.error())));
       co_return std::unexpected(response.error());
@@ -230,15 +239,14 @@ struct App {
       co_return std::unexpected(Error::unavailable);
     }
     std::string data;
+    if (response->body_length && *response->body_length > 65536)
+      co_return std::unexpected(Error::resource_limit);
+    data.reserve(response->body_length ? size_t(*response->body_length) : 4096);
+    std::array<std::byte, 2048> chunk{};
     for (;;) {
-      auto n = response->body.read(chunk);
-      if (!n) {
-        if (n.error() == Error::would_block) {
-          co_await ctx->clock().yield();
-          continue;
-        }
+      auto n = co_await response->body.read_some(chunk);
+      if (!n)
         co_return std::unexpected(n.error());
-      }
       if (!*n)
         break;
       if (data.size() + *n > 65536)
@@ -290,7 +298,7 @@ struct App {
       char url[512];
       if (!store_client_build_catalog_url(url, sizeof url, profile, "", cursor,
                                           query.get().c_str(), kind.c_str(),
-                                          category.c_str(), sort.c_str(), 6)) {
+                                          category.c_str(), sort.c_str(), STORE_MAX_APPS)) {
         message("筛选条件过长，请简化搜索");
         show(Screen::catalog);
         done();
@@ -364,6 +372,7 @@ struct App {
     if (busy)
       return;
     detail_from = screen;
+    preferred_format = STORE_FORMAT_AUTO;
     gallery = {};
     picture_index = 0;
     meta_visible.set(false);
@@ -373,24 +382,33 @@ struct App {
     describe();
     run(load_detail());
   }
+  bool parse_detail(std::string_view body) {
+    store_app_t item{};
+    store_gallery_t pictures{};
+    if (!store_json_parse_app_detail(reinterpret_cast<const uint8_t *>(body.data()), body.size(), &item, &pictures) ||
+        identity(item) != selected_identity ||
+        (preferred_format != STORE_FORMAT_AUTO && item.package_format != preferred_format)) return false;
+    selected = item;
+    gallery = pictures;
+    return true;
+  }
   Task<void> load_detail() {
+    primary_enabled.set(false);
     operation_error_visible.set(false);
     loading(detail_from);
     char url[512];
-    if (!store_client_build_identity_url(url, sizeof url, profile,
+    if (!store_client_build_variant_url(url, sizeof url, profile,
                                          selected.app_id,
-                                         selected.lineage_root_key_id, "")) {
+                                         selected.lineage_root_key_id, "", preferred_format)) {
       message("应用身份不完整");
       show(Screen::detail);
       done();
       co_return Result<void>{};
     }
     auto body = co_await fetch(url);
-    if (body && store_json_parse_app_detail(
-                    reinterpret_cast<const uint8_t *>(body->data()),
-                    body->size(), &selected, &gallery)) {
+    if (body && parse_detail(*body)) {
       selected_identity = identity(selected);
-      message("选择安装或打开应用");
+      message("");
       describe();
     } else
       message("详情加载失败，可以重试");
@@ -400,9 +418,17 @@ struct App {
     co_return Result<void>{};
   }
   void describe() {
+    formats_visible.set(selected.available_formats == (STORE_FORMAT_AOT | STORE_FORMAT_WASM));
+    wasm_selected.set(selected.package_format == STORE_FORMAT_WASM);
     detail_title.set(selected.name[0] ? selected.name : selected.app_id);
     char size[40];
-    store::format_package_size(size, selected.size);
+    uint64_t download_size;
+    if (store::package_download_size(selected, download_size))
+      store::format_package_size(size, download_size);
+    else
+      std::snprintf(size, sizeof(size), "—");
+    format_label.set(std::string(selected.package_format == STORE_FORMAT_WASM
+                                    ? "WASM 版 · " : "AOT 版（推荐）· ") + size);
     detail_text.set(
         std::string(selected.version) + " · " + size + "\n" + selected.summary +
         (selected.changelog[0] ? "\n\n更新内容\n" : "") + selected.changelog);
@@ -419,9 +445,10 @@ struct App {
       detail_text.set("已安装版本：" + std::string(selected.version));
     const bool update =
         current && selected.release_sequence > current->sequence;
-    primary.set(current && !update ? "打开" : update ? "更新" : "安装");
+    primary.set(preferred_format != STORE_FORMAT_AUTO ? "安装" :
+                current && !update ? "打开" : update ? "更新" : "安装");
     primary_enabled.set(
-        current && !update
+        current && !update && preferred_format == STORE_FORMAT_AUTO
             ? true
             : selected.size && selected.download_ticket_url[0] &&
                   !selected_identity.empty() &&
@@ -508,7 +535,7 @@ struct App {
     }
     message(ok ? (only_download ? "下载完成，可在下载管理中安装" : "安装完成")
                : "操作未完成，可能已取消、存储不足或网络中断");
-    co_await refresh_library();
+    co_await refresh_library(only_download);
     describe();
     show(Screen::detail);
     progress = 101;
@@ -550,8 +577,7 @@ struct App {
     loading(Screen::home);
     message("正在读取已安装应用…");
     co_await refresh_library();
-    message(installed_count ? "选择应用可打开、更新或卸载"
-                            : "还没有已安装的应用");
+    message(installed_count ? "" : "暂无已安装应用");
     show(Screen::installed);
     done();
     co_return Result<void>{};
@@ -559,6 +585,7 @@ struct App {
   void installed_detail(unsigned i) {
     if (busy || i >= installed_count)
       return;
+    preferred_format = STORE_FORMAT_AUTO;
     selected = {};
     std::snprintf(selected.app_id, sizeof selected.app_id, "%s",
                   installed[i].app_id.c_str());
@@ -573,7 +600,7 @@ struct App {
     gallery = {};
     meta_visible.set(false);
     describe();
-    message("可直接打开或卸载；联网刷新详情可检查新版");
+    message("");
     account.target(&selected, now);
     show(Screen::detail);
   }
@@ -621,9 +648,8 @@ struct App {
   }
   Task<void> files_task() {
     loading(Screen::home);
-    co_await refresh_library();
-    message(download_count ? "选择安装，或清理不再需要的下载"
-                           : "暂无下载，应用详情中可选择仅下载");
+    co_await refresh_library(true);
+    message(download_count ? "" : "暂无下载");
     show(Screen::downloads);
     done();
     co_return Result<void>{};
@@ -638,7 +664,7 @@ struct App {
                         : co_await ctx->store_installer().install_file(file);
     message(result ? (erase ? "下载已删除" : "安装完成")
                    : "操作已取消或未完成");
-    co_await refresh_library();
+    co_await refresh_library(true);
     done();
     co_return Result<void>{};
   }
@@ -814,12 +840,9 @@ struct App {
       kind.clear();
       category.clear();
     }
-    show(Screen::search);
-  }
-  void keyboard() {
     groups_shown.set(true);
     letters_shown.set(false);
-    show(Screen::keyboard);
+    show(Screen::search);
   }
   void letter_group(unsigned i) {
     static constexpr const char *groups[] = {
@@ -851,8 +874,10 @@ struct App {
     }
   }
   void do_search() {
-    if (busy)
+    if (busy || query.get().empty())
       return;
+    if (search_input.mounted())
+      (void)search_input.hide_keyboard();
     page_index = 0;
     category.clear();
     show(Screen::catalog);
@@ -866,12 +891,9 @@ struct App {
     }
     if (busy)
       cancel();
-    if (screen == Screen::keyboard) {
-      if (letters_shown.get()) {
-        groups_shown.set(true);
-        letters_shown.set(false);
-      } else
-        show(Screen::search);
+    if (screen == Screen::search && letters_shown.get()) {
+      groups_shown.set(true);
+      letters_shown.set(false);
     } else if (screen == Screen::picture) {
       image_visible.set(false);
       images.cancel();
@@ -879,12 +901,18 @@ struct App {
       show(Screen::detail);
     } else if (screen == Screen::detail)
       show(detail_from);
-    else if (screen == Screen::search)
+    else if (screen == Screen::search) {
+      if (search_input.mounted())
+        (void)search_input.hide_keyboard();
+      if (search_from == Screen::home && profile[0]) message("");
       show(search_from);
+    }
     else if (screen == Screen::filters)
       show(Screen::catalog);
-    else
+    else {
+      if (profile[0]) message("");
       show(Screen::home);
+    }
   }
   Result<void> on_start(Context &c, std::span<const std::byte> config) {
     ctx = &c;
@@ -893,6 +921,7 @@ struct App {
       return result;
     (void)c.window().fullscreen(WindowBarMode::hidden, WindowBarMode::hidden);
     account.start();
+    message("正在读取应用信息…");
     show(Screen::home);
     busy = true;
     clock();
@@ -964,16 +993,35 @@ struct App {
     back();
     return BackAction::stay;
   }
-  auto view() {
-    return SafeArea(environment.display(), View(this))
-        .background(sibo::paper)
-        .enabled(ready);
-  }
+  auto &navigation() { return navigation_; }
 };
+
+auto Route::view() {
+  return SafeArea(app->environment.display(), View(app))
+      .background(sibo::paper)
+      .enabled(app->ready);
+}
+
+void App::show(Screen s) {
+  const bool changed = screen != s;
+  screen = s;
+  if (changed || !navigation_.depth()) {
+    auto result = navigation_.replace<Route>(this);
+    // Several state transitions may coalesce before the next UI flush.
+    // Every route reads the latest App state when it mounts.
+    if (!result && result.error() != Error::busy)
+      log("Lite page scheduling failed " + std::to_string(int(result.error())));
+  }
+  if (s != Screen::picture) {
+    image_visible.set(false);
+    images.cancel();
+  }
+  log("Lite page " + std::to_string(unsigned(s)));
+}
 
 template <class Page> bool View::render(Page &page, uint32_t parent) {
   auto &a = *app;
-  Painter p(page, a.callbacks);
+  Painter p(page, callbacks);
   auto metrics = a.environment.display().get();
   const int width = int(uint64_t(metrics.width) * 65536 /
                         std::max(1u, metrics.density_q16)),
@@ -984,8 +1032,10 @@ template <class Page> bool View::render(Page &page, uint32_t parent) {
   auto root = p.box(parent);
   p.fill(root, true);
   p.padding(root, 8, 5, 8, 5);
-  auto frame = [&](Screen s) {
-    return p.frame(root, a.frames[unsigned(s)].value);
+  auto frame = [&] {
+    auto node = p.box(root);
+    p.fill(node, true);
+    return node;
   };
   auto header = [&](uint32_t f, auto &title) {
     p.header(f, title, [&a] { a.back(); });
@@ -996,10 +1046,10 @@ template <class Page> bool View::render(Page &page, uint32_t parent) {
     p.enabled(n, a.idle);
     return n;
   };
-  {
-    auto f = frame(Screen::home), b = p.scroll(p.body(f));
-    p.text(b, "小巧的商城，大大的发现", Font::title);
-    p.text(b, a.notice, Font::caption);
+  if (a.screen == Screen::home) {
+    auto f = frame(), b = p.scroll(p.body(f));
+    auto status = p.text(b, a.notice, Font::caption);
+    p.visible(status, a.notice_visible);
     button(
         b, "应用",
         [&a] {
@@ -1016,14 +1066,14 @@ template <class Page> bool View::render(Page &page, uint32_t parent) {
       a.browse("", "downloads");
     });
     button(b, "搜索", [&a] { a.search(); });
-    button(b, "已安装与更新", [&a] { a.library(); });
-    button(b, "下载管理", [&a] { a.files(); });
-    button(b, "我的账号", [&a] { a.account_view(); });
+    button(b, "已安装", [&a] { a.library(); });
+    button(b, "下载", [&a] { a.files(); });
+    button(b, "账号", [&a] { a.account_view(); });
     auto title = std::string_view("轻量应用商城");
     p.header(f, title, [&a] { (void)a.ctx->window().request_back(); }, true);
   }
-  {
-    auto f = frame(Screen::catalog), b = p.scroll(p.body(f));
+  if (a.screen == Screen::catalog) {
+    auto f = frame(), b = p.scroll(p.body(f));
     p.text(b, a.notice, Font::caption);
     for (unsigned i = 0; i < a.catalog_rows.size(); ++i) {
       auto n = button(b, a.catalog_rows[i].title, [&a, i] {
@@ -1036,13 +1086,13 @@ template <class Page> bool View::render(Page &page, uint32_t parent) {
     p.visible(n, a.next_page);
     n = button(b, "上一页", [&a] { a.page(-1); });
     p.visible(n, a.previous);
-    button(b, "分类筛选", [&a] { a.filters(); });
+    button(b, "分类", [&a] { a.filters(); });
     button(b, "搜索", [&a] { a.search(); });
-    button(b, "刷新 / 重试", [&a] { a.run(a.load_catalog()); });
+    button(b, "刷新", [&a] { a.run(a.load_catalog()); });
     header(f, a.catalog_title);
   }
-  {
-    auto f = frame(Screen::filters), b = p.scroll(p.body(f));
+  if (a.screen == Screen::filters) {
+    auto f = frame(), b = p.scroll(p.body(f));
     button(b, "全部分类", [&a] { a.select_category(-1); }, true);
     for (unsigned i = 0; i < 20; ++i) {
       auto n = button(b, a.category_rows[i].title,
@@ -1052,8 +1102,8 @@ template <class Page> bool View::render(Page &page, uint32_t parent) {
     auto title = std::string_view("选择分类");
     header(f, title);
   }
-  {
-    auto f = frame(Screen::detail), b = p.scroll(p.body(f));
+  if (a.screen == Screen::detail) {
+    auto f = frame(), b = p.scroll(p.body(f));
     p.text(b, a.detail_title, Font::headline);
     auto n = button(b, a.primary, [&a] { a.primary_action(); }, true);
     p.enabled(n, a.primary_enabled);
@@ -1066,6 +1116,15 @@ template <class Page> bool View::render(Page &page, uint32_t parent) {
         a.run(a.install(true));
     });
     p.visible(n, a.has_ticket);
+    auto format = button(b, a.format_label, [&a] {
+      if (a.busy) return;
+      a.preferred_format = a.selected.package_format == STORE_FORMAT_WASM
+                               ? STORE_FORMAT_AOT : STORE_FORMAT_WASM;
+      a.run(a.load_detail());
+    });
+    p.visible(format, a.formats_visible);
+    auto hint = p.text(b, "WASM 运行速度可能较慢", Font::caption);
+    p.visible(hint, a.wasm_selected);
     n = button(b, "查看截图", [&a] { a.screenshot(); });
     p.visible(n, a.has_pictures);
     button(b, a.like_label, [&a] { a.like(); });
@@ -1079,96 +1138,101 @@ template <class Page> bool View::render(Page &page, uint32_t parent) {
     auto title = std::string_view("应用详情");
     header(f, title);
   }
-  {
-    auto f = frame(Screen::search), b = p.scroll(p.body(f));
-    p.text(b, a.query, Font::title);
-    button(b, "按键输入", [&a] { a.keyboard(); }, true);
-    if (a.environment.capabilities().get().supports(
-            UiFeature::text_input_control)) {
-      p.text(b, "中文也可用系统输入法", Font::caption);
-      auto input = TextInput(a.query).max_bytes(64).single_line().on_submit(
-          [&a] { a.do_search(); });
+  if (a.screen == Screen::search) {
+    auto f = frame(), b = p.scroll(p.body(f));
+    if (a.environment.capabilities().get().supports(UiFeature::text_input_control)) {
+      // The TextInput is rendered locally; its callback must live with the page.
+      auto *submit = p.keep_callback([&a] { a.do_search(); });
+      if (!submit)
+        return false;
+      auto input = TextInput(a.query, a.search_input).max_bytes(64).single_line()
+                       .on_submit(std::ref(*submit))
+                       .background(sibo::white).rgba(sibo::ink)
+                       .border_color(sibo::mint).border_width(Dp{1})
+                       .radius(Dp{10}).padding(Dp{6}).height(Dp{40});
       p.ok &= input.render(page, b);
+    } else {
+      // Hosts without text-input controls edit directly on this page.
+      p.text(b, a.query, Font::title);
+      auto groups = p.box(b);
+      p.visible(groups, a.groups_shown);
+      static constexpr const char *names[] = {"abc", "def", "ghi", "jkl", "mno",
+                                               "pqrs", "tuv", "wxyz", "数字", "符号"};
+      for (unsigned i = 0; i < 10; ++i) {
+        auto label = std::string_view(names[i]);
+        button(groups, label, [&a, i] { a.letter_group(i); });
+      }
+      auto letters = p.box(b);
+      p.visible(letters, a.letters_shown);
+      for (unsigned i = 0; i < 10; ++i) {
+        auto n = button(letters, a.letter_rows[i].title,
+                        [&a, i] { a.choose_letter(i); });
+        p.visible(n, a.letter_rows[i].shown);
+      }
+      auto erase = button(b, "退一格", [&a] { a.erase_letter(); });
+      p.ok &= sibo::nonempty_visibility(p.tx, erase, a.query.get()) &&
+              page.template bind<std::string, sibo::nonempty_visibility>(a.query, erase);
     }
-    button(b, "开始搜索", [&a] { a.do_search(); }, true);
-    button(b, "清空", [&a] { a.query.set(""); });
-    static constexpr const char *words[] = {"学习", "数学", "英语", "诗词",
-                                            "工具", "天气", "音乐", "迷宫",
-                                            "拼音", "骰子"};
-    for (auto word : words) {
-      auto label = std::string_view(word);
-      button(b, label, [&a, word] {
-        a.query.set(word);
-        a.do_search();
-      });
+    button(b, "搜索", [&a] { a.do_search(); }, true);
+    auto clear = button(b, "清空", [&a] { a.query.set(""); });
+    p.ok &= sibo::nonempty_visibility(p.tx, clear, a.query.get()) &&
+            page.template bind<std::string, sibo::nonempty_visibility>(a.query, clear);
+    static constexpr const char *words[] = {"学习", "工具", "英语", "音乐"};
+    for (unsigned i = 0; i < 4; i += 2) {
+      auto row = p.box(b, true);
+      for (unsigned j = i; j < i + 2; ++j) {
+        const auto *word = words[j];
+        auto label = std::string_view(word);
+        auto n = button(row, label, [&a, word] {
+          a.query.set(word);
+          a.do_search();
+        });
+        p.ok &= p.tx.logical_px(n, protocol::width, 0) &&
+                p.tx.u16(n, protocol::grow, 1);
+      }
     }
     auto title = std::string_view("搜索");
     header(f, title);
   }
-  {
-    auto f = frame(Screen::keyboard), b = p.scroll(p.body(f));
-    p.text(b, a.query, Font::title);
-    auto groups = p.box(b);
-    p.visible(groups, a.groups_shown);
-    static constexpr const char *names[] = {"abc",  "def",       "ghi", "jkl",
-                                            "mno",  "pqrs",      "tuv", "wxyz",
-                                            "数字", "符号与空格"};
-    for (unsigned i = 0; i < 10; ++i) {
-      auto label = std::string_view(names[i]);
-      button(groups, label, [&a, i] { a.letter_group(i); });
-    }
-    auto letters = p.box(b);
-    p.visible(letters, a.letters_shown);
-    for (unsigned i = 0; i < 10; ++i) {
-      auto n = button(letters, a.letter_rows[i].title,
-                      [&a, i] { a.choose_letter(i); });
-      p.visible(n, a.letter_rows[i].shown);
-    }
-    button(b, "完成并搜索", [&a] { a.do_search(); }, true);
-    button(b, "退一格", [&a] { a.erase_letter(); });
-    button(b, "清空", [&a] { a.query.set(""); });
-    auto title = std::string_view("按键输入");
-    header(f, title);
-  }
 
-  {
-    auto f = frame(Screen::installed), b = p.scroll(p.body(f));
+  if (a.screen == Screen::installed) {
+    auto f = frame(), b = p.scroll(p.body(f));
     p.text(b, a.notice, Font::caption);
-    button(b, "检查所有更新", [&a] { a.run(a.update_check()); }, true);
+    button(b, "检查更新", [&a] { a.run(a.update_check()); }, true);
     for (unsigned i = 0; i < 12; ++i) {
       auto n = button(b, a.installed_rows[i].title,
                       [&a, i] { a.installed_detail(i); });
       p.visible(n, a.installed_rows[i].shown);
     }
     button(b, "刷新", [&a] { a.run(a.library_task()); });
-    auto title = std::string_view("已安装与更新");
+    auto title = std::string_view("已安装");
     header(f, title);
   }
-  {
-    auto f = frame(Screen::downloads), b = p.scroll(p.body(f));
+  if (a.screen == Screen::downloads) {
+    auto f = frame(), b = p.scroll(p.body(f));
     p.text(b, a.notice, Font::caption);
     for (unsigned i = 0; i < 8; ++i) {
       auto box = p.box(b);
       p.visible(box, a.download_rows[i].shown);
       p.text(box, a.download_rows[i].title, Font::title);
       button(
-          box, "安装下载", [&a, i] { a.run(a.file_action(i, false)); }, true);
-      button(box, "删除下载", [&a, i] { a.run(a.file_action(i, true)); });
+          box, "安装", [&a, i] { a.run(a.file_action(i, false)); }, true);
+      button(box, "删除", [&a, i] { a.run(a.file_action(i, true)); });
     }
     button(b, "刷新", [&a] { a.run(a.files_task()); });
-    auto title = std::string_view("下载管理");
+    auto title = std::string_view("下载");
     header(f, title);
   }
-  {
-    auto f = frame(Screen::account), b = p.scroll(p.body(f));
+  if (a.screen == Screen::account) {
+    auto f = frame(), b = p.scroll(p.body(f));
     p.text(b, a.account_text);
     p.text(b, a.notice, Font::caption);
     button(b, a.login_label, [&a] { a.account_action(); }, true);
-    auto title = std::string_view("我的账号");
+    auto title = std::string_view("账号");
     header(f, title);
   }
-  {
-    auto f = frame(Screen::picture), b = p.scroll(p.body(f));
+  if (a.screen == Screen::picture) {
+    auto f = frame(), b = p.scroll(p.body(f));
     auto img = page.create(b, protocol::image);
     p.fill(img);
     p.ok &=
@@ -1182,10 +1246,10 @@ template <class Page> bool View::render(Page &page, uint32_t parent) {
     button(b, "重试图片", [&a] { a.screenshot(); });
     header(f, a.picture_title);
   }
-  {
-    auto f = frame(Screen::loading), b = p.scroll(p.body(f));
+  if (a.screen == Screen::loading) {
+    auto f = frame(), b = p.scroll(p.body(f));
     p.text(b, a.notice, Font::title);
-    p.button(b, "取消本次操作", [&a] { a.back(); });
+    p.button(b, "取消", [&a] { a.back(); });
     auto title = std::string_view("请稍候");
     header(f, title);
   }

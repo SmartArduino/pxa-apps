@@ -48,6 +48,10 @@ int store_client_profile_for_device(char *output, size_t capacity,
            same_text(architecture, "xtensa")) ||
           (same_text(target, "esp32-s31") &&
            same_text(architecture, "riscv32")) ||
+          (same_text(target, "esp32-p4") &&
+           same_text(architecture, "riscv32")) ||
+          (same_text(target, "windows-x86_64") &&
+           same_text(architecture, "x86_64")) ||
           (same_text(target, "linux-x86_64") &&
            same_text(architecture, "x86_64"))) ||
         !same_text(engine, "wamr"))
@@ -55,7 +59,11 @@ int store_client_profile_for_device(char *output, size_t capacity,
     output[0] = '\0';
     const uint32_t native = PXA_STORE_CAP_RESOURCE_INSTALL | PXA_STORE_CAP_VOLUME_PLACEMENT;
     const char *suffix = STORE_PROFILE_SUFFIX;
-    if ((installer_features & native) == native)
+    // P4 and Windows first shipped in 0.9.0; older profile slugs do not exist.
+    // Newer Hosts supply their authoritative profile through the Net backend.
+    if (same_text(target, "esp32-p4") || same_text(target, "windows-x86_64"))
+        suffix = "-pxa-0.9.0";
+    else if ((installer_features & native) == native)
         suffix = (installer_features & PXA_STORE_CAP_INDEXED_CONTAINER)
             ? "-pxa-0.7.0" : "-pxa-0.5.0-r2";
     return append_text(output, capacity, &offset, target) &&
@@ -252,6 +260,18 @@ int store_client_build_identity_url(char *output,size_t capacity,const char *pro
     if(root[64] || !store_client_build_app_url(output,capacity,profile,app_id,device_id))return 0;
     size_t offset=0;while(output[offset])++offset;
     return append_text(output,capacity,&offset,"&lineage_root_key_id=") && append_text(output,capacity,&offset,root);
+}
+
+int store_client_build_variant_url(char *output, size_t capacity, const char *profile,
+    const char *app_id, const char *root, const char *device_id, store_package_format_t format) {
+    if (format != STORE_FORMAT_AUTO && format != STORE_FORMAT_AOT && format != STORE_FORMAT_WASM)
+        return 0;
+    if (!store_client_build_identity_url(output, capacity, profile, app_id, root, device_id)) return 0;
+    if (format == STORE_FORMAT_AUTO) return 1;
+    size_t offset = 0;
+    while (output[offset]) ++offset;
+    return append_text(output, capacity, &offset, "&artifact_format=") &&
+           append_text(output, capacity, &offset, format == STORE_FORMAT_WASM ? "wasm" : "aot");
 }
 
 int store_client_build_download_url(char *output, size_t capacity,

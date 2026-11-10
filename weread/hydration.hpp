@@ -108,10 +108,14 @@ class Hydration {
         }
         if(c=='!'){++at;if(at==input.size()||(input[at]!='0'&&input[at]!='1'))return false;
             return emit(out,input[at++]=='0'?"true":"false");}
-        if(c=='-'||(c>='0'&&c<='9')){
+        if(c=='-'||c=='.'||(c>='0'&&c<='9')){
             auto begin=at++;
             while(at<input.size()&&((input[at]>='0'&&input[at]<='9')||input[at]=='.'||input[at]=='e'||input[at]=='E'||input[at]=='+'||input[at]=='-'))++at;
-            auto raw=input.substr(begin,at-begin);return Json(raw).valid()&&emit(out,raw);
+            const auto raw=input.substr(begin,at-begin);
+            if(!detail::valid_number_literal(raw))return false;
+            if(raw.starts_with('.'))return emit(out,"0")&&emit(out,raw);
+            if(raw.starts_with("-."))return emit(out,"-0")&&emit(out,raw.substr(1));
+            return emit(out,raw);
         }
         auto name=identifier();if(name.empty())return false;
         if(name=="true"||name=="false"||name=="null")return emit(out,name);
@@ -514,10 +518,12 @@ public:
     // Resumable projection with borrowed cursors. A step processes a bounded
     // number of directory rows; it owns only the same output and UID window
     // as the synchronous API. The prepared HTML must outlive the projection.
+    struct CatalogHint {std::string_view book;std::uint32_t chapter,count=0,last=0;};
     class ReaderProjection {
         Hydration& h;
         std::size_t source,selected=0,length=0,skip=0;
         std::optional<std::uint32_t> window;
+        std::optional<CatalogHint> reuse;
         unsigned phase=0,property=0;
         bool failed=false,finished=false,first=true;
         ArrayCursor cursor;
@@ -527,7 +533,7 @@ public:
         std::string output;
         std::vector<std::uint32_t> uids;
         std::uint32_t current=0;
-        static constexpr std::size_t capacity=300;
+        const std::size_t capacity;
         static constexpr std::string_view keys[]={"bookInfo","curChapter","curChapterUrlParam","prevChapterUrlParam",
             "nextChapterUrlParam","token","curChapterSection","chapterSections","chapterInfoCount","errorInfo",
             "isCurChapterNeedToPay","contentText","chapterIndexes","chapterInfos","readerUrlParams","curCatalogRange"};
@@ -619,6 +625,24 @@ public:
                 if(property<12){const auto slot=property++;const auto key=keys[slot];auto expression=values[slot];
                     return expression.empty()||(emit(",\"")&&emit(key)&&emit("\":")&&h.expand(expression,output));}
                 h.stage=7;current=h.integer(h.member(get<"curChapter">(),"chapterUid"));
+                // The whole serializer has already passed preparation. A
+                // targeted jump can keep its validated directory window,
+                // while still projecting fresh body/rights/adjacency fields.
+                if(reuse){
+                    const auto book=h.member(get<"bookInfo">(),"bookId");
+                    const auto chapter=h.member(get<"curChapter">(),"chapterUid");
+                    if(!book.empty()&&!chapter.empty()){
+                        std::string id,uid;const auto limit=h.output_budget;
+                        h.output_budget=std::min<std::size_t>(limit,1024);
+                        const bool valid=h.expand(book,id)&&h.expand(chapter,uid);
+                        h.output_budget=limit;if(!valid)return false;
+                        if(scalar(Json(id),128)==reuse->book&&Json(uid).number()==reuse->chapter&&
+                           (!reuse->count||h.integer(get<"chapterInfoCount">())==reuse->count)&&
+                           (!reuse->last||h.integer(h.member(get<"bookInfo">(),"lastChapterIdx"))==reuse->last)){
+                            phase=5;return emit(",\"catalogReused\":true}");
+                        }
+                    }
+                }
                 phase=2;return set_cursor(chapters());
             }
             std::string_view row;
@@ -643,7 +667,7 @@ public:
                     if(index<skip)continue;
                     uids.push_back(h.integer(h.member(row,"chapterUid")));
                     if(!first&&!emit(","))return false;first=false;
-                    if(!h.properties(row,{"chapterUid","chapterIdx","title"},output))return false;
+                    if(!h.properties(row,{"chapterUid","chapterIdx","title","isLock"},output))return false;
                 }
                 if(!cursor.valid)return false;
                 if(!cursor.complete&&cursor.index<skip+capacity)return true;
@@ -671,7 +695,7 @@ public:
             h.stage=8;finished=true;return true;
         }
     public:
-        ReaderProjection(Hydration& owner,std::size_t source_capacity,std::optional<std::uint32_t> offset={}):h(owner),source(source_capacity),window(offset){}
+        ReaderProjection(Hydration& owner,std::size_t source_capacity,std::optional<std::uint32_t> offset={},std::optional<CatalogHint> hint={},std::size_t rows=300):h(owner),source(source_capacity),window(offset),reuse(hint),capacity(std::clamp<std::size_t>(rows,1,300)){}
         bool done()const{return failed||finished;}
         // false means a validation/budget error, never a partially usable DTO.
         bool step(unsigned rows=32){
@@ -684,7 +708,7 @@ public:
             return std::move(output);
         }
     };
-    ReaderProjection reader_projection(std::size_t source_capacity,std::optional<std::uint32_t> offset={}){return {*this,source_capacity,offset};}
+    ReaderProjection reader_projection(std::size_t source_capacity,std::optional<std::uint32_t> offset={},std::optional<CatalogHint> hint={},std::size_t rows=300){return {*this,source_capacity,offset,hint,rows};}
     // Synchronous convenience for tools/tests. Applications can yield between
     // steps without duplicating grammar, changing limits or rescanning prefixes.
     std::optional<std::string> decode_reader(std::string_view html,std::size_t input_capacity=0){

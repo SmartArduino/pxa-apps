@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-static const unsigned screens[][2]={{200,160},{296,240},{320,240},{240,320},{480,480},{800,480}};
+static const unsigned screens[][2]={{200,160},{296,240},{320,240},{240,320},{480,480},{800,480},{480,854},{854,480}};
 static const unsigned sources[][4]={{159,143,10,9},{257,225,4,3},{160,144,10,9},{240,160,3,2},{256,192,4,3},{256,224,4,3},{320,240,4,3},{512,478,4,3}};
 static void enlargement_test(void){
  /* Include packed rows, a four-pixel tail, odd pitches, shifted pointers,
@@ -75,5 +75,5 @@ int main(void){
   }
   emu_video_deinit(&r);emu_video_deinit(&r);free(c);free(out[0]);free(out[1]);free(reference);
  }
- free(source);enlargement_test();puts("PASS: dynamic geometry, hires, aspect fit, two buffers, controls, strides and six screen sizes");
+ free(source);enlargement_test();puts("PASS: dynamic geometry, hires, aspect fit, two buffers, controls, strides and eight screen sizes");
 }

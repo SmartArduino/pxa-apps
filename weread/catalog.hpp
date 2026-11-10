@@ -2,7 +2,7 @@
 #include "protocol.hpp"
 
 namespace weread {
-struct ChapterLink {std::string title,param;std::uint32_t uid=0;};
+struct ChapterLink {std::string title,param;std::uint32_t uid=0;bool locked=false;};
 struct Catalog {
     static constexpr std::size_t capacity=300;
     std::vector<ChapterLink> items;
@@ -73,7 +73,8 @@ private:
             if(items.empty())wire_begin=index;wire_end=index;
             auto title=scalar(row.get("title"),384);
             if(title.empty())title="第 "+number(index)+" 章";
-            items.push_back({std::move(title),{},*uid});return true;
+            const auto locked=row.get("isLock");
+            items.push_back({std::move(title),{},*uid,locked.raw()=="true"||locked.number()==1});return true;
         },8192)||!valid)return false;
         std::optional<std::uint32_t> previous_uid;std::string_view previous_param;
         if(!params.each([&](Json row){

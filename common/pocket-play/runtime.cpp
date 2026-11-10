@@ -2,6 +2,7 @@
 #include "runtime.hpp"
 #include "../pocket-ui/viewport.hpp"
 #include "../pocket-ui/preferences.hpp"
+#include <algorithm>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -19,7 +20,6 @@
 #include "service-hooks.hpp"
 #endif
 #ifdef PXA_POCKET_STUDIO
-#include <algorithm>
 #include "pxa_canvas.h"
 #include "../pocket-studio/studio.hpp"
 #endif
@@ -184,15 +184,17 @@ void pointer(const pxa_ui_pointer_data_t &p) {
     else if (p.phase == PXA_POINTER_MOVE) phase = Phase::MOVE;
     else if (p.phase == PXA_POINTER_UP) phase = Phase::UP;
     else phase = Phase::CANCEL;
-    if (phase == Phase::DOWN && last_x >=
-#ifdef PXA_POCKET_STUDIO
+    if (phase == Phase::DOWN &&
+#ifdef PXA_POCKET_CUSTOM_MENU
+        game::menu_hit(last_x, last_y)
+#elif defined(PXA_POCKET_STUDIO)
 #if defined(PXA_POCKET_UTILITY) || defined(PXA_POCKET_FILL)
-        WIDTH-48 && last_x < WIDTH-24 && last_y < 26
+        last_x >= WIDTH-48 && last_x < WIDTH-24 && last_y < 26
 #else
-        240 && last_x < 264 && last_y < 26
+        last_x >= 240 && last_x < 264 && last_y < 26
 #endif
 #else
-        WIDTH-24 && last_y < 20
+        last_x >= WIDTH-24 && last_y < 20
 #endif
     ) {
         pointer_consumed = true; toggle_pause();
@@ -211,7 +213,9 @@ void pointer(const pxa_ui_pointer_data_t &p) {
     pocket::redraw();
 }
 void draw_menu() {
-#ifdef PXA_POCKET_STUDIO
+#ifdef PXA_POCKET_CUSTOM_MENU
+    game::draw_menu(paused, menu_row, exit_requested);
+#elif defined(PXA_POCKET_STUDIO)
     studio_menu(paused,menu_row,exit_requested);
 #else
     pocket::rect(WIDTH-24, 0, 24, 20, PANEL);
@@ -277,6 +281,17 @@ void present() {
         staged = false;
     }
     ++frame_id; ++perf_frames; prepared = false; dirty = revision != prepared_revision;
+#ifdef PXA_POCKET_FAST_START
+    // Give the first room/character frame a display interval before native text work.
+    if (frame_id == 1) {
+        char message[120];
+        snprintf(message, sizeof(message), "Pocket: first-frame elapsed_us=%llu",
+            static_cast<unsigned long long>(now_us() - epoch));
+        pxa_log_write(2, message);
+        pocket::redraw();
+        return;
+    }
+#endif
 #ifdef PXA_POCKET_STUDIO
     if(!studio_present())pocket::redraw();
 #endif
@@ -345,7 +360,8 @@ int32_t handle_event(const uint8_t *bytes, uint32_t length) {
         pointer_density = env.density_q16 ? env.density_q16 : 65536;
 #ifdef PXA_POCKET_STUDIO
         bool geometry_changed=studio_geometry(env);
-        studio_density=env.density_q16?env.density_q16:65536;studio_hash=0;
+        studio_density=env.density_q16?env.density_q16:65536;
+        studio_font_scale=env.font_scale_q16?env.font_scale_q16:65536;studio_hash=0;
 #endif
         if (!env.width || !env.height || (uint32_t(display_w) == env.width && uint32_t(display_h) == env.height
 #ifdef PXA_POCKET_STUDIO
@@ -485,7 +501,24 @@ void redraw() { dirty = true; ++revision; }
 void save() { save_dirty = true; if (!save_due) save_due = now_us()+200000; }
 uint32_t random() { rng ^= rng<<13; rng ^= rng>>17; rng ^= rng<<5; return rng; }
 uint32_t millis() { return uint32_t(foreground_us()/1000); }
+int dp(int value) {
+    const auto &area =
+#ifdef PXA_POCKET_FILL
+        content_viewport;
+#else
+        viewport;
+#endif
+    const int64_t denominator = int64_t(std::max(1, area.physical_width())) * 65536;
+    return int((int64_t(std::clamp(value, 0, 1024)) * pointer_density * WIDTH + denominator - 1) / denominator);
+}
 void log(const char *message) { pxa_log_write(2, message); }
+int sp(int value) {
+#ifdef PXA_POCKET_STUDIO
+    return dp(int((int64_t(std::clamp(value, 0, 256)) * studio_font_scale + 65535) / 65536));
+#else
+    return dp(value);
+#endif
+}
 }
 extern "C" int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     pxa_ui_environment_t env{};

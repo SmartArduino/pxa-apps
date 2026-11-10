@@ -1,3 +1,7 @@
 [submodule "nano-j2me/upstream"]
 	path = nano-j2me/upstream
 	url = https://github.com/lucinhu/nano_j2me.git
+[submodule "fat-fish/vendor/dsh-pet"]
+	path = fat-fish/vendor/dsh-pet
+	url = https://github.com/PC2005-cloud/dsh-pet.git
+	branch = main

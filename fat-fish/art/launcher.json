@@ -1,0 +1,11 @@
+{
+  "tool": "Built-in image_gen",
+  "license": "CC-BY-NC-SA-4.0",
+  "source": "launcher.png",
+  "output": "../assets/icon.png",
+  "character_references": [
+    "vendor/dsh-pet/dsh-pet/assets/logo.png",
+    "upstream idle animation"
+  ],
+  "prompt": "Use case: identity-preserve. Asset type: square PXA launcher app icon, crisp at 48 and 64 pixels. Create a polished close-up pixel-art portrait of the SAME chibi blue-haired whale maid character shown in the reference images, preserving her deep navy and blue long hair, blue eyes, small pointed whale-like side fins, white frilled maid headband and blue bow, navy-and-white maid clothing. Head and shoulders fill around 82% of the square with clear face, cheerful small smile, tiny rosy cheeks. Cozy seaside palette matching a pixel-art pet room. Opaque soft pale mint/aqua square background, subtle concentric pixel highlight behind the face, sparse 2 little bubble accents. Strong tidy dark-blue pixel outlines, restrained 16-bit game palette, deliberate chunky pixels, attractive symmetrical composition, full headband and hair inside a generous safe boundary. One single finished icon, edge-to-edge square with square corners. No text, no letters, no watermark, no app frame, no mockup, no screenshot, no extra characters, no photorealism. Reference 1 defines exact character. Reference 2 is existing icon being replaced. Enlarge portrait, remove empty space and previous full-body composition."
+}

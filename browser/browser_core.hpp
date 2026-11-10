@@ -356,7 +356,13 @@ struct Document {
     std::vector<Image> images;
     bool truncated = false, wml = false, links_limited = false;
     ReferrerPolicy referrer = ReferrerPolicy::strict_origin_when_cross_origin;
-    void clear(std::string url) {
+    void clear(std::string url, bool release_storage = false) {
+        if (release_storage) {
+            std::string{}.swap(text); std::string{}.swap(title);
+            std::vector<Span>{}.swap(spans); std::vector<Link>{}.swap(links);
+            std::vector<Anchor>{}.swap(anchors); std::vector<Form>{}.swap(forms);
+            std::vector<Field>{}.swap(fields); std::vector<Image>{}.swap(images);
+        }
         text.clear();
         title.clear();
         base = std::move(url);
@@ -368,6 +374,14 @@ struct Document {
         images.clear();
         truncated = wml = links_limited = false;
         referrer = ReferrerPolicy::strict_origin_when_cross_origin;
+    }
+    // Dynamic backing storage only; nested URL/field strings and VM/Host
+    // allocations are intentionally excluded from this diagnostic.
+    std::size_t buffer_bytes() const {
+        return (text.capacity()>std::string{}.capacity()?text.capacity()+1:0) +
+            spans.capacity()*sizeof(Span)+links.capacity()*sizeof(Link)+
+            anchors.capacity()*sizeof(Anchor)+forms.capacity()*sizeof(Form)+
+            fields.capacity()*sizeof(Field)+images.capacity()*sizeof(Image);
     }
     int add_link(std::string target) {
         const auto found = std::ranges::find(links, target, &Link::target);
@@ -740,8 +754,21 @@ class Parser {
         if (n == "img" && !t.closing) {
             auto alt = t.get("alt");
             auto src = t.get("src");
-            if (src.empty())
-                src = t.get("data-src");
+            if (src.empty() || (src.starts_with("data:") && !inline_image::payload(src)) ||
+                src == "about:blank") {
+                for (auto name : {"data-src", "data-original", "data-lazy-src"}) {
+                    auto candidate=t.get(name);
+                    if (!candidate.empty()) { src=std::move(candidate); break; }
+                }
+                if (src.empty() || src.starts_with("data:") || src=="about:blank") {
+                    // Responsive images commonly list the smaller resource first.
+                    // No CSS tree or second list of candidates is retained.
+                    auto candidates=t.get("srcset");
+                    auto candidate=trim(std::string_view(candidates).substr(0,candidates.find(',')));
+                    candidate=candidate.substr(0,candidate.find_first_of(" \t\r\n"));
+                    if (!candidate.empty() && !candidate.starts_with("data:")) src=candidate;
+                }
+            }
             auto source = resolve(doc_.base, src);
             if (inline_image::payload(src)) {
                 std::size_t used = 0;
@@ -1043,6 +1070,7 @@ struct Layout {
     std::vector<Piece> pieces;
     int height = 0;
     bool truncated = false;
+    void clear() { std::vector<Piece>{}.swap(pieces); height=0; truncated=false; }
     static int font(Style style, int body) { return style == Style::heading ? body * 5 / 4 : body; }
     static std::pair<int, int> image_size(const Image &image, int width, int body) {
         int w = std::clamp(int(image.width) * body / 15, 1, width);

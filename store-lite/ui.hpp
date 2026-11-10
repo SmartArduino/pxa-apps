@@ -19,6 +19,10 @@ struct Label {
 inline bool visibility(Transaction<> &tx, uint32_t n, const bool &v) {
   return tx.u8(n, protocol::visible, v);
 }
+inline bool nonempty_visibility(Transaction<> &tx, uint32_t n,
+                                 const std::string &value) {
+  return tx.u8(n, protocol::visible, !value.empty());
+}
 inline bool pixel_height(Transaction<> &tx, uint32_t n, const int32_t &value) {
   return tx.logical_px(n, protocol::height, value);
 }
@@ -31,15 +35,15 @@ inline bool interactivity(Transaction<> &tx, uint32_t n, const bool &value) {
 
 // Keep the native controls and their callback addresses stable. Tree order is
 // also the three-key focus order; every page places its header after its body.
-template <class Page> struct Painter {
+template <class Page, std::size_t CallbackCount> struct Painter {
   Page &page;
   Transaction<> &tx;
-  std::array<std::function<void()>, 192> &callbacks;
+  std::array<std::function<void()>, CallbackCount> &callbacks;
   unsigned callback_count = 0;
   bool ok = true;
   bool roomy = false;
   unsigned header_size = 34;
-  Painter(Page &p, std::array<std::function<void()>, 192> &c)
+  Painter(Page &p, std::array<std::function<void()>, CallbackCount> &c)
       : page(p), tx(p.transaction()), callbacks(c) {}
   void fill(uint32_t n, bool height = false) {
     ok &= tx.fill(n, protocol::width);
@@ -83,6 +87,15 @@ template <class Page> struct Painter {
     ok &= page.template bind<std::string, write_string_text>(value, n);
     return n;
   }
+  std::function<void()> *keep_callback(std::function<void()> fn) {
+    if (callback_count == callbacks.size()) {
+      ok = false;
+      return nullptr;
+    }
+    auto &cb = callbacks[callback_count++];
+    cb = std::move(fn);
+    return &cb;
+  }
   uint32_t button_root(uint32_t parent, std::function<void()> fn,
                        bool primary = false) {
     auto n = page.create(parent, protocol::control, protocol::button);
@@ -97,13 +110,8 @@ template <class Page> struct Painter {
     padding(n, 10, 9, 10, 9);
     if (roomy)
       ok &= tx.template logical_px<protocol::min_height>(n, 56);
-    if (callback_count == callbacks.size()) {
-      ok = false;
-      return n;
-    }
-    auto &cb = callbacks[callback_count++];
-    cb = std::move(fn);
-    ok &= page.on_click(n, cb);
+    if (auto *cb = keep_callback(std::move(fn)))
+      ok &= page.on_click(n, *cb);
     return n;
   }
   template <class Text>

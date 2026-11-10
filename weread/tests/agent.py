@@ -39,7 +39,11 @@ def main():
                 assert self.headers.get('Cookie')=='wr_vid=1; wr_skey=fixture-only'
                 assert self.headers.get('X-Vid')=='1' and self.headers.get('X-Skey')=='fixture-only'
                 assert not self.headers.get('Authorization')
-                self.data({'apikey':'invalid' if mode=='bad-key' else key},403 if mode=='key-denied' else 200)
+                if mode=='empty-key':self.data({'apikey':''})
+                elif mode=='missing-key':self.data({})
+                elif mode=='key-unavailable':self.data({},503)
+                elif mode=='key-malformed':self.data([])
+                else:self.data({'apikey':'invalid' if mode=='bad-key' else key},403 if mode=='key-denied' else 200)
             elif path.endswith('/reader'):
                 assert self.headers.get('Cookie')=='wr_vid=1; wr_skey=fixture-only'
                 data={'state':{'reader':{'bookInfo':book,'curChapter':{'title':'Original chapter','chapterUid':1,'chapterIdx':1},
@@ -99,6 +103,18 @@ def main():
                         retained=app.shot('refresh-error-retained')
                         body_box=(i+gap,i+head+gap,w-i-gap,h-i-foot-gap)
                         assert not ImageChops.difference(crop(first,body_box),crop(retained,body_box)).getbbox(),'Failed refresh replaced the old metadata'
+                        # Losing the Key after metadata loaded must show the
+                        # persistent setup guide, rather than only a toast.
+                        mode='empty-key';app.tap(w-i-head//2,i+head//2)
+                        app.wait(lambda:'WEREAD SKILL SETUP REQUIRED' in app.logs());time.sleep(2.5)
+                        guide=app.shot('refresh-key-setup')
+                        assert ImageChops.difference(crop(first,body_box),crop(guide,body_box)).getbbox(),'Existing metadata hid setup guidance'
+                        mode='key-unavailable';unavailable=app.logs().count('WEREAD DETAILS UNAVAILABLE')
+                        app.tap(w-i-head//2,i+head//2)
+                        app.wait(lambda:app.logs().count('WEREAD DETAILS UNAVAILABLE')>unavailable);time.sleep(2.5)
+                        restored_metadata=app.shot('network-error-retained')
+                        assert not ImageChops.difference(crop(first,body_box),crop(restored_metadata,body_box)).getbbox(),'Setup guidance discarded the old metadata'
+                        mode='normal'
                     mark=len(requests);app.tap(w-i-dp(22),h-i-foot//2);second=app.shot('details-next')
                     assert ImageChops.difference(Image.open(first).convert('RGB'),Image.open(second).convert('RGB')).getbbox()
                     app.tap(i+dp(22),h-i-foot//2);previous=app.shot('details-previous')
@@ -126,7 +142,7 @@ def main():
                 except BaseException:
                     app.shot('failure');(a.output/'failure.json').write_text(json.dumps({'requests':requests,'fixture_errors':errors},indent=2)+'\n');raise
                 finally:app.close()
-            for mode in ('key-denied','bad-key','bad-book','upgrade','redirect','oversized','progress-denied','blocked'):
+            for mode in ('key-denied','bad-key','empty-key','missing-key','key-unavailable','key-malformed','bad-book','upgrade','redirect','oversized','progress-denied','blocked'):
                 requests.clear();blocked.clear();release.clear();state=Path(directory)/mode;state.mkdir()
                 app=Simulator(a,a.output/mode,state,296,240,160,58)
                 try:
@@ -143,9 +159,27 @@ def main():
                     else:
                         app.wait(lambda:'WEREAD DETAILS UNAVAILABLE' in app.logs());app.shot('persistent-error')
                         assert not any(r[1]=='/credential-leak' for r in requests)
-                        if mode in ('key-denied','bad-key'):assert not any(r[1]=='/api/agent/gateway' for r in requests)
+                        setup=mode in ('key-denied','bad-key','empty-key','missing-key')
+                        assert ('WEREAD SKILL SETUP REQUIRED' in app.logs())==setup
+                        if setup:
+                            # The guide survives toast expiry and uses local
+                            # paging; all three tabs share the same recovery.
+                            time.sleep(2.5);first=app.shot('setup-guide-first');mark=len(requests)
+                            app.tap(260,203);second=app.shot('setup-guide-next')
+                            assert ImageChops.difference(Image.open(first).convert('RGB'),Image.open(second).convert('RGB')).getbbox()
+                            app.tap(36,203);previous=app.shot('setup-guide-previous')
+                            assert not ImageChops.difference(Image.open(first).convert('RGB'),Image.open(previous).convert('RGB')).getbbox()
+                            assert len(requests)==mark,'Setup guide paging refetched the Key'
+                            for tab,x in enumerate((148,233,63),2):
+                                app.tap(x,72);app.wait(lambda:app.logs().count('WEREAD SKILL SETUP REQUIRED')==tab)
+                            assert not any(r[1]=='/api/agent/gateway' for r in requests)
+                        if mode.startswith('key-') or mode in ('bad-key','empty-key','missing-key'):
+                            assert not any(r[1]=='/api/agent/gateway' for r in requests)
                         # Retry through the actual refresh action.
                         mode='normal';app.tap(259,34);app.wait(lambda:'WEREAD DETAILS READY' in app.logs())
+                        if setup:
+                            app.shot('setup-recovered');app.command('KEY BACK');app.tap(120,90)
+                            app.wait(lambda:'WEREAD READER READY' in app.logs())
                     assert key not in app.logs() and 'WEREAD ERROR' not in app.logs()
                     app.command('KEY HOME');app.process.wait(timeout=10)
                     assert 'remaining_internal=0 remaining_external=0' in app.logs()

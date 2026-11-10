@@ -64,7 +64,7 @@ static void motion_hooks(){
     const int32_t flat[]={0,0,9806650};
     for(unsigned i=0;i<20;++i){device.now+=50000;device.tilt.acceleration(flat,device.now,device.now);}
     assert(device.ready());auto before=snapshot();game::tick(20);assert(snapshot().run.x==before.run.x&&snapshot().run.y==before.run.y);
-    const int32_t right[]={0,-4000000,8950000};
+    const int32_t right[]={4000000,0,8950000};
     for(unsigned i=0;i<10;++i){device.now+=50000;device.tilt.acceleration(right,device.now,device.now);game::tick(20);}
     assert(snapshot().run.x>before.run.x+.02f);before=snapshot();device.now+=1000000;game::tick(100);assert(snapshot().run.elapsed_ms==before.run.elapsed_ms&&snapshot().run.x==before.run.x);
     keys[unsigned(Key::RIGHT)]=true;tick(10);keys[unsigned(Key::RIGHT)]=false;assert(snapshot().run.elapsed_ms>before.run.elapsed_ms);

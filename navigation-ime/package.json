@@ -1,0 +1,67 @@
+{
+  "format": "pxa-package-source-0.2",
+  "id": "pxa-navigation-ime",
+  "name": "基础拼音键盘",
+  "description": "支持全键盘英文与拼音逐字选字。",
+  "version": "0.1.0",
+  "release_sequence": 1,
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 262144,
+      "pinned": false
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "services": [
+        "ui"
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "random"
+        ]
+      }
+    },
+    {
+      "id": "provider",
+      "kind": "service",
+      "cmake_target": "pxa_provider",
+      "services": [
+        {
+          "name": "ime",
+          "features": [
+            "latin",
+            "pinyin",
+            "provider"
+          ]
+        }
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "random"
+        ]
+      }
+    }
+  ]
+}

@@ -18,6 +18,11 @@ int main(int argc,char** argv){
         assert(target.items.size()==1&&target.items[0].title=="Original");
     }
     {
+        Catalog c;
+        assert(c.initial(Json(R"({"chapterIndexes":[{"chapterUid":1,"isLock":true},{"chapterUid":2,"isLock":1},{"chapterUid":3,"isLock":false},{"chapterUid":4,"isLock":0},{"chapterUid":5},{"chapterUid":6,"isLock":"true"}],"readerUrlParams":[]})")));
+        for(std::size_t i=0;i<c.items.size();++i)assert(c.items[i].locked==(i<2));
+    }
+    {
         const auto [a,b,c,d]=Json(R"({"ignored":[{"deep":[1,2,{"x":"\\\"}"}]}],"a":null,"a":9,"\u0062":"value","c":{"a":3}})")
             .select({"a","b","c","missing"});
         assert(a.raw()=="null"&&b.string()=="value"&&c.get("a").number()==3&&d.raw().empty());
@@ -31,7 +36,7 @@ int main(int argc,char** argv){
     for(unsigned i=0;i<635;++i){
         if(i){rows+=',';params+=',';}
         const auto chapter=i*34/635+1;
-        rows+="{title:'Heading "+number(i)+"',chapterUid:"+number(chapter)+",chapterIdx:"+number(chapter)+"}";
+        rows+="{title:'Heading "+number(i)+"',chapterUid:"+number(chapter)+",chapterIdx:"+number(chapter)+",isLock:"+(i%3==0?"true":"false")+"}";
         params+="{cUid:"+number(chapter)+",param:'authorized-"+number(chapter)+"'}";
     }
     rows+=']';params+=']';
@@ -47,18 +52,49 @@ int main(int argc,char** argv){
         Reading reader;assert(reader.parse(Json(*json)));const auto& c=reader.catalog;
         assert(c.begin==offset&&c.source_rows==635&&c.total==635&&c.items.size()<=300);
         assert(c.wire_begin==offset*34/635+1);
-        for(const auto& row:c.items){assert(row.title=="Heading "+number(seen++));assert(!row.param.empty());}
+        for(const auto& row:c.items){assert(row.locked==(seen%3==0));assert(row.title=="Heading "+number(seen++));assert(!row.param.empty());}
         assert(bool(c.local_window(-1))==(offset!=0));
         assert(bool(c.local_window(1))==(offset!=600));
         if(offset==0)assert(c.local_window(1)==300&&c.wire_end==17);
         if(offset==600)assert(!c.can_load(1)&&c.wire_end==34);
     }
     assert(seen==635);
+    { // A fast opening window joins full windows without gaps or reverse overlap.
+        Hydration h;assert(h.prepare(html));
+        for(auto [offset,count]:{std::pair{0u,64u},std::pair{64u,300u},std::pair{0u,64u}}){
+            auto job=h.reader_projection(html.size(),offset,{},count);
+            while(!job.done())assert(job.step(7));auto dto=std::move(job).result();assert(dto);
+            Reading r;assert(r.parse(Json(*dto)));
+            assert(r.catalog.begin==offset&&r.catalog.end==offset+count&&r.catalog.items.size()==count);
+            assert(r.catalog.items.front().title=="Heading "+number(offset)&&r.catalog.items.back().title=="Heading "+number(offset+count-1));
+            for(const auto& row:r.catalog.items)assert(!row.param.empty());
+        }
+    }
+    { // Reuse is generated only after book AND numeric chapter identity match.
+        Hydration h;assert(h.prepare(html));
+        auto job=h.reader_projection(html.size(),{},Hydration::CatalogHint{"test",1});
+        while(!job.done())assert(job.step(7));auto dto=std::move(job).result();assert(dto);
+        assert(Json(*dto).get("catalogReused").raw()=="true");
+        assert(Json(*dto).get("chapterIndexes").raw().empty());
+        Reading fresh;assert(fresh.parse(Json(*dto),false)&&fresh.chapter_uid==1&&fresh.book_id=="test");
+        for(auto hint:{Hydration::CatalogHint{"other-book",1},Hydration::CatalogHint{"test",2},
+            Hydration::CatalogHint{"test",1,636,34},Hydration::CatalogHint{"test",1,635,35}}){
+            Hydration other;assert(other.prepare(html));auto full=other.reader_projection(html.size(),{},hint);
+            while(!full.done())assert(full.step(7));auto projected=std::move(full).result();assert(projected);
+            assert(Json(*projected).get("catalogReused").raw().empty());
+            Reading r;assert(r.parse(Json(*projected))&&r.catalog.items.size()==300);
+        }
+        const auto denied="window.__NUXT__=(function(a){return {state:{reader:{bookInfo:{bookId:'test',paid:1},curChapter:{chapterUid:1},isCurChapterNeedToPay:true,errorInfo:{code:-505},chapterIndexes:[],readerUrlParams:[]}}}}(0));";
+        Hydration rights;assert(rights.prepare(denied));auto restricted=rights.reader_projection(std::string_view(denied).size(),{},Hydration::CatalogHint{"test",1});
+        while(!restricted.done())assert(restricted.step());auto output=std::move(restricted).result();assert(output);
+        Reading r;assert(r.parse(Json(*output),false)&&r.requires_purchase&&r.content_error);
+        assert(!h.decode_reader("window.__NUXT__=(function(a){return {state:{reader:{chapterIndexes:[alert(1)]}}}}(0));"));
+    }
     Catalog remote;
     assert(remote.initial(Json(R"({"bookInfo":{"lastChapterIdx":34},"chapterInfoCount":635,"chapterIndexes":[{"chapterUid":16,"chapterIdx":16}],"readerUrlParams":[]})")));
     assert(remote.can_load(1)&&remote.wire_end==16);
-    assert(remote.page(Json(R"({"succ":1,"chapterInfos":[{"chapterUid":34,"chapterIdx":34}],"readerUrlParmas":[]})"),1));
-    assert(!remote.can_load(1)&&remote.can_load(-1));
+    assert(remote.page(Json(R"({"succ":1,"chapterInfos":[{"chapterUid":34,"chapterIdx":34,"isLock":true}],"readerUrlParmas":[]})"),1));
+    assert(!remote.can_load(1)&&remote.can_load(-1)&&remote.items[0].locked);
     assert(!remote.page(Json(R"({"succ":1,"chapterInfos":[{"chapterUid":33,"chapterIdx":33}],"readerUrlParmas":[]})"),1));
     assert(remote.wire_end==34);
     assert(remote.page(Json(R"({"succ":1,"chapterInfos":[],"readerUrlParmas":[]})"),-1));

@@ -38,7 +38,7 @@ os.environ['COMPASS_TEST_SENSORS'] = str(source)
 os.environ['PXA_SIMULATOR_PERF'] = '0'
 
 
-def sensor(m=(24000, 0, -38000), g=(0, 0, 9806650)):
+def sensor(m=(0, 24000, -38000), g=(0, 0, 9806650)):
     temp = source.with_suffix('.tmp')
     temp.write_text(' '.join(str(round(v)) for v in (*m, *g)))
     temp.replace(source)
@@ -84,8 +84,8 @@ def rotate(v, q):
 
 
 def bearing(h):
-    return (65000 + 24000*math.cos(math.radians(h)),
-            -23000 + 24000*math.sin(math.radians(h)), -21000)
+    return (65000 - 24000*math.sin(math.radians(h)),
+            -23000 + 24000*math.cos(math.radians(h)), -21000)
 
 
 report = {'source': 'synthetic vectors via real PXA Host', 'headings': {}}
@@ -113,7 +113,7 @@ for w, h in [(480, 480)] if not args.smoke else [(480, 480), (320, 240), (240, 2
             q = [rng.gauss(0, 1) for _ in range(4)]
             n = math.sqrt(sum(v*v for v in q))
             q = [v/n for v in q]
-            m = rotate((24000, 0, -38000), q)
+            m = rotate((0, 24000, -38000), q)
             g = rotate((0, 0, 9806650), q)
             sensor(tuple(m[j] + (65000, -23000, 17000)[j] for j in range(3)), g)
             time.sleep(.125)
@@ -122,7 +122,7 @@ for w, h in [(480, 480)] if not args.smoke else [(480, 480), (320, 240), (240, 2
         wait(s, 'Compass: calibration saved')
         time.sleep(.7)
         saved = save_blob(s.state, 'compass')
-        assert saved[:4] == b'CMP1' and saved[8] == 1
+        assert saved[:4] == b'CMP2' and saved[8] == 1
         for heading in [0, 90, 180, 270, 359, 1, 42]:
             sensor(bearing(heading))
             report['headings'][str(heading)] = reading(s, 5, heading)
@@ -145,7 +145,10 @@ for w, h in [(480, 480)] if not args.smoke else [(480, 480), (320, 240), (240, 2
         sensor((365000, -23000, 17000))
         reading(s, 4, settle=.2)
         s.shot('08-interference')
-        sensor(bearing(90), (9806650, 0, 0))
+        sensor(bearing(90), (0, 9806650, 0))
+        reading(s, 5, settle=.2)  # Upright uses the rear-facing reference.
+        # Only an ambiguous inverted transition loses a horizontal reference.
+        sensor(bearing(90), (0, 8032936, -5624779))
         reading(s, 3, settle=.2)
         s.shot('09-vertical')
         sensor(bearing(42))

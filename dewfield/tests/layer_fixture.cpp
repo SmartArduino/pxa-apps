@@ -15,6 +15,12 @@ int main(int argc, char **argv) {
   std::memset(s.cleared, 1, sizeof(s.cleared));
   for (auto &p : s.plots)
     p = {};
+  if(!std::strcmp(argv[1],"touch-controls")) {
+    s.day=2;s.story=5;s.px=10*16+8;s.py=18*16+8;s.energy=50;s.produce[2]=3;
+    s.show_joystick=s.show_action=false;farm::sync_inventory(s);farm::equip_item(s,14);
+    uint8_t raw[farm::SaveBytes];assert(farm::encode(s,raw,sizeof(raw)));farm::State checked;assert(farm::decode(checked,raw,sizeof(raw)));
+    FILE*f=std::fopen(argv[2],"wb");assert(f&&std::fwrite(raw,1,sizeof(raw),f)==sizeof(raw));std::fclose(f);f=std::fopen(argv[3],"w");assert(f);std::fclose(f);return 0;
+  }
   if(!std::strncmp(argv[1],"village-",8)) {
     const char *mode=argv[1]+8;s.story=5;s.minute=600;s.energy=50;s.gold=1200;s.show_joystick=s.show_action=false;
     if(!std::strcmp(mode,"shipping")){s.px=8*16+8;s.py=10*16+8;s.produce[0]=13;s.produce[2]=7;farm::sync_inventory(s);farm::equip_item(s,12);}

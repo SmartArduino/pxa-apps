@@ -44,6 +44,8 @@ public:
     uint32_t mean_copy_us() const { return hits_ ? uint32_t(copy_us_ / hits_) : 0; }
 };
 void round(int x, int y, int w, int h, int radius, uint16_t color);
+void round_alpha(int x, int y, int w, int h, int radius, uint16_t color, int opacity);
+void round_outline(int x, int y, int w, int h, int radius, uint16_t color, int opacity = 256);
 void disc(int x, int y, int r, uint16_t color);
 void picture(int x, int y, int w, int h, const Image &image, int darkness = 0);
 void label(int x, int y, int w, const char *text, uint16_t color, int scale = 1,

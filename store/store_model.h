@@ -6,7 +6,14 @@
 
 /* Small initial page; the client adapts page size to the viewport. */
 #define STORE_PAGE_SIZE 2
+/* A client may keep a smaller page window. All its model/parser translation
+ * units must use the same value; the full store keeps twelve by default. */
+#ifndef STORE_MAX_APPS
 #define STORE_MAX_APPS 12
+#endif
+#if STORE_MAX_APPS < 1 || STORE_MAX_APPS > 12
+#error STORE_MAX_APPS must be between 1 and 12
+#endif
 #define STORE_MAX_QUERY 32
 #define STORE_MAX_APP_ID 64
 #define STORE_MAX_NAME 48
@@ -30,6 +37,8 @@
 #define STORE_MAX_SERVICE_NAME 16
 #define STORE_MAX_MEDIA_URL 192
 #define STORE_MAX_SCREENSHOTS 8
+
+enum store_package_format_t { STORE_FORMAT_AUTO = 0, STORE_FORMAT_AOT = 1, STORE_FORMAT_WASM = 2 };
 
 struct store_screenshot_t {
     char url[STORE_MAX_MEDIA_URL];
@@ -79,6 +88,8 @@ typedef struct {
     uint64_t release_sequence;
     uint8_t requires_resources;
     uint8_t resource_size_known;
+    uint8_t package_format;
+    uint8_t available_formats;
     uint8_t permission_count;
     store_permission_t permissions[STORE_MAX_PERMISSIONS];
     uint8_t service_count;

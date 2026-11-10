@@ -32,6 +32,7 @@ p.add_argument('--actors-only',action='store_true')
 p.add_argument('--livestock-only',action='store_true')
 p.add_argument('--details-only',action='store_true')
 p.add_argument('--village-only',action='store_true')
+p.add_argument('--touch-only',action='store_true')
 p.add_argument('--mines-only',action='store_true')
 p.add_argument('--geography-only',action='store_true')
 p.add_argument('--npc-only',action='store_true')
@@ -252,6 +253,29 @@ try:
     try:needs_intro=saved().get('intro',5)<5
     except AssertionError:needs_intro=True
     tap(cw//2,ch-38)
+    if args.touch_only:
+        assert args.fixture_tool
+        if needs_intro:
+            for _ in range(5):time.sleep(.25);key('Z')
+        key('ENTER');time.sleep(.3);saved();stop()
+        raw=out/'touch.save';subprocess.run([str(args.fixture_tool.resolve()),'touch-controls',str(raw),str(out/'unused')],check=True)
+        def fixture():
+            replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38);time.sleep(.3)
+        fixture();initial=saved();camy=max(0,min(384-ch,initial['py']-(ch-8)//2));y=initial['py']-camy
+        command(f'TOUCH DOWN 0 {(cw-8)*scale} {y*scale}');time.sleep(1.6);capture('held-right')
+        # Storage deliberately coalesces writes while a finger is held. Read
+        # durable coordinates only after release; screenshots capture the hold.
+        command(f'TOUCH UP 0 {(cw-8)*scale} {y*scale}');right=wait_for(lambda v:v['px']>initial['px']+110,'held travel')
+        command(f'TOUCH DOWN 0 {(cw-8)*scale} {y*scale}');time.sleep(.25)
+        command(f'TOUCH MOVE 0 {8*scale} {y*scale}');time.sleep(1.1);capture('drag-left')
+        command(f'TOUCH UP 0 {8*scale} {y*scale}');left=wait_for(lambda v:v['px']<right['px']-32,'drag turn');time.sleep(.35);stopped=saved();time.sleep(.5);assert saved()['px']==stopped['px'];key('ENTER');stop()
+        fixture();s=saved();camx=max(0,min(512-cw,s['px']-cw//2));camy=max(0,min(384-ch,s['py']-(ch-8)//2))
+        tap(s['px']-camx,s['py']-camy-14);wait_for_panel('touch eat');capture('touch-eat-confirm');assert saved()['produce'][2]==3
+        mx,my=(cw-228)//2,(ch-210)//2;tap(mx+60,my+190);assert saved()['produce'][2]==3
+        tap(s['px']-camx,s['py']-camy-14);wait_for_panel('touch eat again');tap(mx+165,my+190);v=wait_for(lambda v:v['produce'][2]==2,'touch consume');assert v['energy']>50
+        capture('touch-eaten');key('ENTER');time.sleep(.3);stop();start();tap(cw//2,ch-38);time.sleep(.3);assert saved()['produce'][2]==2;stop()
+        (out/'summary.json').write_text(json.dumps({'held_camera_follow':True,'drag_steering':True,'release_stops':True,'touch_eat_cancel_confirm':True,'buttons_disabled':True},indent=2)+'\n')
+        print('PASS: signed touch-only hold/drag/release and food confirmation, with both touch controls hidden');raise SystemExit(0)
     if args.village_only:
         assert args.fixture_tool
         if needs_intro:

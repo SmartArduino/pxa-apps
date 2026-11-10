@@ -87,6 +87,16 @@ int main(int argc,char** argv){
     assert(Json(*login.confirmation(Json(R"({"vid":1,"skey":"synthetic","code":"synthetic"})"))).get("vid").number()==1);
     assert(!login.confirmation(Json(R"({"scan":0})")));
     assert(reader_text("<p>第一段</p><p>A &amp; B</p><script>hidden()</script>")=="第一段\nA & B");
+    { // Publisher markup can be much larger than the prose it contains.
+        std::string markup="<div>";
+        for(unsigned i=0;i<12000;++i)markup+="<span class='reader-word' data-wco='123'>文</span>";
+        markup+="</div>";
+        bool limit=false;auto text=reader_text(markup,{},nullptr,nullptr,&limit);
+        assert(markup.size()>196608&&text.size()==36000&&!limit);
+        const auto exact="<div><p>"+std::string(196608,'x')+"</p></div>";
+        assert(reader_text(exact,{},nullptr,nullptr,&limit).size()==196608&&!limit);
+        assert(reader_text(std::string(196609,'x'),{},nullptr,nullptr,&limit).empty()&&limit);
+    }
     auto element=html::element("<script>var x='<div id=\"body\">bad</div>';</script><div id='body' title='a>b'><div>inside</div><!-- </div> --><p>end</p></div>","body");
     assert(element && element->starts_with("<div>inside</div>"));
     assert(!html::element("<div id='body'><div>unclosed</div>","body"));

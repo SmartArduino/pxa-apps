@@ -87,6 +87,11 @@ int intro_scene=0;uint32_t intro_elapsed=0;
 bool ranch_page_active() {return page==Page::Ranch||page==Page::Animal||page==Page::Supply||page==Page::Incubate||page==Page::Butcher;}
 int touchx, touchy, stickx, sticky;
 bool stick = false, touch_down = false;
+struct WorldTouch {
+  bool active=false,following=false,ground=false,food=false,interactive=false;
+  int x=0,y=0,wx=0,wy=0,tx=0,ty=0,animal=-1,npc=-1,region=0;
+  uint32_t elapsed=0;
+} world_touch;
 int held_direction = -1;
 int bag_page=0;
 int bag_selection = 0, drag_from = -1, drag_x = 0, drag_y = 0;
@@ -466,6 +471,7 @@ void scene() {
   profile(DrawStage::Effects);
 }
 void stop_motion() {
+  world_touch={};
   butcher_pending=-1;combat_target=-1;
   route = false;
   moving = false;
@@ -1066,7 +1072,7 @@ void weather_icon(int x, int y) {
 int caption_width() {
   char b[80];
   item_label(b, sizeof(b), held_item());
-  return std::clamp(text_width(b) + 18, 66, 146);
+  return std::clamp(text_width(b) + 18 + (food_energy(held_item())?text_width(tr(" · Tap to eat"," · 点此食用")):0), 66, 146);
 }
 struct Notice {
   farm_ui::Rect box{};
@@ -1075,7 +1081,7 @@ struct Notice {
 };
 Notice notice() {
   Notice n;
-  if (!toast_ms && !route)
+  if (!toast_ms && (!route || world_touch.active))
     return n;
   const char *s =
       toast_ms ? toast : tr("Walking to destination…", "正在前往目的地…");
@@ -1194,8 +1200,10 @@ void hud() {
     auto label = ui.caption(caption_width());
     HudLayer layer(label);
     panel(label.x, label.y, label.w, label.h);
-    item_label(b, sizeof(b), held_item());
-    center_text(label.center_x(), label.y + 2, b, Sage);
+    char name[80];item_label(name,sizeof(name),held_item());
+    std::snprintf(b,sizeof(b),"%s%s",name,food_energy(held_item())?tr(" · Tap to eat"," · 点此食用"):"");
+    if(text_width(b)<=label.w-16)center_text(label.center_x(),label.y+2,b,Sage);
+    else fit_text(label.x+8,label.y+2,b,label.w-16,Sage);
   }
   if (!using_controller() && state.show_joystick) {
     auto joystick = ui.joystick();
@@ -1423,9 +1431,9 @@ void modal() {
   } else if(page==Page::Eat) {
     food_preview(x+114,y+82,food_item);item_label(b,sizeof(b),food_item,false);center_text(x+114,y+94,b,Sage);
     std::snprintf(b,sizeof(b),english()?"Restore %d energy":"恢复%d体力",food_energy(food_item));center_text(x+114,y+116,b,Text);
-    fit_text(x+12,y+141,tr("A eat / B cancel; B talks","A吃下 · B取消；B对人互动"),202,Muted);
-    button(x+12,y+177,98,25,tr("CANCEL / B","取消 / B"),selected_row==0);
-    button(x+117,y+177,99,25,tr("EAT / A","吃掉 / A"),selected_row==1);
+    fit_text(x+12,y+141,using_controller()?tr("A eat / B cancel; B talks","A吃下 · B取消；B对人互动"):tr("Tap Eat to confirm; Cancel keeps it","点吃掉确认，取消会保留食物"),202,Muted);
+    button(x+12,y+177,98,25,using_controller()?tr("CANCEL / B","取消 / B"):tr("CANCEL","取消"),selected_row==0);
+    button(x+117,y+177,99,25,using_controller()?tr("EAT / A","吃掉 / A"):tr("EAT","吃掉"),selected_row==1);
   } else if (page == Page::Shop) {
     for (int i = 0; i < 4; ++i) {
       int yy = y + 39 + i * 27;
@@ -1628,6 +1636,65 @@ void modal() {
 }
 int scene_target(int wx, int wy, int &tx, int &ty) {
   int animal=-1;world_objects.pick(wx,wy,state,tx,ty,&animal,&following_npc);return animal;
+}
+void request_eat() {
+  if(!food_energy(held_item())||swing)return;
+  food_item=held_item();open_page(Page::Eat);selected_row=1;
+}
+bool world_touch_start(int x,int y) {
+  auto ui=layout();
+  if(ui.belt().contains(x,y)||ui.calendar().contains(x,y)||ui.vitals().contains(x,y))return false;
+  for(int i=0;i<3;++i)if(ui.header_button(i).contains(x,y))return false;
+  if(in_mine(state))for(int i=0;i<5;++i)if(mine_quick(i).contains(x,y))return false;
+  if((toast_ms||route)&&notice().box.contains(x,y))return false;
+  if(!toast_ms&&!route&&ui.caption(caption_width()).contains(x,y))return false;
+  WorldTouch t;t.active=true;t.x=x;t.y=y;t.wx=x+camx;t.wy=y+camy;t.region=state.region;
+  t.tx=t.wx/16;t.ty=t.wy/16;
+  world_objects.pick(t.wx,t.wy,state,t.tx,t.ty,&t.animal,&t.npc);
+  farm_ui::Rect actor{int(state.px)-camx-12,int(state.py)-camy-(carrying_item(held_item())?54:33),24,36+(carrying_item(held_item())?21:0)};
+  t.food=food_energy(held_item())&&t.animal<0&&t.npc<0&&actor.contains(x,y);
+  t.interactive=t.animal>=0||t.npc>=0||(!state.region&&plot_index(t.tx,t.ty)>=0)||!walkable(state,t.tx,t.ty)||
+    portal_at(state,t.tx,t.ty)||npc_at(state,t.tx,t.ty)>=0||forage_at(state,t.tx,t.ty)>=0||cave_forage_at(state,t.tx,t.ty)>=0||
+    (in_mine(state)&&t.tx==25&&t.ty==17)||(!state.region&&t.ty==7&&t.tx==6)||
+    (state.region==unsigned(Region::Town)&&t.tx==5&&t.ty==7);
+  t.ground=!t.interactive&&!t.food;
+  journey_region=following_npc=following_animal=-1;route=false;route_portal=-1;approaching_portal=false;
+  world_touch=t;
+  // Empty terrain responds on DOWN. Actions stay deferred until a real tap
+  // finishes; holding/dragging across an object must never use a tool on it.
+  if(!t.food)begin_route(t.tx,t.ty,t.interactive);
+  return true;
+}
+void world_touch_follow() {
+  if(world_touch.following)return;
+  world_touch.following=true;route=false;route_action=false;
+  journey_region=following_npc=following_animal=-1;combat_target=-1;route_portal=-1;approaching_portal=false;
+}
+int finger_direction() {
+  // Re-evaluate in screen coordinates each logic tick, including a stationary
+  // held finger while the camera scrolls. No BFS is performed in this mode.
+  int dx=world_touch.x+camx-int(state.px),dy=world_touch.y+camy-int(state.py);
+  if(std::abs(dx)<=8&&std::abs(dy)<=8)return -1;
+  int horizontal=dx>0?1:3,vertical=dy>0?2:0;
+  int primary=std::abs(dx)>std::abs(dy)?horizontal:vertical,secondary=primary==horizontal?vertical:horizontal;
+  auto clear=[&](int d){return walkable(state,state.px/16+(d==1)-(d==3),state.py/16+(d==2)-(d==0))||
+    (portal_at(state,state.px/16,state.py/16)&&d==portal_heading(*portal_at(state,state.px/16,state.py/16)));};
+  if(clear(primary))return primary;
+  if((primary==horizontal?std::abs(dy):std::abs(dx))>8&&clear(secondary))return secondary;
+  return -1;
+}
+void world_touch_finish() {
+  auto t=world_touch;world_touch={};
+  if(t.region!=state.region)return;
+  if(t.following){route=false;route_action=false;redraw();return;}
+  if(t.food){request_eat();return;}
+  if(t.ground)return; // Keep the original DOWN destination, despite camera movement.
+  following_animal=t.animal;following_npc=t.npc;
+  if(t.animal>=0||t.npc>=0){begin_route(t.tx,t.ty,true);return;}
+  int mob=mob_at(state,t.tx,t.ty),ore=ore_at(state,t.tx,t.ty);
+  if(mob>=0)equip_item(state,37);else if(ore>=0)equip_item(state,6);
+  begin_route(t.tx,t.ty,t.interactive);
+  if(mob>=0)combat_target=mob;
 }
 void go_to(Region region, int x, int y, bool use) {
   page = Page::Farm;
@@ -1877,6 +1944,7 @@ bool back() {
 }
 void init() {
   dewfield_net::room.bind(state);
+  world_touch={};
   fresh(state);
   scene_surface(false);
   music_enabled(state.music);effects_enabled(state.sound_effects);
@@ -2105,6 +2173,8 @@ void key(Key k) {
 }
 void pointer(Phase phase, int x, int y) {
   if (phase == Phase::CANCEL) {
+    if(world_touch.active){route=false;route_action=false;journey_region=following_npc=following_animal=-1;}
+    world_touch={};
     touch_down = false;
     drag_from = -1;
     drag_active = false;
@@ -2155,7 +2225,7 @@ void pointer(Phase phase, int x, int y) {
         repeat_use=held_item()<12||held_item()==37;
         action_hold = action_touch = true;
         facing_action();
-      }
+      } else world_touch_start(x,y);
     }
     return;
   }
@@ -2165,6 +2235,11 @@ void pointer(Phase phase, int x, int y) {
     if(requested!=bag_page){bag_page=requested;drag_active=true;redraw();}
   }
   if (phase == Phase::MOVE) {
+    if(world_touch.active) {
+      world_touch.x=std::clamp(x,0,WIDTH-1);world_touch.y=std::clamp(y,0,HEIGHT-1);
+      if(std::abs(x-touchx)+std::abs(y-touchy)>=5)world_touch_follow();
+      return;
+    }
     if (drag_from >= 0) {
       drag_x = x;
       drag_y = y;
@@ -2186,6 +2261,11 @@ void pointer(Phase phase, int x, int y) {
   if (phase != Phase::UP || !touch_down)
     return;
   touch_down = false;
+  if(world_touch.active){
+    // A fast swipe can arrive as DOWN/UP with its intermediate MOVE coalesced.
+    if(std::abs(x-touchx)+std::abs(y-touchy)>=5)world_touch_follow();
+    world_touch_finish();return;
+  }
   if (action_touch) {
     repeat_use=false;
     action_hold = action_touch = false;
@@ -2264,29 +2344,14 @@ void pointer(Phase phase, int x, int y) {
     return;
   }
   if (!toast_ms && !route && ui.caption(caption_width()).contains(x, y)) {
-    if (held_item() >= 8 && held_item() <= 11)cycle_seeds();
+    if(food_energy(held_item()))request_eat();
+    else if (held_item() >= 8 && held_item() <= 11)cycle_seeds();
     return;
   }
   if (state.show_action && ui.action().contains(x, y)) {
     facing_action();
     return;
   }
-  int tx = (x + camx) / 16, ty = (y + camy) / 16;
-  journey_region = following_npc = -1;
-  following_animal=scene_target(x+camx,y+camy,tx,ty);
-  if(following_animal>=0||following_npc>=0){begin_route(tx,ty,true);return;}
-  int pi = plot_index(tx, ty);
-  bool interactive =
-      (!state.region && pi >= 0) || !walkable(state, tx, ty) ||
-      portal_at(state,tx,ty) || npc_at(state,tx,ty)>=0 ||
-      forage_at(state,tx,ty)>=0 || cave_forage_at(state,tx,ty)>=0 ||
-      (in_mine(state)&&tx==25&&ty==17) ||
-      (!state.region && ty==7 && tx==6) ||
-      (state.region==unsigned(Region::Town) && tx==5 && ty==7);
-  int mob=mob_at(state,tx,ty),ore=ore_at(state,tx,ty);
-  if(mob>=0)equip_item(state,37);else if(ore>=0)equip_item(state,6);
-  begin_route(tx, ty, interactive);
-  if(mob>=0)combat_target=mob;
 }
 void tick(uint32_t elapsed) {
   soundscape(title_screen?0:state.region,title_screen?0:state.weather,title_screen?600:state.minute);
@@ -2369,6 +2434,7 @@ void tick(uint32_t elapsed) {
   }
   bool was_walking = walking;
   walking = false;
+  if(world_touch.active){world_touch.elapsed=std::min(1000u,world_touch.elapsed+elapsed);if(world_touch.elapsed>=220)world_touch_follow();}
   int d = -1;
   for (int i = 0; i < 4; ++i)
     if (held(Key(i)))
@@ -2379,6 +2445,7 @@ void tick(uint32_t elapsed) {
     if (std::abs(dx) > 5 || std::abs(dy) > 5)
       d = std::abs(dx) > std::abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0);
   }
+  if(world_touch.active&&world_touch.following)d=finger_direction();
   if (d >= 0 && !moving && !swing)
     navigate(d);
   if(route&&!moving&&in_mine(state)&&combat_target>=0){auto &m=state.mobs[combat_target];if(!m.hp){route=false;combat_target=-1;}else{targetx=m.x/16;targety=m.y/16;route_action=true;}}
@@ -2409,6 +2476,9 @@ void tick(uint32_t elapsed) {
     int tx = state.px / 16, ty = state.py / 16;
     if ((route_action && near(state, targetx, targety)) ||
         (!route_action && tx == targetx && ty == targety)) {
+      // Pressing may approach an object immediately, but only releasing a tap
+      // authorizes using it. A drag/hold takes over as movement instead.
+      if(world_touch.active&&!world_touch.ground&&!world_touch.following){if(was_walking)redraw();return;}
       if(route_portal>=0 && approaching_portal) {
         const auto &p=Portals[route_portal];
         approaching_portal=false;targetx=p.x;targety=p.y;

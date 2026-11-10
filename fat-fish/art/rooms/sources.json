@@ -1,0 +1,43 @@
+{
+  "tool": "Built-in image_gen",
+  "purpose": "Pixel-art room backgrounds",
+  "license": "CC0-1.0",
+  "images": [
+    {
+      "path": "seaside.png",
+      "original_prompt": "Use case: stylized-concept. Asset type: production pixel-art room background for a handheld virtual pet game. Primary request: A cozy sunlit seaside bedroom. Warm honey wood floorboards and cream walls, a broad arched window onto turquoise sea and distant fluffy clouds, a small wicker plant stand at the left edge, a low blue reading cushion and tiny book shelf at the right edge. A pale circular rug on the central floor. Quiet airy morning. Style: polished cozy 16-bit pixel art, deliberate crisp square pixel clusters, restrained palette, light texture, consistent clean outlines, charming small details. Composition: landscape 3:2, straight-on interior view with a shallow floor perspective. Keep the middle 50 percent of the image calm and uncluttered so a separate blue-haired pet sprite can stand there. Wall-to-floor boundary about 60 percent down the image, central standing floor/rug clear around 80 percent down. Furniture stays close to outer edges. The image is the room environment only. No characters, people, pets, user interface, button icons, lettering, logos, borders or watermarks. The room must remain legible when downscaled to 384 by 256 pixels.",
+      "prompt": "Use case: precise-object-edit. Asset type: production pixel-art room background for a handheld virtual-pet game. Edit this existing room into a carefully composed standing area. Preserve its cozy pixel-art technique, room theme, window, lighting, furniture and colors. Recompose the lower part so the wall-to-floor boundary is approximately 48 to 50 percent down the image, leaving more visible wood floor. Move the ONE oval rug upward. Its geometric center must be at exactly 50 percent of image width and approximately 72 percent of image height. Make the oval rug about 46 percent of image width and 18 percent of image height. Keep its entire outline clearly readable. Its center should be an unbroken, calm flat area where a separately rendered pet's feet can stand. Leave the vertical central region directly above the rug empty for that pet. Keep furniture near the side edges. Maintain the landscape 3:2 frame and whole-room perspective, crisp deliberate square pixel clusters, clean appealing details and soft 16-bit shading. The rug must sit naturally flat on the floor. Create only the empty room background, with no characters, UI, text, arrows, coordinate markers, labels or watermark.",
+      "rug": {
+        "source_width": 1536,
+        "source_height": 1024,
+        "x": 765,
+        "y": 778,
+        "radius_x": 360
+      }
+    },
+    {
+      "path": "moonlight.png",
+      "original_prompt": "Use case: stylized-concept. Asset type: production pixel-art room background for a handheld virtual pet game. Primary request: A cozy moonlit whale-lover's bedroom. Muted indigo and dusty lilac walls, warm amber bedside lamp at the left edge, a large arched window with crescent moon, tiny stars and a calm sea. A soft lavender rug on the central floor, a low folded quilt at the right edge and tiny shell decorations. Gentle nighttime glow, readable midtones. Style: polished cozy 16-bit pixel art, deliberate crisp square pixel clusters, restrained palette, light texture, consistent clean outlines, charming small details. Composition: landscape 3:2, straight-on interior view with a shallow floor perspective. Keep the middle 50 percent of the image calm and uncluttered so a separate blue-haired pet sprite can stand there. Wall-to-floor boundary about 60 percent down the image, central standing floor/rug clear around 80 percent down. Furniture stays close to outer edges. The image is the room environment only. No characters, people, pets, user interface, button icons, lettering, logos, borders or watermarks. The room must remain legible when downscaled to 384 by 256 pixels.",
+      "prompt": "Use case: precise-object-edit. Asset type: production pixel-art room background for a handheld virtual-pet game. Edit this existing room into a carefully composed standing area. Preserve its cozy pixel-art technique, room theme, window, lighting, furniture and colors. Recompose the lower part so the wall-to-floor boundary is approximately 48 to 50 percent down the image, leaving more visible wood floor. Move the ONE oval rug upward. Its geometric center must be at exactly 50 percent of image width and approximately 72 percent of image height. Make the oval rug about 46 percent of image width and 18 percent of image height. Keep its entire outline clearly readable. Its center should be an unbroken, calm flat area where a separately rendered pet's feet can stand. Leave the vertical central region directly above the rug empty for that pet. Keep furniture near the side edges. Maintain the landscape 3:2 frame and whole-room perspective, crisp deliberate square pixel clusters, clean appealing details and soft 16-bit shading. The rug must sit naturally flat on the floor. Create only the empty room background, with no characters, UI, text, arrows, coordinate markers, labels or watermark.",
+      "rug": {
+        "source_width": 1536,
+        "source_height": 1024,
+        "x": 764,
+        "y": 773,
+        "radius_x": 387
+      }
+    },
+    {
+      "path": "aquarium.png",
+      "original_prompt": "Use case: stylized-concept. Asset type: production pixel-art room background for a handheld virtual pet game. Primary request: A cozy little underwater observatory room. Seafoam painted wood and cream trim, a huge curved aquarium window looking into a clear teal sea, soft coral, tiny distant fish silhouettes and drifting light rays. A small potted aquatic plant at the left edge, a shell shelf at the right edge, a soft sand-colored circular rug on the central wood floor. Peaceful and bright. Style: polished cozy 16-bit pixel art, deliberate crisp square pixel clusters, restrained palette, light texture, consistent clean outlines, charming small details. Composition: landscape 3:2, straight-on interior view with a shallow floor perspective. Keep the middle 50 percent of the image calm and uncluttered so a separate blue-haired pet sprite can stand there. Wall-to-floor boundary about 60 percent down the image, central standing floor/rug clear around 80 percent down. Furniture stays close to outer edges. The image is the room environment only. No characters, people, pets, user interface, button icons, lettering, logos, borders or watermarks. The room must remain legible when downscaled to 384 by 256 pixels.",
+      "prompt": "Use case: precise-object-edit. Asset type: production pixel-art room background for a handheld virtual-pet game. Edit this existing room into a carefully composed standing area. Preserve its cozy pixel-art technique, room theme, window, lighting, furniture and colors. Recompose the lower part so the wall-to-floor boundary is approximately 48 to 50 percent down the image, leaving more visible wood floor. Move the ONE oval rug upward. Its geometric center must be at exactly 50 percent of image width and approximately 72 percent of image height. Make the oval rug about 46 percent of image width and 18 percent of image height. Keep its entire outline clearly readable. Its center should be an unbroken, calm flat area where a separately rendered pet's feet can stand. Leave the vertical central region directly above the rug empty for that pet. Keep furniture near the side edges. Maintain the landscape 3:2 frame and whole-room perspective, crisp deliberate square pixel clusters, clean appealing details and soft 16-bit shading. The rug must sit naturally flat on the floor. Create only the empty room background, with no characters, UI, text, arrows, coordinate markers, labels or watermark.",
+      "rug": {
+        "source_width": 1536,
+        "source_height": 1024,
+        "x": 760,
+        "y": 777,
+        "radius_x": 366
+      }
+    }
+  ]
+}

@@ -2,6 +2,24 @@
 #include "json.hpp"
 
 namespace weread::detail {
+// Nuxt's minifier emits fractions such as .15 and -.5e2. Validate that
+// numeric notation separately, then expand it to JSON with a leading zero.
+inline bool valid_number_literal(std::string_view value){
+    auto fraction=value;
+    if(fraction.starts_with('-'))fraction.remove_prefix(1);
+    if(!fraction.starts_with('.'))return Json(value).valid();
+    std::size_t at=1;
+    while(at<fraction.size()&&fraction[at]>='0'&&fraction[at]<='9')++at;
+    if(at==1)return false;
+    if(at<fraction.size()&&(fraction[at]=='e'||fraction[at]=='E')){
+        ++at;
+        if(at<fraction.size()&&(fraction[at]=='+'||fraction[at]=='-'))++at;
+        const auto exponent=at;
+        while(at<fraction.size()&&fraction[at]>='0'&&fraction[at]<='9')++at;
+        if(at==exponent)return false;
+    }
+    return at==fraction.size();
+}
 // A resumable validator for the serializer's DATA grammar. It borrows its
 // source, uses a fixed nesting stack, and never evaluates or expands a value.
 // Position and node count belong to the caller, including across literals.
@@ -35,6 +53,12 @@ public:
         while(!done()&&at<stop){
             const char c=source[at];
             if(mode==Mode::quoted){
+                // Ordinary UTF-8 runs need no state-machine dispatch per byte.
+                // Stop at the caller's slice, a delimiter, escape or control.
+                if(c!=quote&&c!='\\'&&static_cast<unsigned char>(c)>=32){
+                    do{++at;}while(at<stop&&source[at]!=quote&&source[at]!='\\'&&static_cast<unsigned char>(source[at])>=32);
+                    continue;
+                }
                 ++at;
                 if(c==quote)end_string();
                 else if(c=='\\')mode=Mode::escaped;
@@ -66,7 +90,7 @@ public:
             }
             if(mode==Mode::number){
                 if(numeric(c)){++at;continue;}
-                if(Json(source.substr(begin,at-begin)).valid())end_value();
+                if(valid_number_literal(source.substr(begin,at-begin)))end_value();
                 else mode=Mode::invalid;
                 continue;
             }
@@ -114,7 +138,7 @@ public:
             begin=at;
             if(first(c)){++at;mode=Mode::name;continue;}
             if(key){mode=Mode::invalid;continue;}
-            if(c=='-'||(c>='0'&&c<='9')){++at;mode=Mode::number;continue;}
+            if(c=='-'||c=='.'||(c>='0'&&c<='9')){++at;mode=Mode::number;continue;}
             if(c=='!'){++at;mode=Mode::bang;continue;}
             if(c=='{'||c=='['){
                 closes[depth++]=c=='{'?'}':']';++at;

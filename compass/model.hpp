@@ -53,8 +53,8 @@ inline float forward_blend(float top_up) {
   return t * t * (3 - 2 * t);
 }
 inline Vec forward_reference(Vec up) {
-  float w = forward_blend(up.x);
-  Vec v{1 - w, 0, -w};
+  float w = forward_blend(up.y);
+  Vec v{0, 1 - w, -w};
   return v - up * dot(v, up);
 }
 struct Calibration {
@@ -382,7 +382,7 @@ inline size_t encode(const Model &d, uint8_t *p, size_t n) {
   if (!p || n < SAVE_SIZE)
     return 0;
   std::memset(p, 0, SAVE_SIZE);
-  std::memcpy(p, "CMP1", 4);
+  std::memcpy(p, "CMP2", 4);
   p[4] = d.channel;
   p[5] = uint8_t(d.declination + 30);
   for (int i = 0; i < 2; ++i) {
@@ -398,7 +398,7 @@ inline size_t encode(const Model &d, uint8_t *p, size_t n) {
   return SAVE_SIZE;
 }
 inline bool decode(Model &d, const uint8_t *p, size_t n) {
-  if (!p || n != SAVE_SIZE || std::memcmp(p, "CMP1", 4) || p[4] > 1 ||
+  if (!p || n != SAVE_SIZE || std::memcmp(p, "CMP2", 4) || p[4] > 1 ||
       p[5] > 60)
     return false;
   uint32_t h;

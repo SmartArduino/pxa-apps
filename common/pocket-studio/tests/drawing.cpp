@@ -91,6 +91,40 @@ int main() {
         studio::round(-8, -9, 25, 30, 8, red);
         studio::round(WIDTH - 5, HEIGHT - 5, 20, 30, 8, blue);
         guard();
+        reset(bg);
+        studio::round_alpha(0, 0, WIDTH, HEIGHT, 0, red, 0);
+        for (unsigned i = 0; i < viewport.pixels(); ++i) assert(canvas[i] == bg);
+        studio::round_alpha(0, 0, WIDTH, HEIGHT, 0, red, 128);
+        for (unsigned i = 0; i < viewport.pixels(); ++i) assert(canvas[i] == studio::mix(bg, red, 128));
+        studio::round_alpha(-8, -9, 25, 30, 8, green, 192);
+        studio::round_alpha(WIDTH - 5, HEIGHT - 5, 20, 30, 8, blue, 400);
+        guard();
+        reset(bg);
+        studio::round_outline(0, 0, WIDTH, HEIGHT, 8, red, 128);
+        assert(canvas[0] == bg && canvas[studio_x(WIDTH / 2)] == studio::mix(bg, red, 128));
+        assert(canvas[studio_y(HEIGHT / 2) * viewport.width] == studio::mix(bg, red, 128));
+        assert(canvas[studio_y(HEIGHT / 2) * viewport.width + studio_x(WIDTH / 2)] == bg);
+        const uint16_t edge_color = studio::mix(bg, red, 128);
+        const unsigned edge_count = unsigned(std::count(canvas, canvas + viewport.pixels(), edge_color));
+        std::vector<uint8_t> visited(viewport.pixels());
+        std::vector<unsigned> connected{unsigned(studio_x(WIDTH / 2))};
+        visited[connected[0]] = 1;
+        for (size_t at = 0; at < connected.size(); ++at) {
+            const int x = connected[at] % viewport.width, y = connected[at] / viewport.width;
+            for (int dy = -1; dy <= 1; ++dy) for (int dx = -1; dx <= 1; ++dx) {
+                const int nx = x + dx, ny = y + dy;
+                if (nx < 0 || nx >= viewport.width || ny < 0 || ny >= viewport.height) continue;
+                const unsigned index = unsigned(ny * viewport.width + nx);
+                if (!visited[index] && canvas[index] == edge_color) {
+                    visited[index] = 1; connected.push_back(index);
+                }
+            }
+        }
+        assert(connected.size() == edge_count);
+        studio::round_outline(-8, -9, 25, 30, 8, green);
+        studio::round_outline(WIDTH - 5, HEIGHT - 5, 20, 30, 8, blue);
+        studio::round_outline(1, 1, 1, 1, 1, red);
+        guard();
         reset();
         studio::glow(WIDTH / 2, HEIGHT / 2, 12, 0xffff, 150);
         assert(canvas[studio_y(HEIGHT / 2) * viewport.width + studio_x(WIDTH / 2)] != 0);

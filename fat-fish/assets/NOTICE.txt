@@ -1,0 +1,33 @@
+Fat Fish for PXA
+
+PXA application code and offline conversion tool
+Copyright (c) 2026 lucinhu. MIT License.
+
+The colored control icons are project code-native artwork under MIT.
+Seaside, Moonlight and Aquarium pixel-room backgrounds were generated using
+the built-in imagegen tool. Their source PNGs and prompts are in art/rooms/
+in the source repository. These room backgrounds are provided as CC0-1.0.
+
+Original project and animation assets
+https://github.com/PC2005-cloud/dsh-pet
+Copyright (c) 2026 PC2005-cloud.
+Upstream code is MIT. Upstream animations, prompts and source videos are
+available for open-source, noncommercial use under the upstream README terms.
+The original MIT license is included as LICENSE-UPSTREAM.txt.
+
+The character is the community DeepSeek "大肥鱼" whale maid.
+Original "溟月" character by 上善无形
+https://space.bilibili.com/4456176
+DeepSeek whale-maid design by ZipZipPipe
+https://space.bilibili.com/4168597
+Authorization statement https://www.bilibili.com/opus/1247156596114456581
+The character is licensed under Creative Commons Attribution-NonCommercial-
+ShareAlike 4.0 International (CC BY-NC-SA 4.0).
+https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+animations.bin is a resized, palette-quantized derivative of the upstream
+animations. The launcher portrait in art/launcher.png was generated with the
+built-in imagegen tool using the upstream character as reference. Its prompt
+is recorded in art/launcher.json. Both assets are CC BY-NC-SA 4.0. Preserve this
+attribution and the noncommercial/share-alike conditions when redistributing
+them. The source commit and individual source hashes are in sources.json.

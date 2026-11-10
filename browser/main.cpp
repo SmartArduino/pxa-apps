@@ -9,6 +9,7 @@
 #include "browser_sites.hpp"
 #include "browser_site_forms.hpp"
 #include "browser_memory.hpp"
+#include "browser_http_body.hpp"
 #include "browser_encoding.hpp"
 #include <pxa/ui_volume_keys.hpp>
 #include <cstdio>
@@ -333,7 +334,11 @@ struct App {
         clear_images();
         document_ready = false;
         url = "about:home";
-        document.clear("https://pxa.doit.am/");
+        const auto before=document.buffer_bytes()+page.pieces.capacity()*sizeof(browser::Piece);
+        page.clear();
+        document.clear("https://pxa.doit.am/", true);
+        log("BROWSER BUFFERS before="+std::to_string(before)+" home="+
+            std::to_string(document.buffer_bytes()+page.pieces.capacity()*sizeof(browser::Piece)));
         early_field_edits=0;
         scroll = position;
         set_status("PXA 浏览器 · 轻量网页阅读");
@@ -432,7 +437,8 @@ struct App {
         scroll = 0;
         restore_scroll = position;
         load_navigation = navigation;
-        document.clear(url);
+        page.clear();
+        document.clear(url, true);
         early_field_edits=0;
         layout_dirty = true;
         if (navigation == Navigation::visit)
@@ -462,7 +468,7 @@ struct App {
             std::array<pxa::NetHeaderView, 8> headers{
                 {{"Accept", "text/html, text/plain;q=0.9, application/rss+xml;q=0.8, "
                             "text/xml;q=0.7"},
-                 {"Accept-Encoding", "identity"},
+                 {"Accept-Encoding", "gzip, deflate"},
                  {"User-Agent", browser::site_user_agent(url, browser::user_agent(mobile_ua))},
                  {"Save-Data", "on"},
                  {"Content-Type", "application/x-www-form-urlencoded"}}};
@@ -529,16 +535,17 @@ struct App {
                 continue;
             }
             history.replace_current(url);
-            auto encoding = response->headers.first("content-encoding");
-            if (encoding && !pxa::http_header_equal(browser::trim(*encoding), "identity")) {
-                set_status("网站返回压缩内容；请使用纯文本或轻量页面");
-                busy = false;
-                dirty = true;
-                co_return pxa::Result<void>{};
+            const auto encoding = browser::content_encoding(response->headers.first("content-encoding").value_or(""));
+            if (encoding == browser::ContentEncoding::unsupported) {
+                set_status("暂不支持此压缩格式 · 支持 gzip / deflate");
+                busy=false;dirty=true;co_return pxa::Result<void>{};
             }
             auto type = response->headers.first("content-type");
             std::string mime = type ? browser::lowercase(*type) : "text/html";
             if (mime.starts_with("image/png") || mime.starts_with("image/jpeg") || mime.starts_with("image/gif")) {
+                if (encoding != browser::ContentEncoding::identity) {
+                    set_status("暂不支持压缩图片响应");busy=false;dirty=true;co_return pxa::Result<void>{};
+                }
                 if (!show_images || (!show_gif && mime.starts_with("image/gif"))) {
                     busy = false; set_status("图片加载已关闭 · 可在菜单开启"); dirty = true;
                     co_return pxa::Result<void>{};
@@ -562,7 +569,8 @@ struct App {
                 }
                 co_return pxa::Result<void>{};
             }
-            bool plain = mime.starts_with("text/plain");
+            bool plain = mime.starts_with("text/plain") || mime.starts_with("text/markdown") ||
+                mime.starts_with("application/json") || mime.starts_with("text/json");
             const bool wml = mime.starts_with("text/vnd.wap.wml") ||
                 (mime.starts_with("application/octet-stream") && browser::transport_url(url).ends_with(".wml"));
             bool rss = mime.starts_with("application/rss+xml") || (!wml && mime.starts_with("text/xml")) ||
@@ -580,9 +588,10 @@ struct App {
             // Do not hold a short streamed paragraph until 1 KiB arrives.
             const std::size_t prescan_bytes = !plain && !rss && !wml &&
                 !browser::content_charset(mime) ? 1024 : 3;
+            browser::HttpBodyReader decoded_body(response->body, encoding, 2*1024*1024, context->clock());
             std::size_t prefix_size = 0;
             while (prefix_size < prescan_bytes) {
-                auto n = co_await response->body.read_some(std::span{receive}.subspan(prefix_size, prescan_bytes - prefix_size));
+                auto n = co_await decoded_body.read_some(std::span{receive}.subspan(prefix_size, prescan_bytes - prefix_size));
                 if (!n) co_return std::unexpected(n.error());
                 if (!*n) break;
                 if (!first) first = millis() - begin;
@@ -640,7 +649,7 @@ struct App {
             if (prefix.starts_with("\xef\xbb\xbf")) prefix.remove_prefix(3);
             consume(prefix);
             for (;;) {
-                auto n = co_await response->body.read_some(receive);
+                auto n = co_await decoded_body.read_some(receive);
                 if (!n)
                     co_return std::unexpected(n.error());
                 if (!*n)
@@ -658,6 +667,9 @@ struct App {
                 if (document.truncated)
                     break;
             }
+            const auto decode_peak=decoded_body.peak_heap();
+            const auto wire_bytes=decoded_body.wire_bytes();
+            decoded_body.release();
             if (!legacy_map.empty()) {
                 converted.clear(); decoder.finish(converted);
                 if (capture_script) script_capture.append(converted);
@@ -708,11 +720,15 @@ struct App {
                           document.forms.size(), document.fields.size(), unsigned(title_id));
 #endif
             log(timing);
+            log("BROWSER BUFFERS document="+std::to_string(document.buffer_bytes())+
+                " layout="+std::to_string(page.pieces.capacity()*sizeof(browser::Piece)));
+            log("BROWSER DECODE wire="+std::to_string(wire_bytes)+" decoded="+std::to_string(received)+
+                " heap_peak="+std::to_string(decode_peak));
 #ifdef PXA_BROWSER_PROFILE
             profile.pending = true;
 #endif
             dirty = true;
-            if (capture_script && script_capture.has_script()) {
+            if (capture_script && !document.truncated && script_capture.has_script()) {
                 if (script_capture.limited()) set_status("脚本页面过大 · 显示静态内容");
                 else prepare_script(script_capture.take());
             }
@@ -744,7 +760,7 @@ struct App {
             auto origin = std::string_view(url).substr(0, url.find_first_of("/?#", url.find("://")+3));
             auto referrer=browser::request_referrer(url,request.url,document.referrer);
             std::array<pxa::NetHeaderView,7> headers{{
-                {"Accept-Encoding","identity"}, {"User-Agent",browser::site_user_agent(url,browser::user_agent(mobile_ua))},
+                {"Accept-Encoding","gzip, deflate"}, {"User-Agent",browser::site_user_agent(url,browser::user_agent(mobile_ua))},
                 {"Accept",request.script ? "application/javascript, text/javascript;q=0.9, */*;q=0.1" : "*/*"},
                 {"Content-Type",request.content_type.empty() ? std::string_view("text/plain;charset=UTF-8") : std::string_view(request.content_type)},
                 {"Cookie",cookie}, {"Origin",origin}, {"Referer",referrer}}};
@@ -753,7 +769,7 @@ struct App {
                 .method=request.post ? pxa::HttpMethod::post : pxa::HttpMethod::get,
                 .headers=std::span{headers}.first(referrer.empty()?6u:7u),.wanted_headers=wanted,
                 .body=std::as_bytes(std::span{request.body.data(),request.body.size()}),
-                .options={.buffer_bytes=1024,.header_bytes=4096,.max_body_bytes=std::uint32_t(limit),.timeout_ms=request.timeout_ms}}, permission);
+                .options={.buffer_bytes=1024,.header_bytes=4096,.max_body_bytes=std::uint32_t(limit+1024),.timeout_ms=request.timeout_ms}}, permission);
             if (!exchange) break;
             auto response = co_await std::move(*exchange).response();
             if (!response) break;
@@ -771,13 +787,15 @@ struct App {
                 continue;
             }
             const auto encoding = response->headers.first("content-encoding");
-            if (encoding && !pxa::http_header_equal(browser::trim(*encoding),"identity")) break;
+            const auto coding=browser::content_encoding(encoding.value_or(""));
+            if (coding==browser::ContentEncoding::unsupported) break;
             // Do not execute an HTML error/login page as JavaScript.
             const auto mime = response->headers.first("content-type");
             if (request.script && mime && browser::lowercase(*mime).starts_with("text/html")) break;
             bool failed = false;
+            browser::HttpBodyReader decoded_body(response->body,coding,limit,context->clock());
             for (;;) {
-                auto n = co_await response->body.read_some(js->receive);
+                auto n = co_await decoded_body.read_some(js->receive);
                 if (!n) { failed=true; break; }
                 if (!*n) break;
                 if (*n > limit-result.body.size()) { failed=true; break; }

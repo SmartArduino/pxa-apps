@@ -1,8 +1,9 @@
 /* GPL-2.0-or-later */
 #pragma once
 #include <stdint.h>
-#define NES_DISPLAY_MAX_WIDTH 800u
-#define NES_DISPLAY_MAX_HEIGHT 480u
+#define NES_DISPLAY_MAX_WIDTH 854u
+#define NES_DISPLAY_MAX_HEIGHT 854u
+#define NES_DISPLAY_MAX_PIXELS (854u * 480u)
 typedef struct {unsigned x,y,width,height;} nes_display_rect_t;
 
 /* Insets/radii are native pixels here. Conservatively inscribe a rectangle;
@@ -33,7 +34,8 @@ static inline nes_display_rect_t nes_display_safe_rect(unsigned w,unsigned h,
  * The game renderer paints at most 256x240; static bars stay in each buffer. */
 static inline unsigned nes_display_canvas(unsigned *width,unsigned *height) {
     if(*width<200 || *height<160 || *width>NES_DISPLAY_MAX_WIDTH ||
-       *height>NES_DISPLAY_MAX_HEIGHT)return 0;
+       *height>NES_DISPLAY_MAX_HEIGHT ||
+       (uint64_t)*width * *height>NES_DISPLAY_MAX_PIXELS)return 0;
     return 1;
 }
 static inline unsigned nes_display_ui_scale(unsigned width,unsigned height) {

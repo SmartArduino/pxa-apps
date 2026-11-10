@@ -125,6 +125,8 @@ static uint64_t account_now() {
 #define NODE_HEADER_SEPARATOR 21u
 #define NODE_INSTALL_BUTTON 18u
 #define NODE_INSTALL_LABEL 19u
+#define NODE_FORMAT_BUTTON 2200u
+#define NODE_FORMAT_LABEL 2201u
 #define NODE_KIND_ALL 96u
 #define NODE_KIND_BASE 100u
 #define NODE_CATEGORY_ALL 97u
@@ -297,6 +299,7 @@ typedef struct {
     char expected_detail_identity[130];
     struct { char identity[130],ticket[256],sha256[65];uint64_t size; } install_candidate;
     uint8_t namespace_waiting;
+    store_package_format_t preferred_format;
     /* A query submitted while a catalog request is in flight is applied as
      * soon as that request completes. */
     char pending_search[STORE_MAX_QUERY];
@@ -2559,9 +2562,19 @@ static int render_detail(void) {
                             message(PXA_MSG_INSTALL_TITLE), app.scratch, 1);
     }
     }
+    if (ok && app.detail_ready && item->available_formats == (STORE_FORMAT_AOT | STORE_FORMAT_WASM)) {
+        char size[24], label[160];
+        format_download_size(size, sizeof(size), item);
+        snprintf(label, sizeof(label), "%s · %s",
+                 message(item->package_format == STORE_FORMAT_WASM
+                             ? PXA_MSG_INSTALL_FORMAT_WASM : PXA_MSG_INSTALL_FORMAT_AOT), size);
+        ok = account_button(&transaction, NODE_FORMAT_BUTTON, NODE_FORMAT_LABEL, NODE_DETAIL_SCROLL,
+                            label, !app.busy && !app.downloading);
+    }
     if (ok) {
         const pxa_store_installed_app_t *current = installed_for(item);
-        const char *label = message(current == NULL ? PXA_MSG_ACTION_INSTALL :
+        const char *label = message(app.preferred_format != STORE_FORMAT_AUTO ? PXA_MSG_ACTION_INSTALL :
+                                    current == NULL ? PXA_MSG_ACTION_INSTALL :
                                     has_update(item) ? PXA_MSG_ACTION_UPDATE :
                                                        PXA_MSG_ACTION_OPEN);
         ok = pxa_ui_create(&transaction, NODE_FOOTER, NODE_ROOT, 0,
@@ -3380,8 +3393,8 @@ static int start_detail_fetch(void) {
         return 0;
     }
     if (!item_identity(item,app.expected_detail_identity) ||
-        !store_client_build_identity_url(app.url, sizeof(app.url), app.profile, item->app_id,
-                                    item->lineage_root_key_id,app.device_id))
+        !store_client_build_variant_url(app.url, sizeof(app.url), app.profile, item->app_id,
+                                    item->lineage_root_key_id,app.device_id, app.preferred_format))
         return 0;
     app.pending_request = STORE_REQUEST_DETAIL;
     if (!ensure_body_capacity()) return 0;
@@ -3767,7 +3780,8 @@ static int finish_detail_body(void) {
                                      &app.detail, &app.gallery))
         return fail_detail(STORE_ERROR_PROTOCOL);
     char received_identity[130];
-    if(!item_identity(&app.detail,received_identity) || !text_equal(received_identity,app.expected_detail_identity))
+    if(!item_identity(&app.detail,received_identity) || !text_equal(received_identity,app.expected_detail_identity) ||
+       (app.preferred_format != STORE_FORMAT_AUTO && app.detail.package_format != app.preferred_format))
         return fail_detail(STORE_ERROR_PROTOCOL);
     if (app.screenshot >= app.gallery.count) app.screenshot = 0;
     app.detail_ready = 1;
@@ -4759,6 +4773,7 @@ static int32_t store_on_event(const uint8_t *event, uint32_t length) {
                 app.detail_ready = 0;
                 app.detail_state = STORE_IDLE;
                 app.update_detail_target = 1;
+                app.preferred_format = STORE_FORMAT_AUTO;
                 ++app.detail_revision;
                 app.gallery = {};
                 app.screenshot = 0;
@@ -4811,10 +4826,19 @@ static int32_t store_on_event(const uint8_t *event, uint32_t length) {
         }
         return PXA_EVENT_HANDLED;
     }
+    if (ui_event.node == NODE_FORMAT_BUTTON) {
+        if (app.busy || app.downloading || !app.detail_ready) return PXA_EVENT_HANDLED;
+        app.preferred_format = app.detail.package_format == STORE_FORMAT_WASM ? STORE_FORMAT_AOT : STORE_FORMAT_WASM;
+        ++app.detail_revision;
+        app.install_feedback = 0;
+        app.detail_scroll = 0;
+        if (!start_detail_fetch()) return fail_detail(STORE_ERROR_UNAVAILABLE) ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+        return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
+    }
     if (ui_event.node == NODE_INSTALL_BUTTON) {
         if (app.install_feedback == 1 || app.downloading) return PXA_EVENT_HANDLED;
         const store_app_t *item = detail_item();
-        if (installed_for(item) != NULL && !has_update(item)) {
+        if (installed_for(item) != NULL && !has_update(item) && app.preferred_format == STORE_FORMAT_AUTO) {
             launch_item(item);
             return PXA_EVENT_HANDLED;
         }
@@ -4845,6 +4869,7 @@ static int32_t store_on_event(const uint8_t *event, uint32_t length) {
         if (app.busy && app.pending_request == STORE_REQUEST_UPDATE_CHECK)
             return PXA_EVENT_HANDLED;
         app.selected = index;
+        app.preferred_format = STORE_FORMAT_AUTO;
         app.detail = *store_catalog_at_const(&app.catalog, index);
         ++app.detail_revision;
         app.detail_ready = 0;

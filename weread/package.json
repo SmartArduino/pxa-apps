@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-weread",
-  "version": "0.1.1+pxa07",
-  "release_sequence": 3,
+  "version": "0.1.9+pxa09",
+  "release_sequence": 11,
   "name": "微信读书",
   "description": "PXA 原生微信读书客户端，独立扫码登录、书架与专注阅读。非腾讯官方客户端。",
   "build": {
@@ -34,21 +34,23 @@
       "services": [
         {
           "name": "ui",
+          "min_version": [0, 9],
           "features": [
             "dynamic-text",
             "sized-text",
             "text-input-control"
           ]
         },
-        "window",
-        "net",
+        {"name": "window", "min_version": [0, 3]},
+        {"name": "net", "min_version": [0, 4]},
         {
           "name": "assets",
+          "min_version": [2, 3],
           "features": [
             "image-decode"
           ]
         },
-        "fs",
+        {"name": "fs", "min_version": [0, 4]},
         "permission",
         "clock",
         "log"

@@ -1,0 +1,18 @@
+[
+  ["IDLE", "待机呼吸休闲", "Breathe", "发呆"],
+  ["WAVE", "点击回应-元气挥手", "Hello", "挥挥手"],
+  ["HAPPY", "点击回应-开心跃动", "Happy", "开心跳跳"],
+  ["TICKLE", "点击回应-挠痒咯咯笑", "Tickle", "挠痒痒"],
+  ["SHY", "点击回应-害羞惊讶", "Shy", "害羞啦"],
+  ["FEED", "大口吃零食", "Snack", "吃零食"],
+  ["HOTPOT", "涮火锅", "Hot pot", "涮火锅"],
+  ["CUBE", "原地专心玩魔方", "Puzzle", "玩魔方"],
+  ["DANCE", "轻快摇摆舞", "Dance", "摇摆舞"],
+  ["BUBBLES", "鲸鱼吐泡泡特效", "Bubbles", "吐泡泡"],
+  ["STRETCH", "超大伸懒腰", "Stretch", "伸懒腰"],
+  ["THINK", "深度思考碎碎念", "Thinking", "碎碎念"],
+  ["SLEEP_START", "睡觉-开始", "Bedtime", "准备睡觉"],
+  ["SLEEP", "睡觉-循环", "Sleeping", "呼呼大睡"],
+  ["WAKE", "睡觉-起来", "Wake up", "起床啦"],
+  ["WALK", "原地左转奔跑", "Stroll", "散散步"]
+]

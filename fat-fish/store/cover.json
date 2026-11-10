@@ -1,0 +1,13 @@
+{
+  "kind": "illustrated-cover",
+  "generator": "built-in image_gen",
+  "runtime_screenshot": false,
+  "license": "CC-BY-NC-SA-4.0",
+  "aspect_ratio": "4:3",
+  "prompt": "Use case: illustration-story. Asset type: PXA app-store promotional cover for 大肥鱼 / Fat Fish, landscape exact 4:3 aspect ratio intended 1280x960. Reference image 1 defines the SAME blue-haired chibi whale maid character, preserve her blue eyes, pointed whale side fins, white frilled headband with blue bow, navy and white maid outfit and small whale apron motif. Reference image 2 defines the actual cozy seaside room and pixel-art palette. Make a beautiful polished 16-bit pixel-art promotional illustration of this one character happily sitting in the CENTER of the pale oval rug, holding a little cookie with both hands and smiling at the viewer. A small colorful toy cube rests beside her. Broad arched window overlooking turquoise sea, warm honey wooden floor, soft cream curtains, leafy potted plant and blue floor cushion toward outer edges. Character fills about half the image height with a clear recognizable face. Bright cozy sunlight, navy outlines, mint and sea-blue accents, warm cream and honey palette, deliberate crisp pixel clusters, rich but calm details. Whole room composition with breathing room around character, clean focus and appealing silhouette. This is standalone cover illustration. No writing, text, title, logo, watermark, UI, status panels, buttons, frame, device mockup, or fake screenshot. One full-bleed opaque landscape 4:3 image.",
+  "sha256": "95f3881da378f8e9f8be339001c5632d076148a8bf1b85ee3e1370bf109f6b5b",
+  "dimensions": [
+    1448,
+    1086
+  ]
+}

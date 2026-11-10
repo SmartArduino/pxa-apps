@@ -1,0 +1,102 @@
+{
+  "format": "pxa-package-source-0.2",
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "id": "pxa-fat-fish",
+  "version": "0.8.3",
+  "release_sequence": 20,
+  "name": "大肥鱼",
+  "localizations": {
+    "en": {
+      "name": "Fat Fish"
+    }
+  },
+  "description": "大肥鱼电子宠物，支持透明动画、触摸互动、喂食、玩耍、睡觉、动作点播与自动存档。形象与素材仅限非商业使用。",
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  },
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 3145728,
+      "pinned": true
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "execution_model": "main-loop",
+      "artifact": "aot",
+      "services": [
+        "surface",
+        "clock",
+        "window",
+        "ui",
+        "log",
+        "storage",
+        "permission",
+        {
+          "name": "net",
+          "min_version": [
+            0,
+            5
+          ]
+        },
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            10
+          ]
+        },
+        {
+          "name": "assets",
+          "min_version": [
+            2,
+            0
+          ]
+        }
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.capture",
+      "scope": "microphone",
+      "required": false
+    },
+    {
+      "name": "audio.playback",
+      "scope": "media",
+      "required": false
+    },
+    {
+      "name": "net.client",
+      "scope": "web",
+      "required": false
+    }
+  ],
+  "icon": "assets/icon.png"
+}

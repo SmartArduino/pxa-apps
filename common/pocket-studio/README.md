@@ -7,11 +7,17 @@
 - 字体通过透明 Canvas 的 sized-text 指令使用 Host 字体，在物理屏幕分辨率渲染；不放大位图字模。文字指令保留顺序遮挡，暂停菜单覆盖旧标签；内容哈希避免重复提交相同文本。
 - `studio::label` 提供居中/左右对齐与定宽裁切；较长的放大数字先降字号。图形只允许在 `game::draw()` 期间绘制。
 - `studio::round`、`disc`、`card`、`button` 在输出分辨率绘制；`picture` 用只读 RGB565 调色板及索引图，绘制时无需解码器、文件服务或堆分配。
+- `studio::round_alpha` 在当前原生帧上混合圆角面板，透明度范围为 0–256，保留裁切与文本遮挡顺序。
+- `studio::round_outline` 绘制连续的圆角细描边，与填充共享圆角几何，内部区域保持透明。
 - 圆角与安全区根据系统 environment 设置。每边至少保留 `ceil(radius × (1 − 1/√2))` 的内缩，避免棋盘和底部按钮被圆角裁切。
 - 暂停菜单入口为逻辑 x240–263/y3–20，语言、继续、重开与保存退出沿用共用运行时。
 
 运行时菜单、字体画布和游戏状态分离；应用仍负责验证存档并选择何时保存。
 系统字体由 Host 提供，未引入新的字体库或系统依赖。未启用宏的其他游戏沿用原绘制路径。
+
+`pocket-play` 应用可通过 `PXA_POCKET_CUSTOM_MENU=1` 实现 `game::draw_menu(bool paused, int row, bool exiting)` 与 `game::menu_hit(int x, int y)`，自定义暂停菜单外观及入口按钮的命中区域。暂停面板沿用共享运行时的位置与四行命中区域，语言、重开和保存退出由运行时处理。
+
+`PXA_POCKET_THEME_TEXT=1` 使用 Host 预加载的系统 Caption 字体，排版可通过 `pocket::sp()` 换算系统字体单位。`PXA_POCKET_FAST_START=1` 让首个图形帧先完成提交，随后发布原生文字画布。
 
 场景源图位于各应用的 `assets/scene.png`，生成提示及来源位于同目录 `scene-source.json`。
 重新编码：

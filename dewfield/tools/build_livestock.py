@@ -204,10 +204,25 @@ def animal(kind, stage, frame):
         oval((hx-1, hy+1, r-2, hy+hh-1), face)
         line([(hx, hy+2), (hx+2, hy+1), (hx+3, hy+2)], face_light)
         # Ears attach at the forehead, and move with the head during feeding.
-        poly([(hx, hy+1), (hx-4, hy-1), (hx-4, hy+2), (hx-1, hy+4)], INK)
-        line([(hx-3, hy+1), (hx-1, hy+2)], PINK_DARK if kind == 4 else DEEP)
-        poly([(r-4, hy+1), (r, hy-1), (r+1, hy+1), (r-2, hy+3)], INK)
-        line([(r-2, hy+1), (r-1, hy)], shade)
+        if kind == 4:
+            # Soft triangular flaps fold forward over the temples. Unlike the
+            # cow's lateral ears they have a broad root and a drooping tip.
+            flap = int(walking and step in (2, 3, 6, 7))
+            poly([(hx-2, hy), (hx+1, hy), (hx+2, hy+2),
+                  (hx, hy+5+flap), (hx-3, hy+3+flap)], INK)
+            poly([(hx-1, hy+1), (hx+1, hy+1), (hx, hy+4+flap),
+                  (hx-2, hy+3)], PINK_DARK)
+            line([(hx-1, hy+1), (hx, hy+1), (hx, hy+2)], PINK_LIGHT)
+            poly([(r-5, hy), (r-2, hy), (r, hy+2),
+                  (r-1, hy+4+flap), (r-4, hy+3)], INK)
+            poly([(r-4, hy+1), (r-2, hy+1), (r-1, hy+2),
+                  (r-2, hy+3+flap)], PINK_DARK)
+            d.point((r-3, hy+1), fill=PINK_LIGHT)
+        else:
+            poly([(hx, hy+1), (hx-4, hy-1), (hx-4, hy+2), (hx-1, hy+4)], INK)
+            line([(hx-3, hy+1), (hx-1, hy+2)], DEEP)
+            poly([(r-4, hy+1), (r, hy-1), (r+1, hy+1), (r-2, hy+3)], INK)
+            line([(r-2, hy+1), (r-1, hy)], shade)
         if kind == 2 and stage:
             line([(hx, hy), (hx-1, hy-3), (hx-2, hy-3)], EDGE)
             d.point((hx-1, hy-2), fill=BEAK)

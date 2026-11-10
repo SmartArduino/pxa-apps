@@ -14,6 +14,30 @@
 using namespace browser;
 int main() {
     {
+        Document d; d.clear("https://images.test/articles/");
+        Parser p(d);
+        p.feed("<img src='data:image/gif;base64,R0lGODlh' data-original='../photo.jpg' alt='lazy'>"
+               "<img data-lazy-src='/lazy.png'><img srcset='/small.jpg 320w, /large.jpg 1600w'>"
+               "<img src='https://images.test/real.png' data-src='https://images.test/not-this.png'>"
+               "<img srcset='javascript:alert(1) 1x'>");
+        p.finish();
+        assert(d.images.size()==4);
+        assert(d.images[0].source=="https://images.test/photo.jpg");
+        assert(d.images[1].source=="https://images.test/lazy.png");
+        assert(d.images[2].source=="https://images.test/small.jpg");
+        assert(d.images[3].source=="https://images.test/real.png");
+        d.clear("https://large.test/");
+        d.append(std::string(max_text,'x'));
+        Layout layout;layout.build(d,64,24);
+        assert(!layout.pieces.empty()&&d.text.capacity()>=max_text);
+        const auto retained=layout.pieces.capacity()*sizeof(Piece)+d.text.capacity();
+        d.clear("https://small.test/",true);layout.clear();
+        assert(layout.pieces.capacity()==0&&d.spans.capacity()==0&&d.images.capacity()==0);
+        assert(d.text.capacity()<=std::string{}.capacity());
+        assert(retained>max_text);
+    }
+
+    {
         using enum ReferrerPolicy;
         const auto page = "https://EXAMPLE.test:443/chapter?key=x#private";
         assert(referrer_policy("origin, unknown, NO-REFERRER") == no_referrer);

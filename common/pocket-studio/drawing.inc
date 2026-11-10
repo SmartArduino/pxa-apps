@@ -80,22 +80,57 @@ void label(int x, int y, int w, const char *s, uint16_t c, int scale, unsigned a
 void label_box(int x, int y, int w, int h, const char *s, uint16_t c) {
     studio_add_box(x, y, w, h, s, c);
 }
-void round(int x, int y, int w, int h, int radius, uint16_t c) {
-    if (!canvas || w <= 0 || h <= 0)
+static int rounded_inset(int row, int top, int bottom, int rx, int ry) {
+    const float dy = row < top + ry ? float(top + ry - row - .5f) / std::max(1, ry) :
+        row >= bottom - ry ? float(row - (bottom - ry) + .5f) / std::max(1, ry) : 0;
+    return dy > 0 ? int(rx * (1 - sqrtf(std::max(0.f, 1 - dy * dy))) + .5f) : 0;
+}
+void round_alpha(int x, int y, int w, int h, int radius, uint16_t c, int opacity) {
+    if (!canvas || w <= 0 || h <= 0 || opacity <= 0)
         return;
+    opacity = std::min(opacity, 256);
     studio_occlude(x, y, w, h);
     const int x0 = studio_x(x), x1 = studio_x(x + w), y0 = studio_y(y), y1 = studio_y(y + h);
     int rx = std::max(1, studio_dx(radius)), ry = std::max(1, studio_dy(radius));
     rx = std::min(rx, (x1 - x0) / 2);
     ry = std::min(ry, (y1 - y0) / 2);
     for (int j = std::max(0, y0); j < std::min(viewport.height, y1); ++j) {
-        float dy = j < y0 + ry    ? float(y0 + ry - j - .5f) / std::max(1, ry)
-                   : j >= y1 - ry ? float(j - (y1 - ry) + .5f) / std::max(1, ry)
-                                  : 0;
-        int inset = dy > 0 ? int(rx * (1 - sqrtf(std::max(0.f, 1 - dy * dy))) + .5f) : 0;
+        const int inset = rounded_inset(j, y0, y1, rx, ry);
         int a = std::max(0, x0 + inset), b = std::min(viewport.width, x1 - inset);
-        if (a < b)
-            std::fill(canvas + j * viewport.width + a, canvas + j * viewport.width + b, c);
+        if (a >= b) continue;
+        uint16_t *row = canvas + j * viewport.width;
+        if (opacity == 256) std::fill(row + a, row + b, c);
+        else for (int i = a; i < b; ++i) row[i] = mix(row[i], c, opacity);
+    }
+}
+void round(int x, int y, int w, int h, int radius, uint16_t c) {
+    round_alpha(x, y, w, h, radius, c, 256);
+}
+void round_outline(int x, int y, int w, int h, int radius, uint16_t c, int opacity) {
+    if (!canvas || w <= 0 || h <= 0 || opacity <= 0) return;
+    opacity = std::min(opacity, 256);
+    const int x0 = studio_x(x), x1 = studio_x(x + w), y0 = studio_y(y), y1 = studio_y(y + h);
+    const int rx = std::min(std::max(1, studio_dx(radius)), (x1 - x0) / 2);
+    const int ry = std::min(std::max(1, studio_dy(radius)), (y1 - y0) / 2);
+    const int stroke_x = std::max(1, studio_dx(1)), stroke_y = std::max(1, studio_dy(1));
+    const int inner_top = y0 + stroke_y, inner_bottom = y1 - stroke_y;
+    const bool has_inner = x1 - x0 > stroke_x * 2 && inner_top < inner_bottom;
+    for (int row = std::max(0, y0); row < std::min(viewport.height, y1); ++row) {
+        const int outer = rounded_inset(row, y0, y1, rx, ry);
+        const int left = std::max(0, x0 + outer), right = std::min(viewport.width, x1 - outer);
+        int inner_left = right, inner_right = right;
+        if (has_inner && row >= inner_top && row < inner_bottom) {
+            const int inner = rounded_inset(row, inner_top, inner_bottom,
+                std::max(0, rx - stroke_x), std::max(0, ry - stroke_y));
+            inner_left = x0 + stroke_x + inner;
+            inner_right = x1 - stroke_x - inner;
+        }
+        // Only the perimeter is painted. Retained text inside remains visible.
+        for (int column = left; column < right; ++column) {
+            if (column >= inner_left && column < inner_right) continue;
+            auto &pixel = canvas[row * viewport.width + column];
+            pixel = opacity == 256 ? c : mix(pixel, c, opacity);
+        }
     }
 }
 void disc(int x, int y, int r, uint16_t c) { round(x - r, y - r, r * 2 + 1, r * 2 + 1, r, c); }

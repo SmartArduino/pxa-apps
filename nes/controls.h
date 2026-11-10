@@ -15,7 +15,7 @@ typedef struct {
     unsigned cached_alpha,cached_pressed;
     nes_control_button_t buttons[NES_CONTROLS_COUNT];
     nes_control_bounds_t paint_bounds[NES_CONTROLS_COUNT];
-    uint8_t mask[NES_DISPLAY_MAX_WIDTH*NES_DISPLAY_MAX_HEIGHT],row_used[NES_DISPLAY_MAX_HEIGHT];
+    uint8_t mask[NES_DISPLAY_MAX_PIXELS],row_used[NES_DISPLAY_MAX_HEIGHT];
     uint16_t palette[64],lut[NES_CONTROL_STYLES][64],black_lut[NES_CONTROL_STYLES];
     nes_display_rect_t safe;
 } nes_controls_t;

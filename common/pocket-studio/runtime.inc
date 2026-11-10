@@ -14,6 +14,7 @@ StudioText studio_texts[112];
 unsigned studio_count;
 uint8_t studio_bytes[12288];
 uint32_t studio_generation, studio_hash, studio_density = 65536;
+uint32_t studio_font_scale = 65536;
 uint8_t studio_initialized = 1;
 #ifdef PXA_POCKET_FILL
 int studio_dx(int x) { return int(int64_t(x) * content_viewport.width / WIDTH); }
@@ -108,6 +109,9 @@ bool studio_present() {
             y = viewport.y + studio_y(t.y) * viewport.host_scale;
         int w = std::max(1, (studio_x(t.x + t.w) - studio_x(t.x)) * viewport.host_scale);
         int font =
+#ifdef PXA_POCKET_THEME_TEXT
+            int((uint64_t(12) * studio_density * studio_font_scale + (UINT64_C(1) << 31)) >> 32);
+#else
             std::clamp(10 * t.scale *
 #ifdef PXA_POCKET_FILL
             content_viewport.physical_height()
@@ -115,6 +119,7 @@ bool studio_present() {
             viewport.physical_height()
 #endif
             / HEIGHT, t.minimum_font, 96);
+#endif
         uint16_t c = t.color;
         uint32_t rgba = (((c >> 11) & 31) * 255 / 31 << 24) | (((c >> 5) & 63) * 255 / 63 << 16) |
                         ((c & 31) * 255 / 31 << 8) | 255;
@@ -130,6 +135,14 @@ bool studio_present() {
                 return false;
             continue;
         }
+        // Reuse the Host's caption face for applications using system typography.
+#ifdef PXA_POCKET_THEME_TEXT
+        if (!pxa_canvas_clip_push(&f, studio_logical(x), studio_logical(y - 2), studio_logical(w),
+                                 studio_logical(font + 8)) ||
+            !pxa_canvas_text_role(&f, studio_logical(x), studio_logical(y - font / 4),
+                studio_logical(w), rgba, PXA_CANVAS_FONT_CAPTION, uint8_t(t.align), t.value, n) ||
+            !pxa_canvas_clip_pop(&f)) return false;
+#else
         // Sized-text (UI 0.6) font size is in physical pixels; positions use dp.
         if (!pxa_canvas_clip_push(&f, studio_logical(x), studio_logical(y - 2), studio_logical(w),
                                   studio_logical(font + 6)) ||
@@ -141,6 +154,7 @@ bool studio_present() {
             !pxa_put_bytes(&f, reinterpret_cast<const uint8_t *>(t.value), n) ||
             !pxa_canvas_clip_pop(&f))
             return false;
+#endif
     }
     uint32_t hash = 2166136261u;
     for (size_t i = 0; i < f.length; ++i)

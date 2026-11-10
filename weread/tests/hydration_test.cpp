@@ -6,6 +6,17 @@
 int main(int argc,char** argv){
  using namespace weread;
  Hydration h;
+ for(auto [literal,json]:{std::pair{".15","0.15"},std::pair{"-.15","-0.15"},std::pair{".5e-2","0.5e-2"},std::pair{"-.5E+2","-0.5E+2"}}){
+  const auto source="window.__NUXT__=(function(a){return {value:a,inlineValue:"+std::string(literal)+"}}("+literal+"));";
+  auto output=h.decode(source);assert(output);
+  assert(Json(*output).get("value").raw()==json&&Json(*output).get("inlineValue").raw()==json);
+  Hydration sliced;auto preparation=sliced.preparation(source);
+  while(!preparation.done())assert(preparation.step(1,1));
+  assert(preparation.result());
+ }
+ for(auto literal:{".","-.",".e1",".1e",".1e+",".1.2",".1+2","..5"}){
+  assert(!h.decode("window.__NUXT__=(function(a){return a}("+std::string(literal)+"));"));
+ }
  auto r=h.decode("window.__NUXT__=(function(a,b){a[0]={title:b};a[2]=1;a[2]=2;return {list:a}}(Array(1),\"safe\"));");assert(r);
  auto list=weread::Json(*r).get("list");unsigned i=0;assert(list.each([&](auto v){if(i==0)assert(v.get("title").string()=="safe");if(i==1)assert(v.raw()=="null");if(i==2)assert(v.number()==2);++i;return true;}));assert(i==3);
  r=h.decode("window.__NUXT__=(function(a){a.x=1;a.y=2;a.x=3;return a}({}));");assert(r&&weread::Json(*r).get("x").number()==3);

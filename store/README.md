@@ -7,6 +7,13 @@ download and installation. Icons load independently of catalog pages; applicatio
 details show a bounded screenshot gallery. Loaded cards stay usable while the
 next page or an image is downloading.
 
+Application details let users switch between compatible AOT and pure WASM packages
+of the same release. AOT remains the recommended default; WASM reduces download
+size but may run slower or use more runtime memory. Explicit format changes
+reinstall the selected package under the same signed identity and preserve private data.
+The format selector stays at the end of the detail content and includes the selected
+download size. After an explicit format change the primary action reads **Install**.
+
 The catalog marks installed apps and available updates. **Installed** lists
 device apps and provides **Check updates**, which queries each installed app's
 detail endpoint rather than relying on the currently loaded, filtered catalog

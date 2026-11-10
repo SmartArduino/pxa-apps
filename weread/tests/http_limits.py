@@ -104,7 +104,7 @@ def main():
                     else:
                         code=-15 if case=='duplicate-data'else -16
                         allowed=(code,-9)if a.bounded_allocation and case=='unknown-body'else(code,)
-                        app.wait(lambda:any(f'WEREAD ERROR code={value} 'in app.logs()for value in allowed),timeout=45)
+                        app.wait(lambda:any(f'WEREAD READING FAILED code={value}'in app.logs()for value in allowed),timeout=45)
                         assert 'WEREAD READER PARSE'not in app.logs()
                         if a.selection and case in ('body-limit','state-limit','duplicate-data'):
                             expected={'body-limit':'limit=3 error=1','state-limit':'limit=2 error=1','duplicate-data':'limit=0 error=2'}[case]

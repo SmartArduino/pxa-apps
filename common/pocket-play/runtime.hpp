@@ -38,6 +38,10 @@ void log(const char *message);
 // via pointer(), so games can combine their captured gesture with held(A).
 bool held(Key key);
 bool portrait_display();
+// Convert display-independent pixels to this canvas's fitted logical units.
+int dp(int value);
+// System typography units, including the Host's font scale.
+int sp(int value);
 void open_menu();
 // Draw-only access. framebuffer() is nullptr outside game::draw().
 void pixel(int x, int y, uint16_t color);
@@ -69,6 +73,11 @@ void set_navigation(bool visible);
 // Elapsed foreground milliseconds, capped at 100. Use bounded work per call.
 void tick(uint32_t elapsed_ms);
 void draw();
+#ifdef PXA_POCKET_CUSTOM_MENU
+// App-defined menu button geometry, with shared pause, language and save/exit handling.
+bool menu_hit(int x, int y);
+void draw_menu(bool paused, int row, bool exiting);
+#endif
 // Return 0 to omit saving. Validate size/version/ranges before changing state.
 size_t serialize(uint8_t *data, size_t capacity);
 void load(const uint8_t *data, size_t size);

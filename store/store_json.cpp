@@ -373,6 +373,8 @@ static void app_reset(store_app_t *app) {
     app->release_sequence = 0;
     app->requires_resources = 0;
     app->resource_size_known = 0;
+    app->package_format = 0;
+    app->available_formats = 0;
     app->permission_count = 0;
     app->service_count = 0;
 }
@@ -604,6 +606,23 @@ static int parse_app(store_json_t *json, store_app_t *app,
                                          sizeof(app->icon_url))) return 0;
             if (text_length(app->icon_url) + 1 == sizeof(app->icon_url))
                 app->icon_url[0] = '\0';
+        } else if (text_equal(key, "package_format")) {
+            char format[16];
+            if (!json_read_string(&it.json, format, sizeof(format))) return 0;
+            app->package_format = text_equal(format, "wasm") ? STORE_FORMAT_WASM :
+                                  text_equal(format, "aot") ? STORE_FORMAT_AOT : STORE_FORMAT_AUTO;
+        } else if (text_equal(key, "available_formats")) {
+            store_json_iterator_t formats;
+            if (!json_array_begin(&it.json, &formats)) return 0;
+            for (;;) {
+                int more_formats; char format[16];
+                if (!json_next(&formats, ']', nullptr, 0, &more_formats)) return 0;
+                if (!more_formats) break;
+                if (!json_read_string(&formats.json, format, sizeof(format))) return 0;
+                if (text_equal(format, "wasm")) app->available_formats |= STORE_FORMAT_WASM;
+                if (text_equal(format, "aot")) app->available_formats |= STORE_FORMAT_AOT;
+            }
+            it.json = formats.json;
         } else if (text_equal(key, "screenshots") && gallery) {
             if (!parse_gallery(&it.json, gallery)) return 0;
         } else if (text_equal(key, "version")) {
