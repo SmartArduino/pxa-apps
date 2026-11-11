@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Xiaozhi fixture for the real PXA simulator (no public AI service required)."""
 import argparse,base64,ctypes,hashlib,json,math,os,pathlib,socket,socketserver,struct,subprocess,threading,time,zlib,tempfile,shutil
-p=argparse.ArgumentParser();p.add_argument('--simulator',required=True);p.add_argument('--package',required=True);p.add_argument('--publisher-key',required=True);p.add_argument('--artifacts',required=True);p.add_argument('--interactive',action='store_true');p.add_argument('--ime-package');p.add_argument('--offline',action='store_true');p.add_argument('--discovery',action='store_true');p.add_argument('--activation',action='store_true');p.add_argument('--emotions',action='store_true');p.add_argument('--drop',action='store_true');p.add_argument('--scenario',choices=['normal','http-error','no-websocket','activation-flow','malformed','handshake-stall','reconnect','settings-cancel','audio-tail','network-flap','large-headers','profile-separation','save-clicks','muted','capture-warmup','text-audio','early-audio','empty-utterance','response-timeout','cancel-wait','idle-toggle','voice-trigger','voice-wait','late-tts'],default='normal');p.add_argument('--scene',choices=['auto','morning','day','evening','night'],default='auto');p.add_argument('--width',type=int,default=320);p.add_argument('--height',type=int,default=240);p.add_argument('--density-dpi',type=int,default=160);args=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('--simulator',required=True);p.add_argument('--package',required=True);p.add_argument('--publisher-key',required=True);p.add_argument('--artifacts',required=True);p.add_argument('--interactive',action='store_true');p.add_argument('--ime-package');p.add_argument('--offline',action='store_true');p.add_argument('--discovery',action='store_true');p.add_argument('--activation',action='store_true');p.add_argument('--emotions',action='store_true');p.add_argument('--drop',action='store_true');p.add_argument('--scenario',choices=['normal','http-error','no-websocket','activation-flow','malformed','handshake-stall','reconnect','settings-cancel','audio-tail','audio-jitter','audio-fallback','network-flap','large-headers','profile-separation','save-clicks','muted','capture-warmup','text-audio','early-audio','empty-utterance','response-timeout','cancel-wait','idle-toggle','voice-trigger','voice-wait','late-tts'],default='normal');p.add_argument('--scene',choices=['auto','morning','day','evening','night'],default='auto');p.add_argument('--width',type=int,default=320);p.add_argument('--height',type=int,default=240);p.add_argument('--density-dpi',type=int,default=160);args=p.parse_args()
 if args.scenario=='large-headers': args.discovery=True
 root=pathlib.Path(args.artifacts).resolve();root.mkdir(parents=True,exist_ok=True);(root/'finish').unlink(missing_ok=True)
 state=root/'state';state.mkdir(exist_ok=True)
@@ -106,7 +106,7 @@ class Handler(socketserver.BaseRequestHandler):
                         if args.emotions and index % 20 == 0:
                             mood = moods[index // 20]
                             send_json(conn, {'type':'llm', 'emotion':mood});seen.append('emotion:'+mood)
-                        frame(conn,2,packet);time.sleep(0 if args.scenario=='audio-tail' else .02)
+                        frame(conn,2,packet);time.sleep((.08 if index%4==3 else 0) if args.scenario=='audio-jitter' else 0 if args.scenario=='audio-tail' else .02)
                     send_json(conn,{'type':'tts','state':'stop'});seen.append('tts.done')
         except (EOFError,OSError):pass
         except Exception as exc:errors.append(repr(exc))
@@ -136,6 +136,8 @@ if args.scenario=='network-flap':
     (root/'network-state').write_text('0');env['PXA_SIM_NETWORK_STATE_FILE']=str(root/'network-state')
 if args.scenario=='capture-warmup':env['PXA_SIM_CAPTURE_START_DELAY_MS']='1200'
 if args.scenario=='muted':env['XIAOZHI_EXPECT_MUTED']='1'
+if args.scenario=='audio-jitter':env['XIAOZHI_EXPECT_CONTINUOUS']='1'
+if args.scenario=='audio-fallback':env['XIAOZHI_NO_BUFFERED']='1'
 if args.scenario in ('voice-trigger','voice-wait'):env['PXA_VT_FIXTURE_FILE']=str(root/'voice-command')
 if args.ime_package: env['PXA_IME_PACKAGE']=str(pathlib.Path(args.ime_package).resolve())
 proc=subprocess.Popen([args.simulator,'--package',args.package,'--publisher-key',str(normalized_key),'--state-root',str(state),'--locale','zh-CN','--width',str(args.width),'--height',str(args.height)]+(['--density-dpi',str(args.density_dpi)] if args.density_dpi!=160 else [])+['--pxadb-control-socket',str(control)],env=env,stdout=log,stderr=subprocess.STDOUT)
@@ -363,12 +365,18 @@ try:
             assert int(audio.group(5))>0
             shot('text-answer.png')
             print('PASS: settings text reply waits for playback initialization and renders all audio',flush=True)
-        elif args.scenario=='audio-tail':
+        elif args.scenario in ('audio-tail','audio-jitter','audio-fallback'):
             wait_for(lambda:'microphone' in seen);recognition_requested.set()
             wait_for(lambda:sum(isinstance(v,dict) and v.get('state')=='start' for v in seen)>=2)
             time.sleep(.1);shot('audio-tail-complete.png')
             assert 'XIAOZHI_AUDIO_HANDOFF' in (root/'simulator.log').read_text(), 'audio-tail requires the Host audio probe'
             print('PASS: complete TTS playback before automatic microphone resume',flush=True)
+            if args.scenario=='audio-fallback':
+                assert 'XIAOZHI_PCM_FALLBACK queue_limit=4' in (root/'simulator.log').read_text()
+                print('PASS: unsupported buffered route falls back to low latency PCM without losing audio',flush=True)
+            if args.scenario=='audio-jitter':
+                assert 'XIAOZHI_CONTINUITY resumed_silence_samples=0' in (root/'simulator.log').read_text()
+                print('PASS: no mid-speech underruns with 80-ms network bursts and 220-ms producer stalls',flush=True)
         elif args.scenario=='settings-cancel':
             wait_for(lambda:'microphone' in seen)
             command('POINTER DOWN 160 120');time.sleep(.85);command('POINTER UP 160 120');time.sleep(.1)

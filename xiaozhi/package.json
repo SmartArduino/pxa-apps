@@ -1,8 +1,8 @@
 {
   "format": "pxa-package-source-0.2",
   "id": "pxa-xiaozhi",
-  "version": "0.4.6",
-  "release_sequence": 19,
+  "version": "0.4.9",
+  "release_sequence": 22,
   "min_sdk": [
     2,
     1
@@ -41,13 +41,14 @@
           "features": [
             "canvas",
             "dynamic-text",
+            "image-sampling",
             "password-input",
             "sized-text",
             "text-input-control"
           ],
           "min_version": [
             0,
-            9
+            11
           ]
         },
         {

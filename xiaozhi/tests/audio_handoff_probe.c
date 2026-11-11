@@ -8,18 +8,41 @@
 #include "pxa/audio_mixer.h"
 static pxa_status_t probe_pcm_write(pxa_audio_mixer_voice_t *, const uint8_t *, size_t);
 static void probe_mixer_flush(pxa_audio_mixer_voice_t *);
+static size_t probe_mixer_render(pxa_audio_mixer_t *, int16_t *, size_t);
+static pxa_status_t probe_buffered(pxa_audio_mixer_voice_t *);
 #define pxa_audio_mixer_write probe_pcm_write
 #define pxa_audio_mixer_flush probe_mixer_flush
+#define pxa_audio_mixer_render probe_mixer_render
+#define pxa_audio_mixer_buffered probe_buffered
 #define PXSYS_PRODUCT_RUNNER_LIBRARY 1
 #include PXA_PRODUCT_RUNNER
 #undef pxa_audio_mixer_write
 #undef pxa_audio_mixer_flush
+#undef pxa_audio_mixer_render
+#undef pxa_audio_mixer_buffered
 #include <assert.h>
 static uint64_t pcm_hash = UINT64_C(14695981039346656037);
 static uint64_t pcm_samples;
+static pxa_status_t probe_buffered(pxa_audio_mixer_voice_t *v) {
+  return getenv("XIAOZHI_NO_BUFFERED") ? PXA_STATUS_UNSUPPORTED : pxa_audio_mixer_buffered(v);
+}
 static unsigned explicit_flushes;
+static uint64_t pending_silence, resumed_silence;
+static int started;
+static size_t probe_mixer_render(pxa_audio_mixer_t *mixer, int16_t *out, size_t count) {
+  uint64_t before=0, after=0;
+  for(unsigned i=0;i<PXA_AUDIO_MIXER_VOICES;++i) before+=mixer->voices[i].state.accepted_samples;
+  size_t extent=pxa_audio_mixer_render(mixer,out,count);
+  for(unsigned i=0;i<PXA_AUDIO_MIXER_VOICES;++i) after+=mixer->voices[i].state.accepted_samples;
+  if(after>before) {
+    if(started) resumed_silence+=pending_silence;
+    pending_silence=count-extent; started=1;
+  } else if(started) pending_silence+=count;
+  return extent;
+}
 static void probe_mixer_flush(pxa_audio_mixer_voice_t *voice) {
-  ++explicit_flushes;
+  /* Closing a rejected, empty buffered route precedes the fallback open. */
+  if(voice->state.submitted_samples) ++explicit_flushes;
   pxa_audio_mixer_flush(voice);
 }
 static pxa_status_t probe_pcm_write(pxa_audio_mixer_voice_t *voice, const uint8_t *pcm, size_t bytes) {
@@ -45,6 +68,15 @@ static void bind_probe(void *context, void (*focus)(void *, bool),
 static void pump_probe(void *context) {
   (void)context;
   product_host_t *host = test.host;
+  if(host && getenv("XIAOZHI_EXPECT_CONTINUOUS") && !test.checked) {
+    static uint64_t last_stall;
+    SDL_LockAudioDevice(host->audio_device);
+    uint64_t accepted=0;
+    for(unsigned i=0;i<PXA_AUDIO_MIXER_VOICES;++i) accepted+=host->audio_mixer.voices[i].state.accepted_samples;
+    SDL_UnlockAudioDevice(host->audio_device);
+    uint64_t now=SDL_GetTicks64();
+    if(accepted>=5120 && now-last_stall>=450) { last_stall=now; SDL_Delay(220); }
+  }
   if (!host || test.checked || host->capture_sequence < 2 || !host->capture)
     return;
   if (getenv("XIAOZHI_EXPECT_MUTED")) {
@@ -70,6 +102,14 @@ static void pump_probe(void *context) {
     assert(state.submitted_samples == state.accepted_samples &&
            "Automatic listening flushed the unplayed TTS tail");
     assert(!state.queued_samples);
+    if(getenv("XIAOZHI_NO_BUFFERED")) {
+      assert(!host->audio_mixer.voices[i].buffered && host->audio_mixer.voices[i].queue_limit==4);
+      fprintf(stderr,"XIAOZHI_PCM_FALLBACK queue_limit=4\n");
+    }
+    if(getenv("XIAOZHI_EXPECT_CONTINUOUS")) {
+      fprintf(stderr,"XIAOZHI_CONTINUITY resumed_silence_samples=%llu buffered=%u queue_limit=%u\n",(unsigned long long)resumed_silence,host->audio_mixer.voices[i].buffered,host->audio_mixer.voices[i].queue_limit);
+      assert(!resumed_silence && "TTS starved between accepted PCM segments");
+    }
     test.checked = 1;
   }
   SDL_UnlockAudioDevice(host->audio_device);

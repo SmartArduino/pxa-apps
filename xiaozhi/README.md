@@ -3,7 +3,7 @@
 可安装的 PXA Guest 应用。协议按 Espressif `esp_xiaozhi`
 `12ba34b0d5db3f6811f80c2de2dd292ddc29ef1b` 的 WebSocket v1 路径移植。
 会话、像素人物、配置、字幕及 Opus 解码运行在应用包内；系统提供通用 TCP/TLS
-Socket、麦克风采集和 PCM 播放。需要包含 **Window 0.4、Net 0.6、Audio 0.15** 的 PXA
+Socket、麦克风采集和 PCM 播放。需要包含 **UI 0.11、Window 0.4、Net 0.6、Audio 0.15** 的 PXA
 系统及对应 C++ SDK，并支持 Assets 2.5、UI `text-input-control` 和系统输入法，旧固件需先更新。
 
 ## 使用
@@ -171,8 +171,23 @@ PXA 系统侧没有引入小智专用 Host 服务；WebSocket 和小智协议均
 覆盖文字回复与提前到达的音频，`empty-utterance`、`response-timeout`、`cancel-wait`
 覆盖空识别、回复超时和取消等待。语音夹具由服务端模拟 VAD 完成，点击屏幕只切换待机或打断。
 
-导入时可用 `python3 tools/prepare_art.py --oxipng /path/to/oxipng` 进一步无损压缩人物 PNG；工具只在开发机运行，导入后会逐字节验证 RGBA 像素。编译对应用和完整 Opus 解码器使用 `-Os`，保留原有音频功能。
+导入时可用 `python3 tools/prepare_art.py --oxipng /path/to/oxipng` 进一步无损压缩人物 PNG；工具只在开发机运行，导入后会逐字节验证 RGBA 像素。应用及 SDK 使用 `-Os`；Opus 定点解码器使用 `-O3`，减少解码耗时。
 
 `late-tts` 验证打断后的迟到 TTS 不会重新开播或中止新一轮录音；
 `audio-tail` 探针还检查正常播完后不会主动清空驱动句尾。
 交互预览可用 `--width`、`--height`、`--density-dpi` 检查不同分辨率与 DPI 的设置页。
+
+
+像素人物和背景通过 UI 0.11 的 `image-sampling` 能力使用最近邻采样，避免缩放时
+出现平滑模糊。语音解码使用固定 480 ms 的应用 PCM 环形缓冲，首批预存 120 ms，
+短句或 200 ms 到期即可提交。可选 Audio 0.16 缓冲播放路由将 PCM 放在系统队列，
+ESPP4-A 以 400 ms 预存或启动期限、480 ms 上限覆盖画面重绘期间的供数间隙。
+不支持该路由的系统回退到原有 PCM 会话；游戏等默认会话继续使用原有低延迟队列。
+自然结束等待队列排空后再开麦，点击打断同时清空应用缓冲与系统队列。
+
+`audio-jitter` 还会组合每 80 ms 一组网络音频包和 220 ms 的生产者停顿，
+由 Host 探针检查音频中途的供数缺口；`tests/speech_buffer_test.cpp` 检查应用缓冲的
+有界容量、部分写入、回绕、启动期限、短句和取消清理。
+
+全屏采用系统临时栏模式：从顶部向下滑可唤出状态栏，从底部向上滑可唤出导航。
+三按键模式可点主页返回桌面；系统手势模式沿用系统导航操作。

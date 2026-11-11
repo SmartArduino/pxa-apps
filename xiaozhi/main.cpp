@@ -3,6 +3,7 @@
 #include "protocol.hpp"
 #include "response_wait.hpp"
 #include "scene_clock.hpp"
+#include "speech_buffer.hpp"
 #include "settings_ui.hpp"
 #include <algorithm>
 #include <cerrno>
@@ -106,7 +107,9 @@ struct App {
   std::array<std::byte, 4097> incoming{};
   std::array<std::byte, 1276> mic_packet{};
   std::array<opus_int16, 1920> pcm{};
-  std::size_t pcm_count = 0, pcm_offset = 0, mic_size = 0;
+  xiaozhi::SpeechBuffer speech;
+  std::size_t mic_size = 0;
+  unsigned decode_max_ms = 0, audio_blocked = 0, speech_high_water = 0;
   unsigned reply_packets = 0, reply_samples = 0, reply_submitted = 0;
   int reply_peak = 0;
   std::uint64_t opened_at = 0, last_received = 0;
@@ -150,7 +153,7 @@ struct App {
     speaking = false;
     accept_audio = false;
     discard_cancelled_reply = false;
-    pcm_count = pcm_offset = 0;
+    speech.reset();
   }
   void fail(std::string message) {
     disconnect();
@@ -514,7 +517,7 @@ struct App {
     }
     // A completed reply may still have frames in the physical device queue.
     // Let capture.open retry until those drain; only abort() discards them.
-    pcm_count = pcm_offset = 0;
+    speech.reset();
     auto opened = co_await context->capture().open(mic_permission);
     if (!opened) {
       busy.set(false);
@@ -575,6 +578,12 @@ struct App {
       status.set("小智正在想…");
     }
   }
+  Task<AudioSession> open_playback() {
+    auto opened = co_await context->audio().open_pcm(play_permission, 16000, 1, true);
+    if (!opened && (opened.error() == Error::unsupported || opened.error() == Error::invalid_argument))
+      co_return co_await context->audio().open_pcm(play_permission, 16000, 1);
+    co_return std::move(opened);
+  }
   Task<void> enable_playback() {
     if (playback || !voice_enabled.get())
       co_return Result<void>{};
@@ -588,7 +597,7 @@ struct App {
       }
       play_permission = std::move(*grant);
     }
-    auto opened = co_await context->audio().open_pcm(play_permission, 16000, 1);
+    auto opened = co_await open_playback();
     if (!opened)
       co_return std::unexpected(opened.error());
     playback.emplace(std::move(*opened));
@@ -609,7 +618,7 @@ struct App {
     speaking = false;
     accept_audio = false;
     discard_cancelled_reply = true;
-    pcm_count = pcm_offset = 0;
+    speech.reset();
     if (playback) {
       auto flushed = co_await playback->flush();
       if (!flushed)
@@ -697,6 +706,8 @@ struct App {
         stop_recording();
         reply_packets = reply_samples = reply_submitted = 0;
         reply_peak = 0;
+        decode_max_ms = audio_blocked = speech_high_water = 0;
+        speech.reset();
         waiting = false;
         response_wait.reset();
         speaking = true;
@@ -728,11 +739,11 @@ struct App {
       fail("服务端返回错误，请检查连接配置");
   }
   void finish_reply() {
-    char diagnostic[160];
+    char diagnostic[240];
     std::snprintf(diagnostic, sizeof(diagnostic),
-                  "Xiaozhi audio: playback=%u packets=%u decoded=%u submitted=%u peak=%d",
+                  "Xiaozhi audio: playback=%u packets=%u decoded=%u submitted=%u peak=%d decode_max_ms=%u blocked=%u reservoir_max=%u",
                   unsigned(bool(playback)), reply_packets, reply_samples,
-                  reply_submitted, reply_peak);
+                  reply_submitted, reply_peak, decode_max_ms, audio_blocked, speech_high_water);
     (void)context->log().write(LogLevel::info, diagnostic);
     tts_finished = false;
     drain_deadline = 0;
@@ -748,7 +759,7 @@ struct App {
     drain_pending = false;
     if (!state)
       co_return std::unexpected(state.error());
-    if (tts_finished && pcm_offset == pcm_count && state->queued_samples == 0)
+    if (tts_finished && speech.empty() && state->queued_samples == 0)
       finish_reply();
     co_return Result<void>{};
   }
@@ -803,27 +814,33 @@ struct App {
         return;
       }
     }
-    // Drain pending PCM before consuming the next compressed packet.
+    // Keep receiving while the Host FIFO is full, within a fixed PCM budget.
+    // Prefill once; preserve every sample across partial writes and would-block.
+    bool output_blocked = false;
     for (unsigned work = 0; work < 8 && socket; work++) {
-      if (pcm_offset < pcm_count && playback) {
-        auto count = std::min<std::size_t>(320, pcm_count - pcm_offset);
-        auto n = playback->write_pcm(
-            std::as_bytes(std::span{pcm}.subspan(pcm_offset, count)));
+      bool wrote = false;
+      if (!output_blocked && playback && speech.ready(now_ms(), tts_finished)) {
+        auto chunk = speech.front();
+        auto n = playback->write_pcm(std::as_bytes(chunk));
         if (!n) {
-          if (n.error() != Error::would_block)
-            fail("语音播放失败");
-          return;
+          if (n.error() != Error::would_block) { fail("语音播放失败"); return; }
+          output_blocked = true; ++audio_blocked;
+        } else {
+          const unsigned samples = *n / 2;
+          speech.consume(samples); reply_submitted += samples;
+          wrote = samples != 0;
+          if (!wrote) output_blocked = true;
         }
-        pcm_offset += *n / 2;
-        reply_submitted += unsigned(*n / 2);
-        if (pcm_offset < pcm_count)
-          continue;
       }
-      pcm_count = pcm_offset = 0;
+      // Reserve the largest legal decoded packet before taking it from Net.
+      if (speech.available() < pcm.size()) {
+        if (!wrote) return;
+        continue;
+      }
       auto n = socket.read(incoming);
       if (!n) {
-        if (n.error() != Error::would_block)
-          fail("连接已断开，请重新连接");
+        if (n.error() != Error::would_block) { fail("连接已断开，请重新连接"); return; }
+        if (wrote && !output_blocked && !speech.empty()) continue;
         return;
       }
       if (!*n) {
@@ -834,6 +851,7 @@ struct App {
       if (incoming[0] == std::byte{1})
         message({reinterpret_cast<const char *>(incoming.data() + 1), *n - 1});
       else if (ready && accept_audio && playback && decoder && *n > 1) {
+        const auto decode_began = now_ms();
         int decoded = opus_decode(
             decoder,
             reinterpret_cast<const unsigned char *>(incoming.data() + 1),
@@ -842,10 +860,14 @@ struct App {
           fail("收到无效的 Opus 音频");
           return;
         }
-        pcm_count = std::size_t(decoded);
+        decode_max_ms = std::max(decode_max_ms, unsigned(now_ms() - decode_began));
+        if (!speech.push(std::span{pcm}.first(unsigned(decoded)), now_ms())) {
+          fail("语音缓冲异常"); return;
+        }
+        speech_high_water = std::max(speech_high_water, speech.size());
         ++reply_packets;
         reply_samples += unsigned(decoded);
-        for (std::size_t i = 0; i < pcm_count; ++i)
+        for (std::size_t i = 0; i < unsigned(decoded); ++i)
           reply_peak = std::max(reply_peak, std::abs(int(pcm[i])));
       }
       if (prepare_audio)
@@ -1558,8 +1580,8 @@ struct App {
       return initialized;
     auto full =
         ctx.window().configure({.edge_to_edge = true,
-                                .status_bar_mode = WindowBarMode::hidden,
-                                .navigation_bar_mode = WindowBarMode::hidden});
+                                .status_bar_mode = WindowBarMode::transient,
+                                .navigation_bar_mode = WindowBarMode::transient});
     if (!full)
       return full;
     auto clock = ctx.clock().set_period(20);

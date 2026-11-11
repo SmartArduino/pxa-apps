@@ -180,7 +180,8 @@ struct Companion {
     commands.rect(0, 0, w, h, 0x2b253bff);
     const pxa::ui::CanvasRegion full{0, 0, w, h};
     if (background)
-      commands.image(full, *background, pxa::ui::ImageFit::cover);
+      commands.image(full, *background, pxa::ui::ImageFit::cover, 255,
+                     pxa::ui::ImageSampling::nearest);
     const float scale = std::max(w / 320.f, h / 240.f);
     const float x = (w - 320 * scale) / 2, y = (h - 240 * scale) / 2;
     auto region = [&](int left, int top, int width, int height) {
@@ -190,7 +191,7 @@ struct Companion {
     };
     if (character && visible)
       commands.image(region(72, 20 + breathe, 176, 220), *character,
-                     pxa::ui::ImageFit::stretch);
+                     pxa::ui::ImageFit::stretch, 255, pxa::ui::ImageSampling::nearest);
     int margin = std::max(10, w / 32),
         font = std::clamp(std::min(w / 21, h / 15), 13, 22);
     if (!visible) {

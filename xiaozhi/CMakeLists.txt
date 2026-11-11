@@ -24,4 +24,4 @@ target_link_options(pxa_main PRIVATE -Wl,-z,stack-size=98304)
 # Prefer compact guest code; codec features and fixed-point settings stay the same.
 target_compile_options(pxa_main PRIVATE -Os)
 target_compile_options(pxa_guest_cpp PRIVATE -Os)
-target_compile_options(opus PRIVATE -Os)
+target_compile_options(opus PRIVATE -O3)
