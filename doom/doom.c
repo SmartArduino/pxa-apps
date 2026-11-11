@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // PureDOOM backend for the shared PXA Core 2.1 game runtime.
 #include "port.h"
+#include "pxa_window.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -146,6 +147,7 @@ void port_game_stats(void) {
         gamestate,menuactive,gametic,gamemap,p->health,p->mo?p->mo->x>>16:0,p->mo?p->mo->y>>16:0,mb_used);
 }
 void port_game_main(void) {
+    (void)pxa_window_set_orientation(PXA_ORIENTATION_LANDSCAPE);
     memset(held,0,sizeof(held));
     for(unsigned i=0;i<sizeof(wad_names)/sizeof(*wad_names);++i) {
         char path[96];snprintf(path,sizeof(path),"/data/%s",wad_names[i]);FILE *f=fopen(path,"rb");

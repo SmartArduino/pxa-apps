@@ -1,5 +1,10 @@
 # DOOM for PXA
 
+启动时通过 Window 0.5 请求横屏；系统按最大整数倍保持 4:3 并居中放大，
+完整保留游戏画面和 HUD。退出或回到桌面时恢复系统方向。方屏保持原方向，
+不支持旋转的设备继续按原生方向显示。
+
+
 基于 [Daivuk/PureDOOM](https://github.com/Daivuk/PureDOOM)，固定提交 `355cfbd16fac119718879239336ee2ea408886bd`。使用本仓库 `../common/recrof/` 的 Core 2.1 main-loop、文件系统、触控/控制器、Surface 和 PCM 运行层。
 
 ## 构建

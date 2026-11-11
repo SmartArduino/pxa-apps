@@ -1,4 +1,5 @@
 #include "port.h"
+#include "pxa_window.h"
 #include "pointer_motion.h"
 #include "audio_convert.h"
 #include "vflash.h"
@@ -332,6 +333,7 @@ void port_game_audio(void) {
       AUDIO_BUFFER_LENGTH-1,played,end,11025);
 }
 void port_game_main(void) {
+  (void)pxa_window_set_orientation(PXA_ORIENTATION_LANDSCAPE);
 #ifdef PXA_QUAKE_RENDER_PROBE
   probe_poll_mode();
 #endif

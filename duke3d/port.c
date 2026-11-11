@@ -11,6 +11,7 @@
 #include "port/keyboard.h"
 #include "vflash.h"
 #include "keymap.h"
+#include "pxa_window.h"
 #include <string.h>
 static displayFrame_t frame;
 static uint8_t scq[256], downq[256];
@@ -68,8 +69,10 @@ void getAnalogInput(int32_t *a, int32_t *b, int32_t *c, int32_t *d) {
       g_iTickRate;
   port_sample_controller(elapsed_us, &pad_x, &pad_y);
   const port_pointer_delta_t touch = port_pointer_sample(&pointer_motion, elapsed_us);
-  mx += touch.x * 3;
-  my += touch.y * 3;
+  // Touch uses relative 320x240 game coordinates. Keep its gain separate from
+  // the controller, including after the Host enlarges the landscape surface.
+  mx += touch.x * 12;
+  my += touch.y * 12;
   const int touch_x = (int)mx, touch_y = (int)my;
   *a = *b = 0;
   *c = touch_x + pad_x * 3;
@@ -198,6 +201,7 @@ void __wrap_sampletimer(void) {
 }
 int dn3dmain(int argc, char **argv);
 void port_game_main(void) {
+  (void)pxa_window_set_orientation(PXA_ORIENTATION_LANDSCAPE);
   initGraphics();
   extMemInit();
   char *argv[] = {"duke3d", NULL};

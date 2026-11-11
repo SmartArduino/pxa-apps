@@ -47,6 +47,9 @@ static uint8_t pending_action_taps;
 static const uint8_t action_tap_codes[]={sc_Space,sc_P,sc_O};
 static float mx,my;
 static port_pointer_motion_t pointer_motion;
+int g_iTickRate=120,g_iTicksPerFrame=26;
+static int pad_dx,pad_dy;
+static void port_sample_controller(uint32_t dt,int *x,int *y){assert(dt>0);*x=pad_dx;*y=pad_dy;}
 #define MODE_GAME 4
 #define MODE_MENU 1
 #define MODE_TYPE 16
@@ -61,7 +64,7 @@ static void port_poll_input(void){if(pending_fire){pending_fire=0;port_game_key(
 for name in ['inputSetMenuMode', 'inputIsMenuMode', 'inputPostKeyEvent',
              'post_action_tap', 'finish_action_sample',
              'inputBeginKeyUpdate', 'inputGetKeyEvent', 'port_game_key',
-             'port_game_reset_motion']:
+             'port_game_reset_motion', 'port_game_motion', 'getAnalogInput']:
     source += function(port, name) + '\n'
 handler = function(keyboard, 'keyhandler')
 handler = handler.split('#elif ESP_PLATFORM\n', 1)[1].split('#else\n', 1)[0]
@@ -154,7 +157,22 @@ int main(void){
   ps[0].gm=MODE_MENU;keyhandler();buttons(0,1);keyhandler();no_actions();
   buttons(PXA_CONTROLLER_SELECT,1);keyhandler();assert(KB_KeyPressed(sc_Enter));
   buttons(0,1);keyhandler();assert(!KB_KeyPressed(sc_Enter));
-  puts("Duke: simultaneous actions, taps, weapon chords, release order, cancellation and menus pass");
+  /* Exercise the production analog adapter. Touch keeps its total gain across
+   * different fixed engine steps, independently of controller speed. */
+  const int rates[]={15,26,60};
+  for(unsigned rate=0;rate<sizeof(rates)/sizeof(*rates);++rate){
+    reset(0);g_iTicksPerFrame=rates[rate];pad_dx=pad_dy=0;
+    port_game_motion(16,-8);int total_x=0,total_y=0;
+    for(int i=0;i<120;++i){int a,b,c,d;getAnalogInput(&a,&b,&c,&d);assert(!a&&!b);total_x+=c;total_y+=d;}
+    assert(total_x>=191 && total_x<=192 && total_y<=-95 && total_y>=-96);
+  }
+  reset(0);pad_dx=7;pad_dy=-3;
+  int a,b,c,d;getAnalogInput(&a,&b,&c,&d);assert(!a&&!b && c==21 && d==-9);
+  pad_dx=pad_dy=0;port_game_motion(120,-80);port_game_reset_motion();
+  getAnalogInput(&a,&b,&c,&d);assert(!a&&!b&&!c&&!d);
+  inputSetMenuMode(true);port_game_motion(120,90);inputSetMenuMode(false);
+  getAnalogInput(&a,&b,&c,&d);assert(!a&&!b&&!c&&!d);
+  puts("Duke: actions, weapon chords, touch gain across engine steps, unchanged controller speed and cancellation pass");
 }
 '''
 (out / 'controls.c').write_text(source)
