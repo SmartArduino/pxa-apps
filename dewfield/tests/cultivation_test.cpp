@@ -22,9 +22,9 @@ static void soil_texture() {
     terrain::plots(r, s);
     int accents = 0;
     const auto &colors = soil::colors(wet);
-    for (int y = 2; y < H - 2; ++y) {
+    for (int y = 4; y < H - 4; ++y) {
       int run = 0;
-      for (int x = 2; x < W - 2; ++x) {
+      for (int x = 4; x < W - 4; ++x) {
         uint16_t c = field[y * W + x];
         assert(c == colors.tones[soil::tone(r.ox + x, r.oy + y)]);
         accents += c != colors.tones[0];

@@ -1,0 +1,28 @@
+{
+  "tool": "built-in imagegen",
+  "assets": [
+    {
+      "role": "core furniture",
+      "source": "art/reference/furniture-v1.png",
+      "prompt_file": "art/reference/furniture-v1.json"
+    },
+    {
+      "role": "shop and outdoor furniture",
+      "source": "art/reference/furniture-details-v1.png",
+      "prompt_file": "art/reference/furniture-details-v1.json"
+    },
+    {
+      "role": "side and back views",
+      "source": "art/reference/furniture-directions-v1.png",
+      "prompt_file": "art/reference/furniture-directions-v1.json"
+    },
+    {
+      "role": "home room layout",
+      "source": "art/reference/home-rooms-v1.png",
+      "prompt_file": "art/reference/home-rooms-v1.json"
+    }
+  ],
+  "compiler": "tools/build_furniture.py",
+  "native_views": 27,
+  "base_furniture_types": 18
+}

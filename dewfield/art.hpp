@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 #include "core.hpp"
+#include "settlement.hpp"
+#include "room_walls.hpp"
 #include "palette.hpp"
 #include "soil.hpp"
 #include "sprites.hpp"
+#include "female_sprites.hpp"
+#include "building_sprites.hpp"
+#include "paving_sprites.hpp"
+#include "furniture_sprites.hpp"
 #include "animal_sprites.hpp"
 #include "mine_sprites.hpp"
 #include "mines.hpp"
@@ -24,6 +30,12 @@ struct Raster {
   uint16_t *p;
   int w, h, ox = 0, oy = 0;
   const uint16_t *tint=nullptr;
+  // Scene shadows reference the already lit ground cache. Reusing that source
+  // makes overlapping shadows a darkest-value union, without a mask buffer.
+  const uint16_t *shadow_ground=nullptr;
+  const uint8_t *shadow_materials=nullptr;
+  int shadow_width=0,shadow_height=0,shadow_limit=3;
+  bool shadow_diffuse=false;
   void rect(int x, int y, int ww, int hh, uint16_t c) {
     if(tint)c=tint[c];
     x -= ox;
@@ -124,8 +136,40 @@ inline void shadow_strip(Raster &r, int x, int y, int width, int alpha) {
     return;
   int left = std::max(0, x), right = std::min(r.w, x + width);
   auto *row = r.p + y * r.w;
+  if(r.shadow_ground) {
+    int gy=y+r.oy;if(gy<0||gy>=r.shadow_height)return;
+    left=std::max(left,-r.ox);right=std::min(right,r.shadow_width-r.ox);
+    auto color=r.tint?r.tint[ShadowTint]:ShadowTint;
+    alpha=std::min(alpha,r.shadow_limit);
+    for(int xx=left;xx<right;++xx) {
+      unsigned at=gy*r.shadow_width+xx+r.ox;
+      // Water keeps its own animated reflections, never dry-land blobs.
+      if(r.shadow_materials&&((r.shadow_materials[at/4]>>((at&3)*2))&3)==3)continue;
+      auto c=blend(r.shadow_ground[at],color,alpha);
+      row[xx]=std::min(row[xx],c);
+    }
+    return;
+  }
   for (int xx = left; xx < right; ++xx)
     row[xx] = blend(row[xx], ShadowTint, alpha);
+}
+// Shallow stepped penumbra, anchored at the soles/foundation. The tiny eastward
+// shift follows the existing upper-left sprite lighting; no detached ellipse.
+inline void soft_ground_shadow(Raster&r,int x,int y,int width,int rows) {
+  for(int yy=0;yy<rows;++yy) {
+    int edge=std::min(yy,rows-1-yy),cut=edge==0?width/4:edge==1?width/10:0;
+    shadow_strip(r,x-width/2+cut+yy/2,y-1+yy,width-cut*2,1);
+    if(!r.shadow_diffuse&&width>=13&&rows>=5&&yy>=2&&yy<rows-2)
+      shadow_strip(r,x-width/3+yy/2,y-1+yy,width*2/3,2);
+  }
+}
+inline void foundation_shadow(Raster&r,const sprites::Sprite&s,int x,int y) {
+  if(!s.shadow)return;
+  for(unsigned i=0;i<s.shadow->count;++i) {
+    const auto&p=s.shadow->spans[i];if(p.alpha<2)continue;
+    for(int shift=1;shift<=5;++shift)
+      shadow_strip(r,x-s.anchor_x+p.x+shift,y-s.anchor_y+p.y+shift/2,p.count,1);
+  }
 }
 inline void shadow_profile(Raster &r, const sprites::Shadow &profile, int x,
                            int y) {
@@ -225,12 +269,12 @@ inline void weed(Raster &r, int x, int y) {
   grounded(r, sprites::grass, x, y);
 }
 inline void chest(Raster &r) {
-  int x = 8 * 16 + 8, y = 9 * 16 + 12;
+  int x = farm::ShippingX * 16 + 8, y = farm::ShippingY * 16 + 12;
   contact_shadow(r, sprites::chest, x, y);
   grounded(r, sprites::chest, x, y);
 }
 inline void well(Raster &r) {
-  int x = 7 * 16 + 8, y = 8 * 16 + 12;
+  int x = farm::WellX * 16 + 8, y = farm::WellY * 16 + 12;
   contact_shadow(r, sprites::well, x, y);
   grounded(r, sprites::well, x, y);
 }
@@ -429,15 +473,36 @@ inline const sprites::Sprite &person_sprite(int dir, int frame,
            : frame ? walking[dir & 3][(frame - 1) & 3]
                    : standing[dir & 3]);
 }
+// Native furniture spans share the scene's lighting and integer pixel grid.
+// The Canvas overload is also used by the TV icon in the forecast dialog.
+inline void furniture(Raster&r,const furniture_sprites::Image&image,int x,int y,int style=0) {
+  const auto&s=image.shape;int left=x-s.anchor_x-r.ox,top=y-s.anchor_y-r.oy;
+  const auto*palette=image.palette+16*std::clamp(style,0,int(image.palettes)-1);
+  for(unsigned i=0;i<s.count;++i){const auto&span=s.spans[i];int yy=top+span.y;if(yy<0||yy>=r.h)continue;
+    int begin=std::max(0,left+span.x),end=std::min(r.w,left+span.x+span.count);
+    unsigned at=span.offset+begin-left-span.x;
+    for(int xx=begin;xx<end;++xx,++at){auto c=palette[(image.indices[at/2]>>((at&1)*4))&15];r.p[yy*r.w+xx]=r.tint?r.tint[c]:c;}
+  }
+}
+template<class Canvas>inline void furniture(Canvas&r,const furniture_sprites::Image&image,int x,int y,int style=0) {
+  const auto&s=image.shape;const auto*palette=image.palette+16*std::clamp(style,0,int(image.palettes)-1);
+  for(unsigned i=0;i<s.count;++i){const auto&span=s.spans[i];unsigned at=span.offset,end=at+span.count;
+    for(unsigned start=at;start<end;){unsigned color=(image.indices[start/2]>>((start&1)*4))&15,finish=start+1;
+      while(finish<end&&((image.indices[finish/2]>>((finish&1)*4))&15)==color)++finish;
+      r.rect(x-s.anchor_x+span.x+int(start-at),y-s.anchor_y+span.y,finish-start,1,palette[color]);start=finish;
+    }
+  }
+}
 #include "world_art.hpp"
 #include "village_art.hpp"
+#include "valley_art.hpp"
 #include "gait.hpp"
 #include "livestock_art.hpp"
 #include "mine_art.hpp"
 inline void person_shadow(Raster &r, int x, int y, int dir, int frame,
                           bool npc = false) {
   if(npc)gait::shadow(r,x,y,dir,frame,&villager_rig(3,dir));
-  else if (frame)
+  else if (frame||gait::feminine)
     gait::shadow(r, x, y, dir, frame);
   else
     contact_shadow(r, person_sprite(dir, 0, npc), x, y);
@@ -454,11 +519,12 @@ inline void carry_item(Raster&r,int x,int y,int item,int selected) {
   else if(item>=16 && item<=18) {
     const sprites::Sprite *items[]={&sprites::fish,&sprites::logs,&sprites::stones};
     const auto &s=*items[item-16];sprite(r,s,x-s.w/2,y-30-s.h);
-  } else if (item >= 19 && item <= 45) food(r,x,y-31,item);
+  } else if (item >= 19 && item <= 47) food(r,x,y-31,item);
 }
 inline void person(Raster &r, int x, int y, int dir, int frame,
                    bool npc = false, int swing = 0, int tool = 0,
-                   bool draw_shadow = true,int item = 0,int grade = 0,int selected = 0,bool fishing = false,tool_anim::Target target={}) {
+                   bool draw_shadow = true,int item = 0,int grade = 0,int selected = 0,bool fishing = false,tool_anim::Target target={},bool feminine=false) {
+  gait::AppearanceGuard appearance(feminine);
   if(draw_shadow) person_shadow(r,x,y,dir,frame,npc);
   if(npc) {gait::draw(r,x,y,dir,frame,false,&villager_rig(3,dir));return;}
   if(swing) tool_anim::use(r,x,y,dir,frame,tool,swing,grade,fishing,target);
@@ -468,7 +534,7 @@ inline void person(Raster &r, int x, int y, int dir, int frame,
     carry_item(r,x,y,item,selected);
   } else if(item && item!=4) {
     tool_anim::use(r,x,y,dir,frame,item-1,0,grade,fishing);
-  } else if(frame) gait::draw(r,x,y,dir,frame);
+  } else if(frame||feminine) gait::draw(r,x,y,dir,frame);
   else grounded(r,person_sprite(dir,0),x,y);
 }
 inline void fence_shadow(Raster &r, int x, int y, int length) {

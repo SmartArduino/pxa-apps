@@ -77,7 +77,7 @@ struct Room {
   }
   void update_visual(Pose p){
     if(!state)return;p.x=state->px;p.y=state->py;p.region=state->region;p.depth=state->mine_depth;
-    p.tool=state->tool;p.item=state->active_slot<farm::InventorySize?state->slots[state->active_slot]:0;
+    p.appearance=state->appearance;p.tool=state->tool;p.item=state->active_slot<farm::InventorySize?state->slots[state->active_slot]:0;
     p.seed=state->selected;p.grade=uint8_t(farm::tool_grade(*state,p.tool));p.active=active();
     farmers[my_id].pose=p;
     if(mode==Mode::Hosting){farmers[0].personal.capture(*state);put_floor(*state);}
@@ -111,7 +111,7 @@ struct Room {
     bool walkable=farm::walkable(*state,p.x/16,p.y/16);
     host.install(*state);get_floor(*state);
     if(!walkable)return false;
-    a.x=p.x;a.y=p.y;a.tool=p.tool;a.seed=p.seed;
+    a.appearance=p.appearance;a.x=p.x;a.y=p.y;a.tool=p.tool;a.seed=p.seed;
     // Selected item is a reference to the shared inventory, never a quantity.
     if(p.item&&farm::item_count(*state,p.item)==0)return false;
     a.slot=255;
@@ -154,7 +154,7 @@ struct Room {
     auto &f=farmers[id].fishing;auto *p=bytes+12+MaxPlayers*PoseBytes+n;
     p[0]=uint8_t(f.phase);p[1]=uint8_t(f.species+1);p[2]=uint8_t(f.length);p[3]=uint8_t(f.attempts);
     put16(p+4,f.bite_at);put16(p+6,f.center);put16(p+8,f.radius);put16(p+10,f.cycle_ms);put16(p+12,f.elapsed);
-    p[14]=uint8_t(f.count);p[15]=uint8_t(f.perfect)|(uint8_t(f.discovered)<<1)|(uint8_t(f.record)<<2);
+    p[14]=uint8_t(f.count);p[15]=uint8_t(f.perfect)|(uint8_t(f.discovered)<<1)|(uint8_t(f.record)<<2)|(uint8_t(f.junk)<<3)|(uint8_t(f.no_bait)<<4);
     unsigned size=unsigned(12+MaxPlayers*PoseBytes+n+16);uint32_t hash=2166136261u;
     for(unsigned i=0;i<size;++i)hash=(hash^bytes[i])*16777619u;
     auto &peer=farmers[id];
@@ -168,7 +168,7 @@ struct Room {
       if(id==0||id>=MaxPlayers)return false;
       auto &f=farmers[id];
       if(type==Message::Hello){
-        if(size!=4||get32(bytes)!=1||f.pose.active)return false;
+        if(size!=4||get32(bytes)!=ProtocolVersion||f.pose.active)return false;
         f=Farmer{};f.personal.capture(*state);
         static constexpr farm::Point spawn[]={{13,14},{15,14},{14,15}};
         auto point=spawn[id-1];f.personal.region=0;f.personal.depth=0;
@@ -210,7 +210,9 @@ struct Room {
     farm::State candidate;
     if(!farm::decode(candidate,bytes+base,farm::SaveBytes))return false;
     auto *p=bytes+base+farm::SaveBytes;
-    if(p[0]>unsigned(farm::FishingSession::Phase::Escaped)||p[1]>farm::FishSpeciesCount||p[3]>2||get16(p+12)>12000)return false;
+    if(p[0]>unsigned(farm::FishingSession::Phase::Escaped)||p[1]>farm::FishSpeciesCount||p[3]>2||get16(p+12)>12000||
+       get16(p+6)>1000||get16(p+8)>500||get16(p+10)<1000||get16(p+10)>5000||p[14]>2||p[15]>31||
+       ((p[15]&8)&&(p[1]||p[0]==unsigned(farm::FishingSession::Phase::Reeling))))return false;
     while(count&&pending[first].command.sequence<=received_ack){first=(first+1)%8;--count;}
     bool new_ack=received_ack>ack;last_heartbeat=now;ack=received_ack;
     if(count)return true;
@@ -218,6 +220,7 @@ struct Room {
     bool first_join=mode==Mode::Joining;
     bool warp=first_join||state->region!=candidate.region||state->mine_depth!=candidate.mine_depth||state->day!=candidate.day;
     *state=candidate;my_id=assigned;
+    state->appearance=local.appearance;
     // Preserve ongoing local movement and the private quickbar. Authoritative
     // energy/health/water and shared quantities still come from the host.
     if(!warp){state->px=local.x;state->py=local.y;}
@@ -226,7 +229,7 @@ struct Room {
     if(!first_join){std::memcpy(state->slots,local.slots,sizeof local.slots);state->active_slot=local.slot;state->tool=local.tool;state->selected=local.seed;farm::sync_inventory(*state);}
     auto &f=farmers[my_id].fishing;f.phase=farm::FishingSession::Phase(p[0]);f.species=int(p[1])-1;f.length=p[2];f.attempts=p[3];
     f.bite_at=get16(p+4);f.center=get16(p+6);f.radius=get16(p+8);f.cycle_ms=get16(p+10);f.elapsed=get16(p+12);f.count=p[14];
-    f.perfect=p[15]&1;f.discovered=p[15]&2;f.record=p[15]&4;
+    f.perfect=p[15]&1;f.discovered=p[15]&2;f.record=p[15]&4;f.junk=p[15]&8;f.no_bait=p[15]&16;
     if(new_ack)fish_changed=true;
     farmers[my_id].personal.capture(*state);farmers[my_id].pose.active=true;
     mode=Mode::Guest;ready=true;changed=true;teleported|=warp;

@@ -26,7 +26,7 @@ int main() {
   s.tool = uint8_t(Tool::Hand);
   assert(act(s, 10, 12) == Result::Harvested);
   assert(s.produce[0] == 1 && s.harvested == 1);
-  stand(s,8,10);equip_item(s,12);assert(ship(s) == 16);
+  stand(s,ShippingX,ShippingY+1);equip_item(s,12);assert(ship(s) == 16);
   assert(s.produce[0] == 0 && s.gold == 100 && s.shipping == 16);
   assert(sleep(s) == 16);
   assert(s.gold == 116 && s.shipping == 0 && s.day == 2);
@@ -70,8 +70,9 @@ int main() {
   for (int hit=1;hit<obstacle_hp(0);++hit) assert(act(s,10,9)==Result::Struck);
   assert(act(s, 10, 9) == Result::Cleared);
   assert(s.wood == 4);
+  assert(act(s, 10, 9) == Result::Cleared);
+  assert(s.wood == 5);
   assert(act(s, 10, 9) != Result::Cleared);
-  assert(s.wood == 4);
   assert(act(s, 25, 7) == Result::Far);
   s.energy = 0;s.overwork=10;
   s.tool = uint8_t(Tool::Hoe);
@@ -97,8 +98,8 @@ int main() {
   assert(quest(s) == 0 && s.friendship == 3 && s.fish == 0);
   // Navigate around obstacles to every important facility using actual BFS.
   for (auto target :
-       {Obstacle{6, 7, 0}, Obstacle{25, 7, 0}, Obstacle{8, 9, 0},
-        Obstacle{7, 8, 0}, Obstacle{24, 17, 0}, Obstacle{21, 8, 0}}) {
+       {Obstacle{6, 7, 0}, Obstacle{25, 7, 0}, Obstacle{ShippingX, ShippingY, 0},
+        Obstacle{WellX, WellY, 0}, Obstacle{24, 17, 0}, Obstacle{21, 8, 0}}) {
     stand(s, 14, 17);
     int steps = 0;
     while (!near(s, target.x, target.y)) {

@@ -1,0 +1,129 @@
+{
+  "source": "home-rooms-v1.png",
+  "source_sha256": "3d7c4f0a1d2802b509e9c3b29a3105a761b7dfced2459f5d91e2cc3e56b23e7f",
+  "compiler": "tools/build_room_walls.py",
+  "sampling": "nearest; 15 opaque colors plus transparency per material",
+  "slices": {
+    "BeamH": {
+      "source_box": [
+        65,
+        28,
+        329,
+        61
+      ],
+      "native_size": [
+        64,
+        8
+      ]
+    },
+    "BeamV": {
+      "source_box": [
+        549,
+        65,
+        585,
+        321
+      ],
+      "native_size": [
+        8,
+        64
+      ]
+    },
+    "Post": {
+      "source_box": [
+        546,
+        24,
+        587,
+        68
+      ],
+      "native_size": [
+        12,
+        12
+      ]
+    },
+    "Collar": {
+      "source_box": [
+        549,
+        343,
+        585,
+        375
+      ],
+      "native_size": [
+        10,
+        8
+      ]
+    },
+    "Jamb": {
+      "source_box": [
+        585,
+        535,
+        612,
+        633
+      ],
+      "native_size": [
+        8,
+        28
+      ]
+    },
+    "Plaster": {
+      "source_box": [
+        73,
+        69,
+        229,
+        115
+      ],
+      "native_size": [
+        40,
+        12
+      ]
+    },
+    "Skirting": {
+      "source_box": [
+        801,
+        608,
+        1065,
+        633
+      ],
+      "native_size": [
+        64,
+        6
+      ]
+    },
+    "Window": {
+      "source_box": [
+        239,
+        68,
+        376,
+        160
+      ],
+      "native_size": [
+        34,
+        23
+      ]
+    },
+    "Door": {
+      "source_box": [
+        600,
+        1008,
+        732,
+        1164
+      ],
+      "native_size": [
+        32,
+        38
+      ]
+    },
+    "Mat": {
+      "source_box": [
+        614,
+        945,
+        718,
+        993
+      ],
+      "native_size": [
+        26,
+        12
+      ]
+    }
+  },
+  "packed_bytes_with_palettes": 2643
+}

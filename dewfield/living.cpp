@@ -22,7 +22,7 @@ const char *weather_name(Weather w,bool en) {
 bool wet_weather(Weather w) { return w==Weather::Rain||w==Weather::Storm; }
 bool shop_open(const State&s) { return (s.day-1)%7!=2 && s.minute>=540 && s.minute<1020; }
 bool building_open(const State&s,Region b) {
-  return b==Region::SeedShop?shop_open(s):b==Region::Lodge?s.minute>=480&&s.minute<1200:true;
+  return unsigned(b)>=unsigned(Region::SeedHome)?s.minute>=480&&s.minute<1260:b==Region::SeedShop?shop_open(s):b==Region::Lodge?s.minute>=480&&s.minute<1200:true;
 }
 bool crop_in_season(uint16_t day,int crop) {
   constexpr unsigned masks[]={1,5,2,4};
@@ -36,6 +36,7 @@ int food_energy(int item) {
     item>=24&&item<=28?wild[item-24]:0;
 }
 int item_price(int item) {
+  if(item==46)return 1;if(item==47)return 0;
   if(item>=38&&item<=45){constexpr int price[]={12,18,32,55,100,30,45,10};return price[item-38];}
   if(item>=29&&item<=36){constexpr int prices[]={20,28,65,55,80,120,28,36};return prices[item-29];}
   constexpr int wild[]={18,25,30,35,28};

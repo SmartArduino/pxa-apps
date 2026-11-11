@@ -178,7 +178,7 @@ void service_link(unsigned id){
     if(status==-7){if(now-l.opened>10000)drop(id);return;}
     if(status!=1){drop(id);return;}
     l.connected=true;l.detected=true;
-    uint8_t hello[4];put32(hello,1);queue(id,Message::Hello,hello,sizeof hello);
+    uint8_t hello[4];put32(hello,ProtocolVersion);queue(id,Message::Hello,hello,sizeof hello);
   }
   if(l.length){
     int n=pxa_io(l.handle,2,l.tx+l.sent,l.length-l.sent);

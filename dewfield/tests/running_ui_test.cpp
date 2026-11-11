@@ -41,12 +41,13 @@ int main() {
   selected_row=3;game::key(Key::A);assert(state.auto_run);
   game::key(Key::DOWN);assert(selected_row==4);
   game::key(Key::DOWN);assert(selected_row==5);
+  game::key(Key::DOWN);assert(selected_row==6);
   game::key(Key::DOWN);assert(selected_row==0);
   farm::State restored; uint8_t bytes[farm::SaveBytes];
   state.auto_run=false;assert(farm::encode(state,bytes,sizeof(bytes))==sizeof(bytes));
   assert(bytes[4]==10 && farm::decode(restored,bytes,bytes[4]>=10?sizeof(bytes):768) && !restored.auto_run);
   bytes[559]=2;resign(bytes);assert(!farm::decode(restored,bytes,bytes[4]>=10?sizeof(bytes):768));
-  bytes[4]=5;resign(bytes);assert(farm::decode(restored,bytes,bytes[4]>=10?sizeof(bytes):768) && restored.auto_run);
+  farm::fresh(state);state.bait=0;farm::sync_inventory(state);farm::encode(state,bytes,sizeof(bytes));bytes[4]=5;resign(bytes);assert(farm::decode(restored,bytes,bytes[4]>=10?sizeof(bytes):768) && restored.auto_run);
   for(auto size:{std::pair<int,int>{240,240},{296,240},{412,412},{240,427},{400,240}}) {
     WIDTH=size.first;HEIGHT=size.second;
     for(bool en:{false,true}) {

@@ -37,11 +37,17 @@ inline bool walk(DayRoute&r,State&probe,int gx,int gy,uint32_t &ms) {
   for(int i=0;i<length;++i){ms+=400;add(r,ms,Region(probe.region),steps[i]%MapW,steps[i]/MapW);}
   return true;
 }
-inline void trip(DayRoute&r,State&probe,Stop stop) {
+inline void trip(DayRoute&r,State&probe,Stop stop,bool ferry=false) {
   auto last=r.nodes[r.count-1];uint32_t ms=std::max(uint32_t(stop.depart*500),last.ms);
   add(r,ms,Region(last.region),last.x/16,last.y/16);probe.region=last.region;
   for(int hop=0;probe.region!=unsigned(stop.region)&&hop<RegionCount;++hop) {
     int id=next_portal(probe,stop.region);if(id<0)return;const auto &p=Portals[id];
+    if(probe.story<3&&ferry&&((p.from==Region::Forest&&p.to==Region::Lake)||(p.from==Region::Lake&&p.to==Region::Forest))) {
+      // Cheng's small skiff reaches the dry east bank while the public bridge
+      // is broken. His route must never interpolate through blocked water.
+      if(!walk(r,probe,p.from==Region::Forest?7:p.x,p.y,ms))return;
+      ms+=1000;probe.region=uint8_t(p.to);add(r,ms,p.to,p.to==Region::Forest?7:p.spawn_x,p.spawn_y);continue;
+    }
     if(p.bridge&&probe.story<3)return;
     if(!walk(r,probe,p.x,p.y,ms))return;
     ms+=400;probe.region=uint8_t(p.to);add(r,ms,p.to,p.spawn_x,p.spawn_y);
@@ -50,9 +56,9 @@ inline void trip(DayRoute&r,State&probe,Stop stop) {
 }
 inline void build(const State&s) {
   for(int id=0;id<NpcCount;++id) {
-    auto &r=routes[id];r.count=0;State probe=s;int beds[]={10,13,19,22};
-    add(r,0,Region::Lodge,beds[id],12);probe.region=unsigned(Region::Lodge);
-    auto go=[&](int time,Region region,int x,int y){trip(r,probe,{time,region,x,y});};
+    auto &r=routes[id];r.count=0;State probe=s;
+    add(r,0,NpcHomes[id],NpcRest[id].x,NpcRest[id].y);probe.region=unsigned(NpcHomes[id]);
+    auto go=[&](int time,Region region,int x,int y){trip(r,probe,{time,region,x,y},id==2);};
     bool wet=s.rain||s.weather==unsigned(Weather::Snow);
     bool gathering=s.story>=5;
     if(id==0) {
@@ -68,8 +74,8 @@ inline void build(const State&s) {
     }
     if(season_day(s.day)==14)go(1020,(wet||season_of(s.day)==3)?Region::Lodge:Region::Town,(wet||season_of(s.day)==3)?10+id*3:12+id*2,(wet||season_of(s.day)==3)?14:13);
     else if(gathering&&!wet)go(1020,Region::Town,12+id*2,13);
-    // Heading home is a visible walk to the inn; doors and map edges connect.
-    go(1140,Region::Lodge,beds[id],12);
+    // Heading home is a visible walk; each villager has their own front door.
+    go(1140,NpcHomes[id],NpcRest[id].x,NpcRest[id].y);
   }
 }
 }
@@ -93,6 +99,7 @@ const char *npc_activity(const State&s,int id,bool en) {
   auto p=npc_pose(s,id);
   if(p.walking)return en?"On the way":"正在沿路行走";
   if(season_day(s.day)==14&&s.minute>=1020&&s.minute<1140)return en?"Seasonal gathering":"季节聚会";
+  if(unsigned(p.region)>=unsigned(Region::SeedHome))return en?"At their own home":"在自己的家中休息";
   if(p.region==Region::Lodge)return en?(s.minute>=1140?"At home":"Resting at the inn"):(s.minute>=1140?"回家休息":"会馆避雨、歇脚");
   if(p.region==Region::SeedShop)return en?"Tending the seed shop":"在种子铺上班";
   if(p.region==Region::Forest&&id==1)return en?"Selecting timber":"林间挑选木料";

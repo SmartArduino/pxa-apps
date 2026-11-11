@@ -7,10 +7,11 @@ namespace dewfield_hud {
 // One bounded scratch region, reused for each HUD group. Fully opaque HUDs
 // bypass both capture and blending; no extra full-screen framebuffer.
 class Backdrop {
-  static constexpr int Capacity=480*96;
-  uint16_t pixels[Capacity];
+  uint16_t *pixels;
+  int capacity;
   int x=0,y=0,w=0,h=0,opacity=8;
 public:
+  Backdrop(uint16_t *scratch,int count):pixels(scratch),capacity(count){}
   static uint16_t blend(uint16_t bg,uint16_t fg,unsigned alpha) {
     unsigned keep=8-alpha;
     return uint16_t(((((fg&0xf81fu)*alpha+(bg&0xf81fu)*keep)>>3)&0xf81fu) |
@@ -23,7 +24,7 @@ public:
     x=std::clamp(left,0,width);y=std::clamp(top,0,height);
     w=std::clamp(right,0,width)-x;h=std::clamp(bottom,0,height)-y;
     if(w<=0||h<=0){w=h=0;return;}
-    if(w*h>Capacity)__builtin_trap();
+    if(!pixels||w*h>capacity)__builtin_trap();
     for(int row=0;row<h;++row)
       std::memcpy(pixels+row*w,frame+(y+row)*width+x,size_t(w)*2);
   }

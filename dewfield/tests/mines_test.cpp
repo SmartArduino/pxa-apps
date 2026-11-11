@@ -17,8 +17,9 @@ int main() {
   assert(act(s,p.x,p.y)==Result::Struck&&s.wild_damage[i]==1);
   assert(encode(s,bytes,sizeof(bytes))==SaveBytes&&decode(t,bytes,sizeof(bytes))&&t.wild_damage[i]==1);
   while(wild_stage(s,i)!=3){auto expected=wild_hits(s,i)==1?Result::Cleared:Result::Struck;assert(act(s,p.x,p.y)==expected);}
-  assert(s.wood==4&&walkable(s,p.x,p.y));auto energy=s.energy;assert(act(s,p.x,p.y)==Result::Blocked&&s.wood==4&&s.energy==energy);
-  for(int night=0;night<7;++night)wild_night(s);assert(wild_stage(s,i)==2&&s.wild_damage[i]==0);
+  assert(s.wood==4&&!walkable(s,p.x,p.y)&&s.wild_age[i]==6);
+  assert(act(s,p.x,p.y)==Result::Cleared&&s.wild_age[i]==7&&s.wood==5&&walkable(s,p.x,p.y));auto energy=s.energy;assert(act(s,p.x,p.y)==Result::Blocked&&s.wood==5&&s.energy==energy);
+  for(int night=0;night<160&&wild_stage(s,i)!=2;++night){++s.day;wild_night(s);}assert(wild_stage(s,i)==2&&s.wild_damage[i]==0);
  }
  for(int grade=0;grade<3;++grade) {
   fresh(s);s.region=unsigned(Region::Forest);s.tool=4;s.tool_grade[4]=grade;auto p=WildTrees[1];beside(s,p.x,p.y);
@@ -62,7 +63,7 @@ int main() {
   }
  assert(tested);
  // Real-size v9 migration retains animals and never invents dungeon progress.
- fresh(s);s.intro=IntroScenes;s.gold=321;encode(s,bytes,sizeof(bytes));bytes[4]=9;sign(bytes,768);
+ fresh(s);s.bait=0;sync_inventory(s);s.intro=IntroScenes;s.gold=321;encode(s,bytes,sizeof(bytes));bytes[4]=9;sign(bytes,768);
  assert(decode(t,bytes,768)&&t.gold==321&&!t.sword_owned&&t.mine_best==0&&t.wild_age[0]==5);
  assert(!decode(t,bytes,SaveBytes));
  fresh(s);s.sword_owned=true;s.region=unsigned(Region::Town);s.visited|=2;s.gold=1000;change_item(s,39,5);change_item(s,38,2);sync_inventory(s);assert(forge_sword(s)&&s.sword_grade==1&&s.gold==920&&!forge_sword(s));

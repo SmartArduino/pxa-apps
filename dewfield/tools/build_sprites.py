@@ -27,7 +27,7 @@ def rgb565(r,g,b):return ((r&248)<<8)|((g&252)<<3)|(b>>3)
 def grade_sprite(im,name,quantize=True):
     """Bound saturation and palette size offline; preserve the authored alpha."""
     foliage=name in ('oak','oak_summer') or name.startswith(('birch','pine','orchard','clover','daisies','herbs'))
-    character=name.startswith(('south','north','east','west','villager'))
+    character=name.startswith(('south','north','east','west','villager','female_'))
     pixels=im.load();graded=Image.new('RGBA',im.size);target=graded.load();opaque=[]
     for y in range(im.height):
         for x in range(im.width):
@@ -63,7 +63,7 @@ def contact_profile(im,name):
     boot must not drag a dark contact shadow into the air. A faint, shallow
     footprint stays centred beneath the body throughout the gait.
     """
-    character=name.startswith(('south','north','east','west','villager'))
+    character=name.startswith(('south','north','east','west','villager','female_'))
     if name.startswith('held_'):return (22,22),[]
     bases={
         'oak':(27,64,55), 'oak_summer':(27,64,55),
@@ -106,7 +106,7 @@ def contact_profile(im,name):
 
 def compile_rig(out,name,im,runs,colors,shape=None):
     npc=int(name.split('_')[1]) if name.startswith('villager_') else -1
-    direction=name if npc<0 else ('south','east','north','west')[int(name[-1])]
+    direction=name.removeprefix('female_') if npc<0 else ('south','east','north','west')[int(name[-1])]
     hip=26 if npc in (0,3) else 23
     # Bind the neutral standing artwork to four independent limbs. Parts
     # reference the original RGB565 pixel array; no PNGs or runtime masks.
@@ -119,7 +119,7 @@ def compile_rig(out,name,im,runs,colors,shape=None):
             denim=b>r*1.08 and b>g*.95 if npc<0 else False
             if 16<=y<=22:
                 if denim or (npc>=0 and 10<=xx<=14):cloth.append(colors[offset+i])
-                elif g>r*.85 and g>b*1.2 or npc>=0:shirt.append(colors[offset+i])
+                elif g>r*.85 and g>b*1.2 or npc>=0 or name.startswith('female_'):shirt.append(colors[offset+i])
             arm=None
             end=24 if side else 23
             if 16<=y<=end and not denim:
@@ -170,7 +170,7 @@ def compile_sprite(out,name,im,shape=None):
             runs.append((y,start,x-start,offset))
     out.write(f'inline constexpr uint16_t {name}_pixels[]={{'+','.join(map(str,colors))+'};\n')
     out.write(f'inline constexpr Span {name}_spans[]={{'+','.join('{'+','.join(map(str,r))+'}'for r in runs)+'};\n')
-    if name in ('south','east','north','west') or name.startswith('villager_'):compile_rig(out,name,im,runs,colors,shape)
+    if name in ('south','east','north','west') or name.startswith(('villager_','female_')):compile_rig(out,name,im,runs,colors,shape)
     anchor,contact=contact_profile(im,name)
     shadow='nullptr'
     if contact:

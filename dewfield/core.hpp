@@ -7,9 +7,9 @@ constexpr int MapW = 32, MapH = 24, Tile = 16, PlotX = 10, PlotY = 9,
               PlotW = 10, PlotH = 8;
 constexpr int PlotCount = PlotW * PlotH, SaveBytes = 1280;
 // Device firmware may cap individual Storage values below the SDK maximum.
-constexpr int StorageSaveBytes = 960, SaveDataBytes = 1117;
+constexpr int StorageSaveBytes = 960, SaveDataBytes = 1125;
 inline int walk_frame(uint32_t distance) {return 1+int((distance/6)%8);}
-constexpr int InventorySize = 56, HotbarSize = 7, ItemCount = 45;
+constexpr int InventorySize = 56, HotbarSize = 7, ItemCount = 47;
 enum class Tool : uint8_t { Hoe, Seeds, Water, Hand, Axe, Pick, Rod, Sword, Count };
 enum class Ground : uint8_t { Grass, Path, Water, Wall, Tree, Rock, Weed };
 enum class Result : uint8_t {
@@ -38,7 +38,7 @@ enum class Result : uint8_t {
   Dialogue,
   Foraged,
   Orders,
-  Kitchen, Calendar, Forecast, Closed, WrongSeason, EmptyShipping, FullFish, Ranch, Animal, Attacked, MineForaged, MineStairs, MineLift, MineChest, NeedSword, Cooldown
+  Kitchen, Calendar, Forecast, Closed, WrongSeason, EmptyShipping, FullFish, Ranch, Animal, Attacked, MineForaged, MineStairs, MineLift, MineChest, NeedSword, Cooldown, NoBait
 };
 struct Crop {
   const char *cn, *en;
@@ -63,7 +63,11 @@ struct MineMob {
   uint16_t x=0,y=0,cooldown=0,windup=0,move_acc=0;
   uint8_t hp=0,dir=2;
 };
+constexpr int WellX=4, WellY=11, ShippingX=22, ShippingY=16;
 struct State {
+  uint16_t bait=0, trash=0;
+  uint8_t appearance=0;
+  bool character_chosen=false;
   Plot plots[PlotCount]{};
   uint8_t cleared[24]{}, sprinklers[10]{};
   uint16_t seeds[4]{12, 4, 0, 0}, produce[4]{}, fish = 0, wood = 0, stone = 0;
@@ -113,7 +117,7 @@ inline constexpr Obstacle Obstacles[] = {
     {10, 9, 0},  {12, 9, 1},  {14, 9, 2},  {16, 10, 0}, {18, 10, 1},
     {11, 11, 2}, {16, 13, 1}, {19, 14, 0}, {10, 16, 1}, {18, 16, 2},
     {7, 14, 0},  {6, 18, 1},  {23, 9, 0},  {25, 11, 1}, {21, 18, 2},
-    {8, 20, 0},  {3, 12, 0},  {28, 6, 0},  {26, 20, 0}, {4, 20, 0},
+    {8, 20, 0},  {3, 15, 0},  {28, 6, 0},  {26, 20, 0}, {4, 20, 0},
     {17, 21, 1}, {22, 6, 2},  {8, 7, 2},   {21, 14, 2}};
 int plot_index(int x, int y);
 int obstacle_index(int x, int y);
@@ -143,7 +147,7 @@ uint32_t sleep(State &s, bool forced = false);
 constexpr int SeasonDays = 28;
 inline int season_of(uint16_t day) { return ((day - 1) / SeasonDays) % 4; }
 inline int season_day(uint16_t day) { return (day - 1) % SeasonDays + 1; }
-inline bool indoors(uint8_t region) { return region == 4 || region == 6 || region == 7 || region == 8; }
+inline bool indoors(uint8_t region) { return region == 4 || region == 6 || region == 7 || region == 8 || (region >= 9 && region <= 12); }
 inline bool carrying_item(int item){return item==2||(item>=8&&item!=37);}
 inline int tool_grade(const State&s,int tool){return tool==7?s.sword_grade:s.tool_grade[tool<7?tool:3];}
 bool buy_seed(State &s, int kind, int count = 1);

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: CC0-1.0
 #include "runtime.hpp"
+#include "asset_stream.hpp"
 #include "multiplayer_transport.hpp"
 #include "../common/pocket-ui/preferences.hpp"
 #include "../common/pocket-ui/viewport.hpp"
@@ -24,6 +25,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+namespace {dewfield_assets::Stream opening_stream;}
 #ifdef PXA_POCKET_SERVICES
 #include "service-hooks.hpp"
 #endif
@@ -74,13 +76,21 @@ uint64_t stage_time[unsigned(DrawStage::Count)]{}, stage_at;
 uint64_t perf_submit_us, perf_acquire_us;
 uint32_t perf_blocked;
 dewfield_raster::NativeRaster native_raster;
-dewfield_hud::Backdrop hud_backdrop;
+// Scene resampling completes before begin_hud. The logical canvas is dead
+// until the next scene redraw, so HUD snapshots can borrow it losslessly.
+#ifndef PXA_POCKET_STUDIO
+dewfield_hud::Backdrop hud_backdrop{logical_frame,LOGICAL_PIXELS};
+#else
+uint16_t hud_scratch[480*96];
+dewfield_hud::Backdrop hud_backdrop{hud_scratch,480*96};
+#endif
 uint64_t prepared_started;
 int display_w = 320, display_h = 240;
 uint32_t pointer_density = 65536;
 int last_x, last_y, menu_row;
 bool running, finished, background = true, fresh_tick, surface_ready,
                         load_ready;
+bool reset_clock_pending=false;
 bool mapped = true, staged, prepared, dirty = true, save_dirty, save_pending,
      pointer_active, pointer_consumed, paused;
 uint8_t prepared_index;
@@ -471,6 +481,7 @@ int32_t handle_event(const uint8_t *bytes, uint32_t length) {
   if (!pxa_parse_event(bytes, length, &e))
     return PXA_STATUS_INTERNAL;
   if(dewfield_transport::event(e))return PXA_EVENT_HANDLED;
+  if(opening_stream.event(e)){pocket::redraw();return PXA_EVENT_HANDLED;}
   pxa_game_render_raster_result_t raster_result{};
   if (pxa_game_render_parse_raster(&e, CREATE_RASTER, &raster_result)) {
     native_raster.created(raster_result);
@@ -670,12 +681,13 @@ void run() {
       continue;
     }
     uint64_t now = now_us();
+    if(reset_clock_pending){last_tick=now;reset_clock_pending=false;}
     if (now - last_tick >= 33333) {
       uint32_t elapsed = uint32_t((now - last_tick) / 1000);
       last_tick = now;
       if (!paused)
-        dewfield_pacing::advance(elapsed, [](uint32_t ms) { game::tick(ms); });
-      for (unsigned i = 0; i < 4; ++i)
+        dewfield_pacing::advance(elapsed, [](uint32_t ms) { game::tick(ms); },[]{return !reset_clock_pending;});
+      for (unsigned i = 0; !reset_clock_pending&&i < 4; ++i)
         if (repeats[i] && now >= repeats[i]) {
           repeats[i] = now + 110000;
           dispatch_key(Key(i));
@@ -683,6 +695,9 @@ void run() {
     }
     service_sound();
     present();
+    // Loading/relighting the first frame is not elapsed movement in the new
+    // map, including a tap delivered immediately after that frame appears.
+    if(reset_clock_pending){last_tick=now_us();reset_clock_pending=false;}
     uint64_t after = now_us();
     if (after - perf_at >= 10000000) {
       char perf[144];
@@ -723,10 +738,15 @@ void run() {
 #include "../pocket-studio/drawing.inc"
 #endif
 namespace pocket {
+bool opening_image(int scene,void*buffer,unsigned bytes) {
+  char path[48];snprintf(path,sizeof path,"assets/opening-%d.idx",scene);
+  return opening_stream.load(path,buffer,bytes);
+}
+void cancel_opening_image(){opening_stream.cancel();}
 void switch_language() { toggle_language(); }
 void effects_enabled(bool enabled) {if(enabled&&!effects_wanted)sound_failed=false;effects_wanted=enabled;if(!enabled&&sound_ready&&effect_packets)for(int track=0;track<6;++track)pxa_audio_stop_effect(sound_session,track);}
 void sound(dewfield_audio::Sfx effect) {play_effect(effect);}
-void soundscape(int region,int weather,int minute) {wanted_music=region==8?3:(region==4||region==6||region==7)?2:minute>=1080?1:(weather==1||weather==2)?4:0;}
+void soundscape(int region,int weather,int minute) {wanted_music=region==8?3:farm::indoors(region)?2:minute>=1080?1:(weather==1||weather==2)?4:0;}
 void music_enabled(bool enabled) { if(enabled && !music_wanted) sound_failed=false; music_wanted=enabled; }
 void open_menu() {
   if (!paused && !exit_requested)
@@ -955,6 +975,7 @@ int dp(int value) {
              denominator);
 }
 void log(const char *message) { pxa_log_write(2, message); }
+void reset_frame_clock(){reset_clock_pending=true;}
 void profile(DrawStage stage) {
   uint64_t now = now_us();
   if (stage != DrawStage::Begin && stage_at)

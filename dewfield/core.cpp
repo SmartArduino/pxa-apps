@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 #include "core.hpp"
 #include "world.hpp"
+#include "settlement.hpp"
 #include "living.hpp"
 #include "collections.hpp"
 #include "livestock.hpp"
@@ -28,17 +29,18 @@ Ground ground(const State &s, int x, int y) {
     return Ground::Wall;
   if(y==1&&(x%2)&&!exit_clearance(s.region,x,y))return Ground::Wall;
   if(y==21&&(x==24||x==26||x==28))return Ground::Wall;
-  if ((x >= 4 && x <= 8 && y >= 3 && y <= 6))
+  if (building_solid(s.region,x,y))
     return Ground::Wall;
   if (x >= 24 && x <= 29 && y >= 14 && y <= 20 &&
       !(x == 24 && (y == 14 || y == 20)) && !(x == 29 && (y == 14 || y == 20)))
     return Ground::Water;
-  if ((x == 21 && y == 8) || (x == 8 && y == 9) || (x == 7 && y == 8))
+  if ((x == 21 && y == 8) || (x == ShippingX && y == ShippingY) || (x == WellX && y == WellY))
     return Ground::Wall;
   if ((y == 8 || y == 17) && ((x >= 10 && x <= 13) || (x >= 16 && x <= 19)))
     return Ground::Wall;
   if(x>=RanchX-1&&x<=RanchX+1&&y>=RanchY-2&&y<=RanchY)return Ground::Wall;
   int o = obstacle_index(x, y);
+  if(o>=0&&Obstacles[o].kind==0&&s.cleared[o]&&s.tree_age[o]<2)return Ground::Tree;
   if (o >= 0 && !s.cleared[o] && (Obstacles[o].kind != 0 || s.tree_age[o] >= 2))
     return Ground(int(Ground::Tree) + Obstacles[o].kind);
   if (road_tile(s.region,x,y))
@@ -89,7 +91,7 @@ unsigned item_count(const State &s, int item) {
       : item >= 22 && item <= 23 ? s.meals[item - 22]
       : item >= 24 && item <= 28 ? s.seasonal[item - 24]
       : item >= 29 && item <= 36 ? s.animal_goods[item-29]
-      : item>=38&&item<=45?s.minerals[item-38]:0;
+      : item>=38&&item<=45?s.minerals[item-38]:item==46?s.bait:item==47?s.trash:0;
 }
 bool change_item(State &s, int item, int amount) {
   uint16_t *stack = item >= 8 && item <= 11 ? &s.seeds[item - 8]
@@ -99,7 +101,7 @@ bool change_item(State &s, int item, int amount) {
       : item >= 22 && item <= 23 ? &s.meals[item - 22]
       : item >= 24 && item <= 28 ? &s.seasonal[item - 24]
       : item >= 29 && item <= 36 ? &s.animal_goods[item-29]
-      : item>=38&&item<=45?&s.minerals[item-38]:nullptr;
+      : item>=38&&item<=45?&s.minerals[item-38]:item==46?&s.bait:item==47?&s.trash:nullptr;
   if (!stack || amount < -int(*stack) || amount > 999 - int(*stack)) return false;
   if(amount>0 && !*stack) {
     int types=0;for(int i=1;i<=ItemCount;++i)types+=item_count(s,i)!=0;
@@ -196,6 +198,7 @@ void fresh(State &s) {
     s.tree_age[i] = Obstacles[i].kind == 0 ? 5 : 0;
   sync_inventory(s);
   // The farm starts with harvestable trees; distant woodland also has saplings.
+  s.bait=12;sync_inventory(s);
   s.tree_age[16] = 0;
   s.tree_age[17] = 2;
   s.tree_age[18] = 3;
@@ -226,7 +229,7 @@ Result act(State &s, int x, int y) {
       return Result::Sleep;
     if (s.region == uint8_t(Region::SeedShop) && x>=12 && x<=19 && y==10)
       return shop_open(s)?Result::Shop:Result::Closed;
-    if (s.region == uint8_t(Region::Home) && x==15 && y==7) return Result::Forecast;
+    if (s.region == uint8_t(Region::Home) && x==12 && y==14) return Result::Forecast;
     if (s.region == uint8_t(Region::Home) && x==13 && y==5) return Result::Calendar;
     if (s.region == uint8_t(Region::Town) && x == 16 && y == 10) {
       s.water=s.capacity;return Result::Refilled;
@@ -240,7 +243,7 @@ Result act(State &s, int x, int y) {
       return collect_forage(s, forage) ? Result::Foraged : Result::Blocked;
     if (ground(s, x, y) == Ground::Water) {
       if (Tool(s.tool) == Tool::Rod)
-        return s.fish>=999?Result::FullFish:s.energy && spend_energy(s,4) ? Result::Fish : Result::NoEnergy;
+        return !s.bait?Result::NoBait:s.fish>=999?Result::FullFish:s.energy && spend_energy(s,4) ? Result::Fish : Result::NoEnergy;
       s.water = s.capacity;
       return Result::Refilled;
     }
@@ -248,21 +251,26 @@ Result act(State &s, int x, int y) {
   }
   if(x==RanchX&&y==RanchY)return Result::Ranch;
   if(animal_at(s,x,y)>=0)return Result::Animal;
-  if (x == 8 && y == 9) {
+  if (x == ShippingX && y == ShippingY) {
     return ship(s)?Result::Ship:Result::EmptyShipping;
   }
   if (x == 21 && y == 8) {
     quest(s);
     return Result::Talk;
   }
-  if ((x == 7 && y == 8) || ground(s, x, y) == Ground::Water) {
+  if ((x == WellX && y == WellY) || ground(s, x, y) == Ground::Water) {
     if (Tool(s.tool) == Tool::Rod && ground(s, x, y) == Ground::Water)
-      return s.fish>=999?Result::FullFish:s.energy && spend_energy(s,4) ? Result::Fish : Result::NoEnergy;
+      return !s.bait?Result::NoBait:s.fish>=999?Result::FullFish:s.energy && spend_energy(s,4) ? Result::Fish : Result::NoEnergy;
     s.water = s.capacity;
     return Result::Refilled;
   }
   auto t = Tool(s.tool);
   int o = obstacle_index(x, y);
+  if(o>=0&&Obstacles[o].kind==0&&s.cleared[o]&&s.tree_age[o]<2) {
+    if(t!=Tool::Axe||s.wood>=999)return Result::Blocked;
+    if(!spend_energy(s,2))return Result::NoEnergy;
+    s.tree_age[o]=2;change_item(s,17,1);sync_inventory(s);return Result::Cleared;
+  }
   if (o >= 0 && !s.cleared[o]) {
     bool young = Obstacles[o].kind == 0 && s.tree_age[o] < 2;
     if ((Obstacles[o].kind == 0 && t != Tool::Axe &&
@@ -348,7 +356,7 @@ Result act(State &s, int x, int y) {
 }
 uint32_t ship_items(State&s,int item,unsigned count) {
   int price=item_price(item);
-  if(s.region||!near(s,8,9)||!price||!count||count>item_count(s,item)||count>(999999u-s.shipping)/unsigned(price))return 0;
+  if(s.region||!near(s,ShippingX,ShippingY)||!price||!count||count>item_count(s,item)||count>(999999u-s.shipping)/unsigned(price))return 0;
   if(!change_item(s,item,-int(count)))return 0;
   s.shipping+=unsigned(price)*count;s.last_shipped=item;s.last_shipped_count=count;sync_inventory(s);
   return unsigned(price)*count;
@@ -356,12 +364,10 @@ uint32_t ship_items(State&s,int item,unsigned count) {
 uint32_t ship(State&s) {return ship_items(s,s.active_slot<InventorySize?s.slots[s.active_slot]:0,1);}
 bool unship(State&s) {
   int item=s.last_shipped,price=item_price(item);unsigned count=s.last_shipped_count;
-  if(s.region||!near(s,8,9)||!price||!count||s.shipping<unsigned(price)*count||!change_item(s,item,int(count)))return false;
+  if(s.region||!near(s,ShippingX,ShippingY)||!price||!count||s.shipping<unsigned(price)*count||!change_item(s,item,int(count)))return false;
   s.shipping-=unsigned(price)*count;s.last_shipped=0;s.last_shipped_count=0;sync_inventory(s);return true;
 }
 uint32_t sleep(State &s, bool forced) {
-  int restoration=s.minute<=1440?100:std::max(50,100-(int(s.minute)-1440)*50/120);
-  if(forced||s.exhausted)restoration=std::min(restoration,50);
   if(forced&&s.region!=unsigned(Region::Home))s.gold-=std::min(1000u,s.gold/10);
   uint32_t income = s.shipping;
   s.gold = std::min(999999u, s.gold + income);
@@ -375,16 +381,11 @@ uint32_t sleep(State &s, bool forced) {
     if ((plot >= 0 && s.plots[plot].tilled) ||
         (!s.region && s.px / Tile == o.x && s.py / Tile == o.y))
       continue;
-    if (s.cleared[i]) {
-      if (s.tree_age[i] >= 5)
-        continue;
-      if (++s.tree_age[i] >= 2) {
-        s.cleared[i] = 0;
-        s.tree_age[i] = 0;
-      }
-    } else if (s.tree_age[i] < 5) {
-      ++s.tree_age[i];
-    }
+    if(!tree_space(s,Region::Farm,o.x,o.y,s.tree_age[i]))continue;
+    if(s.cleared[i]) {
+      if(s.tree_age[i]<2||s.tree_age[i]>=5)continue; // stumps require an axe
+      if(growth_roll(s,o.x,o.y,15)){s.cleared[i]=0;s.tree_age[i]=0;}
+    } else if(s.tree_age[i]<5&&growth_roll(s,o.x,o.y,45))++s.tree_age[i];
   }
   for (int i = 0; i < PlotCount; ++i) {
     auto &p = s.plots[i];
@@ -397,7 +398,7 @@ uint32_t sleep(State &s, bool forced) {
   mine_new_day(s);
   s.health=forced?60:100;
   s.minute = 360;
-  s.energy = restoration;
+  s.energy = 100;
   s.exhausted=false;s.overwork=0;s.last_shipped=0;
   s.water = s.capacity;
   s.weather=unsigned(weather_on(s.day));
@@ -425,6 +426,11 @@ uint32_t sleep(State &s, bool forced) {
   return income;
 }
 bool buy_seed(State &s, int kind, int count) {
+  if(kind==4) {
+    if(count<1||count>99||!shop_open(s)||s.region!=unsigned(Region::SeedShop)||
+       s.gold<unsigned(count*2)||!change_item(s,46,count))return false;
+    s.gold-=count*2;sync_inventory(s);return true;
+  }
   if (!crop_in_season(s.day,kind) || !shop_open(s) || s.region!=unsigned(Region::SeedShop) || kind < 0 || kind >= 4 || count < 1 || count > 99 ||
       s.seeds[kind] + count > 999 ||
       s.gold < uint32_t(Crops[kind].price * count))
@@ -603,6 +609,7 @@ size_t encode(const State &original, uint8_t *out, size_t cap) {
   for(auto v:s.mine_cleared)put(v,4);for(auto v:s.mine_defeated)put(v,1);for(auto v:s.ore_damage)put(v,1);
   for(auto &m:s.mobs){for(auto v:{m.x,m.y,m.cooldown,m.windup,m.move_acc})put(v,2);put(m.hp,1);put(m.dir,1);}
   put(s.last_shipped_count,2);put(!s.sound_effects,1);for(auto v:s.friend_chapter)put(v,1);put(1,1);
+  put(86,1);put(3,1);put(s.bait,2);put(s.trash,2);put(s.appearance,1);put(s.character_chosen,1);
   if(n!=SaveDataBytes)return 0;
   n = SaveBytes - 4;
   put(checksum(out, n), 4);
@@ -654,7 +661,9 @@ bool decode(State &s, const uint8_t *in, size_t n) {
   if (checksum(in, n - 4) != sum)
     return false;
   at = 6;
-  State t;bool life_extension=false;
+  State t;t.character_chosen=true;bool life_extension=false;
+  const bool valley_extension=version>=10&&in[SaveDataBytes-8]==86&&(in[SaveDataBytes-7]>=1&&in[SaveDataBytes-7]<=3);
+  const bool current_layout=valley_extension&&in[SaveDataBytes-7]==3;
   t.day = get(2);
   t.minute = get(2);
   t.energy = get(1);
@@ -856,6 +865,9 @@ bool decode(State &s, const uint8_t *in, size_t n) {
     for(int i=0;i<MineRocks;++i){auto &v=t.ore_damage[i];v=get(1);if(v>6)return false;if(in_mine(t)&&t.mine_depth&&(v>=ore_hp(t,i)||((t.mine_cleared[t.mine_depth-1]&(1u<<i))&&v)))return false;}
     for(int i=0;i<MineMobs;++i){auto &m=t.mobs[i];m.x=get(2);m.y=get(2);m.cooldown=get(2);m.windup=get(2);m.move_acc=get(2);m.hp=get(1);m.dir=get(1);
       if(m.x>=MapW*16||m.y>=MapH*16||m.cooldown>5000||m.windup>400||m.move_acc>=1000||m.hp>90||m.dir>3)return false;
+      if(!valley_extension&&in_mine(t)&&m.hp&&!mine_walkable(t,m.x,m.y)) {
+        auto p=mob_spawn(i);m.x=p.x*16+8;m.y=p.y*16+8;
+      }
       if(in_mine(t)&&t.mine_depth&&(m.hp>mob_max_hp(t,i)||(bool(m.hp)==bool(t.mine_defeated[t.mine_depth-1]&(1u<<i)))||(m.hp&&!mine_walkable(t,m.x,m.y))))return false;
     }
     auto shipped_count=get(2),effects_disabled=get(1);for(auto &v:t.friend_chapter)v=get(1);auto extended=get(1);
@@ -866,6 +878,13 @@ bool decode(State &s, const uint8_t *in, size_t n) {
       for(auto v:t.friend_chapter)if(v>2)return false;
       if(bool(t.last_shipped)!=bool(t.last_shipped_count)||(t.last_shipped&&t.shipping<unsigned(item_price(t.last_shipped))*t.last_shipped_count))return false;
     } else {t.last_shipped_count=t.last_shipped?1:0;t.sound_effects=true;std::fill(t.friend_chapter,t.friend_chapter+4,0);}
+    auto valley_magic=get(1),valley_version=get(1);
+    if(valley_magic) {
+      if(valley_magic!=86||(valley_version<1||valley_version>3))return false;
+      t.bait=get(2);t.trash=get(2);t.appearance=get(1);auto chosen=get(1);
+      if(t.bait>999||t.trash>999||t.appearance>1||chosen>1)return false;
+      t.character_chosen=chosen;
+    } else {t.bait=0;t.trash=0;t.appearance=0;t.character_chosen=true;}
     if(t.visited>=(1u<<RegionCount)||!(t.visited&(1u<<t.region)))return false;
     if(in_mine(t)&&(!sword||!t.mine_depth||t.mine_loaded!=t.mine_depth))return false;
     if(!in_mine(t)&&(t.mine_depth||t.mine_loaded))return false;
@@ -887,6 +906,14 @@ bool decode(State &s, const uint8_t *in, size_t n) {
   }
   if(!t.region&&t.px/16>=RanchX-1&&t.px/16<=RanchX+1&&t.py/16>=RanchY-2&&t.py/16<=RanchY) {
     t.px=RanchX*16+8;t.py=(RanchY+1)*16+8;
+  }
+  if(!valley_extension&&in_mine(t)&&t.px<MapW*Tile&&t.py<MapH*Tile&&!walkable(t,t.px/16,t.py/16)) {
+    t.px=16*16+8;t.py=4*16+8;
+  }
+  if(!current_layout&&!walkable(t,t.px/16,t.py/16)&&!in_mine(t)&&t.px<MapW*Tile&&t.py<MapH*Tile) {
+    int x=t.px/16,y=t.py/16;bool found=false;
+    for(int radius=1;radius<=6&&!found;++radius)for(int dy=-radius;dy<=radius&&!found;++dy)for(int dx=-radius;dx<=radius&&!found;++dx)
+      if(std::abs(dx)+std::abs(dy)==radius&&walkable(t,x+dx,y+dy)){t.px=(x+dx)*16+8;t.py=(y+dy)*16+8;found=true;}
   }
   // Older farmers may have saved on the new town bench/flower-box footprint.
   if(!life_extension&&t.region==unsigned(Region::Town)&&

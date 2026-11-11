@@ -63,14 +63,14 @@ int main() {
   assert(restored.gathered[0]==12&&restored.meals[0]==3&&restored.forage==0xa55&&
          restored.active_slot==active&&restored.slots[active]==22&&restored.orders_done==4);
   // A real v3 prefix migrates with its farm and resources intact.
-  fresh(s);s.gold=449;s.wood=15;s.plots[0]={1,2,1,1};
+  fresh(s);s.bait=0;sync_inventory(s);s.gold=449;s.wood=15;s.plots[0]={1,2,1,1};
   encode(s,bytes,sizeof(bytes));bytes[4]=3;
   uint32_t hash=2166136261u;for(int i=0;i<768-4;++i)hash=(hash^bytes[i])*16777619u;
   for(int i=0;i<4;++i)bytes[768-4+i]=hash>>(i*8);
   assert(decode(restored,bytes,768)&&restored.gold==449&&restored.wood==15&&
       restored.plots[0].crop==2&&restored.orders_done==0&&restored.gathered[0]==0);
   s.gathered[0]=2;s.gathered[1]=3;s.meals[0]=1;s.fish=1;
-  stand(s,Region::Farm,8,10);equip_item(s,19);assert(ship(s)==14&&s.gathered[0]==1&&s.meals[0]==1);
+  stand(s,Region::Farm,ShippingX,ShippingY+1);equip_item(s,19);assert(ship(s)==14&&s.gathered[0]==1&&s.meals[0]==1);
   assert(!change_item(s,0,1)&&!change_item(s,5,-1)&&!change_item(s,19,-2));
   puts("PASS: orchard paths, seasonal/daily forage, transactional recipes, food, gifts, four daily requests, shipping and v3 migration");
 }

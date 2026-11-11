@@ -54,7 +54,7 @@ int main() {
  t.px=RanchX*16+8;t.py=RanchY*16+8;assert(encode(t,b,sizeof(b))&&decode(t,b,b[4]>=10?sizeof(b):768));
  assert(t.px/16==RanchX&&t.py/16==RanchY+1);
  // Real v8 prefix migration bypasses the opening without creating animals.
- fresh(s);encode(s,b,sizeof(b));b[4]=8;std::memset(b+577,0,SaveBytes-581);checksum(b);
+ fresh(s);s.bait=0;sync_inventory(s);encode(s,b,sizeof(b));b[4]=8;std::memset(b+577,0,SaveBytes-581);checksum(b);
  assert(decode(t,b,b[4]>=10?sizeof(b):768)&&t.intro==IntroScenes&&!t.ranch&&!animal_count(t));
  // Range checks and reserved capacity are validated before state is replaced.
  fresh(s);begin_ranch(s);encode(s,b,sizeof(b));b[593]=6;checksum(b);assert(!decode(t,b,b[4]>=10?sizeof(b):768));

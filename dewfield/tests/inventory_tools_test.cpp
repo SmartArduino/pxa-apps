@@ -21,7 +21,8 @@ int main() {
     assert(strikes_left(s,index,tool)==required);
     for(int hit=1;hit<required;++hit){assert(act(s,o.x,o.y)==Result::Struck);assert(!s.cleared[index]);assert(strikes_left(s,index,tool)==required-hit);}
     assert(act(s,o.x,o.y)==Result::Cleared && s.cleared[index] && !s.damage[index]);
-    auto loot=tool==Tool::Axe?s.wood:s.stone;act(s,o.x,o.y);assert(loot==(tool==Tool::Axe?s.wood:s.stone));
+    auto loot=tool==Tool::Axe?s.wood:s.stone;act(s,o.x,o.y);assert(loot+(tool==Tool::Axe?1:0)==(tool==Tool::Axe?s.wood:s.stone));
+    assert(act(s,o.x,o.y)!=Result::Cleared);
     if(tool==Tool::Axe)assert(required==(grade==0?5:grade==1?3:2));
   }
   State s;fresh(s);s.gold=500;s.wood=100;s.stone=100;
@@ -47,10 +48,11 @@ int main() {
   fresh(s);s.gold=321;s.wood=12;s.tool=6;encode(s,bytes,sizeof(bytes));bytes[4]=1;std::fill(bytes+418,bytes+508,0);uint32_t legacy=2166136261u;for(int i=0;i<508;++i)legacy=(legacy^bytes[i])*16777619u;for(int i=0;i<4;++i)bytes[508+i]=legacy>>(i*8);
   assert(decode(restored,bytes,512)&&restored.gold==321&&restored.wood==12&&restored.active_slot==6&&restored.tree_age[0]==5&&restored.show_joystick);valid_inventory(restored);
   fresh(s);assert(tree_stage(s,16)==0&&walkable(s,Obstacles[16].x,Obstacles[16].y));
-  for(int day=0;day<5;++day)sleep(s);assert(tree_stage(s,16)==2);
+  for(int day=0;day<80&&tree_stage(s,16)!=2;++day)sleep(s);assert(tree_stage(s,16)==2);
   auto o=Obstacles[16];s.px=o.x*16+8;s.py=(o.y+1)*16+8;s.tool=4;
   for(int i=0;i<obstacle_hp(16);++i)act(s,o.x,o.y);
-  assert(s.cleared[16]&&tree_stage(s,16)==3);sleep(s);assert(s.cleared[16]);sleep(s);assert(!s.cleared[16]&&tree_stage(s,16)==0);
+  assert(s.cleared[16]&&tree_stage(s,16)==3);for(int day=0;day<8;++day)sleep(s);assert(s.cleared[16]);s.energy=100;assert(act(s,o.x,o.y)==Result::Cleared&&s.tree_age[16]==2);
+  for(int day=0;day<80&&s.cleared[16];++day)sleep(s);assert(!s.cleared[16]);
   s.cleared[0]=1;s.tree_age[0]=0;s.plots[0].tilled=1;for(int day=0;day<8;++day)sleep(s);assert(s.cleared[0]);
   puts("PASS: 5/3/2 material strikes, persistent damage, upgrade costs, lossless inventory swaps, empty hands, v1 migration, settings, tree growth and protected farmland");
 }

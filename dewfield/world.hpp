@@ -2,13 +2,13 @@
 #pragma once
 #include "core.hpp"
 namespace farm {
-enum class Region : uint8_t { Farm, Town, Forest, Lake, Home, Orchard, SeedShop, Lodge, Mine, Count };
+enum class Region : uint8_t { Farm, Town, Forest, Lake, Home, Orchard, SeedShop, Lodge, Mine, SeedHome, CarpenterHome, FisherHome, ElderHome, Count };
 constexpr int RegionCount = int(Region::Count), NpcCount = 4;
 struct Point {
   int x, y;
 };
 // Fixed north-up geography. Indoor destinations share their parent area.
-inline constexpr Point WorldMapPositions[]={{0,0},{1,0},{0,1},{-1,1},{0,0},{1,1},{1,0},{1,0},{0,1}};
+inline constexpr Point WorldMapPositions[]={{0,0},{1,0},{0,1},{-1,1},{0,0},{1,1},{1,0},{1,0},{0,1},{1,0},{1,0},{-1,1},{1,0}};
 struct Portal {
   Region from, to;
   int x, y, spawn_x, spawn_y;
@@ -32,7 +32,18 @@ inline constexpr Portal Portals[] = {
     {Region::Town, Region::Lodge, 24, 7, 16, 18},
     {Region::Lodge, Region::Town, 16, 20, 24, 8},
     {Region::Forest,Region::Mine,22,3,16,4},
-    {Region::Mine,Region::Forest,16,2,22,4}};
+    {Region::Mine,Region::Forest,16,2,22,4},
+    {Region::SeedShop,Region::SeedHome,23,14,8,14},
+    {Region::SeedHome,Region::Town,16,20,9,8},
+    {Region::Town,Region::CarpenterHome,25,18,16,18},
+    {Region::CarpenterHome,Region::Town,16,20,25,19},
+    {Region::Lake,Region::FisherHome,26,9,16,18},
+    {Region::FisherHome,Region::Lake,16,20,26,10},
+    {Region::Town,Region::ElderHome,11,18,16,18},
+    {Region::ElderHome,Region::Town,16,20,11,19},
+    {Region::Town,Region::SeedHome,9,7,16,18},
+    {Region::SeedHome,Region::SeedShop,7,14,22,14}};
+inline constexpr Region NpcHomes[]={Region::SeedHome,Region::CarpenterHome,Region::FisherHome,Region::ElderHome};
 struct NpcPose {
   Region region;
   int x, y, dir;
@@ -46,7 +57,7 @@ struct Forage {
 inline constexpr Forage Foraging[] = {
     {Region::Forest, 7, 7, 17},  {Region::Forest, 24, 17, 17},
     {Region::Forest, 8, 18, 18}, {Region::Lake, 23, 14, 28, 6},
-    {Region::Lake, 24, 17, 18},  {Region::Town, 25, 17, 8},
+    {Region::Lake, 24, 17, 18},  {Region::Town, 21, 17, 8},
     {Region::Orchard, 7, 8, 19, 6}, {Region::Orchard, 13, 17, 19, 6},
     {Region::Orchard, 23, 16, 20}, {Region::Forest, 25, 7, 20},
     {Region::Orchard, 22, 8, 21, 3}, {Region::Orchard, 8, 17, 21, 3},
@@ -60,6 +71,9 @@ Ground world_ground(const State &s, int x, int y);
 bool road_tile(uint8_t region,int x,int y);
 bool exit_clearance(uint8_t region,int x,int y);
 const Portal *portal_at(const State &s, int x, int y);
+// Explicitly tapping the outward road aperture chooses its exit, including
+// the visible road lane beyond the single collision threshold tile.
+const Portal *portal_touch_at(const State&s,int pixel_x,int pixel_y);
 int portal_heading(const Portal &portal);
 int arrival_heading(const Portal &portal);
 Point portal_approach(const Portal &portal);

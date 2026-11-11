@@ -47,6 +47,9 @@ void soundscape(int region,int weather,int minute);
 // Draw directly to output pixels, preserving the source aspect ratio and
 // cropping centrally to fill the entire surface. Also enters UI mode.
 void cover_background(const uint16_t *pixels, int width, int height);
+// The caller owns the buffer until cancel; reads happen only on scene changes.
+bool opening_image(int scene,void *pixels,unsigned bytes);
+void cancel_opening_image();
 void shade();
 bool using_controller();
 struct NavigationInsets {
@@ -63,6 +66,9 @@ int text_width(const char *value, int scale = 1);
 void redraw();
 // Coalesces writes; serialize is called later by the runtime, not here.
 void save();
+// Drop simulation catch-up across a map swap and its first cache rebuild.
+// Local game/runtime coordination only; no PXA service interface is involved.
+void reset_frame_clock();
 uint32_t random();
 uint32_t millis(); // foreground time only
 void log(const char *message);

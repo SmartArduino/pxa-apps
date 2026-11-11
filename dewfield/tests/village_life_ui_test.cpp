@@ -12,7 +12,7 @@ int main(int argc,char**argv){
  game::key(Key::B);assert(page==Page::Farm);game::key(Key::A);assert(page==Page::Eat&&item_count(state,29)==3&&state.energy==50);game::key(Key::B);assert(item_count(state,29)==3);
  game::key(Key::A);game::key(Key::LEFT);game::key(Key::A);assert(page==Page::Farm&&item_count(state,29)==3); // Highlighted cancel really cancels.
  game::key(Key::A);game::key(Key::A);assert(page==Page::Farm&&item_count(state,29)==2&&state.energy==58);
- scene(Region::Farm,8,10);state.produce[0]=13;state.produce[2]=7;equip_item(state,12);dir=0;
+ scene(Region::Farm,ShippingX,ShippingY+1);state.produce[0]=13;state.produce[2]=7;equip_item(state,12);dir=0;
  game::key(Key::B);assert(page==Page::Shipping&&state.produce[0]==13);game::key(Key::A);assert(!state.produce[0]&&state.produce[2]==7&&state.shipping==208&&state.last_shipped_count==13);
  game::key(Key::Y);assert(state.produce[0]==13&&!state.shipping);game::key(Key::X);assert(state.produce[0]==12&&state.last_shipped_count==1);game::key(Key::Y);assert(state.produce[0]==13);
  game::key(Key::R);assert(shipping_page==1);game::key(Key::R);assert(shipping_page==2);game::key(Key::B);assert(page==Page::Farm);

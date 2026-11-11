@@ -64,7 +64,7 @@ struct Layout {
   }
   Rect shop_buy(int index) const {
     auto r = modal();
-    return {r.x + 164, r.y + 39 + index * 27, 51, 23};
+    return {r.x + 164, r.y + 39 + index * 23, 51, 21};
   }
   Rect upgrade() const {
     auto r = modal();
@@ -82,7 +82,7 @@ struct Layout {
     auto r = modal(); return {r.x + 160, r.y + 151, 55, 20};
   }
   Rect setting(int index) const {
-    auto r = modal(); return {r.x + 12, r.y + 37 + index * 27, 202, 24};
+    auto r = modal(); return {r.x + 12, r.y + 37 + index * 23, 202, 21};
   }
   Rect destination(int index) const {
     auto r = modal();
@@ -91,8 +91,8 @@ struct Layout {
   Rect world_destination(int index) const {
     auto r=modal();
     if(!farm::indoors(index)){auto p=farm::WorldMapPositions[index];return {r.x+9+(p.x+1)*71,r.y+38+p.y*42,63,28};}
-    int slot=index==4?0:index==6?1:index==7?2:3;
-    return {r.x+12+(slot%2)*105,r.y+118+(slot/2)*26,100,22};
+    int slot=index==4?0:index==6?1:index==7?2:index==8?3:index-5;
+    return {r.x+12+(slot%4)*52,r.y+126+(slot/4)*24,49,21};
   }
   int world_neighbor(int index,int dx,int dy) const {
     auto from=world_destination(index);int best=index,score=100000;

@@ -19,7 +19,7 @@ void mine_quick_action(int choice) {
  msg(cn,en);changed();
 }
 void refresh_mine_scene() {
- cancel_tool();stop_motion();dir=2;base_dirty=true;cached_geometry=-1;clock_acc=0;page=Page::Farm;changed();
+ cancel_tool();stop_motion();dir=2;base_dirty=true;cached_geometry=-1;clock_acc=0;page=Page::Farm;prepare_arrival();changed();
 }
 void mine_ui_action(int choice) {
  if(page==Page::MineLift) {

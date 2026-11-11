@@ -90,7 +90,7 @@ inline void body(Raster&r,int x,int y,int dir,int walk,const Motion&m) {
   if(!m.two_hands)gait::arm(r,s,p,dir,(dir&1)?1:0,x-12,y-30);
   gait::leg(r,s,p,dir,1,x-12,y-30);gait::leg(r,s,p,dir,0,x-12,y-30);
   if(s.side)r.rect(x-12+(dir==1?10:9),y-14+m.lean_y,5,7,s.cloth);
-  sprite(r,*s.body,x-12+m.lean_x,y-30+m.lean_y);
+  gait::body(r,*s.body,x-12+m.lean_x,y-30+m.lean_y,dir);
 }
 inline void use(Raster&r,int x,int y,int dir,int walk,int tool,int remaining,int grade,bool fishing=false,Target target={}) {
   Motion m=motion(dir,tool,remaining,grade,target.x-x,target.y-y,target.valid);

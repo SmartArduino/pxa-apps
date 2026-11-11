@@ -73,7 +73,7 @@ int main() {
   for (auto &p : s.plots)
     p = {1, 1, 2, 1};
   std::memset(s.sprinklers, 255, sizeof(s.sprinklers));
-  View v{};s.minute=480;
+  View v{};s.minute=500;
   Queue all;
   all.build(s, v, {0, 0, 512, 384});
   assert(all.count < Queue::Capacity && all.count > 250);
@@ -142,7 +142,7 @@ int main() {
     for (int x = 124; x < 148; ++x)
       if (art::hit(sprites::chest, x - 124, y - 135) &&
           art::hit(sprites::well, x - 120, y - 121)) {
-        assert(picking.pick(x, y, s, tx, ty) && tx == 8 && ty == 9);
+        assert(picking.pick(x, y, s, tx, ty) && tx == farm::ShippingX && ty == farm::ShippingY);
         ++shared;
       }
   assert(shared > 10);

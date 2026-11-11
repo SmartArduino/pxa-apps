@@ -2,6 +2,9 @@
 // Included inside namespace art after the raster and sprite helpers.
 #pragma once
 namespace gait {
+inline bool feminine=false;
+struct AppearanceGuard {bool before;explicit AppearanceGuard(bool value):before(feminine){feminine=value;}~AppearanceGuard(){feminine=before;}};
+inline void body(Raster&r,const sprites::Sprite&s,int x,int y,int) {sprite(r,s,x,y);}
 struct Limb {
   int swing, lift;
 };
@@ -21,6 +24,10 @@ inline Pose pose(int frame, int dir = 0) {
           p == 1 || p == 2 || p == 5 || p == 6 ? -1 : 0};
 }
 inline const sprites::Rig &rig(int dir) {
+  if(feminine) {
+    const sprites::Rig *female[]={&sprites::female_north_rig,&sprites::female_east_rig,&sprites::female_south_rig,&sprites::female_west_rig};
+    return *female[dir&3];
+  }
   const sprites::Rig *rigs[] = {&sprites::north_rig, &sprites::east_rig,
                                &sprites::south_rig, &sprites::west_rig};
   return *rigs[dir & 3];
@@ -116,7 +123,7 @@ inline void draw(Raster &r, int x, int y, int dir, int frame, bool carrying = fa
     r.rect(x + (dir == 1 ? 10 : 9), y + 16 + p.bob, 5, 7, s.cloth);
     r.rect(x + (dir == 1 ? 10 : 9), y + 16 + p.bob, 5, 2, s.shirt);
   }
-  sprite(r, *s.body, x, y + p.bob);
+  body(r,*s.body,x,y+p.bob,dir);
   if (carrying) {
     r.line(x+6,y+1,x+10,y,rgb(226,180,131));
     r.line(x+18,y+1,x+14,y,rgb(226,180,131));

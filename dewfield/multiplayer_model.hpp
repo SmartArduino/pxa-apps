@@ -13,6 +13,7 @@
 namespace dewfield_net {
 constexpr unsigned MaxPlayers=4, MaxPacket=1536, DefaultPort=31889;
 constexpr unsigned PoseBytes=24, CommandBytes=12;
+constexpr unsigned ProtocolVersion=4;
 enum class Mode : uint8_t { Offline, Hosting, Joining, Guest };
 enum class Message : uint8_t { Hello=1, Welcome, Pose, Command, Snapshot, Goodbye };
 enum class Op : uint8_t {
@@ -32,24 +33,25 @@ struct Pose {
   uint8_t region=0,depth=0,dir=2,tool=3,item=0,seed=0,grade=0,frame=0;
   int16_t target_x=0,target_y=0;
   bool active=false,walking=false;
+  uint8_t appearance=0;
 };
 inline void encode_pose(const Pose&p,uint8_t*out){
   std::memset(out,0,PoseBytes);put16(out,p.x);put16(out+2,p.y);
   put16(out+4,p.swing);put16(out+6,p.distance);out[8]=p.region;out[9]=p.depth;
   out[10]=p.dir;out[11]=p.tool;out[12]=p.item;out[13]=p.seed;out[14]=p.grade;out[15]=p.frame;
   put16(out+16,uint16_t(p.target_x));put16(out+18,uint16_t(p.target_y));
-  out[20]=uint8_t(p.active)|(uint8_t(p.walking)<<1);
+  out[20]=uint8_t(p.active)|(uint8_t(p.walking)<<1);out[21]=p.appearance;
 }
 inline bool decode_pose(Pose&p,const uint8_t*in,size_t n){
   if(n!=PoseBytes)return false;
   Pose v;v.x=get16(in);v.y=get16(in+2);v.swing=get16(in+4);v.distance=get16(in+6);
   v.region=in[8];v.depth=in[9];v.dir=in[10];v.tool=in[11];v.item=in[12];v.seed=in[13];
   v.grade=in[14];v.frame=in[15];v.target_x=int16_t(get16(in+16));v.target_y=int16_t(get16(in+18));
-  v.active=in[20]&1;v.walking=in[20]&2;
+  v.appearance=in[21];v.active=in[20]&1;v.walking=in[20]&2;
   if(v.x>=farm::MapW*16||v.y>=farm::MapH*16||v.swing>2000||v.region>=farm::RegionCount||
      v.depth>farm::MineFloors||(v.region==unsigned(farm::Region::Mine))!=bool(v.depth)||
      v.dir>3||v.tool>=unsigned(farm::Tool::Count)||v.item>farm::ItemCount||v.seed>3||
-     v.grade>3||v.frame>8||in[20]>3||in[21]||in[22]||in[23]||
+     v.grade>3||v.frame>8||in[20]>3||in[21]>1||in[22]||in[23]||
      v.target_x<0||v.target_x>=512||v.target_y<0||v.target_y>=384)return false;
   p=v;return true;
 }
@@ -65,17 +67,18 @@ inline bool decode_command(Command&c,const uint8_t*in,size_t n){
 // progress and upgrades remain shared. Local hotbar layout stays personal.
 struct Personal {
   uint16_t x=232,y=232,energy=100,water=30,invulnerable=0,cooldown=0;
+  uint8_t appearance=0;
   uint8_t region=0,depth=0,health=100,overwork=0,tool=3,seed=0,slot=255;
   uint8_t slots[farm::InventorySize]{};
   bool exhausted=false,joystick=true,action=true,music=true,run=true,effects=true;
   void capture(const farm::State&s){
-    x=s.px;y=s.py;region=s.region;depth=s.mine_depth;energy=s.energy;water=s.water;health=s.health;
+    appearance=s.appearance;x=s.px;y=s.py;region=s.region;depth=s.mine_depth;energy=s.energy;water=s.water;health=s.health;
     invulnerable=s.invulnerable;cooldown=s.attack_cooldown;overwork=s.overwork;exhausted=s.exhausted;
     tool=s.tool;seed=s.selected;slot=s.active_slot;std::memcpy(slots,s.slots,sizeof slots);
     joystick=s.show_joystick;action=s.show_action;music=s.music;run=s.auto_run;effects=s.sound_effects;
   }
   void install(farm::State&s)const{
-    s.px=x;s.py=y;s.region=region;s.mine_depth=depth;s.mine_loaded=depth;s.visited|=1u<<region;
+    s.appearance=appearance;s.px=x;s.py=y;s.region=region;s.mine_depth=depth;s.mine_loaded=depth;s.visited|=1u<<region;
     s.energy=energy;s.water=std::min(water,s.capacity);s.health=health;
     s.invulnerable=invulnerable;s.attack_cooldown=cooldown;s.overwork=overwork;s.exhausted=exhausted;
     s.tool=tool;s.selected=seed;s.active_slot=slot;std::memcpy(s.slots,slots,sizeof slots);
@@ -95,7 +98,7 @@ struct Farmer {
 inline bool valid_command(const Command&c){
   switch(c.op){
     case Op::Act:case Op::Strike:return c.a>=0&&c.a<32&&c.b>=0&&c.b<24;
-    case Op::BuySeed:return c.a>=0&&c.a<4&&c.b>=1&&c.b<=99;
+    case Op::BuySeed:return c.a>=0&&c.a<5&&c.b>=1&&c.b<=99;
     case Op::UpgradeTool:return c.a>=0&&c.a<7;
     case Op::Sprinkler:return c.a>=0&&c.a<farm::PlotCount;
     case Op::Ship:return c.a>=1&&c.a<=farm::ItemCount&&c.b>=1&&c.b<=999;
@@ -153,7 +156,7 @@ inline int execute(farm::State&s,Farmer&f,const Command&c,uint32_t now){
     case Op::ForgeSword:return forge_sword(s);
     case Op::SpendEnergy:return spend_energy(s,c.a);
     case Op::FishBegin:
-      if(indoors(s.region)||s.energy<4||s.fish>=999)return 0;
+      if(indoors(s.region)||!s.bait||s.energy<4||s.fish>=999)return 0;
       f.fishing.begin(s);f.fishing_started=now;return 1;
     case Op::FishPress:
       if(c.elapsed>now-f.fishing_started+300)return 0;

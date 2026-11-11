@@ -11,10 +11,17 @@ uint16_t pixels[480 * 480 + 32];
 bool controller_mode;
 bool held_keys[4]{};
 int shade_calls, saves, redraw_calls;
+int clock_resets;
 std::vector<const sprites::Sprite *> ui_sprites;
-dewfield_hud::Backdrop hud_backdrop;
+uint16_t hud_scratch[480*96];
+dewfield_hud::Backdrop hud_backdrop{hud_scratch,480*96};
 } // namespace
 namespace pocket {
+bool opening_image(int scene,void*buffer,unsigned bytes) {
+ char path[256];std::snprintf(path,sizeof path,"local/pxa-apps/dewfield/assets/opening-%d.idx",scene);
+ FILE*f=std::fopen(path,"rb");assert(f);bool ok=std::fread(buffer,1,bytes,f)==bytes;std::fclose(f);return ok;
+}
+void cancel_opening_image() {}
 void begin_ui() {}
 void begin_hud(int x,int y,int w,int h,int opacity) {
   hud_backdrop.begin(pixels+16,WIDTH,HEIGHT,x,y,x+w,y+h,opacity);
@@ -82,6 +89,7 @@ void shade() {
 }
 void redraw() { ++redraw_calls; }
 void save() { ++saves; }
+void reset_frame_clock(){++clock_resets;}
 bool held(Key k) { return unsigned(k) < 4 && held_keys[unsigned(k)]; }
 uint32_t millis() { return 0; }
 uint32_t random() { return 123; }
@@ -262,7 +270,7 @@ int main() {
   int gold = state.gold;
   tap(ui.modal().x + 227, HEIGHT - 1);
   assert(page == Page::Shop && state.gold == unsigned(gold));
-  tap(ui.shop_buy(0).center_x(), ui.shop_buy(0).y + 24);
+  tap(ui.shop_buy(0).center_x(), ui.shop_buy(0).y + 21);
   assert(state.gold == unsigned(gold)); // Gap below the button.
   tap(ui.shop_buy(0).center_x(), ui.shop_buy(0).center_y());
   assert(state.gold == unsigned(gold - 5));state.region=0;

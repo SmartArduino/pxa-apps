@@ -46,7 +46,7 @@ int main() {
   assert(!change_item(s,12,1000)&&!discovered_item(s,12));
   assert(change_item(s,12,1)&&discovered_item(s,12));change_item(s,12,-1);
   assert(discovered_item(s,12)); // selling/eating never erases a discovery
-  fresh(s);
+  fresh(s);s.bait=0;sync_inventory(s);
   for(int item:GardenCollection)assert(change_item(s,item,1));
   for(int item:WildCollection)assert(change_item(s,item,1));
   for(int i=0;i<8;++i)s.fish_records[i]=FishSpeciesList[i].min_cm;

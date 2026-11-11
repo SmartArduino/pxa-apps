@@ -2,24 +2,55 @@
 // Included in art. Integer pixels and existing RGB565 spans only.
 #pragma once
 inline void mine_floor_art(Raster&r,int depth) {
- constexpr uint16_t floor[]={rgb(107,96,76),rgb(77,91,94),rgb(77,75,99)};
- constexpr uint16_t wall[]={rgb(132,117,88),rgb(105,117,120),rgb(105,99,129)};
- constexpr uint16_t dark[]={rgb(68,64,52),rgb(52,64,69),rgb(51,49,72)};
- int theme=(depth-1)/10;
- r.rect(0,0,512,384,dark[theme]);
+ // Cached once on entry: shared strata and exposed faces, never a wall grid.
+ constexpr uint16_t floor[]={rgb(134,112,78),rgb(101,119,111),rgb(104,98,122)};
+ constexpr uint16_t stone[]={rgb(106,94,73),rgb(78,98,94),rgb(78,74,101)};
+ constexpr uint16_t face[]={rgb(81,72,59),rgb(60,79,79),rgb(58,54,80)};
+ constexpr uint16_t dark[]={rgb(56,53,46),rgb(44,61,62),rgb(44,41,65)};
+ constexpr uint16_t lip[]={rgb(165,143,98),rgb(138,157,139),rgb(143,132,161)};
+ int theme=std::clamp((depth-1)/10,0,2);
+ r.rect(0,0,512,384,stone[theme]);
  for(int ty=0;ty<24;++ty)for(int tx=0;tx<32;++tx) {
   int x=tx*16,y=ty*16;auto h=hash(tx+depth*7,ty);
-  if(farm::mine_floor(depth,tx,ty)) {
+  bool open=farm::mine_floor(depth,tx,ty);
+  bool n=farm::mine_floor(depth,tx,ty-1),s=farm::mine_floor(depth,tx,ty+1);
+  bool w=farm::mine_floor(depth,tx-1,ty),e=farm::mine_floor(depth,tx+1,ty);
+  if(open) {
    r.rect(x,y,16,16,floor[theme]);
-   for(int i=0;i<4;++i){int xx=(h>>(i*5))%14,yy=(h>>(i*4+2))%14;r.rect(x+xx,y+yy,1+(i&1),1,i&1?wall[theme]:dark[theme]);}
-   if(!farm::mine_floor(depth,tx,ty-1))r.rect(x,y,16,2,dark[theme]);
-   if(!farm::mine_floor(depth,tx-1,ty))r.rect(x,y,1,16,dark[theme]);
+   // Small disconnected pebbles, with no repeated tile border or long planks.
+   for(int i=0;i<3;++i) {
+    int xx=(h>>(i*7))%13+1,yy=(h>>(i*6+3))%12+2;
+    r.rect(x+xx,y+yy,2+(i&1),1,i==1?lip[theme]:stone[theme]);
+    if(i==1)r.rect(x+xx+1,y+yy+1,2,1,stone[theme]);
+   }
+   if(!n){r.rect(x,y,16,2,dark[theme]);r.rect(x,y+2,16,1,face[theme]);}
+   if(!w)r.rect(x,y,2,16,face[theme]);
+   if(!e)r.rect(x+15,y,1,16,stone[theme]);
+   // Stair-step inner corners visually soften the cave's collision tiles.
+   if(!n&&!w){r.rect(x,y,4,3,dark[theme]);r.rect(x,y+3,3,2,face[theme]);}
+   if(!n&&!e){r.rect(x+12,y,4,3,dark[theme]);r.rect(x+13,y+3,3,2,face[theme]);}
   } else {
-   r.rect(x,y,16,16,wall[theme]);r.rect(x,y+11,16,5,dark[theme]);
-   r.line(x+1,y+2,x+10,y+1,rgb(159,151,123));
-   r.line(x+9,y+4,x+12,y+8,dark[theme]);r.line(x+12,y+8,x+15,y+6,dark[theme]);
-   r.rect(x+2+(h%3),y+6,4,2,dark[theme]);
-   if(!farm::mine_floor(depth,tx,ty+1))r.rect(x,y+13,16,3,wall[theme]);
+   // Broad clustered shelves cross tiles; only exposed edges have a rim.
+   if(h%5==0){int xx=x+3+(h%5),yy=y+2+(h>>8)%6;
+    r.line(xx,yy,xx+5,yy-1,lip[theme]);r.line(xx+5,yy-1,xx+8,yy+2,face[theme]);}
+   if((h>>5)%4==0){r.rect(x+3,y+10,7,2,face[theme]);r.rect(x+8,y+9,4,1,face[theme]);}
+   if(s) {
+    int left=w?3:0,right=e?3:0;
+    r.rect(x+left,y+8,16-left-right,8,face[theme]);
+    r.rect(x+left,y+7,16-left-right,2,lip[theme]);
+    r.rect(x+left+1,y+9,14-left-right,1,stone[theme]);
+    r.rect(x+left,y+15,16-left-right,1,dark[theme]);
+    int seam=3+(h%9);r.line(x+seam,y+10,x+seam+1,y+13,dark[theme]);
+    if(w){r.rect(x,y+11,3,5,face[theme]);r.rect(x,y+10,3,1,lip[theme]);}
+    if(e){r.rect(x+13,y+11,3,5,face[theme]);r.rect(x+13,y+10,3,1,lip[theme]);}
+   }
+   if(w){r.rect(x,y,2,s?8:16,lip[theme]);r.rect(x+2,y+2,1,s?5:14,face[theme]);}
+   if(e){r.rect(x+14,y,2,s?8:16,dark[theme]);r.rect(x+13,y+2,1,s?5:14,face[theme]);}
+   if(n)r.rect(x,y,16,2,lip[theme]);
+   if(!n&&!s&&!w&&!e&&h%13==0) {
+    // Occasional small mineral flecks remain decorative and unobtrusive.
+    r.rect(x+7,y+5,3,2,lip[theme]);r.rect(x+8,y+4,1,1,floor[theme]);
+   }
   }
  }
 }

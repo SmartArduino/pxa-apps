@@ -4,6 +4,13 @@
 // Small hand-authored foods share the scene palette and an exact ground edge.
 // y is the bottom baseline, so backpack, carried and forage drawings agree.
 template<class Canvas> inline void food(Canvas &r, int x, int y, int item) {
+  if(item==46||item==47) {
+    r.rect(x-5,y-10,11,9,Ink);r.rect(x-4,y-9,9,7,item==46?rgb(164,116,74):rgb(110,132,120));
+    r.rect(x-4,y-11,9,3,item==46?Gold:rgb(165,181,158));
+    if(item==46){r.rect(x-2,y-7,4,2,rgb(225,153,117));r.rect(x+1,y-6,2,3,rgb(225,153,117));}
+    else {r.line(x-3,y-8,x+3,y-4,Ink);r.rect(x-2,y-2,5,1,Ink);}
+    return;
+  }
   if(item>=38) {
     if(item==43||item==44) {
       r.rect(x-2,y-6,4,6,Ink);r.rect(x-1,y-5,2,4,Cream);
@@ -70,24 +77,7 @@ template<class Canvas> inline void food(Canvas &r, int x, int y, int item) {
   }
 }
 inline void world_stove(Raster &r, int x, int y) {
-  // Masonry oven, enamel hob and copper cookware share the cottage palette.
-  r.rect(x-21,y-38,43,36,Ink);r.rect(x-19,y-36,39,32,rgb(172,132,91));
-  for(int row=0;row<4;++row)for(int col=0;col<5;++col){
-    int xx=x-18+col*8-(row%2?4:0),yy=y-34+row*7;
-    r.rect(xx,yy,7,6,(row+col)%3?rgb(181,138,94):rgb(156,111,74));
-    r.rect(xx+1,yy,5,1,rgb(205,166,115));
-  }
-  r.rect(x-22,y-40,45,6,Ink);r.rect(x-21,y-40,43,3,rgb(95,111,101));
-  r.rect(x-19,y-40,39,1,rgb(175,188,160));
-  for(int xx:{-12,9}){r.rect(x+xx-5,y-39,11,3,Ink);r.rect(x+xx-3,y-40,7,2,rgb(71,78,68));}
-  r.rect(x-12,y-28,25,21,Ink);r.rect(x-10,y-26,21,17,rgb(65,49,36));
-  r.rect(x-8,y-23,17,11,rgb(130,71,37));r.rect(x-5,y-21,3,8,Gold);
-  r.rect(x,y-24,4,12,rgb(224,139,54));r.rect(x-6,y-15,13,3,Earth);
-  r.rect(x+7,y-19,2,3,farm_palette::Brass);r.rect(x-8,y-9,17,2,rgb(122,82,51));
-  r.rect(x-18,y-4,37,3,farm_palette::WoodDark);r.rect(x-18,y-1,5,1,Ink);r.rect(x+14,y-1,5,1,Ink);
-  r.rect(x-9,y-47,17,6,Ink);r.rect(x-8,y-47,15,4,rgb(182,112,58));
-  r.rect(x-6,y-46,4,2,rgb(227,176,101));r.rect(x-7,y-49,13,2,Ink);
-  r.line(x+8,y-46,x+12,y-46,Ink);r.line(x+12,y-46,x+12,y-43,Ink);
+  furniture(r,furniture_sprites::Stove,x,y);
 }
 inline const sprites::Sprite &villager_sprite(int id, int dir = 2) {
   const sprites::Sprite *people[4][4] = {
@@ -113,100 +103,43 @@ inline const sprites::Rig &villager_rig(int id,int dir) {
   return *all[id%4][dir&3];
 }
 inline void world_bed(Raster &r, int x, int y, int style=0) {
-  const uint16_t quilts[]={rgb(116,139,88),rgb(156,101,77),rgb(113,142,143),rgb(164,143,87)};
-  auto quilt=quilts[style&3];
-  r.rect(x-19,y-42,38,39,Ink);r.rect(x-17,y-41,34,37,farm_palette::Wood);
-  r.rect(x-17,y-43,34,4,farm_palette::WoodDark);r.rect(x-16,y-43,32,1,Gold);
-  for(int side:{-1,1}){int xx=x+side*17-1;r.rect(xx,y-45,3,42,Ink);r.rect(xx,y-44,2,39,farm_palette::Brass);r.rect(xx,y-4,3,4,Ink);}
-  r.rect(x-14,y-37,28,33,rgb(212,184,132));r.rect(x-13,y-36,26,31,Cream);
-  r.rect(x-11,y-35,22,9,rgb(205,190,151));r.rect(x-10,y-36,20,8,rgb(246,225,180));
-  r.rect(x-8,y-35,16,1,farm_palette::Highlight);r.rect(x-9,y-29,18,1,rgb(218,198,151));
-  r.rect(x-14,y-25,28,21,quilt);r.rect(x-13,y-24,26,3,rgb(194,194,133));
-  r.rect(x-12,y-21,2,15,blend(quilt,Cream,2));r.rect(x+11,y-21,2,15,blend(quilt,Ink,2));
-  for(int yy=y-19;yy<y-5;yy+=6)for(int xx=x-7;xx<x+9;xx+=6){
-    r.rect(xx,yy,3,2,blend(quilt,Cream,1));r.rect(xx+2,yy+2,2,1,blend(quilt,Ink,1));
-  }
-  r.rect(x-15,y-5,30,4,farm_palette::WoodDark);r.rect(x-15,y-5,30,1,Gold);
-  r.rect(x-11,y-3,22,1,farm_palette::Grain);
+  furniture(r,furniture_sprites::Bed,x,y,style);
 }
-inline void world_table(Raster &r, int x, int y) {
-  for(int side:{-1,1}){int xx=x+side*14-1;r.rect(xx,y-12,4,12,Ink);r.rect(xx+1,y-11,2,10,farm_palette::WoodDark);r.rect(xx,y-1,5,1,Ink);}
-  r.rect(x-21,y-20,42,15,Ink);r.rect(x-20,y-19,40,11,farm_palette::Wood);
-  r.rect(x-19,y-19,38,2,Gold);r.rect(x-20,y-9,40,3,farm_palette::WoodDark);
-  for(int xx=x-11;xx<x+18;xx+=10){r.rect(xx,y-17,1,7,farm_palette::Grain);r.line(xx+2,y-14,xx+6,y-14,farm_palette::Grain);}
-  r.rect(x-9,y-20,17,9,rgb(224,198,142));r.rect(x-8,y-20,15,1,Cream);
-  r.rect(x-3,y-24,6,7,Ink);r.rect(x-2,y-23,4,5,rgb(174,107,61));
-  r.rect(x-1,y-25,2,4,Leaf);r.rect(x-4,y-27,3,3,Green);r.rect(x+1,y-28,3,3,rgb(198,126,88));
+inline void world_table(Raster &r, int x, int y,int style=0) {
+  furniture(r,furniture_sprites::Table,x,y);
+  if(style==4) {
+    r.rect(x-4,y-24,8,7,Cream);r.rect(x-2,y-26,4,2,Gold);r.rect(x+4,y-23,3,2,Cream);r.rect(x-6,y-22,2,4,Cream);r.rect(x-1,y-21,2,2,rgb(180,114,105));
+  } else if(style==2) {
+    r.rect(x-10,y-21,20,8,rgb(120,150,160));r.outline(x-8,y-20,13,5,Cream);r.line(x-4,y-20,x+5,y-16,Gold);
+  } else if(style==3) {
+    r.rect(x-7,y-20,14,6,Cream);r.rect(x-4,y-19,8,3,rgb(111,145,145));r.rect(x+3,y-20,2,4,Gold);
+  } else {
+    r.rect(x-3,y-24,6,7,Ink);r.rect(x-2,y-23,4,5,rgb(174,107,61));
+    r.rect(x-1,y-25,2,4,Leaf);r.rect(x-4,y-27,3,3,Green);r.rect(x+1,y-28,3,3,rgb(198,126,88));
+  }
   r.rect(x+10,y-19,5,4,Ink);r.rect(x+11,y-19,3,3,Cream);r.rect(x+15,y-18,1,2,Cream);
 }
 
 template<class Canvas> inline void world_appliance(Canvas&r,int x,int y,bool tv) {
-  if(tv) {
-    r.line(x-8,y-36,x-2,y-30,Ink);r.line(x+8,y-37,x+2,y-30,Ink);
-    r.rect(x-15,y-30,31,24,Ink);r.rect(x-14,y-29,29,22,farm_palette::WoodDark);
-    r.rect(x-13,y-29,27,2,Gold);r.rect(x-13,y-26,25,17,farm_palette::Wood);
-    r.rect(x-12,y-26,20,16,Ink);r.rect(x-11,y-25,18,14,rgb(64,91,91));
-    r.rect(x-10,y-24,16,12,rgb(119,158,139));r.rect(x-8,y-23,12,4,rgb(158,185,151));
-    r.rect(x-8,y-23,3,1,rgb(191,207,167));r.rect(x-7,y-19,3,3,rgb(218,193,123));
-    r.line(x-10,y-13,x-4,y-18,Leaf);r.line(x-4,y-18,x+5,y-13,Green);
-    r.rect(x+10,y-23,3,3,Ink);r.rect(x+10,y-23,2,2,Gold);
-    r.rect(x+10,y-18,3,2,Ink);r.rect(x+10,y-18,2,1,farm_palette::Brass);
-    for(int yy=y-14;yy<y-10;yy+=2)r.rect(x+10,yy,3,1,Ink);
-    r.rect(x-14,y-6,29,4,farm_palette::Wood);r.rect(x-13,y-6,27,1,Gold);
-    r.rect(x-11,y-2,4,2,Ink);r.rect(x+8,y-2,4,2,Ink);
-  } else {
-    r.rect(x-12,y-31,25,29,Ink);r.rect(x-11,y-30,23,27,farm_palette::Wood);
-    r.rect(x-10,y-29,21,1,Gold);r.rect(x-9,y-27,19,23,Cream);
-    r.rect(x-9,y-27,19,5,rgb(173,91,57));r.rect(x-7,y-28,2,3,Ink);r.rect(x+6,y-28,2,3,Ink);
-    r.rect(x-7,y-20,15,1,rgb(211,184,135));
-    for(int yy=0;yy<3;++yy)for(int xx=0;xx<4;++xx)r.rect(x-6+xx*4,y-17+yy*4,2,2,xx==2&&yy==1?rgb(178,87,56):rgb(160,133,88));
-    r.rect(x-10,y-3,21,1,farm_palette::WoodDark);
-  }
+  furniture(r,tv?furniture_sprites::Television:furniture_sprites::Calendar,x,y);
 }
 inline void world_cabinet(Raster&r,int x,int y,int width=38) {
-  int left=x-width/2;
-  r.rect(left,y-34,width,32,Ink);r.rect(left+1,y-33,width-2,30,farm_palette::WoodDark);
-  r.rect(left+1,y-34,width-2,3,farm_palette::Wood);r.rect(left+2,y-34,width-4,1,Gold);
-  for(int col=0;col<2;++col){int xx=left+3+col*(width/2-1),w=width/2-5;
-    r.rect(xx,y-29,w,20,farm_palette::Wood);r.rect(xx+2,y-27,w-4,12,rgb(84,94,70));
-    r.rect(xx+3,y-26,w-6,4,rgb(122,133,94));r.rect(xx+3,y-19,3,4,Cream);r.rect(xx+7,y-21,3,6,rgb(179,134,72));
-    r.rect(xx+w-3,y-14,2,2,Gold);r.rect(xx+2,y-7,w-4,2,farm_palette::Wood);
-  }
-  r.rect(left+2,y-3,3,3,Ink);r.rect(left+width-5,y-3,3,3,Ink);
+  (void)width;furniture(r,furniture_sprites::Cabinet,x,y);
 }
 inline void world_fireplace(Raster&r,int x,int y,int frame) {
-  r.rect(x-18,y-45,37,43,Ink);r.rect(x-16,y-44,33,40,rgb(151,128,94));
-  for(int yy=0;yy<5;++yy)for(int xx=0;xx<4;++xx){int bx=x-15+xx*8-(yy%2?3:0),by=y-42+yy*8;
-    r.rect(bx,by,7,7,(xx+yy)%2?rgb(178,151,108):rgb(164,137,99));r.rect(bx+1,by,5,1,rgb(205,177,128));}
-  r.rect(x-20,y-40,41,5,Ink);r.rect(x-19,y-40,39,2,Gold);r.rect(x-18,y-37,37,2,farm_palette::WoodDark);
-  r.rect(x-12,y-27,25,23,Ink);r.rect(x-9,y-30,19,3,Ink);r.rect(x-10,y-26,21,21,rgb(61,49,37));
-  r.rect(x-8,y-12,17,7,rgb(129,65,35));r.line(x-9,y-7,x+7,y-10,Earth);r.line(x-5,y-11,x+9,y-7,farm_palette::WoodDark);
-  int f=frame%3;r.rect(x-6,y-17-f,4,9+f,rgb(217,123,46));r.rect(x,y-20+f,5,12-f,Gold);r.rect(x-2,y-14,4,6,rgb(248,211,119));
-  r.rect(x-21,y-4,43,4,Ink);r.rect(x-20,y-4,41,2,rgb(194,167,120));
+  furniture(r,furniture_sprites::Fireplace,x,y);
+  int f=frame%3;
+  r.rect(x-4,y-11-f,2,4+f,rgb(211,120,48));r.rect(x+1,y-13+f,2,5-f,Gold);
+  r.rect(x-1,y-9,2,2,rgb(246,204,118));
 }
-inline void world_chair(Raster&r,int x,int y) {
-  r.rect(x-9,y-25,18,16,Ink);r.rect(x-7,y-24,14,12,farm_palette::Wood);
-  r.rect(x-6,y-23,12,2,Gold);r.rect(x-5,y-20,2,6,farm_palette::Grain);r.rect(x+3,y-20,2,6,farm_palette::Grain);
-  r.rect(x-10,y-12,20,6,Ink);r.rect(x-8,y-12,16,4,rgb(143,153,93));r.rect(x-7,y-12,14,1,rgb(193,190,126));
-  r.rect(x-8,y-6,3,6,Ink);r.rect(x+5,y-6,3,6,Ink);r.rect(x-7,y-5,1,4,farm_palette::Wood);
+inline void world_chair(Raster&r,int x,int y,int style=0) {
+  furniture(r,furniture_sprites::Chair,x,y,style);
 }
 inline void world_shelf(Raster&r,int x,int y) {
-  int left=x-128;
-  r.rect(left,y-36,256,34,Ink);r.rect(left+2,y-35,252,31,farm_palette::WoodDark);
-  for(int level=0;level<2;++level){int yy=y-31+level*14;
-    for(int i=0;i<12;++i){int xx=left+8+i*20;uint16_t c=i%3==0?rgb(168,96,61):i%3==1?rgb(157,161,101):rgb(212,181,114);
-      r.rect(xx,yy,13,11,Ink);r.rect(xx+1,yy-1,11,10,c);r.rect(xx+1,yy-1,11,2,Gold);r.rect(xx+3,yy+3,7,4,Cream);r.rect(xx+6,yy+4,2,2,Leaf);
-    }
-    r.rect(left+1,yy+11,254,3,farm_palette::Wood);r.rect(left+2,yy+11,252,1,Gold);
-  }
-  for(int xx=left+3;xx<left+256;xx+=62)r.rect(xx,y-35,3,32,farm_palette::Wood);
-  r.rect(left,y-3,256,3,Ink);r.rect(left+1,y-3,254,1,farm_palette::Wood);
+  for(int bay=0;bay<4;++bay)furniture(r,furniture_sprites::ShelfBay,x-96+bay*64,y);
 }
 inline void world_counter(Raster&r,int x,int y) {
-  r.rect(x,y-23,176,23,Ink);r.rect(x+2,y-21,172,19,farm_palette::Wood);
-  for(int xx=5;xx<170;xx+=28){r.rect(x+xx,y-17,24,13,farm_palette::WoodDark);r.rect(x+xx+2,y-16,20,10,farm_palette::Wood);r.rect(x+xx+3,y-15,18,1,Gold);r.rect(x+xx+4,y-7,16,1,farm_palette::Grain);}
-  r.rect(x-2,y-26,180,7,Ink);r.rect(x-1,y-26,178,4,rgb(208,158,91));r.rect(x,y-26,176,1,Gold);r.rect(x,y-21,176,2,farm_palette::WoodDark);
-  for(int xx=7;xx<118;xx+=31){r.line(x+xx,y-24,x+xx+20,y-24,farm_palette::Grain);}
+  for(int bay=0;bay<4;++bay)furniture(r,furniture_sprites::CounterBay,x+22+bay*44,y);
   // Wicker seed display and an open ledger.
   r.rect(x+10,y-33,39,8,Ink);r.rect(x+11,y-32,37,6,rgb(172,123,63));
   for(int xx=12;xx<48;xx+=4)r.rect(x+xx,y-31,2,4,Gold);
@@ -229,14 +162,18 @@ inline void world_signpost(Raster&r,int x,int y,int direction) {
   r.line(x+4*dx,y-20+4*dy,x+dx-2*dy,y-20+dy+2*dx,Cream);
 }
 
+inline void room_material(Raster&r,const room_wall_sprites::Material&m,int x,int y,int w,int h,int alpha=8) {
+ int x0=std::max(x,r.ox),x1=std::min(x+w,r.ox+r.w),y0=std::max(y,r.oy),y1=std::min(y+h,r.oy+r.h);
+ for(int yy=y0;yy<y1;++yy)for(int xx=x0;xx<x1;++xx){
+  auto color=room_wall_sprites::sample(m,(xx-x)%m.w,(yy-y)%m.h);if(!color)continue;
+  if(r.tint)color=r.tint[color];auto&dst=r.p[(yy-r.oy)*r.w+xx-r.ox];dst=alpha==8?color:blend(dst,color,alpha);
+ }
+}
+inline void room_post(Raster&r,int x,int y,int alpha=8){
+ const auto&m=room_wall_sprites::Post;room_material(r,m,x-m.w/2,y-m.h/2,m.w,m.h,alpha);
+}
 inline void world_window(Raster&r,int x,int y) {
-  r.rect(x,y,34,23,Ink);r.rect(x+1,y+1,32,21,farm_palette::WoodDark);
-  r.rect(x+2,y+1,30,1,Gold);r.rect(x+4,y+4,26,14,rgb(92,136,140));
-  r.rect(x+5,y+5,24,4,rgb(146,176,157));r.rect(x+6,y+5,4,1,rgb(194,207,172));
-  for(int i=0;i<4;++i){int xx=x+6+i*6;r.line(xx,y+16,xx+3,y+10,rgb(96,130,89));r.line(xx+3,y+10,xx+5,y+16,rgb(96,130,89));}
-  r.rect(x+16,y+4,2,15,farm_palette::Brass);r.rect(x+4,y+11,26,1,farm_palette::Brass);
-  r.rect(x+2,y+3,3,16,Cream);r.rect(x+29,y+3,3,16,Cream);
-  r.rect(x-1,y+21,36,3,farm_palette::Wood);r.rect(x,y+21,34,1,Gold);
+ const auto&m=room_wall_sprites::Window;room_material(r,m,x,y,m.w,m.h);
 }
 inline void world_rug(Raster&r,int x,int y,int w,int h) {
   r.rect(x,y,w,h,rgb(106,112,68));r.rect(x+1,y+1,w-2,h-2,rgb(146,153,91));
@@ -244,25 +181,126 @@ inline void world_rug(Raster&r,int x,int y,int w,int h) {
   for(int xx=x+6;xx<x+w-5;xx+=6){r.rect(xx,y+5,2,1,rgb(192,181,116));r.rect(xx+1,y+h-6,2,1,rgb(192,181,116));}
   for(int xx=x+2;xx<x+w-1;xx+=4){r.rect(xx,y-1,2,1,rgb(200,183,128));r.rect(xx,y+h,2,1,rgb(200,183,128));}
 }
-inline void world_room(Raster&r,bool shop,bool lodge) {
-  r.rect(105,47,302,293,Ink);r.rect(107,49,298,289,farm_palette::WoodDark);
-  r.rect(112,50,288,286,rgb(193,146,91));
-  for(int yy=80;yy<336;yy+=12)for(int xx=112;xx<400;xx+=48) {
-    int width=std::min(48,400-xx),height=std::min(12,336-yy);
-    auto h=hash(xx/48,yy/12);
-    r.rect(xx,yy,width,height,h%3?rgb(191,143,87):rgb(199,151,93));
-    r.rect(xx,yy,width,1,rgb(167,119,70));r.rect(xx,yy+1,width,1,rgb(210,163,103));
-    int seam=xx+int((yy/12)%2?24:0);r.rect(seam,yy+1,1,height-1,rgb(167,119,70));
-    if(width>26){r.line(xx+5,yy+5,xx+16,yy+5,rgb(179,130,76));r.line(xx+20,yy+8,xx+31,yy+8,rgb(201,152,90));}
+// Kitchen tiles and cutaway walls use exactly the collision layout. These
+// static pixels are baked once on room entry, with no additional framebuffer.
+inline void room_floors(Raster&r,uint8_t region) {
+ if(!farm::partitioned(region))return;
+ for(int ty=5;ty<=12;++ty)for(int tx=7;tx<=24;++tx) {
+  if(farm::partition_wall(region,tx,ty))continue;
+  auto room=farm::room_kind(region,tx,ty);
+  if(room==farm::RoomKind::GuestRoom){
+    int x=tx*16,y=ty*16;auto c=rgb(187,145,94);r.rect(x,y,16,16,c);r.rect(x,y,16,1,blend(c,Ink,1));
+    if((tx+ty)%2)r.rect(x,y+1,1,15,blend(c,Ink,1));r.rect(x+4,y+7,7,1,blend(c,Cream,1));continue;
   }
-  r.rect(112,50,288,30,rgb(221,191,135));
+  if(room!=farm::RoomKind::Kitchen)continue;
+  auto c=region==unsigned(farm::Region::FisherHome)?rgb(184,194,173):rgb(205,198,165);
+  if((tx+ty)%2)c=blend(c,Cream,1);
+  int x=tx*16,y=ty*16;r.rect(x,y,16,16,c);
+  r.rect(x,y,16,1,blend(c,Ink,1));r.rect(x,y,1,16,blend(c,Ink,1));
+ }
+}
+inline void room_partitions(Raster&r,uint8_t region) {
+ if(!farm::partitioned(region))return;
+ using namespace farm::walls;
+ // Contact follows the actual eight-pixel wall band, rather than a whole
+ // collision tile. This cache is rebuilt only when entering another room.
+ for(int ty=5;ty<=12;++ty)for(int tx=7;tx<=24;++tx)if(farm::partition_wall(region,tx,ty)) {
+  auto n=links(region,tx,ty);int x=tx*Tile,y=ty*Tile;
+  for(int col=0;col<Tile;){
+   if(!front_face(n,col)){++col;continue;}int first=col;
+   while(col<Tile&&front_face(n,col))++col;
+   shadow_strip(r,x+first,y+Front,col-first,1);
+  }
+  for(int row=0;row<Tile;++row)if(footprint(n,Front-1,row)&&!footprint(n,Front,row))
+   shadow_strip(r,x+Front,y+row,2,1);
+ }
+ auto threshold=[&](int x,int y,int w,int h){
+  r.rect(x,y,w,h,rgb(184,142,86));
+  if(w>h){r.rect(x,y,w,1,rgb(212,173,109));r.rect(x,y+h-1,w,1,rgb(145,101,55));}
+  else {r.rect(x,y,1,h,rgb(212,173,109));r.rect(x+w-1,y,1,h,rgb(145,101,55));}
+ };
+ if(region==unsigned(farm::Region::Lodge))for(int x:{9,14,20})threshold(x*Tile,12*Tile+Inset,2*Tile,Band);
+ else for(int x:{15,18})threshold(x*Tile+Inset,10*Tile,Band,2*Tile);
+}
+inline void room_wall(Raster&r,int tx,int ty,unsigned links,int viewer_x,int viewer_y) {
+ using namespace farm::walls;
+ int x=tx*Tile,y=ty*Tile-Rise;
+ int left=std::max(0,r.ox-x),right=std::min(Tile,r.ox+r.w-x);
+ int top=std::max(0,r.oy-y),bottom=std::min(ImageHeight,r.oy+r.h-y);
+ if(left>=right||top>=bottom)return;
+ const auto&image=Images[links&15];
+ bool fade=viewer_y<ty*Tile+Front&&viewer_y>ty*Tile-Rise-24
+   &&viewer_x>x-18&&viewer_x<x+Tile+18;
+ for(int row=top;row<bottom;++row){
+  auto*dst=r.p+(y+row-r.oy)*r.w+x+left-r.ox;
+  for(int col=left;col<right;++col,++dst){
+   int p=row*Tile+col;auto index=(image[p/2]>>((p&1)*4))&15;
+   if(!index)continue;
+   uint16_t color=0;
+   using namespace room_wall_sprites;
+   if(capital(links&15,col,row)){
+    const auto&m=(links&15)==North?Collar:Post;int sx=(links&15)==North?3:2,sy=(links&15)==North?8:2;
+    color=sample(m,col-sx,row-sy);
+   }else if(row<Tile&&footprint(links&15,col,row)){
+    bool vertical=(links&15)==(North|South)||row<Inset||row>=Front;
+    color=vertical?sample(BeamV,std::clamp(col-Inset,0,Band-1),(ty*Tile+row)%BeamV.h)
+                  :sample(BeamH,(tx*Tile+col)%BeamH.w,std::clamp(row-Inset,0,Band-1));
+   }else{
+    int f=row-Front;
+    if(f>=Rise-Skirting.h)color=sample(Skirting,(tx*Tile+col)%Skirting.w,f-(Rise-Skirting.h));
+    else if(index==Wood||index==WoodLight||index==Edge)color=sample(Jamb,std::clamp(col-Inset,0,Band-1),std::clamp(f,0,Rise-1));
+    else color=sample(room_wall_sprites::Plaster,(tx*Tile+col)%room_wall_sprites::Plaster.w,std::max(0,f)%room_wall_sprites::Plaster.h);
+   }
+   if(r.tint)color=r.tint[color];int alpha=8;
+   if(fade){
+    int margin=std::min({5,x+col-(viewer_x-18),viewer_x+18-1-(x+col),
+                         y+row-(viewer_y-38),viewer_y+4-1-(y+row)});
+    if(margin>0)alpha-=margin;
+   }
+   *dst=alpha==8?color:blend(*dst,color,alpha);
+  }
+ }
+}
+// The perimeter uses the same cap thickness and elevation as the partitions.
+// It is static; only interior walls need to join the moving-object depth queue.
+inline void room_shell(Raster&r,uint8_t region) {
+ using namespace farm::walls;using namespace room_wall_sprites;
+ // The approved drawing is a timber-framed cutaway. The south wall presents
+ // its outside face below the floor, keeping the entrance and lounge readable.
+ room_material(r,room_wall_sprites::Plaster,112,52,288,Rise-6);
+ room_material(r,Skirting,112,74,288,6);
+ for(int x:{ShellLeft,ShellRight})room_material(r,BeamV,x,44,Band,330);
+ room_material(r,BeamH,ShellLeft,44,ShellRight-ShellLeft+Band,Band);
+ for(auto part:{farm::TileBox{112,342,136,26},farm::TileBox{281,342,119,26}}){
+  room_material(r,room_wall_sprites::Plaster,part.x,part.y,part.w,part.h);
+  room_material(r,Skirting,part.x,368,part.w,6);
+ }
+ room_material(r,BeamH,104,334,144,8);room_material(r,BeamH,281,334,127,8);
+ world_window(r,165,343);world_window(r,322,343);
+ room_material(r,Door,248,334,Door.w,Door.h);
+ // The small threshold is on the walkable floor in front of the actual door.
+ r.rect(252,330,24,3,rgb(188,137,73));r.rect(252,330,24,1,Gold);
+}
+inline void world_room(Raster&r,bool shop,bool lodge,int owner=-1) {
+  int theme=shop?1:lodge?2:owner>=0?owner+3:0;
+  constexpr uint16_t floors[]={rgb(193,146,91),rgb(199,159,106),rgb(166,158,133),rgb(198,158,101),rgb(172,125,78),rgb(153,145,115),rgb(199,152,101)};
+  auto floor=floors[theme];auto seam=blend(floor,Ink,2),light=blend(floor,Cream,2);
+  r.rect(102,42,308,333,Ink);
+  r.rect(112,50,288,286,floor);
+  int plank=theme==2?24:48,rows=theme==2?16:12;
+  for(int yy=80;yy<336;yy+=rows)for(int xx=112;xx<400;xx+=plank) {
+    int width=std::min(plank,400-xx),height=std::min(rows,336-yy);auto h=hash(xx/plank,yy/rows);
+    r.rect(xx,yy,width,height,h%3?floor:light);
+    r.rect(xx,yy,width,1,seam);r.rect(xx,yy+1,width,1,light);
+    int join=xx+int((yy/rows)%2?plank/2:0);r.rect(join,yy+1,1,height-1,seam);
+    if(width>26){r.line(xx+5,yy+5,xx+13+h%8,yy+5,blend(floor,Ink,1));r.line(xx+23,yy+8,xx+31,yy+8,light);}
+  }
+  uint8_t region=unsigned(shop?farm::Region::SeedShop:lodge?farm::Region::Lodge:owner>=0?farm::Region(unsigned(farm::Region::SeedHome)+owner):farm::Region::Home);
+  room_floors(r,region);
+  room_shell(r,region);
   for(int xx=118;xx<396;xx+=16){r.rect(xx,55,2,2,rgb(205,177,121));r.rect(xx-1,57,4,1,rgb(210,181,125));}
-  r.rect(112,49,288,3,Gold);r.rect(112,77,288,4,farm_palette::WoodDark);r.rect(113,77,286,1,Gold);
-  r.rect(108,50,5,286,farm_palette::Wood);r.rect(108,50,1,286,Gold);
-  r.rect(400,50,5,286,farm_palette::WoodDark);r.rect(400,50,1,286,farm_palette::Wood);
-  world_window(r,170,54);world_window(r,315,54);
-  world_rug(r,240,278,48,28);
-  if(!shop&&!lodge)world_rug(r,280,223,72,48);
-  r.rect(112,334,136,3,farm_palette::WoodDark);r.rect(281,334,119,3,farm_palette::WoodDark);
-  r.rect(248,332,33,4,rgb(151,112,67));
+  if(lodge){world_window(r,134,54);world_window(r,230,54);world_window(r,337,54);}
+  else {world_window(r,170,54);world_window(r,315,54);}
+  if(owner<0&&!shop&&!lodge){world_rug(r,176,282,60,37);world_rug(r,286,256,84,41);world_rug(r,144,163,68,27);}
+  if(lodge){world_rug(r,248,231,33,86);world_rug(r,147,265,75,39);world_rug(r,307,265,75,39);}
 }

@@ -9,7 +9,7 @@ using namespace farm;
 static void canonical(const State&s,uint8_t*out){assert(encode(s,out,SaveBytes)==SaveBytes);}
 static void same(const State&a,const State&b){uint8_t x[SaveBytes],y[SaveBytes];canonical(a,x);canonical(b,y);assert(!std::memcmp(x,y,sizeof(x)));}
 int main() {
- State s;fresh(s);s.px=8*16+8;s.py=10*16+8;s.produce[0]=20;s.produce[2]=8;sync_inventory(s);
+ State s;fresh(s);s.px=ShippingX*16+8;s.py=(ShippingY+1)*16+8;s.produce[0]=20;s.produce[2]=8;sync_inventory(s);
  assert(ship_items(s,12,20)==320&&s.produce[0]==0&&s.produce[2]==8&&s.last_shipped_count==20);
  assert(unship(s)&&s.produce[0]==20&&s.shipping==0&&!s.last_shipped_count);
  State old=s;assert(!ship_items(s,12,21));same(s,old);
@@ -39,11 +39,11 @@ int main() {
    if(!walkable(probe,p.x/16,p.y/16))std::fprintf(stderr,"bad route story=%d day=%d rain=%d minute=%d npc=%d region=%d x=%d y=%d\n",story,day,rain,minute,id,int(p.region),p.x/16,p.y/16);
    assert(walkable(probe,p.x/16,p.y/16));places[id]|=1u<<unsigned(p.region);moving[id]+=p.walking;
    if(minute>360&&previous[id].region==p.region)assert(std::abs(p.x-previous[id].x)+std::abs(p.y-previous[id].y)<=32);
-   if(minute>=1320)assert(p.region==Region::Lodge);
-   if(!story)assert(p.region!=Region::Lake);
+   if(minute>=1320)assert(p.region==NpcHomes[id]);
+   if(!story&&id!=2)assert(p.region!=Region::Lake);
    previous[id]=p;
   }
-  if(!rain)for(int id=0;id<NpcCount;++id){assert(moving[id]>30);assert(__builtin_popcount(places[id])>=3);}
+  if(!rain)for(int id=0;id<NpcCount;++id){assert(moving[id]>30);assert(__builtin_popcount(places[id])>=(!story&&id==2?2:3));}
  }
  for(const auto &sound:dewfield_audio::sounds) {
   assert(sound.count>0&&sound.count<=4&&sound.track<6);double peak=0;

@@ -11,14 +11,14 @@ struct FishSpecies {
   bool wet_only = false;
 };
 inline constexpr FishSpecies FishSpeciesList[] = {
-  {"银鳞鲫", "Silver crucian", "各处水域 · 四季全天", "Any water / all year", 47,15,12,12,28,360,1560},
-  {"溪纹鲦", "Brook dace", "林间 · 春秋白天", "Woods / spring, fall / day", 4,5,7,9,22,360,1080},
-  {"暖阳鲈", "Sun perch", "农场湖畔 · 夏秋白天", "Farm, lake / summer, fall / day", 9,6,7,18,42,480,1080},
-  {"青背鲤", "Green carp", "农场果园 · 四季白天", "Farm, orchard / all year / day", 33,15,8,22,50,360,1140},
+  {"银鳞鲫", "Silver crucian", "各处水域 · 四季全天", "Any water / all year / 06:00-02:00", 47,15,12,12,28,360,1560},
+  {"溪纹鲦", "Brook dace", "林间 · 春秋 06:00—18:00", "Woods / spring-fall / 06:00-18:00", 4,5,7,9,22,360,1080},
+  {"暖阳鲈", "Sun perch", "农场湖畔 · 夏秋 08:00—18:00", "Farm-lake / summer-fall / 08:00-18:00", 9,6,7,18,42,480,1080},
+  {"青背鲤", "Green carp", "农场果园 · 全季 06:00—19:00", "Farm, orchard / all year / day", 33,15,8,22,50,360,1140},
   {"雨鳍鳟", "Rain trout", "林间湖畔 · 春夏秋雨天", "Woods, lake / wet spring-fall", 12,7,5,20,44,360,1560,true},
-  {"暮影鲶", "Dusk catfish", "林间湖畔 · 四季傍晚后", "Woods, lake / after 18:00", 12,15,5,26,60,1080,1560},
+  {"暮影鲶", "Dusk catfish", "林间湖畔 · 全季 18:00—02:00", "Woods, lake / after 18:00", 12,15,5,26,60,1080,1560},
   {"霜花银鱼", "Frost smelt", "林间湖畔 · 冬季全天", "Woods, lake / winter", 12,8,6,8,20,360,1560},
-  {"星尾锦鲤", "Star koi", "果园湖畔 · 春秋傍晚后", "Orchard, lake / spring-fall dusk", 40,5,2,30,72,1080,1560}
+  {"星尾锦鲤", "Star koi", "果园湖畔 · 春秋 18:00—02:00", "Orchard, lake / spring-fall dusk", 40,5,2,30,72,1080,1560}
 };
 inline constexpr int FishSpeciesCount = 8;
 inline bool fish_available(const State &s, int id) {
@@ -46,9 +46,18 @@ struct FishingSession {
   Phase phase=Phase::Waiting;
   uint32_t elapsed=0, bite_at=0, cycle_ms=2400;
   int species=-1, length=0, attempts=2, count=0, center=500, radius=185;
-  bool perfect=false, discovered=false, record=false;
+  bool perfect=false, discovered=false, record=false, junk=false, no_bait=false;
+  static int trash_percent(const State&s) {
+    const int by_water[]={38,32,18,12,0,22};
+    return std::max(5,(s.region<6?by_water[s.region]:35)-fishing_level(s)*3);
+  }
   void begin(State &s) {
-    *this={};species=choose_fish(s);
+    *this={};
+    if(!s.bait){no_bait=true;phase=Phase::Escaped;return;}
+    change_item(s,46,-1);sync_inventory(s);
+    species=choose_fish(s);
+    junk=species<0||int(random(s)%100)<trash_percent(s);
+    if(junk){species=-1;bite_at=1100+random(s)%1700;return;}
     if(species<0){phase=Phase::Escaped;return;}
     const auto &f=FishSpeciesList[species];
     bite_at=1200+random(s)%1600;
@@ -69,7 +78,13 @@ struct FishingSession {
        (phase==Phase::Reeling && elapsed>9000))phase=Phase::Escaped;
   }
   bool press(State &s) {
-    if(phase==Phase::Bite) {phase=Phase::Reeling;elapsed=0;return false;}
+    if(phase==Phase::Bite) {
+      if(junk) {
+        if(!change_item(s,47,1)){phase=Phase::Escaped;return false;}
+        count=1;phase=Phase::Caught;sync_inventory(s);return true;
+      }
+      phase=Phase::Reeling;elapsed=0;return false;
+    }
     // Early taps leave the float in the water; terminal presses never award twice.
     if(phase!=Phase::Reeling)return false;
     int error=std::abs(cursor()-center);

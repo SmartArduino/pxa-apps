@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: MIT
 #include "living.hpp"
+#include "settlement.hpp"
 #include "wilderness.hpp"
 #include "mines.hpp"
 #include <algorithm>
 #include <cstdlib>
 namespace farm {
 const char *region_name(Region r, bool en) {
-  const char *cn[] = {"晴露农场", "晴露镇", "林间小径", "镜光湖畔", "温暖农舍", "蜜风果园", "晴露种子铺", "村民会馆", "回声矿洞"};
+  const char *cn[] = {"晴露农场", "晴露镇", "林间小径", "镜光湖畔", "温暖农舍", "蜜风果园", "晴露种子铺", "村民会馆", "回声矿洞", "小禾的暖房", "阿岚木工坊", "澄的湖畔小屋", "林婆婆的花屋"};
   const char *eng[] = {"Dewfield Farm", "Dewfield Town", "Whisper Woods",
-                       "Mirror Lake", "Farm Cottage", "Honey Orchard", "Seed Store", "Village Lodge", "Echo Mine"};
+                       "Mirror Lake", "Farm Cottage", "Honey Orchard", "Seed Store", "Village Lodge", "Echo Mine", "Xiaohe's quarters", "Alan's workshop", "Cheng's cabin", "Lin's cottage"};
   return (en ? eng : cn)[unsigned(r) < RegionCount ? unsigned(r) : 0];
 }
 const char *npc_name(int id, bool en) {
@@ -33,16 +34,16 @@ bool road_tile(uint8_t region,int x,int y) {
     return (y==7 && x>=6) || (x==6 && y>=7 && y<=18) ||
       (x==22 && y>=7 && y<=12) || (x==21 && y>=12 && y<=18) ||
       (y==12 && x>=21&&x<=22) || (y==18 && x>=6&&x<=21) || (x==15&&y>=18) ||
-      (y==19 && x>=4 && x<=7) || (y==17 && x>=21 && x<=23);
+      (y==11 && x>=4&&x<=6) || (y==16 && x>=21&&x<=23) || (y==19 && x>=4 && x<=7) || (y==17 && x>=21 && x<=23);
   case Region::Town:
-    return (y==12 && x>=7&&x<=24) || (x==15 && y>=7) ||
-      (y==7 && x>=1 && x<=24) || ((x==7||x==24)&&y>=7&&y<=12) ||
+    return (y==19&&x>=11&&x<=25) || ((x==11||x==25)&&y>=12&&y<=19) || (y==12 && x>=7&&x<=24) || (x==15 && y>=7) ||
+      (y==7 && x>=1 && x<=24) || (x==9&&y==8) || ((x==7||x==24)&&y>=7&&y<=12) ||
       (x>=12&&x<=18&&y>=9&&y<=15);
   case Region::Forest:
     return (y==4&&x>=15&&x<=22)||(x==22&&y>=3&&y<=4)||y==12 || (x==15&&y<=20) || (x==22&&y>=12&&y<=20) ||
       (y==20&&x>=15&&x<=22);
   case Region::Lake:
-    return (y==12&&x>=21) || (x==24&&y>=9&&y<=17);
+    return (y==12&&x>=21) || (x==26&&y>=9&&y<=12) || (x==24&&y>=9&&y<=17);
   case Region::Orchard:
     return (x==15&&y<=19) || (y==12&&x<=15) || ((y==9||y==19)&&x>=8&&x<=22) ||
       ((x==8||x==22)&&y>=9&&y<=19);
@@ -58,16 +59,14 @@ bool exit_clearance(uint8_t region,int x,int y) {
 Ground world_ground(const State &s, int x, int y) {
   Region r = Region(s.region);
   if(r==Region::Mine)return mine_ground(s,x,y);
-  int wild=wild_tree_at(s,x,y);if(wild>=0&&wild_stage(s,wild)!=3&&s.wild_age[wild]>=2)return Ground::Tree;
+  int wild=wild_tree_at(s,x,y);if(wild>=0&&s.wild_age[wild]!=7&&s.wild_age[wild]>=2)return Ground::Tree;
   if (indoors(s.region)) {
-    if(r==Region::SeedShop) {
-      if(x<7||x>24||y<5||y>20 || (y==10&&x>=11&&x<=21) || (y>=6&&y<=7&&x>=8&&x<=23))return Ground::Wall;
+    if(furnished(s.region)) {
+      if(x<7||x>24||y<5||y>20||home_solid(s.region,x,y))return Ground::Wall;
       return Ground::Path;
     }
-    if(r==Region::Lodge) {
-      if(x<7||x>24||y<5||y>20 ||
-         (y>=6&&y<=8&&((x>=8&&x<=10)||(x>=12&&x<=14)||(x>=18&&x<=20)||x>=22)) ||
-         (y>=5&&y<=6&&x>=15&&x<=17))return Ground::Wall;
+    if(r==Region::SeedShop) {
+      if(x<7||x>24||y<5||y>20 || (y==10&&x>=11&&x<=21) || (y>=6&&y<=7&&x>=8&&x<=23) || (y==16&&(x==8||x==23)))return Ground::Wall;
       return Ground::Path;
     }
     if (x < 7 || x > 24 || y < 5 || y > 20)
@@ -82,12 +81,11 @@ Ground world_ground(const State &s, int x, int y) {
   }
   if (x < 1 || y < 1 || x >= MapW - 1 || y >= MapH - 1)
     return Ground::Wall;
+  if(building_solid(s.region,x,y))return Ground::Wall;
   if(y==1&&(x%2)&&!exit_clearance(s.region,x,y))return Ground::Wall;
   if (r == Region::Town) {
     if ((s.story >= 5 && x >= 14 && x <= 16 && y == 14) ||
-        ((x == 16 || x == 18) && y == 10) || (y==10&&x>=10&&x<=12) || (y==8&&(x==5||x==9)))
-      return Ground::Wall;
-    if (((x >= 5 && x <= 9) || (x >= 22 && x <= 26)) && y >= 3 && y <= 6)
+        ((x == 16 || x == 18) && y == 10) || (y==10&&x>=10&&x<=12) || (y==8&&(x==5||x==10)))
       return Ground::Wall;
     if (y >= 17 && y <= 19 && x >= 3 && x <= 8)
       return Ground::Water;
@@ -108,8 +106,7 @@ Ground world_ground(const State &s, int x, int y) {
 
   } else if (r == Region::Lake) {
     if(x>=21&&x<=23&&y>=11&&y<=12)return Ground::Path;
-    if(x>=24&&x<=26&&y>=7&&y<=8)return Ground::Wall;
-    if(s.friend_chapter[1]>=2&&y==10&&x>=25&&x<=27)return Ground::Wall;
+    if(s.friend_chapter[1]>=2&&y==14&&x>=25&&x<=27)return Ground::Wall;
     int left=y<8?7:y<12?4:y<17?3:6;
     int right=y<8?17:y<12?20:y<17?21:18;
     if (x>=left && x<=right && y>=4 && y<=20)
@@ -125,6 +122,8 @@ Ground world_ground(const State &s, int x, int y) {
   return Ground::Grass;
 }
 int portal_heading(const Portal &p) {
+  if(p.from==Region::SeedShop&&p.to==Region::SeedHome)return 1;
+  if(p.from==Region::SeedHome&&p.to==Region::SeedShop)return 3;
   if(p.from==Region::Mine)return 0;
   if (indoors(uint8_t(p.from))) return 2;
   if (indoors(uint8_t(p.to))) return 0;
@@ -135,6 +134,22 @@ int portal_heading(const Portal &p) {
 int arrival_heading(const Portal &p) {
   for(const auto &back:Portals)if(back.from==p.to&&back.to==p.from)return (portal_heading(back)+2)%4;
   return portal_heading(p);
+}
+const Portal*portal_touch_at(const State&s,int x,int y) {
+ if(const auto*p=portal_at(s,x/Tile,y/Tile))return p;
+ // Side doors are painted above their floor tile. Tapping the visible frame
+ // must choose the same threshold as tapping its bottom, not the tile behind it.
+ for(const auto&p:Portals)if(unsigned(p.from)==s.region&&indoors(s.region)&&indoors(unsigned(p.to))){
+  int d=portal_heading(p),cx=p.x*Tile+8,cy=p.y*Tile+8;
+  if((d==1||d==3)&&x>=cx-7&&x<=cx+7&&y>=cy-24&&y<=cy+7)return &p;
+ }
+ if(indoors(s.region)||!road_tile(s.region,x/Tile,y/Tile))return nullptr;
+ for(const auto&p:Portals)if(unsigned(p.from)==s.region&&!indoors(unsigned(p.to))){
+  int d=portal_heading(p),dx=x-(p.x*Tile+8),dy=y-(p.y*Tile+8);
+  int forward=d==1?dx:d==3?-dx:d==2?dy:-dy,lateral=d%2?dy:dx;
+  if(forward>=-8&&forward<24&&std::abs(lateral)<=16)return &p;
+ }
+ return nullptr;
 }
 Point portal_approach(const Portal &p) {
   int d=portal_heading(p);
@@ -305,14 +320,14 @@ const char *npc_line(const State &s, int id, bool personal, bool en) {
   const char *daily[] = {
       "我叫小禾，在镇上照料种子铺。别急着扩大农田，先把每一株小苗照顾好。",
       "我是阿岚。上午在工坊，午后去林间挑木料。那座旧桥，我想再试着修一修。",
-      "叫我澄就好。桥没修好以前，我在林子里等。湖畔的鱼很机灵，可别急着收竿。",
+      "叫我澄就好。桥没修好时，我划小船到林间这边。我的家就在湖岸，桥通了以后来坐坐。钓鱼可别急着收竿。",
       "大家叫我林婆婆。路走熟了，就多来广场坐坐吧。镇上的事，我们可以一起商量"
       "。"};
   const char *daily_en[] = {
       "I'm Xiaohe, the seed keeper. Care for each little seedling first.",
       "I'm Alan, the carpenter. Find me in the workshop or woods. Let's mend "
       "that bridge.",
-      "Call me Cheng. I wait in the woods until the lake bridge is repaired.",
+      "Call me Cheng. I row to the woods while the bridge is broken. Visit my lake cabin once it is repaired.",
       "I'm Granny Lin. Visit the square often. We can help this village "
       "together."};
   return (en ? daily_en : daily)[id % 4];

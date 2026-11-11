@@ -15,10 +15,11 @@ void drain(){
   for(auto&p:packets)assert(guests[p.id-1].receive(0,p.type,p.data.data(),unsigned(p.data.size())));
 }
 void connect(unsigned id){
-  farm::fresh(visitors[id-1]);visitors[id-1].day=18;visitors[id-1].gold=449;
+  farm::fresh(visitors[id-1]);visitors[id-1].day=18;visitors[id-1].gold=449;visitors[id-1].appearance=id&1;
   auto&r=guests[id-1];r.bind(visitors[id-1]);r.original=visitors[id-1];r.restore=true;r.mode=Mode::Joining;r.now=1000;
-  uint8_t hello[4];put32(hello,1);assert(host.receive(id,Message::Hello,hello,4));drain();
+  uint8_t hello[4];put32(hello,ProtocolVersion);assert(host.receive(id,Message::Hello,hello,4));drain();
   assert(r.ready&&r.mode==Mode::Guest&&r.my_id==id&&visitors[id-1].gold==world.gold);
+  assert(visitors[id-1].appearance==(id&1));
 }
 void command(unsigned id,Command c,Pose pose){
   uint8_t bytes[PoseBytes+CommandBytes];encode_pose(pose,bytes);encode_command(c,bytes+PoseBytes);
@@ -60,6 +61,8 @@ int main(){
   host.farmers[1].personal.energy=72;host.farmers[2].personal.energy=31;
   assert(host.send_snapshot(1)&&host.send_snapshot(2));drain();
   assert(visitors[0].energy==72&&visitors[1].energy==31);
+  auto &f=host.farmers[1].fishing;f.junk=true;f.species=-1;f.phase=farm::FishingSession::Phase::Caught;f.count=1;
+  host.now+=1001;assert(host.send_snapshot(1));drain();assert(guests[0].farmers[1].fishing.junk&&visitors[0].appearance==1);
   // Snapshot corruption leaves a guest's current State unchanged.
   host.now+=1001;assert(host.send_snapshot(1));auto corrupt=std::move(outgoing.back());outgoing.clear();
   uint8_t stable[farm::SaveBytes],after[farm::SaveBytes];farm::encode(visitors[0],stable,sizeof stable);

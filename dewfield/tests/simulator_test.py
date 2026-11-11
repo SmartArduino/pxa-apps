@@ -18,6 +18,11 @@ p.add_argument('--output',type=Path,required=True)
 p.add_argument('--runner',type=Path,default=Path('build/simulator/doit-gamekit-1/pxsys_product_simulator'))
 p.add_argument('--appearance-only',action='store_true')
 p.add_argument('--title-only',action='store_true')
+p.add_argument('--valley-only',action='store_true')
+p.add_argument('--settlement-only',action='store_true')
+p.add_argument('--ground-art-only',action='store_true')
+p.add_argument('--rooms-only',action='store_true')
+p.add_argument('--portals-only',action='store_true')
 p.add_argument('--animation-only',action='store_true')
 p.add_argument('--navigation-only',action='store_true')
 p.add_argument('--action-only',action='store_true')
@@ -147,7 +152,7 @@ def saved():
         assert struct.unpack_from('<I',raw,956)[0]==fnv(raw[:956])
         expanded=bytearray(1280);expanded[:98]=raw[:98];expanded[4]=10
         for i,v in enumerate(raw[98:178]):expanded[98+i*4:102+i*4]=bytes([v&1,(v>>1)&7,(v>>4)&7,v>>7])
-        expanded[418:1117]=raw[178:877];struct.pack_into('<I',expanded,1276,fnv(expanded[:1276]));raw=bytes(expanded)
+        expanded[418:1125]=raw[178:885];struct.pack_into('<I',expanded,1276,fnv(expanded[:1276]));raw=bytes(expanded)
     assert raw[:4]==b'DWF1' and len(raw) in (512,768,1280)
     result={k:struct.unpack_from(fmt,raw,offset)[0] for k,fmt,offset in [('day','<H',6),('energy','<B',10),('water','<B',11),('px','<H',18),('py','<H',20),('gold','<I',22),('shipping','<I',26),('earned','<I',30),('harvested','<I',34),('fish','<H',58),('wood','<H',60),('stone','<H',62)]}
     result.update(seeds=list(struct.unpack_from('<8H',raw,42))[::2],produce=list(struct.unpack_from('<8H',raw,42))[1::2],plots=[list(raw[98+i*4:102+i*4])for i in range(80)])
@@ -165,6 +170,7 @@ def saved():
         result['slots']+=list(raw[745:759])
     else:result['intro']=5
     if raw[4]>=10:
+        if raw[1117]==86 and raw[1118] in (1,2,3):result.update(bait=struct.unpack_from('<H',raw,1119)[0],trash=struct.unpack_from('<H',raw,1121)[0],appearance=raw[1123],character_chosen=bool(raw[1124]))
         result['slots']+=list(raw[759:773])
         result['visited']|=raw[839]<<8
         result.update(last_shipped_count=struct.unpack_from('<H',raw,1109)[0] or bool(raw[558]),effects=not bool(raw[1111]),friend_chapter=list(raw[1112:1116]))
@@ -236,6 +242,142 @@ def replace_fixture(raw):
 
 try:
     start();capture('01-title')
+    if args.portals_only:
+        assert args.fixture_tool
+        tap(cw//2,ch-38);key('Z')
+        for _ in range(5):time.sleep(.45);key('Z')
+        wait_for(lambda s:s['intro']==5,'opening complete');stop()
+        def fixture(mode):
+            raw=out/(mode+'.sav');subprocess.run([str(args.fixture_tool.resolve()),'portal-'+mode,str(raw),str(out/(mode+'.json'))],check=True)
+            replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38)
+        fixture('farm');world_tap(30,7)
+        wait_for(lambda s:s['region']==1,'visible outward road aperture');capture('tap-road-edge');stop()
+        fixture('shop');world_tap(24,14)
+        wait_for(lambda s:s['region']==6 and s['px']==24*16+8,'walk past side door without entering');capture('walk-past-door');stop()
+        fixture('shop')
+        v=saved();cx=max(0,min(512-cw,v['px']-cw//2));cy=max(0,min(384-ch,v['py']-(ch-8)//2))
+        x,y=(23*16+8-cx)*scale,(14*16-8-cy)*scale
+        command(f'TOUCH DOWN 0 {x} {y}');time.sleep(.08)
+        command(f'TOUCH MOVE 0 {x+6*scale} {y+6*scale}');command(f'TOUCH UP 0 {x+6*scale} {y+6*scale}')
+        wait_for(lambda s:s['region']==9,'jittered side-door tap');capture('jittered-door-tap');stop()
+        fixture('home');world_tap(16,20)
+        wait_for(lambda s:s['region']==0,'front doormat with long food caption');assert saved()['produce'][0]==1;capture('front-door-food');stop()
+        fixture('farm')
+        # Hold the original captured pointer through the regional transition.
+        # Its release must not click or route in the destination map.
+        v=saved();cx=max(0,min(512-cw,v['px']-cw//2));cy=max(0,min(384-ch,v['py']-(ch-8)//2))
+        x,y=(29*16+8-cx)*scale,(7*16+8-cy)*scale
+        command(f'TOUCH DOWN 0 {x} {y}');wait_for(lambda s:s['region']==1,'held pointer crossing');command(f'TOUCH UP 0 {x} {y}')
+        wait_for(lambda s:s['region']==1,'held intentional exit');capture('arrived');time.sleep(.25)
+        v=saved();assert v['px']==40 and v['py']==120,('old release started destination movement',v['px'],v['py'])
+        # First new-map press uses its camera immediately. No artificial input
+        # delay is needed after the first destination frame has been presented.
+        cx=max(0,min(512-cw,40-cw//2));cy=max(0,min(384-ch,120-(ch-8)//2))
+        tap(6*16+8-cx,8*16+8-cy,.01)
+        wait_for(lambda s:s['region']==1 and s['px']==104 and s['py']==136,'immediate destination retarget');capture('new-map-tap');stop()
+        print('PASS: signed road-aperture taps, local side-door pass-through, jittered doorway taps, held entrance, stale release cancellation and arrival retarget')
+        raise SystemExit(0)
+    if args.rooms_only:
+        assert args.fixture_tool
+        tap(cw//2,ch-38);key('Z')
+        for _ in range(5):time.sleep(.45);key('Z')
+        wait_for(lambda s:s['intro']==5,'opening complete');stop()
+        def fixture(mode):
+            raw=out/(mode+'.sav');subprocess.run([str(args.fixture_tool.resolve()),'rooms-'+mode,str(raw),str(out/(mode+'.json'))],check=True)
+            replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38)
+        fixture('entry');capture('home-rooms')
+        world_tap(10,8);wait_for_panel('bed inside bedroom');capture('bedroom-sleep');key('X')
+        world_tap(21,9);wait_for_panel('stove inside kitchen');capture('kitchen-cooking');key('X')
+        # World taps derive the camera from durable coordinates. Pause/save
+        # after this longer trip instead of reading an earlier coalesced save.
+        key('ENTER');time.sleep(.3);key('ENTER')
+        wait_for(lambda s:s['px']//16==21 and s['py']//16==11,'kitchen position persisted')
+        world_tap(12,13);wait_for_panel('lounge television');capture('living-forecast');key('X');stop()
+        fixture('legacy');key('ENTER')
+        v=wait_for(lambda s:s['px']//16!=12 or s['py']//16!=12,'legacy farmer safely relocated')
+        assert v['gold']==500 and v['day']==1;key('ENTER');capture('legacy-safe-arrival');stop()
+        for mode in ('cutaway','jamb','night','7','9','10','11','12'):
+            fixture(mode);capture('walls-'+mode);stop()
+        print('PASS: signed room-door navigation, lounge forecast, layout migration, wall junctions in six homes, cutaway and night lighting')
+        raise SystemExit(0)
+    if args.ground_art_only:
+        assert args.fixture_tool
+        tap(cw//2,ch-38);key('Z')
+        for _ in range(5):time.sleep(.45);key('Z')
+        wait_for(lambda s:s['intro']==5,'opening complete');stop()
+        for mode in ('day','rain','night','town','lake','room'):
+            raw=out/(mode+'.sav');meta=out/(mode+'.json')
+            subprocess.run([str(args.fixture_tool.resolve()),'ground-'+mode,str(raw),str(meta)],check=True)
+            replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38);capture('ground-'+mode)
+            key('ENTER');time.sleep(.15);assert saved()['region']==json.loads(meta.read_text())['region'];stop()
+        print('PASS: signed PXA ground-art captures: populated crops/livestock, daylight, rain, night, plaza, lake and interior')
+        raise SystemExit(0)
+    if args.settlement_only:
+        assert args.fixture_tool
+        tap(cw//2,ch-38);key('Z')
+        for _ in range(5):time.sleep(.45);key('Z')
+        wait_for(lambda s:s['intro']==5,'opening complete');stop()
+        def fixture(mode):
+            raw=out/(mode+'.sav')
+            subprocess.run([str(args.fixture_tool.resolve()),'settlement-'+mode,str(raw),str(out/(mode+'.json'))],check=True)
+            replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38)
+        for mode in ('sleep','late','overwork'):
+            fixture(mode)
+            if mode=='sleep':
+                key('UP',.01);key('X');wait_for_panel('sleep confirmation');capture('sleep-confirm');key('Z')
+            v=wait_for(lambda s:s['day']==4,'morning after '+mode)
+            assert v['energy']==100 and v['region']==4,(mode,v)
+            capture('morning-'+mode);stop()
+            start();tap(cw//2,ch-38);v=saved();assert v['day']==4 and v['energy']==100;stop()
+        for region in (0,1,3,4,6,7,9,10,11,12):
+            fixture(str(region));capture(f'region-{region}');stop()
+        # Touch the rendered door face, not its invisible navigation tile.
+        # These three entrances previously shared the wrong lodge/shop target.
+        for npc,region,x,y,parent in ((0,9,152,103,1),(1,10,408,277,1),(3,12,184,277,1),(2,11,424,133,3)):
+            fixture('door-'+str(npc));v=saved()
+            cx=max(0,min(512-cw,v['px']-cw//2));cy=max(0,min(384-ch,v['py']-(ch-8)//2))
+            tap(x-cx,y-cy)
+            wait_for(lambda s:s['region']==region,'touch rendered home door')
+            capture('touched-home-'+str(npc));key('DOWN',.65)
+            wait_for(lambda s:s['region']==parent,'leave touched home');stop()
+        (out/'summary.json').write_text(json.dumps({'manual_late_exhausted_sleep':100,'forced_late_sleep':100,'overwork_collapse':100,'restart_full_energy':True,'distinct_buildings':6,'furnished_areas':7,'four_home_doors_touch_and_exit':True},indent=2)+'\n')
+        print('PASS: signed PXA manual/late/overwork overnight full energy, durable restart, six architectural styles and room captures')
+        raise SystemExit(0)
+    if args.valley_only:
+        assert args.fixture_tool
+        tap(cw//2,ch-38);capture('02-farmer-choice')
+        mx,my=(cw-228)//2,(ch-210)//2
+        tap(mx+165,my+95);tap(mx+110,my+188)
+        for i in range(5):
+            time.sleep(.45);capture(f'opening-{i}');key('Z')
+        girl_key=Image.open(out/'opening-2.png').tobytes()
+        wait_for(lambda s:s.get('appearance')==1 and s['intro']==5,'chosen farmer and completed opening')
+        capture('03-farm');stop()
+        def fixture(mode):
+            raw=out/(mode+'.sav');meta=out/(mode+'.json')
+            subprocess.run([str(args.fixture_tool.resolve()),'valley-'+mode,str(raw),str(meta)],check=True)
+            replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38);return json.loads(meta.read_text())
+        # Same actual story, but the stored appearance selects the male art.
+        raw=out/'boy-intro.sav';meta=out/'boy-intro.json'
+        subprocess.run([str(args.fixture_tool.resolve()),'valley-boy-intro',str(raw),str(meta)],check=True)
+        replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38)
+        for i in range(5):time.sleep(.45);capture(f'opening-boy-{i}');key('Z')
+        assert Image.open(out/'opening-boy-2.png').tobytes()!=girl_key
+        wait_for(lambda s:s.get('appearance')==0 and s['intro']==5,'male story selection');stop()
+        for region in range(13):
+            fixture(str(region));capture(f'region-{region}');stop()
+        for depth in (11,21):fixture(f'mine-{depth}');capture(f'mine-{depth}');stop()
+        for npc,region,parent in [(0,9,1),(1,10,1),(2,11,3),(3,12,1)]:
+            fixture(f'door-{npc}');key('UP',.25)
+            wait_for(lambda s:s['region']==region,'enter own home');capture(f'home-entry-{npc}')
+            key('DOWN',.65);wait_for(lambda s:s['region']==parent,'leave own home');stop()
+        meta=fixture('trash');key('RIGHT',.01);key('Z');time.sleep(meta['bite_at']/1000+.1);key('Z')
+        wait_for(lambda s:s.get('trash')==1 and s.get('bait')==11 and not s['fish_caught'],'bait consumed once and trash caught')
+        capture('04-trash-catch');stop()
+        fixture('no-bait');key('RIGHT',.01);key('Z');time.sleep(2.5)
+        assert saved()['bait']==0 and saved()['energy']==100;capture('05-no-bait');stop()
+        print('PASS: real signed PXA farmer selection, five streamed opening illustrations, thirteen regions, three cave themes, four home entrances/exits, bait and garbage persistence')
+        raise SystemExit(0)
     if args.title_only:
         # Verify an unobscured scanline directly against the original art.
         import math
@@ -253,6 +395,7 @@ try:
     try:needs_intro=saved().get('intro',5)<5
     except AssertionError:needs_intro=True
     tap(cw//2,ch-38)
+    if needs_intro:key("Z") # Confirm the default farmer before the opening.
     if args.touch_only:
         assert args.fixture_tool
         if needs_intro:
@@ -601,7 +744,7 @@ try:
             replace_fixture(raw.read_bytes());start();tap(cw//2,ch-38);time.sleep(1)
             capture('living-'+label)
             if label=='home':
-                world_tap(15,7);wait_for_panel('TV forecast');capture('living-forecast');key('BACK')
+                world_tap(12,14);wait_for_panel('TV forecast');capture('living-forecast');key('BACK')
                 world_tap(13,5);wait_for_panel('Calendar');capture('living-calendar');key('BACK')
             elif label=='shop':
                 world_tap(15,10);wait_for_panel('Store counter');capture('living-store-counter');key('BACK')

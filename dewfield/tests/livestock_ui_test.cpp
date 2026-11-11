@@ -14,7 +14,7 @@ int main(int argc,char **argv) {
  for(int ms=0;ms<1000;++ms){game::tick(1);assert(walking);assert(walk_distance<=32);}
  assert(walk_distance>=31);held_keys[1]=false;stop_motion();game::tick(1);assert(!walking);
  // Opening pauses game time, persists between scenes, and replay grants nothing.
- game::init();title_screen=true;page=Page::Farm;game::key(Key::A);assert(page==Page::Intro&&!title_screen);
+ game::init();title_screen=true;page=Page::Farm;game::key(Key::A);assert(page==Page::Character);game::key(Key::A);assert(page==Page::Intro&&!title_screen);
  auto minute=state.minute;game::tick(200);assert(state.minute==minute);game::key(Key::A);assert(intro_scene==1&&state.intro==1);
  uint8_t save[farm::SaveBytes];auto saved_size=game::serialize(save,sizeof(save));game::load(save,saved_size);assert(state.intro==1);
  for(int i=1;i<IntroScenes;++i){game::tick(200);game::key(Key::A);}
