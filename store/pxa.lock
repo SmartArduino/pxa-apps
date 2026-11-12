@@ -5,8 +5,8 @@
   ],
   "schema": "pxa-lock-1",
   "sdk": {
-    "digest": "e6bb7e5e8fd900ca742371bf28711f63768b03184a70af6f584939fbc96e8697",
-    "release": "0.9.0"
+    "digest": "0db69166bf21e6e44478d3b026bb3842ab0dcc6b6e0bc49e1275b46e648955a1",
+    "release": "0.11.0"
   },
   "toolchain": {
     "clang_sha256": "a90f80361e1560feec75afcee8db9c1444907bf21767ccb87d75b84d639bbfe2",
@@ -21,7 +21,7 @@
       "repository": "https://github.com/78/wasm-micro-runtime.git",
       "version": "78-wamr-6a54186a"
     },
-    "wamrc_sha256": "2dea43080c78f2206ca325e55b95bc6d2c26d35d90c26bffd85451dac9c8b066",
+    "wamrc_sha256": "b6f57f308c152fecb5ed651ed7e9567695bb3c4c03b02e2d49e4d111df4728e1",
     "wasi_version": "34.0\nwasi-libc: 2e6fb9d8ee0c\nllvm: 895aa2c896ad\nllvm-version: 23.1.0\nconfig: f992bcc08219"
   }
 }
