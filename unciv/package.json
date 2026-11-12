@@ -1,7 +1,7 @@
 {
   "format":"pxa-package-source-0.2",
   "id":"pxa-unciv", "name":"Unciv", "version":"0.4.0", "release_sequence":6,
-  "description":"从零编写的 PXA 单人回合制 4X：六角探索、建城生产、科技、政策、外交与征服。使用经署名的 Unciv 素材。",
+  "description":"为 PXA 重写的 Unciv",
   "min_sdk":[2,1], "target_sdk":[2,1], "compile_sdk":[2,1],
   "publisher":{"handle":"lucinhu","display_name":"lucinhu"},
   "build":{"system":"cmake","source_dir":".","linear_memory":{"maximum_bytes":2097152,"pinned":true}},
