@@ -14,5 +14,5 @@
   "language": "zh-CN",
   "icon": "assets/icon.png",
   "cover": "store/cover.png",
-  "changelog": "0.11.2：补充独立 Wasm 安装包，提供同版本的 ESP32-S3、ESP32-S31、ESP32-P4 独立 AOT 包；保留原有玩法、存档、原版素材、音乐和音效。\n\n0.11.2: Add a separate portable Wasm package alongside matching ESP32-S3, ESP32-S31 and ESP32-P4 AOT packages. Preserve gameplay, saves, original assets, music and sound effects."
+  "changelog": "0.11.2：补充独立 Wasm 安装包，保留原有玩法、存档、原版素材、音乐和音效。\n对应完整源码：https://github.com/SmartArduino/pxa-apps/tree/codex/mindustry-wasm-0-11-2/mindustry\n\n0.11.2: Add a separate portable Wasm package. Preserve gameplay, saves, original assets, music and sound effects."
 }

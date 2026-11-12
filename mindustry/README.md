@@ -10,7 +10,7 @@
 tools/app.sh build mindustry --source-root local/pxa-apps --target simulator --aot-only
 ```
 
-商城单独提供包含便携 Wasm 代码的安装包，硬件平台分别提供只包含对应架构 AOT 的安装包。各包使用相同版本、release sequence 和原有签名身份。以下命令在固件工作区运行，输出目录使用本次发布的本地产物目录：
+商城单独提供包含便携 Wasm 代码的安装包，硬件平台分别提供只包含对应架构 AOT 的安装包。同一次多平台发布须使用相同版本、release sequence 和原有签名身份。以下命令在固件工作区运行，输出目录使用本次发布的本地产物目录：
 
 ```sh
 release_dir="local/artifacts/mindustry/$(date +%Y%m%d-%H%M%S)/release"
