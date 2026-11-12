@@ -1,0 +1,4 @@
+文字与数值数据来自 Oliver714/hotk-gba-demake。上游自有代码为 GPL-3.0-only；第三方名称、内容、数据与编译资源表不自动适用该许可。
+未包含原版 GBA 精灵、音乐或头像。所用数据的再分发授权尚待确认，当前不发布商城。
+来源：https://github.com/Oliver714/hotk-gba-demake/blob/main/THIRD_PARTY_NOTICES.md
+适配源代码：https://github.com/SmartArduino/pxa-apps/tree/main/hotk

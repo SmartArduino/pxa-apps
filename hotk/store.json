@@ -1,0 +1,15 @@
+{
+  "name": "三国文字策略",
+  "summary": "选择剧本与势力，在文字界面中管理四十八城和武将。",
+  "kind": "game",
+  "category": "strategy",
+  "tags": [
+    "三国",
+    "策略",
+    "文字"
+  ],
+  "description": "三国题材文字策略重实现，包含四十八城、二百五十五将与五个剧本。只复用上游项目的文字和数值数据，不含原版 GBA 精灵、音乐或头像；不是原版 GBA 游戏模拟器。\n\n状态只在本次运行中保留，退出后重新开始。源代码与许可见 https://github.com/SmartArduino/pxa-apps/tree/main/hotk 。\n\nA text strategy adaptation with 48 cities, 255 generals and five scenarios. No original GBA graphics or music. Session-only progress.",
+  "changelog": "上架前草稿：所用数据的再分发授权待确认。",
+  "icon": "assets/icon.png",
+  "cover": null
+}

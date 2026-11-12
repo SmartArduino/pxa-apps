@@ -1,0 +1,15 @@
+{
+  "name": "原创棋盘：地产回合",
+  "summary": "在原创三十格棋盘上掷骰、经营地产，与两位电脑对手对局。",
+  "kind": "game",
+  "category": "strategy",
+  "tags": [
+    "棋盘",
+    "回合制",
+    "单机"
+  ],
+  "description": "原创棋盘和规则的大富翁类游戏，没有《大富翁4》的图像、音乐或地图。三位玩家中两位由电脑控制，包含地产买卖升级、机会事件与破产结算。\n\n当前版本仅在本次运行中保留状态，退出后重新开始。\n\nAn original 30-tile turn-based property board game with two AI opponents. No original Richman 4 assets. No persistent saves.",
+  "changelog": "首次商城版本：原创棋盘、地产经营与三人回合对局。",
+  "icon": "assets/icon.png",
+  "cover": null
+}

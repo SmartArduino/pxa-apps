@@ -1,0 +1,16 @@
+{
+  "name": "MakeCode Arcade 字节码播放器",
+  "summary": "实验性 PXT VM 播放器，导入 .pxt64 游戏；不在设备上编译 TypeScript。",
+  "kind": "game",
+  "category": "arcade",
+  "tags": [
+    "MakeCode",
+    "PXT",
+    "模拟器",
+    "实验性"
+  ],
+  "description": "实验性独立 PXT 字节码播放器，支持 160×120 游戏画面和不超过 512 KiB 的 .pxt64 文件。使用主机导出或转换的游戏文件；设备不编译 TypeScript，也不直接读取 PNG 游戏卡。安装包不附带游戏。\n\n预留 4 MiB Guest 线性内存，系统、AOT、显示及音频还需额外空间。支持触屏与手柄，保存设置有固定大小限制；不支持即时快照、JavaScript 异常恢复及所有硬件扩展。兼容性须逐个游戏验证，桌面成绩不代表 ESP32 帧率。\n\nExperimental PXT VM cartridge player. Import your own .pxt64 files. No TypeScript compilation or PNG cartridge decoding on device.",
+  "changelog": "首次实验版本：PXT VM、图像、混音与有限设置保存，修复 32 位 ABI 适配。",
+  "icon": "assets/icon.png",
+  "cover": null
+}

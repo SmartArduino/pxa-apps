@@ -1,0 +1,15 @@
+{
+  "name": "Freedoom",
+  "summary": "使用自由授权资源的第一人称射击游戏，默认提供 Phase 2。",
+  "kind": "game",
+  "category": "action",
+  "tags": [
+    "Freedoom",
+    "射击",
+    "自由资源"
+  ],
+  "description": "独立 Freedoom 应用，使用 PureDOOM 引擎与 Freedoom v0.13.0 原始自由资源。默认绑定独立签名的 Phase 2 资源包；程序和资源分别校验、安装。\n\n预留 12 MiB Guest 线性内存，另需系统、AOT、显示与音频内存，面向有足够 PSRAM 的 P4 / ESP32-S31 设备。请以具体设备测试为准。支持横屏、手柄和触屏；资源不包含商业 Doom WAD。源代码、GPL 引擎与 BSD 资源声明保留在源码及资源包中。\n\nFreedoom Phase 2 using free game data and the PureDOOM engine. Requires ample PSRAM; not a package of commercial Doom assets.",
+  "changelog": "首次商城版本：独立签名 Phase 2 资源、横屏与标准输入音频适配。",
+  "icon": "assets/icon.png",
+  "cover": null
+}
