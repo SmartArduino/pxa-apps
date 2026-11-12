@@ -1289,7 +1289,7 @@ void init() {
                 b.x, b.y, b.w, b.h, l.button, l.dock[0].x, l.dock[0].y,
                 l.dock[0].w, l.dock[0].h);
   pocket::log(geometry);
-  pocket::log("Mindustry: ready version=0.11.0");
+  pocket::log("Mindustry: ready version=0.11.1");
 }
 void reset() { newGame(false); }
 void key(pocket::Key k) {

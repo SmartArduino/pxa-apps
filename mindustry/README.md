@@ -7,8 +7,20 @@
 在固件工作区根目录构建：
 
 ```sh
-tools/app.sh build mindustry --source-root local/pxa-apps --target simulator,esp32s3,esp32s31,esp32p4
+tools/app.sh build mindustry --source-root local/pxa-apps --target simulator --aot-only
 ```
+
+商城发布按架构分别构建，每个安装包只包含该架构的 AOT。以下命令在固件工作区运行，输出目录使用本次发布的本地产物目录：
+
+```sh
+release_dir="local/artifacts/mindustry/$(date +%Y%m%d-%H%M%S)/release"
+for target in esp32s3 esp32s31 esp32p4 simulator; do
+  tools/app.sh build mindustry --source-root local/pxa-apps \
+    --target "$target" --aot-only --output "$release_dir/$target"
+done
+```
+
+`store/cover.png` 是像素工业风的商城宣传插画，沿用原版素材的 GPL-3.0 许可；商城截图单独使用真实 PXA 模拟器原始画面。
 
 在真实模拟器中运行构建后的签名展开目录：
 
