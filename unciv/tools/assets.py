@@ -22,6 +22,8 @@ icon_specs=[
  ('ui_production','android/Images.Icons/StatIcons/Production.png','CC-BY-3.0','Alex Bickov'),
  ('ui_population','android/Images.Icons/StatIcons/Population.png','CC-BY-3.0 OR Public-Domain','Stéphanie Rusch'),
  ('ui_options','android/Images.Icons/OtherIcons/Options.png','CC-BY-3.0 OR Public-Domain','Thengakola'),
+ ('ui_new','android/Images.Icons/OtherIcons/New.png','CC-BY-3.0 OR Public-Domain','Alice Design'),
+ ('ui_resume','android/Images.Icons/OtherIcons/Resume.png','CC-BY-3.0 OR Public-Domain','Salvia Santos'),
  ('ui_monument','android/Images.ConstructionIcons/BuildingIcons/Monument.png','CC-BY-3.0 OR Public-Domain','Eliricon'),
  ('ui_granary','android/Images.ConstructionIcons/BuildingIcons/Granary.png','CC-BY-3.0 OR Public-Domain','Pedro Santos'),
  ('ui_barracks','android/Images.ConstructionIcons/BuildingIcons/Barracks.png','CC-BY-3.0 OR Public-Domain','Creaticca Creative Agency'),
@@ -75,7 +77,7 @@ for name in sounds:
   pcm[-1-i]=int(pcm[-1-i]*i/80)
  (audio_dir/f'{name}.pcm').write_bytes(bytes(max(0,min(255,128+round(v*9000/peak/256))) for v in pcm))
 # The unmodified upstream application icon, with its complete attribution.
-(ROOT/'assets/icon.png').write_bytes((ROOT/'assets/upstream/Unciv128.png').read_bytes())
+(ROOT/'assets/icon.png').write_bytes((ROOT/'source-assets/upstream/Unciv128.png').read_bytes())
 print('Generated',len(items),'pinned assets')
 
 # The upstream default download offer, with independently pinned source and

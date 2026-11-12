@@ -16,5 +16,5 @@
   "language": "zh-CN",
   "icon": "assets/icon.png",
   "cover": "store/cover.png",
-  "changelog": "0.4.1：新增独立 Wasm 版本，保留 ESP32-S3、ESP32-S31 和 ESP32-P4 的独立 AOT 包；扩充商城简介。游戏玩法、原版素材和音乐与设备版一致，沿用原有存档。\n\n0.4.1: Add a separate portable Wasm package alongside ESP32-S3, ESP32-S31 and ESP32-P4 AOT packages. Expand the store summary; preserve gameplay, original assets, music and saves."
+  "changelog": "0.4.2：主菜单参考原版，采用完整六角地图背景、蓝色图标按钮与自适应布局；加入原版新游戏、继续游戏图标及版本显示。提供独立 Wasm 及 ESP32-S3、ESP32-S31、ESP32-P4 AOT 包，沿用原有存档和详细商城简介。\n\n0.4.2: Refresh the main menu with a full hex-map backdrop, upstream New/Resume icons, responsive blue buttons and a version footer. Includes separate Wasm, ESP32-S3, ESP32-S31 and ESP32-P4 packages; preserves existing saves and the detailed store summary."
 }

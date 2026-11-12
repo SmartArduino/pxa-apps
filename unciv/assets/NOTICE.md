@@ -57,6 +57,8 @@ credits and provide attribution and the CC BY 3.0 terms for all of them.
 | StatIcons/Production.png | Alex Bickov | [Gear](https://thenounproject.com/term/gear/29368) |
 | StatIcons/Population.png | Stéphanie Rusch | [User](https://thenounproject.com/term/user/38217) |
 | OtherIcons/Options.png | Thengakola | [Options](https://thenounproject.com/icon/options-866090) |
+| OtherIcons/New.png | Alice Design | [New](https://thenounproject.com/icon/new-1886943) |
+| OtherIcons/Resume.png | Salvia Santos | [Go back](https://thenounproject.com/icon/go%20back-1901947) |
 | BuildingIcons/Monument.png | Eliricon | [Obelisk](https://thenounproject.com/term/obelisk/749104/) |
 | BuildingIcons/Granary.png | Pedro Santos | [Storehouse](https://thenounproject.com/term/storehouse/966786/) |
 | BuildingIcons/Barracks.png | Creaticca Creative Agency | [Cross swords](https://thenounproject.com/term/cross-swords/965398/) |

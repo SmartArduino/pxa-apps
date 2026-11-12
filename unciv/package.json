@@ -1,6 +1,6 @@
 {
   "format":"pxa-package-source-0.2",
-  "id":"pxa-unciv", "name":"Unciv", "version":"0.4.1", "release_sequence":7,
+  "id":"pxa-unciv", "name":"Unciv", "version":"0.4.2", "release_sequence":8,
   "description":"为 PXA 重写的 Unciv，单人回合制 4X 策略游戏。探索六角世界，建立城市、发展科技与政策，管理人口和生产，指挥单位与 AI 文明竞争。支持地图大小设置、战争迷雾、自动存档，以及原版图像、音效和背景音乐。",
   "min_sdk":[2,1], "target_sdk":[2,1], "compile_sdk":[2,1],
   "publisher":{"handle":"lucinhu","display_name":"lucinhu"},

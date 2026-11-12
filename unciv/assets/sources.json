@@ -182,7 +182,7 @@
       "path": "android/Images.Icons/StatIcons/Food.png",
       "sha256": "dcc8a5b57a4c9c15cb414ee67ef4b09c7c6bb4915a0752b9a4866be5181e4429",
       "license": "CC-BY-3.0",
-      "author": "Pedro Gonçalves"
+      "author": "Pedro Gon\u00e7alves"
     },
     {
       "file": "source-assets/upstream/Production.png",
@@ -196,7 +196,7 @@
       "path": "android/Images.Icons/StatIcons/Population.png",
       "sha256": "ce033c279c6e40382433b495884b8fe8b5fabb8ac04b30582312bab7e98ed46e",
       "license": "CC-BY-3.0 OR Public-Domain",
-      "author": "Stéphanie Rusch"
+      "author": "St\u00e9phanie Rusch"
     },
     {
       "file": "source-assets/upstream/Options.png",
@@ -204,6 +204,20 @@
       "sha256": "6f132ff058cea38527c757b6e7e0984b1521c6cc57c5e18f5559320a397dcc57",
       "license": "CC-BY-3.0 OR Public-Domain",
       "author": "Thengakola"
+    },
+    {
+      "file": "source-assets/upstream/New.png",
+      "path": "android/Images.Icons/OtherIcons/New.png",
+      "sha256": "1ab56b73da41c915cd0719d5f6a9f6b6e311a475c9ea9d935960f45cc680573c",
+      "license": "CC-BY-3.0 OR Public-Domain",
+      "author": "Alice Design"
+    },
+    {
+      "file": "source-assets/upstream/Resume.png",
+      "path": "android/Images.Icons/OtherIcons/Resume.png",
+      "sha256": "ef5e58b22304da59d4ded86aa6cf6dbe93a97e1fd1c136ae2eb973251641fc64",
+      "license": "CC-BY-3.0 OR Public-Domain",
+      "author": "Salvia Santos"
     },
     {
       "file": "source-assets/upstream/Monument.png",

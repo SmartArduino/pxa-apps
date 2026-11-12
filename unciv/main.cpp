@@ -534,6 +534,17 @@ int owned_count(bool units) {
     ++count;
   return count;
 }
+struct TitleLayout {
+  int x, y, width, row_height, gap, count;
+};
+TitleLayout title_layout() {
+  int count = started ? 3 : 2;
+  int height = HEIGHT < 280 ? 32 : 36, gap = 8;
+  int width = std::min(WIDTH - 48, 304);
+  int total = count * (height + gap) - gap;
+  int y = std::min((HEIGHT + 68 - total) / 2, HEIGHT - 28 - total);
+  return {(WIDTH - width) / 2, y, width, height, gap, count};
+}
 int grid_step() {
   int rows = screen == CityView ? 3 : 4;
   return std::clamp(
@@ -543,12 +554,13 @@ int hit(int x, int y) {
   if (x < 0 || y < 0 || x >= WIDTH || y >= HEIGHT)
     return -1;
   if (screen == Title) {
-    if (x >= 24 && x < WIDTH - 24) {
-      int first = HEIGHT / 2 - 4;
-      int count = started ? 3 : 2;
-      for (int row = 0; row < count; ++row)
-        if (y >= first + row * 36 && y < first + row * 36 + 30)
+    const auto menu = title_layout();
+    if (x >= menu.x && x < menu.x + menu.width) {
+      for (int row = 0; row < menu.count; ++row) {
+        int top = menu.y + row * (menu.row_height + menu.gap);
+        if (y >= top && y < top + menu.row_height)
           return row;
+      }
     }
     return -1;
   }
@@ -1446,19 +1458,56 @@ void header(const char *title, const char *subtitle = nullptr,
   box(8, HEIGHT - 27, WIDTH - 16, 25, tr("Back", "返回"));
 }
 void draw_title() {
-  draw_map(true);
-  int first = HEIGHT / 2 - 4;
-  int count = started ? 3 : 2;
-  rect(14, HEIGHT / 2 - 90, WIDTH - 28, started ? 198 : 162, DARK);
-  icon(art::ui_logo, WIDTH / 2 - 96, HEIGHT / 2 - 78, 48);
-  label(WIDTH / 2 - 39, HEIGHT / 2 - 71, 135, "Unciv", PAPER, 4);
+  // A separate decorative world never exposes the campaign's unexplored tiles
+  // or changes its camera, random generator or saved state.
+  clear(DARK);
+  const art::Sprite *terrain[] = {
+      &art::grassland, &art::plains, &art::desert, &art::hill,
+      &art::mountain, &art::forest, &art::coast, &art::ocean};
+  static constexpr uint8_t preview[6][10] = {
+      {7,7,6,0,0,5,3,4,3,0}, {7,6,0,5,5,0,3,4,1,1},
+      {7,7,6,0,5,3,0,1,2,1}, {7,7,6,6,0,0,1,2,2,1},
+      {7,6,0,0,5,0,3,1,2,0}, {6,0,0,5,5,3,4,3,0,0}};
+  int tw = std::clamp(WIDTH / 6, 40, 64), th = tw * 7 / 8;
+  map_raster::begin();
+  for (int col = 0; col * tw * 3 / 4 < WIDTH + tw; ++col)
+    for (int row = 0; row * th < HEIGHT + th; ++row) {
+      const auto &im = *terrain[preview[row % 6][col % 10]];
+      int h = tw * im.h / im.w;
+      sprite(im, col * tw * 3 / 4 - tw / 2,
+             row * th + (col & 1) * th / 2 + th - h - th / 2,
+             tw, h, 170, false);
+    }
+  map_raster::end();
+  const auto menu = title_layout();
+  int title_x = (WIDTH - 196) / 2, title_y = menu.y - 70;
+  icon(art::ui_logo, title_x, title_y, 48);
+  label(title_x + 61, title_y + 8, 135, "Unciv", DARK, 4);
+  label(title_x + 60, title_y + 7, 135, "Unciv", PAPER, 4);
   const char *labels[] = {started ? tr("Resume", "继续游戏")
                                   : tr("Start new game", "开始新游戏"),
                           started ? tr("Start new game", "开始新游戏")
                                   : tr("How to play", "游戏说明"),
                           tr("How to play", "游戏说明")};
-  for (int row = 0; row < count; ++row)
-    box(24, first + row * 36, WIDTH - 48, 30, labels[row], focus == row, GOLD);
+  for (int row = 0; row < menu.count; ++row) {
+    int y = menu.y + row * (menu.row_height + menu.gap);
+    bool active = focus == row;
+    uint16_t fill = active ? rgb(34, 72, 109) : rgb(20, 44, 69);
+    studio::card(menu.x, y, menu.width, menu.row_height, fill,
+                 active ? PAPER : rgb(80, 108, 134), 4);
+    int size = menu.row_height - 12, left = menu.x + 12;
+    if (row == menu.count - 1)
+      label(left, y + (menu.row_height - 20) / 2, size, "?", PAPER, 2, 1);
+    else
+      icon(started && row == 0 ? art::ui_resume : art::ui_new,
+           left, y + 6, size, PAPER);
+    int scale = menu.width >= 220 ? 2 : 1;
+    label(menu.x + 48, y + (menu.row_height - scale * 10) / 2,
+          menu.width - 58, labels[row], PAPER, scale);
+  }
+#ifdef UNCIV_APP_VERSION
+  label(0, HEIGHT - 16, WIDTH, UNCIV_APP_VERSION, GREY, 1, 1);
+#endif
 }
 void draw_technology() {
   char b[128];
