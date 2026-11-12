@@ -1,0 +1,18 @@
+{
+  "name": "Mindustry · PXA",
+  "summary": "非官方 Mindustry C++ 重制：采矿、输送、生产、机器人建造与波次塔防，支持触摸缩放及沙盒。",
+  "description": "基于 Mindustry v154 玩法、使用 C++ 从零实现的非官方 PXA 独立游戏。复用原版图标、建筑贴图、17 组音效和 16 首音乐。\n\n支持 22 种建筑、8 种物资、48×48 地图；传送带、采矿、冶炼、供电、供水、工厂造兵和波次防御。Alpha 机器人跟随视角，普通模式需进入范围并消耗材料逐步建造；沙盒提供无限资源与即时建造。支持双指缩放、折叠建造栏、存档续玩和音乐设置。提供三张生存地图与沙盒地图。\n\n本作目前是基础玩法子集，尚未包含原版完整战役、完整科技树、联网、地图编辑器或原版存档兼容。音乐已为设备转换为 16 kHz 单声道。\n\n非 Anuken 官方发行。应用与 Mindustry 素材按 GPL-3.0 分发，字体按 OFL-1.1 分发。\n对应完整源码：https://github.com/SmartArduino/pxa-apps/tree/codex/mindustry-release-0-11-0/mindustry\n原作：https://github.com/Anuken/Mindustry",
+  "kind": "game",
+  "category": "strategy",
+  "tags": [
+    "塔防",
+    "工厂",
+    "沙盒",
+    "策略",
+    "触摸"
+  ],
+  "language": "zh-CN",
+  "icon": "assets/icon.png",
+  "cover": null,
+  "changelog": "0.11.0：校正全部 22 种建筑的原版图层和图标；修复陆军、空军工厂四向出入口；完善 Alpha 建造、生产供电、波次和沙盒；优化字模缓存及 GameRender 绘制，加入原版音乐音效。"
+}

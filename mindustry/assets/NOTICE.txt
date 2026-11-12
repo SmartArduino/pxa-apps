@@ -1,0 +1,38 @@
+Mindustry PXA edition — independent, unofficial adaptation.
+
+Original Mindustry sprites, interface/app icons, sounds and music:
+Copyright Anuken and Mindustry contributors.
+Source: https://github.com/Anuken/Mindustry
+Pinned version v154, commit d1e0307d3906bb350e80d8969a2464ed0b771ffb.
+Original files and SHA-256 digests are enumerated in upstream.json and audio-upstream.json in the source.
+Original license: GNU GPL version 3; full text in upstream/LICENSE.txt.
+Sprite/icon layer composition, original team-palette application, size
+reduction, RGB565 conversion and indexed-atlas packing are
+modifications. The application icon is an unmodified original upstream PNG.
+The source archive retains all 16 original music Oggs unchanged in
+audio-source/music/, including their metadata. Installed music is converted
+to 16000 Hz mono Ogg Vorbis (quality 5) to match PXA output and reduce decoding.
+The .s16 effects are mono 16000 Hz PCM conversions of the included original Oggs.
+
+The new C++ application and Mindustry-derived artwork are distributed under GPL-3.0.
+No original Java code, Java VM, Arc engine or native engine dependency is linked.
+The UI identifies the adaptation as unofficial. Names identify the original game
+and do not assert endorsement by Anuken.
+
+PXA game lifecycle, media and UI adapters retain their original MIT / CC0 terms.
+Their full license notices are included in licenses/.
+
+Known interface text uses a generated bitmap subset of PXA Sans SC, derived
+from Noto Sans CJK SC and Noto Sans Regular. This font data retains SIL Open
+Font License 1.1, separately from the GPL application. Its copyright, source
+provenance and full licenses are included in licenses/font-NOTICE.txt,
+licenses/font-OFL.txt and licenses/font-OFL-Latin.txt. The source archive
+includes the original attributed TTF, font-upstream.json and its generator.
+Characters outside this subset use cached glyphs from the Host system font.
+
+The 0.2 content extension also uses pinned original pneumatic drill, kiln,
+mechanical pump, conduit, liquid router/tank, unit factory, Flare, titanium,
+metaglass and snow-floor sprites under the same upstream repository license.
+
+The 0.3 interface uses original category, pause/menu, confirm/cancel, rotation,
+research, eraser, undo and troop-command icons under the same license.

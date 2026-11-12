@@ -1,0 +1,286 @@
+{
+  "revision": "d1e0307d3906bb350e80d8969a2464ed0b771ffb",
+  "reference": "v154 Block.icons/createIcons, DrawTurret.icons, Battery.checkDrawDefault, Conduit.icons, LiquidRouter.icons, UnitFactory.icons/drawPlanRegion",
+  "note": "Golden RGB565+A1 pixels from the upstream icon stacks; review against original layers before changing. Furnace/pump/repair warmup glows are excluded from idle icons.",
+  "icons": {
+    "core": {
+      "width": 48,
+      "height": 48,
+      "sha256": "b73313c5b2950c7cfde53eed1531ab6344fc9b0279080e12fd145bb883a995ca",
+      "layers": [
+        "core",
+        "coreteam"
+      ],
+      "outlet_rotation": 0
+    },
+    "drill_frame0": {
+      "width": 32,
+      "height": 32,
+      "sha256": "c5796336f53bef5be2f9ad159ff527497894a52decab093046bdd5cda4302484",
+      "layers": [
+        "drill",
+        "drillrotor",
+        "drilltop"
+      ],
+      "outlet_rotation": 0
+    },
+    "belt": {
+      "width": 16,
+      "height": 16,
+      "sha256": "688479e2abd06144c8625b96980e67a0af64e2cad321863880802a0a709043cb",
+      "layers": [
+        "belt"
+      ],
+      "outlet_rotation": 0
+    },
+    "router": {
+      "width": 16,
+      "height": 16,
+      "sha256": "b0887324397620ed06c0d4492a69938f06918374ac9c4b205b75a4225b615314",
+      "layers": [
+        "router"
+      ],
+      "outlet_rotation": 0
+    },
+    "junction": {
+      "width": 16,
+      "height": 16,
+      "sha256": "9c92f973ea8451f653285830acc4633060ec564ca356c0406f457d9d786fe270",
+      "layers": [
+        "junction"
+      ],
+      "outlet_rotation": 0
+    },
+    "duo": {
+      "width": 16,
+      "height": 16,
+      "sha256": "f9f5013d09a63d1f3429e1e4eeb7d34bce1b8b8fadada3c21e465f20004979e5",
+      "layers": [
+        "turretbase",
+        "duo"
+      ],
+      "outlet_rotation": 0
+    },
+    "wall": {
+      "width": 16,
+      "height": 16,
+      "sha256": "4a1c99f622ec52cf6e4a53f8ddb9da1fe71c08e817b66e70f08bde3942c0c6c3",
+      "layers": [
+        "wall"
+      ],
+      "outlet_rotation": 0
+    },
+    "press": {
+      "width": 32,
+      "height": 32,
+      "sha256": "165248d2851fbdf61814c6ba52e57c211196253ca50bd89035e6b61b770257e1",
+      "layers": [
+        "press"
+      ],
+      "outlet_rotation": 0
+    },
+    "smelter": {
+      "width": 32,
+      "height": 32,
+      "sha256": "ac7c97e2084e0f188db7d8e094e370a7c0655dd58c92a4239200e2e02c9abacc",
+      "layers": [
+        "smelter"
+      ],
+      "outlet_rotation": 0
+    },
+    "generator": {
+      "width": 16,
+      "height": 16,
+      "sha256": "5f2f6fa24213b2720b854c0cdde01a1df6425f350bc5aa2c863fac707c7b05f6",
+      "layers": [
+        "generator"
+      ],
+      "outlet_rotation": 0
+    },
+    "node": {
+      "width": 16,
+      "height": 16,
+      "sha256": "fd4b646b6852da39e56745e99363e023c723d60e9aef22d4136632410fa3ccce",
+      "layers": [
+        "node"
+      ],
+      "outlet_rotation": 0
+    },
+    "battery": {
+      "width": 16,
+      "height": 16,
+      "sha256": "a99303df50cadcb3c5641fd364cc302fb46119f971020c442fcb02578dee6119",
+      "layers": [
+        "battery",
+        "batterytop"
+      ],
+      "outlet_rotation": 0
+    },
+    "mender": {
+      "width": 16,
+      "height": 16,
+      "sha256": "051022c6da2b34ad09165c7435c816655584b95240c609ca3c20d8b62b0260f4",
+      "layers": [
+        "mender"
+      ],
+      "outlet_rotation": 0
+    },
+    "arc": {
+      "width": 16,
+      "height": 16,
+      "sha256": "1c6233695fd730d1bdcc712946a275c1c2e552a7c06f5ae5402695c5ed8d7b1c",
+      "layers": [
+        "turretbase",
+        "arc"
+      ],
+      "outlet_rotation": 0
+    },
+    "pneumatic_frame0": {
+      "width": 32,
+      "height": 32,
+      "sha256": "5e506ed846cd7bf1deac7d89844d47d449e0d5c641438d2bcc16844d186ea9e1",
+      "layers": [
+        "pneumatic",
+        "pneumaticrotor",
+        "pneumatictop"
+      ],
+      "outlet_rotation": 0
+    },
+    "kiln": {
+      "width": 32,
+      "height": 32,
+      "sha256": "378e9dd26bfffa33d71f220f41661d8870ebdd7fb89bbc6c1ff4ec14c9ad27d3",
+      "layers": [
+        "kiln"
+      ],
+      "outlet_rotation": 0
+    },
+    "pump": {
+      "width": 16,
+      "height": 16,
+      "sha256": "7235f75448e0ae1f0dd1ecdc722ccf1443bfe8f138653e77d06d3a9677188782",
+      "layers": [
+        "pump"
+      ],
+      "outlet_rotation": 0
+    },
+    "conduit": {
+      "width": 16,
+      "height": 16,
+      "sha256": "278e9cf76f1cf59b152d7d0ef96d31a9a1d7dd8c81c448e37eb0fa193e45dca5",
+      "layers": [
+        "conduiticonbottom",
+        "conduit"
+      ],
+      "outlet_rotation": 0
+    },
+    "liquidrouter": {
+      "width": 16,
+      "height": 16,
+      "sha256": "56ded0c2118d13b6f1aa40932a96a1021d0bf6dbebb77ab250face999ea04dfc",
+      "layers": [
+        "liquidrouterbottom",
+        "liquidrouter"
+      ],
+      "outlet_rotation": 0
+    },
+    "tank": {
+      "width": 48,
+      "height": 48,
+      "sha256": "3fe5e5fa5051f35adf8d57e52794f7b219cfbb1e9fbec8857fba527fe636f61a",
+      "layers": [
+        "tankbottom",
+        "tank"
+      ],
+      "outlet_rotation": 0
+    },
+    "groundfactory": {
+      "width": 48,
+      "height": 48,
+      "sha256": "5166e1819d5e2dca1068fe56eb47117e5fd55f942749a74370ea0c2401ff7a54",
+      "layers": [
+        "groundfactory",
+        "factoryout",
+        "factorytop"
+      ],
+      "outlet_rotation": 0
+    },
+    "groundfactory_dir1": {
+      "width": 48,
+      "height": 48,
+      "sha256": "c216fa235f1c34fec8d5e171700801c3e8d963285cda177baecf7f94aa9c1cfb",
+      "layers": [
+        "groundfactory",
+        "factoryout",
+        "factorytop"
+      ],
+      "outlet_rotation": 90
+    },
+    "groundfactory_dir2": {
+      "width": 48,
+      "height": 48,
+      "sha256": "c3161007427c91d29e72ef40b975b0db6c3e6f252d303e29f82ab9156e3367f0",
+      "layers": [
+        "groundfactory",
+        "factoryout",
+        "factorytop"
+      ],
+      "outlet_rotation": 180
+    },
+    "groundfactory_dir3": {
+      "width": 48,
+      "height": 48,
+      "sha256": "f8fb8e063eccb21eaaa13a26b1b90824e0ec8bc9972c7db3f44c223d9f89683c",
+      "layers": [
+        "groundfactory",
+        "factoryout",
+        "factorytop"
+      ],
+      "outlet_rotation": 270
+    },
+    "airfactory": {
+      "width": 48,
+      "height": 48,
+      "sha256": "992f485965a699b8400288dce1fa78da6b4002ea6bdb6cd7971ab7e78130bd51",
+      "layers": [
+        "airfactory",
+        "factoryout",
+        "factorytop"
+      ],
+      "outlet_rotation": 0
+    },
+    "airfactory_dir1": {
+      "width": 48,
+      "height": 48,
+      "sha256": "2739e47f6576e0c539c71849e83dc43d23030df6f7811805c54f8d916ac3b0b0",
+      "layers": [
+        "airfactory",
+        "factoryout",
+        "factorytop"
+      ],
+      "outlet_rotation": 90
+    },
+    "airfactory_dir2": {
+      "width": 48,
+      "height": 48,
+      "sha256": "ac84c73efaf143ac09f6efe43f6d58cc5b0a29df28de0d7f6f457267827b8e68",
+      "layers": [
+        "airfactory",
+        "factoryout",
+        "factorytop"
+      ],
+      "outlet_rotation": 180
+    },
+    "airfactory_dir3": {
+      "width": 48,
+      "height": 48,
+      "sha256": "9db7f937a1f66abbd8999888d18877b6d31154131eec6b5f4f5860ac2ece2518",
+      "layers": [
+        "airfactory",
+        "factoryout",
+        "factorytop"
+      ],
+      "outlet_rotation": 270
+    }
+  }
+}

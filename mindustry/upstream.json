@@ -1,0 +1,513 @@
+{
+  "repository": "https://github.com/Anuken/Mindustry",
+  "revision": "d1e0307d3906bb350e80d8969a2464ed0b771ffb",
+  "tag": "v154",
+  "license": "GPL-3.0-only",
+  "files": [
+    {
+      "file": "assets/upstream/icon_production.png",
+      "source": "core/assets-raw/icons/production.png",
+      "sha256": "b77384a36e539c7f825970bd3d9b07dacab1affa277ceb09dda469f82058eace"
+    },
+    {
+      "file": "assets/upstream/icon_distribution.png",
+      "source": "core/assets-raw/icons/distribution.png",
+      "sha256": "e130ee913f0dc22b2cb1edbe699b61b2d3d1f3dc659277cef66d9c310512f111"
+    },
+    {
+      "file": "assets/upstream/icon_turret.png",
+      "source": "core/assets-raw/icons/turret.png",
+      "sha256": "0de3420dbb7dd9f4aad39b5535f14d8d8413e8f7c47c640efe9dfe2943887c93"
+    },
+    {
+      "file": "assets/upstream/icon_crafting.png",
+      "source": "core/assets-raw/icons/crafting.png",
+      "sha256": "a38ccaec6e225cb3df2ed3dc1e8e20b08f762aa60262175d28429cdd0e96993d"
+    },
+    {
+      "file": "assets/upstream/icon_power.png",
+      "source": "core/assets-raw/icons/power.png",
+      "sha256": "c13911ce9baeeb68da14f8bc16cf84f99d47ae9360b7c90f1e1272c9ef35c623"
+    },
+    {
+      "file": "assets/upstream/icon_liquid.png",
+      "source": "core/assets-raw/icons/liquid.png",
+      "sha256": "6804d88762a57351180315c7db7dfed90394c98bd5186572578d4668216ce3b0"
+    },
+    {
+      "file": "assets/upstream/icon_units.png",
+      "source": "core/assets-raw/icons/units.png",
+      "sha256": "05b9fc1906f639f4a5465afb640ee4d5cf3bf3fad720e33284bb28764ca08674"
+    },
+    {
+      "file": "assets/upstream/icon_pause.png",
+      "source": "core/assets-raw/icons/pause.png",
+      "sha256": "0c48241f8914065d6e314e833bc297d3b15a8e522c70167674dbb0ad89a9e66a"
+    },
+    {
+      "file": "assets/upstream/icon_menu.png",
+      "source": "core/assets-raw/icons/menu.png",
+      "sha256": "5cc07f39f3b39ca39cf0f61e07c05926063e10c658bda0144f855bdcb963bbf1"
+    },
+    {
+      "file": "assets/upstream/icon_check.png",
+      "source": "core/assets-raw/icons/check.png",
+      "sha256": "823d9d2cd843cee7e287a1b197f6a95808e364fb176067f4d1f630f5c96b7a7f"
+    },
+    {
+      "file": "assets/upstream/icon_cancel.png",
+      "source": "core/assets-raw/icons/cancel.png",
+      "sha256": "1b5813185a6b900340656616482ffdde7e20b0cc2d934d6fbb600bec5d0b5b3b"
+    },
+    {
+      "file": "assets/upstream/icon_rotate.png",
+      "source": "core/assets-raw/icons/rotate.png",
+      "sha256": "03ecb35852ffc5aecbc380d9dae736e04b2f8bceca0a8c6fd53626a89ffcda63"
+    },
+    {
+      "file": "assets/upstream/icon_tree.png",
+      "source": "core/assets-raw/icons/tree.png",
+      "sha256": "8095afab450064b35cbd1d0ce27de85e9fe17ba61c838abe2406e34d1ca09041"
+    },
+    {
+      "file": "assets/upstream/icon_eraser.png",
+      "source": "core/assets-raw/icons/eraser.png",
+      "sha256": "501b53fd07bb04706700d23a8835742147a35a4a9dba1b4032e1805302608358"
+    },
+    {
+      "file": "assets/upstream/icon_undo.png",
+      "source": "core/assets-raw/icons/undo.png",
+      "sha256": "194301b8000b758f3af3e837f7678e7d14296a211b72c4c9523d3184cd9092a3"
+    },
+    {
+      "file": "assets/upstream/icon_command_rally.png",
+      "source": "core/assets-raw/icons/command-rally.png",
+      "sha256": "49f3687757087ad4b9e1d47537919f3b41e4b3e75078798b3696f9df9c2d4bdb"
+    },
+    {
+      "file": "assets/upstream/icon_command_attack.png",
+      "source": "core/assets-raw/icons/command-attack.png",
+      "sha256": "9084d87b594a693c870e088b8089af7ac5b57d9c62e9fa80d14b16eec08d2e6e"
+    },
+    {
+      "file": "assets/upstream/factoryout.png",
+      "source": "core/assets-raw/sprites/blocks/payload/factory-out-3.png",
+      "sha256": "0e0ab95fba9c66389b4444b1812cbfeb4f79df49b85e268e4aaebe5130994879"
+    },
+    {
+      "file": "assets/upstream/factorytop.png",
+      "source": "core/assets-raw/sprites/blocks/payload/factory-top-3.png",
+      "sha256": "b6857193bc992c0d61188e3b82fad157e2a5fbc9b8372643f78884b3dcdfc785"
+    },
+    {
+      "file": "assets/upstream/turretbase.png",
+      "source": "core/assets-raw/sprites/blocks/turrets/bases/block-1.png",
+      "sha256": "3ae25635be429d98a71ce3c1f346aec0b8df9f16241caadcadafc98322e9f8b2"
+    },
+    {
+      "file": "assets/upstream/batterytop.png",
+      "source": "core/assets-raw/sprites/blocks/power/battery-top.png",
+      "sha256": "d6822715430a871457f4a1634302b904d0662cfa893eaf092171bdb77f68057a"
+    },
+    {
+      "file": "assets/upstream/conduiticonbottom.png",
+      "source": "core/assets-raw/sprites/blocks/liquid/conduits/conduit-bottom.png",
+      "sha256": "90bc9de8c20194913567f2dccac0909d4583a81faa1e7bf9245e21c7456ed7ec"
+    },
+    {
+      "file": "assets/upstream/liquidrouterbottom.png",
+      "source": "core/assets-raw/sprites/blocks/liquid/liquid-router-bottom.png",
+      "sha256": "49778a6db8cbe4c88bd09e4fe1f3ddcc1f96fd9dbb4f756c998389ebd8c78bda"
+    },
+    {
+      "file": "assets/upstream/tankbottom.png",
+      "source": "core/assets-raw/sprites/blocks/liquid/liquid-tank-bottom.png",
+      "sha256": "44f5a306017f3f7e2de8a71fc6d8e72ab73b26a5dbe9d24b40dd80d5c6c70239"
+    },
+    {
+      "file": "assets/upstream/pump.png",
+      "source": "core/assets-raw/sprites/blocks/liquid/mechanical-pump.png",
+      "sha256": "7ceed1a950b185bd01addb330225ec5d9637effe4dff9fc410fc0c0eee5fcc5b"
+    },
+    {
+      "file": "assets/upstream/conduit.png",
+      "source": "core/assets-raw/sprites/blocks/liquid/conduits/conduit-top-0.png",
+      "sha256": "d571c70979541f4d250b09ec5d709c23b7d8d461833b338c2560df075bd01861"
+    },
+    {
+      "file": "assets/upstream/conduitbottom.png",
+      "source": "core/assets-raw/sprites/blocks/liquid/conduits/conduit-bottom-0.png",
+      "sha256": "e9f0e084a04212abfdad810938335d835bc109a365a17e30ad9450ebe945f1ae"
+    },
+    {
+      "file": "assets/upstream/liquidrouter.png",
+      "source": "core/assets-raw/sprites/blocks/liquid/liquid-router.png",
+      "sha256": "5298b2a98b32b508af58e98878981e4e21f43d0ada0ff7cf154042b152cd1f6d"
+    },
+    {
+      "file": "assets/upstream/tank.png",
+      "source": "core/assets-raw/sprites/blocks/liquid/liquid-tank.png",
+      "sha256": "caafb3bb66e50c3ccf6cfe86032cae55bf3d11f1c0c7415a02b92dc0b244806d"
+    },
+    {
+      "file": "assets/upstream/groundfactory.png",
+      "source": "core/assets-raw/sprites/blocks/units/ground-factory.png",
+      "sha256": "2157ce1ba85efaa7695f2bea973aeccf541d99730b11d3d7eb4767acf0d8a923"
+    },
+    {
+      "file": "assets/upstream/airfactory.png",
+      "source": "core/assets-raw/sprites/blocks/units/air-factory.png",
+      "sha256": "a12402737e6858c39e5bbcf1ea342b830aca6b4593f1d522809245fe4d80bbad"
+    },
+    {
+      "file": "assets/upstream/flare.png",
+      "source": "core/assets-raw/sprites/units/flare.png",
+      "sha256": "667f12602fe7b9b82316de24f30b84cbb23b98bec57fffc92c130dfb33fbdea1"
+    },
+    {
+      "file": "assets/upstream/kiln.png",
+      "source": "core/assets-raw/sprites/blocks/production/kiln.png",
+      "sha256": "a136a186b1e83a5892ff847dbae4d7fe19f47019796e89e490339171dd5c5159"
+    },
+    {
+      "file": "assets/upstream/titanium.png",
+      "source": "core/assets-raw/sprites/blocks/environment/ore-titanium1.png",
+      "sha256": "9367f97a6672c42883d12f75d51fcf287afb01fcd81e1bece7c203416a60c87f"
+    },
+    {
+      "file": "assets/upstream/itemtitanium.png",
+      "source": "core/assets-raw/sprites/items/item-titanium.png",
+      "sha256": "0d3b27fba86e8648cfdb343deb14b783c23e7015d31a08191c3de3882720c869"
+    },
+    {
+      "file": "assets/upstream/itemglass.png",
+      "source": "core/assets-raw/sprites/items/item-metaglass.png",
+      "sha256": "ca03a6b2737ae2e48ab35da5e2867c8e37f73bcc19065b4338145a232b828626"
+    },
+    {
+      "file": "assets/upstream/snow.png",
+      "source": "core/assets-raw/sprites/blocks/environment/snow1.png",
+      "sha256": "36a7c6670b769d567c06a1ea835c972151025565eeee94206985e1d01f62607f"
+    },
+    {
+      "file": "assets/upstream/stone1.png",
+      "source": "core/assets-raw/sprites/blocks/environment/stone1.png",
+      "sha256": "9944e33a6fa4d3e6722780e9a6dc48eb53612d3b9800fc5f3b9b1daa93063cf1"
+    },
+    {
+      "file": "assets/upstream/stone2.png",
+      "source": "core/assets-raw/sprites/blocks/environment/stone2.png",
+      "sha256": "34330b3bc2f1418d66bb6fb1dbd7db60cb7ae6eda5f46b8e3a8f9479455a0325"
+    },
+    {
+      "file": "assets/upstream/stone3.png",
+      "source": "core/assets-raw/sprites/blocks/environment/stone3.png",
+      "sha256": "d75e127a7168a525ca9ab94dca3fc5d7384f44f47265b848ccc25b1329f99c32"
+    },
+    {
+      "file": "assets/upstream/sand1.png",
+      "source": "core/assets-raw/sprites/blocks/environment/sand-floor1.png",
+      "sha256": "96c56cea7d5301e1bbdf4274cd3dc13dd19c133150b543a01466bb33ed551355"
+    },
+    {
+      "file": "assets/upstream/water.png",
+      "source": "core/assets-raw/sprites/blocks/environment/shallow-water.png",
+      "sha256": "9c83a2ce008d78cb9bfa80afb272a9b104336c1e1378e589521bc051ef0c36bd"
+    },
+    {
+      "file": "assets/upstream/copper.png",
+      "source": "core/assets-raw/sprites/blocks/environment/ore-copper1.png",
+      "sha256": "931d71a0ab21fccb04d374c191504c558cdd3919af31dd0d539f675b241b7d6f"
+    },
+    {
+      "file": "assets/upstream/lead.png",
+      "source": "core/assets-raw/sprites/blocks/environment/ore-lead1.png",
+      "sha256": "78182051bc59a962f9a04f8c3478ebe639de3c4283d1ee0b7ebdfaa57013122e"
+    },
+    {
+      "file": "assets/upstream/coal.png",
+      "source": "core/assets-raw/sprites/blocks/environment/ore-coal1.png",
+      "sha256": "48631dd9320490f46d4f9717676a251fc68090f89318d58cb24f13e58ec2c8e4"
+    },
+    {
+      "file": "assets/upstream/rock.png",
+      "source": "core/assets-raw/sprites/blocks/environment/stone-wall1.png",
+      "sha256": "ed108f2614929193b52f6e6889be8093c3dcc24c465bffc4c2e3e5b4d6b18246"
+    },
+    {
+      "file": "assets/upstream/core.png",
+      "source": "core/assets-raw/sprites/blocks/storage/core-shard.png",
+      "sha256": "6ded0eee7c8e1130c8909e6ddf821aa703e6f9a6a6c758ff15de98f22a9dbe3d"
+    },
+    {
+      "file": "assets/upstream/coreteam.png",
+      "source": "core/assets-raw/sprites/blocks/storage/core-shard-team.png",
+      "sha256": "65c14ba3b2ad94293b0fa799bd3a914b8441f6308973cbe0909f452443312e77"
+    },
+    {
+      "file": "assets/upstream/drill.png",
+      "source": "core/assets-raw/sprites/blocks/drills/mechanical-drill.png",
+      "sha256": "91c08bcc1fb086e396e05a22b3bc0c40a6bb35a656ef8baec850502b06d05804"
+    },
+    {
+      "file": "assets/upstream/drillrotor.png",
+      "source": "core/assets-raw/sprites/blocks/drills/mechanical-drill-rotator.png",
+      "sha256": "18450c0703fc0289ed135c65b65f0db98b24497afbf7b9462a024524c79f1092"
+    },
+    {
+      "file": "assets/upstream/drilltop.png",
+      "source": "core/assets-raw/sprites/blocks/drills/mechanical-drill-top.png",
+      "sha256": "300268496166d67071cf09ab036c8567c7da92869ea08cc893b841be90fb1211"
+    },
+    {
+      "file": "assets/upstream/pneumatic.png",
+      "source": "core/assets-raw/sprites/blocks/drills/pneumatic-drill.png",
+      "sha256": "1b80e956c5390bb7b5d81bfbfa858da687165aaebf9a1b4523dcf133011252a6"
+    },
+    {
+      "file": "assets/upstream/pneumaticrotor.png",
+      "source": "core/assets-raw/sprites/blocks/drills/pneumatic-drill-rotator.png",
+      "sha256": "28035875bb6e3efedcff1edf8920199dabecf37ba1708a3c90439447f31b3bdb"
+    },
+    {
+      "file": "assets/upstream/pneumatictop.png",
+      "source": "core/assets-raw/sprites/blocks/drills/pneumatic-drill-top.png",
+      "sha256": "3da7650a63ef9cf4bf5c20b0d76d6e018b7d2870ca1e430c1b9b28212a35e215"
+    },
+    {
+      "file": "assets/upstream/drillitem.png",
+      "source": "core/assets-raw/sprites/blocks/drills/drill-item-2.png",
+      "sha256": "49e4e916abc8fa6ad6b844dfd3c173528469ccfa53745363e3367ecdf648eb59"
+    },
+    {
+      "file": "assets/upstream/belt.png",
+      "source": "core/assets-raw/sprites/blocks/distribution/conveyors/conveyor-0-0.png",
+      "sha256": "7d279141d58d28e2fa393374c92fc5a4ffafb289ceb4582904506fbfec014d63"
+    },
+    {
+      "file": "assets/upstream/belt1.png",
+      "source": "core/assets-raw/sprites/blocks/distribution/conveyors/conveyor-0-1.png",
+      "sha256": "c0740a358ebdb31585930a399a7d0e03220bfde62e0dead85a11c8720ade7562"
+    },
+    {
+      "file": "assets/upstream/router.png",
+      "source": "core/assets-raw/sprites/blocks/distribution/router.png",
+      "sha256": "e2afc1935a163a6fc07d3a864afa91213ae8c953ffe9f4687b7eb9eebbea66a0"
+    },
+    {
+      "file": "assets/upstream/junction.png",
+      "source": "core/assets-raw/sprites/blocks/distribution/junction.png",
+      "sha256": "fa5ae541ad4228a8f31c6a5c3686e0afc4d8e01bc5d3bed2e3b7ee1c55f44f6e"
+    },
+    {
+      "file": "assets/upstream/duo.png",
+      "source": "core/assets-raw/sprites/blocks/turrets/duo/duo-preview.png",
+      "sha256": "a71830079df04f0a93315e6e14e2c062cc2df2ca35f303e8812f10758aaff798"
+    },
+    {
+      "file": "assets/upstream/arc.png",
+      "source": "core/assets-raw/sprites/blocks/turrets/arc.png",
+      "sha256": "0fabb8bec196cf7ec9653b907e7090d96bc14b6d4833ddda32eae4b50f589816"
+    },
+    {
+      "file": "assets/upstream/wall.png",
+      "source": "core/assets-raw/sprites/blocks/walls/copper-wall.png",
+      "sha256": "da747ff46c6a69f1c947ac4041141f2ec6d574a86b6ed909c27c664bfbbe94ea"
+    },
+    {
+      "file": "assets/upstream/press.png",
+      "source": "core/assets-raw/sprites/blocks/production/graphite-press.png",
+      "sha256": "e53106058c9be4b572bd8ef0c292b7c01274d2ed1f2f7e99303dd3541c2d6254"
+    },
+    {
+      "file": "assets/upstream/smelter.png",
+      "source": "core/assets-raw/sprites/blocks/production/silicon-smelter.png",
+      "sha256": "d5655c21636e93624ca96dc5c2071dd52d6c2292541ca68893f60b17b04c67e0"
+    },
+    {
+      "file": "assets/upstream/generator.png",
+      "source": "core/assets-raw/sprites/blocks/power/combustion-generator.png",
+      "sha256": "497afe2a6d294c3084dff3d51d165df334c77fe767369ea38ae5f49ce6c5d119"
+    },
+    {
+      "file": "assets/upstream/node.png",
+      "source": "core/assets-raw/sprites/blocks/power/power-node.png",
+      "sha256": "e9a6e88106bc9c128e4c356da7ca01a15aac030c04661cb95bf01fa1ef573fe1"
+    },
+    {
+      "file": "assets/upstream/battery.png",
+      "source": "core/assets-raw/sprites/blocks/power/battery.png",
+      "sha256": "8cf9831940aa9777d2c818ba274520b653238d25eb386180b5041a0f4ec42db1"
+    },
+    {
+      "file": "assets/upstream/mender.png",
+      "source": "core/assets-raw/sprites/blocks/defense/mender.png",
+      "sha256": "f3c7fe1123153a0060750e3ca47201d6d46d09caa093b11d39f059b8029b3702"
+    },
+    {
+      "file": "assets/upstream/dagger.png",
+      "source": "core/assets-raw/sprites/units/dagger.png",
+      "sha256": "048eff6288242a7d6a94e141a1d60b345c0f203a34af84eb0aeb1f10b10364c6"
+    },
+    {
+      "file": "assets/upstream/crawler.png",
+      "source": "core/assets-raw/sprites/units/crawler.png",
+      "sha256": "f743a7b64affb079bbdcf1bedb29f22a5a73e0ac96195ba61e55c6d1e118dd46"
+    },
+    {
+      "file": "assets/upstream/alpha.png",
+      "source": "core/assets-raw/sprites/units/alpha.png",
+      "sha256": "813dc0fe4f371d2da0e0e95737b6a8c5c19327a80d156325e466793c4c419048"
+    },
+    {
+      "file": "assets/upstream/itemcopper.png",
+      "source": "core/assets-raw/sprites/items/item-copper.png",
+      "sha256": "8616f415c00d78b1dc0f8a818de8acc7d84dfefe993b343c158e0817f956bc08"
+    },
+    {
+      "file": "assets/upstream/itemlead.png",
+      "source": "core/assets-raw/sprites/items/item-lead.png",
+      "sha256": "86331809910c7e3d93d5503c9fbdfefa3e98c8cb6eabbc56ab7b98157329a0f7"
+    },
+    {
+      "file": "assets/upstream/itemcoal.png",
+      "source": "core/assets-raw/sprites/items/item-coal.png",
+      "sha256": "2dc136a4342e61b4ab64a00f8e2eb16167acae106f07781e06510e99e10fcff8"
+    },
+    {
+      "file": "assets/upstream/itemgraphite.png",
+      "source": "core/assets-raw/sprites/items/item-graphite.png",
+      "sha256": "4e159d0c786b1900e399733b368f4160b0a95d18b9652265577afe3f874d0b90"
+    },
+    {
+      "file": "assets/upstream/itemsilicon.png",
+      "source": "core/assets-raw/sprites/items/item-silicon.png",
+      "sha256": "c0f390b03c3917335b53fab9f2fad7588a2befa002f9b6ca0922184b4133cfd9"
+    },
+    {
+      "file": "assets/upstream/itemsand.png",
+      "source": "core/assets-raw/sprites/items/item-sand.png",
+      "sha256": "9bbb786a7e516e9ddcd9ef616aebf745ff648218e766ec27804056b3bb808594"
+    },
+    {
+      "file": "assets/upstream/belt_0_2.png",
+      "source": "core/assets-raw/sprites/blocks/distribution/conveyors/conveyor-0-2.png",
+      "sha256": "c6981f1385d1eac3eee5d93a334e3bb917a8fd5f3811704ac686323e1f401232"
+    },
+    {
+      "file": "assets/upstream/belt_0_3.png",
+      "source": "core/assets-raw/sprites/blocks/distribution/conveyors/conveyor-0-3.png",
+      "sha256": "21c1a13a5135e2adfe7c3cd81977dfb22d5ae1558a33ca34652f4061741a3c6b"
+    },
+    {
+      "file": "assets/upstream/belt_1_0.png",
+      "source": "core/assets-raw/sprites/blocks/distribution/conveyors/conveyor-1-0.png",
+      "sha256": "8ad9f83d3ffe44d591cb8d24313baffd2c65972c66cce0213504e9d4d897ba03"
+    },
+    {
+      "file": "assets/upstream/belt_1_1.png",
+      "source": "core/assets-raw/sprites/blocks/distribution/conveyors/conveyor-1-1.png",
+      "sha256": "b4810cf1ac6c3f7528ad6d6b54a1ef358937207509563537bad4a6b6f8b5ead7"
+    },
+    {
+      "file": "assets/upstream/belt_1_2.png",
+      "source": "core/assets-raw/sprites/blocks/distribution/conveyors/conveyor-1-2.png",
+      "sha256": "14e49000e29ed89647ff84ea37c9f3319e173da0265f8fe7d34dc03dfa755b10"
+    },
+    {
+      "file": "assets/upstream/belt_1_3.png",
+      "source": "core/assets-raw/sprites/blocks/distribution/conveyors/conveyor-1-3.png",
+      "sha256": "dec245feabd8cd27f1272352ee225ceaacd7eec3c6e8d5cf216e02967db8c7b6"
+    },
+    {
+      "file": "assets/upstream/belt_2_0.png",
+      "source": "core/assets-raw/sprites/blocks/distribution/conveyors/conveyor-2-0.png",
+      "sha256": "8120dbe36f932f6f327aeb1667a9e5b7121b9ba68f07e566136d438b2215b1bc"
+    },
+    {
+      "file": "assets/upstream/belt_2_1.png",
+      "source": "core/assets-raw/sprites/blocks/distribution/conveyors/conveyor-2-1.png",
+      "sha256": "87ae8d707336e502e6248c09d81948408a04039354e709c3e24337b60ad46c0e"
+    },
+    {
+      "file": "assets/upstream/belt_2_2.png",
+      "source": "core/assets-raw/sprites/blocks/distribution/conveyors/conveyor-2-2.png",
+      "sha256": "f1d2014cdb026e50c74ae3cdfbb099ee0847d8f94d0cd4337712db2624bcf9ea"
+    },
+    {
+      "file": "assets/upstream/belt_2_3.png",
+      "source": "core/assets-raw/sprites/blocks/distribution/conveyors/conveyor-2-3.png",
+      "sha256": "85a678b780f45da5273c1209fcf8b9e97f91f326642343a25fe717918a9c07b8"
+    },
+    {
+      "file": "assets/upstream/belt_3_0.png",
+      "source": "core/assets-raw/sprites/blocks/distribution/conveyors/conveyor-3-0.png",
+      "sha256": "66fd8c7868633aefd9fcb3ff6b3b5ebfa1f5024e91898e6f2b2f5cc0c81aa717"
+    },
+    {
+      "file": "assets/upstream/belt_3_1.png",
+      "source": "core/assets-raw/sprites/blocks/distribution/conveyors/conveyor-3-1.png",
+      "sha256": "b87894251406e034da06fc5185432e8dddeb70bd58ced48179ae535e650d6738"
+    },
+    {
+      "file": "assets/upstream/belt_3_2.png",
+      "source": "core/assets-raw/sprites/blocks/distribution/conveyors/conveyor-3-2.png",
+      "sha256": "dc0739e0ffad9ebf2fcce6806c45e1bf6ef0e044d266dbcaa8825cf26fb5184b"
+    },
+    {
+      "file": "assets/upstream/belt_3_3.png",
+      "source": "core/assets-raw/sprites/blocks/distribution/conveyors/conveyor-3-3.png",
+      "sha256": "7b055925e0e4ab4b5872ddc83243afac5e3a269fab81c8950c5043242985ccab"
+    },
+    {
+      "file": "assets/upstream/belt_4_0.png",
+      "source": "core/assets-raw/sprites/blocks/distribution/conveyors/conveyor-4-0.png",
+      "sha256": "ba2e6b80adc37e3843ba951de5cec2b499b4759cfae7d2fbb5e81375093cf0b7"
+    },
+    {
+      "file": "assets/upstream/belt_4_1.png",
+      "source": "core/assets-raw/sprites/blocks/distribution/conveyors/conveyor-4-1.png",
+      "sha256": "5432fd0808639dbf5b8eaad8e4edcbc3de93ca7280557a3a66d3afa952a93e33"
+    },
+    {
+      "file": "assets/upstream/belt_4_2.png",
+      "source": "core/assets-raw/sprites/blocks/distribution/conveyors/conveyor-4-2.png",
+      "sha256": "e44ac002a23f92e60a812fa5ad018d9da323b481915a5fe9551b216e870db2a1"
+    },
+    {
+      "file": "assets/upstream/belt_4_3.png",
+      "source": "core/assets-raw/sprites/blocks/distribution/conveyors/conveyor-4-3.png",
+      "sha256": "73258b30ae7bfa71d47a579809dcb1effe0d041187e6dc30621f5460a85867c4"
+    },
+    {
+      "file": "assets/upstream/click.ogg",
+      "source": "core/assets/sounds/ui/uiButton.ogg",
+      "sha256": "f0ab7d4f81e7b23fcccd33b6c55a635e8919f84e4927bdcce027611ce2422c1c"
+    },
+    {
+      "file": "assets/upstream/wave.ogg",
+      "source": "core/assets/sounds/ui/waveSpawn.ogg",
+      "sha256": "c01c5e6101c0733e26fc93ca00aa56d2ad1537f558b963fd8cfe9f820aa45e23"
+    },
+    {
+      "file": "assets/upstream/shoot.ogg",
+      "source": "core/assets/sounds/shoot/shootDuo.ogg",
+      "sha256": "90704730a8a72bcba46ef8884c57083eebf22e0bdc5dbf74c4b12ae7245e3684"
+    },
+    {
+      "file": "assets/upstream/explode.ogg",
+      "source": "core/assets/sounds/explosions/blockExplode1.ogg",
+      "sha256": "66cc35987be2a3c769a66034d06bbf8efbdb6985ab2aa9c97d3f4f3853c96a33"
+    },
+    {
+      "file": "assets/upstream/LICENSE.txt",
+      "source": "LICENSE",
+      "sha256": "963392e038d7bea128e55cc67dd691c204593db3527060667f0c82f0f0a1be64"
+    },
+    {
+      "file": "assets/upstream/app-icon.png",
+      "source": "ios/data/Assets.xcassets/AppIcon.appiconset/icon-256.png",
+      "sha256": "535021c92d487ad33d0479ed171bd87878383d86476261d4b36596f92e0cf8dc"
+    }
+  ]
+}
