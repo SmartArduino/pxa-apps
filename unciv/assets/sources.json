@@ -1,0 +1,262 @@
+{
+  "repository": "https://github.com/yairm210/Unciv",
+  "revision": "0f2eb314a17213da0c0ce3b9d9c4693e2ed6ef96",
+  "assets": [
+    {
+      "file": "source-assets/upstream/Grassland.png",
+      "path": "android/Images.Tilesets/TileSets/FantasyHex/Tiles/Grassland.png",
+      "sha256": "977dfa3d2fcb5c617bffd3f8e70ea3c5c95953ad4c5714ba69c3402d72e66859",
+      "license": "CC-BY-4.0",
+      "author": "CuddlyClover and Unciv contributors"
+    },
+    {
+      "file": "source-assets/upstream/Plains.png",
+      "path": "android/Images.Tilesets/TileSets/FantasyHex/Tiles/Plains.png",
+      "sha256": "26156739cf1e7761afc8053d3d6c5137ed82754d0aa56aed06c60c5b058eb709",
+      "license": "CC-BY-4.0",
+      "author": "CuddlyClover and Unciv contributors"
+    },
+    {
+      "file": "source-assets/upstream/Desert.png",
+      "path": "android/Images.Tilesets/TileSets/FantasyHex/Tiles/Desert.png",
+      "sha256": "aabb6a1b6f15bfa70441c9a55d08511e2a81ab7f27f5499e039c984c0cdf09b8",
+      "license": "CC-BY-4.0",
+      "author": "CuddlyClover and Unciv contributors"
+    },
+    {
+      "file": "source-assets/upstream/Hill.png",
+      "path": "android/Images.Tilesets/TileSets/FantasyHex/Tiles/Hill.png",
+      "sha256": "7893cfc75c5e8c393a654610b3ee539c82a9a70f0557e6e2b71102575bed30c0",
+      "license": "CC-BY-4.0",
+      "author": "CuddlyClover and Unciv contributors"
+    },
+    {
+      "file": "source-assets/upstream/Mountain.png",
+      "path": "android/Images.Tilesets/TileSets/FantasyHex/Tiles/Mountain.png",
+      "sha256": "0a6e96970d9daf077e9b9fdec3f2fa31a6a971317de75a8d17ddad4591721690",
+      "license": "CC-BY-4.0",
+      "author": "CuddlyClover and Unciv contributors"
+    },
+    {
+      "file": "source-assets/upstream/Forest.png",
+      "path": "android/Images.Tilesets/TileSets/FantasyHex/Tiles/Forest.png",
+      "sha256": "a268c2593c9baac05c8838e48a1fbebbead15290bc29831f22d18d1065c2e4b2",
+      "license": "CC-BY-4.0",
+      "author": "CuddlyClover and Unciv contributors"
+    },
+    {
+      "file": "source-assets/upstream/Coast.png",
+      "path": "android/Images.Tilesets/TileSets/FantasyHex/Tiles/Coast.png",
+      "sha256": "b21f824827599aeed7b8534df97090b74de64012ebc225ea3307e1bb29ba45b9",
+      "license": "CC-BY-4.0",
+      "author": "CuddlyClover and Unciv contributors"
+    },
+    {
+      "file": "source-assets/upstream/Ocean.png",
+      "path": "android/Images.Tilesets/TileSets/FantasyHex/Tiles/Ocean.png",
+      "sha256": "1670b9be54396984629e7f9365ce2e1478db80cf32e3c9c4cf111622cd91056b",
+      "license": "CC-BY-4.0",
+      "author": "CuddlyClover and Unciv contributors"
+    },
+    {
+      "file": "source-assets/upstream/City_center.png",
+      "path": "android/Images.Tilesets/TileSets/FantasyHex/Tiles/City center.png",
+      "sha256": "502858a82d8b32d6398e22dc92f56fd1fa8d32353ac148b70995df94b1e7d343",
+      "license": "CC-BY-4.0",
+      "author": "CuddlyClover and Unciv contributors"
+    },
+    {
+      "file": "source-assets/upstream/Mine.png",
+      "path": "android/Images.Tilesets/TileSets/FantasyHex/Tiles/Mine.png",
+      "sha256": "6b6458d2c62902103265dec8a672dfc040d73b3c9733a276b9f3d6626c876c70",
+      "license": "CC-BY-4.0",
+      "author": "CuddlyClover and Unciv contributors"
+    },
+    {
+      "file": "source-assets/upstream/Settler.png",
+      "path": "android/Images.AbsoluteUnits/TileSets/AbsoluteUnits/Units/Settler.png",
+      "sha256": "7f29c0e2fb6b28bc6bc40ca4cd5b4bc80b182c93494e45b35351df4c6195236a",
+      "license": "CC-BY-4.0",
+      "author": "letstalkaboutdune"
+    },
+    {
+      "file": "source-assets/upstream/Warrior.png",
+      "path": "android/Images.AbsoluteUnits/TileSets/AbsoluteUnits/Units/Warrior.png",
+      "sha256": "65f2a19b9316ae05a5a1a9953bed22445c0593b54335ade7b5df07764f308c00",
+      "license": "CC-BY-4.0",
+      "author": "letstalkaboutdune"
+    },
+    {
+      "file": "source-assets/upstream/Scout.png",
+      "path": "android/Images.AbsoluteUnits/TileSets/AbsoluteUnits/Units/Scout.png",
+      "sha256": "24953f6d9ab130c4583c022add161b2f3c43f2f2faaf26350e7ef4fd80461864",
+      "license": "CC-BY-4.0",
+      "author": "letstalkaboutdune"
+    },
+    {
+      "file": "source-assets/upstream/Worker.png",
+      "path": "android/Images.AbsoluteUnits/TileSets/AbsoluteUnits/Units/Worker.png",
+      "sha256": "98bfad6efbe7bd949af4b42ef721d337d843deceb033ab459aeb58659ad70508",
+      "license": "CC-BY-4.0",
+      "author": "letstalkaboutdune"
+    },
+    {
+      "file": "source-assets/upstream/Archer.png",
+      "path": "android/Images.AbsoluteUnits/TileSets/AbsoluteUnits/Units/Archer.png",
+      "sha256": "d19efb419a6e0aca9d7c4edace75942de97f9a5209726cb1682f54e5ef49bdf7",
+      "license": "CC-BY-4.0",
+      "author": "letstalkaboutdune"
+    },
+    {
+      "file": "source-assets/upstream/Swordsman.png",
+      "path": "android/Images.AbsoluteUnits/TileSets/AbsoluteUnits/Units/Swordsman.png",
+      "sha256": "2821aa2e47cd2ff166d0fde82752e9c312408b2a4958fd9ffc88aba9ff52847c",
+      "license": "CC-BY-4.0",
+      "author": "letstalkaboutdune"
+    },
+    {
+      "file": "source-assets/upstream/click.mp3",
+      "path": "android/assets/sounds/click.mp3",
+      "sha256": "f86539908defd4e6db4b96c2df711a7a2401df5d41b4d93710ff9b67ee419fc4",
+      "license": "CC0-1.0",
+      "author": "EathanMarkson"
+    },
+    {
+      "file": "source-assets/upstream/whoosh.mp3",
+      "path": "android/assets/sounds/whoosh.mp3",
+      "sha256": "8cca84de4ee3f0aef3e5ee0b673e6eba045c06e7d1a33360274e5f73bc2a9f8f",
+      "license": "CC0-1.0",
+      "author": "dave.des"
+    },
+    {
+      "file": "source-assets/upstream/chimes.mp3",
+      "path": "android/assets/sounds/chimes.mp3",
+      "sha256": "96d00d0768d3ef50f1e77cf971f3f734e5390f7195494b4da21f75706e3d1cbf",
+      "license": "CC0-1.0",
+      "author": "Bastianhallo"
+    },
+    {
+      "file": "source-assets/upstream/paper.mp3",
+      "path": "android/assets/sounds/paper.mp3",
+      "sha256": "102db107978d8498a1bacbbc15fae326d0875fa02ad5fc55bb10162a63a057a1",
+      "license": "CC0-1.0",
+      "author": "stijn"
+    },
+    {
+      "file": "source-assets/upstream/metalhit.mp3",
+      "path": "android/assets/sounds/metalhit.mp3",
+      "sha256": "af799e86d09866730217d02cf72684551a0f04a5e6aab1d672c6896d46f4348f",
+      "license": "CC0-1.0",
+      "author": "SlavicMagic"
+    },
+    {
+      "file": "source-assets/upstream/arrow.mp3",
+      "path": "android/assets/sounds/arrow.mp3",
+      "sha256": "3e1a29ade3ecd58e0db08847166f1ae52ff1a9d9ea2b192e8007d2a4c71ab401",
+      "license": "CC0-1.0",
+      "author": "Twisted_Euphoria"
+    },
+    {
+      "file": "source-assets/upstream/Gold.png",
+      "path": "android/Images.Icons/StatIcons/Gold.png",
+      "sha256": "a3b326ff31cf7d34f3b87a3ca45bf8aa1f54df1c58eeba1e208d81d1edfe4213",
+      "license": "CC-BY-3.0",
+      "author": "Eliricon"
+    },
+    {
+      "file": "source-assets/upstream/Science.png",
+      "path": "android/Images.Icons/StatIcons/Science.png",
+      "sha256": "573833bd740bcc8409d2e8355feb7f6cc3459eacea878eca6359079de6c052fa",
+      "license": "CC-BY-3.0",
+      "author": "Delwar Hossain"
+    },
+    {
+      "file": "source-assets/upstream/Culture.png",
+      "path": "android/Images.Icons/StatIcons/Culture.png",
+      "sha256": "29354b1b84852ac16b5104e5c1471498a371b53ba3b6c779d0550c0c0e903cf5",
+      "license": "CC-BY-3.0",
+      "author": "Naomi Atkinson"
+    },
+    {
+      "file": "source-assets/upstream/Food.png",
+      "path": "android/Images.Icons/StatIcons/Food.png",
+      "sha256": "dcc8a5b57a4c9c15cb414ee67ef4b09c7c6bb4915a0752b9a4866be5181e4429",
+      "license": "CC-BY-3.0",
+      "author": "Pedro Gonçalves"
+    },
+    {
+      "file": "source-assets/upstream/Production.png",
+      "path": "android/Images.Icons/StatIcons/Production.png",
+      "sha256": "92749e784a7ec24f4f0673e764f7099ee73edecdc5b05ebdeff8f6ea2c989c8f",
+      "license": "CC-BY-3.0",
+      "author": "Alex Bickov"
+    },
+    {
+      "file": "source-assets/upstream/Population.png",
+      "path": "android/Images.Icons/StatIcons/Population.png",
+      "sha256": "ce033c279c6e40382433b495884b8fe8b5fabb8ac04b30582312bab7e98ed46e",
+      "license": "CC-BY-3.0 OR Public-Domain",
+      "author": "Stéphanie Rusch"
+    },
+    {
+      "file": "source-assets/upstream/Options.png",
+      "path": "android/Images.Icons/OtherIcons/Options.png",
+      "sha256": "6f132ff058cea38527c757b6e7e0984b1521c6cc57c5e18f5559320a397dcc57",
+      "license": "CC-BY-3.0 OR Public-Domain",
+      "author": "Thengakola"
+    },
+    {
+      "file": "source-assets/upstream/Monument.png",
+      "path": "android/Images.ConstructionIcons/BuildingIcons/Monument.png",
+      "sha256": "10e66b4c7dbc2b907ffec9412305d4645f6e12eb4bbbc7abc843b36eafa9e2b9",
+      "license": "CC-BY-3.0 OR Public-Domain",
+      "author": "Eliricon"
+    },
+    {
+      "file": "source-assets/upstream/Granary.png",
+      "path": "android/Images.ConstructionIcons/BuildingIcons/Granary.png",
+      "sha256": "5da294e2eb67ba6d1f00821374f838246cbceabe9597ce8e6db8634404537b1b",
+      "license": "CC-BY-3.0 OR Public-Domain",
+      "author": "Pedro Santos"
+    },
+    {
+      "file": "source-assets/upstream/Barracks.png",
+      "path": "android/Images.ConstructionIcons/BuildingIcons/Barracks.png",
+      "sha256": "1410dee60376dfa1b5afea2f3dfed72c301e3449ed27b49a4efafa2cba547f00",
+      "license": "CC-BY-3.0 OR Public-Domain",
+      "author": "Creaticca Creative Agency"
+    },
+    {
+      "file": "source-assets/upstream/Unciv128.png",
+      "path": "android/assets/ExtraImages/Icons/Unciv128.png",
+      "sha256": "391361b0b5e6f93d5f07df2cfcc7073aad5a8488539e6630a9656bf8160fe971",
+      "license": "CC-BY-4.0",
+      "author": "yairm210 and u-ndefine; see NOTICE for included CC BY 3.0 components"
+    },
+    {
+      "file": "source-assets/upstream/Highlight.png",
+      "path": "android/Images.Tilesets/TileSets/FantasyHex/Highlight.png",
+      "sha256": "a3ea22b8cc7f31fd5fdc3f142389639e78dfd365e0876db85210bb367e31eb40",
+      "license": "CC-BY-4.0",
+      "author": "CuddlyClover and Unciv contributors"
+    },
+    {
+      "file": "source-assets/upstream/Crosshair.png",
+      "path": "android/Images.Tilesets/TileSets/FantasyHex/Crosshair.png",
+      "sha256": "35d19d3310e24c865b4d124d7acce3564c6f9d2b42d4484a86227a10881e399e",
+      "license": "CC-BY-4.0",
+      "author": "CuddlyClover and Unciv contributors"
+    }
+  ],
+  "music": {
+    "file": "assets/audio/thatched-villagers.ogg",
+    "title": "Thatched Villagers",
+    "author": "Kevin MacLeod",
+    "source": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Thatched%20Villagers.mp3",
+    "source_sha256": "148094b997a55e6ff8506d063720bc852830d9761f6c9c1d6ab7aea284754ca0",
+    "sha256": "67b04d9cf1b71c770e5889f366e52d1a11261250a5ccea5ce09a6c46c64c3f69",
+    "license": "CC-BY-4.0",
+    "credit": "https://github.com/yairm210/Unciv/blob/0f2eb314a17213da0c0ce3b9d9c4693e2ed6ef96/docs/Credits.md#music",
+    "conversion": "Complete track; Vorbis mono 16 kHz, 24 kbps"
+  }
+}

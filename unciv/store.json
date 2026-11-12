@@ -1,0 +1,20 @@
+{
+  "name": "Unciv",
+  "summary": "六角地图上的单人回合制策略游戏：探索、建城、科研与征服。",
+  "description": "从零编写的 PXA 单人回合制 4X 游戏，参考 Unciv 玩法，使用经署名的原版图像、音效及背景音乐。\n\n支持三档地图大小、战争迷雾、拖动和双指缩放；可管理城市工作地块、生产队列、科技、政策与外交。六类单位支持战斗预览、晋升、升级、驻防、休整、控制区、掠夺与修复。两名 AI 对手会发展城市、探索和作战。支持触屏、手柄、中英文和自动存档，音乐与音效可分别开关。\n\n当前是独立的精简规则版本，尚不支持联网、模组、宗教、贸易、完整时代、文明特性与海空军，也不兼容原版存档。\n\nESP-Mosaico（ESP32-S31）已实测；其他 CPU 目标完成交叉构建。需 PXA Core 2.1 和包声明的 Surface、GameRender、UI 0.10、Assets 2.0、Audio 0.10 等服务，实际兼容性以设备 Host 为准。\n\n应用代码为独立 C++ 实现；素材许可及作者见源码 assets/NOTICE.md。完整源码与构建说明：https://github.com/SmartArduino/pxa-apps/tree/codex/unciv/unciv\n\n商城截图来自真实 PXA 模拟器；封面为宣传插画。",
+  "kind": "game",
+  "category": "strategy",
+  "tags": [
+    "回合制",
+    "4X",
+    "策略",
+    "六角地图",
+    "单人",
+    "触屏",
+    "手柄"
+  ],
+  "language": "zh-CN",
+  "icon": "assets/icon.png",
+  "cover": "store/cover.png",
+  "changelog": "0.4.0 首次发布：提供城市发展、生产队列、科研、政策、外交与 AI 对战；支持晋升、控制区、驻防、按领土休整及掠夺修复。加入原版默认背景音乐，独立音乐/音效开关，优化音频播放与地图绘制，兼容旧版 PXA 存档。\n\nInitial release: single-player hex strategy with cities, production queues, research, policies, diplomacy and AI opponents. Includes promotions, zones of control, fortification, territorial healing, pillage/repair and the original default background track."
+}

@@ -1,0 +1,13 @@
+{
+  "format":"pxa-package-source-0.2",
+  "id":"pxa-unciv", "name":"Unciv", "version":"0.4.0", "release_sequence":6,
+  "description":"从零编写的 PXA 单人回合制 4X：六角探索、建城生产、科技、政策、外交与征服。使用经署名的 Unciv 素材。",
+  "min_sdk":[2,1], "target_sdk":[2,1], "compile_sdk":[2,1],
+  "publisher":{"handle":"lucinhu","display_name":"lucinhu"},
+  "build":{"system":"cmake","source_dir":".","linear_memory":{"maximum_bytes":2097152,"pinned":true}},
+  "components":[{"id":"main","kind":"ui","cmake_target":"pxa_main","execution_model":"main-loop","artifact":"aot",
+    "services":[{"name":"game-render","min_version":[1,0]},"surface",{"name":"ui","min_version":[0,10],"features":["canvas","canvas-stream-io","controller-input","font-glyph","sized-text"]},"window","clock","storage","permission","log",{"name":"audio","min_version":[0,10]},{"name":"assets","min_version":[2,0]}],
+    "wasi":{"version":"preview1","libc":"wasi-libc","features":["monotonic-clock","wall-clock"]}}],
+  "permissions":[{"name":"audio.playback","scope":"media","required":false}],
+  "icon":"assets/icon.png"
+}

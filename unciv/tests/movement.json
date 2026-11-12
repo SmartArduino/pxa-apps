@@ -1,0 +1,302 @@
+{
+  "pai-touch": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "confirm-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "settle-fonts",
+      "action": "wait",
+      "ms": 800
+    },
+    {
+      "name": "movement-range",
+      "action": "screenshot"
+    },
+    {
+      "name": "cursor-up",
+      "action": "controller",
+      "buttons": 1,
+      "ms": 80
+    },
+    {
+      "name": "move",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "after-move",
+      "action": "screenshot"
+    },
+    {
+      "name": "next-turn",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "renewed-range",
+      "action": "screenshot"
+    }
+  ],
+  "sensecap-watcher": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "confirm-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "settle-fonts",
+      "action": "wait",
+      "ms": 800
+    },
+    {
+      "name": "movement-range",
+      "action": "screenshot"
+    },
+    {
+      "name": "cursor-up",
+      "action": "controller",
+      "buttons": 1,
+      "ms": 80
+    },
+    {
+      "name": "move",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "after-move",
+      "action": "screenshot"
+    },
+    {
+      "name": "next-turn",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "renewed-range",
+      "action": "screenshot"
+    }
+  ],
+  "esp-mosaico": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "confirm-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "settle-fonts",
+      "action": "wait",
+      "ms": 800
+    },
+    {
+      "name": "movement-range",
+      "action": "screenshot"
+    },
+    {
+      "name": "cursor-up",
+      "action": "controller",
+      "buttons": 1,
+      "ms": 80
+    },
+    {
+      "name": "move",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "after-move",
+      "action": "screenshot"
+    },
+    {
+      "name": "next-turn",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "renewed-range",
+      "action": "screenshot"
+    }
+  ],
+  "esp32s31-korvo-1": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "confirm-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "settle-fonts",
+      "action": "wait",
+      "ms": 800
+    },
+    {
+      "name": "movement-range",
+      "action": "screenshot"
+    },
+    {
+      "name": "cursor-up",
+      "action": "controller",
+      "buttons": 1,
+      "ms": 80
+    },
+    {
+      "name": "move",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "after-move",
+      "action": "screenshot"
+    },
+    {
+      "name": "next-turn",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "renewed-range",
+      "action": "screenshot"
+    }
+  ],
+  "generic": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "confirm-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "settle-fonts",
+      "action": "wait",
+      "ms": 800
+    },
+    {
+      "name": "movement-range",
+      "action": "screenshot"
+    },
+    {
+      "name": "cursor-up",
+      "action": "controller",
+      "buttons": 1,
+      "ms": 80
+    },
+    {
+      "name": "move",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "after-move",
+      "action": "screenshot"
+    },
+    {
+      "name": "next-turn",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "renewed-range",
+      "action": "screenshot"
+    }
+  ]
+}

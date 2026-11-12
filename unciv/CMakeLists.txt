@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.21)
+project(pxa_unciv LANGUAGES C CXX)
+include("${CMAKE_CURRENT_LIST_DIR}/../common/cpp/Application.cmake")
+pxa_add_callback_component(pxa_main COMPONENT_ID main SOURCES main.cpp core.cpp audio.cpp font_cache.cpp game_blit.cpp save_store.cpp runtime.cpp)
+target_compile_definitions(pxa_main PRIVATE PXA_POCKET_STUDIO=1 PXA_POCKET_FILL=1 PXA_POCKET_RESPONSIVE=1 PXA_POCKET_SERVICES=1 PXA_POCKET_CUSTOM_MENU=1)
+target_link_options(pxa_main PRIVATE -Wl,-z,stack-size=65536)

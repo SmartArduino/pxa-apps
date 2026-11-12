@@ -1,0 +1,107 @@
+{
+  "pai-touch": [
+    {
+      "name": "ready-delay",
+      "action": "wait",
+      "ms": 600
+    },
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1500
+    },
+    {
+      "name": "title",
+      "action": "screenshot"
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "select-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "confirm-new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "map-wait",
+      "action": "wait",
+      "ms": 800
+    },
+    {
+      "name": "initial-map",
+      "action": "screenshot"
+    },
+    {
+      "name": "found",
+      "action": "tap",
+      "x": 110,
+      "y": 226
+    },
+    {
+      "name": "city-founded",
+      "action": "screenshot"
+    },
+    {
+      "name": "city",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "production",
+      "action": "screenshot"
+    },
+    {
+      "name": "back",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "research",
+      "action": "controller",
+      "buttons": 1024,
+      "ms": 80
+    },
+    {
+      "name": "tech-tree",
+      "action": "screenshot"
+    },
+    {
+      "name": "back-map",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "end-turn",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "new-turn",
+      "action": "screenshot"
+    },
+    {
+      "name": "diplomacy",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "civilizations",
+      "action": "screenshot"
+    }
+  ]
+}

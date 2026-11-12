@@ -1,0 +1,14 @@
+{
+  "tool": "OpenAI image_gen (built-in)",
+  "created": "2026-11-12",
+  "artwork": "cover.png",
+  "reference_images": [],
+  "runtime_screenshot": false,
+  "aspect_ratio": "4:3",
+  "dimensions": [
+    1448,
+    1086
+  ],
+  "sha256": "8941873bfc496739a1783e8c5056eb0bbec36e44cf731145a3bca8de0dd46ee9",
+  "prompt": "Create a finished illustrated promotional cover for the PXA turn-based strategy game Unciv. Exact landscape 4:3 composition, ideally 1280 by 960 pixels. This is promotional artwork, NOT a runtime screenshot. Style: crisp flat 2D pixel-inspired hexagonal board-game art, restrained colors, legible at small thumbnail sizes, matching a simple civilization strategy game rather than a realistic or cinematic scene. Show a coherent hex-tile coastline with dark teal ocean on the left, lime and olive grassland, small clusters of trees, a few rocky hills, pale farm plots, and one compact ancient walled city with warm terracotta roofs in the middle-right. Include only a few small readable soldier, scout and worker figures with blue and gold flags. Slight overhead perspective, clearly visible hex grid, simple tactile map shapes, no glossy plastic rendering. Deep navy negative space across the upper quarter, merging naturally into the map. Put the sole text 'Unciv' in large clean white sans-serif lettering at upper left. No tagline, no Chinese slogan, no extra labels, no fake UI, no resource counters, no buttons, no device frame, no rounded corners, no watermark. Keep all important subjects and title comfortably inside the 4:3 frame. Opaque background."
+}

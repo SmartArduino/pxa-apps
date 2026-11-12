@@ -1,0 +1,1982 @@
+{
+  "pai-touch": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "choose-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "found",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "initial-city",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "initial-project",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "initial-start-production",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "initial-return-map",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "turn",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "city",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "settler",
+      "action": "controller",
+      "buttons": 4,
+      "ms": 80
+    },
+    {
+      "name": "inspect-settler",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "production-detail",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "production-detail-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "back-city",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "buildings",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "inspect-monument",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "building-detail",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "building-detail-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-detail",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "close-city",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "diplomacy",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "diplomacy-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "cities-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "cities",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "cities-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "open-city-from-list",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "managed-city",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "managed-city-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "city-growth",
+      "action": "controller",
+      "buttons": 128,
+      "ms": 80
+    },
+    {
+      "name": "food-focus",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "apply-food-focus",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "growth-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "growth-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "worked-tiles",
+      "action": "controller",
+      "buttons": 128,
+      "ms": 80
+    },
+    {
+      "name": "tile-right",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "lock-citizen",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "locked-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "worked-tiles-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "restore-auto",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "close-worked-tiles",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "close-growth",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "inspect-purchase",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "purchase-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "purchase-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "cancel-purchase",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "return-map",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "return-overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "units-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "units",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "units-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "locate-unit",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "selected-unit",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "selected-unit-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "deselect-unit",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "terrain-map",
+      "action": "screenshot"
+    },
+    {
+      "name": "economy-turn-0",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-1",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-2",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-3",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-4",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-5",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-6",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-7",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "log-overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "open-log",
+      "action": "controller",
+      "buttons": 128,
+      "ms": 80
+    },
+    {
+      "name": "log-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "notifications-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-log",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "developed-map-screen",
+      "action": "screenshot"
+    }
+  ],
+  "sensecap-watcher": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "choose-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "found",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "initial-city",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "initial-project",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "initial-start-production",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "initial-return-map",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "turn",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "city",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "settler",
+      "action": "controller",
+      "buttons": 4,
+      "ms": 80
+    },
+    {
+      "name": "inspect-settler",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "production-detail",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "production-detail-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "back-city",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "buildings",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "inspect-monument",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "building-detail",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "building-detail-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-detail",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "close-city",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "diplomacy",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "diplomacy-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "cities-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "cities",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "cities-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "open-city-from-list",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "managed-city",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "managed-city-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "city-growth",
+      "action": "controller",
+      "buttons": 128,
+      "ms": 80
+    },
+    {
+      "name": "food-focus",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "apply-food-focus",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "growth-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "growth-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "worked-tiles",
+      "action": "controller",
+      "buttons": 128,
+      "ms": 80
+    },
+    {
+      "name": "tile-right",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "lock-citizen",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "locked-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "worked-tiles-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "restore-auto",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "close-worked-tiles",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "close-growth",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "inspect-purchase",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "purchase-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "purchase-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "cancel-purchase",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "return-map",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "return-overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "units-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "units",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "units-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "locate-unit",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "selected-unit",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "selected-unit-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "deselect-unit",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "terrain-map",
+      "action": "screenshot"
+    },
+    {
+      "name": "economy-turn-0",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-1",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-2",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-3",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-4",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-5",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-6",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-7",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "log-overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "open-log",
+      "action": "controller",
+      "buttons": 128,
+      "ms": 80
+    },
+    {
+      "name": "log-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "notifications-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-log",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "developed-map-screen",
+      "action": "screenshot"
+    }
+  ],
+  "esp-mosaico": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "choose-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "found",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "initial-city",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "initial-project",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "initial-start-production",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "initial-return-map",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "turn",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "city",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "settler",
+      "action": "controller",
+      "buttons": 4,
+      "ms": 80
+    },
+    {
+      "name": "inspect-settler",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "production-detail",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "production-detail-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "back-city",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "buildings",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "inspect-monument",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "building-detail",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "building-detail-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-detail",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "close-city",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "diplomacy",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "diplomacy-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "cities-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "cities",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "cities-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "open-city-from-list",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "managed-city",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "managed-city-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "city-growth",
+      "action": "controller",
+      "buttons": 128,
+      "ms": 80
+    },
+    {
+      "name": "food-focus",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "apply-food-focus",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "growth-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "growth-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "worked-tiles",
+      "action": "controller",
+      "buttons": 128,
+      "ms": 80
+    },
+    {
+      "name": "tile-right",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "lock-citizen",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "locked-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "worked-tiles-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "restore-auto",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "close-worked-tiles",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "close-growth",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "inspect-purchase",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "purchase-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "purchase-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "cancel-purchase",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "return-map",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "return-overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "units-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "units",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "units-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "locate-unit",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "selected-unit",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "selected-unit-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "deselect-unit",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "terrain-map",
+      "action": "screenshot"
+    },
+    {
+      "name": "economy-turn-0",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-1",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-2",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-3",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-4",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-5",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-6",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-7",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "log-overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "open-log",
+      "action": "controller",
+      "buttons": 128,
+      "ms": 80
+    },
+    {
+      "name": "log-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "notifications-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-log",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "developed-map-screen",
+      "action": "screenshot"
+    }
+  ],
+  "esp32s31-korvo-1": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "choose-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "found",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "initial-city",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "initial-project",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "initial-start-production",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "initial-return-map",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "turn",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "city",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "settler",
+      "action": "controller",
+      "buttons": 4,
+      "ms": 80
+    },
+    {
+      "name": "inspect-settler",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "production-detail",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "production-detail-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "back-city",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "buildings",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "inspect-monument",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "building-detail",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "building-detail-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-detail",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "close-city",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "diplomacy",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "diplomacy-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "cities-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "cities",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "cities-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "open-city-from-list",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "managed-city",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "managed-city-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "city-growth",
+      "action": "controller",
+      "buttons": 128,
+      "ms": 80
+    },
+    {
+      "name": "food-focus",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "apply-food-focus",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "growth-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "growth-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "worked-tiles",
+      "action": "controller",
+      "buttons": 128,
+      "ms": 80
+    },
+    {
+      "name": "tile-right",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "lock-citizen",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "locked-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "worked-tiles-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "restore-auto",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "close-worked-tiles",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "close-growth",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "inspect-purchase",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "purchase-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "purchase-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "cancel-purchase",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "return-map",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "return-overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "units-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "units",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "units-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "locate-unit",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "selected-unit",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "selected-unit-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "deselect-unit",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "terrain-map",
+      "action": "screenshot"
+    },
+    {
+      "name": "economy-turn-0",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-1",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-2",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-3",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-4",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-5",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-6",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-7",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "log-overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "open-log",
+      "action": "controller",
+      "buttons": 128,
+      "ms": 80
+    },
+    {
+      "name": "log-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "notifications-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-log",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "developed-map-screen",
+      "action": "screenshot"
+    }
+  ],
+  "generic": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "choose-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "found",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "initial-city",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "initial-project",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "initial-start-production",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "initial-return-map",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "turn",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "city",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "settler",
+      "action": "controller",
+      "buttons": 4,
+      "ms": 80
+    },
+    {
+      "name": "inspect-settler",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "production-detail",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "production-detail-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "back-city",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "buildings",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "inspect-monument",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "building-detail",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "building-detail-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-detail",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "close-city",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "diplomacy",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "diplomacy-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "cities-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "cities",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "cities-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "open-city-from-list",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "managed-city",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "managed-city-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "city-growth",
+      "action": "controller",
+      "buttons": 128,
+      "ms": 80
+    },
+    {
+      "name": "food-focus",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "apply-food-focus",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "growth-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "growth-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "worked-tiles",
+      "action": "controller",
+      "buttons": 128,
+      "ms": 80
+    },
+    {
+      "name": "tile-right",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "lock-citizen",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "locked-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "worked-tiles-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "restore-auto",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "close-worked-tiles",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "close-growth",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "inspect-purchase",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "purchase-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "purchase-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "cancel-purchase",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "return-map",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "return-overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "units-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "units",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "units-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "locate-unit",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "selected-unit",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "selected-unit-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "deselect-unit",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "terrain-map",
+      "action": "screenshot"
+    },
+    {
+      "name": "economy-turn-0",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-1",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-2",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-3",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-4",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-5",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-6",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "economy-turn-7",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "log-overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "open-log",
+      "action": "controller",
+      "buttons": 128,
+      "ms": 80
+    },
+    {
+      "name": "log-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "notifications-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-log",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "developed-map-screen",
+      "action": "screenshot"
+    }
+  ]
+}

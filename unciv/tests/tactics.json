@@ -1,0 +1,772 @@
+{
+  "pai-touch": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "continue",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "raid-map-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "raid-map",
+      "action": "screenshot"
+    },
+    {
+      "name": "overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "cities-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "units-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "unit-details",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "unit-rest-rate-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "unit-rest-rate",
+      "action": "screenshot"
+    },
+    {
+      "name": "second-row",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "third-row",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "pillage-action",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "preview",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "pillage-confirm-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "pillage-confirm",
+      "action": "screenshot"
+    },
+    {
+      "name": "cancel-pillage",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "second-row-again",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "third-row-again",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "pillage-action-again",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "preview-again",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "confirm-pillage",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "pillaged-map-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "pillaged-map",
+      "action": "screenshot"
+    },
+    {
+      "name": "leave-pillaged-site",
+      "action": "controller",
+      "buttons": 4,
+      "ms": 80
+    },
+    {
+      "name": "move-away",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "damage-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "damaged-ground",
+      "action": "screenshot"
+    }
+  ],
+  "sensecap-watcher": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "continue",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "raid-map-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "raid-map",
+      "action": "screenshot"
+    },
+    {
+      "name": "overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "cities-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "units-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "unit-details",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "unit-rest-rate-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "unit-rest-rate",
+      "action": "screenshot"
+    },
+    {
+      "name": "second-row",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "third-row",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "pillage-action",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "preview",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "pillage-confirm-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "pillage-confirm",
+      "action": "screenshot"
+    },
+    {
+      "name": "cancel-pillage",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "second-row-again",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "third-row-again",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "pillage-action-again",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "preview-again",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "confirm-pillage",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "pillaged-map-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "pillaged-map",
+      "action": "screenshot"
+    },
+    {
+      "name": "leave-pillaged-site",
+      "action": "controller",
+      "buttons": 4,
+      "ms": 80
+    },
+    {
+      "name": "move-away",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "damage-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "damaged-ground",
+      "action": "screenshot"
+    }
+  ],
+  "esp-mosaico": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "continue",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "raid-map-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "raid-map",
+      "action": "screenshot"
+    },
+    {
+      "name": "overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "cities-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "units-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "unit-details",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "unit-rest-rate-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "unit-rest-rate",
+      "action": "screenshot"
+    },
+    {
+      "name": "second-row",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "third-row",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "pillage-action",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "preview",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "pillage-confirm-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "pillage-confirm",
+      "action": "screenshot"
+    },
+    {
+      "name": "cancel-pillage",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "second-row-again",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "third-row-again",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "pillage-action-again",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "preview-again",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "confirm-pillage",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "pillaged-map-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "pillaged-map",
+      "action": "screenshot"
+    },
+    {
+      "name": "leave-pillaged-site",
+      "action": "controller",
+      "buttons": 4,
+      "ms": 80
+    },
+    {
+      "name": "move-away",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "damage-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "damaged-ground",
+      "action": "screenshot"
+    }
+  ],
+  "esp32s31-korvo-1": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "continue",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "raid-map-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "raid-map",
+      "action": "screenshot"
+    },
+    {
+      "name": "overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "cities-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "units-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "unit-details",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "unit-rest-rate-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "unit-rest-rate",
+      "action": "screenshot"
+    },
+    {
+      "name": "second-row",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "third-row",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "pillage-action",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "preview",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "pillage-confirm-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "pillage-confirm",
+      "action": "screenshot"
+    },
+    {
+      "name": "cancel-pillage",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "second-row-again",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "third-row-again",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "pillage-action-again",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "preview-again",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "confirm-pillage",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "pillaged-map-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "pillaged-map",
+      "action": "screenshot"
+    },
+    {
+      "name": "leave-pillaged-site",
+      "action": "controller",
+      "buttons": 4,
+      "ms": 80
+    },
+    {
+      "name": "move-away",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "damage-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "damaged-ground",
+      "action": "screenshot"
+    }
+  ],
+  "generic": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "continue",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "raid-map-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "raid-map",
+      "action": "screenshot"
+    },
+    {
+      "name": "overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "cities-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "units-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "unit-details",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "unit-rest-rate-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "unit-rest-rate",
+      "action": "screenshot"
+    },
+    {
+      "name": "second-row",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "third-row",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "pillage-action",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "preview",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "pillage-confirm-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "pillage-confirm",
+      "action": "screenshot"
+    },
+    {
+      "name": "cancel-pillage",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "second-row-again",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "third-row-again",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "pillage-action-again",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "preview-again",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "confirm-pillage",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "pillaged-map-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "pillaged-map",
+      "action": "screenshot"
+    },
+    {
+      "name": "leave-pillaged-site",
+      "action": "controller",
+      "buttons": 4,
+      "ms": 80
+    },
+    {
+      "name": "move-away",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "damage-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "damaged-ground",
+      "action": "screenshot"
+    }
+  ]
+}

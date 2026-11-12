@@ -1,0 +1,822 @@
+{
+  "pai-touch": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "choose-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "found",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "initial-city",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "initial-project",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "initial-start-production",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "initial-return-map",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "cities-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "units-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "unit-details",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "details-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "unit-details-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "to-promotions",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "row-two",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "open-promotions",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "promotions-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "promotions-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-promotions",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "to-upgrade",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "row-upgrade",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "open-upgrade",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "upgrade-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "upgrade-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-upgrade",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "close-details",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "map-screen",
+      "action": "screenshot"
+    }
+  ],
+  "sensecap-watcher": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "choose-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "found",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "initial-city",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "initial-project",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "initial-start-production",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "initial-return-map",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "cities-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "units-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "unit-details",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "details-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "unit-details-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "to-promotions",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "row-two",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "open-promotions",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "promotions-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "promotions-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-promotions",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "to-upgrade",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "row-upgrade",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "open-upgrade",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "upgrade-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "upgrade-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-upgrade",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "close-details",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "map-screen",
+      "action": "screenshot"
+    }
+  ],
+  "esp-mosaico": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "choose-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "found",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "initial-city",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "initial-project",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "initial-start-production",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "initial-return-map",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "cities-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "units-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "unit-details",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "details-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "unit-details-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "to-promotions",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "row-two",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "open-promotions",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "promotions-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "promotions-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-promotions",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "to-upgrade",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "row-upgrade",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "open-upgrade",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "upgrade-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "upgrade-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-upgrade",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "close-details",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "map-screen",
+      "action": "screenshot"
+    }
+  ],
+  "esp32s31-korvo-1": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "choose-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "found",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "initial-city",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "initial-project",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "initial-start-production",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "initial-return-map",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "cities-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "units-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "unit-details",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "details-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "unit-details-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "to-promotions",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "row-two",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "open-promotions",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "promotions-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "promotions-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-promotions",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "to-upgrade",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "row-upgrade",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "open-upgrade",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "upgrade-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "upgrade-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-upgrade",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "close-details",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "map-screen",
+      "action": "screenshot"
+    }
+  ],
+  "generic": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "choose-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "found",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "initial-city",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "initial-project",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "initial-start-production",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "initial-return-map",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "overview",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "cities-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "units-tab",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "unit-details",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "details-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "unit-details-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "to-promotions",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "row-two",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "open-promotions",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "promotions-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "promotions-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-promotions",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "to-upgrade",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "row-upgrade",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "open-upgrade",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "upgrade-ready",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "upgrade-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-upgrade",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "close-details",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "map-screen",
+      "action": "screenshot"
+    }
+  ]
+}
