@@ -49,6 +49,8 @@ static unsigned surface_stride;
 static int pending_buffer=-1;
 static unsigned clear_frames=3;
 static char sd_media_path[256];
+static int sd_media_path_pending;
+static uint64_t sd_media_path_started;
 static unsigned menu_focus,menu_repeat_mode,menu_repeat_controller;
 static uint32_t menu_repeat_buttons;
 static uint64_t menu_repeat_at;
@@ -310,7 +312,8 @@ static __attribute__((noinline, cold)) void paint_menu(uint16_t *out) {
             text(out, 32, 72, UI_FLASH_PATH, UI_ACCENT, 32);
             path_lines(out, 96, "roms/");
             text(out, 32, 112, UI_SD_PATH, UI_ACCENT, 32);
-            path_lines(out, 134, sd_media_path[0] ? sd_media_path : UI_SD_QUERY);
+            path_lines(out, 134, sd_media_path[0] ? sd_media_path :
+                       sd_media_path_pending ? UI_SD_QUERY : UI_IMPORT_PURPOSE);
         } else {
             scroll_bar(out, page, visible, count, 64, visible * 22 - 2);
         }
@@ -752,6 +755,13 @@ static __attribute__((noinline)) void io_tick(void) {
 static void menu_controller_repeat(uint64_t now);
 
 static __attribute__((noinline)) void tick(uint64_t now) {
+    if (sd_media_path_pending) {
+        if (!sd_media_path_started) sd_media_path_started = now;
+        else if (now - sd_media_path_started >= UINT64_C(3000000)) {
+            sd_media_path_pending = 0;
+            redraw = 1;
+        }
+    }
     io_tick();
     exit_tick();
     if (background) return;
@@ -1048,7 +1058,10 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t size) {
     pxa_fs_request_path(PXA_FS_MAKE_DIRECTORY, T_MKDIR, "roms", 4);
     /* The media path query needs FS 0.4. Older Hosts still expose the media
      * root, so the query stays optional. */
-    if (pxa_fs_request_app_media_path(T_MEDIA_PATH)) {
+    sd_media_path[0] = 0;
+    sd_media_path_started = 0;
+    sd_media_path_pending = pxa_fs_request_app_media_path(T_MEDIA_PATH) == PXA_STATUS_OK;
+    if (!sd_media_path_pending) {
         gb_port_log("GB SD media path unavailable on this Host");
     }
     gb_core_set_log_sink(core_log);
@@ -1210,10 +1223,15 @@ int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
     }
     if (e.service == PXA_FS_SERVICE) {
         if(e.token==T_ROM_IMPORT) {import_completed(&e);return PXA_EVENT_HANDLED;}
-        if(e.token==T_MEDIA_PATH) {
+        if(e.token==T_MEDIA_PATH && e.opcode==PXA_FS_APP_MEDIA_PATH) {
+            sd_media_path_pending=0;
             if(pxa_fs_parse_app_media_path(&e,T_MEDIA_PATH,sd_media_path,sizeof(sd_media_path))) {
-                gb_port_log("GB SD media=%s",sd_media_path);redraw=1;
+                gb_port_log("GB SD media=%s",sd_media_path);
+            } else {
+                sd_media_path[0]=0;
+                gb_port_log("GB SD media path unavailable; use Import to choose ROMs");
             }
+            redraw=1;
             return PXA_EVENT_HANDLED;
         }
         if (e.token == T_ROOT) {

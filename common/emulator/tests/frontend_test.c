@@ -89,6 +89,7 @@ int main(int argc,char **argv){
  p.pointer_id=0;pointer(&p);assert(!touches[0]);
  char extension[16];size_t length=strcspn(EMU_EXTENSIONS,"|");assert(length<sizeof(extension));
  memcpy(extension,EMU_EXTENSIONS,length);extension[length]=0;test_library_contract(extension);
+ test_media_path_contract();
  test_theme_contract();
  test_menu_contract();
  puts("PASS: 12 gamepad buttons, independent players, auto hide, menu chord and multi-touch");

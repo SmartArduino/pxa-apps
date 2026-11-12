@@ -213,6 +213,7 @@ int main(int argc,char **argv) {
     audio_test=0;audio=0;
     test_theme_contract();
  test_library_contract("gbc");
+ test_media_path_contract();
  test_menu_contract();
     touch_controls();
     padded_surface(argv[1]);
