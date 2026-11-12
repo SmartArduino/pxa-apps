@@ -135,7 +135,7 @@ inline MkvBlock mkv_block(std::span<const std::byte> header, uint32_t offset, ui
         return {};
     const auto bytes = uint32_t(size - 0x10000004u);
     unsigned track = std::to_integer<unsigned>(header[23]) & 0x7f;
-    if (bytes > 262144 || bytes > end - offset - 27 || (track != 1 && track != 2) ||
+    if (bytes > 1048576 || bytes > end - offset - 27 || (track != 1 && track != 2) ||
         get_be(header.data() + 4, 4) != 0x10000000u + 19 + bytes || header[24] != std::byte{} ||
         header[25] != std::byte{})
         return {};

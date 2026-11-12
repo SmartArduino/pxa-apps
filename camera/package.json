@@ -1,8 +1,8 @@
 {
   "format": "pxa-package-source-0.2",
   "id": "pxa-camera",
-  "version": "0.3.2",
-  "release_sequence": 8,
+  "version": "0.4.1",
+  "release_sequence": 10,
   "name": "相机",
   "description": "自动取景、画质切换、拍照录像与照片视频相册。",
   "min_sdk": [
@@ -21,8 +21,8 @@
     "system": "cmake",
     "source_dir": ".",
     "linear_memory": {
-      "maximum_bytes": 2097152,
-      "pinned": true
+      "maximum_bytes": 4194304,
+      "pinned": false
     }
   },
   "permissions": [

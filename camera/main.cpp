@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "matroska.hpp"
 #include "preview_geometry.hpp"
+#include "camera_profiles.hpp"
 #include <opus.h>
 #include <pxa-ext/peripherals.hpp>
 #include <pxa/canvas.hpp>
@@ -8,6 +9,7 @@
 #include <pxa/ui_layout.hpp>
 #include <pxa/ui_refresh.hpp>
 #include <chrono>
+#include <vector>
 #include <cstdio>
 #include <optional>
 #include <charconv>
@@ -50,6 +52,10 @@ struct CameraApp {
     State<bool> chrome{true};
     State<std::string> shutter_label{""}, page_label{"1 / 1"};
     State<std::string> album_title{"相册"}, audio_label{"录音 · 开"};
+    State<std::string> orientation_label{"横屏"};
+    bool portrait_capture = false;
+    std::optional<bool> window_portrait;
+    std::optional<pxa::WindowMetrics> window_metrics;
     enum class BackTarget { none, camera, gallery };
     BackTarget pending_back = BackTarget::none;
     bool gallery = false, gallery_reload = false;
@@ -84,8 +90,8 @@ struct CameraApp {
     std::array<ports::PortInfo, PXA_PERIPHERALS_MAX_PORTS> available{};
     std::array<ports::CameraProfile, PXA_CAMERA_MAX_PROFILES> profiles{};
     // Reserve space before each JPEG for its Matroska block header.
-    std::array<std::byte, PXA_VISION_MAX_JPEG+40> bytes{};
-    std::span<std::byte> frame_data() { return std::span(bytes).subspan(32,PXA_VISION_MAX_JPEG); }
+    std::vector<std::byte> bytes;
+    std::span<std::byte> frame_data() { return std::span(bytes).subspan(32,bytes.size()-40); }
     ports::PortInfo camera_info{};
     ports::Port port;
     pxa::Permission permission;
@@ -110,7 +116,8 @@ struct CameraApp {
     std::array<std::byte,3208> audio_chunk{};
     std::string video_name;
     pxa::Context* context = nullptr;
-    size_t profile_count = 0, selected = 0;
+    size_t profile_count = 0, selected = 0, photo_profile = 0, video_profile = 0;
+    size_t active_frame_limit = PXA_VISION_MAX_JPEG;
     uint32_t next_photo = 1, next_video = 1, measured_frames = 0;
     uint32_t captured_audio_samples=0, recorded_frame_offset=0;
     bool foreground = true, discovering = false, running = false;
@@ -151,8 +158,53 @@ struct CameraApp {
         const auto& profile=profiles[selected];
         std::string text="画质 · ";
         text += profile.width ? std::to_string(profile.width)+"×"+std::to_string(profile.height) : "原生";
+        if ((profile.width == 1920 && profile.height == 1080) || (profile.width == 1080 && profile.height == 1920))
+            text = profile.quality >= 80 ? "1080p · 高清" : "1080p · 流畅";
         if (profile_count>1) text += " ▾";
         profile_label.set(std::move(text));
+    }
+    auto profile_span() const { return std::span(profiles.data(), profile_count); }
+    void orient_profiles(bool portrait) {
+        if (record || video_file) return; // A Matroska track keeps one extent.
+        portrait_capture = portrait;
+        orientation_label.set(portrait ? "竖屏" : "横屏");
+        if (!profile_count) return;
+        const auto previous = selected;
+        auto photo = camera_profiles::orient(profile_span(), photo_profile, portrait);
+        auto video = camera_profiles::orient(profile_span(), video_profile, portrait);
+        if (photo) photo_profile = *photo;
+        if (video) video_profile = *video;
+        selected = video_mode ? video_profile : photo_profile;
+        show_profile();
+        if (!(video_mode ? video : photo)) status.set("设备未提供此方向的拍摄档位");
+        if (selected != previous && running) { restart=true; preview=false; photograph=false; }
+    }
+    void toggle_orientation() {
+        if (record || video_file || photograph) { status.set("请先结束拍摄"); return; }
+        const bool portrait = !portrait_capture;
+        if (window_metrics && !camera_profiles::supports_window_orientation(window_metrics->native_width,
+            window_metrics->native_height, window_metrics->supported_rotations, portrait)) {
+            status.set("设备界面不支持此方向"); return;
+        }
+        auto changed = context->window().request_orientation(portrait ?
+            pxa::OrientationPreference::portrait : pxa::OrientationPreference::landscape);
+        if (!changed) { status.set("设备不支持界面旋转"); return; }
+        window_portrait = portrait;
+        orient_profiles(portrait);
+        refresh();
+    }
+    void on_window_changed(const pxa::WindowMetrics& metrics) {
+        window_metrics = metrics;
+        // Square windows keep their angle and the user's capture preference.
+        if (metrics.logical_width == metrics.logical_height) return;
+        window_portrait = metrics.logical_height > metrics.logical_width;
+        if (!record && !video_file && !photograph) orient_profiles(*window_portrait);
+        dirty = true;
+    }
+    pxa::Task<void> read_window() {
+        auto metrics = co_await context->window().snapshot(true);
+        if (metrics) on_window_changed(*metrics);
+        co_return pxa::Result<void>{}; // Older Window services remain usable.
     }
     pxa::Task<void> discover() {
         const auto old_id = profile_count ? profiles[selected].id : 0;
@@ -177,15 +229,28 @@ struct CameraApp {
         if (!total) co_return std::unexpected(total.error());
         profile_count = *total; selected = 0;
         for (size_t i = 0; i < profile_count; ++i) if (profiles[i].is_default()) selected = i;
+        // Prefer the explicit HD photo profile; keep the board default usable
+        // by older clients that open parameter zero without profile discovery.
+        for (size_t i = 0; i < profile_count; ++i)
+            if (profiles[i].width == 1920 && profiles[i].height == 1080 && profiles[i].quality >= 80) selected = i;
         for (size_t i = 0; i < profile_count; ++i) if (profiles[i].id == old_id) selected = i;
+        photo_profile = video_profile = selected;
+        for (size_t i = 0; i < profile_count; ++i)
+            if (profiles[i].width == 1920 && profiles[i].height == 1080 && profiles[i].quality <= 65)
+                video_profile = i;
+        if (video_mode) selected = video_profile;
+        orient_profiles(portrait_capture);
         show_profile(); discovering = false;
         if (foreground && !album) { preview=true; start(); }
         co_return pxa::Result<void>{};
     }
     pxa::Task<void> write_all(pxa::File& file, std::span<const std::byte> input) {
         const auto deadline = Clock::now() + std::chrono::seconds(30);
+        auto yield_at = Clock::now() + std::chrono::milliseconds(8);
         while (!input.empty()) {
-            auto written = file.write(input.first(std::min(input.size(), size_t(4096))));
+            // FAT/SD benefits from multi-sector writes. Avoid an event round
+            // trip after every 4 KiB of an otherwise ready JPEG stream.
+            auto written = file.write(input.first(std::min(input.size(), size_t(32768))));
             if (written) {
                 if (!*written || *written > input.size()) co_return std::unexpected(pxa::Error::io_error);
                 input = input.subspan(*written);
@@ -193,8 +258,9 @@ struct CameraApp {
                 co_return std::unexpected(written.error());
             }
             if (Clock::now() > deadline) co_return std::unexpected(pxa::Error::timed_out);
-            if (!input.empty()) {
+            if (!input.empty() && (!written || Clock::now() >= yield_at)) {
                 if (auto yielded = co_await context->clock().yield(); !yielded) co_return yielded;
+                yield_at = Clock::now() + std::chrono::milliseconds(8);
             }
         }
         co_return pxa::Result<void>{};
@@ -218,9 +284,11 @@ struct CameraApp {
         }
     }
     pxa::Task<size_t> read_frame(ports::FrameStream source) {
+        // Preview-only sessions do not reserve a full-resolution JPEG buffer.
+        if (bytes.size() != active_frame_limit + 40) bytes.resize(active_frame_limit + 40);
         const auto deadline = Clock::now() + std::chrono::seconds(20);
         size_t received = 0;
-        unsigned reads = 0;
+        auto yield_at = Clock::now() + std::chrono::milliseconds(8);
         for (;;) {
             std::byte extra{};
             auto target = received < frame_data().size() ? frame_data().subspan(received) : std::span(&extra, 1);
@@ -233,8 +301,9 @@ struct CameraApp {
                 co_return std::unexpected(part.error());
             }
             if (Clock::now() > deadline) co_return std::unexpected(pxa::Error::timed_out);
-            if (!part || ++reads % 12 == 0) {
+            if (!part || Clock::now() >= yield_at) {
                 if (auto yielded = co_await context->clock().yield(); !yielded) co_return std::unexpected(yielded.error());
+                yield_at = Clock::now() + std::chrono::milliseconds(8);
             }
         }
         const auto dimensions = camera_media::jpeg_size(frame_data().first(received));
@@ -255,7 +324,9 @@ struct CameraApp {
         auto committed = co_await context->fs().rename("photo.tmp", *name);
         if (!committed) co_return committed;
         status.set("照片已保存");
-        log("Camera photo saved: " + *name + " bytes=" + std::to_string(size));
+        const auto dimensions = camera_media::jpeg_size(frame_data().first(size));
+        log("Camera photo saved: " + *name + " bytes=" + std::to_string(size) +
+            " width=" + std::to_string(dimensions.width) + " height=" + std::to_string(dimensions.height));
         auto source = co_await context->fs().open(*name, pxa::OpenMode::read);
         if (!source) co_return std::unexpected(source.error());
         auto decoded = co_await context->assets().decode_image(std::move(*source), image_options());
@@ -268,7 +339,7 @@ struct CameraApp {
     }
     static pxa::ImageDecodeOptions image_options() {
         return {.max_width=320, .max_height=320, .max_pixels=102400,
-            .max_encoded_bytes=PXA_VISION_MAX_JPEG, .formats=pxa::ImageFormats::jpeg};
+            .max_encoded_bytes=PXA_VISION_MAX_JPEG_HD, .formats=pxa::ImageFormats::jpeg};
     }
     void close_microphone() {
         (void)microphone.close();
@@ -446,13 +517,15 @@ struct CameraApp {
         if (!grant) co_return std::unexpected(grant.error());
         permission = std::move(*grant);
         const auto deadline = Clock::now() + std::chrono::seconds(20);
+        const auto requested_profile = profiles[selected];
         while (foreground && (preview || photograph || record)) {
-            auto opened = co_await client.open_port(camera_info, PXA_PERIPHERALS_MODE_STREAM, profiles[selected].id, 0, permission);
+            auto opened = co_await client.open_port(camera_info, PXA_PERIPHERALS_MODE_STREAM, requested_profile.id, 0, permission);
             if (opened) { port = std::move(*opened); break; }
             if ((opened.error() != pxa::Error::busy && opened.error() != pxa::Error::would_block) || Clock::now() > deadline)
                 co_return std::unexpected(opened.error());
             if (auto yielded = co_await context->clock().yield(); !yielded) co_return yielded;
         }
+        active_frame_limit = requested_profile.max_frame_bytes;
         measured_at = Clock::now(); measured_frames = 0; paint_us = 0; paint_calls = 0;
         status.set("");
         while (foreground && (preview || photograph || record || video_file)) {
@@ -528,8 +601,12 @@ struct CameraApp {
         (void)context->window().keep_screen_on(true);
         if (auto task = context->tasks().start(run()); !task) fail(task.error());
     }
-    void take_photo() { photograph = true; start(); }
+    void take_photo() {
+        if (restart) { status.set("正在切换画质，请稍候"); return; }
+        photograph = true; start();
+    }
     void toggle_record() {
+        if (!record && restart) { status.set("正在切换画质，请稍候"); return; }
         if (!record && video_file) return;
         record = !record;
         if (record) capture_us=storage_us=preview_us=0;
@@ -540,7 +617,13 @@ struct CameraApp {
         if (!profile_count || discovering) return;
         if (record || video_file) { status.set("请先结束录像"); return; }
         if (profile_count == 1) { status.set("设备提供原生 JPEG 档位"); return; }
-        selected = (selected + 1) % profile_count; show_profile();
+        const bool oriented = camera_profiles::orient(profile_span(), selected, portrait_capture).has_value();
+        for (size_t step = 1; step <= profile_count; ++step) {
+            const auto candidate = (selected + step) % profile_count;
+            if (!oriented || camera_profiles::matches(profiles[candidate], portrait_capture)) { selected=candidate; break; }
+        }
+        (video_mode ? video_profile : photo_profile) = selected;
+        show_profile();
         if (running) { restart=true; preview=false; photograph=false; }
         else { preview=true; start(); }
     }
@@ -753,7 +836,14 @@ struct CameraApp {
         if (loading || playing || record || video_file) return;
         if (album) {
             album_video=video; grid_page=0; load_grid(0,false);
-        } else video_mode=video;
+        } else if (video_mode != video) {
+            (video_mode ? video_profile : photo_profile) = selected;
+            video_mode = video;
+            selected = video_mode ? video_profile : photo_profile;
+            if (profile_count) show_profile();
+            if (running) { restart=true; preview=false; photograph=false; }
+            else if (profile_count) start();
+        }
         refresh();
     }
     pxa::Task<void> play_video(uint32_t epoch) {
@@ -810,7 +900,7 @@ struct CameraApp {
         auto file=co_await context->fs().open(path,pxa::OpenMode::read);
         if (!file) co_return std::unexpected(file.error());
         const pxa::ImageDecodeOptions options{.max_width=64,.max_height=64,.max_pixels=4096,
-            .max_encoded_bytes=PXA_VISION_MAX_JPEG,.formats=pxa::ImageFormats::jpeg};
+            .max_encoded_bytes=PXA_VISION_MAX_JPEG_HD,.formats=pxa::ImageFormats::jpeg};
         if (!video) co_return co_await context->assets().decode_image(std::move(*file),options);
         auto parsed=co_await read_movie(*file,size);
         if (!parsed) co_return std::unexpected(parsed.error());
@@ -930,11 +1020,14 @@ struct CameraApp {
             }
         } else {
             if (image) {
-                if (!album && profile_count && profiles[selected].width==320 && profiles[selected].height==240) {
-                    const auto pixels=image->descriptor();
-                    const int native_width=camera_geometry::native_preview_extent(pixels.width,density_q16);
-                    const int native_height=camera_geometry::native_preview_extent(pixels.height,density_q16);
-                    commands.image({(width-native_width)/2,(height-native_height)/2,native_width,native_height},*image,ImageFit::stretch);
+                const auto pixels=image->descriptor();
+                const bool panel_preview=(pixels.width==840 && pixels.height==472) || (pixels.width==472 && pixels.height==840);
+                const int native_width=camera_geometry::native_preview_extent(pixels.width,density_q16);
+                const int native_height=camera_geometry::native_preview_extent(pixels.height,density_q16);
+                if (!album && ((panel_preview && native_width<=width && native_height<=height) ||
+                    (profile_count && ((profiles[selected].width==320 && profiles[selected].height==240) ||
+                    (profiles[selected].width==240 && profiles[selected].height==320))))) {
+                    commands.image({(width-native_width)/2,(height-native_height)/2,native_width,native_height},*image,ImageFit::contain);
                 } else commands.image({0,0,width,height},*image,ImageFit::contain);
             }
             if (!album && album_thumbnail) {
@@ -955,8 +1048,14 @@ struct CameraApp {
         context = &ctx;
         ctx.tasks().on_error(this, [](void* self, pxa::Error error) noexcept { static_cast<CameraApp*>(self)->fail(error); });
         auto initialized = environment.initialize(config);
-        if (initialized) layout_revision.set(layout_revision.get() + 1);
-        return initialized;
+        if (initialized) {
+            const auto display = environment.display().get();
+            if (display.width != display.height) window_portrait = display.height > display.width;
+            if (window_portrait) orient_profiles(*window_portrait);
+            layout_revision.set(layout_revision.get() + 1);
+        }
+        if (!initialized) return initialized;
+        return ctx.tasks().start(read_window());
     }
     void on_foreground(pxa::Context& ctx) {
         foreground = true; dirty = true;
@@ -971,6 +1070,8 @@ struct CameraApp {
     pxa::Result<bool> on_event(pxa::Context&, const pxa::Event& event) {
         auto updated = environment.update(event);
         if (updated && *updated) { refresh(); if (album && gallery) gallery_reload=true; }
+        if (window_portrait && *window_portrait != portrait_capture && !record && !video_file && !photograph)
+            orient_profiles(*window_portrait);
         if (foreground && pending_back!=BackTarget::none && !loading) {
             const auto target=pending_back; pending_back=BackTarget::none;
             if (target==BackTarget::camera) close_album(); else return_to_grid();
@@ -1006,13 +1107,16 @@ struct CameraApp {
     auto camera_controls() {
         return SafeArea(environment.display(),Column(
             Row(Text("相机").font(Font::body).rgba(0xffffffffu).grow(),
+                Button(orientation_label).on_click([this] { toggle_orientation(); }).font(Font::caption)
+                    .height(26_dp).padding(0_dp).background(0x00000000u).rgba(0xffffffffu),
                 Button(audio_label).on_click([this] {
                     if (record || video_file) { status.set("请先结束录像"); return; }
                     record_sound=!record_sound; audio_label.set(record_sound ? "录音 · 开" : "录音 · 关");
-                }).height(26_dp).padding(0_dp).font(Font::caption).background(0x00000000u).rgba(0xffffffffu).visible(video_mode),
-                Button(profile_label).on_click([this] { next_profile(); }).font(Font::body)
+                }).height(26_dp).padding(0_dp).font(Font::caption).background(0x00000000u).rgba(0xffffffffu).visible(video_mode)
+            ).gap(8_dp).fill(),
+            Row(Button(profile_label).on_click([this] { next_profile(); }).font(Font::body).grow()
                     .height(26_dp).padding(0_dp).align(Align::center).justify(Justify::center)
-                    .background(0x00000000u).rgba(0xffffffffu)).gap(8_dp).fill(),
+                    .background(0x00000000u).rgba(0xffffffffu)).fill(),
             Column().fill().grow(),
             Column(
                 Row(Button("照片").on_click([this] { select_mode(false); }).height(22_dp).padding(0_dp)

@@ -1,0 +1,7 @@
+{
+  "generator": "OpenAI built-in image_gen",
+  "use": "Illustrated promotional cover, not a runtime screenshot",
+  "prompt": "Use case: stylized-concept. Asset type: illustrated app-store promotional cover, 1280 by 960 pixels, landscape 4:3. Create an original polished pixel-art cover for Open Dungeon, a small turn-based procedural dungeon game. Show an isometric arrangement of dark stone dungeon rooms with warm torch light, a lone simple adventurer carrying a sword standing near stairs, a treasure chest and a few small monsters deeper in the corridors. Strong clear composition readable at thumbnail size, restrained teal shadows and amber highlights, charming compact pixel shapes. This is a promotional illustration, not a screenshot; do not draw a fake interface, buttons, device, HUD or performance counters. Text only: OPEN DUNGEON in a carefully rendered pixel title along the upper part. Do not use any existing game logos or recognizable copyrighted characters. Full rectangular image, no rounded corners, no watermark.",
+  "sha256": "c507575bea99d339d41a6e2af2160fdba2fffd78af69f354a160a0801400bba6",
+  "icon": "Original geometric SVG rendered with rsvg-convert; assets/icon.svg is the editable source."
+}

@@ -67,7 +67,7 @@ inline MovieInfo movie_info(std::span<const std::byte> header, uint64_t file_byt
 inline uint32_t chunk_bytes(std::span<const std::byte> header, uint32_t offset, uint32_t end) {
     if (header.size()!=8 || offset>end || end-offset<8) return 0;
     const auto bytes=get32(header.data()+4);
-    if (!bytes || bytes>262144 || uint64_t(bytes)+(bytes&1)+8>end-offset) return 0;
+    if (!bytes || bytes>1048576 || uint64_t(bytes)+(bytes&1)+8>end-offset) return 0;
     return bytes;
 }
 inline uint32_t frame_bytes(std::span<const std::byte> header, uint32_t offset, uint32_t end) {

@@ -1,10 +1,31 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "../matroska.hpp"
 #include "../preview_geometry.hpp"
+#include "../camera_profiles.hpp"
 #include <cassert>
 #include <cstdio>
 using namespace camera_media;
 int main() {
+    assert(camera_profiles::supports_window_orientation(480,854,15,true));
+    assert(camera_profiles::supports_window_orientation(480,854,15,false));
+    assert(!camera_profiles::supports_window_orientation(480,854,1,false));
+    assert(camera_profiles::supports_window_orientation(854,480,1,false));
+    assert(camera_profiles::supports_window_orientation(240,240,1,true));
+    assert(camera_profiles::supports_window_orientation(240,240,1,false));
+    assert(!camera_profiles::supports_window_orientation(480,854,0,true));
+    struct Profile { unsigned width, height, quality; };
+    const std::array profiles{Profile{1920,1080,60},Profile{1920,1080,82},Profile{1080,1920,60},
+        Profile{1080,1920,82},Profile{1280,720,70},Profile{720,1280,70},Profile{640,360,80},Profile{270,480,78}};
+    const std::span<const Profile> list(profiles);
+    assert(camera_profiles::orient(list,0,true)==2 && camera_profiles::orient(list,1,true)==3);
+    assert(camera_profiles::orient(list,2,false)==0 && camera_profiles::orient(list,3,false)==1);
+    assert(camera_profiles::orient(list,4,true)==5 && camera_profiles::orient(list,5,false)==4);
+    assert(camera_profiles::orient(list,6,true)==7); // Nearest offered size when no exact pair exists.
+    assert(!camera_profiles::orient(list,profiles.size(),true));
+    const std::array legacy_profiles{Profile{640,480,75},Profile{320,240,60}};
+    assert(!camera_profiles::orient(std::span<const Profile>(legacy_profiles),0,true));
+    const std::array square{Profile{320,320,75}};
+    assert(camera_profiles::orient(std::span<const Profile>(square),0,true)==0);
     for (unsigned dpi : {160u,216u,240u,320u}) {
         const uint32_t density = dpi*65536/160;
         const int width = camera_geometry::native_preview_extent(320,density);
@@ -13,6 +34,12 @@ int main() {
         const auto physical_height = uint64_t(height)*density/65536;
         assert(physical_width >= 320 && physical_height >= 240);
         assert(std::min(physical_width*256/320,physical_height*256/240) == 256);
+    }
+    for (auto [w,h] : {std::pair{840u,472u},std::pair{472u,840u}}) {
+        const uint32_t density=200*65536/160;
+        const auto dp_width=camera_geometry::native_preview_extent(w,density);
+        const auto dp_height=camera_geometry::native_preview_extent(h,density);
+        assert(uint64_t(dp_width)*density/65536==w && uint64_t(dp_height)*density/65536==h);
     }
     const std::array source{std::byte{255},std::byte{216},std::byte{255},std::byte{192},
         std::byte{0},std::byte{11},std::byte{8},std::byte{0},std::byte{240},
@@ -63,5 +90,9 @@ int main() {
     assert(mkv_block(block,512,2539).size==2000 && mkv_block(block,512,2539).ms==60000);
     assert(!mkv_block(block,512,2538).size);
     auto bad_block=block;bad_block[23]=std::byte{0x83};assert(!mkv_block(bad_block,512,2539).size);
-    puts("Camera media: JPEG segment bounds, truncation and AVI timing/chunk/header layouts passed");
+    const auto hd_block=mkv_block_header(1,123456,1048576);
+    assert(mkv_block(hd_block,512,512+hd_block.size()+1048576).size==1048576);
+    const auto oversized_block=mkv_block_header(1,123456,1048577);
+    assert(!mkv_block(oversized_block,512,512+oversized_block.size()+1048577).size);
+    puts("Camera media: JPEG segment bounds, AVI timing, MKV timestamps and 1080p frame limits passed");
 }

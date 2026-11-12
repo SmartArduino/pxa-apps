@@ -42,7 +42,10 @@
         "log",
         {
           "name": "ui",
-          "min_version": [0, 9]
+          "min_version": [
+            0,
+            9
+          ]
         },
         "window"
       ],
@@ -58,5 +61,6 @@
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
-  }
+  },
+  "icon": "assets/icon.png"
 }

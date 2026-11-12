@@ -1,0 +1,15 @@
+{
+  "name": "Open Dungeon",
+  "summary": "选择职业探索五层随机地牢，进行回合制战斗并挑战最终首领。",
+  "kind": "game",
+  "category": "rpg",
+  "tags": [
+    "地牢",
+    "回合制",
+    "随机地图"
+  ],
+  "icon": "assets/icon.png",
+  "cover": "store/cover.png",
+  "description": "选择三种职业之一，探索五层随机生成的地牢，寻找战利品并挑战最终首领。移植 OPR 的原始规则模块，采用 PXA 自绘界面。\n\n当前版本没有声音和持久存档，退出后重新开始。宣传封面是 AI 生成插画；商城截图为真实模拟器画面。\n\nChoose one of three classes, explore five procedural floors, collect loot and face the final boss. Uses OPR rules with a PXA frontend. No sound or persistent saves.",
+  "changelog": "首次提交商城：提供三职业、五层地牢、战斗与最终首领。\nFirst Store submission: three classes and a complete five-floor campaign."
+}
