@@ -1,0 +1,111 @@
+{
+  "format": "pxa-package-source-0.1",
+  "min_sdk": [
+    2,
+    0
+  ],
+  "target_sdk": [
+    2,
+    0
+  ],
+  "compile_sdk": [
+    2,
+    0
+  ],
+  "id": "pxa-makecode-arcade",
+  "version": "0.1.0",
+  "release_sequence": 1,
+  "name": "MakeCode Arcade",
+  "description": "MakeCode Arcade PXT64 cartridge player with touch and gamepad controls",
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 4194304,
+      "pinned": true
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "artifact": "aot",
+      "services": [
+        "surface",
+        {
+          "name": "window",
+          "min_version": [
+            0,
+            5
+          ]
+        },
+        "ui",
+        "log",
+        "permission",
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            10
+          ]
+        },
+        {
+          "name": "clock",
+          "min_version": [
+            0,
+            2
+          ],
+          "features": []
+        },
+        {
+          "name": "fs",
+          "min_version": [
+            0,
+            3
+          ],
+          "features": [
+            "app-media-root",
+            "read-at"
+          ]
+        },
+        {
+          "name": "assets",
+          "min_version": [
+            2,
+            0
+          ]
+        },
+        {
+          "name": "game-render",
+          "min_version": [
+            1,
+            0
+          ],
+          "features": []
+        },
+        "storage"
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "random",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "required": false,
+      "scope": "media"
+    }
+  ],
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  }
+}

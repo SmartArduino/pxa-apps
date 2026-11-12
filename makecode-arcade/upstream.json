@@ -1,0 +1,10 @@
+{
+  "repository": "https://github.com/whmzsu/makecode-arcade-libretro",
+  "commit": "7842099b5526196643e6813bd408037d598a81cb",
+  "license": "MIT",
+  "paths": [
+    "runtime/pxtapp",
+    "LICENSE"
+  ],
+  "integration": "Pristine vendored runtime; tools/prepare_runtime.py applies PXA changes only in the build directory."
+}

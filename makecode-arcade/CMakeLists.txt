@@ -1,0 +1,32 @@
+cmake_minimum_required(VERSION 3.20)
+project(pxa_makecode_arcade C CXX)
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+set(ARCADE_RUNTIME "${CMAKE_CURRENT_BINARY_DIR}/pxtapp")
+execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tools/prepare_runtime.py"
+    "${CMAKE_CURRENT_SOURCE_DIR}/vendor/pxtapp" "${ARCADE_RUNTIME}"
+    COMMAND_ERROR_IS_FATAL ANY)
+file(GLOB_RECURSE patch_inputs CONFIGURE_DEPENDS vendor/pxtapp/*)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${patch_inputs} tools/prepare_runtime.py)
+set(EMU_ENGINE_SOURCES core.cpp host.cpp settings.cpp "${ARCADE_RUNTIME}/pointers.cpp")
+foreach(dir base core---vm game mixer---ext screen---ext)
+    file(GLOB runtime_sources "${ARCADE_RUNTIME}/${dir}/*.cpp")
+    list(FILTER runtime_sources EXCLUDE REGEX "/(vmload|mca_tick|vmcache|dmesg)\\.cpp$")
+    list(APPEND EMU_ENGINE_SOURCES ${runtime_sources})
+endforeach()
+set(EMU_ENGINE_INCLUDES "${CMAKE_CURRENT_SOURCE_DIR}/compat" "${ARCADE_RUNTIME}")
+set(EMU_ENGINE_DEFINITIONS PXA_ARCADE=1)
+if(ARCADE_NATIVE_TEST)
+    enable_testing()
+    add_executable(arcade_smoke tests/smoke.cpp ${EMU_ENGINE_SOURCES}
+        ../common/emulator/core_util.c ../common/rom/rom_cache.c)
+    target_include_directories(arcade_smoke PRIVATE . ../common/emulator ${EMU_ENGINE_INCLUDES})
+    target_compile_definitions(arcade_smoke PRIVATE ${EMU_ENGINE_DEFINITIONS})
+    target_compile_options(arcade_smoke PRIVATE -O3 -fwrapv -fno-strict-aliasing -UNDEBUG
+        "$<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions;-fno-rtti>")
+    target_link_libraries(arcade_smoke PRIVATE m)
+else()
+    include(../common/emulator/BuildEmulator.cmake)
+    target_compile_options(pxa_main PRIVATE -fwrapv
+        "$<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions;-fno-rtti;-Wno-narrowing>")
+    target_link_options(pxa_main PRIVATE -Wl,-z,stack-size=262144)
+endif()
