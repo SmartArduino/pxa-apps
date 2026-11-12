@@ -118,6 +118,18 @@ APP=/path/to/pxa-apps-unciv/unciv
 "$SDK/bin/pxa" run "$APP" --profile pai-touch --offline
 ```
 
+独立 Wasm 版本使用同一份代码、素材和签名身份构建：
+
+```sh
+"$SDK/bin/pxa" build "$APP" --target wasm --offline --output "$APP/dist/wasm/pxa-unciv"
+```
+
+`dist/wasm/pxa-unciv/artifacts/main.wasm` 是组件，`dist/wasm/pxa-unciv.pxa`
+是包含 Wasm、素材和签名的完整应用包。
+Wasm 需要 PXA Host 提供包声明的服务，不能作为不带 Host 的普通网页程序运行。
+商城分别上传 Wasm 与三个硬件目标的 AOT 包；各包使用相同版本和 release sequence，
+硬件目标通过 `--aot-only` 构建以避免重复携带 Wasm。
+
 `dist/pxa-unciv.pxa` 是签名应用包。真机安装前需构建匹配的 CPU 目标并检查设备兼容性；
 模拟器通过不代表已完成硬件验证。存档格式为带版本号与校验和的显式小端编码，
 拒绝截断、损坏和越界数据。当前格式 v7 兼容读取 v1～v6，使用9位地块编码，存档为 1257 / 1509 / 1752 字节（按地图大小），分为最多三块，

@@ -62,6 +62,18 @@
       "action": "screenshot"
     },
     {
+      "name": "inspect-warrior",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "start-warrior",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
       "name": "back",
       "action": "controller",
       "buttons": 32,
