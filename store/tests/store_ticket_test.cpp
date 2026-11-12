@@ -44,15 +44,20 @@ int main(void) {
     assert(store_client_profile_for_device(url, sizeof(url), "linux-x86_64", "x86_64", "wamr", 3));
     assert(strcmp(url, "linux-x86_64-pxa-0.4.0-r3") == 0);
     assert(!store_client_profile_for_device(url, sizeof(url), "esp32-s31", "xtensa", "wamr", 3));
-    assert(store_client_profile_for_device(url, sizeof(url), "esp32-p4", "riscv32", "wamr", 3,
-        PXA_STORE_CAP_RESOURCE_INSTALL | PXA_STORE_CAP_VOLUME_PLACEMENT | PXA_STORE_CAP_INDEXED_CONTAINER));
+    const uint32_t current_features = PXA_STORE_CAP_RESOURCE_INSTALL |
+        PXA_STORE_CAP_VOLUME_PLACEMENT | PXA_STORE_CAP_INDEXED_CONTAINER;
+    assert(store_client_profile_for_device(url, sizeof(url), "esp32-p4", "riscv32", "wamr", 3, current_features));
     assert(strcmp(url, "esp32-p4-pxa-0.9.0") == 0);
-    assert(store_client_profile_for_device(url, sizeof(url), "windows-x86_64", "x86_64", "wamr", 3));
+    assert(store_client_build_catalog_url(url, sizeof(url), "esp32-p4-pxa-0.9.0", "", 0, "", "", "", "downloads", 6));
+    assert(strstr(url, "profile=esp32-p4-pxa-0.9.0"));
+    assert(store_client_profile_for_device(url, sizeof(url), "windows-x86_64", "x86_64", "wamr", 3, current_features));
     assert(strcmp(url, "windows-x86_64-pxa-0.9.0") == 0);
-    assert(!store_client_profile_for_device(url, sizeof(url), "esp32-p4", "xtensa", "wamr", 3));
-    assert(!store_client_profile_for_device(url, sizeof(url), "esp32-p4", "riscv32", "wamr", 0));
-    assert(!store_client_profile_for_device(url, sizeof(url), "esp32-p4", "riscv32", "other", 3));
-    assert(!store_client_profile_for_device(url, 8, "esp32-p4", "riscv32", "wamr", 3));
+    assert(!store_client_profile_for_device(url, sizeof(url), "esp32-p4", "xtensa", "wamr", 3, current_features));
+    assert(!store_client_profile_for_device(url, sizeof(url), "esp32-p4", "riscv32", "wamr", 3, 0));
+    assert(!store_client_profile_for_device(url, sizeof(url), "windows-x86_64", "x86_64", "wamr", 3, PXA_STORE_CAP_INDEXED_CONTAINER));
+    assert(!store_client_profile_for_device(url, sizeof(url), "esp32-p4", "riscv32", "wamr", 0, current_features));
+    assert(!store_client_profile_for_device(url, sizeof(url), "esp32-p4", "riscv32", "other", 3, current_features));
+    assert(!store_client_profile_for_device(url, 8, "esp32-p4", "riscv32", "wamr", 3, current_features));
     const char root[]="17982acd08493944059713aee9a56135dd4a080ecaaf7aa77df11fdf3102d171";
     assert(store_client_build_identity_url(url,sizeof(url),"esp32-s31-pxa-0.4.0-r3","pxa-nes",root,""));
     assert(strstr(url,"&lineage_root_key_id=17982acd08493944"));

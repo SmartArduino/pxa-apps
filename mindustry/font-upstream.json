@@ -1,0 +1,19 @@
+{
+  "font": "PXA Sans SC Regular",
+  "license": "OFL-1.1",
+  "source": "font-source/noto_sans_cjk_common.ttf",
+  "source_sha256": "ad9ace369f9ed2a2c440e1001c18686197e37bbd680ae5ff7e4214a1dc9f9b0d",
+  "upstream": [
+    "https://github.com/notofonts/noto-cjk",
+    "https://github.com/notofonts/latin-greek-cyrillic"
+  ],
+  "generator": "tools/build_font.py",
+  "sizes": [
+    12,
+    16,
+    24
+  ],
+  "codepoints": 412,
+  "glyphs": 1236,
+  "packed_bytes": 228391
+}

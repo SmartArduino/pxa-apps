@@ -1,0 +1,306 @@
+{
+  "repository": "https://github.com/Anuken/Mindustry",
+  "revision": "d1e0307d3906bb350e80d8969a2464ed0b771ffb",
+  "tag": "v154",
+  "license": "GPL-3.0-only",
+  "music_conversion": "ffmpeg -ac 1 -ar 16000 -c:a libvorbis -q:a 5; original recordings retained in audio-source/music",
+  "effects_conversion": "16000 Hz mono PCM S16LE",
+  "files": [
+    {
+      "file": "audio-source/music/menu.ogg",
+      "source": "core/assets/music/menu.ogg",
+      "sha256": "d7644a99481a879518cab41f0be6dc5a19ebd8241be7f64b746fc794a9a648fb",
+      "bytes": 985523
+    },
+    {
+      "file": "audio-source/music/game1.ogg",
+      "source": "core/assets/music/game1.ogg",
+      "sha256": "e9e43cdad01597b49e40d78349851d92872c034a5fa316019a6f34413dc30c77",
+      "bytes": 1281219
+    },
+    {
+      "file": "audio-source/music/game2.ogg",
+      "source": "core/assets/music/game2.ogg",
+      "sha256": "ed382f98f2d5c3564ff9c3dbcd0c07ce91d1a977706431f30f83cac558e88192",
+      "bytes": 1329376
+    },
+    {
+      "file": "audio-source/music/game3.ogg",
+      "source": "core/assets/music/game3.ogg",
+      "sha256": "b04791a90b2142c1d0f5a6f01198995ab8e7f5efa93be228c1840bbed1e01486",
+      "bytes": 1855682
+    },
+    {
+      "file": "audio-source/music/game4.ogg",
+      "source": "core/assets/music/game4.ogg",
+      "sha256": "113c231cc231b5bb3f352a0da48247155957d872dd6363ac3f02d4642eb0fd5e",
+      "bytes": 2531904
+    },
+    {
+      "file": "audio-source/music/game5.ogg",
+      "source": "core/assets/music/game5.ogg",
+      "sha256": "8aa50eb40778ce52e6c2fa3824f08276393c58dacbcfa08a14e09f2a139dfb71",
+      "bytes": 1975980
+    },
+    {
+      "file": "audio-source/music/game6.ogg",
+      "source": "core/assets/music/game6.ogg",
+      "sha256": "a60ec8489cff2803b6437a47645daa70c27b37fbb0f3e9f3ff223d302f12d8d4",
+      "bytes": 1649639
+    },
+    {
+      "file": "audio-source/music/game7.ogg",
+      "source": "core/assets/music/game7.ogg",
+      "sha256": "2850d6a342ae3e279022ff830a6608c6c7014c255156ce8e4e6d27a8136a6a75",
+      "bytes": 2011976
+    },
+    {
+      "file": "audio-source/music/game8.ogg",
+      "source": "core/assets/music/game8.ogg",
+      "sha256": "f005d0344edfae6dc1cf4443ac46302f874ae59c5eaeba40b06bc0dcf8c126b4",
+      "bytes": 2134796
+    },
+    {
+      "file": "audio-source/music/game9.ogg",
+      "source": "core/assets/music/game9.ogg",
+      "sha256": "1213455e43af61004922bbf875bc43e39f76ccd9545d69ae04f3c340440e1030",
+      "bytes": 2593090
+    },
+    {
+      "file": "audio-source/music/fine.ogg",
+      "source": "core/assets/music/fine.ogg",
+      "sha256": "a5153d804aa91e6153257baf95be7246819de84fecc5d0b6dd64b22d8a6270a2",
+      "bytes": 1819566
+    },
+    {
+      "file": "audio-source/music/boss1.ogg",
+      "source": "core/assets/music/boss1.ogg",
+      "sha256": "ace3b69200b25625804e5395e077028af285babee670f167b8554a4359d6b277",
+      "bytes": 2566868
+    },
+    {
+      "file": "audio-source/music/boss2.ogg",
+      "source": "core/assets/music/boss2.ogg",
+      "sha256": "0c697a8b3e292e43dfad82066749e624e10247a9a10bc7a9deb62df8b4e9f7d2",
+      "bytes": 2705612
+    },
+    {
+      "file": "audio-source/music/land.ogg",
+      "source": "core/assets/music/land.ogg",
+      "sha256": "d5a0878ed8e6731b9e503d7c53cabf9becc0debae4bae3d1b229ca04c62beee0",
+      "bytes": 343172
+    },
+    {
+      "file": "audio-source/music/launch.ogg",
+      "source": "core/assets/music/launch.ogg",
+      "sha256": "fb5035bdfa0ec11d57694197df1412616f0cac1dfcbfb97ba9110203a91f13f0",
+      "bytes": 1169439
+    },
+    {
+      "file": "audio-source/music/editor.ogg",
+      "source": "core/assets/music/editor.ogg",
+      "sha256": "204e2c8b6fc78f13175ca73838b28e789ed4426b361c626c18f212e0da71d078",
+      "bytes": 1539857
+    },
+    {
+      "file": "assets/upstream/click.ogg",
+      "source": "core/assets/sounds/ui/uiButton.ogg",
+      "sha256": "f0ab7d4f81e7b23fcccd33b6c55a635e8919f84e4927bdcce027611ce2422c1c",
+      "bytes": 4735
+    },
+    {
+      "file": "assets/upstream/wave.ogg",
+      "source": "core/assets/sounds/ui/waveSpawn.ogg",
+      "sha256": "c01c5e6101c0733e26fc93ca00aa56d2ad1537f558b963fd8cfe9f820aa45e23",
+      "bytes": 40880
+    },
+    {
+      "file": "assets/upstream/shoot.ogg",
+      "source": "core/assets/sounds/shoot/shootDuo.ogg",
+      "sha256": "90704730a8a72bcba46ef8884c57083eebf22e0bdc5dbf74c4b12ae7245e3684",
+      "bytes": 11091
+    },
+    {
+      "file": "assets/upstream/explode.ogg",
+      "source": "core/assets/sounds/explosions/blockExplode1.ogg",
+      "sha256": "66cc35987be2a3c769a66034d06bbf8efbdb6985ab2aa9c97d3f4f3853c96a33",
+      "bytes": 26623
+    },
+    {
+      "file": "assets/upstream/place.ogg",
+      "source": "core/assets/sounds/block/blockPlace1.ogg",
+      "sha256": "ea30ff4ba133662e2227198a96180d9bc936481df1eba8381ba3ed622c4281bc",
+      "bytes": 13246
+    },
+    {
+      "file": "assets/upstream/break.ogg",
+      "source": "core/assets/sounds/block/blockBreak1.ogg",
+      "sha256": "b3cb45fcaa1e9113037955d9469bc511320b3d0bf1df101a8a6aea340153e7d5",
+      "bytes": 18769
+    },
+    {
+      "file": "assets/upstream/unit.ogg",
+      "source": "core/assets/sounds/block/unitCreate.ogg",
+      "sha256": "674772956493ab6ee75df438c21fb4f424720045c305422303b3c00755a767d2",
+      "bytes": 17972
+    },
+    {
+      "file": "assets/upstream/unlock.ogg",
+      "source": "core/assets/sounds/ui/uiUnlock.ogg",
+      "sha256": "eb7f0cebb7ee0b6622be58883f76cba13c84456e426a643856faa838ba79139e",
+      "bytes": 7880
+    },
+    {
+      "file": "assets/upstream/alpha.ogg",
+      "source": "core/assets/sounds/shoot/shootAlpha.ogg",
+      "sha256": "76840dcc64d50b3daeeef91da77a4fb85eacb4bd6387611885892e0b1d8ee8b0",
+      "bytes": 9236
+    },
+    {
+      "file": "assets/upstream/arc.ogg",
+      "source": "core/assets/sounds/shoot/shootArc.ogg",
+      "sha256": "6d3b317f3867d65e7665f9e1b8263447856838fbabd44a66e99ddb31728f813d",
+      "bytes": 17972
+    },
+    {
+      "file": "assets/upstream/unitshot.ogg",
+      "source": "core/assets/sounds/shoot/shoot.ogg",
+      "sha256": "7372d4dd9f4751b6ec8bc7484d70518dffd57c95bc73f726a4d25d941fb0a2eb",
+      "bytes": 8715
+    },
+    {
+      "file": "assets/upstream/heal.ogg",
+      "source": "core/assets/sounds/block/healWave.ogg",
+      "sha256": "9e1b1bea037749b3800797358ad69e823b6005892e2ccba7eaa32ad818d76ed0",
+      "bytes": 16776
+    },
+    {
+      "file": "assets/upstream/buildloop.ogg",
+      "source": "core/assets/sounds/loops/loopBuild.ogg",
+      "sha256": "57e468ccc346113556de6524a1dd36d4b18a22678846cb4c640ca6a39256aa53",
+      "bytes": 33680
+    },
+    {
+      "file": "assets/upstream/mineloop.ogg",
+      "source": "core/assets/sounds/loops/loopMineBeam.ogg",
+      "sha256": "82b8d6fa3335c888367c303d635343dd7a34da22b0e5a636d3cab2d19994460e",
+      "bytes": 36087
+    },
+    {
+      "file": "assets/upstream/drillloop.ogg",
+      "source": "core/assets/sounds/loops/loopDrill.ogg",
+      "sha256": "eb96521ee822eafc4d5f6a2b1606b828dab119d8ee8e60c4d4a9261af7f745a6",
+      "bytes": 53377
+    },
+    {
+      "file": "assets/upstream/smeltloop.ogg",
+      "source": "core/assets/sounds/loops/loopSmelter.ogg",
+      "sha256": "6e4566543cf0bd8df79c1e0b836a6e14f534fb5ddadcd3adab1009986a4c36cb",
+      "bytes": 29846
+    },
+    {
+      "file": "assets/upstream/factoryloop.ogg",
+      "source": "core/assets/sounds/loops/loopUnitBuilding.ogg",
+      "sha256": "87f8e65b3d5778207fbc2503c7180c870993cbc035e84668cf3986544f4be253",
+      "bytes": 8594
+    }
+  ],
+  "converted_music": [
+    {
+      "file": "assets/music/menu.ogg",
+      "source_file": "audio-source/music/menu.ogg",
+      "sha256": "7de4327cbbe26f33ef9e55a1b38c16fdd70230cc8d1f4955053ba7ef17a1bde1",
+      "bytes": 336508
+    },
+    {
+      "file": "assets/music/game1.ogg",
+      "source_file": "audio-source/music/game1.ogg",
+      "sha256": "109769edd428d5cb35dee322fb18b7e4d50cd0f3e3eee5a13353e10b2921e7ab",
+      "bytes": 416622
+    },
+    {
+      "file": "assets/music/game2.ogg",
+      "source_file": "audio-source/music/game2.ogg",
+      "sha256": "81402f77bd22e9942ec0d92d60f68539408ee74996ebd2ffa1f97fe8dd08c49d",
+      "bytes": 427989
+    },
+    {
+      "file": "assets/music/game3.ogg",
+      "source_file": "audio-source/music/game3.ogg",
+      "sha256": "b543ee18997da57d98b3ee46f38acda7aa261071edc02c480ead09e5dfaa8e3d",
+      "bytes": 580887
+    },
+    {
+      "file": "assets/music/game4.ogg",
+      "source_file": "audio-source/music/game4.ogg",
+      "sha256": "12286b7cc849ecf9db1e55ac7f71b95e1f8f7029c24e7817b7a5874a552e3eb8",
+      "bytes": 907730
+    },
+    {
+      "file": "assets/music/game5.ogg",
+      "source_file": "audio-source/music/game5.ogg",
+      "sha256": "936b1853543eedb6884720f434f0811a355c2e399c0c9cb17cf2c02f7ec77f1b",
+      "bytes": 672957
+    },
+    {
+      "file": "assets/music/game6.ogg",
+      "source_file": "audio-source/music/game6.ogg",
+      "sha256": "0ee1433f8d887b946678bbb49a1021848d9394c83be3dfe8f26e4af4d37feb0b",
+      "bytes": 587334
+    },
+    {
+      "file": "assets/music/game7.ogg",
+      "source_file": "audio-source/music/game7.ogg",
+      "sha256": "77d5cdb212b2779e486a4d429da1b07dd44767796f59c2863dc8a239d9164515",
+      "bytes": 693139
+    },
+    {
+      "file": "assets/music/game8.ogg",
+      "source_file": "audio-source/music/game8.ogg",
+      "sha256": "fafd696a33704749c8e15c0f74d0c2da56fc090be701681f36e7483b6752688d",
+      "bytes": 676462
+    },
+    {
+      "file": "assets/music/game9.ogg",
+      "source_file": "audio-source/music/game9.ogg",
+      "sha256": "3207de43e2cc2a0b15873c769981bcd6c3e633b175c9d2072b06e1478e29d76d",
+      "bytes": 860548
+    },
+    {
+      "file": "assets/music/fine.ogg",
+      "source_file": "audio-source/music/fine.ogg",
+      "sha256": "ccdeb4ca353685ce30b4ca686780e4e15956b210fa7565f65eb1abde4aca01bd",
+      "bytes": 487420
+    },
+    {
+      "file": "assets/music/boss1.ogg",
+      "source_file": "audio-source/music/boss1.ogg",
+      "sha256": "de5ee672a84aec61cb37c0a31edbc5de94004940e9d96f8488c5395d362e6573",
+      "bytes": 891088
+    },
+    {
+      "file": "assets/music/boss2.ogg",
+      "source_file": "audio-source/music/boss2.ogg",
+      "sha256": "c1abcd4e1209eeff2606a1d4fed0a19a5745a57f4b467a3f943dc041dc332738",
+      "bytes": 882628
+    },
+    {
+      "file": "assets/music/land.ogg",
+      "source_file": "audio-source/music/land.ogg",
+      "sha256": "1c3830ec4abd946f4e6ab1be0050d29604d8a1bf8b4c45cba738efac95be6266",
+      "bytes": 47168
+    },
+    {
+      "file": "assets/music/launch.ogg",
+      "source_file": "audio-source/music/launch.ogg",
+      "sha256": "602b788c207c34e564c2af95fdbf70f3f85238b22a1d583fae090eeda3a34a08",
+      "bytes": 407659
+    },
+    {
+      "file": "assets/music/editor.ogg",
+      "source_file": "audio-source/music/editor.ogg",
+      "sha256": "76db7d554e650b2b4263b943cbe98e5993013c22fd0bae66801ff85db2910c1a",
+      "bytes": 482188
+    }
+  ]
+}

@@ -46,26 +46,24 @@ int store_client_profile_for_device(char *output, size_t capacity,
         (formats & (PXA_DEVICE_FORMAT_AOT | PXA_DEVICE_FORMAT_WASM)) == 0 ||
         !((same_text(target, "esp32-s3") &&
            same_text(architecture, "xtensa")) ||
-          (same_text(target, "esp32-s31") &&
+          ((same_text(target, "esp32-s31") || same_text(target, "esp32-p4")) &&
            same_text(architecture, "riscv32")) ||
-          (same_text(target, "esp32-p4") &&
-           same_text(architecture, "riscv32")) ||
-          (same_text(target, "windows-x86_64") &&
-           same_text(architecture, "x86_64")) ||
-          (same_text(target, "linux-x86_64") &&
+          ((same_text(target, "linux-x86_64") || same_text(target, "windows-x86_64")) &&
            same_text(architecture, "x86_64"))) ||
         !same_text(engine, "wamr"))
         return 0;
-    output[0] = '\0';
     const uint32_t native = PXA_STORE_CAP_RESOURCE_INSTALL | PXA_STORE_CAP_VOLUME_PLACEMENT;
     const char *suffix = STORE_PROFILE_SUFFIX;
-    // P4 and Windows first shipped in 0.9.0; older profile slugs do not exist.
-    // Newer Hosts supply their authoritative profile through the Net backend.
-    if (same_text(target, "esp32-p4") || same_text(target, "windows-x86_64"))
+    // P4 and Windows first appeared in the 0.9 published baseline. Never
+    // request a nonexistent older profile or infer an unrelated CPU target.
+    if (same_text(target, "esp32-p4") || same_text(target, "windows-x86_64")) {
+        const uint32_t required = native | PXA_STORE_CAP_INDEXED_CONTAINER;
+        if ((installer_features & required) != required) return 0;
         suffix = "-pxa-0.9.0";
-    else if ((installer_features & native) == native)
+    } else if ((installer_features & native) == native)
         suffix = (installer_features & PXA_STORE_CAP_INDEXED_CONTAINER)
             ? "-pxa-0.7.0" : "-pxa-0.5.0-r2";
+    output[0] = '\0';
     return append_text(output, capacity, &offset, target) &&
            append_text(output, capacity, &offset, suffix);
 }
