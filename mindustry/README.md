@@ -10,15 +10,20 @@
 tools/app.sh build mindustry --source-root local/pxa-apps --target simulator --aot-only
 ```
 
-商城发布按架构分别构建，每个安装包只包含该架构的 AOT。以下命令在固件工作区运行，输出目录使用本次发布的本地产物目录：
+商城单独提供包含便携 Wasm 代码的安装包，硬件平台分别提供只包含对应架构 AOT 的安装包。各包使用相同版本、release sequence 和原有签名身份。以下命令在固件工作区运行，输出目录使用本次发布的本地产物目录：
 
 ```sh
 release_dir="local/artifacts/mindustry/$(date +%Y%m%d-%H%M%S)/release"
+tools/app.sh build mindustry --source-root local/pxa-apps \
+  --target wasm --output "$release_dir/wasm"
 for target in esp32s3 esp32s31 esp32p4 simulator; do
   tools/app.sh build mindustry --source-root local/pxa-apps \
     --target "$target" --aot-only --output "$release_dir/$target"
 done
 ```
+
+Wasm 安装包同样携带原版素材和音乐，需要 PXA Host 提供所声明的服务。
+商城先上传独立 Wasm 包，再上传同一版本的硬件包；浏览器运行仍受 Host 能力检查约束。
 
 `store/cover.png` 是像素工业风的商城宣传插画，沿用原版素材的 GPL-3.0 许可；商城截图单独使用真实 PXA 模拟器原始画面。
 

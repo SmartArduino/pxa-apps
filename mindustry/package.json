@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-mindustry",
-  "version": "0.11.1",
+  "version": "0.11.2",
   "name": "Mindustry · PXA",
   "description": "非官方 C++ 重制：校正全部建筑图标图层、工厂四向出入口、原版音乐音效、视角跟随、Alpha 建造、生产供电、部队和波次防御。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 13,
+  "release_sequence": 14,
   "build": {
     "system": "cmake",
     "source_dir": ".",
@@ -35,7 +35,7 @@
       "kind": "ui",
       "cmake_target": "pxa_main",
       "execution_model": "main-loop",
-      "artifact": "aot",
+      "artifact": "both",
       "services": [
         "surface",
         "clock",
