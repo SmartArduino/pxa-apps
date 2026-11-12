@@ -10,15 +10,47 @@ int main(){
  using namespace room_wall_sprites;
  // Reference-derived materials must remain pixel textures, with transparent
  // capital corners and enough distinct tones to retain carved wood/paper.
- for(const auto*m:{&BeamH,&BeamV,&Post,&Collar,&Jamb,&room_wall_sprites::Plaster,&Skirting,&Window,&Door,&Mat}){
+ for(const auto*m:{&BeamH,&BeamV,&Post,&Collar,&JambCap,&Jamb,&room_wall_sprites::Plaster,&Skirting,&Window,&Door,&Mat}){
   std::set<uint16_t> colors;for(int y=0;y<m->h;++y)for(int x=0;x<m->w;++x){auto c=sample(*m,x,y);if(c)colors.insert(c);}
   assert(colors.size()>=5&&colors.size()<=15);
  }
  assert(!sample(Post,0,0)&&!sample(Collar,0,0));
+ assert(JambCap.w==10&&JambCap.h==10&&!sample(JambCap,0,0));
  // The concept has full timber jambs and a wider moulded capital, rather than
  // the low flat strip or a pale plaster pillar used in previous revisions.
  assert(pixel(North,8,20)==Wood&&pixel(North,8,8)==Capital);
  assert(pixel(North|East|West,8,4)==Capital);
+ // Lower door jambs keep a visible L-shaped return into the lintel. A large
+ // square post here would erase the wall corner and obstruct the opening.
+ for(unsigned n:{unsigned(DoorCorner|East),unsigned(DoorCorner|West)}){
+  assert(!capital(n,8,4));auto&m=farm::walls::image(n);
+  auto at=[&](int x,int y){int p=y*Tile+x;return(m[p/2]>>((p&1)*4))&15;};
+  assert(at(4,0)&&at(8,1)&&!at(3,0)&&!at(12,0));
+  assert(at(8,20)==Wood);
+  // The extended L has a sealed, softly clipped north tip and joins the
+  // transverse beam without a horizontal seam or an oversized square post.
+  auto crest=[&](int x,int y){int p=y*Tile+x;return(Crests[(n&West)?1:0][p/2]>>((p&1)*4))&15;};
+  assert(!crest(Inset,0)&&crest(Inset+1,0)==Edge&&!crest(Front-1,0));
+  for(int y=1;y<ReturnRise;++y)for(int x=Inset;x<Front;++x)assert(crest(x,y));
+  assert(crest(8,ReturnRise-1)==at(8,0));
+ }
+ // Door posts remain vertical timber down to the floor. A horizontal
+ // skirting strip here used to make a detached block below each collar.
+ for(unsigned n:{unsigned(North),unsigned(West),unsigned(East)}){
+  std::vector<uint16_t> frame(16*ImageHeight);art::Raster r{frame.data(),16,ImageHeight,0,-Rise};
+  art::room_wall(r,0,0,n,-1000,-1000);
+  for(int y=16;y<ImageHeight-2;++y)for(int x=Inset+1;x<Front-1;++x)
+   assert(frame[y*16+x]==sample(Jamb,x-Inset,y-Front));
+  for(int y=16;y<ImageHeight;++y)assert(frame[y*16+Inset]==Colors[Edge]&&frame[y*16+Front-1]==Colors[Edge]);
+  for(int x=Inset;x<Front;++x)assert(frame[(ImageHeight-1)*16+x]==Colors[Edge]);
+ }
+ // No longitudinal threshold may protrude behind the lower doorway capital.
+ for(int region:{4,9,10,11,12}){
+  constexpr auto floor=art::rgb(193,146,91);std::vector<uint16_t> frame(512*384,floor);
+  art::Raster r{frame.data(),512,384};art::room_partitions(r,region);
+  for(int x:{15*Tile+Inset,18*Tile+Inset})for(int y=160;y<192;++y)
+   for(int col=0;col<Band;++col)assert(frame[y*512+x+col]==floor);
+ }
  for(int n=0;n<16;++n){
   std::vector<uint16_t> frame(64*80);art::Raster r{frame.data(),64,80};art::room_wall(r,1,2,n,-1000,-1000);
   for(int y=0;y<80;++y)for(int x=0;x<64;++x)if(frame[y*64+x])assert(x>=16&&x<32&&y>=4&&y<44);

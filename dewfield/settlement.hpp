@@ -29,7 +29,7 @@ inline bool partition_wall(uint8_t r,int x,int y){
   if(y>=5&&y<=12&&(x==12||x==18))return true;
   return y==12&&x>=7&&x<=24&&x!=9&&x!=10&&x!=14&&x!=15&&x!=20&&x!=21;
  }
- if(y>=5&&y<=12&&(x==15||x==18)&&y!=10&&y!=11)return true;
+ if(y>=5&&y<=12&&(x==15||x==18)&&(y<9||y>11))return true;
  return y==12&&((x>=7&&x<=15)||(x>=18&&x<=24));
 }
 inline RoomKind room_kind(uint8_t r,int x,int y){

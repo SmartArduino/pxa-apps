@@ -28,7 +28,7 @@ enum class Kind : uint8_t {
   Bed,
   Table,
   Forage,
-  Stove, Television, Calendar, Counter, Cabinet, Fireplace, Chair, Shelf, Signpost, Animal, RanchShed, WildTree, MineEntrance, Ore, Monster, CaveCrop, MineLadder, MineTorch, VillageBoard, Bench, Planter, Workbench, Bookcase, WoodRack, Divider, Armchair, KitchenCounter, RoomWall, RoomPost
+  Stove, Television, Calendar, Counter, Cabinet, Fireplace, Chair, Shelf, Signpost, Animal, RanchShed, WildTree, MineEntrance, Ore, Monster, CaveCrop, MineLadder, MineTorch, VillageBoard, Bench, Planter, Workbench, Bookcase, WoodRack, Divider, Armchair, KitchenCounter, RoomWall, RoomPost, RoomDoor
 };
 struct Rect {
   int x, y, w, h;
@@ -117,8 +117,10 @@ inline Placement placement(const Entry &e) {
   }
 }
 inline Rect bounds(const Entry &e) {
+  if(e.kind==Kind::RoomDoor)return {e.x-2,e.y-farm::walls::Rise,5,76};
   if(e.kind==Kind::RoomPost)return {e.x-6,e.y-6,12,12};
-  if(e.kind==Kind::RoomWall)return {e.x*16,e.y*16-farm::walls::Rise,16,farm::walls::ImageHeight};
+  if(e.kind==Kind::RoomWall){int overhang=e.id&farm::walls::DoorCorner?farm::walls::ReturnRise:0;
+    return {e.x*16,e.y*16-farm::walls::Rise-overhang,16,farm::walls::ImageHeight+overhang};}
   if(e.kind==Kind::KitchenCounter)return {e.x-23,e.y-36,47,38};
   if(e.kind==Kind::Workbench)return {e.x-34,e.y-35,69,37};
   if(e.kind==Kind::Bookcase)return {e.x-35,e.y-46,71,48};
@@ -296,6 +298,10 @@ struct Queue {
   }
   void build_region(const farm::State &s, const View &v) {
     using farm::Region;
+    unsigned door_phases[2]={};auto doors=farm::walls::door_count(s.region);
+    auto near_doors=[&](int x,int y){for(unsigned i=0;i<doors;++i)door_phases[i]=std::max(door_phases[i],farm::walls::door_open(farm::walls::RoomDoors[i],x,y));};
+    near_doors(s.px,s.py);
+    for(unsigned i=0;i<v.farmer_count;++i)near_doors(v.farmers[i].x,v.farmers[i].y);
     if(farm::in_mine(s)) {
       for(int i=0;i<farm::MineRocks;++i){auto p=farm::ore_tile(i);if(!(s.mine_cleared[s.mine_depth-1]&(1u<<i)))add(Kind::Ore,p.x*16+8,p.y*16+13,p.y*16+13,i,true);}
       for(int i=0;i<farm::MineMobs;++i)if(s.mobs[i].hp){auto &m=s.mobs[i];add(Kind::Monster,m.x,m.y,m.y,i,true);}
@@ -377,9 +383,14 @@ struct Queue {
     }
     for (int id = 0; id < 4; ++id) {
       auto p = farm::npc_pose(s, id,v.subminute_ms);
-      if (unsigned(p.region) == s.region)
+      if (unsigned(p.region) == s.region){
+        near_doors(p.x,p.y);
         add(Kind::WorldNpc, p.x, p.y, p.y, id + p.dir * 4, true,
             p.frame);
+      }
+    }
+    for(unsigned i=0;i<doors;++i){auto d=farm::walls::RoomDoors[i];
+      add(Kind::RoomDoor,d.x,d.y,d.y+48,i,false,door_phases[i]);
     }
     signs(s);
     add(Kind::Player, s.px, s.py, s.py);
@@ -438,6 +449,7 @@ struct Queue {
     for (unsigned i = 0; i < count; ++i) {
       const auto &e = entries[i];
       switch (e.kind) {
+      case Kind::RoomDoor:art::room_door_shadow(r,e.x,e.y,e.growth);break;
       case Kind::WildTree:{auto p=placement(e);art::contact_shadow(r,*p.sprite,p.x,p.y);break;}
       case Kind::Ore:art::contact_shadow(r,art::rock_sprite(e.x,e.y),e.x,e.y);break;
       case Kind::Monster:art::mine_monster_shadow(r,e.x,e.y,farm::mob_type(s,e.id));break;
@@ -494,6 +506,7 @@ struct Queue {
     for (unsigned i = 0; i < count; ++i) {
       auto &e = entries[i];
       switch (e.kind) {
+      case Kind::RoomDoor:art::room_door(r,e.x,e.y,e.growth);break;
       case Kind::RoomWall:art::room_wall(r,e.x,e.y,e.id,s.px,s.py);break;
       case Kind::RoomPost:art::room_post(r,e.x,e.y,s.py<e.depth&&std::abs(int(s.px)-e.x)<16&&std::abs(int(s.py)-20-e.y)<20?3:8);break;
       case Kind::Workbench:art::room_workbench(r,e.x,e.y,e.id);break;

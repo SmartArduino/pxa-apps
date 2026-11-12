@@ -33,6 +33,8 @@ int main(int argc, char **argv) {
     }
     if(!std::strcmp(mode,"cutaway")){s.px=12*16+8;s.py=11*16+8;}
     if(!std::strcmp(mode,"jamb")){s.px=15*16+8;s.py=10*16+8;}
+    if(!std::strcmp(mode,"doors-open")){s.px=16*16+8;s.py=11*16;}
+    if(!std::strcmp(mode,"doors-half")){s.px=12*16+8;s.py=11*16;}
     if(!std::strcmp(mode,"night"))s.minute=1170;
     bool legacy=!std::strcmp(argv[1]+6,"legacy");if(legacy){s.px=12*16+8;s.py=12*16+8;}
     uint8_t raw[farm::SaveBytes];assert(farm::encode(s,raw,sizeof raw));

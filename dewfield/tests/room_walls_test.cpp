@@ -34,17 +34,25 @@ int main(){
   // approved concept; they do not change collision or the wall-foot depth.
   for(int ty=5;ty<=12;++ty)for(int tx=7;tx<=24;++tx)if(farm::partition_wall(region,tx,ty)){
    auto n=farm::walls::links(region,tx,ty);
+   if(n&farm::walls::DoorCorner){
+    for(int y=-10;y<4;++y)for(int x=4;x<12;++x){
+     if(y==-10&&(x==4||x==11))continue;
+     expected[(ty*16-28+y)*W+tx*16+x]=true;
+    }
+    continue;
+   }
    if(n==(farm::walls::North|farm::walls::South)||n==(farm::walls::East|farm::walls::West))continue;
-   int left=n==farm::walls::North?3:2,top=n==farm::walls::North?8:2;
-   int width=n==farm::walls::North?10:12,height=n==farm::walls::North?8:12;
+   int left=n==farm::walls::North?3:2,top=n==farm::walls::North?4:2;
+   int width=n==farm::walls::North?10:12,height=n==farm::walls::North?10:12;
    for(int y=0;y<height;++y)for(int x=0;x<width;++x)if(!((x==0||x==width-1)&&(y==0||y==height-1)))
     expected[(ty*16-28+top+y)*W+tx*16+left+x]=true;
   }
   for(unsigned i=0;i<opaque.size();++i)assert(bool(opaque[i])==expected[i]);
   if(region==7)for(int x:{12*16+8,18*16+8})
    assert(opaque[(12*16-28+4)*W+x]==room_wall_sprites::sample(room_wall_sprites::Post,6,2));
-  // The two-tile doorway stays open between the timber jamb and lower capital.
-  if(region!=7)for(int x:{15*16+8,18*16+8})for(int y=160;y<166;++y)assert(!opaque[y*W+x]);
+  // The raised lower return starts at y=154. It follows the marked corner
+  // contour while the underlying three-tile floor opening remains passable.
+  if(region!=7)for(int x:{15*16+8,18*16+8})for(int y=140;y<154;++y)assert(!opaque[y*W+x]);
   r.p=opaque.data();
   // Culling and nonzero camera origins must reproduce the full scene exactly.
   for(auto point:{farm::Point{101,156},farm::Point{187,163},farm::Point{241,129},farm::Point{291,174}}){
@@ -53,6 +61,13 @@ int main(){
    auto q=architecture(s,{point.x,point.y,cw,ch});q.objects(clipped,s,{});
    for(int y=0;y<ch;++y)for(int x=0;x<cw;++x)assert(frame[16+y*cw+x]==opaque[(point.y+y)*W+point.x+x]);
    for(int i=0;i<16;++i)assert(frame[i]==0xabcd&&frame[16+cw*ch+i]==0xabcd);
+  }
+  // A viewport containing only the raised return must not cull the whole
+  // wall tile, whose ordinary cap starts below this seven-pixel strip.
+  if(region!=7){
+   constexpr int cw=23,ch=7;std::vector<uint16_t> frame(cw*ch);
+   art::Raster clipped{frame.data(),cw,ch,241,153};auto q=architecture(s,{241,153,cw,ch});q.objects(clipped,s,{});
+   for(int y=0;y<ch;++y)for(int x=0;x<cw;++x)assert(frame[y*cw+x]==opaque[(153+y)*W+241+x]);
   }
  }
  s.region=4;s.px=192;s.py=184;auto walls=architecture(s);

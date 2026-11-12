@@ -296,9 +296,9 @@ try:
         fixture('legacy');key('ENTER')
         v=wait_for(lambda s:s['px']//16!=12 or s['py']//16!=12,'legacy farmer safely relocated')
         assert v['gold']==500 and v['day']==1;key('ENTER');capture('legacy-safe-arrival');stop()
-        for mode in ('cutaway','jamb','night','7','9','10','11','12'):
+        for mode in ('cutaway','jamb','doors-open','doors-half','night','7','9','10','11','12'):
             fixture(mode);capture('walls-'+mode);stop()
-        print('PASS: signed room-door navigation, lounge forecast, layout migration, wall junctions in six homes, cutaway and night lighting')
+        print('PASS: signed room-door navigation, lounge forecast, layout migration, wood doors open/half/closed, wall returns in six homes, cutaway and night lighting')
         raise SystemExit(0)
     if args.ground_art_only:
         assert args.fixture_tool

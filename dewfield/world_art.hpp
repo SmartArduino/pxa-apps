@@ -220,35 +220,45 @@ inline void room_partitions(Raster&r,uint8_t region) {
   else {r.rect(x,y,1,h,rgb(212,173,109));r.rect(x+w-1,y,1,h,rgb(145,101,55));}
  };
  if(region==unsigned(farm::Region::Lodge))for(int x:{9,14,20})threshold(x*Tile,12*Tile+Inset,2*Tile,Band);
- else for(int x:{15,18})threshold(x*Tile+Inset,10*Tile,Band,2*Tile);
+ // Side openings share the surrounding floor. A floor strip along their
+ // length peeks above the projected lower capital like an extra post.
 }
 inline void room_wall(Raster&r,int tx,int ty,unsigned links,int viewer_x,int viewer_y) {
  using namespace farm::walls;
  int x=tx*Tile,y=ty*Tile-Rise;
  int left=std::max(0,r.ox-x),right=std::min(Tile,r.ox+r.w-x);
- int top=std::max(0,r.oy-y),bottom=std::min(ImageHeight,r.oy+r.h-y);
+ int top=std::max((links&DoorCorner)?-ReturnRise:0,r.oy-y),bottom=std::min(ImageHeight,r.oy+r.h-y);
  if(left>=right||top>=bottom)return;
- const auto&image=Images[links&15];
+ const auto&image=farm::walls::image(links);
  bool fade=viewer_y<ty*Tile+Front&&viewer_y>ty*Tile-Rise-24
    &&viewer_x>x-18&&viewer_x<x+Tile+18;
  for(int row=top;row<bottom;++row){
   auto*dst=r.p+(y+row-r.oy)*r.w+x+left-r.ox;
   for(int col=left;col<right;++col,++dst){
-   int p=row*Tile+col;auto index=(image[p/2]>>((p&1)*4))&15;
+   int p=(row<0?row+ReturnRise:row)*Tile+col;
+   const auto*data=row<0?Crests[(links&West)?1:0].data():image.data();
+   auto index=(data[p/2]>>((p&1)*4))&15;
    if(!index)continue;
    uint16_t color=0;
    using namespace room_wall_sprites;
-   if(capital(links&15,col,row)){
-    const auto&m=(links&15)==North?Collar:Post;int sx=(links&15)==North?3:2,sy=(links&15)==North?8:2;
+   if(capital(links,col,row)){
+    const auto&m=(links&15)==North?JambCap:Post;int sx=(links&15)==North?3:2,sy=(links&15)==North?4:2;
     color=sample(m,col-sx,row-sy);
-   }else if(row<Tile&&footprint(links&15,col,row)){
-    bool vertical=(links&15)==(North|South)||row<Inset||row>=Front;
-    color=vertical?sample(BeamV,std::clamp(col-Inset,0,Band-1),(ty*Tile+row)%BeamV.h)
+   }else if(row<Tile&&cap_shape(links,col,row)){
+    bool vertical=painted_links(links)==(North|South)||row<Inset||row>=Front;
+    color=(links&DoorCorner)&&index!=Cap?Colors[index]:vertical?sample(BeamV,std::clamp(col-Inset,0,Band-1),(ty*Tile+row+BeamV.h)%BeamV.h)
                   :sample(BeamH,(tx*Tile+col)%BeamH.w,std::clamp(row-Inset,0,Band-1));
    }else{
     int f=row-Front;
-    if(f>=Rise-Skirting.h)color=sample(Skirting,(tx*Tile+col)%Skirting.w,f-(Rise-Skirting.h));
-    else if(index==Wood||index==WoodLight||index==Edge)color=sample(Jamb,std::clamp(col-Inset,0,Band-1),std::clamp(f,0,Rise-1));
+    if(timber_face(links&15,col)){
+     int sx=std::clamp(col-Inset,0,Band-1);
+     color=sample(Jamb,sx,std::clamp(f,0,Rise-1));
+     // Each exposed post face has a closed perimeter and a small end-grain
+     // return at floor level; wallpaper skirting must not cut across it.
+     if(sx==0||sx==Band-1||f==Rise-1)color=Colors[Edge];
+     else if(f==Rise-2)color=Colors[CapShade];
+    }
+    else if(f>=Rise-Skirting.h)color=sample(Skirting,(tx*Tile+col)%Skirting.w,f-(Rise-Skirting.h));
     else color=sample(room_wall_sprites::Plaster,(tx*Tile+col)%room_wall_sprites::Plaster.w,std::max(0,f)%room_wall_sprites::Plaster.h);
    }
    if(r.tint)color=r.tint[color];int alpha=8;
@@ -260,6 +270,26 @@ inline void room_wall(Raster&r,int tx,int ty,unsigned links,int viewer_x,int vie
    *dst=alpha==8?color:blend(*dst,color,alpha);
   }
  }
+}
+// Side doors follow the cutaway convention: their top frame is omitted and
+// an opening leaf disappears behind the section instead of showing a flat
+// front-facing panel across a side passage. Jambs belong to the wall volume.
+inline void room_door(Raster&r,int x,int y,unsigned phase){
+ using namespace farm::walls;
+ int alpha=8-std::min(phase,8u);if(!alpha)return;
+ int left=std::max(x-2,r.ox),right=std::min(x+3,r.ox+r.w);
+ int top=std::max(y-Rise,r.oy),bottom=std::min(y+48,r.oy+r.h);
+ for(int yy=top;yy<bottom;++yy)for(int xx=left;xx<right;++xx){
+  int col=xx-x+2;
+  auto c=room_wall_sprites::sample(room_wall_sprites::Jamb,col+1,(yy-y+Rise)%Rise);
+  if(col==0||col==4||yy==y-Rise||yy==y+47)c=Colors[Edge];
+  if(xx>=x&&xx<x+2&&yy>=y+8&&yy<y+10)c=art::Gold;
+  if(r.tint)c=r.tint[c];auto&dst=r.p[(yy-r.oy)*r.w+xx-r.ox];dst=alpha==8?c:blend(dst,c,alpha);
+ }
+}
+inline void room_door_shadow(Raster&r,int x,int y,unsigned phase){
+ if(phase>=8)return;
+ for(int yy=y;yy<y+48;++yy)shadow_strip(r,x+2,yy,1,1);
 }
 // The perimeter uses the same cap thickness and elevation as the partitions.
 // It is static; only interior walls need to join the moving-object depth queue.

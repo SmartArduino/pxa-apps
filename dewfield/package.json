@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-dewfield",
-  "version": "0.23.4",
+  "version": "0.23.6",
   "name": "晴露农场 Dewfield",
   "description": "四人合作像素农场：局域网创建与发现、IP端口直连、网页加入，四季种植、村民故事和矿洞冒险。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 41,
+  "release_sequence": 43,
   "build": {
     "system": "cmake",
     "source_dir": ".",

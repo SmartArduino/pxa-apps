@@ -10,7 +10,7 @@ static void home(int x,int y){
 }
 static void visit(int x,int y,Page expected,int door){
  tap(x-camx,y-camy);bool crossed=false;
- for(int i=0;i<800&&page==Page::Farm;++i){game::tick(33);crossed|=state.px/16==door&&(state.py/16==10||state.py/16==11);}
+ for(int i=0;i<800&&page==Page::Farm;++i){game::tick(33);crossed|=state.px/16==door&&(state.py/16>=9&&state.py/16<=11);}
  assert(page==expected&&crossed);game::key(pocket::Key::B);
 }
 int main(){

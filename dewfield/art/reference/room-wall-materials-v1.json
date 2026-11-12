@@ -42,22 +42,34 @@
     },
     "Collar": {
       "source_box": [
-        549,
-        343,
+        550,
+        345,
         585,
-        375
+        371
       ],
       "native_size": [
         10,
         8
       ]
     },
+    "JambCap": {
+      "source_box": [
+        548,
+        27,
+        585,
+        64
+      ],
+      "native_size": [
+        10,
+        10
+      ]
+    },
     "Jamb": {
       "source_box": [
-        585,
-        535,
-        612,
-        633
+        586,
+        547,
+        610,
+        630
       ],
       "native_size": [
         8,
@@ -125,5 +137,5 @@
       ]
     }
   },
-  "packed_bytes_with_palettes": 2643
+  "packed_bytes_with_palettes": 2725
 }
