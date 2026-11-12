@@ -239,13 +239,15 @@ static void test_save_baseline(void) {
     save_pending=0;free(save_data);save_data=NULL;nes_core_close();free(rom);reset();
 }
 #include "../../common/emulator/tests/import_contract.h"
+#include "../../common/emulator/tests/display_resize_contract.h"
 int main(void) {
     test_save_baseline();
     /* Native canvas keeps existing menu/button physical tap targets. */
     unsigned cw=800,ch=480;assert(nes_display_canvas(&cw,&ch)==1 && cw==800 && ch==480);
     cw=296;ch=240;assert(nes_display_canvas(&cw,&ch)==1 && cw==296 && ch==240);
     cw=320;ch=240;assert(nes_display_canvas(&cw,&ch)==1 && cw==320 && ch==240);
-    cw=801;ch=480;assert(!nes_display_canvas(&cw,&ch));
+    cw=854;ch=480;assert(nes_display_canvas(&cw,&ch)==1);
+    cw=NES_DISPLAY_MAX_WIDTH+1;ch=480;assert(!nes_display_canvas(&cw,&ch));
     reset();width=800;height=480;input_scale=1;
     pxa_ui_environment_t full={0};menu_environment(&full);
     uint16_t *small=malloc(400*240*2);assert(small);
@@ -308,4 +310,5 @@ int main(void) {
     assert(io_calls==1 && !audio_fifo.count && !audio_dropped);
     puts("PASS: sound touch, duplicate click, enable/disable/re-enable, denied retry, synchronous/asynchronous errors, format, backpressure, pre-overflow retry, PCM failure, revocation and late permission cleanup");
 test_import_contract();
+    test_display_resize_contract();
     }

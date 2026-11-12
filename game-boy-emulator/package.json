@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-game-boy",
-  "version": "0.1.63",
-  "release_sequence": 65,
+  "version": "0.1.64",
+  "release_sequence": 66,
   "name": "GB/GBC Emulator",
   "description": "Game Boy and Game Boy Color emulator with SD/flash ROM library, audio and touch or gamepad controls",
   "build": {
@@ -33,7 +33,13 @@
       "artifact": "aot",
       "services": [
         "surface",
-        "window",
+        {
+          "name": "window",
+          "min_version": [
+            0,
+            5
+          ]
+        },
         "ui",
         "log",
         "permission",

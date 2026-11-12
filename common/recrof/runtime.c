@@ -40,6 +40,7 @@ uint64_t port_game_render_context;
 #endif
 #include "pxa_ui.h"
 #include "pxa_window.h"
+#include "../pxa_landscape.h"
 #include "../pxa_canvas_pixels.h"
 #include <stdarg.h>
 #include <stdio.h>
@@ -110,6 +111,7 @@ static uint16_t surface_buffers[2][320 * 240]
     __attribute__((aligned(PXA_SURFACE_BUFFER_ALIGNMENT)));
 #endif
 static uint16_t surface_w = 320, surface_h = 240;
+static int surface_creating;
 static uint8_t pending_buffer = 255;
 static uint64_t pending_frame;
 static int display_w = 320, display_h = 240, mouse_x = 160, mouse_y = 120;
@@ -236,6 +238,13 @@ void port_poll_input(void) {
  * after the Binaryen post-link step. */
 NOINLINE void port_yield(void) {
 #if PORT_NATIVE_MAIN_LOOP
+#ifdef PORT_AUDIO_CLOCKED
+  if(!background && !waiting_token && engine_running) {
+    const uint64_t sleep_deadline=wake_at;
+    port_game_audio(); // App guards nested waits while submitting PCM.
+    wake_at=sleep_deadline;
+  }
+#endif
   const uint64_t began = port_time_us();
   ++perf_yields;
   for (;;) {
@@ -648,6 +657,20 @@ static int open_native_pcm(unsigned rate, unsigned channels) {
 }
 #endif
 uint64_t port_audio_session(void) { return audio; }
+int port_audio_enabled(void) {
+  return audio_permission && !background
+#if PORT_NATIVE_PCM
+    && !audio_failed
+#endif
+    ;
+}
+unsigned port_audio_epoch(void) {
+#if PORT_NATIVE_PCM
+  return audio_epoch;
+#else
+  return 0;
+#endif
+}
 void port_pcm(const int16_t *p, unsigned frames, unsigned rate,
               unsigned channels) {
 #if PORT_NATIVE_PCM
@@ -936,6 +959,29 @@ static void controls_window(const pxa_window_snapshot_t *snapshot) {
   update_control_layout();
   release_input();
 }
+static int create_game_surface(void) {
+  uint8_t bytes[128];uint32_t n;
+  pxa_surface_desc_t d={.width=surface_w,.height=surface_h,.format=PXA_SURFACE_RGB565,.buffer_count=2,
+    .flags=PXA_SURFACE_PREFER_DIRECT_SCANOUT|PXA_SURFACE_GUEST_MAPPED};
+  if(!pxa_surface_build_create(bytes,sizeof(bytes),1,d,&n))return PXA_STATUS_INTERNAL;
+  int status=pxa_control_packet(bytes,n);surface_creating=status==0;return status;
+}
+static int resize_game_surface(void) {
+#ifndef PORT_CUSTOM_FRONTEND
+  if(surface_creating || display_w<16 || display_h<12)return 0;
+  unsigned w=320,h=240;
+  if(display_w<320 || display_h<240) {
+    if(display_w*3<=display_h*4) {w=display_w;h=w*3/4;}
+    else {h=display_h;w=h*4/3;}
+  }
+  if(w==surface_w && h==surface_h)return 0;
+  if(surface) {int status=pxa_close_handle(surface);if(status)return status;surface=0;}
+  surface_w=w;surface_h=h;pending_buffer=255;update_control_layout();
+  int status=create_game_surface();return status?status:1;
+#else
+  return 0;
+#endif
+}
 int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
 #if PORT_NATIVE_MAIN_LOOP
   int port_status = pxa_event_port_open(31);
@@ -947,6 +993,9 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
     display_h = env.height;
   }
   pxa_window_fullscreen();
+#ifdef PORT_LANDSCAPE
+  (void)pxa_app_prefer_landscape();
+#endif
   /* Shape insets from UI do not include transient system/gesture bars. */
   int window_status=pxa_window_request_snapshot(20);
   if(window_status)port_log("PXA Window snapshot unavailable: %d",window_status);
@@ -989,15 +1038,8 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
   int raster_status = pxa_game_render_create_raster(30, 256);
   if (raster_status) return raster_status;
 #endif
-  pxa_surface_desc_t d = {.width = surface_w,
-                          .height = surface_h,
-                          .format = PXA_SURFACE_RGB565,
-                          .buffer_count = 2,
-                          .flags = PXA_SURFACE_PREFER_DIRECT_SCANOUT |
-                                   PXA_SURFACE_GUEST_MAPPED};
-  if (!pxa_surface_build_create(packet, sizeof(packet), 1, d, &n))
-    return PXA_STATUS_INTERNAL;
-  pxa_control_packet(packet, n);
+  int surface_status=create_game_surface();
+  if(surface_status)return surface_status;
   pxa_permission_build(packet, sizeof(packet), PXA_PERMISSION_ACQUIRE, 10,
                        "audio.playback", 14, (const uint8_t *)"media", 5, &n);
   audio_decision_pending=pxa_control_packet(packet, n)==0;
@@ -1103,7 +1145,9 @@ static int32_t handle_event(const uint8_t *bytes, uint32_t n) {
       port_log("PXA surface create failed: %d", r.status);
       return r.status;
     }
-    surface = r.handle;
+    surface = r.handle;surface_creating=0;
+    int resized=resize_game_surface();
+    if(resized)return resized<0?resized:PXA_EVENT_HANDLED;
     uint32_t size;
     int registered = pxa_surface_register_buffers(
         surface, surface_buffers, (uint32_t)surface_w * surface_h * 2, 2);
@@ -1205,6 +1249,7 @@ static int32_t handle_event(const uint8_t *bytes, uint32_t n) {
       display_h = env.height;
       controls_environment(&env);
       release_input();
+      int resized=resize_game_surface();if(resized<0)return resized;
     }
     return PXA_EVENT_HANDLED;
   }

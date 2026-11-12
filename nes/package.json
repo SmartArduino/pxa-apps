@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-nes",
-  "version": "0.1.47",
-  "release_sequence": 54,
+  "version": "0.1.48",
+  "release_sequence": 55,
   "name": "NES Emulator",
   "description": "NES emulator with SD/flash ROM library, audio, controllers and independent frame skipping",
   "build": {
@@ -33,7 +33,13 @@
       "artifact": "aot",
       "services": [
         "surface",
-        "window",
+        {
+          "name": "window",
+          "min_version": [
+            0,
+            5
+          ]
+        },
         "ui",
         "log",
         "permission",

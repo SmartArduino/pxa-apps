@@ -30,11 +30,11 @@ WAD_NAMES = ('doom2.wad', 'plutonia.wad', 'tnt.wad', 'doomu.wad', 'doom.wad', 'd
 MANIFEST_NAME = 'data-manifest.json'
 
 
-def validate_wad(data):
+def validate_wad(data, max_bytes=MAX_WAD_BYTES):
     """Check bounded PC IWAD structure, returning metadata for the exact bytes."""
     size = len(data)
-    if not 12 <= size <= MAX_WAD_BYTES:
-        raise ValueError('IWAD must be 12 bytes to 20 MiB')
+    if not 12 <= size <= max_bytes:
+        raise ValueError(f'IWAD must be 12 bytes to {max_bytes // (1024 * 1024)} MiB')
     magic, count, directory = struct.unpack_from('<4sii', data)
     if magic != b'IWAD':
         raise ValueError('Expected an IWAD header (PWAD add-ons are unsupported)')

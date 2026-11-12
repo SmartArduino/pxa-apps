@@ -201,7 +201,6 @@ void __wrap_sampletimer(void) {
 }
 int dn3dmain(int argc, char **argv);
 void port_game_main(void) {
-  (void)pxa_window_set_orientation(PXA_ORIENTATION_LANDSCAPE);
   initGraphics();
   extMemInit();
   char *argv[] = {"duke3d", NULL};

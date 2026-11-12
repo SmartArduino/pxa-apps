@@ -5,6 +5,7 @@
 #include "pxa_surface.h"
 #include "pxa_ui.h"
 #include "pxa_window.h"
+#include "../common/pxa_landscape.h"
 #include "../common/pxa_canvas_pixels.h"
 #include "engine.h"
 #if OL_CLASSIC
@@ -21,10 +22,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <stdlib.h>
 
 static uint8_t packet[512];
 static uint8_t level_index[16];
-alignas(PXA_SURFACE_BUFFER_ALIGNMENT) static uint16_t buffers[2][320*240];
+alignas(PXA_SURFACE_BUFFER_ALIGNMENT) static uint16_t buffers[2*320*240];
+static uint16_t *small_frame;
+static unsigned surface_w=320,surface_h=240;
+static bool surface_pending,services_started;
 static uint64_t surface, media_root, file, frame_id;
 static uint32_t loaded, total, pad_keys, touch_keys,pressed_keys;
 static uint32_t display_w=320, display_h=240;
@@ -197,6 +202,29 @@ static void choose_menu(unsigned selection) {
 #endif
     }
 }
+static void surface_size(unsigned &w,unsigned &h) {
+    w=320;h=240;
+    if(display_w<320 || display_h<240) {
+        w=display_w*3<=display_h*4?display_w:display_h*4/3;
+        w=w/16*16;h=w*3/4;
+    }
+}
+static int create_surface(void) {
+    pxa_surface_desc_t d{};d.width=surface_w;d.height=surface_h;d.format=PXA_SURFACE_RGB565;d.buffer_count=2;
+    d.flags=PXA_SURFACE_PREFER_DIRECT_SCANOUT|PXA_SURFACE_GUEST_MAPPED;
+    uint32_t n;
+    if(!pxa_surface_build_create(packet,sizeof(packet),1,d,&n))return PXA_STATUS_INTERNAL;
+    int status=pxa_control_packet(packet,n);surface_pending=status==0;return status;
+}
+static int resize_surface(void) {
+    if(surface_pending)return 0;
+    unsigned w,h;surface_size(w,h);
+    if(!w || !h || (w==surface_w && h==surface_h))return 0;
+    if(surface) {int status=pxa_close_handle(surface);if(status)return status;surface=0;}
+    surface_w=w;surface_h=h;pending_buffer=-1;
+    active_touch=-1;pad_keys=touch_keys=pressed_keys=controller_last=controller_suppressed=0;
+    int status=create_surface();return status?status:1;
+}
 static void convert(uint16_t *dest) {
     const uint8_t *src=ol_pixels();
 #if OL_CLASSIC
@@ -271,10 +299,17 @@ static void tick(uint64_t now) {
     int r=pxa_surface_acquire_buffer(surface,&index);
     if (r==PXA_STATUS_WOULD_BLOCK) {++skipped;loading_clock();return;}
     if (r!=4 || index>=2) {error("OpenLara buffer acquisition failed");return;}
+    uint16_t *target=buffers+(size_t)index*surface_w*surface_h;
+    uint16_t *engine_frame=target;
+    if(surface_w<320 || surface_h<240) {
+        if(!small_frame)small_frame=(uint16_t*)malloc(320*240*sizeof(uint16_t));
+        if(!small_frame) {error("OpenLara display buffer allocation failed");return;}
+        engine_frame=small_frame;
+    }
 #if OL_CLASSIC
     // Only acquired buffers are writable. The engine draws directly into the
     // free buffer; a submitted buffer stays untouched until Host releases it.
-    ol_set_framebuffer(buffers[index]);
+    ol_set_framebuffer(engine_frame);
 #endif
     // Re-arm behind controller commands collected during this frame.
     if(frame_clock)pxa_clock_set_period(0);
@@ -317,7 +352,10 @@ static void tick(uint64_t now) {
 #if OL_CLASSIC
     if(opaque_overlay)ol_overlay_end();
 #endif
-    uint64_t rendered=time_us(); convert(buffers[index]); uint64_t converted=time_us();
+    uint64_t rendered=time_us(); convert(engine_frame);
+    if(engine_frame!=target)for(unsigned y=0;y<surface_h;++y)for(unsigned x=0;x<surface_w;++x)
+        target[y*surface_w+x]=engine_frame[(y*240/surface_h)*320+x*320/surface_w];
+    uint64_t converted=time_us();
     render_us+=rendered-begin; convert_us+=converted-rendered;
     r=pxa_surface_present_buffer(surface,index,++frame_id);
     if (r==PXA_STATUS_WOULD_BLOCK) pending_buffer=index;
@@ -361,11 +399,11 @@ static void pointer(const pxa_ui_pointer_data_t &p) {
     if(scanning || background)return;
     uint32_t previous_touch=touch_keys;
     // A fixed D-pad and action buttons also allow PXADB pointer validation.
-    int scale=pxa_surface_fit_scale(320,240,display_w,display_h);
+    int scale=pxa_surface_fit_scale(surface_w,surface_h,display_w,display_h);
     if(scale<1)scale=1;
     int x,y;
     bool inside=pxa_game_pointer_coordinates(p.x,p.y,display_density,
-        display_w,display_h,320,240,unsigned(scale),&x,&y);
+        display_w,display_h,surface_w,surface_h,unsigned(scale),&x,&y);
     if (p.phase==PXA_POINTER_UP || p.phase==PXA_POINTER_CANCEL) {
         if(active_touch==p.pointer_id) {
             note_input(p.timestamp_us);
@@ -411,6 +449,7 @@ extern "C" int32_t pxa_app_start(const uint8_t *config,uint32_t length) {
     pxa_ui_environment_t env;
     if (pxa_ui_parse_start_environment(config,length,&env)) {display_w=env.width;display_h=env.height;display_density=env.density_q16;}
     pxa_window_fullscreen();
+    (void)pxa_app_prefer_landscape();
     pxa_ui_transaction_t tx{};
     if (!pxa_ui_transaction_begin(&tx,1,PXA_UI_TRANSACTION_REPLACE_SURFACE,packet,sizeof(packet)) ||
         !pxa_ui_create(&tx,1,0,0,PXA_UI_NODE_ROOT) ||
@@ -420,11 +459,8 @@ extern "C" int32_t pxa_app_start(const uint8_t *config,uint32_t length) {
         !pxa_ui_set_text(&tx,2,"Starting OpenLara...",20) ||
         !pxa_ui_set_event_mask(&tx,1,PXA_UI_EVENT_MASK_POINTER|PXA_UI_EVENT_MASK_CONTROLLER_STATE) ||
         !pxa_ui_transaction_commit(&tx)) return PXA_STATUS_INTERNAL;
-    pxa_surface_desc_t d{}; d.width=320;d.height=240;d.format=PXA_SURFACE_RGB565;d.buffer_count=2;
-    d.flags=PXA_SURFACE_PREFER_DIRECT_SCANOUT|PXA_SURFACE_GUEST_MAPPED;
-    uint32_t n;
-    if (!pxa_surface_build_create(packet,sizeof(packet),1,d,&n)) return PXA_STATUS_INTERNAL;
-    return pxa_control_packet(packet,n);
+    surface_size(surface_w,surface_h);
+    return create_surface();
 }
 extern "C" int32_t pxa_app_on_event(const uint8_t *bytes,uint32_t length) {
     pxa_event_t e; if (!pxa_parse_event(bytes,length,&e)) return PXA_EVENT_UNHANDLED;
@@ -461,12 +497,14 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *bytes,uint32_t length) {
     if (e.service==PXA_SURFACE_SERVICE && e.opcode==PXA_SURFACE_CREATE && e.token==1) {
         pxa_surface_create_result_t result;
         if (!pxa_surface_parse_create(&e,1,&result) || result.status) return PXA_STATUS_INTERNAL;
-        surface=result.handle;
-        if (pxa_surface_register_buffers(surface,buffers,sizeof(buffers[0]),2)!=sizeof(buffers)) return PXA_STATUS_INTERNAL;
+        surface=result.handle;surface_pending=false;
+        int resized=resize_surface();if(resized)return resized<0?resized:PXA_EVENT_HANDLED;
+        if (pxa_surface_register_buffers(surface,buffers,surface_w*surface_h*2,2)!=(int)(surface_w*surface_h*4)) return PXA_STATUS_INTERNAL;
         uint32_t n;
-        if (!pxa_surface_build_configure_layer(packet,sizeof(packet),2,surface,0,0,320,240,0,1,&n)) return PXA_STATUS_INTERNAL;
+        if (!pxa_surface_build_configure_layer(packet,sizeof(packet),2,surface,0,0,surface_w,surface_h,0,1,&n)) return PXA_STATUS_INTERNAL;
         pxa_control_packet(packet,n); pxa_clock_set_period(16);
-        store_start();audio_start();
+        if(services_started)return PXA_EVENT_HANDLED;
+        services_started=true;store_start();audio_start();
         if (pxa_fs_request_app_media(10))error("OpenLara: SD media unavailable. Insert storage and reopen.");
         return PXA_EVENT_HANDLED;
     }
@@ -558,7 +596,8 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *bytes,uint32_t length) {
     if(e.service==PXA_UI_SERVICE && e.opcode==PXA_UI_ENVIRONMENT_CHANGED) {
         pxa_ui_environment_t env;
         if(pxa_ui_parse_environment_event(&e,&env)) {display_w=env.width;display_h=env.height;display_density=env.density_q16;}
-        active_touch=-1;pad_keys=touch_keys=pressed_keys=controller_last=controller_suppressed=0;return PXA_EVENT_HANDLED;
+        active_touch=-1;pad_keys=touch_keys=pressed_keys=controller_last=controller_suppressed=0;
+        int resized=resize_surface();if(resized<0)return resized;return PXA_EVENT_HANDLED;
     }
 #if OL_OPTIMIZED
     pxa_surface_released_t released;
@@ -576,4 +615,5 @@ extern "C" void pxa_app_stop(uint32_t) {
     pxa_clock_set_period(0);audio_stop();music_stream_stop();store_stop();ol_free();
     if(file)pxa_close_handle(file);if(media_root)pxa_close_handle(media_root);
     if(surface)pxa_close_handle(surface);
+    free(small_frame);small_frame=nullptr;
 }

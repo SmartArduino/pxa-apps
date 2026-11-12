@@ -63,6 +63,7 @@ static void test_save_baseline(const char *path) {
  save_pending=rom_loaded=0;free(save_data);save_data=NULL;emu_core_close();free(rom);
 }
 #include "import_contract.h"
+#include "display_resize_contract.h"
 int main(int argc,char **argv){
  assert(argc==2);test_save_baseline(argv[1]);
  emu_controls_init(&controls,320,240);mode=PLAYING;background=0;release_input();
@@ -92,4 +93,5 @@ int main(int argc,char **argv){
  test_menu_contract();
  puts("PASS: 12 gamepad buttons, independent players, auto hide, menu chord and multi-touch");
  test_import_contract();
+    test_display_resize_contract();
 }

@@ -1,0 +1,13 @@
+{
+  "repository": "https://github.com/recrof/Duke3D-ESP32S3",
+  "commit": "9053c219c1dd87898fa5988ebbb68c951fbbe9fa",
+  "source_directory": "Duke3D-ESP32S3/Game/src/midi",
+  "local_directory": "../duke3d/vendor/Game/src/midi",
+  "license": "GPL-2.0-or-later",
+  "application_license": "GPL-3.0-or-later",
+  "modified": false,
+  "files": {
+    "opl2.c": "f7d44beb464c3cffdb5c95e7b42de6eefaacecb83ba15ab2bd98b418b76adf04",
+    "opl2.h": "5e8a02de389b709ed6252284af4cf7f3b0815894e8d89d8ada15774abfb29e2a"
+  }
+}

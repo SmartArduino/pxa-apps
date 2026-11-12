@@ -13,8 +13,8 @@
     0
   ],
   "id": "pxa-game-gear",
-  "version": "0.1.11",
-  "release_sequence": 14,
+  "version": "0.1.12",
+  "release_sequence": 15,
   "name": "Game Gear Emulator",
   "description": "Game Gear Emulator for PXA with SD/flash library, audio and touch/gamepad controls",
   "build": {
@@ -33,7 +33,13 @@
       "artifact": "aot",
       "services": [
         "surface",
-        "window",
+        {
+          "name": "window",
+          "min_version": [
+            0,
+            5
+          ]
+        },
         "ui",
         "log",
         "permission",

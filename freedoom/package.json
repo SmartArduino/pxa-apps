@@ -1,0 +1,103 @@
+{
+  "format": "pxa-package-source-0.2",
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "id": "pxa-freedoom",
+  "version": "0.2.2",
+  "name": "Freedoom",
+  "description": "Freedoom Phase 1 / Phase 2 with MIDI background music, sound effects, touch/controller input and private saves",
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  },
+  "release_sequence": 4,
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 12582912,
+      "pinned": true
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "execution_model": "main-loop",
+      "artifact": "aot",
+      "services": [
+        "surface",
+        "clock",
+        {
+          "name": "window",
+          "min_version": [
+            0,
+            5
+          ]
+        },
+        "ui",
+        "log",
+        "permission",
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            10
+          ]
+        },
+        {
+          "name": "fs",
+          "min_version": [
+            0,
+            3
+          ],
+          "features": [
+            "app-media-root",
+            "read-at",
+            "scoped-roots"
+          ]
+        },
+        {
+          "name": "game-render",
+          "min_version": [
+            1,
+            2
+          ],
+          "features": [
+            "borrowed-indexed-blit"
+          ]
+        }
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "required": false,
+      "scope": "media"
+    }
+  ],
+  "icon": "assets/icon.png",
+  "resources": {
+    "manifest_sha256": "57f515e11d425b69afffb22553788d7cae2739cfed9b70a3adbd6dcd1c76e7e8"
+  }
+}

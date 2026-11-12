@@ -13,8 +13,8 @@
     0
   ],
   "id": "pxa-snes",
-  "version": "0.1.15",
-  "release_sequence": 18,
+  "version": "0.1.16",
+  "release_sequence": 19,
   "name": "SNES Emulator",
   "description": "SNES Emulator for PXA with SD/flash library, audio and touch/gamepad controls",
   "build": {
@@ -33,7 +33,13 @@
       "artifact": "aot",
       "services": [
         "surface",
-        "window",
+        {
+          "name": "window",
+          "min_version": [
+            0,
+            5
+          ]
+        },
         "ui",
         "log",
         "permission",

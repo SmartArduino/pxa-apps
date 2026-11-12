@@ -23,6 +23,7 @@
 #include "pxa_system.h"
 #include "pxa_ui.h"
 #include "pxa_window.h"
+#include "../common/pxa_landscape.h"
 #include "text.hpp"
 #include "ui_canvas.hpp"
 #include <algorithm>
@@ -880,6 +881,7 @@ extern "C" int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
   int32_t status = pxa_window_fullscreen();
   if (status)
     return status;
+  (void)pxa_app_prefer_landscape();
   if ((status = pxa_event_port_open(PORT)))
     return status;
   if ((status = request_surface()))

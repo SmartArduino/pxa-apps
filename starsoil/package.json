@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-starsoil",
-  "version": "0.14.1",
-  "release_sequence": 43,
+  "version": "0.14.2",
+  "release_sequence": 44,
   "name": "星壤物语 Starsoil",
   "description": "原创2D像素沙盒：探索森林、草甸、沙漠、雪原、雨林与晶洞，采矿建造、合成装备、拜访NPC、挑战星核守卫。衣服、护甲和披风随角色动画分层显示。",
   "publisher": {
@@ -39,7 +39,13 @@
       "services": [
         "surface",
         "clock",
-        "window",
+        {
+          "name": "window",
+          "min_version": [
+            0,
+            5
+          ]
+        },
         {
           "name": "ui",
           "min_version": [

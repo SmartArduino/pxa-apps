@@ -1,0 +1,15 @@
+{
+  "kind": "Official Freedoom Phase 2 desktop icon",
+  "repository": "https://github.com/freedoom/freedoom",
+  "commit": "cfb8644b1a8dc7d7d2177e6a892ccaa2922bdaae",
+  "recipe": "upstream/dist/Makefile: io.github.freedoom.Phase2.png",
+  "source": "upstream/sprites/heada1.png",
+  "tool": "upstream/dist/pillow-compose",
+  "size": [
+    64,
+    64
+  ],
+  "source_sha256": "49665ff13e242a1cde864acf314dc16f3623786876d390c2f4495b6685a30a3a",
+  "icon_sha256": "687236e3da298a863a7b937b7eee78f1871feb3e1455e9415dde355264efbcb4",
+  "license": "BSD-3-Clause"
+}

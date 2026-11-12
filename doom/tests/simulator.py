@@ -104,10 +104,10 @@ def missing_wad_text(image):
     return ImageChops.difference(actual, expected).getbbox() is None
 
 
-def wad_title(path):
+def wad_title(path, max_bytes=20 * 1024 * 1024, map_marker=b"E1M1"):
     """Decode the supplied IWAD's TITLEPIC, giving a content-specific oracle."""
     data = path.read_bytes()
-    require(12 <= len(data) <= 20 * 1024 * 1024 and data[:4] == b"IWAD", "--wad must be a valid shareware IWAD")
+    require(12 <= len(data) <= max_bytes and data[:4] == b"IWAD", "--wad must be a valid IWAD")
     count, directory = struct.unpack_from("<II", data, 4)
     require(0 < count <= 65536 and 12 <= directory <= len(data) - 16 * count, "Invalid WAD directory")
     lumps = {}
@@ -115,7 +115,7 @@ def wad_title(path):
         offset, length, name = struct.unpack_from("<II8s", data, directory + 16 * index)
         require(offset <= len(data) and length <= len(data) - offset, "Invalid WAD lump")
         lumps[name.rstrip(b"\0")] = data[offset:offset + length]
-    require(b"E1M1" in lumps and b"TITLEPIC" in lumps and b"PLAYPAL" in lumps, "Use doom1.wad with E1M1, TITLEPIC and PLAYPAL")
+    require(map_marker in lumps and b"TITLEPIC" in lumps and b"PLAYPAL" in lumps, "IWAD needs its first map, TITLEPIC and PLAYPAL")
     patch, palette = lumps[b"TITLEPIC"], lumps[b"PLAYPAL"]
     width, height = struct.unpack_from("<HH", patch)
     require((width, height) == (320, 200) and len(palette) >= 768, "Unexpected TITLEPIC dimensions/palette")

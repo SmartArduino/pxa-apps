@@ -25,6 +25,7 @@
 #include "pxa_ui.h"
 #include "../common/emulator/menu_focus.h"
 #include "pxa_window.h"
+#include "../common/pxa_landscape.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -999,6 +1000,19 @@ static void update_locale(void) {
     gb_port_log("GB LOCALE %s", i18n.locale);
 }
 
+static void frontend_reset_video(void) {
+    unsigned hidden=controls.controller_hidden;
+    unsigned fit=video_renderer.fit;
+    pending_buffer=-1;surface_stride=0;clear_frames=3;
+    gb_controls_init(&controls,width,height);controls.safe=menu_area;
+    controls.controller_hidden=hidden;
+    gb_video_init(&video_renderer,width,height,menu_area);
+    gb_video_set_fit(&video_renderer,menu_area,fit);
+}
+#define frontend_display_canvas gb_display_canvas
+#include "../common/emulator/surface_resize.h"
+#undef frontend_display_canvas
+
 int32_t pxa_app_start(const uint8_t *config, uint32_t size) {
     pxa_i18n_init_from_start_config(&i18n, &pxa_app_i18n_bundle, config, size);
     pxa_ui_environment_t env = {0};
@@ -1007,11 +1021,12 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t size) {
         height = env.height;
         input_density_q16 = env.density_q16;
     }
+    display_environment=env;
     menu_environment(&env);
     input_scale = gb_display_canvas(&width, &height);
     if (!input_scale) return PXA_STATUS_INVALID_ARGUMENT;
     gb_port_log("GB DISPLAY canvas=%ux%u input_scale=%u density_q16=%u", width, height, input_scale, input_density_q16);
-    pxa_window_fullscreen();
+    pxa_window_fullscreen();(void)pxa_app_prefer_landscape();
     pxa_window_request_snapshot(T_WINDOW);
     (void)pxa_ui_theme_get(T_MENU_THEME);
     uint8_t packet[512];
@@ -1026,12 +1041,7 @@ int32_t pxa_app_start(const uint8_t *config, uint32_t size) {
     controls.safe = menu_area;
     update_locale();
     gb_video_init(&video_renderer, width, height, menu_area);
-    pxa_surface_desc_t desc = {.width = (uint16_t) width, .height = (uint16_t) height,
-                               .format = PXA_SURFACE_RGB565, .buffer_count = 2,
-                               .flags = PXA_SURFACE_GUEST_MAPPED | PXA_SURFACE_PREFER_DIRECT_SCANOUT};
-    if (!pxa_surface_build_create(packet, sizeof(packet), T_SURFACE, desc, &n)) return PXA_STATUS_INTERNAL;
-    int r = pxa_control_packet(packet, n);
-    if (r) return r;
+    int r=request_display_surface();if(r)return r;
     r = pxa_clock_set_period(16);
     if (r) return r;
     pxa_clock_limits(T_LIMITS);
@@ -1083,6 +1093,8 @@ int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
     }
     pxa_ui_environment_t env;
     if (pxa_ui_parse_environment_event(&e, &env)) {
+        int resized=display_environment_changed(&env);
+        if(resized)return resized<0?resized:PXA_EVENT_HANDLED;
         input_density_q16 = env.density_q16;
         menu_environment(&env);
         release_input();
@@ -1160,7 +1172,8 @@ int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
     if (e.token == T_SURFACE && e.service == PXA_SURFACE_SERVICE) {
         pxa_surface_create_result_t r;
         if (!pxa_surface_parse_create(&e, T_SURFACE, &r) || r.status) return PXA_STATUS_INTERNAL;
-        surface = r.handle;
+        int resized=display_surface_created(r.handle);
+        if(resized)return resized<0?resized:PXA_EVENT_HANDLED;
         /* The Host pads the row stride, so the buffers are allocated once the
          * negotiated geometry is known. */
         surface_stride = r.stride_bytes / sizeof(uint16_t);

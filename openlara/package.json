@@ -13,7 +13,7 @@
     1
   ],
   "id": "pxa-openlara",
-  "version": "0.7.11",
+  "version": "0.7.12",
   "name": "OpenLara",
   "description": "OpenLara with automatically installed original PC demo media and app-private saves",
   "build": {
@@ -31,7 +31,13 @@
       "services": [
         "surface",
         "clock",
-        "window",
+        {
+          "name": "window",
+          "min_version": [
+            0,
+            5
+          ]
+        },
         "ui",
         "log",
         {
@@ -66,7 +72,7 @@
       "artifact": "aot"
     }
   ],
-  "release_sequence": 213,
+  "release_sequence": 214,
   "permissions": [
     {
       "name": "audio.playback",

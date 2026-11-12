@@ -85,6 +85,8 @@ void port_pcm(const int16_t *samples, unsigned frames, unsigned rate,
               unsigned channels);
 /* Borrow the existing playback session only for synchronous Audio operations. */
 uint64_t port_audio_session(void);
+int port_audio_enabled(void);
+unsigned port_audio_epoch(void);
 void port_error(const char *message);
 /* RTS startup feedback ends when the engine presents its next real frame. */
 void port_loading_stage(const char *stage);

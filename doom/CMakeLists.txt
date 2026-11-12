@@ -20,3 +20,5 @@ list(REMOVE_ITEM doom_sources "${PXA_RECROF_DIR}/framebuffer.c")
 set_property(TARGET pxa_main PROPERTY SOURCES "${doom_sources}")
 target_sources(pxa_main PRIVATE controls.c)
 target_compile_options(pxa_main PRIVATE -fwrapv -fno-strict-aliasing)
+
+target_compile_definitions(pxa_main PRIVATE PORT_LANDSCAPE=1)

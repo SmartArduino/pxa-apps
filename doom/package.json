@@ -13,14 +13,14 @@
     1
   ],
   "id": "pxa-doom",
-  "version": "0.1.5+pxa07",
+  "version": "0.1.6+pxa07",
   "name": "DOOM",
   "description": "DOOM episode one shareware with automatically installed original IWAD, touch and controller input",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
   },
-  "release_sequence": 7,
+  "release_sequence": 8,
   "build": {
     "system": "cmake",
     "source_dir": ".",

@@ -5,3 +5,6 @@
 	path = fat-fish/vendor/dsh-pet
 	url = https://github.com/PC2005-cloud/dsh-pet.git
 	branch = main
+[submodule "freedoom/upstream"]
+	path = freedoom/upstream
+	url = https://github.com/freedoom/freedoom.git

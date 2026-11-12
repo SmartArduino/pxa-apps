@@ -13,7 +13,7 @@
     1
   ],
   "id": "pxa-quake",
-  "version": "0.6.21+pxa07",
+  "version": "0.6.22+pxa07",
   "name": "Quake · LibreQuake",
   "description": "Quake engine with automatically installed LibreQuake free first-level media and app-private saves",
   "build": {
@@ -91,7 +91,7 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 223,
+  "release_sequence": 224,
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"

@@ -1,5 +1,7 @@
 # PXA 多平台模拟器前端
 
+默认通过 Window 0.5 请求横屏，适用于 GBA、Game Gear、Master System、Mega Drive、PC Engine 和 SNES。旋转后按系统实际宽高重建画布、游戏视口、菜单和触控区域，保留缩放偏好、游戏进度及手柄隐藏状态；创建画布期间的连续尺寸变化会合并到最新尺寸。方屏保持方向，不能旋转时继续使用实际屏幕；退出后由系统恢复方向。
+
 GBA、SNES、Mega Drive、Master System、Game Gear 和 PC Engine 各有独立包 ID、媒体根目录和存档。此目录复用文件浏览、手柄/触摸、系统字体、i18n、音频 FIFO、帧调度和 Surface 显示，GB/GBC 与 NES 复用此处的冷菜单手柄导航，其余前端和游戏热路径保持独立。
 
 ## 游戏文件名
@@ -113,3 +115,15 @@ PGO 默认关闭，不在设备包中加入计数器。剖面按内容摘要复�
 ## 许可证
 
 公共前端为 GPL-2.0-or-later；部分显示、时序代码保留 MPL-2.0 声明，字体遵循 `licenses/ui-font-OFL.txt`。内核许可证分别保留于各 `vendor/`。Snes9x、PicoDrive 及 SMS Plus 使用的 Z80 等代码包含非商业等历史许可限制，不能仅凭前端的 GPL 声明推断整个 App 的分发条件。具体以各文件的许可证和权利人要求为准。
+
+横屏与画布切换可使用真实产品模拟器验证；报告和截图输出到本地产物目录：
+
+```sh
+python3 -B local/pxa-apps/common/tests/landscape_simulator.py \
+  --simulator build/simulator/doit-gamekit-2/pxsys_product_simulator \
+  --packages /path/to/built-packages \
+  --publisher-key local/pxa-apps/.dev-signing/publisher-public.der \
+  --output local/artifacts/landscape/$(date +%Y%m%d-%H%M%S) \
+  --apps game-boy-emulator nes game-gear-emulator \
+  --profiles 480x854 854x480 480x480 240x320 240x240
+```

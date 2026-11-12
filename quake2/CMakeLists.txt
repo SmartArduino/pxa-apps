@@ -36,3 +36,5 @@ target_compile_options(pxa_main PRIVATE -Xclang -cl-single-precision-constant)
 
 target_compile_definitions(pxa_main PRIVATE PORT_EXTERNAL_GAME_DATA=1 PORT_COOPERATE_BUDGET_US=32000
     PORT_TICK_US=8000 PORT_CONTINUATION_BYTES=16384)
+
+target_compile_definitions(pxa_main PRIVATE PORT_LANDSCAPE=1)

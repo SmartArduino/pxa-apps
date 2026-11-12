@@ -13,7 +13,7 @@
     1
   ],
   "id": "pxa-quake2",
-  "version": "0.2.1+pxa07",
+  "version": "0.2.2+pxa07",
   "name": "Quake II",
   "description": "Quake II engine with automatically installed original demo media and app-private saves",
   "build": {
@@ -33,7 +33,13 @@
         "audio",
         "clock",
         "permission",
-        "window",
+        {
+          "name": "window",
+          "min_version": [
+            0,
+            5
+          ]
+        },
         "log",
         "ui",
         {
@@ -68,7 +74,7 @@
       "scope": "media"
     }
   ],
-  "release_sequence": 202,
+  "release_sequence": 203,
   "resources": {
     "manifest_sha256": "4e32449dac8f3d692ae36221500b7520d7ffe5c426fa58741c6f7251cfb047a1"
   },

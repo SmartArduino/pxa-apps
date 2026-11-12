@@ -27,6 +27,7 @@
 #include "pxa_ui.h"
 #include "../common/emulator/menu_focus.h"
 #include "pxa_window.h"
+#include "../common/pxa_landscape.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -679,14 +680,28 @@ static void pointer(const pxa_ui_pointer_data_t *p) {
     }
 }
 #include "menu_controller.h"
+static void frontend_reset_video(void) {
+    unsigned hidden=controls.controller_hidden;
+    pending_index=255;
+    nes_controls_init(&controls,width,height,colors);controls.safe=menu_area;
+    controls.controller_hidden=hidden;
+    nes_video_init_in_rect(&video_renderer,width,height,menu_area,video_history,sizeof(video_history),&controls);
+    video_renderer.resolve=native_resolve;
+    memset(buffer_mode,255,sizeof(buffer_mode));
+}
+#define frontend_display_canvas nes_display_canvas
+#include "../common/emulator/surface_resize.h"
+#undef frontend_display_canvas
+
 int32_t pxa_app_start(const uint8_t *config,uint32_t size) {
     pxa_i18n_init_from_start_config(&i18n,&pxa_app_i18n_bundle,config,size);
     pxa_ui_environment_t env={0};if(pxa_ui_parse_start_environment(config,size,&env)){width=env.width;height=env.height;input_density_q16=env.density_q16;}
+    display_environment=env;
     menu_environment(&env);
     input_scale=nes_display_canvas(&width,&height);
     if(!input_scale)return PXA_STATUS_INVALID_ARGUMENT;
     nes_port_log("NES DISPLAY canvas=%ux%u input_scale=%u density_q16=%u",width,height,input_scale,input_density_q16);
-    pxa_window_fullscreen();pxa_window_request_snapshot(T_WINDOW);
+    pxa_window_fullscreen();(void)pxa_app_prefer_landscape();pxa_window_request_snapshot(T_WINDOW);
     (void)pxa_ui_theme_get(T_MENU_THEME);
     uint8_t packet[512];uint32_t n;pxa_ui_transaction_t tx={0};
     if(!pxa_ui_transaction_begin(&tx,1,PXA_UI_TRANSACTION_REPLACE_SURFACE,packet,sizeof(packet)) ||
@@ -700,10 +715,7 @@ int32_t pxa_app_start(const uint8_t *config,uint32_t size) {
     video_renderer.resolve=native_resolve;
     /* Optional acceleration: an older Host still uses the portable renderer. */
     pxa_game_render_create_raster(T_RASTER,256);
-    pxa_surface_desc_t desc={.width=width,.height=height,.format=PXA_SURFACE_RGB565,.buffer_count=2,
-        .flags=PXA_SURFACE_GUEST_MAPPED|PXA_SURFACE_PREFER_DIRECT_SCANOUT};
-    if(!pxa_surface_build_create(packet,sizeof(packet),T_SURFACE,desc,&n))return PXA_STATUS_INTERNAL;
-    int r=pxa_control_packet(packet,n);if(r)return r;
+    int r=request_display_surface();if(r)return r;
     r=pxa_clock_set_period(16);if(r)return r;pxa_clock_limits(T_LIMITS);
     pxa_fs_request_app_media_path(T_MEDIA_PATH);
     pxa_fs_request_path(PXA_FS_MAKE_DIRECTORY,T_MKDIR,"roms",4);
@@ -742,6 +754,8 @@ int32_t pxa_app_on_event(const uint8_t *data,uint32_t size) {
     }
     pxa_ui_environment_t env;
     if(pxa_ui_parse_environment_event(&e,&env)){
+        int resized=display_environment_changed(&env);
+        if(resized)return resized<0?resized:PXA_EVENT_HANDLED;
         input_density_q16=env.density_q16;menu_environment(&env);release_input();
         controls.safe=menu_area;update_locale();
         nes_video_init_in_rect(&video_renderer,width,height,menu_area,video_history,sizeof(video_history),&controls);
@@ -787,7 +801,8 @@ int32_t pxa_app_on_event(const uint8_t *data,uint32_t size) {
     }
     if(e.token==T_SURFACE && e.service==PXA_SURFACE_SERVICE) {
         pxa_surface_create_result_t r;if(!pxa_surface_parse_create(&e,T_SURFACE,&r) || r.status)return PXA_STATUS_INTERNAL;
-        surface=r.handle;/* Buffers must be packed at the actual negotiated size. */
+        int resized=display_surface_created(r.handle);if(resized)return resized<0?resized:PXA_EVENT_HANDLED;
+        /* Buffers must be packed at the actual negotiated size. */
         int result=pxa_surface_register_buffers(surface,frames,width*height*2,2);if(result!=(int)width*height*4)return PXA_STATUS_INTERNAL;
         unsigned visible=mode==PLAYING || !system_menu_supported;
         surface_visible=!visible;if(!surface_visibility(visible))return PXA_STATUS_INTERNAL;

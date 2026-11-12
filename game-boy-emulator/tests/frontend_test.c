@@ -146,6 +146,7 @@ static void test_save_baseline(const char *path) {
     free(save_data);save_data=NULL;gb_core_close();free(rom);reset();
 }
 #include "../../common/emulator/tests/import_contract.h"
+#include "../../common/emulator/tests/display_resize_contract.h"
 int main(int argc,char **argv) {
     assert(argc==2);test_save_baseline(argv[1]);
     width=320;height=240;input_density_q16=65536;
@@ -217,4 +218,5 @@ int main(int argc,char **argv) {
     padded_surface(argv[1]);
     puts("PASS: controller focus/repeat/hide/restore, exit-save gate, options, audio retry/bounded draining and SD path");
 test_import_contract();
+    test_display_resize_contract();
     }

@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-fat-fish",
-  "version": "0.8.3",
-  "release_sequence": 20,
+  "version": "0.8.4",
+  "release_sequence": 21,
   "name": "大肥鱼",
   "localizations": {
     "en": {
@@ -44,7 +44,13 @@
       "services": [
         "surface",
         "clock",
-        "window",
+        {
+          "name": "window",
+          "min_version": [
+            0,
+            5
+          ]
+        },
         "ui",
         "log",
         "storage",

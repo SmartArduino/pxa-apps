@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-gba",
-  "version": "0.1.44",
-  "release_sequence": 46,
+  "version": "0.1.45",
+  "release_sequence": 47,
   "name": "GBA Emulator",
   "description": "gpSP Game Boy Advance emulator with bounded ROM paging, audio and save states",
   "build": {
@@ -33,7 +33,13 @@
       "artifact": "aot",
       "services": [
         "surface",
-        "window",
+        {
+          "name": "window",
+          "min_version": [
+            0,
+            5
+          ]
+        },
         "ui",
         "log",
         "permission",

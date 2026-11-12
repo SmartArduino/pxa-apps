@@ -16,6 +16,9 @@
 #include "pxa_system.h"
 #include "pxa_ui.h"
 #include "pxa_window.h"
+#ifdef PXA_POCKET_LANDSCAPE
+#include "../pxa_landscape.h"
+#endif
 #ifdef PXA_POCKET_SERVICES
 #include "service-hooks.hpp"
 #endif
@@ -544,6 +547,9 @@ extern "C" int32_t pxa_app_start(const uint8_t *config, uint32_t length) {
         !pxa_ui_transaction_commit(&tx)) return PXA_STATUS_INTERNAL;
     int32_t status = pxa_window_fullscreen();
     if (status) return status;
+#ifdef PXA_POCKET_LANDSCAPE
+    (void)pxa_app_prefer_landscape();
+#endif
     if ((status=pxa_event_port_open(PORT))) return status;
     if ((status=request_surface())) return status;
     if ((status=pxa_storage_request_get(LOAD, save_key, uint32_t(strlen(save_key))))) return status;
