@@ -556,6 +556,16 @@ inline Tag tag(std::string_view s) {
     }
     return t;
 }
+inline bool void_tag(std::string_view name) {
+    switch (name.size()) {
+    case 2: return name == "br" || name == "hr";
+    case 3: return name == "col" || name == "img" || name == "wbr";
+    case 4: return name == "area" || name == "base" || name == "link" || name == "meta";
+    case 5: return name == "embed" || name == "input" || name == "param" || name == "track";
+    case 6: return name == "source";
+    default: return false;
+    }
+}
 // Some static cards use only a literal location assignment instead of href.
 // Recognize that one grammar; never evaluate script, escapes or expressions.
 inline std::optional<std::string_view> static_navigation(std::string_view code) {
@@ -795,8 +805,7 @@ class Parser {
             bool hidden = t.has("hidden") || n == "template" || (n == "dialog" && !t.has("open"));
             hidden |= (props.set & (1u << css::display)) && props.values[css::display] == 1;
             if (hidden) {
-                constexpr std::string_view voids = " area base br col embed hr img input link meta param source track wbr ";
-                if (!trim(value).ends_with('/') && voids.find(" " + n + " ") == voids.npos) {
+                if (!trim(value).ends_with('/') && !void_tag(n)) {
                     hidden_ = n; hidden_depth_ = 1;
                 }
                 return;
@@ -867,8 +876,7 @@ class Parser {
                      n == "blockquote" || n == "tr" || n == "pre" || n == "h1" || n == "h2" ||
                      n == "h3" || n == "h4" || n == "h5" || n == "h6" || n == "form";
         const bool heading = n.size() == 2 && n[0] == 'h' && n[1] >= '1' && n[1] <= '6';
-        constexpr std::string_view voids = " area base br col embed hr img input link meta param source track wbr ";
-        const bool is_void = voids.find(" " + n + " ") != voids.npos;
+        const bool is_void = void_tag(n);
         if (t.closing) {
             if (overflow_depth_) { if (!is_void) --overflow_depth_; }
             else if (auto actual = close_scope(n)) block = *actual;

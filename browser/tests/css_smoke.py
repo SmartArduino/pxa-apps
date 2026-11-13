@@ -18,27 +18,29 @@ def main():
     rows=[]
     try:
         b.wait(lambda:'BROWSER VIEWPORT' in b.logs())
-        for name in ('static','script'):
+        for name in ('static','script','restyle'):
             mark=len(b.logs());b.navigate(root+'/'+name)
             b.wait(lambda:'BROWSER DONE status=200' in b.logs()[mark:])
-            if name=='script': b.wait(lambda:'BROWSER JS UPDATE revision=2 ' in b.logs()[mark:])
+            if name!='static': b.wait(lambda:'BROWSER JS UPDATE revision=2 ' in b.logs()[mark:])
             b.shot(name)
             im=Image.open(a.output/(name+'.png')).convert('RGB')
-            x,y,w,h=b.box('content'); points={key:[] for key in ('red','blue','green')}
+            x,y,w,h=b.box('content'); points={key:[] for key in ('red','blue','green')}; purple=0
             for py in range(y,min(y+h,im.height)):
                 for px in range(x,min(x+w,im.width)):
                     r,g,blue=im.getpixel((px,py))
                     if abs(r-156)<9 and abs(g-36)<9 and abs(blue-54)<9: points['red'].append((px,py))
                     if abs(r-36)<9 and abs(g-104)<9 and abs(blue-172)<9: points['blue'].append((px,py))
                     if abs(r-24)<9 and abs(g-122)<9 and abs(blue-66)<9: points['green'].append((px,py))
+                    if abs(r-128)<9 and abs(g-48)<9 and abs(blue-160)<9: purple+=1
             assert all(len(v)>15 for v in points.values()),{k:len(v) for k,v in points.items()}
+            if name=='restyle': assert purple>15, 'updated style block did not change the title'
             green=points['green'];left=min(v[0] for v in green);right=max(v[0] for v in green)
             assert right>x+w*0.8 and left>x+w*0.25,(left,right,x,w)
             mark=len(b.logs());b.tap((left+right)//2,(min(v[1] for v in green)+max(v[1] for v in green))//2)
             b.wait(lambda:'BROWSER NAV '+root+'/target' in b.logs()[mark:] and 'BROWSER DONE status=200' in b.logs()[mark:])
             b.shot(name+'-link-target')
             assert f.requests['/hidden-image.png']==0 and f.requests['/hidden-link']==0
-            rows.append({'page':name,'color_pixels':{k:len(v) for k,v in points.items()},'aligned_link_hit':True,'hidden_requests':0})
+            rows.append({'page':name,'color_pixels':{k:len(v) for k,v in points.items()},'restyled_pixels':purple,'aligned_link_hit':True,'hidden_requests':0})
         assert 'BROWSER DRAW ERROR' not in b.logs() and 'PXA Guest exception:' not in b.logs()
         (a.output/'results.json').write_text(json.dumps(rows,ensure_ascii=False,indent=2)+'\n')
         print('CSS simulator PASS:',len(rows),'static/script flows')

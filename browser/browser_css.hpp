@@ -12,6 +12,7 @@
 
 namespace browser::css {
 inline constexpr std::size_t max_bytes = 8192, max_rules = 64, max_selector = 64;
+inline constexpr std::size_t cache_slots = 16, max_cache_key = 256;
 inline bool ws(char c) { return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\f'; }
 inline char lower(char c) { return c >= 'A' && c <= 'Z' ? char(c + 32) : c; }
 inline std::string_view trim(std::string_view s) {
@@ -134,7 +135,7 @@ inline Declarations declarations(std::string_view source) {
                     scale = -*n; // relative to parent, resolved only once on entry
             } else if (value.size() > 2 && equal(value.substr(value.size()-2),"px")) {
                 if (auto n = integer(value.substr(0,value.size()-2)); n && *n > 0 && *n <= 512)
-                    scale = *n * 100 / 15; // CSS px adapt with the reader's chosen font
+                    scale = (*n * 100 + 14) / 15; // avoid losing a pixel at the default reading size
             }
             if (scale) out.put(size, scale, important);
         } else if (equal(name,"white-space")) {
@@ -202,25 +203,38 @@ class Sheet {
     struct Rule { std::string selector; Declarations declarations; unsigned specificity; };
     std::vector<Rule> rules_;
     std::size_t bytes_ = 0;
+    struct CacheEntry {
+        std::string key;
+        std::array<std::uint16_t,4> lengths{};
+        Declarations result;
+        std::uint32_t hash = 0;
+        bool valid = false;
+    };
+    mutable std::vector<CacheEntry> cache_;
   public:
     std::size_t rule_count() const { return rules_.size(); }
     bool empty() const { return rules_.empty(); }
     void parse(std::string_view source) {
         source = source.substr(0,max_bytes-bytes_); bytes_ += source.size();
-        std::string cleaned; cleaned.reserve(source.size());
+        if (source.empty() || rules_.size() == max_rules) return;
+        cache_.clear(); // A later style block can override a previously cached match.
+        std::string cleaned;
         char quote = 0;
-        for (std::size_t i = 0; i < source.size(); ++i) {
-            char c = source[i];
-            if (quote) {
-                cleaned += c;
-                if (c == '\\' && i + 1 < source.size()) cleaned += source[++i];
-                else if (c == quote) quote = 0;
-            } else if (source.substr(i,2) == "/*") {
-                auto end = source.find("*/",i+2); if (end == source.npos) break;
-                cleaned += ' '; i = end + 1;
-            } else { cleaned += c; if (c == '\'' || c == '"') quote = c; }
+        if (source.find("/*") != source.npos) {
+            cleaned.reserve(source.size());
+            for (std::size_t i = 0; i < source.size(); ++i) {
+                char c = source[i];
+                if (quote) {
+                    cleaned += c;
+                    if (c == '\\' && i + 1 < source.size()) cleaned += source[++i];
+                    else if (c == quote) quote = 0;
+                } else if (source.substr(i,2) == "/*") {
+                    auto end = source.find("*/",i+2); if (end == source.npos) break;
+                    cleaned += ' '; i = end + 1;
+                } else { cleaned += c; if (c == '\'' || c == '"') quote = c; }
+            }
+            source = cleaned;
         }
-        source = cleaned;
         while (!source.empty() && rules_.size() < max_rules) {
             const auto open = source.find('{'); if (open == source.npos) break;
             auto selectors = trim(source.substr(0,open));
@@ -251,6 +265,28 @@ class Sheet {
     }
     Declarations cascade(std::string_view tag, std::string_view id, std::string_view classes,
                          std::string_view inline_style) const {
+        if (rules_.empty() && inline_style.empty()) return {};
+        const std::array<std::string_view,4> parts{tag,id,classes,inline_style};
+        const auto key_size = tag.size()+id.size()+classes.size()+inline_style.size();
+        CacheEntry *slot = nullptr;
+        std::uint32_t hash = 2166136261u;
+        if (key_size <= max_cache_key) {
+            for (auto part : parts) {
+                hash = (hash ^ std::uint32_t(part.size())) * 16777619u;
+                for (unsigned char c : part) hash = (hash ^ c) * 16777619u;
+            }
+            if (cache_.empty()) cache_.resize(cache_slots);
+            slot = &cache_[hash % cache_slots];
+            if (slot->valid && slot->hash == hash && slot->key.size() == key_size) {
+                bool same = true; std::size_t offset = 0;
+                for (std::size_t i=0; i<parts.size(); ++i) {
+                    same &= slot->lengths[i] == parts[i].size() &&
+                        std::string_view(slot->key).substr(offset,slot->lengths[i]) == parts[i];
+                    offset += slot->lengths[i];
+                }
+                if (same) return slot->result;
+            }
+        }
         Declarations result;
         std::array<unsigned,property_count> ranks{};
         auto apply = [&](const Declarations &props, unsigned score) {
@@ -266,6 +302,16 @@ class Sheet {
         for (const auto &rule : rules_)
             if (matches(rule.selector,tag,id,classes)) apply(rule.declarations,rule.specificity);
         if (!inline_style.empty()) apply(declarations(inline_style),10000);
+        if (slot) {
+            // Own exact key bytes; never retain views into the tokenizer's tag
+            // buffer. Oversized attributes bypass the cache without truncation.
+            std::string key; key.reserve(key_size);
+            for (std::size_t i=0; i<parts.size(); ++i) {
+                key += parts[i]; slot->lengths[i] = std::uint16_t(parts[i].size());
+            }
+            slot->key = std::move(key); slot->hash = hash;
+            slot->result = result; slot->valid = true;
+        }
         return result;
     }
 };

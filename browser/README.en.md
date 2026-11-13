@@ -17,6 +17,11 @@ font sizes follow the reading font within 0.5–2 times its size. Preformatted t
 wraps, and light colors darken against the fixed reading background. External
 stylesheets, complex selectors, media queries, full box layout and retroactive
 restyling of already emitted content remain unsupported.
+Version 0.1.10 caches up to 16 repeated style matches with at most 256 bytes per
+key; larger attributes bypass the cache. Cached declarations still resolve
+relative font sizes and inherited values per element, and later style blocks
+invalidate cached matches. Comment-free CSS is parsed without a copied buffer;
+plain text and unstyled pages do not allocate a match cache.
 Radio groups, disabled controls, explicit empty checkbox values and field
 `aria-label` captions are supported. RSS 2.0 and Atom feeds display linked
 articles and summaries within an 8 KiB per-entry limit. Navigation includes

@@ -4,7 +4,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
 
 PAGE = '''<!doctype html><html><head><meta charset="utf-8"><title>轻量网页排版</title>
-<style>
+<style id="theme">
 .title {font-size:24px;text-align:center;color:#9c2436}
 .article {color:#2468ac} .gone {display:none}
 .poem {white-space:pre-wrap;text-align:center}
@@ -20,6 +20,7 @@ PAGE = '''<!doctype html><html><head><meta charset="utf-8"><title>轻量网页�
 <p class="action"><a href="/target">继续阅读 Next</a></p>
 </body></html>'''
 SCRIPT = "<script>setTimeout(()=>{document.getElementById('message').textContent='脚本更新后保留样式 / Updated';},0);</script>"
+RESTYLE = "<script>setTimeout(()=>{document.getElementById('theme').textContent+=' .title {color:#8030a0}';document.getElementById('message').textContent='样式更新后重新匹配 / Restyled';},0);</script>"
 
 class Fixture:
     def __init__(self, bind='127.0.0.1', port=0):
@@ -31,6 +32,7 @@ class Fixture:
                 fixture.requests[self.path] += 1
                 if self.path == '/target': body = '<h1>Navigation PASS</h1>'
                 elif self.path == '/script': body = PAGE.replace('</body>',SCRIPT+'</body>')
+                elif self.path == '/restyle': body = PAGE.replace('</body>',RESTYLE+'</body>')
                 elif self.path in ('/', '/static'): body = PAGE
                 else: body = '<p>Unexpected hidden request</p>'
                 data = body.encode()

@@ -21,6 +21,28 @@ static void same(const Document &a, const Document &b) {
     }
 }
 int main() {
+    {
+        const auto updated = parse("<style>.item{color:blue}</style><p class=item>Before</p>"
+                                   "<style>.item{color:red}</style><p class=item>After</p>");
+        assert(at(updated,"Before").text_style.color == 0x0000ffff);
+        assert(at(updated,"After").text_style.color == 0xff0000ff);
+        const auto inherited = parse("<style>.relative{font-size:120%}</style>"
+            "<div style='font-size:50%;color:red'><span class=relative>Small</span></div>"
+            "<div style='font-size:200%;color:blue'><span class=relative>Large</span></div>");
+        assert(Layout::font(at(inherited,"Small"),15) == 9 && at(inherited,"Small").text_style.color == 0xff0000ff);
+        assert(Layout::font(at(inherited,"Large"),15) == 30 && at(inherited,"Large").text_style.color == 0x0000ffff);
+        const auto oversized = parse("<p id='"+std::string(300,'x')+"' style='color:#2468ac'>Long key</p>");
+        assert(at(oversized,"Long").text_style.color == 0x2468acff);
+        std::string sheet="<style>", content;
+        for(int i=0;i<40;++i) sheet+=".n"+std::to_string(i)+"{font-size:"+std::to_string(15+i%10)+"px}";
+        sheet+="</style>";
+        for(int i=0;i<100;++i)content+="<p class=n"+std::to_string(i%40)+">Word"+std::to_string(i)+"</p>";
+        const auto many=parse(sheet+content,1);
+        for(int i=0;i<100;++i)assert(Layout::font(at(many,"Word"+std::to_string(i)+"\n"),15)==15+(i%40)%10);
+        const auto entities = parse("<style>.note.hot{color:green}</style>"
+            "<p class='note&#32;hot'>Decoded</p><p class='note hot'>Same</p>",1);
+        assert(at(entities,"Decoded").text_style == at(entities,"Same").text_style);
+    }
     assert(css::readable_color(0xffffffff) == 0x787878ff);
     assert(css::readable_color(0x2468acff) == 0x2468acff);
     const auto root = parse("<html id=root><head><style>html#root{color:#2468ac;font-size:120%}</style>"
