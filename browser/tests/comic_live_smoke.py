@@ -22,7 +22,7 @@ def main():
     a = p.parse_args()
     b = Browser(a.simulator, a.package, a.publisher_key, a.ime_package, a.output,
                 width=480, height=480, corner=0)
-    rows = []
+    rows = []; failures = []
 
     def loaded(mark):
         b.wait(lambda: 'BROWSER DONE status=' in b.logs()[mark:] or
@@ -76,13 +76,33 @@ def main():
             index, page, count = reader(mark)
             assert page == expected
             image = decoded(mark, index)
-            b.shot('pepper-page' + str(expected-1))
-            rows.append(dict(site='peppercarrot', check='original chapter image', page=expected-1, **image))
+            if expected < 5:
+                assert image['width'] > 128 and image['height'] > 256, image
+            b.shot('pepper-page' + str(expected-1) if expected < 5 else 'pepper-footer')
+            rows.append(dict(site='peppercarrot',
+                             check='original comic page' if expected < 5 else 'original chapter footer image',
+                             reader_page=expected, **image))
         mark = len(b.logs()); b.nav(1); loaded(mark)
         index, page, count = reader(mark)
         assert page == 1 and 'ep02_Rainbow-potions.html' in b.logs()[mark:]
         image = decoded(mark, index); b.shot('pepper-next-chapter')
-        rows.append(dict(site='peppercarrot', check='original rel=next chapter opens in reader', **image))
+        rows.append(dict(site='peppercarrot', check='original rel=next chapter title opens in reader', **image))
+        mark = len(b.logs()); b.nav(1)
+        index, page, count = reader(mark)
+        assert page == 2
+        try:
+            image = decoded(mark, index)
+            assert image['width'] > 128 and image['height'] > 256, image
+        except AssertionError:
+            # Keep testing the independent site, but retain a failing exit
+            # status. A chapter header alone does not prove its pages load.
+            failures.append('Pepper & Carrot next-chapter comic page did not load')
+            rows.append(dict(site='peppercarrot', check='original next-chapter comic page',
+                             passed=False, errors=re.findall(r'BROWSER IMAGE ERROR[^\n]*', b.logs()[mark:])))
+            b.shot('pepper-next-chapter-comic-failed')
+        else:
+            b.shot('pepper-next-chapter-comic')
+            rows.append(dict(site='peppercarrot', check='original next-chapter comic page', passed=True, **image))
         b.nav(4)
         mark = len(b.logs()); b.navigate('https://xkcd.com/#comic'); loaded(mark)
         index, page, count, opened = open_reader()
@@ -94,6 +114,7 @@ def main():
         rows.append(dict(site='xkcd', url='https://xkcd.com/#comic',
                          check='fragment-selected original comic image', **image))
         assert 'BROWSER DRAW ERROR' not in b.logs() and 'PXA Guest exception:' not in b.logs()
+        assert not failures, '; '.join(failures)
         print('live comic reading PASS:', len(rows), 'checks', flush=True)
     finally:
         (a.output/'results.json').write_text(json.dumps(rows, ensure_ascii=False, indent=2))

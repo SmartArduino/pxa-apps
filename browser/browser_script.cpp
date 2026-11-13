@@ -286,7 +286,11 @@ struct Page::Impl {
                 if (body.size > 8192) return JS_ThrowRangeError(ctx, "form limit");
                 next.post = method.view() == "post";
                 if (next.post) next.body = body.view();
-                else if (body.size) { next.url += next.url.find('?') == next.url.npos ? '?' : '&'; next.url += body.view(); }
+                else {
+                    auto changed = browser::form_query_url(next.url, body.view());
+                    if (!changed) return JS_ThrowRangeError(ctx, "form URL limit");
+                    next.url = std::move(*changed);
+                }
             }
             self.navigation = std::move(next); return JS_UNDEFINED;
         }

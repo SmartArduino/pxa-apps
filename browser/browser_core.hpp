@@ -144,7 +144,7 @@ inline std::string encode(std::string_view s, bool form = false) {
     std::string r;
     for (unsigned char c : s) {
         if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
-            c == '-' || c == '_' || c == '.' || c == '~')
+            c == '-' || c == '_' || c == '.' || (form ? c == '*' : c == '~'))
             r += char(c);
         else if (c == ' ' && form)
             r += '+';
@@ -1051,8 +1051,8 @@ class Parser {
                 form_ = int(doc_.forms.size());
                 doc_.forms.push_back(
                     {url ? *url : "", method == "post",
-                     bool(url) && (method.empty() || method == "get" || method == "post") &&
-                         (enctype.empty() || enctype == "application/x-www-form-urlencoded")});
+                     bool(url) && method != "dialog" &&
+                         (method != "post" || (enctype != "multipart/form-data" && enctype != "text/plain"))});
             }
         }
         if ((n == "input" || n == "button") && !t.closing && !t.has("disabled") && form_ >= 0 &&
@@ -1063,7 +1063,7 @@ class Parser {
             auto type = lowercase(t.get("type"));
             if (t.has("disabled")) return;
             if (type == "reset" || type == "button") return;
-            if (type == "file" || type == "image") {
+            if (n == "input" && (type == "file" || type == "image")) {
                 if (form_ >= 0) doc_.forms[form_].supported = false;
                 return;
             }
@@ -1261,6 +1261,19 @@ struct Submission {
     std::string url, body;
     bool post = false;
 };
+// Form GET replaces the query while retaining an in-page destination. Keep
+// ordinary link/location navigation separate from this submission behavior.
+inline std::expected<std::string, Error> form_query_url(std::string_view action,
+                                                        std::string_view body) {
+    const auto hash = action.find('#');
+    const auto path = action.substr(0, hash);
+    const auto fragment = hash == action.npos ? std::string_view{} : action.substr(hash);
+    const auto prefix = path.substr(0, path.find('?'));
+    if (prefix.size() + 1 + body.size() + fragment.size() > max_url)
+        return std::unexpected(Error::limit);
+    std::string result(prefix); result += '?'; result += body; result += fragment;
+    return result;
+}
 inline std::expected<Submission, Error> submit(const Document &doc, std::size_t form,
                                                int clicked = -1) {
     if (form >= doc.forms.size() || !doc.forms[form].supported)
@@ -1276,22 +1289,17 @@ inline std::expected<Submission, Error> submit(const Document &doc, std::size_t 
             ((f.type == FieldType::checkbox || f.type == FieldType::radio) && !f.checked))
             continue;
         auto pair = encode(f.name, true) + "=" + encode(f.value, true);
-        if (out.body.size() + pair.size() + 1 > 2048)
+        if (out.body.size() + pair.size() + (out.body.empty() ? 0 : 1) > 2048)
             return std::unexpected(Error::limit);
         if (!out.body.empty())
             out.body += '&';
         out.body += pair;
     }
     if (!out.post) {
-        out.url = std::string(transport_url(out.url));
-        auto q = out.url.find('?');
-        if (q != out.url.npos)
-            out.url.resize(q);
-        out.url += '?';
-        out.url += out.body;
+        auto target = form_query_url(out.url, out.body);
+        if (!target) return std::unexpected(target.error());
+        out.url = std::move(*target);
         out.body.clear();
-        if (out.url.size() > max_url)
-            return std::unexpected(Error::limit);
     }
     return out;
 }

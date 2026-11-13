@@ -14,5 +14,5 @@
     "资讯订阅",
     "书签"
   ],
-  "changelog": "降低脚本页空闲开销：无变化的定时器、微任务和点击回调不再反复生成 DOM 快照。完善动态点击事件绑定与移除，修复 XHR 回调中新加的点击事件可能失效、移除监听器后点击区残留，以及监听器已满时重复注册误报超限。保留原有脚本、内存与图片预算。\n\nAvoids DOM snapshots for unchanged callbacks. Synchronizes dynamic click handlers, including XHR-bound handlers, removes stale hit regions, and keeps duplicate listeners within the existing quota. Script, memory and image budgets remain unchanged."
+  "changelog": "完善基本表单：修复大写 SUBMIT、普通按钮误提交、禁用按钮和提交按钮值丢失；按 DOM 顺序发送同名字段，统一 UTF-8 表单编码，GET 正确替换旧查询并保留锚点。补充有界 requestSubmit 与 submitter，区分直接 submit 和可取消提交事件，减少字段收集的中间数组与编码回调。图片超限时明确显示预算提示。保留原有资源预算。\n\nImproves bounded form activation, successful submitter values, DOM field order, UTF-8 encoding and GET query replacement. Adds requestSubmit and submitter support, fixes direct submit event behavior, and reduces intermediate arrays and encoding callbacks without increasing resource limits. Image quota failures now show a budget message."
 }

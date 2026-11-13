@@ -46,7 +46,7 @@ More → Comic reader provides width-fit reading, image navigation, screen fit,
 dragging and 1/2/4/8× zoom by tapping the header. Declared `rel=next/prev` links
 continue into adjacent chapters. Detail mode downloads and decodes again with
 up to 262144 pixels and retains at most one detailed image. Normal decoding
-keeps its 32768-pixel limit; encoded images remain capped at 512 KiB. Closing
+keeps its 32768-pixel limit; encoded images remain capped at 512 KiB. Loading a chapter title does not verify its comic pages, and memory-saving mode does not reduce the server image's encoded size. Closing
 restores the webpage position. Images still depend on the Host budget; WebP and
 complex scripted/encrypted readers remain unsupported. Chapter pages can retain
 up to 96 bounded image descriptors, with a visible warning when images are omitted.
@@ -98,6 +98,8 @@ tools/dev.sh sim browser --source-root local/pxa-apps
 tools/app.sh build browser --target esp32s3
 bash local/pxa-apps/browser/tests/test.sh
 ```
+
+`tests/run_regressions.py` runs the form, event, style, responsive-image, CSS, compatibility, comic and find suites sequentially, starts the base fixture on `127.0.0.1:31878`, and saves each suite's exit status. Repeat `--suite` to select suites; add `--live` for author-site network checks. See `--help` for simulator, TRACE package, publisher public key, IME package and output arguments. Put output under ignored `local/artifacts/`.
 
 The updated standalone DevKit can run `pxa run pxa-apps/browser`.
 Network access asks for permission. Local HTTP addresses must include `http://`.
@@ -175,6 +177,8 @@ Explicit `hidden` and inline `display:none` content is excluded. Repeated target
 Inline script styles support property assignment, cssText, setProperty, getPropertyValue, getPropertyPriority, removeProperty, length and item. Replacing/removing the style attribute clears old declarations while preserving existing style references. Style-only edits schedule a repaint; unchanged assignments stay idle. Declarations allocate lazily, with at most 32 properties and 4096 serialized UTF-16 code units per element, with at most 16 nested bracket groups in values; quota failures preserve the previous value. Parsing preserves quoted/parenthesized semicolons and recognizes !important. Snapshots reuse cached declaration text. This bounded API does not provide full CSSOM, shorthand expansion or CSS variable evaluation; rendering still applies only the documented text CSS subset.
 
 After a page is painted, callbacks start DOM snapshots only when content, styles or click targets change. Empty callbacks, unchanged text/styles and duplicate listeners do not start snapshots. Dynamic onclick and click-listener registration/removal update hit regions, including handlers attached from an XHR callback. Removing the last handler restores ordinary content. Assigning null/undefined to onclick disables an inline handler; setting the same onclick attribute again reactivates it. Each event type retains its 16-listener limit; duplicate functions consume no extra slot. This remains a bounded event API, not a complete DOM event model.
+
+Basic forms serialize inputs and the activated submit button in DOM tree order, preserving duplicate-name order, button values, checked state and UTF-8 form encoding. Disabled controls do not activate; ordinary/reset buttons do not submit. GET replaces an existing action query and retains its fragment; POST retains both. Scripts can reflect action/method/enctype, call submit() directly, or use bounded requestSubmit([button]) with a cancellable submit event and event.submitter. Full constraint validation is not implemented. Static forms retain 24 fields and a 2 KiB encoded body; script forms retain the existing DOM and 8 KiB body limits. GET URLs remain capped at 1024 bytes. Default-value reset, external form associations, submitter override attributes, file uploads, full select/textarea and multipart/text/plain POST remain unsupported; reset behavior can be supplied by page scripts.
 
 The directory includes TXT Books, 10000txt, Nunubook, Sina Mobile, Gmanhua's catalog, hao123, 2345 and WeRead. Gmanhua chapter pictures still need unsupported browser APIs. WeRead uses an old Kindle UA to request the official lightweight page. Dedicated login/shelf/reader page replacements have been removed; original-page login and reading remain unverified. Earlier QR/login evidence came from the removed adapter and does not prove original-page compatibility. See the [current validation report](docs/original-pages-images-20261016.zh-CN.md).
 

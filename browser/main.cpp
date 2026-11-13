@@ -1104,9 +1104,10 @@ struct App {
             images[slot].index = -1;
             image_states[index] = ImageState::failed;
             set_status(result.error() == pxa::Error::unsupported ? "格式不支持 · 需 PNG/JPEG/GIF" :
-                comic_reading && comic_detail ? "清晰图片未加载 · 可切回省存重试" :
                 result.error()==pxa::Error::limit_exceeded ?
-                "图片超过当前解码预算" : "图片未加载 · 轻点可重试");
+                "图片超过当前加载预算" :
+                comic_reading && comic_detail ? "清晰图片未加载 · 可切回省存重试" :
+                "图片未加载 · 轻点可重试");
             log("BROWSER IMAGE ERROR index=" + std::to_string(index) +
                 " code=" + std::to_string(int(result.error())));
         }

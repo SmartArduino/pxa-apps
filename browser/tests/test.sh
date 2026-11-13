@@ -18,6 +18,9 @@ fi
 "${CXX:-clang++}" "${flags[@]}" "$here/compat_test.cpp" -o "$work/compat-test"
 "$work/compat-test"
 
+"${CXX:-clang++}" "${flags[@]}" "$here/forms_test.cpp" -o "$work/forms-test"
+"$work/forms-test"
+
 "${CXX:-clang++}" "${flags[@]}" "$here/css_test.cpp" -o "$work/css-test"
 "$work/css-test"
 

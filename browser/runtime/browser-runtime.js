@@ -194,11 +194,20 @@
         return !e.defaultPrevented;
     }
     function clickTarget(node) {
+        if (disabledControl(node)) return false;
         const attrs = node._attrs, listeners = node._listeners && node._listeners.click;
         return !!(node.nodeName === 'A' || node.nodeName === 'BUTTON' ||
             attrs && attrs.type && attrs.type.toLowerCase() === 'submit' ||
             typeof node._onclick === 'function' ||
             attrs && own(attrs, 'onclick') && node._onclick === undefined || listeners && listeners.length);
+    }
+    function disabledControl(node) {
+        return !!node && (node.nodeName === 'INPUT' || node.nodeName === 'BUTTON') && node.disabled;
+    }
+    function submitControl(node) {
+        const type = node.type.toLowerCase();
+        return node.nodeName === 'INPUT' ? type === 'submit' :
+            node.nodeName === 'BUTTON' && type !== 'button' && type !== 'reset';
     }
     function listen(type, callback) {
         if (typeof callback !== 'function') return;
@@ -329,7 +338,7 @@
             changed();
         }
     };
-    for (const key of ['id','name','value','src','srcset','sizes','media','loading','href','type','className','alt','title']) {
+    for (const key of ['id','name','value','src','srcset','sizes','media','loading','href','type','className','alt','title','action']) {
         const attribute = key === 'className' ? 'class' : key;
         Object.defineProperty(Node.prototype, key, {
             get() { const attrs=this._attrs;
@@ -338,6 +347,14 @@
                     (this.type.toLowerCase()==='radio' || this.type.toLowerCase()==='checkbox') ? 'on' : ''; },
             set(v) { this.setAttribute(attribute, v); }});
     }
+    for (const key of ['method','enctype']) Object.defineProperty(Node.prototype, key, {
+        get() {
+            const value = (this.getAttribute(key) || '').toLowerCase();
+            return key === 'method' ? (value === 'post' || value === 'dialog' ? value : 'get') :
+                (value === 'multipart/form-data' || value === 'text/plain' ? value : 'application/x-www-form-urlencoded');
+        },
+        set(value) { this.setAttribute(key, value); }
+    });
     for (const key of ['checked','disabled','hidden']) Object.defineProperty(Node.prototype, key, {
         get() { return this.hasAttribute(key); },
         set(v) { if (v) this.setAttribute(key, ''); else this.removeAttribute(key); }});
@@ -468,15 +485,57 @@
             xhr.onerror = () => reject(new TypeError('network error')); xhr.send(options.body || '');
         });
     };
-    function submit(form) {
-        if (!dispatch(form, event('submit'), true)) return;
-        const values = find(form, n => n.nodeName === 'INPUT' && n.name && !n.disabled, true)
-            .filter(n => formOwner(n)===form && n.type.toLowerCase() !== 'submit' &&
-                ((n.type.toLowerCase() !== 'checkbox' && n.type.toLowerCase() !== 'radio') || n.checked))
-            .map(n => encodeURIComponent(n.name) + '=' + encodeURIComponent(n.value)).join('&');
-        native.navigate(form.getAttribute('action') || native.url, (form.getAttribute('method') || 'get').toLowerCase(), values);
+    const simpleFormText = /^[A-Za-z0-9*._-]*$/;
+    function formEncode(text) {
+        if (simpleFormText.test(text)) return text;
+        // Native string replacement avoids a retained JS callback frame for
+        // every punctuation mark, including during an onsubmit -> submit().
+        return encodeURIComponent(text).replaceAll('%20','+').replaceAll('!','%21')
+            .replaceAll("'",'%27').replaceAll('(','%28').replaceAll(')','%29').replaceAll('~','%7E');
     }
-    Node.prototype.submit = function () { submit(this); };
+    function submit(form, submitter = null, fireEvent = true) {
+        if (form.nodeName !== 'FORM') throw new TypeError('form required');
+        if (fireEvent && form._submitting) return;
+        if (fireEvent) form._submitting = true;
+        try {
+            if (fireEvent) {
+                const e = event('submit'); e.submitter = submitter;
+                if (!dispatch(form, e, true)) return;
+            }
+            const method = (form.method || 'get').toLowerCase(), encoding = form.enctype.toLowerCase();
+            if (method === 'dialog') return;
+            if (method === 'post' && (encoding === 'multipart/form-data' || encoding === 'text/plain'))
+                throw new TypeError('form encoding unsupported');
+            // One bounded traversal, in tree order. Nested forms keep their
+            // own controls; no intermediate find/filter/map node arrays.
+            const todo = [form], parts = []; let visited = 0, bytes = 0;
+            while (todo.length) {
+                const n = todo.pop();
+                if (++visited > 512) throw new RangeError('form traversal limit');
+                if (n !== form && n.nodeName === 'FORM') continue;
+                if ((n.nodeName === 'INPUT' || n.nodeName === 'BUTTON') && n.name && !n.disabled) {
+                    const type = n.type.toLowerCase();
+                    const button = n.nodeName === 'BUTTON' || type === 'submit' || type === 'button' || type === 'reset' || type === 'image';
+                    const include = button ? n === submitter : ((type !== 'checkbox' && type !== 'radio') || n.checked);
+                    if (include) {
+                        const pair = formEncode(n.name) + '=' + formEncode(n.value);
+                        bytes += pair.length + (parts.length ? 1 : 0);
+                        if (bytes > 8192) throw new RangeError('form body limit');
+                        parts.push(pair);
+                    }
+                }
+                for (let i = n.childNodes.length - 1; i >= 0; --i) todo.push(n.childNodes[i]);
+            }
+            native.navigate(form.action || native.url, method === 'post' ? 'post' : 'get', parts.join('&'));
+        } finally { if (fireEvent) form._submitting = false; }
+    }
+    Node.prototype.submit = function () { submit(this, null, false); };
+    Node.prototype.requestSubmit = function (submitter = null) {
+        if (submitter !== null && (!(submitter instanceof Node) || !submitControl(submitter)))
+            throw new TypeError('submit button required');
+        if (submitter && formOwner(submitter) !== this) throw new TypeError('submit button belongs to another form');
+        submit(this, submitter);
+    };
     function snapshot(rootNode, render) {
         return {todo:[rootNode],endings:[''],visited:0,render,hits:render?Object.create(null):null};
     }
@@ -505,7 +564,8 @@
             const attributes=n._attrs;
             const type=attributes && attributes.type ? attributes.type.toLowerCase() : '';
             let tag=n.nodeName.toLowerCase(), attrs='', style='';
-            if (render && (tag==='a' || tag==='button' || type==='submit' || typeof n._onclick==='function' ||
+            const disabled=(tag==='input' || tag==='button') && attributes && own(attributes,'disabled');
+            if (render && !disabled && (tag==='a' || tag==='button' || type==='submit' || typeof n._onclick==='function' ||
                     attributes && own(attributes,'onclick') && n._onclick===undefined ||
                     n._listeners && n._listeners.click && n._listeners.click.length)) {
                 if (!n._hit) n._hit=nextHit++;
@@ -513,7 +573,7 @@
                 state.hits[n._hit]=n;attrs+=' data-pxa-click="'+n._hit+'"';
                 if (tag!=='img' && tag!=='input' || type==='submit') tag='a';
             }
-            if (render && tag==='input') {
+            if (render && tag==='input' && !disabled) {
                 if (!n._hit) n._hit=nextHit++;
                 state.hits[n._hit]=n;attrs+=' data-pxa-field="'+n._hit+'"';
             }
@@ -538,6 +598,7 @@
         handlerConstructor: Function,
         handler(id, type) {
             const node=hits[id];
+            if (type === 'click' && disabledControl(node)) return null;
             return node && node['on'+type]===undefined && node._attrs && node._attrs['on'+type] ? node : null;
         },
         open(tag, attributes, empty) {
@@ -594,12 +655,11 @@
         },
         cancelMarkup() { painting=null; },
         click(id) {
-            const node = hits[id]; if (!node) return;
+            const node = hits[id]; if (!node || disabledControl(node)) return;
             if (!dispatch(node, event('click'), true)) return;
+            if (disabledControl(node)) return;
             if (node.nodeName === 'A' && node.href) native.navigate(node.href);
-            else if (node.nodeName === 'BUTTON' || node.type === 'submit') {
-                for (let at = node.parentNode; at; at = at.parentNode) if (at.nodeName === 'FORM') { submit(at); break; }
-            }
+            else if (submitControl(node)) { const form = formOwner(node); if (form) submit(form, node); }
         },
         field(id, value, checked) { const node = hits[id]; if (node) { node.value = value; node.checked = checked; dispatch(node, event('input'), true); dispatch(node, event('change'), true); } }
     };
