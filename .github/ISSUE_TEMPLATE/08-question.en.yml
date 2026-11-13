@@ -1,0 +1,63 @@
+name: English | Usage question
+description: Ask about configuration, integration or development.
+title: '[Question] '
+body:
+  - type: markdown
+    attributes:
+      value: |-
+        This repository covers: PXA apps, games, store client and shared application code.
+
+        - [pxa-workspace](https://github.com/SmartArduino/pxa-workspace/issues/new?template=08-question.en.yml): ESP firmware, board drivers, flashing, workspace scripts and display profiles.
+        - [pxa-system](https://github.com/SmartArduino/pxa-system/issues/new?template=08-question.en.yml): System runtime, services, UI, SDK, DevKit, Agent Kit, packaging tools and simulator implementation.
+
+        If unsure, report what you observed and link related issues. Please avoid duplicate reports.
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched [existing issues](https://github.com/SmartArduino/pxa-apps/issues?q=is%3Aissue) and
+            found no duplicate.
+          required: true
+  - type: input
+    id: target
+    attributes:
+      label: Topic
+      description: Name the module, command, board or app; use unknown if unsure.
+      placeholder: App ID, directory name or common module
+    validations:
+      required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: Question and goal
+      description: Describe what you want to accomplish and where you need help.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Versions and environment
+      description: Include only relevant details; use unknown if unavailable.
+      placeholder: |-
+        App ID / directory and app version:
+        Install source (store / release / local build):
+        Firmware or simulator / SDK version:
+        Board / display profile / input method:
+    validations:
+      required: true
+  - type: textarea
+    id: attempts
+    attributes:
+      label: What you tried
+      description: Describe documentation consulted, commands tried and results; remove keys, tokens and personal
+        data from logs.
+    validations:
+      required: false
+  - type: textarea
+    id: additional
+    attributes:
+      label: Attachments and references
+      description: Add screenshots, a minimal example or related issues if useful.
+    validations:
+      required: false

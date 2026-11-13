@@ -1,0 +1,56 @@
+name: 中文｜文档反馈
+description: 反馈文档错误、缺漏或示例问题
+title: '[文档] '
+body:
+  - type: markdown
+    attributes:
+      value: |-
+        本仓库受理：PXA 应用、游戏、商城客户端与 common 共享应用代码。
+
+        - [pxa-workspace](https://github.com/SmartArduino/pxa-workspace/issues/new?template=03-documentation.zh-CN.yml)：ESP 固件、板级驱动、烧录、工作区脚本与显示配置。
+        - [pxa-system](https://github.com/SmartArduino/pxa-system/issues/new?template=03-documentation.zh-CN.yml)：系统运行库、服务、UI、SDK、DevKit、Agent Kit、打包工具与模拟器实现。
+
+        不确定归属时，可按观察到的问题提交，并关联其他仓库中的相关 Issue；同一问题请勿重复提交。
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: 提交前检查
+      options:
+        - label: 我已搜索[现有 Issue](https://github.com/SmartArduino/pxa-apps/issues?q=is%3Aissue)，未找到相同反馈。
+          required: true
+  - type: input
+    id: location
+    attributes:
+      label: 文档位置
+      description: 提供页面链接或仓库文件路径，并注明章节。
+      placeholder: 页面链接或仓库路径，例如 README.md、docs/...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 文档与产品版本
+      description: 注明阅读的文档分支或版本及使用的产品版本；无法确认时可填写“不清楚”。
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: 文档问题
+      description: 指出错误、缺失、歧义或无法执行的步骤；若命令失败，请给出原命令和报错。
+    validations:
+      required: true
+  - type: textarea
+    id: correction
+    attributes:
+      label: 建议内容
+      description: 描述应如何修改或补充；可以只说明需要解释的内容。
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: 补充信息
+      description: 可附运行环境、截图、参考链接或相关 Issue。
+    validations:
+      required: false

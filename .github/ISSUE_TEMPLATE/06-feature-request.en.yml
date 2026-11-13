@@ -1,0 +1,71 @@
+name: English | Feature request
+description: Suggest a feature or improvement with a use case.
+title: '[Feature] '
+body:
+  - type: markdown
+    attributes:
+      value: |-
+        This repository covers: PXA apps, games, store client and shared application code.
+
+        - [pxa-workspace](https://github.com/SmartArduino/pxa-workspace/issues/new?template=06-feature-request.en.yml): ESP firmware, board drivers, flashing, workspace scripts and display profiles.
+        - [pxa-system](https://github.com/SmartArduino/pxa-system/issues/new?template=06-feature-request.en.yml): System runtime, services, UI, SDK, DevKit, Agent Kit, packaging tools and simulator implementation.
+
+        If unsure, report what you observed and link related issues. Please avoid duplicate reports.
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched [existing issues](https://github.com/SmartArduino/pxa-apps/issues?q=is%3Aissue) and
+            found no duplicate.
+          required: true
+  - type: input
+    id: app
+    attributes:
+      label: App or shared module
+      description: Enter app IDs, directories or a common module; list multiple if needed, or use unknown if unsure.
+      placeholder: e.g. store, pixel-dungeon, common/cpp
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - App behavior or gameplay
+        - UI, input and display adaptation
+        - Performance, audio and resources
+        - Saves, data and settings
+        - Store client
+        - App builds and shared common code
+        - Unsure or other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Use case and problem
+      description: Describe who encounters the limitation, when it occurs and its impact.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed improvement
+      description: Describe the desired behavior and how to judge success; an implementation plan is optional.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Describe current approaches, workarounds and their limitations.
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Environment and references
+      description: Add relevant versions, boards or apps, compatibility requirements, screenshots and related issues.
+    validations:
+      required: false

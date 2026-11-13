@@ -1,0 +1,57 @@
+name: English | Documentation
+description: Report documentation errors, gaps or example issues.
+title: '[Docs] '
+body:
+  - type: markdown
+    attributes:
+      value: |-
+        This repository covers: PXA apps, games, store client and shared application code.
+
+        - [pxa-workspace](https://github.com/SmartArduino/pxa-workspace/issues/new?template=07-documentation.en.yml): ESP firmware, board drivers, flashing, workspace scripts and display profiles.
+        - [pxa-system](https://github.com/SmartArduino/pxa-system/issues/new?template=07-documentation.en.yml): System runtime, services, UI, SDK, DevKit, Agent Kit, packaging tools and simulator implementation.
+
+        If unsure, report what you observed and link related issues. Please avoid duplicate reports.
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched [existing issues](https://github.com/SmartArduino/pxa-apps/issues?q=is%3Aissue) and
+            found no duplicate.
+          required: true
+  - type: input
+    id: location
+    attributes:
+      label: Documentation location
+      description: Provide a page URL or repository path and the section.
+      placeholder: Page URL or repository path, e.g. README.en.md or docs/...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Documentation and product versions
+      description: Include the documentation branch/version and product version; use unknown if unavailable.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Documentation problem
+      description: Describe errors, omissions, ambiguity or failing steps; include the command and error when relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: correction
+    attributes:
+      label: Suggested correction
+      description: Suggest a correction or describe what needs explanation.
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add environment details, screenshots, references or related issues.
+    validations:
+      required: false

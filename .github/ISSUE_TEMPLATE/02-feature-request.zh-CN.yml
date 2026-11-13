@@ -1,0 +1,70 @@
+name: 中文｜功能建议
+description: 提出有明确场景的功能或改进建议
+title: '[建议] '
+body:
+  - type: markdown
+    attributes:
+      value: |-
+        本仓库受理：PXA 应用、游戏、商城客户端与 common 共享应用代码。
+
+        - [pxa-workspace](https://github.com/SmartArduino/pxa-workspace/issues/new?template=02-feature-request.zh-CN.yml)：ESP 固件、板级驱动、烧录、工作区脚本与显示配置。
+        - [pxa-system](https://github.com/SmartArduino/pxa-system/issues/new?template=02-feature-request.zh-CN.yml)：系统运行库、服务、UI、SDK、DevKit、Agent Kit、打包工具与模拟器实现。
+
+        不确定归属时，可按观察到的问题提交，并关联其他仓库中的相关 Issue；同一问题请勿重复提交。
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: 提交前检查
+      options:
+        - label: 我已搜索[现有 Issue](https://github.com/SmartArduino/pxa-apps/issues?q=is%3Aissue)，未找到相同反馈。
+          required: true
+  - type: input
+    id: app
+    attributes:
+      label: 应用或共享模块
+      description: 填写应用 ID、目录名或 common 模块；跨应用问题可列出多个，不确定时可填写“不清楚”。
+      placeholder: 例如：store、pixel-dungeon、common/cpp
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: 涉及模块
+      options:
+        - 应用功能或游戏玩法
+        - 界面、输入与适配
+        - 性能、音频与资源
+        - 存档、数据与设置
+        - 商城客户端
+        - 应用构建与 common 共享代码
+        - 不确定或其他
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: 使用场景与问题
+      description: 描述谁在什么场景遇到了什么限制，以及它的影响。
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 期望的改进
+      description: 说明期望的行为及如何判断需求已满足；无需预先确定实现方案。
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 已考虑的替代方式
+      description: 说明现有做法、变通方法及其不足。
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: 相关环境与参考
+      description: 按需补充版本、板型或应用、兼容性要求、截图与相关 Issue。
+    validations:
+      required: false
