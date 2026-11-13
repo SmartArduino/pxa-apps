@@ -9,7 +9,7 @@
     "英文"
   ],
   "icon": "assets/icon.png",
-  "cover": null,
+  "cover": "store/cover.png",
   "description": "为系统原生输入框提供全键盘英文与拼音逐字选字。安装后在系统输入法设置中选择本键盘；数字和符号面板由系统提供。密码框直接提交字符，不显示拼音候选。\n\n使用固定大小的工作区，适合 Flash 空间有限的设备。\n\nAn English and character-by-character Pinyin keyboard for system text fields. Select it in system keyboard settings after installation. Password fields bypass Pinyin candidates.",
   "changelog": "首次提交商城：英文、拼音候选、分页、退格及密码直接输入。\nFirst Store submission with English, Pinyin candidates and password entry."
 }
