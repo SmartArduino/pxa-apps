@@ -14,5 +14,5 @@
     "资讯订阅",
     "书签"
   ],
-  "changelog": "完善响应式与懒加载图片：校验 srcset 候选、跳过已知不可解码格式，支持 data-srcset 与 picture 格式回退；无效懒加载地址可继续尝试备用地址。脚本设置 srcset、sizes、media 和 loading 可同步到页面。保持原有图片和内存预算。\n\nImproves bounded srcset parsing, lazy-image fallbacks and picture format selection; reflects responsive image attributes in script updates while retaining existing image and memory quotas."
+  "changelog": "完善脚本行内样式：支持 cssText、setProperty 与 removeProperty，修复替换或删除 style 后旧样式残留、内容仍被隐藏的问题。单独修改样式可更新显示，重复设置相同值避免重绘；缓存样式序列化结果。声明按需分配并限制数量与长度，保持现有网页脚本和图片预算。\n\nAdds bounded inline style APIs, clears stale declarations when style attributes are replaced or removed, repaints style-only edits and keeps repeated assignments idle. Cached declaration text reduces repeated serialization work. Existing script and image budgets remain unchanged."
 }

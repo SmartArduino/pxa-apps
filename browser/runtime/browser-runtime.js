@@ -12,6 +12,166 @@
     const escapeCharacter = c => escapeCharacters[c];
     const escape = s => String(s).replace(escapePattern, escapeCharacter);
     function changed() { if (!building) { dirty = true; native.changed(); } }
+    // Lazy, bounded inline declarations. Cache their text so a snapshot need
+    // not enumerate and re-serialize every styled node on each repaint.
+    const styleData = Symbol('inlineStyle'), stylePrototype = Object.create(null);
+    const importantPattern = /!\s*important\s*$/i;
+    function styleName(name, camel = false) {
+        name = String(name);
+        if (camel && !name.startsWith('--')) {
+            if (name === 'cssFloat') name = 'float';
+            else {
+                let dashed = '';
+                // Avoid replace callbacks inside retained native/Proxy frames.
+                for (let i = 0; i < name.length; ++i) {
+                    const c = name[i]; dashed += c >= 'A' && c <= 'Z' ? '-' + c.toLowerCase() : c;
+                }
+                name = dashed;
+            }
+        }
+        return name.length <= 64 && /^(?:--[a-zA-Z0-9_-]+|-?[a-zA-Z][a-zA-Z0-9-]*)$/.test(name) ?
+            (name.startsWith('--') ? name : name.toLowerCase()) : '';
+    }
+    function styleFragments(text, visit) {
+        let prefix = '', segment = 0, quote = '', brackets = '', invalid = false;
+        // Scan punctuation natively; long plain values avoid per-character VM work.
+        const tokens = /[\\;(){}\[\]"'\/]/g;
+        let token;
+        while ((token = tokens.exec(text)) !== null) {
+            const i = token.index, c = token[0];
+            if (c === '\\') { ++tokens.lastIndex; continue; }
+            if (quote) { if (c === quote) quote = ''; continue; }
+            if (c === '/' && text[i + 1] === '*') {
+                const end = text.indexOf('*/', i + 2); prefix += text.slice(segment, i) + ' ';
+                if (end < 0) { segment = text.length; break; }
+                segment = end + 2; tokens.lastIndex = segment; continue;
+            }
+            if (c === '"' || c === "'") quote = c;
+            else if (c === '(' || c === '[' || c === '{') {
+                if (brackets.length >= 16) throw new RangeError('style nesting limit');
+                brackets += c;
+            } else if (c === ')' || c === ']' || c === '}') {
+                if (!brackets || '([{'.indexOf(brackets[brackets.length - 1]) !== ')]}'.indexOf(c)) invalid = true;
+                else brackets = brackets.slice(0, -1);
+            } else if (c === ';' && !brackets) {
+                if (!invalid) visit(prefix + text.slice(segment, i), true);
+                prefix = ''; segment = i + 1; invalid = false;
+            }
+        }
+        if (!quote && !brackets && !invalid) visit(prefix + text.slice(segment), false);
+    }
+    function styleText(declarations) {
+        const {values, priorities} = declarations;
+        const keys = Object.keys(values);
+        if (keys.length > 32) throw new RangeError('style property limit');
+        let text = '';
+        for (const name of keys) {
+            text += name + ':' + values[name] + (priorities && priorities[name] ? ' !important' : '') + ';';
+            if (text.length > 4096) throw new RangeError('style text limit');
+        }
+        return text;
+    }
+    function parseStyle(text) {
+        if (text.length > 4096) throw new RangeError('style text limit');
+        const result = {values:Object.create(null), priorities:null}, values = result.values;
+        styleFragments(text, part => {
+            const colon = part.indexOf(':'); if (colon < 0) return;
+            const name = styleName(part.slice(0, colon).trim()); if (!name) return;
+            let value = part.slice(colon + 1).trim(), priority = '';
+            if (importantPattern.test(value)) { priority = 'important'; value = value.replace(importantPattern, '').trim(); }
+            if (!value || result.priorities && result.priorities[name] && !priority) return;
+            if (!own(values, name) && Object.keys(values).length >= 32) throw new RangeError('style property limit');
+            values[name] = value;
+            if (priority) (result.priorities || (result.priorities=Object.create(null)))[name] = true;
+        });
+        return result;
+    }
+    function commitStyle(data, declarations, text, raw = text) {
+        const node = data.node, attrs = node._attrs;
+        if (attrs && !own(attrs, 'style') && Object.keys(attrs).length >= 24) throw new RangeError('attribute count');
+        if (data.text === text && attrs && attrs.style === raw) return;
+        if (!attrs) node._attrs = Object.create(null);
+        data.values = declarations.values; data.priorities = declarations.priorities;
+        data.text = text; node._attrs.style = raw; changed();
+    }
+    function replaceStyle(node, value, raw = false) {
+        const text = value == null ? '' : String(value), values = parseStyle(text), serialized = styleText(values);
+        commitStyle(styleState(node), values, serialized, raw ? text : serialized);
+    }
+    function removeStyle(data, name) {
+        const old = data.values[name]; if (!old) return '';
+        const next = {values:Object.assign(Object.create(null), data.values), priorities:data.priorities};
+        delete next.values[name];
+        if (next.priorities && next.priorities[name]) {
+            next.priorities = Object.assign(Object.create(null), next.priorities); delete next.priorities[name];
+        }
+        commitStyle(data, next, styleText(next)); return old;
+    }
+    function setStyle(data, name, value, priority = '') {
+        if (!name) return;
+        value = value == null ? '' : String(value);
+        if (!value) { removeStyle(data, name); return; }
+        priority = priority == null ? '' : String(priority).toLowerCase();
+        if (priority && priority !== 'important') return;
+        if (value.length > 4096) throw new RangeError('style text limit');
+        let parsed = '', invalid = false;
+        styleFragments(value, (part, separator) => { if (separator) invalid = true; else parsed = part.trim(); });
+        if (invalid || !parsed || importantPattern.test(parsed)) return;
+        const wasImportant = !!(data.priorities && data.priorities[name]);
+        if (data.values[name] === parsed && wasImportant === !!priority) return;
+        const next = {values:Object.assign(Object.create(null), data.values), priorities:data.priorities};
+        next.values[name] = parsed;
+        if (wasImportant !== !!priority) {
+            next.priorities = Object.assign(Object.create(null), data.priorities);
+            if (priority) next.priorities[name] = true; else delete next.priorities[name];
+        }
+        commitStyle(data, next, styleText(next));
+    }
+    Object.defineProperties(stylePrototype, {
+        cssText: {get() { return this[styleData].text; }, set(v) { replaceStyle(this[styleData].node, v); }},
+        length: {get() { return Object.keys(this[styleData].values).length; }},
+        item: {value(index) { return Object.keys(this[styleData].values)[Number(index) >>> 0] || ''; }},
+        getPropertyValue: {value(name) { return this[styleData].values[styleName(name)] || ''; }},
+        getPropertyPriority: {value(name) { const p = this[styleData].priorities; return p && p[styleName(name)] ? 'important' : ''; }},
+        setProperty: {value(name, value, priority) { setStyle(this[styleData], styleName(name), value, priority); }},
+        removeProperty: {value(name) { return removeStyle(this[styleData], styleName(name)); }},
+        toString: {value() { return this[styleData].text; }}
+    });
+    const styleHandler = {
+        get(target, key, receiver) {
+            if (key === 'cssText') return target[styleData].text;
+            if (key === 'length') return Object.keys(target[styleData].values).length;
+            if (typeof key !== 'string' || key in target) return Reflect.get(target, key, receiver);
+            const values = target[styleData].values;
+            if (/^(0|[1-9][0-9]*)$/.test(key)) return Object.keys(values)[key];
+            return values[styleName(key, true)] || '';
+        },
+        set(target, key, value, receiver) {
+            if (key === 'cssText') { replaceStyle(target[styleData].node, value); return true; }
+            if (typeof key !== 'string' || key in target) return Reflect.set(target, key, value, receiver);
+            setStyle(target[styleData], styleName(key, true), value); return true;
+        },
+        deleteProperty(target, key) {
+            if (typeof key === 'string') removeStyle(target[styleData], styleName(key, true));
+            return true;
+        },
+        ownKeys(target) { return Object.keys(target[styleData].values); },
+        getOwnPropertyDescriptor(target, key) {
+            const entry = target[styleData].values[styleName(key)];
+            return entry ? {value:entry, writable:true, enumerable:true, configurable:true} : undefined;
+        }
+    };
+    function styleState(node) {
+        return node._style || (node._style = {node, values:Object.create(null), priorities:null, text:'', proxy:null});
+    }
+    function inlineStyle(node) {
+        const data = styleState(node);
+        if (!data.proxy) {
+            const target = Object.create(stylePrototype); target[styleData] = data;
+            data.proxy = new Proxy(target, styleHandler);
+        }
+        return data.proxy;
+    }
     function event(type) {
         return {type, target:null, currentTarget:null, defaultPrevented:false,
             preventDefault() { this.defaultPrevented = true; },
@@ -80,17 +240,13 @@
         name = String(name).toLowerCase(); value = String(value);
         if (!/^[a-z_][a-z0-9_:.-]*$/i.test(name) || name.length > 64 || value.length > 4096)
             throw new RangeError('attribute limit');
+        if (name === 'style') { replaceStyle(this, value, true); return; }
         if (!this._attrs) this._attrs = Object.create(null);
         if (!own(this._attrs, name) && Object.keys(this._attrs).length >= 24) throw new RangeError('attribute count');
         if (this._attrs[name] === value) return;
         this._attrs[name] = value;
         if (name==='checked') uncheckRadioPeers(this);
         if (name.startsWith('on')) this[name] = undefined;
-        if (name === 'style') for (const rule of value.split(';')) {
-            const colon = rule.indexOf(':'); if (colon < 0) continue;
-            const key = rule.slice(0, colon).trim().replace(/-([a-z])/g, (_, c) => c.toUpperCase());
-            if (this.style) this.style[key] = rule.slice(colon + 1).trim();
-        }
         changed();
         if (name==='src' && this.nodeName==='SCRIPT') activateScripts(this);
     };
@@ -131,6 +287,9 @@
     }
     Node.prototype.removeAttribute = function (name) {
         name = String(name).toLowerCase(); if (this._attrs && own(this._attrs, name)) {
+            if (name === 'style' && this._style) {
+                const data = this._style; data.values = Object.create(null); data.priorities = null; data.text = '';
+            }
             delete this._attrs[name]; if (name.startsWith('on')) this[name] = undefined; changed();
         }
     };
@@ -166,7 +325,7 @@
                 if (v) this.appendChild(new Node('', v)); else changed();
             }};
     Object.defineProperties(Node.prototype, {
-        style: {get() { return this._style || (this._style = Object.create(null)); }, set(v) { this._style = v; }},
+        style: {get() { return inlineStyle(this); }, set(v) { replaceStyle(this, v); }},
         textContent, innerText: textContent,
         innerHTML: {get() { const parts=[]; for(const n of this.childNodes) parts.push(serialize(n,false)); return parts.join(''); },
             set(v) { v = String(v); if (v.indexOf('<') < 0 && v.indexOf('&') < 0) this.textContent = v;
@@ -175,8 +334,8 @@
         children: {get() { return this.childNodes.filter(n => n.nodeType === 1); }},
         firstChild: {get() { return this.childNodes[0] || null; }},
         lastChild: {get() { return this.childNodes[this.childNodes.length - 1] || null; }},
-        clientWidth: {get() { return parseFloat(this._style && this._style.width) || native.width; }},
-        clientHeight: {get() { return parseFloat(this._style && this._style.height) || 20; }},
+        clientWidth: {get() { return parseFloat(this._style && this._style.values.width) || native.width; }},
+        clientHeight: {get() { return parseFloat(this._style && this._style.values.height) || 20; }},
         offsetWidth: {get() { return this.clientWidth; }}, offsetHeight: {get() { return this.clientHeight; }}
     });
     Node.prototype.getBoundingClientRect = function () {
@@ -306,7 +465,7 @@
                     (type?' type="'+escape(type)+'"':'')+'>'+n.textContent.slice(0,8192)+'</style>');
                 continue;
             }
-            const attributes=n._attrs, styleValues=n._style;
+            const attributes=n._attrs;
             const type=attributes && attributes.type ? attributes.type.toLowerCase() : '';
             let tag=n.nodeName.toLowerCase(), attrs='', style='';
             if (render && (tag==='a' || tag==='button' || type==='submit' || typeof n.onclick==='function' ||
@@ -322,8 +481,7 @@
             }
             if (attributes) for(const k of Object.keys(attributes))
                 if (k!=='style' && !k.startsWith('on') && !k.startsWith('data-pxa-')) attrs+=' '+k+'="'+escape(attributes[k])+'"';
-            if (styleValues) for(const key of Object.keys(styleValues)) if(styleValues[key])
-                style+=key.replace(/[A-Z]/g,c=>'-'+c.toLowerCase())+':'+styleValues[key]+';';
+            if (n._style) style=n._style.text;
             if(style) attrs+=' style="'+escape(style)+'"';
             parts.push('<'+tag+attrs+'>');
             if(tag==='img' || tag==='source' || tag==='input' || tag==='br' || tag==='hr' || tag==='meta' || tag==='link') continue;

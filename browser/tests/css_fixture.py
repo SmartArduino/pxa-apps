@@ -21,6 +21,26 @@ PAGE = '''<!doctype html><html><head><meta charset="utf-8"><title>轻量网页�
 </body></html>'''
 SCRIPT = "<script>setTimeout(()=>{document.getElementById('message').textContent='脚本更新后保留样式 / Updated';},0);</script>"
 RESTYLE = "<script>setTimeout(()=>{document.getElementById('theme').textContent+=' .title {color:#8030a0}';document.getElementById('message').textContent='样式更新后重新匹配 / Restyled';},0);</script>"
+INLINE = '''<!doctype html><html><head><meta charset="utf-8"><title>行内样式</title>
+<style>.target {color:#187a42;font-size:20px}</style></head><body>
+<h3>行内样式 / Inline style</h3>
+<p><button onclick="advanceStyle()" style="color:#d06020;font-size:18px">下一种样式 / Next</button></p>
+<p id="target" class="target" style="display:none;color:#9c2436">样式同步 / Style update</p>
+<script>
+let phase=0;
+function advanceStyle() {
+    const n=document.getElementById('target');
+    switch(++phase) {
+        case 1: n.setAttribute('style','color:#2468ac'); break;
+        case 2: n.style.cssText='color:#8030a0;display:none'; break;
+        case 3: n.style.removeProperty('display'); break;
+        case 4: n.removeAttribute('style'); break;
+        case 5: n.style.setProperty('color','#9c2436','important'); break;
+        case 6: n.style='text-align:center;color:#2468ac'; break;
+        default: n.style.color='#2468ac'; break;
+    }
+}
+</script></body></html>'''
 
 class Fixture:
     def __init__(self, bind='127.0.0.1', port=0):
@@ -33,6 +53,7 @@ class Fixture:
                 if self.path == '/target': body = '<h1>Navigation PASS</h1>'
                 elif self.path == '/script': body = PAGE.replace('</body>',SCRIPT+'</body>')
                 elif self.path == '/restyle': body = PAGE.replace('</body>',RESTYLE+'</body>')
+                elif self.path == '/inline': body = INLINE
                 elif self.path in ('/', '/static'): body = PAGE
                 else: body = '<p>Unexpected hidden request</p>'
                 data = body.encode()

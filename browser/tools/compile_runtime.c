@@ -7,7 +7,9 @@ int main(int argc, char **argv) {
     FILE *f = fopen(argv[1], "rb");
     if (!f || fseek(f, 0, SEEK_END)) return 2;
     long size = ftell(f); rewind(f);
-    if (size <= 0 || size > 32768) return 2;
+    // Only the signed, app-owned bootstrap has a larger build-time source
+    // allowance. Curated libraries retain their 32 KiB source ceiling.
+    if (size <= 0 || size > (argc == 4 ? 32768 : 65536)) return 2;
     char *source = malloc((size_t)size + 1);
     if (!source || fread(source, 1, (size_t)size, f) != (size_t)size) return 2;
     fclose(f); source[size] = 0;

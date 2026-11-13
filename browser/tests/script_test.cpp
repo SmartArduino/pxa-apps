@@ -261,13 +261,13 @@ int main(int argc,char** argv) {
         const out=document.getElementById('out');
         out.setAttribute('first','A'.repeat(520)+'&<"\0');
         out.setAttribute('second','B'.repeat(700)+'&<"\0');
-        out.style.backgroundImage='url('+'C'.repeat(600)+'&<")';
+        out.style.backgroundImage='url("'+'C'.repeat(600)+'&<")';
         out.textContent='Complete tag';
         </script>)HTML");
         const auto html=run(p);
         assert(html.find("first=\""+std::string(520,'A')+"&amp;&lt;&quot;&#xfffd;\"")!=html.npos);
         assert(html.find("second=\""+std::string(700,'B')+"&amp;&lt;&quot;&#xfffd;\"")!=html.npos);
-        assert(html.find("style=\"background-image:url("+std::string(600,'C')+"&amp;&lt;&quot;);\">Complete tag</p>")!=html.npos);
+        assert(html.find("style=\"background-image:url(&quot;"+std::string(600,'C')+"&amp;&lt;&quot;);\">Complete tag</p>")!=html.npos);
         assert(p.stats().errors==0);
     }
     {
@@ -331,6 +331,76 @@ int main(int argc,char** argv) {
     {
         auto p=open("<p id='a'>Waiting</p><script>let r=new XMLHttpRequest();r.open('GET','/cancel');r.send();r.abort();try{fetch('https://other.test/secret')}catch(e){};document.getElementById('a').textContent='OK';</script>");
         auto html=run(p);assert(!p.take_request());assert(html.find("OK")!=html.npos);
+    }
+    {
+        // Replacing/removing the attribute must clear declarations through a
+        // previously retained style reference, including display:none.
+        auto p=open(R"HTML(<p id=a style="display:none;color:red">Visible again</p><script>
+        const n=document.getElementById('a'), s=n.style;
+        n.setAttribute('style','color:blue');
+        if(n.style!==s || s.display!=='' || s.color!=='blue')throw Error('replace style');
+        n.removeAttribute('style');
+        if(n.style!==s || s.cssText!=='' || s.length!==0 || n.hasAttribute('style'))throw Error('remove style');
+        s.fontSize='18px';
+        if(n.getAttribute('style')!=='font-size:18px;' || s['font-size']!=='18px')throw Error('reflect style');
+        </script>)HTML");
+        const auto html=run(p);assert(p.stats().errors==0 && html.find("style=\"font-size:18px;\"")!=html.npos);
+        browser::Document doc;browser::Parser parser(doc,true);parser.feed(html);parser.finish();
+        assert(doc.text.find("Visible again")!=doc.text.npos);
+    }
+    {
+        auto p=open(R"HTML(<p id=a>Style API</p><script>
+        const n=document.getElementById('a'), s=n.style;
+        s.cssText='display:none;color:red !IMPORTANT;color:blue;background-image:url("x;y:z");--Case:kept';
+        if(s.color!=='red' || s.getPropertyPriority('COLOR')!=='important' ||
+           s.backgroundImage!=='url("x;y:z")' || s.getPropertyValue('--Case')!=='kept' ||
+           s.getPropertyValue('--case')!=='' || s.length!==4 || s.item(0)!=='display' || s[1]!=='color')throw Error('parse style');
+        s.setProperty('COLOR','blue','IMPORTANT');
+        s.setProperty('color','ignored','invalid');
+        s.setProperty('color','red;display:none');
+        s.setProperty('color','red !important');
+        if(s.color!=='blue' || s.getPropertyPriority('color')!=='important')throw Error('priority');
+        if(s.removeProperty('display')!=='none' || s.removeProperty('missing')!=='')throw Error('remove property');
+        s.setProperty('color',null,'invalid');
+        if(s.color!=='' || s.getPropertyPriority('color')!=='')throw Error('empty property');
+        Object.assign(s,{fontSize:'20px',textAlign:'center'});
+        if(!Object.keys(s).includes('font-size') || String(s)!==s.cssText)throw Error('enumerate style');
+        s.cssText='color:/* priority */red !important;background-image:url("x;y:/*z*/");width:12px';
+        if(s.color!=='red' || s.backgroundImage!=='url("x;y:/*z*/")')throw Error('style comments');
+        s.setProperty('width','20px)');s.setProperty('width','url("unfinished)');
+        if(s.width!=='12px')throw Error('invalid style value');
+        n.style='color:#2468ac';
+        if(n.style!==s || s.fontSize!=='' || s.length!==1)throw Error('style forwarding');
+        </script>)HTML");
+        const auto html=run(p);assert(p.stats().errors==0 && html.find("style=\"color:#2468ac;\"")!=html.npos);
+    }
+    {
+        auto p=open(R"HTML(<p id=a style="color:red">Atomic budget</p><script>
+        const n=document.getElementById('a'),s=n.style;
+        function rejected(fn){let caught=false;try{fn()}catch(e){caught=e instanceof RangeError}if(!caught)throw Error('missing style limit')}
+        rejected(()=>s.setProperty('width','x'.repeat(4097)));
+        rejected(()=>s.setProperty('width','('.repeat(17)+'1'+')'.repeat(17)));
+        rejected(()=>s.cssText=Array.from({length:33},(_,i)=>'--x'+i+':1').join(';'));
+        if(s.color!=='red' || n.getAttribute('style')!=='color:red')throw Error('partial replacement');
+        s.cssText=Array.from({length:32},(_,i)=>'--x'+i+':1').join(';');
+        const full=s.cssText;
+        rejected(()=>s.setProperty('--extra','1'));
+        rejected(()=>s.setProperty('--x0','z'.repeat(4090)));
+        if(s.cssText!==full || s.length!==32)throw Error('partial mutation');
+        n.removeAttribute('style');
+        for(let i=0;i<23;i++)n.setAttribute('data-x'+i,'1');
+        rejected(()=>s.color='blue');
+        if(s.cssText!=='' || n.hasAttribute('style'))throw Error('attribute budget');
+        </script>)HTML");
+        assert(!run(p).empty() && p.stats().errors==0);
+    }
+    {
+        auto p=open(R"HTML(<p id=a style="color:red">Style only</p>
+        <button onclick="document.getElementById('a').style.color='#2468ac'">Repaint</button><script>void 0;</script>)HTML");
+        assert(!run(p).empty());assert(p.click(1));p.step();const auto html=snapshot(p);
+        assert(html && html->find("color:#2468ac;")!=html->npos && p.stats().errors==0);
+        // Repeating the same assignment must leave the snapshot idle.
+        assert(p.click(1));p.step();assert(!snapshot(p) && p.stats().errors==0);
     }
     {
         auto p=open("<p id='a'>Waiting</p><script>setTimeout(()=>{document.getElementById('a').style.display='none'},0)</script>");run(p);p.step();auto html=snapshot(p);assert(html && html->find("display:none")!=html->npos);
