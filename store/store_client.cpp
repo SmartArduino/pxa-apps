@@ -193,7 +193,8 @@ int store_client_build_catalog_url(char *output, size_t capacity,
         !append_u64(output, capacity, &offset, page_size))
         return 0;
     if (sort != NULL && sort[0] != '\0') {
-        if (!same_text(sort, "updated") && !same_text(sort, "downloads") && !same_text(sort, "name")) return 0;
+        if (!same_text(sort, "featured") && !same_text(sort, "updated") &&
+            !same_text(sort, "downloads") && !same_text(sort, "name")) return 0;
         if (!append_text(output, capacity, &offset, "&sort=") ||
             !append_query_value(output, capacity, &offset, sort)) return 0;
     }

@@ -199,6 +199,7 @@ static uint64_t account_now() {
 #define NODE_DETAIL_ROW_BASE 1000u
 #define NODE_DETAIL_ROW_STRIDE 4u
 #define NODE_SORT_BASE 1640u
+#define STORE_SORT_COUNT 4u
 #define NODE_TECHNICAL 1600u
 #define NODE_TECHNICAL_LABEL 1601u
 #define NODE_GALLERY 1610u
@@ -1075,8 +1076,8 @@ static int create_filters(pxa_ui_transaction_t *transaction) {
                                         m->chip_height) / 2)) ||
         !pxa_ui_set_dp(transaction, NODE_FILTERS, PXA_UI_PROPERTY_GAP, m->chip_gap))
         return 0;
-    const uint32_t sort_labels[] = {PXA_MSG_SORT_UPDATED, PXA_MSG_SORT_DOWNLOADS, PXA_MSG_SORT_NAME};
-    for (uint8_t order = 0; order < 3; ++order)
+    const uint32_t sort_labels[] = {PXA_MSG_SORT_FEATURED, PXA_MSG_SORT_UPDATED, PXA_MSG_SORT_DOWNLOADS, PXA_MSG_SORT_NAME};
+    for (uint8_t order = 0; order < STORE_SORT_COUNT; ++order)
         if (!create_chip(transaction, NODE_SORT_BASE + order * NODE_CHIP_STRIDE,
                          message(sort_labels[order]), app.sort_index == order)) return 0;
     if (!create_chip(transaction, NODE_CATEGORY_ALL,
@@ -3360,7 +3361,7 @@ static int start_catalog_fetch(void) {
     app.busy = 1;
     app.state = STORE_LOADING;
     app.pending_request = STORE_REQUEST_CATALOG;
-    static const char *const sorts[] = {"updated", "downloads", "name"};
+    static const char *const sorts[] = {"featured", "updated", "downloads", "name"};
     if (!store_client_build_catalog_url(app.url, sizeof(app.url),
                                         app.profile,
                                         app.device_id, app.request_cursor,
@@ -4508,7 +4509,7 @@ static int32_t store_on_event(const uint8_t *event, uint32_t length) {
         if (ui_event.node == NODE_LIST || ui_event.node == NODE_FILTERS ||
             ui_event.node == NODE_GALLERY_IMAGE ||
             ui_event.node == NODE_CATEGORY_ALL ||
-            (ui_event.node >= NODE_SORT_BASE && ui_event.node < NODE_SORT_BASE + 3 * NODE_CHIP_STRIDE) ||
+            (ui_event.node >= NODE_SORT_BASE && ui_event.node < NODE_SORT_BASE + STORE_SORT_COUNT * NODE_CHIP_STRIDE) ||
             (ui_event.node >= NODE_CATEGORY_BASE &&
              ui_event.node < NODE_CATEGORY_BASE +
                               STORE_MAX_TAXONOMY * NODE_CHIP_STRIDE) ||
@@ -4612,7 +4613,7 @@ static int32_t store_on_event(const uint8_t *event, uint32_t length) {
         if (!select_kind(next)) return PXA_EVENT_HANDLED;
         return render() ? PXA_EVENT_HANDLED : PXA_STATUS_INTERNAL;
     }
-    if (ui_event.node >= NODE_SORT_BASE && ui_event.node < NODE_SORT_BASE + 3 * NODE_CHIP_STRIDE &&
+    if (ui_event.node >= NODE_SORT_BASE && ui_event.node < NODE_SORT_BASE + STORE_SORT_COUNT * NODE_CHIP_STRIDE &&
         (ui_event.node - NODE_SORT_BASE) % NODE_CHIP_STRIDE == 0) {
         uint8_t order = (uint8_t)((ui_event.node - NODE_SORT_BASE) / NODE_CHIP_STRIDE);
         if (app.sort_index == order) return PXA_EVENT_HANDLED;

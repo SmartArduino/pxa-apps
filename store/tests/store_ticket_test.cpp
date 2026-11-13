@@ -76,6 +76,9 @@ int main(void) {
     assert(store_client_build_catalog_url(url, sizeof(url), "esp32-s3-pxa-0.3.0", "", 0, "", "", "", "downloads", 6));
     assert(strstr(url, "page_size=6") != NULL);
     assert(strstr(url, "&sort=downloads") != NULL);
+    assert(store_client_build_catalog_url(url, sizeof(url), "p", "", 42, "", "game", "puzzle", "featured", 6));
+    assert(strstr(url, "&sort=featured") && strstr(url, "&cursor=42"));
+    assert(strstr(url, "&kind=game") && strstr(url, "&category=puzzle"));
     assert(!store_client_build_catalog_url(url, sizeof(url), "p", "", 0, "", "", "", "invalid", 6));
     assert(!store_client_build_catalog_url(url, sizeof(url), "esp32-s3-pxa-0.3.0", "", 0, "", "", "", "updated", 0));
     assert(!store_client_build_catalog_url(url, sizeof(url), "esp32-s3-pxa-0.3.0", "", 0, "", "", "", "name", 13));

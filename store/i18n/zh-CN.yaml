@@ -101,6 +101,7 @@ translations:
   status.install_unsupported: 当前系统不支持应用安装
   status.storage_full: 存储空间不足，请删除下载记录或不用的应用后重试
   status.install_cancelled: 安装已取消或未获授权
+  sort.featured: 精选
   sort.updated: 最近更新
   sort.downloads: 下载次数
   sort.name: 名称

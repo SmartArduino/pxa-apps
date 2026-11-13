@@ -44,7 +44,7 @@ def main():
             before=count('Lite catalog loaded');choose(label)
             wait(lambda:count('Lite catalog loaded')>before)
             wait(lambda:s.focus() not in ('返回','取消'));time.sleep(.5)
-        wait(lambda:s.focus()=='应用');s.screenshot('home')
+        wait(lambda:s.focus()=='精选');s.screenshot('home')
         if a.ui_pages_only:
             def tree_labels():
                 text=s.log_path.read_text()
@@ -66,7 +66,7 @@ def main():
             choose('abc');choose('a')
             wait(lambda:tree_labels().count('a')==2);s.screenshot('keyboard-letter')
             choose('退一格');wait(lambda:tree_labels().count('a')==1)
-            choose('返回');wait(lambda:s.focus()=='应用')
+            choose('返回');wait(lambda:s.focus()=='精选')
             choose('账号');wait(lambda:s.focus()=='网页登录')
             tree_labels();s.screenshot('account');choose('返回')
             choose('已安装');wait(lambda:s.focus()=='检查更新')
@@ -74,7 +74,7 @@ def main():
             choose('下载');wait(lambda:'暂无下载' in '\n'.join(tree_labels()))
             s.screenshot('downloads-empty');choose('返回')
             load('应用');choose('分类');tree_labels();s.screenshot('categories')
-            choose('返回');choose('返回');wait(lambda:s.focus()=='应用')
+            choose('返回');choose('返回');wait(lambda:s.focus()=='精选')
             assert 'Lite page scheduling failed' not in s.log_path.read_text()
             for error in ('auxiliary stack','out of bounds memory','unreachable instruction'):
                 assert error not in s.log_path.read_text(),error
@@ -82,7 +82,7 @@ def main():
                               'three_key_keyboard':True,'return_navigation':True,
                               'viewport':[a.width,a.height]},ensure_ascii=False),flush=True)
             return
-        load('应用');s.screenshot('catalog')
+        load('精选');s.screenshot('catalog')
         before=count('Lite page 3');s.key('ENTER');wait(lambda:count('Lite page 3')>before+0 and '取消'!=s.focus())
         wait(lambda:s.focus() in ('安装','更新','打开') or (s.focus().startswith('AOT 版') or s.focus().startswith('WASM 版')));time.sleep(.6);s.screenshot('detail')
         if a.format_choice:
@@ -154,7 +154,7 @@ def main():
         if a.full:
             choose('网页登录');wait(lambda:'Lite account phase=3' in s.log_path.read_text(),45);s.screenshot('account-code')
             choose('取消登录')
-        choose('返回');s.expect('应用')
+        choose('返回');s.expect('精选')
         text=s.log_path.read_text()
         for error in ('unreachable instruction','out of bounds memory','coroutine frame allocation','WASM module instantiate failed'):assert error not in text,error
     print(json.dumps({'viewport':[a.width,a.height],'three_key':True,'live_catalog':True,'keyboard_search':True,'screenshots_and_login':a.full,'result':'passed'},ensure_ascii=False),flush=True)

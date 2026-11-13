@@ -11,7 +11,7 @@
   "featured": false,
   "name": "轻量应用商城",
   "language": "zh-CN",
-  "changelog": "安装版本切换移至“仅下载”下方。切换时显示所选 AOT／WASM 安装包的实际下载大小，安装按钮统一为“安装”。默认推荐 AOT，切换不改变应用身份及私有数据。",
+  "changelog": "首页首项改为精选，应用与游戏目录默认精选优先，随后展示其余公开作品；保留分类、搜索和热门榜入口。",
   "icon": "assets/icon.png",
   "cover": "store/cover.png"
 }

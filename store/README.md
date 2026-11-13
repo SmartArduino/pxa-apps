@@ -418,11 +418,15 @@ with the production product simulator.
 
 作者显示绑定为可选能力：Host 同步拒绝或异步完成为 `UNAVAILABLE` / `UNSUPPORTED` 时，商城继续按完整签名身份安装；`DENIED`、格式或签名错误仍会中止。显示绑定不替代安装器的包签名、摘要与应用身份校验。
 
-Catalog sorting uses the same server ordering as the web store: `updated` (default),
+Catalog sorting defaults to `featured`: editorial selections appear first, followed
+by the remaining public apps. Each group uses update time and ID order; an empty
+selection keeps the full catalog available. Other choices are `updated`,
 `downloads` (all release downloads), and `name`. Open the Sort control to choose an
 order or category. The numeric continuation is an application ID used as a keyset
 anchor in that order; a sort change resets pagination. Older clients omitting
 `sort` retain the device API's original ID order.
+Deploy backend support for `sort=featured` before distributing Store 0.9.8 or
+Store Lite 0.1.10; older servers reject the new sort parameter.
 
 安装时，详情页底部和下载页显示 Host 上报的已下载量、实际传输总量和百分比，区分程序与资源下载；传输完成后显示校验与安装状态。系统确认前不显示估算百分比。资源复用时，进度按 Host 的实际传输总量计算。进度事件仅局部更新文字和进度条，不重建页面或重新拉取资源。
 

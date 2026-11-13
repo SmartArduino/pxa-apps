@@ -397,6 +397,10 @@ messages:
     source: Installation cancelled or not permitted
     context: Host denied installation or the user declined the confirmation
     max_bytes: 96
+  sort.featured:
+    source: Featured
+    context: Editorial selections appear before the rest of the catalog
+    max_bytes: 48
   sort.updated:
     source: Recently updated
     context: Catalog sort option

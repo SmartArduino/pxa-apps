@@ -96,7 +96,7 @@ struct App {
   std::array<uint64_t, 64> cursors{};
   unsigned page_index = 0;
   char profile[40]{};
-  std::string kind = "app", category, sort = "updated", selected_identity;
+  std::string kind = "", category, sort = "featured", selected_identity;
   store_package_format_t preferred_format = STORE_FORMAT_AUTO;
   State<bool> formats_visible{false}, wasm_selected{false};
   State<std::string> format_label{""};
@@ -255,7 +255,7 @@ struct App {
     }
     co_return data;
   }
-  void browse(std::string filter = "app", std::string order = "updated") {
+  void browse(std::string filter = "app", std::string order = "featured") {
     if (busy)
       return;
     kind = std::move(filter);
@@ -321,7 +321,8 @@ struct App {
     sync_rows();
     catalog_title.set(query.get().empty() ? (kind == "game"  ? "游戏"
                                              : kind == "app" ? "应用"
-                                                             : "热门榜")
+                                             : sort == "featured" ? "精选"
+                                                                  : "热门榜")
                                           : "搜索结果");
     message(catalog.count ? "第 " + std::to_string(page_index + 1) + " 页"
                           : catalog.has_more ? "当前页无兼容项，可继续下一页"
@@ -1051,12 +1052,18 @@ template <class Page> bool View::render(Page &page, uint32_t parent) {
     auto status = p.text(b, a.notice, Font::caption);
     p.visible(status, a.notice_visible);
     button(
+        b, "精选",
+        [&a] {
+          a.query.set("");
+          a.browse("", "featured");
+        },
+        true);
+    button(
         b, "应用",
         [&a] {
           a.query.set("");
           a.browse("app");
-        },
-        true);
+        });
     button(b, "游戏", [&a] {
       a.query.set("");
       a.browse("game");
