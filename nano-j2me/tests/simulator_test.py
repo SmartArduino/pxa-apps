@@ -121,7 +121,7 @@ def pause_settings():
 try:
     start(0)
     command('SCREENSHOT AFTER_PRESENT', 'empty-library.png')
-    keys('DOWN','Z',*(['DOWN']*6),'Z',*(['DOWN']*4),'Z')
+    keys('DOWN','Z',*(['DOWN']*6),'Z',*(['DOWN']*5),'Z')
     command('SCREENSHOT AFTER_PRESENT','java-memory.png')
     keys('DOWN','DOWN','Z');back()
     roots = list((state/'media').iterdir())

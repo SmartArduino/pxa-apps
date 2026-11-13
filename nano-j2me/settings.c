@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 const unsigned nano_resolution_presets[][2]={{128,160},{176,208},{176,220},{240,320},{320,240},{240,400},{320,480},{360,640}};
-const unsigned nano_heap_presets[]={1024,1536,2048,2560,3072};
+const unsigned nano_heap_presets[]={1024,1536,2048,2560,2816,3072};
 const unsigned nano_heap_count=sizeof(nano_heap_presets)/sizeof(*nano_heap_presets);
 const unsigned nano_resolution_count=sizeof(nano_resolution_presets)/sizeof(*nano_resolution_presets);
 const char *const nano_pad_names[NANO_PAD_BUTTONS]={"上","下","左","右","A","B","START","SELECT","X","Y","L","R"};

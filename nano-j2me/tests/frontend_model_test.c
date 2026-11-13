@@ -87,6 +87,9 @@ static void settings(const char *root) {
     assert(nano_settings_decode(&decoded,legacy2,sizeof(legacy2)) && decoded.heap_kib==3072 && decoded.fps_cap==30);
     uint8_t bytes[NANO_SETTINGS_BYTES];assert(nano_settings_encode(&edited,bytes));
     assert(nano_settings_decode(&decoded,bytes,sizeof(bytes)) && !memcmp(&decoded,&edited,sizeof(edited)));
+    edited.heap_kib=2816;assert(nano_settings_encode(&edited,bytes));
+    assert(nano_settings_decode(&decoded,bytes,sizeof(bytes)) && decoded.heap_kib==2816);
+    edited.heap_kib=3072;assert(nano_settings_encode(&edited,bytes));
     bytes[16]^=1;assert(!nano_settings_decode(&decoded,bytes,sizeof(bytes)));
     assert(!nano_settings_decode(&decoded,bytes,sizeof(bytes)-1));
     edited.map[0]=255;assert(!nano_settings_encode(&edited,bytes));edited.map[0]=original.map[0];

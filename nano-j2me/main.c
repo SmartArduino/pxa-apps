@@ -120,7 +120,7 @@ void port_game_main(void) {
             if(!nano_frontend_begin_game()){nano_frontend_error("内存不足，请降低运行分辨率");break;}
             const nano_settings *config=nano_frontend_settings();
             nj_port port={.name="PXA",.millis=millis,.display_init=display_init,.display_present=display_present,
-                .input_poll=input_poll,.alloc=aligned_alloc_port,.free=free_port,.idle=idle,.sleep_ms=sleep_ms,
+                .display_idle=idle,.input_poll=input_poll,.alloc=aligned_alloc_port,.free=free_port,.idle=idle,.sleep_ms=sleep_ms,
                 .log=log_line,.now=now,.file_open=file_open,.file_read=file_read,.file_write=file_write,
                 .file_seek=file_seek,.file_close=file_close,.file_remove=file_remove,.file_exists=file_exists,
                 .pcm_open=pcm_open,.pcm_write=pcm_write,.pcm_close=pcm_close,.tone_play=tone_play,.tone_stop=tone_stop,

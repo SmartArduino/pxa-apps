@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-nano-j2me",
-  "version": "0.3.3",
-  "release_sequence": 7,
+  "version": "0.3.4",
+  "release_sequence": 8,
   "name": "nano J2ME",
   "description": "J2ME MIDlet runner with adaptive layout, JAR file picker, floating keypad and configurable gamepad controls",
   "publisher": {

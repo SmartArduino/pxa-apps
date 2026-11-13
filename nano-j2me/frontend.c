@@ -523,7 +523,7 @@ static void draw_menu(uint16_t *p) {
         if(f.mode==PAUSED){if(f.memory_warning)snprintf(detail,sizeof(detail),"内存不足：可调整 Java 内存或运行分辨率");
             else snprintf(detail,sizeof(detail),"%s  %dx%d",f.current_name,f.game_w,f.game_h);}
         else if(f.mode==FPS_LIMIT)snprintf(detail,sizeof(detail),"上限不保证实际帧率；运行中应用会重新启动游戏");
-        else if(f.mode==MEMORY)snprintf(detail,sizeof(detail),"提高可用 Java 内存；大 JAR 或高分辨率需留出余量");
+        else if(f.mode==MEMORY)snprintf(detail,sizeof(detail),"Java 堆和图片共用应用内存；图片加载失败可适当减小 Java 堆");
         else if(f.mode==RESOLUTION)snprintf(detail,sizeof(detail),"%s",f.running?"应用后重新启动当前 JAR":"选择预设，或用 +/- 调整尺寸");
         else if(f.mode==MAPPING)snprintf(detail,sizeof(detail),"%s",f.capture?"请按要映射的手柄键":"START + SELECT 可随时打开菜单");
         else if(f.mode==BINDING)snprintf(detail,sizeof(detail),"%s -> 选择游戏按键",nano_pad_names[f.binding]);

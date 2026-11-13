@@ -41,9 +41,14 @@ try:
   if k:key(k);time.sleep(.7)
   if n in (0,2,5):cmd('SCREENSHOT AFTER_PRESENT',f'02-key-{n}.png')
  time.sleep(a.seconds);cmd('SCREENSHOT AFTER_PRESENT','03-play.png')
- key('ENTER')
+ # Use the queued window Back request: a short controller Start pulse can
+ # disappear between controller-state polls in a busy MIDlet.
+ cmd('KEY BACK');time.sleep(.3)
  for _ in range(4):key('DOWN')
- key('Z');time.sleep(.8)
+ key('Z')
+ deadline=time.monotonic()+5
+ while 'J2ME returned result=0' not in logpath.read_text() and time.monotonic()<deadline:
+  time.sleep(.1)
  result['exited_normally']='J2ME returned result=0' in logpath.read_text()
 except Exception as e:result['test_error']=str(e)
 finally:
