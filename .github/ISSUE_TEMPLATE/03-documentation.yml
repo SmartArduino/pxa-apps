@@ -1,0 +1,60 @@
+name: 文档反馈 / Documentation
+description: 反馈文档错误、缺漏或示例问题 / Report documentation errors, gaps or example issues.
+title: '[Docs] '
+body:
+  - type: markdown
+    attributes:
+      value: |-
+        本仓库受理 / This repository covers: PXA 应用、游戏、商城客户端与 common 共享应用代码 / PXA apps, games, store client and shared application code。
+
+        - [pxa-workspace](https://github.com/SmartArduino/pxa-workspace/issues/new/choose): ESP 固件、板级驱动、烧录、工作区脚本与显示配置 / ESP firmware, board drivers, flashing, workspace scripts and display profiles。
+        - [pxa-system](https://github.com/SmartArduino/pxa-system/issues/new/choose): 系统运行库、服务、UI、SDK、DevKit、Agent Kit、打包工具与模拟器实现 / System runtime, services, UI, SDK, DevKit, Agent Kit, packaging tools and simulator implementation。
+
+        不确定归属时，可按观察到的问题提交，并关联其他仓库中的相关 Issue；同一问题请勿重复提交。 / If unsure, report what you observed and link related issues; avoid duplicate reports.
+        可使用中文或英文填写。 / Chinese or English is welcome.
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: 提交前检查 / Before submitting
+      options:
+        - label: 我已搜索[现有 Issue](https://github.com/SmartArduino/pxa-apps/issues?q=is%3Aissue)，未找到相同反馈。 / I searched existing
+            issues and found no duplicate.
+          required: true
+  - type: input
+    id: location
+    attributes:
+      label: 文档位置 / Documentation location
+      description: 提供页面链接或仓库文件路径，并注明章节。 / Provide a page URL or repository path and the section.
+      placeholder: URL / README.md / docs/...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 文档与产品版本 / Documentation and product versions
+      description: 注明阅读的文档分支或版本及使用的产品版本；不清楚可写 unknown。 / Include the documentation branch/version and product version; use
+        unknown if unavailable.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: 文档问题 / Documentation problem
+      description: 指出错误、缺失、歧义或无法执行的步骤；若命令失败，请给出原命令和报错。 / Describe errors, omissions, ambiguity or failing steps; include the
+        command and error when relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: correction
+    attributes:
+      label: 建议内容 / Suggested correction
+      description: 描述应如何修改或补充；可以只说明需要解释的内容。 / Suggest a correction or describe what needs explanation.
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: 补充信息 / Additional context
+      description: 可附运行环境、截图、参考链接或相关 Issue。 / Add environment details, screenshots, references or related issues.
+    validations:
+      required: false

@@ -1,0 +1,12 @@
+blank_issues_enabled: false
+contact_links:
+  - name: PXA 文档 / Documentation
+    url: https://pxa.doit.am/docs/
+    about: 开发入门、安装与使用说明 / Getting started, installation and usage guides.
+  - name: pxa-workspace
+    url: https://github.com/SmartArduino/pxa-workspace/issues/new/choose
+    about: ESP 固件、板级驱动、烧录、工作区脚本与显示配置 / ESP firmware, board drivers, flashing, workspace scripts and display profiles
+  - name: pxa-system
+    url: https://github.com/SmartArduino/pxa-system/issues/new/choose
+    about: 系统运行库、服务、UI、SDK、DevKit、Agent Kit、打包工具与模拟器实现 / System runtime, services, UI, SDK, DevKit, Agent Kit, packaging tools
+      and simulator implementation

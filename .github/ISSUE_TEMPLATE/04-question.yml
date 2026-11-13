@@ -1,0 +1,64 @@
+name: 使用咨询 / Usage question
+description: 咨询配置、接入或开发方法 / Ask about configuration, integration or development.
+title: '[Question] '
+body:
+  - type: markdown
+    attributes:
+      value: |-
+        本仓库受理 / This repository covers: PXA 应用、游戏、商城客户端与 common 共享应用代码 / PXA apps, games, store client and shared application code。
+
+        - [pxa-workspace](https://github.com/SmartArduino/pxa-workspace/issues/new/choose): ESP 固件、板级驱动、烧录、工作区脚本与显示配置 / ESP firmware, board drivers, flashing, workspace scripts and display profiles。
+        - [pxa-system](https://github.com/SmartArduino/pxa-system/issues/new/choose): 系统运行库、服务、UI、SDK、DevKit、Agent Kit、打包工具与模拟器实现 / System runtime, services, UI, SDK, DevKit, Agent Kit, packaging tools and simulator implementation。
+
+        不确定归属时，可按观察到的问题提交，并关联其他仓库中的相关 Issue；同一问题请勿重复提交。 / If unsure, report what you observed and link related issues; avoid duplicate reports.
+        可使用中文或英文填写。 / Chinese or English is welcome.
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: 提交前检查 / Before submitting
+      options:
+        - label: 我已搜索[现有 Issue](https://github.com/SmartArduino/pxa-apps/issues?q=is%3Aissue)，未找到相同反馈。 / I searched existing
+            issues and found no duplicate.
+          required: true
+  - type: input
+    id: target
+    attributes:
+      label: 咨询对象 / Topic
+      description: 注明相关模块、命令、板型或应用；不确定可写 unknown。 / Name the module, command, board or app; use unknown if unsure.
+      placeholder: 应用 ID、目录名或 common 模块 / App ID, directory name or common module
+    validations:
+      required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: 问题与目标 / Question and goal
+      description: 描述你想完成的操作，以及需要帮助的具体环节。 / Describe what you want to accomplish and where you need help.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: 版本与环境 / Versions and environment
+      description: 只填写与问题相关的项目；不清楚可写 unknown。 / Include only relevant details; use unknown if unavailable.
+      placeholder: |-
+        App ID / directory and app version:
+        Install source (store / release / local build):
+        Firmware or simulator / SDK version:
+        Board / display profile / input method:
+    validations:
+      required: true
+  - type: textarea
+    id: attempts
+    attributes:
+      label: 已尝试的步骤 / What you tried
+      description: 说明已查阅的文档、执行的命令和结果；日志请移除密钥、令牌和个人信息。 / Describe documentation consulted, commands tried and results; remove
+        keys, tokens and personal data from logs.
+    validations:
+      required: false
+  - type: textarea
+    id: additional
+    attributes:
+      label: 附件与参考 / Attachments and references
+      description: 按需补充截图、最小示例或相关 Issue 链接。 / Add screenshots, a minimal example or related issues if useful.
+    validations:
+      required: false
