@@ -33,6 +33,9 @@ done
 "$cpp_compiler" "${cpp_flags[@]}" "${objects[@]}" \
     "$cache"/{quickjs,dtoa,libregexp,libunicode,cutils}.o -lm -o "$cache/script-test"
 ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/script-test" "$app/assets/browser-runtime.qjb"
+"$cpp_compiler" "${cpp_flags[@]}" "$app/tests/script_event_test.cpp" "${objects[@]:0:2}" \
+    "$cache"/{quickjs,dtoa,libregexp,libunicode,cutils}.o -lm -o "$cache/event-test"
+ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/event-test" "$app/assets/browser-runtime.qjb"
 "$cpp_compiler" "${cpp_flags[@]}" "$app/tests/library_test.cpp" "${objects[@]:0:2}" \
     "$cache"/{quickjs,dtoa,libregexp,libunicode,cutils}.o -lm -o "$cache/library-test"
 ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/library-test" \

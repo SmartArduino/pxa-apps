@@ -14,5 +14,5 @@
     "资讯订阅",
     "书签"
   ],
-  "changelog": "完善脚本行内样式：支持 cssText、setProperty 与 removeProperty，修复替换或删除 style 后旧样式残留、内容仍被隐藏的问题。单独修改样式可更新显示，重复设置相同值避免重绘；缓存样式序列化结果。声明按需分配并限制数量与长度，保持现有网页脚本和图片预算。\n\nAdds bounded inline style APIs, clears stale declarations when style attributes are replaced or removed, repaints style-only edits and keeps repeated assignments idle. Cached declaration text reduces repeated serialization work. Existing script and image budgets remain unchanged."
+  "changelog": "降低脚本页空闲开销：无变化的定时器、微任务和点击回调不再反复生成 DOM 快照。完善动态点击事件绑定与移除，修复 XHR 回调中新加的点击事件可能失效、移除监听器后点击区残留，以及监听器已满时重复注册误报超限。保留原有脚本、内存与图片预算。\n\nAvoids DOM snapshots for unchanged callbacks. Synchronizes dynamic click handlers, including XHR-bound handlers, removes stale hit regions, and keeps duplicate listeners within the existing quota. Script, memory and image budgets remain unchanged."
 }

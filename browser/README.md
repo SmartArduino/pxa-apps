@@ -44,6 +44,8 @@
 
 脚本可通过 `element.style` 的属性、`cssText`、`setProperty`、`getPropertyValue`、`getPropertyPriority` 和 `removeProperty` 修改行内样式，也可读取 `length` / `item`。替换或移除 `style` 属性会清除旧声明，已有的 `style` 引用保持有效；单独修改样式会触发页面更新，重复写入相同值保持空闲。声明按需分配，每个元素最多 32 项、序列化后最多 4096 个 UTF-16 代码单元，值中的括号最多嵌套 16 层；超限保留原值。解析保留引号和括号内的分号并识别 `!important`，序列化结果复用到后续重绘。该接口仍为有界子集，绘制只应用上述文字 CSS，不实现完整 CSSOM、简写展开或 CSS 变量求值。
 
+已经完成绘制的脚本页只在内容、样式或点击目标变化后启动 DOM 快照；空回调、相同文字/样式赋值和重复监听注册不单独生成快照。动态 `onclick`、`addEventListener` / `removeEventListener` 会同步点击区域，XHR 回调中新绑定的处理器也能生效；移除最后一个处理器会恢复普通内容。`onclick=null` 或 `undefined` 可停用行内处理器，重新设置同一份 `onclick` 属性可重新启用。每类事件仍最多 16 个监听器，重复注册已有函数不占用额外名额；不提供完整 DOM 事件模型。
+
 采用混合组件：界面、滚动、网络和图片走 `main.aot`；QuickJS 与 DOM 放在按需启动的 `script.wasm` 中解释执行，通过有界 IPC 批量交换更新。纯静态页面不加载脚本组件。关闭脚本页会释放 VM，但已加载的模块和增长的线性内存不会因此自动缩小。解释执行会降低脚本速度，不能将包体积减少视为脚本提速。
 已检查更小的引擎候选；JerryScript 的 Guest 异常适配和 MicroQuickJS 的兼容性取舍见 [引擎验证与混合组件方案](docs/engine-selection-20261016.zh-CN.md)。
 组件设计、实测取舍和复现命令见 [AOT + Wasm 混合组件报告](docs/aot-wasm-20261016.zh-CN.md)。

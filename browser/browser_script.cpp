@@ -580,7 +580,8 @@ struct Page::Impl {
         }
     }
     [[gnu::noinline]] void dispatch_event() {
-        dom_dirty = true;
+        // DOM setters and click-target changes notify the native bridge.
+        // Running a timer, promise or no-op handler alone needs no snapshot.
         if (click_count) {
             // Bound autonomous loads between genuine UI actions. A long
             // comic must not exhaust its lifetime script/source allowance

@@ -193,16 +193,33 @@
         }
         return !e.defaultPrevented;
     }
+    function clickTarget(node) {
+        const attrs = node._attrs, listeners = node._listeners && node._listeners.click;
+        return !!(node.nodeName === 'A' || node.nodeName === 'BUTTON' ||
+            attrs && attrs.type && attrs.type.toLowerCase() === 'submit' ||
+            typeof node._onclick === 'function' ||
+            attrs && own(attrs, 'onclick') && node._onclick === undefined || listeners && listeners.length);
+    }
     function listen(type, callback) {
         if (typeof callback !== 'function') return;
+        type = String(type);
+        const node = type === 'click' && this instanceof Node, before = node && clickTarget(this);
         if (!this._listeners) this._listeners = Object.create(null);
         const list = this._listeners[type] || (this._listeners[type] = []);
+        if (list.indexOf(callback) >= 0) return;
         if (list.length >= 16) throw new RangeError('event listener limit');
-        if (list.indexOf(callback) < 0) list.push(callback);
+        list.push(callback);
+        if (node && before !== clickTarget(this)) changed();
     }
     function unlisten(type, callback) {
+        type = String(type);
         const list = this._listeners && this._listeners[type];
-        if (list) { const at = list.indexOf(callback); if (at >= 0) list.splice(at, 1); }
+        if (!list) return;
+        const at = list.indexOf(callback); if (at < 0) return;
+        const node = type === 'click' && this instanceof Node, before = node && clickTarget(this);
+        list.splice(at, 1);
+        if (!list.length) delete this._listeners[type];
+        if (node && before !== clickTarget(this)) changed();
     }
     function Node(tag, text) {
         this.nodeType = tag ? 1 : 3;
@@ -234,6 +251,13 @@
     Node.prototype.addEventListener = listen;
     Node.prototype.removeEventListener = unlisten;
     Node.prototype.dispatchEvent = function (e) { return dispatch(this, e, true); };
+    Object.defineProperty(Node.prototype, 'onclick', {
+        get() { return this._onclick; },
+        set(value) {
+            const before = clickTarget(this); this._onclick = value == null ? null : value;
+            if (before !== clickTarget(this)) changed();
+        }
+    });
     Node.prototype.getAttribute = function (name) { name = String(name).toLowerCase(); return this._attrs && own(this._attrs, name) ? this._attrs[name] : null; };
     Node.prototype.hasAttribute = function (name) { return !!this._attrs && own(this._attrs, String(name).toLowerCase()); };
     Node.prototype.setAttribute = function (name, value) {
@@ -243,10 +267,19 @@
         if (name === 'style') { replaceStyle(this, value, true); return; }
         if (!this._attrs) this._attrs = Object.create(null);
         if (!own(this._attrs, name) && Object.keys(this._attrs).length >= 24) throw new RangeError('attribute count');
-        if (this._attrs[name] === value) return;
+        if (this._attrs[name] === value) {
+            // Setting an inline handler again reactivates it even after a
+            // property assignment disabled/replaced the original handler.
+            if (name === 'onclick') {
+                const before = clickTarget(this); this._onclick = undefined;
+                if (before !== clickTarget(this)) changed();
+            } else if (name.startsWith('on')) this[name] = undefined;
+            return;
+        }
         this._attrs[name] = value;
         if (name==='checked') uncheckRadioPeers(this);
-        if (name.startsWith('on')) this[name] = undefined;
+        if (name === 'onclick') this._onclick = undefined;
+        else if (name.startsWith('on')) this[name] = undefined;
         changed();
         if (name==='src' && this.nodeName==='SCRIPT') activateScripts(this);
     };
@@ -290,7 +323,10 @@
             if (name === 'style' && this._style) {
                 const data = this._style; data.values = Object.create(null); data.priorities = null; data.text = '';
             }
-            delete this._attrs[name]; if (name.startsWith('on')) this[name] = undefined; changed();
+            delete this._attrs[name];
+            if (name === 'onclick') this._onclick = undefined;
+            else if (name.startsWith('on')) this[name] = undefined;
+            changed();
         }
     };
     for (const key of ['id','name','value','src','srcset','sizes','media','loading','href','type','className','alt','title']) {
@@ -319,6 +355,7 @@
                 v = String(v);
                 if (v.length > 16384) throw new RangeError('text limit');
                 if (this.nodeType === 3) { if (this._text !== v) { this._text = v; changed(); } return; }
+                if (!v && this.childNodes.length === 0) return;
                 if (this.childNodes.length === 1 && this.childNodes[0].nodeType === 3) { const n=this.childNodes[0];if(n._text!==v){n._text=v;changed();}return; }
                 for (const n of this.childNodes) n.parentNode = null;
                 this.childNodes = [];
@@ -468,8 +505,9 @@
             const attributes=n._attrs;
             const type=attributes && attributes.type ? attributes.type.toLowerCase() : '';
             let tag=n.nodeName.toLowerCase(), attrs='', style='';
-            if (render && (tag==='a' || tag==='button' || type==='submit' || typeof n.onclick==='function' ||
-                    attributes && own(attributes,'onclick') || n._listeners && n._listeners.click)) {
+            if (render && (tag==='a' || tag==='button' || type==='submit' || typeof n._onclick==='function' ||
+                    attributes && own(attributes,'onclick') && n._onclick===undefined ||
+                    n._listeners && n._listeners.click && n._listeners.click.length)) {
                 if (!n._hit) n._hit=nextHit++;
                 if (Object.keys(state.hits).length>=96) throw new RangeError('interactive node limit');
                 state.hits[n._hit]=n;attrs+=' data-pxa-click="'+n._hit+'"';
