@@ -8,11 +8,7 @@ inline bool comic_image(const Image &image) {
     if ((image.declared_width && image.declared_width <= 64 &&
          image.declared_height && image.declared_height <= 64) ||
         (image.width <= 64 && image.height <= 64)) return false;
-    const auto source = transport_url(image.source);
-    const auto path = source.substr(0, source.find('?'));
-    for (auto suffix : {".svg"sv, ".webp"sv, ".avif"sv})
-        if (path.size() >= suffix.size() && equal_ascii(path.substr(path.size() - suffix.size()), suffix))
-            return false;
+    if(srcset::unsupported(image.source))return false;
     return true;
 }
 inline bool comic_page(const Document &document, const Image &image) {

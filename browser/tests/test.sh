@@ -24,5 +24,8 @@ fi
 "${CXX:-clang++}" "${flags[@]}" "$here/comic_test.cpp" -o "$work/comic-test"
 "$work/comic-test"
 
+"${CXX:-clang++}" "${flags[@]}" "$here/srcset_test.cpp" -o "$work/srcset-test"
+"$work/srcset-test"
+
 "${CXX:-clang++}" "${flags[@]}" "$here/encoding_test.cpp" -o "$work/encoding-test"
 "$work/encoding-test" "$here/../assets/gb18030.bin"

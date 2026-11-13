@@ -191,7 +191,7 @@ HTML, readable JSON/Markdown, classic scripts and XHR/fetch responses support st
 
 New navigations and Home release the old document/layout buffers. In-page DOM updates continue reusing capacity. Guest linear memory does not shrink after growing; released space can be reused by subsequent pages.
 
-Common lazy image attributes (`data-src`, `data-original`, `data-lazy-src`) and the first srcset candidate are supported when src is missing or a non-renderable placeholder. Existing image formats, visibility and size limits still apply. JSON and Markdown are rendered as text, never as HTML.
+Version 0.1.11 validates responsive image candidates and selects the first usable one in author order, preserving URL commas. Invalid or known unsupported lazy addresses fall through to later alternatives; data-srcset and data-lazy-srcset are supported. Each set is limited to 4 KiB / 32 candidates without a retained candidate list. Picture can choose PNG/JPEG/GIF alternatives to explicitly unsupported formats. Only absent media or simple all/screen apply; sizes calculations, media queries and DPR switching are not implemented. Scripts can reflect srcset, sizes, media and loading attributes. The original img source remains the fallback. Existing image formats, visibility and size limits still apply. JSON and Markdown are rendered as text, never as HTML.
 
 The private inflate-only zlib 1.4 dependency retains its Zlib license, source record and file hashes under `vendor/zlib`; its license is included in package assets. No Host interface changes are required. Brotli, stacked codings, raw DEFLATE, compressed images and full modern CSS/JS framework compatibility are not provided.
 

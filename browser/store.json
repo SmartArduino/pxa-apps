@@ -14,5 +14,5 @@
     "资讯订阅",
     "书签"
   ],
-  "changelog": "缓存重复文字样式匹配，减少无注释 CSS 和标签处理的临时开销；后续样式规则会使缓存失效，较长属性直接解析，保留原有预算。修复 CSS 像素字号换算的向下取整误差。\n\nCaches repeated text-style matches, avoids unnecessary CSS copies and tag temporaries, preserves bounded parsing and invalidates matches after stylesheet updates. Fixes CSS pixel font-size rounding."
+  "changelog": "完善响应式与懒加载图片：校验 srcset 候选、跳过已知不可解码格式，支持 data-srcset 与 picture 格式回退；无效懒加载地址可继续尝试备用地址。脚本设置 srcset、sizes、media 和 loading 可同步到页面。保持原有图片和内存预算。\n\nImproves bounded srcset parsing, lazy-image fallbacks and picture format selection; reflects responsive image attributes in script updates while retaining existing image and memory quotas."
 }

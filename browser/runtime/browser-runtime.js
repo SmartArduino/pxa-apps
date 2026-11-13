@@ -134,7 +134,7 @@
             delete this._attrs[name]; if (name.startsWith('on')) this[name] = undefined; changed();
         }
     };
-    for (const key of ['id','name','value','src','href','type','className','alt','title']) {
+    for (const key of ['id','name','value','src','srcset','sizes','media','loading','href','type','className','alt','title']) {
         const attribute = key === 'className' ? 'class' : key;
         Object.defineProperty(Node.prototype, key, {
             get() { const attrs=this._attrs;
@@ -326,7 +326,7 @@
                 style+=key.replace(/[A-Z]/g,c=>'-'+c.toLowerCase())+':'+styleValues[key]+';';
             if(style) attrs+=' style="'+escape(style)+'"';
             parts.push('<'+tag+attrs+'>');
-            if(tag==='img' || tag==='input' || tag==='br' || tag==='hr' || tag==='meta' || tag==='link') continue;
+            if(tag==='img' || tag==='source' || tag==='input' || tag==='br' || tag==='hr' || tag==='meta' || tag==='link') continue;
             if(tag==='a' && n.nodeName==='INPUT') { parts.push(escape(attributes.value || '提交'),'</a>');continue; }
             todo.push(null);endings.push('</'+tag+'>');
             for(let i=n.childNodes.length-1;i>=0;--i) { todo.push(n.childNodes[i]);endings.push(''); }

@@ -12,6 +12,7 @@
 #include <vector>
 #include "browser_inline_image.hpp"
 #include "browser_css.hpp"
+#include "browser_srcset.hpp"
 
 namespace browser {
 using namespace std::literals;
@@ -616,6 +617,18 @@ class Parser {
     bool style_enabled_ = true;
     bool body_started_ = false;
     std::string html_id_, html_classes_, html_inline_;
+    bool in_picture_ = false, picture_used_ = false;
+    std::string picture_source_;
+    bool image_candidate(std::string_view value) const {
+        value=trim(value);
+        if(value.empty() || value=="about:blank" || srcset::unsupported(value))return false;
+        if(inline_image::payload(value))return true;
+        return bool(resolve(doc_.base,value));
+    }
+    std::string image_set(std::string_view list) const {
+        const auto selected=srcset::first(list,[&](auto url){return image_candidate(url);});
+        return selected ? std::string(*selected) : std::string{};
+    }
     void begin_body() {
         if (body_started_) return;
         body_started_ = true;
@@ -793,6 +806,7 @@ class Parser {
         // root tag's nesting: unrelated/mismatched child closes cannot reveal
         // a hidden login dialog or accidentally hide the rest of a valid page.
         if (hidden_depth_) {
+            if(n=="img" && !t.closing && in_picture_) { picture_used_=true;picture_source_.clear(); }
             if (n == hidden_) {
                 if (t.closing) --hidden_depth_;
                 else if (!trim(value).ends_with('/')) ++hidden_depth_;
@@ -805,10 +819,23 @@ class Parser {
             bool hidden = t.has("hidden") || n == "template" || (n == "dialog" && !t.has("open"));
             hidden |= (props.set & (1u << css::display)) && props.values[css::display] == 1;
             if (hidden) {
+                if(n=="img" && in_picture_) { picture_used_=true;picture_source_.clear(); }
                 if (!trim(value).ends_with('/') && !void_tag(n)) {
                     hidden_ = n; hidden_depth_ = 1;
                 }
                 return;
+            }
+        }
+        if (n.size()==7 && n=="picture") {
+            in_picture_=!t.closing && !trim(value).ends_with('/');
+            picture_used_=false;picture_source_.clear();
+        }
+        if (in_picture_ && !t.closing && !picture_used_ && picture_source_.empty() && n=="source") {
+            const auto type=lowercase(trim(t.get("type"))), media=lowercase(trim(t.get("media")));
+            if ((type.empty() || type=="image/png" || type=="image/jpeg" || type=="image/gif") &&
+                (media.empty() || media=="all" || media=="screen")) {
+                picture_source_=image_set(t.get("data-srcset"));
+                if(picture_source_.empty())picture_source_=image_set(t.get("srcset"));
             }
         }
         if (n == "head") {
@@ -951,21 +978,22 @@ class Parser {
             auto src = t.get("src");
             const auto classes = t.get("class");
             const bool lazy = word_token(classes, "lazy") || word_token(classes, "lazyload");
-            if (lazy || src.empty() || (src.starts_with("data:") && !inline_image::payload(src)) ||
-                src == "about:blank") {
+            const bool missing=src.empty() || src=="about:blank" ||
+                (src.starts_with("data:") && !inline_image::payload(src)) ||
+                ((t.has("data-src") || t.has("data-original") || t.has("data-lazy-src") || t.has("data-url")) && !image_candidate(src));
+            std::string selected;
+            if(in_picture_ && !picture_used_)selected=std::move(picture_source_);
+            if(in_picture_)picture_used_=true;
+            if(selected.empty() && (lazy || missing)) {
                 for (auto name : {"data-src", "data-original", "data-lazy-src", "data-url"}) {
                     auto candidate=t.get(name);
-                    if (!candidate.empty()) { src=std::move(candidate); break; }
+                    if (image_candidate(candidate)) { selected=trim(candidate); break; }
                 }
-                if (src.empty() || src.starts_with("data:") || src=="about:blank") {
-                    // Responsive images commonly list the smaller resource first.
-                    // No CSS tree or second list of candidates is retained.
-                    auto candidates=t.get("srcset");
-                    auto candidate=trim(std::string_view(candidates).substr(0,candidates.find(',')));
-                    candidate=candidate.substr(0,candidate.find_first_of(" \t\r\n"));
-                    if (!candidate.empty() && !candidate.starts_with("data:")) src=candidate;
-                }
+                if(selected.empty())selected=image_set(t.get("data-srcset"));
+                if(selected.empty())selected=image_set(t.get("data-lazy-srcset"));
             }
+            if(selected.empty())selected=image_set(t.get("srcset"));
+            if(!selected.empty())src=std::move(selected);
             auto source = resolve(doc_.base, src);
             if (inline_image::payload(src)) {
                 std::size_t used = 0;

@@ -36,6 +36,19 @@ int main(int argc,char** argv) {
     assert(!script_url_allowed("https://example.test","https://other.test/x",false));
     assert(script_url_allowed("https://example.test","https://other.test/x",true));
     {
+        auto p=open("<picture><source id=s type=image/webp srcset='/blocked'>"
+                    "<img src='/fallback.svg'></picture><img id=i src='/fallback.jpg'>"
+                    "<script>let s=document.getElementById('s');s.type='image/png';"
+                    "s.srcset='/updated.png 1x';s.media='screen';s.sizes='100vw';"
+                    "let i=document.getElementById('i');i.srcset='/second.png 2x';i.loading='lazy';"
+                    "if(s.srcset!='/updated.png 1x'||i.loading!='lazy')throw Error('image attributes');</script>");
+        const auto html=run(p);assert(p.stats().errors==0 && html.find("</source>")==html.npos);
+        browser::Document doc;doc.clear("https://example.test/start");browser::Parser parser(doc,true);
+        parser.feed(html);parser.finish();
+        assert(doc.images.size()==2 && doc.images[0].source=="https://example.test/updated.png" &&
+               doc.images[1].source=="https://example.test/second.png");
+    }
+    {
         auto p=open(R"HTML(<form id=f action='/radio' method='post'>
         <input id=a type=radio name=mode value=a checked>
         <input id=b type=radio name=mode value=b checked>
