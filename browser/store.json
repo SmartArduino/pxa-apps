@@ -14,5 +14,5 @@
     "资讯订阅",
     "书签"
   ],
-  "changelog": "完善基本表单：修复大写 SUBMIT、普通按钮误提交、禁用按钮和提交按钮值丢失；按 DOM 顺序发送同名字段，统一 UTF-8 表单编码，GET 正确替换旧查询并保留锚点。补充有界 requestSubmit 与 submitter，区分直接 submit 和可取消提交事件，减少字段收集的中间数组与编码回调。图片超限时明确显示预算提示。保留原有资源预算。\n\nImproves bounded form activation, successful submitter values, DOM field order, UTF-8 encoding and GET query replacement. Adds requestSubmit and submitter support, fixes direct submit event behavior, and reduces intermediate arrays and encoding callbacks without increasing resource limits. Image quota failures now show a budget message."
+  "changelog": "完善轻量脚本的 DOM 查询：支持有界 querySelectorAll、matches、closest 与组合/属性/后代/子元素选择器、选择器列表和 :scope；修正首个匹配和集合的 DOM 顺序、元素查询根范围、类名空白分隔。查询结果为带 item 的静态数组，加入 getElementsByClassName；保留单条解析缓存，限制选择器长度、步数和匹配工作量，避免递归匹配。保留原有页面、脚本、图片和内存上限。\n\nAdds bounded DOM selector queries, compound/attribute/list/child/descendant selectors, :scope, matches, closest and class collections. Preserves tree order and descendant scope, returns static arrays with item(), caches one parsed selector and bounds matching work without recursive calls. Existing resource limits remain unchanged."
 }

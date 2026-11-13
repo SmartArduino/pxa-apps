@@ -396,20 +396,167 @@
         return {x:0,y:0,left:0,top:0,width:this.clientWidth,height:this.clientHeight,
             right:this.clientWidth,bottom:this.clientHeight};
     };
+    function collectionItem(index) { return this[index >>> 0] || null; }
     function find(node, predicate, all) {
-        const found = []; const queue = [node];
-        for (let i = 0; i < queue.length && i < 512; ++i) {
-            const at = queue[i];
+        const found = all ? [] : null, todo = []; let visited = 0;
+        for (let i=node.childNodes.length-1;i>=0;--i) todo.push(node.childNodes[i]);
+        while (todo.length) {
+            if (++visited > 512) throw new RangeError('DOM query traversal limit');
+            const at = todo.pop();
             if (predicate(at)) { if (!all) return at; found.push(at); }
-            for (const child of at.childNodes) queue.push(child);
+            for (let i=at.childNodes.length-1;i>=0;--i) todo.push(at.childNodes[i]);
         }
+        if(all)Object.defineProperty(found,'item',{value:collectionItem});
         return all ? found : null;
     }
     Node.prototype.getElementsByTagName = function (name) { name = String(name).toUpperCase(); return find(this, n => n.nodeType === 1 && (name === '*' || n.nodeName === name), true); };
-    Node.prototype.querySelector = function (selector) {
-        selector = String(selector);
-        return find(this, n => n.nodeType === 1 && (selector[0] === '#' ? n._attrs && n._attrs.id === selector.slice(1) :
-            selector[0] === '.' ? (' ' + (n._attrs && n._attrs['class'] || '') + ' ').indexOf(' ' + selector.slice(1) + ' ') >= 0 : n.nodeName === selector.toUpperCase()), false);
+    const cssSpace = /[\t\n\f\r ]/, cssTrim = /^[\t\n\f\r ]+|[\t\n\f\r ]+$/g;
+    const cssIdent = /^(?:--|-[A-Za-z_\u0080-\uffff]|[A-Za-z_\u0080-\uffff])[A-Za-z0-9_\u0080-\uffff-]*/;
+    function classToken(value, token) {
+        if(!value || !token || cssSpace.test(token))return false;
+        let at=-1;
+        while((at=value.indexOf(token,at+1))>=0) {
+            const end=at+token.length;
+            if((at===0 || cssSpace.test(value[at-1])) && (end===value.length || cssSpace.test(value[end])))return true;
+        }
+        return false;
+    }
+    Node.prototype.getElementsByClassName = function (names) {
+        names=String(names);if(names.length>512)throw new RangeError('class query length limit');
+        const tokens = names.replace(cssTrim,'').split(/[\t\n\f\r ]+/);
+        if(tokens.length>64)throw new RangeError('class query token limit');
+        if(!tokens[0])return Object.defineProperty([],'item',{value:collectionItem});
+        return find(this, n => n.nodeType === 1 && tokens.every(t => classToken(n.className,t)), true);
+    };
+    let lastSelector = null;
+    function selectorPlan(source) {
+        source = String(source);
+        if (source.length > 512) throw new RangeError('selector length limit');
+        if (lastSelector && lastSelector.source === source) return lastSelector;
+        let i=0, terms=0, steps=0; const groups=[];
+        function invalid() { throw new SyntaxError('unsupported or invalid selector'); }
+        function space() { const start=i;while(i<source.length && cssSpace.test(source[i]))++i;return i!==start; }
+        function ident() { const m=cssIdent.exec(source.slice(i));if(!m)invalid();i+=m[0].length;return m[0]; }
+        space();
+        while (i<source.length) {
+            const group=[];let relation='';
+            while (true) {
+                if (++steps>32) throw new RangeError('selector step limit');
+                const part={tag:'',tests:[],relation};
+                if (source[i]==='*')++i;
+                else if (cssIdent.test(source.slice(i)))part.tag=ident().toUpperCase();
+                while(i<source.length) {
+                    const c=source[i];let test;
+                    if(c==='#' || c==='.') {++i;test=[c,ident()];}
+                    else if(c===':') {++i;if(ident()!=='scope')invalid();test=['scope'];}
+                    else if(c==='[') {
+                        ++i;space();const name=ident().toLowerCase();space();
+                        let op='',value='',flag='';
+                        if(source[i]!==']') {
+                            if(source[i]==='=')op=source[i++];
+                            else if('~|^$*'.includes(source[i]) && source[i+1]==='=') {op=source.slice(i,i+2);i+=2;}
+                            else invalid();
+                            space();const quote=source[i];
+                            if(quote==='"' || quote==="'") {
+                                ++i;const start=i;
+                                while(i<source.length && source[i]!==quote) {
+                                    if(source[i]==='\\' || source[i]==='\n' || source[i]==='\r' || source[i]==='\f')invalid();++i;
+                                }
+                                if(i===source.length)invalid();value=source.slice(start,i++);
+                            } else value=ident();
+                            space();if(source[i]!==']') {flag=ident().toLowerCase();if(flag!=='i' && flag!=='s')invalid();space();}
+                        }
+                        if(source[i++]!==']')invalid();test=['attr',name,op,value,flag];
+                    } else break;
+                    if(++terms>64)throw new RangeError('selector term limit');part.tests.push(test);
+                }
+                // A universal selector has neither a tag nor tests.
+                if(!part.tag && !part.tests.length && source[i-1]!=='*')invalid();
+                group.push(part);const separated=space();
+                if(i===source.length || source[i]===',')break;
+                if(source[i]==='>') {++i;space();relation='>';}
+                else if(separated)relation=' ';
+                else invalid();
+            }
+            if(groups.length===8)throw new RangeError('selector group limit');groups.push(group);
+            if(i===source.length)break;
+            ++i;space();if(i===source.length)invalid();
+        }
+        if(!groups.length)invalid();
+        return lastSelector={source,groups};
+    }
+    const asciiUpper=/[A-Z]/,asciiOnly=/^[\x00-\x7f]*$/;
+    function foldAsciiMixed(value) {
+        let result='',start=0;
+        for(let i=0;i<value.length;++i) {
+            const c=value.charCodeAt(i);
+            if(c>=65 && c<=90) {result+=value.slice(start,i)+String.fromCharCode(c+32);start=i+1;}
+        }
+        return result+value.slice(start);
+    }
+    function selectorAttribute(node, test) {
+        const attrs=node._attrs,name=test[1],op=test[2];
+        if(!attrs || !own(attrs,name))return false;
+        if(!op)return true;
+        let value=attrs[name],needle=test[3];
+        const flag=test[4],htmlEnum=(name==='type' && (node.nodeName==='INPUT' || node.nodeName==='BUTTON')) ||
+            (node.nodeName==='FORM' && (name==='method' || name==='enctype')) || name==='dir';
+        if(flag==='i' || (!flag && htmlEnum)) {
+            // No JS replacement callback inside nested event/query frames.
+            if(asciiUpper.test(value))value=asciiOnly.test(value)?value.toLowerCase():foldAsciiMixed(value);
+            if(asciiUpper.test(needle))needle=asciiOnly.test(needle)?needle.toLowerCase():foldAsciiMixed(needle);
+        }
+        if(op==='=')return value===needle;
+        if(op==='|=')return value===needle || value.startsWith(needle+'-');
+        if(!needle)return false;
+        return op==='~=' ? classToken(value,needle) : op==='^=' ? value.startsWith(needle) :
+            op==='$=' ? value.endsWith(needle) : value.includes(needle);
+    }
+    function selectorPart(node, part, scope, work) {
+        if(--work.left<0)throw new RangeError('selector work limit');
+        if(node.nodeType!==1 || part.tag && node.nodeName!==part.tag)return false;
+        for(const test of part.tests) {
+            if(test[0]==='#' ? node.id!==test[1] : test[0]==='.' ? !classToken(node.className,test[1]) :
+               test[0]==='scope' ? node!==scope : !selectorAttribute(node,test))return false;
+        }
+        return true;
+    }
+    function selectorMatch(node, plan, scope, work) {
+        for(const group of plan.groups) {
+            const last=group.length-1;
+            if(last===0) {if(selectorPart(node,group[0],scope,work))return true;continue;}
+            const selected=[];let part=last,at=node;
+            // Iterative backtracking keeps JS call depth independent of the
+            // selector/ancestor depth. A later ancestor can satisfy a child
+            // relation after a nearer descendant candidate fails it.
+            while(true) {
+                while(at && !selectorPart(at,group[part],scope,work)) {
+                    if(part===last || group[part+1].relation==='>') {at=null;break;}
+                    at=at.parentNode;
+                }
+                if(at) {if(part===0)return true;selected[part]=at;--part;at=at.parentNode;continue;}
+                let retry=part+1;
+                while(retry<last && group[retry+1].relation==='>')++retry;
+                if(retry>=last)break;
+                part=retry;at=selected[retry].parentNode;
+            }
+        }
+        return false;
+    }
+    function query(node, selector, all) {
+        const plan=selectorPlan(selector),scope=node.nodeType===9 ? node.documentElement : node,work={left:8192};
+        return find(node,n=>n.nodeType===1 && selectorMatch(n,plan,scope,work),all);
+    }
+    Node.prototype.querySelector = function (selector) { return query(this,selector,false); };
+    Node.prototype.querySelectorAll = function (selector) { return query(this,selector,true); };
+    Node.prototype.matches = function (selector) { return selectorMatch(this,selectorPlan(selector),this,{left:8192}); };
+    Node.prototype.closest = function (selector) {
+        const plan=selectorPlan(selector),work={left:8192};let visited=0;
+        for(let n=this;n;n=n.parentNode) {
+            if(++visited>512)throw new RangeError('closest traversal limit');
+            if(selectorMatch(n,plan,this,work))return n;
+        }
+        return null;
     };
     const document = root.document = new Node('#document'); document.nodeType = 9;
     document.readyState = 'loading'; document.documentElement = document; document.body = document; document.head = null;

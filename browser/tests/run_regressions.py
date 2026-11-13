@@ -11,6 +11,7 @@ from threading import Thread
 from fixture import Handler, ThreadingHTTPServer
 
 SUITES = [
+    ('selectors', 'selector_smoke.py', []), ('selectors-compact', 'selector_smoke.py', ['--width','296','--height','240']),
     ('forms', 'form_smoke.py', []), ('forms-compact', 'form_smoke.py', ['--width','296','--height','240']),
     ('events', 'event_smoke.py', []), ('events-compact', 'event_smoke.py', ['--width','296','--height','240']),
     ('style', 'style_smoke.py', []), ('style-compact', 'style_smoke.py', ['--width','296','--height','240']),
