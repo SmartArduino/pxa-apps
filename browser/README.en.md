@@ -99,7 +99,7 @@ tools/app.sh build browser --target esp32s3
 bash local/pxa-apps/browser/tests/test.sh
 ```
 
-`tests/run_regressions.py` runs the selector, form, event, style, responsive-image, CSS, compatibility, comic and find suites sequentially, starts the base fixture on `127.0.0.1:31878`, and saves each suite's exit status. Repeat `--suite` to select suites; add `--live` for author-site network checks. See `--help` for simulator, TRACE package, publisher public key, IME package and output arguments. Put output under ignored `local/artifacts/`.
+`tests/run_regressions.py` runs the text-container, selector, form, event, style, responsive-image, CSS, compatibility, comic and find suites sequentially, starts the base fixture on `127.0.0.1:31878`, and saves each suite's exit status. Repeat `--suite` to select suites; add `--live` for author-site network checks. See `--help` for simulator, TRACE package, publisher public key, IME package and output arguments. Put output under ignored `local/artifacts/`.
 
 The updated standalone DevKit can run `pxa run pxa-apps/browser`.
 Network access asks for permission. Local HTTP addresses must include `http://`.
@@ -173,6 +173,8 @@ at load/gesture boundaries and is disabled in production builds.
 Legacy Chinese pages now support GB2312/GBK/GB18030 decoding, selected from the HTTP declaration or a bounded 1024-byte HTML meta prescan. The 49,536-byte mapping is a package asset loaded only while decoding a legacy page, then freed; UTF-8 pages do not load it. Legacy-encoded form submission and other encodings such as Big5 remain unsupported.
 
 Explicit `hidden` and inline `display:none` content is excluded. Repeated target URLs share the existing bounded link table; the browser reports when unique links exceed its capacity.
+
+Title/textarea bodies remain text with character references decoded; textarea drops its initial newline and is displayed read-only (editing/submission remains unsupported). Xmp/plaintext preserve literal references, with plaintext lasting until EOF. Iframe/noembed/noframes fallback text creates no scripts, images, links or fields. Frames never auto-load; valid iframe src links can be opened explicitly, while srcdoc remains unsupported. Capture, DOM building and innerHTML use the same text contexts, with DOM source newlines normalized before entity decoding. Repaints project visible raw blocks as escaped preformatted text and protect dynamic style closing tags. The 256-byte title limit and existing document/DOM/script/image budgets remain unchanged.
 
 Inline script styles support property assignment, cssText, setProperty, getPropertyValue, getPropertyPriority, removeProperty, length and item. Replacing/removing the style attribute clears old declarations while preserving existing style references. Style-only edits schedule a repaint; unchanged assignments stay idle. Declarations allocate lazily, with at most 32 properties and 4096 serialized UTF-16 code units per element, with at most 16 nested bracket groups in values; quota failures preserve the previous value. Parsing preserves quoted/parenthesized semicolons and recognizes !important. Snapshots reuse cached declaration text. This bounded API does not provide full CSSOM, shorthand expansion or CSS variable evaluation; rendering still applies only the documented text CSS subset.
 

@@ -42,6 +42,9 @@ ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/form-test" "$a
 "$cpp_compiler" "${cpp_flags[@]}" "$app/tests/script_selector_test.cpp" "${objects[@]:0:2}" \
     "$cache"/{quickjs,dtoa,libregexp,libunicode,cutils}.o -lm -o "$cache/selector-test"
 ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/selector-test" "$app/assets/browser-runtime.qjb"
+"$cpp_compiler" "${cpp_flags[@]}" "$app/tests/script_text_mode_test.cpp" "${objects[@]:0:2}" \
+    "$cache"/{quickjs,dtoa,libregexp,libunicode,cutils}.o -lm -o "$cache/text-mode-test"
+ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/text-mode-test" "$app/assets/browser-runtime.qjb"
 "$cpp_compiler" "${cpp_flags[@]}" "$app/tests/library_test.cpp" "${objects[@]:0:2}" \
     "$cache"/{quickjs,dtoa,libregexp,libunicode,cutils}.o -lm -o "$cache/library-test"
 ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/library-test" \

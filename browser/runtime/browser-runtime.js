@@ -382,7 +382,7 @@
         style: {get() { return inlineStyle(this); }, set(v) { replaceStyle(this, v); }},
         textContent, innerText: textContent,
         innerHTML: {get() { const parts=[]; for(const n of this.childNodes) parts.push(serialize(n,false)); return parts.join(''); },
-            set(v) { v = String(v); if (v.indexOf('<') < 0 && v.indexOf('&') < 0) this.textContent = v;
+            set(v) { v = String(v); if (v.indexOf('<') < 0 && v.indexOf('&') < 0 && v.indexOf('\r') < 0 && v.indexOf('\0') < 0) this.textContent = v;
                 else { for (const n of this.childNodes) n.parentNode = null; this.childNodes = []; native.fragment(this, v); changed(); } }},
         outerHTML: {get() { return serialize(this, false); }},
         children: {get() { return this.childNodes.filter(n => n.nodeType === 1); }},
@@ -571,7 +571,7 @@
         }
         return null;
     };
-    Object.defineProperty(document, 'title', {get() { const t = document.getElementsByTagName('title')[0]; return t ? t.textContent : ''; },
+    Object.defineProperty(document, 'title', {get() { const t = document.getElementsByTagName('title')[0]; return t ? t.textContent.replace(/[\t\n\f\r ]+/g,' ').replace(cssTrim,'') : ''; },
         set(v) { let t = document.getElementsByTagName('title')[0]; if (!t) { t = document.createElement('title'); (document.head || document).appendChild(t); } t.textContent = v; }});
     Object.defineProperty(document, 'cookie', {get:() => native.cookie(), set:value => native.cookie(String(value))});
     root.window = root; root.self = root; root.top = root; root.parent = root;
@@ -686,6 +686,10 @@
     function snapshot(rootNode, render) {
         return {todo:[rootNode],endings:[''],visited:0,render,hits:render?Object.create(null):null};
     }
+    function rawTextNode(node) {
+        return node && (node.nodeName==='SCRIPT' || node.nodeName==='STYLE' || node.nodeName==='XMP' ||
+            node.nodeName==='IFRAME' || node.nodeName==='NOEMBED' || node.nodeName==='NOFRAMES' || node.nodeName==='PLAINTEXT');
+    }
     function advance(state, budget) {
         // Fixed work per idle frame; no traversal consumes native recursion.
         const {todo,endings,render}=state, parts=[]; let count=0;
@@ -693,26 +697,32 @@
             const n=todo.pop(), ending=endings.pop();
             if (ending) { parts.push(ending); continue; }
             if (++state.visited>512) throw new RangeError('DOM traversal limit');
-            if (n.nodeType===3) { parts.push(escape(n._text)); continue; }
+            if (n.nodeType===3) { parts.push(!render && rawTextNode(n.parentNode)?n._text:escape(n._text)); continue; }
             if (n.nodeType===9) {
                 for(let i=n.childNodes.length-1;i>=0;--i) { todo.push(n.childNodes[i]);endings.push(''); }
                 continue;
             }
-            if (n.nodeName==='SCRIPT') continue;
+            if (render && n.nodeName==='SCRIPT') continue;
             // Keep preceding page styles across an incremental DOM repaint.
             // CSS raw text must not be HTML-escaped; the native parser applies
             // its own 8 KiB / 64-rule budget without fetching external sheets.
             if (n.nodeName==='STYLE') {
                 const media=n.getAttribute('media'), type=n.getAttribute('type');
+                const css=n.textContent.slice(0,8192);
                 parts.push('<style'+(media?' media="'+escape(media)+'"':'')+
-                    (type?' type="'+escape(type)+'"':'')+'>'+n.textContent.slice(0,8192)+'</style>');
+                    (type?' type="'+escape(type)+'"':'')+'>'+(render?css.replace(/<\/style/gi,'\\3c /style'):css)+'</style>');
                 continue;
             }
             const attributes=n._attrs;
             const type=attributes && attributes.type ? attributes.type.toLowerCase() : '';
             let tag=n.nodeName.toLowerCase(), attrs='', style='';
+            // A DOM text string may itself contain a literal closing tag.
+            // Project visible raw blocks as escaped preformatted text so an
+            // incremental repaint cannot turn that string into active markup.
+            if(render && (tag==='xmp' || tag==='plaintext'))tag='pre';
             const disabled=(tag==='input' || tag==='button') && attributes && own(attributes,'disabled');
-            if (render && !disabled && (tag==='a' || tag==='button' || type==='submit' || typeof n._onclick==='function' ||
+            const inert=tag==='title' || tag==='iframe' || tag==='noembed' || tag==='noframes';
+            if (render && !inert && !disabled && (tag==='a' || tag==='button' || type==='submit' || typeof n._onclick==='function' ||
                     attributes && own(attributes,'onclick') && n._onclick===undefined ||
                     n._listeners && n._listeners.click && n._listeners.click.length)) {
                 if (!n._hit) n._hit=nextHit++;
@@ -729,6 +739,7 @@
             if (n._style) style=n._style.text;
             if(style) attrs+=' style="'+escape(style)+'"';
             parts.push('<'+tag+attrs+'>');
+            if(render && tag==='textarea')parts.push('\n'); // compensate the parser's initial-LF rule
             if(tag==='img' || tag==='source' || tag==='input' || tag==='br' || tag==='hr' || tag==='meta' || tag==='link') continue;
             if(tag==='a' && n.nodeName==='INPUT') { parts.push(escape(attributes.value || '提交'),'</a>');continue; }
             todo.push(null);endings.push('</'+tag+'>');

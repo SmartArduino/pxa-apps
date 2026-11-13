@@ -567,6 +567,27 @@ inline bool void_tag(std::string_view name) {
     default: return false;
     }
 }
+enum class HtmlText : std::uint8_t { data, rcdata, literal, hidden, plaintext };
+inline HtmlText html_text(std::string_view name) {
+    switch(name.size()) {
+    case 3: if(name=="xmp")return HtmlText::literal;break;
+    case 5: if(name=="title")return HtmlText::rcdata;break;
+    case 6: if(name=="iframe")return HtmlText::hidden;break;
+    case 7: if(name=="noembed")return HtmlText::hidden;break;
+    case 8: if(name=="textarea")return HtmlText::rcdata;if(name=="noframes")return HtmlText::hidden;break;
+    case 9: if(name=="plaintext")return HtmlText::plaintext;break;
+    }
+    return HtmlText::data;
+}
+inline std::string_view text_end_tag(std::string_view name) {
+    if(name=="title")return "</title";
+    if(name=="textarea")return "</textarea";
+    if(name=="xmp")return "</xmp";
+    if(name=="iframe")return "</iframe";
+    if(name=="noembed")return "</noembed";
+    if(name=="noframes")return "</noframes";
+    return {};
+}
 // Some static cards use only a literal location assignment instead of href.
 // Recognize that one grammar; never evaluate script, escapes or expressions.
 inline std::optional<std::string_view> static_navigation(std::string_view code) {
@@ -598,6 +619,7 @@ class Parser {
     bool in_label_ = false;
     bool in_tag_ = false, comment_ = false, discard_tag_ = false;
     bool raw_close_ = false, base_seen_ = false;
+    bool initial_lf_ = false;
     unsigned comment_dashes_ = 0;
     char quote_ = 0;
     Style style_ = Style::body;
@@ -643,11 +665,15 @@ class Parser {
         style_source_.append(value.substr(0,count)); style_bytes_ += count;
     }
     void finish_raw() {
+        flush_text();
         if (raw_ == "style") {
             sheet_.parse(style_source_);
             std::string{}.swap(style_source_);
         }
+        const std::string closing="/"+raw_;
         raw_.clear();
+        initial_lf_=false;
+        handle(closing);
     }
     std::optional<bool> close_scope(std::string_view name) {
         for (std::size_t i = scopes_.size(); i > 0; --i) {
@@ -669,7 +695,7 @@ class Parser {
     // title budgets, entities and incomplete/invalid UTF-8 keep the scalar path.
     // Never allocate a decoded copy or append beyond the readable text budget.
     std::size_t literal_prefix(std::string_view bytes) const {
-        if (unicode_want_ || !entity_.empty() || in_label_ || title_) return 0;
+        if (unicode_want_ || !entity_.empty() || in_label_ || title_ || initial_lf_) return 0;
         const auto limit = std::min(bytes.size(), max_text - doc_.text.size());
         const bool last_span = doc_.spans.size() + 1 == max_spans &&
             (doc_.spans.empty() || doc_.spans.back().style != style_ ||
@@ -702,9 +728,11 @@ class Parser {
         if (title_) {
             if (doc_.title.size() + s.size() <= 256)
                 doc_.title += s;
+            last_space_=false;
             return;
         }
-        if (head_ || !raw_.empty() || hidden_depth_)
+        const auto mode=html_text(raw_);
+        if (head_ || (!raw_.empty() && (mode==HtmlText::data || mode==HtmlText::hidden)) || hidden_depth_)
             return;
         if (in_label_ && label_.size() + s.size() <= 128) label_ += s;
         doc_.append(s, style_, link_, -1, -1, text_style_);
@@ -714,6 +742,8 @@ class Parser {
         if (c == '\n' && last_cr_) { last_cr_ = false; return; }
         last_cr_ = c == '\r';
         if (c == '\r') c = '\n';
+        if(initial_lf_) {initial_lf_=false;if(c=='\n')return;}
+        if(!raw_.empty() && c==0) {glyph("\xef\xbf\xbd");return;}
         if (unicode_want_) {
             if ((c & 0xc0) != 0x80) {
                 glyph("\xef\xbf\xbd");
@@ -784,6 +814,26 @@ class Parser {
         else
             character(static_cast<unsigned char>(c));
     }
+    void flush_text() {
+        if(!entity_.empty()) {
+            auto value=std::move(entity_);entity_.clear();
+            for(unsigned char c:value)character(c);
+        }
+        if(unicode_want_) {glyph("\xef\xbf\xbd");unicode_want_=unicode_size_=0;}
+    }
+    void raw_text(std::string_view bytes) {
+        if(raw_=="style") {capture_style(bytes);return;}
+        const auto mode=html_text(raw_);
+        if(mode==HtmlText::data || mode==HtmlText::hidden)return;
+        while(!bytes.empty() && !doc_.truncated) {
+            if(title_ && doc_.title.size()==256)return;
+            if(const auto count=literal_prefix(bytes)) {
+                last_cr_=false;glyph(bytes.substr(0,count));bytes.remove_prefix(count);continue;
+            }
+            const char c=bytes.front();bytes.remove_prefix(1);
+            if(mode==HtmlText::rcdata)textchar(c);else character(static_cast<unsigned char>(c));
+        }
+    }
     void handle(std::string_view value) {
         auto t = tag(value);
         auto &n = t.name;
@@ -801,6 +851,9 @@ class Parser {
                 style_enabled_ = css::active_style(t.get("media"),t.get("type"));
             }
             return;
+        }
+        if(!t.closing && html_text(n)!=HtmlText::data) {
+            raw_=n;initial_lf_=n=="textarea";last_cr_=false;
         }
         // Honor explicit hiding without building a CSS tree. Count only the
         // root tag's nesting: unrelated/mismatched child closes cannot reveal
@@ -820,7 +873,7 @@ class Parser {
             hidden |= (props.set & (1u << css::display)) && props.values[css::display] == 1;
             if (hidden) {
                 if(n=="img" && in_picture_) { picture_used_=true;picture_source_.clear(); }
-                if (!trim(value).ends_with('/') && !void_tag(n)) {
+                if ((!trim(value).ends_with('/') || html_text(n)!=HtmlText::data) && !void_tag(n)) {
                     hidden_ = n; hidden_depth_ = 1;
                 }
                 return;
@@ -902,6 +955,7 @@ class Parser {
                      n == "footer" || n == "main" || n == "ul" || n == "ol" || n == "li" ||
                      n == "blockquote" || n == "tr" || n == "pre" || n == "h1" || n == "h2" ||
                      n == "h3" || n == "h4" || n == "h5" || n == "h6" || n == "form";
+        block |= n=="textarea" || n=="xmp" || n=="plaintext" || n=="iframe";
         const bool heading = n.size() == 2 && n[0] == 'h' && n[1] >= '1' && n[1] <= '6';
         const bool is_void = void_tag(n);
         if (t.closing) {
@@ -920,7 +974,7 @@ class Parser {
                 if (props.values[css::display] == 2) block = true;
                 if (props.values[css::display] == 3) block = false;
             }
-            if (!is_void && !trim(value).ends_with('/') && n.size() < 32) {
+            if (!is_void && (!trim(value).ends_with('/') || html_text(n)!=HtmlText::data) && n.size() < 32) {
                 if (scopes_.size() < 32) {
                     Scope scope{{},text_style_,style_,block};
                     std::copy(n.begin(),n.end(),scope.name.begin()); scopes_.push_back(scope);
@@ -928,7 +982,9 @@ class Parser {
                         style_ = Style::heading;
                         text_style_.scale = std::uint16_t(std::min(200,int(text_style_.scale)*5/4));
                     }
-                    if (n == "pre") { style_ = Style::code; text_style_.whitespace = css::WhiteSpace::preserve; }
+                    if (n == "pre" || n=="textarea" || n=="xmp" || n=="plaintext") {
+                        style_ = Style::code; text_style_.whitespace = css::WhiteSpace::preserve;
+                    }
                     if (heading && (props.set & (1u << css::size))) text_style_.scale = scope.previous.scale;
                     css::inherit(text_style_,props);
                     pre_ = text_style_.whitespace == css::WhiteSpace::preserve;
@@ -1041,6 +1097,13 @@ class Parser {
             in_label_ = !t.closing;
             if (in_label_) label_.clear();
         }
+        if(n=="iframe" && !t.closing && !t.has("srcdoc")) {
+            const auto source=t.get("src");
+            if(!source.empty())if(auto target=resolve(doc_.base,source)) {
+                const auto index=doc_.add_link(std::move(*target));
+                doc_.append("打开嵌入网页",Style::body,index);doc_.newline(text_style_);
+            }
+        }
         if (n == "form") {
             if (t.closing)
                 form_ = -1;
@@ -1113,6 +1176,7 @@ class Parser {
         while (!bytes.empty()) {
             if (doc_.truncated)
                 return;
+            if(raw_=="plaintext") {raw_text(bytes);return;}
             // Most large style/script bodies and comments contain no markup.
             // Search entire transport chunks instead of walking discarded bytes.
             if (comment_ && !comment_dashes_) {
@@ -1123,7 +1187,7 @@ class Parser {
             if (!in_tag_ && !comment_) {
                 if (!raw_.empty()) {
                     const auto at = bytes.find('<');
-                    capture_style(bytes.substr(0,at));
+                    raw_text(bytes.substr(0,at));
                     if (at == bytes.npos) return;
                     bytes.remove_prefix(at);
                 } else if (const auto n = literal_prefix(bytes)) {
@@ -1159,8 +1223,8 @@ class Parser {
                             if (c == '>') { finish_raw(); in_tag_ = false; }
                             pending_.clear();
                         } else {
-                            capture_style("<"); capture_style(pending_);
-                            if (c != '<') capture_style({&c,1});
+                            raw_text("<"); raw_text(pending_);
+                            if (c != '<') raw_text({&c,1});
                             pending_.clear();
                             in_tag_ = c == '<';
                         }
@@ -1238,16 +1302,8 @@ class Parser {
         }
     }
     void finish() {
-        if (!entity_.empty()) {
-            auto v = std::move(entity_);
-            entity_.clear();
-            for (unsigned char c : v)
-                character(c);
-        }
-        if (unicode_want_) {
-            glyph("\xef\xbf\xbd");
-            unicode_want_ = unicode_size_ = 0;
-        }
+        if(in_tag_ && !raw_.empty() && !raw_close_) {raw_text("<");raw_text(pending_);}
+        flush_text();
         if (in_tag_ && !discard_tag_ && raw_.empty() && !head_) {
             glyph("<");
             for (unsigned char c : pending_)

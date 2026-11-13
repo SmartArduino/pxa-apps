@@ -298,6 +298,21 @@ struct Page::Impl {
             if (argc < 2) return JS_ThrowTypeError(ctx, "fragment arguments");
             auto html = text(1); if (!html.data) return JS_EXCEPTION;
             if (html.size > self.limits.fragment_bytes) return JS_ThrowRangeError(ctx, "fragment limit");
+            Value context_name(ctx,JS_GetPropertyStr(ctx,argv[0],"nodeName"));
+            if(JS_IsException(context_name.value))return JS_EXCEPTION;
+            CString context(ctx,context_name.value);
+            if(!context.data)return JS_EXCEPTION;
+            const auto context_tag=browser::lowercase(context.view());
+            const auto kind=context_tag=="script" || context_tag=="style"?browser::HtmlText::literal:browser::html_text(context_tag);
+            if(kind!=browser::HtmlText::data) {
+                if(!self.limits.fragment_nodes && html.size)return JS_ThrowRangeError(ctx,"fragment node limit");
+                auto normalized=text_value(html.view(),kind==browser::HtmlText::rcdata,self.limits.fragment_bytes);
+                if(!normalized)return JS_ThrowRangeError(ctx,"fragment text limit");
+                auto begun=self.invoke("beginFragment",argv[0]);
+                if(JS_IsException(begun.value))return JS_ThrowRangeError(ctx,"fragment nesting failed");
+                auto value=self.string(*normalized);if(self.check(value.value))self.invoke("text",value.value);
+                self.invoke("endFragment");return self.stopped?JS_ThrowRangeError(ctx,"fragment failed"):JS_UNDEFINED;
+            }
             auto begun = self.invoke("beginFragment", argv[0]);
             if (JS_IsException(begun.value)) return JS_ThrowRangeError(ctx,"fragment nesting failed");
             std::size_t at = 0; unsigned nodes = 0;
@@ -443,7 +458,9 @@ struct Page::Impl {
         const auto item = token(source, at);
         if (item.text.empty()) return;
         if (!item.tag) {
-            auto decoded = browser::entities(item.text); auto value = string(decoded);
+            auto decoded=text_value(item.text,true,limits.html_bytes);
+            if(!decoded) {problem="网页文字超过容量限制";stopped=true;++counters.errors;return;}
+            auto value = string(*decoded);
             if (check(value.value)) invoke("text", value.value);
             return;
         }
@@ -457,7 +474,6 @@ struct Page::Impl {
             if (closing != source.npos) (void)token(source, at);
             if (t.name == "style") {
                 const auto count = std::min(body.size(),browser::css::max_bytes-style_bytes);
-                if (!count) return;
                 if (scripts && ++node_count > limits.nodes) {
                     problem = "脚本页面节点达到上限"; stopped = true; return;
                 }
@@ -505,8 +521,19 @@ struct Page::Impl {
                 JS_SetPropertyUint32(ctx, attrs.value, std::uint32_t(i*2+1), value.release()) < 0) { check(JS_EXCEPTION); return; }
         }
         constexpr auto voids = " area base br col embed hr img input link meta param source track wbr "sv;
-        const bool empty = trim(item.text).ends_with('/') || voids.find(" " + t.name + " ") != voids.npos;
+        const auto kind=browser::html_text(t.name);
+        const bool empty = (kind==browser::HtmlText::data && trim(item.text).ends_with('/')) || voids.find(" " + t.name + " ") != voids.npos;
         invoke("open", name.value, attrs.value, JS_NewBool(ctx, empty));
+        if(kind!=browser::HtmlText::data) {
+            const auto closing=kind==browser::HtmlText::plaintext?source.npos:raw_end(source,browser::text_end_tag(t.name),at);
+            const auto end=closing==source.npos?source.size():closing;
+            auto decoded=text_value(source.substr(at,end-at),kind==browser::HtmlText::rcdata,limits.html_bytes);
+            at=end;if(closing!=source.npos)(void)token(source,at);
+            if(!decoded) {problem="网页文字超过容量限制";stopped=true;++counters.errors;return;}
+            if(t.name=="textarea" && decoded->starts_with('\n'))decoded->erase(0,1);
+            auto value=string(*decoded);if(check(value.value))invoke("text",value.value);
+            invoke("close",name.value);
+        }
     }
     void trace(std::string_view phase) {
         if constexpr(trace_enabled)if(hooks.trace)hooks.trace(hooks.owner,phase);

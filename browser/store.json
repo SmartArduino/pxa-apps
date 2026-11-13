@@ -14,5 +14,5 @@
     "资讯订阅",
     "书签"
   ],
-  "changelog": "完善轻量脚本的 DOM 查询：支持有界 querySelectorAll、matches、closest 与组合/属性/后代/子元素选择器、选择器列表和 :scope；修正首个匹配和集合的 DOM 顺序、元素查询根范围、类名空白分隔。查询结果为带 item 的静态数组，加入 getElementsByClassName；保留单条解析缓存，限制选择器长度、步数和匹配工作量，避免递归匹配。保留原有页面、脚本、图片和内存上限。\n\nAdds bounded DOM selector queries, compound/attribute/list/child/descendant selectors, :scope, matches, closest and class collections. Preserves tree order and descendant scope, returns static arrays with item(), caches one parsed selector and bounds matching work without recursive calls. Existing resource limits remain unchanged."
+  "changelog": "完善 HTML 文本容器：title/textarea 保留标签文字并解码实体，xmp/plaintext 按原始文字阅读，iframe/noembed/noframes 的后备文字不再产生假脚本、图片或表单；iframe 可手动打开原始 src。修复标题空格、文本容器 innerHTML 上下文和动态重绘中的结束标签处理，避免多余请求；保持原有解析、脚本、内存及网络预算。textarea 编辑与提交仍未实现。\n\nCorrects HTML text-container parsing, entity/newline handling and inert script capture. Preserves literal text and safe DOM repaint, fixes title spacing and context-aware innerHTML, and offers explicit iframe source links without automatic frame loading. Existing quotas remain unchanged; textarea editing/submission remains unsupported."
 }

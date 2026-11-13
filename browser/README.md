@@ -38,6 +38,8 @@
 
 这是一款阅读浏览器。Guest 内集成 QuickJS，支持经典脚本、基本 DOM、事件、定时器及同源异步 XHR/fetch；不支持完整 CSS、模块脚本、Canvas/WebGL、视频、验证码和现代框架的完整浏览器环境。
 
+HTML 的 title/textarea 按文本容器解析，保留内部标签文字并解码实体；textarea 忽略初始换行，按只读文字显示，编辑与表单提交仍未实现。xmp 与 plaintext 保留实体字面量，plaintext 直到输入结束；iframe/noembed/noframes 的后备文字不生成脚本、图片、链接或表单。iframe 不自动加载，可手动打开合法 src（srcdoc 仍不支持）。这些模式同样用于脚本捕获、DOM 构建和 innerHTML 上下文；DOM 构建在实体解码前规范化源换行。重绘将可见原始文字块映射为转义的 pre，并保护动态 style 的结束标签，避免把文字重新解析为资源。标题仍限 256 字节，正文、DOM、脚本及图片等原有上限不变。
+
 脚本的 `querySelector` / `querySelectorAll`、`matches` / `closest` 支持标签、通配符、ID、类及其组合，属性存在/比较（`=`、`~=`、`|=`、`^=`、`$=`、`*=` 与 ASCII `i` / `s` 标志）、后代/子元素关系、逗号列表与 `:scope`。查询按 DOM 树顺序返回，元素查询只返回后代；祖先匹配可越过查询根，`:scope` 可显式限定根。集合是带 `item()` 的静态数组，包含 `getElementsByTagName` 与新增的 `getElementsByClassName`，不实现动态 NodeList/HTMLCollection。每个选择器最多 512 个 UTF-16 代码单元、8 组、32 步、64 项条件，每次查询最多访问 512 个节点并执行 8192 次元素与选择器步骤的匹配尝试；仅缓存最近一条解析结果，不缓存匹配节点。属性值默认按原文比较；input/button 的 type、form 的 method/enctype 及 dir 使用默认 ASCII 大小写折叠，显式 i/s 标志优先。暂不支持 CSS 转义、兄弟关系和其他伪类/伪元素，遇到不支持或非法语法抛出 `SyntaxError`，超预算抛出 `RangeError`。这些是脚本查询能力，不扩展下面的样式表绘制子集。
 
 0.1.9 增加有界文字 CSS：正文之前的页内 `<style>` 与行内样式支持简单标签、类、ID 及其组合选择器，按优先级和 `!important` 合并颜色、字号、`display`、`white-space` 与左右/居中对齐。样式继承和嵌套恢复也用于脚本重绘。CSS 总前缀最多 8 KiB、规则最多 64 条、嵌套状态最多 32 层；后续规则按预算忽略，保留可读内容。字号随阅读字号缩放并限制在 0.5–2 倍，`pre` 按可换行方式阅读，浅色文字自动压暗以适应固定阅读背景。暂不请求外部样式表，不支持复杂选择器、媒体查询、完整盒模型或已输出内容的追溯重排。
@@ -158,7 +160,7 @@ python3 local/pxa-apps/browser/tests/fixture.py --bind 0.0.0.0
 `tests/comic_fixture.py` 提供无外部作品和账号数据的漫画章节；`tests/comic_smoke.py` 验证真实模拟器上的适宽、清晰重解码、翻图、缩放、长图拖动、取消慢图、坏图恢复和 `rel=next/prev` 章节跳转，支持 DPI/圆屏参数。`tests/comic_live_smoke.py` 对作者官网执行独立的联网阅读检查，不用本地回放替代实际网络结果。
 `tests/compression_fixture.py --bind 0.0.0.0 --port 31878` 提供 gzip、deflate、压缩脚本、较大的样式前缀、损坏流和纯文本测试页面；真机使用电脑的局域网地址访问 `/compat`。`tests/compression_smoke.py` 通过真实 PXA 模拟器验证这些响应、脚本执行以及返回主页后的缓冲释放，运行参数见 `--help`，`--output` 应放在工作区忽略的 `local/artifacts/` 下。
 测试包设置 `PXA_BROWSER_TRACE=1`，测试从日志读取实际布局，避免按钮坐标随屏幕适配失效。
-`tests/run_regressions.py` 可顺序运行选择器、表单、事件、样式、响应式图片、CSS、兼容性、漫画和查找回归，自动启动 `127.0.0.1:31878` 的基础夹具并逐组保存退出状态。用 `--suite` 选择单组（可重复），用 `--live` 加入作者官网联网检查；通过 `--help` 查看模拟器、TRACE 包、签名公钥、输入法包与输出目录参数，输出须放在忽略的 `local/artifacts/` 下。
+`tests/run_regressions.py` 可顺序运行文本容器、选择器、表单、事件、样式、响应式图片、CSS、兼容性、漫画和查找回归，自动启动 `127.0.0.1:31878` 的基础夹具并逐组保存退出状态。用 `--suite` 选择单组（可重复），用 `--live` 加入作者官网联网检查；通过 `--help` 查看模拟器、TRACE 包、签名公钥、输入法包与输出目录参数，输出须放在忽略的 `local/artifacts/` 下。
 均可用 `--help` 查看参数。`tests/ui_smoke.py` 额外验证手动添加网站、去重、长按移除、
 重启恢复、滚动条拖动/隐藏、音量键开关/长按/释放/输入时暂停及菜单退出；模拟器的 `TEXT` 诊断命令通过正常的 LVGL
 文本变更事件编辑已聚焦的输入框。单独运行模拟器时须传入已受信任的系统输入法包。

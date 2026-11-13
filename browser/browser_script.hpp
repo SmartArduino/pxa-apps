@@ -72,9 +72,10 @@ struct Stats {
 // Bounded HTML capture is separate from the VM. Static pages never create one.
 class Capture {
     std::string bytes_;
-    enum class Mode : std::uint8_t { text, tag, comment, script, style };
+    enum class Mode : std::uint8_t { text, tag, comment, script, style, raw, plaintext };
     std::size_t tag_start_ = 0;
     Mode mode_ = Mode::text;
+    std::string_view raw_end_;
     unsigned char match_ = 0;
     std::array<char,8> style_candidate_{};
     std::size_t style_bytes_ = 0;

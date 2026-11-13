@@ -14,9 +14,10 @@ void Capture::append(std::string_view part, std::size_t limit) {
     // candidate closing bytes so a quota boundary cannot split the closing tag.
     // Scripts/comments keep their existing capture and policy behavior.
     for(char c:part) {
-        if(mode_==Mode::style || mode_==Mode::script) {
+        if(mode_==Mode::plaintext) {if(!keep(c))return;continue;}
+        if(mode_==Mode::style || mode_==Mode::script || mode_==Mode::raw) {
             const bool style=mode_==Mode::style;
-            const auto end=style ? "</style"sv : "</script"sv;
+            const auto end=style ? "</style"sv : mode_==Mode::script ? "</script"sv : raw_end_;
             if(style) {
                 auto css_byte=[&](char item) {
                     if(!style_enabled_ || style_bytes_>=browser::css::max_bytes)return true;
@@ -67,6 +68,12 @@ void Capture::append(std::string_view part, std::size_t limit) {
             text=trim(text.substr(0,text.size()-1));
             const auto name=text.substr(0,text.find_first_of(" \t\r\n\f/"));
             mode_=equal_ascii(name,"style") ? Mode::style : equal_ascii(name,"script") ? Mode::script : Mode::text;
+            if(mode_==Mode::text) {
+                const auto text_name=browser::lowercase(name);
+                const auto kind=browser::html_text(text_name);
+                if(kind==browser::HtmlText::plaintext)mode_=Mode::plaintext;
+                else if(kind!=browser::HtmlText::data) {mode_=Mode::raw;raw_end_=browser::text_end_tag(text_name);}
+            }
             if(mode_==Mode::style) {
                 const auto parsed=browser::tag(text);
                 style_enabled_=browser::css::active_style(parsed.get("media"),parsed.get("type"));
@@ -87,6 +94,13 @@ bool Capture::has_script() const noexcept {
         if (!t.closing && (t.name == "style" || t.name == "script")) {
             auto end = raw_end(bytes_, t.name == "style" ? "</style" : "</script", at);
             if (end != bytes_.npos) at = end;
+        } else if(!t.closing) {
+            const auto kind=browser::html_text(t.name);
+            if(kind==browser::HtmlText::plaintext)break;
+            if(kind!=browser::HtmlText::data) {
+                const auto end=raw_end(bytes_,browser::text_end_tag(t.name),at);
+                at=end==bytes_.npos?bytes_.size():end;
+            }
         }
     }
     return script;

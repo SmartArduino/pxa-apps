@@ -1,5 +1,5 @@
-4c5cb1d1ae2ce6515e8745ee0738fb747b480a58f87a97ccc9bd1e829902c4bd  browser-runtime.js
-e71e82ff6a36af559d91675e37a4034e8d6b10afa0b708f9ad2753fa1511c5ff  ../assets/browser-runtime.qjb
+a787807ac234b43d9836416665e6a586de7695bf8321c4b5294c3b09bb5c00d8  browser-runtime.js
+2d2eb9d5d58a0957800449dfa08efa8db1b6e6f4616acf2e95ea690d7a987742  ../assets/browser-runtime.qjb
 b73a403a59da30726257ddbdf5e399298941c1def997782ee0d4d33f796a80a2  ../vendor/quickjs/cutils.c
 d2da6d06a75b9e6c116c82b7a41df6bcc170c8b1779f374fa953ecf688eda647  ../vendor/quickjs/cutils.h
 05abbf5cde3c7d544dc509fc867c6320b1e002dbeb76fc78a3df33ae62120d0f  ../vendor/quickjs/dtoa.c
