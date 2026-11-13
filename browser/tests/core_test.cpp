@@ -87,7 +87,7 @@ int main() {
         assert(!resolve(d.base,"data:image/png;base64,AAAA"));
     }
     {
-        assert(sites.size() == 8);
+        assert(sites.size() == 15);
         assert(site_user_agent("https://ink.qq.com/", "default").find("Kindle/3.0+") != std::string_view::npos);
         assert(site_user_agent("https://weread.qq.com:443/wrwebsimplenjlogic/login", "default").find("Kindle/3.0+") != std::string_view::npos);
         for (auto url : {"https://weread.qq.com.evil.test/", "https://evil.test/?weread.qq.com", "about:home"})
@@ -308,7 +308,7 @@ int main() {
     assert(whole.links.size() == 1 && whole.links[0].target == "https://a.test/next");
     assert(whole.title == "PXA 浏览器");
     assert(whole.fields.size() == 4);
-    static_assert(sizeof(Span)==16 && sizeof(Piece)==16);
+    static_assert(sizeof(Span)==24 && sizeof(Piece)==16); // eight bytes of bounded text style
     Document pictures;
     pictures.clear("https://a.test/dir/page");
     Parser image_parser(pictures);

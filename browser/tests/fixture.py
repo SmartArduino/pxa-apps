@@ -33,7 +33,29 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path=urlsplit(self.path).path
         try:
-            if path=='/navigation/counts':
+            if path in ('/compat-controls', '/compat-controls-script'):
+                script = "<script>document.getElementById('ready').textContent='Script ready';</script>" if path.endswith('-script') else ''
+                self.respond("<p id='ready'>Radio form</p><form action='/compat-choice'>"
+                             "<input type='radio' name='mode' value='zh' checked aria-label='中文'>"
+                             "<input type='radio' name='mode' value='en' aria-label='English'>"
+                             "<input type='checkbox' name='empty' value='' checked aria-label='Empty'>"
+                             "<input type='file' disabled><input type='submit' value='Send'></form>" + script)
+            elif path=='/compat-choice':
+                values = parse_qs(urlsplit(self.path).query, keep_blank_values=True)
+                ok = values == {'mode':['en'], 'empty':['']}
+                self.respond('<h1>Choice PASS</h1>' if ok else '<h1>Choice FAIL</h1>', 200 if ok else 400)
+            elif path=='/compat-icon':
+                self.respond("<p>Small icon stays small</p><img src='/picture/icon.png' width='25' height='25'>"
+                             "<p>Reading text remains close to the icon.</p>")
+            elif path=='/compat-atom':
+                self.respond("<feed xmlns='http://www.w3.org/2005/Atom'><entry xml:lang='zh'>"
+                             "<title type='html'>&lt;b&gt;Atom 中文文章&lt;/b&gt;</title>"
+                             "<link rel='self' href='/wrong'/><link rel='alternate' href='/compat-article'/>"
+                             "<summary type='html'>&lt;p&gt;可阅读的文章说明&lt;/p&gt;</summary></entry></feed>",
+                             mime='application/atom+xml; charset=utf-8')
+            elif path=='/compat-article':
+                self.respond('<h1>Article PASS</h1>' + '<p>正文阅读 Chinese article.</p>' * 30)
+            elif path=='/navigation/counts':
                 run=parse_qs(urlsplit(self.path).query).get('run',[''])[0]
                 with NAVIGATION_LOCK:
                     counts={route:count for (token,route),count in NAVIGATION_REQUESTS.items()
@@ -58,6 +80,14 @@ class Handler(BaseHTTPRequestHandler):
             elif path=='/session/logout':
                 self.respond('<title>已退出</title><h1>已退出登录</h1>',headers=(('Set-Cookie','session=; Path=/session; Max-Age=0'),))
             elif path=='/':self.respond(ROOT)
+            elif path=='/find':
+                gap=''.join(f'<p>Reading paragraph {n}: scroll and keep the current page.</p>' for n in range(12))
+                self.respond('<title>Page find</title><h1>页内查找验证</h1>'
+                             '<p>First 中文跨行查找 and NeEdLe.</p>' + gap +
+                             '<p>Second 中文<a href="/next">跨行</a>查找 and NEEDLE.</p>' + gap +
+                             '<p>Third 中文跨行查找 and needle.</p>'
+                             '<form><input type="password" name="needle" value="private-test-value">'
+                             '<input type="submit" value="needle"></form>')
             elif path=='/form':self.respond(FORM)
             elif path in ('/encoding', '/encoding-header'):
                 content='<meta http-equiv="Content-Type" content="text/html; charset=gb2312"><title>中文编码</title><h1>网址导航</h1><p>当前位置：手机漫画</p><div style="display: none"><div>正在加载,请稍候...</div></div><p><a href="/next">继续阅读</a></p>'

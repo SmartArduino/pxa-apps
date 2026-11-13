@@ -10,13 +10,33 @@ void Capture::append(std::string_view part, std::size_t limit) {
         if(bytes_.size()==bytes_.capacity() && bytes_.capacity()>limit/2) bytes_.reserve(limit);
         bytes_+=c;return true;
     };
-    // CSS is not evaluated by this DOM. Drop only raw style contents while
-    // streaming, retaining tags/attributes and never interpreting script text
-    // or comments as HTML. No second buffer or larger capture quota is needed.
+    // Preserve only a bounded CSS prefix for the subsequent DOM repaint. Delay
+    // candidate closing bytes so a quota boundary cannot split the closing tag.
+    // Scripts/comments keep their existing capture and policy behavior.
     for(char c:part) {
         if(mode_==Mode::style || mode_==Mode::script) {
             const bool style=mode_==Mode::style;
             const auto end=style ? "</style"sv : "</script"sv;
+            if(style) {
+                auto css_byte=[&](char item) {
+                    if(!style_enabled_ || style_bytes_>=browser::css::max_bytes)return true;
+                    ++style_bytes_; return keep(item);
+                };
+                if(match_==end.size() && tag_boundary(c)) {
+                    tag_start_=bytes_.size();
+                    for(char item:end)if(!keep(item))return;
+                    if(!keep(c))return;
+                    mode_=c=='>' ? Mode::text : Mode::tag;quote_=0;match_=0;continue;
+                }
+                if(match_<end.size() && lower(c)==end[match_]) {
+                    style_candidate_[match_++]=c;continue;
+                }
+                for(unsigned i=0;i<match_;++i)if(!css_byte(style_candidate_[i]))return;
+                match_=0;
+                if(c=='<')style_candidate_[match_++]=c;
+                else if(!css_byte(c))return;
+                continue;
+            }
             if(!style && !keep(c)) return;
             if(match_==end.size()) {
                 if(tag_boundary(c)) {
@@ -47,6 +67,10 @@ void Capture::append(std::string_view part, std::size_t limit) {
             text=trim(text.substr(0,text.size()-1));
             const auto name=text.substr(0,text.find_first_of(" \t\r\n\f/"));
             mode_=equal_ascii(name,"style") ? Mode::style : equal_ascii(name,"script") ? Mode::script : Mode::text;
+            if(mode_==Mode::style) {
+                const auto parsed=browser::tag(text);
+                style_enabled_=browser::css::active_style(parsed.get("media"),parsed.get("type"));
+            }
             match_=0;
         }
     }

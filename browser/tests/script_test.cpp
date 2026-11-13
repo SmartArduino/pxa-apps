@@ -36,6 +36,25 @@ int main(int argc,char** argv) {
     assert(!script_url_allowed("https://example.test","https://other.test/x",false));
     assert(script_url_allowed("https://example.test","https://other.test/x",true));
     {
+        auto p=open(R"HTML(<form id=f action='/radio' method='post'>
+        <input id=a type=radio name=mode value=a checked>
+        <input id=b type=radio name=mode value=b checked>
+        <input id=c type=radio name=other checked>
+        <input type=radio name=other value=ignored>
+        </form><form><input id=d type=radio name=mode value=d checked></form>
+        <p id=result></p><script>
+        var a=document.getElementById('a'),b=document.getElementById('b'),d=document.getElementById('d');
+        if(a.checked||!b.checked||!d.checked)throw Error('initial radio group');
+        a.checked=true;
+        if(!a.checked||b.checked||!d.checked)throw Error('radio group update');
+        document.getElementById('f').submit();
+        document.getElementById('result').textContent='Radio OK';
+        </script>)HTML");
+        assert(run(p).find("Radio OK")!=std::string::npos && p.stats().errors==0);
+        auto nav=p.take_navigation();
+        assert(nav && nav->post && nav->body=="mode=a&other=on");
+    }
+    {
         auto p=open(R"HTML(<p id=a></p><script>
         for (let timeout of [undefined,0,1500,60000]) {
             let x=new XMLHttpRequest();x.open('POST','/wait');
@@ -52,14 +71,14 @@ int main(int argc,char** argv) {
     Capture c;c.append("<!--<script>--><p>static</p><script type='application/json'>{}</script>");assert(!c.has_script());
     c.append("<script src='/code.js'></script>");assert(c.has_script());c.append(std::string(32768,'x'));assert(c.limited());
     {
-        const auto before="<!--<style>ignored</style>--><style id='theme' media='a>b'>"s;
+        const auto before="<!--<style>ignored</style>--><style id='theme' media='screen'>"s;
         const auto after="</STyLe><script>var literal='<style>keep</style></scripture>';</script>"s;
         const auto source=before+std::string(100000,'x')+"</stylex>not a close"+after;
         for(unsigned chunk:{1u,2u,3u,7u,17u,1024u}) {
             Capture capture;
             for(std::size_t at=0;at<source.size();at+=chunk)capture.append(std::string_view(source).substr(at,chunk));
             assert(!capture.limited() && capture.has_script());
-            assert(capture.take()==before+"</style>"+after.substr(8));
+            assert(capture.take()==before+std::string(browser::css::max_bytes,'x')+"</style>"+after.substr(8));
         }
         Capture policy;policy.append(source+"<meta http-equiv='Content-Security-Policy' content=\"script-src 'none'\">");
         assert(!policy.limited() && !policy.has_script());
@@ -302,6 +321,26 @@ int main(int argc,char** argv) {
     }
     {
         auto p=open("<p id='a'>Waiting</p><script>setTimeout(()=>{document.getElementById('a').style.display='none'},0)</script>");run(p);p.step();auto html=snapshot(p);assert(html && html->find("display:none")!=html->npos);
+    }
+    {
+        Capture capture;
+        capture.append("<style>.article{color:#2468ac}</style><p class=article id=a>Before</p>"
+                       "<script>document.getElementById('a').textContent='After';</script>");
+        assert(capture.has_script() && !capture.limited());
+        auto p=open(capture.take());auto html=run(p);
+        browser::Document doc;browser::Parser parser(doc,true);parser.feed(html);parser.finish();
+        assert(doc.text.find("After")!=doc.text.npos && doc.spans.front().text_style.color==0x2468acff);
+    }
+    {
+        auto p=open("<head><style>.article{color:#a02030;font-size:120%}</style>"
+                    "<style media=print>.article{display:none}</style></head>"
+                    "<p class=article id=a>Before</p><script>"
+                    "setTimeout(()=>{document.getElementById('a').textContent='Repainted'},0)</script>");
+        auto html=run(p);p.step();if(auto next=snapshot(p))html=*next;
+        browser::Document doc;browser::Parser parser(doc,true);parser.feed(html);parser.finish();
+        assert(doc.text.find("Repainted")!=doc.text.npos);
+        const auto first=std::ranges::find_if(doc.spans,[](const auto& s){return s.text_style.color==0xa02030ff;});
+        assert(first!=doc.spans.end() && browser::Layout::font(*first,15)==18);
     }
     {
         auto p=open("<a href='/next'>Next</a><script>window.onload=()=>{};</script>");run(p);assert(p.click(1));p.step();auto next=p.take_navigation();assert(next && next->url=="https://example.test/next");

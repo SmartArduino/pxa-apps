@@ -2,7 +2,9 @@
 #include "browser_script.hpp"
 #include "browser_script_client.hpp"
 #include "browser_search.hpp"
+#include "browser_find.hpp"
 #include "browser_image_view.hpp"
+#include "browser_comic.hpp"
 #include "browser_geometry.hpp"
 #include "browser_scrollbar.hpp"
 #include "browser_cookies.hpp"
@@ -97,6 +99,7 @@ struct App {
     browser::Document document;
     std::uint32_t early_field_edits = 0;
     browser::Layout page;
+    browser::PageFind page_find;
     browser::History history;
     enum class Navigation : std::uint8_t { visit, history, reload };
     Navigation load_navigation = Navigation::visit;
@@ -111,11 +114,16 @@ struct App {
         int index = -1;
         std::optional<pxa::DecodedImage> asset;
         std::uint64_t next_frame = 0;
+        bool detailed = false;
     };
     std::array<ImageCache, 2> images;
     int animation_slot = -1;
     std::array<ImageState, browser::max_images> image_states{};
     browser::ImageView image_view;
+    bool comic_reading = false, comic_detail = false, comic_resume = false;
+    int comic_return_scroll = 0, comic_pending = -1;
+    browser::ImageView comic_saved_view;
+    bool comic_restore_view = false;
     int loading_image = -1;
     bool foreground = true;
     int scroll = 0, body_font_dp = 15, edit_field = -1, restore_scroll = 0;
@@ -177,7 +185,8 @@ struct App {
         image_more,
         volume_keys, history_list, history_open, history_clear, directory, site_open,
         image_setting, gif_setting, script_setting, clear_sessions, memory_settings, memory_choice,
-        clear_address
+        clear_address, find_page, find_previous, find_next, find_close,
+        comic_open, comic_previous, comic_next, comic_fit, comic_quality, comic_retry, comic_zoom
     };
     Action pressed_action = Action::address;
     int pressed_index = -1;
@@ -271,6 +280,7 @@ struct App {
         }
     }
     void stop() {
+        comic_pending = -1;
         if (js) {
             js->tasks.cancel();
             if (!js->boot_ready) js.reset();
@@ -300,11 +310,14 @@ struct App {
     }
     void clear_images() {
         image_view = {};
+        comic_reading = false;
+        comic_resume = false;
         scrollbar_dragging = false;
         scrollbar_until = 0;
         for (auto &image : images) {
             image.asset.reset();
             image.index = -1;
+            image.detailed = false;
         }
         image_states.fill(ImageState::unseen);
     }
@@ -314,6 +327,7 @@ struct App {
 #endif
         geometry();
         page.build(document, content.width, font);
+        if (page_find.active()) page_find.refresh(document, page);
         if (url == "about:home")
             page.height = home_height();
         layout_dirty = false;
@@ -326,6 +340,8 @@ struct App {
 #endif
     }
     void home(Navigation navigation = Navigation::visit, int position = 0) {
+        if (editing) finish_edit(false);
+        page_find.clear();
         if (navigation != Navigation::history)
             history.position(scroll);
         press.reset();
@@ -396,6 +412,7 @@ struct App {
             dirty = true;
             return;
         }
+        page_find.clear();
         // New navigations all leave through this entry point, including URL
         // editing, forms and scripts. History has already selected its target;
         // saving here while restoring would overwrite that target's position.
@@ -573,7 +590,8 @@ struct App {
                 mime.starts_with("application/json") || mime.starts_with("text/json");
             const bool wml = mime.starts_with("text/vnd.wap.wml") ||
                 (mime.starts_with("application/octet-stream") && browser::transport_url(url).ends_with(".wml"));
-            bool rss = mime.starts_with("application/rss+xml") || (!wml && mime.starts_with("text/xml")) ||
+            bool rss = mime.starts_with("application/rss+xml") || mime.starts_with("application/atom+xml") ||
+                       (!wml && mime.starts_with("text/xml")) ||
                        mime.starts_with("application/xml");
             if (!plain && !rss && !wml && !mime.starts_with("text/html") &&
                 !mime.starts_with("application/xhtml+xml")) {
@@ -695,6 +713,7 @@ struct App {
             document_history_first = document_history_last = history.current();
             busy = false;
             set_status((document.truncated || page.truncated ? "内容已截断 · "
+                      : document.images_limited             ? "部分图片已省略 · "
                       : document.links_limited              ? "部分链接已省略 · "
                       : code >= 400                        ? "HTTP " + std::to_string(code) + " · "
                                                            : "") +
@@ -942,6 +961,54 @@ struct App {
                 return &item.asset->image();
         return nullptr;
     }
+    void release_comic_detail() {
+        for (auto &item : images) if (item.detailed) {
+            if (item.index >= 0) image_states[item.index] = ImageState::unseen;
+            item.asset.reset(); item.index = -1; item.detailed = false;
+        }
+    }
+    void open_comic(int index = -1) {
+        if (!show_images) { set_status("请先在菜单开启加载图片"); return; }
+        if (index < 0 && !layout_dirty)
+            for (auto it = visible_begin(); it != page.pieces.end() && int(it->y) < scroll + content.height; ++it) {
+                const auto candidate = document.spans[it->span].image;
+                if (candidate >= 0 && browser::comic_page(document, document.images[candidate])) { index = candidate; break; }
+            }
+        if (index < 0) index = browser::comic_neighbor(document, -1, 1);
+        if (index < 0 || std::size_t(index) >= document.images.size() ||
+            !browser::comic_page(document, document.images[index])) {
+            set_status("没有可读图片 · 需 PNG/JPEG/GIF 章节"); return;
+        }
+        if (!comic_reading) comic_return_scroll = scroll;
+        stop();
+        comic_restore_view = false;
+        press.reset();
+        comic_reading = true; menu = false; status_until = 0;
+        // A detailed page replaces both thumbnails before allocating. Only
+        // one detailed image may remain, including after changing pages.
+        for (auto &item : images)
+            if (item.asset && (item.detailed || comic_detail) &&
+                (item.index != index || item.detailed != comic_detail)) {
+                image_states[item.index] = ImageState::unseen;
+                item.asset.reset(); item.index = -1; item.detailed = false;
+            }
+        image_view.open(index);
+        const auto *cached = cached_image(index);
+        const auto &picture = document.images[index];
+        image_view.fit_width(cached ? cached->descriptor().width : picture.width,
+                             cached ? cached->descriptor().height : picture.height,
+                             content.width, content.height);
+        if (!cached) {
+            image_states[index] = ImageState::unseen;
+            comic_pending = index;
+        }
+        dirty = true;
+#ifdef PXA_BROWSER_TRACE
+        const auto [position, count] = browser::comic_position(document, index);
+        log("BROWSER COMIC index=" + std::to_string(index) + " page=" + std::to_string(position) +
+            " count=" + std::to_string(count) + " detail=" + std::to_string(comic_detail));
+#endif
+    }
     void begin_image(int index, bool manual = false) {
         if (index < 0 || std::size_t(index) >= document.images.size())
             return;
@@ -972,7 +1039,7 @@ struct App {
             }
         if (!slot)
             for (auto &item : images)
-                if (!image_visible(item.index)) {
+                if (comic_reading ? item.index != image_view.index : !image_visible(item.index)) {
                     slot = &item;
                     break;
                 }
@@ -1018,6 +1085,7 @@ struct App {
             begin_image(index);
             return;
         }
+        comic_reading = false;
         image_view.open(index);
         reveal_status();
         scrollbar_until = 0;
@@ -1035,7 +1103,9 @@ struct App {
         if (!result) {
             images[slot].index = -1;
             image_states[index] = ImageState::failed;
-            set_status(result.error()==pxa::Error::limit_exceeded ?
+            set_status(result.error() == pxa::Error::unsupported ? "格式不支持 · 需 PNG/JPEG/GIF" :
+                comic_reading && comic_detail ? "清晰图片未加载 · 可切回省存重试" :
+                result.error()==pxa::Error::limit_exceeded ?
                 "图片超过当前解码预算" : "图片未加载 · 轻点可重试");
             log("BROWSER IMAGE ERROR index=" + std::to_string(index) +
                 " code=" + std::to_string(int(result.error())));
@@ -1113,7 +1183,7 @@ struct App {
         co_return std::unexpected(pxa::Error::protocol_error);
     }
     void set_image_dimensions(browser::Image& image, const pxa::AssetDescriptor& info) const {
-        image.width = info.source_width; image.height = info.source_height;
+        image.intrinsic_size(info.source_width, info.source_height);
         if (image.source.starts_with(browser::inline_image::png_prefix)) {
             // Leave the complete small inline image visible above the toolbar.
             auto available=content.height;
@@ -1158,10 +1228,15 @@ struct App {
     template<class Source>
     pxa::Task<void> read_image(Source &body, int index, unsigned slot,
                                std::uint64_t begin) {
+        const auto &picture = document.images[index];
+        const bool detailed = comic_reading && comic_detail && image_view.index == index;
+        const auto decode_width = detailed ? 1024 : picture.declared_width
+            ? std::min(content.width, std::max(1, int(picture.declared_width) * font / 15))
+            : content.width;
         auto decoded = co_await context->assets().images().decode(std::move(body),
-            {.max_width = std::uint16_t(std::clamp(content.width, 1, 512)),
-             .max_height = std::uint16_t(1024),
-             .max_pixels = 32768u,
+            {.max_width = std::uint16_t(std::clamp(decode_width, 1, 512)),
+             .max_height = std::uint16_t(detailed ? 2048 : 1024),
+             .max_pixels = detailed ? browser::comic_detail_pixels : 32768u,
              .max_encoded_bytes = 524288,
              .formats = show_gif ? pxa::ImageFormats::any :
                                   pxa::ImageFormats::png | pxa::ImageFormats::jpeg},
@@ -1171,6 +1246,14 @@ struct App {
         const auto info = decoded->image().descriptor();
         set_image_dimensions(document.images[index], info);
         images[slot].asset.emplace(std::move(*decoded));
+        images[slot].detailed = detailed;
+        if (comic_reading && image_view.index == index) {
+            if (comic_restore_view && comic_saved_view.index == index) {
+                image_view = comic_saved_view;
+                image_view.clamp(info.width, info.height, content.width, content.height);
+                comic_restore_view = false;
+            } else image_view.fit_width(info.width, info.height, content.width, content.height);
+        }
         images[slot].next_frame = millis() + std::max(30u, images[slot].asset->frame_info().delay_ms);
         image_states[index] = ImageState::ready;
         layout_dirty = true;
@@ -1232,7 +1315,8 @@ struct App {
         volume_direction = 0;
         edit_field = field;
         menu = false;
-        input.set(field >= 0 ? document.fields[field].value :
+        input.set(field == -3 ? std::string(page_find.query()) :
+                  field >= 0 ? document.fields[field].value :
                   (url == "about:home" || field == -2 ? "" : url));
         sync_editor();
         dirty = true;
@@ -1243,6 +1327,12 @@ struct App {
             return;
         std::string value = input.get();
         int field = edit_field;
+        if (accept && field == -3 && !browser::trim(value).empty() &&
+            !page_find.start(document, page, value)) {
+            set_status("查找文字最多 128 字节，请缩短后重试");
+            (void)context->window().toast("查找文字最多 128 字节");
+            return;
+        }
         if (accept && field == -2) {
             auto target = browser::resolve({}, browser::trim(value), true);
             if (!target || target->find('?') != target->npos) {
@@ -1270,9 +1360,14 @@ struct App {
         sync_editor();
         dirty = true;
         input.set(""); // Do not keep the last password in a hidden editor.
-        if (!accept)
+        if (!accept) {
+            if (field == -3) status_until = 0;
             return;
-        if (field == -2) {
+        }
+        if (field == -3) {
+            if (browser::trim(value).empty()) page_find.clear();
+            else reveal_find();
+        } else if (field == -2) {
             home();
             set_status("网站已保存到主页");
         } else if (field < 0) {
@@ -1290,6 +1385,23 @@ struct App {
             sync_script_field(document.fields[field]);
             set_status("已更新输入");
         }
+    }
+    void reveal_find() {
+        status_until = 0; // The address bar owns find feedback; discard stale hints.
+        if (page_find.count()) {
+            for (const auto &piece : page.pieces)
+                if (page_find.overlaps(piece)) {
+                    scroll = std::clamp(int(piece.y) - content.height / 3, 0,
+                                        std::max(0, page.height - content.height));
+                    break;
+                }
+        }
+#ifdef PXA_BROWSER_TRACE
+        log("BROWSER FIND result=" + std::to_string(page_find.ordinal()) +
+            " count=" + std::to_string(page_find.count()) +
+            " offset=" + std::to_string(page_find.offset()));
+#endif
+        dirty = true;
     }
     pxa::Task<void> load_bookmarks() {
         // A cancelled/crashed inline decode can leave only this bounded file.
@@ -1436,6 +1548,7 @@ struct App {
         if (editing)
             finish_edit(false);
         stop();
+        release_comic_detail();
         press.reset();
         // Background browsers keep no live GIF decoder. Foreground visibility
         // reloads those entries; ordinary static cached pictures remain valid.
@@ -1448,6 +1561,11 @@ struct App {
     }
     void on_foreground(pxa::Context &) {
         foreground = true;
+        if (comic_reading && !cached_image(image_view.index)) {
+            const auto previous = image_view;
+            open_comic(image_view.index);
+            comic_saved_view = previous; comic_restore_view = true;
+        }
         dirty = true;
     }
     void on_window_changed(const pxa::WindowMetrics &window) {
@@ -1479,6 +1597,10 @@ struct App {
             dirty = true;
             return pxa::BackAction::stay;
         }
+        if (page_find.active()) {
+            action(Action::find_close);
+            return pxa::BackAction::stay;
+        }
         if (history.back()) {
             action(Action::back);
             return pxa::BackAction::stay;
@@ -1492,6 +1614,10 @@ struct App {
             auto value=decode_resource_pressure(event);
             if(!value) return std::unexpected(value.error());
             resource_pressure=*value;
+            if (*value == ResourcePressure::critical && comic_reading) {
+                stop(); release_comic_detail(); comic_detail = false;
+                set_status("设备内存紧张 · 漫画已切回省存，轻点图片重试");
+            }
             const auto budget=js && *value==ResourcePressure::normal ? js->configured_heap_bytes : std::size_t(256*1024);
             if(js && (*value==ResourcePressure::critical ||
                 (js->started && !js->page.set_heap_limit(budget)))) {
@@ -1568,6 +1694,11 @@ struct App {
                 fail(r.error());
         }
         pump_script();
+        if (comic_resume && !busy && document_ready &&
+            (!document.images.empty() || !js || js->reported)) {
+            comic_resume = false;
+            open_comic();
+        }
         if (layout_dirty) {
             rebuild();
             if (page.truncated)
@@ -1601,6 +1732,13 @@ struct App {
         if (profile.pending)
             report_profile();
 #endif
+        // Present the loading placeholder before allocating the next page.
+        // This drops retained Canvas references to the previous detailed image
+        // as well as its Guest handle, keeping the decode budget bounded.
+        if (foreground && comic_reading && comic_pending >= 0 && !busy && canvas.mounted()) {
+            const int target = std::exchange(comic_pending, -1);
+            if (image_view.index == target && !cached_image(target)) begin_image(target);
+        }
     }
     void hit(PixelRect box, Action a, int index = 0) {
         if (hit_count < hits.size())
@@ -1642,7 +1780,12 @@ struct App {
     }
     void button(PixelRect box, std::string_view text, Action a, int i = 0, int align = 1) {
         const bool enabled =
-            (a != Action::back || history.back()) && (a != Action::forward || history.forward());
+            (a != Action::back || history.back()) && (a != Action::forward || history.forward()) &&
+            (a != Action::find_page || (url != "about:home" && !busy)) &&
+            ((a != Action::find_previous && a != Action::find_next) || page_find.count()) &&
+            (a != Action::comic_open || (document_ready && browser::comic_neighbor(document, -1, 1) >= 0)) &&
+            (a != Action::comic_previous || browser::comic_neighbor(document, image_view.index, -1) >= 0 || !document.previous_page.empty()) &&
+            (a != Action::comic_next || browser::comic_neighbor(document, image_view.index, 1) >= 0 || !document.next_page.empty());
         const bool active =
             (a == Action::menu && menu) || (a == Action::home && url == "about:home" && !menu);
         rect(box, !enabled ? 0xf0f3f7ff : active ? 0xdbeaf7ff : 0xe8eef3ff, dp(6));
@@ -1749,7 +1892,7 @@ struct App {
         if (!menu) return page.height;
         const auto count = menu_page == MenuPage::history ? history.entries().size() + 1 :
             menu_page == MenuPage::directory ? browser::sites.size() + 1 :
-            menu_page == MenuPage::script_memory ? browser::memory::choices.size() + 1 : bookmarks.size() + 11;
+            menu_page == MenuPage::script_memory ? browser::memory::choices.size() + 1 : bookmarks.size() + 13;
         return int(count) * (dp(32) + dp(3));
     }
     int &scroll_position() { return menu ? menu_scroll : scroll; }
@@ -1853,11 +1996,21 @@ struct App {
         }
         rect(address, 0xe8eef3ff, dp(7));
         if (!editing) {
+            char find_title[192]{};
+            if (comic_reading && image_view.active()) {
+                const auto [position, count] = browser::comic_position(document, image_view.index);
+                std::snprintf(find_title, sizeof(find_title), "漫画 %d/%d%s · %s · ×%d 放大", position, count,
+                    document.images_limited ? "+" : "", comic_detail ? "清晰" : "省存", image_view.zoom);
+            } else if (page_find.active() && !menu && !image_view.active())
+                std::snprintf(find_title, sizeof(find_title), "%zu/%zu · %s%.*s",
+                    page_find.ordinal(), page_find.count(), page_find.count() ? "" : "无匹配 · ",
+                    int(page_find.query().size()), page_find.query().data());
             label(
                 {address.x + dp(8), address.y, std::max(1, address.width - dp(16)), address.height},
-                url == "about:home" ? "搜索或输入网址…" : std::string_view(url), 0x365675ff,
+                find_title[0] ? std::string_view(find_title) :
+                    url == "about:home" ? "搜索或输入网址…" : std::string_view(url), 0x365675ff,
                 std::min(font, dp(13)), 0, true);
-            hit(address, Action::address);
+            hit(address, comic_reading ? Action::comic_zoom : find_title[0] ? Action::find_page : Action::address);
         } else {
             if (edit_field < 0) {
                 const PixelRect clear{address.x + address.width - dp(60), address.y,
@@ -1881,6 +2034,10 @@ struct App {
                 draw.image(region({content.x + box[0], content.y + box[1], box[2], box[3]}),
                            image->handle());
                 draw.pop_clip();
+            } else if (comic_reading) {
+                label(content, busy || comic_pending >= 0 ? "正在加载漫画图片…" : std::string_view(status), 0x587088ff,
+                      std::min(font, dp(13)), 1, true);
+                if (!busy && comic_pending < 0) hit(content, Action::comic_retry);
             }
         } else if (menu) {
             clip(content);
@@ -1944,6 +2101,10 @@ struct App {
             y += h + dp(3);
             button({content.x, y, content.width, h}, "脚本内存预算", Action::memory_settings);
             y += h + dp(3);
+            button({content.x, y, content.width, h}, "页内查找", Action::find_page);
+            y += h + dp(3);
+            button({content.x, y, content.width, h}, "漫画阅读", Action::comic_open);
+            y += h + dp(3);
             for (std::size_t i = 0; i < bookmarks.size(); ++i, y += h + dp(3))
                 if (y + h > content.y && y < content.y + content.height)
                     button({content.x, y, content.width, h}, bookmarks[i], Action::bookmark_open,
@@ -1998,7 +2159,7 @@ struct App {
                         ++displayed;
                         continue;
                     }
-                    int size = browser::Layout::font(span.style, font);
+                    int size = browser::Layout::font(span, font);
                     if (y + size * 3 / 2 <= content.y)
                         continue;
                     if (draw.bytes_used() + p.size + (span.field >= 0 ? 300 : 100) > 3000) {
@@ -2009,7 +2170,8 @@ struct App {
                                   std::min(content.width - int(p.x), std::max(int(p.width), size)),
                                   size * 3 / 2};
                     auto value = std::string_view(document.text).substr(p.offset, p.size);
-                    auto color = span.link >= 0                        ? 0x1469acff
+                    auto color = span.text_style.color                ? browser::css::readable_color(span.text_style.color)
+                                 : span.link >= 0                        ? 0x1469acff
                                  : span.style == browser::Style::muted ? 0x7a8c9cff
                                                                        : 0x21394dff;
                     if (span.field >= 0 && std::size_t(span.field) < document.fields.size()) {
@@ -2026,14 +2188,15 @@ struct App {
                         if (field.type == browser::FieldType::text && !field.value.empty())
                             label({box.x + box.width / 2, box.y, box.width / 2, box.height},
                                   field.value, 0x1469acff, size, 0, true);
-                        if (!field.value.empty() && field.type != browser::FieldType::submit &&
+                        if ((!field.value.empty() || field.type == browser::FieldType::checkbox ||
+                             field.type == browser::FieldType::radio) && field.type != browser::FieldType::submit &&
                             field.type != browser::FieldType::hidden &&
                             field.type != browser::FieldType::text) {
                             // Field value is visible in the editor; the document row
                             // shows a compact indicator without duplicating secrets.
                             label({box.x + box.width - dp(36), box.y, dp(36), box.height},
-                                  field.type == browser::FieldType::checkbox
-                                      ? (field.checked ? "✓" : "○")
+                                  (field.type == browser::FieldType::checkbox || field.type == browser::FieldType::radio)
+                                      ? (field.checked ? (field.type == browser::FieldType::radio ? "●" : "✓") : "○")
                                       : "…",
                                   0x1469acff, size, 1, true);
                         }
@@ -2043,6 +2206,11 @@ struct App {
                             std::min(box.y + box.height, content.y + content.height) - touch.y;
                         hit(touch, Action::field, span.field);
                     } else {
+                        // Layout uses conservative advances; actual system
+                        // fonts vary and may kern. Emphasize the matching line
+                        // fragment without pretending to know glyph bounds or
+                        // changing the text's placement during find.
+                        if (page_find.overlaps(p)) rect(box, 0xffe8a3ff, dp(2));
                         label(box, value, color, size);
                         if (span.link >= 0) {
                             line(box.x, box.y + size + dp(2), box.x + box.width,
@@ -2094,12 +2262,36 @@ struct App {
                                      Action::menu};
         constexpr std::array image_actions{Action::image_close, Action::image_less,
                                            Action::image_fit, Action::image_more};
-        const std::span<const Action> buttons = image_view.active()
-            ? std::span<const Action>(image_actions) : std::span<const Action>(actions);
-        for (std::size_t i = 0; i < buttons.size(); ++i) {
-            int x = toolbar.x + int(i) * toolbar.width / int(buttons.size());
-            int w = int(i + 1) * toolbar.width / int(buttons.size()) - x + toolbar.x;
-            navigation_button({x + dp(1), toolbar_y, std::max(1, w - dp(2)), row}, buttons[i]);
+        if (comic_reading && image_view.active()) {
+            const std::array labels{
+                browser::comic_neighbor(document, image_view.index, -1) < 0 && !document.previous_page.empty() ? "上一章" : "上一张",
+                browser::comic_neighbor(document, image_view.index, 1) < 0 && !document.next_page.empty() ? "下一章" : "下一张",
+                image_view.width_fit ? "适屏" : "适宽",
+                                    comic_detail ? "省存" : "清晰", "返回"};
+            constexpr std::array comic_actions{Action::comic_previous, Action::comic_next,
+                Action::comic_fit, Action::comic_quality, Action::image_close};
+            for (std::size_t i = 0; i < comic_actions.size(); ++i) {
+                const int x = toolbar.x + int(i) * toolbar.width / int(comic_actions.size());
+                const int w = int(i + 1) * toolbar.width / int(comic_actions.size()) - x + toolbar.x;
+                button({x + dp(1), toolbar_y, std::max(1, w - dp(2)), row}, labels[i], comic_actions[i]);
+            }
+        } else if (page_find.active() && !menu && !editing && !image_view.active()) {
+            constexpr std::array labels{"上一处", "下一处", "修改", "关闭"};
+            constexpr std::array find_actions{Action::find_previous, Action::find_next,
+                                               Action::find_page, Action::find_close};
+            for (std::size_t i = 0; i < find_actions.size(); ++i) {
+                const int x = toolbar.x + int(i) * toolbar.width / int(find_actions.size());
+                const int w = int(i + 1) * toolbar.width / int(find_actions.size()) - x + toolbar.x;
+                button({x + dp(1), toolbar_y, std::max(1, w - dp(2)), row}, labels[i], find_actions[i]);
+            }
+        } else {
+            const std::span<const Action> buttons = image_view.active()
+                ? std::span<const Action>(image_actions) : std::span<const Action>(actions);
+            for (std::size_t i = 0; i < buttons.size(); ++i) {
+                int x = toolbar.x + int(i) * toolbar.width / int(buttons.size());
+                int w = int(i + 1) * toolbar.width / int(buttons.size()) - x + toolbar.x;
+                navigation_button({x + dp(1), toolbar_y, std::max(1, w - dp(2)), row}, buttons[i]);
+            }
         }
         // The Host retains a complete command list, so future exposure and
         // system overlays still repaint correctly. During a drag only the
@@ -2117,6 +2309,60 @@ struct App {
     }
     void action(Action a, int i = 0) {
         switch (a) {
+        case Action::comic_open:
+            open_comic();
+            break;
+        case Action::comic_previous:
+        case Action::comic_next: {
+            const int target = browser::comic_neighbor(document, image_view.index,
+                a == Action::comic_previous ? -1 : 1);
+            if (target >= 0) open_comic(target);
+            else {
+                auto chapter = a == Action::comic_previous ? document.previous_page : document.next_page;
+                if (!chapter.empty()) {
+                    navigate(std::move(chapter));
+                    comic_resume = busy;
+                }
+            }
+            break;
+        }
+        case Action::comic_fit:
+            if (const auto *image = cached_image(image_view.index)) {
+                const auto info = image->descriptor();
+                if (image_view.width_fit) image_view.fit();
+                else image_view.fit_width(info.width, info.height, content.width, content.height);
+            }
+            break;
+        case Action::comic_quality:
+            comic_saved_view = image_view;
+            comic_detail = !comic_detail;
+            open_comic(image_view.index);
+            comic_restore_view = true;
+            break;
+        case Action::comic_retry:
+            open_comic(image_view.index);
+            break;
+        case Action::comic_zoom:
+            if (const auto *image = cached_image(image_view.index)) {
+                const auto info = image->descriptor();
+                if (image_view.zoom < 8)
+                    image_view.resize(1, info.width, info.height, content.width, content.height);
+                else if (image_view.width_fit)
+                    image_view.fit_width(info.width, info.height, content.width, content.height);
+                else image_view.fit();
+            }
+            break;
+        case Action::find_page:
+            if (url != "about:home" && !busy) edit(-3);
+            break;
+        case Action::find_previous:
+        case Action::find_next:
+            page_find.move(document, page, a == Action::find_previous);
+            reveal_find();
+            break;
+        case Action::find_close:
+            page_find.clear();
+            break;
         case Action::address:
             if (editing)
                 finish_edit(true);
@@ -2242,6 +2488,12 @@ struct App {
             begin_image(i, true);
             break;
         case Action::image_close:
+            if (comic_reading) {
+                stop();
+                release_comic_detail();
+                scroll = comic_return_scroll;
+                comic_reading = false;
+            }
             image_view = {};
             set_status("已返回网页 · 长按图片可预览");
             break;
@@ -2295,8 +2547,9 @@ struct App {
                         set_status("该表单暂不支持");
                         dirty = true;
                     }
-                } else if (field.type == browser::FieldType::checkbox) {
-                    field.checked = !field.checked;
+                } else if (field.type == browser::FieldType::checkbox || field.type == browser::FieldType::radio) {
+                    browser::check_field(document, std::size_t(i),
+                        field.type == browser::FieldType::radio || !field.checked);
                     sync_script_field(field);
                     dirty = true;
                 } else

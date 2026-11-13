@@ -12,5 +12,17 @@ fi
 "${CXX:-clang++}" "${flags[@]}" "$here/core_test.cpp" -o "$work/core-test"
 "$work/core-test"
 
+"${CXX:-clang++}" "${flags[@]}" "$here/find_test.cpp" -o "$work/find-test"
+"$work/find-test"
+
+"${CXX:-clang++}" "${flags[@]}" "$here/compat_test.cpp" -o "$work/compat-test"
+"$work/compat-test"
+
+"${CXX:-clang++}" "${flags[@]}" "$here/css_test.cpp" -o "$work/css-test"
+"$work/css-test"
+
+"${CXX:-clang++}" "${flags[@]}" "$here/comic_test.cpp" -o "$work/comic-test"
+"$work/comic-test"
+
 "${CXX:-clang++}" "${flags[@]}" "$here/encoding_test.cpp" -o "$work/encoding-test"
 "$work/encoding-test" "$here/../assets/gb18030.bin"

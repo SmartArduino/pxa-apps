@@ -9,8 +9,42 @@ Its `pxa-browser` application ID is unchanged, preserving existing bookmarks and
 Enter a URL or search terms, tap links, and drag to scroll. It supports HTTP/HTTPS,
 redirects, relative links, back/forward history, bookmarks, system text input,
 basic GET/POST forms, and DPI/shape/safe-area adaptation.
+Version 0.1.9 adds bounded text CSS from preceding inline style blocks and style
+attributes: simple tag/class/ID compounds, cascade and `!important`, inherited
+colors/font sizes, display, whitespace and left/center/right alignment. Styles
+survive script repaints. Limits are 8 KiB of CSS, 64 rules and 32 nested states;
+font sizes follow the reading font within 0.5–2 times its size. Preformatted text
+wraps, and light colors darken against the fixed reading background. External
+stylesheets, complex selectors, media queries, full box layout and retroactive
+restyling of already emitted content remain unsupported.
+Radio groups, disabled controls, explicit empty checkbox values and field
+`aria-label` captions are supported. RSS 2.0 and Atom feeds display linked
+articles and summaries within an 8 KiB per-entry limit. Navigation includes
+Chinese poetry, IT Home and CNBlogs feeds, Chinese Wikisource and NPR's text
+edition. These entry pages and scrolling were checked in the real simulator;
+linked pages, login and live availability have separate compatibility limits.
+The parser skips discarded raw text by transport chunk and batches validated
+UTF-8 literals without a second document buffer. Decoded images retain explicit
+HTML width limits; small icons request smaller output from the native decoder.
 The bottom icons are Back, Forward, Home, Reload/Stop, and More. Hold an enabled
 icon to show its name without navigating.
+
+More → Find in page searches the laid-out page text, with exact Chinese and
+case-insensitive ASCII matching, highlighting the line fragments containing the
+current result. Previous/Next wrap through results; the address
+bar shows the current result and total. Tap it or Edit to change the query.
+Close or system Back exits find and keeps the current reading position. Queries
+are limited to 128 UTF-8 bytes and are not saved. Form fields, passwords and
+image alternatives are excluded, and finding never reloads the page.
+
+More → Comic reader provides width-fit reading, image navigation, screen fit,
+dragging and 1/2/4/8× zoom by tapping the header. Declared `rel=next/prev` links
+continue into adjacent chapters. Detail mode downloads and decodes again with
+up to 262144 pixels and retains at most one detailed image. Normal decoding
+keeps its 32768-pixel limit; encoded images remain capped at 512 KiB. Closing
+restores the webpage position. Images still depend on the Host budget; WebP and
+complex scripted/encrypted readers remain unsupported. Chapter pages can retain
+up to 96 bounded image descriptors, with a visible warning when images are omitted.
 
 Tap a loaded, unlinked image to preview it; linked pictures still navigate on tap
 and open the preview on a long press. Preview controls are Back to page, Zoom out,

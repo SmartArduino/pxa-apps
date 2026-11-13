@@ -34,6 +34,9 @@ def fixtures():
     draw.polygon([(100, 180), (230, 90), (320, 180)], fill=(52, 141, 112, 255))
     draw.rounded_rectangle((112, 65, 194, 120), radius=12, fill=(255, 255, 255, 0))
     result = {}
+    icon = Image.new('RGB', (200, 200), (20, 130, 200))
+    ImageDraw.Draw(icon).rectangle((40, 40, 159, 159), fill=(245, 210, 40))
+    icon_bytes = BytesIO(); icon.save(icon_bytes, 'PNG'); result['icon.png'] = icon_bytes.getvalue()
     for name, picture, fmt, options in [
         ('alpha.png', image, 'PNG', {}),
         ('palette.png', image.convert('P', palette=Image.Palette.ADAPTIVE, colors=32), 'PNG', {}),

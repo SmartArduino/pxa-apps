@@ -58,6 +58,7 @@
         if (this.childNodes.length >= 192) throw new RangeError('child limit');
         if (child.parentNode) child.parentNode.removeChild(child);
         child.parentNode = this; this.childNodes.push(child); changed();
+        if (child.nodeName==='INPUT' && child.checked) uncheckRadioPeers(child);
         if(child.nodeName==='SCRIPT' || child._hasScripts) {
             for(let at=this;at;at=at.parentNode)at._hasScripts=true;
             activateScripts(child);
@@ -83,6 +84,7 @@
         if (!own(this._attrs, name) && Object.keys(this._attrs).length >= 24) throw new RangeError('attribute count');
         if (this._attrs[name] === value) return;
         this._attrs[name] = value;
+        if (name==='checked') uncheckRadioPeers(this);
         if (name.startsWith('on')) this[name] = undefined;
         if (name === 'style') for (const rule of value.split(';')) {
             const colon = rule.indexOf(':'); if (colon < 0) continue;
@@ -92,6 +94,24 @@
         changed();
         if (name==='src' && this.nodeName==='SCRIPT') activateScripts(this);
     };
+    function formOwner(n) {
+        for(let p=n.parentNode;p;p=p.parentNode) if(p.nodeName==='FORM') return p;
+        return null;
+    }
+    function uncheckRadioPeers(node) {
+        if (node.nodeName!=='INPUT' || node.type.toLowerCase()!=='radio' || !node.name) return;
+        const form=formOwner(node);
+        let top=node;while(top.parentNode)top=top.parentNode;
+        const todo=[top];let visited=0;
+        while(todo.length) {
+            if(++visited>512)throw new RangeError('radio traversal limit');
+            const other=todo.pop();
+            if(other!==node && other.nodeName==='INPUT' && other.type.toLowerCase()==='radio' &&
+                other.name===node.name && formOwner(other)===form && other.checked)
+                other.removeAttribute('checked');
+            for(let i=other.childNodes.length-1;i>=0;--i)todo.push(other.childNodes[i]);
+        }
+    }
     function activateScripts(node) {
         let root=node;while(root.parentNode)root=root.parentNode;
         if(root!==document)return;
@@ -117,7 +137,10 @@
     for (const key of ['id','name','value','src','href','type','className','alt','title']) {
         const attribute = key === 'className' ? 'class' : key;
         Object.defineProperty(Node.prototype, key, {
-            get() { const attrs=this._attrs; return attrs && own(attrs,attribute) ? attrs[attribute] || '' : ''; },
+            get() { const attrs=this._attrs;
+                if(attrs && own(attrs,attribute))return attrs[attribute] || '';
+                return key==='value' && this.nodeName==='INPUT' &&
+                    (this.type.toLowerCase()==='radio' || this.type.toLowerCase()==='checkbox') ? 'on' : ''; },
             set(v) { this.setAttribute(attribute, v); }});
     }
     for (const key of ['checked','disabled','hidden']) Object.defineProperty(Node.prototype, key, {
@@ -252,7 +275,8 @@
     function submit(form) {
         if (!dispatch(form, event('submit'), true)) return;
         const values = find(form, n => n.nodeName === 'INPUT' && n.name && !n.disabled, true)
-            .filter(n => n.type !== 'submit' && (n.type !== 'checkbox' || n.checked))
+            .filter(n => formOwner(n)===form && n.type.toLowerCase() !== 'submit' &&
+                ((n.type.toLowerCase() !== 'checkbox' && n.type.toLowerCase() !== 'radio') || n.checked))
             .map(n => encodeURIComponent(n.name) + '=' + encodeURIComponent(n.value)).join('&');
         native.navigate(form.getAttribute('action') || native.url, (form.getAttribute('method') || 'get').toLowerCase(), values);
     }
@@ -272,7 +296,16 @@
                 for(let i=n.childNodes.length-1;i>=0;--i) { todo.push(n.childNodes[i]);endings.push(''); }
                 continue;
             }
-            if (n.nodeName==='SCRIPT' || n.nodeName==='STYLE') continue;
+            if (n.nodeName==='SCRIPT') continue;
+            // Keep preceding page styles across an incremental DOM repaint.
+            // CSS raw text must not be HTML-escaped; the native parser applies
+            // its own 8 KiB / 64-rule budget without fetching external sheets.
+            if (n.nodeName==='STYLE') {
+                const media=n.getAttribute('media'), type=n.getAttribute('type');
+                parts.push('<style'+(media?' media="'+escape(media)+'"':'')+
+                    (type?' type="'+escape(type)+'"':'')+'>'+n.textContent.slice(0,8192)+'</style>');
+                continue;
+            }
             const attributes=n._attrs, styleValues=n._style;
             const type=attributes && attributes.type ? attributes.type.toLowerCase() : '';
             let tag=n.nodeName.toLowerCase(), attrs='', style='';
@@ -317,6 +350,7 @@
             for (let i = 0; i < attributes.length; i += 2) node.setAttribute(attributes[i], attributes[i + 1]);
             if(parent.childNodes.length>=192)throw new RangeError('child limit');
             node.parentNode=parent;parent.childNodes.push(node);
+            if(node.nodeName==='INPUT' && node.checked)uncheckRadioPeers(node);
             if (tag === 'html') document.documentElement = node;
             if (tag === 'body') document.body = node;
             if (tag === 'head') document.head = node;

@@ -1,7 +1,7 @@
 """Read actual pixel geometry from a PXA_BROWSER_TRACE=1 test package."""
 import re
 
-TOOL_ROWS = 11
+TOOL_ROWS = 13
 CLEAR_SESSIONS_ROW = 9
 
 

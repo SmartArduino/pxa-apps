@@ -110,6 +110,7 @@ struct Page::Impl {
     unsigned initialization_stage = 0;
     std::size_t cursor = 0, source_bytes = 0;
     unsigned node_count = 0, script_count = 0;
+    std::size_t style_bytes = 0;
     std::uint32_t next_id = 1, waiting_script = 0;
     std::array<std::uint32_t, 4> outstanding{};
     std::array<bool, 4> script_requests{};
@@ -450,6 +451,30 @@ struct Page::Impl {
             const auto end = closing == source.npos ? source.size() : closing;
             auto body = source.substr(at, end - at); at = end;
             if (closing != source.npos) (void)token(source, at);
+            if (t.name == "style") {
+                const auto count = std::min(body.size(),browser::css::max_bytes-style_bytes);
+                if (!count) return;
+                if (scripts && ++node_count > limits.nodes) {
+                    problem = "脚本页面节点达到上限"; stopped = true; return;
+                }
+                style_bytes += count;
+                Value attrs(ctx,JS_NewArray(ctx));
+                if (!check(attrs.value)) return;
+                for (std::size_t i=0; i<t.count; ++i) {
+                    auto key=string(t.attrs[i].name), value=string(browser::entities(t.attrs[i].value));
+                    if (!check(key.value) || !check(value.value)) return;
+                    if (JS_SetPropertyUint32(ctx,attrs.value,std::uint32_t(i*2),key.release())<0 ||
+                        JS_SetPropertyUint32(ctx,attrs.value,std::uint32_t(i*2+1),value.release())<0) {
+                        check(JS_EXCEPTION); return;
+                    }
+                }
+                auto name=string("style");
+                invoke("open",name.value,attrs.value,JS_FALSE);
+                auto value=string(body.substr(0,count));
+                if (check(value.value)) invoke("text",value.value);
+                invoke("close",name.value);
+                return;
+            }
             if (!scripts || t.name != "script" || !executable(t)) return;
             if (++script_count > limits.scripts) { problem = "网页脚本数量达到上限"; ++counters.errors; return; }
             const auto src = t.get("src");

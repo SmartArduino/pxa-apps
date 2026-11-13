@@ -8,24 +8,27 @@ namespace browser {
 // Coordinates are relative to its centre, so resizing preserves the focus.
 struct ImageView {
     int index = -1, zoom = 1, x = 0, y = 0;
+    bool width_fit = false;
     constexpr bool active() const noexcept { return index >= 0; }
     constexpr void open(int image) noexcept { *this = {image, 1, 0, 0}; }
-    constexpr void fit() noexcept { zoom = 1; x = y = 0; }
+    constexpr void fit() noexcept { zoom = 1; x = y = 0; width_fit = false; }
     constexpr std::array<int, 4> rectangle(int width, int height, int vw, int vh) const noexcept {
         width = std::clamp(width, 1, 4096);
         height = std::clamp(height, 1, 4096);
         vw = std::clamp(vw, 1, 16384);
         vh = std::clamp(vh, 1, 16384);
         int w = vw, h = std::max(1, int(std::int64_t(w) * height / width));
-        if (h > vh) {
+        if (!width_fit && h > vh) {
             h = vh;
             w = std::max(1, int(std::int64_t(h) * width / height));
         }
-        w = std::min(16384, w * std::clamp(zoom, 1, 8));
-        h = std::min(16384, h * std::clamp(zoom, 1, 8));
-        const int mx = std::max(0, (w - vw) / 2), my = std::max(0, (h - vh) / 2);
-        return {(vw - w) / 2 + std::clamp(x, -mx, mx),
-                (vh - h) / 2 + std::clamp(y, -my, my), w, h};
+        w *= std::clamp(zoom, 1, 8);
+        h *= std::clamp(zoom, 1, 8);
+        if (h > 16384) { w = std::max(1, int(std::int64_t(w) * 16384 / h)); h = 16384; }
+        if (w > 16384) { h = std::max(1, int(std::int64_t(h) * 16384 / w)); w = 16384; }
+        const int cx = (vw - w) / 2, cy = (vh - h) / 2;
+        return {cx + (w > vw ? std::clamp(x, vw - w - cx, -cx) : 0),
+                cy + (h > vh ? std::clamp(y, vh - h - cy, -cy) : 0), w, h};
     }
     constexpr std::array<int, 4> clamp(int width, int height, int vw, int vh) noexcept {
         const auto box = rectangle(width, height, vw, vh);
@@ -40,6 +43,10 @@ struct ImageView {
         zoom = next;
         clamp(width, height, vw, vh);
     }
+    constexpr void fit_width(int width, int height, int vw, int vh) noexcept {
+        zoom = 1; x = 0; y = 16384; width_fit = true;
+        clamp(width, height, vw, vh); // begin at the top of a long page
+    }
     constexpr bool pan(int dx, int dy, int width, int height,
                                               int vw, int vh) noexcept {
         const int old_x = x, old_y = y;
@@ -49,5 +56,5 @@ struct ImageView {
         return x != old_x || y != old_y;
     }
 };
-static_assert(sizeof(ImageView) == 16);
+static_assert(sizeof(ImageView) <= 20);
 } // namespace browser

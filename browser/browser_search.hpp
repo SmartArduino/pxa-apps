@@ -27,29 +27,58 @@ inline std::expected<std::string, Error> address_target(std::string_view input,
         return std::unexpected(Error::limit);
     return target;
 }
-// Minimal RSS 2.0 reader for search feeds. One bounded item, not a complete XML
+// Minimal RSS 2.0 / Atom reader. One bounded item, not a complete XML
 // tree. No external entities, DTD expansion, network fetching or XML execution.
 class RssParser {
     Document &doc_;
     std::string buffer_;
-    bool item_ = false, overflow_ = false;
-    static std::string value(std::string_view item, std::string_view tag) {
-        std::string open = "<" + std::string(tag) + ">", close = "</" + std::string(tag) + ">";
-        auto at = item.find(open);
-        if (at == item.npos)
-            return {};
-        at += open.size();
-        auto end = item.find(close, at);
-        if (end == item.npos)
-            return {};
-        auto text = item.substr(at, end - at);
+    bool item_ = false, overflow_ = false, atom_ = false, cdata_ = false;
+    static std::size_t tag_end(std::string_view text, std::size_t at) {
+        char quote = 0;
+        for (; at < text.size(); ++at) {
+            const auto c = text[at];
+            if (quote) { if (c == quote) quote = 0; }
+            else if (c == '\'' || c == '"') quote = c;
+            else if (c == '>') return at;
+        }
+        return text.npos;
+    }
+    static std::pair<std::size_t, std::size_t> opening(std::string_view text,
+                                                      std::string_view name, std::size_t from = 0) {
+        const std::string prefix = "<" + std::string(name);
+        for (;;) {
+            auto at = text.find(prefix, from);
+            if (at == text.npos) return {at, at};
+            const auto after = at + prefix.size();
+            if (after < text.size() && (space(text[after]) || text[after] == '/' || text[after] == '>'))
+                return {at, tag_end(text, after)};
+            from = after;
+        }
+    }
+    static std::string value(std::string_view item, std::string_view name) {
+        const auto [start, at] = opening(item, name);
+        if (start == item.npos || at == item.npos) return {};
+        const auto end = item.find("</" + std::string(name) + ">", at + 1);
+        if (end == item.npos) return {};
+        auto text = trim(item.substr(at + 1, end - at - 1));
         if (text.starts_with("<![CDATA[") && text.ends_with("]]>"))
             return std::string(text.substr(9, text.size() - 12));
         return entities(text);
     }
     void publish() {
         auto title = value(buffer_, "title"), link = value(buffer_, "link"),
-             description = value(buffer_, "description");
+             description = value(buffer_, atom_ ? "summary" : "description");
+        if (atom_) {
+            if (description.empty()) description = value(buffer_, "content");
+            for (std::size_t from = 0;;) {
+                const auto [begin, end] = opening(buffer_, "link", from);
+                if (begin == buffer_.npos || end == buffer_.npos) break;
+                const auto element = tag(std::string_view(buffer_).substr(begin + 1, end - begin - 1));
+                const auto rel = lowercase(element.get("rel"));
+                if (rel.empty() || rel == "alternate") { link = element.get("href"); break; }
+                from = end + 1;
+            }
+        }
         auto target = resolve(doc_.base, trim(link));
         if (!target || doc_.links.size() >= max_links)
             return;
@@ -58,7 +87,10 @@ class RssParser {
         Document safe;
         safe.clear(doc_.base);
         Parser parser(safe);
-        parser.feed_plain(title);
+        const auto [title_begin, title_end] = opening(buffer_, "title");
+        const bool html_title = atom_ && title_begin != buffer_.npos && title_end != buffer_.npos &&
+            tag(std::string_view(buffer_).substr(title_begin + 1, title_end - title_begin - 1)).get("type") == "html";
+        if (html_title) parser.feed(title); else parser.feed_plain(title);
         parser.finish();
         auto label = trim(safe.text);
         if (label.empty())
@@ -85,29 +117,42 @@ class RssParser {
                 return;
             if (!item_) {
                 buffer_ += c;
-                if (buffer_.ends_with("<item>")) {
+                bool begins = false;
+                if (c == '>') {
+                    const auto at = buffer_.rfind('<');
+                    if (at != buffer_.npos) {
+                        const auto text = std::string_view(buffer_).substr(at + 1, buffer_.size() - at - 2);
+                        const auto t = tag(text);
+                        begins = !t.closing && !trim(text).ends_with('/') &&
+                                 (t.name == "item" || t.name == "entry");
+                        if (begins) atom_ = t.name == "entry";
+                    }
+                }
+                if (begins) {
                     item_ = true;
                     buffer_.clear();
-                    overflow_ = false;
-                } else if (buffer_.size() > 6)
-                    buffer_.erase(0, buffer_.size() - 6);
+                    overflow_ = cdata_ = false;
+                } else if (buffer_.size() > 512)
+                    buffer_.erase(0, buffer_.size() - 256);
             } else {
                 buffer_ += c;
-                if (buffer_.ends_with("</item>")) {
+                if (!cdata_ && buffer_.ends_with("<![CDATA[")) cdata_ = true;
+                else if (cdata_ && buffer_.ends_with("]]>")) cdata_ = false;
+                else if (!cdata_ && buffer_.ends_with(atom_ ? "</entry>" : "</item>")) {
                     if (!overflow_)
                         publish();
                     buffer_.clear();
                     item_ = false;
                 } else if (buffer_.size() >= 8192) {
                     overflow_ = true;
-                    buffer_.erase(0, buffer_.size() - 7);
+                    buffer_.erase(0, buffer_.size() - 16);
                 }
             }
         }
     }
     void finish() {
         if (doc_.links.empty())
-            doc_.append("没有可显示的搜索结果，请更换关键词或搜索引擎。");
+            doc_.append("没有可显示的内容，请更换关键词或网址。");
     }
 };
 } // namespace browser

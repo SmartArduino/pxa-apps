@@ -1,0 +1,18 @@
+{
+  "name": "PXA 浏览器",
+  "kind": "app",
+  "category": "network",
+  "language": "zh-CN",
+  "summary": "浏览轻量网页、诗词与资讯订阅，收藏常用网站，并以适宽视图连读漫画图片。",
+  "description": "支持 HTTP/HTTPS 轻量网页、中文、书签、浏览历史、页内查找、基础表单和 RSS/Atom 订阅。漫画视图支持翻图、拖动、适宽/适屏、缩放与有界清晰模式，可跟随网页声明的上下章链接。\n\n按需显示 PNG、JPEG 和 GIF，可调整图片与轻量网页脚本开关。暂不支持 WebP、加密切图、完整 CSS、DRM 或复杂现代网站。外部网站的内容和可用性可能变化。\n\nBrowse lightweight HTTP/HTTPS pages and RSS/Atom feeds, save bookmarks, revisit history and find text. Read image-based comics with page navigation, width/screen fit, pan, zoom and a bounded detail mode. PNG/JPEG/GIF and limited JavaScript are supported; WebP, encrypted image tiles and full modern-browser compatibility are not supported.\n\n漫画运行截图内容：《小辣椒与萝卜头 / Pepper&Carrot》，David Revoy 及翻译贡献者，CC BY 4.0。原作：https://www.peppercarrot.com/cn/webcomic/ep01_Potion-of-Flight.html；许可：https://www.peppercarrot.com/en/license/index.html。截图为浏览器原始显示。\nComic screenshot credit: Pepper&Carrot by David Revoy and translation contributors, CC BY 4.0; original artwork and license linked above.",
+  "icon": "assets/icon.png",
+  "cover": "store/cover-0.1.8.png",
+  "tags": [
+    "浏览器",
+    "网页阅读",
+    "漫画",
+    "资讯订阅",
+    "书签"
+  ],
+  "changelog": "新增有界文字 CSS：标签/类/ID 简单选择器、颜色、字号、空白、对齐与 display；修复嵌套样式恢复、遗漏 head 结束标签及脚本重绘后样式丢失。保留 CSS 和阅读内存预算。\n\nAdds bounded text CSS, simple selectors, cascade, font/color/whitespace/alignment/display; fixes nested style recovery, omitted head ends and styles lost after script repaints."
+}

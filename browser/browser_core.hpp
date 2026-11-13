@@ -11,12 +11,13 @@
 #include <string_view>
 #include <vector>
 #include "browser_inline_image.hpp"
+#include "browser_css.hpp"
 
 namespace browser {
 using namespace std::literals;
 enum class Error { invalid_url, unsupported_scheme, limit, unsupported_form };
 constexpr std::size_t max_url = 1024, max_text = 49152, max_spans = 768, max_links = 96,
-                      max_fields = 24, max_forms = 8, max_pieces = 4096, max_images = 32;
+                      max_fields = 24, max_forms = 8, max_pieces = 4096, max_images = 96;
 inline bool space(unsigned char c) {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\f';
 }
@@ -27,12 +28,25 @@ inline std::string lowercase(std::string_view s) {
         c = lower(c);
     return r;
 }
+inline bool equal_ascii(std::string_view a, std::string_view b) {
+    return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(),
+        [](char x, char y) { return lower(x) == lower(y); });
+}
 inline std::string_view trim(std::string_view s) {
     while (!s.empty() && space(s.front()))
         s.remove_prefix(1);
     while (!s.empty() && space(s.back()))
         s.remove_suffix(1);
     return s;
+}
+inline bool word_token(std::string_view list, std::string_view wanted) {
+    while (!(list = trim(list)).empty()) {
+        const auto end = list.find_first_of(" \t\r\n\f");
+        if (equal_ascii(list.substr(0, end), wanted)) return true;
+        if (end == list.npos) break;
+        list.remove_prefix(end + 1);
+    }
+    return false;
 }
 inline void utf8(std::string &s, std::uint32_t cp) {
     if (cp == 0 || cp > 0x10ffff || (cp >= 0xd800 && cp <= 0xdfff))
@@ -88,6 +102,18 @@ inline std::string entities(std::string_view s) {
             cp = 0x2013;
         else if (name == "hellip")
             cp = 0x2026;
+        else if (name == "ldquo") cp = 0x201c;
+        else if (name == "rdquo") cp = 0x201d;
+        else if (name == "lsquo") cp = 0x2018;
+        else if (name == "rsquo") cp = 0x2019;
+        else if (name == "middot") cp = 0xb7;
+        else if (name == "bull") cp = 0x2022;
+        else if (name == "times") cp = 0xd7;
+        else if (name == "divide") cp = 0xf7;
+        else if (name == "deg") cp = 0xb0;
+        else if (name == "reg") cp = 0xae;
+        else if (name == "trade") cp = 0x2122;
+        else if (name == "euro") cp = 0x20ac;
         else if (name.starts_with('#')) {
             name.remove_prefix(1);
             int base = 10;
@@ -320,11 +346,28 @@ struct Span {
     std::int16_t link = -1, field = -1;
     Style style = Style::body;
     std::int16_t image = -1;
+    css::Text text_style{};
 };
 struct Image {
     std::string source;
     std::uint16_t width = 240, height = 150;
     std::optional<ReferrerPolicy> referrer{};
+    std::uint16_t declared_width = 0, declared_height = 0;
+    void intrinsic_size(unsigned source_width, unsigned source_height) {
+        const auto sw = std::clamp(source_width, 1u, 65535u);
+        const auto sh = std::clamp(source_height, 1u, 65535u);
+        unsigned w = sw, h = sh;
+        // The reader preserves aspect ratio. An explicit width is the layout
+        // ceiling; with height alone derive width from the real source ratio.
+        if (declared_width) {
+            w = std::min(w, unsigned(declared_width));
+            h = std::max(1u, unsigned(std::uint64_t(w) * sh / sw));
+        } else if (declared_height) {
+            h = std::min(h, unsigned(declared_height));
+            w = std::max(1u, unsigned(std::uint64_t(h) * sw / sh));
+        }
+        width = std::uint16_t(w); height = std::uint16_t(h);
+    }
 };
 struct Link {
     std::string target;
@@ -338,7 +381,7 @@ struct Form {
     std::string action;
     bool post = false, supported = true;
 };
-enum class FieldType : std::uint8_t { text, password, hidden, checkbox, submit };
+enum class FieldType : std::uint8_t { text, password, hidden, checkbox, submit, radio };
 struct Field {
     std::string name, value, label;
     std::int16_t form = -1;
@@ -347,24 +390,28 @@ struct Field {
     std::uint32_t script_node = 0;
 };
 struct Document {
-    std::string text, title, base;
+    std::string text, title, base, next_page, previous_page, comic_folder;
     std::vector<Span> spans;
     std::vector<Link> links;
     std::vector<Anchor> anchors;
     std::vector<Form> forms;
     std::vector<Field> fields;
     std::vector<Image> images;
-    bool truncated = false, wml = false, links_limited = false;
+    bool truncated = false, wml = false, links_limited = false, images_limited = false;
     ReferrerPolicy referrer = ReferrerPolicy::strict_origin_when_cross_origin;
     void clear(std::string url, bool release_storage = false) {
         if (release_storage) {
             std::string{}.swap(text); std::string{}.swap(title);
+            std::string{}.swap(next_page); std::string{}.swap(previous_page);
+            std::string{}.swap(comic_folder);
             std::vector<Span>{}.swap(spans); std::vector<Link>{}.swap(links);
             std::vector<Anchor>{}.swap(anchors); std::vector<Form>{}.swap(forms);
             std::vector<Field>{}.swap(fields); std::vector<Image>{}.swap(images);
         }
         text.clear();
         title.clear();
+        next_page.clear(); previous_page.clear();
+        comic_folder.clear();
         base = std::move(url);
         spans.clear();
         links.clear();
@@ -372,7 +419,7 @@ struct Document {
         forms.clear();
         fields.clear();
         images.clear();
-        truncated = wml = links_limited = false;
+        truncated = wml = links_limited = images_limited = false;
         referrer = ReferrerPolicy::strict_origin_when_cross_origin;
     }
     // Dynamic backing storage only; nested URL/field strings and VM/Host
@@ -391,7 +438,7 @@ struct Document {
         return int(links.size() - 1);
     }
     void append(std::string_view value, Style style = Style::body, int link = -1, int field = -1,
-                int image = -1) {
+                int image = -1, css::Text text_style = {}) {
         if (value.empty() || truncated)
             return;
         if (value.size() > max_text - text.size() || spans.size() >= max_spans) {
@@ -399,11 +446,12 @@ struct Document {
             return;
         }
         if (!spans.empty() && spans.back().style == style && spans.back().link == link &&
-            spans.back().field == field && image < 0 && spans.back().image < 0)
+            spans.back().field == field && spans.back().text_style == text_style &&
+            image < 0 && spans.back().image < 0)
             spans.back().size += value.size();
         else
             spans.push_back({std::uint32_t(text.size()), std::uint32_t(value.size()),
-                             std::int16_t(link), std::int16_t(field), style, std::int16_t(image)});
+                             std::int16_t(link), std::int16_t(field), style, std::int16_t(image), text_style});
         if (text.size() + value.size() > text.capacity() && text.capacity() > max_text / 2) {
             // Normal geometric growth can almost double the 48 KiB ceiling.
             // Allocate the final capacity only when a large page needs it;
@@ -421,11 +469,22 @@ struct Document {
         } else
             text += value;
     }
-    void newline() {
+    void newline(css::Text text_style = {}) {
         if (!text.empty() && text.back() != '\n')
-            append("\n");
+            append("\n",Style::body,-1,-1,-1,text_style);
     }
 };
+// Radios with a nonempty name share a group only within the same form. A tap
+// selects a radio and cannot uncheck it; checkboxes retain independent toggles.
+inline void check_field(Document &doc, std::size_t index, bool checked) {
+    if (index >= doc.fields.size()) return;
+    auto &field = doc.fields[index];
+    if (checked && field.type == FieldType::radio && !field.name.empty())
+        for (auto &other : doc.fields)
+            if (&other != &field && other.type == FieldType::radio &&
+                other.form == field.form && other.name == field.name) other.checked = false;
+    field.checked = checked;
+}
 struct Attribute {
     std::string_view name, value;
 };
@@ -436,13 +495,13 @@ struct Tag {
     std::size_t count = 0;
     std::string get(std::string_view key) const {
         for (std::size_t i = 0; i < count; ++i)
-            if (lowercase(attrs[i].name) == key)
+            if (equal_ascii(attrs[i].name, key))
                 return entities(attrs[i].value);
         return {};
     }
     bool has(std::string_view key) const {
         for (std::size_t i = 0; i < count; ++i)
-            if (lowercase(attrs[i].name) == key)
+            if (equal_ascii(attrs[i].name, key))
                 return true;
         return false;
     }
@@ -527,12 +586,94 @@ class Parser {
     unsigned hidden_depth_ = 0;
     bool in_label_ = false;
     bool in_tag_ = false, comment_ = false, discard_tag_ = false;
+    bool raw_close_ = false, base_seen_ = false;
+    unsigned comment_dashes_ = 0;
     char quote_ = 0;
     Style style_ = Style::body;
+    css::Text text_style_{0,100};
+    css::Sheet sheet_;
+    std::string style_source_;
+    std::size_t style_bytes_ = 0;
+    struct Scope {
+        std::array<char,32> name{};
+        css::Text previous;
+        Style role;
+        bool block;
+    };
+    std::vector<Scope> scopes_;
+    unsigned overflow_depth_ = 0;
+    bool last_cr_ = false;
+    bool style_enabled_ = true;
+    bool body_started_ = false;
+    std::string html_id_, html_classes_, html_inline_;
+    void begin_body() {
+        if (body_started_) return;
+        body_started_ = true;
+        text_style_ = {0,100};
+        css::inherit(text_style_,sheet_.cascade("html",html_id_,html_classes_,html_inline_));
+        pre_ = text_style_.whitespace == css::WhiteSpace::preserve;
+        std::string{}.swap(html_id_); std::string{}.swap(html_classes_); std::string{}.swap(html_inline_);
+    }
+    void capture_style(std::string_view value) {
+        if (raw_ != "style" || !style_enabled_) return;
+        const auto count = std::min(value.size(), css::max_bytes - style_bytes_);
+        style_source_.append(value.substr(0,count)); style_bytes_ += count;
+    }
+    void finish_raw() {
+        if (raw_ == "style") {
+            sheet_.parse(style_source_);
+            std::string{}.swap(style_source_);
+        }
+        raw_.clear();
+    }
+    std::optional<bool> close_scope(std::string_view name) {
+        for (std::size_t i = scopes_.size(); i > 0; --i) {
+            const auto &scope = scopes_[i-1];
+            if (std::string_view(scope.name.data()) != name) continue;
+            const auto block = scope.block;
+            text_style_ = scope.previous; style_ = scope.role;
+            pre_ = text_style_.whitespace == css::WhiteSpace::preserve;
+            scopes_.resize(i-1);
+            return block;
+        }
+        return {};
+    }
     int link_ = -1, form_ = -1;
     bool head_ = false, title_ = false, pre_ = false, last_space_ = false;
     std::array<char, 4> unicode_{};
     unsigned unicode_size_ = 0, unicode_want_ = 0;
+    // Batch validated literal runs into the existing document string. Labels,
+    // title budgets, entities and incomplete/invalid UTF-8 keep the scalar path.
+    // Never allocate a decoded copy or append beyond the readable text budget.
+    std::size_t literal_prefix(std::string_view bytes) const {
+        if (unicode_want_ || !entity_.empty() || in_label_ || title_) return 0;
+        const auto limit = std::min(bytes.size(), max_text - doc_.text.size());
+        const bool last_span = doc_.spans.size() + 1 == max_spans &&
+            (doc_.spans.empty() || doc_.spans.back().style != style_ ||
+             doc_.spans.back().text_style != text_style_ ||
+             doc_.spans.back().link != link_ || doc_.spans.back().field >= 0 ||
+             doc_.spans.back().image >= 0);
+        std::size_t at = 0;
+        while (at < limit) {
+            const auto c = static_cast<unsigned char>(bytes[at]);
+            if (c < 32 || space(c) || c == '<' || c == '&') break;
+            const unsigned n = c < 128 ? 1 : c >= 0xc2 && c <= 0xdf ? 2 :
+                               c >= 0xe0 && c <= 0xef ? 3 : c >= 0xf0 && c <= 0xf4 ? 4 : 0;
+            if (!n || n > limit - at) break;
+            bool valid = true;
+            for (unsigned i = 1; i < n; ++i)
+                valid &= (static_cast<unsigned char>(bytes[at+i]) & 0xc0) == 0x80;
+            if (n > 1) {
+                const auto b = static_cast<unsigned char>(bytes[at+1]);
+                valid &= !(c == 0xe0 && b < 0xa0) && !(c == 0xed && b >= 0xa0) &&
+                         !(c == 0xf0 && b < 0x90) && !(c == 0xf4 && b >= 0x90);
+            }
+            if (!valid) break;
+            at += n;
+            if (last_span) break; // preserve scalar truncation at the last new span
+        }
+        return at;
+    }
     void glyph(std::string_view s) {
         if (hidden_depth_) return;
         if (title_) {
@@ -543,10 +684,13 @@ class Parser {
         if (head_ || !raw_.empty() || hidden_depth_)
             return;
         if (in_label_ && label_.size() + s.size() <= 128) label_ += s;
-        doc_.append(s, style_, link_);
+        doc_.append(s, style_, link_, -1, -1, text_style_);
         last_space_ = false;
     }
     void character(unsigned char c) {
+        if (c == '\n' && last_cr_) { last_cr_ = false; return; }
+        last_cr_ = c == '\r';
+        if (c == '\r') c = '\n';
         if (unicode_want_) {
             if ((c & 0xc0) != 0x80) {
                 glyph("\xef\xbf\xbd");
@@ -579,7 +723,11 @@ class Parser {
         }
         if (c < 32 && !space(c))
             return;
-        if (space(c) && !pre_) {
+        if (c == '\n' && text_style_.whitespace == css::WhiteSpace::pre_line) {
+            glyph("\n"); last_space_ = true;
+        } else if (c == '\t' && pre_) {
+            glyph("    ");
+        } else if (space(c) && !pre_) {
             if (!last_space_ &&
                 (title_ ? !doc_.title.empty() : (!doc_.text.empty() && doc_.text.back() != '\n')))
                 glyph(" ");
@@ -624,8 +772,11 @@ class Parser {
             return;
         }
         if (n == "script" || n == "style") {
-            if (!t.closing)
+            if (!t.closing) {
                 raw_ = n;
+                style_source_.clear();
+                style_enabled_ = css::active_style(t.get("media"),t.get("type"));
+            }
             return;
         }
         // Honor explicit hiding without building a CSS tree. Count only the
@@ -638,22 +789,11 @@ class Parser {
             }
             return;
         }
+        const auto props = t.closing || (sheet_.empty() && !t.has("style")) ? css::Declarations{} :
+            sheet_.cascade(n,t.get("id"),t.get("class"),t.get("style"));
         if (!t.closing) {
-            bool hidden = t.has("hidden");
-            auto css = lowercase(t.get("style"));
-            for (std::string_view rest = css; !rest.empty();) {
-                auto end = rest.find(';');
-                auto rule = rest.substr(0, end);
-                auto colon = rule.find(':');
-                if (colon != rule.npos) {
-                    auto name = trim(rule.substr(0, colon));
-                    auto v = trim(rule.substr(colon + 1));
-                    v = trim(v.substr(0, v.find('!')));
-                    hidden |= name == "display" && v == "none";
-                }
-                if (end == rest.npos) break;
-                rest.remove_prefix(end + 1);
-            }
+            bool hidden = t.has("hidden") || n == "template" || (n == "dialog" && !t.has("open"));
+            hidden |= (props.set & (1u << css::display)) && props.values[css::display] == 1;
             if (hidden) {
                 constexpr std::string_view voids = " area base br col embed hr img input link meta param source track wbr ";
                 if (!trim(value).ends_with('/') && voids.find(" " + n + " ") == voids.npos) {
@@ -674,11 +814,16 @@ class Parser {
             title_ = !t.closing;
             return;
         }
-        if (n == "body")
+        if (n == "html" && !t.closing && !body_started_) {
+            html_id_ = t.get("id"); html_classes_ = t.get("class"); html_inline_ = t.get("style");
+        }
+        if (n == "body") {
+            begin_body();
             head_ = title_ = false;
-        if (n == "base" && !t.closing) {
-            if (auto url = resolve(doc_.base, t.get("href")); url)
-                doc_.base = *url;
+        }
+        if (n == "base" && !t.closing && t.has("href") && !base_seen_) {
+            base_seen_ = true;
+            if (auto url = resolve(doc_.base, t.get("href")); url) doc_.base = *url;
             return;
         }
         if (n == "wml" && !t.closing) {
@@ -686,12 +831,21 @@ class Parser {
             if (doc_.forms.empty()) doc_.forms.push_back({doc_.base});
             form_ = 0;
         }
+        if (!t.closing && (n == "a" || n == "link")) {
+            const auto rel = t.get("rel"), href = t.get("href");
+            if (!href.empty() && !href.starts_with('#'))
+                if (auto target = resolve(doc_.base, href); target &&
+                    transport_url(*target) != transport_url(doc_.base)) {
+                    if (doc_.next_page.empty() && word_token(rel, "next")) doc_.next_page = *target;
+                    if (doc_.previous_page.empty() && word_token(rel, "prev")) doc_.previous_page = *target;
+                }
+        }
         if (n == "card" && !t.closing) {
             head_ = title_ = false;
-            doc_.newline();
+            doc_.newline(text_style_);
             auto title = t.get("title");
             if (doc_.title.empty()) doc_.title = title;
-            doc_.append(title, Style::heading); doc_.newline();
+            doc_.append(title, Style::heading); doc_.newline(text_style_);
         }
         if (doc_.wml && n == "go" && !t.closing) {
             auto method = lowercase(t.get("method"));
@@ -701,14 +855,53 @@ class Parser {
                     doc_.append(" [打开] ", Style::body, index);
                 }
         }
+        // Omitted </head>/<body> are common on small generated pages. A body
+        // content start ends the head instead of hiding the remaining article.
+        if (head_ && !t.closing && n != "meta" && n != "link" && n != "base" && n != "html")
+            head_ = title_ = false;
         if (head_)
             return;
+        if (!t.closing && n != "html" && n != "meta" && n != "link" && n != "base") begin_body();
         bool block = n == "p" || n == "div" || n == "section" || n == "article" || n == "header" ||
                      n == "footer" || n == "main" || n == "ul" || n == "ol" || n == "li" ||
                      n == "blockquote" || n == "tr" || n == "pre" || n == "h1" || n == "h2" ||
                      n == "h3" || n == "h4" || n == "h5" || n == "h6" || n == "form";
+        const bool heading = n.size() == 2 && n[0] == 'h' && n[1] >= '1' && n[1] <= '6';
+        constexpr std::string_view voids = " area base br col embed hr img input link meta param source track wbr ";
+        const bool is_void = voids.find(" " + n + " ") != voids.npos;
+        if (t.closing) {
+            if (overflow_depth_) { if (!is_void) --overflow_depth_; }
+            else if (auto actual = close_scope(n)) block = *actual;
+        } else if (!overflow_depth_) {
+            if (block) {
+                // Close an omitted paragraph end, including its inline styles.
+                if (close_scope("p")) doc_.newline(text_style_);
+                if (n == "li" && !scopes_.empty() && std::string_view(scopes_.back().name.data()) == "li")
+                    (void)close_scope("li");
+                if (heading)
+                    for (auto h : {"h1","h2","h3","h4","h5","h6"}) (void)close_scope(h);
+            }
+            if (props.set & (1u << css::display)) {
+                if (props.values[css::display] == 2) block = true;
+                if (props.values[css::display] == 3) block = false;
+            }
+            if (!is_void && !trim(value).ends_with('/') && n.size() < 32) {
+                if (scopes_.size() < 32) {
+                    Scope scope{{},text_style_,style_,block};
+                    std::copy(n.begin(),n.end(),scope.name.begin()); scopes_.push_back(scope);
+                    if (heading) {
+                        style_ = Style::heading;
+                        text_style_.scale = std::uint16_t(std::min(200,int(text_style_.scale)*5/4));
+                    }
+                    if (n == "pre") { style_ = Style::code; text_style_.whitespace = css::WhiteSpace::preserve; }
+                    if (heading && (props.set & (1u << css::size))) text_style_.scale = scope.previous.scale;
+                    css::inherit(text_style_,props);
+                    pre_ = text_style_.whitespace == css::WhiteSpace::preserve;
+                } else overflow_depth_ = 1;
+            }
+        } else if (!is_void && !trim(value).ends_with('/')) ++overflow_depth_;
         if (block || n == "br" || n == "hr")
-            doc_.newline();
+            doc_.newline(text_style_);
         if (!t.closing && doc_.anchors.size() < 96) {
             auto id = t.get("id");
             if (id.empty() && n == "a")
@@ -721,14 +914,8 @@ class Parser {
             if (auto literal = static_navigation(handler))
                 if (auto url = resolve(doc_.base, *literal)) {
                     const int index = doc_.add_link(std::move(*url));
-                    doc_.append("打开链接", Style::body, index); doc_.newline();
+                    doc_.append("打开链接", Style::body, index); doc_.newline(text_style_);
                 }
-        }
-        if (n == "h1" || n == "h2" || n == "h3" || n == "h4" || n == "h5" || n == "h6")
-            style_ = t.closing ? Style::body : Style::heading;
-        if (n == "pre") {
-            pre_ = !t.closing;
-            style_ = pre_ ? Style::code : Style::body;
         }
         if (n == "li" && !t.closing)
             doc_.append("• ");
@@ -754,9 +941,11 @@ class Parser {
         if (n == "img" && !t.closing) {
             auto alt = t.get("alt");
             auto src = t.get("src");
-            if (src.empty() || (src.starts_with("data:") && !inline_image::payload(src)) ||
+            const auto classes = t.get("class");
+            const bool lazy = word_token(classes, "lazy") || word_token(classes, "lazyload");
+            if (lazy || src.empty() || (src.starts_with("data:") && !inline_image::payload(src)) ||
                 src == "about:blank") {
-                for (auto name : {"data-src", "data-original", "data-lazy-src"}) {
+                for (auto name : {"data-src", "data-original", "data-lazy-src", "data-url"}) {
                     auto candidate=t.get(name);
                     if (!candidate.empty()) { src=std::move(candidate); break; }
                 }
@@ -787,18 +976,30 @@ class Parser {
                            ? parsed
                            : fallback;
             };
-            int w = dimension("width", 240), h = dimension("height", 150);
+            const int declared_w = dimension("width", 0), declared_h = dimension("height", 0);
+            int w = declared_w ? declared_w : 240, h = declared_h ? declared_h : 150;
             if (w <= 1 && h <= 1)
                 return; // Common tracking pixels have no reading content.
             if (!src.empty() && source && doc_.images.size() < max_images) {
+                // An explicit comic-page marker can scope the reader to its
+                // image directory, excluding unrelated site/media thumbnails.
+                if (doc_.comic_folder.empty() && word_token(classes, "comicpage") &&
+                    (source->starts_with("https://") || source->starts_with("http://"))) {
+                    const auto path = transport_url(*source).substr(0, source->find('?'));
+                    const auto slash = path.rfind('/');
+                    if (slash != path.npos) doc_.comic_folder = path.substr(0, slash + 1);
+                }
                 int index = int(doc_.images.size());
-                doc_.newline();
+                doc_.newline(text_style_);
                 doc_.images.push_back({std::move(*source), std::uint16_t(w), std::uint16_t(h),
-                    referrer_policy(t.get("referrerpolicy"))});
+                    referrer_policy(t.get("referrerpolicy")),
+                    std::uint16_t(declared_w), std::uint16_t(declared_h)});
                 doc_.append(alt.empty() ? "图片" : alt, Style::muted, link_, -1, index);
-                doc_.newline();
-            } else
+                doc_.newline(text_style_);
+            } else {
+                if (!src.empty() && source && doc_.images.size() == max_images) doc_.images_limited = true;
                 doc_.append(alt.empty() ? "[图片]" : "[图片: " + alt + "]", Style::muted, link_);
+            }
         }
         if (n == "label") {
             in_label_ = !t.closing;
@@ -818,25 +1019,26 @@ class Parser {
                          (enctype.empty() || enctype == "application/x-www-form-urlencoded")});
             }
         }
-        if ((n == "input" || n == "button") && !t.closing && form_ >= 0 &&
+        if ((n == "input" || n == "button") && !t.closing && !t.has("disabled") && form_ >= 0 &&
             doc_.fields.size() >= max_fields)
             doc_.forms[form_].supported = false;
         if ((n == "input" || n == "button") && !t.closing && (form_ >= 0 || scripted_) &&
             doc_.fields.size() < max_fields) {
             auto type = lowercase(t.get("type"));
+            if (t.has("disabled")) return;
             if (type == "reset" || type == "button") return;
-            if (type == "file" || type == "image" || type == "radio") {
+            if (type == "file" || type == "image") {
                 if (form_ >= 0) doc_.forms[form_].supported = false;
                 return;
             }
-            if (t.has("disabled"))
-                return;
             auto ft = n == "button" || type == "submit" ? FieldType::submit
                       : type == "hidden"                ? FieldType::hidden
                       : type == "password"              ? FieldType::password
                       : type == "checkbox"              ? FieldType::checkbox
+                      : type == "radio"                 ? FieldType::radio
                                                         : FieldType::text;
             auto name = t.get("name"), v = t.get("value"), label = t.get("placeholder");
+            if (label.empty()) label = t.get("aria-label");
             if (name.size() > 128 || v.size() > 512 || label.size() > 128) {
                 if (form_ >= 0) doc_.forms[form_].supported = false;
                 return;
@@ -845,22 +1047,24 @@ class Parser {
             if (label.empty() && ft != FieldType::hidden && ft != FieldType::submit)
                 label = trim(label_);
             if (ft != FieldType::hidden) label_.clear();
+            if (label.empty() && ft == FieldType::radio) label = v;
             if (label.empty())
                 label = name;
             if (label.empty())
                 label = ft == FieldType::submit ? "提交" : "输入";
-            if (ft == FieldType::checkbox && v.empty())
+            if ((ft == FieldType::checkbox || ft == FieldType::radio) && !t.has("value"))
                 v = "on";
             int index = int(doc_.fields.size());
             doc_.fields.push_back({std::move(name), std::move(v), std::move(label),
                                    std::int16_t(form_), ft, t.has("checked"), scripted_ ? node_id(t.get("data-pxa-field")) : 0});
+            if (ft == FieldType::radio && t.has("checked")) check_field(doc_, index, true);
             if (ft != FieldType::hidden) {
-                doc_.newline();
+                doc_.newline(text_style_);
                 doc_.append(doc_.fields.back().label, Style::button, -1, index);
-                doc_.newline();
+                doc_.newline(text_style_);
             }
         }
-        if ((n == "select" || n == "textarea") && !t.closing && form_ >= 0)
+        if ((n == "select" || n == "textarea") && !t.closing && !t.has("disabled") && form_ >= 0)
             doc_.forms[form_].supported = false;
     }
 
@@ -870,31 +1074,60 @@ class Parser {
         entity_.reserve(32);
     }
     void feed(std::string_view bytes) {
-        for (char c : bytes) {
+        while (!bytes.empty()) {
             if (doc_.truncated)
                 return;
+            // Most large style/script bodies and comments contain no markup.
+            // Search entire transport chunks instead of walking discarded bytes.
+            if (comment_ && !comment_dashes_) {
+                const auto at = bytes.find('-');
+                if (at == bytes.npos) return;
+                bytes.remove_prefix(at);
+            }
+            if (!in_tag_ && !comment_) {
+                if (!raw_.empty()) {
+                    const auto at = bytes.find('<');
+                    capture_style(bytes.substr(0,at));
+                    if (at == bytes.npos) return;
+                    bytes.remove_prefix(at);
+                } else if (const auto n = literal_prefix(bytes)) {
+                    last_cr_ = false;
+                    glyph(bytes.substr(0, n));
+                    bytes.remove_prefix(n);
+                    continue;
+                }
+            }
+            const char c = bytes.front();
+            bytes.remove_prefix(1);
             if (comment_) {
-                pending_ += c;
-                if (pending_.ends_with("-->")) {
+                if (c == '>' && comment_dashes_ == 2) {
                     comment_ = false;
-                    pending_.clear();
-                } else if (pending_.size() > 8)
-                    pending_.erase(0, pending_.size() - 3);
+                    comment_dashes_ = 0;
+                } else comment_dashes_ = c == '-' ? std::min(2u, comment_dashes_ + 1) : 0;
                 continue;
             }
             if (in_tag_) {
                 if (!raw_.empty()) {
-                    if (c == '<')
-                        pending_.clear();
-                    else if (c == '>') {
-                        handle(pending_);
-                        pending_.clear();
-                        in_tag_ = false;
-                    } else if (pending_.size() < 32)
-                        pending_ += c;
-                    else {
-                        pending_.clear();
-                        in_tag_ = false;
+                    if (raw_close_) {
+                        if (quote_) { if (c == quote_) quote_ = 0; }
+                        else if (c == '\'' || c == '"') quote_ = c;
+                        else if (c == '>') {
+                            finish_raw(); raw_close_ = in_tag_ = false;
+                        }
+                    } else {
+                        const auto at = pending_.size();
+                        if (at <= raw_.size() && lower(c) == (at ? raw_[at-1] : '/'))
+                            pending_ += c;
+                        else if (at == raw_.size()+1 && (space(c) || c == '/' || c == '>')) {
+                            raw_close_ = c != '>';
+                            if (c == '>') { finish_raw(); in_tag_ = false; }
+                            pending_.clear();
+                        } else {
+                            capture_style("<"); capture_style(pending_);
+                            if (c != '<') capture_style({&c,1});
+                            pending_.clear();
+                            in_tag_ = c == '<';
+                        }
                     }
                     continue;
                 }
@@ -926,6 +1159,8 @@ class Parser {
                 pending_ += c;
                 if (pending_ == "!--") {
                     comment_ = true;
+                    comment_dashes_ = 0;
+                    pending_.clear();
                     in_tag_ = false;
                     quote_ = 0;
                     continue;
@@ -954,8 +1189,17 @@ class Parser {
     }
     void feed_plain(std::string_view bytes) {
         pre_ = true;
-        for (unsigned char c : bytes)
+        while (!bytes.empty() && !doc_.truncated) {
+            if (const auto n = literal_prefix(bytes)) {
+                last_cr_ = false;
+                glyph(bytes.substr(0, n));
+                bytes.remove_prefix(n);
+                continue;
+            }
+            const auto c = static_cast<unsigned char>(bytes.front());
+            bytes.remove_prefix(1);
             character(c);
+        }
     }
     void finish() {
         if (!entity_.empty()) {
@@ -973,7 +1217,7 @@ class Parser {
             for (unsigned char c : pending_)
                 character(c);
         }
-        doc_.newline();
+        doc_.newline(text_style_);
         doc_.title = std::string(trim(doc_.title));
     }
 };
@@ -993,7 +1237,7 @@ inline std::expected<Submission, Error> submit(const Document &doc, std::size_t 
         auto &f = doc.fields[i];
         if (f.form != int(form) || f.name.empty() ||
             (f.type == FieldType::submit && int(i) != clicked) ||
-            (f.type == FieldType::checkbox && !f.checked))
+            ((f.type == FieldType::checkbox || f.type == FieldType::radio) && !f.checked))
             continue;
         auto pair = encode(f.name, true) + "=" + encode(f.value, true);
         if (out.body.size() + pair.size() + 1 > 2048)
@@ -1072,6 +1316,10 @@ struct Layout {
     bool truncated = false;
     void clear() { std::vector<Piece>{}.swap(pieces); height=0; truncated=false; }
     static int font(Style style, int body) { return style == Style::heading ? body * 5 / 4 : body; }
+    static int font(const Span &span, int body) {
+        return span.text_style.scale ? std::clamp(body * int(span.text_style.scale) / 100,8,128)
+                                     : font(span.style,body);
+    }
     static std::pair<int, int> image_size(const Image &image, int width, int body) {
         int w = std::clamp(int(image.width) * body / 15, 1, width);
         return {w, std::clamp(int(std::int64_t(w) * image.height / std::max(1, int(image.width))),
@@ -1083,6 +1331,16 @@ struct Layout {
         truncated = false;
         int x = 0, y = 0,
             line_height = body * 3 / 2; // bounded by document, no frame-time allocation
+        std::size_t line_start = 0;
+        css::Align line_align = css::Align::left;
+        auto finish_line = [&] {
+            const int free = std::max(0,width-x);
+            const int shift = line_align == css::Align::center ? free / 2
+                              : line_align == css::Align::right ? free : 0;
+            for (auto i = line_start; shift && i < pieces.size(); ++i)
+                pieces[i].x = std::uint16_t(pieces[i].x + shift);
+            line_start = pieces.size(); line_align = css::Align::left;
+        };
         for (std::size_t si = 0; si < d.spans.size(); ++si) {
             auto &s = d.spans[si];
             if (s.image >= 0 && std::size_t(s.image) < d.images.size()) {
@@ -1090,17 +1348,19 @@ struct Layout {
                     truncated = true;
                     break;
                 }
+                finish_line();
                 if (x)
                     y += line_height;
                 auto [w, h] = image_size(d.images[s.image], width, body);
                 pieces.push_back(
                     {s.offset, std::uint32_t(y), 0, 0, std::uint16_t(w), std::uint16_t(si)});
+                line_start = pieces.size();
                 y += h + body / 2;
                 x = 0;
                 line_height = body * 3 / 2;
                 continue;
             }
-            int size = font(s.style, body);
+            int size = font(s, body);
             std::size_t start = s.offset, p = start, end = start + s.size;
             int begin_x = x;
             auto emit = [&] {
@@ -1109,6 +1369,8 @@ struct Layout {
                         truncated = true;
                         return;
                     }
+                    if (pieces.size() == line_start) line_align = s.text_style.align;
+                    if (s.field >= 0) line_align = css::Align::left;
                     pieces.push_back({std::uint32_t(start), std::uint32_t(y),
                                       std::uint16_t(p - start), std::uint16_t(begin_x),
                                       std::uint16_t(std::max(1, x - begin_x)), std::uint16_t(si)});
@@ -1122,6 +1384,7 @@ struct Layout {
                 n = std::min(n, end - p);
                 if (c == '\n') {
                     emit();
+                    finish_line();
                     ++p;
                     start = p;
                     y += line_height;
@@ -1151,6 +1414,7 @@ struct Layout {
                 }
                 if (x + word_width > width && x) {
                     emit();
+                    finish_line();
                     y += line_height;
                     x = 0;
                     begin_x = 0;
@@ -1165,6 +1429,7 @@ struct Layout {
             if (truncated)
                 break;
         }
+        finish_line();
         height = y + line_height;
     }
 };

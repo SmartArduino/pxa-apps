@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -75,6 +76,9 @@ class Capture {
     std::size_t tag_start_ = 0;
     Mode mode_ = Mode::text;
     unsigned char match_ = 0;
+    std::array<char,8> style_candidate_{};
+    std::size_t style_bytes_ = 0;
+    bool style_enabled_ = true;
     char quote_ = 0;
     bool limited_ = false;
 public:
