@@ -727,16 +727,19 @@ struct Page::Impl {
         if (snapshot_pending && responses.empty() && !click_count && fields.empty()) return;
         JS_UpdateStackTop(runtime);
         const auto begin = now(); deadline = begin + limits.turn_us;
-        if (snapshot_pending) {
-            invoke("cancelMarkup"); snapshot_pending=false; dom_dirty=true;
-            std::string{}.swap(markup_buffer);
-            if (stopped) { deadline=0; return; }
-        }
         ++counters.turns;
         if (prepared.ctx) execute_script();
         else if (!responses.empty()) handle_response();
         else if (!finished && !waiting_script) build_dom_batch();
         else if (finished) dispatch_event();
+        // Release an invalidated projection's priority promptly. The UI may
+        // defer take_markup while an image preview owns its native indices;
+        // retaining a stale snapshot here would also block due page timers.
+        if(snapshot_pending && dom_dirty && !stopped && !heap.failed) {
+            auto canceled=invoke("cancelMarkup");
+            snapshot_pending=false;std::string{}.swap(markup_buffer);
+            if(JS_IsException(canceled.value))stopped=true;
+        }
         if (heap.failed && !stopped) { problem="脚本内存达到上限"; stopped=true; ++counters.errors; }
         counters.max_turn_us = std::max(counters.max_turn_us, now()-begin);
         deadline = 0;
@@ -783,6 +786,7 @@ std::optional<Navigation> Page::take_navigation() {
 }
 std::optional<std::string> Page::take_markup() {
     if (!ready() || impl_->paused || (!impl_->dom_dirty && !impl_->snapshot_pending)) return {};
+    const bool restart=impl_->snapshot_pending && impl_->dom_dirty;
     impl_->dom_dirty = false;
     auto& self = *impl_;
     struct Timing {
@@ -792,6 +796,15 @@ std::optional<std::string> Page::take_markup() {
     ++self.counters.markup_turns;
     JS_UpdateStackTop(self.runtime);
     self.deadline = self.now() + self.limits.turn_us;
+    // Callbacks keep the old visible hit table until projection commits. Only
+    // real document mutations invalidate partial output; no-op network/UI
+    // events must not repeatedly restart and starve a pending repaint.
+    if(restart) {
+        auto canceled=self.invoke("cancelMarkup");
+        if(JS_IsException(canceled.value)) {self.stopped=true;self.deadline=0;return {};}
+        self.snapshot_pending=false;
+        std::string{}.swap(self.markup_buffer);
+    }
     auto value = self.call("markup");
     self.deadline = 0;
     // A failed snapshot may have replaced its hit table. Stop the realm so
