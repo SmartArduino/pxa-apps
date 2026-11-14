@@ -43,8 +43,13 @@ def main():
         load('/image');screen('image-hidden',None);assert not f.counts['/class-image.png'],f.counts
         mark=advance();b.wait(lambda:'BROWSER IMAGE DONE' in b.logs()[mark:]);screen('image-shown','green');assert f.counts['/class-image.png']==1,f.counts
         advance();screen('image-hidden-again',None);assert f.counts['/class-image.png']==1,f.counts
+        load('/attributes');screen('attributes-static','blue')
+        mark=advance();b.wait(lambda:'BROWSER IMAGE DONE' in b.logs()[mark:]);screen('attributes-dynamic','green')
+        assert rows[-1]['color_pixels']['green']>1000,'mixed-case image did not render'
+        assert f.counts['/MiXeD.png']==1 and not f.counts['/mixed.png'],f.counts
+        advance();screen('attributes-unicode','green')
         assert all(error not in b.logs() for error in ('BROWSER JS ERROR','BROWSER DRAW ERROR','PXA Guest exception:'))
-        assert all(f.counts[path]==1 for path in ('/classes','/quota','/image')),f.counts
+        assert all(f.counts[path]==1 for path in ('/classes','/quota','/image','/attributes')),f.counts
         (a.output/'results.json').write_text(json.dumps({'flows':rows,'requests':dict(f.counts)},ensure_ascii=False,indent=2)+'\n')
         print('classList simulator PASS:',len(rows),'flows; CSS, limits, idle and image visibility',flush=True)
     finally:b.close();f.close()

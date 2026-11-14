@@ -499,6 +499,25 @@ struct Page::Impl {
         if (id && !parser_script && !stopped)
             invoke("scriptResponse",JS_NewUint32(ctx,id),JS_NewBool(ctx,before!=counters.errors));
     }
+    static bool ascii_attributes(const browser::Tag& tag) {
+        // Bound the native fast path. Unusual names keep the old JS path,
+        // including its Unicode folding and quota/error behavior.
+        for(std::size_t i=0;i<tag.count;++i) {
+            const auto name=tag.attrs[i].name;if(name.size()>64)return false;
+            for(unsigned char c:name)if(c>=128)return false;
+        }
+        return true;
+    }
+    Value attribute_name(std::string_view name,bool canonical) {
+        if(!canonical)return string(name);
+        std::array<char,64> lower;
+        for(std::size_t i=0;i<name.size();++i)lower[i]=browser::lower(name[i]);
+        // Most names already exist as runtime/property atoms. Share those
+        // strings instead of allocating another temporary key for each node.
+        const auto atom=JS_NewAtomLen(ctx,lower.data(),name.size());
+        if(atom==JS_ATOM_NULL)return {ctx,JS_EXCEPTION};
+        Value key(ctx,JS_AtomToString(ctx,atom));JS_FreeAtom(ctx,atom);return key;
+    }
     void build_one(std::string_view source, std::size_t& at, bool scripts) {
         const auto item = token(source, at);
         if (item.text.empty()) return;
@@ -526,18 +545,19 @@ struct Page::Impl {
                     problem = "脚本页面节点达到上限"; stopped = true; return;
                 }
                 style_bytes += count;
-                Value attrs(ctx,JS_NewArray(ctx));
+                const bool canonical=ascii_attributes(t);
+                Value attrs(ctx,t.count?JS_NewArray(ctx):JS_NULL);
                 if (!check(attrs.value)) return;
                 for (std::size_t i=0; i<t.count; ++i) {
-                    auto key=string(t.attrs[i].name), value=string(browser::entities(t.attrs[i].value));
-                    if (!check(key.value) || !check(value.value)) return;
+                    auto key=attribute_name(t.attrs[i].name,canonical);if(!check(key.value))return;
+                    auto value=string(browser::entities(t.attrs[i].value));if(!check(value.value))return;
                     if (JS_SetPropertyUint32(ctx,attrs.value,std::uint32_t(i*2),key.release())<0 ||
                         JS_SetPropertyUint32(ctx,attrs.value,std::uint32_t(i*2+1),value.release())<0) {
                         check(JS_EXCEPTION); return;
                     }
                 }
                 auto name=string("style");
-                if(JS_IsException(invoke("open",name.value,attrs.value,JS_FALSE).value))return;
+                if(JS_IsException(invoke("open",name.value,attrs.value,JS_NewInt32(ctx,canonical?2:0)).value))return;
                 auto value=string(body.substr(0,count));
                 if (check(value.value)) invoke("text",value.value);
                 invoke("close",name.value);
@@ -560,18 +580,19 @@ struct Page::Impl {
         if (!check(name.value)) return;
         if (t.closing) { invoke("close", name.value); return; }
         if (scripts && ++node_count > limits.nodes) { problem = "脚本页面节点达到上限"; stopped = true; return; }
-        Value attrs(ctx, JS_NewArray(ctx));
+        const bool canonical=ascii_attributes(t);
+        Value attrs(ctx,t.count?JS_NewArray(ctx):JS_NULL);
         if (!check(attrs.value)) return;
         for (std::size_t i = 0; i < t.count; ++i) {
-            auto key = string(t.attrs[i].name); auto value = string(browser::entities(t.attrs[i].value));
-            if (!check(key.value) || !check(value.value)) return;
+            auto key=attribute_name(t.attrs[i].name,canonical);if(!check(key.value))return;
+            auto value=string(browser::entities(t.attrs[i].value));if(!check(value.value))return;
             if (JS_SetPropertyUint32(ctx, attrs.value, std::uint32_t(i*2), key.release()) < 0 ||
                 JS_SetPropertyUint32(ctx, attrs.value, std::uint32_t(i*2+1), value.release()) < 0) { check(JS_EXCEPTION); return; }
         }
         constexpr auto voids = " area base br col embed hr img input link meta param source track wbr "sv;
         const auto kind=browser::html_text(t.name);
         const bool empty = (kind==browser::HtmlText::data && trim(item.text).ends_with('/')) || voids.find(" " + t.name + " ") != voids.npos;
-        if(JS_IsException(invoke("open", name.value, attrs.value, JS_NewBool(ctx, empty)).value))return;
+        if(JS_IsException(invoke("open",name.value,attrs.value,JS_NewInt32(ctx,(empty?1:0)|(canonical?2:0))).value))return;
         if(kind!=browser::HtmlText::data) {
             const auto closing=kind==browser::HtmlText::plaintext?source.npos:raw_end(source,browser::text_end_tag(t.name),at);
             const auto end=closing==source.npos?source.size():closing;

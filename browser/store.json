@@ -14,5 +14,5 @@
     "资讯订阅",
     "书签"
   ],
-  "changelog": "新增有界 classList，支持类名增删、切换、替换、索引、迭代和原始 value 反射；与 className、setAttribute、removeAttribute 及 CSS 选择器同步。按需缓存类名，重复读取和无变化操作不触发重绘。补充 DOMException 与选择器语法异常类型，保持原有属性、脚本、内存和网络预算。\n\nAdds bounded classList mutation, live indices/iteration and raw value reflection, synchronized with attributes and selectors. Lazy token caching avoids repeated splitting and unchanged operations do not repaint. Adds DOMException and correct selector syntax exceptions. Existing attribute, script, memory and network budgets remain unchanged."
+  "changelog": "减少脚本 DOM 构建和动态 HTML 更新中的临时分配：复用常见属性名字符串，无属性节点不再创建空属性数组。保持属性值大小写、重复属性首次值、Unicode 名称回退及既有额度；补充混合大小写样式、事件和图片地址的兼容检查。\n\nReduces temporary allocations during scripted DOM parsing and dynamic HTML updates by sharing common attribute-name strings and avoiding empty attribute arrays. Preserves attribute values, first duplicate values, Unicode-name fallback and existing quotas. Adds checks for mixed-case style/event names and case-sensitive image URLs."
 }

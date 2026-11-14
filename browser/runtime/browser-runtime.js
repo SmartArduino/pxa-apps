@@ -912,13 +912,15 @@
             if (type === 'click' && disabledControl(node)) return null;
             return node && node['on'+type]===undefined && node._attrs && node._attrs['on'+type] ? node : null;
         },
-        open(tag, attributes, empty) {
+        open(tag, attributes, flags) {
+            // Bit 0 marks a leaf, bit 1 marks native-normalized ASCII keys.
+            // A null attribute list represents no attributes without an array.
             // Parsed nodes are fresh; avoid reentering the public DOM methods.
-            const node = new Node(tag), parent=stack[stack.length-1];
-            if(attributes.length)node._attrs=Object.create(null);
+            const node=new Node(tag),parent=stack[stack.length-1],length=attributes?attributes.length:0;
+            if(length)node._attrs=Object.create(null);
             let count=0;
-            for (let i = 0; i < attributes.length; i += 2) {
-                const key=attributes[i].toLowerCase(),value=attributes[i+1],attrs=node._attrs;
+            for (let i = 0; i < length; i += 2) {
+                const key=flags&2?attributes[i]:attributes[i].toLowerCase(),value=attributes[i+1],attrs=node._attrs;
                 if(own(attrs,key))continue; // HTML keeps the first duplicate attribute.
                 if(!attributeNamePattern.test(key) || key.length>64 || value.length>4096 || ++count>24)
                     throw new RangeError('parsed attribute limit');
@@ -938,7 +940,7 @@
                 if (tag === 'body') document.body = node;
                 if (tag === 'head') document.head = node;
             }
-            if (!empty) stack.push(node);
+            if (!(flags&1)) stack.push(node);
         },
         text(text) { if (text) {
             const node=new Node('',text), parent=stack[stack.length-1];

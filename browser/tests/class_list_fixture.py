@@ -49,6 +49,26 @@ const panel=document.getElementById('panel');let phase=0;
 function advance(){const hidden=panel.classList.toggle('folded');check(hidden===Boolean((++phase)%2===0));proof('图片检查 '+phase)}
 </script></body></html>'''
 
+ATTRIBUTES=HEAD.replace('</head>','<StYlE ID=MiXeDSheet MeDiA=ScReEn>.MiXeD{color:#187a42}</StYlE></head>')+\
+    '<BuTtOn OnClIcK="advance()" StYlE="color:#d06020">属性检查</BuTtOn>'+\
+    '<div id=host><P ID=MiXeD iD=Ignored ClAsS=MiXeD TiTlE="VaLuE&amp;X" StYlE="color:#2468ac">属性值检查</P><b></b></div>'+PROOF+\
+    '<script>'+CHECK+'''
+const n=document.getElementById('MiXeD'),host=document.getElementById('host');let phase=0;
+check(!document.getElementById('Ignored') && n.id==='MiXeD' && n.className==='MiXeD' && n.title==='VaLuE&X');
+check(document.getElementById('MiXeDSheet').media==='ScReEn' && host.lastChild.nodeName==='B');
+function advance(){
+ if(++phase===1){
+  host.innerHTML='<StYlE ID=DynamicSheet media=ScReEn>.Unused{color:red}</StYlE><P ID=Next ClAsS=MiXeD TITLE=NeXt>动态属性检查</P><IMG ID=Photo SrC=/MiXeD.png width=48 height=48>';
+  check(document.getElementById('DynamicSheet').media==='ScReEn' && document.getElementById('Next').title==='NeXt');
+  check(document.getElementById('Photo').getAttribute('src')==='/MiXeD.png');
+ }else{
+  host.innerHTML='<p ID=Fallback K=Keep ClAsS=MiXeD>回退路径检查</p>';
+  check(document.getElementById('Fallback').getAttribute('k')==='Keep' && host.firstChild.className==='MiXeD');
+ }proof('属性检查 '+phase);
+}
+</script></body></html>'''
+
+
 
 class Fixture:
     def __init__(self,bind='127.0.0.1',port=0):
@@ -58,9 +78,9 @@ class Fixture:
             def log_message(self,*_):pass
             def do_GET(self):
                 path=urlsplit(self.path).path;fixture.counts[path]+=1
-                if path=='/class-image.png':data=image;content='image/png';status=200
+                if path in ('/class-image.png','/MiXeD.png'):data=image;content='image/png';status=200
                 else:
-                    page={'/classes':MAIN,'/quota':QUOTA,'/image':IMAGE}.get(path)
+                    page={'/classes':MAIN,'/quota':QUOTA,'/image':IMAGE,'/attributes':ATTRIBUTES}.get(path)
                     data=(page or 'Unexpected request').encode();content='text/html; charset=utf-8';status=200 if page else 404
                 self.send_response(status);self.send_header('Content-Type',content);self.send_header('Content-Length',str(len(data)));self.end_headers()
                 try:self.wfile.write(data)

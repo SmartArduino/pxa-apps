@@ -50,10 +50,24 @@ static void measure(bool attributes) {
     std::cout<<"{\"updates\":64,\"cpu_ms\":"<<1000.0*double(std::clock()-begin)/CLOCKS_PER_SEC
         <<",\"vm_peak_bytes\":"<<p.stats().peak_bytes<<",\"markup_batches\":"<<p.stats().markup_turns-before<<"}\n";
 }
+static void measure_load(bool rich) {
+    std::string body;
+    for(unsigned i=0;i<48;++i)body+=rich?
+        "<p ID=p"+std::to_string(i)+" CLASS=Case TITLE=ChApTeR DATA-state=ReAdY LANG=en DIR=ltr ROLE=paragraph ARIA-label=Sample STYLE=\"color:red;font-size:16px\">Line</p>":"<p>Line</p>";
+    body+="<script>const nodes=document.querySelectorAll('p');if(nodes.length!==48)throw Error('node count');";
+    if(rich)body+="for(const n of nodes)if(n.className!=='Case' || n.getAttribute('title')!=='ChApTeR' || n.style.fontSize!=='16px')throw Error('parsed attribute');";
+    body+="location.href='/parsed';</script>";
+    std::size_t peak=0;unsigned batches=0;const auto begin=std::clock();
+    for(unsigned i=0;i<8;++i){auto p=open(body);settle(p);const auto nav=p.take_navigation();assert(nav && nav->url=="https://example.test/parsed");peak=std::max(peak,p.stats().peak_bytes);batches+=p.stats().markup_turns;}
+    std::cout<<"{\"pages\":8,\"nodes_per_page\":48,\"cpu_ms\":"<<1000.0*double(std::clock()-begin)/CLOCKS_PER_SEC
+        <<",\"vm_peak_bytes\":"<<peak<<",\"markup_batches\":"<<batches<<"}\n";
+}
 int main(int argc,char** argv) {
-    assert(argc==2 || (argc==3 && (std::string_view(argv[2])=="--measure" || std::string_view(argv[2])=="--measure-attributes")));
+    assert(argc==2 || argc==3);
     std::ifstream f(argv[1],std::ios::binary);bootstrap.runtime.assign(std::istreambuf_iterator<char>(f),{});
-    assert(!bootstrap.runtime.empty());if(argc==3){measure(std::string_view(argv[2])=="--measure-attributes");return 0;}
+    assert(!bootstrap.runtime.empty());if(argc==3){const std::string_view mode=argv[2];
+        if(mode=="--measure-load" || mode=="--measure-plain")measure_load(mode=="--measure-load");
+        else {assert(mode=="--measure" || mode=="--measure-attributes");measure(mode=="--measure-attributes");}return 0;}
     {
         auto p=open(R"HTML(<form><input id=peer type=radio name=mode value=old checked><div id=host>
         <button id=old type=button onclick="location.href='/old-click'">Old</button><input id=edit value=kept></div></form><script>
@@ -136,6 +150,24 @@ int main(int argc,char** argv) {
         const h=document.createElement('div');h.innerHTML='<style>.proof{color:green}</style>';
         if(h.firstChild.textContent!=='')throw Error('partial writes bypassed style budget');
         </script>)HTML",true);settle(p);
+    }
+    {
+        auto p=open(R"HTML(<STYLE ID=Sheet Media=ScReEn>.Case{color:green}</STYLE>
+        <P ID=First iD=Ignored CLASS=Case TITLE=VaLuE data-State=ReAdY StYlE="CoLoR:red;font-size:16px">Text</P>
+        <p id=Empty></p><p ID=Unicode K=KePt></p><script>
+        const n=document.getElementById('First');
+        if(document.getElementById('Ignored') || n.className!=='Case' || n.title!=='VaLuE' || n.getAttribute('data-state')!=='ReAdY' || n.style.fontSize!=='16px')throw Error('mixed attribute values');
+        if(document.getElementById('Sheet').getAttribute('media')!=='ScReEn')throw Error('style attributes');
+        if(document.getElementById('Unicode').getAttribute('k')!=='KePt')throw Error('Unicode name fallback');
+        const h=document.getElementById('Empty');h.innerHTML='<STYLE ID=DynamicSheet media=ScReEn>.Case{color:blue}</STYLE><P ID=Next CLASS=Case TITLE=NeXt>Next</P><b></b>';
+        if(!document.getElementById('DynamicSheet') || document.getElementById('Next').title!=='NeXt' || h.lastChild.nodeName!=='B')throw Error('dynamic attributes and empty list');
+        h.innerHTML='<p K=Keep ID=Fallback class=Case>Fallback</p>';
+        if(document.getElementById('Fallback').getAttribute('k')!=='Keep')throw Error('fragment Unicode fallback');
+        h.innerHTML='<p '+ '\u212a'.repeat(64)+'=LongCase ID=LongName>Long</p>';
+        if(document.getElementById('LongName').getAttribute('k'.repeat(64))!=='LongCase')throw Error('long UTF-8 name fallback');
+        const before=h.firstChild;let caught=false;try{h.innerHTML='<p '+ 'X'.repeat(65)+'=bad>Bad</p>'}catch(e){caught=e.name==='RangeError'}
+        if(!caught || h.firstChild!==before)throw Error('overlong name rollback');
+        </script>)HTML");settle(p);
     }
     {
         // Catching a fragment error must not turn a hard VM allocation failure

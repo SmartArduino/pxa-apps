@@ -44,6 +44,9 @@ HTML 的 title/textarea 按文本容器解析，保留内部标签文字并解�
 
 支持有界 `classList`：`add/remove/toggle/replace/contains`、`value`、实时索引/长度与迭代（含 `forEach`）。同一元素返回同一列表；`className`、属性写入和删除同步更新列表与 CSS 匹配。类名按 ASCII 空白拆分、去重并保留顺序；无效参数和属性额度失败不会提交部分变更。缓存仅在使用时创建，类名未变时复用；无变化操作不请求重绘。沿用每节点 24 个属性、属性值 4096 字符的原有限制。提供 `DOMException` 的名称、消息、旧式错误码及常量；无效/不支持的选择器抛出名称为 `SyntaxError` 的 DOMException，资源超限仍为 RangeError。这些接口不代表完整浏览器 DOM 支持。
 
+脚本 DOM 解析对属性名均为不超过 64 字节 ASCII 的节点，在原生侧统一属性名大小写，并复用运行时的属性名字符串；无属性节点使用空标记传递，避免为每个节点分配空数组。非 ASCII 或较长名称保留原有脚本处理路径，属性值、首次重复值和额度检查保持不变。原生解析桥与预编译运行库须一起构建、校验；不能混用不同版本的内部参数约定。
+
+
 
 
 脚本的 `querySelector` / `querySelectorAll`、`matches` / `closest` 支持标签、通配符、ID、类及其组合，属性存在/比较（`=`、`~=`、`|=`、`^=`、`$=`、`*=` 与 ASCII `i` / `s` 标志）、后代/子元素关系、逗号列表与 `:scope`。查询按 DOM 树顺序返回，元素查询只返回后代；祖先匹配可越过查询根，`:scope` 可显式限定根。集合是带 `item()` 的静态数组，包含 `getElementsByTagName` 与新增的 `getElementsByClassName`，不实现动态 NodeList/HTMLCollection。每个选择器最多 512 个 UTF-16 代码单元、8 组、32 步、64 项条件，每次查询最多访问 512 个节点并执行 8192 次元素与选择器步骤的匹配尝试；仅缓存最近一条解析结果，不缓存匹配节点。属性值默认按原文比较；input/button 的 type、form 的 method/enctype 及 dir 使用默认 ASCII 大小写折叠，显式 i/s 标志优先。暂不支持 CSS 转义、兄弟关系和其他伪类/伪元素，遇到不支持或非法语法抛出 `SyntaxError`，超预算抛出 `RangeError`。这些是脚本查询能力，不扩展下面的样式表绘制子集。
