@@ -157,7 +157,7 @@
             value:{get(){const value=this.getAttribute('value');return value===null?optionText(this):value;},set(v){this.setAttribute('value',v);}},
             label:{get(){return this.getAttribute('label')||optionText(this);},set(v){this.setAttribute('label',v);}},
             text:{get(){return optionText(this);},set(v){v=domString(v);if(v.length>4096)throw new RangeError('option text limit');this.textContent=v;}},
-            selected:{get(){const select=nearestSelect(this);if(select)normalizeSelect(select);return !!rawSelected(this);},
+            selected:{get(){const select=nearestSelect(this);if(select && select[selectDirty]!==false)normalizeSelect(select);return !!rawSelected(this);},
                 set(v){
                     const select=nearestSelect(this),list=select?normalizeSelect(select):null,selected=!!v;
                     this[optionState]=(selected?1:0)|2;

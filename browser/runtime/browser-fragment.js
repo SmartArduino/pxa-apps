@@ -48,9 +48,17 @@
             }
         }
         before(parent);
-        let index=reference===null?parent.childNodes.length:parent.childNodes.indexOf(reference);
+        const destination=parent.childNodes,length=destination.length;
+        const index=reference===null?length:destination.indexOf(reference);
+        // Extend contiguously before shifting the old tail. Moving directly
+        // beyond the dense end makes this runtime's array storage sparse.
+        for(const node of nodes)destination.push(node);
+        if(index<length) {
+            destination.copyWithin(index+nodes.length,index,length);
+            for(let i=0;i<nodes.length;i++)destination[index+i]=nodes[i];
+        }
         fragment.childNodes.length=0;
-        for(const node of nodes) {parent.childNodes.splice(index++,0,node);node.parentNode=parent;}
+        for(const node of nodes)node.parentNode=parent;
         changed(parent);
         for(const node of nodes)mutation(parent,node);
         // Last checked radio in tree order wins after form ownership changes.

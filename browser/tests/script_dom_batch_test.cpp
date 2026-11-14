@@ -49,6 +49,30 @@ const f=new DocumentFragment(),host=document.getElementById('host');function emp
         settle(p);const auto batches=p.stats().markup_turns;assert(p.click(1));assert(settle(p).empty() && p.stats().markup_turns==batches);
     }
     {
+        auto p=open("<div id=host><i id=a></i><i id=b></i><i id=c></i><i id=d></i></div><p id=proof></p>"+script(R"JS(
+const host=document.getElementById('host'),old=host.childNodes.slice(),destination=host.childNodes,f=new DocumentFragment();
+const x=document.createElement('b'),y=document.createTextNode('Middle');f.appendChild(x);f.appendChild(y);const source=f.childNodes;
+host.insertBefore(f,old[2]);const expected=[old[0],old[1],x,y,old[2],old[3]];
+check(host.childNodes===destination && destination.length===6 && source.length===0,'middle-arrays');
+for(let i=0;i<6;i++)check(destination[i]===expected[i] && expected[i].parentNode===host,'middle-order');
+document.getElementById('proof').textContent='Middle PASS';)JS"));
+        assert(settle(p).find("Middle PASS")!=std::string::npos);
+    }
+    {
+        auto p=open("<div id=host></div><p id=proof></p>"+script(R"JS(
+const host=document.getElementById('host'),f=new DocumentFragment(),source=f.childNodes,destination=host.childNodes,roots=[];
+for(let i=0;i<192;i++){const node=document.createElement('p');roots.push(node);f.appendChild(node)}
+roots[0].onclick=()=>{document.getElementById('proof').textContent='First boundary handler'};
+roots[191].onclick=()=>{document.getElementById('proof').textContent='Last boundary handler'};
+host.appendChild(f);check(source===f.childNodes && source.length===0 && destination===host.childNodes && destination.length===192,'boundary-arrays');
+for(let i=0;i<192;i++)check(destination[i]===roots[i] && roots[i].parentNode===host,'boundary-order');
+host.appendChild(f);check(destination.length===192,'empty-full-destination');
+document.getElementById('proof').textContent='Boundary PASS';)JS"));
+        const auto html=settle(p);assert(html.find("Boundary PASS")!=html.npos);
+        assert(p.click(1));assert(settle(p).find("First boundary handler")!=std::string::npos);
+        assert(p.click(2));assert(settle(p).find("Last boundary handler")!=std::string::npos);
+    }
+    {
         auto p=open("<div id=host></div><p id=proof></p>"+script(R"JS(
 const host=document.getElementById('host'),f=new DocumentFragment(),a=document.createElement('p'),b=document.createElement('p');a.textContent='A';b.textContent='B';a.onclick=()=>{};f.appendChild(a);f.appendChild(b);const source=f.childNodes;
 for(let i=0;i<191;i++)host.appendChild(document.createTextNode(''));

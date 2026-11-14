@@ -45,6 +45,27 @@ document.getElementById('ok').textContent='Basics PASS';)JS"));
         assert(settle(p).find("Basics PASS")!=std::string::npos);
     }
     {
+        auto p=open("<select id=s><option id=a value=a>A<optgroup id=g><option id=b value=b selected>B</optgroup></select><p id=ok></p>"+script(R"JS(
+const s=document.getElementById('s'),a=document.getElementById('a'),b=document.getElementById('b'),g=document.getElementById('g');
+check(b.selected && !a.selected,'read-initial-dirty');
+a.defaultSelected=true;check(a.selected && !b.selected,'read-default-change');
+const c=new Option('C','c',false,true);s.appendChild(c);check(c.selected && !a.selected && !b.selected,'read-append');
+c.remove();check(a.selected && !b.selected,'read-remove');
+s.size=2;s.selectedIndex=-1;check(!a.selected && !b.selected,'read-explicit-none');
+g.disabled=true;a.disabled=true;s.size=1;check(!a.selected && !b.selected,'read-disabled-none');
+g.disabled=false;check(b.selected && !a.selected,'read-enabled-fallback');
+s.multiple=true;a.selected=true;check(a.selected && b.selected,'read-multiple');
+s.multiple=false;check(a.selected && !b.selected,'read-single');
+s.innerHTML='<option id=x value=x>X<option id=y selected value=y>Y';
+const x=document.getElementById('x'),y=document.getElementById('y');check(y.selected && !x.selected,'read-html-replacement');
+const f=new DocumentFragment(),z=new Option('Z','z',false,true);f.appendChild(z);s.insertBefore(f,s.firstChild);
+check(z.selected && !y.selected && !x.selected,'read-fragment');
+z.remove();check(x.selected && !y.selected,'read-removed-fragment-option');
+s.textContent='';check(z.selected && !s.options.length,'detached-option-retains-state');
+document.getElementById('ok').textContent='Selection reads PASS';)JS"));
+        assert(settle(p).find("Selection reads PASS")!=std::string::npos);
+    }
+    {
         auto p=open("<select id=s><option value=old>Old</select><p id=ok></p>"+script(R"JS(
 const s=document.getElementById('s'),o=new Option('New','new',true,false);
 check(o instanceof Option && o.defaultSelected && !o.selected && o.value==='new' && o.index===0,'constructor');
