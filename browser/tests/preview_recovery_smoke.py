@@ -3,7 +3,7 @@
 import argparse
 import json
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageChops
 from geometry import navigation, content_crop
 from harness import Browser
 from image_failure_fixture import Fixture
@@ -21,16 +21,22 @@ def main():
                 width=a.width, height=a.height, corner=0)
     rows = []
 
-    def points(name, color):
+    def locate_color(name, color):
         b.shot(name); im = Image.open(a.output/(name+'.png')).convert('RGB')
         left, top, right, bottom = content_crop({'content':b.box('content'), 'status':b.box('status')})
-        return [(x, y) for y in range(top, bottom) for x in range(left, right)
-                if all(abs(c-v) < 9 for c, v in zip(im.getpixel((x, y)), color))]
+        region = im.crop((left, top, right, bottom))
+        bands = ImageChops.difference(region, Image.new('RGB', region.size, color)).split()
+        maximum = ImageChops.lighter(ImageChops.lighter(bands[0], bands[1]), bands[2])
+        mask = maximum.point([255 if value < 9 else 0 for value in range(256)])
+        bounds = mask.getbbox()
+        box = None if bounds is None else (left+bounds[0], top+bounds[1],
+                                           left+bounds[2]-1, top+bounds[3]-1)
+        return box, mask.histogram()[255]
 
     def middle(found):
-        assert len(found) > 15, len(found)
-        return ((min(p[0] for p in found)+max(p[0] for p in found))//2,
-                (min(p[1] for p in found)+max(p[1] for p in found))//2)
+        box, count = found
+        assert count > 15, count
+        return ((box[0]+box[2])//2, (box[1]+box[3])//2)
 
     try:
         b.wait(lambda: 'BROWSER VIEWPORT' in b.logs())
@@ -39,7 +45,7 @@ def main():
             name = page[1:]; mark = len(b.logs()); b.navigate(root + page)
             b.wait(lambda: 'BROWSER IMAGE DONE index=0' in b.logs()[mark:])
             assert 'BROWSER GIF ERROR' not in b.logs()[mark:]
-            at = middle(points(name+'-first-frame', (220, 45, 65)))
+            at = middle(locate_color(name+'-first-frame', (220, 45, 65)))
             if linked:
                 b.command(f'TOUCH DOWN 0 {at[0]} {at[1]}')
                 b.wait(lambda: 'BROWSER IMAGE VIEW index=0' in b.logs()[mark:])
@@ -48,7 +54,7 @@ def main():
                 b.tap(*at); b.wait(lambda: 'BROWSER IMAGE VIEW index=0' in b.logs()[mark:])
             b.wait(lambda: 'BROWSER GIF ERROR code=-15' in b.logs()[mark:])
             assert f.counts[source] == 1, dict(f.counts)
-            retry_at = middle(points(name+'-frame-error', (20, 105, 172)))
+            retry_at = middle(locate_color(name+'-frame-error', (20, 105, 172)))
             rows.append(dict(flow=name+' shows a retry control after later-frame failure'))
             mark = len(b.logs()); b.tap(*retry_at)
             b.wait(lambda: 'BROWSER IMAGE DONE index=0' in b.logs()[mark:])
@@ -56,7 +62,7 @@ def main():
             assert f.counts[source] == 2 and f.counts[page] == 1, dict(f.counts)
             # The replacement's second frame is actually blue, rather than an
             # error placeholder or a retained copy of the original first frame.
-            assert len(points(name+'-recovered-frame', (35, 105, 220))) > 150
+            assert locate_color(name+'-recovered-frame', (35, 105, 220))[1] > 150
             assert 'BROWSER COMIC' not in b.logs(), 'preview retry entered comic mode'
             assert not f.counts['/trap'], 'linked preview retry followed its hyperlink'
             rows.append(dict(flow=name+' retries once and resumes native animation'))

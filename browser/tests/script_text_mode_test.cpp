@@ -69,7 +69,8 @@ Line</textarea><script>const t=document.getElementById('raw');
         t.innerHTML='\r\nAlpha';if(t.textContent!=='\nAlpha')throw Error('fragment LF');
         </script></body></html>)HTML");
         const auto html=settle(p);browser::Document d;d.clear("https://example.test/");browser::Parser parsed(d,true);parsed.feed(html);parsed.finish();
-        assert(d.text.find("\nAlpha")!=d.text.npos);
+        assert(d.fields.size()==1 && d.fields[0].type==browser::FieldType::textarea &&
+               d.fields[0].value=="\nAlpha" && d.fields[0].script_node);
     }
     {
         auto p=open(R"HTML(<html><body><script>document.addEventListener('DOMContentLoaded',()=>{

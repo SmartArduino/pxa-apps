@@ -22,6 +22,10 @@ def main():
                 if all(abs(v-c)<9 for v,c in zip(im.getpixel((px,py)),color))]
     def click(name,color):
         found=points(name,color);assert len(found)>15,(name,len(found))
+        # Click the first action row. Editable textarea previews also use
+        # blue; their text is not part of the retained blue event handler.
+        top=min(y for _,y in found)
+        found=[point for point in found if point[1]<top+b.dp(20)]
         b.tap((min(v[0] for v in found)+max(v[0] for v in found))//2,
               (min(v[1] for v in found)+max(v[1] for v in found))//2)
     def proof(name):

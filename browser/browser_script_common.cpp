@@ -94,7 +94,7 @@ bool Capture::has_script() const noexcept {
             // A disabled input/button cannot activate its click handler by
             // itself. Other events or scripts may still enable that control.
             const bool click = t.has("onclick") &&
-                !((t.name == "input" || t.name == "button") && t.has("disabled"));
+                !((t.name == "input" || t.name == "button" || t.name == "textarea") && t.has("disabled"));
             if (click || t.has("onload") || t.has("onsubmit")) script = true;
         }
         if (!t.closing && (t.name == "style" || t.name == "script")) {

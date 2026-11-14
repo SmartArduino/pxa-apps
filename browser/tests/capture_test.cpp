@@ -18,7 +18,7 @@ int main() {
         {"<button disabled onclick='bad )'></button><body onload='work()'>",true},
         {"<div disabled onclick='work()'>Not a disabled control</div>",true},
         {"<a disabled onclick='work()'>Link</a>",true},
-        {"<textarea disabled onclick='work()'>Conservative unsupported control</textarea>",true},
+        {"<textarea disabled onclick='work()'>Disabled multiline control</textarea>",false},
         {"<button disabled onclick='bad )'></button><script>work()</script>",true},
         {"<button disabled onclick='bad )'></button><script src=/enable.js></script>",true},
         {"<button disabled onclick='bad )'></button><script type=application/json>{}</script>",false},

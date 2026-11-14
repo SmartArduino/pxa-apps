@@ -224,7 +224,7 @@
             attrs && own(attrs, 'onclick') && node._onclick === undefined || listeners && listeners.length);
     }
     function disabledControl(node) {
-        return !!node && (node.nodeName === 'INPUT' || node.nodeName === 'BUTTON') && node.disabled;
+        return !!node && (node.nodeName === 'INPUT' || node.nodeName === 'BUTTON' || node.nodeName === 'TEXTAREA') && node.disabled;
     }
     function submitControl(node) {
         const type = node.type.toLowerCase();
@@ -363,14 +363,37 @@
             changed();
         }
     };
+    const areaValue=Symbol('areaValue');
+    function areaDefault(node) {
+        const parts=[];
+        for(let i=0;i<node.childNodes.length;++i) {
+            if(i>=512)throw new RangeError('DOM traversal limit');
+            const child=node.childNodes[i];if(child.nodeType===3)parts.push(child._text);
+        }
+        return parts.join('');
+    }
+    function areaText(node) {
+        const value=own(node,areaValue)?node[areaValue]:areaDefault(node);
+        return value.indexOf('\r')<0?value:value.replace(/\r\n?/g,'\n');
+    }
     for (const key of ['id','name','value','src','srcset','sizes','media','loading','href','type','className','alt','title','action']) {
         const attribute = key === 'className' ? 'class' : key;
         Object.defineProperty(Node.prototype, key, {
             get() { const attrs=this._attrs;
+                if(this.nodeName==='TEXTAREA') {
+                    if(key==='value')return areaText(this);
+                    if(key==='type')return 'textarea';
+                }
                 if(attrs && own(attrs,attribute))return attrs[attribute] || '';
                 return key==='value' && this.nodeName==='INPUT' &&
                     (this.type.toLowerCase()==='radio' || this.type.toLowerCase()==='checkbox') ? 'on' : ''; },
             set(v) {
+                if(this.nodeName==='TEXTAREA' && key==='value') {
+                    const text=domString(v);if(text.length>4096)throw new RangeError('value limit');
+                    const before=areaText(this);this[areaValue]=text;
+                    if(areaText(this)!==before)changed();return;
+                }
+                if(this.nodeName==='TEXTAREA' && key==='type')return;
                 if(key==='className') {
                     // Reflection writes directly, without a public DOM call
                     // retained around conversion hooks and token refresh.
@@ -390,9 +413,12 @@
         },
         set(value) { this.setAttribute(key, value); }
     });
-    for (const key of ['checked','disabled','hidden']) Object.defineProperty(Node.prototype, key, {
-        get() { return this.hasAttribute(key); },
-        set(v) { if (v) this.setAttribute(key, ''); else this.removeAttribute(key); }});
+    for (const key of ['checked','disabled','hidden','readOnly']) {
+        const attribute=key==='readOnly'?'readonly':key;
+        Object.defineProperty(Node.prototype, key, {
+            get() { return this.hasAttribute(attribute); },
+            set(v) { if (v) this.setAttribute(attribute, ''); else this.removeAttribute(attribute); }});
+    }
     const textContent = {get() {
                 const todo=[this], parts=[]; let visited=0;
                 while (todo.length) {
@@ -414,6 +440,14 @@
                 if (v) this.appendChild(new Node('', v)); else changed();
             }};
     Object.defineProperties(Node.prototype, {
+        defaultValue: {configurable:true,enumerable:true,
+            get() {return this.nodeName==='TEXTAREA'?areaDefault(this):undefined;},
+            set(v) {
+                if(this.nodeName==='TEXTAREA')this.textContent=domString(v);
+                else Object.defineProperty(this,'defaultValue',{value:v,writable:true,enumerable:true,configurable:true});
+            }},
+        textLength: {configurable:true,enumerable:true,
+            get() {return this.nodeName==='TEXTAREA'?areaText(this).length:undefined;}},
         style: {get() { return inlineStyle(this); }, set(v) { replaceStyle(this, v); }},
         textContent, innerText: textContent,
         innerHTML: {get() { const parts=[]; for(const n of this.childNodes) parts.push(advance(snapshot(n,false),1024).text); return parts.join(''); },
@@ -918,6 +952,7 @@
     const simpleFormText = /^[A-Za-z0-9*._-]*$/;
     function formEncode(text) {
         if (simpleFormText.test(text)) return text;
+        text=text.replace(/\r\n?|\n/g,'\r\n');
         // Native string replacement avoids a retained JS callback frame for
         // every punctuation mark, including during an onsubmit -> submit().
         return encodeURIComponent(text).replaceAll('%20','+').replaceAll('!','%21')
@@ -943,8 +978,10 @@
                 const n = todo.pop();
                 if (++visited > 512) throw new RangeError('form traversal limit');
                 if (n !== form && n.nodeName === 'FORM') continue;
-                if ((n.nodeName === 'INPUT' || n.nodeName === 'BUTTON') && n.name && !n.disabled) {
-                    const type = n.type.toLowerCase();
+                if ((n.nodeName === 'INPUT' || n.nodeName === 'BUTTON' || n.nodeName === 'TEXTAREA') && n.name && !n.disabled) {
+                    if(n.nodeName==='TEXTAREA' && (n.getAttribute('wrap')||'').toLowerCase()==='hard')
+                        throw new TypeError('hard textarea wrapping unsupported');
+                    const type = n.nodeName==='TEXTAREA'?'textarea':n.type.toLowerCase();
                     const button = n.nodeName === 'BUTTON' || type === 'submit' || type === 'button' || type === 'reset' || type === 'image';
                     const include = button ? n === submitter : ((type !== 'checkbox' && type !== 'radio') || n.checked);
                     if (include) {
@@ -1010,7 +1047,7 @@
             // Project visible raw blocks as escaped preformatted text so an
             // incremental repaint cannot turn that string into active markup.
             if(render && (tag==='xmp' || tag==='plaintext'))tag='pre';
-            const disabled=(tag==='input' || tag==='button') && attributes && own(attributes,'disabled');
+            const disabled=(tag==='input' || tag==='button' || tag==='textarea') && attributes && own(attributes,'disabled');
             const inert=tag==='title' || tag==='iframe' || tag==='noembed' || tag==='noframes';
             if (render && !inert && !disabled && (tag==='a' || tag==='button' || type==='submit' || typeof n._onclick==='function' ||
                     attributes && own(attributes,'onclick') && n._onclick===undefined ||
@@ -1019,9 +1056,9 @@
                 if (state.hitCount>=96) throw new RangeError('interactive node limit');
                 if(!state.hits[n._hit])++state.hitCount;
                 state.hits[n._hit]=n;attrs+=' data-pxa-click="'+n._hit+'"';
-                if (tag!=='img' && tag!=='input' || type==='submit') tag='a';
+                if (tag!=='img' && tag!=='input' && tag!=='textarea' || tag==='input' && type==='submit') tag='a';
             }
-            if (render && tag==='input' && !disabled) {
+            if (render && (tag==='input' || tag==='textarea') && !disabled) {
                 if (!n._hit) n._hit=nextHit++;
                 if(!state.hits[n._hit])++state.hitCount;
                 state.hits[n._hit]=n;attrs+=' data-pxa-field="'+n._hit+'"';
@@ -1031,7 +1068,9 @@
             if (n._style) style=n._style.text;
             if(style) attrs+=' style="'+escape(style)+'"';
             parts.push('<'+tag+attrs+'>');
-            if(render && tag==='textarea')parts.push('\n'); // compensate the parser's initial-LF rule
+            if(render && tag==='textarea') {
+                parts.push('\n',escape(n.value),'</textarea>');continue; // compensate the parser's initial-LF rule
+            }
             if(tag==='img' || tag==='source' || tag==='input' || tag==='br' || tag==='hr' || tag==='meta' || tag==='link') continue;
             if(tag==='a' && nodeName==='INPUT') { parts.push(escape(attributes.value || '提交'),'</a>');continue; }
             todo.push(null);endings.push('</'+tag+'>');

@@ -63,6 +63,7 @@ struct App {
     CanvasRef canvas;
     CanvasCommands<4000> draw;
     State<std::string> input{""};
+    State<std::string> area_input{""};
     State<bool> capture_volume_keys{false};
     State<bool> password_input{false};
     browser::Cookies cookies;
@@ -95,7 +96,9 @@ struct App {
     int volume_direction = 0;
     std::uint64_t volume_repeat_at = 0;
     TextInputRef editor;
+    TextInputRef area_editor;
     State<TextInputBox> editor_box{TextInputBox{{}, false, Font::body, 0x17334aff}};
+    State<TextInputBox> area_editor_box{TextInputBox{{}, false, Font::body, 0x17334aff}};
     pxa::Permission permission;
     browser::Document document;
     std::uint32_t early_field_edits = 0;
@@ -207,7 +210,12 @@ struct App {
                          .max_bytes(browser::max_url)
                          .single_line()
                          .on_submit([this] { finish_edit(true); })
-                         .password(password_input))
+                         .password(password_input),
+                     TextInput(area_input, area_editor)
+                         .box(area_editor_box)
+                         .max_bytes(512)
+                         .single_line(false)
+                         .on_submit([this] { finish_edit(true); }))
             .fill()
             .fill_height(), capture_volume_keys,
             [this](const VolumeKeyEvent &event) { volume_key(event.key); });
@@ -244,10 +252,23 @@ struct App {
                           int(std::int64_t(address.y) * 65536 / density),
                           std::max(1, int(std::int64_t(address.width - controls) * 65536 / density)),
                           std::max(1, int(std::int64_t(address.height) * 65536 / density))},
-                         editing,
+                         editing && !multiline_edit(),
                          Font::body,
                          0x17334aff});
+        const int area_height=status_box.y>=content.y && status_box.y<content.y+content.height
+            ? std::max(1,status_box.y-content.y-dp(2)) : content.height;
+        area_editor_box.set(TextInputBox{{int(std::int64_t(content.x) * 65536 / density),
+            int(std::int64_t(content.y) * 65536 / density),
+            std::max(1,int(std::int64_t(content.width) * 65536 / density)),
+            std::max(1,int(std::int64_t(area_height) * 65536 / density))},
+            multiline_edit(),Font::body,0x17334aff});
     }
+    bool multiline_edit() const {
+        return editing && edit_field >= 0 && std::size_t(edit_field) < document.fields.size() &&
+               document.fields[edit_field].type == browser::FieldType::textarea;
+    }
+    TextInputRef &active_editor() { return multiline_edit() ? area_editor : editor; }
+    State<std::string> &active_input() { return multiline_edit() ? area_input : input; }
     void log(std::string_view s) { (void)context->log().write(pxa::LogLevel::info, s); }
     void set_status(auto &&message, unsigned duration_ms = 4000) {
         status = std::forward<decltype(message)>(message);
@@ -1322,18 +1343,29 @@ struct App {
         volume_direction = 0;
         edit_field = field;
         menu = false;
-        input.set(field == -3 ? std::string(page_find.query()) :
+        input.set(""); area_input.set("");
+        active_input().set(field == -3 ? std::string(page_find.query()) :
                   field >= 0 ? document.fields[field].value :
                   (url == "about:home" || field == -2 ? "" : url));
         sync_editor();
         dirty = true;
         focus_pending = true;
+#ifdef PXA_BROWSER_TRACE
+        log("BROWSER EDIT field="+std::to_string(edit_field)+" multiline="+std::to_string(multiline_edit()));
+#endif
     }
     void finish_edit(bool accept) {
         if (!editing)
             return;
-        std::string value = input.get();
+        std::string value = active_input().get();
+        auto &focused = active_editor();
         int field = edit_field;
+        if (accept && field >= 0 && value.size() > 512) {
+            set_status("表单文字最多 512 字节");
+            (void)context->window().toast("表单文字最多 512 字节");
+            focus_pending = true;
+            return;
+        }
         if (accept && field == -3 && !browser::trim(value).empty() &&
             !page_find.start(document, page, value)) {
             set_status("查找文字最多 128 字节，请缩短后重试");
@@ -1363,10 +1395,11 @@ struct App {
         editing = false;
         focus_pending = false;
         edit_field = -1;
-        (void)editor.hide_keyboard();
+        (void)focused.hide_keyboard();
         sync_editor();
         dirty = true;
         input.set(""); // Do not keep the last password in a hidden editor.
+        area_input.set("");
         if (!accept) {
             if (field == -3) status_until = 0;
             return;
@@ -1384,10 +1417,6 @@ struct App {
             else
                 set_status("请输入有效的网址或较短的搜索关键词");
         } else if (std::size_t(field) < document.fields.size()) {
-            if (value.size() > 512) {
-                set_status("表单文字最多 512 字节");
-                return;
-            }
             document.fields[field].value = std::move(value);
             sync_script_field(document.fields[field]);
             set_status("已更新输入");
@@ -1699,9 +1728,9 @@ struct App {
             scrollbar_until = 0;
             body_dirty = true;
         }
-        if (focus_pending && editing && editor.mounted()) {
+        if (focus_pending && editing && active_editor().mounted()) {
             focus_pending = false;
-            auto r = editor.show_keyboard();
+            auto r = active_editor().show_keyboard();
             if (!r)
                 fail(r.error());
         }
@@ -2140,7 +2169,9 @@ struct App {
             draw.pop_clip();
         } else {
             clip(content);
-            if (url == "about:home") {
+            if (multiline_edit()) {
+                rect(content,0xf7fafcff);
+            } else if (url == "about:home") {
                 render_home();
             } else {
                 auto begin = visible_begin();
@@ -2216,13 +2247,19 @@ struct App {
                         else
                             label({box.x + dp(4), box.y, box.width / 2 - dp(4), box.height}, value,
                                   color, size, 0, true);
-                        if (field.type == browser::FieldType::text && !field.value.empty())
+                        if ((field.type == browser::FieldType::text || field.type == browser::FieldType::textarea) && !field.value.empty()) {
+                            std::string_view preview=field.value;
+                            if (field.type == browser::FieldType::textarea) {
+                                const auto first=preview.find_first_not_of("\r\n");
+                                preview.remove_prefix(first==preview.npos?preview.size():first);
+                            }
                             label({box.x + box.width / 2, box.y, box.width / 2, box.height},
-                                  field.value, 0x1469acff, size, 0, true);
+                                  preview, 0x1469acff, size, 0, true);
+                        }
                         if ((!field.value.empty() || field.type == browser::FieldType::checkbox ||
                              field.type == browser::FieldType::radio) && field.type != browser::FieldType::submit &&
                             field.type != browser::FieldType::hidden &&
-                            field.type != browser::FieldType::text) {
+                            field.type != browser::FieldType::text && field.type != browser::FieldType::textarea) {
                             // Field value is visible in the editor; the document row
                             // shows a compact indicator without duplicating secrets.
                             label({box.x + box.width - dp(36), box.y, dp(36), box.height},
@@ -2586,7 +2623,7 @@ struct App {
                         field.type == browser::FieldType::radio || !field.checked);
                     sync_script_field(field);
                     dirty = true;
-                } else
+                } else if (field.type != browser::FieldType::readonly_textarea)
                     edit(i);
             }
             break;

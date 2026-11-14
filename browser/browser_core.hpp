@@ -142,7 +142,13 @@ inline std::string entities(std::string_view s) {
 inline std::string encode(std::string_view s, bool form = false) {
     constexpr char hex[] = "0123456789ABCDEF";
     std::string r;
-    for (unsigned char c : s) {
+    for (std::size_t i = 0; i < s.size(); ++i) {
+        const auto c = static_cast<unsigned char>(s[i]);
+        if (form && (c == '\r' || c == '\n')) {
+            r += "%0D%0A";
+            if (c == '\r' && i + 1 < s.size() && s[i + 1] == '\n') ++i;
+            continue;
+        }
         if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
             c == '-' || c == '_' || c == '.' || (form ? c == '*' : c == '~'))
             r += char(c);
@@ -382,7 +388,7 @@ struct Form {
     std::string action;
     bool post = false, supported = true;
 };
-enum class FieldType : std::uint8_t { text, password, hidden, checkbox, submit, radio };
+enum class FieldType : std::uint8_t { text, password, hidden, checkbox, submit, radio, textarea, readonly_textarea };
 struct Field {
     std::string name, value, label;
     std::int16_t form = -1;
@@ -666,6 +672,7 @@ class Parser {
     }
     void finish_raw() {
         flush_text();
+        if (raw_ == "textarea") finish_textarea();
         if (raw_ == "style") {
             sheet_.parse(style_source_);
             std::string{}.swap(style_source_);
@@ -687,8 +694,69 @@ class Parser {
         }
         return {};
     }
-    int link_ = -1, form_ = -1, button_ = -1;
+    int link_ = -1, form_ = -1, button_ = -1, textarea_ = -1;
     bool button_caption_ = false, button_full_ = false;
+    bool textarea_full_ = false, textarea_hidden_ = false, textarea_space_ = false;
+    bool textarea_source_cr_ = false, textarea_value_cr_ = false;
+    void control(const Tag &t, bool hidden = false) {
+        const auto &n = t.name;
+        if (t.closing || button_ >= 0 || (form_ < 0 && !scripted_) || t.has("disabled")) return;
+        if (n == "select") { if (form_ >= 0) doc_.forms[form_].supported = false; return; }
+        if (n != "input" && n != "button" && n != "textarea") return;
+        const auto type = lowercase(t.get("type"));
+        if (n != "textarea" && (type == "reset" || type == "button")) return;
+        if ((n == "input" && (type == "file" || type == "image")) ||
+            (n == "textarea" && lowercase(t.get("wrap")) == "hard")) {
+            if (form_ >= 0) doc_.forms[form_].supported = false;
+            return;
+        }
+        auto ft = n == "textarea" ? (t.has("readonly") ? FieldType::readonly_textarea : FieldType::textarea)
+                  : n == "button" || type == "submit" ? FieldType::submit
+                  : type == "hidden" ? FieldType::hidden : type == "password" ? FieldType::password
+                  : type == "checkbox" ? FieldType::checkbox : type == "radio" ? FieldType::radio : FieldType::text;
+        if (hidden && ft == FieldType::submit) return; // cannot be the activated native submitter
+        if (doc_.fields.size() >= max_fields) { if (form_ >= 0) doc_.forms[form_].supported = false; return; }
+        auto name = t.get("name"), value = n == "textarea" ? std::string{} : t.get("value");
+        auto label = hidden ? std::string{} : t.get("placeholder");
+        if (!hidden && label.empty()) label = t.get("aria-label");
+        if (name.size() > 128 || value.size() > 512 || label.size() > 128) {
+            if (form_ >= 0) doc_.forms[form_].supported = false;
+            return;
+        }
+        if (!hidden) {
+            if (label.empty() && ft == FieldType::submit) label = value;
+            if (label.empty() && ft != FieldType::hidden && ft != FieldType::submit) label = trim(label_);
+            if (ft != FieldType::hidden) label_.clear();
+            if (label.empty() && ft == FieldType::radio) label = value;
+            if (label.empty()) label = name;
+            if (label.empty()) label = ft == FieldType::submit ? "提交" : n == "textarea" ? "多行输入" : "输入";
+        }
+        if ((ft == FieldType::checkbox || ft == FieldType::radio) && !t.has("value")) value = "on";
+        const int index = int(doc_.fields.size());
+        doc_.fields.push_back({std::move(name),std::move(value),std::move(label),std::int16_t(form_),ft,
+                              t.has("checked"),scripted_ ? node_id(t.get("data-pxa-field")) : 0});
+        if (ft == FieldType::radio && t.has("checked")) check_field(doc_,index,true);
+        if (n == "textarea") {
+            textarea_ = index; textarea_full_ = false; textarea_hidden_ = hidden; textarea_space_ = last_space_;
+            textarea_source_cr_ = textarea_value_cr_ = false;
+        } else if (n == "button") {
+            button_ = index; button_caption_ = button_full_ = false; last_space_ = true;
+        } else if (!hidden && ft != FieldType::hidden) {
+            doc_.newline(text_style_); doc_.append(doc_.fields.back().label,Style::button,-1,index); doc_.newline(text_style_);
+        }
+    }
+    [[gnu::noinline]] void finish_textarea() {
+        if (textarea_ < 0) return;
+        const auto &field = doc_.fields[textarea_];
+        if (!textarea_hidden_ && !textarea_full_ && field.type == FieldType::textarea) {
+            doc_.newline(text_style_);
+            doc_.append(field.label, Style::button, -1, textarea_);
+        }
+        if (!textarea_hidden_) doc_.newline(text_style_);
+        textarea_ = -1;
+        last_space_ = textarea_hidden_ ? textarea_space_ : true;
+        last_cr_ = false;
+    }
     // Keep string finalization out of the common tag parser's instruction path.
     [[gnu::noinline]] void finish_button() {
         if (button_ < 0) return;
@@ -714,6 +782,8 @@ class Parser {
         // sealing the caption without splitting a UTF-8 character.
         if (button_ >= 0 && !button_full_) [[unlikely]]
             limit = std::min(limit,128 - (button_caption_ ? doc_.fields[button_].label.size() : 0));
+        if (textarea_ >= 0 && !textarea_full_) [[unlikely]]
+            limit = std::min(limit,512 - doc_.fields[textarea_].value.size());
         const bool last_span = doc_.spans.size() + 1 == max_spans && button_ < 0 &&
             (doc_.spans.empty() || doc_.spans.back().style != style_ ||
              doc_.spans.back().text_style != text_style_ ||
@@ -741,16 +811,27 @@ class Parser {
         return at;
     }
     void glyph(std::string_view s) {
-        if (hidden_depth_) return;
-        if (title_) {
-            if (doc_.title.size() + s.size() <= 256)
-                doc_.title += s;
-            last_space_=false;
+        if (textarea_ >= 0) [[unlikely]] {
+            auto &field = doc_.fields[textarea_];
+            if (!textarea_full_ && field.value.size() + s.size() <= 512) field.value += s;
+            else if (!textarea_full_) {
+                textarea_full_ = true;
+                if (field.form >= 0) doc_.forms[field.form].supported = false;
+                if (!textarea_hidden_ && field.type == FieldType::textarea)
+                    doc_.append(field.value, Style::code, -1, -1, -1, text_style_);
+            }
+            if (!textarea_hidden_ && (textarea_full_ || field.type == FieldType::readonly_textarea))
+                doc_.append(s, Style::code, -1, -1, -1, text_style_);
+            last_space_ = false;
             return;
         }
+        if (hidden_depth_) return;
+        if (title_) {
+            if (doc_.title.size() + s.size() <= 256) doc_.title += s;
+            last_space_=false; return;
+        }
         const auto mode=html_text(raw_);
-        if (head_ || (!raw_.empty() && (mode==HtmlText::data || mode==HtmlText::hidden)) || hidden_depth_)
-            return;
+        if (head_ || (!raw_.empty() && (mode==HtmlText::data || mode==HtmlText::hidden))) return;
         if (button_ >= 0) [[unlikely]] {
             auto &caption = doc_.fields[button_].label;
             if (!button_caption_) { caption.clear(); button_caption_ = true; }
@@ -764,10 +845,19 @@ class Parser {
         last_space_ = false;
     }
     void character(unsigned char c) {
-        if (c == '\n' && last_cr_) { last_cr_ = false; return; }
-        last_cr_ = c == '\r';
-        if (c == '\r') c = '\n';
-        if(initial_lf_) {initial_lf_=false;if(c=='\n')return;}
+        if (textarea_ >= 0) [[unlikely]] {
+            // Source preprocessing precedes entity expansion. The ignored
+            // initial LF precedes the separate API-value CRLF normalization.
+            if (initial_lf_) { initial_lf_ = false; if (c == '\n') return; }
+            if (c == '\n' && textarea_value_cr_) { textarea_value_cr_ = false; return; }
+            textarea_value_cr_ = c == '\r';
+            if (c == '\r') c = '\n';
+        } else {
+            if (c == '\n' && last_cr_) { last_cr_ = false; return; }
+            last_cr_ = c == '\r';
+            if (c == '\r') c = '\n';
+            if(initial_lf_) {initial_lf_=false;if(c=='\n')return;}
+        }
         if(!raw_.empty() && c==0) {glyph("\xef\xbf\xbd");return;}
         if (unicode_want_) {
             if ((c & 0xc0) != 0x80) {
@@ -798,6 +888,9 @@ class Parser {
             } else
                 glyph("\xef\xbf\xbd");
             return;
+        }
+        if (textarea_ >= 0) {
+            const char value = char(c); glyph({&value,1}); return;
         }
         if (c < 32 && !space(c))
             return;
@@ -856,9 +949,15 @@ class Parser {
         while(!bytes.empty() && !doc_.truncated) {
             if(title_ && doc_.title.size()==256)return;
             if(const auto count=literal_prefix(bytes)) {
+                if (textarea_ >= 0) textarea_source_cr_ = textarea_value_cr_ = false;
                 last_cr_=false;glyph(bytes.substr(0,count));bytes.remove_prefix(count);continue;
             }
-            const char c=bytes.front();bytes.remove_prefix(1);
+            char c=bytes.front();bytes.remove_prefix(1);
+            if (textarea_ >= 0) {
+                if (c == '\n' && textarea_source_cr_) { textarea_source_cr_ = false; continue; }
+                textarea_source_cr_ = c == '\r';
+                if (c == '\r') c = '\n';
+            }
             if(mode==HtmlText::rcdata)textchar(c);else character(static_cast<unsigned char>(c));
         }
     }
@@ -887,6 +986,7 @@ class Parser {
         // root tag's nesting: unrelated/mismatched child closes cannot reveal
         // a hidden login dialog or accidentally hide the rest of a valid page.
         if (hidden_depth_) {
+            control(t,true);
             if(n=="img" && !t.closing && in_picture_) { picture_used_=true;picture_source_.clear(); }
             if (n == hidden_) {
                 if (t.closing) --hidden_depth_;
@@ -905,6 +1005,7 @@ class Parser {
             bool hidden = t.has("hidden") || n == "template" || (n == "dialog" && !t.has("open"));
             hidden |= (props.set & (1u << css::display)) && props.values[css::display] == 1;
             if (hidden) {
+                control(t,true);
                 if(n=="img" && in_picture_) { picture_used_=true;picture_source_.clear(); }
                 if ((!trim(value).ends_with('/') || html_text(n)!=HtmlText::data) && !void_tag(n)) {
                     hidden_ = n; hidden_depth_ = 1;
@@ -1161,57 +1262,8 @@ class Parser {
                          (method != "post" || (enctype != "multipart/form-data" && enctype != "text/plain"))});
             }
         }
-        if ((n == "input" || n == "button") && !t.closing && !t.has("disabled") && form_ >= 0 &&
-            doc_.fields.size() >= max_fields)
-            doc_.forms[form_].supported = false;
-        if ((n == "input" || n == "button") && !t.closing && (form_ >= 0 || scripted_) &&
-            doc_.fields.size() < max_fields) {
-            auto type = lowercase(t.get("type"));
-            if (t.has("disabled")) return;
-            if (type == "reset" || type == "button") return;
-            if (n == "input" && (type == "file" || type == "image")) {
-                if (form_ >= 0) doc_.forms[form_].supported = false;
-                return;
-            }
-            auto ft = n == "button" || type == "submit" ? FieldType::submit
-                      : type == "hidden"                ? FieldType::hidden
-                      : type == "password"              ? FieldType::password
-                      : type == "checkbox"              ? FieldType::checkbox
-                      : type == "radio"                 ? FieldType::radio
-                                                        : FieldType::text;
-            auto name = t.get("name"), v = t.get("value"), label = t.get("placeholder");
-            if (label.empty()) label = t.get("aria-label");
-            if (name.size() > 128 || v.size() > 512 || label.size() > 128) {
-                if (form_ >= 0) doc_.forms[form_].supported = false;
-                return;
-            }
-            if (label.empty() && ft == FieldType::submit) label = v;
-            if (label.empty() && ft != FieldType::hidden && ft != FieldType::submit)
-                label = trim(label_);
-            if (ft != FieldType::hidden) label_.clear();
-            if (label.empty() && ft == FieldType::radio) label = v;
-            if (label.empty())
-                label = name;
-            if (label.empty())
-                label = ft == FieldType::submit ? "提交" : "输入";
-            if ((ft == FieldType::checkbox || ft == FieldType::radio) && !t.has("value"))
-                v = "on";
-            int index = int(doc_.fields.size());
-            doc_.fields.push_back({std::move(name), std::move(v), std::move(label),
-                                   std::int16_t(form_), ft, t.has("checked"), scripted_ ? node_id(t.get("data-pxa-field")) : 0});
-            if (ft == FieldType::radio && t.has("checked")) check_field(doc_, index, true);
-            if (n == "button") {
-                button_ = index;
-                button_caption_ = button_full_ = false;
-                last_space_ = true;
-            } else if (ft != FieldType::hidden) {
-                doc_.newline(text_style_);
-                doc_.append(doc_.fields.back().label, Style::button, -1, index);
-                doc_.newline(text_style_);
-            }
-        }
-        if ((n == "select" || n == "textarea") && !t.closing && !t.has("disabled") && form_ >= 0)
-            doc_.forms[form_].supported = false;
+        control(t);
+
     }
 
   public:
@@ -1357,6 +1409,7 @@ class Parser {
                 character(c);
         }
         finish_button();
+        finish_textarea();
         doc_.newline(text_style_);
         doc_.title = std::string(trim(doc_.title));
     }
