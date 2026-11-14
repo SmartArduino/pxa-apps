@@ -4,7 +4,8 @@
     'use strict';
     const root = globalThis;
     const Function = root.Function; // Inline attributes use the original compiler.
-    const own = Object.hasOwn;
+    const own = Object.hasOwn, attributeNamePattern=/^[a-z_][a-z0-9_:.-]*$/i;
+    const fragmentStage=Symbol('fragmentStage');
     let dirty = false, building = true, nextHit = 1, hits = Object.create(null);
     let nextTimer = 1, timers = [], pending = Object.create(null);
     const escapePattern = /[&<>"\u0000]/g;
@@ -271,7 +272,7 @@
     Node.prototype.hasAttribute = function (name) { return !!this._attrs && own(this._attrs, String(name).toLowerCase()); };
     Node.prototype.setAttribute = function (name, value) {
         name = String(name).toLowerCase(); value = String(value);
-        if (!/^[a-z_][a-z0-9_:.-]*$/i.test(name) || name.length > 64 || value.length > 4096)
+        if (!attributeNamePattern.test(name) || name.length > 64 || value.length > 4096)
             throw new RangeError('attribute limit');
         if (name === 'style') { replaceStyle(this, value, true); return; }
         if (!this._attrs) this._attrs = Object.create(null);
@@ -383,7 +384,18 @@
         textContent, innerText: textContent,
         innerHTML: {get() { const parts=[]; for(const n of this.childNodes) parts.push(serialize(n,false)); return parts.join(''); },
             set(v) { v = String(v); if (v.indexOf('<') < 0 && v.indexOf('&') < 0 && v.indexOf('\r') < 0 && v.indexOf('\0') < 0) this.textContent = v;
-                else { for (const n of this.childNodes) n.parentNode = null; this.childNodes = []; native.fragment(this, v); changed(); } }},
+                else {
+                    // Keep old nodes, handlers and parent links until every
+                    // fragment check succeeds. Only the text context is needed.
+                    const staged={nodeName:this.nodeName,childNodes:[]},stage={target:this,radios:null};
+                    staged[fragmentStage]=stage;native.fragment(staged,v,true);
+                    for(const n of this.childNodes)n.parentNode=null;
+                    this.childNodes=staged.childNodes;
+                    for(const n of this.childNodes)n.parentNode=this;
+                    changed();
+                    const radios=stage.radios;
+                    for(let i=radios?radios.length-1:-1;i>=0;--i)if(radios[i].checked)uncheckRadioPeers(radios[i]);
+                } }},
         outerHTML: {get() { return serialize(this, false); }},
         children: {get() { return this.childNodes.filter(n => n.nodeType === 1); }},
         firstChild: {get() { return this.childNodes[0] || null; }},
@@ -762,13 +774,29 @@
         open(tag, attributes, empty) {
             // Parsed nodes are fresh; avoid reentering the public DOM methods.
             const node = new Node(tag), parent=stack[stack.length-1];
-            for (let i = 0; i < attributes.length; i += 2) node.setAttribute(attributes[i], attributes[i + 1]);
+            if(attributes.length)node._attrs=Object.create(null);
+            let count=0;
+            for (let i = 0; i < attributes.length; i += 2) {
+                const key=attributes[i].toLowerCase(),value=attributes[i+1],attrs=node._attrs;
+                if(own(attrs,key))continue; // HTML keeps the first duplicate attribute.
+                if(!attributeNamePattern.test(key) || key.length>64 || value.length>4096 || ++count>24)
+                    throw new RangeError('parsed attribute limit');
+                if(key==='style') {
+                    const declarations=parseStyle(value),text=styleText(declarations),data=styleState(node);
+                    data.values=declarations.values;data.priorities=declarations.priorities;data.text=text;
+                }
+                attrs[key]=value;
+            }
             if(parent.childNodes.length>=192)throw new RangeError('child limit');
             node.parentNode=parent;parent.childNodes.push(node);
-            if(node.nodeName==='INPUT' && node.checked)uncheckRadioPeers(node);
-            if (tag === 'html') document.documentElement = node;
-            if (tag === 'body') document.body = node;
-            if (tag === 'head') document.head = node;
+            if(node.nodeName==='INPUT' && node.type.toLowerCase()==='radio' && node.checked) {
+                const staged=stack[0][fragmentStage];if(staged)(staged.radios || (staged.radios=[])).push(node);else uncheckRadioPeers(node);
+            }
+            if(!fragments.length) {
+                if (tag === 'html') document.documentElement = node;
+                if (tag === 'body') document.body = node;
+                if (tag === 'head') document.head = node;
+            }
             if (!empty) stack.push(node);
         },
         text(text) { if (text) {
@@ -778,7 +806,21 @@
         } },
         close(tag) { for (let i = stack.length - 1; i > 0; --i) if (stack[i].nodeName.toLowerCase() === tag) { stack.length = i; break; } },
         beginFragment(node) { if (fragments.length >= 4) throw new RangeError('fragment nesting'); fragments.push(stack); stack = [node]; },
-        endFragment() { stack = fragments.pop(); },
+        endFragment() {
+            const staged=stack[0],stage=staged[fragmentStage];stack=fragments.pop();
+            if(stage && stage.radios && stage.radios.some(n=>n.name)) {
+                // Validate the prospective tree before committing children,
+                // changing outside peers or consuming the style allowance.
+                const target=stage.target;let top=target;
+                while(top.parentNode)top=top.parentNode;
+                const todo=[top];let visited=0;
+                while(todo.length) {
+                    if(++visited>512)throw new RangeError('radio traversal limit');
+                    const n=todo.pop(),children=n===target?staged.childNodes:n.childNodes;
+                    for(let i=children.length-1;i>=0;--i)todo.push(children[i]);
+                }
+            }
+        },
         finish() {
             building = false; document.readyState = 'interactive';
             dispatch(document, event('DOMContentLoaded')); document.readyState = 'complete';

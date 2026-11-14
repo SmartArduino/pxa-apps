@@ -126,6 +126,20 @@ struct Page::Impl {
     bool finished = false, stopped = false, paused = false, prepared_response = false;
     std::uint64_t deadline = 0;
     Stats counters;
+    bool* fragment_failure = nullptr;
+    struct FragmentScope {
+        Impl& owner;
+        bool failed=false, committed=false;
+        const bool staged;
+        bool* previous;
+        std::size_t style_checkpoint;
+        FragmentScope(Impl& value,bool staging) : owner(value), staged(staging), previous(value.fragment_failure),
+            style_checkpoint(value.style_bytes) { owner.fragment_failure=&failed; }
+        ~FragmentScope() {
+            owner.fragment_failure=previous;
+            if(staged && !committed)owner.style_bytes=style_checkpoint;
+        }
+    };
     std::uint64_t markup_hash = 0;
     std::size_t markup_size = SIZE_MAX;
     ~Impl() {
@@ -146,6 +160,10 @@ struct Page::Impl {
     }
     bool check(JSValueConst result) {
         if (!JS_IsException(result)) return true;
+        // Keep the original exception pending for the caller's catch block.
+        // Quota failures while building a detached fragment are recoverable;
+        // hard allocation/deadline failures still reach the outer VM guard.
+        if(fragment_failure) {*fragment_failure=true;return false;}
         Value error(ctx, JS_GetException(ctx));
 #ifdef PXA_SCRIPT_DIAGNOSTICS
         CString detail(ctx, error.value); std::fprintf(stderr, "JS ERROR: %.*s\n", int(detail.size), detail.data ? detail.data : "");
@@ -157,6 +175,13 @@ struct Page::Impl {
         }
         else problem = "部分网页脚本不受支持";
         return false;
+    }
+    JSValue rethrow_fragment(JSValue error) {
+        const auto result=JS_Throw(ctx,error);
+        // JS_Throw resets QuickJS's uncatchable flag. Cleanup must never let
+        // a website catch and retry a hard allocation/deadline interruption.
+        if(heap.failed || (deadline && now()>=deadline))JS_SetUncatchableException(ctx,true);
+        return result;
     }
     Value string(std::string_view value) { return {ctx, JS_NewStringLen(ctx, value.data(), value.size())}; }
     Value call(const char* method, std::span<JSValue> args = {}) {
@@ -298,6 +323,7 @@ struct Page::Impl {
             if (argc < 2) return JS_ThrowTypeError(ctx, "fragment arguments");
             auto html = text(1); if (!html.data) return JS_EXCEPTION;
             if (html.size > self.limits.fragment_bytes) return JS_ThrowRangeError(ctx, "fragment limit");
+            FragmentScope scope(self,argc>2 && JS_ToBool(ctx,argv[2]));
             Value context_name(ctx,JS_GetPropertyStr(ctx,argv[0],"nodeName"));
             if(JS_IsException(context_name.value))return JS_EXCEPTION;
             CString context(ctx,context_name.value);
@@ -309,18 +335,37 @@ struct Page::Impl {
                 auto normalized=text_value(html.view(),kind==browser::HtmlText::rcdata,self.limits.fragment_bytes);
                 if(!normalized)return JS_ThrowRangeError(ctx,"fragment text limit");
                 auto begun=self.invoke("beginFragment",argv[0]);
-                if(JS_IsException(begun.value))return JS_ThrowRangeError(ctx,"fragment nesting failed");
+                if(JS_IsException(begun.value))return JS_EXCEPTION;
                 auto value=self.string(*normalized);if(self.check(value.value))self.invoke("text",value.value);
-                self.invoke("endFragment");return self.stopped?JS_ThrowRangeError(ctx,"fragment failed"):JS_UNDEFINED;
+                Value error;
+                if(scope.failed)error=Value(ctx,JS_GetException(ctx));
+                auto ended=self.invoke("endFragment");
+                if(error.ctx) {
+                    if(JS_IsException(ended.value))JS_FreeValue(ctx,JS_GetException(ctx));
+                    return self.rethrow_fragment(error.release());
+                }
+                if(scope.failed)return JS_EXCEPTION;
+                scope.committed=true;return JS_UNDEFINED;
             }
             auto begun = self.invoke("beginFragment", argv[0]);
-            if (JS_IsException(begun.value)) return JS_ThrowRangeError(ctx,"fragment nesting failed");
+            if (JS_IsException(begun.value)) return JS_EXCEPTION;
             std::size_t at = 0; unsigned nodes = 0;
-            while (at < html.size && !self.stopped) {
-                if (++nodes > self.limits.fragment_nodes) { self.invoke("endFragment"); return JS_ThrowRangeError(ctx, "fragment node limit"); }
+            while (at < html.size && !self.stopped && !scope.failed) {
+                if (++nodes > self.limits.fragment_nodes) {
+                    JS_ThrowRangeError(ctx,"fragment node limit");scope.failed=true;break;
+                }
                 self.build_one(html.view(), at, false);
             }
-            self.invoke("endFragment"); return self.stopped ? JS_ThrowRangeError(ctx, "fragment failed") : JS_UNDEFINED;
+            Value error;
+            if(scope.failed)error=Value(ctx,JS_GetException(ctx));
+            auto ended=self.invoke("endFragment");
+            if(error.ctx) {
+                if(JS_IsException(ended.value))JS_FreeValue(ctx,JS_GetException(ctx));
+                return self.rethrow_fragment(error.release());
+            }
+            if(scope.failed)return JS_EXCEPTION;
+            if(self.stopped)return JS_ThrowRangeError(ctx,"fragment failed");
+            scope.committed=true;return JS_UNDEFINED;
         }
         return JS_UNDEFINED;
     }
@@ -459,7 +504,10 @@ struct Page::Impl {
         if (item.text.empty()) return;
         if (!item.tag) {
             auto decoded=text_value(item.text,true,limits.html_bytes);
-            if(!decoded) {problem="网页文字超过容量限制";stopped=true;++counters.errors;return;}
+            if(!decoded) {
+                if(!scripts) {JS_ThrowRangeError(ctx,"fragment text limit");check(JS_EXCEPTION);return;}
+                problem="网页文字超过容量限制";stopped=true;++counters.errors;return;
+            }
             auto value = string(*decoded);
             if (check(value.value)) invoke("text", value.value);
             return;
@@ -489,7 +537,7 @@ struct Page::Impl {
                     }
                 }
                 auto name=string("style");
-                invoke("open",name.value,attrs.value,JS_FALSE);
+                if(JS_IsException(invoke("open",name.value,attrs.value,JS_FALSE).value))return;
                 auto value=string(body.substr(0,count));
                 if (check(value.value)) invoke("text",value.value);
                 invoke("close",name.value);
@@ -523,13 +571,16 @@ struct Page::Impl {
         constexpr auto voids = " area base br col embed hr img input link meta param source track wbr "sv;
         const auto kind=browser::html_text(t.name);
         const bool empty = (kind==browser::HtmlText::data && trim(item.text).ends_with('/')) || voids.find(" " + t.name + " ") != voids.npos;
-        invoke("open", name.value, attrs.value, JS_NewBool(ctx, empty));
+        if(JS_IsException(invoke("open", name.value, attrs.value, JS_NewBool(ctx, empty)).value))return;
         if(kind!=browser::HtmlText::data) {
             const auto closing=kind==browser::HtmlText::plaintext?source.npos:raw_end(source,browser::text_end_tag(t.name),at);
             const auto end=closing==source.npos?source.size():closing;
             auto decoded=text_value(source.substr(at,end-at),kind==browser::HtmlText::rcdata,limits.html_bytes);
             at=end;if(closing!=source.npos)(void)token(source,at);
-            if(!decoded) {problem="网页文字超过容量限制";stopped=true;++counters.errors;return;}
+            if(!decoded) {
+                if(!scripts) {JS_ThrowRangeError(ctx,"fragment text limit");check(JS_EXCEPTION);return;}
+                problem="网页文字超过容量限制";stopped=true;++counters.errors;return;
+            }
             if(t.name=="textarea" && decoded->starts_with('\n'))decoded->erase(0,1);
             auto value=string(*decoded);if(check(value.value))invoke("text",value.value);
             invoke("close",name.value);

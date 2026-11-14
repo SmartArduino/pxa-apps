@@ -14,5 +14,5 @@
     "资讯订阅",
     "书签"
   ],
-  "changelog": "完善 HTML 文本容器：title/textarea 保留标签文字并解码实体，xmp/plaintext 按原始文字阅读，iframe/noembed/noframes 的后备文字不再产生假脚本、图片或表单；iframe 可手动打开原始 src。修复标题空格、文本容器 innerHTML 上下文和动态重绘中的结束标签处理，避免多余请求；保持原有解析、脚本、内存及网络预算。textarea 编辑与提交仍未实现。\n\nCorrects HTML text-container parsing, entity/newline handling and inert script capture. Preserves literal text and safe DOM repaint, fixes title spacing and context-aware innerHTML, and offers explicit iframe source links without automatic frame loading. Existing quotas remain unchanged; textarea editing/submission remains unsupported."
+  "changelog": "修复动态 innerHTML 在片段解析失败时清空或留下半成品的问题；失败后保留旧节点、事件及单选状态，回滚失败片段消耗的样式额度，恢复后仍可继续更新。减少解析属性时的公共 DOM 调用和无效重绘，重复 HTML 属性保留首次值。保持现有资源预算，真实内存耗尽和脚本超时仍停止执行。\n\nStages bounded innerHTML fragments before replacing existing children. Failed parsing preserves nodes, handlers and radio state, restores the style allowance and permits recovery. Initializes parsed attributes directly to avoid redundant DOM calls and repaint notifications, retaining the first duplicate HTML attribute. Existing quotas and hard VM guards remain in place."
 }
