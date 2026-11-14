@@ -186,6 +186,10 @@ Event handlers and listeners run with the target as this, preserving listener or
 
 Nodes expose read-only tagName through the prototype and allocate style state on first use, avoiding duplicate tag names and empty style fields on every node.
 
+Snapshots reuse original tag spellings of at most 64 characters within each batch; rendering a control as a link does not overwrite the cached spelling. Hit counts advance with each snapshot instead of enumerating the entire mapping per interactive node. Short closing tags normalize once before scanning the open stack. Traversal, interaction and fragment budgets remain unchanged.
+
+HTML getters advance bounded snapshots directly. Escaping consumes matches individually instead of retaining callback frames and a complete match list, preserving the existing ampersand, bracket, quote and NUL replacements. Longer tag names retain the original conversion path; no new tag-length limit is imposed.
+
 For nodes whose attribute names are all ASCII and at most 64 bytes, the script DOM parser normalizes names in native code and reuses runtime attribute-name strings. Nodes without attributes pass an empty marker rather than allocating an array. Non-ASCII or longer names retain the existing script path; values, first duplicate values and quota checks remain unchanged. Build and verify the native bridge and compiled runtime together, as their internal argument conventions are versioned together.
 
 

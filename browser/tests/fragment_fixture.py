@@ -13,6 +13,28 @@ CASES={
     'text': "'\\0'.repeat(3000)",
 }
 
+TAGS='''<!doctype html><html><head><meta charset=utf-8><title>标签与快照</title></head><body>
+<button type=button onclick="advance()" style="color:#d06020">切换检查</button>
+<p id=proof style="color:#187a42">初始标签检查</p>
+<div id=host><DiV><p id=initial>初始正文</p></unmatched></dIv><p id=tail>尾部正文</p></div><script>
+const h=document.getElementById('host'),proof=document.getElementById('proof');let phase=0;
+function check(ok){if(!ok)throw Error('tag snapshot')}
+check(document.getElementById('initial').parentNode.parentNode===h && document.getElementById('tail').parentNode===h);
+function advance(){proof.style.color='#555555';switch(++phase){
+ case 1:
+  h.innerHTML='<DiV>'.repeat(28)+'<p id=leaf>嵌套正文</p>'+'</unmatched>'.repeat(28)+'</dIv>'.repeat(28)+'<p id=tail>尾部正文</p>';
+  let at=document.getElementById('leaf');for(let i=0;i<28;++i){at=at.parentNode;check(at.nodeName==='DIV')}
+  check(at.parentNode===h && document.getElementById('tail').parentNode===h);break;
+ case 2:
+  h.innerHTML='<button type=button onclick="void 0">可点&amp;&lt;&gt;按钮</button><button disabled>禁用按钮</button><input type=submit value=提交><input type=text value="正文&amp;&quot;引号&quot;">';
+  check(h.childNodes.length===4 && h.firstChild.nodeName==='BUTTON' && h.childNodes[1].disabled && h.lastChild.type==='text');
+  const raw=h.innerHTML;check(raw.indexOf('<a')<0 && raw.includes('<button') && raw.includes('<input') && raw.includes('&amp;') && raw.includes('&lt;') && raw.includes('&gt;') && raw.includes('&quot;'));break;
+ case 3:
+  h.innerHTML='<p>重复段落</p>'.repeat(8);check(h.querySelectorAll('p').length===8 && h.textContent==='重复段落'.repeat(8));break;
+ }proof.textContent='标签检查 '+phase;proof.style.color='#187a42';
+}
+</script></body></html>'''
+
 
 def page(case):
     body='''<!doctype html><html><head><meta charset=utf-8><title>片段更新</title></head><body>
@@ -55,7 +77,8 @@ class Fixture:
             def log_message(self,*_):pass
             def do_GET(self):
                 path=urlsplit(self.path).path;fixture.counts[path]+=1;case=path.lstrip('/')
-                status=200 if case in CASES else 404;data=(page(case) if status==200 else 'Unexpected request').encode()
+                status=200 if case in CASES or case=='tags' else 404
+                data=(TAGS if case=='tags' else page(case) if status==200 else 'Unexpected request').encode()
                 self.send_response(status);self.send_header('Content-Type','text/html; charset=utf-8')
                 self.send_header('Content-Length',str(len(data)));self.end_headers()
                 try:self.wfile.write(data)

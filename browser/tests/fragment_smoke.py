@@ -36,6 +36,12 @@ def main():
                                 ('recover',(208,96,32)),('new-click',(20,105,172))):
                 name=case+'-'+phase;mark=len(b.logs());click(name+'-before',color)
                 b.wait(lambda:'BROWSER JS UPDATE' in b.logs()[mark:]);proof(name)
+        mark=len(b.logs());b.navigate(root+'/tags')
+        b.wait(lambda:'BROWSER DONE status=200' in b.logs()[mark:] and 'BROWSER JS UPDATE' in b.logs()[mark:]);proof('tags-initial')
+        for phase in range(1,4):
+            mark=len(b.logs());click('tags-'+str(phase)+'-before',(208,96,32))
+            b.wait(lambda:'BROWSER JS UPDATE' in b.logs()[mark:]);proof('tags-'+str(phase))
+            if phase==2:assert 'fields=1' in b.logs()[mark:],'cached tag changed the form field count'
         assert not {k:v for k,v in f.counts.items() if k.startswith('/trap')},f.counts
         assert all(error not in b.logs() for error in ('BROWSER JS ERROR','BROWSER DRAW ERROR','PXA Guest exception:'))
         (a.output/'results.json').write_text(json.dumps({'flows':rows,'requests':dict(f.counts)},ensure_ascii=False,indent=2)+'\n')

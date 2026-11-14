@@ -147,5 +147,23 @@ int main(int argc,char** argv) {
         </script>)HTML",c);
         assert(settle(p).find("Dispatch receiver and recovery passed")!=std::string::npos);
     }
-    std::cout<<"event updates PASS: idle callbacks, handlers, listener quota, XHR, links, receivers and reentrant recovery\n";
+    {
+        // A clickable input also has a field mapping. Count its shared hit ID
+        // once, including when serialization resumes across multiple batches.
+        std::string body;
+        for(unsigned i=0;i<48;++i)body+="<input type=text onclick=\"noop()\">";
+        for(unsigned i=0;i<48;++i)body+="<a href=/target/"+std::to_string(i)+"></a>";
+        body+="<script>function noop(){}</script>";
+        Clock c;auto p=open(std::move(body),c);assert(target(settle(p),96));
+        click(p,96);settle(p);const auto nav=p.take_navigation();assert(nav && nav->url=="https://example.test/target/47");
+    }
+    {
+        std::string body;
+        for(unsigned i=0;i<97;++i)body+="<a href=/target></a>";
+        body+="<script>void 0</script>";
+        Clock c;auto p=open(std::move(body),c);
+        for(unsigned i=0;i<4096 && p.active() && !p.stats().errors;++i){p.step();(void)p.take_markup();}
+        assert(p.stats().errors && !p.take_navigation());
+    }
+    std::cout<<"event updates PASS: idle callbacks, handlers, listener quota, XHR, links, receivers, reentrant recovery and hit limits\n";
 }

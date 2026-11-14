@@ -10,8 +10,19 @@
     let nextTimer = 1, timers = [], pending = Object.create(null);
     const escapePattern = /[&<>"\u0000]/g;
     const escapeCharacters = {'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', '\0':'&#xfffd;'};
-    const escapeCharacter = c => escapeCharacters[c];
-    const escape = s => String(s).replace(escapePattern, escapeCharacter);
+    function escape(s) {
+        s=String(s);escapePattern.lastIndex=0;
+        let match=escapePattern.exec(s);if(!match)return s;
+        // Consume matches directly: replace callbacks retain native frames
+        // while nested HTML getters run, and keep all match arrays alive.
+        const parts=[];let start=0;
+        do {
+            if(match.index>start)parts.push(s.slice(start,match.index));
+            parts.push(escapeCharacters[match[0]]);start=match.index+1;
+        }while((match=escapePattern.exec(s))!==null);
+        if(start<s.length)parts.push(s.slice(start));
+        return parts.join('');
+    }
     function changed() { if (!building) { dirty = true; native.changed(); } }
     // Lazy, bounded inline declarations. Cache their text so a snapshot need
     // not enumerate and re-serialize every styled node on each repaint.
@@ -405,7 +416,7 @@
     Object.defineProperties(Node.prototype, {
         style: {get() { return inlineStyle(this); }, set(v) { replaceStyle(this, v); }},
         textContent, innerText: textContent,
-        innerHTML: {get() { const parts=[]; for(const n of this.childNodes) parts.push(serialize(n,false)); return parts.join(''); },
+        innerHTML: {get() { const parts=[]; for(const n of this.childNodes) parts.push(advance(snapshot(n,false),1024).text); return parts.join(''); },
             set(v) { v = String(v); if (v.indexOf('<') < 0 && v.indexOf('&') < 0 && v.indexOf('\r') < 0 && v.indexOf('\0') < 0) this.textContent = v;
                 else {
                     // Keep old nodes, handlers and parent links until every
@@ -419,7 +430,7 @@
                     const radios=stage.radios;
                     for(let i=radios?radios.length-1:-1;i>=0;--i)if(radios[i].checked)uncheckRadioPeers(radios[i]);
                 } }},
-        outerHTML: {get() { return serialize(this, false); }},
+        outerHTML: {get() { return advance(snapshot(this,false),1024).text; }},
         children: {get() { return this.childNodes.filter(n => n.nodeType === 1); }},
         firstChild: {get() { return this.childNodes[0] || null; }},
         lastChild: {get() { return this.childNodes[this.childNodes.length - 1] || null; }},
@@ -956,7 +967,7 @@
         submit(this, submitter);
     };
     function snapshot(rootNode, render) {
-        return {todo:[rootNode],endings:[''],visited:0,render,hits:render?Object.create(null):null};
+        return {todo:[rootNode],endings:[''],visited:0,render,hitCount:0,hits:render?Object.create(null):null};
     }
     function rawTextNode(node) {
         return node && (node.nodeName==='SCRIPT' || node.nodeName==='STYLE' || node.nodeName==='XMP' ||
@@ -964,7 +975,7 @@
     }
     function advance(state, budget) {
         // Fixed work per idle frame; no traversal consumes native recursion.
-        const {todo,endings,render}=state, parts=[]; let count=0;
+        const {todo,endings,render}=state, parts=[]; let count=0,lastName='',lastTag='';
         while (todo.length && count++<budget) {
             const n=todo.pop(), ending=endings.pop();
             if (ending) { parts.push(ending); continue; }
@@ -974,11 +985,12 @@
                 for(let i=n.childNodes.length-1;i>=0;--i) { todo.push(n.childNodes[i]);endings.push(''); }
                 continue;
             }
-            if (render && n.nodeName==='SCRIPT') continue;
+            const nodeName=n.nodeName;
+            if (render && nodeName==='SCRIPT') continue;
             // Keep preceding page styles across an incremental DOM repaint.
             // CSS raw text must not be HTML-escaped; the native parser applies
             // its own 8 KiB / 64-rule budget without fetching external sheets.
-            if (n.nodeName==='STYLE') {
+            if (nodeName==='STYLE') {
                 const media=n.getAttribute('media'), type=n.getAttribute('type');
                 const css=n.textContent.slice(0,8192);
                 parts.push('<style'+(media?' media="'+escape(media)+'"':'')+
@@ -987,7 +999,13 @@
             }
             const attributes=n._attrs;
             const type=attributes && attributes.type ? attributes.type.toLowerCase() : '';
-            let tag=n.nodeName.toLowerCase(), attrs='', style='';
+            // Adjacent paragraphs/list items share the converted spelling;
+            // text and closing markers do not invalidate this local cache.
+            let tag=lastTag, attrs='', style='';
+            if(nodeName!==lastName) {
+                tag=nodeName.toLowerCase();
+                if(nodeName.length<=64){lastName=nodeName;lastTag=tag;}
+            }
             // A DOM text string may itself contain a literal closing tag.
             // Project visible raw blocks as escaped preformatted text so an
             // incremental repaint cannot turn that string into active markup.
@@ -998,12 +1016,14 @@
                     attributes && own(attributes,'onclick') && n._onclick===undefined ||
                     n._listeners && n._listeners.click && n._listeners.click.length)) {
                 if (!n._hit) n._hit=nextHit++;
-                if (Object.keys(state.hits).length>=96) throw new RangeError('interactive node limit');
+                if (state.hitCount>=96) throw new RangeError('interactive node limit');
+                if(!state.hits[n._hit])++state.hitCount;
                 state.hits[n._hit]=n;attrs+=' data-pxa-click="'+n._hit+'"';
                 if (tag!=='img' && tag!=='input' || type==='submit') tag='a';
             }
             if (render && tag==='input' && !disabled) {
                 if (!n._hit) n._hit=nextHit++;
+                if(!state.hits[n._hit])++state.hitCount;
                 state.hits[n._hit]=n;attrs+=' data-pxa-field="'+n._hit+'"';
             }
             if (attributes) for(const k of Object.keys(attributes))
@@ -1013,13 +1033,12 @@
             parts.push('<'+tag+attrs+'>');
             if(render && tag==='textarea')parts.push('\n'); // compensate the parser's initial-LF rule
             if(tag==='img' || tag==='source' || tag==='input' || tag==='br' || tag==='hr' || tag==='meta' || tag==='link') continue;
-            if(tag==='a' && n.nodeName==='INPUT') { parts.push(escape(attributes.value || '提交'),'</a>');continue; }
+            if(tag==='a' && nodeName==='INPUT') { parts.push(escape(attributes.value || '提交'),'</a>');continue; }
             todo.push(null);endings.push('</'+tag+'>');
             for(let i=n.childNodes.length-1;i>=0;--i) { todo.push(n.childNodes[i]);endings.push(''); }
         }
         return {text:parts.join(''),complete:todo.length===0};
     }
-    function serialize(rootNode, render) { return advance(snapshot(rootNode,render),1024).text; }
     let painting=null;
     let stack = [document], fragments = [];
     document.write = (...parts) => { native.fragment(building ? stack[stack.length-1] : document.body, parts.join('')); changed(); };
@@ -1066,7 +1085,19 @@
             if(parent.childNodes.length>=192)throw new RangeError('child limit');
             node.parentNode=parent;parent.childNodes.push(node);
         } },
-        close(tag) { for (let i = stack.length - 1; i > 0; --i) if (stack[i].nodeName.toLowerCase() === tag) { stack.length = i; break; } },
+        close(tag) {
+            // Parsed node names are uppercase. Convert the closing name once,
+            // including when unmatched closing tags scan a deep open stack.
+            if(stack.length<=1)return;
+            if(tag.length>64) {
+                // Keep large unmatched names on the old path: converting the
+                // whole input could cost more than the short stack entries.
+                for(let i=stack.length-1;i>0;--i)if(stack[i].nodeName.toLowerCase()===tag){stack.length=i;break;}
+                return;
+            }
+            tag=tag.toUpperCase();
+            for(let i=stack.length-1;i>0;--i)if(stack[i].nodeName===tag){stack.length=i;break;}
+        },
         beginFragment(node) { if (fragments.length >= 4) throw new RangeError('fragment nesting'); fragments.push(stack); stack = [node]; },
         endFragment() {
             const staged=stack[0],stage=staged[fragmentStage];stack=fragments.pop();

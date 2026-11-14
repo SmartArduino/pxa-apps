@@ -51,23 +51,36 @@ static void measure(bool attributes) {
     std::cout<<"{\"updates\":64,\"cpu_ms\":"<<1000.0*double(std::clock()-begin)/CLOCKS_PER_SEC
         <<",\"vm_peak_bytes\":"<<p.stats().peak_bytes<<",\"markup_batches\":"<<p.stats().markup_turns-before<<"}\n";
 }
-static void measure_load(bool rich) {
+static void measure_load(bool rich,bool links=false,bool unmatched=false,int escaping=0) {
     std::string body;
-    for(unsigned i=0;i<48;++i)body+=rich?
+    for(unsigned i=0;i<48;++i)body+=links?"<a href=/item/"+std::to_string(i)+">Line</a>":rich?
         "<p ID=p"+std::to_string(i)+" CLASS=Case TITLE=ChApTeR DATA-state=ReAdY LANG=en DIR=ltr ROLE=paragraph ARIA-label=Sample STYLE=\"color:red;font-size:16px\">Line</p>":"<p>Line</p>";
-    body+="<script>const nodes=document.querySelectorAll('p');if(nodes.length!==48)throw Error('node count');";
+    if(unmatched) {
+        body.clear();for(unsigned i=0;i<28;++i)body+="<DiV>";
+        body+="<p id=leaf>Line</p>";
+        for(unsigned i=0;i<28;++i)body+="</unmatched>";
+        for(unsigned i=0;i<28;++i)body+="</dIv>";
+    }
+    body+="<script>const nodes=document.querySelectorAll('"+std::string(unmatched?"div":links?"a":"p")+"');if(nodes.length!=="+std::string(unmatched?"28":"48")+")throw Error('node count');";
+    if(unmatched)body+="let at=document.getElementById('leaf');for(let i=0;i<28;++i){at=at.parentNode;if(at.nodeName!=='DIV')throw Error('unmatched topology')}if(at.parentNode!==document.body)throw Error('unmatched roots');";
     if(rich)body+="for(const n of nodes)if(n.className!=='Case' || n.getAttribute('title')!=='ChApTeR' || n.style.fontSize!=='16px')throw Error('parsed attribute');";
     body+="location.href='/parsed';</script>";
+    if(escaping) {
+        const auto value=escaping==2?"'a'.repeat(256)+' & < > \" '+ 'b'.repeat(256)":"'&<>\"'.repeat(128)";
+        body="<p id=sample></p><script>const n=document.getElementById('sample');n.title=n.textContent="+std::string(value)+
+            ";const raw=n.outerHTML;if(!raw.includes('&amp;') || !raw.includes('&quot;'))throw Error('escaped result');location.href='/parsed';</script>";
+    }
     std::size_t peak=0;unsigned batches=0;const auto begin=std::clock();
     for(unsigned i=0;i<8;++i){auto p=open(body);settle(p);const auto nav=p.take_navigation();assert(nav && nav->url=="https://example.test/parsed");peak=std::max(peak,p.stats().peak_bytes);batches+=p.stats().markup_turns;}
-    std::cout<<"{\"pages\":8,\"nodes_per_page\":48,\"cpu_ms\":"<<1000.0*double(std::clock()-begin)/CLOCKS_PER_SEC
+    std::cout<<"{\"pages\":8,\"nodes_per_page\":"<<(escaping?1:unmatched?29:48)<<",\"cpu_ms\":"<<1000.0*double(std::clock()-begin)/CLOCKS_PER_SEC
         <<",\"vm_peak_bytes\":"<<peak<<",\"markup_batches\":"<<batches<<"}\n";
 }
 int main(int argc,char** argv) {
     assert(argc==2 || argc==3);
     std::ifstream f(argv[1],std::ios::binary);bootstrap.runtime.assign(std::istreambuf_iterator<char>(f),{});
     assert(!bootstrap.runtime.empty());if(argc==3){const std::string_view mode=argv[2];
-        if(mode=="--measure-load" || mode=="--measure-plain")measure_load(mode=="--measure-load");
+        if(mode=="--measure-load" || mode=="--measure-plain" || mode=="--measure-links" || mode=="--measure-unmatched" || mode=="--measure-escaping" || mode=="--measure-escape-sparse")
+            measure_load(mode=="--measure-load",mode=="--measure-links",mode=="--measure-unmatched",mode=="--measure-escaping"?1:mode=="--measure-escape-sparse"?2:0);
         else {assert(mode=="--measure" || mode=="--measure-attributes");measure(mode=="--measure-attributes");}return 0;}
     {
         auto p=open(R"HTML(<form><input id=peer type=radio name=mode value=old checked><div id=host>
@@ -168,6 +181,39 @@ int main(int argc,char** argv) {
         if(document.getElementById('LongName').getAttribute('k'.repeat(64))!=='LongCase')throw Error('long UTF-8 name fallback');
         const before=h.firstChild;let caught=false;try{h.innerHTML='<p '+ 'X'.repeat(65)+'=bad>Bad</p>'}catch(e){caught=e.name==='RangeError'}
         if(!caught || h.firstChild!==before)throw Error('overlong name rollback');
+        </script>)HTML");settle(p);
+    }
+    {
+        auto p=open(R"HTML(<div id=host></div><script>
+        const h=document.getElementById('host');
+        h.innerHTML='<DiV>'.repeat(28)+'<p id=leaf>Line</p>'+'</unmatched>'.repeat(28)+'</dIv>'.repeat(28)+'<b id=tail>Tail</b>';
+        let at=document.getElementById('leaf');
+        for(let i=0;i<28;++i){at=at.parentNode;if(at.nodeName!=='DIV')throw Error('unmatched close topology')}
+        if(at.parentNode!==h || document.getElementById('tail').parentNode!==h)throw Error('closing sibling');
+        const name='custom-'+'a'.repeat(64);
+        h.innerHTML='<'+name+'><p>Long</p></'+name+'><p id=after>After</p>';
+        if(h.firstChild.tagName!==name.toUpperCase() || document.getElementById('after').parentNode!==h)throw Error('long closing name');
+        h.innerHTML='<div><p id=kept>Keep</p></'+'x'.repeat(6000)+'></div><p id=after>After</p>';
+        if(document.getElementById('kept').parentNode!==h.firstChild || document.getElementById('after').parentNode!==h)throw Error('large unmatched closing name');
+        </script>)HTML");settle(p);
+    }
+    {
+        auto p=open(R"HTML(<div id=host></div><button onclick="inspect()">Read HTML</button><script>
+        const h=document.getElementById('host'),text='A&<>"\0';h.title=text;h.textContent=text;
+        const encoded='A&amp;&lt;&gt;&quot;&#xfffd;';
+        function inspect(){
+          if(h.innerHTML!==encoded || h.outerHTML!=='<div id="host" title="'+encoded+'">'+encoded+'</div>')throw Error('HTML escaping');
+          location.href='/escaped';
+        }
+        </script>)HTML");
+        const auto html=settle(p);const auto key=html.find("data-pxa-click=\"");assert(key!=html.npos);
+        assert(p.click(unsigned(std::stoul(html.substr(key+16)))));settle(p);
+        const auto nav=p.take_navigation();assert(nav && nav->url=="https://example.test/escaped");
+    }
+    {
+        auto p=open(R"HTML(<script>
+        const n=document.createElement('div');n.textContent='&'.repeat(2048);
+        if(n.outerHTML!=='<div>'+'&amp;'.repeat(2048)+'</div>')throw Error('dense escaping');
         </script>)HTML");settle(p);
     }
     {

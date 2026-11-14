@@ -14,5 +14,5 @@
     "资讯订阅",
     "书签"
   ],
-  "changelog": "支持 element.dataset / DOMStringMap，补齐 data-* 驼峰属性读写、删除、枚举和同步，兼容常见图片懒加载脚本。按需创建数据视图，复用枚举结果，并减少节点中的重复字段；保持原有网页脚本、DOM 和图片资源额度。改善脚本事件回调的兼容性，支持更多嵌套更新。\n\nAdds bounded element.dataset / DOMStringMap reflection for data-* reads, writes, deletion, enumeration and common image lazy loaders. Creates views on demand, reuses enumeration keys and removes redundant per-node fields while preserving website script, DOM and image budgets. Improves event callback compatibility and nested DOM updates."
+  "changelog": "优化链接较多的页面和嵌套网页处理，减少临时内存分配；保持现有图片、脚本和页面容量限制。改善事件回调中读取网页 HTML 的兼容性，补充深层标签、表单控件与交互上限回归。\n\nReduces temporary allocations on link-heavy and deeply nested pages without increasing image, script or document budgets. Improves HTML reads in event callbacks and adds coverage for unmatched closing tags, form rendering and interaction limits."
 }
