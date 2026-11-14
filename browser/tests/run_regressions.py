@@ -21,6 +21,8 @@ SUITES = [
     ('responsive', 'responsive_smoke.py', []), ('responsive-compact', 'responsive_smoke.py', ['--width','296','--height','240']),
     ('css', 'css_smoke.py', []), ('css-landscape', 'css_smoke.py', ['--width','480','--height','320']),
     ('compat', 'compat_smoke.py', []), ('comic', 'comic_smoke.py', []), ('find', 'find_smoke.py', []),
+    ('image-failures', 'image_failure_smoke.py', []),
+    ('image-failures-compact', 'image_failure_smoke.py', ['--width','296','--height','240']),
     ('comic-live', 'comic_live_smoke.py', []),
 ]
 

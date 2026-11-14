@@ -4,6 +4,7 @@
 #include "browser_search.hpp"
 #include "browser_find.hpp"
 #include "browser_image_view.hpp"
+#include "browser_image_state.hpp"
 #include "browser_comic.hpp"
 #include "browser_geometry.hpp"
 #include "browser_scrollbar.hpp"
@@ -109,7 +110,7 @@ struct App {
     std::string url = "about:home", status;
     std::uint64_t status_until = 0;
     std::array<std::byte, 4096> receive{};
-    enum class ImageState : std::uint8_t { unseen, loading, ready, failed };
+    using ImageState = browser::image_load::State;
     struct ImageCache {
         int index = -1;
         std::optional<pxa::DecodedImage> asset;
@@ -271,7 +272,7 @@ struct App {
                                  : context->tasks().start(std::move(task));
         if (!result) {
             if (loading_image >= 0) {
-                image_states[loading_image] = ImageState::failed;
+                image_states[loading_image] = browser::image_load::failure(result.error());
                 for (auto &image : images)
                     if (image.index == loading_image && !image.asset) image.index = -1;
                 loading_image = -1;
@@ -299,7 +300,7 @@ struct App {
             image.index = -1;
         }
         if (loading_image >= 0) {
-            image_states[loading_image] = ImageState::failed;
+            image_states[loading_image] = ImageState::cancelled;
             for (auto &image : images)
                 if (image.index == loading_image && !image.asset) image.index = -1;
         }
@@ -569,6 +570,7 @@ struct App {
                 }
                 document.images.push_back({url, 240, 150});
                 document.append("图片", browser::Style::muted, -1, -1, 0);
+                document_ready = true;
                 images[0].index = 0;
                 image_states[0] = ImageState::loading;
                 loading_image = 0;
@@ -581,8 +583,8 @@ struct App {
                     log("BROWSER IMAGE ERROR index=0 code=" +
                         std::to_string(int(decoded.error())));
                     images[0].index = -1;
-                    image_states[0] = ImageState::failed;
-                    set_status("图片未加载 · 轻点可重试");
+                    image_states[0] = browser::image_load::failure(decoded.error());
+                    set_status(browser::image_load::title(image_states[0]));
                 }
                 co_return pxa::Result<void>{};
             }
@@ -855,9 +857,9 @@ struct App {
             }
         }
         image_states.fill(ImageState::unseen); image_view={};
-        for (std::size_t i=0;i<previous_images.size();++i) if (previous_states[i]==ImageState::failed) {
+        for (std::size_t i=0;i<previous_images.size();++i) if (browser::image_load::is_failure(previous_states[i])) {
             for (std::size_t j=0;j<document.images.size();++j)
-                if (document.images[j].source==previous_images[i].source) image_states[j]=ImageState::failed;
+                if (document.images[j].source==previous_images[i].source) image_states[j]=previous_states[i];
         }
         for (unsigned i=0;i<images.size();++i) {
             const auto source=images[i].index>=0 && images[i].asset ?
@@ -967,7 +969,7 @@ struct App {
             item.asset.reset(); item.index = -1; item.detailed = false;
         }
     }
-    void open_comic(int index = -1) {
+    void open_comic(int index = -1, bool explicit_retry = false) {
         if (!show_images) { set_status("请先在菜单开启加载图片"); return; }
         if (index < 0 && !layout_dirty)
             for (auto it = visible_begin(); it != page.pieces.end() && int(it->y) < scroll + content.height; ++it) {
@@ -998,7 +1000,7 @@ struct App {
         image_view.fit_width(cached ? cached->descriptor().width : picture.width,
                              cached ? cached->descriptor().height : picture.height,
                              content.width, content.height);
-        if (!cached) {
+        if (!cached && browser::image_load::retry_on_open(image_states[index], explicit_retry)) {
             image_states[index] = ImageState::unseen;
             comic_pending = index;
         }
@@ -1012,8 +1014,12 @@ struct App {
     void begin_image(int index, bool manual = false) {
         if (index < 0 || std::size_t(index) >= document.images.size())
             return;
-        if (!show_images || (!show_gif && browser::gif_url(document.images[index].source))) {
+        if (!show_images) {
             set_status("图片加载已关闭 · 可在菜单开启"); dirty = true; return;
+        }
+        if (!show_gif && browser::gif_url(document.images[index].source)) {
+            image_states[index] = ImageState::disabled;
+            set_status("GIF 加载已关闭"); dirty = true; return;
         }
         if (cached_image(index)) {
             // A linked picture remains a usable link after loading.
@@ -1102,12 +1108,8 @@ struct App {
         dirty = true;
         if (!result) {
             images[slot].index = -1;
-            image_states[index] = ImageState::failed;
-            set_status(result.error() == pxa::Error::unsupported ? "格式不支持 · 需 PNG/JPEG/GIF" :
-                result.error()==pxa::Error::limit_exceeded ?
-                "图片超过当前加载预算" :
-                comic_reading && comic_detail ? "清晰图片未加载 · 可切回省存重试" :
-                "图片未加载 · 轻点可重试");
+            image_states[index] = browser::image_load::failure(result.error());
+            set_status(browser::image_load::title(image_states[index]));
             log("BROWSER IMAGE ERROR index=" + std::to_string(index) +
                 " code=" + std::to_string(int(result.error())));
         }
@@ -1175,7 +1177,7 @@ struct App {
                 mime != "application/octet-stream")
                 co_return std::unexpected(pxa::Error::unsupported);
             if (!show_gif && mime == "image/gif") {
-                image_states[index] = ImageState::failed;
+                image_states[index] = ImageState::disabled;
                 images[slot].index = -1; set_status("GIF 加载已关闭");
                 co_return pxa::Result<void>{};
             }
@@ -1273,7 +1275,7 @@ struct App {
             // A failed advance can have consumed the Host state. Release this
             // owner; the next explicit tap can retry the download safely.
             log("BROWSER GIF ERROR code=" + std::to_string(int(advanced.error())));
-            image_states[image.index] = ImageState::failed;
+            image_states[image.index] = browser::image_load::failure(advanced.error());
             image.asset.reset();
             image.index = -1;
             body_dirty = true;
@@ -2036,9 +2038,22 @@ struct App {
                            image->handle());
                 draw.pop_clip();
             } else if (comic_reading) {
-                label(content, busy || comic_pending >= 0 ? "正在加载漫画图片…" : std::string_view(status), 0x587088ff,
-                      std::min(font, dp(13)), 1, true);
-                if (!busy && comic_pending < 0) hit(content, Action::comic_retry);
+                const int size = std::min(font, dp(13)), row = size * 3 / 2;
+                const bool loading = busy || comic_pending >= 0;
+                const auto state = image_states[image_view.index];
+                const int rows = loading ? 1 : std::clamp(content.height / row, 1, 3);
+                const int top = content.y + (content.height - rows * row) / 2;
+                label({content.x, top, content.width, row}, loading ? "正在加载漫画图片…"
+                          : browser::image_load::title(state), 0x587088ff, size, 1, true);
+                if (!loading) {
+                    if (rows >= 2)
+                        label({content.x, top + row, content.width, row},
+                              browser::image_load::hint(state, comic_detail), 0x587088ff, size, 1, true);
+                    if (rows >= 3)
+                        label({content.x, top + row * 2, content.width, row},
+                              "轻点此处重试", 0x1469acff, size, 1, true);
+                    hit(content, Action::comic_retry);
+                }
             }
         } else if (menu) {
             clip(content);
@@ -2148,10 +2163,16 @@ struct App {
                             if (bottom - top >= font * 3)
                                 label({box.x + dp(4), top + font * 2, box.width - dp(8),
                                        font * 3 / 2},
-                                      image_states[span.image] == ImageState::failed ? "轻点重试" : image_states[span.image] == ImageState::loading
+                                      browser::image_load::is_failure(image_states[span.image])
+                                          ? browser::image_load::title(image_states[span.image]) : image_states[span.image] == ImageState::loading
                                           ? "正在加载…"
                                           : "轻点加载图片",
                                       0x1469acff, std::min(font, dp(13)), 1, true);
+                            if (browser::image_load::is_failure(image_states[span.image]) &&
+                                bottom - top >= font * 5)
+                                label({box.x + dp(4), top + font * 7 / 2, box.width - dp(8),
+                                       font * 3 / 2}, "轻点重试", 0x1469acff,
+                                      std::min(font, dp(13)), 1, true);
                         }
                         PixelRect touch = box;
                         touch.y = std::max(y, content.y);
@@ -2337,11 +2358,11 @@ struct App {
         case Action::comic_quality:
             comic_saved_view = image_view;
             comic_detail = !comic_detail;
-            open_comic(image_view.index);
+            open_comic(image_view.index, true);
             comic_restore_view = true;
             break;
         case Action::comic_retry:
-            open_comic(image_view.index);
+            open_comic(image_view.index, true);
             break;
         case Action::comic_zoom:
             if (const auto *image = cached_image(image_view.index)) {

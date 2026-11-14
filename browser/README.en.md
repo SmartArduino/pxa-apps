@@ -51,6 +51,12 @@ restores the webpage position. Images still depend on the Host budget; WebP and
 complex scripted/encrypted readers remain unsupported. Chapter pages can retain
 up to 96 bounded image descriptors, with a visible warning when images are omitted.
 
+Image failures retain their cause across page-script reordering. Returning to
+an unsupported, over-limit, denied or disabled-GIF image in the comic reader
+does not automatically fetch it again. Tap the failed image or change quality
+to retry explicitly. Temporary network failures and cancelled downloads can
+still resume when entering the reader.
+
 Tap a loaded, unlinked image to preview it; linked pictures still navigate on tap
 and open the preview on a long press. Preview controls are Back to page, Zoom out,
 Fit, and Zoom in. Drag to pan at 2×–8×; returning preserves the reading position.
@@ -99,7 +105,7 @@ tools/app.sh build browser --target esp32s3
 bash local/pxa-apps/browser/tests/test.sh
 ```
 
-`tests/run_regressions.py` runs the text-container, selector, form, event, style, responsive-image, CSS, compatibility, comic and find suites sequentially, starts the base fixture on `127.0.0.1:31878`, and saves each suite's exit status. Repeat `--suite` to select suites; add `--live` for author-site network checks. See `--help` for simulator, TRACE package, publisher public key, IME package and output arguments. Put output under ignored `local/artifacts/`.
+`tests/run_regressions.py` runs the text-container, selector, form, event, style, responsive-image, CSS, compatibility, comic, image-failure and find suites sequentially, starts the base fixture on `127.0.0.1:31878`, and saves each suite's exit status. Repeat `--suite` to select suites; add `--live` for author-site network checks. See `--help` for simulator, TRACE package, publisher public key, IME package and output arguments. Put output under ignored `local/artifacts/`.
 
 The updated standalone DevKit can run `pxa run pxa-apps/browser`.
 Network access asks for permission. Local HTTP addresses must include `http://`.
