@@ -52,6 +52,10 @@ ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/fragment-test"
     "$cache"/{quickjs,dtoa,libregexp,libunicode,cutils}.o -lm -o "$cache/class-list-test"
 ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/class-list-test" \
     "$app/assets/browser-runtime.qjb" "$app/tests/class_list_cases.js" "$app/tests/class_list_expected.json"
+"$cpp_compiler" "${cpp_flags[@]}" "$app/tests/script_dataset_test.cpp" "${objects[@]:0:2}" \
+    "$cache"/{quickjs,dtoa,libregexp,libunicode,cutils}.o -lm -o "$cache/dataset-test"
+ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/dataset-test" \
+    "$app/assets/browser-runtime.qjb" "$app/tests/dataset_cases.js" "$app/tests/dataset_expected.json"
 "$cpp_compiler" "${cpp_flags[@]}" "$app/tests/library_test.cpp" "${objects[@]:0:2}" \
     "$cache"/{quickjs,dtoa,libregexp,libunicode,cutils}.o -lm -o "$cache/library-test"
 ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/library-test" \

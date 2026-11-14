@@ -22,6 +22,7 @@ static std::string settle(Page& p) {
             assert(!p.stats().errors);return html;
         }
     }
+    std::cerr<<"Fragment case "<<case_number<<": "<<p.error()<<"; peak="<<p.stats().peak_bytes<<'\n';
     assert(false && "fragment did not settle");return {};
 }
 static unsigned hit(const std::string& html,std::string_view id) {

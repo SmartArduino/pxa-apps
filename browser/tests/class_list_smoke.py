@@ -48,8 +48,19 @@ def main():
         assert rows[-1]['color_pixels']['green']>1000,'mixed-case image did not render'
         assert f.counts['/MiXeD.png']==1 and not f.counts['/mixed.png'],f.counts
         advance();screen('attributes-unicode','green')
+        counts=dict(f.counts);load('/dataset');screen('dataset-hidden',None)
+        assert f.counts['/class-image.png']==counts.get('/class-image.png',0),'hidden data-src was fetched'
+        mark=advance();b.wait(lambda:'BROWSER IMAGE DONE' in b.logs()[mark:]);screen('dataset-src-loaded','green')
+        assert rows[-1]['color_pixels']['green']>1000 and f.counts['/class-image.png']==counts.get('/class-image.png',0)+1
+        mark=advance();b.wait(lambda:'BROWSER IMAGE DONE' in b.logs()[mark:]);screen('dataset-src-replaced','green')
+        assert rows[-1]['color_pixels']['green']>1000 and f.counts['/MiXeD.png']==counts.get('/MiXeD.png',0)+1
+        advance();screen('dataset-removed',None);advance();screen('dataset-special-keys','green')
+        mark=len(b.logs());b.tap(*button);time.sleep(.5)
+        assert 'BROWSER JS UPDATE' not in b.logs()[mark:],'dataset no-op produced a snapshot';rows.append({'flow':'dataset-no-op-stays-idle'})
+        load('/data-quota');screen('dataset-quota-before','green')
+        for phase in range(1,4):advance();screen('dataset-quota-'+str(phase),'green')
         assert all(error not in b.logs() for error in ('BROWSER JS ERROR','BROWSER DRAW ERROR','PXA Guest exception:'))
-        assert all(f.counts[path]==1 for path in ('/classes','/quota','/image','/attributes')),f.counts
+        assert all(f.counts[path]==1 for path in ('/classes','/quota','/image','/attributes','/dataset','/data-quota')),f.counts
         (a.output/'results.json').write_text(json.dumps({'flows':rows,'requests':dict(f.counts)},ensure_ascii=False,indent=2)+'\n')
         print('classList simulator PASS:',len(rows),'flows; CSS, limits, idle and image visibility',flush=True)
     finally:b.close();f.close()

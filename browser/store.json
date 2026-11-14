@@ -14,5 +14,5 @@
     "资讯订阅",
     "书签"
   ],
-  "changelog": "减少脚本 DOM 构建和动态 HTML 更新中的临时分配：复用常见属性名字符串，无属性节点不再创建空属性数组。保持属性值大小写、重复属性首次值、Unicode 名称回退及既有额度；补充混合大小写样式、事件和图片地址的兼容检查。\n\nReduces temporary allocations during scripted DOM parsing and dynamic HTML updates by sharing common attribute-name strings and avoiding empty attribute arrays. Preserves attribute values, first duplicate values, Unicode-name fallback and existing quotas. Adds checks for mixed-case style/event names and case-sensitive image URLs."
+  "changelog": "支持 element.dataset / DOMStringMap，补齐 data-* 驼峰属性读写、删除、枚举和同步，兼容常见图片懒加载脚本。按需创建数据视图，复用枚举结果，并减少节点中的重复字段；保持原有网页脚本、DOM 和图片资源额度。改善脚本事件回调的兼容性，支持更多嵌套更新。\n\nAdds bounded element.dataset / DOMStringMap reflection for data-* reads, writes, deletion, enumeration and common image lazy loaders. Creates views on demand, reuses enumeration keys and removes redundant per-node fields while preserving website script, DOM and image budgets. Improves event callback compatibility and nested DOM updates."
 }

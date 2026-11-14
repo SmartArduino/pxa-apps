@@ -128,5 +128,24 @@ int main(int argc,char** argv) {
         const auto nav=p.take_navigation();assert(nav && nav->url=="https://example.test/next");
         assert(p.stats().markup_turns==batches);
     }
-    std::cout<<"event updates PASS: idle callbacks, same values, handler changes, listener quota, XHR and live links\n";
+    {
+        Clock c;auto p=open(R"HTML(<p id=t>Dispatch</p><script>
+        const t=document.getElementById('t'),order=[];
+        function handler(e){if(this!==t)throw Error('handler receiver');order.push('H'+e.type);
+          if(e.type==='outer')t.dispatchEvent({type:'inner'})}
+        function listener(e){if(this!==t)throw Error('listener receiver');order.push('L'+e.type)}
+        handler.call=listener.call=()=>{throw Error('call member must be ignored')};
+        t.onouter=handler;t.oninner=handler;t.addEventListener('outer',listener);t.addEventListener('inner',listener);
+        t.dispatchEvent({type:'outer'});
+        if(order.join(',')!=='Houter,Hinner,Linner,Louter')throw Error('nested dispatch order');
+        t.oninner=()=>{throw Error('expected')};let caught=false;
+        try{t.dispatchEvent({type:'inner'})}catch(e){caught=e.message==='expected'}
+        if(!caught)throw Error('dispatch exception');
+        t.oninner=handler;t.dispatchEvent({type:'inner'});
+        if(order.slice(-2).join(',')!=='Hinner,Linner')throw Error('dispatch recovery');
+        t.textContent='Dispatch receiver and recovery passed';
+        </script>)HTML",c);
+        assert(settle(p).find("Dispatch receiver and recovery passed")!=std::string::npos);
+    }
+    std::cout<<"event updates PASS: idle callbacks, handlers, listener quota, XHR, links, receivers and reentrant recovery\n";
 }

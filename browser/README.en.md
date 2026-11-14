@@ -180,6 +180,12 @@ Markup assigned through `innerHTML` is parsed into a detached staging node befor
 
 Bounded `classList` supports add/remove/toggle/replace/contains, raw value reflection, live indices/length and iteration including forEach. It retains object identity and follows className, setAttribute/removeAttribute and CSS selector changes. Tokens split on ASCII whitespace, deduplicate in order, and invalid arguments or attribute quotas leave the prior class value intact. Lists are created on demand, reuse cached tokens, and unchanged operations do not request snapshots. Existing 24-attribute and 4096-character value limits remain. DOMException exposes names, messages, legacy codes and constants; invalid/unsupported selectors raise a SyntaxError DOMException, while resource quotas remain RangeError. This does not provide a complete browser DOM.
 
+`element.dataset` creates a same-object DOMStringMap view on demand. It supports data-* / camel-case conversion, string reads and writes, deletion, enumeration and immediate attribute API reflection, including lazy loaders such as `img.src = img.dataset.src`. It retains the ASCII attribute-name subset (letters, digits, underscore, colon, dot and hyphen), 64-character names, 24 attributes per node and 4096-character values. Unchanged writes stay idle. Accessor and explicitly non-configurable string descriptors are unsupported and rejected before mutation; symbol properties behave as ordinary object properties.
+
+Event handlers and listeners run with the target as this, preserving listener order, nested dispatch and recovery after caught exceptions without relying on an overridable call member.
+
+Nodes expose read-only tagName through the prototype and allocate style state on first use, avoiding duplicate tag names and empty style fields on every node.
+
 For nodes whose attribute names are all ASCII and at most 64 bytes, the script DOM parser normalizes names in native code and reuses runtime attribute-name strings. Nodes without attributes pass an empty marker rather than allocating an array. Non-ASCII or longer names retain the existing script path; values, first duplicate values and quota checks remain unchanged. Build and verify the native bridge and compiled runtime together, as their internal argument conventions are versioned together.
 
 

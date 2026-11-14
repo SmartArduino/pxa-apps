@@ -178,6 +178,7 @@
             preventDefault() { this.defaultPrevented = true; },
             stopPropagation() { this.stopped = true; }};
     }
+    const eventCall=Symbol('eventCall');
     function dispatch(node, e, bubble = false) {
         if (!e.target) e.target = node;
         for (let at = node, depth = 0; at && depth++ < 192; at = bubble ? at.parentNode : null) {
@@ -187,9 +188,18 @@
                 handler = new Function('event', at._attrs['on' + e.type]);
                 at['on' + e.type] = handler;
             }
-            if (typeof handler === 'function' && handler.call(at, e) === false) e.preventDefault();
+            if (typeof handler === 'function') {
+                // Method invocation preserves this without retaining a native
+                // Function.call frame while the website handler is running.
+                let result;at[eventCall]=handler;
+                try {result=at[eventCall](e);}finally {at[eventCall]=null;}
+                if(result===false)e.preventDefault();
+            }
             const listeners = at._listeners && at._listeners[e.type];
-            if (listeners) for (const listener of listeners.slice()) listener.call(at, e);
+            if (listeners) for (const listener of listeners.slice()) {
+                at[eventCall]=listener;
+                try {at[eventCall](e);}finally {at[eventCall]=null;}
+            }
             if (e.stopped) break;
         }
         return !e.defaultPrevented;
@@ -234,11 +244,10 @@
     function Node(tag, text) {
         this.nodeType = tag ? 1 : 3;
         this.nodeName = tag ? tag.toUpperCase() : '#text';
-        this.tagName = tag ? this.nodeName : undefined;
         this.parentNode = null; this.childNodes = [];
         this._text = text || ''; this._attrs = null;
-        if (tag) this._style = null;
     }
+    Object.defineProperty(Node.prototype,'tagName',{get() {return this.nodeType===1?this.nodeName:undefined;}});
     Node.prototype.appendChild = function (child) {
         if (!(child instanceof Node) || child === this) throw new TypeError('invalid child');
         for (let at = this; at; at = at.parentNode) if (at === child) throw new TypeError('cyclic DOM');
@@ -286,6 +295,7 @@
             } else if (name.startsWith('on')) this[name] = undefined;
             return;
         }
+        if(name.startsWith('data-') && this[datasetData])reflectData(this[datasetData],name,value);
         this._attrs[name] = value;
         if(name==='class' && this[tokenData])classTokens(this[tokenData][tokenData],value);
         if (name==='checked') uncheckRadioPeers(this);
@@ -334,6 +344,7 @@
             if (name === 'style' && this._style) {
                 const data = this._style; data.values = Object.create(null); data.priorities = null; data.text = '';
             }
+            if(name.startsWith('data-') && this[datasetData])reflectData(this[datasetData],name,undefined);
             delete this._attrs[name];
             if(name==='class' && this[tokenData])classTokens(this[tokenData][tokenData],'');
             if (name === 'onclick') this._onclick = undefined;
@@ -581,6 +592,114 @@
         set(value) {const list=this.classList;if(list)list.value=value;}
     });
     root.DOMTokenList=DOMTokenList;
+
+    // Mirror data values only after dataset is requested. Ordinary reads avoid
+    // Proxy callbacks in JSON/string-conversion stacks on the Wasm VM.
+    const datasetData=Symbol('dataset');
+    class DOMStringMap {constructor() {throw new TypeError('Illegal constructor');}}
+    Object.defineProperty(DOMStringMap.prototype,Symbol.toStringTag,{value:'DOMStringMap',configurable:true});
+    function dataKey(name) {
+        let key='';
+        for(let i=5;i<name.length;++i) {
+            const c=name.charCodeAt(i+1);
+            if(name[i]==='-' && c>=97 && c<=122){key+=String.fromCharCode(c-32);++i;}else key+=name[i];
+        }
+        return key;
+    }
+    function reflectData(state,name,value) {
+        const key=dataKey(name),target=state.target;
+        if(value===undefined) {
+            const keys=state.keys,at=keys.indexOf(key);delete target[key];
+            if(at>=0){for(let i=at;i+1<keys.length;++i)keys[i]=keys[i+1];--keys.length;--state.count;}
+        }
+        else {
+            const fresh=!own(target,key);
+            Object.defineProperty(target,key,{value,writable:true,enumerable:true,configurable:true});
+            if(fresh) {const keys=state.keys;for(let i=keys.length;i>state.count;--i)keys[i]=keys[i-1];keys[state.count++]=key;}
+        }
+    }
+    let datasetHandler=null;
+    function initDataset() {
+        function dataAttribute(key) {
+            if(key.length>59)return null;
+            let name='data-';
+            for(let i=0;i<key.length;++i) {const c=key.charCodeAt(i);name+=c>=65 && c<=90?'-'+String.fromCharCode(c+32):key[i];}
+            return name.length<=64?name:null;
+        }
+        datasetHandler={
+            ownKeys() {return this.keys;},
+            set(target,key,value,receiver) {
+                if(typeof key!=='string' || receiver!==this.map)return Reflect.set(target,key,value,receiver);
+                // Convert before validating, and keep this path shallow enough
+                // for conversions which themselves update another data key.
+                // Object conversion is explicit to avoid retaining String's
+                // native conversion frames while callbacks reenter the DOM.
+                if(value!==null && (typeof value==='object' || typeof value==='function')) {
+                    const object=value,primitive=object[Symbol.toPrimitive];
+                    if(primitive!=null) {
+                        if(typeof primitive!=='function')throw new TypeError('Invalid primitive conversion');
+                        value=Reflect.apply(primitive,object,['string']);
+                    }else {
+                        const text=object.toString;
+                        if(typeof text==='function')value=Reflect.apply(text,object,[]);
+                        if(value!==null && (typeof value==='object' || typeof value==='function')) {
+                            const number=object.valueOf;
+                            if(typeof number==='function')value=Reflect.apply(number,object,[]);
+                        }
+                    }
+                    if(value!==null && (typeof value==='object' || typeof value==='function'))throw new TypeError('Primitive expected');
+                }
+                if(typeof value==='symbol')throw new TypeError('DOMString expected');value=String(value);
+                if(/-[a-z]/.test(key))throw new DOMException('Hyphen before lowercase letter','SyntaxError');
+                const name=dataAttribute(key),node=this.node,attrs=node._attrs;
+                if(name===null || value.length>4096)throw new RangeError('attribute limit');
+                if(!attributeNamePattern.test(name))throw new DOMException('Invalid data attribute name','InvalidCharacterError');
+                if(attrs && attrs[name]===value)return true;
+                if(attrs && !own(attrs,name) && Object.keys(attrs).length>=24)throw new RangeError('attribute count');
+                const fresh=!own(target,key);
+                Object.defineProperty(target,key,{value,writable:true,enumerable:true,configurable:true});
+                if(fresh) {
+                    const keys=this.keys;
+                    for(let i=keys.length;i>this.count;--i)keys[i]=keys[i-1];
+                    keys[this.count++]=key;
+                }
+                if(!attrs)node._attrs=Object.create(null);
+                node._attrs[name]=value;changed();return true;
+            },
+            defineProperty(target,key,descriptor) {
+                if(typeof key!=='string') {
+                    const present=own(target,key),ok=Reflect.defineProperty(target,key,descriptor);
+                    if(ok && !present)this.keys.push(key);return ok;
+                }
+                // Reject before mutation: non-configurable virtual properties
+                // cannot follow attribute removal and satisfy Proxy invariants.
+                if(descriptor.configurable===false || (!own(descriptor,'value') && !own(descriptor,'writable')))return false;
+                return datasetHandler.set.call(this,target,key,descriptor.value,this.map);
+            },
+            deleteProperty(target,key) {
+                if(typeof key==='string' && own(target,key)) {
+                    const name=dataAttribute(key);delete this.node._attrs[name];
+                    const at=this.keys.indexOf(key);if(at>=0){this.keys.splice(at,1);--this.count;}changed();
+                }
+                const ok=Reflect.deleteProperty(target,key);
+                if(ok && typeof key==='symbol'){const at=this.keys.indexOf(key);if(at>=0)this.keys.splice(at,1);}
+                return ok;
+            },
+            preventExtensions() {return false;}
+        };
+    }
+    Object.defineProperty(Node.prototype,'dataset',{get() {
+        if(this.nodeType!==1)return undefined;
+        let state=this[datasetData];if(!state) {
+            if(!datasetHandler)initDataset();
+            state=Object.create(datasetHandler);state.node=this;state.target=Object.create(DOMStringMap.prototype);state.keys=[];state.count=0;
+            const attrs=this._attrs;
+            if(attrs)for(const name of Object.keys(attrs))if(name.startsWith('data-'))reflectData(state,name,attrs[name]);
+            state.map=new Proxy(state.target,state);Object.defineProperty(this,datasetData,{value:state});
+        }
+        return state.map;
+    }});
+    root.DOMStringMap=DOMStringMap;
 
     function selectorPlan(source) {
         source = String(source);
