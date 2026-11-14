@@ -23,6 +23,9 @@ fi
 "${CXX:-clang++}" "${flags[@]}" "$here/forms_test.cpp" -o "$work/forms-test"
 "$work/forms-test"
 
+"${CXX:-clang++}" "${flags[@]}" "$here/capture_test.cpp" "$here/../browser_script_common.cpp" -o "$work/capture-test"
+"$work/capture-test"
+
 "${CXX:-clang++}" "${flags[@]}" "$here/css_test.cpp" -o "$work/css-test"
 "$work/css-test"
 

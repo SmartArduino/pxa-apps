@@ -2191,7 +2191,8 @@ struct App {
                         continue;
                     }
                     int size = browser::Layout::font(span, font);
-                    if (y + size * 3 / 2 <= content.y)
+                    const int row_height = span.field >= 0 ? size * 2 : size * 3 / 2;
+                    if (y + row_height <= content.y)
                         continue;
                     if (draw.bytes_used() + p.size + (span.field >= 0 ? 300 : 100) > 3000) {
                         dense = true;
@@ -2199,7 +2200,7 @@ struct App {
                     }
                     PixelRect box{content.x + p.x, y,
                                   std::min(content.width - int(p.x), std::max(int(p.width), size)),
-                                  size * 3 / 2};
+                                  row_height};
                     auto value = std::string_view(document.text).substr(p.offset, p.size);
                     auto color = span.text_style.color                ? browser::css::readable_color(span.text_style.color)
                                  : span.link >= 0                        ? 0x1469acff
@@ -2208,7 +2209,6 @@ struct App {
                     if (span.field >= 0 && std::size_t(span.field) < document.fields.size()) {
                         auto &field = document.fields[span.field];
                         box.width = content.width;
-                        box.height = size * 2;
                         const bool submit = field.type == browser::FieldType::submit;
                         rect(box, submit ? 0x156ca8ff : 0xe8eef3ff, dp(5));
                         if (submit)

@@ -97,7 +97,7 @@ See the [layout and volume-key validation report](docs/layout-volume-20261015.zh
 for device screenshots, actual display FPS, memory windows, and test commands.
 
 Search uses Bing RSS by default. DuckDuckGo Lite is selectable in More; its image
-challenges cannot be completed by this reading browser. Guest-only QuickJS supports classic scripts, a bounded DOM, events, timers and same-origin asynchronous XHR/fetch. Full CSS, modules, Canvas/WebGL, video, CAPTCHA and modern framework compatibility are not provided. Static pages create no VM; script scheduling and DOM paints pause during dragging or text editing. Web Storage is origin-isolated and session-only. See [JS integration and validation](docs/javascript-20261015.zh-CN.md). Basic password inputs and bounded,
+challenges cannot be completed by this reading browser. Guest-only QuickJS supports classic scripts, a bounded DOM, events, timers and same-origin asynchronous XHR/fetch. Full CSS, modules, Canvas/WebGL, video, CAPTCHA and modern framework compatibility are not provided. Static pages create no VM. Click handlers on disabled inputs/buttons alone do not start the script component; load/submit handlers, enabled click targets and actual scripts retain automatic detection. Script scheduling and DOM paints pause during dragging or text editing. Web Storage is origin-isolated and session-only. See [JS integration and validation](docs/javascript-20261015.zh-CN.md). Basic password inputs and bounded,
 session-only cookies support compatible login and search forms. More provides
 history selection, cookie clearing and independently persisted image/GIF switches.
 Unsupported encodings (other than UTF-8/GB2312/GBK/GB18030), compressed responses, and unsupported media receive explicit messages.

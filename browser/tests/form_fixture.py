@@ -49,6 +49,13 @@ UPDATE_BUTTON = HEAD + '''<form action="/verify/update" method="post"><input typ
 <button id="send" name="go" value="token" style="color:#d06020">第一次 / First</button></form>
 <script>let n=0;document.getElementById('send').onclick=function(e){
 if(++n===1){e.preventDefault();this.textContent='再次发送 / Again'}}</script></body></html>'''
+ENABLED_CLICK = HEAD + '''<button disabled onclick="invalid syntax )">Disabled</button>
+<button type="button" style="color:#d06020" onclick="this.textContent='有效点击 / Active OK'">有效按钮 / Active</button></body></html>'''
+REENABLED_CLICK = HEAD + '''<button id="send" type="button" disabled style="color:#d06020"
+onclick="this.textContent='重新启用成功 / Enabled OK'">重新启用 / Enable</button>
+<script>document.getElementById('send').disabled=false;</script></body></html>'''
+EDGE_BUTTON = '''<title>按钮边缘 / Button edge</title><form action="/verify/edge" method="post">
+<input type="hidden" name="q" value="ok"><button name="go" value="edge">边缘按钮 / Edge button</button></form>''' + '<p>Scrolling content / 滚动正文</p>' * 40
 PASS = '''<!doctype html><html><head><meta charset="utf-8"><title>Form PASS</title></head>
 <body><h3 id="result" style="color:#187a42">表单通过 / Form PASS</h3></body></html>'''
 
@@ -64,9 +71,10 @@ class Fixture:
                 url = urlsplit(self.path); body = b''
                 if method == 'post': body = self.rfile.read(int(self.headers.get('Content-Length', '0')))
                 if url.path.startswith('/verify/'):
-                    if url.path in ('/verify/request', '/verify/direct', '/verify/empty', '/verify/update'):
+                    if url.path in ('/verify/request', '/verify/direct', '/verify/empty', '/verify/update', '/verify/edge'):
                         expected = {'/verify/request': 'q=ok&go=pick', '/verify/direct': 'q=ok',
-                                    '/verify/empty': 'q=ok&go=', '/verify/update': 'q=ok&go=token'}[url.path]
+                                    '/verify/empty': 'q=ok&go=', '/verify/update': 'q=ok&go=token',
+                                    '/verify/edge': 'q=ok&go=edge'}[url.path]
                         valid = method == 'post' and body.decode() == expected
                     else:
                         _, _, wanted_method, choice = url.path.split('/')
@@ -82,15 +90,15 @@ class Fixture:
                 elif url.path == '/static-controls': text, status = STATIC_CONTROLS, 200
                 elif url.path == '/empty-button': text, status = EMPTY_BUTTON, 200
                 elif url.path == '/update-button': text, status = UPDATE_BUTTON, 200
+                elif url.path == '/enabled-click': text, status = ENABLED_CLICK, 200
+                elif url.path == '/reenabled-click': text, status = REENABLED_CLICK, 200
+                elif url.path == '/edge-button': text, status = EDGE_BUTTON, 200
                 elif url.path.startswith(('/static-', '/button-', '/script-')):
                     mode, wanted_method, choice = url.path[1:].rsplit('-', 2)
                     text, status = page(mode, wanted_method, choice), 200
                 else: text, status = 'Unexpected request', 404
                 data = text.encode(); self.send_response(status)
                 self.send_header('Content-Type', 'text/html; charset=utf-8'); self.send_header('Content-Length', str(len(data)))
-                # Exercise the native static-navigation extractor even on
-                # Hosts fast enough to auto-start handlers before the check.
-                if url.path == '/static-controls': self.send_header('Content-Security-Policy', "script-src 'none'")
                 self.end_headers(); self.wfile.write(data)
             def do_GET(self): self.handle_request('get')
             def do_POST(self): self.handle_request('post')

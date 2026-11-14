@@ -76,12 +76,14 @@ def main():
         rows.append({'flow':'request-submit','request':f.submissions[-1]})
         load('/direct',True);at=point('direct-before',(208,96,32));before=len(f.submissions);mark=len(b.logs());b.tap(*at);submitted(before,mark)
         rows.append({'flow':'direct-submit-from-handler','request':f.submissions[-1]});b.shot('direct-pass')
-        mark=load('/static-controls',False)
-        assert re.search(r'BROWSER DONE [^\n]*links=0 forms=1 fields=0\b',b.logs()[mark:]),b.logs()[mark:]
+        static_mark=load('/static-controls',False)
+        assert re.search(r'BROWSER DONE [^\n]*links=0 forms=1 fields=0\b',b.logs()[static_mark:]),b.logs()[static_mark:]
         for name,color in [('ordinary',(208,96,32)),('disabled',(128,48,160)),('reset',(24,122,66))]:
             at=point('static-'+name,color);before=len(f.submissions);b.tap(*at);time.sleep(.2)
             assert len(f.submissions)==before and not f.requests['/unexpected']
             rows.append({'flow':'static-'+name,'no_form_navigation':True})
+        assert 'BROWSER JS OPEN' not in b.logs()[static_mark:] and 'BROWSER JS READY' not in b.logs()[static_mark:]
+        rows.append({'flow':'disabled-handler-no-auto-js','script_started':False})
         load('/empty-button',False);at=point('empty-button',(21,108,168));before=len(f.submissions);mark=len(b.logs())
         b.tap(*at);submitted(before,mark);rows.append({'flow':'button-omitted-value','request':f.submissions[-1]})
         load('/update-button',True);at=point('update-before',(208,96,32));before=len(f.submissions);mark=len(b.logs())
@@ -89,6 +91,21 @@ def main():
         rows.append({'flow':'button-caption-update-cancelled','no_navigation':True})
         at=point('update-after',(208,96,32));mark=len(b.logs());b.tap(*at);submitted(before,mark)
         rows.append({'flow':'button-caption-update-submit','request':f.submissions[-1]})
+        for path in ('enabled-click','reenabled-click'):
+            load('/'+path,True);at=point(path,(208,96,32));mark=len(b.logs());b.tap(*at)
+            b.wait(lambda:'BROWSER JS UPDATE revision=2 ' in b.logs()[mark:])
+            b.shot(path+'-pass');rows.append({'flow':path,'handler_repainted':True})
+        load('/edge-button',False);x,y,w,h=b.box('content');cx=x+w//2;sy=y+h*3//4
+        mark=len(b.logs());b.command(f'TOUCH DOWN 0 {cx} {sy}');time.sleep(.1)
+        b.command(f'TOUCH MOVE 0 {cx} {sy-24}');time.sleep(.2)
+        b.command(f'TOUCH UP 0 {cx} {sy-24}');time.sleep(.25)
+        b.wait(lambda:'BROWSER SCROLL y=24' in b.logs()[mark:]);b.shot('edge-scrolled')
+        im=Image.open(a.output/'edge-scrolled.png').convert('RGB')
+        blue=sum(all(abs(v-c)<9 for v,c in zip(im.getpixel((px,py)),(21,108,168)))
+                 for py in range(y,y+6) for px in range(x,x+w))
+        assert blue>200,('partly visible button was culled',blue)
+        before=len(f.submissions);mark=len(b.logs());b.tap(x+w//2,y+2);submitted(before,mark)
+        rows.append({'flow':'partly-visible-button','blue_pixels':blue,'request':f.submissions[-1]})
         assert 'BROWSER JS ERROR' not in b.logs() and 'BROWSER DRAW ERROR' not in b.logs() and 'PXA Guest exception:' not in b.logs()
         (a.output/'results.json').write_text(json.dumps(rows,ensure_ascii=False,indent=2)+'\n')
         print('form simulator PASS:',len(rows),'flows; exact GET/POST data, submitter and event behavior',flush=True)
