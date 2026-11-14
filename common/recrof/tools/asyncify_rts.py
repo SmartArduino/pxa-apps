@@ -9,7 +9,7 @@ large. Application stdio wrappers remain instrumented and can await PXA FS.
 import argparse, re, subprocess
 from pathlib import Path
 
-from asyncify import function_names
+from asyncify import required_libc_exclusions
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
@@ -18,10 +18,11 @@ def main():
     a=p.parse_args()
     rows=subprocess.check_output([str(a.llvm_nm),'--defined-only','--format=posix',str(a.libc)],text=True,stderr=subprocess.DEVNULL)
     libc={r.split()[0] for r in rows.splitlines() if len(r.split())>=2 and r.split()[1] in ('T','t','W','w')}
-    names=function_names(a.wasm.read_bytes())
+    names, libc_removed=required_libc_exclusions(a.wasm, libc)
+    libc_removed=set(libc_removed)
     # The runtime refuses resource RPCs until run_game(), so C++ global
     # initialization never suspends. Do not allocate Asyncify frames for it.
-    removed=[n for n in names if re.sub(r'\.\d+$','',n) in libc or
+    removed=[n for n in names if n in libc_removed or
              n.startswith(('__cxx_global_var_init','_GLOBAL__sub_I_')) or
              n in ('__wasm_call_ctors','_initialize')]
     response=a.wasm.with_suffix('.asyncify-libc.txt');response.write_text(','.join(removed))

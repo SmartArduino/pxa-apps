@@ -127,7 +127,14 @@ function(pxa_recrof_component)
             VERBATIM)
         return()
     endif()
+    # The callback transform derives exclusions from the linked function names.
+    # Keep the driver's implicit optimizer from running before that inventory.
+    target_link_options(pxa_main PRIVATE --no-wasm-opt)
     set_property(TARGET pxa_main APPEND PROPERTY LINK_DEPENDS "${asyncify_script}")
+    if(ENGINE_RTS)
+        set_property(TARGET pxa_main APPEND PROPERTY LINK_DEPENDS
+            "${PXA_RECROF_DIR}/tools/asyncify.py")
+    endif()
     find_package(Python3 REQUIRED COMPONENTS Interpreter)
     get_filename_component(wasi_bin "${CMAKE_C_COMPILER}" DIRECTORY)
     get_filename_component(wasi_root "${wasi_bin}" DIRECTORY)

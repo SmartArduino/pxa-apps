@@ -36,6 +36,18 @@ def function_names(data):
         at=end
     return names
 
+def required_libc_exclusions(wasm, libc):
+    names = function_names(wasm.read_bytes())
+    if not names:
+        raise RuntimeError('Asyncify requires linked Wasm function names; '
+                           'disable pre-transform stripping or optimization')
+    if not libc:
+        raise RuntimeError('Asyncify requires a nonempty synchronous libc symbol inventory')
+    removed = [n for n in names if re.sub(r'\.\d+$', '', n) in libc]
+    if not removed:
+        raise RuntimeError('Asyncify matched no synchronous libc functions in linked Wasm names')
+    return names, removed
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('wasm',type=Path);p.add_argument('wasm_opt',type=Path)
@@ -43,8 +55,7 @@ def main():
     a=p.parse_args()
     rows=subprocess.check_output([str(a.llvm_nm),'--defined-only','--format=posix',str(a.libc)],text=True,stderr=subprocess.DEVNULL)
     libc={r.split()[0] for r in rows.splitlines() if len(r.split())>=2 and r.split()[1] in ('T','t','W','w')}
-    names=function_names(a.wasm.read_bytes())
-    removed=[n for n in names if re.sub(r'\.\d+$','',n) in libc]
+    _, removed=required_libc_exclusions(a.wasm, libc)
     response=a.wasm.with_suffix('.asyncify-libc.txt');response.write_text(','.join(removed))
     out=a.wasm.with_suffix('.async.wasm')
     subprocess.run([str(a.wasm_opt),str(a.wasm),'--asyncify',
