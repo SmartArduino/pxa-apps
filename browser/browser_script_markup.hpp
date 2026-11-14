@@ -33,7 +33,9 @@ inline std::optional<std::string> text_value(std::string_view input,bool referen
     return references?browser::entities(normalized):std::move(normalized);
 }
 struct Token { std::string_view text; bool tag = false; };
-inline Token token(std::string_view html, std::size_t& at) {
+// In the interpreted component, an aggregate-returning Wasm call for each
+// token is costly. Keep this bounded lexer in its parser/scanner caller.
+[[gnu::always_inline]] inline Token token(std::string_view html, std::size_t& at) {
     while (at < html.size()) {
         const auto start = at;
         if (html.substr(at).starts_with("<!--")) {
@@ -56,6 +58,62 @@ inline Token token(std::string_view html, std::size_t& at) {
         return {};
     }
     return {};
+}
+// Raw bodies and their closing token are one native DOM-building step.
+// An empty ending denotes plaintext, whose body lasts until EOF.
+inline std::string_view take_raw_body(std::string_view html, std::string_view ending,
+                                      std::size_t& at) {
+    const auto closing=ending.empty()?html.npos:raw_end(html,ending,at);
+    const auto end=closing==html.npos?html.size():closing;
+    const auto body=html.substr(at,end-at);
+    at=end;if(closing!=html.npos)(void)token(html,at);
+    return body;
+}
+// Only these short raw names matter to the structural scan. Match the tag
+// parser's ASCII name grammar without allocating its attribute array/name.
+[[gnu::always_inline]] inline std::optional<std::string_view> fragment_raw_ending(std::string_view text) {
+    text=trim(text);if(text.starts_with('/'))return {};
+    std::array<char,9> head;std::size_t count=0;
+    for(const auto byte:text) {
+        const auto c=lower(byte);
+        if(!((c>='a' && c<='z') || (c>='0' && c<='9') || c=='-'))break;
+        if(count==head.size())return {};
+        head[count++]=c;
+    }
+    const std::string_view name(head.data(),count);
+    if(name=="script")return "</script";
+    if(name=="style")return "</style";
+    const auto kind=browser::html_text(name);
+    if(kind==browser::HtmlText::data)return {};
+    return kind==browser::HtmlText::plaintext?std::string_view{}:browser::text_end_tag(name);
+}
+// Check the existing parser-step allowance without allocating JS nodes.
+// This applies to detached replacements; append-only writes must retain any
+// partial changes made before a later error. Use the same raw-body consumer
+// as the builder so literal tags/comments cannot inflate the step count.
+// Keep scanner locals out of the native dispatcher frame retained by WAMR.
+[[gnu::noinline]] inline bool fragment_fits(std::string_view html,unsigned limit) {
+    if(html.size()<=limit)return true; // every step consumes at least one byte
+    if(limit) {
+        // Tags and intervening text need at most 2*'<' + 1 steps. Comments,
+        // quotes and raw text only reduce that bound; common fragments need
+        // no tag/attribute parsing at all. Stop once the bound cannot prove fit.
+        std::size_t scan=0;unsigned markers=0;
+        while((scan=html.find('<',scan))!=html.npos) {
+            if(++markers>(limit-1)/2)break;
+            ++scan;
+        }
+        if(scan==html.npos)return true;
+    }
+    std::size_t at=0;unsigned steps=0;
+    while(at<html.size()) {
+        if(steps++==limit)return false;
+        const auto item=token(html,at);
+        if(!item.tag || item.text.empty() || item.text.starts_with('!') || item.text.starts_with('?'))continue;
+        if(const auto ending=fragment_raw_ending(item.text))
+            (void)take_raw_body(html,*ending,at);
+    }
+    return true;
 }
 inline bool executable(const Tag& t) {
     const auto type = lowercase(trim(t.get("type")));

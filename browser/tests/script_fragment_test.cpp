@@ -8,8 +8,9 @@
 using namespace browser::script;
 static Bootstrap bootstrap;
 static unsigned case_number=0;
-static Page open(std::string body,bool clocked=false) {
+static Page open(std::string body,bool clocked=false,unsigned fragment_nodes=96) {
     ++case_number;Page p;Limits l;l.heap_bytes=512*1024;l.turn_us=200000;
+    l.fragment_nodes=fragment_nodes;
     Hooks h;if(clocked)h.now_us=[](void*)->std::uint64_t{return 0;};
     assert(p.open("<html><head><style>.proof{color:red}</style></head><body>"+body+"</body></html>","https://example.test/",bootstrap,h,{},l));return p;
 }
@@ -82,6 +83,52 @@ int main(int argc,char** argv) {
         if(mode=="--measure-load" || mode=="--measure-plain" || mode=="--measure-links" || mode=="--measure-unmatched" || mode=="--measure-escaping" || mode=="--measure-escape-sparse")
             measure_load(mode=="--measure-load",mode=="--measure-links",mode=="--measure-unmatched",mode=="--measure-escaping"?1:mode=="--measure-escape-sparse"?2:0);
         else {assert(mode=="--measure" || mode=="--measure-attributes");measure(mode=="--measure-attributes");}return 0;}
+    {
+        // Keep the legacy parser-step boundary, including comments that end
+        // input and raw bodies whose apparent tags are only text. Run this
+        // corpus against the original builder as well as the preflight path.
+        struct Input { const char* expression; unsigned steps; };
+        const Input inputs[]={
+            {"'<p>x</p>'",3}, {"'<p title=\">\">x</p>'",3},
+            {"'<!-- a -->'",1}, {"'<!-- a --><!-- b -->'",1},
+            {"'<p><!-- a -->x<!-- b --></p>'",3}, {"'<p>x</p><!-- tail -->'",4},
+            {"'<!doctype html><p>x</p>'",4}, {"'<?ignored?><p>x</p>'",4},
+            {"'<div><span>x</span></div>'",5}, {"'</unmatched><p>x</p>'",4},
+            {"'<img><br/><hr>'",3}, {"'<p/>text'",2},
+            {"'<p'",1}, {"'<p><unfinished'",2},
+            {"'<textarea>a<b>&amp;</textarea>'",1},
+            {"'<textareax><p>x</p></textareax><p>end</p>'",8},
+            {"'<TITLEfoo><b>x</b></TITLEfoo>'",5},
+            {"'<plaintext-foo>text</plaintext-foo><p>x</p>'",6},
+            {"'<textarea=value><b>x</b></textarea>'",1},
+            {"'< /textarea><p>x</p>'",4},
+            {"'<TeXtArEa>a</textareax><b>text</b></TEXTAREA><p>x</p>'",4},
+            {"'<title>a<b>&amp;</title><p>x</p>'",4},
+            {"'<xmp>a<b>&amp;</xmp><p>x</p>'",4},
+            {"'<iframe><b>text</b></iframe><p>x</p>'",4},
+            {"'<noembed><b>text</b></noembed><p>x</p>'",4},
+            {"'<noframes><b>text</b></noframes><p>x</p>'",4},
+            {"'<plaintext>a<b>text</b><p>x</p>'",1},
+            {"'<style>.a{color:red}</style><p>x</p>'",4},
+            {"'<script><b>text</b></scr'+'ipt><p>x</p>'",4},
+        };
+        for(const auto& input:inputs)for(const auto budget:{input.steps-1,input.steps,input.steps+1}) {
+            const auto allowed=budget>=input.steps;
+            const std::string body="<div id=h><p id=old>Original</p></div><script>"
+                "const h=document.getElementById('h'),old=h.firstChild,saved=h.childNodes;let caught=false;"
+                "try{h.innerHTML="+std::string(input.expression)+"}catch(e){if(e.name!=='RangeError')throw e;caught=true}"
+                "if(caught!=="+(allowed?"false":"true")+")throw Error('parser-step boundary');"
+                "if(caught ? h.childNodes!==saved || h.firstChild!==old || old.parentNode!==h : old.parentNode!==null)throw Error('replacement identity');"
+                "location.href='/budget';</script>";
+            auto p=open(body,true,budget);settle(p);const auto nav=p.take_navigation();
+            assert(nav && nav->url=="https://example.test/budget");
+        }
+        auto p=open(R"HTML(<script>let caught=false;
+        try{document.write('<p id=partial>Kept</p><p id=late>Late</p>')}catch(e){caught=e.name==='RangeError'}
+        if(!caught || document.getElementById('partial').textContent!=='Kept' || document.getElementById('late'))throw Error('partial write order');
+        location.href='/partial';</script>)HTML",true,3);
+        settle(p);const auto nav=p.take_navigation();assert(nav && nav->url=="https://example.test/partial");
+    }
     {
         auto p=open(R"HTML(<form><input id=peer type=radio name=mode value=old checked><div id=host>
         <button id=old type=button onclick="location.href='/old-click'">Old</button><input id=edit value=kept></div></form><script>

@@ -347,6 +347,10 @@ struct Page::Impl {
                 if(scope.failed)return JS_EXCEPTION;
                 scope.committed=true;return JS_UNDEFINED;
             }
+            if(scope.staged && !fragment_fits(html.view(),self.limits.fragment_nodes)) {
+                JS_ThrowRangeError(ctx,"fragment node limit");
+                return self.rethrow_fragment(JS_GetException(ctx));
+            }
             auto begun = self.invoke("beginFragment", argv[0]);
             if (JS_IsException(begun.value)) return JS_EXCEPTION;
             std::size_t at = 0; unsigned nodes = 0;
@@ -535,10 +539,7 @@ struct Page::Impl {
         const auto t = browser::tag(item.text);
         if (t.name.empty()) return;
         if (!t.closing && (t.name == "script" || t.name == "style")) {
-            const auto closing = raw_end(source, t.name == "script" ? "</script" : "</style", at);
-            const auto end = closing == source.npos ? source.size() : closing;
-            auto body = source.substr(at, end - at); at = end;
-            if (closing != source.npos) (void)token(source, at);
+            auto body=take_raw_body(source,t.name=="script"?"</script":"</style",at);
             if (t.name == "style") {
                 const auto count = std::min(body.size(),browser::css::max_bytes-style_bytes);
                 if (scripts && ++node_count > limits.nodes) {
@@ -594,10 +595,8 @@ struct Page::Impl {
         const bool empty = (kind==browser::HtmlText::data && trim(item.text).ends_with('/')) || voids.find(" " + t.name + " ") != voids.npos;
         if(JS_IsException(invoke("open",name.value,attrs.value,JS_NewInt32(ctx,(empty?1:0)|(canonical?2:0))).value))return;
         if(kind!=browser::HtmlText::data) {
-            const auto closing=kind==browser::HtmlText::plaintext?source.npos:raw_end(source,browser::text_end_tag(t.name),at);
-            const auto end=closing==source.npos?source.size():closing;
-            auto decoded=text_value(source.substr(at,end-at),kind==browser::HtmlText::rcdata,limits.html_bytes);
-            at=end;if(closing!=source.npos)(void)token(source,at);
+            const auto body=take_raw_body(source,kind==browser::HtmlText::plaintext?std::string_view{}:browser::text_end_tag(t.name),at);
+            auto decoded=text_value(body,kind==browser::HtmlText::rcdata,limits.html_bytes);
             if(!decoded) {
                 if(!scripts) {JS_ThrowRangeError(ctx,"fragment text limit");check(JS_EXCEPTION);return;}
                 problem="网页文字超过容量限制";stopped=true;++counters.errors;return;
