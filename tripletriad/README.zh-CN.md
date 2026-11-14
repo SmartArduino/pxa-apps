@@ -16,3 +16,5 @@ tools/app.sh build tripletriad --board doit-gamekit-1 --target esp32s31 --aot-on
 各上游版权和许可保持原样；适配层许可不覆盖引擎、字体、游戏数据或美术资源。素材仅按用户提供的私人学习用途使用，未发布到商城。
 
 原引擎的 SAME/COMBO 行为保持上游实现，不声称完整复现 FF8 的全部规则变体。原生规则回归可用 `cmake -S local/pxa-apps/tripletriad -B <本地产物目录> -DTRIAD_NATIVE_TESTS=ON` 构建 `triad_test`，再将图片输出目录作为参数运行。
+
+应用图标为独立绘制的双卡片几何图形，许可见 `assets/ICON-LICENSE.txt`；它不改变原卡牌素材及上游代码的许可范围。

@@ -21,14 +21,18 @@ target_compile_definitions(pxa_main PRIVATE DIGGER_PXA=1 _WASI_EMULATED_PROCESS_
 target_compile_options(pxa_main PRIVATE -fno-optimize-sibling-calls -fwrapv
  "$<$<COMPILE_LANGUAGE:C>:-include>" "$<$<COMPILE_LANGUAGE:C>:${CMAKE_CURRENT_LIST_DIR}/compat/platform.h>")
 set_source_files_properties(coroutine_bridge.S PROPERTIES COMPILE_OPTIONS "--target=wasm32-wasip1")
-target_link_options(pxa_main PRIVATE -Wl,--allow-undefined -Wl,--stack-first -Wl,-z,stack-size=1114112 -Wl,--export=__stack_low -Wl,--export=__stack_high -Wl,--export=malloc -Wl,--export=free
+# The WASI driver can auto-run wasm-opt from PATH before our ordered transform.
+# Preserve function names so Asyncify can exclude the scheduler and stack switch.
+target_link_options(pxa_main PRIVATE --no-wasm-opt -Wl,--allow-undefined -Wl,--stack-first -Wl,-z,stack-size=1114112 -Wl,--export=__stack_low -Wl,--export=__stack_high -Wl,--export=malloc -Wl,--export=free
  -Wl,--wrap=__assert_fail -Wl,--wrap=abort -Wl,--wrap=exit -Wl,--wrap=clock)
 foreach(wasi fd_prestat_get fd_prestat_dir_name path_open fd_close fd_fdstat_get fd_fdstat_set_flags fd_read fd_write fd_seek fd_tell fd_filestat_get path_filestat_get fd_sync fd_datasync path_unlink_file path_remove_directory path_rename clock_time_get clock_res_get environ_sizes_get environ_get proc_exit)
  target_link_options(pxa_main PRIVATE "-Wl,--wrap=__wasi_${wasi}")
 endforeach()
+# Reuse the locals introduced by Asyncify within the Host execution-stack budget.
 add_custom_command(TARGET pxa_main POST_BUILD
  COMMAND "${WASM_OPT}" "$<TARGET_FILE:pxa_main>" --asyncify --pass-arg=asyncify-ignore-imports
  --pass-arg=asyncify-removelist@pxa_app_start,pxa_app_on_event,pxa_app_stop,digger_drive,digger_coroutine_drive,digger_coroutine_start,digger_coroutine_resume,digger_coroutine_cancel,digger_stack_enter
+ --coalesce-locals
  -g --enable-bulk-memory --enable-sign-ext --enable-mutable-globals -o "$<TARGET_FILE:pxa_main>.async"
  COMMAND "${CMAKE_COMMAND}" -E copy "$<TARGET_FILE:pxa_main>.async" "$<TARGET_FILE:pxa_main>"
  VERBATIM)

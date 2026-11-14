@@ -13,8 +13,8 @@
     1
   ],
   "id": "pxa-tripletriad",
-  "version": "0.2.0+pxa07",
-  "release_sequence": 2,
+  "version": "0.2.1",
+  "release_sequence": 3,
   "name": "Triple Triad TTcards",
   "description": "TTcards upstream rules and CPU with a PXA raster frontend. Triple Triad gameplay reimplementation; local learning media profile.",
   "build": {
@@ -42,7 +42,10 @@
         "log",
         {
           "name": "ui",
-          "min_version": [0, 9]
+          "min_version": [
+            0,
+            9
+          ]
         },
         "window"
       ],
@@ -58,5 +61,6 @@
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
-  }
+  },
+  "icon": "assets/icon.png"
 }

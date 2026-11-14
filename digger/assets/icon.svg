@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- SPDX-License-Identifier: MIT; Copyright (c) 2026 PXA contributors -->
+  <rect width="128" height="128" fill="#17283c"/>
+  <path d="M0 91h128v37H0z" fill="#29444b"/>
+  <path d="M0 106h128v22H0z" fill="#3b574d"/>
+  <path d="M91 21l14 14-19 19-14-14z" fill="none" stroke="#ffce6c" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M79 47L47 79" fill="none" stroke="#c79451" stroke-width="10"/>
+  <path d="M47 68l17 17-14 14c-5 5-20 8-27 7-1-7 2-22 7-27z" fill="#e5edf1"/>
+  <path d="M47 76l9 9-14 14-10 3z" fill="#9bb9c3"/>
+  <path d="M84 76h17l10 12-18 20-19-20z" fill="#67dbd0"/>
+  <path d="M84 76l9 32 8-32M74 88h37" fill="none" stroke="#278e9d" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M21 31v10m-5-5h10" fill="none" stroke="#9fd6e4" stroke-width="3" stroke-linecap="round"/>
+</svg>

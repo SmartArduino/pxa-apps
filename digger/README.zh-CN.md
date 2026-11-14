@@ -9,7 +9,7 @@ tools/app.sh build digger --board doit-gamekit-1 --target simulator --aot-only
 tools/app.sh build digger --board doit-gamekit-1 --target esp32s31 --aot-only
 ```
 
-构建还需要 Binaryen `wasm-opt`（已使用版本 133），需加入 `PATH`。
+构建还需要 Binaryen `wasm-opt`（已使用版本 133），需加入 `PATH`。CMake 显式关闭 WASI Clang 的自动 `wasm-opt` 阶段，再按固定顺序执行 Asyncify 和局部变量合并；所用 Clang 需支持 `--no-wasm-opt`。这样可保留 Asyncify 排除名单依赖的函数名，并控制 Host 执行栈用量。
 
 应用源码位于本目录，公共适配层复用 `../common/`，依赖源码随仓库保存，无需原开发机的绝对路径、预编译库或旧 `.pxa` CLI。运行日志和截图保存在工作区 `local/artifacts/`。
 
@@ -20,3 +20,5 @@ tools/app.sh build digger --board doit-gamekit-1 --target esp32s31 --aot-only
 原生 raster 回归：`python3 local/pxa-apps/digger/tests/raster.py --output <本地产物目录>`，需要本机 SDL2 开发库和 `pkg-config`。Enter/触屏 START 开局，方向键移动，A 开火，B 暂停；触屏 NEW 重新开始。
 
 为避免嵌入式堆碎片导致 `memory.grow` 在游戏初始化中失败，线性内存一次性固定预留 6 MiB；渲染仍使用 GameRender。该配置面向至少 16 MiB PSRAM 的设备。
+
+应用图标为独立绘制的铲子与宝石几何图形，许可见 `assets/ICON-LICENSE.txt`；它不改变游戏引擎及原素材的许可范围。
