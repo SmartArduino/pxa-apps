@@ -267,6 +267,14 @@
         if (node && before !== clickTarget(this)) changed(this);
     }
     let selectEnvironment=null;
+    let fragmentEnvironment=null;
+    function ensureFragment() {
+        return fragmentEnvironment || (fragmentEnvironment=native.fragmentRuntime({Node,changed,DOMException,uncheckRadioPeers,activateScripts,elementById,
+            before(node){if(selectEnvironment)selectEnvironment.before(node);},
+            mutation(parent,node){if(selectEnvironment)selectEnvironment.mutation(parent,node);}}));
+    }
+    Object.defineProperty(root,'DocumentFragment',{configurable:true,get(){return ensureFragment().DocumentFragment;},
+        set(value){Object.defineProperty(root,'DocumentFragment',{value,writable:true,configurable:true});}});
     function ensureSelect() {
         return selectEnvironment || (selectEnvironment=native.selectRuntime({Node,changed,domString,collectionItem,formOwner,DOMException}));
     }
@@ -298,7 +306,10 @@
         return false;
     };
     Node.prototype.appendChild = function (child) {
+        if(child instanceof Node && child.nodeType===11)return ensureFragment().insert(this,child,null);
         if (!(child instanceof Node) || child === this) throw new TypeError('invalid child');
+        if(this.nodeType!==1 && this.nodeType!==9 && this.nodeType!==11 || child.nodeType!==1 && child.nodeType!==3)
+            throw new DOMException('Invalid child type','HierarchyRequestError');
         for (let at = this; at; at = at.parentNode) if (at === child) throw new TypeError('cyclic DOM');
         if (this.childNodes.length >= 192 && child.parentNode!==this) throw new RangeError('child limit');
         if(selectEnvironment)selectEnvironment.before(this);
@@ -322,6 +333,7 @@
     Node.prototype.insertBefore=function(child,before=null) {
         if(before===null)return this.appendChild(child);
         if(!(before instanceof Node) || before.parentNode!==this)throw new DOMException('Child not found','NotFoundError');
+        if(child instanceof Node && child.nodeType===11)return ensureFragment().insert(this,child,before);
         if(child===before)return child;
         this.appendChild(child);this.childNodes.splice(this.childNodes.indexOf(child),1);
         this.childNodes.splice(this.childNodes.indexOf(before),0,child);changed(this);return child;
@@ -936,15 +948,17 @@
     document.readyState = 'loading'; document.documentElement = document; document.body = document; document.head = null;
     document.createElement = name => { name = String(name); if (!/^[a-z][a-z0-9-]*$/i.test(name)) throw new TypeError('invalid tag'); return new Node(name); };
     document.createTextNode = text => new Node('', String(text));
+    document.createDocumentFragment=()=>new (ensureFragment().DocumentFragment)();
     root.Image = function (width, height) { const image = document.createElement('img'); if (width) image.setAttribute('width', width); if (height) image.setAttribute('height', height); return image; };
-    document.getElementById = id => {
-        id=String(id);const todo=[document];let visited=0;
+    function elementById(node,id) {
+        const todo=[node];let visited=0;
         while(todo.length && visited++<512) {
             const n=todo.pop();if(n.nodeType===1 && n._attrs && n._attrs.id===id)return n;
             for(let i=n.childNodes.length-1;i>=0;--i)todo.push(n.childNodes[i]);
         }
         return null;
-    };
+    }
+    document.getElementById=id=>elementById(document,String(id));
     Object.defineProperty(document, 'title', {get() { const t = document.getElementsByTagName('title')[0]; return t ? t.textContent.replace(/[\t\n\f\r ]+/g,' ').replace(cssTrim,'') : ''; },
         set(v) { let t = document.getElementsByTagName('title')[0]; if (!t) { t = document.createElement('title'); (document.head || document).appendChild(t); } t.textContent = v; }});
     Object.defineProperty(document, 'cookie', {get:() => native.cookie(), set:value => native.cookie(String(value))});
@@ -1081,7 +1095,7 @@
             if (ending) { parts.push(ending); continue; }
             if (++state.visited>512) throw new RangeError('DOM traversal limit');
             if (n.nodeType===3) { parts.push(!render && rawTextNode(n.parentNode)?n._text:escape(n._text)); continue; }
-            if (n.nodeType===9) {
+            if (n.nodeType===9 || n.nodeType===11) {
                 for(let i=n.childNodes.length-1;i>=0;--i) { todo.push(n.childNodes[i]);endings.push(''); }
                 continue;
             }

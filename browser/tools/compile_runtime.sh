@@ -17,10 +17,12 @@ done
 "$cache/compile-runtime" "$app/runtime/browser-runtime.js" "$app/assets/browser-runtime.qjb"
 "$cache/compile-runtime" "$app/runtime/browser-select.js" "$cache/select-runtime.qjb" pxa-browser-select.js
 python3 "$app/tools/compile_select_header.py" "$cache/select-runtime.qjb" "$app/browser_select_runtime.hpp"
+"$cache/compile-runtime" "$app/runtime/browser-fragment.js" "$cache/fragment-runtime.qjb" pxa-browser-fragment.js
+python3 "$app/tools/compile_select_header.py" "$cache/fragment-runtime.qjb" "$app/browser_fragment_runtime.hpp" fragment_runtime
 python3 "$app/tools/compile_libraries.py" "$cache/compile-runtime"
 (cd "$app/runtime"
     shopt -s nullglob
-    inputs=(browser-runtime.js browser-select.js ../assets/browser-runtime.qjb ../browser_select_runtime.hpp
+    inputs=(browser-runtime.js browser-select.js browser-fragment.js ../assets/browser-runtime.qjb ../browser_select_runtime.hpp ../browser_fragment_runtime.hpp
         ../vendor/quickjs/*.[ch] ../vendor/quickjs/VERSION
         ../tools/compile_runtime.c ../tools/compile_runtime.sh ../tools/compile_libraries.py ../tools/compile_select_header.py
         libraries.json ../browser_script_libraries.hpp ../assets/script-libraries/*
