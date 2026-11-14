@@ -1,5 +1,6 @@
 // Host CPU microbenchmark, not device FPS or network/page-load throughput.
 // Override BROWSER_BENCH_HEADER to compare an unchanged source snapshot.
+// Optional second argument selects one scene for alternating CPU measurements.
 #ifndef BROWSER_BENCH_HEADER
 #define BROWSER_BENCH_HEADER "../browser_core.hpp"
 #endif
@@ -16,6 +17,10 @@ int main(int argc, char **argv) {
     for (int i = 0; i < 1700; ++i) pages["plain"] += "中文阅读 ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz\n";
     pages["raw-prefix"] = "<style>" + std::string(1500000, 'x') + "</style><p>Visible 中文</p>";
     pages["comment-prefix"] = "<!--" + std::string(500000, 'x') + "--><p>Visible 中文</p>";
+    pages["button-captions"] = "<form method=post>";
+    for (int i = 0; i < 24; ++i)
+        pages["button-captions"] += "<button name=go value=token>中文 <b>Send</b> " + std::string(96,'x') + "</button>";
+    pages["button-captions"] += "</form>";
     for (int i = 0; i < 250; ++i) pages["attributes"] += "<div class='card' data-a=1 data-b=2 data-c=3><a title='link' href='/next'>阅读</a></div>";
     std::string sheet = "<style>.article{color:#2468ac;font-size:120%}.note{white-space:pre-line}";
     for (int i = 0; i < 62; ++i) sheet += ".unused" + std::to_string(i) + "{color:red}";
@@ -28,6 +33,7 @@ int main(int argc, char **argv) {
         pages["unique-classes"] += "<p class='entry" + std::to_string(i) + "'>中文阅读 paragraph.</p>";
     }
     for (const auto &[name, html] : pages) {
+        if (argc > 2 && name != argv[2]) continue;
         std::uint64_t checksum = 0;
         const auto start = std::chrono::steady_clock::now();
         const auto cpu_start = std::clock();

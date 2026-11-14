@@ -72,7 +72,7 @@ HTML 的 title/textarea 按文本容器解析，保留内部标签文字并解�
 
 已经完成绘制的脚本页只在内容、样式或点击目标变化后启动 DOM 快照；空回调、相同文字/样式赋值和重复监听注册不单独生成快照。动态 `onclick`、`addEventListener` / `removeEventListener` 会同步点击区域，XHR 回调中新绑定的处理器也能生效；移除最后一个处理器会恢复普通内容。`onclick=null` 或 `undefined` 可停用行内处理器，重新设置同一份 `onclick` 属性可重新启用。每类事件仍最多 16 个监听器，重复注册已有函数不占用额外名额；不提供完整 DOM 事件模型。
 
-基础表单按 DOM 树顺序收集 input 与被激活的提交按钮，保留同名字段顺序、按钮值、复选框/单选状态及 UTF-8 表单编码；禁用控件不触发点击，普通按钮和 reset 按钮不再误提交。GET 替换 action 的旧查询参数并保留锚点，POST 保留 action 的查询与锚点。脚本可设置 action / method / enctype，使用 `form.submit()` 直接提交，或用有界的 `form.requestSubmit([button])` 触发可取消的 submit 事件并读取 `event.submitter`；后者不实现完整约束验证。静态表单仍限 24 个字段和 2 KiB 编码正文，脚本表单仍受原有 DOM 与 8 KiB 正文限制，GET URL 上限仍为 1024 字节。重置默认值、外部 form 关联、提交按钮覆盖属性、文件上传、完整 select/textarea 与 multipart/text/plain POST 尚未实现；reset 可由网页脚本自行处理。
+基础表单按 DOM 树顺序收集 input 与被激活的提交按钮，保留同名字段顺序、按钮值、复选框/单选状态及 UTF-8 表单编码；禁用控件不触发点击，普通按钮和 reset 按钮不再误提交。静态 `<button>` 将可见子文字（含实体、内嵌格式和图片替代文字）合并为不超过 128 字节的 UTF-8 标题，隐藏内容不参与；标题和提交的 `value` 分别保留，省略 `value` 时提交空值。原生表单控件各占一个完整点击区域，长标题在单行内截短。GET 替换 action 的旧查询参数并保留锚点，POST 保留 action 的查询与锚点。脚本可设置 action / method / enctype，使用 `form.submit()` 直接提交，或用有界的 `form.requestSubmit([button])` 触发可取消的 submit 事件并读取 `event.submitter`；后者不实现完整约束验证。静态表单仍限 24 个字段和 2 KiB 编码正文，脚本表单仍受原有 DOM 与 8 KiB 正文限制，GET URL 上限仍为 1024 字节。重置默认值、外部 form 关联、提交按钮覆盖属性、文件上传、完整 select/textarea 与 multipart/text/plain POST 尚未实现；reset 可由网页脚本自行处理。
 
 采用混合组件：界面、滚动、网络和图片走 `main.aot`；QuickJS 与 DOM 放在按需启动的 `script.wasm` 中解释执行，通过有界 IPC 批量交换更新。纯静态页面不加载脚本组件。关闭脚本页会释放 VM，但已加载的模块和增长的线性内存不会因此自动缩小。解释执行会降低脚本速度，不能将包体积减少视为脚本提速。
 已检查更小的引擎候选；JerryScript 的 Guest 异常适配和 MicroQuickJS 的兼容性取舍见 [引擎验证与混合组件方案](docs/engine-selection-20261016.zh-CN.md)。

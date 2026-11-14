@@ -15,7 +15,13 @@ def page(mode, method, choice):
 <div><input type="hidden" name="q" value="A B+*!~'()中"></div><input type="hidden" name="q" value="last">
 <input id="send" type="SUBMIT" name="go" value="Send" style="color:#d06020">
 <input type="submit" name="other" value="Other" style="color:#187a42"></form>'''
-    return body + ('<script>void 0;</script>' if mode == 'script' else '') + '</body></html>'
+    if 'button' in mode:
+        body = body.replace('<input id="send" type="SUBMIT" name="go" value="Send" style="color:#d06020">',
+            '<button id="send" name="go" value="Send" style="color:#d06020">发送 <b>验证 / Send</b></button>')
+        caption = '下一项 / Other ' + '长标题' * 10
+        body = body.replace('<input type="submit" name="other" value="Other" style="color:#187a42">',
+            '<button name="other" value="Other" style="color:#187a42">' + caption + '</button>')
+    return body + ('<script>void 0;</script>' if mode.startswith('script') else '') + '</body></html>'
 
 CONTROLS = HEAD + '''<form method="post" action="/unexpected">
 <button type="BUTTON" style="color:#d06020" onclick="this.textContent='普通按钮成功 / Button OK'">普通按钮 / Button</button>
@@ -33,6 +39,16 @@ f.requestSubmit(send);if(count===1){e.preventDefault();document.getElementById('
 DIRECT = HEAD + '''<form method="post" action="/verify/direct" onsubmit="this.submit();return false">
 <input type="hidden" name="q" value="ok"><button name="go" value="excluded" style="color:#d06020">直接提交 / Direct</button>
 </form><script>void 0;</script></body></html>'''
+STATIC_CONTROLS = HEAD + '''<form action="/unexpected" method="post">
+<button type="button" style="color:#d06020">普通按钮 / Button</button>
+<button disabled name="no" value="bad" style="color:#8030a0" onclick="location.href='/unexpected'">禁用按钮 / Disabled</button>
+<button type="reset" style="color:#187a42">重置按钮 / Reset</button></form></body></html>'''
+EMPTY_BUTTON = HEAD + '''<form action="/verify/empty" method="post"><input type="hidden" name="q" value="ok">
+<button name="go">发送验证 / Send</button></form></body></html>'''
+UPDATE_BUTTON = HEAD + '''<form action="/verify/update" method="post"><input type="hidden" name="q" value="ok">
+<button id="send" name="go" value="token" style="color:#d06020">第一次 / First</button></form>
+<script>let n=0;document.getElementById('send').onclick=function(e){
+if(++n===1){e.preventDefault();this.textContent='再次发送 / Again'}}</script></body></html>'''
 PASS = '''<!doctype html><html><head><meta charset="utf-8"><title>Form PASS</title></head>
 <body><h3 id="result" style="color:#187a42">表单通过 / Form PASS</h3></body></html>'''
 
@@ -48,8 +64,9 @@ class Fixture:
                 url = urlsplit(self.path); body = b''
                 if method == 'post': body = self.rfile.read(int(self.headers.get('Content-Length', '0')))
                 if url.path.startswith('/verify/'):
-                    if url.path in ('/verify/request', '/verify/direct'):
-                        expected = 'q=ok&go=pick' if url.path.endswith('request') else 'q=ok'
+                    if url.path in ('/verify/request', '/verify/direct', '/verify/empty', '/verify/update'):
+                        expected = {'/verify/request': 'q=ok&go=pick', '/verify/direct': 'q=ok',
+                                    '/verify/empty': 'q=ok&go=', '/verify/update': 'q=ok&go=token'}[url.path]
                         valid = method == 'post' and body.decode() == expected
                     else:
                         _, _, wanted_method, choice = url.path.split('/')
@@ -62,12 +79,18 @@ class Fixture:
                 elif url.path == '/controls': text, status = CONTROLS, 200
                 elif url.path == '/request': text, status = REQUEST, 200
                 elif url.path == '/direct': text, status = DIRECT, 200
-                elif url.path.startswith('/static-') or url.path.startswith('/script-'):
-                    mode, wanted_method, choice = url.path[1:].split('-')
+                elif url.path == '/static-controls': text, status = STATIC_CONTROLS, 200
+                elif url.path == '/empty-button': text, status = EMPTY_BUTTON, 200
+                elif url.path == '/update-button': text, status = UPDATE_BUTTON, 200
+                elif url.path.startswith(('/static-', '/button-', '/script-')):
+                    mode, wanted_method, choice = url.path[1:].rsplit('-', 2)
                     text, status = page(mode, wanted_method, choice), 200
                 else: text, status = 'Unexpected request', 404
                 data = text.encode(); self.send_response(status)
                 self.send_header('Content-Type', 'text/html; charset=utf-8'); self.send_header('Content-Length', str(len(data)))
+                # Exercise the native static-navigation extractor even on
+                # Hosts fast enough to auto-start handlers before the check.
+                if url.path == '/static-controls': self.send_header('Content-Security-Policy', "script-src 'none'")
                 self.end_headers(); self.wfile.write(data)
             def do_GET(self): self.handle_request('get')
             def do_POST(self): self.handle_request('post')

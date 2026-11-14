@@ -2,6 +2,7 @@
 """Real PXA form hits, exact HTTP encoding and cancellable submit events."""
 import argparse
 import json
+import re
 import time
 from pathlib import Path
 from PIL import Image
@@ -22,6 +23,7 @@ def main():
         b.wait(lambda:'BROWSER DONE status=200' in b.logs()[mark:])
         if scripted:b.wait(lambda:'BROWSER JS UPDATE revision=1 ' in b.logs()[mark:])
         else:assert 'BROWSER JS READY' not in b.logs()[mark:]
+        return mark
     def point(name, color, index=0):
         b.shot(name);im=Image.open(a.output/(name+'.png')).convert('RGB');x,y,w,h=b.box('content');points=[]
         for py in range(y,min(y+h,im.height)):
@@ -48,11 +50,18 @@ def main():
         assert 'BROWSER DONE status=200' in b.logs()[mark:],b.logs()[mark:]
     try:
         b.wait(lambda:'BROWSER VIEWPORT' in b.logs())
-        for mode in ('static','script'):
+        for mode in ('static','button','script','script-button'):
             for method,choice in (('get','first'),('get','other'),('post','first')):
-                name=mode+'-'+method+'-'+choice;load('/'+name,mode=='script')
-                color=(21,108,168) if mode=='static' else ((24,122,66) if choice=='other' else (208,96,32))
-                at=point(name,color,1 if mode=='static' and choice=='other' else 0)
+                name=mode+'-'+method+'-'+choice;load('/'+name,mode.startswith('script'))
+                native=not mode.startswith('script')
+                color=(21,108,168) if native else ((24,122,66) if choice=='other' else (208,96,32))
+                at=point(name,color,1 if native and choice=='other' else 0)
+                if mode=='button':
+                    im=Image.open(a.output/(name+'.png')).convert('RGB');x,y,w,h=b.box('content')
+                    orphaned=sum(any(all(abs(v-c)<9 for v,c in zip(im.getpixel((px,py)),color))
+                        for color in ((208,96,32),(24,122,66)))
+                        for py in range(y,min(y+h,im.height)) for px in range(x,min(x+w,im.width)))
+                    assert orphaned==0,('button caption rendered outside its native control',orphaned)
                 before=len(f.submissions);mark=len(b.logs());b.tap(*at);submitted(before,mark);b.shot(name+'-pass')
                 rows.append({'flow':name,'request':f.submissions[-1]})
         load('/controls',True)
@@ -67,6 +76,19 @@ def main():
         rows.append({'flow':'request-submit','request':f.submissions[-1]})
         load('/direct',True);at=point('direct-before',(208,96,32));before=len(f.submissions);mark=len(b.logs());b.tap(*at);submitted(before,mark)
         rows.append({'flow':'direct-submit-from-handler','request':f.submissions[-1]});b.shot('direct-pass')
+        mark=load('/static-controls',False)
+        assert re.search(r'BROWSER DONE [^\n]*links=0 forms=1 fields=0\b',b.logs()[mark:]),b.logs()[mark:]
+        for name,color in [('ordinary',(208,96,32)),('disabled',(128,48,160)),('reset',(24,122,66))]:
+            at=point('static-'+name,color);before=len(f.submissions);b.tap(*at);time.sleep(.2)
+            assert len(f.submissions)==before and not f.requests['/unexpected']
+            rows.append({'flow':'static-'+name,'no_form_navigation':True})
+        load('/empty-button',False);at=point('empty-button',(21,108,168));before=len(f.submissions);mark=len(b.logs())
+        b.tap(*at);submitted(before,mark);rows.append({'flow':'button-omitted-value','request':f.submissions[-1]})
+        load('/update-button',True);at=point('update-before',(208,96,32));before=len(f.submissions);mark=len(b.logs())
+        b.tap(*at);b.wait(lambda:'BROWSER JS UPDATE revision=2 ' in b.logs()[mark:]);assert len(f.submissions)==before
+        rows.append({'flow':'button-caption-update-cancelled','no_navigation':True})
+        at=point('update-after',(208,96,32));mark=len(b.logs());b.tap(*at);submitted(before,mark)
+        rows.append({'flow':'button-caption-update-submit','request':f.submissions[-1]})
         assert 'BROWSER JS ERROR' not in b.logs() and 'BROWSER DRAW ERROR' not in b.logs() and 'PXA Guest exception:' not in b.logs()
         (a.output/'results.json').write_text(json.dumps(rows,ensure_ascii=False,indent=2)+'\n')
         print('form simulator PASS:',len(rows),'flows; exact GET/POST data, submitter and event behavior',flush=True)

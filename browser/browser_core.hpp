@@ -687,7 +687,19 @@ class Parser {
         }
         return {};
     }
-    int link_ = -1, form_ = -1;
+    int link_ = -1, form_ = -1, button_ = -1;
+    bool button_caption_ = false, button_full_ = false;
+    // Keep string finalization out of the common tag parser's instruction path.
+    [[gnu::noinline]] void finish_button() {
+        if (button_ < 0) return;
+        auto &field = doc_.fields[button_];
+        if (button_caption_) field.label = std::string(trim(field.label));
+        doc_.newline(text_style_);
+        doc_.append(field.label, Style::button, -1, button_);
+        doc_.newline(text_style_);
+        button_ = -1;
+        last_space_ = true;
+    }
     bool head_ = false, title_ = false, pre_ = false, last_space_ = false;
     std::array<char, 4> unicode_{};
     unsigned unicode_size_ = 0, unicode_want_ = 0;
@@ -696,8 +708,13 @@ class Parser {
     // Never allocate a decoded copy or append beyond the readable text budget.
     std::size_t literal_prefix(std::string_view bytes) const {
         if (unicode_want_ || !entity_.empty() || in_label_ || title_ || initial_lf_) return 0;
-        const auto limit = std::min(bytes.size(), max_text - doc_.text.size());
-        const bool last_span = doc_.spans.size() + 1 == max_spans &&
+        auto limit = std::min(bytes.size(), max_text - doc_.text.size());
+        // Capture a validated run directly into the existing field string.
+        // The first glyph beyond this prefix still takes the scalar path,
+        // sealing the caption without splitting a UTF-8 character.
+        if (button_ >= 0 && !button_full_) [[unlikely]]
+            limit = std::min(limit,128 - (button_caption_ ? doc_.fields[button_].label.size() : 0));
+        const bool last_span = doc_.spans.size() + 1 == max_spans && button_ < 0 &&
             (doc_.spans.empty() || doc_.spans.back().style != style_ ||
              doc_.spans.back().text_style != text_style_ ||
              doc_.spans.back().link != link_ || doc_.spans.back().field >= 0 ||
@@ -734,6 +751,14 @@ class Parser {
         const auto mode=html_text(raw_);
         if (head_ || (!raw_.empty() && (mode==HtmlText::data || mode==HtmlText::hidden)) || hidden_depth_)
             return;
+        if (button_ >= 0) [[unlikely]] {
+            auto &caption = doc_.fields[button_].label;
+            if (!button_caption_) { caption.clear(); button_caption_ = true; }
+            if (!button_full_ && caption.size() + s.size() <= 128) caption += s;
+            else button_full_ = true; // retain a complete UTF-8 prefix, never resume after overflow
+            last_space_ = false;
+            return;
+        }
         if (in_label_ && label_.size() + s.size() <= 128) label_ += s;
         doc_.append(s, style_, link_, -1, -1, text_style_);
         last_space_ = false;
@@ -776,7 +801,10 @@ class Parser {
         }
         if (c < 32 && !space(c))
             return;
-        if (c == '\n' && text_style_.whitespace == css::WhiteSpace::pre_line) {
+        if (button_ >= 0 && space(c)) {
+            if (button_caption_ && !last_space_) glyph(" ");
+            last_space_ = true;
+        } else if (c == '\n' && text_style_.whitespace == css::WhiteSpace::pre_line) {
             glyph("\n"); last_space_ = true;
         } else if (c == '\t' && pre_) {
             glyph("    ");
@@ -865,6 +893,11 @@ class Parser {
                 else if (!trim(value).ends_with('/')) ++hidden_depth_;
             }
             return;
+        }
+        if (button_ >= 0 && (n == "button" || (n == "form" && t.closing))) {
+            finish_button();
+            // A second button implicitly ends the first, including its styles.
+            if (!t.closing) (void)close_scope("button");
         }
         const auto props = t.closing || (sheet_.empty() && !t.has("style")) ? css::Declarations{} :
             sheet_.cascade(n,t.get("id"),t.get("class"),t.get("style"));
@@ -991,8 +1024,10 @@ class Parser {
                 } else overflow_depth_ = 1;
             }
         } else if (!is_void && !trim(value).ends_with('/')) ++overflow_depth_;
-        if (block || n == "br" || n == "hr")
-            doc_.newline(text_style_);
+        if (block || n == "br" || n == "hr") {
+            if (button_ >= 0) character(' ');
+            else doc_.newline(text_style_);
+        }
         if (!t.closing && doc_.anchors.size() < 96) {
             auto id = t.get("id");
             if (id.empty() && n == "a")
@@ -1000,7 +1035,15 @@ class Parser {
             if (!id.empty() && id.size() <= 128)
                 doc_.anchors.push_back({std::move(id), std::uint32_t(doc_.text.size())});
         }
-        if (!t.closing && t.has("onclick")) {
+        // Flatten a native button's visible descendants into its existing
+        // bounded label. Child links/controls must not become separate hits.
+        if (button_ >= 0) {
+            if (n == "img" && !t.closing)
+                for (unsigned char c : t.get("alt")) character(c);
+            return;
+        }
+        if (!t.closing && t.has("onclick") &&
+            !((n == "input" || n == "button") && t.has("disabled"))) {
             const auto handler = t.get("onclick");
             if (auto literal = static_navigation(handler))
                 if (auto url = resolve(doc_.base, *literal)) {
@@ -1157,7 +1200,11 @@ class Parser {
             doc_.fields.push_back({std::move(name), std::move(v), std::move(label),
                                    std::int16_t(form_), ft, t.has("checked"), scripted_ ? node_id(t.get("data-pxa-field")) : 0});
             if (ft == FieldType::radio && t.has("checked")) check_field(doc_, index, true);
-            if (ft != FieldType::hidden) {
+            if (n == "button") {
+                button_ = index;
+                button_caption_ = button_full_ = false;
+                last_space_ = true;
+            } else if (ft != FieldType::hidden) {
                 doc_.newline(text_style_);
                 doc_.append(doc_.fields.back().label, Style::button, -1, index);
                 doc_.newline(text_style_);
@@ -1309,6 +1356,7 @@ class Parser {
             for (unsigned char c : pending_)
                 character(c);
         }
+        finish_button();
         doc_.newline(text_style_);
         doc_.title = std::string(trim(doc_.title));
     }
@@ -1461,6 +1509,21 @@ struct Layout {
                 continue;
             }
             int size = font(s, body);
+            if (s.field >= 0) {
+                if (pieces.size() >= max_pieces) { truncated = true; break; }
+                finish_line();
+                if (x) y += line_height;
+                const auto caption = line_prefix(std::string_view(d.text).substr(s.offset,s.size),width,size);
+                pieces.push_back({s.offset,std::uint32_t(y),std::uint16_t(caption.size()),0,
+                                  std::uint16_t(width),std::uint16_t(si)});
+                // One full-width native control owns one hit, even when its
+                // bounded caption is longer than the viewport. Keep the next
+                // newline responsible for advancing past its entire height.
+                x = width;
+                line_height = size * 2;
+                line_align = css::Align::left;
+                continue;
+            }
             std::size_t start = s.offset, p = start, end = start + s.size;
             int begin_x = x;
             auto emit = [&] {
@@ -1470,7 +1533,6 @@ struct Layout {
                         return;
                     }
                     if (pieces.size() == line_start) line_align = s.text_style.align;
-                    if (s.field >= 0) line_align = css::Align::left;
                     pieces.push_back({std::uint32_t(start), std::uint32_t(y),
                                       std::uint16_t(p - start), std::uint16_t(begin_x),
                                       std::uint16_t(std::max(1, x - begin_x)), std::uint16_t(si)});
@@ -1522,7 +1584,7 @@ struct Layout {
                     line_height = body * 3 / 2;
                 }
                 x += advance;
-                line_height = std::max(line_height, s.field >= 0 ? size * 2 : size * 3 / 2);
+                line_height = std::max(line_height, size * 3 / 2);
                 p += n;
             }
             emit();
