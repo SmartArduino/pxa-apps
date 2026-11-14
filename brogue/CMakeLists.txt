@@ -13,7 +13,8 @@ pxa_retro_component(pxa_main COMPONENT_ID main
 target_compile_definitions(pxa_main PRIVATE BROGUE_EXTRA_VERSION="+104a20f-pxa" DATADIR=.)
 target_compile_options(pxa_main PRIVATE -Wno-incompatible-pointer-types -Wno-int-conversion -fno-optimize-sibling-calls)
 set_source_files_properties(stack_bridge.S PROPERTIES COMPILE_OPTIONS "--target=wasm32-wasip1")
-target_link_options(pxa_main PRIVATE -Wl,--allow-undefined -Wl,-z,stack-size=1048576
+# Keep linker names until the named Asyncify exclusion pass; own Binaryen here.
+target_link_options(pxa_main PRIVATE --no-wasm-opt -Wl,--allow-undefined -Wl,-z,stack-size=1048576
   -Wl,--export=malloc -Wl,--export=free)
 foreach(wasi_call fd_prestat_get fd_prestat_dir_name path_open fd_close fd_fdstat_get
     fd_fdstat_set_flags fd_read fd_write fd_seek fd_filestat_get path_filestat_get
@@ -21,6 +22,6 @@ foreach(wasi_call fd_prestat_get fd_prestat_dir_name path_open fd_close fd_fdsta
   target_link_options(pxa_main PRIVATE "-Wl,--wrap=__wasi_${wasi_call}")
 endforeach()
 add_custom_command(TARGET pxa_main POST_BUILD
-  COMMAND "${WASM_OPT}" "$<TARGET_FILE:pxa_main>" --asyncify --pass-arg=asyncify-ignore-imports --pass-arg=asyncify-removelist@pxa_app_start,br_app_start,br_call_game,br_save_game_stack,br_run_game,pxa_app_on_event,pxa_app_stop -g --enable-bulk-memory --enable-sign-ext --enable-mutable-globals -o "$<TARGET_FILE:pxa_main>.async"
+  COMMAND "${WASM_OPT}" "$<TARGET_FILE:pxa_main>" --asyncify --coalesce-locals --pass-arg=asyncify-ignore-imports --pass-arg=asyncify-removelist@pxa_app_start,br_app_start,br_call_game,br_save_game_stack,br_run_game,pxa_app_on_event,pxa_app_stop -g --enable-bulk-memory --enable-sign-ext --enable-mutable-globals -o "$<TARGET_FILE:pxa_main>.async"
   COMMAND "${CMAKE_COMMAND}" -E copy "$<TARGET_FILE:pxa_main>.async" "$<TARGET_FILE:pxa_main>"
   VERBATIM)
