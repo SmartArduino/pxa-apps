@@ -13,8 +13,8 @@
     0
   ],
   "id": "pxa-browser",
-  "version": "0.1.30",
-  "release_sequence": 32,
+  "version": "0.1.31",
+  "release_sequence": 33,
   "name": "PXA 浏览器",
   "localizations": {
     "en": {

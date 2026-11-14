@@ -79,17 +79,17 @@ int main() {
         "<textarea disabled>not submitted</textarea>"
         "<button name='go' value='yes'>Send</button></form>"
         "<form><input type='radio' name='mode' checked></form>");
-    assert(form.forms.size() == 2 && form.forms[0].supported && form.fields.size() == 6);
-    assert(!form.fields[0].checked && form.fields[1].checked && form.fields[5].checked);
+    assert(form.forms.size() == 2 && form.forms[0].supported && form.fields.size() == 7);
+    assert(!form.fields[0].checked && form.fields[1].checked && form.fields[6].checked && form.fields[4].disabled);
     assert(form.fields[1].label == "New mode" && form.fields[2].value == "on");
-    assert(submit(form, 0, 4)->body == "mode=new&other=on&empty=&go=yes");
+    assert(submit(form, 0, 5)->body == "mode=new&other=on&empty=&go=yes");
     check_field(form, 0, true);
-    assert(form.fields[0].checked && !form.fields[1].checked && form.fields[5].checked);
-    assert(submit(form, 0, 4)->body == "mode=old&other=on&empty=&go=yes");
+    assert(form.fields[0].checked && !form.fields[1].checked && form.fields[6].checked);
+    assert(submit(form, 0, 5)->body == "mode=old&other=on&empty=&go=yes");
     check_field(form, 0, true);
     assert(form.fields[0].checked); // a second tap does not deselect a radio
     check_field(form, 3, false);
-    assert(submit(form, 0, 4)->body == "mode=old&other=on&go=yes");
+    assert(submit(form, 0, 5)->body == "mode=old&other=on&go=yes");
     auto unsupported = parse("<form><input type=file><input type=submit></form>");
     assert(!submit(unsupported, 0, 0));
     auto disabled = parse("<form>" + std::string(100, ' ') +

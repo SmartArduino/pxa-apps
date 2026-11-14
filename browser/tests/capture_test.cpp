@@ -39,6 +39,8 @@ int main() {
     struct Case { std::string_view html; bool needed; };
     constexpr Case cases[] = {
         {"<p>Static</p>",false},
+        {"<select onchange='work()'><option>One</select>",true},
+        {"<select disabled onchange='bad )'><option>One</select>",false},
         {"<input oninput='work()'>",true},
         {"<textarea onchange='work()'></textarea>",true},
         {"<INPUT OnChange='work()'>",true},

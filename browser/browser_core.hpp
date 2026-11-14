@@ -9,6 +9,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 #include "browser_inline_image.hpp"
 #include "browser_css.hpp"
@@ -18,7 +19,8 @@ namespace browser {
 using namespace std::literals;
 enum class Error { invalid_url, unsupported_scheme, limit, unsupported_form };
 constexpr std::size_t max_url = 1024, max_text = 49152, max_spans = 768, max_links = 96,
-                      max_fields = 24, max_forms = 8, max_pieces = 4096, max_images = 96;
+                      max_fields = 24, max_forms = 8, max_pieces = 4096, max_images = 96,
+                      max_select_options = 64;
 inline bool space(unsigned char c) {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\f';
 }
@@ -388,13 +390,27 @@ struct Form {
     std::string action;
     bool post = false, supported = true;
 };
-enum class FieldType : std::uint8_t { text, password, hidden, checkbox, submit, radio, textarea, readonly_textarea };
+enum class FieldType : std::uint8_t { text, password, hidden, checkbox, submit, radio, textarea, readonly_textarea, select };
+struct SelectOption {
+    std::string value, label;
+    bool selected = false, disabled = false, hidden = false;
+    std::uint32_t script_node = 0;
+};
+static_assert(max_forms<=8 && max_select_options<256);
 struct Field {
     std::string name, value, label;
-    std::int16_t form = -1;
-    FieldType type = FieldType::text;
-    bool checked = false;
+    // Eight forms and nine control kinds fit in one byte. Keep the existing
+    // field footprint while adding bounded select metadata (64 total options).
+    std::int8_t form : 4 = -1;
+    FieldType type : 4 = FieldType::text;
+    bool checked : 1 = false;
+    bool multiple : 1 = false, disabled : 1 = false, limited : 1 = false;
+    std::uint8_t first_option = 0, option_count = 0;
     std::uint32_t script_node = 0;
+    Field(std::string n={},std::string v={},std::string l={},std::int16_t f=-1,
+          FieldType t=FieldType::text,bool c=false,std::uint32_t node=0)
+        :name(std::move(n)),value(std::move(v)),label(std::move(l)),
+         form(f>=0 && f<int(max_forms)?f:-1),type(t),checked(c),script_node(node){}
 };
 struct Document {
     std::string text, title, base, next_page, previous_page, comic_folder;
@@ -403,6 +419,7 @@ struct Document {
     std::vector<Anchor> anchors;
     std::vector<Form> forms;
     std::vector<Field> fields;
+    std::vector<SelectOption> select_options;
     std::vector<Image> images;
     bool truncated = false, wml = false, links_limited = false, images_limited = false;
     ReferrerPolicy referrer = ReferrerPolicy::strict_origin_when_cross_origin;
@@ -414,6 +431,7 @@ struct Document {
             std::vector<Span>{}.swap(spans); std::vector<Link>{}.swap(links);
             std::vector<Anchor>{}.swap(anchors); std::vector<Form>{}.swap(forms);
             std::vector<Field>{}.swap(fields); std::vector<Image>{}.swap(images);
+            std::vector<SelectOption>{}.swap(select_options);
         }
         text.clear();
         title.clear();
@@ -425,6 +443,7 @@ struct Document {
         anchors.clear();
         forms.clear();
         fields.clear();
+        select_options.clear();
         images.clear();
         truncated = wml = links_limited = images_limited = false;
         referrer = ReferrerPolicy::strict_origin_when_cross_origin;
@@ -435,7 +454,7 @@ struct Document {
         return (text.capacity()>std::string{}.capacity()?text.capacity()+1:0) +
             spans.capacity()*sizeof(Span)+links.capacity()*sizeof(Link)+
             anchors.capacity()*sizeof(Anchor)+forms.capacity()*sizeof(Form)+
-            fields.capacity()*sizeof(Field)+images.capacity()*sizeof(Image);
+            fields.capacity()*sizeof(Field)+images.capacity()*sizeof(Image)+select_options.capacity()*sizeof(SelectOption);
     }
     int add_link(std::string target) {
         const auto found = std::ranges::find(links, target, &Link::target);
@@ -481,6 +500,57 @@ struct Document {
             append("\n",Style::body,-1,-1,-1,text_style);
     }
 };
+inline std::span<const SelectOption> options(const Document& doc,const Field& field) {
+    if(field.first_option>doc.select_options.size() || field.option_count>doc.select_options.size()-field.first_option)return {};
+    return std::span(doc.select_options).subspan(field.first_option,field.option_count);
+}
+inline std::span<SelectOption> options(Document& doc,const Field& field) {
+    const auto found=options(std::as_const(doc),field);
+    return found.empty()?std::span<SelectOption>{}:std::span(doc.select_options).subspan(field.first_option,field.option_count);
+}
+inline void select_value(Document& doc,Field& field) {
+    field.value.clear();
+    for(const auto& option:options(doc,field))if(option.selected){field.value=option.value;break;}
+}
+inline std::string selection_indices(const Document& doc,const Field& field) {
+    std::string result;const auto choices=options(doc,field);
+    for(std::size_t i=0;i<choices.size();++i)if(choices[i].selected) {
+        if(!result.empty())result+=',';result+=std::to_string(i);
+    }
+    return result;
+}
+inline std::string selection_payload(const Document& doc,const Field& field) {
+    std::string result;
+    for(const auto& option:options(doc,field))if(option.selected) {
+        if(!result.empty())result+=',';result+=std::to_string(option.script_node);
+    }
+    return result;
+}
+inline bool choose_option(Document& doc,Field& field,std::size_t index) {
+    auto choices=options(doc,field);
+    if(field.type!=FieldType::select || field.disabled || field.limited || index>=choices.size() ||
+       choices[index].disabled || choices[index].hidden || (!field.multiple && choices[index].selected))return false;
+    const bool selected=!choices[index].selected;
+    if(!field.multiple)for(auto& option:choices)option.selected=false;
+    choices[index].selected=selected;select_value(doc,field);return true;
+}
+inline bool restore_selection(Document& doc,Field& field,std::span<const SelectOption> previous) {
+    auto choices=options(doc,field);std::array<bool,max_select_options> selected{};
+    if(field.type!=FieldType::select || field.disabled || field.limited || choices.size()>selected.size())return false;
+    std::size_t count=0;
+    for(std::size_t i=0;i<previous.size();++i)if(previous[i].selected) {
+        if(++count>1 && !field.multiple)return false;
+        const auto& old=previous[i];std::size_t found=choices.size();
+        if(i<choices.size() && !selected[i] && choices[i].value==old.value && choices[i].label==old.label)found=i;
+        for(unsigned pass=0;pass<2 && found==choices.size();++pass)
+            for(std::size_t j=0;j<choices.size();++j)
+                if(!selected[j] && choices[j].value==old.value && (!pass?choices[j].label==old.label:true)){found=j;break;}
+        if(found==choices.size() || ((choices[found].disabled || choices[found].hidden) && !choices[found].selected))return false;
+        selected[found]=true;
+    }
+    for(std::size_t i=0;i<choices.size();++i)choices[i].selected=selected[i];
+    select_value(doc,field);return true;
+}
 // Radios with a nonempty name share a group only within the same form. A tap
 // selects a radio and cannot uncheck it; checkboxes retain independent toggles.
 inline void check_field(Document &doc, std::size_t index, bool checked) {
@@ -698,10 +768,78 @@ class Parser {
     bool button_caption_ = false, button_full_ = false;
     bool textarea_full_ = false, textarea_hidden_ = false, textarea_space_ = false;
     bool textarea_source_cr_ = false, textarea_value_cr_ = false;
+    int select_ = -1, option_ = -1;
+    bool select_open_ = false, select_hidden_ = false, select_default_ = false, group_disabled_ = false, group_hidden_ = false;
+    bool option_value_ = false, option_label_ = false, option_space_ = false, option_label_full_ = false;
+    void select_limit() {
+        if(select_<0)return;
+        auto& field=doc_.fields[select_];field.limited=true;
+        if(field.form>=0)doc_.forms[field.form].supported=false;
+    }
+    void begin_select(const Tag& t,bool hidden) {
+        select_open_=true;select_=option_=-1;select_hidden_=hidden;group_disabled_=group_hidden_=false;
+        if(doc_.fields.size()>=max_fields){if(form_>=0)doc_.forms[form_].supported=false;return;}
+        auto name=t.get("name"),label=t.get("aria-label");
+        if(label.empty())label=std::string(trim(label_));label_.clear();
+        if(name.size()>128 || label.size()>128){if(form_>=0)doc_.forms[form_].supported=false;return;}
+        if(label.empty())label=name.empty()?"选择":name;
+        select_=int(doc_.fields.size());
+        doc_.fields.push_back({std::move(name),{},std::move(label),std::int16_t(form_),FieldType::select,false,
+                              scripted_?node_id(t.get("data-pxa-field")):0});
+        auto& field=doc_.fields.back();field.first_option=std::uint8_t(doc_.select_options.size());
+        field.multiple=t.has("multiple");field.disabled=t.has("disabled");
+        const auto size_text=t.get("size");const auto text=trim(size_text);unsigned size=0;
+        if(!text.empty() && text.front()!='-') {
+            auto number=text;if(number.starts_with('+'))number.remove_prefix(1);
+            (void)std::from_chars(number.data(),number.data()+number.size(),size);
+        }
+        select_default_=!scripted_ && !field.multiple && size<=1;
+    }
+    void begin_option(const Tag& t) {
+        option_=-1;option_space_=option_label_full_=false;
+        if(select_<0)return;
+        if(doc_.select_options.size()>=max_select_options){select_limit();return;}
+        auto value=t.get("value"),label=t.get("label");option_value_=t.has("value");option_label_=!label.empty();
+        if(value.size()>512 || label.size()>128){select_limit();return;}
+        option_=int(doc_.select_options.size());
+        const auto props=sheet_.empty() && !t.has("style")?css::Declarations{}:sheet_.cascade(t.name,t.get("id"),t.get("class"),t.get("style"));
+        const bool hidden=t.has("hidden") || (props.set&(1u<<css::display) && props.values[css::display]==1);
+        doc_.select_options.push_back({std::move(value),std::move(label),t.has("selected"),group_disabled_||t.has("disabled"),group_hidden_||hidden,
+                                      scripted_?node_id(t.get("data-pxa-option")):0});
+        ++doc_.fields[select_].option_count;
+    }
+    void select_text(std::string_view text) {
+        if(option_<0)return;
+        if(text.size()==1 && space(static_cast<unsigned char>(text.front()))){option_space_=true;return;}
+        auto& option=doc_.select_options[option_];
+        auto append=[&](std::string& to,std::size_t limit) {
+            const auto extra=std::size_t(option_space_ && !to.empty());
+            if(to.size()+extra+text.size()>limit)return false;
+            if(extra)to+=' ';to+=text;return true;
+        };
+        if(!option_value_ && !append(option.value,512))select_limit();
+        if(!option_label_ && !option_label_full_ && !append(option.label,128))option_label_full_=true;
+        option_space_=false;
+    }
+    void finish_select() {
+        if(!select_open_)return;
+        if(select_>=0) {
+            auto& field=doc_.fields[select_];auto choices=options(doc_,field);int last=-1,first=-1;
+            for(std::size_t i=0;i<choices.size();++i) {
+                if(!choices[i].disabled && first<0)first=int(i);
+                if(choices[i].selected){if(!field.multiple && last>=0)choices[last].selected=false;last=int(i);}
+            }
+            if(last<0 && first>=0 && select_default_)choices[first].selected=true;
+            select_value(doc_,field);
+            if(!select_hidden_) {doc_.newline(text_style_);doc_.append(field.label,Style::button,-1,select_);doc_.newline(text_style_);}
+        }
+        select_open_=false;select_=option_=-1;last_space_=true;
+    }
     void control(const Tag &t, bool hidden = false) {
         const auto &n = t.name;
-        if (t.closing || button_ >= 0 || (form_ < 0 && !scripted_) || t.has("disabled")) return;
-        if (n == "select") { if (form_ >= 0) doc_.forms[form_].supported = false; return; }
+        if(t.closing || button_>=0)return;
+        if(n=="select"){begin_select(t,hidden);return;}
+        if((form_<0 && !scripted_) || t.has("disabled"))return;
         if (n != "input" && n != "button" && n != "textarea") return;
         const auto type = lowercase(t.get("type"));
         if (n != "textarea" && (type == "reset" || type == "button")) return;
@@ -775,7 +913,7 @@ class Parser {
     // title budgets, entities and incomplete/invalid UTF-8 keep the scalar path.
     // Never allocate a decoded copy or append beyond the readable text budget.
     std::size_t literal_prefix(std::string_view bytes) const {
-        if (unicode_want_ || !entity_.empty() || in_label_ || title_ || initial_lf_) return 0;
+        if (unicode_want_ || !entity_.empty() || in_label_ || title_ || initial_lf_ || select_open_) return 0;
         auto limit = std::min(bytes.size(), max_text - doc_.text.size());
         // Capture a validated run directly into the existing field string.
         // The first glyph beyond this prefix still takes the scalar path,
@@ -811,6 +949,7 @@ class Parser {
         return at;
     }
     void glyph(std::string_view s) {
+        if(select_open_){if(raw_.empty())select_text(s);return;}
         if (textarea_ >= 0) [[unlikely]] {
             auto &field = doc_.fields[textarea_];
             if (!textarea_full_ && field.value.size() + s.size() <= 512) field.value += s;
@@ -892,6 +1031,7 @@ class Parser {
         if (textarea_ >= 0) {
             const char value = char(c); glyph({&value,1}); return;
         }
+        if(select_open_) {if(c==0)glyph("\xef\xbf\xbd");else {const char value=char(c);glyph({&value,1});}return;}
         if (c < 32 && !space(c))
             return;
         if (button_ >= 0 && space(c)) {
@@ -978,6 +1118,23 @@ class Parser {
                 style_enabled_ = css::active_style(t.get("media"),t.get("type"));
             }
             return;
+        }
+        if(select_open_) {
+            if(n=="select" || (n=="form" && t.closing)) {
+                finish_select();
+                if(n=="select" && !t.closing){(void)close_scope("select");return;}
+            }
+            else {
+                if(n=="option"){if(t.closing)option_=-1;else begin_option(t);}
+                else if(n=="optgroup") {
+                    option_=-1;group_disabled_=!t.closing && t.has("disabled");group_hidden_=false;
+                    if(!t.closing) {
+                        const auto props=sheet_.empty() && !t.has("style")?css::Declarations{}:sheet_.cascade(n,t.get("id"),t.get("class"),t.get("style"));
+                        group_hidden_=t.has("hidden") || (props.set&(1u<<css::display) && props.values[css::display]==1);
+                    }
+                }
+                return;
+            }
         }
         if(!t.closing && html_text(n)!=HtmlText::data) {
             raw_=n;initial_lf_=n=="textarea";last_cr_=false;
@@ -1330,18 +1487,20 @@ class Parser {
                     }
                     continue;
                 }
+                if (discard_tag_) {
+                    if(quote_) {if(c==quote_)quote_=0;}
+                    else if(c=='"' || c=='\'')quote_=c;
+                    else if (c == '>') {
+                        discard_tag_ = in_tag_ = false;
+                        pending_.clear();
+                    }
+                    continue;
+                }
                 if (pending_.empty() && c != '/' && c != '!' && c != '?' &&
                     !(lower(c) >= 'a' && lower(c) <= 'z')) {
                     in_tag_ = false;
                     textchar('<');
                     textchar(c);
-                    continue;
-                }
-                if (discard_tag_) {
-                    if (c == '>') {
-                        discard_tag_ = in_tag_ = false;
-                        pending_.clear();
-                    }
                     continue;
                 }
                 if (quote_) {
@@ -1367,6 +1526,10 @@ class Parser {
                 const bool image_tag = pending_.size() >= 4 && lower(pending_[0]) == 'i' &&
                     lower(pending_[1]) == 'm' && lower(pending_[2]) == 'g' && space(pending_[3]);
                 if (pending_.size() >= (image_tag ? 4608u : 2048u)) {
+                    // An omitted over-budget tag must not turn a form into
+                    // a seemingly valid submission with missing controls.
+                    if(form_>=0)doc_.forms[form_].supported=false;
+                    if(select_open_)select_limit();
                     discard_tag_ = true;
                     pending_.clear();
                 }
@@ -1410,6 +1573,7 @@ class Parser {
         }
         finish_button();
         finish_textarea();
+        finish_select();
         doc_.newline(text_style_);
         doc_.title = std::string(trim(doc_.title));
     }
@@ -1441,16 +1605,20 @@ inline std::expected<Submission, Error> submit(const Document &doc, std::size_t 
         })) return std::unexpected(Error::unsupported_form);
     for (std::size_t i = 0; i < doc.fields.size(); ++i) {
         auto &f = doc.fields[i];
-        if (f.form != int(form) || f.name.empty() ||
+        if (f.form != int(form) || f.name.empty() || f.disabled ||
             (f.type == FieldType::submit && int(i) != clicked) ||
             ((f.type == FieldType::checkbox || f.type == FieldType::radio) && !f.checked))
             continue;
-        auto pair = encode(f.name, true) + "=" + encode(f.value, true);
-        if (out.body.size() + pair.size() + (out.body.empty() ? 0 : 1) > 2048)
-            return std::unexpected(Error::limit);
-        if (!out.body.empty())
-            out.body += '&';
-        out.body += pair;
+        auto append=[&](std::string_view value) {
+            auto pair=encode(f.name,true)+"="+encode(value,true);
+            if(out.body.size()+pair.size()+(out.body.empty()?0:1)>2048)return false;
+            if(!out.body.empty())out.body+='&';out.body+=pair;return true;
+        };
+        if(f.type==FieldType::select) {
+            if(f.limited)return std::unexpected(Error::unsupported_form);
+            for(const auto& option:options(doc,f))if(option.selected && !option.disabled)
+                if(!append(option.value))return std::unexpected(Error::limit);
+        } else if(!append(f.value))return std::unexpected(Error::limit);
     }
     if (!out.post) {
         auto target = form_query_url(out.url, out.body);

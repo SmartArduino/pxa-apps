@@ -88,7 +88,9 @@ struct App {
         pxa::TaskScope tasks;
     };
     std::unique_ptr<ScriptSession> js;
-    enum class MenuPage : std::uint8_t { tools, history, directory, script_memory };
+    enum class MenuPage : std::uint8_t { tools, history, directory, script_memory, choices };
+    int select_field = -1;
+    std::uint32_t select_node = 0;
     unsigned script_memory_choice = 0;
     ResourcePressure resource_pressure = ResourcePressure::normal;
     MenuPage menu_page = MenuPage::tools;
@@ -190,7 +192,8 @@ struct App {
         volume_keys, history_list, history_open, history_clear, directory, site_open,
         image_setting, gif_setting, script_setting, clear_sessions, memory_settings, memory_choice,
         clear_address, find_page, find_previous, find_next, find_close,
-        comic_open, comic_previous, comic_next, comic_fit, comic_quality, image_retry, comic_zoom
+        comic_open, comic_previous, comic_next, comic_fit, comic_quality, image_retry, comic_zoom,
+        choose_option, choices_done
     };
     Action pressed_action = Action::address;
     int pressed_index = -1;
@@ -783,7 +786,8 @@ struct App {
         co_return std::unexpected(pxa::Error::protocol_error);
     }
     void sync_script_field(const browser::Field& field) {
-        if (js && field.script_node) js->page.change_field(field.script_node, field.value, field.checked);
+        if (js && field.script_node) js->page.change_field(field.script_node,
+            field.type==browser::FieldType::select?browser::selection_payload(document,field):field.value,field.checked);
         else if (show_scripts) {
             const auto index = &field-document.fields.data();
             if (index>=0 && std::size_t(index)<document.fields.size() && index<24) early_field_edits |= 1u<<index;
@@ -865,8 +869,11 @@ struct App {
         auto previous_images=std::move(document.images);
         const auto previous_states=image_states;
         std::vector<std::pair<std::size_t,browser::Field>> edited;
+        std::vector<browser::SelectOption> previous_options;
         if (early_field_edits) {
             for (std::size_t i=0;i<document.fields.size();++i) if (early_field_edits & (1u<<i)) edited.emplace_back(i,document.fields[i]);
+            if(std::ranges::any_of(edited,[](const auto& edit){return edit.second.type==browser::FieldType::select;}))
+                previous_options=std::move(document.select_options);
             early_field_edits=0;
         }
         document.clear(url);
@@ -877,10 +884,15 @@ struct App {
             auto field=index<document.fields.size() && matches(document.fields[index]) ? document.fields.begin()+index :
                 std::ranges::find_if(document.fields,matches);
             if (field!=document.fields.end()) {
-                field->value=old.value;field->checked=old.checked;
-                if (field->script_node) js->page.change_field(field->script_node,field->value,field->checked);
+                if(field->type==browser::FieldType::select) {
+                    if(old.first_option>previous_options.size() || old.option_count>previous_options.size()-old.first_option ||
+                        !browser::restore_selection(document,*field,std::span(previous_options).subspan(old.first_option,old.option_count)))continue;
+                } else {field->value=old.value;field->checked=old.checked;}
+                if (field->script_node) js->page.change_field(field->script_node,
+                    field->type==browser::FieldType::select?browser::selection_payload(document,*field):field->value,field->checked);
             }
         }
+        if(menu && menu_page==MenuPage::choices && !valid_choices())menu=false;
         image_states.fill(ImageState::unseen); image_view={};
         for (std::size_t i=0;i<previous_images.size();++i) if (browser::image_load::is_failure(previous_states[i])) {
             for (std::size_t j=0;j<document.images.size();++j)
@@ -910,7 +922,7 @@ struct App {
         // Idle image preview still needs page timers/network callbacks (for
         // example a QR login). Touch/scroll always take priority; keep its
         // image indices/pixels stable by deferring DOM projection below.
-        if (!foreground || press.active() || scrollbar_dragging || editing || menu) return;
+        if (!foreground || press.active() || scrollbar_dragging || editing || (menu && menu_page!=MenuPage::choices)) return;
         if (!js->boot_loading && !js->boot_ready) { set_status(js->error); js.reset(); return; }
         if (!js->boot_ready) return;
         if (!js->started) {
@@ -1929,8 +1941,29 @@ struct App {
     int home_height() const {
         return dp(8) + int(bookmarks.size() + 2 + (bookmarks.size() < 8)) * (home_row() + dp(6));
     }
+    bool valid_choices() const {
+        return select_field>=0 && std::size_t(select_field)<document.fields.size() &&
+            document.fields[select_field].type==browser::FieldType::select &&
+            document.fields[select_field].script_node==select_node &&
+            !document.fields[select_field].disabled && !document.fields[select_field].limited;
+    }
+    std::string select_label(const browser::Field& field) const {
+        if(field.limited)return "选项超限";
+        std::string result;unsigned count=0;
+        for(const auto& option:browser::options(document,field))if(option.selected) {
+            if(!count++)result=option.label.empty()?"（空）":option.label;
+        }
+        if(!count)return "未选择";
+        if(field.multiple && count>1)result+=" · "+std::to_string(count)+" 项";
+        return result;
+    }
     int scroll_height() const {
         if (!menu) return page.height;
+        if(menu_page==MenuPage::choices) {
+            std::size_t count=1;
+            if(valid_choices())for(const auto& option:browser::options(document,document.fields[select_field]))count+=!option.hidden;
+            return int(count)*(dp(32)+dp(3));
+        }
         const auto count = menu_page == MenuPage::history ? history.entries().size() + 1 :
             menu_page == MenuPage::directory ? browser::sites.size() + 1 :
             menu_page == MenuPage::script_memory ? browser::memory::choices.size() + 1 : bookmarks.size() + 13;
@@ -2097,7 +2130,23 @@ struct App {
             clip(content);
             int y = content.y - menu_scroll, h = dp(32);
             int half = (content.width - pad) / 2;
-            if (menu_page == MenuPage::history) {
+            if(menu_page==MenuPage::choices) {
+                button({content.x,y,content.width,h},"完成选择",Action::choices_done);y+=h+dp(3);
+                if(valid_choices()) {
+                    const auto choices=browser::options(document,document.fields[select_field]);
+                    for(std::size_t n=0;n<choices.size();++n) {
+                        const auto& option=choices[n];if(option.hidden)continue;
+                        if(y+h>content.y && y<content.y+content.height) {
+                            const auto title=std::string(option.selected?"✓ ":"○ ")+(option.label.empty()?"（空）":option.label);
+                            if(option.disabled) {
+                                rect({content.x,y,content.width,h},0xe8eef3ff,dp(5));
+                                label({content.x,y,content.width,h},title,0x7a8c9cff,font,0,true);
+                            } else button({content.x,y,content.width,h},title,Action::choose_option,int(n),0);
+                        }
+                        y+=h+dp(3);
+                    }
+                }
+            } else if (menu_page == MenuPage::history) {
                 button({content.x, y, content.width, h}, "清空浏览历史", Action::history_clear);
                 y += h + dp(3);
                 auto entries = history.entries();
@@ -2256,10 +2305,14 @@ struct App {
                             label({box.x + box.width / 2, box.y, box.width / 2, box.height},
                                   preview, 0x1469acff, size, 0, true);
                         }
+                        if(field.type==browser::FieldType::select)
+                            label({box.x+box.width/2,box.y,box.width/2,box.height},select_label(field),
+                                field.disabled || field.limited?0x7a8c9cff:0x1469acff,size,0,true);
                         if ((!field.value.empty() || field.type == browser::FieldType::checkbox ||
                              field.type == browser::FieldType::radio) && field.type != browser::FieldType::submit &&
                             field.type != browser::FieldType::hidden &&
-                            field.type != browser::FieldType::text && field.type != browser::FieldType::textarea) {
+                            field.type != browser::FieldType::text && field.type != browser::FieldType::textarea &&
+                            field.type != browser::FieldType::select) {
                             // Field value is visible in the editor; the document row
                             // shows a compact indicator without duplicating secrets.
                             label({box.x + box.width - dp(36), box.y, dp(36), box.height},
@@ -2272,7 +2325,7 @@ struct App {
                         touch.y = std::max(touch.y, content.y);
                         touch.height =
                             std::min(box.y + box.height, content.y + content.height) - touch.y;
-                        hit(touch, Action::field, span.field);
+                        if(!field.disabled && !field.limited)hit(touch, Action::field, span.field);
                     } else {
                         // Layout uses conservative advances; actual system
                         // fonts vary and may kern. Emphasize the matching line
@@ -2609,7 +2662,10 @@ struct App {
         case Action::field:
             if (i >= 0 && std::size_t(i) < document.fields.size()) {
                 auto &field = document.fields[i];
-                if (field.type == browser::FieldType::submit) {
+                if(field.type==browser::FieldType::select) {
+                    if(field.disabled || field.limited)break;
+                    select_field=i;select_node=field.script_node;menu=true;menu_page=MenuPage::choices;menu_scroll=0;
+                } else if (field.type == browser::FieldType::submit) {
                     auto request = browser::submit(document, field.form, i);
                     if (request)
                         navigate(std::move(request->url), Navigation::visit, std::move(request->body),
@@ -2627,6 +2683,16 @@ struct App {
                     edit(i);
             }
             break;
+        case Action::choose_option:
+            if(valid_choices() && i>=0) {
+                auto& field=document.fields[select_field];
+                if(browser::choose_option(document,field,std::size_t(i)))sync_script_field(field);
+                if(!field.multiple)menu=false;
+                dirty=true;
+            }
+            break;
+        case Action::choices_done:
+            menu=false;dirty=true;break;
         }
         dirty = true;
     }

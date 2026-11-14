@@ -15,12 +15,14 @@ for name in quickjs dtoa libregexp libunicode cutils; do
 done
 "$compiler" "${flags[@]}" "$app/tools/compile_runtime.c" "$cache"/{quickjs,dtoa,libregexp,libunicode,cutils}.o -lm -o "$cache/compile-runtime"
 "$cache/compile-runtime" "$app/runtime/browser-runtime.js" "$app/assets/browser-runtime.qjb"
+"$cache/compile-runtime" "$app/runtime/browser-select.js" "$cache/select-runtime.qjb" pxa-browser-select.js
+python3 "$app/tools/compile_select_header.py" "$cache/select-runtime.qjb" "$app/browser_select_runtime.hpp"
 python3 "$app/tools/compile_libraries.py" "$cache/compile-runtime"
 (cd "$app/runtime"
     shopt -s nullglob
-    inputs=(browser-runtime.js ../assets/browser-runtime.qjb
+    inputs=(browser-runtime.js browser-select.js ../assets/browser-runtime.qjb ../browser_select_runtime.hpp
         ../vendor/quickjs/*.[ch] ../vendor/quickjs/VERSION
-        ../tools/compile_runtime.c ../tools/compile_runtime.sh ../tools/compile_libraries.py
+        ../tools/compile_runtime.c ../tools/compile_runtime.sh ../tools/compile_libraries.py ../tools/compile_select_header.py
         libraries.json ../browser_script_libraries.hpp ../assets/script-libraries/*
         ../vendor/es5-shim/*)
     sha256sum "${inputs[@]}" > compiled.sha256)

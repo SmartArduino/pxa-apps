@@ -1,6 +1,7 @@
 #include "browser_script.hpp"
 #include "browser_core.hpp"
 #include "browser_script_markup.hpp"
+#include "browser_select_runtime.hpp"
 #include "vendor/quickjs/quickjs.h"
 #include <array>
 #ifdef PXA_SCRIPT_DIAGNOSTICS
@@ -239,10 +240,20 @@ struct Page::Impl {
         const auto slot=std::ranges::find(outstanding,id);
         return id && slot!=outstanding.end() && script_requests[std::size_t(slot-outstanding.begin())];
     }
-    enum Operation { clock, cookie, storage, request, cancel, navigate, fragment, changed, wake };
+    enum Operation { clock, cookie, storage, request, cancel, navigate, fragment, changed, wake, select_module };
     static JSValue native(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv, int magic) {
         auto& self = *static_cast<Impl*>(JS_GetContextOpaque(ctx));
         auto text = [&](int at) { return CString(ctx, at < argc ? argv[at] : JS_UNDEFINED); };
+        if(magic==select_module) {
+            if(argc!=1 || !JS_IsObject(argv[0]))return JS_ThrowTypeError(ctx,"select runtime hooks required");
+            // Only this immutable, app-owned bytecode is accepted. The normal
+            // QuickJS allocator/deadline guards charge the extension when used.
+            Value compiled(ctx,JS_ReadObject(ctx,detail::select_runtime,sizeof(detail::select_runtime),JS_READ_OBJ_BYTECODE));
+            if(JS_IsException(compiled.value))return JS_EXCEPTION;
+            Value factory(ctx,JS_EvalFunction(ctx,compiled.release()));
+            if(JS_IsException(factory.value))return JS_EXCEPTION;
+            return JS_Call(ctx,factory.value,JS_UNDEFINED,1,argv);
+        }
         if (magic == clock) return JS_NewFloat64(ctx, double(self.now()) / 1000);
         if (magic == cookie) {
             if (argc) {
@@ -413,9 +424,9 @@ struct Page::Impl {
                 if (!check(held.value)) return false;
                 return JS_SetPropertyStr(ctx,bindings.value,name,held.release())>=0 || check(JS_EXCEPTION);
             };
-            for (auto [name, operation] : std::array<std::pair<const char*, Operation>, 9>{{
+            for (auto [name, operation] : std::array<std::pair<const char*, Operation>, 10>{{
                 {"now",clock},{"cookie",cookie},{"storage",storage},{"request",request},
-                {"cancel",cancel},{"navigate",navigate},{"fragment",fragment},{"changed",changed},{"wake",wake}}})
+                {"cancel",cancel},{"navigate",navigate},{"fragment",fragment},{"changed",changed},{"wake",wake},{"selectRuntime",select_module}}})
                 if (!property(name, JS_NewCFunctionMagic(ctx, native, name, 0, JS_CFUNC_generic_magic, operation))) return false;
             if (!property("url", string(url).release()) || !property("userAgent",string(metrics.user_agent).release()) ||
                 !property("width",JS_NewInt32(ctx,metrics.width)) || !property("height",JS_NewInt32(ctx,metrics.height)) ||

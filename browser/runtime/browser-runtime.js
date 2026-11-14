@@ -224,7 +224,7 @@
             attrs && own(attrs, 'onclick') && node._onclick === undefined || listeners && listeners.length);
     }
     function disabledControl(node) {
-        return !!node && (node.nodeName === 'INPUT' || node.nodeName === 'BUTTON' || node.nodeName === 'TEXTAREA') && node.disabled;
+        return !!node && (node.nodeName === 'INPUT' || node.nodeName === 'BUTTON' || node.nodeName === 'TEXTAREA' || node.nodeName==='SELECT') && node.disabled;
     }
     function submitControl(node) {
         const type = node.type.toLowerCase();
@@ -252,19 +252,29 @@
         if (!list.length) delete this._listeners[type];
         if (node && before !== clickTarget(this)) changed();
     }
+    let selectEnvironment=null;
+    function ensureSelect() {
+        return selectEnvironment || (selectEnvironment=native.selectRuntime({Node,changed,domString,collectionItem,formOwner,DOMException}));
+    }
+    Object.defineProperty(root,'Option',{configurable:true,get(){const environment=ensureSelect();environment.optionPrototype();return environment.Option;},
+        set(v){Object.defineProperty(root,'Option',{value:v,writable:true,configurable:true});}});
     function Node(tag, text) {
         this.nodeType = tag ? 1 : 3;
         this.nodeName = tag ? tag.toUpperCase() : '#text';
         this.parentNode = null; this.childNodes = [];
         this._text = text || ''; this._attrs = null;
+        if(this.nodeName==='SELECT')Object.setPrototypeOf(this,ensureSelect().selectPrototype());
+        else if(this.nodeName==='OPTION')Object.setPrototypeOf(this,ensureSelect().optionPrototype());
     }
     Object.defineProperty(Node.prototype,'tagName',{get() {return this.nodeType===1?this.nodeName:undefined;}});
     Node.prototype.appendChild = function (child) {
         if (!(child instanceof Node) || child === this) throw new TypeError('invalid child');
         for (let at = this; at; at = at.parentNode) if (at === child) throw new TypeError('cyclic DOM');
-        if (this.childNodes.length >= 192) throw new RangeError('child limit');
+        if (this.childNodes.length >= 192 && child.parentNode!==this) throw new RangeError('child limit');
+        if(selectEnvironment)selectEnvironment.before(this);
         if (child.parentNode) child.parentNode.removeChild(child);
         child.parentNode = this; this.childNodes.push(child); changed();
+        if(selectEnvironment)selectEnvironment.mutation(this,child);
         if (child.nodeName==='INPUT' && child.checked) uncheckRadioPeers(child);
         if(child.nodeName==='SCRIPT' || child._hasScripts) {
             for(let at=this;at;at=at.parentNode)at._hasScripts=true;
@@ -275,7 +285,16 @@
     Node.prototype.removeChild = function (child) {
         const at = this.childNodes.indexOf(child);
         if (at < 0) throw new TypeError('child not found');
-        this.childNodes.splice(at, 1); child.parentNode = null; changed(); return child;
+        if(selectEnvironment)selectEnvironment.before(this);
+        if(selectEnvironment)selectEnvironment.mutation(this,child);this.childNodes.splice(at, 1);child.parentNode=null;
+        changed(); return child;
+    };
+    Node.prototype.insertBefore=function(child,before=null) {
+        if(before===null)return this.appendChild(child);
+        if(!(before instanceof Node) || before.parentNode!==this)throw new DOMException('Child not found','NotFoundError');
+        if(child===before)return child;
+        this.appendChild(child);this.childNodes.splice(this.childNodes.indexOf(child),1);
+        this.childNodes.splice(this.childNodes.indexOf(before),0,child);changed();return child;
     };
     Node.prototype.remove = function () { if (this.parentNode) this.parentNode.removeChild(this); };
     Node.prototype.addEventListener = listen;
@@ -297,6 +316,7 @@
         if (name === 'style') { replaceStyle(this, value, true); return; }
         if (!this._attrs) this._attrs = Object.create(null);
         if (!own(this._attrs, name) && Object.keys(this._attrs).length >= 24) throw new RangeError('attribute count');
+        if(selectEnvironment)selectEnvironment.beforeAttribute(this,name);
         if (this._attrs[name] === value) {
             // Setting an inline handler again reactivates it even after a
             // property assignment disabled/replaced the original handler.
@@ -304,10 +324,12 @@
                 const before = clickTarget(this); this._onclick = undefined;
                 if (before !== clickTarget(this)) changed();
             } else if (name.startsWith('on')) this[name] = undefined;
+            else if(selectEnvironment && selectEnvironment.attribute(this,name))changed();
             return;
         }
         if(name.startsWith('data-') && this[datasetData])reflectData(this[datasetData],name,value);
         this._attrs[name] = value;
+        if(selectEnvironment)selectEnvironment.attribute(this,name);
         if(name==='class' && this[tokenData])classTokens(this[tokenData][tokenData],value);
         if (name==='checked') uncheckRadioPeers(this);
         if (name === 'onclick') this._onclick = undefined;
@@ -352,11 +374,13 @@
     }
     Node.prototype.removeAttribute = function (name) {
         name = String(name).toLowerCase(); if (this._attrs && own(this._attrs, name)) {
+            if(selectEnvironment)selectEnvironment.beforeAttribute(this,name);
             if (name === 'style' && this._style) {
                 const data = this._style; data.values = Object.create(null); data.priorities = null; data.text = '';
             }
             if(name.startsWith('data-') && this[datasetData])reflectData(this[datasetData],name,undefined);
             delete this._attrs[name];
+            if(selectEnvironment)selectEnvironment.attribute(this,name);
             if(name==='class' && this[tokenData])classTokens(this[tokenData][tokenData],'');
             if (name === 'onclick') this._onclick = undefined;
             else if (name.startsWith('on')) this[name] = undefined;
@@ -435,7 +459,8 @@
                 if (this.nodeType === 3) { if (this._text !== v) { this._text = v; changed(); } return; }
                 if (!v && this.childNodes.length === 0) return;
                 if (this.childNodes.length === 1 && this.childNodes[0].nodeType === 3) { const n=this.childNodes[0];if(n._text!==v){n._text=v;changed();}return; }
-                for (const n of this.childNodes) n.parentNode = null;
+                if(selectEnvironment)selectEnvironment.before(this);
+                for (const n of this.childNodes) {if(selectEnvironment)selectEnvironment.mutation(this,n);n.parentNode = null;}
                 this.childNodes = [];
                 if (v) this.appendChild(new Node('', v)); else changed();
             }};
@@ -457,9 +482,11 @@
                     // fragment check succeeds. Only the text context is needed.
                     const staged={nodeName:this.nodeName,childNodes:[]},stage={target:this,radios:null};
                     staged[fragmentStage]=stage;native.fragment(staged,v,true);
-                    for(const n of this.childNodes)n.parentNode=null;
+                    if(selectEnvironment)selectEnvironment.before(this);
+                    for(const n of this.childNodes){if(selectEnvironment)selectEnvironment.mutation(this,n);n.parentNode=null;}
                     this.childNodes=staged.childNodes;
                     for(const n of this.childNodes)n.parentNode=this;
+                    if(selectEnvironment)selectEnvironment.mutation(this,staged);
                     changed();
                     const radios=stage.radios;
                     for(let i=radios?radios.length-1:-1;i>=0;--i)if(radios[i].checked)uncheckRadioPeers(radios[i]);
@@ -973,11 +1000,20 @@
                 throw new TypeError('form encoding unsupported');
             // One bounded traversal, in tree order. Nested forms keep their
             // own controls; no intermediate find/filter/map node arrays.
-            const todo = [form], parts = []; let visited = 0, bytes = 0;
+            const todo = [form], parts = [],work={visited:0};let bytes = 0;
+            function pair(name,value) {
+                const text=formEncode(name)+'='+formEncode(value);bytes+=text.length+(parts.length?1:0);
+                if(bytes>8192)throw new RangeError('form body limit');parts.push(text);
+            }
             while (todo.length) {
                 const n = todo.pop();
-                if (++visited > 512) throw new RangeError('form traversal limit');
+                if (++work.visited > 512) throw new RangeError('form traversal limit');
                 if (n !== form && n.nodeName === 'FORM') continue;
+                if(n.nodeName==='SELECT') {
+                    const environment=ensureSelect(),choices=environment.normalize(n,environment.options(n,work));
+                    if(n.name && !n.disabled)for(const option of choices)if(environment.raw(option) && !environment.disabled(option))pair(n.name,option.value);
+                    continue;
+                }
                 if ((n.nodeName === 'INPUT' || n.nodeName === 'BUTTON' || n.nodeName === 'TEXTAREA') && n.name && !n.disabled) {
                     if(n.nodeName==='TEXTAREA' && (n.getAttribute('wrap')||'').toLowerCase()==='hard')
                         throw new TypeError('hard textarea wrapping unsupported');
@@ -985,10 +1021,7 @@
                     const button = n.nodeName === 'BUTTON' || type === 'submit' || type === 'button' || type === 'reset' || type === 'image';
                     const include = button ? n === submitter : ((type !== 'checkbox' && type !== 'radio') || n.checked);
                     if (include) {
-                        const pair = formEncode(n.name) + '=' + formEncode(n.value);
-                        bytes += pair.length + (parts.length ? 1 : 0);
-                        if (bytes > 8192) throw new RangeError('form body limit');
-                        parts.push(pair);
+                        pair(n.name,n.value);
                     }
                 }
                 for (let i = n.childNodes.length - 1; i >= 0; --i) todo.push(n.childNodes[i]);
@@ -1024,6 +1057,14 @@
             }
             const nodeName=n.nodeName;
             if (render && nodeName==='SCRIPT') continue;
+            if(render && nodeName==='SELECT')ensureSelect().normalize(n);
+            if(render && nodeName==='OPTION' && ensureSelect().nearest(n)) {
+                let attrs=' data-pxa-option="'+ensureSelect().identity(n)+'"';
+                if(ensureSelect().raw(n))attrs+=' selected';
+                if(n._attrs)for(const key of ['value','label','disabled','hidden','id','class','style'])
+                    if(own(n._attrs,key))attrs+=' '+key+'="'+escape(n._attrs[key])+'"';
+                parts.push('<option'+attrs+'>',escape(ensureSelect().text(n,state)),'</option>');continue;
+            }
             // Keep preceding page styles across an incremental DOM repaint.
             // CSS raw text must not be HTML-escaped; the native parser applies
             // its own 8 KiB / 64-rule budget without fetching external sheets.
@@ -1047,7 +1088,7 @@
             // Project visible raw blocks as escaped preformatted text so an
             // incremental repaint cannot turn that string into active markup.
             if(render && (tag==='xmp' || tag==='plaintext'))tag='pre';
-            const disabled=(tag==='input' || tag==='button' || tag==='textarea') && attributes && own(attributes,'disabled');
+            const disabled=(tag==='input' || tag==='button' || tag==='textarea' || tag==='select') && attributes && own(attributes,'disabled');
             const inert=tag==='title' || tag==='iframe' || tag==='noembed' || tag==='noframes';
             if (render && !inert && !disabled && (tag==='a' || tag==='button' || type==='submit' || typeof n._onclick==='function' ||
                     attributes && own(attributes,'onclick') && n._onclick===undefined ||
@@ -1056,15 +1097,18 @@
                 if (state.hitCount>=96) throw new RangeError('interactive node limit');
                 if(!state.hits[n._hit])++state.hitCount;
                 state.hits[n._hit]=n;attrs+=' data-pxa-click="'+n._hit+'"';
-                if (tag!=='img' && tag!=='input' && tag!=='textarea' || tag==='input' && type==='submit') tag='a';
+                if (tag!=='img' && tag!=='input' && tag!=='textarea' && tag!=='select' || tag==='input' && type==='submit') tag='a';
             }
-            if (render && (tag==='input' || tag==='textarea') && !disabled) {
+            if (render && (tag==='input' || tag==='textarea' || tag==='select') && !disabled) {
                 if (!n._hit) n._hit=nextHit++;
+                if(!state.hits[n._hit] && state.hitCount>=96)throw new RangeError('interactive node limit');
                 if(!state.hits[n._hit])++state.hitCount;
                 state.hits[n._hit]=n;attrs+=' data-pxa-field="'+n._hit+'"';
             }
+            if(render && tag==='select' && attributes)for(const key of ['name','multiple','size','disabled','hidden','id','class','aria-label'])
+                if(own(attributes,key))attrs+=' '+key+'="'+escape(attributes[key])+'"';
             if (attributes) for(const k of Object.keys(attributes))
-                if (k!=='style' && !k.startsWith('on') && !k.startsWith('data-pxa-')) attrs+=' '+k+'="'+escape(attributes[k])+'"';
+                if (!(render && tag==='select') && k!=='style' && !k.startsWith('on') && !k.startsWith('data-pxa-')) attrs+=' '+k+'="'+escape(attributes[k])+'"';
             if (n._style) style=n._style.text;
             if(style) attrs+=' style="'+escape(style)+'"';
             parts.push('<'+tag+attrs+'>');
@@ -1090,6 +1134,17 @@
             return node && node['on'+type]===undefined && node._attrs && node._attrs['on'+type] ? node : null;
         },
         open(tag, attributes, flags) {
+            if(tag==='select')for(let i=stack.length-1;i>=0;--i)if(stack[i].nodeName==='SELECT') {
+                if(i)stack.length=i;return;
+            }
+            // Options and groups commonly omit their closing tags. End the
+            // previous option/group without nesting later choices inside it.
+            if(tag==='option' || tag==='optgroup') {
+                let select=-1;
+                for(let i=stack.length-1;i>=0;--i)if(stack[i].nodeName==='SELECT'){select=i;break;}
+                if(select>=0)for(let i=stack.length-1;i>select;--i)
+                    if(stack[i].nodeName==='OPTION' || tag==='optgroup' && stack[i].nodeName==='OPTGROUP')stack.length=i;
+            }
             // Bit 0 marks a leaf, bit 1 marks native-normalized ASCII keys.
             // A null attribute list represents no attributes without an array.
             // Parsed nodes are fresh; avoid reentering the public DOM methods.
@@ -1108,7 +1163,7 @@
                 attrs[key]=value;
             }
             if(parent.childNodes.length>=192)throw new RangeError('child limit');
-            node.parentNode=parent;parent.childNodes.push(node);
+            node.parentNode=parent;parent.childNodes.push(node);if(selectEnvironment)selectEnvironment.mutation(parent,node);
             if(node.nodeName==='INPUT' && node.type.toLowerCase()==='radio' && node.checked) {
                 const staged=stack[0][fragmentStage];if(staged)(staged.radios || (staged.radios=[])).push(node);else uncheckRadioPeers(node);
             }
@@ -1137,7 +1192,7 @@
             tag=tag.toUpperCase();
             for(let i=stack.length-1;i>0;--i)if(stack[i].nodeName===tag){stack.length=i;break;}
         },
-        beginFragment(node) { if (fragments.length >= 4) throw new RangeError('fragment nesting'); fragments.push(stack); stack = [node]; },
+        beginFragment(node) { if (fragments.length >= 4) throw new RangeError('fragment nesting'); if(selectEnvironment && node instanceof Node)selectEnvironment.before(node);fragments.push(stack);stack=[node]; },
         endFragment() {
             const staged=stack[0],stage=staged[fragmentStage];stack=fragments.pop();
             if(stage && stage.radios && stage.radios.some(n=>n.name)) {
@@ -1195,7 +1250,9 @@
         },
         field(id, value, checked) {
             const node=hits[id];
-            if(!node || disabledControl(node) || node.nodeName!=='INPUT' && node.nodeName!=='TEXTAREA')return false;
+            if(!node || disabledControl(node))return false;
+            if(node.nodeName==='SELECT')return ensureSelect().field(node,value);
+            if(node.nodeName!=='INPUT' && node.nodeName!=='TEXTAREA')return false;
             const checkable=node.nodeName==='INPUT' && (node.type.toLowerCase()==='checkbox' || node.type.toLowerCase()==='radio');
             const valueChanged=node.value!==value;
             if(!valueChanged && (!checkable || node.checked===checked))return false;

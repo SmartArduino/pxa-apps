@@ -93,7 +93,7 @@ bool Capture::has_script() const noexcept {
         if (!t.closing) {
             // A disabled input/button cannot activate its click handler by
             // itself. Other events or scripts may still enable that control.
-            const bool disabled=(t.name=="input" || t.name=="button" || t.name=="textarea") && t.has("disabled");
+            const bool disabled=(t.name=="input" || t.name=="button" || t.name=="textarea" || t.name=="select") && t.has("disabled");
             const bool click=t.has("onclick") && !disabled;
             // Committed native field edits also dispatch these bubbling
             // events, including handlers on a form or another ancestor.
