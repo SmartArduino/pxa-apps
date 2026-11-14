@@ -23,6 +23,9 @@ SUITES = [
     ('compat', 'compat_smoke.py', []), ('comic', 'comic_smoke.py', []), ('find', 'find_smoke.py', []),
     ('image-failures', 'image_failure_smoke.py', []),
     ('image-failures-compact', 'image_failure_smoke.py', ['--width','296','--height','240']),
+    ('preview-recovery', 'preview_recovery_smoke.py', []),
+    ('preview-recovery-compact', 'preview_recovery_smoke.py', ['--width','296','--height','240']),
+    ('preview-foreground', 'preview_foreground_smoke.py', []),
     ('comic-live', 'comic_live_smoke.py', []),
 ]
 

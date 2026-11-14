@@ -62,6 +62,10 @@ and open the preview on a long press. Preview controls are Back to page, Zoom ou
 Fit, and Zoom in. Drag to pan at 2×–8×; returning preserves the reading position.
 Zoom is relative to the fitted view and reuses the existing decoded pixels and
 cache, so it does not download again or restore details lost when downsampling.
+If a later GIF frame fails, preview shows the failure and offers a tap to retry
+without following a linked image's hyperlink. Returning to a GIF preview from
+the background reloads its released decoder while preserving zoom and pan;
+the webpage itself is not fetched again.
 See the [JPEG and preview measurements](docs/jpeg-preview-20261015.zh-CN.md) for
 the on-device codec comparison, memory accounting, and validation.
 
@@ -105,7 +109,8 @@ tools/app.sh build browser --target esp32s3
 bash local/pxa-apps/browser/tests/test.sh
 ```
 
-`tests/run_regressions.py` runs the text-container, selector, form, event, style, responsive-image, CSS, compatibility, comic, image-failure and find suites sequentially, starts the base fixture on `127.0.0.1:31878`, and saves each suite's exit status. Repeat `--suite` to select suites; add `--live` for author-site network checks. See `--help` for simulator, TRACE package, publisher public key, IME package and output arguments. Put output under ignored `local/artifacts/`.
+`tests/run_regressions.py` runs the text-container, selector, form, event, style, responsive-image, CSS, compatibility, comic, image/preview-failure, foreground-resume and find suites sequentially, starts the base fixture on `127.0.0.1:31878`, and saves each suite's exit status. Repeat `--suite` to select suites; add `--live` for author-site network checks. See `--help` for simulator, TRACE package, publisher public key, IME package and output arguments. Put output under ignored `local/artifacts/`.
+`tests/preview_foreground_smoke.py` exercises real desktop navigation gestures. It defaults to `pxsys_desktop_simulator` next to the product simulator; use `--desktop-simulator` when running it separately to override that path.
 
 The updated standalone DevKit can run `pxa run pxa-apps/browser`.
 Network access asks for permission. Local HTTP addresses must include `http://`.

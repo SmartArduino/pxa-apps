@@ -28,6 +28,38 @@ def gif():
     return data.getvalue()
 
 
+@cache
+def preview_animation(broken=False, first_delay=3000):
+    frames = [Image.new('RGB', (96, 64), color)
+              for color in ((220, 45, 65), (35, 105, 220), (30, 165, 90))]
+    for frame in frames: frame.paste((255, 255, 255), (20, 16, 44, 40))
+    data = BytesIO()
+    frames[0].save(data, 'GIF', save_all=True, append_images=frames[1:],
+                   duration=[first_delay, 400, 400], loop=0, disposal=2)
+    if not broken: return data.getvalue()
+    body = bytearray(data.getvalue())
+    # Preserve descriptors and block lengths so opening and the first frame
+    # succeed. Only frame two's LZW payload is invalid; failure occurs on advance.
+    at = 13 + (3 * (2 << (body[10] & 7)) if body[10] & 128 else 0)
+    frame = 0
+    while body[at] != 0x3b:
+        tag = body[at]; at += 1
+        if tag == 0x21: at += 1
+        else:
+            assert tag == 0x2c
+            packed = body[at+8]; at += 9
+            if packed & 128: at += 3 * (2 << (packed & 7))
+            at += 1  # LZW minimum code size
+            frame += 1
+        while body[at]:
+            size = body[at]; at += 1
+            if tag == 0x2c and frame == 2: body[at:at+size] = bytes(size)
+            at += size
+        at += 1
+    assert frame == 3
+    return bytes(body)
+
+
 class Fixture:
     def __init__(self):
         self.counts = Counter(); fixture = self
@@ -54,7 +86,18 @@ class Fixture:
                            '/transient': 'flaky.jpg', '/manual': 'manual.jpg',
                            '/cancelled': 'slow.jpg', '/reorder': 'unsupported.jpg',
                            '/gif-disabled': 'page.gif'}
-                if path in sources:
+                if path == '/resume-preview':
+                    self.reply('<title>预览前后台恢复</title><img src="/resume.gif" width=192 height=128>')
+                elif path == '/resume.gif': self.reply(preview_animation(False, 5000), 'image/gif')
+                elif path in ('/preview', '/preview-linked'):
+                    linked = path.endswith('-linked')
+                    source = '/linked-preview.gif' if linked else '/preview.gif'
+                    image = '<img src="' + source + '" width=192 height=128>'
+                    if linked: image = '<a href="/trap">' + image + '</a>'
+                    self.reply('<title>GIF 预览恢复</title>' + image + '<p>动画第二帧恢复验证</p>')
+                elif path in ('/preview.gif', '/linked-preview.gif'):
+                    self.reply(preview_animation(fixture.counts[path] == 1), 'image/gif')
+                elif path in sources:
                     button = '<button onclick="flip()" style="color:#d06020">重新排序</button>' if path == '/reorder' else ''
                     body = ('<title>图片恢复验证</title>' + button + '<div id=pictures>'
                             '<img src="/' + sources[path] + '" width=640 height=960>'

@@ -187,7 +187,7 @@ struct App {
         volume_keys, history_list, history_open, history_clear, directory, site_open,
         image_setting, gif_setting, script_setting, clear_sessions, memory_settings, memory_choice,
         clear_address, find_page, find_previous, find_next, find_close,
-        comic_open, comic_previous, comic_next, comic_fit, comic_quality, comic_retry, comic_zoom
+        comic_open, comic_previous, comic_next, comic_fit, comic_quality, image_retry, comic_zoom
     };
     Action pressed_action = Action::address;
     int pressed_index = -1;
@@ -1568,6 +1568,11 @@ struct App {
             const auto previous = image_view;
             open_comic(image_view.index);
             comic_saved_view = previous; comic_restore_view = true;
+        } else if (image_view.active() && !cached_image(image_view.index) &&
+                   browser::image_load::retry_on_open(image_states[image_view.index])) {
+            // Backgrounding releases GIF decoders. A preview hides the normal
+            // visible-image loader, so resume its image without resetting view.
+            begin_image(image_view.index);
         }
         dirty = true;
     }
@@ -2037,22 +2042,22 @@ struct App {
                 draw.image(region({content.x + box[0], content.y + box[1], box[2], box[3]}),
                            image->handle());
                 draw.pop_clip();
-            } else if (comic_reading) {
+            } else {
                 const int size = std::min(font, dp(13)), row = size * 3 / 2;
                 const bool loading = busy || comic_pending >= 0;
                 const auto state = image_states[image_view.index];
                 const int rows = loading ? 1 : std::clamp(content.height / row, 1, 3);
                 const int top = content.y + (content.height - rows * row) / 2;
-                label({content.x, top, content.width, row}, loading ? "正在加载漫画图片…"
+                label({content.x, top, content.width, row}, loading ? "正在加载图片…"
                           : browser::image_load::title(state), 0x587088ff, size, 1, true);
                 if (!loading) {
                     if (rows >= 2)
                         label({content.x, top + row, content.width, row},
-                              browser::image_load::hint(state, comic_detail), 0x587088ff, size, 1, true);
+                              browser::image_load::hint(state, comic_reading && comic_detail), 0x587088ff, size, 1, true);
                     if (rows >= 3)
                         label({content.x, top + row * 2, content.width, row},
                               "轻点此处重试", 0x1469acff, size, 1, true);
-                    hit(content, Action::comic_retry);
+                    hit(content, Action::image_retry);
                 }
             }
         } else if (menu) {
@@ -2361,8 +2366,11 @@ struct App {
             open_comic(image_view.index, true);
             comic_restore_view = true;
             break;
-        case Action::comic_retry:
-            open_comic(image_view.index, true);
+        case Action::image_retry:
+            if (image_view.active()) {
+                if (comic_reading) open_comic(image_view.index, true);
+                else begin_image(image_view.index);
+            }
             break;
         case Action::comic_zoom:
             if (const auto *image = cached_image(image_view.index)) {
