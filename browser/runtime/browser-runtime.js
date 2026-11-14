@@ -1193,6 +1193,17 @@
             if (node.nodeName === 'A' && node.href) native.navigate(node.href);
             else if (submitControl(node)) { const form = formOwner(node); if (form) submit(form, node); }
         },
-        field(id, value, checked) { const node = hits[id]; if (node) { node.value = value; node.checked = checked; dispatch(node, event('input'), true); dispatch(node, event('change'), true); } }
+        field(id, value, checked) {
+            const node=hits[id];
+            if(!node || disabledControl(node) || node.nodeName!=='INPUT' && node.nodeName!=='TEXTAREA')return false;
+            const checkable=node.nodeName==='INPUT' && (node.type.toLowerCase()==='checkbox' || node.type.toLowerCase()==='radio');
+            const valueChanged=node.value!==value;
+            if(!valueChanged && (!checkable || node.checked===checked))return false;
+            if(valueChanged)node.value=value;if(checkable)node.checked=checked;
+            return true;
+        },
+        // Native code prepares each target handler after the preceding event,
+        // so an input handler can replace/remove the subsequent change handler.
+        fieldEvent(id, input) { const node=hits[id];if(node)dispatch(node,event(input?'input':'change'),true); }
     };
 })

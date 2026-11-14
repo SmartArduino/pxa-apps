@@ -39,6 +39,16 @@ int main() {
     struct Case { std::string_view html; bool needed; };
     constexpr Case cases[] = {
         {"<p>Static</p>",false},
+        {"<input oninput='work()'>",true},
+        {"<textarea onchange='work()'></textarea>",true},
+        {"<INPUT OnChange='work()'>",true},
+        {"<form oninput='work()'><input></form>",true},
+        {"<div onchange='work()'><textarea></textarea></div>",true},
+        {"<input disabled oninput='bad )' onchange='bad )'>",false},
+        {"<textarea disabled onchange='bad )'></textarea>",false},
+        {"<input disabled onchange='bad )'><input oninput='work()'>",true},
+        {"<!--<input oninput='work()'>--><textarea><input onchange='work()'></textarea>",false},
+        {"<input onchange='work()'><meta http-equiv=Content-Security-Policy content=\"script-src 'none'\">",false},
         {"<style><button onclick='ghost()'>",false},
         {"<script type=application/json><button onclick='ghost()'>",false},
         {"<script>work()",true},

@@ -1,5 +1,6 @@
 // Functional event notifications plus an optional host-only idle benchmark.
 #include "../browser_script.hpp"
+#include "../browser_core.hpp"
 #include <cassert>
 #include <ctime>
 #include <fstream>
@@ -27,6 +28,9 @@ static std::string settle(Page& p) {
 static void click(Page& p, unsigned id) { assert(p.click(id)); }
 static bool target(const std::string& html, unsigned id) {
     return html.find("data-pxa-click=\""+std::to_string(id)+"\"")!=html.npos;
+}
+static browser::Document fields(std::string_view html) {
+    browser::Document d;d.clear("https://example.test/");browser::Parser parser(d,true);parser.feed(html);parser.finish();return d;
 }
 static void measure() {
     for (const auto* mode : {"timer","click"}) {
@@ -57,6 +61,44 @@ int main(int argc,char** argv) {
     assert(argc==2 || (argc==3 && std::string_view(argv[2])=="--measure"));
     std::ifstream f(argv[1],std::ios::binary);bootstrap.runtime.assign(std::istreambuf_iterator<char>(f),{});
     assert(!bootstrap.runtime.empty());if(argc==3){measure();return 0;}
+    {
+        Clock c;auto p=open(R"HTML(<form oninput="if(event.target.id!=='q'||event.currentTarget!==this)throw Error('input bubble');document.getElementById('proof').textContent+='P'"
+onchange="document.getElementById('proof').textContent+='F'">
+<input id=q value=old oninput="if(this.value!=='edited'||event.target!==this||event.currentTarget!==this)throw Error('target');document.getElementById('proof').textContent='T'"
+onchange="document.getElementById('proof').textContent+='C'"></form><p id=proof></p>)HTML",c);
+        const auto d=fields(settle(p));assert(d.fields.size()==1 && d.fields[0].script_node);
+        p.change_field(d.fields[0].script_node,"edited",false);
+        assert(settle(p).find("TPCF")!=std::string::npos);
+    }
+    {
+        Clock c;auto p=open("<input value=same oninput='bad )' onchange='bad )'>",c);
+        const auto d=fields(settle(p));assert(d.fields.size()==1);const auto before=p.stats().markup_turns;
+        for(unsigned i=0;i<24;++i) {
+            p.change_field(d.fields[0].script_node,"same",false);
+            assert(settle(p).empty() && !p.stats().errors && p.stats().markup_turns==before);
+        }
+    }
+    {
+        // An input handler can discard an invalid change handler before it
+        // is compiled, or replace it with a new function-body source.
+        for(bool remove:{false,true}) {
+            Clock c;const auto update=remove ? "this.removeAttribute('onchange')" :
+                "this.setAttribute('onchange',&quot;return document.getElementById('proof').textContent='Replacement PASS'&quot;)";
+            auto p=open("<input value=old oninput=\""+std::string(update)+"\" onchange='bad )'><p id=proof></p>",c);
+            const auto d=fields(settle(p));p.change_field(d.fields[0].script_node,"new",false);
+            const auto html=settle(p);assert(html.find(remove?"new":"Replacement PASS")!=html.npos && !p.stats().errors);
+        }
+    }
+    {
+        Clock c;auto p=open(R"HTML(<input type=checkbox checked oninput="if(this.getAttribute('value')!==null)throw Error('implicit value');document.getElementById('proof').textContent+='I'"
+onchange="document.getElementById('proof').textContent+='C'">
+<input type=radio checked oninput="throw Error('unchanged radio')"><p id=proof></p>)HTML",c);
+        const auto d=fields(settle(p));assert(d.fields.size()==2);
+        p.change_field(d.fields[0].script_node,"on",false);assert(settle(p).find("IC")!=std::string::npos);
+        p.change_field(d.fields[0].script_node,"on",false);assert(settle(p).empty());
+        p.change_field(d.fields[1].script_node,"on",true);assert(settle(p).empty());
+        p.change_field(d.fields[0].script_node,"on",true);assert(settle(p).find("ICIC")!=std::string::npos);
+    }
     {
         Clock c;auto p=open(R"HTML(<p id=t style="color:red">Before</p><p id=empty></p><script>
         var n=0,t=document.getElementById('t');var timer=setInterval(()=>{

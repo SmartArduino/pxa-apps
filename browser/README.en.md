@@ -199,7 +199,9 @@ Bounded `classList` supports add/remove/toggle/replace/contains, raw value refle
 
 `element.dataset` creates a same-object DOMStringMap view on demand. It supports data-* / camel-case conversion, string reads and writes, deletion, enumeration and immediate attribute API reflection, including lazy loaders such as `img.src = img.dataset.src`. It retains the ASCII attribute-name subset (letters, digits, underscore, colon, dot and hyphen), 64-character names, 24 attributes per node and 4096-character values. Unchanged writes stay idle. Accessor and explicitly non-configurable string descriptors are unsupported and rejected before mutation; symbol properties behave as ordinary object properties.
 
-Event handlers and listeners run with the target as this, preserving listener order, nested dispatch and recovery after caught exceptions without relying on an overridable call member.
+Pages with only inline oninput/onchange handlers also initialize the script environment on demand. Committed native edits and checked-state changes reach target and ancestor handlers; these attributes on disabled controls do not initialize scripts by themselves. Unchanged values/checked states dispatch no input events, compile no handlers and request no script snapshots. Real changes update the control before input, then change; input may replace or remove the subsequent change handler. Events remain tied to native edit confirmation, rather than each keystroke; this is not a complete browser event model. Update the native bridge and compiled runtime together.
+
+Event handlers and listeners run with currentTarget as this, preserving listener order, nested dispatch and recovery after caught exceptions without relying on an overridable call member.
 
 Nodes expose read-only tagName through the prototype and allocate style state on first use, avoiding duplicate tag names and empty style fields on every node.
 

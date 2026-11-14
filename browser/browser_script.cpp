@@ -695,8 +695,14 @@ struct Page::Impl {
             script_count=0;source_bytes=0;
             auto field = std::move(fields.front()); fields.erase(fields.begin());
             auto value = string(field.value);
-            if (check(value.value) && prepare_inline(field.id, "input") && prepare_inline(field.id, "change"))
-                invoke("field", JS_NewUint32(ctx,field.id), value.value, JS_NewBool(ctx,field.checked));
+            if (check(value.value)) {
+                auto updated=invoke("field",JS_NewUint32(ctx,field.id),value.value,JS_NewBool(ctx,field.checked));
+                if(!JS_IsException(updated.value) && JS_ToBool(ctx,updated.value) && prepare_inline(field.id,"input")) {
+                    auto input=invoke("fieldEvent",JS_NewUint32(ctx,field.id),JS_TRUE);
+                    if(!JS_IsException(input.value) && prepare_inline(field.id,"change"))
+                        invoke("fieldEvent",JS_NewUint32(ctx,field.id),JS_FALSE);
+                }
+            }
         } else invoke("pump");
         if (!stopped && now() < deadline && JS_IsJobPending(runtime)) {
             JSContext* job_context = nullptr;
