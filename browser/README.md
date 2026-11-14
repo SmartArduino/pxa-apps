@@ -76,6 +76,8 @@ HTML 的 title/textarea 按文本容器解析，保留内部标签文字并解�
 
 已经完成绘制的脚本页只在内容、样式或点击目标变化后启动 DOM 快照；空回调、相同文字/样式赋值和重复监听注册不单独生成快照。动态 `onclick`、`addEventListener` / `removeEventListener` 会同步点击区域，XHR 回调中新绑定的处理器也能生效；移除最后一个处理器会恢复普通内容。`onclick=null` 或 `undefined` 可停用行内处理器，重新设置同一份 `onclick` 属性可重新启用。每类事件仍最多 16 个监听器，重复注册已有函数不占用额外名额；不提供完整 DOM 事件模型。
 
+未连接到当前 document 的临时节点可修改文字、样式、属性、事件与选择状态，不启动整页快照；加入页面时统一投影最终状态，移除可见节点仍立即更新。支持 `isConnected`、`parentElement`、`contains(node)` 和 `getRootNode()`，随移动和重新插入反映当前树关系；祖先遍历最多 512 步。不提供 Shadow DOM，getRootNode 的 composed 选项不改变结果。实际连接节点在快照中途变化时仍会取消旧批次，避免混合不同版本。
+
 基础表单按 DOM 树顺序收集 input、textarea、select 与被激活的提交按钮，保留同名字段顺序、按钮值、复选框/单选状态及 UTF-8 表单编码；禁用控件不触发点击，普通按钮和 reset 按钮不再误提交。静态 `<button>` 将可见子文字（含实体、内嵌格式和图片替代文字）合并为不超过 128 字节的 UTF-8 标题，隐藏内容不参与；标题和提交的 `value` 分别保留，省略 `value` 时提交空值。原生表单控件各占一个完整点击区域，长标题在单行内截短。基础 textarea 支持初始文字、中文和实体、只读/禁用状态，以及按需打开的多行原生编辑器；输入法回车插入换行，地址栏「完成」保存修改。每个值仍限 512 个 UTF-8 字节。脚本的 value / defaultValue 分别保留当前值与默认子文字，编辑完成后派发 input / change；内部值按 LF 读取，表单名称和值在编码时将换行统一为 CRLF。隐藏控件仍参与成功字段收集，禁用控件不参与。GET 替换 action 的旧查询参数并保留锚点，POST 保留 action 的查询与锚点。脚本可设置 action / method / enctype，使用 `form.submit()` 直接提交，或用有界的 `form.requestSubmit([button])` 触发可取消的 submit 事件并读取 `event.submitter`；后者不实现完整约束验证。静态表单仍限 24 个字段和 2 KiB 编码正文，脚本表单仍受原有 DOM 与 8 KiB 正文限制，GET URL 上限仍为 1024 字节。重置默认值、外部 form 关联、提交按钮覆盖属性、文件上传、textarea 的 hard 换行与选择区 API，以及 multipart/text/plain POST 尚未实现；reset 可由网页脚本自行处理。
 
 采用混合组件：界面、滚动、网络和图片走 `main.aot`；QuickJS 与 DOM 放在按需启动的 `script.wasm` 中解释执行，通过有界 IPC 批量交换更新。纯静态页面不加载脚本组件。只有禁用 input/button/textarea/select 点击处理器的页面仍按静态页处理；加载、提交事件、启用目标的点击处理器和实际脚本继续触发自动检测。关闭脚本页会释放 VM，但已加载的模块和增长的线性内存不会因此自动缩小。解释执行会降低脚本速度，不能将包体积减少视为脚本提速。

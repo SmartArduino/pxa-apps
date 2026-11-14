@@ -23,7 +23,21 @@
         if(start<s.length)parts.push(s.slice(start));
         return parts.join('');
     }
-    function changed() { if (!building) { dirty = true; native.changed(); } }
+    function treeRoot(node) {
+        if(!(node instanceof Node))throw new TypeError('Node required');
+        let depth=0;
+        while(node.parentNode) {
+            if(++depth>512)throw new RangeError('DOM ancestry limit');
+            node=node.parentNode;
+        }
+        return node;
+    }
+    function changed(node) {
+        // Detached staging has no visible document to serialize. An insertion
+        // notifies through its destination; removal through its former parent.
+        // Keep notifying during a partial snapshot so real edits cancel it.
+        if (!building && (node===undefined || treeRoot(node)===document)) { dirty = true; native.changed(); }
+    }
     // Lazy, bounded inline declarations. Cache their text so a snapshot need
     // not enumerate and re-serialize every styled node on each repaint.
     const styleData = Symbol('inlineStyle'), stylePrototype = Object.create(null);
@@ -104,7 +118,7 @@
         if (data.text === text && attrs && attrs.style === raw) return;
         if (!attrs) node._attrs = Object.create(null);
         data.values = declarations.values; data.priorities = declarations.priorities;
-        data.text = text; node._attrs.style = raw; changed();
+        data.text = text; node._attrs.style = raw; changed(node);
     }
     function replaceStyle(node, value, raw = false) {
         const text = value == null ? '' : String(value), values = parseStyle(text), serialized = styleText(values);
@@ -240,7 +254,7 @@
         if (list.indexOf(callback) >= 0) return;
         if (list.length >= 16) throw new RangeError('event listener limit');
         list.push(callback);
-        if (node && before !== clickTarget(this)) changed();
+        if (node && before !== clickTarget(this)) changed(this);
     }
     function unlisten(type, callback) {
         type = String(type);
@@ -250,7 +264,7 @@
         const node = type === 'click' && this instanceof Node, before = node && clickTarget(this);
         list.splice(at, 1);
         if (!list.length) delete this._listeners[type];
-        if (node && before !== clickTarget(this)) changed();
+        if (node && before !== clickTarget(this)) changed(this);
     }
     let selectEnvironment=null;
     function ensureSelect() {
@@ -267,13 +281,29 @@
         else if(this.nodeName==='OPTION')Object.setPrototypeOf(this,ensureSelect().optionPrototype());
     }
     Object.defineProperty(Node.prototype,'tagName',{get() {return this.nodeType===1?this.nodeName:undefined;}});
+    Object.defineProperties(Node.prototype,{
+        isConnected:{get(){return treeRoot(this)===document;}},
+        parentElement:{get(){if(!(this instanceof Node))throw new TypeError('Node required');return this.parentNode && this.parentNode.nodeType===1?this.parentNode:null;}}
+    });
+    Node.prototype.getRootNode=function(){return treeRoot(this);};
+    Node.prototype.contains=function(other) {
+        if(!(this instanceof Node) || !arguments.length)throw new TypeError('Node required');
+        if(other==null)return false;
+        if(!(other instanceof Node))throw new TypeError('Node required');
+        let depth=0;
+        for(let node=other;node;node=node.parentNode) {
+            if(node===this)return true;
+            if(++depth>512)throw new RangeError('DOM ancestry limit');
+        }
+        return false;
+    };
     Node.prototype.appendChild = function (child) {
         if (!(child instanceof Node) || child === this) throw new TypeError('invalid child');
         for (let at = this; at; at = at.parentNode) if (at === child) throw new TypeError('cyclic DOM');
         if (this.childNodes.length >= 192 && child.parentNode!==this) throw new RangeError('child limit');
         if(selectEnvironment)selectEnvironment.before(this);
         if (child.parentNode) child.parentNode.removeChild(child);
-        child.parentNode = this; this.childNodes.push(child); changed();
+        child.parentNode = this; this.childNodes.push(child); changed(this);
         if(selectEnvironment)selectEnvironment.mutation(this,child);
         if (child.nodeName==='INPUT' && child.checked) uncheckRadioPeers(child);
         if(child.nodeName==='SCRIPT' || child._hasScripts) {
@@ -287,14 +317,14 @@
         if (at < 0) throw new TypeError('child not found');
         if(selectEnvironment)selectEnvironment.before(this);
         if(selectEnvironment)selectEnvironment.mutation(this,child);this.childNodes.splice(at, 1);child.parentNode=null;
-        changed(); return child;
+        changed(this); return child;
     };
     Node.prototype.insertBefore=function(child,before=null) {
         if(before===null)return this.appendChild(child);
         if(!(before instanceof Node) || before.parentNode!==this)throw new DOMException('Child not found','NotFoundError');
         if(child===before)return child;
         this.appendChild(child);this.childNodes.splice(this.childNodes.indexOf(child),1);
-        this.childNodes.splice(this.childNodes.indexOf(before),0,child);changed();return child;
+        this.childNodes.splice(this.childNodes.indexOf(before),0,child);changed(this);return child;
     };
     Node.prototype.remove = function () { if (this.parentNode) this.parentNode.removeChild(this); };
     Node.prototype.addEventListener = listen;
@@ -304,7 +334,7 @@
         get() { return this._onclick; },
         set(value) {
             const before = clickTarget(this); this._onclick = value == null ? null : value;
-            if (before !== clickTarget(this)) changed();
+            if (before !== clickTarget(this)) changed(this);
         }
     });
     Node.prototype.getAttribute = function (name) { name = String(name).toLowerCase(); return this._attrs && own(this._attrs, name) ? this._attrs[name] : null; };
@@ -322,9 +352,9 @@
             // property assignment disabled/replaced the original handler.
             if (name === 'onclick') {
                 const before = clickTarget(this); this._onclick = undefined;
-                if (before !== clickTarget(this)) changed();
+                if (before !== clickTarget(this)) changed(this);
             } else if (name.startsWith('on')) this[name] = undefined;
-            else if(selectEnvironment && selectEnvironment.attribute(this,name))changed();
+            else if(selectEnvironment && selectEnvironment.attribute(this,name))changed(this);
             return;
         }
         if(name.startsWith('data-') && this[datasetData])reflectData(this[datasetData],name,value);
@@ -334,7 +364,7 @@
         if (name==='checked') uncheckRadioPeers(this);
         if (name === 'onclick') this._onclick = undefined;
         else if (name.startsWith('on')) this[name] = undefined;
-        changed();
+        changed(this);
         if (name==='src' && this.nodeName==='SCRIPT') activateScripts(this);
     };
     function formOwner(n) {
@@ -384,7 +414,7 @@
             if(name==='class' && this[tokenData])classTokens(this[tokenData][tokenData],'');
             if (name === 'onclick') this._onclick = undefined;
             else if (name.startsWith('on')) this[name] = undefined;
-            changed();
+            changed(this);
         }
     };
     const areaValue=Symbol('areaValue');
@@ -415,7 +445,7 @@
                 if(this.nodeName==='TEXTAREA' && key==='value') {
                     const text=domString(v);if(text.length>4096)throw new RangeError('value limit');
                     const before=areaText(this);this[areaValue]=text;
-                    if(areaText(this)!==before)changed();return;
+                    if(areaText(this)!==before)changed(this);return;
                 }
                 if(this.nodeName==='TEXTAREA' && key==='type')return;
                 if(key==='className') {
@@ -425,7 +455,7 @@
                     if(attrs && attrs.class===text)return;
                     if(attrs && !own(attrs,'class') && Object.keys(attrs).length>=24)throw new RangeError('attribute count');
                     if(!attrs)this._attrs=Object.create(null);this._attrs.class=text;
-                    if(this[tokenData])classTokens(this[tokenData][tokenData],text);changed();
+                    if(this[tokenData])classTokens(this[tokenData][tokenData],text);changed(this);
                 }else this.setAttribute(attribute,v);
             }});
     }
@@ -456,13 +486,13 @@
             set(v) {
                 v = String(v);
                 if (v.length > 16384) throw new RangeError('text limit');
-                if (this.nodeType === 3) { if (this._text !== v) { this._text = v; changed(); } return; }
+                if (this.nodeType === 3) { if (this._text !== v) { this._text = v; changed(this); } return; }
                 if (!v && this.childNodes.length === 0) return;
-                if (this.childNodes.length === 1 && this.childNodes[0].nodeType === 3) { const n=this.childNodes[0];if(n._text!==v){n._text=v;changed();}return; }
+                if (this.childNodes.length === 1 && this.childNodes[0].nodeType === 3) { const n=this.childNodes[0];if(n._text!==v){n._text=v;changed(this);}return; }
                 if(selectEnvironment)selectEnvironment.before(this);
                 for (const n of this.childNodes) {if(selectEnvironment)selectEnvironment.mutation(this,n);n.parentNode = null;}
                 this.childNodes = [];
-                if (v) this.appendChild(new Node('', v)); else changed();
+                if (v) this.appendChild(new Node('', v)); else changed(this);
             }};
     Object.defineProperties(Node.prototype, {
         defaultValue: {configurable:true,enumerable:true,
@@ -487,7 +517,7 @@
                     this.childNodes=staged.childNodes;
                     for(const n of this.childNodes)n.parentNode=this;
                     if(selectEnvironment)selectEnvironment.mutation(this,staged);
-                    changed();
+                    changed(this);
                     const radios=stage.radios;
                     for(let i=radios?radios.length-1:-1;i>=0;--i)if(radios[i].checked)uncheckRadioPeers(radios[i]);
                 } }},
@@ -581,7 +611,7 @@
         if(attrs && attrs.class===text)return;
         if(attrs && !own(attrs,'class') && Object.keys(attrs).length>=24)throw new RangeError('attribute count');
         if(!attrs)node._attrs=Object.create(null);
-        node._attrs.class=text;classTokens(state,text);changed();
+        node._attrs.class=text;classTokens(state,text);changed(node);
     }
     function commitTokens(state,tokens) {
         const attrs=state.node._attrs;
@@ -736,7 +766,7 @@
                     keys[this.count++]=key;
                 }
                 if(!attrs)node._attrs=Object.create(null);
-                node._attrs[name]=value;changed();return true;
+                node._attrs[name]=value;changed(node);return true;
             },
             defineProperty(target,key,descriptor) {
                 if(typeof key!=='string') {
@@ -751,7 +781,7 @@
             deleteProperty(target,key) {
                 if(typeof key==='string' && own(target,key)) {
                     const name=dataAttribute(key);delete this.node._attrs[name];
-                    const at=this.keys.indexOf(key);if(at>=0){this.keys.splice(at,1);--this.count;}changed();
+                    const at=this.keys.indexOf(key);if(at>=0){this.keys.splice(at,1);--this.count;}changed(this.node);
                 }
                 const ok=Reflect.deleteProperty(target,key);
                 if(ok && typeof key==='symbol'){const at=this.keys.indexOf(key);if(at>=0)this.keys.splice(at,1);}

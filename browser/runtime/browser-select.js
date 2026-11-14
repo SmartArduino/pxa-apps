@@ -123,7 +123,7 @@
             const selected=i===index;updated ||= !!rawSelected(list[i])!==selected;
             list[i][optionState]=(list[i][optionState]&2)|(selected?3:0);
         }
-        if(updated)changed();
+        if(updated)changed(node);
     }
     function selectPrototype() {
         selectSeen=true;
@@ -162,7 +162,7 @@
                     const select=nearestSelect(this),list=select?normalizeSelect(select):null,selected=!!v;
                     this[optionState]=(selected?1:0)|2;
                     if(select){select[selectDirty]=true;if(selected)select[selectPreferred]=this;normalizeSelect(select,list);}
-                    changed();
+                    changed(this);
                 }},
             defaultSelected:{get(){return this.hasAttribute('selected');},set(v){if(v)this.setAttribute('selected','');else this.removeAttribute('selected');}},
             index:{get(){const select=nearestSelect(this);return select?selectOptions(select).indexOf(this):0;}},
@@ -187,7 +187,7 @@
         }
         let updated=false;
         for(let i=0;i<list.length;++i)if(!!rawSelected(list[i])!==selected[i]) {list[i][optionState]=(selected[i]?1:0)|2;updated=true;}
-        if(updated)changed();return updated;
+        if(updated)changed(node);return updated;
     }
     return {selectPrototype,optionPrototype,Option,before:selectionBefore,beforeAttribute:selectionBeforeAttribute,attribute:selectionAttribute,mutation:selectionMutation,normalize:normalizeSelect,options:selectOptions,nearest:nearestSelect,raw:rawSelected,disabled:disabledOption,text:optionText,identity,field:nativeField};
 })
