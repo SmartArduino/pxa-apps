@@ -79,6 +79,16 @@ struct CameraApp {
     uint32_t playback_offset = 224, playback_index = 0;
     uint64_t media_size = 0, read_cookie = 0;
     std::string media_name;
+    struct DeleteTarget {
+        std::string name;
+        uint32_t sequence=0;
+        uint64_t size=0;
+        bool video=false;
+        uint32_t epoch=0;
+    };
+    std::optional<DeleteTarget> delete_target;
+    State<std::string> delete_name{""};
+    bool deleting=false;
     pxa::File playback_file;
     std::array<std::byte, 24+pxa::AudioCapture::max_packet_bytes> read_packet{};
     std::array<std::byte, pxa::AudioCapture::max_packet_bytes> read_body{};
@@ -118,6 +128,7 @@ struct CameraApp {
     pxa::Context* context = nullptr;
     size_t profile_count = 0, selected = 0, photo_profile = 0, video_profile = 0;
     size_t active_frame_limit = PXA_VISION_MAX_JPEG;
+    static constexpr uint32_t viewing_jpeg_limit=512u*1024u;
     uint32_t next_photo = 1, next_video = 1, measured_frames = 0;
     uint32_t captured_audio_samples=0, recorded_frame_offset=0;
     bool foreground = true, discovering = false, running = false;
@@ -132,6 +143,7 @@ struct CameraApp {
 
     void log(std::string_view message) { (void)context->log().write(pxa::LogLevel::info, message); }
     void fail(pxa::Error error) {
+        if (delete_target || deleting) { delete_target.reset(); ++media_epoch; }
         port.reset(); permission.reset(); video_file.close();
         recording_buffer.reset(); close_microphone(); speaker.reset();
         (void)context->window().keep_screen_on(foreground);
@@ -146,6 +158,7 @@ struct CameraApp {
                 case pxa::Error::resource_limit:
                 case pxa::Error::quota_exceeded: status.set("内存或存储空间不足"); break;
                 case pxa::Error::protocol_error: status.set("照片或视频格式无效"); break;
+                case pxa::Error::limit_exceeded: status.set("文件较大，暂时无法查看"); break;
                 case pxa::Error::cancelled: status.set("操作已取消，可重新打开"); break;
                 default: status.set("操作失败 " + std::to_string(int(error))); break;
             }
@@ -180,6 +193,7 @@ struct CameraApp {
         if (selected != previous && running) { restart=true; preview=false; photograph=false; }
     }
     void toggle_orientation() {
+        if (delete_target || deleting) return;
         if (record || video_file || photograph) { status.set("请先结束拍摄"); return; }
         const bool portrait = !portrait_capture;
         if (window_metrics && !camera_profiles::supports_window_orientation(window_metrics->native_width,
@@ -327,6 +341,10 @@ struct CameraApp {
         const auto dimensions = camera_media::jpeg_size(frame_data().first(size));
         log("Camera photo saved: " + *name + " bytes=" + std::to_string(size) +
             " width=" + std::to_string(dimensions.width) + " height=" + std::to_string(dimensions.height));
+        if (size>viewing_jpeg_limit) {
+            status.set("照片已保存，文件较大暂时无法查看"); refresh();
+            co_return pxa::Result<void>{};
+        }
         auto source = co_await context->fs().open(*name, pxa::OpenMode::read);
         if (!source) co_return std::unexpected(source.error());
         auto decoded = co_await context->assets().decode_image(std::move(*source), image_options());
@@ -339,7 +357,7 @@ struct CameraApp {
     }
     static pxa::ImageDecodeOptions image_options() {
         return {.max_width=320, .max_height=320, .max_pixels=102400,
-            .max_encoded_bytes=PXA_VISION_MAX_JPEG_HD, .formats=pxa::ImageFormats::jpeg};
+            .max_encoded_bytes=viewing_jpeg_limit, .formats=pxa::ImageFormats::jpeg};
     }
     void close_microphone() {
         (void)microphone.close();
@@ -591,6 +609,7 @@ struct CameraApp {
         co_return pxa::Result<void>{};
     }
     void start() {
+        if (delete_target || deleting) return;
         if (foreground && !album) preview=true;
         if (running) return;
         if (!profile_count || discovering) {
@@ -602,10 +621,12 @@ struct CameraApp {
         if (auto task = context->tasks().start(run()); !task) fail(task.error());
     }
     void take_photo() {
+        if (delete_target || deleting) return;
         if (restart) { status.set("正在切换画质，请稍候"); return; }
         photograph = true; start();
     }
     void toggle_record() {
+        if (delete_target || deleting) return;
         if (!record && restart) { status.set("正在切换画质，请稍候"); return; }
         if (!record && video_file) return;
         record = !record;
@@ -614,6 +635,7 @@ struct CameraApp {
         if (record) { preview = true; start(); }
     }
     void next_profile() {
+        if (delete_target || deleting) return;
         if (!profile_count || discovering) return;
         if (record || video_file) { status.set("请先结束录像"); return; }
         if (profile_count == 1) { status.set("设备提供原生 JPEG 档位"); return; }
@@ -635,6 +657,96 @@ struct CameraApp {
         uint32_t value = 0;
         auto parsed = std::from_chars(name.data(), name.data()+name.size(), value);
         return parsed.ec == std::errc{} && parsed.ptr == name.data()+name.size() ? value : 0;
+    }
+    static bool valid_media_name(std::string_view name, bool video, uint32_t id) {
+        return id && name.size()<=20 && name.find_first_of("/\\") == name.npos &&
+            name.find('\0') == name.npos && sequence(name,video)==id;
+    }
+    bool delete_ready() const {
+        return foreground && album && !gallery && !loading && !playing && !running &&
+            !preview && !photograph && !record && !video_file && !discovering &&
+            pending_back==BackTarget::none;
+    }
+    bool delete_matches(const DeleteTarget& target) const {
+        return delete_ready() && media_epoch==target.epoch && album_video==target.video &&
+            media_sequence==target.sequence && media_size==target.size && media_name==target.name &&
+            valid_media_name(target.name,target.video,target.sequence);
+    }
+    void request_delete() {
+        if (delete_target || deleting) return;
+        if (!delete_ready()) { status.set("请先结束当前操作"); return; }
+        if (!valid_media_name(media_name,album_video,media_sequence)) {
+            status.set("请选择照片或视频"); return;
+        }
+        delete_target=DeleteTarget{media_name,media_sequence,media_size,album_video,media_epoch};
+        delete_name.set(media_name); chrome.set(true); refresh();
+    }
+    void cancel_delete() {
+        if (deleting || !delete_target) return;
+        delete_target.reset(); refresh();
+    }
+    pxa::Task<void> remove_selected(DeleteTarget target) {
+        auto cancelled=[this] {
+            deleting=false; status.set("文件已变化，请重新选择"); refresh();
+        };
+        if (!deleting || !delete_matches(target)) { cancelled(); co_return pxa::Result<void>{}; }
+        const auto path="album/"+target.name;
+        auto info=co_await context->fs().stat(path);
+        // Selection and activity can change while an FS response is pending.
+        if (!deleting || !delete_matches(target)) { cancelled(); co_return pxa::Result<void>{}; }
+        if (!info) {
+            deleting=false;
+            status.set(info.error()==pxa::Error::not_found ? "文件已变化，请重新选择" : "暂时无法删除，请重试");
+            refresh(); co_return pxa::Result<void>{};
+        }
+        if (info->kind!=pxa::FileKind::regular || info->size!=target.size) {
+            deleting=false; status.set("文件已变化，请重新选择"); refresh();
+            co_return pxa::Result<void>{};
+        }
+        // Paused playback still owns its file. No read/decode task is active
+        // here: both loading and playing were checked before and after stat.
+        if (auto closed=playback_file.close(); !closed) {
+            deleting=false; status.set("暂时无法删除，请重试"); refresh();
+            co_return pxa::Result<void>{};
+        }
+        speaker.reset(); playback_permission.reset();
+        if (playback_decoder) { opus_decoder_destroy(playback_decoder); playback_decoder=nullptr; }
+        image.reset(); album_thumbnail.reset();
+        for (auto& item:items) item.thumbnail.reset();
+        dirty=true; paint();
+        auto removed=co_await context->fs().remove(path);
+        if (!removed) {
+            log("Camera delete failed: "+path+" error="+std::to_string(int(removed.error())));
+            const bool restore=delete_matches(target);
+            deleting=false;
+            if (restore) {
+                loading=true;
+                auto loaded=co_await scan_album(target.sequence,target.epoch,target.name);
+                if (!loaded) log("Camera restore after delete: "+std::to_string(int(loaded.error())));
+            }
+            status.set("删除失败，请重试"); refresh();
+            co_return pxa::Result<void>{};
+        }
+        log("Camera deleted: "+path);
+        media_name.clear(); media_sequence=0; media_size=0;
+        movie={}; playback_index=0; playback_offset=224;
+        deleting=false; gallery=true; gallery_reload=false;
+        grid_page=0; grid_anchor=0; grid_newer=false; ++media_epoch;
+        refresh();
+        if (foreground) load_grid(0,false);
+        else gallery_reload=true;
+        co_return pxa::Result<void>{};
+    }
+    void confirm_delete() {
+        if (deleting || !delete_target) return;
+        auto target=*delete_target;
+        if (!delete_matches(target)) {
+            delete_target.reset(); status.set("文件已变化，请重新选择"); refresh(); return;
+        }
+        delete_target.reset(); deleting=true; status.set("正在删除"); refresh();
+        if (auto task=context->tasks().start(remove_selected(std::move(target))); !task) {
+            deleting=false; status.set("暂时无法删除，请重试"); refresh();
+        }
     }
     pxa::Task<void> read_exact(pxa::File& file, uint64_t offset, size_t size) {
         size_t received = 0;
@@ -698,10 +810,14 @@ struct CameraApp {
         }
         co_return pxa::Result<void>{};
     }
-    pxa::Task<void> decode_video_frame(ports::Client& client) {
+    bool current_media(uint32_t epoch) const {
+        return foreground && album && !gallery && epoch==media_epoch;
+    }
+    pxa::Task<void> decode_video_frame(ports::Client& client, uint32_t epoch) {
         while (playback_offset<movie.end) {
             const auto header_size=movie.matroska ? camera_media::mkv_block_header_bytes : 8u;
             if (auto read=co_await read_exact(playback_file,playback_offset,header_size); !read) co_return read;
+            if (!current_media(epoch)) co_return pxa::Result<void>{};
             const auto block=movie.matroska ? camera_media::mkv_block(std::span(read_body).first(header_size),playback_offset,movie.end) : camera_media::MkvBlock{};
             const auto length=movie.matroska ? block.size : camera_media::chunk_bytes(std::span(read_body).first(8),playback_offset,movie.end);
             if (!length) co_return std::unexpected(pxa::Error::protocol_error);
@@ -715,6 +831,7 @@ struct CameraApp {
                     if (!played) co_return played;
                 }
             } else if (is_video) {
+                if (length>viewing_jpeg_limit) co_return std::unexpected(pxa::Error::limit_exceeded);
                 if (movie.matroska && playing) {
                     playback_timestamp_ms=block.ms;
                     while (foreground && playing && Clock::now()<playback_due+std::chrono::milliseconds(block.ms)) {
@@ -722,11 +839,13 @@ struct CameraApp {
                     }
                 }
                 auto frame=co_await client.file_frame(playback_file,offset,length,read_cookie);
+                if (!current_media(epoch)) co_return pxa::Result<void>{};
                 if (!frame) {
                     log("Camera playback JPEG stream: offset="+std::to_string(offset)+" bytes="+std::to_string(length)+" error="+std::to_string(int(frame.error())));
                     co_return std::unexpected(frame.error());
                 }
                 auto decoded=co_await context->assets().decode_image(std::move(*frame),image_options());
+                if (!current_media(epoch)) co_return pxa::Result<void>{};
                 if (!decoded) co_return std::unexpected(decoded.error());
                 image.emplace(std::move(*decoded)); dirty=true; ++playback_index;
                 co_return pxa::Result<void>{};
@@ -745,7 +864,7 @@ struct CameraApp {
         if (!info.end) co_return std::unexpected(pxa::Error::protocol_error);
         co_return info;
     }
-    pxa::Task<void> scan_album(uint32_t requested, uint32_t epoch) {
+    pxa::Task<void> scan_album(uint32_t requested, uint32_t epoch, std::string requested_name={}) {
         struct LoadingGuard { bool& active; ~LoadingGuard() { active = false; } } guard{loading};
         while (running && foreground && album && epoch == media_epoch) {
             if (auto yielded = co_await context->clock().yield(); !yielded) co_return yielded;
@@ -768,12 +887,12 @@ struct CameraApp {
             if (!requested && id > chosen) {
                 chosen = id; newest_name = (**entry).bytes; newest_size = (**entry).info.size;
             }
-            if (requested == id) { newest_name = (**entry).bytes; newest_size = (**entry).info.size; }
+            if (requested == id && (requested_name.empty() || requested_name==(**entry).name())) { newest_name = (**entry).bytes; newest_size = (**entry).info.size; }
             if (requested && id < requested) older_media = std::max(older_media, id);
             if (requested && id > requested && (!newer_media || id < newer_media)) newer_media = id;
         }
         if (!foreground || !album || gallery || epoch != media_epoch) co_return pxa::Result<void>{};
-        if (!requested && chosen) co_return co_await scan_album(chosen, epoch);
+        if (!requested && chosen) co_return co_await scan_album(chosen, epoch, std::move(newest_name));
         media_sequence = chosen; media_name = std::move(newest_name); media_size = newest_size;
         album_title.set(album_video ? "视频" : "照片");
         if (media_name.empty()) {
@@ -781,40 +900,52 @@ struct CameraApp {
             co_return pxa::Result<void>{};
         }
         status.set((album_video ? "视频 " : "照片 ") + std::to_string(media_sequence) + " · 共 " + std::to_string(media_total) + (album_video ? " 段" : " 张"));
+        if (!album_video && media_size>viewing_jpeg_limit) {
+            status.set("文件较大，暂时无法查看"); loading=false; refresh();
+            co_return pxa::Result<void>{};
+        }
         auto opened = co_await context->fs().open("album/" + media_name, pxa::OpenMode::read);
+        if (!current_media(epoch)) co_return pxa::Result<void>{};
         if (!opened) co_return std::unexpected(opened.error());
         playback_file = std::move(*opened);
         if (album_video) {
             auto parsed=co_await read_movie(playback_file,media_size);
+            if (!current_media(epoch)) { (void)playback_file.close(); co_return pxa::Result<void>{}; }
             if (!parsed) co_return std::unexpected(parsed.error());
             movie=*parsed;
             playback_offset = movie.data; playback_index = 0;
             auto client = co_await ports::open(*context);
+            if (!current_media(epoch)) { (void)playback_file.close(); co_return pxa::Result<void>{}; }
             if (!client) co_return std::unexpected(client.error());
-            if (auto decoded = co_await decode_video_frame(*client); !decoded) co_return decoded;
+            auto decoded=co_await decode_video_frame(*client,epoch);
+            if (!current_media(epoch)) { (void)playback_file.close(); co_return pxa::Result<void>{}; }
+            if (!decoded) co_return decoded;
         } else {
             auto decoded = co_await context->assets().decode_image(std::move(playback_file), image_options());
+            if (!current_media(epoch)) co_return pxa::Result<void>{};
             if (!decoded) co_return std::unexpected(decoded.error());
             image.emplace(std::move(*decoded)); dirty = true;
         }
         loading = false; refresh();
         co_return pxa::Result<void>{};
     }
-    void load_album(uint32_t requested = 0) {
-        if (loading || playing) return;
+    void load_album(uint32_t requested = 0, std::string requested_name={}) {
+        if (delete_target || deleting || loading || playing) return;
         loading = true; playback_file.close();
         if (playback_decoder) { opus_decoder_destroy(playback_decoder); playback_decoder=nullptr; }
         shutter_label.set(album_video ? "播放" : "");
         status.set("正在读取相册");
-        if (auto task = context->tasks().start(scan_album(requested, ++media_epoch)); !task) fail(task.error());
+        if (auto task = context->tasks().start(scan_album(requested, ++media_epoch, std::move(requested_name))); !task) fail(task.error());
     }
     void open_album() {
+        if (delete_target || deleting) return;
         if (loading) return;
         preview=photograph=record=restart=false;
         album=gallery=true; album_video=false; grid_page=0; chrome.set(true);
         shutter_label.set(""); refresh(); load_grid(0,false);
     }
     void close_album() {
+        if (delete_target || deleting) return;
         if (loading || playing) {
             pending_back=BackTarget::camera; playing=false; speaker.reset(); ++media_epoch; return;
         }
@@ -824,6 +955,7 @@ struct CameraApp {
         chrome.set(true); shutter_label.set(""); refresh(); preview=true; start();
     }
     void return_to_grid() {
+        if (delete_target || deleting) return;
         if (loading || playing) {
             pending_back=BackTarget::gallery; playing=false; speaker.reset(); ++media_epoch; return;
         }
@@ -833,6 +965,7 @@ struct CameraApp {
         refresh(); load_grid(grid_anchor,grid_newer);
     }
     void select_mode(bool video) {
+        if (delete_target || deleting) return;
         if (loading || playing || record || video_file) return;
         if (album) {
             album_video=video; grid_page=0; load_grid(0,false);
@@ -867,7 +1000,7 @@ struct CameraApp {
         }
         playback_due = Clock::now()-std::chrono::milliseconds(movie.matroska ? playback_timestamp_ms : 0);
         while (foreground && album && !gallery && playing && epoch == media_epoch && playback_offset < movie.end) {
-            if (auto decoded = co_await decode_video_frame(*client); !decoded) co_return decoded;
+            if (auto decoded = co_await decode_video_frame(*client,epoch); !decoded) co_return decoded;
             if (!movie.matroska) playback_due += std::chrono::microseconds(movie.period_us);
             while (!movie.matroska && !speaker && foreground && playing && Clock::now() < playback_due) {
                 if (auto yielded = co_await context->clock().yield(); !yielded) co_return yielded;
@@ -882,13 +1015,15 @@ struct CameraApp {
             }
         }
         speaker.reset();
-        if (playback_decoder && (!foreground || playback_offset>=movie.end)) { opus_decoder_destroy(playback_decoder); playback_decoder=nullptr; }
+        if (!current_media(epoch)) (void)playback_file.close();
+        if (playback_decoder && (!current_media(epoch) || playback_offset>=movie.end)) { opus_decoder_destroy(playback_decoder); playback_decoder=nullptr; }
         playing = false; loading = false; shutter_label.set("播放");
         (void)context->window().keep_screen_on(foreground); refresh();
         log("Camera video playback: frames=" + std::to_string(playback_index));
         co_return pxa::Result<void>{};
     }
     void shutter() {
+        if (delete_target || deleting) return;
         if (!album) { if (video_mode) toggle_record(); else take_photo(); return; }
         if (!album_video || !playback_file || (loading && !playing)) return;
         if (playing) { playing = false; speaker.reset(); shutter_label.set("播放"); return; }
@@ -897,10 +1032,11 @@ struct CameraApp {
         if (auto task = context->tasks().start(play_video(media_epoch)); !task) fail(task.error());
     }
     pxa::Task<pxa::Asset> make_thumbnail(std::string path, uint64_t size, bool video, uint32_t* duration=nullptr) {
+        if (!video && size>viewing_jpeg_limit) co_return std::unexpected(pxa::Error::limit_exceeded);
         auto file=co_await context->fs().open(path,pxa::OpenMode::read);
         if (!file) co_return std::unexpected(file.error());
         const pxa::ImageDecodeOptions options{.max_width=64,.max_height=64,.max_pixels=4096,
-            .max_encoded_bytes=PXA_VISION_MAX_JPEG_HD,.formats=pxa::ImageFormats::jpeg};
+            .max_encoded_bytes=viewing_jpeg_limit,.formats=pxa::ImageFormats::jpeg};
         if (!video) co_return co_await context->assets().decode_image(std::move(*file),options);
         auto parsed=co_await read_movie(*file,size);
         if (!parsed) co_return std::unexpected(parsed.error());
@@ -960,29 +1096,35 @@ struct CameraApp {
         co_return pxa::Result<void>{};
     }
     void load_grid(uint32_t anchor, bool newer) {
+        if (delete_target || deleting) return;
         if (loading || playing) return;
         loading=true; grid_anchor=anchor; grid_newer=newer; page_size=size_t(grid_columns*grid_rows);
         status.set("正在读取相册"); page_label.set("正在读取");
         if (auto task=context->tasks().start(scan_grid(anchor,newer,++media_epoch,page_size)); !task) fail(task.error());
     }
     void grid_previous() {
+        if (delete_target || deleting) return;
         if (!loading && grid_has_newer && item_count) {
             if (grid_page) --grid_page;
             load_grid(items[0].sequence,true);
         }
     }
     void grid_next() {
+        if (delete_target || deleting) return;
         if (!loading && grid_has_older && item_count) {
             ++grid_page; load_grid(items[item_count-1].sequence,false);
         }
     }
     void open_item(size_t index) {
+        if (delete_target || deleting) return;
         if (loading || index>=item_count) return;
         const auto selected_id=items[index].sequence;
+        const auto selected_name=items[index].name;
         for (auto& item:items) item.thumbnail.reset();
-        gallery=false; chrome.set(true); refresh(); load_album(selected_id);
+        gallery=false; chrome.set(true); refresh(); load_album(selected_id,selected_name);
     }
     void pointer_event(const CanvasPointer& event) {
+        if (delete_target || deleting) return;
         if (!album || gallery) return;
         if (event.action()==PointerPhase::down) {
             if (pointer.active() && !pointer.owns(event)) pointer.reset();
@@ -1072,11 +1214,11 @@ struct CameraApp {
         if (updated && *updated) { refresh(); if (album && gallery) gallery_reload=true; }
         if (window_portrait && *window_portrait != portrait_capture && !record && !video_file && !photograph)
             orient_profiles(*window_portrait);
-        if (foreground && pending_back!=BackTarget::none && !loading) {
+        if (foreground && pending_back!=BackTarget::none && !loading && !deleting && !delete_target) {
             const auto target=pending_back; pending_back=BackTarget::none;
             if (target==BackTarget::camera) close_album(); else return_to_grid();
         }
-        if (foreground && album && gallery_reload && !loading) {
+        if (foreground && album && gallery_reload && !loading && !deleting && !delete_target) {
             gallery_reload=false;
             if (gallery) load_grid(grid_anchor,grid_newer); else load_album(media_sequence);
         }
@@ -1085,6 +1227,7 @@ struct CameraApp {
     }
     void on_background(pxa::Context&) {
         foreground = preview = photograph = record = restart = false;
+        if (delete_target) { delete_target.reset(); refresh(); }
         close_microphone();
         pointer.reset(); playing = false; speaker.reset(); ++media_epoch;
         if (!loading) playback_file.close();
@@ -1093,6 +1236,8 @@ struct CameraApp {
         if (!video_file) status.set("摄像头已释放");
     }
     pxa::BackAction on_back() {
+        if (deleting) return pxa::BackAction::stay;
+        if (delete_target) { cancel_delete(); return pxa::BackAction::stay; }
         if (album) {
             if (gallery) close_album(); else return_to_grid();
             return pxa::BackAction::stay;
@@ -1103,7 +1248,7 @@ struct CameraApp {
         }
         return pxa::BackAction::close;
     }
-    void on_stop(pxa::StopReason) { (void)context->window().keep_screen_on(false); port.reset(); permission.reset(); video_file.close(); recording_buffer.reset(); close_microphone(); speaker.reset(); if (playback_decoder) opus_decoder_destroy(playback_decoder); playback_decoder=nullptr; image.reset(); }
+    void on_stop(pxa::StopReason) { foreground=false; delete_target.reset(); ++media_epoch; (void)playback_file.close(); (void)context->window().keep_screen_on(false); port.reset(); permission.reset(); video_file.close(); recording_buffer.reset(); close_microphone(); speaker.reset(); if (playback_decoder) opus_decoder_destroy(playback_decoder); playback_decoder=nullptr; image.reset(); }
     auto camera_controls() {
         return SafeArea(environment.display(),Column(
             Row(Text("相机").font(Font::body).rgba(0xffffffffu).grow(),
@@ -1172,7 +1317,9 @@ struct CameraApp {
         return SafeArea(environment.display(),Column(
             Row(Button("‹ 相册").on_click([this] { return_to_grid(); }).height(26_dp).padding(0_dp)
                     .align(Align::center).font(Font::caption).background(0x00000000u).rgba(0xffffffffu),
-                Text(album_title).font(Font::caption).text_align(TextAlign::center).grow().rgba(0xffffffffu)
+                Text(album_title).font(Font::caption).text_align(TextAlign::center).grow().rgba(0xffffffffu),
+                Button("删除").on_click([this] { request_delete(); }).height(26_dp).padding(0_dp)
+                    .font(Font::caption).background(0x00000000u).rgba(0xffb5b5ffu)
             ).fill(),
             Column().fill().grow(),
             Row(Button("‹").on_click([this] { if (newer_media) load_album(newer_media); }).grow().height(32_dp).padding(0_dp)
@@ -1185,6 +1332,20 @@ struct CameraApp {
             ).gap(12_dp).fill(),
             Text(status).font(Font::caption).text_align(TextAlign::center).rgba(0xc9ced6ffu).height(16_dp).fill()
         ).gap(4_dp).padding(6_dp).fill().fill_height()).visible(chrome);
+    }
+    auto delete_controls() {
+        return SafeArea(environment.display(),Column(
+            Column().grow().fill(),
+            Text("删除这个文件？").font(Font::body).text_align(TextAlign::center).rgba(0xffffffffu).fill(),
+            Text(delete_name).font(Font::caption).text_align(TextAlign::center).rgba(0xffffffffu).fill(),
+            Row(Button("取消").on_click([this] { cancel_delete(); }).grow().height(34_dp)
+                    .font(Font::body).background(0x353c46ffu).rgba(0xffffffffu),
+                Button("删除").on_click([this] { confirm_delete(); }).grow().height(34_dp)
+                    .font(Font::body).background(0xa6323dffu).rgba(0xffffffffu)
+            ).gap(10_dp).fill().visible(!deleting),
+            Text(status).font(Font::caption).text_align(TextAlign::center).rgba(0xc9ced6ffu).fill(),
+            Column().grow().fill()
+        ).gap(10_dp).padding(12_dp).fill().fill_height());
     }
     auto content() {
         const auto metrics=environment.display().get();
@@ -1199,7 +1360,8 @@ struct CameraApp {
         grid_rows=safe_height<190 ? 1 : 2;
         tile_height=std::max(18,(safe_height-94-(grid_rows-1)*4)/grid_rows);
         grid_x=safe_x+6; grid_y=safe_y+60; dirty=true;
-        using Controls=CameraControls<decltype(camera_controls()),decltype(grid_controls()),decltype(viewer_controls())>;
+        using Controls=CameraControls<decltype(camera_controls()),decltype(grid_controls()),decltype(viewer_controls()),decltype(delete_controls())>;
+        if (delete_target || deleting) return Controls(std::in_place_index<3>,delete_controls());
         if (!album) return Controls(std::in_place_index<0>,camera_controls());
         if (gallery) return Controls(std::in_place_index<1>,grid_controls());
         return Controls(std::in_place_index<2>,viewer_controls());

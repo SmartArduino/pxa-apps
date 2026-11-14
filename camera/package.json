@@ -1,8 +1,8 @@
 {
   "format": "pxa-package-source-0.2",
   "id": "pxa-camera",
-  "version": "0.4.1",
-  "release_sequence": 10,
+  "version": "0.4.2",
+  "release_sequence": 11,
   "name": "相机",
   "description": "自动取景、画质切换、拍照录像与照片视频相册。",
   "min_sdk": [
