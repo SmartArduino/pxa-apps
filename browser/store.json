@@ -14,5 +14,5 @@
     "资讯订阅",
     "书签"
   ],
-  "changelog": "修复动态 innerHTML 在片段解析失败时清空或留下半成品的问题；失败后保留旧节点、事件及单选状态，回滚失败片段消耗的样式额度，恢复后仍可继续更新。减少解析属性时的公共 DOM 调用和无效重绘，重复 HTML 属性保留首次值。保持现有资源预算，真实内存耗尽和脚本超时仍停止执行。\n\nStages bounded innerHTML fragments before replacing existing children. Failed parsing preserves nodes, handlers and radio state, restores the style allowance and permits recovery. Initializes parsed attributes directly to avoid redundant DOM calls and repaint notifications, retaining the first duplicate HTML attribute. Existing quotas and hard VM guards remain in place."
+  "changelog": "新增有界 classList，支持类名增删、切换、替换、索引、迭代和原始 value 反射；与 className、setAttribute、removeAttribute 及 CSS 选择器同步。按需缓存类名，重复读取和无变化操作不触发重绘。补充 DOMException 与选择器语法异常类型，保持原有属性、脚本、内存和网络预算。\n\nAdds bounded classList mutation, live indices/iteration and raw value reflection, synchronized with attributes and selectors. Lazy token caching avoids repeated splitting and unchanged operations do not repaint. Adds DOMException and correct selector syntax exceptions. Existing attribute, script, memory and network budgets remain unchanged."
 }

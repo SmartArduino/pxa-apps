@@ -34,7 +34,7 @@ PAGES={
  </script></body></html>''',
  'errors': HEAD+'''<script>'''+CHECK+'''
  for(const s of ['div,','[x="bad]',':unsupported']){
- let caught=false;try{document.querySelectorAll(s)}catch(e){caught=e.name==='SyntaxError'}check(caught,'syntax error')}
+ let caught=false;try{document.querySelectorAll(s)}catch(e){caught=e instanceof DOMException && e.name==='SyntaxError' && e.code===12 && !(e instanceof SyntaxError)}check(caught,'syntax error')}
  let caught=false;try{document.querySelector('a'.repeat(513))}catch(e){caught=e instanceof RangeError}check(caught,'budget');
  check(document.querySelectorAll('.missing').length===0,'empty result');passed();</script></body></html>''',
  'static': HEAD+'''<section id="reader"><p class="target">Original</p></section><script>'''+CHECK+'''

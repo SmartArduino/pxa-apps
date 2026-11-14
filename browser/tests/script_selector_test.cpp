@@ -88,7 +88,7 @@ int main(int argc,char** argv) {
     }
     {
         auto p=open(R"HTML(<script>
-        function rejects(source,kind=SyntaxError){let caught=false;try{document.querySelectorAll(source)}catch(e){caught=e instanceof kind}if(!caught)throw Error('bad selector '+source)}
+        function rejects(source,kind=DOMException){let caught=false;try{document.querySelectorAll(source)}catch(e){caught=e instanceof kind && (kind!==DOMException || e.name==='SyntaxError' && e.code===12 && !(e instanceof SyntaxError))}if(!caught)throw Error('bad selector '+source)}
         for(const s of ['', ' ', ',', 'div,', '>p','div >','div..a','[x=]','[x="bad]','[x=hello q]', 'div + p',':not(div)', '#123', '.a\\:b'])rejects(s);
         rejects('x'.repeat(513),RangeError);rejects(Array(10).fill('p').join(','),RangeError);
         if(document.querySelectorAll('.missing').length || document.querySelector('.missing')!==null)throw Error('miss');

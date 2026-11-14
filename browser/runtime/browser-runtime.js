@@ -287,6 +287,7 @@
             return;
         }
         this._attrs[name] = value;
+        if(name==='class' && this[tokenData])classTokens(this[tokenData][tokenData],value);
         if (name==='checked') uncheckRadioPeers(this);
         if (name === 'onclick') this._onclick = undefined;
         else if (name.startsWith('on')) this[name] = undefined;
@@ -334,6 +335,7 @@
                 const data = this._style; data.values = Object.create(null); data.priorities = null; data.text = '';
             }
             delete this._attrs[name];
+            if(name==='class' && this[tokenData])classTokens(this[tokenData][tokenData],'');
             if (name === 'onclick') this._onclick = undefined;
             else if (name.startsWith('on')) this[name] = undefined;
             changed();
@@ -346,7 +348,17 @@
                 if(attrs && own(attrs,attribute))return attrs[attribute] || '';
                 return key==='value' && this.nodeName==='INPUT' &&
                     (this.type.toLowerCase()==='radio' || this.type.toLowerCase()==='checkbox') ? 'on' : ''; },
-            set(v) { this.setAttribute(attribute, v); }});
+            set(v) {
+                if(key==='className') {
+                    // Reflection writes directly, without a public DOM call
+                    // retained around conversion hooks and token refresh.
+                    const text=domString(v),attrs=this._attrs;if(text.length>4096)throw new RangeError('attribute limit');
+                    if(attrs && attrs.class===text)return;
+                    if(attrs && !own(attrs,'class') && Object.keys(attrs).length>=24)throw new RangeError('attribute count');
+                    if(!attrs)this._attrs=Object.create(null);this._attrs.class=text;
+                    if(this[tokenData])classTokens(this[tokenData][tokenData],text);changed();
+                }else this.setAttribute(attribute,v);
+            }});
     }
     for (const key of ['method','enctype']) Object.defineProperty(Node.prototype, key, {
         get() {
@@ -441,12 +453,141 @@
         return find(this, n => n.nodeType === 1 && tokens.every(t => classToken(n.className,t)), true);
     };
     let lastSelector = null;
+    // Lazily retain token lists only for nodes which actually use classList.
+    // Cached tokens follow raw attribute writes without touching every setter.
+    const tokenData=Symbol('classListData');
+    const exceptionNames=['IndexSizeError','','HierarchyRequestError','WrongDocumentError','InvalidCharacterError','',
+        'NoModificationAllowedError','NotFoundError','NotSupportedError','InUseAttributeError','InvalidStateError','SyntaxError',
+        'InvalidModificationError','NamespaceError','InvalidAccessError','','TypeMismatchError','SecurityError','NetworkError',
+        'AbortError','URLMismatchError','QuotaExceededError','TimeoutError','InvalidNodeTypeError','DataCloneError'];
+    function domString(value) {if(typeof value==='symbol')throw new TypeError('DOMString expected');return String(value);}
+    class DOMException extends Error {
+        #message;#name;
+        constructor(message='',name='Error') {super();this.#message=domString(message);this.#name=domString(name);}
+        get message() {return this.#message;}
+        get name() {return this.#name;}
+        get code() {return this.#name?exceptionNames.indexOf(this.#name)+1:0;}
+    }
+    const exceptionConstants='INDEX_SIZE DOMSTRING_SIZE HIERARCHY_REQUEST WRONG_DOCUMENT INVALID_CHARACTER NO_DATA_ALLOWED NO_MODIFICATION_ALLOWED NOT_FOUND NOT_SUPPORTED INUSE_ATTRIBUTE INVALID_STATE SYNTAX INVALID_MODIFICATION NAMESPACE INVALID_ACCESS VALIDATION TYPE_MISMATCH SECURITY NETWORK ABORT URL_MISMATCH QUOTA_EXCEEDED TIMEOUT INVALID_NODE_TYPE DATA_CLONE'.split(' ');
+    for(let i=0;i<exceptionConstants.length;++i) {
+        const descriptor={value:i+1,enumerable:true};
+        Object.defineProperty(DOMException,exceptionConstants[i]+'_ERR',descriptor);
+        Object.defineProperty(DOMException.prototype,exceptionConstants[i]+'_ERR',descriptor);
+    }
+    for(const name of ['name','message','code'])Object.defineProperty(DOMException.prototype,name,{enumerable:true});
+    Object.defineProperty(DOMException.prototype,Symbol.toStringTag,{value:'DOMException',configurable:true});
+    root.DOMException=DOMException;
+    class DOMTokenList {constructor() {throw new TypeError('Illegal constructor');}}
+    function tokenState(list) {const state=list && list[tokenData];if(!state || state.list!==list)throw new TypeError('DOMTokenList receiver');return state;}
+    function classValue(state) {const attrs=state.node._attrs;return attrs && own(attrs,'class')?attrs.class:'';}
+    function classTokens(state,raw=classValue(state)) {
+        if(raw!==state.raw) {
+            const seen=Object.create(null),tokens=[];
+            const pattern=/[^\t\n\f\r ]+/g;let match;
+            while((match=pattern.exec(raw))!==null) {const token=match[0];if(!own(seen,token)){seen[token]=true;tokens.push(token);}}
+            const target=state.target,previous=state.tokens?state.tokens.length:0;
+            for(let i=0;i<tokens.length;++i)Object.defineProperty(target,String(i),{value:tokens[i],writable:false,enumerable:true,configurable:true});
+            for(let i=tokens.length;i<previous;++i)delete target[i];
+            state.raw=raw;state.tokens=tokens;
+        }
+        return state.tokens;
+    }
+    function writeClass(state,text) {
+        if(text.length>4096)throw new RangeError('attribute limit');
+        const node=state.node,attrs=node._attrs;
+        if(attrs && attrs.class===text)return;
+        if(attrs && !own(attrs,'class') && Object.keys(attrs).length>=24)throw new RangeError('attribute count');
+        if(!attrs)node._attrs=Object.create(null);
+        node._attrs.class=text;classTokens(state,text);changed();
+    }
+    function commitTokens(state,tokens) {
+        const attrs=state.node._attrs;
+        if(!tokens.length && (!attrs || !own(attrs,'class')))return;
+        const raw=tokens.join(' ');writeClass(state,raw);
+    }
+    function validateToken(token) {
+        if(!token)throw new DOMException('Empty class token','SyntaxError');
+        if(cssSpace.test(token))throw new DOMException('ASCII whitespace in class token','InvalidCharacterError');
+    }
+    function tokenIterator(list,kind) {
+        const state=tokenState(list);let index=0,done=false;
+        return {next() {
+            const tokens=classTokens(state);if(done || index>=tokens.length){done=true;return {value:undefined,done:true};}
+            const at=index++;return {value:kind===0?at:kind===1?tokens[at]:[at,tokens[at]],done:false};
+        },[Symbol.iterator]() {return this;}};
+    }
+    Object.assign(DOMTokenList.prototype,{
+        item(index) {const state=tokenState(this);if(!arguments.length)throw new TypeError('index required');index=index>>>0;return classTokens(state)[index]??null;},
+        contains(token) {const state=tokenState(this);if(!arguments.length)throw new TypeError('token required');token=domString(token);return classTokens(state).includes(token);},
+        add(...tokens) {
+            const state=tokenState(this);for(let i=0;i<tokens.length;++i)tokens[i]=domString(tokens[i]);
+            for(const token of tokens)validateToken(token);
+            const next=classTokens(state).slice();for(const token of tokens)if(!next.includes(token))next.push(token);
+            commitTokens(state,next);
+        },
+        remove(...tokens) {
+            const state=tokenState(this);for(let i=0;i<tokens.length;++i)tokens[i]=domString(tokens[i]);
+            for(const token of tokens)validateToken(token);
+            const next=classTokens(state).filter(token=>!tokens.includes(token));commitTokens(state,next);
+        },
+        toggle(token,force) {
+            const state=tokenState(this);if(!arguments.length)throw new TypeError('token required');token=domString(token);validateToken(token);
+            const tokens=classTokens(state),at=tokens.indexOf(token),present=at>=0;
+            const wanted=force!==undefined?!!force:!present;if(wanted===present)return present;
+            const next=tokens.slice();if(wanted)next.push(token);else next.splice(at,1);commitTokens(state,next);return wanted;
+        },
+        replace(token,newToken) {
+            const state=tokenState(this);if(arguments.length<2)throw new TypeError('two tokens required');
+            token=domString(token);newToken=domString(newToken);
+            if(!token || !newToken)throw new DOMException('Empty class token','SyntaxError');
+            validateToken(token);validateToken(newToken);
+            const tokens=classTokens(state),at=tokens.indexOf(token);if(at<0)return false;
+            const next=tokens.slice(),other=next.indexOf(newToken);
+            if(other<0 || other===at)next[at]=newToken;else {next[Math.min(at,other)]=newToken;next.splice(Math.max(at,other),1);}
+            commitTokens(state,next);return true;
+        },
+        supports(token) {tokenState(this);if(!arguments.length)throw new TypeError('token required');domString(token);throw new TypeError('class has no supported-token vocabulary');},
+        forEach(callback,thisArg) {
+            const state=tokenState(this);if(typeof callback!=='function')throw new TypeError('callback required');
+            for(let i=0;i<classTokens(state).length;++i)callback.call(thisArg,classTokens(state)[i],i,this);
+        },
+        keys() {return tokenIterator(this,0);},values() {return tokenIterator(this,1);},entries() {return tokenIterator(this,2);},
+        toString() {return classValue(tokenState(this));}
+    });
+    Object.defineProperties(DOMTokenList.prototype,{
+        length:{get() {return classTokens(tokenState(this)).length;},enumerable:true,configurable:true},
+        value:{get() {return classValue(tokenState(this));},set(value) {const state=tokenState(this);writeClass(state,domString(value));},enumerable:true,configurable:true},
+        [Symbol.iterator]:{value:DOMTokenList.prototype.values,writable:true,configurable:true},
+        [Symbol.toStringTag]:{value:'DOMTokenList',configurable:true}
+    });
+    const tokenIndex=key=>typeof key==='string' && /^(0|[1-9][0-9]*)$/.test(key) && Number(key)<4294967295;
+    // Ordinary reads avoid Proxy callbacks and their retained Wasm frames.
+    // Only mutations need interception; indices are refreshed on class writes.
+    const tokenHandler={
+        set(target,key,value,receiver) {return !tokenIndex(key) && Reflect.set(target,key,value,receiver);},
+        defineProperty(target,key,descriptor) {return !tokenIndex(key) && Reflect.defineProperty(target,key,descriptor);},
+        deleteProperty(target,key) {return !(tokenIndex(key) && own(target,key)) && Reflect.deleteProperty(target,key);},
+        preventExtensions() {return false;}
+    };
+    Object.defineProperty(Node.prototype,'classList',{
+        get() {
+            if(this.nodeType!==1)return undefined;
+            let list=this[tokenData];if(!list) {
+                const target=Object.create(DOMTokenList.prototype),state={node:this,target,raw:null,tokens:null};list=new Proxy(target,tokenHandler);
+                state.list=list;Object.defineProperty(target,tokenData,{value:state});Object.defineProperty(this,tokenData,{value:list});classTokens(state);
+            }
+            return list;
+        },
+        set(value) {const list=this.classList;if(list)list.value=value;}
+    });
+    root.DOMTokenList=DOMTokenList;
+
     function selectorPlan(source) {
         source = String(source);
         if (source.length > 512) throw new RangeError('selector length limit');
         if (lastSelector && lastSelector.source === source) return lastSelector;
         let i=0, terms=0, steps=0; const groups=[];
-        function invalid() { throw new SyntaxError('unsupported or invalid selector'); }
+        function invalid() { throw new DOMException('Unsupported or invalid selector','SyntaxError'); }
         function space() { const start=i;while(i<source.length && cssSpace.test(source[i]))++i;return i!==start; }
         function ident() { const m=cssIdent.exec(source.slice(i));if(!m)invalid();i+=m[0].length;return m[0]; }
         space();

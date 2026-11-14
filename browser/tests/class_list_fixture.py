@@ -1,0 +1,70 @@
+"""Own CSS/classList pages, request accounting and a small generated image."""
+from collections import Counter
+from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
+from io import BytesIO
+from threading import Thread
+from urllib.parse import urlsplit
+from PIL import Image
+
+HEAD='''<!doctype html><html><head><meta charset=utf-8><title>动态类名</title>
+<style>.blue{color:#2468ac}.green{color:#187a42}.folded{display:none}</style></head><body>'''
+ACTION='<button type=button onclick="advance()" style="color:#d06020">切换状态</button>'
+PROOF='<p id=proof style="color:#555555">准备检查</p>'
+CHECK='''function check(ok){if(!ok)throw Error('class state')}function proof(text){document.getElementById('proof').textContent=text}'''
+MAIN=HEAD+ACTION+'<p id=target class=blue>正文颜色检查</p>'+PROOF+'''<script>'''+CHECK+'''
+const n=document.getElementById('target'),list=n.classList;let phase=0;
+function advance(){switch(++phase){
+ case 1:list.add('green');check(n.matches('.blue.green'));break;
+ case 2:check(list.toggle('folded',true));break;
+ case 3:check(!list.toggle('folded',false));break;
+ case 4:check(list.replace('green','blue'));check(list.length===1 && list[0]==='blue');break;
+ case 5:n.className='green green';check(list.length===1 && list[0]==='green');break;
+ case 6:n.setAttribute('class','blue');check(list.value==='blue');break;
+ case 7:list.value='green extra';check(list[1]==='extra');break;
+ case 8:n.removeAttribute('class');check(!list.length && list[0]===undefined);break;
+ case 9:n.classList='blue';check(n.classList===list && list[0]==='blue');break;
+ case 10:list.remove('blue');list.add('green');break;
+ case 11:let caught=false;try{list.add('valid','bad token')}catch(e){caught=e instanceof DOMException && e.name==='InvalidCharacterError' && e.code===5}
+  check(caught && n.className==='green' && list.length===1);break;
+ default:
+  check(list.contains('green'));list.add('green');list.remove('missing');check(list.toggle('green',true));
+  check(!list.replace('missing','other'));list.value='green';return;
+ }proof('状态检查 '+phase);
+}
+</script></body></html>'''
+QUOTA=HEAD+ACTION+'<p id=target class=green>额度恢复检查</p>'+PROOF+'''<script>'''+CHECK+'''
+const n=document.getElementById('target'),list=n.classList;let phase=0;
+function advance(){switch(++phase){
+ case 1:let caught=false;try{list.add('x'.repeat(4097))}catch(e){caught=e.name==='RangeError'}
+  check(caught && n.className==='green' && list[0]==='green');break;
+ case 2:n.removeAttribute('class');for(let i=0;i<23;++i)n.setAttribute('data-'+i,'x');
+  let limited=false;try{list.add('green')}catch(e){limited=e.name==='RangeError'}
+  list.add();list.remove('missing');check(limited && !n.hasAttribute('class') && !list.length);break;
+ case 3:n.removeAttribute('data-0');list.add('green');check(list[0]==='green');break;
+ }proof('额度检查 '+phase);
+}
+</script></body></html>'''
+IMAGE=HEAD+ACTION+'<div id=panel class=folded><img src=/class-image.png width=48 height=48 alt="类名显示图片"></div>'+PROOF+'''<script>'''+CHECK+'''
+const panel=document.getElementById('panel');let phase=0;
+function advance(){const hidden=panel.classList.toggle('folded');check(hidden===Boolean((++phase)%2===0));proof('图片检查 '+phase)}
+</script></body></html>'''
+
+
+class Fixture:
+    def __init__(self,bind='127.0.0.1',port=0):
+        self.counts=Counter();fixture=self
+        buffer=BytesIO();Image.new('RGB',(48,48),(24,122,66)).save(buffer,format='PNG');image=buffer.getvalue()
+        class Handler(BaseHTTPRequestHandler):
+            def log_message(self,*_):pass
+            def do_GET(self):
+                path=urlsplit(self.path).path;fixture.counts[path]+=1
+                if path=='/class-image.png':data=image;content='image/png';status=200
+                else:
+                    page={'/classes':MAIN,'/quota':QUOTA,'/image':IMAGE}.get(path)
+                    data=(page or 'Unexpected request').encode();content='text/html; charset=utf-8';status=200 if page else 404
+                self.send_response(status);self.send_header('Content-Type',content);self.send_header('Content-Length',str(len(data)));self.end_headers()
+                try:self.wfile.write(data)
+                except (BrokenPipeError,ConnectionResetError):pass
+        self.server=ThreadingHTTPServer((bind,port),Handler)
+    def start(self):self.thread=Thread(target=self.server.serve_forever,daemon=True);self.thread.start();return self
+    def close(self):self.server.shutdown();self.server.server_close();self.thread.join()
