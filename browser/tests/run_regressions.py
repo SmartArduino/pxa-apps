@@ -26,6 +26,8 @@ SUITES = [
     ('preview-recovery', 'preview_recovery_smoke.py', []),
     ('preview-recovery-compact', 'preview_recovery_smoke.py', ['--width','296','--height','240']),
     ('preview-foreground', 'preview_foreground_smoke.py', []),
+    ('http-limits', 'http_limit_smoke.py', []),
+    ('http-limits-compact', 'http_limit_smoke.py', ['--width','296','--height','240']),
     ('comic-live', 'comic_live_smoke.py', []),
 ]
 

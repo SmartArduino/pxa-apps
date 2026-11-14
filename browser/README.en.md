@@ -78,6 +78,10 @@ area is wider than its visible thumb, without allocating a backing bitmap.
 More also offers volume-key paging, off by default: Volume + scrolls up and
 Volume − scrolls down; holding a key repeats. The preference survives restarts.
 Text editing and background operation return volume keys to the system.
+On Hosts with HTTP limit diagnostics, confirmed body overflow stops without
+an extra GET. Oversized response headers can still fall back to static reading
+with scripts disabled. Older Hosts retain the safe fallback; POST is never
+automatically replayed. Body and header budgets are unchanged.
 Address and toolbar use centered safe horizontal bands. Reading content uses
 each side's actual safe margin, without mirroring a one-sided gesture strip,
 allowing rounded and circular screens to use more of their middle area.

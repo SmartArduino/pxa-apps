@@ -512,12 +512,16 @@ struct App {
                 permission);
             if (!exchange)
                 co_return std::unexpected(exchange.error());
-            auto response = co_await std::move(*exchange).response();
+            pxa::HttpLimitReason limit_reason;
+            auto response = co_await std::move(*exchange).response(limit_reason);
             if (!response) {
                 // A policy larger than the response-head budget must not make
                 // a static GET unreadable. Retry without executing scripts.
                 // Never replay a POST whose response could already exist.
-                if (inspect_policy && !post && response.error()==pxa::Error::limit_exceeded) {
+                // Dropping policy cannot fix a confirmed body limit. Unknown
+                // diagnostics on older Hosts retain the safe policy fallback.
+                if (inspect_policy && !post && response.error()==pxa::Error::limit_exceeded &&
+                    limit_reason != pxa::HttpLimitReason::body) {
                     inspect_policy=scripts_allowed=false; --redirect; continue;
                 }
                 co_return std::unexpected(response.error());
