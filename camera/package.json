@@ -72,5 +72,21 @@
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
+  },
+  "interaction": {
+    "schema": "pxa-app-interaction-1",
+    "profiles": [
+      {
+        "id": "touch",
+        "kind": "touch",
+        "complete": true,
+        "requires": {
+          "tap": "tap"
+        },
+        "contacts": 1,
+        "min_width": 240,
+        "min_height": 200
+      }
+    ]
   }
 }
