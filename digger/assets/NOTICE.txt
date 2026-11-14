@@ -1,0 +1,13 @@
+Digger Remastered / PXA port
+
+Digger Remastered is attributed to Andrew Jenner; the Unix/SDL development is attributed to Maksym Sobolyev and contributors. Preserve the 1983 Windmill Software credits carried by the upstream sources and title.
+
+The included Remastered engine, VGA source tables and losslessly decoded built-in title are covered by the upstream Remastered source grant under GNU GPL version 2, with the original per-file permissive notices retained. This does not license or include the separately offered original DOS executable or original Windmill source archive. The no-_SDL_SOUND PXA profile has no music backend or tune data.
+
+Pinned upstream: https://github.com/sobomax/digger/tree/638125eecc2a36629b886f58d7b75253894cf3d3
+Source grant: https://www.digger.org/download.html
+Author clarification: https://www.digger.org/faq.html
+
+Individual notices are in assets/licenses: Digger GPLv2/copyright and BSD notices, microsippy BSD-2-Clause, David Reid MD5 (MIT-0 selected), PXA adapter/SDK MIT, and the compiler runtime notices. The independently drawn application icon is governed by assets/ICON-LICENSE.txt. No blanket license replaces these notices.
+
+Complete corresponding PXA source and build/install instructions must accompany binary distribution; see SOURCES.md in the source companion. A source companion must be available alongside the same application downloads. A mutable repository landing page alone is not the source-delivery artifact.

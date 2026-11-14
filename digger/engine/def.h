@@ -1,6 +1,11 @@
 /* Digger Remastered
    Copyright (c) Andrew Jenner 1998-2004 */
 
+/* PXA port change recorded in Apps commit 03931e810852279c87d9fc7c25a018686ee4436f
+ * (2026-11-03): avoid selecting the native UNIX platform when DIGGER_PXA is defined.
+ * This change notice was added on 2026-11-15; original notices remain above.
+ */
+
 #ifndef DEF_H
 #define DEF_H
 

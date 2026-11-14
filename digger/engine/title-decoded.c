@@ -1,4 +1,9 @@
-/* Lossless built-in title from upstream title_gz.c; upstream licenses apply. */
+/* Digger Remastered built-in title.
+ * Copyright (c) Andrew Jenner 1998-2004; upstream GNU GPL version 2 applies.
+ * PXA transformation recorded in Apps commit 03931e810852279c87d9fc7c25a018686ee4436f
+ * (2026-11-03): losslessly decode the zlib data in title_gz.c into title_pixels.
+ * Copyright/change notice added 2026-11-15; image data is unchanged.
+ */
 #include <string.h>
 static const unsigned char title_pixels[256000]={
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,

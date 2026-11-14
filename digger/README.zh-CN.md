@@ -15,7 +15,7 @@ tools/app.sh build digger --board doit-gamekit-1 --target esp32s31 --aot-only
 
 游戏状态只保存在本次运行的内存中，退出后重新开始。
 
-各上游版权和许可保持原样；适配层许可不覆盖引擎、字体、游戏数据或美术资源。素材仅按用户提供的私人学习用途使用，未发布到商城。
+本移植使用 Digger Remastered 源码及其随附的 VGA/标题数据，按上游 GNU GPL 第 2 版和逐文件 BSD 等许可交付；不包含官网另列的原版 DOS 程序或原版 Windmill 源码。发行时须保留 `assets/NOTICE.txt`、各许可证及完整对应源码，见 [源码交付说明](SOURCES.md)。适配层 MIT 不替代上游许可。
 
 原生 raster 回归：`python3 local/pxa-apps/digger/tests/raster.py --output <本地产物目录>`，需要本机 SDL2 开发库和 `pkg-config`。Enter/触屏 START 开局，方向键移动，A 开火，B 暂停；触屏 NEW 重新开始。
 

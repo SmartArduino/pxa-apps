@@ -1,6 +1,11 @@
 /* Digger Remastered
    Copyright (c) Andrew Jenner 1998-2004 */
 
+/* PXA port change recorded in Apps commit 03931e810852279c87d9fc7c25a018686ee4436f
+ * (2026-11-03): rename the engine process entry to digger_engine_main for the PXA frontend.
+ * This change notice was added on 2026-11-15; original notices remain above.
+ */
+
 static const char copyright[]="Portions Copyright(c) 1983 Windmill Software Inc.";
 
 #include <ctype.h>
