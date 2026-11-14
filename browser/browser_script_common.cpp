@@ -99,7 +99,7 @@ bool Capture::has_script() const noexcept {
         }
         if (!t.closing && (t.name == "style" || t.name == "script")) {
             auto end = raw_end(bytes_, t.name == "style" ? "</style" : "</script", at);
-            if (end != bytes_.npos) at = end;
+            at = end == bytes_.npos ? bytes_.size() : end;
         } else if(!t.closing) {
             const auto kind=browser::html_text(t.name);
             if(kind==browser::HtmlText::plaintext)break;

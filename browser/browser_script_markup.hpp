@@ -6,16 +6,15 @@ inline bool equal_ascii(std::string_view a, std::string_view b) {
     return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(),
         [](char x, char y) { return lower(x) == lower(y); });
 }
-inline std::size_t find_ascii(std::string_view text, std::string_view needle, std::size_t from = 0) {
-    for (auto i = from; i + needle.size() <= text.size(); ++i)
-        if (equal_ascii(text.substr(i, needle.size()), needle)) return i;
-    return text.npos;
-}
 inline bool tag_boundary(char c) { return space(c) || c == '>' || c == '/'; }
 inline std::size_t raw_end(std::string_view text, std::string_view name, std::size_t from) {
+    // Every ending is </name. Search the exact prefix before comparing the
+    // name, including when the body contains many non-closing '<' markers.
     for (;;) {
-        auto at=find_ascii(text,name,from);
+        const auto at=text.find("</",from);
         if(at==text.npos)return at;
+        if(name.size()>text.size()-at)return text.npos;
+        if(!equal_ascii(text.substr(at,name.size()),name)) {from=at+1;continue;}
         if(at+name.size()<text.size() && tag_boundary(text[at+name.size()]))return at;
         from=at+name.size();
     }
