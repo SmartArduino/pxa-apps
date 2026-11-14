@@ -12,3 +12,17 @@ tools/app.sh build meritous --target simulator,esp32s3,esp32s31 --aot-only \
 ```
 
 操作、声音与存档范围见[运行层说明](../common/retro-games/README.md)。游戏来源固定在本目录的 `upstream-lock.json`、`source-lock.json` 或共享引擎的来源记录中；各 `LICENSE`、`COPYING` 和 `NOTICE` 文件分别保留原授权。构建不下载游戏源码。
+
+地图生成与保存的进度界面在原有事件轮询处按实际经过时间定期让出执行，
+使 Host 继续处理输入和生命周期事件；游戏更新仍使用原有时钟。
+
+`tests/verify_gameplay.py` 对正常签名包执行真实模拟器的新局与移动回归，
+保留 CLI 默认输入超时，并使用独立状态目录和矩形原始截图：
+
+```sh
+python3 tests/verify_gameplay.py --sdk /path/to/devkit --kit /path/to/agent-kit \
+  --package /path/to/pxa-meritous.pxa \
+  --output /workspace/local/artifacts/meritous/<timestamp>/gameplay
+```
+
+分别传入 Portable 和 Native 包运行；这是模拟器验证，不代替真实设备验收。

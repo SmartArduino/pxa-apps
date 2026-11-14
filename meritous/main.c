@@ -21,6 +21,12 @@ static uint8_t async_stack[ASYNC_STACK_BYTES] __attribute__((aligned(16)));
 static struct {uint32_t pos,end;} async_data;
 static int suspended,rewinding,started,completed;
 static uint32_t deadline,log_next;
+static uint64_t callback_started_ns;
+static uint64_t monotonic_ns(void) {
+    struct timespec time;
+    if (clock_gettime(CLOCK_MONOTONIC, &time) != 0) return 0;
+    return (uint64_t)time.tv_sec * UINT64_C(1000000000) + time.tv_nsec;
+}
 static SDL_Event events[64];
 static unsigned events_read,events_write;
 static SDLKey held=SDLK_UNKNOWN;
@@ -59,6 +65,15 @@ __attribute__((noinline)) static void yield_to_pxa(void) {
 void SDL_Delay(Uint32 ms){deadline=fb.time_ms+(ms?ms:1);yield_to_pxa();}
 Uint32 SDL_GetTicks(void){return fb.time_ms;}
 int SDL_PollEvent(SDL_Event *event){
+    /* Progress screens poll while map/save work runs. Give the Host time for
+     * input and lifecycle callbacks without changing the game's update clock. */
+    const uint64_t now = monotonic_ns();
+    if (callback_started_ns && now >= callback_started_ns &&
+        now - callback_started_ns >= UINT64_C(8000000)) {
+        deadline=fb.time_ms;
+        yield_to_pxa();
+        callback_started_ns=monotonic_ns();
+    }
     if(events_read==events_write)return 0;
     if(event)*event=events[events_read%64];events_read++;return 1;
 }
@@ -125,7 +140,7 @@ int32_t mt_app_start(const uint8_t *config,uint32_t length){
     fb.width=GAME_W;fb.height=PORT_H;
     for(unsigned i=0;i<256;i++)fb.palette[i]=((i>>3)<<11)|((i>>2)<<5)|(i>>3);
     async_data.pos=(uint32_t)(uintptr_t)async_stack;async_data.end=async_data.pos+sizeof(async_stack);
-    suspended=rewinding=started=completed=0;deadline=log_next=0;events_read=events_write=0;held=SDLK_UNKNOWN;
+    suspended=rewinding=started=completed=0;deadline=log_next=0;events_read=events_write=0;held=SDLK_UNKNOWN;callback_started_ns=0;
     pxa_log_write(PXA_LOG_LEVEL_INFO,"Meritous upstream 2b86412346ed; PXA touch frontend; silent; session-only saves");
     fb.pointer_controller=1;return pxfb_start(&fb,config,length,20);
 }
@@ -135,8 +150,8 @@ int32_t pxa_app_on_event(const uint8_t *bytes,uint32_t length){
     if(flags&PXFB_POINTER)pointer();
     if(flags&PXFB_LIFECYCLE)release();
     if(flags&PXFB_BACK){release();queue(SDLK_ESCAPE,1);queue(SDLK_ESCAPE,0);return PXA_EVENT_HANDLED;}
-    if((flags&PXFB_READY)&&!started){started=1;mt_call_game();}
-    else if((flags&PXFB_TICK)&&started&&!completed&&(int32_t)(fb.time_ms-deadline)>=0)mt_call_game();
+    if((flags&PXFB_READY)&&!started){started=1;callback_started_ns=monotonic_ns();mt_call_game();}
+    else if((flags&PXFB_TICK)&&started&&!completed&&(int32_t)(fb.time_ms-deadline)>=0){callback_started_ns=monotonic_ns();mt_call_game();}
     return flags?PXA_EVENT_HANDLED:PXA_EVENT_UNHANDLED;
 }
 void pxa_app_stop(uint32_t reason){(void)reason;release();pxfb_stop(&fb);}
