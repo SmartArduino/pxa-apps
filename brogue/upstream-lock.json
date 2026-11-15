@@ -4,9 +4,120 @@
   "commit": "104a20fedbe7d9360d2dfc8ff665571694212ad8",
   "engine_version": "1.15.1",
   "source": "vendor",
-  "logic": "All src/brogue/*.c and src/variants/*.c are compiled directly without editing upstream code",
+  "logic": "Upstream vendor files remain byte-identical. Architect.c, Grid.c, Items.c and Movement.c compile through pinned generated copies replacing only observed traversal/pruning recursion bookkeeping with equivalent bounded DFS frames; all original local decisions and all other upstream units are preserved. Explicit traversal loops call the PXA frontend wall-time scheduling checkpoint; upstream game decisions, arithmetic, RNG calls and update order stay unchanged.",
   "license": "AGPL-3.0-or-later (some platform files carry GPL-3.0-or-later headers; combined work follows AGPL)",
   "assets": "No optional tile atlas or bundled SDL fonts used. Game text and symbol tables remain upstream. Frontend bitmap uses DejaVu Sans Mono; see FONT-LICENSE.txt.",
-  "tools": {"wasi-sdk": "34.0", "binaryen": "108", "wamrc": "2.4.3"},
-  "scope": "desktop simulator, 800x552, touch controls; hardware not verified; recording/save files remain volatile"
+  "tools": {
+    "wasi-sdk": "34.0",
+    "binaryen": "108",
+    "wamrc": "2.4.3"
+  },
+  "scope": "desktop simulator, 800x552, touch controls; hardware not verified; recording/save files remain volatile",
+  "build_adaptations": [
+    {
+      "source": "vendor/src/brogue/Architect.c",
+      "source_sha256": "905423dfe7b5b8f8f0af581e9b22d351cbeca77e778f84234952d4794c565b5a",
+      "generator": "compat/generate_architect.py",
+      "replacement": "compat/insert_room_stack.c.inc",
+      "scope": "Same grid writes and complete DFS visit order; no RNG or rule change; frontend wall-time checkpoints preserve traversal across suspensions; original AGPL notice retained."
+    },
+    {
+      "source": "vendor/src/brogue/Grid.c",
+      "source_sha256": "3d6e99a7bc9be8135b48bacd0bda51cb90495ef55c753ff9cbb5a32053f24f80",
+      "generator": "compat/generate_grid.py",
+      "replacement": "compat/fill_region_stack.c.inc",
+      "scope": "Same grid writes, return count, complete DFS order and upstream boundary-break semantics; no RNG change; frontend checkpoints preserve traversal across suspensions; original AGPL notice retained."
+    },
+    {
+      "source": "vendor/src/brogue/Architect.c",
+      "source_sha256": "905423dfe7b5b8f8f0af581e9b22d351cbeca77e778f84234952d4794c565b5a",
+      "generator": "compat/generate_architect.py",
+      "replacement": "compat/lake_fill_stack.c.inc",
+      "scope": "Same flood map, complete DFS visit and predicate-evaluation order; no RNG change; frontend checkpoints preserve traversal across suspensions; original AGPL notice retained."
+    },
+    {
+      "source": "vendor/src/brogue/Architect.c",
+      "source_sha256": "905423dfe7b5b8f8f0af581e9b22d351cbeca77e778f84234952d4794c565b5a",
+      "generator": "compat/generate_architect.py",
+      "replacement": "compat/fill_lake_stack.c.inc",
+      "scope": "Same nested i/j scan and all unfilled/liquid/wreath mutation order; capacity map cells+initial root; no RNG or rule change; original AGPL notice retained."
+    },
+    {
+      "source": "vendor/src/brogue/Architect.c",
+      "source_sha256": "905423dfe7b5b8f8f0af581e9b22d351cbeca77e778f84234952d4794c565b5a",
+      "generator": "compat/generate_architect.py",
+      "replacement": "compat/check_loopiness_stack.c.inc",
+      "scope": "Original clockwise neighbor-string decision unchanged; same boolean return and exact IN_LOOP flag/call order; bounded only-mutated-cell frames; no RNG change; original AGPL notice retained."
+    },
+    {
+      "source": "vendor/src/brogue/Architect.c",
+      "source_sha256": "905423dfe7b5b8f8f0af581e9b22d351cbeca77e778f84234952d4794c565b5a",
+      "generator": "compat/generate_architect.py",
+      "replacement": "compat/audit_loop_stack.c.inc",
+      "scope": "Same 8-neighbor visited-grid/pmap-flag guard and complete call/write order; no pmap change or RNG; original AGPL notice retained."
+    },
+    {
+      "source": "vendor/src/brogue/Architect.c",
+      "source_sha256": "905423dfe7b5b8f8f0af581e9b22d351cbeca77e778f84234952d4794c565b5a",
+      "generator": "compat/generate_architect.py",
+      "replacement": "compat/flood_count_stack.c.inc",
+      "scope": "Same results/pass-map traversal, count initialization, short accumulation and per-return min10000 including original conversion behavior; no RNG; original AGPL notice retained."
+    },
+    {
+      "source": "vendor/src/brogue/Architect.c",
+      "source_sha256": "905423dfe7b5b8f8f0af581e9b22d351cbeca77e778f84234952d4794c565b5a",
+      "generator": "compat/generate_architect.py",
+      "replacement": "compat/connect_cell_stack.c.inc",
+      "scope": "Same zone writes, full DFS/predicate/subtree-return order and short per-child size accumulation; bounded map cells; no RNG or rule change; original AGPL notice retained."
+    },
+    {
+      "source": "vendor/src/brogue/Items.c",
+      "source_sha256": "cf2d43c2af89777d047cd7e4c5fbf6e4a4cd2039fef65fb1169e6a8f7ba21a30",
+      "generator": "compat/generate_items.py",
+      "replacement": "compat/item_heat_stack.c.inc",
+      "scope": "Same recursive heat/predicate/write order and unsigned-short door wrap; checked dynamic frame growth in existing linear-memory heap preserves revisitation without enlarging Host stack or memory budgets; original AGPL notice retained."
+    },
+    {
+      "source": "vendor/src/brogue/Movement.c",
+      "source_sha256": "69ea5b07feb70792046b513b0c44a40d5018bcc3ee7bbbdbf20bd865cb4f650b",
+      "generator": "compat/generate_movement.py",
+      "replacement": "compat/fov_stack.c.inc",
+      "scope": "Same octant transforms, integer/fixed-point rounding, predicate/write/recursive-subrange order using explicit suspended column scans; original in-map origin/eight-octant caller bounds capacity; no lighting/RNG rule change; original AGPL notice retained."
+    },
+    {
+      "source": "vendor/src/brogue/Architect.c",
+      "source_sha256": "905423dfe7b5b8f8f0af581e9b22d351cbeca77e778f84234952d4794c565b5a",
+      "generator": "compat/generate_architect.py",
+      "replacement": "compat/machine_interior_stack.c.inc",
+      "scope": "Same interior writes, neighbor flag short-circuit order, choke threshold and false-return propagation through all ancestors; bounded map cells, frontend scheduling checkpoints only, no RNG/rule change; original AGPL notice retained."
+    },
+    {
+      "source": "vendor/src/brogue/Architect.c",
+      "source_sha256": "905423dfe7b5b8f8f0af581e9b22d351cbeca77e778f84234952d4794c565b5a",
+      "generator": "compat/generate_architect.py",
+      "replacement": "compat/build_machine_stack.c.inc",
+      "scope": "Same two sub-machine requests/return points and original body order; all72locals+7parameters retained in distinct heap fields; linked checked continuation frames avoid direct C recursion. Separate scratch ownership frees active frame/machineData/distanceMap on fatal OOM without logical item/monster rollback or RNG draws. Original AGPL notice retained. Grid scratch preserves exact upstream successful two-malloc sizes/order/row layout, with local header cleanup before fatal context unwind when cell allocation fails."
+    },
+    {
+      "source": "vendor/src/brogue/MainMenu.c",
+      "source_sha256": "1bea4e485f69ff5278adb9e70b9650b5e688f0a47f76ec967f644554b6a85ba0",
+      "generator": "compat/generate_ui.py",
+      "replacement": "compat/mainBrogueJunction_dispatch.c.inc",
+      "scope": "Same per-activation original local storage, initializer timing, branches, child calls/returns, UI state and RNG order; bounded automatic context in existing linear C stack and targeted noinline worker release large interpreter frames during original child gameplay calls; no heap or stack/timeout setting change; original AGPL notice retained."
+    },
+    {
+      "source": "vendor/src/brogue/IO.c",
+      "source_sha256": "0cce67fb80b03ad64a627a566cb23b6a38bbf384ffc1dbe191c2d36e207bdfd4",
+      "generator": "compat/generate_ui.py",
+      "replacement": "compat/mainInputLoop_dispatch.c.inc",
+      "scope": "Same per-activation original local storage, initializer timing, branches, child calls/returns, UI state and RNG order; bounded automatic context in existing linear C stack and targeted noinline worker release large interpreter frames during original child gameplay calls; no heap or stack/timeout setting change; original AGPL notice retained."
+    }
+  ],
+  "scheduling_adaptation": {
+    "source": "main.c",
+    "scope": "Monotonic wall-time budget only, sampled at explicit traversal loop boundaries; existing Asyncify/TICK resume path and game virtual-clock source unchanged; incomplete world state is not inspected by diagnostic reporter.",
+    "budget_us": 8000,
+    "poll_interval_iterations": 64,
+    "oracle_scheduler": "NoOp for pure algorithm equivalence; separate frontend budget boundary test plus real normal-SDK runtime gates."
+  }
 }

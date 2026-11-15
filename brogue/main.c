@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include "platform.h"
 #include "GlobalsBase.h"
 #include "pxa_framebuffer.h"
@@ -35,6 +36,9 @@ void br_save_game_stack(void);
 static struct { uint32_t pos, end; } async_data;
 static int suspended, rewinding, started, completed, dirty, waiting_input, uppercase;
 static uint32_t deadline, previous_buttons;
+static uint64_t slice_started_us;
+static uint32_t slice_poll_count;
+static int cooperative_pause;
 static unsigned long logged_turn;
 static short logged_x, logged_y, logged_hp;
 static uint64_t logged_seed;
@@ -66,6 +70,26 @@ __attribute__((noinline)) static void yield_to_pxa(void) {
     suspended = 1;
     br_save_game_stack();
     async_start_unwind(&async_data);
+}
+
+/* Scheduling uses wall time only; Brogue keeps the existing virtual clock,
+ * RNG and update order. Explicit traversal loops provide safe checkpoints. */
+static uint64_t brogue_monotonic_us(void) {
+    struct timespec now;
+    if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) {
+        __builtin_trap();
+    }
+    return (uint64_t)now.tv_sec * UINT64_C(1000000) + (uint64_t)now.tv_nsec / 1000;
+}
+
+__attribute__((noinline)) void pxa_brogue_cooperate(void) {
+    if ((++slice_poll_count & 63u) != 0 || brogue_monotonic_us() - slice_started_us < 8000) {
+        return;
+    }
+    waiting_input = 0;
+    deadline = fb.time_ms;
+    cooperative_pause = 1;
+    yield_to_pxa();
 }
 
 static uint8_t rgb_index(int r, int g, int b) {
@@ -176,6 +200,7 @@ __attribute__((noinline)) void br_run_game(void) {
 
 /* Called only after the ASM bridge has restored the frontend C stack. */
 static void report_game_state(void) {
+    if (cooperative_pause) return;
     if(rogue.seed!=logged_seed || rogue.playerTurnNumber!=logged_turn ||
        player.loc.x!=logged_x || player.loc.y!=logged_y || player.currentHP!=logged_hp ||
        rogue.gameInProgress!=logged_active || rogue.gameHasEnded!=logged_ended) {
@@ -208,6 +233,15 @@ static void report_game_state(void) {
     }
 }
 
+static void run_game_slice(void) {
+    slice_started_us = brogue_monotonic_us();
+    slice_poll_count = 0;
+    cooperative_pause = 0;
+    br_call_game();
+    report_game_state();
+}
+
+
 /* Retained upstream CLI helper used by seed input in MainMenu.c. */
 boolean tryParseUint64(char *str, uint64_t *num) {
     unsigned long long n; char buf[100];
@@ -228,6 +262,7 @@ int32_t br_app_start(const uint8_t *config,uint32_t length) {
     async_data.end=async_data.pos+sizeof(async_stack);
     suspended=rewinding=started=completed=waiting_input=uppercase=0; dirty=1;
     queue_read=queue_write=0; previous_buttons=0;
+    slice_started_us=0;slice_poll_count=0;cooperative_pause=0;
     logged_seed=UINT64_MAX;logged_turn=~0ul;logged_x=logged_y=logged_hp=-1;
     logged_active=logged_ended=-1;
     currentConsole=(struct brogueConsole){pxa_loop,pxa_pause,pxa_next_event,pxa_plot,remap,modifiers,NULL,NULL,NULL};
@@ -268,10 +303,10 @@ int32_t pxa_app_on_event(const uint8_t *event,uint32_t length) {
             queue_event(type,fb.pointer_x/CELL_W,fb.pointer_y/CELL_H);
         }
     }
-    if((flags & PXFB_READY) && !started) { started=1; suspended=0; br_call_game(); report_game_state(); }
+    if((flags & PXFB_READY) && !started) { started=1; suspended=0; run_game_slice(); }
     else if(started && !completed && (flags & (PXFB_TICK|PXFB_CONTROLLER|PXFB_POINTER)) &&
             ((!waiting_input && (int32_t)(fb.time_ms-deadline)>=0) || queue_write!=queue_read)) {
-        br_call_game(); report_game_state();
+        run_game_slice();
     }
     if(completed) {
         draw_label("Brogue exited. Press HOME to close this PXA package.", 8, 8, 255, 0);
