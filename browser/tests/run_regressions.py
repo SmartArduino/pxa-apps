@@ -11,6 +11,7 @@ from threading import Thread
 from fixture import Handler, ThreadingHTTPServer
 
 SUITES = [
+    ('click-layout', 'click_layout_smoke.py', []), ('click-layout-compact', 'click_layout_smoke.py', ['--width','296','--height','240']),
     ('dom-batch', 'dom_batch_smoke.py', []), ('dom-batch-compact', 'dom_batch_smoke.py', ['--width','296','--height','240']),
     ('snapshot', 'snapshot_smoke.py', []), ('snapshot-compact', 'snapshot_smoke.py', ['--width','296','--height','240']),
     ('connection', 'connection_smoke.py', []), ('connection-compact', 'connection_smoke.py', ['--width','296','--height','240']),

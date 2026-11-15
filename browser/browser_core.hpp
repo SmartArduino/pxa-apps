@@ -710,6 +710,28 @@ class Parser {
         bool block;
     };
     std::vector<Scope> scopes_;
+    // Projection keeps real tags. Track click ownership independently of the
+    // 32 style frames, bounded by the existing hit limit plus one disabled mask.
+    struct ClickScope {
+        std::string name;
+        unsigned nested = 0;
+        int previous = -1;
+        bool disabled = false;
+    };
+    std::vector<ClickScope> click_scopes_;
+    bool clicks_disabled_ = false;
+    void close_click_scope(std::string_view name) {
+        bool closed = false;
+        for (std::size_t i=click_scopes_.size();i>0;--i) {
+            auto& scope=click_scopes_[i-1];
+            if(scope.name!=name)continue;
+            if(scope.nested) {--scope.nested;continue;}
+            if(!closed) {
+                link_=scope.previous;clicks_disabled_=scope.disabled;
+                click_scopes_.resize(i-1);closed=true;
+            }
+        }
+    }
     unsigned overflow_depth_ = 0;
     bool last_cr_ = false;
     bool style_enabled_ = true;
@@ -838,6 +860,7 @@ class Parser {
     void control(const Tag &t, bool hidden = false) {
         const auto &n = t.name;
         if(t.closing || button_>=0)return;
+        if(scripted_ && (clicks_disabled_ || (n=="button" && node_id(t.get("data-pxa-click")))))return;
         if(n=="select"){begin_select(t,hidden);return;}
         if((form_<0 && !scripted_) || t.has("disabled"))return;
         if (n != "input" && n != "button" && n != "textarea") return;
@@ -1309,27 +1332,51 @@ class Parser {
                     doc_.append("打开链接", Style::body, index); doc_.newline(text_style_);
                 }
         }
-        if (n == "li" && !t.closing)
-            doc_.append("• ");
         if (n == "td" || n == "th")
             doc_.append("  ");
-        if (n == "a") {
+        struct RestoreLink {
+            int& current;int previous;bool active=false;
+            ~RestoreLink(){if(active)current=previous;}
+        } restore_link{link_,link_};
+        if(scripted_) {
+            const bool scoped=!is_void && (!trim(value).ends_with('/') || html_text(n)!=HtmlText::data);
+            if(t.closing)close_click_scope(n);
+            else {
+                if(scoped)for(auto& scope:click_scopes_)if(scope.name==n)++scope.nested;
+                const bool field=n=="input" || n=="textarea" || n=="select" || n=="option" || n=="optgroup";
+                const bool disabled=n=="button" && t.has("disabled");
+                const auto id=field || disabled?0:node_id(t.get("data-pxa-click"));
+                if(!clicks_disabled_ && (disabled || n=="a" || id)) {
+                    int next=-1;
+                    if(id) {
+                        if(doc_.links.size()<max_links) {
+                            next=int(doc_.links.size());const auto target=resolve(doc_.base,t.get("href"));
+                            doc_.links.push_back({target?*target:std::string{},id});
+                        } else doc_.links_limited=true;
+                    } else if(!disabled && n=="a") {
+                        const auto href=t.get("href");
+                        if(!href.empty())if(auto target=resolve(doc_.base,href))next=doc_.add_link(std::move(*target));
+                    }
+                    if(scoped && click_scopes_.size()<max_links+(disabled?1u:0u)) {
+                        click_scopes_.push_back({n,0,link_,clicks_disabled_});
+                        clicks_disabled_=disabled;
+                    } else restore_link.active=true;
+                    link_=next;
+                }
+            }
+        } else if (n == "a") {
             if (t.closing)
                 link_ = -1;
             else {
                 link_ = -1;
                 auto href = t.get("href");
-                if (const auto id = scripted_ ? node_id(t.get("data-pxa-click")) : 0) {
-                    if (doc_.links.size() < max_links) {
-                        link_ = int(doc_.links.size());
-                        const auto target = resolve(doc_.base, href);
-                        doc_.links.push_back({target ? *target : std::string{}, id});
-                    }
-                } else if (!href.empty())
+                if (!href.empty())
                     if (auto url = resolve(doc_.base, href); url)
                         link_ = doc_.add_link(std::move(*url));
             }
         }
+        if (n == "li" && !t.closing)
+            doc_.append("• ",style_,link_,-1,-1,text_style_);
         if (n == "img" && !t.closing) {
             auto alt = t.get("alt");
             auto src = t.get("src");

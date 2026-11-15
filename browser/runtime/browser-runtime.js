@@ -1141,7 +1141,7 @@
                 if (state.hitCount>=96) throw new RangeError('interactive node limit');
                 if(!state.hits[n._hit])++state.hitCount;
                 state.hits[n._hit]=n;attrs+=' data-pxa-click="'+n._hit+'"';
-                if (tag!=='img' && tag!=='input' && tag!=='textarea' && tag!=='select' || tag==='input' && type==='submit') tag='a';
+                if(tag==='input' && type==='submit')tag='a';
             }
             if (render && (tag==='input' || tag==='textarea' || tag==='select') && !disabled) {
                 if (!n._hit) n._hit=nextHit++;
@@ -1149,12 +1149,20 @@
                 if(!state.hits[n._hit])++state.hitCount;
                 state.hits[n._hit]=n;attrs+=' data-pxa-field="'+n._hit+'"';
             }
+            if (n._style) style=n._style.text;
+            const priority=render && attrs!=='';
+            if(priority && style)attrs+=' style="'+escape(style)+'"';
+            // Keep CSS identity/declarations within the native attribute cap
+            // ahead of extra page data.
+            if(priority && tag!=='select' && attributes) {
+                if(own(attributes,'id'))attrs+=' id="'+escape(attributes.id)+'"';
+                if(own(attributes,'class'))attrs+=' class="'+escape(attributes.class)+'"';
+            }
             if(render && tag==='select' && attributes)for(const key of ['name','multiple','size','disabled','hidden','id','class','aria-label'])
                 if(own(attributes,key))attrs+=' '+key+'="'+escape(attributes[key])+'"';
             if (attributes) for(const k of Object.keys(attributes))
-                if (!(render && tag==='select') && k!=='style' && !k.startsWith('on') && !k.startsWith('data-pxa-')) attrs+=' '+k+'="'+escape(attributes[k])+'"';
-            if (n._style) style=n._style.text;
-            if(style) attrs+=' style="'+escape(style)+'"';
+                if (!(render && tag==='select') && !(priority && (k==='id' || k==='class')) && k!=='style' && !k.startsWith('on') && !k.startsWith('data-pxa-')) attrs+=' '+k+'="'+escape(attributes[k])+'"';
+            if(!priority && style) attrs+=' style="'+escape(style)+'"';
             parts.push('<'+tag+attrs+'>');
             if(render && tag==='textarea') {
                 parts.push('\n',escape(n.value),'</textarea>');continue; // compensate the parser's initial-LF rule
