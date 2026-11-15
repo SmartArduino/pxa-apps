@@ -1,6 +1,6 @@
 {
   "name": "MakeCode Arcade 字节码播放器",
-  "summary": "实验性 PXT VM 播放器，导入 .pxt64 游戏；不在设备上编译 TypeScript。",
+  "summary": "实验性 PXT VM 播放器，支持触屏、手柄与 .pxt64 游戏导入。",
   "kind": "game",
   "category": "arcade",
   "tags": [
@@ -9,8 +9,13 @@
     "模拟器",
     "实验性"
   ],
-  "description": "实验性独立 PXT 字节码播放器，支持 160×120 游戏画面和不超过 512 KiB 的 .pxt64 文件。使用主机导出或转换的游戏文件；设备不编译 TypeScript，也不直接读取 PNG 游戏卡。安装包不附带游戏。\n\n预留 4 MiB Guest 线性内存，系统、AOT、显示及音频还需额外空间。支持触屏与手柄，保存设置有固定大小限制；不支持即时快照、JavaScript 异常恢复及所有硬件扩展。兼容性须逐个游戏验证，桌面成绩不代表 ESP32 帧率。\n\nExperimental PXT VM cartridge player. Import your own .pxt64 files. No TypeScript compilation or PNG cartridge decoding on device.",
-  "changelog": "首次实验版本：PXT VM、图像、混音与有限设置保存，修复 32 位 ABI 适配。",
+  "description": "实验性独立 PXT 字节码播放器，支持 160×120 游戏画面及不超过 512 KiB 的 .pxt64 文件。用电脑或 MakeCode Arcade 编辑器导出卡带，再通过游戏库导入；设备不编译 TypeScript，也不直接读取 PNG 游戏卡。安装包不附带游戏。\n\n支持触屏和手柄，双人输入相互独立。0.2 改进长循环与多任务调度、嵌套异常处理及游戏切换内存回收，减少显示中间缓冲。设置和高分保存在应用私有目录，支持旧版存档迁移和校验；游戏内 control.reset() 重启后保留设置。保存最多 32 个键，键不超过 127 个 UTF-8 字节，值不超过 1024 字节；不支持即时快照。\n\n应用预留 4 MiB Guest 线性内存，系统、AOT、显示和音频还需要额外空间，ESP32 板卡须有足够 PSRAM 与存储。兼容性需逐个卡带验证；未处理异常、VM panic 或阻塞的 toString() 会终止 Guest，需要重新打开应用。部分硬件扩展不可用，桌面测试不代表 ESP32 实测帧率。\n\n分别提供 Wasm、ESP32-S3、S31、P4 与 Linux x86_64 独立安装包。商城图片来自真实 PXA 产品模拟器运行 Jumpy Platformer，仅示例展示，游戏需另行导入。\n\n对应应用、共享前端和完整版权声明：https://github.com/SmartArduino/pxa-apps/releases/tag/makecode-arcade-v0.2.0 。基于官方 PXA DevKit 0.11.1 构建。PXT 运行时为 MIT，独立 Guest 的共享适配层包含 GPL-2.0-or-later、MPL-2.0 和 OFL-1.1 组件。\n\nExperimental PXT VM cartridge player. Import your own .pxt64 files; games and a TypeScript compiler are not included. Cartridge compatibility and memory availability vary.",
+  "changelog": "0.2.0：改进长循环调度、双人输入和 VM 嵌套异常处理；修复切换游戏的内存泄漏，减少显示缓冲；增加设置存档校验、旧版迁移及重置后保留设置。使用 SDK 0.11.1 提供五类独立目标包。",
   "icon": "assets/icon.png",
-  "cover": null
+  "cover": "store/screenshots/playing.png",
+  "screenshots": [
+    "store/screenshots/library.png",
+    "store/screenshots/tutorial.png",
+    "store/screenshots/playing.png"
+  ]
 }
