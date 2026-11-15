@@ -1,0 +1,23 @@
+{
+  "name": "Digger",
+  "summary": "挖掘隧道、收集宝石，躲避怪物的经典 Digger Remastered 移植。",
+  "description": "采用 Digger Remastered 原引擎与 VGA 画面，提供单人静音玩法。挖掘隧道、收集宝石并躲避怪物。\n\n操作：Enter 或触屏 START 开局，方向键移动，A 开火，B 暂停；触屏 MENU/CONT 暂停与继续，NEW 重新开始。游戏状态仅保留于本次运行，退出后重新开始。\n\n适配 PXA Core 2.1。线性内存固定预留 6 MiB，建议 ESP 设备至少 16 MiB PSRAM；提供独立 Wasm、Linux 模拟器和 ESP32-S31 AOT 安装包。Wasm 与桌面真实运行已验证，未作 ESP 真机帧率或完整通关承诺。\n\n图标为原创几何图形。截图及封面均为真实 PXA 模拟器的原始矩形画面，已关闭系统遮罩、性能浮层和导航栏。\n\n游戏引擎与随附 VGA/标题数据依照 Digger Remastered 的 GPL 第 2 版及逐文件许可分发，完整对应应用源码、构建脚本和版权声明随本版提供：https://github.com/SmartArduino/pxa-apps/releases/tag/digger-v0.2.1 。不包含官网另列的原版 DOS 程序或原版 Windmill 源码。",
+  "kind": "game",
+  "category": "arcade",
+  "language": "en",
+  "tags": [
+    "经典游戏",
+    "挖掘",
+    "触摸",
+    "手柄",
+    "离线"
+  ],
+  "changelog": "首次上架：单人 VGA 原引擎、触摸及方向键控制、暂停/继续与重新开始；提供独立 Wasm、桌面和 ESP32-S31 包，附完整应用源码及许可。",
+  "icon": "assets/icon.png",
+  "cover": "store/screenshots/gameplay.png",
+  "screenshots": [
+    "store/screenshots/title.png",
+    "store/screenshots/gameplay.png",
+    "store/screenshots/new-game.png"
+  ]
+}
