@@ -5,6 +5,7 @@
 extern "C" void emu_core_log(const char *, ...);
 namespace pxt {
 VMImage *vmImg;
+bool pxaResetRequested;
 static uint32_t imageHash, imageBytes;
 uint32_t mca_image_hash() { return imageHash; }
 uint32_t mca_image_bytes() { return imageBytes; }
@@ -12,7 +13,10 @@ void pxa_image_identity(const uint8_t *data, unsigned size) {
     imageBytes = size; imageHash = 2166136261u;
     for (unsigned i = 0; i < size; ++i) imageHash = (imageHash ^ data[i]) * 16777619u;
 }
-void vmStartFromUser(const char *) { target_panic(PANIC_INVALID_IMAGE); }
+void vmStartFromUser(const char *) {
+    pxaResetRequested=true;
+    if(currentFiber) { currentFiber->resumePC=currentFiber->pc; currentFiber->pc=nullptr; }
+}
 void dumpDmesg() {}
 }
 namespace vmcache {
@@ -24,7 +28,7 @@ const char *vm_settings_dir() { return "/unavailable"; }
 extern "C" {
 int pxt_vm_is_vm_thread() { return 1; }
 int pxt_vm_running() { return pxt_vm_online(); }
-void pxt_vm_request_reset() {}
+void pxt_vm_request_reset() { pxt::vmStartFromUser(nullptr); }
 const char *pxt_vm_get_data_directory() { return "/unavailable"; }
 void mca_tick_init() {}
 void mca_tick_shutdown() {}

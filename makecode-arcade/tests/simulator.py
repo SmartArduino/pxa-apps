@@ -65,9 +65,9 @@ for stage in ['discover','play']:
     if stage=='discover':
         match=re.search(r'PXA SIM app-media-root=([^\r\n]+)',logs);assert match,logs
         destination=Path(match[1]);assert destination.is_relative_to(state)
-        shutil.copyfile(args.cartridge,destination/'ping.pxt64')
+        shutil.copyfile(args.cartridge,destination/args.cartridge.name)
     else:
-        assert 'EMU READY name=ping.pxt64' in logs,logs[-5000:]
+        assert f'EMU READY name={args.cartridge.name}' in logs,logs[-5000:]
         assert 'EMU PERF system=ARCADE' in logs,logs[-5000:]
         if args.cartridge.name=='probe.pxt64':
             before=Image.open(args.output/'playing.png').convert('RGB')
@@ -75,6 +75,9 @@ for stage in ['discover','play']:
             assert before.getpixel((160,60))==(255,255,255)
             r,g,b=after.getpixel((160,60))
             assert r==255 and 24<=g<=40 and 24<=b<=40,'A button did not select the red probe background'
+        if args.cartridge.name in ('exceptions.pxt64','reset.pxt64'):
+            r,g,b=Image.open(args.output/'playing.png').convert('RGB').getpixel((160,60))
+            assert 112<=r<=128 and 212<=g<=228 and 72<=b<=88,'Regression fixture did not reach its green success screen'
         print(logs[-5000:])
 control.unlink(missing_ok=True)
 print('PASS: signed PXA cartridge launch and input')

@@ -1,6 +1,6 @@
 # MakeCode Arcade for PXA
 
-Experimental standalone cartridge player based on
+Standalone cartridge player (0.2) based on
 [whmzsu/makecode-arcade-libretro](https://github.com/whmzsu/makecode-arcade-libretro).
 The application uses the PXT bytecode VM, image primitives and mixer. No
 RetroArch frontend or JavaScript engine is installed in the PXA system.
@@ -20,9 +20,13 @@ the standard 160×120 game display. Unsupported images show a load error.
 
 Use direction keys, A/B and Start (the game's menu button). The touchscreen
 overlay and physical/USB gamepad share these controls. The overlay's MENU opens
-the PXA pause menu. A second controller currently controls the same player.
+the PXA pause menu. A second controller maps independently to MakeCode player two.
 Settings and high scores use PXA's private game save files, limited to 32 keys,
-127 UTF-8 bytes per key and 1024 bytes per value. Instant snapshots are unavailable.
+127 UTF-8 bytes per key and 1024 bytes per value. Saves include a version and
+checksum; invalid or duplicate entries are rejected before changing live data.
+Legacy 0.1 saves are imported automatically, with the same cartridge identity.
+Game-over `control.reset()` restarts the cartridge while preserving settings.
+Instant snapshots are unavailable.
 
 ## Build
 
@@ -48,11 +52,17 @@ The port patches 32-bit NumberBoxes, uses a bounded GC arena, fixes Wasm vtable
 callback signatures, and replaces pthread frame scheduling with synchronous VM
 steps. Filesystem settings and diagnostics use application adapters.
 
-Explicit JavaScript `throw`/`try` recovery is not supported by this version;
-a thrown exception or VM panic terminates the guest. Games using unsupported
-hardware/community shims may fail to load. The emulator is experimental, and
-compatibility must be established per cartridge. Native desktop throughput and
-PXA desktop display FPS must not be presented as ESP32 measurements.
+The scheduler advances virtual time once per frame and services multiple runnable
+fibers. Each fiber gets a bounded bytecode quantum; a long loop resumes on later
+frames, while other game tasks and PXA input continue. Nested bytecode exceptions
+propagate across the native `toString()` bridge without Wasm `longjmp`.
+The packed game display resolves directly to RGB565, avoiding a 75 KiB RGBA
+intermediate. Screen and mixer allocations are released when switching games.
+
+A VM panic, an unhandled exception or a blocking `toString()` terminates the
+guest; reopen the app after such a fault. Community extensions requiring absent
+hardware shims may fail to load. Compatibility remains cartridge-specific.
+Native throughput and desktop display FPS are not ESP32 measurements.
 
 Native smoke test, without PXA:
 
@@ -65,7 +75,21 @@ cmake --build "$out/native" -j8
 For the actual 32-bit ABI, configure a separate directory with
 `-DCMAKE_C_FLAGS='-m32 -fno-pie' -DCMAKE_CXX_FLAGS='-m32 -fno-pie'`
 and `-DCMAKE_EXE_LINKER_FLAGS='-m32 -no-pie'` on a multilib Linux host.
-The test checks repeated loading, deterministic video/audio and save validation.
+The tests check repeated loading, deterministic video/audio, structural preflight,
+clock reset, independent players, legacy save migration and transactional checksum
+validation. CTest registers the basic cases when `ARCADE_TEST_CARTRIDGE_DIR` points
+to the upstream `ping.pxt64` / `probe.pxt64` fixtures.
+
+Compile the maintained TS regression fixtures with the pinned external converter:
+
+```sh
+python3 local/pxa-apps/makecode-arcade/tools/build_test_cartridges.py \
+  --cartconv /path/to/makecode-arcade-cartconv --output "$out/regression-carts"
+```
+
+Configure with `-DARCADE_REGRESSION_CARTRIDGE_DIR="$out/regression-carts"` to
+include exception, busy-loop scheduling and player separation tests. No compiler
+or test game is embedded into the application package.
 
 `tests/simulator.py` runs the signed package with the real product simulator,
 loads an externally supplied test cartridge and injects touch/gamepad input.
