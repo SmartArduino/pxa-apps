@@ -26,3 +26,7 @@ with (root/'font_data.hpp').open('w') as f:
     for i,c in enumerate('遗迹疾奔'):ld.text((i*32, -5),c,font=titlefont,fill=255)
     f.write('inline constexpr uint8_t title_atlas[4608]={'+','.join(map(str,large.get_flattened_data()))+'};\n}\n')
 print(f'{len(chars)} glyphs; 65536 atlas bytes')
+
+# Keep the signed binary distribution's notices in sync with embedded glyphs.
+from runpy import run_path
+run_path(str(root / 'tools/build_notices.py'), run_name='__main__')

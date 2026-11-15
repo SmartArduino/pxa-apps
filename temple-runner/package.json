@@ -2,8 +2,8 @@
   "format": "pxa-package-source-0.2",
   "id": "pxa-temple-runner",
   "name": "遗迹疾奔 · Relic Run",
-  "version": "1.0.0",
-  "release_sequence": 1,
+  "version": "1.0.1",
+  "release_sequence": 2,
   "description": "第三人称3D遗迹跑酷：穿越丛林、落日神庙与幽蓝古墓，跳跃、滑铲、变道和急转弯，收集金币与护盾。支持触屏和手柄。",
   "publisher": {
     "handle": "lucinhu",

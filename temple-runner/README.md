@@ -31,3 +31,5 @@ local/pxa-apps/temple-runner/tests/check.sh
 `tests/touch.json` 和 `tests/controller.json` 供 PXA `verify --scenario` 使用。验证输出请指定工作区的 `local/artifacts/`；商城截图须使用 `--store-screenshots` 并检查原图。
 
 美术为代码生成的原创几何模型，音乐由 `tools/build_music.py` 合成，不包含第三方游戏模型、音频或品牌资源。`tools/build_font.py` 使用系统安装的 Noto CJK 生成字形，许可与版权见 `licenses/`。图标由 `tools/build_icon.py` 从原创 SVG 构建。
+
+字体生成后会同步更新随包的 `assets/THIRD_PARTY_LICENSES.txt`，包含应用、共享 SDK 及 Noto 字体的完整声明。仅更新声明时可运行 `python3 tools/build_notices.py`；`licenses/` 中的原始声明也随源码保留。
