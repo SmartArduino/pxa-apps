@@ -3,6 +3,7 @@
 #include "browser_script_markup.hpp"
 #include "browser_select_runtime.hpp"
 #include "browser_fragment_runtime.hpp"
+#include "browser_event_runtime.hpp"
 #include "vendor/quickjs/quickjs.h"
 #include <array>
 #ifdef PXA_SCRIPT_DIAGNOSTICS
@@ -108,7 +109,7 @@ struct Page::Impl {
     JSContext* ctx = nullptr;
     // Initialization's factory and a compiled page script have disjoint
     // lifetimes. Reuse the same root; no extra persistent program/cache.
-    Value bridge, bindings, prepared;
+    Value bridge, bindings, prepared, event_bridge;
     unsigned initialization_stage = 0;
     std::size_t cursor = 0, source_bytes = 0;
     unsigned node_count = 0, script_count = 0;
@@ -125,8 +126,9 @@ struct Page::Impl {
     std::vector<FieldChange> fields;
     bool dom_dirty = true, snapshot_pending = false;
     std::uint64_t timer_at = UINT64_MAX;
-    bool finished = false, stopped = false, paused = false, prepared_response = false;
+    bool finished = false, stopped = false, paused = false, prepared_response = false, event_active = false;
     std::uint64_t deadline = 0;
+    const char* phase = "callback";
     Stats counters;
     bool* fragment_failure = nullptr;
     struct FragmentScope {
@@ -148,6 +150,7 @@ struct Page::Impl {
         bridge = {};
         bindings = {};
         prepared = {};
+        event_bridge = {};
         if (ctx) JS_FreeContext(ctx);
         if (runtime) JS_FreeRuntime(runtime);
     }
@@ -174,6 +177,7 @@ struct Page::Impl {
         if (heap.failed) { problem = "脚本内存达到上限"; stopped = true; }
         else if (deadline && now() >= deadline) {
             ++counters.timeouts; problem = "脚本执行超时"; stopped = true;
+            if(hooks.trace)hooks.trace(hooks.owner,std::string("TIMEOUT phase=")+phase);
         }
         else problem = "部分网页脚本不受支持";
         return false;
@@ -186,40 +190,57 @@ struct Page::Impl {
         return result;
     }
     Value string(std::string_view value) { return {ctx, JS_NewStringLen(ctx, value.data(), value.size())}; }
-    Value call(const char* method, std::span<JSValue> args = {}) {
-        Value function(ctx, JS_GetPropertyStr(ctx, bridge.value, method));
+    Value call_on(JSValueConst owner,const char* method, std::span<JSValue> args = {}) {
+        Value function(ctx, JS_GetPropertyStr(ctx, owner, method));
         if (!check(function.value)) return {ctx, JS_EXCEPTION};
-        Value result(ctx, JS_Call(ctx, function.value, bridge.value, int(args.size()), args.data()));
+        Value result(ctx, JS_Call(ctx, function.value, owner, int(args.size()), args.data()));
         check(result.value); return result;
     }
+    Value call(const char* method,std::span<JSValue> args={}) {return call_on(bridge.value,method,args);}
     template<class... Values> Value invoke(const char* method, Values&&... values) {
         std::array<JSValue, sizeof...(values)> args{values...}; return call(method, args);
     }
-    bool prepare_inline(std::uint32_t id, const char* type) {
+    template<class... Values> Value event_call(const char* method,Values&&... values) {
+        std::array<JSValue,sizeof...(values)> args{values...};return call_on(event_bridge.value,method,args);
+    }
+    // -1 failed, 0 no compiler work, 1 compiled: yield before website code.
+    int prepare_inline() {
         // Compile at the C++ entry, before dispatch adds JS call frames. Keep
         // Function's function-body grammar and cache on the existing node.
-        auto event = string(type), parameter = string("event");
+        auto pending=event_call("handler");
+        if(JS_IsException(pending.value))return -1;
+        if(JS_IsNull(pending.value))return 0;
+        Value node(ctx,JS_GetPropertyStr(ctx,pending.value,"at"));
+        Value dispatched(ctx,JS_GetPropertyStr(ctx,pending.value,"event"));
+        Value event(ctx,JS_GetPropertyStr(ctx,dispatched.value,"type"));
+        auto parameter = string("event");
         Value constructor(ctx, JS_GetPropertyStr(ctx, bridge.value, "handlerConstructor"));
-        if (!check(event.value) || !check(parameter.value) || !check(constructor.value)) return false;
-        const std::string name = std::string("on") + type;
-        auto node = invoke("handler", JS_NewUint32(ctx, id), event.value);
-        if (JS_IsException(node.value)) return false;
-        if (JS_IsNull(node.value)) return true;
+        if (!check(node.value) || !check(dispatched.value) || !check(event.value) ||
+            !check(parameter.value) || !check(constructor.value)) return -1;
+        CString type(ctx,event.value);if(!type.data){check(JS_EXCEPTION);return -1;}
+        const std::string name = std::string("on") + std::string(type.view());
         Value attrs(ctx, JS_GetPropertyStr(ctx, node.value, "_attrs"));
-        if (!check(attrs.value)) return false;
+        if (!check(attrs.value)) return -1;
         Value source(ctx, JS_GetPropertyStr(ctx, attrs.value, name.c_str()));
-        if (!check(source.value)) return false;
+        if (!check(source.value)) return -1;
         CString bytes(ctx, source.value);
-        if (!bytes.data) { check(JS_EXCEPTION); return false; }
+        if (!bytes.data) { check(JS_EXCEPTION); return -1; }
         if (bytes.size > limits.script_bytes || bytes.size > limits.source_bytes - std::min(source_bytes, limits.source_bytes)) {
-            problem = "网页脚本超过容量限制"; ++counters.errors; return false;
+            problem = "网页脚本超过容量限制"; ++counters.errors; return -1;
         }
         source_bytes += bytes.size;
-        JSValue args[] = {parameter.value, source.value};
+        // Coerce with the ordinary execution deadline. Only primitive strings
+        // reach Function under the existing compiler-only allowance: neither
+        // a page-defined toString nor a property setter gains that allowance.
+        auto text=string(bytes.view());if(!check(text.value))return -1;
+        JSValue args[] = {parameter.value, text.value};
+        phase="inline-compile";deadline=now()+compile_turn_us;
         Value function(ctx, JS_CallConstructor(ctx, constructor.value, 2, args));
-        if (!check(function.value)) return false;
-        if (JS_SetPropertyStr(ctx, node.value, name.c_str(), function.release()) < 0) { check(JS_EXCEPTION); return false; }
-        return true;
+        if (!check(function.value)) return -1;
+        if(now()>=deadline) {JS_ThrowInternalError(ctx,"handler compiler deadline");check(JS_EXCEPTION);return -1;}
+        deadline=now()+limits.turn_us;phase="inline-bind";
+        if (JS_SetPropertyStr(ctx, node.value, name.c_str(), function.release()) < 0) { check(JS_EXCEPTION); return -1; }
+        return 1;
     }
     std::uint32_t queue(Request request) {
         auto slot = std::ranges::find(outstanding, 0u);
@@ -697,47 +718,78 @@ struct Page::Impl {
     [[gnu::noinline]] void dispatch_event() {
         // DOM setters and click-target changes notify the native bridge.
         // Running a timer, promise or no-op handler alone needs no snapshot.
-        if (click_count) {
+        if(!event_bridge.ctx && (click_count || !fields.empty())) {
+            phase="event-bootstrap";deadline=now()+bootstrap_turn_us;
+            auto hooks=call("eventHooks");if(JS_IsException(hooks.value))return;
+            Value compiled(ctx,JS_ReadObject(ctx,detail::event_runtime,sizeof(detail::event_runtime),JS_READ_OBJ_BYTECODE));
+            if(!check(compiled.value))return;
+            Value factory(ctx,JS_EvalFunction(ctx,compiled.release()));if(!check(factory.value))return;
+            auto value=hooks.value;
+            Value loaded(ctx,JS_Call(ctx,factory.value,JS_UNDEFINED,1,&value));
+            if(check(loaded.value))event_bridge=std::move(loaded);
+            return;
+        }
+        if (!event_active && click_count) {
             // Bound autonomous loads between genuine UI actions. A long
             // comic must not exhaust its lifetime script/source allowance
             // simply because the user has turned more than twelve pages.
             script_count=0;source_bytes=0;
             const auto id = clicks[0]; std::move(clicks.begin()+1,clicks.begin()+click_count,clicks.begin()); --click_count;
-            if (prepare_inline(id, "click")) invoke("click", JS_NewUint32(ctx,id));
-        } else if (!fields.empty()) {
+            auto begun=event_call("click",JS_NewUint32(ctx,id));
+            event_active=!JS_IsException(begun.value) && JS_ToBool(ctx,begun.value);
+        } else if (!event_active && !fields.empty()) {
             script_count=0;source_bytes=0;
             auto field = std::move(fields.front()); fields.erase(fields.begin());
             auto value = string(field.value);
             if (check(value.value)) {
-                auto updated=invoke("field",JS_NewUint32(ctx,field.id),value.value,JS_NewBool(ctx,field.checked));
-                if(!JS_IsException(updated.value) && JS_ToBool(ctx,updated.value) && prepare_inline(field.id,"input")) {
-                    auto input=invoke("fieldEvent",JS_NewUint32(ctx,field.id),JS_TRUE);
-                    if(!JS_IsException(input.value) && prepare_inline(field.id,"change"))
-                        invoke("fieldEvent",JS_NewUint32(ctx,field.id),JS_FALSE);
-                }
+                auto begun=event_call("field",JS_NewUint32(ctx,field.id),value.value,JS_NewBool(ctx,field.checked));
+                event_active=!JS_IsException(begun.value) && JS_ToBool(ctx,begun.value);
             }
-        } else invoke("pump");
-        if (!stopped && now() < deadline && JS_IsJobPending(runtime)) {
+        } else if(!event_active)invoke("pump");
+        if(event_active && !stopped) {
+            phase="inline-lookup";
+            const auto compiled=prepare_inline();
+            if(compiled>0)return;
+            if(compiled<0) {
+                // A recoverable syntax error can leave promise jobs queued.
+                // Those jobs never inherit the compiler-only allowance.
+                deadline=now()+limits.turn_us;phase="event-recovery";
+                event_active=false;if(!stopped)event_call("cancel");
+            } else {
+                phase="event";
+                auto more=event_call("step");
+                event_active=!JS_IsException(more.value) && JS_ToBool(ctx,more.value);
+                if(JS_IsException(more.value) && !stopped)event_call("cancel");
+            }
+        }
+        if (!event_active && !stopped && now() < deadline && JS_IsJobPending(runtime)) {
+            phase="microtask";
             JSContext* job_context = nullptr;
             if (JS_ExecutePendingJob(runtime, &job_context) < 0) check(JS_EXCEPTION);
+            // Promise reactions can turn an interruption into a rejection.
+            // A hard time limit still terminates the realm before catch jobs.
+            if(!stopped && now()>=deadline) {JS_ThrowInternalError(ctx,"job deadline");check(JS_EXCEPTION);}
         }
     }
     void step() {
         if (stopped || paused) return;
         if (initialization_stage < 6) { initialize_turn(); return; }
-        if (finished && !prepared.ctx && responses.empty() && !click_count && fields.empty() && now() < timer_at && !JS_IsJobPending(runtime)) return;
-        if (snapshot_pending && responses.empty() && !click_count && fields.empty()) return;
+        if (finished && !event_active && !prepared.ctx && responses.empty() && !click_count && fields.empty() && now() < timer_at && !JS_IsJobPending(runtime)) return;
+        if (snapshot_pending && !event_active && responses.empty() && !click_count && fields.empty()) return;
         JS_UpdateStackTop(runtime);
         const auto begin = now(); deadline = begin + limits.turn_us;
+        phase="callback";
         ++counters.turns;
-        if (prepared.ctx) execute_script();
-        else if (!responses.empty()) handle_response();
-        else if (!finished && !waiting_script) build_dom_batch();
+        if (event_active) dispatch_event();
+        else if (prepared.ctx) {phase="script";execute_script();}
+        else if (!responses.empty()) {phase="response";handle_response();}
+        else if (!finished && !waiting_script) {phase="dom";build_dom_batch();}
         else if (finished) dispatch_event();
         // Release an invalidated projection's priority promptly. The UI may
         // defer take_markup while an image preview owns its native indices;
         // retaining a stale snapshot here would also block due page timers.
-        if(snapshot_pending && dom_dirty && !stopped && !heap.failed) {
+        if(snapshot_pending && dom_dirty && !event_active && !stopped && !heap.failed) {
+            phase="cancel-markup";
             auto canceled=invoke("cancelMarkup");
             snapshot_pending=false;std::string{}.swap(markup_buffer);
             if(JS_IsException(canceled.value))stopped=true;
@@ -787,7 +839,7 @@ std::optional<Navigation> Page::take_navigation() {
     return std::exchange(impl_->navigation, {});
 }
 std::optional<std::string> Page::take_markup() {
-    if (!ready() || impl_->paused || (!impl_->dom_dirty && !impl_->snapshot_pending)) return {};
+    if (!ready() || impl_->paused || impl_->event_active || (!impl_->dom_dirty && !impl_->snapshot_pending)) return {};
     const bool restart=impl_->snapshot_pending && impl_->dom_dirty;
     impl_->dom_dirty = false;
     auto& self = *impl_;
@@ -798,6 +850,7 @@ std::optional<std::string> Page::take_markup() {
     ++self.counters.markup_turns;
     JS_UpdateStackTop(self.runtime);
     self.deadline = self.now() + self.limits.turn_us;
+    self.phase="markup";
     // Callbacks keep the old visible hit table until projection commits. Only
     // real document mutations invalidate partial output; no-op network/UI
     // events must not repeatedly restart and starve a pending repaint.
@@ -847,6 +900,9 @@ void Page::change_field(std::uint32_t node, std::string value, bool checked) {
     else if (impl_->fields.size() < 24) impl_->fields.push_back({node,std::move(value),checked});
 }
 void Page::pause(bool value) { if (impl_) impl_->paused = value; }
+bool Page::action_pending() const noexcept {
+    return active() && (impl_->event_active || impl_->click_count || !impl_->fields.empty());
+}
 bool Page::pending(std::uint32_t id) const noexcept { return impl_ && impl_->pending(id); }
 bool Page::active() const noexcept { return impl_ && !impl_->stopped; }
 bool Page::initialized() const noexcept { return active() && impl_->initialization_stage==6; }
@@ -860,7 +916,7 @@ std::uint64_t Page::next_wake_us() const noexcept {
     if(!active() || impl_->paused) return UINT64_MAX;
     const auto& s=*impl_;
     if(s.initialization_stage<6 || s.prepared.ctx || (!s.finished && !s.waiting_script) || !s.responses.empty() ||
-       s.click_count || !s.fields.empty() || (s.finished && (s.dom_dirty || s.snapshot_pending)) || JS_IsJobPending(s.runtime)) return 0;
+       s.event_active || s.click_count || !s.fields.empty() || (s.finished && (s.dom_dirty || s.snapshot_pending)) || JS_IsJobPending(s.runtime)) return 0;
     return s.timer_at;
 }
 } // namespace browser::script

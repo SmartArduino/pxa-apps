@@ -173,12 +173,13 @@ struct ScriptService {
             self.library_state=LibraryState::idle;self.library_id=0;
             return js::CompiledScript{found?State::bytecode:State::source,std::move(self.library_bytecode)};
         };
-#ifdef PXA_BROWSER_TRACE
         h.trace=[](void* p,std::string_view phase){
+#ifndef PXA_BROWSER_TRACE
+            if(!phase.starts_with("TIMEOUT "))return;
+#endif
             auto* self=static_cast<ScriptService*>(p);
             (void)self->context->log().write(pxa::LogLevel::info,"BROWSER JS STAGE "+std::string(phase)+" at_us="+std::to_string(now()));
         };
-#endif
         h.cookie_get=[](void* p,std::string_view u){return static_cast<ScriptService*>(p)->cookies.request(u,now()/1000000,true);};
         h.cookie_set=[](void* p,std::string_view u,std::string_view value){
             auto& s=*static_cast<ScriptService*>(p);

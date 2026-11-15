@@ -125,6 +125,9 @@ public:
     std::optional<std::string> take_markup();
     bool click(std::uint32_t node);
     void change_field(std::uint32_t node, std::string value, bool checked);
+    // Native input, including bubbling/default activation, is serialized
+    // across bounded compiler/execution turns before publishing its DOM.
+    bool action_pending() const noexcept;
     void pause(bool value);
     bool pending(std::uint32_t id) const noexcept;
     bool active() const noexcept;

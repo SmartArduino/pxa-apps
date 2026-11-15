@@ -204,27 +204,27 @@
             stopPropagation() { this.stopped = true; }};
     }
     const eventCall=Symbol('eventCall');
+    function dispatchAt(at,e) {
+        e.currentTarget=at;
+        let handler=at['on'+e.type];
+        if(handler===undefined && at._attrs && at._attrs['on'+e.type]) {
+            handler=new Function('event',at._attrs['on'+e.type]);at['on'+e.type]=handler;
+        }
+        if(typeof handler==='function') {
+            let result;at[eventCall]=handler;
+            try {result=at[eventCall](e);}finally {at[eventCall]=null;}
+            if(result===false)e.preventDefault();
+        }
+        const listeners=at._listeners && at._listeners[e.type];
+        if(listeners)for(const listener of listeners.slice()) {
+            at[eventCall]=listener;
+            try {at[eventCall](e);}finally {at[eventCall]=null;}
+        }
+    }
     function dispatch(node, e, bubble = false) {
         if (!e.target) e.target = node;
         for (let at = node, depth = 0; at && depth++ < 192; at = bubble ? at.parentNode : null) {
-            e.currentTarget = at;
-            let handler = at['on' + e.type];
-            if (handler === undefined && at._attrs && at._attrs['on' + e.type]) {
-                handler = new Function('event', at._attrs['on' + e.type]);
-                at['on' + e.type] = handler;
-            }
-            if (typeof handler === 'function') {
-                // Method invocation preserves this without retaining a native
-                // Function.call frame while the website handler is running.
-                let result;at[eventCall]=handler;
-                try {result=at[eventCall](e);}finally {at[eventCall]=null;}
-                if(result===false)e.preventDefault();
-            }
-            const listeners = at._listeners && at._listeners[e.type];
-            if (listeners) for (const listener of listeners.slice()) {
-                at[eventCall]=listener;
-                try {at[eventCall](e);}finally {at[eventCall]=null;}
-            }
+            dispatchAt(at,e);
             if (e.stopped) break;
         }
         return !e.defaultPrevented;
@@ -1180,11 +1180,7 @@
     document.writeln = (...parts) => document.write(parts.join('') + '\n');
     return {
         handlerConstructor: Function,
-        handler(id, type) {
-            const node=hits[id];
-            if (type === 'click' && disabledControl(node)) return null;
-            return node && node['on'+type]===undefined && node._attrs && node._attrs['on'+type] ? node : null;
-        },
+        eventHooks(){return {event,dispatchAt,disabledControl,submitControl,formOwner,submit,native,ensureSelect,hits(){return hits;}};},
         open(tag, attributes, flags) {
             if(tag==='select')for(let i=stack.length-1;i>=0;--i)if(stack[i].nodeName==='SELECT') {
                 if(i)stack.length=i;return;
@@ -1293,26 +1289,5 @@
             return batch;
         },
         cancelMarkup() { painting=null; },
-        click(id) {
-            const node = hits[id]; if (!node || disabledControl(node)) return;
-            if (!dispatch(node, event('click'), true)) return;
-            if (disabledControl(node)) return;
-            if (node.nodeName === 'A' && node.href) native.navigate(node.href);
-            else if (submitControl(node)) { const form = formOwner(node); if (form) submit(form, node); }
-        },
-        field(id, value, checked) {
-            const node=hits[id];
-            if(!node || disabledControl(node))return false;
-            if(node.nodeName==='SELECT')return ensureSelect().field(node,value);
-            if(node.nodeName!=='INPUT' && node.nodeName!=='TEXTAREA')return false;
-            const checkable=node.nodeName==='INPUT' && (node.type.toLowerCase()==='checkbox' || node.type.toLowerCase()==='radio');
-            const valueChanged=node.value!==value;
-            if(!valueChanged && (!checkable || node.checked===checked))return false;
-            if(valueChanged)node.value=value;if(checkable)node.checked=checked;
-            return true;
-        },
-        // Native code prepares each target handler after the preceding event,
-        // so an input handler can replace/remove the subsequent change handler.
-        fieldEvent(id, input) { const node=hits[id];if(node)dispatch(node,event(input?'input':'change'),true); }
     };
 })

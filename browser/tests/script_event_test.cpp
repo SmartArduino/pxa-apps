@@ -207,5 +207,39 @@ onchange="document.getElementById('proof').textContent+='C'">
         for(unsigned i=0;i<4096 && p.active() && !p.stats().errors;++i){p.step();(void)p.take_markup();}
         assert(p.stats().errors && !p.take_navigation());
     }
-    std::cout<<"event updates PASS: idle callbacks, handlers, listener quota, XHR, links, receivers, reentrant recovery and hit limits\n";
+    {
+        // A stopped event must never compile a malformed ancestor handler.
+        Clock c;auto p=open("<div onclick='bad )'><button onclick=\"event.stopPropagation();document.getElementById('proof').textContent='Stopped PASS'\">Stop</button></div><p id=proof>Before</p>",c);
+        settle(p);click(p,2);assert(settle(p).find("Stopped PASS")!=std::string::npos);
+    }
+    {
+        // Compile a bubbling handler only after the preceding handler changes
+        // it. Timers, promises and XHR completions cannot split one UI action.
+        Clock c;auto p=open(R"HTML(<div id=parent onclick='bad )'><button onclick="document.getElementById('proof').textContent='Target';document.getElementById('parent').setAttribute('onclick',&quot;document.getElementById('proof').textContent+=' Parent'&quot;);Promise.resolve().then(()=>document.getElementById('proof').textContent+=' Promise')">Run</button></div><p id=proof>Before</p>)HTML",c);
+        settle(p);click(p,2);unsigned turns=0;
+        while(p.action_pending() && turns++<256) {
+            p.step();if(p.action_pending())assert(!p.take_markup());
+        }
+        assert(turns>1 && !p.action_pending());
+        assert(settle(p).find("Target Parent Promise")!=std::string::npos);
+    }
+    {
+        // Compilation's larger allowance must not reach page coercion or the
+        // resulting handler. All these callbacks still stop at turn_us.
+        for(const auto* body:{
+            "<button onclick='while(true){}'>Loop</button>",
+            "<button id=b>Coerce</button><script>document.getElementById('b')._attrs.onclick={toString(){while(true){}}}</script>",
+            "<button id=b onclick='void 0'>Setter</button><script>Object.defineProperty(document.getElementById('b'),'onclick',{get(){return undefined},set(){while(true){}}})</script>",
+            "<div onclick='bad )'><button onclick='Promise.resolve().then(()=>{while(true){}})'>Queued job</button></div>"}) {
+            Page p;Limits l;l.heap_bytes=512*1024;l.turn_us=2000;
+            assert(p.open(std::string(body),"https://example.test/",bootstrap,{},{},l));
+            for(unsigned i=0;i<4096 && !p.ready() && p.active();++i){p.step();(void)p.take_markup();}
+            for(unsigned i=0;i<4096 && p.active();++i) {if(p.take_markup())break;p.step();}
+            assert(p.ready() && p.click(std::string_view(body).starts_with("<div")?2:1));
+            for(unsigned i=0;i<256 && p.action_pending();++i)p.step();
+            if(p.active() || p.stats().timeouts!=1)std::cerr<<"event deadline case="<<body<<" active="<<p.active()<<" timeouts="<<p.stats().timeouts<<" errors="<<p.stats().errors<<" error="<<p.error()<<" wake="<<p.next_wake_us()<<"\n";
+            assert(!p.active() && p.stats().timeouts==1);
+        }
+    }
+    std::cout<<"event updates PASS: serialized native actions, lazy inline compilation, callback deadlines, receivers, recovery and hit limits\n";
 }

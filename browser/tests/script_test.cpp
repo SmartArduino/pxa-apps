@@ -426,7 +426,9 @@ int main(int argc,char** argv) {
         assert(first!=doc.spans.end() && browser::Layout::font(*first,15)==18);
     }
     {
-        auto p=open("<a href='/next'>Next</a><script>window.onload=()=>{};</script>");run(p);assert(p.click(1));p.step();auto next=p.take_navigation();assert(next && next->url=="https://example.test/next");
+        auto p=open("<a href='/next'>Next</a><script>window.onload=()=>{};</script>");run(p);assert(p.click(1));
+        for(unsigned i=0;i<256 && p.action_pending();++i)p.step();
+        auto next=p.take_navigation();assert(next && next->url=="https://example.test/next");
     }
     {
         auto p=open("<input id='q' value='old'><script>window.onload=()=>{};</script>");auto html=run(p);browser::Document doc;browser::Parser parser(doc,true);parser.feed(html);parser.finish();assert(doc.fields.size()==1 && doc.fields[0].script_node);

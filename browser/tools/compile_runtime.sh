@@ -19,10 +19,12 @@ done
 python3 "$app/tools/compile_select_header.py" "$cache/select-runtime.qjb" "$app/browser_select_runtime.hpp"
 "$cache/compile-runtime" "$app/runtime/browser-fragment.js" "$cache/fragment-runtime.qjb" pxa-browser-fragment.js
 python3 "$app/tools/compile_select_header.py" "$cache/fragment-runtime.qjb" "$app/browser_fragment_runtime.hpp" fragment_runtime
+"$cache/compile-runtime" "$app/runtime/browser-events.js" "$cache/event-runtime.qjb" pxa-browser-events.js
+python3 "$app/tools/compile_select_header.py" "$cache/event-runtime.qjb" "$app/browser_event_runtime.hpp" event_runtime
 python3 "$app/tools/compile_libraries.py" "$cache/compile-runtime"
 (cd "$app/runtime"
     shopt -s nullglob
-    inputs=(browser-runtime.js browser-select.js browser-fragment.js ../assets/browser-runtime.qjb ../browser_select_runtime.hpp ../browser_fragment_runtime.hpp
+    inputs=(browser-runtime.js browser-select.js browser-fragment.js browser-events.js ../assets/browser-runtime.qjb ../browser_select_runtime.hpp ../browser_fragment_runtime.hpp ../browser_event_runtime.hpp
         ../vendor/quickjs/*.[ch] ../vendor/quickjs/VERSION
         ../tools/compile_runtime.c ../tools/compile_runtime.sh ../tools/compile_libraries.py ../tools/compile_select_header.py
         libraries.json ../browser_script_libraries.hpp ../assets/script-libraries/*

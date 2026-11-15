@@ -90,6 +90,8 @@ HTML 的 title/textarea 按文本容器解析，保留内部标签文字并解�
 
 采用混合组件：界面、滚动、网络和图片走 `main.aot`；QuickJS 与 DOM 放在按需启动的 `script.wasm` 中解释执行，通过有界 IPC 批量交换更新。纯静态页面不加载脚本组件。只有禁用 input/button/textarea/select 点击处理器的页面仍按静态页处理；加载、提交事件、启用目标的点击处理器和实际脚本继续触发自动检测。关闭脚本页会释放 VM，但已加载的模块和增长的线性内存不会因此自动缩小。解释执行会降低脚本速度，不能将包体积减少视为脚本提速。
 
+原生点击和表单编辑按单个操作串行调度：内联事件处理器先在有界编译回合缓存，再逐层执行点击、input、change 和 submit。父处理器在子处理器执行后按需编译，保留停止冒泡、取消默认动作及动态替换处理器的行为；操作完成后再发布网页画面和处理异步回调。事件调度扩展在首次交互时加载，网页回调继续使用 50 ms 主动执行期限；编译阶段使用已有的 2 s 有界编译期限。脚本主动调用的 dispatchEvent 仍同步执行。
+
 下拉选择支持单选、多选、默认选中、禁用控件与 optgroup 禁用继承，隐藏选项仍按标准选择状态提交，但不出现在原生选择菜单中。单选点选即返回；多选逐项切换，点「完成选择」或返回关闭。只提交选中的非禁用选项，保留同名值的树顺序与重复值；没有选择时省略该字段。每页共用最多 64 个选项，原生值仍限 512 个 UTF-8 字节，标题保留 128 字节完整字符前缀；超限控件不可修改，所属静态表单不提交截短数据。原有 24 字段、正文、脚本堆与线性内存预算不变。脚本支持 value / selectedIndex / multiple / size、只读 length、options / selectedOptions，以及 Option 工厂、选项的 selected / defaultSelected / value / text / label / index / form；select.add/remove 和 DOM insertBefore 可修改选项。选择与默认属性分开保存；脚本赋值不触发输入事件，原生选择实际变化后派发 input/change。选择扩展的预编译代码在首次使用 select/option 时才实例化，内存仍计入原有脚本堆上限；普通页面不创建这些原型。options 与 selectedOptions 沿用静态数组和 item() 子集，不实现动态 HTMLOptionsCollection、集合索引写入、length 写入或自定义选择器外观；size 影响默认选择规则，原生始终使用弹出菜单。
 
 已检查更小的引擎候选；JerryScript 的 Guest 异常适配和 MicroQuickJS 的兼容性取舍见 [引擎验证与混合组件方案](docs/engine-selection-20261016.zh-CN.md)。
