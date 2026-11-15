@@ -130,10 +130,7 @@
         "requires": {
           "tap": "tap"
         },
-        "contacts": 1,
-        "holds": {
-          "tap": 500
-        }
+        "contacts": 1
       }
     ]
   }
