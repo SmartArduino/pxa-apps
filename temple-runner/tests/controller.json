@@ -1,0 +1,252 @@
+{
+  "pai-touch": [
+    {
+      "name": "settle",
+      "action": "wait",
+      "ms": 900
+    },
+    {
+      "name": "help",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "help-view",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-help",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "quality-low",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "quality-low-view",
+      "action": "screenshot"
+    },
+    {
+      "name": "quality-high",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "start-view",
+      "action": "screenshot"
+    },
+    {
+      "name": "left",
+      "action": "controller",
+      "buttons": 4,
+      "ms": 80
+    },
+    {
+      "name": "right",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "jump",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "jump-view",
+      "action": "screenshot"
+    },
+    {
+      "name": "slide",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "slide-view",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause",
+      "action": "controller",
+      "buttons": 64,
+      "ms": 80
+    },
+    {
+      "name": "pause-view",
+      "action": "screenshot"
+    },
+    {
+      "name": "mute",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "unmute",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "resume",
+      "action": "controller",
+      "buttons": 64,
+      "ms": 80
+    },
+    {
+      "name": "pause-again",
+      "action": "controller",
+      "buttons": 64,
+      "ms": 80
+    },
+    {
+      "name": "home",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "home-view",
+      "action": "screenshot"
+    }
+  ],
+  "doit-gamekit-2": [
+    {
+      "name": "settle",
+      "action": "wait",
+      "ms": 900
+    },
+    {
+      "name": "help",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "help-view",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-help",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "quality-low",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "quality-low-view",
+      "action": "screenshot"
+    },
+    {
+      "name": "quality-high",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "start-view",
+      "action": "screenshot"
+    },
+    {
+      "name": "left",
+      "action": "controller",
+      "buttons": 4,
+      "ms": 80
+    },
+    {
+      "name": "right",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "jump",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "jump-view",
+      "action": "screenshot"
+    },
+    {
+      "name": "slide",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "slide-view",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause",
+      "action": "controller",
+      "buttons": 64,
+      "ms": 80
+    },
+    {
+      "name": "pause-view",
+      "action": "screenshot"
+    },
+    {
+      "name": "mute",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "unmute",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "resume",
+      "action": "controller",
+      "buttons": 64,
+      "ms": 80
+    },
+    {
+      "name": "pause-again",
+      "action": "controller",
+      "buttons": 64,
+      "ms": 80
+    },
+    {
+      "name": "home",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "home-view",
+      "action": "screenshot"
+    }
+  ]
+}

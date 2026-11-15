@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.20)
+project(pxa_temple_runner LANGUAGES CXX)
+list(APPEND CMAKE_MODULE_PATH "${PXA_CMAKE_MODULE_DIR}")
+include(PxaGuest)
+pxa_add_component(pxa_main CPP COMPONENT_ID main SOURCES main.cpp core.cpp renderer.cpp)
+target_link_options(pxa_main PRIVATE -Wl,-z,stack-size=65536)

@@ -1,0 +1,102 @@
+{
+  "format": "pxa-package-source-0.2",
+  "id": "pxa-temple-runner",
+  "name": "遗迹疾奔 · Relic Run",
+  "version": "1.0.0",
+  "release_sequence": 1,
+  "description": "第三人称3D遗迹跑酷：穿越丛林、落日神庙与幽蓝古墓，跳跃、滑铲、变道和急转弯，收集金币与护盾。支持触屏和手柄。",
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  },
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 1572864,
+      "pinned": true
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "artifact": "both",
+      "services": [
+        "game-render",
+        "clock",
+        "window",
+        "ui",
+        "storage",
+        "log",
+        "permission",
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            8
+          ]
+        }
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      },
+      "execution_model": "main-loop"
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "required": false,
+      "scope": "media"
+    }
+  ],
+  "icon": "assets/icon.png",
+  "interaction": {
+    "schema": "pxa-app-interaction-1",
+    "profiles": [
+      {
+        "id": "touch",
+        "kind": "touch",
+        "complete": true,
+        "contacts": 1,
+        "requires": {
+          "tap": "tap"
+        }
+      },
+      {
+        "id": "gamepad",
+        "kind": "controller",
+        "complete": true,
+        "requires": {
+          "up": "tap",
+          "down": "tap",
+          "left": "tap",
+          "right": "tap",
+          "a": "tap",
+          "b": "tap",
+          "start": "tap",
+          "x": "tap"
+        }
+      }
+    ]
+  }
+}

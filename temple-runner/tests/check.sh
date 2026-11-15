@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+app_dir="$(cd "$(dirname "$0")/.." && pwd)"
+workspace_dir="$(cd "$app_dir/../../.." && pwd)"
+artifact_dir="${1:-$workspace_dir/local/artifacts/temple-runner/$(date +%Y%m%d-%H%M%S)}"
+mkdir -p "$artifact_dir"
+"${CXX:-c++}" -std=c++17 -O2 -Wall -Wextra -fsanitize=address,undefined \
+  "$app_dir/core.cpp" "$app_dir/tests/core_test.cpp" -o "$artifact_dir/core_test"
+"$artifact_dir/core_test" | tee "$artifact_dir/core-test.log"

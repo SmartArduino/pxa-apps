@@ -1,0 +1,694 @@
+{
+  "pai-touch": [
+    {
+      "name": "new-campaign",
+      "action": "tap",
+      "x": 80,
+      "y": 173
+    },
+    {
+      "name": "briefing-settle",
+      "action": "wait",
+      "ms": 700
+    },
+    {
+      "name": "briefing",
+      "action": "screenshot"
+    },
+    {
+      "name": "deploy",
+      "action": "tap",
+      "x": 111,
+      "y": 212
+    },
+    {
+      "name": "deployment",
+      "action": "wait",
+      "ms": 700
+    },
+    {
+      "name": "base-tab",
+      "action": "tap",
+      "x": 17,
+      "y": 201
+    },
+    {
+      "name": "power-card",
+      "action": "tap",
+      "x": 62,
+      "y": 186
+    },
+    {
+      "name": "place-power",
+      "action": "tap",
+      "x": 222,
+      "y": 98
+    },
+    {
+      "name": "power-construction",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "factory-card",
+      "action": "tap",
+      "x": 181,
+      "y": 186
+    },
+    {
+      "name": "place-factory",
+      "action": "tap",
+      "x": 222,
+      "y": 73
+    },
+    {
+      "name": "factory-construction-a",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "factory-construction-b",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "base-development",
+      "action": "screenshot"
+    },
+    {
+      "name": "unit-tab",
+      "action": "tap",
+      "x": 16,
+      "y": 182
+    },
+    {
+      "name": "train-tank",
+      "action": "tap",
+      "x": 143,
+      "y": 186
+    },
+    {
+      "name": "production-a",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "production-b",
+      "action": "wait",
+      "ms": 2000
+    },
+    {
+      "name": "reinforcements",
+      "action": "screenshot"
+    },
+    {
+      "name": "select-army",
+      "action": "tap",
+      "x": 272,
+      "y": 182
+    },
+    {
+      "name": "scout-map",
+      "action": "tap",
+      "x": 268,
+      "y": 59
+    },
+    {
+      "name": "advance-order",
+      "action": "tap",
+      "x": 148,
+      "y": 98
+    },
+    {
+      "name": "advance-orders",
+      "action": "wait",
+      "ms": 2000
+    },
+    {
+      "name": "advance",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause",
+      "action": "tap",
+      "x": 271,
+      "y": 13
+    },
+    {
+      "name": "save-settle",
+      "action": "wait",
+      "ms": 2000
+    },
+    {
+      "name": "paused",
+      "action": "screenshot"
+    },
+    {
+      "name": "restore-process",
+      "action": "relaunch"
+    },
+    {
+      "name": "restore-settle",
+      "action": "wait",
+      "ms": 1000
+    },
+    {
+      "name": "restored-home",
+      "action": "screenshot"
+    },
+    {
+      "name": "resume-snapshot",
+      "action": "tap",
+      "x": 225,
+      "y": 173
+    },
+    {
+      "name": "resume-settle",
+      "action": "wait",
+      "ms": 700
+    },
+    {
+      "name": "restored-battle",
+      "action": "screenshot"
+    }
+  ],
+  "doit-gamekit-2": [
+    {
+      "name": "new-campaign",
+      "action": "tap",
+      "x": 86,
+      "y": 168
+    },
+    {
+      "name": "briefing-settle",
+      "action": "wait",
+      "ms": 700
+    },
+    {
+      "name": "briefing",
+      "action": "screenshot"
+    },
+    {
+      "name": "deploy",
+      "action": "tap",
+      "x": 120,
+      "y": 210
+    },
+    {
+      "name": "deployment",
+      "action": "wait",
+      "ms": 700
+    },
+    {
+      "name": "base-tab",
+      "action": "tap",
+      "x": 18,
+      "y": 198
+    },
+    {
+      "name": "power-card",
+      "action": "tap",
+      "x": 68,
+      "y": 182
+    },
+    {
+      "name": "place-power",
+      "action": "tap",
+      "x": 240,
+      "y": 96
+    },
+    {
+      "name": "power-construction",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "factory-card",
+      "action": "tap",
+      "x": 196,
+      "y": 182
+    },
+    {
+      "name": "place-factory",
+      "action": "tap",
+      "x": 240,
+      "y": 70
+    },
+    {
+      "name": "factory-construction-a",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "factory-construction-b",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "base-development",
+      "action": "screenshot"
+    },
+    {
+      "name": "unit-tab",
+      "action": "tap",
+      "x": 18,
+      "y": 178
+    },
+    {
+      "name": "train-tank",
+      "action": "tap",
+      "x": 154,
+      "y": 182
+    },
+    {
+      "name": "production-a",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "production-b",
+      "action": "wait",
+      "ms": 2000
+    },
+    {
+      "name": "reinforcements",
+      "action": "screenshot"
+    },
+    {
+      "name": "select-army",
+      "action": "tap",
+      "x": 294,
+      "y": 178
+    },
+    {
+      "name": "scout-map",
+      "action": "tap",
+      "x": 290,
+      "y": 64
+    },
+    {
+      "name": "advance-order",
+      "action": "tap",
+      "x": 160,
+      "y": 96
+    },
+    {
+      "name": "advance-orders",
+      "action": "wait",
+      "ms": 2000
+    },
+    {
+      "name": "advance",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause",
+      "action": "tap",
+      "x": 294,
+      "y": 14
+    },
+    {
+      "name": "save-settle",
+      "action": "wait",
+      "ms": 2000
+    },
+    {
+      "name": "paused",
+      "action": "screenshot"
+    },
+    {
+      "name": "restore-process",
+      "action": "relaunch"
+    },
+    {
+      "name": "restore-settle",
+      "action": "wait",
+      "ms": 1000
+    },
+    {
+      "name": "restored-home",
+      "action": "screenshot"
+    },
+    {
+      "name": "resume-snapshot",
+      "action": "tap",
+      "x": 243,
+      "y": 168
+    },
+    {
+      "name": "resume-settle",
+      "action": "wait",
+      "ms": 700
+    },
+    {
+      "name": "restored-battle",
+      "action": "screenshot"
+    }
+  ],
+  "esp-mosaico": [
+    {
+      "name": "new-campaign",
+      "action": "tap",
+      "x": 130,
+      "y": 372
+    },
+    {
+      "name": "briefing-settle",
+      "action": "wait",
+      "ms": 700
+    },
+    {
+      "name": "briefing",
+      "action": "screenshot"
+    },
+    {
+      "name": "deploy",
+      "action": "tap",
+      "x": 180,
+      "y": 436
+    },
+    {
+      "name": "deployment",
+      "action": "wait",
+      "ms": 700
+    },
+    {
+      "name": "base-tab",
+      "action": "tap",
+      "x": 28,
+      "y": 417
+    },
+    {
+      "name": "power-card",
+      "action": "tap",
+      "x": 102,
+      "y": 394
+    },
+    {
+      "name": "place-power",
+      "action": "tap",
+      "x": 360,
+      "y": 205
+    },
+    {
+      "name": "power-construction",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "factory-card",
+      "action": "tap",
+      "x": 295,
+      "y": 394
+    },
+    {
+      "name": "place-factory",
+      "action": "tap",
+      "x": 360,
+      "y": 165
+    },
+    {
+      "name": "factory-construction-a",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "factory-construction-b",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "base-development",
+      "action": "screenshot"
+    },
+    {
+      "name": "unit-tab",
+      "action": "tap",
+      "x": 27,
+      "y": 387
+    },
+    {
+      "name": "train-tank",
+      "action": "tap",
+      "x": 232,
+      "y": 394
+    },
+    {
+      "name": "production-a",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "production-b",
+      "action": "wait",
+      "ms": 2000
+    },
+    {
+      "name": "reinforcements",
+      "action": "screenshot"
+    },
+    {
+      "name": "select-army",
+      "action": "tap",
+      "x": 442,
+      "y": 387
+    },
+    {
+      "name": "scout-map",
+      "action": "tap",
+      "x": 436,
+      "y": 97
+    },
+    {
+      "name": "advance-order",
+      "action": "tap",
+      "x": 240,
+      "y": 205
+    },
+    {
+      "name": "advance-orders",
+      "action": "wait",
+      "ms": 2000
+    },
+    {
+      "name": "advance",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause",
+      "action": "tap",
+      "x": 441,
+      "y": 22
+    },
+    {
+      "name": "save-settle",
+      "action": "wait",
+      "ms": 2000
+    },
+    {
+      "name": "paused",
+      "action": "screenshot"
+    },
+    {
+      "name": "restore-process",
+      "action": "relaunch"
+    },
+    {
+      "name": "restore-settle",
+      "action": "wait",
+      "ms": 1000
+    },
+    {
+      "name": "restored-home",
+      "action": "screenshot"
+    },
+    {
+      "name": "resume-snapshot",
+      "action": "tap",
+      "x": 365,
+      "y": 372
+    },
+    {
+      "name": "resume-settle",
+      "action": "wait",
+      "ms": 700
+    },
+    {
+      "name": "restored-battle",
+      "action": "screenshot"
+    }
+  ],
+  "espp4-a": [
+    {
+      "name": "new-campaign",
+      "action": "tap",
+      "x": 130,
+      "y": 746
+    },
+    {
+      "name": "briefing-settle",
+      "action": "wait",
+      "ms": 700
+    },
+    {
+      "name": "briefing",
+      "action": "screenshot"
+    },
+    {
+      "name": "deploy",
+      "action": "tap",
+      "x": 180,
+      "y": 810
+    },
+    {
+      "name": "deployment",
+      "action": "wait",
+      "ms": 700
+    },
+    {
+      "name": "base-tab",
+      "action": "tap",
+      "x": 28,
+      "y": 791
+    },
+    {
+      "name": "power-card",
+      "action": "tap",
+      "x": 102,
+      "y": 768
+    },
+    {
+      "name": "place-power",
+      "action": "tap",
+      "x": 360,
+      "y": 392
+    },
+    {
+      "name": "power-construction",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "factory-card",
+      "action": "tap",
+      "x": 295,
+      "y": 768
+    },
+    {
+      "name": "place-factory",
+      "action": "tap",
+      "x": 360,
+      "y": 352
+    },
+    {
+      "name": "factory-construction-a",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "factory-construction-b",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "base-development",
+      "action": "screenshot"
+    },
+    {
+      "name": "unit-tab",
+      "action": "tap",
+      "x": 27,
+      "y": 761
+    },
+    {
+      "name": "train-tank",
+      "action": "tap",
+      "x": 232,
+      "y": 768
+    },
+    {
+      "name": "production-a",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "production-b",
+      "action": "wait",
+      "ms": 2000
+    },
+    {
+      "name": "reinforcements",
+      "action": "screenshot"
+    },
+    {
+      "name": "select-army",
+      "action": "tap",
+      "x": 442,
+      "y": 761
+    },
+    {
+      "name": "scout-map",
+      "action": "tap",
+      "x": 436,
+      "y": 97
+    },
+    {
+      "name": "advance-order",
+      "action": "tap",
+      "x": 240,
+      "y": 392
+    },
+    {
+      "name": "advance-orders",
+      "action": "wait",
+      "ms": 2000
+    },
+    {
+      "name": "advance",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause",
+      "action": "tap",
+      "x": 441,
+      "y": 22
+    },
+    {
+      "name": "save-settle",
+      "action": "wait",
+      "ms": 2000
+    },
+    {
+      "name": "paused",
+      "action": "screenshot"
+    },
+    {
+      "name": "restore-process",
+      "action": "relaunch"
+    },
+    {
+      "name": "restore-settle",
+      "action": "wait",
+      "ms": 1000
+    },
+    {
+      "name": "restored-home",
+      "action": "screenshot"
+    },
+    {
+      "name": "resume-snapshot",
+      "action": "tap",
+      "x": 365,
+      "y": 746
+    },
+    {
+      "name": "resume-settle",
+      "action": "wait",
+      "ms": 700
+    },
+    {
+      "name": "restored-battle",
+      "action": "screenshot"
+    }
+  ]
+}
