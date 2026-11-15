@@ -1,0 +1,23 @@
+{
+  "name": "钢铁黎明 · Iron Dawn",
+  "kind": "game",
+  "category": "strategy",
+  "language": "zh-CN",
+  "summary": "原创等距即时战略：采矿建造、装甲编队与三章连续剧情战役。",
+  "tags": [
+    "RTS",
+    "即时战略",
+    "原创",
+    "触屏",
+    "手柄"
+  ],
+  "description": "原创军事科幻即时战略游戏。建设精炼厂、电站、兵营与工厂，维持矿线和供电，生产步兵、坦克、火炮和采矿车；运用编队、战争迷雾、维修与空袭，完成三章连续故事战役。\n\n触屏操作：点选单位，双击选中同型部队；点地面移动、点可见敌军集火，拖动战场或点小地图移动视角。部队与基地面板提供生产、施工和撤单；全军、回基地和缩放辅助小屏操作。支持手柄方向平移、A全军、Start暂停、B返回。建议优先使用较大的触屏体验 RTS 面板。\n\n约每12秒以及暂停、切到后台时保存，完整战局使用应用私有文件中的双快照、校验和原子替换。胜利后解锁下一章，可从档案重玩。\n\n需要 PXA Core 2.1、4 MiB Guest 线性内存及额外的系统、显示和音频空间；板卡须有足够 PSRAM 与存储。分别提供 Wasm、S3、S31、P4 和 Linux x86_64 包。模拟器操作、生产与重启恢复已验证；性能取决于实际设备。\n\n代码、程序化美术与图标均为原创 MIT，不包含红警原作素材；字形采用 Noto CJK（OFL）。对应源码、共享依赖及声明：https://github.com/SmartArduino/pxa-apps/releases/tag/iron-dawn-v1.0.0 。",
+  "changelog": "首次正式版本：三章战役、采矿供电、建筑生产、装甲编队、战争迷雾与空袭；支持触屏/手柄、双快照战局存档，提供五目标独立安装包。",
+  "icon": "assets/icon.png",
+  "screenshots": [
+    "store/screenshots/base-development.png",
+    "store/screenshots/reinforcements.png",
+    "store/screenshots/restored-battle.png"
+  ],
+  "cover": "store/screenshots/base-development.png"
+}
