@@ -61,7 +61,7 @@ void Client::change_field(std::uint32_t id,std::string value,bool checked) {
     else if(fields_.size()<24)fields_.push_back({id,std::move(value),checked});
 }
 bool Client::set_heap_limit(std::size_t bytes) {
-    if(bytes<128*1024 || bytes>4*1024*1024 || summary_.counters.current_bytes>bytes)return false;
+    if(!memory::valid_heap_limit(bytes) || summary_.counters.current_bytes>bytes)return false;
     limits_.heap_bytes=bytes;limit_=bytes;return true;
 }
 void Client::upload(wire::Op op,std::string data) {

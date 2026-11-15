@@ -45,7 +45,12 @@ int main() {
     browser::script::Limits limits; e.data.clear();w::limits(e,limits);
     w::Reader lr{e.data};browser::script::Limits restored;assert(w::limits(lr,restored) && lr.done());
     assert(restored.heap_bytes==limits.heap_bytes && restored.turn_us==limits.turn_us);
-    limits.heap_bytes=8*1024*1024;e.data.clear();w::limits(e,limits);lr={e.data};assert(!w::limits(lr,restored));
+    for(auto bytes:{128*1024u,4*1024*1024u,8*1024*1024u,16*1024*1024u}) {
+        limits.heap_bytes=bytes;e.data.clear();w::limits(e,limits);lr={e.data};assert(w::limits(lr,restored) && restored.heap_bytes==bytes);
+    }
+    for(auto bytes:{0u,128*1024u-1,16*1024*1024u+1,0xffffffffu}) {
+        limits.heap_bytes=bytes;e.data.clear();w::limits(e,limits);lr={e.data};assert(!w::limits(lr,restored));
+    }
     w::Summary summary;summary.generation=9;summary.active=true;summary.ready=true;summary.pending[2]=17;
     summary.error="脚本内存达到上限";summary.counters.max_turn_us=0x1234567890ull;
     e.data.clear();summary.encode(e);r={e.data};auto result=w::Summary::decode(r);

@@ -91,7 +91,7 @@ inline bool limits(Reader& r,Limits& l) {
     l.response_bytes=r.u32();l.script_bytes=r.u32();l.fragment_bytes=r.u32();
     l.nodes=r.u32();l.scripts=r.u32();l.fragment_nodes=r.u32();l.turn_us=r.u64();
     // The signed UI owns policy, but all inputs remain independently bounded.
-    return r.valid && l.heap_bytes>=128*1024 && l.heap_bytes<=4*1024*1024 &&
+    return r.valid && memory::valid_heap_limit(l.heap_bytes) &&
         l.stack_bytes>=4096 && l.stack_bytes<=256*1024 && l.html_bytes<=32768 && l.source_bytes<=65536 &&
         l.response_bytes<=65536 && l.script_bytes<=32768 && l.fragment_bytes<=32768 &&
         l.nodes<=192 && l.scripts<=12 && l.fragment_nodes<=192 && l.turn_us>=1000 && l.turn_us<=50000;

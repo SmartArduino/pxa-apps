@@ -4,6 +4,7 @@
 #include "browser_select_runtime.hpp"
 #include "browser_fragment_runtime.hpp"
 #include "browser_event_runtime.hpp"
+#include "browser_script_heap.hpp"
 #include "vendor/quickjs/quickjs.h"
 #include <array>
 #ifdef PXA_SCRIPT_DIAGNOSTICS
@@ -64,43 +65,8 @@ struct CString {
 }
 
 struct Page::Impl {
-    struct Heap {
-        struct alignas(std::max_align_t) Header { std::size_t bytes; };
-        std::size_t used = 0, peak = 0, limit = 0;
-        bool failed = false;
-        static void* allocate(JSMallocState* state, std::size_t size) {
-            auto& heap = *static_cast<Heap*>(state->opaque);
-            if (!size || size > heap.limit || sizeof(Header) > heap.limit - size ||
-                heap.used > heap.limit - size - sizeof(Header)) { heap.failed = true; return nullptr; }
-            auto* h = static_cast<Header*>(std::malloc(sizeof(Header) + size));
-            if (!h) { heap.failed = true; return nullptr; }
-            h->bytes = size;
-            heap.used += size + sizeof(Header); heap.peak = std::max(heap.peak, heap.used);
-            state->malloc_size = heap.used; ++state->malloc_count;
-            return h + 1;
-        }
-        static void release(JSMallocState* state, void* ptr) {
-            if (!ptr) return;
-            auto& heap = *static_cast<Heap*>(state->opaque);
-            auto* h = static_cast<Header*>(ptr) - 1;
-            heap.used -= h->bytes + sizeof(Header); state->malloc_size = heap.used;
-            --state->malloc_count; std::free(h);
-        }
-        static void* resize(JSMallocState* state, void* ptr, std::size_t size) {
-            if (!ptr) return allocate(state, size);
-            if (!size) { release(state, ptr); return nullptr; }
-            auto& heap = *static_cast<Heap*>(state->opaque);
-            auto* old = static_cast<Header*>(ptr) - 1;
-            const auto old_size = old->bytes;
-            // Charge both allocations until the old storage is released.
-            auto* next = allocate(state, size);
-            if (!next) return nullptr;
-            std::memcpy(next, ptr, std::min(size, old_size)); release(state, ptr);
-            (void)heap;
-            return next;
-        }
-        static std::size_t usable(const void* ptr) { return ptr ? (static_cast<const Header*>(ptr) - 1)->bytes : 0; }
-    } heap;
+    using Heap=detail::ScriptHeap;
+    Heap heap;
     Limits limits;
     Hooks hooks;
     Metrics metrics;
@@ -808,7 +774,7 @@ bool Page::open(std::string html, std::string url, Bootstrap bootstrap, Hooks ho
     impl_.reset(new(std::nothrow) Impl);
     if (!impl_) return false;
     auto& self = *impl_; self.limits = limits; self.hooks = hooks; self.metrics = std::move(metrics);
-    if (html.size() > limits.html_bytes || bootstrap.runtime.size() > 64*1024 ||
+    if (!memory::valid_heap_limit(limits.heap_bytes) || html.size() > limits.html_bytes || bootstrap.runtime.size() > 64*1024 ||
         origin(url).empty()) {
         self.problem = "脚本页面超过限制"; self.stopped = true; return false;
     }
@@ -817,7 +783,7 @@ bool Page::open(std::string html, std::string url, Bootstrap bootstrap, Hooks ho
 }
 void Page::step() { if (impl_) impl_->step(); }
 bool Page::set_heap_limit(std::size_t bytes) {
-    if (!impl_ || bytes < 128*1024 || bytes > 4*1024*1024) return false;
+    if (!impl_ || !memory::valid_heap_limit(bytes)) return false;
     auto& self=*impl_;
     if (self.runtime && self.heap.used > bytes) JS_RunGC(self.runtime);
     if (self.heap.used > bytes) return false;

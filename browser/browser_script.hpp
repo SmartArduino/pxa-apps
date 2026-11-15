@@ -1,4 +1,5 @@
 #pragma once
+#include "browser_memory.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>

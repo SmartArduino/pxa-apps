@@ -30,6 +30,11 @@ for source in "$app/browser_script.cpp" "$app/browser_script_common.cpp" "$app/t
     fi
     objects+=("$object")
 done
+"$cpp_compiler" "${cpp_flags[@]}" "$app/tests/script_heap_test.cpp" -o "$cache/heap-test"
+ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/heap-test"
+"$cpp_compiler" "${cpp_flags[@]}" "$app/tests/script_memory_test.cpp" "${objects[@]:0:2}" \
+    "$cache"/{quickjs,dtoa,libregexp,libunicode,cutils}.o -lm -o "$cache/memory-test"
+ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/memory-test" "$app/assets/browser-runtime.qjb"
 "$cpp_compiler" "${cpp_flags[@]}" "${objects[@]}" \
     "$cache"/{quickjs,dtoa,libregexp,libunicode,cutils}.o -lm -o "$cache/script-test"
 ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/script-test" "$app/assets/browser-runtime.qjb"

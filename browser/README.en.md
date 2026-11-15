@@ -122,18 +122,19 @@ Prefix input with `?` to force a search.
 
 The app consumes streamed chunks instead of retaining the entire HTML response.
 Readable text is limited to 48 KiB, transfer size to 256 KiB, bookmarks to 8,
-history to 24, and each component's Guest linear memory to 8 MiB, growing in 64 KiB pages.
+history to 24, and each component's Guest linear memory to 32 MiB, growing in 64 KiB pages.
 The maximum is not preallocated. More → Script memory offers a persistent automatic
-1 MiB ceiling or manual 256 KiB–4 MiB limits, effective on the next page load.
+1 MiB ceiling or manual 256 KiB–16 MiB limits, effective on the next page load.
 Automatic mode is a conservative fallback, not a measurement of device free RAM.
 The optional JS heap lives inside linear memory; raising its limit reserves nothing.
+The Guest API reports resource pressure, not free RAM. A 32 MiB device must also accommodate the Host, UI and images; configured ceilings are not available-memory guarantees. The JS allocator uses libc realloc rather than unconditionally allocating and copying a second block. realloc may still move/copy; its internal transient overhead is outside the live-block JS counters.
 The UI, scrolling, networking and images run in `main.aot`; QuickJS and the DOM
 run in an on-demand interpreted `script.wasm` service with bounded, batched IPC.
 Static-only runs never load that service. Closing a script page frees its VM,
 but does not unload the module or shrink previously grown linear memory.
 Interpretation trades script speed for storage; a smaller package is not a
 claim of faster JavaScript. UI and service start at 128 KiB and 192 KiB respectively,
-each growing in 64 KiB pages up to 8 MiB, subject to actual device memory.
+each growing in 64 KiB pages up to 32 MiB, subject to actual device memory.
 See the [mixed-component design and measurements](docs/aot-wasm-20261016.zh-CN.md)
 for storage, memory and interpretation tradeoffs.
 The final pai-touch scroll windows measured about 29.0 / 30.3 displayed FPS

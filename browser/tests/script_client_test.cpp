@@ -53,6 +53,11 @@ int main() {
         }
         assert(upload.ends_with(std::string(3000,'x')));
         const auto idle=calls.size();client.step();client.maintain();assert(calls.size()==idle);
+        assert(!client.set_heap_limit(16*1024*1024+1));
+        assert(client.set_heap_limit(16*1024*1024));client.maintain();
+        assert(calls.back().header.op==w::Op::limit);
+        w::Reader limit_payload{calls.back().part};assert(limit_payload.u32()==16*1024*1024 && limit_payload.done());
+        finish(client,state());
         client.pause(true);client.click(3);client.step();assert(calls.back().header.op==w::Op::click);
         auto s=state();s.wake=0;finish(client,s);
         const auto paused=calls.size();client.step();assert(calls.size()==paused);

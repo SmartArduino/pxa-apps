@@ -65,6 +65,8 @@ int main() {
     }
     {
         assert(memory::budget(0)==1024*1024 && memory::budget(5)==4*1024*1024);
+        assert(memory::budget(6)==8*1024*1024 && memory::budget(7)==16*1024*1024);
+        assert(memory::budget(7,1)==256*1024 && memory::budget(7,2)==256*1024);
         assert(memory::budget(99)==memory::budget(0));
         assert(memory::budget(5,1)==256*1024 && memory::budget(3,2)==256*1024);
         std::array<std::byte,4> bytes{std::byte{1}};

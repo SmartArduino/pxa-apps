@@ -14,5 +14,5 @@
     "资讯订阅",
     "书签"
   ],
-  "changelog": "修复 ESP32-S3 上简单点击事件在首次编译时触发超时的问题。内联处理器编译与点击、输入、change、submit 分阶段调度，保留事件冒泡、取消、处理器替换和表单提交语义。改进长页面持续回调时的刷新，沿用有界的脚本、DOM 与内存预算；补充触摸操作兼容声明。\n\nStages inline-handler compilation and native click/input/change/submit dispatch to prevent simple ESP32-S3 interactions timing out. Preserves bubbling, cancellation, handler replacement and form submission. Keeps long-page repaint progress under sustained callbacks, within bounded compiler, callback and memory work; declares the complete touch operation path."
+  "changelog": "优化 JS 数组和缓冲区扩容，避免强制复制并降低扩容所需的临时配额。新增 8 MiB、16 MiB 脚本内存选项，组件线性内存按需增长、上限 32 MiB；自动档保持 1 MiB，保留内存压力降级。上限不预分配，实际可用量取决于设备。\n\nUses libc realloc for JS buffer/array growth. Adds 8/16 MiB JS heap options with unpinned, demand-grown 32 MiB component ceilings. Auto remains 1 MiB; resource-pressure fallback is preserved. Ceilings are not reservations or available-memory guarantees."
 }

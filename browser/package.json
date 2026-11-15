@@ -13,8 +13,8 @@
     0
   ],
   "id": "pxa-browser",
-  "version": "0.1.37",
-  "release_sequence": 39,
+  "version": "0.1.38",
+  "release_sequence": 40,
   "name": "PXA 浏览器",
   "localizations": {
     "en": {
@@ -26,7 +26,7 @@
     "system": "cmake",
     "source_dir": ".",
     "linear_memory": {
-      "maximum_bytes": 8388608,
+      "maximum_bytes": 33554432,
       "pinned": false
     },
     "native_stack_checks": true

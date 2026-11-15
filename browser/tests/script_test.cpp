@@ -171,7 +171,7 @@ int main(int argc,char** argv) {
         assert(p.initialized() && !p.ready());assert(run(p).find("Initialized")!=std::string::npos);
         auto before=p.stats().current_bytes;
         assert(p.set_heap_limit(4*1024*1024));assert(p.stats().current_bytes==before);
-        assert(!p.set_heap_limit(0));assert(!p.set_heap_limit(8*1024*1024));
+        assert(!p.set_heap_limit(0));assert(p.set_heap_limit(16*1024*1024));assert(p.stats().current_bytes==before);assert(!p.set_heap_limit(16*1024*1024+1));
         assert(!p.set_heap_limit(128*1024));assert(p.active());
         assert(p.set_heap_limit(256*1024));
     }
