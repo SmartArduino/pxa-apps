@@ -14,5 +14,5 @@
     "资讯订阅",
     "书签"
   ],
-  "changelog": "完善轻量 JavaScript 事件：支持有界捕获/冒泡、once/passive、对象监听器与 Event/CustomEvent。一次性监听器在调用前移除，事件中途移除的回调不再执行；点击区域同步更新，避免保留已消费的事件闭包。原有脚本堆、监听数量、图片预算和执行期限不变。\n\nImproves bounded JavaScript events with capture/bubbling, once/passive options, listener objects and Event/CustomEvent. One-shot listeners are removed before invocation, removed callbacks are skipped during dispatch, and hit regions stay in sync. Existing heap, listener, image and execution limits remain in force."
+  "changelog": "JavaScript 定时器改为按需加载：按到期时间执行、原地维护队列以减少临时数组；修复延迟参数重复转换、字符串 ID 无法取消和回调 this 错误。循环定时器在回调结束后重新计时，支持自身取消，原有数量与执行预算不变。\n\nLoads JavaScript timers on demand with due-time ordering and in-place queues. Fixes repeated delay conversion, numeric-string cancellation and callback receivers. Intervals rearm after callbacks and support self-cancellation within existing limits."
 }

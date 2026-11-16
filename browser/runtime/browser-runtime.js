@@ -7,7 +7,7 @@
     const own = Object.hasOwn, attributeNamePattern=/^[a-z_][a-z0-9_:.-]*$/i;
     const fragmentStage=Symbol('fragmentStage');
     let dirty = false, building = true, nextHit = 1, hits = Object.create(null);
-    let nextTimer = 1, timers = [], pending = Object.create(null);
+    const pending=Object.create(null);
     const escapePattern = /[&<>"\u0000]/g;
     const escapeCharacters = {'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', '\0':'&#xfffd;'};
     function escape(s) {
@@ -951,16 +951,14 @@
         setItem:(key, value) => { if (!native.storage(1, String(key), String(value), session)) throw new RangeError('storage limit'); },
         removeItem:key => native.storage(2, String(key), '', session),clear:() => native.storage(3, '', '', session)}; }
     root.localStorage = storage(false); root.sessionStorage = storage(true);
-    function schedule() { native.wake(timers.length ? Math.min(...timers.map(t => t.at)) : -1); }
-    root.setTimeout = function (fn, delay, ...args) {
-        if (typeof fn !== 'function') throw new TypeError('function timer required');
-        if (timers.length >= 8) throw new RangeError('timer limit');
-        const id = nextTimer++; timers.push({id,fn,args,at:native.now() + Math.max(0, Number(delay) || 0),interval:0}); schedule(); return id;
-    };
-    root.clearTimeout = id => { timers = timers.filter(t => t.id !== id); schedule(); };
-    root.setInterval = function (fn, delay, ...args) {
-        const id = root.setTimeout(fn, delay, ...args); timers[timers.length - 1].interval = Math.max(20, Number(delay) || 20); return id;
-    };
+    let timerEnvironment=null;
+    const timerApply=Reflect.apply;
+    function ensureTimers() {
+        return timerEnvironment || (timerEnvironment=native.timerRuntime({root,native,apply:timerApply}));
+    }
+    root.setTimeout = (fn, delay, ...args) => ensureTimers().create(fn,delay,args,false);
+    root.setInterval = (fn, delay, ...args) => ensureTimers().create(fn,delay,args,true);
+    root.clearTimeout = id => {id|=0;if(timerEnvironment)timerEnvironment.cancel(id);};
     root.clearInterval = root.clearTimeout;
     root.requestAnimationFrame = fn => root.setTimeout(() => fn(native.now()), 20);
     root.cancelAnimationFrame = root.clearTimeout;
@@ -1245,14 +1243,7 @@
             const node=pending[id];delete pending[id];
             if(node)fire(node,failed?'error':'load');
         },
-        pump() {
-            const now = native.now(), at = timers.findIndex(t => t.at <= now);
-            if (at >= 0) {
-                const timer = timers[at]; timers.splice(at, 1);
-                if (timer.interval) { timer.at = now + timer.interval; timers.push(timer); }
-                schedule(); timer.fn(...timer.args);
-            }
-        },
+        pump() {if(timerEnvironment)timerEnvironment.pump();},
         markup() {
             if (building) return null;
             if (!painting) painting=snapshot(document,true);

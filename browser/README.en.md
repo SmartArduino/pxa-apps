@@ -104,6 +104,8 @@ session-only cookies support compatible login and search forms. More provides
 history selection, cookie clearing and independently persisted image/GIF switches.
 Unsupported encodings (other than UTF-8/GB2312/GBK/GB18030), compressed responses, and unsupported media receive explicit messages.
 
+The timer extension is instantiated on first use and charged to the existing script heap. Timers run in due-time order, with queue order breaking ties. Queue updates avoid temporary scheduling arrays. Delays are converted once, cancellation accepts numeric-string IDs, and callbacks receive window as this. Intervals rearm after callbacks and can cancel themselves. The eight-timer quota, 20 ms minimum repeat delay, one callback per turn and existing script deadlines remain unchanged; exact real-time delivery is not guaranteed.
+
 Requires an updated Host and SDK with Net 0.4 / Core 2.0 and the UI dynamic-text,
 sized-text, text-input-control, password-input, FS atomic replacement, Assets 2.6 / image-decode / image-frames,
 and Window 0.3.

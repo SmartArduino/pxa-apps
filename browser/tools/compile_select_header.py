@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Embed an app-owned optional DOM extension; never accepts web data."""
+"""Embed an app-owned optional runtime extension; never accepts web data."""
 from pathlib import Path
 import sys
 
 symbol=sys.argv[3] if len(sys.argv)>3 else 'select_runtime'
-if symbol not in ('select_runtime','fragment_runtime','event_runtime'):raise SystemExit('Invalid DOM extension symbol')
+if symbol not in ('select_runtime','fragment_runtime','event_runtime','timer_runtime'):raise SystemExit('Invalid runtime extension symbol')
 data=Path(sys.argv[1]).read_bytes()
 if not data.startswith(b'PXAQJS1\n') or not 8<len(data)<=65536:
     raise SystemExit('Invalid app-owned DOM bytecode')

@@ -56,6 +56,31 @@ window.addEventListener('click',e=>{if(e.target===target){
 document.getElementById('once').addEventListener('click',function(){this.textContent='One-time released'},{once:true});
 </script></body></html>'''
 
+PAGES['/timers'] = HEAD + '''
+<button onclick="startTimers()" style="color:#d06020">Run timer checks</button>
+<p id="proof">Ready</p><p id="interval">Interval ready</p><script>
+let run=0;
+function startTimers(){
+ const batch=++run,seen=[];let cancelled=0,conversions=0;
+ document.getElementById('proof').textContent='Running '+batch;
+ const dead=setTimeout(()=>++cancelled,0);clearTimeout(String(dead));
+ function mark(label){'use strict';if(this!==window)throw Error('timer this');seen.push(label);
+  if(seen.length===3){
+   if(cancelled || seen.join(',')!=='early-a,early-b,late')throw Error('timer order/cancellation');
+   document.getElementById('proof').textContent='Timer PASS '+batch+' '+seen.join(',');
+   fetch('/timer-pass-'+batch);
+  }
+ }
+ setTimeout(mark,80,'late');setTimeout(mark,10,'early-a');setTimeout(mark,10,'early-b');
+ const delay={valueOf(){++conversions;return 200}};
+ const id=setInterval(function(){clearInterval(String(id));
+  if(conversions!==1 || this!==window)throw Error('interval coercion/this');
+  document.getElementById('interval').textContent='Interval PASS '+batch;
+  fetch('/interval-pass-'+batch);
+ },delay);
+}
+</script></body></html>'''
+
 PAGES['/event-intrinsics'] = HEAD + '''
 <button onclick="document.getElementById('proof').textContent='Intrinsics PASS'" style="color:#d06020">Load events</button>
 <p id="proof">Ready</p><script>
