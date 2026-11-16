@@ -67,7 +67,7 @@ class Fixture:
                     mime = 'image/jpeg'
                     body = fixture.large_bytes
                     if path == '/oversize.jpg':
-                        body += b'x' * 2097152
+                        body += b'x' * 16777216
                 elif path == '/html.jpg':
                     mime = 'image/jpeg'
                     body = b'<script>throw Error("not an image")</script>'

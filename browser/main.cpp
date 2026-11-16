@@ -135,6 +135,7 @@ struct App {
     bool comic_restore_view = false;
     int loading_image = -1;
     bool compressed_temp_pending = false, compressed_temp_cleaning = false;
+    int image_input_limits_support = 0; // unknown / absent(-1) / supported(1)
     bool foreground = true;
     int scroll = 0, body_font_dp = 15, edit_field = -1, restore_scroll = 0;
     bool busy = false, dirty = true, layout_dirty = true, editing = false, menu = false,
@@ -527,6 +528,10 @@ struct App {
             permission = std::move(*granted);
         }
         const auto begin = millis(); // Permission-dialog time is not network latency.
+        auto image_input = co_await image_input_limit(32768);
+        // Text navigation remains usable under image-memory pressure. Direct
+        // images below use the successful budget or report that pressure.
+        const auto response_limit = image_input ? *image_input : browser::image_response::encoded_limit;
         // Filter unused policy headers before the response-head budget. Retain
         // repeated Set-Cookie fields individually, including on redirects.
         static constexpr std::array<std::string_view, 6> wanted_headers{
@@ -558,7 +563,7 @@ struct App {
                  .body = std::as_bytes(std::span{body.data(), body.size()}),
                  .options = {.buffer_bytes = 4096,
                              .header_bytes = 4096,
-                             .max_body_bytes = browser::image_response::encoded_limit,
+                             .max_body_bytes = response_limit,
                              .timeout_ms = 20000}},
                 permission);
             if (!exchange)
@@ -629,8 +634,9 @@ struct App {
                 images[0].index = 0;
                 image_states[0] = ImageState::loading;
                 loading_image = 0;
-                auto decoded = encoding == browser::ContentEncoding::identity
-                    ? co_await read_image(response->body, 0, 0, begin)
+                auto decoded = !image_input ? pxa::Result<void>{std::unexpected(image_input.error())} :
+                    encoding == browser::ContentEncoding::identity
+                    ? co_await read_image(response->body, 0, 0, begin, *image_input)
                     : co_await read_compressed_image(response->body, encoding, 0, 0, begin);
                 loading_image = -1;
                 busy = false;
@@ -731,6 +737,8 @@ struct App {
                 auto n = co_await decoded_body.read_some(receive);
                 if (!n)
                     co_return std::unexpected(n.error());
+                if (decoded_body.wire_bytes() > browser::image_response::encoded_limit)
+                    co_return std::unexpected(pxa::Error::limit_exceeded);
                 if (!*n)
                     break;
                 if (!first)
@@ -1291,9 +1299,32 @@ struct App {
         }
         co_return pxa::Result<void>{};
     }
+    pxa::Task<std::uint32_t> image_input_limit(std::uint32_t pixels) {
+        if (image_input_limits_support < 0) co_return browser::image_response::encoded_limit;
+        auto limits = co_await context->assets().images().input_limits(pixels);
+        if (!limits) {
+            if (limits.error() == pxa::Error::unsupported) {
+                image_input_limits_support = -1;
+                co_return browser::image_response::encoded_limit;
+            }
+            co_return std::unexpected(limits.error());
+        }
+        image_input_limits_support = 1;
+        // A legacy-sized, manually configured Host retains its old behavior.
+        // On opted-in Hosts a successful zero denotes current memory pressure.
+        const auto available = limits->max_encoded_bytes <= browser::image_response::encoded_limit ?
+            limits->max_encoded_bytes : limits->available_encoded_bytes;
+        log("BROWSER IMAGE LIMIT encoded="+std::to_string(available)+
+            " maximum="+std::to_string(limits->max_encoded_bytes)+" pixels="+std::to_string(pixels));
+        if (!available) co_return std::unexpected(pxa::Error::resource_limit);
+        co_return available;
+    }
     pxa::Task<void> fetch_image(int index, unsigned slot) {
         if (document.images[index].source.starts_with(browser::inline_image::png_prefix))
             co_return co_await fetch_inline_image(index, slot);
+        const bool detailed = comic_reading && comic_detail && image_view.index == index;
+        auto limit = co_await image_input_limit(detailed ? browser::comic_detail_pixels : 32768u);
+        if (!limit) co_return std::unexpected(limit.error());
         auto target = browser::image_response::request_url(url, document.images[index].source);
         const auto begin = millis();
         static constexpr std::array<std::string_view, 4> wanted{"content-type", "content-encoding",
@@ -1316,8 +1347,8 @@ struct App {
                                                            .wanted_headers = wanted,
                                                            .options = {.buffer_bytes = 4096,
                                                                        .header_bytes = 1024,
-                                                                       .max_body_bytes = browser::image_response::encoded_limit,
-                                                                       .timeout_ms = 15000}},
+                                                                       .max_body_bytes = *limit,
+                                                                       .timeout_ms = *limit > browser::image_response::encoded_limit ? 30000u : 15000u}},
                                                           permission);
             if (!exchange)
                 co_return std::unexpected(exchange.error());
@@ -1356,7 +1387,7 @@ struct App {
                 co_return pxa::Result<void>{};
             }
             if (encoding == browser::ContentEncoding::identity)
-                co_return co_await read_image(response->body, index, slot, begin);
+                co_return co_await read_image(response->body, index, slot, begin, *limit);
             co_return co_await read_compressed_image(response->body, encoding, index, slot, begin);
         }
         co_return std::unexpected(pxa::Error::protocol_error);
@@ -1448,7 +1479,7 @@ struct App {
     }
     template<class Source>
     pxa::Task<void> read_image(Source &body, int index, unsigned slot,
-                               std::uint64_t begin) {
+                               std::uint64_t begin, std::uint32_t encoded_limit = browser::image_response::encoded_limit) {
         const auto &picture = document.images[index];
         const bool detailed = comic_reading && comic_detail && image_view.index == index;
         const auto decode_width = detailed ? 1024 : picture.declared_width
@@ -1458,7 +1489,7 @@ struct App {
             {.max_width = std::uint16_t(std::clamp(decode_width, 1, 512)),
              .max_height = std::uint16_t(detailed ? 2048 : 1024),
              .max_pixels = detailed ? browser::comic_detail_pixels : 32768u,
-             .max_encoded_bytes = browser::image_response::encoded_limit,
+             .max_encoded_bytes = encoded_limit,
              .formats = show_gif ? pxa::ImageFormats::any :
                                   pxa::ImageFormats::png | pxa::ImageFormats::jpeg},
             {.max_pixels = 8192, .max_encoded_bytes = 65536});

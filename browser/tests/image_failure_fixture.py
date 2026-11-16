@@ -17,7 +17,8 @@ def oversized():
     image = Image.frombytes('RGB', (1024, 1024), Random(1).randbytes(1024 * 1024 * 3))
     data = BytesIO(); image.save(data, 'JPEG', quality=93)
     body = data.getvalue()
-    assert len(body) > 524288
+    body += bytes(16777216)
+    assert len(body) > 16777216
     return body
 
 

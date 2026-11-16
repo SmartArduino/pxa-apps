@@ -14,5 +14,5 @@
     "资讯订阅",
     "书签"
   ],
-  "changelog": "修复 CDN 图片 MIME 别名、gzip/deflate 响应和 HTTPS 图片链接兼容；公开的 Gmanhua 章节可读取图片列表并直接进入漫画阅读。保持图片编码输入与像素缓存预算；压缩图片解压前后仍各限 512 KiB，并在结束或取消后清理临时文件。WebP 等编码支持范围不变。\n\nFixes CDN image MIME labels, gzip/deflate responses and secure image links. Public Gmanhua chapters open through a bounded native image-list reader. Encoded-input and pixel-cache budgets remain bounded by the existing Host. HTTP-compressed images retain 512 KiB wire/decoded limits and temporary-file cleanup. Codec support, including the WebP limitation, is unchanged."
+  "changelog": "新增动态图片输入预算：支持 Assets 2.7 的固件会根据当前资源配额和堆余量允许更大的普通图片，下载时按需申请，结束后释放。省存/清晰模式像素缓存与 GIF 预算不变；旧固件自动回退到 512 KiB，HTTP 压缩图片仍各限 512 KiB。\n\nAdds dynamic image-input budgets on Assets 2.7 Hosts, allowing larger ordinary images according to current quotas and native heap headroom. Allocation stays on demand; pixel caches and GIF budgets remain unchanged. Older Hosts fall back to 512 KiB; HTTP-compressed images retain separate 512 KiB limits."
 }

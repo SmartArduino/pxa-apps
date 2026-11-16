@@ -13,8 +13,8 @@
     0
   ],
   "id": "pxa-browser",
-  "version": "0.1.39",
-  "release_sequence": 42,
+  "version": "0.1.40",
+  "release_sequence": 43,
   "name": "PXA 浏览器",
   "localizations": {
     "en": {
@@ -58,6 +58,10 @@
           "features": [
             "image-decode",
             "image-frames"
+          ],
+          "min_version": [
+            2,
+            6
           ]
         },
         "net",
@@ -90,7 +94,13 @@
       "kind": "service",
       "cmake_target": "pxa_script",
       "services": [
-        "assets",
+        {
+          "name": "assets",
+          "min_version": [
+            2,
+            6
+          ]
+        },
         "ipc",
         "log"
       ],

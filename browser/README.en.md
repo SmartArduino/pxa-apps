@@ -46,7 +46,7 @@ More → Comic reader provides width-fit reading, image navigation, screen fit,
 dragging and 1/2/4/8× zoom by tapping the header. Declared `rel=next/prev` links
 continue into adjacent chapters. Detail mode downloads and decodes again with
 up to 262144 pixels and retains at most one detailed image. Normal decoding
-keeps its 32768-pixel limit; encoded images remain capped at 512 KiB. Loading a chapter title does not verify its comic pages, and memory-saving mode does not reduce the server image's encoded size. Closing
+keeps its 32768-pixel limit; encoded input follows the current Host budget (512 KiB on legacy Hosts). Loading a chapter title does not verify its comic pages, and memory-saving mode does not reduce the server image's encoded size. Closing
 restores the webpage position. Images still depend on the Host budget; WebP and
 complex scripted/encrypted readers remain unsupported. Chapter pages can retain
 up to 96 bounded image descriptors, with a visible warning when images are omitted.
@@ -267,3 +267,5 @@ Bounded selects support single/multiple selection, default selection, disabled c
 Native clicks and field edits are serialized across bounded compilation and execution turns. Inline handlers compile lazily; each bubbling target runs after the previous target, preserving propagation, cancellation and handler replacement. Rendering and asynchronous page callbacks resume after the native action. The scheduler loads on the first interaction; website callbacks retain the 50 ms cooperative execution deadline, while compilation uses the existing bounded 2 s compiler deadline. Script-driven dispatchEvent remains synchronous.
 
 Gmanhua public chapters use a bounded native image-list adapter and open in comic reading mode without running the full site jQuery viewer. Up to 96 image URLs are retained; changes to the website API can affect compatibility.
+
+On Assets 2.7 Hosts, ordinary network images query the current encoded-input budget before downloading, including output-quality costs. A successful zero means resource pressure. Older Hosts fall back to 512 KiB after one unsupported query. No budget is preallocated, pixel caches remain bounded, and HTTP-compressed images retain their separate 512 KiB limits.
