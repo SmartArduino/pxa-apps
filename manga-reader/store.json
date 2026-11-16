@@ -1,0 +1,16 @@
+{
+  "name": "漫画",
+  "summary": "搜索多站漫画，触摸全屏阅读，自动保存章节和页码。",
+  "description": "支持 MangaDex、拷贝漫画和 MangaKatana，提供书架续读、章节正序／倒序及页码跳转。阅读工具栏轻点显示，闲置自动隐藏。需要触摸和联网；不提供离线整章下载，源站可用性及图片编码会影响阅读。 GameKit 2 当前固件连接 MangaDex 可能失败，建议使用拷贝漫画或 MangaKatana。",
+  "kind": "app",
+  "category": "media",
+  "tags": [
+    "漫画",
+    "阅读",
+    "触摸",
+    "书架"
+  ],
+  "icon": "assets/icon.png",
+  "cover": null,
+  "changelog": "移除单作品书源和自定义入口，加入 MangaKatana 多作品源，增加章节正序／倒序、渐进 JPEG 应用内解码，完善旧书架迁移。\n\nRemove single-series sources and the custom entry; add MangaKatana, chapter ordering, bounded progressive JPEG decoding and library migration."
+}

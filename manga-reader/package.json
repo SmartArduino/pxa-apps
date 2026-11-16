@@ -1,0 +1,78 @@
+{
+  "build": {
+    "linear_memory": {
+      "maximum_bytes": 8388608,
+      "pinned": false
+    },
+    "system": "cmake"
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "services": [
+        "clock",
+        "window",
+        {
+          "name": "ui",
+          "features": [
+            "canvas",
+            "dynamic-text",
+            "text-input-control"
+          ]
+        },
+        "log",
+        "net",
+        "permission",
+        "fs",
+        {
+          "name": "assets",
+          "features": [
+            "image-decode"
+          ],
+          "min_version": [
+            2,
+            6
+          ]
+        }
+      ],
+      "wasi": {
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ],
+        "libc": "wasi-libc",
+        "version": "preview1"
+      }
+    }
+  ],
+  "format": "pxa-package-source-0.1",
+  "id": "pxa-manga-reader",
+  "name": "漫画",
+  "release_sequence": 5,
+  "version": "0.4.1",
+  "description": "搜索多站漫画，触摸全屏阅读，自动保存章节和页码。",
+  "permissions": [
+    {
+      "name": "net.client",
+      "scope": "web",
+      "required": false
+    }
+  ],
+  "interaction": {
+    "schema": "pxa-app-interaction-1",
+    "profiles": [
+      {
+        "id": "touch",
+        "kind": "touch",
+        "complete": true,
+        "contacts": 1,
+        "requires": {
+          "tap": "tap"
+        },
+        "min_width": 172,
+        "min_height": 240
+      }
+    ]
+  }
+}

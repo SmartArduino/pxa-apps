@@ -1,0 +1,4 @@
+tiny-AES-c by kokke and contributors, public domain (The Unlicense).
+picojpeg by Rich Geldreich, public domain.
+See included license notices.
+stb_image by Sean Barrett and contributors, MIT License.

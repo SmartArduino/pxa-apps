@@ -1,0 +1,105 @@
+template<class Owner> bool Reader::Controls::render(Owner& owner,std::uint32_t parent){
+    const auto a=app->area();const float d=app->density();const int x=a.x,y=a.y,w=a.width,h=a.height;
+    constexpr uint32_t ink=0x243b31ff,muted=0x748178ff,accent=0x27664dff,paper=0xfffefaff;
+    bool ok=true;size_t n=0;auto screen=app->screen;
+    auto box=[&](int xx,int yy,int ww,int hh){return CanvasRegion{int(xx/d),int(yy/d),std::max(1,int(ww/d)),std::max(1,int(hh/d))};};
+    auto text=[&] [[gnu::noinline]] (int xx,int yy,int ww,int hh,std::string_view value,Font font=Font::caption,uint32_t color=ink,uint8_t align=0){
+        auto s=manga::ellipsize(value,ww,font==Font::title?20:font==Font::body?16:font==Font::label?14:12);
+        ok=Text(s,WidgetStyle{box(xx,yy,ww,hh),color,0,font,0,align}).render(owner,parent)&&ok;
+    };
+    auto rect=[&](int xx,int yy,int ww,int hh,uint32_t color,int radius=0){ok=Box(WidgetStyle{box(xx,yy,ww,hh),0,color,Font::caption,radius}).render(owner,parent)&&ok;};
+    auto button=[&] [[gnu::noinline]] (int xx,int yy,int ww,int hh,std::string_view label,Act action,int arg=0,bool selected=false,bool enabled=true,bool silent=false){
+        if(n==callbacks.size()){ok=owner.fail(Error::resource_limit);return;}auto& cb=callbacks[n++];cb={app,action,arg};
+        bool icon=screen==reading&&label.size()<=3;
+        ok=Button(label,WidgetStyle{box(xx,yy,ww,hh),silent?0u:screen==reading?0xf5f6eeff:enabled?(selected?0xffffffff:ink):muted,
+            screen==reading?0x14251edc:selected?accent:paper,screen==reading?(icon?Font::title:Font::caption):Font::label,6,1}).on_click_ref(cb).enabled(enabled).render(owner,parent)&&ok;
+    };
+    auto row=[&](int yy,std::string_view title,std::string_view detail,Act action,int arg,bool selected=false,uint32_t spine=accent,bool menu=false){
+        auto label=manga::ellipsize(title,w-(menu?74:42),14);
+        button(x,yy,w-(menu?46:0),38,label,action,arg,false,true,true);
+        rect(x+3,yy+7,2,24,spine,1);
+        text(x+12,yy+3,w-(menu?72:40),19,label,Font::label);
+        text(x+12,yy+22,w-(menu?72:40),15,detail,Font::caption,muted);
+        if(menu){button(x+w-42,yy,42,38,std::string(title)+" · 目录",open_book,arg,false,true,true);text(x+w-38,yy+8,34,24,"≡",Font::title,muted,1);}
+        else text(x+w-25,yy+9,18,24,selected?"✓":"›",Font::label,selected?accent:muted,1);
+    };
+    auto nav=[&]{int third=(w-8)/3;std::array<std::string_view,3> titles{"书架","发现","书源"};std::array<Act,3> actions{shelf_tab,discover_tab,source_tab};
+        for(int i=0;i<3;++i){int xx=x+i*(third+4),ww=i==2?w-2*(third+4):third;bool active=screen==i;
+            button(xx,y,ww,32,titles[i],actions[i],0,false,true,true);
+            text(xx,y+5,ww,24,titles[i],active?Font::body:Font::label,active?ink:muted,1);
+            if(active)rect(xx+ww/4,y+32,ww/2,2,accent,1);
+        }
+    };
+    auto feedback=[&](int yy){text(x,yy,w,22,app->status,Font::caption,muted);};
+    if(screen==reading){
+        if(app->bars){
+            button(x,y,38,30,"≡",go_back);button(x+42,y,38,30,"+",zoom);button(x+w-38,y,38,30,"?",show_help);
+            button(x,y+h-30,38,30,"<",previous_page);button(x+w-38,y+h-30,38,30,">",next_page);
+            button(x+42,y+h-30,w-84,30,app->status,jump_page,0,false,!app->busy);
+        }
+        if(app->busy){text(x,y+h/2-30,w,24,app->status,Font::caption,0xe2ede6ff,1);button(x+(w-80)/2,y+h/2,80,30,"取消加载",cancel);}
+        else if(!app->failure.empty()){text(x,y+h/2-30,w,24,app->status,Font::caption,0xe2ede6ff);button(x+(w-80)/2,y+h/2,80,30,"重试",retry);if(!app->bars)button(x,y,38,30,"≡",go_back);}
+        return ok;
+    }
+    if(screen==help){button(x,y,52,30,"返回",go_back);text(x+64,y+4,w-64,24,"阅读操作",Font::label);
+        int yy=y+42;for(auto s:{"横滑翻页 · 上下拖动长页","轻点画面，显示或隐藏工具栏","+ 切换整页、适宽与放大","点页码跳转 · ≡ 打开目录","工具栏闲置 6 秒自动隐藏","目录可切换正序／倒序"}){text(x,yy,w,24,s);yy+=26;}return ok;
+    }
+    if(screen==page_jump){button(x,y,52,30,"返回",go_back);text(x+64,y+4,w-64,24,"跳转页码",Font::label);
+        rect(x,y+38,w-80,34,paper,6);button(x+w-74,y+38,34,34,"-",jump_step,-1);button(x+w-36,y+38,36,34,"+",jump_step,1);text(x,y+82,w,22,"输入 1–"+std::to_string(app->pages.size())+" 之间的页码",Font::caption,muted);
+        feedback(y+h-62);button(x,y+h-32,w,32,"跳转",jump_submit,0,true);return ok;}
+    if(screen==contents){
+        button(x,y,48,30,"返回",go_back);text(x+60,y+4,w-120,24,"章节目录",Font::label);
+        auto saved=std::any_of(app->shelf.begin(),app->shelf.end(),[&](auto& b){return manga::same(b,app->book);});button(x+w-56,y,56,30,saved?"已收藏":"收藏",collect,0,false,!app->busy);
+        text(x,y+36,w,24,app->book.title,Font::label);
+        if(!app->book.chapter.empty())button(x,y+64,w-154,30,"继续阅读",resume,0,false,!app->busy);
+        else text(x,y+68,w-154,20,app->active_source(),Font::caption,muted);
+        if(app->book.source.empty())button(x+w-148,y+64,72,30,app->language==0?"简中 ▾":app->language==1?"繁中 ▾":"英文 ▾",language_change,0,false,!app->busy);
+        else if(app->book.source=="copymanga"&&!app->groups.empty())button(x+w-148,y+64,72,30,manga::ellipsize(app->groups[app->group_index].title,60,12),language_change,0,false,!app->busy&&app->groups.size()>1);
+        button(x+w-70,y+64,70,30,app->descending?"倒序":"正序",toggle_order,0,false,!app->busy);
+    }else nav();
+    if(screen==source_screen){
+        struct Option {std::string_view id,title,detail;};
+        constexpr std::array<Option,3> choices{{{"","MangaDex","简中 · 繁中 · 英文"},{"copymanga","拷贝漫画","中文 · 分组目录"},{"mangakatana","MangaKatana","英文 · 搜索与章节目录"}}};
+        for(unsigned i=0;i<choices.size();++i){auto& option=choices[i];bool active=app->custom==option.id;int yy=y+42+i*54;
+            button(x,yy,w,48,option.title,choose_source,i,active,true,true);
+            rect(x+10,yy+12,3,24,active?0xe3eee7ff:accent,1);
+            text(x+23,yy+5,w-60,21,option.title,Font::label,active?0xffffffff:ink);
+            text(x+23,yy+28,w-60,16,option.detail,Font::caption,active?0xe3eee7ff:muted);
+            text(x+w-30,yy+14,20,24,active?"✓":"›",Font::label,active?0xffffffff:muted,1);
+        }return ok;
+    }
+    if(screen==discover){
+        rect(x,y+38,w-52,34,paper,6);
+        if(app->input.get().empty())text(x+8,y+46,w-76,20,"搜索漫画名称",Font::caption,muted);
+        button(x+w-48,y+38,48,34,"搜索",search,0,true,!app->busy);
+        button(x,y+76,w-66,24,app->active_source()+"  ›",source_tab,0,false,true,true);
+        text(x+3,y+80,w-74,20,app->active_source()+"  ›",Font::caption,muted);
+        if(app->custom.empty())button(x+w-62,y+76,62,24,app->language==0?"简中 ▾":app->language==1?"繁中 ▾":"英文 ▾",language_change,0,false,!app->busy);
+    }
+    if(screen==shelf_screen){feedback(y+38);if(app->shelf.empty()&&!app->busy){
+        text(x,y+83,w,26,"书架还没有漫画",Font::body,ink,1);
+        button(x+(w-120)/2,y+120,120,34,"去发现",discover_tab,0,true);return ok;}}
+    auto count=screen==shelf_screen?app->shelf.size():screen==discover?app->results.size():app->chapters.size();
+    int yy=y+app->list_y();unsigned shown=0;
+    if(!app->busy&&app->failure.empty())for(size_t i=app->list_start;i<count&&shown<app->row_count();++i,++shown){
+        if(screen==contents){auto label=manga::ellipsize(app->chapters[i].title,w-28,14);bool current=app->chapters[i].id==app->book.chapter;button(x,yy,w,32,label,open_chapter,i,false,true,true);if(current)rect(x+2,yy+6,2,20,accent);text(x+8,yy+7,w-20,22,label,Font::label,current?accent:ink);}
+        else{auto& b=(screen==discover?app->results:app->shelf)[i];std::string detail(manga::source_name(b.source));
+            if(!b.chapter.empty()){detail+=" · "+std::to_string(b.page+1)+(b.pages?"/"+std::to_string(b.pages):" 页");if(!b.chapter_title.empty())detail+=" · "+b.chapter_title;}
+            else detail+=screen==shelf_screen?" · 未开始阅读":" · 点击查看章节";
+            bool saved=screen==shelf_screen&&!b.chapter.empty();
+            row(yy,b.title,detail,saved?read_book:open_book,i,false,b.source=="copymanga"?0xb7773dff:b.source=="mangakatana"?0x667c9bff:accent,saved);
+        }yy+=app->row_height();
+    }
+    if(app->busy||!app->failure.empty()||!count){
+        if(screen!=shelf_screen)feedback(y+app->list_y()+4);
+        if(app->busy)button(x+(w-88)/2,y+h-30,88,30,"取消加载",cancel);
+        else if(!app->failure.empty())button(x+(w-88)/2,y+h-30,88,30,"重试",retry);
+        return ok;
+    }
+    unsigned total=screen==shelf_screen?count:app->total;
+    bool prev=app->list_start||app->offset,next=app->list_start+shown<count||(app->remote_list()&&app->offset+app->batch_size()<total);
+    button(x,y+h-28,36,28,"<",previous_list,0,false,prev);button(x+w-36,y+h-28,36,28,">",next_list,0,false,next);
+    std::string position=std::to_string(app->offset+app->list_start+1)+"–"+std::to_string(app->offset+app->list_start+shown)+(screen==discover&&app->custom=="mangakatana"?" · 第 "+std::to_string(app->offset/app->batch_size()+1)+" 组":" / "+std::to_string(total));
+    text(x+44,y+h-23,w-88,22,position,Font::caption,muted,1);
+    return ok;
+}

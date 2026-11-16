@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.20)
+project(manga_reader LANGUAGES C CXX)
+add_compile_definitions(PXA_COROUTINE_SLOT_COUNT=8 PXA_COROUTINE_SLOT_BYTES=2048)
+find_package(Pxa CONFIG REQUIRED)
+pxa_add_app(main SOURCES main.cpp progressive_jpeg.cpp vendor/picojpeg/picojpeg.c vendor/tiny-aes/aes.c)
+target_compile_definitions(main PRIVATE CBC=1 ECB=0 CTR=0)
+target_link_options(main PRIVATE "-Wl,-z,stack-size=65536")

@@ -1,0 +1,779 @@
+{
+  "doit-gamekit-2": [
+    {
+      "name": "s00-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s01-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s02-expect",
+      "action": "expect",
+      "selector": {
+        "type": "button",
+        "text": "小辣椒与萝卜头"
+      },
+      "expected": {
+        "count": 0
+      }
+    },
+    {
+      "name": "s03-expect",
+      "action": "expect",
+      "selector": {
+        "type": "button",
+        "text": "xkcd"
+      },
+      "expected": {
+        "count": 0
+      }
+    },
+    {
+      "name": "s04-expect",
+      "action": "expect",
+      "selector": {
+        "type": "button",
+        "text": "CommitStrip"
+      },
+      "expected": {
+        "count": 0
+      }
+    },
+    {
+      "name": "s05-expect",
+      "action": "expect",
+      "selector": {
+        "type": "button",
+        "text": "自定义漫画源"
+      },
+      "expected": {
+        "count": 0
+      }
+    },
+    {
+      "name": "s06-expect",
+      "action": "expect",
+      "selector": {
+        "type": "button",
+        "text": "MangaKatana"
+      },
+      "expected": {
+        "count": 1
+      }
+    },
+    {
+      "name": "s07-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s08-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "MangaKatana"
+      }
+    },
+    {
+      "name": "s09-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s10-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "\"Aishiteru\", Uso Dakedo."
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s11-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s12-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "\"Aishiteru\", Uso Dakedo."
+      }
+    },
+    {
+      "name": "s13-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "正序"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s14-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s15-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "正序"
+      }
+    },
+    {
+      "name": "s16-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "倒序"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s17-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s18-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "收藏"
+      }
+    },
+    {
+      "name": "s19-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "已收藏"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 5000
+    },
+    {
+      "name": "s20-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "返回"
+      }
+    },
+    {
+      "name": "s21-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "1 部漫画 · 已保存"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 10000
+    },
+    {
+      "name": "s22-relaunch",
+      "action": "relaunch"
+    },
+    {
+      "name": "s23-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "\"Aishiteru\", Uso Dakedo."
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 10000
+    },
+    {
+      "name": "s24-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s25-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s26-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "MangaDex"
+      }
+    },
+    {
+      "name": "s27-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s28-screenshot",
+      "action": "screenshot"
+    }
+  ],
+  "pai-touch": [
+    {
+      "name": "s00-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s01-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s02-expect",
+      "action": "expect",
+      "selector": {
+        "type": "button",
+        "text": "小辣椒与萝卜头"
+      },
+      "expected": {
+        "count": 0
+      }
+    },
+    {
+      "name": "s03-expect",
+      "action": "expect",
+      "selector": {
+        "type": "button",
+        "text": "xkcd"
+      },
+      "expected": {
+        "count": 0
+      }
+    },
+    {
+      "name": "s04-expect",
+      "action": "expect",
+      "selector": {
+        "type": "button",
+        "text": "CommitStrip"
+      },
+      "expected": {
+        "count": 0
+      }
+    },
+    {
+      "name": "s05-expect",
+      "action": "expect",
+      "selector": {
+        "type": "button",
+        "text": "自定义漫画源"
+      },
+      "expected": {
+        "count": 0
+      }
+    },
+    {
+      "name": "s06-expect",
+      "action": "expect",
+      "selector": {
+        "type": "button",
+        "text": "MangaKatana"
+      },
+      "expected": {
+        "count": 1
+      }
+    },
+    {
+      "name": "s07-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s08-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "MangaKatana"
+      }
+    },
+    {
+      "name": "s09-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s10-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "\"Aishiteru\", Uso Dakedo."
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s11-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s12-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "\"Aishiteru\", Uso Dakedo."
+      }
+    },
+    {
+      "name": "s13-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "正序"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s14-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s15-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "正序"
+      }
+    },
+    {
+      "name": "s16-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "倒序"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s17-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s18-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "收藏"
+      }
+    },
+    {
+      "name": "s19-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "已收藏"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 5000
+    },
+    {
+      "name": "s20-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "返回"
+      }
+    },
+    {
+      "name": "s21-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "1 部漫画 · 已保存"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 10000
+    },
+    {
+      "name": "s22-relaunch",
+      "action": "relaunch"
+    },
+    {
+      "name": "s23-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "\"Aishiteru\", Uso Dakedo."
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 10000
+    },
+    {
+      "name": "s24-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s25-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s26-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "MangaDex"
+      }
+    },
+    {
+      "name": "s27-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s28-screenshot",
+      "action": "screenshot"
+    }
+  ],
+  "generic": [
+    {
+      "name": "s00-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s01-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s02-expect",
+      "action": "expect",
+      "selector": {
+        "type": "button",
+        "text": "小辣椒与萝卜头"
+      },
+      "expected": {
+        "count": 0
+      }
+    },
+    {
+      "name": "s03-expect",
+      "action": "expect",
+      "selector": {
+        "type": "button",
+        "text": "xkcd"
+      },
+      "expected": {
+        "count": 0
+      }
+    },
+    {
+      "name": "s04-expect",
+      "action": "expect",
+      "selector": {
+        "type": "button",
+        "text": "CommitStrip"
+      },
+      "expected": {
+        "count": 0
+      }
+    },
+    {
+      "name": "s05-expect",
+      "action": "expect",
+      "selector": {
+        "type": "button",
+        "text": "自定义漫画源"
+      },
+      "expected": {
+        "count": 0
+      }
+    },
+    {
+      "name": "s06-expect",
+      "action": "expect",
+      "selector": {
+        "type": "button",
+        "text": "MangaKatana"
+      },
+      "expected": {
+        "count": 1
+      }
+    },
+    {
+      "name": "s07-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s08-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "MangaKatana"
+      }
+    },
+    {
+      "name": "s09-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s10-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "\"Aishiteru\", Uso Dakedo."
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s11-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s12-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "\"Aishiteru\", Uso Dakedo."
+      }
+    },
+    {
+      "name": "s13-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "正序"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s14-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s15-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "正序"
+      }
+    },
+    {
+      "name": "s16-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "倒序"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s17-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s18-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "收藏"
+      }
+    },
+    {
+      "name": "s19-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "已收藏"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 5000
+    },
+    {
+      "name": "s20-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "返回"
+      }
+    },
+    {
+      "name": "s21-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "1 部漫画 · 已保存"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 10000
+    },
+    {
+      "name": "s22-relaunch",
+      "action": "relaunch"
+    },
+    {
+      "name": "s23-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "\"Aishiteru\", Uso Dakedo."
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 10000
+    },
+    {
+      "name": "s24-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s25-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s26-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "MangaDex"
+      }
+    },
+    {
+      "name": "s27-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s28-screenshot",
+      "action": "screenshot"
+    }
+  ]
+}
