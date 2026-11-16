@@ -40,12 +40,13 @@ inline int shot_source(const Shot& s){return (s.team>>1)-1;}
 inline unsigned veteran_rank(const Entity& a){return a.kills>=9?3:a.kills>=5?2:a.kills>=2?1:0;}
 struct Blast {Vec p{};float age=0;uint8_t type=0;bool alive=false;};
 struct Job {uint8_t kind=0;float left=0,total=0;};
+struct Expansion {uint32_t mode=0,seed=0,cleared=0;uint8_t damage=0,armor=0,research=0,reserved=0;float research_left=0;};
 struct World {
  std::array<Entity,MAX> e{};std::array<Shot,64> shots{};std::array<Blast,48> blasts{};
  std::array<uint8_t,N*N> terrain{},ore{},fog{},seen{},obstacles{};std::array<Job,6> jobs{};
  uint32_t rng=83711;int chapter=0,credits=1100,power_net=0,job_count=0,wave=0,killed=0,lost=0,earned=0;
  float time=0,next_wave=58,strike_cd=0,capture=0,autosave=0,notice_time=0,reveal_timer=0,radio_time=0;
- bool won=false,defeated=false,story_beat=false;char notice[128]{};unsigned sound=0;
+ bool won=false,defeated=false,story_beat=false;char notice[128]{};unsigned sound=0;Expansion extra{};
  uint32_t random(){rng^=rng<<13;rng^=rng>>17;rng^=rng<<5;return rng;}
  void say(const char* s,float duration=5){std::snprintf(notice,sizeof notice,"%s",s);notice_time=duration;}
  bool building(int k)const{return k>=hq;}
@@ -68,6 +69,34 @@ struct World {
   if(chapter==1){add(supply,2,{10,19});add(supply,2,{20,7});}
   if(chapter==2){add(supply,2,{14,13});add(supply,2,{24,10});}
   say("林岚：先稳住矿线，再组织装甲部队。",8);reveal();power_update();
+ }
+ // Independent defense games preserve the three story chapters and their unlocks.
+ void init_defense(uint32_t seed){init(0);extra.mode=1;extra.seed=seed?seed:83711;rng=extra.seed;credits=1500;next_wave=35;
+  for(auto& a:e)if(a.team!=0)a.hp=0;
+  for(int y=1;y<N-1;++y)for(int x=1;x<N-1;++x){int c=y*N+x;terrain[c]=ore[c]?0:(random()%13==0?1:0);}
+  for(int y=1;y<N-1;++y)if(!defense_crossing(y))for(int x=17;x<=18;++x){terrain[y*N+x]=2;ore[y*N+x]=0;}
+  add(factory,0,{7,5});add(power,0,{3,4});add(turret,0,{10,9});
+  add(supply,2,{13,8});add(supply,2,{9,18});add(supply,2,{19,16});
+  for(int y=18;y<21;++y)for(int x=13;x<16;++x)ore[y*N+x]=200+random()%55;
+  say("苏弥：守住前哨。每次击退敌军，补给队就能靠近。",8);power_update();reveal();
+ }
+ bool defense_crossing(int y)const{int first=6+int(extra.seed%2)*2,second=15+int(extra.seed%3);return (y>=first&&y<=first+3)||(y>=second&&y<=second+3)||(y>=23&&y<=25);}
+ bool defense_bridge(int x,int y)const{if(x<17||x>18)return false;int first=6+int(extra.seed%2)*2,second=15+int(extra.seed%3);return y==first||y==first+3||y==second||y==second+3||y==23||y==25;}
+ unsigned tech_level(int kind)const{return kind==1?extra.damage:extra.armor;}
+ int research_cost(int kind)const{return tech_level(kind)?400:220;}
+ float research_duration(int kind)const{return tech_level(kind)?24.f:16.f;}
+ const char* research_blocked(int kind)const{if(kind<1||kind>2)return "未知研发项目";if(extra.research)return "工程师正在研发";if(tech_level(kind)>=2)return "科技已达最高等级";if(!ready_count(factory))return "需要建成装甲工厂";if(credits<research_cost(kind))return "研发矿石不足";return nullptr;}
+ bool research_start(int kind){if(auto why=research_blocked(kind)){say(why);return false;}credits-=research_cost(kind);extra.research=kind;extra.research_left=research_duration(kind);say("研发已启动，战局继续进行");sound=1;return true;}
+ void research_cancel(){if(!extra.research)return;credits+=research_cost(extra.research);extra.research=0;extra.research_left=0;say("研发已取消，矿石已退回");}
+ void research_tick(float dt){if(!extra.research||!ready_count(factory))return;extra.research_left=std::max(0.f,extra.research_left-dt*(power_net<0?.45f:1.f));if(extra.research_left>0)return;
+  bool ammo=extra.research==1;if(ammo)++extra.damage;else ++extra.armor;extra.research=0;
+  for(auto& a:e)if(a.hp>0&&a.team==0&&a.kind==hq)blast(a.p,4);
+  say(ammo?"弹药改良完成：作战火力增强":"复合装甲完成：受到伤害降低",7);sound=4;
+ }
+ void defense_clear(){extra.cleared=wave;int reward=150+25*wave;credits=std::min(10000000,credits+reward);next_wave=time+18;
+  int base=nearest({6,9},hq,0);if(base>=0)for(auto& a:e)if(a.hp>0&&a.team==0&&a.kind<hq&&dist(a.p,e[base].p)<8){if(a.hp<specs[a.kind].hp)a.hp=std::min(float(specs[a.kind].hp),a.hp+specs[a.kind].hp*.12f);blast(a.p,3);}
+  if(wave%3==0){Vec station=wave%2?Vec{15,16}:Vec{18,8};if(open(station))add(supply,2,station);}
+  char text[120];std::snprintf(text,sizeof text,"第 %d 波已击退！补给 +%d，前哨维修完成",wave,reward);say(text,8);sound=5;
  }
  void power_update(){obstacles.fill(0);for(int c=0;c<N*N;++c){if(terrain[c]==2){obstacles[c]=1;continue;}Vec p=center(c);for(auto& a:e)if(a.hp>0&&building(a.kind)&&((a.p.x-p.x)*(a.p.x-p.x)+(a.p.y-p.y)*(a.p.y-p.y))<(a.kind==turret?.4225f:1.44f)){obstacles[c]=1;break;}}power_net=0;for(auto& a:e)if(a.hp>0&&a.team==0&&a.progress<=0)power_net+=specs[a.kind].supply;}
  int ready_count(int k)const{int n=0;for(auto& a:e)n+=a.hp>0&&a.team==0&&a.kind==k&&a.progress<=0;return n;}
@@ -110,7 +139,7 @@ struct World {
  }
  void blast(Vec p,int type=0){for(auto& b:blasts)if(!b.alive){b={p,0,uint8_t(type),true};return;}}
  void damage(int id,float value,int source=-1){
-  if(id<0||id>=MAX||e[id].hp<=0)return;auto& a=e[id];a.hp-=value;a.flash=.14f;
+  if(id<0||id>=MAX||e[id].hp<=0)return;auto& a=e[id];if(a.team==0)value*=1-extra.armor*.10f;a.hp-=value;a.flash=.14f;
   if(a.hp>0)return;
   a.hp=0;blast(a.p,building(a.kind)?2:1);sound=3;
   int c=cell(a.p);if(terrain[c]!=2&&!ore[c])terrain[c]=building(a.kind)?5:4;
@@ -122,7 +151,7 @@ struct World {
   power_update();
  }
  void fire(int id,int target){auto& a=e[id];bool admitted=false;
-  for(auto& s:shots)if(!s.alive){s={};s.from=a.p;s.p=a.p;s.dest=e[target].p;s.target=int16_t(target|(unsigned(a.cargo)<<7));s.team=uint8_t((id+1)*2+a.team);s.kind=a.kind;s.damage=specs[a.kind].damage*(1+veteran_rank(a)*.12f);s.duration=a.kind==artillery?.85f:a.kind==rocket?.5f:.22f;s.alive=true;admitted=true;break;}
+  for(auto& s:shots)if(!s.alive){s={};s.from=a.p;s.p=a.p;s.dest=e[target].p;s.target=int16_t(target|(unsigned(a.cargo)<<7));s.team=uint8_t((id+1)*2+a.team);s.kind=a.kind;s.damage=specs[a.kind].damage*(1+veteran_rank(a)*.12f)*(a.team==0?1+extra.damage*.12f:1);s.duration=a.kind==artillery?.85f:a.kind==rocket?.5f:.22f;s.alive=true;admitted=true;break;}
   if(!admitted)return;a.cool=specs[a.kind].reload;a.dir=std::atan2(e[target].p.y-a.p.y,e[target].p.x-a.p.x);if(sound<2)sound=2;
  }
  void supply_tick(Entity& station,float dt){
@@ -134,9 +163,16 @@ struct World {
  }
  bool strike(Vec p){if(strike_cd>0){say("支援还在冷却中");return false;}if(credits<180){say("空袭需要 180 矿石");return false;}if(!fog[cell(p)]){say("空袭需要可见目标");return false;}credits-=180;strike_cd=45;for(int i=0;i<MAX;++i)if(e[i].hp>0&&e[i].team==1&&dist(e[i].p,p)<3.8f)damage(i,260);for(int i=0;i<7;++i)blast({p.x+(int(random()%400)-200)*.01f,p.y+(int(random()%400)-200)*.01f},2);say("空中支援：雷鸣打击已抵达！");sound=3;return true;}
  void repair(){for(auto& a:e)if(a.selected&&a.hp>0&&a.team==0){int cost=int((specs[a.kind].hp-a.hp)*.2f);if(cost<=0)continue;if(credits<cost){say("修复资金不足");return;}credits-=cost;a.hp=specs[a.kind].hp;blast(a.p,3);}say("维修完成");}
+ void defense_wave(){bool slot=false;for(auto& a:e)slot|=a.hp<=0;if(!slot){next_wave=time+2;return;}++wave;
+  constexpr Vec edges[]={{23,5},{24,22},{5,24}};auto spawn=edges[(extra.seed+unsigned(wave))%3];int units=std::min(12,3+wave);bool raid=wave%5==0;
+  for(int j=0;j<units;++j){int kind=j%3==0?tank:j%3==1?rifle:rocket;if(wave>=4&&j==units-1)kind=artillery;if(raid&&j%3==0)kind=artillery;
+   int id=add(kind,1,{spawn.x+j%3*.45f,spawn.y+j/3*.45f});if(id>=0){auto& a=e[id];a.goal={6,9};a.step=a.p;a.moving=true;if(raid){a.hp*=1.25f;a.kills=2;}}
+  }
+  char text[100];std::snprintf(text,sizeof text,raid?"第 %d 波：灰塔重装突袭！保护前哨电站！":"第 %d 波来袭！拦截接近矿线的敌军",wave);say(text,7);
+ }
  void wave_spawn(){++wave;next_wave=time+std::max(24.f,55.f-wave*2.f-chapter*4.f);Vec spawn=chapter==1?Vec{23,24}:Vec{24,22};int units=std::min(7,2+wave/2+(chapter==2?1:chapter));for(int j=0;j<units;++j){int k=j%3==0?tank:j%3==1?rifle:rocket;if(chapter==2&&wave>=3&&j==units-1)k=artillery;int id=add(k,1,{spawn.x+(j%3)*.6f,spawn.y+(j/3)*.6f});if(id>=0){e[id].goal=chapter==1&&count(relay,0)?Vec{20,12}:Vec{7,10};e[id].moving=true;e[id].step=e[id].p;}}say("侦察：敌方增援正向基地推进！",6);}
  [[gnu::noinline]] void tick(float dt){if(won||defeated)return;dt=std::clamp(dt,0.f,.1f);time+=dt;autosave+=dt;notice_time=std::max(0.f,notice_time-dt);strike_cd=std::max(0.f,strike_cd-dt);reveal_timer-=dt;
-  if(reveal_timer<=0){reveal();reveal_timer=.5f;}if(time>=next_wave&&count(hq,1))wave_spawn();
+  if(reveal_timer<=0){reveal();reveal_timer=.5f;}if(extra.mode){if(wave==int(extra.cleared)&&army(1)==0&&time>=next_wave)defense_wave();}else if(time>=next_wave&&count(hq,1))wave_spawn();research_tick(dt);
   if(job_count){jobs[0].left-=dt*(power_net<0?.45f:1.f);if(jobs[0].left<=0){int k=jobs[0].kind;int home=nearest({6,8},k<=rocket?barracks:factory,0);if(home<0){say("生产设施已损毁，资金已退回");credits+=specs[k].cost;}else {Vec pos={e[home].p.x+1.6f,e[home].p.y+1.6f};int id=add(k,0,pos);if(id>=0){blast(pos,3);if(e[home].moving&&open(e[home].goal)){e[id].goal=e[home].goal;e[id].step=pos;e[id].moving=true;}say("新部队已就绪");sound=1;}else credits+=specs[k].cost;}for(int j=1;j<job_count;++j)jobs[j-1]=jobs[j];--job_count;}}
   for(int i=0;i<MAX;++i){auto& a=e[i];if(a.hp<=0)continue;a.flash=std::max(0.f,a.flash-dt);a.cool=std::max(0.f,a.cool-dt);
    if(a.kind==supply){supply_tick(a,dt);continue;}
@@ -159,11 +195,12 @@ struct World {
    blast(s.dest,0);if(s.kind==artillery)for(int j=0;j<MAX;++j)if(j!=victim_id&&e[j].hp>0&&e[j].team!=shot_team(s)&&e[j].team!=2&&dist(e[j].p,s.dest)<1.7f)damage(j,value*.5f,source);
   }}
   for(auto& b:blasts)if(b.alive){b.age+=dt;float life=b.type==2?2.2f:b.type==1?1.1f:b.type==3?.7f:b.type==4?1.f:b.type==5?.16f:b.type==6?1.2f:.65f;if(b.age>life)b.alive=false;}
-  if(chapter==1){int r=nearest({20,12},relay,2);if(r>=0){bool near=false;for(auto& a:e)if(a.hp>0&&a.team==0&&a.kind<harvester&&dist(a.p,e[r].p)<3)near=true;if(near){capture+=dt;if(capture>=8){e[r].team=0;story_beat=true;say("苏弥：中继站已上线。坚持住，平民正在撤离！",8);}}}if(count(relay,0)){radio_time+=dt;if(radio_time>=90)won=true;}if(!count(relay,0)&&!count(relay,2))defeated=true;}
-  else if(!count(hq,1)&&(chapter!=2||!count(power,1)))won=true;
+  if(!extra.mode&&chapter==1){int r=nearest({20,12},relay,2);if(r>=0){bool near=false;for(auto& a:e)if(a.hp>0&&a.team==0&&a.kind<harvester&&dist(a.p,e[r].p)<3)near=true;if(near){capture+=dt;if(capture>=8){e[r].team=0;story_beat=true;say("苏弥：中继站已上线。坚持住，平民正在撤离！",8);}}}if(count(relay,0)){radio_time+=dt;if(radio_time>=90)won=true;}if(!count(relay,0)&&!count(relay,2))defeated=true;}
+  else if(!extra.mode&&!count(hq,1)&&(chapter!=2||!count(power,1)))won=true;
   if(!count(hq,0))defeated=true;
-  if(chapter==0&&!story_beat&&time>50){story_beat=true;say("苏弥：灰塔在用民用电网供能。我们必须查清真相。",8);}
-  if(chapter==2&&!count(power,1)&&!story_beat){story_beat=true;for(auto& a:e)if(a.team==1&&a.kind==turret)a.cool=9999;say("林岚：敌方电网瘫痪！全军向灰塔推进！",8);}
+  if(!extra.mode&&chapter==0&&!story_beat&&time>50){story_beat=true;say("苏弥：灰塔在用民用电网供能。我们必须查清真相。",8);}
+  if(extra.mode&&!defeated&&wave>int(extra.cleared)&&army(1)==0)defense_clear();
+  if(!extra.mode&&chapter==2&&!count(power,1)&&!story_beat){story_beat=true;for(auto& a:e)if(a.team==1&&a.kind==turret)a.cool=9999;say("林岚：敌方电网瘫痪！全军向灰塔推进！",8);}
  }
 };
 }

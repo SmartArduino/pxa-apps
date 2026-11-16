@@ -1,10 +1,10 @@
 {
   "format": "pxa-package-source-0.2",
   "id": "pxa-iron-dawn",
-  "version": "1.5.1",
-  "release_sequence": 7,
+  "version": "1.6.0",
+  "release_sequence": 8,
   "name": "钢铁黎明",
-  "description": "原创等距即时战略。采矿建造、装甲编队、战争迷雾与三章故事战役，在灰烬中夺回黎明。",
+  "description": "原创像素即时战略。三章剧情与无尽守备、基地建设、战场科研、装甲编队与触屏框选。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"

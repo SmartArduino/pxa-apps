@@ -7,7 +7,7 @@ struct CombatArt {
  static unsigned facing(float angle){return unsigned(int(std::lround(angle*4/3.14159265f)))&7;}
  struct Leg {Pt hip,knee,ankle,toe;float travel,lift;};
  struct Gait {std::array<Leg,2> legs;Pt forward,side;};
- static Gait gait(int kind,unsigned direction,float phase,float weight){
+ static Gait uncached_gait(int kind,unsigned direction,float phase,float weight){
   const auto& frame=art::frames[art::unit_first[kind]+direction];const auto& rig=art::infantry_rigs[kind][direction];
   float angle=direction*3.14159265f/4,c=std::cos(angle),s=std::sin(angle);
   Pt forward{c-s,(c+s)*.5f},side{-s-c,(c-s)*.5f};float fl=std::hypot(forward.x,forward.y),sl=std::hypot(side.x,side.y);forward={forward.x/fl,forward.y/fl};side={side.x/sl,side.y/sl};
@@ -19,6 +19,13 @@ struct CombatArt {
    Pt knee{(hip.x+ankle.x)*.5f+forward.x*(.5f+lift*.5f),(hip.y+ankle.y)*.5f+forward.y*(.5f+lift*.5f)};
    Pt toe{ankle.x+forward.x*1.8f,ankle.y+forward.y*1.8f};result.legs[j]={hip,knee,ankle,toe,travel,lift};
   }return result;
+ }
+ static Gait gait(int kind,unsigned direction,float phase,float weight){
+  // Full strides and standing poses repeat; partial stop/start poses stay exact.
+  static std::array<Gait,144> poses;static std::array<bool,144> ready{};
+  if(weight!=0&&weight!=1)return uncached_gait(kind,direction,phase,weight);
+  unsigned index=weight==0?128+kind*8+direction:kind*64+direction*8+(unsigned(phase*8)&7);
+  if(!ready[index]){poses[index]=uncached_gait(kind,direction,phase,weight);ready[index]=true;}return poses[index];
  }
  [[gnu::noinline]] static void infantry(Raster& r,int kind,unsigned direction,int x,int y,float zoom,float phase,float weight,unsigned variant){
   auto g=gait(kind,direction,phase,weight);auto color=[&](uint16_t c){return variant==2||variant==3?mix(c,cream,5):c;};

@@ -76,6 +76,7 @@ struct Battlefield {
    unsigned tile=hash%5==0?1:0;if(w.terrain[c]==2)tile=4+(int(clock*2)&1);else if(w.ore[c])tile=7;else if(w.terrain[c]>=3)tile=6;else if(x>=2&&x<=25&&y>=9&&y<=10)tile=2;else if(y>=3&&y<=25&&x>=10&&x<=11)tile=3;
    Sprites::blit(r,art::terrain_first+tile,std::lround(q.x-20*zoom),std::lround(q.y-10*zoom),zoom,zoom,w.fog[c]?0:4);
    if(w.chapter==1&&x>=13&&x<=15&&(y==5||y==8||y==16||y==19||y==23||y==25))ground_details(r,w,p,hash,color);
+   if(w.extra.mode&&w.defense_bridge(x,y)){quad(r,p,.5f,.5f,1,rgb(102,115,105));wire(r,{p.x-.5f,p.y-.45f},{p.x+.5f,p.y-.45f},4,rgb(153,164,139));wire(r,{p.x-.5f,p.y+.45f},{p.x+.5f,p.y+.45f},4,rgb(80,101,93));}
   }
  }
  static unsigned shot_facing(const Shot& s){return CombatArt::facing(std::atan2(s.dest.y-s.from.y,s.dest.x-s.from.x));}
@@ -102,7 +103,7 @@ struct Battlefield {
     else if(hash%19==0){cube(r,p,.22f,.26f,4+hash%4,rgb(119,122,100),rgb(77,88,77),rgb(56,70,65));}
     else if(hash%31==0){wire(r,{p.x-.5f,p.y},{p.x+.5f,p.y},4,rgb(138,137,109));auto v=project(p);r.line(v.x,v.y,v.x,v.y-7,edge);}
    }
-   while(ii<num&&int(w.e[order[ii]].p.x+w.e[order[ii]].p.y)<=d){auto& a=w.e[order[ii++]];if(!onscreen(project(a.p),110))continue;if(a.kind>=hq)building_art(r,a);else unit_art(r,a,order[ii-1]);if(a.kind>=hq&&(a.selected||a.hp<specs[a.kind].hp)){auto p=project(a.p,48);r.rect(p.x-18,p.y,36,3,navy);r.rect(p.x-17,p.y+1,34*std::clamp(a.hp/specs[a.kind].hp,0.f,1.f),1,a.team==1?red:cyan);}}
+   while(ii<num&&int(w.e[order[ii]].p.x+w.e[order[ii]].p.y)<=d){auto& a=w.e[order[ii++]];if(!onscreen(project(a.p),110))continue;if(a.kind>=hq){building_art(r,a);if(w.extra.mode&&a.kind==hq&&a.team==0){auto beacon=project(a.p,58);for(int lamp=0;lamp<3;++lamp)r.rect(beacon.x+(lamp-1)*3*zoom,beacon.y-(1+((int(clock*4)+lamp)%3))*2*zoom,std::max(1,int(2*zoom)),std::max(1,int((2+((int(clock*4)+lamp)%3)*2)*zoom)),cyan);}}else unit_art(r,a,order[ii-1]);if(a.kind>=hq&&(a.selected||a.hp<specs[a.kind].hp)){auto p=project(a.p,48);r.rect(p.x-18,p.y,36,3,navy);r.rect(p.x-17,p.y+1,34*std::clamp(a.hp/specs[a.kind].hp,0.f,1.f),1,a.team==1?red:cyan);}}
   }
   for(const auto& shot:w.shots)if(shot.alive&&!shot_behind(shot)&&w.fog[cell(shot.p)])draw_shot(r,shot);
   for(auto& b:w.blasts)if(b.alive&&w.fog[cell(b.p)]){
