@@ -7,3 +7,8 @@ pxa_add_app(pxa_main COMPONENT_ID main SOURCES main.cpp)
 target_include_directories(pxa_main PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 target_compile_options(pxa_main PRIVATE -O2)
 target_link_options(pxa_main PRIVATE -Wl,-z,stack-size=32768)
+
+option(IRON_PROFILE "Log renderer timings without an on-screen overlay" OFF)
+if(IRON_PROFILE)
+  target_compile_definitions(pxa_main PRIVATE IRON_PROFILE=1)
+endif()
