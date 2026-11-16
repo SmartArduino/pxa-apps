@@ -76,7 +76,11 @@ HTML 的 title/textarea 按文本容器解析，保留内部标签文字并解�
 
 脚本可通过 `element.style` 的属性、`cssText`、`setProperty`、`getPropertyValue`、`getPropertyPriority` 和 `removeProperty` 修改行内样式，也可读取 `length` / `item`。替换或移除 `style` 属性会清除旧声明，已有的 `style` 引用保持有效；单独修改样式会触发页面更新，重复写入相同值保持空闲。声明按需分配，每个元素最多 32 项、序列化后最多 4096 个 UTF-16 代码单元，值中的括号最多嵌套 16 层；超限保留原值。解析保留引号和括号内的分号并识别 `!important`，序列化结果复用到后续重绘。该接口仍为有界子集，绘制只应用上述文字 CSS，不实现完整 CSSOM、简写展开或 CSS 变量求值。
 
-已经完成绘制的脚本页只在内容、样式或点击目标变化后启动 DOM 快照；空回调、相同文字/样式赋值和重复监听注册不单独生成快照。动态 `onclick`、`addEventListener` / `removeEventListener` 会同步点击区域，XHR 回调中新绑定的处理器也能生效；移除最后一个处理器会恢复普通内容。`onclick=null` 或 `undefined` 可停用行内处理器，重新设置同一份 `onclick` 属性可重新启用。每类事件仍最多 16 个监听器，重复注册已有函数不占用额外名额；不提供完整 DOM 事件模型。
+已经完成绘制的脚本页只在内容、样式或点击目标变化后启动 DOM 快照；空回调、相同文字/样式赋值和重复监听注册不单独生成快照。动态 `onclick`、`addEventListener` / `removeEventListener` 会同步点击区域，XHR 回调中新绑定的处理器也能生效；移除最后一个处理器会恢复普通内容。`onclick=null` 或 `undefined` 可停用行内处理器，重新设置同一份 `onclick` 属性可重新启用。每类事件仍最多 16 个监听器，回调和 capture 相同的重复注册不占额外名额。
+
+事件扩展仅在首次使用时加载，内存计入原有脚本堆；普通文字脚本页不会提前实例化该模块。连续排队的原生操作完成后合并发布画面，避免显示半次输入。
+
+支持有界的捕获、目标与冒泡阶段，以及 `Event` / `CustomEvent`、`eventPhase`、取消默认行为、`stopImmediatePropagation`、`once` / `passive` 和对象形式的 `handleEvent`。一次性监听器在调用前移除并释放其闭包引用；派发期间移除的监听器立即停用，新加入的监听器等待该目标的后续阶段或后续事件。派发路径最多 192 个目标，节点移动不会改变当前路径；原生输入继续分回合执行，结束后清理 currentTarget 与阶段状态。点击仍受现有投影目标限制；Shadow DOM、AbortSignal 选项、完整原生事件与异常报告模型尚不支持。
 
 可点击的段落、标题、列表项、容器和脚本按钮保留原标签及 CSS 样式，不再改写为普通链接。渲染器在现有 96 个交互目标上限内记录嵌套归属，子节点或链接结束后恢复父目标；同名容器、图片和禁用按钮内容分别处理，禁用内容不生成点击事件。点击归属与 32 层文字样式栈分开维护；投影优先保留 id、class 和行内样式，避免额外 data 属性挤掉必要样式。
 
@@ -117,7 +121,7 @@ POST 正文不会被历史重放；没有完整的隐私浏览或网站认证功
 ## 构建与运行
 
 需要包含 **Net 0.4 / Core 2.0、UI dynamic-text / sized-text / text-input-control** 的最新 SDK
-与 FS 原子替换接口和 UI password-input 的最新 Host，以及 **Assets 2.3 / image-decode / image-frames、Window 0.3**。
+与 FS 原子替换接口和 UI password-input 的最新 Host，以及 **Assets 2.6 / image-decode / image-frames、Window 0.3**。
 旧版 DevKit 和设备固件需要先更新；仅更新应用包不足以提供流式网络和原生图片解码。
 
 在 pxa-workspace 根目录：
@@ -152,7 +156,7 @@ pxa run pxa-apps/browser
 | JavaScript | 按需创建，默认自动档最高 1 MiB；可选 256 KiB～16 MiB；包含在脚本组件线性内存中，不额外预留。分配器优先交给 libc realloc 原地扩缩，避免强制新旧缓冲同时占用 JS 配额；realloc 仍可能移动和复制，内部瞬时开销不包含在 JS 存活块统计中；首次加载脚本页后，模块仍有驻留成本 |
 | 协程 | 每组件显式选择 8 × 2048 字节槽位；脚本组件仅使用一个资源加载任务 |
 | 图片描述 / 缓存 | 最多 96 张描述、2 张普通按需缓存；漫画清晰模式最多 1 张。超过描述上限会提示省略，不自动扩大预算 |
-| 单张图片网络 / 输出像素 | 512 KiB / 普通 32768、漫画清晰 262144 像素；普通 PNG 最多 128 KiB、JPEG 最多 64 KiB 像素数据；清晰静态图片最多约 1 MiB 像素数据，Host 可拒绝超出实际剩余预算的请求 |
+| 单张图片网络 / 输出像素 | Assets 2.7 使用当前 Host 预算，旧 Host 与 HTTP 压缩图保持 512 KiB / 普通 32768、漫画清晰 262144 像素；普通 PNG 最多 128 KiB、JPEG 最多 64 KiB 像素数据；清晰静态图片最多约 1 MiB 像素数据，Host 可拒绝超出实际剩余预算的请求 |
 | GIF 编码 / 输出像素 | 64 KiB / 8192 像素；不透明为 RGB565、透明为 BGRA8888，处置 3 可额外保留一份缩小背景 |
 | 会话 Cookie | 最多 16 条，字符串合计 4096 字节；仅本次运行有效 |
 | 原图限制 | 有界 MCU/扫描线 JPEG 单边最多 4096；PNG、GIF、LVGL 整图后端仍最多 1048576 像素。旧 Host 仍有旧的 JPEG 限制 |

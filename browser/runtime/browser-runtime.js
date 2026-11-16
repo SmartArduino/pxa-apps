@@ -198,36 +198,29 @@
         }
         return data.proxy;
     }
-    function event(type) {
-        return {type, target:null, currentTarget:null, defaultPrevented:false,
-            preventDefault() { this.defaultPrevented = true; },
-            stopPropagation() { this.stopped = true; }};
+    const eventIntrinsics={__proto__:null,Symbol,defineProperties:Object.defineProperties};
+    let eventEnvironment=null;
+    function ensureEvents() {
+        return eventEnvironment || (eventEnvironment=native.eventRuntime({Node,changed,DOMException,Function,clickTarget,
+            disabledControl,submitControl,formOwner,submit,native,ensureSelect,document,root,intrinsics:eventIntrinsics,hits(){return hits;}}));
     }
-    const eventCall=Symbol('eventCall');
-    function dispatchAt(at,e) {
-        e.currentTarget=at;
-        let handler=at['on'+e.type];
-        if(handler===undefined && at._attrs && at._attrs['on'+e.type]) {
-            handler=new Function('event',at._attrs['on'+e.type]);at['on'+e.type]=handler;
+    for(const name of ['Event','CustomEvent'])Object.defineProperty(root,name,{configurable:true,
+        get(){return ensureEvents()[name];},set(value){Object.defineProperty(root,name,{value,writable:true,configurable:true});}});
+    function listen(type,callback,options){return ensureEvents().listen(this,type,callback,options);}
+    function unlisten(type,callback,options){return ensureEvents().unlisten(this,type,callback,options);}
+    function event(type,bubbles,cancelable){return ensureEvents().event(type,bubbles,cancelable);}
+    function dispatch(node,e,bubble=false){return ensureEvents().dispatch(node,e,bubble);}
+    function fire(node,type,bubbles=false) {
+        // A page that never uses events need not instantiate their bytecode,
+        // prototypes or per-dispatch objects merely to finish loading.
+        if(!eventEnvironment) {
+            let used=false;
+            for(let at=node,depth=0;at && depth++<192;at=bubbles?at.parentNode:null)
+                if(typeof at['on'+type]==='function' || at._attrs && at._attrs['on'+type]){used=true;break;}
+            if(!used && bubbles && node===document)used=typeof root['on'+type]==='function';
+            if(!used)return true;
         }
-        if(typeof handler==='function') {
-            let result;at[eventCall]=handler;
-            try {result=at[eventCall](e);}finally {at[eventCall]=null;}
-            if(result===false)e.preventDefault();
-        }
-        const listeners=at._listeners && at._listeners[e.type];
-        if(listeners)for(const listener of listeners.slice()) {
-            at[eventCall]=listener;
-            try {at[eventCall](e);}finally {at[eventCall]=null;}
-        }
-    }
-    function dispatch(node, e, bubble = false) {
-        if (!e.target) e.target = node;
-        for (let at = node, depth = 0; at && depth++ < 192; at = bubble ? at.parentNode : null) {
-            dispatchAt(at,e);
-            if (e.stopped) break;
-        }
-        return !e.defaultPrevented;
+        return dispatch(node,event(type,bubbles,false),bubbles);
     }
     function clickTarget(node) {
         if (disabledControl(node)) return false;
@@ -244,27 +237,6 @@
         const type = node.type.toLowerCase();
         return node.nodeName === 'INPUT' ? type === 'submit' :
             node.nodeName === 'BUTTON' && type !== 'button' && type !== 'reset';
-    }
-    function listen(type, callback) {
-        if (typeof callback !== 'function') return;
-        type = String(type);
-        const node = type === 'click' && this instanceof Node, before = node && clickTarget(this);
-        if (!this._listeners) this._listeners = Object.create(null);
-        const list = this._listeners[type] || (this._listeners[type] = []);
-        if (list.indexOf(callback) >= 0) return;
-        if (list.length >= 16) throw new RangeError('event listener limit');
-        list.push(callback);
-        if (node && before !== clickTarget(this)) changed(this);
-    }
-    function unlisten(type, callback) {
-        type = String(type);
-        const list = this._listeners && this._listeners[type];
-        if (!list) return;
-        const at = list.indexOf(callback); if (at < 0) return;
-        const node = type === 'click' && this instanceof Node, before = node && clickTarget(this);
-        list.splice(at, 1);
-        if (!list.length) delete this._listeners[type];
-        if (node && before !== clickTarget(this)) changed(this);
     }
     let selectEnvironment=null;
     let fragmentEnvironment=null;
@@ -1035,7 +1007,7 @@
         if (fireEvent) form._submitting = true;
         try {
             if (fireEvent) {
-                const e = event('submit'); e.submitter = submitter;
+                const e = event('submit',true,true); e.submitter = submitter;
                 if (!dispatch(form, e, true)) return;
             }
             const method = (form.method || 'get').toLowerCase(), encoding = form.enctype.toLowerCase();
@@ -1180,7 +1152,7 @@
     document.writeln = (...parts) => document.write(parts.join('') + '\n');
     return {
         handlerConstructor: Function,
-        eventHooks(){return {event,dispatchAt,disabledControl,submitControl,formOwner,submit,native,ensureSelect,hits(){return hits;}};},
+        eventRuntime(){return ensureEvents();},
         open(tag, attributes, flags) {
             if(tag==='select')for(let i=stack.length-1;i>=0;--i)if(stack[i].nodeName==='SELECT') {
                 if(i)stack.length=i;return;
@@ -1258,8 +1230,8 @@
         },
         finish() {
             building = false; document.readyState = 'interactive';
-            dispatch(document, event('DOMContentLoaded')); document.readyState = 'complete';
-            dispatch(root, event('load')); if (document.body) dispatch(document.body, event('load'));
+            fire(document,'DOMContentLoaded',true); document.readyState = 'complete';
+            fire(root,'load'); if (document.body) fire(document.body,'load');
             changed();
         },
         response(id, status, body, failed) {
@@ -1267,11 +1239,11 @@
             xhr._id = 0; xhr.readyState = 4; xhr.status = status; xhr.responseText = body;
             if (xhr.responseType === 'json') { try { xhr.response = JSON.parse(body); } catch (_) { xhr.response = null; } }
             else xhr.response = body;
-            dispatch(xhr, event('readystatechange')); dispatch(xhr, event(failed ? 'error' : 'load')); dispatch(xhr, event('loadend'));
+            fire(xhr,'readystatechange'); fire(xhr,failed?'error':'load'); fire(xhr,'loadend');
         },
         scriptResponse(id, failed) {
             const node=pending[id];delete pending[id];
-            if(node)dispatch(node,event(failed?'error':'load'));
+            if(node)fire(node,failed?'error':'load');
         },
         pump() {
             const now = native.now(), at = timers.findIndex(t => t.at <= now);

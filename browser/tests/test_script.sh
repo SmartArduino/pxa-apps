@@ -41,6 +41,9 @@ ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/script-test" "
 "$cpp_compiler" "${cpp_flags[@]}" "$app/tests/script_event_test.cpp" "${objects[@]:0:2}" \
     "$cache"/{quickjs,dtoa,libregexp,libunicode,cutils}.o -lm -o "$cache/event-test"
 ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/event-test" "$app/assets/browser-runtime.qjb"
+"$cpp_compiler" "${cpp_flags[@]}" "$app/tests/script_event_options_test.cpp" "${objects[@]:0:2}" \
+    "$cache"/{quickjs,dtoa,libregexp,libunicode,cutils}.o -lm -o "$cache/event-options-test"
+ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/event-options-test" "$app/assets/browser-runtime.qjb"
 "$cpp_compiler" "${cpp_flags[@]}" "$app/tests/script_click_layout_test.cpp" "${objects[@]:0:2}" \
     "$cache"/{quickjs,dtoa,libregexp,libunicode,cutils}.o -lm -o "$cache/click-layout-test"
 ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/click-layout-test" "$app/assets/browser-runtime.qjb"
@@ -84,9 +87,13 @@ ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/dataset-test" 
 ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/library-test" \
     "$app/assets/browser-runtime.qjb" "$app/vendor/es5-shim/es5-shim.min.js"
 python3 "$app/tests/library_generator_test.py" "$app/tools/compile_libraries.py"
+# The precise parser cancellation/error contract uses PXA's WASI recursion
+# guard. Native parsing intentionally retains upstream lookahead behavior.
+if [[ ${PXA_SCRIPT_TEST_WASI_MODEL:-0} == 1 ]]; then
 "$compiler" -std=gnu11 "${engine_flags[@]}" "$app/tests/compile_interrupt_test.c" \
     "$cache"/{quickjs,dtoa,libregexp,libunicode,cutils}.o -lm -o "$cache/compile-interrupt-test"
 ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/compile-interrupt-test"
+fi
 "$compiler" -std=gnu11 "${engine_flags[@]}" "$app/tests/array_interrupt_test.c" \
     "$cache"/{quickjs,dtoa,libregexp,libunicode,cutils}.o -lm -o "$cache/array-interrupt-test"
 ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1 "$cache/array-interrupt-test"

@@ -39,6 +39,31 @@ setTimeout(()=>{let x=new XMLHttpRequest();
 },500);</script></body></html>'''
 PAGES = {'/idle': IDLE, '/events': EVENTS, '/inline-events': INLINE, '/xhr-events': XHR}
 
+PAGES['/listener-options'] = HEAD + '''
+<div id="parent"><button id="run" style="color:#d06020">Run events</button></div>
+<p id="once" style="color:#2468ac">One-time target</p><p id="proof">Ready</p><script>
+const target=document.getElementById('run'),parent=document.getElementById('parent');
+const proof=document.getElementById('proof'),trace=[];let runs=0,once=0,objects=0;
+document.addEventListener('click',e=>{if(e.target===target)trace.push('D')},true);
+parent.addEventListener('click',()=>trace.push('C'),{capture:true});
+target.addEventListener('click',()=>{++once;trace.push('O')},{once:true});
+target.addEventListener('probe',{handleEvent(e){if(e.detail!==runs)throw Error('custom event');++objects}});
+target.addEventListener('click',()=>{++runs;target.dispatchEvent(new CustomEvent('probe',{detail:runs}));trace.push('B')});
+parent.addEventListener('click',()=>trace.push('P'));
+window.addEventListener('click',e=>{if(e.target===target){
+ if(objects!==runs)throw Error('object listener');proof.textContent='PASS '+runs+' once='+once+' '+trace.join('');trace.length=0;
+}});
+document.getElementById('once').addEventListener('click',function(){this.textContent='One-time released'},{once:true});
+</script></body></html>'''
+
+PAGES['/event-intrinsics'] = HEAD + '''
+<button onclick="document.getElementById('proof').textContent='Intrinsics PASS'" style="color:#d06020">Load events</button>
+<p id="proof">Ready</p><script>
+function forbidden(){throw Error('replaced intrinsic executed')}
+Object.entries=Object.defineProperties=Symbol=forbidden;
+Object.defineProperty(Object.prototype,'get',{get:forbidden,configurable:true});
+</script></body></html>'''
+
 
 class Fixture:
     def __init__(self, bind='127.0.0.1', port=0):

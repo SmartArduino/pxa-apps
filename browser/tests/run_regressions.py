@@ -23,6 +23,8 @@ SUITES = [
     ('textarea', 'textarea_smoke.py', []), ('textarea-compact', 'textarea_smoke.py', ['--width','296','--height','240']),
     ('select', 'select_smoke.py', []), ('select-compact', 'select_smoke.py', ['--width','296','--height','240']),
     ('events', 'event_smoke.py', []), ('events-compact', 'event_smoke.py', ['--width','296','--height','240']),
+    ('event-options', 'event_options_smoke.py', ['--width','480','--height','480']),
+    ('event-options-compact', 'event_options_smoke.py', ['--width','296','--height','240']),
     ('field-events', 'field_event_smoke.py', []), ('field-events-compact', 'field_event_smoke.py', ['--width','296','--height','240']),
     ('style', 'style_smoke.py', []), ('style-compact', 'style_smoke.py', ['--width','296','--height','240']),
     ('responsive', 'responsive_smoke.py', []), ('responsive-compact', 'responsive_smoke.py', ['--width','296','--height','240']),

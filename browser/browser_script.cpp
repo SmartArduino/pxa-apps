@@ -228,15 +228,17 @@ struct Page::Impl {
         const auto slot=std::ranges::find(outstanding,id);
         return id && slot!=outstanding.end() && script_requests[std::size_t(slot-outstanding.begin())];
     }
-    enum Operation { clock, cookie, storage, request, cancel, navigate, fragment, changed, wake, select_module, fragment_module };
+    enum Operation { clock, cookie, storage, request, cancel, navigate, fragment, changed, wake, select_module, fragment_module, event_module };
     static JSValue native(JSContext* ctx, JSValueConst, int argc, JSValueConst* argv, int magic) {
         auto& self = *static_cast<Impl*>(JS_GetContextOpaque(ctx));
         auto text = [&](int at) { return CString(ctx, at < argc ? argv[at] : JS_UNDEFINED); };
-        if(magic==select_module || magic==fragment_module) {
+        if(magic==select_module || magic==fragment_module || magic==event_module) {
             if(argc!=1 || !JS_IsObject(argv[0]))return JS_ThrowTypeError(ctx,"DOM runtime hooks required");
             // Only this immutable, app-owned bytecode is accepted. The normal
             // QuickJS allocator/deadline guards charge the extension when used.
-            const auto bytes=magic==select_module?std::span<const std::uint8_t>(detail::select_runtime):std::span<const std::uint8_t>(detail::fragment_runtime);
+            const auto bytes=magic==select_module?std::span<const std::uint8_t>(detail::select_runtime):
+                magic==fragment_module?std::span<const std::uint8_t>(detail::fragment_runtime):
+                std::span<const std::uint8_t>(detail::event_runtime);
             Value compiled(ctx,JS_ReadObject(ctx,bytes.data(),bytes.size(),JS_READ_OBJ_BYTECODE));
             if(JS_IsException(compiled.value))return JS_EXCEPTION;
             Value factory(ctx,JS_EvalFunction(ctx,compiled.release()));
@@ -413,9 +415,9 @@ struct Page::Impl {
                 if (!check(held.value)) return false;
                 return JS_SetPropertyStr(ctx,bindings.value,name,held.release())>=0 || check(JS_EXCEPTION);
             };
-            for (auto [name, operation] : std::array<std::pair<const char*, Operation>, 11>{{
+            for (auto [name, operation] : std::array<std::pair<const char*, Operation>, 12>{{
                 {"now",clock},{"cookie",cookie},{"storage",storage},{"request",request},
-                {"cancel",cancel},{"navigate",navigate},{"fragment",fragment},{"changed",changed},{"wake",wake},{"selectRuntime",select_module},{"fragmentRuntime",fragment_module}}})
+                {"cancel",cancel},{"navigate",navigate},{"fragment",fragment},{"changed",changed},{"wake",wake},{"selectRuntime",select_module},{"fragmentRuntime",fragment_module},{"eventRuntime",event_module}}})
                 if (!property(name, JS_NewCFunctionMagic(ctx, native, name, 0, JS_CFUNC_generic_magic, operation))) return false;
             if (!property("url", string(url).release()) || !property("userAgent",string(metrics.user_agent).release()) ||
                 !property("width",JS_NewInt32(ctx,metrics.width)) || !property("height",JS_NewInt32(ctx,metrics.height)) ||
@@ -686,13 +688,8 @@ struct Page::Impl {
         // Running a timer, promise or no-op handler alone needs no snapshot.
         if(!event_bridge.ctx && (click_count || !fields.empty())) {
             phase="event-bootstrap";deadline=now()+bootstrap_turn_us;
-            auto hooks=call("eventHooks");if(JS_IsException(hooks.value))return;
-            Value compiled(ctx,JS_ReadObject(ctx,detail::event_runtime,sizeof(detail::event_runtime),JS_READ_OBJ_BYTECODE));
-            if(!check(compiled.value))return;
-            Value factory(ctx,JS_EvalFunction(ctx,compiled.release()));if(!check(factory.value))return;
-            auto value=hooks.value;
-            Value loaded(ctx,JS_Call(ctx,factory.value,JS_UNDEFINED,1,&value));
-            if(check(loaded.value))event_bridge=std::move(loaded);
+            auto loaded=call("eventRuntime");
+            if(!JS_IsException(loaded.value))event_bridge=std::move(loaded);
             return;
         }
         if (!event_active && click_count) {
@@ -805,7 +802,7 @@ std::optional<Navigation> Page::take_navigation() {
     return std::exchange(impl_->navigation, {});
 }
 std::optional<std::string> Page::take_markup() {
-    if (!ready() || impl_->paused || impl_->event_active || (!impl_->dom_dirty && !impl_->snapshot_pending)) return {};
+    if (!ready() || impl_->paused || action_pending() || (!impl_->dom_dirty && !impl_->snapshot_pending)) return {};
     const bool restart=impl_->snapshot_pending && impl_->dom_dirty;
     impl_->dom_dirty = false;
     auto& self = *impl_;
