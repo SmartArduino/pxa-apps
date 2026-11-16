@@ -158,10 +158,49 @@
       "action": "screenshot"
     },
     {
+      "name": "rescue",
+      "action": "tap",
+      "x": 90,
+      "y": 181
+    },
+    {
+      "name": "rescue-settles",
+      "action": "wait",
+      "ms": 300
+    },
+    {
+      "name": "rescued",
+      "action": "screenshot"
+    },
+    {
+      "name": "rescue-run-0",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "rescue-run-1",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "rescue-run-2",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "rescue-run-3",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "rescue-used",
+      "action": "screenshot"
+    },
+    {
       "name": "retry",
       "action": "tap",
-      "x": 148,
-      "y": 172
+      "x": 206,
+      "y": 181
     },
     {
       "name": "restart-run",
@@ -362,10 +401,49 @@
       "action": "screenshot"
     },
     {
+      "name": "rescue",
+      "action": "tap",
+      "x": 102,
+      "y": 181
+    },
+    {
+      "name": "rescue-settles",
+      "action": "wait",
+      "ms": 300
+    },
+    {
+      "name": "rescued",
+      "action": "screenshot"
+    },
+    {
+      "name": "rescue-run-0",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "rescue-run-1",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "rescue-run-2",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "rescue-run-3",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "rescue-used",
+      "action": "screenshot"
+    },
+    {
       "name": "retry",
       "action": "tap",
-      "x": 160,
-      "y": 172
+      "x": 218,
+      "y": 181
     },
     {
       "name": "restart-run",
@@ -566,10 +644,49 @@
       "action": "screenshot"
     },
     {
+      "name": "rescue",
+      "action": "tap",
+      "x": 147,
+      "y": 337
+    },
+    {
+      "name": "rescue-settles",
+      "action": "wait",
+      "ms": 300
+    },
+    {
+      "name": "rescued",
+      "action": "screenshot"
+    },
+    {
+      "name": "rescue-run-0",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "rescue-run-1",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "rescue-run-2",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "rescue-run-3",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "rescue-used",
+      "action": "screenshot"
+    },
+    {
       "name": "retry",
       "action": "tap",
-      "x": 240,
-      "y": 324
+      "x": 332,
+      "y": 337
     },
     {
       "name": "restart-run",
@@ -770,10 +887,292 @@
       "action": "screenshot"
     },
     {
+      "name": "rescue",
+      "action": "tap",
+      "x": 147,
+      "y": 524
+    },
+    {
+      "name": "rescue-settles",
+      "action": "wait",
+      "ms": 300
+    },
+    {
+      "name": "rescued",
+      "action": "screenshot"
+    },
+    {
+      "name": "rescue-run-0",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "rescue-run-1",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "rescue-run-2",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "rescue-run-3",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "rescue-used",
+      "action": "screenshot"
+    },
+    {
       "name": "retry",
       "action": "tap",
+      "x": 332,
+      "y": 524
+    },
+    {
+      "name": "restart-run",
+      "action": "wait",
+      "ms": 250
+    },
+    {
+      "name": "restarted",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause-restart",
+      "action": "tap",
+      "x": 441,
+      "y": 36
+    },
+    {
+      "name": "home",
+      "action": "tap",
       "x": 240,
-      "y": 511
+      "y": 521
+    },
+    {
+      "name": "save-completes",
+      "action": "wait",
+      "ms": 900
+    },
+    {
+      "name": "relaunch",
+      "action": "relaunch"
+    },
+    {
+      "name": "restore",
+      "action": "wait",
+      "ms": 900
+    },
+    {
+      "name": "saved-best",
+      "action": "screenshot"
+    }
+  ],
+  "espp4-a": [
+    {
+      "name": "settle",
+      "action": "wait",
+      "ms": 900
+    },
+    {
+      "name": "title",
+      "action": "screenshot"
+    },
+    {
+      "name": "help",
+      "action": "tap",
+      "x": 144,
+      "y": 810
+    },
+    {
+      "name": "controls",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-help",
+      "action": "tap",
+      "x": 240,
+      "y": 427
+    },
+    {
+      "name": "quality-low",
+      "action": "tap",
+      "x": 312,
+      "y": 810
+    },
+    {
+      "name": "quality-high",
+      "action": "tap",
+      "x": 312,
+      "y": 810
+    },
+    {
+      "name": "start",
+      "action": "tap",
+      "x": 240,
+      "y": 763
+    },
+    {
+      "name": "running",
+      "action": "wait",
+      "ms": 400
+    },
+    {
+      "name": "gameplay",
+      "action": "screenshot"
+    },
+    {
+      "name": "left",
+      "action": "swipe",
+      "x": 240,
+      "y": 555,
+      "x2": 115,
+      "y2": 555,
+      "ms": 130
+    },
+    {
+      "name": "left-lane",
+      "action": "screenshot"
+    },
+    {
+      "name": "right",
+      "action": "swipe",
+      "x": 240,
+      "y": 555,
+      "x2": 365,
+      "y2": 555,
+      "ms": 130
+    },
+    {
+      "name": "jump",
+      "action": "swipe",
+      "x": 240,
+      "y": 598,
+      "x2": 240,
+      "y2": 342,
+      "ms": 130
+    },
+    {
+      "name": "jumping",
+      "action": "screenshot"
+    },
+    {
+      "name": "slide",
+      "action": "swipe",
+      "x": 240,
+      "y": 342,
+      "x2": 240,
+      "y2": 598,
+      "ms": 130
+    },
+    {
+      "name": "sliding",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause",
+      "action": "tap",
+      "x": 441,
+      "y": 36
+    },
+    {
+      "name": "paused",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause-stays",
+      "action": "wait",
+      "ms": 600
+    },
+    {
+      "name": "mute",
+      "action": "tap",
+      "x": 240,
+      "y": 450
+    },
+    {
+      "name": "unmute",
+      "action": "tap",
+      "x": 240,
+      "y": 450
+    },
+    {
+      "name": "resume",
+      "action": "tap",
+      "x": 240,
+      "y": 403
+    },
+    {
+      "name": "obstacles-one",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "obstacles-two",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "obstacles-three",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "miss-turn",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "game-over",
+      "action": "screenshot"
+    },
+    {
+      "name": "rescue",
+      "action": "tap",
+      "x": 147,
+      "y": 524
+    },
+    {
+      "name": "rescue-settles",
+      "action": "wait",
+      "ms": 300
+    },
+    {
+      "name": "rescued",
+      "action": "screenshot"
+    },
+    {
+      "name": "rescue-run-0",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "rescue-run-1",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "rescue-run-2",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "rescue-run-3",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "rescue-used",
+      "action": "screenshot"
+    },
+    {
+      "name": "retry",
+      "action": "tap",
+      "x": 332,
+      "y": 524
     },
     {
       "name": "restart-run",

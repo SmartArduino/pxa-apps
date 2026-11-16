@@ -3,7 +3,7 @@
   "kind": "game",
   "category": "action",
   "language": "zh-CN",
-  "summary": "原创第三人称3D遗迹跑酷，跨越丛林、落日神庙与幽蓝古墓。",
+  "summary": "在丛林、神庙和古墓中变道、跳跃与滑铲，躲避障碍并收集金币挑战纪录。",
   "tags": [
     "3D",
     "跑酷",
@@ -11,13 +11,9 @@
     "触屏",
     "手柄"
   ],
-  "description": "原创第三人称3D无限跑酷。探险者穿越丛林石桥、落日神庙和幽蓝古墓，躲避倒木、石块、低门与断桥，按路口提示急转弯。每400米切换场景，速度随距离增加；金币计分，护盾抵挡一次碰撞，磁铁限时吸取金币。包含角色分关节动画、遗迹守卫追逐和原创背景音乐。\n\n触屏左右滑动变道，上滑或轻触跳跃，下滑滑铲；靠近路口时向提示方向滑动转弯。右上角暂停，菜单可开关声音或返回标题页。手柄方向键变道，↑/A跳跃，↓/B滑铲，Start暂停与继续；标题页B查看操作，X切换精美/流畅画质。\n\n最佳得分、累计金币、画质和声音设置保存在应用私有数据中。模拟器已验证触屏与手柄、三种场景、急转弯、失败重来和重启后读取纪录。目标呈现周期为33ms，实际帧率取决于设备，不能据此保证所有 ESP32 板卡稳定30FPS。\n\n需要 PXA Core 2.1、1.5 MiB Guest 线性内存，以及系统、渲染和音频的额外空间。分别提供 Wasm、S3、S31、P4 和 Linux x86_64 独立安装包。\n\n游戏代码、几何模型、图标及合成音乐均为原创 MIT，无第三方游戏素材；Noto字形采用OFL。对应源码、生成工具、共享依赖和许可：https://github.com/SmartArduino/pxa-apps/releases/tag/temple-runner-v1.0.1 。",
-  "changelog": "1.0.1：补齐安装包内的应用、共享SDK与Noto字体许可声明；字体生成工具同步更新声明。玩法与运行代码保持不变。",
-  "icon": "assets/icon.png",
-  "screenshots": [
-    "store/screenshots/title.png",
-    "store/screenshots/gameplay.png",
-    "store/screenshots/jumping.png"
-  ],
-  "cover": "store/screenshots/gameplay.png"
+  "description": "第三人称3D无限跑酷。穿越丛林石桥、落日神庙和幽蓝古墓，躲避倒木、石块、低门和断桥，并按路口提示急转弯。金币连击可触发遗迹觉醒，轮换挑战给予额外分数，每局可救援一次。\n\n包含分关节角色动作、遗迹黑豹追逐、玉石金边界面和背景音乐。支持触屏滑动与手柄；最佳得分、累计金币、画质及声音设置会保留。精美和流畅两档画质适合不同设备，文字使用屏幕原生分辨率。\n\n需要PXA Core 2.1及1.5 MiB Guest线性内存，系统、渲染、深度缓冲和音频另需空间。提供独立Wasm、S3、S31、P4与Linux x86_64安装包。设备性能与固件有关，不保证所有板卡稳定30 FPS。\n\n应用与共享源码、生成工具及许可：https://github.com/SmartArduino/pxa-apps/releases/tag/temple-runner-v1.1.1 。字体采用Noto OFL；完整声明随安装包分发。",
+  "changelog": "1.1.1：重做主角跑步、跳跃、滑铲及换道衔接，修复关节缺面和路面对脚部的错误遮挡；更新Logo、应用图标、封面、九宫格玉石界面、雕纹石板、雕像、拱门和追逐黑豹。新增金币连击、遗迹觉醒、轮换挑战和一次救援。中文以原生分辨率显示；静态菜单停止重复绘制，流畅档减少3D分辨率与几何开销，设备图标适配64 KiB上限。\n\nReworked character motion, closed mesh joints and depth ordering; refreshed branding, scalable UI and environment art. Added coin streaks, relic rush, rotating challenges and one rescue per run. Native-resolution text, idle menu rendering and device-sized icon improve readability and resource use.",
+  "icon": "resources/brand/app-icon-source.png",
+  "screenshots": [],
+  "cover": null
 }

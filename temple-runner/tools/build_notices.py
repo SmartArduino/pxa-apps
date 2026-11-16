@@ -11,7 +11,7 @@ def main():
         root / "licenses/Noto-NOTICE.txt",
         root / "licenses/Noto-OFL.txt",
     ]
-    sections = ["Relic Run: original code, geometry, icon and synthesized music are MIT.\nEmbedded Noto glyphs remain SIL OFL-1.1.\n"]
+    sections = ["Relic Run: original code, procedural geometry/materials and synthesized music are MIT.\nBranding and UI skin images were generated for this project with OpenAI image generation and are distributed under the project license.\nEmbedded Noto glyphs remain SIL OFL-1.1.\n"]
     for source in sources:
         sections.append("\n=== " + str(source.relative_to(root)) + " ===\n" + source.read_text(encoding="utf-8"))
     target = root / "assets/THIRD_PARTY_LICENSES.txt"

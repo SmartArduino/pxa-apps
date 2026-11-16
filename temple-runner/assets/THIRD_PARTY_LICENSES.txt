@@ -1,4 +1,5 @@
-Relic Run: original code, geometry, icon and synthesized music are MIT.
+Relic Run: original code, procedural geometry/materials and synthesized music are MIT.
+Branding and UI skin images were generated for this project with OpenAI image generation and are distributed under the project license.
 Embedded Noto glyphs remain SIL OFL-1.1.
 
 

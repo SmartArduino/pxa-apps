@@ -1,0 +1,28 @@
+{
+  "assets": [
+    {
+      "kind": "image",
+      "source": "resources/ui/title-logo.png",
+      "path": "assets/ui/title-logo.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/panel.png",
+      "path": "assets/ui/panel.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/button.png",
+      "path": "assets/ui/button.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/title-background.png",
+      "path": "assets/ui/title-background.pxr",
+      "encoding": "rgb565"
+    }
+  ]
+}

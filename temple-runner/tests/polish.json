@@ -1,0 +1,377 @@
+{
+  "pai-touch": [
+    {
+      "name": "settle",
+      "action": "wait",
+      "ms": 800
+    },
+    {
+      "name": "title",
+      "action": "screenshot"
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 100
+    },
+    {
+      "name": "gameplay",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause",
+      "action": "controller",
+      "buttons": 64,
+      "ms": 100
+    },
+    {
+      "name": "paused",
+      "action": "screenshot"
+    },
+    {
+      "name": "resume",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 100
+    },
+    {
+      "name": "release-resume",
+      "action": "wait",
+      "ms": 100
+    },
+    {
+      "name": "jump",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 100
+    },
+    {
+      "name": "slide",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 100
+    },
+    {
+      "name": "pause-again",
+      "action": "controller",
+      "buttons": 64,
+      "ms": 100
+    },
+    {
+      "name": "release-pause",
+      "action": "wait",
+      "ms": 100
+    },
+    {
+      "name": "home",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 100
+    },
+    {
+      "name": "home-cleared",
+      "action": "screenshot"
+    }
+  ],
+  "doit-gamekit-2": [
+    {
+      "name": "settle",
+      "action": "wait",
+      "ms": 800
+    },
+    {
+      "name": "title",
+      "action": "screenshot"
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 100
+    },
+    {
+      "name": "gameplay",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause",
+      "action": "controller",
+      "buttons": 64,
+      "ms": 100
+    },
+    {
+      "name": "paused",
+      "action": "screenshot"
+    },
+    {
+      "name": "resume",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 100
+    },
+    {
+      "name": "release-resume",
+      "action": "wait",
+      "ms": 100
+    },
+    {
+      "name": "jump",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 100
+    },
+    {
+      "name": "slide",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 100
+    },
+    {
+      "name": "pause-again",
+      "action": "controller",
+      "buttons": 64,
+      "ms": 100
+    },
+    {
+      "name": "release-pause",
+      "action": "wait",
+      "ms": 100
+    },
+    {
+      "name": "home",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 100
+    },
+    {
+      "name": "home-cleared",
+      "action": "screenshot"
+    }
+  ],
+  "esp-mosaico": [
+    {
+      "name": "settle",
+      "action": "wait",
+      "ms": 800
+    },
+    {
+      "name": "title",
+      "action": "screenshot"
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 100
+    },
+    {
+      "name": "gameplay",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause",
+      "action": "controller",
+      "buttons": 64,
+      "ms": 100
+    },
+    {
+      "name": "paused",
+      "action": "screenshot"
+    },
+    {
+      "name": "resume",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 100
+    },
+    {
+      "name": "release-resume",
+      "action": "wait",
+      "ms": 100
+    },
+    {
+      "name": "jump",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 100
+    },
+    {
+      "name": "slide",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 100
+    },
+    {
+      "name": "pause-again",
+      "action": "controller",
+      "buttons": 64,
+      "ms": 100
+    },
+    {
+      "name": "release-pause",
+      "action": "wait",
+      "ms": 100
+    },
+    {
+      "name": "home",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 100
+    },
+    {
+      "name": "home-cleared",
+      "action": "screenshot"
+    }
+  ],
+  "doit-esp32s31-devkit": [
+    {
+      "name": "settle",
+      "action": "wait",
+      "ms": 800
+    },
+    {
+      "name": "title",
+      "action": "screenshot"
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 100
+    },
+    {
+      "name": "gameplay",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause",
+      "action": "controller",
+      "buttons": 64,
+      "ms": 100
+    },
+    {
+      "name": "paused",
+      "action": "screenshot"
+    },
+    {
+      "name": "resume",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 100
+    },
+    {
+      "name": "release-resume",
+      "action": "wait",
+      "ms": 100
+    },
+    {
+      "name": "jump",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 100
+    },
+    {
+      "name": "slide",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 100
+    },
+    {
+      "name": "pause-again",
+      "action": "controller",
+      "buttons": 64,
+      "ms": 100
+    },
+    {
+      "name": "release-pause",
+      "action": "wait",
+      "ms": 100
+    },
+    {
+      "name": "home",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 100
+    },
+    {
+      "name": "home-cleared",
+      "action": "screenshot"
+    }
+  ],
+  "espp4-a": [
+    {
+      "name": "settle",
+      "action": "wait",
+      "ms": 800
+    },
+    {
+      "name": "title",
+      "action": "screenshot"
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 100
+    },
+    {
+      "name": "gameplay",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause",
+      "action": "controller",
+      "buttons": 64,
+      "ms": 100
+    },
+    {
+      "name": "paused",
+      "action": "screenshot"
+    },
+    {
+      "name": "resume",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 100
+    },
+    {
+      "name": "release-resume",
+      "action": "wait",
+      "ms": 100
+    },
+    {
+      "name": "jump",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 100
+    },
+    {
+      "name": "slide",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 100
+    },
+    {
+      "name": "pause-again",
+      "action": "controller",
+      "buttons": 64,
+      "ms": 100
+    },
+    {
+      "name": "release-pause",
+      "action": "wait",
+      "ms": 100
+    },
+    {
+      "name": "home",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 100
+    },
+    {
+      "name": "home-cleared",
+      "action": "screenshot"
+    }
+  ]
+}
