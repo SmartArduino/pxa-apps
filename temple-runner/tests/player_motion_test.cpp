@@ -11,6 +11,8 @@ static void check(const Pose& p){
   assert(std::abs(length(sub(p.elbow[i],p.shoulder[i]))-.30f)<.001f);
   assert(std::abs(length(sub(p.wrist[i],p.elbow[i]))-.27f)<.001f);
   assert(p.ankle[i].y-.11f>=.019f); // lowest boot vertex stays above paving
+  float c=std::cos(p.foot_pitch[i]),t=std::sin(p.foot_pitch[i]);
+  for(float z: {-.14f,.26f})assert(p.ankle[i].y-.11f*c-z*t>.014f);
  }
  if(p.slide>.999f){float head=p.hip_height+(2.15f-.88f)*std::cos(p.pitch);assert(head<1.04f);}
 }
@@ -43,5 +45,23 @@ int main(){
  start(s,42);s.next_turn=s.next_spawn=1000000;action(s,Action::Slide);
  for(int i=0;i<25;i++)update(s,1.f/120);
  float crouch=s.pose_slide;action(s,Action::Jump);assert(s.pose_slide==crouch);
+ // Sliding reads as an asymmetric low brace, with a lifted lead toe.
+ start(s,42);s.next_turn=s.next_spawn=1000000;action(s,Action::Slide);
+ for(int i=0;i<25;i++)update(s,1.f/120);
+ auto slide=pose(s,0);assert(slide.slide>.99f&&slide.foot_pitch[1]<-.2f);
+ assert(slide.wrist[0].y<slide.wrist[1].y-.2f);
+ // Both corner directions build a lean, bank the body, then return smoothly.
+ for(int direction: {-1,1}){
+  start(s,42);s.distance=168;s.next_spawn=1000000;s.turn_direction=direction;
+  action(s,direction<0?Action::Left:Action::Right);float peak=0,previous=0;
+  for(int i=0;i<420;i++){
+   update(s,1.f/120);assert(s.mode==Mode::Running);check(pose(s,0));
+   assert(std::abs(s.turn_lean-previous)<.09f);previous=s.turn_lean;
+   peak=std::max(peak,s.turn_lean*direction);frames++;
+   if(i==150){auto hold=s;hold.mode=Mode::Paused;float lean=hold.turn_lean,fx=hold.turn_fx;
+    update(hold,.05f);assert(hold.turn_lean==lean&&hold.turn_fx==fx);}
+  }
+  assert(s.turns==1&&peak>.65f&&std::abs(s.turn_lean)<.02f);
+ }
  printf("Player motion passed: %u frames, constant limb lengths, ground clearance, slide height, pause freeze, continuous transitions\n",frames);
 }

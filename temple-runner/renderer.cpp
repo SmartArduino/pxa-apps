@@ -15,6 +15,8 @@ constexpr float ring[9][8][2]={{{0.00000000f,0.00000000f},{0.00000000f,0.0000000
 // Dedicated smooth-light palette, outside the material atlas indices.
 constexpr uint32_t actor_colors[16]={0x28786f,0xe7caa0,0x535c71,0xdcad86,0xd5ad70,0x6a4832,0x9c6743,0x70503b,0x2b342f,0x4d3328,0xc9493b,0xe8c378,0x82918a,0x263b34,0xaf7b4c,0x9e7553};
 constexpr V3 actor_ring12[12]={{1,0,0},{.8660254f,0,.5f},{.5f,0,.8660254f},{0,0,1},{-.5f,0,.8660254f},{-.8660254f,0,.5f},{-1,0,0},{-.8660254f,0,-.5f},{-.5f,0,-.8660254f},{0,0,-1},{.5f,0,-.8660254f},{.8660254f,0,-.5f}};
+constexpr float ridge_y[3][11]={{0.36000000f,0.31949747f,0.32296910f,0.34738321f,0.35330489f,0.35539341f,0.38308702f,0.41022037f,0.39175264f,0.34494339f,0.32530029f},{0.34674606f,0.34131518f,0.37232507f,0.39132600f,0.39066246f,0.40469304f,0.43035473f,0.42203213f,0.37535777f,0.34465797f,0.35723324f},{0.36264757f,0.39421442f,0.42632144f,0.42867211f,0.42949762f,0.44775623f,0.44826090f,0.40766459f,0.36839069f,0.37532064f,0.40560126f}};
+constexpr float arch_ring[7][2]={{1,0},{.8660254f,.5f},{.5f,.8660254f},{0,1},{-.5f,.8660254f},{-.8660254f,.5f},{-1,0}};
 constexpr uint32_t GOLD=0xf4c66b, IVORY=0xf6efd7, INK=0x102c29, JADE=0x78d4ac;
 uint16_t rgb(uint32_t c){return uint16_t(((c>>19)&31)<<11|((c>>10)&63)<<5|((c>>3)&31));}
 uint32_t fog_color=0x728f7b;
@@ -40,7 +42,7 @@ bool Renderer::upload(pxa::game::Renderer& target){
  pxa::game::Upload u(target,scratch);text_alpha=target.supports(pxa::game::RenderCapability::sprite_texel_alpha);
  textures=target.supports(pxa::game::RenderCapability::painter_polygon)&&target.supports(pxa::game::RenderCapability::textured_quad);
  if(!u.palette(colors,8)||!u.texture({0},256,256,std::as_bytes(std::span{font::atlas}))||!u.texture({1},128,36,std::as_bytes(std::span{font::title_atlas})))return false;
- if(textures&&!u.texture({2},128,128,std::as_bytes(std::span{materials::atlas})))textures=false;
+ if(textures&&!u.texture({2},256,128,std::as_bytes(std::span{materials::atlas})))textures=false;
  depth=depth&&target.supports(pxa::game::RenderCapability::painter_depth)&&target.supports(pxa::game::RenderCapability::lit_palette_depth);
  const uint8_t actor_texels[16]={208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223};
  if(depth&&!u.texture({4},16,1,std::as_bytes(std::span{actor_texels})))depth=false;
@@ -79,27 +81,37 @@ void Renderer::text(pxa::game::Frame& f,const char* str,float x,float y,float sc
 }
 void Renderer::face(V3 a,V3 b,V3 c,V3 d,uint32_t color,float light,int material){
  if(count>=int(std::size(faces))){skipped++;return;}
- V3 src[8]={a,b,c,d},dst[8];float u0=material>=0?(material%2)*64.f:0,v0=material>=0?(material/2)*64.f:0;
- float uv0[4][2]={{u0,v0+63},{u0+63,v0+63},{u0+63,v0},{u0,v0}},uv1[8][2];int n=4,m=0;
- // Clip against the camera near plane before perspective division.
- for(int i=0;i<n;i++){auto p=src[i],q=src[(i+1)%n];bool pin=p.z> -3.6f,qin=q.z> -3.6f;
+ const float fog_z=(a.z+b.z+c.z+d.z)*.25f;
+ // Keep road overlays ordered in road coordinates. A heading-dependent
+ // average depth lets the full-width bridge deck cover its raised lane tiles.
+ // Per-vertex camera depth below remains authoritative for actors/hazards.
+ const float painter_z=fog_z-.043f*(a.y+b.y+c.y+d.y);
+ V3 src[8]={a,b,c,d},dst[8];float u0=material>=0?(material%4)*64.f:0,v0=material>=0?(material/4)*64.f:0;
+ float uv0[4][2]={{u0,v0+63},{u0+63,v0+63},{u0+63,v0},{u0,v0}},uv1[8][2];int m=0;
+ // Transform once, then clip in camera space. A turning camera must use the
+ // same near plane for projection, interpolation and the shared actor depth.
+ for(int i=0;i<4;i++){
+  float dx=src[i].x-camera_x,z=src[i].z+camera_back,dy=src[i].y-camera_height-bob;
+  float cx=dx*view_cos-z*view_sin,cz=dx*view_sin+z*view_cos;
+  src[i]={cx,dy*.985f+cz*.172f,cz*.985f-dy*.172f};
+ }
+ constexpr float near=1.0f;
+ for(int i=0;i<4;i++){auto p=src[i],q=src[(i+1)%4];bool pin=p.z>near,qin=q.z>near;
   if(pin){dst[m]=p;uv1[m][0]=uv0[i][0];uv1[m++][1]=uv0[i][1];}
-  if(pin!=qin){float t=(-3.6f-p.z)/(q.z-p.z);dst[m]=add(p,mul(sub(q,p),t));int j=(i+1)%n;
+  if(pin!=qin){float t=(near-p.z)/(q.z-p.z);dst[m]=add(p,mul(sub(q,p),t));int j=(i+1)%4;
    uv1[m][0]=uv0[i][0]+t*(uv0[j][0]-uv0[i][0]);uv1[m++][1]=uv0[i][1]+t*(uv0[j][1]-uv0[i][1]);}}
  if(m<3)return;
- float z=0;for(int i=0;i<m;i++)z+=dst[i].z;z/=m;
- const float focal=std::min(width,height)*.98f;float xy[8][2];uint16_t camera_depth[8];float minx=1e6f,maxx=-1e6f,miny=1e6f,maxy=-1e6f;
- for(int i=0;i<m;i++){float cz=dst[i].z+camera_back;float dy=dst[i].y-camera_height-bob;
-  float zz=cz*.985f-dy*.172f,yy=dy*.985f+cz*.172f;
-  camera_depth[i]=pxa::game::painter_depth_from_z(zz);
-  float xx=(dst[i].x-camera_x)*focal/zz,sy=-yy*focal/zz;
-  float sx=width*.5f+xx+sy*roll,sy2=height*(.38f+.10f*std::clamp((float(height)/width-1)*1.5f,0.f,1.f))+sy-xx*roll;
+ float z=0,xy[8][2];uint16_t camera_depth[8];float minx=1e6f,maxx=-1e6f,miny=1e6f,maxy=-1e6f;
+ for(int i=0;i<m;i++){
+  z+=dst[i].z;camera_depth[i]=pxa::game::painter_depth_from_z(dst[i].z);
+  float inv=focal/dst[i].z,xx=dst[i].x*inv,sy=-dst[i].y*inv;
+  float sx=width*.5f+xx+sy*roll,sy2=screen_y+sy-xx*roll;
   xy[i][0]=std::clamp(sx,-1500.f,1500.f);xy[i][1]=std::clamp(sy2,-1500.f,1500.f);
   minx=std::min(minx,sx);maxx=std::max(maxx,sx);miny=std::min(miny,sy2);maxy=std::max(maxy,sy2);
  }
  if(maxx<0||minx>width||maxy<0||miny>height)return;
- uint16_t col=rgb(lit(color,light,std::clamp((z-12)/84.f,0.f,.76f)));
- auto emit=[&](int i,int j,int k,int l){if(count>=int(std::size(faces)))return;Face &f=faces[count];int ids[4]={i,j,k,l};for(int t=0;t<4;t++){f.xy[t*2]=int16_t(xy[ids[t]][0]*16);f.xy[t*2+1]=int16_t(xy[ids[t]][1]*16);f.depths[t]=camera_depth[ids[t]];f.uv[t*2]=int16_t(uv1[ids[t]][0]*16);f.uv[t*2+1]=int16_t(uv1[ids[t]][1]*16);}int64_t area=0;for(int t=0;t<4;t++){int u=(t+1)%4;area+=int64_t(f.xy[t*2])*f.xy[u*2+1]-int64_t(f.xy[u*2])*f.xy[t*2+1];}if(std::abs(area)<5)return;f.depth=z-.043f*(a.y+b.y+c.y+d.y);f.color=col;f.layer=mesh_layer;f.material=textures&&z<24?material:-1;f.light=uint8_t(std::clamp(int(light*6)-(theme==2?2:0),0,7));count++;};
+ z/=m;uint16_t col=rgb(lit(color,light,std::clamp((fog_z-12)/84.f,0.f,.76f)));
+ auto emit=[&](int i,int j,int k,int l){if(count>=int(std::size(faces))){skipped++;return;}Face &f=faces[count];int ids[4]={i,j,k,l};for(int t=0;t<4;t++){f.xy[t*2]=int16_t(xy[ids[t]][0]*16);f.xy[t*2+1]=int16_t(xy[ids[t]][1]*16);f.depths[t]=camera_depth[ids[t]];f.uv[t*2]=int16_t(uv1[ids[t]][0]*16);f.uv[t*2+1]=int16_t(uv1[ids[t]][1]*16);}int64_t area=0;for(int t=0;t<4;t++){int u=(t+1)%4;area+=int64_t(f.xy[t*2])*f.xy[u*2+1]-int64_t(f.xy[u*2])*f.xy[t*2+1];}if(std::abs(area)<5)return;f.depth=painter_z;f.color=col;f.layer=mesh_layer;f.material=textures&&fog_z<24?material:-1;f.light=uint8_t(std::clamp(int(light*6)-(theme==2?2:0),0,7));count++;};
  if(m==4)emit(0,1,2,3);else for(int i=1;i+1<m;i++)emit(0,i,i+1,i+1);
 }
 void Renderer::box(float x,float y,float z,float w,float h,float dep,uint32_t c){
@@ -108,6 +120,15 @@ void Renderer::box(float x,float y,float z,float w,float h,float dep,uint32_t c)
  face({l,b,n},{r,b,n},{r,t,n},{l,t,n},c,.77f);
  if(x>camera_x)face({l,b,f},{l,b,n},{l,t,n},{l,t,f},c,.68f);
  else face({r,b,n},{r,b,f},{r,t,f},{r,t,n},c,.95f);
+}
+bool Renderer::visible_box(V3 center,V3 half) const{
+ if(!object_culling)return true;
+ for(const auto& p:view_planes){
+  float distance=motion::dot(p.normal,center)+p.offset;
+  float radius=motion::dot(p.absolute,add(half,{.05f,.05f,.05f}));
+  if(distance+radius<-.02f)return false;
+ }
+ return true;
 }
 void Renderer::limb(V3 a,V3 b,float radius,uint32_t color,int sides,bool closed){
  V3 dir=norm(sub(b,a)),u=norm(cross(dir,{0,0,1})),v=cross(dir,u);V3 front[10],back[10];
@@ -140,6 +161,7 @@ void Renderer::orb(V3 c,V3 radii,int color,int sides){
  for(int j: {0,2}){V3 n={0,j?1.f:-1.f,0};for(int i=1;i+1<sides;i+=2){int k=std::min(i+2,sides-1);emit(points[j][0],points[j][i],points[j][i+1],points[j][k],n,n,n,n);}}
 }
 void Renderer::monster(float x,float z){
+ if(!visible_box({x,1.1f,z-.5f},{.8f,1.6f,1.55f})){culled_objects++;return;}
  float gait=time*12,bounce=.055f*cosf(gait*2),y=.66f+bounce;uint32_t coat=0x263b38;
  orb({x,y,z},{.37f,.34f,.66f},8);orb({x,y+.24f,z+.52f},{.30f,.30f,.29f},13);
  orb({x,y+.12f,z+.73f},{.24f,.16f,.22f},8,6);
@@ -191,7 +213,9 @@ void Renderer::panel(pxa::game::Frame& f,float x,float y,float w,float h,uint32_
  for(int side: {-1,1}){float xx=side<0?x+3*u:x+w-10*u;rect(f,xx,y+3*u,7*u,u,GOLD);rect(f,side<0?xx:xx+6*u,y+3*u,u,5*u,GOLD);}
 }
 void Renderer::tree(float x,float z,int variant){
- float h=5+(variant%4)*.8f;limb({x,-2,z},{x+.4f,h,z},.24f,0x514a2c,5);
+ float h=5+(variant%4)*.8f;
+ if(!visible_box({x+.4f,(h-1.7f)*.5f,z},{4.3f,(h+2.3f)*.5f,4.3f})){culled_objects++;return;}
+ limb({x,-2,z},{x+.4f,h,z},.24f,0x514a2c,5);
  int leaves=(z<27&&quality==0)?6:4;float cv=cosf(float(variant)),sv=sinf(float(variant));
  for(int i=0;i<leaves;i++){float dx=ring[leaves][i][0]*cv-ring[leaves][i][1]*sv,dz=ring[leaves][i][1]*cv+ring[leaves][i][0]*sv;V3 root={x+.4f,h,z};V3 tip={x+dx*3.8f,h-1.25f,z+dz*3.8f};V3 mid={x+dx*1.9f,h+.3f,z+dz*1.9f};float w=.7f;
  face(root,{mid.x-dz*w,mid.y,mid.z+dx*w},tip,{mid.x+dz*w,mid.y-.16f,mid.z-dx*w},(i&1)?0x297252:0x3b8c59,1.f);
@@ -204,6 +228,7 @@ void Renderer::tree(float x,float z,int variant){
  if(z<32){box(x,-1,z,1.7f,.3f,1.5f,0x264c3d);}
 }
 void Renderer::idol(float x,float z,float s){
+ if(!visible_box({x,1.5f*s,z},{1.05f*s,2.1f*s+.6f,s})){culled_objects++;return;}
  uint32_t stone=0x7d8972;
  if(z>20){
   box(x,-.6f,z,1.7f*s,.7f*s,1.5f*s,stone);box(x,.1f,z,1.15f*s,1.8f*s,.92f*s,stone);
@@ -225,8 +250,20 @@ void Renderer::runner(const State& s){
 #include "player_model.inc"
 }
 void Renderer::render(pxa::game::Frame& f,const State& s,const Save& save){
- drawing_ui=false;count=0;mesh_layer=0;theme=int(s.distance/400)%3;camera_x=s.lane_x*.3f;roll=s.turn_fx*.11f;
+ drawing_ui=false;count=0;mesh_layer=0;theme=int(s.distance/400)%3;camera_x=s.lane_x*.3f+s.turn_lean*.10f;roll=s.turn_lean*.075f;
+ view_cos=cosf(s.turn_lean*.23f);view_sin=sinf(s.turn_lean*.23f);
+ focal=std::min(width,height)*.98f;screen_y=height*(.38f+.10f*std::clamp((float(height)/width-1)*1.5f,0.f,1.f));
  bob=s.mode==Mode::Running&&s.jump_t<=0?sinf(s.elapsed*13.4f)*.018f:0;
+ // Conservative object bounds reject a whole prop before mesh construction.
+ // These are the same five camera planes used by projection/near clipping,
+ // including the roll and heading during a corner.
+ culled_objects=0;
+ V3 rx={view_cos,0,-view_sin},ry={view_sin*.172f,.985f,view_cos*.172f},rz={view_sin*.985f,-.172f,view_cos*.985f};
+ V3 horizontal=sub(rx,mul(ry,roll)),vertical=sub(mul(ry,-1),mul(rx,roll));
+ V3 normals[5]={rz,add(horizontal,mul(rz,width*.5f/focal)),add(mul(horizontal,-1),mul(rz,width*.5f/focal)),add(vertical,mul(rz,screen_y/focal)),add(mul(vertical,-1),mul(rz,(height-screen_y)/focal))};
+ for(int i=0;i<5;i++){
+  V3 n=normals[i];view_planes[i]={n,{std::abs(n.x),std::abs(n.y),std::abs(n.z)},-motion::dot(n,{camera_x,camera_height+bob,-camera_back})-(i==0?1.f:0.f)};
+ }
  fog_color=theme==0?0xa7b79a:theme==1?0xc4a17d:0x3c6270;
  travel=s.distance;
  uint32_t sky=theme==1?0xd5a47f:theme==2?0x1b3545:0xa8bda0;
@@ -234,16 +271,15 @@ void Renderer::render(pxa::game::Frame& f,const State& s,const Save& save){
  if(!(s.mode==Mode::Title&&title_background&&overlay&&display)){
  for(int i=0;i<8;i++){uint32_t c=lit(sky,.78f+i*.025f,0);rect(f,0,i*height*.07f,width,height*.072f,c);}
  if(theme!=2){float sx=width*.77f,sy=height*.17f,r=height*.055f;
-  for(int i=0;i<8;i++){float a=i*PI/4,b=(i+1)*PI/4;
-   f.quad({int16_t(sx*16),int16_t(sy*16),int16_t((sx+cosf(a)*r)*16),int16_t((sy+sinf(a)*r)*16),int16_t((sx+cosf(b)*r)*16),int16_t((sy+sinf(b)*r)*16),int16_t(sx*16),int16_t(sy*16)}, {rgb(theme==1?0xffdf9e:0xe2dfb0)});
+  for(int i=0;i<8;i++){int j=(i+1)%8;
+   f.quad({int16_t(sx*16),int16_t(sy*16),int16_t((sx+ring[8][i][0]*r)*16),int16_t((sy+ring[8][i][1]*r)*16),int16_t((sx+ring[8][j][0]*r)*16),int16_t((sy+ring[8][j][1]*r)*16),int16_t(sx*16),int16_t(sy*16)}, {rgb(theme==1?0xffdf9e:0xe2dfb0)});
   }
  }
  // Broad layered ridges give the skyline depth without repeated triangular peaks.
  for(int layer=0;layer<3;layer++)for(int i=0;i<10;i++){
   float x0=i*width/10.f,x1=(i+1)*width/10.f;
-  auto ridge=[&](float x){return height*(.36f+layer*.027f-.035f*sinf(x/width*7+layer*.8f)-.018f*sinf(x/width*15+layer));};
   uint32_t c=theme==2?(layer==0?0x314c5b:layer==1?0x294650:0x233f49):(layer==0?0x91ac95:layer==1?0x698f77:0x416e59);
-  f.quad({int16_t(x0*16),int16_t(ridge(x0)*16),int16_t(x1*16),int16_t(ridge(x1)*16),int16_t(x1*16),int16_t(height*.56f*16),int16_t(x0*16),int16_t(height*.56f*16)},{rgb(c)});
+  f.quad({int16_t(x0*16),int16_t(height*ridge_y[layer][i]*16),int16_t(x1*16),int16_t(height*ridge_y[layer][i+1]*16),int16_t(x1*16),int16_t(height*.56f*16),int16_t(x0*16),int16_t(height*.56f*16)},{rgb(c)});
  }
  uint32_t stone=theme==1?0xbaa577:theme==2?0x6b8290:0x81958b;
  runner(s);
@@ -259,6 +295,10 @@ void Renderer::render(pxa::game::Frame& f,const State& s,const Save& save){
   float z=i*15.f-fmodf(travel,15.f),x=side*(7.f+(i%2)*3);
   face({x-4,-2,z-9},{x+4,-2,z-9},{x+3,-1.8f,z+9},{x-3,-1.8f,z+9},theme==1?0x727d4a:0x3f684c);
  }
+ if(quality==0)for(int side: {-1,1})for(int band=0;band<2;band++){
+  float z=12+band*16-fmodf(travel*.22f,7.f),x=side*(10.f+band*3),w=3.f+band;
+  face({x-w,-2.96f,z},{x+w,-2.96f,z},{x+w-.6f,-2.96f,z+.18f},{x-w+.6f,-2.96f,z+.18f},theme==2?0x416d79:0x75a799,.88f);
+ }
  float turnz=s.next_turn-s.distance;bool elbow=s.mode!=Mode::Title&&turnz<75;
  const float tile=3.2f;float startz=-4.f-fmodf(travel,tile);
  for(int i=0;i<25;i++){float z=startz+i*tile;if(elbow&&z>turnz+2)continue;
@@ -267,36 +307,61 @@ void Renderer::render(pxa::game::Frame& f,const State& s,const Save& save){
   // Distant paving is only a few pixels tall. Keep the bridge silhouette and
   // borders, reserving the geometry budget for the explorer and hazards.
   if(z>24){
-   face({-2.9f,.01f,z-1.6f},{2.9f,.01f,z-1.6f},{2.9f,.01f,z+1.6f},{-2.9f,.01f,z+1.6f},stone,.97f);
-   for(int side: {-1,1}){float rx=side*2.86f;face({rx-.08f,.15f,z-1.6f},{rx+.08f,.15f,z-1.6f},{rx+.08f,.15f,z+1.6f},{rx-.08f,.15f,z+1.6f},0xd0bc7f);}
+   float far=z+1.6f;bool next_gap=false;
+   for(int j=0;j<s.count;j++)if(s.objects[j].kind==Kind::Gap&&fabsf((s.objects[j].distance-s.distance)-(z+tile))<2.3f)next_gap=true;
+   if(z>36&&i+1<25&&!next_gap&&(!elbow||z+tile<turnz+2)){far+=tile;i++;}
+   face({-2.9f,.01f,z-1.6f},{2.9f,.01f,z-1.6f},{2.9f,.01f,far},{-2.9f,.01f,far},stone,.97f);
+   for(int side: {-1,1}){float rx=side*2.86f;face({rx-.08f,.15f,z-1.6f},{rx+.08f,.15f,z-1.6f},{rx+.08f,.15f,far},{rx-.08f,.15f,far},0xd0bc7f);}
    continue;
   }
   // Raised stone bridge with individually shaded paving, moss and golden borders.
   face({-2.9f,-.68f,z-1.6f},{-2.9f,-.68f,z+1.6f},{-2.9f,-.03f,z+1.6f},{-2.9f,-.03f,z-1.6f},stone,.65f);
   face({2.9f,-.68f,z+1.6f},{2.9f,-.68f,z-1.6f},{2.9f,-.03f,z-1.6f},{2.9f,-.03f,z+1.6f},stone,.8f);
   face({-2.9f,-.025f,z-1.6f},{2.9f,-.025f,z-1.6f},{2.9f,-.025f,z+1.6f},{-2.9f,-.025f,z+1.6f},stone,.66f);
-  for(int lane=-1;lane<=1;lane++){float x=lane*1.8f;uint32_t c=lit(stone,.92f+((i+lane+int(travel/tile))&3)*.04f,0);face({x-.85f,.01f,z-1.53f},{x+.85f,.01f,z-1.53f},{x+.85f,.01f,z+1.53f},{x-.85f,.01f,z+1.53f},c,1.f,(lane&&i%4==0)?1:0);}
+  int row=int(travel/tile)+i;
+  for(int lane=-1;lane<=1;lane++){
+   float x=lane*1.8f;uint32_t pattern=uint32_t(row)*1103515245u+uint32_t(lane+1)*2654435761u;
+   int material=theme==1?4:theme==2?5:0;
+   if(lane==0&&row%7==0)material=7;else if(pattern%13==1)material=6;else if(lane&&pattern%5==0)material=1;
+   uint32_t c=lit(stone,.92f+((row+lane)&3)*.04f,0);
+   face({x-.85f,.01f,z-1.53f},{x+.85f,.01f,z-1.53f},{x+.85f,.01f,z+1.53f},{x-.85f,.01f,z+1.53f},c,1.f,material);
+  }
   for(int side=-1;side<=1;side+=2){
    float rx=side*2.86f;face({rx-.08f,.15f,z-1.57f},{rx+.08f,.15f,z-1.57f},{rx+.08f,.15f,z+1.57f},{rx-.08f,.15f,z+1.57f},0xd0bc7f);
    if(z<12)face({rx-.08f,.02f,z-1.57f},{rx+.08f,.02f,z-1.57f},{rx+.08f,.15f,z-1.57f},{rx-.08f,.15f,z-1.57f},0xa29566);
    if(z<40&&(i+int(travel/tile))%4==0){box(side*3.f,-.05f,z,.45f,.65f,.5f,stone);if(z<9)box(side*3.f,.6f,z,.55f,.12f,.6f,0xb7b388);else{float xx=side*3.f;face({xx-.275f,.72f,z-.3f},{xx+.275f,.72f,z-.3f},{xx+.275f,.72f,z+.3f},{xx-.275f,.72f,z+.3f},0xb7b388);}}
   }
-  if(i<9&&i%3==0&&quality==0)face({-.4f,.03f,z-.4f},{.4f,.03f,z-.4f},{.4f,.03f,z+.4f},{-.4f,.03f,z+.4f},0x6eac8d,1.f,3);
-  if(i<11&&quality==0){float x=((i*19)%7-3)*.65f;face({x,.025f,z-.9f},{x+.05f,.025f,z-.8f},{x-.28f,.025f,z+.1f},{x-.32f,.025f,z+.15f},0x68755a);}
  }
  if(elbow&&turnz>5){float signx=s.turn_direction*2.8f;
   box(signx,.45f,turnz-5,.1f,1.7f,.1f,0x655235);box(signx,1.6f,turnz-5,1.15f,.7f,.14f,0xbca36c);
   float dx=s.turn_direction*.32f;face({signx-dx,1.8f,turnz-5.08f},{signx+dx,1.95f,turnz-5.08f},{signx-dx,2.12f,turnz-5.08f},{signx-dx,1.8f,turnz-5.08f},0x264f45);
  }
- if(elbow){float x=s.turn_direction*12.f;box(x,-.65f,turnz,24,.64f,5.8f,stone);box(0,0,turnz+2.8f,5.8f,.6f,.4f,0xb4a77c);}
+ if(elbow){float x=s.turn_direction*12.f;box(x,-.65f,turnz,24,.64f,5.8f,stone);box(0,0,turnz+2.8f,5.8f,.6f,.4f,0xb4a77c);
+  for(int strip=-1;strip<=1;strip++){float z=turnz+strip*1.8f;face({0,.015f,z-.85f},{x*2,.015f,z-.85f},{x*2,.015f,z+.85f},{0,.015f,z+.85f},stone,1,theme==1?4:theme==2?5:0);}
+  if(turnz<24)for(int mark=0;mark<2;mark++){
+   float z=turnz-5-mark*3.f,dx=s.turn_direction*.65f;
+   face({-dx,.035f,z-.45f},{dx,.035f,z},{-dx,.035f,z+.45f},{-dx*.65f,.035f,z},0xdcbf73,1.1f);
+  }
+ }
+ if(s.turns>0&&std::abs(s.turn_fx)>.05f){float z=s.next_turn-180-s.distance,x=-std::copysign(12.f,s.turn_fx),edge=-std::copysign(2.9f,s.turn_fx);
+  face({edge,.012f,z-2.9f},{x*2,.012f,z-2.9f},{x*2,.012f,z+2.9f},{edge,.012f,z+2.9f},stone,.96f);
+  for(int side: {-1,1})face({edge,.15f,z+side*2.86f-.08f},{x*2,.15f,z+side*2.86f-.08f},{x*2,.15f,z+side*2.86f+.08f},{edge,.15f,z+side*2.86f+.08f},0xd0bc7f);
+ }
  for(int side=-1;side<=1;side+=2){
   for(int i=0;i<(quality==0?3:2);i++){float z=7+i*12-fmodf(travel,12.f);float x=side*(5.f+(i%3)*1.5f);
    if(theme==2){box(x,-1,z,1.2f,5.9f,1.4f,0x4b6570);box(x,4.9f,z,1.7f,.4f,1.8f,0x87938b);if(i%2==0&&side<0)box(0,5.3f,z,12,.4f,1.5f,0x3f5664);}
    else {tree(x,z,i+side*3);if(theme==1&&i%2==0)box(x+side*2,-.5f,z,2.2f,3.f,2.4f,0x9b8b61);}
-   if(z<24&&quality==0)for(int leaf=0;leaf<2;leaf++){float dx=(leaf-1)*.65f;face({x-.7f,-.6f,z},{x+dx,-.05f,z+.5f},{x+dx*1.7f,-.2f,z+1.4f},{x-.7f,-.6f,z},0x568458);}
+   if(z<20&&z>0&&quality==0&&theme!=2)for(int leaf=0;leaf<5;leaf++){
+    float dx=ring[5][leaf][0]*.9f,dz=ring[5][leaf][1]*.8f;
+    V3 base={x,-.65f,z},tip={x+dx,-.35f,z+dz};
+    face(base,{x+dx*.55f-dz*.13f,.12f,z+dz*.55f+dx*.13f},tip,{x+dx*.55f+dz*.13f,.03f,z+dz*.55f-dx*.13f},leaf&1?0x407857:0x6a9c68);
+   }
+   if(theme==2&&z>0&&z<20)face({x-.4f,1.1f,z-.72f},{x+.4f,1.1f,z-.72f},{x+.4f,2.5f,z-.72f},{x-.4f,2.5f,z-.72f},0x6faaa0,.95f,3);
+   if(theme==1&&z>2&&z<24&&i%2==0)face({x+side*2-1.f,.5f,z-1.21f},{x+side*2+1.f,.5f,z-1.21f},{x+side*2+1.f,2.3f,z-1.21f},{x+side*2-1.f,2.3f,z-1.21f},0xb7a36b,1,4);
 }
   for(int i=0;i<2;i++){float z=14+i*30-fmodf(travel,30.f);if(z< -3)continue;
    if(i==1)idol(side*4.3f,z,1.05f);
+   if(!visible_box({side*3.4f,1.3f,z},{.5f,1.5f,.6f})){culled_objects++;continue;}
    // Braziers are geometric flames with a flickering amber core.
    box(side*3.4f,.05f,z,.35f,1.55f,.35f,0x545e47);box(side*3.4f,1.5f,z,.65f,.18f,.6f,0x8b7142);
    float flicker=sinf(time*14+z)*.12f;limb({side*3.4f,1.65f,z},{side*3.4f+.08f,2.3f+flicker,z},.17f,theme==2?0x61cfe2:0xf3a748,5);
@@ -305,24 +370,31 @@ void Renderer::render(pxa::game::Frame& f,const State& s,const Save& save){
  }
  // Monumental gate. Repeated every 96 m, with stepped lintel and jade keystone.
  float gatez=71-fmodf(travel,96.f);
- if(gatez> -4){
+ if(gatez> -4&&visible_box({0,3.4f,gatez},{4.55f,3.95f,1.f})){
   for(int side: {-1,1}){box(side*3.65f,-.5f,gatez,1.25f,4.3f,1.4f,0x75877b);box(side*3.65f,-.1f,gatez,1.6f,.4f,1.7f,0xb3aa7f);}
-  for(int i=0;i<6;i++){float a=i*PI/6+.012f,b=(i+1)*PI/6-.012f;
-   V3 oa={cosf(a)*4.15f,3.2f+sinf(a)*4.15f,gatez-.75f},ob={cosf(b)*4.15f,3.2f+sinf(b)*4.15f,gatez-.75f};
-   V3 ia={cosf(a)*3.35f,3.2f+sinf(a)*3.35f,gatez-.75f},ib={cosf(b)*3.35f,3.2f+sinf(b)*3.35f,gatez-.75f};
-   face(oa,ob,ib,ia,(i&1)?0xb2ae89:0x96a18a,.92f);face(ia,ib,add(ib,{0,0,1.5f}),add(ia,{0,0,1.5f}),0x6e8379,.75f);
+  for(int i=0;i<6;i++){
+   V3 oa={arch_ring[i][0]*4.15f,3.2f+arch_ring[i][1]*4.15f,gatez-.75f},ob={arch_ring[i+1][0]*4.15f,3.2f+arch_ring[i+1][1]*4.15f,gatez-.75f};
+   V3 ia={arch_ring[i][0]*3.35f,3.2f+arch_ring[i][1]*3.35f,gatez-.75f},ib={arch_ring[i+1][0]*3.35f,3.2f+arch_ring[i+1][1]*3.35f,gatez-.75f};
+   face(oa,ob,ib,ia,(i&1)?0xb2ae89:0x96a18a,.92f,theme==1?4:theme==2?5:0);face(ia,ib,add(ib,{0,0,1.5f}),add(ia,{0,0,1.5f}),0x6e8379,.75f);
   }
   face({-.42f,6.35f,gatez-.78f},{.42f,6.35f,gatez-.78f},{.42f,7.19f,gatez-.78f},{-.42f,7.19f,gatez-.78f},0x70a98e,1,3);
  }
  // Deterministic gold trails, culled at the same collection cursor used by the rules.
- int first=std::max(4,int(s.distance/3)-1);for(int i=first;i<first+(quality==0?19:13);i++){float z=i*3.f-s.distance;if(z<.8f||coin_taken(s,i))continue;float x=coin_lane(i)*1.65f;float y=coin_height(i)+sinf(time*4+i*.5f)*.08f;
-  float spin=time*2.8f+i*.6f;float w=.19f*(.25f+.75f*fabsf(cosf(spin)));
+ int first=std::max(4,int(s.distance/3)-1);
+ float coin_wave_s=sinf(time*4+first*.5f),coin_wave_c=cosf(time*4+first*.5f);
+ float coin_spin_s=sinf(time*2.8f+first*.6f),coin_spin_c=cosf(time*2.8f+first*.6f);
+ for(int i=first;i<first+(quality==0?19:13);i++){float z=i*3.f-s.distance,osc=coin_wave_s,spin=coin_spin_c;
+  float ns=coin_wave_s*.87758256f+coin_wave_c*.47942554f;coin_wave_c=coin_wave_c*.87758256f-coin_wave_s*.47942554f;coin_wave_s=ns;
+  ns=coin_spin_s*.82533561f+coin_spin_c*.56464247f;coin_spin_c=coin_spin_c*.82533561f-coin_spin_s*.56464247f;coin_spin_s=ns;
+  if(z<.8f||coin_taken(s,i))continue;float x=coin_lane(i)*1.65f;float y=coin_height(i)+osc*.08f;
+  float w=.19f*(.25f+.75f*fabsf(spin));
   face({x-w*.5f,y-.22f,z},{x+w*.5f,y-.22f,z},{x+w,y,z},{x-w,y,z},0xf8cc58);
   face({x-w,y,z},{x+w,y,z},{x+w*.5f,y+.22f,z},{x-w*.5f,y+.22f,z},0xffd96e);
   face({x-.07f,y-.12f,z-.17f},{x+.07f,y-.12f,z-.17f},{x+.07f,y+.12f,z-.17f},{x-.07f,y+.12f,z-.17f},0xffec9a);
  }
  mesh_layer=2;
  for(int i=0;i<s.count;i++){const auto&o=s.objects[i];float z=o.distance-s.distance;if(z< -3||z>85||o.passed)continue;float x=o.lane*1.65f;
+  if(!visible_box({o.lane==2?0:x,1.f,z},{o.lane==2?3.1f:.85f,2.3f,2.5f})){culled_objects++;continue;}
   if(o.kind==Kind::Rock){box(x,0,z,1.18f,.95f,1.12f,0x7d7660);box(x-.12f,.95f,z,.8f,.25f,.8f,0x99937a);face({x-.55f,.1f,z-.57f},{x+.55f,.1f,z-.57f},{x+.55f,.88f,z-.57f},{x-.55f,.88f,z-.57f},0x787b65,.8f,0);}
   if(o.kind==Kind::Root){limb({-2.7f,.4f,z},{2.7f,.4f,z},.38f,0x785133,8);face({-2.6f,.18f,z-.36f},{2.6f,.18f,z-.36f},{2.6f,.61f,z-.36f},{-2.6f,.61f,z-.36f},0x92613b,1,2);for(int k=-2;k<=2;k++)box(k,.55f,z-.12f,.12f,.12f,.4f,0xb79057);}
   if(o.kind==Kind::Gate){for(int side=-1;side<=1;side+=2)box(side*2.5f,0,z,.4f,2.9f,.5f,0x68694f);box(0,1.08f,z,5.4f,.74f,.6f,0x99794d);box(0,1.83f,z,5.7f,.17f,.8f,0xcfb377);face({-2.4f,1.1f,z-.31f},{2.4f,1.1f,z-.31f},{2.4f,1.79f,z-.31f},{-2.4f,1.79f,z-.31f},0xc5b185,1.f,3);}
@@ -340,13 +412,22 @@ void Renderer::render(pxa::game::Frame& f,const State& s,const Save& save){
   face({x-.025f,y,z},{x,y+.05f,z},{x+.025f,y,z},{x,y-.05f,z},theme==2?0x80dce0:0xd6d990,1.2f);
  }
  peak_faces=std::max(peak_faces,count);
- std::sort(faces,faces+count,[](const Face&a,const Face&b){return a.depth>b.depth;});
+ // Sort compact indices, not the full vertex/UV payload. Depth-tested
+ // actor/hazard faces need no painter sorting at all.
+ int ordered=0,world_end=0,shadow_end=0;
+ for(int i=0;i<count;i++)if(faces[i].layer==0)draw_order[ordered++]=uint16_t(i);
+ world_end=ordered;
+ for(int i=0;i<count;i++)if(faces[i].layer==3)draw_order[ordered++]=uint16_t(i);
+ shadow_end=ordered;
+ for(int i=0;i<count;i++)if(faces[i].layer!=0&&faces[i].layer!=3)draw_order[ordered++]=uint16_t(i);
+ auto farther=[&](uint16_t a,uint16_t b){return faces[a].depth>faces[b].depth;};
+ std::sort(draw_order,draw_order+world_end,farther);
+ if(!depth)std::sort(draw_order+shadow_end,draw_order+count,farther);
  // Paving is drawn before the character. Average-Z painter order can place
  // a foreground ground tile over the feet even though the feet are above it.
  // The small character/obstacle pass shares real per-pixel camera depth.
- for(int pass=0;pass<3;pass++)for(int i=0;i<count;i++){
-  const auto &face=faces[i];int layer=face.layer==0?0:face.layer==3?1:2;
-  if(layer!=pass)continue;
+ for(int i=0;i<count;i++){
+  const auto &face=faces[draw_order[i]];int pass=i<world_end?0:i<shadow_end?1:2;
   if(depth&&pass==2){
    std::array<pxa::game::Vertex,4> v{};
    for(int j=0;j<4;j++){auto&q=v[j];q.x_q4=face.xy[j*2];q.y_q4=face.xy[j*2+1];q.depth_q8=face.depths[j];

@@ -12,6 +12,12 @@ struct Face {std::array<int16_t,8> xy,uv;std::array<uint16_t,4> depths;float dep
 struct Renderer {
     int width=296,height=240,quality=0,count=0,peak_faces=0; float safe_x=0,safe_y=0; bool text_alpha=true; bool textures=true,depth=true;uint8_t mesh_layer=0;uint32_t skipped=0;int theme=0; float time=0,camera_x=0,roll=0,travel=0,bob=0;
     Face faces[960]{};
+    uint16_t draw_order[960]{};
+    float view_cos=1,view_sin=0,focal=0,screen_y=0;
+    struct ClipPlane {V3 normal,absolute;float offset;};
+    ClipPlane view_planes[5]{};
+    bool object_culling=true;
+    uint32_t culled_objects=0;
     pxa::ui::CanvasCommands<4000>* overlay=nullptr;
     const pxa::ui::DisplayMetrics* display=nullptr;
     const pxa::Asset* title_logo=nullptr;
@@ -24,6 +30,7 @@ struct Renderer {
         return std::clamp(std::min(width/296.f,height/240.f),.8f,1.5f);
     }
     bool upload(pxa::game::Renderer& target);
+    bool visible_box(V3 center,V3 half_extent) const;
     void render(pxa::game::Frame& f,const State& s,const Save& save);
     void face(V3 a,V3 b,V3 c,V3 d,uint32_t color,float light=1,int material=-1);
     void box(float x,float y,float z,float w,float h,float d,uint32_t color);

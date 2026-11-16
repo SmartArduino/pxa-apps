@@ -35,19 +35,21 @@ void action(State& s,Action a){
  if(a==Action::Jump&&s.jump_t<=0){s.jump_t=.94f;s.slide=0;s.slide_queued=false;}
  if(a==Action::Slide){
   if(s.jump_t>0){s.jump_t=std::min(s.jump_t,.94f-s.jump_t);s.slide_queued=true;if(s.jump_t<=.0001f){s.jump_t=s.jump=0;s.slide=.88f;s.slide_queued=false;}}
-  else s.slide=.88f;
+  else {if(s.slide<=0)s.slide_age=0;s.slide=.88f;}
  }
 }
 void update(State& s,float dt){
- dt=std::clamp(dt,0.f,.05f);s.flash=std::max(0.f,s.flash-dt);s.turn_fx*=std::max(0.f,1-dt*3.5f);
+ dt=std::clamp(dt,0.f,.05f);s.flash=std::max(0.f,s.flash-dt);
  if(s.mode==Mode::Dead){s.death_t+=dt;return;}
  if(s.mode!=Mode::Running)return;
+ s.turn_fx=std::copysign(std::max(0.f,std::abs(s.turn_fx)-dt/.70f),s.turn_fx);
  s.elapsed+=dt;s.steps++;float before=s.distance;
  s.speed=std::min(16.f,8.8f+s.distance*.0035f);s.distance+=s.speed*dt;
  s.lane_x+=(s.lane*1.65f-s.lane_x)*std::min(1.f,dt*15.f);
  bool airborne=s.jump_t>0;
  if(airborne){s.jump_t=std::max(0.f,s.jump_t-dt*(s.slide_queued?1.45f:1.f));float t=1-s.jump_t/.94f;s.jump=6.6f*t*(1-t);}else s.jump=0;
- s.landing=std::max(0.f,s.landing-dt);if(airborne&&s.jump_t<=0){s.landing=.18f;if(s.slide_queued){s.slide=.88f;s.slide_queued=false;}}
+ s.landing=std::max(0.f,s.landing-dt);if(airborne&&s.jump_t<=0){s.landing=.18f;if(s.slide_queued){s.slide=.88f;s.slide_age=0;s.slide_queued=false;}}
+ if(s.slide>0)s.slide_age+=dt;
  s.slide=std::max(0.f,s.slide-dt);s.shield=std::max(0.f,s.shield-dt);s.magnet=std::max(0.f,s.magnet-dt);s.combo_t=std::max(0.f,s.combo_t-dt);
  float slide_goal=s.slide>.12f?1.f:0.f;s.pose_slide+=std::clamp(slide_goal-s.pose_slide,-dt*8,dt*8);
  s.rush=std::max(0.f,s.rush-dt);s.feedback_t=std::max(0.f,s.feedback_t-dt);s.chase=std::max(0.f,s.chase-dt);
@@ -85,6 +87,10 @@ void update(State& s,float dt){
  if(s.mode==Mode::Running&&quest_progress(s)>=quest_goal(s)){
   s.bonus+=500;s.quests++;s.quest_base=quest_counter(s);feedback(s,Feedback::Quest,1.5f);charge(s,10);
  }
+ float lean=0;
+ if(std::abs(s.turn_fx)>.0001f){float t=1-std::abs(s.turn_fx);lean=std::copysign(.16f+.84f*std::sin(3.14159265f*t),s.turn_fx);}
+ else if(s.queued_turn==s.turn_direction&&s.next_turn>s.distance){float t=std::clamp((14-(s.next_turn-s.distance))/12.f,0.f,1.f);lean=s.turn_direction*.16f*t*t*(3-2*t);}
+ s.turn_lean+=(lean-s.turn_lean)*std::min(1.f,dt*12);
  score(s);
 }
 }
