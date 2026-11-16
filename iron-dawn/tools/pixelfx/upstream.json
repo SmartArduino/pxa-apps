@@ -1,0 +1,41 @@
+{
+  "repository": "https://github.com/patch-gg/pixelfx",
+  "commit": "5294518ce7c72e48b6100a744596e0acf57f2826",
+  "license": "MIT",
+  "excluded": [
+    "gallery/fonts (Patch Pixel is not MIT)",
+    "gallery",
+    "skills",
+    "tools",
+    "all unused effect categories"
+  ],
+  "files": {
+    "LICENSE": "0a77565a50c3462831244452f129c38d2adc4fd07897cbeba8adc943f958604e",
+    "NOTICE.md": "d12932473f98b1a3f0b5820ae23d568b52e39294ba7c2d60c0649a93a808af3b",
+    "package.json": "a0663052563c9e8cf1c5aceee3f57efd9d3031fd6ea51db4d4816705c1f00264",
+    "src/core/act.js": "b4fdeaf8af30c709748bb221c3b3854cc0438f2ce6c6d99f0324e3b3701b9f71",
+    "src/core/actor.js": "5c867a24a88e93520d020b77190f12db265eb8fc357136ce3d92de05e19e63c2",
+    "src/core/chain.js": "5014a0eae326f1855f5e320308ad370dbc342d2f1051df3665866401956bfef9",
+    "src/core/color.js": "4e63f3074df7c1e138f721959858d12e4f6ccc2bf4f8e98c576efbae51241e54",
+    "src/core/font.js": "c094f1d3a9f94478a255f1cc81aa7ccd2c2ba7a97fc1227a29d268acc1f2ec7c",
+    "src/core/fx.js": "a959c5f7b1c15ba8e07cb26e5b1ccc0bce0aef54ca14cf01f9d6e794cf4e5a0b",
+    "src/core/index.js": "ef5966a6365dbbe8a990867b6c7f3fc61922428e5f2e61262a3a430c119bf02d",
+    "src/core/math.js": "da45e1ed43f7d119dd80fbe97c7de2b35b4ea95dea8781671c296ee5942ac0bc",
+    "src/core/painter.js": "5b8ada6a25cdf1e63ae3684cc56276c61306558dc0a3a827a6a39ab038f74681",
+    "src/core/particles.js": "867e58baf522278b4aad383c7224c599cff9ba93268b5eac9485a39a3809477b",
+    "src/core/poses.js": "829f9b59ac883061afb9e952d6b608363ec7678bd00b026c538046685af88139",
+    "src/core/rig.js": "5af3f455b18f9feb9f060732fb457529c6c76975a309c72171aa4e88b31aa70c",
+    "src/core/scene.js": "520a465f771829162dde114880224eb30efbab3cff859cb8a24a28e49d8e198c",
+    "src/core/shapes.js": "3e28f77e25b3083949f083c74304ead6826b7b1da20a658ccb114ab531fc8898",
+    "src/core/sim.js": "517febe05b72de9d07e3596c019b9bb01e1f97a74089a30fa80e9e98849ba4b0",
+    "src/fx/explosions/small-explosion.js": "86b8b0bc9ab758233f06cad3686f0d6037ed674d3637381b1fbebf6cbcd63d54",
+    "src/fx/explosions/big-explosion.js": "3f0eea9e36abfd9d8c1b15430fc13412c4b18abb55545f5f589e882ad50b4b0a",
+    "src/fx/explosions/_lib.js": "3571c77ac617a36b6dd1c4c3b6f4c157dc317ca0033139fe460a737b004d936c",
+    "src/fx/impacts/bullet-impact.js": "aba76cf2a5a1e75b96e55ed1738d684fa9f6e74f428facf5a69613d404716072",
+    "src/fx/impacts/_lib.js": "0f47f85f805295eac267f159e27ce88a8766bbcd4e3b31c75359c97471861d9f",
+    "src/fx/holy/heal-aoe.js": "f9e9d5523abdff4a003d6661a2bcbca7432897018592b5c86a3c72efea8d6c3a",
+    "src/fx/holy/_lib.js": "6768e3763ff7c5d5294308cb92137319a979ff365881dc3b101f3f2a01e6ec27",
+    "src/fx/pickups/collect-burst.js": "14e767332f999978b6234165dde880f7dd21e77eec11f8bb094ae58d9a4d667b",
+    "src/fx/pickups/_lib.js": "85312a8df8ee5ae76a296ebf6da73bb3ffa11db451db999013a960fc59e062de"
+  }
+}

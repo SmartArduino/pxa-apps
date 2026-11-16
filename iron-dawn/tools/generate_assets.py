@@ -25,5 +25,8 @@ common=app.parent/'common/motion-games/licenses'
 notice='Iron Dawn: original application code, game rules and procedural artwork: MIT.\nFont subset: Noto Sans CJK, SIL OFL 1.1.\nFont SHA256: '+hashlib.sha256(font.read_bytes()).hexdigest()+'\n\n'
 for name in ('PXA-SDK-LICENSE.txt','FONT-NOTICE','FONT-OFL.txt','FONT-OFL-Latin.txt'):
  notice+='=== '+name+' ===\n'+(common/name).read_text()+'\n'
+for name in ('pixelfx-LICENSE','pixelfx-NOTICE.md'):
+ path=app/'assets/third-party'/name
+ if path.exists():notice+='=== '+name+' ===\n'+path.read_text()+'\n'
 (app/'assets/NOTICE.txt').write_text(notice)
 print(len(chars),'glyphs;',len(data),'font bytes')
