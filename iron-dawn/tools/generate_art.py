@@ -13,6 +13,7 @@ from PIL import Image
 APP = Path(__file__).resolve().parents[1]
 ROOT = APP / 'art/generated'
 FRAMES, PALETTES, DATA, GROUPS, SOURCES = [], [], bytearray(), {}, {}
+RIG = json.loads((APP/'art/rig.json').read_text())
 
 def rgb565(c):
     r,g,b=c
@@ -74,7 +75,7 @@ def add_group(name,filename,cols,rows,size,anchor='center',trim=False,colors=128
             nearest[c]=min(range(colors),key=lambda i:sum((a-b)**2 for a,b in zip(c,palette[i])))
         return nearest[c]
     first=len(FRAMES)
-    for pixels in cells:
+    for cell_index,pixels in enumerate(cells):
         w,h=size;bx,by,ex,ey=bounds(pixels,w,h)
         if anchor=='infantry':
             points=[x for y in range(by,min(ey,by+5)) for x in range(w) if pixels[y*w+x][3]>=128]
@@ -83,6 +84,7 @@ def add_group(name,filename,cols,rows,size,anchor='center',trim=False,colors=128
             points=[x for y in range(max(by,ey-(10 if anchor=='vehicle' else 15)),ey) for x in range(w) if pixels[y*w+x][3]>=128]
             ox=round(sum(points)/len(points));oy=ey-(8 if anchor=='vehicle' else 13)
         else: ox=w//2;oy=h//2
+        if name in RIG: ox,oy=RIG[name]['anchors'][cell_index%8]
         offset=len(DATA);runs=0
         for y in range(h):
             x=0
@@ -113,9 +115,13 @@ header+=f'inline constexpr std::array<std::array<std::array<uint16_t,128>,5>,{le
 header+=','.join('{{'+','.join('{{'+','.join(map(str,row+[0]*(128-len(row))))+'}}' for row in group)+'}}' for group in PALETTES)+'}};\n'
 header+=f'inline constexpr std::array<uint8_t,{len(DATA)}> bytes={{'+','.join(map(str,DATA))+'};\n'
 for name,(first,count) in GROUPS.items():header+=f'inline constexpr unsigned {name}_first={first}, {name}_count={count};\n'
-header+='inline constexpr std::array<unsigned,5> unit_first={'+','.join(str(GROUPS[n][0])for n in ('rifle','rocket','tank','artillery','harvester'))+'};\n}\n'
+header+='inline constexpr std::array<unsigned,5> unit_first={'+','.join(str(GROUPS[n][0])for n in ('rifle','rocket','tank','artillery','harvester'))+'};\n'
+header+='struct Socket {int16_t x,y;bool behind;};\n'
+header+='inline constexpr std::array<std::array<Socket,8>,4> muzzles={{'+','.join('{{'+','.join('{'+str(x)+','+str(y)+','+str(RIG[n]['muzzle_behind_body'][i]).lower()+'}' for i,(x,y) in enumerate(RIG[n]['muzzles']))+'}}' for n in ('rifle','rocket','tank','artillery'))+'}};\n'
+header+='struct InfantryRig {int16_t hip_x,hip_y,cut;};\n'
+header+='inline constexpr std::array<std::array<InfantryRig,8>,2> infantry_rigs={{'+','.join('{{'+','.join('{'+str(x)+','+str(y)+','+str(RIG[n]['body_cut'][i])+'}' for i,(x,y) in enumerate(RIG[n]['hips']))+'}}' for n in ('rifle','rocket'))+'}};\n}\n'
 (APP/'art_data.hpp').write_text(header)
-manifest={'encoding':'opaque row spans: x (uint8, uint16 for width>255), uint8 y, uint8 length, followed by palette-index pixels','sources':SOURCES,'groups':GROUPS,'frame_count':len(FRAMES),'encoded_bytes':len(DATA),'palettes_bytes':len(PALETTES)*128*5*2,'frame_registration':FRAMES,'mode':'built-in image_gen; PNG masters retained unchanged'}
+manifest={'encoding':'opaque row spans: x (uint8, uint16 for width>255), uint8 y, uint8 length, followed by palette-index pixels','sources':SOURCES,'groups':GROUPS,'frame_count':len(FRAMES),'encoded_bytes':len(DATA),'palettes_bytes':len(PALETTES)*128*5*2,'frame_registration':FRAMES,'rig_sha256':hashlib.sha256((APP/'art/rig.json').read_bytes()).hexdigest(),'mode':'built-in image_gen masters; native code locomotion rig; PNG masters retained unchanged'}
 (ROOT/'assets.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n')
 # App package icon size is part of the SDK resource format.
 Image.open(ROOT/'app-icon.png').convert('RGB').resize((96,96),Image.Resampling.NEAREST).save(APP/'assets/icon.png')

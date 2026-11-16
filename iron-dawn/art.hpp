@@ -4,9 +4,11 @@
 #include "fx.hpp"
 #include "sprites.hpp"
 #include "ground.hpp"
+#include "locomotion.hpp"
+#include "combat_art.hpp"
 namespace iron {
 struct Battlefield {
- float camx=0,camy=0,zoom=1;int width=480,height=320,top=43,bottom=224;float clock=0;GroundCache ground;bool cache_ground=true;
+ float camx=0,camy=0,zoom=1;int width=480,height=320,top=43,bottom=224;float clock=0;GroundCache ground;bool cache_ground=true;Locomotion locomotion;
  Pt project(Vec p,float z=0)const{return {width*.5f+(p.x-p.y)*20*zoom-camx,top+(bottom-top)*.5f+(p.x+p.y)*10*zoom-camy-z*zoom};}
  Vec unproject(int x,int y)const{float dx=(x-width*.5f+camx)/(20*zoom),dy=(y-top-(bottom-top)*.5f+camy)/(10*zoom);return {(dy+dx)*.5f,(dy-dx)*.5f};}
  void focus(Vec p){camx=(p.x-p.y)*20*zoom;camy=(p.x+p.y)*10*zoom;}
@@ -26,16 +28,17 @@ struct Battlefield {
   if(a.hp<specs[a.kind].hp*.35f){auto smoke=project(p,25);for(int i=0;i<3;++i){float age=std::fmod(clock*.65f+i*.34f,1.f);r.ellipse(smoke.x+age*9*zoom,smoke.y-age*25*zoom,(2+age*5)*zoom,(3+age*4)*zoom,mix(rgb(82,82,70),navy,int(age*9)));}}
  }
  [[gnu::noinline]] void turret_art(Raster& r,Vec p,float angle,float z,uint16_t team,float length=.8f,float elevation=0){float dx=std::cos(angle),dy=std::sin(angle);cube(r,p,.28f,.3f,5,rgb(131,146,123),rgb(61,78,68),rgb(45,62,57),z-4);auto a=project(p,z+3),b=project({p.x+dx*length,p.y+dy*length},z+3+elevation);r.line(a.x,a.y,b.x,b.y,rgb(24,34,33),5*zoom);r.line(a.x,a.y,b.x,b.y,rgb(155,163,140),2*zoom);r.rect(a.x-2,a.y-3,4,2,team);}
- [[gnu::noinline]] void unit_art(Raster& r,const Entity& a){
+ [[gnu::noinline]] void unit_art(Raster& r,const Entity& a,int identity=-1){
   auto p=project(a.p);int x=std::lround(p.x),y=std::lround(p.y);bool infantry=a.kind<=rocket;auto team=a.team==1?red:cyan;
   if(a.selected){
    int rx=std::max(6,int((infantry?8:18)*zoom)),ry=std::max(3,int((infantry?4:8)*zoom)),arm=std::max(2,int(4*zoom));
    for(int side:{-1,1})for(int end:{-1,1}){int xx=x+side*rx,yy=y+end*ry;r.line(xx,yy,xx-side*arm,yy,team);r.line(xx,yy,xx,yy-end*std::max(2,arm/2),team);}
    if(a.moving){auto g=project(a.goal);if(onscreen(g)){int d=std::max(2,int(3*zoom));r.line(g.x-d,g.y,g.x+d,g.y,mix(team,navy,5));r.line(g.x,g.y-d,g.x,g.y+d,mix(team,navy,5));}}
   }
-  if(a.moving&&a.kind>=tank)for(int j=0;j<2;++j){float age=std::fmod(clock*1.5f+j*.5f,1.f);Vec dust={a.p.x-std::cos(a.dir)*(.5f+age*.8f),a.p.y-std::sin(a.dir)*(.5f+age*.8f)};auto d=project(dust,2+age*2);r.ellipse(d.x,d.y,(2+age*4)*zoom,(1+age*2)*zoom,mix(rgb(124,119,84),rgb(64,77,57),int(age*13)));}
-  unsigned pose=a.kind==harvester?(a.cargo>0):(a.moving?(unsigned(clock*8)&1):0);unsigned id=Sprites::unit_frame(a.kind,a.dir,pose);unsigned variant=(a.team==1?1:0)+(a.flash>0?2:0);
-  r.ellipse(x+3*zoom,y+3*zoom,(infantry?6:20)*zoom,(infantry?3:8)*zoom,rgb(26,38,33));Sprites::anchor(r,id,x,y,zoom,variant);
+  if(identity>=0&&locomotion.get(identity).weight>.1f&&a.kind>=tank)for(int j=0;j<2;++j){float age=std::fmod(clock*1.5f+j*.5f,1.f);Vec dust={a.p.x-std::cos(a.dir)*(.5f+age*.8f),a.p.y-std::sin(a.dir)*(.5f+age*.8f)};auto d=project(dust,2+age*2);r.ellipse(d.x,d.y,(2+age*4)*zoom,(1+age*2)*zoom,mix(rgb(124,119,84),rgb(64,77,57),int(age*13)));}
+  const auto& motion=locomotion.get(identity);bool firing=a.kind<harvester&&a.cool>specs[a.kind].reload-.12f;
+  unsigned pose=a.kind==harvester?(a.cargo>0):(!firing&&motion.weight>0?(unsigned(motion.phase*8)&1):0);unsigned facing=CombatArt::facing(a.dir);unsigned id=Sprites::unit_frame(a.kind,a.dir,infantry?0:pose);unsigned variant=(a.team==1?1:0)+(a.flash>0?2:0);
+  r.ellipse(x+3*zoom,y+3*zoom,(infantry?6:20)*zoom,(infantry?3:8)*zoom,rgb(26,38,33));if(infantry)CombatArt::infantry(r,a.kind,facing,x,y,zoom,motion.phase,firing?0:motion.weight,variant);else Sprites::anchor(r,id,x,y,zoom,variant);
   unsigned rank=veteran_rank(a);if(rank){int yy=y-(infantry?46:53)*zoom;for(unsigned j=0;j<rank;++j){int xx=x+(int(j)*6-int(rank-1)*3);r.line(xx-2,yy+3,xx,yy,gold);r.line(xx,yy,xx+2,yy+3,gold);}}
   if(a.hp<specs[a.kind].hp*.3f&&!infantry){auto smoke=project(a.p,15);r.ellipse(smoke.x+3*zoom,smoke.y-(5+int(clock*8)%9)*zoom,3*zoom,4*zoom,edge);}
   if(a.selected||a.hp<specs[a.kind].hp){int ww=infantry?16:27,yy=y-(infantry?40:47)*zoom;r.rect(x-ww/2-1,yy-1,ww+2,4,navy);r.rect(x-ww/2,yy,ww*std::clamp(a.hp/specs[a.kind].hp,0.f,1.f),2,a.hp>specs[a.kind].hp*.35f?team:red);}
@@ -75,10 +78,22 @@ struct Battlefield {
    if(w.chapter==1&&x>=13&&x<=15&&(y==5||y==8||y==16||y==19||y==23||y==25))ground_details(r,w,p,hash,color);
   }
  }
+ static unsigned shot_facing(const Shot& s){return CombatArt::facing(std::atan2(s.dest.y-s.from.y,s.dest.x-s.from.x));}
+ static bool shot_behind(const Shot& s){return s.kind<=artillery&&art::muzzles[s.kind][shot_facing(s)].behind;}
+ Pt muzzle(const Shot& s)const{float angle=std::atan2(s.dest.y-s.from.y,s.dest.x-s.from.x);if(s.kind==turret)return project({s.from.x+std::cos(angle)*.95f,s.from.y+std::sin(angle)*.95f},24);auto origin=project(s.from);return CombatArt::socket(s.kind,shot_facing(s),std::lround(origin.x),std::lround(origin.y),zoom);}
+ [[gnu::noinline]] void draw_shot(Raster& r,const Shot& s){
+  auto start=muzzle(s),end=project(s.dest,16);unsigned facing=shot_facing(s);float phase=std::clamp(s.t/std::max(.001f,s.duration),0.f,1.f);
+  auto point=[&](float t){return CombatArt::trajectory(start,end,t,s.kind==artillery,zoom,facing);};auto head=point(phase);
+  if(s.kind==artillery){auto shadow=project(s.p);r.ellipse(shadow.x,shadow.y,3*zoom,2*zoom,navy);}
+  for(int i=3;i>=0;--i){float t=std::max(0.f,phase-i*.065f),next=std::max(0.f,phase-(i+1)*.065f);auto a=point(t),b=point(next);r.line(a.x,a.y,b.x,b.y,i?mix(gold,red,i*3):cream,std::max(1,int((s.kind==rifle?1:2)*zoom)));if(s.kind==rocket&&i&&t>0)r.ellipse(b.x,b.y,std::max(1,int(2*zoom)),std::max(1,int(2*zoom)),edge);}
+  r.dot(head.x,head.y,cream);
+  if(s.t<.08f){int radius=std::max(1,int((s.kind==rifle?2:4)*zoom));r.line(start.x-radius,start.y,start.x+radius,start.y,gold);r.line(start.x,start.y-radius,start.x,start.y+radius,cream);}
+ }
  [[gnu::noinline]] void draw(Raster& r,const World& w){
-  r.clip={0,top,width,bottom-top};
+  r.clip={0,top,width,bottom-top};locomotion.update(w);
   if(cache_ground)ground.draw(r,w,width,top,bottom,camx,camy,zoom,int(clock*2)%4,[&](Raster& backing){draw_ground(backing,w);});else draw_ground(r,w);
   rallies(r,w);
+  for(const auto& shot:w.shots)if(shot.alive&&shot_behind(shot)&&w.fog[cell(shot.p)])draw_shot(r,shot);
   // Painter sort props and entities by their ground plane depth.
   std::array<int,MAX> order{};int num=0;for(int i=0;i<MAX;++i)if(w.e[i].hp>0&&(w.e[i].team==0||w.fog[cell(w.e[i].p)]))order[num++]=i;std::sort(order.begin(),order.begin()+num,[&](int a,int b){return w.e[a].p.x+w.e[a].p.y<w.e[b].p.x+w.e[b].p.y;});
   for(int d=0,ii=0;d<N*2;++d){for(int x=1;x<N-1;++x){int y=d-x;if(y<1||y>=N-1)continue;int c=y*N+x;if(!w.fog[c]||w.ore[c]||w.terrain[c]==2)continue;Vec p={x+.5f,y+.5f};auto q=project(p);if(!onscreen(q,30))continue;uint32_t hash=x*8749+y*6329+x*y*17;if(!((hash%23==0&&x>12)||hash%37==0||hash%19==0||hash%31==0))continue;bool occupied=false;for(auto& a:w.e)if(a.hp>0&&dist(a.p,p)<1.8f){occupied=true;break;}if(occupied)continue;
@@ -87,17 +102,12 @@ struct Battlefield {
     else if(hash%19==0){cube(r,p,.22f,.26f,4+hash%4,rgb(119,122,100),rgb(77,88,77),rgb(56,70,65));}
     else if(hash%31==0){wire(r,{p.x-.5f,p.y},{p.x+.5f,p.y},4,rgb(138,137,109));auto v=project(p);r.line(v.x,v.y,v.x,v.y-7,edge);}
    }
-   while(ii<num&&int(w.e[order[ii]].p.x+w.e[order[ii]].p.y)<=d){auto& a=w.e[order[ii++]];if(!onscreen(project(a.p),110))continue;if(a.kind>=hq)building_art(r,a);else unit_art(r,a);if(a.kind>=hq&&(a.selected||a.hp<specs[a.kind].hp)){auto p=project(a.p,48);r.rect(p.x-18,p.y,36,3,navy);r.rect(p.x-17,p.y+1,34*std::clamp(a.hp/specs[a.kind].hp,0.f,1.f),1,a.team==1?red:cyan);}}
+   while(ii<num&&int(w.e[order[ii]].p.x+w.e[order[ii]].p.y)<=d){auto& a=w.e[order[ii++]];if(!onscreen(project(a.p),110))continue;if(a.kind>=hq)building_art(r,a);else unit_art(r,a,order[ii-1]);if(a.kind>=hq&&(a.selected||a.hp<specs[a.kind].hp)){auto p=project(a.p,48);r.rect(p.x-18,p.y,36,3,navy);r.rect(p.x-17,p.y+1,34*std::clamp(a.hp/specs[a.kind].hp,0.f,1.f),1,a.team==1?red:cyan);}}
   }
-  for(auto& s:w.shots)if(s.alive&&w.fog[cell(s.p)]){
-   float z=s.kind==artillery?std::sin(s.t/s.duration*3.14159f)*50:8;auto a=project(s.p,z),shadow=project(s.p);
-   if(s.kind==artillery)r.ellipse(shadow.x,shadow.y,3*zoom,2*zoom,navy);
-   for(int i=3;i>=0;--i){float t=std::max(0.f,s.t/s.duration-i*.065f);Vec trail={s.from.x+(s.dest.x-s.from.x)*t,s.from.y+(s.dest.y-s.from.y)*t};auto b=project(trail,z);r.line(a.x,a.y,b.x,b.y,i?mix(gold,red,i*3):cream,s.kind==rifle?1:2);if(s.kind==rocket&&i)r.ellipse(b.x,b.y,2*zoom,2*zoom,edge);}
-   r.dot(a.x,a.y,cream);
-  }
+  for(const auto& shot:w.shots)if(shot.alive&&!shot_behind(shot)&&w.fog[cell(shot.p)])draw_shot(r,shot);
   for(auto& b:w.blasts)if(b.alive&&w.fog[cell(b.p)]){
    auto p=project(b.p,b.type==5?10:b.age*10);
-   if(b.type==5){int d=(2+int((.16f-b.age)*20))*zoom;r.line(p.x-d,p.y,p.x+d,p.y,gold);r.line(p.x,p.y-d,p.x,p.y+d,cream);continue;}
+   if(b.type==5)continue; // Legacy save flash; current flashes share the projectile socket.
    auto origin=project(b.p);
    if(b.type==3){draw_fx(r,3,origin.x,origin.y,b.age/.7f,zoom*.9f);continue;}
    if(b.type==4||b.type==6){float f=b.age/(b.type==6?1.2f:1.f);draw_fx(r,4,origin.x,origin.y,f,zoom);if(b.type==6)r.text(p.x,p.y-20,"+280",gold,16,1);else {r.line(p.x-6,p.y-10,p.x,p.y-17,gold,2);r.line(p.x,p.y-17,p.x+6,p.y-10,gold,2);}continue;}

@@ -123,7 +123,7 @@ struct World {
  }
  void fire(int id,int target){auto& a=e[id];bool admitted=false;
   for(auto& s:shots)if(!s.alive){s={};s.from=a.p;s.p=a.p;s.dest=e[target].p;s.target=int16_t(target|(unsigned(a.cargo)<<7));s.team=uint8_t((id+1)*2+a.team);s.kind=a.kind;s.damage=specs[a.kind].damage*(1+veteran_rank(a)*.12f);s.duration=a.kind==artillery?.85f:a.kind==rocket?.5f:.22f;s.alive=true;admitted=true;break;}
-  if(!admitted)return;a.cool=specs[a.kind].reload;a.flash=.08f;a.dir=std::atan2(e[target].p.y-a.p.y,e[target].p.x-a.p.x);blast({a.p.x+std::cos(a.dir)*.8f,a.p.y+std::sin(a.dir)*.8f},5);if(sound<2)sound=2;
+  if(!admitted)return;a.cool=specs[a.kind].reload;a.dir=std::atan2(e[target].p.y-a.p.y,e[target].p.x-a.p.x);if(sound<2)sound=2;
  }
  void supply_tick(Entity& station,float dt){
   bool friendly=false,contested=false;for(auto& a:e)if(a.hp>0&&a.kind<harvester&&dist(a.p,station.p)<2.7f){friendly|=a.team==0;contested|=a.team==1;}
