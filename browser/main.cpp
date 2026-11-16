@@ -5,6 +5,8 @@
 #include "browser_find.hpp"
 #include "browser_image_view.hpp"
 #include "browser_image_state.hpp"
+#include "browser_image_response.hpp"
+#include "browser_gmanhua.hpp"
 #include "browser_comic.hpp"
 #include "browser_geometry.hpp"
 #include "browser_scrollbar.hpp"
@@ -128,9 +130,11 @@ struct App {
     browser::ImageView image_view;
     bool comic_reading = false, comic_detail = false, comic_resume = false;
     int comic_return_scroll = 0, comic_pending = -1;
+    int chapter_start = -1;
     browser::ImageView comic_saved_view;
     bool comic_restore_view = false;
     int loading_image = -1;
+    bool compressed_temp_pending = false, compressed_temp_cleaning = false;
     bool foreground = true;
     int scroll = 0, body_font_dp = 15, edit_field = -1, restore_scroll = 0;
     bool busy = false, dirty = true, layout_dirty = true, editing = false, menu = false,
@@ -315,7 +319,7 @@ struct App {
         }
         const bool interrupted = busy || loading_image >= 0;
         const int cancelled_frame = animation_slot;
-        context->foreground_tasks().cancel();
+        cancel_foreground();
         animation_slot = -1;
         if (cancelled_frame >= 0) {
             auto &image = images[cancelled_frame];
@@ -334,6 +338,7 @@ struct App {
         dirty = true;
     }
     void clear_images() {
+        chapter_start = -1;
         image_view = {};
         comic_reading = false;
         comic_resume = false;
@@ -345,6 +350,28 @@ struct App {
             image.detailed = false;
         }
         image_states.fill(ImageState::unseen);
+    }
+    pxa::Task<void> clean_compressed_temp() {
+        while (compressed_temp_cleaning) {
+            auto yielded = co_await context->clock().yield();
+            if (!yielded) co_return std::unexpected(yielded.error());
+        }
+        if (!compressed_temp_pending) co_return pxa::Result<void>{};
+        compressed_temp_cleaning = true;
+        struct Reset { bool& flag; ~Reset() { flag = false; } } reset{compressed_temp_cleaning};
+        auto result = co_await context->fs().remove("compressed-image.tmp");
+        if (result || result.error() == pxa::Error::not_found) {
+            compressed_temp_pending = false;
+            co_return pxa::Result<void>{};
+        }
+        co_return result;
+    }
+    void cancel_foreground() {
+        context->foreground_tasks().cancel();
+        // Source handles have now closed. FS deliberately refuses unlinking
+        // open files, so cleanup runs after cancellation in the background.
+        if (compressed_temp_pending && !compressed_temp_cleaning)
+            (void)context->tasks().start(clean_compressed_temp());
     }
     void rebuild() {
 #ifdef PXA_BROWSER_PROFILE
@@ -531,7 +558,7 @@ struct App {
                  .body = std::as_bytes(std::span{body.data(), body.size()}),
                  .options = {.buffer_bytes = 4096,
                              .header_bytes = 4096,
-                             .max_body_bytes = 524288,
+                             .max_body_bytes = browser::image_response::encoded_limit,
                              .timeout_ms = 20000}},
                 permission);
             if (!exchange)
@@ -551,6 +578,9 @@ struct App {
                 co_return std::unexpected(response.error());
             }
             if (response->headers.first("content-security-policy")) scripts_allowed=false;
+            // This site's public chapter data has a bounded native reader.
+            // Its full jQuery viewer is not needed for directory/navigation.
+            if (browser::gmanhua::site(url)) scripts_allowed = false;
             response_referrer = browser::ReferrerPolicy::strict_origin_when_cross_origin;
             for (auto value : response->headers.values("referrer-policy"))
                 if (auto policy=browser::referrer_policy(value)) response_referrer=*policy;
@@ -588,10 +618,7 @@ struct App {
             }
             auto type = response->headers.first("content-type");
             std::string mime = type ? browser::lowercase(*type) : "text/html";
-            if (mime.starts_with("image/png") || mime.starts_with("image/jpeg") || mime.starts_with("image/gif")) {
-                if (encoding != browser::ContentEncoding::identity) {
-                    set_status("暂不支持压缩图片响应");busy=false;dirty=true;co_return pxa::Result<void>{};
-                }
+            if (browser::image_response::declared_image(mime)) {
                 if (!show_images || (!show_gif && mime.starts_with("image/gif"))) {
                     busy = false; set_status("图片加载已关闭 · 可在菜单开启"); dirty = true;
                     co_return pxa::Result<void>{};
@@ -602,7 +629,9 @@ struct App {
                 images[0].index = 0;
                 image_states[0] = ImageState::loading;
                 loading_image = 0;
-                auto decoded = co_await read_image(response->body, 0, 0, begin);
+                auto decoded = encoding == browser::ContentEncoding::identity
+                    ? co_await read_image(response->body, 0, 0, begin)
+                    : co_await read_compressed_image(response->body, encoding, 0, 0, begin);
                 loading_image = -1;
                 busy = false;
                 layout_dirty = true;
@@ -676,7 +705,9 @@ struct App {
             if (!plain && !rss && !wml) browser::site_forms(document, url);
             browser::Parser parser(document);
             browser::script::Capture script_capture;
-            const bool capture_script = scripts_allowed && !plain && !rss && !wml;
+            const bool native_chapter = show_images && bool(browser::gmanhua::chapter(url));
+            std::string chapter_status;
+            const bool capture_script = (scripts_allowed || native_chapter) && !plain && !rss && !wml;
             std::optional<browser::RssParser> feed;
             if (rss)
                 feed.emplace(document);
@@ -734,6 +765,27 @@ struct App {
                 feed->finish();
             else
                 parser.finish();
+            if (native_chapter && !document.truncated) {
+                auto metadata = browser::gmanhua::metadata(url,script_capture.take());
+                if (metadata) {
+                    set_status("正在读取漫画图片列表…");
+                    auto loaded = co_await load_gmanhua(*metadata);
+                    if (loaded && *loaded) {
+                        const auto offset = std::uint64_t(metadata->chapter.page-1) * metadata->chapter.per_page;
+                        chapter_start = int(std::min<std::uint64_t>(offset,*loaded-1));
+                        comic_resume = true;
+                    } else {
+                        chapter_status = "漫画列表未返回 · 可刷新重试";
+                        document.append("未能取得漫画图片列表，可稍后重试。",browser::Style::muted);
+                        document.newline();
+                        if (!loaded) log("BROWSER COMIC LIST ERROR code="+std::to_string(int(loaded.error())));
+                    }
+                } else {
+                    chapter_status = "漫画图片列表暂不兼容";
+                    document.append("本页漫画数据暂不兼容。",browser::Style::muted);
+                    document.newline();
+                }
+            }
             layout_dirty = true;
             scroll = restore_scroll;
             rebuild();
@@ -749,6 +801,7 @@ struct App {
                                                            : "") +
                      std::to_string(received / 1024) + " KiB · " +
                      std::to_string(millis() - begin) + " ms");
+            if (!chapter_status.empty()) set_status(std::move(chapter_status));
             if (document.text.empty())
                 set_status("页面无可读文字 · 可能依赖 JavaScript");
             char timing[320];
@@ -777,7 +830,7 @@ struct App {
             profile.pending = true;
 #endif
             dirty = true;
-            if (capture_script && !document.truncated && script_capture.has_script()) {
+            if (scripts_allowed && capture_script && !document.truncated && script_capture.has_script()) {
                 if (script_capture.limited()) set_status("脚本页面过大 · 显示静态内容");
                 else prepare_script(script_capture.take());
             }
@@ -861,7 +914,7 @@ struct App {
     void apply_script_markup(std::string_view markup) {
         // Page download is complete; these foreground tasks only own images.
         // Script requests live in their own scope and cannot retain image refs.
-        context->foreground_tasks().cancel();
+        cancel_foreground();
         if (animation_slot>=0) { images[animation_slot].asset.reset(); images[animation_slot].index=-1; }
         animation_slot=-1; loading_image=-1;
         // Move the existing, bounded table rather than duplicating URL strings.
@@ -1138,6 +1191,92 @@ struct App {
         std::snprintf(message, sizeof(message), "BROWSER IMAGE VIEW index=%d", index);
         log(message);
     }
+    pxa::Task<std::string> gmanhua_batch(const browser::gmanhua::Metadata& metadata,
+                                       unsigned page_number, unsigned count) {
+        auto endpoint = browser::resolve(url,"chapterimagefun.ashx");
+        if (!endpoint || !browser::gmanhua::site(*endpoint))
+            co_return std::unexpected(pxa::Error::invalid_argument);
+        *endpoint += "?d="+std::to_string(millis());
+        const auto body = "cid="+std::to_string(metadata.chapter.cid)+"&page="+
+            std::to_string(page_number)+"&key="+metadata.key+"&showcount="+std::to_string(count);
+        const auto cookie = cookies.request(*endpoint,millis()/1000);
+        const auto referrer = browser::request_referrer(url,*endpoint,document.referrer);
+        std::array<pxa::NetHeaderView,8> headers{{
+            {"Accept","text/plain, application/javascript;q=0.9"},
+            {"Accept-Encoding","gzip, deflate"},
+            {"User-Agent",browser::site_user_agent(*endpoint,browser::user_agent(mobile_ua))},
+            {"Content-Type","application/x-www-form-urlencoded"},
+            {"X-Requested-With","XMLHttpRequest"}, {"Save-Data","on"}}};
+        std::size_t used = 6;
+        if (!cookie.empty()) headers[used++] = {"Cookie",cookie};
+        if (!referrer.empty()) headers[used++] = {"Referer",referrer};
+        static constexpr std::array<std::string_view,2> wanted{"content-encoding","set-cookie"};
+        auto exchange = co_await context->http().open({.url=*endpoint,.method=pxa::HttpMethod::post,
+            .headers=std::span{headers}.first(used),.wanted_headers=wanted,
+            .body=std::as_bytes(std::span{body.data(),body.size()}),
+            .options={.buffer_bytes=4096,.header_bytes=4096,
+                      .max_body_bytes=browser::gmanhua::packet_limit,.timeout_ms=15000}},permission);
+        if (!exchange) co_return std::unexpected(exchange.error());
+        auto response = co_await std::move(*exchange).response();
+        if (!response) co_return std::unexpected(response.error());
+        if (response->status_code != 200)
+            co_return std::unexpected(response->status_code == 403 ? pxa::Error::denied : pxa::Error::protocol_error);
+        for (auto value : response->headers.values("set-cookie"))
+            cookies.receive(*endpoint,value,millis()/1000,std::time(nullptr));
+        const auto encoding = browser::content_encoding(response->headers.first("content-encoding").value_or(""));
+        browser::HttpBodyReader reader(response->body,encoding,browser::gmanhua::packet_limit,context->clock());
+        std::array<std::byte,1024> chunk{}; std::string packet;
+        for (;;) {
+            auto read = co_await reader.read_some(chunk);
+            if (!read) co_return std::unexpected(read.error());
+            if (!*read) break;
+            packet.append(reinterpret_cast<const char*>(chunk.data()),*read);
+        }
+#ifdef PXA_BROWSER_TRACE
+        log("BROWSER COMIC BATCH bytes="+std::to_string(packet.size())+" first="+
+            std::to_string(page_number)+" count="+std::to_string(count)+
+            " cookie_bytes="+std::to_string(cookie.size())+" key_bytes="+
+            std::to_string(metadata.key.size())+" referrer_bytes="+std::to_string(referrer.size()));
+#endif
+        co_return packet;
+    }
+    pxa::Task<std::size_t> load_gmanhua(const browser::gmanhua::Metadata& metadata) {
+        // Decorative arrows must not appear as pages of the chapter.
+        for (auto& span : document.spans) span.image = -1;
+        document.images.clear(); document.comic_folder.clear();
+        const auto maximum = std::min<std::uint32_t>(metadata.images,browser::max_images);
+        document.images_limited |= maximum < metadata.images;
+        for (unsigned first=1;first<=maximum;) {
+            const auto count = std::min(browser::gmanhua::batch_size,maximum-first+1);
+            auto packet = co_await gmanhua_batch(metadata,first,count);
+            // A bounded retry handles an empty public image-list response.
+            if (packet && packet->empty()) packet = co_await gmanhua_batch(metadata,first,count);
+            auto urls = packet ? browser::gmanhua::images(*packet,metadata.chapter.cid) :
+                std::optional<std::vector<std::string>>{};
+#ifdef PXA_BROWSER_TRACE
+            log("BROWSER COMIC BATCH parsed="+std::to_string(bool(urls))+" images="+
+                std::to_string(urls ? urls->size() : 0));
+#endif
+            if (!urls || urls->empty()) {
+                if (document.images.empty())
+                    co_return std::unexpected(packet ? pxa::Error::protocol_error : packet.error());
+                document.images_limited = true; break;
+            }
+            // The server can include the rest of the chapter as preloads.
+            const auto available = std::min<std::size_t>(maximum-first+1,urls->size());
+            for (std::size_t i=0;i<available;++i) {
+                auto source = browser::image_response::request_url(url,std::move((*urls)[i]));
+                const int index = int(document.images.size());
+                document.images.push_back({std::move(source),240,336});
+                document.newline();
+                document.append("图片",browser::Style::muted,-1,-1,index);
+                document.newline();
+            }
+            first += unsigned(available);
+        }
+        log("BROWSER COMIC LIST pages="+std::to_string(document.images.size()));
+        co_return document.images.size();
+    }
     pxa::Task<void> load_image(int index, unsigned slot) {
         auto result = co_await fetch_image(index, slot);
         loading_image = -1;
@@ -1155,9 +1294,7 @@ struct App {
     pxa::Task<void> fetch_image(int index, unsigned slot) {
         if (document.images[index].source.starts_with(browser::inline_image::png_prefix))
             co_return co_await fetch_inline_image(index, slot);
-        auto target = document.images[index].source;
-        if (url.starts_with("https:") && target.starts_with("http:"))
-            co_return std::unexpected(pxa::Error::denied);
+        auto target = browser::image_response::request_url(url, document.images[index].source);
         const auto begin = millis();
         static constexpr std::array<std::string_view, 4> wanted{"content-type", "content-encoding",
                                                                 "location", "set-cookie"};
@@ -1179,7 +1316,7 @@ struct App {
                                                            .wanted_headers = wanted,
                                                            .options = {.buffer_bytes = 4096,
                                                                        .header_bytes = 1024,
-                                                                       .max_body_bytes = 524288,
+                                                                       .max_body_bytes = browser::image_response::encoded_limit,
                                                                        .timeout_ms = 15000}},
                                                           permission);
             if (!exchange)
@@ -1204,23 +1341,67 @@ struct App {
             }
             if (code != 200)
                 co_return std::unexpected(pxa::Error::protocol_error);
-            auto encoding = response->headers.first("content-encoding");
-            if (encoding && !pxa::http_header_equal(browser::trim(*encoding), "identity"))
+            const auto encoding = browser::content_encoding(
+                response->headers.first("content-encoding").value_or(""));
+            if (encoding == browser::ContentEncoding::unsupported)
                 co_return std::unexpected(pxa::Error::unsupported);
             auto type = response->headers.first("content-type");
-            auto mime =
-                type ? browser::lowercase(browser::trim(type->substr(0, type->find(';')))) : "";
-            if (!mime.empty() && mime != "image/png" && mime != "image/jpeg" && mime != "image/gif" &&
-                mime != "application/octet-stream")
-                co_return std::unexpected(pxa::Error::unsupported);
+            auto mime = browser::image_response::mime(type.value_or(""));
+            // A CDN's MIME label is advisory for an explicitly requested
+            // image. The bounded Host decoder validates the actual bytes;
+            // HTML challenge/error bodies cannot become executable content.
             if (!show_gif && mime == "image/gif") {
                 image_states[index] = ImageState::disabled;
                 images[slot].index = -1; set_status("GIF 加载已关闭");
                 co_return pxa::Result<void>{};
             }
-            co_return co_await read_image(response->body, index, slot, begin);
+            if (encoding == browser::ContentEncoding::identity)
+                co_return co_await read_image(response->body, index, slot, begin);
+            co_return co_await read_compressed_image(response->body, encoding, index, slot, begin);
         }
         co_return std::unexpected(pxa::Error::protocol_error);
+    }
+    pxa::Task<void> read_compressed_image(pxa::HttpExchange& body, browser::ContentEncoding encoding,
+                                        int index, unsigned slot, std::uint64_t begin) {
+        if (encoding == browser::ContentEncoding::unsupported)
+            co_return std::unexpected(pxa::Error::unsupported);
+        auto cleaned = co_await clean_compressed_temp();
+        if (!cleaned) co_return std::unexpected(cleaned.error());
+        compressed_temp_pending = true;
+        auto file = co_await context->fs().open("compressed-image.tmp", pxa::OpenMode::read |
+            pxa::OpenMode::write | pxa::OpenMode::create | pxa::OpenMode::truncate);
+        if (!file) co_return std::unexpected(file.error());
+        browser::HttpBodyReader reader(body, encoding, browser::image_response::compressed_limit, context->clock());
+        std::array<std::byte,1024> chunk{};
+        pxa::Result<void> result;
+        for (;;) {
+            auto count = co_await reader.read_some(chunk);
+            if (!count) { result = std::unexpected(count.error()); break; }
+            if (reader.wire_bytes() > browser::image_response::compressed_limit) {
+                result = std::unexpected(pxa::Error::limit_exceeded); break;
+            }
+            if (!*count) break;
+            auto remaining = std::span<const std::byte>(chunk).first(*count);
+            while (!remaining.empty()) {
+                auto written = file->write(remaining);
+                if (!written || !*written) {
+                    result = std::unexpected(written ? pxa::Error::io_error : written.error());
+                    break;
+                }
+                remaining = remaining.subspan(*written);
+            }
+            if (!result) break;
+        }
+        reader.release(); // Free inflate scratch before allocating decoder state.
+        if (result) {
+            auto position = co_await file->seek(0);
+            if (!position) result = std::unexpected(position.error());
+        }
+        if (result) result = co_await read_image(*file, index, slot, begin);
+        if (*file) (void)file->close();
+        auto removed = co_await clean_compressed_temp();
+        if (result && !removed) result = std::unexpected(removed.error());
+        co_return result;
     }
     void set_image_dimensions(browser::Image& image, const pxa::AssetDescriptor& info) const {
         image.intrinsic_size(info.source_width, info.source_height);
@@ -1277,7 +1458,7 @@ struct App {
             {.max_width = std::uint16_t(std::clamp(decode_width, 1, 512)),
              .max_height = std::uint16_t(detailed ? 2048 : 1024),
              .max_pixels = detailed ? browser::comic_detail_pixels : 32768u,
-             .max_encoded_bytes = 524288,
+             .max_encoded_bytes = browser::image_response::encoded_limit,
              .formats = show_gif ? pxa::ImageFormats::any :
                                   pxa::ImageFormats::png | pxa::ImageFormats::jpeg},
             {.max_pixels = 8192, .max_encoded_bytes = 65536});
@@ -1454,6 +1635,7 @@ struct App {
     pxa::Task<void> load_bookmarks() {
         // A cancelled/crashed inline decode can leave only this bounded file.
         (void)co_await context->fs().remove("inline-image.tmp");
+        (void)co_await context->fs().remove("compressed-image.tmp");
         auto file = co_await context->fs().open("bookmarks.txt", pxa::OpenMode::read);
         bookmarks_ready = true;
         if (!file) {
@@ -1750,7 +1932,7 @@ struct App {
         if (comic_resume && !busy && document_ready &&
             (!document.images.empty() || !js || js->reported)) {
             comic_resume = false;
-            open_comic();
+            open_comic(std::exchange(chapter_start,-1));
         }
         if (layout_dirty) {
             rebuild();

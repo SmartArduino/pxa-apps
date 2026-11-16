@@ -17,7 +17,7 @@ inline constexpr std::array sites{
     Site{"万本 TXT 小说网", "https://10000txt.com/"},
     Site{"努努书坊", "https://www.nunubook.com/"},
     Site{"手机新浪网", "https://3g.sina.com.cn/"},
-    Site{"手机漫画网（目录）", "https://www.gmanhua.com/"},
+    Site{"手机漫画网 · 漫画阅读", "https://www.gmanhua.com/"},
     Site{"hao123", "https://wap.hao123.com/"},
     Site{"2345", "https://www.2345.com/wap.htm"},
     Site{"微信读书（实验）", "https://ink.qq.com/"}

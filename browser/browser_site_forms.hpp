@@ -14,11 +14,6 @@ inline void site_forms(Document &doc, std::string_view url) {
         doc.newline();
         return;
     }
-    if (host == "www.gmanhua.com" || host == "gmanhua.com") {
-        doc.append("此站章节图片依赖 JavaScript，暂不能显示；可浏览目录和简介。", Style::muted);
-        doc.newline();
-        return;
-    }
     if (host != "www.bookshuku.org" && host != "wap.bookshuku.org") return;
     if (url.find("/User/Public/") != url.npos || url.find("/user/public/") != url.npos) return;
     const auto origin = std::string(url.substr(0, end));

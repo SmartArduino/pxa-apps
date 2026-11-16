@@ -14,5 +14,5 @@
     "资讯订阅",
     "书签"
   ],
-  "changelog": "优化 JS 数组和缓冲区扩容，避免强制复制并降低扩容所需的临时配额。新增 8 MiB、16 MiB 脚本内存选项，组件线性内存按需增长、上限 32 MiB；自动档保持 1 MiB，保留内存压力降级。上限不预分配，实际可用量取决于设备。\n\nUses libc realloc for JS buffer/array growth. Adds 8/16 MiB JS heap options with unpinned, demand-grown 32 MiB component ceilings. Auto remains 1 MiB; resource-pressure fallback is preserved. Ceilings are not reservations or available-memory guarantees."
+  "changelog": "修复 CDN 图片 MIME 别名、gzip/deflate 响应和 HTTPS 图片链接兼容；公开的 Gmanhua 章节可读取图片列表并直接进入漫画阅读。保持图片编码输入与像素缓存预算；压缩图片解压前后仍各限 512 KiB，并在结束或取消后清理临时文件。WebP 等编码支持范围不变。\n\nFixes CDN image MIME labels, gzip/deflate responses and secure image links. Public Gmanhua chapters open through a bounded native image-list reader. Encoded-input and pixel-cache budgets remain bounded by the existing Host. HTTP-compressed images retain 512 KiB wire/decoded limits and temporary-file cleanup. Codec support, including the WebP limitation, is unchanged."
 }
