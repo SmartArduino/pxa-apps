@@ -1,0 +1,2094 @@
+{
+  "doit-gamekit-2": [
+    {
+      "name": "s00-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s01-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s02-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "瓜子漫画"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s03-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "我爱漫画"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s04-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s05-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "瓜子漫画"
+      }
+    },
+    {
+      "name": "s06-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s07-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "从姑获鸟开始"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s08-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s09-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "从姑获鸟开始"
+      }
+    },
+    {
+      "name": "s10-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "正序"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s11-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s12-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "正序"
+      }
+    },
+    {
+      "name": "s13-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "倒序"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s14-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "倒序"
+      }
+    },
+    {
+      "name": "s15-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "正序"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s16-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "收藏"
+      }
+    },
+    {
+      "name": "s17-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "已收藏"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s18-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "返回"
+      }
+    },
+    {
+      "name": "s19-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "1 部漫画 · 已保存"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s20-relaunch",
+      "action": "relaunch"
+    },
+    {
+      "name": "s21-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "从姑获鸟开始"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s22-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s23-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "我爱漫画"
+      }
+    },
+    {
+      "name": "s24-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s25-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "我要终结这场附身"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s26-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s27-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "我要终结这场附身"
+      }
+    },
+    {
+      "name": "s28-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "第01话"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s29-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s30-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "第01话"
+      }
+    },
+    {
+      "name": "s31-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s32-wait",
+      "action": "wait",
+      "ms": 500
+    },
+    {
+      "name": "s33-tap",
+      "action": "tap",
+      "x": 160,
+      "y": 120
+    },
+    {
+      "name": "s34-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "第 1 / 168 页"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s35-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s36-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "第 1 / 168 页"
+      }
+    },
+    {
+      "name": "s37-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "+"
+      }
+    },
+    {
+      "name": "s38-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "跳转"
+      }
+    },
+    {
+      "name": "s39-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "第 2 / 168 页"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s40-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s41-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "≡"
+      }
+    },
+    {
+      "name": "s42-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "已收藏"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s43-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "已收藏"
+      }
+    },
+    {
+      "name": "s44-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "收藏"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s45-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "返回"
+      }
+    },
+    {
+      "name": "s46-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "1 部漫画 · 已保存"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s47-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s48-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": ">"
+      }
+    },
+    {
+      "name": "s49-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "MangaPill"
+      }
+    },
+    {
+      "name": "s50-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s51-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "Berserk"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s52-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s53-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s54-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": ">"
+      }
+    },
+    {
+      "name": "s55-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "MangaTown"
+      }
+    },
+    {
+      "name": "s56-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s57-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "Shokugeki no Soma"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s58-screenshot",
+      "action": "screenshot"
+    }
+  ],
+  "pai-touch": [
+    {
+      "name": "s00-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s01-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s02-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "瓜子漫画"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s03-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "我爱漫画"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s04-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s05-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "瓜子漫画"
+      }
+    },
+    {
+      "name": "s06-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s07-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "从姑获鸟开始"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s08-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s09-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "从姑获鸟开始"
+      }
+    },
+    {
+      "name": "s10-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "正序"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s11-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s12-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "正序"
+      }
+    },
+    {
+      "name": "s13-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "倒序"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s14-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "倒序"
+      }
+    },
+    {
+      "name": "s15-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "正序"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s16-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "收藏"
+      }
+    },
+    {
+      "name": "s17-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "已收藏"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s18-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "返回"
+      }
+    },
+    {
+      "name": "s19-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "1 部漫画 · 已保存"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s20-relaunch",
+      "action": "relaunch"
+    },
+    {
+      "name": "s21-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "从姑获鸟开始"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s22-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s23-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "我爱漫画"
+      }
+    },
+    {
+      "name": "s24-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s25-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "我要终结这场附身"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s26-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s27-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "我要终结这场附身"
+      }
+    },
+    {
+      "name": "s28-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "第01话"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s29-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s30-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "第01话"
+      }
+    },
+    {
+      "name": "s31-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s32-wait",
+      "action": "wait",
+      "ms": 500
+    },
+    {
+      "name": "s33-tap",
+      "action": "tap",
+      "x": 148,
+      "y": 120
+    },
+    {
+      "name": "s34-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "第 1 / 168 页"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s35-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s36-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "第 1 / 168 页"
+      }
+    },
+    {
+      "name": "s37-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "+"
+      }
+    },
+    {
+      "name": "s38-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "跳转"
+      }
+    },
+    {
+      "name": "s39-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "第 2 / 168 页"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s40-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s41-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "≡"
+      }
+    },
+    {
+      "name": "s42-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "已收藏"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s43-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "已收藏"
+      }
+    },
+    {
+      "name": "s44-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "收藏"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s45-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "返回"
+      }
+    },
+    {
+      "name": "s46-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "1 部漫画 · 已保存"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s47-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s48-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": ">"
+      }
+    },
+    {
+      "name": "s49-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "MangaPill"
+      }
+    },
+    {
+      "name": "s50-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s51-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "Berserk"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s52-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s53-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s54-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": ">"
+      }
+    },
+    {
+      "name": "s55-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "MangaTown"
+      }
+    },
+    {
+      "name": "s56-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s57-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "Shokugeki no Soma"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s58-screenshot",
+      "action": "screenshot"
+    }
+  ],
+  "generic": [
+    {
+      "name": "s00-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s01-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s02-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "瓜子漫画"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s03-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "我爱漫画"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s04-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s05-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "瓜子漫画"
+      }
+    },
+    {
+      "name": "s06-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s07-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "从姑获鸟开始"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s08-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s09-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "从姑获鸟开始"
+      }
+    },
+    {
+      "name": "s10-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "正序"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s11-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s12-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "正序"
+      }
+    },
+    {
+      "name": "s13-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "倒序"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s14-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "倒序"
+      }
+    },
+    {
+      "name": "s15-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "正序"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s16-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "收藏"
+      }
+    },
+    {
+      "name": "s17-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "已收藏"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s18-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "返回"
+      }
+    },
+    {
+      "name": "s19-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "1 部漫画 · 已保存"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s20-relaunch",
+      "action": "relaunch"
+    },
+    {
+      "name": "s21-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "从姑获鸟开始"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s22-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s23-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "我爱漫画"
+      }
+    },
+    {
+      "name": "s24-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s25-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "我要终结这场附身"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s26-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s27-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "我要终结这场附身"
+      }
+    },
+    {
+      "name": "s28-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "第01话"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s29-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s30-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "第01话"
+      }
+    },
+    {
+      "name": "s31-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s32-wait",
+      "action": "wait",
+      "ms": 500
+    },
+    {
+      "name": "s33-tap",
+      "action": "tap",
+      "x": 195,
+      "y": 422
+    },
+    {
+      "name": "s34-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "第 1 / 168 页"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s35-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s36-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "第 1 / 168 页"
+      }
+    },
+    {
+      "name": "s37-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "+"
+      }
+    },
+    {
+      "name": "s38-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "跳转"
+      }
+    },
+    {
+      "name": "s39-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "第 2 / 168 页"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s40-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s41-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "≡"
+      }
+    },
+    {
+      "name": "s42-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "已收藏"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s43-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "已收藏"
+      }
+    },
+    {
+      "name": "s44-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "收藏"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s45-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "返回"
+      }
+    },
+    {
+      "name": "s46-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "1 部漫画 · 已保存"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s47-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s48-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "MangaPill"
+      }
+    },
+    {
+      "name": "s49-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s50-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "Berserk"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s51-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s52-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s53-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "MangaTown"
+      }
+    },
+    {
+      "name": "s54-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s55-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "Shokugeki no Soma"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s56-screenshot",
+      "action": "screenshot"
+    }
+  ],
+  "espp4-a": [
+    {
+      "name": "s00-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s01-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s02-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "瓜子漫画"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s03-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "我爱漫画"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s04-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s05-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "瓜子漫画"
+      }
+    },
+    {
+      "name": "s06-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s07-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "从姑获鸟开始"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s08-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s09-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "从姑获鸟开始"
+      }
+    },
+    {
+      "name": "s10-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "正序"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s11-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s12-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "正序"
+      }
+    },
+    {
+      "name": "s13-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "倒序"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s14-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "倒序"
+      }
+    },
+    {
+      "name": "s15-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "正序"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s16-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "收藏"
+      }
+    },
+    {
+      "name": "s17-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "已收藏"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s18-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "返回"
+      }
+    },
+    {
+      "name": "s19-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "1 部漫画 · 已保存"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s20-relaunch",
+      "action": "relaunch"
+    },
+    {
+      "name": "s21-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "从姑获鸟开始"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s22-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s23-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "我爱漫画"
+      }
+    },
+    {
+      "name": "s24-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s25-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "我要终结这场附身"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s26-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s27-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "我要终结这场附身"
+      }
+    },
+    {
+      "name": "s28-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "第01话"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s29-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s30-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "第01话"
+      }
+    },
+    {
+      "name": "s31-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s32-wait",
+      "action": "wait",
+      "ms": 500
+    },
+    {
+      "name": "s33-tap",
+      "action": "tap",
+      "x": 240,
+      "y": 427
+    },
+    {
+      "name": "s34-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "第 1 / 168 页"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s35-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s36-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "第 1 / 168 页"
+      }
+    },
+    {
+      "name": "s37-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "+"
+      }
+    },
+    {
+      "name": "s38-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "跳转"
+      }
+    },
+    {
+      "name": "s39-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "第 2 / 168 页"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s40-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s41-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "≡"
+      }
+    },
+    {
+      "name": "s42-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "已收藏"
+      },
+      "expected": {
+        "count": 1,
+        "enabled": true
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s43-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "已收藏"
+      }
+    },
+    {
+      "name": "s44-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "收藏"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s45-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "返回"
+      }
+    },
+    {
+      "name": "s46-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "1 部漫画 · 已保存"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s47-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s48-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "MangaPill"
+      }
+    },
+    {
+      "name": "s49-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s50-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "Berserk"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s51-screenshot",
+      "action": "screenshot"
+    },
+    {
+      "name": "s52-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s53-tap-node",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "MangaTown"
+      }
+    },
+    {
+      "name": "s54-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消加载"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s55-wait-for",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "Shokugeki no Soma"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 60000
+    },
+    {
+      "name": "s56-screenshot",
+      "action": "screenshot"
+    }
+  ]
+}

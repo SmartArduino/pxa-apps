@@ -1,6 +1,8 @@
 #include "sources.hpp"
 #include "jpeg_compat.hpp"
 #include "progressive_jpeg.hpp"
+#include "webp_compat.hpp"
+#include <cstring>
 #include <pxa/app.hpp>
 #include <pxa/events.hpp>
 #include <pxa/http.hpp>
@@ -15,7 +17,7 @@ struct Reader {
     enum Screen {shelf_screen,discover,source_screen,contents,reading,help,page_jump};
     enum Act {shelf_tab,discover_tab,source_tab,search,previous_list,next_list,open_book,open_chapter,
         go_back,language_change,resume,collect,previous_page,next_page,zoom,retry,cancel,
-        show_help,choose_source,clear_search,read_book,jump_page,jump_submit,jump_step,toggle_order};
+        show_help,choose_source,source_previous,source_next,clear_search,read_book,jump_page,jump_submit,jump_step,toggle_order};
     struct Callback {Reader* app=nullptr;Act act{};int arg=0;void operator()()const{app->action(act,arg);}};
     struct Controls {
         static constexpr Capacity capacity{128,0,32};
@@ -36,7 +38,7 @@ struct Reader {
     std::vector<std::string> pages,originals;
     manga::Book book;
     std::string custom="copymanga",query,status="正在读取书架…",failure;
-    unsigned language=0,offset=0,total=0,list_start=0,page=0,zoom_mode=1;
+    unsigned source_start=0,language=0,offset=0,total=0,list_start=0,page=0,zoom_mode=1;
     bool input_empty=true;
     bool busy=false,dirty=true,ui_dirty=true,ready=false,save_pending=false,save_busy=false,storage_ok=true,bars=false,dragging=false,exit_pending=false;
     std::uint64_t now_us=0,bar_deadline=0;
@@ -71,16 +73,19 @@ struct Reader {
     void stop(){ctx->foreground_tasks().cancel();busy=false;failure.clear();changed();}
     void begin(Task<void> task){stop();busy=true;message("正在加载…");start(std::move(task));}
     float density()const{return std::max(.25f,float(metrics.density_q16)/65536.f);}
-    CanvasRegion area()const {int l=metrics.safe.left,r=metrics.safe.right,t=metrics.safe.top,b=metrics.safe.bottom;
+    float ui_factor()const{return metrics.height>=480?std::max(1.f,density()/.78125f):1.f;}
+    CanvasRegion physical_area()const {int l=metrics.safe.left,r=metrics.safe.right,t=metrics.safe.top,b=metrics.safe.bottom;
         if(metrics.system_bars_known){l=std::max(l,int(metrics.system_bars.left));r=std::max(r,int(metrics.system_bars.right));t=std::max(t,int(metrics.system_bars.top));b=std::max(b,int(metrics.system_bars.bottom));}
         if(metrics.shape==2){l=std::max(l,int(metrics.width*.15));r=std::max(r,int(metrics.width*.15));t=std::max(t,int(metrics.height*.15));b=std::max(b,int(metrics.height*.15));}
         return {l+4,t+4,std::max(1,int(metrics.width)-l-r-8),std::max(1,int(metrics.height)-t-b-8)};}
+    CanvasRegion area()const {auto r=physical_area();float f=ui_factor();return {int(r.x/f),int(r.y/f),int(r.width/f),int(r.height/f)};}
     CanvasRegion viewport()const {return {0,0,int(metrics.width),int(metrics.height)};}
     CanvasRegion logical(CanvasRegion r)const {float d=density();int left=int(std::floor(r.x/d)),top=int(std::floor(r.y/d));return {left,top,std::max(1,int(std::ceil((r.x+r.width)/d))-left),std::max(1,int(std::ceil((r.y+r.height)/d))-top)};}
     unsigned list_y()const{return screen==shelf_screen?64:screen==contents?100:104;}
     unsigned row_height()const{return screen==contents?36:40;}
     unsigned row_count()const {auto a=area();return std::clamp((a.height-int(list_y())-30)/int(row_height()),1,12);}
-    unsigned batch_size()const {return screen==discover?(custom=="mangakatana"?20:12):20;}
+    unsigned source_rows()const{return std::clamp((area().height-76)/52,1,8);}
+    unsigned batch_size()const {auto source=manga::source_info(custom);return screen==discover&&source?source->batch:20;}
     bool remote_list()const{return screen==discover||(screen==contents&&(book.source.empty()||book.source=="copymanga"));}
     std::string active_source()const{return std::string(manga::source_name(screen==contents?book.source:custom));}
     void fit(){pan_x=pan_y=0;if(!image)return;auto v=viewport();auto d=image->descriptor();
@@ -107,8 +112,10 @@ struct Reader {
         if(!permission){auto p=co_await ctx->permissions().acquire("net.client","web");if(!p)co_return std::unexpected(p.error());permission=std::move(*p);}
         const bool copy_request=url.starts_with("https://api.copy4000.com/");
         const bool copy_browser=copy_request||url.starts_with("https://www.mangacopy.com/")||referrer=="https://www.mangacopy.com/";
+        const bool chinese_browser=url.starts_with("https://www.guazimanhua.com/")||url.starts_with("https://www.woimh.com/")||referrer=="https://www.guazimanhua.com/"||referrer=="https://www.woimh.com/";
+        const bool site_browser=url.starts_with("https://mangapill.com/")||url.starts_with("https://www.mangatown.com/")||referrer=="https://mangapill.com/"||referrer=="https://www.mangatown.com/";
         const std::array<NetHeaderView,5> fields{{{"Accept-Encoding","identity"},
-            {"User-Agent",copy_browser?"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130.0.0.0 Safari/537.36 PXA-Manga/0.4":"PXA-Manga/0.4"},
+            {"User-Agent",(copy_browser||site_browser||chinese_browser)?"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130.0.0.0 Safari/537.36 PXA-Manga/0.5":"PXA-Manga/0.5"},
             {"Referer",referrer.empty()?"https://www.mangacopy.com/":std::string_view(referrer)},
             {"platform","1"},{"version","2026.10.16"}}};
         const auto headers=std::span{fields}.first(copy_request?5:referrer.empty()?2:3);
@@ -116,7 +123,7 @@ struct Reader {
         for(int n=0;n<4;++n){auto ex=co_await ctx->http().open(HttpRequest{.url=url,.headers=headers,.wanted_headers=wanted,.options={.buffer_bytes=4096,.header_bytes=1024,.max_body_bytes=limit,.timeout_ms=limit>524288?60000u:25000u}},permission);
             if(!ex)co_return std::unexpected(ex.error());auto r=co_await std::move(*ex).response();if(!r)co_return std::unexpected(r.error());
             if(r->status_code>=300&&r->status_code<400){auto loc=r->headers.first("location");if(!loc)co_return std::unexpected(Error::protocol_error);auto next=manga::resolve(url,*loc);if(!manga::web(next)||(url.starts_with("https:")&&!next.starts_with("https:")))co_return std::unexpected(Error::denied);url=std::move(next);continue;}
-            if(r->status_code!=200)co_return std::unexpected(r->status_code==429?Error::busy:Error::unavailable);co_return std::move(*r);
+            if(r->status_code!=200)co_return std::unexpected(r->status_code==429?Error::busy:r->status_code==403?Error::denied:Error::unavailable);co_return std::move(*r);
         }co_return std::unexpected(Error::protocol_error);}
     static bool transient(Error e){return e==Error::io_error||e==Error::timed_out||e==Error::unavailable;}
     Task<std::string> json(std::string url,bool validate=true,unsigned maximum=98304,unsigned* count=nullptr){
@@ -132,11 +139,27 @@ struct Reader {
     }
     Task<void> load_catalog(){
         using enum manga::SourceKind;auto kind=manga::source_kind(custom);
+        if(manga::chinese_source(kind)){
+            auto number=std::to_string(offset/batch_size()+1);std::string url;
+            if(kind==guazi)url=std::string(manga::guazi_base)+"/category.php?sort=hits&page="+number+(query.empty()?"":"&keyword="+manga::encoded(query));
+            else url=std::string(manga::woi_base)+(query.empty()?"/booklist?page="+number:"/search?keyword="+manga::encoded(query));
+            auto text=co_await json(url,false,524288);if(!text)co_return std::unexpected(text.error());bool more=false;
+            if(!manga::chinese_books(*text,kind,results,more))co_return std::unexpected(Error::protocol_error);
+            total=offset+batch_size()+(more?1:0);list_start=0;busy=false;message(results.empty()?"没有找到漫画":"中文漫画");co_return Result<void>{};
+        }
+        if(kind==pill||kind==town){
+            auto number=std::to_string(offset/batch_size()+1);std::string url;
+            if(kind==pill)url=std::string(manga::pill_base)+"/search?page="+number+(query.empty()?"&type=manga":"&q="+manga::encoded(query));
+            else url=std::string(manga::town_base)+(query.empty()?"/directory/0-0-0-0-0-0/"+number+".htm":"/search?page="+number+"&name="+manga::encoded(query)+"&name_method=cw");
+            auto text=co_await json(url,false,524288);if(!text)co_return std::unexpected(text.error());bool more=false;
+            if(!manga::site_books(*text,kind,results,more))co_return std::unexpected(Error::protocol_error);
+            total=offset+batch_size()+(more?1:0);list_start=0;busy=false;message(results.empty()?"没有找到漫画":"英文漫画");co_return Result<void>{};
+        }
         if(kind==katana){
             auto number=std::to_string(offset/20+1);auto url=std::string(manga::katana_base)+(query.empty()?"/manga/page/"+number+"?order=popular":"/page/"+number+"?search="+manga::encoded(query)+"&search_by=book_name");
             auto text=co_await json(url,false,262144);if(!text)co_return std::unexpected(text.error());bool more=false;
             if(!manga::katana_books(*text,results,more))co_return std::unexpected(Error::protocol_error);
-            total=offset+results.size()+(more?1:0);list_start=0;busy=false;message(results.empty()?"没有找到漫画":"英文漫画");co_return Result<void>{};
+            total=offset+batch_size()+(more?1:0);list_start=0;busy=false;message(results.empty()?"没有找到漫画":"英文漫画");co_return Result<void>{};
         }
         std::string url;
         if(kind==mangadex)url=api("/manga?limit=12&offset="+std::to_string(offset)+"&contentRating[]=safe&availableTranslatedLanguage[]="+lang()+"&order[followedCount]=desc"+(query.empty()?"":"&title="+manga::encoded(query)));
@@ -150,6 +173,12 @@ struct Reader {
     }
     Task<void> load_chapters(){
         using enum manga::SourceKind;auto kind=manga::source_kind(book.source);std::string url;
+        if(manga::chinese_source(kind)){auto text=co_await json(book.id,false,1048576);if(!text)co_return std::unexpected(text.error());
+            if(!manga::chinese_chapters(*text,book,chapters))co_return std::unexpected(Error::protocol_error);
+            if(descending)std::reverse(chapters.begin(),chapters.end());total=chapters.size();list_start=0;busy=false;message(std::to_string(total)+" 个章节");co_return Result<void>{};}
+        if(kind==pill||kind==town){auto text=co_await json(book.id,false,1048576);if(!text)co_return std::unexpected(text.error());
+            if(!manga::site_chapters(*text,book,chapters))co_return std::unexpected(Error::protocol_error);
+            if(descending)std::reverse(chapters.begin(),chapters.end());total=chapters.size();list_start=0;busy=false;message(std::to_string(total)+" 个章节");co_return Result<void>{};}
         if(kind==katana){auto text=co_await json(book.id,false,524288);if(!text)co_return std::unexpected(text.error());
             if(!manga::katana_chapters(*text,book.id,chapters))co_return std::unexpected(Error::protocol_error);
             if(descending)std::reverse(chapters.begin(),chapters.end());total=chapters.size();list_start=0;busy=false;message(std::to_string(total)+" 个章节");co_return Result<void>{};}
@@ -176,10 +205,10 @@ struct Reader {
     Task<void> load_pages(){
         using enum manga::SourceKind;auto kind=manga::source_kind(book.source);
         auto url=kind==mangadex?api("/at-home/server/"+book.chapter):book.chapter;
-        auto text=co_await json(url,kind==mangadex,kind==copy?196608:kind==katana?262144:98304);if(!text)co_return std::unexpected(text.error());
-        bool ok=kind==copy?manga::copy_pages(*text,pages):kind==katana?manga::katana_pages(*text,pages):manga::pages(manga::Json(*text),pages,true,url);
+        auto text=co_await json(url,kind==mangadex,kind==copy?196608:(kind==katana||kind==pill||kind==town||manga::chinese_source(kind))?262144:98304);if(!text)co_return std::unexpected(text.error());
+        bool ok=kind==copy?manga::copy_pages(*text,pages):kind==katana?manga::katana_pages(*text,pages):kind==pill?manga::pill_pages(*text,pages):kind==town?manga::town_pages(*text,book.chapter,pages):manga::chinese_source(kind)?manga::chinese_pages(*text,kind,pages):manga::pages(manga::Json(*text),pages,true,url);
         if(!ok)co_return std::unexpected(Error::protocol_error);
-        originals.clear();if(kind==mangadex)manga::pages(manga::Json(*text),originals,true,url,true);
+        originals.clear();if(kind==town){originals.resize(pages.size());auto first=manga::town_image(*text);if(!first)co_return std::unexpected(Error::protocol_error);originals[0]=std::move(*first);}if(kind==mangadex)manga::pages(manga::Json(*text),originals,true,url,true);
         page=std::min<unsigned>(book.page,pages.size()-1);co_return co_await load_image();
     }
     Task<void> load_image(){image.reset();dirty=true;
@@ -187,14 +216,22 @@ struct Reader {
         // Replace that frame before requesting another decoded image so two
         // full-size pages cannot overlap in the Host resource budget.
         if(canvas.mounted()){draw.reset();auto box=logical(viewport());draw.rect(box.x,box.y,box.width,box.height,0x141916ff);auto cleared=canvas.present(draw);if(!cleared)co_return std::unexpected(cleared.error());}
+        std::string image_url=pages[page];
+        if(manga::source_kind(book.source)==manga::SourceKind::town){
+            if(page>=originals.size())co_return std::unexpected(Error::protocol_error);
+            if(originals[page].empty()){auto text=co_await json(pages[page],false,262144);if(!text)co_return std::unexpected(text.error());auto url=manga::town_image(*text);if(!url)co_return std::unexpected(Error::protocol_error);originals[page]=std::move(*url);}
+            image_url=originals[page];
+        }
         Result<Asset> a=std::unexpected(Error::io_error);
-        for(unsigned attempt=0;attempt<2;++attempt){auto r=co_await request(pages[page],524288,manga::referrer(book));
+        auto image_path=std::string_view(image_url).substr(0,image_url.find('?'));bool known_webp=image_path.ends_with(".webp");
+        if(known_webp)a=std::unexpected(Error::unsupported);
+        for(unsigned attempt=0;!known_webp&&attempt<2;++attempt){auto r=co_await request(image_url,524288,manga::referrer(book));
             if(r)a=co_await ctx->assets().decode_image(std::move(r->body),{.max_width=512,.max_height=2048,.max_pixels=262144,.max_encoded_bytes=524288,.formats=ImageFormats::png|ImageFormats::jpeg});
             else a=std::unexpected(r.error());if(a||!transient(a.error()))break;
         }
         if(!a&&(a.error()==Error::unsupported||a.error()==Error::limit_exceeded)){
             if(book.source.empty()&&page<originals.size())a=co_await convert_original(originals[page]);
-            else if(book.source=="copymanga"||book.source=="mangakatana")a=co_await convert_original(pages[page]);
+            else if(!book.source.empty())a=co_await convert_original(image_url);
         }
         if(!a)co_return std::unexpected(a.error());image.emplace(std::move(*a));busy=false;failure.clear();if(bars)bar_deadline=now_us+6000000;fit();book.page=page;book.language=language;book.pages=pages.size();
         auto at=std::find_if(shelf.begin(),shelf.end(),[&](auto& b){return manga::same(b,book);});if(at!=shelf.end())*at=book;else if(shelf.size()<24)shelf.insert(shelf.begin(),book);
@@ -210,19 +247,28 @@ struct Reader {
         file=co_await ctx->fs().open("manga-source.tmp");if(!file)co_return std::unexpected(file.error());
         auto converter=std::make_unique<manga::JpegCompat>();
         auto read=[](void* p,std::span<std::byte> out)->std::size_t{auto n=static_cast<File*>(p)->read(out);return n?*n:0;};
-        std::unique_ptr<manga::ProgressiveJpeg> progressive;
+        std::unique_ptr<manga::ProgressiveJpeg> progressive;std::unique_ptr<manga::WebpCompat> webp;
         if(!converter->begin(read,&*file)){
             auto rewound=co_await file->seek(0);if(!rewound)co_return std::unexpected(rewound.error());
-            manga::JpegHeader header;if(!manga::jpeg_header(read,&*file,header))co_return std::unexpected(Error::unsupported);
-            if(std::uint64_t(header.width)*header.height>1048576)co_return std::unexpected(Error::limit_exceeded);
+            std::array<std::byte,12> signature{};auto n=file->read(signature);if(!n)co_return std::unexpected(n.error());
+            bool is_webp=*n==12&&std::memcmp(signature.data(),"RIFF",4)==0&&std::memcmp(signature.data()+8,"WEBP",4)==0;
             rewound=co_await file->seek(0);if(!rewound)co_return std::unexpected(rewound.error());
-            progressive=std::make_unique<manga::ProgressiveJpeg>();
-            if(!progressive->load(read,&*file))co_return std::unexpected(progressive->limited?Error::limit_exceeded:Error::unsupported);
-            converter=std::make_unique<manga::JpegCompat>();
-            if(!converter->begin_rgb(progressive->pixels,progressive->width,progressive->height,progressive->channels))co_return std::unexpected(Error::limit_exceeded);
+            if(is_webp){
+                webp=std::make_unique<manga::WebpCompat>();if(!webp->begin(read,&*file))co_return std::unexpected(webp->limited?Error::limit_exceeded:Error::unsupported);
+                while(!webp->done()){if(!webp->next())co_return std::unexpected(webp->limited?Error::limit_exceeded:Error::protocol_error);auto y=co_await ctx->clock().yield();if(!y)co_return std::unexpected(y.error());}
+                converter=std::make_unique<manga::JpegCompat>();if(!converter->begin_rgb(webp->pixels,webp->width,webp->height,3))co_return std::unexpected(Error::limit_exceeded);
+            }else{
+                manga::JpegHeader header;if(!manga::jpeg_header(read,&*file,header))co_return std::unexpected(Error::unsupported);
+                if(std::uint64_t(header.width)*header.height>1048576)co_return std::unexpected(Error::limit_exceeded);
+                rewound=co_await file->seek(0);if(!rewound)co_return std::unexpected(rewound.error());
+                progressive=std::make_unique<manga::ProgressiveJpeg>();
+                if(!progressive->load(read,&*file))co_return std::unexpected(progressive->limited?Error::limit_exceeded:Error::unsupported);
+                converter=std::make_unique<manga::JpegCompat>();
+                if(!converter->begin_rgb(progressive->pixels,progressive->width,progressive->height,progressive->channels))co_return std::unexpected(Error::limit_exceeded);
+            }
         }
         while(!converter->done()){if(!converter->next_row())co_return std::unexpected(Error::protocol_error);auto y=co_await ctx->clock().yield();if(!y)co_return std::unexpected(y.error());}
-        progressive.reset();
+        progressive.reset();webp.reset();
         auto png=converter->png();converter.reset();closed=file->close();if(!closed)co_return std::unexpected(closed.error());
         auto removed=co_await ctx->fs().remove("manga-source.tmp");if(!removed)co_return std::unexpected(removed.error());
         file=co_await ctx->fs().open("manga-image.tmp",OpenMode::write|OpenMode::create|OpenMode::truncate);if(!file)co_return std::unexpected(file.error());
@@ -253,7 +299,8 @@ struct Reader {
         if(act==go_back){if(screen==page_jump){screen=reading;input.set("");(void)input_ref.hide_keyboard();bar_deadline=now_us+6000000;message("第 "+std::to_string(page+1)+" / "+std::to_string(pages.size())+" 页");return;}if(screen==help){screen=prior;bar_deadline=now_us+6000000;changed();if(screen==reading&&!image)begin(pages.empty()?load_pages():load_image());return;}stop();image.reset();pages.clear();
             if(screen==reading){screen=contents;if(chapters.empty()){list_start=offset=0;begin(load_chapters());}else message(std::to_string(total)+" 个章节");}
             else{screen=shelf_screen;list_start=0;message(shelf_status());}return;}
-        if(act==choose_source){static constexpr std::array<std::string_view,3> ids{"","copymanga","mangakatana"};if(arg<0||unsigned(arg)>=ids.size())return;custom=ids[arg];save();action(discover_tab);return;}
+        if(act==source_previous||act==source_next){auto rows=source_rows();if(act==source_previous)source_start-=std::min(source_start,rows);else if(source_start+rows<manga::sources.size())source_start+=rows;changed();return;}
+        if(act==choose_source){if(arg<0||unsigned(arg)>=manga::sources.size())return;custom=manga::sources[arg].id;save();action(discover_tab);return;}
         if(act==toggle_order){if(busy||screen!=contents)return;descending=!descending;offset=list_start=0;begin(load_chapters());return;}
         if(act==jump_page){if(busy||pages.empty())return;screen=page_jump;input.set(std::to_string(page+1));message("共 "+std::to_string(pages.size())+" 页");return;}
         if(act==jump_step){int value=int(manga::comic_number(input.get()));value=std::clamp(value+(arg<0?-1:1),1,int(pages.size()));input.set(std::to_string(value));message("共 "+std::to_string(pages.size())+" 页");return;}
@@ -261,6 +308,7 @@ struct Reader {
         if(act==clear_search){input.set("");query.clear();offset=0;begin(load_catalog());return;}
         if(act==shelf_tab||act==discover_tab||act==source_tab){stop();image.reset();pages.clear();list_start=offset=0;
             screen=act==shelf_tab?shelf_screen:act==discover_tab?discover:source_screen;query.clear();input.set("");
+            if(screen==source_screen){for(unsigned i=0;i<manga::sources.size();++i)if(manga::sources[i].id==custom)source_start=(i/source_rows())*source_rows();}
             if(screen==discover)begin(load_catalog());else message(screen==source_screen?"当前源："+std::string(manga::source_name(custom)):shelf_status());return;}
         if(act==search){if(busy)return;query=input.get();offset=0;begin(load_catalog());return;}
         if(act==language_change){if(busy)return;if(screen==contents&&book.source=="copymanga"){if(groups.size()>1){group_index=(group_index+1)%groups.size();offset=total=0;begin(load_chapters());}return;}if((screen==discover&&!custom.empty())||(screen==contents&&!book.source.empty()))return;language=(language+1)%3;offset=0;save();if(screen==contents)begin(load_chapters());else begin(load_catalog());return;}
@@ -280,7 +328,7 @@ struct Reader {
     }
     void on_frame(Context&,pxa::game::FrameTick tick){if(input_empty!=input.get().empty()){input_empty=input.get().empty();ui_dirty=true;}now_us=tick.timestamp_us;if(screen==reading&&bars&&!busy&&failure.empty()&&now_us>=bar_deadline){bars=false;changed();}if(save_pending&&!save_busy)start(save_state(),false);
         if(exit_pending&&!save_busy&&!save_pending){exit_pending=false;(void)ctx->window().request_back();}
-        if(ui_dirty){ui_dirty=false;revision.update([](auto n){return n+1;});auto a=area();float d=density();bool edit=screen==discover||screen==page_jump;
+        if(ui_dirty){ui_dirty=false;revision.update([](auto n){return n+1;});auto a=area();float d=density()/ui_factor();bool edit=screen==discover||screen==page_jump;
             input_box.set(TextInputBox{{int((a.x+8)/d),int((a.y+40)/d),int(std::max(1,a.width-16-(screen==discover?52:screen==page_jump?80:0))/d),int(28/d)},edit,Font::label,0x20382fff});}
         if(!dirty||!canvas.mounted())return;dirty=false;draw.reset();auto background=logical(viewport());draw.rect(background.x,background.y,background.width,background.height,screen==reading?0x141916ff:0xf6f5f0ff);
         

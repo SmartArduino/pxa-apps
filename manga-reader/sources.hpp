@@ -1,17 +1,15 @@
 #pragma once
 #include "model.hpp"
 #include "html.hpp"
+#include "site_sources.hpp"
+#include "chinese_sources.hpp"
 #include <array>
 extern "C" {
 #include "vendor/tiny-aes/aes.h"
 }
 namespace manga {
 inline constexpr std::string_view copy_api="https://api.copy4000.com/api/v3";
-inline std::string referrer(const Book& b){switch(source_kind(b.source)){
-    case SourceKind::mangadex:return "https://mangadex.org/";
-    case SourceKind::copy:return "https://www.mangacopy.com/";
-    case SourceKind::katana:return "https://mangakatana.com/";
-    default:return {};}}
+inline std::string referrer(const Book& b){auto source=source_info(b.source);return source?std::string(source->base)+"/":std::string{};}
 inline bool copy_books(Json j,std::vector<Book>& out){if(j.get("code").number()!=200)return false;std::vector<Book> next;bool ok=true;
     bool valid=j.get("results").get("list").each([&](Json row){auto id=row.get("path_word").string(192),t=row.get("name").string(192);if(!id||!t||!slug(*id)){ok=false;return false;}next.push_back({*id,*t,"copymanga"});return true;},32);
     if(!valid||!ok)return false;out=std::move(next);return true;}

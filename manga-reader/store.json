@@ -1,7 +1,7 @@
 {
   "name": "漫画",
   "summary": "搜索多站漫画，触摸全屏阅读，自动保存章节和页码。",
-  "description": "支持 MangaDex、拷贝漫画和 MangaKatana，提供书架续读、章节正序／倒序及页码跳转。阅读工具栏轻点显示，闲置自动隐藏。需要触摸和联网；不提供离线整章下载，源站可用性及图片编码会影响阅读。 GameKit 2 当前固件连接 MangaDex 可能失败，建议使用拷贝漫画或 MangaKatana。",
+  "description": "支持拷贝漫画、瓜子漫画、我爱漫画、MangaDex、MangaKatana、MangaPill 和 MangaTown，提供书架续读、章节正序／倒序及页码跳转。支持应用内 WebP、渐进 JPEG 处理，大屏按密度放大触摸控件；阅读工具栏轻点显示，闲置自动隐藏。需要触摸和联网；不提供离线整章下载、登录或付费章节，源站可用性及图片大小会影响阅读。GameKit 2 当前固件连接 MangaDex 可能失败，可切换其他书源。",
   "kind": "app",
   "category": "media",
   "tags": [
@@ -12,5 +12,5 @@
   ],
   "icon": "assets/icon.png",
   "cover": null,
-  "changelog": "移除单作品书源和自定义入口，加入 MangaKatana 多作品源，增加章节正序／倒序、渐进 JPEG 应用内解码，完善旧书架迁移。\n\nRemove single-series sources and the custom entry; add MangaKatana, chapter ordering, bounded progressive JPEG decoding and library migration."
+  "changelog": "新增 Keiyoushi 中的瓜子漫画、我爱漫画、MangaPill 和 MangaTown 原生适配，优先展示中文书源；增加应用内有界 WebP 解码、懒加载页面解析，并适配 espp4-a 等大屏的控件大小和列表容量。\n\nAdd native Guazimanhua, Woaimanhua, MangaPill and MangaTown adapters, with Chinese sources first. Add bounded app-side WebP decoding, lazy-image parsing, and larger touch controls and lists for screens such as espp4-a."
 }

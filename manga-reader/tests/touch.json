@@ -19,6 +19,14 @@
       }
     },
     {
+      "name": "select-mangadex-page",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": ">"
+      }
+    },
+    {
       "name": "s01-select-mangadex",
       "action": "tap-node",
       "selector": {
@@ -1026,6 +1034,14 @@
       "selector": {
         "type": "button",
         "text": "书源"
+      }
+    },
+    {
+      "name": "select-mangadex-page",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": ">"
       }
     },
     {

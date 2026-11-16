@@ -1,5 +1,6 @@
 #pragma once
 #include <algorithm>
+#include <array>
 #include <charconv>
 #include <cstdint>
 #include <optional>
@@ -95,19 +96,50 @@ inline bool web(std::string_view s){auto p=s.find("://");return (s.starts_with("
 inline std::string resolve(std::string_view base,std::string_view ref){if(web(ref))return std::string(ref);if(ref.empty()||ref.find(":")!=ref.npos||ref.starts_with("//"))return {};auto p=base.find("://");if(p==base.npos)return {};if(ref.front()=='/'){auto end=base.find('/',p+3);return std::string(base.substr(0,end))+std::string(ref);}return std::string(base.substr(0,base.rfind('/')+1))+std::string(ref);}
 inline bool uuid(std::string_view s){if(s.size()!=36)return false;for(size_t i=0;i<s.size();++i)if(i==8||i==13||i==18||i==23){if(s[i]!='-')return false;}else if(!((s[i]>='0'&&s[i]<='9')||(s[i]>='a'&&s[i]<='f')))return false;return true;}
 struct Chapter {std::string id,title;};
-enum class SourceKind {mangadex,copy,katana,unknown};
-inline SourceKind source_kind(std::string_view s){return s.empty()?SourceKind::mangadex:s=="copymanga"?SourceKind::copy:s=="mangakatana"?SourceKind::katana:SourceKind::unknown;}
-inline std::string_view source_name(std::string_view s){switch(source_kind(s)){case SourceKind::mangadex:return "MangaDex";case SourceKind::copy:return "拷贝漫画";case SourceKind::katana:return "MangaKatana";default:return "已移除的书源";}}
+enum class SourceKind {mangadex,copy,katana,pill,town,guazi,woi,unknown};
+struct Source {std::string_view id,title,detail,base;SourceKind kind;unsigned batch;};
+inline constexpr std::array<Source,7> sources{{
+    {"copymanga","拷贝漫画","中文 · 分组目录","https://www.mangacopy.com",SourceKind::copy,12},
+    {"guazimanhua","瓜子漫画","简体中文 · 搜索与章节目录","https://www.guazimanhua.com",SourceKind::guazi,36},
+    {"woaimanhua","我爱漫画","简体中文 · 搜索与章节目录","https://www.woimh.com",SourceKind::woi,35},
+    {"","MangaDex","简中 · 繁中 · 英文","https://mangadex.org",SourceKind::mangadex,12},
+    {"mangakatana","MangaKatana","英文 · 搜索与章节目录","https://mangakatana.com",SourceKind::katana,20},
+    {"mangapill","MangaPill","英文 · 搜索与章节目录","https://mangapill.com",SourceKind::pill,50},
+    {"mangatown","MangaTown","英文 · 按页加载","https://www.mangatown.com",SourceKind::town,30},
+}};
+inline const Source* source_info(std::string_view id){for(auto& source:sources)if(id==source.id)return &source;return nullptr;}
+inline SourceKind source_kind(std::string_view s){auto p=source_info(s);return p?p->kind:SourceKind::unknown;}
+inline std::string_view source_name(std::string_view s){auto p=source_info(s);return p?p->title:"已移除的书源";}
 inline bool valid_source(std::string_view s){return source_kind(s)!=SourceKind::unknown;}
 inline bool retired_source(std::string_view s){return s=="xkcd"||s=="peppercarrot"||s=="commitstrip"||web(s);}
 inline bool katana_book_url(std::string_view s){constexpr std::string_view base="https://mangakatana.com/manga/";return s.starts_with(base)&&s.size()>base.size()&&s.substr(base.size()).find_first_of("/?#\\ ") == s.npos&&web(s);}
 inline bool slug(std::string_view s){return !s.empty()&&s.size()<=192&&s.find_first_of("/\\%?#& \r\n\t")==s.npos;}
 inline unsigned comic_number(std::string_view s){auto n=Json(s).number();return n<=1000000?n:0;}
 inline std::string copy_web(std::string_view id){return "https://www.mangacopy.com/comic/"+encoded(id);}
+inline bool site_path(std::string_view s,std::string_view prefix){return s.starts_with(prefix)&&s.size()>prefix.size()&&s.size()<=1024&&s.find_first_of("?#%\\ \r\n\t")==s.npos&&s.find("..") == s.npos&&web(s);}
+inline bool digits(std::string_view s){return !s.empty()&&s.find_first_not_of("0123456789")==s.npos;}
+inline bool pill_book_url(std::string_view s){constexpr std::string_view prefix="https://mangapill.com/manga/";if(!site_path(s,prefix))return false;s.remove_prefix(prefix.size());auto slash=s.find('/');return slash!=s.npos&&digits(s.substr(0,slash))&&slug(s.substr(slash+1));}
+inline bool town_book_url(std::string_view s){constexpr std::string_view prefix="https://www.mangatown.com/manga/";return site_path(s,prefix)&&s.ends_with('/')&&slug(s.substr(prefix.size(),s.size()-prefix.size()-1));}
+inline bool pill_chapter_url(std::string_view s,std::string_view book){if(!pill_book_url(book))return false;auto id=book.substr(std::string_view("https://mangapill.com/manga/").size());id=id.substr(0,id.find('/'));return site_path(s,"https://mangapill.com/chapters/"+std::string(id)+"-");}
+inline bool town_chapter_url(std::string_view s,std::string_view book){
+    if(!town_book_url(book)||!site_path(s,book)||!s.ends_with('/'))return false;
+    auto part=s.substr(book.size(),s.size()-book.size()-1);
+    if(part.starts_with('v')){auto slash=part.find('/');if(slash==part.npos||!digits(part.substr(1,slash-1)))return false;part.remove_prefix(slash+1);}
+    return part.starts_with('c')&&part.size()>1&&part.find_first_not_of("0123456789._",1)==part.npos;
+}
+inline bool numeric_url(std::string_view s,std::string_view prefix){return s.starts_with(prefix)&&s.size()<=prefix.size()+12&&digits(s.substr(prefix.size()));}
+inline bool guazi_book_url(std::string_view s){return numeric_url(s,"https://www.guazimanhua.com/comic.php?id=");}
+inline bool guazi_chapter_url(std::string_view s){return numeric_url(s,"https://www.guazimanhua.com/chapter.php?id=");}
+inline bool woi_book_url(std::string_view s){return numeric_url(s,"https://www.woimh.com/book/mh");}
+inline bool woi_chapter_url(std::string_view s){constexpr std::string_view prefix="https://www.woimh.com/chapter/";if(!s.starts_with(prefix)||s.size()>prefix.size()+30)return false;auto tail=s.substr(prefix.size());auto dash=tail.find('-');return digits(tail.substr(0,dash))&&(dash==tail.npos||digits(tail.substr(dash+1)));}
 struct Book {std::string id,title,source,chapter,chapter_title;unsigned page=0,language=0,pages=0;};
 inline bool valid_book(const Book& b){if(!valid_source(b.source))return false;switch(source_kind(b.source)){
     case SourceKind::mangadex:return uuid(b.id)&&(b.chapter.empty()||uuid(b.chapter));
     case SourceKind::copy:return slug(b.id)&&(b.chapter.empty()||(b.chapter.starts_with(copy_web(b.id)+"/chapter/")&&uuid(std::string_view(b.chapter).substr(b.chapter.rfind('/')+1))));
+    case SourceKind::guazi:return guazi_book_url(b.id)&&(b.chapter.empty()||guazi_chapter_url(b.chapter));
+    case SourceKind::woi:return woi_book_url(b.id)&&(b.chapter.empty()||woi_chapter_url(b.chapter));
+    case SourceKind::pill:return pill_book_url(b.id)&&(b.chapter.empty()||pill_chapter_url(b.chapter,b.id));
+    case SourceKind::town:return town_book_url(b.id)&&(b.chapter.empty()||town_chapter_url(b.chapter,b.id));
     case SourceKind::katana:return katana_book_url(b.id)&&(b.chapter.empty()||(b.chapter.starts_with(b.id+"/c")&&web(b.chapter)));
     default:return false;}}
 // Estimate glyph widths, then cut at a complete UTF-8 boundary.

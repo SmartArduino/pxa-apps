@@ -1,5 +1,5 @@
 template<class Owner> bool Reader::Controls::render(Owner& owner,std::uint32_t parent){
-    const auto a=app->area();const float d=app->density();const int x=a.x,y=a.y,w=a.width,h=a.height;
+    const auto a=app->area();const float d=app->density()/app->ui_factor();const int x=a.x,y=a.y,w=a.width,h=a.height;
     constexpr uint32_t ink=0x243b31ff,muted=0x748178ff,accent=0x27664dff,paper=0xfffefaff;
     bool ok=true;size_t n=0;auto screen=app->screen;
     auto box=[&](int xx,int yy,int ww,int hh){return CanvasRegion{int(xx/d),int(yy/d),std::max(1,int(ww/d)),std::max(1,int(hh/d))};};
@@ -58,15 +58,18 @@ template<class Owner> bool Reader::Controls::render(Owner& owner,std::uint32_t p
         button(x+w-70,y+64,70,30,app->descending?"倒序":"正序",toggle_order,0,false,!app->busy);
     }else nav();
     if(screen==source_screen){
-        struct Option {std::string_view id,title,detail;};
-        constexpr std::array<Option,3> choices{{{"","MangaDex","简中 · 繁中 · 英文"},{"copymanga","拷贝漫画","中文 · 分组目录"},{"mangakatana","MangaKatana","英文 · 搜索与章节目录"}}};
-        for(unsigned i=0;i<choices.size();++i){auto& option=choices[i];bool active=app->custom==option.id;int yy=y+42+i*54;
-            button(x,yy,w,48,option.title,choose_source,i,active,true,true);
-            rect(x+10,yy+12,3,24,active?0xe3eee7ff:accent,1);
-            text(x+23,yy+5,w-60,21,option.title,Font::label,active?0xffffffff:ink);
-            text(x+23,yy+28,w-60,16,option.detail,Font::caption,active?0xe3eee7ff:muted);
-            text(x+w-30,yy+14,20,24,active?"✓":"›",Font::label,active?0xffffffff:muted,1);
-        }return ok;
+        auto rows=app->source_rows();auto start=std::min<unsigned>(app->source_start,((manga::sources.size()-1)/rows)*rows);
+        for(unsigned i=start;i<manga::sources.size()&&i<start+rows;++i){auto& option=manga::sources[i];bool active=app->custom==option.id;int yy=y+42+(i-start)*52;
+            button(x,yy,w,46,option.title,choose_source,i,active,true,true);
+            rect(x+10,yy+11,3,24,active?0xe3eee7ff:accent,1);
+            text(x+23,yy+4,w-60,21,option.title,Font::label,active?0xffffffff:ink);
+            text(x+23,yy+26,w-60,16,option.detail,Font::caption,active?0xe3eee7ff:muted);
+            text(x+w-30,yy+13,20,24,active?"✓":"›",Font::label,active?0xffffffff:muted,1);
+        }
+        button(x,y+h-28,36,28,"<",source_previous,0,false,start>0);
+        button(x+w-36,y+h-28,36,28,">",source_next,0,false,start+rows<manga::sources.size());
+        text(x+44,y+h-23,w-88,22,std::to_string(start/rows+1)+" / "+std::to_string((manga::sources.size()+rows-1)/rows),Font::caption,muted,1);
+        return ok;
     }
     if(screen==discover){
         rect(x,y+38,w-52,34,paper,6);
@@ -99,7 +102,7 @@ template<class Owner> bool Reader::Controls::render(Owner& owner,std::uint32_t p
     unsigned total=screen==shelf_screen?count:app->total;
     bool prev=app->list_start||app->offset,next=app->list_start+shown<count||(app->remote_list()&&app->offset+app->batch_size()<total);
     button(x,y+h-28,36,28,"<",previous_list,0,false,prev);button(x+w-36,y+h-28,36,28,">",next_list,0,false,next);
-    std::string position=std::to_string(app->offset+app->list_start+1)+"–"+std::to_string(app->offset+app->list_start+shown)+(screen==discover&&app->custom=="mangakatana"?" · 第 "+std::to_string(app->offset/app->batch_size()+1)+" 组":" / "+std::to_string(total));
+    std::string position=std::to_string((screen==discover&&!app->custom.empty()&&app->custom!="copymanga"?0:app->offset)+app->list_start+1)+"–"+std::to_string((screen==discover&&!app->custom.empty()&&app->custom!="copymanga"?0:app->offset)+app->list_start+shown)+(screen==discover&&!app->custom.empty()&&app->custom!="copymanga"?" · 第 "+std::to_string(app->offset/app->batch_size()+1)+" 组":" / "+std::to_string(total));
     text(x+44,y+h-23,w-88,22,position,Font::caption,muted,1);
     return ok;
 }
