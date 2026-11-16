@@ -1,5 +1,5 @@
 {
-  "name": "MakeCode Arcade 字节码播放器",
+  "name": "MakeCode Arcade模拟器",
   "summary": "实验性 PXT VM 播放器，支持触屏、手柄与 .pxt64 游戏导入。",
   "kind": "game",
   "category": "arcade",

@@ -15,7 +15,7 @@
   "id": "pxa-makecode-arcade",
   "version": "0.2.0",
   "release_sequence": 2,
-  "name": "MakeCode Arcade",
+  "name": "MakeCode Arcade模拟器",
   "description": "MakeCode Arcade PXT64 cartridge player with touch and gamepad controls",
   "build": {
     "system": "cmake",
