@@ -10,6 +10,7 @@ import re
 from PIL import Image, ImageDraw, ImageFont
 import characters
 import visuals
+import branding
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTLINE = '#202c38'
@@ -237,6 +238,8 @@ def main():
         array(out,'creature_palettes',creature_palettes,16)
         array(out,'creature_pixels',creature_pixels,576,'uint8_t')
         array(out,'icons',[rgb565(im) for im in icons],256)
+        array(out,'emblem',[rgb565(branding.emblem())],32*32)
+        array(out,'ui_symbols',[rgb565(im) for im in branding.symbols()],8*8)
         array(out,'cover',[rgb565(cover)],144*144)
         out.write('}\n')
     atlas=Image.new('RGBA',(16*16,38*16))
@@ -255,6 +258,8 @@ def main():
     atlas=Image.new('RGBA',(16*16,math.ceil(len(icons)/16)*16))
     for i,im in enumerate(icons):atlas.paste(im,((i%16)*16,(i//16)*16))
     atlas.save(ROOT/'art/items.png')
+    branding.emblem().resize((128,128),Image.Resampling.NEAREST).save(ROOT/'assets/icon-v3.png')
+    branding.emblem().resize((512,512),Image.Resampling.NEAREST).save(ROOT/'store/icon.png')
     print(f'{len(ts)} connected tiles; {len(hs)} character layers; {len(cs)} creature frames; {len(icons)} item icons')
 
 if __name__=='__main__':main()

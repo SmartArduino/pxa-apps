@@ -2,9 +2,11 @@
 #pragma once
 #include "core.hpp"
 #include "color_math.hpp"
+#include "background_dither.hpp"
 #include <algorithm>
 #include <cstdint>
 #include <cstdlib>
+#include <type_traits>
 namespace starsoil_scene {
 constexpr uint16_t c(uint32_t v) {
   return uint16_t(((v >> 8) & 0xf800) | ((v >> 5) & 0x07e0) | ((v >> 3) & 31));
@@ -52,10 +54,11 @@ void broadleaf(int x, int ground, int h, uint16_t trunk, uint16_t foliage,
 }
 // All backgrounds are original pixel geometry. Far layers use different scroll
 // speeds; no giant bitmap, smoothing filter or extra surface buffer is needed.
-template <class Rect, class Line, class Pixel>
+template <class Rect, class Line, class Pixel, class Pattern = starsoil_dither::Fallback>
 void draw(int w, int bottom, int camera_x, int camera_y, int surface_y,
           int depth, int biome, uint32_t clock, uint32_t animation, Rect rect,
-          Line line, Pixel pixel, int first_y = 25, bool cave_sparkles = true) {
+          Line line, Pixel pixel, int first_y = 25, bool cave_sparkles = true,
+          Pattern pattern = {}) {
   using namespace starsoil;
   const bool night = clock < 25000 || clock > 240000;
   auto box = [&](int x, int y, int ww, int hh, uint16_t color) {
@@ -67,6 +70,15 @@ void draw(int w, int bottom, int camera_x, int camera_y, int surface_y,
   auto dot = [&](int x, int y, uint16_t color) {
     if (y >= first_y && y < bottom)
       pixel(x, y, color);
+  };
+  auto gradient = [&](uint32_t top, uint32_t low) {
+    for (int y = first_y; y < bottom; ++y) {
+      const auto row = starsoil_dither::gradient_row(top, low,
+          unsigned((y-first_y)*256 / std::max(1,bottom-first_y)), y);
+      if constexpr (std::is_same_v<Pattern, starsoil_dither::Fallback>) {
+        for (int x = 0; x < w; ++x) pixel(x,y,row[x&3]);
+      } else pattern(0,y,w,row);
+    }
   };
   // Horizontal spans keep framebuffer writes contiguous. Tall one-pixel
   // columns otherwise revisit a different PSRAM cache line for every pixel.
@@ -103,11 +115,7 @@ void draw(int w, int bottom, int camera_x, int camera_y, int surface_y,
   if (depth >= 4) {
     // Crystal hues emerge over eight world tiles, independent of the actor.
     int crystal = std::clamp((camera_y + (first_y + bottom) / 2 - 64 * 16) * 255 / (8 * 16), 0, 255);
-    const uint16_t top = c(0x141d30),
-                   low = blend(c(0x303646), c(0x284452), crystal);
-    for (int y = first_y; y < bottom; ++y)
-      box(0, y, w, 1,
-          blend(top, low, (y - first_y) * 255 / std::max(1, bottom - first_y)));
+    gradient(0x141d30, starsoil_dither::mix_rgb(0x303646,0x284452,unsigned(crystal)));
     for (int layer = 0; layer < 2; ++layer) {
       for (int x = 0; x < w; ++x) {
         int world = x + camera_x / (layer ? 3 : 6);
@@ -117,11 +125,27 @@ void draw(int w, int bottom, int camera_x, int camera_y, int surface_y,
       columns(c(layer ? 0x182536 : 0x1c2b3c), tops, false);
       columns(c(layer ? 0x182735 : 0x223543), floors, true);
     }
+    // Faceted teeth and a middle ledge put depth cues above the walkable
+    // floor; crystals painted only at the screen bottom were usually hidden.
+    const int ceiling_scroll=camera_x/6;
+    for(int i=floor_div(ceiling_scroll,83)-1;i<=floor_div(ceiling_scroll+w,83)+1;++i) {
+      const uint32_t n=hash(uint32_t(i)+437);
+      const int x=i*83-ceiling_scroll,tip=72+int(n%34),half=4+int(n%6);
+      for(int yy=44;yy<tip;++yy) {
+        int span=(tip-yy)*half/(tip-44);
+        box(x-span,yy,span+1,1,c(0x1b3542));
+        box(x+1,yy,span,1,c(0x244551));
+      }
+      line(x,54,x,tip-3,c(0x365661));
+    }
+    const int shelf=bottom*3/5;
+    for(int x=0;x<w;++x)tops[x]=shelf+16+ridge(x+camera_x/4,73,911)/3;
+    columns(c(0x193440),tops,true);
     int scroll = camera_x / 4;
     for (int i = floor_div(scroll, 57) - 1; i < floor_div(scroll + w, 57) + 2;
          ++i) {
       uint32_t n = hash(i + 722);
-      int x = i * 57 - scroll, y = bottom - 25 - int(n % 48),
+      int x = i * 57 - scroll, y = shelf - int(n % 36),
           h = 12 + int(n % 17);
       if (n % 3 == 0) {
         diamond(x, y, 4, h, c(0x38636a), c(0x79b1a4));
@@ -140,14 +164,14 @@ void draw(int w, int bottom, int camera_x, int camera_y, int surface_y,
   const uint32_t sky_low[] = {0xeee0b5, 0xc6ddbd, 0xf0ce98,
                               0xe4ece3, 0xb1c8aa, 0xc6ddbd};
   biome = std::clamp(biome, 0, 5);
-  uint16_t top = night ? c(0x192940) : c(sky_top[biome]);
-  uint16_t low = night ? c(0x53657e) : c(sky_low[biome]);
+  uint32_t top_rgb = night ? 0x192940 : sky_top[biome];
+  uint32_t low_rgb = night ? 0x53657e : sky_low[biome];
   if (clock > 180000 && clock < 240000) {
-    top = blend(top, c(0x917e9e), 105);
-    low = blend(low, c(0xf0b68b), 145);
+    top_rgb = starsoil_dither::mix_rgb(top_rgb,0x917e9e,105);
+    low_rgb = starsoil_dither::mix_rgb(low_rgb,0xf0b68b,145);
   }
-  for (int y = first_y; y < bottom; ++y)
-    box(0, y, w, 1, blend(top, low, (y - first_y) * 255 / std::max(1, bottom - first_y)));
+  const uint16_t top=c(top_rgb),low=c(low_rgb);
+  gradient(top_rgb,low_rgb);
   if (night)
     for (int i = 0; i < 32; ++i) {
       uint32_t n = hash(i + 92);
@@ -274,10 +298,11 @@ inline int surface_level(const starsoil::State &s, int world_x) {
 inline int cave_opacity(int world_y, int surface) {
   return std::clamp((world_y - surface - 32) * 255 / 96, 0, 255);
 }
-template <class Rect, class Line, class Pixel, class Read>
+template <class Rect, class Line, class Pixel, class Read, class Pattern = starsoil_dither::Fallback>
 void draw_world(const starsoil::State &s, int w, int bottom, int camera_x,
                 int camera_y, uint32_t animation, Rect rect, Line line,
-                Pixel pixel, Read read, int first_y = 25, bool cave_sparkles = true) {
+                Pixel pixel, Read read, int first_y = 25, bool cave_sparkles = true,
+                Pattern pattern = {}) {
   int ground = surface_level(s, camera_x + w / 2);
   int base = bottom - 47;
   int horizon = base + floor_div(ground - camera_y - base, 6);
@@ -285,11 +310,37 @@ void draw_world(const starsoil::State &s, int w, int bottom, int camera_x,
   int biome = starsoil::biome_at((camera_x + w / 2) / 16, 0, s.width);
   if (cave_opacity(camera_y + first_y, ground) < 255)
     draw(w, bottom, camera_x, camera_y, horizon, 0, biome, s.clock,
-         animation, rect, line, pixel, first_y);
+         animation, rect, line, pixel, first_y, true, pattern);
+  auto paint_pattern = [&](int x, int y, int count, const starsoil_dither::Row &row) {
+    if constexpr (std::is_same_v<Pattern, starsoil_dither::Fallback>) {
+      for (int xx=x;xx<x+count;++xx) pixel(xx,y,row[xx&3]);
+    } else pattern(x,y,count,row);
+  };
+  auto cave_pattern = [&](int x, int y, int count, const starsoil_dither::Row &row) {
+    const int end=std::min(w,x+count);x=std::max(0,x);
+    if (y<first_y || y>=bottom || x>=end) return;
+    const int alpha=cave_opacity(camera_y+y,ground);
+    if (!alpha) return;
+    if (alpha==255) { paint_pattern(x,y,end-x,row); return; }
+    // Dithered skies repeat every four pixels. Blend each repeated source
+    // pattern once, instead of turning its alternating colors into pixel calls.
+    while (x<end) {
+      const int n=std::min(4,end-x);
+      starsoil_dither::Row old{},mixed{};
+      for (int i=0;i<n;++i) {
+        const int phase=(x+i)&3;
+        old[i]=read(x+i,y);
+        mixed[phase]=starsoil_dither::mix565(old[i],row[phase],unsigned(alpha),x+i,y);
+      }
+      int next=x+n;
+      if (n==4) while (next<end && read(next,y)==old[(next-x)&3]) ++next;
+      paint_pattern(x,y,next-x,mixed);x=next;
+    }
+  };
   auto dot = [&](int x, int y, uint16_t color) {
     if (unsigned(x) >= unsigned(w) || y < first_y || y >= bottom) return;
     int alpha = cave_opacity(camera_y + y, ground);
-    if (alpha) pixel(x, y, alpha == 255 ? color : blend(read(x, y), color, alpha));
+    if (alpha) pixel(x, y, alpha == 255 ? color : starsoil_dither::mix565(read(x,y),color,unsigned(alpha),x,y));
   };
   auto box = [&](int x, int y, int ww, int hh, uint16_t color) {
     int end_x = std::min(w, x + ww), end_y = std::min(bottom, y + hh);
@@ -298,16 +349,7 @@ void draw_world(const starsoil::State &s, int w, int bottom, int camera_x,
       int alpha = cave_opacity(camera_y + row, ground);
       if (alpha == 255) rect(x, row, std::max(0, end_x - x), 1, color);
       else if (alpha) {
-        // A distant layer contains long spans of equal pixels. Blend each
-        // distinct run once, retaining the exact RGB565 floor rounding.
-        int col = x;
-        while (col < end_x) {
-          const uint16_t old = read(col, row);
-          int end = col + 1;
-          while (end < end_x && read(end, row) == old) ++end;
-          rect(col, row, end - col, 1, blend(old, color, alpha));
-          col = end;
-        }
+        cave_pattern(x,row,end_x-x,{color,color,color,color});
       }
     }
   };
@@ -324,7 +366,7 @@ void draw_world(const starsoil::State &s, int w, int bottom, int camera_x,
   };
   if (cave_opacity(camera_y + bottom - 1, ground))
     draw(w, bottom, camera_x, camera_y, horizon, 8, biome, s.clock,
-         animation, box, stroke, dot, std::max(first_y, ground + 32 - camera_y), cave_sparkles);
+         animation, box, stroke, dot, std::max(first_y, ground + 32 - camera_y), cave_sparkles, cave_pattern);
 }
 
 // Sparkles lie inside separate crystal clusters (57 pixels apart). They can
@@ -341,11 +383,11 @@ void draw_cave_sparkles(int width, int bottom, int camera_x, int camera_y,
     const uint32_t value = hash(index + 722);
     if (value % 3 || (animation / 180 + value) % 17 >= 3) continue;
     const int x = index * 57 - scroll;
-    const int y = bottom - 22 - int(value % 48);
+    const int y = bottom*3/5 + 3 - int(value % 36);
     if (x < 0 || x >= width || y < first_y || y >= bottom) continue;
     const int alpha = cave_opacity(camera_y + y, ground);
     if (alpha)
-      pixel(x, y, alpha == 255 ? c(0xb2e3c0) : blend(read(x, y), c(0xb2e3c0), alpha));
+      pixel(x, y, alpha == 255 ? c(0xb2e3c0) : starsoil_dither::mix565(read(x,y),c(0xb2e3c0),unsigned(alpha),x,y));
   }
 }
 } // namespace starsoil_scene

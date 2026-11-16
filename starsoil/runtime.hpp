@@ -86,6 +86,7 @@ uint16_t *framebuffer();
 void begin_scene_batch();
 void end_scene_batch();
 void scene_rect(int x, int y, int w, int h, uint16_t color);
+void scene_pattern(int x, int y, int w, const uint16_t *colors, unsigned phase);
 void scene_line(int x0, int y0, int x1, int y1, uint16_t color);
 // Optional, quiet synthesized tones. when_seconds is absolute foreground time
 // (millis()/1000); zero means now. At most 16 queued tones, duration <= 4

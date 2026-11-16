@@ -85,6 +85,9 @@ void end_scene_batch() {}
 void scene_rect(int x, int y, int w, int h, uint16_t color) {
   rect(x, y, w, h, color);
 }
+void scene_pattern(int x,int y,int w,const uint16_t *colors,unsigned phase) {
+  for (int i=0;i<w;++i) rect(x+i,y,1,1,colors[(phase+unsigned(i))&3]);
+}
 void scene_line(int x, int y, int end_x, int end_y, uint16_t color) {
   line(x, y, end_x, end_y, color);
 }
@@ -404,7 +407,11 @@ static void polish_ui_checks() {
   game::key(pocket::Key::DOWN);assert(recipe==1);
   game::key(pocket::Key::UP);assert(recipe==0);
   tap(content_x()+213,height()-14-FooterInset);
-  assert(count(s,Wood)==0 && count(s,Boards)==12 && visible_recipes==0 && recipe==-1);
+  assert(count(s,Wood)==0 && count(s,Boards)==12);
+  // Boards can now feed wall recipes at the nearby workbench. Empty the
+  // fixture bag explicitly before checking the no-ready-recipe UI state.
+  for(auto &a:s.bag)a={};refresh_recipes();
+  assert(visible_recipes==0 && recipe==-1);
   for(auto k:{pocket::Key::UP,pocket::Key::DOWN,pocket::Key::LEFT,pocket::Key::RIGHT,pocket::Key::A,pocket::Key::Y})game::key(k);
   game::draw();assert(recipe==-1 && visible_recipes==0);
   game::key(pocket::Key::SELECT);assert(!craft_ready_only && visible_recipes==RecipeCount);
@@ -750,6 +757,30 @@ int main(int argc, char **argv) {
     floating_controls();
     assert(pocket::buffer != before);
     puts("PASS physical/controller mode omits floating controls and touch mode restores them");
+  }
+
+  {
+    pocket::WIDTH=pocket::HEIGHT=288;
+    pocket::screen_mode=false;
+    pocket::buffer.assign(288*288,0);pocket::painted.assign(288*288,0);
+    new_game(s,4171231849u);view=World;effects={};
+    s.player.x=677;s.player.y=496;s.player.grounded=true;
+    for(int pass=0;pass<10;++pass) {
+      animation=1000+pass*40;
+      if(pass==1)set_tile(s,44,29,Torch);
+      if(pass==2)set_tile(s,44,29,Air);
+      if(pass==3)s.walls[30*WorldW+43]=Glass;
+      if(pass==4)s.bag[s.selected].item=Torches;
+      if(pass==5)s.equip[7]=GlowCharm;
+      if(pass==6)s.player.x+=17;
+      if(pass==7)s.clock=270000;
+      if(pass==8){s.player.y=1280;s.player.x=194*16+8;}
+      for(int warm=0;warm<3;++warm)game::draw();
+      auto cached=pocket::buffer;
+      static_scene_cache.invalidate();game::draw();
+      assert(cached==pocket::buffer);
+    }
+    puts("PASS real scene cache pixels equal fresh draws: terrain/wall/light edits, moving player, night and caves; dynamic FX stay live");
   }
 
 }

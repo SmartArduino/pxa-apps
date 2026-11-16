@@ -41,6 +41,54 @@ int main(int argc, char **argv) {
   };
   if (std::strcmp(argv[1], "performance-huge") == 0 ||
       std::strcmp(argv[1], "performance-medium") == 0) return save();
+  if (std::strncmp(argv[1],"gravity-",8)==0) {
+    for(int y=42;y<70;++y)for(int x=86;x<120;++x) {
+      set_tile(s,x,y,Air);s.walls[y*WorldW+x]=Air;
+    }
+    for(int x=86;x<120;++x) {
+      s.heights[x]=60;set_tile(s,x,66,Stone);
+      if(x<102 || x>111)set_tile(s,x,60,Grass);
+    }
+    const int t=std::strcmp(argv[1],"gravity-sand")==0?Sand:
+                std::strcmp(argv[1],"gravity-lava")==0?Lava:Water;
+    for(int y=53;y<59;++y) {
+      set_tile(s,102,y,Stone);set_tile(s,108,y,Stone);
+      for(int x=103;x<108;++x)set_tile(s,x,y,t);
+    }
+    for(int x=102;x<=108;++x)set_tile(s,x,59,x==103?Plank:Stone);
+    s.player.x=100*16+8;s.player.y=60*16;s.home_x=100;s.home_y=60;
+    s.clock=100000;s.invulnerable=60000;s.bag[0]={WoodPick,1};s.selected=0;
+    for(auto &m:s.mobs)m={};
+    return save();
+  }
+  if (std::strncmp(argv[1], "fx-", 3) == 0) {
+    const bool cave = std::strcmp(argv[1], "fx-crystal") == 0;
+    const bool water = std::strcmp(argv[1], "fx-water") == 0;
+    const int floor = cave ? 80 : 40;
+    for (int x = 84; x < 132; ++x) {
+      s.heights[x] = cave ? 32 : floor;
+      for (int y = floor - 18; y < floor + 8; ++y) {
+        set_tile(s, x, y, y < floor ? Air : cave ? Stone : y == floor ? Grass : Dirt);
+        s.walls[y * WorldW + x] = Air;
+      }
+    }
+    s.player.x = 100 * 16 + 8; s.player.y = floor * 16;
+    s.clock = std::strcmp(argv[1], "fx-night") == 0 ? 270000 : 100000;
+    s.invulnerable = 60000;
+    for (auto &m : s.mobs) m = {};
+    s.bag[0] = {IronPick, 1}; s.bag[1] = {StarWand, 1};
+    set_tile(s, 97, floor - 1, Torch);
+    if (cave) {
+      for (int x : {93, 94, 104, 105}) set_tile(s, x, floor - 1, CrystalOre);
+      set_tile(s, 108, floor - 1, Portal);
+    } else if (water) {
+      for (int y = floor - 2; y < floor; ++y)
+        for (int x = 102; x < 106; ++x) set_tile(s, x, y, Water);
+      for (int y = floor - 2; y < floor; ++y)
+        for (int x = 108; x < 112; ++x) set_tile(s, x, y, Lava);
+    }
+    return save();
+  }
   if (std::strcmp(argv[1], "walls") == 0) {
     std::fill_n(s.tiles,Cells,uint8_t(Air));std::fill_n(s.walls,Cells,uint8_t(Air));
     std::fill_n(s.heights,WorldW,uint8_t(60));

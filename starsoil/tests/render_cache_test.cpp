@@ -12,21 +12,21 @@ static int reference_light(int x, int y) {
   int surface = s.heights[std::clamp(x, 0, s.width - 1)];
   bool night = s.clock > 240000 || s.clock < 25000;
   int light =
-      y <= surface ? night ? 112 : 255 : std::max(28, 190 - (y - surface) * 23);
+      y <= surface ? night ? 112 : 255 : std::max(40, 190 - (y - surface) * 23);
   int radius = s.equip[7] == GlowCharm                       ? 8
                : items[s.bag[s.selected].item].tile == Torch ? 7
-                                                             : 4;
+                                                             : 6;
   light = std::max(light, 230 - (std::abs(x - int(s.player.x / 16)) +
                                  std::abs(y - int(s.player.y / 16))) *
                                     255 / radius);
-  for (int yy = std::max(0, y - 5); yy <= std::min(s.height - 1, y + 5); ++yy)
-    for (int xx = std::max(0, x - 5); xx <= std::min(s.width - 1, x + 5); ++xx)
-      if (s.tiles[yy * WorldW + xx] == Torch ||
+  for (int yy = std::max(0, y - 6); yy <= std::min(s.height - 1, y + 6); ++yy)
+    for (int xx = std::max(0, x - 6); xx <= std::min(s.width - 1, x + 6); ++xx)
+      if (std::abs(x-xx)+std::abs(y-yy)<=6 && (s.tiles[yy * WorldW + xx] == Torch ||
           s.tiles[yy * WorldW + xx] == Portal ||
-          s.tiles[yy * WorldW + xx] == Lava)
+          s.tiles[yy * WorldW + xx] == Lava))
         light =
-            std::max(light, 255 - (std::abs(x - xx) + std::abs(y - yy)) * 38);
-  return std::clamp(light, 28, 255);
+            std::max(light, 255 - (std::abs(x - xx) + std::abs(y - yy)) * 34);
+  return std::clamp(light, 40, 255);
 }
 static bool same(const starsoil_tree::Crown &a, const starsoil_tree::Crown &b) {
   return a.valid == b.valid &&

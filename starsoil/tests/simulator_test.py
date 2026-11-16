@@ -25,6 +25,8 @@ parser.add_argument('--height',type=int,default=480)
 parser.add_argument('--density',type=int,default=305)
 parser.add_argument('--headed',action='store_true',help='Show a desktop window; headless is the default')
 parser.add_argument('--performance-only',action='store_true',help='Measure submitted FPS while idle and moving across several autosaves at one headless profile')
+parser.add_argument('--visual-fx-only',action='store_true',help='Original animated torch/water/night/crystal/snow captures through the real runtime')
+parser.add_argument('--materials-only',action='store_true',help='Mine a tray outlet and capture real sand/water/lava gravity through the runtime')
 parser.add_argument('--performance-world',choices=('medium','huge'),default='medium')
 parser.add_argument('--housing-only',action='store_true',help='Two-cell door collision, interaction, save/restart and indoor survival at one display profile')
 parser.add_argument('--inventory-only',action='store_true',help='Long-press drag, swaps/merges, direct backpack use, persistence and background jump/depth captures at one display profile')
@@ -158,6 +160,54 @@ def enter_world():
     time.sleep(.7)
 
 try:
+    if args.materials_only:
+        assert args.fixture_tool
+        start(0);enter_world();key('ENTER');time.sleep(.8);path,_=saved();stop()
+        for number,fixture in enumerate(('gravity-sand','gravity-water','gravity-lava'),400):
+            subprocess.run([str(args.fixture_tool.resolve()),fixture,str(path)],check=True)
+            original=read_save(path);w,h=struct.unpack_from('<HH',original,6)
+            material={'gravity-sand':4,'gravity-water':20,'gravity-lava':21}[fixture]
+            initial_tiles=original[228+w:228+w+w*h]
+            start(number);enter_world();key('RIGHT',.03);time.sleep(1)
+            capture(fixture+'-before')
+            # World outlet at 103,59; player at 100*16+8,60*16. Both screens
+            # use the actual aspect-aware camera, not a fixed square viewport.
+            if args.width*224>=args.height*288:
+                ch=224;cw=(args.width*ch+args.height//2)//args.height
+            else:
+                cw=288;ch=(args.height*cw+args.width//2)//args.width
+            x=cw//2+48;y=ch-30-26-47-8
+            px,py=int(x*args.width/cw),int(y*args.height/ch)
+            command(f'TOUCH DOWN 0 {px} {py}');time.sleep(.6)
+            command(f'TOUCH UP 0 {px} {py}')
+            for frame in range(9):
+                capture(f'{fixture}-{frame:02d}');time.sleep(.15)
+            time.sleep(3)
+            capture(fixture+'-after')
+            key('ENTER');time.sleep(1);data=read_save(path)
+            w,h=struct.unpack_from('<HH',data,6);tiles=data[228+w:228+w+w*h]
+            assert len(data)==760+w+w*h*2
+            assert any(tiles[y*w+x]==material for y in range(60,66) for x in range(102,112)), 'Material did not fall into the lower tray'
+            if material in (20,21):assert tiles.count(material)==initial_tiles.count(material),'Liquid volume changed'
+            stop()
+        print('PASS real PXA sand/water/lava outlet mining and gravity captures; originals preserved')
+        raise SystemExit(0)
+    if args.visual_fx_only:
+        from PIL import Image, ImageChops
+        assert args.fixture_tool
+        start(0);enter_world();key('ENTER');time.sleep(.8);path,_=saved();stop()
+        for number,fixture in enumerate(('fx-night','fx-water','fx-crystal','snow','forest'),300):
+            subprocess.run([str(args.fixture_tool.resolve()),fixture,str(path)],check=True)
+            start(number);enter_world();key('RIGHT',.03);time.sleep(8)
+            capture(fixture+'-a');time.sleep(.24);capture(fixture+'-b')
+            a=Image.open(out/(fixture+'-a.png')).convert('RGB')
+            b=Image.open(out/(fixture+'-b.png')).convert('RGB')
+            assert ImageChops.difference(a,b).getbbox(), 'Scene animation did not advance: '+fixture
+            stop()
+        logs=''.join(p.read_text(errors='replace') for p in out.glob('simulator-*.log'))
+        assert 'Guest exception' not in logs and 'save failed' not in logs.lower()
+        print('PASS real PXA animated torch, water/lava, fireflies, crystals, snow and forest; original rectangular captures')
+        raise SystemExit(0)
     if args.building_only:
         assert args.fixture_tool
         start(0);enter_world();key('ENTER');time.sleep(.6);path,_=saved();stop()

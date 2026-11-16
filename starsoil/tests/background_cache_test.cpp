@@ -9,7 +9,8 @@ static starsoil::State state;
 static starsoil_scene::BackgroundCache cache;
 
 static void draw(uint16_t *frame, int width, int height, int first,
-                 int camera_x, int camera_y, uint32_t animation, bool sparkles = true) {
+                 int camera_x, int camera_y, uint32_t animation, bool sparkles = true,
+                 bool fast = true) {
   auto pixel = [&](int x, int y, uint16_t color) {
     if (x >= 0 && x < width && y >= first && y < height)
       frame[y * width + x] = color;
@@ -31,9 +32,16 @@ static void draw(uint16_t *frame, int width, int height, int first,
       if (twice <= dx) { error += dx; y += step_y; }
     }
   };
-  starsoil_scene::draw_world(state, width, height, camera_x, camera_y,
-    animation, rectangle, line, pixel,
-    [&](int x, int y) { return frame[y * width + x]; }, first, sparkles);
+  auto read=[&](int x,int y) {return frame[y*width+x];};
+  if (fast)
+    starsoil_scene::draw_world(state,width,height,camera_x,camera_y,animation,
+      rectangle,line,pixel,read,first,sparkles,
+      [&](int x,int y,int count,const starsoil_dither::Row &row) {
+        starsoil_dither::fill(frame+y*width+x,size_t(count),row.data(),unsigned(x)&3);
+      });
+  else
+    starsoil_scene::draw_world(state,width,height,camera_x,camera_y,animation,
+      rectangle,line,pixel,read,first,sparkles);
 }
 
 static unsigned frames, hits;
@@ -52,7 +60,7 @@ static bool check(int camera_x, int camera_y, uint32_t animation,
   starsoil_scene::draw_cave_sparkles(width, height, camera_x, camera_y, key.ground_y(), animation,
     [&](int x, int y, uint16_t color) { pixels[y * width + x] = color; },
     [&](int x, int y) { return pixels[y * width + x]; }, first);
-  draw(expected.data() + 1, width, height, first, camera_x, camera_y, animation);
+  draw(expected.data() + 1, width, height, first, camera_x, camera_y, animation,true,false);
   assert(actual == expected);
   assert(actual.front() == sentinel && actual.back() == sentinel);
   return hit;

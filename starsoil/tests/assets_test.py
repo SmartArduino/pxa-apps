@@ -107,3 +107,21 @@ for snow in (True,False):
     assert draw_art.visuals.foliage(15,snow).getextrema()[3]==(255,255)
 assert draw_art.tile(8,15).getextrema()[3]==(255,255)
 print('PASS fully joined temperate, snow and jungle foliage have no transparent corner pixels')
+
+# The compiled inventory uses the native-grid source, including opaque actor
+# grips; a reference sheet must never replace it or change inventory indexing.
+definitions=re.findall(r'\{\s*"([^"]*)"\s*,\s*"[^"]*"\s*,\s*(\w+)\s*,\s*(\w+)\s*,\s*\d+\s*,\s*\d+\s*,\s*0x([0-9a-f]+)\s*\}',(ROOT/'items.hpp').read_text())
+icons=generated_rows('icons')
+assert len(definitions)==85 and len(icons)==86
+grips=generated_rows('item_grips')
+variants={}
+for index,(name,kind,tile,color) in enumerate(definitions,1):
+  if kind in ('Block','Furniture','Wall'):continue
+  image=draw_art.icon(kind,color,0,name)
+  assert icons[index]==draw_art.rgb565(image),(index,name)
+  assert image.getextrema()[3]==(0,255),(index,name)
+  if kind in ('Pick','Axe','Hammer','Sword','Bow','Wand'):
+    assert image.getpixel(tuple(grips[index]))[3]==255,(name,grips[index])
+    variants.setdefault(kind,[]).append(tuple(icons[index]))
+for kind,values in variants.items():assert len(set(values))==len(values),kind
+print('PASS compiled native item pixels, transparent silhouettes, unique equipment tiers and stable opaque actor grips')

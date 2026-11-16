@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 #pragma once
+#include "color_math.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -40,5 +41,18 @@ inline void rectangle(uint16_t *out, int stride, int left, int top,
   fill(first, width, color);
   for (int row = top + 1; row < bottom; ++row)
     __builtin_memcpy(out + row * stride + left, first, width * sizeof(*out));
+}
+inline void blend_rectangle(uint16_t *out, int width, int height, int x, int y,
+                            int w, int h, uint16_t color, unsigned alpha) {
+  if (!out || w <= 0 || h <= 0 || !alpha) return;
+  const int left = std::max(0, x), top = std::max(0, y);
+  const int right = std::min(width, x + w), bottom = std::min(height, y + h);
+  if (left >= right || top >= bottom) return;
+  if (alpha >= 255) { rectangle(out, width, left, top, right, bottom, color); return; }
+  for (int yy = top; yy < bottom; ++yy)
+    for (int xx = left; xx < right; ++xx) {
+      auto &pixel = out[yy * width + xx];
+      pixel = starsoil_color::mix(pixel, color, alpha);
+    }
 }
 } // namespace starsoil_pixels

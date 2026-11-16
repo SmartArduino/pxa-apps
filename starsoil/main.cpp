@@ -2,13 +2,15 @@
 #include "actor_renderer.hpp"
 #include "art.hpp"
 #include "background.hpp"
-#include "background_cache.hpp"
+#include "static_scene_cache.hpp"
+#include "scene_details.hpp"
 #include "color_math.hpp"
 #include "core.hpp"
 #include "craft_filter.hpp"
 #include "wall_art.hpp"
 #include "door_art.hpp"
 #include "effects.hpp"
+#include "visual_fx.hpp"
 #include "font.hpp"
 #include "runtime.hpp"
 #include "pointer_capture.hpp"
@@ -29,12 +31,14 @@ constexpr uint16_t Ink = rgb(225, 226, 204), Muted = rgb(143, 163, 162),
                    GoldInk = rgb(229, 192, 120), Dark = rgb(23, 34, 44),
                    Panel = rgb(36, 51, 59), Teal = rgb(113, 184, 166),
                    Red = rgb(203, 117, 119);
+constexpr uint16_t HudWell=rgb(16,29,40), HudEdge=rgb(104,91,75),
+                   HudShine=rgb(192,154,106), HudSlate=rgb(68,85,94);
 State s;
 Effects effects;
 starsoil_scene::Lighting lighting;
 starsoil_tree::CrownCache tree_crowns;
 #ifndef PXA_POCKET_STUDIO
-starsoil_scene::BackgroundCache background_cache;
+starsoil_scene::StaticSceneCache static_scene_cache;
 #endif
 int draw_x = 0, draw_y = 0;
 int width() { return pocket::WIDTH; }
@@ -316,17 +320,6 @@ void human(int x, int feet, int frame, bool face, const uint8_t *equipment,
 
 void sky() {
   auto *canvas = pocket::framebuffer();
-#ifndef PXA_POCKET_STUDIO
-  const auto key = starsoil_scene::BackgroundKey::make(
-      s, width(), render_bottom(), cx, cy, animation, scene_top());
-  auto sparkles = [&] {
-    starsoil_scene::draw_cave_sparkles(width(), render_bottom(), cx, cy,
-      key.ground_y(), animation,
-      [](int x, int y, uint16_t c) { pixel(x, y, c); },
-      [canvas](int x, int y) { return canvas[y * width() + x]; }, scene_top());
-  };
-  if (background_cache.restore(key, canvas)) { sparkles(); return; }
-#endif
   bool reading = false;
   pocket::begin_scene_batch();
   starsoil_scene::draw_world(
@@ -344,12 +337,10 @@ void sky() {
 #else
       false
 #endif
-      );
+      , [](int x,int y,int count,const starsoil_dither::Row &row) {
+        pocket::scene_pattern(x+draw_x,y+draw_y,count,row.data(),unsigned(x)&3);
+      });
   pocket::end_scene_batch();
-#ifndef PXA_POCKET_STUDIO
-  background_cache.store(key, canvas);
-  sparkles();
-#endif
 }
 Input preview_input() {
   Input input;input.smart_cursor=s.smart_cursor;input.down=pocket::held(Key::DOWN) || (touches.owns(17) && stick_dy>14);
@@ -393,6 +384,15 @@ void scene() {
   const int top = std::max(0, (cy + scene_top()) / 16),
             bottom = std::min(s.height - 1, (cy + render_bottom() - 1) / 16);
   lighting.prepare(s, left, top, right - left + 1, bottom - top + 1);
+  auto *scene_pixels = pocket::framebuffer();
+#ifndef PXA_POCKET_STUDIO
+  const auto scene_key = starsoil_scene::BackgroundKey::make(
+      s, width(), render_bottom(), cx, cy, animation, scene_top());
+  const bool restored_scene = static_scene_cache.restore(s, scene_key, scene_pixels);
+#else
+  const bool restored_scene = false;
+#endif
+  if (!restored_scene) {
   tree_crowns.prepare(left, top, right - left + 1, bottom - top + 1,
                      [](int x, int y) { return tile(s, x, y); });
   sky();
@@ -407,6 +407,10 @@ void scene() {
         auto same=[&](int xx,int yy) {return xx>=0 && yy>=0 && xx<s.width && yy<s.height && s.walls[yy*WorldW+xx]==wall;};
         int mask=(same(x,y-1)?1:0)|(same(x+1,y)?2:0)|(same(x,y+1)?4:0)|(same(x-1,y)?8:0);
         starsoil_wall::draw(wall,mask,x,y,sx,sy,light,[](int xx,int yy,int w,int h,uint16_t c) {
+          int top=std::max(yy,scene_top()),bottom=std::min(yy+h,render_bottom());
+          if(top<bottom)rect(xx,top,w,bottom-top,c);
+        });
+        starsoil_details::wall(wall,mask,sx,sy,light,[](int xx,int yy,int w,int h,uint16_t c) {
           int top=std::max(yy,scene_top()),bottom=std::min(yy+h,render_bottom());
           if(top<bottom)rect(xx,top,w,bottom-top,c);
         });
@@ -444,33 +448,6 @@ void scene() {
           sprite(sx, sy, tile_art, 16, 16, false, light, 1, true);
         }
         }
-        if (is_ore(t) && sy >= 52 && sy < render_bottom() - 16 &&
-            (animation / 90 + hash(x + y * 384)) % 41 < 2) {
-          int gx = sx + 3 + int(hash(x * 17 + y) % 10),
-              gy = sy + 3 + int(hash(x + y * 31) % 10);
-          pixel(gx, gy, Ink);
-          pixel(gx - 1, gy, GoldInk);
-          pixel(gx + 1, gy, GoldInk);
-          pixel(gx, gy - 1, Teal);
-          pixel(gx, gy + 1, Teal);
-        }
-        if (t == Torch) {
-          int a = (animation / 130 + x) % 3;
-          if (sy > 29 && sy < render_bottom() - 10)
-            pixel(sx + 6 + a, sy + 2 - a, Ink);
-        }
-        if ((t == Water || t == Lava) && sy >= scene_top() && sy < render_bottom() - 2) {
-          int offset = int(animation / 130 + x) % 8;
-          line(sx + offset, sy + 2, sx + offset + 3, sy + 2, dim(Ink, light));
-        }
-        if (t == Grass && !tile(s, x, y - 1) && sy > 28) {
-          for (int j = 0; j < 3; ++j) {
-            int xx = sx + 2 + j * 5;
-            line(xx, sy - 3 - int(hash(x + j) % 3),
-                 xx + int(animation / 700 % 2), sy,
-                 dim(color(0x80a569), light));
-          }
-        }
       }
       starsoil_terrain::draw_fillet(
           x, y, sx, sy, light, [](int xx, int yy) { return tile(s, xx, yy); },
@@ -478,7 +455,73 @@ void scene() {
             if (yy >= scene_top() && yy < render_bottom())
               pixel(xx, yy, c);
           });
+      starsoil_details::tile(t,x,y,sx,sy,light,tree_sample,
+          [](int xx,int yy,int w,int h,uint16_t c) {
+            int top=std::max(yy,scene_top()),bottom=std::min(yy+h,render_bottom());
+            if(top<bottom)rect(xx,top,w,bottom-top,c);
+          });
     }
+#ifndef PXA_POCKET_STUDIO
+    static_scene_cache.store(scene_pixels);
+#endif
+  }
+#ifndef PXA_POCKET_STUDIO
+  starsoil_scene::draw_cave_sparkles(width(),render_bottom(),cx,cy,scene_key.ground_y(),animation,
+      [](int x,int y,uint16_t c) {
+        const int wx=(cx+x)/16,wy=(cy+y)/16;
+        if(tile(s,wx,wy)==Air && wx>=0 && wy>=0 && wx<s.width && wy<s.height &&
+           !built_wall(s.walls[wy*WorldW+wx]))pixel(x,y,c);
+      },[scene_pixels](int x,int y) {return scene_pixels[y*width()+x];},scene_top());
+#endif
+  // Effects follow static terrain and precede actors. Clip every pixel and
+  // glow at the scene boundary, including tiles partly outside the viewport.
+  auto fx_dot = [](int x, int y, uint16_t c) {
+    if (x >= 0 && x < width() && y >= scene_top() && y < render_bottom()) pixel(x, y, c);
+  };
+  auto fx_glow = [](int x, int y, int w, int h, uint16_t c, unsigned alpha) {
+    int left = std::max(0, x), top = std::max(scene_top(), y);
+    int right = std::min(width(), x + w), bottom = std::min(render_bottom(), y + h);
+    if (left < right && top < bottom) pocket::blend_rect(left, top, right - left, bottom - top, c, alpha);
+  };
+  int glow_budget = 12;
+  for (int y = top; y <= bottom; ++y)
+    for (int x = left; x <= right; ++x) {
+      const int t = tile(s, x, y), sx = x * 16 - cx, sy = y * 16 - cy;
+      if (is_ore(t) && sy >= 52 && sy < render_bottom() - 16 &&
+          (animation / 90 + hash(x + y * 384)) % 41 < 2) {
+        int gx=sx+3+int(hash(x*17+y)%10),gy=sy+3+int(hash(x+y*31)%10);
+        fx_dot(gx,gy,Ink);fx_dot(gx-1,gy,GoldInk);fx_dot(gx+1,gy,GoldInk);
+        fx_dot(gx,gy-1,Teal);fx_dot(gx,gy+1,Teal);
+      }
+      if (t==Grass && tile(s,x,y-1)==Air && sy>28) {
+        for(int j=0;j<3;++j) {
+          int xx=sx+2+j*5;
+          line(xx,sy-3-int(hash(x+j)%3),xx+int(animation/700%2),sy,dim(color(0x80a569),light_at(x,y)));
+        }
+      }
+      if (t == Torch && glow_budget > 0) {
+        --glow_budget;
+        starsoil_fx::torch(sx + 8, sy + 5, animation, hash(x + y * WorldW), fx_dot, fx_glow);
+      } else if ((t == Water || t == Lava) && tile(s, x, y - 1) == Air) {
+        starsoil_fx::liquid(sx, sy, x * 16, t == Lava, light_at(x, y), animation, fx_dot);
+      } else if ((t == Portal || t == CrystalOre) && glow_budget > 0) {
+        const unsigned phase = animation + hash(x + y * WorldW) % 2400;
+        const int power = t == Portal ? 140 + starsoil_fx::triangle(phase, 1600, 100)
+                                      : starsoil_fx::pulse(phase);
+        if (power > 20) {
+          --glow_budget;
+          starsoil_fx::star(sx + 8, sy + 6, color(0x91d9d2), power, fx_dot, fx_glow);
+          if (t == Portal) {
+            int rise = int(phase / 100 % 18);
+            fx_dot(sx + 3, sy + 14 - rise, Teal);
+            fx_dot(sx + 12, sy + 5 - rise, GoldInk);
+          }
+        }
+      }
+    }
+  starsoil_fx::ambient(s, cx, cy, width(), render_bottom(), animation, fx_dot, fx_glow);
+  if (s.player.grounded)
+    fx_glow(int(s.player.x) - cx - 5, int(s.player.y) - cy - 1, 10, 2, Dark, 90);
   for (auto n : s.npcs) {
     int x = int(n.x) - cx, y = int(n.y) - cy;
     if (x < -20 || x > width() + 20 || y < scene_top() || y > render_bottom() - 3)
@@ -557,6 +600,10 @@ void scene() {
         rect(x, y, p.life > 300 ? 2 : 1, 1,
              dim(color(p.color), std::min(255, int(p.life) * 2)));
     }
+  for (const auto &p : effects.pulses)
+    if (p.life)
+      starsoil_fx::ring(int(p.x) - cx, int(p.y) - cy, 360 - p.life,
+          dim(color(p.color), std::min(255, int(p.life))), p.flat, fx_dot);
   int tx = s.target_x * 16 - cx, ty = s.target_y * 16 - cy;
   const auto &held=items[s.bag[s.selected].item];
   bool build=building(held.kind);int cursor_height=16;
@@ -629,6 +676,16 @@ void scene_labels() {
       }
     }
 }
+void hud_frame(int x,int y,int w,int h,bool active=false) {
+  rect(x+1,y+1,w,h,HudWell);
+  rect(x,y,w,h,active?rgb(46,64,64):rgb(25,41,53));
+  outline(x,y,w,h,active?GoldInk:HudEdge);
+  line(x+2,y+1,x+w-3,y+1,active?HudShine:HudSlate);
+  line(x+1,y+2,x+1,y+h-3,active?HudShine:HudSlate);
+  line(x+2,y+h-2,x+w-3,y+h-2,HudWell);
+  pixel(x,y,HudWell);pixel(x+w-1,y,HudWell);
+  pixel(x,y+h-1,HudWell);pixel(x+w-1,y+h-1,HudWell);
+}
 void disc(starsoil_touch::Point p,int radius,bool active) {
   int span=radius;
   for(int dy=0;dy<=radius;++dy) {
@@ -636,9 +693,9 @@ void disc(starsoil_touch::Point p,int radius,bool active) {
     for(int sign : {-1,1}) {
       if(!dy && sign==1)continue;
       int y=p.y+dy*sign;
-      pocket::blend_rect(p.x-span,y,span*2+1,1,Dark,active?215:150);
-      pixel(p.x-span,y,active?GoldInk:Muted);
-      pixel(p.x+span,y,active?GoldInk:Muted);
+      pocket::blend_rect(p.x-span,y,span*2+1,1,HudWell,active?220:radius<=12?190:145);
+      pixel(p.x-span,y,active?GoldInk:sign<0?HudShine:HudEdge);
+      pixel(p.x+span,y,active?HudShine:HudSlate);
     }
   }
 }
@@ -670,38 +727,42 @@ void floating_controls() {
   pixel(talk.x-3,talk.y-1,Ink);pixel(talk.x,talk.y-1,Ink);pixel(talk.x+3,talk.y-1,Ink);
 }
 void hud() {
-  rect(0, 0, width(), 31, Dark);
-  rect(0, 30, width(), 1, rgb(67, 88, 90));
+  hud_frame(0,0,width(),31);
+  line(87,5,87,26,HudEdge);
   label(5, 0, "HP", Red);
-  rect(22, 6, 62, 4, rgb(77, 56, 62));
-  rect(22, 6, s.hp * 62 / 100, 4, Red);
+  rect(21,4,64,8,HudEdge);rect(22,5,62,6,rgb(63,45,52));
+  rect(22,5,s.hp*62/100,5,Red);
+  rect(23,5,std::max(0,int(s.hp)*62/100-2),1,rgb(239,164,149));
   label(5, 15, "MP", Teal);
-  rect(22, 21, 62, 3, rgb(49, 69, 81));
-  rect(22, 21, s.mana * 62 / 60, 3, Teal);
+  rect(21,19,64,8,HudSlate);rect(22,20,62,6,rgb(32,54,64));
+  rect(22,20,s.mana*62/60,5,Teal);
+  rect(23,20,std::max(0,int(s.mana)*62/60-2),1,rgb(169,218,187));
   char b[48];
   std::snprintf(b, sizeof(b), "D%u  %02u:%02u", s.day,
                 (s.clock / 15000 + 6) % 24, s.clock / 250 % 60);
   label(91, 1, b, GoldInk);
-  label(91, 16,
+  center(89,16,std::max(16,width()-116-89),
         biome_name(biome_at(int(s.player.x / 16), int(s.player.y / 16), s.width),
                    !pocket::english()),
         Muted);
   // Keep touch targets below the system's top notification-gesture strip.
-  center(width() - 116, 16, 36, tr("BAG", "背包"), Ink);
-  center(width() - 80, 16, 40, tr("CRAFT", "合成"), Teal);
+  hud_frame(width()-117,11,36,18);
+  hud_frame(width()-81,11,40,18);
+  center(width() - 117, 14, 36, tr("BAG", "背包"), Ink);
+  center(width() - 81, 14, 40, tr("CRAFT", "合成"), Teal);
   for (int i = 0; i < HotSlots; ++i) {
     int x = 20 + i * 24;
-    rect(x, 34, 22, 23, i == s.selected ? rgb(71, 89, 80) : Dark);
-    outline(x, 34, 22, 23, i == s.selected ? GoldInk : rgb(76, 86, 87));
+    hud_frame(x,34,22,23,i==s.selected);
     icon(x + 3, 36, s.bag[i].item);
     if (s.bag[i].count > 1) {
       std::snprintf(b, sizeof(b), "%u", s.bag[i].count);
-      label(x + 2, 42, b, Ink);
+      int bx=std::max(x+1,x+20-text_width(b));
+      rect(bx,44,std::min(20,text_width(b)),11,HudWell);
+      label(bx,42,b,Ink);
     }
   }
   if (s.selected >= HotSlots) {
-    panel(216, 34, 22, 23, rgb(43, 72, 69));
-    outline(216, 34, 22, 23, Teal);
+    hud_frame(216,34,22,23,true);
     icon(219, 36, s.bag[s.selected].item);
     if (s.bag[s.selected].count > 1) {
       std::snprintf(b, sizeof(b), "%u", s.bag[s.selected].count);
@@ -712,7 +773,8 @@ void hud() {
       0, int(s.player.y / 16) -
              int(s.heights[std::clamp(int(s.player.x / 16), 0, s.width - 1)]));
   std::snprintf(b, sizeof(b), "%dm", depth);
-  label(width() - 41, 37, b, Ink);
+  hud_frame(width()-46,35,39,20);
+  center(width()-46,37,39,b,Muted);
   const char *goal;
   int progress = 0, total = 1;
   if (!(s.quests & 1))
@@ -730,14 +792,17 @@ void hud() {
   } else
     goal = s.boss_defeated ? tr("EXPLORE ON", "继续探索")
                            : tr("FIND ALTAR", "寻找祭坛");
-  panel(width() - 90, 62, 84, 37);
-  label(width() - 86, 65, goal, GoldInk);
+  const int qw=104,qx=width()-qw-6,qh=total>1?31:20;
+  hud_frame(qx,62,qw,qh);
+  line(qx+5,71,qx+8,68,GoldInk);line(qx+8,68,qx+11,71,GoldInk);
+  line(qx+5,71,qx+8,74,HudShine);line(qx+8,74,qx+11,71,HudShine);
+  center(qx+15,65,qw-20,goal,GoldInk);
   if (total > 1) {
     std::snprintf(b, sizeof(b), "%d/%d", progress, total);
-    label(width() - 86, 81, b, Muted);
+    label(qx+15,78,b,Muted);
+    rect(qx+48,86,qw-54,2,HudSlate);
+    rect(qx+48,86,progress*(qw-54)/total,2,Teal);
   }
-  rect(width() - 37, 93, 26, 2, rgb(56, 75, 79));
-  rect(width() - 37, 93, progress * 26 / total, 2, Teal);
   floating_controls();
 }
 void heading(const char *txt) {
@@ -759,7 +824,8 @@ void tabs(View current) {
     int x = 5 + i * (width() - 8) / 5;
     int tab_width = (width() - 8) / 5 - 3;
     rect(x, 28, tab_width, 16, vs[i] == current ? rgb(64, 90, 82) : Panel);
-    center(x, 29, tab_width, tr(en[i], cn[i]),
+    sprite(x+3,32,art::ui_symbols[i],8,8,false,vs[i]==current?255:170);
+    center(x+11, 29, tab_width-11, tr(en[i], cn[i]),
            vs[i] == current ? GoldInk : Muted);
   }
   content_origin();
@@ -1824,8 +1890,8 @@ void tick(uint32_t ms) {
     std::snprintf(message, sizeof(message), "%s", s.event);
     event_at = animation + 4500;
   }
-  if (paint >= 40) {
-    paint %= 40;
+  if (paint >= 33) {
+    paint %= 33;
     pocket::redraw();
   }
 }

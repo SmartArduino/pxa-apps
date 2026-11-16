@@ -27,15 +27,15 @@
       24
     ],
     "creature_animation_frames": 6,
-    "creature_types": 5,
-    "item_icons": 81,
+    "creature_types": 9,
+    "item_icons": 86,
     "helmet_variants": 3,
     "character_authoring": "tools/characters.py",
     "hand_attachment": "Authored opaque grip per item, two bow hands, shared pose/frame joints mirrored and scaled with the actor",
     "compositor": "actor_renderer.hpp; shared by game and tests/actor_test.cpp",
     "visual_authoring": "tools/visuals.py",
     "background_authoring": "background.hpp",
-    "visual_revision": "0.7.0",
+    "visual_revision": "0.15.0",
     "human_proportions": "Compact reference-led design: voluminous thirteen-pixel head, large profile eye, short collar, ten-pixel coat torso and eight-pixel legs",
     "tree_connections": "Eight trunk fork/root variants; foliage connects to logs; clustered background crowns share continuous stems",
     "outside_corners": "Connected exposed-edge curves; opaque shared edges, 2px timber corners and 5px soil/stone corners",
@@ -51,7 +51,11 @@
       "dusk bat",
       "mossling",
       "gem crawler",
-      "starheart warden"
+      "starheart warden",
+      "frost slime",
+      "sand scarab",
+      "lantern moth",
+      "jungle stinger"
     ],
     "foliage_connectivity": "Connected corner squares are opaque in temperate, snow and jungle foliage",
     "natural_trees": {
@@ -85,9 +89,12 @@
       "stand": 8,
       "jump": 9
     },
-    "human_frame_count": 10,
+    "human_frame_count": 12,
     "animation_clocks": "Travel-distance Q8 gait phase and separate start-to-finish tool action clock. Static inventory/wardrobe/dialogue previews use the stand frame.",
-    "sprite_storage": "Deduplicated indexed sprite rows; pose-independent clothes and armor reuse locomotion frames"
+    "sprite_storage": "Deduplicated indexed sprite rows; pose-independent clothes and armor reuse locomotion frames",
+    "equipment_authoring": "tools/equipment.py; original 16px grids with unchanged actor grip coordinates",
+    "branding_authoring": "tools/branding.py; original 32px crystal-earth emblem and 8px interface symbols",
+    "background_dither": "Fixed 4x4 ordered pattern with RGB888 interpolation and bounded RGB565 writes"
   },
   "cover": {
     "source": "cover.png",

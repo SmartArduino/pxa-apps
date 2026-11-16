@@ -1,6 +1,8 @@
 MIT License
 
 Copyright (c) 2026 Starsoil contributors
+Copyright (c) 2026 Patch
+Copyright (c) 2026 Hugo Duprez
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,3 +27,9 @@ The font subset, Starsoil UI 12, derives from ZLabs Pixel 12px M CN,
 Copyright (c) 2023-2026 Astro_2539, licensed under SIL OFL 1.1;
 see art/FONT-LICENSE.txt. The build-only KBitX decoder follows kbitfont
 (MIT, Copyright (c) 2025 TakWolf); see art/FONT-CODEC-LICENSE.txt. The generated cover is original AI-generated artwork.
+
+The firefly pulse in visual_fx.hpp adapts PixelFX weather/fireflies.js,
+https://github.com/patch-gg/pixelfx at 5294518ce7c72e48b6100a744596e0acf57f2826,
+which credits Sprite Fusion's fireflies (Copyright (c) 2026 Hugo Duprez, MIT).
+Torch and ripple art direction also references PixelFX. See art/PIXELFX-LICENSE.txt;
+the same license is bundled as assets/pixelfx-license.txt. No PixelFX font is used.

@@ -9,9 +9,11 @@
 #include "save_codec.hpp"
 #include "render_buffers.hpp"
 #include "scene_blit.hpp"
+#include "tile_cache.hpp"
 #include "scene_resample.hpp"
 #include "native_raster.hpp"
 #include "pixel_fill.hpp"
+#include "background_dither.hpp"
 #include "pxa.h"
 #include "pxa_audio.h"
 #include "pxa_clock.h"
@@ -29,6 +31,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
+#include <iterator>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -61,6 +64,7 @@ uint16_t *logical_frame;
 #endif
 uint16_t *canvas;
 starsoil_scene::NativeRaster native_raster;
+starsoil_scene::TileCache tile_cache;
 starsoil_ui::Canvas ui;
 bool ui_active;
 uint8_t packet[PXA_MAX_CONTROL_BYTES], events[PXA_MAX_CONTROL_BYTES],
@@ -78,6 +82,8 @@ uint32_t buttons, blocked_buttons, rng = 0x6d2b79f5;
 uint64_t perf_at, perf_render_us, perf_last_frame;
 uint32_t perf_max_gap_us;
 uint32_t perf_frames;
+constexpr uint64_t TickUs = 16667;
+uint64_t tick_remainder_us;
 int display_w = 320, display_h = 240;
 uint32_t input_density = 65536, display_safe[4]{}, display_corners[4]{};
 bool update_geometry(const pxa_ui_environment_t &env) {
@@ -386,6 +392,12 @@ void present() {
     ui = {frames + prepared_index * viewport.pixels(), viewport.width,
            viewport.height, WIDTH, HEIGHT};
 #endif
+    // Moving/dragging scenes use the direct blitter. Cache only resting views;
+    // the cache also backs off automatically when its working set is too large.
+    tile_cache.begin_frame(!(buttons & (PXA_CONTROLLER_UP | PXA_CONTROLLER_DOWN |
+        PXA_CONTROLLER_LEFT | PXA_CONTROLLER_RIGHT | PXA_CONTROLLER_A)) &&
+        std::none_of(std::begin(pointers.slots), std::end(pointers.slots),
+                     [](const auto &pointer) { return pointer.active; }));
     game::draw();
     draw_menu();
     canvas = nullptr;
@@ -593,8 +605,10 @@ void run() {
       continue;
     }
     uint64_t now = now_us();
-    if (now - last_tick >= 20000) {
-      uint32_t elapsed = uint32_t((now - last_tick) / 1000);
+    if (now - last_tick >= TickUs) {
+      const uint64_t delta = now - last_tick + tick_remainder_us;
+      uint32_t elapsed = uint32_t(delta / 1000);
+      tick_remainder_us = delta % 1000;
       last_tick = now;
       if (!paused)
         game::tick(elapsed > 100 ? 100 : elapsed);
@@ -625,7 +639,7 @@ void run() {
     }
     if (!finished)
       wait_event(save_pending && (paused || exit_requested || worlds_busy()) ? 2000 :
-          after < last_tick + 20000 ? last_tick + 20000 - after : 0);
+          after < last_tick + TickUs ? last_tick + TickUs - after : 0);
   }
 }
 
@@ -695,8 +709,13 @@ bool blit_pixels(int x, int y, const uint16_t *pixels, int w, int h,
 #else
   if (!canvas) return false;
   if (ui_active) return ui.sprite(x, y, pixels, w, h, flip, light, clip_top, clip_bottom);
-  starsoil_scene::blit(canvas, WIDTH, HEIGHT, x, y, pixels, w, h,
-                        flip, light, clip_top, clip_bottom);
+  // All 16x16 sprite sources are immutable application art. Other dimensions
+  // retain the general blitter (characters, previews and non-tile images).
+  if (w == 16 && h == 16 && tile_cache.active())
+    tile_cache.draw(canvas, WIDTH, HEIGHT, x, y, pixels, flip, light, clip_top, clip_bottom);
+  else
+    starsoil_scene::blit(canvas, WIDTH, HEIGHT, x, y, pixels, w, h,
+                          flip, light, clip_top, clip_bottom);
   return true;
 #endif
 }
@@ -741,7 +760,7 @@ void rect(int x, int y, int w, int h, uint16_t color) {
 }
 void blend_rect(int x, int y, int w, int h, uint16_t color, unsigned alpha) {
   if (ui_active) ui.blend_rect(x,y,w,h,color,alpha);
-  else rect(x,y,w,h,color);
+  else starsoil_pixels::blend_rectangle(canvas, WIDTH, HEIGHT, x, y, w, h, color, alpha);
 }
 void clear(uint16_t color) { rect(0, 0, WIDTH, HEIGHT, color); }
 void outline(int x, int y, int w, int h, uint16_t color) {
@@ -799,6 +818,20 @@ void end_scene_batch() { native_raster.end(); }
 void scene_rect(int x, int y, int w, int h, uint16_t color) {
   if (native_raster.batching() && native_raster.fill(x, y, w, h, color)) return;
   rect(x, y, w, h, color);
+}
+void scene_pattern(int x, int y, int w, const uint16_t *colors, unsigned phase) {
+  // Flush earlier geometry before touching its pixels, retaining batching for
+  // the mountains/clouds that follow the gradient. Empty row barriers are free.
+  native_raster.flush();
+  if (y<0 || y>=HEIGHT || w<=0) return;
+  const int left=std::max(0,x),right=std::min(WIDTH,x+w);
+  if (left>=right) return;
+  phase=(phase+unsigned(left-x))&3;
+#ifdef PXA_POCKET_STUDIO
+  for (int xx=left;xx<right;++xx) rect(xx,y,1,1,colors[(phase+unsigned(xx-left))&3]);
+#else
+  if (canvas) starsoil_dither::fill(canvas+y*WIDTH+left,size_t(right-left),colors,phase);
+#endif
 }
 void scene_line(int x0, int y0, int x1, int y1, uint16_t color) {
   if (!native_raster.batching()) { line(x0,y0,x1,y1,color); return; }

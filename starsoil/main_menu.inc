@@ -59,6 +59,8 @@ void menu_background() {
 void draw_title() {
   menu_background();
   normalize_world_selection();
+  sprite(31,10,art::emblem[0],32,32);
+  center(1,11,288,"STARSOIL",Dark,3);
   center(0, 10, 288, "STARSOIL", GoldInk, 3);
   center(0, 49, 288, tr("THE WORLDS BELOW", "星壤物语"), Ink);
   int count = world_count();

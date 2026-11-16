@@ -53,6 +53,6 @@ int main(int argc,char **argv) {
   if(argc==2 && std::strcmp(argv[1],"--print-fingerprint")==0) {
     std::printf("0x%llx\n",static_cast<unsigned long long>(fingerprint));return 0;
   }
-  assert(fingerprint == 0x277d2246f3d0103bull);
+  assert(fingerprint == 0x9580ca196982c96full); // Native material-tier equipment; unchanged rig and grips.
   puts("PASS 2880 reviewed actor plot streams: clothes, armor, held tools, both facings, walk/stand/ascent/apex/descent and lighting");
 }

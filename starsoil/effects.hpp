@@ -20,15 +20,22 @@ struct Effects {
     int amount = 0;
     uint32_t color = 0;
   };
+  struct Pulse {
+    float x = 0, y = 0;
+    uint16_t life = 0;
+    uint32_t color = 0;
+    bool flat = false;
+  };
   std::array<Particle, 40> particles{};
   std::array<Pop, 8> pops{};
+  std::array<Pulse, 8> pulses{};
   std::array<int, ItemCount> inventory{};
   std::array<int, MaxMobs> health{};
   uint32_t mined = 0, seed = 0x27d4eb2d;
   uint16_t hp = 100, dust = 0;
   uint8_t target = Stone;
-  unsigned next_particle = 0, next_pop = 0;
-  bool initialized = false;
+  unsigned next_particle = 0, next_pop = 0, next_pulse = 0;
+  bool initialized = false, grounded = false, wet = false;
   uint32_t random() {
     seed ^= seed << 13;
     seed ^= seed >> 17;
@@ -56,6 +63,9 @@ struct Effects {
         }
     pops[next_pop++ % pops.size()] = {x, y, 1100, item, amount, color};
   }
+  void pulse(float x, float y, uint32_t color, bool flat = false) {
+    pulses[next_pulse++ % pulses.size()] = {x, y, 360, color, flat};
+  }
   void sync(const State &s) {
     inventory.fill(0);
     for (auto b : s.bag)
@@ -64,6 +74,8 @@ struct Effects {
       health[i] = s.mobs[i].hp;
     mined = s.mined;
     hp = s.hp;
+    grounded = s.player.grounded;
+    wet = tile(s, int(s.player.x / 16), int((s.player.y - 4) / 16)) == Water;
     target = tile(s, s.target_x, s.target_y);
     if(items[s.bag[s.selected].item].kind==Hammer && s.target_x>=0 && s.target_y>=0 &&
        s.target_x<s.width && s.target_y<s.height) {
@@ -86,13 +98,17 @@ struct Effects {
         p.life = p.life > ms ? p.life - ms : 0;
         p.y -= 13 * dt;
       }
+    for (auto &p : pulses)
+      p.life = p.life > ms ? p.life - ms : 0;
     if (!initialized || !active) {
       sync(s);
       return;
     }
-    if (s.mined > mined)
+    if (s.mined > mined) {
       burst(s.target_x * 16 + 8, s.target_y * 16 + 8,
             items[tile_drop(target ? target : Stone)].color, 12);
+      pulse(s.target_x * 16 + 8, s.target_y * 16 + 8, 0xd6cda6);
+    }
     if (s.hp < hp)
       pop(s.player.x, s.player.y - 35, -int(hp - s.hp), 0xe99389);
     std::array<int, ItemCount> now{};
@@ -107,7 +123,14 @@ struct Effects {
         const auto &m = s.mobs[i];
         pop(m.x, m.y - 29, -(health[i] - std::max(0, int(m.hp))), 0xffd797);
         burst(m.x, m.y - 10, 0xe4b98c, 5);
+        pulse(m.x, m.y - 10, 0xffdfac);
       }
+    const bool in_water = tile(s, int(s.player.x / 16), int((s.player.y - 4) / 16)) == Water;
+    if (in_water != wet) {
+      burst(s.player.x, s.player.y - 4, 0x9ad7df, 7);
+      pulse(s.player.x, s.player.y - 4, 0xb6e1e0, true);
+    } else if (!grounded && s.player.grounded && !in_water)
+      burst(s.player.x, s.player.y - 1, 0xa69d80, 5);
     dust = uint16_t(dust + ms);
     if (s.player.grounded && std::abs(s.player.vx) > 25 && dust >= 120) {
       dust = 0;

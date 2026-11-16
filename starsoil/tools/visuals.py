@@ -4,6 +4,7 @@ Shared ink, cool shadows, warm highlights. All artwork is painted at native
 resolution; there is no antialiasing, runtime image download or sprite pack.
 """
 from PIL import Image, ImageDraw
+import equipment
 INK='#263342'
 CREAM='#fff0c9'
 GOLD='#eac47a'
@@ -174,6 +175,8 @@ def tile(t,mask,fallback):
 
 
 def icon(kind,col,t,name,tile_fn):
+    refined=equipment.icon(kind,name,col)
+    if refined is not None:return refined
     im,d=canvas();low=name.lower();c='#'+col
     if kind in ('Block','Furniture') and t and name not in ('Water flask','Lava flask'):return tile_fn(t,0)
     if kind=='Wall':

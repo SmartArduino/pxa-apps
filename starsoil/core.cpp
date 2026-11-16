@@ -548,6 +548,7 @@ void shelter(State &s) {
     for (int y = 43; y < 46; ++y)
       put(s, x, y, CopperOre);
 }
+#include "material_physics.inc"
 } // namespace
 uint32_t hash(uint32_t n) {
   n ^= n >> 16;
@@ -571,8 +572,21 @@ bool set_tile(State &s, int x, int y, uint8_t value) {
   if (!inside(s, x, y) || value >= TileCount)
     return false;
   s.tiles[index(x, y)] = value;
+  wake_materials(s,x,y);
   s.dirty = true;
   return true;
+}
+void step_materials(State &s,uint32_t ms) {
+  auto &m=s.materials;
+  if(!m.initialized) {
+    const int columns=(s.width+15)/16,rows=(s.height+15)/16;
+    const uint64_t mask=columns==64?~uint64_t(0):(uint64_t(1)<<columns)-1;
+    std::fill(std::begin(m.active),std::end(m.active),uint64_t(0));
+    for(int y=0;y<rows;++y)m.active[y]=mask;
+    m.initialized=true;
+  }
+  m.elapsed=uint16_t(m.elapsed+std::min(ms,100u));
+  while(m.elapsed>=50) {m.elapsed-=50;material_step(s);}
 }
 Placement placement_preview(const State &s,const Input &input,int x,int y) {
   if(input.smart_cursor && s.smart_cursor && !s.target_ready)return {PlaceFailure::Blocked,y};
@@ -595,6 +609,7 @@ const char *biome_name(Biome b, bool zh) {
   return zh ? cn[b] : en[b];
 }
 void generate(State &s, uint32_t seed) {
+  s.materials={};
   s.seed = seed;
   s.random = seed ? seed : 1;
   for (int x = 0; x < s.width; ++x) {
@@ -1232,6 +1247,7 @@ void tick(State &s, const Input &in, uint32_t ms) {
   const uint32_t previous_played = s.played;
   s.played += ms;
   s.clock += ms;
+  step_materials(s,ms);
   if (s.clock >= 360000) {
     s.clock -= 360000;
     ++s.day;

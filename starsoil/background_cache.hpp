@@ -59,6 +59,7 @@ class BackgroundCache {
   }
 
 public:
+  void invalidate() { valid = false; }
   bool restore(const BackgroundKey &key, uint16_t *frame) {
     const unsigned count = pixel_count(key);
     capture = frame && count && key.reuse_allowed && have_view && key.view == previous_view;

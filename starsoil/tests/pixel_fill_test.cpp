@@ -19,4 +19,15 @@ int main() {
     }
   }
   puts("PASS exact flat fills, empty/single/odd spans, full and pitched rows, frame edges and buffer guards");
+  for (unsigned alpha : {0u, 1u, 23u, 90u, 254u, 255u, 300u})
+    for (int x : {-40, -2, 0, 9, 31, 40})
+      for (int y : {-40, -2, 0, 9, 31, 40}) {
+        std::vector<uint16_t> actual(32 * 32 + 2, 0x1357), expected = actual;
+        for (int yy = std::max(0, y); yy < std::min(32, y + 19); ++yy)
+          for (int xx = std::max(0, x); xx < std::min(32, x + 17); ++xx)
+            expected[1 + yy * 32 + xx] = starsoil_color::mix(0x1357, 0xfd35, std::min(255u, alpha));
+        starsoil_pixels::blend_rectangle(actual.data() + 1, 32, 32, x, y, 17, 19, 0xfd35, alpha);
+        assert(actual == expected);
+      }
+  puts("PASS logical RGB565 glow alpha, scene edge clipping, zero/opaque alpha and buffer guards");
 }

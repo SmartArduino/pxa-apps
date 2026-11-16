@@ -89,9 +89,19 @@ struct StateData {
   char event[96]{};
   uint32_t event_serial = 0;
 };
+// Transient chunk scheduling; tiles remain the persistent source of truth.
+struct MaterialMotion {
+  uint64_t active[WorldH / 16]{};
+  uint32_t moved[256]{};
+  uint32_t step = 0, total_moves = 0;
+  uint16_t elapsed = 0, local_cursor = 0, world_cursor = 0;
+  uint16_t moves = 0, processed_cells = 0;
+  bool initialized = false;
+};
 struct State : StateData {
   uint8_t tiles[Cells]{}, walls[Cells]{};
   uint8_t heights[WorldW]{};
+  MaterialMotion materials{};
 };
 uint32_t hash(uint32_t n);
 uint32_t rng(State &s);
@@ -102,6 +112,8 @@ const char *biome_name(Biome b, bool zh);
 void generate(State &s, uint32_t seed);
 void new_game(State &s, uint32_t seed, WorldSize size = WorldSize::Medium);
 void tick(State &s, const Input &input, uint32_t ms);
+// Fixed 50 ms material steps, at most four 16x16 chunks and 64 moves per step.
+void step_materials(State &s, uint32_t ms);
 int count(const State &s, int item);
 bool add(State &s, int item, int amount);
 bool remove(State &s, int item, int amount);

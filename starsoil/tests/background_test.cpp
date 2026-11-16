@@ -64,6 +64,6 @@ int main() {
       for(auto value:render(x*16,cy))fingerprint=(fingerprint^value)*1099511628211ull;
   }
   printf("Background pixel fingerprint: %llu\n",(unsigned long long)fingerprint);
-  assert(fingerprint==2066120640922625989ull); // Before the boundary-span optimization.
+  assert(fingerprint==9976115187210710719ull); // RGB888 gradients and stable ordered dithering, including cave blending.
   puts("PASS distant ground interpolates across cliffs; full coverage and clipping in every biome at surface and cave depths");
 }
