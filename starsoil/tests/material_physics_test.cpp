@@ -29,7 +29,7 @@ static void run(int n) {
   }
 }
 int main() {
-  fresh();put(40,20,Sand);run(160);assert(tile(s,40,50)==Sand && amounts()[0]==1);
+  fresh();put(40,20,Sand);run(160);assert(tile(s,40,50)==Sand && amounts()==(std::array<int,3>{1,0,0}));
   auto moves=s.materials.total_moves;run(40);assert(s.materials.total_moves==moves);
   for(auto bits:s.materials.active)assert(!bits);
   assert(set_tile(s,40,51,Air));run(15);assert(tile(s,40,51)==Sand);
@@ -76,4 +76,13 @@ int main() {
   for(int y=1;y<s.height-1;++y)for(int x=1;x<s.width-1;++x)put(x,y,y%2?Sand:Air);
   run(40);assert(s.materials.moves<=64 && s.materials.processed_cells<=1024);
   puts("PASS maximum world dimensions keep fixed chunk and movement budgets");
+  for(auto size:{WorldSize::Small,WorldSize::Medium,WorldSize::Large,WorldSize::Huge}) {
+    new_game(s,1234567,size);auto original=amounts();
+    for(int x=1;x<s.width-1;++x)if(biome_at(x,0,s.width)==Desert)
+      for(int y=0;y<int(s.heights[x])+5;++y)assert(tile(s,x,y)!=Water);
+    run(200);assert(amounts()==original);
+    std::vector<uint8_t> data(SaveBytes);size_t bytes=encode(s,data.data(),data.size());
+    assert(bytes && decode(loaded,data.data(),bytes));s=loaded;run(40);assert(amounts()==original);
+  }
+  puts("PASS generated deserts are dry at the surface; gravity and save/reload cannot create water, lava or extra sand in any world size");
 }

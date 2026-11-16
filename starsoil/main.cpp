@@ -402,6 +402,7 @@ void scene() {
          ++x) {
       int sx = x * 16 - cx, sy = y * 16 - cy, t = tile(s, x, y),
           light = light_at(x, y);
+      const int region = biome_at(x,y,s.width);
       int wall=s.walls[y*WorldW+x];
       if(built_wall(uint8_t(wall))) {
         auto same=[&](int xx,int yy) {return xx>=0 && yy>=0 && xx<s.width && yy<s.height && s.walls[yy*WorldW+xx]==wall;};
@@ -419,7 +420,7 @@ void scene() {
       auto crown = t == Air || t == Log || t == Leaves
                        ? tree_crowns.find(x, y, tree_sample) : starsoil_tree::Crown{};
       bool natural_tree = starsoil_tree::draw_natural(
-          x, y, sx, sy, biome_at(x, y, s.width), light, tree_sample,
+          x, y, sx, sy, region, light, tree_sample,
           [](int xx, int yy, uint16_t c) {
             if (yy >= scene_top() && yy < render_bottom())
               pixel(xx, yy, c);
@@ -429,7 +430,6 @@ void scene() {
                    (connects(t, tile(s, x + 1, y)) ? 2 : 0) |
                    (connects(t, tile(s, x, y + 1)) ? 4 : 0) |
                    (connects(t, tile(s, x - 1, y)) ? 8 : 0);
-        int region = biome_at(x, y, s.width);
         auto sample = [](int xx, int yy) { return tile(s, xx, yy); };
         if (door(t)) {
           starsoil_door::draw(t, sx, sy, light, [](int xx, int yy, uint16_t c) {
@@ -443,7 +443,7 @@ void scene() {
         if (!natural_tree) {
           if (starsoil_terrain::terrain(t)) {
             auto neighbors = starsoil_terrain::neighbors(x, y, sample);
-            tile_art = art::tiles[t * 16 + neighbors.sides];
+            tile_art = starsoil_terrain::image(t,neighbors.sides,region);
           }
           sprite(sx, sy, tile_art, 16, 16, false, light, 1, true);
         }
@@ -454,12 +454,12 @@ void scene() {
           [](int xx, int yy, uint16_t c) {
             if (yy >= scene_top() && yy < render_bottom())
               pixel(xx, yy, c);
-          });
+          },region);
       starsoil_details::tile(t,x,y,sx,sy,light,tree_sample,
           [](int xx,int yy,int w,int h,uint16_t c) {
             int top=std::max(yy,scene_top()),bottom=std::min(yy+h,render_bottom());
             if(top<bottom)rect(xx,top,w,bottom-top,c);
-          });
+          },t==Stone && region==Desert);
     }
 #ifndef PXA_POCKET_STUDIO
     static_scene_cache.store(scene_pixels);

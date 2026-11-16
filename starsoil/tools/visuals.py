@@ -59,6 +59,18 @@ def tree_log(mask):
     return im
 
 
+def sandstone(mask):
+    """Biome tint for the existing stone tile; shape and mining stay stone."""
+    image=tile(3,mask,None)
+    for y in range(16):
+        for x in range(16):
+            r,g,b,a=image.getpixel((x,y))
+            if a:
+                value=(r*3+g*6+b)//10
+                image.putpixel((x,y),(min(255,value+40),min(255,value+12),max(0,value-25),a))
+    return image
+
+
 def tile(t,mask,fallback):
     if not t:return canvas()[0]
     im,d=canvas()
@@ -136,9 +148,15 @@ def tile(t,mask,fallback):
         return round_contour(im,mask,8)
     if t in (20,21):
         c='4c8da9' if t==20 else 'cf754b'
-        d.rectangle((0,2,15,15),fill='#'+c)
-        d.line((0,2,15,2),fill='#a3ded5' if t==20 else '#ffcf7c')
-        d.line((1,5,6,5),fill=shade(c,25));d.line((9,10,15,10),fill=shade(c,17));d.line((0,14,7,14),fill=shade(c,-20))
+        # Only an exposed surface has a two-pixel air gap and a bright crest.
+        # Joined cells fill to their top edge, so deep water is one continuous
+        # volume instead of a stack of disconnected blue trays.
+        top=0 if mask&1 else 2
+        d.rectangle((0,top,15,15),fill='#'+c)
+        if not mask&1:
+            d.line((0,2,15,2),fill='#a3ded5' if t==20 else '#ffcf7c')
+            d.line((1,5,6,5),fill=shade(c,25))
+        if not mask&4:d.line((0,15,15,15),fill=shade(c,-20))
         return im
     if t in (29,31):
         d.line((8,7,8,15),fill='#497961');d.line((8,12,4,10),fill='#80ad68');d.line((8,10,12,8),fill='#80ad68')

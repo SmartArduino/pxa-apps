@@ -877,13 +877,22 @@ try:
         assert args.fixture_tool, 'Focused appearance/terrain QA requires --fixture-tool'
         start(0);enter_world();key('ENTER');time.sleep(.6)
         path,_=saved();stop()
-        fixtures=('forest','snow','jungle','reference','plain','cloth','copper','iron','wardrobe','robe') if args.appearance_only else ('joins','forest','snow','jungle','cave')
+        fixtures=('forest','snow','jungle','reference','plain','cloth','copper','iron','wardrobe','robe') if args.appearance_only else ('joins','forest','desert','snow','jungle','cave','shore')
         if args.fixtures:
             assert all(name in fixtures for name in args.fixtures), 'Choose fixtures from the focused run'
             fixtures=args.fixtures
         for number,fixture in enumerate(fixtures,50):
             subprocess.run([str(args.fixture_tool.resolve()),fixture,str(path)],check=True)
-            start(number);enter_world();time.sleep(1.2);capture(fixture+'-fixed')
+            initial=read_save(path)
+            start(number);enter_world();time.sleep(3.5);capture(fixture+'-fixed')
+            if fixture in ('desert','shore'):
+                key('ENTER');time.sleep(.6);_,data=saved()
+                w,h=struct.unpack_from('<HH',data,6)
+                tiles=data[228+w:228+w+w*h];old=initial[228+w:228+w+w*h]
+                assert tiles.count(20)==old.count(20),'Water created or lost in desert/shore'
+                if fixture=='desert':
+                    assert all(tiles[y*w+x]!=20 for x in range(176,205) for y in range(20,44)), 'Dry desert contains water'
+                key('ENTER')
             if args.appearance_only and fixture not in ('forest','snow','jungle'):
                 tap(195,22,'header');tap(145,35,'tab');capture(fixture+'-portrait-right')
                 tap(62,115);capture(fixture+'-portrait-left')

@@ -115,15 +115,21 @@ void draw(int w, int bottom, int camera_x, int camera_y, int surface_y,
   if (depth >= 4) {
     // Crystal hues emerge over eight world tiles, independent of the actor.
     int crystal = std::clamp((camera_y + (first_y + bottom) / 2 - 64 * 16) * 255 / (8 * 16), 0, 255);
-    gradient(0x141d30, starsoil_dither::mix_rgb(0x303646,0x284452,unsigned(crystal)));
+    // A dry dune hollow should read as sandstone, not a blue pool. The warm
+    // shallow palette fades into the same deep crystals without a depth jump.
+    auto mineral = [&](uint32_t normal, uint32_t sandstone) {
+      return c(biome == Desert ? starsoil_dither::mix_rgb(sandstone,normal,unsigned(crystal)) : normal);
+    };
+    const uint32_t cave_top = biome == Desert ? starsoil_dither::mix_rgb(0x30251f,0x141d30,unsigned(crystal)) : 0x141d30;
+    gradient(cave_top, starsoil_dither::mix_rgb(biome == Desert ? 0x594534 : 0x303646,0x284452,unsigned(crystal)));
     for (int layer = 0; layer < 2; ++layer) {
       for (int x = 0; x < w; ++x) {
         int world = x + camera_x / (layer ? 3 : 6);
         tops[x] = 34 + ridge(world, layer ? 53 : 79, 31 + layer * 9) / 2;
         floors[x] = bottom - 8 - ridge(world, layer ? 47 : 81, 117 + layer * 3);
       }
-      columns(c(layer ? 0x182536 : 0x1c2b3c), tops, false);
-      columns(c(layer ? 0x182735 : 0x223543), floors, true);
+      columns(mineral(layer ? 0x182536 : 0x1c2b3c,layer ? 0x392c24 : 0x44342a), tops, false);
+      columns(mineral(layer ? 0x182735 : 0x223543,layer ? 0x3c2e24 : 0x4b392b), floors, true);
     }
     // Faceted teeth and a middle ledge put depth cues above the walkable
     // floor; crystals painted only at the screen bottom were usually hidden.
@@ -133,14 +139,14 @@ void draw(int w, int bottom, int camera_x, int camera_y, int surface_y,
       const int x=i*83-ceiling_scroll,tip=72+int(n%34),half=4+int(n%6);
       for(int yy=44;yy<tip;++yy) {
         int span=(tip-yy)*half/(tip-44);
-        box(x-span,yy,span+1,1,c(0x1b3542));
-        box(x+1,yy,span,1,c(0x244551));
+        box(x-span,yy,span+1,1,mineral(0x1b3542,0x49382b));
+        box(x+1,yy,span,1,mineral(0x244551,0x654d37));
       }
-      line(x,54,x,tip-3,c(0x365661));
+      line(x,54,x,tip-3,mineral(0x365661,0x826345));
     }
     const int shelf=bottom*3/5;
     for(int x=0;x<w;++x)tops[x]=shelf+16+ridge(x+camera_x/4,73,911)/3;
-    columns(c(0x193440),tops,true);
+    columns(mineral(0x193440,0x483528),tops,true);
     int scroll = camera_x / 4;
     for (int i = floor_div(scroll, 57) - 1; i < floor_div(scroll + w, 57) + 2;
          ++i) {
@@ -148,13 +154,13 @@ void draw(int w, int bottom, int camera_x, int camera_y, int surface_y,
       int x = i * 57 - scroll, y = shelf - int(n % 36),
           h = 12 + int(n % 17);
       if (n % 3 == 0) {
-        diamond(x, y, 4, h, c(0x38636a), c(0x79b1a4));
-        diamond(x + 7, y + 7, 2, 13, c(0x2c4e5c), c(0x527d88));
+        diamond(x, y, 4, h, mineral(0x38636a,0x71573b), mineral(0x79b1a4,0xb28c57));
+        diamond(x + 7, y + 7, 2, 13, mineral(0x2c4e5c,0x604a33), mineral(0x527d88,0x997347));
         if (cave_sparkles && (animation / 180 + n) % 17 < 3)
           dot(x, y + 3, c(0xb2e3c0));
       } else {
         for (int yy = 0; yy < 22; ++yy)
-          box(x - yy / 6, 35 + int(n % 12) + yy, yy / 3 + 1, 1, c(0x233342));
+          box(x - yy / 6, 35 + int(n % 12) + yy, yy / 3 + 1, 1, mineral(0x233342,0x48382c));
       }
     }
     return;

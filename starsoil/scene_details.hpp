@@ -19,7 +19,7 @@ void wall(int material, int mask, int x, int y, int light, Rect rect) {
   if (!(mask & 2)) { box(13,0,3,16,0x3b3030); box(13,2,1,12,0x7e5943); }
 }
 template<class Sample, class Rect>
-void tile(int t, int tx, int ty, int x, int y, int light, Sample sample, Rect rect) {
+void tile(int t, int tx, int ty, int x, int y, int light, Sample sample, Rect rect, bool sandstone=false) {
   using namespace starsoil;
   auto box = [&](int xx, int yy, int w, int h, uint32_t c) {
     rect(x + xx, y + yy, w, h, starsoil_color::dim(rgb(c), unsigned(light)));
@@ -46,6 +46,14 @@ void tile(int t, int tx, int ty, int x, int y, int light, Sample sample, Rect re
   } else if (t == Dirt && seed % 5 == 0) {
     box(3,10,5,1,0x73513d);box(7,11,4,1,0x5a4236);
     if (seed & 8) { box(11,5,3,2,0x8a7965);box(12,5,2,1,0xa18f73); }
+  } else if (t == Sand || sandstone) {
+    // Sand has warm grains, never the blue-grey rock rim below. Keep every
+    // detail inside the authored contour, including an isolated falling tile.
+    if (above == Air || above == Cactus) {
+      box(5,0,6,1,0xf0d297);box(6,1,4,1,0xe2bd7b);
+      const int drift = 4 + int(seed % 5);
+      box(drift,4,4,1,0xe6c68b);box(drift+1,5,3,1,0xc8a365);
+    }
   } else if (starsoil_terrain::terrain(t) && !starsoil_terrain::terrain(above)) {
     const bool cold = t == Snow || t == Ice;
     const uint32_t edge = cold ? 0xd7e7e1 : t == CrystalOre ? 0x87c2ba : 0x9babad;

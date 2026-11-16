@@ -101,6 +101,20 @@ for t in (1,2,3,4,5,6,9,10,11,12,13,14,15,16,17,18,19):
 assert draw_art.tile(8,15).getpixel((0,8))[3]==255
 assert draw_art.tile(8,15).getpixel((15,8))[3]==255
 print('PASS distinct armor and clothing, nine animated creature identities with bounded palettes and connected terrain')
+tiles=generated_rows('tiles')
+for material in (20,21):
+  for mask in range(16):
+    image=draw_art.tile(material,mask)
+    assert tiles[material*16+mask]==draw_art.rgb565(image)
+    if mask&1:assert image.getextrema()[3]==(255,255)
+    else:assert image.getpixel((8,0))[3]==0 and image.getpixel((8,2))[3]==255
+print('PASS compiled water/lava match the source, joined bodies are opaque and exposed surfaces remain distinct')
+sandstone=generated_rows('sandstone')
+for mask in range(16):
+  image=draw_art.visuals.sandstone(mask)
+  assert sandstone[mask]==draw_art.rgb565(image)
+  assert list(image.getchannel('A').getdata())==list(draw_art.tile(3,mask).getchannel('A').getdata())
+print('PASS desert stone tint matches compiled pixels and preserves the original stone contour')
 
 # Full foliage interiors must cover the vertices, not merely edge midpoints.
 for snow in (True,False):

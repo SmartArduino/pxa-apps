@@ -2,7 +2,7 @@
 #pragma once
 #include "art.hpp"
 #include "color_math.hpp"
-#include "items.hpp"
+#include "core.hpp"
 #include <cstdint>
 namespace starsoil_terrain {
 // Different opaque materials share one contour, so no transparency is
@@ -14,6 +14,9 @@ constexpr bool terrain(int t) {
 struct Neighbors {
   uint8_t sides, diagonals;
 };
+inline const uint16_t *image(int t,int mask,int biome=starsoil::Forest) {
+  return t==starsoil::Stone && biome==starsoil::Desert ? art::sandstone[mask] : art::tiles[t*16+mask];
+}
 template <class Sample> Neighbors neighbors(int x, int y, Sample sample) {
   return {uint8_t((terrain(sample(x, y - 1)) ? 1 : 0) |
                   (terrain(sample(x + 1, y)) ? 2 : 0) |
@@ -47,17 +50,17 @@ void draw(int x, int y, const uint16_t *data, int light, Plot plot) {
 // Both the game and composite topology tests call these production functions.
 template <class Sample, class Plot>
 bool draw_terrain(int tx, int ty, int sx, int sy, int light, Sample sample,
-                  Plot plot) {
+                  Plot plot, int biome=starsoil::Forest) {
   int t = sample(tx, ty);
   if (!terrain(t))
     return false;
   Neighbors n = neighbors(tx, ty, sample);
-  draw(sx, sy, art::tiles[t * 16 + n.sides], light, plot);
+  draw(sx, sy, image(t,n.sides,biome), light, plot);
   return true;
 }
 template <class Sample, class Plot>
 void draw_fillet(int tx, int ty, int sx, int sy, int light, Sample sample,
-                 Plot plot) {
+                 Plot plot, int biome=starsoil::Forest) {
   if (terrain(sample(tx, ty)))
     return;
   Neighbors n = neighbors(tx, ty, sample);
@@ -71,7 +74,7 @@ void draw_fillet(int tx, int ty, int sx, int sy, int light, Sample sample,
     // The diagonal solid tile necessarily has its two incident sides joined;
     // its shared vertex is opaque and provides the correct material color.
     Neighbors diagonal = neighbors(tx + dx, ty + dy, sample);
-    uint16_t color = art::tiles[t * 16 + diagonal.sides][py * 16 + px];
+    uint16_t color = image(t,diagonal.sides,biome)[py * 16 + px];
     int x = dx > 0 ? 15 : 0, y = dy > 0 ? 15 : 0;
     plot(sx + x, sy + y, dim(color, light));
     plot(sx + x - dx, sy + y, dim(color, light));

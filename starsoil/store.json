@@ -16,5 +16,5 @@
   ],
   "icon": "store/icon.png",
   "cover": "store/cover.png",
-  "changelog": "加入沙、水和熔岩重力：沙会下落、斜向堆积并挤开液体，水向低处流动，熔岩较慢，兼容原存档。更新武器工具、药瓶、矿物和界面图标，加入晶体草土徽记与铜金界面。天空、洞穴和洞口过渡采用固定有序抖动，改善色带；完善火把、波纹、环境粒子及场景细节。静止镜头复用静态场景缓存，区块休眠和固定物理预算限制更新开销，保留 3 MiB 内存上限。\n\nAdds falling and piling sand, finite tile water flow and slower lava with existing-save compatibility. Refreshes equipment, item and UI icons, the crystal-earth emblem and bronze HUD. Ordered dithering smooths sky/cave gradients; bounded environmental effects, sleeping material chunks and static-scene reuse keep the original 3 MiB linear-memory limit."
+  "changelog": "修复沙块使用蓝灰色岩石亮边的问题，沙漠石层和浅层空洞改为暖褐砂岩色，并平滑过渡到深层晶洞，避免误认成积水。水和熔岩的相连方块连续填充，只在露出的液面绘制亮边，消除内部空隙和重复水面条纹。补充干燥沙漠、物质守恒、存档往返及液体贴图回归，保持原存档格式。\n\nFixes blue-grey rock highlights on sand and gives desert stone and shallow hollows a warm sandstone palette with a smooth transition to deep crystals. Connected water/lava tiles now form continuous volumes with crests only on exposed surfaces. Adds dry-desert, material conservation, save/reload and liquid-art regressions without changing the save format."
 }

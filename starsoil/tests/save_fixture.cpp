@@ -41,6 +41,21 @@ int main(int argc, char **argv) {
   };
   if (std::strcmp(argv[1], "performance-huge") == 0 ||
       std::strcmp(argv[1], "performance-medium") == 0) return save();
+  if (std::strcmp(argv[1],"shore")==0) {
+    for(int x=174;x<=211;++x) {
+      s.heights[x]=35;
+      for(int y=17;y<43;++y) {
+        set_tile(s,x,y,y<35?Air:y<40?Sand:Stone);
+        s.walls[y*WorldW+x]=Air;
+      }
+    }
+    for(int x=191;x<203;++x)for(int y=34;y<39;++y)
+      set_tile(s,x,y,y<36?Air:Water);
+    set_tile(s,184,34,Cactus);set_tile(s,184,33,Cactus);
+    s.player.x=187*16+8;s.player.y=35*16;s.clock=100000;s.invulnerable=60000;
+    for(auto &m:s.mobs)m={};
+    return save();
+  }
   if (std::strncmp(argv[1],"gravity-",8)==0) {
     for(int y=42;y<70;++y)for(int x=86;x<120;++x) {
       set_tile(s,x,y,Air);s.walls[y*WorldW+x]=Air;

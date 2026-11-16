@@ -6,7 +6,7 @@
 using namespace starsoil;
 static State s;
 constexpr int W=288,H=232,Top=25;
-static std::vector<uint16_t> render(int cx,int cy) {
+static std::vector<uint16_t> render(int cx,int cy,int cave_biome=-1) {
   std::vector<uint16_t> pixels(W*H,0x1234);
   auto dot=[&](int x,int y,uint16_t c) {
     if (unsigned(x)<W && y>=Top && y<H) pixels[y*W+x]=c;
@@ -20,8 +20,9 @@ static std::vector<uint16_t> render(int cx,int cy) {
     for (;;) { dot(x,y,c);if(x==ex && y==ey)break;int v=e*2;
       if(v>=dy){e+=dy;x+=sx;}if(v<=dx){e+=dx;y+=sy;} }
   };
-  starsoil_scene::draw_world(s,W,H,cx,cy,12345,rect,line,dot,
+  if(cave_biome<0)starsoil_scene::draw_world(s,W,H,cx,cy,12345,rect,line,dot,
     [&](int x,int y){return pixels[y*W+x];},Top);
+  else starsoil_scene::draw(W,H,cx,cy,200,8,cave_biome,s.clock,12345,rect,line,dot,Top);
   for (int y=0;y<Top;++y)for(int x=0;x<W;++x)assert(pixels[y*W+x]==0x1234);
   for (int y=Top;y<H;++y)for(int x=0;x<W;++x)assert(pixels[y*W+x]!=0x1234);
   return pixels;
@@ -57,6 +58,23 @@ int main() {
   for(int x=100;x<140;++x)s.heights[x]=60;
   for(int x=90*16;x<150*16;++x)
     assert(std::abs(starsoil_scene::surface_level(s,x+1)-starsoil_scene::surface_level(s,x))<=1);
+  {
+    auto dry=render(185*16,700);
+    long red=0,blue=0;
+    for(int y=Top;y<H;++y)for(int x=0;x<W;++x) {
+      auto c=dry[y*W+x];red+=c>>11;blue+=c&31;
+    }
+    assert(red>blue); // Shallow desert voids are warm stone, not water blue.
+    // Deep crystals share their established palette across biomes.
+    assert(render(185*16,1500,Desert)==render(185*16,1500,Forest));
+    double desert_step=0;
+    auto before=render(185*16,880);
+    for(int cy=881;cy<1090;++cy) {
+      auto after=render(185*16,cy);desert_step=std::max(desert_step,difference(before,after));before=after;
+    }
+    assert(desert_step<3.0);
+    printf("PASS dry sandstone palette and continuous desert/crystal transition: %.3f maximum mean pixel step\n",desert_step);
+  }
   uint64_t fingerprint=1469598103934665603ull;
   for(uint32_t clock:{10000u,100000u}) {
     s.clock=clock;
@@ -64,6 +82,6 @@ int main() {
       for(auto value:render(x*16,cy))fingerprint=(fingerprint^value)*1099511628211ull;
   }
   printf("Background pixel fingerprint: %llu\n",(unsigned long long)fingerprint);
-  assert(fingerprint==9976115187210710719ull); // RGB888 gradients and stable ordered dithering, including cave blending.
+  assert(fingerprint==17566902826153473617ull); // Ordered dithering, cave blending and warm desert hollows.
   puts("PASS distant ground interpolates across cliffs; full coverage and clipping in every biome at surface and cave depths");
 }
