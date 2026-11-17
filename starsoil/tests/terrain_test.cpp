@@ -49,16 +49,17 @@ void connected_to_cells(const Mask &painted, int pattern, bool solid) {
 }
 } // namespace
 int main() {
-  const int materials[] = {Grass, Dirt, Stone, CopperOre, IronOre,
-                           Snow,  Ice,  Plank, Moss};
-  for (int mode = 0; mode < 6; ++mode)
+  const int materials[] = {Dirt,Grass,Stone,Sand,Snow,Ice,Plank,Brick,CopperOre,
+      IronOre,GoldOre,CoalOre,CrystalOre,RubyOre,Obsidian,Deepstone,Moss};
+  constexpr int Modes=4+int(std::size(materials))+1;
+  for (int mode = 0; mode < Modes; ++mode)
     for (int pattern = 0; pattern < 512; ++pattern) {
       Mask painted{};
       auto sample = [&](int x, int y) {
         if (x < 0 || x >= 3 || y < 0 || y >= 3 ||
             !(pattern & (1 << (y * 3 + x))))
           return int(Air);
-        return mode==4 ? int(Stone) : mode==5 ? int(Sand) : mode ? int(Leaves) : materials[y * 3 + x];
+        return mode>=4 ? (mode<Modes-1?materials[mode-4]:int(Stone)) : mode ? int(Leaves) : materials[y * 3 + x];
       };
       auto plot = [&](int x, int y, uint16_t color) {
         assert(x >= 0 && x < Size && y >= 0 && y < Size);
@@ -69,7 +70,7 @@ int main() {
         for (int x = -1; x <= 3; ++x) {
           int sx = (x + 1) * 16, sy = (y + 1) * 16;
           if (!starsoil_terrain::draw_terrain(x, y, sx, sy, 255, sample,
-                                              plot,mode>=4?Desert:Forest) &&
+                                              plot,mode==Modes-1?Desert:Forest) &&
               sample(x, y) == Leaves) {
             int sides = (sample(x, y - 1) == Leaves ? 1 : 0) |
                         (sample(x + 1, y) == Leaves ? 2 : 0) |
@@ -79,7 +80,7 @@ int main() {
                                   : art::foliage[(mode == 2 ? 0 : 16) + sides];
             starsoil_terrain::draw(sx, sy, data, 255, plot);
           }
-          starsoil_terrain::draw_fillet(x, y, sx, sy, 255, sample, plot,mode>=4?Desert:Forest);
+          starsoil_terrain::draw_fillet(x, y, sx, sy, 255, sample, plot,mode==Modes-1?Desert:Forest);
         }
       connected_to_cells(painted, pattern, false);
       connected_to_cells(painted, pattern, true);
@@ -97,7 +98,7 @@ int main() {
   // The L join fills its empty quadrant instead of cutting the opposite block.
   assert(starsoil_terrain::fill_corners(3, 8) == 0);
   assert(starsoil_terrain::fill_corners(6, 8) == 8);
-  std::puts("PASS 3072 composite neighborhoods: desert sand/stone, mixed terrain and three "
+  std::puts("PASS 11264 composite neighborhoods: every terrain material, desert stone, mixed terrain and three "
             "foliage palettes; no isolated transparent holes, floating fills "
             "or shared-vertex gaps");
 }

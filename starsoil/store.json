@@ -16,5 +16,5 @@
   ],
   "icon": "store/icon.png",
   "cover": "store/cover.png",
-  "changelog": "修复沙块使用蓝灰色岩石亮边的问题，沙漠石层和浅层空洞改为暖褐砂岩色，并平滑过渡到深层晶洞，避免误认成积水。水和熔岩的相连方块连续填充，只在露出的液面绘制亮边，消除内部空隙和重复水面条纹。补充干燥沙漠、物质守恒、存档往返及液体贴图回归，保持原存档格式。\n\nFixes blue-grey rock highlights on sand and gives desert stone and shallow hollows a warm sandstone palette with a smooth transition to deep crystals. Connected water/lava tiles now form continuous volumes with crests only on exposed surfaces. Adds dry-desert, material conservation, save/reload and liquid-art regressions without changing the save format."
+  "changelog": "统一检查并修复方块边缘：裸土不再随机套用蓝灰岩石亮边，移除材质上重复的通用亮边和悬浮碎点，石块与矿石底色改为中性岩灰。木板使用宽木纹与单层边缘，取消屋顶及背景墙重复装饰条。快捷栏、背包、箱子和拖拽物品数量统一为透明背景的小像素数字，仅绘制字形和一像素阴影；保留物品、地形、重力和原存档格式。\n\nAudits block edges, removes blue-grey caps on bare dirt and redundant/floating overlays, and gives stone/ore a neutral rock base. Timber uses broad boards and one exposed edge without duplicate roof or wall trim. Hotbar, bag, storage and drag quantities use compact transparent pixel digits with a one-pixel shadow. Existing items, terrain, gravity and saves are preserved."
 }

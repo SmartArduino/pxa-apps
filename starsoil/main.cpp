@@ -17,6 +17,7 @@
 #include "scene_lighting.hpp"
 #include "terrain.hpp"
 #include "text.hpp"
+#include "quantity.hpp"
 #include "trees.hpp"
 #include <algorithm>
 #include <cmath>
@@ -411,10 +412,6 @@ void scene() {
           int top=std::max(yy,scene_top()),bottom=std::min(yy+h,render_bottom());
           if(top<bottom)rect(xx,top,w,bottom-top,c);
         });
-        starsoil_details::wall(wall,mask,sx,sy,light,[](int xx,int yy,int w,int h,uint16_t c) {
-          int top=std::max(yy,scene_top()),bottom=std::min(yy+h,render_bottom());
-          if(top<bottom)rect(xx,top,w,bottom-top,c);
-        });
       }
       auto tree_sample = [](int xx, int yy) { return tile(s, xx, yy); };
       auto crown = t == Air || t == Log || t == Leaves
@@ -686,6 +683,10 @@ void hud_frame(int x,int y,int w,int h,bool active=false) {
   pixel(x,y,HudWell);pixel(x+w-1,y,HudWell);
   pixel(x,y+h-1,HudWell);pixel(x+w-1,y+h-1,HudWell);
 }
+void stack_count(int x,int y,int w,int h,unsigned count) {
+  starsoil_quantity::draw(x+w-2,y+h-2,count,Ink,Dark,
+      [](int xx,int yy,uint16_t color) {pixel(xx,yy,color);});
+}
 void disc(starsoil_touch::Point p,int radius,bool active) {
   int span=radius;
   for(int dy=0;dy<=radius;++dy) {
@@ -754,20 +755,12 @@ void hud() {
     int x = 20 + i * 24;
     hud_frame(x,34,22,23,i==s.selected);
     icon(x + 3, 36, s.bag[i].item);
-    if (s.bag[i].count > 1) {
-      std::snprintf(b, sizeof(b), "%u", s.bag[i].count);
-      int bx=std::max(x+1,x+20-text_width(b));
-      rect(bx,44,std::min(20,text_width(b)),11,HudWell);
-      label(bx,42,b,Ink);
-    }
+    stack_count(x,34,22,23,s.bag[i].count);
   }
   if (s.selected >= HotSlots) {
     hud_frame(216,34,22,23,true);
     icon(219, 36, s.bag[s.selected].item);
-    if (s.bag[s.selected].count > 1) {
-      std::snprintf(b, sizeof(b), "%u", s.bag[s.selected].count);
-      label(218, 42, b, Ink);
-    }
+    stack_count(216,34,22,23,s.bag[s.selected].count);
   }
   int depth = std::max(
       0, int(s.player.y / 16) -
@@ -843,11 +836,7 @@ void bag_draw() {
     if (i == s.selected) rect(x + 1, y + 1, 2, 3, Teal);
     icon(x + 3, y + 1, s.bag[i].item,
          inventory_touch.dragging && inventory_touch.source == i ? 100 : 255);
-    if (s.bag[i].count > 1) {
-      char b[12];
-      std::snprintf(b, sizeof(b), "%u", s.bag[i].count);
-      label(x + 1, y + bag_row_height() - 2 - pocket::text_height(), b);
-    }
+    stack_count(x,y,23,bag_row_height()-1,s.bag[i].count);
   }
   human(238, height() < 280 ? 118 : 126, art::StandFrame, preview_face, s.equip,
         s.bag[s.selected].item, 255, 2);
@@ -885,11 +874,7 @@ void storage_draw() {
       outline(x, y, 22, storage_row_height() - 2, Teal);
     icon(x + 3, y + 2, s.bag[i].item,
          inventory_touch.dragging && inventory_touch.source == i ? 100 : 255);
-    if (s.bag[i].count > 1) {
-      char b[8];
-      std::snprintf(b, sizeof(b), "%u", s.bag[i].count);
-      label(x + 1, y + storage_row_height() - 4 - pocket::text_height(), b);
-    }
+    stack_count(x,y,22,storage_row_height()-2,s.bag[i].count);
   }
   for (int i = 0; i < 12; ++i) {
     int x = 216 + i % 2 * 33, y = 50 + i / 2 * storage_row_height();
@@ -900,11 +885,7 @@ void storage_draw() {
       outline(x, y, 29, storage_row_height() - 2, Teal);
     icon(x + 6, y + 1, s.chest[i].item,
          inventory_touch.dragging && inventory_touch.source == i + BagSlots ? 100 : 255);
-    if (s.chest[i].count > 1) {
-      char b[8];
-      std::snprintf(b, sizeof(b), "%u", s.chest[i].count);
-      label(x + 1, y + storage_row_height() - 4 - pocket::text_height(), b);
-    }
+    stack_count(x,y,29,storage_row_height()-2,s.chest[i].count);
   }
   footer_origin();
   label(7, 174, tr("Keeps hotbar + held item", "保留快捷栏与手持物"), Muted);
@@ -923,10 +904,7 @@ void inventory_drag_draw() {
   panel(x, y, 23, 25, rgb(45, 67, 67));
   outline(x, y, 23, 25, GoldInk);
   icon(x + 3, y + 1, slot.item);
-  if (slot.count > 1) {
-    char count[8]; std::snprintf(count, sizeof(count), "%u", slot.count);
-    label(x + 1, y + 24 - pocket::text_height(), count, Ink);
-  }
+  stack_count(x,y,23,25,slot.count);
 }
 const char *station_name(int id) {
   const char *en[] = {"HAND", "WORKBENCH", "FURNACE", "ANVIL", "STAR ALTAR"},

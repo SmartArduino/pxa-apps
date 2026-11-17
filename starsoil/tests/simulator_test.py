@@ -877,7 +877,7 @@ try:
         assert args.fixture_tool, 'Focused appearance/terrain QA requires --fixture-tool'
         start(0);enter_world();key('ENTER');time.sleep(.6)
         path,_=saved();stop()
-        fixtures=('forest','snow','jungle','reference','plain','cloth','copper','iron','wardrobe','robe') if args.appearance_only else ('joins','forest','desert','snow','jungle','cave','shore')
+        fixtures=('forest','snow','jungle','reference','plain','cloth','copper','iron','wardrobe','robe') if args.appearance_only else ('joins','forest','desert','snow','jungle','cave','shore','block-soil','block-roof')
         if args.fixtures:
             assert all(name in fixtures for name in args.fixtures), 'Choose fixtures from the focused run'
             fixtures=args.fixtures
@@ -885,7 +885,7 @@ try:
             subprocess.run([str(args.fixture_tool.resolve()),fixture,str(path)],check=True)
             initial=read_save(path)
             start(number);enter_world();time.sleep(3.5);capture(fixture+'-fixed')
-            if fixture in ('desert','shore'):
+            if fixture in ('desert','shore','block-soil','block-roof'):
                 key('ENTER');time.sleep(.6);_,data=saved()
                 w,h=struct.unpack_from('<HH',data,6)
                 tiles=data[228+w:228+w+w*h];old=initial[228+w:228+w+w*h]
@@ -893,6 +893,8 @@ try:
                 if fixture=='desert':
                     assert all(tiles[y*w+x]!=20 for x in range(176,205) for y in range(20,44)), 'Dry desert contains water'
                 key('ENTER')
+            if fixture=='block-roof':
+                tap(195,22,'header');time.sleep(.5);capture('block-quantities-bag')
             if args.appearance_only and fixture not in ('forest','snow','jungle'):
                 tap(195,22,'header');tap(145,35,'tab');capture(fixture+'-portrait-right')
                 tap(62,115);capture(fixture+'-portrait-left')

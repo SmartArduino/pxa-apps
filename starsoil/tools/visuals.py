@@ -74,9 +74,9 @@ def sandstone(mask):
 def tile(t,mask,fallback):
     if not t:return canvas()[0]
     im,d=canvas()
-    colors={1:'8e604e',2:'77af59',3:'6e7e91',4:'d9b87a',5:'d7e9e7',6:'78b9cb',9:'a27655',10:'8798a2',17:'564a70',18:'41455f',19:'658367'}
+    colors={1:'8e604e',2:'77af59',3:'777975',4:'d9b87a',5:'d7e9e7',6:'78b9cb',9:'a27655',10:'8e918b',17:'564a70',18:'484650',19:'658367'}
     if t in colors or 11<=t<=16:
-        base='6e7e91' if 11<=t<=16 else '8e604e' if t==2 else colors[t]
+        base='777975' if 11<=t<=16 else '8e604e' if t==2 else colors[t]
         d.rectangle((0,0,15,15),fill='#'+base)
         if t in (3,10,17,18,19) or 11<=t<=16:
             # Interlocking slabs: broken, stepped clusters rather than speckle.
@@ -86,10 +86,13 @@ def tile(t,mask,fallback):
                 d.line((x+1,y+3,x+w-1,y+3),fill=shade(base,-15))
                 d.point((x+w-1,y+2),fill=shade(base,-20))
         elif t==9:
-            for y in (3,9,15):
-                d.line((0,y,15,y),fill=shade(base,-28));d.line((0,y-1,15,y-1),fill=shade(base,20))
-            for x,y in ((5,0),(11,4),(3,10)):
-                d.line((x,y,x,y+2),fill=shade(base,-18));d.point((x+1,y+1),fill=shade(base,28))
+            # Two broad timber boards, with quiet grain and staggered joints.
+            # Exposed outer edges below add one cap, including the underside.
+            for y in (7,15):
+                d.line((0,y,15,y),fill=shade(base,-24));d.line((0,y-1,15,y-1),fill=shade(base,9))
+            for x,y in ((5,1),(11,8)):
+                d.line((x,y,x,y+5),fill=shade(base,-17))
+            d.line((8,3,13,3),fill=shade(base,11));d.line((1,11,5,11),fill=shade(base,-9))
         elif t==6:
             for x,y in ((1,8),(6,14),(8,5)):
                 d.line((x,y,min(15,x+6),max(0,y-6)),fill='#a9dce0')

@@ -2,6 +2,7 @@
 // Native QA utility: creates reproducible saves, or inspects a simulator save.
 #include "../core.hpp"
 #include "../save_codec.hpp"
+#include "block_fixture.hpp"
 #include <cstdio>
 #include <cstring>
 #include <vector>
@@ -41,6 +42,7 @@ int main(int argc, char **argv) {
   };
   if (std::strcmp(argv[1], "performance-huge") == 0 ||
       std::strcmp(argv[1], "performance-medium") == 0) return save();
+  if(block_fixture(s,argv[1]))return save();
   if (std::strcmp(argv[1],"shore")==0) {
     for(int x=174;x<=211;++x) {
       s.heights[x]=35;

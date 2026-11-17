@@ -35,7 +35,7 @@
     "compositor": "actor_renderer.hpp; shared by game and tests/actor_test.cpp",
     "visual_authoring": "tools/visuals.py",
     "background_authoring": "background.hpp",
-    "visual_revision": "0.15.1",
+    "visual_revision": "0.15.2",
     "human_proportions": "Compact reference-led design: voluminous thirteen-pixel head, large profile eye, short collar, ten-pixel coat torso and eight-pixel legs",
     "tree_connections": "Eight trunk fork/root variants; foliage connects to logs; clustered background crowns share continuous stems",
     "outside_corners": "Connected exposed-edge curves; opaque shared edges, 2px timber corners and 5px soil/stone corners",
@@ -96,7 +96,9 @@
     "branding_authoring": "tools/branding.py; original 32px crystal-earth emblem and 8px interface symbols",
     "background_dither": "Fixed 4x4 ordered pattern with RGB888 interpolation and bounded RGB565 writes",
     "sand_and_liquids": "Warm sand highlights and shallow sandstone caves; connected liquid bodies have crests only on exposed top edges",
-    "desert_stone": "16 native sandstone tints preserve the existing stone contour, collision and drops; 8192 bytes of compiled RGB565 art"
+    "desert_stone": "16 native sandstone tints preserve the existing stone contour, collision and drops; 8192 bytes of compiled RGB565 art",
+    "material_edges": "Authored material contours own exposed edges; no shared rock-colour runtime cap or duplicate timber roof trim",
+    "quantity_digits": "Original transparent 4x7 pixel digits with a one-pixel shadow; shared by hotbar, bag, storage and drag overlays"
   },
   "cover": {
     "source": "cover.png",

@@ -4,6 +4,7 @@
 #include "../input_geometry.hpp"
 #include "../render_buffers.hpp"
 #include "../ui_canvas.hpp"
+#include "block_fixture.hpp"
 #include <cassert>
 #include <filesystem>
 #include <fstream>
@@ -475,6 +476,25 @@ static void building_ui_checks() {
 int main(int argc, char **argv) {
   if(argc==2 && std::strcmp(argv[1],"--building")==0) {building_ui_checks();return 0;}
   game::init();
+  if(argc==3 && std::strcmp(argv[1],"--blocks")==0) {
+    std::filesystem::path root(argv[2]);assert(root.string().find("local/artifacts/")!=std::string::npos);
+    std::filesystem::create_directories(root);
+    pocket::WIDTH=pocket::HEIGHT=288;pocket::buffer.resize(288*288);pocket::painted.resize(288*288);
+    pocket::screen_mode=true;pocket::controller_mode=true;session_active=true;
+    auto capture=[&](const char *name) {
+      event_at=0;animation=6000;game::draw();
+      std::ofstream file(root/(std::string(name)+".ppm"),std::ios::binary);file<<"P6\n480 480\n255\n";
+      for(uint16_t c:pocket::screen) {
+        unsigned char pixel[]={uint8_t((c>>11)*255/31),uint8_t(((c>>5)&63)*255/63),uint8_t((c&31)*255/31)};
+        file.write(reinterpret_cast<char *>(pixel),3);
+      }
+    };
+    for(const char *name:{"block-soil","block-roof"}) {
+      new_game(s,1234567);assert(block_fixture(s,name));view=World;capture(name);
+    }
+    view=Bag;capture("block-quantities-bag");view=Storage;capture("block-quantities-storage");
+    puts("PASS native production scenes: bare soil, timber roof and transparent quantity glyphs in HUD/bag/storage");return 0;
+  }
   if (argc == 2 && std::strcmp(argv[1], "--smart") == 0) { smart_ui_checks(); return 0; }
   if (argc == 2 && std::strcmp(argv[1], "--touch") == 0) { inventory_checks(); multitouch_checks(); return 0; }
   if (argc == 2 && std::strcmp(argv[1], "--polish") == 0) { inventory_checks(); exploration_ui_checks(); polish_ui_checks(); return 0; }
