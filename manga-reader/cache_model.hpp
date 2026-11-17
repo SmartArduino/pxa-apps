@@ -2,9 +2,11 @@
 #include "model.hpp"
 #include <array>
 namespace manga {
+inline std::string page_cache_key(const Book& book,unsigned page){auto s="manga:"+encoded(book.source)+":"+encoded(book.id)+":"+encoded(book.chapter)+":"+std::to_string(page);return s.size()<=1024?s:std::string{};}
+inline bool valid_cache_key(std::string_view key){return web(key)||(key.starts_with("manga:")&&key.size()<=1024&&key.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.%~:")==key.npos);}
 struct CachedPage {std::string key;unsigned bytes=0;std::uint64_t touched=0;};
 struct PageCache {
-    static constexpr unsigned slots=24,maximum=2*1024*1024;
+    static constexpr unsigned slots=128,maximum=64*1024*1024,index_max=196608;
     std::array<CachedPage,slots> pages{};
     bool enabled=true,storage_verified=false;unsigned mode=0,limit=0;std::uint64_t clock=0;
     unsigned used()const{unsigned n=0;for(auto& p:pages)n+=p.bytes;return n;}
@@ -20,10 +22,10 @@ struct PageCache {
         return s+"]}";
     }
     bool restore(std::string_view text){
-        if(text.size()>49152)return false;Json root(text);if(!root.valid()||root.get("version").number()!=1||root.get("mode").number()>2)return false;
+        if(text.size()>index_max)return false;Json root(text);if(!root.valid()||root.get("version").number()!=1||root.get("mode").number()>2)return false;
         PageCache next;next.enabled=root.get("enabled").number()!=0;next.mode=root.get("mode").number();next.storage_verified=root.get("verified").number()==1;bool good=true;
         bool parsed=root.get("pages").each([&](Json j){auto slot=j.get("slot").number(),bytes=j.get("bytes").number();auto key=j.get("key").string().value_or("");auto used=j.get("used").number();
-            if(slot>=slots||bytes==0||bytes>524288||key.size()>1024||!web(key)||!next.pages[slot].key.empty()||next.find(key)>=0){good=false;return false;}
+            if(slot>=slots||bytes==0||bytes>524288||key.size()>1024||!valid_cache_key(key)||!next.pages[slot].key.empty()||next.find(key)>=0){good=false;return false;}
             next.pages[slot]={std::move(key),unsigned(bytes),used};next.clock=std::max(next.clock,std::uint64_t(used));return true;});
         if(!parsed||!good||next.used()>maximum)return false;*this=std::move(next);return true;
     }

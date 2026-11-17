@@ -1,7 +1,7 @@
 {
   "name": "漫画",
   "summary": "搜索多站漫画，触摸全屏阅读，自动保存章节和页码。",
-  "description": "支持七个多作品漫画源，包含拷贝漫画、瓜子漫画和我爱漫画。可搜索、收藏、续读、跳页及双指缩放；条漫到图片底部继续上滑可载入下一张。空间充足时自动缓存已处理的页面，可在设置中清除，正常卸载随应用数据清理。支持应用内 WebP／渐进 JPEG 处理和大屏触摸控件，阅读工具栏自动隐藏。需要联网和触摸；不提供整章离线下载、登录或付费章节，源站及图片大小会影响阅读。GameKit 2 连接 MangaDex 可能受固件 TLS 限制。",
+  "description": "支持七个多作品漫画源，包含拷贝漫画、瓜子漫画和我爱漫画。可搜索、收藏、续读、跳页及双指缩放。条漫按图片顺序连续纵向显示，阅读当前图片时预取后续图片，内存不足时自动缩减缓冲。已读图片保存在应用私有存储中供复读，最多 64 MiB／128 张，可在设置中清除，正常卸载随应用数据清理。自动模式优先采用可用的长条标签，并记住长图判断；可手动选择条漫或分页。支持应用内 WebP／渐进 JPEG 处理和大屏触摸控件，阅读工具栏自动隐藏。需要联网和触摸；不提供整章离线下载、登录或付费章节，源站及图片大小会影响阅读。GameKit 2 连接 MangaDex 可能受固件 TLS 限制。",
   "kind": "app",
   "category": "media",
   "tags": [
@@ -12,5 +12,5 @@
   ],
   "icon": "store-assets/icon-v2.png",
   "cover": "store-assets/cover-v1.jpg",
-  "changelog": "新增双指缩放、宽屏双列布局、自动条漫滑动换页、可清除的有界持久缓存，以及新图标和商城封面。图片解码复用同一次下载，减少重复请求；优化图片处理循环和拖动采样，失败页面仍可跳页。\n\nAdd pinch-to-zoom, wide-screen columns, vertical webtoon page transitions, clearable bounded persistent caching, and new artwork. Reuse downloaded image data, batch conversion work, use faster drag sampling, and keep page navigation available after errors."
+  "changelog": "修复安装后桌面图标缺失。新增条漫相邻图片连续显示、阅读时后续图片预取，以及根据图片资源限额收缩的内存缓冲。已读缓存扩展至 64 MiB／128 张，按作品、章节和图片序号保存，支持清除与正常卸载清理；保留旧版本书架和缓存。自动模式读取 MangaDex 长条标签并记住长图判断，仍可手动切换。\n\nFix the launcher icon. Add continuous webtoon rendering and cancellable look-ahead loading with adaptive decoded-image buffering. Expand persistent read-page caching to 64 MiB / 128 images using stable book/chapter/page keys, preserving existing saves and supporting clearing/uninstall cleanup. Read MangaDex long-strip tags, retain long-image hints, and keep manual reading-mode controls."
 }

@@ -17,12 +17,15 @@ int main(){
     const auto id="11111111-1111-1111-1111-111111111111";
     assert(manga::books(Json(R"({"data":[{"id":"11111111-1111-1111-1111-111111111111","attributes":{"title":{"zh":"漫画"}}}]})"),books,""));
     assert(books.size()==1&&books[0].id==id);
+    assert(!books[0].long_strip);
+    assert(manga::books(Json(R"({"data":[{"id":"11111111-1111-1111-1111-111111111111","attributes":{"title":{"zh":"漫画"},"tags":[{"attributes":{"name":{"en":"Long Strip"}}}]}}]})"),books,""));
+    assert(books[0].long_strip);
     std::vector<std::string> p;
     assert(pages(Json(R"({"baseUrl":"https://uploads.mangadex.org","chapter":{"hash":"abc123","dataSaver":["one.jpg","two.jpg"]}})"),p,true,""));
     assert(p[0]=="https://uploads.mangadex.org/data-saver/abc123/one.jpg");
     books[0].chapter="22222222-2222-2222-2222-222222222222";books[0].chapter_title="第1话";books[0].page=7;books[0].language=2;
     auto state=save(books,2,"");std::vector<Book> restored;unsigned language=0;std::string source;
-    assert(restore(state,restored,language,source));assert(restored[0].page==7&&language==2);
+    assert(restore(state,restored,language,source));assert(restored[0].page==7&&language==2&&restored[0].long_strip);
     assert(!restore("{}",restored,language,source));assert(restored[0].page==7);
     books[0].page=512;assert(!restore(save(books,2,source),restored,language,source));
     auto old=R"({"version":2,"language":0,"source":"peppercarrot","shelf":[{"id":"peppercarrot","title":"旧来源","source":"peppercarrot"},{"id":"11111111-1111-1111-1111-111111111111","title":"保留的漫画","source":"","page":7,"language":0}]})";

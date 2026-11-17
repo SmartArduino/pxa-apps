@@ -50,8 +50,9 @@
   "format": "pxa-package-source-0.1",
   "id": "pxa-manga-reader",
   "name": "漫画",
-  "release_sequence": 7,
-  "version": "0.6.0",
+  "icon": "assets/icon.png",
+  "release_sequence": 9,
+  "version": "0.7.0",
   "description": "搜索多站漫画，触摸全屏阅读，自动保存章节和页码。",
   "permissions": [
     {
