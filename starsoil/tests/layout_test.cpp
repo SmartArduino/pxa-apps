@@ -15,6 +15,9 @@ int WIDTH = BASE_WIDTH, HEIGHT = BASE_HEIGHT;
 static std::vector<uint16_t> buffer;
 static std::vector<uint8_t> painted;
 static bool screen_mode;
+struct TextMark {int x,y,w,h;std::string value;};
+static bool trace_text;
+static std::vector<TextMark> text_marks;
 static std::vector<uint16_t> screen(480 * 480);
 static starsoil_ui::Canvas ui{screen.data(), 480, 480, 288, 288};
 void rect(int x, int y, int w, int h, uint16_t c) {
@@ -64,10 +67,11 @@ void line(int x, int y, int xx, int yy, uint16_t c) {
 }
 void text(int x, int y, const char *s, uint16_t c, int scale) {
   if (screen_mode) {
+    if(trace_text)text_marks.push_back({x,y,ui.text_width(s,scale),ui.text_height(scale),s});
     // All menu text must stay within the full display after reflow.
     assert(ui.x(x) >= 0 && ui.y(y) >= 0);
-    assert(ui.x(x) + starsoil_text::width(s) * ui.font_scale(scale) <= 480);
-    assert(ui.y(y) + 12 * ui.font_scale(scale) <= 480);
+    assert(ui.x(x) + starsoil_text::width(s) * ui.font_scale(scale) <= ui.width);
+    assert(ui.y(y) + 12 * ui.font_scale(scale) <= ui.height);
     ui.text(x, y, s, c, scale);
     return;
   }
@@ -476,6 +480,26 @@ static void building_ui_checks() {
 int main(int argc, char **argv) {
   if(argc==2 && std::strcmp(argv[1],"--building")==0) {building_ui_checks();return 0;}
   game::init();
+  if(argc==3 && std::strcmp(argv[1],"--skins")==0) {
+    std::filesystem::path root(argv[2]);assert(root.string().find("local/artifacts/")!=std::string::npos);
+    std::filesystem::create_directories(root);
+    pocket::WIDTH=pocket::HEIGHT=288;pocket::buffer.resize(288*288);pocket::painted.resize(288*288);
+    pocket::screen_mode=true;pocket::controller_mode=true;session_active=true;
+    new_game(s,1234567);s.player.x=48*16+8;s.player.y=31*16;
+    auto capture=[&](const char *name) {
+      event_at=0;animation=6000;game::draw();
+      std::ofstream file(root/(std::string(name)+".ppm"),std::ios::binary);file<<"P6\n480 480\n255\n";
+      for(uint16_t c:pocket::screen) {
+        unsigned char pixel[]={uint8_t((c>>11)*255/31),uint8_t(((c>>5)&63)*255/63),uint8_t((c&31)*255/31)};
+        file.write(reinterpret_cast<char *>(pixel),3);
+      }
+    };
+    for(auto [page,name]:{std::pair{World,"world"},std::pair{Bag,"bag"},std::pair{Crafting,"craft"},std::pair{Gear,"gear"},std::pair{Dialogue,"dialogue"},std::pair{Storage,"storage"},std::pair{CreateWorld,"create-world"}}) {
+      set_view(page);capture(name);
+    }
+    for(int i=4;i<7;++i) {set_view(Guide);guide_page=i;capture(("creatures-"+std::to_string(i)).c_str());}
+    puts("PASS actual generated-skin UI and all creature guide pages rendered at native output pixels");return 0;
+  }
   if(argc==2 && std::strcmp(argv[1],"--feedback")==0) {
     pocket::WIDTH=pocket::HEIGHT=288;pocket::buffer.resize(288*288);pocket::painted.resize(288*288);
     new_game(s,1234567);session_active=true;set_view(World);game::tick(20);
@@ -518,6 +542,8 @@ int main(int argc, char **argv) {
     new_game(s,1234567);craft_category=CraftGroup::All;craft_ready_only=false;recipe=0;refresh_recipes();do_craft(99);
     bool unavailable=false;for(int i=0;i<visible_recipes;++i) {bool ready=can_craft(s,recipe_list[i]);assert(!ready || !unavailable);unavailable|=!ready;}
     assert(recipe==0);
+    assert(crafted_recipe==0 && crafted_count>0 && !message_active());
+    assert(starsoil_notices::active(animation,craft_feedback_until));
     puts("PASS craftable-first stable ordering across categories, ready-only, empty/full bags, station changes and batch crafting; selection preserved");return 0;
   }
   if(argc==3 && std::strcmp(argv[1],"--blocks")==0) {
@@ -846,5 +872,5 @@ int main(int argc, char **argv) {
     }
     puts("PASS real scene cache pixels equal fresh draws: terrain/wall/light edits, moving player, night and caves; dynamic FX stay live");
   }
-
+  return 0;
 }

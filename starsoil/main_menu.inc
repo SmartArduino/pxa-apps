@@ -88,16 +88,16 @@ void draw_title() {
       sprite(25, y + 4, art::tiles[Grass * 16], 16, 16);
       char b[64];
       std::snprintf(b, sizeof(b), tr("WORLD %02d", "世界 %02d"), slot + 1);
-      label(50, y + 2, b, Ink);
+      label(50, y + 4, b, Ink);
       if (info.valid) {
         std::snprintf(b, sizeof(b), "%ux%u", info.width, info.height);
-        label(132, y + 2, b, Muted);
+        label(132, y + 4, b, Muted);
         std::snprintf(b, sizeof(b), tr("SEED %u", "种子 %u"), info.seed);
-        label(27, y + 22, b, Muted);
+        label(27, y + 21, b, Muted);
         std::snprintf(b, sizeof(b), tr("D%u", "第%u天"), info.day);
-        label(161, y + 22, b, Muted);
+        fit_label(157,y+21,53,b,Muted);
       } else
-        label(27, y + 22, tr("UNREADABLE WORLD", "存档无法读取"), Red);
+        label(27, y + 21, tr("UNREADABLE WORLD", "存档无法读取"), Red);
       // Play and trash use the same pixel-art language as the game controls.
       panel(214, y + 5, 22, 28);
       for (int k = 0; k < 6; ++k)

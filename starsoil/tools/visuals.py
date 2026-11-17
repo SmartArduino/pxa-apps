@@ -1,9 +1,11 @@
-"""Starsoil's hand-authored pixel materials, inventory silhouettes and creatures.
+"""Starsoil's native pixel materials, inventory silhouettes and generated creatures.
 
-Shared ink, cool shadows, warm highlights. All artwork is painted at native
-resolution; there is no antialiasing, runtime image download or sprite pack.
+Shared ink, cool shadows, warm highlights. Runtime artwork uses native pixel grids. Generated creature sheets are imported
+at fixed size; there is no antialiasing or runtime image download.
 """
 from PIL import Image, ImageDraw
+from functools import lru_cache
+from pathlib import Path
 import equipment
 INK='#263342'
 CREAM='#fff0c9'
@@ -348,125 +350,14 @@ def icon(kind,col,t,name,tile_fn):
     return im
 
 
-def creature(kind,frame):
-    im,d=canvas(24,24);b=(0,1,1,0,-1,0)[frame]
-    if kind==0:
-        squash=(0,1,2,1,0,-1)[frame];top=11+squash
-        d.polygon([(3,21),(2,top+5),(4,top+1),(8,top),(15,top),(19,top+2),(21,top+6),(20,22),(5,22)],fill=INK)
-        d.rounded_rectangle((4,top+2,19,21),radius=4,fill='#4d9b92')
-        d.polygon([(6,top+2),(13,top+1),(17,top+3),(17,top+6),(6,top+6)],fill='#8dd5b4')
-        d.line((7,top+2,11,top+2),fill='#d9f4cb')
-        for x in (10,16):d.line((x,top+5,x,top+7),fill='#233a48');d.point((x,top+5),fill='#fff1c8')
-        d.line((13,top+9,14,top+9),fill='#a9e7ba');d.point((6+frame,20),fill='#b0ead0')
-    elif kind==1:
-        flap=(0,2,4,6,3,1)[frame]
-        for flip in (False,True):
-            points=[(10,12),(4,4+flap),(1,3+flap),(1,11+flap),(4,10+flap),(6,15+flap//2),(9,15)]
-            if flip:points=[(23-x,y) for x,y in points]
-            d.polygon(points,fill=INK);p=[(9,12),(3,6+flap),(3,10+flap),(7,12+flap//2),(9,14)]
-            if flip:p=[(23-x,y) for x,y in p]
-            d.polygon(p,fill='#79628c');d.line(p[:2],fill='#b08ca6')
-        d.polygon([(9,13),(9,6),(11,8),(14,8),(16,6),(16,16),(14,19),(11,19)],fill=INK)
-        d.rectangle((10,10,15,16),fill='#574963')
-        for x in (11,14):d.point((x,12),fill='#f1bc88')
-        d.point((12,16),fill='#f6e5ca');d.point((14,16),fill='#f6e5ca')
-    elif kind==2:
-        step=(-2,-1,1,2,1,-1)[frame]
-        for x,dx in ((8,step),(15,-step)):
-            d.line((x,17,x+dx,22),fill=INK,width=4);d.line((x,17,x+dx,21),fill='#977957',width=2)
-        d.line((7,12,3,17+b),fill=INK,width=3);d.line((17,12,21,17-b),fill=INK,width=3)
-        d.rounded_rectangle((6,5+b,18,18),radius=3,fill=INK);d.rectangle((8,8+b,16,17),fill='#886b53')
-        d.line((9,12,9,16),fill='#ba9568');d.line((14,10,14,16),fill='#5e4d49')
-        d.polygon([(4,8+b),(6,4+b),(10,3+b),(13,5+b),(17,3+b),(20,8+b),(16,10+b),(9,9+b)],fill='#487857')
-        d.line((7,5+b,10,4+b,12,6+b),fill='#9ab967');d.point((17,5+b),fill='#bbcd77')
-        d.line((10,2+b,8,b),fill='#759c62');d.line((14,3+b,17,1+b),fill='#87ac68')
-        for x in (10,15):d.point((x,11+b),fill='#f6d492')
-    elif kind==3:
-        # A faceted shelled crawler, not a recolored forest slime.
-        for x in (5,10,16,20):d.line((x,18,x+(frame%3)-1,22),fill='#445571',width=2)
-        d.polygon([(3,18),(4,12+b),(8,8+b),(16,8+b),(21,14),(21,20),(7,21)],fill=INK)
-        d.polygon([(5,17),(7,12+b),(12,10+b),(17,12+b),(18,19),(9,19)],fill='#7287af')
-        for x,y in ((7,12+b),(12,9+b),(16,13+b)):
-            d.polygon([(x-2,y+2),(x,y-5),(x+3,y),(x+2,y+5)],fill='#8bbdcf')
-            d.line((x,y-3,x,y+2),fill='#dcf8e4')
-        d.rectangle((18,15,22,19),fill='#536c85');d.point((21,16),fill='#f6cfa2')
-    elif kind==4:
-        # Armoured stone guardian, floating crystal core, articulated limbs.
-        for x,sign in ((3,-1),(19,1)):
-            sway=(0,1,2,1,0,-1)[frame]*sign
-            d.polygon([(x,10+b),(x+3,9+b),(x+3,16+b+sway),(x+sign,18+b+sway),(x-1,16+b+sway)],fill=INK)
-            d.rectangle((x,11+b,x+2,15+b+sway),fill='#6b8c91');d.point((x,11+b),fill='#bbdac5')
-        for x in (7,15):
-            d.rectangle((x,18,x+3,23),fill=INK);d.rectangle((x+1,19,x+2,21),fill='#819f9c');d.point((x+1,22),fill=GOLD)
-        d.polygon([(6,8+b),(10,6+b),(16,7+b),(19,10+b),(17,19),(8,19),(5,14)],fill=INK)
-        d.polygon([(7,9+b),(10,8+b),(16,9+b),(17,14),(15,17),(9,17),(7,14)],fill='#567980')
-        d.polygon([(12,10+b),(16,13+b),(12,17+b),(9,13+b)],fill='#67d3bd')
-        d.line((12,11+b,12,15+b),fill='#e9ffce');d.point((14,13+b),fill='#b6f9d5')
-        d.polygon([(7,7+b),(7,3+b),(10,1+b),(15,2+b),(18,5+b),(16,9+b),(9,9+b)],fill=INK)
-        d.line((9,4+b,15,4+b),fill='#9bbeb4');d.line((9,6+b,15,6+b),fill='#d9efbb')
-        d.point((12,7+b),fill='#273f50');d.line((10,2+b,11,b),fill='#7fdbbc');d.point((14,1+b),fill=GOLD)
-    elif kind==5:
-        top = 10 + (0,1,2,1,0,-1)[frame]
-        d.polygon([(2,21),(3,top+3),(6,top),(10,top-4),(13,top),
-                   (17,top-2),(20,top+4),(21,22),(4,22)], fill=INK)
-        d.polygon([(4,20),(5,top+3),(9,top+1),(11,top-2),(13,top+3),
-                   (17,top+1),(19,top+5),(19,21),(6,21)], fill='#83b9cc')
-        d.polygon([(5,top+4),(11,top+1),(12,top+6),(6,top+7)], fill='#d9eee7')
-        d.polygon([(12,top+6),(17,top+3),(18,20),(13,21)], fill='#5188ac')
-        for x in (10,16):
-            d.rectangle((x,top+6,x+1,top+8), fill=INK)
-            d.point((x,top+6), fill='#fff1c8')
-        d.line((6+frame,20,8+frame,20), fill='#bce9ed')
-    elif kind==6:
-        step = (-2,-1,1,2,1,-1)[frame]
-        for x in (5,10,15):
-            d.line((x,17,x-2+step,22), fill=INK, width=2)
-            d.line((x,16,x+3-step,20), fill='#8a6045')
-        d.polygon([(2,17),(3,11+b),(7,8+b),(14,9+b),(18,13),
-                   (18,19),(7,21),(3,20)], fill=INK)
-        d.polygon([(4,16),(5,12+b),(8,10+b),(13,11+b),(16,14),
-                   (15,18),(8,19)], fill='#bf8750')
-        d.line((6,12+b,12,11+b), fill='#efcd7e', width=2)
-        d.line((9,11+b,10,18), fill='#81563e')
-        d.polygon([(16,14),(20,12),(23,14),(21,19),(17,19)], fill='#80503a')
-        d.point((21,14), fill='#f6e8ae')
-        d.line((21,17,23,19), fill=INK)
-        d.line((21,12,23,10+b), fill='#efcd7e')
-    elif kind==7:
-        flap = (0,2,4,5,3,1)[frame]
-        for side in (-1,1):
-            wing = [(12,11),(12+side*9,3+flap),(12+side*11,8+flap),
-                    (12+side*7,15+flap),(12+side*2,17)]
-            d.polygon(wing, fill=INK)
-            d.polygon([(12,12),(12+side*8,5+flap),(12+side*9,9+flap),
-                       (12+side*5,14+flap)], fill='#93809c')
-            d.line((12+side*6,8+flap,12+side*4,12+flap), fill='#efca8e', width=2)
-        d.ellipse((9,10,15,21), fill=INK)
-        d.ellipse((10,12,14,20), fill='#d3a354')
-        d.rectangle((11,15,13,18), fill='#fff1bb')
-        d.ellipse((10,6+b,15,12+b), fill='#71566e')
-        d.point((14,8+b), fill='#f9e5b0')
-        d.line((11,7+b,8,3+b), fill=INK)
-        d.line((14,7+b,17,4+b), fill=INK)
-    elif kind==8:
-        flap = (0,2,4,5,3,1)[frame]
-        d.polygon([(10,12),(3,3+flap),(2,7+flap),(7,14)], fill=INK)
-        d.polygon([(11,11),(15,2+flap),(20,4+flap),(16,12)], fill='#b7d5b2')
-        d.line((12,10,17,5+flap), fill='#e4e8cc')
-        d.polygon([(3,15),(5,10),(11,9),(17,12),(19,16),(14,19),
-                   (7,19),(3,17),(0,18)], fill=INK)
-        d.polygon([(5,14),(7,11),(11,11),(16,13),(16,16),(12,17),(6,17)], fill='#7fa661')
-        for x in (7,11):
-            d.line((x,12,x+1,17), fill='#354e48', width=2)
-        d.ellipse((16,11+b,22,17+b), fill='#c1b66b')
-        d.point((21,13+b), fill='#f6efc8')
-        d.line((20,12+b,22,8+b), fill=INK)
-        d.line((9,18,7+frame%3,22), fill=INK)
-        d.line((14,18,16-frame%3,21), fill=INK)
-    else:
-        raise ValueError(f'Unknown creature {kind}')
-    return im
+@lru_cache(maxsize=1)
+def creature_atlas():
+    return Image.open(Path(__file__).resolve().parents[1]/'art/generated/creature-frames-v1.png').convert('RGBA')
 
+def creature(kind,frame):
+    # Fixed-size native frames; original large sheets never enter the runtime.
+    x,y=frame%6*24,kind*24
+    return creature_atlas().crop((x,y,x+24,y+24))
 
 def foliage(mask,snow=False):
     im=tile(8,mask,lambda t,m:None)

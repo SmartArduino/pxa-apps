@@ -188,10 +188,10 @@ def main():
     for kind in range(9):
         frames=[rgb565(im) for im in cs[kind*6:kind*6+6]]
         palette=[0]+sorted({c for pixels in frames for c in pixels if c})
-        if len(palette)>16:
-            raise ValueError(f'Creature {kind} exceeds its 16-color palette')
+        if len(palette)>32:
+            raise ValueError(f'Creature {kind} exceeds its 32-color palette')
         indices={color:index for index,color in enumerate(palette)}
-        creature_palettes.append(palette+[0]*(16-len(palette)))
+        creature_palettes.append(palette+[0]*(32-len(palette)))
         creature_pixels.extend([[indices[c] for c in pixels] for pixels in frames])
     defs=re.findall(r'\{\s*"([^"]*)"\s*,\s*"[^"]*"\s*,\s*(\w+)\s*,\s*(\w+)\s*,\s*\d+\s*,\s*\d+\s*,\s*0x([0-9a-f]+)\s*\}',(ROOT/'items.hpp').read_text())
     if len(defs) != 85:
@@ -235,8 +235,8 @@ def main():
             offhand_points.append((7,8) if kind=='Bow' else (-1,-1))
         array(out,'item_grips',grip_points,2,'int8_t')
         array(out,'item_offhands',offhand_points,2,'int8_t')
-        out.write('inline constexpr int CreatureCount=9, CreatureFrames=6, CreaturePaletteSize=16;\n')
-        array(out,'creature_palettes',creature_palettes,16)
+        out.write('inline constexpr int CreatureCount=9, CreatureFrames=6, CreaturePaletteSize=32;\n')
+        array(out,'creature_palettes',creature_palettes,32)
         array(out,'creature_pixels',creature_pixels,576,'uint8_t')
         array(out,'icons',[rgb565(im) for im in icons],256)
         array(out,'emblem',[rgb565(branding.emblem())],32*32)

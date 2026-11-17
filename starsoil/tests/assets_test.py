@@ -86,7 +86,7 @@ for kind in range(9):
   frames=[draw_art.creature(kind,f) for f in range(6)]
   assert all(im.size==(24,24) and im.getbbox() for im in frames)
   assert len({im.tobytes() for im in frames})>=4
-  assert len({c for im in frames for c in draw_art.rgb565(im)})<=16
+  assert len({c for im in frames for c in draw_art.rgb565(im)})<=32
   for frame,im in enumerate(frames):
     assert [palettes[kind][i] for i in indices[kind*6+frame]]==draw_art.rgb565(im)
 # Connected sides remain opaque, exposed corners round off, and interiors stay solid.

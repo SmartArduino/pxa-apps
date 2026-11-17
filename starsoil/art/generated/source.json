@@ -1,0 +1,158 @@
+{
+  "generator": "Codex built-in image_gen",
+  "source_kind": "AI-generated original pixel-art atlases",
+  "native_ui_tile": [
+    32,
+    32
+  ],
+  "native_creature_frame": [
+    24,
+    24
+  ],
+  "frames_per_creature": 6,
+  "creature_palette": "31 opaque colors per species plus transparent index 0",
+  "sources": [
+    {
+      "name": "ui",
+      "file": "ui-source-v1.png",
+      "prompt": "Use case: ui-mockup\nAsset type: production bitmap UI skin atlas for an original 2D pixel sandbox game \"Starsoil\"; this is an actual sliced texture asset, not a screenshot.\nPrimary request: Design a refined, richly shaded pixel-art RPG UI kit with the readability and crafted material feel of Terraria, but completely original shapes and ornaments. Muted midnight indigo enamel, aged copper and warm gold fine borders, restrained turquoise accents, tiny corner rivets and crystal motifs. Compact and elegant rather than heavy.\nComposition: One square atlas, exactly 3 columns by 3 rows of equal square tiles with NO gutters, NO margins, NO labels and NO text. The whole canvas is logically 96x96 pixels, each tile exactly 32x32 logical pixels. Render enlarged 16x with nearest-neighbor hard square pixels (1536x1536 output). Do not add tiny detail below the logical pixel grid.\nTiles in row-major order:\n1: main window panel, dark blue-grey quiet flat center, fine copper beveled outline and tiny ornate corners.\n2: normal button, dark indigo slightly raised, clean light upper edge.\n3: selected/pressed button, rich dark teal with copper-gold perimeter.\n4: inventory slot, very dark recessed center and subtle steel-copper inset edges.\n5: selected inventory slot, same recessed center with a distinct warm gold selected rim.\n6: inactive tab, dark recessed blue, understated beveled edge.\n7: active tab, slightly brighter teal-blue with gold upper edge.\n8: health/mana meter frame, dark hollow recessed inner area with polished copper outer frame.\n9: dialogue/recipe card, blue slate center with delicate copper corner braces.\nConstraints: Each tile designed for nine-slice use: all four corners fit within 4x4 logical pixels; edge decoration confined to the OUTERMOST 3 pixels; 24x24 central field flat and unobstructed so text and icons fit. Horizontal/vertical edge middle sections must tile seamlessly. Every edge meets its own corner correctly. Tiles align exactly on the 3x3 grid. Fully opaque tile interiors; genuine transparency only outside the tiny clipped outer corners. 20-32 colors shared across atlas, no dithering inside text fields. Crisp square pixel clusters, one-pixel stepped bevels.\nAvoid: typography, mockup menus, item icons, invented labels, logos, drop shadows outside tile bounds, blurred edges, anti-aliasing, painterly detail, perspective, excessive filigree.",
+      "sha256": "606248729bf63e04ea434c8c43445e0c7d4f448be0db8548746a599c178e7e79",
+      "source_size": [
+        1254,
+        1254
+      ],
+      "alpha": [
+        0,
+        255
+      ]
+    },
+    {
+      "name": "dew-slime",
+      "file": "dew-slime-source-v1.png",
+      "prompt": "Use case: illustration-story\nAsset type: production transparent pixel-art enemy animation sprite sheet for the original side-view 2D sandbox Starsoil.\nFormat is critical: SIX frames, arranged EXACTLY THREE COLUMNS by TWO ROWS, equally sized cells, with no gutters, no margins and no labels. Canvas logical size 96x64 pixels, each cell 32x32 pixels. Each frame contains ONE sprite confined to a centered 24x24 pixel box, logical local coordinates x=4..27 and y=4..27. Draw in a true 24x24 native pixel vocabulary, enlarged exactly 16x with nearest-neighbor hard square edges. Output 1536x1024. Genuine transparent background, including all cell padding. One-pixel dark outline, clean readable silhouette, 12-15 consistent colors shared across all six frames. Single side view facing RIGHT in every frame, same character, fixed scale and proportions; body center x=16; grounded creatures have the feet baseline y=27. No camera motion, no zoom and no frame-specific recentering. Loop order is left-to-right top row frames 1,2,3 then left-to-right bottom row frames 4,5,6, returning smoothly to frame1.\nStyle: polished, expressive classic pixel sandbox monster with the readability and charm of Terraria, but original creature design for Starsoil, purposeful pixel clusters, warm rim highlights and cool shadows, no copying game assets.\nAvoid: text, grid lines, numbered frames, outlines around cells, extra characters, scenery, shadow blobs, gradients, glow outside sprite, blur, antialiasing, isometric view, painterly rendering, smooth vector curves.\nSubject and animation: Leaf-dew slime: a translucent jade and mint jelly mound with two tiny dark curious eyes, a bright dew-drop glint and a small sprouting leaf on top; outer silhouette about 20x14 pixels. Six genuinely different coherent squash/stretch hopping poses: rounded rest, flatten anticipation, stretch up, rounded airborne, soften landing, recover. Keep its friendly wild-monster identity and leaf consistent.",
+      "sha256": "0f528bd1c466bf692dff79cc1605ccafa0424ddfc8a3ed19e57f6c783f467392",
+      "source_size": [
+        1536,
+        1024
+      ],
+      "alpha": [
+        0,
+        254
+      ]
+    },
+    {
+      "name": "dusk-bat",
+      "file": "dusk-bat-source-v1.png",
+      "prompt": "Use case: illustration-story\nAsset type: production transparent pixel-art enemy animation sprite sheet for the original side-view 2D sandbox Starsoil.\nFormat is critical: SIX frames, arranged EXACTLY THREE COLUMNS by TWO ROWS, equally sized cells, with no gutters, no margins and no labels. Canvas logical size 96x64 pixels, each cell 32x32 pixels. Each frame contains ONE sprite confined to a centered 24x24 pixel box, logical local coordinates x=4..27 and y=4..27. Draw in a true 24x24 native pixel vocabulary, enlarged exactly 16x with nearest-neighbor hard square edges. Output 1536x1024. Genuine transparent background, including all cell padding. One-pixel dark outline, clean readable silhouette, 12-15 consistent colors shared across all six frames. Single side view facing RIGHT in every frame, same character, fixed scale and proportions; body center x=16; grounded creatures have the feet baseline y=27. No camera motion, no zoom and no frame-specific recentering. Loop order is left-to-right top row frames 1,2,3 then left-to-right bottom row frames 4,5,6, returning smoothly to frame1.\nStyle: polished, expressive classic pixel sandbox monster with the readability and charm of Terraria, but original creature design for Starsoil, purposeful pixel clusters, warm rim highlights and cool shadows, no copying game assets.\nAvoid: text, grid lines, numbered frames, outlines around cells, extra characters, scenery, shadow blobs, gradients, glow outside sprite, blur, antialiasing, isometric view, painterly rendering, smooth vector curves.\nSubject and animation: Dusk bat: small purple-black furry cave bat with pointed ears, a copper nose, two amber eyes, and mauve/purple leathery angular wings. Six smoothly spaced wingbeat poses from high wings through spread wings to low folded wings and back. Core body stays at local x16,y17, wings occupy at most x4..27,y5..26. Every pose remains facing RIGHT, no front-facing view.",
+      "sha256": "c1608157484098675c8e5e5b74fcdb4f296c39f1567f77e652349be271355004",
+      "source_size": [
+        1536,
+        1024
+      ],
+      "alpha": [
+        0,
+        254
+      ]
+    },
+    {
+      "name": "mossling",
+      "file": "mossling-source-v1.png",
+      "prompt": "Use case: illustration-story\nAsset type: production transparent pixel-art enemy animation sprite sheet for the original side-view 2D sandbox Starsoil.\nFormat is critical: SIX frames, arranged EXACTLY THREE COLUMNS by TWO ROWS, equally sized cells, with no gutters, no margins and no labels. Canvas logical size 96x64 pixels, each cell 32x32 pixels. Each frame contains ONE sprite confined to a centered 24x24 pixel box, logical local coordinates x=4..27 and y=4..27. Draw in a true 24x24 native pixel vocabulary, enlarged exactly 16x with nearest-neighbor hard square edges. Output 1536x1024. Genuine transparent background, including all cell padding. One-pixel dark outline, clean readable silhouette, 12-15 consistent colors shared across all six frames. Single side view facing RIGHT in every frame, same character, fixed scale and proportions; body center x=16; grounded creatures have the feet baseline y=27. No camera motion, no zoom and no frame-specific recentering. Loop order is left-to-right top row frames 1,2,3 then left-to-right bottom row frames 4,5,6, returning smoothly to frame1.\nStyle: polished, expressive classic pixel sandbox monster with the readability and charm of Terraria, but original creature design for Starsoil, purposeful pixel clusters, warm rim highlights and cool shadows, no copying game assets.\nAvoid: text, grid lines, numbered frames, outlines around cells, extra characters, scenery, shadow blobs, gradients, glow outside sprite, blur, antialiasing, isometric view, painterly rendering, smooth vector curves.\nSubject and animation: Mossling: a wiry walking forest imp made from gnarled dark walnut bark with a leafy moss hood, tiny crooked twig horns, glowing amber eyes, root feet and expressive branch arms. About 15x23 native pixels. SIX different walk-cycle poses (right step/contact/down/passing/left step/recovery), slight torso bob, alternating root feet and arms, same silhouette and bark markings. Side view faces RIGHT; grounded baseline y27.",
+      "sha256": "feae039908410cc36d0907c131661adee7058c34e3df710fbeb11a0cea31319b",
+      "source_size": [
+        1536,
+        1024
+      ],
+      "alpha": [
+        0,
+        253
+      ]
+    },
+    {
+      "name": "gem-crawler",
+      "file": "gem-crawler-source-v1.png",
+      "prompt": "Use case: illustration-story\nAsset type: production transparent pixel-art enemy animation sprite sheet for the original side-view 2D sandbox Starsoil.\nFormat is critical: SIX frames, arranged EXACTLY THREE COLUMNS by TWO ROWS, equally sized cells, with no gutters, no margins and no labels. Canvas logical size 96x64 pixels, each cell 32x32 pixels. Each frame contains ONE sprite confined to a centered 24x24 pixel box, logical local coordinates x=4..27 and y=4..27. Draw in a true 24x24 native pixel vocabulary, enlarged exactly 16x with nearest-neighbor hard square edges. Output 1536x1024. Genuine transparent background, including all cell padding. One-pixel dark outline, clean readable silhouette, 12-15 consistent colors shared across all six frames. Single side view facing RIGHT in every frame, same character, fixed scale and proportions; body center x=16; grounded creatures have the feet baseline y=27. No camera motion, no zoom and no frame-specific recentering. Loop order is left-to-right top row frames 1,2,3 then left-to-right bottom row frames 4,5,6, returning smoothly to frame1.\nStyle: polished, expressive classic pixel sandbox monster with the readability and charm of Terraria, but original creature design for Starsoil, purposeful pixel clusters, warm rim highlights and cool shadows, no copying game assets.\nAvoid: text, grid lines, numbered frames, outlines around cells, extra characters, scenery, shadow blobs, gradients, glow outside sprite, blur, antialiasing, isometric view, painterly rendering, smooth vector curves.\nSubject and animation: Gem crawler: an original squat cave lizard with a charcoal-indigo rocky body, four sturdy little feet and an asymmetrical cluster of pale turquoise and violet crystal plates along its back, one bright cyan eye and a short heavy tail. 22x19 native pixel silhouette. Six distinct, readable walking/hopping cycle poses with alternating feet, a one-pixel bob, small tail motion; the crystal ridge markings stay consistent. Right-facing, grounded baseline y27. Big readable color clusters that survive reduction to 24 pixels.",
+      "sha256": "724eb1fe1aff6fbdd8b017d98f519d74a80fb300cdffe339666dc798a7dfb9c4",
+      "source_size": [
+        1536,
+        1024
+      ],
+      "alpha": [
+        0,
+        254
+      ]
+    },
+    {
+      "name": "warden",
+      "file": "warden-source-v1.png",
+      "prompt": "Use case: illustration-story\nAsset type: production transparent pixel-art enemy animation sprite sheet for the original side-view 2D sandbox Starsoil.\nFormat is critical: SIX frames, arranged EXACTLY THREE COLUMNS by TWO ROWS, equally sized cells, with no gutters, no margins and no labels. Canvas logical size 96x64 pixels, each cell 32x32 pixels. Each frame contains ONE sprite confined to a centered 24x24 pixel box, logical local coordinates x=4..27 and y=4..27. Draw in a true 24x24 native pixel vocabulary, enlarged exactly 16x with nearest-neighbor hard square edges. Output 1536x1024. Genuine transparent background, including all cell padding. One-pixel dark outline, clean readable silhouette, 12-15 consistent colors shared across all six frames. Single side view facing RIGHT in every frame, same character, fixed scale and proportions; body center x=16; grounded creatures have the feet baseline y=27. No camera motion, no zoom and no frame-specific recentering. Loop order is left-to-right top row frames 1,2,3 then left-to-right bottom row frames 4,5,6, returning smoothly to frame1.\nStyle: polished, expressive classic pixel sandbox monster with the readability and charm of Terraria, but original creature design for Starsoil, purposeful pixel clusters, warm rim highlights and cool shadows, no copying game assets.\nAvoid: text, grid lines, numbered frames, outlines around cells, extra characters, scenery, shadow blobs, gradients, glow outside sprite, blur, antialiasing, isometric view, painterly rendering, smooth vector curves.\nSubject and animation: Starheart warden BOSS: a broad ancient obsidian-and-weathered-copper golem, squared shoulder plates, two heavy articulated fists, stout legs, a small angular head with slit turquoise eyes, and one large luminous turquoise star-shaped crystal inset in its chest. Only 24x24 native pixels: chunky clean readable masses, not a detailed illustration. Six coherent heavy walking/idle poses: contact, weight shift, passing, opposite contact, opposite shift, return. Both feet aligned to baseline y27; same copper plate geometry and bright chest core in every frame. Facing RIGHT, imposing but original.",
+      "sha256": "c65f491a3fcd61c06a2e3cdf1490f23c6313a3b6726436c86854406e078f5778",
+      "source_size": [
+        1536,
+        1024
+      ],
+      "alpha": [
+        0,
+        254
+      ]
+    },
+    {
+      "name": "frost-slime",
+      "file": "frost-slime-source-v1.png",
+      "prompt": "Use case: illustration-story\nAsset type: production transparent pixel-art enemy animation sprite sheet for the original side-view 2D sandbox Starsoil.\nFormat is critical: SIX frames, arranged EXACTLY THREE COLUMNS by TWO ROWS, equally sized cells, with no gutters, no margins and no labels. Canvas logical size 96x64 pixels, each cell 32x32 pixels. Each frame contains ONE sprite confined to a centered 24x24 pixel box, logical local coordinates x=4..27 and y=4..27. Draw in a true 24x24 native pixel vocabulary, enlarged exactly 16x with nearest-neighbor hard square edges. Output 1536x1024. Genuine transparent background, including all cell padding. One-pixel dark outline, clean readable silhouette, 12-15 consistent colors shared across all six frames. Single side view facing RIGHT in every frame, same character, fixed scale and proportions; body center x=16; grounded creatures have the feet baseline y=27. No camera motion, no zoom and no frame-specific recentering. Loop order is left-to-right top row frames 1,2,3 then left-to-right bottom row frames 4,5,6, returning smoothly to frame1.\nStyle: polished, expressive classic pixel sandbox monster with the readability and charm of Terraria, but original creature design for Starsoil, purposeful pixel clusters, warm rim highlights and cool shadows, no copying game assets.\nAvoid: text, grid lines, numbered frames, outlines around cells, extra characters, scenery, shadow blobs, gradients, glow outside sprite, blur, antialiasing, isometric view, painterly rendering, smooth vector curves.\nSubject and animation: Frost-dew slime: pale glacial-blue jelly with a translucent ice shell, three small angular ice spikes on its back, two dark-blue eyes and one white glint; different from green leaf slime. Native silhouette about 21x15 pixels. SIX different squash/stretch hop-cycle poses: rounded rest, flatten, tall launch, round airborne, squash landing, recover. Single-pixel outline, large readable icy color clusters, 12-15 colors maximum, no glow haze. Grounded poses baseline y27.",
+      "sha256": "19378833031c501d3b09647310b7480d4b179439e1a641166b2b7d997f60f7cc",
+      "source_size": [
+        1536,
+        1024
+      ],
+      "alpha": [
+        0,
+        254
+      ]
+    },
+    {
+      "name": "dune-beetle",
+      "file": "dune-beetle-source-v1.png",
+      "prompt": "Use case: illustration-story\nAsset type: production transparent pixel-art enemy animation sprite sheet for the original side-view 2D sandbox Starsoil.\nFormat is critical: SIX frames, arranged EXACTLY THREE COLUMNS by TWO ROWS, equally sized cells, with no gutters, no margins and no labels. Canvas logical size 96x64 pixels, each cell 32x32 pixels. Each frame contains ONE sprite confined to a centered 24x24 pixel box, logical local coordinates x=4..27 and y=4..27. Draw in a true 24x24 native pixel vocabulary, enlarged exactly 16x with nearest-neighbor hard square edges. Output 1536x1024. Genuine transparent background, including all cell padding. One-pixel dark outline, clean readable silhouette, 12-15 consistent colors shared across all six frames. Single side view facing RIGHT in every frame, same character, fixed scale and proportions; body center x=16; grounded creatures have the feet baseline y=27. No camera motion, no zoom and no frame-specific recentering. Loop order is left-to-right top row frames 1,2,3 then left-to-right bottom row frames 4,5,6, returning smoothly to frame1.\nStyle: polished, expressive classic pixel sandbox monster with the readability and charm of Terraria, but original creature design for Starsoil, purposeful pixel clusters, warm rim highlights and cool shadows, no copying game assets.\nAvoid: text, grid lines, numbered frames, outlines around cells, extra characters, scenery, shadow blobs, gradients, glow outside sprite, blur, antialiasing, isometric view, painterly rendering, smooth vector curves.\nSubject and animation: Dune beetle: a sturdy desert beetle with a warm sand-gold segmented shell, copper underplates, four to six dark little legs, two short curved antennae, one amber eye and a small blunt forward horn. Side view facing RIGHT, about 23x14 native pixels, clearly an insect rather than a turtle. SIX different continuous walking/rush poses, legs alternating and shell bobbing by one pixel; shell remains the same size and segments. Ground baseline y27. Bold simple shading suitable for 24x24 runtime sprite.",
+      "sha256": "c7514dd93203b9566c9831c61460c92fa7631f1a58c32abc837bceb80d3797a4",
+      "source_size": [
+        1536,
+        1024
+      ],
+      "alpha": [
+        0,
+        254
+      ]
+    },
+    {
+      "name": "lantern-moth",
+      "file": "lantern-moth-source-v1.png",
+      "prompt": "Use case: illustration-story\nAsset type: production transparent pixel-art enemy animation sprite sheet for the original side-view 2D sandbox Starsoil.\nFormat is critical: SIX frames, arranged EXACTLY THREE COLUMNS by TWO ROWS, equally sized cells, with no gutters, no margins and no labels. Canvas logical size 96x64 pixels, each cell 32x32 pixels. Each frame contains ONE sprite confined to a centered 24x24 pixel box, logical local coordinates x=4..27 and y=4..27. Draw in a true 24x24 native pixel vocabulary, enlarged exactly 16x with nearest-neighbor hard square edges. Output 1536x1024. Genuine transparent background, including all cell padding. One-pixel dark outline, clean readable silhouette, 12-15 consistent colors shared across all six frames. Single side view facing RIGHT in every frame, same character, fixed scale and proportions; body center x=16; grounded creatures have the feet baseline y=27. No camera motion, no zoom and no frame-specific recentering. Loop order is left-to-right top row frames 1,2,3 then left-to-right bottom row frames 4,5,6, returning smoothly to frame1.\nStyle: polished, expressive classic pixel sandbox monster with the readability and charm of Terraria, but original creature design for Starsoil, purposeful pixel clusters, warm rim highlights and cool shadows, no copying game assets.\nAvoid: text, grid lines, numbered frames, outlines around cells, extra characters, scenery, shadow blobs, gradients, glow outside sprite, blur, antialiasing, isometric view, painterly rendering, smooth vector curves.\nSubject and animation: Lantern moth: a small magical night moth with two broad pointed indigo and dusky teal wings, tiny gold eye-spots on the wings, a warm amber lantern-like abdomen, fine curled antennae and a little dark face looking RIGHT. Exactly SIX coherent wingbeat frames (up, halfway up, spread, down, halfway down, lift) with the body anchored at x16,y17. Full silhouette at most 24x22 native pixels. Strong readable indigo-vs-gold pixel masses, no floating light aura, no extra particles.",
+      "sha256": "f66d7780d0d89df2d86a393e81c9672c216e38a1cb24f599b14a82ab9f200351",
+      "source_size": [
+        1536,
+        1024
+      ],
+      "alpha": [
+        0,
+        254
+      ]
+    },
+    {
+      "name": "thorn-hornet",
+      "file": "thorn-hornet-source-v1.png",
+      "prompt": "Use case: illustration-story\nAsset type: production transparent pixel-art enemy animation sprite sheet for the original side-view 2D sandbox Starsoil.\nFormat is critical: SIX frames, arranged EXACTLY THREE COLUMNS by TWO ROWS, equally sized cells, with no gutters, no margins and no labels. Canvas logical size 96x64 pixels, each cell 32x32 pixels. Each frame contains ONE sprite confined to a centered 24x24 pixel box, logical local coordinates x=4..27 and y=4..27. Draw in a true 24x24 native pixel vocabulary, enlarged exactly 16x with nearest-neighbor hard square edges. Output 1536x1024. Genuine transparent background, including all cell padding. One-pixel dark outline, clean readable silhouette, 12-15 consistent colors shared across all six frames. Single side view facing RIGHT in every frame, same character, fixed scale and proportions; body center x=16; grounded creatures have the feet baseline y=27. No camera motion, no zoom and no frame-specific recentering. Loop order is left-to-right top row frames 1,2,3 then left-to-right bottom row frames 4,5,6, returning smoothly to frame1.\nStyle: polished, expressive classic pixel sandbox monster with the readability and charm of Terraria, but original creature design for Starsoil, purposeful pixel clusters, warm rim highlights and cool shadows, no copying game assets.\nAvoid: text, grid lines, numbered frames, outlines around cells, extra characters, scenery, shadow blobs, gradients, glow outside sprite, blur, antialiasing, isometric view, painterly rendering, smooth vector curves.\nSubject and animation: Thorn hornet: a tough little jungle flying insect, side view facing RIGHT, leaf-green and ochre segmented armored abdomen, a pointed dark brown thorn stinger aimed back, two pale mint sharp wings, one conspicuous amber eye, short thorn-like legs and antennae. Native silhouette at most 24x20 pixels. SIX coherent wingbeat/hover frames, alternating up/spread/down wings, abdomen and eye anchored consistently at local x16,y17. Large readable pixel clusters, 12-15 colors, one-pixel dark outline, no haze.",
+      "sha256": "ce90b587a02bedfb5505e40378afac839d49ecc5e835548742b4398660481955",
+      "source_size": [
+        1536,
+        1024
+      ],
+      "alpha": [
+        0,
+        254
+      ]
+    }
+  ],
+  "ui_palette": "63 opaque colors plus transparent index 0",
+  "import": "python3 tools/import_generated.py; python3 tools/draw_art.py"
+}

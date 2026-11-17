@@ -126,7 +126,7 @@ python3 local/pxa-apps/starsoil/tools/build_trees.py
 python3 local/pxa-apps/starsoil/tools/build_font.py
 ```
 
-美术生成需要 Pillow。界面文字按原点阵的水平连续笔画成段绘制，减少重复调用，仍保持完全一致的整数像素。界面、数字、英文和暂停菜单统一使用 [ZLabs Pixel 12px](https://github.com/Astro-2539/ZLabs-Pixel-12px) CN 原始点阵；中文按 12 像素、英文按 6 像素字距显示，行高 13 像素，不从轮廓字体缩放生成。内嵌子集命名为 Starsoil UI 12。`ui_canvas.hpp` 按输出表面的整数像素绘制文字，并使用相同的字号计算宽度、行高、居中与换行。场景只在进入界面绘制阶段时缩放一次，文字和后续弹窗保持正常绘制顺序。中文逐字换行，英文优先按单词边界换行；超长按钮文字以省略号收尾。合成列表每页显示四条配方，为物品名称和材料各留一行。字体工具仅使用 Python 标准库，源 KBitX、固定上游提交与 SHA-256 分别保存在 `art/fonts/` 和 `art/font-source.json`，无需访问网络或安装系统字体。原始 OFL 授权与版权声明保留在 `art/FONT-LICENSE.txt`，并随应用包的 `assets/font-license.txt`、`assets/font-notice.txt` 分发。代码、网格美术与原创整树素材按 MIT 分发；应用运行层从现有 CC0 pocket-play 运行层派生。没有引入 Terraria 的素材或游戏代码。
+美术生成需要 Pillow。界面文字按原点阵的水平连续笔画成段绘制，减少重复调用，仍保持完全一致的整数像素。界面、数字、英文和暂停菜单统一使用 [ZLabs Pixel 12px](https://github.com/Astro-2539/ZLabs-Pixel-12px) CN 原始点阵；中文按 12 像素、英文按 6 像素字距显示，行高 13 像素，不从轮廓字体缩放生成。内嵌子集命名为 Starsoil UI 12。`ui_canvas.hpp` 按输出表面的整数像素绘制文字，并使用相同的字号计算宽度、行高、居中与换行。场景只在进入界面绘制阶段时缩放一次，文字和后续弹窗保持正常绘制顺序。中文逐字换行，英文优先按单词边界换行；超长按钮文字以省略号收尾。合成列表按屏幕高度每页显示两至三条配方，名称和材料各留一行，并与生成式边框保留内边距。字体工具仅使用 Python 标准库，源 KBitX、固定上游提交与 SHA-256 分别保存在 `art/fonts/` 和 `art/font-source.json`，无需访问网络或安装系统字体。原始 OFL 授权与版权声明保留在 `art/FONT-LICENSE.txt`，并随应用包的 `assets/font-license.txt`、`assets/font-notice.txt` 分发。代码、网格美术与原创整树素材按 MIT 分发；应用运行层从现有 CC0 pocket-play 运行层派生。没有引入 Terraria 的素材或游戏代码。
 
 `core.hpp` / `core.cpp` 管理与平台无关的规则与按世界尺寸编码的存档；分配步长固定为最大尺寸，游戏边界使用各世界自己的宽高。`main_menu.inc` 管理世界列表、大小选择、种子键盘和删除确认；`world_storage.inc` 管理文件目录与异步原子存档。`items.hpp` 管理物品与配方，`main.cpp` 管理呈现及操作，`runtime.cpp` 管理 PXA 显示、事件、音频与存档。`tests/font_test.cpp` 检查每个内嵌字形在不同坐标相位下的 2 × 2 像素、字宽和弹窗遮挡；`tests/core_test.cpp` 可在原生编译器配合 AddressSanitizer、UndefinedBehaviorSanitizer 下运行；`tests/actor_test.cpp` 调用游戏实际人物合成器，检查不同穿戴、姿势、帧、朝向下的连接、双足、握点和缩放，并可导出检查图。`tests/layout_test.cpp` 调用实际页面绘制和点击处理，检查画布覆盖、触控区域及采集战斗反馈。`tests/assets_test.py` 检查源点阵及分层素材，`tests/save_fixture.cpp` 提供可重复的模拟器测试存档。
 
@@ -156,4 +156,4 @@ python3 local/pxa-apps/starsoil/tools/build_font.py
 
 建造时会显示半透明预览：绿色可放置，红色表示阻挡、缺少支撑或超出距离；门显示完整两格范围。手持不同背景墙可直接替换并回收旧墙，同种墙不重复扣料。手持墙壁轻点家具仍可互动，按住则在家具后方补墙。合成页底部可筛选全部、建造、工具、装备和补给，并可叠加“可制作”筛选；手柄在列表第一项按上进入分类，左右切换、下返回配方。
 
-怪物动画使用每种生物共用的 16 色调色板和 8 位索引像素，绘制时先计算调色板光照，再逐行写入画面。飞行摆动使用固定采样表，远离玩家的普通怪物会回收。敌方弹药使用独立的 8 发容量池，并在复活时清空。
+怪物动画使用每种生物共用的 32 色调色板和 8 位索引像素，绘制时先计算调色板光照，再逐行写入画面。飞行摆动使用固定采样表，远离玩家的普通怪物会回收。敌方弹药使用独立的 8 发容量池，并在复活时清空。
