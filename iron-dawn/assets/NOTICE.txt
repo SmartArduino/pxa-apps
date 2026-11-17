@@ -7,6 +7,8 @@ Font SHA256: c4bf6069b8e5e31dc42c81f310afbc322c2cbc843ceba6c871358f9f1aaae033
 
 Generated music and effects: original project outputs (MIT), using ACE-Step 1.5 and Stable Audio 3 Small SFX. Models are not included; generation provenance in tools/audio-prompts.json.
 
+Unit voices: original synthetic cast and dialogue (MIT), designed with Qwen3-TTS VoiceDesign and generated from fixed synthetic references with Qwen3-TTS Base (Apache-2.0 models, not included). No third-party voice recordings used; provenance in tools/voice-prompts.json.
+
 === PXA-SDK-LICENSE.txt ===
 MIT License
 

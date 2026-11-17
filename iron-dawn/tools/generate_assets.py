@@ -32,6 +32,7 @@ common=app.parent/'common/motion-games/licenses'
 notice='Iron Dawn: original application code, game rules, procedural and generated artwork: MIT.\nGenerated image masters: built-in ImageGen; prompts and input lineage in tools/art-prompts.json.\nFont subset: Iron Dawn UI Pixel, derived from Z Labs Pixel 12px M CN, SIL OFL 1.1.\nFont SHA256: '+hashlib.sha256(font.read_bytes()).hexdigest()+'\n\n'
 notice=notice.replace('Font subset:', 'Environment and large-screen UI reference: built-in ImageGen; prompts and input lineage in tools/environment-prompts.json; original MIT artwork.\nNine-slice UI skins: built-in ImageGen; prompts and input lineage in tools/ui-skin-prompts.json; original MIT artwork.\nFont subset:')
 notice+='Generated music and effects: original project outputs (MIT), using ACE-Step 1.5 and Stable Audio 3 Small SFX. Models are not included; generation provenance in tools/audio-prompts.json.\n\n'
+notice+='Unit voices: original synthetic cast and dialogue (MIT), designed with Qwen3-TTS VoiceDesign and generated from fixed synthetic references with Qwen3-TTS Base (Apache-2.0 models, not included). No third-party voice recordings used; provenance in tools/voice-prompts.json.\n\n'
 for name in ('PXA-SDK-LICENSE.txt',):
  notice+='=== '+name+' ===\n'+(common/name).read_text()+'\n'
 for name in ('ZLabs-Pixel-OFL.txt','pixelfx-LICENSE','pixelfx-NOTICE.md'):

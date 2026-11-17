@@ -6,7 +6,7 @@ Write evidence under local/artifacts. These are QA captures; use the official
 verify --store-screenshots workflow for marketplace uploads.
 """
 from pathlib import Path
-import argparse,concurrent.futures,json,os,re,socket,struct,subprocess,time
+import argparse,concurrent.futures,json,os,re,socket,struct,subprocess,time,traceback
 from PIL import Image
 p=argparse.ArgumentParser();p.add_argument('--simulator',type=Path,required=True);p.add_argument('--package',type=Path,required=True);p.add_argument('--publisher-key',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--profiles',nargs='+');p.add_argument('--density-dpi',type=int,default=160);args=p.parse_args()
 for name in ('simulator','package','publisher_key','output'):setattr(args,name,getattr(args,name).resolve())
@@ -93,7 +93,7 @@ def run(item):
    stop(True);launch();assert 'Iron Dawn restored' in log.read_text();tap(offset+365,max(214,h-128)+20);shot('restored-default');dock(4);tactic(3);shot('research');tap(w/2,h-32);tap(w-42,24);time.sleep(.8);saves();stop(True)
   text=log.read_text();assert not any(x in text for x in ['surface create error','resize failed','save open failed','save publish failed','save write failed','out of bounds memory','Exception:','double free','corruption'])
   return {'profile':name,'passed':True,'native':[native_w,native_h],'landscape':[pw,ph],'canvas':[w,h],'density_dpi':args.density_dpi,'wide_sidebar':wide,'drawer_touch_and_placement':True,'four_unit_selection_and_movement':True,'save_relaunch_and_research':True,'screenshots':shots}
- except Exception as e:return {'profile':name,'passed':False,'error':str(e),'screenshots':shots}
+ except Exception as e:return {'profile':name,'passed':False,'error':str(e),'traceback':traceback.format_exc(),'screenshots':shots}
  finally:stop();sock.unlink(missing_ok=True)
 with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:results=list(pool.map(run,profiles.items()))
 r={'passed':all(x['passed'] for x in results),'profiles':results,'capture':'official product simulator, rectangular QA viewport'};(args.output/'result.json').write_text(json.dumps(r,ensure_ascii=False,indent=2)+'\n');print(json.dumps(r,ensure_ascii=False),flush=True);raise SystemExit(0 if r['passed'] else 1)

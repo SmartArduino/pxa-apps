@@ -1,0 +1,473 @@
+{
+  "format": "iron-dawn-voices-v1",
+  "language": "Chinese",
+  "models": {
+    "design": "Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+    "clone": "Qwen3-TTS-12Hz-1.7B-Base",
+    "license": "Apache-2.0",
+    "source": "https://github.com/QwenLM/Qwen3-TTS"
+  },
+  "sampling": {
+    "do_sample": true,
+    "temperature": 0.65,
+    "top_p": 0.85,
+    "top_k": 40,
+    "repetition_penalty": 1.05,
+    "max_new_tokens": 256
+  },
+  "cast": [
+    {
+      "id": "rifle",
+      "kind": 0,
+      "name": "游骑兵",
+      "seed": 761101,
+      "instruct": "二十五岁左右的中国男性侦察兵，清亮结实的中高音，有明亮的胸腔共鸣，干净利落，机敏自信，精力充沛但不夸张。标准普通话，字头清晰，语速稍快，短句果断。正在向指挥官进行战术无线电汇报，克制而警觉，绝不播音腔，不要背景噪声或音乐。",
+      "reference_text": "游骑兵就位，正在观察前方。保持队形，我们随时可以出发。确认目标后，立刻行动。",
+      "lines": {
+        "select_0": "游骑兵，听候指令。",
+        "select_1": "前方情况，我盯着。",
+        "move_0": "收到，立即出发。",
+        "move_1": "保持队形，跟我走。",
+        "attack_0": "目标确认，开火！",
+        "attack_1": "掩护跟上，压制他们！",
+        "stop": "收到，停止移动。",
+        "ready": "游骑兵，报到！"
+      },
+      "reference_sha256": "661a66b60eb57103e4f347cf7cd2fa3b93ec0cb45edfa4bc6444553c2c59b6fb",
+      "line_seeds": {
+        "stop": 763118
+      }
+    },
+    {
+      "id": "rocket",
+      "kind": 1,
+      "name": "破甲兵",
+      "seed": 761207,
+      "instruct": "三十岁左右的中国女性反装甲战士，偏低的女中音，声音有坚实的胸腔共鸣和一点沙质，不尖细也不甜美。标准普通话，咬字有力，语速适中。性格冷静坚韧，坚定而充满战斗意志，短促的战术口吻，攻击时干脆坚决。近讲干声，没有广播腔，没有背景噪声或音乐。",
+      "reference_text": "破甲小组已经就位。锁定敌方装甲，等待你的命令。稳住，找到弱点，再一击穿透。",
+      "lines": {
+        "select_0": "破甲小组，准备就绪。",
+        "select_1": "装甲目标，交给我。",
+        "move_0": "收到，转移阵地。",
+        "move_1": "寻找新的射击位置。",
+        "attack_0": "锁定装甲，发射！",
+        "attack_1": "瞄准弱点，打穿它！",
+        "stop": "就地隐蔽，保持警戒。",
+        "ready": "破甲兵，加入战斗。"
+      },
+      "reference_sha256": "74b0009e7cf59b877354517d7fdef2570670b0e5b90ed82b841bdb913e8860d7"
+    },
+    {
+      "id": "tank",
+      "kind": 2,
+      "name": "先锋坦克",
+      "seed": 761309,
+      "instruct": "四十岁左右的中国男性坦克车长，低沉厚重的男低音，宽厚胸腔共鸣，略带粗粝的砂砾质感，沉稳可靠，很有力量感。标准普通话，语速稍慢，吐字结实。老兵式的自信从容，战斗指令简洁有压迫力，不要吼叫。近讲干声，不加电台噪声，不要背景音乐，不是解说员。",
+      "reference_text": "先锋车组就位，装甲检查完毕。我们会顶住正面，步兵跟紧。给个方向，重装部队马上开进。",
+      "lines": {
+        "select_0": "先锋车组，等待命令。",
+        "select_1": "装甲可靠，随时出击。",
+        "move_0": "收到，马上出发。",
+        "move_1": "全车注意，向前推进。",
+        "attack_0": "主炮就绪，开火！",
+        "attack_1": "正面突破，碾碎防线！",
+        "stop": "停车，炮口警戒。",
+        "ready": "先锋坦克，整装待发。"
+      },
+      "reference_sha256": "fbb4434cd4aca9a38e4993cdf23dcc3ef96bd1f586e6eb65a7d0065fe19e9ddf",
+      "line_seeds": {
+        "move_0": 763321,
+        "attack_0": 763349
+      }
+    },
+    {
+      "id": "artillery",
+      "kind": 3,
+      "name": "长弓火炮",
+      "seed": 761413,
+      "instruct": "三十五岁左右的中国男性炮兵军官，偏高且清冷的男中音，声音瘦而有穿透力，轻微鼻腔共鸣，与低沉坦克车长明显不同。标准普通话，语速适中，咬字精确，句间停顿短。性格理性严谨，专注地进行火控计算，克制冷静，准备开火时坚决。近讲干声，没有播音腔，没有背景噪声或音乐。",
+      "reference_text": "长弓炮组正在校准。风向稳定，射击诸元已经确认。请标记目标，我们会把炮火准确送到。",
+      "lines": {
+        "select_0": "长弓炮组，正在待命。",
+        "select_1": "射击诸元，校准完毕。",
+        "move_0": "收到，转移炮位。",
+        "move_1": "收拢支架，前往新阵地。",
+        "attack_0": "坐标确认，炮击开始！",
+        "attack_1": "装填完成，覆盖目标！",
+        "stop": "停止转移，稳固炮位。",
+        "ready": "长弓火炮，部署完毕。"
+      },
+      "reference_sha256": "f4c67485f7fb07455764eafcf184897145e6d8de34e627b016e1aa02a30d65fa"
+    },
+    {
+      "id": "harvester",
+      "kind": 4,
+      "name": "采矿车",
+      "seed": 761519,
+      "instruct": "四十五岁左右的中国女性采矿车司机，中音区温暖略厚的女声，圆润朴实，稍带成熟劳动者的烟嗓质感。标准普通话，节奏自然轻快，语速适中。性格务实乐观，做事麻利，像经验丰富的后勤师傅，亲切但专业，坚定保障补给。不要甜美少女音或播音腔。近讲干声，没有背景噪声或音乐。",
+      "reference_text": "采矿车检查完毕，油料充足。矿区路线我熟悉，补给就交给我们。多运一车矿石，前线就多一分把握。",
+      "lines": {
+        "select_0": "采矿车，听着呢。",
+        "select_1": "补给的事，交给我。",
+        "move_0": "收到，前往矿区。",
+        "move_1": "发动机正常，这就出发。",
+        "ready": "采矿车，准备作业。"
+      },
+      "reference_sha256": "6da10cd093b6ea0fd32db9eae71ee2556dc72e0db69fba3bd268db29f72988e6"
+    }
+  ],
+  "model_sha256": {
+    "design/model.safetensors": "391e8db219f292c515297cdceeb43e4eae67cdde35fa57e79a6a8a532fca0522",
+    "design/speech_tokenizer/model.safetensors": "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
+    "design/config.json": "aecd2cc4c1fe9edef1cb7ca7c401685a43879ad43f3f9e883f1c6760b61731e0",
+    "design/generation_config.json": "f1b90b4513f3b34c62851049e2492d7b4c5940daf1276f89c82b8ef04127f3aa",
+    "clone/model.safetensors": "38fc7fc51c5e776e840414b6fd443962e9411b9654888fd7913e4da643cb857c",
+    "clone/speech_tokenizer/model.safetensors": "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
+    "clone/config.json": "b4f01752d15a488abde3e1ab44723ae4f4b9e68a4037257b098b3737893cc1f9",
+    "clone/generation_config.json": "f1b90b4513f3b34c62851049e2492d7b4c5940daf1276f89c82b8ef04127f3aa"
+  },
+  "processing": {
+    "sample_rate": 16000,
+    "channels": 1,
+    "encoding": "S16LE",
+    "highpass_hz": 140,
+    "lowpass_hz": 6400,
+    "peak_limit": 0.76,
+    "target_rms": 0.17,
+    "lines": {
+      "rifle-select_0": {
+        "duration": 1.39,
+        "trim_start": 0.51,
+        "trim_end": 1.9,
+        "source_sha256": "374500bc71db6c6a590d224ce196fe3c37f4648d059a68284ec3775b83e15ec0",
+        "master_sha256": "7fd3d75afc2983771cd48a04318411757b7e3ae2a276c813462297f788047e89",
+        "runtime_sha256": "2a70e3c691f0020c0d36eb76a04a9d4fcd140a0cbd6ee13651453d9d25bd1f33",
+        "runtime_bytes": 44480
+      },
+      "rifle-select_1": {
+        "duration": 1.64,
+        "trim_start": 0.5,
+        "trim_end": 2.14,
+        "source_sha256": "d782031b4b1df9c7a707c74a7be23aedbc59aa7037157d8f7978eb9273c1ce93",
+        "master_sha256": "92aba31690a1d9c437ed95a686f7c040b0f27631e2fcd7c10f178c68ed735e4d",
+        "runtime_sha256": "82c22ff3a26ba3cf74810becbe13c27d4a2b810c41258f7bca75dae370afbcd3",
+        "runtime_bytes": 52480
+      },
+      "rifle-move_0": {
+        "duration": 1.31,
+        "trim_start": 0.29,
+        "trim_end": 1.6,
+        "source_sha256": "d00567246e71aa75f096c8391d6f76efe2e2e53f68f92533c9c2384c636974bc",
+        "master_sha256": "07f43bc0dac1543bd066180ffbb9933f11a304f47c85df9b468ddee8032eef27",
+        "runtime_sha256": "e3f2642759bf6c88e080a2bcc26fc9d20b2ea6476bd1d639d2728d74d0437863",
+        "runtime_bytes": 41920
+      },
+      "rifle-move_1": {
+        "duration": 1.42,
+        "trim_start": 0.41,
+        "trim_end": 1.83,
+        "source_sha256": "69c17d14d575385c837f66fcb5182c9fd954fc3235e181aa6b74f1189456fab4",
+        "master_sha256": "52b161a1a2f5f0b71cb332b50a5d7bb2f5e05da6cc45e3cd1aa10f377c90c09b",
+        "runtime_sha256": "01da16b9c1e51575fcbc0f749a25585d8b9d583b6baebdf98c28422f89c50fe0",
+        "runtime_bytes": 45440
+      },
+      "rifle-attack_0": {
+        "duration": 1.61,
+        "trim_start": 0.31,
+        "trim_end": 1.92,
+        "source_sha256": "ed0700acf44030617284178d6eb7f918dcff7099ef5249029df1138cdcc191ea",
+        "master_sha256": "bfb1d53dbbf691a2a1592b02a545430477c92b39db374992b759f4572dfae0c0",
+        "runtime_sha256": "7ffb53b6ff9840b7b76cc8c14d35909f8e8b10d1e943e80a6f8818a7911b63de",
+        "runtime_bytes": 51520
+      },
+      "rifle-attack_1": {
+        "duration": 1.77,
+        "trim_start": 0.07,
+        "trim_end": 1.84,
+        "source_sha256": "63450595eaea6e80b6d55ef6db58e52f1fbd054d5968983e231659804fe37e43",
+        "master_sha256": "00e55583dac608cd90fa49501f6e386c2d5863fca9a7ba44f2338abdc1ff957b",
+        "runtime_sha256": "8c472c78c50f2478e53df270cdbc097107b7d555abcedcbea404361b93b2421a",
+        "runtime_bytes": 56640
+      },
+      "rifle-stop": {
+        "duration": 1.54,
+        "trim_start": 0.68,
+        "trim_end": 2.22,
+        "source_sha256": "158c22400eae0f01f9f49762e0d99bdadb753bf15f01199f448433672ada7e75",
+        "master_sha256": "dd9ab2f91b69b2cb129ff2acdf34c9912717ac9ce3da1242b5998ad50b3e400f",
+        "runtime_sha256": "ff55eb1ff6f685784dcc525c10e9af61bb97ec85c3d7580d81c8e19dfd644947",
+        "runtime_bytes": 49280
+      },
+      "rifle-ready": {
+        "duration": 1.17,
+        "trim_start": 0.67,
+        "trim_end": 1.84,
+        "source_sha256": "8eab024901db0a937004214507c253e0d2f24c07c03cc25d8332e2e9056630aa",
+        "master_sha256": "1cac31e3b2d2deab8d32a605e5e2c6f488eb44805d1908614b24a8dd529a7206",
+        "runtime_sha256": "097d1e755f74bba9ee1d10d6901cf73e2a1931dade7992f80a0a0a5b2521461f",
+        "runtime_bytes": 37440
+      },
+      "rocket-select_0": {
+        "duration": 1.81,
+        "trim_start": 0.74,
+        "trim_end": 2.55,
+        "source_sha256": "2bebc8fbdec9607d0b62bae5d0b8d43484ab0c9b8aa3b86331831d0794f2929c",
+        "master_sha256": "15a9fd52f647839481dc49fa8c2038dbeb8d041c1ec06523aa4b778ec185e908",
+        "runtime_sha256": "782687a652df61ab37c81de9d4f7d9a064b7b5f8ec474b381b9ecc48dc45b9e8",
+        "runtime_bytes": 57920
+      },
+      "rocket-select_1": {
+        "duration": 1.74,
+        "trim_start": 0.4,
+        "trim_end": 2.14,
+        "source_sha256": "69b17b375164ca2578da8eecbdf9485819ac72376f1ce8afa74b21d62280a11a",
+        "master_sha256": "713a13aedfd7979e2ff3a47981697bb469a9c9290ceddb4a2bd49e340de7eaf1",
+        "runtime_sha256": "b65a8e15fc228cb13a7fd8b52780552d71564819ac829805b8a196d5d8be5a4e",
+        "runtime_bytes": 55680
+      },
+      "rocket-move_0": {
+        "duration": 1.73,
+        "trim_start": 0.4,
+        "trim_end": 2.13,
+        "source_sha256": "625f6f6e9b0033feb998c8b28b1ab695d855252e1b84988e407072bbb23edae3",
+        "master_sha256": "8bccd0d8ead6ab76a8aa435b774ebd51c9c0136763888dcd8e4e0be10eb5adf7",
+        "runtime_sha256": "059496d6e0d12c14e10f813ce053f5cdeb24daa6955168e1e2a93833b66f36e3",
+        "runtime_bytes": 55360
+      },
+      "rocket-move_1": {
+        "duration": 1.33,
+        "trim_start": 0.62,
+        "trim_end": 1.95,
+        "source_sha256": "c97fce32a21b1960bbb00e249222eb74cbfe9539fd19cbc569d9298b7254441f",
+        "master_sha256": "04e830fd97baef5ede2f98c9b3550b91123e860855cf353a5bb7a9ad101de6e3",
+        "runtime_sha256": "253777402a679939a8c9f5fc471530d6c3e98a124accb3fd3a4b736f73db6a15",
+        "runtime_bytes": 42560
+      },
+      "rocket-attack_0": {
+        "duration": 1.57,
+        "trim_start": 0.49,
+        "trim_end": 2.06,
+        "source_sha256": "cec4c5f791683436977a2b199103567381dd42d92c8fb179f2b6f62947b7292b",
+        "master_sha256": "c4005ace857762187be66a1c7b75404dbae34b6acd145d59798a4d7ee37b342b",
+        "runtime_sha256": "47420c6d378ede3be353607ac3099df23f8e9cdeae0eff9948d303deb3fb232b",
+        "runtime_bytes": 50240
+      },
+      "rocket-attack_1": {
+        "duration": 1.68,
+        "trim_start": 0.24,
+        "trim_end": 1.92,
+        "source_sha256": "b2cfb0819946a836d4490bfa270ce55067f541e8aed597287df2c9063ba95f44",
+        "master_sha256": "34b3929e7d0c7881a13f7485ece2543a34423044ac20dd75686b44cb9ea40f1e",
+        "runtime_sha256": "906452cc9adf829cc376997829f2b4b610d7dc823bfadf80a2e5a0d4d11b4ed2",
+        "runtime_bytes": 53760
+      },
+      "rocket-stop": {
+        "duration": 1.88,
+        "trim_start": 0.67,
+        "trim_end": 2.55,
+        "source_sha256": "7128bcc3c78f69c4f33214375d5b289dcda303f7792a93c427d4949367acc12c",
+        "master_sha256": "c2620c56a4beacaa20d56f2f70179ba18dc4eba206f1ce72d1a9c1d6d8e06f5f",
+        "runtime_sha256": "b5bb472a6cf8d5b7fb881cef73c0b17037f613e1a6a95e8f51cc9a9b8c225638",
+        "runtime_bytes": 60160
+      },
+      "rocket-ready": {
+        "duration": 1.78,
+        "trim_start": 0.7,
+        "trim_end": 2.48,
+        "source_sha256": "b1fa3e64a4180639d5728816b0aa4176be7c3b0f7b2b9f8db988b6df41389d86",
+        "master_sha256": "1570b631d75b369456d4fca445c973a73cd80a79e13c40b6d55075098a6a36dc",
+        "runtime_sha256": "b20627885e00fb2789b4178fedc3c465ec56ad67668f0c2ee36b4b8da9b30952",
+        "runtime_bytes": 56960
+      },
+      "tank-select_0": {
+        "duration": 1.78,
+        "trim_start": 0.67,
+        "trim_end": 2.45,
+        "source_sha256": "eb69bce0bd21aafb5828bf7f4dc43b4fd9f2d74b5df2cd4c13f9eecc845e2cd3",
+        "master_sha256": "9fcb719001a3d55d07b0e7274644c671615edbab9393093bba94b72158b0b735",
+        "runtime_sha256": "ff2a8cc55d12ebbb667bda8b1161034e57217fddc9d11c2334346552a869103f",
+        "runtime_bytes": 56960
+      },
+      "tank-select_1": {
+        "duration": 1.96,
+        "trim_start": 0.28,
+        "trim_end": 2.24,
+        "source_sha256": "0864000b7f69ecc678b498f8edd720c021be421ac878818903bdc43c112dca4b",
+        "master_sha256": "55d591fb88a9207ae96655d504fc58720c94badd2e3b633405e87b6db3694b52",
+        "runtime_sha256": "88db205bcf061e739cad2c1bc0c7fa80535311a3daba4d83892635c2901bc6f0",
+        "runtime_bytes": 62720
+      },
+      "tank-move_0": {
+        "duration": 1.56,
+        "trim_start": 0.44,
+        "trim_end": 2.0,
+        "source_sha256": "dd5cdc4b6d1da4aab34ba446efa357964ca502cbbf558cadba7568f7f7ccfbdd",
+        "master_sha256": "070881740d4531151393ce4226841157162c9084e004424105da72a54bf726af",
+        "runtime_sha256": "013430abacff4449b536ec585f63e7b1548ee2712507d7823019f28a4799cc65",
+        "runtime_bytes": 49920
+      },
+      "tank-move_1": {
+        "duration": 1.8,
+        "trim_start": 0.84,
+        "trim_end": 2.64,
+        "source_sha256": "478ea8ff07d809bd34e005aa68de199bc9bef9894fac77245c4e2904a734b368",
+        "master_sha256": "3e1205589b7d7ff5715dd9faeb49e271f97891e9420ce6137e3c3022fb44a0dd",
+        "runtime_sha256": "774c77d9bf3068405cb9f4a0cebb3a1c6bbfbcead8ad13c634d2e57c3c05378e",
+        "runtime_bytes": 57600
+      },
+      "tank-attack_0": {
+        "duration": 1.92,
+        "trim_start": 0.24,
+        "trim_end": 2.16,
+        "source_sha256": "bde8132d4912557bcc7ca2bd042d611934ab2f3d5ee84cec94509283bb702587",
+        "master_sha256": "d7e950ce6a6bc40261a316b87943e1089d9ed562bc0221073521b8d0a02d9d29",
+        "runtime_sha256": "349f0b78735f971998fd38b4ee573c0acc17fab10714d41ba078985a58841a84",
+        "runtime_bytes": 61440
+      },
+      "tank-attack_1": {
+        "duration": 1.99,
+        "trim_start": 0.41,
+        "trim_end": 2.4,
+        "source_sha256": "a46023ec5785dcb6aad2267933cb982f8f425568f1e6aa3f44910698f2b5b8fb",
+        "master_sha256": "7599864d9d64f9af62f4f9e85c2fe3df6616ba7e2eeb9e3cba6732d7c2912894",
+        "runtime_sha256": "eee4f83dcee0137a5be00d86a5733b1dbe27debd49dc9fcd9c2a0dd5fcfd8192",
+        "runtime_bytes": 63680
+      },
+      "tank-stop": {
+        "duration": 1.81,
+        "trim_start": 0.59,
+        "trim_end": 2.4,
+        "source_sha256": "1aedc600160dbfe8e26491a3bea4aa7c9fcf7e816ec8b4cf5866f6cef00d74bd",
+        "master_sha256": "cdac3eb369e8a5fcd4e32e017efc7fb0cc3b9e05d40e2dbe1ef7137991c6403d",
+        "runtime_sha256": "66b6d017c9be757b895aadb44279f204ddebd5a48a74a3e6668ac2b11feb1b3b",
+        "runtime_bytes": 57920
+      },
+      "tank-ready": {
+        "duration": 2.22,
+        "trim_start": 0.26,
+        "trim_end": 2.48,
+        "source_sha256": "2a7fb4d74308fbf0b406c495c6c4d425820903650a5dc1c64b8d05ef489447a6",
+        "master_sha256": "1e63cc798df6981ec9b1af61e37f8381f6df6f018ef754888ca99e36abf32f55",
+        "runtime_sha256": "06d346f3cae9d82e804ee489a943c9d58dc70d66e2d84dda09ae232b1208465f",
+        "runtime_bytes": 71040
+      },
+      "artillery-select_0": {
+        "duration": 1.77,
+        "trim_start": 0.47,
+        "trim_end": 2.24,
+        "source_sha256": "7100aa7277e8630a6f720de57a17f8b2e150fd923bdd1454f1b7ae9a3876cc7c",
+        "master_sha256": "1a99338a95600d13be2b8d62627938f8f5a054c87b275a31e80c0ff8a09f8432",
+        "runtime_sha256": "5f4faf2d29d46cd7b172917b50aa22328ccf12cb464eeb4b5356d40517993e75",
+        "runtime_bytes": 56640
+      },
+      "artillery-select_1": {
+        "duration": 1.9,
+        "trim_start": 0.66,
+        "trim_end": 2.56,
+        "source_sha256": "2a603cd297a6a6c0aa78512384ce6cc00884ee924bc70005e264901e2856bfa9",
+        "master_sha256": "3baf1853c97865043bdb07ac25fe7507233c6ac43eaa8a5d1322a3a73b57c5b9",
+        "runtime_sha256": "b0d5ca206cffa85c690cb39baf937366f80ab4095b9074c6d3055b2020fca838",
+        "runtime_bytes": 60800
+      },
+      "artillery-move_0": {
+        "duration": 1.67,
+        "trim_start": 0.72,
+        "trim_end": 2.39,
+        "source_sha256": "1eed2857662e0347cdf89880e5bb2a8eb01c4c6f39b93c210f1b8e3a09143c46",
+        "master_sha256": "dd7782e463cb69c01bce1da769936084c2a4849ad96364afbec655b86d501877",
+        "runtime_sha256": "81602085e0e9e5a213b57754df4232a2fc6f9b3c840283428c55df0021d95d7b",
+        "runtime_bytes": 53440
+      },
+      "artillery-move_1": {
+        "duration": 2.21,
+        "trim_start": 0.31,
+        "trim_end": 2.52,
+        "source_sha256": "348a8c2df1289081c08c03783e9d8639a70fe84c11591a5d86b5843a63c39404",
+        "master_sha256": "eae87d867dc53f9986c88a3732006a3a0bd9e8c40488b9f51f66343c6b6db53f",
+        "runtime_sha256": "cebb23aa9f23fc45bc3e51d4db4106d4d259a3ca5fb7c6999c4fdeece68b8a35",
+        "runtime_bytes": 70720
+      },
+      "artillery-attack_0": {
+        "duration": 1.97,
+        "trim_start": 0.35,
+        "trim_end": 2.32,
+        "source_sha256": "c9af37218f55169e9dc5246cb9eec0b46f9edffc37629ae24da9fb90365ad6f9",
+        "master_sha256": "a4f19c7fc9f08b0b72e55d9a7f08a3d6f4647307bd5887e297fa6f369e81cde1",
+        "runtime_sha256": "0f510745cbc50c4de9a10f5a55a191c5826f35560a37324fdb9179e3f065e96e",
+        "runtime_bytes": 63040
+      },
+      "artillery-attack_1": {
+        "duration": 2.06,
+        "trim_start": 0.5,
+        "trim_end": 2.56,
+        "source_sha256": "3a760fa136ea26e64ce25ecd566c2ea86331e3262869e4d06bdd028dd98bff85",
+        "master_sha256": "626fc5fc6e04d5f6af30983f9982bda53e7cbc650962bf5b807bf882fa60d5e2",
+        "runtime_sha256": "3ef9c80ffb0484997a5f036fa059c9137afc2e16996f5fe66440c04c864324ad",
+        "runtime_bytes": 65920
+      },
+      "artillery-stop": {
+        "duration": 1.91,
+        "trim_start": 0.57,
+        "trim_end": 2.48,
+        "source_sha256": "7ff8cce587119e3d3e6bc27184990a156f796e9691332aa2156d67c4a35ba681",
+        "master_sha256": "d218acf65472cfaec561e157af0e1a71b13878e3bfced984d2fddfc037ef26de",
+        "runtime_sha256": "c0d425fd3efa38816c3f690c0da90411932617661d2f7f6cce8fd4a0daab2206",
+        "runtime_bytes": 61120
+      },
+      "artillery-ready": {
+        "duration": 1.56,
+        "trim_start": 0.71,
+        "trim_end": 2.27,
+        "source_sha256": "ac7bf6e44458a4934809be93a4d9e67b90a888b0d2f80b08b163f9e2f9ca27ba",
+        "master_sha256": "dbf7dafa879e235b48f7ff50b2cb873f2fab4b2963362e515f9f78a7893693b9",
+        "runtime_sha256": "c9b0b8223c211b879b0fb5a15cef947b862a1fcd7b25dd8bd913d4c51ec92f41",
+        "runtime_bytes": 49920
+      },
+      "harvester-select_0": {
+        "duration": 1.61,
+        "trim_start": 0.51,
+        "trim_end": 2.12,
+        "source_sha256": "d494a6e40ba2a5b5b615f083f8c3d5e5d415af2a3ae120903f8e165d7f80c5ea",
+        "master_sha256": "97a8cd4838e23e976c20211878c48e33db1c7a3592909e7dbc2e6dcbbcca1394",
+        "runtime_sha256": "1f3ddc162b65537d94327b3bb0af91b9b57a0c5bee1a31f87149966088689655",
+        "runtime_bytes": 51520
+      },
+      "harvester-select_1": {
+        "duration": 1.55,
+        "trim_start": 0.53,
+        "trim_end": 2.08,
+        "source_sha256": "d05149bdfd2e0b3a01d68987a03ad303113b9caa2ef816a49b57ed52ad23dbdb",
+        "master_sha256": "2237c18628525b4e8d44b2a1709986920c0fe77b1b27516ead672bc57d9b4a8d",
+        "runtime_sha256": "a079a646313a7d91bd18ccd80c81bf8f9590efc56305ea9bbaf004501eb65b8e",
+        "runtime_bytes": 49600
+      },
+      "harvester-move_0": {
+        "duration": 1.55,
+        "trim_start": 0.45,
+        "trim_end": 2.0,
+        "source_sha256": "02521a97cfea9f188615b50b4bf5323fe5362d7e208f4730888cc4fcb91279be",
+        "master_sha256": "8c428bec857baf6884349a213674645890d79c568195316c91068e8acf3895fe",
+        "runtime_sha256": "573d129bdadb6ad4b34892313d9db6fe7c348b6ac27df59d52606c04b0ef7093",
+        "runtime_bytes": 49600
+      },
+      "harvester-move_1": {
+        "duration": 1.91,
+        "trim_start": 0.41,
+        "trim_end": 2.32,
+        "source_sha256": "0a1067beda749f10573e1a5e36db2d4cbd0c1f1d988918c96853b7ec6d818c31",
+        "master_sha256": "5fb37cc8d8eeb219da6879af5edcb0cd35f5dbc41b6dcd1aed6006e9df122595",
+        "runtime_sha256": "2f165886e73b2cc956151ef6b9e23c3ddfc71a0f8fa47d3a9b75e68afb218f6a",
+        "runtime_bytes": 61120
+      },
+      "harvester-ready": {
+        "duration": 1.61,
+        "trim_start": 0.36,
+        "trim_end": 1.97,
+        "source_sha256": "92d9f1542c6d3d13d5881ebf8cd3c4181117cacea056c3f451a7d28243c61a68",
+        "master_sha256": "a0570707b0e95255b9864fe9db751e8fe792fca7fdb659e22258b4b6ee46320c",
+        "runtime_sha256": "ab2f7eeb048f48057c695a220938f95938f8b9061cd209bd528e4caf03cb85d0",
+        "runtime_bytes": 51520
+      }
+    }
+  }
+}

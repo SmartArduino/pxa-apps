@@ -59,11 +59,11 @@ struct App {
  void action(int a){if(a!=box_select)selection.cancel();sounds.play(motion::Cue::click);if(a>=mission0&&a<mission0+3){if(unsigned(a-mission0)<=career.unlocked)new_mission(a-mission0);return;}
   if(a>=produce0&&a<produce0+12){int k=a-produce0;if(k>=hq){if(auto b=world.blocked(k)){world.say(b);return;}placing=k;dock.close();world.say("点击基地附近空地部署；点取消退出");}else world.queue(k);report();return;}
   switch(a){case start:new_mission(std::min(2u,career.unlocked));break;case resume:dock.close();screen=Screen::battle;placing=-1;last_tick=0;break;case missions:screen=Screen::campaign;break;case help:screen=Screen::help;break;case endless:new_defense();break;case research_open:screen=Screen::research;placing=-1;break;case research_ammo:case research_armor:if(world.research_start(a==research_ammo?1:2))save();break;case research_cancel:world.research_cancel();save();break;case home:screen=Screen::home;placing=-1;break;
-   case begin:dock.close();screen=Screen::battle;world.say("先造兵，再点全军；点击战场下达移动或攻击。",compact_ui()?5:9);world.select_all();save();break;
+   case begin:dock.close();screen=Screen::battle;world.say("先造兵，再点全军；点击战场下达移动或攻击。",compact_ui()?5:9);world.select_all();sounds.respond(world,UnitCue::select);save();break;
    case pausing:screen=Screen::pause;placing=-1;save();report();break;case restart:if(world.extra.mode)new_defense(world.extra.seed);else new_mission(world.chapter);break;case next:if(world.chapter<2)new_mission(world.chapter+1);else screen=Screen::campaign;break;
    case box_select:if(selection.armed){selection.cancel();world.say("框选已取消");}else {selection.armed=true;placing=-1;last_selected_id=-1;world.say("拖动框选作战单位，松手后点地面移动。",6);}break;
-   case stop_army:world.stop_selected();report();break;
-   case select_army:world.select_all();placing=-1;break;case base:field.focus({6,9});break;case units:tab=0;placing=-1;if(compact_ui())dock.toggle(DockPanel::units);break;case buildings:tab=1;placing=-1;if(compact_ui())dock.toggle(DockPanel::buildings);break;case tactics_open:dock.toggle(DockPanel::tactics);break;case dock_close:dock.close();break;case repair:world.repair();break;case strike:placing=99;world.say("点亮区内目标：空袭 180 / 冷却 45 秒");break;
+   case stop_army:world.stop_selected();sounds.respond(world,UnitCue::stop);report();break;
+   case select_army:world.select_all();sounds.respond(world,UnitCue::select);placing=-1;break;case base:field.focus({6,9});break;case units:tab=0;placing=-1;if(compact_ui())dock.toggle(DockPanel::units);break;case buildings:tab=1;placing=-1;if(compact_ui())dock.toggle(DockPanel::buildings);break;case tactics_open:dock.toggle(DockPanel::tactics);break;case dock_close:dock.close();break;case repair:world.repair();break;case strike:placing=99;world.say("点亮区内目标：空袭 180 / 冷却 45 秒");break;
    case zooming:{Vec p=field.unproject(field.width/2,(field.top+field.bottom)/2);field.zoom=field.zoom>.95f?.72f:field.zoom<.8f?1.3f:1.f;field.focus(p);}break;case cancel:if(placing>=0){placing=-1;world.say("部署已取消",3);}else world.cancel_job();break;
    case save_return:save();screen=Screen::home;break;case sound_toggle:sounds.toggle();break;case difficulty:career.easy=!career.easy;save();break;case exit_game:save();exit_pending=true;break;
   }
@@ -108,7 +108,7 @@ struct App {
   if(selection.tracking){
    selection.move(x,y);int n=selection.commit(world,field);dragging=false;last_selected_id=-1;
    char message[80];if(n)std::snprintf(message,sizeof message,"已框选 %d 个单位 · 点击地面移动 / 敌军集火",n);else std::snprintf(message,sizeof message,"选区内没有作战单位");world.say(message,5);
-   report_selection();report();render();return;
+   if(n)sounds.respond(world,UnitCue::select);report_selection();report();render();return;
   }
   if(dragging){last_selected_id=-1;return;}
   int a=hit_button(x,y);if(a>=0&&a==hit_button(downx,downy)){action(a);render();return;}
@@ -123,8 +123,8 @@ struct App {
    if(id>=0&&world.e[id].team==0){
     if(id==last_selected_id&&clock-last_tap<.4f){int kind=world.e[id].kind;for(auto& unit:world.e)unit.selected=unit.hp>0&&unit.team==0&&unit.kind==kind;world.say("已编组全部同型部队");}
     else {world.select_one(id);world.say(world.e[id].kind==factory||world.e[id].kind==barracks?"点击空地设置新部队集结点":specs[world.e[id].kind].name);}
-    last_selected_id=id;last_tap=clock;
-   }else if(world.selected())world.order(pos,id>=0&&world.e[id].team==1?id:-1);
+    last_selected_id=id;last_tap=clock;sounds.respond(world,UnitCue::select,id);
+   }else if(world.selected()){bool attack=id>=0&&world.e[id].team==1;world.order(pos,attack?id:-1);sounds.respond(world,attack?UnitCue::attack:UnitCue::move);}
    else world.say("点选己方部队，或使用框选和全军");
   }
   report();
@@ -135,8 +135,8 @@ struct App {
  void on_controller(pxa::Context&,const pxa::input::ControllerState& s){using namespace pxa::input;static uint32_t prior=0;uint32_t pressed=s.buttons&~prior;prior=s.buttons;if(!ready)return;if(pressed&controller_b){(void)on_back();return;}if(screen==Screen::battle){if(selection.tracking&&!(pressed&controller_start))return;if(pressed&controller_a)action(select_army);if(pressed&controller_x)action(stop_army);if(pressed&controller_start)action(pausing);if(s.buttons&controller_left)field.camx-=16;if(s.buttons&controller_right)field.camx+=16;if(s.buttons&controller_up)field.camy-=16;if(s.buttons&controller_down)field.camy+=16;clamp_camera();}else {if(pressed&controller_up)focus_action=button_count?buttons[std::max(0,button_index()-1)].action:start;if(pressed&controller_down)focus_action=button_count?buttons[std::min(button_count-1,button_index()+1)].action:start;if(pressed&controller_a)action(focus_action);}}
  int button_index()const{for(int i=0;i<button_count;++i)if(buttons[i].action==focus_action)return i;return 0;}
  pxa::Result<bool> on_event(pxa::Context&,const pxa::Event& e){sounds.event(e);if(auto metrics=pxa::ui::decode_display_metrics(e)){update_display(*metrics);return true;}auto tick=pxa::decode_clock_tick(e);if(!tick)return false;now=tick->timestamp_us;float dt=last_tick?std::clamp(float(now-last_tick)*1e-6f,0.f,.25f):.05f;last_tick=now;if(!ready||!ctx->foreground())return true;clock+=dt;field.clock=clock;save_flash=std::max(0.f,save_flash-dt);sounds.tick(now,dt,screen==Screen::battle||screen==Screen::research,screen==Screen::pause);
-  if(screen==Screen::battle||screen==Screen::research){for(float left=dt;left>.001f;left-=.05f)world.tick(std::min(left,.05f));if(world.sound){sounds.play_event(world.sound);world.sound=0;}if(world.extra.mode)defense_best=std::max(defense_best,world.extra.cleared);if(world.won||world.defeated)finish();if(world.autosave>=12){world.autosave=0;save();report();}}
-  render();if(exit_pending&&!saving){exiting=true;(void)ctx->window().request_back();}return true;}
+  if(screen==Screen::battle||screen==Screen::research){auto before=UnitVoice::roster(world);for(float left=dt;left>.001f;left-=.05f)world.tick(std::min(left,.05f));for(int i=0;i<MAX;++i)if(!before[i]&&world.e[i].hp>0&&world.e[i].team==0&&world.e[i].kind<hq)sounds.unit_ready(world.e[i].kind);if(world.sound){sounds.play_event(world.sound);world.sound=0;}if(world.extra.mode)defense_best=std::max(defense_best,world.extra.cleared);if(world.won||world.defeated)finish();if(world.autosave>=12){world.autosave=0;save();report();}}
+  render();if(exit_pending&&!saving&&sounds.shutdown()){exiting=true;(void)ctx->window().request_back();}return true;}
  void on_background(pxa::Context&){dock.close();selection.cancel();pressing=false;dragging=false;if(screen==Screen::battle||screen==Screen::research)screen=Screen::pause;sounds.suspend();save();(void)ctx->clock().set_period(0);last_tick=0;}
  void on_foreground(pxa::Context&){sounds.resume();(void)ctx->window().request_orientation(pxa::OrientationPreference::landscape);(void)ctx->window().fullscreen(pxa::WindowBarMode::hidden,pxa::WindowBarMode::hidden);last_tick=0;if(ready)(void)ctx->clock().set_period(screen==Screen::battle?33:100);}
  void button(Raster& r,Rect area,int a,std::string_view label,bool primary=false,bool enabled=true){

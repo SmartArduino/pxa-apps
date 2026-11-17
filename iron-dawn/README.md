@@ -60,6 +60,10 @@
 
 重新制作时，用 `tools/generate_audio.py --url <ComfyUI地址> --output <本地产物目录>`生成候选，再运行 `tools/prepare_audio.py --source <候选目录> --report <本地产物JSON>`。工具使用现有模型，不安装或修改ComfyUI；转换需要NumPy和FFmpeg。生成记录、候选和验证输出放在工作区 `local/artifacts/` 下。
 
+五类单位拥有独立且固定的中文声线：游骑兵清亮机敏、破甲兵低女声、坦克车长厚重低沉、炮兵军官清冷精确、采矿司机温暖干练。37句短回应覆盖点选、框选、全军、移动、攻击、停止和生产就绪；采矿车只有选中、出发和就绪台词。同一时刻只允许一个单位播报，连续选择会节流，过时指令不会延迟堆积；播报时压低配乐，暂停、静音或离开战场会取消待播语音。
+
+`tools/voice-prompts.json`记录角色设计、台词、固定种子和模型摘要。每个角色先用Qwen3-TTS VoiceDesign生成原创参考，所有后续台词复用同一Base模型声音提示，不逐句重新设计音色，也不改变音高。原始参考及处理后的无损母版在`art/audio/voices/`；16kHz单声道S16运行资源按需异步加载，复用独立的无线电轨道，不在设备上运行模型或解码压缩语音。制作时，在已有Qwen3-TTS环境的推理机运行`tools/generate_voices.py --models <现有模型目录> --output <任务产物目录>`，再用`tools/prepare_voices.py --source <生成目录> --report <本地产物JSON>`转换；工具离线运行，不下载模型。
+
 ## 构建与运行
 
 在 PXA 工作区根目录：
