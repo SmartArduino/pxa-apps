@@ -1,0 +1,656 @@
+{
+  "pai-touch": [
+    {
+      "name": "endless",
+      "action": "tap",
+      "x": 114,
+      "y": 201
+    },
+    {
+      "name": "deploy",
+      "action": "tap",
+      "x": 111,
+      "y": 213
+    },
+    {
+      "name": "settle",
+      "action": "wait",
+      "ms": 500
+    },
+    {
+      "name": "battle-default",
+      "action": "screenshot"
+    },
+    {
+      "name": "open-units",
+      "action": "tap",
+      "x": 32,
+      "y": 222
+    },
+    {
+      "name": "unit-catalogue",
+      "action": "screenshot"
+    },
+    {
+      "name": "queue-artillery",
+      "action": "tap",
+      "x": 206,
+      "y": 171
+    },
+    {
+      "name": "queued-production",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-units",
+      "action": "tap",
+      "x": 32,
+      "y": 222
+    },
+    {
+      "name": "compact-queue",
+      "action": "screenshot"
+    },
+    {
+      "name": "open-buildings",
+      "action": "tap",
+      "x": 90,
+      "y": 222
+    },
+    {
+      "name": "building-catalogue",
+      "action": "screenshot"
+    },
+    {
+      "name": "choose-power",
+      "action": "tap",
+      "x": 32,
+      "y": 171
+    },
+    {
+      "name": "placement-catalogue-closed",
+      "action": "screenshot"
+    },
+    {
+      "name": "cancel-placement",
+      "action": "tap",
+      "x": 90,
+      "y": 222
+    },
+    {
+      "name": "open-tactics",
+      "action": "tap",
+      "x": 264,
+      "y": 222
+    },
+    {
+      "name": "tactics",
+      "action": "screenshot"
+    },
+    {
+      "name": "drawer-header",
+      "action": "tap",
+      "x": 148,
+      "y": 119
+    },
+    {
+      "name": "header-drag",
+      "action": "swipe",
+      "x": 136,
+      "y": 119,
+      "x2": 157,
+      "y2": 119,
+      "ms": 300
+    },
+    {
+      "name": "header-does-not-pan",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-tactics",
+      "action": "tap",
+      "x": 264,
+      "y": 222
+    },
+    {
+      "name": "reopen-units",
+      "action": "tap",
+      "x": 32,
+      "y": 222
+    },
+    {
+      "name": "world-dismisses-drawer",
+      "action": "tap",
+      "x": 49,
+      "y": 65
+    },
+    {
+      "name": "world-dismissed",
+      "action": "screenshot"
+    },
+    {
+      "name": "selection-tactics",
+      "action": "tap",
+      "x": 264,
+      "y": 222
+    },
+    {
+      "name": "arm-box",
+      "action": "tap",
+      "x": 39,
+      "y": 150
+    },
+    {
+      "name": "selection-armed",
+      "action": "screenshot"
+    },
+    {
+      "name": "select-starters",
+      "action": "swipe",
+      "x": 102,
+      "y": 115,
+      "x2": 170,
+      "y2": 139,
+      "ms": 500
+    },
+    {
+      "name": "selection-complete",
+      "action": "screenshot"
+    },
+    {
+      "name": "stop-army",
+      "action": "tap",
+      "x": 206,
+      "y": 222
+    },
+    {
+      "name": "open-research-menu",
+      "action": "tap",
+      "x": 264,
+      "y": 222
+    },
+    {
+      "name": "research",
+      "action": "tap",
+      "x": 257,
+      "y": 150
+    },
+    {
+      "name": "research-page",
+      "action": "screenshot"
+    },
+    {
+      "name": "leave-research",
+      "action": "tap",
+      "x": 148,
+      "y": 220
+    },
+    {
+      "name": "panel-before-pause",
+      "action": "tap",
+      "x": 32,
+      "y": 222
+    },
+    {
+      "name": "pause",
+      "action": "tap",
+      "x": 272,
+      "y": 15
+    },
+    {
+      "name": "save",
+      "action": "wait",
+      "ms": 1200
+    },
+    {
+      "name": "relaunch",
+      "action": "relaunch"
+    },
+    {
+      "name": "resume",
+      "action": "tap",
+      "x": 225,
+      "y": 173
+    },
+    {
+      "name": "restored-default",
+      "action": "screenshot"
+    }
+  ],
+  "doit-gamekit-2": [
+    {
+      "name": "endless",
+      "action": "tap",
+      "x": 123,
+      "y": 197
+    },
+    {
+      "name": "deploy",
+      "action": "tap",
+      "x": 120,
+      "y": 211
+    },
+    {
+      "name": "settle",
+      "action": "wait",
+      "ms": 500
+    },
+    {
+      "name": "battle-default",
+      "action": "screenshot"
+    },
+    {
+      "name": "open-units",
+      "action": "tap",
+      "x": 35,
+      "y": 222
+    },
+    {
+      "name": "unit-catalogue",
+      "action": "screenshot"
+    },
+    {
+      "name": "queue-artillery",
+      "action": "tap",
+      "x": 223,
+      "y": 170
+    },
+    {
+      "name": "queued-production",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-units",
+      "action": "tap",
+      "x": 35,
+      "y": 222
+    },
+    {
+      "name": "compact-queue",
+      "action": "screenshot"
+    },
+    {
+      "name": "open-buildings",
+      "action": "tap",
+      "x": 97,
+      "y": 222
+    },
+    {
+      "name": "building-catalogue",
+      "action": "screenshot"
+    },
+    {
+      "name": "choose-power",
+      "action": "tap",
+      "x": 35,
+      "y": 170
+    },
+    {
+      "name": "placement-catalogue-closed",
+      "action": "screenshot"
+    },
+    {
+      "name": "cancel-placement",
+      "action": "tap",
+      "x": 97,
+      "y": 222
+    },
+    {
+      "name": "open-tactics",
+      "action": "tap",
+      "x": 285,
+      "y": 222
+    },
+    {
+      "name": "tactics",
+      "action": "screenshot"
+    },
+    {
+      "name": "drawer-header",
+      "action": "tap",
+      "x": 160,
+      "y": 119
+    },
+    {
+      "name": "header-drag",
+      "action": "swipe",
+      "x": 147,
+      "y": 119,
+      "x2": 170,
+      "y2": 119,
+      "ms": 300
+    },
+    {
+      "name": "header-does-not-pan",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-tactics",
+      "action": "tap",
+      "x": 285,
+      "y": 222
+    },
+    {
+      "name": "reopen-units",
+      "action": "tap",
+      "x": 35,
+      "y": 222
+    },
+    {
+      "name": "world-dismisses-drawer",
+      "action": "tap",
+      "x": 53,
+      "y": 70
+    },
+    {
+      "name": "world-dismissed",
+      "action": "screenshot"
+    },
+    {
+      "name": "selection-tactics",
+      "action": "tap",
+      "x": 285,
+      "y": 222
+    },
+    {
+      "name": "arm-box",
+      "action": "tap",
+      "x": 42,
+      "y": 149
+    },
+    {
+      "name": "selection-armed",
+      "action": "screenshot"
+    },
+    {
+      "name": "select-starters",
+      "action": "swipe",
+      "x": 110,
+      "y": 116,
+      "x2": 183,
+      "y2": 142,
+      "ms": 500
+    },
+    {
+      "name": "selection-complete",
+      "action": "screenshot"
+    },
+    {
+      "name": "stop-army",
+      "action": "tap",
+      "x": 223,
+      "y": 222
+    },
+    {
+      "name": "open-research-menu",
+      "action": "tap",
+      "x": 285,
+      "y": 222
+    },
+    {
+      "name": "research",
+      "action": "tap",
+      "x": 278,
+      "y": 149
+    },
+    {
+      "name": "research-page",
+      "action": "screenshot"
+    },
+    {
+      "name": "leave-research",
+      "action": "tap",
+      "x": 160,
+      "y": 219
+    },
+    {
+      "name": "panel-before-pause",
+      "action": "tap",
+      "x": 35,
+      "y": 222
+    },
+    {
+      "name": "pause",
+      "action": "tap",
+      "x": 294,
+      "y": 16
+    },
+    {
+      "name": "save",
+      "action": "wait",
+      "ms": 1200
+    },
+    {
+      "name": "relaunch",
+      "action": "relaunch"
+    },
+    {
+      "name": "resume",
+      "action": "tap",
+      "x": 243,
+      "y": 168
+    },
+    {
+      "name": "restored-default",
+      "action": "screenshot"
+    }
+  ],
+  "esp-mosaico": [
+    {
+      "name": "endless",
+      "action": "tap",
+      "x": 185,
+      "y": 416
+    },
+    {
+      "name": "deploy",
+      "action": "tap",
+      "x": 180,
+      "y": 436
+    },
+    {
+      "name": "settle",
+      "action": "wait",
+      "ms": 500
+    },
+    {
+      "name": "battle-default",
+      "action": "screenshot"
+    },
+    {
+      "name": "open-units",
+      "action": "tap",
+      "x": 52,
+      "y": 460
+    },
+    {
+      "name": "unit-catalogue",
+      "action": "screenshot"
+    },
+    {
+      "name": "queue-artillery",
+      "action": "tap",
+      "x": 334,
+      "y": 391
+    },
+    {
+      "name": "queued-production",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-units",
+      "action": "tap",
+      "x": 52,
+      "y": 460
+    },
+    {
+      "name": "compact-queue",
+      "action": "screenshot"
+    },
+    {
+      "name": "open-buildings",
+      "action": "tap",
+      "x": 146,
+      "y": 460
+    },
+    {
+      "name": "building-catalogue",
+      "action": "screenshot"
+    },
+    {
+      "name": "choose-power",
+      "action": "tap",
+      "x": 52,
+      "y": 391
+    },
+    {
+      "name": "placement-catalogue-closed",
+      "action": "screenshot"
+    },
+    {
+      "name": "cancel-placement",
+      "action": "tap",
+      "x": 146,
+      "y": 460
+    },
+    {
+      "name": "open-tactics",
+      "action": "tap",
+      "x": 428,
+      "y": 460
+    },
+    {
+      "name": "tactics",
+      "action": "screenshot"
+    },
+    {
+      "name": "drawer-header",
+      "action": "tap",
+      "x": 240,
+      "y": 344
+    },
+    {
+      "name": "header-drag",
+      "action": "swipe",
+      "x": 220,
+      "y": 344,
+      "x2": 255,
+      "y2": 344,
+      "ms": 300
+    },
+    {
+      "name": "header-does-not-pan",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-tactics",
+      "action": "tap",
+      "x": 428,
+      "y": 460
+    },
+    {
+      "name": "reopen-units",
+      "action": "tap",
+      "x": 52,
+      "y": 460
+    },
+    {
+      "name": "world-dismisses-drawer",
+      "action": "tap",
+      "x": 80,
+      "y": 105
+    },
+    {
+      "name": "world-dismissed",
+      "action": "screenshot"
+    },
+    {
+      "name": "selection-tactics",
+      "action": "tap",
+      "x": 428,
+      "y": 460
+    },
+    {
+      "name": "arm-box",
+      "action": "tap",
+      "x": 63,
+      "y": 381
+    },
+    {
+      "name": "selection-armed",
+      "action": "screenshot"
+    },
+    {
+      "name": "select-starters",
+      "action": "swipe",
+      "x": 165,
+      "y": 241,
+      "x2": 275,
+      "y2": 280,
+      "ms": 500
+    },
+    {
+      "name": "selection-complete",
+      "action": "screenshot"
+    },
+    {
+      "name": "stop-army",
+      "action": "tap",
+      "x": 334,
+      "y": 460
+    },
+    {
+      "name": "open-research-menu",
+      "action": "tap",
+      "x": 428,
+      "y": 460
+    },
+    {
+      "name": "research",
+      "action": "tap",
+      "x": 417,
+      "y": 381
+    },
+    {
+      "name": "research-page",
+      "action": "screenshot"
+    },
+    {
+      "name": "leave-research",
+      "action": "tap",
+      "x": 240,
+      "y": 448
+    },
+    {
+      "name": "panel-before-pause",
+      "action": "tap",
+      "x": 52,
+      "y": 460
+    },
+    {
+      "name": "pause",
+      "action": "tap",
+      "x": 441,
+      "y": 24
+    },
+    {
+      "name": "save",
+      "action": "wait",
+      "ms": 1200
+    },
+    {
+      "name": "relaunch",
+      "action": "relaunch"
+    },
+    {
+      "name": "resume",
+      "action": "tap",
+      "x": 365,
+      "y": 372
+    },
+    {
+      "name": "restored-default",
+      "action": "screenshot"
+    }
+  ]
+}

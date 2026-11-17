@@ -15,7 +15,7 @@
       "name": "deploy",
       "action": "tap",
       "x": 111,
-      "y": 212
+      "y": 213
     },
     {
       "name": "deployment",
@@ -26,7 +26,7 @@
       "name": "arm-selection",
       "action": "tap",
       "x": 265,
-      "y": 94
+      "y": 99
     },
     {
       "name": "armed",
@@ -35,10 +35,10 @@
     {
       "name": "two-tanks-forward",
       "action": "swipe",
-      "x": 129,
-      "y": 95,
-      "x2": 152,
-      "y2": 124,
+      "x": 130,
+      "y": 114,
+      "x2": 153,
+      "y2": 142,
       "ms": 450
     },
     {
@@ -49,15 +49,15 @@
       "name": "arm-reverse",
       "action": "tap",
       "x": 265,
-      "y": 94
+      "y": 99
     },
     {
       "name": "two-tanks-reverse",
       "action": "swipe",
-      "x": 152,
-      "y": 124,
-      "x2": 129,
-      "y2": 95,
+      "x": 153,
+      "y": 142,
+      "x2": 130,
+      "y2": 114,
       "ms": 450
     },
     {
@@ -68,7 +68,7 @@
       "name": "move-selected",
       "action": "tap",
       "x": 185,
-      "y": 126
+      "y": 142
     },
     {
       "name": "movement",
@@ -83,15 +83,15 @@
       "name": "arm-empty",
       "action": "tap",
       "x": 265,
-      "y": 94
+      "y": 99
     },
     {
       "name": "empty-rectangle",
       "action": "swipe",
-      "x": 21,
-      "y": 116,
+      "x": 22,
+      "y": 128,
       "x2": 52,
-      "y2": 135,
+      "y2": 147,
       "ms": 450
     },
     {
@@ -101,20 +101,20 @@
     {
       "name": "all-army",
       "action": "tap",
-      "x": 271,
-      "y": 182
+      "x": 148,
+      "y": 222
     },
     {
       "name": "arm-cancel",
       "action": "tap",
       "x": 265,
-      "y": 94
+      "y": 99
     },
     {
       "name": "cancel-mode",
       "action": "tap",
       "x": 265,
-      "y": 94
+      "y": 99
     },
     {
       "name": "cancel-preserves-army",
@@ -124,9 +124,9 @@
       "name": "normal-map-pan",
       "action": "swipe",
       "x": 49,
-      "y": 116,
-      "x2": 67,
-      "y2": 126,
+      "y": 131,
+      "x2": 68,
+      "y2": 141,
       "ms": 450
     },
     {
@@ -134,16 +134,22 @@
       "action": "screenshot"
     },
     {
+      "name": "base-open-tactics",
+      "action": "tap",
+      "x": 264,
+      "y": 222
+    },
+    {
       "name": "base",
       "action": "tap",
-      "x": 271,
-      "y": 201
+      "x": 112,
+      "y": 150
     },
     {
       "name": "pause",
       "action": "tap",
-      "x": 271,
-      "y": 13
+      "x": 272,
+      "y": 15
     },
     {
       "name": "save-settle",
@@ -174,7 +180,7 @@
     {
       "name": "campaign",
       "action": "tap",
-      "x": 86,
+      "x": 87,
       "y": 168
     },
     {
@@ -186,7 +192,7 @@
       "name": "deploy",
       "action": "tap",
       "x": 120,
-      "y": 210
+      "y": 211
     },
     {
       "name": "deployment",
@@ -196,8 +202,8 @@
     {
       "name": "arm-selection",
       "action": "tap",
-      "x": 286,
-      "y": 102
+      "x": 287,
+      "y": 107
     },
     {
       "name": "armed",
@@ -207,9 +213,9 @@
       "name": "two-tanks-forward",
       "action": "swipe",
       "x": 140,
-      "y": 93,
+      "y": 114,
       "x2": 165,
-      "y2": 124,
+      "y2": 145,
       "ms": 450
     },
     {
@@ -219,16 +225,16 @@
     {
       "name": "arm-reverse",
       "action": "tap",
-      "x": 286,
-      "y": 102
+      "x": 287,
+      "y": 107
     },
     {
       "name": "two-tanks-reverse",
       "action": "swipe",
       "x": 165,
-      "y": 124,
+      "y": 145,
       "x2": 140,
-      "y2": 93,
+      "y2": 114,
       "ms": 450
     },
     {
@@ -239,7 +245,7 @@
       "name": "move-selected",
       "action": "tap",
       "x": 200,
-      "y": 126
+      "y": 145
     },
     {
       "name": "movement",
@@ -253,16 +259,16 @@
     {
       "name": "arm-empty",
       "action": "tap",
-      "x": 286,
-      "y": 102
+      "x": 287,
+      "y": 107
     },
     {
       "name": "empty-rectangle",
       "action": "swipe",
       "x": 23,
-      "y": 116,
-      "x2": 56,
-      "y2": 136,
+      "y": 130,
+      "x2": 57,
+      "y2": 150,
       "ms": 450
     },
     {
@@ -272,20 +278,20 @@
     {
       "name": "all-army",
       "action": "tap",
-      "x": 293,
-      "y": 178
+      "x": 160,
+      "y": 222
     },
     {
       "name": "arm-cancel",
       "action": "tap",
-      "x": 286,
-      "y": 102
+      "x": 287,
+      "y": 107
     },
     {
       "name": "cancel-mode",
       "action": "tap",
-      "x": 286,
-      "y": 102
+      "x": 287,
+      "y": 107
     },
     {
       "name": "cancel-preserves-army",
@@ -295,9 +301,9 @@
       "name": "normal-map-pan",
       "action": "swipe",
       "x": 53,
-      "y": 116,
+      "y": 133,
       "x2": 73,
-      "y2": 126,
+      "y2": 144,
       "ms": 450
     },
     {
@@ -305,16 +311,22 @@
       "action": "screenshot"
     },
     {
+      "name": "base-open-tactics",
+      "action": "tap",
+      "x": 285,
+      "y": 222
+    },
+    {
       "name": "base",
       "action": "tap",
-      "x": 293,
-      "y": 198
+      "x": 121,
+      "y": 149
     },
     {
       "name": "pause",
       "action": "tap",
       "x": 294,
-      "y": 14
+      "y": 16
     },
     {
       "name": "save-settle",
@@ -368,7 +380,7 @@
       "name": "arm-selection",
       "action": "tap",
       "x": 430,
-      "y": 153
+      "y": 160
     },
     {
       "name": "armed",
@@ -378,9 +390,9 @@
       "name": "two-tanks-forward",
       "action": "swipe",
       "x": 210,
-      "y": 200,
+      "y": 239,
       "x2": 248,
-      "y2": 247,
+      "y2": 285,
       "ms": 450
     },
     {
@@ -391,15 +403,15 @@
       "name": "arm-reverse",
       "action": "tap",
       "x": 430,
-      "y": 153
+      "y": 160
     },
     {
       "name": "two-tanks-reverse",
       "action": "swipe",
       "x": 248,
-      "y": 247,
+      "y": 285,
       "x2": 210,
-      "y2": 200,
+      "y2": 239,
       "ms": 450
     },
     {
@@ -410,7 +422,7 @@
       "name": "move-selected",
       "action": "tap",
       "x": 300,
-      "y": 250
+      "y": 285
     },
     {
       "name": "movement",
@@ -425,15 +437,15 @@
       "name": "arm-empty",
       "action": "tap",
       "x": 430,
-      "y": 153
+      "y": 160
     },
     {
       "name": "empty-rectangle",
       "action": "swipe",
       "x": 35,
-      "y": 235,
+      "y": 263,
       "x2": 85,
-      "y2": 265,
+      "y2": 293,
       "ms": 450
     },
     {
@@ -443,20 +455,20 @@
     {
       "name": "all-army",
       "action": "tap",
-      "x": 440,
-      "y": 387
+      "x": 240,
+      "y": 460
     },
     {
       "name": "arm-cancel",
       "action": "tap",
       "x": 430,
-      "y": 153
+      "y": 160
     },
     {
       "name": "cancel-mode",
       "action": "tap",
       "x": 430,
-      "y": 153
+      "y": 160
     },
     {
       "name": "cancel-preserves-army",
@@ -466,9 +478,9 @@
       "name": "normal-map-pan",
       "action": "swipe",
       "x": 80,
-      "y": 235,
+      "y": 267,
       "x2": 110,
-      "y2": 250,
+      "y2": 283,
       "ms": 450
     },
     {
@@ -476,16 +488,22 @@
       "action": "screenshot"
     },
     {
+      "name": "base-open-tactics",
+      "action": "tap",
+      "x": 428,
+      "y": 460
+    },
+    {
       "name": "base",
       "action": "tap",
-      "x": 440,
-      "y": 417
+      "x": 181,
+      "y": 381
     },
     {
       "name": "pause",
       "action": "tap",
       "x": 441,
-      "y": 22
+      "y": 24
     },
     {
       "name": "save-settle",
@@ -506,177 +524,6 @@
       "action": "tap",
       "x": 365,
       "y": 372
-    },
-    {
-      "name": "restored-battle",
-      "action": "screenshot"
-    }
-  ],
-  "espp4-a": [
-    {
-      "name": "campaign",
-      "action": "tap",
-      "x": 130,
-      "y": 746
-    },
-    {
-      "name": "briefing-settle",
-      "action": "wait",
-      "ms": 400
-    },
-    {
-      "name": "deploy",
-      "action": "tap",
-      "x": 180,
-      "y": 810
-    },
-    {
-      "name": "deployment",
-      "action": "wait",
-      "ms": 400
-    },
-    {
-      "name": "arm-selection",
-      "action": "tap",
-      "x": 430,
-      "y": 153
-    },
-    {
-      "name": "armed",
-      "action": "screenshot"
-    },
-    {
-      "name": "two-tanks-forward",
-      "action": "swipe",
-      "x": 210,
-      "y": 387,
-      "x2": 248,
-      "y2": 434,
-      "ms": 450
-    },
-    {
-      "name": "two-tanks",
-      "action": "screenshot"
-    },
-    {
-      "name": "arm-reverse",
-      "action": "tap",
-      "x": 430,
-      "y": 153
-    },
-    {
-      "name": "two-tanks-reverse",
-      "action": "swipe",
-      "x": 248,
-      "y": 434,
-      "x2": 210,
-      "y2": 387,
-      "ms": 450
-    },
-    {
-      "name": "reverse-selection",
-      "action": "screenshot"
-    },
-    {
-      "name": "move-selected",
-      "action": "tap",
-      "x": 300,
-      "y": 437
-    },
-    {
-      "name": "movement",
-      "action": "wait",
-      "ms": 600
-    },
-    {
-      "name": "selected-orders",
-      "action": "screenshot"
-    },
-    {
-      "name": "arm-empty",
-      "action": "tap",
-      "x": 430,
-      "y": 153
-    },
-    {
-      "name": "empty-rectangle",
-      "action": "swipe",
-      "x": 35,
-      "y": 422,
-      "x2": 85,
-      "y2": 452,
-      "ms": 450
-    },
-    {
-      "name": "empty-selection",
-      "action": "screenshot"
-    },
-    {
-      "name": "all-army",
-      "action": "tap",
-      "x": 440,
-      "y": 761
-    },
-    {
-      "name": "arm-cancel",
-      "action": "tap",
-      "x": 430,
-      "y": 153
-    },
-    {
-      "name": "cancel-mode",
-      "action": "tap",
-      "x": 430,
-      "y": 153
-    },
-    {
-      "name": "cancel-preserves-army",
-      "action": "screenshot"
-    },
-    {
-      "name": "normal-map-pan",
-      "action": "swipe",
-      "x": 80,
-      "y": 422,
-      "x2": 110,
-      "y2": 437,
-      "ms": 450
-    },
-    {
-      "name": "map-panned",
-      "action": "screenshot"
-    },
-    {
-      "name": "base",
-      "action": "tap",
-      "x": 440,
-      "y": 791
-    },
-    {
-      "name": "pause",
-      "action": "tap",
-      "x": 441,
-      "y": 22
-    },
-    {
-      "name": "save-settle",
-      "action": "wait",
-      "ms": 1600
-    },
-    {
-      "name": "relaunch",
-      "action": "relaunch"
-    },
-    {
-      "name": "restore-settle",
-      "action": "wait",
-      "ms": 400
-    },
-    {
-      "name": "resume",
-      "action": "tap",
-      "x": 365,
-      "y": 746
     },
     {
       "name": "restored-battle",
