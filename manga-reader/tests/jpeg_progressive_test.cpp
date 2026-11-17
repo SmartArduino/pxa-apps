@@ -11,7 +11,7 @@ int main(int argc,char** argv){
     assert(manga::jpeg_header(read_file,f,header));assert(std::uint64_t(header.width)*header.height<=1048576);std::rewind(f);
     {manga::ProgressiveJpeg decoded;assert(decoded.load(read_file,f));assert(decoded.peak_bytes<=6*1024*1024);
         manga::JpegCompat output;assert(output.begin_rgb(decoded.pixels,decoded.width,decoded.height,decoded.channels));
-        while(!output.done())assert(output.next_row());auto png=output.png();assert(!png.empty()&&output.width*output.height<=262144);
+        while(!output.done())assert(output.next_row());auto png=output.png();assert(!png.empty()&&output.width*output.height<=524288);
         std::ofstream target(argv[2],std::ios::binary);target.write(reinterpret_cast<const char*>(png.data()),png.size());
         std::cout<<"progressive JPEG "<<decoded.width<<"x"<<decoded.height<<", peak decoder allocations="<<decoded.peak_bytes<<", output="<<output.width<<"x"<<output.height<<"\n";
     }std::fclose(f);

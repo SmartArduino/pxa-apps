@@ -5,9 +5,9 @@ output_dir=$1
 shift
 mkdir -p "$output_dir"
 objects=()
-for file in "$source_dir"/vendor/libwebp/src/{dec,dsp,utils}/*.c "$source_dir"/webp_alloc.c "$source_dir"/vendor/picojpeg/picojpeg.c; do
+for file in "$source_dir"/vendor/libwebp/src/{dec,dsp,utils}/*.c "$source_dir"/webp_alloc.c "$source_dir"/vendor/picojpeg/picojpeg.c "$source_dir"/vendor/zlib/{deflate,trees,adler32,zutil}.c; do
     object="$output_dir/$(basename "${file%.c}").o"
-    definitions=(-DHAVE_CONFIG_H=1)
+    definitions=(-DHAVE_CONFIG_H=1 -DZ_SOLO -DNO_GZIP)
     if [[ "$file" == */utils/utils.c ]]; then
         definitions+=(-Dmalloc=manga_webp_malloc -Dcalloc=manga_webp_calloc -Dfree=manga_webp_free)
     fi

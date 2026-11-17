@@ -1,0 +1,8 @@
+{
+  "stb_image_write.h": {
+    "version": "1.16",
+    "license_selected": "MIT",
+    "origin": "https://github.com/nothings/stb",
+    "use": "JPEG DCT/Huffman helpers and tables; cooperative RGB JPEG encoder in jpeg_rgb.cpp"
+  }
+}

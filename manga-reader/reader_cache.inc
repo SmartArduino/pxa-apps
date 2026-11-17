@@ -13,8 +13,7 @@
     Task<void> load_cache(){
         auto f=co_await ctx->fs().open("reader-cache.json");if(f){std::string text;for(;;){auto n=f->read(buffer);if(!n||text.size()+*n>cache.index_max)break;if(!*n){(void)cache.restore(text);break;}text.append(reinterpret_cast<const char*>(buffer.data()),*n);} (void)f->close();}
         for(unsigned i=0;i<cache.slots;++i){if(cache.pages[i].key.empty())continue;auto info=co_await ctx->fs().stat(cache_path(i));if(info&&info->size==cache.pages[i].bytes)continue;cache.pages[i]={};auto r=co_await ctx->fs().remove(cache_path(i));(void)r;}
-        // Use only the application's private FS. A bounded write probe also
-        // works on Hosts that do not report removable-volume space/features.
+        // Query the installation's volume without writing a capacity probe.
         auto reserved=co_await reserve_cache_space();(void)reserved;
         (void)ctx->log().write(LogLevel::info,"MANGA cache_active_limit="+std::to_string(cache.limit));
         co_return Result<void>{};
@@ -25,13 +24,13 @@
         auto chapter=co_await ctx->fs().remove("reader-chapter.json");(void)chapter;chapter=co_await ctx->fs().remove("reader-reserve.tmp");(void)chapter;cache.limit=0;cache.storage_verified=false;cache_prepare=true;auto written=co_await write_cache_index();if(!written)co_return std::unexpected(written.error());busy=false;message("缓存已清除，书架和进度已保留");co_return Result<void>{};
     }
     Task<void> reserve_cache_space(){
-        if(!cache.enabled)co_return Result<void>{};
-        constexpr unsigned reserve=2*1024*1024;auto info=co_await ctx->fs().stat("reader-reserve.tmp");
-        if(info&&info->size==reserve){cache.limit=cache.maximum;cache.storage_verified=true;co_return Result<void>{};}
-        auto probe=co_await ctx->fs().open("reader-reserve.tmp",OpenMode::write|OpenMode::create|OpenMode::truncate);bool writable=bool(probe);
-        if(probe){for(unsigned i=0;i<reserve/buffer.size()&&writable;++i){auto bytes=std::span<const std::byte>{buffer};while(!bytes.empty()){auto n=probe->write(bytes);if(!n||!*n){writable=false;break;}bytes=bytes.subspan(*n);}if(i%8==7){auto y=co_await ctx->clock().yield();if(!y)writable=false;}}if(!probe->close())writable=false;}
-        if(writable){cache.limit=cache.maximum;cache.storage_verified=true;}
-        else{auto r=co_await ctx->fs().remove("reader-reserve.tmp");(void)r;cache.limit=0;cache.storage_verified=false;}
+        auto removed=co_await ctx->fs().remove("reader-reserve.tmp");(void)removed;
+        cache.limit=0;cache.storage_verified=false;if(!cache.enabled)co_return Result<void>{};
+        // The fixed media root follows app placement. Only query its volume;
+        // images and indexes remain private and are removed on uninstall.
+        auto root=co_await ctx->fs().app_media();if(!root)co_return Result<void>{};
+        auto info=co_await root->info();(void)root->close();
+        if(info){cache.budget(info->free_bytes,(info->space_known&2)!=0);cache.storage_verified=cache.limit!=0;}
         co_return Result<void>{};
     }
     Task<void> storage_pressure(){
@@ -44,25 +43,43 @@
         while(cache.used()+info->size>cache.limit||cache.vacant()<0){int i=cache.oldest();if(i<0)break;auto r=co_await ctx->fs().remove(cache_path(i));if(!r&&r.error()!=Error::not_found)co_return Result<void>{};cache.pages[i]={};}
         int slot=cache.vacant();if(slot<0)co_return Result<void>{};auto invalidated=co_await write_cache_index();if(!invalidated)co_return Result<void>{};auto moved=co_await ctx->fs().replace(file,cache_path(slot));if(moved){cache.pages[slot]={std::move(key),unsigned(info->size),++cache.clock};auto saved=co_await write_cache_index();if(!saved)(void)ctx->log().write(LogLevel::warning,"MANGA cache index write failed");}else{auto reclaimed=co_await storage_pressure();(void)reclaimed;}co_return Result<void>{};
     }
+    Task<Asset> decode_file(std::string path,bool foreground,ImageFormats formats){
+        if(foreground)release_page();
+        for(unsigned pixels=foreground?image_pixels():std::min(image_pixels(),std::max(65536u,(buffer_limit>65536?buffer_limit-65536:0u)/4));pixels>=65536;pixels/=2){auto file=co_await ctx->fs().open(path);if(!file)co_return std::unexpected(file.error());
+            auto a=co_await ctx->assets().decode_image(std::move(*file),{.max_width=std::uint16_t(image_width()),.max_height=2048,.max_pixels=pixels,.max_encoded_bytes=524288,.formats=formats});
+            if(a){auto d=a->descriptor();(void)ctx->log().write(LogLevel::info,"MANGA image="+std::to_string(d.width)+"x"+std::to_string(d.height)+" source="+std::to_string(d.source_width)+"x"+std::to_string(d.source_height)+" resident="+std::to_string(d.resident_bytes));co_return std::move(a);}
+            if(a.error()!=Error::resource_limit&&a.error()!=Error::quota_exceeded)co_return std::unexpected(a.error());
+        }co_return std::unexpected(Error::resource_limit);
+    }
     Task<Asset> cached_image(std::string key,bool foreground=true){
-        int slot=cache.find(key);if(slot<0)co_return std::unexpected(Error::not_found);auto f=co_await ctx->fs().open(cache_path(slot));if(!f){cache.pages[slot]={};co_return std::unexpected(Error::not_found);}if(foreground)release_page();
-        auto a=co_await ctx->assets().decode_image(std::move(*f),{.max_width=512,.max_height=2048,.max_pixels=262144,.max_encoded_bytes=524288,.formats=ImageFormats::png|ImageFormats::jpeg});
+        int slot=cache.find(key);if(slot<0)co_return std::unexpected(Error::not_found);auto f=co_await ctx->fs().open(cache_path(slot));if(!f){cache.pages[slot]={};co_return std::unexpected(Error::not_found);}
+        (void)f->close();auto a=co_await decode_file(cache_path(slot),foreground,ImageFormats::png|ImageFormats::jpeg);
         if(a){cache.touch(slot);(void)ctx->log().write(LogLevel::info,"MANGA cache=hit");co_return std::move(a);}if(a.error()==Error::resource_limit||a.error()==Error::quota_exceeded)co_return std::unexpected(a.error());cache.pages[slot]={};auto r=co_await ctx->fs().remove(cache_path(slot));(void)r;co_return std::unexpected(Error::not_found);
     }
     bool download_storage_failed=false;
-    Task<void> download_image(std::string url){download_storage_failed=false;
-        for(unsigned attempt=0;attempt<2;++attempt){auto response=co_await request(url,4*1024*1024,manga::referrer(book));if(!response){if(!attempt&&transient(response.error()))continue;co_return std::unexpected(response.error());}
-            auto f=co_await ctx->fs().open("manga-source.tmp",OpenMode::write|OpenMode::create|OpenMode::truncate);if(!f){download_storage_failed=true;co_return std::unexpected(f.error());}unsigned received=0;std::optional<Error> failed;
-            for(;;){auto n=co_await response->body.read_some(buffer);if(!n){failed=n.error();break;}if(!*n)break;received+=*n;if(received>4*1024*1024)co_return std::unexpected(Error::limit_exceeded);auto bytes=std::span{buffer}.first(*n);while(!bytes.empty()){auto w=f->write(bytes);if(!w||!*w){download_storage_failed=true;co_return std::unexpected(w?Error::io_error:w.error());}bytes=bytes.subspan(*w);}}
-            auto closed=f->close();if(!closed){download_storage_failed=true;co_return std::unexpected(closed.error());}if(failed){if(!attempt&&transient(*failed))continue;co_return std::unexpected(*failed);}co_return Result<void>{};
+    Task<void> download_image(std::string url){download_storage_failed=false;sync_clock();auto started=now_us;
+        auto chunk=std::make_unique<std::array<std::byte,16384>>();
+        for(unsigned attempt=0;attempt<2;++attempt){std::optional<HttpResponse> response;
+            if(!attempt&&wire_url==url){while(wire_running){auto y=co_await ctx->clock().yield();if(!y)co_return std::unexpected(y.error());}if(wire_ready){if(wire_response)response.emplace(std::move(*wire_response));wire_response.reset();source_bytes=std::move(wire_bytes);wire_ready=false;wire_url.clear();if(!response){if(source_bytes.empty())co_return std::unexpected(Error::protocol_error);(void)ctx->log().write(LogLevel::info,"MANGA wire_consumed_bytes="+std::to_string(source_bytes.size()));co_return Result<void>{};}}}
+            if(!response){source_bytes.clear();auto opened=co_await request(url,4*1024*1024,manga::referrer(book));if(!opened){if(!attempt&&transient(opened.error()))continue;co_return std::unexpected(opened.error());}response.emplace(std::move(*opened));}
+            unsigned received=source_bytes.size();std::optional<File> file;std::optional<Error> failed;
+            for(;;){auto n=co_await response->body.read_some(*chunk);if(!n){failed=n.error();break;}if(!*n)break;received+=*n;if(received>4*1024*1024)co_return std::unexpected(Error::limit_exceeded);
+                if(!file&&source_bytes.size()+*n<=524288)source_bytes.insert(source_bytes.end(),chunk->begin(),chunk->begin()+*n);
+                else{if(!file){auto opened=co_await ctx->fs().open("manga-source.tmp",OpenMode::write|OpenMode::create|OpenMode::truncate);if(!opened){download_storage_failed=true;co_return std::unexpected(opened.error());}file.emplace(std::move(*opened));auto wrote=co_await write_chunks(*file,source_bytes);if(!wrote){download_storage_failed=true;co_return std::unexpected(wrote.error());}std::vector<std::byte>{}.swap(source_bytes);}
+                    auto wrote=co_await write_chunks(*file,std::span{*chunk}.first(*n));if(!wrote){download_storage_failed=true;co_return std::unexpected(wrote.error());}}
+            }
+            if(file){auto closed=file->close();if(!closed){download_storage_failed=true;co_return std::unexpected(closed.error());}}
+            if(failed){if(!attempt&&transient(*failed))continue;co_return std::unexpected(*failed);}if(!received)co_return std::unexpected(Error::protocol_error);sync_clock();(void)ctx->log().write(LogLevel::info,"MANGA input_ready_bytes="+std::to_string(received)+" ram="+std::to_string(!file)+" elapsed_us="+std::to_string(now_us-started));co_return Result<void>{};
         }co_return std::unexpected(Error::io_error);
     }
     Task<Asset> decoded_download(std::string key,bool foreground=true){
-        auto f=co_await ctx->fs().open("manga-source.tmp");if(!f)co_return std::unexpected(f.error());std::array<std::byte,12> header{};auto n=f->read(header);if(!n)co_return std::unexpected(n.error());
-        bool webp=*n>=12&&std::memcmp(header.data(),"RIFF",4)==0&&std::memcmp(header.data()+8,"WEBP",4)==0;bool jpeg=*n>=2&&header[0]==std::byte{255}&&header[1]==std::byte{216};(void)f->close();
-        auto stat=co_await ctx->fs().stat("manga-source.tmp");bool native=!webp&&stat&&stat->size<=524288;
-        if(jpeg&&native){auto input=co_await ctx->fs().open("manga-source.tmp");if(input){manga::JpegHeader size;auto read=[](void* p,std::span<std::byte> out)->size_t{auto n=static_cast<File*>(p)->read(out);return n?*n:0;};if(manga::jpeg_header(read,&*input,size)&&std::uint64_t(size.width)*size.height>262144)native=false;}}
-        if(native){auto input=co_await ctx->fs().open("manga-source.tmp");if(!input)co_return std::unexpected(input.error());if(foreground)release_page();auto a=co_await ctx->assets().decode_image(std::move(*input),{.max_width=512,.max_height=2048,.max_pixels=262144,.max_encoded_bytes=524288,.formats=ImageFormats::png|ImageFormats::jpeg});if(a||a.error()==Error::resource_limit||a.error()==Error::quota_exceeded){auto stored=co_await cache_file(key,"manga-source.tmp");(void)stored;co_return std::move(a);}if(!jpeg||(a.error()!=Error::unsupported&&a.error()!=Error::limit_exceeded))co_return std::unexpected(a.error());}
+        std::array<std::byte,12> header{};std::size_t count=0;
+        if(!source_bytes.empty()){count=std::min(header.size(),source_bytes.size());std::copy_n(source_bytes.begin(),count,header.begin());}
+        else{auto file=co_await ctx->fs().open("manga-source.tmp");if(!file)co_return std::unexpected(file.error());auto n=file->read(header);if(!n)co_return std::unexpected(n.error());count=*n;(void)file->close();}
+        bool webp=count>=12&&std::memcmp(header.data(),"RIFF",4)==0&&std::memcmp(header.data()+8,"WEBP",4)==0;bool jpeg=count>=2&&header[0]==std::byte{255}&&header[1]==std::byte{216};
+        if(!webp&&!source_bytes.empty()){auto written=co_await spool_source();if(!written)co_return std::unexpected(written.error());}
+        bool native=false;if(!webp){auto stat=co_await ctx->fs().stat("manga-source.tmp");native=stat&&stat->size<=524288;}
+        if(native){auto a=co_await decode_file("manga-source.tmp",foreground,ImageFormats::png|ImageFormats::jpeg);if(a||a.error()==Error::resource_limit||a.error()==Error::quota_exceeded){auto stored=co_await cache_file(key,"manga-source.tmp");(void)stored;std::vector<std::byte>{}.swap(source_bytes);co_return std::move(a);}if(!jpeg||(a.error()!=Error::unsupported&&a.error()!=Error::limit_exceeded))co_return std::unexpected(a.error());}
         auto a=co_await convert_download(foreground);if(a||a.error()==Error::resource_limit||a.error()==Error::quota_exceeded){auto stored=co_await cache_file(std::move(key),"manga-image.tmp");(void)stored;}co_return std::move(a);
     }
     Task<bool> chapter_cache(){

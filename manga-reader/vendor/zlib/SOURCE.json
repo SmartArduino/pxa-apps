@@ -1,0 +1,6 @@
+{
+  "upstream": "https://github.com/madler/zlib",
+  "tag": "v1.3.1",
+  "scope": "deflate encoder only; Z_SOLO and NO_GZIP; no system/Host linkage",
+  "license": "Zlib"
+}

@@ -4,7 +4,9 @@ template<class Owner> bool Reader::Controls::render(Owner& owner,std::uint32_t p
     bool ok=true;size_t n=0;auto screen=app->screen;
     auto box=[&](int xx,int yy,int ww,int hh){return CanvasRegion{int(xx/d),int(yy/d),std::max(1,int(ww/d)),std::max(1,int(hh/d))};};
     auto text=[&] [[gnu::noinline]] (int xx,int yy,int ww,int hh,std::string_view value,Font font=Font::caption,uint32_t color=ink,uint8_t align=0){
-        auto s=manga::ellipsize(value,ww,font==Font::title?20:font==Font::body?16:font==Font::label?14:12);
+        int size=font==Font::title?20:font==Font::body?16:font==Font::label?14:12;
+        auto ratio=std::max(1.f,app->density()/app->ui_factor());auto s=manga::ellipsize(value,ww,int(std::ceil(size*ratio)));
+        hh=std::max(hh,int(std::ceil((size+4)*ratio)));
         ok=Text(s,WidgetStyle{box(xx,yy,ww,hh),color,0,font,0,align}).render(owner,parent)&&ok;
     };
     auto rect=[&](int xx,int yy,int ww,int hh,uint32_t color,int radius=0){ok=Box(WidgetStyle{box(xx,yy,ww,hh),0,color,Font::caption,radius}).render(owner,parent)&&ok;};
@@ -12,14 +14,14 @@ template<class Owner> bool Reader::Controls::render(Owner& owner,std::uint32_t p
         if(n==callbacks.size()){ok=owner.fail(Error::resource_limit);return;}auto& cb=callbacks[n++];cb={app,action,arg};
         bool icon=screen==reading&&label.size()<=3;
         ok=Button(label,WidgetStyle{box(xx,yy,ww,hh),silent?0u:screen==reading?0xf5f6eeff:enabled?(selected?0xffffffff:ink):muted,
-            screen==reading?0x14251edc:selected?accent:paper,screen==reading?(icon?Font::title:Font::caption):Font::label,6,1}).on_click_ref(cb).enabled(enabled).render(owner,parent)&&ok;
+            screen==reading?0x14251edc:selected?accent:paper,screen==reading?(icon?Font::title:Font::caption):Font::label,6,1}).on_click_ref(cb).enabled(enabled&&app->ready).render(owner,parent)&&ok;
     };
     auto row=[&](int xx,int yy,int rw,std::string_view title,std::string_view detail,Act action,int arg,bool selected=false,uint32_t spine=accent,bool menu=false){
         auto label=manga::ellipsize(title,rw-(menu?74:42),14);
-        button(xx,yy,rw-(menu?46:0),38,label,action,arg,false,true,true);
+        button(xx,yy,rw-(menu?46:0),app->dense_fonts()?52:38,label,action,arg,false,true,true);
         rect(xx+3,yy+7,2,24,spine,1);
-        text(xx+12,yy+3,rw-(menu?72:40),19,label,Font::label);
-        text(xx+12,yy+22,rw-(menu?72:40),15,detail,Font::caption,muted);
+        text(xx+12,yy+3,rw-(menu?72:40),app->dense_fonts()?24:19,label,Font::label);
+        text(xx+12,yy+(app->dense_fonts()?30:22),rw-(menu?72:40),app->dense_fonts()?22:15,detail,Font::caption,muted);
         if(menu){button(xx+rw-42,yy,42,38,std::string(title)+" · 目录",open_book,arg,false,true,true);text(xx+rw-38,yy+8,34,24,"≡",Font::title,muted,1);}
         else text(xx+rw-25,yy+9,18,24,selected?"✓":"›",Font::label,selected?accent:muted,1);
     };
@@ -32,6 +34,7 @@ template<class Owner> bool Reader::Controls::render(Owner& owner,std::uint32_t p
     };
     auto feedback=[&](int yy){text(x,yy,w,22,app->status,Font::caption,muted);};
     if(screen==reading){
+        if(!app->busy&&app->waiting_scroll&&!app->prefetch_running&&app->prefetch_retry>app->now_us)button(x+w-38,y+h-66,38,30,"↻",retry_buffer);
         if(app->bars||!app->failure.empty()){
             button(x,y,38,30,"≡",go_back);button(x+42,y,42,30,app->zoom_mode==0?"适宽":app->zoom_mode==1?"放大":"整页",zoom,0,false,!app->busy&&bool(app->image));button(x+w-38,y,38,30,"?",show_help);
             button(x,y+h-30,38,30,"<",previous_page,0,false,!app->busy&&app->page>0);button(x+w-38,y+h-30,38,30,">",next_page,0,false,!app->busy&&app->page+1<app->pages.size());
@@ -50,7 +53,7 @@ template<class Owner> bool Reader::Controls::render(Owner& owner,std::uint32_t p
         text(x,y+146,w,32,app->status,Font::caption,muted);return ok;
     }
     if(screen==help){button(x,y,52,30,"返回",go_back);text(x+64,y+4,w-64,24,"阅读操作",Font::label);
-        int yy=y+42;for(auto s:{"横滑翻页 · 上下拖动长页","条漫到底后上滑，加载下一页","双指缩放 · 放大后可拖动","点页码跳转 · ≡ 打开目录"}){text(x,yy,w,24,s);yy+=26;}button(x,y+h-32,w,32,"阅读与缓存设置",show_settings);return ok;
+        int yy=y+42;for(auto s:{"页漫横滑翻页 · 长页上下拖动","条漫连续滚动 · 自动拼接图片","双指缩放 · 放大后可拖动","点页码跳转 · ≡ 打开目录"}){text(x,yy,w,24,s);yy+=26;}button(x,y+h-32,w,32,"阅读与缓存设置",show_settings);return ok;
     }
     if(screen==page_jump){button(x,y,52,30,"返回",go_back);text(x+64,y+4,w-64,24,"跳转页码",Font::label);
         rect(x,y+38,w-80,34,paper,6);button(x+w-74,y+38,34,34,"-",jump_step,-1);button(x+w-36,y+38,36,34,"+",jump_step,1);text(x,y+82,w,22,"输入 1–"+std::to_string(app->pages.size())+" 之间的页码",Font::caption,muted);
@@ -67,11 +70,11 @@ template<class Owner> bool Reader::Controls::render(Owner& owner,std::uint32_t p
     }else nav();
     if(screen==source_screen){
         auto rows=app->source_rows();auto start=std::min<unsigned>(app->source_start,((manga::sources.size()-1)/rows)*rows);
-        for(unsigned i=start;i<manga::sources.size()&&i<start+rows;++i){auto& option=manga::sources[i];bool active=app->custom==option.id;int yy=y+42+(i-start)*52;
-            button(x,yy,w,46,option.title,choose_source,i,active,true,true);
+        for(unsigned i=start;i<manga::sources.size()&&i<start+rows;++i){auto& option=manga::sources[i];bool active=app->custom==option.id;int yy=y+42+(i-start)*app->source_cell();
+            button(x,yy,w,app->source_cell()-6,option.title,choose_source,i,active,true,true);
             rect(x+10,yy+11,3,24,active?0xe3eee7ff:accent,1);
-            text(x+23,yy+4,w-60,21,option.title,Font::label,active?0xffffffff:ink);
-            text(x+23,yy+26,w-60,16,option.detail,Font::caption,active?0xe3eee7ff:muted);
+            text(x+23,yy+4,w-60,app->dense_fonts()?24:21,option.title,Font::label,active?0xffffffff:ink);
+            text(x+23,yy+(app->dense_fonts()?30:26),w-60,app->dense_fonts()?22:16,option.detail,Font::caption,active?0xe3eee7ff:muted);
             text(x+w-30,yy+13,20,24,active?"✓":"›",Font::label,active?0xffffffff:muted,1);
         }
         button(x,y+h-28,36,28,"<",source_previous,0,false,start>0);

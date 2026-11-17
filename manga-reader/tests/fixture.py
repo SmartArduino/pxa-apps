@@ -18,20 +18,24 @@ BOOK = '11111111-1111-1111-1111-111111111111'
 CHAPTER = '22222222-2222-2222-2222-222222222222'
 PROGRESSIVE = False
 NOISE = False
+PANEL_HEIGHT = 640
+PANEL_WIDTH = 320
+WEBP = False
+WEBP_LOSSY = False
 
 
 def panel(index):
     if NOISE:
         image = Image.frombytes('RGB', (320, 400), random.Random(index).randbytes(320*400*3))
         out = io.BytesIO(); image.save(out, format='PNG'); return out.getvalue()
-    image = Image.new('RGB', (320, 640), '#f5f0df')
+    image = Image.new('RGB', (PANEL_WIDTH, PANEL_HEIGHT), '#f5f0df')
     draw = ImageDraw.Draw(image)
     for i in range(3):
         top = 20 + i * 205
         draw.rectangle((12, top, 308, top + 190), fill=['#ccddc2', '#d8dfeb', '#edcdb9'][index%3], outline='#243b31', width=5)
         draw.ellipse((70+i*20, top+65, 160+i*20, top+155), fill='#fff8e6', outline='#243b31', width=3)
         draw.text((40, top+20), f'PAGE {index+1} / PANEL {i+1}', fill='#20382f', font_size=22)
-    out = io.BytesIO(); image.save(out, format='JPEG',progressive=True) if PROGRESSIVE else image.save(out, format='PNG'); return out.getvalue()
+    out = io.BytesIO(); image.save(out, format='WEBP',lossless=not WEBP_LOSSY,quality=95) if WEBP else image.save(out, format='JPEG',progressive=True) if PROGRESSIVE else image.save(out, format='PNG'); return out.getvalue()
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -59,7 +63,8 @@ class Handler(BaseHTTPRequestHandler):
         elif u.path == '/_metrics':
             body = self.server.counts
         elif u.path.startswith('/data-saver/abc123/'):
-            content_type = 'image/jpeg' if PROGRESSIVE else 'image/png'; body = b'broken-image' if self.server.broken_first and u.path.endswith('/1.png') else panel(int(u.path.rsplit('/',1)[1].split('.')[0])-1)
+            if not u.path.endswith('/1.png'):time.sleep(self.server.delay_ms/1000)
+            content_type = 'image/webp' if WEBP else 'image/jpeg' if PROGRESSIVE else 'image/png'; body = b'broken-image' if self.server.broken_first and u.path.endswith('/1.png') else panel(int(u.path.rsplit('/',1)[1].split('.')[0])-1)
         elif u.path == '/catalog.json':
             body = {'books': [{'title': '自定义漫画', 'chapters': '/toc.json'}]}
         elif u.path == '/toc.json':
@@ -84,9 +89,18 @@ if __name__ == '__main__':
     parser.add_argument('--progressive',action='store_true')
     parser.add_argument('--pages',type=int,default=3)
     parser.add_argument('--noise',action='store_true',help='Use larger original panels to exercise persistent cache beyond 2 MiB')
+    parser.add_argument('--height',type=int,default=640)
+    parser.add_argument('--width',type=int,default=320)
+    parser.add_argument('--webp',action='store_true')
+    parser.add_argument('--webp-lossy',action='store_true')
+    parser.add_argument('--delay-ms',type=int,default=0)
     args = parser.parse_args()
     PROGRESSIVE = args.progressive
     NOISE = args.noise
+    PANEL_HEIGHT = min(2048,max(64,args.height))
+    PANEL_WIDTH = min(1024,max(64,args.width))
+    WEBP = args.webp or args.webp_lossy
+    WEBP_LOSSY = args.webp_lossy
     server = ThreadingHTTPServer(('127.0.0.1', args.port), Handler)
     server.fail_once = args.fail_once
     server.fault_lock = Lock()
@@ -94,4 +108,5 @@ if __name__ == '__main__':
     server.counts = {}
     server.broken_first = args.broken_first
     server.page_count = min(512,max(1,args.pages))
+    server.delay_ms = min(5000,max(0,args.delay_ms))
     server.serve_forever()
