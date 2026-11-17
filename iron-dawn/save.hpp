@@ -21,7 +21,7 @@ inline bool valid_world(const Save& s,bool v4=false){
  for(int i=0;i<s.world.job_count;++i){auto& j=s.world.jobs[i];if(j.kind>=hq||!std::isfinite(j.left)||!std::isfinite(j.total)||j.total<=0)return false;}
  for(auto& shot:s.world.shots)if(shot.alive){if(shot.kind>turret||shot_target(shot)<0||shot_target(shot)>=MAX||!std::isfinite(shot.duration)||shot.duration<=0||!std::isfinite(shot.t)||shot.t<0)return false;if(v4&&(shot.team>1||shot.target>=MAX))return false;}
  for(auto& blast:s.world.blasts)if(blast.alive&&(!std::isfinite(blast.age)||blast.age<0||blast.type>6))return false;
- const auto& x=s.world.extra;if(x.mode>1||x.damage>2||x.armor>2||x.research>2||!std::isfinite(x.research_left)||x.research_left<0||x.research_left>24.01f)return false;
+ const auto& x=s.world.extra;if(x.mode>1||x.damage>2||x.armor>2||x.research>2||x.map_rules>1||!std::isfinite(x.research_left)||x.research_left<0||x.research_left>24.01f)return false;
  if(x.research&&(!x.research_left||s.world.tech_level(x.research)>=2))return false;
  if(x.cleared>unsigned(std::max(0,s.world.wave)))return false;
  return true;

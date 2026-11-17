@@ -1,0 +1,43 @@
+{
+  "mode": "built-in image_gen",
+  "license": "Original generated artwork, MIT. No third-party game images are inputs.",
+  "reference": {
+    "path": "art/environment-reference-v1.png",
+    "prompt": "Use case: stylized-concept. Asset type: environment reference illustration for the original pixel RTS game Iron Dawn (钢铁黎明). Create one beautiful wide landscape reference image showing a playable isometric military river valley, viewed in a precise 2:1 isometric camera. Composition: winding dark teal river with natural irregular reed-lined stone banks, a low sturdy steel and concrete bridge with segmented deck, clear railings and small amber safety marks; olive moss and dusty earth fields, patches of short grass, clustered angular rock outcrops and three small groups of readable pine trees; worn slate asphalt roads connect a modest olive industrial outpost at the left to the bridge and golden ore deposits on the right. Include restrained shell craters, broken masonry and short old roadside barriers around the roads. Two small olive tanks and two infantry give scale, each tank has exactly ONE straight cannon. Environment is the focus, not units. Crisp deliberately clustered pixel art, consistent square pixel size, warm upper-left daylight, dark teal shadows, desaturated olive grass, pale stone facets, amber ore highlights; polished classic late-1990s isometric RTS craftsmanship with readable quiet ground below units. Show rich material detail without visual noise. Entire image is a single coherent environment scene. No text, no labels, no logo, no UI, no watermark, no photographic textures, no 3D render, no blur, no bloom. This is reference concept art, not a screenshot."
+  },
+  "atlas": {
+    "source": "art/generated/environment-source-v1.png",
+    "reference": "art/environment-reference-v1.png",
+    "prompt": "Use case: stylized-concept. Asset type: production pixel-art environment prop atlas for the original game Iron Dawn. Use the provided river-valley environment concept as STYLE REFERENCE ONLY: match its handsome pine trees, faceted pale rocks, amber ore, quiet olive materials and upper-left sunlight. Create exactly FOUR equal columns and TWO equal rows, eight equal isolated cells. TRUE TRANSPARENT background, no ground tiles, no terrain scene, no cast shadows, no text or grid. Fixed 2:1 isometric camera. Crisp deliberate square pixel clusters designed to be imported as 48x56 pixel game sprites per cell, consistent scale and light. Every prop fits inside its cell with at least 12% transparent padding, its ground-contact base centered horizontally near 82% down the cell. Row 1 left to right: [one dark green layered pine tree with exposed brown trunk], [one slightly shorter olive green pine tree, same species], [a low single angular pale stone boulder with three clear faces], [one squat cluster of 3 angular pale stone outcrop blocks, wider than tall]. Row 2 left to right: [a very short broken concrete roadside wall segment with three blocks and a little rubble], [one small clump of dry golden-green river reeds, thin clean stems], [one low irregular clump of olive shrubs and short grass], [one small cluster of three bright amber mineral crystals on a few dark stones]. Simple readable silhouettes with detailed internal material shading at small scale. Trees are about 40 pixels tall, rock outcrop about 20 pixels tall, other props about 8 to 16 pixels tall relative to the target 48x56 cell. No people, vehicles, buildings, flags, terrain diamonds, labels, blur, painterly strokes, 3D rendering or extra objects."
+  },
+  "cleanup": {
+    "source": "art/generated/environment-source-v1.png",
+    "output": "art/generated/environment-v2.png",
+    "prompt": "Precisely edit this transparent 4-column by 2-row environment prop sprite atlas. Remove ONLY the stray saturated red, scarlet and lemon-yellow fringe pixels and specks that appear outside the natural contours of the stone boulders, reeds and crystal cluster. Make those unwanted fringe pixels fully transparent. Preserve all eight existing objects, their grid cells, exact position, scale, shape and internal pixel art. Keep the golden amber crystals and the warm green reeds intact; remove only the anomalous outer red/yellow outlining. All genuine tree, rock, wall, plant and crystal colors must remain unchanged. Keep the same image dimensions and true transparent background, no additional objects or text."
+  },
+  "runtime": {
+    "generator": "tools/generate_art.py",
+    "input": "art/generated/environment-v2.png",
+    "grid": [
+      4,
+      2
+    ],
+    "native_cell": [
+      48,
+      56
+    ],
+    "palette_colors": 96,
+    "reference_image_is_runtime_input": false
+  },
+  "source_sha256": {
+    "art/environment-reference-v1.png": "6c2384cacb00166a5937e0864d72fad26d905bd3fee9c368541a8252682d9759",
+    "art/generated/environment-source-v1.png": "953b824320e724679e06e107dc1acaaee2320bde0713edd7ed46da86958352c6",
+    "art/generated/environment-v2.png": "63c911b817216c5ee75766f6fb10a6b8e7ad146fdfb17647c49edc6f2d941b93",
+    "art/large-ui-reference-v1.png": "063be889f7ae218289c6f3e64dfbe34eb20ca3fb9f76f26ac19e3ed6c68998ac"
+  },
+  "large_ui": {
+    "path": "art/large-ui-reference-v1.png",
+    "reference": "QA-only actual simulator capture of the new environment, not a runtime input",
+    "prompt": "Use case: ui-mockup. Asset type: large landscape display HUD design reference for the original pixel RTS Iron Dawn. Use the provided actual game capture as the visual identity reference: preserve its original olive military sprites, navy panels, mint controls, amber resources and crisp pixel typography. Design a polished 16:9 large-screen in-game interface. No title, no game logo and no marketing slogans in the top bar. Large unobstructed isometric battlefield occupies the left roughly 72%; a slim right command sidebar occupies roughly 28%. Top strip shows only ore amount, electric power, elapsed time, pause. Sidebar top: small square minimap at left, selected unit portrait and concise health/selection information at right. Below: two clear tabs labelled 部队 and 基地; five production cards arranged in two columns and three rows, each card has a small handsome unit picture, short Chinese unit name, amber price and clear queue progress. Sidebar bottom: 科研 and 撤单 buttons. A single short command row BELOW THE BATTLEFIELD only contains 全军, 框选, 停止, 维修, 缩放, 空袭. Generous readable spacing and touch-sized buttons. Battle terrain should include readable mossy ground, a river bridge, angular stone ridges, pines and bright ore crystals similar to the supplied style. Crisp deliberately clustered pixel art, refined thin metal borders, restrained mint corner brackets, slight material wear. UI must look functional and compact, never ornamental. No promotional copy, no debug counters, no device frame, no glossy gradients, no bloom or blurred fonts. This is a concept design, not an actual game screenshot."
+  }
+}

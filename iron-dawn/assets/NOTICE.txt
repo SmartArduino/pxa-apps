@@ -1,5 +1,7 @@
 Iron Dawn: original application code, game rules, procedural and generated artwork: MIT.
 Generated image masters: built-in ImageGen; prompts and input lineage in tools/art-prompts.json.
+Environment and large-screen UI reference: built-in ImageGen; prompts and input lineage in tools/environment-prompts.json; original MIT artwork.
+Nine-slice UI skins: built-in ImageGen; prompts and input lineage in tools/ui-skin-prompts.json; original MIT artwork.
 Font subset: Iron Dawn UI Pixel, derived from Z Labs Pixel 12px M CN, SIL OFL 1.1.
 Font SHA256: c4bf6069b8e5e31dc42c81f310afbc322c2cbc843ceba6c871358f9f1aaae033
 

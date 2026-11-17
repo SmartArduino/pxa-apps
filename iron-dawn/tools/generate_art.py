@@ -12,7 +12,7 @@ from PIL import Image
 
 APP = Path(__file__).resolve().parents[1]
 ROOT = APP / 'art/generated'
-FRAMES, PALETTES, DATA, GROUPS, SOURCES = [], [], bytearray(), {}, {}
+FRAMES, PALETTES, DATA, GROUPS, SOURCES, CONTACTS = [], [], bytearray(), {}, {}, []
 RIG = json.loads((APP/'art/rig.json').read_text())
 
 def rgb565(c):
@@ -80,11 +80,19 @@ def add_group(name,filename,cols,rows,size,anchor='center',trim=False,colors=128
         if anchor=='infantry':
             points=[x for y in range(by,min(ey,by+5)) for x in range(w) if pixels[y*w+x][3]>=128]
             ox=round(sum(points)/len(points));oy=by+35
+        elif anchor=='prop':
+            ox=w//2;oy=ey-2
         elif anchor in ('vehicle','building'):
             points=[x for y in range(max(by,ey-(10 if anchor=='vehicle' else 15)),ey) for x in range(w) if pixels[y*w+x][3]>=128]
             ox=round(sum(points)/len(points));oy=ey-(8 if anchor=='vehicle' else 13)
         else: ox=w//2;oy=h//2
         if name in RIG: ox,oy=RIG[name]['anchors'][cell_index%8]
+        # Foot contact comes from the lowest opaque rows, independently of
+        # registration/muzzle anchors. Long barrels and antennas cast no base.
+        depth=14 if anchor=='building' else 6 if anchor=='vehicle' else 4
+        feet=[x for y in range(max(by,ey-depth),ey) for x in range(w) if pixels[y*w+x][3]>=128]
+        rx=max(2,round((max(feet)-min(feet)+1)/2)-1)
+        CONTACTS.append((round((min(feet)+max(feet))/2)-ox,ey-1-oy,rx,max(2,round(rx/2)) if anchor=='building' else max(1,min(3,depth//2))))
         offset=len(DATA);runs=0
         for y in range(h):
             x=0
@@ -104,6 +112,8 @@ for name in ('rifle','rocket','tank','artillery','harvester'):
     add_group(name,(name+'-v2.png') if (ROOT/(name+'-v2.png')).exists() else (name+'.png'),4,4,(48,48) if infantry else (80,80),'infantry' if infantry else 'vehicle')
 add_group('buildings','buildings.png',4,2,(96,96),'building')
 add_group('terrain','terrain.png',4,2,(40,20),trim=True,colors=64)
+add_group('environment','environment-v2.png',4,2,(48,56),'prop',colors=96)
+add_group('ui_skin','ui-skin-v1.png',4,2,(48,32),trim=True,colors=96)
 add_group('icons','ui-icons.png',4,4,(24,24),trim=True,colors=64)
 add_group('wordmark','wordmark.png',1,1,(432,144),colors=128)
 add_group('badge','app-icon.png',1,1,(96,96),colors=128)
@@ -117,6 +127,8 @@ header+=f'inline constexpr std::array<uint8_t,{len(DATA)}> bytes={{'+','.join(ma
 for name,(first,count) in GROUPS.items():header+=f'inline constexpr unsigned {name}_first={first}, {name}_count={count};\n'
 header+='inline constexpr std::array<unsigned,5> unit_first={'+','.join(str(GROUPS[n][0])for n in ('rifle','rocket','tank','artillery','harvester'))+'};\n'
 header+='struct Socket {int16_t x,y;bool behind;};\n'
+header+='struct ShadowContact {int16_t x,bottom,rx,ry;};\n'
+header+=f'inline constexpr std::array<ShadowContact,{len(CONTACTS)}> contacts={{{{'+','.join('{'+','.join(map(str,c))+'}' for c in CONTACTS)+'}};\n'
 header+='inline constexpr std::array<std::array<Socket,8>,4> muzzles={{'+','.join('{{'+','.join('{'+str(x)+','+str(y)+','+str(RIG[n]['muzzle_behind_body'][i]).lower()+'}' for i,(x,y) in enumerate(RIG[n]['muzzles']))+'}}' for n in ('rifle','rocket','tank','artillery'))+'}};\n'
 header+='struct InfantryRig {int16_t hip_x,hip_y,cut;};\n'
 header+='inline constexpr std::array<std::array<InfantryRig,8>,2> infantry_rigs={{'+','.join('{{'+','.join('{'+str(x)+','+str(y)+','+str(RIG[n]['body_cut'][i])+'}' for i,(x,y) in enumerate(RIG[n]['hips']))+'}}' for n in ('rifle','rocket'))+'}};\n}\n'

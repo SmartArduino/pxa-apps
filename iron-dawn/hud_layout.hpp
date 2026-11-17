@@ -16,6 +16,30 @@ struct GameViewport {
  int width,height;
  static GameViewport fit(int pixels_w,int pixels_h){int width=std::clamp(int(int64_t(pixels_w)*320/std::max(1,pixels_h)),480,1060);return {width,std::clamp(int(int64_t(pixels_h)*width/std::max(1,pixels_w)),320,1060)};}
 };
+// The Host presents smaller mapped frames at exact 2x/4x nearest-neighbor
+// scales. Bound both Guest buffers to 2 MiB even on desktop-sized windows.
+struct DisplayPlan {
+ int width,height,scale,offset_x,offset_y;bool wide;float units_per_dp,font_scale;
+ static DisplayPlan fit(int pw,int ph,uint32_t density=65536,uint32_t font=65536){
+  int scale=1;while(scale<4&&int64_t(((pw/scale)*2+63)/64*64)*(ph/scale)*2>2097152)scale*=2;
+  int sw=std::max(1,pw/scale),sh=std::max(1,ph/scale);float dpi=std::clamp(density/65536.f,.5f,4.f);bool wide=pw>=ph&&pw/dpi>=800&&ph/dpi>=440&&sw>=512&&sh>=300;
+  return {sw,sh,scale,(pw-sw*scale)/2,(ph-sh*scale)/2,wide,dpi/scale,std::clamp(font/65536.f,.75f,2.f)};
+ }
+};
+struct LargeHudLayout {
+ int width,height,row,line,side,world_width,top,bottom,map_size,tabs,grid,card_height,footer;
+ LargeHudLayout(int w,int h,float dp,float font=1):width(w),height(h){
+  line=12*font_style(std::lround(12*dp*font),false).scale+4;row=std::max({24,int(std::ceil(40*dp)),line+8});side=std::clamp(std::max(w/4,int(std::lround(224*dp))),168,std::min(288,w/3+12));world_width=w-side;top=std::max(36,row+8);bottom=h-row-10;
+  int map_budget=h-top-2*row-56-3*(2*line+4);map_size=std::clamp(std::min(std::max(h/6,int(std::lround(96*dp))),map_budget),32,112);tabs=top+map_size+20;grid=tabs+row+8;footer=h-row-8;card_height=std::min((footer-8-grid-12)/3,2*line+std::clamp(int(std::lround(32*dp)),20,40)+12);
+ }
+ Rect sidebar()const{return {world_width,top,side,height-top};}
+ Rect map()const{return {world_width+12,top+12,map_size,map_size};}
+ Rect tab(int n)const{return {world_width+8+n*((side-20)/2+4),tabs,(side-20)/2,row};}
+ Rect card(int n)const{return {world_width+8+(n%2)*((side-22)/2+6),grid+(n/2)*(card_height+6),(side-22)/2,card_height};}
+ Rect command(int n)const{int gap=6,cw=(world_width-16-gap*5)/6;return {8+n*(cw+gap),bottom+5,cw,row};}
+ Rect foot(int n)const{return {world_width+8+n*((side-20)/2+4),footer,(side-20)/2,row};}
+ Rect status()const{int y=grid+3*(card_height+6)+2;return {world_width+8,y,side-16,std::max(0,footer-y-8)};}
+};
 struct DockState {
  DockPanel panel=DockPanel::closed;
  void close(){panel=DockPanel::closed;}
@@ -27,7 +51,7 @@ struct DockState {
 struct CompactHudLayout {
  int height,width,offset,row,line,picture,card_height,header,top;
  static bool applies(int physical_width,int physical_height){return physical_width<400||physical_height<=480||physical_width>=physical_height;}
- explicit CompactHudLayout(int canvas_height,int physical_height,int canvas_width=480):height(canvas_height),width(canvas_width),offset((width-480)/2),row(std::max(28,(30*canvas_height+physical_height-1)/physical_height)),line(std::max(20,(14*canvas_height+physical_height-1)/physical_height)),picture(std::max(30,(20*canvas_height+physical_height-1)/physical_height)),card_height(12+picture+line*2),header(line+8),top(height-row-10){}
+ explicit CompactHudLayout(int canvas_height,int physical_height,int canvas_width=480,float density=1,float font=1):height(canvas_height),width(canvas_width),offset((width-480)/2),row(std::max(28,std::min(int(canvas_height*.18f),int(std::ceil(30*density*canvas_height/physical_height))))),line(std::max(20,int(std::ceil(14*font*canvas_height/physical_height)))),picture(std::max(30,(20*canvas_height+physical_height-1)/physical_height)),card_height(12+picture+line*2),header(line+8),top(height-row-10){}
  Rect command(int index)const{return {offset+8+94*index,top+5,88,row};}
  Rect overlay(DockPanel panel)const{int size=panel==DockPanel::closed?0:header+12+(panel==DockPanel::tactics?row*2+6:card_height);return {0,top-size,width,size};}
  Rect card(int index,DockPanel panel)const{return {offset+8+94*index,overlay(panel).y+header+4,88,card_height};}

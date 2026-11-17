@@ -15,7 +15,7 @@ struct Locomotion {
    float moved=dist(a.p,p.last);p.last=a.p;
    if(moved>1){p.phase=p.weight=0;continue;}
    bool walking=moved>.00005f;
-   if(walking)p.phase=std::fmod(p.phase+moved/(a.kind<=rocket?.72f:.48f),1.f);
+   if(walking)p.phase=std::fmod(p.phase+moved/(a.kind<=rocket?.72f:.64f),1.f);
    p.weight=walking?std::min(1.f,p.weight+dt*12):std::max(0.f,p.weight-dt*12);
   }
  }

@@ -1,0 +1,26 @@
+{
+  "mode": "built-in image_gen",
+  "reference": "art/large-ui-reference-v1.png",
+  "path": "art/generated/ui-skin-v1.png",
+  "prompt": "Use case: ui-mockup. Asset type: production 9-slice GUI skin sprite atlas for the original pixel RTS Iron Dawn. Use the supplied HUD design image as a STYLE reference ONLY. Recreate the handsome actual panel and button MATERIALS: dark blue-green gunmetal, fine steel edge bevels, thin pale top-left highlights, deep lower-right recesses, tiny corner screws, small restrained scratches, muted fine metal grain, mint indicator slashes on active states. Create exactly FOUR equal columns and TWO equal rows, EIGHT isolated rectangular skins. Every cell contains one complete wide 3:2 rectangle, with identical size, straight rectangular silhouette and transparent padding outside it. Design for a native 96x64 pixel source rectangle, crisp deliberately placed square pixels. The 6-pixel perimeter holds ALL bevels, small corner details and indicator marks; the broad dark interior must be nearly uniform quiet seamlessly repeatable texture suitable for tiling. No text, symbols, icons, portraits, numbers, progress bars, UI mockup scene or background. TRUE transparent background outside the eight rectangles; INSIDE every rectangle must be opaque. Row 1 left to right: [neutral recessed navy metal panel frame], [normal raised slate-green command button], [selected command button, slightly greener fill and crisp thin mint perimeter with two mint corner marks], [pressed command button, recessed bevel and muted mint edge]. Row 2 left to right: [dark recessed portrait well with fine steel rim], [production card frame with quiet dark matte interior, warm steel edge and a small mint upper-left corner mark], [disabled low-contrast matte command button with dark worn steel rim], [slim technical panel frame with double fine steel border and one tiny muted amber corner marker]. Keep all eight skins in exactly the requested cells. Strong readable material depth while preserving a mostly dark quiet UI. NO bright central gradients, no glow, no rounded corners, no oversized bolts, no labels, no letters, no pictograms, no extra objects, no red/yellow transparency fringes, no blur. Match the reference's craft and finish rather than flat geometric boxes.",
+  "runtime": {
+    "generator": "tools/generate_art.py",
+    "group": "ui_skin",
+    "grid": [
+      4,
+      2
+    ],
+    "native_cell": [
+      48,
+      32
+    ],
+    "slicing": "6-pixel fixed borders and corners; tiled centre strips; opaque row copies with alpha at edge pixels",
+    "png_decoding_at_runtime": false,
+    "rationale": "Import at an integer half scale so the 6-pixel slice encloses the full generated bevel and corner ornaments."
+  },
+  "license": "Original generated artwork, MIT",
+  "source_sha256": {
+    "art/generated/ui-skin-v1.png": "9dc2edd5e66d49a4af3506f3b9e288411576b26f35372a2916d2c917be8d0f19",
+    "art/large-ui-reference-v1.png": "063be889f7ae218289c6f3e64dfbe34eb20ca3fb9f76f26ac19e3ed6c68998ac"
+  }
+}

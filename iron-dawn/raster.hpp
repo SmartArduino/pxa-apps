@@ -19,10 +19,10 @@ inline FontStyle font_style(int desired,bool){return {0,std::clamp((desired+6)/1
 inline int pixel_scale(int value,int numerator,int denominator){int64_t p=int64_t(value)*numerator;return int(p>=0?(p+denominator/2)/denominator:-((-p+denominator/2)/denominator));}
 struct TextCommand {int x,y,size,align;uint16_t color;Rect clip;uint16_t offset,length;};
 struct NativeText {
- int width=480,height=320,canvas_width=480,canvas_height=320;unsigned count=0,bytes=0;bool overflow=false;
+ int width=480,height=320,canvas_width=480,canvas_height=320;float text_scale=1;unsigned count=0,bytes=0;bool overflow=false;
  std::array<TextCommand,128> commands{};std::array<char,8192> strings{};
- void reset(int w,int h,int cw,int ch){width=w;height=h;canvas_width=cw;canvas_height=ch;count=bytes=0;overflow=false;}
- FontStyle style(std::string_view s,int size)const{return font_style(pixel_scale(size,width,canvas_width),ascii_text(s));}
+ void reset(int w,int h,int cw,int ch,float scale=1){width=w;height=h;canvas_width=cw;canvas_height=ch;text_scale=scale;count=bytes=0;overflow=false;}
+ FontStyle style(std::string_view s,int size)const{return font_style(std::lround(pixel_scale(size,width,canvas_width)*text_scale),ascii_text(s));}
  bool push(int x,int y,std::string_view s,uint16_t c,int size,int align,Rect clip){if(count==commands.size()||bytes+s.size()>strings.size()){overflow=true;return false;}std::copy(s.begin(),s.end(),strings.begin()+bytes);commands[count++]={x,y,size,align,c,clip,uint16_t(bytes),uint16_t(s.size())};bytes+=s.size();return true;}
 };
 struct Raster {

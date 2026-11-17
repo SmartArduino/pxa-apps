@@ -15,7 +15,7 @@ int main(){
  assert(Sprites::cache().hits>0&&Sprites::cache().misses>0);
  for(int kind=0;kind<2;++kind)for(unsigned d=0;d<8;++d)for(int phase=0;phase<8;++phase)for(float weight:{0.f,.4f,1.f}){auto x=CombatArt::uncached_gait(kind,d,phase/8.f,weight),y=CombatArt::gait(kind,d,phase/8.f,weight);std::array<float,24> xx,yy;std::memcpy(xx.data(),&x,sizeof x);std::memcpy(yy.data(),&y,sizeof y);assert(xx==yy);}
  World world;world.init(0);MinimapCache cache;for(int iteration=0;iteration<7;++iteration){std::fill(a.begin(),a.end(),navy);b=a;Raster ra(a.data(),w,h,w),rb(b.data(),w,h,w);Rect m{11,13,80,80};
-  for(int y=0;y<N;++y)for(int x=0;x<N;++x){int c=y*N+x;auto col=!world.seen[c]?navy:world.terrain[c]==2?rgb(38,72,80):world.ore[c]?gold:world.fog[c]?rgb(81,106,82):rgb(45,62,56);ra.rect(m.x+x*m.w/N,m.y+y*m.h/N,(x+1)*m.w/N-x*m.w/N,(y+1)*m.h/N-y*m.h/N,col);}cache.draw(rb,world,m);assert(a==b);
+  for(int y=0;y<N;++y)for(int x=0;x<N;++x){int c=y*N+x;auto col=!world.seen[c]?navy:world.terrain[c]==2?rgb(38,72,80):world.ore[c]?gold:world.terrain[c]==ridge?rgb(97,108,101):world.terrain[c]==road||world.terrain[c]==bridge?rgb(120,133,117):world.fog[c]?rgb(81,106,82):rgb(45,62,56);ra.rect(m.x+x*m.w/N,m.y+y*m.h/N,(x+1)*m.w/N-x*m.w/N,(y+1)*m.h/N-y*m.h/N,col);}cache.draw(rb,world,m);assert(a==b);
   if(iteration==1)world.seen[10]^=1;if(iteration==2)world.fog[10]^=1;if(iteration==3)world.ore[10]=world.ore[10]?0:10;if(iteration==4)world.ore[10]=world.ore[10]?0:10;if(iteration==5)world.terrain[10]=(world.terrain[10]+1)%3;
  }
  assert(cache.hits&&cache.misses>=6);std::printf("%u cache/uncached scaled/clipped/variant/eviction comparisons, 384 exact gait cases and minimap invalidation passed\n",cases);
