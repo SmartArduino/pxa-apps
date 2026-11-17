@@ -10,8 +10,9 @@
 #include <utility>
 namespace starsoil {
 namespace {
-void notice(State &s, const char *message) {
+void notice(State &s, const char *message, NoticeKind kind=NoticeKind::Warning) {
   std::snprintf(s.event, sizeof(s.event), "%s", message);
+  s.event_kind=kind;
   ++s.event_serial;
 }
 int ix(float x) { return int(std::floor(x / 16)); }
@@ -273,7 +274,7 @@ void hurt(State &s, int damage) {
   s.player.vy = -100;
   if (!s.hp) {
     respawn(s);
-    notice(s, "你在床边醒来，背包物品已保留。");
+    notice(s, "已回家，背包物品保留。",NoticeKind::Info);
   }
   s.dirty = true;
 }
@@ -292,7 +293,7 @@ void kill(State &s, Actor &m) {
     s.boss_defeated = 1;
     give(s, m.x, m.y, EmberCape, 1);
     give(s, m.x, m.y, StarCore, 1);
-    notice(s, "击败星核守卫！获得余烬披风与星核。");
+    notice(s, "击败星核守卫！获得余烬披风与星核。",NoticeKind::Milestone);
   }
   m.hp = 0;
 }
@@ -393,7 +394,6 @@ void use(State &s, const Input &input, uint32_t ms) {
       remove(s, Glass, 1);
       set_tile(s, x, y, Air);
       s.cooldown = 400;
-      notice(s, "已用玻璃瓶装取液体，可再次放置。");
     }
     return;
   }
@@ -463,11 +463,11 @@ void use(State &s, const Input &input, uint32_t ms) {
     auto place=placement(s,input,x,y);
     if(!place.ok()) {
       if(place.failure==PlaceFailure::DoorSpace) {
-        notice(s,"木门需要两格空间和地面支撑。");s.cooldown=400;
+        s.cooldown=400;
       } else if(place.failure==PlaceFailure::Support) {
-        notice(s,"靠近地面或已有方块放置。");s.cooldown=400;
+        s.cooldown=400;
       } else if(place.failure==PlaceFailure::Space) {
-        notice(s,"先腾出空间，再回收旧墙。");s.cooldown=400;
+        s.cooldown=400;
       }
       return;
     }
@@ -775,7 +775,6 @@ void new_game(State &s, uint32_t seed, WorldSize size) {
                  uint8_t(i),
                  uint8_t(i % 2)};
   s.clock = 90000;
-  notice(s, "欢迎来到星壤！\n先拜访屋外向导，再探索右侧矿井。");
   s.dirty = true;
 }
 int count(const State &s, int id) {
@@ -820,7 +819,6 @@ bool equip(State &s, int slot) {
   std::copy(std::begin(candidate), std::end(candidate), s.bag);
   s.equip[pos] = uint8_t(id);
   s.dirty = true;
-  notice(s, "装备已穿戴，外观与属性已更新。");
   return true;
 }
 bool move_stack(State &s, int from, int to) {
@@ -984,7 +982,6 @@ bool craft(State &s, int r) {
       remove(s, a.item, a.count);
   add(s, recipes[r].out, recipes[r].count);
   ++s.crafted;
-  notice(s, "合成成功。");
   return true;
 }
 int craft_batch(State &s, int r, int limit) {
@@ -1062,7 +1059,6 @@ bool activate(State &s, int slot) {
     s.mana = std::min(60, int(s.mana) + 30);
   } else if (id == RecallPotion) {
     respawn(s);
-    notice(s, "星光将你带回家。");
   } else
     return false;
   remove(s, id, 1);
@@ -1097,7 +1093,6 @@ bool interact_at(State &s, int x, int y) {
     give(s, x * 16 + 8, y * 16, Torches, 6);
     set_tile(s, x, y, Air);
     give(s, x * 16 + 8, y * 16, TreasureChest, 1);
-    notice(s, "打开宝箱，获得了远行者留下的宝物。");
     return true;
   }
   if (t == Bed) {
@@ -1105,13 +1100,12 @@ bool interact_at(State &s, int x, int y) {
     // A bed on the lowest editable row must not create an invalid save header.
     s.home_y = std::min(y + 1, int(s.height) - 2);
     s.dirty = true;
-    notice(s, "已设置出生点，回城药水将带你回到这里。");
+    notice(s, "出生点已更新。",NoticeKind::Info);
     return true;
   }
   if (door(t)) {
     bool open = closed_door(t);
     if (toggle_door(s, x, y, open)) {
-      notice(s, open ? "木门已打开。" : "木门已关闭。");
       return true;
     }
     notice(s, "门口有人或怪物，无法关门。");
@@ -1119,12 +1113,12 @@ bool interact_at(State &s, int x, int y) {
   }
   if (t == Portal) {
     if (s.boss_defeated) {
-      notice(s, "星核已重新点亮，世界属于你的下一次冒险。");
+      notice(s, "星核已重新点亮。",NoticeKind::Info);
       return true;
     }
     for (auto &m : s.mobs)
       if (m.type == 5 && m.hp > 0) {
-        notice(s, "守卫已经苏醒！");
+        notice(s, "守卫已经苏醒！",NoticeKind::Milestone);
         return true;
       }
     if (count(s, StarCore) == 0) {
@@ -1135,7 +1129,7 @@ bool interact_at(State &s, int x, int y) {
       if (m.hp <= 0) {
         remove(s, StarCore, 1);
         m = {s.player.x + 64, s.player.y - 30, 0, -80, int16_t(enemies[Warden].health), Warden, 0};
-        notice(s, "星核守卫苏醒了！");
+        notice(s, "星核守卫苏醒了！",NoticeKind::Milestone);
         return true;
       }
   }
@@ -1158,23 +1152,23 @@ bool trade(State &s, int npc) {
       give(s, s.player.x, s.player.y, Gel, 6);
       give(s, s.player.x, s.player.y, HealPotion, 3);
       s.quests |= 1;
-      notice(s, "向导赠送了凝胶和药水。木材与凝胶能制作火把。");
+      notice(s, "向导赠送了凝胶和药水。木材与凝胶能制作火把。",NoticeKind::Dialogue);
       return true;
     }
     if (!(s.quests & 2) && s.mined >= 20) {
       give(s, s.player.x, s.player.y, CopperBar, 8);
       s.quests |= 2;
-      notice(s, "完成采矿委托，获得八块铜锭。");
+      notice(s, "完成采矿委托，获得八块铜锭。",NoticeKind::Dialogue);
       return true;
     }
     if (!(s.quests & 4) && s.crafted >= 10) {
       give(s, s.player.x, s.player.y, StarDust, 8);
       s.quests |= 4;
-      notice(s, "完成工匠委托，获得星尘。去寻找深处的祭坛吧。");
+      notice(s, "完成工匠委托，获得星尘。去寻找深处的祭坛吧。",NoticeKind::Dialogue);
       return true;
     }
     notice(s, s.mined < 20 ? "向导委托：开采二十个方块。"
-                           : "向导委托：完成十次合成。");
+                           : "向导委托：完成十次合成。",NoticeKind::Dialogue);
     return false;
   }
   Slot copy[BagSlots];
@@ -1194,7 +1188,7 @@ bool trade(State &s, int npc) {
   if (count(s, cost) < n) {
     notice(s, npc == 1   ? "商人：一块金锭换八份丝绸。"
               : npc == 2 ? "铁匠：九块铜矿换两块铁锭。"
-                         : "园丁：三朵野花换两瓶生命药水。");
+                         : "园丁：三朵野花换两瓶生命药水。",NoticeKind::Dialogue);
     return false;
   }
   remove(s, cost, n);
@@ -1203,7 +1197,6 @@ bool trade(State &s, int npc) {
     notice(s, "背包已满，交易未进行。");
     return false;
   }
-  notice(s, "交易完成。");
   return true;
 }
 bool can_spawn_enemy(const State &s, int x, int y, int type) {
@@ -1664,7 +1657,6 @@ bool decode(State &s, const uint8_t *data, size_t size) {
     std::memcpy(s.walls + y * WorldW, walls + y * v.width, v.width);
   }
   normalize_doors(s);
-  notice(s, "世界已载入，欢迎回家。");
   return true;
 }
 } // namespace starsoil

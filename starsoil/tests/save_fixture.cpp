@@ -43,6 +43,12 @@ int main(int argc, char **argv) {
   if (std::strcmp(argv[1], "performance-huge") == 0 ||
       std::strcmp(argv[1], "performance-medium") == 0) return save();
   if(block_fixture(s,argv[1]))return save();
+  if(std::strcmp(argv[1],"notices")==0) {
+    block_fixture(s,"block-roof");
+    for(auto &slot:s.bag)slot={};
+    s.bag[0]={HunterBow,1};s.bag[1]={Wood,24};s.bag[2]={Rock,10};
+    s.player.x=51*16+8;s.selected=0;return save();
+  }
   if (std::strcmp(argv[1],"shore")==0) {
     for(int x=174;x<=211;++x) {
       s.heights[x]=35;

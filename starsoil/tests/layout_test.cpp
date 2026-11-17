@@ -476,6 +476,50 @@ static void building_ui_checks() {
 int main(int argc, char **argv) {
   if(argc==2 && std::strcmp(argv[1],"--building")==0) {building_ui_checks();return 0;}
   game::init();
+  if(argc==2 && std::strcmp(argv[1],"--feedback")==0) {
+    pocket::WIDTH=pocket::HEIGHT=288;pocket::buffer.resize(288*288);pocket::painted.resize(288*288);
+    new_game(s,1234567);session_active=true;set_view(World);game::tick(20);
+    assert(!message_active());
+    s.player.x=51*16+8;s.player.y=31*16;
+    assert(interact_at(s,53,30));game::tick(20);assert(!message_active());
+    assert(interact_at(s,53,30));game::tick(20);assert(!message_active());
+    post_notice("Blocked",NoticeKind::Warning);uint32_t until=event_at;
+    game::tick(20);post_notice("Blocked",NoticeKind::Warning);assert(event_at==until);
+    event_at=0;game::draw();auto baseline=pocket::buffer;
+    event_at=until;game::draw();int changed=0;
+    for(int y=0;y<288;++y)for(int x=0;x<288;++x)if(pocket::buffer[y*288+x]!=baseline[y*288+x]) {
+      ++changed;assert(y>=288-pocket::text_height()-3);
+    }
+    assert(changed>0 && changed<288*5);
+    post_notice("守卫苏醒",NoticeKind::Milestone);std::string important=message;
+    post_notice("没有箭",NoticeKind::Warning);assert(message==important);
+    puts("PASS quiet load/door actions, duplicate suppression, milestone priority and transparent feedback confined below controls");
+    craft_ready_only=false;craft_category=CraftGroup::All;
+    new_game(s,1234567);for(auto &slot:s.bag)slot={};
+    s.bag[0]={Wood,24};s.bag[1]={Rock,10};s.player.x=45*16+8;s.player.y=31*16;
+    refresh_recipes();assert(recipe_list[0]==0 && recipe_list[1]==1 && recipe_list[2]==3 && recipe_list[3]==4);
+    for(int scenario=0;scenario<4;++scenario) {
+      new_game(s,1234567);
+      if(scenario==1)for(auto &slot:s.bag)slot={};
+      if(scenario==2)for(auto &slot:s.bag)slot={Rock,999};
+      if(scenario==3) {s.player.x=200*16;s.player.y=20*16;}
+      for(auto group:{CraftGroup::All,CraftGroup::Building,CraftGroup::Tools,CraftGroup::Gear,CraftGroup::Supplies}) {
+        craft_category=group;
+        for(bool only:{false,true}) {
+          craft_ready_only=only;refresh_recipes();bool unready=false;int prior_ready=-1,prior_unready=-1;
+          for(int i=0;i<visible_recipes;++i) {
+            int id=recipe_list[i];assert(craft_matches(id,group));bool ready=can_craft(s,id);
+            if(ready) {assert(!unready && id>prior_ready);prior_ready=id;}
+            else {assert(!only && id>prior_unready);prior_unready=id;unready=true;}
+          }
+        }
+      }
+    }
+    new_game(s,1234567);craft_category=CraftGroup::All;craft_ready_only=false;recipe=0;refresh_recipes();do_craft(99);
+    bool unavailable=false;for(int i=0;i<visible_recipes;++i) {bool ready=can_craft(s,recipe_list[i]);assert(!ready || !unavailable);unavailable|=!ready;}
+    assert(recipe==0);
+    puts("PASS craftable-first stable ordering across categories, ready-only, empty/full bags, station changes and batch crafting; selection preserved");return 0;
+  }
   if(argc==3 && std::strcmp(argv[1],"--blocks")==0) {
     std::filesystem::path root(argv[2]);assert(root.string().find("local/artifacts/")!=std::string::npos);
     std::filesystem::create_directories(root);

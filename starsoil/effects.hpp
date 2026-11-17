@@ -56,12 +56,20 @@ struct Effects {
     // Repeated pickups of one material combine instead of filling the screen.
     if (item)
       for (auto &p : pops)
-        if (p.life > 350 && p.item == item) {
+        if (p.life && p.item == item) {
           p.amount += amount;
-          p.life = 1100;
+          p.life = 900;p.x=x;p.y=y;
           return;
         }
-    pops[next_pop++ % pops.size()] = {x, y, 1100, item, amount, color};
+    unsigned slot=next_pop++ % pops.size();
+    if(item) {
+      unsigned count=0,oldest=0;uint16_t life=0xffff;
+      for(unsigned i=0;i<pops.size();++i)if(pops[i].life && pops[i].item) {
+        ++count;if(pops[i].life<life) {oldest=i;life=pops[i].life;}
+      }
+      if(count>=3)slot=oldest;
+    }
+    pops[slot] = {x, y, uint16_t(item?900:700), item, amount, color};
   }
   void pulse(float x, float y, uint32_t color, bool flat = false) {
     pulses[next_pulse++ % pulses.size()] = {x, y, 360, color, flat};

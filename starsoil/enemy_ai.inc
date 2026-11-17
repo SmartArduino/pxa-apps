@@ -70,7 +70,6 @@ void ground_enemy_ai(State &s, Actor &m, float dt) {
       if (closed_door(tile(s, x, y)) && toggle_door(s, x, y, true)) {
         m.timer = 0;
         m.vx = float(direction * 32);
-        notice(s, "苔木精推开了木门。");
       }
     }
     const int period = m.type == Warden ? 440 : m.type == FrostSlime ? 1100 : 900;

@@ -33,6 +33,7 @@ parser.add_argument('--inventory-only',action='store_true',help='Long-press drag
 parser.add_argument('--exploration-only',action='store_true',help='Single-tap backpack holding, precise furniture taps with tools, deliberate hold-to-mine and higher jump at one display profile')
 parser.add_argument('--interactions-only',action='store_true',help='Focused furniture taps with picks/axes, hold-to-mine, cancellation and save/restart')
 parser.add_argument('--polish-only',action='store_true',help='Protected sorting, bulk storage, ready-recipe filtering, crafting and save/restart at one display profile')
+parser.add_argument('--notifications-only',action='store_true',help='Quiet doors, transparent short warnings, craftable-first recipes and persistence at one square profile')
 parser.add_argument('--multitouch-only',action='store_true',help='Real runtime multi-ID joystick, jump, use, pause cancellation, release order and full-bleed controls')
 parser.add_argument('--weapons-only',action='store_true',help='Fast focused regression for mining feedback and held weapons')
 parser.add_argument('--terrain-only',action='store_true',help='Focused regression for terrain seams and forest/snow/jungle trees')
@@ -160,6 +161,33 @@ def enter_world():
     time.sleep(.7)
 
 try:
+    if args.notifications_only:
+        assert args.fixture_tool and args.width==args.height==480
+        start(0);enter_world();key('ENTER');time.sleep(.6);path,_=saved();stop()
+        subprocess.run([str(args.fixture_tool.resolve()),'notices',str(path)],check=True)
+        start(500);enter_world();capture('quiet-loaded-world')
+        tap(176,177,'fixed');capture('quiet-door-open')
+        tap(176,177,'fixed');capture('quiet-door-closed')
+        key('X',.10);capture('no-arrow-warning')
+        time.sleep(2.8);capture('warning-expired')
+        from PIL import Image
+        def red_glyphs(name):
+            image=Image.open(out/(name+'.png')).convert('RGB')
+            return sum(r>160 and g<150 and b<150 for r,g,b in image.crop((0,452,480,480)).getdata())
+        assert red_glyphs('no-arrow-warning')>20,'Missing bottom warning'
+        assert red_glyphs('warning-expired')==0,'Warning did not expire'
+        assert red_glyphs('quiet-door-open')==red_glyphs('quiet-door-closed')==0
+        tap(230,22,'header');capture('craftable-first')
+        tap(213,209,'footer');capture('batch-craft-reordered')
+        key('ENTER');time.sleep(.6);_,data=saved()
+        assert struct.unpack_from('<I',data,38)[0]==5,'Selected recipe lost during sorting'
+        assert sum(struct.unpack_from('<H',data,65+i*3)[0]for i in range(40)if data[64+i*3]==9)==20
+        stop();checkpoint=path.read_bytes();start(501)
+        assert path.read_bytes()==checkpoint,'Title rewrote the save'
+        enter_world();capture('quiet-reloaded-world');stop()
+        assert all('Guest exception' not in p.read_text(errors='replace')for p in out.glob('simulator-*.log'))
+        print('PASS real PXA quiet doors, transparent bottom warning and expiry, craftable-first batch crafting, selection and save/restart; one square profile',flush=True)
+        raise SystemExit(0)
     if args.materials_only:
         assert args.fixture_tool
         start(0);enter_world();key('ENTER');time.sleep(.8);path,_=saved();stop()

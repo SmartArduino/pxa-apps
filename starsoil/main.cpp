@@ -102,6 +102,9 @@ uint32_t last_bag_tap_at = 0;
 int inventory_slot_at(int x, int y);
 starsoil_actor::ActionClock tool_animation;
 char message[128]{};
+starsoil_notices::Gate notice_gate;
+uint8_t last_held_item=0;
+uint32_t held_label_until=0;
 const char *tr(const char *en, const char *cn) { return pocket::tr(en, cn); }
 const char *hint(const char *touch_en, const char *touch_cn,
                  const char *pad_en, const char *pad_cn) {
@@ -247,18 +250,30 @@ void button(int x, int y, int w, const char *txt, bool active = false) {
   center(x, y + (20 - pocket::text_height()) / 2, w, txt, active ? GoldInk : Ink);
 }
 void sound(int pitch) { pocket::tone(float(pitch), .045f); }
+bool message_active() {return starsoil_notices::active(animation,event_at);}
+void post_notice(const char *text,NoticeKind kind=NoticeKind::Warning) {
+  if(!text)return;
+  char cleaned[sizeof(message)];std::snprintf(cleaned,sizeof(cleaned),"%s",text);
+  for(char *p=cleaned;*p;++p)if(*p=='\n' || *p=='\r')*p=' ';
+  if(!notice_gate.accept(cleaned,kind,animation,message_active()))return;
+  std::snprintf(message,sizeof(message),"%s",cleaned);
+  event_at=animation+starsoil_notices::duration(kind);
+  if(!event_at)event_at=1;
+}
 void notify(const char *en, const char *cn) {
-  std::snprintf(message, sizeof(message), "%s", tr(en, cn));
-  event_at = animation + 4200;
+  post_notice(tr(en,cn));
 }
 void refresh_recipes() {
   visible_recipes = 0;
+  int waiting[RecipeCount],unready=0;
   int position = -1;
   for (int i = 0; i < RecipeCount; ++i)
-    if (craft_matches(i,craft_category) && (!craft_ready_only || can_craft(s,i))) {
-      if (i == recipe) position = visible_recipes;
-      recipe_list[visible_recipes++] = i;
+    if (craft_matches(i,craft_category)) {
+      if(can_craft(s,i))recipe_list[visible_recipes++]=i;
+      else if(!craft_ready_only)waiting[unready++]=i;
     }
+  for(int i=0;i<unready;++i)recipe_list[visible_recipes++]=waiting[i];
+  for(int i=0;i<visible_recipes;++i)if(recipe_list[i]==recipe)position=i;
   if (position < 0 && visible_recipes) {
     position = 0;
     recipe = recipe_list[0];
@@ -283,6 +298,7 @@ void set_view(View v) {
   scene_touch = {};
   last_bag_tap = -1;
   view = v;
+  event_at=0;notice_gate={};
   touch = -1;
   touch_down = false;
   touches.block();
@@ -637,9 +653,9 @@ void scene_labels() {
       default:en="BLOCKED";cn="无法放置";break;
     }
     int y=s.target_y*16-cy-15;
-    if(y>70 && y<render_bottom()-16) {
+    if(!plan.ok() && y>70 && y<render_bottom()-16) {
       const char *text=tr(en,cn);int x=std::clamp(s.target_x*16-cx+8-text_width(text)/2,4,std::max(4,width()-text_width(text)-4));
-      rect(x-2,y-1,text_width(text)+4,14,Dark);label(x,y,text,plan.ok()?Teal:Red);
+      label(x+1,y+1,text,Dark);label(x,y,text,Red);
     }
   }
   for (const auto &n : s.npcs) {
@@ -656,6 +672,7 @@ void scene_labels() {
       rect(64, 84, std::max(0, int(m.hp)) * 160 / 280, 4, Red);
       label(62, 63, tr("STARHEART WARDEN", "星核守卫"), GoldInk);
     }
+  int pickup_row=0;
   for (const auto &p : effects.pops)
     if (p.life) {
       char b[64];
@@ -664,12 +681,12 @@ void scene_labels() {
                       tr(items[p.item].en, items[p.item].zh));
       else
         std::snprintf(b, sizeof(b), "%d", p.amount);
-      int x = std::clamp(int(p.x) - cx - text_width(b) / 2, 4,
-                         std::max(4, width() - text_width(b) - 4));
       int y = int(p.y) - cy;
+      if(p.item)y-=16+pickup_row++*pocket::text_line_height();
       if (y >= 52 && y < scene_bottom() - 12) {
-        label(x + 1, y + 1, b, Dark);
-        label(x, y, b, mix(color(p.color), Ink, 100));
+        int span=std::min(width()-8,160),x=std::clamp(int(p.x)-cx-span/2,4,width()-span-4);
+        center(x+1,y+1,span,b,Dark);
+        center(x,y,span,b,mix(color(p.color),Ink,100));
       }
     }
 }
@@ -1205,30 +1222,27 @@ void inventory_action(int action) {
   int moved = 0;
   if (action == 81) {
     changed = sort_inventory(s);
-    notify("Bag sorted. Hotbar and held stack kept.", "背包已整理，快捷栏和手持物保留原位。");
   } else if (action == 86 || action == 87) {
     moved = action == 86 ? quick_stack(s) : take_all(s);
     changed = moved > 0;
-    if (changed) {
-      std::snprintf(message, sizeof(message), action == 86 ? tr("STORED %d ITEMS", "已收纳 %d 件物品") : tr("TOOK %d ITEMS", "已取出 %d 件物品"), moved);
-      event_at = animation + 3000;
-    } else
+    if (!changed)
       notify(action == 86 ? "No matches / chest full." : "Bag full / chest empty.",
              action == 86 ? "无可收纳物品，或箱子已满。" : "背包已满，或箱子已空。");
   } else if (action == 88) {
     changed = sort_inventory(s, true);
-    notify("Chest sorted.", "储物箱已整理。");
   }
-  if (changed) { sound(600); pocket::save(); }
+  if (changed) { event_at=0;sound(600); pocket::save(); }
   pocket::redraw();
 }
 void do_craft(int batches = 1) {
+  char feedback[128];
   int completed = craft_batch(s, recipe, batches);
   if (completed) {
     const auto &p = recipes[recipe];
-    std::snprintf(message, sizeof(message), "+%u %s", unsigned(completed * p.count),
+    std::snprintf(feedback, sizeof(feedback), "+%u %s", unsigned(completed * p.count),
                   tr(items[p.out].en, items[p.out].zh));
-    event_at = animation + 3000;
+    if(notice_gate.kind==NoticeKind::Warning) {event_at=0;notice_gate={};}
+    post_notice(feedback,NoticeKind::Info);
     last_event = s.event_serial;
     sound(720);
     pocket::save();
@@ -1236,12 +1250,12 @@ void do_craft(int batches = 1) {
   } else {
     auto reason = craft_status(s, recipe);
     if (reason == CraftStatus::Station) {
-      std::snprintf(message, sizeof(message), tr("NEED: %s", "需要靠近：%s"), station_name(recipes[recipe].station));
-      event_at = animation + 4200;
+      std::snprintf(feedback, sizeof(feedback), tr("NEED: %s", "需要靠近：%s"), station_name(recipes[recipe].station));
+      post_notice(feedback);
     } else if (reason == CraftStatus::Ingredients) {
       for (auto a : recipes[recipe].in) if (a.item && count(s, a.item) < a.count) {
-        std::snprintf(message, sizeof(message), tr("NEED %d MORE %s", "还缺 %d 份%s"), a.count - count(s, a.item), tr(items[a.item].en, items[a.item].zh));
-        event_at = animation + 4200;
+        std::snprintf(feedback, sizeof(feedback), tr("NEED %d MORE %s", "还缺 %d 份%s"), a.count - count(s, a.item), tr(items[a.item].en, items[a.item].zh));
+        post_notice(feedback);
         break;
       }
     } else if (reason == CraftStatus::Space)
@@ -1507,6 +1521,7 @@ void init() {
   animation = autosave = 0;
   tool_animation = {};
   last_event = event_at = 0;
+  notice_gate={};last_held_item=0;held_label_until=0;
   message[0] = 0;
 }
 void reset() {
@@ -1528,6 +1543,7 @@ void create_world(uint32_t seed, uint8_t size) {
   animation = autosave = 0;
   last_event = 0;
   event_at = 0;
+  notice_gate={};last_held_item=0;held_label_until=0;
   world_seed[0] = 0;
   set_view(World);
 }
@@ -1865,9 +1881,10 @@ void tick(uint32_t ms) {
     effects.step(s, ms, false);
   if (s.event_serial != last_event) {
     last_event = s.event_serial;
-    std::snprintf(message, sizeof(message), "%s", s.event);
-    event_at = animation + 4500;
+    post_notice(s.event,s.event_kind);
   }
+  auto held_item=s.bag[s.selected].item;
+  if(held_item!=last_held_item) {last_held_item=held_item;held_label_until=animation+1200;}
   if (paint >= 33) {
     paint %= 33;
     pocket::redraw();
@@ -1885,15 +1902,15 @@ void draw() {
     hud();
     bool boss_active=false;
     for(const auto &m:s.mobs)if(m.hp>0 && m.type==5)boss_active=true;
-    if(!boss_active) center(20, 59, width() - 116,
+    if(!boss_active && starsoil_notices::active(animation,held_label_until)) center(20, 59, width() - 116,
            tr(items[s.bag[s.selected].item].en, items[s.bag[s.selected].item].zh), GoldInk);
-    if (animation < event_at) {
-      const int rows =
-          std::strchr(message, '\n') || text_width(message) > 268 ? 2 : 1;
-      const int toast_height = rows * pocket::text_line_height() + 6,
-                top = std::max(62, height() - 147 - toast_height);
-      panel(5, top, width() - 10, toast_height);
-      wrap(10, top + 3, width() - 20, message, Ink, rows);
+    if (message_active()) {
+      // The bottom margin lies below the character and all floating controls.
+      // Only glyphs and a one-pixel shadow are drawn, never a world-wide box.
+      int y=height()-pocket::text_height()-3;
+      uint16_t color=notice_gate.kind==NoticeKind::Warning?Red:notice_gate.kind==NoticeKind::Info?Teal:GoldInk;
+      center(7,y+1,width()-12,message,Dark);
+      center(6,y,width()-12,message,color);
     }
   } else if (view == Bag)
     bag_draw();
@@ -1910,7 +1927,7 @@ void draw() {
   else
     dialogue_draw();
   if (!home_view() && view != World && view != Map && view != Guide &&
-      animation < event_at) {
+      message_active()) {
     if (view == Bag || view == Crafting || view == Gear)
       footer_origin();
     int y = view == Crafting   ? 177
@@ -1951,6 +1968,7 @@ bool load(const uint8_t *data, size_t size) {
   autosave = 0;
   set_view(World);
   last_event = 0;
+  notice_gate={};event_at=0;message[0]=0;last_held_item=0;held_label_until=0;
   char status[120];
   std::snprintf(
       status, sizeof(status),

@@ -2,6 +2,7 @@
 #pragma once
 #include "items.hpp"
 #include "enemies.hpp"
+#include "notifications.hpp"
 #include <cstddef>
 namespace starsoil {
 // Fixed allocation/stride; each world's actual bounds are stored in State.
@@ -88,6 +89,7 @@ struct StateData {
   uint8_t last_place_item = 0;
   char event[96]{};
   uint32_t event_serial = 0;
+  NoticeKind event_kind=NoticeKind::Info; // Transient, never part of SSR1/SSZ1.
 };
 // Transient chunk scheduling; tiles remain the persistent source of truth.
 struct MaterialMotion {
