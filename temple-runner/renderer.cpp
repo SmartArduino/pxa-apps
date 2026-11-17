@@ -473,16 +473,23 @@ void Renderer::render(pxa::game::Frame& f,const State& s,const Save& save){
   float hx=std::max(9*ui,safe_x),hy=8*ui+safe_y;
   rect(f,hx,hy+36*ui,100*ui,3*ui,0x304c40);rect(f,hx,hy+36*ui,100*ui*(s.rush>0?s.rush/7:s.energy/60),3*ui,s.rush>0?0xffd383:JADE);
   if(multiplier(s)>1){snprintf(num,sizeof(num),"x%d",multiplier(s));text(f,num,hx+69*ui,hy+5*ui,.83f*ui,GOLD);}
-  const char* region=theme==0?"丛林石桥":theme==1?"落日神庙":"幽蓝古墓";text(f,region,cx,10*ui+safe_y,.85f*ui,IVORY,true);
-  if(s.next_turn-s.distance<30){float y=82*ui+safe_y;rect(f,cx-69*ui,y,138*ui,27*ui,INK);label(s.queued_turn==s.turn_direction?"已准备":s.turn_direction==1?"向右转 >>>":"<<< 向左转",y+5*ui,.95f,s.queued_turn==s.turn_direction?JADE:GOLD);}
-  if(s.feedback_t>0&&s.next_turn-s.distance>=30){
+  // Two compact rows beside the score replace banners over the road.
+  const float status_x=(hx+100*ui+width-48*ui-safe_x)*.5f;
+  const char* region=theme==0?"丛林石桥":theme==1?"落日神庙":"幽蓝古墓";
+  uint32_t region_color=IVORY;
+  if(s.rush>0){snprintf(num,sizeof(num),"觉醒 x4 %ds",int(s.rush)+1);region=num;region_color=GOLD;}
+  else if(s.shield>0||s.magnet>0){snprintf(num,sizeof(num),"%s %ds",s.shield>0?"护盾":"磁铁",int(s.shield>0?s.shield:s.magnet));region=num;region_color=JADE;}
+  text(f,region,status_x,10*ui+safe_y,.8f*ui,region_color,true);
+  if(s.next_turn-s.distance<30){
+   const bool armed=s.queued_turn==s.turn_direction;
+   const char* turn=armed?(s.turn_direction==1?"右转 已准备":"左转 已准备"):(s.turn_direction==1?"向右转 >>>":"<<< 向左转");
+   text(f,turn,status_x,30*ui+safe_y,.78f*ui,armed?JADE:GOLD,true);
+  }else if(s.feedback_t>0&&s.feedback!=Feedback::Rush){
    const char* msg=s.feedback==Feedback::Jump?"漂亮跳跃":s.feedback==Feedback::Slide?"完美滑铲":s.feedback==Feedback::Dodge?"惊险闪避":s.feedback==Feedback::Turn?"漂亮转弯":s.feedback==Feedback::Quest?"挑战达成 +500":s.feedback==Feedback::Rush?"遗迹觉醒 x4":s.feedback==Feedback::Rescue?"救援护盾":s.feedback==Feedback::Shield?"护盾破碎":"";
-   float yy=82*ui+safe_y;rect(f,cx-64*ui,yy-3*ui,128*ui,23*ui,INK);label(msg,yy,.95f,s.feedback==Feedback::Shield?0xe39c79:GOLD);
+   text(f,msg,status_x,30*ui+safe_y,.75f*ui,s.feedback==Feedback::Shield?0xe39c79:GOLD,true);
   }
-  if(s.rush>0){snprintf(num,sizeof(num),"觉醒 x4  %ds",int(s.rush)+1);label(num,108*ui+safe_y,.88f,GOLD);}
-  else if(s.shield>0||s.magnet>0){snprintf(num,sizeof(num),"%s %ds",s.shield>0?"护盾":"磁铁",int(s.shield>0?s.shield:s.magnet));label(num,108*ui+safe_y,.85f,JADE);}
-  if(s.distance<28&&save.runs<=1)label("左右变道   上跳跃   下滑铲",57*ui+safe_y,.82f,IVORY);
-  else{snprintf(num,sizeof(num),"%s  %u/%u",s.quests%3==0?"收集金币":s.quests%3==1?"躲避障碍":"通过转弯",quest_progress(s),quest_goal(s));label(num,57*ui+safe_y,.8f,IVORY);}
+  if(s.distance<28&&save.runs<=1)label("左右变道   上跳跃   下滑铲",52*ui+safe_y,.78f,IVORY);
+  else{snprintf(num,sizeof(num),"%s  %u/%u",s.quests%3==0?"收集金币":s.quests%3==1?"躲避障碍":"通过转弯",quest_progress(s),quest_goal(s));label(num,52*ui+safe_y,.78f,IVORY);}
 
  }else {
   float pw=std::min(width-24.f,254*ui),ph=(s.mode==Mode::Help?204.f:172.f)*ui;float x=cx-pw/2,y=(height-ph)/2;

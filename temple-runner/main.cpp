@@ -35,7 +35,7 @@ struct TempleRunner {
    When(hud_only,
     [this]{
      const float scale=std::clamp(std::min(display.width/296.f,display.height/240.f),.8f,1.6f);
-     int px=int(140*scale+display.safe.top);
+     int px=int(76*scale+display.safe.top);
      int h=std::max(80,int((int64_t(px)*65536+display.density_q16-1)/display.density_q16));
      return Overlay(Canvas(hud_ui,0,h).input_only().on_pointer(PointerHandler{this})).fill().height(Dp{h});
     },

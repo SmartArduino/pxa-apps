@@ -23,6 +23,17 @@ int main(){
  s.shield=s.rush=0;s.objects[0]={s.distance+2,2,Kind::Root,false};tick(s,.3f);assert(s.mode==Mode::Dead);action(s,Action::Rescue);assert(s.mode==Mode::Dead);action(s,Action::Confirm);assert(s.rescues==0&&s.mode==Mode::Running);
  s=hit(Kind::Rock);s.objects[0].lane=1;tick(s,.3f);assert(s.avoided==1&&s.feedback==Feedback::Dodge&&s.bonus==50);
  s=clean();s.next_turn=28;action(s,Action::Right);assert(s.queued_turn==1); // prompt accepts an early, deliberate turn
+ // Before either bend, lane dodges still work and do not disarm a correct turn.
+ for(int direction:{-1,1})for(float left:{29.f,15.f,2.f}){
+  s=clean();s.next_turn=left;s.turn_direction=direction;
+  auto correct=direction<0?Action::Left:Action::Right;
+  auto opposite=direction<0?Action::Right:Action::Left;
+  action(s,opposite);assert(s.lane==-direction&&s.queued_turn==-direction);
+  action(s,correct);assert(s.lane==0&&s.queued_turn==direction);
+  action(s,correct);assert(s.lane==direction);
+  action(s,opposite);action(s,opposite);assert(s.lane==-direction&&s.queued_turn==direction);
+  tick(s,left/8.8f+.1f);assert(s.mode==Mode::Running&&s.turns==1&&s.lane==-direction&&s.queued_turn==0);
+ }
  s=clean();s.quests=1;s.quest_base=0;s.avoided=4;update(s,.01f);assert(s.quests==2&&s.bonus==500&&quest_progress(s)==0);
  s.turns=1;update(s,.01f);assert(s.quests==3&&s.bonus==1000&&quest_goal(s)==35&&quest_progress(s)==0);
  // Spacing remains traversable even when the energy reward is disabled.

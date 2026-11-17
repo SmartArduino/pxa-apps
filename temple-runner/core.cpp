@@ -28,8 +28,9 @@ void action(State& s,Action a){
  if(s.mode==Mode::Paused){if(a==Action::Confirm)s.mode=Mode::Running;return;}
  if(s.mode!=Mode::Running)return;
  if(a==Action::Left||a==Action::Right){int d=a==Action::Left?-1:1;
-   // The visible direction prompt and the accepted turn window agree.
-   if(s.next_turn-s.distance<30&&s.next_turn-s.distance>0){s.queued_turn=d;return;}
+   // Lane control remains available through a bend. A correct turn is latched
+   // separately so a subsequent dodge cannot accidentally cancel it.
+   if(s.next_turn-s.distance<30&&s.next_turn-s.distance>0&&s.queued_turn!=s.turn_direction)s.queued_turn=d;
    s.lane=std::clamp(s.lane+d,-1,1);
  }
  if(a==Action::Jump&&s.jump_t<=0){s.jump_t=.94f;s.slide=0;s.slide_queued=false;}
