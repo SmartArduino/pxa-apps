@@ -5,6 +5,7 @@
 #include "../common/cpp/audio.hpp"
 #include "core.hpp"
 #include "renderer.hpp"
+#include "soundscape.hpp"
 #include <algorithm>
 #include <cstdio>
 namespace {
@@ -16,6 +17,9 @@ struct TempleRunner {
  State state;Save progress;
  Renderer scene;
  arcade::AudioBank audio;
+ Soundscape sounds;
+ uint64_t audio_us=0,music_instance=0,music_retry_us=0;
+ uint8_t warm_sound=0;
  std::optional<pxa::game::Renderer> target;
  pxa::game::DrawBuffer<49152> commands;
  pxa::input::Controller pad;
@@ -43,9 +47,9 @@ struct TempleRunner {
    ).fill_height()
   ).fill().fill_height().background(0x00000000u);
  }
- uint64_t last_us=0,perf_us=0,frame_id=0;float accumulator=0,footstep=0;
+ uint64_t last_us=0,perf_us=0,frame_id=0;float accumulator=0;
  bool initializing=false,loaded=false,save_pending=false,dirty=false,gesture=false,moved=false,ready=false,music_requested=false;
- uint8_t pointer=0;int sx=0,sy=0,focus=0;uint32_t sound_coins=0;uint64_t rejected=0;
+ uint8_t pointer=0;int sx=0,sy=0,focus=0;uint64_t rejected=0;
  pxa::Result<void> on_start(pxa::Context& c,std::span<const std::byte> config){
   ctx=&c;if(auto m=pxa::ui::decode_start_display(config))display=*m;
   auto fullscreen=c.window().fullscreen(pxa::WindowBarMode::hidden,pxa::WindowBarMode::hidden);if(!fullscreen)return fullscreen;
@@ -77,6 +81,7 @@ struct TempleRunner {
    progress.best=pxa::wire::get32(data.data()+4);progress.coins=pxa::wire::get32(data.data()+8);progress.runs=pxa::wire::get32(data.data()+12);
    progress.quality=std::clamp(int(data[16]),0,1);progress.sound=std::clamp(int(data[17]),0,1);
   }
+  sounds.enable(progress.sound);
   loaded=(!r&&r.error()==pxa::Error::not_found)||(r&&*r==20&&pxa::wire::get32(data.data())==0x524c4331);
   char message[100];snprintf(message,sizeof(message),"RELIC loaded best=%u coins=%u quality=%u sound=%u writable=%d",progress.best,progress.coins,progress.quality,progress.sound,loaded);(void)ctx->log().write(pxa::LogLevel::info,message);scene.quality=progress.quality;draw();co_return pxa::Result<void>{};}
  pxa::Task<void> save(){save_pending=true;dirty=false;std::array<std::byte,20> data{};
@@ -103,7 +108,30 @@ struct TempleRunner {
   char b[120];snprintf(b,sizeof(b),"RELIC ready display=%ux%u render=%dx%d quality=%d depth=%d",display.width,display.height,scene.width,scene.height,scene.quality,scene.depth);(void)ctx->log().write(pxa::LogLevel::info,b);
   co_return pxa::Result<void>{};
  }
- void tone(int hz,int ms=85){if(!progress.sound||!audio.session)return;pxa::Tone t;t.frequency_hz=uint16_t(hz);t.duration_ms=uint16_t(ms);t.gain_db_q8=-18*256;t.waveform=pxa::Waveform::sine;(void)audio.session->tone(t);}
+ void stop_sounds(){if(audio.session)for(unsigned i=0;i<3;i++)(void)audio.session->control_sound(pxa::SoundTrack(i),pxa::MusicAction::stop);}
+ void stop_music(){music_requested=false;music_instance=0;if(audio.session)(void)audio.session->control_music(pxa::MusicAction::stop);}
+ void toggle_sound(){
+  progress.sound^=1;sounds.enable(progress.sound);
+  if(!progress.sound){stop_sounds();stop_music();}
+  else sounds.request(Cue::Confirm,audio_us);
+  (void)ctx->log().write(pxa::LogLevel::info,progress.sound?"RELIC audio enabled=1":"RELIC audio enabled=0");
+  checkpoint();draw();
+ }
+ void pump_sound(){
+  if(!audio.session)return;
+  if(warm_sound<8&&audio.prepare(warm_sound,cue_info[warm_sound].path)){
+   if(++warm_sound==8)(void)ctx->log().write(pxa::LogLevel::info,"RELIC sound palette ready clips=8 bytes=27200 tracks=3");
+  }
+  for(unsigned track=0;track<3;track++)if(auto pending=sounds.ready(track,audio_us)){
+   const unsigned id=unsigned(pending->cue);
+   if(auto asset=audio.prepare(uint8_t(id),cue_info[id].path)){
+    if(audio.session->sound_track(*asset,pxa::SoundTrack(track),false,pending->gain)){
+     const bool first=!(sounds.played_mask&(1u<<id));sounds.accepted(track,audio_us);
+     if(first){char message[72];snprintf(message,sizeof(message),"RELIC sound clip=%u track=%u",id,track);(void)ctx->log().write(pxa::LogLevel::info,message);}
+    }
+   }
+  }
+ }
  void draw(){if(!ready||initializing||!target||!ctx->foreground())return;scene.safe_x=std::max(float(display.safe.left),float(std::max(display.corners[0],display.corners[1]))*.45f)*scene.width/display.width;scene.safe_y=float(display.safe.top)*scene.height/display.height;
   ++frame_id;pxa::game::Frame f(*target,commands.bytes());
   hud_only.set(state.mode==Mode::Running);
@@ -121,19 +149,22 @@ struct TempleRunner {
  }
  void log_state(const char* event){char b[260];snprintf(b,sizeof(b),"RELIC %s mode=%d distance=%u lane=%d jump=%u slide=%u coins=%u turns=%d score=%u combo=%d rush=%u avoided=%u quests=%u rescue=%u",event,int(state.mode),unsigned(state.distance),state.lane,unsigned(state.jump*100),unsigned(state.slide*100),state.coins,state.turns,state.score,state.combo,unsigned(state.rush*100),state.avoided,state.quests,state.rescues);(void)ctx->log().write(pxa::LogLevel::info,b);}
  void act(Action a){auto old=state.mode;if(state.mode==Mode::Help){state.mode=Mode::Title;draw();return;}
-  action(state,a);if(old!=state.mode){last_us=0;accumulator=0;focus=0;if(state.mode==Mode::Running&&(old==Mode::Title||old==Mode::Dead)&&a==Action::Confirm){sound_coins=0;progress.runs++;checkpoint();tone(660,160);}}
-  else if(state.mode==Mode::Running){tone(a==Action::Jump?520:a==Action::Slide?220:350,55);}
-  if(audio.session&&state.mode!=old){if(state.mode==Mode::Paused||state.mode==Mode::Dead)(void)audio.session->control_music(pxa::MusicAction::pause);else if(state.mode==Mode::Running&&old==Mode::Paused)(void)audio.session->control_music(pxa::MusicAction::resume);}
+  SoundSnapshot before(state);action(state,a);sounds.action(a,before,state,audio_us);
+  if(old!=state.mode){last_us=0;accumulator=0;focus=0;if(state.mode==Mode::Running&&(old==Mode::Title||old==Mode::Dead)&&a==Action::Confirm){progress.runs++;checkpoint();}}
+  if(audio.session&&state.mode!=old){
+   if(state.mode==Mode::Paused){stop_sounds();audio.pause();}
+   else if(state.mode==Mode::Running&&progress.sound)audio.resume();
+  }
   log_state("input");draw();
  }
- void quality(){progress.quality^=1;scene.quality=progress.quality;checkpoint();tone(700);log_state("quality");if(!initializing)(void)ctx->tasks().start(initialize());}
+ void quality(){progress.quality^=1;scene.quality=progress.quality;checkpoint();sounds.request(Cue::Confirm,audio_us);log_state("quality");if(!initializing)(void)ctx->tasks().start(initialize());}
  void bank_run(){progress.best=std::max(progress.best,state.score);progress.coins+=state.coins-state.banked_coins;state.banked_coins=state.coins;checkpoint();}
- void home(){if(state.mode==Mode::Running||state.mode==Mode::Paused||state.mode==Mode::Dead)bank_run();if(audio.session)(void)audio.session->control_music(pxa::MusicAction::stop);music_requested=false;auto seed=state.seed;state=State{};state.seed=seed;gesture=false;last_us=0;draw();}
+ void home(){if(state.mode==Mode::Running||state.mode==Mode::Paused||state.mode==Mode::Dead)bank_run();stop_music();stop_sounds();sounds.clear();auto seed=state.seed;state=State{};state.seed=seed;gesture=false;last_us=0;draw();}
  void tap(int x,int y){float u=scene.ui_scale();float cy=scene.height*.5f;
   if(state.mode==Mode::Title){if(y>scene.height-36*u&&y<scene.height-8*u){if(x>scene.width/2)quality();else state.mode=Mode::Help;}else act(Action::Confirm);}
   else if(state.mode==Mode::Help)home();
   else if(state.mode==Mode::Running){if(x>scene.width-scene.safe_x-48*u&&y<scene.safe_y+48*u)act(Action::Pause);else act(Action::Jump);}
-  else if(state.mode==Mode::Paused){float top=cy-86*u;if(y>top+125*u)home();else if(y>top+89*u){progress.sound^=1;checkpoint();draw();}else act(Action::Confirm);}
+  else if(state.mode==Mode::Paused){float top=cy-86*u;if(y>top+125*u)home();else if(y>top+89*u)toggle_sound();else act(Action::Confirm);}
   else if(x<scene.width*.5f){if(!state.rescues)act(Action::Rescue);else home();}else act(Action::Confirm);draw();
  }
  void pointer_event(const pxa::input::Pointer& p){if(!ready)return;
@@ -151,7 +182,7 @@ struct TempleRunner {
  void on_controller(pxa::Context&,const pxa::input::ControllerState& p){using namespace pxa::input;if(!pad.update(p))return;if(!p.connected){gesture=false;if(state.mode==Mode::Running)act(Action::Pause);return;}
   if(state.mode==Mode::Title){if(pad.pressed(controller_b)){state.mode=Mode::Help;draw();}else if(pad.pressed(controller_x))quality();else if(pad.pressed(controller_a)||pad.pressed(controller_start))act(Action::Confirm);return;}
   if(state.mode==Mode::Help){if(pad.pressed(controller_a)||pad.pressed(controller_b)||pad.pressed(controller_start))home();return;}
-  if(state.mode==Mode::Paused){if(pad.pressed(controller_select)||pad.pressed(controller_b))home();else if(pad.pressed(controller_x)){progress.sound^=1;checkpoint();draw();}else if(pad.pressed(controller_a)||pad.pressed(controller_start))act(Action::Confirm);return;}
+  if(state.mode==Mode::Paused){if(pad.pressed(controller_select)||pad.pressed(controller_b))home();else if(pad.pressed(controller_x))toggle_sound();else if(pad.pressed(controller_a)||pad.pressed(controller_start))act(Action::Confirm);return;}
   if(state.mode==Mode::Dead){if(pad.pressed(controller_b)){if(!state.rescues)act(Action::Rescue);else home();}else if(pad.pressed(controller_a)||pad.pressed(controller_start))act(Action::Confirm);return;}
   if(pad.pressed(controller_start))act(Action::Pause);
   if(pad.pressed(controller_left))act(Action::Left);if(pad.pressed(controller_right))act(Action::Right);
@@ -159,27 +190,36 @@ struct TempleRunner {
   if(pad.pressed(controller_down)||pad.pressed(controller_b))act(Action::Slide);
  }
  pxa::Result<bool> on_event(pxa::Context&,const pxa::Event& e){
+  if(auto playback=pxa::decode_playback(e);playback&&audio.session&&playback->session==audio.session->handle()&&playback->instance==music_instance){
+   if(playback->state==pxa::PlaybackState::ready)(void)ctx->log().write(pxa::LogLevel::info,"RELIC music ready");
+   else {music_requested=false;music_instance=0;music_retry_us=audio_us+2000000;if(playback->state==pxa::PlaybackState::error)(void)ctx->log().write(pxa::LogLevel::warning,"RELIC music playback error");}
+   return true;
+  }
   if(e.is<pxa::ui::DisplayMetrics>()){if(auto m=pxa::ui::decode_display_metrics(e)){bool resize=m->width!=display.width||m->height!=display.height;display=*m;if(resize&&!initializing)(void)ctx->tasks().start(initialize());}return true;}
   return false;
  }
  void on_frame(pxa::Context&,const pxa::game::FrameTick& tick){
-  uint64_t now=tick.timestamp_us;
+  uint64_t now=tick.timestamp_us;audio_us=now;
   float dt=last_us&&now>=last_us?std::min(.12f,float(now-last_us)*1e-6f):0;last_us=now;
-  if(audio.session&&!progress.sound&&music_requested){(void)audio.session->control_music(pxa::MusicAction::stop);music_requested=false;}
-  if(audio.session&&progress.sound&&state.mode==Mode::Running&&!music_requested){auto music=audio.session->music("assets/temple.ogg",true,-18*256);music_requested=bool(music);}
+  if(audio.session&&progress.sound&&state.mode==Mode::Running&&!music_requested&&now>=music_retry_us){
+   auto music=audio.session->music("assets/temple.ogg",true,-9*256);
+   if(music){music_instance=*music;music_requested=true;}else music_retry_us=now+2000000;
+  }
+  SoundSnapshot sound_before(state);
   scene.time+=dt;accumulator+=dt;Mode old=state.mode;auto old_feedback=state.feedback;float feedback_left=state.feedback_t;
   for(int i=0;i<8&&accumulator>=1.f/60;i++){update(state,1.f/60);accumulator-=1.f/60;}
-  if(state.feedback_t>feedback_left||state.feedback!=old_feedback){if(state.feedback==Feedback::Rush){tone(880,180);log_state("rush");}else if(state.feedback==Feedback::Quest){tone(1320,150);log_state("quest");}}
-  if(state.coins>sound_coins){sound_coins=state.coins;tone(1100+(state.combo%4)*160,45);}
-  if(old==Mode::Running&&state.mode==Mode::Dead){state.record=state.score>progress.best;bank_run();state.saved=true;tone(130,280);if(audio.session)(void)audio.session->control_music(pxa::MusicAction::stop);music_requested=false;log_state("dead");}
+  sounds.frame(sound_before,state,now);
+  if(state.feedback_t>feedback_left||state.feedback!=old_feedback){if(state.feedback==Feedback::Rush)log_state("rush");else if(state.feedback==Feedback::Quest)log_state("quest");}
+  if(old==Mode::Running&&state.mode==Mode::Dead){state.record=state.score>progress.best;bank_run();state.saved=true;stop_sounds();stop_music();log_state("dead");}
+  pump_sound();
   // Static menus retain their last frame. Retry until the native Canvas mounts;
   // explicit actions and asynchronous artwork loads request their own redraw.
   // Clock stays active for persistence, input and system lifecycle notifications.
   if(state.mode==Mode::Running||(state.mode==Mode::Dead&&state.death_t<1.4f)||!ui_has_previous||state.mode!=ui_mode)draw();
   if(now-perf_us>=5000000&&target){perf_us=now;if(dirty&&loaded&&!save_pending)(void)ctx->tasks().start(save());if(auto t=target->telemetry()){char b[300];snprintf(b,sizeof(b),"RELIC perf submitted=%llu rendered=%llu visible=%llu raster_us=%llu queue_us=%llu present_us=%llu dropped=%llu rejected=%llu bytes=%u faces=%d peak=%d mode=%d distance=%u clipped=%u",(unsigned long long)t->submitted_frames,(unsigned long long)t->rendered_frames,(unsigned long long)t->visible_frames,(unsigned long long)t->host_raster_us,(unsigned long long)t->queue_wait_us,(unsigned long long)t->present_us,(unsigned long long)t->dropped_frames,(unsigned long long)rejected,t->last_draw_list_bytes,scene.count,scene.peak_faces,int(state.mode),unsigned(state.distance),scene.skipped);(void)ctx->log().write(pxa::LogLevel::info,b);}}
  }
- void on_background(pxa::Context&){if(state.mode==Mode::Running)state.mode=Mode::Paused;gesture=false;pad.reset();last_us=0;accumulator=0;audio.pause();}
- void on_foreground(pxa::Context&){last_us=0;gesture=false;audio.resume();(void)ctx->window().fullscreen(pxa::WindowBarMode::hidden,pxa::WindowBarMode::hidden);draw();}
+ void on_background(pxa::Context&){if(state.mode==Mode::Running)state.mode=Mode::Paused;gesture=false;pad.reset();last_us=0;accumulator=0;sounds.clear();stop_sounds();audio.pause();}
+ void on_foreground(pxa::Context&){last_us=0;gesture=false;if(state.mode==Mode::Running&&progress.sound)audio.resume();(void)ctx->window().fullscreen(pxa::WindowBarMode::hidden,pxa::WindowBarMode::hidden);draw();}
 };
 }
 PXA_APPLICATION(TempleRunner)
