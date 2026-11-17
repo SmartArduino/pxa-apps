@@ -1,0 +1,965 @@
+{
+  "doit-gamekit-2": [
+    {
+      "name": "s00-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "书架为空，去发现漫画"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s01-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "设置"
+      }
+    },
+    {
+      "name": "s02-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "阅读模式：自动"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s03-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "阅读模式：自动"
+      }
+    },
+    {
+      "name": "s04-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "设置已保存"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s05-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "阅读模式：条漫"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "cache-settings",
+      "action": "screenshot"
+    },
+    {
+      "name": "s07-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "返回"
+      }
+    },
+    {
+      "name": "s08-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s09-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": ">"
+      }
+    },
+    {
+      "name": "s10-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "MangaDex"
+      }
+    },
+    {
+      "name": "s11-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "触摸测试漫画"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s12-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "触摸测试漫画"
+      }
+    },
+    {
+      "name": "s13-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "第 1 话 · 出发"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s14-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "第 1 话 · 出发"
+      }
+    },
+    {
+      "name": "s15-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "settle-image",
+      "action": "wait",
+      "ms": 700
+    },
+    {
+      "name": "s17-center",
+      "action": "tap",
+      "x": 160,
+      "y": 110
+    },
+    {
+      "name": "s18-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "第 1 / 3 页"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "first-page",
+      "action": "screenshot"
+    },
+    {
+      "name": "s20-up",
+      "action": "swipe",
+      "x": 160,
+      "y": 190,
+      "x2": 160,
+      "y2": 65,
+      "ms": 650
+    },
+    {
+      "name": "s21-up",
+      "action": "swipe",
+      "x": 160,
+      "y": 190,
+      "x2": 160,
+      "y2": 65,
+      "ms": 650
+    },
+    {
+      "name": "s22-up",
+      "action": "swipe",
+      "x": 160,
+      "y": 190,
+      "x2": 160,
+      "y2": 65,
+      "ms": 650
+    },
+    {
+      "name": "extra-long-scroll",
+      "action": "swipe",
+      "x": 160,
+      "y": 190,
+      "x2": 160,
+      "y2": 65,
+      "ms": 650
+    },
+    {
+      "name": "wait-auto-ready",
+      "action": "wait",
+      "ms": 600
+    },
+    {
+      "name": "show-auto-toolbar",
+      "action": "tap",
+      "x": 160,
+      "y": 110
+    },
+    {
+      "name": "s23-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "第 2 / 3 页"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "auto-next-page",
+      "action": "screenshot"
+    },
+    {
+      "name": "s25-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "<"
+      }
+    },
+    {
+      "name": "s26-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "第 1 / 3 页"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "cached-page-one",
+      "action": "screenshot"
+    },
+    {
+      "name": "s28-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "≡"
+      }
+    },
+    {
+      "name": "s29-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "已收藏"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s30-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "返回"
+      }
+    },
+    {
+      "name": "s31-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "1 部漫画 · 已保存"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "reopen",
+      "action": "relaunch"
+    },
+    {
+      "name": "s33-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "触摸测试漫画"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s34-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "触摸测试漫画"
+      }
+    },
+    {
+      "name": "s35-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "wait-resume",
+      "action": "wait",
+      "ms": 500
+    },
+    {
+      "name": "s37-center",
+      "action": "tap",
+      "x": 160,
+      "y": 110
+    },
+    {
+      "name": "s38-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "第 1 / 3 页"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s39-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "≡"
+      }
+    },
+    {
+      "name": "s40-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "已收藏"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s41-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "返回"
+      }
+    },
+    {
+      "name": "s42-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "1 部漫画 · 已保存"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s43-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "设置"
+      }
+    },
+    {
+      "name": "s44-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "阅读模式：条漫"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "assert-two-persistent-pages",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "2 页 · 21 KiB"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "persistent-cache-settings",
+      "action": "screenshot"
+    },
+    {
+      "name": "s46-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "清除缓存"
+      }
+    },
+    {
+      "name": "s47-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "缓存已清除，书架和进度已保留"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s48-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "0 页 · 0 KiB"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "cache-cleared",
+      "action": "screenshot"
+    },
+    {
+      "name": "s50-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "返回"
+      }
+    },
+    {
+      "name": "s51-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "1 部漫画 · 已保存"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    }
+  ],
+  "espp4-a": [
+    {
+      "name": "s00-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "书架为空，去发现漫画"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s01-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "设置"
+      }
+    },
+    {
+      "name": "s02-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "阅读模式：自动"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s03-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "阅读模式：自动"
+      }
+    },
+    {
+      "name": "s04-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "设置已保存"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s05-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "阅读模式：条漫"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "cache-settings",
+      "action": "screenshot"
+    },
+    {
+      "name": "s07-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "返回"
+      }
+    },
+    {
+      "name": "s08-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "书源"
+      }
+    },
+    {
+      "name": "s09-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "MangaDex"
+      }
+    },
+    {
+      "name": "s10-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "触摸测试漫画"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s11-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "触摸测试漫画"
+      }
+    },
+    {
+      "name": "s12-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "第 1 话 · 出发"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s13-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "第 1 话 · 出发"
+      }
+    },
+    {
+      "name": "s14-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "settle-image",
+      "action": "wait",
+      "ms": 700
+    },
+    {
+      "name": "s16-center",
+      "action": "tap",
+      "x": 240,
+      "y": 400
+    },
+    {
+      "name": "s17-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "第 1 / 3 页"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "first-page",
+      "action": "screenshot"
+    },
+    {
+      "name": "s19-up",
+      "action": "swipe",
+      "x": 240,
+      "y": 700,
+      "x2": 240,
+      "y2": 180,
+      "ms": 650
+    },
+    {
+      "name": "wait-auto-ready",
+      "action": "wait",
+      "ms": 600
+    },
+    {
+      "name": "show-auto-toolbar",
+      "action": "tap",
+      "x": 240,
+      "y": 400
+    },
+    {
+      "name": "s20-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "第 2 / 3 页"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "auto-next-page",
+      "action": "screenshot"
+    },
+    {
+      "name": "s22-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "<"
+      }
+    },
+    {
+      "name": "s23-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "第 1 / 3 页"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "cached-page-one",
+      "action": "screenshot"
+    },
+    {
+      "name": "s25-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "≡"
+      }
+    },
+    {
+      "name": "s26-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "已收藏"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s27-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "返回"
+      }
+    },
+    {
+      "name": "s28-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "1 部漫画 · 已保存"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "reopen",
+      "action": "relaunch"
+    },
+    {
+      "name": "s30-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "触摸测试漫画"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s31-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "触摸测试漫画"
+      }
+    },
+    {
+      "name": "s32-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "取消"
+      },
+      "expected": {
+        "count": 0
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "wait-resume",
+      "action": "wait",
+      "ms": 500
+    },
+    {
+      "name": "s34-center",
+      "action": "tap",
+      "x": 240,
+      "y": 400
+    },
+    {
+      "name": "s35-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "第 1 / 3 页"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s36-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "≡"
+      }
+    },
+    {
+      "name": "s37-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "已收藏"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s38-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "返回"
+      }
+    },
+    {
+      "name": "s39-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "1 部漫画 · 已保存"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s40-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "设置"
+      }
+    },
+    {
+      "name": "s41-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "button",
+        "text": "阅读模式：条漫"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "assert-two-persistent-pages",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "2 页 · 21 KiB"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "persistent-cache-settings",
+      "action": "screenshot"
+    },
+    {
+      "name": "s43-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "清除缓存"
+      }
+    },
+    {
+      "name": "s44-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "缓存已清除，书架和进度已保留"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "s45-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "0 页 · 0 KiB"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    },
+    {
+      "name": "cache-cleared",
+      "action": "screenshot"
+    },
+    {
+      "name": "s47-tap",
+      "action": "tap-node",
+      "selector": {
+        "type": "button",
+        "text": "返回"
+      }
+    },
+    {
+      "name": "s48-wait",
+      "action": "wait-for",
+      "selector": {
+        "type": "text",
+        "text": "1 部漫画 · 已保存"
+      },
+      "expected": {
+        "count": 1
+      },
+      "timeout_ms": 30000
+    }
+  ]
+}

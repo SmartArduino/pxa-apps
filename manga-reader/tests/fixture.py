@@ -15,17 +15,18 @@ from PIL import Image, ImageDraw
 
 BOOK = '11111111-1111-1111-1111-111111111111'
 CHAPTER = '22222222-2222-2222-2222-222222222222'
+PROGRESSIVE = False
 
 
 def panel(index):
-    image = Image.new('RGB', (400, 800), '#f5f0df')
+    image = Image.new('RGB', (320, 640), '#f5f0df')
     draw = ImageDraw.Draw(image)
     for i in range(3):
-        top = 20 + i * 255
-        draw.rectangle((20, top, 380, top + 230), fill=['#ccddc2', '#d8dfeb', '#edcdb9'][index], outline='#243b31', width=5)
+        top = 20 + i * 205
+        draw.rectangle((12, top, 308, top + 190), fill=['#ccddc2', '#d8dfeb', '#edcdb9'][index], outline='#243b31', width=5)
         draw.ellipse((70+i*20, top+65, 160+i*20, top+155), fill='#fff8e6', outline='#243b31', width=3)
         draw.text((40, top+20), f'PAGE {index+1} / PANEL {i+1}', fill='#20382f', font_size=22)
-    out = io.BytesIO(); image.save(out, format='PNG'); return out.getvalue()
+    out = io.BytesIO(); image.save(out, format='JPEG',progressive=True) if PROGRESSIVE else image.save(out, format='PNG'); return out.getvalue()
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -39,7 +40,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_header('Content-Length', '0')
                 self.end_headers()
                 return
-        u = urlsplit(self.path); q = parse_qs(u.query); root = f'http://127.0.0.1:{self.server.server_port}'
+        u = urlsplit(self.path);
+        with self.server.fault_lock:self.server.counts[u.path]=self.server.counts.get(u.path,0)+1
+        q = parse_qs(u.query); root = f'http://127.0.0.1:{self.server.server_port}'
         content_type = 'application/json'; code = 200
         if u.path == '/manga':
             data = [] if q.get('title') == ['missing'] else [dict(id=BOOK, attributes={'title': {'zh': '触摸测试漫画'}})]
@@ -48,8 +51,10 @@ class Handler(BaseHTTPRequestHandler):
             body = {'data': [{'id': CHAPTER, 'attributes': {'chapter': '1', 'title': '出发', 'pages': 3}}], 'total': 1}
         elif u.path == f'/at-home/server/{CHAPTER}':
             body = {'baseUrl': root, 'chapter': {'hash': 'abc123', 'dataSaver': ['1.png', '2.png', '3.png']}}
+        elif u.path == '/_metrics':
+            body = self.server.counts
         elif u.path.startswith('/data-saver/abc123/'):
-            content_type = 'image/png'; body = panel(int(u.path[-5])-1)
+            content_type = 'image/jpeg' if PROGRESSIVE else 'image/png'; body = b'broken-image' if self.server.broken_first and u.path.endswith('/1.png') else panel(int(u.path[-5])-1)
         elif u.path == '/catalog.json':
             body = {'books': [{'title': '自定义漫画', 'chapters': '/toc.json'}]}
         elif u.path == '/toc.json':
@@ -70,9 +75,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', type=int, default=18897)
     parser.add_argument('--fail-once', action='store_true', help='Return 503 once per URL to verify transient recovery')
+    parser.add_argument('--broken-first',action='store_true')
+    parser.add_argument('--progressive',action='store_true')
     args = parser.parse_args()
+    PROGRESSIVE = args.progressive
     server = ThreadingHTTPServer(('127.0.0.1', args.port), Handler)
     server.fail_once = args.fail_once
     server.fault_lock = Lock()
     server.faulted = set()
+    server.counts = {}
+    server.broken_first = args.broken_first
     server.serve_forever()

@@ -61,7 +61,7 @@
       "action": "wait-for",
       "selector": {
         "type": "button",
-        "text": "取消加载"
+        "text": "取消"
       },
       "expected": {
         "count": 0
@@ -229,7 +229,7 @@
       "action": "wait-for",
       "selector": {
         "type": "button",
-        "text": "取消加载"
+        "text": "取消"
       },
       "expected": {
         "count": 0
@@ -290,7 +290,7 @@
       "action": "wait-for",
       "selector": {
         "type": "button",
-        "text": "取消加载"
+        "text": "取消"
       },
       "expected": {
         "count": 0
@@ -316,7 +316,8 @@
         "text": "第 1 / 168 页"
       },
       "expected": {
-        "count": 1
+        "count": 1,
+        "enabled": true
       },
       "timeout_ms": 60000
     },
@@ -356,7 +357,8 @@
         "text": "第 2 / 168 页"
       },
       "expected": {
-        "count": 1
+        "count": 1,
+        "enabled": true
       },
       "timeout_ms": 60000
     },
@@ -454,7 +456,7 @@
       "action": "wait-for",
       "selector": {
         "type": "button",
-        "text": "取消加载"
+        "text": "取消"
       },
       "expected": {
         "count": 0
@@ -506,7 +508,7 @@
       "action": "wait-for",
       "selector": {
         "type": "button",
-        "text": "取消加载"
+        "text": "取消"
       },
       "expected": {
         "count": 0
@@ -592,7 +594,7 @@
       "action": "wait-for",
       "selector": {
         "type": "button",
-        "text": "取消加载"
+        "text": "取消"
       },
       "expected": {
         "count": 0
@@ -760,7 +762,7 @@
       "action": "wait-for",
       "selector": {
         "type": "button",
-        "text": "取消加载"
+        "text": "取消"
       },
       "expected": {
         "count": 0
@@ -821,7 +823,7 @@
       "action": "wait-for",
       "selector": {
         "type": "button",
-        "text": "取消加载"
+        "text": "取消"
       },
       "expected": {
         "count": 0
@@ -847,7 +849,8 @@
         "text": "第 1 / 168 页"
       },
       "expected": {
-        "count": 1
+        "count": 1,
+        "enabled": true
       },
       "timeout_ms": 60000
     },
@@ -887,7 +890,8 @@
         "text": "第 2 / 168 页"
       },
       "expected": {
-        "count": 1
+        "count": 1,
+        "enabled": true
       },
       "timeout_ms": 60000
     },
@@ -985,7 +989,7 @@
       "action": "wait-for",
       "selector": {
         "type": "button",
-        "text": "取消加载"
+        "text": "取消"
       },
       "expected": {
         "count": 0
@@ -1037,7 +1041,7 @@
       "action": "wait-for",
       "selector": {
         "type": "button",
-        "text": "取消加载"
+        "text": "取消"
       },
       "expected": {
         "count": 0
@@ -1123,7 +1127,7 @@
       "action": "wait-for",
       "selector": {
         "type": "button",
-        "text": "取消加载"
+        "text": "取消"
       },
       "expected": {
         "count": 0
@@ -1291,7 +1295,7 @@
       "action": "wait-for",
       "selector": {
         "type": "button",
-        "text": "取消加载"
+        "text": "取消"
       },
       "expected": {
         "count": 0
@@ -1352,7 +1356,7 @@
       "action": "wait-for",
       "selector": {
         "type": "button",
-        "text": "取消加载"
+        "text": "取消"
       },
       "expected": {
         "count": 0
@@ -1378,7 +1382,8 @@
         "text": "第 1 / 168 页"
       },
       "expected": {
-        "count": 1
+        "count": 1,
+        "enabled": true
       },
       "timeout_ms": 60000
     },
@@ -1418,7 +1423,8 @@
         "text": "第 2 / 168 页"
       },
       "expected": {
-        "count": 1
+        "count": 1,
+        "enabled": true
       },
       "timeout_ms": 60000
     },
@@ -1508,7 +1514,7 @@
       "action": "wait-for",
       "selector": {
         "type": "button",
-        "text": "取消加载"
+        "text": "取消"
       },
       "expected": {
         "count": 0
@@ -1552,7 +1558,7 @@
       "action": "wait-for",
       "selector": {
         "type": "button",
-        "text": "取消加载"
+        "text": "取消"
       },
       "expected": {
         "count": 0
@@ -1638,7 +1644,7 @@
       "action": "wait-for",
       "selector": {
         "type": "button",
-        "text": "取消加载"
+        "text": "取消"
       },
       "expected": {
         "count": 0
@@ -1806,7 +1812,7 @@
       "action": "wait-for",
       "selector": {
         "type": "button",
-        "text": "取消加载"
+        "text": "取消"
       },
       "expected": {
         "count": 0
@@ -1867,7 +1873,7 @@
       "action": "wait-for",
       "selector": {
         "type": "button",
-        "text": "取消加载"
+        "text": "取消"
       },
       "expected": {
         "count": 0
@@ -1893,7 +1899,8 @@
         "text": "第 1 / 168 页"
       },
       "expected": {
-        "count": 1
+        "count": 1,
+        "enabled": true
       },
       "timeout_ms": 60000
     },
@@ -1933,7 +1940,8 @@
         "text": "第 2 / 168 页"
       },
       "expected": {
-        "count": 1
+        "count": 1,
+        "enabled": true
       },
       "timeout_ms": 60000
     },
@@ -2023,7 +2031,7 @@
       "action": "wait-for",
       "selector": {
         "type": "button",
-        "text": "取消加载"
+        "text": "取消"
       },
       "expected": {
         "count": 0
@@ -2067,7 +2075,7 @@
       "action": "wait-for",
       "selector": {
         "type": "button",
-        "text": "取消加载"
+        "text": "取消"
       },
       "expected": {
         "count": 0

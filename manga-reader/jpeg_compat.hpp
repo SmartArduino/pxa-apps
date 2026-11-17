@@ -78,7 +78,7 @@ public:
         for(std::size_t at=0;at<pixels.size();){unsigned n=std::min<std::size_t>(65535,pixels.size()-at);out.push_back(at+n==pixels.size()?1:0);
             out.push_back(n);out.push_back(n>>8);out.push_back(~n);out.push_back((~n)>>8);
             out.insert(out.end(),pixels.begin()+at,pixels.begin()+at+n);
-            for(unsigned k=0;k<n;++k){a=(a+pixels[at+k])%65521;b=(b+a)%65521;}at+=n;
+            for(unsigned start=0;start<n;){auto end=std::min(n,start+5552);for(;start<end;++start){a+=pixels[at+start];b+=a;}a%=65521;b%=65521;}at+=n;
         }
         append32(out,(b<<16)|a);put(out.data()+header,unsigned(out.size()-header-8));
         append32(out,crc(std::span{out}.subspan(header+4)));chunk(out,"IEND",{});

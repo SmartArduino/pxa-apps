@@ -14,14 +14,14 @@ template<class Owner> bool Reader::Controls::render(Owner& owner,std::uint32_t p
         ok=Button(label,WidgetStyle{box(xx,yy,ww,hh),silent?0u:screen==reading?0xf5f6eeff:enabled?(selected?0xffffffff:ink):muted,
             screen==reading?0x14251edc:selected?accent:paper,screen==reading?(icon?Font::title:Font::caption):Font::label,6,1}).on_click_ref(cb).enabled(enabled).render(owner,parent)&&ok;
     };
-    auto row=[&](int yy,std::string_view title,std::string_view detail,Act action,int arg,bool selected=false,uint32_t spine=accent,bool menu=false){
-        auto label=manga::ellipsize(title,w-(menu?74:42),14);
-        button(x,yy,w-(menu?46:0),38,label,action,arg,false,true,true);
-        rect(x+3,yy+7,2,24,spine,1);
-        text(x+12,yy+3,w-(menu?72:40),19,label,Font::label);
-        text(x+12,yy+22,w-(menu?72:40),15,detail,Font::caption,muted);
-        if(menu){button(x+w-42,yy,42,38,std::string(title)+" · 目录",open_book,arg,false,true,true);text(x+w-38,yy+8,34,24,"≡",Font::title,muted,1);}
-        else text(x+w-25,yy+9,18,24,selected?"✓":"›",Font::label,selected?accent:muted,1);
+    auto row=[&](int xx,int yy,int rw,std::string_view title,std::string_view detail,Act action,int arg,bool selected=false,uint32_t spine=accent,bool menu=false){
+        auto label=manga::ellipsize(title,rw-(menu?74:42),14);
+        button(xx,yy,rw-(menu?46:0),38,label,action,arg,false,true,true);
+        rect(xx+3,yy+7,2,24,spine,1);
+        text(xx+12,yy+3,rw-(menu?72:40),19,label,Font::label);
+        text(xx+12,yy+22,rw-(menu?72:40),15,detail,Font::caption,muted);
+        if(menu){button(xx+rw-42,yy,42,38,std::string(title)+" · 目录",open_book,arg,false,true,true);text(xx+rw-38,yy+8,34,24,"≡",Font::title,muted,1);}
+        else text(xx+rw-25,yy+9,18,24,selected?"✓":"›",Font::label,selected?accent:muted,1);
     };
     auto nav=[&]{int third=(w-8)/3;std::array<std::string_view,3> titles{"书架","发现","书源"};std::array<Act,3> actions{shelf_tab,discover_tab,source_tab};
         for(int i=0;i<3;++i){int xx=x+i*(third+4),ww=i==2?w-2*(third+4):third;bool active=screen==i;
@@ -32,17 +32,25 @@ template<class Owner> bool Reader::Controls::render(Owner& owner,std::uint32_t p
     };
     auto feedback=[&](int yy){text(x,yy,w,22,app->status,Font::caption,muted);};
     if(screen==reading){
-        if(app->bars){
-            button(x,y,38,30,"≡",go_back);button(x+42,y,38,30,"+",zoom);button(x+w-38,y,38,30,"?",show_help);
-            button(x,y+h-30,38,30,"<",previous_page);button(x+w-38,y+h-30,38,30,">",next_page);
-            button(x+42,y+h-30,w-84,30,app->status,jump_page,0,false,!app->busy);
+        if(app->bars||!app->failure.empty()){
+            button(x,y,38,30,"≡",go_back);button(x+42,y,42,30,app->zoom_mode==0?"适宽":app->zoom_mode==1?"放大":"整页",zoom,0,false,!app->busy&&bool(app->image));button(x+w-38,y,38,30,"?",show_help);
+            button(x,y+h-30,38,30,"<",previous_page,0,false,!app->busy&&app->page>0);button(x+w-38,y+h-30,38,30,">",next_page,0,false,!app->busy&&app->page+1<app->pages.size());
+            button(x+42,y+h-30,w-84,30,app->page_label(),jump_page,0,false,!app->busy&&!app->pages.empty());
         }
-        if(app->busy){text(x,y+h/2-30,w,24,app->status,Font::caption,0xe2ede6ff,1);button(x+(w-80)/2,y+h/2,80,30,"取消加载",cancel);}
-        else if(!app->failure.empty()){text(x,y+h/2-30,w,24,app->status,Font::caption,0xe2ede6ff);button(x+(w-80)/2,y+h/2,80,30,"重试",retry);if(!app->bars)button(x,y,38,30,"≡",go_back);}
+        if(app->busy){rect(x+42,y+h-70,w-84,34,0x14251edc,6);text(x+45,y+h-66,w-90,24,app->status,Font::caption,0xe2ede6ff,1);button(x+w-86,y,44,30,"取消",cancel);}
+        else if(!app->failure.empty()){rect(x,y+h/2-38,w,72,0x14251edc,6);text(x,y+h/2-34,w,24,app->status,Font::caption,0xe2ede6ff,1);button(x+(w-80)/2,y+h/2-4,80,30,"重试",retry);}
         return ok;
     }
+    if(screen==settings_screen){
+        button(x,y,52,30,"返回",go_back);text(x+64,y+4,w-64,24,"阅读与缓存",Font::label);
+        button(x,y+40,w,30,std::string("阅读模式：")+(app->cache.mode==0?"自动":app->cache.mode==1?"条漫":"分页"),reading_mode,0,false,!app->busy);
+        button(x,y+76,w,30,std::string("自动缓存：")+(app->cache.enabled?"开启":"关闭"),toggle_cache,0,false,!app->busy);
+        text(x,y+112,w-100,22,app->cache_label(),Font::caption,muted);
+        button(x+w-92,y+110,92,30,"清除缓存",clear_cache,0,false,!app->busy);
+        text(x,y+146,w,32,app->status,Font::caption,muted);return ok;
+    }
     if(screen==help){button(x,y,52,30,"返回",go_back);text(x+64,y+4,w-64,24,"阅读操作",Font::label);
-        int yy=y+42;for(auto s:{"横滑翻页 · 上下拖动长页","轻点画面，显示或隐藏工具栏","+ 切换整页、适宽与放大","点页码跳转 · ≡ 打开目录","工具栏闲置 6 秒自动隐藏","目录可切换正序／倒序"}){text(x,yy,w,24,s);yy+=26;}return ok;
+        int yy=y+42;for(auto s:{"横滑翻页 · 上下拖动长页","条漫到底后上滑，加载下一页","双指缩放 · 放大后可拖动","点页码跳转 · ≡ 打开目录"}){text(x,yy,w,24,s);yy+=26;}button(x,y+h-32,w,32,"阅读与缓存设置",show_settings);return ok;
     }
     if(screen==page_jump){button(x,y,52,30,"返回",go_back);text(x+64,y+4,w-64,24,"跳转页码",Font::label);
         rect(x,y+38,w-80,34,paper,6);button(x+w-74,y+38,34,34,"-",jump_step,-1);button(x+w-36,y+38,36,34,"+",jump_step,1);text(x,y+82,w,22,"输入 1–"+std::to_string(app->pages.size())+" 之间的页码",Font::caption,muted);
@@ -79,7 +87,7 @@ template<class Owner> bool Reader::Controls::render(Owner& owner,std::uint32_t p
         text(x+3,y+80,w-74,20,app->active_source()+"  ›",Font::caption,muted);
         if(app->custom.empty())button(x+w-62,y+76,62,24,app->language==0?"简中 ▾":app->language==1?"繁中 ▾":"英文 ▾",language_change,0,false,!app->busy);
     }
-    if(screen==shelf_screen){feedback(y+38);if(app->shelf.empty()&&!app->busy){
+    if(screen==shelf_screen){text(x,y+42,w-74,22,app->status,Font::caption,muted);button(x+w-68,y+38,68,30,"设置",show_settings);if(app->shelf.empty()&&!app->busy){
         text(x,y+83,w,26,"书架还没有漫画",Font::body,ink,1);
         button(x+(w-120)/2,y+120,120,34,"去发现",discover_tab,0,true);return ok;}}
     auto count=screen==shelf_screen?app->shelf.size():screen==discover?app->results.size():app->chapters.size();
@@ -90,7 +98,7 @@ template<class Owner> bool Reader::Controls::render(Owner& owner,std::uint32_t p
             if(!b.chapter.empty()){detail+=" · "+std::to_string(b.page+1)+(b.pages?"/"+std::to_string(b.pages):" 页");if(!b.chapter_title.empty())detail+=" · "+b.chapter_title;}
             else detail+=screen==shelf_screen?" · 未开始阅读":" · 点击查看章节";
             bool saved=screen==shelf_screen&&!b.chapter.empty();
-            row(yy,b.title,detail,saved?read_book:open_book,i,false,b.source=="copymanga"?0xb7773dff:b.source=="mangakatana"?0x667c9bff:accent,saved);
+            auto cols=app->columns();int rw=(w-(cols-1)*8)/cols;int xx=x+(shown%cols)*(rw+8);yy=y+app->list_y()+(shown/cols)*app->row_height();row(xx,yy,rw,b.title,detail,saved?read_book:open_book,i,false,b.source=="copymanga"?0xb7773dff:b.source=="mangakatana"?0x667c9bff:accent,saved);
         }yy+=app->row_height();
     }
     if(app->busy||!app->failure.empty()||!count){
