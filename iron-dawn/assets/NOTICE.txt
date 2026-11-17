@@ -5,6 +5,8 @@ Nine-slice UI skins: built-in ImageGen; prompts and input lineage in tools/ui-sk
 Font subset: Iron Dawn UI Pixel, derived from Z Labs Pixel 12px M CN, SIL OFL 1.1.
 Font SHA256: c4bf6069b8e5e31dc42c81f310afbc322c2cbc843ceba6c871358f9f1aaae033
 
+Generated music and effects: original project outputs (MIT), using ACE-Step 1.5 and Stable Audio 3 Small SFX. Models are not included; generation provenance in tools/audio-prompts.json.
+
 === PXA-SDK-LICENSE.txt ===
 MIT License
 

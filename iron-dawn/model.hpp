@@ -127,7 +127,7 @@ struct World {
  bool queue(int k){if(auto reason=blocked(k)){say(reason);return false;}credits-=specs[k].cost;jobs[job_count++]={uint8_t(k),specs[k].build,specs[k].build};say("生产指令已确认");sound=1;return true;}
  void cancel_job(){if(job_count){credits+=specs[jobs[job_count-1].kind].cost;--job_count;say("已取消末项，资金退回");}}
  bool can_place(int,Vec p)const{if(!open(p)||!seen[cell(p)]||terrain[cell(p)]==bridge)return false;for(auto& a:e)if(a.hp>0&&a.team==0&&building(a.kind)&&dist(a.p,p)<6.f&&dist(a.p,p)>1.8f)return true;return false;}
- bool place(int k,Vec p){if(credits<specs[k].cost||!unlocked(k))return false;if(!can_place(k,p)){say("请建在己方基地附近的空地");return false;}int i=add(k,0,p);if(i<0){say("实体数量已达上限");return false;}credits-=specs[k].cost;e[i].progress=specs[k].build;say("工程队：开始施工。");sound=1;power_update();return true;}
+ bool place(int k,Vec p){if(credits<specs[k].cost||!unlocked(k))return false;if(!can_place(k,p)){say("请建在己方基地附近的空地");return false;}int i=add(k,0,p);if(i<0){say("实体数量已达上限");return false;}credits-=specs[k].cost;e[i].progress=specs[k].build;say("工程队：开始施工。");sound=10;power_update();return true;}
  void select_all(){for(auto& a:e)a.selected=a.hp>0&&a.team==0&&a.kind<harvester;say("已选择全部作战部队");}
  int selected()const{int n=0;for(auto& a:e)n+=a.hp>0&&a.selected;return n;}
  void select_one(int id,bool append=false){for(int i=0;i<MAX;++i)if(!append)e[i].selected=false;if(id>=0&&id<MAX&&e[id].hp>0&&e[id].team==0)e[id].selected=true;}
@@ -185,7 +185,7 @@ struct World {
  }
  void fire(int id,int target){auto& a=e[id];bool admitted=false;
   for(auto& s:shots)if(!s.alive){s={};s.from=a.p;s.p=a.p;s.dest=e[target].p;s.target=int16_t(target|(unsigned(a.cargo)<<7));s.team=uint8_t((id+1)*2+a.team);s.kind=a.kind;s.damage=specs[a.kind].damage*(1+veteran_rank(a)*.12f)*(a.team==0?1+extra.damage*.12f:1);s.duration=a.kind==artillery?.85f:a.kind==rocket?.5f:.22f;s.alive=true;admitted=true;break;}
-  if(!admitted)return;a.cool=specs[a.kind].reload;a.dir=std::atan2(e[target].p.y-a.p.y,e[target].p.x-a.p.x);if(sound<2)sound=2;
+  if(!admitted)return;a.cool=specs[a.kind].reload;a.dir=std::atan2(e[target].p.y-a.p.y,e[target].p.x-a.p.x);unsigned cue=a.kind==rifle?6:a.kind==rocket?7:a.kind==artillery?9:8;if(sound<=2)sound=cue;else if(sound>=6&&sound<=9)sound=std::max(sound,cue);
  }
  void supply_tick(Entity& station,float dt){
   bool friendly=false,contested=false;for(auto& a:e)if(a.hp>0&&a.kind<harvester&&dist(a.p,station.p)<2.7f){friendly|=a.team==0;contested|=a.team==1;}
@@ -206,10 +206,10 @@ struct World {
  void wave_spawn(){++wave;next_wave=time+std::max(24.f,55.f-wave*2.f-chapter*4.f);Vec spawn=wave_entry(wave);int units=std::min(7,2+wave/2+(chapter==2?1:chapter));for(int j=0;j<units;++j){int k=j%3==0?tank:j%3==1?rifle:rocket;if(chapter==2&&wave>=3&&j==units-1)k=artillery;int id=add(k,1,{spawn.x+(j%3)*.6f,spawn.y+(j/3)*.6f});if(id>=0){e[id].goal=raid_goal(wave,j);e[id].moving=true;e[id].step=e[id].p;}}say("侦察：敌方增援正向基地推进！",6);}
  [[gnu::noinline]] void tick(float dt){if(won||defeated)return;dt=std::clamp(dt,0.f,.1f);time+=dt;autosave+=dt;notice_time=std::max(0.f,notice_time-dt);strike_cd=std::max(0.f,strike_cd-dt);reveal_timer-=dt;
   if(reveal_timer<=0){reveal();reveal_timer=.5f;}if(extra.mode){if(wave==int(extra.cleared)&&army(1)==0&&time>=next_wave)defense_wave();}else if(time>=next_wave&&count(hq,1))wave_spawn();research_tick(dt);
-  if(job_count){jobs[0].left-=dt*(power_net<0?.45f:1.f);if(jobs[0].left<=0){int k=jobs[0].kind;int home=nearest({6,8},k<=rocket?barracks:factory,0);if(home<0){say("生产设施已损毁，资金已退回");credits+=specs[k].cost;}else {Vec pos={e[home].p.x+1.6f,e[home].p.y+1.6f};int id=add(k,0,pos);if(id>=0){blast(pos,3);if(e[home].moving&&open(e[home].goal)){e[id].goal=e[home].goal;e[id].step=pos;e[id].moving=true;}say("新部队已就绪");sound=1;}else credits+=specs[k].cost;}for(int j=1;j<job_count;++j)jobs[j-1]=jobs[j];--job_count;}}
+  if(job_count){jobs[0].left-=dt*(power_net<0?.45f:1.f);if(jobs[0].left<=0){int k=jobs[0].kind;int home=nearest({6,8},k<=rocket?barracks:factory,0);if(home<0){say("生产设施已损毁，资金已退回");credits+=specs[k].cost;}else {Vec pos={e[home].p.x+1.6f,e[home].p.y+1.6f};int id=add(k,0,pos);if(id>=0){blast(pos,3);if(e[home].moving&&open(e[home].goal)){e[id].goal=e[home].goal;e[id].step=pos;e[id].moving=true;}say("新部队已就绪");sound=11;}else credits+=specs[k].cost;}for(int j=1;j<job_count;++j)jobs[j-1]=jobs[j];--job_count;}}
   for(int i=0;i<MAX;++i){auto& a=e[i];if(a.hp<=0)continue;a.flash=std::max(0.f,a.flash-dt);a.cool=std::max(0.f,a.cool-dt);
    if(a.kind==supply){supply_tick(a,dt);continue;}
-   if(a.progress>0){a.progress-=dt*(power_net<0?.5f:1.f);if(a.progress<=0){a.progress=0;say("工程完成");if(a.kind==refinery){add(harvester,0,{a.p.x+1.5f,a.p.y+1.5f});}power_update();}continue;}
+   if(a.progress>0){a.progress-=dt*(power_net<0?.5f:1.f);if(a.progress<=0){a.progress=0;say("工程完成");if(a.kind==refinery){add(harvester,0,{a.p.x+1.5f,a.p.y+1.5f});}power_update();if(sound<3||(sound>=6&&sound<=9))sound=11;}continue;}
    if(a.kind==harvester&&a.team==0){harvest(i,dt);continue;}
    if(a.kind==relay||a.kind==hq||a.kind==power||a.kind==refinery||a.kind==barracks||a.kind==factory)continue;
    int target=-1;float best=specs[a.kind].range;

@@ -52,6 +52,14 @@
 
 界面按 `art/large-ui-reference-v1.png` 制作，按钮、卡片、面板和肖像底座使用原创图片蒙皮。九宫格保留金属倒角、铆钉和高光，中心与边缘按像素平铺；图片离线编码，运行时不解码PNG。Z Labs像素字体使用整数倍字模。高分辨率窗口采用Host的2倍或4倍整数缩放，两份映射帧合计不超过2MiB；触控坐标同步换算。生成提示词见 `tools/ui-skin-prompts.json`。
 
+## 音乐与音效
+
+指挥部使用克制的工业氛围配乐，进入战斗或科研时渐变到装甲推进节奏。两段配乐为16kHz单声道Vorbis循环；十个短音效覆盖界面、无线电指令、步枪、坦克炮、火炮、火箭、爆炸、施工、就绪与科研完成。暂停会停住音乐并停止短音效，继续行动恢复音乐；暂停菜单的“声音”同时控制配乐和音效，静音设置单独保存。
+
+音频在外部ComfyUI中用ACE-Step 1.5和Stable Audio 3 Small SFX生成，游戏不包含模型或推理依赖。Host流式解码音乐并持有预载的短音效，游戏不缓存整段音乐。音效采用独立轨道与短触发间隔，过时声音不排队。`art/audio/`保留处理后的无损母版，`assets/audio/`是运行时资源；模型摘要、提示词、种子和处理参数见 `tools/audio-prompts.json`。
+
+重新制作时，用 `tools/generate_audio.py --url <ComfyUI地址> --output <本地产物目录>`生成候选，再运行 `tools/prepare_audio.py --source <候选目录> --report <本地产物JSON>`。工具使用现有模型，不安装或修改ComfyUI；转换需要NumPy和FFmpeg。生成记录、候选和验证输出放在工作区 `local/artifacts/` 下。
+
 ## 构建与运行
 
 在 PXA 工作区根目录：

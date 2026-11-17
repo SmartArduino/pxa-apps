@@ -1,0 +1,1261 @@
+{
+  "generator": "ComfyUI on the user-provided remote GPU via SSH; normal built-in nodes, offline models",
+  "models": {
+    "comfyui_commit": "46493d824fd7eac25a741e505159e4c9e0ef0ebd",
+    "models": {
+      "diffusion_models/acestep_v1.5_turbo.safetensors": {
+        "sha256": "3f6e0797fad420a39bd33979eb6e840e30989e34a3794e843d23b60ec6e422d7",
+        "bytes": 4787825604
+      },
+      "text_encoders/qwen_0.6b_ace15_comfy.safetensors": {
+        "sha256": "f8fa0f5042f8c6f5e9f6b2e07b7646f669258a6d89bafabbaec9582fe8a0ba3f",
+        "bytes": 1191590921
+      },
+      "text_encoders/qwen_4b_ace15_comfy.safetensors": {
+        "sha256": "85ef61eb9139ba0eb6d373780bed93002898da88523e79ffdeaded2147ef8bd0",
+        "bytes": 3708526033
+      },
+      "vae/dewfield_ace15_vae.safetensors": {
+        "sha256": "6de92e3a862acd287e08b024ac90f0783a8635451b728721a33ff03565bcb2bb",
+        "bytes": 337431732
+      },
+      "checkpoints/stable_audio_3_small_sfx.safetensors": {
+        "sha256": "ed9cf1b6172f1a8c2921a9560c21109ff3239524563ced9dce6dcdef41e2f515",
+        "bytes": 2270384940
+      },
+      "text_encoders/t5gemma_b_b_ul2.safetensors": {
+        "sha256": "1e1eba25be8872edb0d3c6335c6658fd6388e7b14b60da6e454e404cfcd8150e",
+        "bytes": 1187264003
+      }
+    },
+    "node_source_sha256": {
+      "comfy_extras/nodes_ace.py": "02a5013fe817c66e8ee2b229ecedd413dcc0a6439ffdf18fa3331e40d824de66",
+      "comfy_extras/nodes_audio.py": "897429f8a08be406486beceb39a250c5c206a1162dce868003c93df80dd01887",
+      "comfy/sd.py": "d88d792a1a901a89e5446f13b4efd866463bc8c66a27480f19401a722558213f",
+      "comfy/supported_models.py": "5943d81bc0257b9b72b065a4ecb2f57c51c826e91f86c333b98fbe8a830e0cef",
+      "comfy/model_base.py": "a1a1a7bb89a199710f996bf0bdf549d3e42484fe4dd91aa0a6361bb30c990508",
+      "nodes.py": "e498f0dfe9146d56ddeff184ade4b402edd6e6c4eaca136ae112c8be3914bc96"
+    }
+  },
+  "model_sources": {
+    "music": "https://huggingface.co/ACE-Step/Ace-Step1.5",
+    "effects": "https://huggingface.co/stabilityai/stable-audio-3-small-sfx"
+  },
+  "license": "Generated audio outputs are original project assets, MIT. Model weights/code are not distributed with the game; model licenses apply separately.",
+  "workflows": {
+    "command": {
+      "1": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "acestep_v1.5_turbo.safetensors",
+          "weight_dtype": "default"
+        }
+      },
+      "2": {
+        "class_type": "DualCLIPLoader",
+        "inputs": {
+          "clip_name1": "qwen_0.6b_ace15_comfy.safetensors",
+          "clip_name2": "qwen_4b_ace15_comfy.safetensors",
+          "type": "ace"
+        }
+      },
+      "3": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "dewfield_ace15_vae.safetensors"
+        }
+      },
+      "4": {
+        "class_type": "TextEncodeAceStepAudio1.5",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "tags": "instrumental military strategy game soundtrack, cold northern frontier at dawn, restrained industrial ambient electronic, deep analog bass pulse, distant metallic percussion, soft radio static textures, sparse minor-key synthesizer motif, calm tense tactical planning, layered atmospheric pads, steady 88 BPM in 4/4, seamless understated game background music, no vocals, no singing, no speech, no sound effects, no big intro or ending",
+          "lyrics": "[Instrumental]",
+          "seed": 416028,
+          "bpm": 88,
+          "duration": 60.0,
+          "timesignature": "4",
+          "language": "en",
+          "keyscale": "D minor",
+          "generate_audio_codes": true,
+          "cfg_scale": 2.0,
+          "temperature": 0.85,
+          "top_p": 0.9,
+          "top_k": 0,
+          "min_p": 0.0
+        }
+      },
+      "5": {
+        "class_type": "EmptyAceStep1.5LatentAudio",
+        "inputs": {
+          "seconds": 60.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "ConditioningZeroOut",
+        "inputs": {
+          "conditioning": [
+            "4",
+            0
+          ]
+        }
+      },
+      "7": {
+        "class_type": "ModelSamplingAuraFlow",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "shift": 3.0
+        }
+      },
+      "8": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "7",
+            0
+          ],
+          "seed": 416028,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "euler",
+          "scheduler": "simple",
+          "positive": [
+            "4",
+            0
+          ],
+          "negative": [
+            "6",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "9": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "8",
+            0
+          ],
+          "vae": [
+            "3",
+            0
+          ]
+        }
+      },
+      "10": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "9",
+            0
+          ],
+          "filename_prefix": "iron-dawn/command"
+        }
+      }
+    },
+    "battle": {
+      "1": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "acestep_v1.5_turbo.safetensors",
+          "weight_dtype": "default"
+        }
+      },
+      "2": {
+        "class_type": "DualCLIPLoader",
+        "inputs": {
+          "clip_name1": "qwen_0.6b_ace15_comfy.safetensors",
+          "clip_name2": "qwen_4b_ace15_comfy.safetensors",
+          "type": "ace"
+        }
+      },
+      "3": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "dewfield_ace15_vae.safetensors"
+        }
+      },
+      "4": {
+        "class_type": "TextEncodeAceStepAudio1.5",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "tags": "instrumental industrial military RTS game soundtrack, driving mechanical drum groove, tight electronic bass ostinato, restrained distorted guitar pulses, staccato minor-key synth strings, heavy low toms and metallic snare, determined armored advance through a cold ruined valley, energetic tactical tension without overwhelming combat sounds, steady 112 BPM in 4/4, looping game background arrangement, no vocals, no singing, no speech, no sound effects, no long intro or fade out",
+          "lyrics": "[Instrumental]",
+          "seed": 416039,
+          "bpm": 112,
+          "duration": 60.0,
+          "timesignature": "4",
+          "language": "en",
+          "keyscale": "D minor",
+          "generate_audio_codes": true,
+          "cfg_scale": 2.0,
+          "temperature": 0.85,
+          "top_p": 0.9,
+          "top_k": 0,
+          "min_p": 0.0
+        }
+      },
+      "5": {
+        "class_type": "EmptyAceStep1.5LatentAudio",
+        "inputs": {
+          "seconds": 60.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "ConditioningZeroOut",
+        "inputs": {
+          "conditioning": [
+            "4",
+            0
+          ]
+        }
+      },
+      "7": {
+        "class_type": "ModelSamplingAuraFlow",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "shift": 3.0
+        }
+      },
+      "8": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "7",
+            0
+          ],
+          "seed": 416039,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "euler",
+          "scheduler": "simple",
+          "positive": [
+            "4",
+            0
+          ],
+          "negative": [
+            "6",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "9": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "8",
+            0
+          ],
+          "vae": [
+            "3",
+            0
+          ]
+        }
+      },
+      "10": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "9",
+            0
+          ],
+          "filename_prefix": "iron-dawn/battle"
+        }
+      }
+    },
+    "order": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One-shot sound effect of a short military radio confirmation, crisp relay click followed by two restrained electronic chirps and a very short static tail, dry close clean recording, silent background, no words, no speech, no music."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 573100,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "iron-dawn/order"
+        }
+      }
+    },
+    "rifle": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One-shot sound effect of one compact futuristic military assault rifle firing a tight short burst of three shots, punchy dry mechanical reports, small bolt and casing clicks, silent background, no voices, no music."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 573101,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "iron-dawn/rifle"
+        }
+      }
+    },
+    "tank": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One-shot sound effect of one medium tracked tank cannon firing, powerful low metallic thump with crisp explosive crack, short outdoor tail fading quickly, silent background, no voices, no music."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 573102,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "iron-dawn/tank"
+        }
+      }
+    },
+    "artillery": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One-shot sound effect of one heavy long barrel field artillery firing, deep concussive boom with sharp initial crack and a short rolling outdoor tail, dry isolated game sound, no voices, no music."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 573103,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "iron-dawn/artillery"
+        }
+      }
+    },
+    "rocket": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One-shot sound effect of a compact shoulder launched anti tank missile, short ignition pop followed by a forceful rising air whoosh, fast dry tail, silent background, no voices, no music."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 573104,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "iron-dawn/rocket"
+        }
+      }
+    },
+    "impact": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One-shot sound effect of an armored vehicle hit by a cannon shell, sharp metal impact followed immediately by a compact explosive blast and small falling debris, short tail, silent background, no voices, no music."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 573105,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "iron-dawn/impact"
+        }
+      }
+    },
+    "build": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One-shot sound effect of an industrial construction machine engaging, two heavy metal clunks with a brief hydraulic servo hiss, solid precise mechanical texture, dry silent background, no voices, no music."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 573106,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "iron-dawn/build"
+        }
+      }
+    },
+    "ready": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One-shot sound effect of a military factory confirming unit ready, short clean mechanical relay click followed by two rising soft electronic beeps, crisp restrained futuristic military interface, no voices, no music."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 573107,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "iron-dawn/ready"
+        }
+      }
+    },
+    "upgrade": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One-shot sound effect of military research completed, three soft rising electronic radio tones with a subtle metallic shimmer, concise confident science fiction game interface, clean silent background, no words, no voices, no music."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 573108,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "iron-dawn/upgrade"
+        }
+      }
+    }
+  },
+  "processing": {
+    "music": {
+      "command": {
+        "duration": 43.636375,
+        "sample_rate": 16000,
+        "channels": 1,
+        "bytes": 194458,
+        "sha256": "a8d089da7a958fd6b0e979ea5deb645d065f5571a3a8163c9e5da61118d4b0d2",
+        "master_sha256": "99537afe4ea95f6acf91e9530e708fecb7f5dbea6f97e6e28297041cdf61e615",
+        "bpm": 88,
+        "bars": 16,
+        "source_start": 4.0055,
+        "crossfade_seconds": 2.72725
+      },
+      "battle": {
+        "duration": 34.2856875,
+        "sample_rate": 16000,
+        "channels": 1,
+        "bytes": 185330,
+        "sha256": "705027dd848c6c5e6aab9abe8956f248bfa9557ffb33fa71cc282a4782d65694",
+        "master_sha256": "8fc0f75b1283c12f8f29092747304a436bd5e0ef791ba215863b66a45ce1f254",
+        "bpm": 112,
+        "bars": 16,
+        "source_start": 8.0118125,
+        "crossfade_seconds": 2.142875
+      }
+    },
+    "effects": {
+      "order": {
+        "duration": 0.32,
+        "sample_rate": 16000,
+        "channels": 1,
+        "bytes": 5120,
+        "sha256": "ff8b62944c43875a678c7f6c41d1157509d6f36cd019592559a7d372c5d8dbcf",
+        "master_sha256": "91947069524a8ba93b25ded5e0f3b754923378710e37de6caf71507089852ed4",
+        "source_start": 1.654
+      },
+      "ui": {
+        "duration": 0.085,
+        "sample_rate": 16000,
+        "channels": 1,
+        "bytes": 1360,
+        "sha256": "99701fe31da6a951780466bf600201d23ff9eeafc28c39a36d5495159b6f6af8",
+        "master_sha256": "b210c0438f5c45d40781135fe73a90627db97a54f0ba996c29e32881a3a972a0"
+      },
+      "rifle": {
+        "duration": 0.48,
+        "sample_rate": 16000,
+        "channels": 1,
+        "bytes": 7680,
+        "sha256": "fe773c61331a5d29e61cb1afb0aee5b32f04d78c2ddcf9f1b7e23f326cea3293",
+        "master_sha256": "868b78bf922bb263e20b06f6e0c3fe756675f14e3c4e9ee15ed7709e079ceadd",
+        "source_start": 1.754
+      },
+      "tank": {
+        "duration": 0.8,
+        "sample_rate": 16000,
+        "channels": 1,
+        "bytes": 12800,
+        "sha256": "5c4f9e9eddc9b2e7681ece6ad452b3663c3fab5e49d87aec8af925e2d3367358",
+        "master_sha256": "34c6d797cf3f5ded6926f03e339f7320350b4ab74785dd56f61a638da9736710",
+        "source_start": 0.004
+      },
+      "artillery": {
+        "duration": 0.98,
+        "sample_rate": 16000,
+        "channels": 1,
+        "bytes": 15680,
+        "sha256": "2759dab780823ee035fe4f9e7b46897ffe2f333eeb8034248c7eac79790660ef",
+        "master_sha256": "8fd88f57439613949859a9b42158e1dd2dd68d2aa1e5839155cfa456b75654c5",
+        "source_start": 0.284
+      },
+      "rocket": {
+        "duration": 0.8,
+        "sample_rate": 16000,
+        "channels": 1,
+        "bytes": 12800,
+        "sha256": "0256b0f974c20f66c5726da430347ce2633b9fb35854d54e8f5cdab36af92d96",
+        "master_sha256": "7d36bf901d172976816495834edf81a678f06f87f5754af0eeb1eead2f9660f9",
+        "source_start": 0.014
+      },
+      "impact": {
+        "duration": 0.92,
+        "sample_rate": 16000,
+        "channels": 1,
+        "bytes": 14720,
+        "sha256": "0e86d5e24ccd6887ff9b313d79acb634d32c4c1c3815d2f06595ff642d5599c7",
+        "master_sha256": "9039b90800e2dfd1aae393e8802bf8b6633ebc49c7c15ec3c0ab30a458e28e4a",
+        "source_start": 0.004
+      },
+      "build": {
+        "duration": 0.78,
+        "sample_rate": 16000,
+        "channels": 1,
+        "bytes": 12480,
+        "sha256": "65aa2f81f6b6cd29fa784812971ea176b735d6312581552ff19c6d1cfb0c0b80",
+        "master_sha256": "f8ead18ac8c45a750c67fe806edbcd9911f60da5ead169f5174b54be6058dcf9",
+        "source_start": 1.254
+      },
+      "ready": {
+        "duration": 0.6,
+        "sample_rate": 16000,
+        "channels": 1,
+        "bytes": 9600,
+        "sha256": "93361abd60a08009eb1c9632252a7898fe00f5f9262feee2c791ce1c1823079e",
+        "master_sha256": "bfec80106db2316b420ea76c2a0c37ad707dd991d4fa7bd15e4326ef51398b98",
+        "source_start": 0.004
+      },
+      "upgrade": {
+        "duration": 0.85,
+        "sample_rate": 16000,
+        "channels": 1,
+        "bytes": 13600,
+        "sha256": "b2cbf1d9aaaba23a0061b9266360e6f5f284b4e3ede84df6c0392d169409bf8c",
+        "master_sha256": "91b39c4822e428a850e52d5fb2f84ae07499a7374509b58c817f2b647d07fb48",
+        "source_start": 0.624
+      }
+    },
+    "source_sha256": {
+      "order.flac": "d420fa0cd0176495e0f9ad390961054a4749da9616e1d681a2143318178d198a",
+      "rifle.flac": "59e91ddcb97a4abfc90e4297fbe83a0aeb6a13d385037528c265a65c2173d732",
+      "tank.flac": "6fb8c230c6585a7338d8f96314b0d1848b4e06a2d70772658c0b19a8f619d7b0",
+      "artillery.flac": "95f6c8d7bd647413ff3b1ac81a0490032862e13b8456a58d1841850fea12f0d2",
+      "rocket.flac": "2895538f224b1a3c09facf4951d569634f1f294b3b16200fe7a6f52be2ee52c3",
+      "impact.flac": "72a4a9bf7b309643a5f28ae3c4a6c7ec6ef6ea22306e0482b1a130213e88494a",
+      "build.flac": "5c124d3ef0fe26212e318ab56472a56749e2ee1658872992fdc0d984d3751b36",
+      "ready.flac": "7ba31debd98eb3de437c258efa536e69f81097b0450c5a10beb795b434056ca2",
+      "upgrade.flac": "3f1b9f7bca5ca61ec590ad8f9a5f828b02774f064bc634db93df28192285b6a6",
+      "command.flac": "94733748b391ccb6c54f7ed998f413e806bfe3c29b0dc883807d297f9265719c",
+      "battle.flac": "25331d3c850ce5eade0d90f2b8b64ffe4c0452e7eb4e20f15a858a77a14b3b89"
+    },
+    "normalization": {
+      "music_peak_limit": 0.63,
+      "music_rms_target": 0.12,
+      "effect_peak_limit": 0.7,
+      "sample_rate": 16000,
+      "effect_encoding": "unsigned8",
+      "music_encoding": "Vorbis mono",
+      "effect_edge_fades": "2ms attack, up to 70ms release"
+    }
+  },
+  "runtime": "Mono 16kHz Vorbis streams; 10 raw unsigned 8-bit 16kHz PCM effects, each below 16000 bytes. Prepared assets and the music decode ring are Host-owned."
+}

@@ -45,7 +45,8 @@
         "ui",
         "audio",
         "permission",
-        "fs"
+        "fs",
+        "assets"
       ],
       "wasi": {
         "version": "preview1",
