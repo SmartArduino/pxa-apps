@@ -15,5 +15,5 @@
   "changelog": "1.3.0：重做8种原创音效，以柔和金币铃音、跳跃风声、滑铲摩擦、落地与碰撞闷响、转弯衣料声和奖励和弦替换蜂鸣器提示；背景音乐扩展为40秒木质打击、笛声与暖和声循环。金币触发限速，声音按三类声部控制，不堆积过时提示；修正静音残响和切回前台时暂停音乐意外恢复，并保留弯前换道、顶部紧凑提示和原存档。\n\nEight original PCM cues, a warmer forty-second music loop, bounded pickup sounds, and reliable mute/pause behavior. Existing saves remain compatible.",
   "icon": "resources/brand/app-icon-source.png",
   "screenshots": [],
-  "cover": null
+  "cover": "resources/brand/game-cover-landscape-v1.png"
 }
