@@ -225,21 +225,24 @@ void Renderer::panel(pxa::game::Frame& f,float x,float y,float w,float h,uint32_
  float u=ui_scale();
  const bool primary=fill==0xdab66e||fill==0xe7bf70;
  const auto* skin=primary?button_skin:panel_skin;
- if(!primary&&drawing_ui&&overlay&&display&&std::all_of(panel_slices.begin(),panel_slices.end(),[](auto p){return p!=nullptr;})){
+ if(drawing_ui&&overlay&&display&&((primary&&std::all_of(button_slices.begin(),button_slices.end(),[](auto p){return p!=nullptr;}))||(!primary&&std::all_of(panel_slices.begin(),panel_slices.end(),[](auto p){return p!=nullptr;})))){
   const float rx=float(display->width)/width,ry=float(display->height)/height;
   auto box=pxa::ui::surface_to_canvas_region({int(x*rx),int(y*ry),std::max(1,int(w*rx)),std::max(1,int(h*ry))},*display);
   const int edge=std::max(2,pxa::ui::surface_to_canvas_length(std::max(1,int(24*u*ry)),*display));
-  const int bx=std::min(edge,box.width/2),by=std::min(edge,box.height/2);
+  const int bx=std::min(primary?box.height:edge,box.width/2),by=std::min(edge,box.height/2);
   const int dx[]={box.x,box.x+bx,box.x+box.width-bx,box.x+box.width};
-  const int dy[]={box.y,box.y+by,box.y+box.height-by,box.y+box.height};
-  for(int row=0;row<3;row++)for(int col=0;col<3;col++){
+  const int dy[]={box.y,primary?box.y+box.height:box.y+by,box.y+box.height-by,box.y+box.height};
+  for(int row=0;row<(primary?1:3);row++)for(int col=0;col<3;col++){
    const int dw=dx[col+1]-dx[col],dh=dy[row+1]-dy[row];if(dw<=0||dh<=0)continue;
-   const auto& tile=*panel_slices[row*3+col];
+   const auto& tile=*(primary?button_slices[col]:panel_slices[row*3+col]);
    const int gx=std::max(2,int(std::lround(2.f*dw/(tile.descriptor().width-4))));
    const int gy=std::max(2,int(std::lround(2.f*dh/(tile.descriptor().height-4))));
-   // Sample past each core edge into duplicated texels, then clip the core.
-   // One logical pixel of clip overlap also covers fractional-DPI rounding.
-   overlay->clip({dx[col],dy[row],dw+(col<2?1:0),dh+(row<2?1:0)}).image({dx[col]-gx,dy[row]-gy,dw+2*gx,dh+2*gy},tile,pxa::ui::ImageFit::stretch).pop_clip();
+   // Extend only when integer logical lengths lose a physical edge pixel.
+   // Exact integer DPI needs no overlap or double alpha on the outer border.
+   auto px=[&](int v){return int(int64_t(v)*display->density_q16/65536);};
+   const int ex=col<2&&px(dx[col])+px(dw)<px(dx[col+1])?1:0;
+   const int ey=!primary&&row<2&&px(dy[row])+px(dh)<px(dy[row+1])?1:0;
+   overlay->clip({dx[col],dy[row],dw+ex,dh+ey}).image({dx[col]-gx,dy[row]-gy,dw+2*gx,dh+2*gy},tile,pxa::ui::ImageFit::stretch).pop_clip();
   }
   return;
  }

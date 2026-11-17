@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Shared layout also supplies pointer hit targets in main.cpp.
 drawing_ui=overlay&&display;
+if(!drawing_ui)return; // Menus/HUD are always native, including mount transitions.
 const float ui=ui_scale(),cx=width*.5f;
 const UiLayout layout(width,height,ui,safe_x,safe_y);
 auto card=[&](UiRect b,uint32_t fill=INK){panel(f,b.x,b.y,b.w,b.h,fill,0x9f885b);};

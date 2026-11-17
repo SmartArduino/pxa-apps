@@ -23,3 +23,5 @@ mkdir -p "$artifact_dir"
 "${CXX:-c++}" -std=c++17 -O2 -Wall -Wextra -fsanitize=address,undefined \
   "$app_dir/tests/ui_layout_test.cpp" -o "$artifact_dir/ui_layout_test"
 "$artifact_dir/ui_layout_test" | tee "$artifact_dir/ui-layout.log"
+
+python3 "$app_dir/tests/check_ui_assets.py" | tee "$artifact_dir/ui-skins.log"

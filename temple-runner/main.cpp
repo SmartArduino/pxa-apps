@@ -23,8 +23,9 @@ struct TempleRunner {
  std::optional<pxa::game::Renderer> target;
  pxa::game::DrawBuffer<49152> commands;
  pxa::input::Controller pad;
- std::optional<pxa::Asset> title_art,button_art,background_art,heading_art;
+ std::optional<pxa::Asset> title_art,background_art,heading_art;
  std::array<std::optional<pxa::Asset>,9> panel_art;
+ std::array<std::optional<pxa::Asset>,3> button_art;
  bool art_loading=false,base_art_ready=false;int art_state=-3,heading_variant=0;
  struct PointerHandler {
   TempleRunner* owner=nullptr;
@@ -67,6 +68,10 @@ struct TempleRunner {
   while(art_state!=desired_art()||(art_state>=0&&heading_variant!=(std::min(display.width,display.height)>600?96:48))){
    const int requested=desired_art();art_state=requested;
    scene.heading_skins.fill(nullptr);heading_art.reset();
+   // Drop retained images before loading another menu. The old Canvas pins
+   // its title artwork even after the Guest's Asset handle is closed.
+   if(native_ui.mounted()){pxa::ui::CanvasCommands<4> empty;(void)native_ui.present(empty);}
+   (void)co_await ctx->clock().yield();
    ui_has_previous=false;draw();
    if(requested==-2){
     if(!title_art){auto art=co_await ctx->assets().load(pxa::AssetKind::image,"assets/ui/title-logo.pxr");
@@ -98,10 +103,13 @@ struct TempleRunner {
    auto panel=co_await ctx->assets().load(pxa::AssetKind::image,path);
    if(panel){panel_art[i].emplace(std::move(*panel));scene.panel_slices[i]=&*panel_art[i];}
   }
-  auto button=co_await ctx->assets().load(pxa::AssetKind::image,"assets/ui/button.pxr");
-  if(button){button_art.emplace(std::move(*button));scene.button_skin=&*button_art;}
+  for(unsigned i=0;i<3;i++){
+   char path[40];snprintf(path,sizeof(path),"assets/ui/button-%u.pxr",i);
+   auto button=co_await ctx->assets().load(pxa::AssetKind::image,path);
+   if(button){button_art[i].emplace(std::move(*button));scene.button_slices[i]=&*button_art[i];}
+  }
   base_art_ready=true;ui_has_previous=false;draw();
-  (void)ctx->log().write(pxa::LogLevel::info,std::all_of(scene.panel_slices.begin(),scene.panel_slices.end(),[](auto p){return p!=nullptr;})&&scene.button_skin?"RELIC nine-slice skins loaded":"RELIC nine-slice fallback");
+  (void)ctx->log().write(pxa::LogLevel::info,std::all_of(scene.panel_slices.begin(),scene.panel_slices.end(),[](auto p){return p!=nullptr;})&&std::all_of(scene.button_slices.begin(),scene.button_slices.end(),[](auto p){return p!=nullptr;})?"RELIC nine-slice skins loaded":"RELIC nine-slice fallback");
   co_return co_await sync_art();
  }
  pxa::Task<void> load(){
@@ -162,9 +170,11 @@ struct TempleRunner {
   }
  }
  void draw(){if(!ready||initializing||!target||!ctx->foreground())return;scene.safe_x=std::max(float(display.safe.left),float(std::max(display.corners[0],display.corners[1]))*.45f)*scene.width/display.width;scene.safe_y=ui_hud_top(display.width,scene.safe_x*display.width/scene.width,display.safe.top)*scene.height/display.height;
-  ++frame_id;pxa::game::Frame f(*target,commands.bytes());
   hud_only.set(state.mode==Mode::Running);
   auto& active_ui=state.mode==Mode::Running?hud_ui:native_ui;
+  const int menu_art=desired_art();
+  if(state.mode!=Mode::Running&&(!active_ui.mounted()||(menu_art>=0&&(art_state!=menu_art||art_loading))))return;
+  ++frame_id;pxa::game::Frame f(*target,commands.bytes());
   ui_commands.reset();scene.overlay=active_ui.mounted()?&ui_commands:nullptr;scene.display=&display;
   scene.render(f,state,progress);if(!f.submit())rejected++;
   if(scene.overlay&&(!ui_has_previous||state.mode!=ui_mode||last_us-ui_last_us>=125000)){

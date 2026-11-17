@@ -12,7 +12,7 @@
     "手柄"
   ],
   "description": "第三人称3D无限跑酷。穿越丛林石桥、落日神庙和幽蓝古墓，躲避倒木、石块、低门和断桥，并按路口提示急转弯。金币连击可触发遗迹觉醒，轮换挑战给予额外分数，每局可救援一次。\n\n包含分关节角色动作、非对称滑铲与转弯侧身、遗迹黑豹追逐、8种铺装材质、蕨叶与石壁雕饰、玉石金边界面和背景音乐。支持触屏滑动与手柄；最佳得分、累计金币、画质及声音设置会保留。精美和流畅两档画质适合不同设备，文字使用屏幕原生分辨率。\n\n需要PXA Core 2.1及1.5 MiB Guest线性内存，系统、渲染、深度缓冲和音频另需空间。提供独立Wasm、S3、S31、P4与Linux x86_64安装包。设备性能与固件有关，不保证所有板卡稳定30 FPS。\n\n应用与共享源码、生成工具及许可：https://github.com/SmartArduino/pxa-apps/releases/tag/temple-runner-v1.4.0 。字体采用Noto OFL；完整声明随安装包分发。",
-  "changelog": "1.4.0：重做主菜单、暂停、结算和HUD布局；修复高分辨率下边框与字体不随界面缩放的问题，保留完整九宫格角饰。增加金色宋体菜单标题，正文保持原生分辨率黑体；文字按容器水平与视觉垂直居中，统一字号、行距和按钮尺寸。点击区域与绘制共用同一套布局，保留原存档和游戏规则。\n\nResponsive game UI with properly scaled nine-slice borders, gold serif headings, centered native text and shared visual/input geometry.",
+  "changelog": "1.4.0：重做主菜单、暂停、结算和HUD布局；修复高分辨率下边框与字体不随界面缩放的问题，保留完整九宫格角饰，修复玉石面板与金色按钮的拼接缝及结算页清晰度突变。增加金色宋体菜单标题，正文保持原生分辨率黑体；文字按容器水平与视觉垂直居中，统一字号、行距和按钮尺寸。点击区域与绘制共用同一套布局，保留原存档和游戏规则。\n\nResponsive game UI with properly scaled nine-slice borders, gold serif headings, centered native text and shared visual/input geometry.",
   "icon": "resources/brand/app-icon-source.png",
   "screenshots": [],
   "cover": "resources/brand/game-cover-landscape-v1.png"

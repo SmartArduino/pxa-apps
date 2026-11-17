@@ -27,6 +27,7 @@ struct Renderer {
     const pxa::Asset* button_skin=nullptr;
     std::array<const pxa::Asset*,4> heading_skins{};
     std::array<const pxa::Asset*,9> panel_slices{};
+    std::array<const pxa::Asset*,3> button_slices{};
     int heading_pixels=48;
     bool drawing_ui=false;
     float ui_scale() const {

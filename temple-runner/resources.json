@@ -125,6 +125,24 @@
       "source": "resources/ui/panel-8.png",
       "path": "assets/ui/panel-8.pxr",
       "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/button-0.png",
+      "path": "assets/ui/button-0.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/button-1.png",
+      "path": "assets/ui/button-1.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/button-2.png",
+      "path": "assets/ui/button-2.pxr",
+      "encoding": "bgra8888"
     }
   ]
 }
