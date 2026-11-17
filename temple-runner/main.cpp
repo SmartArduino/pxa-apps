@@ -23,7 +23,9 @@ struct TempleRunner {
  std::optional<pxa::game::Renderer> target;
  pxa::game::DrawBuffer<49152> commands;
  pxa::input::Controller pad;
- std::optional<pxa::Asset> title_art,panel_art,button_art,background_art;
+ std::optional<pxa::Asset> title_art,button_art,background_art,heading_art;
+ std::array<std::optional<pxa::Asset>,9> panel_art;
+ bool art_loading=false,base_art_ready=false;int art_state=-3,heading_variant=0;
  struct PointerHandler {
   TempleRunner* owner=nullptr;
   void operator()(const pxa::ui::CanvasPointer& p) const {if(owner)owner->pointer_event(p);}
@@ -38,8 +40,9 @@ struct TempleRunner {
    Canvas().input_only().on_pointer(PointerHandler{this}),
    When(hud_only,
     [this]{
-     const float scale=std::clamp(std::min(display.width/296.f,display.height/240.f),.8f,1.6f);
-     int px=int(76*scale+display.safe.top);
+     const float scale=ui_pixel_scale(display.width,display.height);
+     float sx=std::max(float(display.safe.left),float(std::max(display.corners[0],display.corners[1]))*.45f);
+     int px=int(76*scale+ui_hud_top(display.width,sx,display.safe.top));
      int h=std::max(80,int((int64_t(px)*65536+display.density_q16-1)/display.density_q16));
      return Overlay(Canvas(hud_ui,0,h).input_only().on_pointer(PointerHandler{this})).fill().height(Dp{h});
     },
@@ -58,22 +61,48 @@ struct TempleRunner {
   return c.tasks().start(start_render());
  }
  pxa::Task<void> start_render(){auto saved=co_await load();if(!saved)co_return std::unexpected(saved.error());co_return co_await initialize();}
+ int desired_art()const{return state.mode==Mode::Title?-2:state.mode==Mode::Running?-1:state.mode==Mode::Paused?0:state.mode==Mode::Help?1:state.record?3:2;}
+ pxa::Task<void> sync_art(){
+  if(art_loading)co_return pxa::Result<void>{};art_loading=true;
+  while(art_state!=desired_art()||(art_state>=0&&heading_variant!=(std::min(display.width,display.height)>600?96:48))){
+   const int requested=desired_art();art_state=requested;
+   scene.heading_skins.fill(nullptr);heading_art.reset();
+   ui_has_previous=false;draw();
+   if(requested==-2){
+    if(!title_art){auto art=co_await ctx->assets().load(pxa::AssetKind::image,"assets/ui/title-logo.pxr");
+     if(art){title_art.emplace(std::move(*art));scene.title_logo=&*title_art;}
+     else (void)ctx->log().write(pxa::LogLevel::warning,"RELIC title artwork fallback");}
+    if(requested!=desired_art())continue;
+    if(display.height>display.width&&!background_art){auto art=co_await ctx->assets().load(pxa::AssetKind::image,"assets/ui/title-background.pxr");
+     if(art){background_art.emplace(std::move(*art));scene.title_background=&*background_art;}
+     else (void)ctx->log().write(pxa::LogLevel::warning,"RELIC title background fallback");}
+   }else{
+    // Title and menu typography never occupy the bounded image cache together.
+    scene.title_logo=nullptr;scene.title_background=nullptr;title_art.reset();background_art.reset();
+    ui_has_previous=false;draw();
+    if(requested>=0){
+     heading_variant=std::min(display.width,display.height)>600?96:48;
+     char path[64];snprintf(path,sizeof(path),"assets/ui/heading-%d-%d.pxr",heading_variant,requested);
+     auto art=co_await ctx->assets().load(pxa::AssetKind::image,path);
+     if(art){heading_art.emplace(std::move(*art));scene.heading_skins[requested]=&*heading_art;scene.heading_pixels=heading_variant;}
+     else {char message[96];snprintf(message,sizeof(message),"RELIC heading font fallback error=%d path=%s",int(art.error()),path);(void)ctx->log().write(pxa::LogLevel::warning,message);}
+    }
+   }
+  }
+  art_loading=false;ui_has_previous=false;draw();
+  (void)ctx->log().write(pxa::LogLevel::info,"RELIC interface artwork ready");co_return pxa::Result<void>{};
+ }
  pxa::Task<void> load_art(){
-  auto art=co_await ctx->assets().load(pxa::AssetKind::image,"assets/ui/title-logo.pxr");
-  if(art){title_art.emplace(std::move(*art));scene.title_logo=&*title_art;ui_has_previous=false;draw();(void)ctx->log().write(pxa::LogLevel::info,"RELIC title artwork loaded");}
-  else (void)ctx->log().write(pxa::LogLevel::warning,"RELIC title artwork fallback");
-  auto panel=co_await ctx->assets().load(pxa::AssetKind::image,"assets/ui/panel.pxr");
-  if(panel){panel_art.emplace(std::move(*panel));scene.panel_skin=&*panel_art;}
+  for(unsigned i=0;i<9;i++){
+   char path[40];snprintf(path,sizeof(path),"assets/ui/panel-%u.pxr",i);
+   auto panel=co_await ctx->assets().load(pxa::AssetKind::image,path);
+   if(panel){panel_art[i].emplace(std::move(*panel));scene.panel_slices[i]=&*panel_art[i];}
+  }
   auto button=co_await ctx->assets().load(pxa::AssetKind::image,"assets/ui/button.pxr");
   if(button){button_art.emplace(std::move(*button));scene.button_skin=&*button_art;}
-  ui_has_previous=false;draw();
-  (void)ctx->log().write(pxa::LogLevel::info,scene.panel_skin&&scene.button_skin?"RELIC nine-slice skins loaded":"RELIC nine-slice fallback");
-  if(display.height>display.width){
-   auto background=co_await ctx->assets().load(pxa::AssetKind::image,"assets/ui/title-background.pxr");
-   if(background){background_art.emplace(std::move(*background));scene.title_background=&*background_art;ui_has_previous=false;draw();(void)ctx->log().write(pxa::LogLevel::info,"RELIC title background loaded");}
-   else{char message[100];snprintf(message,sizeof(message),"RELIC title background unavailable %d",int(background.error()));(void)ctx->log().write(pxa::LogLevel::warning,message);}
-  }
-  co_return pxa::Result<void>{};
+  base_art_ready=true;ui_has_previous=false;draw();
+  (void)ctx->log().write(pxa::LogLevel::info,std::all_of(scene.panel_slices.begin(),scene.panel_slices.end(),[](auto p){return p!=nullptr;})&&scene.button_skin?"RELIC nine-slice skins loaded":"RELIC nine-slice fallback");
+  co_return co_await sync_art();
  }
  pxa::Task<void> load(){
   std::array<std::byte,20> data{};auto r=co_await ctx->storage().get("progress",data);
@@ -132,7 +161,7 @@ struct TempleRunner {
    }
   }
  }
- void draw(){if(!ready||initializing||!target||!ctx->foreground())return;scene.safe_x=std::max(float(display.safe.left),float(std::max(display.corners[0],display.corners[1]))*.45f)*scene.width/display.width;scene.safe_y=float(display.safe.top)*scene.height/display.height;
+ void draw(){if(!ready||initializing||!target||!ctx->foreground())return;scene.safe_x=std::max(float(display.safe.left),float(std::max(display.corners[0],display.corners[1]))*.45f)*scene.width/display.width;scene.safe_y=ui_hud_top(display.width,scene.safe_x*display.width/scene.width,display.safe.top)*scene.height/display.height;
   ++frame_id;pxa::game::Frame f(*target,commands.bytes());
   hud_only.set(state.mode==Mode::Running);
   auto& active_ui=state.mode==Mode::Running?hud_ui:native_ui;
@@ -160,12 +189,12 @@ struct TempleRunner {
  void quality(){progress.quality^=1;scene.quality=progress.quality;checkpoint();sounds.request(Cue::Confirm,audio_us);log_state("quality");if(!initializing)(void)ctx->tasks().start(initialize());}
  void bank_run(){progress.best=std::max(progress.best,state.score);progress.coins+=state.coins-state.banked_coins;state.banked_coins=state.coins;checkpoint();}
  void home(){if(state.mode==Mode::Running||state.mode==Mode::Paused||state.mode==Mode::Dead)bank_run();stop_music();stop_sounds();sounds.clear();auto seed=state.seed;state=State{};state.seed=seed;gesture=false;last_us=0;draw();}
- void tap(int x,int y){float u=scene.ui_scale();float cy=scene.height*.5f;
-  if(state.mode==Mode::Title){if(y>scene.height-36*u&&y<scene.height-8*u){if(x>scene.width/2)quality();else state.mode=Mode::Help;}else act(Action::Confirm);}
+ void tap(int x,int y){const UiLayout ui(scene.width,scene.height,scene.ui_scale(),scene.safe_x,scene.safe_y);
+  if(state.mode==Mode::Title){if(ui.help.contains(x,y)){state.mode=Mode::Help;draw();}else if(ui.quality.contains(x,y))quality();else if(ui.start.contains(x,y))act(Action::Confirm);}
   else if(state.mode==Mode::Help)home();
-  else if(state.mode==Mode::Running){if(x>scene.width-scene.safe_x-48*u&&y<scene.safe_y+48*u)act(Action::Pause);else act(Action::Jump);}
-  else if(state.mode==Mode::Paused){float top=cy-86*u;if(y>top+125*u)home();else if(y>top+89*u)toggle_sound();else act(Action::Confirm);}
-  else if(x<scene.width*.5f){if(!state.rescues)act(Action::Rescue);else home();}else act(Action::Confirm);draw();
+  else if(state.mode==Mode::Running){if(ui.pause.contains(x,y))act(Action::Pause);else act(Action::Jump);}
+  else if(state.mode==Mode::Paused){if(ui.home.contains(x,y))home();else if(ui.sound.contains(x,y))toggle_sound();else if(ui.resume.contains(x,y))act(Action::Confirm);}
+  else if(ui.rescue.contains(x,y)){if(!state.rescues)act(Action::Rescue);else home();}else if(ui.retry.contains(x,y))act(Action::Confirm);draw();
  }
  void pointer_event(const pxa::input::Pointer& p){if(!ready)return;
   int x=pxa::ui::canvas_to_surface_coordinate(p.x,display)*scene.width/display.width,y=pxa::ui::canvas_to_surface_coordinate(p.y,display)*scene.height/display.height;
@@ -195,7 +224,7 @@ struct TempleRunner {
    else {music_requested=false;music_instance=0;music_retry_us=audio_us+2000000;if(playback->state==pxa::PlaybackState::error)(void)ctx->log().write(pxa::LogLevel::warning,"RELIC music playback error");}
    return true;
   }
-  if(e.is<pxa::ui::DisplayMetrics>()){if(auto m=pxa::ui::decode_display_metrics(e)){bool resize=m->width!=display.width||m->height!=display.height;display=*m;if(resize&&!initializing)(void)ctx->tasks().start(initialize());}return true;}
+  if(e.is<pxa::ui::DisplayMetrics>()){if(auto m=pxa::ui::decode_display_metrics(e)){bool resize=m->width!=display.width||m->height!=display.height;display=*m;ui_has_previous=false;if(resize&&!initializing)(void)ctx->tasks().start(initialize());else draw();}return true;}
   return false;
  }
  void on_frame(pxa::Context&,const pxa::game::FrameTick& tick){
@@ -212,6 +241,7 @@ struct TempleRunner {
   if(state.feedback_t>feedback_left||state.feedback!=old_feedback){if(state.feedback==Feedback::Rush)log_state("rush");else if(state.feedback==Feedback::Quest)log_state("quest");}
   if(old==Mode::Running&&state.mode==Mode::Dead){state.record=state.score>progress.best;bank_run();state.saved=true;stop_sounds();stop_music();log_state("dead");}
   pump_sound();
+  if(base_art_ready&&!art_loading&&(art_state!=desired_art()||(art_state>=0&&heading_variant!=(std::min(display.width,display.height)>600?96:48))))(void)ctx->tasks().start(sync_art());
   // Static menus retain their last frame. Retry until the native Canvas mounts;
   // explicit actions and asynchronous artwork loads request their own redraw.
   // Clock stays active for persistence, input and system lifecycle notifications.

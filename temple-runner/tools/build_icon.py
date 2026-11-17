@@ -27,3 +27,5 @@ for source,name,size in (('panel-source.png','panel','128x128!'),('button-source
  print(target)
 
 subprocess.run(['magick',str(root/'resources/brand/title-background-source.png'),'-resize','180x320^','-gravity','center','-extent','180x320','-alpha','off','-strip',str(root/'resources/ui/title-background.png')],check=True)
+
+subprocess.run(['python3',str(root/'tools/build_ui_skins.py')],check=True)

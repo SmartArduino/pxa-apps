@@ -2,6 +2,7 @@
 #pragma once
 #include "core.hpp"
 #include "player_pose.hpp"
+#include "ui_layout.hpp"
 #include <pxa/game.hpp>
 #include <algorithm>
 #include <pxa/canvas.hpp>
@@ -24,10 +25,13 @@ struct Renderer {
     const pxa::Asset* title_background=nullptr;
     const pxa::Asset* panel_skin=nullptr;
     const pxa::Asset* button_skin=nullptr;
+    std::array<const pxa::Asset*,4> heading_skins{};
+    std::array<const pxa::Asset*,9> panel_slices{};
+    int heading_pixels=48;
     bool drawing_ui=false;
     float ui_scale() const {
-        if(display)return std::clamp(std::min(display->width/296.f,display->height/240.f),.8f,1.6f)*height/display->height;
-        return std::clamp(std::min(width/296.f,height/240.f),.8f,1.5f);
+        if(display)return ui_pixel_scale(display->width,display->height)*height/display->height;
+        return ui_pixel_scale(width,height);
     }
     bool upload(pxa::game::Renderer& target);
     bool visible_box(V3 center,V3 half_extent) const;
@@ -43,5 +47,8 @@ struct Renderer {
     void runner(const State& s);
     void text(pxa::game::Frame& f,const char* str,float x,float y,float scale,uint32_t color,bool center=false);
     void rect(pxa::game::Frame& f,float x,float y,float w,float h,uint32_t color);
+    void text_box(pxa::game::Frame& f,const char* text,UiRect box,float pixels,uint32_t color,int align=1,bool shadow=false);
+    void heading(pxa::game::Frame& f,const char* text,UiRect box);
+    void rule(pxa::game::Frame& f,UiRect box,uint32_t color);
 };
 }

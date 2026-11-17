@@ -79,6 +79,47 @@ void Renderer::text(pxa::game::Frame& f,const char* str,float x,float y,float sc
  while(*p&&n<100){int i=glyph(nextchar(p));auto &g=sprites[i/256][counts[i/256]++];n++;g.x=int16_t(x);g.y=int16_t(y);g.width=uint16_t(std::max(1,int(16*scale)));g.height=g.width;g.source_x=(i%16)*16;g.source_y=((i/16)%16)*16;g.source_width=g.source_height=16;x+=font::advance[i]*scale;}
  pxa::game::SpriteOptions o;o.solid_color=true;o.texel_alpha=text_alpha;o.color={rgb(c)};for(int page=0;page<2;page++)if(counts[page])f.sprites({uint8_t(page?3:0)},{sprites[page],size_t(counts[page])},o);
 }
+void Renderer::text_box(pxa::game::Frame& f,const char* value,UiRect box,float pixels,uint32_t color,int align,bool shadow){
+ if(box.w<=0||box.h<=0||!value||!*value)return;
+ const float unit=ui_scale();
+ if(drawing_ui&&overlay&&display){
+  const float rx=float(display->width)/width,ry=float(display->height)/height;
+  const float font_scale=std::clamp(display->font_scale_q16/65536.f,.75f,2.f);
+  float advance=0;const char* at=value;while(*at)advance+=font::advance[glyph(nextchar(at))]/14.f;
+  int size=8;
+  // A small type scale bounds the Host font cache, including fitted numbers.
+  for(float role:{28.f,24.f,20.f,18.f,16.f,14.f,12.f,10.f,8.f})if(role<=pixels+.01f){
+   size=std::clamp(int(std::lround(role*unit*ry*font_scale)),8,128);
+   if(advance*size<=box.w*rx-2&&size<=box.h*ry*.95f)break;
+  }
+  const auto clip=pxa::ui::surface_to_canvas_region({int(std::floor(box.x*rx)),int(std::floor(box.y*ry)),int(std::ceil(box.w*rx)),int(std::ceil(box.h*ry))},*display);
+  // Noto's em is smaller than its line box. Center visible glyphs, keeping the
+  // complete ascent/descent in a generously sized native text command.
+  auto line=pxa::ui::surface_to_canvas_region({int(std::lround(box.x*rx)),int(std::lround(box.cy()*ry-size*.80f)),std::max(1,int(std::lround(box.w*rx))),int(std::ceil(size*1.55f))},*display);
+  overlay->clip(clip);
+  if(shadow){auto shade=line;const int offset=std::max(1,int(std::lround(unit*ry*.6f*65536/display->density_q16)));shade.y+=color==INK?-offset:offset;overlay->text_sized(shade,color==INK?0xffe4a0d0:0x041914ee,value,uint16_t(size),uint8_t(align));}
+  overlay->text_sized(line,(color<<8)|255,value,uint16_t(size),uint8_t(align)).pop_clip();return;
+ }
+ float size=pixels*unit/14.f;float advance=0;const char* at=value;while(*at)advance+=font::advance[glyph(nextchar(at))]*size;
+ if(advance>box.w){size*=box.w/advance;advance=box.w;}
+ const float x=align==1?box.cx():align==2?box.x+box.w-advance:box.x;
+ text(f,value,x,box.cy()-7*size,size,color,align==1);
+}
+void Renderer::heading(pxa::game::Frame& f,const char* value,UiRect box){
+ int row=!strcmp(value,"暂停旅程")?0:!strcmp(value,"操作指南")?1:!strcmp(value,"旅程结束")?2:!strcmp(value,"新纪录")?3:-1;
+ if(drawing_ui&&overlay&&display&&row>=0&&heading_skins[row]){
+  const float rx=float(display->width)/width,ry=float(display->height)/height;
+  const float h=28*ui_scale();
+  auto image=pxa::ui::surface_to_canvas_region({int(std::lround(box.x*rx)),int(std::lround((box.cy()-h*.5f)*ry)),int(std::lround(box.w*rx)),int(std::lround(h*ry))},*display);
+  overlay->image(image,*heading_skins[row],pxa::ui::ImageFit::contain);return;
+ }
+ text_box(f,value,box,24,GOLD,1,true);
+}
+void Renderer::rule(pxa::game::Frame& f,UiRect box,uint32_t color){
+ const float u=ui_scale(),cy=box.cy();
+ rect(f,box.x,cy,box.w*.5f-8*u,u,color);rect(f,box.cx()+8*u,cy,box.w*.5f-8*u,u,color);
+ rect(f,box.cx()-3*u,cy-2*u,6*u,5*u,color);rect(f,box.cx()-u,cy-u,2*u,3*u,JADE);
+}
 void Renderer::face(V3 a,V3 b,V3 c,V3 d,uint32_t color,float light,int material){
  if(count>=int(std::size(faces))){skipped++;return;}
  const float fog_z=(a.z+b.z+c.z+d.z)*.25f;
@@ -184,10 +225,28 @@ void Renderer::panel(pxa::game::Frame& f,float x,float y,float w,float h,uint32_
  float u=ui_scale();
  const bool primary=fill==0xdab66e||fill==0xe7bf70;
  const auto* skin=primary?button_skin:panel_skin;
+ if(!primary&&drawing_ui&&overlay&&display&&std::all_of(panel_slices.begin(),panel_slices.end(),[](auto p){return p!=nullptr;})){
+  const float rx=float(display->width)/width,ry=float(display->height)/height;
+  auto box=pxa::ui::surface_to_canvas_region({int(x*rx),int(y*ry),std::max(1,int(w*rx)),std::max(1,int(h*ry))},*display);
+  const int edge=std::max(2,pxa::ui::surface_to_canvas_length(std::max(1,int(24*u*ry)),*display));
+  const int bx=std::min(edge,box.width/2),by=std::min(edge,box.height/2);
+  const int dx[]={box.x,box.x+bx,box.x+box.width-bx,box.x+box.width};
+  const int dy[]={box.y,box.y+by,box.y+box.height-by,box.y+box.height};
+  for(int row=0;row<3;row++)for(int col=0;col<3;col++){
+   const int dw=dx[col+1]-dx[col],dh=dy[row+1]-dy[row];if(dw<=0||dh<=0)continue;
+   const auto& tile=*panel_slices[row*3+col];
+   const int gx=std::max(2,int(std::lround(2.f*dw/(tile.descriptor().width-4))));
+   const int gy=std::max(2,int(std::lround(2.f*dh/(tile.descriptor().height-4))));
+   // Sample past each core edge into duplicated texels, then clip the core.
+   // One logical pixel of clip overlap also covers fractional-DPI rounding.
+   overlay->clip({dx[col],dy[row],dw+(col<2?1:0),dh+(row<2?1:0)}).image({dx[col]-gx,dy[row]-gy,dw+2*gx,dh+2*gy},tile,pxa::ui::ImageFit::stretch).pop_clip();
+  }
+  return;
+ }
  if(drawing_ui&&overlay&&display&&skin){
   float rx=float(display->width)/width,ry=float(display->height)/height;
   auto box=pxa::ui::surface_to_canvas_region({int(x*rx),int(y*ry),std::max(1,int(w*rx)),std::max(1,int(h*ry))},*display);
-  int corner=std::max(2,pxa::ui::surface_to_canvas_region({0,0,std::max(1,int(8*u*rx)),std::max(1,int(8*u*ry))},*display).width);
+  int corner=std::max(2,pxa::ui::surface_to_canvas_region({0,0,std::max(1,int(24*u*rx)),std::max(1,int(24*u*ry))},*display).width);
   corner=std::min(corner,std::min(box.width,box.height)/2);
   const int sw=skin->descriptor().width,sh=skin->descriptor().height;
   if(primary)corner=std::min(box.width/2,std::max(2,int(std::lround(box.height*64.f/sh))));
@@ -446,62 +505,7 @@ void Renderer::render(pxa::game::Frame& f,const State& s,const Save& save){
   pxa::game::PolygonOptions opts;opts.painter=true;opts.affine_uv=true;f.textured_quad({2},v,opts);
  }
  }
- drawing_ui=overlay&&display;
- // Native Canvas text is rasterized by the Host at physical screen resolution;
- // the atlas remains a fallback for Hosts without sized Canvas text.
- float ui=ui_scale(),cx=width*.5f;
- auto label=[&](const char*t,float y,float size,uint32_t c){text(f,t,cx,y,size*ui,c,true);};
- char num[80];
- if(s.mode==Mode::Title){
-  if(title_background&&drawing_ui){auto box=pxa::ui::surface_to_canvas_region({0,0,int(display->width),int(display->height)},*display);overlay->image(box,*title_background,pxa::ui::ImageFit::cover);}
-  if(title_logo&&drawing_ui){
-   float rx=float(display->width)/width,ry=float(display->height)/height;
-   auto region=pxa::ui::surface_to_canvas_region({int((cx-135*ui)*rx),int(height*.10f*ry),int(270*ui*rx),int((height>width?90:70)*ui*ry)},*display);
-   overlay->image(region,*title_logo,pxa::ui::ImageFit::contain);
-  }else{label("遗迹疾奔",height*.12f,2.f,GOLD);label("R E L I C   R U N",height*.12f+36*ui,.7f,IVORY);}
-  float by=height-73*ui;
-  panel(f,cx-88*ui,by-42*ui,176*ui,33*ui,INK,0x6a805f);
-  text(f,"最佳纪录",cx-74*ui,by-33*ui,.72f*ui,JADE);snprintf(num,sizeof(num),"%06u",save.best);text(f,num,cx+10*ui,by-34*ui,1.f*ui,GOLD);
-  panel(f,cx-104*ui,by,208*ui,32*ui,0xdab66e,0x846233);
-  rect(f,cx-99*ui,by+4*ui,198*ui,2*ui,0xf8d99a);label("开始探险",by+4*ui,1.05f,0x233b31);
-  float oy=height-35*ui;panel(f,cx-134*ui,oy,128*ui,25*ui,INK,0x638875);panel(f,cx+6*ui,oy,128*ui,25*ui,INK,0x638875);
-  text(f,"操作指南",cx-70*ui,oy+6*ui,.82f*ui,IVORY,true);text(f,quality?"画质 流畅":"画质 精美",cx+70*ui,oy+6*ui,.82f*ui,JADE,true);
- }else if(s.mode==Mode::Running){
-  panel(f,std::max(9*ui,safe_x),8*ui+safe_y,100*ui,36*ui,INK,0x6e8162);snprintf(num,sizeof(num),"%06u",s.score);text(f,num,std::max(17*ui,safe_x+8*ui),10*ui+safe_y,1.15f*ui,s.combo_t>0?GOLD:IVORY);
-  snprintf(num,sizeof(num),"%um  金币 %u",unsigned(s.distance),s.coins);text(f,num,std::max(17*ui,safe_x+8*ui),29*ui+safe_y,.8f*ui,GOLD);
-  panel(f,width-38*ui-safe_x,8*ui+safe_y,29*ui,29*ui,INK,0x6e8162);rect(f,width-29*ui-safe_x,16*ui+safe_y,3*ui,12*ui,GOLD);rect(f,width-22*ui-safe_x,16*ui+safe_y,3*ui,12*ui,GOLD);
-  float hx=std::max(9*ui,safe_x),hy=8*ui+safe_y;
-  rect(f,hx,hy+36*ui,100*ui,3*ui,0x304c40);rect(f,hx,hy+36*ui,100*ui*(s.rush>0?s.rush/7:s.energy/60),3*ui,s.rush>0?0xffd383:JADE);
-  if(multiplier(s)>1){snprintf(num,sizeof(num),"x%d",multiplier(s));text(f,num,hx+69*ui,hy+5*ui,.83f*ui,GOLD);}
-  // Two compact rows beside the score replace banners over the road.
-  const float status_x=(hx+100*ui+width-48*ui-safe_x)*.5f;
-  const char* region=theme==0?"丛林石桥":theme==1?"落日神庙":"幽蓝古墓";
-  uint32_t region_color=IVORY;
-  if(s.rush>0){snprintf(num,sizeof(num),"觉醒 x4 %ds",int(s.rush)+1);region=num;region_color=GOLD;}
-  else if(s.shield>0||s.magnet>0){snprintf(num,sizeof(num),"%s %ds",s.shield>0?"护盾":"磁铁",int(s.shield>0?s.shield:s.magnet));region=num;region_color=JADE;}
-  text(f,region,status_x,10*ui+safe_y,.8f*ui,region_color,true);
-  if(s.next_turn-s.distance<30){
-   const bool armed=s.queued_turn==s.turn_direction;
-   const char* turn=armed?(s.turn_direction==1?"右转 已准备":"左转 已准备"):(s.turn_direction==1?"向右转 >>>":"<<< 向左转");
-   text(f,turn,status_x,30*ui+safe_y,.78f*ui,armed?JADE:GOLD,true);
-  }else if(s.feedback_t>0&&s.feedback!=Feedback::Rush){
-   const char* msg=s.feedback==Feedback::Jump?"漂亮跳跃":s.feedback==Feedback::Slide?"完美滑铲":s.feedback==Feedback::Dodge?"惊险闪避":s.feedback==Feedback::Turn?"漂亮转弯":s.feedback==Feedback::Quest?"挑战达成 +500":s.feedback==Feedback::Rush?"遗迹觉醒 x4":s.feedback==Feedback::Rescue?"救援护盾":s.feedback==Feedback::Shield?"护盾破碎":"";
-   text(f,msg,status_x,30*ui+safe_y,.75f*ui,s.feedback==Feedback::Shield?0xe39c79:GOLD,true);
-  }
-  if(s.distance<28&&save.runs<=1)label("左右变道   上跳跃   下滑铲",52*ui+safe_y,.78f,IVORY);
-  else{snprintf(num,sizeof(num),"%s  %u/%u",s.quests%3==0?"收集金币":s.quests%3==1?"躲避障碍":"通过转弯",quest_progress(s),quest_goal(s));label(num,52*ui+safe_y,.78f,IVORY);}
 
- }else {
-  float pw=std::min(width-24.f,254*ui),ph=(s.mode==Mode::Help?204.f:172.f)*ui;float x=cx-pw/2,y=(height-ph)/2;
-  panel(f,x-2*ui,y-2*ui,pw+4*ui,ph+4*ui,INK,0xa58a54);
-  if(s.mode==Mode::Help){label("操作指南",y+16*ui,1.3f,GOLD);label("左右滑动 / 方向键：变道",y+46*ui,.83f,IVORY);label("向上滑动 / A：跳跃",y+68*ui,.83f,IVORY);label("向下滑动 / B：滑铲",y+90*ui,.83f,IVORY);label("弯口：按提示向左或右",y+112*ui,.83f,IVORY);label("START 暂停 / 失败 B 救援",y+134*ui,.8f,IVORY);label("金币连击：觉醒吸金护体",y+156*ui,.78f,IVORY);label("轻触返回",y+182*ui,.88f,JADE);
-  }else if(s.mode==Mode::Paused){panel(f,cx-95*ui,y+53*ui,190*ui,27*ui,0x224c41,0x678b70);panel(f,cx-95*ui,y+90*ui,190*ui,26*ui,0x143c34,0x416d5a);panel(f,cx-95*ui,y+128*ui,190*ui,26*ui,0x143c34,0x416d5a);label("暂停旅程",y+20*ui,1.4f,GOLD);label("继续探险",y+59*ui,1.05f,IVORY);label(save.sound?"音效 开":"音效 关",y+99*ui,.9f,JADE);label("返回主菜单",y+137*ui,.87f,IVORY);
-  }else{label(s.record?"新纪录":"旅程结束",y+16*ui,1.35f,GOLD);snprintf(num,sizeof(num),"%06u",s.score);label(num,y+44*ui,1.65f,IVORY);snprintf(num,sizeof(num),"距离 %um    金币 %u",unsigned(s.distance),s.coins);label(num,y+78*ui,.82f,GOLD);
-   label(!strcmp(s.reason,"gap")?"坠入深渊":!strcmp(s.reason,"turn")?"错过弯口":"碰到障碍",y+99*ui,.8f,0xccac8a);
-   snprintf(num,sizeof(num),"连击 %u  挑战 %u",s.best_combo,s.quests);label(num,y+116*ui,.65f,JADE);
-   panel(f,cx-110*ui,y+134*ui,104*ui,26*ui,0x285346,0x648d73);panel(f,cx+6*ui,y+134*ui,104*ui,26*ui,0xe7bf70,0xb28a48);
-   text(f,s.rescues?"返回":"救援继续",cx-58*ui,y+139*ui,.85f*ui,IVORY,true);text(f,"重来",cx+58*ui,y+139*ui,.85f*ui,INK,true);
-  }
- }
+#include "game_ui.inc"
 }
 }

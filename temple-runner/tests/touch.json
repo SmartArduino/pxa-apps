@@ -12,8 +12,8 @@
     {
       "name": "help",
       "action": "tap",
-      "x": 89,
-      "y": 213
+      "x": 78,
+      "y": 214
     },
     {
       "name": "controls",
@@ -28,20 +28,20 @@
     {
       "name": "quality-low",
       "action": "tap",
-      "x": 192,
-      "y": 213
+      "x": 218,
+      "y": 214
     },
     {
       "name": "quality-high",
       "action": "tap",
-      "x": 192,
-      "y": 213
+      "x": 218,
+      "y": 214
     },
     {
       "name": "start",
       "action": "tap",
       "x": 148,
-      "y": 184
+      "y": 170
     },
     {
       "name": "running",
@@ -103,8 +103,8 @@
     {
       "name": "pause",
       "action": "tap",
-      "x": 272,
-      "y": 22
+      "x": 271,
+      "y": 25
     },
     {
       "name": "paused",
@@ -119,19 +119,19 @@
       "name": "mute",
       "action": "tap",
       "x": 148,
-      "y": 134
+      "y": 145
     },
     {
       "name": "unmute",
       "action": "tap",
       "x": 148,
-      "y": 134
+      "y": 145
     },
     {
       "name": "resume",
       "action": "tap",
       "x": 148,
-      "y": 105
+      "y": 104
     },
     {
       "name": "obstacles-one",
@@ -160,8 +160,8 @@
     {
       "name": "rescue",
       "action": "tap",
-      "x": 90,
-      "y": 181
+      "x": 88,
+      "y": 194
     },
     {
       "name": "rescue-settles",
@@ -199,8 +199,8 @@
     {
       "name": "retry",
       "action": "tap",
-      "x": 206,
-      "y": 181
+      "x": 208,
+      "y": 194
     },
     {
       "name": "restart-run",
@@ -214,14 +214,14 @@
     {
       "name": "pause-restart",
       "action": "tap",
-      "x": 272,
-      "y": 22
+      "x": 271,
+      "y": 25
     },
     {
       "name": "home",
       "action": "tap",
       "x": 148,
-      "y": 178
+      "y": 186
     },
     {
       "name": "save-completes",
@@ -255,8 +255,8 @@
     {
       "name": "help",
       "action": "tap",
-      "x": 96,
-      "y": 213
+      "x": 90,
+      "y": 214
     },
     {
       "name": "controls",
@@ -271,20 +271,20 @@
     {
       "name": "quality-low",
       "action": "tap",
-      "x": 208,
-      "y": 213
+      "x": 230,
+      "y": 214
     },
     {
       "name": "quality-high",
       "action": "tap",
-      "x": 208,
-      "y": 213
+      "x": 230,
+      "y": 214
     },
     {
       "name": "start",
       "action": "tap",
       "x": 160,
-      "y": 184
+      "y": 170
     },
     {
       "name": "running",
@@ -346,8 +346,8 @@
     {
       "name": "pause",
       "action": "tap",
-      "x": 296,
-      "y": 22
+      "x": 295,
+      "y": 25
     },
     {
       "name": "paused",
@@ -362,19 +362,19 @@
       "name": "mute",
       "action": "tap",
       "x": 160,
-      "y": 134
+      "y": 145
     },
     {
       "name": "unmute",
       "action": "tap",
       "x": 160,
-      "y": 134
+      "y": 145
     },
     {
       "name": "resume",
       "action": "tap",
       "x": 160,
-      "y": 105
+      "y": 104
     },
     {
       "name": "obstacles-one",
@@ -403,8 +403,8 @@
     {
       "name": "rescue",
       "action": "tap",
-      "x": 102,
-      "y": 181
+      "x": 100,
+      "y": 194
     },
     {
       "name": "rescue-settles",
@@ -442,8 +442,8 @@
     {
       "name": "retry",
       "action": "tap",
-      "x": 218,
-      "y": 181
+      "x": 220,
+      "y": 194
     },
     {
       "name": "restart-run",
@@ -457,14 +457,14 @@
     {
       "name": "pause-restart",
       "action": "tap",
-      "x": 296,
-      "y": 22
+      "x": 295,
+      "y": 25
     },
     {
       "name": "home",
       "action": "tap",
       "x": 160,
-      "y": 178
+      "y": 186
     },
     {
       "name": "save-completes",
@@ -498,8 +498,8 @@
     {
       "name": "help",
       "action": "tap",
-      "x": 144,
-      "y": 436
+      "x": 126,
+      "y": 438
     },
     {
       "name": "controls",
@@ -514,20 +514,20 @@
     {
       "name": "quality-low",
       "action": "tap",
-      "x": 312,
-      "y": 436
+      "x": 354,
+      "y": 438
     },
     {
       "name": "quality-high",
       "action": "tap",
-      "x": 312,
-      "y": 436
+      "x": 354,
+      "y": 438
     },
     {
       "name": "start",
       "action": "tap",
       "x": 240,
-      "y": 389
+      "y": 366
     },
     {
       "name": "running",
@@ -589,8 +589,8 @@
     {
       "name": "pause",
       "action": "tap",
-      "x": 441,
-      "y": 36
+      "x": 439,
+      "y": 41
     },
     {
       "name": "paused",
@@ -605,19 +605,19 @@
       "name": "mute",
       "action": "tap",
       "x": 240,
-      "y": 263
+      "y": 281
     },
     {
       "name": "unmute",
       "action": "tap",
       "x": 240,
-      "y": 263
+      "y": 281
     },
     {
       "name": "resume",
       "action": "tap",
       "x": 240,
-      "y": 216
+      "y": 214
     },
     {
       "name": "obstacles-one",
@@ -646,8 +646,8 @@
     {
       "name": "rescue",
       "action": "tap",
-      "x": 147,
-      "y": 337
+      "x": 143,
+      "y": 360
     },
     {
       "name": "rescue-settles",
@@ -685,8 +685,8 @@
     {
       "name": "retry",
       "action": "tap",
-      "x": 332,
-      "y": 337
+      "x": 337,
+      "y": 360
     },
     {
       "name": "restart-run",
@@ -700,14 +700,14 @@
     {
       "name": "pause-restart",
       "action": "tap",
-      "x": 441,
-      "y": 36
+      "x": 439,
+      "y": 41
     },
     {
       "name": "home",
       "action": "tap",
       "x": 240,
-      "y": 334
+      "y": 347
     },
     {
       "name": "save-completes",
@@ -741,8 +741,8 @@
     {
       "name": "help",
       "action": "tap",
-      "x": 144,
-      "y": 810
+      "x": 126,
+      "y": 812
     },
     {
       "name": "controls",
@@ -757,20 +757,20 @@
     {
       "name": "quality-low",
       "action": "tap",
-      "x": 312,
-      "y": 810
+      "x": 354,
+      "y": 812
     },
     {
       "name": "quality-high",
       "action": "tap",
-      "x": 312,
-      "y": 810
+      "x": 354,
+      "y": 812
     },
     {
       "name": "start",
       "action": "tap",
       "x": 240,
-      "y": 763
+      "y": 740
     },
     {
       "name": "running",
@@ -832,8 +832,8 @@
     {
       "name": "pause",
       "action": "tap",
-      "x": 441,
-      "y": 36
+      "x": 439,
+      "y": 41
     },
     {
       "name": "paused",
@@ -848,19 +848,19 @@
       "name": "mute",
       "action": "tap",
       "x": 240,
-      "y": 450
+      "y": 468
     },
     {
       "name": "unmute",
       "action": "tap",
       "x": 240,
-      "y": 450
+      "y": 468
     },
     {
       "name": "resume",
       "action": "tap",
       "x": 240,
-      "y": 403
+      "y": 401
     },
     {
       "name": "obstacles-one",
@@ -889,8 +889,8 @@
     {
       "name": "rescue",
       "action": "tap",
-      "x": 147,
-      "y": 524
+      "x": 143,
+      "y": 547
     },
     {
       "name": "rescue-settles",
@@ -928,8 +928,8 @@
     {
       "name": "retry",
       "action": "tap",
-      "x": 332,
-      "y": 524
+      "x": 337,
+      "y": 547
     },
     {
       "name": "restart-run",
@@ -943,14 +943,14 @@
     {
       "name": "pause-restart",
       "action": "tap",
-      "x": 441,
-      "y": 36
+      "x": 439,
+      "y": 41
     },
     {
       "name": "home",
       "action": "tap",
       "x": 240,
-      "y": 521
+      "y": 534
     },
     {
       "name": "save-completes",
@@ -984,8 +984,8 @@
     {
       "name": "help",
       "action": "tap",
-      "x": 144,
-      "y": 810
+      "x": 126,
+      "y": 812
     },
     {
       "name": "controls",
@@ -1000,20 +1000,20 @@
     {
       "name": "quality-low",
       "action": "tap",
-      "x": 312,
-      "y": 810
+      "x": 354,
+      "y": 812
     },
     {
       "name": "quality-high",
       "action": "tap",
-      "x": 312,
-      "y": 810
+      "x": 354,
+      "y": 812
     },
     {
       "name": "start",
       "action": "tap",
       "x": 240,
-      "y": 763
+      "y": 740
     },
     {
       "name": "running",
@@ -1075,8 +1075,8 @@
     {
       "name": "pause",
       "action": "tap",
-      "x": 441,
-      "y": 36
+      "x": 439,
+      "y": 41
     },
     {
       "name": "paused",
@@ -1091,19 +1091,19 @@
       "name": "mute",
       "action": "tap",
       "x": 240,
-      "y": 450
+      "y": 468
     },
     {
       "name": "unmute",
       "action": "tap",
       "x": 240,
-      "y": 450
+      "y": 468
     },
     {
       "name": "resume",
       "action": "tap",
       "x": 240,
-      "y": 403
+      "y": 401
     },
     {
       "name": "obstacles-one",
@@ -1132,8 +1132,8 @@
     {
       "name": "rescue",
       "action": "tap",
-      "x": 147,
-      "y": 524
+      "x": 143,
+      "y": 547
     },
     {
       "name": "rescue-settles",
@@ -1171,8 +1171,8 @@
     {
       "name": "retry",
       "action": "tap",
-      "x": 332,
-      "y": 524
+      "x": 337,
+      "y": 547
     },
     {
       "name": "restart-run",
@@ -1186,14 +1186,14 @@
     {
       "name": "pause-restart",
       "action": "tap",
-      "x": 441,
-      "y": 36
+      "x": 439,
+      "y": 41
     },
     {
       "name": "home",
       "action": "tap",
       "x": 240,
-      "y": 521
+      "y": 534
     },
     {
       "name": "save-completes",

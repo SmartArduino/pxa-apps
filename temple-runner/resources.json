@@ -23,6 +23,108 @@
       "source": "resources/ui/title-background.png",
       "path": "assets/ui/title-background.pxr",
       "encoding": "rgb565"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/heading-48-0.png",
+      "path": "assets/ui/heading-48-0.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/heading-48-1.png",
+      "path": "assets/ui/heading-48-1.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/heading-48-2.png",
+      "path": "assets/ui/heading-48-2.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/heading-48-3.png",
+      "path": "assets/ui/heading-48-3.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/heading-96-0.png",
+      "path": "assets/ui/heading-96-0.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/heading-96-1.png",
+      "path": "assets/ui/heading-96-1.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/heading-96-2.png",
+      "path": "assets/ui/heading-96-2.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/heading-96-3.png",
+      "path": "assets/ui/heading-96-3.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/panel-0.png",
+      "path": "assets/ui/panel-0.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/panel-1.png",
+      "path": "assets/ui/panel-1.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/panel-2.png",
+      "path": "assets/ui/panel-2.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/panel-3.png",
+      "path": "assets/ui/panel-3.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/panel-4.png",
+      "path": "assets/ui/panel-4.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/panel-5.png",
+      "path": "assets/ui/panel-5.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/panel-6.png",
+      "path": "assets/ui/panel-6.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/panel-7.png",
+      "path": "assets/ui/panel-7.pxr",
+      "encoding": "bgra8888"
+    },
+    {
+      "kind": "image",
+      "source": "resources/ui/panel-8.png",
+      "path": "assets/ui/panel-8.pxr",
+      "encoding": "bgra8888"
     }
   ]
 }

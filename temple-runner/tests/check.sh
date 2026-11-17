@@ -19,3 +19,7 @@ mkdir -p "$artifact_dir"
 "${CXX:-c++}" -std=c++17 -O2 -Wall -Wextra -fsanitize=address,undefined \
   "$app_dir/core.cpp" "$app_dir/tests/soundscape_test.cpp" -o "$artifact_dir/soundscape_test"
 "$artifact_dir/soundscape_test" | tee "$artifact_dir/soundscape.log"
+
+"${CXX:-c++}" -std=c++17 -O2 -Wall -Wextra -fsanitize=address,undefined \
+  "$app_dir/tests/ui_layout_test.cpp" -o "$artifact_dir/ui_layout_test"
+"$artifact_dir/ui_layout_test" | tee "$artifact_dir/ui-layout.log"
