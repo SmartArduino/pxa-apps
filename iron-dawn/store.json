@@ -15,5 +15,5 @@
   "changelog": "新增无尽守备：变化渡口、三路增援、每五波重装突袭、波次奖励、前哨维修与纪录保存。新增两级弹药改良和复合装甲研发，支持取消退款、断电减速与存档恢复。完善桥面和前哨信标细节；缓存精灵解码、小地图与步态，降低设备绘制开销。兼容旧版战役存档。\n\nAdds endless defense with changing crossings, three attack routes, armored raids, wave rewards and records. Adds two levels of ammunition and armor research, refunds and persistence. Improves bridge and outpost details; caches sprite decoding, minimap terrain and gait poses while preserving rendering and legacy campaign saves.",
   "icon": "assets/icon.png",
   "screenshots": [],
-  "cover": null
+  "cover": "art/generated/store-cover-v1.png"
 }
