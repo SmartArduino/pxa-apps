@@ -598,6 +598,12 @@ int main(int argc, char **argv) {
     safe(w - 96, 22); assert(hit(w - 96, 22) == 20);
     safe(w - 60, 22); assert(hit(w - 60, 22) == 21);
     safe(w - 28, 22); assert(starsoil::pause_button_hit(w - 28, 22, w));
+    for(auto button:{starsoil::pause_button_bounds(w),starsoil::back_button_bounds(w)}) {
+      assert(button.y>=7 && button.y+button.h<=26 && button.x+button.w<=w-8);
+      safe(button.x+button.w/2,button.y+button.h/2);
+      assert(starsoil::header_button_hit(button.x+button.w/2,button.y+button.h/2,button));
+      assert(!starsoil::header_button_hit(button.x+button.w/2,28,button));
+    }
     safe(31, 45); assert(hit(31, 45) == 30);
     auto controls=touch_layout();
     for(auto p:{controls.stick(),controls.jump(),controls.use(),controls.talk()})safe(p.x,p.y);

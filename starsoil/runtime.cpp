@@ -28,6 +28,7 @@
 #include "../common/pxa_landscape.h"
 #include "text.hpp"
 #include "ui_canvas.hpp"
+#include "ui_skin.hpp"
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
@@ -342,14 +343,17 @@ void draw_menu() {
 #ifdef PXA_POCKET_STUDIO
   studio_menu(paused, menu_row, exit_requested);
 #else
-  pocket::rect(WIDTH - 40, 14, 24, 18, PANEL);
-  for (int y : {17, 21, 25})
-    pocket::rect(WIDTH - 34, y, 12, 2, ACCENT);
+  const auto button=starsoil::pause_button_bounds(WIDTH);
+  auto frame=[](int x,int y,int w,int h,starsoil_skin::Frame style) {
+    starsoil_skin::draw(x,y,w,h,style,[](int xx,int yy,int ww,int hh,uint16_t color) {pocket::rect(xx,yy,ww,hh,color);});
+  };
+  frame(button.x,button.y,button.w,button.h,paused?starsoil_skin::Frame::Pressed:starsoil_skin::Frame::Button);
+  for(int y:{button.y+4,button.y+8,button.y+12})
+    pocket::rect(button.x+6,y,10,2,ACCENT);
   if (!paused)
     return;
   int mx = (WIDTH - 288) / 2, my = (HEIGHT - 224) / 2;
-  pocket::rect(48 + mx, 32 + my, 192, 180, BG);
-  pocket::outline(48 + mx, 32 + my, 192, 180, ACCENT);
+  frame(48+mx,32+my,192,180,starsoil_skin::Frame::Window);
   pocket::text((WIDTH - pocket::text_width(tr("PAUSED", "已暂停"), 2)) / 2,
                43 + my, tr("PAUSED", "已暂停"), INK, 2);
   const char *labels[] = {tr("CONTINUE", "继续"), tr("SAVE & WORLDS", "保存并返回首页"),
@@ -358,12 +362,12 @@ void draw_menu() {
                           tr("LANGUAGE: ENGLISH", "语言：中文")};
   for (int i = 0; i < 5; ++i) {
     int y = 72 + my + i * 24;
-    pocket::rect(56 + mx, y, 176, 22, i == menu_row ? ACCENT : PANEL);
+    frame(56+mx,y,176,22,i==menu_row?starsoil_skin::Frame::Pressed:starsoil_skin::Frame::Button);
     pocket::text(68 + mx, y + (22 - pocket::text_height()) / 2,
-                 labels[i], i == menu_row ? BG : INK);
+                 labels[i], i == menu_row ? ACCENT : INK);
   }
   if (exit_requested || controller_input)
-    pocket::text(68 + mx, 195 + my,
+    pocket::text(68 + mx, 191 + my,
                  exit_requested ? tr("SAVING...", "保存中...")
                                 : tr("A SELECT  B RESUME", "A 选择  B 返回"), MUTED);
 
