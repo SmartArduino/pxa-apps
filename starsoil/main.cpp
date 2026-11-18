@@ -19,6 +19,7 @@
 #include "text.hpp"
 #include "quantity.hpp"
 #include "ui_skin.hpp"
+#include "input_geometry.hpp"
 #include "title_art.hpp"
 #include "trees.hpp"
 #include <algorithm>
@@ -842,7 +843,10 @@ void heading(const char *txt) {
   skin_frame(0,0,width(),height(),starsoil_skin::Frame::Window);
   skin_frame(6,5,width()-12,23,starsoil_skin::Frame::Card);
   label(10, 8, txt, GoldInk);
-  label(width() - 52, 9, "<", Ink);
+  const auto back=starsoil::back_button_bounds(width());
+  skin_frame(back.x,back.y,back.w,back.h,starsoil_skin::Frame::Button);
+  line(back.x+13,back.y+5,back.x+9,back.y+9,Ink);
+  line(back.x+9,back.y+9,back.x+13,back.y+13,Ink);
   content_origin();
 }
 void tabs(View current) {
@@ -1353,7 +1357,7 @@ int hit(int x, int y) {
     const int physical_y = y;
     if (view == Crafting && y >= 14 && y < 28 && x >= width() - 162 && x < width() - 64)
       return 94;
-    if (y >= 14 && y < 28 && x > width() - 64 && x < width() - 40)
+    if (starsoil::header_button_hit(x,y,starsoil::back_button_bounds(width())))
       return 99;
     if (view >= Bag && view <= Guide && y >= 28 && y < 48)
       return 100 + std::clamp((x - 5) * 5 / (width() - 8), 0, 4);
