@@ -34,7 +34,7 @@
         if(image){auto d=image->descriptor();if(d.height>unsigned(d.width)*1.8f)book.long_strip=true;}
         auto at=std::find_if(shelf.begin(),shelf.end(),[&](auto& b){return manga::same(b,book);});
         if(at!=shelf.end())*at=book;else if(shelf.size()<24)shelf.insert(shelf.begin(),book);
-        save();message(page_label());
+        save();status=page_label();dirty=true;if(bars)ui_dirty=true;
     }
     float strip_height(const Asset& asset)const{return float(metrics.width)*asset.descriptor().height/asset.descriptor().width;}
     float strip_zoom()const{return image?scale*image->descriptor().width/metrics.width:1.f;}
@@ -80,11 +80,28 @@
             else if(i<=page+ahead||(vertical()&&covered<metrics.height*1.5f))return i;else break;}
         return -1;
     }
+    int next_wire_page(unsigned index)const{
+        const int direction=index<page?-1:1;
+        for(int i=int(index)+direction;i>=0&&unsigned(i)<pages.size();i+=direction){
+            if(unsigned(i)==rendered_page||buffered_slot(i)>=0)continue;
+            auto key=manga::page_cache_key(book,i);if(!key.empty())key+=":rgb3";else key=pages[i];
+            if(cache.find(key)<0)return i;
+        }
+        return -1;
+    }
+    bool buffered_visible(unsigned index)const{
+        if(!image||!vertical())return false;
+        const float z=strip_zoom();float top=-pan_y;
+        if(index<page)return index+1==page&&top>0;
+        top+=strip_height(*image)*z;
+        for(unsigned i=page+1;i<index;++i){auto slot=buffered_slot(i);if(slot<0)return false;top+=strip_height(*buffered[slot].asset)*z;}
+        return top<metrics.height&&index<=strip_end();
+    }
     bool needs_prefetch(){
         // After pressure, retry only the image explicitly needed at the edge.
         // Keep the current image visible while the Host decides what fits.
         if(!buffer_slots&&requested_page>=0&&now_us>=prefetch_retry){buffer_slots=1;buffer_limit=1048576;}
-        return screen==reading&&!busy&&image&&buffer_slots&&!prefetch_running&&now_us>=prefetch_retry&&next_buffer_page()>=0;
+        return screen==reading&&!busy&&image&&!image_finishing&&pending_cache_file.empty()&&buffer_slots&&!prefetch_running&&now_us>=prefetch_retry&&next_buffer_page()>=0;
     }
     void apply_waiting_scroll(){
         if(!waiting_scroll||!vertical()||touches.count()==2)return;
@@ -100,7 +117,7 @@
             if(index>=originals.size())co_return std::unexpected(Error::protocol_error);
             if(originals[index].empty()){auto text=co_await json(pages[index],false,262144);if(!text)co_return std::unexpected(text.error());auto value=manga::town_image(*text);if(!value)co_return std::unexpected(Error::protocol_error);originals[index]=std::move(*value);}url=originals[index];
         }
-        auto downloaded=co_await download_image(url);if(!downloaded&&download_storage_failed){auto reclaimed=co_await storage_pressure();(void)reclaimed;downloaded=co_await download_image(url);}if(!downloaded)co_return std::unexpected(downloaded.error());schedule_wire(index+1);a=co_await decoded_download(key,foreground);
+        const int following=next_wire_page(index);auto downloaded=co_await download_image(url,following);if(!downloaded&&download_storage_failed){auto reclaimed=co_await storage_pressure();(void)reclaimed;downloaded=co_await download_image(url,following);}if(!downloaded)co_return std::unexpected(downloaded.error());a=co_await decoded_download(key,foreground);
         if(!a&&book.source.empty()&&index<originals.size()&&originals[index]!=url&&(a.error()==Error::unsupported||a.error()==Error::limit_exceeded)){
             downloaded=co_await download_image(originals[index]);if(downloaded)a=co_await decoded_download(key,foreground);
         }
@@ -122,10 +139,11 @@
                 prefetch_retry=now_us+30000000;(void)ctx->log().write(LogLevel::info,"MANGA prefetch_failed="+std::to_string(i)+" error="+std::to_string(int(asset.error())));break;
             }
             if(!book.long_strip&&asset->descriptor().height>asset->descriptor().width*1.8f){book.long_strip=true;progress();}
-            remember(i,std::move(*asset));dirty=true;
+            remember(i,std::move(*asset));dirty|=buffered_visible(i);
             (void)ctx->log().write(LogLevel::info,"MANGA prefetched="+std::to_string(i)+" resident="+std::to_string(buffered_count())+" bytes="+std::to_string(buffered_bytes()));
             prefetch_page=-1;if(requested_page==int(i))requested_page=-1;apply_waiting_scroll();
             auto y=co_await ctx->clock().yield();if(!y)break;
+            auto stored=co_await finish_image_cache();(void)stored;
         }
         prefetch_running=false;prefetch_page=-1;co_return Result<void>{};
     }

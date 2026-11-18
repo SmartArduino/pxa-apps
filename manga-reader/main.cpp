@@ -20,7 +20,7 @@
 using namespace pxa;
 using namespace pxa::ui;
 struct Reader {
-    static constexpr pxa::game::LoopOptions loop_options{20000,20,1};
+    static constexpr pxa::game::LoopOptions loop_options{16000,16,1};
     enum Screen {shelf_screen,discover,source_screen,contents,reading,help,page_jump,settings_screen};
     enum Act {shelf_tab,discover_tab,source_tab,search,previous_list,next_list,open_book,open_chapter,
         go_back,language_change,resume,collect,previous_page,next_page,zoom,retry,cancel,
@@ -48,7 +48,7 @@ struct Reader {
     unsigned source_start=0,language=0,offset=0,total=0,list_start=0,page=0,zoom_mode=1,compatibility_pixels=1048576;
     bool input_empty=true;
     bool busy=false,dirty=true,ui_dirty=true,ready=false,save_pending=false,save_busy=false,storage_ok=true,bars=false,dragging=false,exit_pending=false;
-    std::uint64_t now_us=0,bar_deadline=0;
+    std::uint64_t now_us=0,bar_deadline=0,save_deadline=0,save_first=0;
     manga::TouchPair touches;manga::PinchAnchor pinch;float custom_zoom=1;
     float pan_x=0,pan_y=0,scale=1,down_x=0,down_y=0,last_x=0,last_y=0;
     std::optional<Asset> image;
@@ -87,10 +87,10 @@ struct Reader {
     Result<bool> on_event(Context&,const Event& e){if(e.is<DisplayMetrics>()){auto m=decode_display_metrics(e);if(m){bool resized=metrics.width!=m->width||metrics.height!=m->height;metrics=*m;if(resized){touches.reset();dragging=false;fit();source_start=(source_start/source_rows())*source_rows();list_start=(list_start/row_count())*row_count();}changed();}return true;}
         if(e.is<ui::ResourcePressure>()){auto p=ui::decode_resource_pressure(e);if(p&&*p!=ui::ResourcePressure::normal){stop();memory_pressure(*p==ui::ResourcePressure::critical);}return true;}
         if(e.is<PermissionRevoked>()){stop();permission.reset();failure="网络权限已撤销";message(failure);return true;}return false;}
-    void on_background(Context&){stop();(void)input_ref.hide_keyboard();dragging=false;touches.reset();save();}
+    void on_background(Context&){stop();(void)input_ref.hide_keyboard();dragging=false;touches.reset();save();save_deadline=0;if(save_pending&&!save_busy)start(save_state(),false);}
     void on_foreground(Context&){changed();if(ready&&screen==reading&&(!image||rendered_page!=page)&&!busy)begin(pages.empty()?load_pages():load_image());}
-    BackAction on_back(){if(screen==shelf_screen){if(save_busy||save_pending){exit_pending=true;message("正在保存…");return BackAction::stay;}return BackAction::close;}action(go_back);return BackAction::stay;}
-    void stop(){ctx->foreground_tasks().cancel();clear_wire();prefetch_running=false;prefetch_page=-1;busy=false;failure.clear();changed();}
+    BackAction on_back(){if(screen==shelf_screen){if(save_busy||save_pending){exit_pending=true;save_deadline=0;message("正在保存…");return BackAction::stay;}return BackAction::close;}action(go_back);return BackAction::stay;}
+    void stop(){ctx->foreground_tasks().cancel();clear_wire();pending_cache_key.clear();pending_cache_file.clear();image_finishing=false;prefetch_running=false;prefetch_page=-1;busy=false;failure.clear();changed();}
     void begin(Task<void> task){stop();busy=true;message("正在加载…");start(std::move(task));}
     unsigned image_width()const{return std::clamp(unsigned(metrics.width),320u,1024u);}
     unsigned image_pixels()const{return metrics.width>360?1048576u:262144u;}
@@ -256,7 +256,11 @@ struct Reader {
         Result<Asset> a=std::unexpected(Error::not_found);auto resident=take_buffered(page);
         if(resident){a=std::move(*resident);(void)ctx->log().write(LogLevel::info,"MANGA buffer=hit");}else a=co_await fetch_page(page,true);
         if(!a)co_return std::unexpected(a.error());sync_clock();if(image&&rendered_page!=page)remember(rendered_page,std::move(*image));image.emplace(std::move(*a));touches.reset();dragging=false;rendered_page=page;failure.clear();prefetch_retry=0;if(bars)bar_deadline=now_us+6000000;progress();fit();if(enter_from_bottom){pan_y=std::max(0.f,image->descriptor().height*scale-metrics.height);enter_from_bottom=false;}
-        (void)ctx->log().write(LogLevel::info,"MANGA page_ready_us="+std::to_string(now_us-started));auto r=co_await ctx->fs().remove("manga-source.tmp");(void)r;r=co_await ctx->fs().remove("manga-image.tmp");(void)r;busy=false;changed();co_return Result<void>{};}
+        (void)ctx->log().write(LogLevel::info,"MANGA page_ready_us="+std::to_string(now_us-started));image_finishing=true;busy=false;changed();
+        // Display first; keep the next producer away from this scratch file
+        // until its optional persistent cache entry has been committed.
+        auto y=co_await ctx->clock().yield();if(!y)co_return std::unexpected(y.error());auto stored=co_await finish_image_cache();(void)stored;
+        auto r=co_await ctx->fs().remove("manga-source.tmp");(void)r;r=co_await ctx->fs().remove("manga-image.tmp");(void)r;image_finishing=false;co_return Result<void>{};}
     Task<Asset> convert_download(bool foreground=true){auto started=now_us;std::uint64_t work_us=0;unsigned max_slice_us=0;
         auto batch=[&](auto done,auto step){auto tick=profile_short_tick();bool ok=true;for(unsigned n=0;n<64&&!done();++n){if(!step()){ok=false;break;}if(profile_short_us(tick,profile_short_tick())>=(foreground?6000u:dragging?2000u:4000u))break;}auto us=profile_short_us(tick,profile_short_tick());work_us+=us;max_slice_us=std::max(max_slice_us,us);return ok;};
         if(foreground){
@@ -310,13 +314,13 @@ struct Reader {
         co_return co_await decode_file("manga-image.tmp",foreground,ImageFormats::png|ImageFormats::jpeg);
     }
     std::string shelf_status()const{return shelf.empty()?"书架为空，去发现漫画":std::to_string(shelf.size())+" 部漫画 · "+(!storage_ok?"未保存":save_busy||save_pending?"保存中":"已保存");}
-    void save(){if(ready&&storage_ok)save_pending=true;}
+    void save(){if(ready&&storage_ok){if(!save_pending)save_first=now_us;save_pending=true;save_deadline=screen==reading?std::min(now_us+350000,save_first+1500000):0;}}
     Task<void> save_state(){save_busy=true;
-        while(save_pending){save_pending=false;auto text=manga::save(shelf,language,custom);if(text.size()>32768)co_return std::unexpected(Error::limit_exceeded);
+        if(save_pending){save_pending=false;auto text=manga::save(shelf,language,custom);if(text.size()>32768)co_return std::unexpected(Error::limit_exceeded);
             auto f=co_await ctx->fs().open("manga-state.tmp",OpenMode::write|OpenMode::create|OpenMode::truncate);if(!f)co_return std::unexpected(f.error());
             auto bytes=std::as_bytes(std::span{text.data(),text.size()});while(!bytes.empty()){auto n=f->write(bytes.first(std::min<size_t>(1024,bytes.size())));if(!n||!*n)co_return std::unexpected(n?Error::io_error:n.error());bytes=bytes.subspan(*n);auto y=co_await ctx->clock().yield();if(!y)co_return std::unexpected(y.error());}
             auto closed=f->close();if(!closed)co_return std::unexpected(closed.error());auto moved=co_await ctx->fs().replace("manga-state.tmp","manga-state.json");if(!moved)co_return std::unexpected(moved.error());
-        }save_busy=false;if(screen==shelf_screen)message(shelf_status());else changed();co_return Result<void>{};}
+        }save_busy=false;(void)ctx->log().write(LogLevel::info,"MANGA progress_saved="+std::to_string(book.page));if(screen==shelf_screen)message(shelf_status());co_return Result<void>{};}
     Task<void> load_saved(){auto f=co_await ctx->fs().open("manga-state.json");
         if(f){std::string text;for(;;){auto n=f->read(buffer);if(!n||text.size()+*n>32768){storage_ok=false;break;}if(!*n)break;text.append(reinterpret_cast<const char*>(buffer.data()),*n);}auto c=f->close();
             if(!c||!storage_ok||!manga::restore(text,shelf,language,custom)){storage_ok=false;message("书架记录损坏，已保留原文件");}else if(manga::Json(text).get("version").number()<3)save_pending=true;}
@@ -361,7 +365,7 @@ struct Reader {
         if(act==previous_page||act==next_page){if(pages.empty())return;if((act==previous_page&&page==0)||(act==next_page&&page+1==pages.size())){enter_from_bottom=false;message(act==next_page?"本章已读完，可打开目录":"已是本章第一页");bars=true;return;}
             page+=act==next_page?1:-1;begin(load_image());return;}
     }
-    void on_frame(Context&,pxa::game::FrameTick tick){if(input_empty!=input.get().empty()){input_empty=input.get().empty();ui_dirty=true;}now_us=std::max(now_us,tick.timestamp_us);if(screen==reading&&bars&&!busy&&failure.empty()&&now_us>=bar_deadline){bars=false;changed();}if(save_pending&&!save_busy)start(save_state(),false);
+    void on_frame(Context&,pxa::game::FrameTick tick){if(input_empty!=input.get().empty()){input_empty=input.get().empty();ui_dirty=true;}now_us=std::max(now_us,tick.timestamp_us);if(screen==reading&&bars&&!busy&&failure.empty()&&now_us>=bar_deadline){bars=false;changed();}if(save_pending&&!save_busy&&now_us>=save_deadline)start(save_state(),false);
         if(needs_prefetch()){prefetch_running=true;start(prefetch_pages());}
         auto notice=strip_notice_state();if(notice!=strip_notice){strip_notice=notice;changed();}
         notice=strip_notice_state(true);if(notice!=previous_notice){previous_notice=notice;changed();}

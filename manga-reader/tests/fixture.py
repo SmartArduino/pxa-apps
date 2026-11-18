@@ -62,7 +62,10 @@ class Handler(BaseHTTPRequestHandler):
             body = {'baseUrl': root, 'chapter': {'hash': 'abc123', 'dataSaver': [f'{i+1}.png' for i in range(self.server.page_count)]}}
         elif u.path == '/_metrics':
             body = self.server.counts
+        elif u.path == '/_timings':
+            body = self.server.timings
         elif u.path.startswith('/data-saver/abc123/'):
+            with self.server.fault_lock:self.server.timings.append({'path':u.path,'event':'start','time':time.monotonic()})
             if not u.path.endswith('/1.png'):time.sleep(self.server.delay_ms/1000)
             content_type = 'image/webp' if WEBP else 'image/jpeg' if PROGRESSIVE else 'image/png'; body = b'broken-image' if self.server.broken_first and u.path.endswith('/1.png') else panel(int(u.path.rsplit('/',1)[1].split('.')[0])-1)
         elif u.path == '/catalog.json':
@@ -77,8 +80,11 @@ class Handler(BaseHTTPRequestHandler):
             code = 404; body = {'error': 'not found'}
         if not isinstance(body, bytes): body = json.dumps(body, ensure_ascii=False).encode()
         self.send_response(code); self.send_header('Content-Type', content_type); self.send_header('Content-Length', str(len(body))); self.end_headers()
+        if u.path.startswith('/data-saver/abc123/'):time.sleep(self.server.body_delay_ms/1000)
         try: self.wfile.write(body)
         except (BrokenPipeError, ConnectionResetError): pass
+        if u.path.startswith('/data-saver/abc123/'):
+            with self.server.fault_lock:self.server.timings.append({'path':u.path,'event':'end','time':time.monotonic()})
 
 
 if __name__ == '__main__':
@@ -94,6 +100,7 @@ if __name__ == '__main__':
     parser.add_argument('--webp',action='store_true')
     parser.add_argument('--webp-lossy',action='store_true')
     parser.add_argument('--delay-ms',type=int,default=0)
+    parser.add_argument('--body-delay-ms',type=int,default=0,help='Delay the image body after headers, for overlapping transfer tests')
     args = parser.parse_args()
     PROGRESSIVE = args.progressive
     NOISE = args.noise
@@ -106,7 +113,9 @@ if __name__ == '__main__':
     server.fault_lock = Lock()
     server.faulted = set()
     server.counts = {}
+    server.timings = []
     server.broken_first = args.broken_first
     server.page_count = min(512,max(1,args.pages))
     server.delay_ms = min(5000,max(0,args.delay_ms))
+    server.body_delay_ms = min(5000,max(0,args.body_delay_ms))
     server.serve_forever()

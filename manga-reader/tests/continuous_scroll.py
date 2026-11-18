@@ -58,7 +58,9 @@ def wait_for(f,seconds=20):
   time.sleep(.1)
  raise AssertionError('condition timed out')
 def text(d):return (d.state/'run.log').read_text()
-def position(d):return json.loads(next((d.state/'private-files').glob('*pxa-manga-reader/manga-state.json')).read_text())['shelf'][0]['page']
+def position(d):
+ shelf=json.loads(next((d.state/'private-files').glob('*pxa-manga-reader/manga-state.json')).read_text())['shelf']
+ return shelf[0]['page'] if shelf else 0
 def hold(d,delta):
  start=d.h*.88 if delta<0 else d.h*.12;end=start+delta
  d.pointer('DOWN',d.w*.55,start,0)
@@ -189,4 +191,32 @@ for name,w,h,dpi,pages,height in [('strip-end-small',320,240,125,3,400),('strip-
    results[name]={'passed':True,'known_end_visible':True,'no_loading_at_end':True,'single_short_image':pages==1,'hidden_when_scrolling_back':pages>1}
    print(name,'PASS',flush=True)
  finally:server.terminate();server.wait(timeout=5)
+server=subprocess.Popen([sys.executable,str(Path(__file__).with_name('fixture.py')),'--port','18929','--pages','8','--body-delay-ms','800'],stdout=(out/'transfer-overlap-fixture.log').open('w'),stderr=subprocess.STDOUT)
+try:
+ time.sleep(.3);os.environ['PXA_RESOURCE_EXTERNAL_BYTES']=str(8*1024*1024)
+ with Sim('transfer-overlap',480,480,305) as d:
+  enter(d,True);wait_for(lambda:'MANGA prefetched=1 ' in text(d));events=json.load(urlopen('http://127.0.0.1:18929/_timings'))
+  starts={e['path']:e['time'] for e in events if e['event']=='start'};ends={e['path']:e['time'] for e in events if e['event']=='end'}
+  first='/data-saver/abc123/1.png';second='/data-saver/abc123/2.png';overlap=ends[first]-starts[second]
+  assert overlap>.3,events
+  counts=json.load(urlopen('http://127.0.0.1:18929/_metrics'));assert counts[first]==counts[second]==1,counts
+  results['transfer-overlap']={'passed':True,'body_delay_ms':800,'request_overlap_seconds':round(overlap,3),'no_duplicate_requests':True}
+  print('transfer overlap PASS',results['transfer-overlap'],flush=True)
+finally:server.terminate();server.wait(timeout=5)
+server=subprocess.Popen([sys.executable,str(Path(__file__).with_name('fixture.py')),'--port','18929','--pages','40','--height','64'],stdout=(out/'progress-coalescing-fixture.log').open('w'),stderr=subprocess.STDOUT)
+try:
+ time.sleep(.3)
+ with Sim('progress-coalescing',480,480,305) as d:
+  enter(d,True);wait_for(lambda:'MANGA prefetched=7 ' in text(d));time.sleep(.5)
+  old=text(d);crossings=old.count('MANGA strip_page=');saves=old.count('MANGA progress_saved=')
+  for gesture in range(4):
+   d.pointer('DOWN',260,450,0)
+   for i in range(1,13):d.pointer('MOVE',260,450-i*30,0);time.sleep(.015)
+   d.pointer('UP',260,90,0)
+  time.sleep(1.8);log=text(d);crossings=log.count('MANGA strip_page=')-crossings;saves=log.count('MANGA progress_saved=')-saves
+  last=int(re.findall(r'MANGA strip_page=(\d+)',log)[-1]);assert position(d)==last
+  assert crossings>=6 and 1<=saves<=4,(crossings,saves)
+  results['progress-coalescing']={'passed':True,'crossed_pages':crossings,'state_writes':saves,'latest_position_saved':True}
+  print('progress coalescing PASS',results['progress-coalescing'],flush=True)
+finally:server.terminate();server.wait(timeout=5)
 (out/'continuous-result.json').write_text(json.dumps(results,indent=2));print('All continuous scrolling cases PASS',flush=True)

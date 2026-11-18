@@ -61,8 +61,8 @@
   "id": "pxa-manga-reader",
   "name": "漫画",
   "icon": "assets/icon.png",
-  "release_sequence": 13,
-  "version": "0.8.2",
+  "release_sequence": 14,
+  "version": "0.8.3",
   "description": "搜索多站漫画，触摸全屏阅读，自动保存章节和页码。",
   "permissions": [
     {
