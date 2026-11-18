@@ -3,7 +3,14 @@
     std::string page_label()const{return pages.empty()?"暂无页码":"第 "+std::to_string(page+1)+" / "+std::to_string(pages.size())+" 页";}
     std::string cache_label()const{return std::to_string(cache.count())+" 页 · "+std::to_string((cache.used()+1023)/1024)+" KiB";}
     bool zoomed()const{return image&&image->descriptor().width*scale>metrics.width+1;}
-    bool vertical()const{return cache.mode==1||(cache.mode==0&&book.long_strip);}
+    bool vertical()const{return book.reading_mode==1||(book.reading_mode==0&&book.long_strip);}
+    bool book_settings()const{return settings_prior==reading||(settings_prior==help&&prior==reading);}
+    void restore_view(){zoom_mode=book.view_mode;custom_zoom=book.zoom_permille/1000.f;}
+    void remember_view(){
+        if(!manga::valid_book(book))return;book.view_mode=zoom_mode;book.zoom_permille=std::clamp(unsigned(std::round(custom_zoom*1000)),1u,4000u);
+        auto found=std::find_if(shelf.begin(),shelf.end(),[&](auto& b){return manga::same(b,book);});
+        if(found!=shelf.end())*found=book;else if(shelf.size()<24)shelf.insert(shelf.begin(),book);save();
+    }
     void release_page(){image.reset();if(canvas.mounted()){draw.reset();auto box=logical(viewport());draw.rect(box.x,box.y,box.width,box.height,0x141916ff);(void)canvas.present(draw);}dirty=true;}
     std::string pending_cache_key,pending_cache_file;bool image_finishing=false;
     void queue_image_cache(std::string key,std::string file){if(cache.enabled&&cache.limit){pending_cache_key=std::move(key);pending_cache_file=std::move(file);}}

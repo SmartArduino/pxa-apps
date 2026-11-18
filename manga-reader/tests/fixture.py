@@ -16,6 +16,8 @@ from PIL import Image, ImageDraw
 
 BOOK = '11111111-1111-1111-1111-111111111111'
 CHAPTER = '22222222-2222-2222-2222-222222222222'
+SECOND_BOOK = '33333333-3333-3333-3333-333333333333'
+SECOND_CHAPTER = '44444444-4444-4444-4444-444444444444'
 PROGRESSIVE = False
 NOISE = False
 PANEL_HEIGHT = 640
@@ -55,16 +57,17 @@ class Handler(BaseHTTPRequestHandler):
         content_type = 'application/json'; code = 200
         if u.path == '/manga':
             data = [] if q.get('title') == ['missing'] else [dict(id=BOOK, attributes={'title': {'zh': '触摸测试漫画'}, 'tags': [{'attributes': {'name': {'en': 'Long Strip'}}}]})]
+            if self.server.two_books and data:data.append(dict(id=SECOND_BOOK,attributes={'title':{'zh':'分页测试漫画'},'tags':[]}))
             body = {'result': 'ok', 'data': data, 'total': len(data)}
-        elif u.path == f'/manga/{BOOK}/feed':
-            body = {'data': [{'id': CHAPTER, 'attributes': {'chapter': '1', 'title': '出发', 'pages': self.server.page_count}}], 'total': 1}
-        elif u.path == f'/at-home/server/{CHAPTER}':
-            body = {'baseUrl': root, 'chapter': {'hash': 'abc123', 'dataSaver': [f'{i+1}.png' for i in range(self.server.page_count)]}}
+        elif u.path in [f'/manga/{BOOK}/feed',f'/manga/{SECOND_BOOK}/feed']:
+            body = {'data': [{'id': SECOND_CHAPTER if SECOND_BOOK in u.path else CHAPTER, 'attributes': {'chapter': '1', 'title': '出发', 'pages': self.server.page_count}}], 'total': 1}
+        elif u.path in [f'/at-home/server/{CHAPTER}',f'/at-home/server/{SECOND_CHAPTER}']:
+            body = {'baseUrl': root, 'chapter': {'hash': 'def456' if SECOND_CHAPTER in u.path else 'abc123', 'dataSaver': [f'{i+1}.png' for i in range(self.server.page_count)]}}
         elif u.path == '/_metrics':
             body = self.server.counts
         elif u.path == '/_timings':
             body = self.server.timings
-        elif u.path.startswith('/data-saver/abc123/'):
+        elif u.path.startswith(('/data-saver/abc123/','/data-saver/def456/')):
             with self.server.fault_lock:self.server.timings.append({'path':u.path,'event':'start','time':time.monotonic()})
             if not u.path.endswith('/1.png'):time.sleep(self.server.delay_ms/1000)
             content_type = 'image/webp' if WEBP else 'image/jpeg' if PROGRESSIVE else 'image/png'; body = b'broken-image' if self.server.broken_first and u.path.endswith('/1.png') else panel(int(u.path.rsplit('/',1)[1].split('.')[0])-1)
@@ -101,6 +104,7 @@ if __name__ == '__main__':
     parser.add_argument('--webp-lossy',action='store_true')
     parser.add_argument('--delay-ms',type=int,default=0)
     parser.add_argument('--body-delay-ms',type=int,default=0,help='Delay the image body after headers, for overlapping transfer tests')
+    parser.add_argument('--two-books',action='store_true')
     args = parser.parse_args()
     PROGRESSIVE = args.progressive
     NOISE = args.noise
@@ -118,4 +122,5 @@ if __name__ == '__main__':
     server.page_count = min(512,max(1,args.pages))
     server.delay_ms = min(5000,max(0,args.delay_ms))
     server.body_delay_ms = min(5000,max(0,args.body_delay_ms))
+    server.two_books = args.two_books
     server.serve_forever()

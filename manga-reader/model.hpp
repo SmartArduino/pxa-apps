@@ -132,7 +132,7 @@ inline bool guazi_book_url(std::string_view s){return numeric_url(s,"https://www
 inline bool guazi_chapter_url(std::string_view s){return numeric_url(s,"https://www.guazimanhua.com/chapter.php?id=");}
 inline bool woi_book_url(std::string_view s){return numeric_url(s,"https://www.woimh.com/book/mh");}
 inline bool woi_chapter_url(std::string_view s){constexpr std::string_view prefix="https://www.woimh.com/chapter/";if(!s.starts_with(prefix)||s.size()>prefix.size()+30)return false;auto tail=s.substr(prefix.size());auto dash=tail.find('-');return digits(tail.substr(0,dash))&&(dash==tail.npos||digits(tail.substr(dash+1)));}
-struct Book {std::string id,title,source,chapter,chapter_title;unsigned page=0,language=0,pages=0;bool long_strip=false;};
+struct Book {std::string id,title,source,chapter,chapter_title;unsigned page=0,language=0,pages=0;bool long_strip=false;unsigned reading_mode=0,view_mode=1,zoom_permille=1000;};
 inline bool valid_book(const Book& b){if(!valid_source(b.source))return false;switch(source_kind(b.source)){
     case SourceKind::mangadex:return uuid(b.id)&&(b.chapter.empty()||uuid(b.chapter));
     case SourceKind::copy:return slug(b.id)&&(b.chapter.empty()||(b.chapter.starts_with(copy_web(b.id)+"/chapter/")&&uuid(std::string_view(b.chapter).substr(b.chapter.rfind('/')+1))));
@@ -177,15 +177,17 @@ inline std::string title(Json attributes){auto t=attributes.get("title");for(aut
     if(!valid||!ok||next.empty())return false;out=std::move(next);return true;
 }
 inline std::string save(const std::vector<Book>& shelf,unsigned lang,std::string_view source) {
-    std::string o="{\"version\":3,\"language\":"+std::to_string(lang)+",\"source\":"+quote(source)+",\"shelf\":[";bool comma=false;
-    for(auto& b:shelf){if(comma)o+=',';comma=true;o+="{\"id\":"+quote(b.id)+",\"title\":"+quote(b.title)+",\"source\":"+quote(b.source)+",\"chapter\":"+quote(b.chapter)+",\"chapterTitle\":"+quote(b.chapter_title)+",\"page\":"+std::to_string(b.page)+",\"language\":"+std::to_string(b.language)+",\"pages\":"+std::to_string(b.pages)+",\"longStrip\":"+std::to_string(b.long_strip)+"}";}return o+"]}";
+    std::string o="{\"version\":4,\"language\":"+std::to_string(lang)+",\"source\":"+quote(source)+",\"shelf\":[";bool comma=false;
+    for(auto& b:shelf){if(comma)o+=',';comma=true;o+="{\"id\":"+quote(b.id)+",\"title\":"+quote(b.title)+",\"source\":"+quote(b.source)+",\"chapter\":"+quote(b.chapter)+",\"chapterTitle\":"+quote(b.chapter_title)+",\"page\":"+std::to_string(b.page)+",\"language\":"+std::to_string(b.language)+",\"pages\":"+std::to_string(b.pages)+",\"longStrip\":"+std::to_string(b.long_strip)+",\"readingMode\":"+std::to_string(b.reading_mode)+",\"viewMode\":"+std::to_string(b.view_mode)+",\"zoomPermille\":"+std::to_string(b.zoom_permille)+"}";}return o+"]}";
 }
-[[gnu::noinline]] inline bool restore(std::string_view text,std::vector<Book>& shelf,unsigned& lang,std::string& source){Json j(text);auto version=j.get("version").number();if(text.size()>32768||!j.valid()||version<1||version>3)return false;
+[[gnu::noinline]] inline bool restore(std::string_view text,std::vector<Book>& shelf,unsigned& lang,std::string& source,unsigned legacy_mode=0){Json j(text);auto version=j.get("version").number();if(text.size()>32768||!j.valid()||version<1||version>4||legacy_mode>2)return false;
     std::vector<Book> next;auto s=j.get("source").string(1024);auto l=j.get("language").number(99);bool ok=true;
     if(!s||l>2)return false;if(version<3&&retired_source(*s))*s="copymanga";if(!valid_source(*s))return false;
     auto valid=j.get("shelf").each([&](Json r){Book b{r.get("id").string().value_or(""),r.get("title").string(192).value_or(""),r.get("source").string().value_or(""),r.get("chapter").string().value_or(""),r.get("chapterTitle").string(256).value_or(""),r.get("page").number(9999),r.get("language").number(99)};
         if(version<3&&retired_source(b.source))return true;
-        b.pages=r.get("pages").number();b.long_strip=r.get("longStrip").number()==1;if(b.title.empty()||b.page>511||b.pages>512||b.language>2||!valid_book(b)){ok=false;return false;}next.push_back(std::move(b));return true;},24);
+        b.pages=r.get("pages").number();b.long_strip=r.get("longStrip").number()==1;
+        b.reading_mode=version<4?legacy_mode:r.get("readingMode").number(99);b.view_mode=version<4?1:r.get("viewMode").number(99);b.zoom_permille=version<4?1000:r.get("zoomPermille").number();
+        if(b.title.empty()||b.page>511||b.pages>512||b.language>2||b.reading_mode>2||b.view_mode>3||b.zoom_permille<1||b.zoom_permille>4000||!valid_book(b)){ok=false;return false;}next.push_back(std::move(b));return true;},24);
     if(!valid||!ok)return false;shelf=std::move(next);lang=l;source=*s;return true;
 }
 }

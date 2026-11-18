@@ -24,28 +24,8 @@
       "name": "s02-wait",
       "action": "wait-for",
       "selector": {
-        "type": "button",
-        "text": "阅读模式：自动"
-      },
-      "expected": {
-        "count": 1
-      },
-      "timeout_ms": 30000
-    },
-    {
-      "name": "s03-tap",
-      "action": "tap-node",
-      "selector": {
-        "type": "button",
-        "text": "阅读模式：自动"
-      }
-    },
-    {
-      "name": "s04-wait",
-      "action": "wait-for",
-      "selector": {
         "type": "text",
-        "text": "设置已保存"
+        "text": "阅读方式在每本漫画内单独设置"
       },
       "expected": {
         "count": 1
@@ -56,8 +36,8 @@
       "name": "s05-wait",
       "action": "wait-for",
       "selector": {
-        "type": "button",
-        "text": "阅读模式：条漫"
+        "type": "text",
+        "text": "阅读方式在每本漫画内单独设置"
       },
       "expected": {
         "count": 1
@@ -417,8 +397,8 @@
       "name": "s44-wait",
       "action": "wait-for",
       "selector": {
-        "type": "button",
-        "text": "阅读模式：条漫"
+        "type": "text",
+        "text": "阅读方式在每本漫画内单独设置"
       },
       "expected": {
         "count": 1
@@ -523,28 +503,8 @@
       "name": "s02-wait",
       "action": "wait-for",
       "selector": {
-        "type": "button",
-        "text": "阅读模式：自动"
-      },
-      "expected": {
-        "count": 1
-      },
-      "timeout_ms": 30000
-    },
-    {
-      "name": "s03-tap",
-      "action": "tap-node",
-      "selector": {
-        "type": "button",
-        "text": "阅读模式：自动"
-      }
-    },
-    {
-      "name": "s04-wait",
-      "action": "wait-for",
-      "selector": {
         "type": "text",
-        "text": "设置已保存"
+        "text": "阅读方式在每本漫画内单独设置"
       },
       "expected": {
         "count": 1
@@ -555,8 +515,8 @@
       "name": "s05-wait",
       "action": "wait-for",
       "selector": {
-        "type": "button",
-        "text": "阅读模式：条漫"
+        "type": "text",
+        "text": "阅读方式在每本漫画内单独设置"
       },
       "expected": {
         "count": 1
@@ -881,8 +841,8 @@
       "name": "s41-wait",
       "action": "wait-for",
       "selector": {
-        "type": "button",
-        "text": "阅读模式：条漫"
+        "type": "text",
+        "text": "阅读方式在每本漫画内单独设置"
       },
       "expected": {
         "count": 1

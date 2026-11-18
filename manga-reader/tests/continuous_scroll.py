@@ -71,7 +71,7 @@ def swipe(d,delta):release(d,hold(d,delta))
 def enter(d,disk_off=False):
  d.wait('书架为空，去发现漫画','text');d.wait('设置')
  if disk_off:
-  d.tap('设置');d.wait('阅读模式：自动');d.tap('阅读模式：自动');d.wait('设置已保存','text');d.tap('自动缓存：开启');d.wait('设置已保存','text');d.wait('自动缓存：关闭');d.tap('返回')
+  d.tap('设置');d.wait('阅读方式在每本漫画内单独设置','text');d.tap('自动缓存：开启');d.wait('设置已保存','text');d.wait('自动缓存：关闭');d.tap('返回')
  d.tap('书源')
  if not any(n.get('visible') and n.get('text')=='MangaDex' for n in d.tree()['nodes']):d.tap('>')
  d.tap('MangaDex');d.wait('触摸测试漫画');d.tap('触摸测试漫画');d.wait('第 1 话 · 出发');d.tap('第 1 话 · 出发')
@@ -218,5 +218,21 @@ try:
   assert crossings>=6 and 1<=saves<=4,(crossings,saves)
   results['progress-coalescing']={'passed':True,'crossed_pages':crossings,'state_writes':saves,'latest_position_saved':True}
   print('progress coalescing PASS',results['progress-coalescing'],flush=True)
+finally:server.terminate();server.wait(timeout=5)
+server=subprocess.Popen([sys.executable,str(Path(__file__).with_name('fixture.py')),'--port','18929','--pages','8','--height','400','--two-books'],stdout=(out/'book-preferences-fixture.log').open('w'),stderr=subprocess.STDOUT)
+try:
+ time.sleep(.3);os.environ['PXA_RESOURCE_EXTERNAL_BYTES']=str(8*1024*1024)
+ with Sim('book-preferences',320,240,125) as d:
+  def tools():
+   if not any(n.get('visible') and n.get('text')=='≡' for n in d.tree()['nodes']):d.pointer('DOWN',160,120,0);time.sleep(.1);d.pointer('UP',160,120,0)
+   d.wait('≡')
+  def settings():tools();d.tap('?');d.wait('阅读与缓存设置');d.tap('阅读与缓存设置')
+  def reader():d.tap('返回');d.wait('阅读与缓存设置');d.tap('返回')
+  def shelf():tools();d.tap('≡');d.wait('返回');d.tap('返回');d.wait('设置')
+  enter(d);settings();d.wait('阅读模式：自动');d.tap('阅读模式：自动');d.wait('设置已保存','text');d.wait('阅读模式：条漫');reader();tools();d.tap('放大');d.wait('整页');shelf()
+  d.tap('发现');d.wait('分页测试漫画');d.tap('分页测试漫画');d.wait('第 1 话 · 出发');d.tap('第 1 话 · 出发');wait_for(lambda:text(d).count('MANGA page_ready_us=')>=2);settings();d.wait('阅读模式：自动');d.tap('阅读模式：自动');d.wait('设置已保存','text');d.tap('阅读模式：条漫');d.wait('设置已保存','text');d.wait('阅读模式：分页');reader();tools();d.wait('放大');shelf();d.wait('2 部漫画 · 已保存','text')
+  d.c.request('PACKAGE stop pxa-manga-reader');time.sleep(.3);d.c.request('PACKAGE run pxa-manga-reader');d.wait('设置');d.tap('触摸测试漫画');d.wait('取消',count=0);tools();d.wait('整页');settings();d.wait('阅读模式：条漫');d.shot('first-book-strip-settings');reader();shelf();d.tap('分页测试漫画');d.wait('取消',count=0);tools();d.wait('放大');settings();d.wait('阅读模式：分页');d.shot('second-book-page-settings');reader();shelf()
+  private=next((d.state/'private-files').glob('*pxa-manga-reader'));state=json.loads((private/'manga-state.json').read_text());assert state['version']==4;books={b['title']:b for b in state['shelf']};assert books['触摸测试漫画']['readingMode']==1 and books['触摸测试漫画']['viewMode']==2;assert books['分页测试漫画']['readingMode']==2 and books['分页测试漫画']['viewMode']==1
+  results['book-preferences']={'passed':True,'separate_reading_modes':True,'separate_zoom_preferences':True,'preserved_after_restart_and_book_switch':True};print('per-book preferences PASS',flush=True)
 finally:server.terminate();server.wait(timeout=5)
 (out/'continuous-result.json').write_text(json.dumps(results,indent=2));print('All continuous scrolling cases PASS',flush=True)

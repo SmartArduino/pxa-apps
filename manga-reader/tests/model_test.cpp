@@ -30,6 +30,11 @@ int main(){
     books[0].page=512;assert(!restore(save(books,2,source),restored,language,source));
     auto old=R"({"version":2,"language":0,"source":"peppercarrot","shelf":[{"id":"peppercarrot","title":"旧来源","source":"peppercarrot"},{"id":"11111111-1111-1111-1111-111111111111","title":"保留的漫画","source":"","page":7,"language":0}]})";
     assert(restore(old,restored,language,source));assert(source=="copymanga"&&restored.size()==1&&restored[0].page==7);
+    assert(restore(old,restored,language,source,2));assert(restored[0].reading_mode==2&&restored[0].view_mode==1&&restored[0].zoom_permille==1000);
+    auto a=restored[0];a.reading_mode=1;a.view_mode=3;a.zoom_permille=1750;auto b=a;b.id="33333333-3333-3333-3333-333333333333";b.reading_mode=2;b.view_mode=0;b.zoom_permille=1000;
+    assert(restore(save({a,b},0,""),restored,language,source));assert(restored.size()==2&&restored[0].reading_mode==1&&restored[1].reading_mode==2);assert(restored[0].view_mode==3&&restored[0].zoom_permille==1750&&restored[1].view_mode==0);
+    auto stable=save(restored,language,source);a.reading_mode=3;assert(!restore(save({a},0,""),restored,language,source));assert(save(restored,language,source)==stable);a.reading_mode=1;a.zoom_permille=4001;assert(!restore(save({a},0,""),restored,language,source));assert(save(restored,language,source)==stable);
+    assert(manga::books(Json(R"({"data":[{"id":"11111111-1111-1111-1111-111111111111","attributes":{"title":{"zh":"新漫画"}}}]})"),books,""));assert(books[0].reading_mode==0&&books[0].view_mode==1);
     assert(!valid_source("xkcd")&&!valid_source("commitstrip")&&!valid_source("https://example.com/catalog.json"));
     assert(valid_source("mangakatana"));
     std::string deep(30,'[');deep+='0';deep+=std::string(30,']');assert(!Json(deep).valid());

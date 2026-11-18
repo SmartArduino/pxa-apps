@@ -127,7 +127,7 @@ struct Reader {
             pinch.apply(touches,v.width,v.height,d.width,content_h,scale,pan_x,pan_y);custom_zoom=scale/(float(v.width)/d.width);zoom_mode=3;dragging=true;overflow_y=waiting_scroll=0;requested_page=-1;
             if(bars){bars=false;changed();}dirty=true;return;
         }
-        if(before==2){normalize_strip();if(zoom_mode==3)(void)ctx->log().write(LogLevel::info,"MANGA pinch_permille="+std::to_string(unsigned(custom_zoom*1000)));auto p=touches.remaining();last_x=down_x=p.x;last_y=down_y=p.y;overflow_y=0;dragging=touches.count()!=0;dirty=true;if(!touches.count())touches.reset();return;}
+        if(before==2){normalize_strip();if(zoom_mode==3){remember_view();(void)ctx->log().write(LogLevel::info,"MANGA pinch_permille="+std::to_string(unsigned(custom_zoom*1000)));}auto p=touches.remaining();last_x=down_x=p.x;last_y=down_y=p.y;overflow_y=0;dragging=touches.count()!=0;dirty=true;if(!touches.count())touches.reset();return;}
         if(e.action()==PointerPhase::down){down_x=last_x=x;down_y=last_y=y;overflow_y=waiting_scroll=0;requested_page=-1;prefetch_retry=0;dragging=true;return;}
         if(!dragging){if(!touches.count())touches.reset();return;}
         if(e.action()==PointerPhase::move){auto old_x=pan_x,old_y=pan_y;pan_x-=x-last_x;auto wanted=pan_y+(vertical()?waiting_scroll:0)-(y-last_y);pan_y=wanted;clamp();if(vertical()){waiting_scroll=std::clamp(wanted-pan_y,-float(metrics.height),float(metrics.height));normalize_strip();if((waiting_scroll>0&&strip_end()+1==pages.size())||(waiting_scroll<0&&!page))waiting_scroll=0;queue_strip_edge();}dirty|=int(old_x)!=int(pan_x)||int(old_y)!=int(pan_y);
@@ -320,19 +320,19 @@ struct Reader {
             auto f=co_await ctx->fs().open("manga-state.tmp",OpenMode::write|OpenMode::create|OpenMode::truncate);if(!f)co_return std::unexpected(f.error());
             auto bytes=std::as_bytes(std::span{text.data(),text.size()});while(!bytes.empty()){auto n=f->write(bytes.first(std::min<size_t>(1024,bytes.size())));if(!n||!*n)co_return std::unexpected(n?Error::io_error:n.error());bytes=bytes.subspan(*n);auto y=co_await ctx->clock().yield();if(!y)co_return std::unexpected(y.error());}
             auto closed=f->close();if(!closed)co_return std::unexpected(closed.error());auto moved=co_await ctx->fs().replace("manga-state.tmp","manga-state.json");if(!moved)co_return std::unexpected(moved.error());
-        }save_busy=false;(void)ctx->log().write(LogLevel::info,"MANGA progress_saved="+std::to_string(book.page));if(screen==shelf_screen)message(shelf_status());co_return Result<void>{};}
-    Task<void> load_saved(){auto f=co_await ctx->fs().open("manga-state.json");
+        }save_busy=false;(void)ctx->log().write(LogLevel::info,"MANGA progress_saved="+std::to_string(book.page));if(screen==shelf_screen)message(shelf_status());else if(screen==settings_screen&&book_settings()&&!save_pending)message("设置已保存");co_return Result<void>{};}
+    Task<void> load_saved(){auto loaded_cache=co_await load_cache();(void)loaded_cache;auto f=co_await ctx->fs().open("manga-state.json");
         if(f){std::string text;for(;;){auto n=f->read(buffer);if(!n||text.size()+*n>32768){storage_ok=false;break;}if(!*n)break;text.append(reinterpret_cast<const char*>(buffer.data()),*n);}auto c=f->close();
-            if(!c||!storage_ok||!manga::restore(text,shelf,language,custom)){storage_ok=false;message("书架记录损坏，已保留原文件");}else if(manga::Json(text).get("version").number()<3)save_pending=true;}
+            if(!c||!storage_ok||!manga::restore(text,shelf,language,custom,cache.mode)){storage_ok=false;message("书架记录损坏，已保留原文件");}else if(manga::Json(text).get("version").number()<4)save_pending=true;}
         else if(f.error()!=Error::not_found){storage_ok=false;message("无法读取书架，进度暂不保存");}
         auto cleaned=co_await ctx->fs().remove("manga-source.tmp");(void)cleaned;cleaned=co_await ctx->fs().remove("manga-image.tmp");(void)cleaned;
-        auto loaded_cache=co_await load_cache();(void)loaded_cache;ready=true;if(storage_ok)message(shelf_status());co_return Result<void>{};}
+        ready=true;if(storage_ok)message(shelf_status());co_return Result<void>{};}
     void action(Act act,int arg=0){if(!ready)return;sync_clock();if(screen==reading)bar_deadline=now_us+6000000;
         if(act==retry_buffer){prefetch_retry=0;if(arg<0&&page)requested_page=page-1;else if(strip_notice==StripNotice::failed&&strip_end()+1<pages.size())requested_page=strip_end()+1;changed();return;}
         if(act==cancel){enter_from_bottom=false;stop();if(image){page=rendered_page;message(page_label());}else{bars=true;message("已取消，可重试");failure="已取消";}return;}
         if(act==show_settings){settings_prior=screen;stop();screen=settings_screen;message(cache.limit?"自动管理最近阅读过的页面":"空间不足或不可用，暂不新增缓存");changed();return;}
         if(act==toggle_cache){cache.enabled=!cache.enabled;cache_prepare=cache.enabled&&!cache.limit;begin(save_cache_settings());return;}
-        if(act==reading_mode){cache.mode=(cache.mode+1)%3;zoom_mode=1;fit();begin(save_cache_settings());return;}
+        if(act==reading_mode){if(!book_settings())return;book.reading_mode=(book.reading_mode+1)%3;zoom_mode=1;custom_zoom=1;fit();remember_view();message("正在保存…");return;}
         if(act==clear_cache){begin(clear_cache_files());return;}
         if(act==show_help){prior=screen;stop();screen=help;changed();return;}
         if(act==go_back){if(screen==settings_screen){stop();screen=settings_prior;bars=true;bar_deadline=now_us+6000000;message(screen==reading?page_label():shelf_status());if(screen==reading&&(!image||rendered_page!=page))begin(pages.empty()?load_pages():load_image());return;}if(screen==page_jump){screen=reading;input.set("");(void)input_ref.hide_keyboard();bar_deadline=now_us+6000000;message("第 "+std::to_string(page+1)+" / "+std::to_string(pages.size())+" 页");return;}if(screen==help){screen=prior;bar_deadline=now_us+6000000;changed();if(screen==reading&&(!image||rendered_page!=page))begin(pages.empty()?load_pages():load_image());return;}stop();image.reset();pages.clear();
@@ -354,14 +354,14 @@ struct Reader {
         if(act==retry){if(busy)return;failure.clear();if(screen==discover)begin(load_catalog());else if(screen==contents)begin(load_chapters());else if(screen==reading){if(chapter_from_cache){refresh_chapter=true;pages.clear();}begin(pages.empty()?load_pages():load_image());}return;}
         if(busy)return;
         if(act==open_book||act==read_book){auto& list=screen==discover?results:shelf;if(arg<0||unsigned(arg)>=list.size())return;book=list[arg];auto saved=std::find_if(shelf.begin(),shelf.end(),[&](auto& b){return manga::same(b,book);});if(saved!=shelf.end())book=*saved;
-            language=book.chapter.empty()?language:book.language;chapters.clear();groups.clear();group_index=0;total=0;list_start=offset=0;if(act==read_book&&!book.chapter.empty()){screen=reading;bars=false;zoom_mode=1;pages.clear();begin(load_pages());}else{screen=contents;begin(load_chapters());}return;}
+            restore_view();language=book.chapter.empty()?language:book.language;chapters.clear();groups.clear();group_index=0;total=0;list_start=offset=0;if(act==read_book&&!book.chapter.empty()){screen=reading;bars=false;pages.clear();begin(load_pages());}else{screen=contents;begin(load_chapters());}return;}
         if(act==collect){auto p=std::find_if(shelf.begin(),shelf.end(),[&](auto& b){return manga::same(b,book);});if(p==shelf.end()){if(shelf.size()>=24){message("书架已满（24 部）");return;}shelf.push_back(book);message("已加入书架");}else{shelf.erase(p);message("已从书架移除");}save();return;}
         if(act==previous_list||act==next_list){auto count=screen==shelf_screen?shelf.size():screen==discover?results.size():chapters.size();auto rows=row_count();
             if(act==next_list){if(list_start+rows<count)list_start+=rows;else if(remote_list()&&offset+batch_size()<total){offset+=batch_size();begin(screen==discover?load_catalog():load_chapters());return;}}
             else if(list_start)list_start-=std::min(list_start,rows);else if(offset){offset-=std::min(offset,batch_size());begin(screen==discover?load_catalog():load_chapters());return;}changed();return;}
         if(act==open_chapter||act==resume){if(act==open_chapter){if(arg<0||unsigned(arg)>=chapters.size())return;book.chapter=chapters[arg].id;book.chapter_title=chapters[arg].title;book.page=0;}if(book.chapter.empty())return;if(act==resume)language=book.language;
-            screen=reading;bars=false;zoom_mode=1;pages.clear();begin(load_pages());return;}
-        if(act==zoom){zoom_mode=zoom_mode>=2?0:zoom_mode+1;touches.reset();fit();changed();return;}
+            screen=reading;bars=false;restore_view();pages.clear();begin(load_pages());return;}
+        if(act==zoom){zoom_mode=zoom_mode>=2?0:zoom_mode+1;touches.reset();fit();remember_view();changed();return;}
         if(act==previous_page||act==next_page){if(pages.empty())return;if((act==previous_page&&page==0)||(act==next_page&&page+1==pages.size())){enter_from_bottom=false;message(act==next_page?"本章已读完，可打开目录":"已是本章第一页");bars=true;return;}
             page+=act==next_page?1:-1;begin(load_image());return;}
     }

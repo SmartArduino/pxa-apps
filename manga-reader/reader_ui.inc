@@ -61,8 +61,9 @@ template<class Owner> bool Reader::Controls::render(Owner& owner,std::uint32_t p
         return ok;
     }
     if(screen==settings_screen){
-        button(x,y,52,30,"返回",go_back);text(x+64,y+4,w-64,24,"阅读与缓存",Font::label);
-        button(x,y+40,w,30,std::string("阅读模式：")+(app->cache.mode==0?"自动":app->cache.mode==1?"条漫":"分页"),reading_mode,0,false,!app->busy);
+        const bool local=app->book_settings();button(x,y,52,30,"返回",go_back);text(x+64,y+4,w-64,24,local?"本漫画 · "+app->book.title:std::string("缓存设置"),Font::label);
+        if(local)button(x,y+40,w,30,std::string("阅读模式：")+(app->book.reading_mode==0?"自动":app->book.reading_mode==1?"条漫":"分页"),reading_mode,0,false,!app->busy);
+        else text(x,y+44,w,26,"阅读方式在每本漫画内单独设置",Font::caption,muted);
         button(x,y+76,w,30,std::string("自动缓存：")+(app->cache.enabled?"开启":"关闭"),toggle_cache,0,false,!app->busy);
         text(x,y+112,w-100,22,app->cache_label(),Font::caption,muted);
         button(x+w-92,y+110,92,30,"清除缓存",clear_cache,0,false,!app->busy);
