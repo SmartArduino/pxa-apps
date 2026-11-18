@@ -467,8 +467,8 @@ try:
         data=pause_data()
         assert total(data,7)==1992 and total(data,9)==before_boards+20
         assert struct.unpack_from('<I',data,38)[0]==before_crafted+5
-        stop();checkpoint=path.read_bytes();start(211)
-        assert path.read_bytes()==checkpoint,'Title altered the existing save'
+        stop();checkpoint_bytes=path.read_bytes();checkpoint=read_save(path);start(211)
+        assert path.read_bytes()==checkpoint_bytes,'Title altered the existing save'
         enter_world();tap(195,22,'header');time.sleep(4.6);capture('backpack-restored');data=pause_data()
         assert slots(data)==slots(checkpoint) and data[62]==23
         assert not any('save failed' in p.read_text(errors='replace').lower()for p in out.glob('simulator-*.log'))
@@ -726,7 +726,7 @@ try:
         probe('craft-cn',['UP','DOWN'],((111,199),(234,222)))
         tap(145,35,'tab')
         probe('gear-cn',['RIGHT'],((7,188),(281,222)))
-        verify_native_font('gear-cn-touch','旅人的衣橱',8,12)
+        verify_native_font('gear-cn-touch','旅人的衣橱',10,8)
         tap(258,35,'tab')
         probe('guide-cn',['UP'],((8,49),(278,194)),'content')
         key('X');tap(260,22,'header')
