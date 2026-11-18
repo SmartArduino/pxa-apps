@@ -18,11 +18,18 @@ int main() {
     pocket::screen.resize(pw*ph);pocket::ui={pocket::screen.data(),pw,ph,lw,lh};pocket::screen_mode=true;
     for(bool en:{false,true}) {
       pocket::set_english(en);new_game(s,1234567);s.equip[0]=CrystalHelmet;s.equip[1]=CrystalMail;s.equip[2]=CrystalGreaves;s.equip[7]=GlowCharm;
-      for(auto page:{Bag,Crafting,Gear}) {
+      for(auto page:{World,Bag,Crafting,Gear}) {
         set_view(page);
         if(page==Crafting)post_notice(tr("Free some bag space for the result.","背包空间不足，请先腾出成品位置。"));
         pocket::text_marks.clear();pocket::trace_text=true;game::draw();pocket::trace_text=false;
         int cx=content_x(),cy=content_y(),fy=height()-224-FooterInset;
+        if(page==World) {
+          for(auto [word,x,w]:{std::tuple{tr("BAG","背包"),width()-117,36},std::tuple{tr("CRAFT","合成"),width()-81,40}}) {
+            auto mark=std::find_if(pocket::text_marks.begin(),pocket::text_marks.end(),[&](auto &t){return t.value==word;});
+            assert(mark!=pocket::text_marks.end());contained(*mark,x,11,w,18,1);
+          }
+          continue;
+        }
         for(auto &t:pocket::text_marks) {
           if(t.y<28 && t.x<width()-64) {
             if(page==Crafting && t.x>=width()-162)contained(t,width()-162,5,98,23,2);

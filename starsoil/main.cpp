@@ -142,9 +142,9 @@ int text_width(const char *txt, int scale = 1) {
   return pocket::text_width(txt, scale);
 }
 void center(int x, int y, int w, const char *txt, uint16_t c = Ink,
-            int scale = 1,bool left=false) {
+            int scale = 1,bool left=false,int padding=2) {
   char fitted[256]{};
-  if (text_width(txt, scale) > w - 4) {
+  if (text_width(txt, scale) > w - padding*2) {
     size_t size = 0;
     while (*txt) {
       const char *start = txt;
@@ -153,7 +153,7 @@ void center(int x, int y, int w, const char *txt, uint16_t c = Ink,
       if (size + n + 4 >= sizeof(fitted)) break;
       std::memcpy(fitted + size, start, n);
       std::memcpy(fitted + size + n, "…", 4);
-      if (text_width(fitted, scale) > w - 4) {
+      if (text_width(fitted, scale) > w - padding*2) {
         std::memcpy(fitted + size, "…", 4);
         break;
       }
@@ -161,7 +161,7 @@ void center(int x, int y, int w, const char *txt, uint16_t c = Ink,
     }
     txt = fitted;
   }
-  label(x + (left?2:(w - text_width(txt, scale)) / 2), y, txt, c, scale);
+  label(x + (left?padding:(w - text_width(txt, scale)) / 2), y, txt, c, scale);
 }
 void fit_label(int x,int y,int w,const char *text,uint16_t c=Ink) {center(x,y,w,text,c,1,true);}
 void wrap(int x, int y, int width, const char *txt, uint16_t c = Muted,
@@ -785,8 +785,8 @@ void hud() {
   // Keep touch targets below the system's top notification-gesture strip.
   hud_frame(width()-117,11,36,18);
   hud_frame(width()-81,11,40,18);
-  center(width() - 115, 12, 32, tr("BAG", "背包"), Ink);
-  center(width() - 79, 12, 36, tr("CRAFT", "合成"), Teal);
+  center(width() - 117, 12, 36, tr("BAG", "背包"), Ink,1,false,1);
+  center(width() - 81, 12, 40, tr("CRAFT", "合成"), Teal,1,false,1);
   for (int i = 0; i < HotSlots; ++i) {
     int x = 20 + i * 24;
     hud_frame(x,34,22,23,i==s.selected);
