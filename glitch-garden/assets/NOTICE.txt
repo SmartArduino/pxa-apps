@@ -3,7 +3,7 @@
 PXA game code, rendering adapter, build tools, and procedural sound effects:
 MIT. Full license: LICENSE-PXA-MIT.txt.
 
-Original scene, character sheets, UI art, title/button lettering and glyph atlas:
+Original scene, character sheets, UI art, store cover, title/button lettering and glyph atlas:
 generated with the built-in image_gen tool for this project from original
 prompts. The complete prompts are in art/prompts.json in the source release.
 To the extent any copyrights or related rights are held by the contributors,

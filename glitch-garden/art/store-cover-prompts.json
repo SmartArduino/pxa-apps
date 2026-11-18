@@ -1,0 +1,39 @@
+{
+  "generator": "built-in image_gen",
+  "assets": [
+    {
+      "file": "art/generated/store-cover-v1.png",
+      "purpose": "store cover illustration; not a runtime screenshot",
+      "dimensions": [
+        1448,
+        1086
+      ],
+      "license": "CC0-1.0 to the extent applicable rights are held by contributors",
+      "prompt": "Use case: ads-marketing.\nAsset type: ORIGINAL illustrated storefront cover for the existing game “露芽守卫”. A landscape 4:3 canvas, ideally 1280 × 960 pixels.\nInput images are references ONLY, not edit targets: image 1 shows the game's actual warm hand-painted garden, colors and visual identity; image 2 is the existing coral-petal defender's character model sheet; image 3 is the existing periwinkle bellflower that gathers golden dew; image 4 is the existing charcoal-purple fuzzy dust imp with two leaf antennae, gold eyes and a tan seed pouch; image 5 shows the game's title lettering and wooden sign.\nCreate a polished, inviting, high-resolution storybook-gouache key illustration for this very game. Preserve the recognizable original character designs, chunky soft dark-olive outlines, painted texture, yellow-green grass, warm wood and cream-gold lettering. Show a small group of coral-petal defenders and a drooping blue bellflower with a glowing golden dewdrop holding a garden against two or three mischievous fuzzy dust imps. Suggest the tower-defense action with a couple of flying golden seeds and a natural grassy clearing. Characters should have clear, expressive silhouettes and soft grounded shadows. Keep the composition balanced and readable as a small store thumbnail, with lush but restrained foliage, little pink and cream flowers, warm dappled sunlight and gentle depth. All important characters, roots and feet fully inside the canvas with breathing room.\nAcross the upper third, a beautiful substantial honey-colored wooden sign with curled leaves bears ONLY the exact large Chinese game title “露芽守卫” — all four characters correct, warm cream/gold hand-painted game lettering with a dark brown outline, matching reference image 5. Title must be the strongest visual element and remain readable when reduced.\nThis is promotional cover ILLUSTRATION, not a screenshot. No HUD, cards, menus, buttons, counters, grids, progress bars, device frames, labels, version numbers, captions, slogans, extra text or watermarks. No newly invented character types. No zombies, pea-shooter faces, sunflowers or any recognizable Plants vs. Zombies characters or logos. No pixel art, 3D rendering, vector-flat app graphics, cut-off objects, aggressive horror or generic AI gloss.",
+      "references": [
+        {
+          "role": "actual gameplay style",
+          "type": "verified simulator capture",
+          "app_version": "0.2.7"
+        },
+        {
+          "role": "coral-petal defender character",
+          "file": "art/generated/coralflower.png"
+        },
+        {
+          "role": "dew-producing bellflower character",
+          "file": "art/generated/dewflower.png"
+        },
+        {
+          "role": "dust imp character",
+          "file": "art/generated/dustimp.png"
+        },
+        {
+          "role": "title lettering and wood sign",
+          "type": "verified simulator home capture",
+          "app_version": "0.2.7"
+        }
+      ]
+    }
+  ]
+}

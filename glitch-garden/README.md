@@ -26,7 +26,7 @@ pxa build local/pxa-apps/glitch-garden --offline --target esp32s3,esp32s31,esp32
 
 ## 素材与再生成
 
-`art/generated/` 保存原始参考图、22 张透明序列图、UI、背景和专用字样/字模；完整提示词在 `art/prompts.json` 与 `art/refinement-prompts.json`、`art/expansion-prompts.json`、`art/inbetween-prompts.json`。`asset-sources.json` 保存实际输入摘要。图像再生成使用提示词及参考图；以下工具负责角色连续变形、缩放、透明通道校验、调色板和图集打包。原始生成序列作为设计参考保留；当前播放帧来自固定纹理的运动绑定，生成来源与程序派生过程分别记录。
+`art/generated/` 保存原始参考图、22 张透明序列图、UI、背景和专用字样/字模；完整提示词在 `art/prompts.json` 与 `art/refinement-prompts.json`、`art/expansion-prompts.json`、`art/inbetween-prompts.json`。`art/store-cover-prompts.json` 保存商城原创封面插画的提示词及来源；商城截图仍来自真实运行的模拟器。`asset-sources.json` 保存实际输入摘要。图像再生成使用提示词及参考图；以下工具负责角色连续变形、缩放、透明通道校验、调色板和图集打包。原始生成序列作为设计参考保留；当前播放帧来自固定纹理的运动绑定，生成来源与程序派生过程分别记录。
 
 ```sh
 python3 local/pxa-apps/glitch-garden/tools/build_original_art.py \
