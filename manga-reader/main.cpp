@@ -6,6 +6,7 @@
 #include "cache_model.hpp"
 #include "reader_gesture.hpp"
 #include <cstring>
+#include <cstdlib>
 #include <pxa/app.hpp>
 #include <pxa/events.hpp>
 #include <pxa/http.hpp>
@@ -44,7 +45,7 @@ struct Reader {
     std::vector<std::string> pages,originals;
     manga::Book book;
     std::string custom="copymanga",query,status="正在读取书架…",failure;
-    unsigned source_start=0,language=0,offset=0,total=0,list_start=0,page=0,zoom_mode=1;
+    unsigned source_start=0,language=0,offset=0,total=0,list_start=0,page=0,zoom_mode=1,compatibility_pixels=1048576;
     bool input_empty=true;
     bool busy=false,dirty=true,ui_dirty=true,ready=false,save_pending=false,save_busy=false,storage_ok=true,bars=false,dragging=false,exit_pending=false;
     std::uint64_t now_us=0,bar_deadline=0;
@@ -75,6 +76,11 @@ struct Reader {
         (void)ctx->log().write(LogLevel::warning,"MANGA error="+std::to_string(int(e)));message(failure);
     }
     Result<void> on_start(Context& c,std::span<const std::byte> config){ctx=&c;auto m=decode_start_display(config);if(!m)return std::unexpected(m.error());metrics=*m;
+        // Grow linear memory before decoded Host images fragment PSRAM. Free
+        // the block for normal allocations; Wasm keeps the mapped capacity.
+        compatibility_pixels=image_pixels();auto reserve=std::malloc(std::size_t(compatibility_pixels)*3+1048576);
+        if(reserve)std::free(reserve);else compatibility_pixels=std::min(compatibility_pixels,131072u);
+        (void)c.log().write(LogLevel::info,"MANGA conversion_pixels="+std::to_string(compatibility_pixels));
         c.foreground_tasks().on_error(this,[](void* p,Error e) noexcept {static_cast<Reader*>(p)->error(e);});
         c.tasks().on_error(this,[](void* p,Error e) noexcept {auto a=static_cast<Reader*>(p);a->save_busy=false;a->storage_ok=false;a->save_pending=false;a->message("保存失败 ("+std::to_string(int(e))+")");});
         auto w=c.window().fullscreen(WindowBarMode::hidden,WindowBarMode::hidden);if(!w)return w;start(load_saved(),false);return {};}
@@ -92,6 +98,7 @@ struct Reader {
     float ui_factor()const{return metrics.height>=480?std::max(1.f,std::min({density()/.78125f,metrics.width/320.f,metrics.height/240.f})):1.f;}
     CanvasRegion physical_area()const {int l=metrics.safe.left,r=metrics.safe.right,t=metrics.safe.top,b=metrics.safe.bottom;
         if(metrics.system_bars_known){l=std::max(l,int(metrics.system_bars.left));r=std::max(r,int(metrics.system_bars.right));t=std::max(t,int(metrics.system_bars.top));b=std::max(b,int(metrics.system_bars.bottom));}
+        if(metrics.system_gestures_known){l=std::max(l,int(metrics.system_gestures.left));r=std::max(r,int(metrics.system_gestures.right));t=std::max(t,int(metrics.system_gestures.top));b=std::max(b,int(metrics.system_gestures.bottom));}
         if(metrics.shape==2){l=std::max(l,int(metrics.width*.15));r=std::max(r,int(metrics.width*.15));t=std::max(t,int(metrics.height*.15));b=std::max(b,int(metrics.height*.15));}
         return {l+4,t+4,std::max(1,int(metrics.width)-l-r-8),std::max(1,int(metrics.height)-t-b-8)};}
     CanvasRegion area()const {auto r=physical_area();float f=ui_factor();return {int(r.x/f),int(r.y/f),int(r.width/f),int(r.height/f)};}
@@ -252,8 +259,13 @@ struct Reader {
         (void)ctx->log().write(LogLevel::info,"MANGA page_ready_us="+std::to_string(now_us-started));auto r=co_await ctx->fs().remove("manga-source.tmp");(void)r;r=co_await ctx->fs().remove("manga-image.tmp");(void)r;busy=false;changed();co_return Result<void>{};}
     Task<Asset> convert_download(bool foreground=true){auto started=now_us;std::uint64_t work_us=0;unsigned max_slice_us=0;
         auto batch=[&](auto done,auto step){auto tick=profile_short_tick();bool ok=true;for(unsigned n=0;n<64&&!done();++n){if(!step()){ok=false;break;}if(profile_short_us(tick,profile_short_tick())>=(foreground?6000u:dragging?2000u:4000u))break;}auto us=profile_short_us(tick,profile_short_tick());work_us+=us;max_slice_us=std::max(max_slice_us,us);return ok;};
-        if(foreground)message("正在处理图片…");manga::ImageSource source;if(!source_bytes.empty())source.memory=source_bytes;else{auto opened=co_await ctx->fs().open("manga-source.tmp");if(!opened)co_return std::unexpected(opened.error());source.file.emplace(std::move(*opened));}auto file=&source;
-        auto converter=std::make_unique<manga::JpegCompat>();converter->max_width=image_width();converter->max_pixels=image_pixels();
+        if(foreground){
+            clear_buffers();release_page();message("正在处理图片…");
+            // Let the compositor retire its old image snapshot before the
+            // Guest grows a contiguous RGB decode buffer on fragmented PSRAM.
+            auto tick=profile_short_tick();for(unsigned pass=0;pass<256;++pass){auto y=co_await ctx->clock().yield();if(!y)co_return std::unexpected(y.error());if(profile_short_us(tick,profile_short_tick())>=20000)break;}
+        }manga::ImageSource source;if(!source_bytes.empty())source.memory=source_bytes;else{auto opened=co_await ctx->fs().open("manga-source.tmp");if(!opened)co_return std::unexpected(opened.error());source.file.emplace(std::move(*opened));}auto file=&source;
+        auto converter=std::make_unique<manga::JpegCompat>();converter->max_width=image_width();converter->max_pixels=compatibility_pixels;
         auto read=[](void* p,std::span<std::byte> out)->std::size_t{auto n=static_cast<manga::ImageSource*>(p)->read(out);return n?*n:0;};
         std::unique_ptr<manga::ProgressiveJpeg> progressive;std::unique_ptr<manga::WebpCompat> webp;bool jpeg_output=true;
         if(!converter->begin(read,&*file)){
@@ -262,16 +274,16 @@ struct Reader {
             bool is_webp=*n==12&&std::memcmp(signature.data(),"RIFF",4)==0&&std::memcmp(signature.data()+8,"WEBP",4)==0;
             rewound=co_await file->seek(0);if(!rewound)co_return std::unexpected(rewound.error());
             if(is_webp){
-                webp=std::make_unique<manga::WebpCompat>();webp->max_width=image_width();webp->max_pixels=image_pixels();if(!webp->begin(read,&*file))co_return std::unexpected(webp->limited?Error::limit_exceeded:Error::unsupported);
+                webp=std::make_unique<manga::WebpCompat>();webp->max_width=image_width();webp->max_pixels=compatibility_pixels;if(!webp->begin(read,&*file))co_return std::unexpected(webp->limited?Error::limit_exceeded:Error::unsupported);
                 while(!webp->done()){if(!batch([&]{return webp->done();},[&]{return webp->next();}))co_return std::unexpected(webp->limited?Error::limit_exceeded:Error::protocol_error);auto y=co_await ctx->clock().yield();if(!y)co_return std::unexpected(y.error());}
-                converter=std::make_unique<manga::JpegCompat>();converter->max_width=image_width();converter->max_pixels=image_pixels();if(!converter->begin_rgb(webp->pixels,webp->width,webp->height,3))co_return std::unexpected(Error::limit_exceeded);
+                converter=std::make_unique<manga::JpegCompat>();converter->max_width=image_width();converter->max_pixels=compatibility_pixels;if(!converter->begin_rgb(webp->pixels,webp->width,webp->height,3))co_return std::unexpected(Error::limit_exceeded);
             }else{
                 manga::JpegHeader header;if(!manga::jpeg_header(read,&*file,header))co_return std::unexpected(Error::unsupported);
                 if(std::uint64_t(header.width)*header.height>1048576)co_return std::unexpected(Error::limit_exceeded);
                 rewound=co_await file->seek(0);if(!rewound)co_return std::unexpected(rewound.error());
                 progressive=std::make_unique<manga::ProgressiveJpeg>();
                 if(!progressive->load(read,&*file))co_return std::unexpected(progressive->limited?Error::limit_exceeded:Error::unsupported);
-                converter=std::make_unique<manga::JpegCompat>();converter->max_width=image_width();converter->max_pixels=image_pixels();
+                converter=std::make_unique<manga::JpegCompat>();converter->max_width=image_width();converter->max_pixels=compatibility_pixels;
                 if(!converter->begin_rgb(progressive->pixels,progressive->width,progressive->height,progressive->channels))co_return std::unexpected(Error::limit_exceeded);
             }
         }

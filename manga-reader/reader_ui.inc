@@ -70,9 +70,9 @@ template<class Owner> bool Reader::Controls::render(Owner& owner,std::uint32_t p
     if(screen==help){button(x,y,52,30,"返回",go_back);text(x+64,y+4,w-64,24,"阅读操作",Font::label);
         int yy=y+42;for(auto s:{"页漫横滑翻页 · 长页上下拖动","条漫连续滚动 · 自动拼接图片","双指缩放 · 放大后可拖动","点页码跳转 · ≡ 打开目录"}){text(x,yy,w,24,s);yy+=26;}button(x,y+h-32,w,32,"阅读与缓存设置",show_settings);return ok;
     }
-    if(screen==page_jump){button(x,y,52,30,"返回",go_back);text(x+64,y+4,w-64,24,"跳转页码",Font::label);
+    if(screen==page_jump){button(x,y,52,30,"返回",go_back);text(x+64,y+4,w-128,24,"跳转页码",Font::label);button(x+w-56,y,56,30,"跳转",jump_submit,0,true);
         rect(x,y+38,w-80,34,paper,6);button(x+w-74,y+38,34,34,"-",jump_step,-1);button(x+w-36,y+38,36,34,"+",jump_step,1);text(x,y+82,w,22,"输入 1–"+std::to_string(app->pages.size())+" 之间的页码",Font::caption,muted);
-        feedback(y+h-62);button(x,y+h-32,w,32,"跳转",jump_submit,0,true);return ok;}
+        feedback(y+h-62);return ok;}
     if(screen==contents){
         button(x,y,48,30,"返回",go_back);text(x+60,y+4,w-120,24,"章节目录",Font::label);
         auto saved=std::any_of(app->shelf.begin(),app->shelf.end(),[&](auto& b){return manga::same(b,app->book);});button(x+w-56,y,56,30,saved?"已收藏":"收藏",collect,0,false,!app->busy);
