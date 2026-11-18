@@ -59,10 +59,15 @@ void menu_background() {
 void draw_title() {
   menu_background();
   normalize_world_selection();
-  sprite(31,10,art::emblem[0],32,32);
-  center(1,11,288,"STARSOIL",Dark,3);
-  center(0, 10, 288, "STARSOIL", GoldInk, 3);
-  center(0, 49, 288, tr("THE WORLDS BELOW", "星壤物语"), Ink);
+  for(int y=0;y<48;++y) {
+    unsigned at=starsoil_title_art::rows[y],end=starsoil_title_art::rows[y+1];int x=32;
+    while(at<end) {
+      unsigned length=starsoil_title_art::runs[at++],index=starsoil_title_art::runs[at++];
+      if(index)rect(x,y+6,length,1,starsoil_title_art::palette[index]);x+=length;
+    }
+  }
+  line(88,59,125,59,rgb(137,93,64));line(163,59,200,59,rgb(137,93,64));
+  pixel(143,58,Teal);pixel(144,57,GoldInk);pixel(145,58,Teal);
   int count = world_count();
   if (!count) {
     center(18, 85, 252, tr("YOUR NEXT ADVENTURE", "下一段冒险，由你开启"),

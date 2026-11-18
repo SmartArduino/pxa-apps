@@ -151,8 +151,23 @@
         0,
         254
       ]
+    },
+    {
+      "name": "title-logo",
+      "file": "title-logo-source-v1.png",
+      "sha256": "ce74cfc797ba756f4fac803505e760a267c556d1674a91f39446738ff5dbf020",
+      "prompt": "Use case: logo-brand\nAsset type: actual transparent pixel-art title wordmark asset for the original 2D sandbox game Starsoil, NOT a screen mockup.\nPrimary request: A beautiful, carefully crafted horizontal game title logo reading exactly \"STARSOIL\". Original pixel-art adventure lettering, reminiscent of the handcrafted charm of classic pixel sandbox games such as Terraria but with original letterforms and Starsoil's own crystal-and-soil identity.\nComposition: Wide horizontal wordmark with a small integrated faceted cyan star-crystal rising from a tiny moss-covered earth island at the left, followed by the eight large, clearly legible capital letters S T A R S O I L. The lettering has pale parchment and warm golden stone faces, aged copper undersides, a 1-pixel midnight outline and restrained turquoise crystal accents. A few tiny green shoots grow from the first and last letters; do not obscure their silhouettes.\nPixel specification: This must survive reduction to a native 224x48 pixel transparent sprite. Build the art as chunky intentional pixels at that native size: approximately 22-28 pixel-tall letter faces, consistent baseline, 2-3 pixel stems, clean steps, generous counters. The full asset must fit a 224x48 logical canvas including the crystal emblem and its highlights. Render enlarged for delivery, preferably 1536x512. Keep the entire silhouette inside the canvas with transparent padding. No small painterly detail.\nPalette: about 24-48 flat colors, ink navy, dark slate, warm copper, creamy light gold and cool cyan. Solid crisp square pixel clusters, no smooth gradients, no semitransparent glow.\nText verbatim: STARSOIL\nAvoid: Chinese subtitle, other words, labels, borders, mockup UI, background scenery, drop shadow outside the tight silhouette, Terraria's logo letters, antialiasing, bevelled vector text, glossy 3D rendering, excessive ornaments. Genuine transparent background.",
+      "source_size": [
+        2172,
+        724
+      ],
+      "output": "title-logo-v1.png"
     }
   ],
   "ui_palette": "63 opaque colors plus transparent index 0",
-  "import": "python3 tools/import_generated.py; python3 tools/draw_art.py"
+  "import": "python3 tools/import_generated.py; python3 tools/draw_art.py",
+  "native_title_logo": [
+    224,
+    48
+  ]
 }

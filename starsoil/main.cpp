@@ -19,6 +19,7 @@
 #include "text.hpp"
 #include "quantity.hpp"
 #include "ui_skin.hpp"
+#include "title_art.hpp"
 #include "trees.hpp"
 #include <algorithm>
 #include <cmath>

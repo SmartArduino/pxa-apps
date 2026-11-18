@@ -81,9 +81,35 @@ def native_ui(sources):
     (ROOT/'ui_art.hpp').write_text(text)
     return atlas
 
+def native_title(sources):
+    source=binary(Image.open(DEST/sources['title-logo']['file']))
+    source=source.crop(source.getbbox())
+    from PIL import ImageOps
+    fitted=ImageOps.contain(source,(222,46),Image.Resampling.BOX)
+    image=Image.new('RGBA',(224,48));image.paste(fitted,((224-fitted.width)//2,(48-fitted.height)//2))
+    image=limited([binary(image,128)],63)[0]
+    image.save(DEST/'title-logo-v1.png',optimize=True)
+    colors=sorted({(r>>3)<<11|(g>>2)<<5|(b>>3)for r,g,b,a in image.getdata()if a})
+    palette=[0]+[c or 1 for c in colors];lookup={c:i+1 for i,c in enumerate(colors)}
+    pixels=[lookup[(r>>3)<<11|(g>>2)<<5|(b>>3)]if a else 0 for r,g,b,a in image.getdata()]
+    runs=[];offsets=[0]
+    for y in range(48):
+        row=pixels[y*224:(y+1)*224];x=0
+        while x<224:
+            end=x+1
+            while end<224 and row[end]==row[x]:end+=1
+            runs.extend([end-x,row[x]]);x=end
+        offsets.append(len(runs))
+    text='// SPDX-License-Identifier: MIT\n// Generated from retained title art by tools/import_generated.py.\n#pragma once\n#include <cstdint>\nnamespace starsoil_title_art {\n'
+    text+='inline constexpr uint16_t palette[64]={'+','.join(map(str,palette+[0]*(64-len(palette))))+'};\n'
+    text+='inline constexpr uint16_t rows[49]={'+','.join(map(str,offsets))+'};\n'
+    text+='inline constexpr uint8_t runs['+str(len(runs))+']={'+','.join(map(str,runs))+'};\n}\n'
+    (ROOT/'title_art.hpp').write_text(text)
+
 def main():
     metadata=json.loads((DEST/'source.json').read_text());sources={item['name']:item for item in metadata['sources']}
     for item in sources.values():assert hashlib.sha256((DEST/item['file']).read_bytes()).hexdigest()==item['sha256']
     native_creatures(sources);native_ui(sources)
+    if 'title-logo' in sources:native_title(sources)
     print('Imported nine 6-frame 24x24 creature loops and nine 32x32 UI tiles with bounded palettes.')
 if __name__=='__main__':main()
