@@ -8,7 +8,7 @@ verify --store-screenshots workflow for marketplace uploads.
 from pathlib import Path
 import argparse,concurrent.futures,json,os,re,socket,struct,subprocess,time,traceback
 from PIL import Image
-p=argparse.ArgumentParser();p.add_argument('--simulator',type=Path,required=True);p.add_argument('--package',type=Path,required=True);p.add_argument('--publisher-key',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--profiles',nargs='+');p.add_argument('--density-dpi',type=int,default=160);args=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('--simulator',type=Path,required=True);p.add_argument('--package',type=Path,required=True);p.add_argument('--publisher-key',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--profiles',nargs='+');p.add_argument('--density-dpi',type=int,default=160);p.add_argument('--save-layout',type=Path,required=True);args=p.parse_args();schema=json.loads(args.save_layout.read_text())
 for name in ('simulator','package','publisher_key','output'):setattr(args,name,getattr(args,name).resolve())
 args.output.mkdir(parents=True,exist_ok=False);profiles={'pai-touch':(296,240),'doit-gamekit-2':(320,240),'esp-mosaico':(480,480),'espp4-a':(480,854),'esp32s31-korvo-1':(800,480),'desktop-1024':(1024,600),'tablet':(1280,800),'desktop-hd':(1920,1080)}
 if args.profiles:profiles={n:profiles[n] for n in args.profiles}
@@ -53,7 +53,7 @@ def run(item):
  def saves():
   found=[]
   for file in (state/'private-files').rglob('*.save'):
-   b=file.read_bytes();assert len(b)==13448 and struct.unpack_from('<II',b)==(0x49445736,6);crc=2166136261
+   b=file.read_bytes();assert len(b)==schema['size'] and struct.unpack_from('<II',b)==(0x49445737,7);crc=2166136261
    for byte in b[12:]:crc=((crc^byte)*16777619)&0xffffffff
    assert crc==struct.unpack_from('<I',b,8)[0];found.append((struct.unpack_from('<I',b,16)[0],b))
   assert found;return max(found)[1]
@@ -72,21 +72,26 @@ def run(item):
     def dock(i):tap(offset+52+94*i,bottom+5+row/2)
     def production(i):tap(offset+52+94*i,panel+header+4+card/2)
     def tactic(i):tap(offset+63+118*(i%4),tactics+header+4+(i//4)*(row+6)+row/2)
-   shot('landscape-home');tap(offset+185,max(214,h-128)+64);tap(180,h-44);shot('battle-default');dock(0);shot('unit-catalogue');production(2);shot('queued');dock(1);shot('building-catalogue');production(0);shot('placement');tap(cx-90,mid-65);shot('power-placed')
+   shot('landscape-home');tap(offset+185,max(214,h-128)+64);
+   for briefing_page in range(6):
+    tap(180,h-44)
+    if re.search(r'Iron Dawn state .*screen=3',log.read_text()):break
+   else:raise AssertionError('Briefing did not deploy')
+   shot('battle-default');dock(0);shot('unit-catalogue');production(2);shot('queued');dock(1);shot('building-catalogue');production(0);shot('placement');tap(cx-90,mid-65);shot('power-placed')
    if wide:
     qx=world_w+8+cw+6+cw/2;qy=grid+2*(card_height+6)+card_height/2;swipe(qx,qy,qx+10,qy);shot('sidebar-empty-drag')
    else:
     dock(4);shot('tactics');swipe(w/2,tactics+10,w/2+30,tactics+10);shot('header-drag');tactic(7);dock(4)
    tactic(0);shot('selection-armed');swipe(cx-75,mid-4,cx+35,mid+35);shot('selection-complete');assert re.search(r'Iron Dawn state .*selected=4',log.read_text());tap(cx-40,mid+100);time.sleep(1);shot('movement');tap(w-42,24);time.sleep(.8);assert re.search(r'Iron Dawn state .*screen=4',log.read_text());before=saves()
    deadline=time.monotonic()+15
-   while time.monotonic()<deadline and sum(before[44+i*56+50]==6 and before[44+i*56+51]==0 and struct.unpack_from('<f',before,44+i*56+24)[0]>0 for i in range(100))!=3:
+   while time.monotonic()<deadline and sum(before[schema['entities']+i*56+50]==6 and before[schema['entities']+i*56+51]==0 and struct.unpack_from('<f',before,schema['entities']+i*56+24)[0]>0 for i in range(100))!=3:
     time.sleep(.2);before=saves()
    shot('paused-saved')
    # Actual V6 state confirms build/card hits and world movement after rotation.
-   assert struct.unpack_from('<I',before,13424)[0]==1
+   assert struct.unpack_from('<I',before,schema['extra'])[0]==1
    power_count=0;positions=[]
    for i in range(100):
-    at=44+i*56;kind,team=before[at+50:at+52];hp=struct.unpack_from('<f',before,at+24)[0]
+    at=schema['entities']+i*56;kind,team=before[at+50:at+52];hp=struct.unpack_from('<f',before,at+24)[0]
     power_count+=hp>0 and kind==6 and team==0
     if i in [5,6,7,8]:positions.append(struct.unpack_from('<ff',before,at))
    assert power_count==3,power_count;original=[(8.5,11),(9.5,12),(8,13),(10.5,11.5)];assert all(abs(x-a)+abs(y-b)>.1 for (x,y),(a,b) in zip(positions,original)),positions

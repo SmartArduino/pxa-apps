@@ -5,7 +5,8 @@ include(PxaGuest)
 set(PXA_COROUTINE_SLOT_BYTES 4096)
 pxa_add_app(pxa_main COMPONENT_ID main SOURCES main.cpp)
 target_include_directories(pxa_main PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
-target_compile_options(pxa_main PRIVATE -O2)
+# A 32 KiB Wasm stack must retain room for callers and SDK dispatch.
+target_compile_options(pxa_main PRIVATE -O2 -Wframe-larger-than=16384 -Werror=frame-larger-than)
 target_link_options(pxa_main PRIVATE -Wl,-z,stack-size=32768)
 
 option(IRON_PROFILE "Log renderer timings without an on-screen overlay" OFF)

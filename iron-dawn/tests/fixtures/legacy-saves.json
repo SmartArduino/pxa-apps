@@ -1,0 +1,30 @@
+{
+  "source_commit": "e2d86ce26db694b1c7a51b2182a69519a8fa3efa",
+  "generator": "Compiled previous V6 source-layout save.hpp/model.hpp; controlled chapter-2 fixture, no user/device data",
+  "expected": {
+    "chapter": 1,
+    "time": 43,
+    "credits": 1234,
+    "generation": 73,
+    "career_wins": 7,
+    "best": [
+      120,
+      210,
+      330
+    ]
+  },
+  "files": {
+    "save-v4.bin": {
+      "bytes": 13424,
+      "sha256": "8df35cb23851804811b790852427954f8fd1a4c8dfd9e137c583745435ed5cd1"
+    },
+    "save-v5.bin": {
+      "bytes": 13424,
+      "sha256": "edac36dcfdd3eb6bfd170115d3262ba3a377dd4eee2b037c6d6f4c3aaf37ddb4"
+    },
+    "save-v6.bin": {
+      "bytes": 13448,
+      "sha256": "f3b4bff64d2613821c98898b1229a74efa19a5661fc1fa53b76beee05c9c064d"
+    }
+  }
+}

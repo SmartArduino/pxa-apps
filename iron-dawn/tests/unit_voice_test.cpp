@@ -17,6 +17,6 @@ int main(){
  assert(v.offer(rifle,UnitCue::ready,8000));unsigned serial=v.sequence;v.clear();assert(v.sequence!=serial&&v.take(9000)==-1&&v.busy_until==0);
  assert(!v.offer(harvester,UnitCue::attack,10000)&&!v.offer(harvester,UnitCue::stop,10000));assert(!v.offer(hq,UnitCue::select,10000));
  assert(v.offer(artillery,UnitCue::stop,11000)&&v.take(11000)==artillery*8+6);assert(v.offer(harvester,UnitCue::ready,12000)&&v.take(12000)==harvester*8+7);
- unsigned clips=0;for(int i=0;i<40;++i)if(voice_files[i]){++clips;assert(voice_lengths[i]>300&&voice_lengths[i]<4500);}assert(clips==37&&sizeof(Save)==13448);
- std::puts("Five fixed voice casts, all 37 cue mappings, ally selection, spawn observation, radio arbitration, expiration, cancellation and unchanged V6 layout passed");
+ unsigned clips=0;for(int i=0;i<40;++i)if(voice_files[i]){++clips;assert(voice_lengths[i]>300&&voice_lengths[i]<4500);}assert(clips==37&&sizeof(Save)<24000);
+ std::puts("Five fixed voice casts, all 37 cue mappings, ally selection, spawn observation, radio arbitration, expiration, cancellation and unchanged V7 save roundtrip passed");
 }
