@@ -5,6 +5,7 @@
 #include "webp_compat.hpp"
 #include "cache_model.hpp"
 #include "reader_gesture.hpp"
+#include "directory_cache.hpp"
 #include <cstring>
 #include <cstdlib>
 #include <pxa/app.hpp>
@@ -24,7 +25,7 @@ struct Reader {
     enum Screen {shelf_screen,discover,source_screen,contents,reading,help,page_jump,settings_screen};
     enum Act {shelf_tab,discover_tab,source_tab,search,previous_list,next_list,open_book,open_chapter,
         go_back,language_change,resume,collect,previous_page,next_page,zoom,retry,cancel,
-        show_help,choose_source,source_previous,source_next,clear_search,read_book,jump_page,jump_submit,jump_step,toggle_order,show_settings,toggle_cache,clear_cache,reading_mode,retry_buffer};
+        show_help,choose_source,source_previous,source_next,clear_search,read_book,jump_page,jump_submit,jump_step,toggle_order,show_settings,toggle_cache,clear_cache,reading_mode,retry_buffer,show_contents,refresh_contents};
     struct Callback {Reader* app=nullptr;Act act{};int arg=0;void operator()()const{app->enter_from_bottom=false;app->action(act,arg);}};
     struct Controls {
         static constexpr Capacity capacity{208,0,64};
@@ -57,6 +58,7 @@ struct Reader {
 #include "reader_buffer.inc"
 #include "reader_network.inc"
 #include "reader_cache.inc"
+#include "reader_directory.inc"
     std::array<std::byte,4096> buffer{};
     auto view(){return Stack(Canvas(canvas).on_pointer([this](const CanvasPointer& e){pointer(e);}),
         Refresh(revision,[this]{return Controls{this};}),
@@ -104,7 +106,7 @@ struct Reader {
     CanvasRegion area()const {auto r=physical_area();float f=ui_factor();return {int(r.x/f),int(r.y/f),int(r.width/f),int(r.height/f)};}
     CanvasRegion viewport()const {return {0,0,int(metrics.width),int(metrics.height)};}
     CanvasRegion logical(CanvasRegion r)const {float d=density();int left=int(std::floor(r.x/d)),top=int(std::floor(r.y/d));return {left,top,std::max(1,int(std::ceil((r.x+r.width)/d))-left),std::max(1,int(std::ceil((r.y+r.height)/d))-top)};}
-    unsigned list_y()const{return screen==shelf_screen?64:screen==contents?100:104;}
+    unsigned list_y()const{return screen==shelf_screen?76:screen==contents?100:104;}
     bool dense_fonts()const{return density()>ui_factor()*1.08f;}
     unsigned row_height()const{return screen==contents?36:dense_fonts()?56:40;}
     unsigned columns()const{return (screen==shelf_screen||screen==discover)&&area().width>=480?2:1;}
@@ -209,7 +211,7 @@ struct Reader {
             total=kind==mangadex?j.get("total").number():results.size();}
         list_start=0;busy=false;message(results.empty()?"暂无结果，试试其他搜索词":std::to_string(total)+" 部漫画");co_return Result<void>{};
     }
-    Task<void> load_chapters(){
+    Task<void> load_chapters_network(){
         using enum manga::SourceKind;auto kind=manga::source_kind(book.source);std::string url;
         if(manga::chinese_source(kind)){auto text=co_await json(book.id,false,1048576);if(!text)co_return std::unexpected(text.error());
             if(!manga::chinese_chapters(*text,book,chapters))co_return std::unexpected(Error::protocol_error);
@@ -321,7 +323,7 @@ struct Reader {
             auto bytes=std::as_bytes(std::span{text.data(),text.size()});while(!bytes.empty()){auto n=f->write(bytes.first(std::min<size_t>(1024,bytes.size())));if(!n||!*n)co_return std::unexpected(n?Error::io_error:n.error());bytes=bytes.subspan(*n);auto y=co_await ctx->clock().yield();if(!y)co_return std::unexpected(y.error());}
             auto closed=f->close();if(!closed)co_return std::unexpected(closed.error());auto moved=co_await ctx->fs().replace("manga-state.tmp","manga-state.json");if(!moved)co_return std::unexpected(moved.error());
         }save_busy=false;(void)ctx->log().write(LogLevel::info,"MANGA progress_saved="+std::to_string(book.page));if(screen==shelf_screen)message(shelf_status());else if(screen==settings_screen&&book_settings()&&!save_pending)message("设置已保存");co_return Result<void>{};}
-    Task<void> load_saved(){auto loaded_cache=co_await load_cache();(void)loaded_cache;auto f=co_await ctx->fs().open("manga-state.json");
+    Task<void> load_saved(){auto loaded_cache=co_await load_cache();(void)loaded_cache;loaded_cache=co_await load_directory_cache();(void)loaded_cache;auto f=co_await ctx->fs().open("manga-state.json");
         if(f){std::string text;for(;;){auto n=f->read(buffer);if(!n||text.size()+*n>32768){storage_ok=false;break;}if(!*n)break;text.append(reinterpret_cast<const char*>(buffer.data()),*n);}auto c=f->close();
             if(!c||!storage_ok||!manga::restore(text,shelf,language,custom,cache.mode)){storage_ok=false;message("书架记录损坏，已保留原文件");}else if(manga::Json(text).get("version").number()<4)save_pending=true;}
         else if(f.error()!=Error::not_found){storage_ok=false;message("无法读取书架，进度暂不保存");}
@@ -335,9 +337,13 @@ struct Reader {
         if(act==reading_mode){if(!book_settings())return;book.reading_mode=(book.reading_mode+1)%3;zoom_mode=1;custom_zoom=1;fit();remember_view();message("正在保存…");return;}
         if(act==clear_cache){begin(clear_cache_files());return;}
         if(act==show_help){prior=screen;stop();screen=help;changed();return;}
-        if(act==go_back){if(screen==settings_screen){stop();screen=settings_prior;bars=true;bar_deadline=now_us+6000000;message(screen==reading?page_label():shelf_status());if(screen==reading&&(!image||rendered_page!=page))begin(pages.empty()?load_pages():load_image());return;}if(screen==page_jump){screen=reading;input.set("");(void)input_ref.hide_keyboard();bar_deadline=now_us+6000000;message("第 "+std::to_string(page+1)+" / "+std::to_string(pages.size())+" 页");return;}if(screen==help){screen=prior;bar_deadline=now_us+6000000;changed();if(screen==reading&&(!image||rendered_page!=page))begin(pages.empty()?load_pages():load_image());return;}stop();image.reset();pages.clear();
-            if(screen==reading){screen=contents;if(chapters.empty()){list_start=offset=0;begin(load_chapters());}else message(std::to_string(total)+" 个章节");}
-            else{screen=shelf_screen;list_start=0;message(shelf_status());}return;}
+        if(act==show_contents){if(screen!=reading)return;stop();contents_from_reader=true;screen=contents;
+            if(chapters.empty()){list_start=offset=0;begin(load_chapters());}else message(std::to_string(total)+" 个章节");return;}
+        if(act==refresh_contents){if(screen==contents&&!busy)begin(load_chapters(true));return;}
+        if(act==go_back){if(screen==settings_screen){stop();screen=settings_prior;bars=true;bar_deadline=now_us+6000000;message(screen==reading?page_label():shelf_status());if(screen==reading&&(!image||rendered_page!=page))begin(pages.empty()?load_pages():load_image());return;}if(screen==page_jump){screen=reading;input.set("");(void)input_ref.hide_keyboard();bar_deadline=now_us+6000000;message("第 "+std::to_string(page+1)+" / "+std::to_string(pages.size())+" 页");return;}if(screen==help){screen=prior;bar_deadline=now_us+6000000;changed();if(screen==reading&&(!image||rendered_page!=page))begin(pages.empty()?load_pages():load_image());return;}
+            if(screen==reading){action(show_contents);return;}
+            if(screen==contents&&contents_from_reader){stop();contents_from_reader=false;if(language!=book.language){language=book.language;chapters.clear();groups.clear();group_index=total=list_start=offset=0;}screen=reading;bars=true;bar_deadline=now_us+6000000;message(page_label());if(!image||rendered_page!=page)begin(pages.empty()?load_pages():load_image());return;}
+            stop();clear_buffers();image.reset();pages.clear();originals.clear();screen=shelf_screen;list_start=0;message(shelf_status());return;}
         if(act==source_previous||act==source_next){auto rows=source_rows();if(act==source_previous)source_start-=std::min(source_start,rows);else if(source_start+rows<manga::sources.size())source_start+=rows;changed();return;}
         if(act==choose_source){if(arg<0||unsigned(arg)>=manga::sources.size())return;custom=manga::sources[arg].id;save();action(discover_tab);return;}
         if(act==toggle_order){if(busy||screen!=contents)return;descending=!descending;offset=list_start=0;begin(load_chapters());return;}
@@ -345,7 +351,7 @@ struct Reader {
         if(act==jump_step){int value=int(manga::comic_number(input.get()));value=std::clamp(value+(arg<0?-1:1),1,int(pages.size()));input.set(std::to_string(value));message("共 "+std::to_string(pages.size())+" 页");return;}
         if(act==jump_submit){auto value=manga::comic_number(input.get());if(!value||value>pages.size()){message("请输入 1–"+std::to_string(pages.size())+" 之间的页码");return;}screen=reading;input.set("");(void)input_ref.hide_keyboard();bars=true;bar_deadline=now_us+6000000;if(value-1!=page){page=value-1;begin(load_image());}else if(!image||rendered_page!=page)begin(load_image());else message(page_label());return;}
         if(act==clear_search){input.set("");query.clear();offset=0;begin(load_catalog());return;}
-        if(act==shelf_tab||act==discover_tab||act==source_tab){stop();image.reset();pages.clear();list_start=offset=0;
+        if(act==shelf_tab||act==discover_tab||act==source_tab){stop();clear_buffers();image.reset();pages.clear();originals.clear();contents_from_reader=false;list_start=offset=0;
             screen=act==shelf_tab?shelf_screen:act==discover_tab?discover:source_screen;query.clear();input.set("");
             if(screen==source_screen){for(unsigned i=0;i<manga::sources.size();++i)if(manga::sources[i].id==custom)source_start=(i/source_rows())*source_rows();}
             if(screen==discover)begin(load_catalog());else message(screen==source_screen?"当前源："+std::string(manga::source_name(custom)):shelf_status());return;}
@@ -354,12 +360,14 @@ struct Reader {
         if(act==retry){if(busy)return;failure.clear();if(screen==discover)begin(load_catalog());else if(screen==contents)begin(load_chapters());else if(screen==reading){if(chapter_from_cache){refresh_chapter=true;pages.clear();}begin(pages.empty()?load_pages():load_image());}return;}
         if(busy)return;
         if(act==open_book||act==read_book){auto& list=screen==discover?results:shelf;if(arg<0||unsigned(arg)>=list.size())return;book=list[arg];auto saved=std::find_if(shelf.begin(),shelf.end(),[&](auto& b){return manga::same(b,book);});if(saved!=shelf.end())book=*saved;
-            restore_view();language=book.chapter.empty()?language:book.language;chapters.clear();groups.clear();group_index=0;total=0;list_start=offset=0;if(act==read_book&&!book.chapter.empty()){screen=reading;bars=false;pages.clear();begin(load_pages());}else{screen=contents;begin(load_chapters());}return;}
+            restore_view();language=book.chapter.empty()?language:book.language;clear_buffers();image.reset();pages.clear();originals.clear();contents_from_reader=false;chapters.clear();groups.clear();group_index=0;total=0;list_start=offset=0;
+            if(act==read_book){screen=reading;bars=false;if(book.chapter.empty()){descending=false;begin(read_first_chapter());}else begin(load_pages());}else{screen=contents;begin(load_chapters());}return;}
         if(act==collect){auto p=std::find_if(shelf.begin(),shelf.end(),[&](auto& b){return manga::same(b,book);});if(p==shelf.end()){if(shelf.size()>=24){message("书架已满（24 部）");return;}shelf.push_back(book);message("已加入书架");}else{shelf.erase(p);message("已从书架移除");}save();return;}
         if(act==previous_list||act==next_list){auto count=screen==shelf_screen?shelf.size():screen==discover?results.size():chapters.size();auto rows=row_count();
             if(act==next_list){if(list_start+rows<count)list_start+=rows;else if(remote_list()&&offset+batch_size()<total){offset+=batch_size();begin(screen==discover?load_catalog():load_chapters());return;}}
             else if(list_start)list_start-=std::min(list_start,rows);else if(offset){offset-=std::min(offset,batch_size());begin(screen==discover?load_catalog():load_chapters());return;}changed();return;}
-        if(act==open_chapter||act==resume){if(act==open_chapter){if(arg<0||unsigned(arg)>=chapters.size())return;book.chapter=chapters[arg].id;book.chapter_title=chapters[arg].title;book.page=0;}if(book.chapter.empty())return;if(act==resume)language=book.language;
+        if(act==open_chapter||act==resume){if(act==resume&&contents_from_reader){action(go_back);return;}if(act==open_chapter){if(arg<0||unsigned(arg)>=chapters.size())return;book.chapter=chapters[arg].id;book.chapter_title=chapters[arg].title;book.page=0;}if(book.chapter.empty())return;if(act==resume)language=book.language;
+            contents_from_reader=false;
             screen=reading;bars=false;restore_view();pages.clear();begin(load_pages());return;}
         if(act==zoom){zoom_mode=zoom_mode>=2?0:zoom_mode+1;touches.reset();fit();remember_view();changed();return;}
         if(act==previous_page||act==next_page){if(pages.empty())return;if((act==previous_page&&page==0)||(act==next_page&&page+1==pages.size())){enter_from_bottom=false;message(act==next_page?"本章已读完，可打开目录":"已是本章第一页");bars=true;return;}

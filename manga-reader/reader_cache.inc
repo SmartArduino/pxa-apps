@@ -33,6 +33,7 @@
     }
     Task<void> clear_cache_files(){
         for(auto& p:buffered)p.asset.reset();waiting_scroll=0;
+        directory_cache.entries.clear();auto directory=co_await ctx->fs().remove("reader-directory.json");(void)directory;directory=co_await ctx->fs().remove("reader-directory.tmp");(void)directory;
         for(unsigned i=0;i<cache.slots;++i){auto r=co_await ctx->fs().remove(cache_path(i));if(!r&&r.error()!=Error::not_found)co_return std::unexpected(r.error());cache.pages[i]={};}
         auto chapter=co_await ctx->fs().remove("reader-chapter.json");(void)chapter;chapter=co_await ctx->fs().remove("reader-reserve.tmp");(void)chapter;cache.limit=0;cache.storage_verified=false;cache_prepare=true;auto written=co_await write_cache_index();if(!written)co_return std::unexpected(written.error());busy=false;message("缓存已清除，书架和进度已保留");co_return Result<void>{};
     }

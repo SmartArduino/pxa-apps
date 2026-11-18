@@ -97,7 +97,7 @@
       "action": "tap-node",
       "selector": {
         "type": "button",
-        "text": "触摸测试漫画"
+        "text": "触摸测试漫画 · 目录"
       }
     },
     {
@@ -271,7 +271,7 @@
       "action": "tap-node",
       "selector": {
         "type": "button",
-        "text": "返回"
+        "text": "书架"
       }
     },
     {
@@ -370,7 +370,7 @@
       "action": "tap-node",
       "selector": {
         "type": "button",
-        "text": "返回"
+        "text": "书架"
       }
     },
     {
@@ -568,7 +568,7 @@
       "action": "tap-node",
       "selector": {
         "type": "button",
-        "text": "触摸测试漫画"
+        "text": "触摸测试漫画 · 目录"
       }
     },
     {
@@ -715,7 +715,7 @@
       "action": "tap-node",
       "selector": {
         "type": "button",
-        "text": "返回"
+        "text": "书架"
       }
     },
     {
@@ -814,7 +814,7 @@
       "action": "tap-node",
       "selector": {
         "type": "button",
-        "text": "返回"
+        "text": "书架"
       }
     },
     {

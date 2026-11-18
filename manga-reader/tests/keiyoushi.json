@@ -89,7 +89,7 @@
       "action": "tap-node",
       "selector": {
         "type": "button",
-        "text": "从姑获鸟开始"
+        "text": "从姑获鸟开始 · 目录"
       }
     },
     {
@@ -257,7 +257,7 @@
       "action": "tap-node",
       "selector": {
         "type": "button",
-        "text": "我要终结这场附身"
+        "text": "我要终结这场附身 · 目录"
       }
     },
     {
@@ -412,7 +412,7 @@
       "action": "tap-node",
       "selector": {
         "type": "button",
-        "text": "返回"
+        "text": "书架"
       }
     },
     {
@@ -622,7 +622,7 @@
       "action": "tap-node",
       "selector": {
         "type": "button",
-        "text": "从姑获鸟开始"
+        "text": "从姑获鸟开始 · 目录"
       }
     },
     {
@@ -790,7 +790,7 @@
       "action": "tap-node",
       "selector": {
         "type": "button",
-        "text": "我要终结这场附身"
+        "text": "我要终结这场附身 · 目录"
       }
     },
     {
@@ -945,7 +945,7 @@
       "action": "tap-node",
       "selector": {
         "type": "button",
-        "text": "返回"
+        "text": "书架"
       }
     },
     {
@@ -1155,7 +1155,7 @@
       "action": "tap-node",
       "selector": {
         "type": "button",
-        "text": "从姑获鸟开始"
+        "text": "从姑获鸟开始 · 目录"
       }
     },
     {
@@ -1323,7 +1323,7 @@
       "action": "tap-node",
       "selector": {
         "type": "button",
-        "text": "我要终结这场附身"
+        "text": "我要终结这场附身 · 目录"
       }
     },
     {
@@ -1478,7 +1478,7 @@
       "action": "tap-node",
       "selector": {
         "type": "button",
-        "text": "返回"
+        "text": "书架"
       }
     },
     {
@@ -1672,7 +1672,7 @@
       "action": "tap-node",
       "selector": {
         "type": "button",
-        "text": "从姑获鸟开始"
+        "text": "从姑获鸟开始 · 目录"
       }
     },
     {
@@ -1840,7 +1840,7 @@
       "action": "tap-node",
       "selector": {
         "type": "button",
-        "text": "我要终结这场附身"
+        "text": "我要终结这场附身 · 目录"
       }
     },
     {
@@ -1995,7 +1995,7 @@
       "action": "tap-node",
       "selector": {
         "type": "button",
-        "text": "返回"
+        "text": "书架"
       }
     },
     {

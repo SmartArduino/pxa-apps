@@ -51,6 +51,7 @@ class Json {
     }
 public:
     Json()=default;explicit Json(std::string_view v):s(v){}
+    std::string_view view()const{return s;}
     [[gnu::noinline]] bool valid()const{size_t p=0;if(!skip(s,p))return false;ws(s,p);return p==s.size();}
     [[gnu::noinline]] Json get(std::string_view key)const {
         size_t p=0;ws(s,p);if(p>=s.size()||s[p++]!='{')return {};
