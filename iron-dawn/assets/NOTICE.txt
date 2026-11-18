@@ -9,6 +9,9 @@ Generated music and effects: original project outputs (MIT), using ACE-Step 1.5 
 
 Unit voices: original synthetic cast and dialogue (MIT), designed with Qwen3-TTS VoiceDesign and generated from fixed synthetic references with Qwen3-TTS Base (Apache-2.0 models, not included). No third-party voice recordings used; provenance in tools/voice-prompts.json.
 
+Continuous ground material, modular bridge, rotating turret heads and mission UI strips: built-in ImageGen, original MIT artwork; source PNGs and prompts in tools/field-prompts.json.
+Building and vehicle destruction: original generated effects (MIT), existing remote Stable Audio 3 Small SFX; model hashes and exact workflows in tools/destruction-prompts.json.
+
 === PXA-SDK-LICENSE.txt ===
 MIT License
 

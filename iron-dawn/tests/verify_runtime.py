@@ -10,7 +10,7 @@ import argparse,concurrent.futures,json,os,re,socket,struct,subprocess,time,trac
 from PIL import Image
 p=argparse.ArgumentParser();p.add_argument('--simulator',type=Path,required=True);p.add_argument('--package',type=Path,required=True);p.add_argument('--publisher-key',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--profiles',nargs='+');p.add_argument('--density-dpi',type=int,default=160);args=p.parse_args()
 for name in ('simulator','package','publisher_key','output'):setattr(args,name,getattr(args,name).resolve())
-args.output.mkdir(parents=True,exist_ok=False);profiles={'pai-touch':(296,240),'doit-gamekit-2':(320,240),'esp-mosaico':(480,480),'espp4-a':(480,854),'desktop-1024':(1024,600),'tablet':(1280,800),'desktop-hd':(1920,1080)}
+args.output.mkdir(parents=True,exist_ok=False);profiles={'pai-touch':(296,240),'doit-gamekit-2':(320,240),'esp-mosaico':(480,480),'espp4-a':(480,854),'esp32s31-korvo-1':(800,480),'desktop-1024':(1024,600),'tablet':(1280,800),'desktop-hd':(1920,1080)}
 if args.profiles:profiles={n:profiles[n] for n in args.profiles}
 def run(item):
  name,(native_w,native_h)=item;out=args.output/name;out.mkdir();state=out/'state';state.mkdir();sock=Path('/tmp')/f'iron-hud-{os.getpid()}-{name}.sock';log=out/'run.log';proc=None;shots=[];pw=ph=w=h=0

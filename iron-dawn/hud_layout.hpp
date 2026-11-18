@@ -21,8 +21,8 @@ struct GameViewport {
 struct DisplayPlan {
  int width,height,scale,offset_x,offset_y;bool wide;float units_per_dp,font_scale;
  static DisplayPlan fit(int pw,int ph,uint32_t density=65536,uint32_t font=65536){
-  int scale=1;while(scale<4&&int64_t(((pw/scale)*2+63)/64*64)*(ph/scale)*2>2097152)scale*=2;
-  int sw=std::max(1,pw/scale),sh=std::max(1,ph/scale);float dpi=std::clamp(density/65536.f,.5f,4.f);bool wide=pw>=ph&&pw/dpi>=800&&ph/dpi>=440&&sw>=512&&sh>=300;
+  float dpi=std::clamp(density/65536.f,.5f,4.f);int scale=dpi>=1.25f&&pw>=768&&ph>=480?2:1;while(scale<4&&int64_t(((pw/scale)*2+63)/64*64)*(ph/scale)*2>2097152)scale*=2;
+  int sw=std::max(1,pw/scale),sh=std::max(1,ph/scale);bool wide=pw>=ph&&pw/dpi>=800&&ph/dpi>=440&&sw>=512&&sh>=300;
   return {sw,sh,scale,(pw-sw*scale)/2,(ph-sh*scale)/2,wide,dpi/scale,std::clamp(font/65536.f,.75f,2.f)};
  }
 };

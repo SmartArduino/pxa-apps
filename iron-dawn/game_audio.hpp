@@ -5,12 +5,12 @@
 namespace iron {
 // Prepared effects and streamed music live on the Host, outside the game heap.
 struct GameAudio:motion::Sounds {
- inline static constexpr const char* files[]={"ui","order","rifle","tank","artillery","rocket","impact","build","ready","upgrade"};
- std::array<std::optional<pxa::Asset>,10> clips;
+ inline static constexpr const char* files[]={"ui","order","rifle","tank","artillery","rocket","impact","build","ready","upgrade","building_destroy","vehicle_destroy"};
+ std::array<std::optional<pxa::Asset>,12> clips;
  std::array<uint64_t,6> next_effect{};
  uint64_t milliseconds=0,music_instance=0,retry_music=0;int music_track=-1;float music_gain=-40;
  bool music_ready=false,music_paused=false,opening=false;unsigned accepted_clips=0;
- UnitVoice voices;std::optional<pxa::Asset> voice_clip;int voice_clip_id=-1;bool voice_loading=false,voice_battle=false;
+ UnitVoice voices;std::optional<pxa::Asset> voice_clip;int voice_clip_id=-1;bool voice_loading=false,voice_battle=false;uint64_t next_heavy=0;unsigned last_heavy=0;
  void respond(const World& w,UnitCue cue,int preferred=-1){if(!audible())return;int kind=UnitVoice::speaker(w,preferred,voices.last_kind,cue==UnitCue::attack||cue==UnitCue::stop);voices.offer(kind,cue,milliseconds);}
  void unit_ready(int kind){if(audible())voices.offer(kind,UnitCue::ready,milliseconds);}
  pxa::Task<void> load_voice(int id,unsigned sequence,uint64_t expires){
@@ -21,8 +21,8 @@ struct GameAudio:motion::Sounds {
   voice_loading=false;co_return pxa::Result<void>{};
  }
  pxa::Task<void> prepare(){
-  unsigned loaded=0;for(unsigned i=0;i<clips.size();++i){if(!session)break;char path[80];std::snprintf(path,sizeof path,"assets/audio/%s.pcm",files[i]);auto clip=co_await context->assets().load(pxa::AssetKind::audio,path);if(clip){clips[i].emplace(std::move(*clip));++loaded;}else{char text[100];std::snprintf(text,sizeof text,"Iron Dawn audio prepare %s error=%d",files[i],int(clip.error()));report(text);}}
-  char text[80];std::snprintf(text,sizeof text,"Iron Dawn generated effects ready=%u/10",loaded);report(text);co_return pxa::Result<void>{};
+  unsigned loaded=0;for(unsigned i=0;i<clips.size();++i){if(!session)break;char path[80];std::snprintf(path,sizeof path,"assets/audio/%s.%s",files[i],i<10?"pcm":"s16");auto clip=co_await context->assets().load(pxa::AssetKind::audio,path);if(clip){clips[i].emplace(std::move(*clip));++loaded;}else{char text[100];std::snprintf(text,sizeof text,"Iron Dawn audio prepare %s error=%d",files[i],int(clip.error()));report(text);}}
+  char text[80];std::snprintf(text,sizeof text,"Iron Dawn generated effects ready=%u/12",loaded);report(text);co_return pxa::Result<void>{};
  }
  pxa::Task<void> open(pxa::Context& ctx){auto result=co_await motion::Sounds::open(ctx);if(session)co_await prepare();co_return result;}
  pxa::Task<void> reopen(){
@@ -35,13 +35,13 @@ struct GameAudio:motion::Sounds {
  void resume(){motion::Sounds::resume();}
  void toggle(){enabled=!enabled;if(!enabled)stop();else if(!session&&!opening){opening=true;auto task=context->tasks().start(reopen());if(!task)opening=false;}else play(motion::Cue::click);save_pending=true;if(!saving&&context){saving=true;if(!context->tasks().start(persist()))saving=false;}report(enabled?"Iron Dawn audio enabled=1":"Iron Dawn audio enabled=0");}
  void effect(unsigned id){
-  if(!audible()||id>=clips.size())return;unsigned track=id==2?0:id>=3&&id<=5?1:id==6?2:id<=1?3:4;
-  if(milliseconds<next_effect[track])return;next_effect[track]=milliseconds+(track==0?85:track==1?130:track==2?180:track==3?65:250);
-  if(!clips[id]){motion::Sounds::play(id==6?motion::Cue::impact:id>=8?motion::Cue::star:motion::Cue::click);return;}
-  auto sent=session->sound_track(*clips[id],pxa::SoundTrack(track),false,(id<=1?-15:id==4||id==6?-12:-10)*256);if(sent){if(!accepted_clips)report("Iron Dawn generated effect playing");++accepted_clips;}
+  if(!audible()||id>=clips.size())return;unsigned track=id==2?0:id>=3&&id<=5?1:(id==6||id>=10)?2:id<=1?3:4;
+  if(id>=10){if(milliseconds<next_heavy&&(id==11||last_heavy==10))return;last_heavy=id;next_heavy=milliseconds+350;}else if(milliseconds<next_effect[track])return;next_effect[track]=milliseconds+(id==10?1200:id==11?650:track==0?85:track==1?130:track==2?180:track==3?65:250);
+  if(!clips[id]){motion::Sounds::play((id==6||id>=10)?motion::Cue::impact:id>=8?motion::Cue::star:motion::Cue::click);return;}
+  auto sent=session->sound_track(*clips[id],pxa::SoundTrack(track),false,(id<=1?-15:id==10?-8:id==4||id==6?-12:-10)*256);if(sent){if(!accepted_clips)report("Iron Dawn generated effect playing");++accepted_clips;}
  }
  void play(motion::Cue cue,unsigned=0){using C=motion::Cue;effect(cue==C::impact?6:cue==C::star||cue==C::win?9:cue==C::settle?8:cue==C::dice?3:0);}
- void play_event(unsigned cue){switch(cue){case 1:effect(1);break;case 2:case 8:effect(3);break;case 3:effect(6);break;case 4:effect(9);break;case 5:case 11:effect(8);break;case 6:effect(2);break;case 7:effect(5);break;case 9:effect(4);break;case 10:effect(7);break;}}
+ void play_event(unsigned cue){switch(cue){case 1:effect(1);break;case 2:case 8:effect(3);break;case 3:effect(6);break;case 4:effect(9);break;case 5:case 11:effect(8);break;case 6:effect(2);break;case 7:effect(5);break;case 9:effect(4);break;case 10:effect(7);break;case 12:effect(10);break;case 13:effect(11);break;}}
  void event(const pxa::Event& e){
   motion::Sounds::event(e);if(!session){music_instance=0;music_track=-1;music_ready=false;voices.clear();voice_clip.reset();voice_clip_id=-1;for(auto& clip:clips)clip.reset();return;}
   auto played=pxa::decode_playback(e);if(!played||played->session!=session->handle()||played->instance!=music_instance)return;

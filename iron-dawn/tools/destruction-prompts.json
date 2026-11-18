@@ -1,0 +1,226 @@
+{
+  "tool": "remote ComfyUI; existing Stable Audio 3 Small SFX and T5Gemma models",
+  "input_boundary": "original text prompts only; no reference audio or third-party game samples; models are not included",
+  "license": "original project outputs MIT; upstream model license and model digests in audio-prompts.json",
+  "workflows": {
+    "building_destroy": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "Single one-shot game sound effect: a fortified concrete military building explodes and collapses. Immediate powerful midrange explosive crack, heavy masonry rumble, metal beams breaking, scattered rubble falling for two seconds, natural short fading tail. Dry close perspective, clearly audible on a small speaker. No voices, no alarms, no music, silent background."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 816210,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "iron-dawn/destruction-20261117-162725/building_destroy"
+        }
+      }
+    },
+    "vehicle_destroy": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "Single one-shot game sound effect: an armored military vehicle is destroyed. A sharp compact explosion followed by tearing metal, rattling armored plates, small fragments clattering and a brief low engine power-down. Clear punchy midrange, short dry tail, silent background. No firing sequence, no voices, no music."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 816211,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "iron-dawn/destruction-20261117-162725/vehicle_destroy"
+        }
+      }
+    }
+  },
+  "processing": {
+    "sample_rate": 16000,
+    "encoding": "S16LE",
+    "highpass_hz": 70,
+    "lowpass_hz": 6200,
+    "peak_limit": 0.74,
+    "rms_limit": 0.2,
+    "clips": {
+      "building_destroy": {
+        "duration": 2.4,
+        "sample_rate": 16000,
+        "channels": 1,
+        "runtime_bytes": 76800,
+        "source_start": 0.0,
+        "source_sha256": "35537779edf83c75dd1efb9f507fceb6da2707c5e2e00212627a6ac41dc53cc5",
+        "runtime_sha256": "759f6c4861f1cc5eb0ac20d6b7be04b7bbc876426fffbd9eb3435aa77ebe8390",
+        "master_sha256": "7e468adbb0abf8188da5fcef211288f0ff17970a9f2f8ed6e26424c33863cf44"
+      },
+      "vehicle_destroy": {
+        "duration": 1.3,
+        "sample_rate": 16000,
+        "channels": 1,
+        "runtime_bytes": 41600,
+        "source_start": 0.002,
+        "source_sha256": "ecdf50dedd8f9aa43d7fcaa70bda237cd0fa32c5436fb6d884f1451e2c41a8f8",
+        "runtime_sha256": "53435bcc9f4fb4ea1f2d7ebcd38716a2dd02dca6b7f78d2e8a7e9639275bca28",
+        "master_sha256": "48957650e6dd1e6cd8e37323f617f362a6874fb62120aa304939e8aeadc21246"
+      }
+    }
+  },
+  "model_sha256": {
+    "stable_audio_3_small_sfx.safetensors": "ed9cf1b6172f1a8c2921a9560c21109ff3239524563ced9dce6dcdef41e2f515",
+    "t5gemma_b_b_ul2.safetensors": "1e1eba25be8872edb0d3c6335c6658fd6388e7b14b60da6e454e404cfcd8150e"
+  },
+  "comfy_commit": "46493d824fd7eac25a741e505159e4c9e0ef0ebd"
+}

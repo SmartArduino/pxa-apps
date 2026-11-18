@@ -33,6 +33,7 @@ notice='Iron Dawn: original application code, game rules, procedural and generat
 notice=notice.replace('Font subset:', 'Environment and large-screen UI reference: built-in ImageGen; prompts and input lineage in tools/environment-prompts.json; original MIT artwork.\nNine-slice UI skins: built-in ImageGen; prompts and input lineage in tools/ui-skin-prompts.json; original MIT artwork.\nFont subset:')
 notice+='Generated music and effects: original project outputs (MIT), using ACE-Step 1.5 and Stable Audio 3 Small SFX. Models are not included; generation provenance in tools/audio-prompts.json.\n\n'
 notice+='Unit voices: original synthetic cast and dialogue (MIT), designed with Qwen3-TTS VoiceDesign and generated from fixed synthetic references with Qwen3-TTS Base (Apache-2.0 models, not included). No third-party voice recordings used; provenance in tools/voice-prompts.json.\n\n'
+notice+='Continuous ground material, modular bridge, rotating turret heads and mission UI strips: built-in ImageGen, original MIT artwork; source PNGs and prompts in tools/field-prompts.json.\nBuilding and vehicle destruction: original generated effects (MIT), existing remote Stable Audio 3 Small SFX; model hashes and exact workflows in tools/destruction-prompts.json.\n\n'
 for name in ('PXA-SDK-LICENSE.txt',):
  notice+='=== '+name+' ===\n'+(common/name).read_text()+'\n'
 for name in ('ZLabs-Pixel-OFL.txt','pixelfx-LICENSE','pixelfx-NOTICE.md'):

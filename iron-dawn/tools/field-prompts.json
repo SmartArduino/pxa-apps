@@ -1,0 +1,34 @@
+{
+  "tool": "built-in image_gen",
+  "input_boundary": "Original generated assets; buildings.png used as style reference only for the rotating turret heads; remaining images generated from text only; no third-party game art",
+  "assets": {
+    "turret-v2.png": {
+      "type": "transparent 4x4 sprite atlas",
+      "prompt": "Production sprite animation atlas for an original isometric pixel-art military RTS. Reference buildings.png is STYLE AND PALETTE ONLY: olive steel, muted stone, restrained teal markings, warm upper-left highlights. NEW standalone rotating CANNON HEADS ONLY, without pedestal/building/base. Strict 4 columns x 4 rows, 16 equal cells with clear gutters. Every head has the same armored octagonal gunhouse and ONE straight single barrel, no fork. Fixed mounting pivot, full clearance in every direction. First eight: screen southeast, south, southwest, west, northwest, north, northeast, east. Last eight: same directions and mount, barrel slides inward as recoil, subtle orange light inside muzzle. Chunky pixel clusters, uniform geometry; no labels, shadows, grid or text.",
+      "runtime": "Separate immutable pedestal and registered rotating head; explicit per-frame mounting/muzzle coordinates in art/rig.json.",
+      "sha256": "2606fe3f6eecf328c852dd5bd2445db9a5eaf06aaf88cd648c257941869a81ec",
+      "reference_sha256": "72e3fb824c435b1fc4dab8b098549c8cd455877a4e70e253fd71a55cb053e300"
+    },
+    "terrain-v2.png": {
+      "type": "transparent 4x4 terrain atlas",
+      "prompt": "Sixteen flat 2:1 diamond tiles. Muted olive-grey damp military river valley; embedded gravel, grass, mud, moss and wear; no side walls, raised cubes, cast shadows, outlines, labels or lettering. First row: mossy earth, gravelly earth matching tone, asphalt NW-SE and NE-SW. Second row: teal rippling water phases A/B, rubble, embedded gold minerals. Third row: four subtle compatible earth variants. Fourth row: mud, fern earth, cracked concrete, riverbank gravel. Full diamonds, consistent sizes, blendable edges without checkerboard.",
+      "sha256": "edab00148ed1e2d33768b8caa72adbaa0e8e669923194ad7defdc62519f25b82"
+    },
+    "bridge-v1.png": {
+      "type": "transparent 2x2 modular bridge atlas",
+      "prompt": "Isometric 2:1 pixel military RTS bridge modules, olive-grey industrial palette. Top left: flat repeating concrete/steel deck diamond with seams, bolts and worn yellow center dash NW-SE, no rails or raised sides. Top right: far steel railing segment only, three short posts, amber caps, 2:1 diagonal upper-left to lower-right. Bottom left: matching brighter near railing, same orientation, transparent outside. Bottom right: flat diamond road abutment with stone threshold, steel lip and muddy transition. No cast shadows, no labels or clipped pieces.",
+      "sha256": "5a3579e99d517fea0d47fe99ee6aa65a1b2e1494a7799204027afb83efad2cb9"
+    },
+    "mission-skin-v1.png": {
+      "type": "transparent four-row nine-slice panel atlas",
+      "prompt": "Four long rectangular metal panel strips stacked on a transparent square. Dark olive/blue-grey brushed steel, fine grain, stepped bevels, tiny anchored end caps and rivets, upper-left highlights. Quiet dark middle for runtime text; matching top/bottom borders and repeatable centers. Row accents amber objective, teal radio, rusty red warning, amber-teal progress. Small corners, seamless horizontal border runs, no dangling edges, cutouts, pictograms, text, soft glows or drop shadows.",
+      "sha256": "ec577e04815b56d274c762fcdf21bc7f698ac6ba5d6cd262d492e86dafc6ce88"
+    },
+    "continuous-ground-v1.png": {
+      "type": "opaque seamless material",
+      "prompt": "Full-bleed square TOP-DOWN seamless ground material for a pixel military RTS, not diamonds or an atlas. Organically continuous compacted olive-grey earth, muted moss, sparse tiny grass, embedded gravel, soft mud stains and wear. Quiet desaturated brown-grey and olive green; fine readable pixel clusters. Matching wrap on all edges, no vignette, grid, tile borders, isolated repeating clumps, hard square patches, roads, water, props, text, shadows or floating blocks. The game samples this continuously in world coordinates across map cells.",
+      "runtime": "256x256 indexed material, mirrored wrap and global projected coordinates, no per-cell color blocks.",
+      "sha256": "8208e273a5bb38244563f87cd7376c8fe378a6aca341441aa0a16861a7113108"
+    }
+  }
+}
